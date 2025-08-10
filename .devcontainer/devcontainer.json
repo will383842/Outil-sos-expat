@@ -1,0 +1,25 @@
+{
+  "name": "SOS Expat (Node 20)",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:20",
+  "postCreateCommand": "npm install && cd functions && npm install && npm run build && cd ..",
+  "forwardPorts": [
+    5173,
+    4000,
+    4400,
+    4401,
+    4500,
+    5001,
+    8080,
+    9199,
+    9299
+  ],
+  "remoteUser": "node",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  }
+}

@@ -1,0 +1,149 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /***************
+     * Helpers rôles
+     ***************/
+    function hasAnyRole(roles) {
+      return request.auth != null
+        && request.auth.token.role != null
+        && request.auth.token.role in roles;
+    }
+
+    function isAdmin()    { return hasAnyRole(['admin']); }
+    function isAgent()    { return hasAnyRole(['agent','staff']); }
+    function isProvider() { return hasAnyRole(['provider','prestataire','expert']); }
+    function isSignedIn() { return request.auth != null; }
+    function isSelf(uid)  { return isSignedIn() && request.auth.uid == uid; }
+
+    // Récupère le providerId rattaché à l'utilisateur courant (stocké dans users/{uid}.providerId)
+    function myProviderId() {
+      return isSignedIn()
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.providerId
+        : null;
+    }
+
+    /****************
+     * users/{uid}
+     ****************/
+    match /users/{uid} {
+      // Lecture: l'utilisateur lui-même, admin, agent
+      allow read: if isSelf(uid) || isAdmin() || isAgent();
+
+      // Création: l'utilisateur lui-même (doc id == uid) ou admin/agent (Functions/admin SDK passent en bypass)
+      allow create: if (isSelf(uid) && request.resource.data.uid == uid)
+                    || isAdmin() || isAgent();
+
+      // Mise à jour:
+      // - l'utilisateur peut modifier seulement certains champs "profil"
+      // - admin/agent peuvent tout modifier
+      allow update: if isAdmin() || isAgent() || (
+        isSelf(uid) &&
+        request.resource.data.uid == uid &&
+        // L'utilisateur ne peut PAS changer son "role" ni autres champs sensibles
+        request.resource.data.role == resource.data.role &&
+        request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'displayName', 'photoURL', 'phone', 'whatsappOptIn'
+        ])
+      );
+
+      // Suppression: admin uniquement (ou via outils internes)
+      allow delete: if isAdmin();
+    }
+
+    /****************
+     * providers/{providerId}
+     * Doit contenir au minimum:
+     *   name: string
+     *   managerUserId: string (uid interne gestionnaire)
+     *   (optionnel) providerUserIds: array<string> si plusieurs gestionnaires
+     ****************/
+    match /providers/{providerId} {
+      // Lecture: tout le staff + providers
+      allow read: if isAdmin() || isAgent() || isProvider();
+
+      // Écriture: uniquement admin/agent (les providers ne modifient pas le référentiel)
+      allow create, update, delete: if isAdmin() || isAgent();
+    }
+
+    /****************
+     * countryConfigs/{countryCode}
+     ****************/
+    match /countryConfigs/{countryCode} {
+      allow read: if isAdmin() || isAgent() || isProvider();
+      allow write: if isAdmin(); // config gérée par l'admin
+    }
+
+    /****************
+     * bookings/{bookingId}
+     * Écritures recommandées via Cloud Functions.
+     * Accès provider limité à son providerId.
+     ****************/
+    match /bookings/{bookingId} {
+      // Lecture:
+      //  - admin/agent
+      //  - providers dont le providerId correspond à leur rattachement
+      allow read: if isAdmin() || isAgent()
+                  || (isProvider() && resource.data.providerId == myProviderId());
+
+      // Création/MàJ/Suppression: par défaut via Functions (Admin SDK bypass les rules)
+      // Si besoin d'ouvrir quelques champs aux providers/agents, préciser un diff() contrôlé.
+      allow create, update, delete: if isAdmin() || isAgent();
+    }
+
+    /****************
+     * conversations/{convId} et sous-collection messages
+     * messages contient:
+     *   providerId: string
+     *   toInternalUserId: string (uid de l'interne destinataire)
+     *   createdAt: timestamp
+     ****************/
+    match /conversations/{convId} {
+      // Lecture conversation: admin/agent ou provider rattaché
+      allow read: if isAdmin() || isAgent()
+                  || (isProvider() && resource.data.providerId == myProviderId());
+      // Écritures: via Functions uniquement
+      allow create, update, delete: if isAdmin() || isAgent();
+
+      match /messages/{msgId} {
+        // Lecture message:
+        //  - admin/agent
+        //  - provider rattaché au providerId du message
+        //  - interne destinataire spécifique
+        allow read: if isAdmin() || isAgent()
+                    || (isProvider() && resource.data.providerId == myProviderId())
+                    || (isSignedIn() && resource.data.toInternalUserId == request.auth.uid);
+
+        // Écritures: via Functions (ou assouplir si besoin pour réponses internes)
+        allow create, update, delete: if isAdmin() || isAgent();
+      }
+    }
+
+    /****************
+     * messages/{messageId}  (si tu as aussi une collection "plate")
+     ****************/
+    match /messages/{messageId} {
+      allow read: if isAdmin() || isAgent()
+                  || (isProvider() && resource.data.providerId == myProviderId())
+                  || (isSignedIn() && resource.data.toInternalUserId == request.auth.uid);
+
+      // Création/MAJ/Suppression: via Functions
+      allow create, update, delete: if isAdmin() || isAgent();
+    }
+
+    /****************
+     * ops/** (maintenance interne)
+     ****************/
+    match /ops/{document=**} {
+      allow read, write: if isAdmin();
+    }
+
+    /****************
+     * Par défaut: interdit
+     ****************/
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

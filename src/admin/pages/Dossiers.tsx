@@ -1,0 +1,1 @@
+export default function Dossiers(){return <div className='rounded-2xl shadow p-4 bg-white'>Dossiers</div>}

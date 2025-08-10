@@ -1,0 +1,273 @@
+{
+  "name": "outils-sos-expat",
+  "version": "1.0.0",
+  "description": "Application mobile-first complète pour SOS Expats avec authentification Firebase, chat GPT intégré et console d'administration",
+  "template": "bolt-vite-react-ts",
+  "author": {
+    "name": "SOS Expats",
+    "email": "contact@sosexpats.com",
+    "organization": "SOS Expats"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sosexpats/outils-sos-expat.git"
+  },
+  "license": "Proprietary",
+  "branding": {
+    "primaryColor": "#CE3C3C",
+    "secondaryColor": "#A02E2E",
+    "accentColor": "#E84545",
+    "backgroundColor": "#FFFFFF",
+    "textColor": "#333333",
+    "logo": "/assets/logo-sos-expats.svg"
+  },
+  "environment": {
+    "development": {
+      "port": 3000,
+      "host": "0.0.0.0",
+      "https": false,
+      "open": true,
+      "hmr": true
+    },
+    "staging": {
+      "port": 3001,
+      "buildPath": "dist-staging",
+      "sourceMaps": true
+    },
+    "production": {
+      "buildPath": "dist",
+      "publicPath": "/",
+      "sourceMaps": false,
+      "compressionLevel": 9
+    }
+  },
+  "pwa": {
+    "enabled": true,
+    "name": "Outils SOS Expat",
+    "shortName": "SOS Expat",
+    "description": "Plateforme interne d'assistance professionnelle SOS Expats",
+    "themeColor": "#CE3C3C",
+    "backgroundColor": "#F2F2F2",
+    "display": "standalone",
+    "orientation": "portrait-primary",
+    "startUrl": "/",
+    "scope": "/",
+    "icons": {
+      "192": "/icons/icon-192x192.png",
+      "512": "/icons/icon-512x512.png",
+      "purpose": "any maskable"
+    },
+    "installable": {
+      "android": true,
+      "ios": true
+    },
+    "features": {
+      "offlineSupport": true,
+      "pushNotifications": true,
+      "backgroundSync": true
+    }
+  },
+  "features": {
+    "authentication": {
+      "provider": "firebase",
+      "methods": ["email", "google", "facebook"],
+      "persistentLogin": true,
+      "emailVerification": true
+    },
+    "realtime": {
+      "enabled": true,
+      "provider": "firebase-firestore",
+      "collections": ["requests", "messages", "users", "notifications"]
+    },
+    "ai": {
+      "enabled": true,
+      "provider": "openai-gpt4",
+      "features": ["chat", "assistance", "translation"],
+      "customPrompts": true
+    },
+    "admin": {
+      "enabled": true,
+      "features": ["user-management", "analytics", "prompt-management", "history"]
+    },
+    "notifications": {
+      "push": true,
+      "email": true,
+      "inApp": true
+    },
+    "offline": {
+      "enabled": true,
+      "cachingStrategy": "networkFirst",
+      "essentialPages": ["/", "/dashboard", "/chat", "/profile"]
+    },
+    "internationalization": {
+      "enabled": true,
+      "defaultLocale": "fr",
+      "supportedLocales": ["fr", "en", "es", "de"]
+    }
+  },
+  "firebase": {
+    "services": [
+      "auth",
+      "firestore",
+      "functions",
+      "storage",
+      "messaging",
+      "analytics"
+    ],
+    "configPath": "src/config/firebase.ts",
+    "functions": {
+      "region": "europe-west1",
+      "runtime": "nodejs18"
+    }
+  },
+  "designGuidelines": {
+    "philosophy": "Beautiful, production-worthy designs - not cookie cutter",
+    "requirements": {
+      "fullFeatured": true,
+      "productionReady": true,
+      "customDesign": true,
+      "responsive": true
+    },
+    "technology": {
+      "syntax": "JSX",
+      "styling": "tailwindcss",
+      "hooks": "react",
+      "icons": "lucide-react",
+      "installPolicy": "minimal - avoid unnecessary packages"
+    },
+    "restrictions": {
+      "noUIThemes": true,
+      "noExternalIconPacks": true,
+      "useBuiltInOnly": true,
+      "exceptionPolicy": "only if absolutely necessary or explicitly requested"
+    },
+    "standards": {
+      "logos": "use lucide-react icons",
+      "components": "custom-built",
+      "animations": "tailwind + framer-motion",
+      "layout": "mobile-first responsive"
+    }
+  },
+    "framework": "react",
+    "styling": "tailwindcss",
+    "components": "custom",
+    "animations": "framer-motion",
+    "icons": "lucide-react",
+    "responsive": {
+      "mobileFirst": true,
+      "breakpoints": {
+        "sm": "640px",
+        "md": "768px",
+        "lg": "1024px",
+        "xl": "1280px"
+      }
+    },
+    "theme": {
+      "darkMode": false,
+      "borderRadius": "rounded-lg",
+      "shadows": true,
+      "transitions": "smooth"
+    }
+  },
+  "dependencies": {
+    "core": [
+      "react",
+      "react-dom",
+      "react-router-dom",
+      "typescript"
+    ],
+    "firebase": [
+      "firebase",
+      "@firebase/auth",
+      "@firebase/firestore",
+      "@firebase/functions",
+      "@firebase/storage"
+    ],
+    "ui": [
+      "tailwindcss",
+      "framer-motion",
+      "lucide-react",
+      "@headlessui/react"
+    ],
+    "utilities": [
+      "axios",
+      "date-fns",
+      "react-hot-toast",
+      "react-hook-form",
+      "zod"
+    ],
+    "pwa": [
+      "vite-plugin-pwa",
+      "workbox-webpack-plugin"
+    ]
+  },
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc && vite build",
+    "build:staging": "tsc && vite build --mode staging",
+    "preview": "vite preview",
+    "deploy": "npm run build && firebase deploy",
+    "deploy:functions": "firebase deploy --only functions",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint . --ext ts,tsx --fix",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "type-check": "tsc --noEmit",
+    "firebase:emulators": "firebase emulators:start",
+    "pwa:generate-icons": "pwa-assets-generator"
+  },
+  "buildConfig": {
+    "target": "es2020",
+    "minify": true,
+    "treeshaking": true,
+    "chunkSizeWarningLimit": 1000,
+    "rollupOptions": {
+      "output": {
+        "manualChunks": {
+          "vendor": ["react", "react-dom"],
+          "firebase": ["firebase/app", "firebase/auth", "firebase/firestore"],
+          "ui": ["framer-motion", "lucide-react"]
+        }
+      }
+    }
+  },
+  "security": {
+    "contentSecurityPolicy": false,
+    "cors": {
+      "allowedOrigins": ["*"],
+      "allowedMethods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      "allowCredentials": true
+    },
+    "firebaseRules": {
+      "firestore": "firestore.rules",
+      "storage": "storage.rules",
+      "developmentMode": true
+    },
+    "headers": {
+      "xFrameOptions": "SAMEORIGIN"
+    }
+  },
+  "monitoring": {
+    "analytics": {
+      "google": true,
+      "firebase": true
+    },
+    "errorTracking": {
+      "sentry": false,
+      "firebase": true
+    },
+    "performance": {
+      "lighthouse": true,
+      "webVitals": true
+    }
+  },
+  "deployment": {
+    "hosting": "firebase",
+    "domains": {
+      "production": "app.sosexpats.com",
+      "staging": "staging.sosexpats.com"
+    },
+    "ssl": true,
+    "cdn": true
+  }
+}

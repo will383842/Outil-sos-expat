@@ -1,0 +1,1 @@
+export default function Messages(){return <div className='rounded-2xl shadow p-4 bg-white'>Messages</div>}
