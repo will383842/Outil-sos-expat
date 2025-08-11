@@ -3,7 +3,7 @@ import Dashboard from "./pages/Dashboard";
 import Dossiers from "./pages/Dossiers";
 import Messages from "./pages/Messages";
 import Prestataires from "./pages/Prestataires";
-import Pays from "./pages/Pays";
+import Pays from "./pages/pays";
 import Parametres from "./pages/Parametres";
 import { signOut } from "firebase/auth";
 import { auth } from "../lib/firebase";

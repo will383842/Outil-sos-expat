@@ -61,6 +61,10 @@
       {
         "source": "/adminSetRole",
         "function": "setRole"
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
       }
     ]
   },
