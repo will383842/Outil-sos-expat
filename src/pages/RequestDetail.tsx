@@ -235,7 +235,7 @@ Cette approche devrait résoudre le problème d'authentification rencontré.`,
     setChatMessages(prev => [...prev, userMessage]);
 
     try {
-      const convId = (request && (request.id || request.requestId)) ? (request.id || request.requestId) : 'demo';
+      const convId = (request && (request.id)) ? (request.id) : 'demo';
       const { callChat } = await import('../services/functionsClient');
       const reply = await callChat(convId, newMessage);
 
@@ -262,35 +262,6 @@ Cette approche devrait résoudre le problème d'authentification rencontré.`,
       setNewMessage('');
       setIsLoadingChat(false);
     }
-  };
-    
-    setChatMessages(prev => [...prev, userMessage]);
-    try {
-      // If a conversation id exists, call backend; else fallback to mock
-      const convId = request.id || request.requestId || 'demo';
-      const { callChat } = await import('../services/functionsClient');
-      const reply = await callChat(convId, newMessage);
-      const aiMessage: ChatMessage = { id: Date.now().toString()+"a", role: 'assistant', content: reply, timestamp: new Date(), tokensUsed: Math.ceil(reply.length/4) };
-      setChatMessages(prev => [...prev, aiMessage]);
-    } catch (e) {
-      console.warn('Backend chat failed, falling back to mock', e);
-      // fallback to existing mock flow below
-    }
-    setNewMessage('');
-
-    // Simuler la réponse IA
-    setTimeout(() => {
-      const aiResponse: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: `Excellente question concernant "${newMessage}". En tant qu'expert en visa et immigration, voici ce que je recommande :\n\n• **Point clé 1** : La réglementation récente stipule que...\n• **Point clé 2** : Pour votre situation spécifique d'étudiante espagnole...\n• **Point clé 3** : Les délais à prévoir sont généralement...\n\nCette information est basée sur les dernières directives officielles. Souhaitez-vous que je détaille l'un de ces aspects ?`,
-        timestamp: new Date(),
-        tokensUsed: 124
-      };
-      
-      setChatMessages(prev => [...prev, aiResponse]);
-      setIsLoadingChat(false);
-    }, 2000);
   };
 
   const handleCompleteRequest = async () => {
@@ -611,7 +582,7 @@ Cette approche devrait résoudre le problème d'authentification rencontré.`,
           <button
             onClick={handleCompleteRequest}
             disabled={isCompleting}
-            className="flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-2xl hover:from-emerald-600 hover:to-green-600 transition-all duration-300 font-bold shadow-xl hover:scale-105 disabled:opacity-50"
+            className="flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-2xl hover:from-emerald-600 hover:to-green-600 transition-all durée-300 font-bold shadow-xl hover:scale-105 disabled:opacity-50"
           >
             {isCompleting ? (
               <>
