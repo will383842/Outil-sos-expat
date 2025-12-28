@@ -1,0 +1,279 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ==========================================================================
+    // FONCTIONS UTILITAIRES DE SÉCURITÉ
+    // ==========================================================================
+
+    // Vérifie si l'utilisateur est authentifié
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Récupère les données utilisateur depuis Firestore
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // Vérifie le rôle via custom claims (prioritaire) ou Firestore
+    function hasRole(role) {
+      return isSignedIn() && (
+        request.auth.token.role == role ||
+        getUserData().role == role
+      );
+    }
+
+    // Vérifie si admin
+    function isAdmin() {
+      return hasRole('admin') || hasRole('superadmin');
+    }
+
+    // Vérifie si provider
+    function isProvider() {
+      return hasRole('provider') || isAdmin();
+    }
+
+    // Vérifie si l'utilisateur a un abonnement actif
+    function hasActiveSubscription() {
+      let userData = getUserData();
+      return userData.subscriptionStatus == 'active' ||
+             userData.subscriptionStatus == 'trialing' ||
+             isAdmin();
+    }
+
+    // Vérifie si l'utilisateur est le propriétaire du document
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Vérifie si le provider est assigné au booking
+    function isAssignedProvider(providerId) {
+      let userData = getUserData();
+      return isSignedIn() && (
+        userData.linkedProviderIds.hasAny([providerId]) ||
+        userData.activeProviderId == providerId ||
+        isAdmin()
+      );
+    }
+
+    // ==========================================================================
+    // USERS - Comptes utilisateurs
+    // ==========================================================================
+    match /users/{uid} {
+      // Lecture: propre profil ou admin
+      allow read: if isOwner(uid) || isAdmin();
+
+      // Création: seulement pour son propre UID (via Auth trigger)
+      allow create: if isOwner(uid);
+
+      // Mise à jour: propre profil (champs limités) ou admin (tout)
+      // SÉCURITÉ: linkedProviderIds et activeProviderId sont protégés pour éviter l'escalade de privilèges
+      allow update: if isOwner(uid) && !request.resource.data.diff(resource.data).affectedKeys()
+        .hasAny(['role', 'subscriptionStatus', 'subscriptionId', 'isAdmin', 'linkedProviderIds', 'activeProviderId'])
+        || isAdmin();
+
+      // Suppression: admin uniquement
+      allow delete: if isAdmin();
+    }
+
+    // ==========================================================================
+    // PROVIDERS - Prestataires (avocats, experts)
+    // ==========================================================================
+    match /providers/{providerId} {
+      // Lecture: tout utilisateur authentifié avec abonnement actif
+      allow read: if isSignedIn() && (hasActiveSubscription() || isAdmin());
+
+      // Création/Modification/Suppression: admin uniquement
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /sos_profiles/{profileId} {
+      allow read: if isSignedIn() && hasActiveSubscription();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ==========================================================================
+    // BOOKINGS - Dossiers clients
+    // ==========================================================================
+    match /bookings/{bookingId} {
+      // Lecture: admin ou provider assigné
+      allow read: if isAdmin() || (
+        isProvider() &&
+        hasActiveSubscription() &&
+        isAssignedProvider(resource.data.providerId)
+      );
+
+      // Création: admin ou via webhook (vérifié côté Cloud Function)
+      allow create: if isAdmin();
+
+      // Mise à jour: admin ou provider assigné (champs limités)
+      allow update: if isAdmin() || (
+        isProvider() &&
+        hasActiveSubscription() &&
+        isAssignedProvider(resource.data.providerId) &&
+        !request.resource.data.diff(resource.data).affectedKeys()
+          .hasAny(['providerId', 'providerType', 'createdAt', 'source'])
+      );
+
+      // Suppression: admin uniquement
+      allow delete: if isAdmin();
+    }
+
+    // ==========================================================================
+    // CONVERSATIONS - Discussions avec sous-collection messages
+    // ==========================================================================
+    match /conversations/{convId} {
+      // Lecture: admin ou provider assigné
+      allow read: if isAdmin() || (
+        isProvider() &&
+        hasActiveSubscription() &&
+        isAssignedProvider(resource.data.providerId)
+      );
+
+      // Création: admin ou système (Cloud Functions)
+      allow create: if isAdmin();
+
+      // Mise à jour: admin ou provider assigné
+      allow update: if isAdmin() || (
+        isProvider() &&
+        hasActiveSubscription() &&
+        isAssignedProvider(resource.data.providerId)
+      );
+
+      // Suppression: admin uniquement
+      allow delete: if isAdmin();
+
+      // Messages dans la conversation
+      match /messages/{msgId} {
+        // Lecture: même règle que la conversation parente
+        allow read: if isAdmin() || (
+          isProvider() &&
+          hasActiveSubscription() &&
+          isAssignedProvider(get(/databases/$(database)/documents/conversations/$(convId)).data.providerId)
+        );
+
+        // Création: admin, provider assigné, ou système
+        allow create: if isAdmin() || (
+          isProvider() &&
+          hasActiveSubscription() &&
+          isAssignedProvider(get(/databases/$(database)/documents/conversations/$(convId)).data.providerId)
+        );
+
+        // Mise à jour/Suppression: admin uniquement
+        allow update, delete: if isAdmin();
+      }
+    }
+
+    // ==========================================================================
+    // MESSAGES - Collection plate (legacy, si utilisée)
+    // ==========================================================================
+    match /messages/{messageId} {
+      allow read: if isSignedIn() && hasActiveSubscription();
+      allow create: if isProvider() && hasActiveSubscription();
+      allow update, delete: if isAdmin();
+    }
+
+    // ==========================================================================
+    // SETTINGS - Paramètres globaux (IA, système)
+    // ==========================================================================
+    match /settings/{settingId} {
+      // Lecture: admin et providers avec abonnement
+      allow read: if isSignedIn() && (isAdmin() || hasActiveSubscription());
+
+      // Écriture: admin uniquement
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /config/{configId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // ==========================================================================
+    // COUNTRY CONFIGS - Configuration par pays
+    // ==========================================================================
+    match /countryConfigs/{countryCode} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ==========================================================================
+    // SUBSCRIPTIONS - Abonnements (synchronisé depuis Laravel)
+    // ==========================================================================
+    match /subscriptions/{subId} {
+      // Lecture: propre abonnement ou admin
+      allow read: if isAdmin() || resource.data.userId == request.auth.uid;
+
+      // Écriture: uniquement via Cloud Functions (webhook Laravel)
+      allow create, update, delete: if false;
+    }
+
+    // ==========================================================================
+    // OPS - Opérations système (rate limiting, maintenance)
+    // ==========================================================================
+    match /ops/{document=**} {
+      // Lecture: admin uniquement
+      allow read: if isAdmin();
+
+      // Écriture: via Cloud Functions uniquement
+      allow create, update, delete: if false;
+    }
+
+    // ==========================================================================
+    // NOTIFICATIONS
+    // ==========================================================================
+    match /notifications/{notifId} {
+      // Lecture: propres notifications ou admin
+      allow read: if isAdmin() || resource.data.userId == request.auth.uid;
+
+      // Création: système uniquement
+      allow create: if isAdmin();
+
+      // Mise à jour: marquer comme lu
+      allow update: if resource.data.userId == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead', 'readAt']);
+
+      allow delete: if isAdmin();
+    }
+
+    // ==========================================================================
+    // LOGS / AUDIT
+    // ==========================================================================
+    match /logs/{logId} {
+      // Lecture: admin uniquement
+      allow read: if isAdmin();
+
+      // Écriture: via Cloud Functions uniquement
+      allow create, update, delete: if false;
+    }
+
+    match /auditLogs/{logId} {
+      allow read: if isAdmin();
+      allow create, update, delete: if false;
+    }
+
+    // ==========================================================================
+    // STATS / ANALYTICS
+    // ==========================================================================
+    match /stats/{statId} {
+      allow read: if isAdmin();
+      allow create, update, delete: if false;
+    }
+
+    // ==========================================================================
+    // INGEST BOOKINGS - Webhook temporaire
+    // ==========================================================================
+    match /ingestBookings/{docId} {
+      allow read: if isAdmin();
+      allow create, update, delete: if false;
+    }
+
+    // ==========================================================================
+    // CATCH-ALL - Refuser tout le reste par défaut
+    // ==========================================================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

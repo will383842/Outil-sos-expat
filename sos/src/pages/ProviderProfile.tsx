@@ -1,0 +1,2978 @@
+// src/pages/ProviderProfile.tsx - VERSION FUSIONNÉE COMPLÈTE
+import React, { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { parseLocaleFromPath, getLocaleString } from "../utils/localeRoutes";
+import {
+  Star,
+  MapPin,
+  Phone,
+  Shield,
+  Award,
+  Globe,
+  Users,
+  Share2,
+  Facebook,
+  Twitter,
+  Linkedin,
+  GraduationCap,
+  Briefcase,
+  Languages as LanguagesIcon,
+  AlertTriangle,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Sparkles,
+  ArrowLeft,
+  TrendingUp,
+  User,
+  HelpCircle,
+  X,
+} from "lucide-react";
+import {
+  doc,
+  getDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+  limit,
+  onSnapshot,
+  Timestamp as FsTimestamp,
+} from "firebase/firestore";
+import { db } from "../config/firebase";
+import Layout from "../components/layout/Layout";
+import LoadingSpinner from "../components/common/LoadingSpinner";
+import { useAuth } from "../contexts/AuthContext";
+import { useApp } from "../contexts/AppContext";
+import {
+  logAnalyticsEvent,
+  getProviderReviews,
+  incrementReviewHelpfulCount,
+  reportReview,
+  normalizeUserData,
+} from "../utils/firestore";
+import SEOHead from "../components/layout/SEOHead";
+import { Review } from "../types";
+
+// 👉 Lazy load du composant Reviews (non critique au premier rendu)
+const Reviews = lazy(() => import("../components/review/Reviews"));
+
+// 👉 Pricing admin
+import { usePricingConfig } from "../services/pricingService";
+
+// Imports des traductions AAA
+import aaaTranslationsFr from '../helper/aaaprofiles/admin_aaa_fr.json';
+import aaaTranslationsEn from '../helper/aaaprofiles/admin_aaa_en.json';
+import aaaTranslationsEs from '../helper/aaaprofiles/admin_aaa_es.json';
+import aaaTranslationsDe from '../helper/aaaprofiles/admin_aaa_de.json';
+import aaaTranslationsPt from '../helper/aaaprofiles/admin_aaa_pt.json';
+import aaaTranslationsRu from '../helper/aaaprofiles/admin_aaa_ru.json';
+import aaaTranslationsZh from '../helper/aaaprofiles/admin_aaa_zh.json';
+import aaaTranslationsAr from '../helper/aaaprofiles/admin_aaa_ar.json';
+import aaaTranslationsHi from '../helper/aaaprofiles/admin_aaa_hi.json';
+import { 
+  getCountryName, 
+  formatLanguages,
+  convertLanguageNamesToCodes
+} from "../utils/formatters";
+
+// ✅ Import du système de slugs
+import { 
+  generateSlug, 
+  formatPublicName,
+  slugify 
+} from "../utils/slugGenerator";
+import { useSnippetGenerator } from '../hooks/useSnippetGenerator';
+
+// 👉 Translation system
+import { useProviderTranslation } from "../hooks/useProviderTranslation";
+import { TranslationBanner } from "../components/provider/TranslationBanner";
+import { type SupportedLanguage } from "../services/providerTranslationService";
+import { getTranslatedRouteSlug } from "../multilingual-system";
+
+const aaaTranslationsMap: Record<string, any> = {
+  fr: aaaTranslationsFr,
+  en: aaaTranslationsEn,
+  es: aaaTranslationsEs,
+  de: aaaTranslationsDe,
+  pt: aaaTranslationsPt,
+  ru: aaaTranslationsRu,
+  zh: aaaTranslationsZh,
+  ar: aaaTranslationsAr,
+  hi: aaaTranslationsHi,
+};
+
+import { FormattedMessage, useIntl } from "react-intl";
+import { getLawyerSpecialityLabel } from "../data/lawyer-specialties";
+import { getExpatHelpTypeLabel } from "../data/expat-help-types";
+
+/* ===================================================================== */
+/* CONSTANTES OPTIMISÉES                                                */
+/* ===================================================================== */
+
+const IMAGE_SIZES = {
+  AVATAR_MOBILE: 96,
+  AVATAR_DESKTOP: 128,
+  MODAL_MAX_WIDTH: 1200,
+  MODAL_MAX_HEIGHT: 800,
+  THUMBNAIL_WIDTH: 400,
+  THUMBNAIL_HEIGHT: 400,
+} as const;
+
+const ANIMATION_DURATIONS = {
+  STATUS_TRANSITION: 500,
+  LOADING_DELAY: 2500,
+} as const;
+
+const STORAGE_KEYS = {
+  SELECTED_PROVIDER: "selectedProvider",
+} as const;
+
+const SUCCESSFUL_CALL_THRESHOLD_SECONDS = 120; // 2 minutes
+
+// ✅ Cache configuration
+const CACHE_CONFIG = {
+  PROFILE_TTL: 5 * 60 * 1000, // 5 minutes
+  STATS_TTL: 2 * 60 * 1000, // 2 minutes
+  REVIEWS_TTL: 3 * 60 * 1000, // 3 minutes
+} as const;
+
+type TSLike = FsTimestamp | Date | null | undefined;
+
+/* ===================================================================== */
+/* TYPES                                                                */
+/* ===================================================================== */
+
+interface LocalizedText {
+  fr?: string;
+  en?: string;
+  [key: string]: string | undefined;
+}
+
+interface Education {
+  institution?: string | LocalizedText;
+  degree?: string | LocalizedText;
+  year?: number;
+  [key: string]: unknown;
+}
+
+interface Certification {
+  name?: string | LocalizedText;
+  issuer?: string | LocalizedText;
+  year?: number;
+  [key: string]: unknown;
+}
+
+type AuthUser = {
+  uid?: string;
+  id?: string;
+} & Partial<import("../contexts/types").User>;
+
+interface LocationState {
+  selectedProvider?: Partial<SosProfile>;
+  providerData?: Partial<SosProfile>;
+  navigationSource?: string;
+}
+
+interface SosProfile {
+  uid: string;
+  id?: string;
+  type: "lawyer" | "expat";
+  fullName: string;
+  firstName: string;
+  lastName: string;
+  slug?: string;
+  country: string;
+  city?: string;
+  residenceCountry?: string;
+  operatingCountries?: string[];
+  languages: string[];
+  mainLanguage?: string;
+  specialties: string[];
+  helpTypes?: string[];
+  description?: string | LocalizedText;
+  professionalDescription?: string | LocalizedText;
+  experienceDescription?: string | LocalizedText;
+  motivation?: string | LocalizedText;
+  bio?: string | LocalizedText;
+  profilePhoto?: string;
+  photoURL?: string;
+  avatar?: string;
+  rating: number;
+  reviewCount: number;
+  yearsOfExperience: number;
+  yearsAsExpat?: number;
+  isOnline?: boolean;
+  isActive: boolean;
+  isApproved: boolean;
+  isVerified: boolean;
+  isVisibleOnMap?: boolean;
+  education?: Education | Education[] | LocalizedText;
+  certifications?: Certification | Certification[] | LocalizedText;
+  lawSchool?: string | LocalizedText;
+  graduationYear?: number;
+  responseTime?: string;
+  successRate?: number;
+  totalCalls?: number;
+  successfulCalls?: number;
+  totalResponses?: number;
+  totalResponseTime?: number;
+  avgResponseTimeMs?: number;
+  createdAt?: TSLike;
+  updatedAt?: TSLike;
+  lastSeen?: TSLike;
+}
+
+interface RatingDistribution {
+  5: number;
+  4: number;
+  3: number;
+  2: number;
+  1: number;
+}
+
+interface OnlineStatus {
+  isOnline: boolean;
+  lastUpdate: Date | null;
+  listenerActive: boolean;
+  connectionAttempts: number;
+}
+
+interface ProviderStats {
+  totalCallsReceived: number;
+  successfulCalls: number;
+  successRate: number;
+  averageRating: number;
+  totalReviews: number;
+  completedCalls: number;
+  realReviewsCount: number;
+}
+
+interface RouteParams extends Record<string, string | undefined> {
+  id?: string;
+  country?: string;
+  language?: string;
+  type?: string;
+  slug?: string;
+  profileId?: string;
+  name?: string;
+  nameSlug?: string;
+  typeCountry?: string;
+  locale?: string;
+  localeRegion?: string;
+  lang?: string;
+  nameSlugWithUid?: string;
+}
+
+/* ===================================================================== */
+/* UTILS FUNCTIONS                                                      */
+/* ===================================================================== */
+
+const detectLanguage = (): "fr" | "en" =>
+  typeof navigator !== "undefined" && navigator.language
+    ? navigator.language.toLowerCase().startsWith("fr")
+      ? "fr"
+      : "en"
+    : "en";
+
+const safeNormalize = (v?: string): string =>
+  (v || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+const getFirstString = (
+  val: unknown,
+  preferred?: string
+): string | undefined => {
+  if (!val) return undefined;
+  if (typeof val === "string") return val.trim() || undefined;
+  if (Array.isArray(val)) {
+    const arr = val
+      .map((x) => getFirstString(x, preferred))
+      .filter((x): x is string => Boolean(x));
+    return arr.length ? arr.join(", ") : undefined;
+  }
+  if (typeof val === "object" && val !== null) {
+    const obj = val as Record<string, unknown>;
+    if (preferred && typeof obj[preferred] === "string") {
+      const s = (obj[preferred] as string).trim();
+      if (s) return s;
+    }
+    for (const k of Object.keys(obj)) {
+      const v = obj[k];
+      if (typeof v === "string" && v.trim()) return v.trim();
+    }
+  }
+  return undefined;
+};
+
+const toArrayFromAny = (val: unknown, preferred?: string): string[] => {
+  if (!val) return [];
+  if (Array.isArray(val)) {
+    return val
+      .map((x) =>
+        typeof x === "string" ? x : getFirstString(x, preferred) || ""
+      )
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+  if (typeof val === "string")
+    return val
+      .split(/[;,]/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+  if (typeof val === "object" && val !== null) {
+    const obj = val as Record<string, unknown>;
+    return Object.values(obj)
+      .map((v) =>
+        typeof v === "string" ? v : getFirstString(v, preferred) || ""
+      )
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+  return [];
+};
+
+const pickDescription = (
+  p: Partial<SosProfile>,
+  preferredLang?: string,
+  intl?: any
+): string => {
+  const chain = [
+    getFirstString(p.description, preferredLang),
+    getFirstString(p.bio, preferredLang),
+    getFirstString(p.professionalDescription, preferredLang),
+    getFirstString(p.experienceDescription, preferredLang),
+  ];
+  return (
+    chain.find(Boolean) ||
+    (intl ? intl.formatMessage({ id: "providerProfile.noDescriptionAvailable" }) : "")
+  );
+};
+
+const toStringFromAny = (
+  val: unknown,
+  preferred?: string
+): string | undefined => getFirstString(val, preferred);
+
+const isFsTimestamp = (v: unknown): v is FsTimestamp =>
+  typeof (v as FsTimestamp | null)?.toDate === "function";
+
+// Format avec tiret pour HTML lang attribute
+const LOCALE_MAPPING: Record<string, string> = {
+  'fr': 'fr-FR',
+  'en': 'en-US',
+  'es': 'es-ES',
+  'de': 'de-DE',
+  'pt': 'pt-PT',
+  'ru': 'ru-RU',
+  'zh': 'zh-CN',
+  'ar': 'ar-SA',
+  'hi': 'hi-IN'
+};
+
+// Format avec underscore pour Open Graph og:locale
+const OG_LOCALE_MAPPING: Record<string, string> = {
+  'fr': 'fr_FR',
+  'en': 'en_US',
+  'es': 'es_ES',
+  'de': 'de_DE',
+  'pt': 'pt_BR',
+  'ru': 'ru_RU',
+  'zh': 'zh_CN',
+  'ar': 'ar_SA',
+  'hi': 'hi_IN'
+};
+
+const formatJoinDate = (val: TSLike, langCode: string): string | undefined => {
+  if (!val) return undefined;
+  const d = isFsTimestamp(val)
+    ? val.toDate()
+    : val instanceof Date 
+      ? val
+      : undefined;
+  if (!d) return undefined;
+  
+  const locale = LOCALE_MAPPING[langCode] || 'fr-FR';
+  const fmt = new Intl.DateTimeFormat(locale, {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+  return fmt.format(d);
+};
+
+const formatEUR = (value?: number) => {
+  if (typeof value !== "number") return "—";
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "EUR",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(value);
+};
+
+const formatUSD = (value?: number) => {
+  if (typeof value !== "number") return "$—";
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(value);
+};
+
+const getAuthUserId = (u: unknown): string | undefined => {
+  if (!u || (typeof u !== "object" && typeof u !== "function"))
+    return undefined;
+  const maybe = u as { uid?: unknown; id?: unknown };
+  const uid =
+    typeof maybe.uid === "string" && maybe.uid.trim() ? maybe.uid : undefined;
+  const id =
+    typeof maybe.id === "string" && maybe.id.trim() ? maybe.id : undefined;
+  return uid ?? id;
+};
+
+const formatShortName = (provider: SosProfile): string => {
+  const firstName = provider.firstName || "";
+  const lastName = provider.lastName || "";
+  const lastInitial = lastName.charAt(0).toUpperCase();
+  return lastInitial ? `${firstName} ${lastInitial}.` : firstName;
+};
+
+// ✅ Fonction de sanitization pour sécurité
+const sanitizeHTML = (html: string): string => {
+  const tempDiv = document.createElement('div');
+  tempDiv.textContent = html;
+  return tempDiv.innerHTML;
+};
+
+// ✅ Cache simple en mémoire
+class SimpleCache {
+  private cache = new Map<string, { data: any; timestamp: number }>();
+
+  set(key: string, data: any, ttl: number): void {
+    this.cache.set(key, { data, timestamp: Date.now() + ttl });
+  }
+
+  get<T>(key: string): T | null {
+    const entry = this.cache.get(key);
+    if (!entry) return null;
+    if (Date.now() > entry.timestamp) {
+      this.cache.delete(key);
+      return null;
+    }
+    return entry.data as T;
+  }
+
+  clear(): void {
+    this.cache.clear();
+  }
+}
+
+const cache = new SimpleCache();
+
+/* ===================================================================== */
+/* CALCUL DES STATISTIQUES                                              */
+/* ===================================================================== */
+
+const calculateProviderStats = async (providerId: string): Promise<ProviderStats> => {
+  // ✅ Vérifier le cache d'abord
+  const cacheKey = `stats_${providerId}`;
+  const cached = cache.get<ProviderStats>(cacheKey);
+  if (cached) return cached;
+
+  try {
+    const callSessionsQuery = query(
+      collection(db, "call_sessions"),
+      where("metadata.providerId", "==", providerId)
+    );
+    const callSessionsSnapshot = await getDocs(callSessionsQuery);
+    
+    let totalCallsReceived = 0;
+    let successfulCalls = 0;
+    let completedCalls = 0;
+
+    callSessionsSnapshot.forEach((doc) => {
+      const data = doc.data();
+      totalCallsReceived++;
+      
+      if (data.status === "completed" || data.endedAt) {
+        completedCalls++;
+        
+        const startedAt = data.startedAt?.toDate?.() || data.createdAt?.toDate?.();
+        const endedAt = data.endedAt?.toDate?.();
+        
+        if (startedAt && endedAt) {
+          const durationSeconds = (endedAt.getTime() - startedAt.getTime()) / 1000;
+          
+          if (durationSeconds >= SUCCESSFUL_CALL_THRESHOLD_SECONDS) {
+            successfulCalls++;
+          }
+        }
+      }
+    });
+
+    const reviewsQuery = query(
+      collection(db, "reviews"),
+      where("providerId", "==", providerId),
+      where("isPublic", "==", true)
+    );
+    const reviewsSnapshot = await getDocs(reviewsQuery);
+    
+    let totalRating = 0;
+    let totalReviews = 0;
+    let realReviewsCount = 0;
+
+    reviewsSnapshot.forEach((doc) => {
+  const data = doc.data();
+  
+  if (typeof data.rating === "number") {
+    totalRating += data.rating;
+    realReviewsCount++;
+    totalReviews++;
+  }
+});
+
+    const averageRating = realReviewsCount > 0 ? totalRating / realReviewsCount : 0;
+    const successRate = totalCallsReceived > 0 
+      ? Math.round((successfulCalls / totalCallsReceived) * 100) 
+      : 0;
+
+    const stats = {
+      totalCallsReceived,
+      successfulCalls,
+      successRate,
+      averageRating,
+      totalReviews,
+      completedCalls,
+      realReviewsCount,
+    };
+
+    // ✅ Mettre en cache
+    cache.set(cacheKey, stats, CACHE_CONFIG.STATS_TTL);
+
+    return stats;
+  } catch (error) {
+    console.error("Error calculating provider stats:", error);
+    return {
+      totalCallsReceived: 0,
+      successfulCalls: 0,
+      successRate: 0,
+      averageRating: 0,
+      totalReviews: 0,
+      completedCalls: 0,
+      realReviewsCount: 0,
+    };
+  }
+};
+
+
+
+/* ===================================================================== */
+/* COMPOSANT PRINCIPAL                                                   */
+/* ===================================================================== */
+
+const ProviderProfile: React.FC = () => {
+  const intl = useIntl();
+  const params = useParams<RouteParams>();
+  const {
+    id,
+    country: countryParam,
+    language: langParam,
+    type: typeParam,
+    nameSlug,
+    typeCountry,
+  } = params;
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { language } = useApp();
+
+  const detectedLang = useMemo(
+    () =>
+      language === "fr" || language === "en"
+        ? (language as "fr" | "en")
+        : detectLanguage(),
+    [language]
+  );
+
+  const preferredLangKey = useMemo(() => {
+    const validLocales = ['fr', 'en', 'es', 'de', 'pt', 'ru', 'ch', 'ar', 'hi'] as const;
+    type ValidLocale = typeof validLocales[number];
+    
+    if (validLocales.includes(language as ValidLocale)) {
+      return language as ValidLocale;
+    }
+    if (validLocales.includes(detectedLang as ValidLocale)) {
+      return detectedLang as ValidLocale;
+    }
+    return 'en' as ValidLocale;
+  }, [language, detectedLang]);
+
+  const translateAAA = useCallback((key: string): string => {
+    if (!key) return '';
+    
+    try {
+      const keys = key.split('.');
+      const translations = aaaTranslationsMap[preferredLangKey] || aaaTranslationsMap['fr'];
+      let value: any = translations;
+      
+      for (const k of keys) {
+        value = value?.[k];
+      }
+      
+      return typeof value === 'string' ? value : key;
+    } catch {
+      return key;
+    }
+  }, [preferredLangKey]);
+
+  const [provider, setProvider] = useState<SosProfile | null>(null);
+  const [realProviderId, setRealProviderId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+
+  // Translation system
+  const { locale: currentLocale, lang: currentLang } = parseLocaleFromPath(location.pathname);
+  const targetLanguage: SupportedLanguage = (currentLang?.toLowerCase() as SupportedLanguage) || 'en';
+  // Always show original first, then switch to translated when user selects a language
+  const [showOriginal, setShowOriginal] = useState(true);
+  // Track which language translation we're currently viewing
+  const [viewingLanguage, setViewingLanguage] = useState<SupportedLanguage | null>(null);
+  
+  // Use ref to track if we're actively viewing a translation (prevents state resets)
+  const viewingLanguageRef = useRef<SupportedLanguage | null>(null);
+  
+  // Sync ref with state
+  useEffect(() => {
+    viewingLanguageRef.current = viewingLanguage;
+  }, [viewingLanguage]);
+  
+  // Only load translation if user explicitly selected a language to view
+  // On initial load, don't load any translation - always show original
+  const translationLanguage = viewingLanguage || null; // Don't use targetLanguage on initial load
+  const {
+    translation,
+    original: originalTranslation,
+    availableLanguages,
+    isLoading: isTranslationLoading,
+    translate,
+    reloadForLanguage,
+    error: translationError,
+  } = useProviderTranslation(realProviderId, viewingLanguage || null); // Never use targetLanguage here to prevent unwanted reloads
+
+  // Preserve translation view state when translation data changes
+  useEffect(() => {
+    // If we're viewing a translation and translation data exists, ensure state is preserved
+    if (viewingLanguageRef.current && translation && !showOriginal) {
+      // State is already correct, but ensure it stays that way
+      // This prevents reverting to original when translation data reloads
+      console.log('[ProviderProfile] Preserving translation view for:', viewingLanguageRef.current);
+      // Force state to remain if it somehow got reset
+      if (viewingLanguage !== viewingLanguageRef.current) {
+        console.log('[ProviderProfile] State mismatch detected, restoring viewingLanguage');
+        setViewingLanguage(viewingLanguageRef.current);
+        setShowOriginal(false);
+      }
+    }
+  }, [translation, viewingLanguage, showOriginal]);
+
+  const [providerStats, setProviderStats] = useState<ProviderStats>({
+    totalCallsReceived: 0,
+    successfulCalls: 0,
+    successRate: 0,
+    averageRating: 0,
+    totalReviews: 0,
+    completedCalls: 0,
+    realReviewsCount: 0,
+  });
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
+
+  const { pricing } = usePricingConfig();
+
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [isLoadingReviews, setIsLoadingReviews] = useState(true);
+  const [ratingDistribution, setRatingDistribution] =
+    useState<RatingDistribution>({ 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 });
+  const [showImageModal, setShowImageModal] = useState(false);
+
+  const [onlineStatus, setOnlineStatus] = useState<OnlineStatus>({
+    isOnline: false,
+    lastUpdate: null,
+    listenerActive: false,
+    connectionAttempts: 0,
+  });
+
+  const [isOnCall, setIsOnCall] = useState(false);
+
+  const [activePromo, setActivePromo] = useState<{
+    code: string;
+    discountType: "percentage" | "fixed";
+    discountValue: number;
+    services: string[];
+  } | null>(null);
+
+  const seoUpdatedRef = useRef(false);
+  const lastUrlRef = useRef<string>('');
+  const providerLoadedRef = useRef(false);
+
+  useEffect(() => {
+    seoUpdatedRef.current = false;
+    lastUrlRef.current = '';
+    providerLoadedRef.current = false;
+  }, [id, params.slug, params.profileId]);
+
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem("activePromoCode");
+      if (saved) {
+        const promoData = JSON.parse(saved);
+        setActivePromo(promoData);
+      }
+    } catch (error) {
+      console.error("Error loading active promo:", error);
+    }
+  }, []);
+
+  const serviceTypeForPricing: "lawyer" | "expat" | undefined = provider?.type;
+
+  const bookingPrice = useMemo(() => {
+    if (!pricing || !serviceTypeForPricing) return null;
+
+    const cfg = pricing[serviceTypeForPricing];
+    const baseEur = cfg.eur.totalAmount;
+    const baseUsd = cfg.usd.totalAmount;
+
+    const serviceKey =
+      serviceTypeForPricing === "lawyer" ? "lawyer_call" : "expat_call";
+    const promoApplies =
+      activePromo && activePromo.services.includes(serviceKey);
+
+    let finalEur = baseEur;
+    let finalUsd = baseUsd;
+    let discountEur = 0;
+    let discountUsd = 0;
+
+    if (promoApplies) {
+      if (activePromo.discountType === "percentage") {
+        discountEur = baseEur * (activePromo.discountValue / 100);
+        discountUsd = baseUsd * (activePromo.discountValue / 100);
+      } else {
+        discountEur = Math.min(activePromo.discountValue, baseEur);
+        discountUsd = Math.min(
+          activePromo.discountValue * (baseUsd / baseEur),
+          baseUsd
+        );
+      }
+
+      finalEur = Math.max(0, baseEur - discountEur);
+      finalUsd = Math.max(0, baseUsd - discountUsd);
+    }
+
+    return {
+      eur: Math.round(finalEur),
+      usd: Math.round(finalUsd),
+      originalEur: baseEur,
+      originalUsd: baseUsd,
+      discountEur: Math.round(discountEur),
+      discountUsd: Math.round(discountUsd),
+      hasDiscount: promoApplies,
+      duration: cfg.eur.duration,
+      promoCode: promoApplies ? activePromo.code : null,
+    };
+  }, [pricing, serviceTypeForPricing, activePromo]);
+
+  const realLoadReviews = useCallback(
+    async (providerId: string): Promise<Review[]> => {
+      const cacheKey = `reviews_${providerId}`;
+      const cached = cache.get<Review[]>(cacheKey);
+      if (cached) return cached;
+
+      try {
+        const arr = await getProviderReviews(providerId);
+        const reviews = Array.isArray(arr) ? arr : [];
+        
+        cache.set(cacheKey, reviews, CACHE_CONFIG.REVIEWS_TTL);
+        
+        return reviews;
+      } catch {
+        return [];
+      }
+    },
+    []
+  );
+
+  const loadReviews = useCallback(
+    async (docId: string, uid?: string): Promise<void> => {
+      try {
+        setIsLoadingReviews(true);
+        const candidates = [docId, uid].filter((x): x is string => Boolean(x));
+        let providerReviews: Review[] = [];
+        
+        for (const pid of candidates) {
+          providerReviews = await realLoadReviews(pid);
+          if (providerReviews.length) break;
+        }
+        
+        const translatedReviews = providerReviews.map(review => {
+          const reviewWithKey = review as any;
+          
+          const translatedComment = reviewWithKey.commentKey 
+            ? translateAAA(reviewWithKey.commentKey)
+            : review.comment;
+          
+          return { 
+            ...review, 
+            comment: translatedComment 
+          };
+        });
+        
+        setReviews(translatedReviews);
+        
+        const distribution: RatingDistribution = {
+          5: 0,
+          4: 0,
+          3: 0,
+          2: 0,
+          1: 0,
+        };
+        
+        translatedReviews.forEach((r) => {
+          const rr = Math.max(
+            1,
+            Math.min(5, Math.round(r.rating))
+          ) as keyof RatingDistribution;
+          distribution[rr] += 1;
+        });
+        
+        setRatingDistribution(distribution);
+      } catch (e) {
+        console.error("Error loading reviews:", e);
+      } finally {
+        setIsLoadingReviews(false);
+      }
+    },
+    [realLoadReviews, translateAAA]
+  );
+
+  useEffect(() => {
+    const loadProviderData = async (): Promise<void> => {
+      if (providerLoadedRef.current) return;
+      
+      setIsLoading(true);
+      setNotFound(false);
+
+      try {
+        let providerData: SosProfile | null = null;
+        let foundProviderId: string | null = null;
+
+        const possibleIds = [
+          id,
+          params.slug,
+          params.profileId,
+          params.name,
+          params.nameSlug,
+          params.nameId,
+          params.nameSlugWithUid,
+          location.pathname.split("/").pop(),
+        ].filter((x): x is string => Boolean(x));
+
+        const potentialUids = new Set<string>();
+        
+        for (const rawId of possibleIds) {
+          potentialUids.add(rawId);
+          
+          const uidMatch = rawId.match(/[a-zA-Z0-9]{8,}$/);
+          if (uidMatch) {
+            potentialUids.add(uidMatch[0]);
+          }
+          
+          const lastToken = rawId.split("-").pop();
+          if (lastToken && lastToken.length >= 8) {
+            potentialUids.add(lastToken);
+          }
+        }
+
+        for (const testId of potentialUids) {
+          if (providerData) break;
+
+          try {
+            const ref = doc(db, "sos_profiles", testId);
+            const snap = await getDoc(ref);
+            if (snap.exists()) {
+              const data = snap.data();
+              const normalized = normalizeUserData(data, snap.id);
+              const { type: _type, education: _education, ...restNormalized } = normalized as any;
+              const safeType: "lawyer" | "expat" = (data?.type === "lawyer" || data?.type === "expat") ? data.type : "expat";
+              const safeProvider = { ...restNormalized, type: safeType, ...data };
+              providerData = {
+              ...restNormalized,
+              id: snap.id,
+              uid: normalized.uid || snap.id,
+              type: safeType,
+              description: pickDescription(safeProvider as any, preferredLangKey, intl),
+              specialties: toArrayFromAny(data?.specialties, preferredLangKey),
+              helpTypes: toArrayFromAny(data?.helpTypes, preferredLangKey),
+              operatingCountries: toArrayFromAny(data?.operatingCountries, preferredLangKey),
+              residenceCountry: data?.residenceCountry || data?.country,
+              education: data?.education,
+              yearsOfExperience: data?.yearsOfExperience || 0,
+              yearsAsExpat: data?.yearsAsExpat || data?.yearsOfExperience || 0,
+              rating: data?.rating || data?.averageRating || 0,
+              reviewCount: data?.reviewCount || 0,
+              totalCalls: data?.totalCalls || 0,
+              createdAt: data?.createdAt,
+            } as SosProfile;
+            foundProviderId = snap.id;
+            break;
+            }
+          } catch (e) {
+            console.warn('Error searching by doc ID:', testId, e);
+          }
+
+          try {
+            const qByUid = query(
+              collection(db, "sos_profiles"),
+              where("uid", "==", testId),
+              limit(1)
+            );
+            const qsUid = await getDocs(qByUid);
+            if (!qsUid.empty) {
+              const found = qsUid.docs[0];
+              const data = found.data();
+              const normalized = normalizeUserData(data, found.id);
+              const { type: _type, education: _education, ...restNormalized } = normalized as any;
+              const safeType: "lawyer" | "expat" = (data?.type === "lawyer" || data?.type === "expat") ? data.type : "expat";
+              const safeProvider = { ...restNormalized, type: safeType, ...data };
+              providerData = {
+              ...restNormalized,
+              id: found.id,
+              uid: normalized.uid || found.id,
+              type: safeType,
+              description: pickDescription(safeProvider as any, preferredLangKey, intl),
+              specialties: toArrayFromAny(data?.specialties, preferredLangKey),
+              helpTypes: toArrayFromAny(data?.helpTypes, preferredLangKey),
+              operatingCountries: toArrayFromAny(data?.operatingCountries, preferredLangKey),
+              residenceCountry: data?.residenceCountry || data?.country,
+              education: data?.education,
+              yearsOfExperience: data?.yearsOfExperience || 0,
+              yearsAsExpat: data?.yearsAsExpat || data?.yearsOfExperience || 0,
+              rating: data?.rating || data?.averageRating || 0,
+              reviewCount: data?.reviewCount || 0,
+              totalCalls: data?.totalCalls || 0,
+              createdAt: data?.createdAt,
+            } as SosProfile;
+            foundProviderId = found.id;
+            break;
+            }
+          } catch (e) {
+            console.warn('Error searching by uid:', testId, e);
+          }
+        }
+
+        if (!providerData && possibleIds.length > 0) {
+          const slugNoUid = possibleIds[0].replace(/-[a-zA-Z0-9]{8,}$/, "");
+          
+          try {
+            const qSlug = query(
+              collection(db, "sos_profiles"),
+              where("slug", "==", slugNoUid),
+              limit(1)
+            );
+            const qsSlug = await getDocs(qSlug);
+            if (!qsSlug.empty) {
+              const m = qsSlug.docs[0];
+              const data = m.data();
+              const normalized = normalizeUserData(data, m.id);
+              const { type: _type, education: _education, ...restNormalized } = normalized as any;
+              const safeType: "lawyer" | "expat" = (data?.type === "lawyer" || data?.type === "expat") ? data.type : "expat";
+              const safeProvider = { ...restNormalized, type: safeType, ...data };
+              providerData = {
+              ...restNormalized,
+              id: m.id,
+              uid: normalized.uid || m.id,
+              type: safeType,
+              description: pickDescription(safeProvider as any, preferredLangKey, intl),
+              specialties: toArrayFromAny(data?.specialties, preferredLangKey),
+              helpTypes: toArrayFromAny(data?.helpTypes, preferredLangKey),
+              operatingCountries: toArrayFromAny(data?.operatingCountries, preferredLangKey),
+              residenceCountry: data?.residenceCountry || data?.country,
+              education: data?.education,
+              yearsOfExperience: data?.yearsOfExperience || 0,
+              yearsAsExpat: data?.yearsAsExpat || data?.yearsOfExperience || 0,
+              rating: data?.rating || data?.averageRating || 0,
+              reviewCount: data?.reviewCount || 0,
+              totalCalls: data?.totalCalls || 0,
+              createdAt: data?.createdAt,
+            } as SosProfile;
+            foundProviderId = m.id;
+            }
+          } catch (e) {
+            console.warn('Error searching by slug:', e);
+          }
+        }
+
+        if (!providerData && location.state) {
+          const state = location.state as LocationState;
+          const navData = state.selectedProvider || state.providerData;
+          if (navData) {
+            providerData = {
+              uid: navData.id || "",
+              id: navData.id || "",
+              fullName: navData.fullName || `${navData.firstName || ""} ${navData.lastName || ""}`.trim(),
+              firstName: navData.firstName || "",
+              lastName: navData.lastName || "",
+              type: navData.type === "lawyer" ? "lawyer" : "expat",
+              country: navData.country || "",
+              languages: navData.languages || [],
+              specialties: toArrayFromAny(navData.specialties, preferredLangKey),
+              helpTypes: toArrayFromAny(navData.helpTypes, preferredLangKey),
+              description: navData.description || navData.bio || "",
+              profilePhoto: navData.profilePhoto || navData.avatar,
+              rating: Number(navData.rating) || 0,
+              reviewCount: Number(navData.reviewCount) || 0,
+              yearsOfExperience: Number(navData.yearsOfExperience) || 0,
+              yearsAsExpat: Number(navData.yearsAsExpat) || Number(navData.yearsOfExperience) || 0,
+              totalCalls: Number(navData.totalCalls) || 0,
+              createdAt: navData.createdAt,
+              isActive: true,
+              isApproved: true,
+              isVerified: !!navData.isVerified,
+              operatingCountries: toArrayFromAny(navData.operatingCountries, preferredLangKey),
+              residenceCountry: navData.residenceCountry || navData.country,
+            } as SosProfile;
+            foundProviderId = navData.id || "";
+          }
+        }
+
+        if (providerData && foundProviderId) {
+          // ✅ Vérifications de sécurité harmonisées avec SOSCall.tsx
+          const isInactive = providerData.isActive === false;
+          const isNotApproved = providerData.isApproved === false;
+          const isBanned = (providerData as any).isBanned === true;
+          const isHidden = (providerData as any).isVisible === false;
+          const isAdmin = (providerData as any).isAdmin === true || (providerData as any).role === 'admin';
+
+          if (isInactive || isNotApproved || isBanned || isHidden || isAdmin) {
+            setNotFound(true);
+            setIsLoading(false);
+            return;
+          }
+          
+          if (!providerData.fullName?.trim()) {
+            providerData.fullName = `${providerData.firstName || ""} ${providerData.lastName || ""}`.trim() || 
+              intl.formatMessage({ id: "providerProfile.defaultProfileName" });
+          }
+          
+          setProvider(providerData);
+          setRealProviderId(foundProviderId);
+          providerLoadedRef.current = true;
+          
+          setIsLoadingStats(true);
+          const stats = await calculateProviderStats(foundProviderId);
+          setProviderStats(stats);
+          setIsLoadingStats(false);
+          
+          if (typeof requestIdleCallback !== "undefined") {
+            requestIdleCallback(() => loadReviews(foundProviderId, providerData.uid));
+          } else {
+            await loadReviews(foundProviderId, providerData.uid);
+          }
+        } else {
+          setNotFound(true);
+        }
+      } catch (e) {
+        console.error("Error loading provider:", e);
+        setNotFound(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProviderData();
+  }, [id, typeParam, countryParam, langParam, preferredLangKey, params.slug, params.profileId, params.name, params.nameSlug, params.nameId]);
+
+  useEffect(() => {
+    if (!realProviderId) return;
+    
+    setOnlineStatus((s) => ({
+      ...s,
+      listenerActive: true,
+      connectionAttempts: s.connectionAttempts + 1,
+    }));
+    
+    const unsub = onSnapshot(
+      doc(db, "sos_profiles", realProviderId),
+      { includeMetadataChanges: true },
+      (snap) => {
+        if (snap.exists()) {
+          const data = snap.data() || {};
+          const newIsOnline = !!data.isOnline;
+
+          // ✅ Vérifications de sécurité harmonisées avec SOSCall.tsx
+          const isActive = data.isActive !== false;
+          const isApproved = data.isApproved !== false;
+          const notBanned = data.isBanned !== true;
+          const isVisible = data.isVisible !== false;
+          const notAdmin = data.isAdmin !== true && data.role !== 'admin';
+
+          if (!isActive || !isApproved || !notBanned || !isVisible || !notAdmin) {
+            setNotFound(true);
+            setProvider(null);
+            return;
+          }
+          
+          setOnlineStatus((prev) => ({
+            ...prev,
+            isOnline: newIsOnline,
+            lastUpdate: new Date(),
+            listenerActive: true,
+          }));
+          
+          setProvider((prev) =>
+            prev
+              ? { ...prev, isOnline: newIsOnline, updatedAt: new Date() }
+              : prev
+          );
+        }
+      },
+      (err) => {
+        console.error("Realtime listener error:", err);
+        setOnlineStatus((s) => ({
+          ...s,
+          listenerActive: false,
+          lastUpdate: new Date(),
+        }));
+      }
+    );
+    
+    return () => {
+      setOnlineStatus((s) => ({ ...s, listenerActive: false }));
+      unsub();
+    };
+  }, [realProviderId]);
+
+  useEffect(() => {
+    if (!realProviderId) return;
+
+    const activeCallStatuses = [
+      "pending",
+      "provider_connecting",
+      "client_connecting",
+      "both_connecting",
+      "active",
+    ];
+
+    const callSessionsQuery = query(
+      collection(db, "call_sessions"),
+      where("metadata.providerId", "==", realProviderId),
+      where("status", "in", activeCallStatuses),
+      limit(1)
+    );
+
+    const unsubscribe = onSnapshot(
+      callSessionsQuery,
+      (snapshot) => {
+        setIsOnCall(!snapshot.empty);
+      },
+      (error) => {
+        console.error("Error listening to call sessions:", error);
+        setIsOnCall(false);
+      }
+    );
+
+    return () => {
+      unsubscribe();
+    };
+  }, [realProviderId]);
+
+  useEffect(() => {
+    if (realProviderId && provider) {
+      loadReviews(realProviderId, provider.uid);
+    }
+  }, [preferredLangKey, realProviderId, provider?.uid, loadReviews]);
+  
+  useEffect(() => {
+    if (!isLoading && !provider && notFound) {
+      const tmo = setTimeout(
+        () => navigate("/sos-appel"),
+        ANIMATION_DURATIONS.LOADING_DELAY
+      );
+      return () => clearTimeout(tmo);
+    }
+  }, [isLoading, provider, notFound, navigate]);
+
+  const updateSEOMetadata = useCallback(() => {
+    if (!provider || isLoading || seoUpdatedRef.current) return;
+    
+    try {
+      const fullSlug = generateSlug({
+        firstName: provider.firstName || '',
+        lastName: provider.lastName || '',
+        role: provider.type,
+        country: provider.country,
+        languages: provider.languages || [],
+        specialties: provider.type === 'lawyer' 
+          ? (provider.specialties || [])
+          : (provider.helpTypes || []),
+        locale: language,
+      });
+      
+      const seoUrl = `/${fullSlug}`;
+
+      const displayName = formatPublicName(provider);
+      const isLawyer = provider.type === "lawyer";
+      
+      const roleLabel = isLawyer
+        ? intl.formatMessage({ id: "providerProfile.lawyer" })
+        : intl.formatMessage({ id: "providerProfile.expat" });
+      
+      const pageTitle = `${displayName} - ${roleLabel} ${intl.formatMessage({ id: "providerProfile.in" })} ${getCountryName(provider.country, preferredLangKey)} | SOS Expat & Travelers`;
+      
+      document.title = pageTitle;
+
+      const updateOrCreateMeta = (property: string, content: string): void => {
+        let meta = document.querySelector(
+          `meta[property="${property}"]`
+        ) as HTMLMetaElement | null;
+        if (!meta) {
+          meta = document.createElement("meta");
+          meta.setAttribute("property", property);
+          document.head.appendChild(meta);
+        }
+        meta.setAttribute("content", content);
+      };
+
+      const updateOrCreateMetaName = (name: string, content: string): void => {
+        let meta = document.querySelector(
+          `meta[name="${name}"]`
+        ) as HTMLMetaElement | null;
+        if (!meta) {
+          meta = document.createElement("meta");
+          meta.setAttribute("name", name);
+          document.head.appendChild(meta);
+        }
+        meta.setAttribute("content", content);
+      };
+
+      const ogDesc = pickDescription(provider, preferredLangKey, intl).slice(0, 160);
+      const ogImage =
+        provider.profilePhoto ||
+        provider.photoURL ||
+        provider.avatar ||
+        "/default-avatar.png";
+      const fullImageUrl = ogImage.startsWith('http') ? ogImage : `${window.location.origin}${ogImage}`;
+
+      // ✅ Open Graph
+      updateOrCreateMeta("og:title", pageTitle);
+      updateOrCreateMeta("og:description", ogDesc);
+      updateOrCreateMeta("og:image", fullImageUrl);
+      updateOrCreateMeta("og:url", window.location.href);
+      updateOrCreateMeta("og:type", "profile");
+      updateOrCreateMeta("og:site_name", "SOS Expat & Travelers");
+      updateOrCreateMeta(
+        "og:locale",
+        OG_LOCALE_MAPPING[preferredLangKey] || "en_US"
+      );
+
+      // ✅ Twitter Card
+      updateOrCreateMetaName("twitter:card", "summary_large_image");
+      updateOrCreateMetaName("twitter:site", "@SOSExpat");
+      updateOrCreateMetaName("twitter:creator", "@SOSExpat");
+      updateOrCreateMetaName("twitter:title", pageTitle);
+      updateOrCreateMetaName("twitter:description", ogDesc);
+      updateOrCreateMetaName("twitter:image", fullImageUrl);
+      updateOrCreateMetaName("twitter:image:alt", ogDesc);
+
+      // ✅ Robots
+      updateOrCreateMetaName("robots", "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1");
+      
+      // ✅ Mobile
+      updateOrCreateMetaName("format-detection", "telephone=yes");
+
+      // ✅ Hreflang pour SEO international
+      const SUPPORTED_LANGS = ['fr', 'en', 'es', 'de', 'pt', 'ru', 'ch', 'ar', 'hi'];
+      const baseUrl = window.location.origin;
+      const pathWithoutLang = window.location.pathname.replace(/^\/(fr|en|es|de|pt|ru|ch|ar|hi)/, '');
+
+      document.querySelectorAll('link[rel="alternate"][hreflang]').forEach(el => el.remove());
+
+      SUPPORTED_LANGS.forEach(lang => {
+        const link = document.createElement('link');
+        link.rel = 'alternate';
+        // Convertir 'ch' en 'zh-Hans' pour le standard hreflang SEO
+        link.hreflang = lang === 'ch' ? 'zh-Hans' : lang;
+        link.href = `${baseUrl}/${lang}${pathWithoutLang}`;
+        document.head.appendChild(link);
+      });
+      
+      const xDefaultLink = document.createElement('link');
+      xDefaultLink.rel = 'alternate';
+      xDefaultLink.hreflang = 'x-default';
+      xDefaultLink.href = `${baseUrl}/fr${pathWithoutLang}`;
+      document.head.appendChild(xDefaultLink);
+      
+      seoUpdatedRef.current = true;
+    } catch (e) {
+      console.error("Error updating SEO metadata:", e);
+    }
+  }, [provider, isLoading, preferredLangKey, intl, language, realProviderId]);
+
+  useEffect(() => {
+    if (provider && !isLoading) {
+      updateSEOMetadata();
+    }
+  }, [provider, isLoading, updateSEOMetadata]);
+
+  const handleBookCall = useCallback(() => {
+    if (!provider) return;
+    const gtag = (window as Window & { gtag?: (...args: unknown[]) => void })
+      .gtag;
+    if (typeof window !== "undefined" && typeof gtag === "function") {
+      gtag("event", "book_call_click", {
+        provider_id: provider.id,
+        provider_uid: provider.uid,
+        provider_type: provider.type,
+        provider_country: provider.country,
+        is_online: onlineStatus.isOnline,
+      });
+    }
+    const authUserId = getAuthUserId(user);
+    if (authUserId) {
+      logAnalyticsEvent({
+        eventType: "book_call_click",
+        userId: authUserId,
+        eventData: {
+          providerId: provider.id,
+          providerUid: provider.uid,
+          providerType: provider.type,
+          providerName: provider.fullName,
+          providerOnlineStatus: onlineStatus.isOnline,
+        },
+      });
+    }
+    try {
+      sessionStorage.setItem(
+        STORAGE_KEYS.SELECTED_PROVIDER,
+        JSON.stringify(provider)
+      );
+    } catch (error) {
+      console.warn("Failed to save provider to sessionStorage:", error);
+    }
+    const target = `/booking-request/${provider.id}`;
+    if (user) {
+      navigate(target, {
+        state: {
+          selectedProvider: provider,
+          navigationSource: "provider_profile",
+        },
+      });
+    } else {
+      navigate(`/login?redirect=${encodeURIComponent(target)}`, {
+        state: {
+          selectedProvider: provider,
+          navigationSource: "provider_profile",
+        },
+      });
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [provider, user, navigate, onlineStatus.isOnline]);
+
+  const shareProfile = useCallback(
+    (platform: "facebook" | "twitter" | "linkedin" | "copy") => {
+      if (!provider) return;
+      const isLawyer = provider.type === "lawyer";
+      // Extract locale and language from current pathname to preserve it
+      const { locale: currentLocale, lang: currentLang } = parseLocaleFromPath(location.pathname);
+      
+      // Use translated route slug based on current language
+      const routeKey = isLawyer ? "lawyer" : "expat";
+      const displayType = currentLang 
+        ? getTranslatedRouteSlug(routeKey, currentLang)
+        : (isLawyer ? "avocat" : "expatrie");
+      
+      // Use translated slug if available
+      const nameSlug =
+        translation && !showOriginal && translation.slug
+          ? translation.slug
+          : (provider.slug || safeNormalize(`${provider.firstName}-${provider.lastName}`));
+      const finalSlug = nameSlug.includes(provider.id || '') ? nameSlug : `${nameSlug}-${provider.id}`;
+      
+      const seoPath = `/${displayType}/${finalSlug}`;
+      const fullSeoPath = currentLocale ? `/${currentLocale}${seoPath}` : seoPath;
+      const currentUrl = `${window.location.origin}${fullSeoPath}`;
+      const displayName = formatPublicName(provider);
+      
+      const roleLabel = isLawyer
+        ? intl.formatMessage({ id: "providerProfile.lawyer" })
+        : intl.formatMessage({ id: "providerProfile.expat" });
+      
+      const title = `${displayName} - ${roleLabel} ${intl.formatMessage({ id: "providerProfile.in" })} ${getCountryName(provider.country, preferredLangKey)}`;
+
+      switch (platform) {
+        case "facebook":
+          window.open(
+            `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentUrl)}`,
+            "_blank",
+            "noopener,noreferrer"
+          );
+          break;
+        case "twitter":
+          window.open(
+            `https://twitter.com/intent/tweet?url=${encodeURIComponent(currentUrl)}&text=${encodeURIComponent(title)}`,
+            "_blank",
+            "noopener,noreferrer"
+          );
+          break;
+        case "linkedin":
+          window.open(
+            `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(currentUrl)}`,
+            "_blank",
+            "noopener,noreferrer"
+          );
+          break;
+        case "copy":
+          if (navigator.clipboard?.writeText) {
+            navigator.clipboard.writeText(currentUrl);
+            alert(intl.formatMessage({ id: "providerProfile.linkCopied" }));
+          } else {
+            const textArea = document.createElement("textarea");
+            textArea.value = currentUrl;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textArea);
+            alert(intl.formatMessage({ id: "providerProfile.linkCopied" }));
+          }
+          break;
+      }
+    },
+    [provider, intl, language, preferredLangKey, location.pathname, translation, showOriginal]
+  );
+
+  const handleHelpfulClick = useCallback(
+    async (reviewId: string) => {
+      if (!user) {
+        navigate("/login");
+        return;
+      }
+      try {
+        await incrementReviewHelpfulCount(reviewId);
+        setReviews((prev) =>
+          prev.map((r) =>
+            r.id === reviewId
+              ? { ...r, helpfulVotes: (r.helpfulVotes || 0) + 1 }
+              : r
+          )
+        );
+      } catch (e) {
+        console.error("Error marking review helpful:", e);
+      }
+    },
+    [user, navigate]
+  );
+
+  const handleReportClick = useCallback(
+    async (reviewId: string) => {
+      if (!user) {
+        navigate("/login");
+        return;
+      }
+      const reason = window.prompt(intl.formatMessage({ id: "providerProfile.reportReason" }));
+      if (reason) {
+        try {
+          await reportReview(reviewId, reason);
+          alert(intl.formatMessage({ id: "providerProfile.reportThanks" }));
+        } catch (e) {
+          console.error("Error reporting review:", e);
+        }
+      }
+    },
+    [user, navigate, intl]
+  );
+
+  const renderStars = useCallback((rating?: number) => {
+    const safe =
+      typeof rating === "number" && !Number.isNaN(rating) ? rating : 0;
+    const full = Math.floor(safe);
+    const hasHalf = safe - full >= 0.5;
+    return Array.from({ length: 5 }, (_, i) => (
+      <Star
+        key={i}
+        size={18}
+        className={
+          i < full
+            ? "text-yellow-400 fill-yellow-400"
+            : i === full && hasHalf
+              ? "text-yellow-400"
+              : "text-gray-400"
+        }
+        aria-hidden="true"
+      />
+    ));
+  }, []);
+
+  const handleImageError = useCallback(
+    (e: React.SyntheticEvent<HTMLImageElement>) => {
+      const img = e.target as HTMLImageElement;
+      img.onerror = null;
+      img.src = "/default-avatar.png";
+    },
+    []
+  );
+
+  const isLawyer = provider?.type === "lawyer";
+  const isExpat = provider?.type === "expat";
+  
+  const languagesList = useMemo<string[]>(
+    () => (provider?.languages?.length ? provider.languages : []),
+    [provider?.languages]
+  );
+
+  const languageCodes = useMemo(() => {
+  // Si déjà des codes ISO (fr, en, es...), les garder tels quels
+  const isAlreadyCodes = languagesList.every(
+    (lang) => lang.length === 2 || lang.length === 3
+  );
+  if (isAlreadyCodes) {
+    return languagesList;
+  }
+  // Sinon convertir les noms en codes
+  return convertLanguageNamesToCodes(languagesList);
+}, [languagesList]);
+  
+  const mainPhoto: string =
+    provider?.profilePhoto ||
+    provider?.photoURL ||
+    provider?.avatar ||
+    "/default-avatar.png";
+  
+  const descriptionText = useMemo(() => {
+    if (!provider) return "";
+    // ALWAYS show original from sos_profiles when showOriginal is true
+    if (showOriginal) {
+      return pickDescription(provider, preferredLangKey, intl);
+    }
+    // Only use translation if user explicitly selected a language and showOriginal is false
+    if (translation && !showOriginal && viewingLanguage) {
+      // Check translation fields in priority order:
+      // 1. description (what's saved in Dashboard)
+      // 2. bio (fallback for older translations)
+      // 3. summary (motivation field, also saved in Dashboard)
+      const trans = translation as any;
+      if (trans.description) {
+        return typeof trans.description === 'string' ? trans.description : String(trans.description);
+      }
+      if (trans.bio) {
+        return typeof trans.bio === 'string' ? trans.bio : String(trans.bio);
+      }
+      if (trans.summary) {
+        return typeof trans.summary === 'string' ? trans.summary : String(trans.summary);
+      }
+    }
+    // Fallback to provider's description (original)
+    return pickDescription(provider, preferredLangKey, intl);
+  }, [provider, preferredLangKey, intl, translation, showOriginal, viewingLanguage]);
+
+  const isNewProvider = useMemo(() => {
+    return providerStats.completedCalls === 0 && providerStats.realReviewsCount === 0;
+  }, [providerStats]);
+
+  const snippetData = useSnippetGenerator(
+    provider ? {
+      firstName: provider.firstName,
+      lastName: provider.lastName,
+      type: provider.type,
+      country: provider.country,
+      city: provider.city,
+      languages: provider.languages,
+      specialties: provider.specialties || [],
+      helpTypes: provider.helpTypes || [],
+      yearsOfExperience: provider.yearsOfExperience,
+      yearsAsExpat: provider.yearsAsExpat,
+      rating: providerStats.averageRating || provider.rating,
+      reviewCount: providerStats.realReviewsCount || provider.reviewCount,
+      successRate: providerStats.successRate || provider.successRate,
+      totalCalls: providerStats.completedCalls || provider.totalCalls,
+      description: descriptionText
+    } : null,
+    language
+  );
+  
+  const educationText = useMemo(() => {
+    if (!provider || !isLawyer) return undefined;
+    return (
+      toStringFromAny(provider.lawSchool, preferredLangKey) ||
+      toStringFromAny(provider.education, preferredLangKey)
+    );
+  }, [provider, isLawyer, preferredLangKey]);
+  
+  const certificationsArray = useMemo(() => {
+    if (!provider || !isLawyer) return [];
+    const s = toStringFromAny(provider.certifications, preferredLangKey);
+    if (!s) return [];
+    return s
+      .split(",")
+      .map((x) => x.trim())
+      .filter(Boolean);
+  }, [provider, isLawyer, preferredLangKey]);
+  
+  const derivedSpecialties = useMemo(() => {
+    if (!provider) return [];
+    
+    // Determine which locale to use for translation
+    const localeForTranslation = detectedLang === "fr" ? "fr" : "en";
+    
+    // ALWAYS show original from sos_profiles when showOriginal is true
+    if (showOriginal) {
+      const arr = isLawyer
+        ? toArrayFromAny(provider.specialties, preferredLangKey)
+        : toArrayFromAny(
+            provider.helpTypes || provider.specialties,
+            preferredLangKey
+          );
+      // Translate specialty codes to localized labels
+      return arr
+        .map((s) => {
+          try {
+            const cleanCode = s.trim().toUpperCase();
+            if (isLawyer) {
+              const label = getLawyerSpecialityLabel(cleanCode, localeForTranslation as any);
+              return label !== cleanCode ? label : s;
+            } else {
+              const label = getExpatHelpTypeLabel(cleanCode, localeForTranslation as any);
+              return label !== cleanCode ? label : s;
+            }
+          } catch (e) {
+            return s;
+          }
+        })
+        .map((s) => s.replace(/\s+/g, " ").trim())
+        .filter(Boolean);
+    }
+    // Only use translation if user explicitly selected a language and showOriginal is false
+    if (translation && !showOriginal && viewingLanguage && translation.specialties) {
+      return translation.specialties;
+    }
+    // Fallback to provider's specialties (original) - but still translate the codes
+    const arr = isLawyer
+      ? toArrayFromAny(provider.specialties, preferredLangKey)
+      : toArrayFromAny(
+          provider.helpTypes || provider.specialties,
+          preferredLangKey
+        );
+    // Translate specialty codes to localized labels
+    return arr
+      .map((s) => {
+        try {
+          const cleanCode = s.trim().toUpperCase();
+          if (isLawyer) {
+            const label = getLawyerSpecialityLabel(cleanCode, localeForTranslation as any);
+            return label !== cleanCode ? label : s;
+          } else {
+            const label = getExpatHelpTypeLabel(cleanCode, localeForTranslation as any);
+            return label !== cleanCode ? label : s;
+          }
+        } catch (e) {
+          return s;
+        }
+      })
+      .map((s) => s.replace(/\s+/g, " ").trim())
+      .filter(Boolean);
+  }, [provider, isLawyer, preferredLangKey, translation, showOriginal, viewingLanguage, detectedLang]);
+  
+  const joinDateText = useMemo(() => {
+    if (!provider) return undefined;
+    const formatted = formatJoinDate(
+      provider.createdAt || provider.updatedAt || null,
+      preferredLangKey
+    );
+    if (!formatted) return undefined;
+    return `${intl.formatMessage({ id: "providerProfile.memberSince" })} ${formatted}`;
+  }, [provider, preferredLangKey, intl]);
+
+  const yearsLabel = intl.formatMessage({ id: "providerProfile.years" });
+  const minutesLabel = intl.formatMessage({ id: "providerProfile.minutes" });
+
+  // ✅ Structured Data enrichi
+  const structuredData = useMemo<Record<string, unknown> | undefined>(() => {
+    if (!provider) return undefined;
+    const displayName = formatPublicName(provider);
+    
+    const roleLabel = isLawyer
+      ? intl.formatMessage({ id: "providerProfile.attorney" })
+      : intl.formatMessage({ id: "providerProfile.consultant" });
+    
+    const data: Record<string, unknown> = {
+      "@context": "https://schema.org",
+      "@type": isLawyer ? "Attorney" : "Person",
+      "@id": `${window.location.origin}${window.location.pathname}`,
+      name: displayName,
+      image: {
+        "@type": "ImageObject",
+        url: mainPhoto,
+        width: IMAGE_SIZES.MODAL_MAX_WIDTH,
+        height: IMAGE_SIZES.MODAL_MAX_HEIGHT,
+      },
+      description: descriptionText,
+      address: { 
+        "@type": "PostalAddress", 
+        addressCountry: provider.country,
+        ...(provider.city && { addressLocality: provider.city })
+      },
+      jobTitle: roleLabel,
+      worksFor: {
+        "@type": "Organization",
+        name: "SOS Expat & Travelers",
+        url: window.location.origin,
+        logo: `${window.location.origin}/logo.png`,
+      },
+      knowsLanguage: languagesList.map((lang) => ({
+        "@type": "Language",
+        name: lang,
+      })),
+      ...(providerStats.realReviewsCount > 0 && {
+        aggregateRating: {
+          "@type": "AggregateRating",
+          ratingValue: providerStats.averageRating || 0,
+          reviewCount: providerStats.realReviewsCount || 0,
+          bestRating: 5,
+          worstRating: 1,
+        }
+      }),
+      ...(provider.yearsOfExperience && {
+        hasOccupation: {
+          "@type": "Occupation",
+          name: roleLabel,
+          experienceRequirements: `${provider.yearsOfExperience} ${yearsLabel}`,
+        }
+      }),
+      // LegalService/ProfessionalService enrichment
+      priceRange: "€€-€€€",
+      areaServed: {
+        "@type": "Country",
+        name: provider.country
+      },
+      ...(provider.specialties && provider.specialties.length > 0 && {
+        hasOfferCatalog: {
+          "@type": "OfferCatalog",
+          name: isLawyer
+            ? intl.formatMessage({ id: "providerProfile.legalServices", defaultMessage: "Services juridiques" })
+            : intl.formatMessage({ id: "providerProfile.consultingServices", defaultMessage: "Services de conseil" }),
+          itemListElement: provider.specialties.slice(0, 5).map((specialty, index) => ({
+            "@type": "Offer",
+            "@id": `${window.location.origin}${window.location.pathname}#service-${index}`,
+            itemOffered: {
+              "@type": "Service",
+              name: specialty
+            }
+          }))
+        }
+      }),
+      openingHoursSpecification: {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+        opens: "00:00",
+        closes: "23:59"
+      },
+    };
+    return data;
+  }, [
+    provider,
+    isLawyer,
+    mainPhoto,
+    descriptionText,
+    intl,
+    languagesList,
+    providerStats,
+    yearsLabel,
+  ]);
+
+  // ✅ BreadcrumbList Schema
+  const breadcrumbSchema = useMemo(() => {
+    if (!provider) return null;
+    
+    return {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": intl.formatMessage({ id: "providerProfile.breadcrumbHome", defaultMessage: "Accueil" }),
+          "item": window.location.origin
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": intl.formatMessage({ id: "providerProfile.breadcrumbSosCall", defaultMessage: "SOS Appel" }),
+          "item": `${window.location.origin}/sos-appel`
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": formatPublicName(provider),
+          "item": window.location.href
+        }
+      ]
+    };
+  }, [provider, intl]);
+
+  // ✅ FAQPage Schema
+  const faqSchema = useMemo(() => {
+    if (!snippetData?.snippets?.faqContent || snippetData.snippets.faqContent.length === 0) {
+      return null;
+    }
+
+    return {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": snippetData.snippets.faqContent.map((faq) => ({
+        "@type": "Question",
+        "name": faq.question,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": faq.answer
+        }
+      }))
+    };
+  }, [snippetData]);
+
+  // ✅ Loading state
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center bg-gray-950">
+          <LoadingSpinner 
+            size="large" 
+            color="red" 
+            text={intl.formatMessage({ id: "providerProfile.loading" })} 
+          />
+        </div>
+      </Layout>
+    );
+  }
+
+  // ✅ Not found state
+  if (notFound || !provider) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center bg-gray-950 px-4">
+          <div className="max-w-md mx-auto p-8 text-center">
+            <div className="mb-6">
+              <div className="mx-auto w-24 h-24 bg-gradient-to-br from-red-500/20 to-red-600/20 rounded-full flex items-center justify-center border border-red-500/30">
+                <AlertTriangle className="w-12 h-12 text-red-500" aria-hidden="true" />
+              </div>
+            </div>
+            
+            <h1 className="text-2xl font-bold text-white mb-3">
+              <FormattedMessage id="providerProfile.notFound" />
+            </h1>
+            <p className="text-gray-400 mb-8">
+              <FormattedMessage id="providerProfile.notFoundDescription" />
+            </p>
+            
+            <button
+              onClick={() => navigate("/sos-appel")}
+              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-red-600 to-red-500 text-white rounded-xl hover:from-red-500 hover:to-red-400 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-semibold focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-gray-950"
+              aria-label={intl.formatMessage({ id: "providerProfile.backToExperts" })}
+            >
+              <ArrowLeft className="w-5 h-5 mr-2" aria-hidden="true" />
+              <FormattedMessage id="providerProfile.backToExperts" />
+            </button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  const roleLabel = isLawyer
+    ? intl.formatMessage({ id: "providerProfile.lawyer" })
+    : intl.formatMessage({ id: "providerProfile.expat" });
+  
+  const seoTitle = translation && !showOriginal && translation.seo?.metaTitle
+    ? translation.seo.metaTitle
+    : `${formatPublicName(provider)} - ${roleLabel} ${intl.formatMessage({ id: "providerProfile.in" })} ${getCountryName(provider.country, preferredLangKey)} | SOS Expat & Travelers`;
+  
+  const seoDescription = translation && !showOriginal && translation.seo?.metaDescription
+    ? translation.seo.metaDescription
+    : `${intl.formatMessage({ id: "providerProfile.consult" })} ${formatPublicName(provider)}, ${roleLabel.toLowerCase()} ${intl.formatMessage({ id: "providerProfile.frenchSpeaking" })} ${intl.formatMessage({ id: "providerProfile.in" })} ${getCountryName(provider.country, preferredLangKey)}. ${descriptionText.slice(0, 120)}...`;
+
+  const canonicalUrl = (() => {
+    // Use translated route slug based on current language
+    const routeKey = isLawyer ? "lawyer" : "expat";
+    const displayType = currentLang 
+      ? getTranslatedRouteSlug(routeKey, currentLang)
+      : (isLawyer ? "avocat" : "expatrie");
+    
+    // Use translated slug if available, otherwise generate from name
+    const nameSlug = translation && !showOriginal && translation.slug
+      ? translation.slug
+      : (provider.slug || safeNormalize(provider.fullName || `${provider.firstName}-${provider.lastName}`));
+    
+    const finalSlug = nameSlug.includes(provider.id || '') ? nameSlug : `${nameSlug}-${provider.id}`;
+    return `/${currentLocale || ''}/${displayType}/${finalSlug}`;
+  })();
+
+  return (
+    <Layout>
+      <SEOHead
+        title={seoTitle}
+        description={seoDescription}
+        canonicalUrl={canonicalUrl}
+        ogImage={mainPhoto}
+        ogType="profile"
+        structuredData={
+          translation && !showOriginal && translation.seo?.jsonLd
+            ? translation.seo.jsonLd
+            : structuredData
+        }
+      />
+
+      {/* ✅ Snippets JSON-LD */}
+      {snippetData && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: snippetData.jsonLD }}
+        />
+      )}
+      
+      {/* ✅ BreadcrumbList Schema */}
+      {breadcrumbSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+        />
+      )}
+      
+      {/* ✅ FAQPage Schema */}
+      {faqSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+      )}
+
+      {/* SVG defs pour dégradé étoiles */}
+      <svg width="0" height="0" className="hidden" aria-hidden="true">
+        <defs>
+          <linearGradient id="half-star" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="50%" stopColor="#FACC15" />
+            <stop offset="50%" stopColor="#6B7280" />
+          </linearGradient>
+        </defs>
+      </svg>
+
+      {/* Preconnect optimisés */}
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      <link rel="preconnect" href="https://firestore.googleapis.com" />
+
+      <div className="min-h-screen bg-gray-950 pb-24 lg:pb-8">
+        
+        {/* ========================================== */}
+        {/* HERO SECTION - DARK DESIGN                */}
+        {/* ========================================== */}
+        <header className="relative overflow-hidden">
+          {/* Background gradients */}
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-900 to-black" />
+          <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-transparent to-blue-500/10" />
+          <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-gradient-to-r from-red-500/15 to-orange-500/15 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-gradient-to-r from-blue-500/15 to-purple-500/15 rounded-full blur-3xl" />
+
+          <div className="relative z-10 max-w-7xl mx-auto px-4 py-6 lg:py-10">
+            {/* Navigation */}
+            <nav className="mb-6">
+              <button
+                onClick={() => navigate("/sos-appel")}
+                className="inline-flex items-center rounded-full bg-white/10 border border-white/20 text-white/90 hover:text-white hover:bg-white/15 backdrop-blur-sm px-4 py-2 transition-all min-h-[44px] text-sm font-medium"
+                aria-label={intl.formatMessage({ id: "providerProfile.backToExperts" })}
+              >
+                <ArrowLeft size={18} className="mr-2" aria-hidden="true" />
+                <FormattedMessage id="providerProfile.backToExperts" />
+              </button>
+            </nav>
+
+            {/* H1 sémantique caché pour SEO */}
+            <h1 className="sr-only">
+              {formatPublicName(provider)} - {roleLabel} {derivedSpecialties[0] || ''} {languagesList[0] || ''} {intl.formatMessage({ id: "providerProfile.in" })} {getCountryName(provider.country, preferredLangKey)}
+            </h1>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+              {/* ===== COLONNE GAUCHE: Infos principales ===== */}
+              <div className="lg:col-span-2">
+                <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+                  {/* Photo de profil */}
+                  <div className="relative flex-shrink-0">
+                    <div className="p-[3px] rounded-full bg-gradient-to-br from-red-400 via-orange-400 to-yellow-300">
+                      <img
+                        src={mainPhoto}
+                        alt={intl.formatMessage(
+                          { id: "providerProfile.profilePhotoAlt", defaultMessage: "Photo de profil de {name}" },
+                          { name: formatShortName(provider) }
+                        )}
+                        className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full object-cover border-4 border-black/30 cursor-pointer hover:scale-105 transition-transform"
+                        width={IMAGE_SIZES.AVATAR_MOBILE}
+                        height={IMAGE_SIZES.AVATAR_MOBILE}
+                        onClick={() => setShowImageModal(true)}
+                        onError={handleImageError}
+                        loading="eager"
+                        fetchPriority="high"
+                      />
+                    </div>
+                    {/* Online status indicator */}
+                    <div
+                      className={`absolute -bottom-1 -right-1 w-7 h-7 rounded-full border-4 border-gray-900 transition-all duration-500 ${
+                        onlineStatus.isOnline ? "bg-green-500" : "bg-red-500"
+                      }`}
+                      title={onlineStatus.isOnline 
+                        ? intl.formatMessage({ id: "providerProfile.online" })
+                        : intl.formatMessage({ id: "providerProfile.offline" })
+                      }
+                    >
+                      {onlineStatus.isOnline && (
+                        <span className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-75" aria-hidden="true"></span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Informations textuelles */}
+                  <div className="flex-1 min-w-0">
+                    {/* Nom + Badges */}
+                    <div className="flex flex-wrap items-center gap-2 mb-3">
+                      <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black leading-tight bg-gradient-to-r from-white via-gray-100 to-white bg-clip-text text-transparent">
+                        {translation && !showOriginal && translation.title
+                          ? translation.title
+                          : translation && !showOriginal && translation.seo?.h1
+                          ? translation.seo.h1
+                          : formatShortName(provider)}
+                      </h2>
+
+                      {/* Badge type */}
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs sm:text-sm font-semibold border backdrop-blur-sm ${
+                          isLawyer
+                            ? "bg-blue-500/20 border-blue-400/30 text-blue-200"
+                            : "bg-green-500/20 border-green-400/30 text-green-200"
+                        }`}
+                      >
+                        {isLawyer ? (
+                          <FormattedMessage id="providerProfile.certifiedLawyer" />
+                        ) : (
+                          <FormattedMessage id="providerProfile.expertExpat" />
+                        )}
+                      </span>
+
+                      {/* Badge vérifié */}
+                      {provider.isVerified && (
+                        <span className="inline-flex items-center gap-1 bg-white text-gray-900 text-xs px-2.5 py-1 rounded-full border border-gray-200 font-medium">
+                          <Shield size={14} className="text-green-600" />
+                          <FormattedMessage id="providerProfile.verified" />
+                        </span>
+                      )}
+
+                      {/* Badge nouveau */}
+                      {isNewProvider && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-yellow-400/20 to-orange-400/20 border border-yellow-400/30 rounded-full text-xs font-bold text-yellow-300">
+                          <Sparkles size={12} />
+                          <FormattedMessage id="providerProfile.new" />
+                        </span>
+                      )}
+
+                      {/* Badge statut en ligne */}
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs sm:text-sm font-bold transition-all duration-500 border ${
+                          onlineStatus.isOnline
+                            ? "bg-green-500/20 text-green-300 border-green-400/30 shadow-lg shadow-green-500/20"
+                            : "bg-red-500/20 text-red-300 border-red-400/30"
+                        }`}
+                      >
+                        {onlineStatus.isOnline
+                          ? `🟢 ${intl.formatMessage({ id: "providerProfile.online" })}`
+                          : `🔴 ${intl.formatMessage({ id: "providerProfile.offline" })}`}
+                      </span>
+                    </div>
+
+                    {/* Localisation et expérience */}
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-gray-300 mb-4 text-sm">
+                      <div className="inline-flex items-center gap-1.5">
+                        <MapPin size={16} className="text-red-400 flex-shrink-0" />
+                        <span>{getCountryName(provider.country, preferredLangKey)}</span>
+                      </div>
+                      <div className="inline-flex items-center gap-1.5">
+                        {isLawyer ? (
+                          <Briefcase size={16} className="text-blue-400 flex-shrink-0" />
+                        ) : (
+                          <Users size={16} className="text-green-400 flex-shrink-0" />
+                        )}
+                        <span>
+                          {isLawyer
+                            ? `${provider.yearsOfExperience || 0} ${intl.formatMessage({ id: "providerProfile.yearsExperience" })}`
+                            : `${provider.yearsAsExpat || provider.yearsOfExperience || 0} ${intl.formatMessage({ id: "providerProfile.yearsAsExpat" })}`}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Rating */}
+                    {!isNewProvider && (
+                      <div className="inline-flex items-center gap-2 mb-4 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm px-3 py-1.5">
+                        <div className="flex" aria-label={`Rating: ${providerStats.averageRating || 0} out of 5 stars`}>
+                          {renderStars(providerStats.averageRating || provider.rating)}
+                        </div>
+                        <span className="text-white font-semibold">
+                          {providerStats.averageRating 
+                            ? providerStats.averageRating.toFixed(1)
+                            : (typeof provider.rating === "number" ? provider.rating.toFixed(1) : "--")}
+                        </span>
+                        <span className="text-gray-400">
+                          ({providerStats.realReviewsCount} <FormattedMessage id="providerProfile.reviews" />)
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Description courte */}
+                    <p className="text-gray-200 leading-relaxed text-sm sm:text-base line-clamp-3 lg:line-clamp-4">
+                      {descriptionText}
+                    </p>
+
+                    {/* Social sharing */}
+                    <div className="flex items-center gap-3 mt-5">
+                      <span className="text-gray-400 text-sm">
+                        <FormattedMessage id="providerProfile.share" />
+                      </span>
+                      <button
+                        onClick={() => shareProfile("facebook")}
+                        className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white/90 hover:text-white transition-all"
+                        aria-label="Share on Facebook"
+                      >
+                        <Facebook size={18} />
+                      </button>
+                      <button
+                        onClick={() => shareProfile("twitter")}
+                        className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white/90 hover:text-white transition-all"
+                        aria-label="Share on X"
+                      >
+                        <Twitter size={18} />
+                      </button>
+                      <button
+                        onClick={() => shareProfile("linkedin")}
+                        className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white/90 hover:text-white transition-all"
+                        aria-label="Share on LinkedIn"
+                      >
+                        <Linkedin size={18} />
+                      </button>
+                      <button
+                        onClick={() => shareProfile("copy")}
+                        className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white/90 hover:text-white transition-all"
+                        aria-label={intl.formatMessage({ id: "providerProfile.copyLink" })}
+                      >
+                        <Share2 size={18} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ===== COLONNE DROITE: Booking card ===== */}
+              <aside className="lg:col-span-1">
+                <div className="group relative bg-white rounded-3xl shadow-2xl p-5 sm:p-6 border border-gray-200 transition-all hover:scale-[1.01] hover:shadow-red-500/10">
+                  {/* Overlay gradient */}
+                  <div className="pointer-events-none absolute inset-0 rounded-3xl bg-gradient-to-br from-red-500/5 to-orange-500/5 group-hover:from-red-500/10 group-hover:to-orange-500/10 transition-opacity" />
+                  
+                  <div className="relative z-10">
+                    {/* Badge délai d'appel */}
+                    <div className="text-center mb-5">
+                      <div className="inline-flex items-center gap-2 bg-gray-900 text-white rounded-full px-3 py-1.5 text-xs font-semibold">
+                        <Phone size={14} />
+                        <span><FormattedMessage id="callIn5Min" /></span>
+                      </div>
+
+                      {/* Prix */}
+                      <div className="mt-4">
+                        {bookingPrice?.hasDiscount ? (
+                          <>
+                            <div className="text-gray-400 line-through text-lg">
+                              {formatEUR(bookingPrice.originalEur)}
+                            </div>
+                            <div className="text-3xl sm:text-4xl font-black text-red-600">
+                              {formatEUR(bookingPrice.eur)}
+                            </div>
+                            <div className="text-xs text-green-600 font-semibold mt-1">
+                              Code {bookingPrice.promoCode} (-{formatEUR(bookingPrice.discountEur)})
+                            </div>
+                          </>
+                        ) : (
+                          <div className="text-3xl sm:text-4xl font-black text-gray-900">
+                            {bookingPrice ? formatEUR(bookingPrice.eur) : "—"}
+                          </div>
+                        )}
+                        <div className="text-gray-500 text-sm mt-1">
+                          {bookingPrice ? `(${formatUSD(bookingPrice.usd)})` : ""}
+                        </div>
+                      </div>
+
+                      <div className="text-gray-600 text-sm mt-1 flex items-center justify-center gap-1">
+                        <Clock size={14} />
+                        {bookingPrice?.duration
+                          ? `${bookingPrice.duration} ${intl.formatMessage({ id: "providerProfile.minutes" })}`
+                          : "—"}
+                      </div>
+                    </div>
+
+                    {/* Stats rapides */}
+                    <div className="space-y-3 mb-5">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">
+                          <FormattedMessage id="providerProfile.successRate" />
+                        </span>
+                        <span className="font-semibold text-gray-900">
+                          {isLoadingStats ? "..." : `${providerStats.successRate}%`}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-sm bg-gray-50 p-3 rounded-xl border border-gray-200">
+                        <span className="text-gray-700 font-medium">
+                          <FormattedMessage id="providerProfile.availability" />
+                        </span>
+                        <span
+                          className={`font-bold text-xs px-2.5 py-1 rounded-full transition-all ${
+                            isOnCall
+                              ? "bg-orange-100 text-orange-800 border border-orange-300"
+                              : onlineStatus.isOnline
+                                ? "bg-green-100 text-green-800 border border-green-300"
+                                : "bg-red-100 text-red-800 border border-red-300"
+                          }`}
+                        >
+                          {isOnCall
+                            ? `📞 ${intl.formatMessage({ id: "providerProfile.alreadyOnCall" })}`
+                            : onlineStatus.isOnline
+                              ? `🟢 ${intl.formatMessage({ id: "providerProfile.online" })}`
+                              : `🔴 ${intl.formatMessage({ id: "providerProfile.offline" })}`}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">
+                          <FormattedMessage id="providerProfile.completedCalls" />
+                        </span>
+                        <span className="font-semibold">
+                          {isLoadingStats ? "..." : providerStats.completedCalls}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* CTA Button - Desktop only (mobile has fixed bottom) */}
+                    <button
+                      onClick={handleBookCall}
+                      disabled={!onlineStatus.isOnline || isOnCall}
+                      className={`hidden lg:flex w-full py-4 px-4 rounded-2xl font-bold text-lg transition-all duration-300 items-center justify-center gap-3 min-h-[56px] focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                        onlineStatus.isOnline && !isOnCall
+                          ? "bg-gradient-to-r from-green-600 to-green-500 text-white hover:from-green-500 hover:to-green-400 hover:scale-[1.02] shadow-lg shadow-green-500/30 focus:ring-green-500"
+                          : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                      }`}
+                      aria-label={
+                        isOnCall
+                          ? intl.formatMessage({ id: "providerProfile.alreadyOnCall" })
+                          : onlineStatus.isOnline
+                            ? intl.formatMessage({ id: "providerProfile.bookNow" })
+                            : intl.formatMessage({ id: "providerProfile.unavailable" })
+                      }
+                    >
+                      <Phone size={22} aria-hidden="true" />
+                      <span>
+                        {isOnCall
+                          ? intl.formatMessage({ id: "providerProfile.alreadyOnCall" })
+                          : onlineStatus.isOnline
+                            ? intl.formatMessage({ id: "providerProfile.bookNow" })
+                            : intl.formatMessage({ id: "providerProfile.unavailable" })}
+                      </span>
+                      {onlineStatus.isOnline && !isOnCall && (
+                        <div className="flex gap-1" aria-hidden="true">
+                          <div className="w-2 h-2 rounded-full animate-pulse bg-white/80"></div>
+                          <div className="w-2 h-2 rounded-full animate-pulse delay-75 bg-white/80"></div>
+                          <div className="w-2 h-2 rounded-full animate-pulse delay-150 bg-white/80"></div>
+                        </div>
+                      )}
+                    </button>
+
+                    {/* Message de statut */}
+                    <div className="mt-3 text-center text-sm hidden lg:block">
+                      {isOnCall ? (
+                        <div className="text-orange-600 font-medium">
+                          📞 <FormattedMessage id="providerProfile.onCallMessage" />
+                        </div>
+                      ) : onlineStatus.isOnline ? (
+                        <div className="text-green-600 font-medium">
+                          ✅ <FormattedMessage id="providerProfile.availableNow" />
+                        </div>
+                      ) : (
+                        <div className="text-red-600">
+                          ❌ <FormattedMessage id="providerProfile.currentlyOffline" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Badge sécurité */}
+                    <div className="mt-4 text-center">
+                      <div className="inline-flex items-center justify-center gap-2 text-xs text-gray-600 rounded-full border border-gray-200 px-3 py-1.5">
+                        <Shield size={14} aria-hidden="true" />
+                        <FormattedMessage id="providerProfile.securePayment" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </header>
+
+        {/* ========================================== */}
+        {/* MAIN CONTENT - WHITE/LIGHT SECTION        */}
+        {/* ========================================== */}
+        <main className="relative bg-gradient-to-b from-white via-gray-50 to-white rounded-t-[32px] -mt-4">
+          <div className="max-w-7xl mx-auto px-4 py-8 lg:py-12">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+              
+              {/* ===== COLONNE PRINCIPALE ===== */}
+              <div className="lg:col-span-2 space-y-6">
+                
+                {/* Translation Banner */}
+                {realProviderId && !isLoading && (
+                  <TranslationBanner
+                    providerId={realProviderId}
+                    currentLanguage={targetLanguage}
+                    availableLanguages={availableLanguages}
+                    onTranslationComplete={async (lang, trans) => {
+                      console.log('[ProviderProfile] Translation complete for language:', lang);
+                      // Switch to viewing the translated language
+                      setViewingLanguage(lang);
+                      viewingLanguageRef.current = lang; // Update ref immediately
+                      setShowOriginal(false); // Switch to translated view after translation completes
+                      
+                      // Reload translation state for the language we just translated
+                      if (reloadForLanguage) {
+                        setTimeout(async () => {
+                          try {
+                            await reloadForLanguage(lang);
+                            // Force state to remain after reload - prevent reverting to original
+                            // Use ref to ensure we maintain the correct language
+                            const currentLang = viewingLanguageRef.current || lang;
+                            setViewingLanguage(currentLang);
+                            viewingLanguageRef.current = currentLang;
+                            setShowOriginal(false);
+                            console.log('[ProviderProfile] State preserved after reload for:', currentLang);
+                          } catch (error) {
+                            console.error('[ProviderProfile] Error reloading translation:', error);
+                            // Even on error, maintain the viewing state
+                            setViewingLanguage(lang);
+                            viewingLanguageRef.current = lang;
+                            setShowOriginal(false);
+                          }
+                        }, 1000); // Wait for Firestore to update
+                      }
+                    }}
+                    onViewTranslation={(lang) => {
+                      // Handle viewing an already-translated language
+                      console.log('[ProviderProfile] Viewing translation for language:', lang);
+                      setViewingLanguage(lang);
+                      viewingLanguageRef.current = lang; // Update ref immediately
+                      setShowOriginal(false);
+                      
+                      if (reloadForLanguage) {
+                        reloadForLanguage(lang).then(() => {
+                          // Force state to remain after reload - prevent reverting to original
+                          // Use ref to ensure we maintain the correct language
+                          const currentLang = viewingLanguageRef.current || lang;
+                          setViewingLanguage(currentLang);
+                          viewingLanguageRef.current = currentLang;
+                          setShowOriginal(false);
+                          console.log('[ProviderProfile] State preserved after reload for:', currentLang);
+                        }).catch((error) => {
+                          console.error('[ProviderProfile] Error reloading translation:', error);
+                          // Even on error, maintain the viewing state
+                          setViewingLanguage(lang);
+                          viewingLanguageRef.current = lang;
+                          setShowOriginal(false);
+                        });
+                      }
+                    }}
+                    onTranslate={async (lang) => {
+                      const result = await translate(lang);  // Pass the language parameter
+                      return result;
+                    }}
+                  />
+                )}
+                
+                {/* View Original Button - Show if translation exists */}
+                {translation && originalTranslation && (
+                  <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm p-4 border border-gray-200 dark:border-gray-700">
+                    <button
+                      onClick={() => {
+                        setShowOriginal(!showOriginal);
+                        // If switching to original, reset viewing language
+                        if (!showOriginal) {
+                          setViewingLanguage(null);
+                        }
+                      }}
+                      className="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-md text-sm font-medium transition-colors flex items-center gap-2 border-2 border-gray-300 text-gray-500"
+                    >
+                      {showOriginal ? (
+                        <>
+                          <FormattedMessage
+                            id="providerTranslation.viewTranslated"
+                            defaultMessage={`View translated `}
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <FormattedMessage
+                            id="providerTranslation.viewOriginal"
+                            defaultMessage={`View original`}
+                          />
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+                
+                {/* Section Description complète */}
+                <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <User size={20} className="text-red-500" />
+                    <FormattedMessage id="providerProfile.about" />
+                  </h3>
+                  <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                    {descriptionText}
+                  </p>
+                  
+                  {/* Motivation si présente */}
+                  {(() => {
+                    // ALWAYS show original from sos_profiles when showOriginal is true
+                    let motivationText: string | null = null;
+                    if (showOriginal) {
+                      motivationText = getFirstString(provider.motivation, preferredLangKey);
+                    } else if (translation && viewingLanguage) {
+                      // Only use translation if user explicitly selected a language
+                      // Check both 'summary' (what Dashboard saves) and 'motivation' (what backend generates)
+                      const trans = translation as any;
+                      if (trans.summary) {
+                        motivationText = typeof trans.summary === 'string' ? trans.summary : String(trans.summary);
+                      } else if (trans.motivation) {
+                        motivationText = typeof trans.motivation === 'string' ? trans.motivation : String(trans.motivation);
+                      }
+                    } else {
+                      // Fallback to original
+                      motivationText = getFirstString(provider.motivation, preferredLangKey);
+                    }
+                    return motivationText && (
+                      <div className="mt-4 pt-4 border-t border-gray-100">
+                        <p className="text-gray-600 whitespace-pre-line italic">
+                          {motivationText}
+                        </p>
+                      </div>
+                    );
+                  })()}
+                </section>
+
+                {/* Section Spécialités */}
+                <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <Briefcase size={20} className={isLawyer ? "text-blue-500" : "text-green-500"} />
+                    <FormattedMessage id="providerProfile.specialties" />
+                  </h3>
+                  {derivedSpecialties.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {derivedSpecialties.map((s, i) => (
+                        <span
+                          key={`${s}-${i}`}
+                          className={`px-3 py-1.5 rounded-full text-sm font-medium border ${
+                            isLawyer 
+                              ? "bg-blue-50 text-blue-700 border-blue-200" 
+                              : "bg-green-50 text-green-700 border-green-200"
+                          }`}
+                        >
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">
+                      <FormattedMessage id="providerProfile.noSpecialties" />
+                    </p>
+                  )}
+                </section>
+
+                {/* Section Pays d'intervention */}
+                {provider.operatingCountries && provider.operatingCountries.length > 0 && (
+                  <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <MapPin size={20} className="text-red-500" />
+                      <FormattedMessage id="providerProfile.operatingCountries" />
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {provider.operatingCountries.map((countryCode, index) => (
+                        <span
+                          key={`${countryCode}-${index}`}
+                          className="px-3 py-1.5 bg-red-50 text-red-700 border border-red-200 rounded-full text-sm font-medium"
+                        >
+                          {getCountryName(countryCode, preferredLangKey)}
+                        </span>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* Section Langues */}
+                <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <Globe size={20} className="text-purple-500" />
+                    <FormattedMessage id="providerProfile.languages" />
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {languageCodes.map((code, i) => (
+                      <span
+                        key={`${code}-${i}`}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 rounded-full text-sm font-medium"
+                      >
+                        <LanguagesIcon size={14} />
+                        {formatLanguages([code], preferredLangKey)}
+                      </span>
+                    ))}
+                  </div>
+                </section>
+
+                {/* Section Formation (avocats uniquement) */}
+                {isLawyer && (educationText || certificationsArray.length > 0) && (
+                  <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <GraduationCap size={20} className="text-indigo-500" />
+                      <FormattedMessage id="providerProfile.educationCertifications" />
+                    </h3>
+                    <div className="space-y-3">
+                      {educationText && (
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                            <GraduationCap size={16} className="text-indigo-600" />
+                          </div>
+                          <div>
+                            <p className="text-gray-800 font-medium">{educationText}</p>
+                            {provider.graduationYear && (
+                              <p className="text-gray-500 text-sm mt-0.5">
+                                <FormattedMessage id="providerProfile.graduated" /> {provider.graduationYear}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      {certificationsArray.map((cert, i) => (
+                        <div key={i} className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                            <Award size={16} className="text-amber-600" />
+                          </div>
+                          <p className="text-gray-700">{cert}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* Section Expérience expatrié */}
+                {isExpat && (
+                  <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <Users size={20} className="text-green-500" />
+                      <FormattedMessage id="providerProfile.expatExperience" />
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                          <MapPin size={18} className="text-green-600" />
+                        </div>
+                        <p className="text-gray-700">
+                          {provider.yearsAsExpat || provider.yearsOfExperience || 0}{" "}
+                          {intl.formatMessage({ id: "providerProfile.yearsAbroad" })}{" "}
+                          {intl.formatMessage({ id: "providerProfile.in" })}{" "}
+                          {getCountryName(provider.country, preferredLangKey)}
+                        </p>
+                      </div>
+                      
+                      {getFirstString(provider.experienceDescription, preferredLangKey) && (
+                        <p className="text-gray-600 pl-13">
+                          {getFirstString(provider.experienceDescription, preferredLangKey)}
+                        </p>
+                      )}
+
+                      {(() => {
+                        // ALWAYS show original from sos_profiles when showOriginal is true
+                        let motivationText: string | null = null;
+                        if (showOriginal) {
+                          motivationText = getFirstString(provider.motivation, preferredLangKey);
+                        } else if (translation && viewingLanguage) {
+                          // Only use translation if user explicitly selected a language
+                          // Check both 'summary' (what Dashboard saves) and 'motivation' (what backend generates)
+                          const trans = translation as any;
+                          if (trans.summary) {
+                            motivationText = typeof trans.summary === 'string' ? trans.summary : String(trans.summary);
+                          } else if (trans.motivation) {
+                            motivationText = typeof trans.motivation === 'string' ? trans.motivation : String(trans.motivation);
+                          }
+                        } else {
+                          // Fallback to original
+                          motivationText = getFirstString(provider.motivation, preferredLangKey);
+                        }
+                        return motivationText && (
+                          <p className="text-gray-700 whitespace-pre-line">
+                            {motivationText}
+                          </p>
+                        );
+                      })()}
+                    </div>
+                  </section>
+                )}
+
+                {/* Section Avis clients */}
+                <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200" id="reviews-section">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                      <Star size={20} className="text-yellow-500" />
+                      <FormattedMessage id="providerProfile.customerReviews" />
+                      <span className="text-gray-500 font-normal">({providerStats.realReviewsCount})</span>
+                    </h3>
+                    
+                    {!isNewProvider && (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 px-3 py-1.5 text-sm font-bold text-white shadow-sm">
+                        <Star className="w-4 h-4 fill-white" />
+                        {providerStats.averageRating ? providerStats.averageRating.toFixed(1) : "—"}/5
+                      </span>
+                    )}
+                  </div>
+
+                  {isLoadingReviews ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto" />
+                      <p className="mt-2 text-gray-500 text-sm">
+                        <FormattedMessage id="providerProfile.loadingReviews" />
+                      </p>
+                    </div>
+                  ) : isNewProvider ? (
+                    <div className="text-center py-8">
+                      <Sparkles className="w-12 h-12 mx-auto mb-3 text-yellow-500" />
+                      <p className="font-semibold text-gray-800 mb-1">
+                        <FormattedMessage id="providerProfile.newProviderNoReviews" />
+                      </p>
+                      <p className="text-gray-500 text-sm">
+                        <FormattedMessage id="providerProfile.beTheFirst" />
+                      </p>
+                    </div>
+                  ) : (
+                    <Suspense fallback={
+                      <div className="text-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto" />
+                      </div>
+                    }>
+                      <Reviews
+                        mode="summary"
+                        averageRating={providerStats.averageRating || 0}
+                        totalReviews={providerStats.realReviewsCount}
+                        ratingDistribution={ratingDistribution}
+                      />
+                      <div className="mt-6">
+                        <Reviews
+                          mode="list"
+                          reviews={reviews}
+                          showControls={!!user}
+                          onHelpfulClick={handleHelpfulClick}
+                          onReportClick={handleReportClick}
+                        />
+                      </div>
+                    </Suspense>
+                  )}
+                </section>
+
+                {/* Section FAQ */}
+                {snippetData?.snippets?.faqContent && snippetData.snippets.faqContent.length > 0 && (
+                  <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <HelpCircle size={20} className="text-cyan-500" />
+                      <FormattedMessage id="providerProfile.frequentlyAskedQuestions" />
+                    </h3>
+                    <div className="space-y-2">
+                      {snippetData.snippets.faqContent.map((faq, index) => (
+                        <details 
+                          key={`faq-${index}`}
+                          className="group border border-gray-200 rounded-xl overflow-hidden"
+                        >
+                          <summary className="flex justify-between items-center cursor-pointer list-none p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
+                            <span className="text-sm font-semibold text-gray-800 pr-4">
+                              {faq.question}
+                            </span>
+                            <svg
+                              className="w-5 h-5 text-gray-500 transition-transform group-open:rotate-180 flex-shrink-0"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </summary>
+                          <div className="px-4 py-3 text-sm text-gray-600 leading-relaxed bg-white border-t border-gray-100">
+                            {faq.answer}
+                          </div>
+                        </details>
+                      ))}
+                    </div>
+                  </section>
+                )}
+              </div>
+
+              {/* ===== SIDEBAR DROITE ===== */}
+              <aside className="lg:col-span-1">
+                <div className="sticky top-6 space-y-6">
+                  
+                  {/* Statistiques */}
+                  <div className="bg-white rounded-2xl shadow-sm p-5 border border-gray-200">
+                    <h4 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <TrendingUp size={18} className="text-emerald-500" />
+                      <FormattedMessage id="providerProfile.stats" />
+                    </h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600 text-sm">
+                          <FormattedMessage id="providerProfile.averageRating" />
+                        </span>
+                        <span className="font-semibold text-gray-900">
+                          {providerStats.averageRating ? providerStats.averageRating.toFixed(1) : "--"}/5
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600 text-sm">
+                          <FormattedMessage id="providerProfile.reviews" />
+                        </span>
+                        <span className="font-semibold text-gray-900">
+                          {providerStats.realReviewsCount}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600 text-sm">
+                          <FormattedMessage id="providerProfile.successRate" />
+                        </span>
+                        <span className="font-semibold text-gray-900">
+                          {isLoadingStats ? "..." : `${providerStats.successRate}%`}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600 text-sm">
+                          <FormattedMessage id="providerProfile.completedCalls" />
+                        </span>
+                        <span className="font-semibold text-gray-900">
+                          {isLoadingStats ? "..." : providerStats.completedCalls}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600 text-sm">
+                          <FormattedMessage id="providerProfile.experience" />
+                        </span>
+                        <span className="font-semibold text-gray-900">
+                          {isLawyer
+                            ? `${provider.yearsOfExperience || 0} ${yearsLabel}`
+                            : `${provider.yearsAsExpat || provider.yearsOfExperience || 0} ${yearsLabel}`}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Informations */}
+                  <div className="bg-white rounded-2xl shadow-sm p-5 border border-gray-200">
+                    <h4 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <User size={18} className="text-gray-500" />
+                      <FormattedMessage id="providerProfile.information" />
+                    </h4>
+                    <div className="space-y-3 text-sm">
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <MapPin size={16} className="text-gray-400 flex-shrink-0" />
+                        <span>
+                          <FormattedMessage id="providerProfile.basedIn" />{" "}
+                          {getCountryName(provider.country, preferredLangKey)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <LanguagesIcon size={16} className="text-gray-400 flex-shrink-0" />
+                        <span>
+                          <FormattedMessage id="providerProfile.speaks" />{" "}
+                          {formatLanguages(languageCodes, preferredLangKey)}
+                        </span>
+                      </div>
+                      {joinDateText && (
+                        <div className="flex items-center gap-2 text-gray-500 text-xs">
+                          <Clock size={14} className="text-gray-400 flex-shrink-0" />
+                          <span>{joinDateText}</span>
+                        </div>
+                      )}
+                      
+                      {/* Statut en ligne avec animation */}
+                      <div
+                        className={`flex items-center gap-2 p-3 rounded-xl mt-2 transition-all ${
+                          onlineStatus.isOnline 
+                            ? "bg-green-50 border border-green-200" 
+                            : "bg-gray-50 border border-gray-200"
+                        }`}
+                      >
+                        <div
+                          className={`relative w-5 h-5 rounded-full flex items-center justify-center ${
+                            onlineStatus.isOnline ? "bg-green-500" : "bg-gray-400"
+                          }`}
+                        >
+                          {onlineStatus.isOnline && (
+                            <div className="absolute w-5 h-5 rounded-full bg-green-500 animate-ping opacity-75" />
+                          )}
+                          <div className="w-2 h-2 bg-white rounded-full relative z-10" />
+                        </div>
+                        <span className={`font-semibold text-sm ${
+                          onlineStatus.isOnline ? "text-green-700" : "text-gray-600"
+                        }`}>
+                          {onlineStatus.isOnline ? (
+                            <FormattedMessage id="providerProfile.onlineNow" />
+                          ) : (
+                            <FormattedMessage id="providerProfile.offline" />
+                          )}
+                        </span>
+                      </div>
+
+                      {/* Badge vérifié */}
+                      {provider.isVerified && (
+                        <div className="flex items-center gap-2 text-gray-600 pt-2">
+                          <Shield size={16} className="text-green-500 flex-shrink-0" />
+                          <span className="font-medium">
+                            <FormattedMessage id="providerProfile.verifiedExpert" />
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </main>
+      </div>
+
+      {/* ========================================== */}
+      {/* CTA FLOTTANT MOBILE - TOUJOURS VISIBLE    */}
+      {/* ========================================== */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
+        <div className="px-4 py-3 safe-area-inset-bottom">
+          {/* Info prix + statut */}
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-bold text-gray-900">
+                {bookingPrice ? formatEUR(bookingPrice.eur) : "—"}
+              </span>
+              <span className="text-gray-500 text-sm">
+                / {bookingPrice?.duration || 20}{minutesLabel.charAt(0)}
+              </span>
+            </div>
+            <div
+              className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                isOnCall
+                  ? "bg-orange-100 text-orange-700"
+                  : onlineStatus.isOnline
+                    ? "bg-green-100 text-green-700"
+                    : "bg-gray-100 text-gray-600"
+              }`}
+            >
+              {isOnCall
+                ? intl.formatMessage({ id: "providerProfile.onCall" })
+                : onlineStatus.isOnline
+                  ? intl.formatMessage({ id: "providerProfile.available" })
+                  : intl.formatMessage({ id: "providerProfile.offline" })}
+            </div>
+          </div>
+
+          {/* Bouton CTA */}
+          <button
+            onClick={handleBookCall}
+            disabled={!onlineStatus.isOnline || isOnCall}
+            className={`w-full py-3.5 rounded-xl font-bold text-base transition-all flex items-center justify-center gap-2 ${
+              onlineStatus.isOnline && !isOnCall
+                ? "bg-gradient-to-r from-green-600 to-green-500 text-white shadow-lg shadow-green-500/30 active:scale-[0.98]"
+                : "bg-gray-200 text-gray-500 cursor-not-allowed"
+            }`}
+            aria-label={
+              onlineStatus.isOnline && !isOnCall
+                ? intl.formatMessage(
+                    { id: "providerProfile.callAriaLabel", defaultMessage: "Appeler {name}" },
+                    { name: formatShortName(provider) }
+                  )
+                : isOnCall
+                  ? intl.formatMessage({ id: "providerProfile.alreadyOnCall" })
+                  : intl.formatMessage({ id: "providerProfile.unavailable" })
+            }
+          >
+            {onlineStatus.isOnline && !isOnCall ? (
+              <>
+                <Phone size={20} />
+                <span><FormattedMessage id="providerProfile.callButton" defaultMessage="Appeler maintenant" /></span>
+              </>
+            ) : isOnCall ? (
+              <>
+                <XCircle size={20} />
+                <FormattedMessage id="providerProfile.alreadyOnCall" />
+              </>
+            ) : (
+              <>
+                <XCircle size={20} />
+                <FormattedMessage id="providerProfile.unavailable" />
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* ========================================== */}
+      {/* MODAL IMAGE                               */}
+      {/* ========================================== */}
+      {showImageModal && (
+        <div
+          className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowImageModal(false)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') setShowImageModal(false);
+          }}
+          role="dialog"
+          aria-modal="true"
+          aria-label={intl.formatMessage({ id: "providerProfile.imageModalAria", defaultMessage: "Agrandissement de l'image de profil" })}
+          tabIndex={-1}
+        >
+          <div className="relative max-w-3xl max-h-[90vh]">
+            <img
+              src={mainPhoto}
+              alt={intl.formatMessage({ id: "providerProfile.fullPhotoAlt", defaultMessage: "Photo complète de {name}" }, { name: formatPublicName(provider) })}
+              className="max-w-full max-h-[90vh] object-contain rounded-2xl"
+              onError={handleImageError}
+              loading="lazy"
+              width={IMAGE_SIZES.MODAL_MAX_WIDTH}
+              height={IMAGE_SIZES.MODAL_MAX_HEIGHT}
+            />
+            <button
+              className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full p-2.5 text-gray-800 hover:bg-white transition-colors shadow-lg focus:outline-none focus:ring-2 focus:ring-white"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowImageModal(false);
+              }}
+              aria-label={intl.formatMessage({ id: "providerProfile.close" })}
+            >
+              <X size={24} />
+            </button>
+          </div>
+        </div>
+      )}
+    </Layout>
+  );
+};
+
+export default ProviderProfile;

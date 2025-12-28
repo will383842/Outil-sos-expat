@@ -1,0 +1,27 @@
+{
+  "title": "Asistente legal experto",
+  "description": "Escriba las preguntas de su cliente para recibir respuestas legales detalladas y con fuentes.",
+  "placeholder": "Chatee con GPT para refinar la respuesta...",
+  "placeholderClient": "Escriba la pregunta del cliente...",
+  "typing": "GPT está pensando...",
+  "generating": "El asistente IA está generando una respuesta",
+  "analyzing": "Análisis legal en curso...",
+  "sendMessage": "Enviar mensaje",
+  "sendMessageShort": "Enviar",
+  "sending": "Enviando...",
+  "copyMessage": "Copiar mensaje",
+  "copyResponse": "Copiar respuesta",
+  "messageCopied": "Mensaje copiado",
+  "regenerate": "Regenerar respuesta",
+  "chatHistory": "Historial de conversación con el asistente IA",
+  "assistantLabel": "Asistente legal",
+  "yourQuestion": "Su pregunta",
+  "instructions": {
+    "desktop": "Presione Enter para enviar, Shift+Enter para nueva línea"
+  },
+  "tags": {
+    "internationalLaw": "Derecho internacional",
+    "expatTax": "Fiscalidad de expatriados",
+    "immigration": "Inmigración"
+  }
+}

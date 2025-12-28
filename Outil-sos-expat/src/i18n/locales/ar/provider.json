@@ -1,0 +1,314 @@
+{
+  "dashboard": {
+    "title": "لوحة التحكم الخاصة بي",
+    "welcome": "مرحبا، {{name}}",
+    "selectProvider": "اختر مقدم خدمة لعرض احصائياتك",
+    "activityOf": "نشاط {{name}}",
+    "noProvider": {
+      "title": "لم يتم اختيار مقدم خدمة",
+      "description": "يرجى تسجيل الدخول او اختيار حساب مقدم خدمة"
+    },
+    "stats": {
+      "myDossiers": "ملفاتي",
+      "activeDossiers": "الملفات النشطة",
+      "myActiveDossiers": "ملفاتي النشطة",
+      "pending": "قيد الانتظار",
+      "inProgress": "قيد التنفيذ",
+      "completed": "مكتملة",
+      "completedThisMonth": "مكتملة هذا الشهر",
+      "total": "اجمالي",
+      "typeLawyer": "نوع المحامي",
+      "typeExpat": "نوع المغترب",
+      "myRevenue": "ايراداتي"
+    },
+    "quota": {
+      "title": "حصة الذكاء الاصطناعي",
+      "usages": "استخدامات",
+      "remaining": "{{count}} استخدامات متبقية",
+      "almostReached": "الحصة شارفت على النفاد! تواصل مع الدعم لزيادتها."
+    },
+    "recentDossiers": "ملفاتي الاخيرة",
+    "noDossiers": "لا توجد ملفات حديثة",
+    "recentBookings": "الملفات الحديثة",
+    "noRecentBookings": "لا توجد ملفات حديثة",
+    "quickActions": {
+      "title": "اجراءات سريعة",
+      "myDossiers": "ملفاتي",
+      "myProfile": "ملفي الشخصي",
+      "messages": "الرسائل"
+    },
+    "charts": {
+      "distributionByType": "التوزيع حسب النوع",
+      "dossiersByStatus": "الملفات حسب الحالة"
+    },
+    "aiAssistant": {
+      "title": "مساعد قانوني بالذكاء الاصطناعي",
+      "description": "يقوم الذكاء الاصطناعي بتوليد ردود قانونية سياقية تلقائيا لكل ملف. يمكن لمقدمي الخدمات الدردشة مع الذكاء الاصطناعي في الوقت الفعلي اثناء مكالماتهم مع العملاء.",
+      "autoResponsesEnabled": "الردود التلقائية مفعلة"
+    },
+    "subscription": {
+      "title": "اشتراكي",
+      "active": "نشط",
+      "trial": "فترة تجريبية",
+      "pending": "في انتظار الدفع",
+      "expired": "منتهي",
+      "expiresIn": "{{days}} يوم متبقي",
+      "expiresToday": "ينتهي اليوم",
+      "expiresTomorrow": "ينتهي غدا",
+      "renewWarning": "جدد اشتراكك للمتابعة"
+    }
+  },
+  "multiDashboard": {
+    "title": "لوحة تحكم متعددة المزودين",
+    "allProviders": "جميع المزودين",
+    "selectProvider": "اختر مزودا",
+    "aggregatedView": "عرض مجمع ل {{count}} مزودين",
+    "statsFor": "احصائيات {{name}}",
+    "sharedQuota": "الحصة المشتركة",
+    "remaining": "{{count}} متبقي",
+    "quotaWarning": "الحصة شارفت على النفاد. تواصل مع الادارة.",
+    "linkedProviders": "المزودون المرتبطون",
+    "activity7Days": "نشاط 7 ايام",
+    "distributionByType": "التوزيع حسب النوع",
+    "dossiersByStatus": "الملفات حسب الحالة",
+    "revenue": "الايرادات"
+  },
+  "dossiers": {
+    "title": "الملفات",
+    "count": "{{count}} ملف",
+    "count_other": "{{count}} ملفات",
+    "found": "تم العثور عليها",
+    "search": "البحث بالعنوان، العميل، البلد...",
+    "filters": {
+      "status": "الحالة",
+      "type": "النوع",
+      "all": "الكل",
+      "lawyer": "محامي",
+      "expat": "خبير"
+    },
+    "empty": {
+      "title": "لم يتم العثور على ملفات",
+      "modifyFilters": "حاول تعديل المرشحات",
+      "newRequestsHere": "ستظهر الطلبات الجديدة هنا"
+    },
+    "loadMore": "تحميل المزيد من الملفات",
+    "allLoaded": "تم تحميل جميع الملفات ({{count}} اجمالي)",
+    "noDescription": "لا يوجد وصف",
+    "noTitle": "بدون عنوان"
+  },
+  "dossierDetail": {
+    "accessDenied": "تم رفض الوصول - هذا الملف لا يخصك",
+    "notFound": "الملف غير موجود",
+    "consultationDuration": "مدة الاستشارة",
+    "consultationTimeElapsed": "انتهى وقت الاستشارة",
+    "autoLockWarning": "سيتم قفل المحادثة تلقائيا",
+    "startAfterFirstResponse": "ستبدا الاستشارة بعد اول رد من الذكاء الاصطناعي",
+    "conversationClosed": "المحادثة مغلقة",
+    "historyAvailable": "السجل لا يزال متاحا اعلاه"
+  },
+  "aiChat": {
+    "title": "مساعد قانوني بالذكاء الاصطناعي",
+    "subtitle": "اطرح اسئلة العميل هنا",
+    "timeElapsed": "الوقت المنقضي",
+    "expertTitle": "مساعد قانوني خبير",
+    "expertDescription": "اكتب اسئلة عميلك للحصول على اجابات قانونية مفصلة ومصادر موثقة.",
+    "tags": {
+      "internationalLaw": "القانون الدولي",
+      "expatTax": "ضرائب المغتربين",
+      "immigration": "الهجرة"
+    },
+    "legalAssistant": "مساعد قانوني",
+    "yourQuestion": "سؤالك",
+    "copyResponse": "نسخ الرد",
+    "analyzing": "جاري التحليل القانوني...",
+    "inputPlaceholder": "اكتب سؤال العميل...",
+    "keyboardHint": "Enter للارسال - Shift+Enter لسطر جديد"
+  },
+  "clientInfo": {
+    "waitingAI": "في انتظار الذكاء الاصطناعي",
+    "archived": "مؤرشف",
+    "activeConsultation": "استشارة نشطة",
+    "duration": "المدة: {{minutes}} دقيقة",
+    "timeRemaining": "الوقت المتبقي ({{minutes}} دقيقة اجمالي)",
+    "historyAvailable": "سجل المحادثة لا يزال متاحا للاطلاع",
+    "client": "العميل",
+    "name": "الاسم",
+    "nationality": "الجنسية",
+    "interventionCountry": "بلد التدخل",
+    "languages": "اللغات",
+    "request": "الطلب",
+    "title": "العنوان",
+    "description": "الوصف",
+    "service": "الخدمة",
+    "createdOn": "تاريخ الانشاء",
+    "provider": "مقدم الخدمة"
+  },
+  "page": {
+    "loadingDossier": "جاري تحميل الملف...",
+    "backToDossiers": "العودة الى الملفات",
+    "aiActive": "الذكاء الاصطناعي نشط",
+    "consultationExpiredMessage": "انتهى وقت الاستشارة ({{minutes}} دقيقة) - السجل لا يزال متاحا",
+    "initializingChat": "جاري تهيئة محادثة الذكاء الاصطناعي..."
+  },
+  "bookingCard": {
+    "lawyer": "محامي",
+    "expat": "مغترب",
+    "aiProcessed": "ذكاء اصطناعي",
+    "client": "عميل"
+  },
+  "statusActions": {
+    "startCall": "بدء المكالمة",
+    "finish": "انهاء",
+    "cancel": "الغاء",
+    "reopenConversation": "اعادة فتح المحادثة"
+  },
+  "quotaExhausted": {
+    "title": "نفدت حصة الاستخدام",
+    "description": "لقد وصلت الى حد طلبات الذكاء الاصطناعي لهذه الفترة. قم بترقية اشتراكك لمواصلة استخدام المساعد.",
+    "quotaUsage": "استخدام الحصة",
+    "requestsUsed": "طلبات مستخدمة",
+    "outOf": "من",
+    "nextRenewal": "التجديد التالي",
+    "increaseQuota": "زيادة حصتي",
+    "contactSupport": "التواصل مع الدعم",
+    "signOut": "تسجيل الخروج",
+    "connectedAs": "متصل كـ"
+  },
+  "messages": {
+    "title": "الرسائل",
+    "aiResponses": "ردود الذكاء الاصطناعي",
+    "questions": "اسئلة",
+    "lastAiResponse": "اخر رد من الذكاء الاصطناعي",
+    "selectProvider": "اختر مزودا لعرض محادثاتك",
+    "modifySearch": "حاول تعديل بحثك",
+    "allConversations": "جميع المحادثات",
+    "myConversations": "محادثاتي",
+    "allConversationsHistory": "سجل جميع المحادثات وردود الذكاء الاصطناعي",
+    "conversationsOf": "محادثات {{name}}",
+    "conversations": "المحادثات",
+    "activeLastHour": "نشطة (ساعة)",
+    "searchPlaceholder": "البحث بالعميل، معرف الملف...",
+    "noConversationFound": "لم يتم العثور على محادثات",
+    "conversationsWillAppear": "ستظهر المحادثات مع الذكاء الاصطناعي هنا",
+    "conversation": "محادثة"
+  },
+  "profile": {
+    "title": "ملفي الشخصي",
+    "description": "ادارة معلومات حساب مقدم الخدمة",
+    "loading": "جاري تحميل الملف الشخصي...",
+    "noProviderSelected": "لم يتم اختيار مقدم خدمة",
+    "selectProviderToView": "اختر مقدم خدمة لعرض ملفه الشخصي",
+    "lawyer": "محامي",
+    "expatExpert": "خبير شؤون المغتربين",
+    "contactInfo": "معلومات الاتصال",
+    "email": "البريد الالكتروني",
+    "emailNotEditable": "لا يمكن تعديل البريد الالكتروني",
+    "phone": "الهاتف",
+    "website": "الموقع الالكتروني",
+    "location": "الموقع",
+    "country": "البلد",
+    "contactAdminToModify": "تواصل مع المسؤول للتعديل",
+    "city": "المدينة",
+    "address": "العنوان",
+    "specialties": "التخصصات",
+    "addSpecialty": "اضافة تخصص...",
+    "noSpecialtyAdded": "لم يتم اضافة تخصص",
+    "noSpecialtySet": "لم يتم تحديد تخصص",
+    "spokenLanguages": "اللغات المتحدثة",
+    "addLanguage": "اضافة لغة...",
+    "noLanguageAdded": "لم يتم اضافة لغة",
+    "noLanguageSet": "لم يتم تحديد لغة",
+    "descriptionSection": "الوصف",
+    "descriptionPlaceholder": "صف نشاطك ومجالات تخصصك...",
+    "noDescriptionSet": "لم يتم تحديد وصف",
+    "systemInfo": "معلومات النظام",
+    "providerId": "معرف مقدم الخدمة",
+    "accountType": "نوع الحساب",
+    "providerName": "اسم مقدم الخدمة",
+    "statusLabel": "الحالة"
+  },
+  "providerSwitcher": {
+    "noProvider": "لا يوجد مزود مرتبط",
+    "select": "اختر...",
+    "switchProvider": "تبديل المزود",
+    "manageProviders": "ادارة مزوديي",
+    "lawyer": "محامي",
+    "expatExpert": "خبير شؤون المغتربين"
+  },
+  "subscriptionScreen": {
+    "header": {
+      "subtitle": "مساعد الذكاء الاصطناعي لمقدمي الخدمات",
+      "signOut": "تسجيل الخروج"
+    },
+    "hero": {
+      "badge": "الاشتراك مطلوب",
+      "title": "عزز استشاراتك بالذكاء الاصطناعي",
+      "descriptionLawyer": "احصل على مساعد قانوني بالذكاء الاصطناعي يبحث عن المعلومات القانونية في الوقت الفعلي أثناء استشاراتك.",
+      "descriptionExpat": "احصل على معلومات عملية فورية حول الاغتراب لدعم عملائك بشكل أفضل."
+    },
+    "benefits": {
+      "aiRealTime": {
+        "title": "مساعد ذكاء اصطناعي فوري",
+        "description": "بحث قانوني فوري أثناء استشاراتك"
+      },
+      "updatedData": {
+        "title": "بيانات محدثة",
+        "description": "الوصول إلى المعلومات القانونية من أكثر من 190 دولة"
+      },
+      "timeSaving": {
+        "title": "توفير الوقت",
+        "description": "إجابات دقيقة في ثوانٍ"
+      },
+      "reliableSources": {
+        "title": "مصادر موثوقة",
+        "description": "اقتباسات ومراجع قانونية موثقة"
+      }
+    },
+    "pricing": {
+      "monthly": "شهري",
+      "annual": "سنوي",
+      "perMonth": "/شهر",
+      "billedAnnually": "يُفوتر {{amount}}€/سنة",
+      "savings": "وفر {{amount}}€",
+      "unlimited": "وصول غير محدود لمساعد الذكاء الاصطناعي",
+      "noCommitment": "بدون التزام",
+      "cancelAnytime": "إلغاء في أي وقت",
+      "twoMonthsFree": "شهران مجاناً",
+      "prioritySupport": "دعم ذو أولوية",
+      "chooseMonthly": "اختر الشهري",
+      "subscribeNow": "اشترك الآن"
+    },
+    "payment": {
+      "secure": "دفع آمن ببطاقة الائتمان",
+      "methods": "فيزا، ماستركارد، أمريكان إكسبريس - دفع مشفر SSL - متوافق مع PCI-DSS"
+    },
+    "footer": {
+      "questions": "أسئلة؟",
+      "contactUs": "تواصل معنا",
+      "connectedAs": "متصل كـ {{email}}",
+      "copyright": "جميع الحقوق محفوظة."
+    }
+  },
+  "subscriptionExpired": {
+    "gracePeriod": "فترة السماح",
+    "expired": "انتهى الاشتراك",
+    "titleGrace": "انتهى اشتراكك",
+    "titleSuspended": "الوصول معلق",
+    "descriptionGrace": "لديك {{days}} يوم لتجديد اشتراكك دون انقطاع الخدمة.",
+    "descriptionExpired": "انتهى اشتراكك. جدد الآن لاستعادة الوصول إلى مساعد الذكاء الاصطناعي.",
+    "expirationDate": "تاريخ الانتهاء",
+    "daysAgo": "منذ {{count}} يوم",
+    "daysAgo_other": "منذ {{count}} أيام",
+    "gracePeriodActive": "فترة السماح نشطة",
+    "daysRemaining": "{{count}} يوم متبقي للتجديد",
+    "whatYouGet": "ما ستستعيده",
+    "benefitAI": "مساعد ذكاء اصطناعي فوري",
+    "benefitCountries": "الوصول إلى بيانات من أكثر من 190 دولة",
+    "benefitSources": "مصادر قانونية موثقة",
+    "renewButton": "تجديد اشتراكي",
+    "contactSupport": "تواصل مع الدعم",
+    "signOut": "تسجيل الخروج",
+    "connectedAs": "متصل كـ {{email}}",
+    "copyright": "جميع الحقوق محفوظة."
+  }
+}

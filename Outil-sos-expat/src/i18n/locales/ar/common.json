@@ -1,0 +1,192 @@
+{
+  "navigation": {
+    "dashboard": "لوحة التحكم",
+    "dossiers": "ملفاتي",
+    "messages": "الرسائل",
+    "profile": "ملفي الشخصي",
+    "settings": "الإعدادات",
+    "signOut": "تسجيل الخروج",
+    "signingOut": "جاري الخروج...",
+    "prestataires": "مقدمو الخدمات",
+    "access": "الوصول",
+    "team": "الفريق",
+    "countries": "الدول",
+    "audit": "المراجعة",
+    "testAI": "اختبار الذكاء الاصطناعي",
+    "administration": "الإدارة"
+  },
+  "actions": {
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "create": "إنشاء",
+    "add": "إضافة",
+    "search": "بحث",
+    "filter": "تصفية",
+    "filters": "المرشحات",
+    "reset": "إعادة تعيين",
+    "export": "تصدير",
+    "refresh": "تحديث",
+    "loadMore": "تحميل المزيد",
+    "copy": "نسخ",
+    "copied": "تم النسخ",
+    "retry": "إعادة المحاولة",
+    "send": "إرسال",
+    "sending": "جاري الإرسال...",
+    "close": "إغلاق",
+    "back": "رجوع",
+    "backHome": "العودة للرئيسية",
+    "view": "عرض",
+    "viewAll": "عرض الكل",
+    "confirm": "تأكيد",
+    "preview": "معاينة",
+    "expand": "توسيع",
+    "collapse": "طي",
+    "start": "بدء",
+    "stop": "إيقاف",
+    "finish": "إنهاء",
+    "reopen": "إعادة فتح"
+  },
+  "status": {
+    "pending": "قيد الانتظار",
+    "inProgress": "قيد التنفيذ",
+    "completed": "مكتمل",
+    "cancelled": "ملغى",
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "expired": "منتهي الصلاحية",
+    "verified": "موثق",
+    "trial": "فترة تجريبية",
+    "paymentPending": "في انتظار الدفع"
+  },
+  "priority": {
+    "urgent": "عاجل",
+    "high": "عالية",
+    "medium": "متوسطة",
+    "low": "منخفضة"
+  },
+  "time": {
+    "today": "اليوم",
+    "yesterday": "أمس",
+    "minutesAgo": "منذ {{count}} دقيقة",
+    "hoursAgo": "منذ {{count}} ساعة",
+    "daysAgo": "منذ {{count}} يوم",
+    "daysRemaining": "{{count}} يوم متبقي",
+    "expiresToday": "ينتهي اليوم",
+    "expiresTomorrow": "ينتهي غداً"
+  },
+  "errors": {
+    "generic": "حدث خطأ",
+    "loading": "خطأ في التحميل",
+    "network": "خطأ في الشبكة",
+    "unauthorized": "غير مصرح بالوصول",
+    "notFound": "غير موجود",
+    "copyFailed": "فشل النسخ",
+    "sendFailed": "فشل الإرسال",
+    "loadingProfile": "خطأ في تحميل الملف الشخصي",
+    "savingProfile": "خطأ في حفظ الملف الشخصي"
+  },
+  "success": {
+    "saved": "تم الحفظ بنجاح",
+    "deleted": "تم الحذف بنجاح",
+    "copied": "تم النسخ إلى الحافظة",
+    "profileUpdated": "تم تحديث الملف الشخصي بنجاح!"
+  },
+  "empty": {
+    "noData": "لا توجد بيانات",
+    "noResults": "لا توجد نتائج",
+    "modifyFilters": "حاول تعديل المرشحات"
+  },
+  "loading": {
+    "default": "جاري التحميل...",
+    "dashboard": "جاري تحميل لوحة التحكم",
+    "dashboardMessage": "جاري تحميل لوحة التحكم..."
+  },
+  "language": "اللغة",
+  "all": "الكل",
+  "type": "النوع",
+  "types": {
+    "lawyer": "محامي",
+    "expat": "مغترب",
+    "expert": "خبير"
+  },
+  "providerTypes": {
+    "lawyer": "محامي",
+    "expatExpert": "خبير في شؤون المغتربين"
+  },
+  "roles": {
+    "admin": "مدير",
+    "agent": "وكيل",
+    "provider": "مقدم خدمة"
+  },
+  "offline": {
+    "message": "وضع عدم الاتصال - بعض الميزات محدودة"
+  },
+  "connectedAs": "متصل كـ",
+  "allRightsReserved": "جميع الحقوق محفوظة.",
+  "guards": {
+    "loading": "جاري التحميل...",
+    "verifyingAccess": "جاري التحقق من صلاحية الوصول...",
+    "accountNotFound": "الحساب غير موجود",
+    "accountNotFoundDescription": "حسابك غير موجود في نظامنا. يجب عليك أولاً التسجيل كمقدم خدمة على sos-expat.com.",
+    "registerOnSosExpat": "التسجيل على sos-expat.com",
+    "contactSupport": "الاتصال بالدعم",
+    "accessReservedProviders": "الوصول مخصص لمقدمي الخدمات",
+    "accessReservedDescription": "هذه الأداة مخصصة للمحامين وخبراء شؤون المغتربين الشركاء مع SOS Expat.",
+    "currentRoleNotAllowed": "دورك الحالي ({{role}}) لا يسمح بالوصول إلى هذا القسم.",
+    "becomeProvider": "كن مقدم خدمة",
+    "backToSosExpat": "العودة إلى sos-expat.com",
+    "subscriptionRequired": "الاشتراك مطلوب",
+    "subscriptionRequiredMessage": "مطلوب اشتراك فعال.",
+    "viewOffers": "عرض العروض",
+    "needHelp": "تحتاج مساعدة؟ تواصل معنا على",
+    "close": "إغلاق"
+  },
+  "subscription": {
+    "active": "نشط",
+    "trial": "تجريبي",
+    "trialing": "فترة تجريبية",
+    "pastDue": "متأخر الدفع",
+    "past_due": "متأخر الدفع",
+    "canceled": "ملغى",
+    "expired": "منتهي",
+    "unpaid": "غير مدفوع",
+    "paused": "متوقف",
+    "noSubscription": "لا يوجد اشتراك",
+    "admin": "مدير",
+    "expiresTomorrow": "ينتهي اشتراكك غداً. تذكر تجديده.",
+    "expiresInDays": "ينتهي اشتراكك خلال {{days}} أيام. تذكر تجديده.",
+    "expiresInDaysShort": "ينتهي اشتراكك خلال {{days}} أيام."
+  },
+  "language": {
+    "change": "تغيير اللغة",
+    "select": "اللغة / Language",
+    "available": "اللغات المتاحة"
+  },
+  "validation": {
+    "emailRequired": "البريد الإلكتروني مطلوب",
+    "emailInvalid": "صيغة البريد الإلكتروني غير صالحة",
+    "nameRequired": "الاسم مطلوب"
+  },
+  "provider": {
+    "addTitle": "إضافة مقدم خدمة",
+    "googleEmail": "بريد Google",
+    "googleEmailHint": "سيسجل مقدم الخدمة الدخول بهذا الحساب",
+    "fullName": "الاسم الكامل",
+    "providerType": "نوع مقدم الخدمة",
+    "lawyer": "محامي",
+    "expat": "مغترب",
+    "country": "البلد",
+    "adding": "جاري الإضافة...",
+    "addError": "خطأ أثناء الإضافة"
+  },
+  "subscriptionErrors": {
+    "notAuthenticated": "يجب تسجيل الدخول للوصول إلى هذه الميزة.",
+    "subscriptionExpired": "انتهى اشتراكك. يرجى التجديد للمتابعة.",
+    "subscriptionCanceled": "تم إلغاء اشتراكك. يرجى إعادة الاشتراك للمتابعة.",
+    "paymentFailed": "تم اكتشاف مشكلة في الدفع. يرجى تحديث معلومات الدفع.",
+    "noSubscription": "مطلوب اشتراك فعال للوصول إلى هذه الميزة.",
+    "accessGranted": "تم منح الوصول"
+  }
+}

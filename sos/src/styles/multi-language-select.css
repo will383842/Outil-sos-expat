@@ -1,0 +1,90 @@
+:root {
+  --mls-bg: #ffffff;
+  --mls-border: #e5e7eb;
+  --mls-border-focus: #dc2626;
+  --mls-text: #111827;
+  --mls-placeholder: rgba(107, 114, 128, 0.8);
+  --mls-menu-bg: #ffffff;
+  --mls-option-hover: #f8fafc;
+  --mls-chip-bg: #eff6ff;
+  --mls-chip-text: #1e40af;
+  --mls-chip-border: #dbeafe;
+  --mls-success-bg: #f0fdf4;
+  --mls-success-border: #bbf7d0;
+  --mls-success-text: #166534;
+}
+
+html.dark {
+  --mls-bg: rgba(15, 23, 42, 0.6);
+  --mls-border: rgba(148, 163, 184, 0.35);
+  --mls-border-focus: rgba(248, 113, 113, 0.8);
+  --mls-text: #f8fafc;
+  --mls-placeholder: rgba(226, 232, 240, 0.7);
+  --mls-menu-bg: rgba(15, 23, 42, 0.95);
+  --mls-option-hover: rgba(71, 85, 105, 0.45);
+  --mls-chip-bg: rgba(248, 113, 113, 0.15);
+  --mls-chip-text: #fee2e2;
+  --mls-chip-border: rgba(252, 165, 165, 0.5);
+  --mls-success-bg: rgba(34, 197, 94, 0.15);
+  --mls-success-border: rgba(34, 197, 94, 0.35);
+  --mls-success-text: #bbf7d0;
+}
+
+.multi-language-select {
+  width: 100%;
+}
+
+.multi-language-select .mls__control {
+  background-color: var(--mls-bg);
+  border: 2px solid var(--mls-border);
+  color: var(--mls-text);
+}
+
+.multi-language-select .mls__control--is-focused {
+  border-color: var(--mls-border-focus);
+  box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.25);
+}
+
+.multi-language-select .mls__value-container,
+.multi-language-select .mls__input-container {
+  color: var(--mls-text);
+}
+
+.multi-language-select .mls__single-value,
+.multi-language-select .mls__input {
+  color: var(--mls-text);
+}
+
+.multi-language-select .mls__placeholder {
+  color: var(--mls-placeholder);
+}
+
+.multi-language-select .mls__menu {
+  background-color: var(--mls-menu-bg);
+  border: 1px solid var(--mls-border);
+  color: var(--mls-text);
+}
+
+.multi-language-select .mls__option {
+  background-color: transparent;
+  color: var(--mls-text);
+}
+
+.multi-language-select .mls__option--is-focused {
+  background-color: var(--mls-option-hover);
+  color: var(--mls-text);
+}
+
+.multi-language-select .mls__multi-value {
+  background-color: var(--mls-chip-bg);
+  border: 1px solid var(--mls-chip-border);
+}
+
+.multi-language-select .mls__multi-value__label {
+  color: var(--mls-chip-text);
+}
+
+.multi-language-select .mls__menu-list {
+  background-color: var(--mls-menu-bg);
+}
+

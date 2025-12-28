@@ -1,0 +1,314 @@
+{
+  "dashboard": {
+    "title": "我的仪表板",
+    "welcome": "欢迎，{{name}}",
+    "selectProvider": "选择服务商以查看您的统计数据",
+    "activityOf": "{{name}}的活动",
+    "noProvider": {
+      "title": "未选择服务商",
+      "description": "请登录或选择服务商账户"
+    },
+    "stats": {
+      "myDossiers": "我的案例",
+      "activeDossiers": "活跃案例",
+      "myActiveDossiers": "我的活跃案例",
+      "pending": "待处理",
+      "inProgress": "进行中",
+      "completed": "已完成",
+      "completedThisMonth": "本月完成",
+      "total": "总计",
+      "typeLawyer": "律师类型",
+      "typeExpat": "外派类型",
+      "myRevenue": "我的收入"
+    },
+    "quota": {
+      "title": "AI配额",
+      "usages": "次使用",
+      "remaining": "剩余{{count}}次使用",
+      "almostReached": "配额即将用完！请联系客服增加。"
+    },
+    "recentDossiers": "我的近期案例",
+    "noDossiers": "暂无近期案例",
+    "recentBookings": "近期案例",
+    "noRecentBookings": "暂无近期案例",
+    "quickActions": {
+      "title": "快速操作",
+      "myDossiers": "我的案例",
+      "myProfile": "我的资料",
+      "messages": "消息"
+    },
+    "charts": {
+      "distributionByType": "类型分布",
+      "dossiersByStatus": "按状态分类的案例"
+    },
+    "aiAssistant": {
+      "title": "AI法律助手",
+      "description": "AI自动为每个案例生成情境化的法律回复。服务商可以在客户通话期间与AI实时聊天。",
+      "autoResponsesEnabled": "自动回复已启用"
+    },
+    "subscription": {
+      "title": "我的订阅",
+      "active": "活跃",
+      "trial": "试用期",
+      "pending": "待付款",
+      "expired": "已过期",
+      "expiresIn": "剩余{{days}}天",
+      "expiresToday": "今天到期",
+      "expiresTomorrow": "明天到期",
+      "renewWarning": "请续订以继续使用"
+    }
+  },
+  "multiDashboard": {
+    "title": "多服务商仪表板",
+    "allProviders": "所有服务商",
+    "selectProvider": "选择服务商",
+    "aggregatedView": "{{count}}个服务商的汇总视图",
+    "statsFor": "{{name}}的统计数据",
+    "sharedQuota": "共享配额",
+    "remaining": "剩余{{count}}",
+    "quotaWarning": "配额即将耗尽。请联系管理员。",
+    "linkedProviders": "关联的服务商",
+    "activity7Days": "7天活动",
+    "distributionByType": "类型分布",
+    "dossiersByStatus": "按状态分类的案例",
+    "revenue": "收入"
+  },
+  "dossiers": {
+    "title": "案例",
+    "count": "{{count}}个案例",
+    "count_other": "{{count}}个案例",
+    "found": "已找到",
+    "search": "按标题、客户、国家搜索...",
+    "filters": {
+      "status": "状态",
+      "type": "类型",
+      "all": "全部",
+      "lawyer": "律师",
+      "expat": "专家"
+    },
+    "empty": {
+      "title": "未找到案例",
+      "modifyFilters": "尝试修改筛选条件",
+      "newRequestsHere": "新请求将显示在这里"
+    },
+    "loadMore": "加载更多案例",
+    "allLoaded": "所有案例已加载（共{{count}}个）",
+    "noDescription": "无描述",
+    "noTitle": "无标题"
+  },
+  "dossierDetail": {
+    "accessDenied": "访问被拒绝 - 此案例不属于您",
+    "notFound": "案例未找到",
+    "consultationDuration": "咨询时长",
+    "consultationTimeElapsed": "咨询时间已用完",
+    "autoLockWarning": "对话将自动锁定",
+    "startAfterFirstResponse": "咨询将在第一次AI回复后开始",
+    "conversationClosed": "对话已结束",
+    "historyAvailable": "历史记录仍可在上方查看"
+  },
+  "aiChat": {
+    "title": "AI法律助手",
+    "subtitle": "在此处提出客户的问题",
+    "timeElapsed": "已用时间",
+    "expertTitle": "专家法律助手",
+    "expertDescription": "输入您客户的问题以获取详细且有来源的法律答复。",
+    "tags": {
+      "internationalLaw": "国际法",
+      "expatTax": "外派人员税务",
+      "immigration": "移民"
+    },
+    "legalAssistant": "法律助手",
+    "yourQuestion": "您的问题",
+    "copyResponse": "复制回复",
+    "analyzing": "法律分析中...",
+    "inputPlaceholder": "输入客户的问题...",
+    "keyboardHint": "按Enter发送 - Shift+Enter换行"
+  },
+  "clientInfo": {
+    "waitingAI": "等待AI",
+    "archived": "已归档",
+    "activeConsultation": "活跃咨询",
+    "duration": "时长：{{minutes}}分钟",
+    "timeRemaining": "剩余时间（总共{{minutes}}分钟）",
+    "historyAvailable": "对话历史记录仍可查看",
+    "client": "客户",
+    "name": "姓名",
+    "nationality": "国籍",
+    "interventionCountry": "服务国家",
+    "languages": "语言",
+    "request": "请求",
+    "title": "标题",
+    "description": "描述",
+    "service": "服务",
+    "createdOn": "创建于",
+    "provider": "服务商"
+  },
+  "page": {
+    "loadingDossier": "正在加载案例...",
+    "backToDossiers": "返回案例列表",
+    "aiActive": "AI已激活",
+    "consultationExpiredMessage": "咨询时间已用完（{{minutes}}分钟）- 历史记录仍可查看",
+    "initializingChat": "正在初始化AI聊天..."
+  },
+  "bookingCard": {
+    "lawyer": "律师",
+    "expat": "外派人员",
+    "aiProcessed": "AI",
+    "client": "客户"
+  },
+  "statusActions": {
+    "startCall": "开始通话",
+    "finish": "完成",
+    "cancel": "取消",
+    "reopenConversation": "重新开启对话"
+  },
+  "quotaExhausted": {
+    "title": "使用配额已耗尽",
+    "description": "您已达到本期AI请求限制。请升级订阅以继续使用助手。",
+    "quotaUsage": "配额使用情况",
+    "requestsUsed": "请求已使用",
+    "outOf": "共",
+    "nextRenewal": "下次续期",
+    "increaseQuota": "增加配额",
+    "contactSupport": "联系客服",
+    "signOut": "退出登录",
+    "connectedAs": "已连接为"
+  },
+  "messages": {
+    "title": "消息",
+    "aiResponses": "AI回复",
+    "questions": "问题",
+    "lastAiResponse": "最后AI回复",
+    "selectProvider": "选择服务商以查看对话",
+    "modifySearch": "尝试修改搜索条件",
+    "allConversations": "所有对话",
+    "myConversations": "我的对话",
+    "allConversationsHistory": "所有对话和AI回复的历史记录",
+    "conversationsOf": "{{name}}的对话",
+    "conversations": "对话",
+    "activeLastHour": "活跃（1小时）",
+    "searchPlaceholder": "按客户、案例ID搜索...",
+    "noConversationFound": "未找到对话",
+    "conversationsWillAppear": "与AI的对话将显示在这里",
+    "conversation": "对话"
+  },
+  "profile": {
+    "title": "我的资料",
+    "description": "管理您的服务商账户信息",
+    "loading": "正在加载资料...",
+    "noProviderSelected": "未选择服务商",
+    "selectProviderToView": "选择服务商以查看其资料",
+    "lawyer": "律师",
+    "expatExpert": "外派专家",
+    "contactInfo": "联系信息",
+    "email": "电子邮件",
+    "emailNotEditable": "电子邮件无法修改",
+    "phone": "电话",
+    "website": "网站",
+    "location": "位置",
+    "country": "国家",
+    "contactAdminToModify": "联系管理员进行修改",
+    "city": "城市",
+    "address": "地址",
+    "specialties": "专业领域",
+    "addSpecialty": "添加专业领域...",
+    "noSpecialtyAdded": "未添加专业领域",
+    "noSpecialtySet": "未设置专业领域",
+    "spokenLanguages": "所说语言",
+    "addLanguage": "添加语言...",
+    "noLanguageAdded": "未添加语言",
+    "noLanguageSet": "未设置语言",
+    "descriptionSection": "描述",
+    "descriptionPlaceholder": "描述您的业务、专业领域...",
+    "noDescriptionSet": "未设置描述",
+    "systemInfo": "系统信息",
+    "providerId": "服务商ID",
+    "accountType": "账户类型",
+    "providerName": "服务商名称",
+    "statusLabel": "状态"
+  },
+  "providerSwitcher": {
+    "noProvider": "无关联服务商",
+    "select": "选择...",
+    "switchProvider": "切换服务商",
+    "manageProviders": "管理我的服务商",
+    "lawyer": "律师",
+    "expatExpert": "外派专家"
+  },
+  "subscriptionScreen": {
+    "header": {
+      "subtitle": "服务商AI助手",
+      "signOut": "退出登录"
+    },
+    "hero": {
+      "badge": "需要订阅",
+      "title": "用AI提升您的咨询服务",
+      "descriptionLawyer": "获取AI法律助手，在咨询过程中实时搜索法律信息。",
+      "descriptionExpat": "即时获取有关移民的实用信息，更好地支持您的客户。"
+    },
+    "benefits": {
+      "aiRealTime": {
+        "title": "实时AI助手",
+        "description": "咨询期间即时法律研究"
+      },
+      "updatedData": {
+        "title": "更新数据",
+        "description": "访问190多个国家的法律信息"
+      },
+      "timeSaving": {
+        "title": "节省时间",
+        "description": "几秒钟内获得准确答案"
+      },
+      "reliableSources": {
+        "title": "可靠来源",
+        "description": "经过验证的法律引用和参考"
+      }
+    },
+    "pricing": {
+      "monthly": "月付",
+      "annual": "年付",
+      "perMonth": "/月",
+      "billedAnnually": "每年收费{{amount}}€",
+      "savings": "节省{{amount}}€",
+      "unlimited": "无限使用AI助手",
+      "noCommitment": "无需承诺",
+      "cancelAnytime": "随时取消",
+      "twoMonthsFree": "免费2个月",
+      "prioritySupport": "优先支持",
+      "chooseMonthly": "选择月付",
+      "subscribeNow": "立即订阅"
+    },
+    "payment": {
+      "secure": "信用卡安全支付",
+      "methods": "Visa, Mastercard, American Express - SSL加密支付 - PCI-DSS合规"
+    },
+    "footer": {
+      "questions": "有问题？",
+      "contactUs": "联系我们",
+      "connectedAs": "登录为 {{email}}",
+      "copyright": "保留所有权利。"
+    }
+  },
+  "subscriptionExpired": {
+    "gracePeriod": "宽限期",
+    "expired": "订阅已过期",
+    "titleGrace": "您的订阅已过期",
+    "titleSuspended": "访问已暂停",
+    "descriptionGrace": "您还有{{days}}天时间续订，不会中断服务。",
+    "descriptionExpired": "您的订阅已过期。立即续订以恢复AI助手访问权限。",
+    "expirationDate": "过期日期",
+    "daysAgo": "{{count}}天前",
+    "daysAgo_other": "{{count}}天前",
+    "gracePeriodActive": "宽限期有效",
+    "daysRemaining": "还有{{count}}天可以续订",
+    "whatYouGet": "您将恢复的功能",
+    "benefitAI": "实时AI助手",
+    "benefitCountries": "访问190多个国家的数据",
+    "benefitSources": "经过验证的法律来源",
+    "renewButton": "续订我的订阅",
+    "contactSupport": "联系支持",
+    "signOut": "退出登录",
+    "connectedAs": "登录为 {{email}}",
+    "copyright": "保留所有权利。"
+  }
+}

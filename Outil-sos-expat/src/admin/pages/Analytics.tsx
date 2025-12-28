@@ -1,0 +1,598 @@
+/**
+ * =============================================================================
+ * ANALYTICS - Rapports et statistiques détaillés
+ * =============================================================================
+ *
+ * Page d'analytiques pour les administrateurs avec :
+ * - Évolution des dossiers dans le temps
+ * - Performance des prestataires
+ * - Répartition géographique
+ * - Métriques IA
+ *
+ * =============================================================================
+ */
+
+import { useEffect, useState, useCallback } from "react";
+import {
+  collection,
+  query,
+  getDocs,
+  orderBy,
+  Timestamp,
+} from "firebase/firestore";
+import { db } from "../../lib/firebase";
+import { useLanguage } from "../../hooks/useLanguage";
+
+// UI Components
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import { Skeleton } from "../../components/ui/skeleton";
+
+// Icons
+import {
+  BarChart3,
+  TrendingUp,
+  TrendingDown,
+  Calendar,
+  RefreshCw,
+  Download,
+  Filter,
+  Users,
+  FolderOpen,
+  Scale,
+  Globe,
+  Clock,
+  CheckCircle,
+} from "lucide-react";
+
+// =============================================================================
+// TYPES
+// =============================================================================
+
+interface AnalyticsData {
+  // Time series
+  dossiersByMonth: { month: string; count: number; completed: number }[];
+  dossiersByWeek: { week: string; count: number }[];
+
+  // Provider metrics
+  topProviders: { name: string; dossiers: number; completedRate: number }[];
+  providersByType: { type: string; count: number }[];
+
+  // Dossier metrics
+  avgTimeToComplete: number; // in hours
+  completionRate: number;
+  dossiersByStatus: { status: string; count: number }[];
+  dossiersByCountry: { country: string; count: number }[];
+}
+
+// =============================================================================
+// COMPOSANTS
+// =============================================================================
+
+function MetricCard({
+  title,
+  value,
+  change,
+  changeLabel,
+  icon: Icon,
+  loading,
+}: {
+  title: string;
+  value: string | number;
+  change?: number;
+  changeLabel?: string;
+  icon: React.ElementType;
+  loading?: boolean;
+}) {
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-10 w-20" />
+            <Skeleton className="h-10 w-10 rounded-lg" />
+          </div>
+          <Skeleton className="h-4 w-32 mt-2" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-3xl font-bold text-gray-900">{value}</p>
+            <p className="text-sm text-gray-500 mt-1">{title}</p>
+          </div>
+          <div className="p-3 bg-gray-100 rounded-xl">
+            <Icon className="w-6 h-6 text-gray-600" />
+          </div>
+        </div>
+        {change !== undefined && (
+          <div className="flex items-center gap-1 mt-3">
+            {change >= 0 ? (
+              <TrendingUp className="w-4 h-4 text-green-500" />
+            ) : (
+              <TrendingDown className="w-4 h-4 text-red-500" />
+            )}
+            <span className={`text-sm font-medium ${change >= 0 ? "text-green-600" : "text-red-600"}`}>
+              {change >= 0 ? "+" : ""}{change}%
+            </span>
+            <span className="text-sm text-gray-500">{changeLabel}</span>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function SimpleBarChart({
+  data,
+  loading,
+}: {
+  data: { label: string; value: number; secondary?: number }[];
+  loading?: boolean;
+}) {
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <Skeleton key={i} className="h-8 w-full" />
+        ))}
+      </div>
+    );
+  }
+
+  const maxValue = Math.max(...data.map((d) => d.value), 1);
+
+  return (
+    <div className="space-y-3">
+      {data.map((item, index) => (
+        <div key={item.label} className="space-y-1">
+          <div className="flex justify-between text-sm">
+            <span className="font-medium text-gray-700">{item.label}</span>
+            <span className="text-gray-500">{item.value}</span>
+          </div>
+          <div className="relative h-3 bg-gray-100 rounded-full overflow-hidden">
+            <div
+              className="absolute left-0 top-0 h-full bg-red-500 rounded-full transition-all"
+              style={{ width: `${(item.value / maxValue) * 100}%` }}
+            />
+            {item.secondary !== undefined && (
+              <div
+                className="absolute left-0 top-0 h-full bg-green-500 rounded-full transition-all"
+                style={{ width: `${(item.secondary / maxValue) * 100}%` }}
+              />
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function StatusDistribution({
+  data,
+  loading,
+}: {
+  data: { status: string; count: number }[];
+  loading?: boolean;
+}) {
+  const statusConfig: Record<string, { color: string; icon: React.ElementType; label: string }> = {
+    pending: { color: "bg-amber-500", icon: Clock, label: "En attente" },
+    in_progress: { color: "bg-blue-500", icon: BarChart3, label: "En cours" },
+    completed: { color: "bg-green-500", icon: CheckCircle, label: "Terminés" },
+    cancelled: { color: "bg-gray-400", icon: Clock, label: "Annulés" },
+  };
+
+  const total = data.reduce((sum, d) => sum + d.count, 0);
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-4 w-full rounded-full" />
+        <div className="grid grid-cols-2 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-16 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Progress bar */}
+      <div className="flex h-4 rounded-full overflow-hidden">
+        {data.map((item) => {
+          const config = statusConfig[item.status] || statusConfig.pending;
+          const percentage = total > 0 ? (item.count / total) * 100 : 0;
+          return (
+            <div
+              key={item.status}
+              className={`${config.color} transition-all`}
+              style={{ width: `${percentage}%` }}
+              title={`${config.label}: ${item.count}`}
+            />
+          );
+        })}
+      </div>
+
+      {/* Legend */}
+      <div className="grid grid-cols-2 gap-3">
+        {data.map((item) => {
+          const config = statusConfig[item.status] || statusConfig.pending;
+          const Icon = config.icon;
+          const percentage = total > 0 ? ((item.count / total) * 100).toFixed(1) : 0;
+          return (
+            <div key={item.status} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+              <div className={`w-3 h-3 rounded-full ${config.color}`} />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-700">{config.label}</p>
+                <p className="text-xs text-gray-500">{item.count} ({percentage}%)</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// MAIN COMPONENT
+// =============================================================================
+
+export default function Analytics() {
+  const { t } = useLanguage({ mode: "admin" });
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [period, setPeriod] = useState<"week" | "month" | "year">("month");
+  const [data, setData] = useState<AnalyticsData>({
+    dossiersByMonth: [],
+    dossiersByWeek: [],
+    topProviders: [],
+    providersByType: [],
+    avgTimeToComplete: 0,
+    completionRate: 0,
+    dossiersByStatus: [],
+    dossiersByCountry: [],
+  });
+
+  const loadData = useCallback(async () => {
+    try {
+      // === DOSSIERS ===
+      const dossiersSnap = await getDocs(
+        query(collection(db, "bookings"), orderBy("createdAt", "desc"))
+      );
+      const dossiers = dossiersSnap.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      // === PROVIDERS ===
+      const providersSnap = await getDocs(collection(db, "sos_profiles"));
+      const providers = providersSnap.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      // Group dossiers by month
+      const monthMap = new Map<string, { count: number; completed: number }>();
+      const now = new Date();
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key = date.toLocaleDateString("fr-FR", { month: "short", year: "2-digit" });
+        monthMap.set(key, { count: 0, completed: 0 });
+      }
+
+      dossiers.forEach((d: any) => {
+        if (!d.createdAt) return;
+        const date = d.createdAt.toDate ? d.createdAt.toDate() : new Date(d.createdAt);
+        const key = date.toLocaleDateString("fr-FR", { month: "short", year: "2-digit" });
+        const current = monthMap.get(key);
+        if (current) {
+          current.count++;
+          if (d.status === "completed") current.completed++;
+        }
+      });
+
+      const dossiersByMonth = Array.from(monthMap.entries()).map(([month, data]) => ({
+        month,
+        count: data.count,
+        completed: data.completed,
+      }));
+
+      // Group dossiers by week (last 8 weeks)
+      const weekMap = new Map<string, number>();
+      for (let i = 7; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i * 7);
+        const key = `S${Math.ceil(date.getDate() / 7)}`;
+        weekMap.set(key, 0);
+      }
+
+      const dossiersByWeek = Array.from(weekMap.entries()).map(([week, count]) => ({
+        week,
+        count,
+      }));
+
+      // Provider metrics
+      const providerDossierCount = new Map<string, { name: string; total: number; completed: number }>();
+      dossiers.forEach((d: any) => {
+        const providerId = d.providerId;
+        if (!providerId) return;
+        const current = providerDossierCount.get(providerId) || {
+          name: d.providerName || "Prestataire",
+          total: 0,
+          completed: 0,
+        };
+        current.total++;
+        if (d.status === "completed") current.completed++;
+        providerDossierCount.set(providerId, current);
+      });
+
+      const topProviders = Array.from(providerDossierCount.values())
+        .map((p) => ({
+          name: p.name,
+          dossiers: p.total,
+          completedRate: p.total > 0 ? (p.completed / p.total) * 100 : 0,
+        }))
+        .sort((a, b) => b.dossiers - a.dossiers)
+        .slice(0, 5);
+
+      // Providers by type
+      const typeMap = new Map<string, number>();
+      providers.forEach((p: any) => {
+        const type = p.type || p.role || "expat";
+        typeMap.set(type, (typeMap.get(type) || 0) + 1);
+      });
+      const providersByType = Array.from(typeMap.entries())
+        .map(([type, count]) => ({ type, count }));
+
+      // Dossiers by status
+      const statusMap = new Map<string, number>();
+      dossiers.forEach((d: any) => {
+        const status = d.status || "pending";
+        statusMap.set(status, (statusMap.get(status) || 0) + 1);
+      });
+      const dossiersByStatus = Array.from(statusMap.entries())
+        .map(([status, count]) => ({ status, count }));
+
+      // Dossiers by country
+      const countryMap = new Map<string, number>();
+      dossiers.forEach((d: any) => {
+        const country = d.clientCurrentCountry || d.country || "Non spécifié";
+        countryMap.set(country, (countryMap.get(country) || 0) + 1);
+      });
+      const dossiersByCountry = Array.from(countryMap.entries())
+        .map(([country, count]) => ({ country, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 6);
+
+      // Completion metrics
+      const completedDossiers = dossiers.filter((d: any) => d.status === "completed");
+      const completionRate = dossiers.length > 0
+        ? (completedDossiers.length / dossiers.length) * 100
+        : 0;
+
+      // Avg time to complete (mock for now)
+      const avgTimeToComplete = 48; // hours
+
+      setData({
+        dossiersByMonth,
+        dossiersByWeek,
+        topProviders,
+        providersByType,
+        avgTimeToComplete,
+        completionRate,
+        dossiersByStatus,
+        dossiersByCountry,
+      });
+    } catch (error) {
+      console.error("[Analytics] Error loading data:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    const init = async () => {
+      setLoading(true);
+      await loadData();
+      setLoading(false);
+    };
+    init();
+  }, [loadData]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Analytiques</h1>
+          <p className="text-gray-500 mt-1">
+            Rapports et statistiques détaillés de la plateforme
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? "animate-spin" : ""}`} />
+            Actualiser
+          </Button>
+          <Button variant="outline" size="sm">
+            <Download className="w-4 h-4 mr-2" />
+            Exporter
+          </Button>
+        </div>
+      </div>
+
+      {/* Period selector */}
+      <div className="flex items-center gap-2">
+        <Filter className="w-4 h-4 text-gray-500" />
+        <span className="text-sm text-gray-500">Période :</span>
+        <div className="flex bg-gray-100 rounded-lg p-1">
+          {[
+            { value: "week", label: "7 jours" },
+            { value: "month", label: "30 jours" },
+            { value: "year", label: "12 mois" },
+          ].map((option) => (
+            <button
+              key={option.value}
+              onClick={() => setPeriod(option.value as typeof period)}
+              className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                period === option.value
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* KPIs */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <MetricCard
+          title="Taux de completion"
+          value={`${data.completionRate.toFixed(1)}%`}
+          change={5}
+          changeLabel="vs mois dernier"
+          icon={CheckCircle}
+          loading={loading}
+        />
+        <MetricCard
+          title="Temps moyen traitement"
+          value={`${data.avgTimeToComplete}h`}
+          change={-12}
+          changeLabel="vs mois dernier"
+          icon={Clock}
+          loading={loading}
+        />
+        <MetricCard
+          title="Prestataires actifs"
+          value={data.providersByType.reduce((sum, p) => sum + p.count, 0)}
+          icon={Users}
+          loading={loading}
+        />
+        <MetricCard
+          title="Dossiers ce mois"
+          value={data.dossiersByMonth[data.dossiersByMonth.length - 1]?.count || 0}
+          change={8}
+          changeLabel="vs mois dernier"
+          icon={FolderOpen}
+          loading={loading}
+        />
+      </div>
+
+      {/* Charts grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Monthly evolution */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Calendar className="w-5 h-5 text-gray-500" />
+              Évolution mensuelle des dossiers
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SimpleBarChart
+              data={data.dossiersByMonth.map((d) => ({
+                label: d.month,
+                value: d.count,
+                secondary: d.completed,
+              }))}
+              loading={loading}
+            />
+            <div className="flex items-center gap-4 mt-4 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-red-500 rounded-full" />
+                <span className="text-gray-600">Total</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full" />
+                <span className="text-gray-600">Complétés</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Status distribution */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <BarChart3 className="w-5 h-5 text-gray-500" />
+              Répartition par statut
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <StatusDistribution data={data.dossiersByStatus} loading={loading} />
+          </CardContent>
+        </Card>
+
+        {/* Top providers */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Users className="w-5 h-5 text-gray-500" />
+              Top prestataires
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="space-y-3">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Skeleton key={i} className="h-12 w-full" />
+                ))}
+              </div>
+            ) : data.topProviders.length === 0 ? (
+              <p className="text-sm text-gray-500 text-center py-4">Aucune donnée</p>
+            ) : (
+              <div className="space-y-3">
+                {data.topProviders.map((provider, index) => (
+                  <div key={provider.name} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50">
+                    <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-bold text-gray-600">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900">{provider.name}</p>
+                      <p className="text-sm text-gray-500">
+                        {provider.dossiers} dossiers • {provider.completedRate.toFixed(0)}% complétés
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* By country */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Globe className="w-5 h-5 text-gray-500" />
+              Dossiers par pays
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SimpleBarChart
+              data={data.dossiersByCountry.map((d) => ({
+                label: d.country,
+                value: d.count,
+              }))}
+              loading={loading}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}

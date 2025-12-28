@@ -1,0 +1,145 @@
+# Robots.txt pour SOS-Expat.com
+# https://sos-expat.com
+# Dernière mise à jour: 2025-12-28
+
+# ===========================================
+# RÈGLES PAR DÉFAUT (Tous les robots)
+# ===========================================
+User-agent: *
+Allow: /
+
+# Pages protégées à ne pas indexer
+Disallow: /dashboard
+Disallow: /profile/edit
+Disallow: /call-checkout
+Disallow: /booking-request
+Disallow: /payment-success
+Disallow: /admin
+Disallow: /api/
+Disallow: /_next/
+Disallow: /assets/
+
+# Fichiers statiques autorisés
+Allow: /assets/*.css
+Allow: /assets/*.js
+Allow: /assets/*.png
+Allow: /assets/*.jpg
+Allow: /assets/*.svg
+Allow: /assets/*.woff2
+
+# ===========================================
+# MOTEURS DE RECHERCHE PRINCIPAUX
+# ===========================================
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Yandex
+Allow: /
+Crawl-delay: 2
+
+User-agent: DuckDuckBot
+Allow: /
+Crawl-delay: 1
+
+# ===========================================
+# BOTS IA - AUTORISÉS POUR L'INDEXATION
+# ===========================================
+# ChatGPT / OpenAI
+User-agent: GPTBot
+Allow: /
+Crawl-delay: 2
+
+User-agent: ChatGPT-User
+Allow: /
+Crawl-delay: 2
+
+# Claude / Anthropic
+User-agent: ClaudeBot
+Allow: /
+Crawl-delay: 2
+
+User-agent: Claude-Web
+Allow: /
+Crawl-delay: 2
+
+User-agent: anthropic-ai
+Allow: /
+Crawl-delay: 2
+
+# Perplexity AI
+User-agent: PerplexityBot
+Allow: /
+Crawl-delay: 2
+
+# Google AI (Gemini)
+User-agent: Google-Extended
+Allow: /
+Crawl-delay: 2
+
+# Cohere AI
+User-agent: cohere-ai
+Allow: /
+Crawl-delay: 2
+
+# Meta AI
+User-agent: FacebookBot
+Allow: /
+Crawl-delay: 2
+
+User-agent: meta-externalagent
+Allow: /
+Crawl-delay: 2
+
+# Amazon / Alexa
+User-agent: Amazonbot
+Allow: /
+Crawl-delay: 2
+
+# Microsoft Copilot
+User-agent: Applebot-Extended
+Allow: /
+Crawl-delay: 2
+
+# You.com
+User-agent: YouBot
+Allow: /
+Crawl-delay: 2
+
+# Common Crawl (utilisé par plusieurs IA)
+User-agent: CCBot
+Allow: /
+Crawl-delay: 3
+
+# ===========================================
+# BOTS BLOQUÉS (Scrapers agressifs)
+# ===========================================
+User-agent: Bytespider
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+# ===========================================
+# SITEMAPS
+# ===========================================
+Sitemap: https://sos-expat.com/sitemap.xml
+
+# Délai par défaut entre requêtes
+Crawl-delay: 1

@@ -1,0 +1,21 @@
+# 🔥 Firebase (public)
+VITE_FIREBASE_API_KEY=…
+VITE_FIREBASE_AUTH_DOMAIN=sos-urgently-ac307.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=sos-urgently-ac307
+VITE_FIREBASE_STORAGE_BUCKET=sos-urgently-ac307.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=268195823113
+VITE_FIREBASE_APP_ID=1:268195823113:web:10bf2e5bacdc1816f182d8
+
+# 💳 Stripe (clé publiable live)
+VITE_STRIPE_PUBLIC_KEY=pk_live_51RFHjpDF7L3utQbNUpC7Q6HqQHMdV9C08CXQyJWtBXxnkR9fk1lUs94pD9nBem4rGOdv3FFU6vPHe8UwT2hfCBKT00aTovlcPn
+
+# 🌍 Functions
+VITE_FUNCTIONS_REGION=europe-west1
+FUNCTIONS_URL=https://europe-west1-sos-urgently-ac307.cloudfunctions.net
+
+# 🔗 Frontend URL (prod)
+FRONTEND_URL=https://www.sosexpats.com
+
+# 🐞 Debug (optionnel)
+DEBUG_STRIPE=false
+LOG_LEVEL=info

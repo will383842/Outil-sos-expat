@@ -1,0 +1,369 @@
+{
+  "header": {
+    "title": "SOS Expats — Admin",
+    "providerTitle": "SOS Expats — Espaco Pro",
+    "previewMode": "Vista do Prestador",
+    "exitPreview": "Voltar a Vista Admin"
+  },
+  "sidebar": {
+    "expand": "Expandir menu",
+    "collapse": "Recolher menu",
+    "sections": {
+      "overview": "Visao geral",
+      "management": "Gestao",
+      "configuration": "Configuracao",
+      "security": "Seguranca"
+    },
+    "nav": {
+      "dashboard": "Painel",
+      "analytics": "Analises",
+      "providers": "Prestadores",
+      "dossiers": "Todos os Processos",
+      "team": "Equipa",
+      "countries": "Paises",
+      "aiSettings": "Configuracao IA",
+      "settings": "Definicoes",
+      "auditLogs": "Registo de Auditoria"
+    }
+  },
+  "dashboard": {
+    "title": "Painel de Administracao",
+    "subtitle": "Visao geral da atividade da plataforma",
+    "description": "Visao geral da atividade da plataforma e monitorizacao de servicos",
+    "stats": {
+      "totalDossiers": "Total de Processos",
+      "dossiersInProgress": "Processos em Curso",
+      "activeProviders": "Prestadores Ativos",
+      "aiRequests": "Pedidos IA (mes)",
+      "activeDossiers": "Processos Ativos",
+      "lawyerDossiers": "Processos de Advogados",
+      "expatDossiers": "Processos de Expatriados",
+      "aiProcessed": "Processados por IA",
+      "totalRevenue": "Receita Total"
+    },
+    "activity": {
+      "title": "Atividade de 7 Dias",
+      "days": {
+        "sun": "Dom",
+        "mon": "Seg",
+        "tue": "Ter",
+        "wed": "Qua",
+        "thu": "Qui",
+        "fri": "Sex",
+        "sat": "Sab"
+      }
+    },
+    "iaStatus": {
+      "title": "Estado da IA",
+      "operational": "Operacional",
+      "warning": "Aviso de Quota",
+      "critical": "Quota Critica",
+      "usage": "Utilizacao Este Mes",
+      "percent": "{{percent}}% da quota mensal utilizada"
+    },
+    "providers": {
+      "title": "Prestadores",
+      "none": "Sem prestadores ativos",
+      "totalRegistered": "Total registados",
+      "withAccess": "Com acesso a ferramenta",
+      "withoutAccess": "Sem acesso",
+      "accessEnabled": "Acesso ativado"
+    },
+    "recentDossiers": {
+      "title": "Processos Recentes",
+      "none": "Sem processos recentes"
+    },
+    "sync": {
+      "title": "Sincronizacao Laravel",
+      "connected": "Ligado",
+      "disconnected": "Desligado",
+      "error": "Erro",
+      "lastSync": "Ultima sincronizacao",
+      "pending": "Itens pendentes",
+      "syncNow": "Sincronizar agora"
+    }
+  },
+  "accessDenied": {
+    "title": "Acesso Negado",
+    "description": "Esta pagina esta reservada para administradores.",
+    "noRights": "Nao possui as permissoes necessarias para aceder a esta seccao.",
+    "connectedAs": "Ligado como",
+    "role": "Funcao"
+  },
+  "prestataires": {
+    "title": "Prestadores",
+    "description": "Gerir o acesso a ferramenta para advogados e especialistas em expatriacao",
+    "stats": {
+      "total": "Total",
+      "lawyers": "Advogados",
+      "expats": "Expatriados",
+      "withAccess": "Com Acesso"
+    },
+    "search": "Pesquisar por nome, email, pais...",
+    "filters": {
+      "type": "Tipo",
+      "access": "Acesso a Ferramenta",
+      "all": "Todos",
+      "withAccess": "Com Acesso",
+      "withoutAccess": "Sem Acesso"
+    },
+    "addManually": "Adicionar Manualmente",
+    "addProvider": "Adicionar Prestador",
+    "form": {
+      "email": "Email Google",
+      "fullName": "Nome Completo",
+      "type": "Tipo",
+      "country": "Pais"
+    },
+    "table": {
+      "name": "Nome",
+      "email": "Email",
+      "type": "Tipo",
+      "country": "Pais",
+      "access": "Acesso"
+    },
+    "actions": {
+      "grantAccess": "Conceder Acesso",
+      "revokeAccess": "Revogar Acesso",
+      "activeAccess": "Acesso Ativo"
+    },
+    "empty": {
+      "title": "Nenhum prestador encontrado",
+      "description": "Tente modificar os seus filtros"
+    },
+    "loadMore": "Carregar mais prestadores",
+    "emailMissing": "Email em falta"
+  },
+  "mesPrestataires": {
+    "title": "Os Meus Prestadores",
+    "description": "Gerir as contas de prestadores associadas ao seu perfil",
+    "linkedProviders": "Prestadores Associados",
+    "noProviders": {
+      "title": "Sem prestadores associados",
+      "description": "Adicione prestadores para comecar a processar processos"
+    },
+    "addProvider": "Adicionar Prestador",
+    "switchProvider": "Mudar de Prestador",
+    "remove": "Remover",
+    "setAsActive": "Definir como ativo",
+    "searchProvider": "Pesquisar um prestador...",
+    "noProviderFound": "Nenhum prestador encontrado",
+    "allProvidersLinked": "Todos os prestadores ja estao associados",
+    "confirmRemove": "Tem a certeza de que pretende remover este prestador da sua conta?",
+    "success": {
+      "added": "Prestador adicionado com sucesso!",
+      "removed": "Prestador removido com sucesso!",
+      "defaultUpdated": "Prestador predefinido atualizado!"
+    },
+    "errors": {
+      "addFailed": "Erro ao adicionar prestador",
+      "removeFailed": "Erro ao remover prestador"
+    }
+  },
+  "gestionAcces": {
+    "title": "Gestao de Acessos",
+    "description": "Associar prestadores a utilizadores para que recebam os seus processos",
+    "addUser": "Adicionar um utilizador",
+    "howItWorks": {
+      "title": "Como funciona?",
+      "line1": "Cada utilizador inicia sessao com o seu email Google",
+      "line2": "Atribui-lhe um ou mais prestadores abaixo",
+      "line3": "Quando um cliente reserva este prestador, o utilizador ve o processo no seu painel"
+    },
+    "stats": {
+      "users": "Utilizadores",
+      "activeProviders": "Prestadores ativos",
+      "links": "Associacoes"
+    },
+    "search": "Pesquisar utilizador por email ou nome...",
+    "providerCount": "{{count}} prestador(es)",
+    "selectProviders": "Selecionar prestadores para este utilizador:",
+    "deleteUser": "Eliminar utilizador",
+    "deleteConfirm": "Eliminar este utilizador e todos os seus acessos?",
+    "noUsers": {
+      "title": "Nenhum utilizador encontrado",
+      "description": "Adicione um utilizador para lhe dar acesso a prestadores"
+    },
+    "toast": {
+      "providersSaved": "Prestadores guardados com sucesso",
+      "saveError": "Erro ao guardar",
+      "userDeleted": "Utilizador eliminado",
+      "deleteError": "Erro ao eliminar",
+      "loadError": "Erro ao carregar utilizadores",
+      "addError": "Erro ao adicionar"
+    },
+    "modal": {
+      "title": "Adicionar um utilizador",
+      "firebaseId": "ID de utilizador Firebase",
+      "firebaseIdRequired": "O ID de utilizador Firebase e obrigatorio",
+      "firebaseIdPlaceholder": "5lTY3iPh16Z7gHlrzr7XzrY4pGE2",
+      "firebaseIdHint": "Encontre este ID na Firebase Console -> Authentication -> Users",
+      "email": "Email",
+      "emailPlaceholder": "utilizador@gmail.com",
+      "displayName": "Nome de apresentacao",
+      "displayNamePlaceholder": "Joao Silva",
+      "providersToLink": "Prestadores a associar",
+      "noProviderAvailable": "Nenhum prestador disponivel"
+    }
+  },
+  "utilisateurs": {
+    "title": "Utilizadores",
+    "description": "Gestao da equipa de administracao",
+    "roles": {
+      "admin": "Administrador",
+      "agent": "Agente",
+      "provider": "Prestador"
+    },
+    "roleDescriptions": {
+      "admin": "Acesso completo a todas as funcionalidades",
+      "agent": "Gestao de processos e mensagens",
+      "provider": "Acesso apenas aos processos atribuidos"
+    },
+    "stats": {
+      "total": "Total",
+      "admins": "Administradores",
+      "agents": "Agentes"
+    },
+    "noName": "Sem nome",
+    "availableRoles": "Funcoes disponiveis",
+    "search": "Pesquisar por nome ou email...",
+    "setAdmin": "Definir como Admin",
+    "setAgent": "Definir como Agente",
+    "setProvider": "Definir como Prestador",
+    "multiProvider": "Multi-prestador",
+    "multiProviderDescription": "Pode gerir multiplos prestadores",
+    "confirmDelete": "Eliminar este utilizador?",
+    "createdOn": "Criado em {{date}}",
+    "empty": {
+      "title": "Nenhum utilizador encontrado",
+      "modifySearch": "Tente modificar a sua pesquisa",
+      "usersWillAppear": "Os utilizadores ligados aparecerao aqui"
+    },
+    "note": "Nota: Os utilizadores sao criados automaticamente no primeiro inicio de sessao. Utilize a funcao setRole para atribuir funcoes.",
+    "loadMore": "Carregar mais utilizadores",
+    "allLoaded": "Todos os utilizadores foram carregados ({{count}} no total)",
+    "important": "Importante",
+    "importantNote": "Para criar um novo administrador, o utilizador deve primeiro iniciar sessao na aplicacao. Depois, pode alterar a funcao dele aqui. Em alternativa, utilize a Cloud Function <code>setRole</code> com a chave API de administrador."
+  },
+  "pays": {
+    "title": "Paises",
+    "description": "Lista de paises configurados",
+    "columns": {
+      "code": "Codigo",
+      "name": "Nome",
+      "active": "Ativo"
+    }
+  },
+  "auditLogs": {
+    "title": "Registos de Auditoria",
+    "description": "Historico de acoes da plataforma",
+    "stats": {
+      "total": "Total",
+      "today": "Hoje"
+    },
+    "filters": {
+      "severity": "Gravidade",
+      "actionType": "Tipo de acao"
+    },
+    "counter": "A mostrar {{shown}} de {{total}} entradas",
+    "actions": {
+      "login": "Inicio de sessao",
+      "logout": "Fim de sessao",
+      "roleChange": "Alteracao de funcao",
+      "providerCreate": "Prestador criado",
+      "providerUpdate": "Prestador atualizado",
+      "providerDelete": "Prestador eliminado",
+      "accessGranted": "Acesso concedido",
+      "accessRevoked": "Acesso revogado",
+      "dossierCreate": "Processo criado",
+      "dossierUpdate": "Processo atualizado",
+      "dossierStatusChange": "Estado alterado",
+      "dossierDelete": "Processo eliminado",
+      "aiResponseGenerated": "Resposta IA gerada",
+      "aiSettingsChanged": "Definicoes IA alteradas",
+      "settingsChanged": "Definicoes alteradas",
+      "dataExport": "Exportacao de dados",
+      "adminAction": "Acao de administrador"
+    },
+    "severity": {
+      "info": "Informacao",
+      "warning": "Aviso",
+      "critical": "Critico"
+    }
+  },
+  "parametres": {
+    "title": "Definicoes Gerais",
+    "description": "Funcoes, temas, integracoes, registos..."
+  },
+  "testIA": {
+    "title": "Teste IA - Modo Administrador",
+    "description": "Testar as respostas do assistente IA",
+    "infoBanner": {
+      "title": "Modo de Teste Administrador",
+      "description": "Esta pagina permite testar a IA simulando diferentes contextos. As chamadas sao efetuadas atraves da Cloud Function",
+      "cloudFunction": "aiChat",
+      "metadataInfo": "As respostas incluem metadados de depuracao (modelo, prestador, citacoes, tempo de resposta)."
+    },
+    "context": {
+      "button": "Contexto",
+      "title": "Contexto simulado",
+      "providerType": {
+        "title": "Tipo de prestador",
+        "lawyer": "Advogado",
+        "expert": "Especialista",
+        "lawyerDescription": "Claude 3.5 Sonnet - Raciocinio juridico",
+        "expertDescription": "GPT-4o - Conselhos praticos"
+      },
+      "fields": {
+        "country": "Pais",
+        "countryPlaceholder": "ex.: Tailandia",
+        "nationality": "Nacionalidade",
+        "nationalityPlaceholder": "ex.: Portuguesa",
+        "clientName": "Nome do cliente",
+        "clientNamePlaceholder": "ex.: Joao Teste",
+        "urgency": "Urgencia"
+      },
+      "urgencyLevels": {
+        "low": "Baixa",
+        "medium": "Media",
+        "high": "Alta",
+        "critical": "Critica"
+      }
+    },
+    "quickTests": {
+      "title": "Testes rapidos",
+      "visa": "Visto a expirar",
+      "urgence": "Emergencia roubo/perda",
+      "juridique": "Problema com empregador",
+      "pratique": "Alojamento em Banguecoque"
+    },
+    "chat": {
+      "emptyState": "Envie uma mensagem para iniciar o teste",
+      "placeholder": "Escreva a sua mensagem de teste...",
+      "ariaLabelMessages": "Mensagens da conversa",
+      "ariaLabelInput": "Mensagem a enviar",
+      "ariaLabelSend": "Enviar mensagem",
+      "ariaLabelThinking": "A IA esta a pensar",
+      "thinking": "A IA esta a pensar...",
+      "noResponse": "Sem resposta",
+      "lastResponse": "Ultima resposta em {{time}}ms"
+    },
+    "debug": {
+      "button": "Depuracao",
+      "model": "Modelo",
+      "provider": "Prestador",
+      "time": "Tempo",
+      "perplexitySearch": "Pesquisa Perplexity",
+      "fallback": "Alternativa",
+      "sources": "Fontes"
+    },
+    "errors": {
+      "title": "Erro",
+      "unknown": "Erro desconhecido",
+      "prefix": "Erro:",
+      "closeLabel": "Fechar erro"
+    }
+  },
+  "verifyingRights": "A verificar permissoes...",
+  "loadingPage": "A carregar pagina"
+}

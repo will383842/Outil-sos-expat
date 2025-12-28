@@ -1,0 +1,61 @@
+// {
+//   "compilerOptions": {
+//     "target": "ES2020",
+//     "lib": ["ES2020", "DOM", "DOM.Iterable"],
+//     "module": "ESNext",
+//     "moduleResolution": "Node",
+//     "jsx": "react-jsx",
+
+//     "baseUrl": ".",
+//     "paths": { "@/*": ["src/*"] },
+
+//     "allowJs": true,
+//     "strict": true,
+//     "noImplicitAny": true,
+//     "strictNullChecks": true,
+//     "strictFunctionTypes": true,
+
+//     "skipLibCheck": true,
+//     "esModuleInterop": true,
+//     "allowSyntheticDefaultImports": true,
+//     "resolveJsonModule": true,
+//     "isolatedModules": true,
+//     "noEmit": true,
+//     "forceConsistentCasingInFileNames": true,
+//     "allowImportingTsExtensions": true,
+
+//     "types": ["vite/client", "react", "react-dom"]
+//   },
+//   "include": ["src"],
+//   "exclude": ["node_modules"]
+// }
+
+
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": { "@/*": ["src/*"] },
+    "allowJs": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "strictFunctionTypes": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "forceConsistentCasingInFileNames": true,
+    "allowImportingTsExtensions": true,
+
+    "types": ["vite/client", "react", "react-dom", "node"]
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"]
+}

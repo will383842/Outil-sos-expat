@@ -1,0 +1,314 @@
+{
+  "dashboard": {
+    "title": "Моя панель управления",
+    "welcome": "Добро пожаловать, {{name}}",
+    "selectProvider": "Выберите провайдера для просмотра статистики",
+    "activityOf": "Активность {{name}}",
+    "noProvider": {
+      "title": "Провайдер не выбран",
+      "description": "Пожалуйста, войдите или выберите аккаунт провайдера"
+    },
+    "stats": {
+      "myDossiers": "Мои дела",
+      "activeDossiers": "Активные дела",
+      "myActiveDossiers": "Мои активные дела",
+      "pending": "Ожидающие",
+      "inProgress": "В работе",
+      "completed": "Завершённые",
+      "completedThisMonth": "Завершено в этом месяце",
+      "total": "всего",
+      "typeLawyer": "Тип Юрист",
+      "typeExpat": "Тип Экспат",
+      "myRevenue": "Мой доход"
+    },
+    "quota": {
+      "title": "Квота ИИ",
+      "usages": "использований",
+      "remaining": "Осталось {{count}} использований",
+      "almostReached": "Квота почти исчерпана! Свяжитесь с поддержкой."
+    },
+    "recentDossiers": "Мои недавние дела",
+    "noDossiers": "Нет недавних дел",
+    "recentBookings": "Недавние дела",
+    "noRecentBookings": "Нет недавних дел",
+    "quickActions": {
+      "title": "Быстрые действия",
+      "myDossiers": "Мои дела",
+      "myProfile": "Мой профиль",
+      "messages": "Сообщения"
+    },
+    "charts": {
+      "distributionByType": "Распределение по типу",
+      "dossiersByStatus": "Дела по статусу"
+    },
+    "aiAssistant": {
+      "title": "ИИ Юридический Ассистент",
+      "description": "ИИ автоматически генерирует контекстуализированные юридические ответы для каждого дела. Провайдеры могут общаться с ИИ в реальном времени во время звонков с клиентами.",
+      "autoResponsesEnabled": "Автоматические ответы включены"
+    },
+    "subscription": {
+      "title": "Моя подписка",
+      "active": "Активна",
+      "trial": "Пробный период",
+      "pending": "Ожидание оплаты",
+      "expired": "Истекла",
+      "expiresIn": "Осталось {{days}} дней",
+      "expiresToday": "Истекает сегодня",
+      "expiresTomorrow": "Истекает завтра",
+      "renewWarning": "Продлите подписку для продолжения"
+    }
+  },
+  "multiDashboard": {
+    "title": "Панель мульти-провайдера",
+    "allProviders": "Все провайдеры",
+    "selectProvider": "Выберите провайдера",
+    "aggregatedView": "Агрегированный вид {{count}} провайдеров",
+    "statsFor": "Статистика для {{name}}",
+    "sharedQuota": "Общая квота",
+    "remaining": "Осталось {{count}}",
+    "quotaWarning": "Квота почти исчерпана. Свяжитесь с администрацией.",
+    "linkedProviders": "Связанные провайдеры",
+    "activity7Days": "Активность за 7 дней",
+    "distributionByType": "Распределение по типу",
+    "dossiersByStatus": "Дела по статусу",
+    "revenue": "Доход"
+  },
+  "dossiers": {
+    "title": "Дела",
+    "count": "{{count}} дело",
+    "count_other": "{{count}} дел",
+    "found": "найдено",
+    "search": "Поиск по названию, клиенту, стране...",
+    "filters": {
+      "status": "Статус",
+      "type": "Тип",
+      "all": "Все",
+      "lawyer": "Юрист",
+      "expat": "Эксперт"
+    },
+    "empty": {
+      "title": "Дела не найдены",
+      "modifyFilters": "Попробуйте изменить фильтры",
+      "newRequestsHere": "Новые запросы появятся здесь"
+    },
+    "loadMore": "Загрузить ещё",
+    "allLoaded": "Все дела загружены ({{count}} всего)",
+    "noDescription": "Нет описания",
+    "noTitle": "Без названия"
+  },
+  "dossierDetail": {
+    "accessDenied": "Доступ запрещён - Это дело не принадлежит вам",
+    "notFound": "Дело не найдено",
+    "consultationDuration": "Длительность консультации",
+    "consultationTimeElapsed": "Время консультации истекло",
+    "autoLockWarning": "Разговор будет автоматически заблокирован",
+    "startAfterFirstResponse": "Консультация начнётся после первого ответа ИИ",
+    "conversationClosed": "Разговор завершён",
+    "historyAvailable": "История доступна выше"
+  },
+  "aiChat": {
+    "title": "ИИ Юридический Ассистент",
+    "subtitle": "Задавайте вопросы клиента здесь",
+    "timeElapsed": "Прошедшее время",
+    "expertTitle": "Экспертный Юридический Ассистент",
+    "expertDescription": "Введите вопросы вашего клиента, чтобы получить подробные юридические ответы с источниками.",
+    "tags": {
+      "internationalLaw": "Международное право",
+      "expatTax": "Налогообложение экспатов",
+      "immigration": "Иммиграция"
+    },
+    "legalAssistant": "Юридический Ассистент",
+    "yourQuestion": "Ваш вопрос",
+    "copyResponse": "Копировать ответ",
+    "analyzing": "Юридический анализ...",
+    "inputPlaceholder": "Введите вопрос клиента...",
+    "keyboardHint": "Enter для отправки - Shift+Enter для новой строки"
+  },
+  "clientInfo": {
+    "waitingAI": "Ожидание ИИ",
+    "archived": "Архивировано",
+    "activeConsultation": "Активная консультация",
+    "duration": "Длительность: {{minutes}} минут",
+    "timeRemaining": "Оставшееся время ({{minutes}} мин всего)",
+    "historyAvailable": "История переписки остаётся доступной",
+    "client": "Клиент",
+    "name": "Имя",
+    "nationality": "Гражданство",
+    "interventionCountry": "Страна вмешательства",
+    "languages": "Языки",
+    "request": "Запрос",
+    "title": "Название",
+    "description": "Описание",
+    "service": "Услуга",
+    "createdOn": "Создано",
+    "provider": "Провайдер"
+  },
+  "page": {
+    "loadingDossier": "Загрузка дела...",
+    "backToDossiers": "Вернуться к делам",
+    "aiActive": "ИИ активен",
+    "consultationExpiredMessage": "Время консультации истекло ({{minutes}} мин) — История остаётся доступной",
+    "initializingChat": "Инициализация ИИ чата..."
+  },
+  "bookingCard": {
+    "lawyer": "Юрист",
+    "expat": "Экспат",
+    "aiProcessed": "ИИ",
+    "client": "Клиент"
+  },
+  "statusActions": {
+    "startCall": "Начать звонок",
+    "finish": "Завершить",
+    "cancel": "Отменить",
+    "reopenConversation": "Возобновить разговор"
+  },
+  "quotaExhausted": {
+    "title": "Квота исчерпана",
+    "description": "Вы достигли лимита запросов ИИ за этот период. Обновите подписку для продолжения использования ассистента.",
+    "quotaUsage": "Использование квоты",
+    "requestsUsed": "запросов использовано",
+    "outOf": "из",
+    "nextRenewal": "Следующее обновление",
+    "increaseQuota": "Увеличить квоту",
+    "contactSupport": "Связаться с поддержкой",
+    "signOut": "Выйти",
+    "connectedAs": "Подключён как"
+  },
+  "messages": {
+    "title": "Сообщения",
+    "aiResponses": "ответов ИИ",
+    "questions": "вопросов",
+    "lastAiResponse": "Последний ответ ИИ",
+    "selectProvider": "Выберите провайдера для просмотра разговоров",
+    "modifySearch": "Попробуйте изменить поиск",
+    "allConversations": "Все разговоры",
+    "myConversations": "Мои разговоры",
+    "allConversationsHistory": "История всех разговоров и ответов ИИ",
+    "conversationsOf": "Разговоры {{name}}",
+    "conversations": "Разговоры",
+    "activeLastHour": "Активные (1ч)",
+    "searchPlaceholder": "Поиск по клиенту, ID дела...",
+    "noConversationFound": "Разговоры не найдены",
+    "conversationsWillAppear": "Разговоры с ИИ появятся здесь",
+    "conversation": "Разговор"
+  },
+  "profile": {
+    "title": "Мой профиль",
+    "description": "Управление информацией вашего аккаунта провайдера",
+    "loading": "Загрузка профиля...",
+    "noProviderSelected": "Провайдер не выбран",
+    "selectProviderToView": "Выберите провайдера для просмотра профиля",
+    "lawyer": "Юрист",
+    "expatExpert": "Эксперт по экспатриации",
+    "contactInfo": "Контактная информация",
+    "email": "Email",
+    "emailNotEditable": "Email нельзя изменить",
+    "phone": "Телефон",
+    "website": "Веб-сайт",
+    "location": "Местоположение",
+    "country": "Страна",
+    "contactAdminToModify": "Свяжитесь с админом для изменения",
+    "city": "Город",
+    "address": "Адрес",
+    "specialties": "Специализации",
+    "addSpecialty": "Добавить специализацию...",
+    "noSpecialtyAdded": "Специализация не добавлена",
+    "noSpecialtySet": "Специализация не указана",
+    "spokenLanguages": "Языки",
+    "addLanguage": "Добавить язык...",
+    "noLanguageAdded": "Язык не добавлен",
+    "noLanguageSet": "Язык не указан",
+    "descriptionSection": "Описание",
+    "descriptionPlaceholder": "Опишите вашу деятельность, области специализации...",
+    "noDescriptionSet": "Описание не указано",
+    "systemInfo": "Системная информация",
+    "providerId": "ID провайдера",
+    "accountType": "Тип аккаунта",
+    "providerName": "Имя провайдера",
+    "statusLabel": "Статус"
+  },
+  "providerSwitcher": {
+    "noProvider": "Нет связанных провайдеров",
+    "select": "Выбрать...",
+    "switchProvider": "Сменить провайдера",
+    "manageProviders": "Управление провайдерами",
+    "lawyer": "Юрист",
+    "expatExpert": "Эксперт по экспатриации"
+  },
+  "subscriptionScreen": {
+    "header": {
+      "subtitle": "ИИ-ассистент для провайдеров",
+      "signOut": "Выйти"
+    },
+    "hero": {
+      "badge": "Требуется подписка",
+      "title": "Улучшите консультации с помощью ИИ",
+      "descriptionLawyer": "Получите доступ к ИИ-юридическому ассистенту, который ищет правовую информацию в режиме реального времени во время консультаций.",
+      "descriptionExpat": "Мгновенно получайте практическую информацию об эмиграции для лучшей поддержки клиентов."
+    },
+    "benefits": {
+      "aiRealTime": {
+        "title": "ИИ-ассистент в реальном времени",
+        "description": "Мгновенный юридический поиск во время консультаций"
+      },
+      "updatedData": {
+        "title": "Актуальные данные",
+        "description": "Доступ к правовой информации из более чем 190 стран"
+      },
+      "timeSaving": {
+        "title": "Экономия времени",
+        "description": "Точные ответы за секунды"
+      },
+      "reliableSources": {
+        "title": "Надежные источники",
+        "description": "Проверенные юридические цитаты и ссылки"
+      }
+    },
+    "pricing": {
+      "monthly": "Ежемесячно",
+      "annual": "Ежегодно",
+      "perMonth": "/месяц",
+      "billedAnnually": "Оплата {{amount}}€/год",
+      "savings": "ЭКОНОМИЯ {{amount}}€",
+      "unlimited": "Неограниченный доступ к ИИ-ассистенту",
+      "noCommitment": "Без обязательств",
+      "cancelAnytime": "Отмена в любое время",
+      "twoMonthsFree": "2 месяца бесплатно",
+      "prioritySupport": "Приоритетная поддержка",
+      "chooseMonthly": "Выбрать ежемесячную",
+      "subscribeNow": "Подписаться сейчас"
+    },
+    "payment": {
+      "secure": "Безопасная оплата картой",
+      "methods": "Visa, Mastercard, American Express - SSL-шифрование - Соответствие PCI-DSS"
+    },
+    "footer": {
+      "questions": "Вопросы?",
+      "contactUs": "Свяжитесь с нами",
+      "connectedAs": "Подключен как {{email}}",
+      "copyright": "Все права защищены."
+    }
+  },
+  "subscriptionExpired": {
+    "gracePeriod": "Льготный период",
+    "expired": "Подписка истекла",
+    "titleGrace": "Ваша подписка истекла",
+    "titleSuspended": "Доступ приостановлен",
+    "descriptionGrace": "У вас есть еще {{days}} дней для продления подписки без прерывания сервиса.",
+    "descriptionExpired": "Ваша подписка истекла. Продлите сейчас, чтобы восстановить доступ к ИИ-ассистенту.",
+    "expirationDate": "Дата истечения",
+    "daysAgo": "{{count}} день назад",
+    "daysAgo_other": "{{count}} дней назад",
+    "gracePeriodActive": "Льготный период активен",
+    "daysRemaining": "{{count}} дней осталось для продления",
+    "whatYouGet": "Что вы получите обратно",
+    "benefitAI": "ИИ-ассистент в реальном времени",
+    "benefitCountries": "Доступ к данным из более чем 190 стран",
+    "benefitSources": "Проверенные юридические источники",
+    "renewButton": "Продлить подписку",
+    "contactSupport": "Связаться с поддержкой",
+    "signOut": "Выйти",
+    "connectedAs": "Подключен как {{email}}",
+    "copyright": "Все права защищены."
+  }
+}

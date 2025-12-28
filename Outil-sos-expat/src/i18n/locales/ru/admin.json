@@ -1,0 +1,369 @@
+{
+  "header": {
+    "title": "SOS Expats — Админ",
+    "providerTitle": "SOS Expats — Пространство специалиста",
+    "previewMode": "Просмотр поставщика",
+    "exitPreview": "Вернуться к панели администратора"
+  },
+  "sidebar": {
+    "expand": "Развернуть меню",
+    "collapse": "Свернуть меню",
+    "sections": {
+      "overview": "Обзор",
+      "management": "Управление",
+      "configuration": "Конфигурация",
+      "security": "Безопасность"
+    },
+    "nav": {
+      "dashboard": "Панель управления",
+      "analytics": "Аналитика",
+      "providers": "Поставщики",
+      "dossiers": "Все дела",
+      "team": "Команда",
+      "countries": "Страны",
+      "aiSettings": "Настройка ИИ",
+      "settings": "Настройки",
+      "auditLogs": "Журнал аудита"
+    }
+  },
+  "dashboard": {
+    "title": "Панель администратора",
+    "subtitle": "Обзор активности платформы",
+    "description": "Обзор активности платформы и мониторинг сервисов",
+    "stats": {
+      "totalDossiers": "Всего дел",
+      "dossiersInProgress": "Дела в работе",
+      "activeProviders": "Активные поставщики",
+      "aiRequests": "Запросы ИИ (месяц)",
+      "activeDossiers": "Активные дела",
+      "lawyerDossiers": "Дела юристов",
+      "expatDossiers": "Дела экспатов",
+      "aiProcessed": "Обработано ИИ",
+      "totalRevenue": "Общий доход"
+    },
+    "activity": {
+      "title": "Активность за 7 дней",
+      "days": {
+        "sun": "Вс",
+        "mon": "Пн",
+        "tue": "Вт",
+        "wed": "Ср",
+        "thu": "Чт",
+        "fri": "Пт",
+        "sat": "Сб"
+      }
+    },
+    "iaStatus": {
+      "title": "Статус ИИ",
+      "operational": "Работает",
+      "warning": "Предупреждение о квоте",
+      "critical": "Критическая квота",
+      "usage": "Использование в этом месяце",
+      "percent": "{{percent}}% месячной квоты использовано"
+    },
+    "providers": {
+      "title": "Поставщики",
+      "none": "Нет активных поставщиков",
+      "totalRegistered": "Всего зарегистрировано",
+      "withAccess": "С доступом к инструменту",
+      "withoutAccess": "Без доступа",
+      "accessEnabled": "Доступ включён"
+    },
+    "recentDossiers": {
+      "title": "Последние дела",
+      "none": "Нет последних дел"
+    },
+    "sync": {
+      "title": "Синхронизация Laravel",
+      "connected": "Подключено",
+      "disconnected": "Отключено",
+      "error": "Ошибка",
+      "lastSync": "Последняя синхронизация",
+      "pending": "Ожидающие элементы",
+      "syncNow": "Синхронизировать сейчас"
+    }
+  },
+  "accessDenied": {
+    "title": "Доступ запрещён",
+    "description": "Эта страница предназначена только для администраторов.",
+    "noRights": "У вас нет необходимых прав для доступа к этому разделу.",
+    "connectedAs": "Вы вошли как",
+    "role": "Роль"
+  },
+  "prestataires": {
+    "title": "Поставщики",
+    "description": "Управление доступом к инструменту для юристов и экспертов по экспатам",
+    "stats": {
+      "total": "Всего",
+      "lawyers": "Юристы",
+      "expats": "Экспаты",
+      "withAccess": "С доступом"
+    },
+    "search": "Поиск по имени, email, стране...",
+    "filters": {
+      "type": "Тип",
+      "access": "Доступ к инструменту",
+      "all": "Все",
+      "withAccess": "С доступом",
+      "withoutAccess": "Без доступа"
+    },
+    "addManually": "Добавить вручную",
+    "addProvider": "Добавить поставщика",
+    "form": {
+      "email": "Email Google",
+      "fullName": "Полное имя",
+      "type": "Тип",
+      "country": "Страна"
+    },
+    "table": {
+      "name": "Имя",
+      "email": "Email",
+      "type": "Тип",
+      "country": "Страна",
+      "access": "Доступ"
+    },
+    "actions": {
+      "grantAccess": "Предоставить доступ",
+      "revokeAccess": "Отозвать доступ",
+      "activeAccess": "Доступ активен"
+    },
+    "empty": {
+      "title": "Поставщики не найдены",
+      "description": "Попробуйте изменить фильтры"
+    },
+    "loadMore": "Загрузить ещё поставщиков",
+    "emailMissing": "Email отсутствует"
+  },
+  "mesPrestataires": {
+    "title": "Мои поставщики",
+    "description": "Управление учётными записями поставщиков, связанными с вашим профилем",
+    "linkedProviders": "Связанные поставщики",
+    "noProviders": {
+      "title": "Нет связанных поставщиков",
+      "description": "Добавьте поставщиков, чтобы начать обработку дел"
+    },
+    "addProvider": "Добавить поставщика",
+    "switchProvider": "Сменить поставщика",
+    "remove": "Удалить",
+    "setAsActive": "Установить как активного",
+    "searchProvider": "Поиск поставщика...",
+    "noProviderFound": "Поставщик не найден",
+    "allProvidersLinked": "Все поставщики уже связаны",
+    "confirmRemove": "Вы уверены, что хотите удалить этого поставщика из вашей учётной записи?",
+    "success": {
+      "added": "Поставщик успешно добавлен!",
+      "removed": "Поставщик успешно удалён!",
+      "defaultUpdated": "Поставщик по умолчанию обновлён!"
+    },
+    "errors": {
+      "addFailed": "Ошибка при добавлении поставщика",
+      "removeFailed": "Ошибка при удалении поставщика"
+    }
+  },
+  "gestionAcces": {
+    "title": "Управление доступом",
+    "description": "Свяжите поставщиков с пользователями, чтобы они получали свои дела",
+    "addUser": "Добавить пользователя",
+    "howItWorks": {
+      "title": "Как это работает?",
+      "line1": "Каждый пользователь входит со своим email Google",
+      "line2": "Вы назначаете им одного или нескольких поставщиков ниже",
+      "line3": "Когда клиент бронирует этого поставщика, пользователь видит дело в своей панели управления"
+    },
+    "stats": {
+      "users": "Пользователи",
+      "activeProviders": "Активные поставщики",
+      "links": "Связи"
+    },
+    "search": "Поиск пользователя по email или имени...",
+    "providerCount": "{{count}} поставщик(ов)",
+    "selectProviders": "Выберите поставщиков для этого пользователя:",
+    "deleteUser": "Удалить пользователя",
+    "deleteConfirm": "Удалить этого пользователя и все его права доступа?",
+    "noUsers": {
+      "title": "Пользователи не найдены",
+      "description": "Добавьте пользователя, чтобы предоставить ему доступ к поставщикам"
+    },
+    "toast": {
+      "providersSaved": "Поставщики успешно сохранены",
+      "saveError": "Ошибка при сохранении",
+      "userDeleted": "Пользователь удалён",
+      "deleteError": "Ошибка при удалении",
+      "loadError": "Ошибка при загрузке пользователей",
+      "addError": "Ошибка при добавлении"
+    },
+    "modal": {
+      "title": "Добавить пользователя",
+      "firebaseId": "ID пользователя Firebase",
+      "firebaseIdRequired": "ID пользователя Firebase обязателен",
+      "firebaseIdPlaceholder": "5lTY3iPh16Z7gHlrzr7XzrY4pGE2",
+      "firebaseIdHint": "Найдите этот ID в Firebase Console → Authentication → Users",
+      "email": "Email",
+      "emailPlaceholder": "user@gmail.com",
+      "displayName": "Отображаемое имя",
+      "displayNamePlaceholder": "Иван Иванов",
+      "providersToLink": "Поставщики для связи",
+      "noProviderAvailable": "Нет доступных поставщиков"
+    }
+  },
+  "utilisateurs": {
+    "title": "Пользователи",
+    "description": "Управление командой администраторов",
+    "roles": {
+      "admin": "Администратор",
+      "agent": "Агент",
+      "provider": "Поставщик"
+    },
+    "roleDescriptions": {
+      "admin": "Полный доступ ко всем функциям",
+      "agent": "Управление делами и сообщениями",
+      "provider": "Доступ только к назначенным делам"
+    },
+    "stats": {
+      "total": "Всего",
+      "admins": "Администраторы",
+      "agents": "Агенты"
+    },
+    "noName": "Без имени",
+    "availableRoles": "Доступные роли",
+    "search": "Поиск по имени или email...",
+    "setAdmin": "Назначить администратором",
+    "setAgent": "Назначить агентом",
+    "setProvider": "Назначить поставщиком",
+    "multiProvider": "Мульти-поставщик",
+    "multiProviderDescription": "Может управлять несколькими поставщиками",
+    "confirmDelete": "Удалить этого пользователя?",
+    "createdOn": "Создан {{date}}",
+    "empty": {
+      "title": "Пользователи не найдены",
+      "modifySearch": "Попробуйте изменить поисковый запрос",
+      "usersWillAppear": "Подключённые пользователи появятся здесь"
+    },
+    "note": "Примечание: Пользователи создаются автоматически при первом входе. Используйте функцию setRole для назначения ролей.",
+    "loadMore": "Загрузить ещё пользователей",
+    "allLoaded": "Все пользователи загружены ({{count}} всего)",
+    "important": "Важно",
+    "importantNote": "Чтобы создать нового администратора, пользователь должен сначала войти в приложение. Затем вы можете изменить его роль здесь. Либо используйте Cloud Function <code>setRole</code> с API-ключом администратора."
+  },
+  "pays": {
+    "title": "Страны",
+    "description": "Список настроенных стран",
+    "columns": {
+      "code": "Код",
+      "name": "Название",
+      "active": "Активна"
+    }
+  },
+  "auditLogs": {
+    "title": "Журнал аудита",
+    "description": "История действий на платформе",
+    "stats": {
+      "total": "Всего",
+      "today": "Сегодня"
+    },
+    "filters": {
+      "severity": "Важность",
+      "actionType": "Тип действия"
+    },
+    "counter": "Показано {{shown}} из {{total}} записей",
+    "actions": {
+      "login": "Вход",
+      "logout": "Выход",
+      "roleChange": "Изменение роли",
+      "providerCreate": "Поставщик создан",
+      "providerUpdate": "Поставщик обновлён",
+      "providerDelete": "Поставщик удалён",
+      "accessGranted": "Доступ предоставлен",
+      "accessRevoked": "Доступ отозван",
+      "dossierCreate": "Дело создано",
+      "dossierUpdate": "Дело обновлено",
+      "dossierStatusChange": "Статус изменён",
+      "dossierDelete": "Дело удалено",
+      "aiResponseGenerated": "Ответ ИИ сгенерирован",
+      "aiSettingsChanged": "Настройки ИИ изменены",
+      "settingsChanged": "Настройки изменены",
+      "dataExport": "Экспорт данных",
+      "adminAction": "Действие администратора"
+    },
+    "severity": {
+      "info": "Информация",
+      "warning": "Предупреждение",
+      "critical": "Критично"
+    }
+  },
+  "parametres": {
+    "title": "Общие настройки",
+    "description": "Роли, темы, интеграции, журналы..."
+  },
+  "testIA": {
+    "title": "Тест ИИ — Режим администратора",
+    "description": "Тестирование ответов ИИ-ассистента",
+    "infoBanner": {
+      "title": "Режим тестирования администратора",
+      "description": "Эта страница позволяет тестировать ИИ, моделируя различные контексты. Вызовы выполняются через Cloud Function",
+      "cloudFunction": "aiChat",
+      "metadataInfo": "Ответы включают отладочные метаданные (модель, поставщик, цитаты, время ответа)."
+    },
+    "context": {
+      "button": "Контекст",
+      "title": "Моделируемый контекст",
+      "providerType": {
+        "title": "Тип поставщика",
+        "lawyer": "Юрист",
+        "expert": "Эксперт",
+        "lawyerDescription": "Claude 3.5 Sonnet — Юридическое мышление",
+        "expertDescription": "GPT-4o — Практические советы"
+      },
+      "fields": {
+        "country": "Страна",
+        "countryPlaceholder": "напр.: Таиланд",
+        "nationality": "Национальность",
+        "nationalityPlaceholder": "напр.: Русский",
+        "clientName": "Имя клиента",
+        "clientNamePlaceholder": "напр.: Иван Тестов",
+        "urgency": "Срочность"
+      },
+      "urgencyLevels": {
+        "low": "Низкая",
+        "medium": "Средняя",
+        "high": "Высокая",
+        "critical": "Критическая"
+      }
+    },
+    "quickTests": {
+      "title": "Быстрые тесты",
+      "visa": "Истекающая виза",
+      "urgence": "Кража/потеря — экстренно",
+      "juridique": "Проблема с работодателем",
+      "pratique": "Жильё в Бангкоке"
+    },
+    "chat": {
+      "emptyState": "Отправьте сообщение, чтобы начать тестирование",
+      "placeholder": "Введите тестовое сообщение...",
+      "ariaLabelMessages": "Сообщения беседы",
+      "ariaLabelInput": "Сообщение для отправки",
+      "ariaLabelSend": "Отправить сообщение",
+      "ariaLabelThinking": "ИИ обрабатывает запрос",
+      "thinking": "ИИ обрабатывает запрос...",
+      "noResponse": "Нет ответа",
+      "lastResponse": "Последний ответ за {{time}} мс"
+    },
+    "debug": {
+      "button": "Отладка",
+      "model": "Модель",
+      "provider": "Поставщик",
+      "time": "Время",
+      "perplexitySearch": "Поиск Perplexity",
+      "fallback": "Резервный вариант",
+      "sources": "Источники"
+    },
+    "errors": {
+      "title": "Ошибка",
+      "unknown": "Неизвестная ошибка",
+      "prefix": "Ошибка:",
+      "closeLabel": "Закрыть ошибку"
+    }
+  },
+  "verifyingRights": "Проверка прав доступа...",
+  "loadingPage": "Загрузка страницы"
+}

@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="fr">
+
+<head>
+  <!-- 📱 META MOBILE FIRST -->
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes, minimum-scale=1.0, maximum-scale=5.0" />
+
+  <!-- 🎯 PWA & MOBILE -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#dc2626" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#b91c1c" media="(prefers-color-scheme: dark)" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="SOS Urgently" />
+  <meta name="apple-touch-fullscreen" content="yes" />
+  <link rel="apple-touch-icon" href="/icon-192x192.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180x180.png" />
+  <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon-152x152.png" />
+  <link rel="apple-touch-icon" sizes="120x120" href="/apple-touch-icon-120x120.png" />
+
+  <!-- 🤖 ANDROID -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="application-name" content="SOS Urgently" />
+
+  <!-- 🔍 SEO -->
+  <title>SOS Expat & Travelers - Aide d'urgence pour expatriés</title>
+  <meta name="description"
+    content="Assistance urgente 24/7 pour expatriés francophones. Avocats, traducteurs, urgences médicales. Support immédiat partout dans le monde. Application mobile disponible." />
+  <meta name="keywords"
+    content="expat, urgence, assistance, avocat, francophone, voyage, expatrié, aide, 24/7, mobile" />
+  <link rel="canonical" href="https://sos-expat.com" />
+
+  <!-- 🔒 GOOGLE CONSENT MODE V2 - Must be FIRST before any Google tags -->
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+
+    // Set default consent state (denied until user consents) - GDPR/EEA compliance
+    gtag('consent', 'default', {
+      'ad_storage': 'denied',
+      'ad_user_data': 'denied',
+      'ad_personalization': 'denied',
+      'analytics_storage': 'denied',
+      'functionality_storage': 'denied',
+      'personalization_storage': 'denied',
+      'security_storage': 'granted',
+      'wait_for_update': 500
+    });
+
+    // Enable URL passthrough for better attribution when cookies blocked
+    gtag('set', 'url_passthrough', true);
+    // Redact ad click identifiers when ad_storage is denied
+    gtag('set', 'ads_data_redaction', true);
+
+    // Restore consent from localStorage if already given
+    (function() {
+      try {
+        var saved = localStorage.getItem('cookie_preferences');
+        if (saved) {
+          var prefs = JSON.parse(saved);
+          gtag('consent', 'update', {
+            'ad_storage': prefs.marketing ? 'granted' : 'denied',
+            'ad_user_data': prefs.marketing ? 'granted' : 'denied',
+            'ad_personalization': prefs.marketing ? 'granted' : 'denied',
+            'analytics_storage': prefs.analytics ? 'granted' : 'denied',
+            'functionality_storage': prefs.performance ? 'granted' : 'denied',
+            'personalization_storage': prefs.performance ? 'granted' : 'denied'
+          });
+        }
+      } catch(e) {}
+    })();
+  </script>
+
+  <!-- 🚀 PERFORMANCE HINTS -->
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://api.stripe.com" crossorigin />
+  <link rel="preconnect" href="https://api.twilio.com" crossorigin />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
+  <link rel="dns-prefetch" href="https://www.google-analytics.com" />
+
+  <!-- ⚡ PRELOADS -->
+  <link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="prefetch" href="/icon-512x512.png" />
+
+  <!-- 🎨 ICONS & FAVICONS -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" media="(prefers-color-scheme: light)" />
+  <link rel="icon" type="image/svg+xml" href="/favicon-dark.svg" media="(prefers-color-scheme: dark)" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="shortcut icon" href="/favicon.ico" />
+
+  <!-- 🌐 SOCIAL -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://sos-expat.com/" />
+  <meta property="og:title" content="SOS Expat & Travelers - Aide d'urgence 24/7" />
+  <meta property="og:description"
+    content="Assistance urgente pour expatriés francophones. Avocats, traducteurs, urgences. Support immédiat mobile partout dans le monde." />
+  <meta property="og:image" content="https://sos-expat.com/og-image-1200x630.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="SOS Expat - Application mobile d'assistance urgente" />
+  <meta property="og:locale" content="fr_FR" />
+  <meta property="og:site_name" content="SOS Expat & Travelers" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content="https://sos-expat.com/" />
+  <meta name="twitter:title" content="SOS Expat & Travelers - Aide d'urgence mobile" />
+  <meta name="twitter:description"
+    content="App mobile d'assistance urgente pour expatriés. Avocats, traducteurs, urgences 24/7. Téléchargez l'app maintenant." />
+  <meta name="twitter:image" content="https://sos-expat.com/twitter-image.png" />
+  <meta name="twitter:creator" content="@sos-expat" />
+  <meta name="twitter:site" content="@sos-expat" />
+
+  <!-- 🔍 BOTS -->
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+  <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+  <meta name="bingbot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+
+  <!-- 🎨 CRITICAL CSS - TOUT EN CSS STATIQUE -->
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+      -webkit-tap-highlight-color: transparent;
+      font-family: "Inter var", system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #root {
+      min-height: 100vh;
+    }
+
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-size: 18px;
+      color: #666;
+    }
+
+    .app-loading {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 20px;
+      z-index: 9999;
+      transition: opacity 0.3s ease;
+    }
+
+    @supports (padding: max(0px)) {
+      body {
+        padding-left: max(12px, env(safe-area-inset-left));
+        padding-right: max(12px, env(safe-area-inset-right));
+      }
+    }
+
+    @media (max-width: 768px) {
+      html {
+        font-size: 16px;
+      }
+
+      body {
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+      }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .app-loading {
+        background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* ✅ Police Inter */
+    @font-face {
+      font-family: "Inter var";
+      src: url("/fonts/inter-var.woff2") format("woff2");
+      font-weight: 100 900;
+      font-display: swap;
+      font-style: normal;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 🔒 GTM noscript fallback - for users without JavaScript -->
+  <noscript>
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-XXXXXXX"
+      height="0" width="0" style="display:none;visibility:hidden"></iframe>
+  </noscript>
+
+  <!-- 📱 Loading -->
+  <div id="app-loading" class="app-loading">
+    <div>
+      <div style="font-size: 32px; margin-bottom: 16px">🆘</div>
+      <div>Chargement...</div>
+    </div>
+  </div>
+
+  <!-- 🎯 App -->
+  <div id="root"></div>
+
+  <!-- App entry - DOIT ÊTRE LE SEUL SCRIPT type="module" -->
+  <script type="module" src="/src/main.tsx"></script>
+
+  <!-- 🔥 SCRIPT POUR SUPPRIMER LE LOADING -->
+  <script>
+    // Attendre que React soit monté
+    setTimeout(function () {
+      const loading = document.getElementById('app-loading');
+      if (loading) {
+        loading.style.opacity = '0';
+        setTimeout(function () {
+          loading.remove();
+        }, 300);
+      }
+    }, 1000);
+  </script>
+
+  <!-- ❌ No JS -->
+  <noscript>
+    <div style="padding:20px; text-align:center; font-family:sans-serif; background:#fee2e2; color:#991b1b;">
+      Cette application nécessite JavaScript pour fonctionner. Activez-le dans votre navigateur.
+    </div>
+  </noscript>
+</body>
+
+</html>

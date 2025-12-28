@@ -1,0 +1,302 @@
+rules_version = '2';
+
+// ==========================================
+// FIRESTORE DATABASE RULES - SOS-EXPAT
+// ==========================================
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ================= HELPER FUNCTIONS =================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return request.auth != null &&
+             request.auth.token.role == 'admin';
+    }
+
+    function isDev() {
+      return request.auth != null &&
+             request.auth.token.role == 'dev';
+    }
+
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    function isProvider() {
+      return request.auth != null &&
+             (request.auth.token.role == 'lawyer' || request.auth.token.role == 'expat');
+    }
+
+    function isClient() {
+      return request.auth != null && request.auth.token.role == 'client';
+    }
+
+    // ================= USERS COLLECTION =================
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin() || isDev();
+      allow delete: if isAdmin() || isDev();
+    }
+
+    // ================= SOS_PROFILES COLLECTION =================
+    match /sos_profiles/{profileId} {
+      // Lecture publique pour afficher les profils des prestataires
+      allow read: if true;
+
+      // Écriture : propriétaire ou admin
+      allow create: if isAuthenticated() && isOwner(profileId);
+      allow update: if isOwner(profileId) || isAdmin() || isDev();
+      allow delete: if isAdmin() || isDev();
+
+      // Sous-collection reviews
+      match /reviews/{reviewId} {
+        allow read: if true;
+        allow create: if isAuthenticated();
+        allow update, delete: if isAdmin() || isDev();
+      }
+    }
+
+    // ================= REVIEWS COLLECTION =================
+    match /reviews/{reviewId} {
+      // Lecture : tout le monde pour les avis publiés, admin/dev pour tous
+      allow read: if resource.data.status == 'published' && resource.data.isPublic == true
+                  || isAdmin()
+                  || isDev()
+                  || (isAuthenticated() && resource.data.clientId == request.auth.uid)
+                  || (isAuthenticated() && resource.data.providerId == request.auth.uid);
+
+      // Création : client authentifié uniquement
+      // Validation : le clientId doit correspondre à l'utilisateur connecté
+      allow create: if isAuthenticated()
+                    && request.resource.data.clientId == request.auth.uid
+                    && request.resource.data.providerId is string
+                    && request.resource.data.callId is string
+                    && request.resource.data.rating is number
+                    && request.resource.data.rating >= 1
+                    && request.resource.data.rating <= 5
+                    && request.resource.data.comment is string
+                    && request.resource.data.comment.size() > 0
+                    && request.resource.data.comment.size() <= 2000;
+
+      // Mise à jour :
+      // - Le prestataire peut modifier isPublic et status (pour show/hide)
+      // - Admin peut tout modifier
+      allow update: if isAdmin()
+                    || isDev()
+                    || (isAuthenticated()
+                        && resource.data.providerId == request.auth.uid
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isPublic', 'status']));
+
+      // Suppression : admin seulement
+      allow delete: if isAdmin() || isDev();
+    }
+
+    // ================= CALLS/CALL_SESSIONS COLLECTION =================
+    match /calls/{callId} {
+      allow read: if isAuthenticated() &&
+                  (resource.data.clientId == request.auth.uid ||
+                   resource.data.providerId == request.auth.uid ||
+                   isAdmin() || isDev());
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() &&
+                    (resource.data.clientId == request.auth.uid ||
+                     resource.data.providerId == request.auth.uid ||
+                     isAdmin() || isDev());
+      allow delete: if isAdmin() || isDev();
+    }
+
+    match /call_sessions/{sessionId} {
+      allow read: if isAuthenticated() &&
+                  (resource.data.clientId == request.auth.uid ||
+                   resource.data.providerId == request.auth.uid ||
+                   isAdmin() || isDev());
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isAdmin() || isDev();
+    }
+
+    // ================= PAYMENTS COLLECTION =================
+    match /payments/{paymentId} {
+      allow read: if isAuthenticated() &&
+                  (resource.data.userId == request.auth.uid || isAdmin() || isDev());
+      allow create: if isAuthenticated();
+      allow update: if isAdmin() || isDev();
+      allow delete: if isAdmin() || isDev();
+    }
+
+    // ================= ORDERS COLLECTION =================
+    match /orders/{orderId} {
+      allow read: if isAuthenticated() &&
+                  (resource.data.userId == request.auth.uid ||
+                   resource.data.clientId == request.auth.uid ||
+                   isAdmin() || isDev());
+      allow create: if isAuthenticated();
+      allow update: if isAdmin() || isDev();
+      allow delete: if isAdmin() || isDev();
+    }
+
+    // ================= NOTIFICATIONS COLLECTION =================
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() &&
+                  (resource.data.userId == request.auth.uid || isAdmin() || isDev());
+      allow create: if isAuthenticated() || isAdmin();
+      allow update: if isOwner(resource.data.userId) || isAdmin() || isDev();
+      allow delete: if isAdmin() || isDev();
+    }
+
+    // ================= FCM TOKENS COLLECTION (P1 Security Fix) =================
+    match /fcm_tokens/{userId} {
+      // Only token owner can read their own token
+      allow read: if isOwner(userId) || isAdmin() || isDev();
+      // Only token owner can create/update their token
+      allow create, update: if isOwner(userId);
+      // Owner or admin can delete
+      allow delete: if isOwner(userId) || isAdmin() || isDev();
+    }
+
+    // ================= IN-APP NOTIFICATIONS (P2 Security Fix) =================
+    match /inapp_notifications/{notificationId} {
+      allow read: if isAuthenticated() &&
+                  (resource.data.uid == request.auth.uid || isAdmin() || isDev());
+      allow create: if false; // Only Cloud Functions can create
+      allow update: if isAuthenticated() && resource.data.uid == request.auth.uid &&
+                    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt']);
+      allow delete: if isAdmin() || isDev();
+    }
+
+    // ================= MESSAGE EVENTS (Cloud Functions only) =================
+    match /message_events/{eventId} {
+      allow read: if isAdmin() || isDev();
+      allow write: if false; // Only Cloud Functions
+    }
+
+    // ================= MESSAGE DELIVERIES (Cloud Functions only) =================
+    match /message_deliveries/{deliveryId} {
+      allow read: if isAdmin() || isDev();
+      allow write: if false; // Only Cloud Functions
+    }
+
+    // ================= NOTIFICATION LOGS (Cloud Functions only) =================
+    match /notification_logs/{logId} {
+      allow read: if isAdmin() || isDev();
+      allow write: if false; // Only Cloud Functions
+    }
+
+    // ================= FAVORITES COLLECTION =================
+    match /favorites/{favoriteId} {
+      allow read: if isAuthenticated() &&
+                  (resource.data.userId == request.auth.uid || isAdmin() || isDev());
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isOwner(resource.data.userId) || isAdmin();
+      allow delete: if isOwner(resource.data.userId) || isAdmin() || isDev();
+    }
+
+    // ================= FAQ COLLECTION =================
+    match /faqs/{faqId} {
+      allow read: if resource.data.isActive == true || isAdmin() || isDev();
+      allow create, update, delete: if isAdmin() || isDev();
+    }
+
+    // ================= HELP CENTER COLLECTION =================
+    match /helpCenter/{articleId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin() || isDev();
+    }
+
+    // ================= AAA USED CONTENT COLLECTION =================
+    match /aaa_used_content/{documentId} {
+      allow get, list: if isAdmin() || isDev();
+      allow create: if isAdmin() &&
+                   request.resource.data.keys().hasAll(['type', 'langCode', 'usedAt']) &&
+                   request.resource.data.type in ['bio', 'review'];
+      allow update, delete: if false;
+    }
+
+    // ================= AAA_PROFILES COLLECTION =================
+    match /aaa_profiles/{profileId} {
+      allow read: if isAdmin() || isDev();
+      allow write: if isAdmin() || isDev();
+    }
+
+    // ================= PROVIDER MESSAGE ORDER CUSTOMERS =================
+    match /providerMessageOrderCustomers/{messageId} {
+      allow create: if isAuthenticated()
+        && request.resource.data.senderId == request.auth.uid
+        && request.resource.data.providerId is string
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0
+        && request.resource.data.message.size() <= 1000;
+
+      allow read: if (isAuthenticated()
+        && (request.auth.uid == resource.data.providerId
+            || request.auth.uid == resource.data.senderId))
+        || isAdmin() || isDev();
+
+      allow update: if isAuthenticated()
+        && request.auth.uid == resource.data.providerId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+
+      allow delete: if isAdmin() || isDev();
+    }
+
+    // ================= PROVIDERS TRANSLATIONS =================
+    match /providers_translations/{providerId} {
+      allow read: if true;
+      allow create: if (isAuthenticated() && request.auth.uid == providerId) || isAdmin() || isDev();
+      allow update: if (isAuthenticated() && request.auth.uid == providerId) || isAdmin() || isDev();
+      allow delete: if isAdmin() || isDev();
+    }
+
+    // ================= CONFIG COLLECTION =================
+    match /config/{docId} {
+      allow read: if isAdmin() || isDev();
+      allow write: if isAdmin() || isDev();
+    }
+
+    // ================= SETTINGS COLLECTION =================
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin() || isDev();
+    }
+
+    // ================= DOCUMENTS COLLECTION =================
+    match /documents/{documentId} {
+      allow read: if isAuthenticated() &&
+                  (resource.data.userId == request.auth.uid || isAdmin() || isDev());
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isOwner(resource.data.userId) || isAdmin() || isDev();
+      allow delete: if isAdmin() || isDev();
+    }
+
+    // ================= INVOICES COLLECTION =================
+    match /invoices/{invoiceId} {
+      allow read: if isAuthenticated() &&
+                  (resource.data.userId == request.auth.uid ||
+                   resource.data.clientId == request.auth.uid ||
+                   isAdmin() || isDev());
+      allow create, update, delete: if isAdmin() || isDev();
+    }
+
+    // ================= COUPONS COLLECTION =================
+    match /coupons/{couponId} {
+      allow read: if true;
+      allow write: if isAdmin() || isDev();
+    }
+
+    // ================= AUDIT LOGS COLLECTION =================
+    match /auditLogs/{logId} {
+      allow read: if isAdmin() || isDev();
+      allow create: if isAuthenticated();
+      allow update, delete: if false;
+    }
+
+    // ================= CATCH-ALL (deny by default) =================
+    match /{document=**} {
+      allow read, write: if isDev();
+    }
+  }
+}

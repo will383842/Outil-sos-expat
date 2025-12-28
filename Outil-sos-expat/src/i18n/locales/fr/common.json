@@ -1,0 +1,192 @@
+{
+  "navigation": {
+    "dashboard": "Dashboard",
+    "dossiers": "Mes Dossiers",
+    "messages": "Messages",
+    "profile": "Mon Profil",
+    "settings": "Paramètres",
+    "signOut": "Se déconnecter",
+    "signingOut": "Déconnexion...",
+    "prestataires": "Prestataires",
+    "access": "Accès",
+    "team": "Équipe",
+    "countries": "Pays",
+    "audit": "Audit",
+    "testAI": "Test IA",
+    "administration": "Administration"
+  },
+  "actions": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "create": "Créer",
+    "add": "Ajouter",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "filters": "Filtres",
+    "reset": "Réinitialiser",
+    "export": "Exporter",
+    "refresh": "Actualiser",
+    "loadMore": "Charger plus",
+    "copy": "Copier",
+    "copied": "Copié",
+    "retry": "Réessayer",
+    "send": "Envoyer",
+    "sending": "Envoi en cours...",
+    "close": "Fermer",
+    "back": "Retour",
+    "backHome": "Retour à l'accueil",
+    "view": "Voir",
+    "viewAll": "Voir tout",
+    "confirm": "Confirmer",
+    "preview": "Prévisualiser",
+    "expand": "Agrandir",
+    "collapse": "Réduire",
+    "start": "Démarrer",
+    "stop": "Arrêter",
+    "finish": "Terminer",
+    "reopen": "Réouvrir"
+  },
+  "status": {
+    "pending": "En attente",
+    "inProgress": "En cours",
+    "completed": "Terminé",
+    "cancelled": "Annulé",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "expired": "Expiré",
+    "verified": "Vérifié",
+    "trial": "Période d'essai",
+    "paymentPending": "Paiement en attente"
+  },
+  "priority": {
+    "urgent": "Urgent",
+    "high": "Haute",
+    "medium": "Moyenne",
+    "low": "Basse"
+  },
+  "time": {
+    "today": "Aujourd'hui",
+    "yesterday": "Hier",
+    "minutesAgo": "Il y a {{count}} min",
+    "hoursAgo": "Il y a {{count}}h",
+    "daysAgo": "Il y a {{count}}j",
+    "daysRemaining": "{{count}} jours restants",
+    "expiresToday": "Expire aujourd'hui",
+    "expiresTomorrow": "Expire demain"
+  },
+  "errors": {
+    "generic": "Une erreur est survenue",
+    "loading": "Erreur de chargement",
+    "network": "Erreur réseau",
+    "unauthorized": "Accès non autorisé",
+    "notFound": "Non trouvé",
+    "copyFailed": "Erreur lors de la copie",
+    "sendFailed": "Erreur d'envoi",
+    "loadingProfile": "Erreur lors du chargement du profil",
+    "savingProfile": "Erreur lors de la sauvegarde du profil"
+  },
+  "success": {
+    "saved": "Enregistré avec succès",
+    "deleted": "Supprimé avec succès",
+    "copied": "Copié dans le presse-papiers",
+    "profileUpdated": "Profil mis à jour avec succès !"
+  },
+  "empty": {
+    "noData": "Aucune donnée",
+    "noResults": "Aucun résultat",
+    "modifyFilters": "Essayez de modifier vos filtres"
+  },
+  "loading": {
+    "default": "Chargement...",
+    "dashboard": "Chargement du dashboard",
+    "dashboardMessage": "Chargement du tableau de bord..."
+  },
+  "language": "Langue",
+  "all": "Tous",
+  "type": "Type",
+  "types": {
+    "lawyer": "Avocat",
+    "expat": "Expatrié",
+    "expert": "Expert"
+  },
+  "providerTypes": {
+    "lawyer": "Avocat",
+    "expatExpert": "Expert expatrié"
+  },
+  "roles": {
+    "admin": "Administrateur",
+    "agent": "Agent",
+    "provider": "Prestataire"
+  },
+  "offline": {
+    "message": "Mode hors ligne - Certaines fonctionnalités sont limitées"
+  },
+  "connectedAs": "Connecté en tant que",
+  "allRightsReserved": "Tous droits réservés.",
+  "guards": {
+    "loading": "Chargement...",
+    "verifyingAccess": "Vérification de votre accès...",
+    "accountNotFound": "Compte non trouvé",
+    "accountNotFoundDescription": "Votre compte n'existe pas dans notre système. Vous devez d'abord vous inscrire en tant que prestataire sur sos-expat.com.",
+    "registerOnSosExpat": "S'inscrire sur sos-expat.com",
+    "contactSupport": "Contacter le support",
+    "accessReservedProviders": "Accès réservé aux prestataires",
+    "accessReservedDescription": "Cet outil est réservé aux avocats et expatriés aidants partenaires de SOS Expat.",
+    "currentRoleNotAllowed": "Votre rôle actuel ({{role}}) ne permet pas d'accéder à cet espace.",
+    "becomeProvider": "Devenir prestataire",
+    "backToSosExpat": "Retour à sos-expat.com",
+    "subscriptionRequired": "Abonnement requis",
+    "subscriptionRequiredMessage": "Un abonnement actif est requis.",
+    "viewOffers": "Voir les offres",
+    "needHelp": "Besoin d'aide ? Contactez-nous à",
+    "close": "Fermer"
+  },
+  "subscription": {
+    "active": "Actif",
+    "trial": "Essai",
+    "trialing": "Période d'essai",
+    "pastDue": "Paiement en retard",
+    "past_due": "Paiement en retard",
+    "canceled": "Annulé",
+    "expired": "Expiré",
+    "unpaid": "Impayé",
+    "paused": "En pause",
+    "noSubscription": "Aucun abonnement",
+    "admin": "Admin",
+    "expiresTomorrow": "Votre abonnement expire demain. Pensez à le renouveler.",
+    "expiresInDays": "Votre abonnement expire dans {{days}} jours. Pensez à le renouveler.",
+    "expiresInDaysShort": "Votre abonnement expire dans {{days}} jours."
+  },
+  "language": {
+    "change": "Changer de langue",
+    "select": "Langue / Language",
+    "available": "Langues disponibles"
+  },
+  "validation": {
+    "emailRequired": "L'email est requis",
+    "emailInvalid": "Format d'email invalide",
+    "nameRequired": "Le nom est requis"
+  },
+  "provider": {
+    "addTitle": "Ajouter un prestataire",
+    "googleEmail": "Email Google",
+    "googleEmailHint": "Le prestataire se connectera avec ce compte Google",
+    "fullName": "Nom complet",
+    "providerType": "Type de prestataire",
+    "lawyer": "Avocat",
+    "expat": "Expatrié",
+    "country": "Pays",
+    "adding": "Ajout...",
+    "addError": "Erreur lors de l'ajout"
+  },
+  "subscriptionErrors": {
+    "notAuthenticated": "Vous devez être connecté pour accéder à cette fonctionnalité.",
+    "subscriptionExpired": "Votre abonnement a expiré. Veuillez le renouveler pour continuer.",
+    "subscriptionCanceled": "Votre abonnement a été annulé. Veuillez vous réabonner pour continuer.",
+    "paymentFailed": "Un problème de paiement a été détecté. Veuillez mettre à jour vos informations de paiement.",
+    "noSubscription": "Un abonnement actif est requis pour accéder à cette fonctionnalité.",
+    "accessGranted": "Accès autorisé"
+  }
+}

@@ -1,0 +1,28 @@
+# Ignore source TypeScript files (only lib/ is needed)
+src/
+
+# Ignore test files
+**/*.test.ts
+**/*.test.js
+**/*.spec.ts
+**/*.spec.js
+__tests__/
+
+# Ignore development files
+.env.local
+.env.development
+*.log
+*.md
+.git/
+.gitignore
+
+# Ignore IDE files
+.vscode/
+.idea/
+
+# Ignore TypeScript config (not needed at runtime)
+tsconfig.json
+tsconfig.dev.json
+
+# Node modules will be installed in cloud, but we keep it for local
+# node_modules/

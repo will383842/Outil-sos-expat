@@ -1,0 +1,369 @@
+{
+  "header": {
+    "title": "SOS Expats — Admin",
+    "providerTitle": "SOS Expats — Pro Space",
+    "previewMode": "Provider View",
+    "exitPreview": "Return to Admin View"
+  },
+  "sidebar": {
+    "expand": "Expand menu",
+    "collapse": "Collapse menu",
+    "sections": {
+      "overview": "Overview",
+      "management": "Management",
+      "configuration": "Configuration",
+      "security": "Security"
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "analytics": "Analytics",
+      "providers": "Providers",
+      "dossiers": "All cases",
+      "team": "Team",
+      "countries": "Countries",
+      "aiSettings": "AI Configuration",
+      "settings": "Settings",
+      "auditLogs": "Audit Log"
+    }
+  },
+  "dashboard": {
+    "title": "Admin Dashboard",
+    "subtitle": "Platform activity overview",
+    "description": "Platform activity overview and service monitoring",
+    "stats": {
+      "totalDossiers": "Total Cases",
+      "dossiersInProgress": "Cases in Progress",
+      "activeProviders": "Active Providers",
+      "aiRequests": "AI Requests (month)",
+      "activeDossiers": "Active Cases",
+      "lawyerDossiers": "Lawyer Cases",
+      "expatDossiers": "Expat Cases",
+      "aiProcessed": "AI Processed",
+      "totalRevenue": "Total Revenue"
+    },
+    "activity": {
+      "title": "7-Day Activity",
+      "days": {
+        "sun": "Sun",
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat"
+      }
+    },
+    "iaStatus": {
+      "title": "AI Status",
+      "operational": "Operational",
+      "warning": "Quota Warning",
+      "critical": "Critical Quota",
+      "usage": "This Month Usage",
+      "percent": "{{percent}}% of monthly quota used"
+    },
+    "providers": {
+      "title": "Providers",
+      "none": "No active providers",
+      "totalRegistered": "Total registered",
+      "withAccess": "With tool access",
+      "withoutAccess": "Without access",
+      "accessEnabled": "Access enabled"
+    },
+    "recentDossiers": {
+      "title": "Recent Cases",
+      "none": "No recent cases"
+    },
+    "sync": {
+      "title": "Laravel Sync",
+      "connected": "Connected",
+      "disconnected": "Disconnected",
+      "error": "Error",
+      "lastSync": "Last sync",
+      "pending": "Pending items",
+      "syncNow": "Sync now"
+    }
+  },
+  "accessDenied": {
+    "title": "Access Denied",
+    "description": "This page is reserved for administrators.",
+    "noRights": "You do not have the necessary permissions to access this section.",
+    "connectedAs": "Connected as",
+    "role": "Role"
+  },
+  "prestataires": {
+    "title": "Providers",
+    "description": "Manage tool access for lawyers and expat experts",
+    "stats": {
+      "total": "Total",
+      "lawyers": "Lawyers",
+      "expats": "Expats",
+      "withAccess": "With Access"
+    },
+    "search": "Search by name, email, country...",
+    "filters": {
+      "type": "Type",
+      "access": "Tool Access",
+      "all": "All",
+      "withAccess": "With Access",
+      "withoutAccess": "Without Access"
+    },
+    "addManually": "Add Manually",
+    "addProvider": "Add Provider",
+    "form": {
+      "email": "Google Email",
+      "fullName": "Full Name",
+      "type": "Type",
+      "country": "Country"
+    },
+    "table": {
+      "name": "Name",
+      "email": "Email",
+      "type": "Type",
+      "country": "Country",
+      "access": "Access"
+    },
+    "actions": {
+      "grantAccess": "Grant Access",
+      "revokeAccess": "Revoke Access",
+      "activeAccess": "Access Active"
+    },
+    "empty": {
+      "title": "No providers found",
+      "description": "Try modifying your filters"
+    },
+    "loadMore": "Load more providers",
+    "emailMissing": "Email missing"
+  },
+  "mesPrestataires": {
+    "title": "My Providers",
+    "description": "Manage provider accounts linked to your profile",
+    "linkedProviders": "Linked Providers",
+    "noProviders": {
+      "title": "No linked providers",
+      "description": "Add providers to start processing cases"
+    },
+    "addProvider": "Add Provider",
+    "switchProvider": "Switch Provider",
+    "remove": "Remove",
+    "setAsActive": "Set as active",
+    "searchProvider": "Search for a provider...",
+    "noProviderFound": "No provider found",
+    "allProvidersLinked": "All providers are already linked",
+    "confirmRemove": "Are you sure you want to remove this provider from your account?",
+    "success": {
+      "added": "Provider added successfully!",
+      "removed": "Provider removed successfully!",
+      "defaultUpdated": "Default provider updated!"
+    },
+    "errors": {
+      "addFailed": "Error adding provider",
+      "removeFailed": "Error removing provider"
+    }
+  },
+  "gestionAcces": {
+    "title": "Access Management",
+    "description": "Link providers to users so they receive their cases",
+    "addUser": "Add a user",
+    "howItWorks": {
+      "title": "How does it work?",
+      "line1": "Each user logs in with their Google email",
+      "line2": "You assign them one or more providers below",
+      "line3": "When a client books this provider, the user sees the case in their dashboard"
+    },
+    "stats": {
+      "users": "Users",
+      "activeProviders": "Active providers",
+      "links": "Links"
+    },
+    "search": "Search for a user by email or name...",
+    "providerCount": "{{count}} provider(s)",
+    "selectProviders": "Select providers for this user:",
+    "deleteUser": "Delete user",
+    "deleteConfirm": "Delete this user and all their access?",
+    "noUsers": {
+      "title": "No users found",
+      "description": "Add a user to give them access to providers"
+    },
+    "toast": {
+      "providersSaved": "Providers saved successfully",
+      "saveError": "Error while saving",
+      "userDeleted": "User deleted",
+      "deleteError": "Error while deleting",
+      "loadError": "Error loading users",
+      "addError": "Error while adding"
+    },
+    "modal": {
+      "title": "Add a user",
+      "firebaseId": "Firebase user ID",
+      "firebaseIdRequired": "Firebase user ID is required",
+      "firebaseIdPlaceholder": "5lTY3iPh16Z7gHlrzr7XzrY4pGE2",
+      "firebaseIdHint": "Find this ID in Firebase Console → Authentication → Users",
+      "email": "Email",
+      "emailPlaceholder": "user@gmail.com",
+      "displayName": "Display name",
+      "displayNamePlaceholder": "John Doe",
+      "providersToLink": "Providers to link",
+      "noProviderAvailable": "No provider available"
+    }
+  },
+  "utilisateurs": {
+    "title": "Users",
+    "description": "Admin team management",
+    "roles": {
+      "admin": "Administrator",
+      "agent": "Agent",
+      "provider": "Provider"
+    },
+    "roleDescriptions": {
+      "admin": "Full access to all features",
+      "agent": "Case and message management",
+      "provider": "Access to assigned cases only"
+    },
+    "stats": {
+      "total": "Total",
+      "admins": "Admins",
+      "agents": "Agents"
+    },
+    "noName": "No name",
+    "availableRoles": "Available roles",
+    "search": "Search by name or email...",
+    "setAdmin": "Set Admin",
+    "setAgent": "Set Agent",
+    "setProvider": "Set Provider",
+    "multiProvider": "Multi-provider",
+    "multiProviderDescription": "Can manage multiple providers",
+    "confirmDelete": "Delete this user?",
+    "createdOn": "Created on {{date}}",
+    "empty": {
+      "title": "No users found",
+      "modifySearch": "Try modifying your search",
+      "usersWillAppear": "Connected users will appear here"
+    },
+    "note": "Note: Users are created automatically on their first login. Use the setRole function to assign roles.",
+    "loadMore": "Load more users",
+    "allLoaded": "All users have been loaded ({{count}} total)",
+    "important": "Important",
+    "importantNote": "To create a new administrator, the user must first log in to the application. Then, you can change their role here. Alternatively, use the <code>setRole</code> Cloud Function with the admin API key."
+  },
+  "pays": {
+    "title": "Countries",
+    "description": "Configured countries list",
+    "columns": {
+      "code": "Code",
+      "name": "Name",
+      "active": "Active"
+    }
+  },
+  "auditLogs": {
+    "title": "Audit Logs",
+    "description": "Platform action history",
+    "stats": {
+      "total": "Total",
+      "today": "Today"
+    },
+    "filters": {
+      "severity": "Severity",
+      "actionType": "Action type"
+    },
+    "counter": "Showing {{shown}} of {{total}} entries",
+    "actions": {
+      "login": "Login",
+      "logout": "Logout",
+      "roleChange": "Role Change",
+      "providerCreate": "Provider Created",
+      "providerUpdate": "Provider Updated",
+      "providerDelete": "Provider Deleted",
+      "accessGranted": "Access Granted",
+      "accessRevoked": "Access Revoked",
+      "dossierCreate": "Case Created",
+      "dossierUpdate": "Case Updated",
+      "dossierStatusChange": "Status Changed",
+      "dossierDelete": "Case Deleted",
+      "aiResponseGenerated": "AI Response Generated",
+      "aiSettingsChanged": "AI Settings Changed",
+      "settingsChanged": "Settings Changed",
+      "dataExport": "Data Export",
+      "adminAction": "Admin Action"
+    },
+    "severity": {
+      "info": "Info",
+      "warning": "Warning",
+      "critical": "Critical"
+    }
+  },
+  "parametres": {
+    "title": "General Settings",
+    "description": "Roles, themes, integrations, logs..."
+  },
+  "testIA": {
+    "title": "AI Test - Admin Mode",
+    "description": "Test AI assistant responses",
+    "infoBanner": {
+      "title": "Admin Test Mode",
+      "description": "This page allows you to test the AI by simulating different contexts. Calls are made via the Cloud Function",
+      "cloudFunction": "aiChat",
+      "metadataInfo": "Responses include debug metadata (model, provider, citations, response time)."
+    },
+    "context": {
+      "button": "Context",
+      "title": "Simulated context",
+      "providerType": {
+        "title": "Provider type",
+        "lawyer": "Lawyer",
+        "expert": "Expert",
+        "lawyerDescription": "Claude 3.5 Sonnet - Legal reasoning",
+        "expertDescription": "GPT-4o - Practical advice"
+      },
+      "fields": {
+        "country": "Country",
+        "countryPlaceholder": "e.g.: Thailand",
+        "nationality": "Nationality",
+        "nationalityPlaceholder": "e.g.: French",
+        "clientName": "Client name",
+        "clientNamePlaceholder": "e.g.: John Test",
+        "urgency": "Urgency"
+      },
+      "urgencyLevels": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High",
+        "critical": "Critical"
+      }
+    },
+    "quickTests": {
+      "title": "Quick tests",
+      "visa": "Expiring visa",
+      "urgence": "Theft/loss emergency",
+      "juridique": "Employer issue",
+      "pratique": "Bangkok housing"
+    },
+    "chat": {
+      "emptyState": "Send a message to start testing",
+      "placeholder": "Type your test message...",
+      "ariaLabelMessages": "Conversation messages",
+      "ariaLabelInput": "Message to send",
+      "ariaLabelSend": "Send message",
+      "ariaLabelThinking": "AI is thinking",
+      "thinking": "AI is thinking...",
+      "noResponse": "No response",
+      "lastResponse": "Last response in {{time}}ms"
+    },
+    "debug": {
+      "button": "Debug",
+      "model": "Model",
+      "provider": "Provider",
+      "time": "Time",
+      "perplexitySearch": "Perplexity search",
+      "fallback": "Fallback",
+      "sources": "Sources"
+    },
+    "errors": {
+      "title": "Error",
+      "unknown": "Unknown error",
+      "prefix": "Error:",
+      "closeLabel": "Close error"
+    }
+  },
+  "verifyingRights": "Verifying permissions...",
+  "loadingPage": "Loading page"
+}

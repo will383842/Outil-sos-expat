@@ -1,0 +1,314 @@
+{
+  "dashboard": {
+    "title": "Mi panel de control",
+    "welcome": "Bienvenido, {{name}}",
+    "selectProvider": "Seleccione un proveedor para ver sus estadisticas",
+    "activityOf": "Actividad de {{name}}",
+    "noProvider": {
+      "title": "Ningun proveedor seleccionado",
+      "description": "Por favor inicie sesion o seleccione una cuenta de proveedor"
+    },
+    "stats": {
+      "myDossiers": "Mis casos",
+      "activeDossiers": "Casos activos",
+      "myActiveDossiers": "Mis casos activos",
+      "pending": "Pendientes",
+      "inProgress": "En curso",
+      "completed": "Completados",
+      "completedThisMonth": "Completados este mes",
+      "total": "total",
+      "typeLawyer": "Tipo Abogado",
+      "typeExpat": "Tipo Expatriado",
+      "myRevenue": "Mis ingresos"
+    },
+    "quota": {
+      "title": "Cuota IA",
+      "usages": "usos",
+      "remaining": "{{count}} usos restantes",
+      "almostReached": "Cuota casi alcanzada! Contacte con soporte para aumentarla."
+    },
+    "recentDossiers": "Mis casos recientes",
+    "noDossiers": "Sin casos recientes",
+    "recentBookings": "Casos recientes",
+    "noRecentBookings": "Sin casos recientes",
+    "quickActions": {
+      "title": "Acciones rapidas",
+      "myDossiers": "Mis casos",
+      "myProfile": "Mi perfil",
+      "messages": "Mensajes"
+    },
+    "charts": {
+      "distributionByType": "Distribucion por tipo",
+      "dossiersByStatus": "Casos por estado"
+    },
+    "aiAssistant": {
+      "title": "Asistente Juridico IA",
+      "description": "La IA genera automaticamente respuestas juridicas contextualizadas para cada caso. Los proveedores pueden chatear con la IA en tiempo real durante sus llamadas con clientes.",
+      "autoResponsesEnabled": "Respuestas automaticas activadas"
+    },
+    "subscription": {
+      "title": "Mi suscripcion",
+      "active": "Activa",
+      "trial": "Periodo de prueba",
+      "pending": "Pago pendiente",
+      "expired": "Expirada",
+      "expiresIn": "{{days}} dias restantes",
+      "expiresToday": "Expira hoy",
+      "expiresTomorrow": "Expira manana",
+      "renewWarning": "Renueve su suscripcion para continuar"
+    }
+  },
+  "multiDashboard": {
+    "title": "Panel multi-proveedor",
+    "allProviders": "Todos los proveedores",
+    "selectProvider": "Seleccionar proveedor",
+    "aggregatedView": "Vista agregada de {{count}} proveedores",
+    "statsFor": "Estadisticas de {{name}}",
+    "sharedQuota": "Cuota compartida",
+    "remaining": "{{count}} restantes",
+    "quotaWarning": "Cuota casi agotada. Contacte con administracion.",
+    "linkedProviders": "Proveedores vinculados",
+    "activity7Days": "Actividad de 7 dias",
+    "distributionByType": "Distribucion por tipo",
+    "dossiersByStatus": "Casos por estado",
+    "revenue": "Ingresos"
+  },
+  "dossiers": {
+    "title": "Casos",
+    "count": "{{count}} caso",
+    "count_other": "{{count}} casos",
+    "found": "encontrado(s)",
+    "search": "Buscar por titulo, cliente, pais...",
+    "filters": {
+      "status": "Estado",
+      "type": "Tipo",
+      "all": "Todos",
+      "lawyer": "Abogado",
+      "expat": "Experto"
+    },
+    "empty": {
+      "title": "No se encontraron casos",
+      "modifyFilters": "Intente modificar sus filtros",
+      "newRequestsHere": "Las nuevas solicitudes apareceran aqui"
+    },
+    "loadMore": "Cargar mas casos",
+    "allLoaded": "Todos los casos cargados ({{count}} en total)",
+    "noDescription": "Sin descripcion",
+    "noTitle": "Sin titulo"
+  },
+  "dossierDetail": {
+    "accessDenied": "Acceso denegado - Este caso no le pertenece",
+    "notFound": "Caso no encontrado",
+    "consultationDuration": "Duracion de la consulta",
+    "consultationTimeElapsed": "Tiempo de consulta agotado",
+    "autoLockWarning": "La conversacion se bloqueara automaticamente",
+    "startAfterFirstResponse": "La consulta comenzara despues de la primera respuesta de IA",
+    "conversationClosed": "Conversacion cerrada",
+    "historyAvailable": "El historial permanece disponible arriba"
+  },
+  "aiChat": {
+    "title": "Asistente Juridico IA",
+    "subtitle": "Haga las preguntas del cliente aqui",
+    "timeElapsed": "Tiempo transcurrido",
+    "expertTitle": "Asistente Juridico Experto",
+    "expertDescription": "Escriba las preguntas de su cliente para recibir respuestas juridicas detalladas y con fuentes.",
+    "tags": {
+      "internationalLaw": "Derecho internacional",
+      "expatTax": "Fiscalidad de expatriados",
+      "immigration": "Inmigracion"
+    },
+    "legalAssistant": "Asistente Juridico",
+    "yourQuestion": "Su pregunta",
+    "copyResponse": "Copiar respuesta",
+    "analyzing": "Analisis juridico en curso...",
+    "inputPlaceholder": "Escriba la pregunta del cliente...",
+    "keyboardHint": "Enter para enviar - Shift+Enter para salto de linea"
+  },
+  "clientInfo": {
+    "waitingAI": "Esperando IA",
+    "archived": "Archivado",
+    "activeConsultation": "Consulta activa",
+    "duration": "Duracion: {{minutes}} minutos",
+    "timeRemaining": "Tiempo restante ({{minutes}} min total)",
+    "historyAvailable": "El historial de la conversacion permanece consultable",
+    "client": "Cliente",
+    "name": "Nombre",
+    "nationality": "Nacionalidad",
+    "interventionCountry": "Pais de intervencion",
+    "languages": "Idiomas",
+    "request": "Solicitud",
+    "title": "Titulo",
+    "description": "Descripcion",
+    "service": "Servicio",
+    "createdOn": "Creado el",
+    "provider": "Proveedor"
+  },
+  "page": {
+    "loadingDossier": "Cargando caso...",
+    "backToDossiers": "Volver a los casos",
+    "aiActive": "IA activa",
+    "consultationExpiredMessage": "Tiempo de consulta agotado ({{minutes}} min) - El historial permanece consultable",
+    "initializingChat": "Inicializando chat IA..."
+  },
+  "bookingCard": {
+    "lawyer": "Abogado",
+    "expat": "Expatriado",
+    "aiProcessed": "IA",
+    "client": "Cliente"
+  },
+  "statusActions": {
+    "startCall": "Iniciar llamada",
+    "finish": "Finalizar",
+    "cancel": "Cancelar",
+    "reopenConversation": "Reabrir conversacion"
+  },
+  "quotaExhausted": {
+    "title": "Cuota de uso agotada",
+    "description": "Ha alcanzado el limite de solicitudes de IA para este periodo. Mejore su suscripcion para continuar usando el asistente.",
+    "quotaUsage": "Uso de cuota",
+    "requestsUsed": "solicitudes utilizadas",
+    "outOf": "de",
+    "nextRenewal": "Proxima renovacion",
+    "increaseQuota": "Aumentar mi cuota",
+    "contactSupport": "Contactar soporte",
+    "signOut": "Cerrar sesion",
+    "connectedAs": "Conectado como"
+  },
+  "messages": {
+    "title": "Mensajes",
+    "aiResponses": "respuestas IA",
+    "questions": "preguntas",
+    "lastAiResponse": "Ultima respuesta IA",
+    "selectProvider": "Seleccione un proveedor para ver sus conversaciones",
+    "modifySearch": "Intente modificar su busqueda",
+    "allConversations": "Todas las Conversaciones",
+    "myConversations": "Mis Conversaciones",
+    "allConversationsHistory": "Historial de todas las conversaciones y respuestas IA",
+    "conversationsOf": "Conversaciones de {{name}}",
+    "conversations": "Conversaciones",
+    "activeLastHour": "Activas (1h)",
+    "searchPlaceholder": "Buscar por cliente, ID de caso...",
+    "noConversationFound": "Ninguna conversacion encontrada",
+    "conversationsWillAppear": "Las conversaciones con IA apareceran aqui",
+    "conversation": "Conversacion"
+  },
+  "profile": {
+    "title": "Mi perfil",
+    "description": "Gestione la informacion de su cuenta de proveedor",
+    "loading": "Cargando perfil...",
+    "noProviderSelected": "Ningun proveedor seleccionado",
+    "selectProviderToView": "Seleccione un proveedor para ver su perfil",
+    "lawyer": "Abogado",
+    "expatExpert": "Experto en expatriacion",
+    "contactInfo": "Informacion de contacto",
+    "email": "Correo electronico",
+    "emailNotEditable": "El correo electronico no se puede modificar",
+    "phone": "Telefono",
+    "website": "Sitio web",
+    "location": "Ubicacion",
+    "country": "Pais",
+    "contactAdminToModify": "Contacte al administrador para modificar",
+    "city": "Ciudad",
+    "address": "Direccion",
+    "specialties": "Especialidades",
+    "addSpecialty": "Anadir especialidad...",
+    "noSpecialtyAdded": "Ninguna especialidad anadida",
+    "noSpecialtySet": "Ninguna especialidad indicada",
+    "spokenLanguages": "Idiomas hablados",
+    "addLanguage": "Anadir idioma...",
+    "noLanguageAdded": "Ningun idioma anadido",
+    "noLanguageSet": "Ningun idioma indicado",
+    "descriptionSection": "Descripcion",
+    "descriptionPlaceholder": "Describa su actividad, sus areas de especializacion...",
+    "noDescriptionSet": "Ninguna descripcion indicada",
+    "systemInfo": "Informacion del sistema",
+    "providerId": "ID del proveedor",
+    "accountType": "Tipo de cuenta",
+    "providerName": "Nombre del proveedor",
+    "statusLabel": "Estado"
+  },
+  "providerSwitcher": {
+    "noProvider": "Sin proveedor vinculado",
+    "select": "Seleccionar...",
+    "switchProvider": "Cambiar proveedor",
+    "manageProviders": "Gestionar mis proveedores",
+    "lawyer": "Abogado",
+    "expatExpert": "Experto en expatriacion"
+  },
+  "subscriptionScreen": {
+    "header": {
+      "subtitle": "Asistente IA para proveedores",
+      "signOut": "Cerrar sesión"
+    },
+    "hero": {
+      "badge": "Suscripción requerida",
+      "title": "Potencia tus consultas con IA",
+      "descriptionLawyer": "Accede a un asistente legal IA que busca información legal en tiempo real durante tus consultas.",
+      "descriptionExpat": "Obtén información práctica instantánea sobre expatriación para apoyar mejor a tus clientes."
+    },
+    "benefits": {
+      "aiRealTime": {
+        "title": "Asistente IA en tiempo real",
+        "description": "Investigación legal instantánea durante tus consultas"
+      },
+      "updatedData": {
+        "title": "Datos actualizados",
+        "description": "Acceso a información legal de más de 190 países"
+      },
+      "timeSaving": {
+        "title": "Ahorro de tiempo",
+        "description": "Respuestas precisas en segundos"
+      },
+      "reliableSources": {
+        "title": "Fuentes confiables",
+        "description": "Citas y referencias legales verificadas"
+      }
+    },
+    "pricing": {
+      "monthly": "Mensual",
+      "annual": "Anual",
+      "perMonth": "/mes",
+      "billedAnnually": "Facturado {{amount}}€/año",
+      "savings": "AHORRA {{amount}}€",
+      "unlimited": "Acceso ilimitado al asistente IA",
+      "noCommitment": "Sin compromiso",
+      "cancelAnytime": "Cancela en cualquier momento",
+      "twoMonthsFree": "2 meses gratis",
+      "prioritySupport": "Soporte prioritario",
+      "chooseMonthly": "Elegir mensual",
+      "subscribeNow": "Suscribirse ahora"
+    },
+    "payment": {
+      "secure": "Pago seguro con tarjeta",
+      "methods": "Visa, Mastercard, American Express - Pago cifrado SSL - Conformidad PCI-DSS"
+    },
+    "footer": {
+      "questions": "¿Preguntas?",
+      "contactUs": "Contáctenos",
+      "connectedAs": "Conectado como {{email}}",
+      "copyright": "Todos los derechos reservados."
+    }
+  },
+  "subscriptionExpired": {
+    "gracePeriod": "Período de gracia",
+    "expired": "Suscripción expirada",
+    "titleGrace": "Tu suscripción ha expirado",
+    "titleSuspended": "Acceso suspendido",
+    "descriptionGrace": "Tienes {{days}} días para renovar tu suscripción sin interrupción del servicio.",
+    "descriptionExpired": "Tu suscripción ha expirado. Renueva ahora para recuperar el acceso al asistente IA.",
+    "expirationDate": "Fecha de expiración",
+    "daysAgo": "hace {{count}} día",
+    "daysAgo_other": "hace {{count}} días",
+    "gracePeriodActive": "Período de gracia activo",
+    "daysRemaining": "{{count}} días restantes para renovar",
+    "whatYouGet": "Lo que recuperarás",
+    "benefitAI": "Asistente IA en tiempo real",
+    "benefitCountries": "Acceso a datos de más de 190 países",
+    "benefitSources": "Fuentes legales verificadas",
+    "renewButton": "Renovar mi suscripción",
+    "contactSupport": "Contactar soporte",
+    "signOut": "Cerrar sesión",
+    "connectedAs": "Conectado como {{email}}",
+    "copyright": "Todos los derechos reservados."
+  }
+}

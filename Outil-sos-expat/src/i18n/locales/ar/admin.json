@@ -1,0 +1,369 @@
+{
+  "header": {
+    "title": "SOS Expats — الإدارة",
+    "providerTitle": "SOS Expats — المساحة المهنية",
+    "previewMode": "عرض مقدم الخدمة",
+    "exitPreview": "العودة إلى عرض المدير"
+  },
+  "sidebar": {
+    "expand": "توسيع القائمة",
+    "collapse": "طي القائمة",
+    "sections": {
+      "overview": "نظرة عامة",
+      "management": "الإدارة",
+      "configuration": "التكوين",
+      "security": "الأمان"
+    },
+    "nav": {
+      "dashboard": "لوحة التحكم",
+      "analytics": "التحليلات",
+      "providers": "مقدمو الخدمات",
+      "dossiers": "جميع الملفات",
+      "team": "الفريق",
+      "countries": "البلدان",
+      "aiSettings": "إعدادات الذكاء الاصطناعي",
+      "settings": "الإعدادات",
+      "auditLogs": "سجل التدقيق"
+    }
+  },
+  "dashboard": {
+    "title": "لوحة تحكم المدير",
+    "subtitle": "نظرة عامة على نشاط المنصة",
+    "description": "نظرة عامة على نشاط المنصة ومراقبة الخدمات",
+    "stats": {
+      "totalDossiers": "إجمالي الملفات",
+      "dossiersInProgress": "الملفات قيد التنفيذ",
+      "activeProviders": "مقدمو الخدمات النشطون",
+      "aiRequests": "طلبات الذكاء الاصطناعي (شهرياً)",
+      "activeDossiers": "الملفات النشطة",
+      "lawyerDossiers": "ملفات المحامين",
+      "expatDossiers": "ملفات المغتربين",
+      "aiProcessed": "معالجة بالذكاء الاصطناعي",
+      "totalRevenue": "إجمالي الإيرادات"
+    },
+    "activity": {
+      "title": "نشاط 7 أيام",
+      "days": {
+        "sun": "أحد",
+        "mon": "إثنين",
+        "tue": "ثلاثاء",
+        "wed": "أربعاء",
+        "thu": "خميس",
+        "fri": "جمعة",
+        "sat": "سبت"
+      }
+    },
+    "iaStatus": {
+      "title": "حالة الذكاء الاصطناعي",
+      "operational": "يعمل",
+      "warning": "تحذير الحصة",
+      "critical": "حصة حرجة",
+      "usage": "الاستخدام هذا الشهر",
+      "percent": "{{percent}}% من الحصة الشهرية مستخدمة"
+    },
+    "providers": {
+      "title": "مقدمو الخدمات",
+      "none": "لا يوجد مقدمو خدمات نشطون",
+      "totalRegistered": "إجمالي المسجلين",
+      "withAccess": "مع وصول للأداة",
+      "withoutAccess": "بدون وصول",
+      "accessEnabled": "الوصول مفعل"
+    },
+    "recentDossiers": {
+      "title": "الملفات الأخيرة",
+      "none": "لا توجد ملفات أخيرة"
+    },
+    "sync": {
+      "title": "مزامنة Laravel",
+      "connected": "متصل",
+      "disconnected": "غير متصل",
+      "error": "خطأ",
+      "lastSync": "آخر مزامنة",
+      "pending": "عناصر معلقة",
+      "syncNow": "مزامنة الآن"
+    }
+  },
+  "accessDenied": {
+    "title": "تم رفض الوصول",
+    "description": "هذه الصفحة مخصصة للمديرين فقط.",
+    "noRights": "ليس لديك الصلاحيات اللازمة للوصول إلى هذا القسم.",
+    "connectedAs": "متصل كـ",
+    "role": "الدور"
+  },
+  "prestataires": {
+    "title": "مقدمو الخدمات",
+    "description": "إدارة وصول الأداة للمحامين وخبراء المغتربين",
+    "stats": {
+      "total": "الإجمالي",
+      "lawyers": "المحامون",
+      "expats": "المغتربون",
+      "withAccess": "مع وصول"
+    },
+    "search": "البحث بالاسم أو البريد الإلكتروني أو البلد...",
+    "filters": {
+      "type": "النوع",
+      "access": "وصول الأداة",
+      "all": "الكل",
+      "withAccess": "مع وصول",
+      "withoutAccess": "بدون وصول"
+    },
+    "addManually": "إضافة يدوياً",
+    "addProvider": "إضافة مقدم خدمة",
+    "form": {
+      "email": "بريد Google الإلكتروني",
+      "fullName": "الاسم الكامل",
+      "type": "النوع",
+      "country": "البلد"
+    },
+    "table": {
+      "name": "الاسم",
+      "email": "البريد الإلكتروني",
+      "type": "النوع",
+      "country": "البلد",
+      "access": "الوصول"
+    },
+    "actions": {
+      "grantAccess": "منح الوصول",
+      "revokeAccess": "إلغاء الوصول",
+      "activeAccess": "الوصول نشط"
+    },
+    "empty": {
+      "title": "لم يتم العثور على مقدمي خدمات",
+      "description": "حاول تعديل الفلاتر"
+    },
+    "loadMore": "تحميل المزيد من مقدمي الخدمات",
+    "emailMissing": "البريد الإلكتروني مفقود"
+  },
+  "mesPrestataires": {
+    "title": "مقدمو خدماتي",
+    "description": "إدارة حسابات مقدمي الخدمات المرتبطة بملفك الشخصي",
+    "linkedProviders": "مقدمو الخدمات المرتبطون",
+    "noProviders": {
+      "title": "لا يوجد مقدمو خدمات مرتبطون",
+      "description": "أضف مقدمي خدمات للبدء في معالجة الملفات"
+    },
+    "addProvider": "إضافة مقدم خدمة",
+    "switchProvider": "تبديل مقدم الخدمة",
+    "remove": "إزالة",
+    "setAsActive": "تعيين كنشط",
+    "searchProvider": "البحث عن مقدم خدمة...",
+    "noProviderFound": "لم يتم العثور على مقدم خدمة",
+    "allProvidersLinked": "جميع مقدمي الخدمات مرتبطون بالفعل",
+    "confirmRemove": "هل أنت متأكد من إزالة مقدم الخدمة هذا من حسابك؟",
+    "success": {
+      "added": "تمت إضافة مقدم الخدمة بنجاح!",
+      "removed": "تمت إزالة مقدم الخدمة بنجاح!",
+      "defaultUpdated": "تم تحديث مقدم الخدمة الافتراضي!"
+    },
+    "errors": {
+      "addFailed": "خطأ في إضافة مقدم الخدمة",
+      "removeFailed": "خطأ في إزالة مقدم الخدمة"
+    }
+  },
+  "gestionAcces": {
+    "title": "إدارة الوصول",
+    "description": "ربط مقدمي الخدمات بالمستخدمين ليتلقوا ملفاتهم",
+    "addUser": "إضافة مستخدم",
+    "howItWorks": {
+      "title": "كيف يعمل؟",
+      "line1": "كل مستخدم يسجل الدخول ببريد Google الخاص به",
+      "line2": "تعين له مقدم خدمة واحد أو أكثر أدناه",
+      "line3": "عندما يحجز عميل مقدم الخدمة هذا، يرى المستخدم الملف في لوحة التحكم الخاصة به"
+    },
+    "stats": {
+      "users": "المستخدمون",
+      "activeProviders": "مقدمو الخدمات النشطون",
+      "links": "الروابط"
+    },
+    "search": "البحث عن مستخدم بالبريد الإلكتروني أو الاسم...",
+    "providerCount": "{{count}} مقدم(ي) خدمة",
+    "selectProviders": "اختر مقدمي الخدمات لهذا المستخدم:",
+    "deleteUser": "حذف المستخدم",
+    "deleteConfirm": "حذف هذا المستخدم وجميع صلاحياته؟",
+    "noUsers": {
+      "title": "لم يتم العثور على مستخدمين",
+      "description": "أضف مستخدماً لمنحه وصولاً لمقدمي الخدمات"
+    },
+    "toast": {
+      "providersSaved": "تم حفظ مقدمي الخدمات بنجاح",
+      "saveError": "خطأ أثناء الحفظ",
+      "userDeleted": "تم حذف المستخدم",
+      "deleteError": "خطأ أثناء الحذف",
+      "loadError": "خطأ في تحميل المستخدمين",
+      "addError": "خطأ أثناء الإضافة"
+    },
+    "modal": {
+      "title": "إضافة مستخدم",
+      "firebaseId": "معرف مستخدم Firebase",
+      "firebaseIdRequired": "معرف مستخدم Firebase مطلوب",
+      "firebaseIdPlaceholder": "5lTY3iPh16Z7gHlrzr7XzrY4pGE2",
+      "firebaseIdHint": "ابحث عن هذا المعرف في Firebase Console ← المصادقة ← المستخدمون",
+      "email": "البريد الإلكتروني",
+      "emailPlaceholder": "user@gmail.com",
+      "displayName": "اسم العرض",
+      "displayNamePlaceholder": "أحمد محمد",
+      "providersToLink": "مقدمو الخدمات للربط",
+      "noProviderAvailable": "لا يوجد مقدم خدمة متاح"
+    }
+  },
+  "utilisateurs": {
+    "title": "المستخدمون",
+    "description": "إدارة فريق الإدارة",
+    "roles": {
+      "admin": "مدير",
+      "agent": "وكيل",
+      "provider": "مقدم خدمة"
+    },
+    "roleDescriptions": {
+      "admin": "وصول كامل لجميع الميزات",
+      "agent": "إدارة الملفات والرسائل",
+      "provider": "وصول فقط للملفات المعينة"
+    },
+    "stats": {
+      "total": "الإجمالي",
+      "admins": "المديرون",
+      "agents": "الوكلاء"
+    },
+    "noName": "بدون اسم",
+    "availableRoles": "الأدوار المتاحة",
+    "search": "البحث بالاسم أو البريد الإلكتروني...",
+    "setAdmin": "تعيين كمدير",
+    "setAgent": "تعيين كوكيل",
+    "setProvider": "تعيين كمقدم خدمة",
+    "multiProvider": "متعدد مقدمي الخدمات",
+    "multiProviderDescription": "يمكنه إدارة عدة مقدمي خدمات",
+    "confirmDelete": "حذف هذا المستخدم؟",
+    "createdOn": "تم الإنشاء في {{date}}",
+    "empty": {
+      "title": "لم يتم العثور على مستخدمين",
+      "modifySearch": "حاول تعديل بحثك",
+      "usersWillAppear": "المستخدمون المتصلون سيظهرون هنا"
+    },
+    "note": "ملاحظة: يتم إنشاء المستخدمين تلقائياً عند تسجيل الدخول الأول. استخدم وظيفة setRole لتعيين الأدوار.",
+    "loadMore": "تحميل المزيد من المستخدمين",
+    "allLoaded": "تم تحميل جميع المستخدمين ({{count}} إجمالاً)",
+    "important": "مهم",
+    "importantNote": "لإنشاء مدير جديد، يجب على المستخدم تسجيل الدخول للتطبيق أولاً. ثم يمكنك تغيير دوره هنا. بدلاً من ذلك، استخدم Cloud Function <code>setRole</code> مع مفتاح API الخاص بالمدير."
+  },
+  "pays": {
+    "title": "البلدان",
+    "description": "قائمة البلدان المكونة",
+    "columns": {
+      "code": "الرمز",
+      "name": "الاسم",
+      "active": "نشط"
+    }
+  },
+  "auditLogs": {
+    "title": "سجلات التدقيق",
+    "description": "سجل إجراءات المنصة",
+    "stats": {
+      "total": "الإجمالي",
+      "today": "اليوم"
+    },
+    "filters": {
+      "severity": "الخطورة",
+      "actionType": "نوع الإجراء"
+    },
+    "counter": "عرض {{shown}} من {{total}} إدخال",
+    "actions": {
+      "login": "تسجيل الدخول",
+      "logout": "تسجيل الخروج",
+      "roleChange": "تغيير الدور",
+      "providerCreate": "تم إنشاء مقدم خدمة",
+      "providerUpdate": "تم تحديث مقدم خدمة",
+      "providerDelete": "تم حذف مقدم خدمة",
+      "accessGranted": "تم منح الوصول",
+      "accessRevoked": "تم إلغاء الوصول",
+      "dossierCreate": "تم إنشاء ملف",
+      "dossierUpdate": "تم تحديث ملف",
+      "dossierStatusChange": "تم تغيير الحالة",
+      "dossierDelete": "تم حذف ملف",
+      "aiResponseGenerated": "تم إنشاء رد الذكاء الاصطناعي",
+      "aiSettingsChanged": "تم تغيير إعدادات الذكاء الاصطناعي",
+      "settingsChanged": "تم تغيير الإعدادات",
+      "dataExport": "تصدير البيانات",
+      "adminAction": "إجراء المدير"
+    },
+    "severity": {
+      "info": "معلومات",
+      "warning": "تحذير",
+      "critical": "حرج"
+    }
+  },
+  "parametres": {
+    "title": "الإعدادات العامة",
+    "description": "الأدوار، السمات، التكاملات، السجلات..."
+  },
+  "testIA": {
+    "title": "اختبار الذكاء الاصطناعي - وضع المدير",
+    "description": "اختبر ردود مساعد الذكاء الاصطناعي",
+    "infoBanner": {
+      "title": "وضع اختبار المدير",
+      "description": "تتيح لك هذه الصفحة اختبار الذكاء الاصطناعي من خلال محاكاة سياقات مختلفة. يتم إجراء الاستدعاءات عبر Cloud Function",
+      "cloudFunction": "aiChat",
+      "metadataInfo": "تتضمن الردود بيانات تعريف التصحيح (النموذج، مقدم الخدمة، الاقتباسات، وقت الرد)."
+    },
+    "context": {
+      "button": "السياق",
+      "title": "السياق المحاكى",
+      "providerType": {
+        "title": "نوع مقدم الخدمة",
+        "lawyer": "محامي",
+        "expert": "خبير",
+        "lawyerDescription": "Claude 3.5 Sonnet - التفكير القانوني",
+        "expertDescription": "GPT-4o - نصائح عملية"
+      },
+      "fields": {
+        "country": "البلد",
+        "countryPlaceholder": "مثال: تايلاند",
+        "nationality": "الجنسية",
+        "nationalityPlaceholder": "مثال: عربية",
+        "clientName": "اسم العميل",
+        "clientNamePlaceholder": "مثال: أحمد اختبار",
+        "urgency": "الإلحاح"
+      },
+      "urgencyLevels": {
+        "low": "منخفض",
+        "medium": "متوسط",
+        "high": "عالي",
+        "critical": "حرج"
+      }
+    },
+    "quickTests": {
+      "title": "اختبارات سريعة",
+      "visa": "تأشيرة تنتهي",
+      "urgence": "طوارئ سرقة/فقدان",
+      "juridique": "مشكلة مع صاحب العمل",
+      "pratique": "سكن في بانكوك"
+    },
+    "chat": {
+      "emptyState": "أرسل رسالة لبدء الاختبار",
+      "placeholder": "اكتب رسالة الاختبار...",
+      "ariaLabelMessages": "رسائل المحادثة",
+      "ariaLabelInput": "الرسالة المراد إرسالها",
+      "ariaLabelSend": "إرسال الرسالة",
+      "ariaLabelThinking": "الذكاء الاصطناعي يفكر",
+      "thinking": "الذكاء الاصطناعي يفكر...",
+      "noResponse": "لا يوجد رد",
+      "lastResponse": "آخر رد في {{time}} مللي ثانية"
+    },
+    "debug": {
+      "button": "تصحيح",
+      "model": "النموذج",
+      "provider": "مقدم الخدمة",
+      "time": "الوقت",
+      "perplexitySearch": "بحث Perplexity",
+      "fallback": "احتياطي",
+      "sources": "المصادر"
+    },
+    "errors": {
+      "title": "خطأ",
+      "unknown": "خطأ غير معروف",
+      "prefix": "خطأ:",
+      "closeLabel": "إغلاق الخطأ"
+    }
+  },
+  "verifyingRights": "جاري التحقق من الصلاحيات...",
+  "loadingPage": "جاري تحميل الصفحة"
+}

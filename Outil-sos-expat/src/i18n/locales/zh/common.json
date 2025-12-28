@@ -1,0 +1,192 @@
+{
+  "navigation": {
+    "dashboard": "仪表板",
+    "dossiers": "我的案例",
+    "messages": "消息",
+    "profile": "我的资料",
+    "settings": "设置",
+    "signOut": "退出登录",
+    "signingOut": "正在退出...",
+    "prestataires": "服务商",
+    "access": "访问权限",
+    "team": "团队",
+    "countries": "国家",
+    "audit": "审计",
+    "testAI": "AI测试",
+    "administration": "管理"
+  },
+  "actions": {
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "edit": "编辑",
+    "create": "创建",
+    "add": "添加",
+    "search": "搜索",
+    "filter": "筛选",
+    "filters": "筛选条件",
+    "reset": "重置",
+    "export": "导出",
+    "refresh": "刷新",
+    "loadMore": "加载更多",
+    "copy": "复制",
+    "copied": "已复制",
+    "retry": "重试",
+    "send": "发送",
+    "sending": "发送中...",
+    "close": "关闭",
+    "back": "返回",
+    "backHome": "返回首页",
+    "view": "查看",
+    "viewAll": "查看全部",
+    "confirm": "确认",
+    "preview": "预览",
+    "expand": "展开",
+    "collapse": "收起",
+    "start": "开始",
+    "stop": "停止",
+    "finish": "完成",
+    "reopen": "重新打开"
+  },
+  "status": {
+    "pending": "待处理",
+    "inProgress": "进行中",
+    "completed": "已完成",
+    "cancelled": "已取消",
+    "active": "活跃",
+    "inactive": "非活跃",
+    "expired": "已过期",
+    "verified": "已验证",
+    "trial": "试用期",
+    "paymentPending": "待付款"
+  },
+  "priority": {
+    "urgent": "紧急",
+    "high": "高",
+    "medium": "中",
+    "low": "低"
+  },
+  "time": {
+    "today": "今天",
+    "yesterday": "昨天",
+    "minutesAgo": "{{count}}分钟前",
+    "hoursAgo": "{{count}}小时前",
+    "daysAgo": "{{count}}天前",
+    "daysRemaining": "剩余{{count}}天",
+    "expiresToday": "今天到期",
+    "expiresTomorrow": "明天到期"
+  },
+  "errors": {
+    "generic": "发生错误",
+    "loading": "加载错误",
+    "network": "网络错误",
+    "unauthorized": "未授权访问",
+    "notFound": "未找到",
+    "copyFailed": "复制失败",
+    "sendFailed": "发送失败",
+    "loadingProfile": "加载资料时出错",
+    "savingProfile": "保存资料时出错"
+  },
+  "success": {
+    "saved": "保存成功",
+    "deleted": "删除成功",
+    "copied": "已复制到剪贴板",
+    "profileUpdated": "资料更新成功！"
+  },
+  "empty": {
+    "noData": "暂无数据",
+    "noResults": "无结果",
+    "modifyFilters": "尝试修改筛选条件"
+  },
+  "loading": {
+    "default": "加载中...",
+    "dashboard": "正在加载仪表板",
+    "dashboardMessage": "正在加载仪表板..."
+  },
+  "language": "语言",
+  "all": "全部",
+  "type": "类型",
+  "types": {
+    "lawyer": "律师",
+    "expat": "外派人员",
+    "expert": "专家"
+  },
+  "providerTypes": {
+    "lawyer": "律师",
+    "expatExpert": "外派专家"
+  },
+  "roles": {
+    "admin": "管理员",
+    "agent": "代理",
+    "provider": "服务商"
+  },
+  "offline": {
+    "message": "离线模式 - 部分功能受限"
+  },
+  "connectedAs": "登录身份",
+  "allRightsReserved": "版权所有。",
+  "guards": {
+    "loading": "加载中...",
+    "verifyingAccess": "正在验证您的访问权限...",
+    "accountNotFound": "账户未找到",
+    "accountNotFoundDescription": "您的账户在我们的系统中不存在。您需要先在 sos-expat.com 注册成为服务商。",
+    "registerOnSosExpat": "在 sos-expat.com 注册",
+    "contactSupport": "联系客服",
+    "accessReservedProviders": "仅限服务商访问",
+    "accessReservedDescription": "此工具仅供与 SOS Expat 合作的律师和外派专家使用。",
+    "currentRoleNotAllowed": "您当前的角色（{{role}}）无法访问此区域。",
+    "becomeProvider": "成为服务商",
+    "backToSosExpat": "返回 sos-expat.com",
+    "subscriptionRequired": "需要订阅",
+    "subscriptionRequiredMessage": "需要有效订阅。",
+    "viewOffers": "查看套餐",
+    "needHelp": "需要帮助？请联系我们",
+    "close": "关闭"
+  },
+  "subscription": {
+    "active": "有效",
+    "trial": "试用",
+    "trialing": "试用期",
+    "pastDue": "逾期付款",
+    "past_due": "逾期付款",
+    "canceled": "已取消",
+    "expired": "已过期",
+    "unpaid": "未付款",
+    "paused": "已暂停",
+    "noSubscription": "无订阅",
+    "admin": "管理员",
+    "expiresTomorrow": "您的订阅明天到期。请记得续订。",
+    "expiresInDays": "您的订阅将在{{days}}天后到期。请记得续订。",
+    "expiresInDaysShort": "您的订阅将在{{days}}天后到期。"
+  },
+  "language": {
+    "change": "更改语言",
+    "select": "语言 / Language",
+    "available": "可用语言"
+  },
+  "validation": {
+    "emailRequired": "需要填写邮箱",
+    "emailInvalid": "邮箱格式无效",
+    "nameRequired": "需要填写姓名"
+  },
+  "provider": {
+    "addTitle": "添加服务商",
+    "googleEmail": "Google 邮箱",
+    "googleEmailHint": "服务商将使用此 Google 账户登录",
+    "fullName": "全名",
+    "providerType": "服务商类型",
+    "lawyer": "律师",
+    "expat": "外派人员",
+    "country": "国家",
+    "adding": "正在添加...",
+    "addError": "添加时出错"
+  },
+  "subscriptionErrors": {
+    "notAuthenticated": "您必须登录才能访问此功能。",
+    "subscriptionExpired": "您的订阅已过期。请续订以继续使用。",
+    "subscriptionCanceled": "您的订阅已被取消。请重新订阅以继续使用。",
+    "paymentFailed": "检测到付款问题。请更新您的付款信息。",
+    "noSubscription": "访问此功能需要有效订阅。",
+    "accessGranted": "访问已授权"
+  }
+}

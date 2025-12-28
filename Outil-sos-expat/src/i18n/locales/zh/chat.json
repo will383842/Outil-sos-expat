@@ -1,0 +1,27 @@
+{
+  "title": "专业法律助手",
+  "description": "输入客户的问题，获取详细且有来源的法律回复。",
+  "placeholder": "与GPT聊天以完善回复...",
+  "placeholderClient": "输入客户的问题...",
+  "typing": "GPT正在思考...",
+  "generating": "AI助手正在生成回复",
+  "analyzing": "法律分析进行中...",
+  "sendMessage": "发送消息",
+  "sendMessageShort": "发送",
+  "sending": "发送中...",
+  "copyMessage": "复制消息",
+  "copyResponse": "复制回复",
+  "messageCopied": "消息已复制",
+  "regenerate": "重新生成回复",
+  "chatHistory": "与AI助手的对话历史",
+  "assistantLabel": "法律助手",
+  "yourQuestion": "您的问题",
+  "instructions": {
+    "desktop": "按Enter发送，Shift+Enter换行"
+  },
+  "tags": {
+    "internationalLaw": "国际法",
+    "expatTax": "外派人员税务",
+    "immigration": "移民"
+  }
+}

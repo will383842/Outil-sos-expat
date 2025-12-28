@@ -1,0 +1,15 @@
+{
+  "pricingTitlePrefix": {
+    "fr": "",
+    "en": "",
+    "missingIn": [
+      "de",
+      "es",
+      "pt",
+      "ru",
+      "hi",
+      "ar",
+      "ch"
+    ]
+  }
+}

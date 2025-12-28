@@ -1,0 +1,27 @@
+{
+  "title": "Assistant Juridique Expert",
+  "description": "Tapez les questions de votre client pour recevoir des réponses juridiques détaillées et sourcées.",
+  "placeholder": "Discutez avec GPT pour affiner la réponse...",
+  "placeholderClient": "Tapez la question du client...",
+  "typing": "GPT réfléchit...",
+  "generating": "L'assistant IA génère une réponse",
+  "analyzing": "Analyse juridique en cours...",
+  "sendMessage": "Envoyer le message",
+  "sendMessageShort": "Envoyer",
+  "sending": "Envoi en cours...",
+  "copyMessage": "Copier le message",
+  "copyResponse": "Copier la réponse",
+  "messageCopied": "Message copié",
+  "regenerate": "Régénérer la réponse",
+  "chatHistory": "Historique de la conversation avec l'assistant IA",
+  "assistantLabel": "Assistant Juridique",
+  "yourQuestion": "Votre question",
+  "instructions": {
+    "desktop": "Appuyez sur Entrée pour envoyer, Maj+Entrée pour une nouvelle ligne"
+  },
+  "tags": {
+    "internationalLaw": "Droit international",
+    "expatTax": "Fiscalité expatriés",
+    "immigration": "Immigration"
+  }
+}

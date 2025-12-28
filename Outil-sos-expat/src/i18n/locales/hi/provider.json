@@ -1,0 +1,314 @@
+{
+  "dashboard": {
+    "title": "मेरा डैशबोर्ड",
+    "welcome": "स्वागत है, {{name}}",
+    "selectProvider": "अपने आंकड़े देखने के लिए प्रदाता चुनें",
+    "activityOf": "{{name}} की गतिविधि",
+    "noProvider": {
+      "title": "कोई प्रदाता नहीं चुना गया",
+      "description": "कृपया लॉग इन करें या प्रदाता खाता चुनें"
+    },
+    "stats": {
+      "myDossiers": "मेरे केस",
+      "activeDossiers": "सक्रिय केस",
+      "myActiveDossiers": "मेरे सक्रिय केस",
+      "pending": "लंबित",
+      "inProgress": "प्रगति में",
+      "completed": "पूर्ण",
+      "completedThisMonth": "इस महीने पूर्ण",
+      "total": "कुल",
+      "typeLawyer": "वकील प्रकार",
+      "typeExpat": "प्रवासी प्रकार",
+      "myRevenue": "मेरी आय"
+    },
+    "quota": {
+      "title": "AI कोटा",
+      "usages": "उपयोग",
+      "remaining": "{{count}} उपयोग शेष",
+      "almostReached": "कोटा लगभग समाप्त! बढ़ाने के लिए सहायता से संपर्क करें।"
+    },
+    "recentDossiers": "मेरे हाल के केस",
+    "noDossiers": "कोई हाल के केस नहीं",
+    "recentBookings": "हाल के केस",
+    "noRecentBookings": "कोई हाल के केस नहीं",
+    "quickActions": {
+      "title": "त्वरित कार्य",
+      "myDossiers": "मेरे केस",
+      "myProfile": "मेरी प्रोफ़ाइल",
+      "messages": "संदेश"
+    },
+    "charts": {
+      "distributionByType": "प्रकार के अनुसार वितरण",
+      "dossiersByStatus": "स्थिति के अनुसार केस"
+    },
+    "aiAssistant": {
+      "title": "AI कानूनी सहायक",
+      "description": "AI स्वचालित रूप से प्रत्येक केस के लिए संदर्भित कानूनी उत्तर उत्पन्न करता है। प्रदाता अपने ग्राहक कॉल के दौरान वास्तविक समय में AI के साथ चैट कर सकते हैं।",
+      "autoResponsesEnabled": "स्वचालित प्रतिक्रियाएं सक्षम"
+    },
+    "subscription": {
+      "title": "मेरी सदस्यता",
+      "active": "सक्रिय",
+      "trial": "ट्रायल अवधि",
+      "pending": "भुगतान लंबित",
+      "expired": "समाप्त",
+      "expiresIn": "{{days}} दिन शेष",
+      "expiresToday": "आज समाप्त होगा",
+      "expiresTomorrow": "कल समाप्त होगा",
+      "renewWarning": "जारी रखने के लिए अपनी सदस्यता नवीनीकृत करें"
+    }
+  },
+  "multiDashboard": {
+    "title": "मल्टी-प्रदाता डैशबोर्ड",
+    "allProviders": "सभी प्रदाता",
+    "selectProvider": "प्रदाता चुनें",
+    "aggregatedView": "{{count}} प्रदाताओं का संयुक्त दृश्य",
+    "statsFor": "{{name}} के आंकड़े",
+    "sharedQuota": "साझा कोटा",
+    "remaining": "{{count}} शेष",
+    "quotaWarning": "कोटा लगभग समाप्त। प्रशासन से संपर्क करें।",
+    "linkedProviders": "जुड़े प्रदाता",
+    "activity7Days": "7 दिनों की गतिविधि",
+    "distributionByType": "प्रकार के अनुसार वितरण",
+    "dossiersByStatus": "स्थिति के अनुसार केस",
+    "revenue": "आय"
+  },
+  "dossiers": {
+    "title": "केस",
+    "count": "{{count}} केस",
+    "count_other": "{{count}} केस",
+    "found": "मिले",
+    "search": "शीर्षक, ग्राहक, देश से खोजें...",
+    "filters": {
+      "status": "स्थिति",
+      "type": "प्रकार",
+      "all": "सभी",
+      "lawyer": "वकील",
+      "expat": "विशेषज्ञ"
+    },
+    "empty": {
+      "title": "कोई केस नहीं मिला",
+      "modifyFilters": "अपने फ़िल्टर बदलने का प्रयास करें",
+      "newRequestsHere": "नए अनुरोध यहां दिखाई देंगे"
+    },
+    "loadMore": "और केस लोड करें",
+    "allLoaded": "सभी केस लोड हो गए (कुल {{count}})",
+    "noDescription": "कोई विवरण नहीं",
+    "noTitle": "शीर्षक रहित"
+  },
+  "dossierDetail": {
+    "accessDenied": "पहुंच अस्वीकृत - यह केस आपका नहीं है",
+    "notFound": "केस नहीं मिला",
+    "consultationDuration": "परामर्श अवधि",
+    "consultationTimeElapsed": "परामर्श समय समाप्त",
+    "autoLockWarning": "बातचीत स्वचालित रूप से लॉक हो जाएगी",
+    "startAfterFirstResponse": "पहली AI प्रतिक्रिया के बाद परामर्श शुरू होगा",
+    "conversationClosed": "बातचीत बंद",
+    "historyAvailable": "इतिहास ऊपर उपलब्ध है"
+  },
+  "aiChat": {
+    "title": "AI कानूनी सहायक",
+    "subtitle": "ग्राहक के प्रश्न यहां पूछें",
+    "timeElapsed": "बीता समय",
+    "expertTitle": "विशेषज्ञ कानूनी सहायक",
+    "expertDescription": "विस्तृत और स्रोत-आधारित कानूनी उत्तर प्राप्त करने के लिए अपने ग्राहक के प्रश्न टाइप करें।",
+    "tags": {
+      "internationalLaw": "अंतर्राष्ट्रीय कानून",
+      "expatTax": "प्रवासी कराधान",
+      "immigration": "आव्रजन"
+    },
+    "legalAssistant": "कानूनी सहायक",
+    "yourQuestion": "आपका प्रश्न",
+    "copyResponse": "उत्तर कॉपी करें",
+    "analyzing": "कानूनी विश्लेषण जारी...",
+    "inputPlaceholder": "ग्राहक का प्रश्न टाइप करें...",
+    "keyboardHint": "भेजने के लिए Enter - नई पंक्ति के लिए Shift+Enter"
+  },
+  "clientInfo": {
+    "waitingAI": "AI की प्रतीक्षा",
+    "archived": "संग्रहीत",
+    "activeConsultation": "सक्रिय परामर्श",
+    "duration": "अवधि: {{minutes}} मिनट",
+    "timeRemaining": "शेष समय (कुल {{minutes}} मिनट)",
+    "historyAvailable": "बातचीत का इतिहास देखने योग्य है",
+    "client": "ग्राहक",
+    "name": "नाम",
+    "nationality": "राष्ट्रीयता",
+    "interventionCountry": "हस्तक्षेप देश",
+    "languages": "भाषाएं",
+    "request": "अनुरोध",
+    "title": "शीर्षक",
+    "description": "विवरण",
+    "service": "सेवा",
+    "createdOn": "बनाया गया",
+    "provider": "प्रदाता"
+  },
+  "page": {
+    "loadingDossier": "केस लोड हो रहा है...",
+    "backToDossiers": "केस पर वापस जाएं",
+    "aiActive": "AI सक्रिय",
+    "consultationExpiredMessage": "परामर्श समय समाप्त ({{minutes}} मिनट) - इतिहास देखने योग्य है",
+    "initializingChat": "AI चैट प्रारंभ हो रही है..."
+  },
+  "bookingCard": {
+    "lawyer": "वकील",
+    "expat": "प्रवासी",
+    "aiProcessed": "AI",
+    "client": "ग्राहक"
+  },
+  "statusActions": {
+    "startCall": "कॉल शुरू करें",
+    "finish": "समाप्त करें",
+    "cancel": "रद्द करें",
+    "reopenConversation": "बातचीत फिर से खोलें"
+  },
+  "quotaExhausted": {
+    "title": "उपयोग कोटा समाप्त",
+    "description": "आपने इस अवधि के लिए AI अनुरोध सीमा पूरी कर ली है। सहायक का उपयोग जारी रखने के लिए अपनी सदस्यता अपग्रेड करें।",
+    "quotaUsage": "कोटा उपयोग",
+    "requestsUsed": "अनुरोध उपयोग किए गए",
+    "outOf": "में से",
+    "nextRenewal": "अगला नवीनीकरण",
+    "increaseQuota": "मेरा कोटा बढ़ाएं",
+    "contactSupport": "सहायता से संपर्क करें",
+    "signOut": "साइन आउट",
+    "connectedAs": "इस रूप में जुड़े"
+  },
+  "messages": {
+    "title": "संदेश",
+    "aiResponses": "AI प्रतिक्रियाएं",
+    "questions": "प्रश्न",
+    "lastAiResponse": "अंतिम AI प्रतिक्रिया",
+    "selectProvider": "अपनी बातचीत देखने के लिए प्रदाता चुनें",
+    "modifySearch": "अपनी खोज बदलने का प्रयास करें",
+    "allConversations": "सभी बातचीत",
+    "myConversations": "मेरी बातचीत",
+    "allConversationsHistory": "सभी बातचीत और AI प्रतिक्रियाओं का इतिहास",
+    "conversationsOf": "{{name}} की बातचीत",
+    "conversations": "बातचीत",
+    "activeLastHour": "सक्रिय (1 घंटा)",
+    "searchPlaceholder": "ग्राहक, केस ID से खोजें...",
+    "noConversationFound": "कोई बातचीत नहीं मिली",
+    "conversationsWillAppear": "AI के साथ बातचीत यहां दिखाई देगी",
+    "conversation": "बातचीत"
+  },
+  "profile": {
+    "title": "मेरी प्रोफ़ाइल",
+    "description": "अपने प्रदाता खाते की जानकारी प्रबंधित करें",
+    "loading": "प्रोफ़ाइल लोड हो रही है...",
+    "noProviderSelected": "कोई प्रदाता नहीं चुना गया",
+    "selectProviderToView": "प्रोफ़ाइल देखने के लिए प्रदाता चुनें",
+    "lawyer": "वकील",
+    "expatExpert": "प्रवासी विशेषज्ञ",
+    "contactInfo": "संपर्क जानकारी",
+    "email": "ईमेल",
+    "emailNotEditable": "ईमेल संपादित नहीं किया जा सकता",
+    "phone": "फोन",
+    "website": "वेबसाइट",
+    "location": "स्थान",
+    "country": "देश",
+    "contactAdminToModify": "संशोधन के लिए व्यवस्थापक से संपर्क करें",
+    "city": "शहर",
+    "address": "पता",
+    "specialties": "विशेषज्ञताएं",
+    "addSpecialty": "विशेषज्ञता जोड़ें...",
+    "noSpecialtyAdded": "कोई विशेषज्ञता नहीं जोड़ी गई",
+    "noSpecialtySet": "कोई विशेषज्ञता निर्धारित नहीं",
+    "spokenLanguages": "बोली जाने वाली भाषाएं",
+    "addLanguage": "भाषा जोड़ें...",
+    "noLanguageAdded": "कोई भाषा नहीं जोड़ी गई",
+    "noLanguageSet": "कोई भाषा निर्धारित नहीं",
+    "descriptionSection": "विवरण",
+    "descriptionPlaceholder": "अपनी गतिविधि, विशेषज्ञता के क्षेत्रों का वर्णन करें...",
+    "noDescriptionSet": "कोई विवरण निर्धारित नहीं",
+    "systemInfo": "सिस्टम जानकारी",
+    "providerId": "प्रदाता ID",
+    "accountType": "खाता प्रकार",
+    "providerName": "प्रदाता का नाम",
+    "statusLabel": "स्थिति"
+  },
+  "providerSwitcher": {
+    "noProvider": "कोई जुड़ा प्रदाता नहीं",
+    "select": "चुनें...",
+    "switchProvider": "प्रदाता बदलें",
+    "manageProviders": "मेरे प्रदाता प्रबंधित करें",
+    "lawyer": "वकील",
+    "expatExpert": "प्रवासी विशेषज्ञ"
+  },
+  "subscriptionScreen": {
+    "header": {
+      "subtitle": "प्रदाताओं के लिए AI सहायक",
+      "signOut": "साइन आउट"
+    },
+    "hero": {
+      "badge": "सदस्यता आवश्यक",
+      "title": "AI के साथ अपने परामर्श को बेहतर बनाएं",
+      "descriptionLawyer": "एक AI कानूनी सहायक तक पहुंच प्राप्त करें जो आपके परामर्श के दौरान वास्तविक समय में कानूनी जानकारी खोजता है।",
+      "descriptionExpat": "अपने ग्राहकों को बेहतर सहायता देने के लिए प्रवासन के बारे में तत्काल व्यावहारिक जानकारी प्राप्त करें।"
+    },
+    "benefits": {
+      "aiRealTime": {
+        "title": "रियल-टाइम AI सहायक",
+        "description": "आपके परामर्श के दौरान तत्काल कानूनी शोध"
+      },
+      "updatedData": {
+        "title": "अपडेटेड डेटा",
+        "description": "190+ देशों की कानूनी जानकारी तक पहुंच"
+      },
+      "timeSaving": {
+        "title": "समय की बचत",
+        "description": "सेकंड में सटीक उत्तर"
+      },
+      "reliableSources": {
+        "title": "विश्वसनीय स्रोत",
+        "description": "सत्यापित कानूनी उद्धरण और संदर्भ"
+      }
+    },
+    "pricing": {
+      "monthly": "मासिक",
+      "annual": "वार्षिक",
+      "perMonth": "/माह",
+      "billedAnnually": "{{amount}}€/वर्ष बिल किया गया",
+      "savings": "{{amount}}€ बचाएं",
+      "unlimited": "AI सहायक तक असीमित पहुंच",
+      "noCommitment": "कोई प्रतिबद्धता नहीं",
+      "cancelAnytime": "कभी भी रद्द करें",
+      "twoMonthsFree": "2 महीने मुफ्त",
+      "prioritySupport": "प्राथमिकता समर्थन",
+      "chooseMonthly": "मासिक चुनें",
+      "subscribeNow": "अभी सदस्यता लें"
+    },
+    "payment": {
+      "secure": "क्रेडिट कार्ड द्वारा सुरक्षित भुगतान",
+      "methods": "Visa, Mastercard, American Express - SSL एन्क्रिप्टेड भुगतान - PCI-DSS अनुरूप"
+    },
+    "footer": {
+      "questions": "प्रश्न?",
+      "contactUs": "हमसे संपर्क करें",
+      "connectedAs": "{{email}} के रूप में जुड़ा",
+      "copyright": "सर्वाधिकार सुरक्षित।"
+    }
+  },
+  "subscriptionExpired": {
+    "gracePeriod": "छूट अवधि",
+    "expired": "सदस्यता समाप्त",
+    "titleGrace": "आपकी सदस्यता समाप्त हो गई है",
+    "titleSuspended": "पहुंच निलंबित",
+    "descriptionGrace": "सेवा में बाधा के बिना अपनी सदस्यता नवीनीकृत करने के लिए आपके पास अभी भी {{days}} दिन हैं।",
+    "descriptionExpired": "आपकी सदस्यता समाप्त हो गई है। AI सहायक तक पहुंच पुनः प्राप्त करने के लिए अभी नवीनीकरण करें।",
+    "expirationDate": "समाप्ति तिथि",
+    "daysAgo": "{{count}} दिन पहले",
+    "daysAgo_other": "{{count}} दिन पहले",
+    "gracePeriodActive": "छूट अवधि सक्रिय",
+    "daysRemaining": "नवीनीकरण के लिए {{count}} दिन शेष",
+    "whatYouGet": "आपको क्या वापस मिलेगा",
+    "benefitAI": "रियल-टाइम AI सहायक",
+    "benefitCountries": "190+ देशों के डेटा तक पहुंच",
+    "benefitSources": "सत्यापित कानूनी स्रोत",
+    "renewButton": "मेरी सदस्यता नवीनीकृत करें",
+    "contactSupport": "सहायता से संपर्क करें",
+    "signOut": "साइन आउट",
+    "connectedAs": "{{email}} के रूप में जुड़ा",
+    "copyright": "सर्वाधिकार सुरक्षित।"
+  }
+}

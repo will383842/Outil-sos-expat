@@ -1,0 +1,423 @@
+{
+  "dashboard": {
+    "title": "My Dashboard",
+    "welcome": "Welcome, {{name}}",
+    "selectProvider": "Select a provider to view your statistics",
+    "activityOf": "Activity of {{name}}",
+    "dossier": "Case",
+    "noProvider": {
+      "title": "No provider selected",
+      "description": "Please log in or select a provider account"
+    },
+    "stats": {
+      "myDossiers": "My cases",
+      "activeDossiers": "Active cases",
+      "myActiveDossiers": "My active cases",
+      "pending": "Pending",
+      "inProgress": "In progress",
+      "completed": "Completed",
+      "completedThisMonth": "Completed this month",
+      "total": "total",
+      "typeLawyer": "Lawyer Type",
+      "typeExpat": "Expat Type",
+      "myRevenue": "My revenue"
+    },
+    "quota": {
+      "title": "AI Quota",
+      "usages": "uses",
+      "remaining": "{{count}} uses remaining",
+      "almostReached": "Quota almost reached! Contact support to increase."
+    },
+    "recentDossiers": "My Recent Cases",
+    "noDossiers": "No recent cases",
+    "recentBookings": "Recent cases",
+    "noRecentBookings": "No recent cases",
+    "quickActions": {
+      "title": "Quick Actions",
+      "myDossiers": "My Cases",
+      "myProfile": "My Profile",
+      "messages": "Messages"
+    },
+    "charts": {
+      "distributionByType": "Distribution by type",
+      "dossiersByStatus": "Cases by status"
+    },
+    "aiAssistant": {
+      "title": "AI Legal Assistant",
+      "description": "The AI automatically generates contextualized legal responses for each case. Providers can chat with the AI in real-time during their client calls.",
+      "autoResponsesEnabled": "Automatic responses enabled"
+    },
+    "subscription": {
+      "title": "My Subscription",
+      "active": "Active",
+      "trial": "Trial Period",
+      "pending": "Payment Pending",
+      "expired": "Expired",
+      "expiresIn": "{{days}} days remaining",
+      "expiresToday": "Expires today",
+      "expiresTomorrow": "Expires tomorrow",
+      "renewWarning": "Renew your subscription to continue"
+    }
+  },
+  "multiDashboard": {
+    "title": "Multi-Provider Dashboard",
+    "allProviders": "All providers",
+    "selectProvider": "Select a provider",
+    "aggregatedView": "Aggregated view of {{count}} providers",
+    "statsFor": "Statistics for {{name}}",
+    "sharedQuota": "Shared Quota",
+    "remaining": "{{count}} remaining",
+    "quotaWarning": "Quota almost exhausted. Contact administration.",
+    "linkedProviders": "Linked Providers",
+    "activity7Days": "7-Day Activity",
+    "distributionByType": "Distribution by Type",
+    "dossiersByStatus": "Cases by Status",
+    "revenue": "Revenue"
+  },
+  "dossiers": {
+    "title": "Cases",
+    "count": "{{count}} case",
+    "count_other": "{{count}} cases",
+    "found": "found",
+    "search": "Search by title, client, country...",
+    "filters": {
+      "status": "Status",
+      "type": "Type",
+      "all": "All",
+      "lawyer": "Lawyer",
+      "expat": "Expert"
+    },
+    "empty": {
+      "title": "No cases found",
+      "modifyFilters": "Try modifying your filters",
+      "newRequestsHere": "New requests will appear here"
+    },
+    "loadMore": "Load more cases",
+    "allLoaded": "All cases loaded ({{count}} total)",
+    "noDescription": "No description",
+    "noTitle": "Untitled"
+  },
+  "dossierDetail": {
+    "accessDenied": "Access denied - This case does not belong to you",
+    "notFound": "Case not found",
+    "consultationDuration": "Consultation duration",
+    "consultationTimeElapsed": "Consultation time elapsed",
+    "autoLockWarning": "The conversation will lock automatically",
+    "startAfterFirstResponse": "Consultation will start after the first AI response",
+    "conversationClosed": "Conversation closed",
+    "historyAvailable": "History remains available above"
+  },
+  "aiChat": {
+    "title": "AI Legal Assistant",
+    "subtitle": "Ask the client's questions here",
+    "timeElapsed": "Time elapsed",
+    "expertTitle": "Expert Legal Assistant",
+    "expertDescription": "Type your client's questions to receive detailed and sourced legal answers.",
+    "tags": {
+      "internationalLaw": "International Law",
+      "expatTax": "Expat Taxation",
+      "immigration": "Immigration"
+    },
+    "legalAssistant": "Legal Assistant",
+    "yourQuestion": "Your question",
+    "copyResponse": "Copy response",
+    "analyzing": "Legal analysis in progress...",
+    "inputPlaceholder": "Type the client's question...",
+    "keyboardHint": "Enter to send • Shift+Enter for new line"
+  },
+  "clientInfo": {
+    "waitingAI": "Waiting for AI",
+    "archived": "Archived",
+    "activeConsultation": "Active consultation",
+    "duration": "Duration: {{minutes}} minutes",
+    "timeRemaining": "Time remaining ({{minutes}} min total)",
+    "historyAvailable": "Conversation history remains available",
+    "client": "Client",
+    "name": "Name",
+    "nationality": "Nationality",
+    "interventionCountry": "Country of intervention",
+    "languages": "Languages",
+    "request": "Request",
+    "title": "Title",
+    "description": "Description",
+    "service": "Service",
+    "createdOn": "Created on",
+    "provider": "Provider"
+  },
+  "page": {
+    "loadingDossier": "Loading case...",
+    "backToDossiers": "Back to cases",
+    "aiActive": "AI active",
+    "consultationExpiredMessage": "Consultation time elapsed ({{minutes}} min) — History remains available",
+    "initializingChat": "Initializing AI chat..."
+  },
+  "bookingCard": {
+    "lawyer": "Lawyer",
+    "expat": "Expat",
+    "aiProcessed": "AI",
+    "client": "Client"
+  },
+  "statusActions": {
+    "startCall": "Start call",
+    "finish": "Finish",
+    "cancel": "Cancel",
+    "reopenConversation": "Reopen conversation"
+  },
+  "quotaExhausted": {
+    "title": "Usage Quota Exhausted",
+    "description": "You have reached the AI request limit for this period. Upgrade your subscription to continue using the assistant.",
+    "quotaUsage": "Quota Usage",
+    "requestsUsed": "requests used",
+    "outOf": "out of",
+    "nextRenewal": "Next renewal",
+    "increaseQuota": "Increase my quota",
+    "contactSupport": "Contact support",
+    "signOut": "Sign out",
+    "connectedAs": "Connected as"
+  },
+  "messages": {
+    "title": "Messages",
+    "aiResponses": "AI responses",
+    "questions": "questions",
+    "lastAiResponse": "Last AI response",
+    "selectProvider": "Select a provider to view your conversations",
+    "modifySearch": "Try modifying your search",
+    "allConversations": "All Conversations",
+    "myConversations": "My Conversations",
+    "allConversationsHistory": "History of all conversations and AI responses",
+    "conversationsOf": "Conversations of {{name}}",
+    "conversations": "Conversations",
+    "activeLastHour": "Active (1h)",
+    "searchPlaceholder": "Search by client, case ID...",
+    "noConversationFound": "No conversation found",
+    "conversationsWillAppear": "AI conversations will appear here",
+    "conversation": "Conversation"
+  },
+  "profile": {
+    "title": "My Profile",
+    "description": "Manage your provider account information",
+    "loading": "Loading profile...",
+    "noProviderSelected": "No provider selected",
+    "selectProviderToView": "Select a provider to view their profile",
+    "lawyer": "Lawyer",
+    "expatExpert": "Expat expert",
+    "contactInfo": "Contact Information",
+    "email": "Email",
+    "emailNotEditable": "Email cannot be modified",
+    "phone": "Phone",
+    "website": "Website",
+    "location": "Location",
+    "country": "Country",
+    "contactAdminToModify": "Contact admin to modify",
+    "city": "City",
+    "address": "Address",
+    "specialties": "Specialties",
+    "addSpecialty": "Add a specialty...",
+    "noSpecialtyAdded": "No specialty added",
+    "noSpecialtySet": "No specialty set",
+    "spokenLanguages": "Spoken Languages",
+    "addLanguage": "Add a language...",
+    "noLanguageAdded": "No language added",
+    "noLanguageSet": "No language set",
+    "descriptionSection": "Description",
+    "descriptionPlaceholder": "Describe your activity, areas of expertise...",
+    "noDescriptionSet": "No description set",
+    "systemInfo": "System Information",
+    "providerId": "Provider ID",
+    "accountType": "Account Type",
+    "providerName": "Provider Name",
+    "statusLabel": "Status"
+  },
+  "providerSwitcher": {
+    "noProvider": "No linked provider",
+    "select": "Select...",
+    "switchProvider": "Switch provider",
+    "manageProviders": "Manage my providers",
+    "lawyer": "Lawyer",
+    "expatExpert": "Expat expert"
+  },
+  "subscriptionScreen": {
+    "header": {
+      "subtitle": "AI Assistant for providers",
+      "signOut": "Sign out"
+    },
+    "hero": {
+      "badge": "Subscription required",
+      "title": "Boost your consultations with AI",
+      "descriptionLawyer": "Access an AI legal assistant that searches for legal information in real-time during your consultations.",
+      "descriptionExpat": "Get instant practical information about expatriation to better support your clients."
+    },
+    "benefits": {
+      "aiRealTime": {
+        "title": "Real-time AI Assistant",
+        "description": "Instant legal research during your consultations"
+      },
+      "updatedData": {
+        "title": "Updated data",
+        "description": "Access to legal information from 190+ countries"
+      },
+      "timeSaving": {
+        "title": "Time saving",
+        "description": "Accurate answers in seconds"
+      },
+      "reliableSources": {
+        "title": "Reliable sources",
+        "description": "Verified legal citations and references"
+      }
+    },
+    "pricing": {
+      "monthly": "Monthly",
+      "annual": "Annual",
+      "perMonth": "/month",
+      "billedAnnually": "Billed {{amount}}€/year",
+      "savings": "SAVE {{amount}}€",
+      "unlimited": "Unlimited access to AI assistant",
+      "noCommitment": "No commitment",
+      "cancelAnytime": "Cancel anytime",
+      "twoMonthsFree": "2 months free",
+      "prioritySupport": "Priority support",
+      "chooseMonthly": "Choose monthly",
+      "subscribeNow": "Subscribe now"
+    },
+    "payment": {
+      "secure": "Secure payment by credit card",
+      "methods": "Visa, Mastercard, American Express - SSL encrypted payment - PCI-DSS compliant"
+    },
+    "footer": {
+      "questions": "Questions?",
+      "contactUs": "Contact us",
+      "connectedAs": "Connected as {{email}}",
+      "copyright": "All rights reserved."
+    }
+  },
+  "home": {
+    "noActiveConversation": "No active conversation",
+    "noActiveDescription": "All your consultations are completed. New requests will appear here.",
+    "inProgress": "In progress",
+    "startedAgo": "Started {{time}} ago",
+    "exchanges": "{{count}} exchanges",
+    "continueConversation": "Continue conversation",
+    "welcome": "Welcome{{name}}",
+    "subtitle": "Your AI consultation space",
+    "hello": "Hello{{name}}",
+    "hasActive": "You have an active conversation",
+    "allUpdated": "All your consultations are up to date",
+    "welcomeTitle": "Welcome to your space",
+    "welcomeDescription": "Your conversations with clients will appear here as soon as a new request is assigned to you.",
+    "readyToReceive": "You are ready to receive your first clients.",
+    "loadError": "Unable to load conversations",
+    "activeConversation": "Active conversation",
+    "recentHistory": "Recent history",
+    "viewAll": "View all",
+    "noPastConversations": "No past conversations",
+    "exchangesWithAI": "{{count}} exchanges with AI",
+    "ago": {
+      "minutes": "{{count}} min ago",
+      "hours": "{{count}}h ago",
+      "yesterday": "Yesterday",
+      "days": "{{count}} days ago"
+    }
+  },
+  "conversationHistory": {
+    "title": "History",
+    "completed": "Completed",
+    "archived": "Archived",
+    "cancelled": "Cancelled",
+    "active": "In progress",
+    "searchPlaceholder": "Search for a client...",
+    "statusFilter": "Status:",
+    "filterAll": "All",
+    "filterCompleted": "Completed",
+    "filterArchived": "Archived",
+    "filterCancelled": "Cancelled",
+    "noResults": "No results",
+    "noPastConversations": "No past conversations",
+    "modifySearch": "Try modifying your search criteria",
+    "comingHere": "Your completed conversations will appear here",
+    "loadMore": "Load more",
+    "loading": "Loading...",
+    "loadError": "Unable to load history",
+    "conversationCount": "{{count}} past conversation",
+    "conversationCount_other": "{{count}} past conversations",
+    "filters": "Filters",
+    "exchanges": "{{count}} exchange",
+    "exchanges_other": "{{count}} exchanges"
+  },
+  "sidebar": {
+    "home": "Home",
+    "history": "History",
+    "myProfile": "My Profile",
+    "providersCount": "{{count}} provider",
+    "providersCount_other": "{{count}} providers",
+    "aiQuota": "AI Quota",
+    "subscription": "Subscription",
+    "active": "Active",
+    "inactive": "Inactive",
+    "signOut": "Sign out",
+    "proSpace": "Pro Space",
+    "lawyer": "Lawyer",
+    "expert": "Expert",
+    "select": "Select"
+  },
+  "appDashboard": {
+    "loadingPage": "Loading page",
+    "loading": "Loading...",
+    "noProviderLinked": {
+      "title": "No provider linked",
+      "description": "Your account is not yet linked to a provider. Please contact the SOS-Expat administrator to activate your access."
+    },
+    "accessDenied": {
+      "title": "Access denied",
+      "description": "You do not have the necessary rights to access this space."
+    },
+    "loadingDashboard": "Loading your space...",
+    "signOut": "Sign out",
+    "backToHome": "Back to home"
+  },
+  "profilePage": {
+    "notFound": "No provider profile found",
+    "title": "My Profile",
+    "subtitle": "Your information as it appears on SOS Expat",
+    "syncInfo": "This information is synchronized from your SOS Expat account. To modify it, go to the main platform.",
+    "editOnSosExpat": "Edit my profile on sos-expat.com",
+    "lawyerTitle": "Lawyer",
+    "expertTitle": "Expat Expert",
+    "lawyerDesc": "Legal assistance for expats",
+    "expertDesc": "Practical support for expats",
+    "personalInfo": "Personal information",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "country": "Country",
+    "skills": "Skills",
+    "languages": "Spoken languages",
+    "specialtiesLawyer": "Legal specialties",
+    "specialtiesExpert": "Areas of expertise",
+    "activeAccount": "Active account",
+    "inactiveAccount": "Inactive account",
+    "readyForClients": "Ready to receive clients",
+    "notSet": "Not set"
+  },
+  "subscriptionExpired": {
+    "gracePeriod": "Grace period",
+    "expired": "Subscription expired",
+    "titleGrace": "Your subscription has expired",
+    "titleSuspended": "Access suspended",
+    "descriptionGrace": "You still have {{days}} days to renew your subscription without service interruption.",
+    "descriptionExpired": "Your subscription has expired. Renew now to regain access to the AI assistant.",
+    "expirationDate": "Expiration date",
+    "daysAgo": "{{count}} day ago",
+    "daysAgo_other": "{{count}} days ago",
+    "gracePeriodActive": "Grace period active",
+    "daysRemaining": "{{count}} days left to renew",
+    "whatYouGet": "What you'll get back",
+    "benefitAI": "Real-time AI Assistant",
+    "benefitCountries": "Access to data from 190+ countries",
+    "benefitSources": "Verified legal sources",
+    "renewButton": "Renew my subscription",
+    "contactSupport": "Contact support",
+    "signOut": "Sign out",
+    "connectedAs": "Connected as {{email}}",
+    "copyright": "All rights reserved."
+  }
+}

@@ -1,0 +1,192 @@
+{
+  "navigation": {
+    "dashboard": "Панель управления",
+    "dossiers": "Мои дела",
+    "messages": "Сообщения",
+    "profile": "Мой профиль",
+    "settings": "Настройки",
+    "signOut": "Выйти",
+    "signingOut": "Выход...",
+    "prestataires": "Провайдеры",
+    "access": "Доступ",
+    "team": "Команда",
+    "countries": "Страны",
+    "audit": "Аудит",
+    "testAI": "Тест ИИ",
+    "administration": "Администрирование"
+  },
+  "actions": {
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "delete": "Удалить",
+    "edit": "Редактировать",
+    "create": "Создать",
+    "add": "Добавить",
+    "search": "Поиск",
+    "filter": "Фильтр",
+    "filters": "Фильтры",
+    "reset": "Сбросить",
+    "export": "Экспорт",
+    "refresh": "Обновить",
+    "loadMore": "Загрузить ещё",
+    "copy": "Копировать",
+    "copied": "Скопировано",
+    "retry": "Повторить",
+    "send": "Отправить",
+    "sending": "Отправка...",
+    "close": "Закрыть",
+    "back": "Назад",
+    "backHome": "На главную",
+    "view": "Просмотр",
+    "viewAll": "Смотреть все",
+    "confirm": "Подтвердить",
+    "preview": "Предпросмотр",
+    "expand": "Развернуть",
+    "collapse": "Свернуть",
+    "start": "Начать",
+    "stop": "Остановить",
+    "finish": "Завершить",
+    "reopen": "Возобновить"
+  },
+  "status": {
+    "pending": "Ожидание",
+    "inProgress": "В работе",
+    "completed": "Завершено",
+    "cancelled": "Отменено",
+    "active": "Активен",
+    "inactive": "Неактивен",
+    "expired": "Истёк",
+    "verified": "Подтверждён",
+    "trial": "Пробный период",
+    "paymentPending": "Ожидание оплаты"
+  },
+  "priority": {
+    "urgent": "Срочно",
+    "high": "Высокий",
+    "medium": "Средний",
+    "low": "Низкий"
+  },
+  "time": {
+    "today": "Сегодня",
+    "yesterday": "Вчера",
+    "minutesAgo": "{{count}} мин назад",
+    "hoursAgo": "{{count}} ч назад",
+    "daysAgo": "{{count}} д назад",
+    "daysRemaining": "Осталось {{count}} дней",
+    "expiresToday": "Истекает сегодня",
+    "expiresTomorrow": "Истекает завтра"
+  },
+  "errors": {
+    "generic": "Произошла ошибка",
+    "loading": "Ошибка загрузки",
+    "network": "Ошибка сети",
+    "unauthorized": "Доступ запрещён",
+    "notFound": "Не найдено",
+    "copyFailed": "Ошибка копирования",
+    "sendFailed": "Ошибка отправки",
+    "loadingProfile": "Ошибка загрузки профиля",
+    "savingProfile": "Ошибка сохранения профиля"
+  },
+  "success": {
+    "saved": "Успешно сохранено",
+    "deleted": "Успешно удалено",
+    "copied": "Скопировано в буфер обмена",
+    "profileUpdated": "Профиль успешно обновлён!"
+  },
+  "empty": {
+    "noData": "Нет данных",
+    "noResults": "Нет результатов",
+    "modifyFilters": "Попробуйте изменить фильтры"
+  },
+  "loading": {
+    "default": "Загрузка...",
+    "dashboard": "Загрузка панели управления",
+    "dashboardMessage": "Загрузка панели управления..."
+  },
+  "language": "Язык",
+  "all": "Все",
+  "type": "Тип",
+  "types": {
+    "lawyer": "Юрист",
+    "expat": "Экспат",
+    "expert": "Эксперт"
+  },
+  "providerTypes": {
+    "lawyer": "Юрист",
+    "expatExpert": "Эксперт по экспатриации"
+  },
+  "roles": {
+    "admin": "Администратор",
+    "agent": "Агент",
+    "provider": "Провайдер"
+  },
+  "offline": {
+    "message": "Офлайн режим - Некоторые функции ограничены"
+  },
+  "connectedAs": "Вы вошли как",
+  "allRightsReserved": "Все права защищены.",
+  "guards": {
+    "loading": "Загрузка...",
+    "verifyingAccess": "Проверка вашего доступа...",
+    "accountNotFound": "Аккаунт не найден",
+    "accountNotFoundDescription": "Ваш аккаунт не существует в нашей системе. Сначала вам необходимо зарегистрироваться как провайдер на sos-expat.com.",
+    "registerOnSosExpat": "Зарегистрироваться на sos-expat.com",
+    "contactSupport": "Связаться с поддержкой",
+    "accessReservedProviders": "Доступ только для провайдеров",
+    "accessReservedDescription": "Этот инструмент предназначен для юристов и экспертов по экспатриации, являющихся партнёрами SOS Expat.",
+    "currentRoleNotAllowed": "Ваша текущая роль ({{role}}) не позволяет получить доступ к этому разделу.",
+    "becomeProvider": "Стать провайдером",
+    "backToSosExpat": "Вернуться на sos-expat.com",
+    "subscriptionRequired": "Требуется подписка",
+    "subscriptionRequiredMessage": "Требуется активная подписка.",
+    "viewOffers": "Посмотреть предложения",
+    "needHelp": "Нужна помощь? Свяжитесь с нами по адресу",
+    "close": "Закрыть"
+  },
+  "subscription": {
+    "active": "Активна",
+    "trial": "Пробная",
+    "trialing": "Пробный период",
+    "pastDue": "Просрочен платёж",
+    "past_due": "Просрочен платёж",
+    "canceled": "Отменена",
+    "expired": "Истекла",
+    "unpaid": "Не оплачена",
+    "paused": "Приостановлена",
+    "noSubscription": "Нет подписки",
+    "admin": "Админ",
+    "expiresTomorrow": "Ваша подписка истекает завтра. Не забудьте продлить.",
+    "expiresInDays": "Ваша подписка истекает через {{days}} дней. Не забудьте продлить.",
+    "expiresInDaysShort": "Ваша подписка истекает через {{days}} дней."
+  },
+  "language": {
+    "change": "Сменить язык",
+    "select": "Язык / Language",
+    "available": "Доступные языки"
+  },
+  "validation": {
+    "emailRequired": "Требуется email",
+    "emailInvalid": "Неверный формат email",
+    "nameRequired": "Требуется имя"
+  },
+  "provider": {
+    "addTitle": "Добавить провайдера",
+    "googleEmail": "Google Email",
+    "googleEmailHint": "Провайдер войдёт с этим аккаунтом Google",
+    "fullName": "Полное имя",
+    "providerType": "Тип провайдера",
+    "lawyer": "Юрист",
+    "expat": "Экспат",
+    "country": "Страна",
+    "adding": "Добавление...",
+    "addError": "Ошибка при добавлении"
+  },
+  "subscriptionErrors": {
+    "notAuthenticated": "Вы должны войти в систему для доступа к этой функции.",
+    "subscriptionExpired": "Ваша подписка истекла. Пожалуйста, продлите её для продолжения.",
+    "subscriptionCanceled": "Ваша подписка была отменена. Пожалуйста, подпишитесь снова для продолжения.",
+    "paymentFailed": "Обнаружена проблема с оплатой. Пожалуйста, обновите платёжную информацию.",
+    "noSubscription": "Для доступа к этой функции требуется активная подписка.",
+    "accessGranted": "Доступ разрешён"
+  }
+}

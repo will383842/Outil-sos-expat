@@ -1,0 +1,41 @@
+# SOS-Expat.com - Aide d'urgence pour expatriés
+
+## À propos
+SOS-Expat est une plateforme d'urgence connectant les expatriés français
+avec des avocats et prestataires experts vérifiés en moins de 5 minutes.
+Disponible dans 197 pays et 9 langues.
+
+## Services
+- Mise en relation urgente avec des avocats internationaux
+- Aide par des Expat Aidants (experts non-juridiques)
+- Assistance 24/7
+- Prestataires vérifiés
+
+## Fonctionnement
+1. Le client crée une demande d'aide
+2. Les prestataires disponibles sont alertés
+3. Mise en relation en moins de 5 minutes
+4. Le client paie directement le prestataire sous 24h
+5. Des frais de mise en relation s'appliquent
+
+## Questions fréquentes
+Q: Comment fonctionne le paiement ?
+R: Le client paie directement le prestataire sur son compte bancaire
+   dans un délai de 24 heures après la mise en relation.
+
+Q: Qu'est-ce que les frais de mise en relation ?
+R: Les frais de mise en relation financent le fonctionnement de la
+   plateforme et la vérification des prestataires. Ils sont
+   communiqués de manière transparente lors de l'inscription.
+
+Q: Dans combien de pays êtes-vous présents ?
+R: SOS-Expat opère dans 197 pays à travers le monde et supporte
+   9 langues (français, anglais, espagnol, allemand, portugais,
+   russe, chinois, arabe, hindi).
+
+Q: Quel est le délai de réponse ?
+R: Un expert vous répond en moins de 5 minutes, 24h/24 et 7j/7.
+
+## Contact
+Site: https://sos-expat.com
+Support: support@sos-expat.com

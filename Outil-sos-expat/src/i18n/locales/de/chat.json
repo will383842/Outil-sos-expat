@@ -1,0 +1,27 @@
+{
+  "title": "Juristischer Expertenassistent",
+  "description": "Geben Sie die Fragen Ihres Kunden ein, um detaillierte und fundierte rechtliche Antworten zu erhalten.",
+  "placeholder": "Chatten Sie mit GPT, um die Antwort zu verfeinern...",
+  "placeholderClient": "Geben Sie die Frage des Kunden ein...",
+  "typing": "GPT denkt nach...",
+  "generating": "KI-Assistent generiert eine Antwort",
+  "analyzing": "Rechtliche Analyse läuft...",
+  "sendMessage": "Nachricht senden",
+  "sendMessageShort": "Senden",
+  "sending": "Wird gesendet...",
+  "copyMessage": "Nachricht kopieren",
+  "copyResponse": "Antwort kopieren",
+  "messageCopied": "Nachricht kopiert",
+  "regenerate": "Antwort neu generieren",
+  "chatHistory": "Konversationsverlauf mit KI-Assistent",
+  "assistantLabel": "Rechtsassistent",
+  "yourQuestion": "Ihre Frage",
+  "instructions": {
+    "desktop": "Enter zum Senden, Shift+Enter für neue Zeile"
+  },
+  "tags": {
+    "internationalLaw": "Internationales Recht",
+    "expatTax": "Expat-Besteuerung",
+    "immigration": "Einwanderung"
+  }
+}
