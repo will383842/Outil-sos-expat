@@ -32,7 +32,7 @@ import {
   Save,
   X
 } from 'lucide-react';
-import { db } from '../../../firebase';
+import { db } from '../../../config/firebase';
 import {
   collection,
   query,

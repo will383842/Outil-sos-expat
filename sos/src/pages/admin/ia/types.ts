@@ -362,7 +362,8 @@ export type IaTabId =
   | 'pricing'
   | 'trial-config'
   | 'logs'
-  | 'alerts';
+  | 'alerts'
+  | 'analytics';
 
 export interface IaTab {
   id: IaTabId;
