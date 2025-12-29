@@ -161,7 +161,6 @@ export async function getPricingConfig(): Promise<PricingConfig> {
     }
 
     const data = snap.data() as FirestorePricingDoc;
-    // console.log(data, " == data from firestore");
     const normalized = normalizeFirestoreDocument(data);
 
     if (!isValidPricingConfig(normalized)) {

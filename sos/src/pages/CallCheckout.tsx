@@ -2221,7 +2221,8 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
 
   const providerRole: ServiceKind | null = useMemo(() => {
     if (!provider) return null;
-    return (provider.role || provider.type || "expat") as ServiceKind;
+    // Priorité à 'type' (champ canonique) sur 'role' (alias optionnel)
+    return (provider.type || provider.role || "expat") as ServiceKind;
   }, [provider]);
 
   // Déterminer le gateway de paiement (Stripe ou PayPal) selon le pays du provider
