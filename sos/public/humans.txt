@@ -1,0 +1,38 @@
+/* TEAM */
+Company: SOS Expat
+Site: https://sos-expat.com
+Location: Estonia / International (197 countries)
+Contact: contact@sos-expat.com
+
+/* DESCRIPTION */
+SOS Expat is an international platform connecting expatriates
+worldwide with verified lawyers and expert service providers
+in 197 countries. Available 24/7 in 9 languages for emergency
+legal assistance.
+
+/* SERVICES */
+- Emergency legal assistance for expatriates
+- Connection with international lawyers
+- Expat Helper network (non-legal experts)
+- 24/7 availability in 197 countries
+- 9 languages supported
+
+/* LANGUAGES */
+French, English, Spanish, German, Portuguese,
+Russian, Chinese, Arabic, Hindi
+
+/* TECHNOLOGY */
+Frontend: React, TypeScript, Vite, Tailwind CSS
+Backend: Firebase (Functions, Firestore, Auth, Storage)
+Hosting: Firebase Hosting
+PWA: Full Progressive Web App support
+AI: Claude, OpenAI integrations
+
+/* STANDARDS */
+Accessibility: WCAG 2.1 AA
+Security: HTTPS, CSP, HSTS
+Privacy: GDPR Compliant
+Performance: Core Web Vitals optimized
+
+/* LAST UPDATE */
+2025-12-29

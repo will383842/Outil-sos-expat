@@ -1,12 +1,14 @@
 # Robots.txt pour SOS-Expat.com
 # https://sos-expat.com
-# Dernière mise à jour: 2025-12-28
+# Dernière mise à jour: 2025-12-29
 
 # ===========================================
 # RÈGLES PAR DÉFAUT (Tous les robots)
 # ===========================================
 User-agent: *
 Allow: /
+Allow: /llms.txt
+Allow: /.well-known/
 
 # Pages protégées à ne pas indexer
 Disallow: /dashboard
@@ -34,6 +36,12 @@ User-agent: Googlebot
 Allow: /
 Crawl-delay: 0
 
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: Googlebot-Video
+Allow: /
+
 User-agent: Bingbot
 Allow: /
 Crawl-delay: 1
@@ -46,6 +54,44 @@ User-agent: DuckDuckBot
 Allow: /
 Crawl-delay: 1
 
+User-agent: Baiduspider
+Allow: /
+Crawl-delay: 2
+
+User-agent: Sogou
+Allow: /
+Crawl-delay: 2
+
+# ===========================================
+# BOTS SOCIAUX - PREVIEWS & PARTAGES
+# ===========================================
+User-agent: Twitterbot
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: Slackbot
+Allow: /
+
+User-agent: Slackbot-LinkExpanding
+Allow: /
+
+User-agent: WhatsApp
+Allow: /
+
+User-agent: TelegramBot
+Allow: /
+
+User-agent: Discordbot
+Allow: /
+
+User-agent: Pinterestbot
+Allow: /
+
+User-agent: Redditbot
+Allow: /
+
 # ===========================================
 # BOTS IA - AUTORISÉS POUR L'INDEXATION
 # ===========================================
@@ -55,6 +101,10 @@ Allow: /
 Crawl-delay: 2
 
 User-agent: ChatGPT-User
+Allow: /
+Crawl-delay: 2
+
+User-agent: OAI-SearchBot
 Allow: /
 Crawl-delay: 2
 
@@ -100,7 +150,11 @@ User-agent: Amazonbot
 Allow: /
 Crawl-delay: 2
 
-# Microsoft Copilot
+# Apple
+User-agent: Applebot
+Allow: /
+Crawl-delay: 2
+
 User-agent: Applebot-Extended
 Allow: /
 Crawl-delay: 2
@@ -110,10 +164,35 @@ User-agent: YouBot
 Allow: /
 Crawl-delay: 2
 
+# AI2 (Allen Institute)
+User-agent: Ai2Bot
+Allow: /
+Crawl-delay: 2
+
+User-agent: Ai2Bot-Dolma
+Allow: /
+Crawl-delay: 2
+
+# Mistral AI
+User-agent: MistralBot
+Allow: /
+Crawl-delay: 2
+
 # Common Crawl (utilisé par plusieurs IA)
 User-agent: CCBot
 Allow: /
 Crawl-delay: 3
+
+# ===========================================
+# OUTILS SEO AUTORISÉS
+# ===========================================
+User-agent: Screaming Frog SEO Spider
+Allow: /
+Crawl-delay: 2
+
+User-agent: Sitebulb
+Allow: /
+Crawl-delay: 2
 
 # ===========================================
 # BOTS BLOQUÉS (Scrapers agressifs)
@@ -136,10 +215,38 @@ Disallow: /
 User-agent: DotBot
 Disallow: /
 
+User-agent: BLEXBot
+Disallow: /
+
+User-agent: DataForSeoBot
+Disallow: /
+
+User-agent: serpstatbot
+Disallow: /
+
+User-agent: SEOkicks
+Disallow: /
+
+User-agent: AspiegelBot
+Disallow: /
+
 # ===========================================
 # SITEMAPS
 # ===========================================
 Sitemap: https://sos-expat.com/sitemap.xml
+Sitemap: https://sos-expat.com/sitemap-static.xml
+Sitemap: https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapProfiles
+Sitemap: https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapBlog
+Sitemap: https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapLanding
+
+# ===========================================
+# FICHIERS SPÉCIAUX
+# ===========================================
+# LLMs.txt pour les IA conversationnelles
+# https://sos-expat.com/llms.txt
+
+# IndexNow pour indexation instantanée
+# Clé: sosexpat2025indexnowkey
 
 # Délai par défaut entre requêtes
 Crawl-delay: 1

@@ -1,41 +1,125 @@
-# SOS-Expat.com - Aide d'urgence pour expatriés
+# SOS-Expat.com - Emergency Legal Assistance for Expatriates Worldwide
 
-## À propos
-SOS-Expat est une plateforme d'urgence connectant les expatriés français
-avec des avocats et prestataires experts vérifiés en moins de 5 minutes.
-Disponible dans 197 pays et 9 langues.
+> SOS-Expat is the leading international platform connecting expatriates with verified lawyers and expert service providers in under 5 minutes. Available 24/7 in 197 countries and 9 languages.
 
-## Services
-- Mise en relation urgente avec des avocats internationaux
-- Aide par des Expat Aidants (experts non-juridiques)
-- Assistance 24/7
-- Prestataires vérifiés
+## Identity
+- Name: SOS Expat
+- Website: https://sos-expat.com
+- Sector: LegalTech / Expatriate Services
+- Founded: 2024
+- Headquarters: Estonia
+- Coverage: 197 countries worldwide
 
-## Fonctionnement
-1. Le client crée une demande d'aide
-2. Les prestataires disponibles sont alertés
-3. Mise en relation en moins de 5 minutes
-4. Le client paie directement le prestataire sous 24h
-5. Des frais de mise en relation s'appliquent
+## Mission
+Provide emergency legal assistance to expatriates anywhere in the world, connecting them quickly with verified and qualified professionals.
 
-## Questions fréquentes
-Q: Comment fonctionne le paiement ?
-R: Le client paie directement le prestataire sur son compte bancaire
-   dans un délai de 24 heures après la mise en relation.
+## Main Services
 
-Q: Qu'est-ce que les frais de mise en relation ?
-R: Les frais de mise en relation financent le fonctionnement de la
-   plateforme et la vérification des prestataires. Ils sont
-   communiqués de manière transparente lors de l'inscription.
+### 1. Lawyer Matching
+- International lawyers specialized in expatriate law
+- Expertise: immigration, labor law, family law, criminal law
+- Guaranteed response in under 5 minutes
+- Verification of qualifications and references
 
-Q: Dans combien de pays êtes-vous présents ?
-R: SOS-Expat opère dans 197 pays à travers le monde et supporte
-   9 langues (français, anglais, espagnol, allemand, portugais,
-   russe, chinois, arabe, hindi).
+### 2. Expat Helpers
+- Non-legal experts for administrative support
+- Consular assistance
+- Translation and interpretation
+- Personalized guidance
 
-Q: Quel est le délai de réponse ?
-R: Un expert vous répond en moins de 5 minutes, 24h/24 et 7j/7.
+### 3. Video Consultation
+- Secure video calls with service providers
+- Available on all devices
+- Optional recording for reference
+
+## Geographic Coverage
+- 197 countries covered
+- Strong presence: Europe, North America, Asia, Middle East, Africa
+- Network of local providers in each country
+
+## Supported Languages
+1. French
+2. English
+3. Spanish
+4. German
+5. Portuguese
+6. Russian
+7. Chinese (Mandarin)
+8. Arabic
+9. Hindi
+
+## How It Works
+
+### For Clients (Expatriates)
+1. Free registration on the platform
+2. Describe your legal or administrative need
+3. Automatic matching with an available expert
+4. Consultation in under 5 minutes
+5. Secure payment directly to the provider
+
+### For Providers (Lawyers/Experts)
+1. Registration and qualification verification
+2. Profile and availability setup
+3. Real-time request notifications
+4. Consultation management via platform
+5. Payment within 24h after consultation
+
+## Pricing
+- Registration: Free for all
+- Connection fees: Transparent, communicated at registration
+- Fees: Set by each provider
+- Payment: Secure, within 24h to provider
+
+## Frequently Asked Questions
+
+Q: What is the average response time?
+A: An expert responds in under 5 minutes, 24/7.
+
+Q: How are lawyers verified?
+A: Each lawyer must provide diplomas, bar registration, and professional references. Our team manually verifies each application.
+
+Q: In what cases can I contact SOS Expat?
+A: Visa issues, arrest abroad, labor disputes, international divorce, inheritance, accidents, and any legal emergency.
+
+Q: Can I choose my lawyer?
+A: Yes, you can browse available lawyer profiles and choose the one that best fits your needs.
+
+Q: How does payment work?
+A: The client pays the provider directly to their bank account within 24 hours of the connection. Connection fees are billed separately.
+
+Q: Is SOS Expat available 24/7?
+A: Yes, our platform operates 24/7. Experts are available at all hours thanks to our international network.
+
+## Important Pages
+- Home: https://sos-expat.com
+- Find a lawyer: https://sos-expat.com/lawyers
+- How it works: https://sos-expat.com/how-it-works
+- Pricing: https://sos-expat.com/pricing
+- Blog: https://sos-expat.com/blog
+- FAQ: https://sos-expat.com/faq
+- Contact: https://sos-expat.com/contact
+- Client registration: https://sos-expat.com/register-client
+- Lawyer registration: https://sos-expat.com/register-lawyer
+- Expat Helper registration: https://sos-expat.com/register-expat
 
 ## Contact
-Site: https://sos-expat.com
-Support: support@sos-expat.com
+- Website: https://sos-expat.com
+- General email: contact@sos-expat.com
+- Support: support@sos-expat.com
+- Security: security@sos-expat.com
+
+## Legal
+- Client Terms: https://sos-expat.com/terms-clients
+- Lawyer Terms: https://sos-expat.com/terms-lawyers
+- Expat Helper Terms: https://sos-expat.com/terms-expats
+- Privacy Policy: https://sos-expat.com/privacy
+- Cookie Policy: https://sos-expat.com/cookies
+
+## Technical Data
+- PWA: Installable Progressive Web App
+- Accessibility: WCAG 2.1 AA
+- Security: HTTPS, Firebase authentication
+- GDPR: Compliant
+
+## Last Updated
+2025-12-29

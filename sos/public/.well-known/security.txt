@@ -1,0 +1,30 @@
+# Security Policy for SOS-Expat.com
+# https://sos-expat.com/.well-known/security.txt
+# Headquarters: Estonia | Coverage: 197 countries
+# Last updated: 2025-12-29
+
+# Contact information for security researchers
+Contact: mailto:security@sos-expat.com
+Contact: mailto:contact@sos-expat.com
+Contact: https://sos-expat.com/contact
+
+# Preferred languages for security reports (9 languages supported)
+Preferred-Languages: en, fr, es, de, pt, ru, zh, ar, hi
+
+# Our security policy
+Policy: https://sos-expat.com/security-policy
+
+# Acknowledgments page (if applicable)
+# Acknowledgments: https://sos-expat.com/security-hall-of-fame
+
+# PGP Key for encrypted communications (optional)
+# Encryption: https://sos-expat.com/.well-known/pgp-key.txt
+
+# Expiration date
+Expires: 2030-12-31T23:59:59.000Z
+
+# Canonical URL
+Canonical: https://sos-expat.com/.well-known/security.txt
+
+# Hiring security professionals?
+# Hiring: https://sos-expat.com/careers
