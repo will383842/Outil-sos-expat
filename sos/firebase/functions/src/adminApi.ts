@@ -12,6 +12,37 @@ const asDate = (d: Date | admin.firestore.Timestamp) =>
 if (!admin.apps.length) admin.initializeApp();
 const db = admin.firestore();
 
+/**
+ * P0 SECURITY FIX: Verify admin authentication via Firebase ID token
+ * Returns the decoded token if valid admin, null otherwise
+ */
+async function verifyAdminAuth(req: Request): Promise<admin.auth.DecodedIdToken | null> {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith('Bearer ')) {
+      return null;
+    }
+
+    const idToken = authHeader.split('Bearer ')[1];
+    if (!idToken) {
+      return null;
+    }
+
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+
+    // Check if user has admin role in custom claims
+    if (decodedToken.role !== 'admin' && decodedToken.admin !== true) {
+      console.warn(`[AdminAPI] Non-admin user attempted access: ${decodedToken.uid}`);
+      return null;
+    }
+
+    return decodedToken;
+  } catch (error) {
+    console.error('[AdminAPI] Token verification failed:', error);
+    return null;
+  }
+}
+
 function pctChange(curr: number, prev: number) {
   if (!prev) return 100;
   return ((curr - prev) / prev) * 100;
@@ -45,6 +76,14 @@ export const api = onRequest(
       // =============================
       if (path === '/admin/financial-stats') {
         console.log('📊 Route financial-stats appelée');
+
+        // P0 SECURITY FIX: Require admin authentication
+        const adminUser = await verifyAdminAuth(req);
+        if (!adminUser) {
+          res.status(401).json({ error: 'Authentication required', code: 'UNAUTHORIZED' });
+          return;
+        }
+        console.log(`📊 Admin authenticated: ${adminUser.uid}`);
 
         try {
           const now = Date.now();
@@ -128,6 +167,14 @@ export const api = onRequest(
       if (path === '/admin/last-modifications') {
         console.log('🕐 Route last-modifications appelée');
 
+        // P0 SECURITY FIX: Require admin authentication
+        const adminUser = await verifyAdminAuth(req);
+        if (!adminUser) {
+          res.status(401).json({ error: 'Authentication required', code: 'UNAUTHORIZED' });
+          return;
+        }
+        console.log(`🕐 Admin authenticated: ${adminUser.uid}`);
+
         try {
           const pricingDoc = await db
             .doc('admin_config/pricing')
@@ -185,6 +232,14 @@ export const api = onRequest(
       // =============================
       if (path === '/admin/system-status') {
         console.log('⚙️ Route system-status appelée');
+
+        // P0 SECURITY FIX: Require admin authentication
+        const adminUser = await verifyAdminAuth(req);
+        if (!adminUser) {
+          res.status(401).json({ error: 'Authentication required', code: 'UNAUTHORIZED' });
+          return;
+        }
+        console.log(`⚙️ Admin authenticated: ${adminUser.uid}`);
 
         try {
           const t0 = Date.now();

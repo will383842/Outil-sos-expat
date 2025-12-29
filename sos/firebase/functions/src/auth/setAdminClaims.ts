@@ -70,8 +70,9 @@ export const setAdminClaims = onCall(
 );
 
 /**
- * Force la mise à jour des claims admin (pour les admins existants)
- * À appeler une seule fois pour initialiser
+ * P0 SECURITY FIX: Force la mise à jour des claims admin (pour les admins existants)
+ * REQUIRES: Caller must be an existing admin to add new admins
+ * This prevents unauthenticated privilege escalation
  */
 export const initializeAdminClaims = onCall(
   {
@@ -79,8 +80,23 @@ export const initializeAdminClaims = onCall(
     cors: true,
   },
   async (request) => {
-    // Cette fonction peut être appelée sans auth pour l'initialisation
-    // SÉCURITÉ: Ne fonctionne que pour les emails de la whitelist
+    // P0 SECURITY FIX: Require authentication
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Vous devez être connecté");
+    }
+
+    // P0 SECURITY FIX: Verify caller is already an admin
+    const callerRole = request.auth.token.role;
+    const callerIsAdmin = request.auth.token.admin === true;
+
+    if (callerRole !== "admin" && !callerIsAdmin) {
+      // Log unauthorized attempt for security monitoring
+      console.warn(`[initializeAdminClaims] SECURITY: Unauthorized attempt by ${request.auth.uid} (${request.auth.token.email})`);
+      throw new HttpsError(
+        "permission-denied",
+        "Seuls les administrateurs existants peuvent créer de nouveaux admins"
+      );
+    }
 
     const { email } = request.data || {};
 
@@ -90,7 +106,9 @@ export const initializeAdminClaims = onCall(
 
     const normalizedEmail = email.toLowerCase();
 
+    // Keep whitelist as additional security layer
     if (!ADMIN_EMAILS.includes(normalizedEmail)) {
+      console.warn(`[initializeAdminClaims] SECURITY: Attempt to add non-whitelisted email: ${normalizedEmail} by ${request.auth.uid}`);
       throw new HttpsError(
         "permission-denied",
         "Cet email n'est pas dans la whitelist admin"
@@ -115,7 +133,18 @@ export const initializeAdminClaims = onCall(
         { merge: true }
       );
 
-      console.log(`[initializeAdminClaims] Admin initialized for ${normalizedEmail}`);
+      // Log admin creation for audit
+      console.log(`[initializeAdminClaims] Admin initialized for ${normalizedEmail} by ${request.auth.token.email}`);
+
+      // Create audit log entry
+      await db.collection("admin_audit_logs").add({
+        action: "admin_claims_initialized",
+        targetEmail: normalizedEmail,
+        targetUid: userRecord.uid,
+        performedBy: request.auth.uid,
+        performedByEmail: request.auth.token.email,
+        timestamp: new Date(),
+      });
 
       return {
         success: true,

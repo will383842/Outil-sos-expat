@@ -78,28 +78,34 @@ service firebase.storage {
       allow delete: if (isAuthenticated() && (request.auth.uid == userId || isAdmin()));
     }
 
+    // P0 SECURITY FIX: Require authentication for temp uploads
     match /registration_temp/{fileName} {
       allow read: if true;
-      allow write: if isImage() && isValidFileSize();
+      // P0 FIX: Added isAuthenticated() - anonymous uploads were allowed before
+      allow write: if isAuthenticated() && isImage() && isValidFileSize();
       allow delete: if isAdmin();
     }
 
+    // P0 SECURITY FIX: Require authentication for temp profiles
     match /temp_profiles/{fileName} {
       allow read: if true;
-      allow write: if isImage() && isValidFileSize();
+      // P0 FIX: Added isAuthenticated() - anonymous uploads were allowed before
+      allow write: if isAuthenticated() && isImage() && isValidFileSize();
       allow delete: if isAdmin();
     }
 
-    match /profile_photos/{fileName} {
+    // P1 SECURITY FIX: Require ownership check for delete
+    match /profile_photos/{userId}/{fileName} {
       allow read: if true;
-      allow write: if isAuthenticated() && isImage() && isValidFileSize();
-      allow delete: if isAuthenticated();
+      allow write: if isAuthenticated() && request.auth.uid == userId && isImage() && isValidFileSize();
+      // P1 FIX: Only owner or admin can delete their own photos
+      allow delete: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
     }
 
     match /documents/{userId}/{fileName} {
       allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
       allow write: if isAuthenticated() && request.auth.uid == userId && isValidDocumentType() && isValidFileSize();
-      allow delete: if isAuthenticated() && (request.auth.uid == userId || isAdmin()));
+      allow delete: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
     }
 
     // Factures par utilisateur (legacy)

@@ -76,6 +76,12 @@ export {
   getKYCReminderStatus,
 } from "./KYCReminderManager";
 
+// Unclaimed Funds Processing (180 days forfeiture - CGV Article 8.6-8.9)
+export {
+  scheduledProcessUnclaimedFunds,
+  UNCLAIMED_FUNDS_CONFIG,
+} from "./scheduled/processUnclaimedFunds";
+
 // PayPal Onboarding Reminders
 export {
   scheduledPayPalReminders,
@@ -89,6 +95,9 @@ export {
 // KYC Templates Seed
 export { initKYCReminderTemplates } from "./seeds/kycReminderTemplates";
 
+// Unclaimed Funds Templates Seed
+export { initUnclaimedFundsTemplates } from "./seeds/unclaimedFundsTemplates";
+
 // Refund Management (simplifie pour Direct Charges)
 // Note: Les fonctions scheduledUnclaimedFundsCheck, getUnclaimedFundsStats, resolveUnclaimedFund
 // ont ete supprimees car avec Direct Charges, les fonds vont directement au provider.
@@ -97,7 +106,7 @@ export {
   RefundManager,
   UnclaimedFundsManager, // deprecated alias
   REFUND_CONFIG,
-  UNCLAIMED_FUNDS_CONFIG, // deprecated alias
+  // UNCLAIMED_FUNDS_CONFIG removed - already exported from ./scheduled/processUnclaimedFunds
 } from "./UnclaimedFundsManager";
 
 // Provider Earnings Dashboard
@@ -3451,6 +3460,12 @@ export const testWebhook = onRequest(
 export { checkProviderInactivity } from './scheduled/checkProviderInactivity';
 export { updateProviderActivity } from './callables/updateProviderActivity';
 export { setProviderOffline } from './callables/setProviderOffline';
+
+// ========== ALERTES DISPONIBILITE PRESTATAIRES ==========
+export {
+  checkLowProviderAvailability,
+  getProviderAvailabilityStats
+} from './scheduled/checkLowProviderAvailability';
 
 // ========== DEAD LETTER QUEUE - WEBHOOK RETRY SYSTEM ==========
 export {

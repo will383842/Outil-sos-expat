@@ -195,3 +195,153 @@ export const admin_templates_seed = onCall({
 
   return { ok: true, frCount: Object.keys(fr.items || {}).length, enCount: Object.keys(en.items || {}).length };
 });
+
+// ========== UNCLAIMED FUNDS MANAGEMENT ==========
+
+import { UnclaimedFundsProcessor } from "../scheduled/processUnclaimedFunds";
+
+/**
+ * Get unclaimed funds statistics
+ */
+export const admin_unclaimed_funds_stats = onCall({
+  region: "europe-west1",
+  memory: "256MiB",
+  timeoutSeconds: 60
+}, async (req) => {
+  assertAdmin(req);
+
+  const processor = new UnclaimedFundsProcessor();
+  const stats = await processor.getStats();
+
+  return { success: true, stats };
+});
+
+/**
+ * Get list of pending transfers awaiting KYC
+ */
+export const admin_unclaimed_funds_list = onCall({
+  region: "europe-west1",
+  memory: "256MiB",
+  timeoutSeconds: 60
+}, async (req) => {
+  assertAdmin(req);
+
+  const { status = "pending_kyc", limit: queryLimit = 50 } = req.data || {};
+  const db = getFirestore();
+
+  const snapshot = await db
+    .collection("pending_transfers")
+    .where("status", "==", status)
+    .orderBy("createdAt", "desc")
+    .limit(queryLimit)
+    .get();
+
+  const transfers = snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+    createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || null,
+  }));
+
+  return { success: true, transfers, count: transfers.length };
+});
+
+/**
+ * Get list of forfeited funds
+ */
+export const admin_forfeited_funds_list = onCall({
+  region: "europe-west1",
+  memory: "256MiB",
+  timeoutSeconds: 60
+}, async (req) => {
+  assertAdmin(req);
+
+  const { limit: queryLimit = 50 } = req.data || {};
+  const db = getFirestore();
+
+  const snapshot = await db
+    .collection("forfeited_funds")
+    .orderBy("forfeitedAt", "desc")
+    .limit(queryLimit)
+    .get();
+
+  const funds = snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+    forfeitedAt: doc.data().forfeitedAt?.toDate?.()?.toISOString() || null,
+    originalCreatedAt: doc.data().originalCreatedAt?.toDate?.()?.toISOString() || null,
+    exceptionalClaimDeadline: doc.data().exceptionalClaimDeadline?.toDate?.()?.toISOString() || null,
+  }));
+
+  return { success: true, funds, count: funds.length };
+});
+
+/**
+ * Process exceptional claim for forfeited funds
+ */
+export const admin_process_exceptional_claim = onCall({
+  region: "europe-west1",
+  memory: "256MiB",
+  timeoutSeconds: 120
+}, async (req) => {
+  assertAdmin(req);
+
+  const { forfeitedFundsId, claimReason, supportingDocuments = [], approved } = req.data || {};
+
+  if (!forfeitedFundsId) {
+    throw new HttpsError("invalid-argument", "forfeitedFundsId is required");
+  }
+
+  if (!claimReason || !["medical_incapacity", "force_majeure", "platform_error"].includes(claimReason)) {
+    throw new HttpsError("invalid-argument", "Valid claimReason required: medical_incapacity, force_majeure, platform_error");
+  }
+
+  if (approved !== true) {
+    // Just reject the claim
+    const db = getFirestore();
+    await db.collection("forfeited_funds").doc(forfeitedFundsId).update({
+      exceptionalClaimStatus: "rejected",
+      claimReason,
+      claimRejectedAt: new Date(),
+      claimRejectedBy: req.auth?.uid,
+      updatedAt: new Date(),
+    });
+
+    return { success: true, action: "rejected" };
+  }
+
+  // Process approval
+  const processor = new UnclaimedFundsProcessor();
+  const result = await processor.processExceptionalClaim(
+    forfeitedFundsId,
+    claimReason,
+    supportingDocuments,
+    req.auth?.uid || "admin"
+  );
+
+  if (!result.success) {
+    throw new HttpsError("internal", result.error || "Failed to process claim");
+  }
+
+  return {
+    success: true,
+    action: "approved",
+    refundAmount: result.refundAmount ? result.refundAmount / 100 : 0,
+    processingFee: result.processingFee ? result.processingFee / 100 : 0,
+  };
+});
+
+/**
+ * Manually trigger unclaimed funds processing (for testing)
+ */
+export const admin_trigger_unclaimed_funds_processing = onCall({
+  region: "europe-west1",
+  memory: "512MiB",
+  timeoutSeconds: 300
+}, async (req) => {
+  assertAdmin(req);
+
+  const processor = new UnclaimedFundsProcessor();
+  const result = await processor.process();
+
+  return { success: true, result };
+});

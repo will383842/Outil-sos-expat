@@ -12,7 +12,8 @@ const AdminLogin: React.FC = () => {
   const { user: authUser, authInitialized } = useAuth();
   const intl = useIntl();
 
-  // SECURITY FIX: Removed hardcoded credentials - 2025-12-23
+  // P0 SECURITY FIX: Removed hardcoded credentials and admin whitelist - 2025-12-29
+  // Admin verification now relies ONLY on Firestore role and Firebase custom claims
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -22,9 +23,6 @@ const AdminLogin: React.FC = () => {
 
   // Ref pour éviter navigation multiple
   const hasNavigatedRef = useRef(false);
-
-  // Email admin autorisé
-  const ADMIN_EMAILS = ['williamsjullin@gmail.com'];
 
   // Surveiller AuthContext pour naviguer quand user.role === 'admin'
   useEffect(() => {
@@ -53,51 +51,45 @@ const AdminLogin: React.FC = () => {
       await setPersistence(auth, browserLocalPersistence);
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      
-      // Check if user is admin
+
+      // P0 SECURITY FIX: Check admin status from Firestore ONLY (no frontend whitelist)
+      // Admin role must be set by backend (Cloud Functions) or existing admins
       const userRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userRef);
 
-      // Vérifier que c'est un email admin autorisé
-      const isAdminEmail = ADMIN_EMAILS.includes(user.email?.toLowerCase() || '');
-
-      if (!isAdminEmail) {
-        // Email non autorisé - refuser l'accès
+      // Verify user exists and has admin role in Firestore
+      if (!userDoc.exists()) {
+        // User doesn't exist in Firestore - cannot be admin
         setError(intl.formatMessage({ id: 'admin.login.error.unauthorized' }));
+        setIsLoading(false);
         try {
           await signOut(auth);
-        } catch (error) {
-          console.error('Error signing out:', error);
+        } catch (signOutError) {
+          console.error('Error signing out:', signOutError);
         }
         return;
       }
 
-      // Email admin autorisé - créer ou mettre à jour le document
-      if (!userDoc.exists()) {
-        await setDoc(userRef, {
-          id: user.uid,
-          uid: user.uid,
-          email: user.email,
-          role: 'admin',
-          isActive: true,
-          isApproved: true,
-          preferredLanguage: 'fr',
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-          lastLoginAt: serverTimestamp()
-        });
-      } else {
-        // Mettre à jour lastLoginAt ET s'assurer que role='admin' et email sont définis
-        // C'est important car les vérifications frontend utilisent user.role
-        await setDoc(userRef, {
-          email: user.email,           // S'assurer que l'email est dans Firestore
-          role: 'admin',               // S'assurer que le rôle admin est défini
-          isActive: true,
-          isApproved: true,
-          lastLoginAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        }, { merge: true });
+      const userData = userDoc.data();
+      const isAdmin = userData?.role === 'admin';
+
+      if (!isAdmin) {
+        // User exists but is not admin - deny access
+        setError(intl.formatMessage({ id: 'admin.login.error.unauthorized' }));
+        setIsLoading(false);
+        try {
+          await signOut(auth);
+        } catch (signOutError) {
+          console.error('Error signing out:', signOutError);
+        }
+        return;
       }
+
+      // User is verified admin - update last login timestamp only
+      await setDoc(userRef, {
+        lastLoginAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      }, { merge: true });
 
       // Activer la navigation en attente - le useEffect surveillera AuthContext
       setPendingNavigation(true);

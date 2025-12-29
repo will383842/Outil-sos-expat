@@ -215,6 +215,7 @@ interface LawyerFormData {
   educations: string[];
   availability: "available" | "busy" | "offline";
   acceptTerms: boolean;
+  acceptPaymentTerms: boolean;
 }
 
 interface LanguageOption {
@@ -645,6 +646,7 @@ const RegisterLawyer: React.FC = () => {
     educations: [""],
     availability: "offline",
     acceptTerms: false,
+    acceptPaymentTerms: false,
   };
 
   const [form, setForm] = useState<LawyerFormData>(initial);
@@ -1077,7 +1079,12 @@ const RegisterLawyer: React.FC = () => {
     if (!form.acceptTerms) {
       e.acceptTerms = intl.formatMessage({ id: "registerLawyer.errors.acceptTermsRequired" });
     }
-    
+
+    // Validation payment terms
+    if (!form.acceptPaymentTerms) {
+      e.acceptPaymentTerms = intl.formatMessage({ id: "registerLawyer.errors.acceptPaymentTermsRequired" });
+    }
+
     setFieldErrors(e);
     
     // Focus sur le premier champ en erreur
@@ -1104,10 +1111,11 @@ const RegisterLawyer: React.FC = () => {
       lastName: true, 
       email: true, 
       password: true, 
-      phone: true, 
-      currentCountry: true, 
-      bio: true, 
-      acceptTerms: true 
+      phone: true,
+      currentCountry: true,
+      bio: true,
+      acceptTerms: true,
+      acceptPaymentTerms: true
     });
     
     setIsSubmitting(true);
@@ -1321,10 +1329,11 @@ const RegisterLawyer: React.FC = () => {
       !!form.profilePhoto && 
       form.specialties.length > 0 && 
       form.practiceCountries.length > 0 &&
-      (selectedLanguages as LanguageOption[]).length > 0 && 
+      (selectedLanguages as LanguageOption[]).length > 0 &&
       form.educations.some((e) => e.trim().length > 0) &&
-      form.acceptTerms && 
-      !isLoading && 
+      form.acceptTerms &&
+      form.acceptPaymentTerms &&
+      !isLoading &&
       !isSubmitting
     );
   }, [form, selectedLanguages, isLoading, isSubmitting]);
@@ -2319,9 +2328,40 @@ const RegisterLawyer: React.FC = () => {
                   <span className="text-red-500 ml-1" aria-label={intl.formatMessage({ id: "common.required" })}>*</span>
                 </label>
               </div>
-              <FieldError 
-                error={fieldErrors.acceptTerms} 
-                show={!!fieldErrors.acceptTerms} 
+              <FieldError
+                error={fieldErrors.acceptTerms}
+                show={!!fieldErrors.acceptTerms}
+              />
+
+              {/* Checkbox conditions de paiement et fonds non réclamés */}
+              <div className="flex items-start gap-3 mb-5 p-4 bg-amber-50 rounded-xl border border-amber-200">
+                <input
+                  type="checkbox"
+                  id="acceptPaymentTerms"
+                  checked={form.acceptPaymentTerms}
+                  onChange={(e) => {
+                    setForm((p) => ({ ...p, acceptPaymentTerms: e.target.checked }));
+                    setTouched((p) => ({ ...p, acceptPaymentTerms: true }));
+                  }}
+                  className="mt-1 h-5 w-5 text-amber-600 border-gray-400 rounded focus:ring-2 focus:ring-amber-500"
+                  aria-required="true"
+                  aria-invalid={!!fieldErrors.acceptPaymentTerms}
+                  aria-describedby={fieldErrors.acceptPaymentTerms ? "acceptPaymentTerms-error" : undefined}
+                />
+                <label
+                  htmlFor="acceptPaymentTerms"
+                  className="text-sm text-gray-800 font-medium"
+                >
+                  <FormattedMessage id="registerLawyer.ui.acceptPaymentTerms" />
+                  <span className="text-red-500 ml-1" aria-label={intl.formatMessage({ id: "common.required" })}>*</span>
+                  <p className="text-xs text-gray-600 mt-1">
+                    <FormattedMessage id="registerLawyer.ui.paymentTermsDetails" />
+                  </p>
+                </label>
+              </div>
+              <FieldError
+                error={fieldErrors.acceptPaymentTerms}
+                show={!!fieldErrors.acceptPaymentTerms}
               />
 
               <Button

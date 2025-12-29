@@ -123,10 +123,10 @@ export default defineConfig(({ mode }) => {
             if (id.includes('firebase') || id.includes('@firebase')) {
               return 'firebase-core';
             }
-            // UI Libraries - chunk séparé
-            if (id.includes('@mui') || id.includes('@emotion') || id.includes('@headlessui')) {
-              return 'ui-libs';
-            }
+            // UI Libraries - inclus dans vendor pour éviter les problèmes d'initialisation
+            // if (id.includes('@mui') || id.includes('@emotion') || id.includes('@headlessui')) {
+            //   return 'ui-libs';
+            // }
             // Charts et PDF - chunk séparé (lazy load recommandé)
             if (id.includes('recharts') || id.includes('jspdf') || id.includes('html2canvas')) {
               return 'heavy-libs';

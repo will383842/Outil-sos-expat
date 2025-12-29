@@ -791,6 +791,22 @@ const TermsExpats: React.FC = () => {
 
 8.5. **Coopération légale.** L'Aidant s'engage à coopérer avec SOS Expat et les autorités compétentes en cas d'enquête relative au blanchiment d'argent, au financement du terrorisme ou à toute autre infraction financière.
 
+### Fonds non réclamés et vérification KYC
+
+8.6. **Conservation des fonds en attente.** Lorsqu'un paiement est effectué par un Utilisateur pour une prestation réalisée par un Aidant n'ayant pas complété sa vérification KYC, les fonds correspondant à la part de l'Aidant (déduction faite de la commission de la Plateforme) sont conservés en attente sur un compte séquestre. La Plateforme s'engage à :
+- Notifier l'Aidant par email de l'existence de fonds en attente ;
+- Envoyer des rappels réguliers (à 7 jours, 30 jours, 60 jours, 90 jours, 120 jours et 150 jours) ;
+- Fournir à l'Aidant tous les moyens nécessaires pour compléter sa vérification KYC.
+
+8.7. **Fonds non réclamés et déchéance.** À défaut de vérification KYC complète dans un délai de **cent quatre-vingts (180) jours** à compter du premier paiement mis en attente, et malgré les notifications prévues à l'article 8.6, les fonds seront considérés comme **abandonnés** par l'Aidant. L'Aidant reconnaît et accepte expressément que :
+- (a) Les fonds non réclamés dans ce délai seront définitivement acquis à la Plateforme à titre d'indemnité forfaitaire pour frais de gestion, conservation et tentatives de contact ;
+- (b) Cette acquisition est la contrepartie des coûts administratifs supportés par la Plateforme pour la gestion des fonds non réclamés ;
+- (c) Il renonce expressément à toute réclamation sur ces fonds passé le délai de 180 jours.
+
+8.8. **Réclamation exceptionnelle.** Par dérogation à l'article 8.7, l'Aidant peut adresser une demande de réclamation motivée dans un délai maximum de **douze (12) mois** suivant l'expiration du délai de 180 jours, uniquement dans les cas suivants : incapacité médicale documentée, force majeure dûment justifiée, ou erreur technique imputable à la Plateforme. La Plateforme examinera la demande sous 30 jours et se réserve le droit d'accepter ou de refuser la réclamation. En cas d'acceptation, des frais de traitement de **vingt pour cent (20%)** seront retenus sur le montant restitué.
+
+8.9. **Acceptation expresse.** En s'inscrivant sur la Plateforme en tant qu'Aidant, celui-ci déclare avoir pris connaissance des présentes conditions relatives aux fonds non réclamés et les accepte expressément. Cette acceptation constitue une condition essentielle et déterminante de l'accès au statut de prestataire sur la Plateforme.
+
 ---
 
 ## 9. Données personnelles (cadre global – GDPR/DSA)
@@ -1011,6 +1027,22 @@ Pour toute question ou demande légale, contactez-nous :
 8.4. **Sanctions and embargoes.** Access to the Platform and payment services may be **restricted** in territories subject to **sanctions or embargoes** (EU, USA, UN, OFAC). The Helper declares **not to appear on any sanctions list** and to comply with applicable **export controls**.
 
 8.5. **Legal cooperation.** The Helper agrees to cooperate with SOS Expat and competent authorities in case of investigation related to money laundering, terrorist financing, or any other financial offense.
+
+### Unclaimed Funds and KYC Verification
+
+8.6. **Holding of pending funds.** When a payment is made by a User for a service provided by a Helper who has not completed KYC verification, the funds corresponding to the Helper's share (after deduction of the Platform's commission) are held in escrow. The Platform commits to:
+- Notify the Helper by email of the existence of pending funds;
+- Send regular reminders (at 7 days, 30 days, 60 days, 90 days, 120 days, and 150 days);
+- Provide the Helper with all necessary means to complete their KYC verification.
+
+8.7. **Unclaimed funds and forfeiture.** If KYC verification is not completed within **one hundred and eighty (180) days** from the first payment placed on hold, and despite the notifications provided in article 8.6, the funds shall be considered **abandoned** by the Helper. The Helper expressly acknowledges and accepts that:
+- (a) Unclaimed funds within this period shall be definitively acquired by the Platform as a lump-sum indemnity for management, custody, and contact attempt costs;
+- (b) This acquisition compensates for the administrative costs borne by the Platform for managing unclaimed funds;
+- (c) They expressly waive any claim to these funds after the 180-day period.
+
+8.8. **Exceptional claim.** Notwithstanding article 8.7, the Helper may submit a substantiated claim within a maximum of **twelve (12) months** following the expiration of the 180-day period, only in the following cases: documented medical incapacity, duly justified force majeure, or technical error attributable to the Platform. The Platform will review the request within 30 days and reserves the right to accept or reject the claim. If accepted, a processing fee of **twenty percent (20%)** will be deducted from the refunded amount.
+
+8.9. **Express acceptance.** By registering on the Platform as a Helper, they declare that they have read these conditions relating to unclaimed funds and expressly accept them. This acceptance constitutes an essential and determining condition for access to provider status on the Platform.
 
 ---
 

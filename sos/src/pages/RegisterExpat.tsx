@@ -212,6 +212,7 @@ interface ExpatFormData {
   bio: string;
   availability: "available" | "busy" | "offline";
   acceptTerms: boolean;
+  acceptPaymentTerms: boolean;
 }
 
 interface LanguageOption {
@@ -426,6 +427,7 @@ const RegisterExpat: React.FC = () => {
     bio: "",
     availability: "offline" as const,
     acceptTerms: false,
+    acceptPaymentTerms: false,
   };
 
   const [form, setForm] = useState<ExpatFormData>(initial);
@@ -808,7 +810,11 @@ const RegisterExpat: React.FC = () => {
     if (!form.acceptTerms) {
       e.acceptTerms = intl.formatMessage({ id: "registerExpat.errors.acceptTermsRequired" });
     }
-    
+
+    if (!form.acceptPaymentTerms) {
+      e.acceptPaymentTerms = intl.formatMessage({ id: "registerExpat.errors.acceptPaymentTermsRequired" });
+    }
+
     setFieldErrors(e);
     
     if (Object.keys(e).length > 0 && fieldRefs.firstName.current) {
@@ -830,16 +836,17 @@ const RegisterExpat: React.FC = () => {
     setBotError("");
     
     setTouched({ 
-      firstName: true, 
-      lastName: true, 
-      email: true, 
-      password: true, 
-      phone: true, 
+      firstName: true,
+      lastName: true,
+      email: true,
+      password: true,
+      phone: true,
       currentCountry: true,
       currentPresenceCountry: true,
       interventionCountry: true,
-      bio: true, 
-      acceptTerms: true 
+      bio: true,
+      acceptTerms: true,
+      acceptPaymentTerms: true
     });
     
     setIsSubmitting(true);
@@ -1010,10 +1017,11 @@ const RegisterExpat: React.FC = () => {
       form.bio.trim().length <= MAX_BIO_LENGTH &&
       !!form.profilePhoto && 
       form.helpTypes.length > 0 &&
-      (selectedLanguages as LanguageOption[]).length > 0 && 
+      (selectedLanguages as LanguageOption[]).length > 0 &&
       form.yearsAsExpat >= 1 &&
-      form.acceptTerms && 
-      !isLoading && 
+      form.acceptTerms &&
+      form.acceptPaymentTerms &&
+      !isLoading &&
       !isSubmitting
     );
   }, [form, selectedLanguages, isLoading, isSubmitting]);
@@ -1959,9 +1967,40 @@ const RegisterExpat: React.FC = () => {
                   <span className="text-red-500 ml-1" aria-label={intl.formatMessage({ id: "common.required" })}>*</span>
                 </label>
               </div>
-              <FieldError 
-                error={fieldErrors.acceptTerms} 
-                show={!!fieldErrors.acceptTerms} 
+              <FieldError
+                error={fieldErrors.acceptTerms}
+                show={!!fieldErrors.acceptTerms}
+              />
+
+              {/* Checkbox conditions de paiement et fonds non réclamés */}
+              <div className="flex items-start gap-3 mb-5 p-4 bg-amber-50 rounded-xl border border-amber-200">
+                <input
+                  type="checkbox"
+                  id="acceptPaymentTerms"
+                  checked={form.acceptPaymentTerms}
+                  onChange={(e) => {
+                    setForm((p) => ({ ...p, acceptPaymentTerms: e.target.checked }));
+                    setTouched((p) => ({ ...p, acceptPaymentTerms: true }));
+                  }}
+                  className="mt-1 h-5 w-5 text-amber-600 border-gray-400 rounded focus:ring-2 focus:ring-amber-500"
+                  aria-required="true"
+                  aria-invalid={!!fieldErrors.acceptPaymentTerms}
+                  aria-describedby={fieldErrors.acceptPaymentTerms ? "acceptPaymentTerms-error" : undefined}
+                />
+                <label
+                  htmlFor="acceptPaymentTerms"
+                  className="text-sm text-gray-800 font-medium"
+                >
+                  <FormattedMessage id="registerExpat.ui.acceptPaymentTerms" />
+                  <span className="text-red-500 ml-1" aria-label={intl.formatMessage({ id: "common.required" })}>*</span>
+                  <p className="text-xs text-gray-600 mt-1">
+                    <FormattedMessage id="registerExpat.ui.paymentTermsDetails" />
+                  </p>
+                </label>
+              </div>
+              <FieldError
+                error={fieldErrors.acceptPaymentTerms}
+                show={!!fieldErrors.acceptPaymentTerms}
               />
 
               <Button

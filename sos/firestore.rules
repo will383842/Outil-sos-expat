@@ -315,8 +315,10 @@ service cloud.firestore {
     }
 
     // ================= SETTINGS COLLECTION =================
+    // P1 SECURITY FIX: Require authentication for settings read
+    // Public settings should be moved to a dedicated 'public_config' collection
     match /settings/{docId} {
-      allow read: if true;
+      allow read: if isAuthenticated();
       allow write: if isAdmin() || isDev();
     }
 
@@ -339,15 +341,19 @@ service cloud.firestore {
     }
 
     // ================= COUPONS COLLECTION =================
+    // P1 SECURITY FIX: Require authentication to prevent coupon enumeration
+    // Valid coupons are validated server-side via Cloud Functions
     match /coupons/{couponId} {
-      allow read: if true;
+      allow read: if isAuthenticated();
       allow write: if isAdmin() || isDev();
     }
 
     // ================= AUDIT LOGS COLLECTION =================
+    // P1 SECURITY FIX: Only Cloud Functions can create audit logs (via Admin SDK)
+    // This prevents users from creating fake audit entries
     match /auditLogs/{logId} {
       allow read: if isAdmin() || isDev();
-      allow create: if isAuthenticated();
+      allow create: if false; // Only Cloud Functions via Admin SDK
       allow update, delete: if false;
     }
 
@@ -630,20 +636,22 @@ service cloud.firestore {
     }
 
     // ================= ADMIN INVOICES (Console admin) =================
+    // P1 SECURITY FIX: Only Cloud Functions can create admin invoices
     match /admin_invoices/{invoiceId} {
       // Seuls les admins peuvent accéder
       allow read: if isAdmin() || isDev();
-      // Les utilisateurs authentifiés peuvent créer (pour synchronisation admin)
-      allow create: if isAuthenticated();
+      // P1 FIX: Only Cloud Functions via Admin SDK can create
+      allow create: if false;
       allow update, delete: if isAdmin() || isDev();
     }
 
     // ================= AUDIT LOGS (Facturation) =================
+    // P1 SECURITY FIX: Only Cloud Functions can create audit logs
     match /audit_logs/{logId} {
       // Seuls les admins peuvent lire les logs
       allow read: if isAdmin() || isDev();
-      // Les utilisateurs authentifiés peuvent créer des logs (traçabilité factures)
-      allow create: if isAuthenticated();
+      // P1 FIX: Only Cloud Functions via Admin SDK can create (prevents log forgery)
+      allow create: if false;
       allow update, delete: if isAdmin() || isDev();
     }
 

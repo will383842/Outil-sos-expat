@@ -781,6 +781,24 @@ const TermsLawyers: React.FC = () => {
 
 8.3. L'accès peut être restreint dans des territoires soumis à sanctions/embargos si la loi l'exige. L'Avocat déclare ne figurer sur aucune liste de sanctions et respecter les contrôles export applicables.
 
+### Fonds non réclamés et vérification KYC
+
+8.4. **Obligation de compléter le processus de vérification (KYC).** Pour recevoir les paiements issus des prestations réalisées via la Plateforme, l'Avocat s'engage à compléter le processus de vérification d'identité (KYC - Know Your Customer) auprès de notre partenaire de paiement Stripe dans les meilleurs délais suivant son inscription. L'Avocat reconnaît que l'absence de vérification KYC complète empêche techniquement le versement des fonds sur son compte bancaire.
+
+8.5. **Conservation des fonds en attente.** Lorsqu'un paiement est effectué par un Utilisateur pour une prestation réalisée par un Avocat n'ayant pas complété sa vérification KYC, les fonds correspondant à la part de l'Avocat (déduction faite de la commission de la Plateforme) sont conservés en attente sur un compte séquestre. La Plateforme s'engage à :
+- Notifier l'Avocat par email de l'existence de fonds en attente ;
+- Envoyer des rappels réguliers (à 7 jours, 30 jours, 60 jours, 90 jours, 120 jours et 150 jours) ;
+- Fournir à l'Avocat tous les moyens nécessaires pour compléter sa vérification KYC.
+
+8.6. **Fonds non réclamés et déchéance.** À défaut de vérification KYC complète dans un délai de **cent quatre-vingts (180) jours** à compter du premier paiement mis en attente, et malgré les notifications prévues à l'article 8.5, les fonds seront considérés comme **abandonnés** par l'Avocat. L'Avocat reconnaît et accepte expressément que :
+- (a) Les fonds non réclamés dans ce délai seront définitivement acquis à la Plateforme à titre d'indemnité forfaitaire pour frais de gestion, conservation et tentatives de contact ;
+- (b) Cette acquisition est la contrepartie des coûts administratifs supportés par la Plateforme pour la gestion des fonds non réclamés ;
+- (c) Il renonce expressément à toute réclamation sur ces fonds passé le délai de 180 jours.
+
+8.7. **Réclamation exceptionnelle.** Par dérogation à l'article 8.6, l'Avocat peut adresser une demande de réclamation motivée dans un délai maximum de **douze (12) mois** suivant l'expiration du délai de 180 jours, uniquement dans les cas suivants : incapacité médicale documentée, force majeure dûment justifiée, ou erreur technique imputable à la Plateforme. La Plateforme examinera la demande sous 30 jours et se réserve le droit d'accepter ou de refuser la réclamation. En cas d'acceptation, des frais de traitement de **vingt pour cent (20%)** seront retenus sur le montant restitué.
+
+8.8. **Acceptation expresse.** En s'inscrivant sur la Plateforme en tant qu'Avocat, celui-ci déclare avoir pris connaissance des présentes conditions relatives aux fonds non réclamés et les accepte expressément. Cette acceptation constitue une condition essentielle et déterminante de l'accès au statut de prestataire sur la Plateforme.
+
 ---
 
 ## 9. Données personnelles (cadre global – GDPR/DSA)
@@ -998,6 +1016,24 @@ Pour toute question ou demande légale : **https://sos-expat.com/contact**
 8.2. SOS Expat may defer, withhold, or cancel payments in case of suspected fraud, non-compliance, or legal order.
 
 8.3. Access may be restricted in sanctioned/embargoed territories if required by law. The Lawyer declares not to appear on any sanctions list and to comply with applicable export controls.
+
+### Unclaimed Funds and KYC Verification
+
+8.4. **Obligation to complete the verification process (KYC).** To receive payments from services provided through the Platform, the Lawyer agrees to complete the identity verification process (KYC - Know Your Customer) with our payment partner Stripe as soon as possible following registration. The Lawyer acknowledges that failure to complete KYC verification technically prevents the transfer of funds to their bank account.
+
+8.5. **Holding of pending funds.** When a payment is made by a User for a service provided by a Lawyer who has not completed KYC verification, the funds corresponding to the Lawyer's share (after deduction of the Platform's commission) are held in escrow. The Platform commits to:
+- Notify the Lawyer by email of the existence of pending funds;
+- Send regular reminders (at 7 days, 30 days, 60 days, 90 days, 120 days, and 150 days);
+- Provide the Lawyer with all necessary means to complete their KYC verification.
+
+8.6. **Unclaimed funds and forfeiture.** If KYC verification is not completed within **one hundred and eighty (180) days** from the first payment placed on hold, and despite the notifications provided in article 8.5, the funds shall be considered **abandoned** by the Lawyer. The Lawyer expressly acknowledges and accepts that:
+- (a) Unclaimed funds within this period shall be definitively acquired by the Platform as a lump-sum indemnity for management, custody, and contact attempt costs;
+- (b) This acquisition compensates for the administrative costs borne by the Platform for managing unclaimed funds;
+- (c) They expressly waive any claim to these funds after the 180-day period.
+
+8.7. **Exceptional claim.** Notwithstanding article 8.6, the Lawyer may submit a substantiated claim within a maximum of **twelve (12) months** following the expiration of the 180-day period, only in the following cases: documented medical incapacity, duly justified force majeure, or technical error attributable to the Platform. The Platform will review the request within 30 days and reserves the right to accept or reject the claim. If accepted, a processing fee of **twenty percent (20%)** will be deducted from the refunded amount.
+
+8.8. **Express acceptance.** By registering on the Platform as a Lawyer, they declare that they have read these conditions relating to unclaimed funds and expressly accept them. This acceptance constitutes an essential and determining condition for access to provider status on the Platform.
 
 ---
 
