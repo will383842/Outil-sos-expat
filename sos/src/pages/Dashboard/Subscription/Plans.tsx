@@ -14,6 +14,7 @@ import DashboardLayout from '../../../components/layout/DashboardLayout';
 import { useSubscription } from '../../../hooks/useSubscription';
 import { useAuth } from '../../../contexts/AuthContext';
 import { PricingTable } from '../../../components/subscription/PricingTable';
+import { createSubscription } from '../../../services/subscription/subscriptionService';
 import { SubscriptionPlan, Currency, ProviderType, BillingPeriod, SupportedLanguage } from '../../../types/subscription';
 import { cn } from '../../../utils/cn';
 
@@ -42,7 +43,6 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
   const intl = useIntl();
   const stripe = useStripe();
   const elements = useElements();
-  const { subscribe } = useSubscription();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -64,7 +64,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
       }
 
       // Create subscription via Cloud Function
-      const result = await subscribe({
+      const result = await createSubscription({
         planId: selectedPlan.id,
         currency
       });

@@ -1429,7 +1429,7 @@ const RegisterClient: React.FC = () => {
                           show={!!(phoneError && touched.phone)} 
                         />
                         <FieldSuccess
-                          show={!phoneError && !!touched.phone && !!formData.phone && parsePhoneNumberFromString(formData.phone)?.isValid()}
+                          show={!phoneError && !!touched.phone && !!formData.phone && (parsePhoneNumberFromString(formData.phone)?.isValid() ?? false)}
                           message={intl.formatMessage({ id: "registerClient.success.fieldValid" })}
                         />
                       </>

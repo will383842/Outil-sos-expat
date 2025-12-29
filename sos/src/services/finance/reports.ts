@@ -1,8 +1,8 @@
-import type { Payment, Invoice, CountryAmount, VatBucket } from '@/types/finance';
+import type { Payment, Invoice, CountryAmount, VatBucket, Currency } from '@/types/finance';
 
 export function aggregateByCountry(payments: Payment[], invoices: Invoice[]) : CountryAmount[] {
   const map = new Map<string, CountryAmount>();
-  const push = (country:string, currency:string, gross:number, tax:number)=>{
+  const push = (country:string, currency:Currency, gross:number, tax:number)=>{
     const k = country+'|'+currency;
     const prev = map.get(k) || { country, currency, gross:0, net:0, tax:0, count:0 };
     prev.gross += gross; prev.tax += (tax||0); prev.net = prev.gross - prev.tax; prev.count += 1; map.set(k, prev);

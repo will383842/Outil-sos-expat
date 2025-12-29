@@ -8,10 +8,10 @@
  */
 
 import { useCallback, useEffect } from "react";
-import { useTranslation, type TFunction } from "react-i18next";
+import { useTranslation } from "react-i18next";
 
-// Re-export TFunction pour utilisation dans les composants
-export type { TFunction };
+// Type pour la fonction de traduction (compatible avec les nouvelles versions de react-i18next)
+export type TFunction = (key: string, options?: Record<string, unknown>) => string;
 import {
   ADMIN_LANGUAGES,
   PROVIDER_LANGUAGES,
@@ -38,11 +38,13 @@ export interface UseLanguageOptions {
 
 export interface UseLanguageReturn {
   /** Fonction de traduction t() */
-  t: ReturnType<typeof useTranslation>["t"];
+  t: TFunction;
   /** Instance i18n */
   i18n: ReturnType<typeof useTranslation>["i18n"];
   /** Code de la langue actuelle */
   currentLanguage: string;
+  /** Alias pour currentLanguage (compatibilité) */
+  currentLocale: string;
   /** Informations sur la langue actuelle */
   currentLanguageInfo: LanguageInfo;
   /** Changer la langue */
@@ -55,6 +57,8 @@ export interface UseLanguageReturn {
   isRTL: boolean;
   /** Code locale pour date-fns */
   dateLocale: string;
+  /** Fonction pour obtenir la locale de date (compatibilité) */
+  getDateLocale: () => string;
 }
 
 /**
@@ -162,16 +166,20 @@ export function useLanguage(
     }
   }, [i18n.language, availableLanguages, changeLanguage]);
 
+  const dateLocaleValue = getDateLocale(i18n.language);
+
   return {
     t,
     i18n,
     currentLanguage: i18n.language,
+    currentLocale: i18n.language,
     currentLanguageInfo,
     changeLanguage,
     availableLanguages,
     availableLanguagesInfo,
     isRTL: isRTL(i18n.language),
-    dateLocale: getDateLocale(i18n.language),
+    dateLocale: dateLocaleValue,
+    getDateLocale: () => dateLocaleValue,
   };
 }
 

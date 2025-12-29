@@ -15,12 +15,19 @@ import { detectUserLanguage, saveLanguagePreference, hasLocalePrefix, parseLocal
 // Updated Language type: fr, en, es, de, ru, pt, ch, hi, ar (9 languages)
 type Language = "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar";
 
+// RTL languages list
+const RTL_LANGUAGES: Language[] = ["ar"];
+
+// Check if language is RTL
+export const isRTLLanguage = (lang: Language): boolean => RTL_LANGUAGES.includes(lang);
+
 interface AppContextType {
   services: Service[];
   settings: AppSettings;
   enhancedSettings: EnhancedSettings;
   notifications: Notification[];
   language: Language;
+  isRTL: boolean;
   setLanguage: (lang: Language) => void;
   addNotification: (
     notification: Omit<Notification, "id" | "createdAt">
@@ -267,6 +274,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         enhancedSettings,
         notifications,
         language,
+        isRTL: isRTLLanguage(language),
         setLanguage: handleSetLanguage,
         addNotification,
         markNotificationAsRead,

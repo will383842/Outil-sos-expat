@@ -1942,8 +1942,8 @@ const SOSCall: React.FC = () => {
             return {
               id: doc.id,
               category: data.category || 'general',
-              question: data.question[langCode], // Use current language only
-              answer: data.answer[langCode], // Use current language only
+              question: data.question?.[langCode] || '', // Use current language only
+              answer: data.answer?.[langCode] || '', // Use current language only
               tags: data.tags || [],
               order: data.order || 999
             };

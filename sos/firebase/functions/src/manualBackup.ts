@@ -17,12 +17,20 @@ export const createManualBackup = onCall(
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
-    // // Check if user has admin role
-    // if (!request.auth.token.role || request.auth.token.role !== "admin") {
-    //   throw new HttpsError("permission-denied", "Admin only");
-    // }
-
     const userId = request.auth.uid;
+
+    // Check if user has admin role via custom claims
+    const isAdminClaim = request.auth.token.role === "admin" || request.auth.token.role === "dev";
+
+    // Double-check in Firestore for extra security
+    const userDoc = await admin.firestore().collection("users").doc(userId).get();
+    const userData = userDoc.data();
+    const isAdminFirestore = userData?.role === "admin" || userData?.role === "dev";
+
+    if (!isAdminClaim && !isAdminFirestore) {
+      console.warn(`⚠️ Unauthorized backup attempt by user: ${userId}`);
+      throw new HttpsError("permission-denied", "Admin access required to create backups");
+    }
 
     try {
       console.log("🚀 Creating manual backup for admin:", userId);

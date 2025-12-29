@@ -406,7 +406,7 @@ export async function notifySubscriptionRenewed(
       currency,
       invoiceUrl: invoice.hostedInvoiceUrl || `${getAppUrl()}/dashboard/invoices`,
       nextBillingDate: subscription.currentPeriodEnd
-        ? subscription.currentPeriodEnd.toDate().toLocaleDateString()
+        ? subscription.currentPeriodEnd.toDate().toLocaleDateString(locale)
         : '',
     },
     priority: 'normal',
@@ -566,11 +566,12 @@ export async function notifySubscriptionCanceled(
   const firstName = provider ? getProviderFirstName(provider) : 'Cher client';
 
   // Determiner la date de fin
+  const locale = provider ? getProviderLocale(provider) : 'en';
   let endDate = '';
   if (subscription.currentPeriodEnd) {
-    endDate = subscription.currentPeriodEnd.toDate().toLocaleDateString();
+    endDate = subscription.currentPeriodEnd.toDate().toLocaleDateString(locale);
   } else if (subscription.canceledAt) {
-    endDate = subscription.canceledAt.toDate().toLocaleDateString();
+    endDate = subscription.canceledAt.toDate().toLocaleDateString(locale);
   }
 
   return sendSubscriptionEmail({
@@ -603,12 +604,13 @@ export async function notifyTrialEnding(
   const firstName = provider ? getProviderFirstName(provider) : 'Cher client';
 
   // Calculer la date de fin du trial
+  const locale = provider ? getProviderLocale(provider) : 'en';
   let trialEndDate = '';
   let daysRemaining = 0;
 
   if (subscription.trialEndsAt) {
     const trialEnd = subscription.trialEndsAt.toDate();
-    trialEndDate = trialEnd.toLocaleDateString();
+    trialEndDate = trialEnd.toLocaleDateString(locale);
 
     const now = new Date();
     daysRemaining = Math.max(0, Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
@@ -741,7 +743,7 @@ export async function notifySubscriptionDowngradeScheduled(
   const newPlanName = newPlan.name?.[locale.substring(0, 2)] || newPlan.tier;
 
   const effectiveDate = subscription.currentPeriodEnd
-    ? subscription.currentPeriodEnd.toDate().toLocaleDateString()
+    ? subscription.currentPeriodEnd.toDate().toLocaleDateString(locale)
     : '';
 
   return sendSubscriptionEmail({

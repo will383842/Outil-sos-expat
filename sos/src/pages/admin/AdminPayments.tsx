@@ -271,7 +271,7 @@ const AdminPayments: React.FC = () => {
 
         return {
           ...payment,
-          callSession,
+          callSession: callSession ?? undefined,
           invoices,
           callDate,
           duration: callDuration,

@@ -331,11 +331,13 @@ function AIStatusCard({
   quotaUsed,
   loading,
   t,
+  locale,
 }: {
   requestsThisMonth: number;
   quotaUsed: number;
   loading?: boolean;
   t: (key: string, options?: Record<string, unknown>) => string;
+  locale: string;
 }) {
   const quotaMax = 10000;
   const usagePercent = (quotaUsed / quotaMax) * 100;
@@ -384,7 +386,7 @@ function AIStatusCard({
         <div>
           <div className="flex justify-between text-sm mb-1">
             <span className="text-gray-500">{t("admin:dashboard.iaStatus.usage")}</span>
-            <span className="font-medium">{requestsThisMonth.toLocaleString()} / {quotaMax.toLocaleString()}</span>
+            <span className="font-medium">{requestsThisMonth.toLocaleString(locale)} / {quotaMax.toLocaleString(locale)}</span>
           </div>
           <div className="w-full bg-gray-100 rounded-full h-2.5">
             <div
@@ -748,6 +750,7 @@ export default function AdminDashboard() {
             quotaUsed={data.aiQuotaUsed}
             loading={loading}
             t={t}
+            locale={currentLanguage}
           />
           <AlertsCard
             inactiveProviders={data.totalProviders - data.activeProviders}

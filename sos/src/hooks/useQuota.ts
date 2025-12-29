@@ -143,14 +143,15 @@ export function useQuota(): UseQuotaReturn {
 
     setIsLoading(true);
 
-    const unsubscribe = subscribeToAiUsage(user.uid, async (aiUsage) => {
+    const uid = user.uid;
+    const unsubscribe = subscribeToAiUsage(uid, async (aiUsage) => {
       if (!isMounted.current) return;
 
       setUsage(aiUsage);
 
       // Refresh quota check when usage changes
       try {
-        const result = await checkAiQuota(user.uid);
+        const result = await checkAiQuota(uid);
         if (isMounted.current) {
           setQuotaResult(result);
         }
@@ -162,7 +163,7 @@ export function useQuota(): UseQuotaReturn {
     });
 
     // Initial quota check
-    checkAiQuota(user.uid)
+    checkAiQuota(uid)
       .then((result) => {
         if (isMounted.current) {
           setQuotaResult(result);

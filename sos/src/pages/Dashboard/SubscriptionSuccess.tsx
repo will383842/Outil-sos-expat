@@ -223,7 +223,7 @@ export const SubscriptionSuccessPage: React.FC = () => {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
 
-  const { subscription, plans, loadSubscription } = useSubscription();
+  const { subscription, plans, refresh } = useSubscription();
 
   // State
   const [loading, setLoading] = useState(true);
@@ -249,7 +249,7 @@ export const SubscriptionSuccessPage: React.FC = () => {
   const verifySession = useCallback(async () => {
     if (!sessionId) {
       // No session_id, try to load subscription directly
-      await loadSubscription();
+      await refresh();
       setLoading(false);
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 5000);
@@ -274,7 +274,7 @@ export const SubscriptionSuccessPage: React.FC = () => {
         setTimeout(() => setShowConfetti(false), 5000);
 
         // Reload subscription data
-        await loadSubscription();
+        await refresh();
       } else {
         setError(result.data.error || intl.formatMessage({ id: 'subscription.success.error.sessionInvalid' }));
       }
@@ -285,7 +285,7 @@ export const SubscriptionSuccessPage: React.FC = () => {
 
       // If the function doesn't exist yet, just load subscription
       if (firebaseError.code === 'functions/not-found') {
-        await loadSubscription();
+        await refresh();
         setShowConfetti(true);
         setTimeout(() => setShowConfetti(false), 5000);
       } else {
@@ -294,7 +294,7 @@ export const SubscriptionSuccessPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [sessionId, loadSubscription, intl]);
+  }, [sessionId, refresh, intl]);
 
   // Verify session on mount
   useEffect(() => {

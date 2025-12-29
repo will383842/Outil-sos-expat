@@ -54,7 +54,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     try {
       const result = await share(data);
 
-      if (result.success) {
+      if (result.success && result.method !== 'none') {
         setFeedback(result.method === 'native' ? 'shared' : 'copied');
         onShareSuccess?.(result.method);
       } else if (result.error?.name !== 'AbortError') {

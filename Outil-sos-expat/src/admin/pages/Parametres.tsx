@@ -208,7 +208,7 @@ function InputSetting({
 // =============================================================================
 
 export default function Parametres() {
-  const { t } = useLanguage({ mode: "admin" });
+  const { t, dateLocale } = useLanguage({ mode: "admin" });
   const { user } = useAuth();
   const [settings, setSettings] = useState<PlatformSettings>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
@@ -392,7 +392,7 @@ export default function Parametres() {
                 onChange={(e) => updateSetting("maintenanceMessage", e.target.value)}
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                placeholder="La plateforme est en maintenance..."
+                placeholder={t("parametres.maintenance.messagePlaceholder")}
               />
             </div>
           </div>
@@ -556,7 +556,7 @@ export default function Parametres() {
       {/* Info derniere mise a jour */}
       {settings.updatedAt && (
         <p className="text-sm text-gray-500 text-center">
-          {t("parametres.lastUpdate")}: {settings.updatedAt.toDate().toLocaleString("fr-FR")}
+          {t("parametres.lastUpdate")} {settings.updatedAt.toDate().toLocaleString(dateLocale)}
           {settings.updatedBy && ` ${t("parametres.by")} ${settings.updatedBy}`}
         </p>
       )}

@@ -38,4 +38,13 @@ export interface GenerationSummary {
   errors?: string[];
 }
 
-
+export interface ProviderData {
+  id: string;
+  type?: string;
+  country?: string;
+  languages?: string[];
+  fullName?: string;
+  name?: string;
+  slug?: string;
+  updatedAt?: Date | { toDate?: () => Date };
+}

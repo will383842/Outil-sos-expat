@@ -22,8 +22,25 @@ const Layout: React.FC<LayoutProps> = ({
   role = 'main'
 }) => {
   const { authInitialized, isLoading } = useAuth();
-  const { language } = useApp();
+  const { language, isRTL } = useApp();
   const [showCookieBannerState, setShowCookieBannerState] = useState(false);
+
+  // Update document direction for RTL languages
+  useEffect(() => {
+    const dir = isRTL ? 'rtl' : 'ltr';
+    document.documentElement.dir = dir;
+    document.documentElement.setAttribute('dir', dir);
+    document.body.dir = dir;
+
+    // Add/remove RTL class for CSS styling
+    if (isRTL) {
+      document.documentElement.classList.add('rtl');
+      document.body.classList.add('rtl');
+    } else {
+      document.documentElement.classList.remove('rtl');
+      document.body.classList.remove('rtl');
+    }
+  }, [isRTL]);
 
   // Map language code to locale string for HTML lang attribute
   const htmlLang = useMemo(() => {
@@ -99,8 +116,8 @@ const Layout: React.FC<LayoutProps> = ({
     <>
       {/* Global Meta Tags */}
       <Helmet>
-        {/* HTML Language Attribute */}
-        <html lang={htmlLang} />
+        {/* HTML Language and Direction Attributes */}
+        <html lang={htmlLang} dir={isRTL ? 'rtl' : 'ltr'} />
 
         {/* Global Meta Tags */}
         <meta name="format-detection" content="telephone=no" />
@@ -149,12 +166,12 @@ const Layout: React.FC<LayoutProps> = ({
       </Helmet>
 
       <div className="min-h-screen flex flex-col bg-gray-50 antialiased">
-        {/* Skip link pour accessibilité */}
+        {/* Skip link pour accessibilité - RTL aware */}
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-blue-600 text-white px-4 py-2 rounded-md z-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className={`sr-only focus:not-sr-only focus:absolute focus:top-4 ${isRTL ? 'focus:right-4' : 'focus:left-4'} bg-blue-600 text-white px-4 py-2 rounded-md z-50 focus:outline-none focus:ring-2 focus:ring-blue-500`}
         >
-          Aller au contenu principal
+          {isRTL ? 'الانتقال إلى المحتوى الرئيسي' : 'Aller au contenu principal'}
         </a>
 
         <Header />

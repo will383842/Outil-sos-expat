@@ -170,11 +170,11 @@ const AdminErrorLogs: React.FC = () => {
         }
       } else {
         // Pagination: use the already determined field
-        if (!lastDoc) {
+        if (!lastDoc || !fieldToUse) {
           setHasMore(false);
           return;
         }
-        
+
         try {
           q = query(
             errorLogsRef,

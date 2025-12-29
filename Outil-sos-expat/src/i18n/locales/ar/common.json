@@ -189,5 +189,10 @@
     "paymentFailed": "تم اكتشاف مشكلة في الدفع. يرجى تحديث معلومات الدفع.",
     "noSubscription": "مطلوب اشتراك فعال للوصول إلى هذه الميزة.",
     "accessGranted": "تم منح الوصول"
+  },
+  "export": {
+    "format": "صيغة التصدير",
+    "csvDescription": "متوافق مع Excel",
+    "jsonDescription": "تنسيق منظم"
   }
 }

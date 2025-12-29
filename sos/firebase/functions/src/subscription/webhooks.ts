@@ -410,6 +410,25 @@ export async function handleSubscriptionCreated(
     await db.doc(`ai_usage/${providerId}`).set(aiUsageData, { merge: true });
     logger.info(`[handleSubscriptionCreated] Initialized AI usage for ${providerId} with limit ${aiCallsLimit}`);
 
+    // Réactiver le profil public du prestataire (si précédemment masqué suite à annulation)
+    const sosProfileRef = db.doc(`sos_profiles/${providerId}`);
+    const sosProfileDoc = await sosProfileRef.get();
+    if (sosProfileDoc.exists) {
+      const profileData = sosProfileDoc.data();
+      // Réactiver seulement si le profil était masqué à cause d'une annulation d'abonnement
+      if (profileData?.hiddenReason === 'subscription_canceled' || profileData?.isActive === false) {
+        await sosProfileRef.update({
+          isVisible: true,
+          isActive: true,
+          hiddenReason: admin.firestore.FieldValue.delete(),
+          hiddenAt: admin.firestore.FieldValue.delete(),
+          reactivatedAt: now,
+          updatedAt: now
+        });
+        logger.info(`[handleSubscriptionCreated] Reactivated sos_profile for ${providerId}`);
+      }
+    }
+
     // Logger l'action
     await logSubscriptionAction({
       providerId,
@@ -624,7 +643,7 @@ export async function handleSubscriptionUpdated(
             FNAME: providerInfo.firstName,
             OLD_PLAN: previousTier,
             NEW_PLAN: newTier,
-            EFFECTIVE_DATE: new Date(subscription.current_period_end * 1000).toLocaleDateString()
+            EFFECTIVE_DATE: new Date(subscription.current_period_end * 1000).toLocaleDateString(providerInfo.language || 'fr-FR')
           }
         });
       } else if (cancelScheduleChanged && subscription.cancel_at_period_end) {
@@ -636,7 +655,7 @@ export async function handleSubscriptionUpdated(
           vars: {
             FNAME: providerInfo.firstName,
             PLAN_NAME: newTier,
-            END_DATE: new Date(subscription.current_period_end * 1000).toLocaleDateString(),
+            END_DATE: new Date(subscription.current_period_end * 1000).toLocaleDateString(providerInfo.language || 'fr-FR'),
             REACTIVATE_URL: 'https://sos-expat.com/dashboard/subscription'
           }
         });
@@ -727,6 +746,20 @@ export async function handleSubscriptionDeleted(
       updatedAt: now
     });
     logger.info(`[handleSubscriptionDeleted] Disabled AI access for ${providerId}`);
+
+    // Masquer le profil public du prestataire (évite les pages 404 dans les listings/sitemaps)
+    const sosProfileRef = db.doc(`sos_profiles/${providerId}`);
+    const sosProfileDoc = await sosProfileRef.get();
+    if (sosProfileDoc.exists) {
+      await sosProfileRef.update({
+        isVisible: false,
+        isActive: false,
+        hiddenReason: 'subscription_canceled',
+        hiddenAt: now,
+        updatedAt: now
+      });
+      logger.info(`[handleSubscriptionDeleted] Hidden sos_profile for ${providerId}`);
+    }
 
     // Logger l'action
     await logSubscriptionAction({
@@ -847,7 +880,7 @@ export async function handleTrialWillEnd(
         vars: {
           FNAME: providerInfo.firstName,
           DAYS_REMAINING: daysRemaining.toString(),
-          TRIAL_END_DATE: trialEnd.toLocaleDateString(),
+          TRIAL_END_DATE: trialEnd.toLocaleDateString(providerInfo.language || 'fr-FR'),
           PLAN_NAME: planId,
           AI_CALLS_USED: trialCallsUsed.toString(),
           AI_CALLS_LIMIT: trialConfig.maxAiCalls.toString(),
@@ -1017,7 +1050,7 @@ export async function handleInvoicePaid(
             PLAN_NAME: subData.tier,
             AMOUNT: ((invoice.amount_paid || 0) / 100).toFixed(2),
             CURRENCY: (invoice.currency || 'eur').toUpperCase(),
-            NEXT_BILLING_DATE: new Date(invoice.period_end * 1000).toLocaleDateString(),
+            NEXT_BILLING_DATE: new Date(invoice.period_end * 1000).toLocaleDateString(providerInfo.language || 'fr-FR'),
             INVOICE_URL: invoice.hosted_invoice_url || '',
             AI_CALLS_LIMIT: aiCallsLimit === -1 ? 'Illimite' : aiCallsLimit.toString()
           }

@@ -623,7 +623,7 @@ const SuccessPayment: React.FC = () => {
         const result = await generateBothInvoices(
           callRecord,
           payment,
-          user.uid,
+          user?.uid || '',
           {
             locale: language || 'en',
             metadata: {

@@ -25,6 +25,7 @@ import {
   ArrowLeft,
   TrendingUp,
   User,
+  UserX,
   HelpCircle,
   X,
 } from "lucide-react";
@@ -635,6 +636,10 @@ const ProviderProfile: React.FC = () => {
   const [realProviderId, setRealProviderId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  // Stocke la raison et le type pour afficher des alternatives pertinentes
+  const [notFoundReason, setNotFoundReason] = useState<'not_found' | 'unavailable'>('not_found');
+  const [unavailableProviderType, setUnavailableProviderType] = useState<'lawyer' | 'expat' | null>(null);
+  const [suggestedProviders, setSuggestedProviders] = useState<SosProfile[]>([]);
 
   // Translation system
   const { locale: currentLocale, lang: currentLang } = parseLocaleFromPath(location.pathname);
@@ -1058,6 +1063,112 @@ const ProviderProfile: React.FC = () => {
           const isAdmin = (providerData as any).isAdmin === true || (providerData as any).role === 'admin';
 
           if (isInactive || isNotApproved || isBanned || isHidden || isAdmin) {
+            // Prestataire trouvé mais indisponible - stocker le type pour suggérer des alternatives
+            setNotFoundReason('unavailable');
+            setUnavailableProviderType(providerData.type === 'lawyer' ? 'lawyer' : 'expat');
+
+            // Charger des prestataires similaires : même type + même pays + actifs
+            // Puis filtrer par langues côté client
+            try {
+              const unavailableType = providerData.type || 'expat';
+              const unavailableCountry = providerData.country || providerData.residenceCountry || '';
+              const unavailableLanguages = Array.isArray(providerData.languages)
+                ? providerData.languages.map((l: string) => l.toLowerCase())
+                : [];
+
+              // Requête Firestore : même type + même pays + actif + visible
+              const suggestionsQuery = query(
+                collection(db, "sos_profiles"),
+                where("type", "==", unavailableType),
+                where("country", "==", unavailableCountry),
+                where("isVisible", "==", true),
+                where("isActive", "==", true),
+                limit(20) // Prendre plus pour filtrer ensuite par langue
+              );
+
+              const suggestionsSnap = await getDocs(suggestionsQuery);
+
+              let suggestions = suggestionsSnap.docs
+                .map(doc => {
+                  const data = doc.data();
+                  return {
+                    id: doc.id,
+                    uid: data.uid || doc.id,
+                    fullName: data.fullName || data.displayName || `${data.firstName || ''} ${data.lastName || ''}`.trim(),
+                    type: data.type || 'expat',
+                    country: data.country || '',
+                    languages: Array.isArray(data.languages) ? data.languages : [],
+                    profilePhoto: data.profilePhoto || data.avatar,
+                    rating: data.rating || data.averageRating || 0,
+                    reviewCount: data.reviewCount || 0,
+                    isOnline: data.isOnline || false,
+                    slug: data.slug,
+                  } as SosProfile;
+                })
+                .filter(p => p.id !== foundProviderId) // Exclure le prestataire actuel
+                .filter(p => {
+                  // Filtrer par langue : au moins une langue en commun
+                  if (unavailableLanguages.length === 0) return true;
+                  const providerLangs = (p.languages || []).map((l: string) => l.toLowerCase());
+                  return providerLangs.some((lang: string) => unavailableLanguages.includes(lang));
+                })
+                // Trier : en ligne d'abord, puis par note décroissante
+                .sort((a, b) => {
+                  if (a.isOnline !== b.isOnline) return b.isOnline ? 1 : -1;
+                  return (b.rating || 0) - (a.rating || 0);
+                })
+                .slice(0, 3); // Garder les 3 meilleurs
+
+              // Si pas assez de résultats avec même pays, élargir la recherche
+              if (suggestions.length < 3) {
+                const fallbackQuery = query(
+                  collection(db, "sos_profiles"),
+                  where("type", "==", unavailableType),
+                  where("isVisible", "==", true),
+                  where("isActive", "==", true),
+                  limit(20)
+                );
+                const fallbackSnap = await getDocs(fallbackQuery);
+                const existingIds = new Set(suggestions.map(s => s.id));
+
+                const moreSuggestions = fallbackSnap.docs
+                  .map(doc => {
+                    const data = doc.data();
+                    return {
+                      id: doc.id,
+                      uid: data.uid || doc.id,
+                      fullName: data.fullName || data.displayName || `${data.firstName || ''} ${data.lastName || ''}`.trim(),
+                      type: data.type || 'expat',
+                      country: data.country || '',
+                      languages: Array.isArray(data.languages) ? data.languages : [],
+                      profilePhoto: data.profilePhoto || data.avatar,
+                      rating: data.rating || data.averageRating || 0,
+                      reviewCount: data.reviewCount || 0,
+                      isOnline: data.isOnline || false,
+                      slug: data.slug,
+                    } as SosProfile;
+                  })
+                  .filter(p => p.id !== foundProviderId && !existingIds.has(p.id))
+                  .filter(p => {
+                    // Priorité aux mêmes langues
+                    if (unavailableLanguages.length === 0) return true;
+                    const providerLangs = (p.languages || []).map((l: string) => l.toLowerCase());
+                    return providerLangs.some((lang: string) => unavailableLanguages.includes(lang));
+                  })
+                  .sort((a, b) => {
+                    if (a.isOnline !== b.isOnline) return b.isOnline ? 1 : -1;
+                    return (b.rating || 0) - (a.rating || 0);
+                  })
+                  .slice(0, 3 - suggestions.length);
+
+                suggestions = [...suggestions, ...moreSuggestions];
+              }
+
+              setSuggestedProviders(suggestions);
+            } catch (e) {
+              console.warn('Could not load suggestions:', e);
+            }
+
             setNotFound(true);
             setIsLoading(false);
             return;
@@ -1857,33 +1968,112 @@ const ProviderProfile: React.FC = () => {
     );
   }
 
-  // ✅ Not found state
+  // ✅ Not found / Unavailable state - avec suggestions d'alternatives
   if (notFound || !provider) {
+    const isUnavailable = notFoundReason === 'unavailable';
+    const providerTypeLabel = unavailableProviderType === 'lawyer'
+      ? intl.formatMessage({ id: "providerProfile.lawyer" })
+      : intl.formatMessage({ id: "providerProfile.expat" });
+
     return (
       <Layout>
-        <div className="min-h-screen flex items-center justify-center bg-gray-950 px-4">
-          <div className="max-w-md mx-auto p-8 text-center">
-            <div className="mb-6">
-              <div className="mx-auto w-24 h-24 bg-gradient-to-br from-red-500/20 to-red-600/20 rounded-full flex items-center justify-center border border-red-500/30">
-                <AlertTriangle className="w-12 h-12 text-red-500" aria-hidden="true" />
+        <div className="min-h-screen bg-gray-950 px-4 py-12">
+          <div className="max-w-2xl mx-auto">
+            {/* Message principal */}
+            <div className="text-center mb-10">
+              <div className="mb-6">
+                <div className="mx-auto w-24 h-24 bg-gradient-to-br from-amber-500/20 to-orange-600/20 rounded-full flex items-center justify-center border border-amber-500/30">
+                  {isUnavailable ? (
+                    <UserX className="w-12 h-12 text-amber-500" aria-hidden="true" />
+                  ) : (
+                    <AlertTriangle className="w-12 h-12 text-red-500" aria-hidden="true" />
+                  )}
+                </div>
               </div>
+
+              <h1 className="text-2xl font-bold text-white mb-3">
+                {isUnavailable ? (
+                  <FormattedMessage id="providerProfile.unavailable" defaultMessage="Expert temporairement indisponible" />
+                ) : (
+                  <FormattedMessage id="providerProfile.notFound" />
+                )}
+              </h1>
+              <p className="text-gray-400 mb-6 max-w-md mx-auto">
+                {isUnavailable ? (
+                  <FormattedMessage
+                    id="providerProfile.unavailableDescription"
+                    defaultMessage="Ce prestataire n'est plus disponible sur notre plateforme. Découvrez d'autres experts qualifiés ci-dessous."
+                  />
+                ) : (
+                  <FormattedMessage id="providerProfile.notFoundDescription" />
+                )}
+              </p>
             </div>
-            
-            <h1 className="text-2xl font-bold text-white mb-3">
-              <FormattedMessage id="providerProfile.notFound" />
-            </h1>
-            <p className="text-gray-400 mb-8">
-              <FormattedMessage id="providerProfile.notFoundDescription" />
-            </p>
-            
-            <button
-              onClick={() => navigate("/sos-appel")}
-              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-red-600 to-red-500 text-white rounded-xl hover:from-red-500 hover:to-red-400 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-semibold focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-gray-950"
-              aria-label={intl.formatMessage({ id: "providerProfile.backToExperts" })}
-            >
-              <ArrowLeft className="w-5 h-5 mr-2" aria-hidden="true" />
-              <FormattedMessage id="providerProfile.backToExperts" />
-            </button>
+
+            {/* Suggestions de prestataires similaires */}
+            {isUnavailable && suggestedProviders.length > 0 && (
+              <div className="mb-10">
+                <h2 className="text-lg font-semibold text-white mb-4 text-center">
+                  <FormattedMessage
+                    id="providerProfile.suggestedExperts"
+                    defaultMessage="Experts similaires disponibles"
+                  />
+                </h2>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {suggestedProviders.map((suggestion) => (
+                    <button
+                      key={suggestion.id}
+                      onClick={() => {
+                        const slug = suggestion.slug || suggestion.id;
+                        const role = suggestion.type === 'lawyer' ? 'avocat' : 'expatrie';
+                        navigate(`/${role}/${slug}`);
+                      }}
+                      className="bg-gray-900/50 border border-gray-800 rounded-xl p-4 text-left hover:bg-gray-800/50 hover:border-gray-700 transition-all group"
+                    >
+                      <div className="flex items-center gap-3 mb-2">
+                        <img
+                          src={suggestion.profilePhoto || '/default-avatar.png'}
+                          alt={suggestion.fullName || 'Expert'}
+                          className="w-12 h-12 rounded-full object-cover border-2 border-gray-700 group-hover:border-red-500/50 transition-colors"
+                          onError={(e) => { e.currentTarget.src = '/default-avatar.png'; }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-white truncate">{suggestion.fullName}</p>
+                          <p className="text-sm text-gray-400">{suggestion.country}</p>
+                        </div>
+                        {suggestion.isOnline && (
+                          <span className="w-3 h-3 bg-green-500 rounded-full animate-pulse" title="En ligne" />
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                        <span className="text-white">{(suggestion.rating || 0).toFixed(1)}</span>
+                        <span className="text-gray-500">({suggestion.reviewCount || 0} avis)</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Boutons d'action */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={() => navigate("/sos-appel")}
+                className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-red-600 to-red-500 text-white rounded-xl hover:from-red-500 hover:to-red-400 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-semibold focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-gray-950"
+                aria-label={intl.formatMessage({ id: "providerProfile.backToExperts" })}
+              >
+                <Users className="w-5 h-5 mr-2" aria-hidden="true" />
+                <FormattedMessage id="providerProfile.seeAllExperts" defaultMessage="Voir tous les experts" />
+              </button>
+              <button
+                onClick={() => navigate(-1)}
+                className="inline-flex items-center justify-center px-6 py-3 bg-gray-800 text-white rounded-xl hover:bg-gray-700 transition-all font-semibold focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-950"
+              >
+                <ArrowLeft className="w-5 h-5 mr-2" aria-hidden="true" />
+                <FormattedMessage id="providerProfile.goBack" defaultMessage="Retour" />
+              </button>
+            </div>
           </div>
         </div>
       </Layout>
@@ -2452,7 +2642,7 @@ const ProviderProfile: React.FC = () => {
                   {/* Motivation si présente */}
                   {(() => {
                     // ALWAYS show original from sos_profiles when showOriginal is true
-                    let motivationText: string | null = null;
+                    let motivationText: string | null | undefined = null;
                     if (showOriginal) {
                       motivationText = getFirstString(provider.motivation, preferredLangKey);
                     } else if (translation && viewingLanguage) {
@@ -2608,7 +2798,7 @@ const ProviderProfile: React.FC = () => {
 
                       {(() => {
                         // ALWAYS show original from sos_profiles when showOriginal is true
-                        let motivationText: string | null = null;
+                        let motivationText: string | null | undefined = null;
                         if (showOriginal) {
                           motivationText = getFirstString(provider.motivation, preferredLangKey);
                         } else if (translation && viewingLanguage) {

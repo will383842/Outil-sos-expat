@@ -600,7 +600,7 @@ export default function Prestataires() {
 
       // 3. Audit log
       await logAuditEntry({
-        action: newAccessState ? "accessGranted" : "accessRevoked",
+        action: newAccessState ? "provider.access_grant" : "provider.access_revoke",
         targetType: "provider",
         targetId: provider.id,
         details: {
@@ -651,7 +651,7 @@ export default function Prestataires() {
 
     // Audit log
     await logAuditEntry({
-      action: "providerCreate",
+      action: "provider.create",
       targetType: "provider",
       targetId: providerId,
       details: {

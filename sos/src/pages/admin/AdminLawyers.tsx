@@ -994,7 +994,7 @@ const AdminLawyers: React.FC = () => {
       case "lastLogin":
         return (
           <div style={cellStyleFor(col)} className="text-sm">
-            {l.lastLoginAt ? l.lastLoginAt.toLocaleDateString() : "—"}
+            {l.lastLoginAt ? l.lastLoginAt.toLocaleDateString(intl.locale) : "—"}
           </div>
         );
       case "accountStatus":

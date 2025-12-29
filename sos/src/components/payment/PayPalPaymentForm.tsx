@@ -98,7 +98,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
     }
   };
 
-  const onApprove = async (data: { orderID: string; payerID?: string }): Promise<void> => {
+  const onApprove = async (data: { orderID: string; payerID?: string | null }): Promise<void> => {
     try {
       setIsProcessing(true);
 

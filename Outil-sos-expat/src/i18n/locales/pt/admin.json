@@ -357,7 +357,8 @@
       "activeDesc": "Os utilizadores veem a mensagem de manutencao em vez da plataforma.",
       "enable": "Ativar modo de manutencao",
       "enableDesc": "Mostrar mensagem de manutencao aos utilizadores",
-      "message": "Mensagem de manutencao"
+      "message": "Mensagem de manutencao",
+      "messagePlaceholder": "A plataforma esta em manutencao..."
     },
     "notifications": {
       "title": "Notificacoes",

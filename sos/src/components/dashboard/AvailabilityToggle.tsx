@@ -12,7 +12,7 @@ const AvailabilityToggle: React.FC<Props> = ({ className = "" }) => {
   const [saving, setSaving] = useState(false);
   const [errorCode, setErrorCode] = useState<string | null>(null);
 
-  // Calcul état online/offline depuis user
+  // Calcul état online/offline/busy depuis user
   const isOnline = useMemo(() => {
     if (!user) return false;
     if (user.availability === "available") return true;
@@ -20,10 +20,16 @@ const AvailabilityToggle: React.FC<Props> = ({ className = "" }) => {
     return typeof user.isOnline === "boolean" ? user.isOnline : false;
   }, [user]);
 
+  // Détection du statut "busy" (en appel)
+  const isBusy = useMemo(() => {
+    return user?.availability === "busy";
+  }, [user]);
+
   const disabled =
     saving ||
     isLoading ||
     !user ||
+    isBusy || // Désactiver le toggle quand en appel
     (user?.role !== "lawyer" && user?.role !== "expat");
 
   const handleToggle = async () => {
@@ -58,9 +64,11 @@ const AvailabilityToggle: React.FC<Props> = ({ className = "" }) => {
     }
   };
 
-  const stateClasses = isOnline
-    ? "bg-emerald-100 border-emerald-500 text-emerald-800"
-    : "bg-gray-100 border-gray-300 text-gray-700";
+  const stateClasses = isBusy
+    ? "bg-orange-100 border-orange-500 text-orange-800"
+    : isOnline
+      ? "bg-emerald-100 border-emerald-500 text-emerald-800"
+      : "bg-gray-100 border-gray-300 text-gray-700";
 
   return (
     <div className={className}>
@@ -81,24 +89,28 @@ const AvailabilityToggle: React.FC<Props> = ({ className = "" }) => {
           ].join(" ")}
           aria-pressed={isOnline}
           aria-busy={saving}
-          aria-label={isOnline
-            ? intl.formatMessage({ id: "header.status.goOffline" })
-            : intl.formatMessage({ id: "header.status.goOnline" })}
+          aria-label={isBusy
+            ? intl.formatMessage({ id: "header.status.busy", defaultMessage: "En appel" })
+            : isOnline
+              ? intl.formatMessage({ id: "header.status.goOffline" })
+              : intl.formatMessage({ id: "header.status.goOnline" })}
         >
-          {/* Bulle verte/rouge */}
+          {/* Bulle verte/orange/rouge */}
           <span
             aria-hidden
             className={[
               "inline-block w-2.5 h-2.5 rounded-full",
-              isOnline ? "bg-emerald-500" : "bg-red-500",
+              isBusy ? "bg-orange-500" : isOnline ? "bg-emerald-500" : "bg-red-500",
               "shadow-[0_0_0_3px_rgba(0,0,0,0.04)]",
             ].join(" ")}
           />
           {/* Texte */}
           <span className="inline-block font-medium tracking-tight text-sm">
-            {isOnline
-              ? intl.formatMessage({ id: "header.status.online" })
-              : intl.formatMessage({ id: "header.status.offline" })}
+            {isBusy
+              ? intl.formatMessage({ id: "header.status.busy", defaultMessage: "En appel" })
+              : isOnline
+                ? intl.formatMessage({ id: "header.status.online" })
+                : intl.formatMessage({ id: "header.status.offline" })}
           </span>
         </button>
 

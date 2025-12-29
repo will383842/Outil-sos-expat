@@ -284,6 +284,7 @@ export interface BookingFiltersValues {
   priority: string;
   provider: string;
   dateRange: string;
+  [key: string]: FilterValue;
 }
 
 const BOOKING_FILTERS: FilterDefinition[] = [
@@ -311,6 +312,7 @@ export interface ProviderFiltersValues {
   type: string;
   country: string;
   status: string;
+  [key: string]: FilterValue;
 }
 
 const PROVIDER_FILTERS: FilterDefinition[] = [

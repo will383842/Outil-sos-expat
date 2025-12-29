@@ -268,7 +268,8 @@ export const AiAssistantPage: React.FC = () => {
       unlimited: { fr: 'Illimité', en: 'Unlimited' }
     };
 
-    return tierNames[subscription.tier]?.[locale] || subscription.tier;
+    const tierName = tierNames[subscription.tier];
+    return (tierName && (tierName.fr || tierName.en)) || subscription.tier;
   };
 
   return (

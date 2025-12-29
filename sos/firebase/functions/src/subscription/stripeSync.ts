@@ -231,8 +231,10 @@ export const syncSubscriptionPlansToStripe = functions
       const db = getDb();
       const stripeClient = getStripe();
 
-      // 1. Lire tous les plans depuis subscription_plans
-      const plansSnapshot = await db.collection('subscription_plans').get();
+      // 1. Lire tous les plans depuis subscription_plans - OPTIMISÉ: select() pour ne charger que les champs nécessaires
+      const plansSnapshot = await db.collection('subscription_plans')
+        .select('name', 'description', 'tier', 'providerType', 'pricing', 'annualPricing', 'annualDiscountPercent', 'stripeProductId', 'stripePriceId', 'stripePriceIdAnnual', 'features', 'isActive')
+        .get();
 
       if (plansSnapshot.empty) {
         await logSyncOperation({

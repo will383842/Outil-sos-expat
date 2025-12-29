@@ -13,8 +13,9 @@ import {
 import { db } from '../../config/firebase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useIntl } from 'react-intl';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+// jsPDF et autoTable sont chargés dynamiquement pour réduire le bundle initial
+// import jsPDF from 'jspdf';
+// import autoTable from 'jspdf-autotable';
 import { formatDate } from '@/utils/localeFormatters';
 import { useApp } from '@/contexts/AppContext';
 
@@ -147,7 +148,13 @@ export default function UserInvoices() {
     }
   };
 
-  const exportPDF = () => {
+  const exportPDF = async () => {
+    // Dynamic import de jsPDF et autoTable - chargés uniquement quand nécessaire (~300KB)
+    const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+      import('jspdf'),
+      import('jspdf-autotable')
+    ]);
+
     const doc = new jsPDF();
     doc.text(intl.formatMessage({ id: 'userInvoices.title' }), 14, 15);
 

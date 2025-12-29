@@ -441,7 +441,7 @@ export function useSubscription(): UseSubscriptionReturn {
     setError(null);
 
     try {
-      await startTrialService(providerType);
+      await startTrialService(user.uid, providerType);
       // The subscription update will be received via Firestore listener
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Failed to initialize trial');

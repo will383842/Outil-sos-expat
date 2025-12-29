@@ -490,8 +490,8 @@ export const getKYCReminderStatus = onCall(
       recentReminders: [] as any[],
     };
 
-    // Stats lawyers
-    const lawyersSnapshot = await db.collection("lawyers").get();
+    // Stats lawyers - OPTIMISÉ: select() pour ne charger que le champ nécessaire
+    const lawyersSnapshot = await db.collection("lawyers").select("stripeOnboardingComplete").get();
     stats.lawyers.total = lawyersSnapshot.size;
     lawyersSnapshot.docs.forEach((doc) => {
       const data = doc.data();
@@ -502,8 +502,8 @@ export const getKYCReminderStatus = onCall(
       }
     });
 
-    // Stats expats
-    const expatsSnapshot = await db.collection("expats").get();
+    // Stats expats - OPTIMISÉ: select() pour ne charger que le champ nécessaire
+    const expatsSnapshot = await db.collection("expats").select("stripeOnboardingComplete").get();
     stats.expats.total = expatsSnapshot.size;
     expatsSnapshot.docs.forEach((doc) => {
       const data = doc.data();

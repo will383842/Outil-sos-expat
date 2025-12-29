@@ -63,6 +63,7 @@ export function generateProviderUrl(
     languages?: string[];
     fullName?: string;
     name?: string;
+    slug?: string;
   },
   lang: string,
   country: string

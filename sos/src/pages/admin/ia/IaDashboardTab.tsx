@@ -473,14 +473,14 @@ export const IaDashboardTab: React.FC = () => {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={planDistribution}
+                  data={planDistribution as Array<{ name: string; value: number; color: string }>}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
                   outerRadius={80}
                   paddingAngle={5}
                   dataKey="value"
-                  label={({ name, value }) => `${name}: ${value}`}
+                  label={({ name, value }: { name?: string; value?: number }) => `${name ?? ''}: ${value ?? 0}`}
                 >
                   {planDistribution.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />

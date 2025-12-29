@@ -66,7 +66,7 @@ export function useProviderTranslation(
 
     try {
       console.log('[useProviderTranslation] Calling getProviderTranslation...');
-      const result = await getProviderTranslation(providerId, targetLanguage);
+      const result = await getProviderTranslation(providerId, targetLanguage!);
       console.log('[useProviderTranslation] ✓ getProviderTranslation completed');
       console.log('[useProviderTranslation] Result:', {
         hasTranslation: !!result.translation,
@@ -121,6 +121,10 @@ export function useProviderTranslation(
 
     // Use provided language or fallback to current targetLanguage
     const langToTranslate = lang || targetLanguage;
+    if (!langToTranslate) {
+      console.warn('[useProviderTranslation] No target language specified');
+      return null;
+    }
     console.log('[useProviderTranslation] Language to translate:', langToTranslate);
 
     // Don't translate for robots
@@ -175,7 +179,7 @@ export function useProviderTranslation(
       // Only reload for current page language if it's different from the translated language
       // This prevents resetting the translation state
       let currentPageResult = result;
-      if (targetLanguage !== langToTranslate) {
+      if (targetLanguage && targetLanguage !== langToTranslate) {
         currentPageResult = await getProviderTranslation(providerId, targetLanguage);
         console.log('[useProviderTranslation] Current page language result:', {
           hasTranslation: !!currentPageResult.translation,

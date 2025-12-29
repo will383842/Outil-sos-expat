@@ -532,7 +532,7 @@ class AdminDebugSystem {
 
     console.log('\n%c💡 RECOMMANDATIONS:', 'font-size: 14px; font-weight: bold; color: #f59e0b;');
     
-    if (this.componentStats.get('AdminLayout')?.renderCount > 3) {
+    if ((this.componentStats.get('AdminLayout')?.renderCount ?? 0) > 3) {
       console.log('→ AdminLayout se re-rend trop. Vérifier les dépendances du contexte Auth.');
     }
     

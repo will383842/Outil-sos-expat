@@ -3,6 +3,17 @@
 import { collection, addDoc, serverTimestamp, doc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
+/* ----------------------------- Dev-only Logger ----------------------------- */
+
+const isDev = import.meta.env.DEV;
+
+/** Logger that only outputs in development mode */
+const devLog = {
+  log: (...args: unknown[]) => isDev && console.log(...args),
+  warn: (...args: unknown[]) => isDev && console.warn(...args),
+  error: (...args: unknown[]) => isDev && console.error(...args),
+};
+
 /* -------------------------------- Utilities -------------------------------- */
 
 /**
@@ -23,7 +34,7 @@ const cleanObject = <T extends Record<string, unknown>>(obj: T): Partial<T> => {
 
 declare global {
   interface Window {
-    gtag?: (...args: unknown[]) => void;
+    gtag: (...args: unknown[]) => void;
   }
 }
 
@@ -145,17 +156,15 @@ class AnalyticsService {
       await this.incrementCounter('language_mismatches_total');
       await this.incrementCounter(`language_mismatches_${data.source}`);
 
-      // Optionnel: console debug
-       
-      console.log('📊 Language mismatch logged:', {
+      // Dev-only debug log
+      devLog.log('📊 Language mismatch logged:', {
         providerId: data.providerId,
         clientLanguages: data.clientLanguages,
         providerLanguages: data.providerLanguages,
         source: data.source,
       });
     } catch (error) {
-       
-      console.error("❌ Erreur lors du logging de l'incompatibilité linguistique:", error);
+      devLog.error("❌ Erreur lors du logging de l'incompatibilité linguistique:", error);
     }
   }
 
@@ -186,8 +195,7 @@ class AnalyticsService {
         });
       }
     } catch (error) {
-       
-      console.error("❌ Erreur lors du logging de l'action utilisateur:", error);
+      devLog.error("❌ Erreur lors du logging de l'action utilisateur:", error);
     }
   }
 
@@ -228,10 +236,9 @@ class AnalyticsService {
       }
 
        
-      console.log('🎯 Conversion logged:', data.conversionType, data.amount);
+      devLog.log('🎯 Conversion logged:', data.conversionType, data.amount);
     } catch (error) {
-       
-      console.error('❌ Erreur lors du logging de conversion:', error);
+      devLog.error('❌ Erreur lors du logging de conversion:', error);
     }
   }
 
@@ -256,12 +263,10 @@ class AnalyticsService {
       await this.incrementCounter(`errors_severity_${data.severity}`);
 
       if (data.severity === 'critical' || data.severity === 'high') {
-         
-        console.error('🚨 Critical error logged:', data);
+        devLog.error('🚨 Critical error logged:', data);
       }
     } catch (error) {
-       
-      console.error("❌ Erreur lors du logging d'erreur:", error);
+      devLog.error("❌ Erreur lors du logging d'erreur:", error);
     }
   }
 
@@ -282,12 +287,10 @@ class AnalyticsService {
       await addDoc(collection(db, 'analytics_performance'), eventData);
 
       if (data.duration > 5000) {
-         
-        console.warn('⚠️ Performance issue detected:', data);
+        devLog.warn('⚠️ Performance issue detected:', data);
       }
     } catch (error) {
-       
-      console.error('❌ Erreur lors du logging de performance:', error);
+      devLog.error('❌ Erreur lors du logging de performance:', error);
     }
   }
 
@@ -313,8 +316,7 @@ class AnalyticsService {
         );
       });
     } catch (error) {
-       
-      console.error("❌ Erreur lors de l'incrémentation du compteur:", error);
+      devLog.error("❌ Erreur lors de l'incrémentation du compteur:", error);
     }
   }
 

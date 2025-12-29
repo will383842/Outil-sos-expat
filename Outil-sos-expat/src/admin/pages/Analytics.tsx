@@ -18,7 +18,6 @@ import {
   query,
   getDocs,
   orderBy,
-  Timestamp,
 } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { useLanguage } from "../../hooks/useLanguage";
@@ -39,7 +38,6 @@ import {
   Filter,
   Users,
   FolderOpen,
-  Scale,
   Globe,
   Clock,
   CheckCircle,
@@ -59,10 +57,47 @@ interface AnalyticsData {
   providersByType: { type: string; count: number }[];
 
   // Dossier metrics
-  avgTimeToComplete: number; // in hours
+  avgTimeToComplete: number | null; // in hours, null if no data
   completionRate: number;
   dossiersByStatus: { status: string; count: number }[];
   dossiersByCountry: { country: string; count: number }[];
+
+  // Trend data (calculated from real data)
+  completionRateTrend: number | null;
+  avgTimeTrend: number | null;
+  dossiersTrend: number | null;
+
+  // Total dossiers in period
+  totalDossiersInPeriod: number;
+}
+
+// Helper to get period date range
+function getPeriodRange(period: "week" | "month" | "year"): { start: Date; end: Date; previousStart: Date; previousEnd: Date } {
+  const now = new Date();
+  const end = now;
+  let start: Date;
+  let previousStart: Date;
+  let previousEnd: Date;
+
+  switch (period) {
+    case "week":
+      start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      previousEnd = new Date(start.getTime() - 1);
+      previousStart = new Date(previousEnd.getTime() - 7 * 24 * 60 * 60 * 1000);
+      break;
+    case "month":
+      start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      previousEnd = new Date(start.getTime() - 1);
+      previousStart = new Date(previousEnd.getTime() - 30 * 24 * 60 * 60 * 1000);
+      break;
+    case "year":
+      start = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+      previousEnd = new Date(start.getTime() - 1);
+      previousStart = new Date(previousEnd.getFullYear() - 1, previousEnd.getMonth(), previousEnd.getDate());
+      break;
+  }
+
+  return { start, end, previousStart, previousEnd };
 }
 
 // =============================================================================
@@ -255,22 +290,44 @@ export default function Analytics() {
     dossiersByWeek: [],
     topProviders: [],
     providersByType: [],
-    avgTimeToComplete: 0,
+    avgTimeToComplete: null,
     completionRate: 0,
     dossiersByStatus: [],
     dossiersByCountry: [],
+    completionRateTrend: null,
+    avgTimeTrend: null,
+    dossiersTrend: null,
+    totalDossiersInPeriod: 0,
   });
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (selectedPeriod: "week" | "month" | "year") => {
     try {
+      const { start, end, previousStart, previousEnd } = getPeriodRange(selectedPeriod);
+
       // === DOSSIERS ===
       const dossiersSnap = await getDocs(
         query(collection(db, "bookings"), orderBy("createdAt", "desc"))
       );
-      const dossiers = dossiersSnap.docs.map((doc) => ({
+      const allDossiers = dossiersSnap.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
+
+      // Filter dossiers by period
+      const getDossierDate = (d: any): Date | null => {
+        if (!d.createdAt) return null;
+        return d.createdAt.toDate ? d.createdAt.toDate() : new Date(d.createdAt);
+      };
+
+      const dossiersInPeriod = allDossiers.filter((d: any) => {
+        const date = getDossierDate(d);
+        return date && date >= start && date <= end;
+      });
+
+      const dossiersInPreviousPeriod = allDossiers.filter((d: any) => {
+        const date = getDossierDate(d);
+        return date && date >= previousStart && date <= previousEnd;
+      });
 
       // === PROVIDERS ===
       const providersSnap = await getDocs(collection(db, "sos_profiles"));
@@ -279,7 +336,7 @@ export default function Analytics() {
         ...doc.data(),
       }));
 
-      // Group dossiers by month
+      // Group dossiers by month (always show 6 months for context)
       const monthMap = new Map<string, { count: number; completed: number }>();
       const now = new Date();
       for (let i = 5; i >= 0; i--) {
@@ -288,9 +345,9 @@ export default function Analytics() {
         monthMap.set(key, { count: 0, completed: 0 });
       }
 
-      dossiers.forEach((d: any) => {
-        if (!d.createdAt) return;
-        const date = d.createdAt.toDate ? d.createdAt.toDate() : new Date(d.createdAt);
+      allDossiers.forEach((d: any) => {
+        const date = getDossierDate(d);
+        if (!date) return;
         const key = date.toLocaleDateString("fr-FR", { month: "short", year: "2-digit" });
         const current = monthMap.get(key);
         if (current) {
@@ -308,10 +365,17 @@ export default function Analytics() {
       // Group dossiers by week (last 8 weeks)
       const weekMap = new Map<string, number>();
       for (let i = 7; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i * 7);
-        const key = `S${Math.ceil(date.getDate() / 7)}`;
-        weekMap.set(key, 0);
+        const weekStart = new Date();
+        weekStart.setDate(weekStart.getDate() - i * 7);
+        const weekEnd = new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000);
+        const key = `S${8 - i}`;
+
+        const count = allDossiers.filter((d: any) => {
+          const date = getDossierDate(d);
+          return date && date >= weekStart && date < weekEnd;
+        }).length;
+
+        weekMap.set(key, count);
       }
 
       const dossiersByWeek = Array.from(weekMap.entries()).map(([week, count]) => ({
@@ -319,9 +383,9 @@ export default function Analytics() {
         count,
       }));
 
-      // Provider metrics
+      // Provider metrics (filtered by period)
       const providerDossierCount = new Map<string, { name: string; total: number; completed: number }>();
-      dossiers.forEach((d: any) => {
+      dossiersInPeriod.forEach((d: any) => {
         const providerId = d.providerId;
         if (!providerId) return;
         const current = providerDossierCount.get(providerId) || {
@@ -352,19 +416,19 @@ export default function Analytics() {
       const providersByType = Array.from(typeMap.entries())
         .map(([type, count]) => ({ type, count }));
 
-      // Dossiers by status
+      // Dossiers by status (filtered by period)
       const statusMap = new Map<string, number>();
-      dossiers.forEach((d: any) => {
+      dossiersInPeriod.forEach((d: any) => {
         const status = d.status || "pending";
         statusMap.set(status, (statusMap.get(status) || 0) + 1);
       });
       const dossiersByStatus = Array.from(statusMap.entries())
         .map(([status, count]) => ({ status, count }));
 
-      // Dossiers by country
+      // Dossiers by country (filtered by period)
       const countryMap = new Map<string, number>();
-      dossiers.forEach((d: any) => {
-        const country = d.clientCurrentCountry || d.country || "Non spécifié";
+      dossiersInPeriod.forEach((d: any) => {
+        const country = d.clientCurrentCountry || d.country || "Non specifie";
         countryMap.set(country, (countryMap.get(country) || 0) + 1);
       });
       const dossiersByCountry = Array.from(countryMap.entries())
@@ -372,14 +436,62 @@ export default function Analytics() {
         .sort((a, b) => b.count - a.count)
         .slice(0, 6);
 
-      // Completion metrics
-      const completedDossiers = dossiers.filter((d: any) => d.status === "completed");
-      const completionRate = dossiers.length > 0
-        ? (completedDossiers.length / dossiers.length) * 100
+      // Completion metrics (filtered by period)
+      const completedDossiersInPeriod = dossiersInPeriod.filter((d: any) => d.status === "completed");
+      const completionRate = dossiersInPeriod.length > 0
+        ? (completedDossiersInPeriod.length / dossiersInPeriod.length) * 100
         : 0;
 
-      // Avg time to complete (mock for now)
-      const avgTimeToComplete = 48; // hours
+      // Previous period completion rate for trend
+      const completedDossiersInPrevPeriod = dossiersInPreviousPeriod.filter((d: any) => d.status === "completed");
+      const prevCompletionRate = dossiersInPreviousPeriod.length > 0
+        ? (completedDossiersInPrevPeriod.length / dossiersInPreviousPeriod.length) * 100
+        : 0;
+
+      // Calculate completion rate trend
+      const completionRateTrend = prevCompletionRate > 0
+        ? Math.round(((completionRate - prevCompletionRate) / prevCompletionRate) * 100)
+        : null;
+
+      // Calculate dossiers count trend
+      const dossiersTrend = dossiersInPreviousPeriod.length > 0
+        ? Math.round(((dossiersInPeriod.length - dossiersInPreviousPeriod.length) / dossiersInPreviousPeriod.length) * 100)
+        : null;
+
+      // Calculate avg time to complete from real data
+      const completedWithDates = completedDossiersInPeriod.filter((d: any) => {
+        return d.createdAt && d.completedAt;
+      });
+
+      let avgTimeToComplete: number | null = null;
+      let avgTimeTrend: number | null = null;
+
+      if (completedWithDates.length > 0) {
+        const totalHours = completedWithDates.reduce((sum: number, d: any) => {
+          const createdAt = d.createdAt.toDate ? d.createdAt.toDate() : new Date(d.createdAt);
+          const completedAt = d.completedAt.toDate ? d.completedAt.toDate() : new Date(d.completedAt);
+          const hours = (completedAt.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
+          return sum + hours;
+        }, 0);
+        avgTimeToComplete = Math.round(totalHours / completedWithDates.length);
+
+        // Calculate previous period avg time
+        const prevCompletedWithDates = completedDossiersInPrevPeriod.filter((d: any) => {
+          return d.createdAt && d.completedAt;
+        });
+
+        if (prevCompletedWithDates.length > 0) {
+          const prevTotalHours = prevCompletedWithDates.reduce((sum: number, d: any) => {
+            const createdAt = d.createdAt.toDate ? d.createdAt.toDate() : new Date(d.createdAt);
+            const completedAt = d.completedAt.toDate ? d.completedAt.toDate() : new Date(d.completedAt);
+            const hours = (completedAt.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
+            return sum + hours;
+          }, 0);
+          const prevAvgTime = prevTotalHours / prevCompletedWithDates.length;
+          // Negative trend is good for time (less time = better)
+          avgTimeTrend = Math.round(((avgTimeToComplete - prevAvgTime) / prevAvgTime) * 100);
+        }
+      }
 
       setData({
         dossiersByMonth,
@@ -390,6 +502,10 @@ export default function Analytics() {
         completionRate,
         dossiersByStatus,
         dossiersByCountry,
+        completionRateTrend,
+        avgTimeTrend,
+        dossiersTrend,
+        totalDossiersInPeriod: dossiersInPeriod.length,
       });
     } catch (error) {
       console.error("[Analytics] Error loading data:", error);
@@ -399,17 +515,100 @@ export default function Analytics() {
   useEffect(() => {
     const init = async () => {
       setLoading(true);
-      await loadData();
+      await loadData(period);
       setLoading(false);
     };
     init();
-  }, [loadData]);
+  }, [loadData, period]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await loadData();
+    await loadData(period);
     setRefreshing(false);
   };
+
+  // Export analytics data to CSV
+  const handleExport = useCallback(() => {
+    const exportPeriodLabels = {
+      week: "7_jours",
+      month: "30_jours",
+      year: "12_mois",
+    };
+
+    // Build CSV content
+    const lines: string[] = [];
+
+    // Header
+    lines.push(`Rapport Analytiques SOS Expat - ${new Date().toLocaleDateString("fr-FR")}`);
+    lines.push(`Periode: ${exportPeriodLabels[period]}`);
+    lines.push("");
+
+    // KPIs
+    lines.push("=== INDICATEURS CLES ===");
+    lines.push(`Taux de completion;${data.completionRate.toFixed(1)}%`);
+    lines.push(`Temps moyen traitement;${data.avgTimeToComplete !== null ? `${data.avgTimeToComplete}h` : "N/A"}`);
+    lines.push(`Prestataires actifs;${data.providersByType.reduce((sum, p) => sum + p.count, 0)}`);
+    lines.push(`Dossiers sur la periode;${data.totalDossiersInPeriod}`);
+    lines.push("");
+
+    // Dossiers by status
+    lines.push("=== REPARTITION PAR STATUT ===");
+    lines.push("Statut;Nombre");
+    data.dossiersByStatus.forEach((item) => {
+      const statusLabels: Record<string, string> = {
+        pending: "En attente",
+        in_progress: "En cours",
+        completed: "Termines",
+        cancelled: "Annules",
+      };
+      lines.push(`${statusLabels[item.status] || item.status};${item.count}`);
+    });
+    lines.push("");
+
+    // Dossiers by country
+    lines.push("=== DOSSIERS PAR PAYS ===");
+    lines.push("Pays;Nombre");
+    data.dossiersByCountry.forEach((item) => {
+      lines.push(`${item.country};${item.count}`);
+    });
+    lines.push("");
+
+    // Top providers
+    lines.push("=== TOP PRESTATAIRES ===");
+    lines.push("Prestataire;Dossiers;Taux completion");
+    data.topProviders.forEach((item) => {
+      lines.push(`${item.name};${item.dossiers};${item.completedRate.toFixed(0)}%`);
+    });
+    lines.push("");
+
+    // Monthly evolution
+    lines.push("=== EVOLUTION MENSUELLE ===");
+    lines.push("Mois;Total;Completes");
+    data.dossiersByMonth.forEach((item) => {
+      lines.push(`${item.month};${item.count};${item.completed}`);
+    });
+
+    // Create and download CSV file
+    const csvContent = lines.join("\n");
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `analytiques_sos_expat_${exportPeriodLabels[period]}_${new Date().toISOString().split("T")[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, [data, period]);
+
+  // Period labels for display
+  const periodLabels: Record<typeof period, string> = {
+    week: "7 jours",
+    month: "30 jours",
+    year: "12 mois",
+  };
+
+  const periodLabel = `vs periode precedente`;
 
   return (
     <div className="space-y-6">
@@ -426,9 +625,9 @@ export default function Analytics() {
             <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? "animate-spin" : ""}`} />
             Actualiser
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleExport} disabled={loading}>
             <Download className="w-4 h-4 mr-2" />
-            Exporter
+            Exporter CSV
           </Button>
         </div>
       </div>
@@ -463,16 +662,16 @@ export default function Analytics() {
         <MetricCard
           title="Taux de completion"
           value={`${data.completionRate.toFixed(1)}%`}
-          change={5}
-          changeLabel="vs mois dernier"
+          change={data.completionRateTrend ?? undefined}
+          changeLabel={periodLabel}
           icon={CheckCircle}
           loading={loading}
         />
         <MetricCard
           title="Temps moyen traitement"
-          value={`${data.avgTimeToComplete}h`}
-          change={-12}
-          changeLabel="vs mois dernier"
+          value={data.avgTimeToComplete !== null ? `${data.avgTimeToComplete}h` : "N/A"}
+          change={data.avgTimeTrend !== null ? -data.avgTimeTrend : undefined}
+          changeLabel={data.avgTimeTrend !== null ? periodLabel : undefined}
           icon={Clock}
           loading={loading}
         />
@@ -483,10 +682,10 @@ export default function Analytics() {
           loading={loading}
         />
         <MetricCard
-          title="Dossiers ce mois"
-          value={data.dossiersByMonth[data.dossiersByMonth.length - 1]?.count || 0}
-          change={8}
-          changeLabel="vs mois dernier"
+          title={`Dossiers (${periodLabels[period]})`}
+          value={data.totalDossiersInPeriod}
+          change={data.dossiersTrend ?? undefined}
+          changeLabel={data.dossiersTrend !== null ? periodLabel : undefined}
           icon={FolderOpen}
           loading={loading}
         />

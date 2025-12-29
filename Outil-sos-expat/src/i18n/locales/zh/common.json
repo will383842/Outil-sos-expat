@@ -189,5 +189,10 @@
     "paymentFailed": "检测到付款问题。请更新您的付款信息。",
     "noSubscription": "访问此功能需要有效订阅。",
     "accessGranted": "访问已授权"
+  },
+  "export": {
+    "format": "导出格式",
+    "csvDescription": "兼容Excel",
+    "jsonDescription": "结构化格式"
   }
 }

@@ -338,6 +338,22 @@ export class DisputeManager {
   }
 
   /**
+   * Récupère la locale préférée du provider
+   */
+  private async getProviderLocale(providerId: string): Promise<string> {
+    try {
+      const providerDoc = await this.db.doc(`providers/${providerId}`).get();
+      if (providerDoc.exists) {
+        const data = providerDoc.data();
+        return data?.language || data?.preferredLanguage || data?.lang || 'fr-FR';
+      }
+      return 'fr-FR';
+    } catch {
+      return 'fr-FR';
+    }
+  }
+
+  /**
    * Notifie le provider qu'une dispute a été ouverte sur son compte
    * IMPORTANT: Avec les Direct Charges, c'est le provider qui doit gérer la dispute
    */
@@ -346,13 +362,14 @@ export class DisputeManager {
     disputeRecord: DisputeRecord
   ): Promise<void> {
     try {
+      const locale = await this.getProviderLocale(providerId);
       await this.db.collection("notifications").add({
         userId: providerId,
         type: "dispute_opened",
         title: "Litige ouvert sur votre compte",
         message: `Un client a ouvert un litige de ${(disputeRecord.amount / 100).toFixed(2)} ${disputeRecord.currency.toUpperCase()}. ` +
           `Raison: ${DISPUTE_REASON_LABELS[disputeRecord.reason] || disputeRecord.reason}. ` +
-          `Vous devez répondre via votre dashboard Stripe avant le ${disputeRecord.evidenceDueBy?.toLocaleDateString() || "N/A"}.`,
+          `Vous devez répondre via votre dashboard Stripe avant le ${disputeRecord.evidenceDueBy?.toLocaleDateString(locale) || "N/A"}.`,
         data: {
           disputeId: disputeRecord.id,
           amount: disputeRecord.amount,

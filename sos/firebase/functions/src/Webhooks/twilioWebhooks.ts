@@ -6,6 +6,7 @@ import { Response } from 'express';
 import * as admin from 'firebase-admin';
 import { Request } from 'firebase-functions/v2/https';
 import { validateTwilioWebhookSignature } from '../lib/twilio';
+import { setProviderBusy } from '../callables/providerStatusManager';
 
 
 interface TwilioCallWebhookBody {
@@ -140,19 +141,36 @@ async function handleCallRinging(
  * Gère le statut "answered"
  */
 async function handleCallAnswered(
-  sessionId: string, 
-  participantType: 'provider' | 'client', 
+  sessionId: string,
+  participantType: 'provider' | 'client',
   body: TwilioCallWebhookBody
 ) {
   try {
     console.log(`✅ ${participantType} a répondu: ${sessionId}`);
-    
+
     await twilioCallManager.updateParticipantStatus(
       sessionId,
       participantType,
       'connected',
       admin.firestore.Timestamp.fromDate(new Date())
     );
+
+    // ===== NOUVEAU: Mettre le prestataire en statut "busy" quand il répond =====
+    if (participantType === 'provider') {
+      const currentSession = await twilioCallManager.getCallSession(sessionId);
+      if (currentSession?.metadata?.providerId) {
+        try {
+          await setProviderBusy(
+            currentSession.metadata.providerId,
+            sessionId,
+            'in_call'
+          );
+          console.log(`📞 [Webhook] Provider ${currentSession.metadata.providerId} marked as BUSY`);
+        } catch (busyError) {
+          console.error(`⚠️ [Webhook] Failed to set provider busy (non-blocking):`, busyError);
+        }
+      }
+    }
 
     // Vérifier si les deux participants sont connectés
     const session = await twilioCallManager.getCallSession(sessionId);

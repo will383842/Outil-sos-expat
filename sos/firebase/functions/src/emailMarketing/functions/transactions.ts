@@ -232,6 +232,21 @@ export const handleReviewSubmitted = onDocumentCreated(
           } catch (emailError) {
             console.error(`❌ Error sending provider notification:`, emailError);
           }
+
+          // In-app notification for provider
+          try {
+            await admin.firestore().collection("inapp_notifications").add({
+              uid: providerId,
+              type: "new_review",
+              title: rating >= 4 ? "⭐ Nouvel avis positif" : "📝 Nouvel avis",
+              message: `${client?.firstName || "Un client"} vous a donné ${rating}/5 étoiles`,
+              link: "/dashboard/reviews",
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              read: false,
+            });
+          } catch (notifError) {
+            console.error(`❌ Error creating in-app notification:`, notifError);
+          }
         }
       } else {
         // Unsatisfied client → Simple thank you
@@ -249,7 +264,9 @@ export const handleReviewSubmitted = onDocumentCreated(
           console.error(`❌ Error sending thank you email:`, emailError);
         }
 
-        // Store negative review for follow-up
+        // Store negative review for follow-up (TTL: 90 days)
+        // Note: Configure TTL policy in Firebase Console > Firestore > TTL > Add policy for 'expireAt' field
+        const ninetyDaysFromNow = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
         try {
           await admin.firestore().collection("negative_reviews").add({
             clientId,
@@ -258,13 +275,15 @@ export const handleReviewSubmitted = onDocumentCreated(
             text: comment || "",
             callId,
             timestamp: admin.firestore.FieldValue.serverTimestamp(),
+            expireAt: admin.firestore.Timestamp.fromDate(ninetyDaysFromNow),
           });
         } catch (storeError) {
           console.error(`❌ Error storing negative review:`, storeError);
         }
 
-        // Create support alert for very low ratings (<= 2)
+        // Create support alert for very low ratings (<= 2) (TTL: 30 days)
         if (rating <= 2) {
+          const thirtyDaysFromNow = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
           try {
             await admin.firestore().collection("support_alerts").add({
               type: "negative_review",
@@ -275,6 +294,7 @@ export const handleReviewSubmitted = onDocumentCreated(
               text: comment || "",
               callId,
               timestamp: admin.firestore.FieldValue.serverTimestamp(),
+              expireAt: admin.firestore.Timestamp.fromDate(thirtyDaysFromNow),
               status: "pending",
             });
           } catch (alertError) {
@@ -320,6 +340,21 @@ export const handleReviewSubmitted = onDocumentCreated(
             });
           } catch (emailError) {
             console.error(`❌ Error sending provider notification:`, emailError);
+          }
+
+          // In-app notification for provider (negative/neutral review)
+          try {
+            await admin.firestore().collection("inapp_notifications").add({
+              uid: providerId,
+              type: "new_review",
+              title: rating <= 2 ? "⚠️ Avis négatif reçu" : "📝 Nouvel avis",
+              message: `${client?.firstName || "Un client"} vous a donné ${rating}/5 étoiles`,
+              link: "/dashboard/reviews",
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              read: false,
+            });
+          } catch (notifError) {
+            console.error(`❌ Error creating in-app notification:`, notifError);
           }
         }
       }

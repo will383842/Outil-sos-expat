@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Phone, CheckCircle, Clock, LucideIcon } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
@@ -36,11 +36,12 @@ interface Translations {
   };
 }
 
-const HowItWorksPage: React.FC = () => {
+// OPTIMISÉ: memo() pour éviter re-renders inutiles
+const HowItWorksPage: React.FC = memo(function HowItWorksPage() {
   const { language } = useApp();
 
-  // Traductions complètes pour la page
-  const translations: Translations = {
+  // OPTIMISÉ: useMemo pour éviter re-création des traductions
+  const translations: Translations = useMemo(() => ({
     fr: {
       pageTitle: 'Comment ça marche - Notre processus',
       pageDescription: 'Découvrez comment obtenir de l\'aide juridique ou d\'expatriation en 3 étapes simples, rapides et sécurisées.',
@@ -95,12 +96,13 @@ const HowItWorksPage: React.FC = () => {
         }
       }
     }
-  };
+  }), []);
 
   const currentLang = language || 'fr';
   const t = translations[currentLang] || translations.fr;
 
-  const steps: Step[] = [
+  // OPTIMISÉ: useMemo pour éviter re-création du tableau steps
+  const steps: Step[] = useMemo(() => [
     {
       number: 1,
       icon: Phone,
@@ -131,7 +133,7 @@ const HowItWorksPage: React.FC = () => {
       textColorClass: 'text-green-600',
       borderColorClass: 'border-green-200'
     }
-  ];
+  ], []);
 
   return (
     <>
@@ -282,7 +284,7 @@ const HowItWorksPage: React.FC = () => {
       </main>
     </>
   );
-};
+});
 
 export default HowItWorksPage;
 

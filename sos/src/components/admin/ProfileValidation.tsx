@@ -401,6 +401,10 @@ const ProfileValidation: React.FC = () => {
                     src={profile.profilePhoto || '/default-avatar.png'}
                     alt={profile.fullName}
                     className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+                    loading="lazy"
+                    decoding="async"
+                    width={80}
+                    height={80}
                   />
                   <div className="flex-1">
                     <h3 className="text-xl font-bold text-gray-900 mb-1">

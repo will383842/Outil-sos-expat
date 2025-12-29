@@ -3222,7 +3222,7 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                                 <div className="inline-flex items-center gap-1">
                                   <Calendar className="w-3 h-3" />
                                   <span>
-                                    Created: <span className="font-medium">{formatDate(review.createdAt)}</span>
+                                    Created: <span className="font-medium">{review.createdAt ? formatDate(review.createdAt) : '-'}</span>
                                   </span>
                                 </div>
                                

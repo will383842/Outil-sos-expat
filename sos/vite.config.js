@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import wasm from 'vite-plugin-wasm'
+import { visualizer } from 'rollup-plugin-visualizer'
 import { fileURLToPath, URL } from 'node:url'
 import { resolve } from 'path'
 
@@ -9,6 +10,7 @@ export default defineConfig(({ mode }) => {
   const USE_EMULATORS = String(env.VITE_USE_EMULATORS).toLowerCase() === 'true'
   const PROJECT_ID = env.VITE_FIREBASE_PROJECT_ID || 'sos-urgently-ac307'
   const REGION = env.VITE_FUNCTIONS_REGION || 'europe-west1'
+  const isAnalyze = mode === 'analyze'
 
   const target = USE_EMULATORS
     ? `http://127.0.0.1:5001/${PROJECT_ID}/${REGION}`
@@ -18,6 +20,14 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       wasm(),
+      // Bundle analyzer - activé avec: npm run analyze
+      isAnalyze && visualizer({
+        open: true,
+        filename: 'dist/bundle-stats.html',
+        gzipSize: true,
+        brotliSize: true,
+        template: 'treemap', // ou 'sunburst', 'network'
+      }),
       // Custom plugin to handle SPA routing in dev server
       {
         name: 'spa-fallback',
@@ -69,7 +79,6 @@ export default defineConfig(({ mode }) => {
         'firebase/functions',
         'firebase/storage',
         'firebase/analytics',
-        'firebase-admin',
       ],
       esbuildOptions: {
         target: 'esnext',
@@ -78,16 +87,51 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       target: 'esnext',
+      // Minification avec terser pour réduire la taille du bundle
+      minify: 'terser',
+      terserOptions: {
+        compress: {
+          drop_console: true,  // Supprime console.log en production
+          drop_debugger: true, // Supprime debugger
+          passes: 2,           // 2 passes pour meilleure compression
+        },
+        mangle: true,
+        format: {
+          comments: false,     // Supprime les commentaires
+        },
+      },
+      // Génère les sourcemaps uniquement si nécessaire
+      sourcemap: false,
       commonjsOptions: {
         include: [/node_modules/],
         transformMixedEsModules: true,
       },
       rollupOptions: {
         output: {
+          // Stratégie de chunks optimisée
           manualChunks(id) {
-            if (id.includes('firebase') || id.includes('@firebase')) {
-              return 'firebase';
+            // Firebase - split en plusieurs chunks pour un chargement plus rapide
+            if (id.includes('firebase/auth')) {
+              return 'firebase-auth';
             }
+            if (id.includes('firebase/firestore')) {
+              return 'firebase-db';
+            }
+            if (id.includes('firebase/storage')) {
+              return 'firebase-storage';
+            }
+            if (id.includes('firebase') || id.includes('@firebase')) {
+              return 'firebase-core';
+            }
+            // UI Libraries - chunk séparé
+            if (id.includes('@mui') || id.includes('@emotion') || id.includes('@headlessui')) {
+              return 'ui-libs';
+            }
+            // Charts et PDF - chunk séparé (lazy load recommandé)
+            if (id.includes('recharts') || id.includes('jspdf') || id.includes('html2canvas')) {
+              return 'heavy-libs';
+            }
+            // Autres vendor
             if (id.includes('node_modules')) {
               return 'vendor';
             }

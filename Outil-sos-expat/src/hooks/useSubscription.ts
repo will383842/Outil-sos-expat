@@ -156,7 +156,7 @@ export function useRequireSubscription(): UseRequireSubscriptionReturn {
 
     if (!hasAccess) {
       checkCurrentUserAccess().then(({ reason }) => {
-        setErrorMessage(getSubscriptionErrorMessage(reason, i18n.language || "en"));
+        setErrorMessage(getSubscriptionErrorMessage(reason));
       });
     } else {
       setErrorMessage(null);

@@ -50,7 +50,7 @@ import type { User } from "../../contexts/types";
 
 declare global {
   interface Window {
-    gtag?: (...args: unknown[]) => void;
+    gtag: (...args: unknown[]) => void;
   }
 }
 
@@ -985,6 +985,10 @@ const PWAInstallArea = memo<PWAInstallAreaProps>(function PWAInstallArea({
           src="/icons/icon-72x72.png"
           alt={logoAlt}
           className="w-full h-full object-cover"
+          width={72}
+          height={72}
+          loading="eager"
+          decoding="async"
           onError={(e) => {
             const img = e.currentTarget;
             if (img.src.includes("icon-72x72.png")) {
@@ -1030,6 +1034,10 @@ const PWAIconButton = memo(function PWAIconButton() {
         src="/icons/icon-72x72.png"
         alt={logoAlt}
         className="w-full h-full object-cover"
+        width={64}
+        height={64}
+        loading="eager"
+        decoding="async"
         onError={(e) => {
           const img = e.currentTarget;
           if (img.src.includes("icon-72x72.png")) {

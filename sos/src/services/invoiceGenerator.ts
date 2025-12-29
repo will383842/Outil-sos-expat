@@ -1,4 +1,5 @@
-import jsPDF from 'jspdf';
+// jsPDF est chargé dynamiquement pour réduire le bundle initial
+// import jsPDF from 'jspdf'; // LAZY LOADED
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { 
   addDoc, 
@@ -435,9 +436,13 @@ const getInvoiceTranslations = (locale: string = 'en') => {
 // ==================== GÉNÉRATION PDF ====================
 /**
  * Génère le PDF de facture avec design professionnel et responsive
+ * jsPDF est chargé dynamiquement pour réduire le bundle initial (~300KB)
  */
 export const generateInvoicePDF = async (invoiceData: InvoiceData): Promise<Blob> => {
   try {
+    // Dynamic import de jsPDF - chargé uniquement quand nécessaire
+    const { default: jsPDF } = await import('jspdf');
+
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',

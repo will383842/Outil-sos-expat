@@ -511,7 +511,8 @@ export const ChoosePlan: React.FC = () => {
   const providerType: ProviderType = userRole === 'lawyer' ? 'lawyer' : 'expat_aidant';
 
   // SECURITY: Block clients from accessing this page
-  const isClient = userRole === 'client' || userRole === 'user';
+  // Note: Only check for 'client' as valid UserRole; 'user' is not a valid role in the type system
+  const isClient = userRole === 'client';
 
   // If user is a client, show error and redirect
   useEffect(() => {

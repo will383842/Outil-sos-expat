@@ -227,7 +227,7 @@ export default function ProviderEarnings({ className = "", compact = false }: Pr
                         {tx.description}
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {new Date(tx.createdAt).toLocaleDateString()}
+                        {new Date(tx.createdAt).toLocaleDateString(intl.locale)}
                       </div>
                     </div>
                   </div>

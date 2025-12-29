@@ -1668,15 +1668,16 @@ const TestimonialDetail: React.FC = () => {
   }, [country, urlLanguage]);
 
   // Helper: pick a localized value from objects that have keys like { fr, en, es, de, ru, hi }
-  const pickLang = <T extends Record<string, any> | undefined>(obj: T): any => {
+  const pickLang = <T extends Record<string, unknown> | undefined>(obj: T): unknown => {
     if (!obj) return undefined;
+    const record = obj as Record<string, unknown>;
     // prefer exact language, then en, then fr, then first available entry
     return (
-      obj[language as keyof T] ??
-      obj["en"] ??
-      obj["fr"] ??
+      record[language] ??
+      record["en"] ??
+      record["fr"] ??
       // fallback to first property value if nothing above matches
-      (Object.values(obj)[0] as any)
+      Object.values(record)[0]
     );
   };
 
@@ -2211,7 +2212,7 @@ const TestimonialDetail: React.FC = () => {
     setOrCreateMeta("og:description", pageDescription);
     setOrCreateMeta("og:type", "article");
     setOrCreateMeta("og:url", window.location.href);
-    setOrCreateMeta("og:image", testimonialData.clientAvatar);
+    setOrCreateMeta("og:image", testimonialData.clientAvatar || '');
 
     // Set structured data for better SEO / Définir les données структурées pour un meilleur SEO
     const structuredData = {

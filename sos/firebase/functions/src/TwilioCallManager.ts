@@ -6,6 +6,7 @@ import { logError } from "./utils/logs/logError";
 import { logCallRecord } from "./utils/logs/logCallRecord";
 import { messageManager } from "./MessageManager";
 import { stripeManager } from "./StripeManager";
+import { setProviderBusy, setProviderAvailable } from "./callables/providerStatusManager";
 
 // =============================
 // Typage fort du JSON de prompts
@@ -655,6 +656,19 @@ export class TwilioCallManager {
       return;
     }
 
+    // ===== NOUVEAU: Mettre le prestataire en statut "busy" =====
+    try {
+      await setProviderBusy(
+        callSession.metadata.providerId,
+        sessionId,
+        'in_call'
+      );
+      console.log(`📞 Provider ${callSession.metadata.providerId} marked as BUSY`);
+    } catch (busyError) {
+      console.error(`⚠️ Failed to set provider busy (non-blocking):`, busyError);
+      // Continue - ne pas bloquer l'appel si la mise à jour échoue
+    }
+
     await this.updateCallSessionStatus(sessionId, "both_connecting");
 
     await logCallRecord({
@@ -1120,6 +1134,18 @@ export class TwilioCallManager {
         });
       }
 
+      // ===== NOUVEAU: Remettre le prestataire en statut "available" =====
+      try {
+        await setProviderAvailable(
+          callSession.metadata.providerId,
+          `call_failed_${reason}`
+        );
+        console.log(`✅ Provider ${callSession.metadata.providerId} marked as AVAILABLE after failure`);
+      } catch (availableError) {
+        console.error(`⚠️ Failed to set provider available after failure (non-blocking):`, availableError);
+        await logError('TwilioCallManager:handleCallFailure:setAvailable', availableError as unknown);
+      }
+
       await logCallRecord({
         callId: sessionId,
         status: `call_failed_${reason}`,
@@ -1295,6 +1321,18 @@ export class TwilioCallManager {
       }
       
       console.log(`📄 Just logging the record : ${sessionId}`);
+
+      // ===== NOUVEAU: Remettre le prestataire en statut "available" =====
+      try {
+        await setProviderAvailable(
+          callSession.metadata.providerId,
+          'call_completed'
+        );
+        console.log(`✅ Provider ${callSession.metadata.providerId} marked as AVAILABLE`);
+      } catch (availableError) {
+        console.error(`⚠️ Failed to set provider available (non-blocking):`, availableError);
+        await logError('TwilioCallManager:handleCallCompletion:setAvailable', availableError as unknown);
+      }
 
       await logCallRecord({
         callId: sessionId,

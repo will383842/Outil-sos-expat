@@ -30,7 +30,7 @@ import DashboardLayout from '../../components/layout/DashboardLayout';
 import { SubscriptionCard } from '../../components/subscription/SubscriptionCard';
 import { QuotaUsageBar } from '../../components/subscription/QuotaUsageBar';
 import { subscribeToInvoices } from '../../services/subscription/subscriptionService';
-import { Invoice, ProviderType, SubscriptionTier, SupportedLanguage } from '../../types/subscription';
+import { Invoice, SubscriptionTier, SupportedLanguage } from '../../types/subscription';
 import { cn } from '../../utils/cn';
 import { getDateLocale } from '../../utils/formatters';
 
@@ -270,7 +270,8 @@ export const MySubscription: React.FC = () => {
 
   // SECURITY: Block clients from accessing this page
   const userRole = user?.role || user?.type || '';
-  const isClient = userRole === 'client' || userRole === 'user';
+  // Note: Only check for 'client' as valid UserRole; 'user' is not a valid role in the type system
+  const isClient = userRole === 'client';
 
   // Redirect clients to dashboard
   useEffect(() => {
@@ -385,8 +386,8 @@ export const MySubscription: React.FC = () => {
 
     setIsInitializing(true);
     try {
-      const providerType: ProviderType = user.role === 'lawyer' ? 'lawyer' : 'expat_aidant';
-      await initializeTrial(providerType);
+      // initializeTrial uses the providerType from the hook internally
+      await initializeTrial();
     } catch (error) {
       console.error('Error starting trial:', error);
     } finally {

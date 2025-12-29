@@ -126,7 +126,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
   const currentKey = getCurrentActiveKey();
 
   // Menu items
-  const menuItems = [
+  type MenuItem = {
+    key: string;
+    icon: React.ReactNode;
+    route: string;
+    labels: Record<string, string>;
+    badge?: string;
+  };
+
+  const menuItems: MenuItem[] = [
     {
       key: "profile",
       icon: <User className="mr-3 h-5 w-5" />,
@@ -166,7 +174,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
   ];
 
   // AI items for lawyers, expats, and admins
-  const aiMenuItems = authInitialized && (user.role === "lawyer" || user.role === "expat" || user.role === "admin")
+  const aiMenuItems: MenuItem[] = authInitialized && (user.role === "lawyer" || user.role === "expat" || user.role === "admin")
     ? [
         {
           key: "ai-assistant",
@@ -184,7 +192,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
       ]
     : [];
 
-  const allMenuItems = [...menuItems, ...aiMenuItems];
+  const allMenuItems: MenuItem[] = [...menuItems, ...aiMenuItems];
 
   return (
     <Layout showFooter={false}>
@@ -202,6 +210,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
                         src={`${user.profilePhoto}?v=${(user.updatedAt as Date | undefined)?.valueOf?.() || Date.now()}`}
                         alt={getUserFirstName()}
                         className="w-16 h-16 rounded-full object-cover ring-2 ring-white/80"
+                        loading="eager"
+                        decoding="async"
+                        width={64}
+                        height={64}
                       />
                     ) : (
                       <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
@@ -242,7 +254,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
                               : "text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5"
                             }
                           `}
-                          title={(item.labels as Record<string, string>)[language] || item.labels.en}
+                          title={item.labels[language] ?? item.labels.en}
                         >
                           {/* Barre active à gauche */}
                           <span
@@ -253,12 +265,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
                             } ${UI.radiusSm}`}
                           />
                           {item.icon}
-                          {(item.labels as Record<string, string>)[language] || item.labels.en}
+                          {item.labels[language] ?? item.labels.en}
 
                           {/* Badge NEW */}
                           {'badge' in item && item.badge && (
                             <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold animate-pulse">
-                              {item.badge}
+                              {String(item.badge)}
                             </span>
                           )}
                           {/* Active indicator */}

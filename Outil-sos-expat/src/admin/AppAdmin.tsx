@@ -143,11 +143,11 @@ export default function AdminApp() {
   const { t } = useLanguage({ mode: "admin" });
   const [searchParams] = useSearchParams();
 
-  // DEV MODE BYPASS
-  const isDev = import.meta.env.DEV || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-  const devBypass = isDev && (searchParams.get("dev") === "true" || sessionStorage.getItem("devMode") === "true");
-  if (devBypass) {
-    console.warn("⚠️ [DEV MODE] Console Admin accessible sans authentification");
+  // DEV MODE BYPASS - Only in Vite dev server AND localhost (never in production builds)
+  const isLocalDev = import.meta.env.DEV && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+  const devBypass = isLocalDev && searchParams.get("dev") === "true";
+  if (devBypass && import.meta.env.DEV) {
+    console.warn("⚠️ [DEV MODE] Console Admin accessible sans authentification - localhost uniquement");
     return (
       <div className="flex h-screen bg-gray-100">
         <AdminSidebar />

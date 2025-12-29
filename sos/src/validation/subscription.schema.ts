@@ -75,10 +75,18 @@ const ALLOWED_REDIRECT_DOMAINS = [
 // PlanId format regex: provider_tier (e.g., lawyer_pro, expat_aidant_standard)
 const PLAN_ID_REGEX = /^(lawyer|expat_aidant)_(trial|basic|standard|pro|unlimited)$/;
 
-// Safe string transformer: trim and remove dangerous characters
-const safeStringSchema = z.string().transform((val) => {
-  return val.trim().replace(/[<>]/g, '');
-});
+// Safe string transformer factory: trim and remove dangerous characters
+// Returns a function that creates a safe string schema with optional constraints
+const createSafeString = (options?: { min?: number; max?: number }) => {
+  let schema = z.string();
+  if (options?.min !== undefined) {
+    schema = schema.min(options.min);
+  }
+  if (options?.max !== undefined) {
+    schema = schema.max(options.max);
+  }
+  return schema.transform((val) => val.trim().replace(/[<>]/g, ''));
+};
 
 /**
  * Validate redirect URL is in allowed domains
@@ -115,7 +123,7 @@ export const createCheckoutSchema = z.object({
   cancelUrl: safeRedirectUrlSchema.optional(),
 
   /** Code promo a appliquer (optionnel) */
-  promoCode: safeStringSchema.max(50).optional(),
+  promoCode: createSafeString({ max: 50 }).optional(),
 
   /** Devise preferee (optionnel, defaut: EUR) */
   currency: currencySchema.optional(),
@@ -151,10 +159,10 @@ export type ChangePlanInput = z.infer<typeof changePlanSchema>;
  */
 export const cancelSubscriptionSchema = z.object({
   /** Raison de l'annulation (optionnel, max 500 caracteres) */
-  reason: safeStringSchema.max(500, 'Reason must be at most 500 characters').optional(),
+  reason: createSafeString({ max: 500 }).optional(),
 
   /** Feedback supplementaire pour amelioration */
-  feedback: safeStringSchema.max(1000).optional(),
+  feedback: createSafeString({ max: 1000 }).optional(),
 
   /** Si true, annulation immediate. Si false, a la fin de la periode (defaut) */
   immediate: z.boolean().default(false),
@@ -207,7 +215,7 @@ export const adminForceAccessSchema = z.object({
     .optional(),
 
   /** Note interne pour expliquer pourquoi l'acces est accorde/revoque */
-  note: safeStringSchema.max(500, 'Note must be at most 500 characters').optional(),
+  note: createSafeString({ max: 500 }).optional(),
 });
 
 export type AdminForceAccessInput = z.infer<typeof adminForceAccessSchema>;
@@ -232,7 +240,7 @@ export const adminChangePlanSchema = z.object({
   immediate: z.boolean(),
 
   /** Raison du changement (pour audit) */
-  reason: safeStringSchema.max(500).optional(),
+  reason: createSafeString({ max: 500 }).optional(),
 });
 
 export type AdminChangePlanInput = z.infer<typeof adminChangePlanSchema>;
@@ -251,7 +259,7 @@ export const adminCancelSubscriptionSchema = z.object({
   immediate: z.boolean().default(false),
 
   /** Raison de l'annulation (obligatoire pour audit) */
-  reason: safeStringSchema.min(1, 'Reason is required').max(500),
+  reason: createSafeString({ min: 1, max: 500 }),
 
   /** Rembourser le prorata si annulation immediate */
   refundProrata: z.boolean().default(true),
@@ -270,7 +278,7 @@ export const adminResetQuotaSchema = z.object({
     .regex(FIREBASE_UID_REGEX, 'Invalid provider ID format'),
 
   /** Note explicative */
-  note: safeStringSchema.max(500).optional(),
+  note: createSafeString({ max: 500 }).optional(),
 });
 
 export type AdminResetQuotaInput = z.infer<typeof adminResetQuotaSchema>;
@@ -402,7 +410,7 @@ export function validateCreateCheckout(input: unknown) {
   }
   return {
     success: false as const,
-    errors: result.error.errors.map(e => ({
+    errors: result.error.issues.map(e => ({
       path: e.path.join('.'),
       message: e.message,
     })),
@@ -419,7 +427,7 @@ export function validateCancelSubscription(input: unknown) {
   }
   return {
     success: false as const,
-    errors: result.error.errors.map(e => ({
+    errors: result.error.issues.map(e => ({
       path: e.path.join('.'),
       message: e.message,
     })),
@@ -436,7 +444,7 @@ export function validateAdminForceAccess(input: unknown) {
   }
   return {
     success: false as const,
-    errors: result.error.errors.map(e => ({
+    errors: result.error.issues.map(e => ({
       path: e.path.join('.'),
       message: e.message,
     })),
@@ -453,7 +461,7 @@ export function validateAdminChangePlan(input: unknown) {
   }
   return {
     success: false as const,
-    errors: result.error.errors.map(e => ({
+    errors: result.error.issues.map(e => ({
       path: e.path.join('.'),
       message: e.message,
     })),

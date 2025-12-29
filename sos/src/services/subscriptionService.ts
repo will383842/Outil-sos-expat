@@ -23,7 +23,7 @@ import {
   onSnapshot,
   Unsubscribe
 } from 'firebase/firestore';
-import { httpsCallable, HttpsCallableResult } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
 import { db, functions } from '../config/firebase';
 import {
   Subscription,
@@ -538,7 +538,7 @@ class SubscriptionService {
         CheckoutResult
       >(functions, 'createSubscriptionCheckout');
 
-      const result: HttpsCallableResult<CheckoutResult> = await createCheckoutFn({
+      const result = await createCheckoutFn({
         planId,
         billingPeriod
       });

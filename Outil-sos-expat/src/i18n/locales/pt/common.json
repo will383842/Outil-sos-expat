@@ -189,5 +189,10 @@
     "paymentFailed": "Foi detetado um problema de pagamento. Por favor, atualize as suas informações de pagamento.",
     "noSubscription": "É necessária uma subscrição ativa para aceder a esta funcionalidade.",
     "accessGranted": "Acesso concedido"
+  },
+  "export": {
+    "format": "Formato de exportação",
+    "csvDescription": "Compatível com Excel",
+    "jsonDescription": "Formato estruturado"
   }
 }

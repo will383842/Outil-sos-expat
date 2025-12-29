@@ -150,7 +150,7 @@ export function usePagination<T extends DocumentData = DocumentData>(
         const items = pageData.map((doc) => ({
           id: doc.id,
           ...doc.data(),
-        })) as T[];
+        })) as unknown as T[];
 
         setData(items);
         setHasMore(hasMoreData);

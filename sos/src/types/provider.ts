@@ -85,6 +85,16 @@ export interface Provider {
   lastStatusChange?: Timestamp;
   nationality?: string;
   practiceCountries?: string[]; // Pays d'intervention
+
+  // ========== GESTION STATUT BUSY PENDANT APPELS ==========
+  /** Statut de disponibilité du prestataire */
+  availability?: 'available' | 'busy' | 'offline';
+  /** ID de la session d'appel en cours (si busy) */
+  currentCallSessionId?: string | null;
+  /** Timestamp du début de l'indisponibilité */
+  busySince?: Timestamp | null;
+  /** Raison de l'indisponibilité */
+  busyReason?: 'in_call' | 'break' | 'offline' | 'manually_disabled' | null;
 }
 
 /**
@@ -203,6 +213,16 @@ export function normalizeProvider(providerData: unknown): Provider {
   const profilePhoto = avatar;
   const isActive = o.isActive === false ? false : true;
 
+  // Nouveaux champs pour gestion statut busy
+  const availability = ((): 'available' | 'busy' | 'offline' => {
+    if (o.availability === 'busy') return 'busy';
+    if (o.availability === 'offline' || !isOnline) return 'offline';
+    return 'available';
+  })();
+  const currentCallSessionId = typeof o.currentCallSessionId === 'string' ? o.currentCallSessionId : null;
+  const busySince = o.busySince as Timestamp | null | undefined;
+  const busyReason = o.busyReason as 'in_call' | 'break' | 'offline' | 'manually_disabled' | null | undefined;
+
   return {
     // Champs obligatoires de l'interface originale Providers.tsx
     id,
@@ -244,18 +264,29 @@ export function normalizeProvider(providerData: unknown): Provider {
     graduationYear,
     expatriationYear,
     isActive,
+
+    // Nouveaux champs statut busy
+    availability,
+    currentCallSessionId,
+    busySince,
+    busyReason,
   };
 }
 
 /**
  * Valide qu'un provider a les données minimales requises
+ * Filtre les prestataires inactifs, non approuvés, bannis ou cachés
  */
 export function validateProvider(provider: Provider | null): provider is Provider {
   if (!provider) return false;
 
-  // Validation sans isApproved: les prestataires sont visibles même sans KYC complété
-  // Critères: ID valide, nom valide, pas banni, visible, pas admin
-  // Note: On cast pour accéder aux champs potentiellement présents dans Firestore mais non typés
+  // Critères de validation :
+  // - ID valide et nom valide
+  // - Compte actif (isActive !== false)
+  // - Profil approuvé (isApproved !== false)
+  // - Non banni (isBanned !== true)
+  // - Visible (isVisible !== false)
+  // - Pas un admin
   const rawProvider = provider as unknown as Record<string, unknown>;
   const roleStr = String(rawProvider.role ?? '');
   const notAdmin = roleStr !== 'admin' && rawProvider.isAdmin !== true;
@@ -263,6 +294,8 @@ export function validateProvider(provider: Provider | null): provider is Provide
   return Boolean(
     provider.id.trim() &&
     provider.name.trim() &&
+    provider.isActive !== false &&
+    provider.isApproved !== false &&
     !provider.isBanned &&
     provider.isVisible !== false &&
     notAdmin
@@ -315,5 +348,11 @@ export function createDefaultProvider(providerId: string): Provider {
     graduationYear: '',
     expatriationYear: '',
     isActive: true,
+
+    // Nouveaux champs statut busy
+    availability: 'offline',
+    currentCallSessionId: null,
+    busySince: null,
+    busyReason: null,
   };
 }

@@ -57,6 +57,7 @@ type Translations = {
   hi: TranslationUnit;
   pt: TranslationUnit;
   ch: TranslationUnit;
+  ar: TranslationUnit;
 };
 
 const PrivacyPolicy: React.FC = () => {

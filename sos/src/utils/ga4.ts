@@ -11,8 +11,8 @@
 
 declare global {
   interface Window {
-    dataLayer?: unknown[];
-    gtag?: (...args: unknown[]) => void;
+    dataLayer: unknown[];
+    gtag: (...args: unknown[]) => void;
   }
 }
 
@@ -178,8 +178,8 @@ export const initializeGA4 = (): void => {
   }
 
   // Check if already initialized (less strict check)
-  if (window.gtag && window.dataLayer) {
-    const currentGtag = (window as any).gtag;
+  if (typeof window.gtag === 'function' && window.dataLayer) {
+    const currentGtag = (window as unknown as { gtag: (...args: unknown[]) => void }).gtag;
     // Check if it's Google's gtag (not our wrapper)
     if (currentGtag && currentGtag.toString().length > 100) {
       console.log('✅ GA4: Already initialized');

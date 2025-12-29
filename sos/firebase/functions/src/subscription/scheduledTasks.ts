@@ -406,8 +406,10 @@ export const sendQuotaAlerts = onSchedule(
     const db = getDb();
     const now = admin.firestore.Timestamp.now();
 
-    // Get all ai_usage documents
-    const usageSnapshot = await db.collection('ai_usage').get();
+    // Get all ai_usage documents - OPTIMISÉ: select() pour ne charger que les champs nécessaires
+    const usageSnapshot = await db.collection('ai_usage')
+      .select('providerId', 'currentPeriodCalls', 'currentPeriodEnd', 'alert80SentAt', 'alert100SentAt')
+      .get();
 
     if (usageSnapshot.empty) {
       logger.info('[sendQuotaAlerts] No ai_usage documents found');

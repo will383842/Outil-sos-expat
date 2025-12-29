@@ -357,7 +357,8 @@
       "activeDesc": "Los usuarios ven el mensaje de mantenimiento en lugar de la plataforma.",
       "enable": "Activar modo mantenimiento",
       "enableDesc": "Mostrar mensaje de mantenimiento a los usuarios",
-      "message": "Mensaje de mantenimiento"
+      "message": "Mensaje de mantenimiento",
+      "messagePlaceholder": "La plataforma esta en mantenimiento..."
     },
     "notifications": {
       "title": "Notificaciones",

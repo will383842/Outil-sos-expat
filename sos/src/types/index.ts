@@ -24,6 +24,7 @@ export type { Provider as ProviderDoc } from './provider';
 
 // -----------------------------------------------------------------------------
 // Domaine Subscription (abonnements IA pour prestataires)
+// Currency = 'EUR' | 'USD' (uppercase - display convention)
 // -----------------------------------------------------------------------------
 export type {
   SubscriptionTier,
@@ -41,6 +42,50 @@ export type {
 } from './subscription';
 
 // -----------------------------------------------------------------------------
+// Domaine Pricing (tarification des services/appels)
+// ServiceCurrency = 'eur' | 'usd' (lowercase - Stripe API convention)
+// -----------------------------------------------------------------------------
+export type {
+  ServiceCurrency,
+  Currency as PricingCurrency,
+  ServiceKind,
+  PricingNode,
+  PricingOverrideNode,
+  PricingDoc
+} from './pricing';
+
+// -----------------------------------------------------------------------------
+// Currency Conversion Utilities
+// Helpers to convert between uppercase (display) and lowercase (Stripe) formats
+// -----------------------------------------------------------------------------
+export type DisplayCurrency = 'EUR' | 'USD';
+export type StripeCurrency = 'eur' | 'usd';
+
+/** Convert Stripe currency (lowercase) to display format (uppercase) */
+export const toDisplayCurrency = (currency: StripeCurrency): DisplayCurrency => {
+  return currency.toUpperCase() as DisplayCurrency;
+};
+
+/** Convert display currency (uppercase) to Stripe format (lowercase) */
+export const toStripeCurrency = (currency: DisplayCurrency): StripeCurrency => {
+  return currency.toLowerCase() as StripeCurrency;
+};
+
+/** Normalize any currency string to Stripe format */
+export const normalizeToStripeCurrency = (currency: string): StripeCurrency => {
+  const lower = currency.toLowerCase();
+  if (lower === 'eur' || lower === 'usd') return lower as StripeCurrency;
+  return 'eur'; // Default fallback
+};
+
+/** Normalize any currency string to display format */
+export const normalizeToDisplayCurrency = (currency: string): DisplayCurrency => {
+  const upper = currency.toUpperCase();
+  if (upper === 'EUR' || upper === 'USD') return upper as DisplayCurrency;
+  return 'EUR'; // Default fallback
+};
+
+// -----------------------------------------------------------------------------
 // Types de domaine transverses (reviews, reports, paiements, appels, etc.)
 // Ces interfaces reflètent l'usage observé dans le code et évitent les `any`.
 // -----------------------------------------------------------------------------
@@ -51,13 +96,14 @@ export interface Review {
   rating: number;
   comment?: string;
 
-  // Dates: on accepte Date native, timestamp number (ms/s) ou Firestore Timestamp-like
-  createdAt: Date | number | { toDate(): Date };
+  // Dates: createdAt must be Date for sorting/display in Testimonials pages
+  createdAt: Date;
 
   // Infos client / auteur
   clientId?: string;
   clientName?: string;
   clientCountry?: string;
+  clientAvatar?: string;       // utilisé dans Testimonials.tsx et TestimonialDetail.tsx
   authorName?: string;
   authorId?: string;
 
@@ -69,14 +115,22 @@ export interface Review {
   serviceType?: 'lawyer_call' | 'expat_call';
   callId?: string;
 
-  // Modération / statut
-  status?: 'pending' | 'published' | 'hidden';
+  // Modération / statut (hidden utilisé dans AdminReviews, rejected dans testimonials)
+  status?: 'pending' | 'published' | 'rejected' | 'hidden';
   isPublic?: boolean;          // utilisé dans utils/firestore.ts
   moderatorNotes?: string;     // utilisé dans AdminReviews.tsx
   reportedCount?: number;
+  verified?: boolean;          // utilisé dans Testimonials.tsx et TestimonialDetail.tsx
 
   // Divers
   helpfulVotes?: number;
+
+  // Champs additionnels pour les témoignages détaillés (TestimonialDetail.tsx)
+  title?: string;
+  fullcontent?: string;
+  service_used?: string;
+  duration?: string;
+  help_type?: string[];
 }
 
 // Report utilisé dans AdminReports.tsx (statuts stricts)

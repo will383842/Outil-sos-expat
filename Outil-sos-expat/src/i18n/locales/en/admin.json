@@ -376,7 +376,8 @@
       "activeDesc": "Users see the maintenance message instead of the platform.",
       "enable": "Enable maintenance mode",
       "enableDesc": "Display maintenance message to users",
-      "message": "Maintenance message"
+      "message": "Maintenance message",
+      "messagePlaceholder": "The platform is under maintenance..."
     },
     "notifications": {
       "title": "Notifications",

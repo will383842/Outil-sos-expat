@@ -20,17 +20,17 @@ export const SubscriptionSuccessPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const { subscription, plans, loadSubscription } = useSubscription();
+  const { subscription, plans, refresh } = useSubscription();
   const [showConfetti, setShowConfetti] = useState(true);
 
   // Reload subscription data
   useEffect(() => {
-    loadSubscription();
+    refresh();
 
     // Stop confetti after 5 seconds
     const timer = setTimeout(() => setShowConfetti(false), 5000);
     return () => clearTimeout(timer);
-  }, [loadSubscription]);
+  }, [refresh]);
 
   // Get current plan name
   const currentPlan = plans.find(p => p.id === subscription?.planId);

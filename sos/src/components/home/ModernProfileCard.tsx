@@ -11,6 +11,7 @@ import {
   Wifi,
   WifiOff,
   MapPin,
+  Clock,
 } from "lucide-react";
 
 // Import des utilitaires d'internationalisation
@@ -32,6 +33,7 @@ interface ModernProfileCardProps {
   isUserConnected: boolean;
   index?: number;
   language?: "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar";
+  showSpecialties?: boolean;
 }
 
 // Constants - Centralisées pour éviter les recreations
@@ -160,33 +162,49 @@ const getProfessionInfo = (type: string) => {
   return PROFESSION_ICONS[type] || PROFESSION_ICONS["expat"];
 };
 
-// Hook pour les couleurs de statut (mémoïsé)
-const useStatusColors = (isOnline: boolean) => {
-  return useMemo(
-    () =>
-      isOnline
-        ? {
-            border: "border-green-300",
-            shadow: "shadow-green-100",
-            glow: "shadow-green-200/50",
-            borderShadow: "drop-shadow-[0_0_8px_rgba(34,197,94,0.3)]",
-            badge: "bg-green-100 text-green-800 border-green-300",
-            button:
-              "bg-green-700 hover:bg-green-800 active:bg-green-900 border-green-700",
-            accent: "text-green-700",
-          }
-        : {
-            border: "border-red-300",
-            shadow: "shadow-red-100",
-            glow: "shadow-red-200/50",
-            borderShadow: "drop-shadow-[0_0_8px_rgba(239,68,68,0.4)]",
-            badge: "bg-red-100 text-red-800 border-red-300",
-            button:
-              "bg-red-700 hover:bg-red-800 active:bg-red-900 border-red-700",
-            accent: "text-red-700",
-          },
-    [isOnline]
-  );
+// Type pour le statut de disponibilité
+type AvailabilityStatus = 'available' | 'busy' | 'offline';
+
+// Hook pour les couleurs de statut (mémoïsé) - Supporte available, busy, offline
+const useStatusColors = (availability: AvailabilityStatus) => {
+  return useMemo(() => {
+    switch (availability) {
+      case 'available':
+        return {
+          border: "border-green-300",
+          shadow: "shadow-green-100",
+          glow: "shadow-green-200/50",
+          borderShadow: "drop-shadow-[0_0_8px_rgba(34,197,94,0.3)]",
+          badge: "bg-green-100 text-green-800 border-green-300",
+          button:
+            "bg-green-700 hover:bg-green-800 active:bg-green-900 border-green-700",
+          accent: "text-green-700",
+        };
+      case 'busy':
+        return {
+          border: "border-orange-300",
+          shadow: "shadow-orange-100",
+          glow: "shadow-orange-200/50",
+          borderShadow: "drop-shadow-[0_0_8px_rgba(249,115,22,0.3)]",
+          badge: "bg-orange-100 text-orange-800 border-orange-300",
+          button:
+            "bg-orange-600 hover:bg-orange-700 active:bg-orange-800 border-orange-600",
+          accent: "text-orange-600",
+        };
+      case 'offline':
+      default:
+        return {
+          border: "border-red-300",
+          shadow: "shadow-red-100",
+          glow: "shadow-red-200/50",
+          borderShadow: "drop-shadow-[0_0_8px_rgba(239,68,68,0.4)]",
+          badge: "bg-red-100 text-red-800 border-red-300",
+          button:
+            "bg-red-700 hover:bg-red-800 active:bg-red-900 border-red-700",
+          accent: "text-red-700",
+        };
+    }
+  }, [availability]);
 };
 
 // Composant ModernProfileCard - Version Production avec Internationalisation
@@ -204,7 +222,14 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
     const [imageLoaded, setImageLoaded] = useState(false);
     const [imageError, setImageError] = useState(false);
 
-    const statusColors = useStatusColors(provider.isOnline);
+    // Déterminer le statut de disponibilité
+    const availability: AvailabilityStatus = useMemo(() => {
+      if (provider.availability === 'busy') return 'busy';
+      if (provider.isOnline && provider.availability !== 'offline') return 'available';
+      return 'offline';
+    }, [provider.availability, provider.isOnline]);
+
+    const statusColors = useStatusColors(availability);
     const professionInfo = useMemo(
       () => getProfessionInfo(provider.type),
       [provider.type]
@@ -314,6 +339,19 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
       setIsHovered(false);
     }, []);
 
+    // Fonction helper pour obtenir le texte du statut traduit
+    const getStatusText = useCallback(() => {
+      switch (availability) {
+        case 'available':
+          return intl.formatMessage({ id: "card.online" });
+        case 'busy':
+          return intl.formatMessage({ id: "card.busy", defaultMessage: "Occupé" });
+        case 'offline':
+        default:
+          return intl.formatMessage({ id: "card.offline" });
+      }
+    }, [availability, intl]);
+
     const ariaLabels = useMemo(
       () => ({
         card: intl.formatMessage(
@@ -322,11 +360,7 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
         ),
         status: intl.formatMessage(
           { id: "card.aria.onlineStatus" },
-          {
-            status: provider.isOnline
-              ? intl.formatMessage({ id: "card.online" })
-              : intl.formatMessage({ id: "card.offline" }),
-          }
+          { status: getStatusText() }
         ),
         rating: intl.formatMessage(
           { id: "card.aria.rating" },
@@ -337,7 +371,7 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
           { name: provider.name }
         ),
       }),
-      [intl, provider.name, provider.isOnline, provider.rating]
+      [intl, provider.name, provider.rating, getStatusText]
     );
 
     return (
@@ -403,16 +437,14 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
               `}
                 aria-label={ariaLabels.status}
               >
-                {provider.isOnline ? (
+                {availability === 'available' ? (
                   <Wifi className="w-4 h-4" aria-hidden="true" />
+                ) : availability === 'busy' ? (
+                  <Clock className="w-4 h-4" aria-hidden="true" />
                 ) : (
                   <WifiOff className="w-4 h-4" aria-hidden="true" />
                 )}
-                <span>
-                  {provider.isOnline
-                    ? intl.formatMessage({ id: "card.online" })
-                    : intl.formatMessage({ id: "card.offline" })}
-                </span>
+                <span>{getStatusText()}</span>
               </div>
             </div>
 

@@ -158,6 +158,20 @@ const I18N = {
     altToCrop: "待裁剪图像",
     altPreview: "裁剪预览",
   },
+  ar: {
+    title: "اقتصاص الصورة",
+    hint: "اسحب الصورة لإعادة تموضعها. استخدم أدوات التحكم للضبط.",
+    preview: "معاينة:",
+    finalSize: "الحجم النهائي:",
+    quality: "تنسيق محسّن، جودة عالية",
+    zoom: "تكبير",
+    rotate: "تدوير 90°",
+    cancel: "إلغاء",
+    validate: "تطبيق",
+    processing: "جارٍ المعالجة...",
+    altToCrop: "صورة للاقتصاص",
+    altPreview: "معاينة الاقتصاص",
+  },
 } as const;
 
 

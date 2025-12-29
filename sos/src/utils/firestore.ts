@@ -782,23 +782,19 @@ export const updatePaymentRecord = async (
 // };
 
 export const createReviewRecord = async (reviewData: Partial<Review>) => {
-  try {
-    console.log("🚀 Starting createReviewRecord with data:", reviewData);
+  // Auto-publication si note >= 4
+  const auto = (Number(reviewData.rating) || 0) >= 4;
+  const currentUser = auth.currentUser;
 
-    // Auto-publication si note >= 4
-    const auto = (Number(reviewData.rating) || 0) >= 4;
-    const currentUser = auth.currentUser;
+  // Check authentication first
+  if (!currentUser) {
+    throw new Error("User is not authenticated");
+  }
 
-    // ✅ Check authentication first
-    if (!currentUser) {
-      throw new Error("User is not authenticated");
-    }
-
-    console.log("✅ User authenticated:", currentUser.uid);
-
-    // ✅ Check if review already exists for this call (unicité)
+  // Use transaction for atomicity - prevents race conditions on uniqueness check
+  return await runTransaction(db, async (transaction) => {
+    // Check if review already exists for this call (unicité)
     if (reviewData.callId) {
-      console.log("🔍 Checking for existing review...");
       const existingReviewQuery = query(
         collection(db, "reviews"),
         where("callId", "==", reviewData.callId),
@@ -808,10 +804,8 @@ export const createReviewRecord = async (reviewData: Partial<Review>) => {
       const existingReviewSnap = await getDocs(existingReviewQuery);
 
       if (!existingReviewSnap.empty) {
-        console.log("⚠️ Review already exists for this call");
         throw new Error("You have already submitted a review for this call");
       }
-      console.log("✅ No existing review found, proceeding...");
     }
 
     const payload: Dict = {
@@ -823,109 +817,49 @@ export const createReviewRecord = async (reviewData: Partial<Review>) => {
       ...(auto ? { publishedAt: serverTimestamp() } : {}),
     };
 
-    console.log("📦 Payload prepared:", payload);
+    // Create review document
+    const reviewsRef = collection(db, "reviews");
+    const reviewDocRef = doc(reviewsRef);
+    transaction.set(reviewDocRef, payload as DocumentData);
 
-    // === STEP 1: Create review document ===
-    try {
-      console.log("🔄 Creating review document in 'reviews' collection...");
-      const reviewsRef = collection(db, "reviews");
-      const reviewDoc = await addDoc(reviewsRef, payload as DocumentData);
-      console.log("✅ Review document created successfully:", reviewDoc.id);
+    // Update provider aggregates atomically
+    if (reviewData.providerId && truthy(reviewData.rating)) {
+      const providerId = reviewData.providerId as string;
 
-      // === STEP 2: Update provider aggregates ===
-      if (reviewData.providerId && truthy(reviewData.rating)) {
-        const providerId = reviewData.providerId as string;
-        console.log("🔄 Updating provider aggregates for:", providerId);
+      // Get provider document
+      const sosRef = doc(db, "sos_profiles", providerId);
+      const sosSnap = await transaction.get(sosRef);
 
-        try {
-          // Get provider document
-          console.log("🔄 Fetching sos_profiles document...");
-          const sosRef = doc(db, "sos_profiles", providerId);
-          const sosSnap = await getDoc(sosRef);
+      if (sosSnap.exists()) {
+        const p = asDict(sosSnap.data());
+        const currentRating = getNum(p.rating, 0);
+        const currentCount = getNum(p.reviewCount, 0);
+        const newRating =
+          (currentRating * currentCount + Number(reviewData.rating)) /
+          (currentCount + 1);
 
-          if (sosSnap.exists()) {
-            console.log("✅ sos_profiles document found");
-            const p = asDict(sosSnap.data());
-            const currentRating = getNum(p.rating, 0);
-            const currentCount = getNum(p.reviewCount, 0);
-            const newRating =
-              (currentRating * currentCount + Number(reviewData.rating)) /
-              (currentCount + 1);
+        // Update sos_profiles
+        transaction.update(sosRef, {
+          rating: newRating,
+          reviewCount: currentCount + 1,
+          updatedAt: serverTimestamp(),
+        });
 
-            console.log("📊 Rating calculation:", {
-              currentRating,
-              currentCount,
-              newRating,
-              addedRating: reviewData.rating,
-            });
-
-            // Update sos_profiles
-            try {
-              console.log("🔄 Updating sos_profiles document...");
-              await updateDoc(sosRef, {
-                rating: newRating,
-                reviewCount: increment(1),
-                updatedAt: serverTimestamp(),
-              });
-              console.log("✅ sos_profiles updated successfully");
-            } catch (sosError) {
-              console.error("❌ Error updating sos_profiles:", sosError);
-              throw sosError;
-            }
-
-            // Update users document
-            try {
-              console.log("🔄 Updating users document...");
-              const userRef = doc(db, "users", providerId);
-              await updateDoc(userRef, {
-                rating: newRating,
-                reviewCount: increment(1),
-                updatedAt: serverTimestamp(),
-              });
-              console.log("✅ users document updated successfully");
-            } catch (userError) {
-              console.error("❌ Error updating users document:", userError);
-              throw userError;
-            }
-          } else {
-            console.warn("⚠️ sos_profiles document not found for:", providerId);
-          }
-        } catch (aggregateError) {
-          console.error(
-            "❌ Error in provider aggregates update:",
-            aggregateError
-          );
-          // Don't throw here - review was created successfully
-          console.log("⚠️ Review created but aggregate update failed");
+        // Update users document
+        const userRef = doc(db, "users", providerId);
+        const userSnap = await transaction.get(userRef);
+        if (userSnap.exists()) {
+          transaction.update(userRef, {
+            rating: newRating,
+            reviewCount: currentCount + 1,
+            updatedAt: serverTimestamp(),
+          });
         }
-      } else {
-        console.log(
-          "⏭️ Skipping provider aggregates (no providerId or rating)"
-        );
       }
-
-      console.log(
-        "🎉 createReviewRecord completed successfully:",
-        reviewDoc.id
-      );
-      return reviewDoc.id;
-    } catch (reviewCreationError) {
-      console.error("❌ Error creating review document:", reviewCreationError);
-      throw reviewCreationError;
     }
-  } catch (mainError) {
-    console.error("❌ Fatal error in createReviewRecord:", mainError);
 
-    // Log additional debug info
-    console.error("Debug info:", {
-      isAuthenticated: !!auth.currentUser,
-      userId: auth.currentUser?.uid,
-      reviewData: reviewData,
-      error: mainError,
-    });
-
-    throw mainError;
-  }
+    return reviewDocRef.id;
+  });
 };
 
 // B) Remplacement complet de updateReviewStatus (synchronise status <-> isPublic)

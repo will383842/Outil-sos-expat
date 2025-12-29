@@ -88,18 +88,19 @@ export function useAiQuota(): UseAiQuotaReturn {
 
   // Check quota when usage changes
   useEffect(() => {
-    if (!user?.uid) return;
+    const uid = user?.uid;
+    if (!uid) return;
 
-    const checkQuota = async () => {
+    const checkQuotaAsync = async () => {
       try {
-        const result = await checkAiQuota(user.uid);
+        const result = await checkAiQuota(uid);
         setQuotaCheck(result);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error checking quota:', err);
       }
     };
 
-    checkQuota();
+    checkQuotaAsync();
   }, [user?.uid, usage]);
 
   // Computed values

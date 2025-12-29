@@ -24,8 +24,8 @@ import { useAiQuota } from '../../../hooks/useAiQuota';
 import { useAuth } from '../../../contexts/AuthContext';
 import { SubscriptionCard } from '../../../components/subscription/SubscriptionCard';
 import { QuotaUsageBar } from '../../../components/subscription/QuotaUsageBar';
-import { getInvoices, subscribeToInvoices } from '../../../services/subscription/subscriptionService';
-import { Invoice, ProviderType } from '../../../types/subscription';
+import { subscribeToInvoices } from '../../../services/subscription/subscriptionService';
+import { Invoice } from '../../../types/subscription';
 import { cn } from '../../../utils/cn';
 import { getDateLocale } from '../../../utils/formatters';
 
@@ -146,8 +146,8 @@ export const SubscriptionPage: React.FC = () => {
     loading: subLoading,
     isTrialing,
     openBillingPortal,
-    cancel: cancelSubscription,
-    reactivate: reactivateSubscription,
+    cancelSubscription,
+    reactivateSubscription,
     initializeTrial
   } = useSubscription();
 
@@ -187,8 +187,8 @@ export const SubscriptionPage: React.FC = () => {
 
     setIsInitializing(true);
     try {
-      const providerType: ProviderType = user.role === 'lawyer' ? 'lawyer' : 'expat_aidant';
-      await initializeTrial(providerType);
+      // initializeTrial uses the providerType from the hook internally
+      await initializeTrial();
     } catch (error) {
       console.error('Error starting trial:', error);
     } finally {
@@ -198,9 +198,11 @@ export const SubscriptionPage: React.FC = () => {
 
   // Handle cancel subscription
   const handleCancel = async () => {
-    const result = await cancelSubscription(false); // Cancel at period end
-    if (result.success) {
+    try {
+      await cancelSubscription(); // Cancel at period end
       setShowCancelModal(false);
+    } catch (error) {
+      console.error('Failed to cancel subscription:', error);
     }
   };
 

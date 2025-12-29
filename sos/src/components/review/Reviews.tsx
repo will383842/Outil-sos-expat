@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useCallback, useMemo } from 'react';
 import { Star, MapPin, Calendar, ThumbsUp, Flag } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { formatDate } from '../../utils/localeFormatters';
@@ -36,7 +36,8 @@ interface ReviewsProps {
   ratingDistribution?: { 5: number; 4: number; 3: number; 2: number; 1: number };
 }
 
-const Reviews: React.FC<ReviewsProps> = ({
+// OPTIMISÉ: memo() pour éviter re-renders inutiles
+const Reviews: React.FC<ReviewsProps> = memo(function Reviews({
   reviews,
   mode = 'list',
   showControls = false,
@@ -45,10 +46,11 @@ const Reviews: React.FC<ReviewsProps> = ({
   averageRating = 0,
   totalReviews = 0,
   ratingDistribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
-}) => {
+}) {
   const { language } = useApp();
-  
-  const renderStars = (rating: number) => {
+
+  // OPTIMISÉ: useCallback pour éviter re-création de la fonction
+  const renderStars = useCallback((rating: number) => {
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating - fullStars >= 0.5;
     return Array.from({ length: 5 }, (_, i) => (
@@ -64,16 +66,25 @@ const Reviews: React.FC<ReviewsProps> = ({
         }
       />
     ));
-  };
+  }, [mode]);
 
-  const formatDateLocal = (date: DateLike) => {
+  const formatDateLocal = useCallback((date: DateLike) => {
     return formatDate(date, {
       language,
       format: 'long',
     });
-  };
+  }, [language]);
 
-  const getPercentage = (count: number) => (!totalReviews ? 0 : Math.round((count / totalReviews) * 100));
+  // OPTIMISÉ: useMemo pour pré-calculer les pourcentages une seule fois
+  const percentages = useMemo(() => ({
+    5: !totalReviews ? 0 : Math.round((ratingDistribution[5] / totalReviews) * 100),
+    4: !totalReviews ? 0 : Math.round((ratingDistribution[4] / totalReviews) * 100),
+    3: !totalReviews ? 0 : Math.round((ratingDistribution[3] / totalReviews) * 100),
+    2: !totalReviews ? 0 : Math.round((ratingDistribution[2] / totalReviews) * 100),
+    1: !totalReviews ? 0 : Math.round((ratingDistribution[1] / totalReviews) * 100),
+  }), [totalReviews, ratingDistribution]);
+
+  const getPercentage = useCallback((count: number) => (!totalReviews ? 0 : Math.round((count / totalReviews) * 100)), [totalReviews]);
 
   if (mode === 'summary') {
     return (
@@ -204,7 +215,7 @@ const Reviews: React.FC<ReviewsProps> = ({
       ))}
     </div>
   );
-};
+});
 
 export default Reviews;
 

@@ -31,7 +31,7 @@ import {
   Languages,
   Briefcase,
   Scale,
-  Map
+  Map as MapIcon
 } from 'lucide-react';
 import WorldMapSubscriptions, { CountryData } from '../../../components/admin/WorldMapSubscriptions';
 import {
@@ -738,7 +738,7 @@ export const IaSubscriptionsTab: React.FC = () => {
               viewMode === 'map' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
             )}
           >
-            <Map className="w-4 h-4" />
+            <MapIcon className="w-4 h-4" />
             Carte mondiale
           </button>
         </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
-import { Star, MapPin, Phone, ChevronLeft, ChevronRight, Globe, Search, ArrowDown, ArrowUp, ChevronDown, Filter } from 'lucide-react';
+import { Star, MapPin, Phone, ChevronLeft, ChevronRight, Globe, Search, ArrowDown, ArrowUp, ChevronDown, Filter, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useIntl } from 'react-intl';
 import { collection, query, onSnapshot, limit, where, orderBy } from 'firebase/firestore';
@@ -51,6 +51,9 @@ interface Provider {
   readonly toLowerCase?: never;
   readonly split?: never;
   readonly toMillis?: never;
+  // Gestion statut busy pendant appels
+  readonly availability?: 'available' | 'busy' | 'offline';
+  readonly currentCallSessionId?: string | null;
 }
 
 interface ProfileCardsProps {
@@ -406,6 +409,9 @@ const provider: Provider = {
         reviewCount: Math.max(0, Number(data.reviewCount) || 0),
         yearsOfExperience: Math.max(0, Number(data.yearsOfExperience) || Number(data.yearsAsExpat) || 0),
         isOnline: Boolean(data.isOnline),
+        availability: (data.availability === 'busy' ? 'busy' :
+                       data.availability === 'offline' || !data.isOnline ? 'offline' : 'available') as 'available' | 'busy' | 'offline',
+        currentCallSessionId: typeof data.currentCallSessionId === 'string' ? data.currentCallSessionId : null,
         isApproved: data.isApproved === true,
         isVisible: data.isVisible !== false,
         isActive: data.isActive !== false,
@@ -921,9 +927,11 @@ filtered = filtered.filter(p => {
           tabIndex={0}
           aria-label={`Contacter ${provider.name}, ${provider.type === 'lawyer' ? 'avocat' : 'expert expatriation'} en ${provider.country}`}
           className={`${isCarousel ? 'flex-shrink-0 w-80' : ''} group bg-white rounded-3xl shadow-lg overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-3 backdrop-blur-sm cursor-pointer border-[3px] ${
-            provider.isOnline 
-              ? 'border-green-500 shadow-green-500/20 hover:border-green-600 hover:shadow-green-600/30' 
-              : 'border-red-500 shadow-red-500/20 hover:border-red-600 hover:shadow-red-600/30'
+            provider.availability === 'busy'
+              ? 'border-orange-500 shadow-orange-500/20 hover:border-orange-600 hover:shadow-orange-600/30'
+              : provider.isOnline
+                ? 'border-green-500 shadow-green-500/20 hover:border-green-600 hover:shadow-green-600/30'
+                : 'border-red-500 shadow-red-500/20 hover:border-red-600 hover:shadow-red-600/30'
           }`}
           data-provider-id={provider.id}
           data-provider-type={provider.type}
@@ -972,11 +980,17 @@ filtered = filtered.filter(p => {
             </div>
 
             <div className="absolute bottom-4 right-4">
-              <div className={`w-5 h-5 rounded-full shadow-xl border-2 border-white ${
-                provider.isOnline 
-                  ? 'bg-green-500 shadow-green-500/60 animate-pulse' 
-                  : 'bg-red-500 shadow-red-500/60'
-              }`}></div>
+              <div className={`w-5 h-5 rounded-full shadow-xl border-2 border-white flex items-center justify-center ${
+                provider.availability === 'busy'
+                  ? 'bg-orange-500 shadow-orange-500/60'
+                  : provider.isOnline
+                    ? 'bg-green-500 shadow-green-500/60 animate-pulse'
+                    : 'bg-red-500 shadow-red-500/60'
+              }`}>
+                {provider.availability === 'busy' && (
+                  <Clock className="w-3 h-3 text-white" />
+                )}
+              </div>
             </div>
           </div>
           
@@ -1107,12 +1121,15 @@ filtered = filtered.filter(p => {
           />
           
           <div className="absolute top-4 left-4">
-            <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
-              provider.isOnline 
-                ? 'bg-green-500 text-white' 
-                : 'bg-red-500 text-white'
+            <div className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 ${
+              provider.availability === 'busy'
+                ? 'bg-orange-500 text-white'
+                : provider.isOnline
+                  ? 'bg-green-500 text-white'
+                  : 'bg-red-500 text-white'
             }`}>
-              {provider.isOnline ? 'En ligne' : 'Hors ligne'}
+              {provider.availability === 'busy' && <Clock size={12} />}
+              {provider.availability === 'busy' ? 'Occupé' : provider.isOnline ? 'En ligne' : 'Hors ligne'}
             </div>
           </div>
           

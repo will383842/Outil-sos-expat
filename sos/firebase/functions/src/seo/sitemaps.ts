@@ -48,49 +48,51 @@ export const sitemapProfiles = onRequest(
       const db = admin.firestore();
       
       // ✅ Utilise sos_profiles (pas users)
+      // Filtre les prestataires visibles, approuvés ET actifs
       const snapshot = await db.collection('sos_profiles')
         .where('isVisible', '==', true)
         .where('isApproved', '==', true)
+        .where('isActive', '==', true)
         .get();
 
       const today = new Date().toISOString().split('T')[0];
-      
-      let xml = `<?xml version="1.0" encoding="UTF-8"?>
+
+      // OPTIMISÉ: Utilise array.join() au lieu de += pour éviter O(n²)
+      const urlBlocks: string[] = [];
+
+      urlBlocks.push(`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml">
-`;
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">`);
 
       snapshot.docs.forEach(doc => {
         const profile = doc.data();
-        
+
         if (!profile.slug) return;
 
         const countryCode = profile.countryCode || profile.country || 'fr';
-        
+
         LANGUAGES.forEach(lang => {
           const url = `${SITE_URL}/${lang}-${countryCode}/${profile.slug}`;
-          
-          xml += `  <url>
-    <loc>${escapeXml(url)}</loc>
-`;
-          
-          // Hreflang pour toutes les langues (ch → zh-Hans pour SEO)
-          LANGUAGES.forEach(hrefLang => {
+
+          // Génère tous les hreflang en une seule opération
+          const hreflangs = LANGUAGES.map(hrefLang => {
             const hrefUrl = `${SITE_URL}/${hrefLang}-${countryCode}/${profile.slug}`;
-            xml += `    <xhtml:link rel="alternate" hreflang="${getHreflangCode(hrefLang)}" href="${escapeXml(hrefUrl)}"/>
-`;
-          });
-          
-          xml += `    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(`${SITE_URL}/fr-${countryCode}/${profile.slug}`)}"/>
+            return `    <xhtml:link rel="alternate" hreflang="${getHreflangCode(hrefLang)}" href="${escapeXml(hrefUrl)}"/>`;
+          }).join('\n');
+
+          urlBlocks.push(`  <url>
+    <loc>${escapeXml(url)}</loc>
+${hreflangs}
+    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(`${SITE_URL}/fr-${countryCode}/${profile.slug}`)}"/>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <lastmod>${today}</lastmod>
-  </url>
-`;
+  </url>`);
         });
       });
 
-      xml += `</urlset>`;
+      urlBlocks.push(`</urlset>`);
+      const xml = urlBlocks.join('\n');
 
       res.set('Content-Type', 'application/xml; charset=utf-8');
       res.set('Cache-Control', 'public, max-age=3600');
@@ -145,11 +147,6 @@ export const sitemapBlog = onRequest(
 
       const today = new Date().toISOString().split('T')[0];
 
-      let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml">
-`;
-
       // Mapping des slugs de routes par langue
       const helpCenterSlug: Record<string, string> = {
         fr: 'centre-aide',
@@ -165,13 +162,23 @@ export const sitemapBlog = onRequest(
 
       // Si aucun article, retourne un sitemap vide mais valide
       if (publishedDocs.length === 0) {
-        xml += `</urlset>`;
+        const emptyXml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+</urlset>`;
         res.set('Content-Type', 'application/xml; charset=utf-8');
         res.set('Cache-Control', 'public, max-age=3600');
-        res.status(200).send(xml);
+        res.status(200).send(emptyXml);
         console.log(`⚠️ Sitemap help articles: 0 articles publiés`);
         return;
       }
+
+      // OPTIMISÉ: Utilise array.join() au lieu de += pour éviter O(n²)
+      const urlBlocks: string[] = [];
+
+      urlBlocks.push(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">`);
 
       publishedDocs.forEach(doc => {
         const article = doc.data();
@@ -192,28 +199,26 @@ export const sitemapBlog = onRequest(
           const routeSlug = helpCenterSlug[lang] || 'help-center';
           const url = `${SITE_URL}/${lang}/${routeSlug}/${slug}`;
 
-          xml += `  <url>
-    <loc>${escapeXml(url)}</loc>
-`;
-
-          // Hreflang pour toutes les langues
-          LANGUAGES.forEach(hrefLang => {
+          // Génère tous les hreflang en une seule opération
+          const hreflangs = LANGUAGES.map(hrefLang => {
             const hrefSlug = getSlug(hrefLang);
             const hrefRouteSlug = helpCenterSlug[hrefLang] || 'help-center';
-            xml += `    <xhtml:link rel="alternate" hreflang="${getHreflangCode(hrefLang)}" href="${escapeXml(`${SITE_URL}/${hrefLang}/${hrefRouteSlug}/${hrefSlug}`)}"/>
-`;
-          });
+            return `    <xhtml:link rel="alternate" hreflang="${getHreflangCode(hrefLang)}" href="${escapeXml(`${SITE_URL}/${hrefLang}/${hrefRouteSlug}/${hrefSlug}`)}"/>`;
+          }).join('\n');
 
-          xml += `    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(`${SITE_URL}/fr/${helpCenterSlug['fr']}/${getSlug('fr')}`)}"/>
+          urlBlocks.push(`  <url>
+    <loc>${escapeXml(url)}</loc>
+${hreflangs}
+    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(`${SITE_URL}/fr/${helpCenterSlug['fr']}/${getSlug('fr')}`)}"/>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
     <lastmod>${article.updatedAt?.toDate?.()?.toISOString?.()?.split('T')[0] || today}</lastmod>
-  </url>
-`;
+  </url>`);
         });
       });
 
-      xml += `</urlset>`;
+      urlBlocks.push(`</urlset>`);
+      const xml = urlBlocks.join('\n');
 
       res.set('Content-Type', 'application/xml; charset=utf-8');
       res.set('Cache-Control', 'public, max-age=3600');
@@ -254,38 +259,39 @@ export const sitemapLanding = onRequest(
         .get();
 
       const today = new Date().toISOString().split('T')[0];
-      
-      let xml = `<?xml version="1.0" encoding="UTF-8"?>
+
+      // OPTIMISÉ: Utilise array.join() au lieu de += pour éviter O(n²)
+      const urlBlocks: string[] = [];
+
+      urlBlocks.push(`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml">
-`;
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">`);
 
       snapshot.docs.forEach(doc => {
         const page = doc.data();
         const slug = page.slug || doc.id;
-        
+
         LANGUAGES.forEach(lang => {
           const url = `${SITE_URL}/${lang}/${slug}`;
-          
-          xml += `  <url>
-    <loc>${escapeXml(url)}</loc>
-`;
-          
-          LANGUAGES.forEach(hrefLang => {
-            xml += `    <xhtml:link rel="alternate" hreflang="${getHreflangCode(hrefLang)}" href="${escapeXml(`${SITE_URL}/${hrefLang}/${slug}`)}"/>
-`;
-          });
 
-          xml += `    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(`${SITE_URL}/fr/${slug}`)}"/>
+          // Génère tous les hreflang en une seule opération
+          const hreflangs = LANGUAGES.map(hrefLang =>
+            `    <xhtml:link rel="alternate" hreflang="${getHreflangCode(hrefLang)}" href="${escapeXml(`${SITE_URL}/${hrefLang}/${slug}`)}"/>`
+          ).join('\n');
+
+          urlBlocks.push(`  <url>
+    <loc>${escapeXml(url)}</loc>
+${hreflangs}
+    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(`${SITE_URL}/fr/${slug}`)}"/>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <lastmod>${today}</lastmod>
-  </url>
-`;
+  </url>`);
         });
       });
 
-      xml += `</urlset>`;
+      urlBlocks.push(`</urlset>`);
+      const xml = urlBlocks.join('\n');
 
       res.set('Content-Type', 'application/xml; charset=utf-8');
       res.set('Cache-Control', 'public, max-age=3600');

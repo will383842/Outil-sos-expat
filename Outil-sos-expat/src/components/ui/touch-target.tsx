@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 // TYPES
 // =============================================================================
 
-export interface TouchTargetProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface TouchTargetProps extends React.HTMLAttributes<HTMLElement> {
   /** Minimum touch target size in pixels (default: 44 - Apple HIG standard) */
   minSize?: number;
   /** The content to wrap */
@@ -50,7 +50,7 @@ export interface TouchTargetProps extends React.HTMLAttributes<HTMLDivElement> {
  *   <SmallButton />
  * </TouchTarget>
  */
-const TouchTarget = React.forwardRef<HTMLDivElement, TouchTargetProps>(
+const TouchTarget = React.forwardRef<HTMLElement, TouchTargetProps>(
   (
     {
       minSize = 44,
@@ -64,7 +64,7 @@ const TouchTarget = React.forwardRef<HTMLDivElement, TouchTargetProps>(
   ) => {
     return (
       <Component
-        ref={ref as React.Ref<HTMLDivElement>}
+        ref={ref as never}
         className={cn(
           "relative",
           centered && "inline-flex items-center justify-center",

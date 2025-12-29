@@ -22,7 +22,15 @@ const CONFIG = {
   },
   CONSULTATION_DURATION: {
     lawyer: '20 min',
-    expat: '30 min'
+    expat: '30 min',
+    accountant: '30 min',
+    notary: '30 min',
+    tax_consultant: '30 min',
+    real_estate: '30 min',
+    translator: '30 min',
+    hr_consultant: '30 min',
+    financial_advisor: '30 min',
+    insurance_broker: '30 min'
   }
 } as const;
 

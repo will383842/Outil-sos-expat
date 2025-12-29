@@ -357,7 +357,8 @@
       "activeDesc": "Benutzer sehen die Wartungsmeldung anstelle der Plattform.",
       "enable": "Wartungsmodus aktivieren",
       "enableDesc": "Wartungsmeldung für Benutzer anzeigen",
-      "message": "Wartungsmeldung"
+      "message": "Wartungsmeldung",
+      "messagePlaceholder": "Die Plattform befindet sich in Wartung..."
     },
     "notifications": {
       "title": "Benachrichtigungen",

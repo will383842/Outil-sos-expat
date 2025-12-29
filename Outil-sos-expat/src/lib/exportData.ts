@@ -37,16 +37,35 @@ function formatCsvValue(value: unknown): string {
   return strValue;
 }
 
+// Locale courante pour l'export (peut être modifiée via setExportLocale)
+let currentExportLocale = "fr-FR";
+
+/**
+ * Définit la locale utilisée pour formater les dates dans les exports
+ */
+export function setExportLocale(locale: string): void {
+  currentExportLocale = locale;
+}
+
+/**
+ * Récupère la locale actuelle pour les exports
+ */
+export function getExportLocale(): string {
+  return currentExportLocale;
+}
+
 /**
  * Formate une date Firestore Timestamp ou Date
+ * Compatible avec ExportColumn.transform (le 2e param est ignoré, utilise currentExportLocale)
  */
-function formatDate(value: unknown): string {
+function formatDate(value: unknown, _row?: unknown): string {
   if (!value) return "";
+  const dateLocale = currentExportLocale;
 
   // Firestore Timestamp
   if (typeof value === "object" && value !== null && "toDate" in value) {
     const date = (value as { toDate: () => Date }).toDate();
-    return date.toLocaleDateString("fr-FR", {
+    return date.toLocaleDateString(dateLocale, {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -57,7 +76,7 @@ function formatDate(value: unknown): string {
 
   // Date native
   if (value instanceof Date) {
-    return value.toLocaleDateString("fr-FR", {
+    return value.toLocaleDateString(dateLocale, {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { collection, query, getDocs, where, orderBy, Timestamp } from 'firebase/firestore';
+import React, { useState, useEffect, useCallback } from 'react';
+import { collection, query, getDocs, where, orderBy, Timestamp, QueryConstraint } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { TrendingUp, DollarSign, Calendar, Users, Percent, Download } from 'lucide-react';
@@ -33,12 +33,25 @@ interface AnalyticsData {
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
+// Types pour les handlers
+type TimeframeType = '7d' | '30d' | '90d' | '1y';
+type CurrencyType = 'all' | 'eur' | 'usd';
+
 export const FinancialAnalytics: React.FC = () => {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [timeframe, setTimeframe] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
-  const [selectedCurrency, setSelectedCurrency] = useState<'all' | 'eur' | 'usd'>('all');
+  const [timeframe, setTimeframe] = useState<TimeframeType>('30d');
+  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyType>('all');
+
+  // OPTIMISÉ: useCallback pour éviter re-création des handlers à chaque render
+  const handleTimeframeChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setTimeframe(e.target.value as TimeframeType);
+  }, []);
+
+  const handleCurrencyChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedCurrency(e.target.value as CurrencyType);
+  }, []);
 
   useEffect(() => {
     loadPaymentsData();
@@ -67,23 +80,20 @@ export const FinancialAnalytics: React.FC = () => {
           break;
       }
 
-      // Query Firebase
-      let paymentsQuery = query(
-        collection(db, 'payments'),
+      // Query Firebase - OPTIMISÉ: construction conditionnelle sans duplication
+      const baseConstraints: QueryConstraint[] = [
         where('createdAt', '>=', Timestamp.fromDate(startDate)),
         where('status', 'in', ['captured', 'succeeded']),
-        orderBy('createdAt', 'desc')
-      );
+      ];
 
+      // Ajouter le filtre currency seulement si nécessaire
       if (selectedCurrency !== 'all') {
-        paymentsQuery = query(
-          collection(db, 'payments'),
-          where('createdAt', '>=', Timestamp.fromDate(startDate)),
-          where('currency', '==', selectedCurrency),
-          where('status', 'in', ['captured', 'succeeded']),
-          orderBy('createdAt', 'desc')
-        );
+        baseConstraints.push(where('currency', '==', selectedCurrency));
       }
+
+      baseConstraints.push(orderBy('createdAt', 'desc'));
+
+      const paymentsQuery = query(collection(db, 'payments'), ...baseConstraints);
 
       const paymentsSnapshot = await getDocs(paymentsQuery);
       
@@ -280,7 +290,7 @@ export const FinancialAnalytics: React.FC = () => {
         <div className="flex flex-wrap gap-3">
           <select
             value={timeframe}
-            onChange={(e) => setTimeframe(e.target.value as any)}
+            onChange={handleTimeframeChange}
             className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500"
           >
             <option value="7d">7 derniers jours</option>
@@ -288,10 +298,10 @@ export const FinancialAnalytics: React.FC = () => {
             <option value="90d">90 derniers jours</option>
             <option value="1y">1 an</option>
           </select>
-          
+
           <select
             value={selectedCurrency}
-            onChange={(e) => setSelectedCurrency(e.target.value as any)}
+            onChange={handleCurrencyChange}
             className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">Toutes devises</option>

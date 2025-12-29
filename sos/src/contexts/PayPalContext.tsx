@@ -22,7 +22,7 @@ interface PayPalProviderProps {
 
 export const PayPalProvider: React.FC<PayPalProviderProps> = ({ children }) => {
   const clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID as string || "";
-  const mode = (import.meta.env.VITE_PAYPAL_MODE as string) === "live" ? "live" : "sandbox";
+  const mode: "sandbox" | "live" = (import.meta.env.VITE_PAYPAL_MODE as string) === "live" ? "live" : "sandbox";
   const isConfigured = Boolean(clientId);
 
   const initialOptions: ReactPayPalScriptOptions = useMemo(() => ({

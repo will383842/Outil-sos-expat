@@ -357,7 +357,8 @@
       "activeDesc": "用户看到维护消息而不是平台。",
       "enable": "启用维护模式",
       "enableDesc": "向用户显示维护消息",
-      "message": "维护消息"
+      "message": "维护消息",
+      "messagePlaceholder": "平台正在维护中..."
     },
     "notifications": {
       "title": "通知",

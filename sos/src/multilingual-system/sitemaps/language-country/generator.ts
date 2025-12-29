@@ -3,19 +3,12 @@
  * Generates sitemaps by language-country (e.g., sitemap-fr-fr.xml, sitemap-en-us.xml)
  */
 
-import { SitemapUrl, StaticRoute } from '../types';
+import { SitemapUrl, StaticRoute, ProviderData } from '../types';
 import { STATIC_ROUTES, LANGUAGES } from '../constants';
 import { generateRouteUrl, generateProviderUrl, generateSitemapXml } from '../utils';
 
-export interface ProviderData {
-  id: string;
-  type?: string;
-  country?: string;
-  languages?: string[];
-  fullName?: string;
-  name?: string;
-  updatedAt?: Date | { toDate?: () => Date };
-}
+// Re-export ProviderData for backwards compatibility
+export type { ProviderData } from '../types';
 
 /**
  * Generate Level 1 sitemap (by language-country)

@@ -10,7 +10,7 @@ export interface Review {
   clientName: string;
   clientCountry: string;
   serviceType: "lawyer_call" | "expat_call";
-  status: "published" | "pending" | "rejected";
+  status: "published" | "pending" | "rejected" | "hidden";
   helpfulVotes: number;
   clientAvatar?: string;
   verified: boolean;

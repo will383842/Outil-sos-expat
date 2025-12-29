@@ -157,6 +157,7 @@ type ProviderExtras = {
   languagesSpoken?: string[];
   languages?: string[];
   country?: string;
+  countryCode?: string;
   avatar?: string;
   email?: string;
   name?: string;
@@ -1535,7 +1536,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
         console.log("Status in stripe : ", status);
 
         // P0 FIX: Gérer correctement 3D Secure (requires_action)
-        if (status === "requires_action" && paymentIntent.client_secret) {
+        if (status === "requires_action" && paymentIntent.client_secret && stripe) {
           console.log("🔐 3D Secure authentication required, handling...");
           const { error: confirmError, paymentIntent: confirmedIntent } =
             await stripe.handleCardAction(paymentIntent.client_secret);
@@ -2796,7 +2797,8 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
                       console.log("PayPal payment success:", details);
                       handlePaymentSuccess({
                         paymentIntentId: details.orderId,
-                        callSessionId: details.orderId,
+                        call: "scheduled",
+                        orderId: details.orderId,
                       });
                     }}
                     onError={(error) => {
