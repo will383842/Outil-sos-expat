@@ -37,7 +37,7 @@ const Prestataires = lazy(() => import("./pages/Prestataires"));
 const Dossiers = lazy(() => import("./pages/Dossiers"));
 const DossierDetail = lazy(() => import("./pages/DossierDetail"));
 const Utilisateurs = lazy(() => import("./pages/Utilisateurs"));
-const Pays = lazy(() => import("./pages/pays"));
+const Pays = lazy(() => import("./pages/Pays"));
 const AIConfig = lazy(() => import("./pages/AIConfig"));
 const Parametres = lazy(() => import("./pages/Parametres"));
 const AuditLogs = lazy(() => import("./pages/AuditLogs"));
