@@ -41,6 +41,7 @@ export const sitemapProfiles = onRequest(
     timeoutSeconds: 60,
     maxInstances: 5,
     minInstances: 0,
+    serviceAccount: 'firebase-adminsdk-fbsvc@sos-urgently-ac307.iam.gserviceaccount.com',
   },
   async (_req, res) => {
     try {
@@ -119,6 +120,7 @@ export const sitemapBlog = onRequest(
     timeoutSeconds: 60,
     maxInstances: 3,
     minInstances: 0,
+    serviceAccount: 'firebase-adminsdk-fbsvc@sos-urgently-ac307.iam.gserviceaccount.com',
   },
   async (_req, res) => {
     try {
@@ -241,6 +243,7 @@ export const sitemapLanding = onRequest(
     timeoutSeconds: 60,
     maxInstances: 3,
     minInstances: 0,
+    serviceAccount: 'firebase-adminsdk-fbsvc@sos-urgently-ac307.iam.gserviceaccount.com',
   },
   async (_req, res) => {
     try {

@@ -30,9 +30,10 @@ import ReviewModal from "../components/review/ReviewModal";
 import { formatDateTime, formatDate } from "../utils/localeFormatters";
 
 // 🔁 Firestore
-import { doc, onSnapshot, getDoc } from "firebase/firestore";
+import { doc, onSnapshot, getDoc, collection, query, where, getDocs, limit as firestoreLimit, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../config/firebase";
 import { useIntl, FormattedMessage } from "react-intl";
+import { generateBothInvoices } from "../services/invoiceGenerator";
 
 /* =========================
    Types pour l'order / coupon / metadata
@@ -463,6 +464,207 @@ const SuccessPayment: React.FC = () => {
     );
     return () => unsub();
   }, [orderId]);
+
+  /* =========================
+     GÉNÉRATION AUTOMATIQUE DES FACTURES
+     ========================= */
+  const [invoiceGenerated, setInvoiceGenerated] = useState(false);
+
+  useEffect(() => {
+    // Ne générer qu'une seule fois et seulement si on a les données nécessaires
+    if (!callId || !user?.uid || invoiceGenerated) return;
+
+    // Vérifier dans sessionStorage si déjà généré pour cette session
+    const invoiceKey = `invoice_generated_${callId}`;
+    if (sessionStorage.getItem(invoiceKey)) {
+      setInvoiceGenerated(true);
+      return;
+    }
+
+    const generateInvoices = async () => {
+      try {
+        console.log("🧾 Vérification et génération des factures pour l'appel:", callId);
+
+        // 1. Vérifier si les factures existent déjà dans la base
+        const existingInvoicesQuery = query(
+          collection(db, 'invoice_records'),
+          where('callId', '==', callId),
+          firestoreLimit(1)
+        );
+        const existingInvoices = await getDocs(existingInvoicesQuery);
+
+        if (!existingInvoices.empty) {
+          console.log("✅ Factures déjà générées pour cet appel");
+          sessionStorage.setItem(invoiceKey, 'true');
+          setInvoiceGenerated(true);
+          return;
+        }
+
+        // 2. Récupérer les données de la call_session
+        const callSessionRef = doc(db, 'call_sessions', callId);
+        const callSessionSnap = await getDoc(callSessionRef);
+
+        if (!callSessionSnap.exists()) {
+          console.warn("⚠️ Call session non trouvée:", callId);
+          return;
+        }
+
+        const callSessionData = callSessionSnap.data();
+
+        // 3. Récupérer le paiement associé (Stripe ou PayPal)
+        let paymentData: Record<string, any> | null = null;
+
+        // Essayer d'abord la collection 'payments' (Stripe)
+        const paymentQuery = query(
+          collection(db, 'payments'),
+          where('callSessionId', '==', callId),
+          firestoreLimit(1)
+        );
+        const paymentSnap = await getDocs(paymentQuery);
+
+        if (!paymentSnap.empty) {
+          paymentData = paymentSnap.docs[0].data();
+        } else {
+          // Essayer avec callId
+          const paymentQuery2 = query(
+            collection(db, 'payments'),
+            where('callId', '==', callId),
+            firestoreLimit(1)
+          );
+          const paymentSnap2 = await getDocs(paymentQuery2);
+
+          if (!paymentSnap2.empty) {
+            paymentData = paymentSnap2.docs[0].data();
+          }
+        }
+
+        // Si pas trouvé dans 'payments', vérifier si c'est un paiement PayPal
+        // Les données PayPal sont stockées dans call_sessions.payment
+        if (!paymentData && callSessionData.payment) {
+          console.log("💳 Utilisation des données de paiement PayPal depuis call_sessions");
+          const isPayPal = callSessionData.payment.gateway === 'paypal' ||
+                          callSessionData.payment.paymentMethod === 'paypal' ||
+                          !!callSessionData.payment.paypalOrderId;
+
+          if (isPayPal) {
+            // Récupérer les montants depuis paypal_orders si disponible
+            let paypalOrderData: Record<string, any> | null = null;
+            if (callSessionData.payment.paypalOrderId) {
+              const paypalOrderDoc = await getDoc(doc(db, 'paypal_orders', callSessionData.payment.paypalOrderId));
+              if (paypalOrderDoc.exists()) {
+                paypalOrderData = paypalOrderDoc.data();
+              }
+            }
+
+            paymentData = {
+              amount: paypalOrderData?.capturedGrossAmount || paypalOrderData?.amount || callSessionData.payment.amount || paidAmount,
+              platformFee: paypalOrderData?.capturedPlatformFee || paypalOrderData?.platformFee || callSessionData.payment.platformFee,
+              providerAmount: paypalOrderData?.capturedProviderAmount || paypalOrderData?.providerAmount || callSessionData.payment.providerAmount,
+              currency: paypalOrderData?.capturedCurrency || paypalOrderData?.currency || callSessionData.payment.currency || 'EUR',
+              paymentMethod: 'paypal',
+              paypalOrderId: callSessionData.payment.paypalOrderId,
+              status: callSessionData.payment.status
+            };
+          }
+        }
+
+        if (!paymentData) {
+          console.warn("⚠️ Paiement non trouvé pour cet appel (ni Stripe, ni PayPal)");
+          return;
+        }
+
+        // 4. Construire les objets pour generateBothInvoices
+        const callRecord = {
+          id: callId,
+          clientId: callSessionData.clientId || user.uid,
+          providerId: callSessionData.providerId || '',
+          clientName: callSessionData.clientName || user.displayName || '',
+          providerName: callSessionData.providerName || '',
+          serviceType: (callSessionData.serviceType || 'lawyer_call') as 'lawyer_call' | 'expat_advice' | 'emergency_help',
+          duration: callSessionData.duration || paidDuration || 20,
+          clientCountry: callSessionData.clientCountry || '',
+          providerCountry: callSessionData.providerCountry || '',
+          createdAt: callSessionData.createdAt?.toDate?.() || new Date()
+        };
+
+        // Calculer les frais de plateforme (commission)
+        // Pour PayPal, utiliser les montants déjà calculés côté serveur
+        const totalAmount = paymentData.amount || paidAmount || 0;
+        let platformFee: number;
+        let providerAmountCalc: number;
+
+        if (paymentData.platformFee !== undefined && paymentData.providerAmount !== undefined) {
+          // Utiliser les montants déjà calculés (PayPal ou données existantes)
+          platformFee = paymentData.platformFee;
+          providerAmountCalc = paymentData.providerAmount;
+        } else {
+          // Calculer pour Stripe si non disponibles
+          const commissionRate = callRecord.serviceType === 'lawyer_call' ? 0.09 : 0.05; // 9% avocat, 5% expat
+          platformFee = Math.round(totalAmount * commissionRate * 100) / 100;
+          providerAmountCalc = Math.round((totalAmount - platformFee) * 100) / 100;
+        }
+
+        const payment = {
+          amount: totalAmount,
+          platformFee: platformFee,
+          providerAmount: providerAmountCalc,
+          clientEmail: paymentData.clientEmail || user.email || '',
+          providerEmail: paymentData.providerEmail || '',
+          providerPhone: paymentData.providerPhone || '',
+          providerId: callSessionData.providerId || '',
+          paymentMethod: paymentData.paymentMethod || 'card',
+          currency: paymentData.currency || 'EUR',
+          transactionId: paymentData.stripePaymentIntentId || paymentData.paypalOrderId || paymentIntentId || ''
+        };
+
+        console.log("📄 Génération des factures avec:", { callRecord, payment });
+
+        // 5. Générer les factures
+        const result = await generateBothInvoices(
+          callRecord,
+          payment,
+          user.uid,
+          {
+            locale: language || 'en',
+            metadata: {
+              sessionId: callId,
+              userAgent: navigator.userAgent
+            }
+          }
+        );
+
+        console.log("✅ Factures générées avec succès:", result);
+
+        // 6. Mettre à jour le flag invoicesCreated dans call_sessions pour éviter
+        // que le serveur (TwilioCallManager) ne régénère des factures en doublon
+        try {
+          await updateDoc(callSessionRef, {
+            'metadata.invoicesCreated': true,
+            'metadata.invoicesCreatedAt': serverTimestamp(),
+            'metadata.invoiceNumbers': result.invoiceNumbers
+          });
+          console.log("✅ Flag invoicesCreated mis à jour dans call_sessions");
+        } catch (updateError) {
+          console.warn("⚠️ Impossible de mettre à jour le flag invoicesCreated:", updateError);
+          // Non bloquant - les factures sont quand même générées
+        }
+
+        sessionStorage.setItem(invoiceKey, 'true');
+        setInvoiceGenerated(true);
+
+      } catch (error) {
+        console.error("❌ Erreur lors de la génération des factures:", error);
+        // Ne pas bloquer l'UX, les factures peuvent être générées plus tard par le serveur
+      }
+    };
+
+    // Attendre un peu pour s'assurer que le paiement est bien enregistré
+    const timer = setTimeout(() => {
+      generateInvoices();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [callId, user?.uid, invoiceGenerated, language, paidAmount, paidDuration, paymentIntentId]);
 
   // Devise / symbole (pour le bloc order)
   const orderCurrency: Currency = (order?.currency as Currency) ?? "eur";
@@ -938,7 +1140,9 @@ const SuccessPayment: React.FC = () => {
                       {intl.formatMessage({ id: "success.service" })}:
                     </span>
                     <span className="font-bold text-gray-900">
-                      {isLawyer ? t.lawyerCall : t.expatCall}
+                      {isLawyer
+                        ? intl.formatMessage({ id: "success.lawyerCall" })
+                        : intl.formatMessage({ id: "success.expatCall" })}
                     </span>
                   </div>
 

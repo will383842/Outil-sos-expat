@@ -614,6 +614,39 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ================= INVOICE RECORDS (Prestations) =================
+    match /invoice_records/{invoiceId} {
+      // Les utilisateurs peuvent lire leurs propres factures (client ou provider)
+      allow read: if isAuthenticated() &&
+                  (resource.data.clientId == request.auth.uid ||
+                   resource.data.providerId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Les utilisateurs authentifiés peuvent créer des factures pour eux-mêmes
+      allow create: if isAuthenticated() &&
+                    (request.resource.data.clientId == request.auth.uid ||
+                     isAdmin() || isDev());
+      // Seuls admins peuvent modifier/supprimer
+      allow update, delete: if isAdmin() || isDev();
+    }
+
+    // ================= ADMIN INVOICES (Console admin) =================
+    match /admin_invoices/{invoiceId} {
+      // Seuls les admins peuvent accéder
+      allow read: if isAdmin() || isDev();
+      // Les utilisateurs authentifiés peuvent créer (pour synchronisation admin)
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin() || isDev();
+    }
+
+    // ================= AUDIT LOGS (Facturation) =================
+    match /audit_logs/{logId} {
+      // Seuls les admins peuvent lire les logs
+      allow read: if isAdmin() || isDev();
+      // Les utilisateurs authentifiés peuvent créer des logs (traçabilité factures)
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin() || isDev();
+    }
+
     // ================= CATCH-ALL (deny by default) =================
     match /{document=**} {
       allow read, write: if isDev();

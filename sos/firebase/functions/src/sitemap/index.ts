@@ -11,6 +11,11 @@ import { onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { generateAllSitemaps } from './generator';
 
+// Initialize Firebase Admin if not already initialized
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
+
 // Debounce mechanism to prevent excessive regenerations
 let lastRegenerationTime = 0;
 const REGENERATION_DEBOUNCE_MS = 5 * 60 * 1000; // 5 minutes - don't regenerate more than once per 5 minutes
@@ -45,6 +50,8 @@ export const generateSitemaps = onRequest(
     maxInstances: 1, // Only one at a time to avoid conflicts
     minInstances: 0,
     concurrency: 1,
+    // Use Firebase Admin service account for Firestore access
+    serviceAccount: 'firebase-adminsdk-fbsvc@sos-urgently-ac307.iam.gserviceaccount.com',
   },
   async (_req: Request, res: Response) => {
     try {

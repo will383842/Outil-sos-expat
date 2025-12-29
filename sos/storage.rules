@@ -102,9 +102,22 @@ service firebase.storage {
       allow delete: if isAuthenticated() && (request.auth.uid == userId || isAdmin()));
     }
 
+    // Factures par utilisateur (legacy)
     match /invoices/{userId}/{fileName} {
       allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
       allow write, delete: if isAdmin() && isValidDocumentType() && isValidFileSize();
+    }
+
+    // Factures prestations (platform et provider)
+    match /invoices/{invoiceType}/{year}/{month}/{fileName} {
+      // Lecture: utilisateurs authentifiés (les URLs sont signées)
+      allow read: if isAuthenticated();
+      // Écriture: utilisateurs authentifiés peuvent créer des factures PDF
+      allow create: if isAuthenticated() &&
+                    request.resource.contentType == 'application/pdf' &&
+                    request.resource.size < 5 * 1024 * 1024;
+      // Suppression: admins uniquement
+      allow delete: if isAdmin();
     }
 
     match /backups/{fileName} {
