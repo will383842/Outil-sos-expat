@@ -66,35 +66,39 @@ const PRICING_REF = doc(db, "admin_config", "pricing");
 let _cache: { data: PricingConfig | null; ts: number } = { data: null, ts: 0 };
 const CACHE_MS = 5 * 60 * 1000;
 
-/** Fallback */
+/** Fallback - Doit correspondre aux prix backend */
 const DEFAULT_FALLBACK: PricingConfig = {
   lawyer: {
-    eur: makeConfigFromBase({
-      base: 50,
-      feePercent: 20,
-      duration: 20,
+    eur: {
+      totalAmount: 49,
+      connectionFeeAmount: 19,
+      providerAmount: 30,
+      duration: 25,
       currency: "eur",
-    }),
-    usd: makeConfigFromBase({
-      base: 55,
-      feePercent: 20,
-      duration: 20,
+    },
+    usd: {
+      totalAmount: 55,
+      connectionFeeAmount: 25,
+      providerAmount: 30,
+      duration: 25,
       currency: "usd",
-    }),
+    },
   },
   expat: {
-    eur: makeConfigFromBase({
-      base: 50,
-      feePercent: 20,
-      duration: 30,
+    eur: {
+      totalAmount: 19,
+      connectionFeeAmount: 9,
+      providerAmount: 10,
+      duration: 35,
       currency: "eur",
-    }),
-    usd: makeConfigFromBase({
-      base: 55,
-      feePercent: 20,
-      duration: 30,
+    },
+    usd: {
+      totalAmount: 25,
+      connectionFeeAmount: 15,
+      providerAmount: 10,
+      duration: 35,
       currency: "usd",
-    }),
+    },
   },
 };
 
