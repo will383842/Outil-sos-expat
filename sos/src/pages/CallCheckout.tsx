@@ -2784,7 +2784,7 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
                   }}
                 >
                   <PayPalPaymentForm
-                    amount={adminPricing?.totalPrice || 0}
+                    amount={adminPricing?.totalAmount || 0}
                     currency={selectedCurrency.toUpperCase()}
                     providerId={provider?.id || ""}
                     providerPayPalMerchantId={provider?.paypalMerchantId}

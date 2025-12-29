@@ -257,14 +257,13 @@ async function validateBusinessLogic(
     }
     if (!isProduction) return { valid: true };
 
-    const expectedTotal =
-      data.serviceType === 'lawyer_call'
-        ? currency === 'eur'
-          ? 49
-          : 55
-        : currency === 'eur'
-        ? 19
-        : 25;
+    // Récupération dynamique des prix depuis Firestore
+    const serviceKind: 'lawyer' | 'expat' = data.serviceType === 'lawyer_call' ? 'lawyer' : 'expat';
+    const pricingConfig = await getPricingConfig(serviceKind, currency, db);
+    const expectedTotal = pricingConfig.totalAmount;
+
+    // Tolérance large (100€) pour ce contrôle de sanité basique
+    // La vraie validation stricte (±0.5€) se fait plus tard dans le flux
     const diff = Math.abs(Number(data.amount) - expectedTotal);
     if (diff > 100) return { valid: false, error: 'Montant inhabituel pour ce service' };
     return { valid: true };
