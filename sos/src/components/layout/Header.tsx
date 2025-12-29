@@ -22,6 +22,9 @@ import {
   LogOut,
   Wifi,
   WifiOff,
+  CreditCard,
+  Bot,
+  Sparkles,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useApp } from "../../contexts/AppContext";
@@ -1207,6 +1210,29 @@ const UserMenu = memo<UserMenuProps>(function UserMenu({
           </Link>
         </div>
 
+        {/* AI Subscription links for providers - Mobile */}
+        {(typedUser.role === "lawyer" || typedUser.role === "expat") && (
+          <div className="grid grid-cols-2 gap-2">
+            <Link
+              to="/dashboard/ai-assistant"
+              className="flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-medium
+                bg-gradient-to-r from-indigo-500/30 to-purple-500/30 backdrop-blur-sm text-white hover:from-indigo-500/40 hover:to-purple-500/40 min-h-[44px]"
+            >
+              <Bot className="w-4 h-4 mr-2" aria-hidden="true" />
+              <span>IA</span>
+              <span className="ml-1 text-[8px] px-1 py-0.5 rounded-full bg-pink-500 font-bold">NEW</span>
+            </Link>
+            <Link
+              to="/dashboard/subscription"
+              className="flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-medium
+                bg-gradient-to-r from-indigo-500/30 to-purple-500/30 backdrop-blur-sm text-white hover:from-indigo-500/40 hover:to-purple-500/40 min-h-[44px]"
+            >
+              <CreditCard className="w-4 h-4 mr-2" aria-hidden="true" />
+              <span>{intl.formatMessage({ id: "dashboard.subscription", defaultMessage: "Abo" })}</span>
+            </Link>
+          </div>
+        )}
+
         <button
           onClick={handleLogout}
           className="flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-medium
@@ -1295,6 +1321,36 @@ const UserMenu = memo<UserMenuProps>(function UserMenu({
               <Settings className="w-4 h-4 mr-3" aria-hidden="true" />
               {t.dashboard}
             </Link>
+            {/* AI Subscription links for providers */}
+            {(typedUser.role === "lawyer" || typedUser.role === "expat") && (
+              <>
+                <Link
+                  to="/dashboard/ai-assistant"
+                  className="group flex items-center px-4 py-3 text-sm text-gray-700
+                    hover:bg-indigo-50 hover:text-indigo-600 rounded-xl mx-1
+                    focus:outline-none focus-visible:bg-indigo-50"
+                  onClick={() => setOpen(false)}
+                  role="menuitem"
+                >
+                  <Bot className="w-4 h-4 mr-3 text-indigo-500" aria-hidden="true" />
+                  {intl.formatMessage({ id: "dashboard.aiAssistant", defaultMessage: "AI Assistant" })}
+                  <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold">
+                    NEW
+                  </span>
+                </Link>
+                <Link
+                  to="/dashboard/subscription"
+                  className="group flex items-center px-4 py-3 text-sm text-gray-700
+                    hover:bg-indigo-50 hover:text-indigo-600 rounded-xl mx-1
+                    focus:outline-none focus-visible:bg-indigo-50"
+                  onClick={() => setOpen(false)}
+                  role="menuitem"
+                >
+                  <CreditCard className="w-4 h-4 mr-3 text-indigo-500" aria-hidden="true" />
+                  {intl.formatMessage({ id: "dashboard.subscription", defaultMessage: "My Subscription" })}
+                </Link>
+              </>
+            )}
             <hr className="my-1 border-gray-100" />
             <button
               onClick={handleLogout}

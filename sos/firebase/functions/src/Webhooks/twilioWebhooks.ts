@@ -5,6 +5,7 @@ import { logError } from '../utils/logs/logError';
 import { Response } from 'express';
 import * as admin from 'firebase-admin';
 import { Request } from 'firebase-functions/v2/https';
+import { validateTwilioWebhookSignature } from '../lib/twilio';
 
 
 interface TwilioCallWebhookBody {
@@ -37,6 +38,13 @@ export const twilioCallWebhook = onRequest(
   async (req: Request, res: Response) => {
     try {
       console.log("[twilioCallWebhook] === Twilio Webhook Execution Started ===");
+
+      // ===== P0 SECURITY FIX: Validate Twilio signature =====
+      if (!validateTwilioWebhookSignature(req as any, res as any)) {
+        console.error("[twilioCallWebhook] Invalid Twilio signature - rejecting request");
+        return; // Response already sent by validateTwilioWebhookSignature
+      }
+
       const body: TwilioCallWebhookBody = req.body;
       console.log('[twilioCallWebhook] Body : ', body);
       

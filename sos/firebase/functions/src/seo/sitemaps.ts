@@ -6,6 +6,11 @@
 import { onRequest } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 
+// Initialisation Firebase Admin (si pas déjà fait)
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
+
 const SITE_URL = 'https://sos-expat.com';
 const LANGUAGES = ['fr', 'en', 'de', 'es', 'pt', 'ru', 'ch', 'ar', 'hi'];
 
@@ -92,9 +97,14 @@ export const sitemapProfiles = onRequest(
       
       console.log(`✅ Sitemap profils: ${snapshot.docs.length} profils (${snapshot.docs.length * LANGUAGES.length} URLs)`);
       
-    } catch (error) {
-      console.error('❌ Erreur sitemap profils:', error);
-      res.status(500).send('Error generating sitemap');
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error('❌ Erreur sitemap profils:', {
+        message: err.message,
+        stack: err.stack,
+        name: err.name
+      });
+      res.status(500).send(`Error generating sitemap: ${err.message}`);
     }
   }
 );
@@ -112,13 +122,24 @@ export const sitemapBlog = onRequest(
   },
   async (_req, res) => {
     try {
+      console.log('🔄 Début génération sitemap help articles...');
+
       const db = admin.firestore();
+      console.log('✅ Firestore initialisé');
 
       // ✅ CORRIGÉ: Utilise help_articles au lieu de blog_posts
-      // Le champ de statut est isPublished (boolean) et non status
-      const snapshot = await db.collection('help_articles')
-        .where('isPublished', '==', true)
-        .get();
+      // Récupère tous les articles puis filtre côté serveur (plus robuste)
+      console.log('📥 Récupération des help_articles...');
+      const snapshot = await db.collection('help_articles').get();
+      console.log(`📄 ${snapshot.docs.length} documents trouvés`);
+
+      // Filtre les articles publiés (isPublished peut ne pas exister sur tous les docs)
+      const publishedDocs = snapshot.docs.filter(doc => {
+        const data = doc.data();
+        return data.isPublished === true || data.status === 'published';
+      });
+
+      console.log(`📊 Sitemap blog: ${snapshot.docs.length} total, ${publishedDocs.length} publiés`);
 
       const today = new Date().toISOString().split('T')[0];
 
@@ -140,7 +161,17 @@ export const sitemapBlog = onRequest(
         hi: 'sahayata-kendra',
       };
 
-      snapshot.docs.forEach(doc => {
+      // Si aucun article, retourne un sitemap vide mais valide
+      if (publishedDocs.length === 0) {
+        xml += `</urlset>`;
+        res.set('Content-Type', 'application/xml; charset=utf-8');
+        res.set('Cache-Control', 'public, max-age=3600');
+        res.status(200).send(xml);
+        console.log(`⚠️ Sitemap help articles: 0 articles publiés`);
+        return;
+      }
+
+      publishedDocs.forEach(doc => {
         const article = doc.data();
 
         // Le slug peut être un string ou un objet multilingue
@@ -186,11 +217,16 @@ export const sitemapBlog = onRequest(
       res.set('Cache-Control', 'public, max-age=3600');
       res.status(200).send(xml);
 
-      console.log(`✅ Sitemap help articles: ${snapshot.docs.length} articles (${snapshot.docs.length * LANGUAGES.length} URLs)`);
+      console.log(`✅ Sitemap help articles: ${publishedDocs.length} articles (${publishedDocs.length * LANGUAGES.length} URLs)`);
 
-    } catch (error) {
-      console.error('❌ Erreur sitemap help articles:', error);
-      res.status(500).send('Error generating help articles sitemap');
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error('❌ Erreur sitemap help articles:', {
+        message: err.message,
+        stack: err.stack,
+        name: err.name
+      });
+      res.status(500).send(`Error generating help articles sitemap: ${err.message}`);
     }
   }
 );

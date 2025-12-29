@@ -2,7 +2,7 @@
  * Types partagés pour l'Outil IA Admin
  */
 
-import { SubscriptionTier } from '../../../types/subscription';
+import { SubscriptionTier, SubscriptionStatus, Currency, BillingPeriod } from '../../../types/subscription';
 
 // ============================================================================
 // STATS
@@ -14,7 +14,118 @@ export interface SubscriptionStats {
   trialUsers: number;
   paidUsers: number;
   mrr: number;
+  mrrEur: number;
+  mrrUsd: number;
+  churnRate: number;
+  trialConversionRate: number;
   byTier: Record<SubscriptionTier, number>;
+}
+
+// ============================================================================
+// DASHBOARD CHART DATA
+// ============================================================================
+
+export interface DailySubscriberData {
+  date: string;
+  total: number;
+  active: number;
+  trial: number;
+  canceled: number;
+}
+
+export interface PlanDistributionData {
+  name: string;
+  value: number;
+  color: string;
+}
+
+export interface UsageByPlanData {
+  plan: string;
+  avgUsage: number;
+  maxUsage: number;
+  minUsage: number;
+}
+
+// ============================================================================
+// SUBSCRIPTIONS LIST
+// ============================================================================
+
+export interface SubscriptionListItem {
+  id: string;
+  providerId: string;
+  providerName: string;
+  providerEmail: string;
+  providerType: 'lawyer' | 'expat_aidant';
+  planId: string;
+  planName: string;
+  tier: SubscriptionTier;
+  status: SubscriptionStatus;
+  billingPeriod: BillingPeriod;
+  currency: Currency;
+  amount: number;
+  startDate: Date;
+  endDate: Date;
+  canceledAt?: Date;
+  stripeSubscriptionId?: string;
+  stripeCustomerId?: string;
+}
+
+export type SubscriptionFilter = {
+  status: SubscriptionStatus | 'all';
+  tier: SubscriptionTier | 'all';
+  billingPeriod: BillingPeriod | 'all';
+  dateRange: 'all' | '7d' | '30d' | '90d' | '1y';
+  search: string;
+};
+
+// ============================================================================
+// QUOTA RESET HISTORY
+// ============================================================================
+
+export interface QuotaResetLog {
+  id: string;
+  providerId: string;
+  providerName: string;
+  resetBy: string;
+  resetByName: string;
+  previousUsage: number;
+  quotaLimit: number;
+  reason?: string;
+  createdAt: Date;
+}
+
+// ============================================================================
+// PRICING HISTORY
+// ============================================================================
+
+export interface PricingChangeLog {
+  id: string;
+  planId: string;
+  planName: string;
+  changedBy: string;
+  changedByName: string;
+  previousPricing: { EUR: number; USD: number };
+  newPricing: { EUR: number; USD: number };
+  previousAiCalls?: number;
+  newAiCalls?: number;
+  createdAt: Date;
+}
+
+// ============================================================================
+// TRIAL PROVIDERS
+// ============================================================================
+
+export interface TrialProvider {
+  id: string;
+  email: string;
+  displayName: string;
+  providerType: 'lawyer' | 'expat_aidant';
+  trialStartedAt: Date;
+  trialEndsAt: Date;
+  daysRemaining: number;
+  aiCallsUsed: number;
+  maxAiCalls: number;
+  lastActivityAt?: Date;
 }
 
 // ============================================================================
@@ -97,6 +208,7 @@ export type IaTabId =
   | 'dashboard'
   | 'access'
   | 'quotas'
+  | 'subscriptions'
   | 'multi-providers'
   | 'pricing'
   | 'trial-config'

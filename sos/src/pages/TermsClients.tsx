@@ -412,7 +412,7 @@ const TermsClients: React.FC = () => {
       if (
         line.toLowerCase().includes("contact form") ||
         line.toLowerCase().includes("formulaire de contact") ||
-        line.toLowerCase().includes("http://localhost:5174/contact")
+        line.toLowerCase().includes("https://sos-expat.com/contact")
       ) {
         elements.push(
           <div
@@ -427,7 +427,7 @@ const TermsClients: React.FC = () => {
             </h3>
             <p className="text-gray-800 leading-relaxed mb-6 text-lg">{line}</p>
             <a
-              href="http://localhost:5174/contact"
+              href="https://sos-expat.com/contact"
               className="inline-flex items-center gap-3 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg"
             >
               <svg
@@ -649,7 +649,7 @@ const TermsClients: React.FC = () => {
 
 ## 15. संपर्क
 
-**संपर्क फ़ॉर्म (सहायता और कानूनी पूछताछ)**: **http://localhost:5174/contact**
+**संपर्क फ़ॉर्म (सहायता और कानूनी पूछताछ)**: **https://sos-expat.com/contact**
 `;
 
   const defaultFr = `
@@ -829,7 +829,7 @@ La Plateforme, ses marques, logos, bases de données et contenus sont protégés
 
 ## 15. Contact
 
-**Formulaire de contact (support & demandes légales)** : **http://localhost:5174/contact**
+**Formulaire de contact (support & demandes légales)** : **https://sos-expat.com/contact**
 `;
 
   const defaultEn = `
@@ -1011,7 +1011,7 @@ The Platform, its trademarks, logos, databases, and content are protected. No ri
 
 ## 15. Contact
 
-**Contact Form (Support & Legal Requests):** **[http://localhost:5174/contact](http://localhost:5174/contact)**
+**Contact Form (Support & Legal Requests):** **[https://sos-expat.com/contact](https://sos-expat.com/contact)**
 `;
 
   const defaultEs = `
@@ -1193,7 +1193,7 @@ La Plataforma, sus marcas, logotipos, bases de datos y contenidos están protegi
 
 ## 15. Contacto
 
-**Formulario de contacto (soporte y solicitudes legales):** **[http://localhost:5174/contact](http://localhost:5174/contact)**
+**Formulario de contacto (soporte y solicitudes legales):** **[https://sos-expat.com/contact](https://sos-expat.com/contact)**
 `;
 
   const defaultDe = `
@@ -1375,7 +1375,7 @@ Die Plattform, Marken, Logos, Datenbanken und Inhalte sind geschützt. Keine Rec
 
 ## 15. Kontakt
 
-**Kontaktformular (Support und rechtliche Anfragen):** **[http://localhost:5174/contact](http://localhost:5174/contact)**
+**Kontaktformular (Support und rechtliche Anfragen):** **[https://sos-expat.com/contact](https://sos-expat.com/contact)**
 `;
 
   const defaultRu = `
@@ -1557,7 +1557,7 @@ Die Plattform, Marken, Logos, Datenbanken und Inhalte sind geschützt. Keine Rec
 
 ## 15. Контакты
 
-**Форма обратной связи (поддержка и юридические запросы):** **[http://localhost:5174/contact](http://localhost:5174/contact)**
+**Форма обратной связи (поддержка и юридические запросы):** **[https://sos-expat.com/contact](https://sos-expat.com/contact)**
 `;
 
 const defaultPt = `
@@ -1822,7 +1822,7 @@ A Plataforma, suas marcas, logos, bases de dados e conteúdos são protegidos. N
 ## 15. Contato
 
 
-**Formulário de contato (suporte & solicitações legais)**: [**http://localhost:5174/contact**](http://localhost:5174/contact)
+**Formulário de contato (suporte & solicitações legais)**: [**https://sos-expat.com/contact**](https://sos-expat.com/contact)
 `;
 const defaultCh = `
 # 一般条款 – 客户（全球）
@@ -1971,7 +1971,7 @@ const defaultCh = `
 
 ## 15. 联系方式
 
-联系表单（支持与法律请求）： http://localhost:5174/contact
+联系表单（支持与法律请求）： https://sos-expat.com/contact
 `
 
   
@@ -2152,7 +2152,7 @@ const defaultCh = `
 
 ## 15. اتصل
 
-**نموذج الاتصال (الدعم والطلبات القانونية)**: [[**http://localhost:5174/contact**](http://localhost:5174/contact)](http://localhost:5174/contact)
+**نموذج الاتصال (الدعم والطلبات القانونية)**: [[**https://sos-expat.com/contact**](https://sos-expat.com/contact)](https://sos-expat.com/contact)
 `;
 
   
@@ -2609,7 +2609,7 @@ const anchorMap = useMemo(
 
               <div className="mt-8 flex items-center justify-center gap-4">
                 <a
-                  href="http://localhost:5174/contact"
+                  href="https://sos-expat.com/contact"
                   className="group inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-gradient-to-r from-red-600 via-red-500 to-orange-500 text-white font-bold border-2 border-red-400/50 hover:scale-105 transition-all"
                 >
                   <Globe className="w-5 h-5" />
@@ -2713,7 +2713,7 @@ const anchorMap = useMemo(
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
               <a
-                href="http://localhost:5174/contact"
+                href="https://sos-expat.com/contact"
                 className="group relative overflow-hidden border-2 border-white bg-transparent text-white px-10 py-5 rounded-3xl font-bold text-lg transition-all duration-300 hover:scale-105 hover:bg-white/10 flex items-center gap-3"
               >
                 <Globe className="w-5 h-5" />

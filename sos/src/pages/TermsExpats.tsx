@@ -623,7 +623,7 @@ const TermsExpats: React.FC = () => {
             </h3>
             <p className="text-gray-800 leading-relaxed mb-6 text-lg">{line}</p>
             <a
-              href="http://localhost:5174/contact"
+              href="https://sos-expat.com/contact"
               className="inline-flex items-center gap-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg"
             >
               <svg
@@ -2574,7 +2574,7 @@ Para perguntas ou questões legais, entre em contato conosco:
                   <span>{t.ctaHero}</span>
                 </Link>
                 <a
-                  href="http://localhost:5174/contact"
+                  href="https://sos-expat.com/contact"
                   className="group inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-gradient-to-r from-red-600 via-red-500 to-orange-500 text-white font-bold border-2 border-red-400/50 hover:scale-105 transition-all"
                 >
                   <Heart className="w-5 h-5" />
@@ -2721,7 +2721,7 @@ Para perguntas ou questões legais, entre em contato conosco:
               </Link>
 
               <a
-                href="http://localhost:5174/contact"
+                href="https://sos-expat.com/contact"
                 className="group relative overflow-hidden border-2 border-white bg-transparent text-white px-10 py-5 rounded-3xl font-bold text-lg transition-all duration-300 hover:scale-105 hover:bg-white/10 flex items-center gap-3"
               >
                 <Heart className="w-5 h-5" />

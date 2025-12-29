@@ -74,11 +74,18 @@ export interface StripePaymentData {
   callSessionId?: string;
   metadata?: Record<string, string>;
 
-  /* ===== Destination Charges (nouveau modèle de paiement) ===== */
+  /* ===== Direct Charges (modèle de paiement actif) ===== */
   /**
-   * Stripe Account ID du prestataire (acct_xxx) pour Destination Charges.
-   * Si fourni, le paiement sera splitté automatiquement à la capture.
+   * Stripe Account ID du prestataire (acct_xxx) pour Direct Charges.
+   * Avec Direct Charges:
+   * - La charge est créée DIRECTEMENT sur le compte du provider
+   * - L'argent va directement au provider
+   * - Seule la commission (application_fee) revient à SOS-Expat
+   * - Les remboursements sont faits depuis le compte du provider
    */
+  providerStripeAccountId?: string;
+
+  /** @deprecated Utiliser providerStripeAccountId - conservé pour compatibilité */
   destinationAccountId?: string;
 }
 
@@ -121,12 +128,23 @@ interface PaymentDoc {
   environment?: string;
   mode?: 'live' | 'test';
   callSessionId?: string;
-  /* ===== Destination Charges ===== */
-  /** Stripe Account ID de destination (si Destination Charges utilisé) */
+  /* ===== Direct Charges ===== */
+  /** Stripe Account ID du provider (charge créée sur son compte) */
+  providerStripeAccountId?: string;
+  /** Commission SOS-Expat en centimes (application_fee_amount) */
+  applicationFeeAmountCents?: number;
+  /** Indique si le paiement utilise Direct Charges */
+  useDirectCharges?: boolean;
+  /* ===== KYC / Pending Transfer ===== */
+  /** Indique si le provider avait complété son KYC au moment du paiement */
+  providerKycComplete?: boolean;
+  /** Indique si un transfert différé est nécessaire (KYC incomplet) */
+  pendingTransferRequired?: boolean;
+  /** @deprecated - conservé pour compatibilité avec anciens paiements */
   destinationAccountId?: string;
-  /** Montant transféré au prestataire en centimes (via transfer_data.amount) */
+  /** @deprecated - conservé pour compatibilité avec anciens paiements */
   transferAmountCents?: number;
-  /** Indique si le paiement utilise Destination Charges */
+  /** @deprecated - conservé pour compatibilité avec anciens paiements */
   useDestinationCharges?: boolean;
 }
 
@@ -279,81 +297,102 @@ export class StripeManager {
       const commissionAmountCents = toCents(commissionEuros);
       const providerAmountCents = toCents(data.providerAmount);
 
-      // ===== Destination Charges: verification du compte prestataire =====
-      const useDestinationCharges = Boolean(data.destinationAccountId);
+      // ===== DIRECT CHARGES vs PLATFORM ESCROW =====
+      // Priorité: providerStripeAccountId > destinationAccountId (legacy)
+      const providerStripeAccountId = data.providerStripeAccountId || data.destinationAccountId;
+      let useDirectCharges = false;
+      let providerKycComplete = false;
+      let pendingTransferRequired = false;
 
-      if (useDestinationCharges) {
-        console.log('[createPaymentIntent] Mode Destination Charges active:', {
-          destinationAccountId: data.destinationAccountId,
-          transferAmountCents: providerAmountCents,
-          platformFeeCents: commissionAmountCents,
+      if (providerStripeAccountId) {
+        console.log('[createPaymentIntent] Vérification du compte Stripe du provider:', {
+          providerStripeAccountId,
         });
 
         // Validation du format du Stripe Account ID
-        if (!data.destinationAccountId!.startsWith('acct_')) {
+        if (!providerStripeAccountId.startsWith('acct_')) {
           throw new HttpsError(
             'invalid-argument',
-            `destinationAccountId invalide: doit commencer par "acct_" (recu: ${data.destinationAccountId})`
+            `providerStripeAccountId invalide: doit commencer par "acct_" (recu: ${providerStripeAccountId})`
           );
         }
 
         // Verifier que le compte Connect est valide et peut recevoir des paiements
         try {
-          const connectedAccount = await this.stripe.accounts.retrieve(data.destinationAccountId!);
+          const connectedAccount = await this.stripe.accounts.retrieve(providerStripeAccountId);
 
-          if (!connectedAccount.charges_enabled) {
-            console.error('[createPaymentIntent] Le compte Connect ne peut pas recevoir de paiements:', {
-              accountId: data.destinationAccountId,
+          if (connectedAccount.charges_enabled) {
+            // ===== KYC COMPLET: Direct Charges =====
+            // L'argent va directement au provider
+            useDirectCharges = true;
+            providerKycComplete = true;
+            console.log('[createPaymentIntent] KYC complet - Mode DIRECT CHARGES actif:', {
+              accountId: providerStripeAccountId,
               chargesEnabled: connectedAccount.charges_enabled,
               payoutsEnabled: connectedAccount.payouts_enabled,
+              country: connectedAccount.country,
             });
-            throw new HttpsError(
-              'failed-precondition',
-              'Le compte Stripe du prestataire ne peut pas encore recevoir de paiements. Verifiez que l\'onboarding est termine.'
-            );
+          } else {
+            // ===== KYC INCOMPLET: Platform Escrow =====
+            // L'argent va sur le compte plateforme, transfert différé quand KYC sera fait
+            useDirectCharges = false;
+            providerKycComplete = false;
+            pendingTransferRequired = true;
+            console.log('[createPaymentIntent] KYC incomplet - Mode PLATFORM ESCROW actif:', {
+              accountId: providerStripeAccountId,
+              chargesEnabled: connectedAccount.charges_enabled,
+              payoutsEnabled: connectedAccount.payouts_enabled,
+              reason: 'Le paiement sera conservé sur la plateforme et transféré automatiquement quand le provider aura complété son KYC',
+            });
           }
-
-          console.log('[createPaymentIntent] Compte Connect verifie:', {
-            accountId: data.destinationAccountId,
-            chargesEnabled: connectedAccount.charges_enabled,
-            payoutsEnabled: connectedAccount.payouts_enabled,
-          });
         } catch (stripeError) {
-          if (stripeError instanceof HttpsError) throw stripeError;
-
-          console.error('[createPaymentIntent] Erreur lors de la verification du compte Connect:', stripeError);
-          throw new HttpsError(
-            'failed-precondition',
-            `Compte Stripe Connect introuvable ou invalide: ${data.destinationAccountId}`
-          );
+          // Compte inexistant ou erreur - utiliser mode plateforme
+          console.warn('[createPaymentIntent] Erreur verification compte Connect, utilisation mode plateforme:', stripeError);
+          useDirectCharges = false;
+          providerKycComplete = false;
+          pendingTransferRequired = true;
         }
+      } else {
+        // Pas de compte Stripe - mode plateforme avec transfert différé
+        console.log('[createPaymentIntent] Pas de compte Stripe provider - Mode PLATFORM ESCROW');
+        pendingTransferRequired = true;
       }
 
-      console.log('Creation PaymentIntent Stripe:', {
+      console.log('[createPaymentIntent] Configuration finale:', {
         amountEuros: data.amount,
         amountCents,
         currency,
         serviceType: data.serviceType,
         commissionEuros,
-        commissionAmountCents,
+        applicationFeeCents: commissionAmountCents,
         providerEuros: data.providerAmount,
-        providerAmountCents,
+        providerReceivesCents: amountCents - commissionAmountCents,
         mode: this.mode,
-        useDestinationCharges,
-        ...(useDestinationCharges && {
-          destinationAccountId: data.destinationAccountId,
-          transferAmountCents: providerAmountCents,
-        }),
+        useDirectCharges,
+        providerKycComplete,
+        pendingTransferRequired,
+        providerStripeAccountId: providerStripeAccountId || 'N/A (platform mode)',
       });
 
       console.log("data in createPaymentIntent", data.callSessionId);
 
-      // Construction des parametres du PaymentIntent
+      // ===== DIRECT CHARGES: Construction des paramètres =====
+      // Avec Direct Charges:
+      // - La charge est créée SUR LE COMPTE DU PROVIDER (stripeAccount option)
+      // - Le montant total va au provider
+      // - application_fee_amount définit la commission SOS-Expat qui est prélevée
+      // - capture_method: 'manual' permet l'escrow pendant l'appel
       const paymentIntentParams: Stripe.PaymentIntentCreateParams = {
         amount: amountCents,
         currency,
-        capture_method: 'manual', // L'argent est bloque mais pas preleve jusqu'a capture apres appel >= 2 min
+        capture_method: 'manual', // ESCROW: L'argent est bloqué jusqu'à capture après appel >= 2 min
         automatic_payment_methods: { enabled: true },
+        // ===== DIRECT CHARGES: application_fee_amount =====
+        // Cette commission va DIRECTEMENT à SOS-Expat (compte plateforme)
+        // Le reste (amountCents - commissionAmountCents) reste sur le compte du provider
+        ...(useDirectCharges && commissionAmountCents > 0 ? {
+          application_fee_amount: commissionAmountCents,
+        } : {}),
         metadata: {
           clientId: data.clientId,
           providerId: data.providerId,
@@ -361,12 +400,15 @@ export class StripeManager {
           providerType: data.providerType,
           commissionAmountCents: String(commissionAmountCents),
           providerAmountCents: String(providerAmountCents),
+          applicationFeeCents: String(commissionAmountCents),
           commissionAmountEuros: commissionEuros.toFixed(2),
           providerAmountEuros: data.providerAmount.toFixed(2),
           environment: process.env.NODE_ENV || 'development',
           mode: this.mode,
-          useDestinationCharges: String(useDestinationCharges),
-          ...(data.destinationAccountId ? { destinationAccountId: data.destinationAccountId } : {}),
+          useDirectCharges: String(useDirectCharges),
+          providerKycComplete: String(providerKycComplete),
+          pendingTransferRequired: String(pendingTransferRequired),
+          ...(providerStripeAccountId ? { providerStripeAccountId } : {}),
           ...(data.callSessionId ? { callSessionId: data.callSessionId } : {}),
           ...(data.metadata || {}),
         },
@@ -375,36 +417,47 @@ export class StripeManager {
         receipt_email: await this.getClientEmail(data.clientId),
       };
 
-      // ===== Ajout de transfer_data pour Destination Charges =====
-      // Le paiement sera automatiquement splitte a la capture:
-      // - transfer_data.amount (providerAmountCents) va au prestataire
-      // - Le reste (commissionAmountCents) reste sur le compte plateforme
-      if (useDestinationCharges && data.destinationAccountId) {
-        paymentIntentParams.transfer_data = {
-          destination: data.destinationAccountId,
-          amount: providerAmountCents, // Montant en centimes pour le prestataire
-        };
-        // on_behalf_of fait apparaitre le paiement sur le dashboard du prestataire
-        paymentIntentParams.on_behalf_of = data.destinationAccountId;
+      // ===== P0 FIX: Idempotency key pour éviter les doubles charges =====
+      // La clé est basée sur clientId + providerId + callSessionId + amount
+      // IMPORTANT: NE PAS inclure Date.now() car cela rend la clé unique à chaque appel
+      // et annule l'effet de l'idempotence (protection contre les doubles charges)
+      const idempotencyKey = `pi_create_${data.clientId}_${data.providerId}_${data.callSessionId || 'no-session'}_${amountCents}`;
 
-        console.log('[createPaymentIntent] transfer_data configure:', {
-          destination: data.destinationAccountId,
-          transferAmountCents: providerAmountCents,
-          platformFeeCents: amountCents - providerAmountCents,
-        });
+      // ===== DIRECT CHARGES: Création sur le compte du provider =====
+      // La différence clé avec Destination Charges:
+      // - stripeAccount dans les options fait créer la charge SUR le compte du provider
+      // - L'argent va directement au provider, pas à la plateforme puis transfert
+      let paymentIntent: Stripe.PaymentIntent;
+
+      if (useDirectCharges && providerStripeAccountId) {
+        console.log('[createPaymentIntent] Création PaymentIntent sur le compte du provider (Direct Charges)');
+        paymentIntent = await this.stripe.paymentIntents.create(
+          paymentIntentParams,
+          {
+            idempotencyKey: idempotencyKey.substring(0, 255),
+            stripeAccount: providerStripeAccountId, // DIRECT CHARGES: Charge créée sur le compte du provider
+          }
+        );
+      } else {
+        console.log('[createPaymentIntent] Création PaymentIntent sur le compte plateforme (fallback mode)');
+        paymentIntent = await this.stripe.paymentIntents.create(
+          paymentIntentParams,
+          {
+            idempotencyKey: idempotencyKey.substring(0, 255),
+          }
+        );
       }
+      console.log('paymentIntent created with idempotency key:', idempotencyKey.substring(0, 50) + '...');
 
-      const paymentIntent = await this.stripe.paymentIntents.create(paymentIntentParams);
-      console.log('paymentIntent', paymentIntent);
-
-      console.log('PaymentIntent Stripe cree:', {
+      console.log('PaymentIntent Stripe cree (DIRECT CHARGES):', {
         id: paymentIntent.id,
         amount: paymentIntent.amount,
         amountInEuros: paymentIntent.amount / 100,
         status: paymentIntent.status,
         mode: this.mode,
-        useDestinationCharges,
-        hasTransferData: !!paymentIntent.transfer_data,
+        useDirectCharges,
+        applicationFeeAmount: useDirectCharges ? commissionAmountCents : 0,
+        createdOnAccount: useDirectCharges ? providerStripeAccountId : 'plateforme',
       });
 
       await this.savePaymentRecord(
@@ -415,11 +468,55 @@ export class StripeManager {
           commissionAmountCents,
           providerAmountCents,
           currency,
-          useDestinationCharges,
-          destinationAccountId: data.destinationAccountId,
-          transferAmountCents: useDestinationCharges ? providerAmountCents : undefined,
+          useDirectCharges,
+          providerStripeAccountId,
+          applicationFeeAmountCents: useDirectCharges ? commissionAmountCents : undefined,
+          pendingTransferRequired,
+          providerKycComplete,
         }
       );
+
+      // ===== TRANSFERT DIFFÉRÉ: Créer un enregistrement pending_transfers si KYC incomplet =====
+      // Ce transfert sera traité automatiquement quand le provider complètera son KYC
+      if (pendingTransferRequired) {
+        try {
+          await this.db.collection('pending_transfers').add({
+            paymentIntentId: paymentIntent.id,
+            providerId: data.providerId,
+            providerStripeAccountId: providerStripeAccountId || null,
+            clientId: data.clientId,
+            callSessionId: data.callSessionId || null,
+            amount: amountCents,
+            providerAmount: providerAmountCents,
+            commissionAmount: commissionAmountCents,
+            currency,
+            status: 'pending_kyc', // Statut: en attente de KYC
+            reason: 'Provider KYC not completed at payment time',
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            environment: process.env.NODE_ENV || 'development',
+            mode: this.mode,
+          });
+          console.log('[createPaymentIntent] Pending transfer créé - sera traité après KYC du provider:', {
+            paymentIntentId: paymentIntent.id,
+            providerId: data.providerId,
+            providerAmount: providerAmountCents / 100,
+          });
+        } catch (pendingError) {
+          console.error('[createPaymentIntent] Erreur création pending_transfer:', pendingError);
+          // Ne pas bloquer le paiement si l'enregistrement échoue
+          // Créer une alerte admin
+          await this.db.collection('admin_alerts').add({
+            type: 'pending_transfer_creation_failed',
+            severity: 'high',
+            paymentIntentId: paymentIntent.id,
+            providerId: data.providerId,
+            error: pendingError instanceof Error ? pendingError.message : 'Unknown error',
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            resolved: false,
+          });
+        }
+      }
 
       return {
         success: true,
@@ -461,8 +558,65 @@ export class StripeManager {
         mode: this.mode,
       });
 
+      // ===== P1 FIX: Vérification KYC du provider AVANT capture =====
+      const providerId = paymentIntent.metadata?.providerId;
+      if (providerId) {
+        try {
+          const providerDoc = await this.db.collection('users').doc(providerId).get();
+          if (providerDoc.exists) {
+            const providerData = providerDoc.data();
+            const kycStatus = providerData?.kycStatus;
+            const VALID_KYC_STATUSES = ['completed', 'verified'];
+
+            if (!kycStatus || !VALID_KYC_STATUSES.includes(kycStatus)) {
+              console.warn('[capturePayment] KYC provider non vérifié', {
+                providerId,
+                kycStatus: kycStatus || 'undefined',
+                paymentIntentId,
+              });
+
+              // Créer une alerte admin pour suivi
+              await this.db.collection('admin_alerts').add({
+                type: 'kyc_not_verified_at_capture',
+                severity: 'high',
+                providerId: providerId,
+                paymentIntentId: paymentIntentId,
+                kycStatus: kycStatus || 'undefined',
+                message: `Tentative de capture pour provider avec KYC non vérifié: ${kycStatus || 'undefined'}`,
+                sessionId: sessionId || null,
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                resolved: false,
+              });
+
+              // En production, on peut choisir de bloquer ou juste alerter
+              // Pour l'instant, on alerte mais on continue la capture
+              // Pour bloquer, décommenter les lignes suivantes:
+              // throw new HttpsError(
+              //   'failed-precondition',
+              //   'Impossible de capturer: KYC du prestataire non vérifié'
+              // );
+            } else {
+              console.log('[capturePayment] KYC provider vérifié:', kycStatus);
+            }
+          } else {
+            console.warn('[capturePayment] Provider non trouvé:', providerId);
+          }
+        } catch (kycError) {
+          console.error('[capturePayment] Erreur vérification KYC:', kycError);
+          // On continue la capture même en cas d'erreur de vérification
+        }
+      }
+      // ===== FIN P1 FIX =====
+
       // Capture le paiement - avec Destination Charges, le transfert est cree automatiquement
-      const captured = await this.stripe.paymentIntents.capture(paymentIntentId);
+      // ===== P0 FIX: Idempotency key pour la capture =====
+      // IMPORTANT: NE PAS inclure Date.now() - une capture ne doit se faire qu'une seule fois
+      const captureIdempotencyKey = `capture_${paymentIntentId}`;
+      const captured = await this.stripe.paymentIntents.capture(
+        paymentIntentId,
+        {},
+        { idempotencyKey: captureIdempotencyKey.substring(0, 255) }
+      );
 
       // Recuperer l'ID du transfert auto-cree par Stripe (Destination Charges)
       // Le transfert est disponible directement sur le PaymentIntent apres capture
@@ -625,7 +779,13 @@ export class StripeManager {
 
       if (amount !== undefined) refundData.amount = toCents(amount);
 
-      const refund = await this.stripe.refunds.create(refundData);
+      // ===== P0 FIX: Idempotency key pour le remboursement =====
+      // IMPORTANT: NE PAS inclure Date.now() - un remboursement ne doit se faire qu'une seule fois
+      const refundIdempotencyKey = `refund_${paymentIntentId}_${amount || 'full'}`;
+      const refund = await this.stripe.refunds.create(
+        refundData,
+        { idempotencyKey: refundIdempotencyKey.substring(0, 255) }
+      );
 
       // Mise a jour du document payment avec les infos de remboursement
       const refundUpdate: Record<string, unknown> = {
@@ -644,6 +804,34 @@ export class StripeManager {
       }
 
       await this.db.collection('payments').doc(paymentIntentId).update(refundUpdate);
+
+      // ===== P0 FIX: Écrire dans la collection refunds pour l'historique =====
+      const refundRecord = {
+        refundId: refund.id,
+        paymentIntentId: paymentIntentId,
+        stripeRefundId: refund.id,
+        amount: refund.amount,
+        amountInMainUnit: refund.amount / 100,
+        currency: refund.currency,
+        status: refund.status,
+        reason: reason,
+        clientId: paymentData?.clientId || null,
+        providerId: paymentData?.providerId || null,
+        sessionId: sessionId || paymentData?.callSessionId || null,
+        usedDestinationCharges: usedDestinationCharges,
+        transferReversed: usedDestinationCharges || wasTransferred,
+        metadata: {
+          paymentAmount: paymentData?.amount || null,
+          paymentCurrency: paymentData?.currency || null,
+          serviceType: paymentData?.serviceType || null,
+        },
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        environment: process.env.NODE_ENV || 'development',
+        mode: this.mode,
+      };
+
+      await this.db.collection('refunds').doc(refund.id).set(refundRecord);
+      console.log('[refundPayment] Refund record saved to refunds collection:', refund.id);
 
       // Update related invoices to refunded status
       if (sessionId) {
@@ -821,9 +1009,16 @@ async cancelPayment(
       ? (reason as CancelReason)
       : undefined;
 
-    const canceled = await this.stripe.paymentIntents.cancel(paymentIntentId, {
-      ...(normalized ? { cancellation_reason: normalized } : {}),
-    });
+    // ===== P0 FIX: Idempotency key pour l'annulation =====
+    // IMPORTANT: Une annulation ne doit se faire qu'une seule fois par PaymentIntent
+    const cancelIdempotencyKey = `cancel_${paymentIntentId}`;
+    const canceled = await this.stripe.paymentIntents.cancel(
+      paymentIntentId,
+      {
+        ...(normalized ? { cancellation_reason: normalized } : {}),
+      },
+      { idempotencyKey: cancelIdempotencyKey }
+    );
 
     await this.db.collection('payments').doc(paymentIntentId).update({
       status: canceled.status,
@@ -1011,10 +1206,17 @@ async cancelPayment(
       commissionAmountCents: number;
       providerAmountCents: number;
       currency: SupportedCurrency;
-      // Destination Charges
+      // Destination Charges (legacy)
       useDestinationCharges?: boolean;
       destinationAccountId?: string;
       transferAmountCents?: number;
+      // Direct Charges (nouveau modele)
+      useDirectCharges?: boolean;
+      providerStripeAccountId?: string;
+      applicationFeeAmountCents?: number;
+      // KYC / Pending Transfer
+      pendingTransferRequired?: boolean;
+      providerKycComplete?: boolean;
     }
   ): Promise<void> {
     const paymentRecord: PaymentDoc = {
@@ -1048,7 +1250,16 @@ async cancelPayment(
         ? { callSessionId: dataEuros.callSessionId }
         : {}),
 
-      // ===== Destination Charges =====
+      // ===== Direct Charges =====
+      useDirectCharges: cents.useDirectCharges || false,
+      ...(cents.providerStripeAccountId ? { providerStripeAccountId: cents.providerStripeAccountId } : {}),
+      ...(cents.applicationFeeAmountCents !== undefined ? { applicationFeeAmountCents: cents.applicationFeeAmountCents } : {}),
+
+      // ===== KYC / Pending Transfer =====
+      providerKycComplete: cents.providerKycComplete || false,
+      pendingTransferRequired: cents.pendingTransferRequired || false,
+
+      // ===== Destination Charges (legacy) =====
       useDestinationCharges: cents.useDestinationCharges || false,
       ...(cents.destinationAccountId ? { destinationAccountId: cents.destinationAccountId } : {}),
       ...(cents.transferAmountCents !== undefined ? { transferAmountCents: cents.transferAmountCents } : {}),
@@ -1056,14 +1267,16 @@ async cancelPayment(
 
     await this.db.collection('payments').doc(paymentIntent.id).set(paymentRecord as unknown as admin.firestore.DocumentData);
 
-    console.log('Enregistrement paiement sauvegarde en DB:', {
+    console.log('[savePaymentRecord] Paiement sauvegardé:', {
       id: paymentIntent.id,
       amountCents: cents.amountCents,
       amountEuros: dataEuros.amount,
       mode: this.mode,
       hasCallSessionId: Boolean(paymentRecord.callSessionId),
-      useDestinationCharges: cents.useDestinationCharges || false,
-      destinationAccountId: cents.destinationAccountId || null,
+      useDirectCharges: cents.useDirectCharges || false,
+      providerKycComplete: cents.providerKycComplete || false,
+      pendingTransferRequired: cents.pendingTransferRequired || false,
+      providerStripeAccountId: cents.providerStripeAccountId || null,
     });
   }
 }

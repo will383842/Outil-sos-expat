@@ -869,6 +869,9 @@ const RegisterExpat: React.FC = () => {
       
       const languageCodes = (selectedLanguages as LanguageOption[]).map((l) => l.value);
       
+      // Récupérer le code ISO du pays de résidence pour la détection gateway
+      const residenceCountryCode = getCountryCode(form.currentPresenceCountry);
+
       const userData = {
         role: "expat" as const,
         type: "expat" as const,
@@ -881,6 +884,8 @@ const RegisterExpat: React.FC = () => {
         currentCountry: form.currentCountry,
         currentPresenceCountry: form.currentPresenceCountry,
         country: form.currentPresenceCountry,
+        // Code ISO 2 lettres du pays de résidence (pour détection gateway Stripe/PayPal)
+        countryCode: residenceCountryCode,
         interventionCountry: form.interventionCountry,
         profilePhoto: form.profilePhoto,
         photoURL: form.profilePhoto,

@@ -4,6 +4,7 @@ import { twilioCallManager } from '../TwilioCallManager';
 import { logCallRecord } from '../utils/logs/logCallRecord';
 import { logError } from '../utils/logs/logError';
 import { Request, Response } from 'express';
+import { validateTwilioWebhookSignature } from '../lib/twilio';
 
 
 interface TwilioRecordingWebhookBody {
@@ -38,6 +39,12 @@ export const TwilioRecordingWebhook = onRequest(
   },
   async (req: Request, res: Response) => {
     try {
+      // ===== P0 SECURITY FIX: Validate Twilio signature =====
+      if (!validateTwilioWebhookSignature(req, res)) {
+        console.error("[twilioRecordingWebhook] Invalid Twilio signature - rejecting request");
+        return; // Response already sent by validateTwilioWebhookSignature
+      }
+
       const body: TwilioRecordingWebhookBody = req.body;
 
       console.log('🎬 Recording Webhook reçu:', {

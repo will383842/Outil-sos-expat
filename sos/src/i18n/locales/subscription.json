@@ -3,12 +3,15 @@
     "subscription": {
       "title": "Abonnement",
       "mySubscription": "Mon Abonnement",
-      "manageDescription": "Gérez votre abonnement et suivez votre utilisation",
-      "manageBilling": "Gérer la facturation",
+      "manageSubscription": "Gerer mon abonnement",
+      "manageDescription": "Gerez votre abonnement et suivez votre utilisation",
+      "manageBilling": "Gerer la facturation",
       "viewPlans": "Voir les plans",
       "changePlan": "Changer de plan",
       "cancelSubscription": "Annuler l'abonnement",
-      "reactivate": "Réactiver l'abonnement",
+      "currentPlan": "Formule actuelle",
+      "noPlan": "Aucun abonnement actif",
+      "startTrial": "Commencer l'essai gratuit",
       "stats": {
         "callsThisMonth": "Appels ce mois",
         "trialDaysLeft": "Jours d'essai restants",
@@ -21,38 +24,48 @@
         "billingPortal": "Portail de facturation"
       },
       "status": {
-        "trialing": "Essai",
+        "trialing": "Periode d'essai",
         "active": "Actif",
         "past_due": "Paiement en retard",
-        "canceled": "Annulé",
-        "expired": "Expiré",
+        "canceled": "Annule",
+        "expired": "Expire",
         "paused": "En pause"
       },
       "trial": {
         "title": "Essai gratuit",
-        "description": "Découvrez l'assistant IA gratuitement",
-        "daysRemaining": "{{days}} jours restants",
-        "callsRemaining": "{{calls}} appels restants",
-        "expired": "Votre période d'essai est terminée",
-        "callsExhausted": "Vous avez utilisé tous vos appels d'essai",
+        "description": "Decouvrez l'assistant IA gratuitement",
+        "daysRemaining": "{days} jours restants",
+        "callsRemaining": "{calls} appels restants",
+        "expired": "Votre periode d'essai est terminee",
+        "callsExhausted": "Vous avez utilise tous vos appels d'essai",
         "startTrial": "Commencer l'essai gratuit",
-        "noCreditCard": "Pas de carte de crédit requise"
+        "noCreditCard": "Pas de carte de credit requise",
+        "expiresOn": "Expire le {date}",
+        "period": "Periode d'essai",
+        "daysAnd": "jours et"
       },
       "plans": {
         "title": "Choisissez votre plan",
-        "subtitle": "Sélectionnez le plan qui correspond à vos besoins",
+        "subtitle": "Selectionnez le plan qui correspond a vos besoins",
         "loading": "Chargement des plans...",
         "basic": "Basic",
         "standard": "Standard",
         "pro": "Pro",
-        "unlimited": "Illimité",
-        "popular": "POPULAIRE",
+        "unlimited": "Illimite",
+        "popular": "Populaire",
+        "recommended": "Recommande",
         "currentPlan": "Plan actuel",
-        "upgrade": "Passer à ce plan",
-        "downgrade": "Rétrograder",
+        "current": "Plan actuel",
+        "upgrade": "Passer a ce plan",
+        "downgrade": "Retrograder",
         "perMonth": "/mois",
-        "callsPerMonth": "{{count}} appels/mois",
-        "unlimitedCalls": "Appels illimités"
+        "callsPerMonth": "{count} appels/mois",
+        "unlimitedCalls": "Appels illimites",
+        "choosePlan": "Choisir une formule",
+        "monthly": "Mensuel",
+        "yearly": "Annuel",
+        "savePercent": "Economisez {percent}%",
+        "costPerCall": "{cost} par appel"
       },
       "features": {
         "ai_chat": "Chat IA",
@@ -60,48 +73,52 @@
         "ai_templates": "Templates IA",
         "ai_translation": "Traduction IA",
         "priority_support": "Support prioritaire",
-        "api_access": "Accès API",
-        "dedicated_support": "Support dédié"
+        "api_access": "Acces API",
+        "dedicated_support": "Support dedie"
       },
       "quota": {
         "title": "Utilisation IA",
-        "used": "Utilisés",
+        "usage": "Utilisation du quota",
+        "used": "{used} sur {total} appels utilises",
         "total": "Total",
         "remaining": "Restants",
-        "unlimited": "Illimité",
-        "resetInfo": "Le quota se réinitialise au début de chaque mois",
-        "exhausted": "Quota atteint",
+        "unlimited": "Appels illimites",
+        "resetInfo": "Le quota se reinitialise au debut de chaque mois",
+        "exhausted": "Quota epuise",
         "nearLimit": "Presque atteint",
         "available": "Disponible",
         "upgradePrompt": "Augmenter votre quota"
       },
       "billing": {
         "title": "Facturation",
-        "nextBilling": "Prochaine facturation",
+        "managePayment": "Gerer mon paiement",
+        "updateCard": "Mettre a jour ma carte",
+        "viewInvoices": "Voir mes factures",
+        "nextBilling": "Prochaine facturation : {date}",
+        "amount": "Montant : {amount}",
         "currency": "Devise",
         "invoices": "Factures",
-        "recentInvoices": "Factures récentes",
+        "recentInvoices": "Factures recentes",
         "invoiceHistory": "Historique des factures",
-        "downloadPdf": "Télécharger PDF",
+        "downloadPdf": "Telecharger PDF",
         "noInvoices": "Aucune facture",
-        "period": "Période",
-        "amount": "Montant",
+        "period": "Periode",
         "status": "Statut",
-        "paid": "Payée",
+        "paid": "Payee",
         "open": "En attente",
         "draft": "Brouillon",
-        "void": "Annulée",
-        "uncollectible": "Impayée",
+        "void": "Annulee",
+        "uncollectible": "Impayee",
         "monthly": "Mensuel",
         "yearly": "Annuel",
         "perMonth": "/mois"
       },
       "checkout": {
         "title": "Finaliser votre abonnement",
-        "orderSummary": "Récapitulatif",
+        "orderSummary": "Recapitulatif",
         "monthlyTotal": "Total mensuel",
         "paymentInfo": "Informations de paiement",
-        "securePayment": "Paiement sécurisé par Stripe",
+        "securePayment": "Paiement securise par Stripe",
         "subscribe": "S'abonner",
         "processing": "Traitement...",
         "cancel": "Annuler",
@@ -109,55 +126,76 @@
         "noCommitment": "Sans engagement"
       },
       "cancelModal": {
-        "title": "Annuler l'abonnement",
-        "message": "Êtes-vous sûr de vouloir annuler votre abonnement ? Vous conserverez l'accès jusqu'à la fin de la période en cours.",
+        "title": "Annuler votre abonnement ?",
+        "message": "Vous garderez l'acces jusqu'au {date}. Vous pourrez vous reabonner a tout moment.",
+        "reason": "Raison de l'annulation (optionnel)",
         "keep": "Non, garder",
-        "confirm": "Oui, annuler"
+        "keepSubscription": "Garder mon abonnement",
+        "confirm": "Oui, annuler",
+        "confirmCancel": "Confirmer l'annulation",
+        "scheduled": "Annulation programmee",
+        "endsOn": "Votre abonnement se termine le {date}"
+      },
+      "reactivate": {
+        "title": "Reactiver votre abonnement",
+        "message": "Votre abonnement continuera normalement.",
+        "button": "Reactiver",
+        "success": "Abonnement reactive avec succes !"
       },
       "success": {
-        "title": "Félicitations !",
-        "subtitle": "Votre abonnement {{plan}} est maintenant actif",
-        "accessTo": "Vous avez maintenant accès à :",
-        "startUsing": "Commencer à utiliser l'IA",
+        "title": "Felicitations !",
+        "subtitle": "Votre abonnement {plan} est maintenant actif",
+        "accessTo": "Vous avez maintenant acces a :",
+        "startUsing": "Commencer a utiliser l'IA",
         "viewSubscription": "Voir mon abonnement",
-        "emailSent": "Une confirmation a été envoyée à votre email",
-        "thankYou": "Merci de faire confiance à SOS-Expat",
+        "emailSent": "Une confirmation a ete envoyee a votre email",
+        "thankYou": "Merci de faire confiance a SOS-Expat",
         "features": {
-          "fullAccess": "Accès complet à l'outil IA",
+          "fullAccess": "Acces complet a l'outil IA",
           "smartAssistant": "Assistant IA intelligent",
           "contextualSuggestions": "Suggestions contextuelles",
-          "unlimitedCallsPerMonth": "Appels illimités par mois",
-          "callsPerMonth": "{{count}} appels IA par mois"
+          "unlimitedCallsPerMonth": "Appels illimites par mois",
+          "callsPerMonth": "{count} appels IA par mois"
         }
       },
       "errors": {
         "noSubscription": "Vous n'avez pas d'abonnement actif",
-        "paymentFailed": "Le paiement a échoué",
-        "subscriptionExpired": "Votre abonnement a expiré",
+        "paymentFailed": "Le paiement a echoue",
+        "subscriptionExpired": "Votre abonnement a expire",
         "quotaExhausted": "Vous avez atteint votre quota mensuel",
-        "trialExpired": "Votre période d'essai est terminée",
-        "generic": "Une erreur s'est produite"
+        "trialExpired": "Votre periode d'essai est terminee",
+        "generic": "Une erreur s'est produite",
+        "loadFailed": "Impossible de charger votre abonnement",
+        "cancelFailed": "Impossible d'annuler l'abonnement",
+        "checkoutFailed": "Erreur lors du paiement",
+        "updatePaymentMethod": "Veuillez mettre a jour votre moyen de paiement"
+      },
+      "actions": {
+        "subscribe": "S'abonner",
+        "upgrade": "Passer au plan superieur",
+        "changePlan": "Changer de formule",
+        "cancel": "Annuler l'abonnement"
       },
       "faq": {
-        "title": "Questions fréquentes",
+        "title": "Questions frequentes",
         "changePlan": {
           "q": "Puis-je changer de plan ?",
-          "a": "Oui, vous pouvez upgrader ou downgrader à tout moment. Le changement prend effet immédiatement."
+          "a": "Oui, vous pouvez upgrader ou downgrader a tout moment. Le changement prend effet immediatement."
         },
         "trial": {
           "q": "Comment fonctionne l'essai gratuit ?",
-          "a": "Vous bénéficiez de 30 jours d'essai avec 3 appels IA gratuits. Aucune carte de crédit requise."
+          "a": "Vous beneficiez de 30 jours d'essai avec 3 appels IA gratuits. Aucune carte de credit requise."
         },
         "quota": {
           "q": "Que se passe-t-il si j'atteins mon quota ?",
-          "a": "Vous pouvez soit attendre le mois suivant pour un reset, soit upgrader vers un plan supérieur."
+          "a": "Vous pouvez soit attendre le mois suivant pour un reset, soit upgrader vers un plan superieur."
         },
         "cancel": {
-          "q": "Puis-je annuler à tout moment ?",
-          "a": "Oui, vous pouvez annuler à tout moment. Vous conserverez l'accès jusqu'à la fin de votre période payée."
+          "q": "Puis-je annuler a tout moment ?",
+          "a": "Oui, vous pouvez annuler a tout moment. Vous conserverez l'acces jusqu'a la fin de votre periode payee."
         }
       },
-      "calls": "{{count}} appels"
+      "calls": "{count} appels"
     },
     "aiAssistant": {
       "title": "Assistant IA",
@@ -165,28 +203,28 @@
       "clearConversation": "Effacer la conversation",
       "mySubscription": "Mon abonnement",
       "howCanIHelp": "Comment puis-je vous aider ?",
-      "askQuestion": "Posez une question sur vos clients expatriés, les démarches administratives, ou demandez des conseils.",
+      "askQuestion": "Posez une question sur vos clients expatries, les demarches administratives, ou demandez des conseils.",
       "typeMessage": "Tapez votre message...",
       "send": "Envoyer",
-      "callsRemaining": "{{count}} appels restants ce mois",
-      "unlimitedCalls": "Appels illimités",
-      "poweredBy": "Propulsé par Claude & GPT-4",
+      "callsRemaining": "{count} appels restants ce mois",
+      "unlimitedCalls": "Appels illimites",
+      "poweredBy": "Propulse par Claude & GPT-4",
       "tips": {
         "title": "Conseils",
-        "tip1": "Soyez précis dans vos questions",
-        "tip2": "Mentionnez le pays concerné",
+        "tip1": "Soyez precis dans vos questions",
+        "tip2": "Mentionnez le pays concerne",
         "tip3": "L'IA peut rechercher sur le web"
       },
       "upgradeModal": {
         "title": "Quota atteint",
-        "message": "Vous avez atteint la limite de votre plan. Passez à un abonnement supérieur pour continuer à utiliser l'assistant IA.",
+        "message": "Vous avez atteint la limite de votre plan. Passez a un abonnement superieur pour continuer a utiliser l'assistant IA.",
         "later": "Plus tard",
         "viewPlans": "Voir les plans"
       },
       "errors": {
-        "notAuthenticated": "Vous devez être connecté",
+        "notAuthenticated": "Vous devez etre connecte",
         "communicationError": "Erreur lors de la communication avec l'IA",
-        "noMessageToRetry": "Aucun message à réessayer"
+        "noMessageToRetry": "Aucun message a reessayer"
       }
     }
   },
@@ -194,12 +232,15 @@
     "subscription": {
       "title": "Subscription",
       "mySubscription": "My Subscription",
+      "manageSubscription": "Manage my subscription",
       "manageDescription": "Manage your subscription and track your usage",
       "manageBilling": "Manage billing",
       "viewPlans": "View plans",
       "changePlan": "Change plan",
       "cancelSubscription": "Cancel subscription",
-      "reactivate": "Reactivate subscription",
+      "currentPlan": "Current plan",
+      "noPlan": "No active subscription",
+      "startTrial": "Start free trial",
       "stats": {
         "callsThisMonth": "Calls this month",
         "trialDaysLeft": "Trial days left",
@@ -212,9 +253,9 @@
         "billingPortal": "Billing Portal"
       },
       "status": {
-        "trialing": "Trial",
+        "trialing": "Trial period",
         "active": "Active",
-        "past_due": "Past Due",
+        "past_due": "Past due",
         "canceled": "Canceled",
         "expired": "Expired",
         "paused": "Paused"
@@ -222,12 +263,15 @@
       "trial": {
         "title": "Free Trial",
         "description": "Discover the AI assistant for free",
-        "daysRemaining": "{{days}} days remaining",
-        "callsRemaining": "{{calls}} calls remaining",
+        "daysRemaining": "{days} days remaining",
+        "callsRemaining": "{calls} calls remaining",
         "expired": "Your trial period has ended",
         "callsExhausted": "You have used all your trial calls",
         "startTrial": "Start free trial",
-        "noCreditCard": "No credit card required"
+        "noCreditCard": "No credit card required",
+        "expiresOn": "Expires on {date}",
+        "period": "Trial period",
+        "daysAnd": "days and"
       },
       "plans": {
         "title": "Choose Your Plan",
@@ -237,13 +281,20 @@
         "standard": "Standard",
         "pro": "Pro",
         "unlimited": "Unlimited",
-        "popular": "POPULAR",
+        "popular": "Popular",
+        "recommended": "Recommended",
         "currentPlan": "Current plan",
-        "upgrade": "Upgrade",
+        "current": "Current plan",
+        "upgrade": "Upgrade to this plan",
         "downgrade": "Downgrade",
         "perMonth": "/month",
-        "callsPerMonth": "{{count}} calls/month",
-        "unlimitedCalls": "Unlimited calls"
+        "callsPerMonth": "{count} calls/month",
+        "unlimitedCalls": "Unlimited calls",
+        "choosePlan": "Choose a plan",
+        "monthly": "Monthly",
+        "yearly": "Yearly",
+        "savePercent": "Save {percent}%",
+        "costPerCall": "{cost} per call"
       },
       "features": {
         "ai_chat": "AI Chat",
@@ -256,19 +307,24 @@
       },
       "quota": {
         "title": "AI Usage",
-        "used": "Used",
+        "usage": "Quota usage",
+        "used": "{used} of {total} calls used",
         "total": "Total",
         "remaining": "Remaining",
-        "unlimited": "Unlimited",
+        "unlimited": "Unlimited calls",
         "resetInfo": "Quota resets at the beginning of each month",
-        "exhausted": "Quota reached",
+        "exhausted": "Quota exhausted",
         "nearLimit": "Almost reached",
         "available": "Available",
         "upgradePrompt": "Increase your quota"
       },
       "billing": {
         "title": "Billing",
-        "nextBilling": "Next billing",
+        "managePayment": "Manage my payment",
+        "updateCard": "Update my card",
+        "viewInvoices": "View my invoices",
+        "nextBilling": "Next billing: {date}",
+        "amount": "Amount: {amount}",
         "currency": "Currency",
         "invoices": "Invoices",
         "recentInvoices": "Recent Invoices",
@@ -276,7 +332,6 @@
         "downloadPdf": "Download PDF",
         "noInvoices": "No invoices",
         "period": "Period",
-        "amount": "Amount",
         "status": "Status",
         "paid": "Paid",
         "open": "Open",
@@ -300,14 +355,25 @@
         "noCommitment": "No commitment"
       },
       "cancelModal": {
-        "title": "Cancel Subscription",
-        "message": "Are you sure you want to cancel your subscription? You will keep access until the end of the current period.",
+        "title": "Cancel your subscription?",
+        "message": "You will keep access until {date}. You can resubscribe at any time.",
+        "reason": "Cancellation reason (optional)",
         "keep": "No, keep it",
-        "confirm": "Yes, cancel"
+        "keepSubscription": "Keep my subscription",
+        "confirm": "Yes, cancel",
+        "confirmCancel": "Confirm cancellation",
+        "scheduled": "Cancellation scheduled",
+        "endsOn": "Your subscription ends on {date}"
+      },
+      "reactivate": {
+        "title": "Reactivate your subscription",
+        "message": "Your subscription will continue normally.",
+        "button": "Reactivate",
+        "success": "Subscription reactivated successfully!"
       },
       "success": {
         "title": "Congratulations!",
-        "subtitle": "Your {{plan}} subscription is now active",
+        "subtitle": "Your {plan} subscription is now active",
         "accessTo": "You now have access to:",
         "startUsing": "Start using AI",
         "viewSubscription": "View my subscription",
@@ -318,7 +384,7 @@
           "smartAssistant": "Smart AI Assistant",
           "contextualSuggestions": "Contextual suggestions",
           "unlimitedCallsPerMonth": "Unlimited calls per month",
-          "callsPerMonth": "{{count}} AI calls per month"
+          "callsPerMonth": "{count} AI calls per month"
         }
       },
       "errors": {
@@ -327,7 +393,17 @@
         "subscriptionExpired": "Your subscription has expired",
         "quotaExhausted": "You have reached your monthly quota",
         "trialExpired": "Your trial period has ended",
-        "generic": "An error occurred"
+        "generic": "An error occurred",
+        "loadFailed": "Unable to load your subscription",
+        "cancelFailed": "Unable to cancel subscription",
+        "checkoutFailed": "Payment error",
+        "updatePaymentMethod": "Please update your payment method"
+      },
+      "actions": {
+        "subscribe": "Subscribe",
+        "upgrade": "Upgrade to higher plan",
+        "changePlan": "Change plan",
+        "cancel": "Cancel subscription"
       },
       "faq": {
         "title": "Frequently Asked Questions",
@@ -348,7 +424,7 @@
           "a": "Yes, you can cancel anytime. You'll keep access until the end of your paid period."
         }
       },
-      "calls": "{{count}} calls"
+      "calls": "{count} calls"
     },
     "aiAssistant": {
       "title": "AI Assistant",
@@ -359,7 +435,7 @@
       "askQuestion": "Ask a question about your expat clients, administrative procedures, or request advice.",
       "typeMessage": "Type your message...",
       "send": "Send",
-      "callsRemaining": "{{count}} calls remaining this month",
+      "callsRemaining": "{count} calls remaining this month",
       "unlimitedCalls": "Unlimited calls",
       "poweredBy": "Powered by Claude & GPT-4",
       "tips": {
@@ -383,27 +459,30 @@
   },
   "es": {
     "subscription": {
-      "title": "Suscripción",
-      "mySubscription": "Mi Suscripción",
-      "manageDescription": "Gestiona tu suscripción y sigue tu uso",
-      "manageBilling": "Gestionar facturación",
+      "title": "Suscripcion",
+      "mySubscription": "Mi Suscripcion",
+      "manageSubscription": "Gestionar mi suscripcion",
+      "manageDescription": "Gestiona tu suscripcion y sigue tu uso",
+      "manageBilling": "Gestionar facturacion",
       "viewPlans": "Ver planes",
       "changePlan": "Cambiar plan",
-      "cancelSubscription": "Cancelar suscripción",
-      "reactivate": "Reactivar suscripción",
+      "cancelSubscription": "Cancelar suscripcion",
+      "currentPlan": "Plan actual",
+      "noPlan": "Sin suscripcion activa",
+      "startTrial": "Iniciar prueba gratuita",
       "stats": {
         "callsThisMonth": "Llamadas este mes",
-        "trialDaysLeft": "Días de prueba restantes",
-        "daysRemaining": "Días restantes",
+        "trialDaysLeft": "Dias de prueba restantes",
+        "daysRemaining": "Dias restantes",
         "totalCalls": "Total llamadas"
       },
       "quickActions": {
-        "title": "Acciones rápidas",
+        "title": "Acciones rapidas",
         "openAI": "Abrir Asistente IA",
-        "billingPortal": "Portal de facturación"
+        "billingPortal": "Portal de facturacion"
       },
       "status": {
-        "trialing": "Prueba",
+        "trialing": "Periodo de prueba",
         "active": "Activo",
         "past_due": "Pago pendiente",
         "canceled": "Cancelado",
@@ -413,61 +492,75 @@
       "trial": {
         "title": "Prueba gratuita",
         "description": "Descubre el asistente IA gratis",
-        "daysRemaining": "{{days}} días restantes",
-        "callsRemaining": "{{calls}} llamadas restantes",
-        "expired": "Tu período de prueba ha terminado",
+        "daysRemaining": "{days} dias restantes",
+        "callsRemaining": "{calls} llamadas restantes",
+        "expired": "Tu periodo de prueba ha terminado",
         "callsExhausted": "Has usado todas tus llamadas de prueba",
         "startTrial": "Iniciar prueba gratuita",
-        "noCreditCard": "No se requiere tarjeta de crédito"
+        "noCreditCard": "No se requiere tarjeta de credito",
+        "expiresOn": "Expira el {date}",
+        "period": "Periodo de prueba",
+        "daysAnd": "dias y"
       },
       "plans": {
         "title": "Elige tu plan",
         "subtitle": "Selecciona el plan que se adapte a tus necesidades",
         "loading": "Cargando planes...",
-        "basic": "Básico",
-        "standard": "Estándar",
+        "basic": "Basico",
+        "standard": "Estandar",
         "pro": "Pro",
         "unlimited": "Ilimitado",
-        "popular": "POPULAR",
+        "popular": "Popular",
+        "recommended": "Recomendado",
         "currentPlan": "Plan actual",
-        "upgrade": "Mejorar",
+        "current": "Plan actual",
+        "upgrade": "Pasar a este plan",
         "downgrade": "Degradar",
         "perMonth": "/mes",
-        "callsPerMonth": "{{count}} llamadas/mes",
-        "unlimitedCalls": "Llamadas ilimitadas"
+        "callsPerMonth": "{count} llamadas/mes",
+        "unlimitedCalls": "Llamadas ilimitadas",
+        "choosePlan": "Elegir un plan",
+        "monthly": "Mensual",
+        "yearly": "Anual",
+        "savePercent": "Ahorra {percent}%",
+        "costPerCall": "{cost} por llamada"
       },
       "features": {
         "ai_chat": "Chat IA",
         "ai_suggestions": "Sugerencias IA",
         "ai_templates": "Plantillas IA",
-        "ai_translation": "Traducción IA",
+        "ai_translation": "Traduccion IA",
         "priority_support": "Soporte prioritario",
         "api_access": "Acceso API",
         "dedicated_support": "Soporte dedicado"
       },
       "quota": {
         "title": "Uso de IA",
-        "used": "Usados",
+        "usage": "Uso del cupo",
+        "used": "{used} de {total} llamadas usadas",
         "total": "Total",
         "remaining": "Restantes",
-        "unlimited": "Ilimitado",
+        "unlimited": "Llamadas ilimitadas",
         "resetInfo": "La cuota se reinicia al inicio de cada mes",
-        "exhausted": "Cuota alcanzada",
+        "exhausted": "Cuota agotada",
         "nearLimit": "Casi alcanzada",
         "available": "Disponible",
         "upgradePrompt": "Aumentar tu cuota"
       },
       "billing": {
-        "title": "Facturación",
-        "nextBilling": "Próxima facturación",
+        "title": "Facturacion",
+        "managePayment": "Gestionar mi pago",
+        "updateCard": "Actualizar mi tarjeta",
+        "viewInvoices": "Ver mis facturas",
+        "nextBilling": "Proxima facturacion: {date}",
+        "amount": "Monto: {amount}",
         "currency": "Moneda",
         "invoices": "Facturas",
         "recentInvoices": "Facturas recientes",
         "invoiceHistory": "Historial de facturas",
         "downloadPdf": "Descargar PDF",
         "noInvoices": "Sin facturas",
-        "period": "Período",
-        "amount": "Monto",
+        "period": "Periodo",
         "status": "Estado",
         "paid": "Pagada",
         "open": "Pendiente",
@@ -479,94 +572,115 @@
         "perMonth": "/mes"
       },
       "checkout": {
-        "title": "Completa tu suscripción",
+        "title": "Completa tu suscripcion",
         "orderSummary": "Resumen del pedido",
         "monthlyTotal": "Total mensual",
-        "paymentInfo": "Información de pago",
+        "paymentInfo": "Informacion de pago",
         "securePayment": "Pago seguro por Stripe",
         "subscribe": "Suscribirse",
         "processing": "Procesando...",
         "cancel": "Cancelar",
-        "easyCancellation": "Cancelación fácil",
+        "easyCancellation": "Cancelacion facil",
         "noCommitment": "Sin compromiso"
       },
       "cancelModal": {
-        "title": "Cancelar suscripción",
-        "message": "¿Estás seguro de que quieres cancelar tu suscripción? Mantendrás el acceso hasta el final del período actual.",
+        "title": "Cancelar tu suscripcion?",
+        "message": "Mantendras el acceso hasta el {date}. Podras volver a suscribirte en cualquier momento.",
+        "reason": "Razon de la cancelacion (opcional)",
         "keep": "No, mantener",
-        "confirm": "Sí, cancelar"
+        "keepSubscription": "Mantener mi suscripcion",
+        "confirm": "Si, cancelar",
+        "confirmCancel": "Confirmar cancelacion",
+        "scheduled": "Cancelacion programada",
+        "endsOn": "Tu suscripcion termina el {date}"
+      },
+      "reactivate": {
+        "title": "Reactivar tu suscripcion",
+        "message": "Tu suscripcion continuara normalmente.",
+        "button": "Reactivar",
+        "success": "Suscripcion reactivada con exito!"
       },
       "success": {
-        "title": "¡Felicidades!",
-        "subtitle": "Tu suscripción {{plan}} está ahora activa",
+        "title": "Felicidades!",
+        "subtitle": "Tu suscripcion {plan} esta ahora activa",
         "accessTo": "Ahora tienes acceso a:",
         "startUsing": "Empezar a usar IA",
-        "viewSubscription": "Ver mi suscripción",
-        "emailSent": "Se ha enviado una confirmación a tu email",
+        "viewSubscription": "Ver mi suscripcion",
+        "emailSent": "Se ha enviado una confirmacion a tu email",
         "thankYou": "Gracias por confiar en SOS-Expat",
         "features": {
           "fullAccess": "Acceso completo a la herramienta IA",
           "smartAssistant": "Asistente IA inteligente",
           "contextualSuggestions": "Sugerencias contextuales",
           "unlimitedCallsPerMonth": "Llamadas ilimitadas por mes",
-          "callsPerMonth": "{{count}} llamadas IA por mes"
+          "callsPerMonth": "{count} llamadas IA por mes"
         }
       },
       "errors": {
-        "noSubscription": "No tienes una suscripción activa",
-        "paymentFailed": "El pago falló",
-        "subscriptionExpired": "Tu suscripción ha expirado",
+        "noSubscription": "No tienes una suscripcion activa",
+        "paymentFailed": "El pago fallo",
+        "subscriptionExpired": "Tu suscripcion ha expirado",
         "quotaExhausted": "Has alcanzado tu cuota mensual",
-        "trialExpired": "Tu período de prueba ha terminado",
-        "generic": "Ha ocurrido un error"
+        "trialExpired": "Tu periodo de prueba ha terminado",
+        "generic": "Ha ocurrido un error",
+        "loadFailed": "No se pudo cargar tu suscripcion",
+        "cancelFailed": "No se pudo cancelar la suscripcion",
+        "checkoutFailed": "Error en el pago",
+        "updatePaymentMethod": "Por favor actualiza tu metodo de pago"
+      },
+      "actions": {
+        "subscribe": "Suscribirse",
+        "upgrade": "Pasar al plan superior",
+        "changePlan": "Cambiar de plan",
+        "cancel": "Cancelar suscripcion"
       },
       "faq": {
         "title": "Preguntas frecuentes",
         "changePlan": {
-          "q": "¿Puedo cambiar de plan?",
-          "a": "Sí, puedes mejorar o degradar en cualquier momento. Los cambios tienen efecto inmediato."
+          "q": "Puedo cambiar de plan?",
+          "a": "Si, puedes mejorar o degradar en cualquier momento. Los cambios tienen efecto inmediato."
         },
         "trial": {
-          "q": "¿Cómo funciona la prueba gratuita?",
-          "a": "Tienes 30 días de prueba con 3 llamadas IA gratuitas. No se requiere tarjeta de crédito."
+          "q": "Como funciona la prueba gratuita?",
+          "a": "Tienes 30 dias de prueba con 3 llamadas IA gratuitas. No se requiere tarjeta de credito."
         },
         "quota": {
-          "q": "¿Qué pasa si alcanzo mi cuota?",
+          "q": "Que pasa si alcanzo mi cuota?",
           "a": "Puedes esperar al mes siguiente para un reinicio, o mejorar a un plan superior."
         },
         "cancel": {
-          "q": "¿Puedo cancelar en cualquier momento?",
-          "a": "Sí, puedes cancelar cuando quieras. Mantendrás el acceso hasta el final de tu período pagado."
+          "q": "Puedo cancelar en cualquier momento?",
+          "a": "Si, puedes cancelar cuando quieras. Mantendras el acceso hasta el final de tu periodo pagado."
         }
       },
-      "calls": "{{count}} llamadas"
+      "calls": "{count} llamadas"
     },
     "aiAssistant": {
       "title": "Asistente IA",
       "subtitle": "Tu asistente personal para ayudar a tus clientes",
-      "clearConversation": "Borrar conversación",
-      "mySubscription": "Mi suscripción",
-      "howCanIHelp": "¿Cómo puedo ayudarte?",
-      "askQuestion": "Haz una pregunta sobre tus clientes expatriados, trámites administrativos o pide consejos.",
+      "clearConversation": "Borrar conversacion",
+      "mySubscription": "Mi suscripcion",
+      "howCanIHelp": "Como puedo ayudarte?",
+      "askQuestion": "Haz una pregunta sobre tus clientes expatriados, tramites administrativos o pide consejos.",
       "typeMessage": "Escribe tu mensaje...",
       "send": "Enviar",
-      "callsRemaining": "{{count}} llamadas restantes este mes",
+      "callsRemaining": "{count} llamadas restantes este mes",
       "unlimitedCalls": "Llamadas ilimitadas",
       "poweredBy": "Impulsado por Claude & GPT-4",
       "tips": {
         "title": "Consejos",
-        "tip1": "Sé específico en tus preguntas",
-        "tip2": "Menciona el país relevante",
+        "tip1": "Se especifico en tus preguntas",
+        "tip2": "Menciona el pais relevante",
         "tip3": "La IA puede buscar en la web"
       },
       "upgradeModal": {
         "title": "Cuota alcanzada",
-        "message": "Has alcanzado el límite de tu plan. Mejora a una suscripción superior para seguir usando el asistente IA.",
-        "later": "Más tarde",
+        "message": "Has alcanzado el limite de tu plan. Mejora a una suscripcion superior para seguir usando el asistente IA.",
+        "later": "Mas tarde",
         "viewPlans": "Ver planes"
       },
       "errors": {
-        "notAuthenticated": "Debes iniciar sesión",
+        "notAuthenticated": "Debes iniciar sesion",
         "communicationError": "Error al comunicar con la IA",
         "noMessageToRetry": "No hay mensaje para reintentar"
       }
@@ -576,12 +690,15 @@
     "subscription": {
       "title": "Abonnement",
       "mySubscription": "Mein Abonnement",
+      "manageSubscription": "Mein Abonnement verwalten",
       "manageDescription": "Verwalten Sie Ihr Abonnement und verfolgen Sie Ihre Nutzung",
       "manageBilling": "Abrechnung verwalten",
-      "viewPlans": "Pläne anzeigen",
-      "changePlan": "Plan ändern",
-      "cancelSubscription": "Abonnement kündigen",
-      "reactivate": "Abonnement reaktivieren",
+      "viewPlans": "Plane anzeigen",
+      "changePlan": "Plan andern",
+      "cancelSubscription": "Abonnement kundigen",
+      "currentPlan": "Aktueller Plan",
+      "noPlan": "Kein aktives Abonnement",
+      "startTrial": "Kostenlose Testversion starten",
       "stats": {
         "callsThisMonth": "Anrufe diesen Monat",
         "trialDaysLeft": "Testtage verbleibend",
@@ -590,75 +707,89 @@
       },
       "quickActions": {
         "title": "Schnellaktionen",
-        "openAI": "KI-Assistent öffnen",
+        "openAI": "KI-Assistent offnen",
         "billingPortal": "Abrechnungsportal"
       },
       "status": {
-        "trialing": "Testversion",
+        "trialing": "Testzeitraum",
         "active": "Aktiv",
-        "past_due": "Zahlung überfällig",
-        "canceled": "Gekündigt",
+        "past_due": "Zahlung uberfallig",
+        "canceled": "Gekundigt",
         "expired": "Abgelaufen",
         "paused": "Pausiert"
       },
       "trial": {
         "title": "Kostenlose Testversion",
         "description": "Entdecken Sie den KI-Assistenten kostenlos",
-        "daysRemaining": "{{days}} Tage verbleibend",
-        "callsRemaining": "{{calls}} Anrufe verbleibend",
+        "daysRemaining": "{days} Tage verbleibend",
+        "callsRemaining": "{calls} Anrufe verbleibend",
         "expired": "Ihre Testphase ist beendet",
         "callsExhausted": "Sie haben alle Testanrufe verbraucht",
         "startTrial": "Kostenlose Testversion starten",
-        "noCreditCard": "Keine Kreditkarte erforderlich"
+        "noCreditCard": "Keine Kreditkarte erforderlich",
+        "expiresOn": "Lauft ab am {date}",
+        "period": "Testzeitraum",
+        "daysAnd": "Tage und"
       },
       "plans": {
-        "title": "Wählen Sie Ihren Plan",
-        "subtitle": "Wählen Sie den Plan, der Ihren Bedürfnissen entspricht",
-        "loading": "Pläne werden geladen...",
+        "title": "Wahlen Sie Ihren Plan",
+        "subtitle": "Wahlen Sie den Plan, der Ihren Bedurfnissen entspricht",
+        "loading": "Plane werden geladen...",
         "basic": "Basis",
         "standard": "Standard",
         "pro": "Pro",
         "unlimited": "Unbegrenzt",
-        "popular": "BELIEBT",
+        "popular": "Beliebt",
+        "recommended": "Empfohlen",
         "currentPlan": "Aktueller Plan",
-        "upgrade": "Upgrade",
-        "downgrade": "Downgrade",
+        "current": "Aktueller Plan",
+        "upgrade": "Auf diesen Plan wechseln",
+        "downgrade": "Herabstufen",
         "perMonth": "/Monat",
-        "callsPerMonth": "{{count}} Anrufe/Monat",
-        "unlimitedCalls": "Unbegrenzte Anrufe"
+        "callsPerMonth": "{count} Anrufe/Monat",
+        "unlimitedCalls": "Unbegrenzte Anrufe",
+        "choosePlan": "Plan wahlen",
+        "monthly": "Monatlich",
+        "yearly": "Jahrlich",
+        "savePercent": "Sparen Sie {percent}%",
+        "costPerCall": "{cost} pro Anruf"
       },
       "features": {
         "ai_chat": "KI-Chat",
-        "ai_suggestions": "KI-Vorschläge",
+        "ai_suggestions": "KI-Vorschlage",
         "ai_templates": "KI-Vorlagen",
-        "ai_translation": "KI-Übersetzung",
-        "priority_support": "Prioritäts-Support",
+        "ai_translation": "KI-Ubersetzung",
+        "priority_support": "Prioritats-Support",
         "api_access": "API-Zugang",
         "dedicated_support": "Dedizierter Support"
       },
       "quota": {
         "title": "KI-Nutzung",
-        "used": "Verwendet",
+        "usage": "Kontingentnutzung",
+        "used": "{used} von {total} Anrufen verwendet",
         "total": "Gesamt",
         "remaining": "Verbleibend",
-        "unlimited": "Unbegrenzt",
-        "resetInfo": "Das Kontingent wird zu Beginn jedes Monats zurückgesetzt",
-        "exhausted": "Kontingent erreicht",
+        "unlimited": "Unbegrenzte Anrufe",
+        "resetInfo": "Das Kontingent wird zu Beginn jedes Monats zuruckgesetzt",
+        "exhausted": "Kontingent erschopft",
         "nearLimit": "Fast erreicht",
-        "available": "Verfügbar",
-        "upgradePrompt": "Kontingent erhöhen"
+        "available": "Verfugbar",
+        "upgradePrompt": "Kontingent erhohen"
       },
       "billing": {
         "title": "Abrechnung",
-        "nextBilling": "Nächste Abrechnung",
-        "currency": "Währung",
+        "managePayment": "Meine Zahlung verwalten",
+        "updateCard": "Meine Karte aktualisieren",
+        "viewInvoices": "Meine Rechnungen anzeigen",
+        "nextBilling": "Nachste Abrechnung: {date}",
+        "amount": "Betrag: {amount}",
+        "currency": "Wahrung",
         "invoices": "Rechnungen",
         "recentInvoices": "Aktuelle Rechnungen",
         "invoiceHistory": "Rechnungsverlauf",
         "downloadPdf": "PDF herunterladen",
         "noInvoices": "Keine Rechnungen",
         "period": "Zeitraum",
-        "amount": "Betrag",
         "status": "Status",
         "paid": "Bezahlt",
         "open": "Offen",
@@ -666,41 +797,52 @@
         "void": "Storniert",
         "uncollectible": "Unbezahlt",
         "monthly": "Monatlich",
-        "yearly": "Jährlich",
+        "yearly": "Jahrlich",
         "perMonth": "/Monat"
       },
       "checkout": {
-        "title": "Abonnement abschließen",
-        "orderSummary": "Bestellübersicht",
+        "title": "Abonnement abschliessen",
+        "orderSummary": "Bestellubersicht",
         "monthlyTotal": "Monatliche Gesamtsumme",
         "paymentInfo": "Zahlungsinformationen",
-        "securePayment": "Sichere Zahlung über Stripe",
+        "securePayment": "Sichere Zahlung uber Stripe",
         "subscribe": "Abonnieren",
         "processing": "Wird verarbeitet...",
         "cancel": "Abbrechen",
-        "easyCancellation": "Einfache Kündigung",
+        "easyCancellation": "Einfache Kundigung",
         "noCommitment": "Keine Bindung"
       },
       "cancelModal": {
-        "title": "Abonnement kündigen",
-        "message": "Sind Sie sicher, dass Sie Ihr Abonnement kündigen möchten? Sie behalten den Zugang bis zum Ende des aktuellen Zeitraums.",
+        "title": "Abonnement kundigen?",
+        "message": "Sie behalten den Zugang bis zum {date}. Sie konnen sich jederzeit wieder anmelden.",
+        "reason": "Kundigungsgrund (optional)",
         "keep": "Nein, behalten",
-        "confirm": "Ja, kündigen"
+        "keepSubscription": "Mein Abonnement behalten",
+        "confirm": "Ja, kundigen",
+        "confirmCancel": "Kundigung bestatigen",
+        "scheduled": "Kundigung geplant",
+        "endsOn": "Ihr Abonnement endet am {date}"
+      },
+      "reactivate": {
+        "title": "Abonnement reaktivieren",
+        "message": "Ihr Abonnement wird normal fortgesetzt.",
+        "button": "Reaktivieren",
+        "success": "Abonnement erfolgreich reaktiviert!"
       },
       "success": {
-        "title": "Herzlichen Glückwunsch!",
-        "subtitle": "Ihr {{plan}}-Abonnement ist jetzt aktiv",
+        "title": "Herzlichen Gluckwunsch!",
+        "subtitle": "Ihr {plan}-Abonnement ist jetzt aktiv",
         "accessTo": "Sie haben jetzt Zugang zu:",
         "startUsing": "KI nutzen",
         "viewSubscription": "Mein Abonnement anzeigen",
-        "emailSent": "Eine Bestätigung wurde an Ihre E-Mail gesendet",
-        "thankYou": "Vielen Dank für Ihr Vertrauen in SOS-Expat",
+        "emailSent": "Eine Bestatigung wurde an Ihre E-Mail gesendet",
+        "thankYou": "Vielen Dank fur Ihr Vertrauen in SOS-Expat",
         "features": {
           "fullAccess": "Voller Zugang zum KI-Tool",
           "smartAssistant": "Intelligenter KI-Assistent",
-          "contextualSuggestions": "Kontextbezogene Vorschläge",
+          "contextualSuggestions": "Kontextbezogene Vorschlage",
           "unlimitedCallsPerMonth": "Unbegrenzte Anrufe pro Monat",
-          "callsPerMonth": "{{count}} KI-Anrufe pro Monat"
+          "callsPerMonth": "{count} KI-Anrufe pro Monat"
         }
       },
       "errors": {
@@ -709,13 +851,23 @@
         "subscriptionExpired": "Ihr Abonnement ist abgelaufen",
         "quotaExhausted": "Sie haben Ihr monatliches Kontingent erreicht",
         "trialExpired": "Ihre Testphase ist beendet",
-        "generic": "Ein Fehler ist aufgetreten"
+        "generic": "Ein Fehler ist aufgetreten",
+        "loadFailed": "Abonnement konnte nicht geladen werden",
+        "cancelFailed": "Abonnement konnte nicht gekundigt werden",
+        "checkoutFailed": "Zahlungsfehler",
+        "updatePaymentMethod": "Bitte aktualisieren Sie Ihre Zahlungsmethode"
+      },
+      "actions": {
+        "subscribe": "Abonnieren",
+        "upgrade": "Auf hoheren Plan wechseln",
+        "changePlan": "Plan andern",
+        "cancel": "Abonnement kundigen"
       },
       "faq": {
-        "title": "Häufig gestellte Fragen",
+        "title": "Haufig gestellte Fragen",
         "changePlan": {
           "q": "Kann ich den Plan wechseln?",
-          "a": "Ja, Sie können jederzeit upgraden oder downgraden. Änderungen werden sofort wirksam."
+          "a": "Ja, Sie konnen jederzeit upgraden oder downgraden. Anderungen werden sofort wirksam."
         },
         "trial": {
           "q": "Wie funktioniert die kostenlose Testversion?",
@@ -723,41 +875,41 @@
         },
         "quota": {
           "q": "Was passiert, wenn ich mein Kontingent erreiche?",
-          "a": "Sie können entweder auf den nächsten Monat für einen Reset warten oder auf einen höheren Plan upgraden."
+          "a": "Sie konnen entweder auf den nachsten Monat fur einen Reset warten oder auf einen hoheren Plan upgraden."
         },
         "cancel": {
-          "q": "Kann ich jederzeit kündigen?",
-          "a": "Ja, Sie können jederzeit kündigen. Sie behalten den Zugang bis zum Ende Ihres bezahlten Zeitraums."
+          "q": "Kann ich jederzeit kundigen?",
+          "a": "Ja, Sie konnen jederzeit kundigen. Sie behalten den Zugang bis zum Ende Ihres bezahlten Zeitraums."
         }
       },
-      "calls": "{{count}} Anrufe"
+      "calls": "{count} Anrufe"
     },
     "aiAssistant": {
       "title": "KI-Assistent",
-      "subtitle": "Ihr persönlicher Assistent zur Unterstützung Ihrer Kunden",
-      "clearConversation": "Konversation löschen",
+      "subtitle": "Ihr personlicher Assistent zur Unterstutzung Ihrer Kunden",
+      "clearConversation": "Konversation loschen",
       "mySubscription": "Mein Abonnement",
       "howCanIHelp": "Wie kann ich Ihnen helfen?",
       "askQuestion": "Stellen Sie eine Frage zu Ihren Expat-Kunden, Verwaltungsverfahren oder bitten Sie um Beratung.",
       "typeMessage": "Nachricht eingeben...",
       "send": "Senden",
-      "callsRemaining": "{{count}} Anrufe verbleibend diesen Monat",
+      "callsRemaining": "{count} Anrufe verbleibend diesen Monat",
       "unlimitedCalls": "Unbegrenzte Anrufe",
       "poweredBy": "Betrieben von Claude & GPT-4",
       "tips": {
         "title": "Tipps",
         "tip1": "Seien Sie spezifisch in Ihren Fragen",
-        "tip2": "Erwähnen Sie das relevante Land",
+        "tip2": "Erwahnen Sie das relevante Land",
         "tip3": "KI kann im Web suchen"
       },
       "upgradeModal": {
         "title": "Kontingent erreicht",
-        "message": "Sie haben das Limit Ihres Plans erreicht. Upgraden Sie auf ein höheres Abonnement, um den KI-Assistenten weiter zu nutzen.",
-        "later": "Später",
-        "viewPlans": "Pläne anzeigen"
+        "message": "Sie haben das Limit Ihres Plans erreicht. Upgraden Sie auf ein hoheres Abonnement, um den KI-Assistenten weiter zu nutzen.",
+        "later": "Spater",
+        "viewPlans": "Plane anzeigen"
       },
       "errors": {
-        "notAuthenticated": "Sie müssen angemeldet sein",
+        "notAuthenticated": "Sie mussen angemeldet sein",
         "communicationError": "Fehler bei der Kommunikation mit der KI",
         "noMessageToRetry": "Keine Nachricht zum Wiederholen"
       }
@@ -767,25 +919,28 @@
     "subscription": {
       "title": "Assinatura",
       "mySubscription": "Minha Assinatura",
+      "manageSubscription": "Gerenciar minha assinatura",
       "manageDescription": "Gerencie sua assinatura e acompanhe seu uso",
       "manageBilling": "Gerenciar faturamento",
       "viewPlans": "Ver planos",
       "changePlan": "Alterar plano",
       "cancelSubscription": "Cancelar assinatura",
-      "reactivate": "Reativar assinatura",
+      "currentPlan": "Plano atual",
+      "noPlan": "Sem assinatura ativa",
+      "startTrial": "Iniciar teste gratuito",
       "stats": {
-        "callsThisMonth": "Chamadas este mês",
+        "callsThisMonth": "Chamadas este mes",
         "trialDaysLeft": "Dias de teste restantes",
         "daysRemaining": "Dias restantes",
         "totalCalls": "Total de chamadas"
       },
       "quickActions": {
-        "title": "Ações rápidas",
+        "title": "Acoes rapidas",
         "openAI": "Abrir Assistente IA",
         "billingPortal": "Portal de faturamento"
       },
       "status": {
-        "trialing": "Teste",
+        "trialing": "Periodo de teste",
         "active": "Ativo",
         "past_due": "Pagamento pendente",
         "canceled": "Cancelado",
@@ -795,61 +950,75 @@
       "trial": {
         "title": "Teste gratuito",
         "description": "Descubra o assistente IA gratuitamente",
-        "daysRemaining": "{{days}} dias restantes",
-        "callsRemaining": "{{calls}} chamadas restantes",
-        "expired": "Seu período de teste terminou",
-        "callsExhausted": "Você usou todas as chamadas de teste",
+        "daysRemaining": "{days} dias restantes",
+        "callsRemaining": "{calls} chamadas restantes",
+        "expired": "Seu periodo de teste terminou",
+        "callsExhausted": "Voce usou todas as chamadas de teste",
         "startTrial": "Iniciar teste gratuito",
-        "noCreditCard": "Cartão de crédito não necessário"
+        "noCreditCard": "Cartao de credito nao necessario",
+        "expiresOn": "Expira em {date}",
+        "period": "Periodo de teste",
+        "daysAnd": "dias e"
       },
       "plans": {
         "title": "Escolha seu plano",
         "subtitle": "Selecione o plano que atende suas necessidades",
         "loading": "Carregando planos...",
-        "basic": "Básico",
-        "standard": "Padrão",
+        "basic": "Basico",
+        "standard": "Padrao",
         "pro": "Pro",
         "unlimited": "Ilimitado",
-        "popular": "POPULAR",
+        "popular": "Popular",
+        "recommended": "Recomendado",
         "currentPlan": "Plano atual",
-        "upgrade": "Upgrade",
-        "downgrade": "Downgrade",
-        "perMonth": "/mês",
-        "callsPerMonth": "{{count}} chamadas/mês",
-        "unlimitedCalls": "Chamadas ilimitadas"
+        "current": "Plano atual",
+        "upgrade": "Mudar para este plano",
+        "downgrade": "Fazer downgrade",
+        "perMonth": "/mes",
+        "callsPerMonth": "{count} chamadas/mes",
+        "unlimitedCalls": "Chamadas ilimitadas",
+        "choosePlan": "Escolher um plano",
+        "monthly": "Mensal",
+        "yearly": "Anual",
+        "savePercent": "Economize {percent}%",
+        "costPerCall": "{cost} por chamada"
       },
       "features": {
         "ai_chat": "Chat IA",
-        "ai_suggestions": "Sugestões IA",
+        "ai_suggestions": "Sugestoes IA",
         "ai_templates": "Templates IA",
-        "ai_translation": "Tradução IA",
-        "priority_support": "Suporte prioritário",
+        "ai_translation": "Traducao IA",
+        "priority_support": "Suporte prioritario",
         "api_access": "Acesso API",
         "dedicated_support": "Suporte dedicado"
       },
       "quota": {
         "title": "Uso de IA",
-        "used": "Usados",
+        "usage": "Uso da cota",
+        "used": "{used} de {total} chamadas usadas",
         "total": "Total",
         "remaining": "Restantes",
-        "unlimited": "Ilimitado",
-        "resetInfo": "A cota é reiniciada no início de cada mês",
-        "exhausted": "Cota atingida",
+        "unlimited": "Chamadas ilimitadas",
+        "resetInfo": "A cota e reiniciada no inicio de cada mes",
+        "exhausted": "Cota esgotada",
         "nearLimit": "Quase atingida",
-        "available": "Disponível",
+        "available": "Disponivel",
         "upgradePrompt": "Aumentar sua cota"
       },
       "billing": {
         "title": "Faturamento",
-        "nextBilling": "Próximo faturamento",
+        "managePayment": "Gerenciar meu pagamento",
+        "updateCard": "Atualizar meu cartao",
+        "viewInvoices": "Ver minhas faturas",
+        "nextBilling": "Proximo faturamento: {date}",
+        "amount": "Valor: {amount}",
         "currency": "Moeda",
         "invoices": "Faturas",
         "recentInvoices": "Faturas recentes",
-        "invoiceHistory": "Histórico de faturas",
+        "invoiceHistory": "Historico de faturas",
         "downloadPdf": "Baixar PDF",
         "noInvoices": "Sem faturas",
-        "period": "Período",
-        "amount": "Valor",
+        "period": "Periodo",
         "status": "Status",
         "paid": "Pago",
         "open": "Em aberto",
@@ -858,97 +1027,118 @@
         "uncollectible": "Inadimplente",
         "monthly": "Mensal",
         "yearly": "Anual",
-        "perMonth": "/mês"
+        "perMonth": "/mes"
       },
       "checkout": {
         "title": "Completar sua assinatura",
         "orderSummary": "Resumo do pedido",
         "monthlyTotal": "Total mensal",
-        "paymentInfo": "Informações de pagamento",
+        "paymentInfo": "Informacoes de pagamento",
         "securePayment": "Pagamento seguro por Stripe",
         "subscribe": "Assinar",
         "processing": "Processando...",
         "cancel": "Cancelar",
-        "easyCancellation": "Cancelamento fácil",
+        "easyCancellation": "Cancelamento facil",
         "noCommitment": "Sem compromisso"
       },
       "cancelModal": {
-        "title": "Cancelar assinatura",
-        "message": "Tem certeza de que deseja cancelar sua assinatura? Você manterá o acesso até o final do período atual.",
-        "keep": "Não, manter",
-        "confirm": "Sim, cancelar"
+        "title": "Cancelar sua assinatura?",
+        "message": "Voce mantera o acesso ate {date}. Voce podera se inscrever novamente a qualquer momento.",
+        "reason": "Motivo do cancelamento (opcional)",
+        "keep": "Nao, manter",
+        "keepSubscription": "Manter minha assinatura",
+        "confirm": "Sim, cancelar",
+        "confirmCancel": "Confirmar cancelamento",
+        "scheduled": "Cancelamento agendado",
+        "endsOn": "Sua assinatura termina em {date}"
+      },
+      "reactivate": {
+        "title": "Reativar sua assinatura",
+        "message": "Sua assinatura continuara normalmente.",
+        "button": "Reativar",
+        "success": "Assinatura reativada com sucesso!"
       },
       "success": {
-        "title": "Parabéns!",
-        "subtitle": "Sua assinatura {{plan}} está agora ativa",
-        "accessTo": "Você agora tem acesso a:",
-        "startUsing": "Começar a usar IA",
+        "title": "Parabens!",
+        "subtitle": "Sua assinatura {plan} esta agora ativa",
+        "accessTo": "Voce agora tem acesso a:",
+        "startUsing": "Comecar a usar IA",
         "viewSubscription": "Ver minha assinatura",
-        "emailSent": "Uma confirmação foi enviada para seu email",
+        "emailSent": "Uma confirmacao foi enviada para seu email",
         "thankYou": "Obrigado por confiar na SOS-Expat",
         "features": {
-          "fullAccess": "Acesso completo à ferramenta IA",
+          "fullAccess": "Acesso completo a ferramenta IA",
           "smartAssistant": "Assistente IA inteligente",
-          "contextualSuggestions": "Sugestões contextuais",
-          "unlimitedCallsPerMonth": "Chamadas ilimitadas por mês",
-          "callsPerMonth": "{{count}} chamadas IA por mês"
+          "contextualSuggestions": "Sugestoes contextuais",
+          "unlimitedCallsPerMonth": "Chamadas ilimitadas por mes",
+          "callsPerMonth": "{count} chamadas IA por mes"
         }
       },
       "errors": {
-        "noSubscription": "Você não tem uma assinatura ativa",
+        "noSubscription": "Voce nao tem uma assinatura ativa",
         "paymentFailed": "Pagamento falhou",
         "subscriptionExpired": "Sua assinatura expirou",
-        "quotaExhausted": "Você atingiu sua cota mensal",
-        "trialExpired": "Seu período de teste terminou",
-        "generic": "Ocorreu um erro"
+        "quotaExhausted": "Voce atingiu sua cota mensal",
+        "trialExpired": "Seu periodo de teste terminou",
+        "generic": "Ocorreu um erro",
+        "loadFailed": "Nao foi possivel carregar sua assinatura",
+        "cancelFailed": "Nao foi possivel cancelar a assinatura",
+        "checkoutFailed": "Erro no pagamento",
+        "updatePaymentMethod": "Por favor atualize seu metodo de pagamento"
+      },
+      "actions": {
+        "subscribe": "Assinar",
+        "upgrade": "Mudar para plano superior",
+        "changePlan": "Mudar de plano",
+        "cancel": "Cancelar assinatura"
       },
       "faq": {
         "title": "Perguntas frequentes",
         "changePlan": {
           "q": "Posso mudar de plano?",
-          "a": "Sim, você pode fazer upgrade ou downgrade a qualquer momento. As mudanças têm efeito imediato."
+          "a": "Sim, voce pode fazer upgrade ou downgrade a qualquer momento. As mudancas tem efeito imediato."
         },
         "trial": {
           "q": "Como funciona o teste gratuito?",
-          "a": "Você tem 30 dias de teste com 3 chamadas IA gratuitas. Cartão de crédito não necessário."
+          "a": "Voce tem 30 dias de teste com 3 chamadas IA gratuitas. Cartao de credito nao necessario."
         },
         "quota": {
           "q": "O que acontece se eu atingir minha cota?",
-          "a": "Você pode esperar o próximo mês para uma reinicialização ou fazer upgrade para um plano superior."
+          "a": "Voce pode esperar o proximo mes para uma reinicializacao ou fazer upgrade para um plano superior."
         },
         "cancel": {
           "q": "Posso cancelar a qualquer momento?",
-          "a": "Sim, você pode cancelar quando quiser. Você manterá o acesso até o final do seu período pago."
+          "a": "Sim, voce pode cancelar quando quiser. Voce mantera o acesso ate o final do seu periodo pago."
         }
       },
-      "calls": "{{count}} chamadas"
+      "calls": "{count} chamadas"
     },
     "aiAssistant": {
       "title": "Assistente IA",
       "subtitle": "Seu assistente pessoal para ajudar seus clientes",
       "clearConversation": "Limpar conversa",
       "mySubscription": "Minha assinatura",
-      "howCanIHelp": "Como posso ajudá-lo?",
-      "askQuestion": "Faça uma pergunta sobre seus clientes expatriados, procedimentos administrativos ou peça conselhos.",
+      "howCanIHelp": "Como posso ajuda-lo?",
+      "askQuestion": "Faca uma pergunta sobre seus clientes expatriados, procedimentos administrativos ou peca conselhos.",
       "typeMessage": "Digite sua mensagem...",
       "send": "Enviar",
-      "callsRemaining": "{{count}} chamadas restantes este mês",
+      "callsRemaining": "{count} chamadas restantes este mes",
       "unlimitedCalls": "Chamadas ilimitadas",
       "poweredBy": "Desenvolvido por Claude & GPT-4",
       "tips": {
         "title": "Dicas",
-        "tip1": "Seja específico em suas perguntas",
-        "tip2": "Mencione o país relevante",
+        "tip1": "Seja especifico em suas perguntas",
+        "tip2": "Mencione o pais relevante",
         "tip3": "A IA pode pesquisar na web"
       },
       "upgradeModal": {
         "title": "Cota atingida",
-        "message": "Você atingiu o limite do seu plano. Faça upgrade para uma assinatura superior para continuar usando o assistente IA.",
+        "message": "Voce atingiu o limite do seu plano. Faca upgrade para uma assinatura superior para continuar usando o assistente IA.",
         "later": "Mais tarde",
         "viewPlans": "Ver planos"
       },
       "errors": {
-        "notAuthenticated": "Você deve estar logado",
+        "notAuthenticated": "Voce deve estar logado",
         "communicationError": "Erro ao comunicar com a IA",
         "noMessageToRetry": "Nenhuma mensagem para retentar"
       }
@@ -956,765 +1146,917 @@
   },
   "ru": {
     "subscription": {
-      "title": "Подписка",
-      "mySubscription": "Моя подписка",
-      "manageDescription": "Управляйте подпиской и отслеживайте использование",
-      "manageBilling": "Управление оплатой",
-      "viewPlans": "Просмотр планов",
-      "changePlan": "Сменить план",
-      "cancelSubscription": "Отменить подписку",
-      "reactivate": "Возобновить подписку",
+      "title": "Podpiska",
+      "mySubscription": "Moya podpiska",
+      "manageSubscription": "Upravlyat' moey podpiskoy",
+      "manageDescription": "Upravlyayte podpiskoy i otslezhivayte ispol'zovanie",
+      "manageBilling": "Upravlenie oplatoy",
+      "viewPlans": "Prosmotr planov",
+      "changePlan": "Smenit' plan",
+      "cancelSubscription": "Otmenit' podpisku",
+      "currentPlan": "Tekushchiy plan",
+      "noPlan": "Net aktivnoy podpiski",
+      "startTrial": "Nachat' besplatnyy period",
       "stats": {
-        "callsThisMonth": "Вызовы в этом месяце",
-        "trialDaysLeft": "Осталось дней пробного периода",
-        "daysRemaining": "Осталось дней",
-        "totalCalls": "Всего вызовов"
+        "callsThisMonth": "Vyzovy v etom mesyatse",
+        "trialDaysLeft": "Ostalos' dney probnogo perioda",
+        "daysRemaining": "Ostalos' dney",
+        "totalCalls": "Vsego vyzovov"
       },
       "quickActions": {
-        "title": "Быстрые действия",
-        "openAI": "Открыть ИИ-ассистента",
-        "billingPortal": "Портал оплаты"
+        "title": "Bystrye deystviya",
+        "openAI": "Otkryt' II-assistenta",
+        "billingPortal": "Portal oplaty"
       },
       "status": {
-        "trialing": "Пробный",
-        "active": "Активный",
-        "past_due": "Просрочен платеж",
-        "canceled": "Отменён",
-        "expired": "Истёк",
-        "paused": "Приостановлен"
+        "trialing": "Probnyy period",
+        "active": "Aktivnyy",
+        "past_due": "Prosrochen platezh",
+        "canceled": "Otmenen",
+        "expired": "Istek",
+        "paused": "Priostanovlen"
       },
       "trial": {
-        "title": "Бесплатный пробный период",
-        "description": "Попробуйте ИИ-ассистента бесплатно",
-        "daysRemaining": "Осталось {{days}} дней",
-        "callsRemaining": "Осталось {{calls}} вызовов",
-        "expired": "Ваш пробный период закончился",
-        "callsExhausted": "Вы использовали все пробные вызовы",
-        "startTrial": "Начать бесплатный период",
-        "noCreditCard": "Кредитная карта не требуется"
+        "title": "Besplatnyy probnyy period",
+        "description": "Poprobuyte II-assistenta besplatno",
+        "daysRemaining": "Ostalos' {days} dney",
+        "callsRemaining": "Ostalos' {calls} vyzovov",
+        "expired": "Vash probnyy period zakonchilsya",
+        "callsExhausted": "Vy ispol'zovali vse probnye vyzovy",
+        "startTrial": "Nachat' besplatnyy period",
+        "noCreditCard": "Kreditnaya karta ne trebuetsya",
+        "expiresOn": "Istekaet {date}",
+        "period": "Probnyy period",
+        "daysAnd": "dney i"
       },
       "plans": {
-        "title": "Выберите план",
-        "subtitle": "Выберите план, который соответствует вашим потребностям",
-        "basic": "Базовый",
-        "standard": "Стандартный",
-        "pro": "Про",
-        "unlimited": "Безлимитный",
-        "popular": "ПОПУЛЯРНЫЙ",
-        "currentPlan": "Текущий план",
-        "upgrade": "Улучшить",
-        "downgrade": "Понизить",
-        "perMonth": "/месяц",
-        "callsPerMonth": "{{count}} вызовов/месяц",
-        "unlimitedCalls": "Неограниченные вызовы",
-        "loading": "Загрузка планов..."
+        "title": "Vyberite plan",
+        "subtitle": "Vyberite plan, kotoryy sootvetstvuet vashim potrebnostyam",
+        "loading": "Zagruzka planov...",
+        "basic": "Bazovyy",
+        "standard": "Standartnyy",
+        "pro": "Pro",
+        "unlimited": "Bezlimitnyy",
+        "popular": "Populyarnyy",
+        "recommended": "Rekomendovannyy",
+        "currentPlan": "Tekushchiy plan",
+        "current": "Tekushchiy plan",
+        "upgrade": "Pereyti na etot plan",
+        "downgrade": "Ponizit'",
+        "perMonth": "/mesyats",
+        "callsPerMonth": "{count} vyzovov/mesyats",
+        "unlimitedCalls": "Neogranichennye vyzovy",
+        "choosePlan": "Vybrat' plan",
+        "monthly": "Ezhemesyachno",
+        "yearly": "Ezhegodno",
+        "savePercent": "Ekonomiya {percent}%",
+        "costPerCall": "{cost} za vyzov"
       },
       "features": {
-        "ai_chat": "ИИ-чат",
-        "ai_suggestions": "ИИ-предложения",
-        "ai_templates": "ИИ-шаблоны",
-        "ai_translation": "ИИ-перевод",
-        "priority_support": "Приоритетная поддержка",
-        "api_access": "API доступ",
-        "dedicated_support": "Выделенная поддержка"
+        "ai_chat": "II-chat",
+        "ai_suggestions": "II-predlozheniya",
+        "ai_templates": "II-shablony",
+        "ai_translation": "II-perevod",
+        "priority_support": "Prioritetnaya podderzhka",
+        "api_access": "API dostup",
+        "dedicated_support": "Vydelennaya podderzhka"
       },
       "quota": {
-        "title": "Использование ИИ",
-        "used": "Использовано",
-        "total": "Всего",
-        "remaining": "Осталось",
-        "unlimited": "Неограничено",
-        "resetInfo": "Квота сбрасывается в начале каждого месяца",
-        "exhausted": "Квота исчерпана",
-        "nearLimit": "Почти исчерпана",
-        "available": "Доступно",
-        "upgradePrompt": "Увеличить квоту"
+        "title": "Ispol'zovanie II",
+        "usage": "Ispol'zovanie kvoty",
+        "used": "{used} iz {total} vyzovov ispol'zovano",
+        "total": "Vsego",
+        "remaining": "Ostalos'",
+        "unlimited": "Neogranichennye vyzovy",
+        "resetInfo": "Kvota sbrasyvaetsya v nachale kazhdogo mesyatsa",
+        "exhausted": "Kvota ischerpana",
+        "nearLimit": "Pochti ischerpana",
+        "available": "Dostupno",
+        "upgradePrompt": "Uvelichit' kvotu"
       },
       "billing": {
-        "title": "Оплата",
-        "nextBilling": "Следующий платеж",
-        "currency": "Валюта",
-        "invoices": "Счета",
-        "recentInvoices": "Последние счета",
-        "invoiceHistory": "История счетов",
-        "downloadPdf": "Скачать PDF",
-        "noInvoices": "Нет счетов",
-        "period": "Период",
-        "amount": "Сумма",
-        "status": "Статус",
-        "paid": "Оплачен",
-        "open": "Открыт",
-        "draft": "Черновик",
-        "void": "Аннулирован",
-        "uncollectible": "Невозможно взыскать",
-        "monthly": "Ежемесячно",
-        "yearly": "Ежегодно",
-        "perMonth": "/месяц"
+        "title": "Oplata",
+        "managePayment": "Upravlyat' moim platezhom",
+        "updateCard": "Obnovit' moyu kartu",
+        "viewInvoices": "Posmotret' moi scheta",
+        "nextBilling": "Sleduyushchiy platezh: {date}",
+        "amount": "Summa: {amount}",
+        "currency": "Valyuta",
+        "invoices": "Scheta",
+        "recentInvoices": "Poslednie scheta",
+        "invoiceHistory": "Istoriya schetov",
+        "downloadPdf": "Skachat' PDF",
+        "noInvoices": "Net schetov",
+        "period": "Period",
+        "status": "Status",
+        "paid": "Oplachen",
+        "open": "Otkryt",
+        "draft": "Chernovik",
+        "void": "Annulirovan",
+        "uncollectible": "Nevozmozhno vzyskat'",
+        "monthly": "Ezhemesyachno",
+        "yearly": "Ezhegodno",
+        "perMonth": "/mesyats"
       },
       "checkout": {
-        "title": "Завершить подписку",
-        "orderSummary": "Итог заказа",
-        "monthlyTotal": "Ежемесячная сумма",
-        "paymentInfo": "Платежная информация",
-        "securePayment": "Безопасная оплата через Stripe",
-        "subscribe": "Подписаться",
-        "processing": "Обработка...",
-        "cancel": "Отмена",
-        "easyCancellation": "Легкая отмена",
-        "noCommitment": "Без обязательств"
+        "title": "Zavershit' podpisku",
+        "orderSummary": "Itog zakaza",
+        "monthlyTotal": "Ezhemesyachnaya summa",
+        "paymentInfo": "Platezhnaya informatsiya",
+        "securePayment": "Bezopasnaya oplata cherez Stripe",
+        "subscribe": "Podpisat'sya",
+        "processing": "Obrabotka...",
+        "cancel": "Otmena",
+        "easyCancellation": "Legkaya otmena",
+        "noCommitment": "Bez obyazatel'stv"
       },
       "cancelModal": {
-        "title": "Отменить подписку",
-        "message": "Вы уверены, что хотите отменить подписку? Вы сохраните доступ до конца текущего периода.",
-        "keep": "Нет, сохранить",
-        "confirm": "Да, отменить"
+        "title": "Otmenit' podpisku?",
+        "message": "Vy sokhranite dostup do {date}. Vy mozhete podpisat'sya snova v lyuboye vremya.",
+        "reason": "Prichina otmeny (neobyzatel'no)",
+        "keep": "Net, sokhranit'",
+        "keepSubscription": "Sokhranit' moyu podpisku",
+        "confirm": "Da, otmenit'",
+        "confirmCancel": "Podtverdit' otmenu",
+        "scheduled": "Otmena zaprogrammirovana",
+        "endsOn": "Vasha podpiska zakanchivaetsya {date}"
+      },
+      "reactivate": {
+        "title": "Reaktivirovat' podpisku",
+        "message": "Vasha podpiska budet prodolzhena normal'no.",
+        "button": "Reaktivirovat'",
+        "success": "Podpiska uspeshno reaktivirovana!"
       },
       "success": {
-        "title": "Поздравляем!",
-        "subtitle": "Ваша подписка {{plan}} теперь активна",
-        "accessTo": "Теперь у вас есть доступ к:",
-        "startUsing": "Начать использовать ИИ",
-        "viewSubscription": "Посмотреть подписку",
-        "emailSent": "Подтверждение отправлено на вашу почту",
-        "thankYou": "Спасибо за доверие SOS-Expat",
+        "title": "Pozdravlyaem!",
+        "subtitle": "Vasha podpiska {plan} teper' aktivna",
+        "accessTo": "Teper' u vas est' dostup k:",
+        "startUsing": "Nachat' ispol'zovat' II",
+        "viewSubscription": "Posmotret' podpisku",
+        "emailSent": "Podtverzhdenie otpravleno na vashu pochtu",
+        "thankYou": "Spasibo za doveriye SOS-Expat",
         "features": {
-          "fullAccess": "Полный доступ к инструменту ИИ",
-          "smartAssistant": "Умный ИИ-ассистент",
-          "contextualSuggestions": "Контекстные предложения",
-          "unlimitedCallsPerMonth": "Неограниченные вызовы в месяц",
-          "callsPerMonth": "{{count}} ИИ-вызовов в месяц"
+          "fullAccess": "Polnyy dostup k instrumentu II",
+          "smartAssistant": "Umnyy II-assistent",
+          "contextualSuggestions": "Kontekstnyye predlozheniya",
+          "unlimitedCallsPerMonth": "Neogranichennyye vyzovy v mesyats",
+          "callsPerMonth": "{count} II-vyzovov v mesyats"
         }
       },
       "errors": {
-        "noSubscription": "У вас нет активной подписки",
-        "paymentFailed": "Ошибка оплаты",
-        "subscriptionExpired": "Ваша подписка истекла",
-        "quotaExhausted": "Вы достигли месячной квоты",
-        "trialExpired": "Ваш пробный период закончился",
-        "generic": "Произошла ошибка"
+        "noSubscription": "U vas net aktivnoy podpiski",
+        "paymentFailed": "Oshibka oplaty",
+        "subscriptionExpired": "Vasha podpiska istekla",
+        "quotaExhausted": "Vy dostigli mesyachnoy kvoty",
+        "trialExpired": "Vash probnyy period zakonchilsya",
+        "generic": "Proizoshla oshibka",
+        "loadFailed": "Nevozmozhno zagruzit' vashu podpisku",
+        "cancelFailed": "Nevozmozhno otmenit' podpisku",
+        "checkoutFailed": "Oshibka platezha",
+        "updatePaymentMethod": "Pozhaluysta obnovite sposob oplaty"
+      },
+      "actions": {
+        "subscribe": "Podpisat'sya",
+        "upgrade": "Pereyti na vysshiy plan",
+        "changePlan": "Smenit' plan",
+        "cancel": "Otmenit' podpisku"
       },
       "faq": {
-        "title": "Частые вопросы",
+        "title": "Chastyye voprosy",
         "changePlan": {
-          "q": "Могу ли я сменить план?",
-          "a": "Да, вы можете улучшить или понизить план в любое время. Изменения вступают в силу немедленно."
+          "q": "Mogu li ya smenit' plan?",
+          "a": "Da, vy mozhete uluchshit' ili ponizit' plan v lyuboye vremya. Izmeneniya vstupayut v silu nemedlenno."
         },
         "trial": {
-          "q": "Как работает бесплатный период?",
-          "a": "Вы получаете 30 дней с 3 бесплатными ИИ-вызовами. Кредитная карта не требуется."
+          "q": "Kak rabotayet besplatnyy period?",
+          "a": "Vy poluchayete 30 dney s 3 besplatnymi II-vyzovami. Kreditnaya karta ne trebuetsya."
         },
         "quota": {
-          "q": "Что будет, если я достигну квоты?",
-          "a": "Вы можете подождать следующего месяца для сброса или улучшить план."
+          "q": "Chto budet yesli ya dostignu kvoty?",
+          "a": "Vy mozhete podozhdat' sleduyushchego mesyatsa dlya sbrosa ili uluchshit' plan."
         },
         "cancel": {
-          "q": "Могу ли я отменить в любое время?",
-          "a": "Да, вы можете отменить когда угодно. Доступ сохранится до конца оплаченного периода."
+          "q": "Mogu li ya otmenit' v lyuboye vremya?",
+          "a": "Da, vy mozhete otmenit' kogda ugodno. Dostup sokhranitsya do kontsa oplachennogo perioda."
         }
       },
-      "calls": "{{count}} звонков"
+      "calls": "{count} zvonkov"
     },
     "aiAssistant": {
-      "title": "ИИ-ассистент",
-      "subtitle": "Ваш личный помощник для работы с клиентами",
-      "clearConversation": "Очистить беседу",
-      "mySubscription": "Моя подписка",
-      "howCanIHelp": "Чем могу помочь?",
-      "askQuestion": "Задайте вопрос о ваших клиентах-экспатах, административных процедурах или попросите совет.",
-      "typeMessage": "Введите сообщение...",
-      "send": "Отправить",
-      "callsRemaining": "{{count}} вызовов осталось в этом месяце",
-      "unlimitedCalls": "Неограниченные вызовы",
-      "poweredBy": "Работает на Claude & GPT-4",
+      "title": "II-assistent",
+      "subtitle": "Vash lichnyy pomoshchnik dlya raboty s klientami",
+      "clearConversation": "Ochistit' besedu",
+      "mySubscription": "Moya podpiska",
+      "howCanIHelp": "Chem mogu pomoch'?",
+      "askQuestion": "Zadayte vopros o vashikh klientakh-ekspatakh, administrativnykh protsedurakh ili poprosite sovet.",
+      "typeMessage": "Vvedite soobshcheniye...",
+      "send": "Otpravit'",
+      "callsRemaining": "{count} vyzovov ostalos' v etom mesyatse",
+      "unlimitedCalls": "Neogranichennyye vyzovy",
+      "poweredBy": "Rabotayet na Claude & GPT-4",
       "tips": {
-        "title": "Советы",
-        "tip1": "Будьте конкретны в вопросах",
-        "tip2": "Укажите соответствующую страну",
-        "tip3": "ИИ может искать в интернете"
+        "title": "Sovety",
+        "tip1": "Bud'te konkretny v voprosakh",
+        "tip2": "Ukazhite sootvetstvuyushchuyu stranu",
+        "tip3": "II mozhet iskat' v internete"
       },
       "upgradeModal": {
-        "title": "Квота исчерпана",
-        "message": "Вы достигли лимита вашего плана. Улучшите подписку для продолжения использования ИИ-ассистента.",
-        "later": "Позже",
-        "viewPlans": "Посмотреть планы"
+        "title": "Kvota ischerpana",
+        "message": "Vy dostigli limita vashego plana. Uluchshite podpisku dlya prodolzheniya ispol'zovaniya II-assistenta.",
+        "later": "Pozzhe",
+        "viewPlans": "Posmotret' plany"
       },
       "errors": {
-        "notAuthenticated": "Необходимо войти в систему",
-        "communicationError": "Ошибка связи с ИИ",
-        "noMessageToRetry": "Нет сообщения для повтора"
+        "notAuthenticated": "Neobkhodimo voyti v sistemu",
+        "communicationError": "Oshibka svyazi s II",
+        "noMessageToRetry": "Net soobshcheniya dlya povtora"
       }
     }
   },
   "hi": {
     "subscription": {
-      "title": "सदस्यता",
-      "mySubscription": "मेरी सदस्यता",
-      "manageDescription": "अपनी सदस्यता प्रबंधित करें और उपयोग ट्रैक करें",
-      "manageBilling": "बिलिंग प्रबंधित करें",
-      "viewPlans": "प्लान देखें",
-      "changePlan": "प्लान बदलें",
-      "cancelSubscription": "सदस्यता रद्द करें",
-      "reactivate": "सदस्यता पुनः सक्रिय करें",
+      "title": "Sadasyta",
+      "mySubscription": "Meri Sadasyta",
+      "manageSubscription": "Meri sadasyta prabandhan kare",
+      "manageDescription": "Apni sadasyta prabandhan kare aur upyog track kare",
+      "manageBilling": "Billing prabandhan kare",
+      "viewPlans": "Plan dekhe",
+      "changePlan": "Plan badle",
+      "cancelSubscription": "Sadasyta radd kare",
+      "currentPlan": "Vartaman plan",
+      "noPlan": "Koi sakriy sadasyta nahi",
+      "startTrial": "Muft trial shuru kare",
       "stats": {
-        "callsThisMonth": "इस महीने कॉल",
-        "trialDaysLeft": "ट्रायल दिन शेष",
-        "daysRemaining": "दिन शेष",
-        "totalCalls": "कुल कॉल"
+        "callsThisMonth": "Is mahine call",
+        "trialDaysLeft": "Trial din shesh",
+        "daysRemaining": "Din shesh",
+        "totalCalls": "Kul call"
       },
       "quickActions": {
-        "title": "त्वरित कार्रवाई",
-        "openAI": "एआई सहायक खोलें",
-        "billingPortal": "बिलिंग पोर्टल"
+        "title": "Tvarit karrvai",
+        "openAI": "AI sahayak khole",
+        "billingPortal": "Billing portal"
       },
       "status": {
-        "trialing": "ट्रायल",
-        "active": "सक्रिय",
-        "past_due": "भुगतान बकाया",
-        "canceled": "रद्द",
-        "expired": "समाप्त",
-        "paused": "रुका हुआ"
+        "trialing": "Trial avadhi",
+        "active": "Sakriy",
+        "past_due": "Bhugtan bakaya",
+        "canceled": "Radd",
+        "expired": "Samapt",
+        "paused": "Ruka hua"
       },
       "trial": {
-        "title": "मुफ्त ट्रायल",
-        "description": "एआई सहायक को मुफ्त में आज़माएं",
-        "daysRemaining": "{{days}} दिन शेष",
-        "callsRemaining": "{{calls}} कॉल शेष",
-        "expired": "आपका ट्रायल समाप्त हो गया",
-        "callsExhausted": "आपने सभी ट्रायल कॉल उपयोग कर लिए",
-        "startTrial": "मुफ्त ट्रायल शुरू करें",
-        "noCreditCard": "क्रेडिट कार्ड आवश्यक नहीं"
+        "title": "Muft trial",
+        "description": "AI sahayak ko muft me azmayen",
+        "daysRemaining": "{days} din shesh",
+        "callsRemaining": "{calls} call shesh",
+        "expired": "Apka trial samapt ho gaya",
+        "callsExhausted": "Apne sabhi trial call upyog kar liye",
+        "startTrial": "Muft trial shuru kare",
+        "noCreditCard": "Credit card avashyak nahi",
+        "expiresOn": "{date} ko samapt hoga",
+        "period": "Trial avadhi",
+        "daysAnd": "din aur"
       },
       "plans": {
-        "title": "अपना प्लान चुनें",
-        "subtitle": "अपनी जरूरतों के अनुसार प्लान चुनें",
-        "basic": "बेसिक",
-        "standard": "स्टैंडर्ड",
-        "pro": "प्रो",
-        "unlimited": "अनलिमिटेड",
-        "popular": "लोकप्रिय",
-        "currentPlan": "वर्तमान प्लान",
-        "upgrade": "अपग्रेड",
-        "downgrade": "डाउनग्रेड",
-        "perMonth": "/महीना",
-        "callsPerMonth": "{{count}} कॉल/महीना",
-        "unlimitedCalls": "असीमित कॉल",
-        "loading": "प्लान लोड हो रहे हैं..."
+        "title": "Apna plan chune",
+        "subtitle": "Apni jaroorato ke anusar plan chune",
+        "loading": "Plan load ho rahe hai...",
+        "basic": "Basic",
+        "standard": "Standard",
+        "pro": "Pro",
+        "unlimited": "Unlimited",
+        "popular": "Lokpriy",
+        "recommended": "Anushansit",
+        "currentPlan": "Vartaman plan",
+        "current": "Vartaman plan",
+        "upgrade": "Is plan me badle",
+        "downgrade": "Downgrade",
+        "perMonth": "/mahina",
+        "callsPerMonth": "{count} call/mahina",
+        "unlimitedCalls": "Asimit call",
+        "choosePlan": "Ek plan chune",
+        "monthly": "Masik",
+        "yearly": "Varshik",
+        "savePercent": "{percent}% bachaye",
+        "costPerCall": "{cost} prati call"
       },
       "features": {
-        "ai_chat": "एआई चैट",
-        "ai_suggestions": "एआई सुझाव",
-        "ai_templates": "एआई टेम्पलेट",
-        "ai_translation": "एआई अनुवाद",
-        "priority_support": "प्राथमिकता सहायता",
-        "api_access": "API एक्सेस",
-        "dedicated_support": "समर्पित सहायता"
+        "ai_chat": "AI chat",
+        "ai_suggestions": "AI sujhav",
+        "ai_templates": "AI template",
+        "ai_translation": "AI anuvad",
+        "priority_support": "Prathamikta sahayata",
+        "api_access": "API access",
+        "dedicated_support": "Samarpit sahayata"
       },
       "quota": {
-        "title": "एआई उपयोग",
-        "used": "उपयोग किया",
-        "total": "कुल",
-        "remaining": "शेष",
-        "unlimited": "असीमित",
-        "resetInfo": "कोटा हर महीने की शुरुआत में रीसेट होता है",
-        "exhausted": "कोटा समाप्त",
-        "nearLimit": "लगभग समाप्त",
-        "available": "उपलब्ध",
-        "upgradePrompt": "अपना कोटा बढ़ाएं"
+        "title": "AI upyog",
+        "usage": "Kota upyog",
+        "used": "{total} me se {used} call upyog kiye",
+        "total": "Kul",
+        "remaining": "Shesh",
+        "unlimited": "Asimit call",
+        "resetInfo": "Kota har mahine ki shuruat me reset hota hai",
+        "exhausted": "Kota samapt",
+        "nearLimit": "Lagbhag samapt",
+        "available": "Uplabdh",
+        "upgradePrompt": "Apna kota badhaye"
       },
       "billing": {
-        "title": "बिलिंग",
-        "nextBilling": "अगला बिल",
-        "currency": "मुद्रा",
-        "invoices": "इनवॉइस",
-        "recentInvoices": "हाल के इनवॉइस",
-        "invoiceHistory": "इनवॉइस इतिहास",
-        "downloadPdf": "PDF डाउनलोड करें",
-        "noInvoices": "कोई इनवॉइस नहीं",
-        "period": "अवधि",
-        "amount": "राशि",
-        "status": "स्थिति",
-        "paid": "भुगतान हुआ",
-        "open": "लंबित",
-        "draft": "ड्राफ्ट",
-        "void": "रद्द",
-        "uncollectible": "अवसूलनीय नहीं",
-        "monthly": "मासिक",
-        "yearly": "वार्षिक",
-        "perMonth": "/महीना"
+        "title": "Billing",
+        "managePayment": "Mera bhugtan prabandhan kare",
+        "updateCard": "Mera card update kare",
+        "viewInvoices": "Meri invoice dekhe",
+        "nextBilling": "Agla bill: {date}",
+        "amount": "Rashi: {amount}",
+        "currency": "Mudra",
+        "invoices": "Invoice",
+        "recentInvoices": "Haal ki invoice",
+        "invoiceHistory": "Invoice itihas",
+        "downloadPdf": "PDF download kare",
+        "noInvoices": "Koi invoice nahi",
+        "period": "Avadhi",
+        "status": "Sthiti",
+        "paid": "Bhugtan hua",
+        "open": "Lambit",
+        "draft": "Draft",
+        "void": "Radd",
+        "uncollectible": "Avasulniy nahi",
+        "monthly": "Masik",
+        "yearly": "Varshik",
+        "perMonth": "/mahina"
       },
       "checkout": {
-        "title": "सदस्यता पूर्ण करें",
-        "orderSummary": "ऑर्डर सारांश",
-        "monthlyTotal": "मासिक कुल",
-        "paymentInfo": "भुगतान जानकारी",
-        "securePayment": "Stripe द्वारा सुरक्षित भुगतान",
-        "subscribe": "सदस्यता लें",
-        "processing": "प्रोसेसिंग...",
-        "cancel": "रद्द करें",
-        "easyCancellation": "आसान रद्दीकरण",
-        "noCommitment": "कोई प्रतिबद्धता नहीं"
+        "title": "Apni sadasyta purn kare",
+        "orderSummary": "Order saransh",
+        "monthlyTotal": "Masik kul",
+        "paymentInfo": "Bhugtan jankari",
+        "securePayment": "Stripe dvara surakshit bhugtan",
+        "subscribe": "Subscribe kare",
+        "processing": "Processing...",
+        "cancel": "Radd kare",
+        "easyCancellation": "Asan raddiikaran",
+        "noCommitment": "Koi pratibaddhata nahi"
       },
       "cancelModal": {
-        "title": "सदस्यता रद्द करें",
-        "message": "क्या आप सुनिश्चित हैं कि आप सदस्यता रद्द करना चाहते हैं? वर्तमान अवधि के अंत तक पहुंच बनी रहेगी।",
-        "keep": "नहीं, रखें",
-        "confirm": "हां, रद्द करें"
+        "title": "Apni sadasyta radd kare?",
+        "message": "Ap {date} tak pahunch banaiye rakhenge. Ap kabhi bhi phir se subscribe kar sakte hai.",
+        "reason": "Raddiikaran ka karan (vaikalpik)",
+        "keep": "Nahi, rakhe",
+        "keepSubscription": "Meri sadasyta rakhe",
+        "confirm": "Ha, radd kare",
+        "confirmCancel": "Raddiikaran ki pushtii kare",
+        "scheduled": "Raddiikaran niyojit",
+        "endsOn": "Apki sadasyta {date} ko samapt hoti hai"
+      },
+      "reactivate": {
+        "title": "Apni sadasyta punah sakriy kare",
+        "message": "Apki sadasyta samanya roop se jari rahegi.",
+        "button": "Punah sakriy kare",
+        "success": "Sadasyta safaltapurvak punah sakriy!"
       },
       "success": {
-        "title": "बधाई हो!",
-        "subtitle": "आपकी {{plan}} सदस्यता अब सक्रिय है",
-        "accessTo": "अब आपके पास एक्सेस है:",
-        "startUsing": "एआई का उपयोग शुरू करें",
-        "viewSubscription": "मेरी सदस्यता देखें",
-        "emailSent": "पुष्टि आपके ईमेल पर भेजी गई",
-        "thankYou": "SOS-Expat पर भरोसा करने के लिए धन्यवाद",
+        "title": "Badhai ho!",
+        "subtitle": "Apki {plan} sadasyta ab sakriy hai",
+        "accessTo": "Ab apke pas access hai:",
+        "startUsing": "AI ka upyog shuru kare",
+        "viewSubscription": "Meri sadasyta dekhe",
+        "emailSent": "Pushtii apke email par bheji gayi",
+        "thankYou": "SOS-Expat par bharosa karne ke liye dhanyavad",
         "features": {
-          "fullAccess": "एआई टूल तक पूर्ण पहुंच",
-          "smartAssistant": "स्मार्ट एआई सहायक",
-          "contextualSuggestions": "संदर्भ-आधारित सुझाव",
-          "unlimitedCallsPerMonth": "प्रति माह असीमित कॉल",
-          "callsPerMonth": "प्रति माह {{count}} एआई कॉल"
+          "fullAccess": "AI tool tak purn pahunch",
+          "smartAssistant": "Smart AI sahayak",
+          "contextualSuggestions": "Sandarbh-adharit sujhav",
+          "unlimitedCallsPerMonth": "Prati mah asimit call",
+          "callsPerMonth": "Prati mah {count} AI call"
         }
       },
       "errors": {
-        "noSubscription": "आपके पास कोई सक्रिय सदस्यता नहीं है",
-        "paymentFailed": "भुगतान विफल",
-        "subscriptionExpired": "आपकी सदस्यता समाप्त हो गई",
-        "quotaExhausted": "आपने मासिक कोटा पूरा कर लिया",
-        "trialExpired": "आपका ट्रायल समाप्त हो गया",
-        "generic": "एक त्रुटि हुई"
+        "noSubscription": "Apke pas koi sakriy sadasyta nahi hai",
+        "paymentFailed": "Bhugtan vifal",
+        "subscriptionExpired": "Apki sadasyta samapt ho gayi",
+        "quotaExhausted": "Apne masik kota pura kar liya",
+        "trialExpired": "Apka trial samapt ho gaya",
+        "generic": "Ek truti hui",
+        "loadFailed": "Apki sadasyta load karne me asmarth",
+        "cancelFailed": "Sadasyta radd karne me asmarth",
+        "checkoutFailed": "Bhugtan me truti",
+        "updatePaymentMethod": "Kripya apna bhugtan tarika update kare"
+      },
+      "actions": {
+        "subscribe": "Subscribe kare",
+        "upgrade": "Uchh plan me badle",
+        "changePlan": "Plan badle",
+        "cancel": "Sadasyta radd kare"
       },
       "faq": {
-        "title": "अक्सर पूछे जाने वाले प्रश्न",
+        "title": "Aksar puchhe jane vale prashna",
         "changePlan": {
-          "q": "क्या मैं प्लान बदल सकता हूं?",
-          "a": "हां, आप कभी भी अपग्रेड या डाउनग्रेड कर सकते हैं। बदलाव तुरंत लागू होते हैं।"
+          "q": "Kya main plan badal sakta hu?",
+          "a": "Ha, ap kabhi bhi upgrade ya downgrade kar sakte hai. Badlav turant lagu hote hai."
         },
         "trial": {
-          "q": "मुफ्त ट्रायल कैसे काम करता है?",
-          "a": "आपको 3 मुफ्त एआई कॉल के साथ 30 दिन का ट्रायल मिलता है। क्रेडिट कार्ड आवश्यक नहीं।"
+          "q": "Muft trial kaise kaam karta hai?",
+          "a": "Apko 3 muft AI call ke saath 30 din ka trial milta hai. Credit card avashyak nahi."
         },
         "quota": {
-          "q": "अगर मैं कोटा तक पहुंच जाऊं तो क्या होगा?",
-          "a": "आप रीसेट के लिए अगले महीने का इंतजार कर सकते हैं, या उच्च प्लान में अपग्रेड कर सकते हैं।"
+          "q": "Agar main kota tak pahunch jau to kya hoga?",
+          "a": "Ap reset ke liye agle mahine ka intezaar kar sakte hai, ya uchh plan me upgrade kar sakte hai."
         },
         "cancel": {
-          "q": "क्या मैं कभी भी रद्द कर सकता हूं?",
-          "a": "हां, आप कभी भी रद्द कर सकते हैं। भुगतान अवधि के अंत तक पहुंच बनी रहेगी।"
+          "q": "Kya main kabhi bhi radd kar sakta hu?",
+          "a": "Ha, ap kabhi bhi radd kar sakte hai. Bhugtan avadhi ke ant tak pahunch bani rahegi."
         }
       },
-      "calls": "{{count}} कॉल"
+      "calls": "{count} call"
     },
     "aiAssistant": {
-      "title": "एआई सहायक",
-      "subtitle": "आपके ग्राहकों की मदद के लिए व्यक्तिगत सहायक",
-      "clearConversation": "बातचीत साफ करें",
-      "mySubscription": "मेरी सदस्यता",
-      "howCanIHelp": "मैं आपकी कैसे मदद कर सकता हूं?",
-      "askQuestion": "अपने एक्सपैट ग्राहकों, प्रशासनिक प्रक्रियाओं के बारे में सवाल पूछें या सलाह लें।",
-      "typeMessage": "अपना संदेश लिखें...",
-      "send": "भेजें",
-      "callsRemaining": "इस महीने {{count}} कॉल शेष",
-      "unlimitedCalls": "असीमित कॉल",
-      "poweredBy": "Claude & GPT-4 द्वारा संचालित",
+      "title": "AI Sahayak",
+      "subtitle": "Apke grahako ki madad ke liye vyaktigat sahayak",
+      "clearConversation": "Batcheet saaf kare",
+      "mySubscription": "Meri sadasyta",
+      "howCanIHelp": "Main apki kaise madad kar sakta hu?",
+      "askQuestion": "Apne expat grahako, prashasnik prakriyao ke baare me saval puche ya salah le.",
+      "typeMessage": "Apna sandesh likhe...",
+      "send": "Bheje",
+      "callsRemaining": "Is mahine {count} call shesh",
+      "unlimitedCalls": "Asimit call",
+      "poweredBy": "Claude & GPT-4 dvara sanchaalit",
       "tips": {
-        "title": "सुझाव",
-        "tip1": "अपने सवालों में विशिष्ट रहें",
-        "tip2": "संबंधित देश का उल्लेख करें",
-        "tip3": "एआई वेब पर खोज सकता है"
+        "title": "Sujhav",
+        "tip1": "Apne savalo me vishisht rahe",
+        "tip2": "Sambandhit desh ka ullekh kare",
+        "tip3": "AI web par khoj sakta hai"
       },
       "upgradeModal": {
-        "title": "कोटा समाप्त",
-        "message": "आपने अपने प्लान की सीमा पूरी कर ली है। एआई सहायक का उपयोग जारी रखने के लिए अपग्रेड करें।",
-        "later": "बाद में",
-        "viewPlans": "प्लान देखें"
+        "title": "Kota samapt",
+        "message": "Apne apne plan ki seema puri kar li hai. AI sahayak ka upyog jari rakhne ke liye upgrade kare.",
+        "later": "Baad me",
+        "viewPlans": "Plan dekhe"
       },
       "errors": {
-        "notAuthenticated": "आपको लॉग इन होना चाहिए",
-        "communicationError": "एआई के साथ संचार में त्रुटि",
-        "noMessageToRetry": "पुनः प्रयास के लिए कोई संदेश नहीं"
+        "notAuthenticated": "Apko log in hona chahiye",
+        "communicationError": "AI ke saath sanchar me truti",
+        "noMessageToRetry": "Punah prayaas ke liye koi sandesh nahi"
       }
     }
   },
   "ar": {
     "subscription": {
-      "title": "الاشتراك",
-      "mySubscription": "اشتراكي",
-      "manageDescription": "إدارة اشتراكك وتتبع استخدامك",
-      "manageBilling": "إدارة الفواتير",
-      "viewPlans": "عرض الخطط",
-      "changePlan": "تغيير الخطة",
-      "cancelSubscription": "إلغاء الاشتراك",
-      "reactivate": "إعادة تفعيل الاشتراك",
+      "title": "Al-ishtirak",
+      "mySubscription": "Ishtiraki",
+      "manageSubscription": "Idarat ishtiraki",
+      "manageDescription": "Idarat ishtirakak wa tatab'u istikhdamak",
+      "manageBilling": "Idarat al-fawatir",
+      "viewPlans": "'Ard al-khitat",
+      "changePlan": "Taghyir al-khitta",
+      "cancelSubscription": "Ilgha' al-ishtirak",
+      "currentPlan": "Al-khitta al-haliya",
+      "noPlan": "La yujad ishtirak nasht",
+      "startTrial": "Ibda' al-tajriba al-majjaniya",
       "stats": {
-        "callsThisMonth": "مكالمات هذا الشهر",
-        "trialDaysLeft": "أيام التجربة المتبقية",
-        "daysRemaining": "أيام متبقية",
-        "totalCalls": "إجمالي المكالمات"
+        "callsThisMonth": "Mukalamat hadha al-shahr",
+        "trialDaysLeft": "Ayyam al-tajriba al-mutabaqiya",
+        "daysRemaining": "Ayyam mutabaqiya",
+        "totalCalls": "Ijmali al-mukalamat"
       },
       "quickActions": {
-        "title": "إجراءات سريعة",
-        "openAI": "فتح مساعد الذكاء الاصطناعي",
-        "billingPortal": "بوابة الفواتير"
+        "title": "Ijra'at sari'a",
+        "openAI": "Fath musa'id al-dhaka' al-istina'i",
+        "billingPortal": "Bawwabat al-fawatir"
       },
       "status": {
-        "trialing": "تجريبي",
-        "active": "نشط",
-        "past_due": "الدفع متأخر",
-        "canceled": "ملغى",
-        "expired": "منتهي",
-        "paused": "متوقف"
+        "trialing": "Fatrat tajriba",
+        "active": "Nasht",
+        "past_due": "Al-daf' muta'akhir",
+        "canceled": "Mulghah",
+        "expired": "Muntahi",
+        "paused": "Mutawaqqif"
       },
       "trial": {
-        "title": "تجربة مجانية",
-        "description": "اكتشف مساعد الذكاء الاصطناعي مجاناً",
-        "daysRemaining": "{{days}} يوم متبقي",
-        "callsRemaining": "{{calls}} مكالمات متبقية",
-        "expired": "انتهت فترة التجربة",
-        "callsExhausted": "استخدمت جميع مكالمات التجربة",
-        "startTrial": "ابدأ التجربة المجانية",
-        "noCreditCard": "لا تحتاج بطاقة ائتمان"
+        "title": "Tajriba majjaniya",
+        "description": "Iktashif musa'id al-dhaka' al-istina'i majjanan",
+        "daysRemaining": "{days} yawm mutabaqi",
+        "callsRemaining": "{calls} mukalamat mutabaqiya",
+        "expired": "Intahat fatrat al-tajriba",
+        "callsExhausted": "Istakhdamt jami' mukalamat al-tajriba",
+        "startTrial": "Ibda' al-tajriba al-majjaniya",
+        "noCreditCard": "La tahtaj bitaqat i'timan",
+        "expiresOn": "Tantahi fi {date}",
+        "period": "Fatrat al-tajriba",
+        "daysAnd": "yawm wa"
       },
       "plans": {
-        "title": "اختر خطتك",
-        "subtitle": "اختر الخطة التي تناسب احتياجاتك",
-        "basic": "أساسي",
-        "standard": "قياسي",
-        "pro": "احترافي",
-        "unlimited": "غير محدود",
-        "popular": "شائع",
-        "currentPlan": "الخطة الحالية",
-        "upgrade": "ترقية",
-        "downgrade": "تخفيض",
-        "perMonth": "/شهر",
-        "callsPerMonth": "{{count}} مكالمة/شهر",
-        "unlimitedCalls": "مكالمات غير محدودة",
-        "loading": "جاري تحميل الخطط..."
+        "title": "Ikhtar khittatak",
+        "subtitle": "Ikhtar al-khitta allati tunasib ihtiyajatik",
+        "loading": "Jari tahmil al-khitat...",
+        "basic": "Asasi",
+        "standard": "Qiyasi",
+        "pro": "Ihtirafi",
+        "unlimited": "Ghayr mahdud",
+        "popular": "Sha'i'",
+        "recommended": "Muwsah bih",
+        "currentPlan": "Al-khitta al-haliya",
+        "current": "Al-khitta al-haliya",
+        "upgrade": "Al-intiqal ila hadhihi al-khitta",
+        "downgrade": "Takhfid",
+        "perMonth": "/shahr",
+        "callsPerMonth": "{count} mukalama/shahr",
+        "unlimitedCalls": "Mukalamat ghayr mahduda",
+        "choosePlan": "Ikhtar khitta",
+        "monthly": "Shahri",
+        "yearly": "Sanawi",
+        "savePercent": "Waffir {percent}%",
+        "costPerCall": "{cost} li-kul mukalama"
       },
       "features": {
-        "ai_chat": "محادثة ذكية",
-        "ai_suggestions": "اقتراحات ذكية",
-        "ai_templates": "قوالب ذكية",
-        "ai_translation": "ترجمة ذكية",
-        "priority_support": "دعم أولوي",
-        "api_access": "وصول API",
-        "dedicated_support": "دعم مخصص"
+        "ai_chat": "Muhadatha dhakiya",
+        "ai_suggestions": "Iqtirahat dhakiya",
+        "ai_templates": "Qawalib dhakiya",
+        "ai_translation": "Tarjama dhakiya",
+        "priority_support": "Da'm awlawi",
+        "api_access": "Wusul API",
+        "dedicated_support": "Da'm mukhasas"
       },
       "quota": {
-        "title": "استخدام الذكاء الاصطناعي",
-        "used": "مستخدم",
-        "total": "الإجمالي",
-        "remaining": "متبقي",
-        "unlimited": "غير محدود",
-        "resetInfo": "يتم إعادة تعيين الحصة في بداية كل شهر",
-        "exhausted": "تم استنفاد الحصة",
-        "nearLimit": "قريب من الحد",
-        "available": "متاح",
-        "upgradePrompt": "زيادة حصتك"
+        "title": "Istikhdam al-dhaka' al-istina'i",
+        "usage": "Istikhdam al-hissa",
+        "used": "{used} min {total} mukalamat mustakhdama",
+        "total": "Al-ijmali",
+        "remaining": "Mutabaqi",
+        "unlimited": "Mukalamat ghayr mahduda",
+        "resetInfo": "Yatim i'adat ta'yin al-hissa fi bidayat kul shahr",
+        "exhausted": "Tam istinfad al-hissa",
+        "nearLimit": "Qarib min al-hadd",
+        "available": "Mutah",
+        "upgradePrompt": "Ziyadat hissatik"
       },
       "billing": {
-        "title": "الفواتير",
-        "nextBilling": "الفاتورة التالية",
-        "currency": "العملة",
-        "invoices": "الفواتير",
-        "recentInvoices": "الفواتير الأخيرة",
-        "invoiceHistory": "سجل الفواتير",
-        "downloadPdf": "تحميل PDF",
-        "noInvoices": "لا توجد فواتير",
-        "period": "الفترة",
-        "amount": "المبلغ",
-        "status": "الحالة",
-        "paid": "مدفوع",
-        "open": "معلق",
-        "draft": "مسودة",
-        "void": "ملغى",
-        "uncollectible": "غير قابل للتحصيل",
-        "monthly": "شهري",
-        "yearly": "سنوي",
-        "perMonth": "/شهر"
+        "title": "Al-fawatir",
+        "managePayment": "Idarat daf'i",
+        "updateCard": "Tahdith bitaqati",
+        "viewInvoices": "'Ard fawatiri",
+        "nextBilling": "Al-fatura al-taliya: {date}",
+        "amount": "Al-mablagh: {amount}",
+        "currency": "Al-'umla",
+        "invoices": "Al-fawatir",
+        "recentInvoices": "Al-fawatir al-akhira",
+        "invoiceHistory": "Sijil al-fawatir",
+        "downloadPdf": "Tahmil PDF",
+        "noInvoices": "La tujad fawatir",
+        "period": "Al-fatra",
+        "status": "Al-hala",
+        "paid": "Madfu'",
+        "open": "Mu'allaq",
+        "draft": "Musawwada",
+        "void": "Mulgha",
+        "uncollectible": "Ghayr qabil li-l-tahsil",
+        "monthly": "Shahri",
+        "yearly": "Sanawi",
+        "perMonth": "/shahr"
       },
       "checkout": {
-        "title": "إتمام اشتراكك",
-        "orderSummary": "ملخص الطلب",
-        "monthlyTotal": "الإجمالي الشهري",
-        "paymentInfo": "معلومات الدفع",
-        "securePayment": "دفع آمن عبر Stripe",
-        "subscribe": "اشترك",
-        "processing": "جاري المعالجة...",
-        "cancel": "إلغاء",
-        "easyCancellation": "إلغاء سهل",
-        "noCommitment": "بدون التزام"
+        "title": "Itmam ishtirakak",
+        "orderSummary": "Mulakhas al-talab",
+        "monthlyTotal": "Al-ijmali al-shahri",
+        "paymentInfo": "Ma'lumat al-daf'",
+        "securePayment": "Daf' amin 'abr Stripe",
+        "subscribe": "Ishtarik",
+        "processing": "Jari al-mu'alaja...",
+        "cancel": "Ilgha'",
+        "easyCancellation": "Ilgha' sahl",
+        "noCommitment": "Bidun iltizam"
       },
       "cancelModal": {
-        "title": "إلغاء الاشتراك",
-        "message": "هل أنت متأكد من رغبتك في إلغاء الاشتراك؟ ستحتفظ بالوصول حتى نهاية الفترة الحالية.",
-        "keep": "لا، احتفظ به",
-        "confirm": "نعم، ألغِ"
+        "title": "Ilgha' ishtirakak?",
+        "message": "Satahfadh bi-l-wusul hatta {date}. Yumkinak al-ishtirak majaddadan fi ay waqt.",
+        "reason": "Sabab al-ilgha' (ikhtiyari)",
+        "keep": "La, ihtafidh bih",
+        "keepSubscription": "Ihtafidh bi-ishtiraki",
+        "confirm": "Na'am, alghi",
+        "confirmCancel": "Ta'kid al-ilgha'",
+        "scheduled": "Ilgha' mujadwal",
+        "endsOn": "Yantahi ishtirakak fi {date}"
+      },
+      "reactivate": {
+        "title": "I'adat taf'il ishtirakak",
+        "message": "Sayastamir ishtirakak bi-shakl tabi'i.",
+        "button": "I'adat al-taf'il",
+        "success": "Tam i'adat taf'il al-ishtirak bi-najah!"
       },
       "success": {
-        "title": "تهانينا!",
-        "subtitle": "اشتراكك {{plan}} نشط الآن",
-        "accessTo": "لديك الآن وصول إلى:",
-        "startUsing": "ابدأ استخدام الذكاء الاصطناعي",
-        "viewSubscription": "عرض اشتراكي",
-        "emailSent": "تم إرسال تأكيد إلى بريدك الإلكتروني",
-        "thankYou": "شكراً لثقتك في SOS-Expat",
+        "title": "Tahanina!",
+        "subtitle": "Ishtirakak {plan} nasht al-an",
+        "accessTo": "Ladayk al-an wusul ila:",
+        "startUsing": "Ibda' istikhdam al-dhaka' al-istina'i",
+        "viewSubscription": "'Ard ishtiraki",
+        "emailSent": "Tam irsal ta'kid ila baridak al-iliktruni",
+        "thankYou": "Shukran li-thiqatik fi SOS-Expat",
         "features": {
-          "fullAccess": "وصول كامل لأداة الذكاء الاصطناعي",
-          "smartAssistant": "مساعد ذكاء اصطناعي ذكي",
-          "contextualSuggestions": "اقتراحات سياقية",
-          "unlimitedCallsPerMonth": "مكالمات غير محدودة شهرياً",
-          "callsPerMonth": "{{count}} مكالمات ذكاء اصطناعي شهرياً"
+          "fullAccess": "Wusul kamil li-adat al-dhaka' al-istina'i",
+          "smartAssistant": "Musa'id dhaka' istina'i dhaki",
+          "contextualSuggestions": "Iqtirahat siyaqiya",
+          "unlimitedCallsPerMonth": "Mukalamat ghayr mahduda shahriyan",
+          "callsPerMonth": "{count} mukalamat dhaka' istina'i shahriyan"
         }
       },
       "errors": {
-        "noSubscription": "ليس لديك اشتراك نشط",
-        "paymentFailed": "فشل الدفع",
-        "subscriptionExpired": "انتهى اشتراكك",
-        "quotaExhausted": "وصلت إلى حصتك الشهرية",
-        "trialExpired": "انتهت فترة التجربة",
-        "generic": "حدث خطأ"
+        "noSubscription": "Laysa ladayk ishtirak nasht",
+        "paymentFailed": "Fashil al-daf'",
+        "subscriptionExpired": "Intaha ishtirakak",
+        "quotaExhausted": "Wasalt ila hissatik al-shahriya",
+        "trialExpired": "Intahat fatrat al-tajriba",
+        "generic": "Hadatha khata'",
+        "loadFailed": "Ta'adhur tahmil ishtirakak",
+        "cancelFailed": "Ta'adhur ilgha' al-ishtirak",
+        "checkoutFailed": "Khata' fi al-daf'",
+        "updatePaymentMethod": "Yurja tahdith tariqat al-daf'"
+      },
+      "actions": {
+        "subscribe": "Ishtarik",
+        "upgrade": "Al-intiqal ila khitta a'la",
+        "changePlan": "Taghyir al-khitta",
+        "cancel": "Ilgha' al-ishtirak"
       },
       "faq": {
-        "title": "الأسئلة الشائعة",
+        "title": "Al-as'ila al-sha'i'a",
         "changePlan": {
-          "q": "هل يمكنني تغيير الخطة؟",
-          "a": "نعم، يمكنك الترقية أو التخفيض في أي وقت. التغييرات تسري فوراً."
+          "q": "Hal yumkinuni taghyir al-khitta?",
+          "a": "Na'am, yumkinak al-tarqiya aw al-takhfid fi ay waqt. Al-taghyirat tasri fawran."
         },
         "trial": {
-          "q": "كيف تعمل التجربة المجانية؟",
-          "a": "تحصل على 30 يوماً مع 3 مكالمات ذكاء اصطناعي مجانية. لا تحتاج بطاقة ائتمان."
+          "q": "Kayf ta'mal al-tajriba al-majjaniya?",
+          "a": "Tahsul 'ala 30 yawman ma'a 3 mukalamat dhaka' istina'i majjaniya. La tahtaj bitaqat i'timan."
         },
         "quota": {
-          "q": "ماذا يحدث إذا وصلت للحد؟",
-          "a": "يمكنك الانتظار للشهر التالي للإعادة، أو الترقية لخطة أعلى."
+          "q": "Madha yahduth idha wasalt li-l-hadd?",
+          "a": "Yumkinak al-intidhar li-l-shahr al-tali li-l-i'ada, aw al-tarqiya li-khitta a'la."
         },
         "cancel": {
-          "q": "هل يمكنني الإلغاء في أي وقت؟",
-          "a": "نعم، يمكنك الإلغاء في أي وقت. ستحتفظ بالوصول حتى نهاية فترتك المدفوعة."
+          "q": "Hal yumkinuni al-ilgha' fi ay waqt?",
+          "a": "Na'am, yumkinak al-ilgha' fi ay waqt. Satahfadh bi-l-wusul hatta nihayat fatratik al-madfu'a."
         }
       },
-      "calls": "{{count}} مكالمات"
+      "calls": "{count} mukalamat"
     },
     "aiAssistant": {
-      "title": "مساعد الذكاء الاصطناعي",
-      "subtitle": "مساعدك الشخصي لمساعدة عملائك",
-      "clearConversation": "مسح المحادثة",
-      "mySubscription": "اشتراكي",
-      "howCanIHelp": "كيف يمكنني مساعدتك؟",
-      "askQuestion": "اطرح سؤالاً عن عملائك المغتربين، الإجراءات الإدارية، أو اطلب نصيحة.",
-      "typeMessage": "اكتب رسالتك...",
-      "send": "إرسال",
-      "callsRemaining": "{{count}} مكالمات متبقية هذا الشهر",
-      "unlimitedCalls": "مكالمات غير محدودة",
-      "poweredBy": "يعمل بواسطة Claude & GPT-4",
+      "title": "Musa'id al-dhaka' al-istina'i",
+      "subtitle": "Musa'idak al-shakhsi li-musa'adat 'umala'ik",
+      "clearConversation": "Mash al-muhadatha",
+      "mySubscription": "Ishtiraki",
+      "howCanIHelp": "Kayf yumkinuni musa'adatuk?",
+      "askQuestion": "Itrah su'alan 'an 'umala'ik al-mughtaribin, al-ijra'at al-idariya, aw utlub nasiha.",
+      "typeMessage": "Uktub risalatak...",
+      "send": "Irsal",
+      "callsRemaining": "{count} mukalamat mutabaqiya hadha al-shahr",
+      "unlimitedCalls": "Mukalamat ghayr mahduda",
+      "poweredBy": "Ya'mal bi-wasilat Claude & GPT-4",
       "tips": {
-        "title": "نصائح",
-        "tip1": "كن محدداً في أسئلتك",
-        "tip2": "اذكر البلد المعني",
-        "tip3": "يمكن للذكاء الاصطناعي البحث في الإنترنت"
+        "title": "Nasa'ih",
+        "tip1": "Kun muhaddadan fi as'ilatik",
+        "tip2": "Udhkur al-balad al-ma'ni",
+        "tip3": "Yumkin li-l-dhaka' al-istina'i al-bahth fi al-internet"
       },
       "upgradeModal": {
-        "title": "تم استنفاد الحصة",
-        "message": "وصلت لحد خطتك. قم بالترقية لاشتراك أعلى لمواصلة استخدام مساعد الذكاء الاصطناعي.",
-        "later": "لاحقاً",
-        "viewPlans": "عرض الخطط"
+        "title": "Tam istinfad al-hissa",
+        "message": "Wasalt li-hadd khittatik. Qum bi-l-tarqiya li-ishtirak a'la li-muwasilat istikhdam musa'id al-dhaka' al-istina'i.",
+        "later": "Lahiqan",
+        "viewPlans": "'Ard al-khitat"
       },
       "errors": {
-        "notAuthenticated": "يجب تسجيل الدخول",
-        "communicationError": "خطأ في التواصل مع الذكاء الاصطناعي",
-        "noMessageToRetry": "لا توجد رسالة للإعادة"
+        "notAuthenticated": "Yajib tasjil al-dukhul",
+        "communicationError": "Khata' fi al-tawasul ma'a al-dhaka' al-istina'i",
+        "noMessageToRetry": "La tujad risala li-l-i'ada"
       }
     }
   },
   "ch": {
     "subscription": {
-      "title": "订阅",
-      "mySubscription": "我的订阅",
-      "manageDescription": "管理您的订阅并跟踪使用情况",
-      "manageBilling": "管理账单",
-      "viewPlans": "查看方案",
-      "changePlan": "更改方案",
-      "cancelSubscription": "取消订阅",
-      "reactivate": "重新激活订阅",
+      "title": "Dingyue",
+      "mySubscription": "Wo de dingyue",
+      "manageSubscription": "Guanli wo de dingyue",
+      "manageDescription": "Guanli nin de dingyue bing genzong shiyong qingkuang",
+      "manageBilling": "Guanli zhangdan",
+      "viewPlans": "Chakan fang'an",
+      "changePlan": "Gengai fang'an",
+      "cancelSubscription": "Quxiao dingyue",
+      "currentPlan": "Dangqian fang'an",
+      "noPlan": "Wu huoyue dingyue",
+      "startTrial": "Kaishi mianfei shiyong",
       "stats": {
-        "callsThisMonth": "本月通话",
-        "trialDaysLeft": "试用剩余天数",
-        "daysRemaining": "剩余天数",
-        "totalCalls": "总通话"
+        "callsThisMonth": "Benyue tonghua",
+        "trialDaysLeft": "Shiyong shengyu tianshu",
+        "daysRemaining": "Shengyu tianshu",
+        "totalCalls": "Zong tonghua"
       },
       "quickActions": {
-        "title": "快速操作",
-        "openAI": "打开AI助手",
-        "billingPortal": "账单门户"
+        "title": "Kuaisu caozuo",
+        "openAI": "Dakai AI zhushou",
+        "billingPortal": "Zhangdan menhu"
       },
       "status": {
-        "trialing": "试用中",
-        "active": "活跃",
-        "past_due": "逾期",
-        "canceled": "已取消",
-        "expired": "已过期",
-        "paused": "已暂停"
+        "trialing": "Shiyong qi",
+        "active": "Huoyue",
+        "past_due": "Yuqi",
+        "canceled": "Yi quxiao",
+        "expired": "Yi guoqi",
+        "paused": "Yi zanting"
       },
       "trial": {
-        "title": "免费试用",
-        "description": "免费体验AI助手",
-        "daysRemaining": "剩余{{days}}天",
-        "callsRemaining": "剩余{{calls}}次通话",
-        "expired": "您的试用期已结束",
-        "callsExhausted": "您已用完所有试用通话",
-        "startTrial": "开始免费试用",
-        "noCreditCard": "无需信用卡"
+        "title": "Mianfei shiyong",
+        "description": "Mianfei tiyan AI zhushou",
+        "daysRemaining": "Shengyu {days} tian",
+        "callsRemaining": "Shengyu {calls} ci tonghua",
+        "expired": "Nin de shiyong qi yi jieshu",
+        "callsExhausted": "Nin yi yongwan suoyou shiyong tonghua",
+        "startTrial": "Kaishi mianfei shiyong",
+        "noCreditCard": "Wuxu xinyongka",
+        "expiresOn": "{date} guoqi",
+        "period": "Shiyong qi",
+        "daysAnd": "tian he"
       },
       "plans": {
-        "title": "选择您的方案",
-        "subtitle": "选择适合您需求的方案",
-        "basic": "基础版",
-        "standard": "标准版",
-        "pro": "专业版",
-        "unlimited": "无限版",
-        "popular": "热门",
-        "currentPlan": "当前方案",
-        "upgrade": "升级",
-        "downgrade": "降级",
-        "perMonth": "/月",
-        "callsPerMonth": "{{count}}次通话/月",
-        "unlimitedCalls": "无限通话",
-        "loading": "正在加载方案..."
+        "title": "Xuanze nin de fang'an",
+        "subtitle": "Xuanze shihe nin xuqiu de fang'an",
+        "loading": "Zhengzai jiazai fang'an...",
+        "basic": "Jichu ban",
+        "standard": "Biaozhun ban",
+        "pro": "Zhuanye ban",
+        "unlimited": "Wuxian ban",
+        "popular": "Remen",
+        "recommended": "Tuijian",
+        "currentPlan": "Dangqian fang'an",
+        "current": "Dangqian fang'an",
+        "upgrade": "Qiehuan dao ci fang'an",
+        "downgrade": "Jiangji",
+        "perMonth": "/yue",
+        "callsPerMonth": "{count} ci tonghua/yue",
+        "unlimitedCalls": "Wuxian tonghua",
+        "choosePlan": "Xuanze fang'an",
+        "monthly": "Yuefu",
+        "yearly": "Nianfu",
+        "savePercent": "Jisheng {percent}%",
+        "costPerCall": "Mei ci tonghua {cost}"
       },
       "features": {
-        "ai_chat": "AI聊天",
-        "ai_suggestions": "AI建议",
-        "ai_templates": "AI模板",
-        "ai_translation": "AI翻译",
-        "priority_support": "优先支持",
-        "api_access": "API访问",
-        "dedicated_support": "专属支持"
+        "ai_chat": "AI liaotian",
+        "ai_suggestions": "AI jianyi",
+        "ai_templates": "AI muban",
+        "ai_translation": "AI fanyi",
+        "priority_support": "Youxian zhichi",
+        "api_access": "API fangwen",
+        "dedicated_support": "Zhuanshu zhichi"
       },
       "quota": {
-        "title": "AI使用情况",
-        "used": "已使用",
-        "total": "总计",
-        "remaining": "剩余",
-        "unlimited": "无限",
-        "resetInfo": "配额每月初重置",
-        "exhausted": "配额已用完",
-        "nearLimit": "接近上限",
-        "available": "可用",
-        "upgradePrompt": "增加您的配额"
+        "title": "AI shiyong qingkuang",
+        "usage": "Peie shiyong",
+        "used": "Yi shiyong {used}/{total} ci tonghua",
+        "total": "Zongji",
+        "remaining": "Shengyu",
+        "unlimited": "Wuxian tonghua",
+        "resetInfo": "Peie meiyue chu chongzhi",
+        "exhausted": "Peie yi yongwan",
+        "nearLimit": "Jiejin shangxian",
+        "available": "Keyong",
+        "upgradePrompt": "Zengjia nin de peie"
       },
       "billing": {
-        "title": "账单",
-        "nextBilling": "下次账单",
-        "currency": "货币",
-        "invoices": "发票",
-        "recentInvoices": "最近发票",
-        "invoiceHistory": "发票历史",
-        "downloadPdf": "下载PDF",
-        "noInvoices": "没有发票",
-        "period": "周期",
-        "amount": "金额",
-        "status": "状态",
-        "paid": "已付",
-        "open": "待付",
-        "draft": "草稿",
-        "void": "作废",
-        "uncollectible": "无法收回",
-        "monthly": "月付",
-        "yearly": "年付",
-        "perMonth": "/月"
+        "title": "Zhangdan",
+        "managePayment": "Guanli wo de fukuan",
+        "updateCard": "Gengxin wo de ka",
+        "viewInvoices": "Chakan wo de fapiao",
+        "nextBilling": "Xia ci zhangdan: {date}",
+        "amount": "Jin'e: {amount}",
+        "currency": "Huobi",
+        "invoices": "Fapiao",
+        "recentInvoices": "Zuijin fapiao",
+        "invoiceHistory": "Fapiao lishi",
+        "downloadPdf": "Xiazai PDF",
+        "noInvoices": "Meiyou fapiao",
+        "period": "Zhouqi",
+        "status": "Zhuangtai",
+        "paid": "Yi fu",
+        "open": "Daifu",
+        "draft": "Caogao",
+        "void": "Zuofei",
+        "uncollectible": "Wufa shouhui",
+        "monthly": "Yuefu",
+        "yearly": "Nianfu",
+        "perMonth": "/yue"
       },
       "checkout": {
-        "title": "完成您的订阅",
-        "orderSummary": "订单摘要",
-        "monthlyTotal": "月度总计",
-        "paymentInfo": "支付信息",
-        "securePayment": "通过Stripe安全支付",
-        "subscribe": "订阅",
-        "processing": "处理中...",
-        "cancel": "取消",
-        "easyCancellation": "轻松取消",
-        "noCommitment": "无需承诺"
+        "title": "Wancheng nin de dingyue",
+        "orderSummary": "Dingdan zhaiyao",
+        "monthlyTotal": "Yuedu zongji",
+        "paymentInfo": "Zhifu xinxi",
+        "securePayment": "Tongguo Stripe anquan zhifu",
+        "subscribe": "Dingyue",
+        "processing": "Chuli zhong...",
+        "cancel": "Quxiao",
+        "easyCancellation": "Qingsong quxiao",
+        "noCommitment": "Wuxu chengnuo"
       },
       "cancelModal": {
-        "title": "取消订阅",
-        "message": "您确定要取消订阅吗？您将保留访问权限直到当前周期结束。",
-        "keep": "否，保留",
-        "confirm": "是，取消"
+        "title": "Quxiao nin de dingyue?",
+        "message": "Nin jiang baoliu fangwen quanxian zhidao {date}. Nin keyi suishi chongxin dingyue.",
+        "reason": "Quxiao yuanyin (ke xuan)",
+        "keep": "Fou, baoliu",
+        "keepSubscription": "Baoliu wo de dingyue",
+        "confirm": "Shi, quxiao",
+        "confirmCancel": "Queren quxiao",
+        "scheduled": "Quxiao yi anpai",
+        "endsOn": "Nin de dingyue jiang yu {date} jieshu"
+      },
+      "reactivate": {
+        "title": "Chongxin jihuo nin de dingyue",
+        "message": "Nin de dingyue jiang zhengchang jixu.",
+        "button": "Chongxin jihuo",
+        "success": "Dingyue chongxin jihuo chenggong!"
       },
       "success": {
-        "title": "恭喜！",
-        "subtitle": "您的{{plan}}订阅现已激活",
-        "accessTo": "您现在可以访问：",
-        "startUsing": "开始使用AI",
-        "viewSubscription": "查看我的订阅",
-        "emailSent": "确认邮件已发送至您的邮箱",
-        "thankYou": "感谢您信任SOS-Expat",
+        "title": "Gongxi!",
+        "subtitle": "Nin de {plan} dingyue xian yi jihuo",
+        "accessTo": "Nin xianzai keyi fangwen:",
+        "startUsing": "Kaishi shiyong AI",
+        "viewSubscription": "Chakan wo de dingyue",
+        "emailSent": "Queren youjian yi fasong dao nin de youxiang",
+        "thankYou": "Ganxie nin xinren SOS-Expat",
         "features": {
-          "fullAccess": "完全访问AI工具",
-          "smartAssistant": "智能AI助手",
-          "contextualSuggestions": "上下文建议",
-          "unlimitedCallsPerMonth": "每月无限通话",
-          "callsPerMonth": "每月{{count}}次AI通话"
+          "fullAccess": "Wanquan fangwen AI gongju",
+          "smartAssistant": "Zhineng AI zhushou",
+          "contextualSuggestions": "Shangxiawen jianyi",
+          "unlimitedCallsPerMonth": "Meiyue wuxian tonghua",
+          "callsPerMonth": "Meiyue {count} ci AI tonghua"
         }
       },
       "errors": {
-        "noSubscription": "您没有活跃的订阅",
-        "paymentFailed": "支付失败",
-        "subscriptionExpired": "您的订阅已过期",
-        "quotaExhausted": "您已达到月度配额",
-        "trialExpired": "您的试用期已结束",
-        "generic": "发生错误"
+        "noSubscription": "Nin meiyou huoyue de dingyue",
+        "paymentFailed": "Zhifu shibai",
+        "subscriptionExpired": "Nin de dingyue yi guoqi",
+        "quotaExhausted": "Nin yi dadao yuedu peie",
+        "trialExpired": "Nin de shiyong qi yi jieshu",
+        "generic": "Fasheng cuowu",
+        "loadFailed": "Wufa jiazai nin de dingyue",
+        "cancelFailed": "Wufa quxiao dingyue",
+        "checkoutFailed": "Zhifu cuowu",
+        "updatePaymentMethod": "Qing gengxin nin de zhifu fangshi"
+      },
+      "actions": {
+        "subscribe": "Dingyue",
+        "upgrade": "Shengji dao genggao fang'an",
+        "changePlan": "Gengai fang'an",
+        "cancel": "Quxiao dingyue"
       },
       "faq": {
-        "title": "常见问题",
+        "title": "Changjian wenti",
         "changePlan": {
-          "q": "我可以更改方案吗？",
-          "a": "是的，您可以随时升级或降级。更改立即生效。"
+          "q": "Wo keyi gengai fang'an ma?",
+          "a": "Shi de, nin keyi suishi shengji huo jiangji. Gengai liji shengxiao."
         },
         "trial": {
-          "q": "免费试用如何运作？",
-          "a": "您可获得30天试用期和3次免费AI通话。无需信用卡。"
+          "q": "Mianfei shiyong ruhe yunzuo?",
+          "a": "Nin ke huode 30 tian shiyong qi he 3 ci mianfei AI tonghua. Wuxu xinyongka."
         },
         "quota": {
-          "q": "如果我达到配额会怎样？",
-          "a": "您可以等待下个月重置，或升级到更高的方案。"
+          "q": "Ruguo wo dadao peie hui zenyang?",
+          "a": "Nin keyi dengdai xia ge yue chongzhi, huo shengji dao genggao de fang'an."
         },
         "cancel": {
-          "q": "我可以随时取消吗？",
-          "a": "是的，您可以随时取消。您将保留访问权限直到付费期结束。"
+          "q": "Wo keyi suishi quxiao ma?",
+          "a": "Shi de, nin keyi suishi quxiao. Nin jiang baoliu fangwen quanxian zhidao fufeiqr jieshu."
         }
       },
-      "calls": "{{count}} 次通话"
+      "calls": "{count} ci tonghua"
     },
     "aiAssistant": {
-      "title": "AI助手",
-      "subtitle": "您的个人助手，帮助您的客户",
-      "clearConversation": "清除对话",
-      "mySubscription": "我的订阅",
-      "howCanIHelp": "我能帮您什么？",
-      "askQuestion": "询问有关您的外籍客户、行政程序的问题，或寻求建议。",
-      "typeMessage": "输入您的消息...",
-      "send": "发送",
-      "callsRemaining": "本月剩余{{count}}次通话",
-      "unlimitedCalls": "无限通话",
-      "poweredBy": "由Claude和GPT-4驱动",
+      "title": "AI Zhushou",
+      "subtitle": "Nin de geren zhushou, bangzhu nin de kehu",
+      "clearConversation": "Qingchu duihua",
+      "mySubscription": "Wo de dingyue",
+      "howCanIHelp": "Wo neng bang nin shenme?",
+      "askQuestion": "Xunwen guanyu nin de waiji kehu, xingzheng chengxu de wenti, huo xunqiu jianyi.",
+      "typeMessage": "Shuru nin de xiaoxi...",
+      "send": "Fasong",
+      "callsRemaining": "Benyue shengyu {count} ci tonghua",
+      "unlimitedCalls": "Wuxian tonghua",
+      "poweredBy": "You Claude he GPT-4 qudong",
       "tips": {
-        "title": "提示",
-        "tip1": "问题要具体",
-        "tip2": "提及相关国家",
-        "tip3": "AI可以搜索网络"
+        "title": "Tishi",
+        "tip1": "Wenti yao juti",
+        "tip2": "Tiqi xiangguan guojia",
+        "tip3": "AI keyi sousuo wangluo"
       },
       "upgradeModal": {
-        "title": "配额已用完",
-        "message": "您已达到方案限制。升级到更高的订阅以继续使用AI助手。",
-        "later": "稍后",
-        "viewPlans": "查看方案"
+        "title": "Peie yi yongwan",
+        "message": "Nin yi dadao fang'an xianzhi. Shengji dao genggao de dingyue yi jixu shiyong AI zhushou.",
+        "later": "Shaohou",
+        "viewPlans": "Chakan fang'an"
       },
       "errors": {
-        "notAuthenticated": "您必须登录",
-        "communicationError": "与AI通信时出错",
-        "noMessageToRetry": "没有消息可重试"
+        "notAuthenticated": "Nin bixu denglu",
+        "communicationError": "Yu AI tongxin shi chucuo",
+        "noMessageToRetry": "Meiyou xiaoxi ke chongshi"
       }
     }
   }

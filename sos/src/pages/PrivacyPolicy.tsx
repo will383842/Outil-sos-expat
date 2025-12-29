@@ -561,7 +561,7 @@ const PrivacyPolicy: React.FC = () => {
 
       // SPECIAL: contact line -> nice card WITHOUT raw URL & without extra heading
       if (
-        line.toLowerCase().includes("http://localhost:5174/contact") ||
+        line.toLowerCase().includes("https://sos-expat.com/contact") ||
         line.toLowerCase().includes("/contact")
       ) {
         elements.push(
@@ -581,7 +581,7 @@ const PrivacyPolicy: React.FC = () => {
               {t.contactContent}
             </p>
             <a
-              href="http://localhost:5174/contact"
+              href="https://sos-expat.com/contact"
               className="inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition-all hover:scale-105 hover:shadow-lg"
             >
               <Globe className="w-5 h-5" />
@@ -651,7 +651,7 @@ const PrivacyPolicy: React.FC = () => {
 ---
 
 ## 5. ${t.contact}
-http://localhost:5174/contact
+https://sos-expat.com/contact
 `;
 
   // --- Default bilingual content (shown if no Firestore content) ---
@@ -681,7 +681,7 @@ Aucun **commerce des données**. Partage limité à des prestataires **vérifié
 ---
 
 ## 5. ${t.contact}
-http://localhost:5174/contact
+https://sos-expat.com/contact
 `;
 
   const defaultEn = `
@@ -710,7 +710,7 @@ No **data resale**. Limited sharing with **vetted** processors to provide the se
 ---
 
 ## 5. ${t.contact}
-http://localhost:5174/contact
+https://sos-expat.com/contact
 `;
 
 const defaultCh = `
@@ -744,7 +744,7 @@ const defaultCh = `
 
   5. ${t.contact}
 
-  http://localhost:5174/contact
+  https://sos-expat.com/contact
 `
 
 const defaultEs = `
@@ -773,7 +773,7 @@ Sin **reventa de datos**. Compartición limitada con procesadores **verificados*
 ---
 
 ## 5. ${t.contact}
-http://localhost:5174/contact
+https://sos-expat.com/contact
 `;
 
 const defaultDe = `
@@ -802,7 +802,7 @@ Kein **Datenverkauf**. Begrenzte Weitergabe an **geprüfte** Auftragsverarbeiter
 ---
 
 ## 5. ${t.contact}
-http://localhost:5174/contact
+https://sos-expat.com/contact
 `;
 
 const defaultPt = `
@@ -831,7 +831,7 @@ Sem **revenda de dados**. Compartilhamento limitado com processadores **verifica
 ---
 
 ## 5. ${t.contact}
-http://localhost:5174/contact
+https://sos-expat.com/contact
 `;
 
 const defaultRu = `
@@ -860,7 +860,7 @@ const defaultRu = `
 ---
 
 ## 5. ${t.contact}
-http://localhost:5174/contact
+https://sos-expat.com/contact
 `;
 
 const defaultAr = `
@@ -889,7 +889,7 @@ const defaultAr = `
 ---
 
 ## 5. ${t.contact}
-http://localhost:5174/contact
+https://sos-expat.com/contact
 `;
 
   // const defaultContent = selectedLanguage === "fr" ? defaultFr : defaultEn;
@@ -1019,7 +1019,7 @@ http://localhost:5174/contact
 
               <div className="mt-8 flex items-center justify-center">
                 <a
-                  href="http://localhost:5174/contact"
+                  href="https://sos-expat.com/contact"
                   className="group inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-bold border-2 border-blue-400/50 hover:scale-105 transition-all"
                 >
                   <Globe className="w-5 h-5" />

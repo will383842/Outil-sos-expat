@@ -559,11 +559,26 @@ export const createPaymentIntent = onCall(
         }
       }
 
-      // critical: comment this to bypass diff check for testing
-      // const diff = Math.abs(Number(amountInMainUnit) - Number(expected));
-      // if (diff > 0.5) {
-      //   throw new HttpsError('invalid-argument', `Montant inattendu (reçu ${amountInMainUnit}, attendu ${expected})`);
-      // }
+      // ===== VALIDATION MONTANT (P0 SECURITY FIX - NE PAS COMMENTER EN PRODUCTION) =====
+      // Cette validation empêche la manipulation des prix côté client
+      const diff = Math.abs(Number(amountInMainUnit) - Number(expected));
+      // Tolérance de 0.5€ pour les arrondis de coupons/promotions
+      if (diff > 0.5 && isProduction) {
+        logger.error('[createPaymentIntent] Amount mismatch detected', {
+          received: amountInMainUnit,
+          expected,
+          difference: diff,
+          userId: request.auth?.uid,
+        });
+        throw new HttpsError('invalid-argument', `Montant inattendu (reçu ${amountInMainUnit}, attendu ${expected})`);
+      } else if (diff > 0.5) {
+        // En dev, on log un warning mais on continue
+        logger.warn('[createPaymentIntent] Amount mismatch in dev mode', {
+          received: amountInMainUnit,
+          expected,
+          difference: diff,
+        });
+      }
 
       const coherence = validateAmountCoherence(
         amountInMainUnit,

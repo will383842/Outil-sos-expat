@@ -38,7 +38,10 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && isOwner(userId);
-      allow update: if isOwner(userId) || isAdmin() || isDev();
+      // L'utilisateur peut modifier ses propres données SAUF les champs d'accès IA forcé
+      allow update: if (isOwner(userId) &&
+                        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['forcedAiAccess', 'forceAiAccess', 'forcedAIAccess', 'freeTrialUntil', 'freeTrialGrantedBy']))
+                       || isAdmin() || isDev();
       allow delete: if isAdmin() || isDev();
     }
 
@@ -114,18 +117,42 @@ service cloud.firestore {
                   (resource.data.clientId == request.auth.uid ||
                    resource.data.providerId == request.auth.uid ||
                    isAdmin() || isDev());
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated();
+      // Seul le client peut créer une session (validation de l'ownership)
+      allow create: if isAuthenticated() &&
+                    request.resource.data.clientId == request.auth.uid;
+      // Seuls les participants (client ou provider) peuvent mettre à jour
+      allow update: if isAuthenticated() &&
+                    (resource.data.clientId == request.auth.uid ||
+                     resource.data.providerId == request.auth.uid ||
+                     isAdmin() || isDev());
       allow delete: if isAdmin() || isDev();
     }
 
     // ================= PAYMENTS COLLECTION =================
     match /payments/{paymentId} {
       allow read: if isAuthenticated() &&
-                  (resource.data.userId == request.auth.uid || isAdmin() || isDev());
-      allow create: if isAuthenticated();
+                  (resource.data.userId == request.auth.uid ||
+                   resource.data.clientId == request.auth.uid ||
+                   resource.data.providerId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Seul le client peut créer un paiement pour lui-même
+      allow create: if isAuthenticated() &&
+                    (request.resource.data.userId == request.auth.uid ||
+                     request.resource.data.clientId == request.auth.uid);
       allow update: if isAdmin() || isDev();
       allow delete: if isAdmin() || isDev();
+    }
+
+    // ================= REFUNDS COLLECTION =================
+    match /refunds/{refundId} {
+      // Client et provider peuvent voir leurs remboursements
+      allow read: if isAuthenticated() &&
+                  (resource.data.clientId == request.auth.uid ||
+                   resource.data.providerId == request.auth.uid ||
+                   resource.data.userId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Seules les Cloud Functions peuvent écrire (via Admin SDK)
+      allow write: if false;
     }
 
     // ================= ORDERS COLLECTION =================
@@ -292,6 +319,245 @@ service cloud.firestore {
       allow read: if isAdmin() || isDev();
       allow create: if isAuthenticated();
       allow update, delete: if false;
+    }
+
+    // ================= DISPUTES COLLECTION (Chargebacks) =================
+    match /disputes/{disputeId} {
+      // Only admins can read disputes (sensitive financial data)
+      allow read: if isAdmin() || isDev();
+      // Only Cloud Functions can write (via webhooks)
+      allow write: if false;
+    }
+
+    // ================= ADMIN ALERTS COLLECTION =================
+    match /admin_alerts/{alertId} {
+      allow read: if isAdmin() || isDev();
+      // Admins can update (mark as read)
+      allow update: if isAdmin() || isDev();
+      // Only Cloud Functions can create
+      allow create, delete: if false;
+    }
+
+    // ================= FINANCIAL EVENTS COLLECTION =================
+    match /financial_events/{eventId} {
+      allow read: if isAdmin() || isDev();
+      // Only Cloud Functions can write
+      allow write: if false;
+    }
+
+    // ================= PROVIDER BALANCE ADJUSTMENTS =================
+    match /provider_balance_adjustments/{adjustmentId} {
+      // Providers can read their own adjustments
+      allow read: if isAuthenticated() &&
+                  (resource.data.providerId == request.auth.uid || isAdmin() || isDev());
+      // Only Cloud Functions can write
+      allow write: if false;
+    }
+
+    // ================= KYC REMINDERS LOG =================
+    match /kyc_reminders_log/{logId} {
+      // Only admins can read reminder logs
+      allow read: if isAdmin() || isDev();
+      // Only Cloud Functions can write
+      allow write: if false;
+    }
+
+    // ================= PAYPAL REMINDER QUEUE =================
+    match /paypal_reminder_queue/{providerId} {
+      // Providers can read their own reminder status
+      allow read: if isAuthenticated() &&
+                  (request.auth.uid == providerId || isAdmin() || isDev());
+      // Only Cloud Functions can write
+      allow write: if false;
+    }
+
+    // ================= PAYPAL ACCOUNT LOGS =================
+    match /paypal_account_logs/{logId} {
+      // Providers can read their own logs, admins can read all
+      allow read: if isAuthenticated() &&
+                  (resource.data.providerId == request.auth.uid || isAdmin() || isDev());
+      // Only Cloud Functions can write
+      allow write: if false;
+    }
+
+    // ================= PAYPAL REMINDERS LOG =================
+    match /paypal_reminders_log/{logId} {
+      // Only admins can read reminder logs
+      allow read: if isAdmin() || isDev();
+      // Only Cloud Functions can write
+      allow write: if false;
+    }
+
+    // ================= UNCLAIMED FUNDS =================
+    match /unclaimed_funds/{fundId} {
+      // Only admins can read unclaimed funds
+      allow read: if isAdmin() || isDev();
+      // Only Cloud Functions can write
+      allow write: if false;
+    }
+
+    // ================= ADMIN ACTIONS LOG =================
+    match /admin_actions_log/{logId} {
+      // Only admins can read action logs
+      allow read: if isAdmin() || isDev();
+      // Only Cloud Functions can write
+      allow write: if false;
+    }
+
+    // ================= PAYPAL ORDERS =================
+    match /paypal_orders/{orderId} {
+      // Clients can read their own orders, admins can read all
+      allow read: if isAuthenticated() &&
+                  (resource.data.clientId == request.auth.uid ||
+                   resource.data.providerId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Only Cloud Functions can write
+      allow write: if false;
+    }
+
+    // ================= PAYPAL REFERRALS (Merchant Onboarding) =================
+    match /paypal_referrals/{referralId} {
+      // Providers can read their own referrals, admins can read all
+      allow read: if isAuthenticated() &&
+                  (resource.data.providerId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Only Cloud Functions can write
+      allow write: if false;
+    }
+
+    // ================= PAYPAL WEBHOOK EVENTS =================
+    match /paypal_webhook_events/{eventId} {
+      // Only admins can read webhook events
+      allow read: if isAdmin() || isDev();
+      // Only Cloud Functions can write
+      allow write: if false;
+    }
+
+    // ================= PAYPAL PAYOUTS =================
+    match /paypal_payouts/{payoutId} {
+      // Providers can read their own payouts, admins can read all
+      allow read: if isAuthenticated() &&
+                  (resource.data.providerId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Only Cloud Functions can write
+      allow write: if false;
+    }
+
+    // ================= PAYPAL PAYOUTS FAILED =================
+    match /paypal_payouts_failed/{failedId} {
+      // Only admins can read failed payouts
+      allow read: if isAdmin() || isDev();
+      // Only Cloud Functions can write
+      allow write: if false;
+    }
+
+    // ================= STRIPE TRANSFERS =================
+    match /transfers/{transferId} {
+      // Providers can read their own transfers, admins can read all
+      allow read: if isAuthenticated() &&
+                  (resource.data.providerId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Only Cloud Functions can write
+      allow write: if false;
+    }
+
+    // ================= PENDING TRANSFERS (Deferred KYC) =================
+    match /pending_transfers/{transferId} {
+      // Providers can read their own pending transfers
+      // This allows them to see how much is pending until they complete KYC
+      allow read: if isAuthenticated() &&
+                  (resource.data.providerId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Only Cloud Functions can write
+      allow write: if false;
+    }
+
+    // ================= FAILED TRANSFERS LOG =================
+    match /failed_transfers_log/{logId} {
+      // Only admins can read failed transfer logs
+      allow read: if isAdmin() || isDev();
+      // Only Cloud Functions can write
+      allow write: if false;
+    }
+
+    // ================= CALL RECORDINGS =================
+    match /call_recordings/{recordingId} {
+      // Only admins can access recordings
+      allow read: if isAdmin() || isDev();
+      // Only Cloud Functions can write
+      allow write: if false;
+    }
+
+    // ================= TECHNICAL ALERTS =================
+    match /technical_alerts/{alertId} {
+      // Only admins/devs can access
+      allow read: if isAdmin() || isDev();
+      allow update: if isAdmin() || isDev(); // To mark as resolved
+      allow create, delete: if false; // Only Cloud Functions
+    }
+
+    // ================= ADMIN NOTIFICATIONS =================
+    match /admin_notifications/{notificationId} {
+      // Only admins can access
+      allow read: if isAdmin() || isDev();
+      allow update: if isAdmin() || isDev(); // To mark as processed
+      allow create, delete: if false; // Only Cloud Functions
+    }
+
+    // ================= SUBSCRIPTIONS COLLECTION =================
+    match /subscriptions/{providerId} {
+      // Le provider peut lire son propre abonnement
+      allow read: if isOwner(providerId) || isAdmin() || isDev();
+      // Seules les Cloud Functions peuvent écrire (via Admin SDK)
+      allow write: if false;
+    }
+
+    // ================= SUBSCRIPTION PLANS COLLECTION =================
+    match /subscription_plans/{planId} {
+      // Lecture publique (pour afficher les prix)
+      allow read: if true;
+      // Seuls les admins peuvent modifier les plans
+      allow write: if isAdmin() || isDev();
+    }
+
+    // ================= AI USAGE COLLECTION =================
+    match /ai_usage/{providerId} {
+      // Le provider peut lire son propre usage
+      allow read: if isOwner(providerId) || isAdmin() || isDev();
+      // Seules les Cloud Functions peuvent écrire
+      allow write: if false;
+    }
+
+    // ================= SUBSCRIPTION LOGS COLLECTION =================
+    match /subscription_logs/{logId} {
+      // Seuls les admins peuvent lire les logs d'abonnement
+      allow read: if isAdmin() || isDev();
+      // Seules les Cloud Functions peuvent écrire
+      allow write: if false;
+    }
+
+    // ================= PROCESSED STRIPE EVENTS (Idempotency) =================
+    match /processed_stripe_events/{eventId} {
+      // Seuls les admins peuvent lire
+      allow read: if isAdmin() || isDev();
+      // Seules les Cloud Functions peuvent écrire
+      allow write: if false;
+    }
+
+    // ================= QUOTA RESET LOGS =================
+    match /quota_reset_logs/{logId} {
+      // Seuls les admins peuvent lire
+      allow read: if isAdmin() || isDev();
+      // Seules les Cloud Functions peuvent écrire
+      allow write: if false;
+    }
+
+    // ================= TRIAL EXPIRATION LOGS =================
+    match /trial_expiration_logs/{logId} {
+      // Seuls les admins peuvent lire
+      allow read: if isAdmin() || isDev();
+      // Seules les Cloud Functions peuvent écrire
+      allow write: if false;
     }
 
     // ================= CATCH-ALL (deny by default) =================

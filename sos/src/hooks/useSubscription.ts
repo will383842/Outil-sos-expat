@@ -1,307 +1,415 @@
 /**
  * useSubscription Hook
- * Gestion de l'abonnement du prestataire
+ * Gestion complète de l'abonnement du prestataire avec pattern SWR-like
+ *
+ * @description Hook React pour gérer l'état de l'abonnement, avec:
+ * - Écoute temps réel Firestore
+ * - Cache automatique et refresh
+ * - États dérivés calculés (isActive, isTrialing, etc.)
+ * - Actions d'annulation et réactivation
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAuth } from '../contexts/useAuth';
 import {
   Subscription,
   SubscriptionPlan,
   SubscriptionStatus,
-  ProviderType,
-  Currency,
-  CreateSubscriptionRequest,
-  CreateSubscriptionResponse
+  SubscriptionTier
 } from '../types/subscription';
 import {
   getSubscription,
   subscribeToSubscription,
-  getSubscriptionPlans,
-  subscribeToPlans,
-  createSubscription,
-  updateSubscription,
-  cancelSubscription,
-  reactivateSubscription,
-  openCustomerPortal,
-  startTrial
+  getSubscriptionPlan,
+  cancelSubscription as cancelSubscriptionService,
+  reactivateSubscription as reactivateSubscriptionService,
+  openCustomerPortal
 } from '../services/subscription/subscriptionService';
 
-interface UseSubscriptionReturn {
-  // State
-  subscription: Subscription | null;
-  plans: SubscriptionPlan[];
-  loading: boolean;
-  error: string | null;
+// ============================================================================
+// TYPES
+// ============================================================================
 
-  // Status helpers
-  isTrialing: boolean;
+interface UseSubscriptionReturn {
+  // État
+  subscription: Subscription | null;
+  plan: SubscriptionPlan | null;
+  isLoading: boolean;
+  error: Error | null;
+
+  // Dérivés
   isActive: boolean;
+  isTrialing: boolean;
   isPastDue: boolean;
   isCanceled: boolean;
-  canAccessAi: boolean;
+  cancelAtPeriodEnd: boolean;
+  daysUntilRenewal: number;
 
   // Actions
-  loadSubscription: () => Promise<void>;
-  loadPlans: (providerType: ProviderType) => Promise<void>;
-  subscribe: (request: CreateSubscriptionRequest) => Promise<CreateSubscriptionResponse>;
-  upgrade: (newPlanId: string) => Promise<{ success: boolean; error?: string }>;
-  downgrade: (newPlanId: string) => Promise<{ success: boolean; error?: string }>;
-  cancel: (immediate?: boolean, reason?: string) => Promise<{ success: boolean; error?: string }>;
-  reactivate: () => Promise<{ success: boolean; error?: string }>;
+  cancelSubscription: (reason?: string) => Promise<void>;
+  reactivateSubscription: () => Promise<void>;
   openBillingPortal: () => Promise<void>;
-  initializeTrial: (providerType: ProviderType) => Promise<Subscription>;
 
-  // Utils
-  getPlanForTier: (tier: string) => SubscriptionPlan | undefined;
-  formatPrice: (plan: SubscriptionPlan, currency: Currency) => string;
+  // Refresh
+  refresh: () => Promise<void>;
 }
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes cache TTL
+
+// ============================================================================
+// CACHE MANAGEMENT
+// ============================================================================
+
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+}
+
+const planCache = new Map<string, CacheEntry<SubscriptionPlan>>();
+
+function getCachedPlan(planId: string): SubscriptionPlan | null {
+  const entry = planCache.get(planId);
+  if (!entry) return null;
+
+  const isExpired = Date.now() - entry.timestamp > CACHE_TTL_MS;
+  if (isExpired) {
+    planCache.delete(planId);
+    return null;
+  }
+
+  return entry.data;
+}
+
+function setCachedPlan(planId: string, plan: SubscriptionPlan): void {
+  planCache.set(planId, {
+    data: plan,
+    timestamp: Date.now()
+  });
+}
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Calcule le nombre de jours jusqu'au renouvellement
+ */
+function calculateDaysUntilRenewal(subscription: Subscription | null): number {
+  if (!subscription?.currentPeriodEnd) return 0;
+
+  const now = new Date();
+  const endDate = subscription.currentPeriodEnd instanceof Date
+    ? subscription.currentPeriodEnd
+    : new Date(subscription.currentPeriodEnd);
+
+  const diffMs = endDate.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+  return Math.max(0, diffDays);
+}
+
+/**
+ * Vérifie si le statut est actif
+ */
+function isStatusActive(status?: SubscriptionStatus): boolean {
+  return status === 'active';
+}
+
+/**
+ * Vérifie si le statut est en essai
+ */
+function isStatusTrialing(status?: SubscriptionStatus): boolean {
+  return status === 'trialing';
+}
+
+/**
+ * Vérifie si le paiement est en retard
+ */
+function isStatusPastDue(status?: SubscriptionStatus): boolean {
+  return status === 'past_due';
+}
+
+/**
+ * Vérifie si l'abonnement est annulé
+ */
+function isStatusCanceled(status?: SubscriptionStatus): boolean {
+  return status === 'canceled' || status === 'expired';
+}
+
+// ============================================================================
+// HOOK IMPLEMENTATION
+// ============================================================================
 
 export function useSubscription(): UseSubscriptionReturn {
   const { user } = useAuth();
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  // Load subscription on mount and subscribe to changes
+  // State
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [plan, setPlan] = useState<SubscriptionPlan | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  // Refs pour éviter les race conditions
+  const isMounted = useRef(true);
+  const lastPlanId = useRef<string | null>(null);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  // Subscribe to real-time subscription updates
   useEffect(() => {
     if (!user?.uid) {
       setSubscription(null);
-      setLoading(false);
+      setPlan(null);
+      setIsLoading(false);
       return;
     }
 
-    setLoading(true);
+    setIsLoading(true);
+    setError(null);
 
-    // Subscribe to real-time updates
     const unsubscribe = subscribeToSubscription(user.uid, (sub) => {
+      if (!isMounted.current) return;
+
       setSubscription(sub);
-      setLoading(false);
+      setIsLoading(false);
+
+      // Load plan if subscription changed
+      if (sub?.planId && sub.planId !== lastPlanId.current) {
+        lastPlanId.current = sub.planId;
+        loadPlan(sub.planId);
+      } else if (!sub) {
+        setPlan(null);
+        lastPlanId.current = null;
+      }
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+    };
   }, [user?.uid]);
 
-  // Load plans when provider type is known
-  useEffect(() => {
-    if (!user?.role) return;
+  // Load plan with caching
+  const loadPlan = useCallback(async (planId: string) => {
+    // Check cache first
+    const cachedPlan = getCachedPlan(planId);
+    if (cachedPlan) {
+      setPlan(cachedPlan);
+      return;
+    }
 
-    const providerType: ProviderType = user.role === 'lawyer' ? 'lawyer' : 'expat_aidant';
+    try {
+      const fetchedPlan = await getSubscriptionPlan(planId);
+      if (!isMounted.current) return;
 
-    const unsubscribe = subscribeToPlans(providerType, (loadedPlans) => {
-      setPlans(loadedPlans);
-    });
+      if (fetchedPlan) {
+        setCachedPlan(planId, fetchedPlan);
+        setPlan(fetchedPlan);
+      }
+    } catch (err) {
+      console.error('[useSubscription] Failed to load plan:', err);
+      // Ne pas propager l'erreur, le plan est secondaire
+    }
+  }, []);
 
-    return () => unsubscribe();
-  }, [user?.role]);
+  // ============================================================================
+  // DERIVED VALUES (MEMOIZED)
+  // ============================================================================
 
-  // Status helpers
-  const isTrialing = subscription?.status === 'trialing';
-  const isActive = subscription?.status === 'active';
-  const isPastDue = subscription?.status === 'past_due';
-  const isCanceled = subscription?.status === 'canceled' || subscription?.cancelAtPeriodEnd === true;
-  const canAccessAi = isTrialing || isActive;
+  const isActive = useMemo(() => {
+    return isStatusActive(subscription?.status);
+  }, [subscription?.status]);
 
-  // Load subscription manually
-  const loadSubscription = useCallback(async () => {
-    if (!user?.uid) return;
+  const isTrialing = useMemo(() => {
+    return isStatusTrialing(subscription?.status);
+  }, [subscription?.status]);
 
-    setLoading(true);
+  const isPastDue = useMemo(() => {
+    return isStatusPastDue(subscription?.status);
+  }, [subscription?.status]);
+
+  const isCanceled = useMemo(() => {
+    return isStatusCanceled(subscription?.status);
+  }, [subscription?.status]);
+
+  const cancelAtPeriodEnd = useMemo(() => {
+    return subscription?.cancelAtPeriodEnd ?? false;
+  }, [subscription?.cancelAtPeriodEnd]);
+
+  const daysUntilRenewal = useMemo(() => {
+    return calculateDaysUntilRenewal(subscription);
+  }, [subscription]);
+
+  // ============================================================================
+  // ACTIONS
+  // ============================================================================
+
+  /**
+   * Annule l'abonnement (à la fin de la période)
+   */
+  const cancelSubscription = useCallback(async (reason?: string): Promise<void> => {
+    if (!user?.uid) {
+      throw new Error('User must be authenticated');
+    }
+
+    setIsLoading(true);
     setError(null);
 
     try {
-      const sub = await getSubscription(user.uid);
-      setSubscription(sub);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load subscription');
+      const result = await cancelSubscriptionService(true, reason);
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to cancel subscription');
+      }
+
+      // La mise à jour sera reçue via le listener Firestore
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to cancel subscription');
+      if (isMounted.current) {
+        setError(error);
+      }
+      throw error;
     } finally {
-      setLoading(false);
+      if (isMounted.current) {
+        setIsLoading(false);
+      }
     }
   }, [user?.uid]);
 
-  // Load plans manually
-  const loadPlans = useCallback(async (providerType: ProviderType) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const loadedPlans = await getSubscriptionPlans(providerType);
-      setPlans(loadedPlans);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load plans');
-    } finally {
-      setLoading(false);
+  /**
+   * Réactive un abonnement annulé (avant la fin de période)
+   */
+  const reactivateSubscription = useCallback(async (): Promise<void> => {
+    if (!user?.uid) {
+      throw new Error('User must be authenticated');
     }
-  }, []);
 
-  // Subscribe to a plan
-  const subscribe = useCallback(async (request: CreateSubscriptionRequest): Promise<CreateSubscriptionResponse> => {
-    setLoading(true);
+    if (!cancelAtPeriodEnd) {
+      throw new Error('Subscription is not pending cancellation');
+    }
+
+    setIsLoading(true);
     setError(null);
 
     try {
-      const result = await createSubscription(request);
+      const result = await reactivateSubscriptionService();
 
-      if (!result.success && result.error) {
-        setError(result.error);
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to reactivate subscription');
       }
 
-      return result;
-    } catch (err: any) {
-      const errorMessage = err.message || 'Failed to create subscription';
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Upgrade subscription
-  const upgrade = useCallback(async (newPlanId: string) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const result = await updateSubscription(newPlanId);
-
-      if (!result.success && result.error) {
-        setError(result.error);
+      // La mise à jour sera reçue via le listener Firestore
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to reactivate subscription');
+      if (isMounted.current) {
+        setError(error);
       }
-
-      return result;
-    } catch (err: any) {
-      const errorMessage = err.message || 'Failed to upgrade subscription';
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
+      throw error;
     } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Downgrade subscription (same as upgrade, just different plan)
-  const downgrade = upgrade;
-
-  // Cancel subscription
-  const cancel = useCallback(async (immediate: boolean = false, reason?: string) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const result = await cancelSubscription(!immediate, reason);
-
-      if (!result.success && result.error) {
-        setError(result.error);
+      if (isMounted.current) {
+        setIsLoading(false);
       }
-
-      return result;
-    } catch (err: any) {
-      const errorMessage = err.message || 'Failed to cancel subscription';
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
-    } finally {
-      setLoading(false);
     }
-  }, []);
+  }, [user?.uid, cancelAtPeriodEnd]);
 
-  // Reactivate canceled subscription
-  const reactivate = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const result = await reactivateSubscription();
-
-      if (!result.success && result.error) {
-        setError(result.error);
-      }
-
-      return result;
-    } catch (err: any) {
-      const errorMessage = err.message || 'Failed to reactivate subscription';
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
-    } finally {
-      setLoading(false);
+  /**
+   * Ouvre le portail de facturation Stripe
+   */
+  const openBillingPortal = useCallback(async (): Promise<void> => {
+    if (!user?.uid) {
+      throw new Error('User must be authenticated');
     }
-  }, []);
 
-  // Open Stripe billing portal
-  const openBillingPortal = useCallback(async () => {
-    setLoading(true);
+    setIsLoading(true);
     setError(null);
 
     try {
       const { url } = await openCustomerPortal();
       window.location.href = url;
-    } catch (err: any) {
-      setError(err.message || 'Failed to open billing portal');
-      setLoading(false);
-    }
-  }, []);
-
-  // Initialize trial period
-  const initializeTrial = useCallback(async (providerType: ProviderType) => {
-    if (!user?.uid) {
-      throw new Error('User must be authenticated');
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const newSubscription = await startTrial(user.uid, providerType);
-      setSubscription(newSubscription);
-      return newSubscription;
-    } catch (err: any) {
-      setError(err.message || 'Failed to start trial');
-      throw err;
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to open billing portal');
+      if (isMounted.current) {
+        setError(error);
+        setIsLoading(false);
+      }
+      throw error;
     }
   }, [user?.uid]);
 
-  // Get plan by tier
-  const getPlanForTier = useCallback((tier: string) => {
-    return plans.find((p) => p.tier === tier);
-  }, [plans]);
+  /**
+   * Rafraîchit manuellement les données d'abonnement
+   */
+  const refresh = useCallback(async (): Promise<void> => {
+    if (!user?.uid) return;
 
-  // Format price for display
-  const formatPrice = useCallback((plan: SubscriptionPlan, currency: Currency) => {
-    const price = plan.pricing[currency];
-    const symbol = currency === 'EUR' ? '€' : '$';
+    setIsLoading(true);
+    setError(null);
 
-    return `${price}${symbol}`;
-  }, []);
+    try {
+      const sub = await getSubscription(user.uid);
+
+      if (!isMounted.current) return;
+
+      setSubscription(sub);
+
+      if (sub?.planId) {
+        // Force refresh du plan (bypass cache)
+        const fetchedPlan = await getSubscriptionPlan(sub.planId);
+        if (fetchedPlan && isMounted.current) {
+          setCachedPlan(sub.planId, fetchedPlan);
+          setPlan(fetchedPlan);
+        }
+      } else {
+        setPlan(null);
+      }
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to refresh subscription');
+      if (isMounted.current) {
+        setError(error);
+      }
+      throw error;
+    } finally {
+      if (isMounted.current) {
+        setIsLoading(false);
+      }
+    }
+  }, [user?.uid]);
+
+  // ============================================================================
+  // RETURN
+  // ============================================================================
 
   return {
-    // State
+    // État
     subscription,
-    plans,
-    loading,
+    plan,
+    isLoading,
     error,
 
-    // Status helpers
-    isTrialing,
+    // Dérivés
     isActive,
+    isTrialing,
     isPastDue,
     isCanceled,
-    canAccessAi,
+    cancelAtPeriodEnd,
+    daysUntilRenewal,
 
     // Actions
-    loadSubscription,
-    loadPlans,
-    subscribe,
-    upgrade,
-    downgrade,
-    cancel,
-    reactivate,
+    cancelSubscription,
+    reactivateSubscription,
     openBillingPortal,
-    initializeTrial,
 
-    // Utils
-    getPlanForTier,
-    formatPrice
+    // Refresh
+    refresh
   };
 }
 

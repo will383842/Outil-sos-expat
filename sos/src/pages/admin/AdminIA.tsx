@@ -13,7 +13,8 @@ import {
   DollarSign,
   Clock,
   Activity,
-  RefreshCw
+  RefreshCw,
+  CreditCard
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import AdminLayout from '../../components/admin/AdminLayout';
@@ -26,6 +27,7 @@ import { IaTabId, IaTab } from './ia/types';
 const IaDashboardTab = lazy(() => import('./ia/IaDashboardTab'));
 const IaAccessTab = lazy(() => import('./ia/IaAccessTab'));
 const IaQuotasTab = lazy(() => import('./ia/IaQuotasTab'));
+const IaSubscriptionsTab = lazy(() => import('./ia/IaSubscriptionsTab'));
 const IaMultiProvidersTab = lazy(() => import('./ia/IaMultiProvidersTab'));
 const IaPricingTab = lazy(() => import('./ia/IaPricingTab'));
 const IaTrialConfigTab = lazy(() => import('./ia/IaTrialConfigTab'));
@@ -43,13 +45,18 @@ const TABS: IaTab[] = [
   },
   {
     id: 'access',
-    label: 'Accès Prestataires',
+    label: 'Acces Prestataires',
     icon: Users,
   },
   {
     id: 'quotas',
     label: 'Quotas',
     icon: Gauge,
+  },
+  {
+    id: 'subscriptions',
+    label: 'Abonnements',
+    icon: CreditCard,
   },
   {
     id: 'multi-providers',
@@ -98,6 +105,8 @@ export const AdminIA: React.FC = () => {
         return <IaAccessTab />;
       case 'quotas':
         return <IaQuotasTab />;
+      case 'subscriptions':
+        return <IaSubscriptionsTab />;
       case 'multi-providers':
         return <IaMultiProvidersTab />;
       case 'pricing':

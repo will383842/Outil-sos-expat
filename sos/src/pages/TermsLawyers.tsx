@@ -618,7 +618,7 @@ const TermsLawyers: React.FC = () => {
             </h3>
             <p className="text-gray-800 leading-relaxed mb-6 text-lg">{line}</p>
             <a
-              href="http://localhost:5174/contact"
+              href="https://sos-expat.com/contact"
               className="inline-flex items-center gap-3 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg"
             >
               <svg
@@ -879,7 +879,7 @@ La Plateforme, ses marques, logos, bases de données et contenus sont protégés
 
 ## 15. Contact
 
-Pour toute question ou demande légale : **http://localhost:5174/contact**
+Pour toute question ou demande légale : **https://sos-expat.com/contact**
 `;
 
   const defaultEn = `
@@ -1097,7 +1097,7 @@ The Platform, its trademarks, logos, databases, and content are protected. No ri
 
 ## 15. Contact
 
-For any legal question or request: **http://localhost:5174/contact**
+For any legal question or request: **https://sos-expat.com/contact**
 `;
 
   const defaultEs = `
@@ -1297,7 +1297,7 @@ La Plataforma, sus marcas, logotipos, bases de datos y contenidos están protegi
 
 ## 14. Contacto
 
-Para cualquier pregunta o solicitud legal: **[http://localhost:5174/contact](http://localhost:5174/contact)**
+Para cualquier pregunta o solicitud legal: **[https://sos-expat.com/contact](https://sos-expat.com/contact)**
 `;
 
   const defaultRu = `
@@ -1497,7 +1497,7 @@ Para cualquier pregunta o solicitud legal: **[http://localhost:5174/contact](htt
 
 ## 14. Контакты
 
-По вопросам (поддержка и юридические запросы): **[http://localhost:5174/contact](http://localhost:5174/contact)**
+По вопросам (поддержка и юридические запросы): **[https://sos-expat.com/contact](https://sos-expat.com/contact)**
 `;
 
   const defaultDe = `
@@ -1697,7 +1697,7 @@ Die Plattform, ihre Marken, Logos, Datenbanken und Inhalte sind geschützt. Es w
 
 ## 14. Kontakt
 
-Für rechtliche oder sonstige Anfragen: **[http://localhost:5174/contact](http://localhost:5174/contact)**
+Für rechtliche oder sonstige Anfragen: **[https://sos-expat.com/contact](https://sos-expat.com/contact)**
 `;
 
   const defaultHi = `
@@ -1910,7 +1910,7 @@ SOS Expat इन राशियों या देश/मुद्रा क�
 
 ## 14. संपर्क
 
-किसी भी प्रश्न या कानूनी अनुरोध के लिए: **[http://localhost:5174/contact](http://localhost:5174/contact)**
+किसी भी प्रश्न या कानूनी अनुरोध के लिए: **[https://sos-expat.com/contact](https://sos-expat.com/contact)**
 `;
 
   const defaultPt = `
@@ -2112,7 +2112,7 @@ Os conteúdos fornecidos pelo Advogado (perfil, foto, descrições) são licenci
 
 ## 14. Contato
 
-Para qualquer questão ou solicitação legal: **[http://localhost:5174/contact](http://localhost:5174/contact)**
+Para qualquer questão ou solicitação legal: **[https://sos-expat.com/contact](https://sos-expat.com/contact)**
 `;
 
   const defaultCh = `
@@ -2314,7 +2314,7 @@ SOS Expat 可根据国家/货币发布本地费率表或调整金额，自公布
 
 ## 14. 联系方式
 
-如有法律问题或请求，请访问：**[http://localhost:5174/contact](http://localhost:5174/contact)**
+如有法律问题或请求，请访问：**[https://sos-expat.com/contact](https://sos-expat.com/contact)**
 `;
   const defaultAr = `
 # شروط الاستخدام – للمحامين (عالمي)
@@ -2518,7 +2518,7 @@ SOS Expat 可根据国家/货币发布本地费率表或调整金额，自公布
 
 ## 14. الاتصال
 
-لأي استفسار قانوني أو طلب، يُرجى زيارة: **[http://localhost:5174/contact](http://localhost:5174/contact)**
+لأي استفسار قانوني أو طلب، يُرجى زيارة: **[https://sos-expat.com/contact](https://sos-expat.com/contact)**
 `;
 
   // const defaultContent = selectedLanguage === 'fr' ? defaultFr : defaultEn;
@@ -2653,7 +2653,7 @@ SOS Expat 可根据国家/货币发布本地费率表或调整金额，自公布
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
                 <a
-                  href="http://localhost:5174/contact"
+                  href="https://sos-expat.com/contact"
                   className="group inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-gradient-to-r from-red-600 via-red-500 to-orange-500 text-white font-bold border-2 border-red-400/50 hover:scale-105 transition-all"
                 >
                   <Globe className="w-5 h-5" />
@@ -2801,7 +2801,7 @@ SOS Expat 可根据国家/货币发布本地费率表或调整金额，自公布
               </Link>
 
               <a
-                href="http://localhost:5174/contact"
+                href="https://sos-expat.com/contact"
                 className="group relative overflow-hidden border-2 border-white bg-transparent text-white px-10 py-5 rounded-3xl font-bold text-lg transition-all duration-300 hover:scale-105 hover:bg-white/10 flex items-center gap-3"
               >
                 <Globe className="w-5 h-5" />

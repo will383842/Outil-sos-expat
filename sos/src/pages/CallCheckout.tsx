@@ -45,6 +45,9 @@ import { useApp } from "@/contexts/AppContext";
 import { FormattedMessage, useIntl } from "react-intl";
 import { formatCurrency } from "../utils/localeFormatters";
 import { getDateLocale } from "../utils/formatters";
+import { usePaymentGateway } from "../hooks/usePaymentGateway";
+import { PayPalPaymentForm, GatewayIndicator } from "../components/payment";
+import { PayPalScriptProvider } from "@paypal/react-paypal-js";
 
 /* -------------------------- Stripe singleton (HMR-safe) ------------------ */
 // Conserve la même Promise Stripe à travers les rechargements HMR.
@@ -2203,6 +2206,19 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
     return (provider.role || provider.type || "expat") as ServiceKind;
   }, [provider]);
 
+  // Déterminer le gateway de paiement (Stripe ou PayPal) selon le pays du provider
+  const providerCountryCode = useMemo(() => {
+    if (!provider) return undefined;
+    // Extraire le code pays du provider (peut être "FR", "DZ", etc.)
+    return provider.countryCode || provider.country?.toUpperCase()?.substring(0, 2);
+  }, [provider]);
+
+  const {
+    gateway: paymentGateway,
+    isLoading: gatewayLoading,
+    isPayPalOnly,
+  } = usePaymentGateway(providerCountryCode);
+
   const storedClientPhone = useMemo(() => {
     try {
       return sessionStorage.getItem("clientPhone") || "";
@@ -2723,23 +2739,76 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
                 </div>
               )}
 
-              <Elements stripe={stripePromise}>
-                <PaymentForm
-                  user={user}
-                  provider={provider}
-                  service={service}
-                  adminPricing={adminPricing}
-                  onSuccess={handlePaymentSuccess}
-                  onError={handlePaymentError}
-                  isProcessing={isProcessing}
-                  setIsProcessing={(p) => {
-                    setError("");
-                    setIsProcessing(p);
+              {/* Indicateur du gateway de paiement */}
+              <div className="mb-4">
+                <GatewayIndicator gateway={paymentGateway} />
+                {isPayPalOnly && (
+                  <p className="text-xs text-amber-600 mt-2">
+                    <FormattedMessage
+                      id="payment.paypalOnly.notice"
+                      defaultMessage="Ce prestataire accepte uniquement les paiements PayPal"
+                    />
+                  </p>
+                )}
+              </div>
+
+              {/* Formulaire de paiement - Stripe ou PayPal selon le gateway */}
+              {gatewayLoading ? (
+                <div className="flex items-center justify-center p-6">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : paymentGateway === "paypal" ? (
+                <PayPalScriptProvider
+                  options={{
+                    clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID as string || "test",
+                    currency: selectedCurrency.toUpperCase(),
+                    intent: "capture",
                   }}
-                  isMobile={isMobile}
-                  activePromo={activePromo}
-                />
-              </Elements>
+                >
+                  <PayPalPaymentForm
+                    amount={adminPricing?.totalPrice || 0}
+                    currency={selectedCurrency.toUpperCase()}
+                    providerId={provider?.id || ""}
+                    providerPayPalMerchantId={provider?.paypalMerchantId}
+                    callSessionId={`session_${Date.now()}`}
+                    clientId={user?.uid || ""}
+                    description={`Appel ${providerRole === "lawyer" ? "avocat" : "expat"} - ${provider?.fullName || provider?.name}`}
+                    onSuccess={(details) => {
+                      console.log("PayPal payment success:", details);
+                      handlePaymentSuccess({
+                        paymentIntentId: details.orderId,
+                        callSessionId: details.orderId,
+                      });
+                    }}
+                    onError={(error) => {
+                      console.error("PayPal payment error:", error);
+                      handlePaymentError(error.message);
+                    }}
+                    onCancel={() => {
+                      setError("Paiement annulé");
+                    }}
+                    disabled={isProcessing}
+                  />
+                </PayPalScriptProvider>
+              ) : (
+                <Elements stripe={stripePromise}>
+                  <PaymentForm
+                    user={user}
+                    provider={provider}
+                    service={service}
+                    adminPricing={adminPricing}
+                    onSuccess={handlePaymentSuccess}
+                    onError={handlePaymentError}
+                    isProcessing={isProcessing}
+                    setIsProcessing={(p) => {
+                      setError("");
+                      setIsProcessing(p);
+                    }}
+                    isMobile={isMobile}
+                    activePromo={activePromo}
+                  />
+                </Elements>
+              )}
             </div>
           </section>
 

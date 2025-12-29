@@ -62,6 +62,94 @@ export { checkStripeAccountStatus } from "./checkStripeAccountStatus";
 export { createManualBackup } from "./manualBackup";
 export { scheduledBackup } from "./scheduledBackup";
 
+// Dispute handling
+import {
+  handleDisputeCreated,
+  handleDisputeUpdated,
+  handleDisputeClosed,
+} from "./DisputeManager";
+
+// KYC Reminders (Stripe)
+export {
+  scheduledKYCReminders,
+  triggerKYCReminders,
+  getKYCReminderStatus,
+} from "./KYCReminderManager";
+
+// PayPal Onboarding Reminders
+export {
+  scheduledPayPalReminders,
+  triggerPayPalReminders,
+  getPayPalReminderStatus,
+  PayPalReminderManager,
+  PAYPAL_REMINDER_CONFIG,
+  onPayPalConnected,
+} from "./PayPalReminderManager";
+
+// KYC Templates Seed
+export { initKYCReminderTemplates } from "./seeds/kycReminderTemplates";
+
+// Refund Management (simplifie pour Direct Charges)
+// Note: Les fonctions scheduledUnclaimedFundsCheck, getUnclaimedFundsStats, resolveUnclaimedFund
+// ont ete supprimees car avec Direct Charges, les fonds vont directement au provider.
+// Seul le RefundManager est conserve pour les remboursements d'appels non effectues.
+export {
+  RefundManager,
+  UnclaimedFundsManager, // deprecated alias
+  REFUND_CONFIG,
+  UNCLAIMED_FUNDS_CONFIG, // deprecated alias
+} from "./UnclaimedFundsManager";
+
+// Provider Earnings Dashboard
+export {
+  getProviderEarningsSummary,
+  getProviderTransactions,
+  getProviderMonthlyStats,
+  getProviderPayoutHistory,
+  getProviderDashboard,
+  adminGetProviderEarnings,
+} from "./ProviderEarningsService";
+
+// Pending Transfer Processor (for deferred transfers after KYC)
+import {
+  processPendingTransfersForProvider,
+  getPendingTransfersStats,
+  retryFailedTransfersForProvider,
+} from "./PendingTransferProcessor";
+
+export {
+  processPendingTransfersForProvider,
+  getPendingTransfersStats,
+  retryFailedTransfersForProvider,
+};
+
+// PayPal Commerce Platform
+import {
+  PAYPAL_CLIENT_ID as _PAYPAL_CLIENT_ID,
+  PAYPAL_CLIENT_SECRET as _PAYPAL_CLIENT_SECRET,
+  PAYPAL_WEBHOOK_ID as _PAYPAL_WEBHOOK_ID,
+  PAYPAL_PARTNER_ID as _PAYPAL_PARTNER_ID,
+} from "./PayPalManager";
+
+export {
+  createPayPalOnboardingLink,
+  checkPayPalMerchantStatus,
+  createPayPalOrder,
+  capturePayPalOrder,
+  paypalWebhook,
+  getRecommendedPaymentGateway,
+  PAYPAL_CLIENT_ID,
+  PAYPAL_CLIENT_SECRET,
+  PAYPAL_WEBHOOK_ID,
+  PAYPAL_PARTNER_ID,
+} from "./PayPalManager";
+
+// Alias pour usage local dans GLOBAL_SECRETS
+const PAYPAL_CLIENT_ID = _PAYPAL_CLIENT_ID;
+const PAYPAL_CLIENT_SECRET = _PAYPAL_CLIENT_SECRET;
+const PAYPAL_WEBHOOK_ID = _PAYPAL_WEBHOOK_ID;
+const PAYPAL_PARTNER_ID = _PAYPAL_PARTNER_ID;
+
 // Cloud Tasks auth
 export const TASKS_AUTH_SECRET = defineSecret("TASKS_AUTH_SECRET");
 
@@ -82,6 +170,11 @@ const GLOBAL_SECRETS = [
   STRIPE_SECRET_KEY_TEST,
   STRIPE_SECRET_KEY_LIVE,
   TASKS_AUTH_SECRET,
+  // PayPal Commerce Platform secrets
+  PAYPAL_CLIENT_ID,
+  PAYPAL_CLIENT_SECRET,
+  PAYPAL_WEBHOOK_ID,
+  PAYPAL_PARTNER_ID,
   // MAILWIZZ_API_KEY and MAILWIZZ_WEBHOOK_SECRET removed - now using static values from environment
 ].filter(Boolean) as any[];
 
@@ -93,12 +186,16 @@ setGlobalOptions({
   secrets: GLOBAL_SECRETS,
 } as any);
 
-// ✅ ADD YOUR STRIPE CONNECT FUNCTIONS HERE
+// ✅ STRIPE CONNECT FUNCTIONS (Express Accounts)
 export {
+  // Nouvelles fonctions Express (recommandées)
+  createExpressAccount,
+  getOnboardingLink,
+  checkKycStatus,
+  // Fonctions dépréciées (compatibilité)
   createCustomAccount,
   submitKycData,
   addBankAccount,
-  checkKycStatus,
 } from "./stripeAutomaticKyc";
 
 export { completeLawyerOnboarding } from "./lawyerOnboarding";
@@ -139,6 +236,14 @@ export const STRIPE_WEBHOOK_SECRET_LIVE = defineSecret(
   "STRIPE_WEBHOOK_SECRET_LIVE"
 );
 
+// Secrets pour le webhook Connect (Direct Charges - evenements des comptes connectes)
+export const STRIPE_CONNECT_WEBHOOK_SECRET_TEST = defineSecret(
+  "STRIPE_CONNECT_WEBHOOK_SECRET_TEST"
+);
+export const STRIPE_CONNECT_WEBHOOK_SECRET_LIVE = defineSecret(
+  "STRIPE_CONNECT_WEBHOOK_SECRET_LIVE"
+);
+
 // Helpers de sélection de secrets selon le mode
 function isLive(): boolean {
   return (STRIPE_MODE.value() || "test").toLowerCase() === "live";
@@ -152,6 +257,13 @@ function getStripeWebhookSecret(): string {
   return isLive()
     ? process.env.STRIPE_WEBHOOK_SECRET_LIVE || ""
     : process.env.STRIPE_WEBHOOK_SECRET_TEST_V1 || "";
+}
+
+// Helper pour le webhook Connect (Direct Charges) - reserve pour utilisation future
+export function getStripeConnectWebhookSecret(): string {
+  return isLive()
+    ? process.env.STRIPE_CONNECT_WEBHOOK_SECRET_LIVE || ""
+    : process.env.STRIPE_CONNECT_WEBHOOK_SECRET_TEST || "";
 }
 
 // ====== INTERFACES DE DEBUGGING ======
@@ -1027,7 +1139,8 @@ export const stripeWebhook = onRequest(
   {
     region: "europe-west1",
     memory: "512MiB",
-    // secrets: [STRIPE_WEBHOOK_SECRET_TEST, STRIPE_WEBHOOK_SECRET_LIVE], // ✅ CRITICAL LINE
+    // ===== P0 SECURITY FIX: Activer les secrets pour la vérification de signature =====
+    secrets: [STRIPE_WEBHOOK_SECRET_TEST, STRIPE_WEBHOOK_SECRET_LIVE],
     concurrency: 1,
     timeoutSeconds: 30,
     minInstances: 0,
@@ -1285,15 +1398,259 @@ export const stripeWebhook = onRequest(
 
             case "charge.refunded":
               console.log("💸 Processing charge.refunded");
+              {
+                const charge = event.data.object as Stripe.Charge;
+                const refunds = charge.refunds?.data || [];
+
+                // Traiter chaque remboursement de la charge
+                for (const refund of refunds) {
+                  // Vérifier si ce refund existe déjà dans notre collection
+                  const existingRefund = await database.collection("refunds").doc(refund.id).get();
+
+                  if (!existingRefund.exists) {
+                    // Trouver le paiement associé
+                    const paymentQuery = await database.collection("payments")
+                      .where("stripeChargeId", "==", charge.id)
+                      .limit(1)
+                      .get();
+
+                    let paymentData: any = null;
+                    if (!paymentQuery.empty) {
+                      paymentData = paymentQuery.docs[0].data();
+                    }
+
+                    // Créer le record de remboursement si pas déjà créé par notre API
+                    await database.collection("refunds").doc(refund.id).set({
+                      refundId: refund.id,
+                      stripeRefundId: refund.id,
+                      chargeId: charge.id,
+                      paymentIntentId: charge.payment_intent as string || null,
+                      amount: refund.amount,
+                      amountInMainUnit: refund.amount / 100,
+                      currency: refund.currency,
+                      status: refund.status,
+                      reason: refund.reason || "webhook_created",
+                      clientId: paymentData?.clientId || null,
+                      providerId: paymentData?.providerId || null,
+                      sessionId: paymentData?.callSessionId || null,
+                      source: "stripe_webhook",
+                      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    }, { merge: true });
+
+                    console.log(`💸 Refund ${refund.id} recorded from webhook`);
+                  }
+                }
+
+                // Créer une notification pour le client si on trouve le paiement
+                if (charge.payment_intent) {
+                  const paymentDoc = await database.collection("payments")
+                    .doc(charge.payment_intent as string)
+                    .get();
+
+                  if (paymentDoc.exists) {
+                    const payment = paymentDoc.data();
+                    if (payment?.clientId) {
+                      await database.collection("inapp_notifications").add({
+                        uid: payment.clientId,
+                        type: "refund_processed",
+                        title: "Remboursement effectué",
+                        message: `Votre remboursement de ${(charge.amount_refunded / 100).toFixed(2)} ${charge.currency.toUpperCase()} a été traité.`,
+                        read: false,
+                        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                      });
+                    }
+                  }
+                }
+              }
+              console.log("✅ Handled charge.refunded");
               break;
 
             case "refund.updated":
               console.log("🔄 Processing refund.updated");
+              {
+                const refund = event.data.object as Stripe.Refund;
+
+                // Mettre à jour le statut du remboursement
+                await database.collection("refunds").doc(refund.id).set({
+                  status: refund.status,
+                  failureReason: refund.failure_reason || null,
+                  updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                }, { merge: true });
+
+                // Si le remboursement a échoué, alerter l'admin
+                if (refund.status === "failed") {
+                  await database.collection("admin_alerts").add({
+                    type: "refund_failed",
+                    priority: "high",
+                    title: "Remboursement échoué",
+                    message: `Le remboursement ${refund.id} a échoué. Raison: ${refund.failure_reason || "inconnue"}`,
+                    refundId: refund.id,
+                    read: false,
+                    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                  });
+                }
+              }
+              console.log("✅ Handled refund.updated");
               break;
 
-            case "account.updated":
-              console.log("🏦 Processing account.updated (Stripe Connect)");
+            // ====== DISPUTE EVENTS (Chargebacks) ======
+            case "charge.dispute.created":
+              console.log("🚨 Processing charge.dispute.created");
+              await handleDisputeCreated(
+                event.data.object as Stripe.Dispute,
+                database,
+                stripeInstance
+              );
+              console.log("✅ Handled charge.dispute.created");
               break;
+
+            case "charge.dispute.updated":
+              console.log("📝 Processing charge.dispute.updated");
+              await handleDisputeUpdated(
+                event.data.object as Stripe.Dispute,
+                database,
+                stripeInstance
+              );
+              console.log("✅ Handled charge.dispute.updated");
+              break;
+
+            case "charge.dispute.closed":
+              console.log("🏁 Processing charge.dispute.closed");
+              await handleDisputeClosed(
+                event.data.object as Stripe.Dispute,
+                database,
+                stripeInstance
+              );
+              console.log("✅ Handled charge.dispute.closed");
+              break;
+
+            case "account.updated": {
+              console.log("🏦 Processing account.updated (Stripe Connect)");
+              const account = event.data.object as Stripe.Account;
+
+              // Trouver le provider par stripeAccountId
+              const providersSnapshot = await database
+                .collection("users")
+                .where("stripeAccountId", "==", account.id)
+                .limit(1)
+                .get();
+
+              if (!providersSnapshot.empty) {
+                const providerDoc = providersSnapshot.docs[0];
+                const providerData = providerDoc.data();
+
+                // Déterminer le nouveau statut KYC
+                const chargesEnabled = account.charges_enabled;
+                const payoutsEnabled = account.payouts_enabled;
+                const detailsSubmitted = account.details_submitted;
+
+                let newKycStatus = providerData.kycStatus || "not_started";
+
+                if (chargesEnabled && payoutsEnabled && detailsSubmitted) {
+                  newKycStatus = "completed";
+                } else if (detailsSubmitted) {
+                  newKycStatus = "in_progress";
+                } else if (account.requirements?.currently_due?.length) {
+                  newKycStatus = "incomplete";
+                }
+
+                const updateData: Record<string, any> = {
+                  "stripeAccountStatus.chargesEnabled": chargesEnabled,
+                  "stripeAccountStatus.payoutsEnabled": payoutsEnabled,
+                  "stripeAccountStatus.detailsSubmitted": detailsSubmitted,
+                  "stripeAccountStatus.requirements": account.requirements || null,
+                  "stripeAccountStatus.updatedAt": admin.firestore.FieldValue.serverTimestamp(),
+                  updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                };
+
+                // Mettre à jour le kycStatus si changé
+                if (newKycStatus !== providerData.kycStatus) {
+                  updateData.kycStatus = newKycStatus;
+
+                  // Notifier le provider si KYC complété
+                  if (newKycStatus === "completed") {
+                    await database.collection("inapp_notifications").add({
+                      uid: providerDoc.id,
+                      type: "kyc_completed",
+                      title: "Vérification complète",
+                      message: "Votre compte est entièrement vérifié. Vous pouvez maintenant recevoir des virements.",
+                      read: false,
+                      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    });
+                  }
+                }
+
+                await providerDoc.ref.update(updateData);
+                console.log(`✅ Updated provider ${providerDoc.id} KYC status: ${newKycStatus}`);
+
+                // ===== DEFERRED TRANSFER PROCESSING =====
+                // Si chargesEnabled vient de passer a true, traiter les transferts en attente
+                const wasChargesEnabled = providerData.stripeAccountStatus?.chargesEnabled || providerData.chargesEnabled;
+
+                if (chargesEnabled && !wasChargesEnabled) {
+                  console.log(`💰 Provider ${providerDoc.id} just enabled charges - processing pending transfers`);
+
+                  try {
+                    const transferResult = await processPendingTransfersForProvider(
+                      providerDoc.id,
+                      account.id,
+                      database
+                    );
+
+                    console.log(`💰 Pending transfers processed for ${providerDoc.id}:`, {
+                      processed: transferResult.processed,
+                      succeeded: transferResult.succeeded,
+                      failed: transferResult.failed,
+                    });
+
+                    // Si des transferts ont ete traites, notifier le provider
+                    if (transferResult.succeeded > 0) {
+                      await database.collection("inapp_notifications").add({
+                        uid: providerDoc.id,
+                        type: "pending_payments_processed",
+                        title: "Paiements en attente traites",
+                        message: `${transferResult.succeeded} paiement(s) en attente ont ete transferes sur votre compte.`,
+                        read: false,
+                        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                      });
+                    }
+
+                    // Si des transferts ont echoue, alerter l'admin
+                    if (transferResult.failed > 0) {
+                      await database.collection("admin_alerts").add({
+                        type: "pending_transfers_partial_failure",
+                        priority: "high",
+                        title: "Echec partiel des transferts differes",
+                        message: `${transferResult.failed} transfert(s) ont echoue pour le provider ${providerDoc.id} apres KYC complete.`,
+                        providerId: providerDoc.id,
+                        stripeAccountId: account.id,
+                        details: transferResult,
+                        read: false,
+                        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                      });
+                    }
+                  } catch (transferError) {
+                    console.error(`❌ Error processing pending transfers for ${providerDoc.id}:`, transferError);
+
+                    // Creer une alerte admin pour investigation
+                    await database.collection("admin_alerts").add({
+                      type: "pending_transfers_error",
+                      priority: "critical",
+                      title: "Erreur traitement transferts differes",
+                      message: `Erreur lors du traitement des transferts differes pour le provider ${providerDoc.id}`,
+                      providerId: providerDoc.id,
+                      stripeAccountId: account.id,
+                      error: transferError instanceof Error ? transferError.message : String(transferError),
+                      read: false,
+                      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    });
+                  }
+                }
+              } else {
+                console.log(`⚠️ No provider found for Stripe account: ${account.id}`);
+              }
+              break;
+            }
             case "account.application.authorized": {
               console.log(
                 "✅ [ACCOUNT.APPLICATION.AUTHORIZED] User authorized your platform"
@@ -1306,11 +1663,67 @@ export const stripeWebhook = onRequest(
               break;
             }
 
-            case "account.application.deauthorized":
+            case "account.application.deauthorized": {
               console.log(
                 "❌ [ACCOUNT.APPLICATION.DEAUTHORIZED] User disconnected account"
               );
+              // L'objet est de type Application, pas Account
+              const deauthorizedApp = event.data.object as { account?: string; id?: string };
+              const deauthorizedAccountId = deauthorizedApp.account || deauthorizedApp.id;
+
+              if (!deauthorizedAccountId) {
+                console.log("⚠️ No account ID found in deauthorized event");
+                break;
+              }
+
+              // Trouver le provider par stripeAccountId
+              const deauthProvidersSnapshot = await database
+                .collection("users")
+                .where("stripeAccountId", "==", deauthorizedAccountId)
+                .limit(1)
+                .get();
+
+              if (!deauthProvidersSnapshot.empty) {
+                const providerDoc = deauthProvidersSnapshot.docs[0];
+
+                // Désactiver le compte du provider
+                await providerDoc.ref.update({
+                  "stripeAccountStatus.deauthorized": true,
+                  "stripeAccountStatus.deauthorizedAt": admin.firestore.FieldValue.serverTimestamp(),
+                  "stripeAccountStatus.chargesEnabled": false,
+                  "stripeAccountStatus.payoutsEnabled": false,
+                  kycStatus: "disconnected",
+                  isOnline: false, // Mettre hors ligne automatiquement
+                  updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+
+                // Notifier le provider
+                await database.collection("inapp_notifications").add({
+                  uid: providerDoc.id,
+                  type: "account_disconnected",
+                  title: "Compte Stripe déconnecté",
+                  message: "Votre compte Stripe a été déconnecté. Veuillez le reconfigurer pour recevoir des paiements.",
+                  read: false,
+                  createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+
+                // Alerte admin
+                await database.collection("admin_alerts").add({
+                  type: "stripe_account_deauthorized",
+                  severity: "medium",
+                  providerId: providerDoc.id,
+                  stripeAccountId: deauthorizedAccountId,
+                  message: `Le provider ${providerDoc.id} a déconnecté son compte Stripe`,
+                  createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                  resolved: false,
+                });
+
+                console.log(`✅ Disabled provider ${providerDoc.id} after Stripe deauthorization`);
+              } else {
+                console.log(`⚠️ No provider found for deauthorized Stripe account: ${deauthorizedAccountId}`);
+              }
               break;
+            }
 
             case "account.external_account.created":
               console.log(
@@ -1985,6 +2398,69 @@ const handleTransferCreated = traceFunction(
         stripeCreated: transfer.created,
       }, { merge: true });
 
+      // ===== P1 FIX: Notification au provider pour le paiement reçu =====
+      // Trouver le provider via le Stripe Connect account ID
+      const destinationAccountId = typeof transfer.destination === "string"
+        ? transfer.destination
+        : transfer.destination?.id;
+
+      if (destinationAccountId) {
+        // Chercher le provider par son stripeAccountId
+        const providerQuery = await database.collection("users")
+          .where("stripeAccountId", "==", destinationAccountId)
+          .limit(1)
+          .get();
+
+        if (!providerQuery.empty) {
+          const providerId = providerQuery.docs[0].id;
+          const providerData = providerQuery.docs[0].data();
+          const amountFormatted = (transfer.amount / 100).toFixed(2);
+          const currencySymbol = transfer.currency === "eur" ? "€" : "$";
+
+          // Créer notification in-app
+          await database.collection("inapp_notifications").add({
+            uid: providerId,
+            type: "payout_received",
+            title: "Paiement reçu",
+            message: `Vous avez reçu ${amountFormatted}${currencySymbol} pour votre consultation.`,
+            amount: transfer.amount / 100,
+            currency: transfer.currency,
+            transferId: transfer.id,
+            read: false,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+
+          // Créer un événement message pour notification email/SMS
+          await database.collection("message_events").add({
+            eventId: "provider.payout.received",
+            locale: providerData.preferredLanguage || providerData.language || "en",
+            to: { email: providerData.email },
+            context: {
+              user: {
+                uid: providerId,
+                email: providerData.email,
+                preferredLanguage: providerData.preferredLanguage || "en",
+              },
+            },
+            vars: {
+              PROVIDER_NAME: providerData.displayName || providerData.firstName || "Provider",
+              AMOUNT: amountFormatted,
+              CURRENCY: transfer.currency.toUpperCase(),
+              CURRENCY_SYMBOL: currencySymbol,
+            },
+            uid: providerId,
+            dedupeKey: `payout_${transfer.id}`,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+
+          ultraLogger.info("STRIPE_TRANSFER_CREATED", "Notification payout envoyee au provider", {
+            providerId,
+            amount: amountFormatted,
+            currency: transfer.currency,
+          });
+        }
+      }
+
       return true;
     } catch (transferError: unknown) {
       ultraLogger.error(
@@ -2187,6 +2663,38 @@ const handleTransferFailed = traceFunction(
         stripeCreated: transfer.created,
         requiresManualReview: true,
       }, { merge: true });
+
+      // Enregistrer comme fond non reclame
+      if (callSessionId) {
+        try {
+          const { UnclaimedFundsManager, UNCLAIMED_FUNDS_CONFIG } = await import("./UnclaimedFundsManager");
+          const manager = new UnclaimedFundsManager(database);
+
+          // Recuperer les infos de la session
+          const sessionDoc = await database.collection("call_sessions").doc(callSessionId).get();
+          const sessionData = sessionDoc.data();
+
+          if (sessionData) {
+            await manager.registerUnclaimedFund({
+              paymentIntentId: sessionData.payment?.paymentIntentId || transfer.source_transaction as string,
+              chargeId: transfer.source_transaction as string,
+              callSessionId,
+              totalAmount: sessionData.payment?.amount || transfer.amount,
+              providerAmount: transfer.amount,
+              platformAmount: (sessionData.payment?.amount || transfer.amount) - transfer.amount,
+              currency: transfer.currency,
+              clientId: sessionData.clientId,
+              providerId: sessionData.providerId,
+              reason: UNCLAIMED_FUNDS_CONFIG.REASONS.TRANSFER_FAILED,
+              reasonDetails: `Transfer ${transfer.id} failed to destination ${transfer.destination}`,
+            });
+            console.log("✅ Unclaimed fund registered for failed transfer:", transfer.id);
+          }
+        } catch (unclaimedError) {
+          console.error("⚠️ Failed to register unclaimed fund:", unclaimedError);
+          // Ne pas bloquer le flux principal
+        }
+      }
 
       return true;
     } catch (failError: unknown) {
@@ -2940,7 +3448,7 @@ export const testWebhook = onRequest(
   )
 );
 
-// ========== SYSTÈME EN LIGNE/HORS LIGNE ==========
+// ========== SYSTEME EN LIGNE/HORS LIGNE ==========
 export { checkProviderInactivity } from './scheduled/checkProviderInactivity';
 export { updateProviderActivity } from './callables/updateProviderActivity';
 export { setProviderOffline } from './callables/setProviderOffline';
@@ -2976,7 +3484,58 @@ export {
 } from './emailMarketing/functions/stopAutoresponders';
 export { detectInactiveUsers } from './emailMarketing/functions/inactiveUsers';
 
-// AI Subscription System
+// ============================================
+// SUBSCRIPTION FUNCTIONS
+// ============================================
+
+// Checkout
+export { createSubscriptionCheckout } from './subscription/checkout';
+
+// Gestion abonnement provider
+export { cancelSubscription, reactivateSubscription } from './subscription/cancelSubscription';
+export { getBillingPortalUrl } from './subscription/billingPortal';
+
+// Acces et usage IA
+export {
+  checkAiAccess,
+  incrementAiUsage,
+  getSubscriptionDetails
+} from './subscription/accessControl';
+
+// Admin functions
+export {
+  adminForceAiAccess,
+  adminResetQuota,
+  adminChangePlan,
+  adminCancelSubscription,
+  adminGetSubscriptionStats,
+  adminSyncStripePrices,
+  adminGetProviderSubscriptionHistory
+} from './subscription/adminFunctions';
+
+// Scheduled tasks
+export {
+  resetMonthlyQuotas,
+  checkPastDueSubscriptions,
+  sendQuotaAlerts,
+  cleanupExpiredTrials
+} from './subscription/scheduledTasks';
+
+// Stripe sync
+export { syncSubscriptionPlansToStripe } from './subscription/stripeSync';
+
+// Webhook handlers (exported for testing and direct use)
+export {
+  handleSubscriptionCreated,
+  handleSubscriptionUpdated,
+  handleSubscriptionDeleted,
+  handleTrialWillEnd,
+  handleInvoicePaid,
+  handleInvoicePaymentFailed,
+  webhookHandlers,
+} from './subscription/webhooks';
+
+// AI Subscription System - Legacy aliases for backward compatibility
 export {
   createSubscription as subscriptionCreate,
   updateSubscription as subscriptionUpdate,
@@ -2998,6 +3557,7 @@ export {
 
 // Dunning System - Automatic Payment Retry
 export { processDunningQueue } from './subscriptions/dunning';
+
 export {
   handleEmailOpen,
   handleEmailClick,
@@ -3228,6 +3788,9 @@ export {
   onSosProfileCreated,
   onSosProfileUpdated,
 } from './triggers/syncSosProfilesToOutil';
+
+// ========== AUTOMATIC STRIPE EXPRESS ACCOUNT CREATION ==========
+export { onProviderCreated } from './triggers/onProviderCreated';
 
 // ========== SYNC BOOKINGS TO OUTIL-SOS-EXPAT (AI TRIGGER) ==========
 export { onBookingRequestCreated } from './triggers/syncBookingsToOutil';

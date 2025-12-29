@@ -34,6 +34,27 @@ export interface Provider {
   isApproved?: boolean;
   isBanned?: boolean;
 
+  // Champs de paiement (Stripe ou PayPal selon le pays)
+  paymentGateway?: 'stripe' | 'paypal';
+
+  // Stripe Connect
+  stripeAccountId?: string;
+  stripeAccountStatus?: 'pending_verification' | 'verified' | 'restricted' | 'error';
+  stripeOnboardingComplete?: boolean;
+  chargesEnabled?: boolean;
+  payoutsEnabled?: boolean;
+  kycStatus?: 'not_started' | 'pending' | 'completed' | 'verified' | 'error';
+
+  // PayPal Commerce Platform
+  paypalMerchantId?: string;
+  paypalAccountStatus?: 'not_connected' | 'pending' | 'connected' | 'restricted' | 'error';
+  paypalOnboardingComplete?: boolean;
+  paypalPaymentsReceivable?: boolean;
+  paypalRemindersCount?: number;
+
+  // Statut de compte de paiement
+  isPaymentAccountRequired?: boolean;
+  paymentAccountRequiredReason?: string;
 
   // Champs étendus pour compatibilité avec les autres composants
   fullName?: string;

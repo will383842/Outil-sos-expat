@@ -107,6 +107,12 @@ export interface CallSessionState {
     transferredAt?: admin.firestore.Timestamp;
     transferStatus?: "automatic" | "pending" | "succeeded" | "failed";
     transferFailureReason?: string;
+    /** Gateway de paiement utilisee: stripe ou paypal */
+    gateway?: "stripe" | "paypal";
+    /** ID de l'ordre PayPal (si gateway = paypal) */
+    paypalOrderId?: string;
+    /** ID de capture PayPal */
+    paypalCaptureId?: string;
   };
   metadata: {
     providerId: string;
@@ -1134,7 +1140,7 @@ export class TwilioCallManager {
   ): Promise<void> {
     try {
       const callSession = await this.getCallSession(sessionId);
-      if (!callSession?.payment.intentId) return;
+      if (!callSession?.payment.intentId && !callSession?.payment.paypalOrderId) return;
 
       // CRITIQUE: Distinction entre cancel (non capturé) et refund (capturé)
       // - Si payment.status === "authorized" → PaymentIntent en état requires_capture → CANCEL
@@ -1142,26 +1148,62 @@ export class TwilioCallManager {
       const paymentStatus = callSession.payment.status;
       let result: { success: boolean; error?: string };
 
-      if (paymentStatus === "authorized") {
-        // Paiement NON capturé → Annuler (pas rembourser)
-        console.log(`💳 Annulation paiement non-capturé ${sessionId} - raison: ${reason}`);
-        result = await stripeManager.cancelPayment(
-          callSession.payment.intentId,
-          "requested_by_customer",
-          sessionId
-        );
-      } else if (paymentStatus === "captured") {
-        // Paiement CAPTURÉ → Rembourser
-        console.log(`💳 Remboursement paiement capturé ${sessionId} - raison: ${reason}`);
-        result = await stripeManager.refundPayment(
-          callSession.payment.intentId,
-          `Appel échoué: ${reason}`,
-          sessionId
-        );
+      // Détection gateway: PayPal ou Stripe
+      const isPayPal = callSession.payment.gateway === "paypal" || !!callSession.payment.paypalOrderId;
+
+      if (isPayPal) {
+        // ===== PAYPAL REFUND/CANCEL =====
+        console.log(`💳 [PAYPAL] Traitement remboursement/annulation ${sessionId} - raison: ${reason}`);
+
+        if (paymentStatus === "authorized" || paymentStatus === "pending") {
+          // PayPal: ordre non capturé → pas d'action nécessaire (expire automatiquement)
+          console.log(`💳 [PAYPAL] Ordre non capturé - expiration automatique`);
+          result = { success: true };
+        } else if (paymentStatus === "captured" && callSession.payment.paypalCaptureId) {
+          // PayPal: paiement capturé → rembourser via captureId
+          const { PayPalManager } = await import("./PayPalManager");
+          const paypalManager = new PayPalManager();
+
+          try {
+            const refundResult = await paypalManager.refundPayment(
+              callSession.payment.paypalCaptureId,
+              callSession.payment.amount,
+              "EUR",
+              `Appel échoué: ${reason}`
+            );
+            result = { success: refundResult.success, error: refundResult.success ? undefined : refundResult.status };
+            console.log(`✅ [PAYPAL] Refund result:`, refundResult);
+          } catch (paypalError) {
+            console.error(`❌ [PAYPAL] Refund error:`, paypalError);
+            result = { success: false, error: paypalError instanceof Error ? paypalError.message : "PayPal refund failed" };
+          }
+        } else {
+          console.log(`⚠️ [PAYPAL] Paiement ${sessionId} déjà traité ou statut inconnu: ${paymentStatus}`);
+          return;
+        }
       } else {
-        // Statut inconnu ou déjà traité
-        console.log(`⚠️ Paiement ${sessionId} déjà traité ou statut inconnu: ${paymentStatus}`);
-        return;
+        // ===== STRIPE REFUND/CANCEL =====
+        if (paymentStatus === "authorized") {
+          // Paiement NON capturé → Annuler (pas rembourser)
+          console.log(`💳 [STRIPE] Annulation paiement non-capturé ${sessionId} - raison: ${reason}`);
+          result = await stripeManager.cancelPayment(
+            callSession.payment.intentId,
+            "requested_by_customer",
+            sessionId
+          );
+        } else if (paymentStatus === "captured") {
+          // Paiement CAPTURÉ → Rembourser
+          console.log(`💳 [STRIPE] Remboursement paiement capturé ${sessionId} - raison: ${reason}`);
+          result = await stripeManager.refundPayment(
+            callSession.payment.intentId,
+            `Appel échoué: ${reason}`,
+            sessionId
+          );
+        } else {
+          // Statut inconnu ou déjà traité
+          console.log(`⚠️ [STRIPE] Paiement ${sessionId} déjà traité ou statut inconnu: ${paymentStatus}`);
+          return;
+        }
       }
 
       if (result.success) {
@@ -1419,12 +1461,41 @@ export class TwilioCallManager {
 
       console.log(`💸 Pricing config - Platform: ${platformFee} EUR, Provider: ${providerAmount} EUR (${providerAmountCents} cents)`);
 
-      // ===== DESTINATION CHARGES: Le transfert est automatique a la capture =====
-      // capturePayment retourne maintenant transferId si Destination Charges est configure
-      const captureResult = await stripeManager.capturePayment(
-        session.payment.intentId,
-        sessionId
-      );
+      // ===== DETECTION GATEWAY: PayPal ou Stripe =====
+      const isPayPal = session.payment.gateway === "paypal" || !!session.payment.paypalOrderId;
+
+      let captureResult: { success: boolean; error?: string; transferId?: string; captureId?: string };
+
+      if (isPayPal && session.payment.paypalOrderId) {
+        // ===== PAYPAL CAPTURE =====
+        console.log(`💳 [PAYPAL] Capturing PayPal order: ${session.payment.paypalOrderId}`);
+        const { PayPalManager } = await import("./PayPalManager");
+        const paypalManager = new PayPalManager();
+
+        try {
+          const paypalResult = await paypalManager.captureOrder(session.payment.paypalOrderId);
+          captureResult = {
+            success: paypalResult.success,
+            captureId: paypalResult.captureId,
+            error: paypalResult.success ? undefined : `PayPal capture failed: ${paypalResult.status}`,
+          };
+          console.log(`✅ [PAYPAL] Capture result:`, JSON.stringify(paypalResult, null, 2));
+        } catch (paypalError) {
+          console.error(`❌ [PAYPAL] Capture error:`, paypalError);
+          captureResult = {
+            success: false,
+            error: paypalError instanceof Error ? paypalError.message : "PayPal capture failed",
+          };
+        }
+      } else {
+        // ===== STRIPE CAPTURE (DESTINATION CHARGES) =====
+        // capturePayment retourne maintenant transferId si Destination Charges est configure
+        console.log(`💳 [STRIPE] Capturing Stripe payment: ${session.payment.intentId}`);
+        captureResult = await stripeManager.capturePayment(
+          session.payment.intentId,
+          sessionId
+        );
+      }
 
       console.log("📄 Capture result:", JSON.stringify(captureResult, null, 2));
 

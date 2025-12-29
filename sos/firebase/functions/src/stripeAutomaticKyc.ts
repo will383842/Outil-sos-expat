@@ -1,52 +1,319 @@
+/**
+ * stripeAutomaticKyc.ts
+ *
+ * Gestion des comptes Stripe Connect Express pour les prestataires.
+ *
+ * MIGRATION CUSTOM → EXPRESS:
+ * - Les comptes Express utilisent l'onboarding hébergé par Stripe
+ * - Pas besoin de collecter les données KYC manuellement
+ * - Stripe gère la vérification d'identité et les coordonnées bancaires
+ *
+ * Fonctions actives:
+ * - createExpressAccount: Crée un compte Express
+ * - checkKycStatus: Vérifie le statut du compte
+ * - getOnboardingLink: Génère un lien d'onboarding Stripe
+ *
+ * Fonctions dépréciées (conservées pour compatibilité):
+ * - createCustomAccount: Remplacé par createExpressAccount
+ * - submitKycData: Plus nécessaire avec Express
+ * - addBankAccount: Géré par l'onboarding Stripe
+ */
+
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-
-// Import the existing getStripe function from index
 import { getStripe } from "./index";
 
-// Create Custom Connected Account
-export const createCustomAccount = onCall(async (request) => {
-  if (!request.auth) {
-    throw new HttpsError("unauthenticated", "User must be authenticated");
+// ====== NOUVELLES FONCTIONS EXPRESS ======
+
+interface CreateExpressAccountData {
+  email: string;
+  country?: string;
+  userType?: "lawyer" | "expat";
+}
+
+/**
+ * Crée un compte Stripe Connect Express
+ * Remplace createCustomAccount
+ */
+export const createExpressAccount = onCall<CreateExpressAccountData>(
+  { region: "europe-west1" },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    const { email, country, userType } = request.data;
+    const stripe = getStripe();
+
+    if (!stripe) {
+      throw new HttpsError("internal", "Stripe is not configured");
+    }
+
+    try {
+      console.log("🚀 Creating Stripe Express account for:", request.auth.uid);
+
+      // Créer un compte Express (KYC géré par Stripe)
+      const account = await stripe.accounts.create({
+        type: "express",
+        country: country || "FR",
+        email: email,
+        business_type: "individual",
+        capabilities: {
+          card_payments: { requested: true },
+          transfers: { requested: true },
+        },
+        metadata: {
+          platform: "sos-expat",
+          userId: request.auth.uid,
+          userType: userType || "provider",
+        },
+      });
+
+      console.log("✅ Stripe Express account created:", account.id);
+
+      // Déterminer la collection
+      const collection = userType === "expat" ? "expats" : "lawyers";
+
+      // Sauvegarder dans Firestore
+      const stripeData = {
+        stripeAccountId: account.id,
+        stripeAccountType: "express",
+        kycStatus: "not_started",
+        stripeOnboardingComplete: false,
+        chargesEnabled: false,
+        payoutsEnabled: false,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      };
+
+      await Promise.all([
+        admin.firestore().collection(collection).doc(request.auth.uid).set(stripeData, { merge: true }),
+        admin.firestore().collection("users").doc(request.auth.uid).set(stripeData, { merge: true }),
+        admin.firestore().collection("sos_profiles").doc(request.auth.uid).set(stripeData, { merge: true }),
+      ]);
+
+      return {
+        success: true,
+        accountId: account.id,
+        accountType: "express",
+      };
+    } catch (error: any) {
+      console.error("❌ Error creating Express account:", error);
+      throw new HttpsError("internal", error.message);
+    }
   }
+);
 
-  const { email, country } = request.data;
-  const stripe = getStripe(); // Use existing Stripe instance
+/**
+ * Génère un lien d'onboarding Stripe pour compléter la vérification
+ */
+export const getOnboardingLink = onCall<{ accountId?: string }>(
+  { region: "europe-west1" },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
 
-  if (!stripe) {
-    throw new HttpsError("internal", "Stripe is not configured");
+    const stripe = getStripe();
+    if (!stripe) {
+      throw new HttpsError("internal", "Stripe is not configured");
+    }
+
+    try {
+      // Récupérer l'accountId depuis les données ou Firestore
+      let accountId = request.data?.accountId;
+
+      if (!accountId) {
+        // Chercher dans users
+        const userDoc = await admin.firestore().collection("users").doc(request.auth.uid).get();
+        accountId = userDoc.data()?.stripeAccountId;
+      }
+
+      if (!accountId) {
+        throw new HttpsError("not-found", "No Stripe account found for this user");
+      }
+
+      // Créer le lien d'onboarding
+      const accountLink = await stripe.accountLinks.create({
+        account: accountId,
+        refresh_url: "https://sos-expat.com/dashboard/kyc?refresh=true",
+        return_url: "https://sos-expat.com/dashboard/kyc?success=true",
+        type: "account_onboarding",
+      });
+
+      console.log("✅ Onboarding link created for:", accountId);
+
+      // Mettre à jour le statut
+      await admin.firestore().collection("users").doc(request.auth.uid).update({
+        kycStatus: "in_progress",
+        lastOnboardingLinkAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      return {
+        success: true,
+        url: accountLink.url,
+        expiresAt: accountLink.expires_at,
+      };
+    } catch (error: any) {
+      console.error("❌ Error creating onboarding link:", error);
+      throw new HttpsError("internal", error.message);
+    }
   }
+);
 
-  try {
-    const account = await stripe.accounts.create({
-      type: "custom",
-      country: country || "FR",
-      email: email,
-      business_type: "individual",
-      capabilities: {
-        card_payments: { requested: true },
-        transfers: { requested: true },
-      },
-      tos_acceptance: {
-        date: Math.floor(Date.now() / 1000),
-        ip: request.rawRequest.ip || "unknown",
-      },
-    });
+/**
+ * Vérifie le statut KYC d'un compte Stripe
+ * Fonctionne pour Express et Custom
+ */
+interface KycStatusData {
+  accountId?: string;
+}
 
-    await admin.firestore().collection("lawyers").doc(request.auth.uid).update({
-      stripeAccountId: account.id,
-      kycStatus: "pending",
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
+export const checkKycStatus = onCall<KycStatusData>(
+  { region: "europe-west1" },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
 
-    return { accountId: account.id, success: true };
-  } catch (error: any) {
-    console.error("Error creating account:", error);
-    throw new HttpsError("internal", error.message);
+    const stripe = getStripe();
+    if (!stripe) {
+      throw new HttpsError("internal", "Stripe is not configured");
+    }
+
+    try {
+      // Récupérer l'accountId
+      let accountId = request.data?.accountId;
+
+      if (!accountId) {
+        const userDoc = await admin.firestore().collection("users").doc(request.auth.uid).get();
+        accountId = userDoc.data()?.stripeAccountId;
+      }
+
+      if (!accountId) {
+        return {
+          hasAccount: false,
+          status: "no_account",
+        };
+      }
+
+      const account = await stripe.accounts.retrieve(accountId);
+
+      const status = {
+        hasAccount: true,
+        accountId: account.id,
+        accountType: account.type,
+        detailsSubmitted: account.details_submitted,
+        chargesEnabled: account.charges_enabled,
+        payoutsEnabled: account.payouts_enabled,
+        currentlyDue: account.requirements?.currently_due || [],
+        eventuallyDue: account.requirements?.eventually_due || [],
+        pendingVerification: account.requirements?.pending_verification || [],
+        disabledReason: account.requirements?.disabled_reason || null,
+        status: account.charges_enabled && account.payouts_enabled
+          ? "complete"
+          : account.details_submitted
+            ? "pending_verification"
+            : "incomplete",
+      };
+
+      // Mettre à jour Firestore
+      const updateData = {
+        verificationStatus: status,
+        chargesEnabled: account.charges_enabled,
+        payoutsEnabled: account.payouts_enabled,
+        stripeOnboardingComplete: account.details_submitted && account.charges_enabled,
+        kycStatus: status.status === "complete"
+          ? "completed"
+          : status.status === "pending_verification"
+            ? "pending"
+            : "in_progress",
+        lastKycCheck: admin.firestore.FieldValue.serverTimestamp(),
+      };
+
+      await Promise.all([
+        admin.firestore().collection("users").doc(request.auth.uid).update(updateData),
+        admin.firestore().collection("sos_profiles").doc(request.auth.uid).set(updateData, { merge: true }),
+      ]);
+
+      // Aussi mettre à jour la collection spécifique (lawyers ou expats)
+      try {
+        await admin.firestore().collection("lawyers").doc(request.auth.uid).update(updateData);
+      } catch {
+        try {
+          await admin.firestore().collection("expats").doc(request.auth.uid).update(updateData);
+        } catch {
+          // Ignorer si aucune collection n'existe
+        }
+      }
+
+      return status;
+    } catch (error: any) {
+      console.error("❌ Error checking KYC status:", error);
+      throw new HttpsError("internal", error.message);
+    }
   }
-});
+);
 
-// Submit KYC Data
+// ====== FONCTIONS DÉPRÉCIÉES (conservées pour compatibilité) ======
+
+/**
+ * @deprecated Utilisez createExpressAccount à la place
+ * Cette fonction crée des comptes Custom qui nécessitent plus de travail de KYC
+ */
+export const createCustomAccount = onCall(
+  { region: "europe-west1" },
+  async (request) => {
+    console.warn("⚠️ createCustomAccount is deprecated. Use createExpressAccount instead.");
+
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    const { email, country } = request.data;
+    const stripe = getStripe();
+
+    if (!stripe) {
+      throw new HttpsError("internal", "Stripe is not configured");
+    }
+
+    try {
+      // Créer un compte Express au lieu de Custom
+      const account = await stripe.accounts.create({
+        type: "express", // Changé de "custom" à "express"
+        country: country || "FR",
+        email: email,
+        business_type: "individual",
+        capabilities: {
+          card_payments: { requested: true },
+          transfers: { requested: true },
+        },
+        metadata: {
+          platform: "sos-expat",
+          userId: request.auth.uid,
+          migratedFromCustom: "true",
+        },
+      });
+
+      await admin.firestore().collection("lawyers").doc(request.auth.uid).update({
+        stripeAccountId: account.id,
+        stripeAccountType: "express",
+        kycStatus: "not_started",
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      return { accountId: account.id, success: true };
+    } catch (error: any) {
+      console.error("Error creating account:", error);
+      throw new HttpsError("internal", error.message);
+    }
+  }
+);
+
+/**
+ * @deprecated Plus nécessaire avec les comptes Express
+ * L'onboarding Express gère la collecte des données KYC
+ */
 interface KycData {
   accountId: string;
   firstName: string;
@@ -62,146 +329,46 @@ interface KycData {
   panNumber: string;
 }
 
-export const submitKycData = onCall<KycData>(async (request) => {
-  if (!request.auth) {
-    throw new HttpsError("unauthenticated", "User must be authenticated");
+export const submitKycData = onCall<KycData>(
+  { region: "europe-west1" },
+  async (request) => {
+    console.warn("⚠️ submitKycData is deprecated. Express accounts use Stripe's hosted onboarding.");
+
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    // Retourner une instruction pour utiliser l'onboarding Express
+    throw new HttpsError(
+      "failed-precondition",
+      "This function is deprecated. Please use getOnboardingLink to complete KYC via Stripe's hosted onboarding."
+    );
   }
+);
 
-  const {
-    accountId,
-    firstName,
-    lastName,
-    email,
-    dobDay,
-    dobMonth,
-    dobYear,
-    addressLine1,
-    city,
-    state,
-    postalCode,
-    panNumber,
-  } = request.data;
-
-  const stripe = getStripe();
-
-  if (!stripe) {
-    throw new HttpsError("internal", "Stripe is not configured");
-  }
-
-  try {
-    const account = await stripe.accounts.update(accountId, {
-      business_profile: {
-        mcc: "7399",
-        url: "https://sos-expat.com",
-      },
-      individual: {
-        first_name: firstName,
-        last_name: lastName,
-        email: email,
-        dob: {
-          day: parseInt(String(dobDay)),
-          month: parseInt(String(dobMonth)),
-          year: parseInt(String(dobYear)),
-        },
-        address: {
-          line1: addressLine1,
-          city: city,
-          state: state,
-          postal_code: postalCode,
-          country: "FR",
-        },
-        id_number: panNumber,
-      },
-    });
-
-    await admin.firestore().collection("lawyers").doc(request.auth.uid).update({
-      kycSubmitted: true,
-      submittedAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
-
-    return { success: true, account };
-  } catch (error: any) {
-    console.error("Error submitting KYC:", error);
-    throw new HttpsError("internal", error.message);
-  }
-});
-
-// Add Bank Account
+/**
+ * @deprecated Plus nécessaire avec les comptes Express
+ * L'onboarding Express gère l'ajout des coordonnées bancaires
+ */
 interface BankAccountData {
   accountId: string;
   accountNumber: string;
   ifscCode: string;
 }
 
-export const addBankAccount = onCall<BankAccountData>(async (request) => {
-  if (!request.auth) {
-    throw new HttpsError("unauthenticated", "User must be authenticated");
+export const addBankAccount = onCall<BankAccountData>(
+  { region: "europe-west1" },
+  async (request) => {
+    console.warn("⚠️ addBankAccount is deprecated. Express accounts use Stripe's hosted onboarding.");
+
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    // Retourner une instruction pour utiliser l'onboarding Express
+    throw new HttpsError(
+      "failed-precondition",
+      "This function is deprecated. Please use getOnboardingLink to add bank account via Stripe's hosted onboarding."
+    );
   }
-
-  const { accountId, accountNumber, ifscCode } = request.data;
-  const stripe = getStripe();
-
-  if (!stripe) {
-    throw new HttpsError("internal", "Stripe is not configured");
-  }
-
-  try {
-    const bankAccount = await stripe.accounts.createExternalAccount(accountId, {
-      external_account: {
-        object: "bank_account",
-        country: "FR", // Changed from IN to FR for France
-        currency: "eur", // Changed from inr to eur for France
-        account_number: accountNumber,
-        routing_number: ifscCode, // Use IBAN for France instead
-      },
-    });
-
-    await admin.firestore().collection("lawyers").doc(request.auth.uid).update({
-      bankAccountAdded: true,
-      bankAccountId: bankAccount.id,
-    });
-
-    return { success: true, bankAccount };
-  } catch (error: any) {
-    console.error("Bank account error:", error);
-    throw new HttpsError("internal", error.message);
-  }
-});
-
-// Check KYC Status
-interface KycStatusData {
-  accountId: string;
-}
-
-export const checkKycStatus = onCall<KycStatusData>(async (request) => {
-  if (!request.auth) {
-    throw new HttpsError("unauthenticated", "User must be authenticated");
-  }
-
-  const { accountId } = request.data;
-  const stripe = getStripe();
-
-  if (!stripe) {
-    throw new HttpsError("internal", "Stripe is not configured");
-  }
-
-  try {
-    const account = await stripe.accounts.retrieve(accountId);
-
-    const status = {
-      detailsSubmitted: account.details_submitted,
-      chargesEnabled: account.charges_enabled,
-      payoutsEnabled: account.payouts_enabled,
-      requirements: account.requirements,
-    };
-
-    await admin.firestore().collection("lawyers").doc(request.auth.uid).update({
-      verificationStatus: status,
-      lastChecked: admin.firestore.FieldValue.serverTimestamp(),
-    });
-
-    return status;
-  } catch (error: any) {
-    throw new HttpsError("internal", error.message);
-  }
-});
+);

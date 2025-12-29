@@ -10,6 +10,18 @@ import * as admin from 'firebase-admin';
 import Stripe from 'stripe';
 import { MailwizzAPI } from '../emailMarketing/utils/mailwizz';
 import { getLanguageCode } from '../emailMarketing/config';
+import {
+  handleSubscriptionCreated as handleSubCreated,
+  handleSubscriptionUpdated as handleSubUpdated,
+  handleSubscriptionDeleted as handleSubDeleted,
+  handleSubscriptionPaused as handleSubPaused,
+  handleSubscriptionResumed as handleSubResumed,
+  handleTrialWillEnd as handleTrialEnd,
+  handleInvoicePaid as handleInvPaid,
+  handleInvoicePaymentFailed as handleInvFailed,
+  handleInvoiceCreated as handleInvCreated,
+  handlePaymentMethodUpdated as handlePMUpdated
+} from './webhooks';
 
 // Initialize admin if not already initialized
 if (!admin.apps.length) {
@@ -90,6 +102,106 @@ async function getSubscriptionPlan(planId: string): Promise<SubscriptionPlan | n
   const planDoc = await getDb().doc(`subscription_plans/${planId}`).get();
   if (!planDoc.exists) return null;
   return { id: planDoc.id, ...planDoc.data() } as SubscriptionPlan;
+}
+
+/**
+ * Initialize a trial subscription for a new provider
+ * Called when a provider first registers
+ */
+export async function initializeTrial(providerId: string): Promise<{
+  success: boolean;
+  trialEndsAt?: Date;
+  maxAiCalls?: number;
+  error?: string;
+}> {
+  const db = getDb();
+  const now = admin.firestore.Timestamp.now();
+
+  try {
+    // Get trial config
+    const trialConfig = await getTrialConfig();
+
+    if (!trialConfig.isEnabled) {
+      return {
+        success: false,
+        error: 'Trial is currently disabled'
+      };
+    }
+
+    // Check if user already has a subscription
+    const existingSubDoc = await db.doc(`subscriptions/${providerId}`).get();
+    if (existingSubDoc.exists) {
+      const existingData = existingSubDoc.data();
+      // If already trialing or has active subscription, skip
+      if (existingData?.status === 'trialing' || existingData?.status === 'active') {
+        return {
+          success: true,
+          trialEndsAt: existingData.trialEndsAt?.toDate(),
+          maxAiCalls: trialConfig.maxAiCalls,
+          error: 'User already has an active subscription or trial'
+        };
+      }
+    }
+
+    // Calculate trial end date
+    const trialEndsAt = new Date();
+    trialEndsAt.setDate(trialEndsAt.getDate() + trialConfig.durationDays);
+
+    // Create subscription document for trial
+    const subscriptionData = {
+      providerId,
+      planId: 'trial',
+      tier: 'trial' as SubscriptionTier,
+      status: 'trialing' as SubscriptionStatus,
+      stripeCustomerId: null,
+      stripeSubscriptionId: null,
+      stripePriceId: null,
+      currency: 'EUR' as Currency,
+      billingPeriod: null,
+      currentPeriodStart: now,
+      currentPeriodEnd: admin.firestore.Timestamp.fromDate(trialEndsAt),
+      cancelAtPeriodEnd: false,
+      canceledAt: null,
+      trialStartedAt: now,
+      trialEndsAt: admin.firestore.Timestamp.fromDate(trialEndsAt),
+      aiCallsLimit: trialConfig.maxAiCalls,
+      aiAccessEnabled: true,
+      createdAt: now,
+      updatedAt: now
+    };
+
+    await db.doc(`subscriptions/${providerId}`).set(subscriptionData);
+
+    // Initialize AI usage tracking
+    const aiUsageData = {
+      providerId,
+      subscriptionId: providerId,
+      currentPeriodCalls: 0,
+      trialCallsUsed: 0,
+      totalCallsAllTime: 0,
+      aiCallsLimit: trialConfig.maxAiCalls,
+      currentPeriodStart: now,
+      currentPeriodEnd: admin.firestore.Timestamp.fromDate(trialEndsAt),
+      createdAt: now,
+      updatedAt: now
+    };
+
+    await db.doc(`ai_usage/${providerId}`).set(aiUsageData);
+
+    console.log(`✅ Trial initialized for provider ${providerId} - ends on ${trialEndsAt.toISOString()}`);
+
+    return {
+      success: true,
+      trialEndsAt,
+      maxAiCalls: trialConfig.maxAiCalls
+    };
+  } catch (error: any) {
+    console.error(`❌ Error initializing trial for ${providerId}:`, error);
+    return {
+      success: false,
+      error: error.message || 'Failed to initialize trial'
+    };
+  }
 }
 
 async function getOrCreateStripeCustomer(
@@ -350,104 +462,22 @@ export const updateSubscription = functions
   });
 
 // ============================================================================
-// CANCEL SUBSCRIPTION
+// CANCEL SUBSCRIPTION & REACTIVATE SUBSCRIPTION
+// Enhanced version with i18n email notifications (9 languages)
 // ============================================================================
 
-export const cancelSubscription = functions
-  .region('europe-west1')
-  .https.onCall(async (data, context) => {
-    if (!context.auth) {
-      throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
-    }
-
-    const providerId = context.auth.uid;
-    const { cancelAtPeriodEnd = true, reason } = data as {
-      cancelAtPeriodEnd?: boolean;
-      reason?: string;
-    };
-
-    try {
-      const subDoc = await getDb().doc(`subscriptions/${providerId}`).get();
-      if (!subDoc.exists || !subDoc.data()?.stripeSubscriptionId) {
-        throw new functions.https.HttpsError('not-found', 'No active subscription found');
-      }
-
-      const stripeSubscriptionId = subDoc.data()!.stripeSubscriptionId;
-
-      if (cancelAtPeriodEnd) {
-        // Cancel at end of billing period
-        await getStripe().subscriptions.update(stripeSubscriptionId, {
-          cancel_at_period_end: true,
-          metadata: { cancellation_reason: reason || 'user_requested' }
-        });
-
-        await getDb().doc(`subscriptions/${providerId}`).update({
-          cancelAtPeriodEnd: true,
-          canceledAt: admin.firestore.Timestamp.now(),
-          updatedAt: admin.firestore.Timestamp.now()
-        });
-      } else {
-        // Cancel immediately
-        await getStripe().subscriptions.cancel(stripeSubscriptionId);
-
-        await getDb().doc(`subscriptions/${providerId}`).update({
-          status: 'canceled',
-          cancelAtPeriodEnd: false,
-          canceledAt: admin.firestore.Timestamp.now(),
-          updatedAt: admin.firestore.Timestamp.now()
-        });
-      }
-
-      return { success: true };
-    } catch (error: any) {
-      console.error('Error canceling subscription:', error);
-      throw new functions.https.HttpsError('internal', error.message || 'Failed to cancel subscription');
-    }
-  });
-
-// ============================================================================
-// REACTIVATE SUBSCRIPTION
-// ============================================================================
-
-export const reactivateSubscription = functions
-  .region('europe-west1')
-  .https.onCall(async (_data, context) => {
-    if (!context.auth) {
-      throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
-    }
-
-    const providerId = context.auth.uid;
-
-    try {
-      const subDoc = await getDb().doc(`subscriptions/${providerId}`).get();
-      if (!subDoc.exists || !subDoc.data()?.stripeSubscriptionId) {
-        throw new functions.https.HttpsError('not-found', 'No subscription found');
-      }
-
-      const subData = subDoc.data()!;
-      if (!subData.cancelAtPeriodEnd) {
-        throw new functions.https.HttpsError('failed-precondition', 'Subscription is not scheduled for cancellation');
-      }
-
-      // Reactivate in Stripe
-      await getStripe().subscriptions.update(subData.stripeSubscriptionId, {
-        cancel_at_period_end: false
-      });
-
-      // Update Firestore
-      await getDb().doc(`subscriptions/${providerId}`).update({
-        cancelAtPeriodEnd: false,
-        canceledAt: null,
-        status: 'active',
-        updatedAt: admin.firestore.Timestamp.now()
-      });
-
-      return { success: true };
-    } catch (error: any) {
-      console.error('Error reactivating subscription:', error);
-      throw new functions.https.HttpsError('internal', error.message || 'Failed to reactivate subscription');
-    }
-  });
+// Re-export enhanced cancel and reactivate functions from dedicated module
+export {
+  cancelSubscription,
+  reactivateSubscription,
+  pauseSubscription,
+  resumeSubscription,
+  CANCELLATION_EMAIL_TEMPLATES,
+  REACTIVATION_EMAIL_TEMPLATES,
+  sendCancellationEmail,
+  sendReactivationEmail,
+  logSubscriptionAction
+} from './cancelSubscription';
 
 // ============================================================================
 // STRIPE CUSTOMER PORTAL
@@ -715,27 +745,60 @@ export const stripeWebhook = functions
       return;
     }
 
+    // Context for logging and retries
+    const webhookContext = {
+      eventId: event.id,
+      eventType: event.type,
+      retryCount: 0
+    };
+
     try {
       switch (event.type) {
         case 'customer.subscription.created':
+          // Use the new enhanced handler from webhooks.ts
+          await handleSubCreated(event.data.object as Stripe.Subscription, webhookContext);
+          break;
+
         case 'customer.subscription.updated':
-          await handleSubscriptionUpdate(event.data.object as Stripe.Subscription);
+          // Use the new enhanced handler from webhooks.ts
+          await handleSubUpdated(event.data.object as Stripe.Subscription, webhookContext);
           break;
 
         case 'customer.subscription.deleted':
-          await handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
+          // Use the new enhanced handler from webhooks.ts
+          await handleSubDeleted(event.data.object as Stripe.Subscription, webhookContext);
           break;
 
         case 'invoice.paid':
-          await handleInvoicePaid(event.data.object as Stripe.Invoice);
+          // Use the new enhanced handler from webhooks.ts
+          await handleInvPaid(event.data.object as Stripe.Invoice, webhookContext);
           break;
 
         case 'invoice.payment_failed':
-          await handlePaymentFailed(event.data.object as Stripe.Invoice);
+          // Use the new enhanced handler from webhooks.ts
+          await handleInvFailed(event.data.object as Stripe.Invoice, webhookContext);
           break;
 
         case 'customer.subscription.trial_will_end':
-          await handleTrialEnding(event.data.object as Stripe.Subscription);
+          // Use the new enhanced handler from webhooks.ts
+          await handleTrialEnd(event.data.object as Stripe.Subscription, webhookContext);
+          break;
+
+        case 'customer.subscription.paused':
+          await handleSubPaused(event.data.object as Stripe.Subscription, webhookContext);
+          break;
+
+        case 'customer.subscription.resumed':
+          await handleSubResumed(event.data.object as Stripe.Subscription, webhookContext);
+          break;
+
+        case 'invoice.created':
+          await handleInvCreated(event.data.object as Stripe.Invoice, webhookContext);
+          break;
+
+        case 'payment_method.attached':
+        case 'payment_method.updated':
+          await handlePMUpdated(event.data.object as Stripe.PaymentMethod, webhookContext);
           break;
 
         default:
@@ -745,217 +808,30 @@ export const stripeWebhook = functions
       res.json({ received: true });
     } catch (error) {
       console.error('Error processing webhook:', error);
+      // Log the error for debugging but still return 200 to avoid Stripe retries for transient errors
+      // Stripe will retry automatically for 500 errors
       res.status(500).json({ error: 'Webhook processing failed' });
     }
   });
 
 // ============================================================================
-// WEBHOOK HANDLERS
+// LEGACY WEBHOOK HANDLERS (Deprecated - Now using ./webhooks.ts)
+// These handlers are kept for reference but are no longer used.
+// The new enhanced handlers in webhooks.ts provide:
+// - Better logging and audit trail (subscription_logs collection)
+// - Email notifications via notificationPipeline
+// - Upgrade/downgrade detection with immediate/scheduled application
+// - AI access management with quota reset
+// - Trial to free plan conversion on cancellation
 // ============================================================================
 
-async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
-  const providerId = subscription.metadata.providerId;
-  if (!providerId) {
-    console.error('No providerId in subscription metadata');
-    return;
-  }
-
-  const now = admin.firestore.Timestamp.now();
-
-  await getDb().doc(`subscriptions/${providerId}`).update({
-    status: mapStripeStatus(subscription.status),
-    stripePriceId: subscription.items.data[0]?.price.id,
-    currentPeriodStart: admin.firestore.Timestamp.fromMillis(subscription.current_period_start * 1000),
-    currentPeriodEnd: admin.firestore.Timestamp.fromMillis(subscription.current_period_end * 1000),
-    cancelAtPeriodEnd: subscription.cancel_at_period_end,
-    canceledAt: subscription.canceled_at
-      ? admin.firestore.Timestamp.fromMillis(subscription.canceled_at * 1000)
-      : null,
-    updatedAt: now
-  });
-
-  // Reset period calls on renewal
-  if (subscription.status === 'active') {
-    await getDb().doc(`ai_usage/${providerId}`).update({
-      currentPeriodCalls: 0,
-      currentPeriodStart: admin.firestore.Timestamp.fromMillis(subscription.current_period_start * 1000),
-      currentPeriodEnd: admin.firestore.Timestamp.fromMillis(subscription.current_period_end * 1000),
-      updatedAt: now
-    });
-  }
-}
-
-async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
-  const providerId = subscription.metadata.providerId;
-  if (!providerId) return;
-
-  await getDb().doc(`subscriptions/${providerId}`).update({
-    status: 'expired',
-    canceledAt: admin.firestore.Timestamp.now(),
-    updatedAt: admin.firestore.Timestamp.now()
-  });
-}
-
-async function handleInvoicePaid(invoice: Stripe.Invoice) {
-  if (!invoice.subscription) return;
-
-  const subscription = await getStripe().subscriptions.retrieve(invoice.subscription as string);
-  const providerId = subscription.metadata.providerId;
-  if (!providerId) return;
-
-  const now = admin.firestore.Timestamp.now();
-
-  // Store invoice in Firestore
-  await getDb().collection('invoices').doc(invoice.id).set({
-    stripeInvoiceId: invoice.id,
-    providerId,
-    subscriptionId: providerId,
-    amountDue: invoice.amount_due / 100,
-    amountPaid: invoice.amount_paid / 100,
-    currency: invoice.currency.toUpperCase(),
-    status: 'paid',
-    periodStart: admin.firestore.Timestamp.fromMillis(invoice.period_start * 1000),
-    periodEnd: admin.firestore.Timestamp.fromMillis(invoice.period_end * 1000),
-    dueDate: invoice.due_date ? admin.firestore.Timestamp.fromMillis(invoice.due_date * 1000) : null,
-    paidAt: now,
-    invoicePdfUrl: invoice.invoice_pdf,
-    hostedInvoiceUrl: invoice.hosted_invoice_url,
-    createdAt: now
-  });
-
-  // Update subscription status
-  await getDb().doc(`subscriptions/${providerId}`).update({
-    status: 'active',
-    updatedAt: now
-  });
-
-  // Mark dunning as recovered if it exists
-  if (invoice.id) {
-    try {
-      const { markDunningRecovered } = await import('../subscriptions/dunning');
-      await markDunningRecovered(invoice.id);
-      console.log(`✅ Dunning recovered for invoice: ${invoice.id}`);
-    } catch (dunningError) {
-      // Not all invoices will have dunning records, so this is expected
-      console.log(`ℹ️ No dunning record found for invoice: ${invoice.id}`);
-    }
-  }
-}
-
-async function handlePaymentFailed(invoice: Stripe.Invoice) {
-  if (!invoice.subscription) return;
-
-  const subscription = await getStripe().subscriptions.retrieve(invoice.subscription as string);
-  const providerId = subscription.metadata.providerId;
-  if (!providerId) return;
-
-  await getDb().doc(`subscriptions/${providerId}`).update({
-    status: 'past_due',
-    updatedAt: admin.firestore.Timestamp.now()
-  });
-
-  // Create dunning record for automatic retry
-  if (invoice.id) {
-    try {
-      const { createDunningRecord } = await import('../subscriptions/dunning');
-      await createDunningRecord(
-        providerId,
-        invoice.subscription as string,
-        invoice.id
-      );
-      console.log(`✅ Dunning record created for provider: ${providerId}`);
-    } catch (dunningError) {
-      console.error(`❌ Failed to create dunning record for provider ${providerId}:`, dunningError);
-    }
-  }
-
-  // Send notification email to provider about failed payment
-  try {
-    const providerDoc = await getDb().collection('users').doc(providerId).get();
-    if (!providerDoc.exists) {
-      console.warn(`⚠️ Provider not found for subscription payment failure: ${providerId}`);
-      return;
-    }
-
-    const provider = providerDoc.data();
-    const lang = getLanguageCode(
-      provider?.language || provider?.preferredLanguage || provider?.lang || 'en'
-    );
-
-    const mailwizz = new MailwizzAPI();
-    await mailwizz.sendTransactional({
-      to: provider?.email || '',
-      template: `TR_PRV_subscription-payment-failed_${lang}`,
-      customFields: {
-        FNAME: provider?.firstName || provider?.name || '',
-        AMOUNT: ((invoice.amount_due || 0) / 100).toString(),
-        CURRENCY: (invoice.currency || 'eur').toUpperCase(),
-        INVOICE_URL: invoice.hosted_invoice_url || '',
-        RETRY_URL: 'https://sos-expat.com/dashboard/subscription',
-        DUE_DATE: invoice.due_date
-          ? new Date(invoice.due_date * 1000).toLocaleDateString()
-          : '',
-      },
-    });
-
-    console.log(`✅ Subscription payment failed email sent to provider: ${providerId}`);
-  } catch (emailError) {
-    console.error(`❌ Failed to send payment failed email to provider ${providerId}:`, emailError);
-  }
-}
-
-async function handleTrialEnding(subscription: Stripe.Subscription) {
-  const providerId = subscription.metadata.providerId;
-  if (!providerId) return;
-
-  // Send notification email about trial ending soon
-  try {
-    const providerDoc = await getDb().collection('users').doc(providerId).get();
-    if (!providerDoc.exists) {
-      console.warn(`⚠️ Provider not found for trial ending notification: ${providerId}`);
-      return;
-    }
-
-    const provider = providerDoc.data();
-    const lang = getLanguageCode(
-      provider?.language || provider?.preferredLanguage || provider?.lang || 'en'
-    );
-
-    // Calculate days remaining
-    const trialEnd = subscription.trial_end
-      ? new Date(subscription.trial_end * 1000)
-      : new Date();
-    const now = new Date();
-    const daysRemaining = Math.max(
-      0,
-      Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-    );
-
-    // Get subscription plan details
-    const subDoc = await getDb().collection('subscriptions').doc(providerId).get();
-    const subData = subDoc.data();
-    const planName = subData?.planId || 'Trial';
-
-    const mailwizz = new MailwizzAPI();
-    await mailwizz.sendTransactional({
-      to: provider?.email || '',
-      template: `TR_PRV_trial-ending_${lang}`,
-      customFields: {
-        FNAME: provider?.firstName || provider?.name || '',
-        DAYS_REMAINING: daysRemaining.toString(),
-        TRIAL_END_DATE: trialEnd.toLocaleDateString(),
-        PLAN_NAME: planName,
-        UPGRADE_URL: 'https://sos-expat.com/dashboard/subscription/plans',
-        AI_CALLS_USED: (subData?.currentPeriodUsage || 0).toString(),
-        AI_CALLS_LIMIT: (subData?.aiCallsLimit || 10).toString(),
-      },
-    });
-
-    console.log(`✅ Trial ending notification sent to provider: ${providerId} (${daysRemaining} days remaining)`);
-  } catch (emailError) {
-    console.error(`❌ Failed to send trial ending email to provider ${providerId}:`, emailError);
-  }
-}
+// NOTE: All handlers below are deprecated. See webhooks.ts for the new implementations:
+// - handleSubscriptionCreated: Creates subscription doc, initializes AI usage, sends welcome email
+// - handleSubscriptionUpdated: Detects upgrades/downgrades, handles cancel_at_period_end
+// - handleSubscriptionDeleted: Sets status to canceled, disables AI access, returns to trial
+// - handleTrialWillEnd: Sends 3-day reminder email
+// - handleInvoicePaid: Resets monthly quota, sends renewal confirmation
+// - handleInvoicePaymentFailed: Sets past_due, creates dunning record, disables access after 7 days
 
 // ============================================================================
 // ADMIN FUNCTIONS
@@ -1740,3 +1616,73 @@ export const resetMonthlyAiQuotas = functions
     console.log(`Monthly quota reset completed for ${processedCount} providers`);
     return null;
   });
+
+// ============================================================================
+// ADMIN FUNCTIONS (Subscription Management)
+// ============================================================================
+
+export {
+  adminForceAiAccess,
+  adminResetQuota,
+  adminChangePlan,
+  adminCancelSubscription,
+  adminGetSubscriptionStats,
+  adminSyncStripePrices,
+  adminGetProviderSubscriptionHistory,
+} from './adminFunctions';
+
+
+// ============================================================================
+// BILLING PORTAL (Facturation)
+// ============================================================================
+
+export { getBillingPortalUrl, detectStripeLocale } from './billingPortal';
+
+// ============================================================================
+// STRIPE SYNC (Synchronisation des plans avec Stripe)
+// ============================================================================
+
+export {
+  syncSubscriptionPlansToStripe,
+  updateStripePrices,
+  deactivateStripePlan,
+  reactivateStripePlan,
+} from './stripeSync';
+
+// ============================================================================
+// WEBHOOK HANDLERS (Exported for testing and direct use)
+// ============================================================================
+
+export {
+  handleSubscriptionCreated,
+  handleSubscriptionUpdated,
+  handleSubscriptionDeleted,
+  handleSubscriptionPaused,
+  handleSubscriptionResumed,
+  handleTrialWillEnd,
+  handleInvoicePaid,
+  handleInvoicePaymentFailed,
+  handleInvoiceCreated,
+  handlePaymentMethodUpdated,
+  webhookHandlers,
+} from './webhooks';
+
+// ============================================================================
+// EMAIL NOTIFICATIONS
+// ============================================================================
+
+export {
+  sendSubscriptionEmail,
+  notifySubscriptionCreated,
+  notifySubscriptionRenewed,
+  notifyQuotaAlert,
+  notifyPaymentFailed,
+  notifySubscriptionCanceled,
+  notifyTrialEnding,
+  notifySubscriptionExpired,
+  notifySubscriptionUpgraded,
+  notifySubscriptionDowngradeScheduled,
+  notifySubscriptionReactivated,
+  notifyAccountSuspended,
+  subscriptionEmailNotifications,
+} from './emailNotifications';
