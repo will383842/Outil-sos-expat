@@ -5,6 +5,7 @@
   <!-- Page d'accueil -->
   <url>
     <loc>https://sos-expat.com/</loc>
+    <lastmod>2025-12-29</lastmod>
     <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es"/>
@@ -22,6 +23,7 @@
   <!-- FAQ -->
   <url>
     <loc>https://sos-expat.com/faq</loc>
+    <lastmod>2025-12-29</lastmod>
     <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr/faq"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en/faq"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es/faq"/>
@@ -39,6 +41,7 @@
   <!-- Contact -->
   <url>
     <loc>https://sos-expat.com/contact</loc>
+    <lastmod>2025-12-29</lastmod>
     <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr/contact"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en/contact"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es/contact"/>
@@ -56,6 +59,7 @@
   <!-- Inscription Avocat -->
   <url>
     <loc>https://sos-expat.com/register-lawyer</loc>
+    <lastmod>2025-12-29</lastmod>
     <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr/register-lawyer"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en/register-lawyer"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es/register-lawyer"/>
@@ -73,6 +77,7 @@
   <!-- Inscription Expat Aidant -->
   <url>
     <loc>https://sos-expat.com/register-expat</loc>
+    <lastmod>2025-12-29</lastmod>
     <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr/register-expat"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en/register-expat"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es/register-expat"/>
@@ -90,6 +95,7 @@
   <!-- Inscription Client -->
   <url>
     <loc>https://sos-expat.com/register-client</loc>
+    <lastmod>2025-12-29</lastmod>
     <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr/register-client"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en/register-client"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es/register-client"/>
@@ -107,6 +113,7 @@
   <!-- Connexion -->
   <url>
     <loc>https://sos-expat.com/login</loc>
+    <lastmod>2025-12-29</lastmod>
     <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr/login"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en/login"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es/login"/>
@@ -124,6 +131,7 @@
   <!-- CGU Avocats -->
   <url>
     <loc>https://sos-expat.com/terms-lawyers</loc>
+    <lastmod>2025-12-29</lastmod>
     <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr/terms-lawyers"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en/terms-lawyers"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es/terms-lawyers"/>
@@ -141,6 +149,7 @@
   <!-- CGU Clients -->
   <url>
     <loc>https://sos-expat.com/terms-clients</loc>
+    <lastmod>2025-12-29</lastmod>
     <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr/terms-clients"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en/terms-clients"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es/terms-clients"/>
@@ -158,6 +167,7 @@
   <!-- CGU Expats -->
   <url>
     <loc>https://sos-expat.com/terms-expats</loc>
+    <lastmod>2025-12-29</lastmod>
     <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr/terms-expats"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en/terms-expats"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es/terms-expats"/>
@@ -175,6 +185,7 @@
   <!-- Politique de confidentialité -->
   <url>
     <loc>https://sos-expat.com/privacy</loc>
+    <lastmod>2025-12-29</lastmod>
     <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr/privacy"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en/privacy"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es/privacy"/>
@@ -192,6 +203,7 @@
   <!-- Cookies -->
   <url>
     <loc>https://sos-expat.com/cookies</loc>
+    <lastmod>2025-12-29</lastmod>
     <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr/cookies"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en/cookies"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es/cookies"/>
@@ -209,6 +221,7 @@
   <!-- Blog -->
   <url>
     <loc>https://sos-expat.com/blog</loc>
+    <lastmod>2025-12-29</lastmod>
     <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr/blog"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en/blog"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es/blog"/>
@@ -226,6 +239,7 @@
   <!-- Témoignages -->
   <url>
     <loc>https://sos-expat.com/testimonials</loc>
+    <lastmod>2025-12-29</lastmod>
     <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr/testimonials"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en/testimonials"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es/testimonials"/>
@@ -243,6 +257,7 @@
   <!-- Centre d'aide -->
   <url>
     <loc>https://sos-expat.com/help</loc>
+    <lastmod>2025-12-29</lastmod>
     <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr/help"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en/help"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es/help"/>

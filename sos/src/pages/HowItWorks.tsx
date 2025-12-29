@@ -2,19 +2,57 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { CheckCircle, Users, MessageSquare } from "lucide-react";
 import Layout from "../components/layout/Layout";
+import SEOHead from "../components/layout/SEOHead";
 import { FormattedMessage, useIntl } from "react-intl";
+import { useApp } from "../contexts/AppContext";
 
 const HowItWorksPage: React.FC = () => {
   const intl = useIntl();
+  const { language } = useApp();
 
-  // Set page title
-  React.useEffect(() => {
-    document.title = intl.formatMessage({ id: "howItWorks.title1" }) + " " + 
-                    intl.formatMessage({ id: "howItWorks.title2" }) + " - SOS Expats";
-  }, [intl]);
+  const pageTitle = `${intl.formatMessage({ id: "howItWorks.title1" })} ${intl.formatMessage({ id: "howItWorks.title2" })} - SOS Expat`;
+  const pageDescription = intl.formatMessage({ id: "howItWorks.subtitle" });
+
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": pageTitle,
+    "description": pageDescription,
+    "step": [
+      {
+        "@type": "HowToStep",
+        "position": 1,
+        "name": intl.formatMessage({ id: "howItWorks.step1Title" }),
+        "text": intl.formatMessage({ id: "howItWorks.step1Desc" })
+      },
+      {
+        "@type": "HowToStep",
+        "position": 2,
+        "name": intl.formatMessage({ id: "howItWorks.step2Title" }),
+        "text": intl.formatMessage({ id: "howItWorks.step2Desc" })
+      },
+      {
+        "@type": "HowToStep",
+        "position": 3,
+        "name": intl.formatMessage({ id: "howItWorks.step3Title" }),
+        "text": intl.formatMessage({ id: "howItWorks.step3Desc" })
+      }
+    ]
+  };
 
   return (
     <Layout>
+      <SEOHead
+        title={pageTitle}
+        description={pageDescription}
+        canonicalUrl={`/${language}/how-it-works`}
+        ogType="website"
+        keywords="comment ça marche, expatrié, avocat, consultation juridique, aide expatriation"
+        locale={language === "fr" ? "fr_FR" : language === "en" ? "en_US" : `${language}_${language.toUpperCase()}`}
+        structuredData={structuredData}
+        contentType="HowTo"
+        aiSummary="Guide étape par étape expliquant comment utiliser SOS Expat pour obtenir une aide juridique rapide"
+      />
       <div className="min-h-screen bg-gray-950">
         {/* Header avec style moderne comme la home */}
         <section className="relative pt-20 pb-32 overflow-hidden">

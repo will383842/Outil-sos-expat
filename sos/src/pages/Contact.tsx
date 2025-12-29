@@ -20,6 +20,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import Layout from "../components/layout/Layout";
+import SEOHead from "../components/layout/SEOHead";
 import Button from "../components/common/Button";
 import { useApp } from "../contexts/AppContext";
 import {
@@ -1023,8 +1024,36 @@ const Contact: React.FC = () => {
     );
   }
 
+  // SEO configuration
+  const contactStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    "name": t.pageTitle,
+    "description": t.pageSubtitle,
+    "mainEntity": {
+      "@type": "Organization",
+      "name": "SOS Expat",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer service",
+        "availableLanguage": ["French", "English", "Spanish", "German", "Portuguese"]
+      }
+    }
+  };
+
   return (
     <Layout>
+      <SEOHead
+        title={`${t.pageTitle} - SOS Expat`}
+        description={t.pageSubtitle}
+        canonicalUrl={`/${language}/contact`}
+        ogType="website"
+        keywords="contact, aide expatrié, support client, formulaire contact, SOS Expat"
+        locale={language === "fr" ? "fr_FR" : language === "en" ? "en_US" : `${language}_${language.toUpperCase()}`}
+        structuredData={contactStructuredData}
+        contentType="ContactPage"
+        aiSummary="Page de contact SOS Expat pour demander de l'aide juridique ou des informations sur l'expatriation"
+      />
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50">
         {/* Header avec design fun et énergique */}
         <header className="relative pt-12 pb-16 overflow-hidden">

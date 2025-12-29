@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Star, MapPin, Phone, Clock } from 'lucide-react';
 import Layout from '../components/layout/Layout';
+import SEOHead from '../components/layout/SEOHead';
 import { useApp } from '../contexts/AppContext';
 import { collection, query, getDocs, limit, where, DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
 import { db } from '../config/firebase';
@@ -322,10 +323,49 @@ const Providers: React.FC = () => {
     countries: countries.length
   }), [providers, countries]);
 
+  // SEO configuration
+  const seoConfig = useMemo(() => ({
+    title: `${t.title} - SOS Expat`,
+    description: t.subtitle,
+    keywords: "experts, avocats expatriés, expatriés aidants, consultation juridique, aide expatriation",
+    structuredData: {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": t.title,
+      "description": t.subtitle,
+      "numberOfItems": stats.totalProviders,
+      "itemListElement": filteredProviders.slice(0, 10).map((provider, index) => ({
+        "@type": "ListItem",
+        "position": index + 1,
+        "item": {
+          "@type": "Person",
+          "name": provider.name,
+          "jobTitle": provider.type === 'lawyer' ? t.lawyer : t.expat,
+          "address": {
+            "@type": "PostalAddress",
+            "addressCountry": provider.country
+          },
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": provider.rating,
+            "reviewCount": provider.reviewCount
+          }
+        }
+      }))
+    }
+  }), [t, stats.totalProviders, filteredProviders]);
+
   // Loading state
   if (isLoading) {
     return (
       <Layout>
+        <SEOHead
+          title={seoConfig.title}
+          description={seoConfig.description}
+          canonicalUrl={`/${language}/providers`}
+          keywords={seoConfig.keywords}
+          locale={language === "fr" ? "fr_FR" : language === "en" ? "en_US" : `${language}_${language.toUpperCase()}`}
+        />
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600 mx-auto mb-4"></div>
@@ -340,6 +380,12 @@ const Providers: React.FC = () => {
   if (error && providers.length === 0) {
     return (
       <Layout>
+        <SEOHead
+          title={seoConfig.title}
+          description={seoConfig.description}
+          canonicalUrl={`/${language}/providers`}
+          noindex={true}
+        />
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="text-center">
             <div className="text-red-600 text-xl mb-4">{t.errorLoading}</div>
@@ -357,6 +403,17 @@ const Providers: React.FC = () => {
 
   return (
     <Layout>
+      <SEOHead
+        title={seoConfig.title}
+        description={seoConfig.description}
+        canonicalUrl={`/${language}/providers`}
+        ogType="website"
+        keywords={seoConfig.keywords}
+        locale={language === "fr" ? "fr_FR" : language === "en" ? "en_US" : `${language}_${language.toUpperCase()}`}
+        structuredData={seoConfig.structuredData}
+        contentType="ItemList"
+        aiSummary={`Liste de ${stats.totalProviders} experts vérifiés (avocats et expatriés) disponibles pour des consultations`}
+      />
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <div className="bg-gradient-to-r from-red-600 to-red-700 text-white py-16">

@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/Layout";
+import SEOHead from "../components/layout/SEOHead";
 import { useApp } from "../contexts/AppContext";
 import { useAuth } from "../contexts/AuthContext";
 import { validateCoupon } from "../utils/coupon";
@@ -301,8 +302,44 @@ const Pricing: React.FC = () => {
     [intl, selectedCurrency]
   );
 
+  // SEO configuration
+  const pageTitle = intl.formatMessage({ id: "pricing.heading" }) + " " + intl.formatMessage({ id: "pricing.headingHighlight" }) + " - SOS Expat";
+  const pageDescription = intl.formatMessage({ id: "pricing.subtitle" });
+
+  const pricingStructuredData = useMemo(() => ({
+    "@context": "https://schema.org",
+    "@type": "PriceSpecification",
+    "name": "Tarifs SOS Expat",
+    "description": pageDescription,
+    "priceCurrency": selectedCurrency.toUpperCase(),
+    "eligibleQuantity": {
+      "@type": "QuantitativeValue",
+      "unitCode": "MIN"
+    },
+    "offers": dynamicServices.filter(s => s.isActive).map(service => ({
+      "@type": "Offer",
+      "name": service.title,
+      "description": service.description,
+      "price": service.price,
+      "priceCurrency": selectedCurrency.toUpperCase(),
+      "availability": "https://schema.org/InStock",
+      "validFrom": new Date().toISOString()
+    }))
+  }), [selectedCurrency, dynamicServices, pageDescription]);
+
   return (
     <Layout>
+      <SEOHead
+        title={pageTitle}
+        description={pageDescription}
+        canonicalUrl={`/${language}/pricing`}
+        ogType="website"
+        keywords="tarifs, prix, consultation avocat expatrié, aide juridique expatriation, consultation en ligne"
+        locale={language === "fr" ? "fr_FR" : language === "en" ? "en_US" : `${language}_${language.toUpperCase()}`}
+        structuredData={pricingStructuredData}
+        contentType="PriceSpecification"
+        aiSummary="Tarifs transparents pour les consultations avec avocats et expatriés aidants sur SOS Expat"
+      />
       <div className="min-h-screen bg-gray-950">
         {/* Banner */}
         {(pricingLoading || pricingError) && (

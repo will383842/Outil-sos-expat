@@ -3455,6 +3455,9 @@ export { setProviderOffline } from './callables/setProviderOffline';
 // ========== SEO - AUTO-INDEXATION ==========
 export * from './seo';
 
+// ========== SITEMAP GENERATOR (Advanced 3-level system) ==========
+export { generateSitemaps, onProviderChange, scheduledSitemapGeneration } from './sitemap';
+
 // ========== TRANSLATION FUNCTIONS ==========
 export * from './translation/translateProvider';
 export * from './translation/initializeProviderTranslation';

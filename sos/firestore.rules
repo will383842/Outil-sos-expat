@@ -252,6 +252,18 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin() || isDev();
     }
 
+    // ================= HELP ARTICLES COLLECTION (for SEO sitemaps) =================
+    match /help_articles/{articleId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin() || isDev();
+    }
+
+    // ================= LANDING PAGES COLLECTION (for SEO sitemaps) =================
+    match /landing_pages/{pageId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin() || isDev();
+    }
+
     // ================= AAA USED CONTENT COLLECTION =================
     match /aaa_used_content/{documentId} {
       allow get, list: if isAdmin() || isDev();
