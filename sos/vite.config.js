@@ -109,29 +109,9 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           // Stratégie de chunks optimisée
-          manualChunks(id) {
-            // Firebase - split en plusieurs chunks pour un chargement plus rapide
-            if (id.includes('firebase/auth')) {
-              return 'firebase-auth';
-            }
-            if (id.includes('firebase/firestore')) {
-              return 'firebase-db';
-            }
-            if (id.includes('firebase/storage')) {
-              return 'firebase-storage';
-            }
-            if (id.includes('firebase') || id.includes('@firebase')) {
-              return 'firebase-core';
-            }
-            // UI Libraries - inclus dans vendor pour éviter les problèmes d'initialisation
-            // if (id.includes('@mui') || id.includes('@emotion') || id.includes('@headlessui')) {
-            //   return 'ui-libs';
-            // }
-            // Charts et PDF - chunk séparé (lazy load recommandé)
-            if (id.includes('recharts') || id.includes('jspdf') || id.includes('html2canvas')) {
-              return 'heavy-libs';
-            }
-            // Autres vendor
+manualChunks(id) {
+            // Désactivé temporairement pour éviter les erreurs d'initialisation
+            // Tout ira dans vendor
             if (id.includes('node_modules')) {
               return 'vendor';
             }

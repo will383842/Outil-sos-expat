@@ -8,12 +8,12 @@ import { db } from '../config/firebase';
 
 // Configuration
 const INCOMING_CALL_CONFIG = {
-  // Durée de la sonnerie en ms (15 secondes par défaut)
-  RING_DURATION_MS: 15000,
-  // Volume de la sonnerie (0.0 - 1.0)
-  RING_VOLUME: 0.5,
-  // Intervalle de répétition de la sonnerie en ms
-  RING_REPEAT_INTERVAL_MS: 3000,
+  // Durée de la sonnerie en ms (30 secondes - plus long car son doux)
+  RING_DURATION_MS: 30000,
+  // Volume de la sonnerie (0.0 - 1.0) - très bas pour son doux
+  RING_VOLUME: 0.15,
+  // Intervalle de répétition de la sonnerie en ms (5 secondes - espacé pour rester doux)
+  RING_REPEAT_INTERVAL_MS: 5000,
   // Clé localStorage pour les préférences
   SOUND_ENABLED_KEY: 'incomingCallSoundEnabled',
   VIBRATION_ENABLED_KEY: 'incomingCallVibrationEnabled',
@@ -57,62 +57,126 @@ const getAudioContext = (): AudioContext => {
   return audioContext;
 };
 
-// Générer une sonnerie avec Web Audio API
-const generateRingtone = (ctx: AudioContext, duration: number = 1): void => {
+// Générer une sonnerie DOUCE et mélodieuse avec Web Audio API
+const generateRingtone = (ctx: AudioContext, duration: number = 2.5): void => {
   const now = ctx.currentTime;
+  const volume = parseFloat(localStorage.getItem('incomingCallVolume') || '0.15');
 
-  // Créer les oscillateurs pour une sonnerie téléphonique classique
-  const oscillator1 = ctx.createOscillator();
-  const oscillator2 = ctx.createOscillator();
-  const gainNode = ctx.createGain();
+  // Notes douces (accord de Do majeur avec septième - très apaisant)
+  // C4 (261Hz), E4 (329Hz), G4 (392Hz), B4 (494Hz)
+  const notes = [261.63, 329.63, 392.00, 493.88];
 
-  // Fréquences classiques de sonnerie téléphonique (440Hz et 480Hz)
-  oscillator1.frequency.setValueAtTime(440, now);
-  oscillator2.frequency.setValueAtTime(480, now);
-  oscillator1.type = 'sine';
-  oscillator2.type = 'sine';
+  notes.forEach((freq, index) => {
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
 
-  // Connecter les oscillateurs au gain node
-  oscillator1.connect(gainNode);
-  oscillator2.connect(gainNode);
-  gainNode.connect(ctx.destination);
+    // Onde sinusoïdale pure pour un son très doux
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(freq, now);
 
-  // Volume
-  const volume = parseFloat(localStorage.getItem('incomingCallVolume') || '0.5');
-  gainNode.gain.setValueAtTime(volume * 0.3, now);
+    // Connecter
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
 
-  // Pattern de sonnerie: on-off-on-off
-  const patternDuration = duration;
-  for (let i = 0; i < 2; i++) {
-    const startTime = now + i * 0.5;
-    gainNode.gain.setValueAtTime(volume * 0.3, startTime);
-    gainNode.gain.setValueAtTime(0, startTime + 0.2);
-  }
+    // Envelope ADSR très douce (Attack-Decay-Sustain-Release)
+    const noteStart = now + index * 0.4; // Arpège doux
+    const noteDuration = 1.2;
 
-  // Démarrer et arrêter les oscillateurs
-  oscillator1.start(now);
-  oscillator2.start(now);
-  oscillator1.stop(now + patternDuration);
-  oscillator2.stop(now + patternDuration);
+    // Attack très progressif (fade in doux)
+    gainNode.gain.setValueAtTime(0, noteStart);
+    gainNode.gain.linearRampToValueAtTime(volume * 0.08, noteStart + 0.3);
+
+    // Sustain doux
+    gainNode.gain.linearRampToValueAtTime(volume * 0.06, noteStart + 0.6);
+
+    // Release très progressif (fade out doux)
+    gainNode.gain.linearRampToValueAtTime(0, noteStart + noteDuration);
+
+    oscillator.start(noteStart);
+    oscillator.stop(noteStart + noteDuration + 0.1);
+  });
+
+  // Ajouter une note de basse très subtile pour la chaleur
+  const bassOsc = ctx.createOscillator();
+  const bassGain = ctx.createGain();
+  bassOsc.type = 'sine';
+  bassOsc.frequency.setValueAtTime(130.81, now); // C3 - basse douce
+  bassOsc.connect(bassGain);
+  bassGain.connect(ctx.destination);
+
+  bassGain.gain.setValueAtTime(0, now);
+  bassGain.gain.linearRampToValueAtTime(volume * 0.03, now + 0.5);
+  bassGain.gain.linearRampToValueAtTime(volume * 0.02, now + 1.5);
+  bassGain.gain.linearRampToValueAtTime(0, now + 2.5);
+
+  bassOsc.start(now);
+  bassOsc.stop(now + 2.6);
 };
 
-// Jouer le fichier audio de sonnerie
+// Générer un carillon doux (alternative)
+const generateSoftChime = (ctx: AudioContext): void => {
+  const now = ctx.currentTime;
+  const volume = parseFloat(localStorage.getItem('incomingCallVolume') || '0.15');
+
+  // Séquence de carillon doux (pentatonique - très apaisant)
+  const chimeNotes = [
+    { freq: 523.25, delay: 0, duration: 1.5 },      // C5
+    { freq: 659.25, delay: 0.3, duration: 1.2 },    // E5
+    { freq: 783.99, delay: 0.6, duration: 1.0 },    // G5
+    { freq: 523.25, delay: 1.2, duration: 0.8 },    // C5 (reprise douce)
+  ];
+
+  chimeNotes.forEach(({ freq, delay, duration }) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, now);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    const start = now + delay;
+
+    // Envelope très douce type "cloche de méditation"
+    gain.gain.setValueAtTime(0, start);
+    gain.gain.linearRampToValueAtTime(volume * 0.1, start + 0.05); // Attack rapide mais doux
+    gain.gain.exponentialRampToValueAtTime(volume * 0.02, start + duration * 0.5);
+    gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
+
+    osc.start(start);
+    osc.stop(start + duration + 0.1);
+  });
+};
+
+// Compteur pour alterner les sons
+let ringCounter = 0;
+
+// Jouer le fichier audio de sonnerie (ou génération douce)
 const playRingtoneFile = async (): Promise<HTMLAudioElement | null> => {
   try {
+    // Essayer d'abord le fichier audio personnalisé
     const audio = new Audio('/sounds/incoming-call.wav');
-    audio.volume = parseFloat(localStorage.getItem('incomingCallVolume') || '0.5');
-    audio.loop = true;
+    audio.volume = parseFloat(localStorage.getItem('incomingCallVolume') || '0.15');
+    audio.loop = false; // Pas de loop, on gère manuellement
     await audio.play();
     return audio;
   } catch (error) {
-    console.warn('Impossible de jouer le fichier audio, utilisation du fallback Web Audio API:', error);
-    // Fallback: utiliser Web Audio API
+    // Fallback: utiliser Web Audio API avec sonnerie douce
+    console.log('Utilisation de la sonnerie douce générée');
     try {
       const ctx = getAudioContext();
       if (ctx.state === 'suspended') {
         await ctx.resume();
       }
-      generateRingtone(ctx, 1);
+
+      // Alterner entre arpège doux et carillon
+      ringCounter++;
+      if (ringCounter % 2 === 0) {
+        generateSoftChime(ctx);
+      } else {
+        generateRingtone(ctx, 2.5);
+      }
     } catch (e) {
       console.error('Erreur lors de la génération de la sonnerie:', e);
     }
@@ -120,11 +184,25 @@ const playRingtoneFile = async (): Promise<HTMLAudioElement | null> => {
   }
 };
 
-// Vibration (pour mobiles)
+// Jouer uniquement la sonnerie douce générée (pour le test)
+const playSoftRingtone = async (): Promise<void> => {
+  try {
+    const ctx = getAudioContext();
+    if (ctx.state === 'suspended') {
+      await ctx.resume();
+    }
+    generateRingtone(ctx, 2.5);
+  } catch (e) {
+    console.error('Erreur lors de la génération de la sonnerie douce:', e);
+  }
+};
+
+// Vibration douce (pour mobiles)
 const triggerVibration = (): void => {
   if ('vibrate' in navigator) {
-    // Pattern de vibration: vibrer 200ms, pause 100ms, répéter
-    navigator.vibrate([200, 100, 200, 100, 200]);
+    // Pattern de vibration DOUX: courtes impulsions légères avec longues pauses
+    // 100ms vibration, 300ms pause, 100ms vibration, 500ms pause
+    navigator.vibrate([100, 300, 100, 500, 80]);
   }
 };
 
