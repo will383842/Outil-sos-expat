@@ -252,6 +252,52 @@
       "code": "Codigo",
       "name": "Nome",
       "active": "Ativo"
+    },
+    "addCountry": "Adicionar um pais",
+    "editCountry": "Editar pais",
+    "confirmDelete": "Eliminar {{name}}?",
+    "search": "Pesquisar um pais...",
+    "stats": {
+      "total": "Total de paises",
+      "active": "Ativos",
+      "withLawyers": "Com advogados",
+      "withExperts": "Com especialistas"
+    },
+    "filters": {
+      "activeOnly": "Apenas ativos",
+      "inactiveOnly": "Apenas inativos"
+    },
+    "empty": {
+      "title": "Nenhum pais encontrado",
+      "addFirst": "Adicione o seu primeiro pais"
+    },
+    "form": {
+      "code": "Codigo ISO",
+      "codePlaceholder": "ex. FR",
+      "flag": "Emoji da bandeira",
+      "name": "Nome (principal)",
+      "namePlaceholder": "ex. Franca",
+      "nameFr": "Nome FR",
+      "nameEn": "Nome EN",
+      "phonePrefix": "Prefixo telefonico",
+      "phonePrefixPlaceholder": "ex. +33",
+      "timezone": "Fuso horario",
+      "timezonePlaceholder": "ex. Europe/Paris",
+      "currency": "Moeda",
+      "currencyPlaceholder": "ex. EUR",
+      "currencySymbol": "Simbolo da moeda",
+      "currencySymbolPlaceholder": "ex. €",
+      "active": "Pais ativo",
+      "activeDesc": "Visivel nos seletores",
+      "lawyersAvailable": "Advogados disponiveis",
+      "lawyersAvailableDesc": "Advogados cobrem este pais",
+      "expertsAvailable": "Especialistas disponiveis",
+      "expertsAvailableDesc": "Especialistas cobrem este pais"
+    },
+    "services": {
+      "lawyers": "Advogados",
+      "experts": "Especialistas",
+      "none": "Sem servicos"
     }
   },
   "auditLogs": {
@@ -293,7 +339,59 @@
   },
   "parametres": {
     "title": "Definicoes Gerais",
-    "description": "Funcoes, temas, integracoes, registos..."
+    "description": "Funcoes, temas, integracoes, registos...",
+    "lastUpdate": "Ultima atualizacao:",
+    "by": "por",
+    "platform": {
+      "title": "Informacoes da plataforma",
+      "description": "Nome e dados de contacto",
+      "name": "Nome da plataforma",
+      "email": "Email de suporte",
+      "phone": "Telefone de suporte",
+      "website": "Website principal"
+    },
+    "maintenance": {
+      "title": "Modo de manutencao",
+      "description": "Suspender acesso a plataforma",
+      "active": "Modo de manutencao ativo",
+      "activeDesc": "Os utilizadores veem a mensagem de manutencao em vez da plataforma.",
+      "enable": "Ativar modo de manutencao",
+      "enableDesc": "Mostrar mensagem de manutencao aos utilizadores",
+      "message": "Mensagem de manutencao"
+    },
+    "notifications": {
+      "title": "Notificacoes",
+      "description": "Configurar notificacoes por email",
+      "email": "Notificacoes por email",
+      "emailDesc": "Ativar notificacoes por email",
+      "newDossier": "Novo processo",
+      "newDossierDesc": "Notificar quando um novo processo e criado",
+      "newMessage": "Nova mensagem",
+      "newMessageDesc": "Notificar quando uma mensagem e recebida",
+      "providerSignup": "Registo de prestador",
+      "providerSignupDesc": "Notificar quando um prestador se regista"
+    },
+    "integrations": {
+      "title": "Integracoes",
+      "description": "Ligacoes a servicos externos",
+      "laravel": "Laravel API (sos-expat.com)",
+      "laravelDesc": "Sincronizar com site principal",
+      "laravelUrl": "URL da API Laravel",
+      "stripe": "Stripe (pagamentos)",
+      "stripeDesc": "Gestao de subscricoes via Stripe",
+      "apiKeysNote": "As chaves API sao configuradas atraves de variaveis de ambiente"
+    },
+    "links": {
+      "title": "Ligacoes uteis",
+      "firebase": "Consola Firebase",
+      "firebaseDesc": "Base de dados",
+      "stripe": "Painel Stripe",
+      "stripeDesc": "Pagamentos",
+      "sosExpat": "Admin SOS-Expat",
+      "sosExpatDesc": "Site principal",
+      "googleCloud": "Google Cloud",
+      "googleCloudDesc": "Functions e API"
+    }
   },
   "testIA": {
     "title": "Teste IA - Modo Administrador",
@@ -362,6 +460,47 @@
       "unknown": "Erro desconhecido",
       "prefix": "Erro:",
       "closeLabel": "Fechar erro"
+    }
+  },
+  "aiConfig": {
+    "title": "Configuracao IA",
+    "description": "Definicoes do assistente IA para prestadores",
+    "unsaved": "Nao guardado",
+    "modified": "Modificado",
+    "characters": "caracteres",
+    "architecture": {
+      "title": "Arquitetura Multi-LLM",
+      "lawyers": "Advogados:",
+      "experts": "Especialistas:",
+      "search": "Pesquisa:",
+      "perplexityNote": "O Perplexity enriquece automaticamente as respostas com dados web atualizados."
+    },
+    "status": {
+      "disabled": "IA Desativada",
+      "disabledDesc": "As respostas automaticas estao suspensas para todos os prestadores.",
+      "enabled": "IA Ativa",
+      "enabledDesc": "O assistente IA responde aos prestadores de acordo com a configuracao abaixo."
+    },
+    "behavior": {
+      "title": "Comportamento",
+      "description": "Ativacao e respostas automaticas"
+    },
+    "toggles": {
+      "enabled": "IA Ativada",
+      "enabledDesc": "Ativar assistente IA globalmente",
+      "autoBooking": "Resposta automatica a novos processos",
+      "autoBookingDesc": "A IA responde automaticamente quando um cliente cria um processo",
+      "autoMessage": "Resposta automatica a mensagens",
+      "autoMessageDesc": "A IA responde automaticamente as mensagens dos clientes"
+    },
+    "prompts": {
+      "aboutTitle": "Sobre os prompts",
+      "aboutDescription": "Os prompts abaixo definem o comportamento e tom da IA. Modifique-os para ajustar as respostas as necessidades dos seus prestadores. Em caso de duvida, use o botao \"Repor\" para restaurar os valores predefinidos.",
+      "lawyerTitle": "Prompt de Advogado",
+      "lawyerDescription": "Instrucoes para assistencia juridica (Claude 3.5 Sonnet)",
+      "expertTitle": "Prompt de Especialista",
+      "expertDescription": "Instrucoes para orientacao pratica (GPT-4o)",
+      "placeholder": "Introduza o prompt do sistema..."
     }
   },
   "verifyingRights": "A verificar permissoes...",

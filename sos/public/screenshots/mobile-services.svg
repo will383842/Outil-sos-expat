@@ -1,0 +1,135 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844">
+  <defs>
+    <linearGradient id="headerGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#dc2626"/>
+      <stop offset="100%" style="stop-color:#b91c1c"/>
+    </linearGradient>
+    <filter id="shadow2" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="390" height="844" fill="#f9fafb"/>
+
+  <!-- Status Bar -->
+  <rect width="390" height="44" fill="url(#headerGrad2)"/>
+  <text x="20" y="28" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="500">9:41</text>
+  <text x="340" y="28" fill="white" font-family="system-ui, sans-serif" font-size="14">100%</text>
+
+  <!-- Header -->
+  <rect y="44" width="390" height="56" fill="url(#headerGrad2)"/>
+  <text x="30" y="78" fill="white" font-size="20">&lt;</text>
+  <text x="195" y="80" text-anchor="middle" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600">Avocats disponibles</text>
+  <text x="350" y="78" fill="white" font-size="18">&#9881;</text>
+
+  <!-- Search Bar -->
+  <rect x="20" y="115" width="350" height="44" rx="22" fill="white" filter="url(#shadow2)"/>
+  <text x="50" y="143" fill="#9ca3af" font-family="system-ui, sans-serif" font-size="14">&#128269; Rechercher par specialite...</text>
+
+  <!-- Filter Pills -->
+  <rect x="20" y="175" width="80" height="32" rx="16" fill="#dc2626"/>
+  <text x="60" y="196" text-anchor="middle" fill="white" font-family="system-ui, sans-serif" font-size="12" font-weight="500">Tous</text>
+
+  <rect x="110" y="175" width="100" height="32" rx="16" fill="white" stroke="#e5e7eb"/>
+  <text x="160" y="196" text-anchor="middle" fill="#6b7280" font-family="system-ui, sans-serif" font-size="12">Immigration</text>
+
+  <rect x="220" y="175" width="80" height="32" rx="16" fill="white" stroke="#e5e7eb"/>
+  <text x="260" y="196" text-anchor="middle" fill="#6b7280" font-family="system-ui, sans-serif" font-size="12">Fiscal</text>
+
+  <rect x="310" y="175" width="60" height="32" rx="16" fill="white" stroke="#e5e7eb"/>
+  <text x="340" y="196" text-anchor="middle" fill="#6b7280" font-family="system-ui, sans-serif" font-size="12">+5</text>
+
+  <!-- Provider Card 1 -->
+  <rect x="20" y="225" width="350" height="140" rx="16" fill="white" filter="url(#shadow2)"/>
+  <circle cx="70" cy="275" r="35" fill="#e5e7eb"/>
+  <text x="70" y="282" text-anchor="middle" fill="#6b7280" font-size="24">&#128104;&#8205;&#9878;&#65039;</text>
+  <text x="120" y="260" fill="#1f2937" font-family="system-ui, sans-serif" font-size="16" font-weight="600">Me. Sophie Martin</text>
+  <text x="120" y="280" fill="#dc2626" font-family="system-ui, sans-serif" font-size="12" font-weight="500">Droit de l'immigration</text>
+  <text x="120" y="300" fill="#6b7280" font-family="system-ui, sans-serif" font-size="12">Paris, France</text>
+
+  <!-- Rating -->
+  <text x="120" y="320" fill="#fbbf24" font-size="12">&#9733;&#9733;&#9733;&#9733;&#9733;</text>
+  <text x="190" y="320" fill="#6b7280" font-family="system-ui, sans-serif" font-size="12">(127 avis)</text>
+
+  <!-- Online indicator -->
+  <circle cx="335" cy="250" r="6" fill="#22c55e"/>
+  <text x="325" y="270" fill="#22c55e" font-family="system-ui, sans-serif" font-size="10">En ligne</text>
+
+  <!-- Price -->
+  <text x="305" y="320" fill="#1f2937" font-family="system-ui, sans-serif" font-size="14" font-weight="700">45EUR/15min</text>
+
+  <!-- CTA -->
+  <rect x="260" y="330" width="90" height="28" rx="14" fill="#dc2626"/>
+  <text x="305" y="350" text-anchor="middle" fill="white" font-family="system-ui, sans-serif" font-size="12" font-weight="600">Appeler</text>
+
+  <!-- Provider Card 2 -->
+  <rect x="20" y="385" width="350" height="140" rx="16" fill="white" filter="url(#shadow2)"/>
+  <circle cx="70" cy="435" r="35" fill="#e5e7eb"/>
+  <text x="70" y="442" text-anchor="middle" fill="#6b7280" font-size="24">&#128105;&#8205;&#9878;&#65039;</text>
+  <text x="120" y="420" fill="#1f2937" font-family="system-ui, sans-serif" font-size="16" font-weight="600">Me. Jean Dupont</text>
+  <text x="120" y="440" fill="#dc2626" font-family="system-ui, sans-serif" font-size="12" font-weight="500">Droit fiscal international</text>
+  <text x="120" y="460" fill="#6b7280" font-family="system-ui, sans-serif" font-size="12">Londres, UK &#127468;&#127463;</text>
+
+  <text x="120" y="480" fill="#fbbf24" font-size="12">&#9733;&#9733;&#9733;&#9733;&#9734;</text>
+  <text x="190" y="480" fill="#6b7280" font-family="system-ui, sans-serif" font-size="12">(89 avis)</text>
+
+  <circle cx="335" cy="410" r="6" fill="#22c55e"/>
+  <text x="325" y="430" fill="#22c55e" font-family="system-ui, sans-serif" font-size="10">En ligne</text>
+
+  <text x="305" y="480" fill="#1f2937" font-family="system-ui, sans-serif" font-size="14" font-weight="700">55EUR/15min</text>
+
+  <rect x="260" y="490" width="90" height="28" rx="14" fill="#dc2626"/>
+  <text x="305" y="510" text-anchor="middle" fill="white" font-family="system-ui, sans-serif" font-size="12" font-weight="600">Appeler</text>
+
+  <!-- Provider Card 3 -->
+  <rect x="20" y="545" width="350" height="140" rx="16" fill="white" filter="url(#shadow2)"/>
+  <circle cx="70" cy="595" r="35" fill="#e5e7eb"/>
+  <text x="70" y="602" text-anchor="middle" fill="#6b7280" font-size="24">&#128104;&#8205;&#9878;&#65039;</text>
+  <text x="120" y="580" fill="#1f2937" font-family="system-ui, sans-serif" font-size="16" font-weight="600">Me. Ahmed Hassan</text>
+  <text x="120" y="600" fill="#dc2626" font-family="system-ui, sans-serif" font-size="12" font-weight="500">Droit des affaires</text>
+  <text x="120" y="620" fill="#6b7280" font-family="system-ui, sans-serif" font-size="12">Dubai, UAE &#127462;&#127466;</text>
+
+  <text x="120" y="640" fill="#fbbf24" font-size="12">&#9733;&#9733;&#9733;&#9733;&#9733;</text>
+  <text x="190" y="640" fill="#6b7280" font-family="system-ui, sans-serif" font-size="12">(156 avis)</text>
+
+  <circle cx="335" cy="570" r="6" fill="#9ca3af"/>
+  <text x="315" y="590" fill="#9ca3af" font-family="system-ui, sans-serif" font-size="10">Hors ligne</text>
+
+  <text x="305" y="640" fill="#1f2937" font-family="system-ui, sans-serif" font-size="14" font-weight="700">60EUR/15min</text>
+
+  <rect x="260" y="650" width="90" height="28" rx="14" fill="#9ca3af"/>
+  <text x="305" y="670" text-anchor="middle" fill="white" font-family="system-ui, sans-serif" font-size="12" font-weight="600">Indispo.</text>
+
+  <!-- Languages indicator -->
+  <rect x="20" y="705" width="350" height="40" rx="8" fill="#fef2f2"/>
+  <text x="40" y="730" fill="#dc2626" font-family="system-ui, sans-serif" font-size="12" font-weight="500">&#127760; 9 langues disponibles: FR, EN, ES, DE, PT, RU, AR, ZH, HI</text>
+
+  <!-- Bottom Navigation -->
+  <rect y="764" width="390" height="80" fill="white" filter="url(#shadow2)"/>
+  <line x1="0" y1="764" x2="390" y2="764" stroke="#e5e7eb" stroke-width="1"/>
+
+  <g transform="translate(48, 784)">
+    <text x="0" y="16" text-anchor="middle" fill="#9ca3af" font-size="20">&#127968;</text>
+    <text x="0" y="40" text-anchor="middle" fill="#9ca3af" font-family="system-ui, sans-serif" font-size="10">Accueil</text>
+  </g>
+
+  <g transform="translate(146, 784)">
+    <circle cx="0" cy="12" r="12" fill="#dc2626"/>
+    <text x="0" y="16" text-anchor="middle" fill="white" font-size="12">&#128269;</text>
+    <text x="0" y="40" text-anchor="middle" fill="#dc2626" font-family="system-ui, sans-serif" font-size="10" font-weight="600">Recherche</text>
+  </g>
+
+  <g transform="translate(244, 784)">
+    <text x="0" y="16" text-anchor="middle" fill="#9ca3af" font-size="20">&#128276;</text>
+    <text x="0" y="40" text-anchor="middle" fill="#9ca3af" font-family="system-ui, sans-serif" font-size="10">Alertes</text>
+  </g>
+
+  <g transform="translate(342, 784)">
+    <text x="0" y="16" text-anchor="middle" fill="#9ca3af" font-size="20">&#128100;</text>
+    <text x="0" y="40" text-anchor="middle" fill="#9ca3af" font-family="system-ui, sans-serif" font-size="10">Profil</text>
+  </g>
+
+  <!-- Home indicator -->
+  <rect x="145" y="828" width="100" height="5" rx="2.5" fill="#1f2937"/>
+</svg>

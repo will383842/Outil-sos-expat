@@ -20,6 +20,7 @@ import {
   onSnapshot,
   DocumentData,
   QueryConstraint,
+  runTransaction,
 } from "firebase/firestore";
 import {
   ref,
@@ -963,6 +964,64 @@ export const reportReview = async (
     createdAt: serverTimestamp(),
   });
   return true;
+};
+
+/**
+ * Recalculate provider stats (rating average and review count) from all published reviews
+ * Called after review modification or deletion to ensure stats are accurate
+ */
+export const recalculateProviderStats = async (providerId: string): Promise<void> => {
+  try {
+    // Get all published reviews for this provider
+    const reviewsCol = collection(db, "reviews");
+    const q = query(
+      reviewsCol,
+      where("providerId", "==", providerId),
+      where("status", "==", "published"),
+      where("isPublic", "==", true)
+    );
+    const snapshot = await getDocs(q);
+
+    // Calculate new stats
+    let totalRating = 0;
+    let reviewCount = 0;
+
+    snapshot.docs.forEach((docSnap) => {
+      const data = docSnap.data();
+      const rating = getNum(data.rating, 0);
+      if (rating >= 1 && rating <= 5) {
+        totalRating += rating;
+        reviewCount++;
+      }
+    });
+
+    const newRating = reviewCount > 0 ? totalRating / reviewCount : 0;
+
+    // Update sos_profiles
+    const sosRef = doc(db, "sos_profiles", providerId);
+    const sosSnap = await getDoc(sosRef);
+    if (sosSnap.exists()) {
+      await updateDoc(sosRef, {
+        rating: newRating,
+        reviewCount,
+        updatedAt: serverTimestamp(),
+      });
+    }
+
+    // Update users
+    const userRef = doc(db, "users", providerId);
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      await updateDoc(userRef, {
+        rating: newRating,
+        reviewCount,
+        updatedAt: serverTimestamp(),
+      });
+    }
+  } catch (error) {
+    console.error("Error recalculating provider stats:", error);
+    throw error;
+  }
 };
 
 export const getAllReviews = async (options?: {

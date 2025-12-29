@@ -61,6 +61,23 @@
       "usage": "This Month Usage",
       "percent": "{{percent}}% of monthly quota used"
     },
+    "alerts": {
+      "title": "Alerts",
+      "none": "No alerts",
+      "inactiveProviders": "{{count}} inactive provider(s)",
+      "oldPendingDossiers": "{{count}} case(s) pending for 48h+",
+      "view": "View"
+    },
+    "providersByCountry": "Providers by Country",
+    "spokenLanguages": "Spoken Languages",
+    "noCountryRegistered": "No country registered",
+    "noLanguageRegistered": "No language registered",
+    "notSpecified": "Not specified",
+    "totalRegistered": "{{count}} registered in total",
+    "totalCount": "{{count}} in total",
+    "thisWeek": "this week",
+    "legalProviders": "legal providers",
+    "companions": "companions",
     "providers": {
       "title": "Providers",
       "none": "No active providers",
@@ -71,7 +88,9 @@
     },
     "recentDossiers": {
       "title": "Recent Cases",
-      "none": "No recent cases"
+      "none": "No recent cases",
+      "dossierFallback": "Case #{{id}}",
+      "clientFallback": "Client"
     },
     "sync": {
       "title": "Laravel Sync",
@@ -252,6 +271,52 @@
       "code": "Code",
       "name": "Name",
       "active": "Active"
+    },
+    "addCountry": "Add a country",
+    "editCountry": "Edit country",
+    "confirmDelete": "Delete {{name}}?",
+    "search": "Search for a country...",
+    "stats": {
+      "total": "Total countries",
+      "active": "Active",
+      "withLawyers": "With lawyers",
+      "withExperts": "With experts"
+    },
+    "filters": {
+      "activeOnly": "Active only",
+      "inactiveOnly": "Inactive only"
+    },
+    "empty": {
+      "title": "No countries found",
+      "addFirst": "Add your first country"
+    },
+    "form": {
+      "code": "ISO Code",
+      "codePlaceholder": "e.g. FR",
+      "flag": "Flag emoji",
+      "name": "Name (main)",
+      "namePlaceholder": "e.g. France",
+      "nameFr": "Name FR",
+      "nameEn": "Name EN",
+      "phonePrefix": "Phone prefix",
+      "phonePrefixPlaceholder": "e.g. +33",
+      "timezone": "Timezone",
+      "timezonePlaceholder": "e.g. Europe/Paris",
+      "currency": "Currency",
+      "currencyPlaceholder": "e.g. EUR",
+      "currencySymbol": "Currency symbol",
+      "currencySymbolPlaceholder": "e.g. €",
+      "active": "Country active",
+      "activeDesc": "Visible in selectors",
+      "lawyersAvailable": "Lawyers available",
+      "lawyersAvailableDesc": "Lawyers cover this country",
+      "expertsAvailable": "Experts available",
+      "expertsAvailableDesc": "Experts cover this country"
+    },
+    "services": {
+      "lawyers": "Lawyers",
+      "experts": "Experts",
+      "none": "No services"
     }
   },
   "auditLogs": {
@@ -293,7 +358,59 @@
   },
   "parametres": {
     "title": "General Settings",
-    "description": "Roles, themes, integrations, logs..."
+    "description": "Roles, themes, integrations, logs...",
+    "lastUpdate": "Last update:",
+    "by": "by",
+    "platform": {
+      "title": "Platform information",
+      "description": "Name and contact details",
+      "name": "Platform name",
+      "email": "Support email",
+      "phone": "Support phone",
+      "website": "Main website"
+    },
+    "maintenance": {
+      "title": "Maintenance mode",
+      "description": "Suspend platform access",
+      "active": "Maintenance mode active",
+      "activeDesc": "Users see the maintenance message instead of the platform.",
+      "enable": "Enable maintenance mode",
+      "enableDesc": "Display maintenance message to users",
+      "message": "Maintenance message"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Configure email notifications",
+      "email": "Email notifications",
+      "emailDesc": "Enable email notifications",
+      "newDossier": "New case",
+      "newDossierDesc": "Notify when a new case is created",
+      "newMessage": "New message",
+      "newMessageDesc": "Notify when a message is received",
+      "providerSignup": "Provider signup",
+      "providerSignupDesc": "Notify when a provider signs up"
+    },
+    "integrations": {
+      "title": "Integrations",
+      "description": "External service connections",
+      "laravel": "Laravel API (sos-expat.com)",
+      "laravelDesc": "Sync with main site",
+      "laravelUrl": "Laravel API URL",
+      "stripe": "Stripe (payments)",
+      "stripeDesc": "Subscription management via Stripe",
+      "apiKeysNote": "API keys are configured via environment variables"
+    },
+    "links": {
+      "title": "Useful links",
+      "firebase": "Firebase Console",
+      "firebaseDesc": "Database",
+      "stripe": "Stripe Dashboard",
+      "stripeDesc": "Payments",
+      "sosExpat": "SOS-Expat Admin",
+      "sosExpatDesc": "Main site",
+      "googleCloud": "Google Cloud",
+      "googleCloudDesc": "Functions & API"
+    }
   },
   "testIA": {
     "title": "AI Test - Admin Mode",
@@ -362,6 +479,47 @@
       "unknown": "Unknown error",
       "prefix": "Error:",
       "closeLabel": "Close error"
+    }
+  },
+  "aiConfig": {
+    "title": "AI Configuration",
+    "description": "AI assistant settings for providers",
+    "unsaved": "Unsaved",
+    "modified": "Modified",
+    "characters": "characters",
+    "architecture": {
+      "title": "Multi-LLM Architecture",
+      "lawyers": "Lawyers:",
+      "experts": "Experts:",
+      "search": "Search:",
+      "perplexityNote": "Perplexity automatically enriches responses with up-to-date web data."
+    },
+    "status": {
+      "disabled": "AI Disabled",
+      "disabledDesc": "Automatic responses are suspended for all providers.",
+      "enabled": "AI Active",
+      "enabledDesc": "The AI assistant responds to providers according to the configuration below."
+    },
+    "behavior": {
+      "title": "Behavior",
+      "description": "Activation and automatic responses"
+    },
+    "toggles": {
+      "enabled": "AI Enabled",
+      "enabledDesc": "Enable AI assistant globally",
+      "autoBooking": "Auto-reply to new cases",
+      "autoBookingDesc": "AI automatically responds when a client creates a case",
+      "autoMessage": "Auto-reply to messages",
+      "autoMessageDesc": "AI automatically responds to client messages"
+    },
+    "prompts": {
+      "aboutTitle": "About prompts",
+      "aboutDescription": "The prompts below define the behavior and tone of the AI. Modify them to adjust responses to your providers' needs. If in doubt, use the \"Reset\" button to restore defaults.",
+      "lawyerTitle": "Lawyer Prompt",
+      "lawyerDescription": "Instructions for legal assistance (Claude 3.5 Sonnet)",
+      "expertTitle": "Expert Prompt",
+      "expertDescription": "Instructions for practical guidance (GPT-4o)",
+      "placeholder": "Enter system prompt..."
     }
   },
   "verifyingRights": "Verifying permissions...",

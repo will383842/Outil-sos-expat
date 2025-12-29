@@ -12,6 +12,8 @@
 
 import { useEffect, useState } from "react";
 import { useLanguage } from "../../hooks/useLanguage";
+import { useAuth } from "../../contexts/UnifiedUserContext";
+import { logAuditEntry } from "../../lib/auditLog";
 import {
   collection,
   query,
@@ -353,7 +355,7 @@ function AddProviderModal({
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="avocat@gmail.com"
+              placeholder={t("admin:prestataires.form.emailPlaceholder")}
               className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
               required
             />
@@ -439,6 +441,7 @@ function AddProviderModal({
 
 export default function Prestataires() {
   const { t } = useLanguage({ mode: "admin" });
+  const { user } = useAuth();
   const [providers, setProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -595,7 +598,22 @@ export default function Prestataires() {
         }, { merge: true });
       }
 
-      // 3. Mise à jour locale
+      // 3. Audit log
+      await logAuditEntry({
+        action: newAccessState ? "accessGranted" : "accessRevoked",
+        targetType: "provider",
+        targetId: provider.id,
+        details: {
+          email: provider.email,
+          name: displayName,
+          type: providerType,
+          country: country,
+          adminEmail: user?.email || "unknown",
+        },
+        severity: "info",
+      });
+
+      // 4. Mise à jour locale
       setProviders((prev) =>
         prev.map((p) =>
           p.id === provider.id
@@ -618,7 +636,7 @@ export default function Prestataires() {
   const handleAddProvider = async (data: { email: string; name: string; type: "lawyer" | "expat"; country: string }) => {
     // Générer un ID unique
     const providerId = `manual_${Date.now()}`;
-    
+
     // Créer dans providers
     await setDoc(doc(db, "providers", providerId), {
       email: data.email.toLowerCase(),
@@ -629,6 +647,22 @@ export default function Prestataires() {
       manual: true,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
+    });
+
+    // Audit log
+    await logAuditEntry({
+      action: "providerCreate",
+      targetType: "provider",
+      targetId: providerId,
+      details: {
+        email: data.email.toLowerCase(),
+        name: data.name,
+        type: data.type,
+        country: data.country,
+        manual: true,
+        adminEmail: user?.email || "unknown",
+      },
+      severity: "info",
     });
 
     // Ajouter à la liste locale

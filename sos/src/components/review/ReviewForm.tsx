@@ -54,7 +54,6 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
       setIsSubmitting(false);
       return;
     }
-    console.log("trying to write the review! ");
     try {
       // ✅ NE PAS forcer status ni isPublic : la logique est dans createReviewRecord
       await createReviewRecord({
@@ -69,7 +68,6 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
         helpfulVotes: 0,
         reportedCount: 0,
       });
-      console.log("review written! ");
 
       // Scroll vers la section des avis
       const reviewsSection = document.getElementById("reviews-section");

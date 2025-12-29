@@ -18,6 +18,7 @@ import { doc, getDoc, setDoc, Timestamp } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { logAuditEntry } from "../../lib/auditLog";
 import { useAuth } from "../../contexts/UnifiedUserContext";
+import { useLanguage } from "../../hooks/useLanguage";
 
 // UI Components
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/card";
@@ -187,6 +188,12 @@ const PromptEditor = memo(function PromptEditor({
   onChange,
   defaultValue,
   onReset,
+  resetLabel,
+  placeholderText,
+  modifiedLabel,
+  charactersLabel,
+  expandTitle,
+  collapseTitle,
 }: {
   label: string;
   description: string;
@@ -196,6 +203,12 @@ const PromptEditor = memo(function PromptEditor({
   onChange: (value: string) => void;
   defaultValue: string;
   onReset: () => void;
+  resetLabel: string;
+  placeholderText: string;
+  modifiedLabel: string;
+  charactersLabel: string;
+  expandTitle: string;
+  collapseTitle: string;
 }) {
   const [expanded, setExpanded] = useState(false);
   const isModified = value !== defaultValue;
@@ -221,7 +234,7 @@ const PromptEditor = memo(function PromptEditor({
               className="text-gray-500"
             >
               <RefreshCw className="w-3 h-3 mr-1" />
-              Réinitialiser
+              {resetLabel}
             </Button>
           )}
         </div>
@@ -233,12 +246,12 @@ const PromptEditor = memo(function PromptEditor({
             onChange={(e) => onChange(e.target.value)}
             rows={expanded ? 25 : 10}
             className="w-full p-4 border border-gray-200 rounded-xl text-sm font-mono resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            placeholder="Entrez le prompt système..."
+            placeholder={placeholderText}
           />
           <button
             onClick={() => setExpanded(!expanded)}
             className="absolute bottom-3 right-3 p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-            title={expanded ? "Réduire" : "Agrandir"}
+            title={expanded ? collapseTitle : expandTitle}
           >
             {expanded ? (
               <ChevronUp className="w-4 h-4 text-gray-600" />
@@ -249,12 +262,12 @@ const PromptEditor = memo(function PromptEditor({
         </div>
         <div className="flex items-center justify-between mt-2">
           <p className="text-xs text-gray-500">
-            {value.length} caractères
+            {value.length} {charactersLabel}
           </p>
           {isModified && (
             <p className="text-xs text-amber-600 flex items-center gap-1">
               <AlertTriangle className="w-3 h-3" />
-              Modifié
+              {modifiedLabel}
             </p>
           )}
         </div>
@@ -269,6 +282,7 @@ const PromptEditor = memo(function PromptEditor({
 
 export default function AIConfig() {
   const { user } = useAuth();
+  const { t } = useLanguage({ mode: "admin" });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -357,17 +371,17 @@ export default function AIConfig() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <Sparkles className="w-7 h-7 text-purple-600" />
-            Configuration IA
+            {t("aiConfig.title")}
           </h1>
           <p className="text-gray-500 mt-1">
-            Paramètres de l'assistant IA pour les prestataires
+            {t("aiConfig.description")}
           </p>
         </div>
         <div className="flex items-center gap-3">
           {hasChanges && (
             <span className="text-sm text-amber-600 flex items-center gap-1">
               <AlertTriangle className="w-4 h-4" />
-              Non sauvegardé
+              {t("aiConfig.unsaved")}
             </span>
           )}
           <Button
@@ -380,7 +394,7 @@ export default function AIConfig() {
             ) : (
               <Save className="w-4 h-4 mr-2" />
             )}
-            Enregistrer
+            {t("common:actions.save")}
           </Button>
         </div>
       </div>
@@ -391,23 +405,23 @@ export default function AIConfig() {
           <div className="flex items-start gap-3">
             <Brain className="w-5 h-5 text-purple-600 mt-0.5" />
             <div>
-              <p className="font-semibold text-gray-900 mb-2">Architecture Multi-LLM</p>
+              <p className="font-semibold text-gray-900 mb-2">{t("aiConfig.architecture.title")}</p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
                 <div className="flex items-center gap-2 p-2 bg-white rounded-lg">
                   <Scale className="w-4 h-4 text-blue-600" />
-                  <span><strong>Avocats:</strong> Claude 3.5 Sonnet</span>
+                  <span><strong>{t("aiConfig.architecture.lawyers")}</strong> Claude 3.5 Sonnet</span>
                 </div>
                 <div className="flex items-center gap-2 p-2 bg-white rounded-lg">
                   <Globe className="w-4 h-4 text-green-600" />
-                  <span><strong>Experts:</strong> GPT-4o</span>
+                  <span><strong>{t("aiConfig.architecture.experts")}</strong> GPT-4o</span>
                 </div>
                 <div className="flex items-center gap-2 p-2 bg-white rounded-lg">
                   <Search className="w-4 h-4 text-orange-600" />
-                  <span><strong>Recherche:</strong> Perplexity</span>
+                  <span><strong>{t("aiConfig.architecture.search")}</strong> Perplexity</span>
                 </div>
               </div>
               <p className="text-xs text-gray-500 mt-2">
-                Perplexity enrichit automatiquement les réponses avec des données web actualisées.
+                {t("aiConfig.architecture.perplexityNote")}
               </p>
             </div>
           </div>
@@ -420,9 +434,9 @@ export default function AIConfig() {
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
             <div>
-              <p className="font-medium text-amber-800">IA désactivée</p>
+              <p className="font-medium text-amber-800">{t("aiConfig.status.disabled")}</p>
               <p className="text-sm text-amber-700 mt-1">
-                Les réponses automatiques sont suspendues pour tous les prestataires.
+                {t("aiConfig.status.disabledDesc")}
               </p>
             </div>
           </div>
@@ -435,9 +449,9 @@ export default function AIConfig() {
           <div className="flex items-start gap-3">
             <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
             <div>
-              <p className="font-medium text-green-800">IA active</p>
+              <p className="font-medium text-green-800">{t("aiConfig.status.enabled")}</p>
               <p className="text-sm text-green-700 mt-1">
-                L'assistant IA répond aux prestataires selon la configuration ci-dessous.
+                {t("aiConfig.status.enabledDesc")}
               </p>
             </div>
           </div>
@@ -447,8 +461,8 @@ export default function AIConfig() {
       {/* Toggles */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Comportement</CardTitle>
-          <CardDescription>Activation et réponses automatiques</CardDescription>
+          <CardTitle className="text-base">{t("aiConfig.behavior.title")}</CardTitle>
+          <CardDescription>{t("aiConfig.behavior.description")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {/* IA Enabled */}
@@ -456,8 +470,8 @@ export default function AIConfig() {
             <div className="flex items-center gap-3">
               <div className={`w-3 h-3 rounded-full ${settings.enabled ? "bg-green-500 animate-pulse" : "bg-gray-300"}`} />
               <div>
-                <p className="font-medium text-gray-900">IA activée</p>
-                <p className="text-sm text-gray-500">Active l'assistant IA globalement</p>
+                <p className="font-medium text-gray-900">{t("aiConfig.toggles.enabled")}</p>
+                <p className="text-sm text-gray-500">{t("aiConfig.toggles.enabledDesc")}</p>
               </div>
             </div>
             <Switch
@@ -467,8 +481,8 @@ export default function AIConfig() {
           </div>
 
           <ToggleRow
-            label="Auto-réponse aux nouveaux dossiers"
-            description="L'IA répond automatiquement quand un client crée un dossier"
+            label={t("aiConfig.toggles.autoBooking")}
+            description={t("aiConfig.toggles.autoBookingDesc")}
             checked={settings.autoReplyOnBooking}
             onCheckedChange={(checked) => updateSetting("autoReplyOnBooking", checked)}
             disabled={!settings.enabled}
@@ -476,8 +490,8 @@ export default function AIConfig() {
           />
 
           <ToggleRow
-            label="Auto-réponse aux messages"
-            description="L'IA répond automatiquement aux messages des clients"
+            label={t("aiConfig.toggles.autoMessage")}
+            description={t("aiConfig.toggles.autoMessageDesc")}
             checked={settings.autoReplyOnMessage}
             onCheckedChange={(checked) => updateSetting("autoReplyOnMessage", checked)}
             disabled={!settings.enabled}
@@ -491,11 +505,9 @@ export default function AIConfig() {
         <div className="flex items-start gap-3">
           <Info className="w-5 h-5 text-blue-600 mt-0.5" />
           <div>
-            <p className="font-medium text-blue-800">À propos des prompts</p>
+            <p className="font-medium text-blue-800">{t("aiConfig.prompts.aboutTitle")}</p>
             <p className="text-sm text-blue-700 mt-1">
-              Les prompts ci-dessous définissent le comportement et le ton de l'IA.
-              Modifiez-les pour ajuster les réponses aux besoins de vos prestataires.
-              En cas de doute, utilisez le bouton "Réinitialiser" pour revenir aux valeurs par défaut.
+              {t("aiConfig.prompts.aboutDescription")}
             </p>
           </div>
         </div>
@@ -503,26 +515,38 @@ export default function AIConfig() {
 
       {/* Prompt Avocat */}
       <PromptEditor
-        label="Prompt Avocats"
-        description="Instructions pour l'assistance juridique (Claude 3.5 Sonnet)"
+        label={t("aiConfig.prompts.lawyerTitle")}
+        description={t("aiConfig.prompts.lawyerDescription")}
         icon={Scale}
         iconColor="bg-blue-600"
         value={settings.lawyerSystemPrompt}
         onChange={(value) => updateSetting("lawyerSystemPrompt", value)}
         defaultValue={DEFAULT_LAWYER_PROMPT}
         onReset={() => updateSetting("lawyerSystemPrompt", DEFAULT_LAWYER_PROMPT)}
+        resetLabel={t("common:actions.reset")}
+        placeholderText={t("aiConfig.prompts.placeholder")}
+        modifiedLabel={t("aiConfig.modified")}
+        charactersLabel={t("aiConfig.characters")}
+        expandTitle={t("common:actions.expand")}
+        collapseTitle={t("common:actions.collapse")}
       />
 
       {/* Prompt Expert */}
       <PromptEditor
-        label="Prompt Experts"
-        description="Instructions pour l'accompagnement pratique (GPT-4o)"
+        label={t("aiConfig.prompts.expertTitle")}
+        description={t("aiConfig.prompts.expertDescription")}
         icon={Globe}
         iconColor="bg-green-600"
         value={settings.expertSystemPrompt}
         onChange={(value) => updateSetting("expertSystemPrompt", value)}
         defaultValue={DEFAULT_EXPERT_PROMPT}
         onReset={() => updateSetting("expertSystemPrompt", DEFAULT_EXPERT_PROMPT)}
+        resetLabel={t("common:actions.reset")}
+        placeholderText={t("aiConfig.prompts.placeholder")}
+        modifiedLabel={t("aiConfig.modified")}
+        charactersLabel={t("aiConfig.characters")}
+        expandTitle={t("common:actions.expand")}
+        collapseTitle={t("common:actions.collapse")}
       />
     </div>
   );

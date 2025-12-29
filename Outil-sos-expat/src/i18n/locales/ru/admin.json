@@ -252,6 +252,52 @@
       "code": "Код",
       "name": "Название",
       "active": "Активна"
+    },
+    "addCountry": "Добавить страну",
+    "editCountry": "Редактировать страну",
+    "confirmDelete": "Удалить {{name}}?",
+    "search": "Поиск страны...",
+    "stats": {
+      "total": "Всего стран",
+      "active": "Активных",
+      "withLawyers": "С юристами",
+      "withExperts": "С экспертами"
+    },
+    "filters": {
+      "activeOnly": "Только активные",
+      "inactiveOnly": "Только неактивные"
+    },
+    "empty": {
+      "title": "Страны не найдены",
+      "addFirst": "Добавьте первую страну"
+    },
+    "form": {
+      "code": "ISO-код",
+      "codePlaceholder": "напр. FR",
+      "flag": "Эмодзи флага",
+      "name": "Название (основное)",
+      "namePlaceholder": "напр. Франция",
+      "nameFr": "Название FR",
+      "nameEn": "Название EN",
+      "phonePrefix": "Телефонный код",
+      "phonePrefixPlaceholder": "напр. +33",
+      "timezone": "Часовой пояс",
+      "timezonePlaceholder": "напр. Europe/Paris",
+      "currency": "Валюта",
+      "currencyPlaceholder": "напр. EUR",
+      "currencySymbol": "Символ валюты",
+      "currencySymbolPlaceholder": "напр. €",
+      "active": "Страна активна",
+      "activeDesc": "Видна в селекторах",
+      "lawyersAvailable": "Юристы доступны",
+      "lawyersAvailableDesc": "Юристы работают в этой стране",
+      "expertsAvailable": "Эксперты доступны",
+      "expertsAvailableDesc": "Эксперты работают в этой стране"
+    },
+    "services": {
+      "lawyers": "Юристы",
+      "experts": "Эксперты",
+      "none": "Нет услуг"
     }
   },
   "auditLogs": {
@@ -293,7 +339,59 @@
   },
   "parametres": {
     "title": "Общие настройки",
-    "description": "Роли, темы, интеграции, журналы..."
+    "description": "Роли, темы, интеграции, журналы...",
+    "lastUpdate": "Последнее обновление:",
+    "by": "от",
+    "platform": {
+      "title": "Информация о платформе",
+      "description": "Название и контактные данные",
+      "name": "Название платформы",
+      "email": "Email поддержки",
+      "phone": "Телефон поддержки",
+      "website": "Основной сайт"
+    },
+    "maintenance": {
+      "title": "Режим обслуживания",
+      "description": "Приостановить доступ к платформе",
+      "active": "Режим обслуживания активен",
+      "activeDesc": "Пользователи видят сообщение об обслуживании вместо платформы.",
+      "enable": "Включить режим обслуживания",
+      "enableDesc": "Показывать сообщение об обслуживании пользователям",
+      "message": "Сообщение об обслуживании"
+    },
+    "notifications": {
+      "title": "Уведомления",
+      "description": "Настройка уведомлений по email",
+      "email": "Уведомления по email",
+      "emailDesc": "Включить уведомления по email",
+      "newDossier": "Новое дело",
+      "newDossierDesc": "Уведомлять при создании нового дела",
+      "newMessage": "Новое сообщение",
+      "newMessageDesc": "Уведомлять при получении сообщения",
+      "providerSignup": "Регистрация поставщика",
+      "providerSignupDesc": "Уведомлять при регистрации поставщика"
+    },
+    "integrations": {
+      "title": "Интеграции",
+      "description": "Подключения к внешним сервисам",
+      "laravel": "Laravel API (sos-expat.com)",
+      "laravelDesc": "Синхронизация с основным сайтом",
+      "laravelUrl": "URL Laravel API",
+      "stripe": "Stripe (платежи)",
+      "stripeDesc": "Управление подписками через Stripe",
+      "apiKeysNote": "API-ключи настраиваются через переменные окружения"
+    },
+    "links": {
+      "title": "Полезные ссылки",
+      "firebase": "Консоль Firebase",
+      "firebaseDesc": "База данных",
+      "stripe": "Панель Stripe",
+      "stripeDesc": "Платежи",
+      "sosExpat": "Админ SOS-Expat",
+      "sosExpatDesc": "Основной сайт",
+      "googleCloud": "Google Cloud",
+      "googleCloudDesc": "Functions и API"
+    }
   },
   "testIA": {
     "title": "Тест ИИ — Режим администратора",
@@ -362,6 +460,47 @@
       "unknown": "Неизвестная ошибка",
       "prefix": "Ошибка:",
       "closeLabel": "Закрыть ошибку"
+    }
+  },
+  "aiConfig": {
+    "title": "Конфигурация ИИ",
+    "description": "Настройки ИИ-ассистента для поставщиков",
+    "unsaved": "Не сохранено",
+    "modified": "Изменено",
+    "characters": "символов",
+    "architecture": {
+      "title": "Мульти-LLM архитектура",
+      "lawyers": "Юристы:",
+      "experts": "Эксперты:",
+      "search": "Поиск:",
+      "perplexityNote": "Perplexity автоматически обогащает ответы актуальными данными из интернета."
+    },
+    "status": {
+      "disabled": "ИИ Отключён",
+      "disabledDesc": "Автоматические ответы приостановлены для всех поставщиков.",
+      "enabled": "ИИ Активен",
+      "enabledDesc": "ИИ-ассистент отвечает поставщикам согласно настройкам ниже."
+    },
+    "behavior": {
+      "title": "Поведение",
+      "description": "Активация и автоматические ответы"
+    },
+    "toggles": {
+      "enabled": "ИИ Включён",
+      "enabledDesc": "Включить ИИ-ассистента глобально",
+      "autoBooking": "Авто-ответ на новые дела",
+      "autoBookingDesc": "ИИ автоматически отвечает, когда клиент создаёт дело",
+      "autoMessage": "Авто-ответ на сообщения",
+      "autoMessageDesc": "ИИ автоматически отвечает на сообщения клиентов"
+    },
+    "prompts": {
+      "aboutTitle": "О промптах",
+      "aboutDescription": "Промпты ниже определяют поведение и тон ИИ. Измените их для настройки ответов под нужды ваших поставщиков. В случае сомнений используйте кнопку \"Сбросить\" для восстановления значений по умолчанию.",
+      "lawyerTitle": "Промпт юриста",
+      "lawyerDescription": "Инструкции для юридической помощи (Claude 3.5 Sonnet)",
+      "expertTitle": "Промпт эксперта",
+      "expertDescription": "Инструкции для практических рекомендаций (GPT-4o)",
+      "placeholder": "Введите системный промпт..."
     }
   },
   "verifyingRights": "Проверка прав доступа...",

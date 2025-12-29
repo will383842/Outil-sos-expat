@@ -252,6 +252,52 @@
       "code": "Code",
       "name": "Name",
       "active": "Aktiv"
+    },
+    "addCountry": "Land hinzufügen",
+    "editCountry": "Land bearbeiten",
+    "confirmDelete": "{{name}} löschen?",
+    "search": "Land suchen...",
+    "stats": {
+      "total": "Länder gesamt",
+      "active": "Aktiv",
+      "withLawyers": "Mit Anwälten",
+      "withExperts": "Mit Experten"
+    },
+    "filters": {
+      "activeOnly": "Nur aktive",
+      "inactiveOnly": "Nur inaktive"
+    },
+    "empty": {
+      "title": "Keine Länder gefunden",
+      "addFirst": "Fügen Sie Ihr erstes Land hinzu"
+    },
+    "form": {
+      "code": "ISO-Code",
+      "codePlaceholder": "z.B. FR",
+      "flag": "Flaggen-Emoji",
+      "name": "Name (Haupt)",
+      "namePlaceholder": "z.B. Frankreich",
+      "nameFr": "Name FR",
+      "nameEn": "Name EN",
+      "phonePrefix": "Telefonvorwahl",
+      "phonePrefixPlaceholder": "z.B. +33",
+      "timezone": "Zeitzone",
+      "timezonePlaceholder": "z.B. Europe/Paris",
+      "currency": "Währung",
+      "currencyPlaceholder": "z.B. EUR",
+      "currencySymbol": "Währungssymbol",
+      "currencySymbolPlaceholder": "z.B. €",
+      "active": "Land aktiv",
+      "activeDesc": "In Auswahllisten sichtbar",
+      "lawyersAvailable": "Anwälte verfügbar",
+      "lawyersAvailableDesc": "Anwälte decken dieses Land ab",
+      "expertsAvailable": "Experten verfügbar",
+      "expertsAvailableDesc": "Experten decken dieses Land ab"
+    },
+    "services": {
+      "lawyers": "Anwälte",
+      "experts": "Experten",
+      "none": "Keine Dienste"
     }
   },
   "auditLogs": {
@@ -293,7 +339,59 @@
   },
   "parametres": {
     "title": "Allgemeine Einstellungen",
-    "description": "Rollen, Themes, Integrationen, Protokolle..."
+    "description": "Rollen, Themes, Integrationen, Protokolle...",
+    "lastUpdate": "Letzte Aktualisierung:",
+    "by": "von",
+    "platform": {
+      "title": "Plattforminformationen",
+      "description": "Name und Kontaktdaten",
+      "name": "Plattformname",
+      "email": "Support-E-Mail",
+      "phone": "Support-Telefon",
+      "website": "Haupt-Website"
+    },
+    "maintenance": {
+      "title": "Wartungsmodus",
+      "description": "Plattformzugang sperren",
+      "active": "Wartungsmodus aktiv",
+      "activeDesc": "Benutzer sehen die Wartungsmeldung anstelle der Plattform.",
+      "enable": "Wartungsmodus aktivieren",
+      "enableDesc": "Wartungsmeldung für Benutzer anzeigen",
+      "message": "Wartungsmeldung"
+    },
+    "notifications": {
+      "title": "Benachrichtigungen",
+      "description": "E-Mail-Benachrichtigungen konfigurieren",
+      "email": "E-Mail-Benachrichtigungen",
+      "emailDesc": "E-Mail-Benachrichtigungen aktivieren",
+      "newDossier": "Neuer Fall",
+      "newDossierDesc": "Benachrichtigen, wenn ein neuer Fall erstellt wird",
+      "newMessage": "Neue Nachricht",
+      "newMessageDesc": "Benachrichtigen, wenn eine Nachricht empfangen wird",
+      "providerSignup": "Anbieter-Registrierung",
+      "providerSignupDesc": "Benachrichtigen, wenn sich ein Anbieter registriert"
+    },
+    "integrations": {
+      "title": "Integrationen",
+      "description": "Verbindungen zu externen Diensten",
+      "laravel": "Laravel API (sos-expat.com)",
+      "laravelDesc": "Mit Hauptseite synchronisieren",
+      "laravelUrl": "Laravel API URL",
+      "stripe": "Stripe (Zahlungen)",
+      "stripeDesc": "Abonnementverwaltung über Stripe",
+      "apiKeysNote": "API-Schlüssel werden über Umgebungsvariablen konfiguriert"
+    },
+    "links": {
+      "title": "Nützliche Links",
+      "firebase": "Firebase-Konsole",
+      "firebaseDesc": "Datenbank",
+      "stripe": "Stripe-Dashboard",
+      "stripeDesc": "Zahlungen",
+      "sosExpat": "SOS-Expat Admin",
+      "sosExpatDesc": "Hauptseite",
+      "googleCloud": "Google Cloud",
+      "googleCloudDesc": "Functions & API"
+    }
   },
   "testIA": {
     "title": "KI-Test - Admin-Modus",
@@ -362,6 +460,47 @@
       "unknown": "Unbekannter Fehler",
       "prefix": "Fehler:",
       "closeLabel": "Fehler schließen"
+    }
+  },
+  "aiConfig": {
+    "title": "KI-Konfiguration",
+    "description": "KI-Assistenten-Einstellungen für Anbieter",
+    "unsaved": "Nicht gespeichert",
+    "modified": "Geändert",
+    "characters": "Zeichen",
+    "architecture": {
+      "title": "Multi-LLM-Architektur",
+      "lawyers": "Anwälte:",
+      "experts": "Experten:",
+      "search": "Suche:",
+      "perplexityNote": "Perplexity reichert Antworten automatisch mit aktuellen Webdaten an."
+    },
+    "status": {
+      "disabled": "KI Deaktiviert",
+      "disabledDesc": "Automatische Antworten sind für alle Anbieter ausgesetzt.",
+      "enabled": "KI Aktiv",
+      "enabledDesc": "Der KI-Assistent antwortet Anbietern gemäß der untenstehenden Konfiguration."
+    },
+    "behavior": {
+      "title": "Verhalten",
+      "description": "Aktivierung und automatische Antworten"
+    },
+    "toggles": {
+      "enabled": "KI Aktiviert",
+      "enabledDesc": "KI-Assistent global aktivieren",
+      "autoBooking": "Auto-Antwort bei neuen Fällen",
+      "autoBookingDesc": "KI antwortet automatisch, wenn ein Kunde einen Fall erstellt",
+      "autoMessage": "Auto-Antwort auf Nachrichten",
+      "autoMessageDesc": "KI antwortet automatisch auf Kundennachrichten"
+    },
+    "prompts": {
+      "aboutTitle": "Über Prompts",
+      "aboutDescription": "Die folgenden Prompts definieren das Verhalten und den Ton der KI. Ändern Sie sie, um die Antworten an die Bedürfnisse Ihrer Anbieter anzupassen. Im Zweifelsfall verwenden Sie die Schaltfläche \"Zurücksetzen\", um die Standardwerte wiederherzustellen.",
+      "lawyerTitle": "Anwalts-Prompt",
+      "lawyerDescription": "Anweisungen für rechtliche Unterstützung (Claude 3.5 Sonnet)",
+      "expertTitle": "Experten-Prompt",
+      "expertDescription": "Anweisungen für praktische Beratung (GPT-4o)",
+      "placeholder": "System-Prompt eingeben..."
     }
   },
   "verifyingRights": "Berechtigungen werden überprüft...",

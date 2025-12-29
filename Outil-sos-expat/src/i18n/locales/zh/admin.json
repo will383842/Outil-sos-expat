@@ -252,6 +252,52 @@
       "code": "代码",
       "name": "名称",
       "active": "活跃"
+    },
+    "addCountry": "添加国家",
+    "editCountry": "编辑国家",
+    "confirmDelete": "删除 {{name}}？",
+    "search": "搜索国家...",
+    "stats": {
+      "total": "国家总数",
+      "active": "活跃",
+      "withLawyers": "有律师",
+      "withExperts": "有专家"
+    },
+    "filters": {
+      "activeOnly": "仅活跃",
+      "inactiveOnly": "仅非活跃"
+    },
+    "empty": {
+      "title": "未找到国家",
+      "addFirst": "添加您的第一个国家"
+    },
+    "form": {
+      "code": "ISO代码",
+      "codePlaceholder": "例如 FR",
+      "flag": "国旗表情",
+      "name": "名称（主要）",
+      "namePlaceholder": "例如 法国",
+      "nameFr": "法语名称",
+      "nameEn": "英语名称",
+      "phonePrefix": "电话区号",
+      "phonePrefixPlaceholder": "例如 +33",
+      "timezone": "时区",
+      "timezonePlaceholder": "例如 Europe/Paris",
+      "currency": "货币",
+      "currencyPlaceholder": "例如 EUR",
+      "currencySymbol": "货币符号",
+      "currencySymbolPlaceholder": "例如 €",
+      "active": "国家活跃",
+      "activeDesc": "在选择器中可见",
+      "lawyersAvailable": "律师可用",
+      "lawyersAvailableDesc": "律师覆盖此国家",
+      "expertsAvailable": "专家可用",
+      "expertsAvailableDesc": "专家覆盖此国家"
+    },
+    "services": {
+      "lawyers": "律师",
+      "experts": "专家",
+      "none": "无服务"
     }
   },
   "auditLogs": {
@@ -293,7 +339,59 @@
   },
   "parametres": {
     "title": "通用设置",
-    "description": "角色、主题、集成、日志..."
+    "description": "角色、主题、集成、日志...",
+    "lastUpdate": "最后更新：",
+    "by": "由",
+    "platform": {
+      "title": "平台信息",
+      "description": "名称和联系方式",
+      "name": "平台名称",
+      "email": "支持邮箱",
+      "phone": "支持电话",
+      "website": "主网站"
+    },
+    "maintenance": {
+      "title": "维护模式",
+      "description": "暂停平台访问",
+      "active": "维护模式已激活",
+      "activeDesc": "用户看到维护消息而不是平台。",
+      "enable": "启用维护模式",
+      "enableDesc": "向用户显示维护消息",
+      "message": "维护消息"
+    },
+    "notifications": {
+      "title": "通知",
+      "description": "配置邮件通知",
+      "email": "邮件通知",
+      "emailDesc": "启用邮件通知",
+      "newDossier": "新案件",
+      "newDossierDesc": "创建新案件时通知",
+      "newMessage": "新消息",
+      "newMessageDesc": "收到消息时通知",
+      "providerSignup": "服务商注册",
+      "providerSignupDesc": "服务商注册时通知"
+    },
+    "integrations": {
+      "title": "集成",
+      "description": "外部服务连接",
+      "laravel": "Laravel API (sos-expat.com)",
+      "laravelDesc": "与主站同步",
+      "laravelUrl": "Laravel API URL",
+      "stripe": "Stripe（支付）",
+      "stripeDesc": "通过Stripe管理订阅",
+      "apiKeysNote": "API密钥通过环境变量配置"
+    },
+    "links": {
+      "title": "有用链接",
+      "firebase": "Firebase控制台",
+      "firebaseDesc": "数据库",
+      "stripe": "Stripe仪表板",
+      "stripeDesc": "支付",
+      "sosExpat": "SOS-Expat管理",
+      "sosExpatDesc": "主站",
+      "googleCloud": "Google Cloud",
+      "googleCloudDesc": "Functions和API"
+    }
   },
   "testIA": {
     "title": "AI测试 - 管理模式",
@@ -362,6 +460,47 @@
       "unknown": "未知错误",
       "prefix": "错误：",
       "closeLabel": "关闭错误"
+    }
+  },
+  "aiConfig": {
+    "title": "AI配置",
+    "description": "服务商的AI助手设置",
+    "unsaved": "未保存",
+    "modified": "已修改",
+    "characters": "字符",
+    "architecture": {
+      "title": "多LLM架构",
+      "lawyers": "律师：",
+      "experts": "专家：",
+      "search": "搜索：",
+      "perplexityNote": "Perplexity自动用最新网络数据丰富响应。"
+    },
+    "status": {
+      "disabled": "AI已禁用",
+      "disabledDesc": "所有服务商的自动回复已暂停。",
+      "enabled": "AI已激活",
+      "enabledDesc": "AI助手根据以下配置响应服务商。"
+    },
+    "behavior": {
+      "title": "行为",
+      "description": "激活和自动回复"
+    },
+    "toggles": {
+      "enabled": "AI已启用",
+      "enabledDesc": "全局启用AI助手",
+      "autoBooking": "自动回复新案件",
+      "autoBookingDesc": "客户创建案件时AI自动回复",
+      "autoMessage": "自动回复消息",
+      "autoMessageDesc": "AI自动回复客户消息"
+    },
+    "prompts": {
+      "aboutTitle": "关于提示词",
+      "aboutDescription": "以下提示词定义AI的行为和语气。修改它们以根据服务商的需求调整响应。如有疑问，使用\"重置\"按钮恢复默认值。",
+      "lawyerTitle": "律师提示词",
+      "lawyerDescription": "法律援助指令（Claude 3.5 Sonnet）",
+      "expertTitle": "专家提示词",
+      "expertDescription": "实用指导指令（GPT-4o）",
+      "placeholder": "输入系统提示词..."
     }
   },
   "verifyingRights": "正在验证权限...",

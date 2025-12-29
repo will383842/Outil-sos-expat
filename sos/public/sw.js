@@ -27,7 +27,7 @@ const CORE_RESOURCES = [
   '/fonts/inter-var.woff2',
   // Favicons
   '/favicon.ico',
-  '/sos-favicon.svg'
+  '/favicon.svg'
 ];
 
 // Assets à précacher en arrière-plan (non bloquants)

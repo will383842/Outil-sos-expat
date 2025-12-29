@@ -418,7 +418,7 @@ export default function Utilisateurs() {
       <div className="flex items-center justify-center h-64">
         <div className="flex items-center gap-3 text-gray-600">
           <RefreshCw className="w-5 h-5 animate-spin" />
-          <span>{t("loading")}</span>
+          <span>{t("common:loading.default")}</span>
         </div>
       </div>
     );
@@ -560,7 +560,7 @@ export default function Utilisateurs() {
                 {loadingMore ? (
                   <>
                     <RefreshCw className="w-4 h-4 animate-spin" />
-                    {t("loading")}
+                    {t("common:loading.default")}
                   </>
                 ) : (
                   <>

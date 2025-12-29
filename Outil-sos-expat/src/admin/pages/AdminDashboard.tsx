@@ -240,7 +240,7 @@ function RecentDossiersList({
 }: {
   dossiers: RecentDossier[];
   loading?: boolean;
-  t: (key: string) => string;
+  t: (key: string, options?: Record<string, unknown>) => string;
 }) {
   const statusConfig: Record<string, { color: string; icon: React.ElementType }> = {
     pending: { color: "text-amber-600 bg-amber-50", icon: Clock },
@@ -305,10 +305,10 @@ function RecentDossiersList({
                     </div>
                     <div>
                       <p className="font-medium text-gray-900 group-hover:text-red-600 transition-colors">
-                        {dossier.title || `Dossier #${dossier.id.slice(0, 8)}`}
+                        {dossier.title || t("admin:dashboard.recentDossiers.dossierFallback", { id: dossier.id.slice(0, 8) })}
                       </p>
                       <p className="text-sm text-gray-500">
-                        {dossier.clientName || "Client"}
+                        {dossier.clientName || t("admin:dashboard.recentDossiers.clientFallback")}
                       </p>
                     </div>
                   </div>
@@ -335,7 +335,7 @@ function AIStatusCard({
   requestsThisMonth: number;
   quotaUsed: number;
   loading?: boolean;
-  t: (key: string) => string;
+  t: (key: string, options?: Record<string, unknown>) => string;
 }) {
   const quotaMax = 10000;
   const usagePercent = (quotaUsed / quotaMax) * 100;
@@ -420,7 +420,7 @@ function AlertsCard({
   inactiveProviders: number;
   oldPendingDossiers: number;
   loading?: boolean;
-  t: (key: string) => string;
+  t: (key: string, options?: Record<string, unknown>) => string;
 }) {
   const hasAlerts = inactiveProviders > 0 || oldPendingDossiers > 0;
 
@@ -442,25 +442,25 @@ function AlertsCard({
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <AlertTriangle className={`w-5 h-5 ${hasAlerts ? "text-amber-500" : "text-gray-400"}`} />
-          Alertes
+          {t("admin:dashboard.alerts.title")}
         </CardTitle>
       </CardHeader>
       <CardContent>
         {!hasAlerts ? (
           <div className="flex items-center gap-2 text-green-600">
             <CheckCircle className="w-5 h-5" />
-            <span className="text-sm font-medium">Aucune alerte</span>
+            <span className="text-sm font-medium">{t("admin:dashboard.alerts.none")}</span>
           </div>
         ) : (
           <div className="space-y-2">
             {inactiveProviders > 0 && (
               <div className="flex items-center justify-between p-2 bg-amber-100 rounded-lg">
                 <span className="text-sm text-amber-800">
-                  {inactiveProviders} prestataire(s) inactif(s)
+                  {t("admin:dashboard.alerts.inactiveProviders", { count: inactiveProviders })}
                 </span>
                 <Link to="/admin/prestataires">
                   <Button variant="ghost" size="sm" className="text-amber-700 hover:text-amber-800">
-                    Voir
+                    {t("admin:dashboard.alerts.view")}
                   </Button>
                 </Link>
               </div>
@@ -468,11 +468,11 @@ function AlertsCard({
             {oldPendingDossiers > 0 && (
               <div className="flex items-center justify-between p-2 bg-amber-100 rounded-lg">
                 <span className="text-sm text-amber-800">
-                  {oldPendingDossiers} dossier(s) en attente depuis +48h
+                  {t("admin:dashboard.alerts.oldPendingDossiers", { count: oldPendingDossiers })}
                 </span>
                 <Link to="/admin/dossiers">
                   <Button variant="ghost" size="sm" className="text-amber-700 hover:text-amber-800">
-                    Voir
+                    {t("admin:dashboard.alerts.view")}
                   </Button>
                 </Link>
               </div>
@@ -489,7 +489,7 @@ function AlertsCard({
 // =============================================================================
 
 export default function AdminDashboard() {
-  const { t } = useLanguage({ mode: "admin" });
+  const { t, currentLanguage } = useLanguage({ mode: "admin" });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [data, setData] = useState<DashboardData>({
@@ -528,7 +528,7 @@ export default function AdminDashboard() {
       // Group by country
       const countryMap = new Map<string, number>();
       providers.forEach((p: any) => {
-        const country = p.country || p.currentCountry || "Non spécifié";
+        const country = p.country || p.currentCountry || "__NOT_SPECIFIED__";
         countryMap.set(country, (countryMap.get(country) || 0) + 1);
       });
       const providersByCountry = Array.from(countryMap.entries())
@@ -670,35 +670,35 @@ export default function AdminDashboard() {
       {/* KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="Prestataires actifs"
+          title={t("admin:dashboard.stats.activeProviders")}
           value={data.activeProviders}
-          subtitle={`${data.totalProviders} inscrits au total`}
+          subtitle={t("admin:dashboard.totalRegistered", { count: data.totalProviders })}
           icon={Users}
           color="blue"
-          trend={{ value: data.newProvidersThisWeek, label: "cette semaine" }}
+          trend={{ value: data.newProvidersThisWeek, label: t("admin:dashboard.thisWeek") }}
           loading={loading}
         />
         <StatCard
-          title="Dossiers en cours"
+          title={t("admin:dashboard.stats.dossiersInProgress")}
           value={data.pendingDossiers + data.inProgressDossiers}
-          subtitle={`${data.totalDossiers} au total`}
+          subtitle={t("admin:dashboard.totalCount", { count: data.totalDossiers })}
           icon={FolderOpen}
           color="amber"
-          trend={{ value: data.newDossiersThisWeek, label: "cette semaine" }}
+          trend={{ value: data.newDossiersThisWeek, label: t("admin:dashboard.thisWeek") }}
           loading={loading}
         />
         <StatCard
-          title="Avocats"
+          title={t("common:types.lawyer")}
           value={data.lawyerCount}
-          subtitle="prestataires juridiques"
+          subtitle={t("admin:dashboard.legalProviders")}
           icon={Scale}
           color="purple"
           loading={loading}
         />
         <StatCard
-          title="Experts Expat"
+          title={t("common:providerTypes.expatExpert")}
           value={data.expatCount}
-          subtitle="accompagnateurs"
+          subtitle={t("admin:dashboard.companions")}
           icon={Globe}
           color="green"
           loading={loading}
@@ -712,24 +712,24 @@ export default function AdminDashboard() {
           {/* Distribution by country and language */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <DistributionCard
-              title="Prestataires par pays"
+              title={t("admin:dashboard.providersByCountry")}
               icon={MapPin}
               data={data.providersByCountry.map((item) => ({
-                label: item.country,
+                label: item.country === "__NOT_SPECIFIED__" ? t("admin:dashboard.notSpecified") : item.country,
                 count: item.count,
               }))}
               loading={loading}
-              emptyMessage="Aucun pays enregistré"
+              emptyMessage={t("admin:dashboard.noCountryRegistered")}
             />
             <DistributionCard
-              title="Langues parlées"
+              title={t("admin:dashboard.spokenLanguages")}
               icon={Languages}
               data={data.providersByLanguage.map((item) => ({
                 label: item.language.toUpperCase(),
                 count: item.count,
               }))}
               loading={loading}
-              emptyMessage="Aucune langue enregistrée"
+              emptyMessage={t("admin:dashboard.noLanguageRegistered")}
             />
           </div>
 

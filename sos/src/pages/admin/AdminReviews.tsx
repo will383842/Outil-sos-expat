@@ -43,6 +43,7 @@ import Modal from '../../components/common/Modal';
 import ErrorBoundary from '../../components/common/ErrorBoundary';
 import { useAuth } from '../../contexts/AuthContext';
 import { Review } from '../../types';
+import { recalculateProviderStats } from '../../utils/firestore';
 import {
   ResponsiveContainer,
   LineChart,
@@ -717,6 +718,7 @@ rows[m][bucketKey] += 1;
 
   const handleDeleteReview = async () => {
     if (!selectedReview) return;
+    const providerId = selectedReview.providerId;
     try {
       setIsActionLoading(true);
       await deleteDoc(doc(db, 'reviews', selectedReview.id));
@@ -724,6 +726,10 @@ rows[m][bucketKey] += 1;
       setShowDeleteModal(false);
       setShowReviewModal(false);
       setSelectedReview(null);
+      // Recalculate provider stats after deletion
+      if (providerId) {
+        await recalculateProviderStats(providerId);
+      }
       alert(lang === 'fr' ? 'Avis supprimé avec succès' : 'Review deleted');
       await loadStats();
     } catch (err) {
@@ -742,11 +748,20 @@ rows[m][bucketKey] += 1;
         : `Permanently delete ${selectedIds.size} review(s)?`
     );
     if (!ok) return;
+    // Collect unique provider IDs before deletion
+    const providerIds = new Set<string>();
+    reviews.forEach((r) => {
+      if (selectedIds.has(r.id) && r.providerId) {
+        providerIds.add(r.providerId);
+      }
+    });
     try {
       setIsActionLoading(true);
       await Promise.all(Array.from(selectedIds).map((id) => deleteDoc(doc(db, 'reviews', id))));
       setReviews((prev) => prev.filter((r) => !selectedIds.has(r.id)));
       setSelectedIds(new Set());
+      // Recalculate stats for all affected providers
+      await Promise.all(Array.from(providerIds).map((pid) => recalculateProviderStats(pid)));
       alert(lang === 'fr' ? 'Avis supprimés avec succès' : 'Reviews deleted');
       await loadStats();
     } catch (err) {
@@ -770,6 +785,10 @@ rows[m][bucketKey] += 1;
         prev.map((r) => (r.id === selectedReview.id ? { ...r, rating: editedRating } : r))
       );
       setSelectedReview({ ...selectedReview, rating: editedRating });
+      // Recalculate provider stats after rating change
+      if (selectedReview.providerId) {
+        await recalculateProviderStats(selectedReview.providerId);
+      }
       alert(lang === 'fr' ? 'Note mise à jour' : 'Rating saved');
       await loadStats();
     } catch (err) {

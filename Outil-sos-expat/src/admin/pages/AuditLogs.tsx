@@ -283,7 +283,7 @@ export default function AuditLogs() {
       <div className="flex items-center justify-center h-64">
         <div className="flex items-center gap-3 text-gray-600">
           <RefreshCw className="w-5 h-5" />
-          <span>{t("common:loading")}</span>
+          <span>{t("common:loading.default")}</span>
         </div>
       </div>
     );
@@ -398,10 +398,10 @@ export default function AuditLogs() {
                 <option value="user.">{t("utilisateurs.title")}</option>
                 <option value="provider.">{t("prestataires.title")}</option>
                 <option value="booking.">{t("common:navigation.dossiers")}</option>
-                <option value="ai.">IA</option>
+                <option value="ai.">{t("common:types.ai")}</option>
                 <option value="settings.">{t("common:navigation.settings")}</option>
                 <option value="export.">{t("common:actions.export")}</option>
-                <option value="admin.">Admin</option>
+                <option value="admin.">{t("common:roles.admin")}</option>
               </select>
             </div>
 

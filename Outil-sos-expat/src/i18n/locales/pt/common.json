@@ -17,6 +17,7 @@
   },
   "actions": {
     "save": "Guardar",
+    "saving": "Salvando...",
     "cancel": "Cancelar",
     "delete": "Eliminar",
     "edit": "Editar",

@@ -61,6 +61,23 @@
       "usage": "Usage ce mois",
       "percent": "{{percent}}% du quota mensuel utilisé"
     },
+    "alerts": {
+      "title": "Alertes",
+      "none": "Aucune alerte",
+      "inactiveProviders": "{{count}} prestataire(s) inactif(s)",
+      "oldPendingDossiers": "{{count}} dossier(s) en attente depuis +48h",
+      "view": "Voir"
+    },
+    "providersByCountry": "Prestataires par pays",
+    "spokenLanguages": "Langues parlées",
+    "noCountryRegistered": "Aucun pays enregistré",
+    "noLanguageRegistered": "Aucune langue enregistrée",
+    "notSpecified": "Non spécifié",
+    "totalRegistered": "{{count}} inscrits au total",
+    "totalCount": "{{count}} au total",
+    "thisWeek": "cette semaine",
+    "legalProviders": "prestataires juridiques",
+    "companions": "accompagnateurs",
     "providers": {
       "title": "Prestataires",
       "none": "Aucun prestataire actif",
@@ -71,7 +88,9 @@
     },
     "recentDossiers": {
       "title": "Dossiers Récents",
-      "none": "Aucun dossier récent"
+      "none": "Aucun dossier récent",
+      "dossierFallback": "Dossier #{{id}}",
+      "clientFallback": "Client"
     },
     "sync": {
       "title": "Sync Laravel",
@@ -247,11 +266,57 @@
   },
   "pays": {
     "title": "Pays",
-    "description": "Liste des pays configurés",
+    "description": "Configuration des pays disponibles",
+    "addCountry": "Ajouter un pays",
+    "editCountry": "Modifier le pays",
+    "confirmDelete": "Supprimer {{name}} ?",
+    "search": "Rechercher un pays...",
     "columns": {
       "code": "Code",
       "name": "Nom",
       "active": "Actif"
+    },
+    "stats": {
+      "total": "Total pays",
+      "active": "Actifs",
+      "withLawyers": "Avec avocats",
+      "withExperts": "Avec experts"
+    },
+    "filters": {
+      "activeOnly": "Actifs uniquement",
+      "inactiveOnly": "Inactifs uniquement"
+    },
+    "empty": {
+      "title": "Aucun pays trouvé",
+      "addFirst": "Ajoutez votre premier pays"
+    },
+    "form": {
+      "code": "Code ISO",
+      "codePlaceholder": "FR, TH, US...",
+      "flag": "Emoji drapeau",
+      "name": "Nom (principal)",
+      "namePlaceholder": "France, Thaïlande...",
+      "nameFr": "Nom FR",
+      "nameEn": "Nom EN",
+      "phonePrefix": "Préfixe téléphone",
+      "phonePrefixPlaceholder": "+33",
+      "timezone": "Timezone",
+      "timezonePlaceholder": "Europe/Paris",
+      "currency": "Devise",
+      "currencyPlaceholder": "EUR, THB...",
+      "currencySymbol": "Symbole devise",
+      "currencySymbolPlaceholder": "€, ฿...",
+      "active": "Pays actif",
+      "activeDesc": "Visible dans les sélecteurs",
+      "lawyersAvailable": "Avocats disponibles",
+      "lawyersAvailableDesc": "Des avocats couvrent ce pays",
+      "expertsAvailable": "Experts disponibles",
+      "expertsAvailableDesc": "Des experts couvrent ce pays"
+    },
+    "services": {
+      "lawyers": "Avocats",
+      "experts": "Experts",
+      "none": "Aucun service"
     }
   },
   "auditLogs": {
@@ -293,7 +358,101 @@
   },
   "parametres": {
     "title": "Paramètres généraux",
-    "description": "Rôles, thèmes, intégrations, journaux…"
+    "description": "Configuration de la plateforme",
+    "lastUpdate": "Dernière mise à jour:",
+    "by": "par",
+    "platform": {
+      "title": "Informations plateforme",
+      "description": "Nom et coordonnées de contact",
+      "name": "Nom de la plateforme",
+      "email": "Email de support",
+      "phone": "Téléphone de support",
+      "website": "Site web principal"
+    },
+    "maintenance": {
+      "title": "Mode maintenance",
+      "description": "Suspendre l'accès à la plateforme",
+      "active": "Mode maintenance actif",
+      "activeDesc": "Les utilisateurs voient le message de maintenance au lieu de la plateforme.",
+      "enable": "Activer le mode maintenance",
+      "enableDesc": "Affiche un message de maintenance aux utilisateurs",
+      "message": "Message de maintenance",
+      "messagePlaceholder": "La plateforme est en maintenance..."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Configurer les notifications par email",
+      "email": "Notifications email",
+      "emailDesc": "Activer les notifications par email",
+      "newDossier": "Nouveau dossier",
+      "newDossierDesc": "Notifier quand un nouveau dossier est créé",
+      "newMessage": "Nouveau message",
+      "newMessageDesc": "Notifier quand un message est reçu",
+      "providerSignup": "Inscription prestataire",
+      "providerSignupDesc": "Notifier quand un prestataire s'inscrit"
+    },
+    "integrations": {
+      "title": "Intégrations",
+      "description": "Connexions aux services externes",
+      "laravel": "API Laravel (sos-expat.com)",
+      "laravelDesc": "Synchronisation avec le site principal",
+      "laravelUrl": "URL de l'API Laravel",
+      "stripe": "Stripe (paiements)",
+      "stripeDesc": "Gestion des abonnements via Stripe",
+      "apiKeysNote": "Les clés API sont configurées via les variables d'environnement"
+    },
+    "links": {
+      "title": "Liens utiles",
+      "firebase": "Firebase Console",
+      "firebaseDesc": "Base de données",
+      "stripe": "Stripe Dashboard",
+      "stripeDesc": "Paiements",
+      "sosExpat": "SOS-Expat Admin",
+      "sosExpatDesc": "Site principal",
+      "googleCloud": "Google Cloud",
+      "googleCloudDesc": "Functions & API"
+    }
+  },
+  "aiConfig": {
+    "title": "Configuration IA",
+    "description": "Paramètres de l'assistant IA pour les prestataires",
+    "unsaved": "Non sauvegardé",
+    "modified": "Modifié",
+    "characters": "caractères",
+    "architecture": {
+      "title": "Architecture Multi-LLM",
+      "lawyers": "Avocats:",
+      "experts": "Experts:",
+      "search": "Recherche:",
+      "perplexityNote": "Perplexity enrichit automatiquement les réponses avec des données web actualisées."
+    },
+    "status": {
+      "disabled": "IA désactivée",
+      "disabledDesc": "Les réponses automatiques sont suspendues pour tous les prestataires.",
+      "enabled": "IA active",
+      "enabledDesc": "L'assistant IA répond aux prestataires selon la configuration ci-dessous."
+    },
+    "behavior": {
+      "title": "Comportement",
+      "description": "Activation et réponses automatiques"
+    },
+    "toggles": {
+      "enabled": "IA activée",
+      "enabledDesc": "Active l'assistant IA globalement",
+      "autoBooking": "Auto-réponse aux nouveaux dossiers",
+      "autoBookingDesc": "L'IA répond automatiquement quand un client crée un dossier",
+      "autoMessage": "Auto-réponse aux messages",
+      "autoMessageDesc": "L'IA répond automatiquement aux messages des clients"
+    },
+    "prompts": {
+      "aboutTitle": "À propos des prompts",
+      "aboutDescription": "Les prompts ci-dessous définissent le comportement et le ton de l'IA. Modifiez-les pour ajuster les réponses aux besoins de vos prestataires. En cas de doute, utilisez le bouton \"Réinitialiser\" pour revenir aux valeurs par défaut.",
+      "lawyerTitle": "Prompt Avocats",
+      "lawyerDescription": "Instructions pour l'assistance juridique (Claude 3.5 Sonnet)",
+      "expertTitle": "Prompt Experts",
+      "expertDescription": "Instructions pour l'accompagnement pratique (GPT-4o)",
+      "placeholder": "Entrez le prompt système..."
+    }
   },
   "testIA": {
     "title": "Test IA - Mode Admin",

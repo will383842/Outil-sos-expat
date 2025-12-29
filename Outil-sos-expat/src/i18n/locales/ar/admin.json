@@ -252,6 +252,52 @@
       "code": "الرمز",
       "name": "الاسم",
       "active": "نشط"
+    },
+    "addCountry": "إضافة بلد",
+    "editCountry": "تعديل البلد",
+    "confirmDelete": "حذف {{name}}؟",
+    "search": "البحث عن بلد...",
+    "stats": {
+      "total": "إجمالي البلدان",
+      "active": "نشط",
+      "withLawyers": "مع محامين",
+      "withExperts": "مع خبراء"
+    },
+    "filters": {
+      "activeOnly": "النشطة فقط",
+      "inactiveOnly": "غير النشطة فقط"
+    },
+    "empty": {
+      "title": "لم يتم العثور على بلدان",
+      "addFirst": "أضف أول بلد"
+    },
+    "form": {
+      "code": "رمز ISO",
+      "codePlaceholder": "مثال FR",
+      "flag": "رمز العلم",
+      "name": "الاسم (الرئيسي)",
+      "namePlaceholder": "مثال فرنسا",
+      "nameFr": "الاسم FR",
+      "nameEn": "الاسم EN",
+      "phonePrefix": "رمز الهاتف",
+      "phonePrefixPlaceholder": "مثال +33",
+      "timezone": "المنطقة الزمنية",
+      "timezonePlaceholder": "مثال Europe/Paris",
+      "currency": "العملة",
+      "currencyPlaceholder": "مثال EUR",
+      "currencySymbol": "رمز العملة",
+      "currencySymbolPlaceholder": "مثال €",
+      "active": "البلد نشط",
+      "activeDesc": "مرئي في المحددات",
+      "lawyersAvailable": "محامون متاحون",
+      "lawyersAvailableDesc": "المحامون يغطون هذا البلد",
+      "expertsAvailable": "خبراء متاحون",
+      "expertsAvailableDesc": "الخبراء يغطون هذا البلد"
+    },
+    "services": {
+      "lawyers": "المحامون",
+      "experts": "الخبراء",
+      "none": "لا توجد خدمات"
     }
   },
   "auditLogs": {
@@ -293,7 +339,59 @@
   },
   "parametres": {
     "title": "الإعدادات العامة",
-    "description": "الأدوار، السمات، التكاملات، السجلات..."
+    "description": "الأدوار، السمات، التكاملات، السجلات...",
+    "lastUpdate": "آخر تحديث:",
+    "by": "بواسطة",
+    "platform": {
+      "title": "معلومات المنصة",
+      "description": "الاسم وبيانات الاتصال",
+      "name": "اسم المنصة",
+      "email": "بريد الدعم",
+      "phone": "هاتف الدعم",
+      "website": "الموقع الرئيسي"
+    },
+    "maintenance": {
+      "title": "وضع الصيانة",
+      "description": "تعليق الوصول للمنصة",
+      "active": "وضع الصيانة نشط",
+      "activeDesc": "يرى المستخدمون رسالة الصيانة بدلاً من المنصة.",
+      "enable": "تفعيل وضع الصيانة",
+      "enableDesc": "عرض رسالة الصيانة للمستخدمين",
+      "message": "رسالة الصيانة"
+    },
+    "notifications": {
+      "title": "الإشعارات",
+      "description": "تكوين إشعارات البريد الإلكتروني",
+      "email": "إشعارات البريد الإلكتروني",
+      "emailDesc": "تفعيل إشعارات البريد الإلكتروني",
+      "newDossier": "ملف جديد",
+      "newDossierDesc": "إشعار عند إنشاء ملف جديد",
+      "newMessage": "رسالة جديدة",
+      "newMessageDesc": "إشعار عند استلام رسالة",
+      "providerSignup": "تسجيل مقدم خدمة",
+      "providerSignupDesc": "إشعار عند تسجيل مقدم خدمة"
+    },
+    "integrations": {
+      "title": "التكاملات",
+      "description": "اتصالات الخدمات الخارجية",
+      "laravel": "Laravel API (sos-expat.com)",
+      "laravelDesc": "المزامنة مع الموقع الرئيسي",
+      "laravelUrl": "عنوان Laravel API",
+      "stripe": "Stripe (المدفوعات)",
+      "stripeDesc": "إدارة الاشتراكات عبر Stripe",
+      "apiKeysNote": "يتم تكوين مفاتيح API عبر متغيرات البيئة"
+    },
+    "links": {
+      "title": "روابط مفيدة",
+      "firebase": "وحدة تحكم Firebase",
+      "firebaseDesc": "قاعدة البيانات",
+      "stripe": "لوحة Stripe",
+      "stripeDesc": "المدفوعات",
+      "sosExpat": "إدارة SOS-Expat",
+      "sosExpatDesc": "الموقع الرئيسي",
+      "googleCloud": "Google Cloud",
+      "googleCloudDesc": "Functions و API"
+    }
   },
   "testIA": {
     "title": "اختبار الذكاء الاصطناعي - وضع المدير",
@@ -362,6 +460,47 @@
       "unknown": "خطأ غير معروف",
       "prefix": "خطأ:",
       "closeLabel": "إغلاق الخطأ"
+    }
+  },
+  "aiConfig": {
+    "title": "إعدادات الذكاء الاصطناعي",
+    "description": "إعدادات مساعد الذكاء الاصطناعي لمقدمي الخدمات",
+    "unsaved": "غير محفوظ",
+    "modified": "معدل",
+    "characters": "حرف",
+    "architecture": {
+      "title": "بنية متعددة LLM",
+      "lawyers": "المحامون:",
+      "experts": "الخبراء:",
+      "search": "البحث:",
+      "perplexityNote": "يثري Perplexity الردود تلقائياً ببيانات الويب المحدثة."
+    },
+    "status": {
+      "disabled": "الذكاء الاصطناعي معطل",
+      "disabledDesc": "الردود التلقائية معلقة لجميع مقدمي الخدمات.",
+      "enabled": "الذكاء الاصطناعي نشط",
+      "enabledDesc": "يستجيب مساعد الذكاء الاصطناعي لمقدمي الخدمات وفقاً للإعدادات أدناه."
+    },
+    "behavior": {
+      "title": "السلوك",
+      "description": "التفعيل والردود التلقائية"
+    },
+    "toggles": {
+      "enabled": "الذكاء الاصطناعي مفعل",
+      "enabledDesc": "تفعيل مساعد الذكاء الاصطناعي عالمياً",
+      "autoBooking": "رد تلقائي على الملفات الجديدة",
+      "autoBookingDesc": "يرد الذكاء الاصطناعي تلقائياً عندما ينشئ عميل ملفاً",
+      "autoMessage": "رد تلقائي على الرسائل",
+      "autoMessageDesc": "يرد الذكاء الاصطناعي تلقائياً على رسائل العملاء"
+    },
+    "prompts": {
+      "aboutTitle": "حول الأوامر",
+      "aboutDescription": "تحدد الأوامر أدناه سلوك ونبرة الذكاء الاصطناعي. عدلها لضبط الردود حسب احتياجات مقدمي الخدمات. في حالة الشك، استخدم زر \"إعادة تعيين\" لاستعادة الإعدادات الافتراضية.",
+      "lawyerTitle": "أمر المحامي",
+      "lawyerDescription": "تعليمات للمساعدة القانونية (Claude 3.5 Sonnet)",
+      "expertTitle": "أمر الخبير",
+      "expertDescription": "تعليمات للتوجيه العملي (GPT-4o)",
+      "placeholder": "أدخل أمر النظام..."
     }
   },
   "verifyingRights": "جاري التحقق من الصلاحيات...",

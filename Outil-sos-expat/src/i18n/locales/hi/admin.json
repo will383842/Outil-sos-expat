@@ -252,6 +252,52 @@
       "code": "कोड",
       "name": "नाम",
       "active": "सक्रिय"
+    },
+    "addCountry": "देश जोड़ें",
+    "editCountry": "देश संपादित करें",
+    "confirmDelete": "{{name}} हटाएं?",
+    "search": "देश खोजें...",
+    "stats": {
+      "total": "कुल देश",
+      "active": "सक्रिय",
+      "withLawyers": "वकीलों के साथ",
+      "withExperts": "विशेषज्ञों के साथ"
+    },
+    "filters": {
+      "activeOnly": "केवल सक्रिय",
+      "inactiveOnly": "केवल निष्क्रिय"
+    },
+    "empty": {
+      "title": "कोई देश नहीं मिला",
+      "addFirst": "अपना पहला देश जोड़ें"
+    },
+    "form": {
+      "code": "ISO कोड",
+      "codePlaceholder": "जैसे FR",
+      "flag": "झंडा इमोजी",
+      "name": "नाम (मुख्य)",
+      "namePlaceholder": "जैसे फ्रांस",
+      "nameFr": "नाम FR",
+      "nameEn": "नाम EN",
+      "phonePrefix": "फ़ोन प्रीफ़िक्स",
+      "phonePrefixPlaceholder": "जैसे +33",
+      "timezone": "समय क्षेत्र",
+      "timezonePlaceholder": "जैसे Europe/Paris",
+      "currency": "मुद्रा",
+      "currencyPlaceholder": "जैसे EUR",
+      "currencySymbol": "मुद्रा चिह्न",
+      "currencySymbolPlaceholder": "जैसे €",
+      "active": "देश सक्रिय",
+      "activeDesc": "चयनकर्ताओं में दृश्यमान",
+      "lawyersAvailable": "वकील उपलब्ध",
+      "lawyersAvailableDesc": "वकील इस देश को कवर करते हैं",
+      "expertsAvailable": "विशेषज्ञ उपलब्ध",
+      "expertsAvailableDesc": "विशेषज्ञ इस देश को कवर करते हैं"
+    },
+    "services": {
+      "lawyers": "वकील",
+      "experts": "विशेषज्ञ",
+      "none": "कोई सेवाएं नहीं"
     }
   },
   "auditLogs": {
@@ -293,7 +339,59 @@
   },
   "parametres": {
     "title": "सामान्य सेटिंग्स",
-    "description": "भूमिकाएं, थीम, एकीकरण, लॉग..."
+    "description": "भूमिकाएं, थीम, एकीकरण, लॉग...",
+    "lastUpdate": "अंतिम अपडेट:",
+    "by": "द्वारा",
+    "platform": {
+      "title": "प्लेटफॉर्म जानकारी",
+      "description": "नाम और संपर्क विवरण",
+      "name": "प्लेटफॉर्म का नाम",
+      "email": "सहायता ईमेल",
+      "phone": "सहायता फ़ोन",
+      "website": "मुख्य वेबसाइट"
+    },
+    "maintenance": {
+      "title": "मेंटेनेंस मोड",
+      "description": "प्लेटफॉर्म एक्सेस निलंबित करें",
+      "active": "मेंटेनेंस मोड सक्रिय",
+      "activeDesc": "उपयोगकर्ता प्लेटफॉर्म के बजाय मेंटेनेंस संदेश देखते हैं।",
+      "enable": "मेंटेनेंस मोड सक्षम करें",
+      "enableDesc": "उपयोगकर्ताओं को मेंटेनेंस संदेश दिखाएं",
+      "message": "मेंटेनेंस संदेश"
+    },
+    "notifications": {
+      "title": "सूचनाएं",
+      "description": "ईमेल सूचनाएं कॉन्फ़िगर करें",
+      "email": "ईमेल सूचनाएं",
+      "emailDesc": "ईमेल सूचनाएं सक्षम करें",
+      "newDossier": "नया मामला",
+      "newDossierDesc": "नया मामला बनने पर सूचित करें",
+      "newMessage": "नया संदेश",
+      "newMessageDesc": "संदेश प्राप्त होने पर सूचित करें",
+      "providerSignup": "प्रदाता पंजीकरण",
+      "providerSignupDesc": "प्रदाता पंजीकरण करने पर सूचित करें"
+    },
+    "integrations": {
+      "title": "एकीकरण",
+      "description": "बाहरी सेवा कनेक्शन",
+      "laravel": "Laravel API (sos-expat.com)",
+      "laravelDesc": "मुख्य साइट के साथ सिंक करें",
+      "laravelUrl": "Laravel API URL",
+      "stripe": "Stripe (भुगतान)",
+      "stripeDesc": "Stripe के माध्यम से सदस्यता प्रबंधन",
+      "apiKeysNote": "API कुंजियां पर्यावरण वेरिएबल के माध्यम से कॉन्फ़िगर की जाती हैं"
+    },
+    "links": {
+      "title": "उपयोगी लिंक",
+      "firebase": "Firebase Console",
+      "firebaseDesc": "डेटाबेस",
+      "stripe": "Stripe Dashboard",
+      "stripeDesc": "भुगतान",
+      "sosExpat": "SOS-Expat Admin",
+      "sosExpatDesc": "मुख्य साइट",
+      "googleCloud": "Google Cloud",
+      "googleCloudDesc": "Functions और API"
+    }
   },
   "testIA": {
     "title": "एआई परीक्षण - एडमिन मोड",
@@ -362,6 +460,47 @@
       "unknown": "अज्ञात त्रुटि",
       "prefix": "त्रुटि:",
       "closeLabel": "त्रुटि बंद करें"
+    }
+  },
+  "aiConfig": {
+    "title": "AI कॉन्फ़िगरेशन",
+    "description": "प्रदाताओं के लिए AI सहायक सेटिंग्स",
+    "unsaved": "सहेजा नहीं गया",
+    "modified": "संशोधित",
+    "characters": "अक्षर",
+    "architecture": {
+      "title": "मल्टी-LLM आर्किटेक्चर",
+      "lawyers": "वकील:",
+      "experts": "विशेषज्ञ:",
+      "search": "खोज:",
+      "perplexityNote": "Perplexity स्वचालित रूप से अप-टू-डेट वेब डेटा के साथ प्रतिक्रियाओं को समृद्ध करता है।"
+    },
+    "status": {
+      "disabled": "AI अक्षम",
+      "disabledDesc": "सभी प्रदाताओं के लिए स्वचालित प्रतिक्रियाएं निलंबित हैं।",
+      "enabled": "AI सक्रिय",
+      "enabledDesc": "AI सहायक नीचे दी गई कॉन्फ़िगरेशन के अनुसार प्रदाताओं को जवाब देता है।"
+    },
+    "behavior": {
+      "title": "व्यवहार",
+      "description": "सक्रियण और स्वचालित प्रतिक्रियाएं"
+    },
+    "toggles": {
+      "enabled": "AI सक्षम",
+      "enabledDesc": "AI सहायक को वैश्विक रूप से सक्षम करें",
+      "autoBooking": "नए मामलों पर ऑटो-रिप्लाई",
+      "autoBookingDesc": "जब कोई ग्राहक मामला बनाता है तो AI स्वचालित रूप से जवाब देता है",
+      "autoMessage": "संदेशों पर ऑटो-रिप्लाई",
+      "autoMessageDesc": "AI स्वचालित रूप से ग्राहक संदेशों का जवाब देता है"
+    },
+    "prompts": {
+      "aboutTitle": "प्रॉम्प्ट के बारे में",
+      "aboutDescription": "नीचे दिए गए प्रॉम्प्ट AI के व्यवहार और टोन को परिभाषित करते हैं। अपने प्रदाताओं की जरूरतों के अनुसार प्रतिक्रियाओं को समायोजित करने के लिए उन्हें संशोधित करें। संदेह होने पर, डिफ़ॉल्ट को पुनर्स्थापित करने के लिए \"रीसेट\" बटन का उपयोग करें।",
+      "lawyerTitle": "वकील प्रॉम्प्ट",
+      "lawyerDescription": "कानूनी सहायता के लिए निर्देश (Claude 3.5 Sonnet)",
+      "expertTitle": "विशेषज्ञ प्रॉम्प्ट",
+      "expertDescription": "व्यावहारिक मार्गदर्शन के लिए निर्देश (GPT-4o)",
+      "placeholder": "सिस्टम प्रॉम्प्ट दर्ज करें..."
     }
   },
   "verifyingRights": "अनुमतियाँ सत्यापित हो रही हैं...",

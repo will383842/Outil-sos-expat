@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1290 2796" width="1290" height="2796">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#dc2626"/>
+      <stop offset="50%" style="stop-color:#b91c1c"/>
+      <stop offset="100%" style="stop-color:#991b1b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1290" height="2796" fill="url(#bg)"/>
+  <circle cx="219.3" cy="447.36" r="193.5" fill="rgba(255,255,255,0.03)"/>
+  <circle cx="1070.7" cy="2320.68" r="258" fill="rgba(255,255,255,0.03)"/>
+  <g transform="translate(645, 1118.4)">
+    <circle cx="0" cy="0" r="103.2" fill="rgba(255,255,255,0.15)"/>
+    <text x="0" y="25.8" text-anchor="middle" fill="white" font-family="system-ui,-apple-system,sans-serif" font-size="64.5" font-weight="900">SOS</text>
+  </g>
+  <text x="645" y="1453.92" text-anchor="middle" fill="white" font-family="system-ui,-apple-system,sans-serif" font-size="51.6" font-weight="700">SOS Expat</text>
+  <text x="645" y="1621.6799999999998" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-family="system-ui,-apple-system,sans-serif" font-size="25.8">Assistance Urgente 24/7</text>
+  <g transform="translate(645, 1817.4)">
+    <circle cx="-25.8" cy="0" r="7.74" fill="rgba(255,255,255,0.6)"><animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0s"/></circle>
+    <circle cx="0" cy="0" r="7.74" fill="rgba(255,255,255,0.6)"><animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0.3s"/></circle>
+    <circle cx="25.8" cy="0" r="7.74" fill="rgba(255,255,255,0.6)"><animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0.6s"/></circle>
+  </g>
+  <text x="645" y="2572.32" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-family="system-ui,-apple-system,sans-serif" font-size="19.349999999999998">197 pays - 9 langues</text>
+</svg>

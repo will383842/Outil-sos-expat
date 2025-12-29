@@ -294,7 +294,7 @@ export default function Parametres() {
           {saveSuccess && (
             <span className="flex items-center gap-1 text-green-600 text-sm">
               <CheckCircle className="w-4 h-4" />
-              Enregistre
+              {t("common:success.saved")}
             </span>
           )}
           <Button
@@ -307,7 +307,7 @@ export default function Parametres() {
             ) : (
               <Save className="w-4 h-4 mr-2" />
             )}
-            Enregistrer
+            {t("common:actions.save")}
           </Button>
         </div>
       </div>
@@ -318,9 +318,9 @@ export default function Parametres() {
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
             <div>
-              <p className="font-medium text-amber-800">Mode maintenance actif</p>
+              <p className="font-medium text-amber-800">{t("parametres.maintenance.active")}</p>
               <p className="text-sm text-amber-700 mt-1">
-                Les utilisateurs voient le message de maintenance au lieu de la plateforme.
+                {t("parametres.maintenance.activeDesc")}
               </p>
             </div>
           </div>
@@ -330,35 +330,35 @@ export default function Parametres() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Informations plateforme */}
         <SettingCard
-          title="Informations plateforme"
-          description="Nom et coordonnees de contact"
+          title={t("parametres.platform.title")}
+          description={t("parametres.platform.description")}
           icon={Building2}
           iconColor="text-blue-600"
           loading={loading}
         >
           <div className="space-y-4">
             <InputSetting
-              label="Nom de la plateforme"
+              label={t("parametres.platform.name")}
               value={settings.platformName}
               onChange={(v) => updateSetting("platformName", v)}
               placeholder="SOS-Expat"
             />
             <InputSetting
-              label="Email de support"
+              label={t("parametres.platform.email")}
               value={settings.supportEmail}
               onChange={(v) => updateSetting("supportEmail", v)}
               type="email"
               placeholder="support@sos-expat.com"
             />
             <InputSetting
-              label="Telephone de support"
+              label={t("parametres.platform.phone")}
               value={settings.supportPhone}
               onChange={(v) => updateSetting("supportPhone", v)}
               type="tel"
               placeholder="+33 1 00 00 00 00"
             />
             <InputSetting
-              label="Site web principal"
+              label={t("parametres.platform.website")}
               value={settings.mainWebsite}
               onChange={(v) => updateSetting("mainWebsite", v)}
               type="url"
@@ -369,23 +369,23 @@ export default function Parametres() {
 
         {/* Mode maintenance */}
         <SettingCard
-          title="Mode maintenance"
-          description="Suspendre l'acces a la plateforme"
+          title={t("parametres.maintenance.title")}
+          description={t("parametres.maintenance.description")}
           icon={Wrench}
           iconColor="text-amber-600"
           loading={loading}
         >
           <div className="space-y-4">
             <ToggleSetting
-              label="Activer le mode maintenance"
-              description="Affiche un message de maintenance aux utilisateurs"
+              label={t("parametres.maintenance.enable")}
+              description={t("parametres.maintenance.enableDesc")}
               checked={settings.maintenanceMode}
               onChange={(v) => updateSetting("maintenanceMode", v)}
             />
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Message de maintenance
+                {t("parametres.maintenance.message")}
               </label>
               <textarea
                 value={settings.maintenanceMessage}
@@ -400,36 +400,36 @@ export default function Parametres() {
 
         {/* Notifications */}
         <SettingCard
-          title="Notifications"
-          description="Configurer les notifications par email"
+          title={t("parametres.notifications.title")}
+          description={t("parametres.notifications.description")}
           icon={Bell}
           iconColor="text-purple-600"
           loading={loading}
         >
           <div className="space-y-3">
             <ToggleSetting
-              label="Notifications email"
-              description="Activer les notifications par email"
+              label={t("parametres.notifications.email")}
+              description={t("parametres.notifications.emailDesc")}
               checked={settings.emailNotificationsEnabled}
               onChange={(v) => updateSetting("emailNotificationsEnabled", v)}
             />
             <ToggleSetting
-              label="Nouveau dossier"
-              description="Notifier quand un nouveau dossier est cree"
+              label={t("parametres.notifications.newDossier")}
+              description={t("parametres.notifications.newDossierDesc")}
               checked={settings.notifyOnNewDossier}
               onChange={(v) => updateSetting("notifyOnNewDossier", v)}
               disabled={!settings.emailNotificationsEnabled}
             />
             <ToggleSetting
-              label="Nouveau message"
-              description="Notifier quand un message est recu"
+              label={t("parametres.notifications.newMessage")}
+              description={t("parametres.notifications.newMessageDesc")}
               checked={settings.notifyOnNewMessage}
               onChange={(v) => updateSetting("notifyOnNewMessage", v)}
               disabled={!settings.emailNotificationsEnabled}
             />
             <ToggleSetting
-              label="Inscription prestataire"
-              description="Notifier quand un prestataire s'inscrit"
+              label={t("parametres.notifications.providerSignup")}
+              description={t("parametres.notifications.providerSignupDesc")}
               checked={settings.notifyOnProviderSignup}
               onChange={(v) => updateSetting("notifyOnProviderSignup", v)}
               disabled={!settings.emailNotificationsEnabled}
@@ -439,23 +439,23 @@ export default function Parametres() {
 
         {/* Integrations */}
         <SettingCard
-          title="Integrations"
-          description="Connexions aux services externes"
+          title={t("parametres.integrations.title")}
+          description={t("parametres.integrations.description")}
           icon={Link2}
           iconColor="text-green-600"
           loading={loading}
         >
           <div className="space-y-4">
             <ToggleSetting
-              label="API Laravel (sos-expat.com)"
-              description="Synchronisation avec le site principal"
+              label={t("parametres.integrations.laravel")}
+              description={t("parametres.integrations.laravelDesc")}
               checked={settings.laravelApiEnabled}
               onChange={(v) => updateSetting("laravelApiEnabled", v)}
             />
 
             {settings.laravelApiEnabled && (
               <InputSetting
-                label="URL de l'API Laravel"
+                label={t("parametres.integrations.laravelUrl")}
                 value={settings.laravelApiUrl}
                 onChange={(v) => updateSetting("laravelApiUrl", v)}
                 type="url"
@@ -464,8 +464,8 @@ export default function Parametres() {
             )}
 
             <ToggleSetting
-              label="Stripe (paiements)"
-              description="Gestion des abonnements via Stripe"
+              label={t("parametres.integrations.stripe")}
+              description={t("parametres.integrations.stripeDesc")}
               checked={settings.stripeEnabled}
               onChange={(v) => updateSetting("stripeEnabled", v)}
             />
@@ -473,7 +473,7 @@ export default function Parametres() {
             <div className="pt-2">
               <p className="text-xs text-gray-500 flex items-center gap-1">
                 <Info className="w-3 h-3" />
-                Les cles API sont configurees via les variables d'environnement
+                {t("parametres.integrations.apiKeysNote")}
               </p>
             </div>
           </div>
@@ -485,7 +485,7 @@ export default function Parametres() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <ExternalLink className="w-5 h-5 text-gray-600" />
-            Liens utiles
+            {t("parametres.links.title")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -500,8 +500,8 @@ export default function Parametres() {
                 <Shield className="w-4 h-4 text-orange-600" />
               </div>
               <div>
-                <p className="font-medium text-gray-900">Firebase Console</p>
-                <p className="text-xs text-gray-500">Base de donnees</p>
+                <p className="font-medium text-gray-900">{t("parametres.links.firebase")}</p>
+                <p className="text-xs text-gray-500">{t("parametres.links.firebaseDesc")}</p>
               </div>
             </a>
 
@@ -515,8 +515,8 @@ export default function Parametres() {
                 <Globe className="w-4 h-4 text-purple-600" />
               </div>
               <div>
-                <p className="font-medium text-gray-900">Stripe Dashboard</p>
-                <p className="text-xs text-gray-500">Paiements</p>
+                <p className="font-medium text-gray-900">{t("parametres.links.stripe")}</p>
+                <p className="text-xs text-gray-500">{t("parametres.links.stripeDesc")}</p>
               </div>
             </a>
 
@@ -530,8 +530,8 @@ export default function Parametres() {
                 <Building2 className="w-4 h-4 text-blue-600" />
               </div>
               <div>
-                <p className="font-medium text-gray-900">SOS-Expat Admin</p>
-                <p className="text-xs text-gray-500">Site principal</p>
+                <p className="font-medium text-gray-900">{t("parametres.links.sosExpat")}</p>
+                <p className="text-xs text-gray-500">{t("parametres.links.sosExpatDesc")}</p>
               </div>
             </a>
 
@@ -545,8 +545,8 @@ export default function Parametres() {
                 <Clock className="w-4 h-4 text-green-600" />
               </div>
               <div>
-                <p className="font-medium text-gray-900">Google Cloud</p>
-                <p className="text-xs text-gray-500">Functions & API</p>
+                <p className="font-medium text-gray-900">{t("parametres.links.googleCloud")}</p>
+                <p className="text-xs text-gray-500">{t("parametres.links.googleCloudDesc")}</p>
               </div>
             </a>
           </div>
@@ -556,8 +556,8 @@ export default function Parametres() {
       {/* Info derniere mise a jour */}
       {settings.updatedAt && (
         <p className="text-sm text-gray-500 text-center">
-          Derniere mise a jour: {settings.updatedAt.toDate().toLocaleString("fr-FR")}
-          {settings.updatedBy && ` par ${settings.updatedBy}`}
+          {t("parametres.lastUpdate")}: {settings.updatedAt.toDate().toLocaleString("fr-FR")}
+          {settings.updatedBy && ` ${t("parametres.by")} ${settings.updatedBy}`}
         </p>
       )}
     </div>

@@ -6,8 +6,8 @@ import Layout from '../components/layout/Layout';
 import Button from '../components/common/Button';
 import { useAuth } from '../contexts/AuthContext';
 import { useApp } from '../contexts/AppContext';
-import { sendPasswordResetEmail } from 'firebase/auth';
-import { auth } from '../config/firebase';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../config/firebase';
 
 interface FormData {
   email: string;
@@ -683,9 +683,14 @@ const PasswordReset: React.FC = () => {
     try {
       // Performance mark
       performance.mark('password-reset-attempt-start');
-      
-      await sendPasswordResetEmail(auth, formData.email.trim().toLowerCase());
-      
+
+      // Call custom Cloud Function for branded, translated email
+      const sendPasswordReset = httpsCallable(functions, 'sendCustomPasswordResetEmail');
+      await sendPasswordReset({
+        email: formData.email.trim().toLowerCase(),
+        language: language // Current UI language (fr, en, etc.)
+      });
+
       // Performance measure
       performance.mark('password-reset-attempt-end');
       performance.measure('password-reset-attempt', { start: 'password-reset-attempt-start', end: 'password-reset-attempt-end' });
@@ -705,35 +710,27 @@ const PasswordReset: React.FC = () => {
       }
       
     } catch (error) {
-      // Narrow typing + extraction
-      const err = error as { code?: string; message?: string } | Error | unknown;
+      // Cloud Function error handling
+      const err = error as { code?: string; message?: string; details?: { code?: string } } | Error | unknown;
       console.error('Password reset error:', err);
-      
-      const code = (err as { code?: string })?.code;
-      
-      // Pour la sécurité : toujours afficher le succès même si l'email n'existe pas
-      if (code === 'auth/user-not-found') {
-        // On affiche quand même le succès pour ne pas révéler que l'email n'existe pas
-        setIsSuccess(true);
-        setLastSentEmail(formData.email);
-        setCooldownTime(60);
-        
-        // Log en interne seulement
-        console.log('Email not found but showing success for security');
-        
-      } else if (code === 'auth/too-many-requests') {
+
+      // Extract error code from Cloud Function error
+      const code = (err as any)?.code || (err as any)?.details?.code;
+
+      // Handle specific errors
+      if (code === 'resource-exhausted' || code === 'functions/resource-exhausted') {
         setFormErrors({ general: t('error.too_many_requests') });
         setCooldownTime(300); // 5 minutes cooldown
-      } else if (code === 'auth/invalid-email') {
+      } else if (code === 'invalid-argument' || code === 'functions/invalid-argument') {
         setFormErrors({ email: t('validation.email_invalid') });
       } else {
-        // Pour les autres erreurs, on affiche un message générique
+        // For generic errors, show generic message
         setFormErrors({ general: t('error.description') });
       }
-      
-      // Error analytics (sans révéler si l'email existe)
+
+      // Error analytics
       const gtag = getGtag();
-      if (gtag && code !== 'auth/user-not-found') {
+      if (gtag) {
         gtag('event', 'password_reset_failed', {
           error_type: code || 'unknown',
           attempts: submitAttempts + 1
@@ -742,7 +739,7 @@ const PasswordReset: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [formData.email, validateForm, submitAttempts, isOnline, t, formErrors, cooldownTime]);
+  }, [formData.email, validateForm, submitAttempts, isOnline, t, formErrors, cooldownTime, language]);
 
   // Resend email
   const handleResend = useCallback(() => {

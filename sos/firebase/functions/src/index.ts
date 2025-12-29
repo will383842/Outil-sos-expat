@@ -3808,3 +3808,6 @@ export { generateOutilToken } from './auth/generateOutilToken';
 
 // ========== ADMIN CLAIMS ==========
 export { setAdminClaims, initializeAdminClaims } from './auth/setAdminClaims';
+
+// ========== PASSWORD RESET (CUSTOM BRANDED EMAIL) ==========
+export { sendCustomPasswordResetEmail } from './auth/passwordReset';

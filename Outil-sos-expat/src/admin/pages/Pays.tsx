@@ -114,11 +114,13 @@ const CountryCard = memo(function CountryCard({
   onEdit,
   onDelete,
   onToggleActive,
+  t,
 }: {
   country: CountryConfig;
   onEdit: (country: CountryConfig) => void;
   onDelete: (id: string) => void;
   onToggleActive: (id: string, active: boolean) => void;
+  t: (key: string, options?: Record<string, unknown>) => string;
 }) {
   const [showMenu, setShowMenu] = useState(false);
 
@@ -161,11 +163,11 @@ const CountryCard = memo(function CountryCard({
                     className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
                   >
                     <Edit2 className="w-4 h-4 text-gray-500" />
-                    Modifier
+                    {t("common:actions.edit")}
                   </button>
                   <button
                     onClick={() => {
-                      if (window.confirm(`Supprimer ${country.name} ?`)) {
+                      if (window.confirm(t("pays.confirmDelete", { name: country.name }))) {
                         onDelete(country.id);
                       }
                       setShowMenu(false);
@@ -173,7 +175,7 @@ const CountryCard = memo(function CountryCard({
                     className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
                   >
                     <Trash2 className="w-4 h-4" />
-                    Supprimer
+                    {t("common:actions.delete")}
                   </button>
                 </div>
               </>
@@ -200,12 +202,12 @@ const CountryCard = memo(function CountryCard({
           {country.active ? (
             <span className="inline-flex items-center gap-1 text-green-600">
               <CheckCircle className="w-4 h-4" />
-              Actif
+              {t("common:status.active")}
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 text-gray-400">
               <XCircle className="w-4 h-4" />
-              Inactif
+              {t("common:status.inactive")}
             </span>
           )}
         </div>
@@ -215,17 +217,17 @@ const CountryCard = memo(function CountryCard({
       <div className="mt-3 flex gap-2">
         {country.lawyersAvailable && (
           <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
-            Avocats
+            {t("pays.services.lawyers")}
           </span>
         )}
         {country.expertsAvailable && (
           <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
-            Experts
+            {t("pays.services.experts")}
           </span>
         )}
         {!country.lawyersAvailable && !country.expertsAvailable && (
           <span className="text-xs px-2 py-1 bg-gray-100 text-gray-500 rounded-full">
-            Aucun service
+            {t("pays.services.none")}
           </span>
         )}
       </div>
@@ -243,12 +245,14 @@ function CountryFormModal({
   country,
   onSave,
   saving,
+  t,
 }: {
   isOpen: boolean;
   onClose: () => void;
   country: CountryConfig | null;
   onSave: (data: CountryFormData) => void;
   saving: boolean;
+  t: (key: string, options?: Record<string, unknown>) => string;
 }) {
   const [form, setForm] = useState<CountryFormData>(EMPTY_FORM);
 
@@ -280,7 +284,7 @@ function CountryFormModal({
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-lg font-semibold">
-            {country ? "Modifier le pays" : "Ajouter un pays"}
+            {country ? t("pays.editCountry") : t("pays.addCountry")}
           </h2>
           <button
             onClick={onClose}
@@ -295,7 +299,7 @@ function CountryFormModal({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Code ISO <span className="text-red-500">*</span>
+                {t("pays.form.code")} <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -309,7 +313,7 @@ function CountryFormModal({
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Emoji drapeau
+                {t("pays.form.flag")}
               </label>
               <input
                 type="text"
@@ -324,7 +328,7 @@ function CountryFormModal({
           {/* Noms */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nom (principal) <span className="text-red-500">*</span>
+              {t("pays.form.name")} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -338,7 +342,7 @@ function CountryFormModal({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nom FR
+                {t("pays.form.nameFr")}
               </label>
               <input
                 type="text"
@@ -349,7 +353,7 @@ function CountryFormModal({
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nom EN
+                {t("pays.form.nameEn")}
               </label>
               <input
                 type="text"
@@ -364,7 +368,7 @@ function CountryFormModal({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Préfixe téléphone
+                {t("pays.form.phonePrefix")}
               </label>
               <input
                 type="text"
@@ -376,7 +380,7 @@ function CountryFormModal({
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Timezone
+                {t("pays.form.timezone")}
               </label>
               <input
                 type="text"
@@ -391,7 +395,7 @@ function CountryFormModal({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Devise
+                {t("pays.form.currency")}
               </label>
               <input
                 type="text"
@@ -404,7 +408,7 @@ function CountryFormModal({
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Symbole devise
+                {t("pays.form.currencySymbol")}
               </label>
               <input
                 type="text"
@@ -420,8 +424,8 @@ function CountryFormModal({
           <div className="space-y-3 pt-2">
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div>
-                <p className="font-medium text-gray-900">Pays actif</p>
-                <p className="text-xs text-gray-500">Visible dans les sélecteurs</p>
+                <p className="font-medium text-gray-900">{t("pays.form.active")}</p>
+                <p className="text-xs text-gray-500">{t("pays.form.activeDesc")}</p>
               </div>
               <Switch
                 checked={form.active}
@@ -431,8 +435,8 @@ function CountryFormModal({
 
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div>
-                <p className="font-medium text-gray-900">Avocats disponibles</p>
-                <p className="text-xs text-gray-500">Des avocats couvrent ce pays</p>
+                <p className="font-medium text-gray-900">{t("pays.form.lawyersAvailable")}</p>
+                <p className="text-xs text-gray-500">{t("pays.form.lawyersAvailableDesc")}</p>
               </div>
               <Switch
                 checked={form.lawyersAvailable}
@@ -442,8 +446,8 @@ function CountryFormModal({
 
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div>
-                <p className="font-medium text-gray-900">Experts disponibles</p>
-                <p className="text-xs text-gray-500">Des experts couvrent ce pays</p>
+                <p className="font-medium text-gray-900">{t("pays.form.expertsAvailable")}</p>
+                <p className="text-xs text-gray-500">{t("pays.form.expertsAvailableDesc")}</p>
               </div>
               <Switch
                 checked={form.expertsAvailable}
@@ -456,7 +460,7 @@ function CountryFormModal({
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 p-4 border-t">
           <Button variant="outline" onClick={onClose} disabled={saving}>
-            Annuler
+            {t("common:actions.cancel")}
           </Button>
           <Button
             onClick={() => onSave(form)}
@@ -466,12 +470,12 @@ function CountryFormModal({
             {saving ? (
               <>
                 <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                Enregistrement...
+                {t("common:actions.saving")}
               </>
             ) : (
               <>
                 <Save className="w-4 h-4 mr-2" />
-                Enregistrer
+                {t("common:actions.save")}
               </>
             )}
           </Button>
@@ -675,7 +679,7 @@ export default function Pays() {
           className="bg-red-600 hover:bg-red-700"
         >
           <Plus className="w-4 h-4 mr-2" />
-          Ajouter un pays
+          {t("pays.addCountry")}
         </Button>
       </div>
 
@@ -688,7 +692,7 @@ export default function Pays() {
             </div>
             <div>
               <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-              <div className="text-sm text-gray-600">Total pays</div>
+              <div className="text-sm text-gray-600">{t("pays.stats.total")}</div>
             </div>
           </CardContent>
         </Card>
@@ -700,7 +704,7 @@ export default function Pays() {
             </div>
             <div>
               <div className="text-2xl font-bold text-gray-900">{stats.active}</div>
-              <div className="text-sm text-gray-600">Actifs</div>
+              <div className="text-sm text-gray-600">{t("pays.stats.active")}</div>
             </div>
           </CardContent>
         </Card>
@@ -712,7 +716,7 @@ export default function Pays() {
             </div>
             <div>
               <div className="text-2xl font-bold text-gray-900">{stats.withLawyers}</div>
-              <div className="text-sm text-gray-600">Avec avocats</div>
+              <div className="text-sm text-gray-600">{t("pays.stats.withLawyers")}</div>
             </div>
           </CardContent>
         </Card>
@@ -724,7 +728,7 @@ export default function Pays() {
             </div>
             <div>
               <div className="text-2xl font-bold text-gray-900">{stats.withExperts}</div>
-              <div className="text-sm text-gray-600">Avec experts</div>
+              <div className="text-sm text-gray-600">{t("pays.stats.withExperts")}</div>
             </div>
           </CardContent>
         </Card>
@@ -738,7 +742,7 @@ export default function Pays() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Rechercher un pays..."
+                placeholder={t("pays.search")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
@@ -751,9 +755,9 @@ export default function Pays() {
                 onChange={(e) => setFilterActive(e.target.value as typeof filterActive)}
                 className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
               >
-                <option value="all">Tous</option>
-                <option value="active">Actifs uniquement</option>
-                <option value="inactive">Inactifs uniquement</option>
+                <option value="all">{t("common:all")}</option>
+                <option value="active">{t("pays.filters.activeOnly")}</option>
+                <option value="inactive">{t("pays.filters.inactiveOnly")}</option>
               </select>
             </div>
           </div>
@@ -767,12 +771,12 @@ export default function Pays() {
             <Globe className="w-8 h-8 text-gray-400" />
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-1">
-            Aucun pays trouvé
+            {t("pays.empty.title")}
           </h3>
           <p className="text-gray-600">
             {searchTerm || filterActive !== "all"
-              ? "Essayez de modifier vos filtres"
-              : "Ajoutez votre premier pays"}
+              ? t("common:empty.modifyFilters")
+              : t("pays.empty.addFirst")}
           </p>
         </div>
       ) : (
@@ -787,6 +791,7 @@ export default function Pays() {
               }}
               onDelete={handleDelete}
               onToggleActive={handleToggleActive}
+              t={t}
             />
           ))}
         </div>
@@ -802,6 +807,7 @@ export default function Pays() {
         country={editingCountry}
         onSave={handleSave}
         saving={saving}
+        t={t}
       />
     </div>
   );
