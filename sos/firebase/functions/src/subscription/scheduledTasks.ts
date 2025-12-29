@@ -551,10 +551,6 @@ export const cleanupExpiredTrials = onSchedule(
       const providerId = subscription.providerId || doc.id;
 
       try {
-        // Check if there's a valid payment method or active Stripe subscription
-        // (If they converted to paid during trial, status would already be 'active')
-        const hasPayment = subscription.stripeSubscriptionId && subscription.status === 'trialing';
-
         // Check for any successful invoice payments
         const invoicesSnapshot = await db
           .collection('invoices')
@@ -631,6 +627,136 @@ export const cleanupExpiredTrials = onSchedule(
     await batch.commit();
 
     logger.info(`[cleanupExpiredTrials] Completed: ${expiredCount} trials expired, ${errorCount} errors`);
+  }
+);
+
+// ============================================================================
+// 5. CLEANUP EXPIRED TTL DOCUMENTS
+// Scheduled: Every day at 03:00 UTC
+// Cleans up processed_webhook_events and rate_limits with expired TTL
+// ============================================================================
+
+export const cleanupExpiredDocuments = onSchedule(
+  {
+    schedule: '0 3 * * *', // Hour 3, Every day
+    region: 'europe-west1',
+    timeZone: 'UTC',
+    memory: '512MiB',
+    timeoutSeconds: 300,
+  },
+  async (_event: ScheduledEvent) => {
+    logger.info('[cleanupExpiredDocuments] Starting TTL cleanup...');
+
+    const db = getDb();
+    const now = admin.firestore.Timestamp.now();
+
+    let totalDeleted = 0;
+    let errorCount = 0;
+
+    // ========================================
+    // 1. Cleanup processed_webhook_events
+    // ========================================
+    try {
+      const webhookEventsSnapshot = await db
+        .collection('processed_webhook_events')
+        .where('expiresAt', '<', now)
+        .limit(500) // Process in batches
+        .get();
+
+      if (!webhookEventsSnapshot.empty) {
+        const batch = db.batch();
+        webhookEventsSnapshot.docs.forEach(doc => {
+          batch.delete(doc.ref);
+        });
+        await batch.commit();
+        totalDeleted += webhookEventsSnapshot.size;
+        logger.info(`[cleanupExpiredDocuments] Deleted ${webhookEventsSnapshot.size} expired webhook events`);
+      }
+    } catch (error) {
+      logger.error('[cleanupExpiredDocuments] Error cleaning webhook events:', error);
+      errorCount++;
+    }
+
+    // ========================================
+    // 2. Cleanup rate_limits (older than 2 hours)
+    // ========================================
+    try {
+      const twoHoursAgo = Date.now() - 2 * 60 * 60 * 1000;
+      const rateLimitsSnapshot = await db
+        .collection('rate_limits')
+        .where('windowStart', '<', twoHoursAgo)
+        .limit(500)
+        .get();
+
+      if (!rateLimitsSnapshot.empty) {
+        const batch = db.batch();
+        rateLimitsSnapshot.docs.forEach(doc => {
+          batch.delete(doc.ref);
+        });
+        await batch.commit();
+        totalDeleted += rateLimitsSnapshot.size;
+        logger.info(`[cleanupExpiredDocuments] Deleted ${rateLimitsSnapshot.size} expired rate limits`);
+      }
+    } catch (error) {
+      logger.error('[cleanupExpiredDocuments] Error cleaning rate limits:', error);
+      errorCount++;
+    }
+
+    // ========================================
+    // 3. Cleanup old subscription_logs (older than 90 days)
+    // ========================================
+    try {
+      const ninetyDaysAgo = admin.firestore.Timestamp.fromMillis(
+        Date.now() - 90 * 24 * 60 * 60 * 1000
+      );
+      const logsSnapshot = await db
+        .collection('subscription_logs')
+        .where('createdAt', '<', ninetyDaysAgo)
+        .limit(500)
+        .get();
+
+      if (!logsSnapshot.empty) {
+        const batch = db.batch();
+        logsSnapshot.docs.forEach(doc => {
+          batch.delete(doc.ref);
+        });
+        await batch.commit();
+        totalDeleted += logsSnapshot.size;
+        logger.info(`[cleanupExpiredDocuments] Deleted ${logsSnapshot.size} old subscription logs`);
+      }
+    } catch (error) {
+      logger.error('[cleanupExpiredDocuments] Error cleaning subscription logs:', error);
+      errorCount++;
+    }
+
+    // ========================================
+    // 4. Cleanup old quota_reset_logs (older than 60 days)
+    // ========================================
+    try {
+      const sixtyDaysAgo = admin.firestore.Timestamp.fromMillis(
+        Date.now() - 60 * 24 * 60 * 60 * 1000
+      );
+      const quotaLogsSnapshot = await db
+        .collection('quota_reset_logs')
+        .where('resetAt', '<', sixtyDaysAgo)
+        .limit(500)
+        .get();
+
+      if (!quotaLogsSnapshot.empty) {
+        const batch = db.batch();
+        quotaLogsSnapshot.docs.forEach(doc => {
+          batch.delete(doc.ref);
+        });
+        await batch.commit();
+        totalDeleted += quotaLogsSnapshot.size;
+        logger.info(`[cleanupExpiredDocuments] Deleted ${quotaLogsSnapshot.size} old quota reset logs`);
+      }
+    } catch (error) {
+      logger.error('[cleanupExpiredDocuments] Error cleaning quota logs:', error);
+      errorCount++;
+    }
+
+    logger.info(`[cleanupExpiredDocuments] Completed: ${totalDeleted} documents deleted, ${errorCount} errors`);
   }
 );
 

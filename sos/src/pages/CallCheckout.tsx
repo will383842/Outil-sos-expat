@@ -1531,8 +1531,26 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
         const paymentIntent = result.paymentIntent;
         if (!paymentIntent) throw new Error(t("err.paymentFailed"));
 
-        const status = paymentIntent.status;
+        let status = paymentIntent.status;
         console.log("Status in stripe : ", status);
+
+        // P0 FIX: Gérer correctement 3D Secure (requires_action)
+        if (status === "requires_action" && paymentIntent.client_secret) {
+          console.log("🔐 3D Secure authentication required, handling...");
+          const { error: confirmError, paymentIntent: confirmedIntent } =
+            await stripe.handleCardAction(paymentIntent.client_secret);
+
+          if (confirmError) {
+            console.error("3D Secure failed:", confirmError);
+            throw new Error(confirmError.message || t("err.actionRequired"));
+          }
+
+          if (confirmedIntent) {
+            status = confirmedIntent.status;
+            console.log("3D Secure completed, new status:", status);
+          }
+        }
+
         if (!["succeeded", "requires_capture", "processing"].includes(status)) {
           if (status === "requires_action")
             throw new Error(t("err.actionRequired"));

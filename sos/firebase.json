@@ -52,6 +52,27 @@
         "destination": "/sitemaps/global/sitemap-index.xml.gz"
       },
       {
+        "source": "/sitemap-landing.xml",
+        "function": {
+          "functionId": "sitemapLanding",
+          "region": "europe-west1"
+        }
+      },
+      {
+        "source": "/sitemap-profiles.xml",
+        "function": {
+          "functionId": "sitemapProfiles",
+          "region": "europe-west1"
+        }
+      },
+      {
+        "source": "/sitemap-blog.xml",
+        "function": {
+          "functionId": "sitemapBlog",
+          "region": "europe-west1"
+        }
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
@@ -72,7 +93,7 @@
         ]
       },
       {
-        "source": "/sitemap_index.xml",
+        "source": "/sitemap*.xml",
         "headers": [
           { "key": "Content-Type", "value": "application/xml; charset=utf-8" },
           { "key": "Cache-Control", "value": "public, max-age=3600" }

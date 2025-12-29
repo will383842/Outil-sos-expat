@@ -262,7 +262,6 @@ export const syncSubscriptionPlansToStripe = functions
 
           // 2a. Verifier si le produit Stripe existe (via metadata.planId)
           let product = await findExistingProduct(planId);
-          let productCreated = false;
 
           // 2b. Si non: creer le produit
           if (!product) {
@@ -278,7 +277,6 @@ export const syncSubscriptionPlansToStripe = functions
               },
             });
             report.created.products++;
-            productCreated = true;
             console.log(`[syncSubscriptionPlansToStripe] Product created: ${product.id}`);
           } else {
             console.log(`[syncSubscriptionPlansToStripe] Product exists: ${product.id}`);
@@ -718,7 +716,9 @@ export const deactivateStripePlan = functions
           await stripeClient.products.update(productId, {
             active: false,
             metadata: {
-              ...plan,
+              planId: planId,
+              tier: plan.tier,
+              providerType: plan.providerType,
               deactivatedAt: new Date().toISOString(),
               deactivatedBy: adminId,
             },

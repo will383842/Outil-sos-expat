@@ -1204,15 +1204,14 @@ export const stripeWebhook = onRequest(
 
           webhookSecret = getStripeWebhookSecret();
 
-          console.log("🔐 Webhook secret:", webhookSecret);
-
-          console.log("🔐 Webhook secret retrieved");
-          console.log("🔐 Secret length:", webhookSecret.length);
-          console.log(
-            "🔐 Secret starts with whsec_:",
-            webhookSecret.startsWith("whsec_")
-          );
-          console.log("🔐 Secret preview:", webhookSecret.slice(0, 10) + "...");
+          // P0 SECURITY FIX: Ne JAMAIS logger le secret webhook
+          // Vérification silencieuse de la validité
+          if (!webhookSecret || !webhookSecret.startsWith("whsec_")) {
+            console.error("❌ Invalid webhook secret format");
+            res.status(500).send("Invalid webhook secret configuration");
+            return;
+          }
+          console.log("🔐 Webhook secret validated (length:", webhookSecret.length, ")");
         } catch (secretError) {
           console.log("❌ Secret retrieval error:", secretError);
           res.status(500).send("Secret configuration error");

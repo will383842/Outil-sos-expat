@@ -507,7 +507,18 @@ export const ChoosePlan: React.FC = () => {
   };
 
   // Determine provider type
-  const providerType: ProviderType = user?.role === 'lawyer' ? 'lawyer' : 'expat_aidant';
+  const userRole = user?.role || user?.type || '';
+  const providerType: ProviderType = userRole === 'lawyer' ? 'lawyer' : 'expat_aidant';
+
+  // SECURITY: Block clients from accessing this page
+  const isClient = userRole === 'client' || userRole === 'user';
+
+  // If user is a client, show error and redirect
+  useEffect(() => {
+    if (!subscriptionLoading && isClient) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isClient, subscriptionLoading, navigate]);
 
   // Get available plans
   const defaultPlans = providerType === 'lawyer' ? DEFAULT_LAWYER_PLANS : DEFAULT_EXPAT_PLANS;
@@ -549,8 +560,59 @@ export const ChoosePlan: React.FC = () => {
       }
     } catch (err: any) {
       console.error('Error creating checkout session:', err);
-      // Extract error message from Firebase Functions error
-      const errorMessage = err.message || err.details || intl.formatMessage({ id: 'subscription.errors.generic' });
+
+      // Parse Firebase Functions error with proper user-friendly messages
+      let errorMessage = intl.formatMessage({ id: 'subscription.errors.generic', defaultMessage: 'Une erreur est survenue. Veuillez réessayer.' });
+
+      // Firebase Functions errors have a code property
+      const errorCode = err?.code || err?.details?.code || '';
+      const firebaseMessage = err?.message || err?.details?.message || '';
+
+      // Map error codes to user-friendly messages
+      if (errorCode === 'functions/resource-exhausted' || firebaseMessage.includes('Trop de tentatives')) {
+        errorMessage = intl.formatMessage({
+          id: 'subscription.errors.rateLimited',
+          defaultMessage: 'Trop de tentatives de paiement. Veuillez réessayer dans une heure.'
+        });
+      } else if (errorCode === 'functions/failed-precondition') {
+        if (firebaseMessage.includes('abonnement actif')) {
+          errorMessage = intl.formatMessage({
+            id: 'subscription.errors.alreadySubscribed',
+            defaultMessage: 'Vous avez déjà un abonnement actif. Veuillez le gérer depuis votre espace abonnement.'
+          });
+        } else if (firebaseMessage.includes('plan is no longer available') || firebaseMessage.includes('plus disponible')) {
+          errorMessage = intl.formatMessage({
+            id: 'subscription.errors.planUnavailable',
+            defaultMessage: 'Ce plan n\'est plus disponible. Veuillez sélectionner un autre plan.'
+          });
+        } else {
+          errorMessage = firebaseMessage || errorMessage;
+        }
+      } else if (errorCode === 'functions/permission-denied') {
+        errorMessage = intl.formatMessage({
+          id: 'subscription.errors.permissionDenied',
+          defaultMessage: 'Vous n\'avez pas les droits pour effectuer cette action.'
+        });
+      } else if (errorCode === 'functions/unauthenticated') {
+        errorMessage = intl.formatMessage({
+          id: 'subscription.errors.unauthenticated',
+          defaultMessage: 'Veuillez vous connecter pour continuer.'
+        });
+      } else if (errorCode === 'functions/not-found') {
+        errorMessage = intl.formatMessage({
+          id: 'subscription.errors.notFound',
+          defaultMessage: 'Plan ou profil introuvable. Veuillez rafraîchir la page.'
+        });
+      } else if (errorCode === 'functions/internal' || errorCode === 'functions/unavailable') {
+        errorMessage = intl.formatMessage({
+          id: 'subscription.errors.serverError',
+          defaultMessage: 'Une erreur serveur est survenue. Veuillez réessayer plus tard.'
+        });
+      } else if (firebaseMessage && !firebaseMessage.includes('INTERNAL')) {
+        // Use the server message if it's not an internal error
+        errorMessage = firebaseMessage;
+      }
+
       setError(errorMessage);
       setIsLoading(false);
       setLoadingPlanId(null);
@@ -566,6 +628,25 @@ export const ChoosePlan: React.FC = () => {
             <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mx-auto mb-4" />
             <p className="text-gray-500">
               {intl.formatMessage({ id: 'subscription.plans.loading' })}
+            </p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Block clients from seeing subscription plans
+  if (isClient) {
+    return (
+      <DashboardLayout activeKey="subscription">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <X className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              {intl.formatMessage({ id: 'subscription.errors.clientNotAllowed', defaultMessage: 'Accès non autorisé' })}
+            </h2>
+            <p className="text-gray-500">
+              {intl.formatMessage({ id: 'subscription.errors.clientNotAllowedMessage', defaultMessage: 'Les abonnements sont réservés aux prestataires (avocats et expatriés aidants).' })}
             </p>
           </div>
         </div>

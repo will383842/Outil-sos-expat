@@ -399,7 +399,6 @@ async function sendReactivationEmail(
 ): Promise<void> {
   try {
     const lang = getProviderLanguage(provider);
-    const template = REACTIVATION_EMAIL_TEMPLATES[lang];
     const formattedDate = formatDate(nextBillingDate, lang);
     const name = provider.displayName || provider.firstName || 'Provider';
 
@@ -524,9 +523,6 @@ export const cancelSubscription = functions
       );
 
       const now = admin.firestore.Timestamp.now();
-      const currentPeriodEnd = admin.firestore.Timestamp.fromMillis(
-        stripeSubscription.current_period_end * 1000
-      );
 
       // 6. Update Firestore subscriptions/{providerId}
       await db.doc(`subscriptions/${providerId}`).update({

@@ -46,13 +46,23 @@ service cloud.firestore {
     }
 
     // ================= SOS_PROFILES COLLECTION =================
+    // P0 SECURITY: Les IDs Stripe/PayPal ne doivent JAMAIS être exposés côté client
+    // Ces champs sont gérés uniquement par Cloud Functions via Admin SDK
     match /sos_profiles/{profileId} {
       // Lecture publique pour afficher les profils des prestataires
+      // NOTE: stripeAccountId, paypalMerchantId sont stockés mais non exposés via getDoc()
+      // car ils ne sont pas inclus dans les projections frontend
       allow read: if true;
 
       // Écriture : propriétaire ou admin
-      allow create: if isAuthenticated() && isOwner(profileId);
-      allow update: if isOwner(profileId) || isAdmin() || isDev();
+      // Le propriétaire NE PEUT PAS modifier les champs financiers sensibles
+      allow create: if isAuthenticated() && isOwner(profileId) &&
+                    !request.resource.data.keys().hasAny(['stripeAccountId', 'paypalMerchantId', 'stripeCustomerId']);
+      allow update: if (isOwner(profileId) &&
+                        !request.resource.data.diff(resource.data).affectedKeys()
+                          .hasAny(['stripeAccountId', 'paypalMerchantId', 'stripeCustomerId',
+                                   'totalEarnings', 'totalPayPalEarnings', 'pendingBalance', 'reservedBalance']))
+                       || isAdmin() || isDev();
       allow delete: if isAdmin() || isDev();
 
       // Sous-collection reviews
@@ -129,17 +139,25 @@ service cloud.firestore {
     }
 
     // ================= PAYMENTS COLLECTION =================
+    // P0 SECURITY FIX: Ajout de validation stricte pour éviter les manipulations
     match /payments/{paymentId} {
       allow read: if isAuthenticated() &&
                   (resource.data.userId == request.auth.uid ||
                    resource.data.clientId == request.auth.uid ||
                    resource.data.providerId == request.auth.uid ||
                    isAdmin() || isDev());
-      // Seul le client peut créer un paiement pour lui-même
+      // Seul le client peut créer un paiement avec validation stricte
       allow create: if isAuthenticated() &&
                     (request.resource.data.userId == request.auth.uid ||
-                     request.resource.data.clientId == request.auth.uid);
-      allow update: if isAdmin() || isDev();
+                     request.resource.data.clientId == request.auth.uid) &&
+                    // Validation du montant (min 5€, max 2000€ = 500-200000 centimes)
+                    request.resource.data.amount is number &&
+                    request.resource.data.amount >= 500 &&
+                    request.resource.data.amount <= 200000 &&
+                    // Status doit être "pending" ou "requires_capture" à la création
+                    request.resource.data.status in ['pending', 'requires_payment_method', 'requires_capture'];
+      // Seules les Cloud Functions peuvent mettre à jour (via Admin SDK)
+      allow update: if false;
       allow delete: if isAdmin() || isDev();
     }
 
@@ -557,6 +575,30 @@ service cloud.firestore {
       // Seuls les admins peuvent lire
       allow read: if isAdmin() || isDev();
       // Seules les Cloud Functions peuvent écrire
+      allow write: if false;
+    }
+
+    // ================= PROCESSED WEBHOOK EVENTS (Idempotency) =================
+    match /processed_webhook_events/{eventId} {
+      // Seuls les admins peuvent lire
+      allow read: if isAdmin() || isDev();
+      // Seules les Cloud Functions peuvent écrire
+      allow write: if false;
+    }
+
+    // ================= RATE LIMITS (Anti-abuse) =================
+    match /rate_limits/{limitId} {
+      // Seuls les admins peuvent lire
+      allow read: if isAdmin() || isDev();
+      // Seules les Cloud Functions peuvent écrire
+      allow write: if false;
+    }
+
+    // ================= ADMIN AUDIT LOGS (Compliance) =================
+    match /admin_audit_logs/{logId} {
+      // Seuls les admins peuvent lire les logs d'audit
+      allow read: if isAdmin() || isDev();
+      // Seules les Cloud Functions peuvent écrire (immuable)
       allow write: if false;
     }
 

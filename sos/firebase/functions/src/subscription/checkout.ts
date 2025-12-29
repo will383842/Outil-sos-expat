@@ -138,6 +138,77 @@ function getDb(): admin.firestore.Firestore {
   return admin.firestore();
 }
 
+// ============================================================================
+// RATE LIMITING
+// ============================================================================
+
+const RATE_LIMIT_MAX_ATTEMPTS = 5; // Max 5 checkout attempts
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour window
+
+interface RateLimitEntry {
+  attempts: number;
+  windowStart: admin.firestore.Timestamp;
+}
+
+/**
+ * Checks rate limit for checkout attempts
+ * Returns true if within limit, false if exceeded
+ */
+async function checkRateLimit(
+  db: admin.firestore.Firestore,
+  providerId: string
+): Promise<boolean> {
+  const rateLimitRef = db.doc(`rate_limits/checkout_${providerId}`);
+
+  try {
+    const result = await db.runTransaction(async (transaction) => {
+      const doc = await transaction.get(rateLimitRef);
+      const now = Date.now();
+
+      if (!doc.exists) {
+        // First attempt, create entry
+        transaction.set(rateLimitRef, {
+          attempts: 1,
+          windowStart: admin.firestore.Timestamp.now(),
+          expiresAt: admin.firestore.Timestamp.fromMillis(now + RATE_LIMIT_WINDOW_MS)
+        });
+        return true;
+      }
+
+      const data = doc.data() as RateLimitEntry;
+      const windowStartMs = data.windowStart.toMillis();
+      const windowAge = now - windowStartMs;
+
+      if (windowAge >= RATE_LIMIT_WINDOW_MS) {
+        // Window expired, reset
+        transaction.set(rateLimitRef, {
+          attempts: 1,
+          windowStart: admin.firestore.Timestamp.now(),
+          expiresAt: admin.firestore.Timestamp.fromMillis(now + RATE_LIMIT_WINDOW_MS)
+        });
+        return true;
+      }
+
+      if (data.attempts >= RATE_LIMIT_MAX_ATTEMPTS) {
+        // Rate limit exceeded
+        return false;
+      }
+
+      // Increment attempts
+      transaction.update(rateLimitRef, {
+        attempts: admin.firestore.FieldValue.increment(1)
+      });
+      return true;
+    });
+
+    return result;
+  } catch (error) {
+    logger.error('Rate limit check failed', { providerId, error });
+    // On error, allow the request (fail open) to not block legitimate users
+    return true;
+  }
+}
+
 /**
  * Detects the currency based on provider's country
  * Returns EUR for Eurozone countries, USD for all others
@@ -341,6 +412,21 @@ export const createSubscriptionCheckout = onCall<CheckoutInput, Promise<Checkout
     const providerId = request.auth.uid;
 
     // ========================================================================
+    // 1b. Rate Limiting Check
+    // ========================================================================
+
+    const db = getDb();
+    const withinRateLimit = await checkRateLimit(db, providerId);
+
+    if (!withinRateLimit) {
+      logger.warn('Rate limit exceeded for checkout', { providerId });
+      throw new HttpsError(
+        'resource-exhausted',
+        'Trop de tentatives de paiement. Veuillez réessayer dans une heure.'
+      );
+    }
+
+    // ========================================================================
     // 2. Input Validation with Zod
     // ========================================================================
 
@@ -355,7 +441,6 @@ export const createSubscriptionCheckout = onCall<CheckoutInput, Promise<Checkout
     });
 
     try {
-      const db = getDb();
       const stripe = createStripeClient();
 
       // ======================================================================
@@ -419,18 +504,64 @@ export const createSubscriptionCheckout = onCall<CheckoutInput, Promise<Checkout
         throw new HttpsError('not-found', 'Provider profile not found');
       }
 
-      // Determine provider type from data or plan
-      const providerType: ProviderType =
-        providerData.type === 'lawyer' || providerData.role === 'lawyer'
-          ? 'lawyer'
-          : 'expat_aidant';
+      // Determine provider type from data
+      const userRole = providerData.type || providerData.role || '';
 
-      logger.info('Provider data retrieved', {
+      // SECURITY: Block clients from accessing subscriptions
+      if (userRole === 'client' || userRole === 'user') {
+        logger.error('Client attempted to access subscription', { providerId, userRole });
+        throw new HttpsError(
+          'permission-denied',
+          'Seuls les prestataires (avocats et expatriés aidants) peuvent souscrire à un abonnement'
+        );
+      }
+
+      const providerType: ProviderType =
+        userRole === 'lawyer' ? 'lawyer' : 'expat_aidant';
+
+      // SECURITY: Validate that plan's providerType matches user's providerType
+      if (plan.providerType !== providerType) {
+        logger.error('Provider type mismatch', {
+          providerId,
+          planId,
+          planProviderType: plan.providerType,
+          userProviderType: providerType,
+          userRole,
+        });
+        throw new HttpsError(
+          'permission-denied',
+          `Ce plan n'est pas disponible pour votre profil. Vous êtes "${providerType === 'lawyer' ? 'avocat' : 'expatrié aidant'}" mais ce plan est réservé aux "${plan.providerType === 'lawyer' ? 'avocats' : 'expatriés aidants'}".`
+        );
+      }
+
+      logger.info('Provider data retrieved and validated', {
         providerId,
         providerCountry,
         providerType,
-        email: providerData.email,
+        planProviderType: plan.providerType,
+        // SECURITY: Don't log full email - mask it
+        emailMasked: providerData.email ? `${providerData.email.substring(0, 3)}***@***` : 'none',
       });
+
+      // ======================================================================
+      // 4b. CHECK FOR EXISTING ACTIVE SUBSCRIPTION (CRITICAL)
+      // ======================================================================
+
+      const existingSubDoc = await db.doc(`subscriptions/${providerId}`).get();
+      if (existingSubDoc.exists) {
+        const existingSub = existingSubDoc.data();
+        if (existingSub && ['active', 'trialing'].includes(existingSub.status)) {
+          logger.warn('User already has active subscription', {
+            providerId,
+            existingStatus: existingSub.status,
+            existingTier: existingSub.tier,
+          });
+          throw new HttpsError(
+            'failed-precondition',
+            'Vous avez déjà un abonnement actif. Veuillez le gérer depuis votre espace abonnement.'
+          );
+        }
+      }
 
       // ======================================================================
       // 5. Detect Currency Based on Country or Use Requested Currency
@@ -558,6 +689,11 @@ export const createSubscriptionCheckout = onCall<CheckoutInput, Promise<Checkout
         sessionParams.subscription_data!.trial_period_days = trialPeriodDays;
       }
 
+      // Generate idempotency key to prevent duplicate checkout sessions
+      // Uses 5-minute time buckets so rapid clicks get the same session
+      const timeBucket = Math.floor(Date.now() / (5 * 60 * 1000)); // 5-minute window
+      const idempotencyKey = `checkout_${providerId}_${planId}_${billingPeriod}_${currency}_${timeBucket}`;
+
       logger.info('Creating Checkout Session', {
         providerId,
         planId,
@@ -565,9 +701,12 @@ export const createSubscriptionCheckout = onCall<CheckoutInput, Promise<Checkout
         customerId,
         hasTrialDays: !!trialPeriodDays,
         trialPeriodDays,
+        idempotencyKey,
       });
 
-      const session = await stripe.checkout.sessions.create(sessionParams);
+      const session = await stripe.checkout.sessions.create(sessionParams, {
+        idempotencyKey,
+      });
 
       if (!session.id || !session.url) {
         logger.error('Failed to create checkout session - no ID or URL', {
@@ -587,7 +726,8 @@ export const createSubscriptionCheckout = onCall<CheckoutInput, Promise<Checkout
         providerId,
         planId,
         sessionId: session.id,
-        url: session.url,
+        // SECURITY: Don't log full URL as it contains sensitive session token
+        urlDomain: session.url ? new URL(session.url).hostname : 'unknown',
         currency,
         billingPeriod,
         hasTrialDays: !!trialPeriodDays,
@@ -609,27 +749,28 @@ export const createSubscriptionCheckout = onCall<CheckoutInput, Promise<Checkout
       }
 
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      const errorStack = error instanceof Error ? error.stack : undefined;
+      // SECURITY: Don't log stack trace in production - it can reveal sensitive paths
 
       logger.error('createSubscriptionCheckout failed', {
         providerId,
         planId,
         billingPeriod,
         error: errorMessage,
-        stack: errorStack,
+        errorType: error instanceof Error ? error.constructor.name : 'Unknown',
       });
 
-      // Handle Stripe-specific errors
+      // Handle Stripe-specific errors - don't expose internal Stripe details to client
       if (error instanceof Stripe.errors.StripeError) {
+        logger.error('Stripe API error details', { stripeCode: error.code, stripeType: error.type });
         throw new HttpsError(
           'internal',
-          `Stripe error: ${error.message}`
+          'Une erreur est survenue lors de la création du paiement. Veuillez réessayer.'
         );
       }
 
       throw new HttpsError(
         'internal',
-        `Failed to create subscription checkout: ${errorMessage}`
+        'Une erreur est survenue lors de la création du paiement. Veuillez réessayer.'
       );
     }
   }

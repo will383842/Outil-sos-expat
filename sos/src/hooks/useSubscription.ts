@@ -21,10 +21,13 @@ import {
   getSubscription,
   subscribeToSubscription,
   getSubscriptionPlan,
+  subscribeToPlans,
   cancelSubscription as cancelSubscriptionService,
   reactivateSubscription as reactivateSubscriptionService,
-  openCustomerPortal
+  openCustomerPortal,
+  startTrial as startTrialService
 } from '../services/subscription/subscriptionService';
+import { ProviderType } from '../types/subscription';
 
 // ============================================================================
 // TYPES
@@ -34,7 +37,9 @@ interface UseSubscriptionReturn {
   // État
   subscription: Subscription | null;
   plan: SubscriptionPlan | null;
+  plans: SubscriptionPlan[]; // All available plans for the user's provider type
   isLoading: boolean;
+  loading: boolean; // Alias for isLoading (backward compatibility)
   error: Error | null;
 
   // Dérivés
@@ -52,6 +57,9 @@ interface UseSubscriptionReturn {
 
   // Refresh
   refresh: () => Promise<void>;
+
+  // Plan initialization (for users without subscription)
+  initializeTrial: () => Promise<void>;
 }
 
 // ============================================================================
@@ -150,12 +158,20 @@ export function useSubscription(): UseSubscriptionReturn {
   // State
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [plan, setPlan] = useState<SubscriptionPlan | null>(null);
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   // Refs pour éviter les race conditions
   const isMounted = useRef(true);
   const lastPlanId = useRef<string | null>(null);
+  const lastProviderType = useRef<ProviderType | null>(null);
+
+  // Determine provider type from user
+  const providerType: ProviderType = useMemo(() => {
+    const role = user?.role || user?.type || '';
+    return role === 'lawyer' ? 'lawyer' : 'expat_aidant';
+  }, [user?.role, user?.type]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -197,6 +213,35 @@ export function useSubscription(): UseSubscriptionReturn {
       unsubscribe();
     };
   }, [user?.uid]);
+
+  // Subscribe to available plans based on provider type
+  useEffect(() => {
+    if (!user?.uid || !providerType) {
+      setPlans([]);
+      return;
+    }
+
+    // Avoid re-subscribing if provider type hasn't changed
+    if (providerType === lastProviderType.current) {
+      return;
+    }
+    lastProviderType.current = providerType;
+
+    const unsubscribePlans = subscribeToPlans(providerType, (loadedPlans) => {
+      if (!isMounted.current) return;
+
+      // Filter out trial plans and sort by sortOrder
+      const activePlans = loadedPlans
+        .filter(p => p.isActive && p.tier !== 'trial')
+        .sort((a, b) => a.sortOrder - b.sortOrder);
+
+      setPlans(activePlans);
+    });
+
+    return () => {
+      unsubscribePlans();
+    };
+  }, [user?.uid, providerType]);
 
   // Load plan with caching
   const loadPlan = useCallback(async (planId: string) => {
@@ -384,6 +429,33 @@ export function useSubscription(): UseSubscriptionReturn {
     }
   }, [user?.uid]);
 
+  /**
+   * Initialize a trial subscription for users without subscription
+   */
+  const initializeTrial = useCallback(async (): Promise<void> => {
+    if (!user?.uid) {
+      throw new Error('User must be authenticated');
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await startTrialService(providerType);
+      // The subscription update will be received via Firestore listener
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to initialize trial');
+      if (isMounted.current) {
+        setError(error);
+      }
+      throw error;
+    } finally {
+      if (isMounted.current) {
+        setIsLoading(false);
+      }
+    }
+  }, [user?.uid, providerType]);
+
   // ============================================================================
   // RETURN
   // ============================================================================
@@ -392,7 +464,9 @@ export function useSubscription(): UseSubscriptionReturn {
     // État
     subscription,
     plan,
+    plans,
     isLoading,
+    loading: isLoading, // Alias for backward compatibility
     error,
 
     // Dérivés
@@ -407,6 +481,7 @@ export function useSubscription(): UseSubscriptionReturn {
     cancelSubscription,
     reactivateSubscription,
     openBillingPortal,
+    initializeTrial,
 
     // Refresh
     refresh

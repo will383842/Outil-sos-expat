@@ -19,8 +19,14 @@ import {
   handleTrialWillEnd as handleTrialEnd,
   handleInvoicePaid as handleInvPaid,
   handleInvoicePaymentFailed as handleInvFailed,
+  handleInvoicePaymentActionRequired as handleInvActionRequired,
   handleInvoiceCreated as handleInvCreated,
-  handlePaymentMethodUpdated as handlePMUpdated
+  handlePaymentMethodUpdated as handlePMUpdated,
+  handlePayoutFailed,
+  handleRefundFailed,
+  handlePaymentIntentFailed,
+  handleDisputeCreated,
+  handleDisputeClosed
 } from './webhooks';
 
 // Initialize admin if not already initialized
@@ -96,6 +102,125 @@ async function getTrialConfig(): Promise<TrialConfig> {
     return { durationDays: 30, maxAiCalls: 3, isEnabled: true };
   }
   return settingsDoc.data()!.trial;
+}
+
+// ============================================================================
+// IDEMPOTENCE HELPERS
+// ============================================================================
+
+/**
+ * Check if a webhook event has already been processed
+ * Prevents duplicate processing from Stripe retries
+ */
+async function isEventAlreadyProcessed(eventId: string): Promise<boolean> {
+  const doc = await getDb().doc(`processed_webhook_events/${eventId}`).get();
+  return doc.exists;
+}
+
+/**
+ * Mark a webhook event as processed
+ * TTL: 30 days (Stripe doesn't retry after that)
+ */
+async function markEventAsProcessed(eventId: string, eventType: string): Promise<void> {
+  await getDb().doc(`processed_webhook_events/${eventId}`).set({
+    eventId,
+    eventType,
+    processedAt: admin.firestore.Timestamp.now(),
+    // TTL for cleanup (30 days from now)
+    expiresAt: admin.firestore.Timestamp.fromMillis(Date.now() + 30 * 24 * 60 * 60 * 1000)
+  });
+}
+
+// ============================================================================
+// RATE LIMITING HELPERS
+// ============================================================================
+
+interface RateLimitConfig {
+  maxRequests: number;
+  windowMs: number;
+}
+
+const RATE_LIMITS: Record<string, RateLimitConfig> = {
+  checkAiQuota: { maxRequests: 60, windowMs: 60000 },      // 60/min
+  recordAiCall: { maxRequests: 30, windowMs: 60000 },      // 30/min
+  createSubscription: { maxRequests: 5, windowMs: 3600000 }, // 5/hour
+  updateSubscription: { maxRequests: 10, windowMs: 3600000 }, // 10/hour
+  default: { maxRequests: 100, windowMs: 60000 }           // 100/min
+};
+
+/**
+ * Check rate limit for a user/function combination
+ * Returns true if request is allowed, false if rate limited
+ */
+async function checkRateLimit(userId: string, functionName: string): Promise<{ allowed: boolean; remaining: number; resetAt: number }> {
+  const config = RATE_LIMITS[functionName] || RATE_LIMITS.default;
+  const windowStart = Date.now() - config.windowMs;
+  const rateLimitRef = getDb().collection('rate_limits').doc(`${userId}_${functionName}`);
+
+  const doc = await rateLimitRef.get();
+  const data = doc.data();
+
+  // If no record or window expired, reset
+  if (!data || data.windowStart < windowStart) {
+    await rateLimitRef.set({
+      userId,
+      functionName,
+      count: 1,
+      windowStart: Date.now(),
+      updatedAt: admin.firestore.Timestamp.now()
+    });
+    return { allowed: true, remaining: config.maxRequests - 1, resetAt: Date.now() + config.windowMs };
+  }
+
+  // Check if over limit
+  if (data.count >= config.maxRequests) {
+    return {
+      allowed: false,
+      remaining: 0,
+      resetAt: data.windowStart + config.windowMs
+    };
+  }
+
+  // Increment counter
+  await rateLimitRef.update({
+    count: admin.firestore.FieldValue.increment(1),
+    updatedAt: admin.firestore.Timestamp.now()
+  });
+
+  return {
+    allowed: true,
+    remaining: config.maxRequests - data.count - 1,
+    resetAt: data.windowStart + config.windowMs
+  };
+}
+
+// ============================================================================
+// AUDIT LOGGING HELPERS
+// ============================================================================
+
+interface AuditLogEntry {
+  action: string;
+  adminId: string;
+  adminEmail?: string;
+  targetId?: string;
+  targetType?: string;
+  previousValue?: unknown;
+  newValue?: unknown;
+  metadata?: Record<string, unknown>;
+  ipAddress?: string;
+  userAgent?: string;
+  timestamp: FirebaseFirestore.Timestamp;
+}
+
+/**
+ * Log an admin action for audit purposes
+ */
+async function logAdminAction(entry: Omit<AuditLogEntry, 'timestamp'>): Promise<void> {
+  await getDb().collection('admin_audit_logs').add({
+    ...entry,
+    timestamp: admin.firestore.Timestamp.now()
+  });
+  console.log(`[AUDIT] ${entry.action} by ${entry.adminId} on ${entry.targetType}/${entry.targetId}`);
 }
 
 async function getSubscriptionPlan(planId: string): Promise<SubscriptionPlan | null> {
@@ -241,6 +366,16 @@ export const createSubscription = functions
     }
 
     const providerId = context.auth.uid;
+
+    // Rate limiting check (strict: 5 per hour)
+    const rateLimit = await checkRateLimit(providerId, 'createSubscription');
+    if (!rateLimit.allowed) {
+      throw new functions.https.HttpsError(
+        'resource-exhausted',
+        `Too many subscription attempts. Try again in ${Math.ceil((rateLimit.resetAt - Date.now()) / 60000)} minutes`
+      );
+    }
+
     const { planId, currency, billingPeriod = 'monthly', paymentMethodId, promotionCode } = data as {
       planId: string;
       currency: Currency;
@@ -262,6 +397,31 @@ export const createSubscription = functions
         throw new functions.https.HttpsError('not-found', 'Provider not found');
       }
       const providerData = providerDoc.data()!;
+
+      // SECURITY: Determine and validate provider type
+      const userRole = providerData.type || providerData.role || '';
+
+      // SECURITY: Block clients from accessing subscriptions
+      if (userRole === 'client' || userRole === 'user') {
+        console.error(`[createSubscription] Client ${providerId} attempted to access subscription`);
+        throw new functions.https.HttpsError(
+          'permission-denied',
+          'Seuls les prestataires (avocats et expatriés aidants) peuvent souscrire à un abonnement'
+        );
+      }
+
+      const userProviderType: ProviderType = userRole === 'lawyer' ? 'lawyer' : 'expat_aidant';
+
+      // SECURITY: Validate that plan's providerType matches user's providerType
+      if (plan.providerType !== userProviderType) {
+        console.error(`[createSubscription] Provider type mismatch: user=${userProviderType}, plan=${plan.providerType}`);
+        throw new functions.https.HttpsError(
+          'permission-denied',
+          `Ce plan n'est pas disponible pour votre profil. Vous êtes "${userProviderType === 'lawyer' ? 'avocat' : 'expatrié aidant'}" mais ce plan est réservé aux "${plan.providerType === 'lawyer' ? 'avocats' : 'expatriés aidants'}".`
+        );
+      }
+
+      console.log(`[createSubscription] Provider ${providerId} validated: type=${userProviderType}, plan=${planId}`);
 
       // Get or create Stripe customer
       const customerId = await getOrCreateStripeCustomer(
@@ -523,6 +683,15 @@ export const checkAiQuota = functions
 
     const providerId = context.auth.uid;
 
+    // Rate limiting check
+    const rateLimit = await checkRateLimit(providerId, 'checkAiQuota');
+    if (!rateLimit.allowed) {
+      throw new functions.https.HttpsError(
+        'resource-exhausted',
+        `Rate limit exceeded. Try again in ${Math.ceil((rateLimit.resetAt - Date.now()) / 1000)} seconds`
+      );
+    }
+
     try {
       const [subDoc, usageDoc, trialConfig, userDoc] = await Promise.all([
         getDb().doc(`subscriptions/${providerId}`).get(),
@@ -657,6 +826,16 @@ export const recordAiCall = functions
     }
 
     const providerId = context.auth.uid;
+
+    // Rate limiting check
+    const rateLimit = await checkRateLimit(providerId, 'recordAiCall');
+    if (!rateLimit.allowed) {
+      throw new functions.https.HttpsError(
+        'resource-exhausted',
+        `Rate limit exceeded. Try again in ${Math.ceil((rateLimit.resetAt - Date.now()) / 1000)} seconds`
+      );
+    }
+
     const {
       callType,
       provider,
@@ -671,12 +850,76 @@ export const recordAiCall = functions
       conversationId
     } = data;
 
+    // Validate required fields
+    if (!callType || typeof callType !== 'string') {
+      throw new functions.https.HttpsError('invalid-argument', 'callType is required and must be a string');
+    }
+
     try {
-      const batch = getDb().batch();
+      const db = getDb();
       const now = admin.firestore.Timestamp.now();
 
+      // SERVER-SIDE VALIDATION: Check if user has active subscription/quota
+      const [subDoc, usageDoc, userDoc, trialConfig] = await Promise.all([
+        db.doc(`subscriptions/${providerId}`).get(),
+        db.doc(`ai_usage/${providerId}`).get(),
+        db.doc(`users/${providerId}`).get(),
+        getTrialConfig()
+      ]);
+
+      // Check for admin-granted free access (bypass quota check)
+      const userData = userDoc.exists ? userDoc.data() : null;
+      const hasFreeAccess = userData?.forceAiAccess === true;
+
+      if (!hasFreeAccess) {
+        // Validate subscription status
+        if (!subDoc.exists) {
+          throw new functions.https.HttpsError('permission-denied', 'No active subscription found');
+        }
+
+        const subscription = subDoc.data()!;
+        const usage = usageDoc.exists ? usageDoc.data()! : { trialCallsUsed: 0, currentPeriodCalls: 0 };
+        const isInTrial = subscription.status === 'trialing';
+
+        // Check subscription status
+        if (!['active', 'trialing'].includes(subscription.status)) {
+          throw new functions.https.HttpsError(
+            'permission-denied',
+            `Subscription status "${subscription.status}" does not allow AI calls`
+          );
+        }
+
+        // Check AI access flag
+        if (subscription.aiAccessEnabled === false) {
+          throw new functions.https.HttpsError('permission-denied', 'AI access is disabled for this subscription');
+        }
+
+        // Check quota based on subscription type
+        if (isInTrial) {
+          const trialEndsAt = subscription.trialEndsAt?.toDate();
+          if (trialEndsAt && new Date() > trialEndsAt) {
+            throw new functions.https.HttpsError('permission-denied', 'Trial period has expired');
+          }
+          if (usage.trialCallsUsed >= trialConfig.maxAiCalls) {
+            throw new functions.https.HttpsError('permission-denied', 'Trial AI calls exhausted');
+          }
+        } else {
+          // Get plan limits for active subscription
+          const plan = await getSubscriptionPlan(subscription.planId);
+          const limit = plan?.aiCallsLimit ?? 0;
+
+          // Only check if not unlimited (-1)
+          if (limit !== -1 && usage.currentPeriodCalls >= limit) {
+            throw new functions.https.HttpsError('permission-denied', 'Monthly AI quota exhausted');
+          }
+        }
+      }
+
+      // All validations passed - proceed with recording
+      const batch = db.batch();
+
       // Add call log
-      const logRef = getDb().collection('ai_call_logs').doc();
+      const logRef = db.collection('ai_call_logs').doc();
       batch.set(logRef, {
         providerId,
         subscriptionId: providerId,
@@ -691,15 +934,15 @@ export const recordAiCall = functions
         durationMs,
         bookingId: bookingId || null,
         conversationId: conversationId || null,
+        validatedServerSide: true, // Flag to indicate server validation passed
         createdAt: now
       });
 
-      // Get current subscription to check if in trial
-      const subDoc = await getDb().doc(`subscriptions/${providerId}`).get();
+      // Get subscription status for counter update
       const isInTrial = subDoc.exists && subDoc.data()?.status === 'trialing';
 
       // Update usage counters
-      const usageRef = getDb().doc(`ai_usage/${providerId}`);
+      const usageRef = db.doc(`ai_usage/${providerId}`);
       if (isInTrial) {
         batch.update(usageRef, {
           trialCallsUsed: admin.firestore.FieldValue.increment(1),
@@ -731,9 +974,21 @@ export const recordAiCall = functions
 export const stripeWebhook = functions
   .region('europe-west1')
   .https.onRequest(async (req, res) => {
+    // SECURITY: Validate webhook secret is configured
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      console.error('CRITICAL: STRIPE_WEBHOOK_SECRET is not configured');
+      res.status(500).send('Webhook secret not configured');
+      return;
+    }
+
+    // SECURITY: Validate stripe-signature header is present
     const sig = req.headers['stripe-signature'] as string;
-    // Migration: functions.config() deprecated - using env vars only (set via defineSecret)
-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
+    if (!sig) {
+      console.error('Missing stripe-signature header');
+      res.status(400).send('Missing stripe-signature header');
+      return;
+    }
 
     let event: Stripe.Event;
 
@@ -741,7 +996,15 @@ export const stripeWebhook = functions
       event = getStripe().webhooks.constructEvent(req.rawBody, sig, webhookSecret);
     } catch (err: any) {
       console.error('Webhook signature verification failed:', err.message);
-      res.status(400).send(`Webhook Error: ${err.message}`);
+      res.status(400).send('Webhook signature verification failed');
+      return;
+    }
+
+    // IDEMPOTENCE CHECK: Skip if event already processed
+    const alreadyProcessed = await isEventAlreadyProcessed(event.id);
+    if (alreadyProcessed) {
+      console.log(`[stripeWebhook] Event ${event.id} already processed, skipping`);
+      res.json({ received: true, skipped: true, reason: 'already_processed' });
       return;
     }
 
@@ -779,6 +1042,11 @@ export const stripeWebhook = functions
           await handleInvFailed(event.data.object as Stripe.Invoice, webhookContext);
           break;
 
+        case 'invoice.payment_action_required':
+          // Handle 3D Secure / SCA authentication required
+          await handleInvActionRequired(event.data.object as Stripe.Invoice, webhookContext);
+          break;
+
         case 'customer.subscription.trial_will_end':
           // Use the new enhanced handler from webhooks.ts
           await handleTrialEnd(event.data.object as Stripe.Subscription, webhookContext);
@@ -801,16 +1069,54 @@ export const stripeWebhook = functions
           await handlePMUpdated(event.data.object as Stripe.PaymentMethod, webhookContext);
           break;
 
+        case 'payout.failed':
+          await handlePayoutFailed(event.data.object as Stripe.Payout, webhookContext);
+          break;
+
+        case 'refund.failed':
+          await handleRefundFailed(event.data.object as Stripe.Refund, webhookContext);
+          break;
+
+        case 'payment_intent.payment_failed':
+          await handlePaymentIntentFailed(event.data.object as Stripe.PaymentIntent, webhookContext);
+          break;
+
+        case 'charge.dispute.created':
+          await handleDisputeCreated(event.data.object as Stripe.Dispute, webhookContext);
+          break;
+
+        case 'charge.dispute.closed':
+          await handleDisputeClosed(event.data.object as Stripe.Dispute, webhookContext);
+          break;
+
         default:
           console.log(`Unhandled event type: ${event.type}`);
       }
 
+      // Mark event as processed AFTER successful handling
+      await markEventAsProcessed(event.id, event.type);
+      console.log(`[stripeWebhook] Event ${event.id} (${event.type}) processed successfully`);
+
       res.json({ received: true });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error processing webhook:', error);
-      // Log the error for debugging but still return 200 to avoid Stripe retries for transient errors
-      // Stripe will retry automatically for 500 errors
-      res.status(500).json({ error: 'Webhook processing failed' });
+
+      // Determine if this is a transient error (should retry) or permanent (should not retry)
+      const isTransientError = error.code === 'UNAVAILABLE' ||
+        error.code === 'DEADLINE_EXCEEDED' ||
+        error.message?.includes('timeout') ||
+        error.message?.includes('ECONNRESET');
+
+      if (isTransientError) {
+        // Return 500 so Stripe will retry
+        res.status(500).json({ error: 'Webhook processing failed - transient error' });
+      } else {
+        // Return 200 with error details to prevent Stripe retries for permanent errors
+        // Mark as processed to prevent infinite retries on business logic errors
+        await markEventAsProcessed(event.id, event.type);
+        console.log(`[stripeWebhook] Event ${event.id} marked as processed despite error (permanent failure)`);
+        res.json({ received: true, error: 'Processing failed but marked as handled' });
+      }
     }
   });
 
@@ -888,7 +1194,22 @@ export const updateTrialConfig = functions
     if (maxAiCalls !== undefined) updates['trial.maxAiCalls'] = maxAiCalls;
     if (isEnabled !== undefined) updates['trial.isEnabled'] = isEnabled;
 
+    // Get previous config for audit
+    const prevDoc = await getDb().doc('settings/subscription').get();
+    const previousValue = prevDoc.exists ? prevDoc.data()?.trial : null;
+
     await getDb().doc('settings/subscription').set(updates, { merge: true });
+
+    // AUDIT LOG: Track admin action
+    await logAdminAction({
+      action: 'UPDATE_TRIAL_CONFIG',
+      adminId: context.auth!.uid,
+      adminEmail: context.auth!.token.email,
+      targetId: 'subscription',
+      targetType: 'settings',
+      previousValue,
+      newValue: { durationDays, maxAiCalls, isEnabled }
+    });
 
     return { success: true };
   });
@@ -949,7 +1270,22 @@ export const updatePlanPricing = functions
     if (name) updates.name = name;
     if (description) updates.description = description;
 
+    // Get previous plan for audit
+    const prevDoc = await getDb().doc(`subscription_plans/${planId}`).get();
+    const previousValue = prevDoc.exists ? prevDoc.data() : null;
+
     await getDb().doc(`subscription_plans/${planId}`).update(updates);
+
+    // AUDIT LOG: Track admin action
+    await logAdminAction({
+      action: 'UPDATE_PLAN_PRICING',
+      adminId: context.auth!.uid,
+      adminEmail: context.auth!.token.email,
+      targetId: planId,
+      targetType: 'subscription_plan',
+      previousValue: previousValue ? { pricing: previousValue.pricing, aiCallsLimit: previousValue.aiCallsLimit } : null,
+      newValue: { pricing, annualPricing, aiCallsLimit, annualDiscountPercent }
+    });
 
     return { success: true };
   });
@@ -1100,6 +1436,8 @@ export const setFreeAiAccess = functions
 
       const now = admin.firestore.Timestamp.now();
 
+      const previousValue = userDoc.data()?.forceAiAccess || false;
+
       if (grant) {
         await userRef.update({
           forceAiAccess: true,
@@ -1120,6 +1458,18 @@ export const setFreeAiAccess = functions
 
         console.log(`❌ Free AI access revoked from user ${userId} by admin ${context.auth!.uid}`);
       }
+
+      // AUDIT LOG: Track admin action
+      await logAdminAction({
+        action: grant ? 'GRANT_FREE_AI_ACCESS' : 'REVOKE_FREE_AI_ACCESS',
+        adminId: context.auth!.uid,
+        adminEmail: context.auth!.token.email,
+        targetId: userId,
+        targetType: 'user',
+        previousValue: { forceAiAccess: previousValue },
+        newValue: { forceAiAccess: grant },
+        metadata: { note }
+      });
 
       return {
         success: true,

@@ -201,6 +201,155 @@ export interface MultiProviderAccount {
 }
 
 // ============================================================================
+// SUBSCRIPTION EVENTS & ALERTS
+// ============================================================================
+
+export type SubscriptionEventType =
+  | 'subscription.created'
+  | 'subscription.activated'
+  | 'subscription.upgraded'
+  | 'subscription.downgraded'
+  | 'subscription.canceled'
+  | 'subscription.expired'
+  | 'subscription.reactivated'
+  | 'subscription.paused'
+  | 'subscription.resumed'
+  | 'trial.started'
+  | 'trial.ending_soon'
+  | 'trial.converted'
+  | 'trial.expired'
+  | 'payment.succeeded'
+  | 'payment.failed'
+  | 'payment.action_required'
+  | 'payment.refunded'
+  | 'quota.warning_80'
+  | 'quota.exceeded'
+  | 'quota.reset'
+  | 'churn.risk_detected'
+  | 'mrr.significant_change';
+
+export type AlertSeverity = 'info' | 'warning' | 'error' | 'success';
+
+export interface SubscriptionEvent {
+  id: string;
+  eventType: SubscriptionEventType;
+  severity: AlertSeverity;
+  providerId: string;
+  providerName: string;
+  providerEmail: string;
+  providerType: 'lawyer' | 'expat_aidant';
+  title: string;
+  description: string;
+  metadata?: {
+    previousTier?: string;
+    newTier?: string;
+    previousStatus?: string;
+    newStatus?: string;
+    amount?: number;
+    currency?: string;
+    reason?: string;
+    stripeEventId?: string;
+    mrrImpact?: number;
+    churnRiskScore?: number;
+  };
+  isRead: boolean;
+  isAcknowledged: boolean;
+  acknowledgedBy?: string;
+  acknowledgedAt?: Date;
+  createdAt: Date;
+}
+
+export interface AlertConfig {
+  id: string;
+  eventType: SubscriptionEventType;
+  isEnabled: boolean;
+  emailNotification: boolean;
+  slackNotification: boolean;
+  webhookNotification: boolean;
+  webhookUrl?: string;
+  emailRecipients: string[];
+  severity: AlertSeverity;
+}
+
+// ============================================================================
+// ADVANCED ANALYTICS
+// ============================================================================
+
+export interface CohortData {
+  cohortMonth: string; // YYYY-MM
+  totalUsers: number;
+  retentionByMonth: number[]; // retention % for months 0, 1, 2, 3...
+  avgLTV: number;
+  churnedCount: number;
+}
+
+export interface LTVMetrics {
+  overallLTV: number;
+  ltvByTier: Record<string, number>;
+  ltvByProviderType: Record<string, number>;
+  avgSubscriptionDuration: number; // in months
+  avgRevenuePerUser: number;
+  projectedLTV: number;
+}
+
+export interface ChurnPrediction {
+  providerId: string;
+  providerName: string;
+  providerEmail: string;
+  riskScore: number; // 0-100
+  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  riskFactors: string[];
+  lastActivity: Date;
+  daysSinceLastActivity: number;
+  usageDeclinePercent: number;
+  recommendedAction: string;
+}
+
+export interface RevenueMetrics {
+  mrr: number;
+  arr: number;
+  mrrGrowthRate: number;
+  netMrrChange: number;
+  newMrr: number;
+  expansionMrr: number;
+  contractionMrr: number;
+  churnedMrr: number;
+  reactivationMrr: number;
+}
+
+export interface MRRMovement {
+  date: string;
+  newMrr: number;
+  expansionMrr: number;
+  contractionMrr: number;
+  churnedMrr: number;
+  reactivationMrr: number;
+  netMrr: number;
+}
+
+// ============================================================================
+// ADMIN NOTIFICATION PREFERENCES
+// ============================================================================
+
+export interface AdminNotificationPreferences {
+  adminId: string;
+  email: string;
+  enableEmailAlerts: boolean;
+  enableSlackAlerts: boolean;
+  slackWebhookUrl?: string;
+  alertThresholds: {
+    mrrDropPercent: number; // Alert if MRR drops by this %
+    churnRatePercent: number; // Alert if churn rate exceeds this
+    failedPaymentsCount: number; // Alert after X failed payments
+    trialExpiringDays: number; // Alert X days before trial expires
+  };
+  subscribedEvents: SubscriptionEventType[];
+  quietHoursStart?: string; // HH:MM
+  quietHoursEnd?: string; // HH:MM
+  timezone: string;
+}
+
+// ============================================================================
 // ONGLETS
 // ============================================================================
 
@@ -212,7 +361,8 @@ export type IaTabId =
   | 'multi-providers'
   | 'pricing'
   | 'trial-config'
-  | 'logs';
+  | 'logs'
+  | 'alerts';
 
 export interface IaTab {
   id: IaTabId;

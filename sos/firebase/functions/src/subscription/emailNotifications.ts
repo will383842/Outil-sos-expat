@@ -200,15 +200,6 @@ async function getSubscriptionPlan(planId: string): Promise<SubscriptionPlanData
 }
 
 /**
- * Recupere l'abonnement du provider
- */
-async function getSubscription(providerId: string): Promise<SubscriptionData | null> {
-  const doc = await getDb().doc(`subscriptions/${providerId}`).get();
-  if (!doc.exists) return null;
-  return { providerId, ...doc.data() } as SubscriptionData;
-}
-
-/**
  * Genere l'URL de base de l'application
  */
 function getAppUrl(): string {

@@ -14,7 +14,8 @@ import {
   Clock,
   Activity,
   RefreshCw,
-  CreditCard
+  CreditCard,
+  Bell
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import AdminLayout from '../../components/admin/AdminLayout';
@@ -32,6 +33,7 @@ const IaMultiProvidersTab = lazy(() => import('./ia/IaMultiProvidersTab'));
 const IaPricingTab = lazy(() => import('./ia/IaPricingTab'));
 const IaTrialConfigTab = lazy(() => import('./ia/IaTrialConfigTab'));
 const IaLogsTab = lazy(() => import('./ia/IaLogsTab'));
+const IaAlertsEventsTab = lazy(() => import('./ia/IaAlertsEventsTab'));
 
 // ============================================================================
 // TAB DEFINITIONS
@@ -78,6 +80,11 @@ const TABS: IaTab[] = [
     label: 'Logs IA',
     icon: Activity,
   },
+  {
+    id: 'alerts',
+    label: 'Alertes',
+    icon: Bell,
+  },
 ];
 
 // ============================================================================
@@ -115,6 +122,8 @@ export const AdminIA: React.FC = () => {
         return <IaTrialConfigTab />;
       case 'logs':
         return <IaLogsTab />;
+      case 'alerts':
+        return <IaAlertsEventsTab />;
       default:
         return <IaDashboardTab />;
     }

@@ -210,13 +210,13 @@ export function validateInput<T>(
   const result = schema.safeParse(data);
 
   if (!result.success) {
-    const errors = result.error.errors.map(e => ({
-      path: e.path.join('.'),
-      message: e.message,
+    const errors = result.error.issues.map((issue) => ({
+      path: issue.path.map(String).join('.'),
+      message: issue.message,
     }));
 
-    const errorMessage = customMessage || errors.map(e =>
-      e.path ? `${e.path}: ${e.message}` : e.message
+    const errorMessage = customMessage || errors.map((err) =>
+      err.path ? `${err.path}: ${err.message}` : err.message
     ).join('; ');
 
     console.error('[Validation Error]', errors);
@@ -242,14 +242,14 @@ export function safeValidateInput<T>(
   const result = schema.safeParse(data);
 
   if (!result.success) {
-    const errors = result.error.errors.map(e => ({
-      path: e.path.join('.'),
-      message: e.message,
+    const errors = result.error.issues.map((issue) => ({
+      path: issue.path.map(String).join('.'),
+      message: issue.message,
     }));
 
     return {
       success: false,
-      error: errors.map(e => e.path ? `${e.path}: ${e.message}` : e.message).join('; '),
+      error: errors.map((err) => err.path ? `${err.path}: ${err.message}` : err.message).join('; '),
       details: errors,
     };
   }
@@ -296,7 +296,7 @@ export function validateStripeMetadata(
 
   const result = stripeMetadataSchema.safeParse(metadata);
   if (!result.success) {
-    console.warn('[validateStripeMetadata] Invalid metadata:', result.error.errors);
+    console.warn('[validateStripeMetadata] Invalid metadata:', result.error.issues);
     return null;
   }
 

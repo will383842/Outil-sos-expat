@@ -53,6 +53,7 @@ const PAYPAL_CONFIG = {
   DEFAULT_CURRENCY: "EUR",
 
   // Pays supportés par PayPal Commerce mais pas par Stripe Connect
+  // P0 FIX: Ajout de l'Inde (IN) - 1.4 milliard d'habitants
   PAYPAL_ONLY_COUNTRIES: [
     // Afrique
     "DZ", "AO", "BJ", "BW", "BF", "BI", "CM", "CV", "CF", "TD", "KM", "CG", "CD",
@@ -61,7 +62,7 @@ const PAYPAL_CONFIG = {
     "RW", "ST", "SN", "SC", "SL", "SO", "ZA", "SS", "SD", "TZ", "TG", "TN", "UG",
     "ZM", "ZW",
     // Asie (non couverts par Stripe)
-    "AF", "BD", "BT", "KH", "LA", "MM", "NP", "PK", "LK", "TJ", "TM", "UZ", "VN",
+    "AF", "BD", "BT", "IN", "KH", "LA", "MM", "NP", "PK", "LK", "TJ", "TM", "UZ", "VN",
     // Amérique Latine
     "BO", "CU", "EC", "SV", "GT", "HN", "NI", "PY", "SR", "VE",
     // Autres

@@ -290,23 +290,29 @@ function compareTiers(oldTier: SubscriptionTier, newTier: SubscriptionTier): num
 
 /**
  * Vérifie si un événement Stripe a déjà été traité (déduplication)
+ * UNIFIED: Uses same collection as index.ts (processed_webhook_events)
  * @returns true si l'événement a déjà été traité, false sinon
  */
 async function isEventAlreadyProcessed(eventId: string): Promise<boolean> {
-  const processedRef = getDb().collection('processed_stripe_events').doc(eventId);
+  // Use the same collection as index.ts for consistency
+  const processedRef = getDb().collection('processed_webhook_events').doc(eventId);
   const doc = await processedRef.get();
   return doc.exists;
 }
 
 /**
  * Marque un événement Stripe comme traité
+ * UNIFIED: Uses same collection as index.ts with TTL
  */
 async function markEventAsProcessed(eventId: string, eventType: string): Promise<void> {
-  const processedRef = getDb().collection('processed_stripe_events').doc(eventId);
+  // Use the same collection as index.ts for consistency
+  const processedRef = getDb().collection('processed_webhook_events').doc(eventId);
   await processedRef.set({
     eventId,
     eventType,
-    processedAt: admin.firestore.Timestamp.now()
+    processedAt: admin.firestore.Timestamp.now(),
+    // TTL for cleanup (30 days from now) - same as index.ts
+    expiresAt: admin.firestore.Timestamp.fromMillis(Date.now() + 30 * 24 * 60 * 60 * 1000)
   });
 }
 
@@ -1587,6 +1593,546 @@ export async function handlePaymentMethodUpdated(
 }
 
 // ============================================================================
+// PAYOUT & REFUND HANDLERS
+// ============================================================================
+
+/**
+ * Handler pour payout.failed
+ * - Logger l'échec du payout
+ * - Notifier l'admin
+ */
+export async function handlePayoutFailed(
+  payout: Stripe.Payout,
+  context?: WebhookContext
+): Promise<void> {
+  // Idempotency check
+  if (context?.eventId) {
+    if (await isEventAlreadyProcessed(context.eventId)) {
+      logger.info(`[handlePayoutFailed] Event ${context.eventId} already processed, skipping`);
+      return;
+    }
+  }
+
+  logger.error(`[handlePayoutFailed] Payout ${payout.id} failed: ${payout.failure_message}`);
+
+  const db = getDb();
+  const now = admin.firestore.Timestamp.now();
+
+  try {
+    // Logger l'échec dans payout_logs
+    await db.collection('payout_logs').add({
+      stripePayoutId: payout.id,
+      amount: payout.amount / 100,
+      currency: payout.currency?.toUpperCase(),
+      status: 'failed',
+      failureCode: payout.failure_code,
+      failureMessage: payout.failure_message,
+      destination: payout.destination,
+      createdAt: now
+    });
+
+    // Notifier les admins
+    await db.collection('admin_alerts').add({
+      type: 'payout_failed',
+      severity: 'high',
+      message: `Payout ${payout.id} échoué: ${payout.failure_message}`,
+      data: {
+        payoutId: payout.id,
+        amount: payout.amount / 100,
+        currency: payout.currency,
+        failureCode: payout.failure_code,
+        failureMessage: payout.failure_message
+      },
+      read: false,
+      createdAt: now
+    });
+
+    // Marquer l'événement comme traité
+    if (context?.eventId) {
+      await markEventAsProcessed(context.eventId, context.eventType);
+    }
+
+    logger.info(`[handlePayoutFailed] Completed for payout: ${payout.id}`);
+  } catch (error) {
+    logger.error(`[handlePayoutFailed] Error:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Handler pour refund.failed
+ * - Logger l'échec du remboursement
+ * - Notifier le client et l'admin
+ */
+export async function handleRefundFailed(
+  refund: Stripe.Refund,
+  context?: WebhookContext
+): Promise<void> {
+  // Idempotency check
+  if (context?.eventId) {
+    if (await isEventAlreadyProcessed(context.eventId)) {
+      logger.info(`[handleRefundFailed] Event ${context.eventId} already processed, skipping`);
+      return;
+    }
+  }
+
+  logger.error(`[handleRefundFailed] Refund ${refund.id} failed: ${refund.failure_reason}`);
+
+  const db = getDb();
+  const now = admin.firestore.Timestamp.now();
+
+  try {
+    // Trouver le paiement original
+    const chargeId = typeof refund.charge === 'string' ? refund.charge : refund.charge?.id;
+
+    // Mettre à jour le document de remboursement s'il existe
+    if (chargeId) {
+      const refundQuery = await db.collection('refunds')
+        .where('stripeChargeId', '==', chargeId)
+        .limit(1)
+        .get();
+
+      if (!refundQuery.empty) {
+        const refundDoc = refundQuery.docs[0];
+        await refundDoc.ref.update({
+          status: 'failed',
+          failureReason: refund.failure_reason,
+          updatedAt: now
+        });
+      }
+    }
+
+    // Logger l'échec
+    await db.collection('refund_logs').add({
+      stripeRefundId: refund.id,
+      stripeChargeId: chargeId,
+      amount: refund.amount / 100,
+      currency: refund.currency?.toUpperCase(),
+      status: 'failed',
+      failureReason: refund.failure_reason,
+      createdAt: now
+    });
+
+    // Notifier les admins
+    await db.collection('admin_alerts').add({
+      type: 'refund_failed',
+      severity: 'high',
+      message: `Remboursement ${refund.id} échoué: ${refund.failure_reason}`,
+      data: {
+        refundId: refund.id,
+        chargeId,
+        amount: refund.amount / 100,
+        currency: refund.currency,
+        failureReason: refund.failure_reason
+      },
+      read: false,
+      createdAt: now
+    });
+
+    // Marquer l'événement comme traité
+    if (context?.eventId) {
+      await markEventAsProcessed(context.eventId, context.eventType);
+    }
+
+    logger.info(`[handleRefundFailed] Completed for refund: ${refund.id}`);
+  } catch (error) {
+    logger.error(`[handleRefundFailed] Error:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Handler pour payment_intent.payment_failed
+ * - Logger l'échec du paiement
+ * - Notifier le client
+ */
+export async function handlePaymentIntentFailed(
+  paymentIntent: Stripe.PaymentIntent,
+  context?: WebhookContext
+): Promise<void> {
+  // Idempotency check
+  if (context?.eventId) {
+    if (await isEventAlreadyProcessed(context.eventId)) {
+      logger.info(`[handlePaymentIntentFailed] Event ${context.eventId} already processed, skipping`);
+      return;
+    }
+  }
+
+  const lastError = paymentIntent.last_payment_error;
+  logger.error(`[handlePaymentIntentFailed] PaymentIntent ${paymentIntent.id} failed: ${lastError?.message}`);
+
+  const db = getDb();
+  const now = admin.firestore.Timestamp.now();
+
+  try {
+    // Extraire l'ID client des metadata
+    const clientId = paymentIntent.metadata?.clientId || paymentIntent.metadata?.userId;
+    const callId = paymentIntent.metadata?.callId;
+
+    // Logger l'échec
+    await db.collection('payment_failures').add({
+      stripePaymentIntentId: paymentIntent.id,
+      clientId,
+      callId,
+      amount: paymentIntent.amount / 100,
+      currency: paymentIntent.currency?.toUpperCase(),
+      errorCode: lastError?.code,
+      errorMessage: lastError?.message,
+      errorType: lastError?.type,
+      declineCode: lastError?.decline_code,
+      createdAt: now
+    });
+
+    // Notifier le client si identifié
+    if (clientId) {
+      const clientDoc = await db.doc(`users/${clientId}`).get();
+      if (clientDoc.exists) {
+        const clientData = clientDoc.data()!;
+
+        await enqueueNotification({
+          eventId: 'payment.failed',
+          providerId: clientId,
+          email: clientData.email,
+          locale: clientData.language || clientData.preferredLanguage || 'en',
+          vars: {
+            FNAME: clientData.firstName || clientData.displayName || '',
+            AMOUNT: (paymentIntent.amount / 100).toFixed(2),
+            CURRENCY: paymentIntent.currency?.toUpperCase() || 'EUR',
+            ERROR_MESSAGE: lastError?.message || 'Payment failed',
+            RETRY_URL: 'https://sos-expat.com/dashboard/payments'
+          }
+        });
+      }
+    }
+
+    // Marquer l'événement comme traité
+    if (context?.eventId) {
+      await markEventAsProcessed(context.eventId, context.eventType);
+    }
+
+    logger.info(`[handlePaymentIntentFailed] Completed for payment intent: ${paymentIntent.id}`);
+  } catch (error) {
+    logger.error(`[handlePaymentIntentFailed] Error:`, error);
+    throw error;
+  }
+}
+
+// ============================================================================
+// PAYMENT ACTION REQUIRED HANDLER
+// ============================================================================
+
+/**
+ * Handler pour invoice.payment_action_required
+ * - Envoyer email urgent avec lien de confirmation 3D Secure
+ * - Ce cas se produit quand la banque exige une authentification supplémentaire (SCA)
+ */
+export async function handleInvoicePaymentActionRequired(
+  invoice: Stripe.Invoice,
+  context?: WebhookContext
+): Promise<void> {
+  // Idempotency check
+  if (context?.eventId) {
+    if (await isEventAlreadyProcessed(context.eventId)) {
+      logger.info(`[handleInvoicePaymentActionRequired] Event ${context.eventId} already processed, skipping`);
+      return;
+    }
+  }
+
+  if (!invoice.subscription) {
+    logger.info('[handleInvoicePaymentActionRequired] No subscription on invoice, skipping');
+    return;
+  }
+
+  const subscriptionId = typeof invoice.subscription === 'string'
+    ? invoice.subscription
+    : invoice.subscription.id;
+
+  logger.info(`[handleInvoicePaymentActionRequired] Processing invoice ${invoice.id} for subscription ${subscriptionId}`);
+
+  const db = getDb();
+  const now = admin.firestore.Timestamp.now();
+
+  try {
+    // Trouver le document subscription
+    const subsSnapshot = await db.collection('subscriptions')
+      .where('stripeSubscriptionId', '==', subscriptionId)
+      .limit(1)
+      .get();
+
+    if (subsSnapshot.empty) {
+      logger.warn(`[handleInvoicePaymentActionRequired] No subscription found for ${subscriptionId}`);
+      return;
+    }
+
+    const subDoc = subsSnapshot.docs[0];
+    const providerId = subDoc.id;
+    const subData = subDoc.data();
+
+    // Mettre à jour le document subscription pour indiquer l'action requise
+    await db.doc(`subscriptions/${providerId}`).update({
+      paymentActionRequired: true,
+      paymentActionRequiredAt: now,
+      hostedInvoiceUrl: invoice.hosted_invoice_url,
+      updatedAt: now
+    });
+
+    // Logger l'action
+    await logSubscriptionAction({
+      providerId,
+      action: 'payment_action_required',
+      stripeEventId: context?.eventId,
+      stripeEventType: context?.eventType,
+      metadata: {
+        invoiceId: invoice.id,
+        amount: (invoice.amount_due || 0) / 100,
+        currency: invoice.currency,
+        hostedInvoiceUrl: invoice.hosted_invoice_url
+      }
+    });
+
+    // Envoyer email urgent avec lien 3D Secure
+    const providerInfo = await getProviderInfo(providerId);
+    if (providerInfo?.email) {
+      await enqueueNotification({
+        eventId: 'subscription.payment_action_required',
+        providerId,
+        email: providerInfo.email,
+        locale: providerInfo.language,
+        vars: {
+          FNAME: providerInfo.firstName,
+          PLAN_NAME: subData.tier,
+          AMOUNT: ((invoice.amount_due || 0) / 100).toFixed(2),
+          CURRENCY: (invoice.currency || 'eur').toUpperCase(),
+          CONFIRM_PAYMENT_URL: invoice.hosted_invoice_url || 'https://sos-expat.com/dashboard/subscription/payment',
+          DEADLINE_HOURS: '24'
+        }
+      });
+
+      logger.info(`[handleInvoicePaymentActionRequired] 3D Secure action required email queued for ${providerId}`);
+    }
+
+    // Marquer l'événement comme traité après succès
+    if (context?.eventId) {
+      await markEventAsProcessed(context.eventId, context.eventType);
+    }
+
+    logger.info(`[handleInvoicePaymentActionRequired] Completed for provider: ${providerId}`);
+  } catch (error) {
+    logger.error(`[handleInvoicePaymentActionRequired] Error:`, error);
+    throw error;
+  }
+}
+
+// ============================================================================
+// DISPUTE HANDLERS
+// ============================================================================
+
+/**
+ * Handler pour charge.dispute.created
+ * - Créer un document dispute
+ * - Notifier l'admin
+ * - Logger pour audit
+ */
+export async function handleDisputeCreated(
+  dispute: Stripe.Dispute,
+  context?: WebhookContext
+): Promise<void> {
+  // Idempotency check
+  if (context?.eventId) {
+    if (await isEventAlreadyProcessed(context.eventId)) {
+      logger.info(`[handleDisputeCreated] Event ${context.eventId} already processed, skipping`);
+      return;
+    }
+  }
+
+  logger.warn(`[handleDisputeCreated] Dispute ${dispute.id} created for charge ${dispute.charge}`);
+
+  const db = getDb();
+  const now = admin.firestore.Timestamp.now();
+
+  try {
+    const chargeId = typeof dispute.charge === 'string' ? dispute.charge : dispute.charge?.id;
+
+    // Créer le document dispute
+    await db.collection('disputes').doc(dispute.id).set({
+      stripeDisputeId: dispute.id,
+      stripeChargeId: chargeId,
+      amount: dispute.amount / 100,
+      currency: dispute.currency?.toUpperCase(),
+      reason: dispute.reason,
+      status: dispute.status,
+      evidenceDueBy: dispute.evidence_details?.due_by
+        ? admin.firestore.Timestamp.fromMillis(dispute.evidence_details.due_by * 1000)
+        : null,
+      isChargeRefundable: dispute.is_charge_refundable,
+      createdAt: now,
+      updatedAt: now
+    });
+
+    // Trouver la transaction originale pour lier au client/provider
+    const paymentQuery = await db.collection('payments')
+      .where('stripeChargeId', '==', chargeId)
+      .limit(1)
+      .get();
+
+    let clientId: string | null = null;
+    let providerId: string | null = null;
+
+    if (!paymentQuery.empty) {
+      const paymentData = paymentQuery.docs[0].data();
+      clientId = paymentData.clientId;
+      providerId = paymentData.providerId;
+
+      // Mettre à jour le paiement avec le dispute
+      await paymentQuery.docs[0].ref.update({
+        hasDispute: true,
+        disputeId: dispute.id,
+        disputeStatus: dispute.status,
+        updatedAt: now
+      });
+    }
+
+    // Notifier les admins (haute priorité)
+    await db.collection('admin_alerts').add({
+      type: 'dispute_created',
+      severity: 'critical',
+      message: `Nouveau litige (${dispute.reason}) - ${dispute.amount / 100} ${dispute.currency?.toUpperCase()}`,
+      data: {
+        disputeId: dispute.id,
+        chargeId,
+        amount: dispute.amount / 100,
+        currency: dispute.currency,
+        reason: dispute.reason,
+        clientId,
+        providerId,
+        evidenceDueBy: dispute.evidence_details?.due_by
+      },
+      read: false,
+      createdAt: now
+    });
+
+    // Logger l'action
+    await db.collection('dispute_logs').add({
+      stripeDisputeId: dispute.id,
+      action: 'created',
+      chargeId,
+      amount: dispute.amount / 100,
+      reason: dispute.reason,
+      status: dispute.status,
+      clientId,
+      providerId,
+      stripeEventId: context?.eventId,
+      createdAt: now
+    });
+
+    // Marquer l'événement comme traité
+    if (context?.eventId) {
+      await markEventAsProcessed(context.eventId, context.eventType);
+    }
+
+    logger.info(`[handleDisputeCreated] Completed for dispute: ${dispute.id}`);
+  } catch (error) {
+    logger.error(`[handleDisputeCreated] Error:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Handler pour charge.dispute.closed
+ * - Mettre à jour le document dispute
+ * - Notifier l'admin du résultat
+ * - Logger pour audit
+ */
+export async function handleDisputeClosed(
+  dispute: Stripe.Dispute,
+  context?: WebhookContext
+): Promise<void> {
+  // Idempotency check
+  if (context?.eventId) {
+    if (await isEventAlreadyProcessed(context.eventId)) {
+      logger.info(`[handleDisputeClosed] Event ${context.eventId} already processed, skipping`);
+      return;
+    }
+  }
+
+  logger.info(`[handleDisputeClosed] Dispute ${dispute.id} closed with status: ${dispute.status}`);
+
+  const db = getDb();
+  const now = admin.firestore.Timestamp.now();
+
+  try {
+    const chargeId = typeof dispute.charge === 'string' ? dispute.charge : dispute.charge?.id;
+
+    // Mettre à jour le document dispute
+    await db.collection('disputes').doc(dispute.id).update({
+      status: dispute.status,
+      closedAt: now,
+      updatedAt: now
+    });
+
+    // Déterminer le résultat
+    const isWon = dispute.status === 'won';
+    const isLost = dispute.status === 'lost';
+    const resultText = isWon ? 'gagné' : isLost ? 'perdu' : dispute.status;
+
+    // Mettre à jour le paiement lié
+    const paymentQuery = await db.collection('payments')
+      .where('stripeChargeId', '==', chargeId)
+      .limit(1)
+      .get();
+
+    if (!paymentQuery.empty) {
+      await paymentQuery.docs[0].ref.update({
+        disputeStatus: dispute.status,
+        disputeClosedAt: now,
+        updatedAt: now
+      });
+    }
+
+    // Notifier les admins
+    await db.collection('admin_alerts').add({
+      type: 'dispute_closed',
+      severity: isLost ? 'high' : 'medium',
+      message: `Litige ${dispute.id} ${resultText} - ${dispute.amount / 100} ${dispute.currency?.toUpperCase()}`,
+      data: {
+        disputeId: dispute.id,
+        chargeId,
+        amount: dispute.amount / 100,
+        currency: dispute.currency,
+        reason: dispute.reason,
+        status: dispute.status,
+        result: resultText
+      },
+      read: false,
+      createdAt: now
+    });
+
+    // Logger l'action
+    await db.collection('dispute_logs').add({
+      stripeDisputeId: dispute.id,
+      action: 'closed',
+      chargeId,
+      amount: dispute.amount / 100,
+      reason: dispute.reason,
+      status: dispute.status,
+      result: resultText,
+      stripeEventId: context?.eventId,
+      createdAt: now
+    });
+
+    // Marquer l'événement comme traité
+    if (context?.eventId) {
+      await markEventAsProcessed(context.eventId, context.eventType);
+    }
+
+    logger.info(`[handleDisputeClosed] Completed for dispute: ${dispute.id} (${resultText})`);
+  } catch (error) {
+    logger.error(`[handleDisputeClosed] Error:`, error);
+    throw error;
+  }
+}
+
+// ============================================================================
 // EXPORTS
 // ============================================================================
 
@@ -1599,6 +2145,12 @@ export const webhookHandlers = {
   handleTrialWillEnd,
   handleInvoicePaid,
   handleInvoicePaymentFailed,
+  handleInvoicePaymentActionRequired,
   handleInvoiceCreated,
-  handlePaymentMethodUpdated
+  handlePaymentMethodUpdated,
+  handlePayoutFailed,
+  handleRefundFailed,
+  handlePaymentIntentFailed,
+  handleDisputeCreated,
+  handleDisputeClosed
 };

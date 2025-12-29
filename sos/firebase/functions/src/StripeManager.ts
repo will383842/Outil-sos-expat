@@ -248,17 +248,16 @@ export class StripeManager {
     }
 
     const calculatedTotal = commission + data.providerAmount;
-    const tolerance = 0.02;
+    // P0 SECURITY FIX: Réduire la tolérance de 1€ à 0.05€ pour éviter manipulation
+    const tolerance = 0.05;
     const delta = Math.abs(calculatedTotal - amount);
 
     if (delta > tolerance) {
-      // tolérance pour arrondis; si > 1€, on bloque
-      if (delta > 1) {
-        throw new HttpsError(
-          'failed-precondition',
-          `Incohérence montants: ${amount}€ != ${calculatedTotal}€`
-        );
-      }
+      // Tolérance stricte de 5 centimes maximum pour les arrondis
+      throw new HttpsError(
+        'failed-precondition',
+        `Incohérence montants: ${amount}€ != ${calculatedTotal}€ (delta: ${delta.toFixed(2)}€)`
+      );
     }
   }
 
@@ -832,6 +831,53 @@ export class StripeManager {
 
       await this.db.collection('refunds').doc(refund.id).set(refundRecord);
       console.log('[refundPayment] Refund record saved to refunds collection:', refund.id);
+
+      // ===== P0 FIX: Notification de remboursement au client =====
+      if (paymentData?.clientId) {
+        try {
+          const refundAmountFormatted = (refund.amount / 100).toFixed(2);
+          const currencySymbol = refund.currency?.toUpperCase() === 'EUR' ? '€' : '$';
+
+          // Créer une notification in-app pour le client
+          await this.db.collection('inapp_notifications').add({
+            uid: paymentData.clientId,
+            type: 'refund_completed',
+            title: 'Remboursement effectué',
+            body: `Votre remboursement de ${refundAmountFormatted}${currencySymbol} a été initié. Il sera crédité sur votre compte dans 3-5 jours ouvrés.`,
+            data: {
+              refundId: refund.id,
+              paymentIntentId: paymentIntentId,
+              amount: refund.amount,
+              currency: refund.currency,
+              reason: reason,
+            },
+            read: false,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+
+          // Enqueue email notification via message_events pipeline
+          await this.db.collection('message_events').add({
+            eventId: 'payment_refunded',
+            locale: 'fr', // Default, should detect from user preferences
+            to: { uid: paymentData.clientId },
+            context: {
+              user: { uid: paymentData.clientId },
+            },
+            vars: {
+              refundAmount: refundAmountFormatted,
+              currency: currencySymbol,
+              refundReason: reason || 'Remboursement demandé',
+              estimatedArrival: '3-5 jours ouvrés',
+            },
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+
+          console.log('[refundPayment] ✅ Client notification sent for refund:', refund.id);
+        } catch (notifError) {
+          console.error('[refundPayment] ⚠️ Failed to send refund notification:', notifError);
+          // Don't fail the refund if notification fails
+        }
+      }
 
       // Update related invoices to refunded status
       if (sessionId) {
