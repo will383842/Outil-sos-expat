@@ -37,7 +37,9 @@ import {
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import Layout from "../components/layout/Layout";
 import Button from "../components/common/Button";
+import ExtensionBlockedAlert from "../components/common/ExtensionBlockedAlert";
 import { useAuth } from "../contexts/AuthContext";
+import { isExtensionBlockedError } from "../utils/networkResilience";
 import { useApp } from "../contexts/AppContext";
 import type { Provider } from "../contexts/types";
 import {
@@ -282,6 +284,8 @@ const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [submitAttempts, setSubmitAttempts] = useState<number>(0);
+  const [showExtensionBlockedAlert, setShowExtensionBlockedAlert] = useState<boolean>(false);
+  const [isRetryingConnection, setIsRetryingConnection] = useState<boolean>(false);
 
   // Get redirect URL from sessionStorage first (most reliable), then query params, then default to dashboard
   // sessionStorage is set BEFORE navigation, so it's more reliable than query params which might get lost
@@ -735,10 +739,29 @@ const Login: React.FC = () => {
       } catch (loginError) {
         console.error("Login error:", loginError);
         setSubmitAttempts((prev) => prev + 1);
+
+        // Détecter si l'erreur est causée par une extension bloquante
+        if (isExtensionBlockedError(loginError)) {
+          setShowExtensionBlockedAlert(true);
+        }
       }
     },
     [formData, validateForm, login]
   );
+
+  // Fonction de retry après alerte extension
+  const handleRetryAfterExtensionBlock = useCallback(async () => {
+    setIsRetryingConnection(true);
+    try {
+      await login(formData.email.trim().toLowerCase(), formData.password);
+      setShowExtensionBlockedAlert(false);
+    } catch (retryError) {
+      console.error("Retry failed:", retryError);
+      // L'alerte reste visible pour que l'utilisateur puisse essayer les solutions
+    } finally {
+      setIsRetryingConnection(false);
+    }
+  }, [formData, login]);
 
   // ==================== GOOGLE LOGIN ====================
   const handleGoogleLogin = useCallback(async () => {
@@ -772,11 +795,14 @@ const Login: React.FC = () => {
       setLocalLoading(false);
 
       const errorMessage = googleError instanceof Error ? googleError.message : "";
-      const isCancelled = 
-        errorMessage.includes("popup-closed") || 
+      const isCancelled =
+        errorMessage.includes("popup-closed") ||
         errorMessage.includes("cancelled");
-        
-      if (!isCancelled) {
+
+      // Détecter si l'erreur est causée par une extension bloquante
+      if (isExtensionBlockedError(googleError)) {
+        setShowExtensionBlockedAlert(true);
+      } else if (!isCancelled) {
         setFormErrors({ general: intl.formatMessage({ id: "error.googleLogin" }) });
       }
     }
@@ -824,6 +850,15 @@ const Login: React.FC = () => {
   // ==================== RENDER ====================
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
+      {/* Alerte élégante pour les extensions bloquantes */}
+      {showExtensionBlockedAlert && (
+        <ExtensionBlockedAlert
+          onDismiss={() => setShowExtensionBlockedAlert(false)}
+          onRetry={handleRetryAfterExtensionBlock}
+          isRetrying={isRetryingConnection}
+        />
+      )}
+
       <Layout>
         <main 
           className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 flex flex-col items-center justify-center px-4 py-4" 

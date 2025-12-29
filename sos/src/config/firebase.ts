@@ -1,5 +1,12 @@
 // src/config/firebase.ts
 import { initializeApp, getApps, getApp, type FirebaseOptions } from "firebase/app";
+import { installNetworkResilience, suppressExtensionErrors } from "../utils/networkResilience";
+
+// 🛡️ Installer la protection réseau AVANT tout le reste
+if (typeof window !== 'undefined') {
+  installNetworkResilience();
+  suppressExtensionErrors();
+}
 import { getAuth, connectAuthEmulator, type Auth } from "firebase/auth";
 import {
   initializeFirestore,
