@@ -26,8 +26,12 @@ import {
   handleRefundFailed,
   handlePaymentIntentFailed,
   handleDisputeCreated,
-  handleDisputeClosed
+  handleDisputeClosed,
+  handleChargeRefunded,
+  handleTransferUpdated,
+  handleTransferFailed
 } from './webhooks';
+import { addToDeadLetterQueue } from './deadLetterQueue';
 
 // Initialize admin if not already initialized
 if (!admin.apps.length) {
@@ -1089,6 +1093,20 @@ export const stripeWebhook = functions
           await handleDisputeClosed(event.data.object as Stripe.Dispute, webhookContext);
           break;
 
+        // NEW: Refund tracking
+        case 'charge.refunded':
+          await handleChargeRefunded(event.data.object as Stripe.Charge, webhookContext);
+          break;
+
+        // NEW: Transfer tracking for provider payouts
+        case 'transfer.updated':
+          await handleTransferUpdated(event.data.object as Stripe.Transfer, webhookContext);
+          break;
+
+        case 'transfer.failed':
+          await handleTransferFailed(event.data.object as Stripe.Transfer, webhookContext);
+          break;
+
         default:
           console.log(`Unhandled event type: ${event.type}`);
       }
@@ -1111,11 +1129,22 @@ export const stripeWebhook = functions
         // Return 500 so Stripe will retry
         res.status(500).json({ error: 'Webhook processing failed - transient error' });
       } else {
+        // Add to Dead Letter Queue for later processing/investigation
+        try {
+          await addToDeadLetterQueue(event, error, {
+            webhookContext,
+            isTransient: false
+          });
+          console.log(`[stripeWebhook] Event ${event.id} added to Dead Letter Queue`);
+        } catch (dlqError) {
+          console.error(`[stripeWebhook] Failed to add to DLQ:`, dlqError);
+        }
+
         // Return 200 with error details to prevent Stripe retries for permanent errors
         // Mark as processed to prevent infinite retries on business logic errors
         await markEventAsProcessed(event.id, event.type);
         console.log(`[stripeWebhook] Event ${event.id} marked as processed despite error (permanent failure)`);
-        res.json({ received: true, error: 'Processing failed but marked as handled' });
+        res.json({ received: true, error: 'Processing failed but added to DLQ for retry' });
       }
     }
   });
@@ -2014,8 +2043,21 @@ export {
   handleInvoicePaymentFailed,
   handleInvoiceCreated,
   handlePaymentMethodUpdated,
+  handleChargeRefunded,
+  handleTransferUpdated,
+  handleTransferFailed,
   webhookHandlers,
 } from './webhooks';
+
+// Dead Letter Queue exports
+export {
+  addToDeadLetterQueue,
+  markAsResolved,
+  getEventsToRetry,
+  getDLQStats,
+  forceRetry,
+  cleanupOldEntries
+} from './deadLetterQueue';
 
 // ============================================================================
 // EMAIL NOTIFICATIONS

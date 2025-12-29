@@ -1403,6 +1403,30 @@
   "footer.support.serviceStatus": "حالة الخدمة",
   "footer.support.title": "الدعم",
   "form.progress": "تقدم النموذج",
+  "gdpr.consent.analytics": "ملفات تعريف الارتباط للتحليلات والأداء",
+  "gdpr.consent.essential": "ملفات تعريف الارتباط الأساسية (لا يمكن تعطيلها)",
+  "gdpr.consent.marketing": "رسائل البريد الإلكتروني والإشعارات التسويقية",
+  "gdpr.consent.title": "تفضيلات الخصوصية الخاصة بك",
+  "gdpr.consent.updated": "تم تحديث التفضيلات بنجاح",
+  "gdpr.delete.confirm": "أفهم أن هذا الإجراء لا يمكن التراجع عنه",
+  "gdpr.delete.description": "حذف حسابك وجميع البيانات المرتبطة به نهائياً",
+  "gdpr.delete.pending": "طلب حذف حسابك قيد المعالجة",
+  "gdpr.delete.submitted": "تم تقديم طلب الحذف",
+  "gdpr.delete.title": "حذف حسابي",
+  "gdpr.delete.warning": "تحذير: هذا الإجراء لا يمكن التراجع عنه",
+  "gdpr.export.description": "تحميل نسخة من جميع بياناتك الشخصية",
+  "gdpr.export.generating": "جاري تجهيز بياناتك...",
+  "gdpr.export.ready": "التصدير جاهز",
+  "gdpr.export.title": "تصدير بياناتي",
+  "gdpr.history.action": "الإجراء",
+  "gdpr.history.date": "التاريخ",
+  "gdpr.history.empty": "لا يوجد سجل للوصول إلى البيانات",
+  "gdpr.history.ip": "عنوان IP",
+  "gdpr.history.title": "سجل الوصول إلى البيانات",
+  "gdpr.request.approved": "موافق عليه",
+  "gdpr.request.pending": "قيد الانتظار",
+  "gdpr.request.processed": "تمت المعالجة",
+  "gdpr.request.rejected": "مرفوض",
   "guarantee.confidentiality": "السرية والأمان",
   "guarantee.countries": "خبراء في +150 دولة",
   "guarantee.instant": "حجز فوري — مكالمة في 5 دقائق",
@@ -3489,6 +3513,55 @@
   "subscription.trial.startTrial": "ابدأ التجربة المجانية",
   "subscription.trial.title": "تجربة مجانية",
   "subscription.viewPlans": "عرض الخطط",
+  "systemHealth.alerts.acknowledge": "إقرار",
+  "systemHealth.alerts.acknowledged": "تم الإقرار",
+  "systemHealth.alerts.active": "التنبيهات النشطة",
+  "systemHealth.alerts.critical": "حرج",
+  "systemHealth.alerts.empty": "لا توجد تنبيهات نشطة",
+  "systemHealth.alerts.high": "عالي",
+  "systemHealth.alerts.low": "منخفض",
+  "systemHealth.alerts.medium": "متوسط",
+  "systemHealth.dr.lastTest": "آخر اختبار",
+  "systemHealth.dr.nextTest": "الاختبار التالي",
+  "systemHealth.dr.runTest": "تشغيل اختبار DR",
+  "systemHealth.dr.running": "الاختبار قيد التشغيل...",
+  "systemHealth.dr.testFailed": "فشل الاختبار",
+  "systemHealth.dr.testPassed": "نجح الاختبار",
+  "systemHealth.dr.title": "استعادة الكوارث",
+  "systemHealth.metrics.apiLatency": "زمن استجابة API",
+  "systemHealth.metrics.backupAge": "عمر النسخة الاحتياطية",
+  "systemHealth.metrics.dbConnections": "اتصالات قاعدة البيانات",
+  "systemHealth.metrics.diskUsage": "استخدام القرص",
+  "systemHealth.metrics.dlqSize": "حجم DLQ",
+  "systemHealth.metrics.errorRate": "معدل الأخطاء",
+  "systemHealth.metrics.memoryUsage": "استخدام الذاكرة",
+  "systemHealth.metrics.title": "مقاييس النظام",
+  "systemHealth.status.degraded": "متدهور",
+  "systemHealth.status.healthy": "سليم",
+  "systemHealth.status.offline": "غير متصل",
+  "systemHealth.status.warning": "تحذير",
+  "systemHealth.title": "صحة النظام",
+  "systemHealth.lastCheck": "آخر فحص",
+  "systemHealth.issues": "مشاكل مكتشفة",
+  "systemHealth.noIssues": "لا توجد مشاكل",
+  "systemHealth.metrics.dlqPending": "أحداث معلقة",
+  "systemHealth.metrics.dlqFailed": "أحداث فاشلة",
+  "systemHealth.metrics.activeAlerts": "تنبيهات نشطة",
+  "systemHealth.metrics.errorsLastHour": "أخطاء (ساعة)",
+  "systemHealth.metrics.openDisputes": "نزاعات مفتوحة",
+  "systemHealth.metrics.backupFirestore": "نسخة Firestore",
+  "systemHealth.metrics.backupAuth": "نسخة Auth",
+  "systemHealth.metrics.drTests": "اختبارات DR",
+  "systemHealth.alerts.title": "التنبيهات النشطة",
+  "systemHealth.alerts.noAlerts": "لا توجد تنبيهات نشطة",
+  "systemHealth.dr.noTests": "لا توجد اختبارات DR",
+  "systemHealth.dr.date": "التاريخ",
+  "systemHealth.dr.status": "الحالة",
+  "systemHealth.dr.results": "النتائج",
+  "systemHealth.dr.duration": "المدة",
+  "systemHealth.errors.loading": "خطأ في تحميل البيانات",
+  "systemHealth.errors.drTest": "خطأ في اختبار DR",
+  "systemHealth.never": "أبداً",
   "success.allGood": "كل شيء على ما يرام! ✨",
   "success.almostThere": "نحن على وشك الانتهاء! 🎯",
   "success.amount": "المبلغ المدفوع",

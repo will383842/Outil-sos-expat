@@ -2166,6 +2166,316 @@ export async function handleDisputeClosed(
 }
 
 // ============================================================================
+// HANDLER: charge.refunded
+// ============================================================================
+
+/**
+ * Handler pour charge.refunded
+ * - Logger le remboursement pour audit
+ * - Mettre à jour le paiement lié
+ * - Notifier l'admin
+ */
+export async function handleChargeRefunded(
+  charge: Stripe.Charge,
+  context?: WebhookContext
+): Promise<void> {
+  // Idempotency check
+  if (context?.eventId) {
+    if (await isEventAlreadyProcessed(context.eventId)) {
+      logger.info(`[handleChargeRefunded] Event ${context.eventId} already processed, skipping`);
+      return;
+    }
+  }
+
+  logger.info(`[handleChargeRefunded] Charge ${charge.id} refunded`);
+
+  const db = getDb();
+  const now = admin.firestore.Timestamp.now();
+
+  try {
+    const refundedAmount = charge.amount_refunded / 100;
+    const totalAmount = charge.amount / 100;
+    const isFullRefund = charge.refunded;
+    const currency = charge.currency?.toUpperCase() || 'EUR';
+
+    // Chercher le paiement lié
+    const paymentQuery = await db.collection('payments')
+      .where('stripeChargeId', '==', charge.id)
+      .limit(1)
+      .get();
+
+    let clientId: string | null = null;
+    let providerId: string | null = null;
+    let paymentId: string | null = null;
+
+    if (!paymentQuery.empty) {
+      const paymentDoc = paymentQuery.docs[0];
+      const paymentData = paymentDoc.data();
+      clientId = paymentData.clientId;
+      providerId = paymentData.providerId;
+      paymentId = paymentDoc.id;
+
+      // Mettre à jour le paiement
+      await paymentDoc.ref.update({
+        refundedAmount,
+        isFullyRefunded: isFullRefund,
+        refundedAt: now,
+        status: isFullRefund ? 'refunded' : 'partially_refunded',
+        updatedAt: now
+      });
+    }
+
+    // Logger dans la collection refund_audit pour traçabilité complète
+    await db.collection('refund_audit').add({
+      stripeChargeId: charge.id,
+      paymentId,
+      refundedAmount,
+      totalAmount,
+      currency,
+      isFullRefund,
+      clientId,
+      providerId,
+      refundReason: charge.refunds?.data?.[0]?.reason || 'unknown',
+      stripeEventId: context?.eventId,
+      createdAt: now
+    });
+
+    // Notifier les admins si remboursement significatif (> 50€)
+    if (refundedAmount >= 50) {
+      await db.collection('admin_alerts').add({
+        type: 'refund_processed',
+        severity: 'medium',
+        message: `Remboursement ${isFullRefund ? 'total' : 'partiel'}: ${refundedAmount} ${currency}`,
+        data: {
+          chargeId: charge.id,
+          paymentId,
+          refundedAmount,
+          totalAmount,
+          currency,
+          isFullRefund,
+          clientId,
+          providerId
+        },
+        read: false,
+        createdAt: now
+      });
+    }
+
+    // Marquer l'événement comme traité
+    if (context?.eventId) {
+      await markEventAsProcessed(context.eventId, context.eventType);
+    }
+
+    logger.info(`[handleChargeRefunded] Completed for charge: ${charge.id} (${refundedAmount} ${currency})`);
+  } catch (error) {
+    logger.error(`[handleChargeRefunded] Error:`, error);
+    throw error;
+  }
+}
+
+// ============================================================================
+// HANDLER: transfer.updated
+// ============================================================================
+
+/**
+ * Handler pour transfer.updated
+ * - Suivre l'état des transferts vers les prestataires
+ * - Logger pour réconciliation
+ */
+export async function handleTransferUpdated(
+  transfer: Stripe.Transfer,
+  context?: WebhookContext
+): Promise<void> {
+  // Idempotency check
+  if (context?.eventId) {
+    if (await isEventAlreadyProcessed(context.eventId)) {
+      logger.info(`[handleTransferUpdated] Event ${context.eventId} already processed, skipping`);
+      return;
+    }
+  }
+
+  logger.info(`[handleTransferUpdated] Transfer ${transfer.id} updated`);
+
+  const db = getDb();
+  const now = admin.firestore.Timestamp.now();
+
+  try {
+    const amount = transfer.amount / 100;
+    const currency = transfer.currency?.toUpperCase() || 'EUR';
+    const destinationAccount = typeof transfer.destination === 'string'
+      ? transfer.destination
+      : transfer.destination?.id;
+
+    // Chercher le provider par son stripeAccountId
+    let providerId: string | null = null;
+    if (destinationAccount) {
+      const providerQuery = await db.collection('sos_profiles')
+        .where('stripeAccountId', '==', destinationAccount)
+        .limit(1)
+        .get();
+
+      if (!providerQuery.empty) {
+        providerId = providerQuery.docs[0].id;
+      }
+    }
+
+    // Logger le transfert
+    await db.collection('transfer_logs').add({
+      stripeTransferId: transfer.id,
+      providerId,
+      destinationAccount,
+      amount,
+      currency,
+      status: transfer.reversed ? 'reversed' : 'completed',
+      sourceTransaction: transfer.source_transaction,
+      metadata: transfer.metadata,
+      stripeEventId: context?.eventId,
+      createdAt: now
+    });
+
+    // Si transfert lié à un paiement, mettre à jour
+    if (transfer.source_transaction) {
+      const paymentQuery = await db.collection('payments')
+        .where('stripePaymentIntentId', '==', transfer.source_transaction)
+        .limit(1)
+        .get();
+
+      if (!paymentQuery.empty) {
+        await paymentQuery.docs[0].ref.update({
+          transferId: transfer.id,
+          transferStatus: transfer.reversed ? 'reversed' : 'completed',
+          transferCompletedAt: now,
+          updatedAt: now
+        });
+      }
+    }
+
+    // Marquer l'événement comme traité
+    if (context?.eventId) {
+      await markEventAsProcessed(context.eventId, context.eventType);
+    }
+
+    logger.info(`[handleTransferUpdated] Completed for transfer: ${transfer.id}`);
+  } catch (error) {
+    logger.error(`[handleTransferUpdated] Error:`, error);
+    throw error;
+  }
+}
+
+// ============================================================================
+// HANDLER: transfer.failed
+// ============================================================================
+
+/**
+ * Handler pour transfer.failed
+ * - Alerter sur les échecs de transfert vers prestataires
+ * - Logger pour investigation
+ * - Créer une entrée dans pending_transfers pour retry
+ */
+export async function handleTransferFailed(
+  transfer: Stripe.Transfer,
+  context?: WebhookContext
+): Promise<void> {
+  // Idempotency check
+  if (context?.eventId) {
+    if (await isEventAlreadyProcessed(context.eventId)) {
+      logger.info(`[handleTransferFailed] Event ${context.eventId} already processed, skipping`);
+      return;
+    }
+  }
+
+  logger.info(`[handleTransferFailed] Transfer ${transfer.id} FAILED`);
+
+  const db = getDb();
+  const now = admin.firestore.Timestamp.now();
+
+  try {
+    const amount = transfer.amount / 100;
+    const currency = transfer.currency?.toUpperCase() || 'EUR';
+    const destinationAccount = typeof transfer.destination === 'string'
+      ? transfer.destination
+      : transfer.destination?.id;
+
+    // Chercher le provider par son stripeAccountId
+    let providerId: string | null = null;
+    let providerEmail: string | null = null;
+    if (destinationAccount) {
+      const providerQuery = await db.collection('sos_profiles')
+        .where('stripeAccountId', '==', destinationAccount)
+        .limit(1)
+        .get();
+
+      if (!providerQuery.empty) {
+        const providerData = providerQuery.docs[0].data();
+        providerId = providerQuery.docs[0].id;
+        providerEmail = providerData.email;
+      }
+    }
+
+    // Logger l'échec
+    await db.collection('failed_transfers_log').add({
+      stripeTransferId: transfer.id,
+      providerId,
+      providerEmail,
+      destinationAccount,
+      amount,
+      currency,
+      sourceTransaction: transfer.source_transaction,
+      failureReason: 'Transfer failed - check Stripe dashboard for details',
+      metadata: transfer.metadata,
+      stripeEventId: context?.eventId,
+      createdAt: now
+    });
+
+    // Créer une entrée pending_transfers pour retry manuel
+    if (providerId) {
+      await db.collection('pending_transfers').add({
+        providerId,
+        stripeAccountId: destinationAccount,
+        amount,
+        currency,
+        originalTransferId: transfer.id,
+        sourceTransaction: transfer.source_transaction,
+        status: 'failed',
+        retryCount: 0,
+        maxRetries: 3,
+        failureReason: 'Original transfer failed',
+        createdAt: now,
+        updatedAt: now
+      });
+    }
+
+    // Alerte admin CRITIQUE
+    await db.collection('admin_alerts').add({
+      type: 'transfer_failed',
+      severity: 'critical',
+      message: `ÉCHEC transfert prestataire: ${amount} ${currency}`,
+      data: {
+        transferId: transfer.id,
+        providerId,
+        providerEmail,
+        destinationAccount,
+        amount,
+        currency,
+        sourceTransaction: transfer.source_transaction
+      },
+      read: false,
+      createdAt: now
+    });
+
+    // Marquer l'événement comme traité
+    if (context?.eventId) {
+      await markEventAsProcessed(context.eventId, context.eventType);
+    }
+
+    logger.error(`[handleTransferFailed] Transfer ${transfer.id} failed for provider ${providerId}`);
+  } catch (error) {
+    logger.error(`[handleTransferFailed] Error:`, error);
+    throw error;
+  }
+}
+
+// ============================================================================
 // EXPORTS
 // ============================================================================
 
@@ -2185,5 +2495,8 @@ export const webhookHandlers = {
   handleRefundFailed,
   handlePaymentIntentFailed,
   handleDisputeCreated,
-  handleDisputeClosed
+  handleDisputeClosed,
+  handleChargeRefunded,
+  handleTransferUpdated,
+  handleTransferFailed
 };

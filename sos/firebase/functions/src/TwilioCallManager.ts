@@ -7,6 +7,8 @@ import { logCallRecord } from "./utils/logs/logCallRecord";
 import { messageManager } from "./MessageManager";
 import { stripeManager } from "./StripeManager";
 import { setProviderBusy, setProviderAvailable } from "./callables/providerStatusManager";
+// 🔒 Phone number encryption
+import { encryptPhoneNumber, decryptPhoneNumber } from "./utils/encryption";
 
 // =============================
 // Typage fort du JSON de prompts
@@ -434,17 +436,21 @@ export class TwilioCallManager {
       const maxDuration = params.providerType === "lawyer" ? 1500 : 2100; // 25/35 min
       const conferenceName = `conf_${params.sessionId}_${Date.now()}`;
 
+      // Encrypt phone numbers for storage (GDPR/PII protection)
+      const encryptedProviderPhone = encryptPhoneNumber(validProviderPhone);
+      const encryptedClientPhone = encryptPhoneNumber(validClientPhone);
+
       const callSession: CallSessionState = {
         id: params.sessionId,
         status: "pending",
         participants: {
           provider: {
-            phone: validProviderPhone,
+            phone: encryptedProviderPhone,
             status: "pending",
             attemptCount: 0,
           },
           client: {
-            phone: validClientPhone,
+            phone: encryptedClientPhone,
             status: "pending",
             attemptCount: 0,
           },
@@ -619,11 +625,15 @@ export class TwilioCallManager {
 
     await this.updateCallSessionStatus(sessionId, "client_connecting");
 
+    // Decrypt phone numbers for Twilio call
+    const clientPhone = decryptPhoneNumber(callSession.participants.client.phone);
+    const providerPhone = decryptPhoneNumber(callSession.participants.provider.phone);
+
     console.log(`📞 Étape 1: Appel client ${sessionId}`);
     const clientConnected = await this.callParticipantWithRetries(
       sessionId,
       "client",
-      callSession.participants.client.phone,
+      clientPhone,
       callSession.conference.name,
       callSession.metadata.maxDuration,
       ttsLocale,
@@ -642,7 +652,7 @@ export class TwilioCallManager {
     const providerConnected = await this.callParticipantWithRetries(
       sessionId,
       "provider",
-      callSession.participants.provider.phone,
+      providerPhone,
       callSession.conference.name,
       callSession.metadata.maxDuration,
       ttsLocale,
@@ -1085,10 +1095,14 @@ export class TwilioCallManager {
       try {
         const notificationPromises: Array<Promise<unknown>> = [];
 
+        // Decrypt phone numbers for SMS notifications
+        const decryptedProviderPhone = decryptPhoneNumber(callSession.participants.provider.phone);
+        const decryptedClientPhone = decryptPhoneNumber(callSession.participants.client.phone);
+
         if (reason === "client_no_answer" || reason === "system_error") {
           notificationPromises.push(
             messageManager.sendSmartMessage({
-              to: callSession.participants.provider.phone,
+              to: decryptedProviderPhone,
               templateId: `call_failure_${reason}_provider`,
               variables: {
                 clientName: "le client",
@@ -1102,7 +1116,7 @@ export class TwilioCallManager {
         if (reason === "provider_no_answer" || reason === "system_error") {
           notificationPromises.push(
             messageManager.sendSmartMessage({
-              to: callSession.participants.client.phone,
+              to: decryptedClientPhone,
               templateId: `call_failure_${reason}_client`,
               variables: {
                 providerName: "votre expert",
@@ -1267,9 +1281,13 @@ export class TwilioCallManager {
         const minutes = Math.floor(duration / 60);
         const seconds = duration % 60;
 
+        // Decrypt phone numbers for SMS notifications
+        const decryptedClientPhone = decryptPhoneNumber(callSession.participants.client.phone);
+        const decryptedProviderPhone = decryptPhoneNumber(callSession.participants.provider.phone);
+
         await Promise.allSettled([
           messageManager.sendSmartMessage({
-            to: callSession.participants.client.phone,
+            to: decryptedClientPhone,
             templateId: "call_success_client",
             variables: {
               duration: minutes.toString(),
@@ -1279,7 +1297,7 @@ export class TwilioCallManager {
             },
           }),
           messageManager.sendSmartMessage({
-            to: callSession.participants.provider.phone,
+            to: decryptedProviderPhone,
             templateId: "call_success_provider",
             variables: {
               duration: minutes.toString(),

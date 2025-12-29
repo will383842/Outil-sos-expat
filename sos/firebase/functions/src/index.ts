@@ -3452,6 +3452,63 @@ export { checkProviderInactivity } from './scheduled/checkProviderInactivity';
 export { updateProviderActivity } from './callables/updateProviderActivity';
 export { setProviderOffline } from './callables/setProviderOffline';
 
+// ========== DEAD LETTER QUEUE - WEBHOOK RETRY SYSTEM ==========
+export {
+  processWebhookDLQ,
+  cleanupWebhookDLQ,
+  adminForceRetryDLQEvent,
+  adminGetDLQStats
+} from './scheduled/processDLQ';
+
+// ========== TWILIO RECORDINGS BACKUP ==========
+export {
+  backupTwilioRecordings,
+  triggerTwilioBackup,
+  getTwilioBackupStats
+} from './scheduled/backupTwilioRecordings';
+
+// ========== PHONE NUMBER ENCRYPTION MIGRATION ==========
+export {
+  migratePhoneEncryption,
+  getEncryptionStatus,
+  generateEncryptionKey
+} from './scheduled/migrateEncryption';
+
+// ========== FIREBASE AUTH BACKUP ==========
+export {
+  backupFirebaseAuth,
+  cleanupOldAuthBackups,
+  triggerAuthBackup,
+  listAuthBackups
+} from './scheduled/backupAuth';
+
+// ========== SYSTEM MONITORING & ALERTS ==========
+export {
+  runSystemHealthCheck,
+  cleanupOldAlerts,
+  getActiveAlerts,
+  acknowledgeAlert,
+  getSystemHealthSummary
+} from './monitoring/criticalAlerts';
+
+// ========== DISASTER RECOVERY TESTS ==========
+export {
+  runMonthlyDRTest,
+  runDRTestManual,
+  listDRReports
+} from './scheduled/disasterRecoveryTest';
+
+// ========== GDPR AUDIT TRAIL ==========
+export {
+  requestDataExport,
+  requestAccountDeletion,
+  getMyDataAccessHistory,
+  updateConsentPreferences,
+  listGDPRRequests,
+  processGDPRRequest,
+  getUserAuditTrail
+} from './gdpr/auditTrail';
+
 // ========== SEO - AUTO-INDEXATION ==========
 export * from './seo';
 
@@ -3811,3 +3868,10 @@ export { setAdminClaims, initializeAdminClaims } from './auth/setAdminClaims';
 
 // ========== PASSWORD RESET (CUSTOM BRANDED EMAIL) ==========
 export { sendCustomPasswordResetEmail } from './auth/passwordReset';
+
+// ========== STORAGE CONFIGURATION (ADMIN) ==========
+export {
+  enableStorageVersioning,
+  configureStorageLifecycle,
+  getStorageConfig
+} from './admin/enableStorageVersioning';
