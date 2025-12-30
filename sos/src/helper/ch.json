@@ -4029,8 +4029,11 @@
   "wizard.step3.all": "我还不确定",
   "wizard.step3.all.desc": "查看所有可用专家",
   "wizard.search.country": "搜索国家...",
+  "wizard.search.language": "搜索语言...",
   "wizard.popular.countries": "热门国家",
+  "wizard.popular.languages": "热门语言",
   "wizard.show.all.countries": "显示所有国家",
+  "wizard.show.all.languages": "显示所有语言",
   "wizard.no.results": "未找到结果",
   "wizard.seeResults": "查看结果",
   "wizard.modifyFilters": "修改筛选条件"

@@ -31,6 +31,18 @@ interface GuidedFilterWizardProps {
 // ========================================
 // Helper Functions
 // ========================================
+
+// Normalize text by removing accents for search (é→e, ù→u, etc.)
+const normalizeText = (text: string): string => {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[œ]/g, "oe")
+    .replace(/[æ]/g, "ae")
+    .replace(/[ß]/g, "ss");
+};
+
 const getCountryLanguageKey = (locale: string): LanguageKey => {
   const mapping: Record<string, LanguageKey> = {
     fr: "nameFr",
@@ -156,8 +168,10 @@ const CountryStep: React.FC<{
 
   const filteredCountries = useMemo(() => {
     if (!searchQuery.trim()) return countryOptions;
-    const query = searchQuery.toLowerCase();
-    return countryOptions.filter((c) => c.label.toLowerCase().includes(query));
+    const normalizedQuery = normalizeText(searchQuery);
+    return countryOptions.filter((c) =>
+      normalizeText(c.label).includes(normalizedQuery)
+    );
   }, [countryOptions, searchQuery]);
 
   const popularCountriesWithLabels = useMemo(() => {
@@ -297,53 +311,141 @@ const LanguageStep: React.FC<{
   onBack: () => void;
 }> = ({ selectedLanguage, onSelect, languageOptions, onNext, onBack }) => {
   const intl = useIntl();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showAllLanguages, setShowAllLanguages] = useState(false);
+
+  // Filter languages with accent-insensitive search
+  const filteredLanguages = useMemo(() => {
+    if (!searchQuery.trim()) return languageOptions;
+    const normalizedQuery = normalizeText(searchQuery);
+    return languageOptions.filter((l) =>
+      normalizeText(l.label).includes(normalizedQuery)
+    );
+  }, [languageOptions, searchQuery]);
+
+  // Map popular languages with their translated labels
+  const popularLanguagesWithLabels = useMemo(() => {
+    return POPULAR_LANGUAGES.map((pl) => {
+      const found = languageOptions.find(
+        (l) => l.code.toLowerCase() === pl.code.toLowerCase()
+      );
+      return found ? { ...pl, label: found.label } : { ...pl };
+    });
+  }, [languageOptions]);
+
+  // Get flag for a language code
+  const getFlagForLanguage = (code: string): string => {
+    const popular = POPULAR_LANGUAGES.find(
+      (l) => l.code.toLowerCase() === code.toLowerCase()
+    );
+    if (popular) return popular.flag;
+    // Default mappings for other languages
+    const flagMap: Record<string, string> = {
+      it: "IT", nl: "NL", pl: "PL", tr: "TR", ja: "JP", ko: "KR",
+      vi: "VN", th: "TH", id: "ID", ms: "MY", sv: "SE", no: "NO",
+      da: "DK", fi: "FI", cs: "CZ", el: "GR", hu: "HU", ro: "RO",
+      uk: "UA", he: "IL", fa: "IR", bn: "BD", ta: "IN", te: "IN",
+      ur: "PK", sw: "KE", af: "ZA", tl: "PH",
+    };
+    return flagMap[code.toLowerCase()] || "UN";
+  };
 
   return (
     <div className="flex flex-col h-full">
       {/* Title */}
-      <div className="text-center mb-6">
-        <div className="w-16 h-16 mx-auto mb-4 bg-blue-500/20 rounded-2xl flex items-center justify-center">
-          <Globe className="w-8 h-8 text-blue-400" />
+      <div className="text-center mb-4">
+        <div className="w-14 h-14 mx-auto mb-3 bg-blue-500/20 rounded-2xl flex items-center justify-center">
+          <Globe className="w-7 h-7 text-blue-400" />
         </div>
-        <h2 className="text-2xl font-bold text-white mb-2">
+        <h2 className="text-xl font-bold text-white mb-1">
           <FormattedMessage id="wizard.step2.title" />
         </h2>
-        <p className="text-gray-400 text-sm">
+        <p className="text-gray-400 text-xs">
           <FormattedMessage id="wizard.step2.subtitle" />
         </p>
       </div>
 
+      {/* Search */}
+      <div className="relative mb-3">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setShowAllLanguages(true);
+          }}
+          placeholder={intl.formatMessage({ id: "wizard.search.language", defaultMessage: "Rechercher une langue..." })}
+          className="w-full pl-12 pr-4 py-3 bg-white/5 border-2 border-white/10 rounded-2xl text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500/50 transition-all text-base"
+        />
+      </div>
+
       {/* Languages Grid */}
       <div className="flex-1 overflow-y-auto">
-        <div className="grid grid-cols-1 gap-3">
-          {POPULAR_LANGUAGES.map((lang) => {
-            const option = languageOptions.find(
-              (l) => l.code.toLowerCase() === lang.code.toLowerCase()
-            );
-            const label = option?.label || lang.label;
-
-            return (
-              <button
-                key={lang.code}
-                onClick={() => onSelect(lang.code)}
-                className={`
-                  flex items-center gap-4 p-5 rounded-2xl border-2 transition-all duration-200
-                  touch-manipulation min-h-[72px]
-                  ${selectedLanguage === lang.code
-                    ? "bg-blue-500/20 border-blue-500 text-white"
-                    : "bg-white/5 border-white/10 text-gray-200 hover:bg-white/10 active:scale-[0.98]"
-                  }
-                `}
-              >
-                <CountryFlag code={lang.flag} size="lg" />
-                <span className="font-semibold text-lg">{label}</span>
-                {selectedLanguage === lang.code && (
-                  <Check className="w-6 h-6 text-blue-400 ml-auto" />
-                )}
-              </button>
-            );
-          })}
-        </div>
+        {!showAllLanguages && !searchQuery ? (
+          <>
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+              <FormattedMessage id="wizard.popular.languages" defaultMessage="Langues populaires" />
+            </p>
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              {popularLanguagesWithLabels.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => onSelect(lang.code)}
+                  className={`
+                    flex items-center gap-2 p-3 rounded-xl border-2 transition-all duration-200
+                    touch-manipulation min-h-[56px]
+                    ${selectedLanguage === lang.code
+                      ? "bg-blue-500/20 border-blue-500 text-white"
+                      : "bg-white/5 border-white/10 text-gray-200 hover:bg-white/10 active:scale-95"
+                    }
+                  `}
+                >
+                  <CountryFlag code={lang.flag} size="sm" />
+                  <span className="font-medium text-sm truncate">{lang.label}</span>
+                  {selectedLanguage === lang.code && (
+                    <Check className="w-4 h-4 text-blue-400 ml-auto flex-shrink-0" />
+                  )}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowAllLanguages(true)}
+              className="w-full py-2 text-center text-blue-400 font-medium text-sm hover:text-blue-300 transition-colors"
+            >
+              <FormattedMessage id="wizard.show.all.languages" defaultMessage="Voir toutes les langues" /> →
+            </button>
+          </>
+        ) : (
+          <div className="space-y-2">
+            {filteredLanguages.length === 0 ? (
+              <p className="text-center text-gray-400 py-8">
+                <FormattedMessage id="wizard.no.results" />
+              </p>
+            ) : (
+              filteredLanguages.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => onSelect(lang.code)}
+                  className={`
+                    w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all duration-200
+                    touch-manipulation
+                    ${selectedLanguage === lang.code
+                      ? "bg-blue-500/20 border-blue-500 text-white"
+                      : "bg-white/5 border-white/10 text-gray-200 hover:bg-white/10 active:scale-95"
+                    }
+                  `}
+                >
+                  <CountryFlag code={getFlagForLanguage(lang.code)} size="sm" />
+                  <span className="font-medium text-sm">{lang.label}</span>
+                  {selectedLanguage === lang.code && (
+                    <Check className="w-4 h-4 text-blue-400 ml-auto" />
+                  )}
+                </button>
+              ))
+            )}
+          </div>
+        )}
       </div>
 
       {/* Navigation Buttons */}

@@ -4008,8 +4008,11 @@
   "wizard.step3.all": "Я пока не уверен",
   "wizard.step3.all.desc": "Показать всех доступных экспертов",
   "wizard.search.country": "Поиск страны...",
+  "wizard.search.language": "Поиск языка...",
   "wizard.popular.countries": "Популярные страны",
+  "wizard.popular.languages": "Популярные языки",
   "wizard.show.all.countries": "Показать все страны",
+  "wizard.show.all.languages": "Показать все языки",
   "wizard.no.results": "Результатов не найдено",
   "wizard.seeResults": "Показать результаты",
   "wizard.modifyFilters": "Изменить фильтры"

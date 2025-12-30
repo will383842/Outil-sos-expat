@@ -4008,8 +4008,11 @@
   "wizard.step3.all": "Aún no lo sé",
   "wizard.step3.all.desc": "Ver todos los expertos disponibles",
   "wizard.search.country": "Buscar un país...",
+  "wizard.search.language": "Buscar un idioma...",
   "wizard.popular.countries": "Países populares",
+  "wizard.popular.languages": "Idiomas populares",
   "wizard.show.all.countries": "Ver todos los países",
+  "wizard.show.all.languages": "Ver todos los idiomas",
   "wizard.no.results": "No se encontraron resultados",
   "wizard.seeResults": "Ver resultados",
   "wizard.modifyFilters": "Modificar filtros"

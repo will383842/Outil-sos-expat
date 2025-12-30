@@ -4021,8 +4021,11 @@
   "wizard.step3.all": "Je ne sais pas encore",
   "wizard.step3.all.desc": "Voir tous les experts disponibles",
   "wizard.search.country": "Rechercher un pays...",
+  "wizard.search.language": "Rechercher une langue...",
   "wizard.popular.countries": "Pays populaires",
+  "wizard.popular.languages": "Langues populaires",
   "wizard.show.all.countries": "Voir tous les pays",
+  "wizard.show.all.languages": "Voir toutes les langues",
   "wizard.no.results": "Aucun résultat trouvé",
   "wizard.seeResults": "Voir les résultats",
   "wizard.modifyFilters": "Modifier les filtres"

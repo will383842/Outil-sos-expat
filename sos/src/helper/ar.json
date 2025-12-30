@@ -4029,8 +4029,11 @@
   "wizard.step3.all": "لست متأكداً بعد",
   "wizard.step3.all.desc": "عرض جميع الخبراء المتاحين",
   "wizard.search.country": "ابحث عن بلد...",
+  "wizard.search.language": "ابحث عن لغة...",
   "wizard.popular.countries": "البلدان الشائعة",
+  "wizard.popular.languages": "اللغات الشائعة",
   "wizard.show.all.countries": "عرض جميع البلدان",
+  "wizard.show.all.languages": "عرض جميع اللغات",
   "wizard.no.results": "لم يتم العثور على نتائج",
   "wizard.seeResults": "عرض النتائج",
   "wizard.modifyFilters": "تعديل الفلاتر"

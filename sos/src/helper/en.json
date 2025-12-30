@@ -4021,8 +4021,11 @@
   "wizard.step3.all": "I'm not sure yet",
   "wizard.step3.all.desc": "View all available experts",
   "wizard.search.country": "Search for a country...",
+  "wizard.search.language": "Search for a language...",
   "wizard.popular.countries": "Popular countries",
+  "wizard.popular.languages": "Popular languages",
   "wizard.show.all.countries": "Show all countries",
+  "wizard.show.all.languages": "Show all languages",
   "wizard.no.results": "No results found",
   "wizard.seeResults": "See results",
   "wizard.modifyFilters": "Modify filters"

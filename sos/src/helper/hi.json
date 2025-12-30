@@ -4029,8 +4029,11 @@
   "wizard.step3.all": "मुझे अभी पता नहीं",
   "wizard.step3.all.desc": "सभी उपलब्ध विशेषज्ञ देखें",
   "wizard.search.country": "देश खोजें...",
+  "wizard.search.language": "भाषा खोजें...",
   "wizard.popular.countries": "लोकप्रिय देश",
+  "wizard.popular.languages": "लोकप्रिय भाषाएं",
   "wizard.show.all.countries": "सभी देश दिखाएं",
+  "wizard.show.all.languages": "सभी भाषाएं दिखाएं",
   "wizard.no.results": "कोई परिणाम नहीं मिला",
   "wizard.seeResults": "परिणाम देखें",
   "wizard.modifyFilters": "फ़िल्टर बदलें"
