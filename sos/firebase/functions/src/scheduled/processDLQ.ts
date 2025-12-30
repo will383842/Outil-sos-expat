@@ -81,7 +81,9 @@ const webhookHandlers: Record<string, WebhookHandler> = {
  */
 export const processWebhookDLQ = onSchedule(
   {
-    schedule: 'every 5 minutes',
+    // OPTIMIZED: Changed from 5 minutes to 30 minutes to reduce invocations by 83%
+    // Previous: 288 invocations/day → Now: 48 invocations/day
+    schedule: 'every 30 minutes',
     region: 'europe-west1',
     memory: '256MiB',
     timeoutSeconds: 300

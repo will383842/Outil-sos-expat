@@ -132,9 +132,14 @@ export const sitemapBlog = onRequest(
       console.log('✅ Firestore initialisé');
 
       // ✅ CORRIGÉ: Utilise help_articles au lieu de blog_posts
-      // Récupère tous les articles puis filtre côté serveur (plus robuste)
+      // OPTIMIZED: Added limit(1000) and where clause to avoid full collection scan
+      // Previous: Read ALL documents → Now: Read max 1000 published articles
       console.log('📥 Récupération des help_articles...');
-      const snapshot = await db.collection('help_articles').get();
+      const snapshot = await db.collection('help_articles')
+        .where('isPublished', '==', true)
+        .orderBy('updatedAt', 'desc')
+        .limit(1000)
+        .get();
       console.log(`📄 ${snapshot.docs.length} documents trouvés`);
 
       // Filtre les articles publiés (isPublished peut ne pas exister sur tous les docs)

@@ -452,11 +452,13 @@ async function checkErrorRate(): Promise<void> {
 // ============================================================================
 
 /**
- * Job de monitoring exécuté toutes les 15 minutes
+ * Job de monitoring exécuté toutes les heures
+ * OPTIMIZED: Changed from 15 minutes to 1 hour to reduce invocations by 75%
+ * Previous: 96 invocations/day → Now: 24 invocations/day
  */
 export const runSystemHealthCheck = onSchedule(
   {
-    schedule: 'every 15 minutes',
+    schedule: 'every 1 hours',
     region: 'europe-west1',
     memory: '256MiB',
     timeoutSeconds: 120

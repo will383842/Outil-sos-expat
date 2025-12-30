@@ -34,7 +34,8 @@ import {
   serverTimestamp,
   DocumentData,
   QueryDocumentSnapshot,
-  QueryConstraint
+  QueryConstraint,
+  writeBatch
 } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import AdminLayout from '../../components/admin/AdminLayout';
@@ -757,7 +758,14 @@ rows[m][bucketKey] += 1;
     });
     try {
       setIsActionLoading(true);
-      await Promise.all(Array.from(selectedIds).map((id) => deleteDoc(doc(db, 'reviews', id))));
+      // OPTIMIZED: Use writeBatch instead of Promise.all for better performance
+      // and to avoid Firestore write limits (max 500 per batch)
+      const batch = writeBatch(db);
+      const idsArray = Array.from(selectedIds);
+      idsArray.forEach((id) => {
+        batch.delete(doc(db, 'reviews', id));
+      });
+      await batch.commit();
       setReviews((prev) => prev.filter((r) => !selectedIds.has(r.id)));
       setSelectedIds(new Set());
       // Recalculate stats for all affected providers

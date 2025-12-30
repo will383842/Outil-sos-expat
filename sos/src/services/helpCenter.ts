@@ -12,6 +12,7 @@ import {
   DocumentData,
   updateDoc,
   where,
+  writeBatch,
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 
@@ -231,20 +232,48 @@ export const deleteHelpArticle = (id: string): Promise<void> =>
 /**
  * Delete ALL categories and ALL articles from the Help Center
  * Use with caution - this cannot be undone!
+ * OPTIMIZED: Uses writeBatch instead of Promise.all for better performance
+ * and to handle large collections (batches of 450 to stay under 500 limit)
  */
 export const deleteAllHelpCenterData = async (): Promise<{
   categoriesDeleted: number;
   articlesDeleted: number;
 }> => {
-  // Delete all categories
+  // Delete all categories using batch
   const categoriesSnap = await getDocs(collection(db, "help_categories"));
-  const categoryDeletePromises = categoriesSnap.docs.map(d => deleteDoc(d.ref));
-  await Promise.all(categoryDeletePromises);
+  let batch = writeBatch(db);
+  let batchCount = 0;
 
-  // Delete all articles
+  for (const docSnap of categoriesSnap.docs) {
+    batch.delete(docSnap.ref);
+    batchCount++;
+    if (batchCount >= 450) {
+      await batch.commit();
+      batch = writeBatch(db);
+      batchCount = 0;
+    }
+  }
+  if (batchCount > 0) {
+    await batch.commit();
+  }
+
+  // Delete all articles using batch
   const articlesSnap = await getDocs(collection(db, "help_articles"));
-  const articleDeletePromises = articlesSnap.docs.map(d => deleteDoc(d.ref));
-  await Promise.all(articleDeletePromises);
+  batch = writeBatch(db);
+  batchCount = 0;
+
+  for (const docSnap of articlesSnap.docs) {
+    batch.delete(docSnap.ref);
+    batchCount++;
+    if (batchCount >= 450) {
+      await batch.commit();
+      batch = writeBatch(db);
+      batchCount = 0;
+    }
+  }
+  if (batchCount > 0) {
+    await batch.commit();
+  }
 
   return {
     categoriesDeleted: categoriesSnap.size,

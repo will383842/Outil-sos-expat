@@ -18,6 +18,7 @@ import {
   QueryConstraint,
   Query as FSQuery,
   CollectionReference,
+  writeBatch,
 } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import {
@@ -1130,22 +1131,25 @@ const AdminClients: React.FC = () => {
                 if (reason.length < 3) return;
 
                 try {
+                  // OPTIMIZED: Use writeBatch instead of Promise.all for better performance
+                  const batch = writeBatch(db);
                   if (reasonOpen?.type === "suspend") {
                     // suspendre en lot
-                    await Promise.all(
-                      ids.map((id: string) =>
-                        updateDoc(doc(db, "users", id), {
-                          status: "suspended",
-                          suspendedReason: reason,
-                          suspendedAt: new Date(),
-                          updatedAt: new Date(),
-                        })
-                      )
-                    );
+                    ids.forEach((id: string) => {
+                      batch.update(doc(db, "users", id), {
+                        status: "suspended",
+                        suspendedReason: reason,
+                        suspendedAt: new Date(),
+                        updatedAt: new Date(),
+                      });
+                    });
                   } else {
                     // supprimer en lot (hard delete)
-                    await Promise.all(ids.map((id: string) => deleteDoc(doc(db, "users", id))));
+                    ids.forEach((id: string) => {
+                      batch.delete(doc(db, "users", id));
+                    });
                   }
+                  await batch.commit();
                   setReasonOpen(null);
                   setReasonText("");
                   setSelectedClients([]);

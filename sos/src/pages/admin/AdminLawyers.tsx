@@ -17,6 +17,7 @@ import {
   QueryConstraint,
   Query as FSQuery,
   CollectionReference,
+  writeBatch,
 } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import {
@@ -1775,41 +1776,40 @@ const AdminLawyers: React.FC = () => {
                 if (reasonOpen?.type !== "kycRequest" && msg.length < 3) return;
 
                 try {
+                  // OPTIMIZED: Use writeBatch instead of Promise.all for better performance
+                  const batch = writeBatch(db);
                   if (reasonOpen?.type === "suspend") {
-                    await Promise.all(
-                      ids.map((id) =>
-                        updateDoc(doc(db, "users", id), {
-                          status: "suspended",
-                          suspendedReason: msg,
-                          suspendedAt: new Date(),
-                          updatedAt: new Date(),
-                        })
-                      )
-                    );
+                    ids.forEach((id) => {
+                      batch.update(doc(db, "users", id), {
+                        status: "suspended",
+                        suspendedReason: msg,
+                        suspendedAt: new Date(),
+                        updatedAt: new Date(),
+                      });
+                    });
                   } else if (reasonOpen?.type === "delete") {
-                    await Promise.all(ids.map((id) => deleteDoc(doc(db, "users", id))));
+                    ids.forEach((id) => {
+                      batch.delete(doc(db, "users", id));
+                    });
                   } else if (reasonOpen?.type === "reject") {
-                    await Promise.all(
-                      ids.map((id) =>
-                        updateDoc(doc(db, "users", id), {
-                          validationStatus: "rejected",
-                          isValidated: false,
-                          validationReason: msg,
-                          updatedAt: new Date(),
-                        })
-                      )
-                    );
+                    ids.forEach((id) => {
+                      batch.update(doc(db, "users", id), {
+                        validationStatus: "rejected",
+                        isValidated: false,
+                        validationReason: msg,
+                        updatedAt: new Date(),
+                      });
+                    });
                   } else if (reasonOpen?.type === "kycRequest") {
-                    await Promise.all(
-                      ids.map((id) =>
-                        updateDoc(doc(db, "users", id), {
-                          kycStatus: "requested",
-                          kycMessage: msg || null,
-                          updatedAt: new Date(),
-                        })
-                      )
-                    );
+                    ids.forEach((id) => {
+                      batch.update(doc(db, "users", id), {
+                        kycStatus: "requested",
+                        kycMessage: msg || null,
+                        updatedAt: new Date(),
+                      });
+                    });
                   }
+                  await batch.commit();
 
                   setReasonOpen(null);
                   setReasonText("");
