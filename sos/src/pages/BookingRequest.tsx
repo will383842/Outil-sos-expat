@@ -32,7 +32,8 @@ import { useAuth } from "../contexts/AuthContext";
 import { useApp } from "../contexts/AppContext";
 
 import { logLanguageMismatch } from "../services/analytics";
-import languages, { getLanguageLabel, type Language as AppLanguage } from "../data/languages-spoken";
+import languages, { getLanguageLabel, languagesData, type Language as AppLanguage } from "../data/languages-spoken";
+import { countriesData } from "../data/countries";
 
 import { db } from "../config/firebase";
 import { doc, onSnapshot, getDoc } from "firebase/firestore";
@@ -1515,6 +1516,63 @@ const BookingRequest: React.FC = () => {
       if (unsub) unsub();
     };
   }, [providerId, readProviderFromSession]);
+
+  // Pre-fill form with wizard data from sessionStorage
+  useEffect(() => {
+    try {
+      const wizardData = sessionStorage.getItem('wizardFilters');
+      if (!wizardData) return;
+
+      const { country, languages: wizardLanguages } = JSON.parse(wizardData) as {
+        country: string;
+        languages: string[];
+        type: string;
+      };
+
+      // Map country code to country name in English
+      if (country) {
+        const countryData = countriesData.find(
+          (c) => c.code.toLowerCase() === country.toLowerCase()
+        );
+        if (countryData) {
+          // Check if the country name exists in the countries array
+          const countryName = countryData.nameEn;
+          if (countries.includes(countryName)) {
+            setValue('currentCountry', countryName);
+          }
+        }
+      }
+
+      // Map language codes to BookingLanguage objects
+      if (wizardLanguages && wizardLanguages.length > 0) {
+        const selectedLangs: BookingLanguage[] = wizardLanguages
+          .map((code) => {
+            const langData = languagesData.find(
+              (l) => l.code.toLowerCase() === code.toLowerCase()
+            );
+            if (langData) {
+              return {
+                code: langData.code,
+                name: langData.name,
+                nativeName: langData.nativeName,
+              } as BookingLanguage;
+            }
+            return null;
+          })
+          .filter((v): v is BookingLanguage => Boolean(v));
+
+        if (selectedLangs.length > 0) {
+          setLanguagesSpoken(selectedLangs);
+          setValue('clientLanguages', selectedLangs.map((l) => l.code));
+        }
+      }
+
+      // Clear wizard data after use (optional - comment out to keep it)
+      // sessionStorage.removeItem('wizardFilters');
+    } catch (e) {
+      console.warn('Failed to read wizard filters from sessionStorage', e);
+    }
+  }, [setValue]);
 
   // Matching live des langues
   useEffect(() => {

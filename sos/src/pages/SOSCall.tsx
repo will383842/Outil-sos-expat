@@ -1932,6 +1932,17 @@ const SOSCall: React.FC = () => {
     setSelectedType(filters.type);
     setShowWizard(false);
     setWizardCompleted(true);
+
+    // Store wizard data in sessionStorage for pre-filling booking form
+    try {
+      sessionStorage.setItem('wizardFilters', JSON.stringify({
+        country: filters.country,
+        languages: filters.languages,
+        type: filters.type
+      }));
+    } catch (e) {
+      console.warn('Failed to store wizard filters in sessionStorage', e);
+    }
   }, []);
 
   // Load FAQs from Firestore
