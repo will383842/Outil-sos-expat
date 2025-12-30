@@ -229,6 +229,73 @@
 </head>
 
 <body>
+  <!-- 🌍 LOCALE REDIRECT - Must be FIRST before anything else -->
+  <script>
+    (function() {
+      // Only redirect if we're on root path without locale
+      if (window.location.pathname !== '/' && window.location.pathname !== '') return;
+
+      // Country -> Locale mapping (timezone-based detection)
+      var TZ_TO_LOCALE = {
+        'Europe/Paris': 'fr-fr', 'Europe/Brussels': 'fr-be', 'Europe/Luxembourg': 'fr-lu',
+        'Africa/Algiers': 'fr-dz', 'Africa/Casablanca': 'fr-ma', 'Africa/Tunis': 'fr-tn',
+        'Africa/Dakar': 'fr-sn', 'Africa/Abidjan': 'fr-ci', 'Africa/Douala': 'fr-cm',
+        'Europe/Madrid': 'es-es', 'America/Mexico_City': 'es-mx', 'America/Argentina/Buenos_Aires': 'es-ar',
+        'America/Bogota': 'es-co', 'America/Santiago': 'es-cl', 'America/Lima': 'es-pe',
+        'America/New_York': 'en-us', 'America/Los_Angeles': 'en-us', 'America/Chicago': 'en-us',
+        'Europe/London': 'en-gb', 'Australia/Sydney': 'en-au', 'Pacific/Auckland': 'en-nz',
+        'Europe/Berlin': 'de-de', 'Europe/Vienna': 'de-at', 'Europe/Zurich': 'fr-ch',
+        'Europe/Moscow': 'ru-ru', 'Europe/Minsk': 'ru-by', 'Asia/Almaty': 'ru-kz',
+        'America/Sao_Paulo': 'pt-br', 'Europe/Lisbon': 'pt-pt',
+        'Asia/Shanghai': 'ch-cn', 'Asia/Hong_Kong': 'ch-hk', 'Asia/Taipei': 'ch-tw',
+        'Asia/Kolkata': 'hi-in', 'Asia/Kathmandu': 'hi-np',
+        'Asia/Riyadh': 'ar-sa', 'Asia/Dubai': 'ar-ae', 'Africa/Cairo': 'ar-eg'
+      };
+
+      // Browser lang -> Locale fallback
+      var LANG_TO_LOCALE = {
+        'fr': 'fr-fr', 'en': 'en-us', 'es': 'es-es', 'de': 'de-de',
+        'ru': 'ru-ru', 'pt': 'pt-pt', 'zh': 'ch-cn', 'hi': 'hi-in', 'ar': 'ar-sa'
+      };
+
+      var locale = 'fr-fr'; // Default
+
+      // 1. Check saved preference
+      try {
+        var saved = localStorage.getItem('sos_language');
+        if (saved && LANG_TO_LOCALE[saved]) {
+          // Convert saved language (e.g., 'en') to locale (e.g., 'en-us')
+          locale = LANG_TO_LOCALE[saved];
+        }
+      } catch(e) {}
+
+      // 2. If no saved preference, detect from timezone
+      if (!localStorage.getItem('sos_language')) {
+        try {
+          var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+          if (tz && TZ_TO_LOCALE[tz]) {
+            locale = TZ_TO_LOCALE[tz];
+          } else {
+            // 3. Fallback to browser language
+            var browserLang = (navigator.language || navigator.userLanguage || 'fr').substring(0, 2).toLowerCase();
+            if (LANG_TO_LOCALE[browserLang]) {
+              locale = LANG_TO_LOCALE[browserLang];
+            }
+          }
+        } catch(e) {
+          // Fallback to browser language on error
+          var browserLang = (navigator.language || 'fr').substring(0, 2).toLowerCase();
+          if (LANG_TO_LOCALE[browserLang]) {
+            locale = LANG_TO_LOCALE[browserLang];
+          }
+        }
+      }
+
+      // Redirect to locale
+      window.location.replace('/' + locale);
+    })();
+  </script>
+
   <!-- 🔒 GTM noscript fallback - for users without JavaScript -->
   <noscript>
     <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-XXXXXXX"
