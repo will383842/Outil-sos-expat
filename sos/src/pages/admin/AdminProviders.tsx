@@ -874,7 +874,7 @@ const AdminProviders: React.FC = () => {
                               <img
                                 className="h-10 w-10 rounded-full object-cover"
                                 src={provider.profilePhoto}
-                                alt=""
+                                alt={`Photo de profil de ${provider.displayName || provider.firstName || 'prestataire'}`}
                               />
                             ) : (
                               <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">

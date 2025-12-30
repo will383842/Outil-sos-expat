@@ -35,6 +35,7 @@ import {
   detectUserCurrency,
   getEffectivePrice,
 } from "@/services/pricingService";
+import { useAggregateRatingWithDefault } from "../hooks/useAggregateRating";
 import { FormattedMessage, useIntl } from "react-intl";
 import { useApp } from "../contexts/AppContext";
 import { formatCurrency } from "../utils/localeFormatters";
@@ -407,6 +408,9 @@ const OptimizedHomePage: React.FC = () => {
   const intl = useIntl();
   const { language } = useApp();
 
+  // ======= Aggregate Rating for Google Stars =======
+  const aggregateRating = useAggregateRatingWithDefault();
+
   // ======= URL Construction =======
   const currentPath = "/";
   const canonicalUrl = `${SEO_CONSTANTS.BASE_URL}/${language}${currentPath === "/" ? "" : currentPath}`;
@@ -471,7 +475,16 @@ const OptimizedHomePage: React.FC = () => {
       "Relocation",
       "International law",
     ],
-  }), [intl]);
+    // CRITICAL: AggregateRating for Google Rich Snippets (Stars)
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": aggregateRating.ratingValue.toFixed(1),
+      "ratingCount": aggregateRating.ratingCount,
+      "reviewCount": aggregateRating.reviewCount,
+      "bestRating": "5",
+      "worstRating": "1"
+    },
+  }), [intl, aggregateRating]);
 
   const jsonLdWebSite = useMemo(() => ({
     "@context": "https://schema.org",
@@ -524,7 +537,34 @@ const OptimizedHomePage: React.FC = () => {
         },
       ],
     },
-  }), [intl]);
+    // CRITICAL: AggregateRating for Google Rich Snippets (Stars) on Service
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": aggregateRating.ratingValue.toFixed(1),
+      "ratingCount": aggregateRating.ratingCount,
+      "reviewCount": aggregateRating.reviewCount,
+      "bestRating": "5",
+      "worstRating": "1"
+    },
+    // Include recent reviews for better SEO
+    "review": aggregateRating.recentReviews.slice(0, 5).map((review) => ({
+      "@type": "Review",
+      "author": {
+        "@type": "Person",
+        "name": review.clientName
+      },
+      "reviewRating": {
+        "@type": "Rating",
+        "ratingValue": review.rating,
+        "bestRating": "5",
+        "worstRating": "1"
+      },
+      "reviewBody": review.comment,
+      "datePublished": review.createdAt instanceof Date
+        ? review.createdAt.toISOString().split('T')[0]
+        : new Date().toISOString().split('T')[0]
+    }))
+  }), [intl, aggregateRating]);
 
   const jsonLdFAQ = useMemo(() => ({
     "@context": "https://schema.org",

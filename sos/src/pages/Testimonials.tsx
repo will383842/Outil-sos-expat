@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import {
   Star,
   MapPin,
@@ -21,6 +22,7 @@ import { logAnalyticsEvent, getAllReviews } from "../utils/firestore";
 import { getDateLocale } from "../utils/formatters";
 import { FormattedMessage, useIntl } from "react-intl";
 import { createMockReviewsData } from "@/constants/testimonials";
+import { useAggregateRatingWithDefault } from "../hooks/useAggregateRating";
 
 // =================== TYPES ===================
 export interface Review {
@@ -279,12 +281,18 @@ const createCountrySlug = (country: string): string => {
 
 
 
+// =================== SEO CONSTANTS ===================
+const SEO_BASE_URL = "https://sos-expat.com";
+
 // =================== MAIN COMPONENT ===================
 const Testimonials: React.FC = () => {
   const intl = useIntl();
   const { language } = useApp();
   const navigate = useNavigate();
-  
+
+  // ✅ Aggregate Rating for Google Rich Snippets
+  const aggregateRating = useAggregateRatingWithDefault();
+
   // ✅ Check if current language is RTL
   const isRTL = language === 'ar';
 
@@ -352,6 +360,61 @@ const Testimonials: React.FC = () => {
   const totalPages = Math.ceil(
     filteredTestimonials.length / TESTIMONIALS_PER_PAGE
   );
+
+  // =================== SEO SCHEMA FOR GOOGLE RICH SNIPPETS ===================
+  const jsonLdReviewsPage = useMemo(() => ({
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": `${SEO_BASE_URL}/#organization`,
+    "name": "SOS Expat & Travelers",
+    "url": SEO_BASE_URL,
+    "logo": `${SEO_BASE_URL}/sos-logo.webp`,
+    "description": intl.formatMessage({ id: "testy.hero.subtitle" }),
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": aggregateRating.ratingValue.toFixed(1),
+      "ratingCount": aggregateRating.ratingCount,
+      "reviewCount": aggregateRating.reviewCount,
+      "bestRating": "5",
+      "worstRating": "1"
+    },
+    "review": aggregateRating.recentReviews.slice(0, 10).map((review) => ({
+      "@type": "Review",
+      "author": {
+        "@type": "Person",
+        "name": review.clientName
+      },
+      "reviewRating": {
+        "@type": "Rating",
+        "ratingValue": review.rating,
+        "bestRating": "5",
+        "worstRating": "1"
+      },
+      "reviewBody": review.comment,
+      "datePublished": review.createdAt instanceof Date
+        ? review.createdAt.toISOString().split('T')[0]
+        : new Date().toISOString().split('T')[0]
+    }))
+  }), [intl, aggregateRating]);
+
+  const jsonLdBreadcrumb = useMemo(() => ({
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": intl.formatMessage({ id: "breadcrumb.home" }),
+        "item": `${SEO_BASE_URL}/${language}`
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": intl.formatMessage({ id: "testy.hero.titleFirst" }) + " " + intl.formatMessage({ id: "testy.hero.titleSecond" }),
+        "item": `${SEO_BASE_URL}/${language}/testimonials`
+      }
+    ]
+  }), [intl, language]);
 
   // Load testimonials from Firestore with mock fallback
   const loadTestimonials = useCallback(async () => {
@@ -589,6 +652,34 @@ const Testimonials: React.FC = () => {
 
   return (
     <Layout>
+      {/* =================== SEO HEAD FOR GOOGLE RICH SNIPPETS =================== */}
+      <Helmet>
+        <title>{intl.formatMessage({ id: "testy.hero.titleFirst" })} {intl.formatMessage({ id: "testy.hero.titleSecond" })} | SOS Expat</title>
+        <meta name="description" content={intl.formatMessage({ id: "testy.hero.subtitle" })} />
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+        <link rel="canonical" href={`${SEO_BASE_URL}/${language}/testimonials`} />
+
+        {/* Open Graph */}
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={`${intl.formatMessage({ id: "testy.hero.titleFirst" })} ${intl.formatMessage({ id: "testy.hero.titleSecond" })} | SOS Expat`} />
+        <meta property="og:description" content={intl.formatMessage({ id: "testy.hero.subtitle" })} />
+        <meta property="og:url" content={`${SEO_BASE_URL}/${language}/testimonials`} />
+        <meta property="og:image" content={`${SEO_BASE_URL}/og-image.jpg`} />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${intl.formatMessage({ id: "testy.hero.titleFirst" })} ${intl.formatMessage({ id: "testy.hero.titleSecond" })} | SOS Expat`} />
+        <meta name="twitter:description" content={intl.formatMessage({ id: "testy.hero.subtitle" })} />
+
+        {/* JSON-LD Schema for Google Rich Snippets (Stars) */}
+        <script type="application/ld+json">
+          {JSON.stringify(jsonLdReviewsPage)}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify(jsonLdBreadcrumb)}
+        </script>
+      </Helmet>
+
       <div
         className="min-h-screen bg-gray-50"
         key={`testimonials-${currentLanguage}`}

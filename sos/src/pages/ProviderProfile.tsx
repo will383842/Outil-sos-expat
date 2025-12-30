@@ -591,7 +591,7 @@ const ProviderProfile: React.FC = () => {
   } = params;
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { language } = useApp();
 
   const detectedLang = useMemo(
@@ -1464,6 +1464,13 @@ const ProviderProfile: React.FC = () => {
 
   const handleBookCall = useCallback(() => {
     if (!provider) return;
+
+    // Si l'auth est encore en cours de chargement, on attend
+    if (authLoading) {
+      console.log("Auth still loading, waiting...");
+      return;
+    }
+
     const gtag = (window as Window & { gtag?: (...args: unknown[]) => void })
       .gtag;
     if (typeof window !== "undefined" && typeof gtag === "function") {
@@ -1510,7 +1517,7 @@ const ProviderProfile: React.FC = () => {
       // ✅ Afficher le wizard d'auth au lieu de rediriger vers /login
       setShowAuthWizard(true);
     }
-  }, [provider, user, navigate, onlineStatus.isOnline]);
+  }, [provider, user, authLoading, navigate, onlineStatus.isOnline]);
 
   // Callback quand l'authentification réussit via le wizard
   const handleAuthSuccess = useCallback(() => {
@@ -2491,29 +2498,40 @@ const ProviderProfile: React.FC = () => {
                     {/* CTA Button - Desktop only (mobile has fixed bottom) */}
                     <button
                       onClick={handleBookCall}
-                      disabled={!onlineStatus.isOnline || isOnCall}
+                      disabled={!onlineStatus.isOnline || isOnCall || authLoading}
                       className={`hidden lg:flex w-full py-4 px-4 rounded-2xl font-bold text-lg transition-all duration-300 items-center justify-center gap-3 min-h-[56px] focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                        onlineStatus.isOnline && !isOnCall
+                        onlineStatus.isOnline && !isOnCall && !authLoading
                           ? "bg-gradient-to-r from-green-600 to-green-500 text-white hover:from-green-500 hover:to-green-400 hover:scale-[1.02] shadow-lg shadow-green-500/30 focus:ring-green-500"
                           : "bg-gray-200 text-gray-500 cursor-not-allowed"
                       }`}
                       aria-label={
-                        isOnCall
-                          ? intl.formatMessage({ id: "providerProfile.alreadyOnCall" })
-                          : onlineStatus.isOnline
-                            ? intl.formatMessage({ id: "providerProfile.bookNow" })
-                            : intl.formatMessage({ id: "providerProfile.unavailable" })
+                        authLoading
+                          ? intl.formatMessage({ id: "providerProfile.loading", defaultMessage: "Chargement..." })
+                          : isOnCall
+                            ? intl.formatMessage({ id: "providerProfile.alreadyOnCall" })
+                            : onlineStatus.isOnline
+                              ? intl.formatMessage({ id: "providerProfile.bookNow" })
+                              : intl.formatMessage({ id: "providerProfile.unavailable" })
                       }
                     >
-                      <Phone size={22} aria-hidden="true" />
-                      <span>
-                        {isOnCall
-                          ? intl.formatMessage({ id: "providerProfile.alreadyOnCall" })
-                          : onlineStatus.isOnline
-                            ? intl.formatMessage({ id: "providerProfile.bookNow" })
-                            : intl.formatMessage({ id: "providerProfile.unavailable" })}
-                      </span>
-                      {onlineStatus.isOnline && !isOnCall && (
+                      {authLoading ? (
+                        <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-400 border-t-transparent" />
+                          <span><FormattedMessage id="providerProfile.loading" defaultMessage="Chargement..." /></span>
+                        </>
+                      ) : (
+                        <>
+                          <Phone size={22} aria-hidden="true" />
+                          <span>
+                            {isOnCall
+                              ? intl.formatMessage({ id: "providerProfile.alreadyOnCall" })
+                              : onlineStatus.isOnline
+                                ? intl.formatMessage({ id: "providerProfile.bookNow" })
+                                : intl.formatMessage({ id: "providerProfile.unavailable" })}
+                          </span>
+                        </>
+                      )}
+                      {onlineStatus.isOnline && !isOnCall && !authLoading && (
                         <div className="flex gap-1" aria-hidden="true">
                           <div className="w-2 h-2 rounded-full animate-pulse bg-white/80"></div>
                           <div className="w-2 h-2 rounded-full animate-pulse delay-75 bg-white/80"></div>
@@ -3119,24 +3137,31 @@ const ProviderProfile: React.FC = () => {
           {/* Bouton CTA */}
           <button
             onClick={handleBookCall}
-            disabled={!onlineStatus.isOnline || isOnCall}
+            disabled={!onlineStatus.isOnline || isOnCall || authLoading}
             className={`w-full py-3.5 rounded-xl font-bold text-base transition-all flex items-center justify-center gap-2 ${
-              onlineStatus.isOnline && !isOnCall
+              onlineStatus.isOnline && !isOnCall && !authLoading
                 ? "bg-gradient-to-r from-green-600 to-green-500 text-white shadow-lg shadow-green-500/30 active:scale-[0.98]"
                 : "bg-gray-200 text-gray-500 cursor-not-allowed"
             }`}
             aria-label={
-              onlineStatus.isOnline && !isOnCall
-                ? intl.formatMessage(
-                    { id: "providerProfile.callAriaLabel", defaultMessage: "Appeler {name}" },
-                    { name: formatShortName(provider) }
-                  )
-                : isOnCall
-                  ? intl.formatMessage({ id: "providerProfile.alreadyOnCall" })
-                  : intl.formatMessage({ id: "providerProfile.unavailable" })
+              authLoading
+                ? intl.formatMessage({ id: "providerProfile.loading", defaultMessage: "Chargement..." })
+                : onlineStatus.isOnline && !isOnCall
+                  ? intl.formatMessage(
+                      { id: "providerProfile.callAriaLabel", defaultMessage: "Appeler {name}" },
+                      { name: formatShortName(provider) }
+                    )
+                  : isOnCall
+                    ? intl.formatMessage({ id: "providerProfile.alreadyOnCall" })
+                    : intl.formatMessage({ id: "providerProfile.unavailable" })
             }
           >
-            {onlineStatus.isOnline && !isOnCall ? (
+            {authLoading ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-400 border-t-transparent" />
+                <span><FormattedMessage id="providerProfile.loading" defaultMessage="Chargement..." /></span>
+              </>
+            ) : onlineStatus.isOnline && !isOnCall ? (
               <>
                 <Phone size={20} />
                 <span><FormattedMessage id="providerProfile.callButton" defaultMessage="Appeler maintenant" /></span>

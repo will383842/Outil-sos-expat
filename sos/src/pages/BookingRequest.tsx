@@ -1382,7 +1382,6 @@ const BookingRequest: React.FC = () => {
   const [languagesSpoken, setLanguagesSpoken] = useState<BookingLanguage[]>([]);
   const [hasLanguageMatchRealTime, setHasLanguageMatchRealTime] =
     useState(true);
-  const [showPreview, setShowPreview] = useState(false);
   const [formError, setFormError] = useState("");
 
   // Refs pour scroll ciblé (en cas d'erreur globale)
@@ -1965,7 +1964,7 @@ const BookingRequest: React.FC = () => {
   // ===== RENDER =====
   if (providerLoading) {
     return (
-      <Layout>
+      <Layout showFooter={false}>
         <div className="min-h-screen flex items-center justify-center bg-white">
           <div className="flex items-center space-x-3 text-gray-700">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-700"></div>
@@ -1981,7 +1980,7 @@ const BookingRequest: React.FC = () => {
     Boolean(errors[name]);
 
   return (
-    <Layout>
+    <Layout showFooter={false}>
       {/* SEO minimal */}
       <script
         type="application/ld+json"
@@ -1995,7 +1994,7 @@ const BookingRequest: React.FC = () => {
         }}
       />
 
-      <div className="min-h-screen bg-[linear-gradient(180deg,#fff7f7_0%,#ffffff_35%,#fff5f8_100%)] py-3 sm:py-8 pb-safe">
+      <div className="min-h-screen bg-[linear-gradient(180deg,#fff7f7_0%,#ffffff_35%,#fff5f8_100%)] py-3 sm:py-8 pb-safe overflow-x-hidden w-full max-w-full">
         {/* Hero / Title - Mobile optimized */}
         <header className="px-3 sm:px-4 max-w-3xl mx-auto mb-3 sm:mb-6">
           <div className="flex items-center gap-2 sm:gap-3 text-gray-700 mb-2">
@@ -2148,10 +2147,10 @@ const BookingRequest: React.FC = () => {
           </div>
         </div>
 
-        {/* Form + Preview - Mobile optimized */}
-        <div className="max-w-3xl mx-auto px-3 sm:px-4">
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-            <form onSubmit={handleSubmit(onSubmit)} noValidate className="touch-manipulation">
+        {/* Form - Mobile optimized */}
+        <div className="max-w-3xl mx-auto px-3 sm:px-4 w-full">
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden w-full">
+            <form onSubmit={handleSubmit(onSubmit)} noValidate className="touch-manipulation w-full">
               {/* Section Perso */}
               <section className="p-4 sm:p-6">
                 <SectionHeader
@@ -2854,42 +2853,6 @@ const BookingRequest: React.FC = () => {
                   </div>
                 </div>
               )}
-
-              {/* Aperçu rapide */}
-              <div className="px-4 sm:px-6">
-                <button
-                  type="button"
-                  onClick={() => setShowPreview((v) => !v)}
-                  className="inline-flex items-center px-3 py-2.5 text-sm font-semibold rounded-xl border border-gray-300 hover:bg-gray-50 active:scale-[0.98] transition-transform touch-manipulation"
-                >
-                  {/* {showPreview
-                    ? "Masquer l’aperçu"
-                    : "Afficher l’aperçu rapide"} */}
-                  {showPreview ? (
-                    <FormattedMessage id="preview.hide" />
-                  ) : (
-                    <FormattedMessage id="preview.show" />
-                  )}
-                </button>
-
-                {showPreview && (
-                  <div className="mt-3">
-                    <PreviewCard
-                      title={watch("title")}
-                      country={
-                        watch("currentCountry") === "Autre"
-                          ? watch("autrePays") || ""
-                          : watch("currentCountry") || ""
-                      }
-                      langs={watch("clientLanguages") || []}
-                      phone={watch("clientPhone")}
-                      priceLabel={`${displayEUR}€ / $${displayUSD}`}
-                      duration={displayDuration}
-                      langPack={t}
-                    />
-                  </div>
-                )}
-              </div>
 
               {/* CTA - Mobile optimized with sticky behavior */}
               <div className="p-4 sm:p-6 pb-6 sm:pb-6">

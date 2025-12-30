@@ -58,11 +58,11 @@ const LANGUAGE_FLAG_MAP: Record<string, string> = {
 };
 
 // Country flag component
-const CountryFlag: React.FC<{ code: string }> = ({ code }) => {
+const CountryFlag: React.FC<{ code: string; name?: string }> = ({ code, name }) => {
   return (
     <img
       src={`https://flagcdn.com/w40/${code.toLowerCase()}.png`}
-      alt=""
+      alt={name ? `Drapeau ${name}` : `Flag of ${code.toUpperCase()}`}
       className="w-6 h-4 object-cover rounded-sm flex-shrink-0"
       loading="lazy"
     />
