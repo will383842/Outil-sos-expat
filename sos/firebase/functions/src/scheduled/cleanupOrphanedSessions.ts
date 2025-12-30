@@ -26,8 +26,12 @@ const THRESHOLDS = {
 
 export const cleanupOrphanedSessions = scheduler.onSchedule(
   {
-    schedule: 'every 30 minutes',
+    // OPTIMIZED: Changed from 30 minutes to 1 hour to reduce invocations by 50%
+    // Previous: 48 invocations/day → Now: 24 invocations/day
+    schedule: 'every 1 hours',
     timeZone: 'Europe/Paris',
+    region: 'europe-west1',
+    memory: '256MiB',
   },
   async () => {
     console.log('🧹 [CLEANUP] Démarrage nettoyage sessions orphelines et prestataires busy...');

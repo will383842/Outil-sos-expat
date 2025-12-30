@@ -216,7 +216,9 @@ export const onLandingPageCreated = onDocumentCreated(
 // ============================================
 export const scheduledSitemapPing = onSchedule(
   {
-    schedule: 'every 1 hours',
+    // OPTIMIZED: Changed from 1 hour to 2 hours to reduce invocations by 50%
+    // Previous: 24 invocations/day → Now: 12 invocations/day
+    schedule: 'every 2 hours',
     region: REGION,
     memory: '256MiB',
     timeoutSeconds: 60,

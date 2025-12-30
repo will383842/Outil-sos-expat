@@ -1087,6 +1087,7 @@
   "cta.subtitle": "انضم إلى أكثر من <strong>15,000 مغترب</strong> يثقون بنا للتقدم في الخارج.",
   "cta.title": "مستعد للمساعدة؟",
   "cta.urgent247": "طوارئ 24/7",
+  "cta.callNow": "اتصل الآن",
   "cta.urgentNow": "طوارئ الآن",
   "currency.eur.code": "EUR",
   "currency.eur.flag": "🇪🇺",
@@ -1491,7 +1492,7 @@
   "helpCenter.title": "مركز المساعدة",
   "helpCenter.userAccount": "حساب المستخدم",
   "hero.cta.ariaLabel": "الإجراءات الرئيسية للصفحة الرئيسية",
-  "hero.description": "خبير محلي يجيبك في أقل من 5 دقائق، في أي مكان على الكوكب... وبلغتك!",
+  "hero.description": "اختر محامياً أو مغترباً مساعداً ليتصل بك في أقل من 5 دقائق، في أي مكان على الكوكب... وبلغتك!",
   "hero.subtitle": "تحتاج مساعدة، حلاً، يد عون فورية؟",
   "hero.title.line1": "SOS",
   "hero.title.line2": "المغتربين والمسافرين",
@@ -1979,6 +1980,7 @@
   "providerProfile.averageRatingAria": "التقييم المتوسط: {rating} نجوم من 5",
   "providerProfile.backToExperts": "العودة إلى الخبراء",
   "providerProfile.basedIn": "مقيم في ",
+  "providerProfile.beTheFirst": "كن أول من يترك تقييماً!",
   "providerProfile.bookNow": "احجز الآن",
   "providerProfile.breadcrumbHome": "الرئيسية",
   "providerProfile.breadcrumbSosCall": "مكالمة SOS",
@@ -2025,6 +2027,8 @@
   "providerProfile.mainNavigation": "التنقل الرئيسي",
   "providerProfile.memberSince": "عضو منذ",
   "providerProfile.minutes": "دقائق",
+  "providerProfile.new": "جديد",
+  "providerProfile.newProviderNoReviews": "هذا المزود جديد ولم يتلق أي تقييمات بعد.",
   "providerProfile.noDescriptionAvailable": "لا يوجد وصف متاح.",
   "providerProfile.noRatingsYet": "لا توجد تقييمات بعد",
   "providerProfile.noSpecialties": "لا توجد تخصصات مدخلة",
@@ -3128,7 +3132,8 @@
   "sosCall.hero.badge": "مكالمة SOS عاجلة",
   "sosCall.hero.badge.ariaLabel": "خدمة SOS اتصال نشطة مع خبراء متاحين",
   "sosCall.hero.expertCount": "{online} خبير متصل من أصل {total} متاح",
-  "sosCall.hero.subtitle": "محامون ومغتربون موثقون • متاحون على مدار الساعة • <strong>+150 دولة</strong>",
+  "sosCall.hero.subtitle": "محامون ومغتربون موثقون • متاحون على مدار الساعة • <strong>+197 دولة</strong>",
+  "sosCall.hero.subtitle.mobile": "اعثر على خبيرك واحصل على مكالمة هاتفية في أقل من 5 دقائق",
   "sosCall.hero.title.highlight": "خبيرك",
   "sosCall.hero.title.prefix": "ابحث عن",
   "sosCall.hero.title.suffix": "الآن",
@@ -4010,5 +4015,23 @@
   "whyChooseDescription": "مصمم ليكون سريعاً، واضحاً وداعماً حقاً: الجوال أولاً.",
   "whyChooseHighlight": "SOS Expats",
   "whyChooseTitle": "لماذا تختار {strong}SOS Expat{/strong}؟",
-  "worldwideLabel": "عالمي"
+  "worldwideLabel": "عالمي",
+  "wizard.step1.title": "في أي بلد تحتاج المساعدة؟",
+  "wizard.step1.subtitle": "اختر البلد الذي تحتاج فيه المساعدة",
+  "wizard.step2.title": "ما اللغة التي تتحدثها؟",
+  "wizard.step2.subtitle": "اختر لغة التواصل",
+  "wizard.step3.title": "من تريد الاتصال به؟",
+  "wizard.step3.subtitle": "اختر نوع الخبير",
+  "wizard.step3.lawyer": "محامٍ",
+  "wizard.step3.lawyer.desc": "استشارة قانونية مهنية",
+  "wizard.step3.expat": "مغترب مساعد",
+  "wizard.step3.expat.desc": "نصائح عملية مبنية على الخبرة",
+  "wizard.step3.all": "لست متأكداً بعد",
+  "wizard.step3.all.desc": "عرض جميع الخبراء المتاحين",
+  "wizard.search.country": "ابحث عن بلد...",
+  "wizard.popular.countries": "البلدان الشائعة",
+  "wizard.show.all.countries": "عرض جميع البلدان",
+  "wizard.no.results": "لم يتم العثور على نتائج",
+  "wizard.seeResults": "عرض النتائج",
+  "wizard.modifyFilters": "تعديل الفلاتر"
 }

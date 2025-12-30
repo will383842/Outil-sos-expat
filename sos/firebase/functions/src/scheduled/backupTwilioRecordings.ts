@@ -355,10 +355,12 @@ export const backupTwilioRecordings = onSchedule(
  */
 export const retryFailedTwilioBackups = onSchedule(
   {
-    schedule: '0 */4 * * *', // Toutes les 4 heures
+    // OPTIMIZED: Changed from every 4 hours to every 6 hours to reduce invocations by 33%
+    // Previous: 6 invocations/day → Now: 4 invocations/day
+    schedule: '0 */6 * * *', // Toutes les 6 heures
     timeZone: 'Europe/Paris',
     region: 'europe-west1',
-    memory: '512MiB',
+    memory: '512MiB', // Keep 512MiB - downloads audio files
     timeoutSeconds: CONFIG.TIMEOUT_SECONDS
   },
   async () => {

@@ -442,7 +442,7 @@ export const scheduledPayPalReminders = onSchedule(
     schedule: "0 10 * * *",
     timeZone: "Europe/Paris",
     region: "europe-west1",
-    memory: "512MiB",
+    memory: "256MiB", // OPTIMIZED: Reduced from 512MiB - simple queries
     timeoutSeconds: 300,
   },
   async () => {

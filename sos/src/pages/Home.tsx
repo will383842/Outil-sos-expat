@@ -1209,22 +1209,23 @@ const OptimizedHomePage: React.FC = () => {
                 className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6"
                 aria-label={intl.formatMessage({ id: "aria.mainActions" })}
               >
+                {/* Bouton principal d'appel - "Appeler maintenant" avec icône téléphone */}
                 <Link
                   to="/sos-appel"
-                  className="group relative overflow-hidden bg-gradient-to-r from-red-600 via-red-500 to-orange-500 hover:from-red-700 hover:via-red-600 hover:to-orange-600 text-white px-12 py-6 rounded-3xl font-black text-xl transition-all duration-300 hover:scale-110 hover:shadow-2xl hover:shadow-red-500/50 flex items-center space-x-4 border-2 border-red-400/50 touch-manipulation"
+                  className="group relative overflow-hidden bg-gradient-to-r from-red-600 via-red-500 to-orange-500 hover:from-red-700 hover:via-red-600 hover:to-orange-600 text-white px-10 sm:px-12 py-5 sm:py-6 rounded-3xl font-black text-lg sm:text-xl transition-all duration-300 hover:scale-110 hover:shadow-2xl hover:shadow-red-500/50 flex items-center justify-center space-x-3 sm:space-x-4 border-2 border-red-400/50 touch-manipulation"
                   aria-label={intl.formatMessage({ id: "aria.urgentCall" })}
                 >
-                  <Phone className="w-8 h-8 group-hover:animate-pulse" aria-hidden="true" />
+                  <Phone className="w-7 h-7 sm:w-8 sm:h-8 animate-pulse" aria-hidden="true" />
                   <span>
-                    <FormattedMessage id="cta.urgent247" />
+                    <FormattedMessage id="cta.callNow" />
                   </span>
-                  <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" aria-hidden="true" />
                   <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/30 via-orange-500/30 to-red-600/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" aria-hidden="true" />
                 </Link>
 
+                {/* Bouton "Voir les experts" - masqué sur mobile, visible sur desktop */}
                 <Link
                   to="/sos-appel"
-                  className="group flex items-center space-x-3 px-10 py-6 rounded-3xl bg-white/10 hover:bg-white/20 text-white border-2 border-white/30 hover:border-white/50 transition-all duration-300 hover:scale-105 backdrop-blur-sm font-bold text-lg touch-manipulation"
+                  className="group hidden md:flex items-center space-x-3 px-10 py-6 rounded-3xl bg-white/10 hover:bg-white/20 text-white border-2 border-white/30 hover:border-white/50 transition-all duration-300 hover:scale-105 backdrop-blur-sm font-bold text-lg touch-manipulation"
                   aria-label={intl.formatMessage({ id: "aria.viewExperts" })}
                 >
                   <Play className="w-6 h-6" aria-hidden="true" />

@@ -36,6 +36,7 @@ import { db } from "../config/firebase";
 import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
 import { useApp } from "../contexts/AppContext";
+import GuidedFilterWizard from "../components/sos-call/GuidedFilterWizard";
 import { FormattedMessage, useIntl } from "react-intl";
 import { getAllProviderTypeKeywords, getProviderTypeKeywords, type SupportedLanguage, detectSearchLanguage } from "../utils/multilingualSearch";
 
@@ -1869,6 +1870,10 @@ const SOSCall: React.FC = () => {
   // Mobile filter bottom sheet
   const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
 
+  // Guided filter wizard (mobile-first)
+  const [showWizard, setShowWizard] = useState<boolean>(false);
+  const [wizardCompleted, setWizardCompleted] = useState<boolean>(false);
+
   // Search state
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
@@ -1897,6 +1902,36 @@ const SOSCall: React.FC = () => {
   const languageOptions = useMemo(() => {
     return getLanguageOptions(language || 'fr');
   }, [language]);
+
+  // Auto-show wizard on mobile (obligatory on every visit)
+  useEffect(() => {
+    const checkMobile = () => {
+      const isMobile = window.innerWidth < 768;
+      if (isMobile && !wizardCompleted) {
+        setShowWizard(true);
+      }
+    };
+
+    // Check on mount
+    checkMobile();
+
+    // Also check on resize
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, [wizardCompleted]);
+
+  // Handle wizard completion
+  const handleWizardComplete = useCallback((filters: {
+    country: string;
+    language: string;
+    type: "all" | "lawyer" | "expat";
+  }) => {
+    setSelectedCountryCode(filters.country);
+    setSelectedLanguageCode(filters.language);
+    setSelectedType(filters.type);
+    setShowWizard(false);
+    setWizardCompleted(true);
+  }, []);
 
   // Load FAQs from Firestore
   useEffect(() => {
@@ -2804,12 +2839,21 @@ const SOSCall: React.FC = () => {
             </h1>
 
             {/* ===== FEATURED SNIPPET (Position 0 Google) ===== */}
-            <p 
-              className="text-sm sm:text-lg md:text-xl text-gray-200 max-w-3xl mx-auto px-4 featured-snippet"
+            {/* Version Mobile - Texte simplifié */}
+            <p
+              className="md:hidden text-sm text-gray-200 max-w-3xl mx-auto px-4 featured-snippet"
               itemProp="description"
               data-featured-snippet="true"
             >
-              <FormattedMessage 
+              <FormattedMessage id="sosCall.hero.subtitle.mobile" />
+            </p>
+            {/* Version Desktop - Texte complet */}
+            <p
+              className="hidden md:block text-lg lg:text-xl text-gray-200 max-w-3xl mx-auto px-4 featured-snippet"
+              itemProp="description"
+              data-featured-snippet="true"
+            >
+              <FormattedMessage
                 id="sosCall.hero.subtitle"
                 values={{
                   strong: (chunks) => <strong className="text-white" itemProp="about">{chunks}</strong>,
@@ -3571,20 +3615,33 @@ const SOSCall: React.FC = () => {
 
       {/* ========================================
           📱 FAB - Floating Action Button (Mobile)
+          Caché quand le wizard est ouvert
       ======================================== */}
-      <button
-        onClick={() => setIsFilterOpen(true)}
-        className="lg:hidden fixed bottom-6 right-4 z-40 w-14 h-14 rounded-2xl bg-gradient-to-r from-red-600 to-orange-600 flex items-center justify-center shadow-lg shadow-red-500/30 active:scale-95 transition-transform"
-        style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
-        aria-label={intl.formatMessage({ id: "sosCall.filters.open" }, { defaultMessage: "Ouvrir les filtres" })}
-      >
-        <SlidersHorizontal className="w-6 h-6 text-white" />
-        {activeFiltersCount > 0 && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-white text-red-600 text-xs font-bold rounded-full flex items-center justify-center">
-            {activeFiltersCount}
-          </span>
-        )}
-      </button>
+      {!showWizard && (
+        <button
+          onClick={() => setIsFilterOpen(true)}
+          className="lg:hidden fixed bottom-6 right-4 z-40 w-14 h-14 rounded-2xl bg-gradient-to-r from-red-600 to-orange-600 flex items-center justify-center shadow-lg shadow-red-500/30 active:scale-95 transition-transform"
+          style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
+          aria-label={intl.formatMessage({ id: "sosCall.filters.open" }, { defaultMessage: "Ouvrir les filtres" })}
+        >
+          <SlidersHorizontal className="w-6 h-6 text-white" />
+          {activeFiltersCount > 0 && (
+            <span className="absolute -top-1 -right-1 w-5 h-5 bg-white text-red-600 text-xs font-bold rounded-full flex items-center justify-center">
+              {activeFiltersCount}
+            </span>
+          )}
+        </button>
+      )}
+
+      {/* ========================================
+          🧙 Guided Filter Wizard (Mobile-First)
+      ======================================== */}
+      <GuidedFilterWizard
+        isOpen={showWizard}
+        onComplete={handleWizardComplete}
+        countryOptions={countryOptions}
+        languageOptions={languageOptions}
+      />
 
       {/* ========================================
           📱 Bottom Sheet Filtres (Mobile)

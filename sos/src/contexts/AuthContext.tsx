@@ -877,11 +877,34 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       console.log('[Auth] Google login successful. Photo URL:', googleUser.photoURL);
     } catch (e) {
       if (!(e instanceof Error && e.message === 'GOOGLE_ROLE_RESTRICTION')) {
-        const msg = 'Connexion Google annulée ou impossible.';
+        // 🔍 Log détaillé pour debug
+        const errorCode = (e as any)?.code || 'unknown';
+        const errorMessage = e instanceof Error ? e.message : String(e);
+        console.error('❌ [Google Auth] Error details:', {
+          code: errorCode,
+          message: errorMessage,
+          fullError: e
+        });
+
+        // Messages d'erreur plus spécifiques
+        let msg = 'Connexion Google annulée ou impossible.';
+        if (errorCode === 'auth/popup-blocked') {
+          msg = 'Popup bloqué. Autorisez les popups pour ce site.';
+        } else if (errorCode === 'auth/popup-closed-by-user') {
+          msg = 'Connexion annulée.';
+        } else if (errorCode === 'auth/unauthorized-domain') {
+          msg = 'Domaine non autorisé. Contactez le support.';
+        } else if (errorCode === 'auth/operation-not-allowed') {
+          msg = 'Connexion Google non activée. Contactez le support.';
+        } else if (errorCode === 'auth/network-request-failed') {
+          msg = 'Erreur réseau. Vérifiez votre connexion.';
+        }
+
         setError(msg);
         setAuthMetrics((m) => ({ ...m, failedLogins: m.failedLogins + 1 }));
         await logAuthEvent('google_login_failed', {
-          error: e instanceof Error ? e.message : String(e),
+          error: errorMessage,
+          errorCode,
           deviceInfo
         });
         throw new Error(msg);

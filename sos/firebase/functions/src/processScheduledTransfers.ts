@@ -34,7 +34,7 @@ export const processScheduledTransfers = onSchedule(
     schedule: "0 2 * * *", // Every day at 2 AM UTC
     region: "europe-west1",
     timeoutSeconds: 540,
-    memory: "512MiB",
+    memory: "256MiB", // OPTIMIZED: Reduced from 512MiB - legacy function with simple queries
   },
   async () => {
     const now = new Date();
