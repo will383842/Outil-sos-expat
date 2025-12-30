@@ -546,9 +546,9 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-gray-950 flex flex-col">
-      {/* Header */}
-      <div className="flex-shrink-0 px-4 pt-6 pb-4">
+    <div className="fixed inset-x-0 top-[56px] lg:top-[80px] bottom-0 z-40 bg-gray-950 flex flex-col">
+      {/* Progress Bar */}
+      <div className="flex-shrink-0 px-4 pt-4 pb-4">
         <StepProgressBar currentStep={step} totalSteps={3} />
       </div>
 
