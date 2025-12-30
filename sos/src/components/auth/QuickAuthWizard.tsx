@@ -4,8 +4,6 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { X, Mail, Lock, ArrowRight, Loader2, CheckCircle, AlertCircle, Eye, EyeOff } from 'lucide-react';
-import { fetchSignInMethodsForEmail } from 'firebase/auth';
-import { auth } from '../../config/firebase';
 import { useAuth } from '../../contexts/AuthContext';
 
 // Google Icon SVG
@@ -18,7 +16,7 @@ const GoogleIcon = () => (
   </svg>
 );
 
-type WizardStep = 'initial' | 'password-login' | 'password-register' | 'loading' | 'success' | 'error';
+type WizardStep = 'initial' | 'confirm-register' | 'loading' | 'success';
 
 interface QuickAuthWizardProps {
   isOpen: boolean;
@@ -42,13 +40,14 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isEmailChecking, setIsEmailChecking] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   // Refs
   const emailInputRef = useRef<HTMLInputElement>(null);
   const passwordInputRef = useRef<HTMLInputElement>(null);
+  const confirmPasswordInputRef = useRef<HTMLInputElement>(null);
 
   // Reset on open/close
   useEffect(() => {
@@ -59,6 +58,7 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
       setConfirmPassword('');
       setError(null);
       setShowPassword(false);
+      setIsSubmitting(false);
       // Focus email input after animation
       setTimeout(() => emailInputRef.current?.focus(), 300);
     }
@@ -70,60 +70,43 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
     return emailRegex.test(email.trim().toLowerCase());
   };
 
-  // Check if email exists
-  const checkEmailAndProceed = useCallback(async () => {
+  // Handle login attempt - if user doesn't exist, switch to register
+  const handleLoginAttempt = useCallback(async () => {
     if (!isValidEmail(email)) {
       setError(intl.formatMessage({ id: 'auth.wizard.invalidEmail' }));
       return;
     }
-
-    setIsEmailChecking(true);
-    setError(null);
-
-    try {
-      const methods = await fetchSignInMethodsForEmail(auth, email.trim().toLowerCase());
-
-      if (methods.length > 0) {
-        // Email exists - go to login
-        if (methods.includes('google.com') && !methods.includes('password')) {
-          // Only Google - prompt to use Google
-          setError(intl.formatMessage({ id: 'auth.wizard.useGoogle' }));
-          setIsEmailChecking(false);
-          return;
-        }
-        setStep('password-login');
-        setTimeout(() => passwordInputRef.current?.focus(), 100);
-      } else {
-        // Email doesn't exist - go to register
-        setStep('password-register');
-        setTimeout(() => passwordInputRef.current?.focus(), 100);
-      }
-    } catch (err) {
-      console.error('Email check error:', err);
-      setError(intl.formatMessage({ id: 'auth.wizard.error.generic' }));
-    } finally {
-      setIsEmailChecking(false);
-    }
-  }, [email, intl]);
-
-  // Handle login
-  const handleLogin = useCallback(async () => {
     if (!password) {
       setError(intl.formatMessage({ id: 'auth.wizard.passwordRequired' }));
       return;
     }
+    if (password.length < 6) {
+      setError(intl.formatMessage({ id: 'auth.wizard.passwordTooShort' }));
+      return;
+    }
 
-    setStep('loading');
+    setIsSubmitting(true);
     setError(null);
 
     try {
+      // Try to login first
       await login(email.trim().toLowerCase(), password);
       setStep('success');
       setTimeout(onSuccess, 800);
     } catch (err: any) {
-      console.error('Login error:', err);
-      setStep('password-login');
-      if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+      console.error('Login attempt error:', err);
+      setIsSubmitting(false);
+
+      // Check error code to determine if user doesn't exist
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+        // User doesn't exist OR wrong password - we need to distinguish
+        // Try to determine if it's a new user by attempting to check
+        // Since fetchSignInMethodsForEmail is disabled, we'll ask for confirmation
+        // If they confirm, we register. If registration fails with "email-already-in-use",
+        // then it was wrong password
+        setStep('confirm-register');
+        setTimeout(() => confirmPasswordInputRef.current?.focus(), 100);
+      } else if (err.code === 'auth/wrong-password') {
         setError(intl.formatMessage({ id: 'auth.wizard.wrongPassword' }));
       } else if (err.code === 'auth/too-many-requests') {
         setError(intl.formatMessage({ id: 'auth.wizard.tooManyAttempts' }));
@@ -133,22 +116,14 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
     }
   }, [email, password, login, intl, onSuccess]);
 
-  // Handle register
+  // Handle registration after confirmation
   const handleRegister = useCallback(async () => {
-    if (!password) {
-      setError(intl.formatMessage({ id: 'auth.wizard.passwordRequired' }));
-      return;
-    }
-    if (password.length < 6) {
-      setError(intl.formatMessage({ id: 'auth.wizard.passwordTooShort' }));
-      return;
-    }
     if (password !== confirmPassword) {
       setError(intl.formatMessage({ id: 'auth.wizard.passwordMismatch' }));
       return;
     }
 
-    setStep('loading');
+    setIsSubmitting(true);
     setError(null);
 
     try {
@@ -160,9 +135,13 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
       setTimeout(onSuccess, 800);
     } catch (err: any) {
       console.error('Register error:', err);
-      setStep('password-register');
+      setIsSubmitting(false);
+
       if (err.code === 'auth/email-already-in-use') {
-        setError(intl.formatMessage({ id: 'auth.wizard.emailExists' }));
+        // Email exists - it was wrong password before
+        setStep('initial');
+        setError(intl.formatMessage({ id: 'auth.wizard.wrongPassword' }));
+        setConfirmPassword('');
       } else if (err.code === 'auth/weak-password') {
         setError(intl.formatMessage({ id: 'auth.wizard.weakPassword' }));
       } else {
@@ -200,21 +179,18 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
     e.preventDefault();
 
     if (step === 'initial') {
-      checkEmailAndProceed();
-    } else if (step === 'password-login') {
-      handleLogin();
-    } else if (step === 'password-register') {
+      handleLoginAttempt();
+    } else if (step === 'confirm-register') {
       handleRegister();
     }
-  }, [step, checkEmailAndProceed, handleLogin, handleRegister]);
+  }, [step, handleLoginAttempt, handleRegister]);
 
   // Go back to initial step
   const goBack = useCallback(() => {
     setStep('initial');
-    setPassword('');
     setConfirmPassword('');
     setError(null);
-    setTimeout(() => emailInputRef.current?.focus(), 100);
+    setTimeout(() => passwordInputRef.current?.focus(), 100);
   }, []);
 
   if (!isOpen) return null;
@@ -246,9 +222,7 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
             <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
               {step === 'success' ? (
                 <FormattedMessage id="auth.wizard.success.title" />
-              ) : step === 'password-login' ? (
-                <FormattedMessage id="auth.wizard.login.title" />
-              ) : step === 'password-register' ? (
+              ) : step === 'confirm-register' ? (
                 <FormattedMessage id="auth.wizard.register.title" />
               ) : (
                 <FormattedMessage id="auth.wizard.title" />
@@ -289,14 +263,14 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
             </div>
           )}
 
-          {/* Initial Step - Email or Google */}
+          {/* Initial Step - Email + Password */}
           {step === 'initial' && (
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Google Button - Primary */}
               <button
                 type="button"
                 onClick={handleGoogleLogin}
-                disabled={isGoogleLoading || isEmailChecking}
+                disabled={isGoogleLoading || isSubmitting}
                 className="w-full flex items-center justify-center gap-3 py-4 px-4 bg-white hover:bg-gray-100 text-gray-800 font-semibold rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 min-h-[56px]"
               >
                 {isGoogleLoading ? (
@@ -319,65 +293,21 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
               </div>
 
               {/* Email Input */}
-              <div className="space-y-2">
-                <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    ref={emailInputRef}
-                    type="email"
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      setError(null);
-                    }}
-                    placeholder={intl.formatMessage({ id: 'auth.wizard.emailPlaceholder' })}
-                    className="w-full pl-12 pr-4 py-4 bg-white/5 border-2 border-white/10 rounded-2xl text-white placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 transition-colors min-h-[56px]"
-                    autoComplete="email"
-                    disabled={isEmailChecking}
-                  />
-                </div>
-              </div>
-
-              {/* Error Message */}
-              {error && (
-                <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
-                  <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
-                  <p className="text-red-400 text-sm">{error}</p>
-                </div>
-              )}
-
-              {/* Continue Button */}
-              <button
-                type="submit"
-                disabled={!email || isEmailChecking}
-                className="w-full flex items-center justify-center gap-2 py-4 px-4 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-bold rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed min-h-[56px]"
-              >
-                {isEmailChecking ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <>
-                    <FormattedMessage id="auth.wizard.continueEmail" />
-                    <ArrowRight className="w-5 h-5" />
-                  </>
-                )}
-              </button>
-            </form>
-          )}
-
-          {/* Password Step - Login */}
-          {step === 'password-login' && (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Email Display */}
-              <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
-                <Mail className="w-5 h-5 text-gray-400" />
-                <span className="text-white">{email}</span>
-                <button
-                  type="button"
-                  onClick={goBack}
-                  className="ml-auto text-red-400 hover:text-red-300 text-sm font-medium"
-                >
-                  <FormattedMessage id="auth.wizard.change" />
-                </button>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  ref={emailInputRef}
+                  type="email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setError(null);
+                  }}
+                  placeholder={intl.formatMessage({ id: 'auth.wizard.emailPlaceholder' })}
+                  className="w-full pl-12 pr-4 py-4 bg-white/5 border-2 border-white/10 rounded-2xl text-white placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 transition-colors min-h-[56px]"
+                  autoComplete="email"
+                  disabled={isSubmitting}
+                />
               </div>
 
               {/* Password Input */}
@@ -394,11 +324,13 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
                   placeholder={intl.formatMessage({ id: 'auth.wizard.passwordPlaceholder' })}
                   className="w-full pl-12 pr-12 py-4 bg-white/5 border-2 border-white/10 rounded-2xl text-white placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 transition-colors min-h-[56px]"
                   autoComplete="current-password"
+                  disabled={isSubmitting}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                  tabIndex={-1}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -412,14 +344,20 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
                 </div>
               )}
 
-              {/* Login Button */}
+              {/* Submit Button */}
               <button
                 type="submit"
-                disabled={!password}
+                disabled={!email || !password || isSubmitting}
                 className="w-full flex items-center justify-center gap-2 py-4 px-4 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-bold rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed min-h-[56px]"
               >
-                <FormattedMessage id="auth.wizard.login" />
-                <ArrowRight className="w-5 h-5" />
+                {isSubmitting ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    <FormattedMessage id="auth.wizard.login" />
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
               </button>
 
               {/* Forgot Password Link */}
@@ -434,9 +372,17 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
             </form>
           )}
 
-          {/* Password Step - Register */}
-          {step === 'password-register' && (
+          {/* Confirm Registration Step */}
+          {step === 'confirm-register' && (
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Info Message */}
+              <div className="flex items-center gap-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0" />
+                <p className="text-blue-400 text-sm">
+                  <FormattedMessage id="auth.wizard.createAccount" />
+                </p>
+              </div>
+
               {/* Email Display */}
               <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
                 <Mail className="w-5 h-5 text-gray-400" />
@@ -450,42 +396,17 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
                 </button>
               </div>
 
-              {/* Info Message */}
-              <div className="flex items-center gap-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
-                <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0" />
-                <p className="text-blue-400 text-sm">
-                  <FormattedMessage id="auth.wizard.createAccount" />
-                </p>
-              </div>
-
-              {/* Password Input */}
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  ref={passwordInputRef}
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setError(null);
-                  }}
-                  placeholder={intl.formatMessage({ id: 'auth.wizard.choosePassword' })}
-                  className="w-full pl-12 pr-12 py-4 bg-white/5 border-2 border-white/10 rounded-2xl text-white placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 transition-colors min-h-[56px]"
-                  autoComplete="new-password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
+              {/* Password Display (masked) */}
+              <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
+                <Lock className="w-5 h-5 text-gray-400" />
+                <span className="text-white">{'•'.repeat(password.length)}</span>
               </div>
 
               {/* Confirm Password Input */}
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
+                  ref={confirmPasswordInputRef}
                   type={showPassword ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => {
@@ -493,15 +414,19 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
                     setError(null);
                   }}
                   placeholder={intl.formatMessage({ id: 'auth.wizard.confirmPassword' })}
-                  className="w-full pl-12 pr-4 py-4 bg-white/5 border-2 border-white/10 rounded-2xl text-white placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 transition-colors min-h-[56px]"
+                  className="w-full pl-12 pr-12 py-4 bg-white/5 border-2 border-white/10 rounded-2xl text-white placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 transition-colors min-h-[56px]"
                   autoComplete="new-password"
+                  disabled={isSubmitting}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
               </div>
-
-              {/* Password Requirements */}
-              <p className="text-gray-500 text-xs">
-                <FormattedMessage id="auth.wizard.passwordHint" />
-              </p>
 
               {/* Error Message */}
               {error && (
@@ -514,11 +439,17 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
               {/* Register Button */}
               <button
                 type="submit"
-                disabled={!password || !confirmPassword}
+                disabled={!confirmPassword || isSubmitting}
                 className="w-full flex items-center justify-center gap-2 py-4 px-4 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-bold rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed min-h-[56px]"
               >
-                <FormattedMessage id="auth.wizard.createAndContinue" />
-                <ArrowRight className="w-5 h-5" />
+                {isSubmitting ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    <FormattedMessage id="auth.wizard.createAndContinue" />
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
               </button>
 
               {/* Terms */}
@@ -531,6 +462,15 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
                   }}
                 />
               </p>
+
+              {/* Back Button */}
+              <button
+                type="button"
+                onClick={goBack}
+                className="w-full py-3 text-gray-400 hover:text-white text-sm transition-colors"
+              >
+                <FormattedMessage id="action.back" />
+              </button>
             </form>
           )}
         </div>
