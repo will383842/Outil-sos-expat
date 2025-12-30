@@ -2733,109 +2733,8 @@ const handleTransferFailed = traceFunction(
 // ========================================
 // FONCTIONS CRON POUR MAINTENANCE
 // ========================================
-export const scheduledFirestoreExport = onSchedule(
-  {
-    region: "europe-west1",
-    memory: "256MiB",
-    cpu: 0.25,
-    maxInstances: 1,
-    minInstances: 0,
-    concurrency: 1,
-    schedule: "0 2 * * *",
-    timeZone: "Europe/Paris",
-  },
-  async () => {
-    const metadata = createDebugMetadata("scheduledFirestoreExport");
-    logFunctionStart(metadata);
-
-    try {
-      ultraLogger.info("SCHEDULED_BACKUP", "Décollage sauvegarde automatique");
-
-      const database = initializeFirebase();
-      const projectId = process.env.GCLOUD_PROJECT;
-      const bucketName = `${projectId}-backups`;
-      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-
-      ultraLogger.debug("SCHEDULED_BACKUP", "Configuration sauvegarde", {
-        projectId,
-        bucketName,
-        timestamp,
-      });
-
-      const firestoreClient = new admin.firestore.v1.FirestoreAdminClient();
-
-      const firestoreExportName = `firestore-export-${timestamp}`;
-      const firestoreExportPath = `gs://${bucketName}/${firestoreExportName}`;
-
-      ultraLogger.info("SCHEDULED_BACKUP", "Lancement export Firestore", {
-        exportPath: firestoreExportPath,
-      });
-
-      const [firestoreOperation] = await firestoreClient.exportDocuments({
-        name: `projects/${projectId}/databases/(default)`,
-        outputUriPrefix: firestoreExportPath,
-        collectionIds: [],
-      });
-
-      ultraLogger.info("SCHEDULED_BACKUP", "Export Firestore démarré", {
-        operationName: firestoreOperation.name,
-      });
-
-      await database
-        .collection("logs")
-        .doc("backups")
-        .collection("entries")
-        .add({
-          type: "scheduled_backup",
-          firestoreExportPath,
-          operationName: firestoreOperation.name,
-          timestamp: admin.firestore.FieldValue.serverTimestamp(),
-          status: "completed",
-        });
-
-      logFunctionEnd(metadata, {
-        success: true,
-        exportPath: firestoreExportPath,
-      });
-    } catch (exportError: unknown) {
-      ultraLogger.error(
-        "SCHEDULED_BACKUP",
-        "Erreur sauvegarde automatique",
-        {
-          error:
-            exportError instanceof Error
-              ? exportError.message
-              : String(exportError),
-          stack: exportError instanceof Error ? exportError.stack : undefined,
-        },
-        exportError instanceof Error ? exportError : undefined
-      );
-
-      const errorMessage =
-        exportError instanceof Error ? exportError.message : "Unknown error";
-      const database = initializeFirebase();
-
-      await database
-        .collection("logs")
-        .doc("backups")
-        .collection("entries")
-        .add({
-          type: "scheduled_backup",
-          timestamp: admin.firestore.FieldValue.serverTimestamp(),
-          status: "failed",
-          error: errorMessage,
-        });
-
-      logFunctionEnd(
-        metadata,
-        undefined,
-        exportError instanceof Error
-          ? exportError
-          : new Error(String(exportError))
-      );
-    }
-  }
-);
+// NOTE: scheduledFirestoreExport a été supprimé - utiliser scheduledBackup de ./scheduledBackup
+// qui inclut checksums, counts de collections et meilleur monitoring
 
 export const scheduledCleanup = onSchedule(
   {
@@ -3483,6 +3382,7 @@ export {
 // ========== TWILIO RECORDINGS BACKUP ==========
 export {
   backupTwilioRecordings,
+  retryFailedTwilioBackups,
   triggerTwilioBackup,
   getTwilioBackupStats
 } from './scheduled/backupTwilioRecordings';
@@ -3501,6 +3401,24 @@ export {
   triggerAuthBackup,
   listAuthBackups
 } from './scheduled/backupAuth';
+
+// ========== FIREBASE AUTH RESTORE ==========
+export {
+  restoreFirebaseAuth,
+  listRestorableAuthBackups,
+  validateAuthBackup,
+  restoreSingleUser
+} from './admin/restoreFirebaseAuth';
+
+// ========== FIRESTORE COLLECTION RESTORE ==========
+export {
+  importCollectionFromBackup,
+  listAvailableBackups,
+  restoreCollectionDocuments,
+  verifyCollectionIntegrity,
+  exportCollectionToJson,
+  importCollectionFromJson
+} from './admin/restoreCollection';
 
 // ========== SYSTEM MONITORING & ALERTS ==========
 export {

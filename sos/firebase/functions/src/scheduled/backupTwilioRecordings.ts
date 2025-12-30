@@ -29,7 +29,11 @@ const CONFIG = {
   // Dossier de destination dans Firebase Storage
   STORAGE_PATH: 'call_recordings_backup',
   // Durée max d'exécution (en secondes)
-  TIMEOUT_SECONDS: 540 // 9 minutes
+  TIMEOUT_SECONDS: 540, // 9 minutes
+  // Retry configuration
+  MAX_RETRIES: 3,
+  INITIAL_RETRY_DELAY_MS: 1000, // 1 seconde, puis 2s, 4s (exponential)
+  RETRY_BATCH_SIZE: 10 // Nombre de recordings failed à retenter par exécution
 };
 
 // ============================================================================
@@ -50,8 +54,13 @@ interface CallRecording {
   backupUrl?: string;
   backupPath?: string;
   backedUpAt?: FirebaseFirestore.Timestamp;
-  backupStatus?: 'pending' | 'completed' | 'failed';
+  backupStatus?: 'pending' | 'completed' | 'failed' | 'permanent_failure';
   backupError?: string;
+  // Retry tracking
+  backupAttempts?: number;
+  lastBackupAttempt?: FirebaseFirestore.Timestamp;
+  backupErrors?: string[];
+  nextRetryAfter?: FirebaseFirestore.Timestamp;
 }
 
 // ============================================================================
@@ -60,6 +69,30 @@ interface CallRecording {
 
 const getDb = () => admin.firestore();
 const getStorage = () => admin.storage().bucket();
+
+/**
+ * Pause l'exécution pour un délai donné
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Calcule le délai de retry avec backoff exponentiel
+ */
+function calculateRetryDelay(attempt: number): number {
+  return CONFIG.INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt);
+}
+
+/**
+ * Calcule la date du prochain retry
+ */
+function calculateNextRetryTime(attempt: number): Date {
+  // Délai progressif: 5min, 30min, 2h
+  const delays = [5 * 60 * 1000, 30 * 60 * 1000, 2 * 60 * 60 * 1000];
+  const delayMs = delays[Math.min(attempt, delays.length - 1)];
+  return new Date(Date.now() + delayMs);
+}
 
 /**
  * Récupère les credentials Twilio depuis les variables d'environnement
@@ -76,9 +109,9 @@ function getTwilioCredentials(): { accountSid: string; authToken: string } {
 }
 
 /**
- * Télécharge un recording depuis Twilio
+ * Télécharge un recording depuis Twilio avec retry automatique
  */
-async function downloadRecording(recordingUrl: string): Promise<Buffer> {
+async function downloadRecording(recordingUrl: string, maxRetries: number = 3): Promise<Buffer> {
   const { accountSid, authToken } = getTwilioCredentials();
 
   // Twilio recording URLs peuvent être relatives ou absolues
@@ -92,18 +125,53 @@ async function downloadRecording(recordingUrl: string): Promise<Buffer> {
     fullUrl = `${fullUrl}.mp3`;
   }
 
-  const response = await fetch(fullUrl, {
-    headers: {
-      'Authorization': 'Basic ' + Buffer.from(`${accountSid}:${authToken}`).toString('base64')
-    }
-  });
+  let lastError: Error | null = null;
 
-  if (!response.ok) {
-    throw new Error(`Failed to download recording: ${response.status} ${response.statusText}`);
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      if (attempt > 0) {
+        const delay = calculateRetryDelay(attempt - 1);
+        logger.info(`[TwilioBackup] Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms delay`);
+        await sleep(delay);
+      }
+
+      const response = await fetch(fullUrl, {
+        headers: {
+          'Authorization': 'Basic ' + Buffer.from(`${accountSid}:${authToken}`).toString('base64')
+        }
+      });
+
+      if (!response.ok) {
+        // 404 = recording déjà expiré, ne pas retry
+        if (response.status === 404) {
+          throw new Error(`Recording not found (expired?): ${response.status}`);
+        }
+        // 429 = rate limit, attendre plus longtemps
+        if (response.status === 429) {
+          const retryAfter = parseInt(response.headers.get('Retry-After') || '60', 10);
+          logger.warn(`[TwilioBackup] Rate limited, waiting ${retryAfter}s`);
+          await sleep(retryAfter * 1000);
+          continue;
+        }
+        throw new Error(`Failed to download recording: ${response.status} ${response.statusText}`);
+      }
+
+      const arrayBuffer = await response.arrayBuffer();
+      return Buffer.from(arrayBuffer);
+
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+
+      // Ne pas retry pour les erreurs permanentes (404)
+      if (lastError.message.includes('not found') || lastError.message.includes('expired')) {
+        throw lastError;
+      }
+
+      logger.warn(`[TwilioBackup] Download attempt ${attempt + 1} failed: ${lastError.message}`);
+    }
   }
 
-  const arrayBuffer = await response.arrayBuffer();
-  return Buffer.from(arrayBuffer);
+  throw lastError || new Error('Download failed after all retries');
 }
 
 /**
@@ -237,12 +305,29 @@ export const backupTwilioRecordings = onSchedule(
           const err = error instanceof Error ? error : new Error(String(error));
           logger.error(`[TwilioBackup] Failed to backup recording ${recording.recordingSid}:`, err);
 
-          // Marquer comme échoué
+          const currentAttempts = (recording.backupAttempts || 0) + 1;
+          const isExpired = err.message.includes('not found') || err.message.includes('expired');
+          const isPermanentFailure = currentAttempts >= CONFIG.MAX_RETRIES || isExpired;
+
+          // Collecter l'historique des erreurs
+          const errorHistory = recording.backupErrors || [];
+          errorHistory.push(`[${new Date().toISOString()}] ${err.message}`);
+
+          // Marquer selon le nombre de tentatives
           await doc.ref.update({
-            backupStatus: 'failed',
+            backupStatus: isPermanentFailure ? 'permanent_failure' : 'failed',
             backupError: err.message,
-            backupAttemptedAt: admin.firestore.Timestamp.now()
+            backupAttempts: currentAttempts,
+            backupErrors: errorHistory.slice(-5), // Garder les 5 dernières erreurs
+            lastBackupAttempt: admin.firestore.Timestamp.now(),
+            nextRetryAfter: isPermanentFailure
+              ? null
+              : admin.firestore.Timestamp.fromDate(calculateNextRetryTime(currentAttempts))
           });
+
+          if (isPermanentFailure) {
+            logger.error(`[TwilioBackup] Permanent failure for ${recording.recordingSid} after ${currentAttempts} attempts`);
+          }
         }
       }
 
@@ -259,6 +344,150 @@ export const backupTwilioRecordings = onSchedule(
 
     } catch (error) {
       logger.error('[TwilioBackup] Fatal error:', error);
+      throw error;
+    }
+  }
+);
+
+/**
+ * Job pour retenter les backups en échec
+ * Exécute toutes les 4 heures
+ */
+export const retryFailedTwilioBackups = onSchedule(
+  {
+    schedule: '0 */4 * * *', // Toutes les 4 heures
+    timeZone: 'Europe/Paris',
+    region: 'europe-west1',
+    memory: '512MiB',
+    timeoutSeconds: CONFIG.TIMEOUT_SECONDS
+  },
+  async () => {
+    logger.info('[TwilioBackup] Starting retry of failed backups...');
+
+    const db = getDb();
+    const now = admin.firestore.Timestamp.now();
+    const startTime = Date.now();
+
+    try {
+      // Récupérer les recordings en échec éligibles pour retry
+      const failedRecordings = await db.collection('call_recordings')
+        .where('backupStatus', '==', 'failed')
+        .where('nextRetryAfter', '<=', now)
+        .orderBy('nextRetryAfter', 'asc')
+        .limit(CONFIG.RETRY_BATCH_SIZE)
+        .get();
+
+      if (failedRecordings.empty) {
+        logger.info('[TwilioBackup] No failed recordings eligible for retry');
+        return;
+      }
+
+      logger.info(`[TwilioBackup] Found ${failedRecordings.size} recordings to retry`);
+
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const doc of failedRecordings.docs) {
+        // Vérifier le timeout
+        if (Date.now() - startTime > (CONFIG.TIMEOUT_SECONDS - 60) * 1000) {
+          logger.warn('[TwilioBackup] Approaching timeout, stopping retry batch');
+          break;
+        }
+
+        const recording = { id: doc.id, ...doc.data() } as CallRecording;
+
+        try {
+          logger.info(`[TwilioBackup] Retrying recording ${recording.recordingSid} (attempt ${(recording.backupAttempts || 0) + 1})`);
+
+          // Télécharger le recording
+          const audioBuffer = await downloadRecording(recording.recordingUrl);
+
+          // Construire le chemin de stockage
+          const timestamp = recording.createdAt.toDate();
+          const year = timestamp.getFullYear();
+          const month = String(timestamp.getMonth() + 1).padStart(2, '0');
+          const day = String(timestamp.getDate()).padStart(2, '0');
+          const storagePath = `${CONFIG.STORAGE_PATH}/${year}/${month}/${day}/${recording.recordingSid}.mp3`;
+
+          // Upload vers Firebase Storage
+          const backupUrl = await uploadToStorage(audioBuffer, storagePath, {
+            recordingSid: recording.recordingSid,
+            sessionId: recording.sessionId || '',
+            originalUrl: recording.recordingUrl,
+            duration: String(recording.recordingDuration || 0),
+            backedUpAt: new Date().toISOString(),
+            retriedAfterFailure: 'true'
+          });
+
+          // Mettre à jour le document Firestore
+          await doc.ref.update({
+            backupUrl,
+            backupPath: storagePath,
+            backedUpAt: admin.firestore.Timestamp.now(),
+            backupStatus: 'completed',
+            backupError: admin.firestore.FieldValue.delete(),
+            nextRetryAfter: admin.firestore.FieldValue.delete()
+          });
+
+          successCount++;
+          logger.info(`[TwilioBackup] Retry successful for ${recording.recordingSid}`);
+
+        } catch (error: unknown) {
+          failCount++;
+          const err = error instanceof Error ? error : new Error(String(error));
+          logger.error(`[TwilioBackup] Retry failed for ${recording.recordingSid}:`, err);
+
+          const currentAttempts = (recording.backupAttempts || 0) + 1;
+          const isExpired = err.message.includes('not found') || err.message.includes('expired');
+          const isPermanentFailure = currentAttempts >= CONFIG.MAX_RETRIES || isExpired;
+
+          const errorHistory = recording.backupErrors || [];
+          errorHistory.push(`[${new Date().toISOString()}] Retry: ${err.message}`);
+
+          await doc.ref.update({
+            backupStatus: isPermanentFailure ? 'permanent_failure' : 'failed',
+            backupError: err.message,
+            backupAttempts: currentAttempts,
+            backupErrors: errorHistory.slice(-5),
+            lastBackupAttempt: admin.firestore.Timestamp.now(),
+            nextRetryAfter: isPermanentFailure
+              ? admin.firestore.FieldValue.delete()
+              : admin.firestore.Timestamp.fromDate(calculateNextRetryTime(currentAttempts))
+          });
+        }
+      }
+
+      // Log des statistiques de retry
+      await db.collection('system_logs').add({
+        type: 'twilio_backup_retry',
+        success: successCount,
+        failed: failCount,
+        total: failedRecordings.size,
+        createdAt: admin.firestore.Timestamp.now()
+      });
+
+      // Créer une alerte si trop d'échecs permanents
+      if (failCount > 0) {
+        const permanentFailures = await db.collection('call_recordings')
+          .where('backupStatus', '==', 'permanent_failure')
+          .count()
+          .get();
+
+        if (permanentFailures.data().count > 10) {
+          await db.collection('system_alerts').add({
+            type: 'twilio_backup_failures',
+            severity: 'warning',
+            message: `${permanentFailures.data().count} recordings have permanently failed backup`,
+            acknowledged: false,
+            createdAt: admin.firestore.Timestamp.now()
+          });
+        }
+      }
+
+      logger.info(`[TwilioBackup] Retry completed. Success: ${successCount}, Failed: ${failCount}`);
+
+    } catch (error) {
+      logger.error('[TwilioBackup] Retry job fatal error:', error);
       throw error;
     }
   }
