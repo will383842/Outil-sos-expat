@@ -1160,9 +1160,9 @@ const ModernProfileCard: React.FC<{
         className={`
           relative bg-white rounded-2xl overflow-hidden cursor-pointer
           transition-all duration-300 ease-out border-2 shadow-lg
-          w-[280px] h-[480px]
-          sm:w-[300px] sm:h-[500px]
-          md:w-[320px] md:h-[520px]
+          w-[320px] h-[520px]
+          sm:w-[340px] sm:h-[540px]
+          md:w-[360px] md:h-[560px]
           ${statusColors.border} ${statusColors.shadow} ${statusColors.borderShadow}
           ${isHovered ? `scale-[1.02] ${statusColors.glow} shadow-xl` : ""}
           focus:outline-none focus:ring-4 focus:ring-blue-500/50
@@ -2824,42 +2824,21 @@ const SOSCall: React.FC = () => {
             </div>
 
             {/* ===== H1 UNIQUE - SEO OPTIMISÉ ===== */}
-            <h1 
+            <h1
               className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight mb-3 sm:mb-4 px-2"
               id="page-title"
               itemProp="headline"
             >
-              <FormattedMessage id="sosCall.hero.title.prefix" />
-              <span 
-                className="bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 bg-clip-text text-transparent"
-                itemProp="keywords"
-              >
-                {" "}<FormattedMessage id="sosCall.hero.title.highlight" />{" "}
-              </span>
-              <FormattedMessage id="sosCall.hero.title.suffix" />
+              <FormattedMessage id="sosCall.hero.title.new" />
             </h1>
 
             {/* ===== FEATURED SNIPPET (Position 0 Google) ===== */}
-            {/* Version Mobile - Texte simplifié */}
             <p
-              className="md:hidden text-sm text-gray-200 max-w-3xl mx-auto px-4 featured-snippet"
+              className="text-sm md:text-lg lg:text-xl text-gray-200 max-w-3xl mx-auto px-4 featured-snippet"
               itemProp="description"
               data-featured-snippet="true"
             >
-              <FormattedMessage id="sosCall.hero.subtitle.mobile" />
-            </p>
-            {/* Version Desktop - Texte complet */}
-            <p
-              className="hidden md:block text-lg lg:text-xl text-gray-200 max-w-3xl mx-auto px-4 featured-snippet"
-              itemProp="description"
-              data-featured-snippet="true"
-            >
-              <FormattedMessage
-                id="sosCall.hero.subtitle"
-                values={{
-                  strong: (chunks) => <strong className="text-white" itemProp="about">{chunks}</strong>,
-                }}
-              />
+              <FormattedMessage id="sosCall.hero.subtitle.new" />
             </p>
 
             {/* ===== EXPERT COUNT SNIPPET (pour Google) ===== */}
@@ -2900,10 +2879,10 @@ const SOSCall: React.FC = () => {
           <meta itemProp="itemListOrder" content="https://schema.org/ItemListOrderDescending" />
           
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            {/* ===== H2 - Titre de section ===== */}
+            {/* ===== H2 - Titre de section (Desktop uniquement) ===== */}
             <div className="text-center mb-5 sm:mb-8">
-              <h2 
-                className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-black text-white mb-4"
+              <h2
+                className="hidden lg:block text-lg sm:text-xl lg:text-2xl xl:text-3xl font-black text-white mb-4"
                 id="section-title"
                 itemProp="name"
               >
@@ -2949,8 +2928,8 @@ const SOSCall: React.FC = () => {
                   </div>
                 </div>
 
-                {/* SEARCH BAR */}
-                <div className="mb-6 max-w-4xl mx-auto">
+                {/* SEARCH BAR - Desktop uniquement */}
+                <div className="hidden lg:block mb-6 max-w-4xl mx-auto">
                 <div className="relative group">
                   <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 via-orange-500/20 to-yellow-500/20 rounded-3xl blur-xl opacity-50 group-hover:opacity-75 transition-opacity duration-300" />
                   <div className="relative bg-gray-900 backdrop-blur-xl border border-white/20 rounded-3xl p-2 shadow-2xl my-4">
@@ -3466,18 +3445,27 @@ const SOSCall: React.FC = () => {
                     ))}
                   </div>
                   
-                  {/* Indicateur de scroll mobile */}
-                  <div className="flex justify-center mt-2 gap-1">
-                    {Array.from({ length: Math.min(paginatedProviders.length, 5) }).map((_, i) => (
-                      <div 
-                        key={i}
-                        className="w-1.5 h-1.5 rounded-full bg-white/30"
-                        aria-hidden="true"
-                      />
-                    ))}
-                    {paginatedProviders.length > 5 && (
-                      <span className="text-white/50 text-[10px] ml-1">+{paginatedProviders.length - 5}</span>
-                    )}
+                  {/* Indicateur de scroll mobile - Texte + Dots */}
+                  <div className="flex flex-col items-center mt-4 gap-2">
+                    {/* Texte indicateur */}
+                    <div className="flex items-center gap-2 text-white/70 text-sm">
+                      <ChevronLeft className="w-4 h-4 animate-pulse" aria-hidden="true" />
+                      <span><FormattedMessage id="sosCall.scroll.hint" /></span>
+                      <ChevronRight className="w-4 h-4 animate-pulse" aria-hidden="true" />
+                    </div>
+                    {/* Dots indicateur */}
+                    <div className="flex items-center gap-1.5">
+                      {Array.from({ length: Math.min(paginatedProviders.length, 5) }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="w-2 h-2 rounded-full bg-white/40"
+                          aria-hidden="true"
+                        />
+                      ))}
+                      {paginatedProviders.length > 5 && (
+                        <span className="text-white/60 text-xs ml-1">+{paginatedProviders.length - 5}</span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -3540,8 +3528,8 @@ const SOSCall: React.FC = () => {
               </div>
             )}
 
-            {/* CTA Section */}
-            <section className="text-center mt-10 sm:mt-14" aria-labelledby="cta-heading">
+            {/* CTA Section - Desktop uniquement */}
+            <section className="hidden lg:block text-center mt-10 sm:mt-14" aria-labelledby="cta-heading">
               <div className="rounded-xl sm:rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-md p-5 sm:p-10">
                 <h3 id="cta-heading" className="text-lg sm:text-xl lg:text-2xl font-black text-white mb-2 sm:mb-3">
                   <FormattedMessage id="sosCall.cta.title" />
