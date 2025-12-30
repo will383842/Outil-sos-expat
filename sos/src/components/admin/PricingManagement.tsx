@@ -146,12 +146,12 @@ export const PricingManagement: React.FC = () => {
 
   const getDefaultConfig = (): PricingConfig => ({
     lawyer: {
-      eur: { totalAmount: 49, connectionFeeAmount: 19, providerAmount: 30, duration: 25, currency: 'eur' },
-      usd: { totalAmount: 55, connectionFeeAmount: 25, providerAmount: 30, duration: 25, currency: 'usd' }
+      eur: { totalAmount: 49, connectionFeeAmount: 19, providerAmount: 30, duration: 20, currency: 'eur' },
+      usd: { totalAmount: 55, connectionFeeAmount: 25, providerAmount: 30, duration: 20, currency: 'usd' }
     },
     expat: {
-      eur: { totalAmount: 19, connectionFeeAmount: 9, providerAmount: 10, duration: 35, currency: 'eur' },
-      usd: { totalAmount: 25, connectionFeeAmount: 15, providerAmount: 10, duration: 35, currency: 'usd' }
+      eur: { totalAmount: 19, connectionFeeAmount: 9, providerAmount: 10, duration: 30, currency: 'eur' },
+      usd: { totalAmount: 25, connectionFeeAmount: 15, providerAmount: 10, duration: 30, currency: 'usd' }
     }
     // overrides hydratés ensuite
   });

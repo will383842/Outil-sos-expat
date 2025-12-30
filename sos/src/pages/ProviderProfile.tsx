@@ -544,13 +544,14 @@ const calculateProviderStats = async (providerId: string): Promise<ProviderStats
       ? Math.round((successfulCalls / totalCallsReceived) * 100) 
       : 0;
 
+    // completedCalls = nombre d'avis (chaque avis correspond à un appel réalisé)
     const stats = {
       totalCallsReceived,
       successfulCalls,
       successRate,
       averageRating,
       totalReviews,
-      completedCalls,
+      completedCalls: realReviewsCount, // Appels réalisés = nombre d'avis clients
       realReviewsCount,
     };
 
@@ -2455,15 +2456,6 @@ const ProviderProfile: React.FC = () => {
 
                     {/* Stats rapides */}
                     <div className="space-y-3 mb-5">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">
-                          <FormattedMessage id="providerProfile.successRate" />
-                        </span>
-                        <span className="font-semibold text-gray-900">
-                          {isLoadingStats ? "..." : `${providerStats.successRate}%`}
-                        </span>
-                      </div>
-                      
                       <div className="flex items-center justify-between text-sm bg-gray-50 p-3 rounded-xl border border-gray-200">
                         <span className="text-gray-700 font-medium">
                           <FormattedMessage id="providerProfile.availability" />
