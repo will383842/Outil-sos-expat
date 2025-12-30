@@ -2901,9 +2901,9 @@ const SOSCall: React.FC = () => {
                   📱 FILTRES SECTION (Tous écrans)
               ======================================== */}
               <div className="space-y-3">
-                {/* Stats Bar Mobile */}
-                <div 
-                  className="flex items-center justify-between bg-white/5 backdrop-blur-sm rounded-2xl px-4 py-3 border border-white/10"
+                {/* Stats Bar - Desktop uniquement */}
+                <div
+                  className="hidden lg:flex items-center justify-between bg-white/5 backdrop-blur-sm rounded-2xl px-4 py-3 border border-white/10"
                   role="status"
                   aria-live="polite"
                 >
@@ -3420,15 +3420,6 @@ const SOSCall: React.FC = () => {
               <>
                 {/* Version Mobile - Scroll horizontal centré */}
                 <div className="lg:hidden">
-                  {/* Indicateur de scroll - En haut, bien visible */}
-                  <div className="flex items-center justify-center gap-3 mb-4 py-3 px-4 mx-4 rounded-2xl bg-gradient-to-r from-red-500/20 via-orange-500/20 to-red-500/20 border border-white/10">
-                    <ChevronLeft className="w-5 h-5 text-white/80 animate-bounce-x" aria-hidden="true" />
-                    <span className="text-white font-medium text-sm">
-                      <FormattedMessage id="sosCall.scroll.hint" />
-                    </span>
-                    <ChevronRight className="w-5 h-5 text-white/80 animate-bounce-x-reverse" aria-hidden="true" />
-                  </div>
-
                   {/* Container de scroll centré */}
                   <div
                     className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide"
@@ -3457,18 +3448,13 @@ const SOSCall: React.FC = () => {
                     ))}
                   </div>
 
-                  {/* Dots indicateur en bas */}
-                  <div className="flex items-center justify-center gap-2 mt-3">
-                    {Array.from({ length: Math.min(paginatedProviders.length, 5) }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="w-2.5 h-2.5 rounded-full bg-white/50"
-                        aria-hidden="true"
-                      />
-                    ))}
-                    {paginatedProviders.length > 5 && (
-                      <span className="text-white/70 text-sm ml-1">+{paginatedProviders.length - 5}</span>
-                    )}
+                  {/* Indicateur de scroll - En bas, sous les cards */}
+                  <div className="flex items-center justify-center gap-3 mt-4 py-3 px-4 mx-4 rounded-2xl bg-gradient-to-r from-red-500/20 via-orange-500/20 to-red-500/20 border border-white/10">
+                    <ChevronLeft className="w-5 h-5 text-white/80 animate-bounce-x" aria-hidden="true" />
+                    <span className="text-white font-medium text-sm">
+                      <FormattedMessage id="sosCall.scroll.hint" />
+                    </span>
+                    <ChevronRight className="w-5 h-5 text-white/80 animate-bounce-x-reverse" aria-hidden="true" />
                   </div>
                 </div>
 
