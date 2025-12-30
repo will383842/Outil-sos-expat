@@ -1,18 +1,14 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import {
-  MapPin,
-  Globe,
-  Users,
   ChevronRight,
   ChevronLeft,
   Scale,
+  Globe,
   HelpCircle,
   Search,
   Check,
 } from "lucide-react";
-import { getSortedCountries, type LanguageKey } from "../../data/countries";
-import { languagesData, getLanguageLabel, type SupportedLocale } from "../../data/languages-spoken";
 
 // ========================================
 // Types
@@ -43,80 +39,47 @@ const normalizeText = (text: string): string => {
     .replace(/[ß]/g, "ss");
 };
 
-const getCountryLanguageKey = (locale: string): LanguageKey => {
-  const mapping: Record<string, LanguageKey> = {
-    fr: "nameFr",
-    en: "nameEn",
-    es: "nameEs",
-    de: "nameDe",
-    pt: "namePt",
-    ru: "nameRu",
-    hi: "nameFr",
-    ch: "nameZh",
-    zh: "nameZh",
-    ar: "nameAr",
-  };
-  return mapping[locale.toLowerCase()] || "nameEn";
+// Priority languages codes (in order)
+const PRIORITY_LANGUAGE_CODES = ["fr", "en", "de", "ru", "zh", "es", "pt", "ar", "hi"];
+
+// Flag mappings for languages
+const LANGUAGE_FLAG_MAP: Record<string, string> = {
+  fr: "FR", en: "GB", de: "DE", ru: "RU", zh: "CN", es: "ES", pt: "PT", ar: "SA", hi: "IN",
+  it: "IT", nl: "NL", pl: "PL", tr: "TR", ja: "JP", ko: "KR",
+  vi: "VN", th: "TH", id: "ID", ms: "MY", sv: "SE", no: "NO",
+  da: "DK", fi: "FI", cs: "CZ", el: "GR", hu: "HU", ro: "RO",
+  uk: "UA", he: "IL", fa: "IR", bn: "BD", ta: "IN", te: "IN",
+  ur: "PK", sw: "KE", af: "ZA", tl: "PH",
 };
 
-// Popular countries with flags
-const POPULAR_COUNTRIES = [
-  { code: "FR", flag: "FR" },
-  { code: "US", flag: "US" },
-  { code: "ES", flag: "ES" },
-  { code: "DE", flag: "DE" },
-  { code: "GB", flag: "GB" },
-  { code: "CA", flag: "CA" },
-  { code: "IT", flag: "IT" },
-  { code: "BR", flag: "BR" },
-  { code: "PT", flag: "PT" },
-  { code: "CH", flag: "CH" },
-  { code: "BE", flag: "BE" },
-  { code: "MA", flag: "MA" },
-];
-
-// Popular languages with flags
-const POPULAR_LANGUAGES = [
-  { code: "fr", flag: "FR", label: "Français" },
-  { code: "en", flag: "GB", label: "English" },
-  { code: "es", flag: "ES", label: "Español" },
-  { code: "de", flag: "DE", label: "Deutsch" },
-  { code: "pt", flag: "PT", label: "Português" },
-  { code: "ru", flag: "RU", label: "Русский" },
-  { code: "zh", flag: "CN", label: "中文" },
-  { code: "ar", flag: "SA", label: "العربية" },
-  { code: "hi", flag: "IN", label: "हिंदी" },
-];
-
 // Country flag component
-const CountryFlag: React.FC<{ code: string; size?: "sm" | "md" | "lg" }> = ({
+const CountryFlag: React.FC<{ code: string; size?: "sm" | "md" }> = ({
   code,
-  size = "md",
+  size = "sm",
 }) => {
   const sizeClasses = {
     sm: "w-5 h-4",
-    md: "w-8 h-6",
-    lg: "w-10 h-8",
+    md: "w-6 h-5",
   };
   return (
     <img
       src={`https://flagcdn.com/w40/${code.toLowerCase()}.png`}
       alt=""
-      className={`${sizeClasses[size]} object-cover rounded shadow-sm`}
+      className={`${sizeClasses[size]} object-cover rounded`}
       loading="lazy"
     />
   );
 };
 
 // ========================================
-// Step Progress Bar
+// Step Progress Bar (compact)
 // ========================================
 const StepProgressBar: React.FC<{ currentStep: number; totalSteps: number }> = ({
   currentStep,
   totalSteps,
 }) => {
   return (
-    <div className="flex items-center justify-center gap-2 mb-6">
+    <div className="flex items-center justify-center gap-2">
       {Array.from({ length: totalSteps }).map((_, index) => {
         const stepNum = index + 1;
         const isActive = stepNum === currentStep;
@@ -126,22 +89,22 @@ const StepProgressBar: React.FC<{ currentStep: number; totalSteps: number }> = (
           <React.Fragment key={stepNum}>
             <div
               className={`
-                w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg
+                w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm
                 transition-all duration-300
                 ${isCompleted
                   ? "bg-green-500 text-white"
                   : isActive
-                    ? "bg-red-500 text-white scale-110 shadow-lg shadow-red-500/30"
+                    ? "bg-red-500 text-white"
                     : "bg-white/10 text-gray-400"
                 }
               `}
             >
-              {isCompleted ? <Check className="w-5 h-5" /> : stepNum}
+              {isCompleted ? <Check className="w-4 h-4" /> : stepNum}
             </div>
             {stepNum < totalSteps && (
               <div
                 className={`
-                  w-12 h-1 rounded-full transition-all duration-300
+                  w-8 h-0.5 rounded-full transition-all duration-300
                   ${isCompleted ? "bg-green-500" : "bg-white/10"}
                 `}
               />
@@ -154,7 +117,7 @@ const StepProgressBar: React.FC<{ currentStep: number; totalSteps: number }> = (
 };
 
 // ========================================
-// Country Step Component
+// Country Step Component (compact)
 // ========================================
 const CountryStep: React.FC<{
   selectedCountry: string;
@@ -164,7 +127,6 @@ const CountryStep: React.FC<{
 }> = ({ selectedCountry, onSelect, countryOptions, onNext }) => {
   const intl = useIntl();
   const [searchQuery, setSearchQuery] = useState("");
-  const [showAllCountries, setShowAllCountries] = useState(false);
 
   const filteredCountries = useMemo(() => {
     if (!searchQuery.trim()) return countryOptions;
@@ -174,126 +136,72 @@ const CountryStep: React.FC<{
     );
   }, [countryOptions, searchQuery]);
 
-  const popularCountriesWithLabels = useMemo(() => {
-    return POPULAR_COUNTRIES.map((pc) => {
-      const found = countryOptions.find((c) => c.code === pc.code);
-      return found ? { ...pc, label: found.label } : null;
-    }).filter(Boolean) as { code: string; flag: string; label: string }[];
-  }, [countryOptions]);
-
   return (
     <div className="flex flex-col h-full">
       {/* Title */}
-      <div className="text-center mb-6">
-        <div className="w-16 h-16 mx-auto mb-4 bg-red-500/20 rounded-2xl flex items-center justify-center">
-          <MapPin className="w-8 h-8 text-red-400" />
-        </div>
-        <h2 className="text-2xl font-bold text-white mb-2">
-          <FormattedMessage id="wizard.step1.title" />
-        </h2>
-        <p className="text-gray-400 text-sm">
-          <FormattedMessage id="wizard.step1.subtitle" />
-        </p>
-      </div>
+      <h2 className="text-lg font-bold text-white text-center mb-3">
+        <FormattedMessage id="wizard.step1.title" />
+      </h2>
 
       {/* Search */}
-      <div className="relative mb-4">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+      <div className="relative mb-3">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         <input
           type="text"
           value={searchQuery}
-          onChange={(e) => {
-            setSearchQuery(e.target.value);
-            setShowAllCountries(true);
-          }}
+          onChange={(e) => setSearchQuery(e.target.value)}
           placeholder={intl.formatMessage({ id: "wizard.search.country" })}
-          className="w-full pl-12 pr-4 py-4 bg-white/5 border-2 border-white/10 rounded-2xl text-white placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 transition-all text-base"
+          className="w-full pl-10 pr-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 text-sm"
         />
       </div>
 
-      {/* Popular Countries Grid or Search Results */}
-      <div className="flex-1 overflow-y-auto">
-        {!showAllCountries && !searchQuery ? (
-          <>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-              <FormattedMessage id="wizard.popular.countries" />
-            </p>
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              {popularCountriesWithLabels.map((country) => (
-                <button
-                  key={country.code}
-                  onClick={() => onSelect(country.code)}
-                  className={`
-                    flex items-center gap-3 p-4 rounded-2xl border-2 transition-all duration-200
-                    touch-manipulation min-h-[64px]
-                    ${selectedCountry === country.code
-                      ? "bg-red-500/20 border-red-500 text-white"
-                      : "bg-white/5 border-white/10 text-gray-200 hover:bg-white/10 active:scale-95"
-                    }
-                  `}
-                >
-                  <CountryFlag code={country.flag} size="md" />
-                  <span className="font-medium text-sm truncate">{country.label}</span>
-                  {selectedCountry === country.code && (
-                    <Check className="w-5 h-5 text-red-400 ml-auto flex-shrink-0" />
-                  )}
-                </button>
-              ))}
-            </div>
+      {/* Countries List */}
+      <div className="flex-1 overflow-y-auto -mx-1 px-1">
+        <div className="grid grid-cols-2 gap-2">
+          {filteredCountries.map((country) => (
             <button
-              onClick={() => setShowAllCountries(true)}
-              className="w-full py-3 text-center text-red-400 font-medium hover:text-red-300 transition-colors"
+              key={country.code}
+              onClick={() => onSelect(country.code)}
+              className={`
+                flex items-center gap-2 p-2.5 rounded-xl border transition-all
+                touch-manipulation text-left
+                ${selectedCountry === country.code
+                  ? "bg-red-500/20 border-red-500 text-white"
+                  : "bg-white/5 border-white/10 text-gray-200 active:scale-95"
+                }
+              `}
             >
-              <FormattedMessage id="wizard.show.all.countries" /> →
+              <CountryFlag code={country.code} size="sm" />
+              <span className="text-xs font-medium truncate flex-1">{country.label}</span>
+              {selectedCountry === country.code && (
+                <Check className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+              )}
             </button>
-          </>
-        ) : (
-          <div className="space-y-2">
-            {filteredCountries.slice(0, 20).map((country) => (
-              <button
-                key={country.code}
-                onClick={() => onSelect(country.code)}
-                className={`
-                  w-full flex items-center gap-3 p-4 rounded-2xl border-2 transition-all duration-200
-                  touch-manipulation
-                  ${selectedCountry === country.code
-                    ? "bg-red-500/20 border-red-500 text-white"
-                    : "bg-white/5 border-white/10 text-gray-200 hover:bg-white/10 active:scale-95"
-                  }
-                `}
-              >
-                <CountryFlag code={country.code} size="md" />
-                <span className="font-medium">{country.label}</span>
-                {selectedCountry === country.code && (
-                  <Check className="w-5 h-5 text-red-400 ml-auto" />
-                )}
-              </button>
-            ))}
-            {filteredCountries.length === 0 && (
-              <p className="text-center text-gray-400 py-8">
-                <FormattedMessage id="wizard.no.results" />
-              </p>
-            )}
-          </div>
+          ))}
+        </div>
+        {filteredCountries.length === 0 && (
+          <p className="text-center text-gray-400 py-4 text-sm">
+            <FormattedMessage id="wizard.no.results" />
+          </p>
         )}
       </div>
 
       {/* Next Button */}
-      <div className="mt-4 pt-4 border-t border-white/10">
+      <div className="pt-3 border-t border-white/10 mt-3">
         <button
           onClick={onNext}
-          disabled={!selectedCountry || selectedCountry === "all"}
+          disabled={!selectedCountry}
           className={`
-            w-full py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-2
-            transition-all duration-200 touch-manipulation
-            ${selectedCountry && selectedCountry !== "all"
-              ? "bg-gradient-to-r from-red-500 to-orange-500 text-white hover:from-red-600 hover:to-orange-600 active:scale-[0.98]"
+            w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2
+            transition-all touch-manipulation
+            ${selectedCountry
+              ? "bg-gradient-to-r from-red-500 to-orange-500 text-white active:scale-[0.98]"
               : "bg-white/10 text-gray-500 cursor-not-allowed"
             }
           `}
         >
           <FormattedMessage id="action.next" />
-          <ChevronRight className="w-5 h-5" />
+          <ChevronRight className="w-4 h-4" />
         </button>
       </div>
     </div>
@@ -301,7 +209,7 @@ const CountryStep: React.FC<{
 };
 
 // ========================================
-// Language Step Component
+// Language Step Component (compact)
 // ========================================
 const LanguageStep: React.FC<{
   selectedLanguage: string;
@@ -312,165 +220,120 @@ const LanguageStep: React.FC<{
 }> = ({ selectedLanguage, onSelect, languageOptions, onNext, onBack }) => {
   const intl = useIntl();
   const [searchQuery, setSearchQuery] = useState("");
-  const [showAllLanguages, setShowAllLanguages] = useState(false);
+
+  // Sort languages: priority first, then alphabetically (including priority ones)
+  const sortedLanguages = useMemo(() => {
+    const priorityLangs: { code: string; label: string }[] = [];
+    const otherLangs: { code: string; label: string }[] = [];
+
+    // Separate priority and other languages
+    languageOptions.forEach((lang) => {
+      if (PRIORITY_LANGUAGE_CODES.includes(lang.code.toLowerCase())) {
+        priorityLangs.push(lang);
+      } else {
+        otherLangs.push(lang);
+      }
+    });
+
+    // Sort priority by their order in PRIORITY_LANGUAGE_CODES
+    priorityLangs.sort((a, b) => {
+      const indexA = PRIORITY_LANGUAGE_CODES.indexOf(a.code.toLowerCase());
+      const indexB = PRIORITY_LANGUAGE_CODES.indexOf(b.code.toLowerCase());
+      return indexA - indexB;
+    });
+
+    // Sort others alphabetically
+    otherLangs.sort((a, b) => a.label.localeCompare(b.label));
+
+    return [...priorityLangs, ...otherLangs];
+  }, [languageOptions]);
 
   // Filter languages with accent-insensitive search
   const filteredLanguages = useMemo(() => {
-    if (!searchQuery.trim()) return languageOptions;
+    if (!searchQuery.trim()) return sortedLanguages;
     const normalizedQuery = normalizeText(searchQuery);
-    return languageOptions.filter((l) =>
+    return sortedLanguages.filter((l) =>
       normalizeText(l.label).includes(normalizedQuery)
     );
-  }, [languageOptions, searchQuery]);
+  }, [sortedLanguages, searchQuery]);
 
-  // Map popular languages with their translated labels
-  const popularLanguagesWithLabels = useMemo(() => {
-    return POPULAR_LANGUAGES.map((pl) => {
-      const found = languageOptions.find(
-        (l) => l.code.toLowerCase() === pl.code.toLowerCase()
-      );
-      return found ? { ...pl, label: found.label } : { ...pl };
-    });
-  }, [languageOptions]);
-
-  // Get flag for a language code
   const getFlagForLanguage = (code: string): string => {
-    const popular = POPULAR_LANGUAGES.find(
-      (l) => l.code.toLowerCase() === code.toLowerCase()
-    );
-    if (popular) return popular.flag;
-    // Default mappings for other languages
-    const flagMap: Record<string, string> = {
-      it: "IT", nl: "NL", pl: "PL", tr: "TR", ja: "JP", ko: "KR",
-      vi: "VN", th: "TH", id: "ID", ms: "MY", sv: "SE", no: "NO",
-      da: "DK", fi: "FI", cs: "CZ", el: "GR", hu: "HU", ro: "RO",
-      uk: "UA", he: "IL", fa: "IR", bn: "BD", ta: "IN", te: "IN",
-      ur: "PK", sw: "KE", af: "ZA", tl: "PH",
-    };
-    return flagMap[code.toLowerCase()] || "UN";
+    return LANGUAGE_FLAG_MAP[code.toLowerCase()] || "UN";
   };
 
   return (
     <div className="flex flex-col h-full">
       {/* Title */}
-      <div className="text-center mb-4">
-        <div className="w-14 h-14 mx-auto mb-3 bg-blue-500/20 rounded-2xl flex items-center justify-center">
-          <Globe className="w-7 h-7 text-blue-400" />
-        </div>
-        <h2 className="text-xl font-bold text-white mb-1">
-          <FormattedMessage id="wizard.step2.title" />
-        </h2>
-        <p className="text-gray-400 text-xs">
-          <FormattedMessage id="wizard.step2.subtitle" />
-        </p>
-      </div>
+      <h2 className="text-lg font-bold text-white text-center mb-3">
+        <FormattedMessage id="wizard.step2.title" />
+      </h2>
 
       {/* Search */}
       <div className="relative mb-3">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         <input
           type="text"
           value={searchQuery}
-          onChange={(e) => {
-            setSearchQuery(e.target.value);
-            setShowAllLanguages(true);
-          }}
-          placeholder={intl.formatMessage({ id: "wizard.search.language", defaultMessage: "Rechercher une langue..." })}
-          className="w-full pl-12 pr-4 py-3 bg-white/5 border-2 border-white/10 rounded-2xl text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500/50 transition-all text-base"
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder={intl.formatMessage({ id: "wizard.search.language" })}
+          className="w-full pl-10 pr-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500/50 text-sm"
         />
       </div>
 
-      {/* Languages Grid */}
-      <div className="flex-1 overflow-y-auto">
-        {!showAllLanguages && !searchQuery ? (
-          <>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-              <FormattedMessage id="wizard.popular.languages" defaultMessage="Langues populaires" />
-            </p>
-            <div className="grid grid-cols-2 gap-2 mb-3">
-              {popularLanguagesWithLabels.map((lang) => (
-                <button
-                  key={lang.code}
-                  onClick={() => onSelect(lang.code)}
-                  className={`
-                    flex items-center gap-2 p-3 rounded-xl border-2 transition-all duration-200
-                    touch-manipulation min-h-[56px]
-                    ${selectedLanguage === lang.code
-                      ? "bg-blue-500/20 border-blue-500 text-white"
-                      : "bg-white/5 border-white/10 text-gray-200 hover:bg-white/10 active:scale-95"
-                    }
-                  `}
-                >
-                  <CountryFlag code={lang.flag} size="sm" />
-                  <span className="font-medium text-sm truncate">{lang.label}</span>
-                  {selectedLanguage === lang.code && (
-                    <Check className="w-4 h-4 text-blue-400 ml-auto flex-shrink-0" />
-                  )}
-                </button>
-              ))}
-            </div>
+      {/* Languages List */}
+      <div className="flex-1 overflow-y-auto -mx-1 px-1">
+        <div className="grid grid-cols-2 gap-2">
+          {filteredLanguages.map((lang) => (
             <button
-              onClick={() => setShowAllLanguages(true)}
-              className="w-full py-2 text-center text-blue-400 font-medium text-sm hover:text-blue-300 transition-colors"
+              key={lang.code}
+              onClick={() => onSelect(lang.code)}
+              className={`
+                flex items-center gap-2 p-2.5 rounded-xl border transition-all
+                touch-manipulation text-left
+                ${selectedLanguage === lang.code
+                  ? "bg-blue-500/20 border-blue-500 text-white"
+                  : "bg-white/5 border-white/10 text-gray-200 active:scale-95"
+                }
+              `}
             >
-              <FormattedMessage id="wizard.show.all.languages" defaultMessage="Voir toutes les langues" /> →
+              <CountryFlag code={getFlagForLanguage(lang.code)} size="sm" />
+              <span className="text-xs font-medium truncate flex-1">{lang.label}</span>
+              {selectedLanguage === lang.code && (
+                <Check className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
+              )}
             </button>
-          </>
-        ) : (
-          <div className="space-y-2">
-            {filteredLanguages.length === 0 ? (
-              <p className="text-center text-gray-400 py-8">
-                <FormattedMessage id="wizard.no.results" />
-              </p>
-            ) : (
-              filteredLanguages.map((lang) => (
-                <button
-                  key={lang.code}
-                  onClick={() => onSelect(lang.code)}
-                  className={`
-                    w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all duration-200
-                    touch-manipulation
-                    ${selectedLanguage === lang.code
-                      ? "bg-blue-500/20 border-blue-500 text-white"
-                      : "bg-white/5 border-white/10 text-gray-200 hover:bg-white/10 active:scale-95"
-                    }
-                  `}
-                >
-                  <CountryFlag code={getFlagForLanguage(lang.code)} size="sm" />
-                  <span className="font-medium text-sm">{lang.label}</span>
-                  {selectedLanguage === lang.code && (
-                    <Check className="w-4 h-4 text-blue-400 ml-auto" />
-                  )}
-                </button>
-              ))
-            )}
-          </div>
+          ))}
+        </div>
+        {filteredLanguages.length === 0 && (
+          <p className="text-center text-gray-400 py-4 text-sm">
+            <FormattedMessage id="wizard.no.results" />
+          </p>
         )}
       </div>
 
       {/* Navigation Buttons */}
-      <div className="mt-4 pt-4 border-t border-white/10 flex gap-3">
+      <div className="pt-3 border-t border-white/10 mt-3 flex gap-2">
         <button
           onClick={onBack}
-          className="flex-1 py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 bg-white/10 text-white hover:bg-white/20 transition-all touch-manipulation"
+          className="flex-1 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-1 bg-white/10 text-white active:scale-[0.98] touch-manipulation"
         >
-          <ChevronLeft className="w-5 h-5" />
+          <ChevronLeft className="w-4 h-4" />
           <FormattedMessage id="action.back" />
         </button>
         <button
           onClick={onNext}
-          disabled={!selectedLanguage || selectedLanguage === "all"}
+          disabled={!selectedLanguage}
           className={`
-            flex-1 py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-2
-            transition-all duration-200 touch-manipulation
-            ${selectedLanguage && selectedLanguage !== "all"
-              ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 active:scale-[0.98]"
+            flex-1 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-1
+            transition-all touch-manipulation
+            ${selectedLanguage
+              ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white active:scale-[0.98]"
               : "bg-white/10 text-gray-500 cursor-not-allowed"
             }
           `}
         >
           <FormattedMessage id="action.next" />
-          <ChevronRight className="w-5 h-5" />
+          <ChevronRight className="w-4 h-4" />
         </button>
       </div>
     </div>
@@ -478,7 +341,7 @@ const LanguageStep: React.FC<{
 };
 
 // ========================================
-// Type Step Component
+// Type Step Component (compact - fits without scroll)
 // ========================================
 const TypeStep: React.FC<{
   selectedType: "all" | "lawyer" | "expat";
@@ -486,115 +349,96 @@ const TypeStep: React.FC<{
   onComplete: () => void;
   onBack: () => void;
 }> = ({ selectedType, onSelect, onComplete, onBack }) => {
-  const intl = useIntl();
-
   const typeOptions = [
     {
       value: "lawyer" as const,
       icon: Scale,
-      color: "from-slate-500 to-slate-700",
       bgColor: "bg-slate-500/20",
       borderColor: "border-slate-500",
-      textColor: "text-slate-400",
+      iconBg: "bg-slate-500",
     },
     {
       value: "expat" as const,
       icon: Globe,
-      color: "from-emerald-500 to-teal-600",
       bgColor: "bg-emerald-500/20",
       borderColor: "border-emerald-500",
-      textColor: "text-emerald-400",
+      iconBg: "bg-emerald-500",
     },
     {
       value: "all" as const,
       icon: HelpCircle,
-      color: "from-purple-500 to-pink-600",
       bgColor: "bg-purple-500/20",
       borderColor: "border-purple-500",
-      textColor: "text-purple-400",
+      iconBg: "bg-purple-500",
     },
   ];
 
   return (
     <div className="flex flex-col h-full">
       {/* Title */}
-      <div className="text-center mb-6">
-        <div className="w-16 h-16 mx-auto mb-4 bg-purple-500/20 rounded-2xl flex items-center justify-center">
-          <Users className="w-8 h-8 text-purple-400" />
-        </div>
-        <h2 className="text-2xl font-bold text-white mb-2">
-          <FormattedMessage id="wizard.step3.title" />
-        </h2>
-        <p className="text-gray-400 text-sm">
-          <FormattedMessage id="wizard.step3.subtitle" />
-        </p>
-      </div>
+      <h2 className="text-lg font-bold text-white text-center mb-4">
+        <FormattedMessage id="wizard.step3.title" />
+      </h2>
 
       {/* Type Options */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="space-y-4">
-          {typeOptions.map((option) => {
-            const Icon = option.icon;
-            const isSelected = selectedType === option.value;
+      <div className="flex-1 space-y-3">
+        {typeOptions.map((option) => {
+          const Icon = option.icon;
+          const isSelected = selectedType === option.value;
 
-            return (
-              <button
-                key={option.value}
-                onClick={() => {
-                  onSelect(option.value);
-                }}
+          return (
+            <button
+              key={option.value}
+              onClick={() => onSelect(option.value)}
+              className={`
+                w-full p-4 rounded-2xl border-2 transition-all
+                touch-manipulation text-left flex items-center gap-3
+                ${isSelected
+                  ? `${option.bgColor} ${option.borderColor}`
+                  : "bg-white/5 border-white/10"
+                }
+                active:scale-[0.98]
+              `}
+            >
+              <div
                 className={`
-                  w-full p-6 rounded-3xl border-2 transition-all duration-200
-                  touch-manipulation text-left
-                  ${isSelected
-                    ? `${option.bgColor} ${option.borderColor}`
-                    : "bg-white/5 border-white/10 hover:bg-white/10"
-                  }
-                  active:scale-[0.98]
+                  w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0
+                  ${isSelected ? option.iconBg : "bg-white/10"}
                 `}
               >
-                <div className="flex items-start gap-4">
-                  <div
-                    className={`
-                      w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0
-                      ${isSelected ? `bg-gradient-to-br ${option.color}` : "bg-white/10"}
-                    `}
-                  >
-                    <Icon className={`w-7 h-7 ${isSelected ? "text-white" : "text-gray-400"}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className={`text-xl font-bold mb-1 ${isSelected ? "text-white" : "text-gray-200"}`}>
-                      <FormattedMessage id={`wizard.step3.${option.value}`} />
-                    </h3>
-                    <p className={`text-sm ${isSelected ? option.textColor : "text-gray-400"}`}>
-                      <FormattedMessage id={`wizard.step3.${option.value}.desc`} />
-                    </p>
-                  </div>
-                  {isSelected && (
-                    <Check className={`w-6 h-6 ${option.textColor} flex-shrink-0`} />
-                  )}
-                </div>
-              </button>
-            );
-          })}
-        </div>
+                <Icon className={`w-5 h-5 ${isSelected ? "text-white" : "text-gray-400"}`} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className={`text-base font-bold ${isSelected ? "text-white" : "text-gray-200"}`}>
+                  <FormattedMessage id={`wizard.step3.${option.value}`} />
+                </h3>
+                <p className="text-xs text-gray-400">
+                  <FormattedMessage id={`wizard.step3.${option.value}.desc`} />
+                </p>
+              </div>
+              {isSelected && (
+                <Check className="w-5 h-5 text-white flex-shrink-0" />
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Navigation Buttons */}
-      <div className="mt-4 pt-4 border-t border-white/10 flex gap-3">
+      <div className="pt-3 border-t border-white/10 mt-3 flex gap-2">
         <button
           onClick={onBack}
-          className="flex-1 py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 bg-white/10 text-white hover:bg-white/20 transition-all touch-manipulation"
+          className="flex-1 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-1 bg-white/10 text-white active:scale-[0.98] touch-manipulation"
         >
-          <ChevronLeft className="w-5 h-5" />
+          <ChevronLeft className="w-4 h-4" />
           <FormattedMessage id="action.back" />
         </button>
         <button
           onClick={onComplete}
-          className="flex-1 py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 transition-all touch-manipulation active:scale-[0.98]"
+          className="flex-1 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white active:scale-[0.98] touch-manipulation"
         >
           <FormattedMessage id="wizard.seeResults" />
-          <ChevronRight className="w-5 h-5" />
+          <ChevronRight className="w-4 h-4" />
         </button>
       </div>
     </div>
@@ -649,13 +493,13 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
 
   return (
     <div className="fixed inset-x-0 top-[56px] lg:top-[80px] bottom-0 z-40 bg-gray-950 flex flex-col">
-      {/* Progress Bar */}
-      <div className="flex-shrink-0 px-4 pt-4 pb-4">
+      {/* Progress Bar - with safe padding from header */}
+      <div className="flex-shrink-0 px-4 pt-3 pb-2">
         <StepProgressBar currentStep={step} totalSteps={3} />
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-hidden px-4 pb-4">
+      <div className="flex-1 overflow-hidden px-4 pb-4 flex flex-col min-h-0">
         {step === 1 && (
           <CountryStep
             selectedCountry={selectedCountry}
@@ -682,9 +526,6 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
           />
         )}
       </div>
-
-      {/* Safe area padding for mobile */}
-      <div className="flex-shrink-0 h-safe-area-inset-bottom" />
     </div>
   );
 };

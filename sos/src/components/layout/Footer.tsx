@@ -409,10 +409,10 @@ const ScrollToTopButton = memo<ScrollToTopButtonProps>(
       <button
         type="button"
         onClick={onClick}
-        className="fixed bottom-6 right-6 z-50 group
-          bg-gradient-to-r from-red-500 to-red-600 
-          text-white p-3 rounded-2xl shadow-xl 
-          hover:shadow-red-500/25 hover:scale-110 
+        className="hidden lg:flex fixed bottom-6 right-6 z-50 group
+          bg-gradient-to-r from-red-500 to-red-600
+          text-white p-3 rounded-2xl shadow-xl
+          hover:shadow-red-500/25 hover:scale-110
           focus:scale-110 active:scale-95
           transition-all duration-300 ease-out
           focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50
