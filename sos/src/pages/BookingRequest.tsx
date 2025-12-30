@@ -1395,16 +1395,18 @@ const BookingRequest: React.FC = () => {
   const refPhone = useRef<HTMLDivElement | null>(null);
   const refCGU = useRef<HTMLDivElement | null>(null);
 
+  // Mobile-first input classes with 44px minimum touch target (Apple HIG)
   const inputClass = (hasErr?: boolean) =>
-    `w-full px-3 py-3 border-2 rounded-xl bg-white text-gray-900 placeholder-gray-500 focus:outline-none transition-all duration-200 text-base 
-  
-    [&_input]:border-0 [&_input]:outline-none [&_input]:shadow-none
+    `w-full px-3 sm:px-4 py-3 sm:py-3.5 min-h-[48px] border-2 rounded-xl bg-white text-gray-900 placeholder-gray-400
+    focus:outline-none transition-all duration-200 text-base touch-manipulation
+    [&_input]:border-0 [&_input]:outline-none [&_input]:shadow-none [&_input]:bg-transparent
     [&_input:focus]:border-0 [&_input:focus]:outline-none [&_input:focus]:shadow-none
-    [&_select]:outline-none [&_select:focus]:outline-none
+    [&_select]:outline-none [&_select:focus]:outline-none [&_select]:bg-transparent
+    [-webkit-appearance:none] [appearance:none]
   ${
     hasErr
-      ? "border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-red-50"
-      : "border-gray-200 hover:border-gray-300 focus:border-red-600"
+      ? "border-red-500 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 bg-red-50/50"
+      : "border-gray-200 hover:border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
   }`;
 
   // Rediriger vers login si non connecté
@@ -1935,135 +1937,165 @@ const BookingRequest: React.FC = () => {
         }}
       />
 
-      <div className="min-h-screen bg-[linear-gradient(180deg,#fff7f7_0%,#ffffff_35%,#fff5f8_100%)] py-4 sm:py-8">
-        {/* Hero / Title */}
-        <header className="px-4 max-w-3xl mx-auto mb-4 sm:mb-6">
-          <div className="flex items-center gap-3 text-gray-700 mb-2">
+      <div className="min-h-screen bg-[linear-gradient(180deg,#fff7f7_0%,#ffffff_35%,#fff5f8_100%)] py-3 sm:py-8 pb-safe">
+        {/* Hero / Title - Mobile optimized */}
+        <header className="px-3 sm:px-4 max-w-3xl mx-auto mb-3 sm:mb-6">
+          <div className="flex items-center gap-2 sm:gap-3 text-gray-700 mb-2">
             <button
               onClick={() => navigate(`/provider/${provider!.id}`)}
-              className="p-2 rounded-lg hover:bg-gray-100"
+              className="p-2.5 -ml-1 rounded-xl hover:bg-gray-100 active:scale-95 transition-transform touch-manipulation"
               aria-label="Retour"
             >
-              <ArrowLeft size={20} />
+              <ArrowLeft size={22} />
             </button>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-gray-900">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl sm:text-3xl font-black tracking-tight text-gray-900 truncate">
                 <span
                   className={`bg-gradient-to-r ${THEME.gradFrom} ${THEME.gradVia} ${THEME.gradTo} bg-clip-text text-transparent`}
                 >
-                  {/* {t.heroTitle} */}
                   <FormattedMessage id="bookingRequest.heroTitle" />
                 </span>
               </h1>
-              <p className="text-sm text-gray-600 mt-1">
-                {/* {t.heroSubtitle} */}
+              <p className="text-xs sm:text-sm text-gray-600 mt-0.5 sm:mt-1 line-clamp-1 sm:line-clamp-none">
                 <FormattedMessage id="bookingRequest.heroSubtitle" />
               </p>
             </div>
           </div>
 
-          {/* Progress */}
-          <div className="mb-3">
+          {/* Progress bar - Mobile optimized */}
+          <div className="mb-2 sm:mb-3">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-sm font-bold text-gray-700">
-                {/* {t.progress} */}
+              <span className="text-xs sm:text-sm font-bold text-gray-700">
                 {intl.formatMessage({ id: "bookingRequest.progress" })}
               </span>
-              <span className="text-sm font-bold text-red-600">
+              <span className="text-xs sm:text-sm font-bold text-red-600 tabular-nums">
                 {formProgress}%
               </span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div className="w-full bg-gray-200 rounded-full h-2 sm:h-2.5 overflow-hidden">
               <div
-                className="h-2.5 rounded-full bg-gradient-to-r from-red-500 to-orange-500 transition-all duration-700"
+                className="h-full rounded-full bg-gradient-to-r from-red-500 to-orange-500 transition-all duration-500 ease-out"
                 style={{ width: `${formProgress}%` }}
               />
             </div>
           </div>
         </header>
 
-        {/* Provider card */}
-        <div className="max-w-3xl mx-auto px-4 mb-4">
-          <div className="p-4 sm:p-5 bg-white rounded-2xl shadow-lg border border-gray-100 flex items-start gap-4">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 border-red-200 bg-white shadow-md flex-shrink-0 grid place-items-center">
-              {provider?.avatar ? (
-                <img
-                  src={provider.avatar}
-                  alt={`Photo de ${provider.name}`}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = "/default-avatar.png";
-                  }}
-                />
-              ) : (
-                <img
-                  src="/default-avatar.png"
-                  alt="Avatar par défaut"
-                  className="w-full h-full object-cover"
-                />
-              )}
+        {/* Provider card - Mobile-first optimized */}
+        <div className="max-w-3xl mx-auto px-3 sm:px-4 mb-4">
+          <div className="p-3 sm:p-5 bg-white rounded-2xl shadow-lg border border-gray-100">
+            {/* Mobile: Stack layout / Desktop: Row layout */}
+            <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
+              {/* Provider info row */}
+              <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl overflow-hidden border-2 border-red-200 bg-white shadow-md flex-shrink-0 grid place-items-center">
+                  {provider?.avatar ? (
+                    <img
+                      src={provider.avatar}
+                      alt={`Photo de ${provider.name}`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "/default-avatar.png";
+                      }}
+                    />
+                  ) : (
+                    <img
+                      src="/default-avatar.png"
+                      alt="Avatar par défaut"
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-base sm:text-xl font-extrabold text-gray-900 truncate max-w-[150px] sm:max-w-none">
+                      {provider?.name || "—"}
+                    </h3>
+                    <span
+                      className={`inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold whitespace-nowrap ${
+                        isLawyer
+                          ? "bg-blue-100 text-blue-800 border border-blue-200"
+                          : "bg-green-100 text-green-800 border border-green-200"
+                      }`}
+                    >
+                      {isLawyer ? "⚖️ Avocat" : "🌍 Expatrié"}
+                    </span>
+                  </div>
+                  <div className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-gray-700 flex items-center gap-1.5">
+                    <span className="font-medium">📍</span>
+                    <span className="truncate">{provider.country}</span>
+                  </div>
+                  {/* Languages - Hidden on mobile, shown on desktop */}
+                  {!!provider?.languages?.length && (
+                    <div className="hidden sm:flex mt-2 flex-wrap gap-1">
+                      {(provider.languages || []).slice(0, 3).map((code, idx) => {
+                        const l = ALL_LANGS.find((x) => x.code === code);
+                        const label = l ? getLanguageLabel(l, lang) : code.toUpperCase();
+                        return (
+                          <span
+                            key={`${code}-${idx}`}
+                            className="inline-block px-2 py-0.5 bg-blue-50 text-blue-800 text-xs rounded border border-blue-200"
+                          >
+                            {label}
+                          </span>
+                        );
+                      })}
+                      {(provider.languages || []).length > 3 && (
+                        <span className="text-xs text-gray-500">
+                          +{(provider.languages || []).length - 3}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Price card - Full width on mobile */}
+              <div className="flex items-center justify-between sm:justify-center sm:flex-col bg-gradient-to-r sm:bg-none from-red-50 to-orange-50 sm:bg-white rounded-xl p-3 sm:p-4 border border-red-100 sm:border-gray-200 sm:min-w-[130px]">
+                <div className="flex items-baseline gap-1 sm:block sm:text-center">
+                  <div className="text-xl sm:text-3xl font-extrabold text-red-600">{displayEUR}€</div>
+                  <div className="text-sm sm:text-base text-gray-500 sm:hidden">/ ${displayUSD}</div>
+                  <div className="hidden sm:block text-sm text-gray-500">/ ${displayUSD}</div>
+                </div>
+                <div className="flex items-center gap-2 sm:flex-col sm:gap-1 sm:mt-1">
+                  <div className="text-sm font-semibold text-gray-700 bg-white sm:bg-transparent px-2 py-0.5 rounded-full sm:rounded-none">
+                    ⏱️ {displayDuration} min
+                  </div>
+                  <div className="text-xs text-gray-500 hidden sm:block">
+                    💳 {intl.formatMessage({ id: "bookingRequest.securePay" })}
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-lg sm:text-xl font-extrabold text-gray-900 truncate">
-                  {provider?.name || "—"}
-                </h3>
-                <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
-                    isLawyer
-                      ? "bg-blue-100 text-blue-800 border border-blue-200"
-                      : "bg-green-100 text-green-800 border border-green-200"
-                  }`}
-                >
-                  {isLawyer ? "⚖️ Avocat" : "🌍 Expatrié aidant"}
-                </span>
-              </div>
-              <div className="mt-1 text-xs sm:text-sm text-gray-700 flex items-center gap-2">
-                <span className="font-medium">📍</span>
-                <span className="truncate">{provider.country}</span>
-              </div>
-              {!!provider?.languages?.length && (
-                <div className="mt-2 flex flex-wrap gap-1">
-                  {(provider.languages || []).slice(0, 3).map((code, idx) => {
+
+            {/* Languages on mobile - Compact horizontal scroll */}
+            {!!provider?.languages?.length && (
+              <div className="sm:hidden mt-3 -mx-1 px-1 overflow-x-auto scrollbar-hide">
+                <div className="flex gap-1.5 pb-1">
+                  {(provider.languages || []).map((code, idx) => {
                     const l = ALL_LANGS.find((x) => x.code === code);
                     const label = l ? getLanguageLabel(l, lang) : code.toUpperCase();
                     return (
                       <span
-                        key={`${code}-${idx}`}
-                        className="inline-block px-2 py-0.5 bg-blue-50 text-blue-800 text-xs rounded border border-blue-200"
+                        key={`mobile-${code}-${idx}`}
+                        className="inline-block px-2 py-1 bg-blue-50 text-blue-800 text-xs rounded-full border border-blue-200 whitespace-nowrap"
                       >
                         {label}
                       </span>
                     );
                   })}
-                  {(provider.languages || []).length > 3 && (
-                    <span className="text-xs text-gray-500">
-                      +{(provider.languages || []).length - 3}
-                    </span>
-                  )}
                 </div>
-              )}
-            </div>
-            <div className="text-center sm:text-right bg-white rounded-xl p-3 sm:p-4 border border-gray-200 w-auto min-w-[120px]">
-              <div className="text-2xl sm:text-3xl font-extrabold text-red-600">{`${displayEUR}€ / $${displayUSD}`}</div>
-              <div className="text-sm text-gray-600 mt-1">
-                {displayDuration} min
               </div>
-              <div className="mt-1 text-xs text-gray-500">
-                💳
-                {/* {t.securePay} */}
-                {intl.formatMessage({ id: "bookingRequest.securePay" })}
-              </div>
-            </div>
+            )}
           </div>
         </div>
 
-        {/* Form + Preview */}
-        <div className="max-w-3xl mx-auto px-4">
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-100">
-            <form onSubmit={handleSubmit(onSubmit)} noValidate>
+        {/* Form + Preview - Mobile optimized */}
+        <div className="max-w-3xl mx-auto px-3 sm:px-4">
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+            <form onSubmit={handleSubmit(onSubmit)} noValidate className="touch-manipulation">
               {/* Section Perso */}
-              <section className="p-5 sm:p-6">
+              <section className="p-4 sm:p-6">
                 <SectionHeader
                   icon={<MapPin className="w-5 h-5" />}
                   // title={t.personal}
@@ -2284,7 +2316,7 @@ const BookingRequest: React.FC = () => {
               </section>
 
               {/* Section Demande */}
-              <section className="p-5 sm:p-6 border-t border-gray-50">
+              <section className="p-4 sm:p-6 border-t border-gray-100">
                 <SectionHeader
                   icon={<Globe className="w-5 h-5" />}
                   // title={t.request}
@@ -2402,7 +2434,7 @@ const BookingRequest: React.FC = () => {
 
               {/* Section Langues */}
               <section
-                className="p-5 sm:p-6 border-t border-gray-50"
+                className="p-4 sm:p-6 border-t border-gray-100"
                 ref={refLangs}
               >
                 <SectionHeader
@@ -2561,7 +2593,7 @@ const BookingRequest: React.FC = () => {
 
               {/* Section Contact (RHF + PhoneField) */}
               <section
-                className="p-5 sm:p-6 border-t border-gray-50"
+                className="p-4 sm:p-6 border-t border-gray-100"
                 ref={refPhone}
               >
                 <SectionHeader
@@ -2688,11 +2720,11 @@ const BookingRequest: React.FC = () => {
 
               {/* CGU */}
               <section
-                className="p-5 sm:p-6 border-t border-gray-50"
+                className="p-4 sm:p-6 border-t border-gray-100"
                 ref={refCGU}
               >
-                <div className="bg-gray-50 rounded-xl p-4 sm:p-5 border border-gray-200">
-                  <div className="flex items-start gap-3">
+                <div className="bg-gray-50 rounded-xl p-3 sm:p-5 border border-gray-200">
+                  <div className="flex items-start gap-2 sm:gap-3">
                     <Controller
                       control={control}
                       name="acceptTerms"
@@ -2747,8 +2779,8 @@ const BookingRequest: React.FC = () => {
 
               {/* Erreurs globales */}
               {formError && (
-                <div className="px-5 sm:px-6 pb-0">
-                  <div className="bg-red-50 border-l-4 border-red-500 rounded-xl p-4">
+                <div className="px-4 sm:px-6 pb-0">
+                  <div className="bg-red-50 border-l-4 border-red-500 rounded-xl p-3 sm:p-4">
                     <div className="flex">
                       <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
                       <div className="ml-3">
@@ -2766,11 +2798,11 @@ const BookingRequest: React.FC = () => {
               )}
 
               {/* Aperçu rapide */}
-              <div className="px-5 sm:px-6">
+              <div className="px-4 sm:px-6">
                 <button
                   type="button"
                   onClick={() => setShowPreview((v) => !v)}
-                  className="inline-flex items-center px-3 py-2 text-sm font-semibold rounded-lg border border-gray-300 hover:bg-gray-50"
+                  className="inline-flex items-center px-3 py-2.5 text-sm font-semibold rounded-xl border border-gray-300 hover:bg-gray-50 active:scale-[0.98] transition-transform touch-manipulation"
                 >
                   {/* {showPreview
                     ? "Masquer l’aperçu"
@@ -2801,8 +2833,8 @@ const BookingRequest: React.FC = () => {
                 )}
               </div>
 
-              {/* CTA */}
-              <div className="p-5 sm:p-6">
+              {/* CTA - Mobile optimized with sticky behavior */}
+              <div className="p-4 sm:p-6 pb-6 sm:pb-6">
                 <Button
                   type="submit"
                   loading={isSubmitting}
@@ -2810,34 +2842,33 @@ const BookingRequest: React.FC = () => {
                   size="large"
                   className={`${
                     Object.values(validFlags).every(Boolean)
-                      ? `bg-gradient-to-r ${THEME.button} hover:opacity-95 transform hover:scale-[1.01] shadow-lg`
+                      ? `bg-gradient-to-r ${THEME.button} hover:opacity-95 transform hover:scale-[1.01] active:scale-[0.98] shadow-lg shadow-red-500/25`
                       : "bg-gray-400 cursor-not-allowed"
-                  } text-white font-bold py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 ease-out text-base sm:text-lg`}
+                  } text-white font-bold py-4 sm:py-4 px-4 sm:px-8 rounded-xl transition-all duration-200 ease-out text-sm sm:text-lg touch-manipulation min-h-[56px]`}
                   disabled={
                     isSubmitting || !Object.values(validFlags).every(Boolean)
                   }
                 >
                   {isSubmitting ? (
-                    <div className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-3" />
-                      {intl.formatMessage({ id: 'bookingRequest.processing' })}
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="animate-spin rounded-full h-5 w-5 sm:h-6 sm:w-6 border-2 border-white border-t-transparent" />
+                      <span className="text-sm sm:text-base">{intl.formatMessage({ id: 'bookingRequest.processing' })}</span>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-center">
-                      <Euro size={20} className="mr-2 sm:mr-3" />
-                      <span>
-                        {/* {t.continuePay} */}
-                        {intl.formatMessage({
-                          id: "bookingRequest.continuePay",
-                        })}
-                        ({`${displayEUR}€ / $${displayUSD}`})
+                    <div className="flex items-center justify-center gap-2">
+                      <Euro size={18} className="flex-shrink-0" />
+                      <span className="truncate">
+                        {intl.formatMessage({ id: "bookingRequest.continuePay" })}
+                      </span>
+                      <span className="font-extrabold whitespace-nowrap">
+                        {displayEUR}€
                       </span>
                     </div>
                   )}
                 </Button>
 
                 {!Object.values(validFlags).every(Boolean) && (
-                  <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
                     <p className="text-yellow-800 text-sm font-medium mb-2">
                       🔍{" "}
                       {/* {lang === "en"
