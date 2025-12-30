@@ -140,15 +140,26 @@ export function normalizeProvider(providerData: unknown): Provider {
   const type: 'lawyer' | 'expat' =
     rawType === 'lawyer' || rawType === 'expat' ? (rawType as 'lawyer' | 'expat') : 'expat';
 
-  // name / fullName
-  const nameCandidate =
-    toStr(o.name) ||
-    toStr(o.fullName) ||
-    toStr(o.providerName) ||
-    toStr(o.displayName) ||
-    `${toStr(o.firstName)} ${toStr(o.lastName)}`.trim();
-  const name = nameCandidate || (id ? `Expert ${id.slice(-4)}` : 'Expert');
-  const fullName = toStr(o.fullName) || toStr(o.name) || name;
+  // name / fullName - Format public: "Prénom N." (first name + initial)
+  const firstName = toStr(o.firstName);
+  const lastName = toStr(o.lastName);
+
+  // Build public display name (FirstName + Last initial)
+  const formatPublicName = (first: string, last: string): string => {
+    if (first && last) {
+      return `${first} ${last.charAt(0).toUpperCase()}.`;
+    }
+    return first || last || '';
+  };
+
+  // Priority: existing formatted name > build from first/last > full name > fallback
+  const existingName = toStr(o.name) || toStr(o.providerName) || toStr(o.displayName);
+  const publicName = formatPublicName(firstName, lastName);
+  const rawFullName = toStr(o.fullName);
+
+  // Use public name format if we have firstName+lastName, otherwise use existing
+  const name = publicName || existingName || rawFullName || (id ? `Expert ${id.slice(-4)}` : 'Expert');
+  const fullName = rawFullName || existingName || `${firstName} ${lastName}`.trim() || name;
 
   // country
   const country =
@@ -208,8 +219,7 @@ export function normalizeProvider(providerData: unknown): Provider {
   const expatriationYear = toStr(o.expatriationYear);
   const currentCountry = toStr(o.currentCountry, country);
   const currentPresenceCountry = toStr(o.currentPresenceCountry, country);
-  const firstName = toStr(o.firstName);
-  const lastName = toStr(o.lastName);
+  // firstName and lastName already declared above for name formatting
   const profilePhoto = avatar;
   const isActive = o.isActive === false ? false : true;
 

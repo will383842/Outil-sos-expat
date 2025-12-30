@@ -319,6 +319,14 @@ service cloud.firestore {
       allow write: if isAdmin() || isDev();
     }
 
+    // ================= ADMIN CONFIG COLLECTION =================
+    // P0 FIX: Allow public read for pricing data (needed for public pages)
+    // Only admin/dev can write
+    match /admin_config/{docId} {
+      allow read: if true;  // Public read for pricing - needed on public pages
+      allow write: if isAdmin() || isDev();
+    }
+
     // ================= SETTINGS COLLECTION =================
     // P1 SECURITY FIX: Require authentication for settings read
     // Public settings should be moved to a dedicated 'public_config' collection

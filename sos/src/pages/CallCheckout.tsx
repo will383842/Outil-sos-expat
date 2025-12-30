@@ -1739,12 +1739,19 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
       [isProcessing, adminPricing.totalAmount, actuallySubmitPayment]
     );
 
+    // Use name (public format "Prénom N.") for display, fallback to build from first/last
     const providerDisplayName = useMemo(
-      () =>
-        provider?.fullName ||
-        provider?.name ||
-        `${provider?.firstName || ""} ${provider?.lastName || ""}`.trim() ||
-        "Expert",
+      () => {
+        // Prefer formatted public name
+        if (provider?.name) return provider.name;
+        // Build from first/last names with initial format
+        const first = provider?.firstName || "";
+        const last = provider?.lastName || "";
+        if (first && last) return `${first} ${last.charAt(0).toUpperCase()}.`;
+        if (first) return first;
+        // Fallback
+        return provider?.fullName || "Expert";
+      },
       [provider]
     );
 
@@ -2593,11 +2600,11 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
                     provider.profilePhoto ||
                     "/default-avatar.png"
                   }
-                  alt={provider.fullName || provider.name || "Expert"}
+                  alt={provider.name || "Expert"}
                   className="w-12 h-12 rounded-lg object-cover ring-2 ring-white shadow-sm"
                   onError={(e) => {
                     const target = e.currentTarget as HTMLImageElement;
-                    const name = provider.fullName || provider.name || "Expert";
+                    const name = provider.name || "Expert";
                     target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=100&background=4F46E5&color=fff`;
                   }}
                   loading="lazy"
@@ -2610,7 +2617,7 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
 
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-gray-900 truncate text-sm">
-                  {provider.fullName || provider.name || "Expert"}
+                  {provider.name || "Expert"}
                 </h3>
                 <div className="flex items-center gap-2 mt-1">
                   <span
@@ -2792,7 +2799,7 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
                     providerPayPalMerchantId={provider?.paypalMerchantId}
                     callSessionId={`session_${Date.now()}`}
                     clientId={user?.uid || ""}
-                    description={`Appel ${providerRole === "lawyer" ? "avocat" : "expat"} - ${provider?.fullName || provider?.name}`}
+                    description={`Appel ${providerRole === "lawyer" ? "avocat" : "expat"} - ${provider?.name || "Expert"}`}
                     onSuccess={(details) => {
                       console.log("PayPal payment success:", details);
                       handlePaymentSuccess({

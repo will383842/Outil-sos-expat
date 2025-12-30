@@ -47,20 +47,21 @@ export interface AdminPricingDoc {
 /* ────────────────────────────────────────────────────────────────────────────
    Configuration par défaut (modifiable dans l'admin)
    ──────────────────────────────────────────────────────────────────────────── */
+// Fallback values: lawyer: 20min, expat: 30min (must match admin defaults)
 export const DEFAULT_PRICING_CONFIG: PricingTable = {
   lawyer: {
     eur: {
       totalAmount: 49,
       connectionFeeAmount: 19,
       providerAmount: 30,
-      duration: 25,
+      duration: 20,
       currency: 'eur',
     },
     usd: {
       totalAmount: 55,
       connectionFeeAmount: 25,
       providerAmount: 30,
-      duration: 25,
+      duration: 20,
       currency: 'usd',
     },
   },
@@ -69,14 +70,14 @@ export const DEFAULT_PRICING_CONFIG: PricingTable = {
       totalAmount: 19,
       connectionFeeAmount: 9,
       providerAmount: 10,
-      duration: 35,
+      duration: 30,
       currency: 'eur',
     },
     usd: {
       totalAmount: 25,
       connectionFeeAmount: 15,
       providerAmount: 10,
-      duration: 35,
+      duration: 30,
       currency: 'usd',
     },
   },

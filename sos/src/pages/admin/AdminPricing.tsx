@@ -27,6 +27,7 @@ import AdminLayout from "../../components/admin/AdminLayout";
 import { db } from "../../config/firebase";
 import { useAuth } from "../../contexts/AuthContext";
 import AdminPromoCodes from "./AdminPromoCodes";
+import { clearPricingCache } from "../../services/pricingService";
 
 /* ---------------- Types ---------------- */
 
@@ -327,6 +328,8 @@ const AdminPricing: React.FC = () => {
       },
       { merge: true }
     );
+    // Invalidate frontend cache so changes reflect immediately
+    clearPricingCache();
     alert("Prix de base enregistré ✅");
   };
 
@@ -374,6 +377,8 @@ const AdminPricing: React.FC = () => {
       },
       { merge: true }
     );
+    // Invalidate frontend cache so changes reflect immediately
+    clearPricingCache();
     alert("Prix promotionnel enregistré ✅");
   };
 

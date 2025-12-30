@@ -162,13 +162,20 @@ div[class*="country-list"] {
   background: white !important;
 }
 
-/* Mobile responsive */
-@media (max-width: 640px) {
+/* Mobile responsive - fix overflow on small screens */
+@media (max-width: 768px) {
   .react-tel-input .country-list {
     width: calc(100vw - 32px) !important;
-    max-width: 400px !important;
+    max-width: 320px !important;
     left: 50% !important;
     transform: translateX(-50%) !important;
+  }
+}
+
+@media (max-width: 400px) {
+  .react-tel-input .country-list {
+    width: calc(100vw - 24px) !important;
+    max-width: 280px !important;
   }
 }
 

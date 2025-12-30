@@ -66,21 +66,21 @@ const PRICING_REF = doc(db, "admin_config", "pricing");
 let _cache: { data: PricingConfig | null; ts: number } = { data: null, ts: 0 };
 const CACHE_MS = 5 * 60 * 1000;
 
-/** Fallback - Doit correspondre aux prix backend */
+/** Fallback - Doit correspondre aux prix backend et admin (lawyer: 20min, expat: 30min) */
 const DEFAULT_FALLBACK: PricingConfig = {
   lawyer: {
     eur: {
       totalAmount: 49,
       connectionFeeAmount: 19,
       providerAmount: 30,
-      duration: 25,
+      duration: 20,
       currency: "eur",
     },
     usd: {
       totalAmount: 55,
       connectionFeeAmount: 25,
       providerAmount: 30,
-      duration: 25,
+      duration: 20,
       currency: "usd",
     },
   },
@@ -89,14 +89,14 @@ const DEFAULT_FALLBACK: PricingConfig = {
       totalAmount: 19,
       connectionFeeAmount: 9,
       providerAmount: 10,
-      duration: 35,
+      duration: 30,
       currency: "eur",
     },
     usd: {
       totalAmount: 25,
       connectionFeeAmount: 15,
       providerAmount: 10,
-      duration: 35,
+      duration: 30,
       currency: "usd",
     },
   },
