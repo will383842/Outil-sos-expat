@@ -1044,22 +1044,9 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         throw err;
       }
 
-      const methods = await fetchSignInMethodsForEmail(auth, email);
-      if (methods.length > 0) {
-        if (methods.includes('password')) {
-          const err = new Error('Cet email est déjà associé à un compte.') as AppError;
-          err.code = 'auth/email-already-in-use';
-          throw err;
-        }
-        if (methods.includes('google.com')) {
-          const err = new Error('Cet email est lié à un compte Google.') as AppError;
-          err.code = 'sos/email-linked-to-google';
-          throw err;
-        }
-        const err = new Error("Email lié à un autre fournisseur d'identité.") as AppError;
-        err.code = 'sos/email-linked-to-other';
-        throw err;
-      }
+      // Note: fetchSignInMethodsForEmail est désactivé par Firebase pour la protection
+      // contre l'énumération d'emails. On laisse createUserWithEmailAndPassword
+      // gérer les erreurs d'email déjà utilisé directement.
 
       const cred = await createUserWithEmailAndPassword(auth, email, password);
 
