@@ -660,6 +660,31 @@ service cloud.firestore {
       allow update, delete: if isAdmin() || isDev();
     }
 
+    // ================= BOOKING REQUESTS COLLECTION =================
+    match /booking_requests/{bookingId} {
+      // Lecture : client ou provider concerné, ou admin/dev
+      allow read: if isAuthenticated() &&
+                  (resource.data.clientId == request.auth.uid ||
+                   resource.data.providerId == request.auth.uid ||
+                   isAdmin() || isDev());
+
+      // Création : client authentifié avec validation des champs requis
+      allow create: if isAuthenticated() &&
+                    request.resource.data.clientId == request.auth.uid &&
+                    request.resource.data.providerId is string &&
+                    request.resource.data.serviceType is string &&
+                    request.resource.data.status == "pending";
+
+      // Mise à jour : client ou provider concerné (pour changer le statut, etc.)
+      allow update: if isAuthenticated() &&
+                    (resource.data.clientId == request.auth.uid ||
+                     resource.data.providerId == request.auth.uid ||
+                     isAdmin() || isDev());
+
+      // Suppression : admin uniquement
+      allow delete: if isAdmin() || isDev();
+    }
+
     // ================= CATCH-ALL (deny by default) =================
     match /{document=**} {
       allow read, write: if isDev();
