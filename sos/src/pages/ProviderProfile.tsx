@@ -867,13 +867,63 @@ const ProviderProfile: React.FC = () => {
   useEffect(() => {
     const loadProviderData = async (): Promise<void> => {
       if (providerLoadedRef.current) return;
-      
+
       setIsLoading(true);
       setNotFound(false);
 
       try {
         let providerData: SosProfile | null = null;
         let foundProviderId: string | null = null;
+
+        // ✅ PRIORITÉ 1: Vérifier location.state pour éviter le flash 404
+        // Quand on navigue depuis SOSCall, le provider est passé directement
+        if (location.state) {
+          const state = location.state as LocationState;
+          const navData = state.selectedProvider || state.providerData;
+          if (navData && navData.id) {
+            providerData = {
+              uid: navData.id || "",
+              id: navData.id || "",
+              fullName: navData.fullName || `${navData.firstName || ""} ${navData.lastName || ""}`.trim(),
+              firstName: navData.firstName || "",
+              lastName: navData.lastName || "",
+              type: navData.type === "lawyer" ? "lawyer" : "expat",
+              country: navData.country || "",
+              languages: navData.languages || [],
+              specialties: toArrayFromAny(navData.specialties, preferredLangKey),
+              helpTypes: toArrayFromAny(navData.helpTypes, preferredLangKey),
+              description: navData.description || navData.bio || "",
+              profilePhoto: navData.profilePhoto || navData.avatar,
+              rating: Number(navData.rating) || 0,
+              reviewCount: Number(navData.reviewCount) || 0,
+              yearsOfExperience: Number(navData.yearsOfExperience) || 0,
+              yearsAsExpat: Number(navData.yearsAsExpat) || Number(navData.yearsOfExperience) || 0,
+              totalCalls: Number(navData.totalCalls) || 0,
+              createdAt: navData.createdAt,
+              isActive: true,
+              isApproved: true,
+              isVerified: !!navData.isVerified,
+              operatingCountries: toArrayFromAny(navData.operatingCountries, preferredLangKey),
+              residenceCountry: navData.residenceCountry || navData.country,
+            } as SosProfile;
+            foundProviderId = navData.id || "";
+
+            // Afficher immédiatement les données du state, puis enrichir en arrière-plan
+            setProvider(providerData);
+            setRealProviderId(foundProviderId);
+            providerLoadedRef.current = true;
+            setIsLoading(false);
+
+            // Charger les stats et reviews en arrière-plan
+            setIsLoadingStats(true);
+            calculateProviderStats(foundProviderId).then(stats => {
+              setProviderStats(stats);
+              setIsLoadingStats(false);
+            });
+            loadReviews(foundProviderId, navData.id);
+            return; // Sortir ici - données déjà affichées
+          }
+        }
 
         const possibleIds = [
           id,
@@ -1021,38 +1071,7 @@ const ProviderProfile: React.FC = () => {
           }
         }
 
-        if (!providerData && location.state) {
-          const state = location.state as LocationState;
-          const navData = state.selectedProvider || state.providerData;
-          if (navData) {
-            providerData = {
-              uid: navData.id || "",
-              id: navData.id || "",
-              fullName: navData.fullName || `${navData.firstName || ""} ${navData.lastName || ""}`.trim(),
-              firstName: navData.firstName || "",
-              lastName: navData.lastName || "",
-              type: navData.type === "lawyer" ? "lawyer" : "expat",
-              country: navData.country || "",
-              languages: navData.languages || [],
-              specialties: toArrayFromAny(navData.specialties, preferredLangKey),
-              helpTypes: toArrayFromAny(navData.helpTypes, preferredLangKey),
-              description: navData.description || navData.bio || "",
-              profilePhoto: navData.profilePhoto || navData.avatar,
-              rating: Number(navData.rating) || 0,
-              reviewCount: Number(navData.reviewCount) || 0,
-              yearsOfExperience: Number(navData.yearsOfExperience) || 0,
-              yearsAsExpat: Number(navData.yearsAsExpat) || Number(navData.yearsOfExperience) || 0,
-              totalCalls: Number(navData.totalCalls) || 0,
-              createdAt: navData.createdAt,
-              isActive: true,
-              isApproved: true,
-              isVerified: !!navData.isVerified,
-              operatingCountries: toArrayFromAny(navData.operatingCountries, preferredLangKey),
-              residenceCountry: navData.residenceCountry || navData.country,
-            } as SosProfile;
-            foundProviderId = navData.id || "";
-          }
-        }
+        // Note: location.state est déjà vérifié en priorité au début de cette fonction
 
         if (providerData && foundProviderId) {
           // ✅ Vérifications de sécurité harmonisées avec SOSCall.tsx

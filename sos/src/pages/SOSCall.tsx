@@ -3418,20 +3418,32 @@ const SOSCall: React.FC = () => {
               </>
             ) : filteredProviders.length > 0 ? (
               <>
-                {/* Version Mobile - Scroll horizontal fluide */}
+                {/* Version Mobile - Scroll horizontal centré */}
                 <div className="lg:hidden">
-                  <div 
-                    className="flex gap-3 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide -mx-4 px-4"
+                  {/* Indicateur de scroll - En haut, bien visible */}
+                  <div className="flex items-center justify-center gap-3 mb-4 py-3 px-4 mx-4 rounded-2xl bg-gradient-to-r from-red-500/20 via-orange-500/20 to-red-500/20 border border-white/10">
+                    <ChevronLeft className="w-5 h-5 text-white/80 animate-bounce-x" aria-hidden="true" />
+                    <span className="text-white font-medium text-sm">
+                      <FormattedMessage id="sosCall.scroll.hint" />
+                    </span>
+                    <ChevronRight className="w-5 h-5 text-white/80 animate-bounce-x-reverse" aria-hidden="true" />
+                  </div>
+
+                  {/* Container de scroll centré */}
+                  <div
+                    className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide"
                     role="list"
                     aria-label={intl.formatMessage({ id: "sosCall.providerList.mobileAriaLabel" })}
                     style={{
                       WebkitOverflowScrolling: 'touch',
+                      paddingLeft: 'calc((100vw - 320px) / 2)',
+                      paddingRight: 'calc((100vw - 320px) / 2)',
                     }}
                   >
                     {paginatedProviders.map((provider, index) => (
-                      <div 
-                        key={provider.id} 
-                        className="snap-center flex-shrink-0" 
+                      <div
+                        key={provider.id}
+                        className="snap-center flex-shrink-0"
                         role="listitem"
                       >
                         <ModernProfileCard
@@ -3444,28 +3456,19 @@ const SOSCall: React.FC = () => {
                       </div>
                     ))}
                   </div>
-                  
-                  {/* Indicateur de scroll mobile - Texte + Dots */}
-                  <div className="flex flex-col items-center mt-4 gap-2">
-                    {/* Texte indicateur */}
-                    <div className="flex items-center gap-2 text-white/70 text-sm">
-                      <ChevronLeft className="w-4 h-4 animate-pulse" aria-hidden="true" />
-                      <span><FormattedMessage id="sosCall.scroll.hint" /></span>
-                      <ChevronRight className="w-4 h-4 animate-pulse" aria-hidden="true" />
-                    </div>
-                    {/* Dots indicateur */}
-                    <div className="flex items-center gap-1.5">
-                      {Array.from({ length: Math.min(paginatedProviders.length, 5) }).map((_, i) => (
-                        <div
-                          key={i}
-                          className="w-2 h-2 rounded-full bg-white/40"
-                          aria-hidden="true"
-                        />
-                      ))}
-                      {paginatedProviders.length > 5 && (
-                        <span className="text-white/60 text-xs ml-1">+{paginatedProviders.length - 5}</span>
-                      )}
-                    </div>
+
+                  {/* Dots indicateur en bas */}
+                  <div className="flex items-center justify-center gap-2 mt-3">
+                    {Array.from({ length: Math.min(paginatedProviders.length, 5) }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="w-2.5 h-2.5 rounded-full bg-white/50"
+                        aria-hidden="true"
+                      />
+                    ))}
+                    {paginatedProviders.length > 5 && (
+                      <span className="text-white/70 text-sm ml-1">+{paginatedProviders.length - 5}</span>
+                    )}
                   </div>
                 </div>
 
@@ -3599,6 +3602,22 @@ const SOSCall: React.FC = () => {
         }
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
+        }
+
+        /* Animation bounce horizontal pour indicateur scroll */
+        @keyframes bounce-x {
+          0%, 100% { transform: translateX(0); }
+          50% { transform: translateX(-4px); }
+        }
+        @keyframes bounce-x-reverse {
+          0%, 100% { transform: translateX(0); }
+          50% { transform: translateX(4px); }
+        }
+        .animate-bounce-x {
+          animation: bounce-x 1s ease-in-out infinite;
+        }
+        .animate-bounce-x-reverse {
+          animation: bounce-x-reverse 1s ease-in-out infinite;
         }
       `}</style>
 
