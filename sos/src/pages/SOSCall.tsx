@@ -1920,14 +1920,15 @@ const SOSCall: React.FC = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, [wizardCompleted]);
 
-  // Handle wizard completion
+  // Handle wizard completion (supports multi-language selection)
   const handleWizardComplete = useCallback((filters: {
     country: string;
-    language: string;
+    languages: string[];
     type: "all" | "lawyer" | "expat";
   }) => {
     setSelectedCountryCode(filters.country);
-    setSelectedLanguageCode(filters.language);
+    // Use first selected language for main filter (or "all" if none)
+    setSelectedLanguageCode(filters.languages.length > 0 ? filters.languages[0] : "all");
     setSelectedType(filters.type);
     setShowWizard(false);
     setWizardCompleted(true);

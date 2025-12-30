@@ -17,7 +17,7 @@ interface GuidedFilterWizardProps {
   isOpen: boolean;
   onComplete: (filters: {
     country: string;
-    language: string;
+    languages: string[]; // Changed to array for multi-select
     type: "all" | "lawyer" | "expat";
   }) => void;
   countryOptions: { code: string; label: string }[];
@@ -58,26 +58,19 @@ const LANGUAGE_FLAG_MAP: Record<string, string> = {
 };
 
 // Country flag component
-const CountryFlag: React.FC<{ code: string; size?: "sm" | "md" }> = ({
-  code,
-  size = "sm",
-}) => {
-  const sizeClasses = {
-    sm: "w-6 h-4",
-    md: "w-7 h-5",
-  };
+const CountryFlag: React.FC<{ code: string }> = ({ code }) => {
   return (
     <img
       src={`https://flagcdn.com/w40/${code.toLowerCase()}.png`}
       alt=""
-      className={`${sizeClasses[size]} object-cover rounded-sm flex-shrink-0`}
+      className="w-6 h-4 object-cover rounded-sm flex-shrink-0"
       loading="lazy"
     />
   );
 };
 
 // ========================================
-// Step Progress Bar
+// Step Progress Bar (Fixed at top)
 // ========================================
 const StepProgressBar: React.FC<{ currentStep: number; totalSteps: number }> = ({
   currentStep,
@@ -94,7 +87,7 @@ const StepProgressBar: React.FC<{ currentStep: number; totalSteps: number }> = (
           <React.Fragment key={stepNum}>
             <div
               className={`
-                w-10 h-10 rounded-full flex items-center justify-center font-bold text-base
+                w-11 h-11 rounded-full flex items-center justify-center font-bold text-lg
                 transition-all duration-300 shadow-lg
                 ${isCompleted
                   ? "bg-green-500 text-white"
@@ -109,7 +102,7 @@ const StepProgressBar: React.FC<{ currentStep: number; totalSteps: number }> = (
             {stepNum < totalSteps && (
               <div
                 className={`
-                  w-12 h-1 rounded-full transition-all duration-300
+                  w-10 h-1 rounded-full transition-all duration-300
                   ${isCompleted ? "bg-green-500" : "bg-white/10"}
                 `}
               />
@@ -128,8 +121,7 @@ const CountryStep: React.FC<{
   selectedCountry: string;
   onSelect: (code: string) => void;
   countryOptions: { code: string; label: string }[];
-  onNext: () => void;
-}> = ({ selectedCountry, onSelect, countryOptions, onNext }) => {
+}> = ({ selectedCountry, onSelect, countryOptions }) => {
   const intl = useIntl();
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -146,14 +138,12 @@ const CountryStep: React.FC<{
       }
     });
 
-    // Sort priority by their order in PRIORITY_COUNTRY_CODES
     priorityCountries.sort((a, b) => {
       const indexA = PRIORITY_COUNTRY_CODES.indexOf(a.code.toLowerCase());
       const indexB = PRIORITY_COUNTRY_CODES.indexOf(b.code.toLowerCase());
       return indexA - indexB;
     });
 
-    // Sort others alphabetically
     otherCountries.sort((a, b) => a.label.localeCompare(b.label));
 
     return [...priorityCountries, ...otherCountries];
@@ -168,7 +158,7 @@ const CountryStep: React.FC<{
   }, [sortedCountries, searchQuery]);
 
   return (
-    <div className="flex flex-col h-full">
+    <>
       {/* Title */}
       <h2 className="text-xl font-bold text-white text-center mb-4">
         <FormattedMessage id="wizard.step1.title" />
@@ -182,27 +172,27 @@ const CountryStep: React.FC<{
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder={intl.formatMessage({ id: "wizard.search.country" })}
-          className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 text-base"
+          className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 text-base"
         />
       </div>
 
-      {/* Countries List */}
-      <div className="flex-1 overflow-y-auto -mx-2 px-2 min-h-0">
-        <div className="grid grid-cols-2 gap-2">
+      {/* Countries Grid - Scrollable */}
+      <div className="flex-1 overflow-y-auto overscroll-contain">
+        <div className="grid grid-cols-2 gap-2 pb-2">
           {filteredCountries.map((country) => (
             <button
               key={country.code}
               onClick={() => onSelect(country.code)}
               className={`
-                flex items-center gap-2 p-3 rounded-xl border-2 transition-all
-                touch-manipulation text-left min-h-[48px]
+                flex items-center gap-2.5 p-3 rounded-xl border-2 transition-all
+                touch-manipulation text-left min-h-[52px]
                 ${selectedCountry === country.code
                   ? "bg-red-500/20 border-red-500 text-white"
-                  : "bg-white/5 border-transparent text-gray-200 active:scale-[0.98]"
+                  : "bg-white/5 border-transparent text-gray-200 active:scale-[0.97] active:bg-white/10"
                 }
               `}
             >
-              <CountryFlag code={country.code} size="sm" />
+              <CountryFlag code={country.code} />
               <span className="text-sm font-medium truncate flex-1">{country.label}</span>
               {selectedCountry === country.code && (
                 <Check className="w-4 h-4 text-red-400 flex-shrink-0" />
@@ -216,39 +206,18 @@ const CountryStep: React.FC<{
           </p>
         )}
       </div>
-
-      {/* Next Button */}
-      <div className="pt-4 mt-auto">
-        <button
-          onClick={onNext}
-          disabled={!selectedCountry}
-          className={`
-            w-full py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-2
-            transition-all touch-manipulation min-h-[56px]
-            ${selectedCountry
-              ? "bg-gradient-to-r from-red-500 to-orange-500 text-white active:scale-[0.98] shadow-lg shadow-red-500/30"
-              : "bg-white/10 text-gray-500 cursor-not-allowed"
-            }
-          `}
-        >
-          <FormattedMessage id="action.next" />
-          <ChevronRight className="w-5 h-5" />
-        </button>
-      </div>
-    </div>
+    </>
   );
 };
 
 // ========================================
-// Language Step Component
+// Language Step Component (Multi-Select)
 // ========================================
 const LanguageStep: React.FC<{
-  selectedLanguage: string;
-  onSelect: (code: string) => void;
+  selectedLanguages: string[];
+  onToggle: (code: string) => void;
   languageOptions: { code: string; label: string }[];
-  onNext: () => void;
-  onBack: () => void;
-}> = ({ selectedLanguage, onSelect, languageOptions, onNext, onBack }) => {
+}> = ({ selectedLanguages, onToggle, languageOptions }) => {
   const intl = useIntl();
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -289,11 +258,21 @@ const LanguageStep: React.FC<{
   };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Title */}
-      <h2 className="text-xl font-bold text-white text-center mb-4">
+    <>
+      {/* Title with selection count */}
+      <h2 className="text-xl font-bold text-white text-center mb-1">
         <FormattedMessage id="wizard.step2.title" />
       </h2>
+      {selectedLanguages.length > 0 && (
+        <p className="text-center text-blue-400 text-sm mb-3">
+          {selectedLanguages.length} <FormattedMessage id="wizard.languages.selected" />
+        </p>
+      )}
+      {selectedLanguages.length === 0 && (
+        <p className="text-center text-gray-500 text-sm mb-3">
+          <FormattedMessage id="wizard.languages.multiSelect" />
+        </p>
+      )}
 
       {/* Search */}
       <div className="relative mb-4">
@@ -303,33 +282,36 @@ const LanguageStep: React.FC<{
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder={intl.formatMessage({ id: "wizard.search.language" })}
-          className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500/50 text-base"
+          className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500/50 text-base"
         />
       </div>
 
-      {/* Languages List */}
-      <div className="flex-1 overflow-y-auto -mx-2 px-2 min-h-0">
-        <div className="grid grid-cols-2 gap-2">
-          {filteredLanguages.map((lang) => (
-            <button
-              key={lang.code}
-              onClick={() => onSelect(lang.code)}
-              className={`
-                flex items-center gap-2 p-3 rounded-xl border-2 transition-all
-                touch-manipulation text-left min-h-[48px]
-                ${selectedLanguage === lang.code
-                  ? "bg-blue-500/20 border-blue-500 text-white"
-                  : "bg-white/5 border-transparent text-gray-200 active:scale-[0.98]"
-                }
-              `}
-            >
-              <CountryFlag code={getFlagForLanguage(lang.code)} size="sm" />
-              <span className="text-sm font-medium truncate flex-1">{lang.label}</span>
-              {selectedLanguage === lang.code && (
-                <Check className="w-4 h-4 text-blue-400 flex-shrink-0" />
-              )}
-            </button>
-          ))}
+      {/* Languages Grid - Scrollable */}
+      <div className="flex-1 overflow-y-auto overscroll-contain">
+        <div className="grid grid-cols-2 gap-2 pb-2">
+          {filteredLanguages.map((lang) => {
+            const isSelected = selectedLanguages.includes(lang.code);
+            return (
+              <button
+                key={lang.code}
+                onClick={() => onToggle(lang.code)}
+                className={`
+                  flex items-center gap-2.5 p-3 rounded-xl border-2 transition-all
+                  touch-manipulation text-left min-h-[52px]
+                  ${isSelected
+                    ? "bg-blue-500/20 border-blue-500 text-white"
+                    : "bg-white/5 border-transparent text-gray-200 active:scale-[0.97] active:bg-white/10"
+                  }
+                `}
+              >
+                <CountryFlag code={getFlagForLanguage(lang.code)} />
+                <span className="text-sm font-medium truncate flex-1">{lang.label}</span>
+                {isSelected && (
+                  <Check className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                )}
+              </button>
+            );
+          })}
         </div>
         {filteredLanguages.length === 0 && (
           <p className="text-center text-gray-400 py-8 text-base">
@@ -337,33 +319,7 @@ const LanguageStep: React.FC<{
           </p>
         )}
       </div>
-
-      {/* Navigation Buttons */}
-      <div className="pt-4 mt-auto flex gap-3">
-        <button
-          onClick={onBack}
-          className="flex-1 py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-2 bg-white/10 text-white active:scale-[0.98] touch-manipulation min-h-[56px]"
-        >
-          <ChevronLeft className="w-5 h-5" />
-          <FormattedMessage id="action.back" />
-        </button>
-        <button
-          onClick={onNext}
-          disabled={!selectedLanguage}
-          className={`
-            flex-1 py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-2
-            transition-all touch-manipulation min-h-[56px]
-            ${selectedLanguage
-              ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white active:scale-[0.98] shadow-lg shadow-blue-500/30"
-              : "bg-white/10 text-gray-500 cursor-not-allowed"
-            }
-          `}
-        >
-          <FormattedMessage id="action.next" />
-          <ChevronRight className="w-5 h-5" />
-        </button>
-      </div>
-    </div>
+    </>
   );
 };
 
@@ -373,9 +329,7 @@ const LanguageStep: React.FC<{
 const TypeStep: React.FC<{
   selectedType: "all" | "lawyer" | "expat";
   onSelect: (type: "all" | "lawyer" | "expat") => void;
-  onComplete: () => void;
-  onBack: () => void;
-}> = ({ selectedType, onSelect, onComplete, onBack }) => {
+}> = ({ selectedType, onSelect }) => {
   const typeOptions = [
     {
       value: "lawyer" as const,
@@ -401,14 +355,14 @@ const TypeStep: React.FC<{
   ];
 
   return (
-    <div className="flex flex-col h-full">
+    <>
       {/* Title */}
       <h2 className="text-xl font-bold text-white text-center mb-6">
         <FormattedMessage id="wizard.step3.title" />
       </h2>
 
-      {/* Type Options */}
-      <div className="flex-1 space-y-3">
+      {/* Type Options - No scroll needed */}
+      <div className="flex-1 flex flex-col justify-center space-y-3">
         {typeOptions.map((option) => {
           const Icon = option.icon;
           const isSelected = selectedType === option.value;
@@ -419,7 +373,7 @@ const TypeStep: React.FC<{
               onClick={() => onSelect(option.value)}
               className={`
                 w-full p-4 rounded-2xl border-2 transition-all
-                touch-manipulation text-left flex items-center gap-4 min-h-[72px]
+                touch-manipulation text-left flex items-center gap-4
                 ${isSelected
                   ? `${option.bgColor} ${option.borderColor}`
                   : "bg-white/5 border-transparent"
@@ -429,11 +383,11 @@ const TypeStep: React.FC<{
             >
               <div
                 className={`
-                  w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0
+                  w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0
                   ${isSelected ? option.iconBg : "bg-white/10"}
                 `}
               >
-                <Icon className={`w-6 h-6 ${isSelected ? "text-white" : "text-gray-400"}`} />
+                <Icon className={`w-7 h-7 ${isSelected ? "text-white" : "text-gray-400"}`} />
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className={`text-lg font-bold ${isSelected ? "text-white" : "text-gray-200"}`}>
@@ -450,25 +404,7 @@ const TypeStep: React.FC<{
           );
         })}
       </div>
-
-      {/* Navigation Buttons */}
-      <div className="pt-4 mt-auto flex gap-3">
-        <button
-          onClick={onBack}
-          className="flex-1 py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-2 bg-white/10 text-white active:scale-[0.98] touch-manipulation min-h-[56px]"
-        >
-          <ChevronLeft className="w-5 h-5" />
-          <FormattedMessage id="action.back" />
-        </button>
-        <button
-          onClick={onComplete}
-          className="flex-1 py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white active:scale-[0.98] touch-manipulation min-h-[56px] shadow-lg shadow-green-500/30"
-        >
-          <FormattedMessage id="wizard.seeResults" />
-          <ChevronRight className="w-5 h-5" />
-        </button>
-      </div>
-    </div>
+    </>
   );
 };
 
@@ -483,8 +419,17 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
 }) => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [selectedCountry, setSelectedCountry] = useState<string>("");
-  const [selectedLanguage, setSelectedLanguage] = useState<string>("");
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [selectedType, setSelectedType] = useState<"all" | "lawyer" | "expat">("all");
+
+  // Toggle language selection
+  const toggleLanguage = useCallback((code: string) => {
+    setSelectedLanguages((prev) =>
+      prev.includes(code)
+        ? prev.filter((c) => c !== code)
+        : [...prev, code]
+    );
+  }, []);
 
   // Prevent body scroll when wizard is open
   useEffect(() => {
@@ -503,7 +448,7 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
     if (isOpen) {
       setStep(1);
       setSelectedCountry("");
-      setSelectedLanguage("");
+      setSelectedLanguages([]);
       setSelectedType("all");
     }
   }, [isOpen]);
@@ -511,46 +456,110 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
   const handleComplete = useCallback(() => {
     onComplete({
       country: selectedCountry,
-      language: selectedLanguage,
+      languages: selectedLanguages,
       type: selectedType,
     });
-  }, [onComplete, selectedCountry, selectedLanguage, selectedType]);
+  }, [onComplete, selectedCountry, selectedLanguages, selectedType]);
+
+  const canProceed = useMemo(() => {
+    if (step === 1) return !!selectedCountry;
+    if (step === 2) return selectedLanguages.length > 0;
+    return true;
+  }, [step, selectedCountry, selectedLanguages]);
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-x-0 top-[56px] lg:top-[80px] bottom-0 z-40 bg-gradient-to-b from-gray-900 to-gray-950 flex flex-col">
-      {/* Progress Bar - with safe padding from header */}
-      <div className="flex-shrink-0 px-4 pt-6 pb-4">
+
+      {/* ===== HEADER FIXE : Progress Bar ===== */}
+      <div className="flex-shrink-0 px-5 pt-8 pb-5 bg-gray-900/90 backdrop-blur-sm border-b border-white/5">
         <StepProgressBar currentStep={step} totalSteps={3} />
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-hidden px-4 pb-6 flex flex-col min-h-0">
+      {/* ===== CONTENU SCROLLABLE ===== */}
+      <div className="flex-1 overflow-hidden px-5 py-5 flex flex-col min-h-0 max-w-md mx-auto w-full">
         {step === 1 && (
           <CountryStep
             selectedCountry={selectedCountry}
             onSelect={setSelectedCountry}
             countryOptions={countryOptions}
-            onNext={() => setStep(2)}
           />
         )}
         {step === 2 && (
           <LanguageStep
-            selectedLanguage={selectedLanguage}
-            onSelect={setSelectedLanguage}
+            selectedLanguages={selectedLanguages}
+            onToggle={toggleLanguage}
             languageOptions={languageOptions}
-            onNext={() => setStep(3)}
-            onBack={() => setStep(1)}
           />
         )}
         {step === 3 && (
           <TypeStep
             selectedType={selectedType}
             onSelect={setSelectedType}
-            onComplete={handleComplete}
-            onBack={() => setStep(2)}
           />
+        )}
+      </div>
+
+      {/* ===== FOOTER FIXE : Boutons Navigation ===== */}
+      <div
+        className="flex-shrink-0 px-5 py-4 bg-gray-900/95 backdrop-blur-md border-t border-white/10 max-w-md mx-auto w-full"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 16px) + 16px)' }}
+      >
+        {step === 1 ? (
+          // Step 1: Only Next button
+          <button
+            onClick={() => setStep(2)}
+            disabled={!canProceed}
+            className={`
+              w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2
+              transition-all touch-manipulation min-h-[60px]
+              ${canProceed
+                ? "bg-gradient-to-r from-red-500 to-orange-500 text-white active:scale-[0.98] shadow-lg shadow-red-500/30"
+                : "bg-white/10 text-gray-500 cursor-not-allowed"
+              }
+            `}
+          >
+            <FormattedMessage id="action.next" />
+            <ChevronRight className="w-6 h-6" />
+          </button>
+        ) : (
+          // Steps 2 & 3: Back + Next/Complete buttons
+          <div className="flex gap-3">
+            <button
+              onClick={() => setStep((step - 1) as 1 | 2)}
+              className="flex-1 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 bg-white/10 text-white active:scale-[0.98] touch-manipulation min-h-[60px]"
+            >
+              <ChevronLeft className="w-6 h-6" />
+              <FormattedMessage id="action.back" />
+            </button>
+
+            {step === 2 ? (
+              <button
+                onClick={() => setStep(3)}
+                disabled={!canProceed}
+                className={`
+                  flex-1 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2
+                  transition-all touch-manipulation min-h-[60px]
+                  ${canProceed
+                    ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white active:scale-[0.98] shadow-lg shadow-blue-500/30"
+                    : "bg-white/10 text-gray-500 cursor-not-allowed"
+                  }
+                `}
+              >
+                <FormattedMessage id="action.next" />
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            ) : (
+              <button
+                onClick={handleComplete}
+                className="flex-1 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white active:scale-[0.98] touch-manipulation min-h-[60px] shadow-lg shadow-green-500/30"
+              >
+                <FormattedMessage id="wizard.seeResults" />
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            )}
+          </div>
         )}
       </div>
     </div>
