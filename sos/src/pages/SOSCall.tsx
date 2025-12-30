@@ -3010,8 +3010,8 @@ const SOSCall: React.FC = () => {
               </div>
               </div>
 
-              {/* FILTRES */}
-              <div className="rounded-[28px] border border-white/10 bg-white/5 backdrop-blur-md p-4 sm:p-6 max-w-6xl mx-auto">
+              {/* FILTRES - Desktop uniquement (mobile utilise le FAB + wizard) */}
+              <div className="hidden lg:block rounded-[28px] border border-white/10 bg-white/5 backdrop-blur-md p-4 sm:p-6 max-w-6xl mx-auto">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
                   {/* Type */}
                   <div className="space-y-1">
