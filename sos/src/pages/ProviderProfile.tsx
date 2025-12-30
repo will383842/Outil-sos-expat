@@ -104,6 +104,7 @@ const aaaTranslationsMap: Record<string, any> = {
 };
 
 import { FormattedMessage, useIntl } from "react-intl";
+import QuickAuthWizard from "../components/auth/QuickAuthWizard";
 import { getLawyerSpecialityLabel } from "../data/lawyer-specialties";
 import { getExpatHelpTypeLabel } from "../data/expat-help-types";
 
@@ -720,6 +721,9 @@ const ProviderProfile: React.FC = () => {
     discountValue: number;
     services: string[];
   } | null>(null);
+
+  // État pour le wizard d'authentification rapide
+  const [showAuthWizard, setShowAuthWizard] = useState(false);
 
   const seoUpdatedRef = useRef(false);
   const lastUrlRef = useRef<string>('');
@@ -1501,16 +1505,26 @@ const ProviderProfile: React.FC = () => {
           navigationSource: "provider_profile",
         },
       });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
-      navigate(`/login?redirect=${encodeURIComponent(target)}`, {
-        state: {
-          selectedProvider: provider,
-          navigationSource: "provider_profile",
-        },
-      });
+      // ✅ Afficher le wizard d'auth au lieu de rediriger vers /login
+      setShowAuthWizard(true);
     }
-    window.scrollTo({ top: 0, behavior: "smooth" });
   }, [provider, user, navigate, onlineStatus.isOnline]);
+
+  // Callback quand l'authentification réussit via le wizard
+  const handleAuthSuccess = useCallback(() => {
+    if (!provider) return;
+    setShowAuthWizard(false);
+    const target = `/booking-request/${provider.id}`;
+    navigate(target, {
+      state: {
+        selectedProvider: provider,
+        navigationSource: "provider_profile",
+      },
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [provider, navigate]);
 
   const shareProfile = useCallback(
     (platform: "facebook" | "twitter" | "linkedin" | "copy") => {
@@ -3180,6 +3194,16 @@ const ProviderProfile: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* ========================================== */}
+      {/* WIZARD D'AUTHENTIFICATION RAPIDE          */}
+      {/* ========================================== */}
+      <QuickAuthWizard
+        isOpen={showAuthWizard}
+        onClose={() => setShowAuthWizard(false)}
+        onSuccess={handleAuthSuccess}
+        providerName={provider ? formatPublicName(provider) : undefined}
+      />
     </Layout>
   );
 };
