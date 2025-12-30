@@ -1,0 +1,23 @@
+name: sos-expat
+region: fra
+static_sites:
+  - name: sos-expat-frontend
+    source_dir: /sos
+    build_command: npm run build:force
+    output_dir: dist
+    environment_slug: node-js
+    catchall_document: index.html
+    routes:
+      - path: /
+    cors:
+      allow_origins:
+        - exact: https://sos-expat.com
+        - exact: https://www.sos-expat.com
+      allow_methods:
+        - GET
+        - HEAD
+        - OPTIONS
+      allow_headers:
+        - Content-Type
+        - Authorization
+      max_age: "86400"
