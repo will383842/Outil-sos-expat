@@ -116,9 +116,36 @@ export const installNetworkResilience = (): void => {
     let lastError: Error | null = null;
     const maxRetries = 3;
 
+    // Extraire les options de la requête pour pouvoir les réutiliser
+    // On ne peut pas réutiliser un objet Request - il faut recréer la requête à chaque fois
+    let requestUrl: string;
+    let requestInit: RequestInit | undefined;
+
+    if (input instanceof Request) {
+      requestUrl = input.url;
+      // Clone les options de la requête originale
+      requestInit = {
+        method: input.method,
+        headers: input.headers,
+        mode: input.mode as RequestMode,
+        credentials: input.credentials,
+        cache: input.cache,
+        redirect: input.redirect,
+        referrer: input.referrer,
+        referrerPolicy: input.referrerPolicy,
+        integrity: input.integrity,
+        // Pour le body, on ne peut le lire qu'une fois, donc on utilise init.body si fourni
+        body: init?.body,
+        ...init
+      };
+    } else {
+      requestUrl = typeof input === 'string' ? input : input.toString();
+      requestInit = init;
+    }
+
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        return await originalFetch(input, init);
+        return await originalFetch(requestUrl, requestInit);
       } catch (error) {
         lastError = error as Error;
 

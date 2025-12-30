@@ -1259,7 +1259,7 @@ const OptimizedHomePage: React.FC = () => {
                   <span>
                     <FormattedMessage id="cta.callNow" />
                   </span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/30 via-orange-500/30 to-red-600/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" aria-hidden="true" />
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-yellow-400/30 via-orange-500/30 to-red-600/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" aria-hidden="true" />
                 </Link>
 
                 {/* Bouton "Voir les experts" - masqué sur mobile, visible sur desktop */}

@@ -20,6 +20,7 @@ import {
   X,
   RotateCcw,
   Sparkles,
+  Briefcase,
 } from "lucide-react";
 import {
   collection,
@@ -1128,6 +1129,19 @@ const ModernProfileCard: React.FC<{
     return result;
   }, [provider.interventionCountries, provider.country, language]);
 
+  const formattedSpecialties = useMemo(() => {
+    if (!provider.specialties || provider.specialties.length === 0) {
+      return '';
+    }
+
+    const specs = provider.specialties.slice(0, 2);
+    let result = specs.join(' • ');
+    if (provider.specialties.length > 2) {
+      result += ` +${provider.specialties.length - 2}`;
+    }
+    return result;
+  }, [provider.specialties]);
+
   const ariaLabels = useMemo(
     () => ({
       card: intl.formatMessage(
@@ -1293,7 +1307,7 @@ const ModernProfileCard: React.FC<{
           {/* Nom et expérience */}
           <div className="space-y-1.5 sm:space-y-2 mb-2 sm:mb-3">
             <div className="flex items-center justify-between gap-2">
-              <h3 className="text-base sm:text-lg font-bold text-slate-800 truncate flex-1" itemProp="name">
+              <h3 className="text-lg sm:text-xl font-bold text-slate-800 truncate flex-1" itemProp="name">
                 {provider.name}
               </h3>
               <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-teal-50 border border-teal-200 flex-shrink-0">
@@ -1311,8 +1325,8 @@ const ModernProfileCard: React.FC<{
             {/* Pays d'intervention */}
             {formattedCountries && (
               <div className="flex items-start gap-1.5 sm:gap-2">
-                <MapPin className="w-3 h-3 text-blue-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
-                <span className="text-blue-600 text-[11px] sm:text-xs leading-tight line-clamp-2" itemProp="workLocation">
+                <MapPin className="w-3.5 h-3.5 text-blue-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
+                <span className="text-blue-600 text-xs sm:text-sm leading-tight line-clamp-2" itemProp="workLocation">
                   {formattedCountries}
                 </span>
               </div>
@@ -1321,9 +1335,19 @@ const ModernProfileCard: React.FC<{
             {/* Langues parlées */}
             {formattedLanguages && (
               <div className="flex items-start gap-1.5 sm:gap-2">
-                <Globe className="w-3 h-3 text-indigo-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
-                <span className="text-indigo-600 text-[11px] sm:text-xs leading-tight line-clamp-2" itemProp="knowsLanguage">
+                <Globe className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
+                <span className="text-indigo-600 text-xs sm:text-sm leading-tight line-clamp-2" itemProp="knowsLanguage">
                   {formattedLanguages}
+                </span>
+              </div>
+            )}
+
+            {/* Spécialités */}
+            {formattedSpecialties && (
+              <div className="flex items-start gap-1.5 sm:gap-2">
+                <Briefcase className="w-3.5 h-3.5 text-purple-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
+                <span className="text-purple-600 text-xs sm:text-sm leading-tight line-clamp-2" itemProp="hasOccupation">
+                  {formattedSpecialties}
                 </span>
               </div>
             )}
@@ -2811,15 +2835,15 @@ const SOSCall: React.FC = () => {
         {/* ========================================
             HERO SECTION
         ======================================== */}
-        <header className="relative pt-12 pb-16 sm:pt-16 sm:pb-20 overflow-hidden" role="banner">
+        <header className="relative pt-8 pb-8 sm:pt-16 sm:pb-20 overflow-hidden" role="banner">
           <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900" aria-hidden="true" />
           <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-transparent to-blue-500/10" aria-hidden="true" />
           <div className="absolute top-1/4 left-1/4 w-48 sm:w-64 lg:w-96 h-48 sm:h-64 lg:h-96 bg-gradient-to-r from-red-500/20 to-orange-500/20 rounded-full blur-3xl" aria-hidden="true" />
           <div className="absolute bottom-1/4 right-1/4 w-48 sm:w-64 lg:w-96 h-48 sm:h-64 lg:h-96 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-3xl" aria-hidden="true" />
 
           <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
-            <div 
-              className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full pl-3 sm:pl-5 pr-2 sm:pr-3 py-1.5 sm:py-2 border border-white/20 mb-4 sm:mb-6"
+            <div
+              className="hidden sm:inline-flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full pl-3 sm:pl-5 pr-2 sm:pr-3 py-1.5 sm:py-2 border border-white/20 mb-4 sm:mb-6"
               role="status"
               aria-label={intl.formatMessage({ id: "sosCall.hero.badge.ariaLabel" })}
             >
@@ -2827,8 +2851,8 @@ const SOSCall: React.FC = () => {
               <span className="text-white font-semibold text-xs sm:text-sm">
                 <FormattedMessage id="sosCall.hero.badge" />
               </span>
-              <div 
-                className="w-2 h-2 bg-green-400 rounded-full animate-pulse" 
+              <div
+                className="w-2 h-2 bg-green-400 rounded-full animate-pulse"
                 aria-hidden="true"
                 role="presentation"
               />

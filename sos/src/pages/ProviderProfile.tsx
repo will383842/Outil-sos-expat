@@ -2236,7 +2236,7 @@ const ProviderProfile: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
               {/* ===== COLONNE GAUCHE: Infos principales ===== */}
               <div className="lg:col-span-2">
-                <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
                   {/* Photo de profil */}
                   <div className="relative flex-shrink-0">
                     <div className="p-[3px] rounded-full bg-gradient-to-br from-red-400 via-orange-400 to-yellow-300">
