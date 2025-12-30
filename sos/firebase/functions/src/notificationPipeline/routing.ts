@@ -10,13 +10,11 @@ export async function getRouting(eventId: string): Promise<RoutingPerEvent> {
   const eventRouting = routing[eventId];
   
   if (!eventRouting) {
-    // Configuration par défaut
+    // Configuration par défaut (SMS/WhatsApp supprimés)
     return {
       strategy: 'parallel',
       channels: {
         email: { enabled: true, provider: 'zoho', rateLimitH: 0, retries: 1, delaySec: 0 },
-        sms: { enabled: true, provider: 'twilio', rateLimitH: 0, retries: 1, delaySec: 0 },
-        whatsapp: { enabled: false, provider: 'twilio', rateLimitH: 0, retries: 1, delaySec: 0 },
         push: { enabled: false, provider: 'fcm', rateLimitH: 0, retries: 1, delaySec: 0 },
         inapp: { enabled: false, provider: 'firestore', rateLimitH: 0, retries: 1, delaySec: 0 }
       }
@@ -24,12 +22,12 @@ export async function getRouting(eventId: string): Promise<RoutingPerEvent> {
   }
   
   // ADAPTATEUR : Convertir l'ancien format vers le nouveau
-  // Ancien format : { "channels": ["email", "sms"], "rate_limit_h": 0 }
+  // Ancien format : { "channels": ["email"], "rate_limit_h": 0 }
   // Nouveau format : { "strategy": "parallel", "channels": { "email": { "enabled": true, ... } } }
-  
+
   const oldChannels = eventRouting.channels || ["email"];
   const rateLimitH = eventRouting.rate_limit_h || 0;
-  
+
   return {
     strategy: eventRouting.strategy || "parallel",
     order: eventRouting.order || oldChannels,
@@ -37,20 +35,6 @@ export async function getRouting(eventId: string): Promise<RoutingPerEvent> {
       email: {
         enabled: oldChannels.includes("email"),
         provider: "zoho",
-        rateLimitH: rateLimitH,
-        retries: 1,
-        delaySec: 0
-      },
-      sms: {
-        enabled: oldChannels.includes("sms"),
-        provider: "twilio",
-        rateLimitH: rateLimitH,
-        retries: 1,
-        delaySec: 0
-      },
-      whatsapp: {
-        enabled: oldChannels.includes("whatsapp"),
-        provider: "twilio",
         rateLimitH: rateLimitH,
         retries: 1,
         delaySec: 0

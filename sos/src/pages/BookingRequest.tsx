@@ -1157,7 +1157,6 @@ interface BookingRequestData {
   clientLastName: string;
   clientNationality: string;
   clientCurrentCountry: string;
-  clientWhatsapp: string;
   providerId: string;
   providerName: string;
   providerType: "lawyer" | "expat";
@@ -1191,7 +1190,6 @@ type BookingFormData = {
   title: string;
   description: string;
   clientPhone: string; // géré via PhoneField (E.164)
-  whatsapp?: string; // E.164 optionnel
   acceptTerms: boolean;
   clientLanguages: string[]; // codes (["fr","en"])
 };
@@ -1374,7 +1372,6 @@ const BookingRequest: React.FC = () => {
       title: "",
       description: "",
       clientPhone: "",
-      whatsapp: "",
       acceptTerms: false,
       clientLanguages: [],
     },
@@ -1602,15 +1599,6 @@ const BookingRequest: React.FC = () => {
         return false;
       }
     })();
-      const whatsappValid = (() => {
-    if (!values.whatsapp || !values.whatsapp.trim()) return false; // Required!
-    try {
-      const p = parsePhoneNumberFromString(values.whatsapp);
-      return !!p && p.isValid();
-    } catch {
-      return false;
-    }
-  })();
 
     const sharedLang = hasLanguageMatchRealTime;
 
@@ -1624,7 +1612,6 @@ const BookingRequest: React.FC = () => {
       autrePays: otherOk,
       langs: langsOk,
       phone: phoneValid,
-      whatsapp: whatsappValid,
       accept: accept,
       sharedLang,
     };
@@ -1694,7 +1681,6 @@ const BookingRequest: React.FC = () => {
       clientLastName: sanitizeInput(state.lastName),
       clientNationality: sanitizeInput(state.nationality),
       clientCurrentCountry: sanitizeInput(normalizedCountry),
-      clientWhatsapp: state.whatsapp || "",
       providerId: selectedProvider.id,
       providerName: selectedProvider.name ?? "",
       providerType: selectedProvider.type,
@@ -1815,7 +1801,6 @@ const BookingRequest: React.FC = () => {
         title: bookingRequest.title,
         description: bookingRequest.description,
         clientPhone: bookingRequest.clientPhone,
-        clientWhatsapp: bookingRequest.clientWhatsapp,
         price: bookingRequest.price,
         // ✅ on envoie le littéral `20 | 30`
         duration: svcDuration,
@@ -2699,122 +2684,6 @@ const BookingRequest: React.FC = () => {
                   )}
                 </div>
 
-                {/* WhatsApp optionnel */}
-                {/* <div className="mt-5">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <MessageCircle size={16} className="inline mr-1" />{" "}
-                    {t.fields.whatsapp}
-                  </label>
-
-                  <Controller
-                    control={control}
-                    name="whatsapp"
-                    rules={{
-                      validate: (v) => {
-                        if (!v || v.trim() === "") return true; // optionnel
-                        try {
-                          const p = parsePhoneNumberFromString(v);
-                          return p && p.isValid()
-                            ? true
-                            : "Numéro WhatsApp invalide";
-                        } catch {
-                          return "Numéro WhatsApp invalide";
-                        }
-                      },
-                    }}
-                    render={({ field }) => (
-                      <input
-                        {...field}
-                        type="tel"
-                        className={inputClass(Boolean(errors.whatsapp))}
-                        placeholder="+33 6 12 34 56 78"
-                      />
-                    )}
-                  />
-                  {errors.whatsapp && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {String(errors.whatsapp.message)}
-                    </p>
-                  )}
-                  {Boolean(watch("whatsapp")) && (
-                    <div className="mt-1 text-xs text-gray-500">
-                      ➜ WhatsApp:{" "}
-                      <span className="font-mono">{watch("whatsapp")}</span>
-                    </div>
-                  )}
-                  <div className="mt-2 text-xs text-gray-600 flex items-center gap-1">
-                    <Info className={`w-4 h-4 ${THEME.icon}`} />{" "}
-                    {t.hints.whatsapp}
-                  </div>
-                </div> */}
-
-                {/* WhatsApp optionnel avec sélecteur de pays */}
-                <div className="mt-5">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <MessageCircle size={16} className="inline mr-1" />
-                    {/* {t.fields.whatsapp} */}
-                    {intl.formatMessage({
-                      id: "bookingRequest.fields.whatsapp",
-                    })}
-                    <span className="text-red-500">*</span>
-                  </label>
-                  <Controller
-                    control={control}
-                    name="whatsapp"
-                    rules={{
-                      required: intl.formatMessage({
-                        id: "bookingRequest.validators.whatsapp",
-                      }),
-                      validate: (v) => {
-                        if (!v || !v.trim()) {
-                          return intl.formatMessage({
-                            id: "bookingRequest.validators.whatsapp",
-                          });
-                        }
-                        try {
-                          const p = parsePhoneNumberFromString(v);
-                          return p && p.isValid()
-                            ? true
-                            : lang === "fr"
-                              ? "Numéro WhatsApp invalide"
-                              : "Invalid WhatsApp number";
-                        } catch {
-                          return lang === "fr"
-                            ? "Numéro WhatsApp invalide"
-                            : "Invalid WhatsApp number";
-                        }
-                      },
-                    }}
-                    render={({ field }) => (
-                      <IntlPhoneInput
-                        value={field.value || ""}
-                        onChange={field.onChange}
-                        defaultCountry="fr"
-                        placeholder="+33 6 12 34 56 78"
-                        className={inputClass(Boolean(errors.whatsapp))}
-                        name="whatsapp"
-                      />
-                    )}
-                  />
-                  <div className="mt-2 text-xs text-gray-600 flex items-center gap-1">
-                    <Info className={`w-4 h-4 ${THEME.icon}`} />
-                    {/* {t.hints.whatsapp} */}
-                    {intl.formatMessage({
-                      id: "bookingRequest.hints.whatsapp",
-                    })}
-                  </div>
-                  {errors.whatsapp && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {String(errors.whatsapp.message)}
-                    </p>
-                  )}
-                  {Boolean(watch("whatsapp")) && (
-                    <div className="mt-1 text-xs text-gray-500">
-                      WhatsApp:{" "}
-                      <span className="font-mono">{watch("whatsapp")}</span>
-                    </div>
-                  )}
-                </div>
               </section>
 
               {/* CGU */}

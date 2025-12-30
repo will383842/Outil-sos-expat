@@ -237,8 +237,6 @@ import { createAndScheduleCallHTTPS } from "./createAndScheduleCallFunction";
 
 import { runExecuteCallTask } from "./runtime/executeCallTask";
 
-import { messageManager } from "./MessageManager";
-
 ultraLogger.debug("IMPORTS", "Imports principaux chargés avec succès");
 
 // ====== PARAMS & SECRETS ADDITIONNELS ======
@@ -952,36 +950,12 @@ const sendPaymentNotifications = traceFunction(
         title,
       });
 
-      const notifications = await Promise.allSettled([
-        providerPhone
-          ? messageManager.sendSmartMessage({
-              to: providerPhone,
-              templateId: "provider_notification",
-              variables: { requestTitle: title, language },
-              preferWhatsApp: false,
-            })
-          : Promise.resolve({ skipped: "no_provider_phone" }),
-        clientPhone
-          ? messageManager.sendSmartMessage({
-              to: clientPhone,
-              templateId: "client_notification",
-              variables: { requestTitle: title, language },
-              preferWhatsApp: false,
-            })
-          : Promise.resolve({ skipped: "no_client_phone" }),
-      ]);
-
-      const results = notifications.map((result, index) => ({
-        target: index === 0 ? "provider" : "client",
-        status: result.status,
-        ...(result.status === "fulfilled"
-          ? { result: result.value }
-          : { error: result.reason }),
-      }));
-
-      ultraLogger.info("PAYMENT_NOTIFICATIONS", "Notifications envoyées", {
+      // SMS/WhatsApp notifications have been removed
+      // Voice call will be scheduled via scheduleCallTask instead
+      ultraLogger.info("PAYMENT_NOTIFICATIONS", "SMS/WhatsApp disabled - voice call will be scheduled", {
         callSessionId,
-        results,
+        providerPhone: providerPhone ? "present" : "missing",
+        clientPhone: clientPhone ? "present" : "missing",
       });
     } catch (error) {
       ultraLogger.error(

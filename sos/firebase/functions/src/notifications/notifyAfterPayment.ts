@@ -2,7 +2,6 @@
 import { scheduleCallTask } from '../lib/tasks';
 import { getFirestore } from 'firebase-admin/firestore';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { messageManager } from '../MessageManager';
 import { logger } from 'firebase-functions/v2';
 
 // 🔧 FIX CRITIQUE: Configuration d'optimisation CPU
@@ -30,7 +29,7 @@ interface CallSessionData {
   };
   sessionId?: string;
   status?: string;
-  
+
   // ⚠️ DEPRECATED: Ancienne structure (fallback seulement)
   providerPhone?: string;
   clientPhone?: string;
@@ -41,20 +40,20 @@ interface CallSessionData {
 // ✅ Fonction interne (pour usage depuis d'autres Cloud Functions comme les webhooks)
 export async function notifyAfterPaymentInternal(callId: string): Promise<void> {
   const startTime = Date.now();
-  
+
   try {
     logger.info(`🚀 Début notifyAfterPaymentInternal pour callId: ${callId}`);
 
     // ✅ CORRECT: Utiliser la collection 'call_sessions'
     const callDoc = await db.collection('call_sessions').doc(callId).get();
-    
+
     if (!callDoc.exists) {
       logger.warn(`⚠️ Document call_sessions/${callId} introuvable`);
       return;
     }
 
     const callData = callDoc.data() as CallSessionData;
-    
+
     if (!callData) {
       logger.warn(`⚠️ Données vides pour callId: ${callId}`);
       return;
@@ -63,17 +62,14 @@ export async function notifyAfterPaymentInternal(callId: string): Promise<void> 
     // ✅ CORRECT: Mapping des nouveaux champs avec fallback robuste
     const providerPhone = callData.participants?.provider?.phone ?? callData.providerPhone ?? '';
     const clientPhone = callData.participants?.client?.phone ?? callData.clientPhone ?? '';
-    const language = callData.metadata?.clientLanguages?.[0] ?? callData.clientLanguages?.[0] ?? 'fr';
-    const title = callData.metadata?.title ?? callData.title ?? 'Consultation';
 
     // 🛡️ Validation stricte des données critiques
     if (!providerPhone || !clientPhone) {
       const error = `Numéros de téléphone manquants - Provider: ${providerPhone ? '✓' : '✗'}, Client: ${clientPhone ? '✓' : '✗'}`;
-      logger.error(`❌ ${error}`, { 
-        callId, 
-        hasProvider: !!providerPhone, 
+      logger.error(`❌ ${error}`, {
+        callId,
+        hasProvider: !!providerPhone,
         hasClient: !!clientPhone,
-        // 🔧 FIX: Éviter de logger les données sensibles
         structureInfo: {
           hasParticipants: !!callData.participants,
           hasProviderData: !!callData.participants?.provider,
@@ -97,64 +93,21 @@ export async function notifyAfterPaymentInternal(callId: string): Promise<void> 
 
     logger.info(`📋 Données extraites`, {
       callId,
-      title,
-      language,
       providerPhone: `${providerPhone.substring(0, 6)}***`,
       clientPhone: `${clientPhone.substring(0, 6)}***`,
-      // 📊 Indicateur de quelle structure a été utilisée
       dataSource: callData.participants?.provider?.phone ? 'NEW_STRUCTURE' : 'LEGACY_FALLBACK'
     });
 
-    // 🔄 Envoi parallèle des notifications pour optimiser les performances
-    // 📱 Configuration SMS forcée
-    const notificationPromises = [
-      // Notification prestataire - SMS forcé
-      messageManager.sendSmartMessage({
-        to: providerPhone,
-        templateId: 'provider_notification',
-        variables: {
-          requestTitle: title,
-          language
-        },
-        preferWhatsApp: false
-      }).catch(error => {
-        logger.error(`❌ Erreur notification prestataire`, { callId, error: error.message });
-        throw new Error(`Erreur notification prestataire: ${error.message}`);
-      }),
-
-      // Notification client - SMS forcé
-      messageManager.sendSmartMessage({
-        to: clientPhone,
-        templateId: 'client_notification',
-        variables: {
-          requestTitle: title,
-          language
-        },
-        preferWhatsApp: false
-      }).catch(error => {
-        logger.error(`❌ Erreur notification client`, { callId, error: error.message });
-        throw new Error(`Erreur notification client: ${error.message}`);
-      })
-    ];
-
-    await Promise.all(notificationPromises);
-    
-    logger.info(`✅ Notifications SMS envoyées avec succès`, {
-      callId,
-      duration: `${Date.now() - startTime}ms`,
-      method: 'SMS_FORCED'
-    });
-
-    // 🔁 Planification de l'appel vocal avec gestion d'erreur
+    // 🔁 Planification de l'appel vocal
     try {
       // 🔧 FIX: Utiliser callId comme sessionId par défaut si non spécifié
       const callSessionId = callData.sessionId || callId;
       await scheduleCallTask(callSessionId, 5 * 60); // 5 minutes
-      
-      logger.info(`⏰ Tâche d'appel planifiée`, { 
-        callId, 
-        callSessionId, 
-        delayMinutes: 5 
+
+      logger.info(`⏰ Tâche d'appel planifiée`, {
+        callId,
+        callSessionId,
+        delayMinutes: 5
       });
     } catch (scheduleError) {
       // ⚠️ Log mais ne fait pas échouer toute la fonction
@@ -169,8 +122,7 @@ export async function notifyAfterPaymentInternal(callId: string): Promise<void> 
     logger.info(`🏁 notifyAfterPaymentInternal terminée`, {
       callId,
       totalDuration: `${totalDuration}ms`,
-      success: true,
-      notificationMethod: 'SMS_FORCED'
+      success: true
     });
 
   } catch (error) {
@@ -210,7 +162,7 @@ export const notifyAfterPayment = onCall(
 
       // 🔍 Validation des données d'entrée
       const { callId } = request.data;
-      
+
       if (!callId || typeof callId !== 'string' || callId.trim().length === 0) {
         logger.error(`❌ CallId invalide`, { requestId, callId, userId: request.auth.uid });
         throw new HttpsError(
@@ -220,34 +172,29 @@ export const notifyAfterPayment = onCall(
       }
 
       const sanitizedCallId = callId.trim();
-      
-      // 🔐 Vérification des permissions (optionnel mais recommandé)
-      // TODO: Vous pouvez ajouter une vérification que l'utilisateur a le droit d'accéder à ce callId
-      
+
       await notifyAfterPaymentInternal(sanitizedCallId);
-      
+
       const response = {
         success: true,
-        message: 'Notifications SMS envoyées avec succès',
+        message: 'Appel planifié avec succès',
         callId: sanitizedCallId,
         timestamp: new Date().toISOString(),
-        duration: `${Date.now() - startTime}ms`,
-        method: 'SMS_FORCED'
+        duration: `${Date.now() - startTime}ms`
       };
 
       logger.info(`✅ Cloud Function notifyAfterPayment réussie`, {
         requestId,
         userId: request.auth.uid,
         callId: sanitizedCallId,
-        duration: response.duration,
-        notificationMethod: 'SMS_FORCED'
+        duration: response.duration
       });
 
       return response;
 
     } catch (error) {
       const duration = Date.now() - startTime;
-      
+
       // 🔄 Gestion différenciée des erreurs
       if (error instanceof HttpsError) {
         logger.warn(`⚠️ Erreur client dans notifyAfterPayment`, {
@@ -269,7 +216,7 @@ export const notifyAfterPayment = onCall(
 
       throw new HttpsError(
         'internal',
-        'Une erreur interne s\'est produite lors de l\'envoi des notifications'
+        'Une erreur interne s\'est produite lors de la planification de l\'appel'
       );
     }
   }

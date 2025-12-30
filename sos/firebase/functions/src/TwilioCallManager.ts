@@ -4,7 +4,6 @@ import { getTwilioClient, getTwilioPhoneNumber } from "./lib/twilio";
 import { getFunctionsBaseUrl } from "./utils/urlBase";
 import { logError } from "./utils/logs/logError";
 import { logCallRecord } from "./utils/logs/logCallRecord";
-import { messageManager } from "./MessageManager";
 import { stripeManager } from "./StripeManager";
 import { setProviderBusy, setProviderAvailable } from "./callables/providerStatusManager";
 // 🔒 Phone number encryption
@@ -1054,8 +1053,6 @@ export class TwilioCallManager {
 
       // 🛠️ FIX: Always fallback to 'en' if missing
       const clientLanguage = callSession.metadata?.clientLanguages?.[0] || "en";
-      const providerLanguage =
-        callSession.metadata?.providerLanguages?.[0] || "en";
 
       // 🆕 NEW: If provider doesn't answer and client is already connected, redirect their call to play voice message
       if (reason === "provider_no_answer" && 
@@ -1092,48 +1089,8 @@ export class TwilioCallManager {
         }
       }                                                                                                                                                                                                                                                                                                                              
 
-      try {
-        const notificationPromises: Array<Promise<unknown>> = [];
-
-        // Decrypt phone numbers for SMS notifications
-        const decryptedProviderPhone = decryptPhoneNumber(callSession.participants.provider.phone);
-        const decryptedClientPhone = decryptPhoneNumber(callSession.participants.client.phone);
-
-        if (reason === "client_no_answer" || reason === "system_error") {
-          notificationPromises.push(
-            messageManager.sendSmartMessage({
-              to: decryptedProviderPhone,
-              templateId: `call_failure_${reason}_provider`,
-              variables: {
-                clientName: "le client",
-                serviceType: callSession.metadata.serviceType,
-                language: providerLanguage,
-              },
-            })
-          );
-        }
-
-        if (reason === "provider_no_answer" || reason === "system_error") {
-          notificationPromises.push(
-            messageManager.sendSmartMessage({
-              to: decryptedClientPhone,
-              templateId: `call_failure_${reason}_client`,
-              variables: {
-                providerName: "votre expert",
-                serviceType: callSession.metadata.serviceType,
-                language: clientLanguage,
-              },
-            })
-          );
-        }
-
-        await Promise.allSettled(notificationPromises);
-      } catch (notificationError) {
-        await logError(
-          "TwilioCallManager:handleCallFailure:notification",
-          notificationError as unknown
-        );
-      }
+      // SMS/WhatsApp notifications removed - only voice calls are used for notifications
+      console.log(`[TwilioCallManager] Call failure notification skipped (SMS/WhatsApp disabled), reason: ${reason}`);
 
       await this.processRefund(sessionId, `failed_${reason}`);
 
@@ -1273,46 +1230,11 @@ export class TwilioCallManager {
 
       await this.updateCallSessionStatus(sessionId, "completed");
 
-      const clientLanguage = callSession.metadata.clientLanguages?.[0] || "fr";
-      const providerLanguage =
-        callSession.metadata.providerLanguages?.[0] || "fr";
+      // SMS/WhatsApp notifications removed - call completion logged
+      const minutes = Math.floor(duration / 60);
+      const seconds = duration % 60;
+      console.log(`[TwilioCallManager] Call completed notification skipped (SMS/WhatsApp disabled), duration: ${minutes}m${seconds}s`);
 
-      try {
-        const minutes = Math.floor(duration / 60);
-        const seconds = duration % 60;
-
-        // Decrypt phone numbers for SMS notifications
-        const decryptedClientPhone = decryptPhoneNumber(callSession.participants.client.phone);
-        const decryptedProviderPhone = decryptPhoneNumber(callSession.participants.provider.phone);
-
-        await Promise.allSettled([
-          messageManager.sendSmartMessage({
-            to: decryptedClientPhone,
-            templateId: "call_success_client",
-            variables: {
-              duration: minutes.toString(),
-              seconds: seconds.toString(),
-              serviceType: callSession.metadata.serviceType,
-              language: clientLanguage,
-            },
-          }),
-          messageManager.sendSmartMessage({
-            to: decryptedProviderPhone,
-            templateId: "call_success_provider",
-            variables: {
-              duration: minutes.toString(),
-              seconds: seconds.toString(),
-              serviceType: callSession.metadata.serviceType,
-              language: providerLanguage,
-            },
-          }),
-        ]);
-      } catch (notificationError) {
-        await logError(
-          "TwilioCallManager:handleCallCompletion:notification",
-          notificationError as unknown
-        );
-      }
       console.log(`📄 Should capture payment: ${this.shouldCapturePayment(callSession, duration)}`);
 
       if (this.shouldCapturePayment(callSession, duration)) {

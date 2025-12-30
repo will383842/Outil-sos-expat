@@ -32,20 +32,17 @@ export interface PushNotificationPayload {
 export interface MultiChannelNotification {
   type: string;
   recipientEmail?: string;
-  recipientPhone?: string;
   recipientName?: string;
   recipientCountry?: string;
   emailSubject?: string;
   emailHtml?: string;
-  smsMessage?: string;
-  whatsappMessage?: string;
 }
 
 // ✅ Typage des réponses Firebase
 interface MultiChannelResponse {
   success: boolean;
   results: Array<{
-    channel: 'email' | 'sms' | 'whatsapp' | 'push';
+    channel: 'email' | 'push';
     success: boolean;
     error?: string;
   }>;

@@ -129,28 +129,6 @@ async function sendOne(
     return { messageId };
   }
 
-  if (channel === "sms") {
-    const to = ctx?.user?.phoneNumber || evt.to?.phone;
-    if (!to || !tmpl.sms?.enabled)
-      throw new Error("Missing SMS destination or disabled template");
-
-    const body = render(tmpl.sms.text || "", { ...ctx, ...evt.vars });
-    const sid = await sendSms(to, body);
-    return { sid };
-  }
-
-  // ❌ Branche WhatsApp complètement retirée
-  // if (channel === "whatsapp") {
-  //   const to = ctx?.user?.waNumber || ctx?.user?.phoneNumber || evt.to?.phone;
-  //   if (!to || !tmpl.whatsapp?.enabled)
-  //     console.log("🚨 WhatsApp is disabled, skipping");
-  //   throw new Error("Missing WhatsApp destination or disabled template");
-
-  //   // const body = render(tmpl.whatsapp.text || "", { ...ctx, ...evt.vars });
-  //   // const sid = await sendWa(to, body);
-  //   // return { sid };
-  // }
-
   if (channel === "push") {
     const token = ctx?.user?.fcmTokens?.[0] || evt.to?.fcmToken;
     if (!token || !tmpl.push?.enabled)
@@ -243,21 +221,13 @@ export const onMessageEventCreate = onDocumentCreated(
     document: "message_events/{id}",
     memory: "512MiB",
     timeoutSeconds: 120,
-    // On laisse les secrets déclarés (même si WA est inactif) pour cohérence d'environnement
     secrets: [
       EMAIL_USER,
       EMAIL_PASS,
-      TWILIO_ACCOUNT_SID,
-      TWILIO_AUTH_TOKEN,
-      TWILIO_PHONE_NUMBER,
-      TWILIO_WHATSAPP_NUMBER,
     ],
   },
   async (event) => {
     // 0) Interrupteur global
-    // const enabled = await isMessagingEnabled(); -> uncomment this to enable disable
-    const twilioWhatsappNumber = TWILIO_WHATSAPP_NUMBER.value();
-    console.log(`🚀 TWILIO_WHATSAPP_NUMBER: ${twilioWhatsappNumber}`);
     const enabled = true;
     if (!enabled) {
       console.log("🔒 Messaging disabled: ignoring event");
@@ -446,15 +416,6 @@ function getDestinationForChannel(
   switch (channel) {
     case "email":
       return ctx?.user?.email || evt.to?.email;
-    case "sms":
-      return ctx?.user?.phoneNumber || evt.to?.phone;
-    // case "whatsapp":
-    //   return (
-    //     ctx?.user?.waNumber ||
-    //     ctx?.user?.phoneNumber ||
-    //     evt.to?.whatsapp ||
-    //     evt.to?.phone
-    //   ); // ❌ retiré
     case "push":
       return (
         ((ctx?.user?.fcmTokens?.[0] || evt.to?.fcmToken) ?? "").slice(0, 20) +

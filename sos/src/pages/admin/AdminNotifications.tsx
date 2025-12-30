@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   Bell,
   Mail,
-  MessageSquare,
   Smartphone,
   Send,
   CheckCircle,
@@ -55,8 +54,6 @@ interface NotificationStats {
   successfulNotifications: number;
   failedNotifications: number;
   emailSuccess: number;
-  smsSuccess: number;
-  whatsappSuccess: number;
   pushSuccess: number;
 }
 
@@ -77,8 +74,6 @@ const AdminNotifications: React.FC = () => {
     successfulNotifications: 0,
     failedNotifications: 0,
     emailSuccess: 0,
-    smsSuccess: 0,
-    whatsappSuccess: 0,
     pushSuccess: 0,
   });
 
@@ -127,8 +122,6 @@ const AdminNotifications: React.FC = () => {
       const failedNotifications = totalNotifications - successfulNotifications;
 
       let emailSuccess = 0,
-        smsSuccess = 0,
-        whatsappSuccess = 0,
         pushSuccess = 0;
 
       notificationsData.forEach((n) => {
@@ -137,12 +130,6 @@ const AdminNotifications: React.FC = () => {
             switch (r.channel) {
               case 'email':
                 emailSuccess++;
-                break;
-              case 'sms':
-                smsSuccess++;
-                break;
-              case 'whatsapp':
-                whatsappSuccess++;
                 break;
               case 'push':
                 pushSuccess++;
@@ -157,8 +144,6 @@ const AdminNotifications: React.FC = () => {
         successfulNotifications,
         failedNotifications,
         emailSuccess,
-        smsSuccess,
-        whatsappSuccess,
         pushSuccess,
       });
     } catch (error) {
@@ -199,17 +184,14 @@ const AdminNotifications: React.FC = () => {
       const payload: MultiChannelNotification = {
         type: 'admin_test',
         recipientEmail: p.email,
-        recipientPhone: p.phone,
         recipientName,
         recipientCountry: p.country,
         emailSubject: 'Test de notification • Admin',
         emailHtml: `
           <h2>Test de notification</h2>
-          <p>Ceci est un envoi de test depuis l’interface admin.</p>
+          <p>Ceci est un envoi de test depuis l'interface admin.</p>
           <p><strong>Prestataire:</strong> ${recipientName} (${providerId})</p>
         `.trim(),
-        smsMessage: `Test de notification Admin pour ${recipientName}`,
-        whatsappMessage: `🧪 *Test Admin*\nPrestataire: ${recipientName}\nID: ${providerId}`,
       };
 
       const ok = await notificationService.sendMultiChannelNotification(payload);
@@ -245,10 +227,6 @@ const AdminNotifications: React.FC = () => {
     switch (channel) {
       case 'email':
         return <Mail size={16} className="text-blue-600" />;
-      case 'sms':
-        return <MessageSquare size={16} className="text-green-600" />;
-      case 'whatsapp':
-        return <MessageSquare size={16} className="text-green-500" />;
       case 'push':
         return <Smartphone size={16} className="text-purple-600" />;
       default:
@@ -353,21 +331,11 @@ const AdminNotifications: React.FC = () => {
           {/* Channel Stats */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Statistiques par canal</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="text-center">
                 <Mail className="w-8 h-8 text-blue-600 mx-auto mb-2" />
                 <p className="text-sm text-gray-600">Email</p>
                 <p className="text-xl font-bold text-blue-600">{stats.emailSuccess}</p>
-              </div>
-              <div className="text-center">
-                <MessageSquare className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                <p className="text-sm text-gray-600">SMS</p>
-                <p className="text-xl font-bold text-green-600">{stats.smsSuccess}</p>
-              </div>
-              <div className="text-center">
-                <MessageSquare className="w-8 h-8 text-green-500 mx-auto mb-2" />
-                <p className="text-sm text-gray-600">WhatsApp</p>
-                <p className="text-xl font-bold text-green-500">{stats.whatsappSuccess}</p>
               </div>
               <div className="text-center">
                 <Smartphone className="w-8 h-8 text-purple-600 mx-auto mb-2" />
@@ -502,7 +470,7 @@ const AdminNotifications: React.FC = () => {
                   <div className="mt-2 text-sm text-blue-700">
                     <p>
                       Ce test enverra une notification de démonstration au prestataire sélectionné
-                      via tous les canaux disponibles (email, SMS, WhatsApp, push).
+                      via les canaux disponibles (email, push).
                     </p>
                   </div>
                 </div>

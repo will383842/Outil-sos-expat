@@ -83,10 +83,6 @@ export interface User {
   phone?: string;
   phoneNumber?: string;
   phoneCountryCode?: string;
-  whatsapp?: string;
-  whatsAppNumber?: string;
-  whatsappNumber?: string;
-  whatsappCountryCode?: string;
 
   // Localisation
   country?: string;
@@ -330,9 +326,6 @@ export interface Provider {
   // Contact
   phone?: string;
   phoneNumber?: string;
-  whatsapp?: string;
-  whatsAppNumber?: string;
-  whatsappNumber?: string;
 
   // Localisation
   country: string;
@@ -394,7 +387,6 @@ export interface BookingRequest {
   clientLastName: string;
   clientEmail?: string;
   clientPhone: string;
-  clientWhatsapp?: string;
   clientNationality: string;
   clientCurrentCountry: string;
   clientLanguages: string[];
