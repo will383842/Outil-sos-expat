@@ -260,36 +260,33 @@
 
       var locale = 'fr-fr'; // Default
 
-      // 1. Check saved preference
+      // 1. Check saved preference (user manually changed language)
       try {
         var saved = localStorage.getItem('sos_language');
         if (saved && LANG_TO_LOCALE[saved]) {
-          // Convert saved language (e.g., 'en') to locale (e.g., 'en-us')
           locale = LANG_TO_LOCALE[saved];
+          window.location.replace('/' + locale);
+          return;
         }
       } catch(e) {}
 
-      // 2. If no saved preference, detect from timezone
-      if (!localStorage.getItem('sos_language')) {
-        try {
-          var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-          if (tz && TZ_TO_LOCALE[tz]) {
-            locale = TZ_TO_LOCALE[tz];
-          } else {
-            // 3. Fallback to browser language
-            var browserLang = (navigator.language || navigator.userLanguage || 'fr').substring(0, 2).toLowerCase();
-            if (LANG_TO_LOCALE[browserLang]) {
-              locale = LANG_TO_LOCALE[browserLang];
-            }
-          }
-        } catch(e) {
-          // Fallback to browser language on error
-          var browserLang = (navigator.language || 'fr').substring(0, 2).toLowerCase();
-          if (LANG_TO_LOCALE[browserLang]) {
-            locale = LANG_TO_LOCALE[browserLang];
-          }
+      // 2. Browser language (best for expats/travelers - German in Thailand sees German)
+      try {
+        var browserLang = (navigator.language || navigator.userLanguage || '').substring(0, 2).toLowerCase();
+        if (browserLang && LANG_TO_LOCALE[browserLang]) {
+          locale = LANG_TO_LOCALE[browserLang];
+          window.location.replace('/' + locale);
+          return;
         }
-      }
+      } catch(e) {}
+
+      // 3. Timezone fallback (for users with neutral browser settings)
+      try {
+        var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (tz && TZ_TO_LOCALE[tz]) {
+          locale = TZ_TO_LOCALE[tz];
+        }
+      } catch(e) {}
 
       // Redirect to locale
       window.location.replace('/' + locale);
