@@ -3,8 +3,7 @@ import { Request, Response } from "express";
 
 const ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID as string;
 const AUTH_TOKEN  = process.env.TWILIO_AUTH_TOKEN as string;
-const SMS_NUMBER  = process.env.TWILIO_PHONE_NUMBER as string;
-const WA_NUMBER   = process.env.TWILIO_WHATSAPP_NUMBER as string;
+const PHONE_NUMBER  = process.env.TWILIO_PHONE_NUMBER as string;
 
 export function getTwilioClient() {
   // SECURITY FIX: Removed credential logging - 2025-12-23
@@ -15,14 +14,9 @@ export function getTwilioClient() {
 }
 
 export function getTwilioPhoneNumber() {
-  if (!SMS_NUMBER) throw new Error("TWILIO_PHONE_NUMBER missing.");
+  if (!PHONE_NUMBER) throw new Error("TWILIO_PHONE_NUMBER missing.");
   // SECURITY FIX: Removed phone number logging - 2025-12-23
-  return SMS_NUMBER;
-}
-
-export function getTwilioWhatsAppNumber() {
-  if (!WA_NUMBER) throw new Error("TWILIO_WHATSAPP_NUMBER missing.");
-  return WA_NUMBER;
+  return PHONE_NUMBER;
 }
 
 /**
@@ -112,4 +106,4 @@ export function twilioValidationMiddleware(
 /** Compat: certains fichiers importent encore ces constantes */
 export const TWILIO_ACCOUNT_SID = ACCOUNT_SID;
 export const TWILIO_AUTH_TOKEN  = AUTH_TOKEN;
-export const TWILIO_PHONE_NUMBER = SMS_NUMBER;
+export const TWILIO_PHONE_NUMBER = PHONE_NUMBER;

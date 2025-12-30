@@ -6,10 +6,6 @@ import * as admin from "firebase-admin";
 // 🔐 SECRETS
 const EMAIL_USER = defineSecret("EMAIL_USER");
 const EMAIL_PASS = defineSecret("EMAIL_PASS");
-const TWILIO_ACCOUNT_SID = defineSecret("TWILIO_ACCOUNT_SID");
-const TWILIO_AUTH_TOKEN = defineSecret("TWILIO_AUTH_TOKEN");
-const TWILIO_PHONE_NUMBER = defineSecret("TWILIO_PHONE_NUMBER");
-const TWILIO_WHATSAPP_NUMBER = defineSecret("TWILIO_WHATSAPP_NUMBER"); // Gardé pour compatibilité/rotation, même si WA n'est pas envoyé ici.
 
 // 📤 IMPORTS DES MODULES
 import { getTemplate } from "./templates";
@@ -19,8 +15,6 @@ import { Channel, TemplatesByEvent, RoutingPerEvent } from "./types";
 
 // IMPORTS DES PROVIDERS
 import { sendZoho } from "./providers/email/zohoSmtp";
-import { sendSms } from "./providers/sms/twilioSms";
-// import { sendWhatsApp } from "./providers/whatsapp/twilio"; // ❌ retiré : WhatsApp non géré ici
 import { sendPush } from "./providers/push/fcm";
 import { writeInApp } from "./providers/inapp/firestore";
 import { resolveLang } from "./i18n";
@@ -76,14 +70,6 @@ type MessageEvent = {
 // ----- Helpers pour sélection des canaux
 function hasContact(channel: Channel, ctx: Context): boolean {
   if (channel === "email") return !!(ctx?.user?.email || ctx?.to?.email);
-  if (channel === "sms") return !!(ctx?.user?.phoneNumber || ctx?.to?.phone);
-  // if (channel === "whatsapp")
-  //   return !!(
-  //     ctx?.user?.waNumber ||
-  //     ctx?.user?.phoneNumber ||
-  //     ctx?.to?.whatsapp ||
-  //     ctx?.to?.phone
-  //   ); // ❌ retiré
   if (channel === "push")
     return (
       (Array.isArray(ctx?.user?.fcmTokens) &&
@@ -101,8 +87,8 @@ function channelsToAttempt(
   tmpl: TemplatesByEvent,
   ctx: Context
 ): Channel[] {
-  // Liste sans WhatsApp (supprimé)
-  const all: Channel[] = ["email", "push", "sms", "inapp"];
+  // Liste des canaux actifs (SMS/WhatsApp supprimés)
+  const all: Channel[] = ["email", "push", "inapp"];
   const base = all.filter(
     (c) => routeChannels[c]?.enabled && tmpl[c]?.enabled && hasContact(c, ctx)
   );
