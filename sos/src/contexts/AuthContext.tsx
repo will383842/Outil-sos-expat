@@ -1613,9 +1613,11 @@ export default AuthProvider;
 
 /* =========================================================
    Compat : re-export d'un hook useAuth ici aussi
+   Now returns default context instead of throwing to prevent white screens
    ========================================================= */
 export const useAuth = () => {
   const ctx = useContext(BaseAuthContext);
-  if (!ctx) throw new Error('useAuth doit être utilisé dans un AuthProvider');
+  // Return context directly - BaseAuthContext now has default values
+  // This prevents white screens when component is used outside provider
   return ctx;
 };

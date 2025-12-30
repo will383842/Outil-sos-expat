@@ -561,9 +561,10 @@ const Login: React.FC = () => {
       
       const gtag = getGtag();
       if (gtag) {
-        gtag("event", "email_check", { 
-          email_exists: exists, 
-          email_domain: email.split("@")[1],
+        const emailParts = email.split("@");
+        gtag("event", "email_check", {
+          email_exists: exists,
+          email_domain: emailParts[1] || 'unknown',
           auth_methods: signInMethods
         });
       }

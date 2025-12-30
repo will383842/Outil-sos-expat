@@ -5,6 +5,7 @@ import { httpsCallable } from "firebase/functions";
 import { functions } from "../../config/firebase";
 import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
+import { useApp } from "../../contexts/AppContext";
 
 interface PayPalPaymentFormProps {
   amount: number;
@@ -55,10 +56,13 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<"idle" | "processing" | "success" | "error">("idle");
   const intl = useIntl();
+  const { settings } = useApp();
 
-  // Calcul des montants
-  const platformFee = amount * 0.2; // 20% pour la plateforme
-  const providerAmount = amount * 0.8; // 80% pour le provider
+  // SECURITY FIX: Use commission rate from backend settings instead of hardcoded values
+  // The backend will validate and recalculate these values for security
+  const commissionRate = settings?.commissionRate ?? 0.20; // Default fallback only
+  const platformFee = amount * commissionRate;
+  const providerAmount = amount * (1 - commissionRate);
 
   const createOrder = async (): Promise<string> => {
     try {

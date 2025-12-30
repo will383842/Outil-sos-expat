@@ -39,14 +39,51 @@ interface AppContextType {
   countriesLoading: boolean;
 }
 
-const AppContext = createContext<AppContextType | undefined>(undefined);
+// Default AppContext values to prevent white screens when used outside provider
+const defaultAppContext: AppContextType = {
+  services: [],
+  settings: {
+    platformName: 'SOS Expat',
+    platformEmail: 'contact@sos-expat.com',
+    lawyerBasePrice: 49,
+    expatBasePrice: 19,
+    lawyerCallDuration: 20,
+    expatCallDuration: 30,
+    commissionRate: 0.20,
+    affiliateCommissionRate: 0.05,
+  },
+  enhancedSettings: {
+    maintenanceMode: false,
+    allowNewRegistrations: true,
+    requireEmailVerification: false,
+    defaultLanguage: 'fr',
+    supportedLanguages: ['fr', 'en', 'es', 'de', 'ru', 'pt', 'ch', 'hi', 'ar'],
+    features: {
+      enableChat: true,
+      enableVideoCall: true,
+      enablePayments: true,
+      enableNotifications: true,
+      enableAnalytics: true,
+    },
+  },
+  notifications: [],
+  language: 'fr',
+  isRTL: false,
+  setLanguage: () => console.warn('[AppContext] Called outside of AppProvider'),
+  addNotification: () => console.warn('[AppContext] Called outside of AppProvider'),
+  markNotificationAsRead: () => console.warn('[AppContext] Called outside of AppProvider'),
+  getUnreadNotificationsCount: () => 0,
+  updateEnhancedSettings: () => console.warn('[AppContext] Called outside of AppProvider'),
+  isCountryEnabled: () => true, // Default to enabled to avoid blocking
+  countriesLoading: true,
+};
+
+const AppContext = createContext<AppContextType>(defaultAppContext);
 
 export const useApp = (): AppContextType => {
-  const context = useContext(AppContext);
-  if (!context) {
-    throw new Error("useApp must be used within an AppProvider");
-  }
-  return context;
+  // Return context directly - AppContext now has default values
+  // This prevents white screens when component is used outside provider
+  return useContext(AppContext);
 };
 
 interface AppProviderProps {

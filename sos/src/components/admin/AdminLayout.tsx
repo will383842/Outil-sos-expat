@@ -74,6 +74,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const [isUpdatingProfiles, setIsUpdatingProfiles] = useState(false);
   const [updateSuccess, setUpdateSuccess] = useState<boolean | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   // =========================================================================
   // EFFECTS
@@ -93,9 +94,14 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
   // Sidebar preference
   useEffect(() => {
-    const saved = localStorage.getItem('admin-sidebar-open');
-    if (saved !== null) {
-      setIsSidebarOpen(JSON.parse(saved));
+    try {
+      const saved = localStorage.getItem('admin-sidebar-open');
+      if (saved !== null) {
+        setIsSidebarOpen(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.warn('Failed to parse admin-sidebar-open from localStorage:', e);
+      // Keep default state
     }
   }, []);
 
@@ -103,7 +109,14 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   // CALLBACKS
   // =========================================================================
 
-  const handleLogout = useCallback(async () => {
+  const handleLogout = useCallback(async (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (loggingOut) return;
+
+    setLoggingOut(true);
     try {
       await logout();
       navigate('/admin/login');
@@ -114,8 +127,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         error: `Erreur de déconnexion admin: ${errorMessage}`,
         context: { component: 'AdminLayout', userId: user?.id },
       });
+      // Navigate même en cas d'erreur
+      navigate('/admin/login');
+    } finally {
+      setLoggingOut(false);
     }
-  }, [logout, navigate, user?.id]);
+  }, [logout, navigate, user?.id, loggingOut]);
 
   const handleUpdateProfiles = useCallback(async () => {
     const ok = window.confirm('Êtes-vous sûr de vouloir mettre à jour tous les profils?');
@@ -217,7 +234,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               ? 'Votre compte a été suspendu. Contactez le support.'
               : 'Votre compte est en cours de validation.'}
           </p>
-          <Button onClick={handleLogout} variant="secondary">Se déconnecter</Button>
+          <Button onClick={handleLogout} variant="secondary" disabled={loggingOut} loading={loggingOut}>
+            {loggingOut ? 'Déconnexion...' : 'Se déconnecter'}
+          </Button>
         </div>
       </div>
     );
@@ -296,10 +315,24 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               <div className="p-4 border-t border-gray-700">
                 <button
                   onClick={handleLogout}
-                  className="flex items-center w-full px-4 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-gray-700 hover:text-white"
+                  disabled={loggingOut}
+                  className={`flex items-center w-full px-4 py-2 text-sm font-medium rounded-md transition-all ${
+                    loggingOut
+                      ? 'text-gray-500 cursor-not-allowed opacity-70'
+                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                  }`}
                 >
-                  <LogOut className="h-5 w-5 mr-3" />
-                  <span>Déconnexion</span>
+                  {loggingOut ? (
+                    <>
+                      <div className="h-5 w-5 mr-3 border-2 border-gray-500 border-t-transparent rounded-full animate-spin" />
+                      <span>Déconnexion...</span>
+                    </>
+                  ) : (
+                    <>
+                      <LogOut className="h-5 w-5 mr-3" />
+                      <span>Déconnexion</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -366,12 +399,24 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 <div className="p-4 border-t border-gray-700">
                   <button
                     onClick={handleLogout}
-                    className={`flex items-center w-full px-4 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-gray-700 hover:text-white ${
-                      !isSidebarOpen ? 'justify-center' : ''
-                    }`}
+                    disabled={loggingOut}
+                    className={`flex items-center w-full px-4 py-2 text-sm font-medium rounded-md transition-all ${
+                      loggingOut
+                        ? 'text-gray-500 cursor-not-allowed opacity-70'
+                        : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                    } ${!isSidebarOpen ? 'justify-center' : ''}`}
                   >
-                    <LogOut className="h-5 w-5 flex-shrink-0" />
-                    {isSidebarOpen && <span className="ml-3">Déconnexion</span>}
+                    {loggingOut ? (
+                      <>
+                        <div className="h-5 w-5 flex-shrink-0 border-2 border-gray-500 border-t-transparent rounded-full animate-spin" />
+                        {isSidebarOpen && <span className="ml-3">Déconnexion...</span>}
+                      </>
+                    ) : (
+                      <>
+                        <LogOut className="h-5 w-5 flex-shrink-0" />
+                        {isSidebarOpen && <span className="ml-3">Déconnexion</span>}
+                      </>
+                    )}
                   </button>
                 </div>
               </div>

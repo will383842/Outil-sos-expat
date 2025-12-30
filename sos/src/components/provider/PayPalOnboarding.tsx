@@ -1,125 +1,146 @@
 // src/components/provider/PayPalOnboarding.tsx
+// Version simplifiée : le prestataire entre son email PayPal pour recevoir ses paiements
 import React, { useState, useEffect } from "react";
-import { httpsCallable } from "firebase/functions";
-import { functions } from "../../config/firebase";
-import { CheckCircle, ExternalLink, Loader2, AlertCircle, RefreshCw } from "lucide-react";
+import { doc, updateDoc, getDoc } from "firebase/firestore";
+import { db } from "../../config/firebase";
+import { CheckCircle, Loader2, AlertCircle, Mail } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 
 interface PayPalOnboardingProps {
   providerId: string;
   providerEmail: string;
-  providerFirstName: string;
-  providerLastName: string;
-  providerCountry: string;
-  businessName?: string;
-  onStatusChange?: (status: PayPalMerchantStatus) => void;
+  providerType: "lawyer" | "expat";
+  onStatusChange?: (status: PayPalStatus) => void;
   className?: string;
 }
 
-type PayPalMerchantStatus =
-  | "not_connected"
-  | "pending"
-  | "active"
-  | "suspended"
-  | "restricted";
-
-interface MerchantStatusResponse {
-  isConnected: boolean;
-  status: PayPalMerchantStatus;
-  merchantId?: string;
-  email?: string;
-  paymentsReceivable?: boolean;
-  primaryEmailConfirmed?: boolean;
-}
-
-interface OnboardingLinkResponse {
-  actionUrl: string;
-  partnerId: string;
-}
+type PayPalStatus = "not_connected" | "pending" | "active";
 
 export const PayPalOnboarding: React.FC<PayPalOnboardingProps> = ({
   providerId,
   providerEmail,
-  providerFirstName,
-  providerLastName,
-  providerCountry,
-  businessName,
+  providerType,
   onStatusChange,
   className = "",
 }) => {
-  const [status, setStatus] = useState<PayPalMerchantStatus>("not_connected");
-  const [merchantId, setMerchantId] = useState<string | null>(null);
+  const [status, setStatus] = useState<PayPalStatus>("not_connected");
+  const [paypalEmail, setPaypalEmail] = useState<string>("");
+  const [savedEmail, setSavedEmail] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isConnecting, setIsConnecting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const intl = useIntl();
 
-  // Vérifier le statut du merchant au chargement
+  // Charger le statut PayPal actuel
   useEffect(() => {
-    checkMerchantStatus();
+    loadPayPalStatus();
   }, [providerId]);
 
-  const checkMerchantStatus = async () => {
+  const loadPayPalStatus = async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      const checkStatus = httpsCallable<
-        { providerId: string },
-        MerchantStatusResponse
-      >(functions, "checkPayPalMerchantStatus");
+      // Vérifier dans sos_profiles
+      const profileDoc = await getDoc(doc(db, "sos_profiles", providerId));
 
-      const result = await checkStatus({ providerId });
-      const { isConnected, status: merchantStatus, merchantId: id } = result.data;
+      if (profileDoc.exists()) {
+        const data = profileDoc.data();
+        const email = data.paypalEmail;
+        const accountStatus = data.paypalAccountStatus;
 
-      setStatus(merchantStatus);
-      setMerchantId(id || null);
-      onStatusChange?.(merchantStatus);
+        if (email) {
+          setSavedEmail(email);
+          setPaypalEmail(email);
+          setStatus(accountStatus === "active" ? "active" : "active"); // Si email existe, c'est actif
+          onStatusChange?.("active");
+        } else {
+          setStatus("not_connected");
+          onStatusChange?.("not_connected");
+        }
+      }
     } catch (err) {
-      console.error("Erreur vérification statut PayPal:", err);
-      setStatus("not_connected");
+      console.error("Erreur chargement statut PayPal:", err);
+      setError("Erreur lors du chargement du statut PayPal");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const startOnboarding = async () => {
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const savePayPalEmail = async () => {
+    if (!paypalEmail.trim()) {
+      setError(intl.formatMessage({
+        id: "provider.paypal.error.emailRequired",
+        defaultMessage: "Veuillez entrer votre adresse email PayPal",
+      }));
+      return;
+    }
+
+    if (!validateEmail(paypalEmail)) {
+      setError(intl.formatMessage({
+        id: "provider.paypal.error.invalidEmail",
+        defaultMessage: "Veuillez entrer une adresse email valide",
+      }));
+      return;
+    }
+
     try {
-      setIsConnecting(true);
+      setIsSaving(true);
       setError(null);
+      setSuccess(null);
 
-      const createOnboardingLink = httpsCallable<
-        {
-          providerId: string;
-          email: string;
-          firstName: string;
-          lastName: string;
-          country: string;
-          businessName?: string;
-        },
-        OnboardingLinkResponse
-      >(functions, "createPayPalOnboardingLink");
+      const updateData = {
+        paypalEmail: paypalEmail.trim().toLowerCase(),
+        paypalAccountStatus: "active",
+        paypalOnboardingComplete: true,
+        paypalPaymentsReceivable: true,
+        isVisible: true, // Rendre le prestataire visible
+        updatedAt: new Date(),
+      };
 
-      const result = await createOnboardingLink({
-        providerId,
-        email: providerEmail,
-        firstName: providerFirstName,
-        lastName: providerLastName,
-        country: providerCountry,
-        businessName,
+      // Mettre à jour sos_profiles
+      await updateDoc(doc(db, "sos_profiles", providerId), updateData);
+
+      // Mettre à jour la collection spécifique (lawyers ou expats)
+      const collectionName = providerType === "lawyer" ? "lawyers" : "expats";
+      await updateDoc(doc(db, collectionName, providerId), updateData);
+
+      // Mettre à jour users
+      await updateDoc(doc(db, "users", providerId), {
+        paypalEmail: paypalEmail.trim().toLowerCase(),
+        paypalAccountStatus: "active",
+        paypalOnboardingComplete: true,
+        updatedAt: new Date(),
       });
 
-      // Rediriger vers PayPal pour l'onboarding
-      window.location.href = result.data.actionUrl;
+      setSavedEmail(paypalEmail);
+      setStatus("active");
+      onStatusChange?.("active");
+
+      setSuccess(intl.formatMessage({
+        id: "provider.paypal.success",
+        defaultMessage: "Votre compte PayPal a été enregistré avec succès !",
+      }));
+
+      // Rafraîchir la page après 2 secondes
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+
     } catch (err) {
-      console.error("Erreur création lien onboarding PayPal:", err);
-      setError(
-        intl.formatMessage({
-          id: "provider.paypal.error.onboarding",
-          defaultMessage: "Impossible de démarrer la connexion PayPal. Veuillez réessayer.",
-        })
-      );
-      setIsConnecting(false);
+      console.error("Erreur sauvegarde email PayPal:", err);
+      setError(intl.formatMessage({
+        id: "provider.paypal.error.save",
+        defaultMessage: "Erreur lors de l'enregistrement. Veuillez réessayer.",
+      }));
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -138,11 +159,11 @@ export const PayPalOnboarding: React.FC<PayPalOnboardingProps> = ({
   }
 
   // Statut connecté et actif
-  if (status === "active") {
+  if (status === "active" && savedEmail) {
     return (
       <div className={`bg-green-50 border border-green-200 rounded-lg p-4 ${className}`}>
         <div className="flex items-center">
-          <CheckCircle className="w-6 h-6 text-green-500 mr-3" />
+          <CheckCircle className="w-6 h-6 text-green-500 mr-3 flex-shrink-0" />
           <div>
             <h4 className="font-semibold text-green-800">
               <FormattedMessage
@@ -156,123 +177,133 @@ export const PayPalOnboarding: React.FC<PayPalOnboardingProps> = ({
                 defaultMessage="Vous pouvez recevoir des paiements via PayPal"
               />
             </p>
-            {merchantId && (
-              <p className="text-xs text-green-600 mt-1">
-                Merchant ID: {merchantId}
-              </p>
-            )}
-          </div>
-        </div>
-        <button
-          onClick={checkMerchantStatus}
-          className="mt-3 flex items-center text-sm text-green-600 hover:text-green-800"
-        >
-          <RefreshCw className="w-4 h-4 mr-1" />
-          <FormattedMessage
-            id="provider.paypal.refresh"
-            defaultMessage="Actualiser le statut"
-          />
-        </button>
-      </div>
-    );
-  }
-
-  // Statut en attente
-  if (status === "pending") {
-    return (
-      <div className={`bg-yellow-50 border border-yellow-200 rounded-lg p-4 ${className}`}>
-        <div className="flex items-center">
-          <Loader2 className="w-6 h-6 animate-spin text-yellow-500 mr-3" />
-          <div>
-            <h4 className="font-semibold text-yellow-800">
-              <FormattedMessage
-                id="provider.paypal.pending"
-                defaultMessage="Vérification en cours"
-              />
-            </h4>
-            <p className="text-sm text-yellow-700 mt-1">
-              <FormattedMessage
-                id="provider.paypal.pendingDescription"
-                defaultMessage="PayPal vérifie votre compte. Cela peut prendre quelques minutes."
-              />
+            <p className="text-sm text-green-600 mt-2 flex items-center">
+              <Mail className="w-4 h-4 mr-1" />
+              {savedEmail}
             </p>
           </div>
         </div>
-        <button
-          onClick={checkMerchantStatus}
-          className="mt-3 flex items-center text-sm text-yellow-600 hover:text-yellow-800"
-        >
-          <RefreshCw className="w-4 h-4 mr-1" />
-          <FormattedMessage
-            id="provider.paypal.checkAgain"
-            defaultMessage="Vérifier à nouveau"
-          />
-        </button>
+
+        {/* Option pour modifier l'email */}
+        <div className="mt-4 pt-4 border-t border-green-200">
+          <button
+            onClick={() => {
+              setStatus("not_connected");
+              setSavedEmail(null);
+            }}
+            className="text-sm text-green-600 hover:text-green-800 underline"
+          >
+            <FormattedMessage
+              id="provider.paypal.changeEmail"
+              defaultMessage="Modifier l'adresse email PayPal"
+            />
+          </button>
+        </div>
       </div>
     );
   }
 
-  // Non connecté - bouton pour démarrer
+  // Formulaire pour entrer l'email PayPal
   return (
-    <div className={`bg-white border border-gray-200 rounded-lg p-4 ${className}`}>
-      <div className="flex items-start">
+    <div className={`bg-white border border-gray-200 rounded-lg p-6 ${className}`}>
+      <div className="flex items-start mb-4">
         <div className="flex-shrink-0 p-2 bg-[#003087] rounded-lg">
           <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
             <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106z" />
           </svg>
         </div>
-        <div className="ml-4 flex-1">
+        <div className="ml-4">
           <h4 className="font-semibold text-gray-900">
             <FormattedMessage
               id="provider.paypal.connect.title"
-              defaultMessage="Connecter PayPal"
+              defaultMessage="Configurer PayPal"
             />
           </h4>
           <p className="text-sm text-gray-600 mt-1">
             <FormattedMessage
               id="provider.paypal.connect.description"
-              defaultMessage="Recevez des paiements de clients du monde entier via PayPal"
+              defaultMessage="Entrez l'adresse email associée à votre compte PayPal pour recevoir vos paiements."
             />
           </p>
-
-          {error && (
-            <div className="mt-3 flex items-center text-sm text-red-600">
-              <AlertCircle className="w-4 h-4 mr-1" />
-              {error}
-            </div>
-          )}
-
-          <button
-            onClick={startOnboarding}
-            disabled={isConnecting}
-            className="mt-4 inline-flex items-center px-4 py-2 bg-[#0070ba] text-white rounded-lg hover:bg-[#003087] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isConnecting ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                <FormattedMessage
-                  id="provider.paypal.connecting"
-                  defaultMessage="Connexion en cours..."
-                />
-              </>
-            ) : (
-              <>
-                <ExternalLink className="w-4 h-4 mr-2" />
-                <FormattedMessage
-                  id="provider.paypal.connectButton"
-                  defaultMessage="Connecter mon compte PayPal"
-                />
-              </>
-            )}
-          </button>
         </div>
       </div>
 
+      {/* Champ email */}
+      <div className="mb-4">
+        <label htmlFor="paypal-email" className="block text-sm font-medium text-gray-700 mb-2">
+          <FormattedMessage
+            id="provider.paypal.emailLabel"
+            defaultMessage="Adresse email PayPal"
+          />
+        </label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="email"
+            id="paypal-email"
+            value={paypalEmail}
+            onChange={(e) => {
+              setPaypalEmail(e.target.value);
+              setError(null);
+            }}
+            placeholder={providerEmail}
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+          />
+        </div>
+        <p className="text-xs text-gray-500 mt-1">
+          <FormattedMessage
+            id="provider.paypal.emailHint"
+            defaultMessage="Cette adresse doit correspondre à votre compte PayPal"
+          />
+        </p>
+      </div>
+
+      {/* Messages d'erreur et de succès */}
+      {error && (
+        <div className="mb-4 flex items-center text-sm text-red-600 bg-red-50 p-3 rounded-lg">
+          <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="mb-4 flex items-center text-sm text-green-600 bg-green-50 p-3 rounded-lg">
+          <CheckCircle className="w-4 h-4 mr-2 flex-shrink-0" />
+          {success}
+        </div>
+      )}
+
+      {/* Bouton de sauvegarde */}
+      <button
+        onClick={savePayPalEmail}
+        disabled={isSaving || !paypalEmail.trim()}
+        className="w-full flex items-center justify-center px-4 py-3 bg-[#0070ba] text-white rounded-lg hover:bg-[#003087] transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+      >
+        {isSaving ? (
+          <>
+            <Loader2 className="w-5 h-5 animate-spin mr-2" />
+            <FormattedMessage
+              id="provider.paypal.saving"
+              defaultMessage="Enregistrement..."
+            />
+          </>
+        ) : (
+          <>
+            <CheckCircle className="w-5 h-5 mr-2" />
+            <FormattedMessage
+              id="provider.paypal.saveButton"
+              defaultMessage="Enregistrer mon compte PayPal"
+            />
+          </>
+        )}
+      </button>
+
+      {/* Note de sécurité */}
       <div className="mt-4 pt-4 border-t border-gray-100">
         <p className="text-xs text-gray-500">
           <FormattedMessage
-            id="provider.paypal.connect.note"
-            defaultMessage="Vous serez redirigé vers PayPal pour compléter la connexion. Vos informations bancaires ne sont jamais partagées avec SOS-Expat."
+            id="provider.paypal.securityNote"
+            defaultMessage="Vos paiements seront envoyés directement sur votre compte PayPal. SOS-Expat n'a jamais accès à vos informations bancaires."
           />
         </p>
       </div>

@@ -56,6 +56,7 @@ const LocaleRouter: React.FC<LocaleRouterProps> = ({ children }) => {
         // Invalid locale - redirect to valid one
         const locale = getLocaleString(language);
         const { pathWithoutLocale } = parseLocaleFromPath(decodedPathname);
+        setIsValidating(false); // CRITICAL: Set before navigate to prevent blank page
         navigate(`/${locale}${pathWithoutLocale}`, { replace: true });
         return;
       }
@@ -64,6 +65,7 @@ const LocaleRouter: React.FC<LocaleRouterProps> = ({ children }) => {
     // If path doesn't have locale prefix and is not root, redirect to add it
     if (!hasLocalePrefix(decodedPathname) && decodedPathname !== "/") {
       const locale = getLocaleString(language);
+      setIsValidating(false); // CRITICAL: Set before navigate to prevent blank page
       navigate(`/${locale}${decodedPathname}`, { replace: true });
       return;
     }
@@ -77,7 +79,7 @@ const LocaleRouter: React.FC<LocaleRouterProps> = ({ children }) => {
       // The next useEffect run will handle slug translation after language state updates
       if (lang && lang !== language) {
         setLanguage(lang as "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar");
-        // Don't set isValidating to false here - let the next render handle it
+        setIsValidating(false); // Allow render while language syncs
         return;
       }
 
@@ -132,6 +134,7 @@ const LocaleRouter: React.FC<LocaleRouterProps> = ({ children }) => {
                 const correctChildSlug = getTranslatedRouteSlug(childRouteKey, lang);
                 if (`${matchedPath}/${restOfPath}` !== correctChildSlug) {
                   const newPath = `/${getLocaleString(lang)}/${correctChildSlug}`;
+                  setIsValidating(false); // CRITICAL: Set before navigate to prevent blank page
                   navigate(newPath, { replace: true });
                   return;
                 }
@@ -142,6 +145,7 @@ const LocaleRouter: React.FC<LocaleRouterProps> = ({ children }) => {
             // Redirect if slug doesn't match current language
             if (matchedPath !== correctSlug) {
               const newPath = `/${getLocaleString(lang)}/${correctSlug}${restOfPath ? `/${restOfPath}` : ""}`;
+              setIsValidating(false); // CRITICAL: Set before navigate to prevent blank page
               navigate(newPath, { replace: true });
               return;
             }
@@ -151,6 +155,7 @@ const LocaleRouter: React.FC<LocaleRouterProps> = ({ children }) => {
     } else if (decodedPathname === "/") {
       // Root path - redirect to default locale
       const locale = getLocaleString(language);
+      setIsValidating(false); // CRITICAL: Set before navigate to prevent blank page on sos-expat.com
       navigate(`/${locale}`, { replace: true });
       return;
     }

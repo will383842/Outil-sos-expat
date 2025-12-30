@@ -4,7 +4,7 @@
  * une expérience utilisateur cohérente avec le sidebar
  */
 
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useState, useCallback } from 'react';
 import { useIntl } from 'react-intl';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -73,6 +73,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
   const location = useLocation();
   const { user, logout, authInitialized } = useAuth();
   const { language } = useApp();
+  const [loggingOut, setLoggingOut] = useState(false);
 
   // AI Quota for sidebar display
   const {
@@ -108,10 +109,24 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
     return user.email?.split('@')[0] || 'User';
   };
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login');
-  };
+  const handleLogout = useCallback(async (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (loggingOut) return;
+
+    setLoggingOut(true);
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error("Logout error:", error);
+      navigate('/login');
+    } finally {
+      setLoggingOut(false);
+    }
+  }, [logout, navigate, loggingOut]);
 
   // Déterminer la clé active basée sur l'URL si non fournie
   const getCurrentActiveKey = () => {
@@ -300,10 +315,24 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
                     <li>
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center px-4 py-2 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5"
+                        disabled={loggingOut}
+                        className={`w-full flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                          loggingOut
+                            ? "text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-70"
+                            : "text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5"
+                        }`}
                       >
-                        <LogOut className="mr-3 h-5 w-5" />
-                        {intl.formatMessage({ id: "dashboard.logout" })}
+                        {loggingOut ? (
+                          <>
+                            <div className="mr-3 h-5 w-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                            {intl.formatMessage({ id: "dashboard.loggingOut", defaultMessage: "Déconnexion..." })}
+                          </>
+                        ) : (
+                          <>
+                            <LogOut className="mr-3 h-5 w-5" />
+                            {intl.formatMessage({ id: "dashboard.logout" })}
+                          </>
+                        )}
                       </button>
                     </li>
                   </ul>

@@ -138,6 +138,7 @@ import {
   PAYPAL_CLIENT_SECRET as _PAYPAL_CLIENT_SECRET,
   PAYPAL_WEBHOOK_ID as _PAYPAL_WEBHOOK_ID,
   PAYPAL_PARTNER_ID as _PAYPAL_PARTNER_ID,
+  PAYPAL_MODE as _PAYPAL_MODE,
 } from "./PayPalManager";
 
 export {
@@ -147,10 +148,14 @@ export {
   capturePayPalOrder,
   paypalWebhook,
   getRecommendedPaymentGateway,
+  createPayPalPayout,
+  checkPayPalPayoutStatus,
   PAYPAL_CLIENT_ID,
   PAYPAL_CLIENT_SECRET,
   PAYPAL_WEBHOOK_ID,
   PAYPAL_PARTNER_ID,
+  PAYPAL_MODE,
+  PAYPAL_PLATFORM_MERCHANT_ID,
 } from "./PayPalManager";
 
 // Alias pour usage local dans GLOBAL_SECRETS
@@ -260,12 +265,12 @@ function isLive(): boolean {
 function getStripeSecretKey(): string {
   return isLive()
     ? process.env.STRIPE_SECRET_KEY_LIVE || ""
-    : process.env.STRIPE_SECRET_KEY_TEST_V1 || "";
+    : process.env.STRIPE_SECRET_KEY_TEST || "";
 }
 function getStripeWebhookSecret(): string {
   return isLive()
     ? process.env.STRIPE_WEBHOOK_SECRET_LIVE || ""
-    : process.env.STRIPE_WEBHOOK_SECRET_TEST_V1 || "";
+    : process.env.STRIPE_WEBHOOK_SECRET_TEST || "";
 }
 
 // Helper pour le webhook Connect (Direct Charges) - reserve pour utilisation future

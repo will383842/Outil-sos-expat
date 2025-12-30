@@ -199,9 +199,11 @@ const SuccessPayment: React.FC = () => {
     const urlProviderRole = searchParams.get("providerRole");
 
     if (urlAmount && urlServiceType) {
-      setPaidAmount(parseFloat(urlAmount));
+      const parsedAmount = parseFloat(urlAmount);
+      setPaidAmount(Number.isNaN(parsedAmount) ? 0 : parsedAmount);
       setPaidServiceType(urlServiceType);
-      const d = urlDuration ? parseInt(urlDuration) : 0;
+      const parsedDuration = urlDuration ? parseInt(urlDuration, 10) : 0;
+      const d = Number.isNaN(parsedDuration) ? 0 : parsedDuration;
       setPaidDuration(d);
       setProviderRole(urlProviderRole || "");
       setTimeRemaining(d * 60);
@@ -248,9 +250,11 @@ const SuccessPayment: React.FC = () => {
     try {
       const savedTimestamp = sessionStorage.getItem(sessionKey);
       if (savedTimestamp) {
-        const timestamp = parseInt(savedTimestamp);
-        setPaymentTimestamp(timestamp);
-        return;
+        const timestamp = parseInt(savedTimestamp, 10);
+        if (!Number.isNaN(timestamp)) {
+          setPaymentTimestamp(timestamp);
+          return;
+        }
       }
     } catch {}
 

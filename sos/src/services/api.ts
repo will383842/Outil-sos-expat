@@ -54,6 +54,81 @@ function checkUserAuth(): void {
 }
 
 /**
+ * Validation des données d'appel
+ */
+function validateCallData(data: CallData): void {
+  if (!data.providerId || typeof data.providerId !== 'string') {
+    throw new Error('Provider ID invalide');
+  }
+  if (!data.clientId || typeof data.clientId !== 'string') {
+    throw new Error('Client ID invalide');
+  }
+  if (!data.clientPhone || typeof data.clientPhone !== 'string') {
+    throw new Error('Numéro de téléphone client invalide');
+  }
+  if (!data.providerPhone || typeof data.providerPhone !== 'string') {
+    throw new Error('Numéro de téléphone prestataire invalide');
+  }
+  if (!data.paymentIntentId || typeof data.paymentIntentId !== 'string') {
+    throw new Error('Payment Intent ID invalide');
+  }
+  if (data.providerType !== 'lawyer' && data.providerType !== 'expat') {
+    throw new Error('Type de prestataire invalide');
+  }
+}
+
+/**
+ * Validation des données SMS
+ */
+function validateSmsData(data: SmsData): void {
+  if (!data.to || !/^\+?[0-9]{8,15}$/.test(data.to)) {
+    throw new Error('Numéro de téléphone invalide');
+  }
+  if (!data.message || data.message.length === 0) {
+    throw new Error('Message invalide');
+  }
+  if (data.message.length > 1600) {
+    throw new Error('Message trop long (max 1600 caractères)');
+  }
+}
+
+/**
+ * Validation des données de paiement
+ */
+function validatePaymentData(data: PaymentData): void {
+  if (!data.amount || typeof data.amount !== 'number' || data.amount <= 0) {
+    throw new Error('Montant invalide');
+  }
+  if (data.currency && typeof data.currency !== 'string') {
+    throw new Error('Devise invalide');
+  }
+}
+
+/**
+ * Validation du Payment Intent ID
+ */
+function validatePaymentIntentId(paymentIntentId: string): void {
+  if (!paymentIntentId || typeof paymentIntentId !== 'string') {
+    throw new Error('Payment Intent ID invalide');
+  }
+  if (!paymentIntentId.startsWith('pi_')) {
+    throw new Error('Format Payment Intent ID invalide');
+  }
+}
+
+/**
+ * Validation des données de mise à jour de statut d'appel
+ */
+function validateCallStatusData(callSessionId: string, status: string): void {
+  if (!callSessionId || typeof callSessionId !== 'string') {
+    throw new Error('Call Session ID invalide');
+  }
+  if (!status || typeof status !== 'string') {
+    throw new Error('Statut invalide');
+  }
+}
+
+/**
  * Gestion des erreurs des fonctions Cloud
  */
 function handleCloudFunctionError(error: unknown, operation: string): never {
@@ -67,7 +142,8 @@ function handleCloudFunctionError(error: unknown, operation: string): never {
 export async function createPaymentIntent(data: PaymentData) {
   try {
     checkUserAuth();
-    
+    validatePaymentData(data);
+
     const createPaymentIntentFn = httpsCallable(functions, 'createPaymentIntent');
     const result = await createPaymentIntentFn({
       amount: data.amount,
@@ -87,7 +163,8 @@ export async function createPaymentIntent(data: PaymentData) {
 export async function capturePayment(paymentIntentId: string): Promise<boolean> {
   try {
     checkUserAuth();
-    
+    validatePaymentIntentId(paymentIntentId);
+
     const capturePaymentFn = httpsCallable(functions, 'capturePayment');
     const result = await capturePaymentFn({ paymentIntentId });
     
@@ -104,7 +181,8 @@ export async function capturePayment(paymentIntentId: string): Promise<boolean> 
 export async function cancelPayment(paymentIntentId: string): Promise<boolean> {
   try {
     checkUserAuth();
-    
+    validatePaymentIntentId(paymentIntentId);
+
     const cancelPaymentFn = httpsCallable(functions, 'cancelPayment');
     const result = await cancelPaymentFn({ paymentIntentId });
     
@@ -121,7 +199,8 @@ export async function cancelPayment(paymentIntentId: string): Promise<boolean> {
 export async function initiateCall(callData: CallData) {
   try {
     checkUserAuth();
-    
+    validateCallData(callData);
+
     const initiateCallFn = httpsCallable(functions, 'initiateCall');
     const result = await initiateCallFn(callData);
     
@@ -137,7 +216,8 @@ export async function initiateCall(callData: CallData) {
 export async function sendSms(data: SmsData) {
   try {
     checkUserAuth();
-    
+    validateSmsData(data);
+
     const sendSmsFn = httpsCallable(functions, 'sendSms');
     const result = await sendSmsFn(data);
     
@@ -151,13 +231,14 @@ export async function sendSms(data: SmsData) {
  * Met à jour le statut d'un appel
  */
 export async function updateCallStatus(
-  callSessionId: string, 
-  status: string, 
+  callSessionId: string,
+  status: string,
   details?: Record<string, unknown>
 ) {
   try {
     checkUserAuth();
-    
+    validateCallStatusData(callSessionId, status);
+
     const updateCallStatusFn = httpsCallable(functions, 'updateCallStatus');
     const result = await updateCallStatusFn({
       callSessionId,

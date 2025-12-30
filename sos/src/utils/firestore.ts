@@ -13,6 +13,7 @@ import {
   where,
   orderBy,
   limit as fsLimit,
+  startAfter,
   serverTimestamp,
   Timestamp,
   increment,
@@ -20,6 +21,8 @@ import {
   onSnapshot,
   DocumentData,
   QueryConstraint,
+  QueryDocumentSnapshot,
+  QuerySnapshot,
   runTransaction,
 } from "firebase/firestore";
 import {
@@ -74,6 +77,40 @@ const toDate = (v: unknown): Date | null => {
 };
 
 const truthy = (v: unknown) => v !== undefined && v !== null;
+
+// Pagination helper for fetching all documents in batches (max 500 per batch)
+const PAGINATION_BATCH_SIZE = 500;
+
+const fetchAllDocsPaginated = async (
+  collectionRef: ReturnType<typeof collection>,
+  constraints: QueryConstraint[] = []
+): Promise<QueryDocumentSnapshot<DocumentData>[]> => {
+  const allDocs: QueryDocumentSnapshot<DocumentData>[] = [];
+  let lastDoc: QueryDocumentSnapshot<DocumentData> | null = null;
+  let hasMore = true;
+
+  while (hasMore) {
+    const baseConstraints: QueryConstraint[] = [...constraints, fsLimit(PAGINATION_BATCH_SIZE)];
+    let currentQuery;
+    if (lastDoc) {
+      currentQuery = query(collectionRef, ...baseConstraints, startAfter(lastDoc));
+    } else {
+      currentQuery = query(collectionRef, ...baseConstraints);
+    }
+
+    const snapshot: QuerySnapshot<DocumentData> = await getDocs(currentQuery);
+
+    if (snapshot.empty || snapshot.docs.length === 0) {
+      hasMore = false;
+    } else {
+      allDocs.push(...snapshot.docs);
+      lastDoc = snapshot.docs[snapshot.docs.length - 1];
+      hasMore = snapshot.docs.length === PAGINATION_BATCH_SIZE;
+    }
+  }
+
+  return allDocs;
+};
 
 export const firstString = (
   val: unknown,
@@ -906,21 +943,19 @@ export const reportReview = async (
  */
 export const recalculateProviderStats = async (providerId: string): Promise<void> => {
   try {
-    // Get all published reviews for this provider
+    // Get all published reviews for this provider (with pagination for safety)
     const reviewsCol = collection(db, "reviews");
-    const q = query(
-      reviewsCol,
+    const reviewDocs = await fetchAllDocsPaginated(reviewsCol, [
       where("providerId", "==", providerId),
       where("status", "==", "published"),
       where("isPublic", "==", true)
-    );
-    const snapshot = await getDocs(q);
+    ]);
 
     // Calculate new stats
     let totalRating = 0;
     let reviewCount = 0;
 
-    snapshot.docs.forEach((docSnap) => {
+    reviewDocs.forEach((docSnap) => {
       const data = docSnap.data();
       const rating = getNum(data.rating, 0);
       if (rating >= 1 && rating <= 5) {
@@ -975,10 +1010,11 @@ export const getAllReviews = async (options?: {
 
   constraints.push(orderBy("createdAt", "desc"));
 
-  if (typeof options?.limit === "number")
-    constraints.push(fsLimit(options.limit));
+  // Always apply a limit to prevent loading too many documents (default 500)
+  const limitValue = typeof options?.limit === "number" ? options.limit : 500;
+  constraints.push(fsLimit(limitValue));
 
-  const q = constraints.length ? query(base, ...constraints) : base;
+  const q = query(base, ...constraints);
 
   const snapshot = await getDocs(q);
   return snapshot.docs.map((d) => {
@@ -1024,9 +1060,8 @@ export const getProviderReviews = async (
     if (snap.empty) {
       // fallback sous-collection - on filtre côté client pour isPublic
       try {
-        const sub = await getDocs(
-          collection(db, "sos_profiles", providerIdOrUid, "reviews")
-        );
+        const subRef = collection(db, "sos_profiles", providerIdOrUid, "reviews");
+        const sub = await getDocs(query(subRef, fsLimit(500)));
         return sub.docs
           .map((d) => {
             const data = asDict(d.data());
@@ -1270,11 +1305,12 @@ export const logAuditEvent = async (
 export const updateExistingProfiles = async () => {
   try {
     const sosProfilesRef = collection(db, "sos_profiles");
-    const sosSnapshot = await getDocs(sosProfilesRef);
-    if (!sosSnapshot.empty) {
+    // Use pagination to avoid loading 10,000+ documents at once
+    const sosDocs = await fetchAllDocsPaginated(sosProfilesRef);
+    if (sosDocs.length > 0) {
       let count = 0;
       let batch = writeBatch(db);
-      for (const profileDoc of sosSnapshot.docs) {
+      for (const profileDoc of sosDocs) {
         const profileData = asDict(profileDoc.data());
         const updates: Record<string, unknown> = {};
 
@@ -1352,11 +1388,12 @@ export const updateExistingProfiles = async () => {
     }
 
     const usersRef = collection(db, "users");
-    const usersSnapshot = await getDocs(usersRef);
-    if (!usersSnapshot.empty) {
+    // Use pagination to avoid loading 10,000+ documents at once
+    const usersDocs = await fetchAllDocsPaginated(usersRef);
+    if (usersDocs.length > 0) {
       let count = 0;
       let batch = writeBatch(db);
-      for (const userDoc of usersSnapshot.docs) {
+      for (const userDoc of usersDocs) {
         const u = asDict(userDoc.data());
         const updates: Record<string, unknown> = {};
 
@@ -1410,16 +1447,18 @@ export const fixAllProfiles = async () => {
     }
 
     const sosProfilesRef = collection(db, "sos_profiles");
-    const sosSnapshot = await getDocs(sosProfilesRef);
+    // Use pagination to avoid loading 10,000+ documents at once
+    const sosDocs = await fetchAllDocsPaginated(sosProfilesRef);
     const usersRef = collection(db, "users");
-    const usersSnapshot = await getDocs(usersRef);
+    // Use pagination to avoid loading 10,000+ documents at once
+    const usersDocs = await fetchAllDocsPaginated(usersRef);
 
-    if (sosSnapshot.empty || usersSnapshot.empty) return false;
+    if (sosDocs.length === 0 || usersDocs.length === 0) return false;
 
     let batch = writeBatch(db);
     let count = 0;
 
-    for (const profileDoc of sosSnapshot.docs) {
+    for (const profileDoc of sosDocs) {
       const profileData = asDict(profileDoc.data());
       const updates: Record<string, unknown> = {
         isVisible: true,
@@ -1429,7 +1468,7 @@ export const fixAllProfiles = async () => {
       };
 
       if (!profileData.type) {
-        const pair = usersSnapshot.docs.find((d) => d.id === profileDoc.id);
+        const pair = usersDocs.find((d) => d.id === profileDoc.id);
         const pairData = pair ? asDict(pair.data()) : {};
         updates.type = (
           getStr(pairData.role) === "lawyer" ? "lawyer" : "expat"
@@ -1462,7 +1501,7 @@ export const fixAllProfiles = async () => {
       }
     }
 
-    for (const userDoc of usersSnapshot.docs) {
+    for (const userDoc of usersDocs) {
       const u = asDict(userDoc.data());
       const updates: Record<string, unknown> = {
         updatedAt: serverTimestamp(),
@@ -1503,14 +1542,15 @@ export const validateDataIntegrity = async (): Promise<{
     const issues: string[] = [];
     const fixes: unknown[] = [];
 
-    const usersSnapshot = await getDocs(collection(db, "users"));
-    const sosProfilesSnapshot = await getDocs(collection(db, "sos_profiles"));
+    // Use pagination to avoid loading 10,000+ documents at once
+    const usersDocs = await fetchAllDocsPaginated(collection(db, "users"));
+    const sosProfilesDocs = await fetchAllDocsPaginated(collection(db, "sos_profiles"));
 
     const users = new Map<string, unknown>();
     const sosProfiles = new Map<string, unknown>();
 
-    usersSnapshot.docs.forEach((d) => users.set(d.id, d.data()));
-    sosProfilesSnapshot.docs.forEach((d) => sosProfiles.set(d.id, d.data()));
+    usersDocs.forEach((d) => users.set(d.id, d.data()));
+    sosProfilesDocs.forEach((d) => sosProfiles.set(d.id, d.data()));
 
     for (const [uid, userData] of users) {
       const userDataObj = userData as { role?: string };
@@ -1554,27 +1594,39 @@ export const cleanupObsoleteData = async (): Promise<boolean> => {
       throw new Error("Accès non autorisé - Admin requis");
     }
 
-    const batch = writeBatch(db);
+    let batch = writeBatch(db);
     let operationCount = 0;
 
-    const oldSessionsQuery = query(
+    // Use pagination to handle potentially large datasets
+    const oldSessionsDocs = await fetchAllDocsPaginated(
       collection(db, "call_sessions"),
-      where("createdAt", "<", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))
+      [where("createdAt", "<", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))]
     );
-    const oldSessionsSnapshot = await getDocs(oldSessionsQuery);
-    for (const d of oldSessionsSnapshot.docs) {
+    for (const d of oldSessionsDocs) {
       batch.delete(d.ref);
       operationCount++;
+      // Commit in batches of 450 to avoid Firestore limits
+      if (operationCount >= 450) {
+        await batch.commit();
+        batch = writeBatch(db);
+        operationCount = 0;
+      }
     }
 
-    const oldLogsQuery = query(
+    // Use pagination to handle potentially large datasets
+    const oldLogsDocs = await fetchAllDocsPaginated(
       collection(db, "logs"),
-      where("timestamp", "<", new Date(Date.now() - 90 * 24 * 60 * 60 * 1000))
+      [where("timestamp", "<", new Date(Date.now() - 90 * 24 * 60 * 60 * 1000))]
     );
-    const oldLogsSnapshot = await getDocs(oldLogsQuery);
-    for (const d of oldLogsSnapshot.docs) {
+    for (const d of oldLogsDocs) {
       batch.delete(d.ref);
       operationCount++;
+      // Commit in batches of 450 to avoid Firestore limits
+      if (operationCount >= 450) {
+        await batch.commit();
+        batch = writeBatch(db);
+        operationCount = 0;
+      }
     }
 
     if (operationCount > 0) await batch.commit();

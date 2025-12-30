@@ -116,14 +116,24 @@ service firebase.storage {
 
     // Factures prestations (platform et provider)
     match /invoices/{invoiceType}/{year}/{month}/{fileName} {
+      // Validate invoiceType to prevent path traversal
+      function isValidInvoiceType() {
+        return invoiceType in ['platform', 'provider', 'client', 'commission'];
+      }
+      // Validate year/month format
+      function isValidDatePath() {
+        return year.matches('^[0-9]{4}$') && month.matches('^(0[1-9]|1[0-2])$');
+      }
       // Lecture: utilisateurs authentifiés (les URLs sont signées)
-      allow read: if isAuthenticated();
+      allow read: if isAuthenticated() && isValidInvoiceType() && isValidDatePath();
       // Écriture: utilisateurs authentifiés peuvent créer des factures PDF
       allow create: if isAuthenticated() &&
+                    isValidInvoiceType() &&
+                    isValidDatePath() &&
                     request.resource.contentType == 'application/pdf' &&
                     request.resource.size < 5 * 1024 * 1024;
       // Suppression: admins uniquement
-      allow delete: if isAdmin();
+      allow delete: if isAdmin() && isValidInvoiceType();
     }
 
     match /backups/{fileName} {

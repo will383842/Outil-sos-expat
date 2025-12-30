@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { doc, updateDoc, getDoc, getDocs, collection, query, where, Timestamp, serverTimestamp } from "firebase/firestore";
 import { db, auth, storage } from "../config/firebase";
@@ -81,6 +81,7 @@ const UPLOAD_CONFIG = {
 
 const ProfileEdit: React.FC = () => {
   const navigate = useNavigate();
+  const { userId } = useParams<{ userId?: string }>();
   const { user: ctxUser, authInitialized, refreshUser } = useAuth();
   const intl = useIntl();
   const t = (id: string) => intl.formatMessage({ id });
@@ -114,6 +115,18 @@ const ProfileEdit: React.FC = () => {
     },
     [navigate]
   );
+
+  // IDOR Protection: Verify user is editing their own profile
+  useEffect(() => {
+    if (!authInitialized) return;
+
+    // If a userId is specified in the URL, verify it matches the authenticated user
+    if (userId && userId !== ctxUser?.uid) {
+      console.error('IDOR Protection: Unauthorized profile access attempt detected');
+      navigate('/dashboard');
+      return;
+    }
+  }, [userId, ctxUser?.uid, authInitialized, navigate]);
 
   const validateField = useCallback(
     (name: FieldErrorKey, value: string): FieldErrors => {

@@ -17,7 +17,7 @@
 
 import * as admin from "firebase-admin";
 import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
-import { defineSecret } from "firebase-functions/params";
+import { defineSecret, defineString } from "firebase-functions/params";
 
 // Secrets PayPal
 export const PAYPAL_CLIENT_ID = defineSecret("PAYPAL_CLIENT_ID");
@@ -27,6 +27,9 @@ export const PAYPAL_PARTNER_ID = defineSecret("PAYPAL_PARTNER_ID");
 // Merchant ID de la plateforme SOS-Expat pour recevoir les frais de plateforme
 export const PAYPAL_PLATFORM_MERCHANT_ID = defineSecret("PAYPAL_PLATFORM_MERCHANT_ID");
 
+// Mode PayPal: "sandbox" pour les tests, "live" pour la production
+export const PAYPAL_MODE = defineString("PAYPAL_MODE", { default: "sandbox" });
+
 // Configuration
 const PAYPAL_CONFIG = {
   // URLs selon l'environnement
@@ -35,7 +38,8 @@ const PAYPAL_CONFIG = {
 
   // Mode (sandbox ou live)
   get MODE(): "sandbox" | "live" {
-    return process.env.PAYPAL_MODE === "live" ? "live" : "sandbox";
+    const mode = PAYPAL_MODE.value();
+    return mode === "live" ? "live" : "sandbox";
   },
 
   get BASE_URL(): string {
@@ -131,6 +135,19 @@ interface CreateOrderData {
   currency: string;
   providerId: string;
   providerPayPalMerchantId: string;
+  clientId: string;
+  description: string;
+}
+
+// Données pour le flux simplifié (sans Partner status)
+interface CreateSimpleOrderData {
+  callSessionId: string;
+  amount: number;
+  providerAmount: number;
+  platformFee: number;
+  currency: string;
+  providerId: string;
+  providerPayPalEmail: string; // Email au lieu de Merchant ID
   clientId: string;
   description: string;
 }
@@ -361,6 +378,107 @@ export class PayPalManager {
   // ====== ORDERS / PAIEMENTS ======
 
   /**
+   * Cree un ordre PayPal SIMPLIFIE (flux Payouts)
+   *
+   * FLUX SIMPLIFIE (sans Partner status):
+   * =====================================
+   * 1. Le client paie le montant total (ex: 100 EUR)
+   * 2. L'argent va sur le compte PayPal SOS-Expat
+   * 3. Apres capture, SOS-Expat envoie la part du provider via Payouts API
+   * 4. SOS-Expat garde sa commission (ex: 20 EUR)
+   *
+   * Avantages:
+   * - Pas besoin de Partner status PayPal
+   * - Le provider doit juste fournir son email PayPal
+   * - Simple a mettre en place
+   *
+   * Inconvenients:
+   * - Transit par la plateforme (SOS-Expat recoit puis redistribue)
+   * - Le provider recoit apres capture (pas instantane)
+   */
+  async createSimpleOrder(data: CreateSimpleOrderData): Promise<{
+    orderId: string;
+    approvalUrl: string;
+    status: string;
+  }> {
+    console.log("📦 [PAYPAL] Creating SIMPLE order (Payouts flow) for session:", data.callSessionId);
+    console.log(`📦 [PAYPAL] Total: ${data.amount} ${data.currency} | Platform keeps: ${data.platformFee} | Provider will receive via Payout: ${data.providerAmount}`);
+
+    const totalAmount = data.amount.toFixed(2);
+
+    // Ordre simple: l'argent va à SOS-Expat, pas de split automatique
+    const orderData = {
+      intent: "CAPTURE",
+      purchase_units: [
+        {
+          reference_id: data.callSessionId,
+          description: data.description,
+          amount: {
+            currency_code: data.currency,
+            value: totalAmount,
+          },
+          custom_id: data.callSessionId,
+          soft_descriptor: "SOS-EXPAT",
+        },
+      ],
+      application_context: {
+        brand_name: "SOS Expat",
+        landing_page: "LOGIN",
+        user_action: "PAY_NOW",
+        return_url: `${PAYPAL_CONFIG.RETURN_URL}?sessionId=${data.callSessionId}`,
+        cancel_url: `${PAYPAL_CONFIG.CANCEL_URL}?sessionId=${data.callSessionId}`,
+      },
+    };
+
+    const response = await this.apiRequest<PayPalOrder>(
+      "POST",
+      "/v2/checkout/orders",
+      orderData
+    );
+
+    const approvalUrl = response.links?.find((l: any) => l.rel === "approve")?.href;
+
+    if (!approvalUrl) {
+      throw new Error("No approval URL in PayPal response");
+    }
+
+    // Sauvegarder l'ordre avec le flag "simpleFlow" pour déclencher le payout après capture
+    await this.db.collection("paypal_orders").doc(response.id).set({
+      orderId: response.id,
+      callSessionId: data.callSessionId,
+      clientId: data.clientId,
+      providerId: data.providerId,
+      providerPayPalEmail: data.providerPayPalEmail, // Email pour le payout
+      amount: data.amount,
+      providerAmount: data.providerAmount,
+      platformFee: data.platformFee,
+      currency: data.currency,
+      status: response.status,
+      approvalUrl,
+      simpleFlow: true, // Flag pour déclencher le payout après capture
+      payoutStatus: "pending", // En attente du payout
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    // Mettre à jour la session d'appel
+    await this.db.collection("call_sessions").doc(data.callSessionId).update({
+      "payment.paypalOrderId": response.id,
+      "payment.paymentMethod": "paypal",
+      "payment.paymentFlow": "simple_payout", // Indique le flux utilisé
+      "payment.status": "pending_approval",
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    console.log("✅ [PAYPAL] Simple order created:", response.id);
+
+    return {
+      orderId: response.id,
+      approvalUrl,
+      status: response.status,
+    };
+  }
+
+  /**
    * Cree un ordre PayPal avec PAIEMENT DIRECT au provider
    *
    * FLUX DE PAIEMENT DIRECT (PayPal Commerce Platform):
@@ -379,6 +497,9 @@ export class PayPalManager {
    * Configuration requise:
    * - PAYPAL_PLATFORM_MERCHANT_ID: Merchant ID du compte SOS-Expat
    * - Le provider doit avoir complete l'onboarding PayPal Commerce Platform
+   *
+   * NOTE: Ce flux nécessite le statut Partner PayPal. Si vous n'avez pas
+   * ce statut, utilisez createSimpleOrder() à la place.
    */
   async createOrder(data: CreateOrderData): Promise<{
     orderId: string;
@@ -502,26 +623,41 @@ export class PayPalManager {
   /**
    * Capture un ordre PayPal apres approbation du client
    *
-   * FLUX DE CAPTURE POUR PAIEMENT DIRECT:
-   * =====================================
-   * Lorsque le client approuve le paiement et que nous appelons capture:
-   * 1. PayPal preleve le montant total du compte du client
-   * 2. PayPal envoie directement l'argent (moins platform_fees) au provider
-   * 3. PayPal envoie les platform_fees au compte SOS-Expat
-   * 4. Le provider recoit son paiement instantanement (disbursement_mode: INSTANT)
+   * GÈRE 2 FLUX:
+   * =============
+   * 1. FLUX DIRECT (Partner status): Split automatique via platform_fees
+   * 2. FLUX SIMPLE (sans Partner): Payout automatique après capture
    *
-   * Aucune action supplementaire requise - tout est automatique!
+   * RÈGLE MÉTIER CRITIQUE:
+   * ======================
+   * Une fois la prestation effectuée, AUCUN REMBOURSEMENT n'est possible,
+   * même si le prestataire n'a pas fait son KYC. Le paiement reste en attente
+   * jusqu'à ce que le prestataire configure son compte PayPal.
    */
   async captureOrder(orderId: string): Promise<{
     success: boolean;
     captureId: string;
     status: string;
     providerAmount?: number;
-    platformFee?: number;
+    connectionFee?: number; // Frais de mise en relation (pas "commission")
     grossAmount?: number;
+    payoutTriggered?: boolean;
+    payoutId?: string;
   }> {
-    console.log("💳 [PAYPAL] Capturing DIRECT payment order:", orderId);
+    console.log("💳 [PAYPAL] Capturing order:", orderId);
 
+    // Récupérer les données de l'ordre AVANT capture
+    const orderDoc = await this.db.collection("paypal_orders").doc(orderId).get();
+    const orderData = orderDoc.data();
+
+    if (!orderData) {
+      throw new Error(`Order ${orderId} not found`);
+    }
+
+    const isSimpleFlow = orderData.simpleFlow === true;
+    console.log(`💳 [PAYPAL] Flow type: ${isSimpleFlow ? "SIMPLE (Payout)" : "DIRECT (Split)"}`);
+
+    // Effectuer la capture
     const response = await this.apiRequest<any>(
       "POST",
       `/v2/checkout/orders/${orderId}/capture`,
@@ -532,37 +668,75 @@ export class PayPalManager {
     const captureAmount = capture?.amount?.value ? parseFloat(capture.amount.value) : 0;
     const captureCurrency = capture?.amount?.currency_code || "EUR";
 
-    // Extraire les informations de breakdown si disponibles
+    // Extraire les informations de breakdown
     const sellerReceivableBreakdown = capture?.seller_receivable_breakdown;
     const grossAmount = sellerReceivableBreakdown?.gross_amount?.value
       ? parseFloat(sellerReceivableBreakdown.gross_amount.value)
       : captureAmount;
-    const platformFeeAmount = sellerReceivableBreakdown?.platform_fees?.[0]?.amount?.value
-      ? parseFloat(sellerReceivableBreakdown.platform_fees[0].amount.value)
-      : 0;
-    const netAmount = sellerReceivableBreakdown?.net_amount?.value
-      ? parseFloat(sellerReceivableBreakdown.net_amount.value)
-      : grossAmount - platformFeeAmount;
 
-    console.log(`💳 [PAYPAL] Capture completed - Gross: ${grossAmount} ${captureCurrency}, Platform fee: ${platformFeeAmount}, Provider receives: ${netAmount}`);
+    // Pour le flux simple, les frais sont stockés dans orderData
+    const connectionFeeAmount = isSimpleFlow
+      ? (orderData.platformFee || orderData.connectionFee || 0)
+      : (sellerReceivableBreakdown?.platform_fees?.[0]?.amount?.value
+        ? parseFloat(sellerReceivableBreakdown.platform_fees[0].amount.value)
+        : 0);
 
-    // Recuperer d'abord les donnees de l'ordre pour avoir le callSessionId et providerId
-    const orderDoc = await this.db.collection("paypal_orders").doc(orderId).get();
-    const orderData = orderDoc.data();
+    const providerAmount = isSimpleFlow
+      ? (orderData.providerAmount || grossAmount - connectionFeeAmount)
+      : (sellerReceivableBreakdown?.net_amount?.value
+        ? parseFloat(sellerReceivableBreakdown.net_amount.value)
+        : grossAmount - connectionFeeAmount);
 
-    // Mettre a jour l'ordre avec les details de capture
+    console.log(`💳 [PAYPAL] Capture completed - Total: ${grossAmount} ${captureCurrency}, Frais de mise en relation: ${connectionFeeAmount}, Provider: ${providerAmount}`);
+
+    let payoutTriggered = false;
+    let payoutId: string | undefined;
+
+    // ===== FLUX SIMPLE: Déclencher le Payout automatiquement =====
+    if (isSimpleFlow && orderData.providerPayPalEmail && providerAmount > 0) {
+      console.log(`💰 [PAYPAL] Triggering automatic payout to ${orderData.providerPayPalEmail}`);
+
+      try {
+        const payoutResult = await this.createPayout({
+          providerId: orderData.providerId,
+          providerPayPalEmail: orderData.providerPayPalEmail,
+          amount: providerAmount,
+          currency: captureCurrency as "EUR" | "USD",
+          sessionId: orderData.callSessionId,
+          note: `Paiement pour consultation SOS-Expat - Session ${orderData.callSessionId}`,
+        });
+
+        payoutTriggered = payoutResult.success;
+        payoutId = payoutResult.payoutBatchId;
+
+        console.log(`💰 [PAYPAL] Payout ${payoutTriggered ? "SUCCESS" : "FAILED"}: ${payoutId}`);
+      } catch (payoutError) {
+        console.error("❌ [PAYPAL] Payout failed, will retry later:", payoutError);
+        // Le payout a échoué, mais le paiement est capturé
+        // L'argent reste sur le compte SOS-Expat jusqu'à ce qu'on puisse payer le provider
+      }
+    }
+
+    // Mettre à jour l'ordre avec les détails de capture
     await this.db.collection("paypal_orders").doc(orderId).update({
       status: response.status,
       captureId: capture?.id,
       capturedAt: admin.firestore.FieldValue.serverTimestamp(),
-      // Montants reels apres capture
       capturedGrossAmount: grossAmount,
-      capturedPlatformFee: platformFeeAmount,
-      capturedProviderAmount: netAmount,
+      capturedConnectionFee: connectionFeeAmount, // Renommé de platformFee
+      capturedProviderAmount: providerAmount,
       capturedCurrency: captureCurrency,
-      // Flag pour indiquer que le provider a deja recu l'argent
-      providerPaidDirectly: true,
-      providerPaidAt: admin.firestore.FieldValue.serverTimestamp(),
+      // Pour le flux direct
+      providerPaidDirectly: !isSimpleFlow,
+      providerPaidAt: !isSimpleFlow ? admin.firestore.FieldValue.serverTimestamp() : null,
+      // Pour le flux simple
+      payoutTriggered,
+      payoutId: payoutId || null,
+      payoutStatus: payoutTriggered ? "pending" : (isSimpleFlow ? "awaiting_payout" : "not_applicable"),
+      // IMPORTANT: Marquer que la prestation est livrée = pas de remboursement possible
+      serviceDelivered: true,
+      refundBlocked: true, // Protection contre les remboursements
+      refundBlockReason: "Service has been delivered",
     });
 
     if (orderData?.callSessionId) {
@@ -570,24 +744,42 @@ export class PayPalManager {
         "payment.status": "captured",
         "payment.capturedAt": admin.firestore.FieldValue.serverTimestamp(),
         "payment.paypalCaptureId": capture?.id,
-        // Indiquer que le paiement est direct au provider
-        "payment.directPayment": true,
-        "payment.providerPaidDirectly": true,
-        "payment.providerAmount": netAmount,
-        "payment.platformFee": platformFeeAmount,
+        "payment.paymentFlow": isSimpleFlow ? "simple_payout" : "direct_split",
+        "payment.providerPaidDirectly": !isSimpleFlow,
+        "payment.providerAmount": providerAmount,
+        "payment.connectionFee": connectionFeeAmount,
+        "payment.payoutTriggered": payoutTriggered,
+        "payment.payoutId": payoutId || null,
+        // Protection remboursement
+        "payment.serviceDelivered": true,
+        "payment.refundBlocked": true,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
     }
 
-    // Mettre a jour les earnings du provider (pour suivi, l'argent est deja sur son compte PayPal)
+    // Mettre à jour les earnings du provider
     if (orderData?.providerId) {
-      await this.db.collection("sos_profiles").doc(orderData.providerId).update({
-        totalPayPalEarnings: admin.firestore.FieldValue.increment(netAmount),
+      const updateData: any = {
         lastPayPalPaymentAt: admin.firestore.FieldValue.serverTimestamp(),
-        lastPayPalPaymentAmount: netAmount,
-      });
+        lastPayPalPaymentAmount: providerAmount,
+      };
 
-      console.log(`✅ [PAYPAL] Provider ${orderData.providerId} received ${netAmount} ${captureCurrency} directly on their PayPal account`);
+      if (isSimpleFlow) {
+        // Flux simple: le provider a un paiement en attente
+        if (payoutTriggered) {
+          updateData.pendingPayPalEarnings = admin.firestore.FieldValue.increment(providerAmount);
+        } else {
+          // Payout échoué: marquer comme en attente de payout
+          updateData.awaitingPayout = admin.firestore.FieldValue.increment(providerAmount);
+        }
+      } else {
+        // Flux direct: le provider a déjà reçu l'argent
+        updateData.totalPayPalEarnings = admin.firestore.FieldValue.increment(providerAmount);
+      }
+
+      await this.db.collection("sos_profiles").doc(orderData.providerId).update(updateData);
+
+      console.log(`✅ [PAYPAL] Provider ${orderData.providerId} - Amount: ${providerAmount} ${captureCurrency} (${isSimpleFlow ? "via payout" : "direct"})`);
     }
 
     console.log("✅ [PAYPAL] Order captured successfully:", orderId);
@@ -596,26 +788,111 @@ export class PayPalManager {
       success: response.status === "COMPLETED",
       captureId: capture?.id || "",
       status: response.status,
-      providerAmount: netAmount,
-      platformFee: platformFeeAmount,
-      grossAmount: grossAmount,
+      providerAmount,
+      connectionFee: connectionFeeAmount,
+      grossAmount,
+      payoutTriggered,
+      payoutId,
     };
   }
 
   /**
    * Rembourse un paiement PayPal
+   *
+   * RÈGLE MÉTIER CRITIQUE:
+   * ======================
+   * Le remboursement est BLOQUÉ si la prestation a eu lieu.
+   * Même si le prestataire n'a pas fait son KYC, le client ne peut pas
+   * être remboursé une fois le service délivré.
+   *
+   * @param captureId - ID de la capture PayPal
+   * @param amount - Montant à rembourser (optionnel, remboursement total si non spécifié)
+   * @param currency - Devise
+   * @param reason - Raison du remboursement
+   * @param forceRefund - Admin only: force le remboursement même si bloqué
    */
   async refundPayment(
     captureId: string,
     amount?: number,
     currency?: string,
-    reason?: string
+    reason?: string,
+    forceRefund: boolean = false
   ): Promise<{
     success: boolean;
     refundId: string;
     status: string;
+    blocked?: boolean;
+    blockReason?: string;
   }> {
-    console.log("💸 [PAYPAL] Refunding capture:", captureId);
+    console.log("💸 [PAYPAL] Refund request for capture:", captureId);
+
+    // ===== VÉRIFICATION CRITIQUE: Service délivré = pas de remboursement =====
+    // Chercher l'ordre associé à cette capture
+    const ordersQuery = await this.db.collection("paypal_orders")
+      .where("captureId", "==", captureId)
+      .limit(1)
+      .get();
+
+    if (!ordersQuery.empty) {
+      const orderData = ordersQuery.docs[0].data();
+
+      // Vérifier si le remboursement est bloqué
+      if (orderData.refundBlocked && !forceRefund) {
+        console.warn(`🚫 [PAYPAL] Refund BLOCKED for capture ${captureId}: ${orderData.refundBlockReason}`);
+
+        // Logger la tentative de remboursement bloquée
+        await this.db.collection("refund_attempts_blocked").add({
+          captureId,
+          orderId: orderData.orderId,
+          callSessionId: orderData.callSessionId,
+          providerId: orderData.providerId,
+          clientId: orderData.clientId,
+          amount: amount || orderData.capturedGrossAmount,
+          reason,
+          blockReason: orderData.refundBlockReason || "Service has been delivered",
+          attemptedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        return {
+          success: false,
+          refundId: "",
+          status: "BLOCKED",
+          blocked: true,
+          blockReason: orderData.refundBlockReason || "Le remboursement est impossible car la prestation a été effectuée.",
+        };
+      }
+
+      // Vérifier si le service a été délivré via la session d'appel
+      if (orderData.callSessionId) {
+        const sessionDoc = await this.db.collection("call_sessions").doc(orderData.callSessionId).get();
+        const sessionData = sessionDoc.data();
+
+        if (sessionData?.status === "completed" || sessionData?.payment?.serviceDelivered) {
+          if (!forceRefund) {
+            console.warn(`🚫 [PAYPAL] Refund BLOCKED: Call session ${orderData.callSessionId} is completed`);
+
+            await this.db.collection("refund_attempts_blocked").add({
+              captureId,
+              orderId: orderData.orderId,
+              callSessionId: orderData.callSessionId,
+              reason: "Call session completed",
+              attemptedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+
+            return {
+              success: false,
+              refundId: "",
+              status: "BLOCKED",
+              blocked: true,
+              blockReason: "Le remboursement est impossible car la consultation a eu lieu.",
+            };
+          }
+        }
+      }
+    }
+
+    // Si on arrive ici, le remboursement est autorisé
+    console.log("💸 [PAYPAL] Refund authorized, processing...");
 
     const refundData: any = {};
 
@@ -904,12 +1181,19 @@ export const checkPayPalMerchantStatus = onCall(
 /**
  * Crée un ordre PayPal (appelé depuis le frontend)
  *
+ * GÈRE 2 FLUX AUTOMATIQUEMENT:
+ * ============================
+ * 1. FLUX DIRECT (si provider a merchantId): Split automatique via platform_fees
+ * 2. FLUX SIMPLE (si provider a seulement paypalEmail): Payout après capture
+ *
+ * Le système choisit automatiquement le bon flux selon la configuration du provider.
+ *
  * P0 SECURITY FIX: Les frais sont calculés côté serveur, pas par le client
  */
 export const createPayPalOrder = onCall(
   {
     region: "europe-west1",
-    secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_PARTNER_ID],
+    secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_PARTNER_ID, PAYPAL_PLATFORM_MERCHANT_ID],
   },
   async (request) => {
     if (!request.auth) {
@@ -932,17 +1216,27 @@ export const createPayPalOrder = onCall(
     // Import du pricing service pour calculer les frais côté serveur
     const { getServiceAmounts } = await import("./services/pricingService");
 
-    // Vérifier que le provider a un compte PayPal
+    // Vérifier les données du provider
     const db = admin.firestore();
     const providerDoc = await db.collection("users").doc(providerId).get();
     const providerData = providerDoc.data();
 
-    if (!providerData?.paypalMerchantId) {
-      throw new HttpsError("failed-precondition", "Provider has no PayPal account");
+    if (!providerData) {
+      throw new HttpsError("not-found", "Provider not found");
+    }
+
+    // Déterminer le flux à utiliser
+    const hasMerchantId = !!providerData.paypalMerchantId;
+    const hasPayPalEmail = !!providerData.paypalEmail;
+
+    if (!hasMerchantId && !hasPayPalEmail) {
+      throw new HttpsError(
+        "failed-precondition",
+        "Le prestataire n'a pas configuré son compte PayPal. Il doit d'abord entrer son email PayPal dans son profil."
+      );
     }
 
     // ===== P0 SECURITY FIX: Calculer les frais côté serveur =====
-    // Ne JAMAIS faire confiance aux valeurs envoyées par le client
     const normalizedCurrency = (currency || "EUR").toLowerCase() as "eur" | "usd";
     const normalizedServiceType = (serviceType || providerData.type || "expat") as "lawyer" | "expat";
 
@@ -960,29 +1254,58 @@ export const createPayPalOrder = onCall(
       );
     }
 
-    // Utiliser les valeurs calculées par le serveur, pas celles du client
+    // Utiliser les valeurs calculées par le serveur (frais de mise en relation, pas "commission")
     const serverProviderAmount = serverPricing.providerAmount;
-    const serverPlatformFee = serverPricing.connectionFeeAmount;
+    const serverConnectionFee = serverPricing.connectionFeeAmount; // Frais de mise en relation
 
-    console.log(`[PAYPAL] Server-calculated fees: total=${serverPricing.totalAmount}, ` +
-      `provider=${serverProviderAmount}, platform=${serverPlatformFee}`);
+    console.log(`[PAYPAL] Server-calculated: total=${serverPricing.totalAmount}, ` +
+      `provider=${serverProviderAmount}, frais mise en relation=${serverConnectionFee}`);
+    console.log(`[PAYPAL] Flow: ${hasMerchantId ? "DIRECT (split)" : "SIMPLE (payout)"}`);
 
     const manager = new PayPalManager();
 
     try {
-      const result = await manager.createOrder({
-        callSessionId,
-        amount: serverPricing.totalAmount, // Utiliser le montant serveur
-        providerAmount: serverProviderAmount, // Calculé côté serveur
-        platformFee: serverPlatformFee, // Calculé côté serveur
-        currency: normalizedCurrency.toUpperCase(),
-        providerId,
-        providerPayPalMerchantId: providerData.paypalMerchantId,
-        clientId: request.auth.uid,
-        description: description || "SOS Expat - Consultation",
-      });
+      let result;
 
-      return { success: true, ...result };
+      if (hasMerchantId) {
+        // ===== FLUX DIRECT: Split automatique via PayPal Commerce Platform =====
+        console.log(`[PAYPAL] Using DIRECT flow with merchantId: ${providerData.paypalMerchantId}`);
+
+        result = await manager.createOrder({
+          callSessionId,
+          amount: serverPricing.totalAmount,
+          providerAmount: serverProviderAmount,
+          platformFee: serverConnectionFee, // Sera renommé en connectionFee plus tard
+          currency: normalizedCurrency.toUpperCase(),
+          providerId,
+          providerPayPalMerchantId: providerData.paypalMerchantId,
+          clientId: request.auth.uid,
+          description: description || "SOS Expat - Consultation",
+        });
+
+      } else {
+        // ===== FLUX SIMPLE: Payout après capture =====
+        console.log(`[PAYPAL] Using SIMPLE flow with email: ${providerData.paypalEmail}`);
+
+        result = await manager.createSimpleOrder({
+          callSessionId,
+          amount: serverPricing.totalAmount,
+          providerAmount: serverProviderAmount,
+          platformFee: serverConnectionFee,
+          currency: normalizedCurrency.toUpperCase(),
+          providerId,
+          providerPayPalEmail: providerData.paypalEmail,
+          clientId: request.auth.uid,
+          description: description || "SOS Expat - Consultation",
+        });
+      }
+
+      return {
+        success: true,
+        ...result,
+        flow: hasMerchantId ? "direct" : "simple",
+      };
+
     } catch (error) {
       console.error("Error creating PayPal order:", error);
       throw new HttpsError("internal", "Failed to create order");

@@ -110,7 +110,104 @@ export function openTestBackupHttp() {
 }
 
 // ---- Admin elevation ----
-export async function grantAdminIfToken(token: string) {
+
+// Rate limiting state for grantAdminIfToken
+const adminTokenAttempts: { timestamps: number[] } = { timestamps: [] };
+const MAX_ATTEMPTS_PER_MINUTE = 3;
+const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
+
+// Token validation constants
+const MIN_TOKEN_LENGTH = 32;
+const MAX_TOKEN_LENGTH = 256;
+const TOKEN_PATTERN = /^[a-zA-Z0-9_-]+$/;
+
+/**
+ * Validates the admin token format
+ * @throws Error if token format is invalid
+ */
+function validateTokenFormat(token: string): void {
+  if (!token || typeof token !== "string") {
+    throw new Error("Token is required and must be a string");
+  }
+
+  const trimmedToken = token.trim();
+
+  if (trimmedToken.length < MIN_TOKEN_LENGTH) {
+    throw new Error(
+      `Token must be at least ${MIN_TOKEN_LENGTH} characters long`
+    );
+  }
+
+  if (trimmedToken.length > MAX_TOKEN_LENGTH) {
+    throw new Error(`Token must not exceed ${MAX_TOKEN_LENGTH} characters`);
+  }
+
+  if (!TOKEN_PATTERN.test(trimmedToken)) {
+    throw new Error(
+      "Token contains invalid characters. Only alphanumeric characters, hyphens, and underscores are allowed"
+    );
+  }
+}
+
+/**
+ * Checks rate limiting for admin token attempts
+ * @throws Error if rate limit exceeded
+ */
+function checkRateLimit(): void {
+  const now = Date.now();
+
+  // Clean up old timestamps outside the window
+  adminTokenAttempts.timestamps = adminTokenAttempts.timestamps.filter(
+    (ts) => now - ts < RATE_LIMIT_WINDOW_MS
+  );
+
+  if (adminTokenAttempts.timestamps.length >= MAX_ATTEMPTS_PER_MINUTE) {
+    const oldestAttempt = adminTokenAttempts.timestamps[0];
+    const waitTime = Math.ceil(
+      (RATE_LIMIT_WINDOW_MS - (now - oldestAttempt)) / 1000
+    );
+    throw new Error(
+      `Too many attempts. Please wait ${waitTime} seconds before trying again`
+    );
+  }
+
+  // Record this attempt
+  adminTokenAttempts.timestamps.push(now);
+}
+
+/**
+ * Checks if the user is currently authenticated
+ * @throws Error if user is not authenticated
+ */
+async function checkUserAuthenticated(): Promise<void> {
+  // Dynamic import to avoid circular dependencies
+  const { getAuth } = await import("firebase/auth");
+  const auth = getAuth();
+
+  if (!auth.currentUser) {
+    throw new Error(
+      "User must be authenticated before requesting admin privileges"
+    );
+  }
+}
+
+/**
+ * Grant admin privileges using a secure token
+ * Includes validation, rate limiting, and authentication checks
+ */
+export async function grantAdminIfToken(
+  token: string
+): Promise<{ ok: boolean }> {
+  // 1. Check user is authenticated first
+  await checkUserAuthenticated();
+
+  // 2. Check rate limiting
+  checkRateLimit();
+
+  // 3. Validate token format
+  validateTokenFormat(token);
+
+  // 4. Call the backend function
   const call = httpsCallable(functions, "grantAdminIfToken");
-  return (await call({ token })).data as { ok: boolean };
+  return (await call({ token: token.trim() })).data as { ok: boolean };
 }

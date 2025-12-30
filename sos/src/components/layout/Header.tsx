@@ -1063,19 +1063,32 @@ const UserMenu = memo<UserMenuProps>(function UserMenu({
   const typedUser = user as WithAuthExtras | null;
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      // Ne pas fermer le menu si logout en cours
+      if (loggingOut) return;
       if (ref.current && !ref.current.contains(event.target as Node)) {
         setOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [loggingOut]);
 
-  const handleLogout = useCallback(async () => {
+  const handleLogout = useCallback(async (e?: React.MouseEvent) => {
+    // Empêcher la propagation et le comportement par défaut
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    // Éviter les double-clics
+    if (loggingOut) return;
+
+    setLoggingOut(true);
     try {
       await logout();
       setOpen(false);
@@ -1092,8 +1105,10 @@ const UserMenu = memo<UserMenuProps>(function UserMenu({
       } catch {
         window.location.assign("/");
       }
+    } finally {
+      setLoggingOut(false);
     }
-  }, [logout, navigate]);
+  }, [logout, navigate, loggingOut]);
 
   // Traductions
   const t = useMemo(
@@ -1243,12 +1258,26 @@ const UserMenu = memo<UserMenuProps>(function UserMenu({
 
         <button
           onClick={handleLogout}
-          className="flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-medium
-            bg-red-600 text-white hover:bg-red-700 w-full min-h-[44px]"
+          disabled={loggingOut}
+          className={`flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-medium
+            w-full min-h-[44px] transition-all ${
+              loggingOut
+                ? "bg-red-400 text-white cursor-not-allowed opacity-70"
+                : "bg-red-600 text-white hover:bg-red-700"
+            }`}
           aria-label={t.logout}
         >
-          <LogOut className="w-4 h-4 mr-2" aria-hidden="true" />
-          <span>{t.logout}</span>
+          {loggingOut ? (
+            <>
+              <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span>Déconnexion...</span>
+            </>
+          ) : (
+            <>
+              <LogOut className="w-4 h-4 mr-2" aria-hidden="true" />
+              <span>{t.logout}</span>
+            </>
+          )}
         </button>
       </div>
     );
@@ -1362,12 +1391,26 @@ const UserMenu = memo<UserMenuProps>(function UserMenu({
             <hr className="my-1 border-gray-100" />
             <button
               onClick={handleLogout}
-              className="group flex items-center w-full px-4 py-3 text-sm text-red-600
-                hover:bg-red-50 rounded-xl mx-1 focus:outline-none focus-visible:bg-red-50"
+              disabled={loggingOut}
+              className={`group flex items-center w-full px-4 py-3 text-sm rounded-xl mx-1
+                focus:outline-none focus-visible:bg-red-50 transition-all ${
+                  loggingOut
+                    ? "text-red-400 cursor-not-allowed opacity-70"
+                    : "text-red-600 hover:bg-red-50"
+                }`}
               role="menuitem"
             >
-              <LogOut className="w-4 h-4 mr-3" aria-hidden="true" />
-              {t.logout}
+              {loggingOut ? (
+                <>
+                  <div className="w-4 h-4 mr-3 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                  Déconnexion...
+                </>
+              ) : (
+                <>
+                  <LogOut className="w-4 h-4 mr-3" aria-hidden="true" />
+                  {t.logout}
+                </>
+              )}
             </button>
           </div>
         </div>

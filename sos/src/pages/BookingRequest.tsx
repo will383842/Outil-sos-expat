@@ -118,7 +118,7 @@ const I18N = {
     callTiming: "Appel dans les 5 minutes après paiement",
     securePay: "Paiement 100% sécurisé",
     satisfied:
-      "💯 Satisfait ou remboursé : expert indisponible = remboursement automatique.",
+      "💯 Expert indisponible = remboursement automatique.",
     continuePay: "Continuer vers le paiement",
     errorsTitle: "Oups, quelques retouches et c’est parfait ✨",
     hints: {
@@ -330,7 +330,7 @@ const I18N = {
     callTiming: "Call within 5 minutes after payment",
     securePay: "100% secure payment",
     satisfied:
-      "💯 Satisfaction guarantee: if the expert is unavailable, you are automatically refunded.",
+      "💯 If the expert is unavailable, you are automatically refunded.",
     continuePay: "Continue to payment",
     errorsTitle: "Tiny tweaks and we’re there ✨",
     hints: {

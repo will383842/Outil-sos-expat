@@ -703,8 +703,9 @@ const PasswordReset: React.FC = () => {
       // Success analytics
       const gtag = getGtag();
       if (gtag) {
+        const emailParts = formData.email.split('@');
         gtag('event', 'password_reset_success', {
-          email_domain: formData.email.split('@')[1],
+          email_domain: emailParts[1] || 'unknown',
           attempt_number: submitAttempts + 1
         });
       }

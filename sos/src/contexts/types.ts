@@ -56,6 +56,7 @@ export interface User {
   isVisible?: boolean;
   isOnline?: boolean;
 
+  // Stripe KYC
   stripeAccountId?: string;
   kycStatus?:
     | "not_started"
@@ -68,6 +69,15 @@ export interface User {
   chargesEnabled?: boolean;
   payoutsEnabled?: boolean;
   stripeAccountDisconnected?: boolean;
+
+  // PayPal KYC (pour pays non supportés par Stripe)
+  paymentGateway?: 'stripe' | 'paypal';
+  paypalAccountStatus?: 'not_connected' | 'pending' | 'active' | 'connected' | 'restricted' | 'error';
+  paypalEmail?: string; // Email PayPal pour recevoir les paiements
+  paypalMerchantId?: string;
+  paypalOnboardingComplete?: boolean;
+  paypalPaymentsReceivable?: boolean;
+  isPaymentAccountRequired?: boolean;
 
   // Contact
   phone?: string;
@@ -191,43 +201,73 @@ export interface Notification {
 // ===============================
 
 export interface AppSettings {
-  servicesEnabled: {
+  // Platform info
+  platformName?: string;
+  platformEmail?: string;
+
+  // Pricing
+  lawyerBasePrice?: number;
+  expatBasePrice?: number;
+  lawyerCallDuration?: number;
+  expatCallDuration?: number;
+  commissionRate?: number;
+  affiliateCommissionRate?: number;
+
+  // Legacy format (for compatibility)
+  servicesEnabled?: {
     lawyerCalls: boolean;
     expatCalls: boolean;
   };
-  pricing: {
+  pricing?: {
     lawyerCall: number;
     expatCall: number;
   };
-  platformCommission: number;
-  maxCallDuration: number;
-  callTimeout: number;
-  supportedCountries: string[];
-  supportedLanguages: SupportedLanguage[];
+  platformCommission?: number;
+  maxCallDuration?: number;
+  callTimeout?: number;
+  supportedCountries?: string[];
+  supportedLanguages?: SupportedLanguage[];
 }
 
 export interface EnhancedSettings {
-  notifications: {
+  // Platform state
+  maintenanceMode?: boolean;
+  allowNewRegistrations?: boolean;
+  requireEmailVerification?: boolean;
+  defaultLanguage?: SupportedLanguage;
+  supportedLanguages?: SupportedLanguage[];
+
+  // Feature flags
+  features?: {
+    enableChat?: boolean;
+    enableVideoCall?: boolean;
+    enablePayments?: boolean;
+    enableNotifications?: boolean;
+    enableAnalytics?: boolean;
+  };
+
+  // Legacy format (for compatibility)
+  notifications?: {
     email: boolean;
     push: boolean;
     sms: boolean;
   };
-  privacy: {
+  privacy?: {
     profileVisibility: "public" | "private" | "contacts";
     allowContact: boolean;
     showOnMap: boolean;
   };
-  language: {
+  language?: {
     primary: SupportedLanguage;
     secondary?: SupportedLanguage;
     preferredCommunication: SupportedLanguage;
   };
-  rateLimit: {
+  rateLimit?: {
     apiCallsPerMinute: number;
     lastApiCall: Date;
     callCount: number;
   };
-  audit: {
+  audit?: {
     lastLogin: Date;
     lastProfileUpdate: Date;
     loginHistory: Array<{

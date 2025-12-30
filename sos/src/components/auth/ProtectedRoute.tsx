@@ -6,6 +6,39 @@ import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorBoundary from '../common/ErrorBoundary';
 import { checkUserRole, isUserBanned } from '../../utils/auth';
 
+/**
+ * Validates that a redirect URL is safe (local path only)
+ * Prevents open redirect vulnerabilities
+ */
+const isValidLocalRedirect = (url: string): boolean => {
+  // Must start with / and not have protocol or double slashes
+  if (!url || typeof url !== 'string') return false;
+
+  // Reject URLs with protocols (http:, https:, javascript:, etc.)
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(url)) return false;
+
+  // Reject protocol-relative URLs (//example.com)
+  if (url.startsWith('//')) return false;
+
+  // Reject URLs with @ (user@host format)
+  if (url.includes('@')) return false;
+
+  // Must be a relative path starting with /
+  if (!url.startsWith('/')) return false;
+
+  // Reject URLs with backslashes (path traversal)
+  if (url.includes('\\')) return false;
+
+  return true;
+};
+
+/**
+ * Sanitizes a redirect URL, returning a safe default if invalid
+ */
+const sanitizeRedirectUrl = (url: string, defaultPath: string = '/'): string => {
+  return isValidLocalRedirect(url) ? url : defaultPath;
+};
+
 interface ProtectedRouteProps {
   children: React.ReactNode;
   allowedRoles?: string | string[];
@@ -95,6 +128,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     [location]
   );
 
+  // Sanitize the redirect URL to prevent open redirect attacks
+  const safeRedirectParam = useMemo(
+    () => sanitizeRedirectUrl(fullPath, computedFallbackPath),
+    [fullPath, computedFallbackPath]
+  );
+
   const renderContent = () => {
     switch (authState) {
       case 'loading':
@@ -127,7 +166,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         }
         return (
           <Navigate
-            to={`${computedFallbackPath}?redirect=${encodeURIComponent(fullPath)}&error=auth_error`}
+            to={`${computedFallbackPath}?redirect=${encodeURIComponent(safeRedirectParam)}&error=auth_error`}
             replace
           />
         );
@@ -145,7 +184,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       case 'unauthorized':
         return (
           <Navigate
-            to={`${computedFallbackPath}?redirect=${encodeURIComponent(fullPath)}`}
+            to={`${computedFallbackPath}?redirect=${encodeURIComponent(safeRedirectParam)}`}
             replace
           />
         );
@@ -156,7 +195,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       default:
         return (
           <Navigate
-            to={`${computedFallbackPath}?redirect=${encodeURIComponent(fullPath)}&error=unknown`}
+            to={`${computedFallbackPath}?redirect=${encodeURIComponent(safeRedirectParam)}&error=unknown`}
             replace
           />
         );

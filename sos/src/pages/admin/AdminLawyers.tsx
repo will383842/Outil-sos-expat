@@ -17,8 +17,6 @@ import {
   QueryConstraint,
   Query as FSQuery,
   CollectionReference,
-  onSnapshot,
-  Unsubscribe,
 } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import {
@@ -301,8 +299,6 @@ const AdminLawyers: React.FC = () => {
   const [hasNext, setHasNext] = useState(false);
   const [totalExact, setTotalExact] = useState<number | null>(null);
 
-  // listeners temps réel par doc visible
-  const docUnsubsRef = useRef<Record<string, Unsubscribe>>({});
 
   useEffect(() => {
     localStorage.setItem("admin.lawyers.pageSize", String(pageSize));
@@ -362,9 +358,6 @@ const AdminLawyers: React.FC = () => {
   const loadPage = useCallback(async () => {
     setLoading(true);
     setErrorMsg(null);
-
-    Object.values(docUnsubsRef.current).forEach((u) => u && u());
-    docUnsubsRef.current = {};
 
     try {
       const base = collection(db, "users") as CollectionReference<DocumentData>;
@@ -489,40 +482,10 @@ const AdminLawyers: React.FC = () => {
 
       setRows(data);
 
-      // temps réel
-      data.forEach((row) => {
-        const id = row.id;
-        const ref = doc(db, "users", id);
-        docUnsubsRef.current[id] = onSnapshot(ref, (ds) => {
-          if (!ds.exists()) {
-            setRows((prev) => prev.filter((x) => x.id !== id));
-            return;
-          }
-          const v = ds.data() as FirestoreLawyerDoc;
-          setRows((prev) =>
-            prev.map((x) =>
-              x.id !== id
-                ? x
-                : {
-                  ...x,
-                  status: (v.status ?? x.status) as UserStatus,
-                  isValidated: v.isValidated ?? x.isValidated,
-                  validationStatus: v.validationStatus ?? x.validationStatus,
-                  validationReason: v.validationReason ?? x.validationReason,
-                  kycStatus: v.kycStatus ?? x.kycStatus,
-                  kycProvider: v.kycProvider ?? x.kycProvider,
-                  kycStripeAccountId: v.kycStripeAccountId ?? x.kycStripeAccountId,
-                  kycLastSyncAt: v.kycLastSyncAt
-                    ? v.kycLastSyncAt.toDate()
-                    : x.kycLastSyncAt,
-                  lastLoginAt: v.lastLoginAt ? v.lastLoginAt.toDate() : x.lastLoginAt,
-                  emailVerified: v.emailVerified ?? x.emailVerified,
-                  phone: v.phone ?? x.phone,
-                }
-            )
-          );
-        });
-      });
+      // NOTE: Listeners temps réel supprimés pour éviter les memory leaks (N listeners pour N profils).
+      // Les données sont rechargées via loadPage() lors des changements de page/filtres.
+      // Pour les mises à jour en temps réel après une action, le state local est déjà mis à jour
+      // par les fonctions setValidation, setKyc, setStatus qui appellent updateDoc.
     } catch (e) {
       console.error("[AdminLawyers] load error", e);
 
@@ -555,10 +518,6 @@ const AdminLawyers: React.FC = () => {
   ]);
   useEffect(() => {
     loadPage();
-    return () => {
-      Object.values(docUnsubsRef.current).forEach((u) => u && u());
-      docUnsubsRef.current = {};
-    };
   }, [loadPage]);
 
   const toggleSelect = (id: string) => {

@@ -68,5 +68,64 @@ export interface AuthContextType {
   setUserAvailability: (availability: 'available' | 'busy' | 'offline') => Promise<void>;
 }
 
+// Default values for AuthContext to prevent white screens when used outside provider
+const defaultDeviceInfo: DeviceInfo = {
+  type: 'desktop',
+  os: 'unknown',
+  browser: 'unknown',
+  isOnline: true,
+  connectionSpeed: 'fast',
+};
+
+const defaultAuthMetrics: AuthMetrics = {
+  loginAttempts: 0,
+  lastAttempt: new Date(),
+  successfulLogins: 0,
+  failedLogins: 0,
+  googleAttempts: 0,
+  roleRestrictionBlocks: 0,
+  passwordResetRequests: 0,
+  emailUpdateAttempts: 0,
+  profileUpdateAttempts: 0,
+};
+
+// No-op async function for default context
+const noopAsync = async () => {
+  console.warn('[AuthContext] Called outside of AuthProvider - no operation performed');
+};
+
+const noopAsyncUsers = async (): Promise<User[]> => {
+  console.warn('[AuthContext] Called outside of AuthProvider - returning empty array');
+  return [];
+};
+
+export const defaultAuthContext: AuthContextType = {
+  user: null,
+  firebaseUser: null,
+  isUserLoggedIn: () => false,
+  isLoading: true,
+  authInitialized: false,
+  error: null,
+  authMetrics: defaultAuthMetrics,
+  deviceInfo: defaultDeviceInfo,
+  login: noopAsync,
+  loginWithGoogle: noopAsync,
+  register: noopAsync,
+  logout: noopAsync,
+  clearError: () => {},
+  refreshUser: noopAsync,
+  getLastLoginInfo: () => ({ date: null, device: null }),
+  updateUserProfile: noopAsync,
+  updateUserEmail: noopAsync,
+  updateUserPassword: noopAsync,
+  reauthenticateUser: noopAsync,
+  sendPasswordReset: noopAsync,
+  sendVerificationEmail: noopAsync,
+  deleteUserAccount: noopAsync,
+  getUsersByRole: noopAsyncUsers,
+  setUserAvailability: noopAsync,
+};
+
 // Named export expected by AuthContext.tsx
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Using default context to prevent crashes when used outside provider
+export const AuthContext = createContext<AuthContextType>(defaultAuthContext);

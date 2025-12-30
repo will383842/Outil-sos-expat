@@ -68,6 +68,7 @@ import {
 } from "firebase/auth";
 import { FormattedMessage, useIntl } from "react-intl";
 import StripeKYC from "@/components/StripeKyc";
+import PayPalOnboarding from "@/components/provider/PayPalOnboarding";
 import IntlPhoneInput from "@/components/forms-data/IntlPhoneInput";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { useForm, Controller } from "react-hook-form";
@@ -547,6 +548,7 @@ const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>("profile");
   const [isEditMode, setIsEditMode] = useState<boolean>(false); // Toggle Vue/Édition dans l'onglet Profil
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [loggingOut, setLoggingOut] = useState<boolean>(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -659,6 +661,13 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
     if (!user) navigate("/login");
     console.log(user, " : this is the user .");
   }, [user, navigate]);
+
+  // ✅ Set userDataReady to true once user is loaded
+  useEffect(() => {
+    if (user && (user.role === "lawyer" || user.role === "expat")) {
+      setUserDataReady(true);
+    }
+  }, [user]);
 
 // ✅ Force refresh user data on mount for lawyer/expat (fixes KYC loading issue after signup)
 // ⚠️ Limited to ONE attempt to prevent infinite loops
@@ -1164,13 +1173,21 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
   };
 
   // Logout sans écran blanc
-  const handleLogout = useCallback(async () => {
+  const handleLogout = useCallback(async (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (loggingOut) return;
+
+    setLoggingOut(true);
     try {
       await logout();
     } finally {
+      setLoggingOut(false);
       navigate("/login", { replace: true });
     }
-  }, [logout, navigate]);
+  }, [logout, navigate, loggingOut]);
 
 
 
@@ -1459,13 +1476,14 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
       )}
 
       {/* ========================================== */}
-      {/* STRIPE KYC STATUS & VERIFICATION SECTION */}
+      {/* KYC STATUS & VERIFICATION SECTION (STRIPE OR PAYPAL) */}
       {/* ========================================== */}
 
-      {/* Show KYC verification form if not started or incomplete */}
+      {/* STRIPE KYC: Show verification form if Stripe provider and not complete */}
       {userDataReady &&
         user &&
         (user.role === "lawyer" || user.role === "expat") &&
+        (user?.paymentGateway === "stripe" || !user?.paymentGateway) &&
         (user?.kycStatus === "not_started" ||
           user?.kycStatus === "in_progress" ||
           !user?.stripeOnboardingComplete) && (
@@ -1494,6 +1512,49 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                 <StripeKYC
                   userType={user.role as "lawyer" | "expat"}
                   onComplete={() => window.location.reload()}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+      {/* PAYPAL KYC: Show PayPal onboarding if PayPal provider and not connected */}
+      {userDataReady &&
+        user &&
+        (user.role === "lawyer" || user.role === "expat") &&
+        user?.paymentGateway === "paypal" &&
+        (user?.paypalAccountStatus === "not_connected" || !user?.paypalOnboardingComplete) && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="mb-8 bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl shadow-xl overflow-hidden">
+              <div className="px-6 py-8 sm:px-8">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-2xl font-bold text-white mb-2">
+                      <FormattedMessage
+                        id="dashboard.paypal.title"
+                        defaultMessage="Connect Your PayPal Account"
+                      />
+                    </h2>
+                    <p className="text-blue-100">
+                      <FormattedMessage
+                        id="dashboard.paypal.description"
+                        defaultMessage="Connect your PayPal account to receive payments from clients worldwide."
+                      />
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <PayPalOnboarding
+                  providerId={user.id}
+                  providerEmail={user.email}
+                  providerType={user.role as "lawyer" | "expat"}
+                  onStatusChange={(status) => {
+                    if (status === "active") {
+                      window.location.reload();
+                    }
+                  }}
                 />
               </div>
             </div>
@@ -1533,31 +1594,73 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
         </div>
       )} */}
 
-      {/* Show success banner if KYC is verified and charges enabled */}
+      {/* Show success banner if STRIPE KYC is verified and charges enabled */}
       {user &&
         (user.role === "lawyer" || user.role === "expat") &&
+        (user?.paymentGateway === "stripe" || !user?.paymentGateway) &&
         user?.stripeOnboardingComplete &&
         user?.chargesEnabled && (
-          <div className="mb-6 bg-green-50 border-l-4 border-green-500 rounded-lg p-4 shadow-sm">
-            <div className="flex items-center">
-              <svg
-                className="h-6 w-6 text-green-500 mr-3"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <div>
-                <p className="text-green-800 font-semibold">
-                  {intl.formatMessage({ id: 'kyc.verified.title' })}
-                </p>
-                <p className="text-green-700 text-sm">
-                  {intl.formatMessage({ id: 'kyc.verified.description' })}
-                </p>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="bg-green-50 border-l-4 border-green-500 rounded-lg p-4 shadow-sm">
+              <div className="flex items-center">
+                <svg
+                  className="h-6 w-6 text-green-500 mr-3"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <div>
+                  <p className="text-green-800 font-semibold">
+                    {intl.formatMessage({ id: 'kyc.verified.title' })}
+                  </p>
+                  <p className="text-green-700 text-sm">
+                    {intl.formatMessage({ id: 'kyc.verified.description' })}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+      {/* Show success banner if PAYPAL is connected and active */}
+      {user &&
+        (user.role === "lawyer" || user.role === "expat") &&
+        user?.paymentGateway === "paypal" &&
+        (user?.paypalAccountStatus === "active" || user?.paypalAccountStatus === "connected") &&
+        user?.paypalOnboardingComplete && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="bg-green-50 border-l-4 border-green-500 rounded-lg p-4 shadow-sm">
+              <div className="flex items-center">
+                <svg
+                  className="h-6 w-6 text-green-500 mr-3"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <div>
+                  <p className="text-green-800 font-semibold">
+                    <FormattedMessage
+                      id="dashboard.paypal.verified"
+                      defaultMessage="PayPal Connected!"
+                    />
+                  </p>
+                  <p className="text-green-700 text-sm">
+                    <FormattedMessage
+                      id="dashboard.paypal.verified.description"
+                      defaultMessage="You can now receive payments via PayPal from clients worldwide."
+                    />
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -1596,37 +1699,78 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
         </div>
       )} */}
 
-      {/* Show pending banner if KYC is under review */}
+      {/* Show pending banner if STRIPE KYC is under review */}
       {user &&
         (user.role === "lawyer" || user.role === "expat") &&
+        (user?.paymentGateway === "stripe" || !user?.paymentGateway) &&
         user?.stripeOnboardingComplete &&
         !user?.chargesEnabled && (
-          <div className="mb-6 bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-4 shadow-sm">
-            <div className="flex items-center">
-              <svg
-                className="h-6 w-6 text-yellow-500 mr-3"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <div>
-                <p className="text-yellow-800 font-semibold">
-                  <FormattedMessage
-                    id="dashboard.kyc.pending"
-                    defaultMessage="Verification Under Review"
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-4 shadow-sm">
+              <div className="flex items-center">
+                <svg
+                  className="h-6 w-6 text-yellow-500 mr-3"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
                   />
-                </p>
-                <p className="text-yellow-700 text-sm">
-                  <FormattedMessage
-                    id="dashboard.kyc.pending.description"
-                    defaultMessage="Your verification is being reviewed by Stripe. You'll be notified once approved (usually 24-48 hours)."
+                </svg>
+                <div>
+                  <p className="text-yellow-800 font-semibold">
+                    <FormattedMessage
+                      id="dashboard.kyc.pending"
+                      defaultMessage="Verification Under Review"
+                    />
+                  </p>
+                  <p className="text-yellow-700 text-sm">
+                    <FormattedMessage
+                      id="dashboard.kyc.pending.description"
+                      defaultMessage="Your verification is being reviewed by Stripe. You'll be notified once approved (usually 24-48 hours)."
+                    />
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+      {/* Show pending banner if PAYPAL is pending verification */}
+      {user &&
+        (user.role === "lawyer" || user.role === "expat") &&
+        user?.paymentGateway === "paypal" &&
+        user?.paypalAccountStatus === "pending" && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-4 shadow-sm">
+              <div className="flex items-center">
+                <svg
+                  className="h-6 w-6 text-yellow-500 mr-3"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
                   />
-                </p>
+                </svg>
+                <div>
+                  <p className="text-yellow-800 font-semibold">
+                    <FormattedMessage
+                      id="dashboard.paypal.pending"
+                      defaultMessage="PayPal Verification In Progress"
+                    />
+                  </p>
+                  <p className="text-yellow-700 text-sm">
+                    <FormattedMessage
+                      id="dashboard.paypal.pending.description"
+                      defaultMessage="PayPal is verifying your account. This usually takes a few minutes."
+                    />
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -1861,11 +2005,24 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                     <li>
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center px-4 py-2 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5"
+                        disabled={loggingOut}
+                        className={`w-full flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                          loggingOut
+                            ? "text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-70"
+                            : "text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5"
+                        }`}
                       >
-                        <LogOut className="mr-3 h-5 w-5" />
-
-                        {intl.formatMessage({ id: "dashboard.logout" })}
+                        {loggingOut ? (
+                          <>
+                            <div className="mr-3 h-5 w-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                            {intl.formatMessage({ id: "dashboard.loggingOut", defaultMessage: "Déconnexion..." })}
+                          </>
+                        ) : (
+                          <>
+                            <LogOut className="mr-3 h-5 w-5" />
+                            {intl.formatMessage({ id: "dashboard.logout" })}
+                          </>
+                        )}
                       </button>
                     </li>
                   </ul>

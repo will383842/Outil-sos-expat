@@ -19,7 +19,12 @@ export const isUrlExpired = (url: string): boolean => {
     }
     
     // Convert expires timestamp (Unix timestamp in seconds) to milliseconds
-    const expiresTimestamp = parseInt(expiresParam, 10) * 1000;
+    const parsedExpires = parseInt(expiresParam, 10);
+    // NaN check - if parsing fails, treat as expired
+    if (Number.isNaN(parsedExpires)) {
+      return true;
+    }
+    const expiresTimestamp = parsedExpires * 1000;
     const now = Date.now();
     
     // Check if expired (with 1 minute buffer to account for clock skew)
@@ -45,8 +50,13 @@ export const getUrlExpiration = (url: string): number | null => {
     if (!expiresParam) {
       return null;
     }
-    
-    return parseInt(expiresParam, 10) * 1000;
+
+    const parsedExpires = parseInt(expiresParam, 10);
+    // NaN check - if parsing fails, return null
+    if (Number.isNaN(parsedExpires)) {
+      return null;
+    }
+    return parsedExpires * 1000;
   } catch (error) {
     console.error('Error extracting URL expiration:', error);
     return null;

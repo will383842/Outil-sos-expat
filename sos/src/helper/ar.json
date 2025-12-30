@@ -661,7 +661,7 @@
   "banner.subtitle": "تحتاج مساعدة الآن؟ اتصل بنا.",
   "banner.title": "SOS Expat — مساعدة 24/7",
   "beforeCoffeeCools": "قبل أن تبرد قهوتك",
-  "benefits.common.moneyBack": "ضمان استرداد الأموال",
+  "benefits.common.moneyBack": "استرداد إذا كان الخبير غير متاح",
   "benefits.common.pdfInvoice": "فاتورة PDF تلقائية",
   "benefits.common.secureCall": "مكالمة هاتفية آمنة",
   "benefits.common.support247": "دعم على مدار الساعة",
@@ -738,7 +738,7 @@
   "bookingRequest.processing": "جاري المعالجة...",
   "bookingRequest.progress": "التقدم",
   "bookingRequest.request": "طلبك",
-  "bookingRequest.satisfied": "💯 ضمان الرضا: إذا كان الخبير غير متاح، ستُسترد أموالك تلقائيًا.",
+  "bookingRequest.satisfied": "💯 إذا كان الخبير غير متاح، ستُسترد أموالك تلقائيًا.",
   "bookingRequest.securePay": "دفع آمن 100%",
   "bookingRequest.seesClear": "الأمور واضحة 👀",
   "bookingRequest.selectCountry": "-- اختر بلدًا --",
@@ -779,6 +779,7 @@
   "card.aria.profileCard": "بطاقة ملف {name}",
   "card.aria.rating": "تقييم {rating} من 5",
   "card.aria.viewProfileAction": "عرض ملف {name}",
+  "card.busy": "مشغول",
   "card.labels.languages": "اللغات",
   "card.labels.offline": "غير متصل",
   "card.labels.online": "متصل",
@@ -788,7 +789,6 @@
   "card.labels.viewProfile": "عرض الملف",
   "card.labels.years": "سنوات",
   "card.languages": "اللغات",
-  "card.busy": "مشغول",
   "card.offline": "غير متصل",
   "card.online": "متصل",
   "card.others": "آخرون",
@@ -887,6 +887,7 @@
   "common.all": "الكل",
   "common.back": "رجوع",
   "common.client": "عميل",
+  "common.close": "إغلاق",
   "common.connecting": "جاري الاتصال...",
   "common.consultation": "استشارة",
   "common.copied": "تم النسخ!",
@@ -902,6 +903,7 @@
   "common.refresh": "تحديث",
   "common.required": "مطلوب",
   "common.retry": "إعادة المحاولة",
+  "common.retrying": "جاري إعادة المحاولة...",
   "common.search": "بحث",
   "common.select": "اختر...",
   "common.send": "إرسال",
@@ -909,19 +911,7 @@
   "common.shared": "تمت المشاركة!",
   "common.showMore": "عرض المزيد",
   "common.unknown": "غير معروف",
-  "common.close": "إغلاق",
-  "common.retrying": "جاري إعادة المحاولة...",
   "common.viewAll": "عرض الكل",
-  "extension.blocked.cause": "يحدث هذا عادةً بسبب برنامج مكافحة الفيروسات (Avast، Norton، Kaspersky) أو مانع الإعلانات.",
-  "extension.blocked.description": "يبدو أن إضافة في المتصفح تحظر الاتصال بخوادمنا.",
-  "extension.blocked.note": "يظهر هذا التنبيه فقط عند وجود مشكلة في الاتصال.",
-  "extension.blocked.privateMode": "الوضع الخاص",
-  "extension.blocked.showSolutions": "عرض الحلول",
-  "extension.blocked.step1": "جرب وضع التصفح الخاص (Ctrl+Shift+N)",
-  "extension.blocked.step2": "قم بتعطيل برنامج مكافحة الفيروسات مؤقتاً (Avast، Norton، Kaspersky...)",
-  "extension.blocked.step3": "قم بتعطيل مانع الإعلانات لهذا الموقع",
-  "extension.blocked.step4": "أضف هذا الموقع إلى القائمة البيضاء لمكافح الفيروسات",
-  "extension.blocked.title": "تم اكتشاف مشكلة في الاتصال",
   "concreteExamples": "حالات عملية",
   "concreteExamplesDescription": "خبير لكل حاجة، نقطة.",
   "confidentialityGuarantee": "السرية مضمونة",
@@ -1117,16 +1107,7 @@
   "dashboard.barNumber": "رقم النقابة (اختياري)",
   "dashboard.bioPlaceholder": "سيرتك المهنية…",
   "dashboard.calls": "مكالمات",
-  "dashboard.earnings.title": "أرباحي",
-  "dashboard.earnings.available": "متاح",
-  "dashboard.earnings.pending": "قيد الانتظار",
-  "dashboard.earnings.total": "إجمالي الأرباح",
-  "dashboard.earnings.calls": "المكالمات الناجحة",
-  "dashboard.earnings.recentTransactions": "المعاملات الأخيرة",
-  "dashboard.earnings.totalPayouts": "إجمالي المدفوعات",
-  "dashboard.earnings.reserved": "المبلغ المحجوز",
   "dashboard.choosePlan": "اختر خطة",
-  "dashboard.subscription": "اشتراكي",
   "dashboard.client": "العميل",
   "dashboard.completed": "مكتمل",
   "dashboard.countriesOfIntervention": "بلدان التدخل",
@@ -1137,6 +1118,14 @@
   "dashboard.description": "الوصف / السيرة الذاتية",
   "dashboard.descriptionBio": "الوصف / السيرة",
   "dashboard.descriptionPlaceholder": "أدخل الوصف أو السيرة الذاتية...",
+  "dashboard.earnings.available": "متاح",
+  "dashboard.earnings.calls": "المكالمات الناجحة",
+  "dashboard.earnings.pending": "قيد الانتظار",
+  "dashboard.earnings.recentTransactions": "المعاملات الأخيرة",
+  "dashboard.earnings.reserved": "المبلغ المحجوز",
+  "dashboard.earnings.title": "أرباحي",
+  "dashboard.earnings.total": "إجمالي الأرباح",
+  "dashboard.earnings.totalPayouts": "إجمالي المدفوعات",
   "dashboard.edit": "تعديل",
   "dashboard.editMode": "وضع التحرير",
   "dashboard.educations": "التعليم",
@@ -1206,6 +1195,7 @@
   "dashboard.specialtiesPlaceholder": "أضف التخصص واضغط Enter",
   "dashboard.status": "الحالة",
   "dashboard.statusOnlyProviders": "الحالة متاحة فقط لمقدمي الخدمات",
+  "dashboard.subscription": "اشتراكي",
   "dashboard.translationFrozen": "هذه الترجمة مجمدة ومحمية من التحديثات التلقائية.",
   "dashboard.translations": "الترجمات",
   "dashboard.unfreeze": "إلغاء التجميد",
@@ -1256,7 +1246,7 @@
   "expatCall.duration": "30 دقيقة",
   "expatCall.extendedAvailability": "توفر ممتد",
   "expatCall.extendedAvailabilityDesc": "30 دقيقة من التبادل لاستكشاف وضعك",
-  "expatCall.guarantees": "دفع آمن • مكالمة فورية • ضمان الرضا",
+  "expatCall.guarantees": "دفع آمن • مكالمة فورية • خبراء موثقون",
   "expatCall.livedExperience": "تجربة معاشة",
   "expatCall.livedExperienceDesc": "نصائح مبنية على تجربة اغتراب حقيقية",
   "expatCall.localKnowledge": "معرفة محلية",
@@ -1282,6 +1272,16 @@
   "expertsDescription": "أقل من 5 دقائق، ويرن الهاتف: خبير يرد، أينما كنت، بلغتك.",
   "expertsIn150Countries": "خبراء في 150 دولة",
   "expertsTitle": "في خدمتكم",
+  "extension.blocked.cause": "يحدث هذا عادةً بسبب برنامج مكافحة الفيروسات (Avast، Norton، Kaspersky) أو مانع الإعلانات.",
+  "extension.blocked.description": "يبدو أن إضافة في المتصفح تحظر الاتصال بخوادمنا.",
+  "extension.blocked.note": "يظهر هذا التنبيه فقط عند وجود مشكلة في الاتصال.",
+  "extension.blocked.privateMode": "الوضع الخاص",
+  "extension.blocked.showSolutions": "عرض الحلول",
+  "extension.blocked.step1": "جرب وضع التصفح الخاص (Ctrl+Shift+N)",
+  "extension.blocked.step2": "قم بتعطيل برنامج مكافحة الفيروسات مؤقتاً (Avast، Norton، Kaspersky...)",
+  "extension.blocked.step3": "قم بتعطيل مانع الإعلانات لهذا الموقع",
+  "extension.blocked.step4": "أضف هذا الموقع إلى القائمة البيضاء لمكافح الفيروسات",
+  "extension.blocked.title": "تم اكتشاف مشكلة في الاتصال",
   "faq.a1": "تبدأ الاستشارات مع محامينا المؤهلين من 49 يورو لمدة 20 دقيقة. للتحدث مع مغترب ذي خبرة، السعر 19 يورو لمدة 30 دقيقة. لا رسوم خفية، دفع آمن. يمكنك اختيار عملتك (يورو أو دولار).",
   "faq.a2": "يعمل SOS Expat في 197 دولة حول العالم. نربط 304 مليون مغترب بمحامين وخبراء محليين يتحدثون 9 لغات: الفرنسية، الإنجليزية، الألمانية، الروسية، الصينية، الإسبانية، البرتغالية، العربية والهندية.",
   "faq.a3": "خدمة SOS لدينا تعمل على مدار الساعة طوال أيام الأسبوع. خبير أو محامٍ يتصل بك في أقل من 5 دقائق، أينما كنت في العالم. مثالي لحالات الطوارئ الإدارية والقانونية أو الطبية أثناء اغترابك.",
@@ -1749,13 +1749,6 @@
   "payment.secure.description": "البيانات محمية بـ SSL. المكالمة تبدأ تلقائياً بعد الدفع.",
   "payment.secure.title": "دفع آمن",
   "payment.total": "المجموع",
-  "provider.payout.received": "تم استلام الدفع",
-  "provider.payout.receivedMessage": "لقد استلمت {amount}{symbol} مقابل استشارتك.",
-  "provider.payout.pending": "الدفع قيد الانتظار",
-  "provider.payout.failed": "فشل الدفع",
-  "provider.balance.available": "الرصيد المتاح",
-  "provider.balance.pending": "قيد الانتظار",
-  "provider.balance.reserved": "محجوز (نزاعات)",
   "preview.hide": "إخفاء المعاينة",
   "preview.show": "عرض المعاينة السريعة",
   "pricing.adminSync": "الأسعار متزامنة مع الإدارة",
@@ -1811,8 +1804,8 @@
   "pricing.promoPlaceholder": "كود خصم",
   "pricing.refundTime": "استرداد خلال 24 ساعة",
   "pricing.reload": "إعادة تحميل",
-  "pricing.satisfactionGuarantee": "ضمان الرضا",
-  "pricing.satisfactionGuaranteeDesc": "إذا لم يرد الخبير بعد 3 محاولات، يتم استرداد أموالك تلقائياً. نضمن رضاك 100%.",
+  "pricing.satisfactionGuarantee": "استرداد مضمون",
+  "pricing.satisfactionGuaranteeDesc": "إذا لم يرد الخبير بعد 3 محاولات، يتم استرداد أموالك تلقائياً.",
   "pricing.securePayment": "دفع آمن",
   "pricing.securePaymentDesc": "جميع معاملاتك محمية بتشفير SSL 256 بت. لا نخزن بياناتك المصرفية أبداً.",
   "pricing.securityHighlight": "الضمانات",
@@ -1936,6 +1929,46 @@
   "profileValidation.sortRecent": "الأحدث",
   "profileValidation.title": "التحقق من الملفات",
   "profileValidation.yearsExp": "سنوات خبرة",
+  "provider.balance.available": "الرصيد المتاح",
+  "provider.balance.pending": "قيد الانتظار",
+  "provider.balance.reserved": "محجوز (نزاعات)",
+  "provider.payout.failed": "فشل الدفع",
+  "provider.payout.pending": "الدفع قيد الانتظار",
+  "provider.payout.received": "تم استلام الدفع",
+  "provider.payout.receivedMessage": "لقد استلمت {amount}{symbol} مقابل استشارتك.",
+  "provider.paypal.changeEmail": "تغيير عنوان البريد الإلكتروني لـ PayPal",
+  "provider.paypal.checking": "جاري التحقق من حالة PayPal...",
+  "provider.paypal.connect.description": "أدخل عنوان البريد الإلكتروني المرتبط بحسابك على PayPal لاستلام مدفوعاتك.",
+  "provider.paypal.connect.title": "إعداد PayPal",
+  "provider.paypal.connectNow": "الربط الآن",
+  "provider.paypal.connected": "تم ربط حساب PayPal",
+  "provider.paypal.connectedDesc": "ملفك الشخصي مرئي الآن على المنصة. يمكنك البدء في استقبال العملاء.",
+  "provider.paypal.connectionRequired": "يلزم ربط PayPal",
+  "provider.paypal.connectionRequiredDesc": "لتكون مرئياً على المنصة وتلقي المدفوعات، يرجى ربط حساب PayPal الخاص بك.",
+  "provider.paypal.earnings.available": "الرصيد المتاح",
+  "provider.paypal.earnings.blocked": "الأموال محجوبة",
+  "provider.paypal.earnings.blockedDesc": "أكمل التحقق من PayPal للوصول إلى أموالك.",
+  "provider.paypal.emailHint": "يجب أن يتطابق هذا العنوان مع حسابك على PayPal",
+  "provider.paypal.emailLabel": "عنوان البريد الإلكتروني لـ PayPal",
+  "provider.paypal.error.emailRequired": "الرجاء إدخال عنوان بريدك الإلكتروني على PayPal",
+  "provider.paypal.error.invalidEmail": "الرجاء إدخال عنوان بريد إلكتروني صالح",
+  "provider.paypal.error.save": "خطأ في الحفظ. الرجاء المحاولة مرة أخرى.",
+  "provider.paypal.profileNotVisible": "ملفك الشخصي غير مرئي بعد",
+  "provider.paypal.profileNotVisibleDesc": "سيصبح ملفك الشخصي مرئياً بمجرد ربط حساب PayPal الخاص بك.",
+  "provider.paypal.ready": "يمكنك استلام المدفوعات عبر PayPal",
+  "provider.paypal.reminder.message": "اربط حساب PayPal الخاص بك لبدء استقبال العملاء والمدفوعات.",
+  "provider.paypal.reminder.title": "تذكير: ربط PayPal",
+  "provider.paypal.reminder.urgent": "عاجل: اربط حساب PayPal الخاص بك",
+  "provider.paypal.saveButton": "حفظ حسابي على PayPal",
+  "provider.paypal.saving": "جاري الحفظ...",
+  "provider.paypal.securityNote": "سيتم إرسال مدفوعاتك مباشرة إلى حسابك على PayPal. لا يمكن لـ SOS-Expat الوصول إلى معلوماتك المصرفية أبداً.",
+  "provider.paypal.success": "تم تسجيل حسابك على PayPal بنجاح!",
+  "provider.stripe.completeKyc": "إكمال التحقق",
+  "provider.stripe.earnings.available": "متاح للسحب",
+  "provider.stripe.earnings.blocked": "الأموال محجوبة حتى التحقق",
+  "provider.stripe.kycRequired": "يلزم التحقق من الهوية",
+  "provider.stripe.kycRequiredDesc": "لسحب أرباحك، يرجى إكمال التحقق من هويتك على Stripe.",
+  "provider.stripe.verified": "تم التحقق من الهوية",
   "providerProfile.about": "حول",
   "providerProfile.alreadyOnCall": "في مكالمة حالياً",
   "providerProfile.attorney": "محامٍ",
@@ -1978,6 +2011,7 @@
   "providerProfile.frenchSpeaking": "ناطق بالعربية",
   "providerProfile.frequentlyAskedQuestions": "الأسئلة الشائعة",
   "providerProfile.fullPhotoAlt": "الصورة الكاملة لـ {name}",
+  "providerProfile.goBack": "رجوع",
   "providerProfile.graduated": "تخرج في",
   "providerProfile.imageModalAria": "تكبير صورة الملف الشخصي",
   "providerProfile.in": "في",
@@ -2011,6 +2045,7 @@
   "providerProfile.residesIn": "يقيم في",
   "providerProfile.reviews": "تقييمات",
   "providerProfile.securePayment": "دفع آمن",
+  "providerProfile.seeAllExperts": "عرض جميع الخبراء",
   "providerProfile.share": "مشاركة",
   "providerProfile.shareButtons": "أزرار المشاركة",
   "providerProfile.shareByEmail": "مشاركة عبر البريد الإلكتروني",
@@ -2027,11 +2062,9 @@
   "providerProfile.stats": "الإحصائيات",
   "providerProfile.successRate": "نسبة النجاح",
   "providerProfile.successRateAria": "نسبة النجاح: {rate}%",
+  "providerProfile.suggestedExperts": "خبراء مشابهون متاحون",
   "providerProfile.unavailable": "غير متاح",
   "providerProfile.unavailableDescription": "لم يعد هذا المزود متاحًا على منصتنا. اكتشف خبراء مؤهلين آخرين أدناه.",
-  "providerProfile.goBack": "رجوع",
-  "providerProfile.seeAllExperts": "عرض جميع الخبراء",
-  "providerProfile.suggestedExperts": "خبراء مشابهون متاحون",
   "providerProfile.verified": "موثق",
   "providerProfile.verifiedExpert": "خبير موثق",
   "providerProfile.verifiedProfile": "ملف موثق",
@@ -2877,7 +2910,7 @@
   "safetyDescription": "جميع خبرائنا موثقون. دفع آمن 100%.",
   "safetyItem1": "التحقق من الهوية والشهادات",
   "safetyItem2": "دفع آمن 100% مع Stripe",
-  "safetyItem3": "ضمان الرضا",
+  "safetyItem3": "استرداد إذا كان الخبير غير متاح",
   "safetyItem4": "البيانات الشخصية محمية",
   "safetyTitle": "سلامتك هي أولويتنا",
   "schema.areaServed": "العالم بأسره",
@@ -2999,7 +3032,7 @@
   "services.expatCallDesc": "نصيحة عملية من مغترب يتحدث العربية ويعرف البلد.",
   "services.lawyerCall": "اتصال محامي",
   "services.lawyerCallDesc": "استشارة قانونية عاجلة عبر الهاتف مع محامٍ معتمد.",
-  "services.satisfaction": "ضمان الرضا",
+  "services.satisfaction": "استرداد مضمون",
   "services.satisfactionDesc": "استرداد تلقائي إذا لم يرد الخبير.",
   "services.subtitle": "اختر الخدمة التي تناسب احتياجاتك وتواصل فوراً مع خبير.",
   "services.title": "خدمات الطوارئ لدينا",
@@ -3356,7 +3389,6 @@
   "subscription.billing.monthly": "شهري",
   "subscription.billing.nextBilling": "الفاتورة التالية",
   "subscription.billing.noInvoices": "لا توجد فواتير",
-  "subscription.billing.viewAll": "عرض جميع الفواتير",
   "subscription.billing.open": "معلق",
   "subscription.billing.paid": "مدفوع",
   "subscription.billing.perMonth": "/شهر",
@@ -3367,6 +3399,7 @@
   "subscription.billing.status": "الحالة",
   "subscription.billing.title": "الفواتير",
   "subscription.billing.uncollectible": "غير قابل للتحصيل",
+  "subscription.billing.viewAll": "عرض جميع الفواتير",
   "subscription.billing.void": "ملغى",
   "subscription.billing.yearly": "سنوي",
   "subscription.calls": "{count} مكالمات",
@@ -3374,10 +3407,10 @@
   "subscription.cancelModal.endsOn": "ينتهي اشتراكك في {date}",
   "subscription.cancelModal.keep": "لا، احتفظ به",
   "subscription.cancelModal.message": "هل أنت متأكد من رغبتك في إلغاء الاشتراك؟ ستحتفظ بالوصول حتى نهاية الفترة الحالية.",
-  "subscription.cancelModal.scheduled": "إلغاء مجدول",
-  "subscription.cancelModal.title": "إلغاء الاشتراك",
   "subscription.cancelModal.reasonLabel": "السبب (اختياري)",
   "subscription.cancelModal.reasonPlaceholder": "لماذا تريد إلغاء اشتراكك؟",
+  "subscription.cancelModal.scheduled": "إلغاء مجدول",
+  "subscription.cancelModal.title": "إلغاء الاشتراك",
   "subscription.cancelSubscription": "إلغاء الاشتراك",
   "subscription.changePlan": "تغيير الخطة",
   "subscription.checkout.cancel": "إلغاء",
@@ -3394,24 +3427,24 @@
   "subscription.choosePlan.title": "اختر خطتك",
   "subscription.currentPlan": "الخطة الحالية",
   "subscription.downgrade.effectiveAtPeriodEnd": "ساري المفعول في نهاية الفترة الحالية",
+  "subscription.errors.alreadySubscribed": "لديك بالفعل اشتراك نشط. يرجى إدارته من صفحة الاشتراك.",
+  "subscription.errors.clientNotAllowed": "الوصول مرفوض",
+  "subscription.errors.clientNotAllowedMessage": "الاشتراكات مخصصة للمزودين (المحامين ومساعدي المغتربين).",
   "subscription.errors.generic": "حدث خطأ",
   "subscription.errors.noSubscription": "ليس لديك اشتراك نشط",
+  "subscription.errors.notFound": "الخطة أو الملف الشخصي غير موجود. يرجى تحديث الصفحة.",
   "subscription.errors.paymentFailed": "فشل الدفع",
+  "subscription.errors.permissionDenied": "ليس لديك صلاحية لتنفيذ هذا الإجراء.",
+  "subscription.errors.planUnavailable": "هذه الخطة لم تعد متاحة. يرجى اختيار خطة أخرى.",
   "subscription.errors.quotaExhausted": "وصلت إلى حصتك الشهرية",
+  "subscription.errors.rateLimited": "محاولات دفع كثيرة جدًا. يرجى المحاولة مرة أخرى بعد ساعة.",
+  "subscription.errors.serverError": "حدث خطأ في الخادم. يرجى المحاولة لاحقًا.",
   "subscription.errors.subscriptionCanceled": "تم إلغاء اشتراكك",
   "subscription.errors.subscriptionExpired": "انتهى اشتراكك",
   "subscription.errors.trialCallsExhausted": "لقد استخدمت جميع مكالماتك التجريبية",
   "subscription.errors.trialExpired": "انتهت فترة التجربة",
-  "subscription.errors.updatePaymentMethod": "يرجى تحديث طريقة الدفع",
-  "subscription.errors.rateLimited": "محاولات دفع كثيرة جدًا. يرجى المحاولة مرة أخرى بعد ساعة.",
-  "subscription.errors.alreadySubscribed": "لديك بالفعل اشتراك نشط. يرجى إدارته من صفحة الاشتراك.",
-  "subscription.errors.planUnavailable": "هذه الخطة لم تعد متاحة. يرجى اختيار خطة أخرى.",
-  "subscription.errors.permissionDenied": "ليس لديك صلاحية لتنفيذ هذا الإجراء.",
   "subscription.errors.unauthenticated": "يرجى تسجيل الدخول للمتابعة.",
-  "subscription.errors.notFound": "الخطة أو الملف الشخصي غير موجود. يرجى تحديث الصفحة.",
-  "subscription.errors.serverError": "حدث خطأ في الخادم. يرجى المحاولة لاحقًا.",
-  "subscription.errors.clientNotAllowed": "الوصول مرفوض",
-  "subscription.errors.clientNotAllowedMessage": "الاشتراكات مخصصة للمزودين (المحامين ومساعدي المغتربين).",
+  "subscription.errors.updatePaymentMethod": "يرجى تحديث طريقة الدفع",
   "subscription.faq.cancel.a": "نعم، يمكنك الإلغاء في أي وقت. ستحتفظ بالوصول حتى نهاية فترتك المدفوعة.",
   "subscription.faq.cancel.q": "هل يمكنني الإلغاء في أي وقت؟",
   "subscription.faq.changePlan.a": "نعم، يمكنك الترقية أو التخفيض في أي وقت. التغييرات تسري فوراً.",
@@ -3513,55 +3546,6 @@
   "subscription.trial.startTrial": "ابدأ التجربة المجانية",
   "subscription.trial.title": "تجربة مجانية",
   "subscription.viewPlans": "عرض الخطط",
-  "systemHealth.alerts.acknowledge": "إقرار",
-  "systemHealth.alerts.acknowledged": "تم الإقرار",
-  "systemHealth.alerts.active": "التنبيهات النشطة",
-  "systemHealth.alerts.critical": "حرج",
-  "systemHealth.alerts.empty": "لا توجد تنبيهات نشطة",
-  "systemHealth.alerts.high": "عالي",
-  "systemHealth.alerts.low": "منخفض",
-  "systemHealth.alerts.medium": "متوسط",
-  "systemHealth.dr.lastTest": "آخر اختبار",
-  "systemHealth.dr.nextTest": "الاختبار التالي",
-  "systemHealth.dr.runTest": "تشغيل اختبار DR",
-  "systemHealth.dr.running": "الاختبار قيد التشغيل...",
-  "systemHealth.dr.testFailed": "فشل الاختبار",
-  "systemHealth.dr.testPassed": "نجح الاختبار",
-  "systemHealth.dr.title": "استعادة الكوارث",
-  "systemHealth.metrics.apiLatency": "زمن استجابة API",
-  "systemHealth.metrics.backupAge": "عمر النسخة الاحتياطية",
-  "systemHealth.metrics.dbConnections": "اتصالات قاعدة البيانات",
-  "systemHealth.metrics.diskUsage": "استخدام القرص",
-  "systemHealth.metrics.dlqSize": "حجم DLQ",
-  "systemHealth.metrics.errorRate": "معدل الأخطاء",
-  "systemHealth.metrics.memoryUsage": "استخدام الذاكرة",
-  "systemHealth.metrics.title": "مقاييس النظام",
-  "systemHealth.status.degraded": "متدهور",
-  "systemHealth.status.healthy": "سليم",
-  "systemHealth.status.offline": "غير متصل",
-  "systemHealth.status.warning": "تحذير",
-  "systemHealth.title": "صحة النظام",
-  "systemHealth.lastCheck": "آخر فحص",
-  "systemHealth.issues": "مشاكل مكتشفة",
-  "systemHealth.noIssues": "لا توجد مشاكل",
-  "systemHealth.metrics.dlqPending": "أحداث معلقة",
-  "systemHealth.metrics.dlqFailed": "أحداث فاشلة",
-  "systemHealth.metrics.activeAlerts": "تنبيهات نشطة",
-  "systemHealth.metrics.errorsLastHour": "أخطاء (ساعة)",
-  "systemHealth.metrics.openDisputes": "نزاعات مفتوحة",
-  "systemHealth.metrics.backupFirestore": "نسخة Firestore",
-  "systemHealth.metrics.backupAuth": "نسخة Auth",
-  "systemHealth.metrics.drTests": "اختبارات DR",
-  "systemHealth.alerts.title": "التنبيهات النشطة",
-  "systemHealth.alerts.noAlerts": "لا توجد تنبيهات نشطة",
-  "systemHealth.dr.noTests": "لا توجد اختبارات DR",
-  "systemHealth.dr.date": "التاريخ",
-  "systemHealth.dr.status": "الحالة",
-  "systemHealth.dr.results": "النتائج",
-  "systemHealth.dr.duration": "المدة",
-  "systemHealth.errors.loading": "خطأ في تحميل البيانات",
-  "systemHealth.errors.drTest": "خطأ في اختبار DR",
-  "systemHealth.never": "أبداً",
   "success.allGood": "كل شيء على ما يرام! ✨",
   "success.almostThere": "نحن على وشك الانتهاء! 🎯",
   "success.amount": "المبلغ المدفوع",
@@ -3613,7 +3597,7 @@
   "success.readyToRingDesc": "ابق قريباً من هاتفك وأجب عند الرنين 📱✨",
   "success.readyToRingTitle": "سيبدأ الهاتف بالرنين قريباً!",
   "success.reference": "المرجع",
-  "success.satisfactionGuaranteed": "الرضا مضمون 🌟",
+  "success.satisfactionGuaranteed": "خبراء موثقون 🌟",
   "success.service": "الخدمة",
   "success.serviceDetails": "ملخص استشارتك ✨",
   "success.serviceNotFound": "عذراً، الخدمة غير موجودة 🤔",
@@ -3633,6 +3617,55 @@
   "success.whatNext": "ماذا الآن؟",
   "success.youRock": "أنت رائع! 🤘",
   "success.youSaved": "وفّرت {symbol}{amount}",
+  "systemHealth.alerts.acknowledge": "إقرار",
+  "systemHealth.alerts.acknowledged": "تم الإقرار",
+  "systemHealth.alerts.active": "التنبيهات النشطة",
+  "systemHealth.alerts.critical": "حرج",
+  "systemHealth.alerts.empty": "لا توجد تنبيهات نشطة",
+  "systemHealth.alerts.high": "عالي",
+  "systemHealth.alerts.low": "منخفض",
+  "systemHealth.alerts.medium": "متوسط",
+  "systemHealth.alerts.noAlerts": "لا توجد تنبيهات نشطة",
+  "systemHealth.alerts.title": "التنبيهات النشطة",
+  "systemHealth.dr.date": "التاريخ",
+  "systemHealth.dr.duration": "المدة",
+  "systemHealth.dr.lastTest": "آخر اختبار",
+  "systemHealth.dr.nextTest": "الاختبار التالي",
+  "systemHealth.dr.noTests": "لا توجد اختبارات DR",
+  "systemHealth.dr.results": "النتائج",
+  "systemHealth.dr.runTest": "تشغيل اختبار DR",
+  "systemHealth.dr.running": "الاختبار قيد التشغيل...",
+  "systemHealth.dr.status": "الحالة",
+  "systemHealth.dr.testFailed": "فشل الاختبار",
+  "systemHealth.dr.testPassed": "نجح الاختبار",
+  "systemHealth.dr.title": "استعادة الكوارث",
+  "systemHealth.errors.drTest": "خطأ في اختبار DR",
+  "systemHealth.errors.loading": "خطأ في تحميل البيانات",
+  "systemHealth.issues": "مشاكل مكتشفة",
+  "systemHealth.lastCheck": "آخر فحص",
+  "systemHealth.metrics.activeAlerts": "تنبيهات نشطة",
+  "systemHealth.metrics.apiLatency": "زمن استجابة API",
+  "systemHealth.metrics.backupAge": "عمر النسخة الاحتياطية",
+  "systemHealth.metrics.backupAuth": "نسخة Auth",
+  "systemHealth.metrics.backupFirestore": "نسخة Firestore",
+  "systemHealth.metrics.dbConnections": "اتصالات قاعدة البيانات",
+  "systemHealth.metrics.diskUsage": "استخدام القرص",
+  "systemHealth.metrics.dlqFailed": "أحداث فاشلة",
+  "systemHealth.metrics.dlqPending": "أحداث معلقة",
+  "systemHealth.metrics.dlqSize": "حجم DLQ",
+  "systemHealth.metrics.drTests": "اختبارات DR",
+  "systemHealth.metrics.errorRate": "معدل الأخطاء",
+  "systemHealth.metrics.errorsLastHour": "أخطاء (ساعة)",
+  "systemHealth.metrics.memoryUsage": "استخدام الذاكرة",
+  "systemHealth.metrics.openDisputes": "نزاعات مفتوحة",
+  "systemHealth.metrics.title": "مقاييس النظام",
+  "systemHealth.never": "أبداً",
+  "systemHealth.noIssues": "لا توجد مشاكل",
+  "systemHealth.status.degraded": "متدهور",
+  "systemHealth.status.healthy": "سليم",
+  "systemHealth.status.offline": "غير متصل",
+  "systemHealth.status.warning": "تحذير",
+  "systemHealth.title": "صحة النظام",
   "testimonial.backToTestimonials": "العودة إلى الشهادات",
   "testimonial.copyLink": "نسخ الرابط",
   "testimonial.customerSatisfaction": "رضا العملاء",
@@ -3977,24 +4010,5 @@
   "whyChooseDescription": "مصمم ليكون سريعاً، واضحاً وداعماً حقاً: الجوال أولاً.",
   "whyChooseHighlight": "SOS Expats",
   "whyChooseTitle": "لماذا تختار {strong}SOS Expat{/strong}؟",
-  "worldwideLabel": "عالمي",
-  "provider.paypal.connectionRequired": "يلزم ربط PayPal",
-  "provider.paypal.connectionRequiredDesc": "لتكون مرئياً على المنصة وتلقي المدفوعات، يرجى ربط حساب PayPal الخاص بك.",
-  "provider.paypal.connectNow": "الربط الآن",
-  "provider.paypal.profileNotVisible": "ملفك الشخصي غير مرئي بعد",
-  "provider.paypal.profileNotVisibleDesc": "سيصبح ملفك الشخصي مرئياً بمجرد ربط حساب PayPal الخاص بك.",
-  "provider.paypal.reminder.title": "تذكير: ربط PayPal",
-  "provider.paypal.reminder.urgent": "عاجل: اربط حساب PayPal الخاص بك",
-  "provider.paypal.reminder.message": "اربط حساب PayPal الخاص بك لبدء استقبال العملاء والمدفوعات.",
-  "provider.paypal.connected": "تم ربط حساب PayPal",
-  "provider.paypal.connectedDesc": "ملفك الشخصي مرئي الآن على المنصة. يمكنك البدء في استقبال العملاء.",
-  "provider.paypal.earnings.blocked": "الأموال محجوبة",
-  "provider.paypal.earnings.blockedDesc": "أكمل التحقق من PayPal للوصول إلى أموالك.",
-  "provider.paypal.earnings.available": "الرصيد المتاح",
-  "provider.stripe.kycRequired": "يلزم التحقق من الهوية",
-  "provider.stripe.kycRequiredDesc": "لسحب أرباحك، يرجى إكمال التحقق من هويتك على Stripe.",
-  "provider.stripe.completeKyc": "إكمال التحقق",
-  "provider.stripe.verified": "تم التحقق من الهوية",
-  "provider.stripe.earnings.blocked": "الأموال محجوبة حتى التحقق",
-  "provider.stripe.earnings.available": "متاح للسحب"
+  "worldwideLabel": "عالمي"
 }
