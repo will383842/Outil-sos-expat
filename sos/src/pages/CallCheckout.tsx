@@ -1909,7 +1909,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
                       const name = providerDisplayName;
                       target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=40`;
                     }}
-                    alt=""
+                    alt={`Photo de profil de ${providerDisplayName}`}
                     loading="lazy"
                   />
                   <span className="font-medium text-gray-900 text-xs">
@@ -2478,7 +2478,7 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
 
   if (pricingLoading || !providerRole) {
     return (
-      <Layout>
+      <Layout showFooter={false}>
         <div className="min-h-screen flex items-center justify-center text-gray-600">
           ...
         </div>
@@ -2488,7 +2488,7 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
 
   if (!provider) {
     return (
-      <Layout>
+      <Layout showFooter={false}>
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-red-100 px-4">
           <div className="bg-white rounded-2xl shadow-xl p-6 text-center max-w-sm mx-auto">
             <AlertCircle
@@ -2523,7 +2523,7 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
 
   if (!user || !user.uid || !adminPricing || !service) {
     return (
-      <Layout>
+      <Layout showFooter={false}>
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-red-100 px-4">
           <div className="bg-white rounded-2xl shadow-xl p-6 text-center max-w-sm mx-auto">
             <AlertCircle
@@ -2557,8 +2557,8 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
   }
 
   return (
-    <Layout>
-      <main className="bg-gradient-to-br from-red-50 to-red-100 min-h-[calc(100vh-80px)] sm:min-h-[calc(100vh-80px)]">
+    <Layout showFooter={false}>
+      <main className="bg-gradient-to-br from-red-50 to-red-100 min-h-screen overflow-x-hidden">
         <div className="max-w-lg mx-auto px-4 py-4">
           {!!pricingError && (
             <div className="mb-3 rounded-lg border border-yellow-300 bg-yellow-50 px-3 py-2 text-xs text-yellow-800">

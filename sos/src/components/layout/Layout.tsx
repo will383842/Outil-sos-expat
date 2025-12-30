@@ -165,7 +165,7 @@ const Layout: React.FC<LayoutProps> = ({
         />
       </Helmet>
 
-      <div className="min-h-screen flex flex-col bg-gray-50 antialiased">
+      <div className="min-h-screen flex flex-col bg-gray-50 antialiased overflow-x-hidden max-w-full">
         {/* Skip link pour accessibilité - RTL aware */}
         <a
           href="#main-content"
