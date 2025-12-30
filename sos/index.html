@@ -235,58 +235,78 @@
       // Only redirect if we're on root path without locale
       if (window.location.pathname !== '/' && window.location.pathname !== '') return;
 
-      // Country -> Locale mapping (timezone-based detection)
-      var TZ_TO_LOCALE = {
-        'Europe/Paris': 'fr-fr', 'Europe/Brussels': 'fr-be', 'Europe/Luxembourg': 'fr-lu',
-        'Africa/Algiers': 'fr-dz', 'Africa/Casablanca': 'fr-ma', 'Africa/Tunis': 'fr-tn',
-        'Africa/Dakar': 'fr-sn', 'Africa/Abidjan': 'fr-ci', 'Africa/Douala': 'fr-cm',
-        'Europe/Madrid': 'es-es', 'America/Mexico_City': 'es-mx', 'America/Argentina/Buenos_Aires': 'es-ar',
-        'America/Bogota': 'es-co', 'America/Santiago': 'es-cl', 'America/Lima': 'es-pe',
-        'America/New_York': 'en-us', 'America/Los_Angeles': 'en-us', 'America/Chicago': 'en-us',
-        'Europe/London': 'en-gb', 'Australia/Sydney': 'en-au', 'Pacific/Auckland': 'en-nz',
-        'Europe/Berlin': 'de-de', 'Europe/Vienna': 'de-at', 'Europe/Zurich': 'fr-ch',
-        'Europe/Moscow': 'ru-ru', 'Europe/Minsk': 'ru-by', 'Asia/Almaty': 'ru-kz',
-        'America/Sao_Paulo': 'pt-br', 'Europe/Lisbon': 'pt-pt',
-        'Asia/Shanghai': 'ch-cn', 'Asia/Hong_Kong': 'ch-hk', 'Asia/Taipei': 'ch-tw',
-        'Asia/Kolkata': 'hi-in', 'Asia/Kathmandu': 'hi-np',
-        'Asia/Riyadh': 'ar-sa', 'Asia/Dubai': 'ar-ae', 'Africa/Cairo': 'ar-eg'
+      // Timezone -> Country code mapping
+      var TZ_TO_COUNTRY = {
+        // Europe
+        'Europe/Paris': 'fr', 'Europe/Brussels': 'be', 'Europe/Luxembourg': 'lu',
+        'Europe/Madrid': 'es', 'Europe/London': 'gb', 'Europe/Berlin': 'de',
+        'Europe/Vienna': 'at', 'Europe/Zurich': 'ch', 'Europe/Rome': 'it',
+        'Europe/Amsterdam': 'nl', 'Europe/Lisbon': 'pt', 'Europe/Warsaw': 'pl',
+        'Europe/Prague': 'cz', 'Europe/Stockholm': 'se', 'Europe/Oslo': 'no',
+        'Europe/Copenhagen': 'dk', 'Europe/Helsinki': 'fi', 'Europe/Dublin': 'ie',
+        'Europe/Athens': 'gr', 'Europe/Bucharest': 'ro', 'Europe/Budapest': 'hu',
+        'Europe/Moscow': 'ru', 'Europe/Minsk': 'by', 'Europe/Kiev': 'ua',
+        // Americas
+        'America/New_York': 'us', 'America/Los_Angeles': 'us', 'America/Chicago': 'us',
+        'America/Denver': 'us', 'America/Phoenix': 'us', 'America/Toronto': 'ca',
+        'America/Vancouver': 'ca', 'America/Mexico_City': 'mx', 'America/Sao_Paulo': 'br',
+        'America/Argentina/Buenos_Aires': 'ar', 'America/Bogota': 'co', 'America/Santiago': 'cl',
+        'America/Lima': 'pe', 'America/Caracas': 've',
+        // Asia
+        'Asia/Tokyo': 'jp', 'Asia/Shanghai': 'cn', 'Asia/Hong_Kong': 'hk',
+        'Asia/Singapore': 'sg', 'Asia/Seoul': 'kr', 'Asia/Taipei': 'tw',
+        'Asia/Bangkok': 'th', 'Asia/Jakarta': 'id', 'Asia/Manila': 'ph',
+        'Asia/Kuala_Lumpur': 'my', 'Asia/Ho_Chi_Minh': 'vn', 'Asia/Kolkata': 'in',
+        'Asia/Dubai': 'ae', 'Asia/Riyadh': 'sa', 'Asia/Tel_Aviv': 'il',
+        'Asia/Beirut': 'lb', 'Asia/Almaty': 'kz',
+        // Africa
+        'Africa/Cairo': 'eg', 'Africa/Johannesburg': 'za', 'Africa/Lagos': 'ng',
+        'Africa/Nairobi': 'ke', 'Africa/Casablanca': 'ma', 'Africa/Algiers': 'dz',
+        'Africa/Tunis': 'tn', 'Africa/Dakar': 'sn', 'Africa/Abidjan': 'ci',
+        // Oceania
+        'Australia/Sydney': 'au', 'Australia/Melbourne': 'au', 'Australia/Perth': 'au',
+        'Pacific/Auckland': 'nz'
       };
 
-      // Browser lang -> Locale fallback
-      var LANG_TO_LOCALE = {
-        'fr': 'fr-fr', 'en': 'en-us', 'es': 'es-es', 'de': 'de-de',
-        'ru': 'ru-ru', 'pt': 'pt-pt', 'zh': 'ch-cn', 'hi': 'hi-in', 'ar': 'ar-sa'
-      };
+      // Supported languages
+      var SUPPORTED_LANGS = ['fr', 'en', 'es', 'de', 'ru', 'pt', 'zh', 'hi', 'ar'];
 
-      var locale = 'fr-fr'; // Default
+      // Map browser lang codes to our lang codes
+      var LANG_MAP = { 'zh': 'ch' }; // Chinese uses 'ch' in our system
+
+      var lang = 'fr'; // Default language
+      var country = 'fr'; // Default country
 
       // 1. Check saved preference (user manually changed language)
       try {
         var saved = localStorage.getItem('sos_language');
-        if (saved && LANG_TO_LOCALE[saved]) {
-          locale = LANG_TO_LOCALE[saved];
-          window.location.replace('/' + locale);
-          return;
+        if (saved && SUPPORTED_LANGS.includes(saved)) {
+          lang = saved;
         }
       } catch(e) {}
 
-      // 2. Browser language (best for expats/travelers - German in Thailand sees German)
-      try {
-        var browserLang = (navigator.language || navigator.userLanguage || '').substring(0, 2).toLowerCase();
-        if (browserLang && LANG_TO_LOCALE[browserLang]) {
-          locale = LANG_TO_LOCALE[browserLang];
-          window.location.replace('/' + locale);
-          return;
-        }
-      } catch(e) {}
+      // 2. Detect language from browser (if no saved preference)
+      if (!localStorage.getItem('sos_language')) {
+        try {
+          var browserLang = (navigator.language || navigator.userLanguage || '').substring(0, 2).toLowerCase();
+          if (browserLang && SUPPORTED_LANGS.includes(browserLang)) {
+            lang = browserLang;
+          } else if (browserLang && LANG_MAP[browserLang]) {
+            lang = LANG_MAP[browserLang];
+          }
+        } catch(e) {}
+      }
 
-      // 3. Timezone fallback (for users with neutral browser settings)
+      // 3. Detect country from timezone
       try {
         var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        if (tz && TZ_TO_LOCALE[tz]) {
-          locale = TZ_TO_LOCALE[tz];
+        if (tz && TZ_TO_COUNTRY[tz]) {
+          country = TZ_TO_COUNTRY[tz];
         }
       } catch(e) {}
+
+      // Build locale: language-country (e.g., de-th, en-cn, fr-jp)
+      var locale = lang + '-' + country;
 
       // Redirect to locale
       window.location.replace('/' + locale);
