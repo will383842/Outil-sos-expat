@@ -3055,14 +3055,14 @@ const BookingRequest: React.FC = () => {
                 </svg>
               </div>
               <h3 className="text-lg font-semibold text-gray-900">
-                {intl.formatMessage({ id: "bookingRequest.langWarning.title" }, { defaultMessage: "Attention - Langues différentes" })}
+                {intl.formatMessage({ id: "bookingRequest.langWarning.title", defaultMessage: "Attention - Langues différentes" })}
               </h3>
             </div>
             <p className="text-gray-600 mb-6">
-              {intl.formatMessage(
-                { id: "bookingRequest.langWarning.message" },
-                { defaultMessage: "Vous n'avez pas de langue en commun avec ce prestataire. La communication pourrait être difficile. Voulez-vous continuer ?" }
-              )}
+              {intl.formatMessage({
+                id: "bookingRequest.langWarning.message",
+                defaultMessage: "Vous n'avez pas de langue en commun avec ce prestataire. La communication pourrait être difficile. Voulez-vous continuer ?"
+              })}
             </p>
             <div className="flex gap-3">
               <button
@@ -3070,7 +3070,7 @@ const BookingRequest: React.FC = () => {
                 onClick={() => setShowLangMismatchWarning(false)}
                 className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors"
               >
-                {intl.formatMessage({ id: "common.cancel" }, { defaultMessage: "Annuler" })}
+                {intl.formatMessage({ id: "common.cancel", defaultMessage: "Annuler" })}
               </button>
               <button
                 type="button"
@@ -3082,7 +3082,7 @@ const BookingRequest: React.FC = () => {
                 }}
                 className="flex-1 px-4 py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl font-medium hover:from-red-600 hover:to-orange-600 transition-colors"
               >
-                {intl.formatMessage({ id: "bookingRequest.langWarning.continue" }, { defaultMessage: "Continuer quand même" })}
+                {intl.formatMessage({ id: "bookingRequest.langWarning.continue", defaultMessage: "Continuer quand même" })}
               </button>
             </div>
           </div>

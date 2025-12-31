@@ -68,14 +68,40 @@ export const storage: FirebaseStorage = getStorage(app);
 
 // Firestore - Configuration optimisée pour performance
 // NOTE: experimentalForceLongPolling a été RETIRÉ car il cause une lenteur extrême (10s+ par requête)
-// Si tu as des problèmes de blocage par extension/firewall, réactive-le temporairement
+// Cache réduit à 20MB pour éviter QuotaExceededError sur navigateurs avec quota limité
 export const db: Firestore = initializeFirestore(app, {
-  // Cache persistant pour des performances optimales
-  localCache: persistentLocalCache({ cacheSizeBytes: 50 * 1024 * 1024, // 50MB max
+  localCache: persistentLocalCache({
+    cacheSizeBytes: 20 * 1024 * 1024, // 20MB max (réduit de 50MB)
     tabManager: persistentMultipleTabManager(),
   }),
 });
-console.log("🔧 [Firebase] Firestore initialisé avec cache persistant (performance optimale)");
+console.log("🔧 [Firebase] Firestore initialisé avec cache persistant (20MB max)");
+
+// Auto-nettoyage du cache si le stockage est presque plein
+if (typeof navigator !== 'undefined' && 'storage' in navigator) {
+  navigator.storage.estimate?.().then(({ usage, quota }) => {
+    if (usage && quota) {
+      const usagePercent = (usage / quota) * 100;
+      console.log(`📊 [Storage] Utilisation: ${(usage / 1024 / 1024).toFixed(1)}MB / ${(quota / 1024 / 1024).toFixed(1)}MB (${usagePercent.toFixed(1)}%)`);
+
+      // Si > 80% utilisé, nettoyer les caches
+      if (usagePercent > 80) {
+        console.warn("⚠️ [Storage] Stockage presque plein, nettoyage des caches...");
+        // Supprimer les vieux caches Service Worker
+        if ('caches' in window) {
+          caches.keys().then(names => {
+            names.forEach(name => {
+              if (name.includes('workbox') || name.includes('firebase')) {
+                caches.delete(name);
+                console.log(`🗑️ [Cache] Supprimé: ${name}`);
+              }
+            });
+          });
+        }
+      }
+    }
+  }).catch(() => { /* Storage API non disponible */ });
+}
 
 // 🔇 Réduire le bruit Firestore (logs seulement si erreur)
 setLogLevel("error");
