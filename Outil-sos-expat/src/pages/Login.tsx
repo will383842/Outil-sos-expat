@@ -81,7 +81,7 @@ export default function Login() {
       navigate("/admin");
     } catch (err: any) {
       console.error("Erreur connexion:", err);
-      if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
+      if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password" || err.code === "auth/invalid-credential") {
         setError("Email ou mot de passe incorrect");
       } else if (err.code === "auth/invalid-email") {
         setError("Adresse email invalide");

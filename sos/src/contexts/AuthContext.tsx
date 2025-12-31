@@ -614,12 +614,11 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     // et afficher une erreur à l'utilisateur plutôt que de corrompre son rôle
     timeoutId = setTimeout(() => {
       if (!firstSnapArrived.current && !cancelled) {
-        console.warn("🔐 [AuthContext] onSnapshot timeout (15s) - Firestore trop lent, connexion conservée");
-        // ✅ NE PAS définir role: 'client' par défaut - garder loading
-        // L'utilisateur verra un spinner mais son rôle ne sera pas corrompu
-        setError('Connexion lente au serveur. Veuillez patienter ou rafraîchir la page.');
-        // On garde isLoading=true pour ne pas afficher un dashboard incorrect
-        // Le listener onSnapshot finira par recevoir les vraies données
+        console.warn("🔐 [AuthContext] onSnapshot timeout (15s) - Firestore trop lent");
+        // Afficher l'erreur ET arrêter le spinner pour que l'utilisateur puisse agir
+        setError('Connexion lente au serveur. Veuillez rafraîchir la page.');
+        setIsLoading(false); // CRITIQUE: Arrêter le spinner pour éviter UI bloquée
+        // Le listener onSnapshot peut encore recevoir les données plus tard
       }
     }, 15000);
 
@@ -818,11 +817,12 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           : 'Email ou mot de passe invalide.';
       setError(msg);
       setAuthMetrics((m) => ({ ...m, failedLogins: m.failedLogins + 1 }));
-      await logAuthEvent('login_failed', {
+      // Log en arrière-plan (ne pas bloquer le UI)
+      logAuthEvent('login_failed', {
         error: e instanceof Error ? e.message : String(e),
         email: normalizeEmail(email),
         deviceInfo
-      });
+      }).catch(() => { /* ignoré */ });
       throw new Error(msg);
     } finally {
       setIsLoading(false);
@@ -867,12 +867,13 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
             roleRestrictionBlocks: m.roleRestrictionBlocks + 1,
           }));
           setError('GOOGLE_ROLE_RESTRICTION');
-          await logAuthEvent('google_login_role_restriction', {
+          // Log en arrière-plan (ne pas bloquer le UI)
+          logAuthEvent('google_login_role_restriction', {
             userId: googleUser.uid,
             role: existing.role,
             email: googleUser.email,
             deviceInfo
-          });
+          }).catch(() => { /* ignoré */ });
           throw new Error('GOOGLE_ROLE_RESTRICTION');
         }
         // Split displayName if firstName/lastName are missing
@@ -961,11 +962,12 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
         setError(msg);
         setAuthMetrics((m) => ({ ...m, failedLogins: m.failedLogins + 1 }));
-        await logAuthEvent('google_login_failed', {
+        // Log en arrière-plan (ne pas bloquer le UI)
+        logAuthEvent('google_login_failed', {
           error: errorMessage,
           errorCode,
           deviceInfo
-        });
+        }).catch(() => { /* ignoré */ });
         throw new Error(msg);
       } else {
         throw e;
@@ -1000,12 +1002,13 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
               roleRestrictionBlocks: m.roleRestrictionBlocks + 1,
             }));
             setError('GOOGLE_ROLE_RESTRICTION');
-            await logAuthEvent('google_login_role_restriction', {
+            // Log en arrière-plan (ne pas bloquer le UI)
+            logAuthEvent('google_login_role_restriction', {
               userId: googleUser.uid,
               role: existing.role,
               email: googleUser.email,
               deviceInfo
-            });
+            }).catch(() => { /* ignoré */ });
             return;
           }
           // Split displayName if firstName/lastName are missing
@@ -1212,13 +1215,14 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           break;
       }
       setError(msg);
-      await logAuthEvent('registration_error', {
+      // Log en arrière-plan (ne pas bloquer le UI)
+      logAuthEvent('registration_error', {
         errorCode: e?.code ?? 'unknown',
         errorMessage: e?.message ?? String(e),
         email: userData.email,
         role: userData.role,
         deviceInfo
-      });
+      }).catch(() => { /* ignoré */ });
       throw e;
     } finally {
       setIsLoading(false);
@@ -1363,11 +1367,12 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       });
 
     } catch (error) {
-      await logAuthEvent('profile_update_failed', {
+      // Log en arrière-plan (ne pas bloquer le UI)
+      logAuthEvent('profile_update_failed', {
         userId: firebaseUser.uid,
         error: error instanceof Error ? error.message : String(error),
         deviceInfo
-      });
+      }).catch(() => { /* ignoré */ });
       throw error;
     }
   }, [firebaseUser, user, deviceInfo]);
@@ -1407,11 +1412,12 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       });
 
     } catch (error) {
-      await logAuthEvent('email_update_failed', {
+      // Log en arrière-plan (ne pas bloquer le UI)
+      logAuthEvent('email_update_failed', {
         userId: firebaseUser.uid,
         error: error instanceof Error ? error.message : String(error),
         deviceInfo
-      });
+      }).catch(() => { /* ignoré */ });
       throw error;
     }
   }, [firebaseUser, user?.email, deviceInfo]);
@@ -1432,11 +1438,12 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       });
 
     } catch (error) {
-      await logAuthEvent('password_update_failed', {
+      // Log en arrière-plan (ne pas bloquer le UI)
+      logAuthEvent('password_update_failed', {
         userId: firebaseUser.uid,
         error: error instanceof Error ? error.message : String(error),
         deviceInfo
-      });
+      }).catch(() => { /* ignoré */ });
       throw error;
     }
   }, [firebaseUser, deviceInfo]);
@@ -1454,11 +1461,12 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       });
 
     } catch (error) {
-      await logAuthEvent('reauthentication_failed', {
+      // Log en arrière-plan (ne pas bloquer le UI)
+      logAuthEvent('reauthentication_failed', {
         userId: firebaseUser.uid,
         error: error instanceof Error ? error.message : String(error),
         deviceInfo
-      });
+      }).catch(() => { /* ignoré */ });
       throw error;
     }
   }, [firebaseUser, user?.email, deviceInfo]);
@@ -1480,11 +1488,12 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       });
 
     } catch (error) {
-      await logAuthEvent('password_reset_failed', {
+      // Log en arrière-plan (ne pas bloquer le UI)
+      logAuthEvent('password_reset_failed', {
         email,
         error: error instanceof Error ? error.message : String(error),
         deviceInfo
-      });
+      }).catch(() => { /* ignoré */ });
       throw error;
     }
   }, [deviceInfo]);
@@ -1502,11 +1511,12 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       });
 
     } catch (error) {
-      await logAuthEvent('verification_email_failed', {
+      // Log en arrière-plan (ne pas bloquer le UI)
+      logAuthEvent('verification_email_failed', {
         userId: firebaseUser.uid,
         error: error instanceof Error ? error.message : String(error),
         deviceInfo
-      });
+      }).catch(() => { /* ignoré */ });
       throw error;
     }
   }, [firebaseUser, deviceInfo]);
@@ -1551,11 +1561,12 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       setError(null);
 
     } catch (error) {
-      await logAuthEvent('account_deletion_failed', {
+      // Log en arrière-plan (ne pas bloquer le UI)
+      logAuthEvent('account_deletion_failed', {
         userId: firebaseUser.uid,
         error: error instanceof Error ? error.message : String(error),
         deviceInfo
-      });
+      }).catch(() => { /* ignoré */ });
       throw error;
     }
   }, [firebaseUser, user, deviceInfo]);

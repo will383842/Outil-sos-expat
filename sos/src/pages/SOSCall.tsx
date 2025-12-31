@@ -2037,21 +2037,11 @@ const SOSCall: React.FC = () => {
     return getLanguageOptions(language || 'fr');
   }, [language]);
 
-  // Auto-show wizard on mobile (obligatory on every visit)
+  // Auto-show wizard on ALL devices (obligatory on every visit)
   useEffect(() => {
-    const checkMobile = () => {
-      const isMobile = window.innerWidth < 768;
-      if (isMobile && !wizardCompleted) {
-        setShowWizard(true);
-      }
-    };
-
-    // Check on mount
-    checkMobile();
-
-    // Also check on resize
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    if (!wizardCompleted) {
+      setShowWizard(true);
+    }
   }, [wizardCompleted]);
 
   // Handle wizard completion (supports multi-language selection)

@@ -33,6 +33,8 @@ const AuthForm: React.FC = () => {
     () => ({
       'auth/invalid-email': intl.formatMessage({ id: 'auth.errors.invalidEmail' }),
       'auth/user-not-found': intl.formatMessage({ id: 'auth.errors.userNotFound' }),
+      'auth/invalid-credential': intl.formatMessage({ id: 'auth.errors.userNotFound' }),
+      'auth/wrong-password': intl.formatMessage({ id: 'auth.errors.userNotFound' }),
       'auth/too-many-requests': intl.formatMessage({ id: 'auth.errors.tooManyRequests' }),
       'auth/network-request-failed': intl.formatMessage({ id: 'auth.errors.networkError' }),
       default: intl.formatMessage({ id: 'auth.errors.generic' }),

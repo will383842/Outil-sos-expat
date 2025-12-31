@@ -409,6 +409,7 @@ const ProfileEdit: React.FC = () => {
           const code = (err as { code: string }).code;
           switch (code) {
             case "auth/wrong-password":
+            case "auth/invalid-credential":
               errorMessage = "Mot de passe actuel incorrect";
               break;
             case "auth/weak-password":
