@@ -282,6 +282,7 @@ const AdminLegalDocuments = lazy(
 const AdminFAQs = lazy(() => import("../../pages/admin/AdminFAQs"));
 const AdminBackups = lazy(() => import("../../pages/admin/AdminBackups"));
 const AdminSettings = lazy(() => import("../../pages/admin/AdminSettings"));
+const AdminSystemHealth = lazy(() => import("../../pages/admin/AdminSystemHealth"));
 
 // ===== LAZY IMPORTS - ANALYTICS & REPORTS =====
 const AdminCountryStats = lazy(() =>
@@ -753,6 +754,14 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
       <Route
+        path="system-health"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminSystemHealth />
+          </Suspense>
+        }
+      />
+      <Route
         path="settings"
         element={
           <Suspense fallback={<LoadingSpinner />}>
@@ -972,6 +981,7 @@ export const useAdminRouteValidation = () => {
       "/admin/countries",
       "/admin/documents",
       "/admin/backups",
+      "/admin/system-health",
       "/admin/settings",
       "/admin/reports/country-stats",
       "/admin/reports/financial",

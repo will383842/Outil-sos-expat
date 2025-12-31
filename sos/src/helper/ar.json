@@ -678,6 +678,19 @@
   "auth.wizard.useGoogle": "هذا الحساب يستخدم Google. استخدم زر \"المتابعة مع Google\".",
   "auth.wizard.weakPassword": "كلمة المرور ضعيفة جداً",
   "auth.wizard.wrongPassword": "كلمة مرور خاطئة",
+  "availability.actions.goOffline": "قطع الاتصال",
+  "availability.actions.goOnline": "الاتصال",
+  "availability.errors.notApproved": "لم تتم الموافقة على ملفك الشخصي بعد من قبل الإدارة.",
+  "availability.errors.syncFailed": "فشل المزامنة مع Firestore.",
+  "availability.errors.updateFailed": "فشل تحديث الحالة.",
+  "availability.reminder.actions.disableToday": "لا تذكرني اليوم",
+  "availability.reminder.actions.goOffline": "الانتقال إلى وضع عدم الاتصال",
+  "availability.reminder.actions.stayOnline": "البقاء متصلاً",
+  "availability.reminder.message": "ما زلت متصلاً. هل تريد البقاء متاحاً؟",
+  "availability.reminder.title": "تذكير التوفر",
+  "availability.reminderMessage": "لا تنس أنك متصل!",
+  "availability.status.offline": "غير متصل",
+  "availability.status.online": "متصل",
   "availableExpats": "المغتربون المتاحون",
   "availableExperts": "الخبراء المتاحون",
   "availableLawyers": "المحامون المتاحون",
@@ -818,7 +831,12 @@
   "card.labels.languages": "اللغات",
   "card.labels.offline": "غير متصل",
   "card.labels.online": "متصل",
+  "card.labels.onlineOnly": "متصلون فقط",
+  "card.labels.onlineCount": "{online} متصل • {total} إجمالي",
   "card.labels.others": "آخرون",
+  "card.results.found": "{count, plural, one {# مقدم خدمة} other {# مقدمي خدمات}}",
+  "card.results.online": "متصل",
+  "card.results.typeOf": "من نوع {type}",
   "card.labels.reviews": "تقييمات",
   "card.labels.specialties": "التخصصات",
   "card.labels.viewProfile": "عرض الملف",
@@ -1569,6 +1587,17 @@
   "howto.step2.text": "قم بالدفع الآمن بالبطاقة المصرفية عبر منصة Stripe",
   "howto.step3.name": "استقبل مكالمتك",
   "howto.step3.text": "خبير يتصل بك في أقل من 5 دقائق للإجابة على أسئلتك",
+  "i18n.common.back": "رجوع",
+  "i18n.common.client": "عميل",
+  "i18n.common.connecting": "جاري الاتصال...",
+  "i18n.common.consultation": "استشارة",
+  "i18n.common.days": "أيام",
+  "i18n.common.error": "خطأ",
+  "i18n.common.loadMore": "تحميل المزيد",
+  "i18n.common.none": "لا شيء",
+  "i18n.common.refresh": "تحديث",
+  "i18n.common.retry": "إعادة المحاولة",
+  "i18n.common.viewAll": "عرض الكل",
   "installApp": "تثبيت التطبيق",
   "installHintAndroid": "على Android: Chrome → القائمة ⋮ → تثبيت التطبيق.",
   "installHintDesktop": "على الكمبيوتر: Chrome/Edge → أيقونة «تثبيت» في شريط العنوان.",
@@ -1601,6 +1630,8 @@
   "join.title": "انضم إلى SOS Expat",
   "joinNetworkDescription": "محامون أو مغتربون: انضموا إلينا وحولوا مهاراتكم إلى فرص حقيقية.",
   "joinNetworkTitle": "انضم إلى شبكة SOS Expat",
+  "kyc.verified.description": "يمكنك الآن تلقي المدفوعات من العملاء.",
+  "kyc.verified.title": "تم التحقق من الحساب!",
   "language.af": "الأفريقانية",
   "language.all": "الكل",
   "language.am": "الأمهرية",
@@ -1951,6 +1982,13 @@
   "profileValidation.noPending": "لا توجد ملفات معلقة",
   "profileValidation.notFound": "صفحة المسؤول غير موجودة",
   "profileValidation.notFoundDesc": "الصفحة المطلوبة غير موجودة.",
+  "profileValidation.pending.description": "ملفك الشخصي قيد المراجعة حاليًا من قبل فريقنا.",
+  "profileValidation.pending.steps.emailNotification": "ستتلقى بريدًا إلكترونيًا بمجرد الموافقة على ملفك الشخصي",
+  "profileValidation.pending.steps.profileVisible": "بمجرد الموافقة عليه، سيكون ملفك الشخصي مرئيًا لجميع العملاء",
+  "profileValidation.pending.steps.teamVerifies": "فريقنا يتحقق من معلومات ملفك الشخصي",
+  "profileValidation.pending.title": "الملف الشخصي قيد المراجعة",
+  "profileValidation.pending.validationTime": "وقت التحقق المعتاد:",
+  "profileValidation.pending.whatHappensNow": "📋 ماذا يحدث الآن؟",
   "profileValidation.pendingBadge": "في انتظار التحقق",
   "profileValidation.processing": "جاري المعالجة...",
   "profileValidation.reject": "رفض",
@@ -1959,6 +1997,11 @@
   "profileValidation.rejectReason": "سبب الرفض (اختياري)",
   "profileValidation.rejectSuccess": "تم رفض الملف",
   "profileValidation.rejectTitle": "رفض هذا الملف؟",
+  "profileValidation.rejected.contactSupport": "اتصل بالدعم",
+  "profileValidation.rejected.description": "للأسف، لم يتم اعتماد ملفك الشخصي في هذا الوقت.",
+  "profileValidation.rejected.editProfile": "تعديل ملفي الشخصي",
+  "profileValidation.rejected.rejectionReason": "📝 سبب الرفض:",
+  "profileValidation.rejected.title": "الملف الشخصي غير معتمد",
   "profileValidation.sortBy": "ترتيب حسب:",
   "profileValidation.sortName": "الاسم (أ-ي)",
   "profileValidation.sortOldest": "الأقدم",

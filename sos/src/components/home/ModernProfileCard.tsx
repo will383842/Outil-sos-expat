@@ -15,14 +15,16 @@ import {
 } from "lucide-react";
 
 // Import des utilitaires d'internationalisation
-import { 
-  getCountryName, 
+import {
+  getCountryName,
   getCountryFlag,
   getLanguageName,
   formatCountries,
   formatLanguages,
-  type LanguageKey 
+  type LanguageKey
 } from "../../utils/formatters";
+
+import { formatSpecialties, mapLanguageToLocale } from "../../utils/specialtyMapper";
 
 // Types
 import type { Provider } from '@/types/provider';
@@ -287,32 +289,16 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
     }, [provider.practiceCountries, provider.country, language]);
 
     // ========================================
-    // SPÉCIALITÉS (optionnel)
+    // SPÉCIALITÉS (optionnel) avec traductions
     // ========================================
     const formattedSpecialties = useMemo(() => {
       if (!showSpecialties || !provider.specialties || provider.specialties.length === 0) {
         return null;
       }
-      
-      // Formater les spécialités (on garde le format actuel)
-      const specialties = provider.specialties
-        .slice(0, 2)
-        .map((s) => {
-          // Convertir les codes de spécialités en texte lisible
-          const formatted = s
-            .replace(/_/g, " ")
-            .toLowerCase()
-            .split(" ")
-            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(" ");
-          return formatted;
-        })
-        .join(" • ");
-      
-      return provider.specialties.length > 2 
-        ? `${specialties} +${provider.specialties.length - 2}`
-        : specialties;
-    }, [provider.specialties, showSpecialties]);
+
+      const locale = mapLanguageToLocale(language || 'fr');
+      return formatSpecialties(provider.specialties, locale, 2);
+    }, [provider.specialties, showSpecialties, language]);
 
     const handleImageError = useCallback(
       (e: React.SyntheticEvent<HTMLImageElement>) => {

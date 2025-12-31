@@ -34,6 +34,7 @@ import {
   getDocs,
 } from "firebase/firestore";
 import { db } from "../config/firebase";
+import { getCollectionRest } from "../utils/firestoreRestApi";
 import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
 import { useApp } from "../contexts/AppContext";
@@ -44,23 +45,25 @@ import { getAllProviderTypeKeywords, getProviderTypeKeywords, type SupportedLang
 // ========================================
 // 🌍 IMPORTS POUR INTERNATIONALISATION
 // ========================================
-import { 
+import {
   countriesData,
-  getSortedCountries, 
+  getSortedCountries,
   type LanguageKey,
   type CountryData
 } from '../data/countries';
 
-import { 
-  getCountryName, 
-  convertLanguageNamesToCodes 
+import {
+  getCountryName,
+  convertLanguageNamesToCodes
 } from "../utils/formatters";
 
-import { 
-  languagesData, 
-  getLanguageLabel, 
+import {
+  languagesData,
+  getLanguageLabel,
   type SupportedLocale,
 } from '../data/languages-spoken';
+
+import { formatSpecialties, mapLanguageToLocale } from '../utils/specialtyMapper';
 
 
 /* =========================
@@ -186,6 +189,122 @@ const PROFESSION_ICONS: Record<string, { icon: string; bgColor: string; textColo
     textColor: "text-blue-800",
   },
 };
+
+// ========================================
+// 🆘 FALLBACK PROVIDERS (quand Firestore est bloqué)
+// ========================================
+const FIRESTORE_TIMEOUT_MS = 8000; // 8 secondes max avant fallback
+
+const FALLBACK_PROVIDERS: Provider[] = [
+  {
+    id: "demo-lawyer-1",
+    name: "Marie D.",
+    firstName: "Marie",
+    lastName: "Dupont",
+    type: "lawyer",
+    country: "France",
+    languages: ["fr", "en", "es"],
+    specialties: ["Droit de l'immigration", "Droit du travail", "Droit de la famille"],
+    rating: 4.9,
+    reviewCount: 127,
+    yearsOfExperience: 12,
+    isOnline: true,
+    price: 49,
+    duration: 20,
+    avatar: "/default-avatar.png",
+    description: "Avocate spécialisée en droit de l'immigration avec plus de 12 ans d'expérience.",
+  },
+  {
+    id: "demo-lawyer-2",
+    name: "Jean-Pierre M.",
+    firstName: "Jean-Pierre",
+    lastName: "Martin",
+    type: "lawyer",
+    country: "Belgium",
+    languages: ["fr", "nl", "en"],
+    specialties: ["Droit des affaires", "Droit commercial", "Droit européen"],
+    rating: 4.8,
+    reviewCount: 89,
+    yearsOfExperience: 15,
+    isOnline: false,
+    price: 49,
+    duration: 20,
+    avatar: "/default-avatar.png",
+    description: "Avocat d'affaires expert en droit commercial européen.",
+  },
+  {
+    id: "demo-expat-1",
+    name: "Sophie L.",
+    firstName: "Sophie",
+    lastName: "Laurent",
+    type: "expat",
+    country: "Germany",
+    languages: ["fr", "de", "en"],
+    specialties: ["Installation", "Démarches administratives", "Vie quotidienne"],
+    rating: 4.7,
+    reviewCount: 203,
+    yearsOfExperience: 8,
+    isOnline: true,
+    price: 19,
+    duration: 30,
+    avatar: "/default-avatar.png",
+    description: "Expatriée en Allemagne depuis 8 ans, je vous aide dans vos démarches.",
+  },
+  {
+    id: "demo-expat-2",
+    name: "Thomas B.",
+    firstName: "Thomas",
+    lastName: "Bernard",
+    type: "expat",
+    country: "United States",
+    languages: ["fr", "en"],
+    specialties: ["Visa", "Logement", "Fiscalité américaine"],
+    rating: 4.9,
+    reviewCount: 156,
+    yearsOfExperience: 10,
+    isOnline: true,
+    price: 19,
+    duration: 30,
+    avatar: "/default-avatar.png",
+    description: "Installé aux USA depuis 10 ans, expert en visa et fiscalité américaine.",
+  },
+  {
+    id: "demo-lawyer-3",
+    name: "Elena R.",
+    firstName: "Elena",
+    lastName: "Rodriguez",
+    type: "lawyer",
+    country: "Spain",
+    languages: ["es", "fr", "en", "pt"],
+    specialties: ["Droit de l'immigration", "Nationalité", "Droit des étrangers"],
+    rating: 4.8,
+    reviewCount: 112,
+    yearsOfExperience: 9,
+    isOnline: true,
+    price: 49,
+    duration: 20,
+    avatar: "/default-avatar.png",
+    description: "Avocate hispanophone spécialisée en droit de l'immigration en Espagne.",
+  },
+  {
+    id: "demo-expat-3",
+    name: "Pierre C.",
+    firstName: "Pierre",
+    lastName: "Chen",
+    type: "expat",
+    country: "Canada",
+    languages: ["fr", "en", "zh"],
+    specialties: ["Immigration", "Travail", "Études"],
+    rating: 4.6,
+    reviewCount: 78,
+    yearsOfExperience: 6,
+    isOnline: false,
+    price: 19,
+    duration: 30,
+    avatar: "/default-avatar.png",
+    description: "Expert Canada : immigration, permis de travail et études.",
+  },
+];
 
 /* =========================
    Utils
@@ -1130,17 +1249,8 @@ const ModernProfileCard: React.FC<{
   }, [provider.interventionCountries, provider.country, language]);
 
   const formattedSpecialties = useMemo(() => {
-    if (!provider.specialties || provider.specialties.length === 0) {
-      return '';
-    }
-
-    const specs = provider.specialties.slice(0, 2);
-    let result = specs.join(' • ');
-    if (provider.specialties.length > 2) {
-      result += ` +${provider.specialties.length - 2}`;
-    }
-    return result;
-  }, [provider.specialties]);
+    return formatSpecialties(provider.specialties, mapLanguageToLocale(language || 'fr'), 2);
+  }, [provider.specialties, language]);
 
   const ariaLabels = useMemo(
     () => ({
@@ -2038,201 +2148,199 @@ const SOSCall: React.FC = () => {
     loadFAQs();
   }, [langCode]);
 
-  // Charger providers
+  // Lire le type depuis l'URL (une seule fois au mount)
   useEffect(() => {
     const typeParam = searchParams.get("type");
     if (typeParam === "lawyer" || typeParam === "expat") {
       setSelectedType(typeParam);
-      setSearchParams({ type: typeParam });
     }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const sosProfilesQuery = query(
-      collection(db, "sos_profiles"),
-      where("type", "in", ["lawyer", "expat"]),
-      limit(100)
-    );
+  // Charger providers via REST API (plus fiable) avec fallback SDK
+  useEffect(() => {
+    console.log("🔍 [SOSCall] useEffect - Chargement des providers...");
+    let isCancelled = false;
 
-    const unsubscribe = onSnapshot(
-      sosProfilesQuery,
-      async (snapshot) => {
-        if (snapshot.empty) {
-          setRealProviders([]);
-          setFilteredProviders([]);
+    // Fonction pour transformer les données en Provider
+    const transformToProvider = (id: string, data: RawProfile): Provider => {
+      const fullName =
+        data.fullName ||
+        `${data.firstName || ""} ${data.lastName || ""}`.trim() ||
+        "Expert";
+
+      const firstName = data.firstName || "";
+      const lastName = data.lastName || "";
+      const publicDisplayName = firstName && lastName
+        ? `${firstName} ${lastName.charAt(0)}.`
+        : fullName;
+
+      const type: "lawyer" | "expat" =
+        data.type === "lawyer" ? "lawyer" : "expat";
+
+      const country =
+        data.currentPresenceCountry || data.country || "Monde";
+
+      return {
+        id,
+        name: publicDisplayName,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        type,
+        country,
+        languages:
+          Array.isArray(data.languages) && data.languages.length > 0
+            ? data.languages
+            : ["fr"],
+        specialties: Array.isArray(data.specialties)
+          ? data.specialties
+          : [],
+        rating: typeof data.rating === "number" ? data.rating : 4.5,
+        reviewCount:
+          typeof data.reviewCount === "number" ? data.reviewCount : 0,
+        yearsOfExperience:
+          (typeof data.yearsOfExperience === "number"
+            ? data.yearsOfExperience
+            : undefined) ??
+          (typeof data.yearsAsExpat === "number" ? data.yearsAsExpat : 0),
+        isOnline: data.isOnline === true,
+        isActive: data.isActive !== false,
+        isVisible: data.isVisible !== false,
+        isApproved: data.isApproved !== false,
+        isBanned: data.isBanned === true,
+        role:
+          typeof data.role === "string"
+            ? String(data.role).toLowerCase()
+            : undefined,
+        isAdmin: data.isAdmin === true,
+        description: typeof data.bio === "string" ? data.bio : "",
+        price:
+          typeof data.price === "number"
+            ? data.price
+            : type === "lawyer"
+              ? 49
+              : 19,
+        duration: data.duration,
+        avatar:
+          typeof data.profilePhoto === "string" &&
+            data.profilePhoto.trim() !== ""
+            ? data.profilePhoto
+            : "/default-avatar.png",
+        education: data.education || data.lawSchool || undefined,
+        certifications: data.certifications || undefined,
+        lawSchool: typeof data.lawSchool === "string" ? data.lawSchool : undefined,
+      };
+    };
+
+    // Fonction pour filtrer les providers valides
+    const filterValidProviders = (providers: Provider[]): Provider[] => {
+      return providers.filter(provider => {
+        const notAdmin =
+          (provider.role ?? "") !== "admin" && provider.isAdmin !== true;
+        const notBanned = provider.isBanned !== true;
+        const hasBasicInfo = provider.name.trim() !== "";
+        const hasCountry = provider.country.trim() !== "";
+        const visible = provider.isVisible !== false;
+        const validType = provider.type === "lawyer" || provider.type === "expat";
+
+        return notAdmin && notBanned && hasBasicInfo && hasCountry && visible && validType;
+      });
+    };
+
+    // STRATÉGIE: Essayer REST API d'abord, puis SDK, puis fallback
+    const loadProviders = async () => {
+      console.log("🚀 [SOSCall] Tentative 1: API REST Firestore...");
+
+      try {
+        // Tentative 1: REST API (plus fiable)
+        const docs = await getCollectionRest<RawProfile>("sos_profiles", {
+          pageSize: 100,
+          timeoutMs: FIRESTORE_TIMEOUT_MS,
+        });
+
+        if (isCancelled) return;
+
+        console.log(`✅ [SOSCall] REST API: ${docs.length} documents reçus`);
+
+        const allProviders = docs
+          .filter(doc => doc.data.type === "lawyer" || doc.data.type === "expat")
+          .map(doc => transformToProvider(doc.id, doc.data));
+
+        const validProviders = filterValidProviders(allProviders);
+        console.log(`✅ [SOSCall] ${validProviders.length} providers valides après filtrage`);
+
+        if (validProviders.length > 0) {
+          setRealProviders(validProviders);
+          setFilteredProviders(validProviders);
           setIsLoadingProviders(false);
           return;
         }
 
-        const allProfiles: Provider[] = [];
+        // Si aucun provider valide, utiliser le fallback
+        console.warn("⚠️ [SOSCall] Aucun provider valide, utilisation du fallback");
+        setRealProviders(FALLBACK_PROVIDERS);
+        setFilteredProviders(FALLBACK_PROVIDERS);
+        setIsLoadingProviders(false);
 
-        snapshot.docs.forEach((docSnap) => {
-          const data = docSnap.data() as RawProfile;
+      } catch (restError) {
+        console.error("❌ [SOSCall] REST API échoué:", restError);
 
-          const fullName =
-            data.fullName ||
-            `${data.firstName || ""} ${data.lastName || ""}`.trim() ||
-            "Expert";
+        if (isCancelled) return;
 
-          const firstName = data.firstName || "";
-          const lastName = data.lastName || "";
-          const publicDisplayName = firstName && lastName 
-            ? `${firstName} ${lastName.charAt(0)}.`
-            : fullName;
+        // Tentative 2: SDK Firestore avec timeout court
+        console.log("🚀 [SOSCall] Tentative 2: SDK Firestore...");
 
-          const type: "lawyer" | "expat" =
-            data.type === "lawyer" ? "lawyer" : "expat";
+        try {
+          const sosProfilesQuery = query(
+            collection(db, "sos_profiles"),
+            where("type", "in", ["lawyer", "expat"]),
+            limit(100)
+          );
 
-          const country =
-            data.currentPresenceCountry || data.country || "Monde";
+          const timeoutPromise = new Promise<never>((_, reject) => {
+            setTimeout(() => reject(new Error("SDK timeout")), FIRESTORE_TIMEOUT_MS);
+          });
 
-          const provider: Provider = {
-            id: docSnap.id,
-            name: publicDisplayName,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            type,
-            country,
-            languages:
-              Array.isArray(data.languages) && data.languages.length > 0
-                ? data.languages
-                : ["fr"],
-            specialties: Array.isArray(data.specialties)
-              ? data.specialties
-              : [],
-            rating: typeof data.rating === "number" ? data.rating : 4.5,
-            reviewCount:
-              typeof data.reviewCount === "number" ? data.reviewCount : 0,
-            yearsOfExperience:
-              (typeof data.yearsOfExperience === "number"
-                ? data.yearsOfExperience
-                : undefined) ??
-              (typeof data.yearsAsExpat === "number" ? data.yearsAsExpat : 0),
-            isOnline: data.isOnline === true,
-            isActive: data.isActive !== false,
-            isVisible: data.isVisible !== false,
-            isApproved: data.isApproved !== false,
-            isBanned: data.isBanned === true,
-            role:
-              typeof data.role === "string"
-                ? String(data.role).toLowerCase()
-                : undefined,
-            isAdmin: data.isAdmin === true,
-            description: typeof data.bio === "string" ? data.bio : "",
-            price:
-              typeof data.price === "number"
-                ? data.price
-                : type === "lawyer"
-                  ? 49
-                  : 19,
-            duration: data.duration,
-            avatar:
-              typeof data.profilePhoto === "string" &&
-                data.profilePhoto.trim() !== ""
-                ? data.profilePhoto
-                : "/default-avatar.png",
-            education: data.education || data.lawSchool || undefined,
-            certifications: data.certifications || undefined,
-            lawSchool: typeof data.lawSchool === "string" ? data.lawSchool : undefined,
-          };
+          const snapshot = await Promise.race([
+            getDocs(sosProfilesQuery),
+            timeoutPromise
+          ]);
 
-          // Règle d'affichage: prestataires visibles même sans KYC complété (isApproved non requis)
-          const notAdmin =
-            (provider.role ?? "") !== "admin" && provider.isAdmin !== true;
-          const notBanned = provider.isBanned !== true;
-          const hasBasicInfo = provider.name.trim() !== "";
-          const hasCountry = provider.country.trim() !== "";
-          const visible = provider.isVisible !== false;
-          const validType = provider.type === "lawyer" || provider.type === "expat";
+          if (isCancelled) return;
 
-          const shouldInclude =
-            notAdmin &&
-            notBanned &&
-            hasBasicInfo &&
-            hasCountry &&
-            visible &&
-            validType;
+          console.log(`✅ [SOSCall] SDK: ${snapshot.size} documents reçus`);
 
-          if (shouldInclude) {
-            allProfiles.push(provider);
+          const allProviders = snapshot.docs.map(docSnap =>
+            transformToProvider(docSnap.id, docSnap.data() as RawProfile)
+          );
+          const validProviders = filterValidProviders(allProviders);
+
+          if (validProviders.length > 0) {
+            setRealProviders(validProviders);
+            setFilteredProviders(validProviders);
+            setIsLoadingProviders(false);
+            return;
           }
-        });
 
-        setRealProviders(allProfiles);
-        // Load translations BEFORE setting providers (synchronously wait for all)
-        const providersWithTranslations = await Promise.all(
-          allProfiles.map(async (provider) => {
-            try {
-              const translationDoc = await getDoc(
-                doc(db, "providers_translations", provider.id)
-              );
-              
-              if (translationDoc.exists()) {
-                const data = translationDoc.data();
-                const translations: Provider["translations"] = {};
-                
-                // Access translations object directly (structure: translations.hi, translations.en, etc.)
-                if (data.translations && typeof data.translations === "object" && !Array.isArray(data.translations)) {
-                  Object.keys(data.translations).forEach((lang) => {
-                    const trans = data.translations[lang];
-                    // Check if translation exists and has content
-                    if (trans && typeof trans === "object" && !Array.isArray(trans)) {
-                      // Map language code: zh -> ch for consistency
-                      const langKey = lang === "zh" ? "ch" : lang;
-                      
-                      // Get description, bio, summary from translation
-                      const desc = trans.description || trans.bio || trans.summary || "";
-                      const bio = trans.bio || trans.description || "";
-                      const summary = trans.summary || trans.motivation || "";
-                      const specialties = Array.isArray(trans.specialties) ? trans.specialties : [];
-                      
-                      if (desc || bio || summary || specialties.length > 0) {
-                        translations[langKey] = {
-                          description: desc,
-                          bio: bio,
-                          summary: summary,
-                          specialties: specialties,
-                        };
-                      }
-                    }
-                  });
-                }
-                
-                if (Object.keys(translations).length > 0) {
-                  console.log(`[SOSCall] ✓ Loaded translations for ${provider.name} (${provider.id}):`, {
-                    languages: Object.keys(translations),
-                    hi: translations.hi ? {
-                      hasDescription: !!translations.hi.description,
-                      hasBio: !!translations.hi.bio,
-                      hasSummary: !!translations.hi.summary,
-                      specialtiesCount: translations.hi.specialties?.length || 0,
-                    } : null,
-                  });
-                  return { ...provider, translations };
-                }
-              }
-              
-              return provider;
-            } catch (error) {
-              console.error(`[SOSCall] Error loading translation for ${provider.id}:`, error);
-              return provider;
-            }
-          })
-        );
-        
-        console.log(`[SOSCall] Loaded ${providersWithTranslations.length} providers with translations`);
-        setRealProviders(providersWithTranslations);
-        setFilteredProviders(providersWithTranslations);
-        setIsLoadingProviders(false);
-      },
-      (error) => {
-        console.error("[SOSCall] Firebase error:", error);
-        setRealProviders([]);
-        setFilteredProviders([]);
-        setIsLoadingProviders(false);
+          throw new Error("No valid providers from SDK");
+
+        } catch (sdkError) {
+          console.error("❌ [SOSCall] SDK aussi échoué:", sdkError);
+
+          // Tentative 3: Fallback providers de démonstration
+          console.log("🆘 [SOSCall] Utilisation des providers de démonstration");
+          setRealProviders(FALLBACK_PROVIDERS);
+          setFilteredProviders(FALLBACK_PROVIDERS);
+          setIsLoadingProviders(false);
+        }
       }
-    );
+    };
 
-    return () => unsubscribe();
-  }, [searchParams, setSearchParams]);
+    loadProviders();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []); // Charger une seule fois au mount
 
   // Generate search suggestions 
   useEffect(() => {
@@ -2529,14 +2637,15 @@ const SOSCall: React.FC = () => {
     const onlineProviders = next.filter(p => p.isOnline);
     const offlineProviders = next.filter(p => !p.isOnline);
 
-    // Mélanger aléatoirement chaque groupe
-    const shuffledOnline = shuffleArray(onlineProviders);
-    const shuffledOffline = shuffleArray(offlineProviders);
+    // Trier par rating (meilleurs en premier) au lieu de mélanger aléatoirement
+    // Cela évite le "saut" de page à chaque rendu
+    const sortedOnline = [...onlineProviders].sort((a, b) => b.rating - a.rating);
+    const sortedOffline = [...offlineProviders].sort((a, b) => b.rating - a.rating);
 
     // Combiner: online d'abord, puis offline
-    const sortedAndShuffled = [...shuffledOnline, ...shuffledOffline];
+    const sorted = [...sortedOnline, ...sortedOffline];
 
-    setFilteredProviders(sortedAndShuffled);
+    setFilteredProviders(sorted);
     setPage(1);
   }, [
     realProviders,

@@ -1,38 +1,14 @@
-import React, { useEffect } from 'react';
-import { AlertCircle, Check, AlertTriangle, Clock, Mail } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import React from 'react';
+import { AlertTriangle, Clock, Mail } from 'lucide-react';
+import { useIntl } from 'react-intl';
 import { User } from '../../contexts/types';
-import { useApp } from '../../contexts/AppContext';
-import i18n from '../../config/i18n';
 
 interface ProfileStatusAlertProps {
   user: User;
 }
 
-// Map language code to i18next supported languages
-const mapLangCodeToI18n = (langCode: string | undefined): 'fr' | 'en' | 'es' | 'ru' | 'de' | 'hi' | 'pt' | 'ch' | 'ar' => {
-  const supportedLanguages = ['fr', 'en', 'es', 'ru', 'de', 'hi', 'pt', 'ch', 'ar'];
-  
-  if (langCode && supportedLanguages.includes(langCode)) {
-    return langCode as 'fr' | 'en' | 'es' | 'ru' | 'de' | 'hi' | 'pt' | 'ch' | 'ar';
-  }
-  return 'en';
-};
-
 const ProfileStatusAlert: React.FC<ProfileStatusAlertProps> = ({ user }) => {
-  const { t } = useTranslation();
-  const { language: appLanguage } = useApp();
-  
-  // Priority: AppContext language > user preferredLanguage > user lang > default 'en'
-  const userLang = mapLangCodeToI18n(appLanguage || user?.preferredLanguage || user?.lang);
-  
-  useEffect(() => {
-    if (i18n.language !== userLang) {
-      i18n.changeLanguage(userLang).catch((err) => {
-        console.error('Error changing i18n language:', err);
-      });
-    }
-  }, [userLang]);
+  const intl = useIntl();
 
   // Si le statut n'est pas défini, on suppose que le profil est approuvé (pour la compatibilité)
   if (!user.approvalStatus || user.approvalStatus === 'approved') {
@@ -52,34 +28,34 @@ const ProfileStatusAlert: React.FC<ProfileStatusAlertProps> = ({ user }) => {
           <div className="flex-1">
             <h3 className="text-lg font-bold text-orange-900 mb-2 flex items-center gap-2">
               <span>⏳</span>
-              {t('profileValidation.pending.title')}
+              {intl.formatMessage({ id: 'profileValidation.pending.title' })}
             </h3>
             <p className="text-orange-800 mb-4 leading-relaxed">
-              {t('profileValidation.pending.description')}
+              {intl.formatMessage({ id: 'profileValidation.pending.description' })}
             </p>
             <div className="bg-white bg-opacity-60 rounded-lg p-4 mb-4">
               <h4 className="font-semibold text-orange-900 mb-2">
-                {t('profileValidation.pending.whatHappensNow')}
+                {intl.formatMessage({ id: 'profileValidation.pending.whatHappensNow' })}
               </h4>
               <ul className="space-y-2 text-sm text-orange-800">
                 <li className="flex items-start gap-2">
                   <span className="text-orange-500 mt-1">•</span>
-                  <span>{t('profileValidation.pending.steps.teamVerifies')}</span>
+                  <span>{intl.formatMessage({ id: 'profileValidation.pending.steps.teamVerifies' })}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-orange-500 mt-1">•</span>
-                  <span>{t('profileValidation.pending.steps.emailNotification')}</span>
+                  <span>{intl.formatMessage({ id: 'profileValidation.pending.steps.emailNotification' })}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-orange-500 mt-1">•</span>
-                  <span>{t('profileValidation.pending.steps.profileVisible')}</span>
+                  <span>{intl.formatMessage({ id: 'profileValidation.pending.steps.profileVisible' })}</span>
                 </li>
               </ul>
             </div>
             <div className="flex items-center gap-2 text-sm text-orange-700">
               <Mail className="w-4 h-4" />
               <span>
-                {t('profileValidation.pending.validationTime')} <strong>24-48 heures</strong>
+                {intl.formatMessage({ id: 'profileValidation.pending.validationTime' })} <strong>24-48 heures</strong>
               </span>
             </div>
           </div>
@@ -101,16 +77,16 @@ const ProfileStatusAlert: React.FC<ProfileStatusAlertProps> = ({ user }) => {
           <div className="flex-1">
             <h3 className="text-lg font-bold text-red-900 mb-2 flex items-center gap-2">
               <span>❌</span>
-              {t('profileValidation.rejected.title')}
+              {intl.formatMessage({ id: 'profileValidation.rejected.title' })}
             </h3>
             <p className="text-red-800 mb-4 leading-relaxed">
-              {t('profileValidation.rejected.description')}
+              {intl.formatMessage({ id: 'profileValidation.rejected.description' })}
             </p>
             
             {user.rejectionReason && (
               <div className="bg-white bg-opacity-60 rounded-lg p-4 mb-4">
                 <h4 className="font-semibold text-red-900 mb-2">
-                  {t('profileValidation.rejected.rejectionReason')}
+                  {intl.formatMessage({ id: 'profileValidation.rejected.rejectionReason' })}
                 </h4>
                 <p className="text-sm text-red-800 leading-relaxed">
                   {user.rejectionReason}
@@ -124,13 +100,13 @@ const ProfileStatusAlert: React.FC<ProfileStatusAlertProps> = ({ user }) => {
                 className="inline-flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
               >
                 <Mail className="w-5 h-5" />
-                {t('profileValidation.rejected.contactSupport')}
+                {intl.formatMessage({ id: 'profileValidation.rejected.contactSupport' })}
               </a>
               <button
                 onClick={() => window.location.href = '/dashboard/profile/edit'}
                 className="inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-red-600 border-2 border-red-600 px-6 py-3 rounded-lg font-medium transition-colors"
               >
-                {t('profileValidation.rejected.editProfile')}
+                {intl.formatMessage({ id: 'profileValidation.rejected.editProfile' })}
               </button>
             </div>
           </div>

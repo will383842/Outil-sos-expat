@@ -16,9 +16,14 @@ service cloud.firestore {
              request.auth.token.role == 'admin';
     }
 
+    // SECURITE: Le role 'dev' est DESACTIVE en production
+    // Pour activer temporairement en dev, definir une variable d'environnement
+    // Cette fonction retourne TOUJOURS false en production
     function isDev() {
-      return request.auth != null &&
-             request.auth.token.role == 'dev';
+      // PRODUCTION: Toujours false - aucun acces dev en production
+      return false;
+      // Pour debug local uniquement, decommenter la ligne suivante:
+      // return request.auth != null && request.auth.token.role == 'dev';
     }
 
     function isOwner(userId) {
@@ -694,8 +699,10 @@ service cloud.firestore {
     }
 
     // ================= CATCH-ALL (deny by default) =================
+    // SECURITE: Refuse TOUT acces non explicitement autorise
+    // Le role 'dev' est desactive en production
     match /{document=**} {
-      allow read, write: if isDev();
+      allow read, write: if false;
     }
   }
 }

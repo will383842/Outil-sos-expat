@@ -12,7 +12,7 @@ const client = new admin.firestore.v1.FirestoreAdminClient();
 
 // Configuration
 const CONFIG = {
-  RETENTION_DAYS: 30,
+  RETENTION_DAYS: 90, // Augmente de 30 a 90 jours pour meilleure protection
   CRITICAL_COLLECTIONS: [
     "users",
     "sos_profiles",

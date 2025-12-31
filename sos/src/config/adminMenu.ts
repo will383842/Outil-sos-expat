@@ -48,6 +48,7 @@ import {
   HelpingHand,
   HelpCircle,
   Bot,
+  Activity,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -560,6 +561,13 @@ export const adminMenuTree: AdminMenuItem[] = [
             path: "/admin/backups",
             icon: Archive,
             description: "Backup et restauration",
+          },
+          {
+            id: "system-health",
+            label: "Santé système",
+            path: "/admin/system-health",
+            icon: Activity,
+            description: "Monitoring DR et alertes système",
           },
         ],
       },

@@ -881,7 +881,8 @@ filtered = filtered.filter(p => {
   isCarousel?: boolean; 
 }) => {
   const { language = 'fr' } = useApp();
-  
+  const intl = useIntl();
+
     const cardSchema = useMemo(() => ({
       "@context": "https://schema.org",
       "@type": provider.type === 'lawyer' ? "LegalService" : "Service",
@@ -891,7 +892,7 @@ filtered = filtered.filter(p => {
         "@type": "Person",
         "name": provider.name,
         "image": provider.avatar,
-        "jobTitle": provider.type === 'lawyer' ? 'Avocat' : 'Expert Expatriation',
+        "jobTitle": provider.type === 'lawyer' ? intl.formatMessage({ id: 'role.lawyer' }) : intl.formatMessage({ id: 'role.expat' }),
       },
       "areaServed": provider.country,
       "availableLanguage": provider.languages,
@@ -925,7 +926,7 @@ filtered = filtered.filter(p => {
           }}
           role="button"
           tabIndex={0}
-          aria-label={`Contacter ${provider.name}, ${provider.type === 'lawyer' ? 'avocat' : 'expert expatriation'} en ${provider.country}`}
+          aria-label={`${intl.formatMessage({ id: 'common.contact' })} ${provider.name}, ${provider.type === 'lawyer' ? intl.formatMessage({ id: 'role.lawyer' }).toLowerCase() : intl.formatMessage({ id: 'role.expat' }).toLowerCase()} - ${getCountryName(provider.country, language)}`}
           className={`${isCarousel ? 'flex-shrink-0 w-80' : ''} group bg-white rounded-3xl shadow-lg overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-3 backdrop-blur-sm cursor-pointer border-[3px] ${
             provider.availability === 'busy'
               ? 'border-orange-500 shadow-orange-500/20 hover:border-orange-600 hover:shadow-orange-600/30'
@@ -947,7 +948,7 @@ filtered = filtered.filter(p => {
           <div className="relative aspect-[3/4] overflow-hidden">
             <img
               src={provider.avatar}
-              alt={`${provider.name} - ${provider.type === 'lawyer' ? 'Avocat' : 'Expatrié'}`}
+              alt={`${provider.name} - ${provider.type === 'lawyer' ? intl.formatMessage({ id: 'role.lawyer' }) : intl.formatMessage({ id: 'role.expat' })}`}
               className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
               itemProp="image"
               loading={priority === 'high' ? 'eager' : 'lazy'}
@@ -968,7 +969,7 @@ filtered = filtered.filter(p => {
                   ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/30' 
                   : 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg shadow-purple-500/30'
               }`}>
-                {provider.type === 'lawyer' ? '⚖️ Avocat' : '🌍 Expatrié'}
+                {provider.type === 'lawyer' ? `⚖️ ${intl.formatMessage({ id: 'role.lawyer' })}` : `🌍 ${intl.formatMessage({ id: 'role.expat' })}`}
               </div>
             </div>
             
@@ -1089,7 +1090,7 @@ filtered = filtered.filter(p => {
         }}
         role="button"
         tabIndex={0}
-        aria-label={`Contacter ${provider.name}, ${provider.type === 'lawyer' ? 'avocat' : 'expert expatriation'} en ${provider.country}`}
+        aria-label={`${intl.formatMessage({ id: 'common.contact' })} ${provider.name}, ${provider.type === 'lawyer' ? intl.formatMessage({ id: 'role.lawyer' }).toLowerCase() : intl.formatMessage({ id: 'role.expat' }).toLowerCase()} - ${getCountryName(provider.country, language)}`}
         className={`bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 ${
           cardStyle === 'premium' ? 'hover:border-blue-300' : 'hover:border-gray-200'
         }`}
@@ -1107,7 +1108,7 @@ filtered = filtered.filter(p => {
         <div className="relative h-64 overflow-hidden">
           <img
             src={provider.avatar}
-            alt={`Photo de profil de ${provider.name}, ${provider.type === 'lawyer' ? 'avocat' : 'expert expatriation'} en ${provider.country}`}
+            alt={`${provider.name} - ${provider.type === 'lawyer' ? intl.formatMessage({ id: 'role.lawyer' }) : intl.formatMessage({ id: 'role.expat' })} - ${getCountryName(provider.country, language)}`}
             loading={priority === 'high' ? 'eager' : 'lazy'}
             decoding="async"
             className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
@@ -1129,7 +1130,7 @@ filtered = filtered.filter(p => {
                   : 'bg-red-500 text-white'
             }`}>
               {provider.availability === 'busy' && <Clock size={12} />}
-              {provider.availability === 'busy' ? 'Occupé' : provider.isOnline ? 'En ligne' : 'Hors ligne'}
+              {provider.availability === 'busy' ? intl.formatMessage({ id: 'card.busy' }) : provider.isOnline ? intl.formatMessage({ id: 'status.online' }) : intl.formatMessage({ id: 'status.offline' })}
             </div>
           </div>
           
@@ -1139,7 +1140,7 @@ filtered = filtered.filter(p => {
                 ? 'bg-blue-500 text-white' 
                 : 'bg-purple-500 text-white'
             }`}>
-              {provider.type === 'lawyer' ? 'Avocat' : 'Expert'}
+              {provider.type === 'lawyer' ? intl.formatMessage({ id: 'role.lawyer' }) : intl.formatMessage({ id: 'role.expat' })}
             </div>
           </div>
         </div>
@@ -1247,9 +1248,9 @@ filtered = filtered.filter(p => {
                   onChange={(e) => setActiveFilter(e.target.value as 'all' | 'lawyer' | 'expat')}
                   className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all appearance-none text-sm"
                 >
-                  <option value="all">Tous</option>
-                  <option value="lawyer">Avocats</option>
-                  <option value="expat">Expatriés</option>
+                  <option value="all">{intl.formatMessage({ id: 'sosCall.filters.type.all' })}</option>
+                  <option value="lawyer">{intl.formatMessage({ id: 'sosCall.filters.type.lawyer' })}</option>
+                  <option value="expat">{intl.formatMessage({ id: 'sosCall.filters.type.expat' })}</option>
                 </select>
                 <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" aria-hidden="true" />
               </div>
@@ -1257,7 +1258,7 @@ filtered = filtered.filter(p => {
 
             <div className="space-y-1">
               <label htmlFor="country-filter" className="block text-xs font-medium text-gray-600 uppercase tracking-wide">
-                Pays
+                {intl.formatMessage({ id: 'country.label' })}
               </label>
               <div className="relative">
                 <select
@@ -1327,7 +1328,7 @@ filtered = filtered.filter(p => {
                     onChange={(e) => setOnlineOnly(e.target.checked)}
                     className="w-4 h-4 text-red-600 bg-white border-gray-300 rounded focus:ring-red-500 focus:ring-2 mr-2"
                   />
-                  <span className="text-sm text-gray-700">En ligne seulement</span>
+                  <span className="text-sm text-gray-700">{intl.formatMessage({ id: 'card.labels.onlineOnly' })}</span>
                 </label>
               </div>
             </div>
@@ -1340,13 +1341,13 @@ filtered = filtered.filter(p => {
                 onClick={resetFilters}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 active:bg-gray-100 transition-colors text-sm font-medium h-10"
               >
-                Réinitialiser
+                {intl.formatMessage({ id: 'action.reset' })}
               </button>
             </div>
           </div>
 
           <div className="mt-4 text-center text-xs text-gray-500">
-            {filteredProviders.filter(p => p.isOnline).length} en ligne • {filteredProviders.length} au total
+            {intl.formatMessage({ id: 'card.labels.onlineCount' }, { online: filteredProviders.filter(p => p.isOnline).length, total: filteredProviders.length })}
           </div>
         </div>
       );
@@ -1381,7 +1382,7 @@ filtered = filtered.filter(p => {
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              Avocats
+              {intl.formatMessage({ id: 'sosCall.filters.type.lawyer' })}
             </button>
             <button
               role="tab"
@@ -1446,7 +1447,7 @@ filtered = filtered.filter(p => {
                 onChange={(e) => setOnlineOnly(e.target.checked)}
                 className="w-4 h-4 text-red-600 bg-white border-gray-300 rounded focus:ring-red-500 focus:ring-2 mr-2"
               />
-              <span className="text-sm text-gray-700">En ligne uniquement</span>
+              <span className="text-sm text-gray-700">{intl.formatMessage({ id: 'card.labels.onlineOnly' })}</span>
             </label>
           </div>
         </div>
@@ -1619,10 +1620,10 @@ filtered = filtered.filter(p => {
           <div className="results-summary mb-4" aria-live="polite">
             {!isLoading && (
               <p className="text-sm text-gray-600">
-                {filteredProviders.length} prestataire{filteredProviders.length > 1 ? 's' : ''} trouvé{filteredProviders.length > 1 ? 's' : ''}
-                {activeFilter !== 'all' && ` de type ${activeFilter === 'lawyer' ? 'avocat' : 'expert'}`}
-                {selectedCountry !== 'all' && ` en ${selectedCountry}`}
-                {onlineOnly && ' en ligne'}
+                {intl.formatMessage({ id: 'card.results.found' }, { count: filteredProviders.length })}
+                {activeFilter !== 'all' && ` ${intl.formatMessage({ id: 'card.results.typeOf' }, { type: activeFilter === 'lawyer' ? intl.formatMessage({ id: 'role.lawyer' }).toLowerCase() : intl.formatMessage({ id: 'role.expat' }).toLowerCase() })}`}
+                {selectedCountry !== 'all' && ` - ${getCountryName(selectedCountry, language)}`}
+                {onlineOnly && ` ${intl.formatMessage({ id: 'card.results.online' })}`}
               </p>
             )}
           </div>
@@ -1764,23 +1765,23 @@ filtered = filtered.filter(p => {
                 onClick={() => setActiveFilter('lawyer')}
                 className={`px-4 py-2 rounded-lg font-medium transition-all ${
                   activeFilter === 'lawyer' 
-                    ? 'bg-blue-600 text-white' 
+                    ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                Avocats
+                {intl.formatMessage({ id: 'sosCall.filters.type.lawyer' })}
               </button>
               <button
                 role="tab"
                 aria-selected={activeFilter === 'expat'}
                 onClick={() => setActiveFilter('expat')}
                 className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                  activeFilter === 'expat' 
-                    ? 'bg-blue-600 text-white' 
+                  activeFilter === 'expat'
+                    ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                Experts
+                {intl.formatMessage({ id: 'sosCall.filters.type.expat' })}
               </button>
             </div>
           </div>

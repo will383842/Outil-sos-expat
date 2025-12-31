@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useIntl } from 'react-intl';
 import {
   collection,
   query,
@@ -43,7 +43,8 @@ type FilterType = 'all' | 'lawyer' | 'expat';
 type SortType = 'recent' | 'oldest' | 'name';
 
 const ProfileValidation: React.FC = () => {
-  const { t } = useTranslation();
+  const intl = useIntl();
+  const t = (id: string, values?: Record<string, string | number>) => intl.formatMessage({ id }, values);
   const { user: currentUser } = useAuth();
   const [pendingProfiles, setPendingProfiles] = useState<PendingProfile[]>([]);
   const [loading, setLoading] = useState(true);

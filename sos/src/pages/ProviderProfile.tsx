@@ -41,6 +41,7 @@ import {
   Timestamp as FsTimestamp,
 } from "firebase/firestore";
 import { db } from "../config/firebase";
+import { getDocumentRest } from "../utils/firestoreRestApi";
 import Layout from "../components/layout/Layout";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import { useAuth } from "../contexts/AuthContext";
@@ -960,10 +961,51 @@ const ProviderProfile: React.FC = () => {
         for (const testId of potentialUids) {
           if (providerData) break;
 
+          // 1. Essayer d'abord via l'API REST (plus rapide et fiable)
+          try {
+            console.log(`📡 [ProviderProfile] Trying REST API for: ${testId}`);
+            const restResult = await getDocumentRest<Record<string, any>>('sos_profiles', testId, 5000);
+            if (restResult.exists && restResult.data) {
+              const data = restResult.data;
+              const normalized = normalizeUserData(data, restResult.id);
+              const { type: _type, education: _education, ...restNormalized } = normalized as any;
+              const safeType: "lawyer" | "expat" = (data?.type === "lawyer" || data?.type === "expat") ? data.type : "expat";
+              const safeProvider = { ...restNormalized, type: safeType, ...data };
+              providerData = {
+                ...restNormalized,
+                id: restResult.id,
+                uid: normalized.uid || restResult.id,
+                type: safeType,
+                description: pickDescription(safeProvider as any, preferredLangKey, intl),
+                specialties: toArrayFromAny(data?.specialties, preferredLangKey),
+                helpTypes: toArrayFromAny(data?.helpTypes, preferredLangKey),
+                operatingCountries: toArrayFromAny(data?.operatingCountries, preferredLangKey),
+                residenceCountry: data?.residenceCountry || data?.country,
+                education: data?.education,
+                yearsOfExperience: data?.yearsOfExperience || 0,
+                yearsAsExpat: data?.yearsAsExpat || data?.yearsOfExperience || 0,
+                rating: data?.rating || data?.averageRating || 0,
+                reviewCount: data?.reviewCount || 0,
+                totalCalls: data?.totalCalls || 0,
+                createdAt: data?.createdAt,
+              } as SosProfile;
+              foundProviderId = restResult.id;
+              console.log(`✅ [ProviderProfile] Found via REST API: ${foundProviderId}`);
+              break;
+            }
+          } catch (restErr) {
+            console.warn('REST API failed, falling back to SDK:', restErr);
+          }
+
+          // 2. Fallback vers le SDK Firestore avec timeout
           try {
             const ref = doc(db, "sos_profiles", testId);
-            const snap = await getDoc(ref);
-            if (snap.exists()) {
+            const sdkPromise = getDoc(ref);
+            const timeoutPromise = new Promise<null>((_, reject) =>
+              setTimeout(() => reject(new Error('SDK timeout')), 8000)
+            );
+            const snap = await Promise.race([sdkPromise, timeoutPromise]);
+            if (snap && snap.exists()) {
               const data = snap.data();
               const normalized = normalizeUserData(data, snap.id);
               const { type: _type, education: _education, ...restNormalized } = normalized as any;

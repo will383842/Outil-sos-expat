@@ -1,5 +1,6 @@
 // src/pages/admin/AdminKYCProviders.tsx
 import React, { useState, useEffect, useCallback } from 'react';
+import { useIntl } from 'react-intl';
 import {
   collection,
   query,
@@ -96,6 +97,7 @@ interface Stats {
 
 const AdminKYCProviders: React.FC = () => {
   const { user: currentUser } = useAuth();
+  const intl = useIntl();
   const [providers, setProviders] = useState<KYCProvider[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
@@ -413,7 +415,7 @@ const AdminKYCProviders: React.FC = () => {
   };
 
   const getServiceTypeLabel = (type: ServiceType) => {
-    return type === 'lawyer_call' ? 'Avocat' : 'Expatrié';
+    return type === 'lawyer_call' ? intl.formatMessage({ id: 'role.lawyer' }) : intl.formatMessage({ id: 'role.expat' });
   };
 
   const getDocumentCompleteness = (documents: KYCDocument[]) => {

@@ -58,9 +58,30 @@ export { createStripeAccount } from "./createStripeAccount";
 export { getStripeAccountSession } from "./getAccountSession";
 export { checkStripeAccountStatus } from "./checkStripeAccountStatus";
 
-// backup
+// backup - Single backup (legacy, kept for compatibility)
 export { createManualBackup } from "./manualBackup";
 export { scheduledBackup } from "./scheduledBackup";
+
+// backup - Multi-frequency (3x per day for better RPO)
+export {
+  morningBackup,
+  middayBackup,
+  eveningBackup,
+  cleanupOldBackups,
+} from "./scheduled/multiFrequencyBackup";
+
+// backup - Cross-region DR
+export {
+  dailyCrossRegionBackup,
+  cleanupDRBackups,
+} from "./scheduled/crossRegionBackup";
+
+// backup - Quarterly restore test
+export {
+  quarterlyRestoreTest,
+  runRestoreTestManual,
+  listRestoreTestReports,
+} from "./scheduled/quarterlyRestoreTest";
 
 // Dispute handling
 import {

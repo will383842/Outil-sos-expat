@@ -151,27 +151,63 @@ function isValidPricingConfig(cfg: unknown): cfg is PricingConfig {
 /** Lecture Firestore */
 export async function getPricingConfig(): Promise<PricingConfig> {
   const now = Date.now();
-  if (_cache.data && now - _cache.ts < CACHE_MS) return _cache.data;
+  console.log("🔍 [pricingService] getPricingConfig appelé");
+
+  if (_cache.data && now - _cache.ts < CACHE_MS) {
+    console.log("✅ [pricingService] Retour cache (valide)", _cache.data);
+    return _cache.data;
+  }
 
   try {
-    const snap = await getDoc(PRICING_REF);
+    console.log("📡 [pricingService] Lecture Firestore admin_config/pricing...");
+    console.log("📡 [pricingService] PRICING_REF path:", PRICING_REF.path);
+
+    // Timeout de 5 secondes - si Firestore est bloqué, on utilise le fallback immédiatement
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error("TIMEOUT: Firestore bloqué - utilisation du fallback"));
+      }, 5000);
+    });
+
+    console.log("📡 [pricingService] Appel getDoc() avec timeout 10s...");
+    const snap = await Promise.race([getDoc(PRICING_REF), timeoutPromise]) as any;
+    console.log("📡 [pricingService] ✅ getDoc() a répondu! Snap exists?", snap.exists());
+
     if (!snap.exists()) {
+      console.warn("⚠️ [pricingService] Document pricing n'existe pas! Utilisation fallback");
       _cache = { data: DEFAULT_FALLBACK, ts: now };
       return DEFAULT_FALLBACK;
     }
 
     const data = snap.data() as FirestorePricingDoc;
+    console.log("📄 [pricingService] Données brutes Firestore:", JSON.stringify(data, null, 2));
+
     const normalized = normalizeFirestoreDocument(data);
+    console.log("📄 [pricingService] Données normalisées:", JSON.stringify(normalized, null, 2));
 
     if (!isValidPricingConfig(normalized)) {
+      console.warn("⚠️ [pricingService] Config invalide après normalisation! Utilisation fallback");
+      console.log("📄 [pricingService] Validation échouée pour:", {
+        lawyerEur: isValidServiceConfig(normalized?.lawyer?.eur),
+        lawyerUsd: isValidServiceConfig(normalized?.lawyer?.usd),
+        expatEur: isValidServiceConfig(normalized?.expat?.eur),
+        expatUsd: isValidServiceConfig(normalized?.expat?.usd),
+      });
       _cache = { data: DEFAULT_FALLBACK, ts: now };
       return DEFAULT_FALLBACK;
     }
 
+    console.log("✅ [pricingService] Config valide, mise en cache");
     _cache = { data: normalized, ts: now };
     return normalized;
   } catch (err) {
-    console.error("[pricingService] Firestore error:", err);
+    console.error("❌ [pricingService] Firestore error:", err);
+    console.error("❌ [pricingService] Error details:", {
+      name: (err as Error)?.name,
+      message: (err as Error)?.message,
+      code: (err as any)?.code,
+      stack: (err as Error)?.stack,
+    });
     _cache = { data: DEFAULT_FALLBACK, ts: now };
     return DEFAULT_FALLBACK;
   }

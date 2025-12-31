@@ -12,7 +12,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { useTranslation } from 'react-i18next';
+import { useIntl } from 'react-intl';
 import {
   Shield,
   AlertTriangle,
@@ -73,7 +73,8 @@ interface DRReport {
 }
 
 const AdminSystemHealth: React.FC = () => {
-  const { t } = useTranslation();
+  const intl = useIntl();
+  const t = (id: string, values?: Record<string, string | number>) => intl.formatMessage({ id }, values);
   const functions = getFunctions(undefined, 'europe-west1');
 
   // State

@@ -44,6 +44,7 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL, deleteObject } from 'firebase/storage';
 import { auth, db, storage } from '../config/firebase';
+import { getDocumentRest } from '../utils/firestoreRestApi';
 import type { User } from './types';
 import type { AuthContextType } from './AuthContextBase';
 import { AuthContext as BaseAuthContext } from './AuthContextBase';
@@ -575,11 +576,19 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
   // onAuthStateChanged → ne fait que stocker l'utilisateur auth
   useEffect(() => {
+    console.log("🔐 [AuthContext] Initialisation onAuthStateChanged...");
     const unsubAuth = onAuthStateChanged(auth, (u) => {
+      console.log("🔐 [AuthContext] onAuthStateChanged triggered:", {
+        hasUser: !!u,
+        uid: u?.uid,
+        email: u?.email,
+        emailVerified: u?.emailVerified,
+      });
       setIsLoading(true);
       setAuthUser(u);
       setFirebaseUser(u ?? null);
       if (!u) {
+        console.log("🔐 [AuthContext] Pas d'utilisateur connecté, nettoyage état");
         // Pas d'utilisateur → on nettoie l'état applicatif
         setUser(null);
         signingOutRef.current = false;
@@ -598,23 +607,64 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   const firstSnapArrived = useRef(false);
 
   useEffect(() => {
-    if (!authUser) return;               // attendre l'auth
-    if (subscribed.current) return;      // éviter double abonnement en StrictMode
+    console.log("🔐 [AuthContext] useEffect users listener - authUser:", authUser?.uid);
+    if (!authUser) {
+      console.log("🔐 [AuthContext] Pas d'authUser, skip listener");
+      return;               // attendre l'auth
+    }
+    if (subscribed.current) {
+      console.log("🔐 [AuthContext] Déjà abonné, skip");
+      return;      // éviter double abonnement en StrictMode
+    }
     subscribed.current = true;
     firstSnapArrived.current = false;
     setIsLoading(true);
 
     const uid = authUser.uid;
     const refUser = doc(db, 'users', uid);
+    console.log("🔐 [AuthContext] Lecture users/" + uid);
 
     let unsubUser: undefined | (() => void);
     let cancelled = false;
 
     (async () => {
       try {
-        // Créer le doc si absent
-        const snap = await getDoc(refUser);
-        if (!snap.exists()) {
+        // Créer le doc si absent - avec timeout et fallback REST API
+        console.log("🔐 [AuthContext] getDoc users/" + uid);
+
+        let docExists = false;
+        let docData: Record<string, any> | null = null;
+
+        // 1. Essayer d'abord via REST API (plus rapide et fiable)
+        try {
+          console.log("🔐 [AuthContext] Trying REST API for users/" + uid);
+          const restResult = await getDocumentRest<Record<string, any>>('users', uid, 5000);
+          docExists = restResult.exists;
+          docData = restResult.data;
+          console.log("🔐 [AuthContext] REST API result - exists:", docExists);
+        } catch (restErr) {
+          console.warn("🔐 [AuthContext] REST API failed, trying SDK:", restErr);
+        }
+
+        // 2. Si REST API n'a pas trouvé, essayer le SDK avec timeout
+        if (!docExists && !docData) {
+          try {
+            const sdkPromise = getDoc(refUser);
+            const timeoutPromise = new Promise<null>((_, reject) =>
+              setTimeout(() => reject(new Error('SDK timeout')), 8000)
+            );
+            const snap = await Promise.race([sdkPromise, timeoutPromise]);
+            if (snap && snap.exists()) {
+              docExists = true;
+              docData = snap.data() as Record<string, any>;
+            }
+          } catch (sdkErr) {
+            console.warn("🔐 [AuthContext] SDK also failed:", sdkErr);
+          }
+        }
+
+        console.log("🔐 [AuthContext] Doc exists?", docExists);
+        if (!docExists) {
           await setDoc(
             refUser,
             {
@@ -635,7 +685,29 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
         if (cancelled) return;
 
-        // Ouvrir le listener après auth + doc présent
+        // Si on a des données via REST API, initialiser l'utilisateur immédiatement
+        if (docExists && docData) {
+          console.log("🔐 [AuthContext] Initializing user from REST API data");
+          const data = docData as Partial<User>;
+          setUser({
+            ...(data as Partial<User>),
+            id: uid,
+            uid,
+            email: data.email || authUser.email || null,
+            createdAt: data.createdAt instanceof Date ? data.createdAt : new Date(),
+            updatedAt: data.updatedAt instanceof Date ? data.updatedAt : new Date(),
+            lastLoginAt: new Date(),
+            isVerifiedEmail: authUser.emailVerified,
+          } as User);
+
+          if (!firstSnapArrived.current) {
+            firstSnapArrived.current = true;
+            setIsLoading(false);
+            setAuthInitialized(true);
+          }
+        }
+
+        // Ouvrir le listener après auth + doc présent (pour les mises à jour en temps réel)
         unsubUser = onSnapshot(
           refUser,
           (docSnap) => {
@@ -676,13 +748,25 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
             }
           },
           (err) => {
-            console.error(`[users/${uid}] permission-denied ?`, err);
+            console.error(`❌ [AuthContext] [users/${uid}] Erreur listener:`, err);
+            console.error(`❌ [AuthContext] Error details:`, {
+              name: (err as Error)?.name,
+              message: (err as Error)?.message,
+              code: (err as any)?.code,
+              stack: (err as Error)?.stack,
+            });
             setIsLoading(false);
             setAuthInitialized(true);
           }
         );
       } catch (e) {
-        console.error('Init user doc failed', e);
+        console.error('❌ [AuthContext] Init user doc failed:', e);
+        console.error(`❌ [AuthContext] Error details:`, {
+          name: (e as Error)?.name,
+          message: (e as Error)?.message,
+          code: (e as any)?.code,
+          stack: (e as Error)?.stack,
+        });
         setIsLoading(false);
         setAuthInitialized(true);
       }
@@ -723,12 +807,14 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   }, []);
 
   const login = useCallback(async (email: string, password: string, rememberMe: boolean = false): Promise<void> => {
+    console.log("🔐 [AuthContext] login() appelé avec email:", email);
     setIsLoading(true);
     setError(null);
     setAuthMetrics((m) => ({ ...m, loginAttempts: m.loginAttempts + 1, lastAttempt: new Date() }));
 
     if (!email || !password) {
       const msg = 'Email et mot de passe sont obligatoires';
+      console.error("❌ [AuthContext] login() - email ou password manquant");
       setError(msg);
       setIsLoading(false);
       setAuthMetrics((m) => ({ ...m, failedLogins: m.failedLogins + 1 }));
@@ -736,8 +822,10 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     }
 
     try {
+      console.log("🔐 [AuthContext] login() - setPersistence...");
       const persistenceType = rememberMe ? browserLocalPersistence : browserSessionPersistence;
       await setPersistence(auth, persistenceType);
+      console.log("🔐 [AuthContext] login() - signInWithEmailAndPassword...");
 
       const timeout = deviceInfo.connectionSpeed === 'slow' ? 15000 : 10000;
       const loginPromise = signInWithEmailAndPassword(auth, normalizeEmail(email), password);
@@ -746,6 +834,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         new Promise<never>((_, rej) => setTimeout(() => rej(new Error('auth/timeout')), timeout)),
       ]);
 
+      console.log("✅ [AuthContext] login() réussi pour:", cred.user.uid);
       await logAuthEvent('successful_login', {
         userId: cred.user.uid,
         provider: 'email',
@@ -753,6 +842,13 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         deviceInfo
       });
     } catch (e) {
+      console.error("❌ [AuthContext] login() ERREUR:", e);
+      console.error("❌ [AuthContext] login() Error details:", {
+        name: (e as Error)?.name,
+        message: (e as Error)?.message,
+        code: (e as any)?.code,
+        stack: (e as Error)?.stack,
+      });
       const msg =
         e instanceof Error && e.message === 'auth/timeout'
           ? 'Connexion trop lente, réessayez.'
@@ -1017,11 +1113,18 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
   // REGISTER
   const register = useCallback(async (userData: Partial<User>, password: string): Promise<void> => {
+    console.log("🔐 [AuthContext] register() appelé avec:", {
+      email: userData.email,
+      role: userData.role,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+    });
     setIsLoading(true);
     setError(null);
 
     try {
       if (!userData.role || !['client', 'lawyer', 'expat', 'admin'].includes(userData.role)) {
+        console.error("❌ [AuthContext] register() - rôle invalide:", userData.role);
         const err = new Error('Rôle utilisateur invalide ou manquant.') as AppError;
         err.code = 'sos/invalid-role';
         throw err;
@@ -1048,7 +1151,9 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       // contre l'énumération d'emails. On laisse createUserWithEmailAndPassword
       // gérer les erreurs d'email déjà utilisé directement.
 
+      console.log("🔐 [AuthContext] register() - createUserWithEmailAndPassword...");
       const cred = await createUserWithEmailAndPassword(auth, email, password);
+      console.log("✅ [AuthContext] register() - User créé:", cred.user.uid);
 
       let finalProfilePhotoURL = '/default-avatar.png';
       if (userData.profilePhoto?.startsWith('data:image')) {
@@ -1103,6 +1208,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         /* no-op */ void 0;
       }
 
+      console.log("✅ [AuthContext] register() - Inscription réussie!");
       await logAuthEvent('registration_success', {
         userId: cred.user.uid,
         role: userData.role,
@@ -1113,6 +1219,13 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         deviceInfo
       });
     } catch (err) {
+      console.error("❌ [AuthContext] register() ERREUR:", err);
+      console.error("❌ [AuthContext] register() Error details:", {
+        name: (err as Error)?.name,
+        message: (err as Error)?.message,
+        code: (err as any)?.code,
+        stack: (err as Error)?.stack,
+      });
       const e = err as AppError;
       let msg = 'Inscription impossible. Réessayez.';
       switch (e?.code) {

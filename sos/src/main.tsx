@@ -8,9 +8,6 @@ import { AppProvider } from './contexts/AppContext';
 import { BrowserRouter } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 
-// Import the centralized i18n configuration
-import './config/i18n';
-
 // Initialize GTM/GA4 if user has already consented
 import { hasAnalyticsConsent } from './utils/ga4';
 import { initializeGTM } from './utils/gtm';

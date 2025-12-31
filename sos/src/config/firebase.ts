@@ -38,7 +38,16 @@ const firebaseConfig: FirebaseOptions = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID as string,
 };
 
-// Vérifications basiques d’env
+// Vérifications basiques d'env
+console.log("🔧 [Firebase] Configuration chargée:", {
+  apiKey: firebaseConfig.apiKey ? "✅ présent" : "❌ MANQUANT",
+  authDomain: firebaseConfig.authDomain,
+  projectId: firebaseConfig.projectId,
+  storageBucket: firebaseConfig.storageBucket,
+  messagingSenderId: firebaseConfig.messagingSenderId ? "✅ présent" : "❌ MANQUANT",
+  appId: firebaseConfig.appId ? "✅ présent" : "❌ MANQUANT",
+});
+
 if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
   console.error("❌ Variables d'environnement Firebase manquantes");
   throw new Error("Configuration Firebase incomplète");
@@ -57,12 +66,16 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 export const auth: Auth = getAuth(app);
 export const storage: FirebaseStorage = getStorage(app);
 
-// Firestore avec cache offline multi-onglets
+// Firestore - Configuration pour résister aux blocages (extensions, firewalls, etc.)
 export const db: Firestore = initializeFirestore(app, {
-  localCache: persistentLocalCache({
-    tabManager: persistentMultipleTabManager(),
-  }),
+  // Force long polling au lieu de WebChannel - plus résistant aux blocages
+  experimentalForceLongPolling: true,
+  // Pas de cache persistant pour éviter les blocages IndexedDB
+  // localCache: persistentLocalCache({
+  //   tabManager: persistentMultipleTabManager(),
+  // }),
 });
+console.log("🔧 [Firebase] Firestore initialisé avec experimentalForceLongPolling (anti-blocage)");
 
 // 🔇 Réduire le bruit Firestore (logs seulement si erreur)
 setLogLevel("error");

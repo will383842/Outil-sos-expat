@@ -5,7 +5,7 @@ import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../../config/firebase';
 import Layout from '../layout/Layout';
 import Button from '../common/Button';
-import { useTranslation } from 'react-i18next';
+import { useIntl } from 'react-intl';
 
 interface FirebaseErrorLike {
   code?: string;
@@ -19,8 +19,7 @@ interface FormState {
 }
 
 const AuthForm: React.FC = () => {
-  // i18n — appelé en haut, sans condition → pas d’erreur de hooks
-  const { t } = useTranslation();
+  const intl = useIntl();
 
   const [formState, setFormState] = useState<FormState>({
     isLoading: false,
@@ -32,13 +31,13 @@ const AuthForm: React.FC = () => {
 
   const errorMessages = useMemo(
     () => ({
-      'auth/invalid-email': t('auth.errors.invalidEmail'),
-      'auth/user-not-found': t('auth.errors.userNotFound'),
-      'auth/too-many-requests': t('auth.errors.tooManyRequests'),
-      'auth/network-request-failed': t('auth.errors.networkError'),
-      default: t('auth.errors.generic'),
+      'auth/invalid-email': intl.formatMessage({ id: 'auth.errors.invalidEmail' }),
+      'auth/user-not-found': intl.formatMessage({ id: 'auth.errors.userNotFound' }),
+      'auth/too-many-requests': intl.formatMessage({ id: 'auth.errors.tooManyRequests' }),
+      'auth/network-request-failed': intl.formatMessage({ id: 'auth.errors.networkError' }),
+      default: intl.formatMessage({ id: 'auth.errors.generic' }),
     }),
-    [t]
+    [intl]
   );
 
   const getErrorMessage = useCallback(
@@ -59,12 +58,12 @@ const AuthForm: React.FC = () => {
       const trimmed = email.trim();
 
       if (!trimmed) {
-        setFormState((prev) => ({ ...prev, error: t('auth.errors.emailRequired') }));
+        setFormState((prev) => ({ ...prev, error: intl.formatMessage({ id: 'auth.errors.emailRequired' }) }));
         return;
       }
 
       if (!isValidEmail(trimmed)) {
-        setFormState((prev) => ({ ...prev, error: t('auth.errors.emailInvalid') }));
+        setFormState((prev) => ({ ...prev, error: intl.formatMessage({ id: 'auth.errors.emailInvalid' }) }));
         return;
       }
 
@@ -82,7 +81,7 @@ const AuthForm: React.FC = () => {
         }));
       }
     },
-    [email, isValidEmail, getErrorMessage, t]
+    [email, isValidEmail, getErrorMessage, intl]
   );
 
   const ErrorDisplay: React.FC<{ error: string }> = ({ error }) => (
@@ -90,7 +89,7 @@ const AuthForm: React.FC = () => {
       <div className="flex">
         <AlertTriangle className="h-5 w-5 text-red-400 flex-shrink-0" aria-hidden="true" />
         <div className="ml-3">
-          <h3 className="text-sm font-medium text-red-800">{t('common.error')}</h3>
+          <h3 className="text-sm font-medium text-red-800">{intl.formatMessage({ id: 'common.error' })}</h3>
           <div className="mt-2 text-sm text-red-700">{error}</div>
         </div>
       </div>
@@ -102,10 +101,10 @@ const AuthForm: React.FC = () => {
       <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-8 px-4 sm:py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <h1 className="mt-6 text-center text-2xl sm:text-3xl font-bold text-gray-900">
-            {t('auth.passwordReset.title')}
+            {intl.formatMessage({ id: 'auth.passwordReset.title' })}
           </h1>
           <p className="mt-2 text-center text-sm text-gray-600">
-            {t('auth.passwordReset.subtitle')}
+            {intl.formatMessage({ id: 'auth.passwordReset.subtitle' })}
           </p>
         </div>
 
@@ -117,17 +116,17 @@ const AuthForm: React.FC = () => {
                   <CheckCircle className="h-6 w-6 text-green-600" aria-hidden="true" />
                 </div>
                 <h2 className="mt-2 text-lg font-medium text-gray-900">
-                  {t('auth.passwordReset.emailSent')}
+                  {intl.formatMessage({ id: 'auth.passwordReset.emailSent' })}
                 </h2>
                 <p className="mt-1 text-sm text-gray-500">
-                  {t('auth.passwordReset.emailSentDescription', { email })}
+                  {intl.formatMessage({ id: 'auth.passwordReset.emailSentDescription' }, { email })}
                 </p>
                 <div className="mt-6">
                   <Link
                     to="/login"
                     className="text-sm font-medium text-red-600 hover:text-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded"
                   >
-                    {t('auth.backToLogin')}
+                    {intl.formatMessage({ id: 'auth.backToLogin' })}
                   </Link>
                 </div>
               </div>
@@ -137,7 +136,7 @@ const AuthForm: React.FC = () => {
 
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                    {t('auth.email')}
+                    {intl.formatMessage({ id: 'auth.email' })}
                   </label>
                   <div className="mt-1 relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -160,7 +159,7 @@ const AuthForm: React.FC = () => {
                         }
                       }}
                       className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-red-500 focus:border-red-500 text-base sm:text-sm"
-                      placeholder={t('auth.emailPlaceholder')}
+                      placeholder={intl.formatMessage({ id: 'auth.emailPlaceholder' })}
                       disabled={formState.isLoading}
                     />
                   </div>
@@ -175,7 +174,7 @@ const AuthForm: React.FC = () => {
                     size="large"
                     className="bg-red-600 hover:bg-red-700 disabled:bg-gray-300"
                   >
-                    {t('auth.passwordReset.sendLink')}
+                    {intl.formatMessage({ id: 'auth.passwordReset.sendLink' })}
                   </Button>
                 </div>
 
@@ -185,7 +184,7 @@ const AuthForm: React.FC = () => {
                     className="flex items-center text-sm font-medium text-gray-600 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 rounded px-2 py-1"
                   >
                     <ArrowLeft className="mr-1 h-4 w-4" aria-hidden="true" />
-                    {t('auth.backToLogin')}
+                    {intl.formatMessage({ id: 'auth.backToLogin' })}
                   </Link>
                 </div>
               </form>
@@ -198,5 +197,3 @@ const AuthForm: React.FC = () => {
 };
 
 export default AuthForm;
-
-

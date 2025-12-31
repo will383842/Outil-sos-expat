@@ -1,4 +1,4 @@
-// src/components/home/ProfileCarousel.tsx - VERSION FINALE avec conversion des langues
+// src/components/home/ProfileCarousel.tsx - VERSION FINALE avec conversion des langues + REST API fallback
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
@@ -8,8 +8,11 @@ import { db } from '../../config/firebase';
 import { getDownloadURL, ref } from 'firebase/storage';
 import { storage } from '../../config/firebase';
 import { getCountryName } from '../../utils/formatters';
+import { getCollectionRest } from '../../utils/firestoreRestApi';
 import ModernProfileCard from './ModernProfileCard';
 import type { Provider } from '@/types/provider';
+
+const FIRESTORE_TIMEOUT_MS = 8000;
 
 const DEFAULT_AVATAR = '/default-avatar.png';
 
@@ -81,32 +84,17 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
     return selected;
   }, []);
 
-  // Chargement initial
+  // Chargement initial avec REST API fallback
   const loadInitialProviders = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      const sosProfilesQuery = query(
-        collection(db, 'sos_profiles'),
-        where('type', 'in', ['lawyer', 'expat']),
-        fsLimit(50)
-      );
-      const snapshot = await getDocs(sosProfilesQuery);
+      console.log("🏠 [ProfileCarousel] Tentative 1: REST API...");
 
-      if (snapshot.empty) {
-        setOnlineProviders([]);
-        setVisibleProviders([]);
-        return;
-      }
-
-      const items: Provider[] = [];
-
-      for (const d of snapshot.docs) {
+      // Fonction de transformation commune
+      const transformDoc = async (id: string, data: any): Promise<Provider | null> => {
         try {
-          const data = d.data() as any;
-          const id = d.id;
-
           // Extraction prénom/nom
           const firstName = (data.firstName || '').trim();
           const lastName = (data.lastName || '').trim();
@@ -116,25 +104,17 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
             'Expert';
 
           // Génération du nom public avec initiale
-          const publicDisplayName = firstName && lastName 
+          const publicDisplayName = firstName && lastName
             ? `${firstName} ${lastName.charAt(0)}.`
             : fullName;
-
-          console.log('🔍 ProfileCarousel - Nom transformé:', publicDisplayName, 'pour', fullName);
 
           const type: 'lawyer' | 'expat' | string =
             data.type === 'lawyer' || data.type === 'expat' ? data.type : 'expat';
 
-          // ✅ Extraction du code pays et conversion en nom lisible
+          // Extraction du code pays et conversion en nom lisible
           const countryCode: string =
             data.currentPresenceCountry || data.country || data.currentCountry || 'FR';
           const country: string = getCountryName(countryCode, language);
-
-          console.log('🌍 Pays converti:', {
-            code: countryCode,
-            name: country,
-            locale: language
-          });
 
           let avatar: string = data.profilePhoto || data.photoURL || data.avatar || '';
           if (avatar && avatar.startsWith('user_uploads/')) {
@@ -152,8 +132,8 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
             id,
             name: publicDisplayName,
             type,
-            country, // ✅ Pays converti en nom lisible
-            languages: Array.isArray(data.languages) ? data.languages : ['Français'], // Les langues étaient déjà correctes
+            country,
+            languages: Array.isArray(data.languages) ? data.languages : ['Français'],
             specialties: Array.isArray(data.specialties) ? data.specialties : [],
             rating: typeof data.rating === 'number' && data.rating >= 0 && data.rating <= 5 ? data.rating : 4.5,
             reviewCount: typeof data.reviewCount === 'number' && data.reviewCount >= 0 ? data.reviewCount : 0,
@@ -164,8 +144,6 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
             description: data.description || data.bio || '',
             price: typeof data.price === 'number' ? data.price : (type === 'lawyer' ? 49 : 19),
             duration: typeof data.duration === 'number' ? data.duration : (type === 'lawyer' ? 20 : 30),
-
-            // Flags pertinents
             isApproved: data.isApproved === true,
             isVisible: data.isVisible !== false,
             isBanned: data.isBanned === true,
@@ -175,19 +153,86 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
             __isAdmin: isAdmin,
           } as Provider & { __isAdmin?: boolean };
 
-          // Règle d'affichage: prestataires visibles même sans KYC complété (isApproved non requis)
+          // Règle d'affichage
           const hasValidData = provider.name.trim() !== '' && provider.country.trim() !== '';
           const notBanned = data.isBanned !== true;
           const notAdmin = !(provider as any).__isAdmin;
           const visible = data.isVisible !== false;
           const validType = provider.type === 'lawyer' || provider.type === 'expat';
 
-          const shouldInclude = hasValidData && notBanned && notAdmin && visible && validType;
-
-          if (shouldInclude) items.push(provider);
+          if (hasValidData && notBanned && notAdmin && visible && validType) {
+            return provider;
+          }
+          return null;
         } catch (e) {
-          console.error('❌ Erreur transformation document:', d.id, e);
+          console.error('❌ Erreur transformation document:', id, e);
+          return null;
         }
+      };
+
+      let items: Provider[] = [];
+
+      // Tentative 1: REST API
+      try {
+        const docs = await getCollectionRest<any>("sos_profiles", {
+          pageSize: 50,
+          timeoutMs: FIRESTORE_TIMEOUT_MS,
+        });
+
+        console.log(`✅ [ProfileCarousel] REST API: ${docs.length} documents reçus`);
+
+        const transformedPromises = docs
+          .filter(doc => doc.data.type === "lawyer" || doc.data.type === "expat")
+          .map(doc => transformDoc(doc.id, doc.data));
+
+        const transformed = await Promise.all(transformedPromises);
+        items = transformed.filter((p): p is Provider => p !== null);
+
+        if (items.length > 0) {
+          console.log(`✅ [ProfileCarousel] ${items.length} providers valides`);
+          setOnlineProviders(items.slice(0, pageSize));
+          setVisibleProviders(selectVisibleProviders(items));
+          return;
+        }
+      } catch (restError) {
+        console.error("❌ [ProfileCarousel] REST API échoué:", restError);
+      }
+
+      // Tentative 2: SDK Firestore
+      console.log("🏠 [ProfileCarousel] Tentative 2: SDK Firestore...");
+
+      try {
+        const sosProfilesQuery = query(
+          collection(db, 'sos_profiles'),
+          where('type', 'in', ['lawyer', 'expat']),
+          fsLimit(50)
+        );
+
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error("SDK timeout")), FIRESTORE_TIMEOUT_MS);
+        });
+
+        const snapshot = await Promise.race([
+          getDocs(sosProfilesQuery),
+          timeoutPromise
+        ]);
+
+        console.log(`✅ [ProfileCarousel] SDK: ${snapshot.size} documents reçus`);
+
+        if (!snapshot.empty) {
+          const transformedPromises = snapshot.docs.map(d => transformDoc(d.id, d.data()));
+          const transformed = await Promise.all(transformedPromises);
+          items = transformed.filter((p): p is Provider => p !== null);
+        }
+      } catch (sdkError) {
+        console.error("❌ [ProfileCarousel] SDK aussi échoué:", sdkError);
+      }
+
+      if (items.length === 0) {
+        console.warn("⚠️ [ProfileCarousel] Aucun provider trouvé");
+        setOnlineProviders([]);
+        setVisibleProviders([]);
+        return;
       }
 
       setOnlineProviders(items.slice(0, pageSize));
