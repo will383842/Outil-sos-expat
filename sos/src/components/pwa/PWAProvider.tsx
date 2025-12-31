@@ -12,7 +12,7 @@
 
 import React, { useEffect, useState, useCallback, createContext, useContext } from 'react';
 import { useIntl } from 'react-intl';
-import InstallBanner from '../common/InstallBanner';
+// InstallBanner est géré dans Layout.tsx
 import IOSInstallInstructions from '../common/IOSInstallInstructions';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { useBadging } from '@/hooks/useBadging';
@@ -145,8 +145,7 @@ const PWAProvider: React.FC<PWAProviderProps> = ({
     <PWAContext.Provider value={contextValue}>
       {children}
 
-      {/* Install Banner - Android/Desktop */}
-      {showInstallBanner && !installed && <InstallBanner />}
+      {/* Install Banner géré dans Layout.tsx pour éviter double rendu */}
 
       {/* iOS Install Instructions */}
       {showIOSPrompt && (

@@ -32,7 +32,7 @@ const isStandalone = (): boolean => {
 };
 
 const STORAGE_KEY = 'ios_install_dismissed_at';
-const DISMISS_DAYS = 14;
+const DISMISS_DAYS = 1; // 24 heures
 
 const IOSInstallInstructions: React.FC<IOSInstallInstructionsProps> = ({
   onClose,

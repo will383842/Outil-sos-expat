@@ -716,12 +716,16 @@ const Login: React.FC = () => {
   const handleSubmit = useCallback(
     async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      
+
+      // Protection contre le double-clic
+      if (localLoading) return;
+
       if (!validateForm()) {
         setSubmitAttempts((prev) => prev + 1);
         return;
       }
 
+      setLocalLoading(true);
       try {
         const persistenceType = formData.rememberMe 
           ? browserLocalPersistence 
@@ -740,6 +744,7 @@ const Login: React.FC = () => {
       } catch (loginError) {
         console.error("Login error:", loginError);
         setSubmitAttempts((prev) => prev + 1);
+        setLocalLoading(false);
 
         // Détecter si l'erreur est causée par une extension bloquante
         if (isExtensionBlockedError(loginError)) {
@@ -747,7 +752,7 @@ const Login: React.FC = () => {
         }
       }
     },
-    [formData, validateForm, login]
+    [formData, validateForm, login, localLoading]
   );
 
   // Fonction de retry après alerte extension

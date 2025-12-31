@@ -1383,6 +1383,9 @@ const BookingRequest: React.FC = () => {
   const [hasLanguageMatchRealTime, setHasLanguageMatchRealTime] =
     useState(true);
   const [formError, setFormError] = useState("");
+  // P1-3 FIX: État pour le warning de langue au lieu du blocage
+  const [showLangMismatchWarning, setShowLangMismatchWarning] = useState(false);
+  const [langMismatchAcknowledged, setLangMismatchAcknowledged] = useState(false);
 
   // Refs pour scroll ciblé (en cas d'erreur globale)
   const refFirstName = useRef<HTMLDivElement | null>(null);
@@ -1793,8 +1796,9 @@ const BookingRequest: React.FC = () => {
     console.log(data, "data === in onSubmit");
     // return;
 
-    // blocage si pas de langue partagée (on log)
-    if (!hasLanguageMatchRealTime) {
+    // P1-3 FIX: Warning au lieu de blocage si pas de langue partagée
+    // On log dans tous les cas, mais on laisse l'utilisateur continuer s'il confirme
+    if (!hasLanguageMatchRealTime && !langMismatchAcknowledged) {
       try {
         await logLanguageMismatch({
           clientLanguages: data.clientLanguages,
@@ -1816,8 +1820,8 @@ const BookingRequest: React.FC = () => {
       } catch (error) {
         console.warn("logLanguageMismatch failed", error);
       }
-      setFormError(t.validators.langMismatch);
-      scrollToFirstIncomplete();
+      // Afficher le warning au lieu de bloquer
+      setShowLangMismatchWarning(true);
       return;
     }
 
@@ -2201,6 +2205,7 @@ const BookingRequest: React.FC = () => {
                           placeholder={intl.formatMessage({
                             id: "bookingRequest.placeholders.firstName",
                           })}
+                          maxLength={50}
                         />
                       )}
                     />
@@ -2241,11 +2246,10 @@ const BookingRequest: React.FC = () => {
                             field.onChange(sanitizeText(e.target.value))
                           }
                           className={inputClass(inputHas("lastName"))}
-                          // placeholder={t.placeholders.lastName}
-
                           placeholder={intl.formatMessage({
                             id: "bookingRequest.placeholders.lastName",
                           })}
+                          maxLength={50}
                         />
                       )}
                     />
@@ -2422,16 +2426,15 @@ const BookingRequest: React.FC = () => {
                           field.onChange(sanitizeText(e.target.value))
                         }
                         className={inputClass(Boolean(errors.title))}
-                        // placeholder={t.placeholders.title}
                         placeholder={intl.formatMessage({
                           id: "bookingRequest.placeholders.title",
                         })}
+                        maxLength={150}
                       />
                     )}
                   />
                   <div className="mt-1 text-xs text-gray-500">
                     💡
-                    {/* {t.hints.title} */}
                     {intl.formatMessage({ id: "bookingRequest.hints.title" })}
                   </div>
                   <FieldSuccess
@@ -2475,16 +2478,15 @@ const BookingRequest: React.FC = () => {
                         rows={5}
                         onChange={(e) => field.onChange(e.target.value)}
                         className={`resize-none ${inputClass(Boolean(errors.description))}`}
-                        // placeholder={t.placeholders.description}
                         placeholder={intl.formatMessage({
                           id: "bookingRequest.placeholders.description",
                         })}
+                        maxLength={2000}
                       />
                     )}
                   />
                   <div className="mt-1 text-xs text-gray-500">
                     🔎
-                    {/* {t.hints.desc} */}
                     {intl.formatMessage({ id: "bookingRequest.hints.desc" })}
                   </div>
                   <FieldSuccess
@@ -2813,7 +2815,7 @@ const BookingRequest: React.FC = () => {
                           type="checkbox"
                           checked={field.value}
                           onChange={(e) => field.onChange(e.target.checked)}
-                          className="h-5 w-5 mt-0.5 rounded border-gray-300 text-red-600 focus:ring-red-500 flex-shrink-0"
+                          className="h-6 w-6 min-w-[24px] mt-0.5 rounded border-gray-300 text-red-600 focus:ring-red-500 flex-shrink-0 cursor-pointer"
                           required
                         />
                       )}
@@ -3041,6 +3043,51 @@ const BookingRequest: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* P1-3 FIX: Modal de warning pour langue non partagée */}
+      {showLangMismatchWarning && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
+                <svg className="w-6 h-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                {intl.formatMessage({ id: "bookingRequest.langWarning.title" }, { defaultMessage: "Attention - Langues différentes" })}
+              </h3>
+            </div>
+            <p className="text-gray-600 mb-6">
+              {intl.formatMessage(
+                { id: "bookingRequest.langWarning.message" },
+                { defaultMessage: "Vous n'avez pas de langue en commun avec ce prestataire. La communication pourrait être difficile. Voulez-vous continuer ?" }
+              )}
+            </p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowLangMismatchWarning(false)}
+                className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+              >
+                {intl.formatMessage({ id: "common.cancel" }, { defaultMessage: "Annuler" })}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setLangMismatchAcknowledged(true);
+                  setShowLangMismatchWarning(false);
+                  // Re-soumettre le formulaire
+                  handleSubmit(onSubmit)();
+                }}
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl font-medium hover:from-red-600 hover:to-orange-600 transition-colors"
+              >
+                {intl.formatMessage({ id: "bookingRequest.langWarning.continue" }, { defaultMessage: "Continuer quand même" })}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 };

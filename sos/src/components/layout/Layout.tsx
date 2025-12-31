@@ -199,7 +199,7 @@ const Layout: React.FC<LayoutProps> = ({
         bottomPx={24}                             // aligné avec bottom-6
         zIndexClass="z-50"
         gradientClass="from-violet-600 to-fuchsia-600"
-        closeForDays={30}                         // persistance après fermeture
+        closeForDays={1}                          // 24 heures après fermeture
       />
       </div>
     </>

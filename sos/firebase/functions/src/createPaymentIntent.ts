@@ -255,6 +255,26 @@ async function validateBusinessLogic(
     if (providerData.status === 'suspended' || providerData.status === 'banned') {
       return { valid: false, error: 'Prestataire non disponible' };
     }
+
+    // P0-2 FIX: Vérifier la disponibilité du provider AVANT le paiement
+    // Cela évite les paiements pour des providers qui sont offline ou indisponibles
+    const providerProfileDoc = await db.collection('sos_profiles').doc(data.providerId).get();
+    if (providerProfileDoc.exists) {
+      const profileData = providerProfileDoc.data();
+      // Vérifier si le provider est en ligne et disponible
+      if (profileData?.isOnline === false) {
+        logger.warn('[validateBusinessLogic] Provider is offline', { providerId: data.providerId });
+        return { valid: false, error: 'Le prestataire n\'est pas disponible actuellement. Veuillez réessayer plus tard.' };
+      }
+      if (profileData?.availability === 'offline' || profileData?.availability === 'busy') {
+        logger.warn('[validateBusinessLogic] Provider is not available', {
+          providerId: data.providerId,
+          availability: profileData?.availability,
+        });
+        return { valid: false, error: 'Le prestataire est actuellement occupé ou hors ligne.' };
+      }
+    }
+
     if (!isProduction) return { valid: true };
 
     // Récupération dynamique des prix depuis Firestore

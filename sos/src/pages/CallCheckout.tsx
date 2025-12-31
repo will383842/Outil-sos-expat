@@ -1181,6 +1181,12 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
       (() => Promise<void>) | null
     >(null);
 
+    // P0-1 FIX: callSessionId stable généré UNE SEULE FOIS pour garantir l'idempotence
+    // NE PAS utiliser Date.now() dans actuallySubmitPayment car cela crée une nouvelle clé à chaque retry
+    const [stableCallSessionId] = useState(() =>
+      `call_session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+    );
+
     const { watch, setError } = useForm<PhoneFormValues>({
       defaultValues: {
         clientPhone: service?.clientPhone || "",
@@ -1445,8 +1451,19 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
         setIsProcessing(true);
         validatePaymentData();
 
-        // ✅ Generate callSessionId FIRST
-        const callSessionId = `call_session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+        // P0-1 FIX: Utiliser le callSessionId STABLE (généré une seule fois)
+        // pour garantir l'idempotence en cas de retry
+        const callSessionId = stableCallSessionId;
+
+        // P0-3 FIX: Valider le téléphone AVANT le paiement (pas après)
+        const clientPhoneForValidation = toE164(watch("clientPhone"));
+        if (!/^\+[1-9]\d{8,14}$/.test(clientPhoneForValidation)) {
+          setError("clientPhone", {
+            type: "validate",
+            message: t("err.invalidPhone"),
+          });
+          throw new Error(t("err.invalidPhone"));
+        }
 
         const createPaymentIntent: HttpsCallable<
           PaymentIntentData,
@@ -1536,10 +1553,26 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
         console.log("Status in stripe : ", status);
 
         // P0 FIX: Gérer correctement 3D Secure (requires_action)
+        // P1-1 FIX: Timeout de 10 minutes pour éviter le blocage UI
         if (status === "requires_action" && paymentIntent.client_secret && stripe) {
           console.log("🔐 3D Secure authentication required, handling...");
+
+          const THREE_DS_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+
+          const handleCardActionWithTimeout = async () => {
+            const timeoutPromise = new Promise<never>((_, reject) => {
+              setTimeout(() => {
+                reject(new Error(t("err.3dsTimeout") || "L'authentification 3D Secure a expiré. Veuillez réessayer."));
+              }, THREE_DS_TIMEOUT_MS);
+            });
+
+            const actionPromise = stripe.handleCardAction(paymentIntent.client_secret!);
+
+            return Promise.race([actionPromise, timeoutPromise]);
+          };
+
           const { error: confirmError, paymentIntent: confirmedIntent } =
-            await stripe.handleCardAction(paymentIntent.client_secret);
+            await handleCardActionWithTimeout();
 
           if (confirmError) {
             console.error("3D Secure failed:", confirmError);
@@ -1561,10 +1594,8 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           throw new Error(`${t("err.unexpectedStatus")}: ${status}`);
         }
 
-        const clientPhoneE164 = toE164(
-          // user?.phone || watch("clientPhone") || ""
-          watch("clientPhone")
-        );
+        // P0-3 FIX: clientPhone déjà validé avant le paiement
+        const clientPhoneE164 = clientPhoneForValidation;
         const providerPhoneE164 = toE164(
           provider.phoneNumber || provider.phone || ""
         );
@@ -1579,22 +1610,16 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           providerPhoneNumber: provider.phoneNumber,
         });
 
-        if (!/^\+[1-9]\d{8,14}$/.test(clientPhoneE164)) {
-          console.warn("Invalid client phone:", clientPhoneE164);
-          setError("clientPhone", {
-            type: "validate",
-            message: t("err.invalidPhone"),
-          });
-        }
-
+        // Provider phone warning (on ne peut pas bloquer car c'est hors de notre contrôle)
         if (!/^\+[1-9]\d{8,14}$/.test(providerPhoneE164)) {
-          console.warn("Invalid provider phone:", providerPhoneE164);
+          console.warn("⚠️ Invalid provider phone - call scheduling may fail:", providerPhoneE164);
         }
 
         let callStatus: "scheduled" | "skipped" = "skipped";
         let callId: string | undefined;
 
         // Planifier l'appel si les numéros sont valides
+        // Note: clientPhoneE164 est TOUJOURS valide ici grâce à la validation P0-3
         if (
           /^\+[1-9]\d{8,14}$/.test(clientPhoneE164) &&
           /^\+[1-9]\d{8,14}$/.test(providerPhoneE164)
@@ -1694,6 +1719,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
     }, [
       setIsProcessing,
       validatePaymentData,
+      stableCallSessionId, // P0-1 FIX: callSessionId stable
       adminPricing.totalAmount,
       adminPricing.connectionFeeAmount,
       adminPricing.providerAmount,

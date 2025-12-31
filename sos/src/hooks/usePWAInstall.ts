@@ -7,7 +7,7 @@ type BIPEvent = Event & {
 };
 
 const LS_KEY = 'install_banner_closed_at';
-const CLOSE_DAYS = 30;
+const CLOSE_DAYS = 1; // 24 heures
 
 const isStandalone = () =>
   window.matchMedia?.('(display-mode: standalone)').matches ||

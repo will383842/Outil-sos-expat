@@ -614,13 +614,13 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     // et afficher une erreur à l'utilisateur plutôt que de corrompre son rôle
     timeoutId = setTimeout(() => {
       if (!firstSnapArrived.current && !cancelled) {
-        console.warn("🔐 [AuthContext] onSnapshot timeout (15s) - Firestore trop lent");
+        console.warn("🔐 [AuthContext] onSnapshot timeout (8s) - Firestore trop lent");
         // Afficher l'erreur ET arrêter le spinner pour que l'utilisateur puisse agir
         setError('Connexion lente au serveur. Veuillez rafraîchir la page.');
         setIsLoading(false); // CRITIQUE: Arrêter le spinner pour éviter UI bloquée
         // Le listener onSnapshot peut encore recevoir les données plus tard
       }
-    }, 15000);
+    }, 8000);
 
     // Un seul listener qui gère TOUT : données initiales + mises à jour temps réel
     unsubUser = onSnapshot(
@@ -1077,6 +1077,28 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     })();
   }, [deviceInfo]);
 
+  // P1-2 FIX: Écouter les événements de logout des autres onglets
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      // Détecter le logout depuis un autre onglet
+      if (event.key === 'sos_logout_event' && event.newValue) {
+        console.log('🔐 [Auth] Logout détecté depuis un autre onglet, déconnexion...');
+        // Nettoyer les states sans re-signaler (éviter boucle infinie)
+        signingOutRef.current = true;
+        setUser(null);
+        setFirebaseUser(null);
+        setAuthUser(null);
+        setError(null);
+        // Firebase signOut en arrière-plan
+        firebaseSignOut(auth).catch(() => { /* ignoré */ });
+        signingOutRef.current = false;
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   // REGISTER
   const register = useCallback(async (userData: Partial<User>, password: string): Promise<void> => {
     console.log("🔐 [AuthContext] register() appelé avec:", {
@@ -1277,6 +1299,15 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
     // Log en arrière-plan (ne pas attendre)
     logAuthEvent('logout', { userId: uid, role, deviceInfo }).catch(() => { /* ignoré */ });
+
+    // P1-2 FIX: Signaler le logout aux autres onglets via localStorage
+    try {
+      localStorage.setItem('sos_logout_event', Date.now().toString());
+      // Nettoyer immédiatement pour permettre de futurs logouts
+      setTimeout(() => localStorage.removeItem('sos_logout_event'), 100);
+    } catch {
+      // Ignorer si localStorage n'est pas disponible
+    }
 
     signingOutRef.current = false;
     console.log('✅ [Auth] logout() terminé');

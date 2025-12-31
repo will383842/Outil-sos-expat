@@ -729,24 +729,26 @@ const matchCountry = (
   return allPossibleNames.includes(providerCountryLower);
 };
 
-// Vérifie si les langues du provider correspondent au filtre
+// Vérifie si les langues du provider correspondent au filtre (supporte multi-sélection)
 const matchLanguage = (
   providerLangs: string[],
-  selectedCode: string,
+  selectedCodes: string[], // Changé: array de codes au lieu d'un seul
   custom: string
 ): boolean => {
-  if (selectedCode === "all") return true;
+  // Si aucune langue sélectionnée ou "all", on montre tout
+  if (!selectedCodes || selectedCodes.length === 0 || selectedCodes.includes("all")) return true;
   if (!providerLangs || providerLangs.length === 0) return false;
-  
+
   // Convertir les langues du provider en codes normalisés
   const providerLangCodes = convertLanguageNamesToCodes(providerLangs).map(c => c.toLowerCase());
-  
-  if (selectedCode === "Autre") {
+
+  // Si "Autre" est sélectionné, chercher avec le texte custom
+  if (selectedCodes.includes("Autre")) {
     if (!custom) return true;
     const needle = custom.toLowerCase().trim();
-    
+
     // Chercher dans les codes et les labels traduits
-    return providerLangCodes.some(code => {
+    const matchesCustom = providerLangCodes.some(code => {
       // Vérifier le code directement
       if (code.includes(needle)) return true;
 
@@ -754,20 +756,23 @@ const matchLanguage = (
       const normalizedCode = code === 'ch' ? 'zh' : code;
       const lang = languagesData.find(l => l.code.toLowerCase() === normalizedCode);
       if (!lang) return false;
-      
+
       // Vérifier tous les labels dans toutes les langues via l'objet labels
       if (lang.labels) {
         const allLabels = Object.values(lang.labels).filter(Boolean).map(l => l?.toLowerCase());
         return allLabels.some(l => l?.includes(needle));
       }
-      
+
       return false;
     });
+    if (matchesCustom) return true;
   }
-  
-  // Recherche par code de langue sélectionné
-  const targetCode = selectedCode.toLowerCase();
-  return providerLangCodes.includes(targetCode);
+
+  // Recherche par codes de langues sélectionnés - le provider doit parler AU MOINS UNE des langues
+  const targetCodes = selectedCodes.filter(c => c !== "Autre").map(c => c.toLowerCase());
+  if (targetCodes.length === 0) return true;
+
+  return targetCodes.some(targetCode => providerLangCodes.includes(targetCode));
 };
 
 /* =========================
@@ -1798,7 +1803,7 @@ const FilterBottomSheet: React.FC<{
   setSelectedType: (v: "all" | "lawyer" | "expat") => void;
   selectedCountryCode: string;
   handleCountryChange: (v: string) => void;
-  selectedLanguageCode: string;
+  selectedLanguageCodes: string[]; // Multi-langue support
   handleLanguageChange: (v: string) => void;
   statusFilter: string;
   setStatusFilter: (v: "all" | "online" | "offline") => void;
@@ -1815,7 +1820,7 @@ const FilterBottomSheet: React.FC<{
   intl: ReturnType<typeof useIntl>;
 }> = ({
   isOpen, onClose, selectedType, setSelectedType,
-  selectedCountryCode, handleCountryChange, selectedLanguageCode,
+  selectedCountryCode, handleCountryChange, selectedLanguageCodes,
   handleLanguageChange, statusFilter, setStatusFilter, resetFilters,
   countryOptions, languageOptions, customCountry, setCustomCountry,
   customLanguage, setCustomLanguage, showCustomCountry, showCustomLanguage,
@@ -1920,14 +1925,17 @@ const FilterBottomSheet: React.FC<{
             )}
           </div>
 
-          {/* Language */}
+          {/* Language (multi-select from wizard) */}
           <div className="space-y-2">
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
               <FormattedMessage id="sosCall.filters.language.label" />
+              {selectedLanguageCodes.length > 1 && (
+                <span className="ml-1 text-red-400">({selectedLanguageCodes.length})</span>
+              )}
             </label>
             <div className="relative">
               <select
-                value={selectedLanguageCode}
+                value={selectedLanguageCodes.length === 0 ? "all" : selectedLanguageCodes[0]}
                 onChange={(e) => handleLanguageChange(e.target.value)}
                 className="w-full px-4 py-3.5 bg-white/5 text-white border-2 border-white/10 rounded-2xl focus:outline-none focus:border-red-400/50 transition-all appearance-none text-sm min-h-[48px]"
               >
@@ -1939,6 +1947,22 @@ const FilterBottomSheet: React.FC<{
               </select>
               <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
             </div>
+            {/* Show selected languages as chips if multi-select */}
+            {selectedLanguageCodes.length > 1 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {selectedLanguageCodes.map(code => {
+                  const langLabel = languageOptions.find(l => l.code === code)?.label || code;
+                  return (
+                    <span
+                      key={code}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-500/20 text-purple-300 rounded-full text-xs font-medium"
+                    >
+                      {langLabel}
+                    </span>
+                  );
+                })}
+              </div>
+            )}
             {showCustomLanguage && (
               <input
                 type="text"
@@ -1983,6 +2007,9 @@ const SOSCall: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Protection contre le double-clic sur navigation
+  const isNavigatingRef = useRef(false);
+
   // États filtres
   const [selectedType, setSelectedType] = useState<"all" | "lawyer" | "expat">(
     searchParams.get("type") === "lawyer"
@@ -1992,7 +2019,7 @@ const SOSCall: React.FC = () => {
         : "all"
   );
   const [selectedCountryCode, setSelectedCountryCode] = useState<string>("all");
-  const [selectedLanguageCode, setSelectedLanguageCode] = useState<string>("all");
+  const [selectedLanguageCodes, setSelectedLanguageCodes] = useState<string[]>([]); // Multi-langue support
   const [customCountry, setCustomCountry] = useState<string>("");
   const [customLanguage, setCustomLanguage] = useState<string>("");
   const [showCustomCountry, setShowCustomCountry] = useState<boolean>(false);
@@ -2051,8 +2078,8 @@ const SOSCall: React.FC = () => {
     type: "all" | "lawyer" | "expat";
   }) => {
     setSelectedCountryCode(filters.country);
-    // Use first selected language for main filter (or "all" if none)
-    setSelectedLanguageCode(filters.languages.length > 0 ? filters.languages[0] : "all");
+    // Utiliser TOUTES les langues sélectionnées pour le filtrage
+    setSelectedLanguageCodes(filters.languages.length > 0 ? filters.languages : []);
     setSelectedType(filters.type);
     setShowWizard(false);
     setWizardCompleted(true);
@@ -2436,10 +2463,10 @@ const SOSCall: React.FC = () => {
         customCountry
       );
       
-      // Filtre langue avec la nouvelle fonction
+      // Filtre langue avec la nouvelle fonction (multi-langues)
       const matchesLanguageFilter = matchLanguage(
         provider.languages,
-        selectedLanguageCode,
+        selectedLanguageCodes,
         customLanguage
       );
 
@@ -2641,7 +2668,7 @@ const SOSCall: React.FC = () => {
     realProviders,
     selectedType,
     selectedCountryCode,
-    selectedLanguageCode,
+    selectedLanguageCodes,
     customCountry,
     customLanguage,
     statusFilter,
@@ -2665,8 +2692,27 @@ const SOSCall: React.FC = () => {
     if (value !== "Autre") setCustomCountry("");
   }, []);
 
+  // Handler pour ajout/suppression de langue (multi-select)
+  const handleLanguageToggle = useCallback((code: string) => {
+    setSelectedLanguageCodes(prev => {
+      if (prev.includes(code)) {
+        return prev.filter(c => c !== code);
+      } else {
+        return [...prev, code];
+      }
+    });
+    if (code === "Autre") {
+      setShowCustomLanguage(prev => !prev);
+    }
+  }, []);
+
+  // Handler pour sélection unique (compatibilité UI existante)
   const handleLanguageChange = useCallback((value: string) => {
-    setSelectedLanguageCode(value);
+    if (value === "all") {
+      setSelectedLanguageCodes([]);
+    } else {
+      setSelectedLanguageCodes([value]);
+    }
     setShowCustomLanguage(value === "Autre");
     if (value !== "Autre") setCustomLanguage("");
   }, []);
@@ -2674,7 +2720,7 @@ const SOSCall: React.FC = () => {
   const resetFilters = useCallback(() => {
     setSelectedType("all");
     setSelectedCountryCode("all");
-    setSelectedLanguageCode("all");
+    setSelectedLanguageCodes([]);
     setCustomCountry("");
     setCustomLanguage("");
     setShowCustomCountry(false);
@@ -2684,12 +2730,16 @@ const SOSCall: React.FC = () => {
 
   // Navigation
   const handleProviderClick = useCallback((provider: Provider) => {
+    // Protection contre le double-clic
+    if (isNavigatingRef.current) return;
+
     const typeSlug = provider.type === "lawyer" ? "avocat" : "expatrie";
     const countrySlug = slugify(provider.country);
     const nameSlug = slugify(provider.name);
     const seoUrl = `/${typeSlug}/${countrySlug}/francais/${nameSlug}-${provider.id}`;
 
     if (location.pathname !== seoUrl) {
+      isNavigatingRef.current = true;
       try {
         sessionStorage.setItem("selectedProvider", JSON.stringify(provider));
       } catch {
@@ -2698,6 +2748,10 @@ const SOSCall: React.FC = () => {
       navigate(seoUrl, {
         state: { selectedProvider: provider, navigationSource: "sos_call" },
       });
+      // Reset après un court délai pour permettre de nouvelles navigations si l'utilisateur revient
+      setTimeout(() => {
+        isNavigatingRef.current = false;
+      }, 500);
     }
   }, [location.pathname, navigate]);
 
@@ -2716,18 +2770,18 @@ const SOSCall: React.FC = () => {
     let count = 0;
     if (selectedType !== "all") count++;
     if (selectedCountryCode !== "all") count++;
-    if (selectedLanguageCode !== "all") count++;
+    if (selectedLanguageCodes.length > 0) count += selectedLanguageCodes.length; // Compte chaque langue
     if (statusFilter !== "all") count++;
     return count;
-  }, [selectedType, selectedCountryCode, selectedLanguageCode, statusFilter]);
+  }, [selectedType, selectedCountryCode, selectedLanguageCodes, statusFilter]);
 
   // Compteur de filtres avancés (Pays + Langue seulement, pour le bouton Filtres)
   const advancedFiltersCount = useMemo(() => {
     let count = 0;
     if (selectedCountryCode !== "all") count++;
-    if (selectedLanguageCode !== "all") count++;
+    if (selectedLanguageCodes.length > 0) count++;
     return count;
-  }, [selectedCountryCode, selectedLanguageCode]);
+  }, [selectedCountryCode, selectedLanguageCodes]);
 
   // ========================================
   // 🔍 SEO - Génération des données structurées
@@ -3227,19 +3281,21 @@ const SOSCall: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Langue */}
+                  {/* Langue (affiche multi-sélection du wizard ou permet sélection unique) */}
                   <div className="space-y-1">
                     <label
                       htmlFor="language-filter"
                       className="block text-xs font-semibold text-gray-300 uppercase tracking-wide"
                     >
-                      {/* Langue */}
                       <FormattedMessage id="language.label" />
+                      {selectedLanguageCodes.length > 1 && (
+                        <span className="ml-1 text-red-400">({selectedLanguageCodes.length})</span>
+                      )}
                     </label>
                     <div className="relative">
                       <select
                         id="language-filter"
-                        value={selectedLanguageCode}
+                        value={selectedLanguageCodes.length === 0 ? "all" : selectedLanguageCodes[0]}
                         onChange={(e) => handleLanguageChange(e.target.value)}
                         className="
                           w-full px-3 py-2
@@ -3250,7 +3306,6 @@ const SOSCall: React.FC = () => {
                           transition-all appearance-none text-sm
                         "
                       >
-                        {/* <option value="all">Toutes</option> */}
                         <option value="all">
                           <FormattedMessage id="language.all" />
                         </option>
@@ -3262,13 +3317,30 @@ const SOSCall: React.FC = () => {
                         <option value="Autre">
                           <FormattedMessage id="language.other" />
                         </option>
-                        {/* <option value="Autre">Autre</option> */}
                       </select>
                       <ChevronDown
                         className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-300 pointer-events-none"
                         aria-hidden="true"
                       />
                     </div>
+                    {/* Afficher les langues sélectionnées comme chips si multi-select */}
+                    {selectedLanguageCodes.length > 1 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {selectedLanguageCodes.map(code => {
+                          const langLabel = languageOptions.find(l => l.code === code)?.label || code;
+                          return (
+                            <span
+                              key={code}
+                              className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-500/20 text-red-300 rounded-full text-xs cursor-pointer hover:bg-red-500/30"
+                              onClick={() => handleLanguageToggle(code)}
+                            >
+                              {langLabel}
+                              <X className="w-3 h-3" />
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
                     {showCustomLanguage && (
                       <input
                         type="text"
@@ -3460,18 +3532,20 @@ const SOSCall: React.FC = () => {
                       <X className="w-3.5 h-3.5" />
                     </button>
                   )}
-                  {selectedLanguageCode !== "all" && (
+                  {/* Chips pour chaque langue sélectionnée */}
+                  {selectedLanguageCodes.map(code => (
                     <button
-                      onClick={() => setSelectedLanguageCode("all")}
+                      key={code}
+                      onClick={() => handleLanguageToggle(code)}
                       className="flex-shrink-0 px-3 py-2.5 rounded-full text-sm font-medium bg-purple-500/20 text-purple-300 border border-purple-400/30 min-h-[44px] flex items-center gap-2 active:scale-95"
                     >
                       <Globe className="w-3.5 h-3.5" />
                       <span className="max-w-[100px] truncate">
-                        {languageOptions.find(l => l.code === selectedLanguageCode)?.label || selectedLanguageCode}
+                        {languageOptions.find(l => l.code === code)?.label || code}
                       </span>
                       <X className="w-3.5 h-3.5" />
                     </button>
-                  )}
+                  ))}
                   
                   {/* Spacer pour padding droit */}
                   <div className="flex-shrink-0 w-4" aria-hidden="true" />
@@ -3781,7 +3855,7 @@ const SOSCall: React.FC = () => {
         setSelectedType={setSelectedType}
         selectedCountryCode={selectedCountryCode}
         handleCountryChange={handleCountryChange}
-        selectedLanguageCode={selectedLanguageCode}
+        selectedLanguageCodes={selectedLanguageCodes}
         handleLanguageChange={handleLanguageChange}
         statusFilter={statusFilter}
         setStatusFilter={setStatusFilter}

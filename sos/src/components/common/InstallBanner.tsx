@@ -1,5 +1,5 @@
 // src/components/common/InstallBanner.tsx
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { X, Download } from 'lucide-react';
 import { useIntl } from 'react-intl';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
@@ -29,16 +29,15 @@ const InstallBanner: React.FC<InstallBannerProps> = ({
   bottomPx = 24,                             // bottom-6
   zIndexClass = 'z-50',
   gradientClass = 'from-violet-600 to-fuchsia-600',
-  closeForDays = 30,
+  closeForDays = 1, // 24 heures
   className = '',
 }) => {
   const intl = useIntl();
-  const { canPrompt: canInstall, installed: isInstalled, install, closeForAWhile } = usePWAInstall();
+  const { canPrompt, shouldShowBanner, install, closeForAWhile } = usePWAInstall();
   const [closedNow, setClosedNow] = useState(false);
 
-  const shouldShow = useMemo(() => {
-    return canInstall && !isInstalled && !closedNow;
-  }, [canInstall, isInstalled, closedNow]);
+  // Utilise shouldShowBanner du hook (vérifie localStorage) + closedNow pour masquage immédiat
+  const shouldShow = canPrompt && shouldShowBanner && !closedNow;
 
   if (!shouldShow) return null;
 

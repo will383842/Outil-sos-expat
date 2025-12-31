@@ -187,11 +187,13 @@ export async function getPricingConfig(): Promise<PricingConfig> {
 
     if (!isValidPricingConfig(normalized)) {
       console.warn("⚠️ [pricingService] Config invalide après normalisation! Utilisation fallback");
+      // Cast explicite pour éviter l'erreur TypeScript "never" après le type guard
+      const debugData = normalized as Partial<PricingConfig>;
       console.log("📄 [pricingService] Validation échouée pour:", {
-        lawyerEur: isValidServiceConfig(normalized?.lawyer?.eur),
-        lawyerUsd: isValidServiceConfig(normalized?.lawyer?.usd),
-        expatEur: isValidServiceConfig(normalized?.expat?.eur),
-        expatUsd: isValidServiceConfig(normalized?.expat?.usd),
+        lawyerEur: isValidServiceConfig(debugData?.lawyer?.eur),
+        lawyerUsd: isValidServiceConfig(debugData?.lawyer?.usd),
+        expatEur: isValidServiceConfig(debugData?.expat?.eur),
+        expatUsd: isValidServiceConfig(debugData?.expat?.usd),
       });
       _cache = { data: DEFAULT_FALLBACK, ts: now };
       return DEFAULT_FALLBACK;
