@@ -71,7 +71,7 @@ export const storage: FirebaseStorage = getStorage(app);
 // Si tu as des problèmes de blocage par extension/firewall, réactive-le temporairement
 export const db: Firestore = initializeFirestore(app, {
   // Cache persistant pour des performances optimales
-  localCache: persistentLocalCache({
+  localCache: persistentLocalCache({ cacheSizeBytes: 50 * 1024 * 1024, // 50MB max
     tabManager: persistentMultipleTabManager(),
   }),
 });
