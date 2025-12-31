@@ -789,6 +789,7 @@ filtered = filtered.filter(p => {
 
   // AI-optimized star rating component
   const StarRating = React.memo(({ rating, reviewCount }: { rating: number; reviewCount: number }) => {
+    const intl = useIntl();
     const stars = useMemo(() => {
       const result = [];
       const fullStars = Math.floor(rating);
@@ -834,14 +835,14 @@ filtered = filtered.filter(p => {
     }, [rating]);
 
     return (
-      <div 
-        role="img" 
-        aria-label={`Note ${rating.toFixed(1)} sur 5 basée sur ${reviewCount} avis`}
+      <div
+        role="img"
+        aria-label={intl.formatMessage({ id: 'card.aria.ratingWithReviews' }, { rating: rating.toFixed(1), count: reviewCount })}
         className="flex items-center gap-1"
       >
         {stars}
         <span className="sr-only">
-          {rating.toFixed(1)} étoiles sur 5, {reviewCount} avis
+          {intl.formatMessage({ id: 'card.aria.starsDescription' }, { rating: rating.toFixed(1), count: reviewCount })}
         </span>
       </div>
     );

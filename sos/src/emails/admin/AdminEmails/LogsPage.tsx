@@ -1,7 +1,7 @@
 // LogsPage.tsx
 import React, { useEffect, useState } from 'react';
 import { db } from '@/config/firebase';
-import { collection, getDocs, orderBy, query } from 'firebase/firestore';
+import { collection, getDocs, orderBy, query, limit } from 'firebase/firestore';
 import { format } from 'date-fns';
 
 interface EmailLog {
@@ -18,7 +18,7 @@ const LogsPage: React.FC = () => {
 
   useEffect(() => {
     const fetchLogs = async () => {
-      const snapshot = await getDocs(query(collection(db, 'email_logs'), orderBy('timestamp', 'desc')));
+      const snapshot = await getDocs(query(collection(db, 'email_logs'), orderBy('timestamp', 'desc'), limit(500)));
       setLogs(snapshot.docs.map(doc => doc.data() as EmailLog));
     };
     fetchLogs();

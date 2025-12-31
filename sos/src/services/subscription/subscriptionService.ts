@@ -235,88 +235,116 @@ export async function getSubscription(providerId: string): Promise<Subscription 
 
 /**
  * Écoute les changements d'abonnement en temps réel
- * Vérifie les deux formats d'ID et aussi les données user
+ * OPTIMISÉ: Détermine d'abord quel document existe, puis n'écoute que celui-là
+ * (Au lieu de 3 listeners simultanés, on n'en utilise qu'1)
  */
 export function subscribeToSubscription(
   providerId: string,
   callback: (subscription: Subscription | null) => void
 ): () => void {
-  const unsubscribers: (() => void)[] = [];
-  let lastSubscription: Subscription | null = null;
+  let unsubscribe: (() => void) | null = null;
+  let cancelled = false;
 
-  // Fonction pour notifier le callback avec la meilleure donnée trouvée
-  const notifyCallback = (subscription: Subscription | null, source: string) => {
-    // Prioriser les données les plus complètes
-    if (subscription && (!lastSubscription || source === "subscriptions")) {
-      lastSubscription = subscription;
-      callback(subscription);
-    } else if (!subscription && !lastSubscription) {
+  // Fonction pour créer un subscription depuis les données user
+  const createSubscriptionFromUser = (userData: any): Subscription => {
+    const now = new Date();
+    const expiresAt = userData.subscriptionExpiresAt?.toDate() ||
+                      userData.trialEndsAt?.toDate() ||
+                      new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+    return {
+      id: providerId,
+      providerId,
+      providerType: userData.providerType || "lawyer",
+      planId: userData.planId || "basic",
+      tier: userData.tier || userData.planName || "basic",
+      status: userData.subscriptionStatus,
+      stripeCustomerId: userData.stripeCustomerId || "",
+      stripeSubscriptionId: userData.stripeSubscriptionId || null,
+      stripePriceId: userData.stripePriceId || null,
+      trialStartedAt: userData.trialStartedAt?.toDate() || null,
+      trialEndsAt: userData.trialEndsAt?.toDate() || null,
+      currentPeriodStart: now,
+      currentPeriodEnd: expiresAt,
+      canceledAt: userData.canceledAt?.toDate() || null,
+      cancelAtPeriodEnd: userData.cancelAtPeriodEnd || false,
+      currency: userData.currency || "EUR",
+      currentPeriodAmount: userData.priceAmount || 0,
+      createdAt: userData.createdAt?.toDate() || now,
+      updatedAt: userData.updatedAt?.toDate() || now
+    };
+  };
+
+  // Déterminer quel document écouter (une seule fois au démarrage)
+  const initListener = async () => {
+    if (cancelled) return;
+
+    try {
+      // 1. Vérifier subscriptions/{providerId}
+      const subRef = doc(db, COLLECTIONS.SUBSCRIPTIONS, providerId);
+      const subSnap = await getDoc(subRef);
+
+      if (cancelled) return;
+
+      if (subSnap.exists()) {
+        // Écouter seulement ce document
+        unsubscribe = onSnapshot(subRef, (snapshot) => {
+          if (snapshot.exists()) {
+            callback(parseSubscription(snapshot.id, snapshot.data()));
+          } else {
+            callback(null);
+          }
+        });
+        return;
+      }
+
+      // 2. Vérifier subscriptions/sub_{providerId}
+      const subRefAlt = doc(db, COLLECTIONS.SUBSCRIPTIONS, `sub_${providerId}`);
+      const subSnapAlt = await getDoc(subRefAlt);
+
+      if (cancelled) return;
+
+      if (subSnapAlt.exists()) {
+        // Écouter seulement ce document
+        unsubscribe = onSnapshot(subRefAlt, (snapshot) => {
+          if (snapshot.exists()) {
+            callback(parseSubscription(snapshot.id, snapshot.data()));
+          } else {
+            callback(null);
+          }
+        });
+        return;
+      }
+
+      // 3. Fallback: écouter le document user
+      const userRef = doc(db, "users", providerId);
+      unsubscribe = onSnapshot(userRef, (snapshot) => {
+        if (snapshot.exists()) {
+          const userData = snapshot.data();
+          if (userData?.subscriptionStatus) {
+            callback(createSubscriptionFromUser(userData));
+          } else {
+            callback(null);
+          }
+        } else {
+          callback(null);
+        }
+      });
+    } catch (error) {
+      console.error('[subscribeToSubscription] Error initializing listener:', error);
       callback(null);
     }
   };
 
-  // 1. Écouter subscriptions/{providerId}
-  const subRef = doc(db, COLLECTIONS.SUBSCRIPTIONS, providerId);
-  unsubscribers.push(
-    onSnapshot(subRef, (snapshot) => {
-      if (snapshot.exists()) {
-        notifyCallback(parseSubscription(snapshot.id, snapshot.data()), "subscriptions");
-      }
-    })
-  );
+  // Lancer l'initialisation
+  initListener();
 
-  // 2. Écouter subscriptions/sub_{providerId}
-  const subRefAlt = doc(db, COLLECTIONS.SUBSCRIPTIONS, `sub_${providerId}`);
-  unsubscribers.push(
-    onSnapshot(subRefAlt, (snapshot) => {
-      if (snapshot.exists()) {
-        notifyCallback(parseSubscription(snapshot.id, snapshot.data()), "subscriptions");
-      }
-    })
-  );
-
-  // 3. Écouter le document user pour les données d'abonnement
-  const userRef = doc(db, "users", providerId);
-  unsubscribers.push(
-    onSnapshot(userRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const userData = snapshot.data();
-        if (userData?.subscriptionStatus) {
-          const now = new Date();
-          const expiresAt = userData.subscriptionExpiresAt?.toDate() ||
-                            userData.trialEndsAt?.toDate() ||
-                            new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-
-          const subscription: Subscription = {
-            id: providerId,
-            providerId,
-            providerType: userData.providerType || "lawyer",
-            planId: userData.planId || "basic",
-            tier: userData.tier || userData.planName || "basic",
-            status: userData.subscriptionStatus,
-            stripeCustomerId: userData.stripeCustomerId || "",
-            stripeSubscriptionId: userData.stripeSubscriptionId || null,
-            stripePriceId: userData.stripePriceId || null,
-            trialStartedAt: userData.trialStartedAt?.toDate() || null,
-            trialEndsAt: userData.trialEndsAt?.toDate() || null,
-            currentPeriodStart: now,
-            currentPeriodEnd: expiresAt,
-            canceledAt: userData.canceledAt?.toDate() || null,
-            cancelAtPeriodEnd: userData.cancelAtPeriodEnd || false,
-            currency: userData.currency || "EUR",
-            currentPeriodAmount: userData.priceAmount || 0,
-            createdAt: userData.createdAt?.toDate() || now,
-            updatedAt: userData.updatedAt?.toDate() || now
-          };
-          notifyCallback(subscription, "user");
-        }
-      }
-    })
-  );
-
-  // Retourner une fonction pour unsubscribe de tous les listeners
+  // Retourner fonction de cleanup
   return () => {
-    unsubscribers.forEach(unsub => unsub());
+    cancelled = true;
+    if (unsubscribe) {
+      unsubscribe();
+    }
   };
 }
 

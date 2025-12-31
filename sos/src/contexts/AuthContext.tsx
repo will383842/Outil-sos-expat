@@ -44,7 +44,6 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL, deleteObject } from 'firebase/storage';
 import { auth, db, storage } from '../config/firebase';
-import { getDocumentRest } from '../utils/firestoreRestApi';
 import type { User } from './types';
 import type { AuthContextType } from './AuthContextBase';
 import { AuthContext as BaseAuthContext } from './AuthContextBase';
@@ -626,52 +625,81 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
     let unsubUser: undefined | (() => void);
     let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
-    (async () => {
-      try {
-        // Créer le doc si absent - avec timeout et fallback REST API
-        console.log("🔐 [AuthContext] getDoc users/" + uid);
+    // OPTIMISATION: Utiliser UNIQUEMENT onSnapshot() qui retourne les données initiales
+    // au premier callback. Évite la double lecture (getDoc + onSnapshot).
+    // Si le premier callback n'arrive pas dans 15s, on initialise avec les données Auth minimales.
 
-        let docExists = false;
-        let docData: Record<string, any> | null = null;
+    console.log("🔐 [AuthContext] Setting up onSnapshot listener for users/" + uid);
 
-        // 1. Essayer d'abord via REST API (plus rapide et fiable)
-        try {
-          console.log("🔐 [AuthContext] Trying REST API for users/" + uid);
-          const restResult = await getDocumentRest<Record<string, any>>('users', uid, 5000);
-          docExists = restResult.exists;
-          docData = restResult.data;
-          console.log("🔐 [AuthContext] REST API result - exists:", docExists);
-        } catch (restErr) {
-          console.warn("🔐 [AuthContext] REST API failed, trying SDK:", restErr);
+    // Timeout de secours si Firestore est trop lent
+    timeoutId = setTimeout(() => {
+      if (!firstSnapArrived.current && !cancelled) {
+        console.warn("🔐 [AuthContext] onSnapshot timeout (15s) - using Firebase Auth data only");
+        setUser({
+          id: uid,
+          uid,
+          email: authUser.email || null,
+          role: 'client',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          lastLoginAt: new Date(),
+          isVerifiedEmail: authUser.emailVerified,
+          isActive: true,
+          isApproved: false,
+        } as User);
+
+        firstSnapArrived.current = true;
+        setIsLoading(false);
+        setAuthInitialized(true);
+      }
+    }, 15000);
+
+    // Un seul listener qui gère TOUT : données initiales + mises à jour temps réel
+    unsubUser = onSnapshot(
+      refUser,
+      async (docSnap) => {
+        if (signingOutRef.current || cancelled) return;
+
+        // Annuler le timeout car on a reçu une réponse
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
         }
 
-        // 2. Si REST API n'a pas trouvé, essayer le SDK avec timeout
-        if (!docExists && !docData) {
-          try {
-            const sdkPromise = getDoc(refUser);
-            const timeoutPromise = new Promise<null>((_, reject) =>
-              setTimeout(() => reject(new Error('SDK timeout')), 8000)
-            );
-            const snap = await Promise.race([sdkPromise, timeoutPromise]);
-            if (snap && snap.exists()) {
-              docExists = true;
-              docData = snap.data() as Record<string, any>;
-            }
-          } catch (sdkErr) {
-            console.warn("🔐 [AuthContext] SDK also failed:", sdkErr);
+        // Document n'existe pas → le créer en arrière-plan
+        if (!docSnap.exists()) {
+          console.log("🔐 [AuthContext] Document users/" + uid + " n'existe pas, création...");
+
+          // Initialiser l'utilisateur avec les données minimales immédiatement
+          if (!firstSnapArrived.current) {
+            setUser({
+              id: uid,
+              uid,
+              email: authUser.email || null,
+              role: 'client',
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              lastLoginAt: new Date(),
+              isVerifiedEmail: authUser.emailVerified,
+              isActive: true,
+              isApproved: false,
+            } as User);
+
+            firstSnapArrived.current = true;
+            setIsLoading(false);
+            setAuthInitialized(true);
           }
-        }
 
-        console.log("🔐 [AuthContext] Doc exists?", docExists);
-        if (!docExists) {
-          await setDoc(
+          // Créer le document en arrière-plan (sans bloquer)
+          setDoc(
             refUser,
             {
               uid,
               email: authUser.email || null,
               emailLower: (authUser.email || '').toLowerCase(),
-              role: 'client',  // Rôle par défaut pour éviter undefined
+              role: 'client',
               createdAt: serverTimestamp(),
               updatedAt: serverTimestamp(),
               isActive: true,
@@ -680,102 +708,91 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
               isVisible: false,
             },
             { merge: true }
-          );
+          ).catch(err => console.warn("🔐 [AuthContext] Background setDoc failed:", err));
+
+          return;
         }
 
-        if (cancelled) return;
+        // Document existe → utiliser les données
+        const data = docSnap.data() as Partial<User>;
 
-        // Si on a des données via REST API, initialiser l'utilisateur immédiatement
-        if (docExists && docData) {
-          console.log("🔐 [AuthContext] Initializing user from REST API data");
-          const data = docData as Partial<User>;
-          setUser({
+        setUser((prev) => {
+          const merged: User = {
+            ...(prev ?? ({} as User)),
             ...(data as Partial<User>),
             id: uid,
             uid,
-            email: data.email || authUser.email || null,
-            createdAt: data.createdAt instanceof Date ? data.createdAt : new Date(),
-            updatedAt: data.updatedAt instanceof Date ? data.updatedAt : new Date(),
-            lastLoginAt: new Date(),
+            // S'assurer que l'email vient de authUser si absent de Firestore
+            email: data.email || authUser.email || prev?.email || null,
+            createdAt:
+              data.createdAt instanceof Timestamp
+                ? data.createdAt.toDate()
+                : prev?.createdAt || new Date(),
+            updatedAt:
+              data.updatedAt instanceof Timestamp
+                ? data.updatedAt.toDate()
+                : new Date(),
+            lastLoginAt:
+              (data as any).lastLoginAt instanceof Timestamp
+                ? (data as any).lastLoginAt.toDate()
+                : new Date(),
             isVerifiedEmail: authUser.emailVerified,
-          } as User);
+          } as User;
+          return merged;
+        });
 
-          if (!firstSnapArrived.current) {
-            firstSnapArrived.current = true;
-            setIsLoading(false);
-            setAuthInitialized(true);
-          }
+        if (!firstSnapArrived.current) {
+          console.log("🔐 [AuthContext] First snapshot received for users/" + uid);
+          firstSnapArrived.current = true;
+          setIsLoading(false);
+          setAuthInitialized(true);
+        }
+      },
+      (err) => {
+        // Annuler le timeout en cas d'erreur
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
         }
 
-        // Ouvrir le listener après auth + doc présent (pour les mises à jour en temps réel)
-        unsubUser = onSnapshot(
-          refUser,
-          (docSnap) => {
-            if (signingOutRef.current) return;
-            if (!docSnap.exists()) return;
-
-            const data = docSnap.data() as Partial<User>;
-
-            setUser((prev) => {
-              const merged: User = {
-                ...(prev ?? ({} as User)),
-                ...(data as Partial<User>),
-                id: uid,
-                uid,
-                // S'assurer que l'email vient de authUser si absent de Firestore
-                email: data.email || authUser.email || prev?.email || null,
-                createdAt:
-                  data.createdAt instanceof Timestamp
-                    ? data.createdAt.toDate()
-                    : prev?.createdAt || new Date(),
-                updatedAt:
-                  data.updatedAt instanceof Timestamp
-                    ? data.updatedAt.toDate()
-                    : new Date(),
-                lastLoginAt:
-                  (data as any).lastLoginAt instanceof Timestamp
-                    ? (data as any).lastLoginAt.toDate()
-                    : new Date(),
-                isVerifiedEmail: authUser.emailVerified,
-              } as User;
-              return merged;
-            });
-
-            if (!firstSnapArrived.current) {
-              firstSnapArrived.current = true;
-              setIsLoading(false);
-              setAuthInitialized(true);
-            }
-          },
-          (err) => {
-            console.error(`❌ [AuthContext] [users/${uid}] Erreur listener:`, err);
-            console.error(`❌ [AuthContext] Error details:`, {
-              name: (err as Error)?.name,
-              message: (err as Error)?.message,
-              code: (err as any)?.code,
-              stack: (err as Error)?.stack,
-            });
-            setIsLoading(false);
-            setAuthInitialized(true);
-          }
-        );
-      } catch (e) {
-        console.error('❌ [AuthContext] Init user doc failed:', e);
+        console.error(`❌ [AuthContext] [users/${uid}] Erreur listener:`, err);
         console.error(`❌ [AuthContext] Error details:`, {
-          name: (e as Error)?.name,
-          message: (e as Error)?.message,
-          code: (e as any)?.code,
-          stack: (e as Error)?.stack,
+          name: (err as Error)?.name,
+          message: (err as Error)?.message,
+          code: (err as any)?.code,
+          stack: (err as Error)?.stack,
         });
+
+        // En cas d'erreur, initialiser avec les données minimales
+        if (!firstSnapArrived.current) {
+          setUser({
+            id: uid,
+            uid,
+            email: authUser.email || null,
+            role: 'client',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            lastLoginAt: new Date(),
+            isVerifiedEmail: authUser.emailVerified,
+            isActive: true,
+            isApproved: false,
+          } as User);
+          firstSnapArrived.current = true;
+        }
+
         setIsLoading(false);
         setAuthInitialized(true);
       }
-    })();
+    );
 
     // cleanup (StrictMode monte/démonte 2x)
     return () => {
       cancelled = true;
       subscribed.current = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
       unsubUser?.();
     };
   }, [authUser?.uid]);
@@ -1263,45 +1280,56 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   }, [deviceInfo]);
 
   const logout = useCallback(async (): Promise<void> => {
+    console.log('🔐 [Auth] logout() appelé');
     signingOutRef.current = true;
+
+    // Capturer les infos AVANT de nettoyer les states
+    const uid = user?.id || user?.uid;
+    const role = user?.role;
+
+    // 1. Nettoyer immédiatement les states locaux (ne pas attendre Firestore)
+    setUser(null);
+    setFirebaseUser(null);
+    setAuthUser(null);
+    setError(null);
+    setAuthMetrics({
+      loginAttempts: 0,
+      lastAttempt: new Date(),
+      successfulLogins: 0,
+      failedLogins: 0,
+      googleAttempts: 0,
+      roleRestrictionBlocks: 0,
+      passwordResetRequests: 0,
+      emailUpdateAttempts: 0,
+      profileUpdateAttempts: 0,
+    });
+
+    // 2. Firebase signOut (avec timeout court)
     try {
-      const uid = user?.id || user?.uid;
-      const role = user?.role;
-
-      await logAuthEvent('logout', {
-        userId: uid,
-        role,
-        deviceInfo
-      });
-
-      if (uid && (role === 'lawyer' || role === 'expat')) {
-        await Promise.allSettled([
-          writeSosPresence(uid, role, false),
-          writeUsersPresenceBestEffort(uid, false)
-        ]);
-      }
-
-      await firebaseSignOut(auth);
-      setUser(null);
-      setFirebaseUser(null);
-      setAuthUser(null);
-      setError(null);
-      setAuthMetrics({
-        loginAttempts: 0,
-        lastAttempt: new Date(),
-        successfulLogins: 0,
-        failedLogins: 0,
-        googleAttempts: 0,
-        roleRestrictionBlocks: 0,
-        passwordResetRequests: 0,
-        emailUpdateAttempts: 0,
-        profileUpdateAttempts: 0,
-      });
+      const signOutPromise = firebaseSignOut(auth);
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('SignOut timeout')), 3000)
+      );
+      await Promise.race([signOutPromise, timeoutPromise]);
+      console.log('✅ [Auth] Firebase signOut réussi');
     } catch (e) {
-      console.error('[Auth] logout error:', e);
-    } finally {
-      signingOutRef.current = false;
+      console.warn('[Auth] Firebase signOut error (ignoré):', e);
+      // Continuer même si signOut échoue - les states sont déjà nettoyés
     }
+
+    // 3. Opérations Firestore en arrière-plan (fire and forget - ne PAS attendre)
+    if (uid && (role === 'lawyer' || role === 'expat')) {
+      Promise.allSettled([
+        writeSosPresence(uid, role, false),
+        writeUsersPresenceBestEffort(uid, false)
+      ]).catch(() => { /* ignoré */ });
+    }
+
+    // Log en arrière-plan (ne pas attendre)
+    logAuthEvent('logout', { userId: uid, role, deviceInfo }).catch(() => { /* ignoré */ });
+
+    signingOutRef.current = false;
+    console.log('✅ [Auth] logout() terminé');
   }, [user, deviceInfo]);
 
   const clearError = useCallback((): void => setError(null), []);

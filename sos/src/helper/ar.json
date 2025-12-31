@@ -640,9 +640,16 @@
   "aria.urgentCallNow": "مكالمة طوارئ الآن",
   "aria.viewExperts": "شاهد الخبراء المتاحين",
   "aria.viewReviewFrom": "شاهد تقييم {name}",
+  "auth.accessError": "خطأ في الوصول",
+  "auth.accountSuspended": "الحساب موقوف",
+  "auth.contactSupport": "تم إيقاف حسابك. اتصل بالدعم لمزيد من المعلومات.",
   "auth.error.googleRoleRestriction": "تسجيل الدخول باستخدام Google مخصص للعملاء فقط.",
+  "auth.failed": "فشل المصادقة",
+  "auth.initializing": "جارٍ التهيئة...",
   "auth.login": "تسجيل الدخول",
   "auth.signup": "التسجيل",
+  "auth.unableVerify": "تعذر التحقق من صلاحياتك. يرجى المحاولة مرة أخرى.",
+  "auth.verifyingAccess": "جارٍ التحقق من الوصول...",
   "auth.wizard.change": "تغيير",
   "auth.wizard.choosePassword": "اختر كلمة مرور",
   "auth.wizard.confirmPassword": "تأكيد كلمة المرور",
@@ -737,6 +744,11 @@
   "bookingRequest.contact": "الاتصال",
   "bookingRequest.continuePay": "المتابعة للدفع",
   "bookingRequest.error": "حدث خطأ. يرجى المحاولة مرة أخرى.",
+  "bookingRequest.errors.generic": "حدث خطأ. يرجى المحاولة مرة أخرى.",
+  "bookingRequest.errors.invalidData": "بيانات غير صالحة. يرجى التحقق من النموذج.",
+  "bookingRequest.errors.networkTimeout": "انتهت مهلة الاتصال. تحقق من شبكتك وحاول مرة أخرى.",
+  "bookingRequest.errors.permissionDenied": "تم رفض الوصول. يرجى تسجيل الدخول مرة أخرى.",
+  "bookingRequest.errors.sessionExpired": "انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى.",
   "bookingRequest.errorsTitle": "بعض التعديلات وسيكون مثاليًا ✨",
   "bookingRequest.expatBadge": "🌍 مغترب مساعد",
   "bookingRequest.fields.accept": "أوافق على ",
@@ -826,17 +838,16 @@
   "card.aria.onlineStatus": "حالة الاتصال: {status}",
   "card.aria.profileCard": "بطاقة ملف {name}",
   "card.aria.rating": "تقييم {rating} من 5",
+  "card.aria.ratingWithReviews": "تقييم {rating} من 5 بناءً على {count} تقييم",
+  "card.aria.starsDescription": "{rating} نجوم من 5، {count} تقييم",
   "card.aria.viewProfileAction": "عرض ملف {name}",
   "card.busy": "مشغول",
   "card.labels.languages": "اللغات",
   "card.labels.offline": "غير متصل",
   "card.labels.online": "متصل",
-  "card.labels.onlineOnly": "متصلون فقط",
   "card.labels.onlineCount": "{online} متصل • {total} إجمالي",
+  "card.labels.onlineOnly": "متصلون فقط",
   "card.labels.others": "آخرون",
-  "card.results.found": "{count, plural, one {# مقدم خدمة} other {# مقدمي خدمات}}",
-  "card.results.online": "متصل",
-  "card.results.typeOf": "من نوع {type}",
   "card.labels.reviews": "تقييمات",
   "card.labels.specialties": "التخصصات",
   "card.labels.viewProfile": "عرض الملف",
@@ -855,6 +866,9 @@
   "card.profession.real_estate": "عقارات",
   "card.profession.tax_consultant": "مستشار ضريبي",
   "card.profession.translator": "مترجم",
+  "card.results.found": "{count, plural, one {# مقدم خدمة} other {# مقدمي خدمات}}",
+  "card.results.online": "متصل",
+  "card.results.typeOf": "من نوع {type}",
   "card.reviews": "تقييمات",
   "card.viewProfile": "عرض الملف",
   "card.years": "سنوات",
@@ -1734,7 +1748,9 @@
   "loading.verifying": "جارٍ التحقق من بياناتك...",
   "login.create_account": "إنشاء حساب",
   "login.create_account_aria": "إنشاء حساب جديد على SOS Expats",
+  "login.create_account_short": "إنشاء حساب",
   "login.email_label": "عنوان البريد الإلكتروني",
+  "login.email_not_found_hint": "هذا البريد الإلكتروني غير مسجل بعد.",
   "login.email_placeholder": "your@email.com",
   "login.forgot_password": "نسيت كلمة المرور؟",
   "login.forgot_password_help": "إعادة تعيين كلمة المرور",

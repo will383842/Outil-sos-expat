@@ -197,17 +197,13 @@ const AdminDashboard: React.FC = () => {
     if (!user) return;
 
     try {
-      const callsSnapshot = await getDocs(collection(db, "calls"));
-      
-      // ✅ Vérifier si toujours monté AVANT de continuer
-      if (!mountedRef.current) {
-        console.log('[AdminDashboard] loadStats: component unmounted, aborting');
-        return;
-      }
+      // ✅ OPTIMISATION: Requêtes parallèles au lieu de séquentielles
+      const [callsSnapshot, paymentsSnapshot] = await Promise.all([
+        getDocs(collection(db, "calls")),
+        getDocs(collection(db, "payments"))
+      ]);
 
-      const paymentsSnapshot = await getDocs(collection(db, "payments"));
-      
-      // ✅ Vérifier à nouveau après la 2ème requête
+      // ✅ Vérifier si toujours monté AVANT de continuer
       if (!mountedRef.current) {
         console.log('[AdminDashboard] loadStats: component unmounted, aborting');
         return;

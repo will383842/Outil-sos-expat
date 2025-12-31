@@ -42,6 +42,8 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
 
   const rotationTimer = useRef<NodeJS.Timeout | null>(null);
   const recentlyShown = useRef<Set<string>>(new Set());
+  // ✅ OPTIMISATION: Ref pour éviter les memory leaks
+  const mountedRef = useRef(true);
 
   const isUserConnected = useMemo(() => !authLoading && !!user, [authLoading, user]);
 
@@ -276,24 +278,39 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
     setVisibleProviders(prev => prev.map(p => p.id === id ? { ...p, isOnline } : p));
   }, []);
 
+  // ✅ OPTIMISATION: Un seul listener au lieu de N listeners
+  // Utilise 'in' query limitée à 30 providers max (limite Firestore)
   const setupRealtimeListeners = useCallback(() => {
     if (visibleProviders.length === 0) return () => {};
-    const unsubscribes: (() => void)[] = [];
-    visibleProviders.forEach(p => {
-      const refCol = collection(db, 'sos_profiles');
-      const q = query(refCol, where('__name__', '==', p.id));
-      const unsub = onSnapshot(q, (snap) => {
-        snap.docChanges().forEach((chg) => {
-          if (chg.type === 'modified') {
-            const data = chg.doc.data() as any;
-            const online = data.isOnline === true;
-            if (online !== p.isOnline) updateProviderOnlineStatus(chg.doc.id, online);
+
+    // Prendre les premiers 30 IDs (limite Firestore pour 'in' queries)
+    const providerIds = visibleProviders.slice(0, 30).map(p => p.id);
+
+    // Un seul listener pour tous les providers visibles
+    const sosProfilesRef = collection(db, 'sos_profiles');
+    const q = query(sosProfilesRef, where('__name__', 'in', providerIds));
+
+    const unsub = onSnapshot(q, (snap) => {
+      // ✅ Check si le composant est toujours monté
+      if (!mountedRef.current) return;
+
+      snap.docChanges().forEach((chg) => {
+        if (chg.type === 'modified') {
+          const data = chg.doc.data() as any;
+          const online = data.isOnline === true;
+          const provider = visibleProviders.find(p => p.id === chg.doc.id);
+          if (provider && online !== provider.isOnline) {
+            updateProviderOnlineStatus(chg.doc.id, online);
           }
-        });
-      }, (e) => console.error(`Listener ${p.id} error:`, e));
-      unsubscribes.push(unsub);
+        }
+      });
+    }, (e) => {
+      if (mountedRef.current) {
+        console.error('[ProfileCarousel] Realtime listener error:', e);
+      }
     });
-    return () => unsubscribes.forEach(u => u());
+
+    return () => unsub();
   }, [visibleProviders, updateProviderOnlineStatus]);
 
   // Timers / Effects
@@ -305,7 +322,14 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
     return () => { if (rotationTimer.current) clearInterval(rotationTimer.current); };
   }, [rotateVisibleProviders, visibleProviders.length, onlineProviders.length]);
 
-  useEffect(() => { loadInitialProviders(); }, [loadInitialProviders]);
+  // ✅ OPTIMISATION: Cleanup propre avec mountedRef
+  useEffect(() => {
+    mountedRef.current = true;
+    loadInitialProviders();
+    return () => {
+      mountedRef.current = false;
+    };
+  }, [loadInitialProviders]);
 
   useEffect(() => {
     if (visibleProviders.length === 0) return;

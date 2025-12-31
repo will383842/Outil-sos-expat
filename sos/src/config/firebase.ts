@@ -66,16 +66,16 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 export const auth: Auth = getAuth(app);
 export const storage: FirebaseStorage = getStorage(app);
 
-// Firestore - Configuration pour résister aux blocages (extensions, firewalls, etc.)
+// Firestore - Configuration optimisée pour performance
+// NOTE: experimentalForceLongPolling a été RETIRÉ car il cause une lenteur extrême (10s+ par requête)
+// Si tu as des problèmes de blocage par extension/firewall, réactive-le temporairement
 export const db: Firestore = initializeFirestore(app, {
-  // Force long polling au lieu de WebChannel - plus résistant aux blocages
-  experimentalForceLongPolling: true,
-  // Pas de cache persistant pour éviter les blocages IndexedDB
-  // localCache: persistentLocalCache({
-  //   tabManager: persistentMultipleTabManager(),
-  // }),
+  // Cache persistant pour des performances optimales
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager(),
+  }),
 });
-console.log("🔧 [Firebase] Firestore initialisé avec experimentalForceLongPolling (anti-blocage)");
+console.log("🔧 [Firebase] Firestore initialisé avec cache persistant (performance optimale)");
 
 // 🔇 Réduire le bruit Firestore (logs seulement si erreur)
 setLogLevel("error");

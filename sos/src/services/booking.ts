@@ -45,14 +45,24 @@ export type BookingRequestOptional = {
 
 export type BookingRequestCreate = BookingRequestMinimal & BookingRequestOptional;
 
+// Timeout helper pour éviter les blocages réseau
+const withTimeout = <T>(promise: Promise<T>, ms: number, errorMessage: string): Promise<T> => {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(errorMessage)), ms)
+    ),
+  ]);
+};
+
 export async function createBookingRequest(data: BookingRequestCreate) {
   const u = auth.currentUser;
-  if (!u) throw new Error("Utilisateur non connecté");
+  if (!u) throw new Error("SESSION_EXPIRED");
 
   const providerId = String(data.providerId || "").trim();
   const serviceType = String(data.serviceType || "").trim();
   if (!providerId || !serviceType) {
-    throw new Error("providerId/serviceType manquants");
+    throw new Error("INVALID_DATA");
   }
 
   // Respecte strictement tes rules : clientId = auth.uid, status = "pending"
@@ -92,5 +102,10 @@ export async function createBookingRequest(data: BookingRequestCreate) {
     createdAt: serverTimestamp(),
   };
 
-  await addDoc(collection(db, "booking_requests"), payload); // ✅ camelCase centralisée
+  // Timeout de 15 secondes pour éviter le blocage indéfini
+  await withTimeout(
+    addDoc(collection(db, "booking_requests"), payload),
+    15000,
+    "NETWORK_TIMEOUT"
+  );
 }

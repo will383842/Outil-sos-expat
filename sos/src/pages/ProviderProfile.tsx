@@ -482,6 +482,17 @@ const cache = new SimpleCache();
 /* CALCUL DES STATISTIQUES                                              */
 /* ===================================================================== */
 
+// Stats par défaut pour affichage immédiat
+const DEFAULT_STATS: ProviderStats = {
+  totalCallsReceived: 0,
+  successfulCalls: 0,
+  successRate: 0,
+  averageRating: 0,
+  totalReviews: 0,
+  completedCalls: 0,
+  realReviewsCount: 0,
+};
+
 const calculateProviderStats = async (providerId: string): Promise<ProviderStats> => {
   // ✅ Vérifier le cache d'abord
   const cacheKey = `stats_${providerId}`;
@@ -489,88 +500,90 @@ const calculateProviderStats = async (providerId: string): Promise<ProviderStats
   if (cached) return cached;
 
   try {
-    const callSessionsQuery = query(
-      collection(db, "call_sessions"),
-      where("metadata.providerId", "==", providerId)
+    // ✅ Timeout de 12 secondes pour éviter le blocage (augmenté pour réseaux lents)
+    const timeoutPromise = new Promise<ProviderStats>((_, reject) =>
+      setTimeout(() => reject(new Error('Stats calculation timeout')), 12000)
     );
-    const callSessionsSnapshot = await getDocs(callSessionsQuery);
-    
-    let totalCallsReceived = 0;
-    let successfulCalls = 0;
-    let completedCalls = 0;
 
-    callSessionsSnapshot.forEach((doc) => {
-      const data = doc.data();
-      totalCallsReceived++;
-      
-      if (data.status === "completed" || data.endedAt) {
-        completedCalls++;
-        
-        const startedAt = data.startedAt?.toDate?.() || data.createdAt?.toDate?.();
-        const endedAt = data.endedAt?.toDate?.();
-        
-        if (startedAt && endedAt) {
-          const durationSeconds = (endedAt.getTime() - startedAt.getTime()) / 1000;
-          
-          if (durationSeconds >= SUCCESSFUL_CALL_THRESHOLD_SECONDS) {
-            successfulCalls++;
+    const statsPromise = (async (): Promise<ProviderStats> => {
+      const callSessionsQuery = query(
+        collection(db, "call_sessions"),
+        where("metadata.providerId", "==", providerId)
+      );
+      const callSessionsSnapshot = await getDocs(callSessionsQuery);
+
+      let totalCallsReceived = 0;
+      let successfulCalls = 0;
+      let completedCalls = 0;
+
+      callSessionsSnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        totalCallsReceived++;
+
+        if (data.status === "completed" || data.endedAt) {
+          completedCalls++;
+
+          const startedAt = data.startedAt?.toDate?.() || data.createdAt?.toDate?.();
+          const endedAt = data.endedAt?.toDate?.();
+
+          if (startedAt && endedAt) {
+            const durationSeconds = (endedAt.getTime() - startedAt.getTime()) / 1000;
+
+            if (durationSeconds >= SUCCESSFUL_CALL_THRESHOLD_SECONDS) {
+              successfulCalls++;
+            }
           }
         }
-      }
-    });
+      });
 
-    const reviewsQuery = query(
-      collection(db, "reviews"),
-      where("providerId", "==", providerId),
-      where("isPublic", "==", true)
-    );
-    const reviewsSnapshot = await getDocs(reviewsQuery);
-    
-    let totalRating = 0;
-    let totalReviews = 0;
-    let realReviewsCount = 0;
+      const reviewsQuery = query(
+        collection(db, "reviews"),
+        where("providerId", "==", providerId),
+        where("isPublic", "==", true)
+      );
+      const reviewsSnapshot = await getDocs(reviewsQuery);
 
-    reviewsSnapshot.forEach((doc) => {
-  const data = doc.data();
-  
-  if (typeof data.rating === "number") {
-    totalRating += data.rating;
-    realReviewsCount++;
-    totalReviews++;
-  }
-});
+      let totalRating = 0;
+      let totalReviews = 0;
+      let realReviewsCount = 0;
 
-    const averageRating = realReviewsCount > 0 ? totalRating / realReviewsCount : 0;
-    const successRate = totalCallsReceived > 0 
-      ? Math.round((successfulCalls / totalCallsReceived) * 100) 
-      : 0;
+      reviewsSnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
 
-    // completedCalls = nombre d'avis (chaque avis correspond à un appel réalisé)
-    const stats = {
-      totalCallsReceived,
-      successfulCalls,
-      successRate,
-      averageRating,
-      totalReviews,
-      completedCalls: realReviewsCount, // Appels réalisés = nombre d'avis clients
-      realReviewsCount,
-    };
+        if (typeof data.rating === "number") {
+          totalRating += data.rating;
+          realReviewsCount++;
+          totalReviews++;
+        }
+      });
 
-    // ✅ Mettre en cache
-    cache.set(cacheKey, stats, CACHE_CONFIG.STATS_TTL);
+      const averageRating = realReviewsCount > 0 ? totalRating / realReviewsCount : 0;
+      const successRate = totalCallsReceived > 0
+        ? Math.round((successfulCalls / totalCallsReceived) * 100)
+        : 0;
 
-    return stats;
+      const stats: ProviderStats = {
+        totalCallsReceived,
+        successfulCalls,
+        successRate,
+        averageRating,
+        totalReviews,
+        completedCalls: realReviewsCount,
+        realReviewsCount,
+      };
+
+      // ✅ Mettre en cache
+      cache.set(cacheKey, stats, CACHE_CONFIG.STATS_TTL);
+
+      return stats;
+    })();
+
+    // ✅ Race entre le calcul des stats et le timeout
+    const result = await Promise.race([statsPromise, timeoutPromise]);
+    return result;
   } catch (error) {
-    console.error("Error calculating provider stats:", error);
-    return {
-      totalCallsReceived: 0,
-      successfulCalls: 0,
-      successRate: 0,
-      averageRating: 0,
-      totalReviews: 0,
-      completedCalls: 0,
-      realReviewsCount: 0,
-    };
+    console.warn("Stats calculation failed or timeout:", error);
+    return DEFAULT_STATS;
   }
 };
 
@@ -887,6 +900,7 @@ const ProviderProfile: React.FC = () => {
           const state = location.state as LocationState;
           const navData = state.selectedProvider || state.providerData;
           if (navData && navData.id) {
+            const navIsOnline = !!(navData as any).isOnline;
             providerData = {
               uid: navData.id || "",
               id: navData.id || "",
@@ -911,6 +925,7 @@ const ProviderProfile: React.FC = () => {
               isVerified: !!navData.isVerified,
               operatingCountries: toArrayFromAny(navData.operatingCountries, preferredLangKey),
               residenceCountry: navData.residenceCountry || navData.country,
+              isOnline: navIsOnline, // ✅ Statut en ligne depuis navigation state
             } as SosProfile;
             foundProviderId = navData.id || "";
 
@@ -918,15 +933,32 @@ const ProviderProfile: React.FC = () => {
             setProvider(providerData);
             setRealProviderId(foundProviderId);
             providerLoadedRef.current = true;
+
+            // ✅ Initialiser le statut en ligne depuis les données de navigation
+            setOnlineStatus(prev => ({
+              ...prev,
+              isOnline: navIsOnline,
+              lastUpdate: new Date(),
+            }));
+
             setIsLoading(false);
 
-            // Charger les stats et reviews en arrière-plan
+            // Charger les stats et reviews en arrière-plan (non-bloquant)
             setIsLoadingStats(true);
-            calculateProviderStats(foundProviderId).then(stats => {
-              setProviderStats(stats);
-              setIsLoadingStats(false);
+            calculateProviderStats(foundProviderId)
+              .then(stats => {
+                setProviderStats(stats);
+                setIsLoadingStats(false);
+              })
+              .catch(err => {
+                console.warn("Stats loading failed:", err);
+                setIsLoadingStats(false);
+              });
+
+            loadReviews(foundProviderId, navData.id).catch(err => {
+              console.warn("Reviews loading failed:", err);
             });
-            loadReviews(foundProviderId, navData.id);
+
             return; // Sortir ici - données déjà affichées
           }
         }
@@ -942,26 +974,50 @@ const ProviderProfile: React.FC = () => {
           location.pathname.split("/").pop(),
         ].filter((x): x is string => Boolean(x));
 
-        const potentialUids = new Set<string>();
-        
+        // Collecter les IDs possibles - les IDs extraits EN PREMIER (plus probables)
+        const extractedIds: string[] = [];
+        const rawIds: string[] = [];
+
         for (const rawId of possibleIds) {
-          potentialUids.add(rawId);
-          
-          const uidMatch = rawId.match(/[a-zA-Z0-9]{8,}$/);
-          if (uidMatch) {
-            potentialUids.add(uidMatch[0]);
+          rawIds.push(rawId);
+
+          // Pattern 1: ID après le dernier tiret (format: nameSlug-providerId)
+          // Ex: "julien-v-DfDbWASBaeaVEZrqg6Wlcd3zpYX2" → "DfDbWASBaeaVEZrqg6Wlcd3zpYX2"
+          const lastHyphenIndex = rawId.lastIndexOf('-');
+          if (lastHyphenIndex !== -1) {
+            const afterLastHyphen = rawId.slice(lastHyphenIndex + 1);
+            if (afterLastHyphen && afterLastHyphen.length >= 8 && !extractedIds.includes(afterLastHyphen)) {
+              extractedIds.push(afterLastHyphen);
+              console.log(`🔍 [ProviderProfile] Extracted ID after hyphen: ${afterLastHyphen}`);
+            }
           }
-          
-          const lastToken = rawId.split("-").pop();
-          if (lastToken && lastToken.length >= 8) {
-            potentialUids.add(lastToken);
+
+          // Pattern 2: IDs AAA - chercher "aaa_" dans le slug
+          // Ex: "manuel-m-aaa_lawyer_ni_1767139088290_nkq1" → "aaa_lawyer_ni_1767139088290_nkq1"
+          const aaaIndex = rawId.indexOf('aaa_');
+          if (aaaIndex !== -1) {
+            const aaaId = rawId.slice(aaaIndex);
+            if (!extractedIds.includes(aaaId)) {
+              extractedIds.push(aaaId);
+              console.log(`🔍 [ProviderProfile] Extracted AAA ID: ${aaaId}`);
+            }
+          }
+
+          // Pattern 3: UID Firebase classique (20+ caractères alphanumériques à la fin)
+          const uidMatch = rawId.match(/[a-zA-Z0-9]{20,}$/);
+          if (uidMatch && !extractedIds.includes(uidMatch[0])) {
+            extractedIds.push(uidMatch[0]);
           }
         }
 
+        // Mettre les IDs extraits en premier (plus probables), puis les IDs bruts
+        const potentialUids = [...new Set([...extractedIds, ...rawIds])];
+        console.log("🔍 [ProviderProfile] Potential UIDs to search (ordered):", potentialUids);
+
+        // PHASE 1: Essayer TOUS les IDs via REST API (rapide, pas de timeout)
         for (const testId of potentialUids) {
           if (providerData) break;
 
-          // 1. Essayer d'abord via l'API REST (plus rapide et fiable)
           try {
             console.log(`📡 [ProviderProfile] Trying REST API for: ${testId}`);
             const restResult = await getDocumentRest<Record<string, any>>('sos_profiles', testId, 5000);
@@ -988,18 +1044,25 @@ const ProviderProfile: React.FC = () => {
                 reviewCount: data?.reviewCount || 0,
                 totalCalls: data?.totalCalls || 0,
                 createdAt: data?.createdAt,
+                isOnline: !!data?.isOnline, // ✅ Statut en ligne depuis REST API
               } as SosProfile;
               foundProviderId = restResult.id;
               console.log(`✅ [ProviderProfile] Found via REST API: ${foundProviderId}`);
               break;
             }
+            // 404 = document non trouvé, continuer avec l'ID suivant
           } catch (restErr) {
-            console.warn('REST API failed, falling back to SDK:', restErr);
+            // Erreur réseau, continuer avec l'ID suivant
+            console.warn('REST API error for', testId, ':', restErr);
           }
+        }
 
-          // 2. Fallback vers le SDK Firestore avec timeout
+        // PHASE 2: Si REST n'a rien trouvé, essayer le SDK (UNE SEULE FOIS avec le premier ID)
+        if (!providerData && potentialUids.length > 0) {
+          const firstId = potentialUids[0];
+          console.log(`📡 [ProviderProfile] REST failed, trying SDK for: ${firstId}`);
           try {
-            const ref = doc(db, "sos_profiles", testId);
+            const ref = doc(db, "sos_profiles", firstId);
             const sdkPromise = getDoc(ref);
             const timeoutPromise = new Promise<null>((_, reject) =>
               setTimeout(() => reject(new Error('SDK timeout')), 8000)
@@ -1028,51 +1091,13 @@ const ProviderProfile: React.FC = () => {
               reviewCount: data?.reviewCount || 0,
               totalCalls: data?.totalCalls || 0,
               createdAt: data?.createdAt,
+              isOnline: !!data?.isOnline, // ✅ Statut en ligne depuis SDK
             } as SosProfile;
             foundProviderId = snap.id;
-            break;
+            console.log(`✅ [ProviderProfile] Found via SDK: ${foundProviderId}`);
             }
           } catch (e) {
-            console.warn('Error searching by doc ID:', testId, e);
-          }
-
-          try {
-            const qByUid = query(
-              collection(db, "sos_profiles"),
-              where("uid", "==", testId),
-              limit(1)
-            );
-            const qsUid = await getDocs(qByUid);
-            if (!qsUid.empty) {
-              const found = qsUid.docs[0];
-              const data = found.data();
-              const normalized = normalizeUserData(data, found.id);
-              const { type: _type, education: _education, ...restNormalized } = normalized as any;
-              const safeType: "lawyer" | "expat" = (data?.type === "lawyer" || data?.type === "expat") ? data.type : "expat";
-              const safeProvider = { ...restNormalized, type: safeType, ...data };
-              providerData = {
-              ...restNormalized,
-              id: found.id,
-              uid: normalized.uid || found.id,
-              type: safeType,
-              description: pickDescription(safeProvider as any, preferredLangKey, intl),
-              specialties: toArrayFromAny(data?.specialties, preferredLangKey),
-              helpTypes: toArrayFromAny(data?.helpTypes, preferredLangKey),
-              operatingCountries: toArrayFromAny(data?.operatingCountries, preferredLangKey),
-              residenceCountry: data?.residenceCountry || data?.country,
-              education: data?.education,
-              yearsOfExperience: data?.yearsOfExperience || 0,
-              yearsAsExpat: data?.yearsAsExpat || data?.yearsOfExperience || 0,
-              rating: data?.rating || data?.averageRating || 0,
-              reviewCount: data?.reviewCount || 0,
-              totalCalls: data?.totalCalls || 0,
-              createdAt: data?.createdAt,
-            } as SosProfile;
-            foundProviderId = found.id;
-            break;
-            }
-          } catch (e) {
-            console.warn('Error searching by uid:', testId, e);
+            console.warn('SDK error:', e);
           }
         }
 
@@ -1110,6 +1135,7 @@ const ProviderProfile: React.FC = () => {
               reviewCount: data?.reviewCount || 0,
               totalCalls: data?.totalCalls || 0,
               createdAt: data?.createdAt,
+              isOnline: !!data?.isOnline, // ✅ Statut en ligne depuis slug search
             } as SosProfile;
             foundProviderId = m.id;
             }
@@ -1248,24 +1274,42 @@ const ProviderProfile: React.FC = () => {
           setProvider(providerData);
           setRealProviderId(foundProviderId);
           providerLoadedRef.current = true;
-          
+
+          // ✅ IMPORTANT: Initialiser le statut en ligne depuis les données REST API
+          setOnlineStatus(prev => ({
+            ...prev,
+            isOnline: !!(providerData as any).isOnline,
+            lastUpdate: new Date(),
+          }));
+
+          // ✅ IMPORTANT: Afficher le provider IMMÉDIATEMENT sans attendre les stats
+          setIsLoading(false);
+
+          // ✅ Charger les stats en arrière-plan (non-bloquant)
           setIsLoadingStats(true);
-          const stats = await calculateProviderStats(foundProviderId);
-          setProviderStats(stats);
-          setIsLoadingStats(false);
-          
-          if (typeof requestIdleCallback !== "undefined") {
-            requestIdleCallback(() => loadReviews(foundProviderId, providerData.uid));
-          } else {
-            await loadReviews(foundProviderId, providerData.uid);
-          }
+          calculateProviderStats(foundProviderId)
+            .then(stats => {
+              setProviderStats(stats);
+              setIsLoadingStats(false);
+            })
+            .catch(err => {
+              console.warn("Stats loading failed:", err);
+              setIsLoadingStats(false);
+            });
+
+          // ✅ Charger les reviews en arrière-plan (non-bloquant)
+          loadReviews(foundProviderId, providerData.uid).catch(err => {
+            console.warn("Reviews loading failed:", err);
+          });
+
+          return; // ✅ Sortir immédiatement - page affichée
         } else {
           setNotFound(true);
+          setIsLoading(false);
         }
       } catch (e) {
         console.error("Error loading provider:", e);
         setNotFound(true);
-      } finally {
         setIsLoading(false);
       }
     };
@@ -2125,13 +2169,13 @@ const ProviderProfile: React.FC = () => {
                           <p className="text-sm text-gray-400">{suggestion.country}</p>
                         </div>
                         {suggestion.isOnline && (
-                          <span className="w-3 h-3 bg-green-500 rounded-full animate-pulse" title="En ligne" />
+                          <span className="w-3 h-3 bg-green-500 rounded-full animate-pulse" title={intl.formatMessage({ id: 'status.online' })} />
                         )}
                       </div>
                       <div className="flex items-center gap-2 text-sm">
                         <Star className="w-4 h-4 text-yellow-400 fill-current" />
                         <span className="text-white">{(suggestion.rating || 0).toFixed(1)}</span>
-                        <span className="text-gray-500">({suggestion.reviewCount || 0} avis)</span>
+                        <span className="text-gray-500">({suggestion.reviewCount || 0} {intl.formatMessage({ id: 'card.labels.reviews' })})</span>
                       </div>
                     </button>
                   ))}
@@ -2286,7 +2330,11 @@ const ProviderProfile: React.FC = () => {
                         src={mainPhoto}
                         alt={intl.formatMessage(
                           { id: "providerProfile.profilePhotoAlt", defaultMessage: "Photo de profil de {name}" },
-                          { name: formatShortName(provider) }
+                          {
+                            name: formatShortName(provider),
+                            role: roleLabel,
+                            country: getCountryName(provider.country, preferredLangKey)
+                          }
                         )}
                         className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full object-cover border-4 border-black/30 cursor-pointer hover:scale-105 transition-transform"
                         width={IMAGE_SIZES.AVATAR_MOBILE}
@@ -2294,7 +2342,6 @@ const ProviderProfile: React.FC = () => {
                         onClick={() => setShowImageModal(true)}
                         onError={handleImageError}
                         loading="eager"
-                        fetchPriority="high"
                       />
                     </div>
                     {/* Online status indicator */}
@@ -3182,8 +3229,8 @@ const ProviderProfile: React.FC = () => {
                 ? intl.formatMessage({ id: "providerProfile.loading", defaultMessage: "Chargement..." })
                 : onlineStatus.isOnline && !isOnCall
                   ? intl.formatMessage(
-                      { id: "providerProfile.callAriaLabel", defaultMessage: "Appeler {name}" },
-                      { name: formatShortName(provider) }
+                      { id: "providerProfile.callAriaLabel", defaultMessage: "Appeler {name} pour {price}" },
+                      { name: formatShortName(provider), price: bookingPrice ? `${formatEUR(bookingPrice.eur)} (${formatUSD(bookingPrice.usd)})` : "—" }
                     )
                   : isOnCall
                     ? intl.formatMessage({ id: "providerProfile.alreadyOnCall" })

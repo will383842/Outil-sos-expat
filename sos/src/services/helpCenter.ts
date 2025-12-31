@@ -13,6 +13,8 @@ import {
   updateDoc,
   where,
   writeBatch,
+  limit,
+  orderBy,
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 
@@ -147,28 +149,33 @@ export const listHelpCategories = async (locale?: string): Promise<HelpCategory[
   if (locale) {
     constraints.push(where("locale", "==", locale));
   }
+  // Ajout d'une limite pour éviter de charger trop de données
+  constraints.push(orderBy("order", "asc"));
+  constraints.push(limit(100));
   const q = query(categoriesCol, ...constraints);
   const snap = await getDocs(q);
   return snap.docs
-    .map((d) => mapCategory({ id: d.id, ...d.data() }))
-    .sort((a, b) => a.order - b.order);
+    .map((d) => mapCategory({ id: d.id, ...d.data() }));
 };
 
 export const listHelpArticles = async (options?: {
   locale?: string;
   categoryId?: string;
   onlyPublished?: boolean;
+  maxResults?: number;
 }): Promise<HelpArticle[]> => {
   const articlesCol = collection(db, "help_articles");
   const constraints = [];
   if (options?.locale) constraints.push(where("locale", "==", options.locale));
   if (options?.categoryId) constraints.push(where("categoryId", "==", options.categoryId));
   if (options?.onlyPublished) constraints.push(where("isPublished", "==", true));
+  // Ajout d'une limite pour éviter de charger trop de données
+  constraints.push(orderBy("order", "asc"));
+  constraints.push(limit(options?.maxResults ?? 200));
   const q = query(articlesCol, ...constraints);
   const snap = await getDocs(q);
   return snap.docs
-    .map((d) => mapArticle({ id: d.id, ...d.data() }))
-    .sort((a, b) => a.order - b.order);
+    .map((d) => mapArticle({ id: d.id, ...d.data() }));
 };
 
 export const createHelpCategory = async (

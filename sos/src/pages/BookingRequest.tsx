@@ -1957,7 +1957,21 @@ const BookingRequest: React.FC = () => {
       navigate(`/call-checkout/${providerId}`);
     } catch (err) {
       console.error("Submit error", err);
-      setFormError("Une erreur est survenue. Veuillez réessayer.");
+
+      // Gestion des erreurs spécifiques pour de meilleurs messages utilisateur
+      const errorMessage = err instanceof Error ? err.message : "UNKNOWN";
+
+      if (errorMessage === "SESSION_EXPIRED") {
+        setFormError(intl.formatMessage({ id: "bookingRequest.errors.sessionExpired", defaultMessage: "Session expirée. Veuillez vous reconnecter." }));
+      } else if (errorMessage === "NETWORK_TIMEOUT") {
+        setFormError(intl.formatMessage({ id: "bookingRequest.errors.networkTimeout", defaultMessage: "La connexion a expiré. Vérifiez votre réseau et réessayez." }));
+      } else if (errorMessage === "INVALID_DATA") {
+        setFormError(intl.formatMessage({ id: "bookingRequest.errors.invalidData", defaultMessage: "Données invalides. Veuillez vérifier le formulaire." }));
+      } else if (errorMessage.includes("permission-denied")) {
+        setFormError(intl.formatMessage({ id: "bookingRequest.errors.permissionDenied", defaultMessage: "Accès refusé. Veuillez vous reconnecter." }));
+      } else {
+        setFormError(intl.formatMessage({ id: "bookingRequest.errors.generic", defaultMessage: "Une erreur est survenue. Veuillez réessayer." }));
+      }
     }
   };
 
