@@ -227,6 +227,16 @@ export const onProviderCreated = onDocumentCreated(
       return;
     }
 
+    // ⚠️ CORRECTION CRITIQUE: Définir les Custom Claims Firebase pour le provider
+    // Sans cela, les Firestore Rules qui utilisent request.auth.token.role ne fonctionnent pas
+    try {
+      await admin.auth().setCustomUserClaims(uid, { role: providerType });
+      console.log(`[onProviderCreated] ✅ Custom Claims définis: role=${providerType} pour: ${uid}`);
+    } catch (claimsError) {
+      console.error(`[onProviderCreated] ❌ Erreur définition Custom Claims pour ${uid}:`, claimsError);
+      // Continuer même si les claims échouent - on peut les définir manuellement plus tard
+    }
+
     // Vérifier si un compte Stripe existe déjà
     if (data.stripeAccountId) {
       console.log(`[onProviderCreated] Compte Stripe déjà existant: ${data.stripeAccountId} pour: ${uid}`);

@@ -3784,6 +3784,11 @@ export {
 // ========== AUTOMATIC STRIPE EXPRESS ACCOUNT CREATION ==========
 export { onProviderCreated } from './triggers/onProviderCreated';
 
+// ========== SYNC ROLE TO CUSTOM CLAIMS (CRITICAL FOR AUTH) ==========
+// Ces triggers synchronisent le rôle Firestore avec les Custom Claims Firebase
+// Sans cela, les Firestore Rules qui vérifient request.auth.token.role ne fonctionnent pas
+export { onUserCreatedSyncClaims, onUserUpdatedSyncClaims } from './triggers/syncRoleClaims';
+
 // ========== SYNC BOOKINGS TO OUTIL-SOS-EXPAT (AI TRIGGER) ==========
 export { onBookingRequestCreated } from './triggers/syncBookingsToOutil';
 
@@ -3798,6 +3803,11 @@ export { generateOutilToken } from './auth/generateOutilToken';
 
 // ========== ADMIN CLAIMS ==========
 export { setAdminClaims, initializeAdminClaims } from './auth/setAdminClaims';
+
+// ========== RESTORE USER ROLES (BUG FIX 30/12/2025) ==========
+// Scripts de restauration pour corriger les rôles perdus suite aux bugs
+// des commits a756c14 et 06efdb3 (defaultAuthContext + cold starts)
+export { restoreUserRoles, syncAllCustomClaims, checkUserRole } from './admin/restoreUserRoles';
 
 // ========== PASSWORD RESET (CUSTOM BRANDED EMAIL) ==========
 export { sendCustomPasswordResetEmail } from './auth/passwordReset';

@@ -414,52 +414,28 @@ const createUserDocumentInFirestore = async (
 /**
  * getUserDocument : version existante conservée (utile à refreshUser),
  * mais ⚠️ la lecture initiale ne s'appuie PLUS dessus — elle passe par le flux 2 temps plus bas.
+ *
+ * ⚠️ CORRECTION: Cette fonction ne doit JAMAIS créer un document avec role='client'
+ * car cela corromprait le rôle des prestataires (lawyers/expats).
  */
 const getUserDocument = async (firebaseUser: FirebaseUser): Promise<User | null> => {
   const refUser = doc(db, 'users', firebaseUser.uid);
-
-  const ensureUserDoc = async () => {
-    await setDoc(refUser, {
-      uid: firebaseUser.uid,
-      email: firebaseUser.email ?? null,
-      emailLower: (firebaseUser.email ?? '').toLowerCase(),
-      role: 'client',
-      isActive: true,
-      isApproved: false,
-      approvalStatus: 'pending',
-      isVisible: false,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    }, { merge: true });
-  };
 
   let snap: any;
   try {
     snap = await getDoc(refUser);
   } catch (e: any) {
-    if (e?.code === 'permission-denied') {
-      await ensureUserDoc();
-      snap = await getDoc(refUser);
-    } else {
-      throw e;
-    }
+    // ⚠️ CORRECTION: Ne pas créer de document en cas d'erreur de permission
+    // Retourner null pour signaler que l'utilisateur n'a pas de profil
+    console.error('[Auth] getUserDocument permission error:', e);
+    return null;
   }
 
+  // ⚠️ CORRECTION: Si le document n'existe pas, retourner null
+  // Ne JAMAIS créer un document avec role='client' par défaut
   if (!snap.exists()) {
-    await ensureUserDoc();
-    return {
-      id: firebaseUser.uid,
-      uid: firebaseUser.uid,
-      email: firebaseUser.email ?? null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      lastLoginAt: new Date(),
-      isVerifiedEmail: firebaseUser.emailVerified,
-      isOnline: false,
-      isApproved: false,
-      approvalStatus: 'pending',
-      isVisible: false,
-    } as unknown as User;
+    console.warn('[Auth] getUserDocument: document does not exist for uid:', firebaseUser.uid);
+    return null;
   }
 
   const data = snap.data() as Partial<User>;
@@ -634,25 +610,16 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     console.log("🔐 [AuthContext] Setting up onSnapshot listener for users/" + uid);
 
     // Timeout de secours si Firestore est trop lent
+    // ⚠️ CORRECTION: Ne PAS écraser le rôle avec 'client' - garder l'état loading
+    // et afficher une erreur à l'utilisateur plutôt que de corrompre son rôle
     timeoutId = setTimeout(() => {
       if (!firstSnapArrived.current && !cancelled) {
-        console.warn("🔐 [AuthContext] onSnapshot timeout (15s) - using Firebase Auth data only");
-        setUser({
-          id: uid,
-          uid,
-          email: authUser.email || null,
-          role: 'client',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          lastLoginAt: new Date(),
-          isVerifiedEmail: authUser.emailVerified,
-          isActive: true,
-          isApproved: false,
-        } as User);
-
-        firstSnapArrived.current = true;
-        setIsLoading(false);
-        setAuthInitialized(true);
+        console.warn("🔐 [AuthContext] onSnapshot timeout (15s) - Firestore trop lent, connexion conservée");
+        // ✅ NE PAS définir role: 'client' par défaut - garder loading
+        // L'utilisateur verra un spinner mais son rôle ne sera pas corrompu
+        setError('Connexion lente au serveur. Veuillez patienter ou rafraîchir la page.');
+        // On garde isLoading=true pour ne pas afficher un dashboard incorrect
+        // Le listener onSnapshot finira par recevoir les vraies données
       }
     }, 15000);
 
@@ -668,47 +635,29 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           timeoutId = null;
         }
 
-        // Document n'existe pas → le créer en arrière-plan
+        // Document n'existe pas → c'est une ANOMALIE car le document devrait exister après inscription
+        // ⚠️ CORRECTION: Ne PAS créer un document avec role='client' par défaut
+        // Cela corromprait le rôle des prestataires (lawyers/expats) si leur document
+        // n'a pas encore été répliqué ou s'il y a une erreur de timing
         if (!docSnap.exists()) {
-          console.log("🔐 [AuthContext] Document users/" + uid + " n'existe pas, création...");
+          console.warn("🔐 [AuthContext] Document users/" + uid + " n'existe pas - ANOMALIE");
+          console.warn("🔐 [AuthContext] L'utilisateur s'est connecté mais son document Firestore est absent.");
+          console.warn("🔐 [AuthContext] Cela peut arriver si l'inscription n'a pas terminé correctement.");
 
-          // Initialiser l'utilisateur avec les données minimales immédiatement
+          // ✅ CORRECTION: Garder l'état loading et afficher une erreur
+          // plutôt que de créer un faux document avec role='client'
           if (!firstSnapArrived.current) {
-            setUser({
-              id: uid,
-              uid,
-              email: authUser.email || null,
-              role: 'client',
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              lastLoginAt: new Date(),
-              isVerifiedEmail: authUser.emailVerified,
-              isActive: true,
-              isApproved: false,
-            } as User);
-
+            setError('Votre profil est en cours de création. Veuillez patienter quelques secondes et rafraîchir la page.');
+            // NE PAS définir setUser avec role='client' !
+            // Le document sera créé par le processus d'inscription qui définit le bon rôle
             firstSnapArrived.current = true;
             setIsLoading(false);
             setAuthInitialized(true);
           }
 
-          // Créer le document en arrière-plan (sans bloquer)
-          setDoc(
-            refUser,
-            {
-              uid,
-              email: authUser.email || null,
-              emailLower: (authUser.email || '').toLowerCase(),
-              role: 'client',
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp(),
-              isActive: true,
-              isApproved: false,
-              approvalStatus: 'pending',
-              isVisible: false,
-            },
-            { merge: true }
-          ).catch(err => console.warn("🔐 [AuthContext] Background setDoc failed:", err));
+          // ⚠️ NE PAS créer le document ici avec role='client'
+          // Le document doit être créé par le flow d'inscription (register) avec le BON rôle
+          // Si on arrive ici, c'est une erreur de synchronisation - l'utilisateur doit rafraîchir
 
           return;
         }
@@ -763,20 +712,17 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           stack: (err as Error)?.stack,
         });
 
-        // En cas d'erreur, initialiser avec les données minimales
+        // ⚠️ CORRECTION: En cas d'erreur, NE PAS définir role='client' par défaut
+        // Cela corromprait le rôle des prestataires si Firestore a une erreur temporaire
         if (!firstSnapArrived.current) {
-          setUser({
-            id: uid,
-            uid,
-            email: authUser.email || null,
-            role: 'client',
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            lastLoginAt: new Date(),
-            isVerifiedEmail: authUser.emailVerified,
-            isActive: true,
-            isApproved: false,
-          } as User);
+          // ✅ Afficher une erreur au lieu d'écraser le rôle
+          const errorCode = (err as any)?.code || 'unknown';
+          if (errorCode === 'permission-denied') {
+            setError('Accès refusé à votre profil. Veuillez vous reconnecter.');
+          } else {
+            setError('Erreur de connexion au serveur. Veuillez rafraîchir la page.');
+          }
+          // NE PAS définir setUser avec role='client' !
           firstSnapArrived.current = true;
         }
 
@@ -1764,11 +1710,17 @@ export default AuthProvider;
 
 /* =========================================================
    Compat : re-export d'un hook useAuth ici aussi
-   Now returns default context instead of throwing to prevent white screens
+   RESTAURÉ: Vérification du contexte pour éviter les bugs silencieux
    ========================================================= */
 export const useAuth = () => {
   const ctx = useContext(BaseAuthContext);
-  // Return context directly - BaseAuthContext now has default values
-  // This prevents white screens when component is used outside provider
+
+  // CRITIQUE: Vérifier que le contexte est initialisé
+  // Si authInitialized est false ET user est null ET isLoading est true,
+  // c'est probablement le defaultContext - on avertit mais on ne crash pas
+  if (!ctx.authInitialized && ctx.user === null && ctx.isLoading) {
+    console.warn('[useAuth] ⚠️ Contexte non initialisé - attendre authInitialized=true avant d\'utiliser les données');
+  }
+
   return ctx;
 };

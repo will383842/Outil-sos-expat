@@ -43,7 +43,8 @@ import {
   where,
   onSnapshot,
 } from "firebase/firestore";
-import { db } from "../../config/firebase";
+import { db, functions } from "../../config/firebase";
+import { httpsCallable } from "firebase/functions";
 import ErrorBoundary from "../../components/common/ErrorBoundary";
 import { logError } from "../../utils/logging";
 import Modal from "../../components/common/Modal";
@@ -153,6 +154,13 @@ const AdminDashboard: React.FC = () => {
   const [isCleaningData, setIsCleaningData] = useState<boolean>(false);
   const [isTestingNotifications, setIsTestingNotifications] =
     useState<boolean>(false);
+  const [isRestoringRoles, setIsRestoringRoles] = useState<boolean>(false);
+  const [roleRestorationResult, setRoleRestorationResult] = useState<{
+    restored: number;
+    synced: number;
+    failed: number;
+    skipped: number;
+  } | null>(null);
 
   const [stats, setStats] = useState<Stats>({
     totalCalls: 0,
@@ -188,6 +196,63 @@ const AdminDashboard: React.FC = () => {
     }
 
     throw new Error(intl.formatMessage({ id: 'admin.dashboard.notifications.serviceUnavailable' }));
+  };
+
+  // ==========================================================================
+  // 🔧 RESTAURATION DES RÔLES (Bug fix 30/12/2025)
+  // ==========================================================================
+  const handleRestoreRoles = async () => {
+    if (!user || user.role !== 'admin') return;
+
+    setIsRestoringRoles(true);
+    setRoleRestorationResult(null);
+
+    try {
+      console.log('🔧 Démarrage de la restauration des rôles...');
+
+      // 1. Restaurer les rôles perdus
+      const restoreUserRolesFn = httpsCallable<unknown, {
+        totalProcessed: number;
+        restored: number;
+        failed: number;
+        skipped: number;
+      }>(functions, 'restoreUserRoles');
+
+      const restoreResult = await restoreUserRolesFn();
+      console.log('📊 Résultat restauration:', restoreResult.data);
+
+      // 2. Synchroniser tous les Custom Claims
+      const syncAllCustomClaimsFn = httpsCallable<unknown, {
+        synced: number;
+        failed: number;
+      }>(functions, 'syncAllCustomClaims');
+
+      const syncResult = await syncAllCustomClaimsFn();
+      console.log('📊 Résultat synchronisation:', syncResult.data);
+
+      if (!mountedRef.current) return;
+
+      setRoleRestorationResult({
+        restored: restoreResult.data.restored,
+        synced: syncResult.data.synced,
+        failed: restoreResult.data.failed + syncResult.data.failed,
+        skipped: restoreResult.data.skipped,
+      });
+
+      alert(`✅ Restauration terminée!\n\n` +
+        `• Rôles restaurés: ${restoreResult.data.restored}\n` +
+        `• Claims synchronisés: ${syncResult.data.synced}\n` +
+        `• Ignorés (vrais clients): ${restoreResult.data.skipped}\n` +
+        `• Échecs: ${restoreResult.data.failed + syncResult.data.failed}`);
+
+    } catch (error) {
+      console.error('❌ Erreur restauration:', error);
+      alert('❌ Erreur lors de la restauration des rôles. Voir la console pour les détails.');
+    } finally {
+      if (mountedRef.current) {
+        setIsRestoringRoles(false);
+      }
+    }
   };
 
   // ==========================================================================
@@ -606,6 +671,14 @@ const AdminDashboard: React.FC = () => {
                   >
                     <Mail size={20} className="mr-2" />
                     {intl.formatMessage({ id: 'admin.dashboard.buttons.testNotifications' })}
+                  </Button>
+                  <Button
+                    onClick={handleRestoreRoles}
+                    loading={isRestoringRoles}
+                    className="bg-yellow-600 hover:bg-yellow-700"
+                  >
+                    <UserCheck size={20} className="mr-2" />
+                    🔧 Restaurer les rôles
                   </Button>
                 </div>
               </div>
