@@ -87,10 +87,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     setError(null);
 
     try {
-      // Timeout anti-latence sur le check de ban (25s pour réseaux très lents)
+      // Timeout anti-latence sur le check de ban (8s - réduit pour éviter pages blanches prolongées)
       const banned = await Promise.race([
         isUserBanned(user.id),
-        new Promise<boolean>((_, reject) => setTimeout(() => reject(new Error('Authorization timeout')), 25000)),
+        new Promise<boolean>((_, reject) => setTimeout(() => reject(new Error('Authorization timeout')), 8000)),
       ]);
 
       if (banned) {

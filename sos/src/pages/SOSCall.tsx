@@ -39,6 +39,7 @@ import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
 import { useApp } from "../contexts/AppContext";
 import GuidedFilterWizard from "../components/sos-call/GuidedFilterWizard";
+import DesktopFilterBar from "../components/sos-call/DesktopFilterBar";
 import { FormattedMessage, useIntl } from "react-intl";
 import { getAllProviderTypeKeywords, getProviderTypeKeywords, type SupportedLanguage, detectSearchLanguage } from "../utils/multilingualSearch";
 
@@ -3086,100 +3087,34 @@ const SOSCall: React.FC = () => {
               </h2>
 
               {/* ========================================
-                  📱 FILTRES SECTION (Tous écrans)
+                  🖥️ DESKTOP FILTER BAR (Nouvelle version compacte)
               ======================================== */}
-              <div className="space-y-3">
-                {/* Stats Bar - Desktop uniquement */}
-                <div
-                  className="hidden lg:flex items-center justify-between bg-white/5 backdrop-blur-sm rounded-2xl px-4 py-3 border border-white/10"
-                  role="status"
-                  aria-live="polite"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2">
-                      <span className="relative flex h-2.5 w-2.5">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
-                      </span>
-                      <span className="text-green-400 font-bold text-sm">{onlineCount}</span>
-                      <span className="text-gray-400 text-sm">
-                        <FormattedMessage id="sosCall.stats.onlineShort" defaultMessage="en ligne" />
-                      </span>
+              <DesktopFilterBar
+                onlineCount={onlineCount}
+                totalExperts={realProviders.length}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                searchSuggestions={searchSuggestions}
+                showSuggestions={showSuggestions}
+                onShowSuggestionsChange={setShowSuggestions}
+                selectedType={selectedType}
+                onTypeChange={setSelectedType}
+                selectedCountryCode={selectedCountryCode}
+                onCountryChange={handleCountryChange}
+                countryOptions={countryOptions}
+                selectedLanguageCodes={selectedLanguageCodes}
+                onLanguageToggle={handleLanguageToggle}
+                languageOptions={languageOptions}
+                statusFilter={statusFilter}
+                onStatusChange={setStatusFilter}
+                onResetFilters={resetFilters}
+                activeFiltersCount={activeFiltersCount}
+              />
 
-                      <span className="size-1 mx-2 my-4 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white text-sm font-bold" />
-                      <span className="text-white text-sm">{realProviders.length}</span>
-                      <div className="text-white text-sm">
-
-                      <FormattedMessage id="experts"/>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* SEARCH BAR - Desktop uniquement */}
-                <div className="hidden lg:block mb-6 max-w-4xl mx-auto">
-                <div className="relative group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 via-orange-500/20 to-yellow-500/20 rounded-3xl blur-xl opacity-50 group-hover:opacity-75 transition-opacity duration-300" />
-                  <div className="relative bg-gray-900 backdrop-blur-xl border border-white/20 rounded-3xl p-2 shadow-2xl my-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 relative">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 w-5 h-5" />
-                        <input
-                          type="text"
-                          value={searchQuery}
-                          onChange={(e) => {
-                            setSearchQuery(e.target.value);
-                            setShowSuggestions(true);
-                          }}
-                          onFocus={() => setShowSuggestions(true)}
-                          onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                          placeholder={intl.formatMessage({ id: "search.placeholder" })}
-                          className="w-full pl-12 pr-4 py-4 bg-gray-900 border border-white/15 rounded-2xl text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-transparent transition-all duration-300 text-base"
-                        />
-                        {searchQuery && (
-                          <button
-                            onClick={() => {
-                              setSearchQuery("");
-                              setShowSuggestions(false);
-                            }}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-                            aria-label="Clear search"
-                          >
-                            <X className="w-5 h-5" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* Search Suggestions */}
-                    {showSuggestions && searchSuggestions.length > 0 && (
-                      <div className="mt-2 bg-gray-900 backdrop-blur-xl border border-white/20 rounded-2xl p-2 max-h-64 overflow-y-auto">
-                        <div className="text-xs font-semibold text-gray-300 uppercase tracking-wide px-3 py-2">
-                          <FormattedMessage id="search.suggestions" />
-                        </div>
-                        <div className="space-y-1">
-                          {searchSuggestions.map((suggestion, idx) => (
-                            <button
-                              key={idx}
-                              onClick={() => {
-                                setSearchQuery(suggestion);
-                                setShowSuggestions(false);
-                              }}
-                              className="w-full text-left px-4 py-2 rounded-xl text-white/90 hover:bg-white/10 hover:text-white transition-all duration-200 text-sm"
-                            >
-                              {suggestion}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-              </div>
-
-              {/* FILTRES - Desktop uniquement (mobile utilise le FAB + wizard) */}
-              <div className="hidden lg:block rounded-[28px] border border-white/10 bg-white/5 backdrop-blur-md p-4 sm:p-6 max-w-6xl mx-auto">
+              {/* ========================================
+                  📱 FILTRES SECTION (Mobile uniquement)
+              ======================================== */}
+              <div className="space-y-3 lg:hidden">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
                   {/* Type */}
                   <div className="space-y-1">
