@@ -49,6 +49,14 @@ import { getNamesByCountry } from '../../data/names-by-country';
 import { getLawyerSpecialityLabel } from '../../data/lawyer-specialties';
 import { getExpatHelpTypeLabel } from '../../data/expat-help-types';
 
+// Import du script de génération massive d'avocats
+import { generateLawyersAllCountries } from '../../scripts/generateLawyersAllCountries';
+
+// Exposer la fonction globalement pour la console
+if (typeof window !== 'undefined') {
+  (window as any).generateLawyersAllCountries = generateLawyersAllCountries;
+}
+
 // ✅ IMPORTS CORRIGÉS depuis slugGenerator (generateSlug non utilisé - généré par ProviderProfile)
 import { 
   slugify,
