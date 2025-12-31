@@ -49,10 +49,17 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
   const emailInputRef = useRef<HTMLInputElement>(null);
   const passwordInputRef = useRef<HTMLInputElement>(null);
   const googleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // FIX: Track previous isOpen state to only reset on actual modal open (false→true transition)
+  const wasOpenRef = useRef(false);
 
-  // Reset on open/close
+  // Reset ONLY when modal transitions from closed to open (not on re-renders while open)
   useEffect(() => {
-    if (isOpen) {
+    const wasOpen = wasOpenRef.current;
+    wasOpenRef.current = isOpen;
+
+    // Only reset if transitioning from closed (false) to open (true)
+    // This prevents losing form data during re-renders while the modal is open
+    if (isOpen && !wasOpen) {
       setStep('email');
       setEmail('');
       setPassword('');
