@@ -1398,13 +1398,13 @@ const BookingRequest: React.FC = () => {
   const refPhone = useRef<HTMLDivElement | null>(null);
   const refCGU = useRef<HTMLDivElement | null>(null);
 
-  // Mobile-first input classes with 44px minimum touch target (Apple HIG)
+  // Mobile-first 2026 input classes with 48px minimum touch target (Apple HIG + Google Material 3)
   const inputClass = (hasErr?: boolean) =>
-    `w-full px-3 sm:px-4 py-3 sm:py-3.5 min-h-[48px] border-2 rounded-xl bg-white text-gray-900 placeholder-gray-400
-    focus:outline-none transition-all duration-200 text-base touch-manipulation
-    [&_input]:border-0 [&_input]:outline-none [&_input]:shadow-none [&_input]:bg-transparent
+    `w-full max-w-full box-border px-3 sm:px-4 py-3 sm:py-3.5 min-h-[48px] border-2 rounded-xl bg-white text-gray-900 placeholder-gray-400
+    focus:outline-none transition-all duration-200 text-[16px] touch-manipulation overflow-hidden
+    [&_input]:border-0 [&_input]:outline-none [&_input]:shadow-none [&_input]:bg-transparent [&_input]:w-full [&_input]:max-w-full
     [&_input:focus]:border-0 [&_input:focus]:outline-none [&_input:focus]:shadow-none
-    [&_select]:outline-none [&_select:focus]:outline-none [&_select]:bg-transparent
+    [&_select]:outline-none [&_select:focus]:outline-none [&_select]:bg-transparent [&_select]:w-full
     [-webkit-appearance:none] [appearance:none]
   ${
     hasErr
@@ -1928,6 +1928,9 @@ const BookingRequest: React.FC = () => {
         );
         sessionStorage.setItem("clientPhone", bookingRequest.clientPhone);
 
+        // Sauvegarde complète du bookingRequest pour récupération en cas de retour arrière
+        sessionStorage.setItem("bookingRequest", JSON.stringify(bookingRequest));
+
         sessionStorage.setItem(
           "serviceData",
           JSON.stringify({
@@ -2012,7 +2015,7 @@ const BookingRequest: React.FC = () => {
         }}
       />
 
-      <div className="min-h-screen bg-[linear-gradient(180deg,#fff7f7_0%,#ffffff_35%,#fff5f8_100%)] py-3 sm:py-8 pb-safe overflow-x-hidden w-full max-w-full">
+      <div className="min-h-screen bg-[linear-gradient(180deg,#fff7f7_0%,#ffffff_35%,#fff5f8_100%)] py-3 sm:py-8 pb-safe overflow-x-hidden w-full max-w-[100vw] box-border">
         {/* Hero / Title - Mobile optimized */}
         <header className="px-3 sm:px-4 max-w-3xl mx-auto mb-3 sm:mb-6">
           <div className="flex items-center gap-2 sm:gap-3 text-gray-700 mb-2">
@@ -2165,10 +2168,10 @@ const BookingRequest: React.FC = () => {
           </div>
         </div>
 
-        {/* Form - Mobile optimized */}
-        <div className="max-w-3xl mx-auto px-3 sm:px-4 w-full">
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden w-full">
-            <form onSubmit={handleSubmit(onSubmit)} noValidate className="touch-manipulation w-full">
+        {/* Form - Mobile optimized with strict overflow control */}
+        <div className="max-w-3xl mx-auto px-3 sm:px-4 w-full box-border">
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden w-full max-w-full">
+            <form onSubmit={handleSubmit(onSubmit)} noValidate className="touch-manipulation w-full max-w-full overflow-hidden">
               {/* Section Perso */}
               <section className="p-4 sm:p-6">
                 <SectionHeader

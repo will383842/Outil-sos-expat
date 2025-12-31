@@ -32,6 +32,43 @@ html.dark {
 
 .multi-language-select {
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Mobile-first 2026 best practices */
+.multi-language-select .mls__control {
+  min-height: 48px;
+  font-size: 16px; /* Prevents iOS zoom */
+}
+
+.multi-language-select .mls__menu {
+  max-width: calc(100vw - 24px);
+  overflow-x: hidden;
+}
+
+.multi-language-select .mls__value-container {
+  flex-wrap: wrap;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.multi-language-select .mls__multi-value {
+  max-width: calc(100% - 8px);
+}
+
+.multi-language-select .mls__multi-value__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 150px;
+}
+
+@media (max-width: 400px) {
+  .multi-language-select .mls__multi-value__label {
+    max-width: 100px;
+  }
 }
 
 .multi-language-select .mls__control {

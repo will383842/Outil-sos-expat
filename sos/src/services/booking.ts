@@ -102,10 +102,10 @@ export async function createBookingRequest(data: BookingRequestCreate) {
     createdAt: serverTimestamp(),
   };
 
-  // Timeout de 15 secondes pour éviter le blocage indéfini
+  // Timeout de 30 secondes pour éviter le blocage indéfini (augmenté pour connexions lentes)
   await withTimeout(
     addDoc(collection(db, "booking_requests"), payload),
-    15000,
+    30000,
     "NETWORK_TIMEOUT"
   );
 }

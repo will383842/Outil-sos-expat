@@ -183,8 +183,54 @@ div[class*="country-list"] {
 .react-tel-input {
   position: relative !important;
   z-index: 10 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .react-tel-input .flag-dropdown.open {
   z-index: 9998 !important;
+}
+
+/* Mobile-first 2026 best practices */
+.intl-phone-input {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+.intl-phone-input .react-tel-input {
+  width: 100% !important;
+}
+
+.intl-phone-input .react-tel-input .form-control {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  min-height: 48px !important;
+  font-size: 16px !important; /* Prevents iOS zoom on focus */
+  border-radius: 12px !important;
+  padding-left: 52px !important;
+}
+
+.intl-phone-input .react-tel-input .flag-dropdown {
+  border-radius: 12px 0 0 12px !important;
+  min-height: 48px !important;
+}
+
+/* Ultra-small screens */
+@media (max-width: 360px) {
+  .intl-phone-input .react-tel-input .form-control {
+    padding-left: 48px !important;
+    font-size: 15px !important;
+  }
+
+  .react-tel-input .country-list {
+    width: calc(100vw - 20px) !important;
+    max-width: 260px !important;
+    left: 0 !important;
+    right: auto !important;
+    transform: none !important;
+  }
 }
