@@ -7,6 +7,9 @@ static_sites:
     output_dir: dist
     environment_slug: node-js
     catchall_document: index.html
+    routes:
+      - path: /
+        preserve_path_prefix: true
     cors:
       allow_origins:
         - exact: https://sos-expat.com
