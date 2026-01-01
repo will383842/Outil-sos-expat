@@ -733,6 +733,271 @@ export async function checkAllProfiles(): Promise<void> {
   }
 }
 
+// =============================================
+// MIGRATION DES CODES ISO DANS LES BIOS
+// =============================================
+
+/**
+ * Mapping complet des codes ISO vers noms de pays en français
+ */
+const ISO_TO_COUNTRY_NAME: Record<string, string> = {
+  'AF': 'Afghanistan', 'AL': 'Albanie', 'DZ': 'Algérie', 'AD': 'Andorre', 'AO': 'Angola',
+  'AR': 'Argentine', 'AM': 'Arménie', 'AU': 'Australie', 'AT': 'Autriche', 'AZ': 'Azerbaïdjan',
+  'BS': 'Bahamas', 'BH': 'Bahreïn', 'BD': 'Bangladesh', 'BB': 'Barbade', 'BY': 'Biélorussie',
+  'BE': 'Belgique', 'BZ': 'Belize', 'BJ': 'Bénin', 'BT': 'Bhoutan', 'BO': 'Bolivie',
+  'BA': 'Bosnie-Herzégovine', 'BW': 'Botswana', 'BR': 'Brésil', 'BN': 'Brunei', 'BG': 'Bulgarie',
+  'BF': 'Burkina Faso', 'BI': 'Burundi', 'KH': 'Cambodge', 'CM': 'Cameroun', 'CA': 'Canada',
+  'CV': 'Cap-Vert', 'CF': 'Centrafrique', 'TD': 'Tchad', 'CL': 'Chili', 'CN': 'Chine',
+  'CO': 'Colombie', 'KM': 'Comores', 'CG': 'Congo', 'CD': 'RD Congo', 'CR': 'Costa Rica',
+  'CI': 'Côte d\'Ivoire', 'HR': 'Croatie', 'CU': 'Cuba', 'CY': 'Chypre', 'CZ': 'Tchéquie',
+  'DK': 'Danemark', 'DJ': 'Djibouti', 'DM': 'Dominique', 'DO': 'République Dominicaine',
+  'EC': 'Équateur', 'EG': 'Égypte', 'SV': 'Salvador', 'GQ': 'Guinée équatoriale', 'ER': 'Érythrée',
+  'EE': 'Estonie', 'SZ': 'Eswatini', 'ET': 'Éthiopie', 'FJ': 'Fidji', 'FI': 'Finlande',
+  'FR': 'France', 'GA': 'Gabon', 'GM': 'Gambie', 'GE': 'Géorgie', 'DE': 'Allemagne',
+  'GH': 'Ghana', 'GR': 'Grèce', 'GD': 'Grenade', 'GT': 'Guatemala', 'GN': 'Guinée',
+  'GW': 'Guinée-Bissau', 'GY': 'Guyana', 'HT': 'Haïti', 'HN': 'Honduras', 'HU': 'Hongrie',
+  'IS': 'Islande', 'IN': 'Inde', 'ID': 'Indonésie', 'IR': 'Iran', 'IQ': 'Irak',
+  'IE': 'Irlande', 'IL': 'Israël', 'IT': 'Italie', 'JM': 'Jamaïque', 'JP': 'Japon',
+  'JO': 'Jordanie', 'KZ': 'Kazakhstan', 'KE': 'Kenya', 'KI': 'Kiribati', 'KP': 'Corée du Nord',
+  'KR': 'Corée du Sud', 'KW': 'Koweït', 'KG': 'Kirghizistan', 'LA': 'Laos', 'LV': 'Lettonie',
+  'LB': 'Liban', 'LS': 'Lesotho', 'LR': 'Liberia', 'LY': 'Libye', 'LI': 'Liechtenstein',
+  'LT': 'Lituanie', 'LU': 'Luxembourg', 'MG': 'Madagascar', 'MW': 'Malawi', 'MY': 'Malaisie',
+  'MV': 'Maldives', 'ML': 'Mali', 'MT': 'Malte', 'MH': 'Îles Marshall', 'MR': 'Mauritanie',
+  'MU': 'Maurice', 'MX': 'Mexique', 'FM': 'Micronésie', 'MD': 'Moldavie', 'MC': 'Monaco',
+  'MN': 'Mongolie', 'ME': 'Monténégro', 'MA': 'Maroc', 'MZ': 'Mozambique', 'MM': 'Myanmar',
+  'NA': 'Namibie', 'NR': 'Nauru', 'NP': 'Népal', 'NL': 'Pays-Bas', 'NZ': 'Nouvelle-Zélande',
+  'NI': 'Nicaragua', 'NE': 'Niger', 'NG': 'Nigeria', 'NO': 'Norvège', 'OM': 'Oman',
+  'PK': 'Pakistan', 'PW': 'Palaos', 'PA': 'Panama', 'PG': 'Papouasie-Nouvelle-Guinée', 'PY': 'Paraguay',
+  'PE': 'Pérou', 'PH': 'Philippines', 'PL': 'Pologne', 'PT': 'Portugal', 'QA': 'Qatar',
+  'RO': 'Roumanie', 'RU': 'Russie', 'RW': 'Rwanda', 'KN': 'Saint-Kitts-et-Nevis', 'LC': 'Sainte-Lucie',
+  'VC': 'Saint-Vincent-et-les-Grenadines', 'WS': 'Samoa', 'SM': 'Saint-Marin', 'ST': 'São Tomé-et-Príncipe',
+  'SA': 'Arabie Saoudite', 'SN': 'Sénégal', 'RS': 'Serbie', 'SC': 'Seychelles', 'SL': 'Sierra Leone',
+  'SG': 'Singapour', 'SK': 'Slovaquie', 'SI': 'Slovénie', 'SB': 'Îles Salomon', 'SO': 'Somalie',
+  'ZA': 'Afrique du Sud', 'SS': 'Soudan du Sud', 'ES': 'Espagne', 'LK': 'Sri Lanka', 'SD': 'Soudan',
+  'SR': 'Suriname', 'SE': 'Suède', 'CH': 'Suisse', 'SY': 'Syrie', 'TW': 'Taïwan',
+  'TJ': 'Tadjikistan', 'TZ': 'Tanzanie', 'TH': 'Thaïlande', 'TL': 'Timor oriental', 'TG': 'Togo',
+  'TO': 'Tonga', 'TT': 'Trinité-et-Tobago', 'TN': 'Tunisie', 'TR': 'Turquie', 'TM': 'Turkménistan',
+  'TV': 'Tuvalu', 'UG': 'Ouganda', 'UA': 'Ukraine', 'AE': 'Émirats arabes unis', 'GB': 'Royaume-Uni',
+  'US': 'États-Unis', 'UY': 'Uruguay', 'UZ': 'Ouzbékistan', 'VU': 'Vanuatu', 'VA': 'Vatican',
+  'VE': 'Venezuela', 'VN': 'Vietnam', 'YE': 'Yémen', 'ZM': 'Zambie', 'ZW': 'Zimbabwe',
+  'HK': 'Hong Kong', 'MO': 'Macao', 'PS': 'Palestine', 'XK': 'Kosovo',
+};
+
+/**
+ * Détecte et remplace les codes ISO dans un texte de bio
+ * Recherche les patterns comme "en NI", "à FR", "depuis DE", etc.
+ */
+function replaceIsoCodesInBio(bio: string): { updated: string; replacements: string[] } {
+  const replacements: string[] = [];
+  let updated = bio;
+
+  // Patterns courants où les codes ISO apparaissent
+  const patterns = [
+    /\b(en|à|au|aux|depuis|de|du|pour|vers)\s+([A-Z]{2})\b/g,  // "en NI", "à FR"
+    /\b([A-Z]{2})\s+(depuis|pour|avec)\b/g,                      // "NI depuis"
+    /\(([A-Z]{2})\)/g,                                            // "(NI)"
+  ];
+
+  for (const pattern of patterns) {
+    updated = updated.replace(pattern, (match, ...groups) => {
+      // Trouver le code ISO dans le match
+      for (const group of groups) {
+        if (typeof group === 'string' && group.length === 2 && /^[A-Z]{2}$/.test(group)) {
+          const countryName = ISO_TO_COUNTRY_NAME[group];
+          if (countryName) {
+            replacements.push(`${group} → ${countryName}`);
+            return match.replace(group, countryName);
+          }
+        }
+      }
+      return match;
+    });
+  }
+
+  // Remplacer aussi les codes ISO isolés (2 lettres majuscules entourées d'espaces ou ponctuation)
+  for (const [code, name] of Object.entries(ISO_TO_COUNTRY_NAME)) {
+    const isoPattern = new RegExp(`\\b${code}\\b`, 'g');
+    if (isoPattern.test(updated) && updated.includes(code)) {
+      // Vérifier que ce n'est pas un faux positif (mot courant comme "DE", "EN", etc.)
+      const falsePositives = ['DE', 'EN', 'ES', 'LA', 'LE', 'UN', 'ET', 'OU', 'AU', 'DU', 'AI', 'AS', 'ME', 'MA', 'MO', 'NO'];
+      if (!falsePositives.includes(code)) {
+        const beforeReplace = updated;
+        updated = updated.replace(isoPattern, name);
+        if (beforeReplace !== updated) {
+          replacements.push(`${code} → ${name}`);
+        }
+      }
+    }
+  }
+
+  return { updated, replacements };
+}
+
+/**
+ * Corrige les bios d'un profil en remplaçant les codes ISO par les noms de pays
+ */
+function fixBiosCountryCodes(bio: Record<string, string>): {
+  fixed: Record<string, string>;
+  hasChanges: boolean;
+  allReplacements: Record<string, string[]>;
+} {
+  const fixed: Record<string, string> = {};
+  const allReplacements: Record<string, string[]> = {};
+  let hasChanges = false;
+
+  for (const [lang, text] of Object.entries(bio)) {
+    const { updated, replacements } = replaceIsoCodesInBio(text);
+    fixed[lang] = updated;
+    if (replacements.length > 0) {
+      allReplacements[lang] = replacements;
+      hasChanges = true;
+    }
+  }
+
+  return { fixed, hasChanges, allReplacements };
+}
+
+/**
+ * Prévisualise les corrections des codes ISO dans les bios
+ */
+export async function previewBioCountryFix(): Promise<void> {
+  console.log('🔍 Analyse des bios avec codes ISO...\n');
+
+  const querySnapshot = await getDocs(collection(db, 'sos_profiles'));
+  let profilesWithIssues = 0;
+  const examples: { name: string; replacements: Record<string, string[]> }[] = [];
+
+  for (const docSnap of querySnapshot.docs) {
+    const data = docSnap.data();
+    const bio = data.bio;
+
+    if (bio && typeof bio === 'object') {
+      const { hasChanges, allReplacements } = fixBiosCountryCodes(bio as Record<string, string>);
+      if (hasChanges) {
+        profilesWithIssues++;
+        if (examples.length < 10) {
+          examples.push({
+            name: data.fullName || docSnap.id,
+            replacements: allReplacements
+          });
+        }
+      }
+    }
+  }
+
+  console.log(`📊 Résultats:`);
+  console.log(`   Profils avec codes ISO dans bio: ${profilesWithIssues}`);
+  console.log(`   Total profils analysés: ${querySnapshot.docs.length}\n`);
+
+  if (examples.length > 0) {
+    console.log('📝 Exemples de corrections (10 premiers):');
+    for (const example of examples) {
+      console.log(`\n  👤 ${example.name}:`);
+      for (const [lang, replacements] of Object.entries(example.replacements)) {
+        console.log(`     [${lang}] ${replacements.join(', ')}`);
+      }
+    }
+  }
+
+  console.log('\n💡 Pour appliquer les corrections:');
+  console.log('   migrateSpecialtyCodes.fixBios()');
+}
+
+/**
+ * Corrige tous les codes ISO dans les bios de tous les profils
+ */
+export async function fixAllBiosCountryCodes(): Promise<void> {
+  console.log('🔧 Correction des codes ISO dans les bios...\n');
+
+  const querySnapshot = await getDocs(collection(db, 'sos_profiles'));
+  let fixedCount = 0;
+  let errorCount = 0;
+
+  for (const docSnap of querySnapshot.docs) {
+    const data = docSnap.data();
+    const bio = data.bio;
+
+    if (bio && typeof bio === 'object') {
+      const { fixed, hasChanges, allReplacements } = fixBiosCountryCodes(bio as Record<string, string>);
+
+      if (hasChanges) {
+        try {
+          // Mettre à jour dans sos_profiles
+          await updateDoc(doc(db, 'sos_profiles', docSnap.id), { bio: fixed });
+
+          // Mettre à jour aussi dans users si existe
+          try {
+            await updateDoc(doc(db, 'users', docSnap.id), { bio: fixed });
+          } catch {
+            // Ignorer si le doc users n'existe pas
+          }
+
+          fixedCount++;
+          console.log(`✅ ${data.fullName || docSnap.id}:`);
+          for (const [lang, replacements] of Object.entries(allReplacements)) {
+            console.log(`   [${lang}] ${replacements.join(', ')}`);
+          }
+        } catch (error) {
+          errorCount++;
+          console.error(`❌ Erreur ${data.fullName || docSnap.id}:`, error);
+        }
+      }
+    }
+  }
+
+  console.log('\n📊 Résumé:');
+  console.log(`   Profils corrigés: ${fixedCount}`);
+  console.log(`   Erreurs: ${errorCount}`);
+}
+
+/**
+ * Corrige les codes ISO dans la bio d'un profil spécifique
+ */
+export async function fixOneBioCountryCodes(profileId: string): Promise<void> {
+  console.log(`🔧 Correction de la bio pour ${profileId}...\n`);
+
+  const docRef = doc(db, 'sos_profiles', profileId);
+  const querySnapshot = await getDocs(collection(db, 'sos_profiles'));
+  const docSnap = querySnapshot.docs.find(d => d.id === profileId);
+
+  if (!docSnap) {
+    console.error(`❌ Profil ${profileId} non trouvé`);
+    return;
+  }
+
+  const data = docSnap.data();
+  const bio = data.bio;
+
+  if (!bio || typeof bio !== 'object') {
+    console.log('⚠️ Ce profil n\'a pas de bio multilingue');
+    return;
+  }
+
+  const { fixed, hasChanges, allReplacements } = fixBiosCountryCodes(bio as Record<string, string>);
+
+  if (!hasChanges) {
+    console.log('✅ Aucun code ISO trouvé dans la bio');
+    return;
+  }
+
+  console.log('📝 Corrections à appliquer:');
+  for (const [lang, replacements] of Object.entries(allReplacements)) {
+    console.log(`   [${lang}] ${replacements.join(', ')}`);
+  }
+
+  try {
+    await updateDoc(doc(db, 'sos_profiles', profileId), { bio: fixed });
+    try {
+      await updateDoc(doc(db, 'users', profileId), { bio: fixed });
+    } catch {
+      // Ignorer si users n'existe pas
+    }
+    console.log('\n✅ Bio corrigée avec succès!');
+  } catch (error) {
+    console.error('\n❌ Erreur:', error);
+  }
+}
+
 // Exposer les fonctions globalement pour la console
 if (typeof window !== 'undefined') {
   (window as any).migrateSpecialtyCodes = {
@@ -740,11 +1005,20 @@ if (typeof window !== 'undefined') {
     migrateAll: migrateAllSpecialtyCodes,
     migrateOne: migrateOneProfile,
     checkAll: checkAllProfiles,
+    // Nouvelles fonctions pour les bios
+    previewBios: previewBioCountryFix,
+    fixBios: fixAllBiosCountryCodes,
+    fixOneBio: fixOneBioCountryCodes,
   };
 
   console.log('🔧 Script de migration chargé. Utilisez:');
-  console.log('  - migrateSpecialtyCodes.preview() pour prévisualiser');
-  console.log('  - migrateSpecialtyCodes.migrateAll() pour migrer tous les profils');
-  console.log('  - migrateSpecialtyCodes.migrateOne("profileId") pour migrer un profil');
-  console.log('  - migrateSpecialtyCodes.checkAll() pour vérifier tous les profils');
+  console.log('  📦 Spécialités:');
+  console.log('    - migrateSpecialtyCodes.preview() pour prévisualiser');
+  console.log('    - migrateSpecialtyCodes.migrateAll() pour migrer tous les profils');
+  console.log('    - migrateSpecialtyCodes.migrateOne("profileId") pour migrer un profil');
+  console.log('    - migrateSpecialtyCodes.checkAll() pour vérifier tous les profils');
+  console.log('  🌍 Codes pays dans bios:');
+  console.log('    - migrateSpecialtyCodes.previewBios() pour prévisualiser les corrections');
+  console.log('    - migrateSpecialtyCodes.fixBios() pour corriger tous les bios');
+  console.log('    - migrateSpecialtyCodes.fixOneBio("profileId") pour corriger un bio');
 }
