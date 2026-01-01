@@ -1176,7 +1176,7 @@ filtered = filtered.filter(p => {
           
           <div className="flex items-center justify-between mb-4" itemProp="offers" itemScope itemType="http://schema.org/Offer">
             <div className="text-2xl font-bold text-blue-600" itemProp="price">
-              {provider.price}€
+              {Number(provider.price).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
               <span itemProp="priceCurrency" className="sr-only">EUR</span>
             </div>
             <div className="text-sm text-gray-500">{provider.duration} min</div>

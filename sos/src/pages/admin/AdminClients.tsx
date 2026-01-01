@@ -967,7 +967,7 @@ const AdminClients: React.FC = () => {
                             </span>
                           </div>
                           <div className="text-xs text-gray-500">
-                            {client.callsCount} {t("callsSpend").split(" ")[0]} • {client.totalSpent.toFixed(2)} €
+                            {client.callsCount} {t("callsSpend").split(" ")[0]} • {client.totalSpent.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
                           </div>
                         </div>
                       </td>

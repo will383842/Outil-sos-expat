@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, AlertCircle, LogIn, Shield } from 'lucide-react';
 import { signInWithEmailAndPassword, setPersistence, browserLocalPersistence, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
-import { auth, db } from '../../config/firebase';
+import { httpsCallable } from 'firebase/functions';
+import { auth, db, functions } from '../../config/firebase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useIntl } from 'react-intl';
 
@@ -85,7 +86,22 @@ const AdminLogin: React.FC = () => {
         return;
       }
 
-      // User is verified admin - update last login timestamp only
+      // User is verified admin - set custom claims via Cloud Function
+      // This is CRITICAL for Firestore security rules to work
+      try {
+        const setAdminClaimsFn = httpsCallable(functions, 'setAdminClaims');
+        await setAdminClaimsFn();
+        console.log('[AdminLogin] Custom claims set successfully');
+
+        // Force token refresh to get new claims
+        await user.getIdToken(true);
+        console.log('[AdminLogin] Token refreshed with new claims');
+      } catch (claimsError) {
+        console.warn('[AdminLogin] Could not set custom claims:', claimsError);
+        // Continue anyway - claims might already be set
+      }
+
+      // Update last login timestamp
       await setDoc(userRef, {
         lastLoginAt: serverTimestamp(),
         updatedAt: serverTimestamp()

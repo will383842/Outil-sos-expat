@@ -8,6 +8,7 @@ import { collection, query, getDocs, limit, where, DocumentData, QueryDocumentSn
 import { db } from '../config/firebase';
 import type { Provider } from '../types/provider';
 import { normalizeProvider, validateProvider } from '../types/provider';
+import { usePricingConfig } from '../services/pricingService';
 
 type ProviderType = 'all' | 'lawyer' | 'expat';
 type SortOption = 'rating' | 'price' | 'experience';
@@ -94,7 +95,10 @@ const getCountryCoordinates = (country: string): { lat: number; lng: number } | 
 const Providers: React.FC = () => {
   const { language } = useApp();
   const navigate = useNavigate();
-  
+
+  // Get centralized pricing configuration from admin_config/pricing
+  const { pricing } = usePricingConfig();
+
   // State management
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<ProviderType>('all');
@@ -279,6 +283,14 @@ const Providers: React.FC = () => {
     // ✅ CORRECTION : Utilisation des noms de propriétés attendus par CallCheckoutWrapper
     const selectedProvider = normalizeProvider(provider); // ← AJOUT de normalizeProvider
 
+    // Get commission amounts from centralized admin_config/pricing
+    const serviceType = selectedProvider.type === 'lawyer' ? 'lawyer' : 'expat';
+    const pricingConfig = pricing?.[serviceType]?.eur;
+
+    // Use connectionFeeAmount from admin_config/pricing, fallback to calculated values
+    const commissionAmount = pricingConfig?.connectionFeeAmount ?? Math.round(selectedProvider.price * 0.39 * 100) / 100;
+    const providerAmount = pricingConfig?.providerAmount ?? Math.round(selectedProvider.price - commissionAmount);
+
     const serviceData = {
       providerId: selectedProvider.id,
       serviceType: selectedProvider.type === 'lawyer' ? 'lawyer_call' : 'expat_call',
@@ -286,8 +298,8 @@ const Providers: React.FC = () => {
       amount: selectedProvider.price,
       duration: selectedProvider.duration,
       clientPhone: '',
-      commissionAmount: Math.round(selectedProvider.price * 0.20 * 100) / 100,
-      providerAmount: Math.round(selectedProvider.price * 0.80 * 100) / 100
+      commissionAmount: commissionAmount,
+      providerAmount: providerAmount
     };
 
     sessionStorage.setItem('selectedProvider', JSON.stringify(selectedProvider)); // ← AJOUT
@@ -301,7 +313,7 @@ const Providers: React.FC = () => {
     });
     
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [navigate]);
+  }, [navigate, pricing]);
 
   // Reset filters
   const resetFilters = useCallback(() => {
@@ -561,7 +573,7 @@ const Providers: React.FC = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-gray-900">€{provider.price}</div>
+                      <div className="text-2xl font-bold text-gray-900">{Number(provider.price).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</div>
                       <div className="text-xs text-gray-500">
                         {CONFIG.CONSULTATION_DURATION[provider.type]}
                       </div>

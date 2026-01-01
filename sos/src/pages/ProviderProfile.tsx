@@ -108,6 +108,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import QuickAuthWizard from "../components/auth/QuickAuthWizard";
 import { getLawyerSpecialityLabel } from "../data/lawyer-specialties";
 import { getExpatHelpTypeLabel } from "../data/expat-help-types";
+import { getSpecialtyLabel, mapLanguageToLocale } from "../utils/specialtyMapper";
 
 /* ===================================================================== */
 /* CONSTANTES OPTIMISÉES                                                */
@@ -413,7 +414,7 @@ const formatEUR = (value?: number) => {
   return new Intl.NumberFormat("fr-FR", {
     style: "currency",
     currency: "EUR",
-    minimumFractionDigits: 0,
+    minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value);
 };
@@ -423,7 +424,7 @@ const formatUSD = (value?: number) => {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-    minimumFractionDigits: 0,
+    minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value);
 };
@@ -1861,59 +1862,36 @@ const ProviderProfile: React.FC = () => {
   
   const derivedSpecialties = useMemo(() => {
     if (!provider) return [];
-    
-    // Determine which locale to use for translation
-    const localeForTranslation = detectedLang === "fr" ? "fr" : "en";
-    
-    // ALWAYS show original from sos_profiles when showOriginal is true
-    if (showOriginal) {
-      const arr = isLawyer
-        ? toArrayFromAny(provider.specialties, preferredLangKey)
-        : toArrayFromAny(
-            provider.helpTypes || provider.specialties,
-            preferredLangKey
-          );
-      // Translate specialty codes to localized labels
-      return arr
-        .map((s) => {
-          try {
-            const cleanCode = s.trim().toUpperCase();
-            if (isLawyer) {
-              const label = getLawyerSpecialityLabel(cleanCode, localeForTranslation as any);
-              return label !== cleanCode ? label : s;
-            } else {
-              const label = getExpatHelpTypeLabel(cleanCode, localeForTranslation as any);
-              return label !== cleanCode ? label : s;
-            }
-          } catch (e) {
-            return s;
-          }
-        })
-        .map((s) => s.replace(/\s+/g, " ").trim())
-        .filter(Boolean);
-    }
+
+    // Determine which locale to use for translation - use mapLanguageToLocale for proper mapping
+    const localeForTranslation = mapLanguageToLocale(detectedLang || preferredLangKey || 'fr');
+
     // Only use translation if user explicitly selected a language and showOriginal is false
     if (translation && !showOriginal && viewingLanguage && translation.specialties) {
       return translation.specialties;
     }
-    // Fallback to provider's specialties (original) - but still translate the codes
+
+    // Get specialties array
     const arr = isLawyer
       ? toArrayFromAny(provider.specialties, preferredLangKey)
       : toArrayFromAny(
           provider.helpTypes || provider.specialties,
           preferredLangKey
         );
-    // Translate specialty codes to localized labels
+
+    // Translate specialty codes to localized labels using the specialtyMapper
     return arr
       .map((s) => {
         try {
-          const cleanCode = s.trim().toUpperCase();
+          const cleanCode = s.trim();
           if (isLawyer) {
-            const label = getLawyerSpecialityLabel(cleanCode, localeForTranslation as any);
-            return label !== cleanCode ? label : s;
+            // Use getSpecialtyLabel from specialtyMapper which handles camelCase to SCREAMING_SNAKE_CASE mapping
+            return getSpecialtyLabel(cleanCode, localeForTranslation);
           } else {
-            const label = getExpatHelpTypeLabel(cleanCode, localeForTranslation as any);
-            return label !== cleanCode ? label : s;
+            // For expat help types, try the original method first
+            const upperCode = cleanCode.toUpperCase();
+            const label = getExpatHelpTypeLabel(upperCode, localeForTranslation as any);
+            return label !== upperCode ? label : cleanCode;
           }
         } catch (e) {
           return s;
@@ -2002,17 +1980,18 @@ const ProviderProfile: React.FC = () => {
             ? intl.formatMessage({ id: "providerProfile.legalServices", defaultMessage: "Services juridiques" })
             : intl.formatMessage({ id: "providerProfile.consultingServices", defaultMessage: "Services de conseil" }),
           itemListElement: provider.specialties.slice(0, 5).map((specialty, index) => {
-            // Translate specialty code to localized label
-            const cleanCode = specialty.trim().toUpperCase();
+            // Translate specialty code to localized label using specialtyMapper
+            const cleanCode = specialty.trim();
+            const locale = mapLanguageToLocale(preferredLangKey || 'fr');
             const translatedName = isLawyer
-              ? getLawyerSpecialityLabel(cleanCode, preferredLangKey === 'fr' ? 'fr' : 'en')
-              : getExpatHelpTypeLabel(cleanCode, preferredLangKey === 'fr' ? 'fr' : 'en');
+              ? getSpecialtyLabel(cleanCode, locale)
+              : getExpatHelpTypeLabel(cleanCode.toUpperCase(), locale as any);
             return {
               "@type": "Offer",
               "@id": `${window.location.origin}${window.location.pathname}#service-${index}`,
               itemOffered: {
                 "@type": "Service",
-                name: translatedName !== cleanCode ? translatedName : specialty
+                name: translatedName
               }
             };
           })

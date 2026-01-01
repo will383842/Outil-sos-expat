@@ -20,7 +20,8 @@ import {
   collection,
   addDoc,
 } from "firebase/firestore";
-import { auth, db } from "../config/firebase";
+import { auth, db, functions } from "../config/firebase";
+import { httpsCallable } from "firebase/functions";
 import { logError } from "./logging";
 import { getErrorMessage } from "./errors";
 import type { User } from "../contexts/types";
@@ -552,6 +553,58 @@ const isUserAdmin = async (userId: string): Promise<boolean> => {
   }
 };
 
+/* -------------------------------------------------------------------------- */
+/*                         Refresh Admin Custom Claims                          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Refreshes admin custom claims for the current user.
+ * This is needed because Firestore security rules check request.auth.token.role
+ * which must be set via Cloud Functions.
+ *
+ * Call this function:
+ * - After admin login if claims are missing
+ * - If admin operations fail with permission errors
+ *
+ * @returns true if claims were refreshed successfully, false otherwise
+ */
+const refreshAdminClaims = async (): Promise<boolean> => {
+  try {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      console.warn("[refreshAdminClaims] No current user");
+      return false;
+    }
+
+    // Check if user is admin in Firestore
+    const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+    if (!userDoc.exists() || userDoc.data().role !== "admin") {
+      console.warn("[refreshAdminClaims] User is not admin in Firestore");
+      return false;
+    }
+
+    // Call Cloud Function to set admin claims
+    const setAdminClaimsFn = httpsCallable(functions, "setAdminClaims");
+    await setAdminClaimsFn();
+    console.log("[refreshAdminClaims] Admin claims set via Cloud Function");
+
+    // Force token refresh to get new claims
+    await currentUser.getIdToken(true);
+    console.log("[refreshAdminClaims] Token refreshed with new claims");
+
+    return true;
+  } catch (err: unknown) {
+    const msg = getErrorMessage(err);
+    console.error("[refreshAdminClaims] Error:", msg);
+    logError({
+      origin: "frontend",
+      error: `Refresh admin claims error: ${msg}`,
+      context: { userId: auth.currentUser?.uid },
+    });
+    return false;
+  }
+};
+
 export {
   registerUser,
   loginUser,
@@ -563,4 +616,5 @@ export {
   getUserData,
   isUserApproved,
   isUserAdmin,
+  refreshAdminClaims,
 };

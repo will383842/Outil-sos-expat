@@ -320,9 +320,8 @@ const PlanCard: React.FC<PlanCardProps> = ({
   const costPerCall = plan.aiCallsLimit > 0 ? displayPrice / plan.aiCallsLimit : 0;
 
   const formatPrice = (price: number) => {
-    const symbol = currency === 'EUR' ? 'EUR' : '$';
-    const formatted = price % 1 === 0 ? price.toString() : price.toFixed(2);
-    return currency === 'EUR' ? `${formatted} EUR` : `$${formatted}`;
+    const formatted = price.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return currency === 'EUR' ? `${formatted} €` : `$${formatted}`;
   };
 
   const getButtonLabel = () => {

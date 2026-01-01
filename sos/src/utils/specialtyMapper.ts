@@ -6,6 +6,10 @@ import {
   flattenLawyerSpecialities,
   type LawyerSpecialityItem,
 } from '../data/lawyer-specialties';
+import {
+  getExpatHelpTypeLabel,
+  expatHelpTypesData,
+} from '../data/expat-help-types';
 
 type LocaleType = 'fr' | 'en' | 'es' | 'de' | 'pt' | 'ru' | 'zh' | 'ar' | 'hi';
 
@@ -24,14 +28,72 @@ function camelToSnake(str: string): string {
 }
 
 /**
+ * Mapping des codes INVALIDES (SCREAMING_SNAKE_CASE) vers des codes VALIDES
+ * Ces codes n'existent pas dans lawyer-specialties.ts
+ */
+const INVALID_CODE_TO_VALID: Record<string, string> = {
+  // Urgences invalides → codes valides
+  'URG_GARDE_A_VUE_ETRANGER': 'URG_ASSISTANCE_PENALE_INTERNATIONALE',
+  'URG_EXPULSION_URGENTE': 'IMMI_VISAS_PERMIS_SEJOUR',
+
+  // Anciens codes visa/immigration
+  'VIS_VISA_TRAVAIL': 'IMMI_CONTRATS_TRAVAIL_INTERNATIONAL',
+  'VIS_VISA_ENTREPRENEUR': 'IMMI_VISAS_PERMIS_SEJOUR',
+  'VIS_VISA_INVESTISSEUR': 'IMMI_VISAS_PERMIS_SEJOUR',
+  'VIS_VISA_ETUDIANT': 'IMMI_VISAS_PERMIS_SEJOUR',
+  'VIS_REGROUPEMENT_FAMILIAL': 'FAM_GARDE_ENFANTS_TRANSFRONTALIERE',
+  'VIS_NATURALISATION': 'IMMI_NATURALISATION',
+  'VIS_CARTE_SEJOUR': 'IMMI_VISAS_PERMIS_SEJOUR',
+  'VIS_ASILE_REFUGIES': 'IMMI_VISAS_PERMIS_SEJOUR',
+  'VIS_EXPULSION_URGENTE': 'IMMI_VISAS_PERMIS_SEJOUR',
+
+  // Anciens codes famille
+  'FAM_DIVORCE_INTERNATIONAL': 'FAM_MARIAGE_DIVORCE',
+  'FAM_GARDE_ENFANTS_INTERNATIONALE': 'FAM_GARDE_ENFANTS_TRANSFRONTALIERE',
+  'FAM_PENSION_ALIMENTAIRE': 'FAM_MARIAGE_DIVORCE',
+  'FAM_MARIAGE_MIXTE': 'FAM_MARIAGE_DIVORCE',
+  'FAM_ADOPTION_INTERNATIONALE': 'FAM_GARDE_ENFANTS_TRANSFRONTALIERE',
+
+  // Anciens codes fiscalité
+  'FISC_FISCALITE_EXPATS': 'FISC_OPTIMISATION_EXPATRIES',
+  'FISC_OPTIMISATION_FISCALE': 'FISC_OPTIMISATION_EXPATRIES',
+  'FISC_SUCCESSION_INTERNATIONALE': 'PATR_SUCCESSIONS_INTERNATIONALES',
+
+  // Anciens codes droit du travail
+  'DRT_DROIT_TRAVAIL_INTERNATIONAL': 'IMMI_CONTRATS_TRAVAIL_INTERNATIONAL',
+  'DRT_CONTRATS_TRAVAIL_ETRANGERS': 'IMMI_CONTRATS_TRAVAIL_INTERNATIONAL',
+  'DRT_LICENCIEMENT_ETRANGER': 'IMMI_CONTRATS_TRAVAIL_INTERNATIONAL',
+
+  // Anciens codes immobilier
+  'IMM_ACHAT_IMMOBILIER_ETRANGER': 'IMMO_ACHAT_VENTE',
+  'IMM_BAIL_COMMERCIAL_INTERNATIONAL': 'IMMO_LOCATION_BAUX',
+  'IMM_LITIGE_IMMOBILIER': 'IMMO_LITIGES_IMMOBILIERS',
+
+  // Anciens codes entreprise
+  'ENT_CREATION_SOCIETE': 'ENTR_CREATION_ENTREPRISE_ETRANGER',
+  'ENT_DROIT_COMMERCIAL_INTERNATIONAL': 'ENTR_INVESTISSEMENTS',
+  'ENT_FUSION_ACQUISITION': 'ENTR_INVESTISSEMENTS',
+
+  // Anciens codes civil
+  'CIV_ACCIDENTS_ETRANGER': 'URG_ACCIDENTS_RESPONSABILITE_CIVILE',
+  'CIV_RESPONSABILITE_CIVILE': 'URG_ACCIDENTS_RESPONSABILITE_CIVILE',
+  'CIV_ASSURANCE_INTERNATIONALE': 'ASSU_ASSURANCES_INTERNATIONALES',
+
+  // Anciens codes successions
+  'SUC_TESTAMENT_INTERNATIONAL': 'PATR_TESTAMENTS',
+  'SUC_HERITAGE_TRANSFRONTALIER': 'PATR_SUCCESSIONS_INTERNATIONALES',
+  'SUC_HERAITAGE_TRANSFRONTALIER': 'PATR_SUCCESSIONS_INTERNATIONALES',
+};
+
+/**
  * Mapping explicite des codes Firestore vers les codes de traduction
  * pour les cas qui ne suivent pas la règle camelCase → SCREAMING_SNAKE_CASE
  */
 const SPECIALTY_CODE_MAPPING: Record<string, string> = {
   // Urgences
   'urgAssistancePenaleInternationale': 'URG_ASSISTANCE_PENALE_INTERNATIONALE',
-  'urgGardeAVueEtranger': 'URG_GARDE_A_VUE_ETRANGER',
-  'urgExpulsionUrgente': 'URG_EXPULSION_URGENTE',
+  'urgGardeAVueEtranger': 'URG_ASSISTANCE_PENALE_INTERNATIONALE',
+  'urgExpulsionUrgente': 'IMMI_VISAS_PERMIS_SEJOUR',
   'urgAccidentsResponsabiliteCivile': 'URG_ACCIDENTS_RESPONSABILITE_CIVILE',
   'urgRapatriementUrgence': 'URG_RAPATRIEMENT_URGENCE',
 
@@ -182,17 +244,50 @@ function getAllSpecialties() {
   return allSpecialtiesCache;
 }
 
+// Cache pour les codes expat
+let expatCodesCache: Set<string> | null = null;
+
+function getExpatCodes(): Set<string> {
+  if (!expatCodesCache) {
+    expatCodesCache = new Set(expatHelpTypesData.map(item => item.code));
+  }
+  return expatCodesCache;
+}
+
+/**
+ * Vérifie si un code est un code de type d'aide expat
+ */
+function isExpatCode(code: string): boolean {
+  return getExpatCodes().has(code);
+}
+
 /**
  * Trouve le code de traduction correspondant à un code Firestore
  */
 function findTranslationCode(firestoreCode: string): string | null {
-  // 1. Vérifier le mapping explicite
+  // 0. Vérifier d'abord si c'est un code invalide connu
+  if (INVALID_CODE_TO_VALID[firestoreCode]) {
+    return INVALID_CODE_TO_VALID[firestoreCode];
+  }
+
+  // 1. Vérifier le mapping explicite camelCase → SCREAMING_SNAKE_CASE
   if (SPECIALTY_CODE_MAPPING[firestoreCode]) {
-    return SPECIALTY_CODE_MAPPING[firestoreCode];
+    const mappedCode = SPECIALTY_CODE_MAPPING[firestoreCode];
+    // Vérifier si le code mappé est lui-même invalide
+    if (INVALID_CODE_TO_VALID[mappedCode]) {
+      return INVALID_CODE_TO_VALID[mappedCode];
+    }
+    return mappedCode;
   }
 
   // 2. Essayer la conversion directe camelCase → SCREAMING_SNAKE_CASE
   const snakeCode = camelToSnake(firestoreCode);
+
+  // Vérifier si le code converti est invalide
+  if (INVALID_CODE_TO_VALID[snakeCode]) {
+    return INVALID_CODE_TO_VALID[snakeCode];
+  }
+
   const allSpecs = getAllSpecialties();
   if (allSpecs.find(s => s.code === snakeCode)) {
     return snakeCode;
@@ -200,6 +295,12 @@ function findTranslationCode(firestoreCode: string): string | null {
 
   // 3. Essayer en majuscules directement
   const upperCode = firestoreCode.toUpperCase();
+
+  // Vérifier si le code en majuscules est invalide
+  if (INVALID_CODE_TO_VALID[upperCode]) {
+    return INVALID_CODE_TO_VALID[upperCode];
+  }
+
   if (allSpecs.find(s => s.code === upperCode)) {
     return upperCode;
   }
@@ -222,10 +323,19 @@ export function getSpecialtyLabel(
   firestoreCode: string,
   locale: LocaleType = 'fr'
 ): string {
-  // Chercher le code de traduction correspondant
+  // 1. Vérifier d'abord si c'est un code expat
+  if (isExpatCode(firestoreCode)) {
+    return getExpatHelpTypeLabel(firestoreCode, locale);
+  }
+
+  // 2. Chercher le code de traduction pour les avocats
   const translationCode = findTranslationCode(firestoreCode);
 
   if (translationCode) {
+    // Vérifier si le code traduit est un code expat
+    if (isExpatCode(translationCode)) {
+      return getExpatHelpTypeLabel(translationCode, locale);
+    }
     const label = getLawyerSpecialityLabel(translationCode, locale);
     if (label !== translationCode) {
       return label;
@@ -270,21 +380,31 @@ function formatSpecialtyCodeReadable(code: string, locale: LocaleType): string {
     'suc': { fr: 'Succession', en: 'Inheritance', es: 'Sucesión', de: 'Erbschaft', pt: 'Sucessão', ru: 'Наследство', zh: '继承', ar: 'وراثة', hi: 'उत्तराधिकार' },
   };
 
-  // Extraire le préfixe (tout ce qui est en minuscules au début)
-  const prefixMatch = code.match(/^([a-z]+)/);
-  const prefix = prefixMatch ? prefixMatch[1] : '';
+  // Détecter si c'est un code SCREAMING_SNAKE_CASE (ex: URG_EXPULSION_URGENTE)
+  const isScreamingSnakeCase = /^[A-Z][A-Z0-9_]*$/.test(code);
 
-  // Obtenir le reste du code après le préfixe
-  const rest = code.slice(prefix.length);
+  let prefix = '';
+  let words: string[] = [];
 
-  // Formater le reste: camelCase/SCREAMING_SNAKE → mots séparés
-  const words = rest
-    .replace(/([A-Z])/g, ' $1')
-    .replace(/_/g, ' ')
-    .trim()
-    .toLowerCase()
-    .split(' ')
-    .filter(w => w.length > 0);
+  if (isScreamingSnakeCase) {
+    // Format SCREAMING_SNAKE_CASE: URG_EXPULSION_URGENTE
+    const parts = code.split('_');
+    prefix = parts[0].toLowerCase(); // URG → urg
+    words = parts.slice(1).map(w => w.toLowerCase()); // ['expulsion', 'urgente']
+  } else {
+    // Format camelCase: urgExpulsionUrgente
+    const prefixMatch = code.match(/^([a-z]+)/);
+    prefix = prefixMatch ? prefixMatch[1] : '';
+    const rest = code.slice(prefix.length);
+
+    // Formater le reste: camelCase → mots séparés
+    words = rest
+      .replace(/([A-Z])/g, ' $1')
+      .trim()
+      .toLowerCase()
+      .split(' ')
+      .filter(w => w.length > 0);
+  }
 
   // Construire le label final
   const prefixLabel = prefixLabels[prefix]?.[locale] || prefixLabels[prefix]?.['fr'] || '';

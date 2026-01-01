@@ -178,7 +178,7 @@ const PaymentStatusBadge: React.FC<{ status: string; amount: number }> = ({ stat
         {config.label}
       </span>
       <div className="text-sm font-medium text-gray-900 mt-1">
-        {amount.toFixed(2)}€
+        {amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
       </div>
     </div>
   );
@@ -655,7 +655,7 @@ const AdminCallsSessions: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Revenus Total</p>
-                    <p className="text-2xl font-bold text-gray-900">{sessionStats.totalRevenue.toFixed(2)}€</p>
+                    <p className="text-2xl font-bold text-gray-900">{sessionStats.totalRevenue.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</p>
                   </div>
                   <div className="p-3 rounded-full bg-purple-100">
                     <DollarSign className="w-6 h-6 text-purple-600" />
@@ -935,7 +935,7 @@ const AdminCallsSessions: React.FC = () => {
                     endTime={selectedSession.conference.endedAt}
                   />
                   <div className="text-sm text-gray-500 mt-1">
-                    {selectedSession.payment.amount.toFixed(2)}€
+                    {selectedSession.payment.amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
                   </div>
                 </div>
               </div>
@@ -1011,7 +1011,7 @@ const AdminCallsSessions: React.FC = () => {
                   <div className="bg-gray-50 rounded-lg p-4 space-y-3">
                     <div>
                       <span className="text-sm text-gray-600">Montant:</span>
-                      <span className="text-sm font-medium ml-2">{selectedSession.payment.amount.toFixed(2)}€</span>
+                      <span className="text-sm font-medium ml-2">{selectedSession.payment.amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</span>
                     </div>
                     <div>
                       <span className="text-sm text-gray-600">Statut:</span>

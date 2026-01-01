@@ -168,7 +168,7 @@ const PlanEditor: React.FC<PlanEditorProps> = ({ plan, onSave, isLoading, global
         <div className="flex items-center gap-4">
           <div className="text-right">
             <div className="font-semibold text-gray-900">{plan.pricing.EUR}€/mois</div>
-            <div className="text-sm text-green-600">{monthlyEquivEUR.toFixed(2)}€/mois (annuel)</div>
+            <div className="text-sm text-green-600">{monthlyEquivEUR.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€/mois (annuel)</div>
           </div>
           {isExpanded ? (
             <ChevronUp className="w-5 h-5 text-gray-400" />
@@ -261,9 +261,9 @@ const PlanEditor: React.FC<PlanEditorProps> = ({ plan, onSave, isLoading, global
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div className="bg-white rounded-lg p-3">
                   <div className="text-gray-500">EUR</div>
-                  <div className="font-bold text-green-700">{calculatedAnnualEUR.toFixed(2)}€/an</div>
-                  <div className="text-xs text-gray-500">≈ {monthlyEquivEUR.toFixed(2)}€/mois</div>
-                  <div className="text-xs text-green-600">Économie: {savingsEUR.toFixed(2)}€</div>
+                  <div className="font-bold text-green-700">{calculatedAnnualEUR.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€/an</div>
+                  <div className="text-xs text-gray-500">≈ {monthlyEquivEUR.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€/mois</div>
+                  <div className="text-xs text-green-600">Économie: {savingsEUR.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</div>
                 </div>
                 <div className="bg-white rounded-lg p-3">
                   <div className="text-gray-500">USD</div>

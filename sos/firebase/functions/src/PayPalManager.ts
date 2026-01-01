@@ -50,8 +50,9 @@ const PAYPAL_CONFIG = {
   RETURN_URL: "https://sos-expat.com/payment/success",
   CANCEL_URL: "https://sos-expat.com/payment/cancel",
 
-  // Frais de plateforme (en pourcentage)
-  PLATFORM_FEE_PERCENT: 20, // 20% = frais de service
+  // REMOVED: PLATFORM_FEE_PERCENT hardcoded value
+  // Commission amounts are now centralized in admin_config/pricing (Firestore)
+  // The actual fee calculation is done via getServiceAmounts() from pricingService.ts
 
   // Devise par défaut
   DEFAULT_CURRENCY: "EUR",

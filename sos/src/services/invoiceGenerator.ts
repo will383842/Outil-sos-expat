@@ -137,9 +137,9 @@ export const generateInvoiceNumber = (type: 'platform' | 'provider', date: Date 
  */
 const formatCurrency = (amount: number, currency: string = 'EUR'): string => {
   const currencyInfo = SUPPORTED_CURRENCIES[currency as keyof typeof SUPPORTED_CURRENCIES] || SUPPORTED_CURRENCIES.EUR;
-  const formattedAmount = amount.toFixed(2);
-  
-  return currencyInfo.position === 'before' 
+  const formattedAmount = amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  return currencyInfo.position === 'before'
     ? `${currencyInfo.symbol}${formattedAmount}`
     : `${formattedAmount} ${currencyInfo.symbol}`;
 };

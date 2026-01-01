@@ -327,7 +327,8 @@ export const SubscriptionSuccessPage: React.FC = () => {
 
   const formatPrice = (amount: number, currency: Currency) => {
     const symbol = currency === 'EUR' ? '\u20AC' : '$';
-    return `${amount}${symbol}`;
+    const formatted = amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return `${formatted} ${symbol}`;
   };
 
   // Customer email

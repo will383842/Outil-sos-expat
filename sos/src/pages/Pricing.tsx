@@ -295,8 +295,8 @@ const Pricing: React.FC = () => {
       return intl.formatNumber(amount, {
         style: "currency",
         currency: selectedCurrency.toUpperCase(),
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
       });
     },
     [intl, selectedCurrency]

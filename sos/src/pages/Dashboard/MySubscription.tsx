@@ -213,7 +213,8 @@ const InvoiceRow: React.FC<InvoiceRowProps> = ({ invoice, locale, intl }) => {
 
   const formatAmount = (amount: number, currency: string) => {
     const symbol = currency === 'EUR' ? '€' : '$';
-    return `${amount.toFixed(2)}${symbol}`;
+    const formatted = amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return `${formatted} ${symbol}`;
   };
 
   const statusColors: Record<string, string> = {
@@ -360,7 +361,8 @@ export const MySubscription: React.FC = () => {
   // Format price
   const formatPrice = (amount: number, currency: string) => {
     const symbol = currency === 'EUR' ? '€' : '$';
-    return `${amount}${symbol}`;
+    const formatted = amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return `${formatted} ${symbol}`;
   };
 
   // Get plan name

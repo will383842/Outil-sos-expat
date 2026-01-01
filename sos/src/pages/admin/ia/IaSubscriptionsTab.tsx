@@ -788,14 +788,14 @@ export const IaSubscriptionsTab: React.FC = () => {
             <StatCard
               icon={<DollarSign className="w-4 h-4 text-emerald-600" />}
               label="MRR"
-              value={`${stats.mrrEur.toLocaleString()}€`}
+              value={`${stats.mrrEur.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€`}
               subValue={stats.mrrUsd > 0 ? `+ $${stats.mrrUsd.toLocaleString()}` : undefined}
               color="bg-emerald-50"
             />
             <StatCard
               icon={<TrendingUp className="w-4 h-4 text-purple-600" />}
               label="ARR"
-              value={`${stats.arrEur.toLocaleString()}€`}
+              value={`${stats.arrEur.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€`}
               color="bg-purple-50"
             />
             <StatCard
@@ -814,7 +814,7 @@ export const IaSubscriptionsTab: React.FC = () => {
               title="Par type de prestataire"
               icon={<Users className="w-5 h-5 text-indigo-600" />}
               items={roleStats.map(r => ({
-                label: `${r.label} (${r.mrrEur.toLocaleString()}€ MRR)`,
+                label: `${r.label} (${r.mrrEur.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€ MRR)`,
                 value: r.count,
                 percentage: r.percentage,
                 color: r.role === 'lawyer' ? 'bg-red-500' : 'bg-blue-500'
@@ -826,7 +826,7 @@ export const IaSubscriptionsTab: React.FC = () => {
               title="Par plan"
               icon={<Crown className="w-5 h-5 text-purple-600" />}
               items={tierStats.map(t => ({
-                label: `${t.label} (${t.mrrEur.toLocaleString()}€ MRR)`,
+                label: `${t.label} (${t.mrrEur.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€ MRR)`,
                 value: t.count,
                 percentage: t.percentage,
                 color: t.color
@@ -838,7 +838,7 @@ export const IaSubscriptionsTab: React.FC = () => {
               title="Top 10 pays"
               icon={<Globe className="w-5 h-5 text-green-600" />}
               items={countryStats.map((c, i) => ({
-                label: `${c.name} (${c.mrrEur.toLocaleString()}€)`,
+                label: `${c.name} (${c.mrrEur.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€)`,
                 value: c.count,
                 percentage: c.percentage,
                 color: i === 0 ? 'bg-green-500' : i === 1 ? 'bg-green-400' : 'bg-green-300'
@@ -1168,7 +1168,7 @@ export const IaSubscriptionsTab: React.FC = () => {
             <StatCard
               icon={<DollarSign className="w-4 h-4 text-emerald-600" />}
               label="MRR mondial"
-              value={`${worldMapData.reduce((acc, c) => acc + c.mrrEur, 0).toLocaleString()}€`}
+              value={`${worldMapData.reduce((acc, c) => acc + c.mrrEur, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€`}
               color="bg-emerald-50"
             />
             <StatCard
@@ -1208,7 +1208,7 @@ export const IaSubscriptionsTab: React.FC = () => {
                       <tr key={country.code} className="hover:bg-gray-50">
                         <td className="px-4 py-2 font-medium text-gray-900">{country.name}</td>
                         <td className="px-4 py-2 text-right text-gray-700">{country.subscriptions}</td>
-                        <td className="px-4 py-2 text-right text-emerald-600 font-medium">{country.mrrEur.toLocaleString()}€</td>
+                        <td className="px-4 py-2 text-right text-emerald-600 font-medium">{country.mrrEur.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</td>
                         <td className="px-4 py-2 text-right text-red-600">{country.lawyers}</td>
                         <td className="px-4 py-2 text-right text-blue-600">{country.expats}</td>
                         <td className="px-4 py-2 text-right text-amber-600">{country.trials}</td>
@@ -1220,7 +1220,7 @@ export const IaSubscriptionsTab: React.FC = () => {
                   <tr>
                     <td className="px-4 py-2 text-gray-900">Total</td>
                     <td className="px-4 py-2 text-right text-gray-900">{worldMapData.reduce((acc, c) => acc + c.subscriptions, 0)}</td>
-                    <td className="px-4 py-2 text-right text-emerald-700">{worldMapData.reduce((acc, c) => acc + c.mrrEur, 0).toLocaleString()}€</td>
+                    <td className="px-4 py-2 text-right text-emerald-700">{worldMapData.reduce((acc, c) => acc + c.mrrEur, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</td>
                     <td className="px-4 py-2 text-right text-red-700">{worldMapData.reduce((acc, c) => acc + c.lawyers, 0)}</td>
                     <td className="px-4 py-2 text-right text-blue-700">{worldMapData.reduce((acc, c) => acc + c.expats, 0)}</td>
                     <td className="px-4 py-2 text-right text-amber-700">{worldMapData.reduce((acc, c) => acc + c.trials, 0)}</td>

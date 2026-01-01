@@ -49,7 +49,8 @@ const defaultAppContext: AppContextType = {
     expatBasePrice: 19,
     lawyerCallDuration: 20,
     expatCallDuration: 30,
-    commissionRate: 0.20,
+    // REMOVED: commissionRate - use admin_config/pricing via pricingService instead
+    // Commission is now defined as connectionFeeAmount in admin_config/pricing (Firestore)
     affiliateCommissionRate: 0.05,
   },
   enhancedSettings: {
@@ -158,7 +159,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       lawyerCall: 49,
       expatCall: 19,
     },
-    platformCommission: 0.15,
+    // REMOVED: platformCommission hardcoded value
+    // Commission amounts are now centralized in admin_config/pricing (Firestore)
+    // Use pricingService.getPricingConfig() or usePricingConfig() hook to get connectionFeeAmount
     maxCallDuration: 30,
     callTimeout: 30,
     supportedCountries: supportedCountries,

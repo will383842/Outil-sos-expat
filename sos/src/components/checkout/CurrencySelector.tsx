@@ -89,10 +89,10 @@ export const CurrencySelector: React.FC<CurrencySelectorProps> = ({
           
           <div className="space-y-1">
             <div className={`text-lg font-bold ${selectedCurrency === 'eur' ? 'text-blue-900' : 'text-gray-900'}`}>
-              {prices.eur.total.toFixed(2)}€
+              {prices.eur.total.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
             </div>
             <div className="text-xs text-gray-500">
-              {intl.formatMessage({ id: 'checkout.currency.fees' })} {prices.eur.fee.toFixed(2)}€
+              {intl.formatMessage({ id: 'checkout.currency.fees' })} {prices.eur.fee.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
             </div>
           </div>
         </button>
@@ -123,10 +123,10 @@ export const CurrencySelector: React.FC<CurrencySelectorProps> = ({
           
           <div className="space-y-1">
             <div className={`text-lg font-bold ${selectedCurrency === 'usd' ? 'text-green-900' : 'text-gray-900'}`}>
-              ${prices.usd.total.toFixed(2)}
+              ${prices.usd.total.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
             <div className="text-xs text-gray-500">
-              {intl.formatMessage({ id: 'checkout.currency.fees' })} ${prices.usd.fee.toFixed(2)}
+              {intl.formatMessage({ id: 'checkout.currency.fees' })} ${prices.usd.fee.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
           </div>
         </button>

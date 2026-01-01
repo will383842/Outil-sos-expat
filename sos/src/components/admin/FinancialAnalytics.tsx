@@ -364,7 +364,7 @@ export const FinancialAnalytics: React.FC = () => {
               <p className="text-purple-100 text-sm">Nb. Transactions</p>
               <p className="text-3xl font-bold">{analytics.paymentCount}</p>
               <p className="text-purple-100 text-sm">
-                Moy: {analytics.avgTransactionValue.toFixed(0)}€
+                Moy: {analytics.avgTransactionValue.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
               </p>
             </div>
             <Calendar className="w-12 h-12 text-purple-200" />
@@ -401,9 +401,9 @@ export const FinancialAnalytics: React.FC = () => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
                 <YAxis />
-                <Tooltip 
+                <Tooltip
                   formatter={(value: number, name: string) => [
-                    `${value.toFixed(0)}€`,
+                    `${value.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€`,
                     name === 'revenue' ? 'Revenus' : 'Frais'
                   ]}
                 />
@@ -446,7 +446,7 @@ export const FinancialAnalytics: React.FC = () => {
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value: number) => [`${value.toFixed(0)}€`, 'Revenus']} />
+                <Tooltip formatter={(value: number) => [`${value.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€`, 'Revenus']} />
               </PieChart>
             </ResponsiveContainer>
           </div>

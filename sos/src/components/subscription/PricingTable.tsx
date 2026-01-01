@@ -98,8 +98,11 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 
   const formatPrice = (price: number) => {
     const symbol = selectedCurrency === 'EUR' ? '€' : '$';
-    // Formater avec décimales si nécessaire
-    const formatted = price % 1 === 0 ? price.toString() : price.toFixed(2);
+    // Toujours formater avec 2 décimales et virgule (format français)
+    const formatted = price.toLocaleString('fr-FR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
     return `${formatted}${symbol}`;
   };
 

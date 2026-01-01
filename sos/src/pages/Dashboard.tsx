@@ -853,7 +853,7 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
   };
 
   const formatDuration = (minutes: number): string => `${minutes} min`;
-  const formatPrice = (price: number): string => `${price.toFixed(2)} €`;
+  const formatPrice = (price: number): string => `${price.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
 
   const getStatusBadge = (status: CallStatus): any => {
     const statusConfig: Record<

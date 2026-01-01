@@ -18,7 +18,10 @@ import {
   X,
   Download,
   Languages,
-  LayoutGrid
+  LayoutGrid,
+  CheckCircle,
+  ThumbsUp,
+  ThumbsDown
 } from 'lucide-react';
 import {
   collection,
@@ -63,7 +66,6 @@ import {
    ============================================================ */
 
 const REVIEWS_PER_PAGE = 20;
-const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
 
 type SortRating = 'none' | 'asc' | 'desc';
 type ViewMode = 'day' | 'week' | 'month' | 'year' | 'custom';
@@ -155,7 +157,7 @@ const STRINGS: Record<Lang, Record<string, string>> = {
     irreversible: 'Attention : Cette action est irréversible',
     youWillDelete: "Vous êtes sur le point de supprimer définitivement l'avis de :",
     cancel: 'Annuler', confirm: 'Confirmer la suppression',
-    quality: 'Qualité', autoPublished: 'Auto-publiés (J+2)', hiddenPct: 'Masqués',
+    quality: 'Qualité', autoPublished: 'Auto-approuvés (note >= 4)', hiddenPct: 'Masqués',
     reportedPct: 'Avis signalés', avgHelpful: 'Votes utiles (moy.)',
     ratingSplit: 'Répartition des notes (1★→5★)',
     ratingShare: 'Part des notes par mois', topCountries: 'Top pays (volume)',
@@ -178,7 +180,18 @@ const STRINGS: Record<Lang, Record<string, string>> = {
     stacked: 'Répartition mensuelle des notes',
     kpi: 'KPI Qualité',
     topCountriesCard: 'Top pays',
-    topProvidersCard: 'Top prestataires'
+    topProvidersCard: 'Top prestataires',
+    approve: 'Approuver',
+    reject: 'Rejeter',
+    approved: 'Approuvé',
+    rejected: 'Rejeté',
+    pendingApproval: 'En attente d\'approbation',
+    reviewApproved: 'Avis approuvé avec succès',
+    reviewRejected: 'Avis rejeté avec succès',
+    needsManualReview: 'Nécessite approbation manuelle (note < 4)',
+    autoApproved: 'Auto-approuvé (note >= 4)',
+    bulkApprove: 'Approuver sélection',
+    bulkReject: 'Rejeter sélection'
   },
   en: {
     reviewsMgmt: 'Reviews management',
@@ -214,7 +227,7 @@ const STRINGS: Record<Lang, Record<string, string>> = {
     irreversible: 'Warning: This action is irreversible',
     youWillDelete: 'You are about to permanently delete the review from:',
     cancel: 'Cancel', confirm: 'Confirm deletion',
-    quality: 'Quality', autoPublished: 'Auto-published (D+2)', hiddenPct: 'Hidden',
+    quality: 'Quality', autoPublished: 'Auto-approved (rating >= 4)', hiddenPct: 'Hidden',
     reportedPct: 'Reported', avgHelpful: 'Avg. helpful votes',
     ratingSplit: 'Rating distribution (1★→5★)',
     ratingShare: 'Share of ratings per month', topCountries: 'Top countries (volume)',
@@ -237,7 +250,18 @@ const STRINGS: Record<Lang, Record<string, string>> = {
     stacked: 'Monthly rating share',
     kpi: 'Quality KPIs',
     topCountriesCard: 'Top countries',
-    topProvidersCard: 'Top providers'
+    topProvidersCard: 'Top providers',
+    approve: 'Approve',
+    reject: 'Reject',
+    approved: 'Approved',
+    rejected: 'Rejected',
+    pendingApproval: 'Pending approval',
+    reviewApproved: 'Review approved successfully',
+    reviewRejected: 'Review rejected successfully',
+    needsManualReview: 'Needs manual approval (rating < 4)',
+    autoApproved: 'Auto-approved (rating >= 4)',
+    bulkApprove: 'Approve selection',
+    bulkReject: 'Reject selection'
   }
 };
 
@@ -469,33 +493,10 @@ const AdminReviews: React.FC = () => {
 
   /* ======================== Firestore Queries ======================= */
 
-  const autoPublishEligible = async (fetched: Review[]) => {
-    const nowMs = Date.now();
-    const eligible = fetched.filter((r) => {
-      const raw = (r.createdAt as any)?.toDate?.() ?? r.createdAt;
-      const createdMs = raw instanceof Date ? raw.getTime() : Date.now();
-      return (r.status === 'pending' || !r.status) && nowMs - createdMs >= TWO_DAYS_MS;
-    });
-    if (eligible.length === 0) return;
-    try {
-      await Promise.all(
-        eligible.map((rev) =>
-          updateDoc(doc(db, 'reviews', rev.id), {
-            status: 'published',
-            publishedAt: serverTimestamp(),
-            moderatedAt: serverTimestamp(),
-            moderatorNotes: lang === 'fr' ? 'Publication automatique après 2 jours' : 'Auto-published after 2 days'
-          })
-        )
-      );
-      setReviews((prev) =>
-        prev.map((r) => (eligible.find((e) => e.id === r.id) ? { ...r, status: 'published' } : r))
-      );
-      await loadStats();
-    } catch (err) {
-      console.error('Auto-publish failed:', err);
-    }
-  };
+  // NOTE: Auto-publish after 2 days has been REMOVED.
+  // New logic:
+  // - Reviews with rating >= 4 are auto-approved immediately on creation (in firestore.ts)
+  // - Reviews with rating < 4 require MANUAL admin approval (no auto-publish)
 
   const buildQueryConstraints = (loadMore: boolean): QueryConstraint[] => {
     const constraints: QueryConstraint[] = [
@@ -553,8 +554,9 @@ const AdminReviews: React.FC = () => {
         const rt = Math.max(1, Math.min(5, Math.round(Number(r.rating) || 0))) as 1 | 2 | 3 | 4 | 5;
         buckets[rt] += 1;
       });
+      // Auto-approved = published reviews with rating >= 4 (these are auto-approved on creation)
       const autoPublished = data.filter(
-        (r) => r.status === 'published' && r.moderatorNotes?.toLowerCase?.().includes('auto')
+        (r) => r.status === 'published' && (r.rating || 0) >= 4
       ).length;
       const autoPublishedPct = totalReviews ? (autoPublished / totalReviews) * 100 : 0;
       const hiddenPct = totalReviews ? (hiddenReviews / totalReviews) * 100 : 0;
@@ -619,8 +621,6 @@ const AdminReviews: React.FC = () => {
         setReviews(fetched);
         setSelectedIds(new Set());
       }
-
-      await autoPublishEligible(fetched);
     } catch (err) {
       console.error('Error loading reviews:', err);
     } finally {
@@ -702,6 +702,7 @@ rows[m][bucketKey] += 1;
       setIsActionLoading(true);
       await updateDoc(doc(db, 'reviews', reviewId), {
         status: 'hidden',
+        isPublic: false,
         moderatedAt: serverTimestamp(),
         moderatorNotes: lang === 'fr' ? "Masqué par l'administrateur" : 'Hidden by admin'
       });
@@ -712,6 +713,139 @@ rows[m][bucketKey] += 1;
     } catch (err) {
       console.error('Error hiding review:', err);
       alert(lang === 'fr' ? "Erreur lors du masquage de l'avis" : 'Failed to hide review');
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const handleApproveReview = async (reviewId: string, providerId?: string) => {
+    try {
+      setIsActionLoading(true);
+      await updateDoc(doc(db, 'reviews', reviewId), {
+        status: 'published',
+        isPublic: true,
+        publishedAt: serverTimestamp(),
+        moderatedAt: serverTimestamp(),
+        moderatorNotes: lang === 'fr' ? "Approuvé manuellement par l'administrateur" : 'Manually approved by admin'
+      });
+      setReviews((prev) => prev.map((r) => (r.id === reviewId ? { ...r, status: 'published' } : r)));
+      if (selectedReview?.id === reviewId) setSelectedReview({ ...selectedReview, status: 'published' });
+      // Recalculate provider stats after approval
+      if (providerId) {
+        await recalculateProviderStats(providerId);
+      }
+      alert(t('reviewApproved'));
+      await loadStats();
+    } catch (err) {
+      console.error('Error approving review:', err);
+      alert(lang === 'fr' ? "Erreur lors de l'approbation de l'avis" : 'Failed to approve review');
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const handleRejectReview = async (reviewId: string) => {
+    try {
+      setIsActionLoading(true);
+      await updateDoc(doc(db, 'reviews', reviewId), {
+        status: 'hidden',
+        isPublic: false,
+        moderatedAt: serverTimestamp(),
+        moderatorNotes: lang === 'fr' ? "Rejeté par l'administrateur" : 'Rejected by admin'
+      });
+      setReviews((prev) => prev.map((r) => (r.id === reviewId ? { ...r, status: 'hidden' } : r)));
+      if (selectedReview?.id === reviewId) setSelectedReview({ ...selectedReview, status: 'hidden' });
+      alert(t('reviewRejected'));
+      await loadStats();
+    } catch (err) {
+      console.error('Error rejecting review:', err);
+      alert(lang === 'fr' ? "Erreur lors du rejet de l'avis" : 'Failed to reject review');
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const handleBulkApprove = async () => {
+    if (selectedIds.size === 0) return;
+    const pendingIds = reviews.filter((r) => selectedIds.has(r.id) && (r.status === 'pending' || !r.status));
+    if (pendingIds.length === 0) {
+      alert(lang === 'fr' ? 'Aucun avis en attente sélectionné' : 'No pending reviews selected');
+      return;
+    }
+    const ok = confirm(
+      lang === 'fr'
+        ? `Approuver ${pendingIds.length} avis en attente ?`
+        : `Approve ${pendingIds.length} pending review(s)?`
+    );
+    if (!ok) return;
+    // Collect unique provider IDs
+    const providerIds = new Set<string>();
+    pendingIds.forEach((r) => {
+      if (r.providerId) providerIds.add(r.providerId);
+    });
+    try {
+      setIsActionLoading(true);
+      const batch = writeBatch(db);
+      pendingIds.forEach((r) => {
+        batch.update(doc(db, 'reviews', r.id), {
+          status: 'published',
+          isPublic: true,
+          publishedAt: serverTimestamp(),
+          moderatedAt: serverTimestamp(),
+          moderatorNotes: lang === 'fr' ? "Approuvé en masse par l'administrateur" : 'Bulk approved by admin'
+        });
+      });
+      await batch.commit();
+      setReviews((prev) =>
+        prev.map((r) => (selectedIds.has(r.id) && (r.status === 'pending' || !r.status) ? { ...r, status: 'published' } : r))
+      );
+      setSelectedIds(new Set());
+      // Recalculate stats for all affected providers
+      await Promise.all(Array.from(providerIds).map((pid) => recalculateProviderStats(pid)));
+      alert(lang === 'fr' ? 'Avis approuvés avec succès' : 'Reviews approved');
+      await loadStats();
+    } catch (err) {
+      console.error('Bulk approve error:', err);
+      alert(lang === 'fr' ? "Erreur lors de l'approbation en masse" : 'Bulk approve failed');
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const handleBulkReject = async () => {
+    if (selectedIds.size === 0) return;
+    const pendingIds = reviews.filter((r) => selectedIds.has(r.id) && (r.status === 'pending' || !r.status));
+    if (pendingIds.length === 0) {
+      alert(lang === 'fr' ? 'Aucun avis en attente sélectionné' : 'No pending reviews selected');
+      return;
+    }
+    const ok = confirm(
+      lang === 'fr'
+        ? `Rejeter ${pendingIds.length} avis en attente ?`
+        : `Reject ${pendingIds.length} pending review(s)?`
+    );
+    if (!ok) return;
+    try {
+      setIsActionLoading(true);
+      const batch = writeBatch(db);
+      pendingIds.forEach((r) => {
+        batch.update(doc(db, 'reviews', r.id), {
+          status: 'hidden',
+          isPublic: false,
+          moderatedAt: serverTimestamp(),
+          moderatorNotes: lang === 'fr' ? "Rejeté en masse par l'administrateur" : 'Bulk rejected by admin'
+        });
+      });
+      await batch.commit();
+      setReviews((prev) =>
+        prev.map((r) => (selectedIds.has(r.id) && (r.status === 'pending' || !r.status) ? { ...r, status: 'hidden' } : r))
+      );
+      setSelectedIds(new Set());
+      alert(lang === 'fr' ? 'Avis rejetés avec succès' : 'Reviews rejected');
+      await loadStats();
+    } catch (err) {
+      console.error('Bulk reject error:', err);
+      alert(lang === 'fr' ? 'Erreur lors du rejet en masse' : 'Bulk reject failed');
     } finally {
       setIsActionLoading(false);
     }
@@ -1498,6 +1632,30 @@ rows[m][bucketKey] += 1;
                   {t('reset')}
                 </Button>
                 <Button
+                  onClick={handleBulkApprove}
+                  variant="outline"
+                  size="small"
+                  className={`border-green-600 text-green-600 hover:bg-green-50 ${
+                    selectedIds.size === 0 ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                  disabled={selectedIds.size === 0 || isActionLoading}
+                >
+                  <ThumbsUp size={16} className="mr-2" />
+                  {t('bulkApprove')}
+                </Button>
+                <Button
+                  onClick={handleBulkReject}
+                  variant="outline"
+                  size="small"
+                  className={`border-orange-600 text-orange-600 hover:bg-orange-50 ${
+                    selectedIds.size === 0 ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                  disabled={selectedIds.size === 0 || isActionLoading}
+                >
+                  <ThumbsDown size={16} className="mr-2" />
+                  {t('bulkReject')}
+                </Button>
+                <Button
                   onClick={handleBulkDelete}
                   variant="outline"
                   size="small"
@@ -1576,13 +1734,37 @@ rows[m][bucketKey] += 1;
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(review.status)}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <div className="flex items-center space-x-3">
+                          <div className="flex items-center space-x-2">
                             <button onClick={() => handleViewReview(review)} className="text-blue-600 hover:text-blue-800" title={t('reviewDetails')}>
                               <Eye size={18} />
                             </button>
-                            <button onClick={() => handleHideReview(review.id)} className="text-yellow-600 hover:text-yellow-700" title={t('hide')}>
-                              <XCircle size={18} />
-                            </button>
+                            {/* Show approve/reject only for pending reviews */}
+                            {(review.status === 'pending' || !review.status) && (
+                              <>
+                                <button
+                                  onClick={() => handleApproveReview(review.id, review.providerId)}
+                                  className="text-green-600 hover:text-green-800"
+                                  title={t('approve')}
+                                  disabled={isActionLoading}
+                                >
+                                  <ThumbsUp size={18} />
+                                </button>
+                                <button
+                                  onClick={() => handleRejectReview(review.id)}
+                                  className="text-red-600 hover:text-red-800"
+                                  title={t('reject')}
+                                  disabled={isActionLoading}
+                                >
+                                  <ThumbsDown size={18} />
+                                </button>
+                              </>
+                            )}
+                            {/* Show hide button for published reviews */}
+                            {review.status === 'published' && (
+                              <button onClick={() => handleHideReview(review.id)} className="text-yellow-600 hover:text-yellow-700" title={t('hide')}>
+                                <XCircle size={18} />
+                              </button>
+                            )}
                             <button
                               onClick={() => { setSelectedReview(review); setShowDeleteModal(true); }}
                               className="text-red-600 hover:text-red-800"
@@ -1691,12 +1873,30 @@ rows[m][bucketKey] += 1;
 
                   <h4 className="text-sm font-medium text-gray-500 mt-4 mb-2">{t('moderation')}</h4>
                   <div className="space-y-2">
-                    {selectedReview.status !== 'hidden' && (
+                    {/* Show approve/reject for pending reviews */}
+                    {(selectedReview.status === 'pending' || !selectedReview.status) && (
+                      <>
+                        <Button
+                          onClick={() => handleApproveReview(selectedReview.id, selectedReview.providerId)}
+                          fullWidth className="bg-green-600 hover:bg-green-700" disabled={isActionLoading}
+                        >
+                          <CheckCircle size={16} className="mr-2" /> {t('approve')}
+                        </Button>
+                        <Button
+                          onClick={() => handleRejectReview(selectedReview.id)}
+                          fullWidth className="bg-orange-600 hover:bg-orange-700" disabled={isActionLoading}
+                        >
+                          <XCircle size={16} className="mr-2" /> {t('reject')}
+                        </Button>
+                      </>
+                    )}
+                    {/* Show hide button for published reviews */}
+                    {selectedReview.status === 'published' && (
                       <Button
                         onClick={() => handleHideReview(selectedReview.id)}
                         fullWidth className="bg-yellow-600 hover:bg-yellow-700" disabled={isActionLoading}
                       >
-                        <XCircle size={16} className="mr-2" /> {t('hide')}
+                        <EyeOff size={16} className="mr-2" /> {t('hide')}
                       </Button>
                     )}
                     <Button

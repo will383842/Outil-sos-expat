@@ -164,7 +164,7 @@ const CohortTable: React.FC<CohortTableProps> = ({ cohorts, loading }) => {
                 </td>
               ))}
               <td className="px-4 py-3 text-right font-medium text-gray-900">
-                {cohort.avgLTV.toFixed(0)}€
+                {cohort.avgLTV.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
               </td>
             </tr>
           ))}
@@ -214,13 +214,13 @@ const LTVMetricsCard: React.FC<LTVCardProps> = ({ metrics, loading }) => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl">
           <p className="text-sm text-gray-600 mb-1">LTV Global</p>
-          <p className="text-2xl font-bold text-indigo-700">{metrics.overallLTV.toFixed(0)}€</p>
+          <p className="text-2xl font-bold text-indigo-700">{metrics.overallLTV.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</p>
           <p className="text-xs text-gray-500 mt-1">Valeur vie client moyenne</p>
         </div>
 
         <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl">
           <p className="text-sm text-gray-600 mb-1">LTV Projeté</p>
-          <p className="text-2xl font-bold text-green-700">{metrics.projectedLTV.toFixed(0)}€</p>
+          <p className="text-2xl font-bold text-green-700">{metrics.projectedLTV.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</p>
           <p className="text-xs text-gray-500 mt-1">Basé sur tendances actuelles</p>
         </div>
 
@@ -253,7 +253,7 @@ const LTVMetricsCard: React.FC<LTVCardProps> = ({ metrics, loading }) => {
         <div className="grid grid-cols-5 gap-2">
           {Object.entries(metrics.ltvByTier).map(([tier, ltv]) => (
             <div key={tier} className="text-center p-3 bg-gray-50 rounded-lg">
-              <p className="text-lg font-bold text-gray-900">{ltv.toFixed(0)}€</p>
+              <p className="text-lg font-bold text-gray-900">{ltv.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</p>
               <p className="text-xs text-gray-500 capitalize">{TIER_LABELS[tier as SubscriptionTier] || tier}</p>
             </div>
           ))}
@@ -269,7 +269,7 @@ const LTVMetricsCard: React.FC<LTVCardProps> = ({ metrics, loading }) => {
               <span className="text-sm text-gray-600">
                 {type === 'lawyer' ? '👨‍⚖️ Avocats' : '🤝 Expat Aidants'}
               </span>
-              <span className="font-bold text-gray-900">{ltv.toFixed(0)}€</span>
+              <span className="font-bold text-gray-900">{ltv.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</span>
             </div>
           ))}
         </div>
@@ -526,7 +526,7 @@ const MRRMovementsChart: React.FC<MRRMovementsChartProps> = ({ movements, loadin
           <XAxis dataKey="date" tick={{ fontSize: 11 }} />
           <YAxis tick={{ fontSize: 11 }} tickFormatter={(value) => `${value}€`} />
           <Tooltip
-            formatter={(value: number) => [`${value.toFixed(0)}€`]}
+            formatter={(value: number) => [`${value.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€`]}
             contentStyle={{
               backgroundColor: 'white',
               border: '1px solid #E5E7EB',
@@ -1046,7 +1046,7 @@ export const IaAnalyticsTab: React.FC = () => {
               <DollarSign className="w-4 h-4 text-green-600" />
               <span className="text-sm text-gray-500">MRR</span>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{revenueMetrics.mrr.toLocaleString('fr-FR')}€</p>
+            <p className="text-2xl font-bold text-gray-900">{revenueMetrics.mrr.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</p>
             <p className={cn(
               'text-xs mt-1 flex items-center gap-1',
               revenueMetrics.mrrGrowthRate >= 0 ? 'text-green-600' : 'text-red-600'
@@ -1061,7 +1061,7 @@ export const IaAnalyticsTab: React.FC = () => {
               <Target className="w-4 h-4 text-indigo-600" />
               <span className="text-sm text-gray-500">LTV Moyen</span>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{ltvMetrics?.overallLTV.toFixed(0) || 0}€</p>
+            <p className="text-2xl font-bold text-gray-900">{ltvMetrics?.overallLTV.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0,00'}€</p>
             <p className="text-xs text-gray-500 mt-1">Par utilisateur</p>
           </div>
 
@@ -1137,23 +1137,23 @@ export const IaAnalyticsTab: React.FC = () => {
             {revenueMetrics && (
               <div className="mt-6 grid grid-cols-5 gap-4">
                 <div className="text-center p-3 bg-green-50 rounded-lg">
-                  <p className="text-lg font-bold text-green-700">+{revenueMetrics.newMrr}€</p>
+                  <p className="text-lg font-bold text-green-700">+{revenueMetrics.newMrr.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</p>
                   <p className="text-xs text-green-600">Nouveau</p>
                 </div>
                 <div className="text-center p-3 bg-blue-50 rounded-lg">
-                  <p className="text-lg font-bold text-blue-700">+{revenueMetrics.expansionMrr}€</p>
+                  <p className="text-lg font-bold text-blue-700">+{revenueMetrics.expansionMrr.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</p>
                   <p className="text-xs text-blue-600">Expansion</p>
                 </div>
                 <div className="text-center p-3 bg-purple-50 rounded-lg">
-                  <p className="text-lg font-bold text-purple-700">+{revenueMetrics.reactivationMrr}€</p>
+                  <p className="text-lg font-bold text-purple-700">+{revenueMetrics.reactivationMrr.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</p>
                   <p className="text-xs text-purple-600">Réactivation</p>
                 </div>
                 <div className="text-center p-3 bg-orange-50 rounded-lg">
-                  <p className="text-lg font-bold text-orange-700">-{revenueMetrics.contractionMrr}€</p>
+                  <p className="text-lg font-bold text-orange-700">-{revenueMetrics.contractionMrr.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</p>
                   <p className="text-xs text-orange-600">Contraction</p>
                 </div>
                 <div className="text-center p-3 bg-red-50 rounded-lg">
-                  <p className="text-lg font-bold text-red-700">-{revenueMetrics.churnedMrr}€</p>
+                  <p className="text-lg font-bold text-red-700">-{revenueMetrics.churnedMrr.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</p>
                   <p className="text-xs text-red-600">Churn</p>
                 </div>
               </div>

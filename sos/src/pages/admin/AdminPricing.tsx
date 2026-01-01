@@ -28,6 +28,7 @@ import { db } from "../../config/firebase";
 import { useAuth } from "../../contexts/AuthContext";
 import AdminPromoCodes from "./AdminPromoCodes";
 import { clearPricingCache } from "../../services/pricingService";
+import { refreshAdminClaims } from "../../utils/auth";
 
 /* ---------------- Types ---------------- */
 
@@ -93,6 +94,14 @@ const toTs = (d: Date | null): Timestamp | null =>
 const SERVICE_LABEL: Record<ServiceKind, ServiceLabel> = {
   expat: "Expat",
   lawyer: "Avocat",
+};
+
+// Formater un prix avec 2 décimales et virgule (format français)
+const formatPrice = (value: number): string => {
+  return value.toLocaleString("fr-FR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 };
 
 /* ------------- Composants réutilisables ------------- */
@@ -308,29 +317,56 @@ const AdminPricing: React.FC = () => {
         selBase.totalAmount
       )
     ) {
-      alert("La somme “Marge + Part prestataire” doit = Total");
+      alert("La somme 'Marge + Part prestataire' doit = Total");
       return;
     }
-    await setDoc(
-      doc(db, "admin_config", "pricing"),
-      {
-        [service]: {
-          [currency]: {
-            connectionFeeAmount: Number(selBase.connectionFeeAmount),
-            providerAmount: Number(selBase.providerAmount),
-            totalAmount: Number(selBase.totalAmount),
-            currency,
-            duration: Number(selBase.duration),
+
+    const performSave = async () => {
+      await setDoc(
+        doc(db, "admin_config", "pricing"),
+        {
+          [service]: {
+            [currency]: {
+              connectionFeeAmount: Number(selBase.connectionFeeAmount),
+              providerAmount: Number(selBase.providerAmount),
+              totalAmount: Number(selBase.totalAmount),
+              currency,
+              duration: Number(selBase.duration),
+            },
           },
+          updatedAt: serverTimestamp(),
+          updatedBy: user?.uid ?? "admin",
         },
-        updatedAt: serverTimestamp(),
-        updatedBy: user?.uid ?? "admin",
-      },
-      { merge: true }
-    );
-    // Invalidate frontend cache so changes reflect immediately
-    clearPricingCache();
-    alert("Prix de base enregistré ✅");
+        { merge: true }
+      );
+    };
+
+    try {
+      await performSave();
+      // Invalidate frontend cache so changes reflect immediately
+      clearPricingCache();
+      alert("Prix de base enregistré ✅");
+    } catch (error: any) {
+      // If permission denied, try refreshing admin claims and retry
+      if (error?.code === "permission-denied" || error?.message?.includes("permission")) {
+        console.log("[AdminPricing] Permission denied, refreshing admin claims...");
+        const claimsRefreshed = await refreshAdminClaims();
+        if (claimsRefreshed) {
+          try {
+            await performSave();
+            clearPricingCache();
+            alert("Prix de base enregistré ✅");
+            return;
+          } catch (retryError) {
+            console.error("[AdminPricing] Save failed after claims refresh:", retryError);
+          }
+        }
+        alert("Erreur: Permissions insuffisantes. Veuillez vous reconnecter.");
+      } else {
+        console.error("[AdminPricing] Save error:", error);
+        alert("Erreur lors de l'enregistrement: " + (error?.message || "Erreur inconnue"));
+      }
+    }
   };
 
   const savePromo = async (): Promise<void> => {
@@ -350,49 +386,102 @@ const AdminPricing: React.FC = () => {
           selPromo.totalAmount
         )
       ) {
-        alert("La somme “Marge + Part prestataire” doit = Total (promo)");
+        alert("La somme 'Marge + Part prestataire' doit = Total (promo)");
         return;
       }
     }
-    await setDoc(
-      doc(db, "admin_config", "pricing"),
-      {
-        overrides: {
-          [service]: {
-            [currency]: {
-              enabled: selPromo.enabled,
-              startsAt: selPromo.startsAt ?? null,
-              endsAt: selPromo.endsAt ?? null,
-              connectionFeeAmount: Number(selPromo.connectionFeeAmount),
-              providerAmount: Number(selPromo.providerAmount),
-              totalAmount: Number(selPromo.totalAmount),
-              stackableWithCoupons: Boolean(selPromo.stackableWithCoupons),
-              label: selPromo.label,
-              strikeTargets: selPromo.strikeTargets || "default",
+
+    const performSave = async () => {
+      await setDoc(
+        doc(db, "admin_config", "pricing"),
+        {
+          overrides: {
+            [service]: {
+              [currency]: {
+                enabled: selPromo.enabled,
+                startsAt: selPromo.startsAt ?? null,
+                endsAt: selPromo.endsAt ?? null,
+                connectionFeeAmount: Number(selPromo.connectionFeeAmount),
+                providerAmount: Number(selPromo.providerAmount),
+                totalAmount: Number(selPromo.totalAmount),
+                stackableWithCoupons: Boolean(selPromo.stackableWithCoupons),
+                label: selPromo.label,
+                strikeTargets: selPromo.strikeTargets || "default",
+              },
             },
           },
+          updatedAt: serverTimestamp(),
+          updatedBy: user?.uid ?? "admin",
         },
-        updatedAt: serverTimestamp(),
-        updatedBy: user?.uid ?? "admin",
-      },
-      { merge: true }
-    );
-    // Invalidate frontend cache so changes reflect immediately
-    clearPricingCache();
-    alert("Prix promotionnel enregistré ✅");
+        { merge: true }
+      );
+    };
+
+    try {
+      await performSave();
+      // Invalidate frontend cache so changes reflect immediately
+      clearPricingCache();
+      alert("Prix promotionnel enregistré ✅");
+    } catch (error: any) {
+      if (error?.code === "permission-denied" || error?.message?.includes("permission")) {
+        console.log("[AdminPricing] Permission denied for promo, refreshing admin claims...");
+        const claimsRefreshed = await refreshAdminClaims();
+        if (claimsRefreshed) {
+          try {
+            await performSave();
+            clearPricingCache();
+            alert("Prix promotionnel enregistré ✅");
+            return;
+          } catch (retryError) {
+            console.error("[AdminPricing] Promo save failed after claims refresh:", retryError);
+          }
+        }
+        alert("Erreur: Permissions insuffisantes. Veuillez vous reconnecter.");
+      } else {
+        console.error("[AdminPricing] Promo save error:", error);
+        alert("Erreur lors de l'enregistrement: " + (error?.message || "Erreur inconnue"));
+      }
+    }
   };
 
   const saveGlobalStackable = async (value: boolean): Promise<void> => {
-    await setDoc(
-      doc(db, "admin_config", "pricing"),
-      {
-        overrides: { settings: { stackableDefault: value } },
-        updatedAt: serverTimestamp(),
-        updatedBy: user?.uid ?? "admin",
-      },
-      { merge: true }
-    );
-    setStackableDefault(value);
+    try {
+      await setDoc(
+        doc(db, "admin_config", "pricing"),
+        {
+          overrides: { settings: { stackableDefault: value } },
+          updatedAt: serverTimestamp(),
+          updatedBy: user?.uid ?? "admin",
+        },
+        { merge: true }
+      );
+      setStackableDefault(value);
+    } catch (error: any) {
+      if (error?.code === "permission-denied" || error?.message?.includes("permission")) {
+        const claimsRefreshed = await refreshAdminClaims();
+        if (claimsRefreshed) {
+          try {
+            await setDoc(
+              doc(db, "admin_config", "pricing"),
+              {
+                overrides: { settings: { stackableDefault: value } },
+                updatedAt: serverTimestamp(),
+                updatedBy: user?.uid ?? "admin",
+              },
+              { merge: true }
+            );
+            setStackableDefault(value);
+            return;
+          } catch (retryError) {
+            console.error("[AdminPricing] Stackable save failed after claims refresh:", retryError);
+          }
+        }
+        alert("Erreur: Permissions insuffisantes. Veuillez vous reconnecter.");
+      } else {
+        console.error("[AdminPricing] Stackable save error:", error);
+        alert("Erreur lors de l'enregistrement");
+      }
+    }
   };
 
   /* ----------- Preview (logique back) ----------- */
@@ -408,11 +497,11 @@ const AdminPricing: React.FC = () => {
 
   const runPreview = useCallback(async () => {
     let total = selBase.totalAmount;
-    let explanation = `Prix de base: ${total.toFixed(2)} ${currency.toUpperCase()}`;
+    let explanation = `Prix de base: ${formatPrice(total)} ${currency.toUpperCase()}`;
 
     if (isPromoActiveNow) {
       total = selPromo.totalAmount;
-      explanation += ` → Promo active (“prix barré”): ${total.toFixed(2)} ${currency.toUpperCase()}`;
+      explanation += ` → Promo active ("prix barré"): ${formatPrice(total)} ${currency.toUpperCase()}`;
     }
 
     // coupon si empilable (vérification légère, comme le back)
@@ -457,7 +546,7 @@ const AdminPricing: React.FC = () => {
               discount = Math.min(discount, c.maxDiscount);
             discount = Math.min(discount, total);
             total = Math.max(0, Math.round((total - discount) * 100) / 100);
-            explanation += ` • Coupon “${previewCoupon.toUpperCase()}” appliqué: -${discount.toFixed(2)}.`;
+            explanation += ` • Coupon "${previewCoupon.toUpperCase()}" appliqué: -${formatPrice(discount)}.`;
           } else {
             explanation += " • Coupon non applicable.";
           }
@@ -489,10 +578,10 @@ const AdminPricing: React.FC = () => {
     <div className="text-lg font-semibold text-gray-900">
       {strike ? (
         <span className="line-through text-gray-400 mr-2">
-          {value.toFixed(2)}
+          {formatPrice(value)}
         </span>
       ) : (
-        value.toFixed(2)
+        formatPrice(value)
       )}{" "}
       {currency.toUpperCase()}
     </div>
@@ -904,7 +993,7 @@ const AdminPricing: React.FC = () => {
             <div className="p-3 border rounded-lg">
               <div className="text-xs text-gray-500">Écart</div>
               <div className="text-lg font-semibold text-gray-900">
-                {(selBase.totalAmount - selPromo.totalAmount).toFixed(2)}{" "}
+                {formatPrice(selBase.totalAmount - selPromo.totalAmount)}{" "}
                 {currency.toUpperCase()}
               </div>
             </div>
@@ -961,7 +1050,7 @@ const AdminPricing: React.FC = () => {
             <div className="mt-3 flex items-center justify-between">
               <div className="text-sm text-gray-700">{previewDetails}</div>
               <div className="text-lg font-semibold">
-                Total final: {previewTotal.toFixed(2)} {currency.toUpperCase()}
+                Total final: {formatPrice(previewTotal)} {currency.toUpperCase()}
               </div>
             </div>
           )}

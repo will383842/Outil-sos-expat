@@ -2043,7 +2043,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
                     className="text-lg font-black bg-gradient-to-r from-red-500 to-pink-600 bg-clip-text text-transparent"
                     {...priceInfo}
                   >
-                    {adminPricing.totalAmount.toFixed(2)} {currencySymbol}
+                    {adminPricing.totalAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currencySymbol}
                   </span>
                 </div>
               </div>
@@ -2103,7 +2103,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           title={intl.formatMessage({ id: "checkout.confirmPayment" })}
           message={intl.formatMessage(
             { id: "checkout.confirmPaymentMessage" },
-            { amount: adminPricing.totalAmount.toFixed(2), symbol: currencySymbol, currency: serviceCurrency.toUpperCase() }
+            { amount: adminPricing.totalAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), symbol: currencySymbol, currency: serviceCurrency.toUpperCase() }
           )}
           cancelLabel={t("callCheckout.modal.cancel")}
           confirmLabel={t("callCheckout.modal.confirm")}

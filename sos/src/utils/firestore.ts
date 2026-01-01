@@ -337,7 +337,9 @@ export const createInitialAppSettings = async () => {
       await setDoc(settingsRef, {
         servicesEnabled: { lawyerCalls: true, expatCalls: true },
         pricing: { lawyerCall: 49, expatCall: 19 },
-        platformCommission: 0.15,
+        // REMOVED: platformCommission hardcoded value
+        // Commission amounts are now centralized in admin_config/pricing (Firestore)
+        // Use pricingService.getPricingConfig() to get connectionFeeAmount
         maxCallDuration: 30,
         callTimeout: 30,
         supportedCountries: [
@@ -688,17 +690,27 @@ export const getUserCallSessions = async (
 ) => {
   try {
     const callSessionsRef = collection(db, "call_sessions");
-    
-    // Determine which field to query based on role
-    const fieldName = userRole === "client" ? "metadata.clientId" : "metadata.providerId";
-    
-    const q = query(
-      callSessionsRef,
-      where(fieldName, "==", userId),
-      orderBy("metadata.createdAt", "desc"),
-      fsLimit(50)
-    );
-    
+
+    // Admin users can see all sessions, others filter by their ID
+    let q;
+    if (userRole === "admin") {
+      // Admin: get all recent sessions without user filter
+      q = query(
+        callSessionsRef,
+        orderBy("metadata.createdAt", "desc"),
+        fsLimit(50)
+      );
+    } else {
+      // Determine which field to query based on role
+      const fieldName = userRole === "client" ? "metadata.clientId" : "metadata.providerId";
+      q = query(
+        callSessionsRef,
+        where(fieldName, "==", userId),
+        orderBy("metadata.createdAt", "desc"),
+        fsLimit(50)
+      );
+    }
+
     const snapshot = await getDocs(q);
     
     return snapshot.docs.map(docSnap => {
@@ -859,8 +871,9 @@ export const createReviewRecord = async (reviewData: Partial<Review>) => {
     const reviewDocRef = doc(reviewsRef);
     transaction.set(reviewDocRef, payload as DocumentData);
 
-    // Update provider aggregates atomically
-    if (reviewData.providerId && truthy(reviewData.rating)) {
+    // Update provider aggregates ONLY for auto-published reviews (rating >= 4)
+    // Pending reviews will have their stats updated when admin approves them
+    if (auto && reviewData.providerId && truthy(reviewData.rating)) {
       const providerId = reviewData.providerId as string;
 
       // Get provider document

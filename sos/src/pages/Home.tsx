@@ -805,7 +805,8 @@ const OptimizedHomePage: React.FC = () => {
     return new Intl.NumberFormat(locale, {
       style: "currency",
       currency: currencyCode,
-      maximumFractionDigits: 0,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(value);
   }, []);
 
@@ -1458,6 +1459,14 @@ const OptimizedHomePage: React.FC = () => {
                   const minutesLawyer = pricing.lawyer[currency].duration;
                   const minutesExpat = pricing.expat[currency].duration;
 
+                  // Format price number with 2 decimals (French format with comma)
+                  const formatPriceNumber = (value: number): string => {
+                    return value.toLocaleString("fr-FR", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    });
+                  };
+
                   const renderEffPrice = (eff: EffectivePrice, minutes: number) => (
                     <div
                       className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"
@@ -1467,10 +1476,10 @@ const OptimizedHomePage: React.FC = () => {
                         {eff.override ? (
                           <div className="flex items-end gap-2">
                             <span className="line-through text-gray-500" aria-label={intl.formatMessage({ id: "aria.originalPrice" })}>
-                              {currencySymbol}{eff.standard.totalAmount.toFixed(2)}
+                              {currencySymbol}{formatPriceNumber(eff.standard.totalAmount)}
                             </span>
                             <span className="text-2xl sm:text-5xl font-bold">
-                              {currencySymbol}{eff.price.totalAmount.toFixed(2)}
+                              {currencySymbol}{formatPriceNumber(eff.price.totalAmount)}
                             </span>
                             {eff.override?.label && (
                               <span className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full">
@@ -1480,7 +1489,7 @@ const OptimizedHomePage: React.FC = () => {
                           </div>
                         ) : (
                           <span className="text-2xl sm:text-5xl font-bold">
-                            {currencySymbol}{eff.price.totalAmount.toFixed(0)}
+                            {currencySymbol}{formatPriceNumber(eff.price.totalAmount)}
                           </span>
                         )}
                       </div>

@@ -84,7 +84,8 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
 
   const formatPrice = (amount: number, currency: Currency) => {
     const symbol = currency === 'EUR' ? '€' : '$';
-    return `${amount}${symbol}`;
+    const formatted = amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return `${formatted} ${symbol}`;
   };
 
   const getPlanName = () => {

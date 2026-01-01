@@ -206,6 +206,7 @@ export interface AppSettings {
   expatBasePrice?: number;
   lawyerCallDuration?: number;
   expatCallDuration?: number;
+  /** @deprecated Use admin_config/pricing via pricingService instead */
   commissionRate?: number;
   affiliateCommissionRate?: number;
 
@@ -218,6 +219,7 @@ export interface AppSettings {
     lawyerCall: number;
     expatCall: number;
   };
+  /** @deprecated Use admin_config/pricing via pricingService instead */
   platformCommission?: number;
   maxCallDuration?: number;
   callTimeout?: number;

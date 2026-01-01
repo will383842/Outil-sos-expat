@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 import {
   collection, addDoc, setDoc, doc, serverTimestamp, getDocs, query,
-  where, updateDoc, deleteDoc, runTransaction, Timestamp
+  where, updateDoc, deleteDoc, runTransaction, Timestamp, orderBy, limit
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../../config/firebase';
@@ -49,12 +49,22 @@ import { getNamesByCountry } from '../../data/names-by-country';
 import { getLawyerSpecialityLabel } from '../../data/lawyer-specialties';
 import { getExpatHelpTypeLabel } from '../../data/expat-help-types';
 
+// Import du script de migration
+import { previewMigration, migrateAllSpecialtyCodes, migrateOneProfile, checkAllProfiles } from '../../scripts/migrateSpecialtyCodes';
+import { getSpecialtyLabel, mapLanguageToLocale } from '../../utils/specialtyMapper';
+
 // Import du script de génération massive d'avocats
 import { generateLawyersAllCountries } from '../../scripts/generateLawyersAllCountries';
 
-// Exposer la fonction globalement pour la console
+// Exposer les fonctions globalement pour la console
 if (typeof window !== 'undefined') {
   (window as any).generateLawyersAllCountries = generateLawyersAllCountries;
+  (window as any).migrateSpecialtyCodes = {
+    preview: previewMigration,
+    migrateAll: migrateAllSpecialtyCodes,
+    migrateOne: migrateOneProfile,
+    checkAll: checkAllProfiles,
+  };
 }
 
 // ✅ IMPORTS CORRIGÉS depuis slugGenerator (generateSlug non utilisé - généré par ProviderProfile)
@@ -879,6 +889,8 @@ async function getUniqueBio(
 
 /**
  * Convertit les codes de spécialités en labels traduits
+ * Utilise le specialtyMapper pour gérer les codes camelCase et SCREAMING_SNAKE_CASE
+ * @example ["visVisaTravail"] → ["Visas et permis de séjour"]
  * @example ["URG_ASSISTANCE_PENALE_INTERNATIONALE"] → ["Assistance pénale internationale"]
  */
 function translateSpecialtyCodes(
@@ -886,13 +898,12 @@ function translateSpecialtyCodes(
   role: Role,
   langCode: string
 ): string[] {
+  const locale = mapLanguageToLocale(langCode);
   if (role === 'lawyer') {
-    return codes.map(code => 
-      getLawyerSpecialityLabel(code, langCode as 'fr' | 'en' | 'es' | 'de' | 'pt')
-    );
+    return codes.map(code => getSpecialtyLabel(code.trim(), locale));
   } else {
-    return codes.map(code => 
-      getExpatHelpTypeLabel(code, langCode as 'fr' | 'en' | 'es' | 'de' | 'pt' | 'ru' | 'zh' | 'ar' | 'hi')
+    return codes.map(code =>
+      getExpatHelpTypeLabel(code.trim().toUpperCase(), langCode as 'fr' | 'en' | 'es' | 'de' | 'pt' | 'ru' | 'zh' | 'ar' | 'hi')
     );
   }
 }
@@ -1512,17 +1523,21 @@ const AdminAaaProfiles: React.FC = () => {
     try {
       setIsLoadingProfiles(true);
       const usersRef = collection(db, 'users');
-      const snapshot = await getDocs(usersRef);
-      const all = snapshot.docs.map((d) => {
+      // Use server-side filtering to only load test profiles (prevents loading 100K+ users)
+      const testProfilesQuery = query(
+        usersRef,
+        where('isTestProfile', '==', true),
+        orderBy('createdAt', 'desc'),
+        limit(500) // Limit to 500 test profiles max for performance
+      );
+      const snapshot = await getDocs(testProfilesQuery);
+      const profiles = snapshot.docs.map((d) => {
         const data = d.data();
         return {
           id: d.id, ...data,
           createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(),
         } as AaaProfile;
       });
-      const profiles = all
-        .filter((p) => p.isTestProfile === true)
-        .sort((a, b) => (b.createdAt?.getTime?.() || 0) - (a.createdAt?.getTime?.() || 0));
       setExistingProfiles(profiles);
     } catch (e) {
       console.error(e);
@@ -1699,9 +1714,9 @@ const AdminAaaProfiles: React.FC = () => {
       createdAt: Timestamp.fromDate(createdAt), updatedAt: serverTimestamp(),
       lastLoginAt: serverTimestamp(), role, isSOS: true, points: 0,
       affiliateCode: `AAA${Math.random().toString(36).slice(2, 7).toUpperCase()}`,
-      referralBy: null, bio, 
+      referralBy: null, bio,
       responseTime,
-      availability: 'available', totalCalls, totalEarnings: 0, averageRating: rating,
+      availability: 'offline', totalCalls, totalEarnings: 0, averageRating: rating,
       rating, reviewCount, isEarlyProvider: isEarly,
       mapLocation,
     };
@@ -3157,7 +3172,7 @@ const AdminAaaProfiles: React.FC = () => {
                   <div className="flex flex-wrap gap-2 mb-2">
                     {(editFormData.specialties || []).map((specialty: string) => (
                       <span key={specialty} className="inline-flex items-center px-2 py-1 bg-purple-100 text-purple-800 text-sm rounded-full">
-                        {getLawyerSpecialityLabel(specialty, 'fr')}
+                        {getSpecialtyLabel(specialty, 'fr')}
                         <button
                           type="button"
                           onClick={() => setEditFormData((prev) => ({
@@ -3189,7 +3204,7 @@ const AdminAaaProfiles: React.FC = () => {
                   >
                     <option value="">+ Ajouter une spécialité...</option>
                     {LAWYER_SPECIALTIES.filter(s => !editFormData.specialties?.includes(s)).map((specialty: string) => (
-                      <option key={specialty} value={specialty}>{getLawyerSpecialityLabel(specialty, 'fr')}</option>
+                      <option key={specialty} value={specialty}>{getSpecialtyLabel(specialty, 'fr')}</option>
                     ))}
                   </select>
                 </div>

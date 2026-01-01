@@ -274,7 +274,7 @@ const useColumnLayout = () => {
 /* ---------------------- Utils ---------------------- */
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 const fmtDate = (d?: Date) => (d ? d.toLocaleDateString("fr-FR") : "—");
-const fmtMoney = (n: number) => `${n.toFixed(2)}€`;
+const fmtMoney = (n: number) => `${n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€`;
 
 /* ---------------------- Composant principal ---------------------- */
 const AdminExpats: React.FC = () => {
@@ -355,13 +355,68 @@ const AdminExpats: React.FC = () => {
   };
 
   /* ---------------------- Chargement Firestore (pagination serveur) ---------------------- */
+  /**
+   * Build Firestore query with server-side filters.
+   *
+   * SERVER-SIDE FILTERS (applied in Firestore query for accurate pagination):
+   * - role: always "expat"
+   * - status: exact match (active, suspended, pending, banned)
+   * - validationStatus: exact match (pending, approved, rejected)
+   * - country: exact match on country field
+   * - originCountry: exact match on originCountry field
+   * - dateRange: range query on createdAt (today, week, month)
+   *
+   * CLIENT-SIDE FILTERS (must remain client-side - documented reasons):
+   * - searchTerm: Full-text search across multiple fields (firstName, lastName, email, city, country, originCountry)
+   *   Firestore doesn't support full-text search or OR queries across multiple fields.
+   *   Would require Algolia/ElasticSearch or composite indexes for each field combination.
+   * - helpDomain: Partial match within array (user types "logement" to find "aide au logement")
+   *   Firestore array-contains only supports exact match, not partial/substring matching.
+   * - language: Partial match within array (same reason as helpDomain)
+   * - minRating: Cannot combine range queries (>=) with inequality on different fields in Firestore
+   *   without composite indexes. Currently createdAt orderBy conflicts with rating range.
+   * - minYearsInCountry: Computed field (calculated from expatSince), not stored directly.
+   *   Would require storing as indexed field to enable server-side filtering.
+   */
   const buildBaseQuery = useCallback(
-    (opts?: { after?: QueryDocumentSnapshot<DocumentData> | null }) => {
+    (opts?: { after?: QueryDocumentSnapshot<DocumentData> | null; forCount?: boolean }) => {
       const base = [where("role", "==", "expat")] as any[];
 
+      // Server-side filters for accurate pagination
       if (filters.status !== "all") base.push(where("status", "==", filters.status));
       if (filters.validationStatus !== "all") base.push(where("validationStatus", "==", filters.validationStatus));
-      // Recherche large côté client après fetch (pour rester proche de Lawyers). Ici on garde un orderBy fixe.
+
+      // Country filter - exact match server-side
+      if (filters.country !== "all" && filters.country.trim() !== "") {
+        base.push(where("country", "==", filters.country));
+      }
+
+      // Origin country filter - exact match server-side
+      // Note: We filter on originCountry field; documents may also have countryOfOrigin or nationalite
+      // but those are handled by mapDoc normalization
+      if (filters.originCountry !== "all" && filters.originCountry.trim() !== "") {
+        base.push(where("originCountry", "==", filters.originCountry));
+      }
+
+      // Date range filter - server-side range query on createdAt
+      if (filters.dateRange !== "all") {
+        const now = new Date();
+        const from = new Date();
+        if (filters.dateRange === "today") {
+          from.setHours(0, 0, 0, 0);
+        } else if (filters.dateRange === "week") {
+          from.setDate(now.getDate() - 7);
+        } else if (filters.dateRange === "month") {
+          from.setMonth(now.getMonth() - 1);
+        }
+        base.push(where("createdAt", ">=", Timestamp.fromDate(from)));
+      }
+
+      // For count queries, we don't need ordering or pagination
+      if (opts?.forCount) {
+        return fsQuery(collection(db, "users"), ...base);
+      }
+
       const q = fsQuery(
         collection(db, "users"),
         ...base,
@@ -371,24 +426,34 @@ const AdminExpats: React.FC = () => {
       );
       return q;
     },
-    [filters.status, filters.validationStatus, pageSize]
+    [filters.status, filters.validationStatus, filters.country, filters.originCountry, filters.dateRange, pageSize]
   );
 
   const loadCount = useCallback(async () => {
     try {
-      const cQuery = fsQuery(collection(db, "users"), where("role", "==", "expat"));
+      // Use the same filters as buildBaseQuery for accurate count
+      const cQuery = buildBaseQuery({ forCount: true });
       const snapshot = await getCountFromServer(cQuery);
       setTotal(snapshot.data().count);
     } catch {
       // silencieux
     }
-  }, []);
+  }, [buildBaseQuery]);
 
+  /**
+   * Apply client-side filters for filters that cannot be efficiently done server-side.
+   * See buildBaseQuery comment for detailed explanation of why these remain client-side.
+   *
+   * NOTE: country, originCountry, and dateRange are now handled server-side in buildBaseQuery
+   * for accurate pagination. They are no longer filtered here.
+   */
   const applyClientSideFilters = useCallback(
     (arr: Expat[]) => {
       let out = [...arr];
       const f = filters;
 
+      // CLIENT-SIDE: Full-text search across multiple fields
+      // Firestore doesn't support full-text search or OR queries across multiple fields
       if (f.searchTerm) {
         const s = f.searchTerm.toLowerCase();
         out = out.filter(
@@ -400,31 +465,41 @@ const AdminExpats: React.FC = () => {
             (e.originCountry || "").toLowerCase().includes(s)
         );
       }
-      if (f.country !== "all") out = out.filter((e) => e.country?.toLowerCase() === f.country.toLowerCase());
-      if (f.originCountry !== "all")
-        out = out.filter((e) => (e.originCountry || "").toLowerCase() === f.originCountry.toLowerCase());
-      if (f.helpDomain) out = out.filter((e) => e.helpDomains.some((d) => d.toLowerCase().includes(f.helpDomain.toLowerCase())));
-      if (f.language) out = out.filter((e) => e.languages.some((d) => d.toLowerCase().includes(f.language.toLowerCase())));
-      if (f.minRating !== "all") out = out.filter((e) => e.rating >= parseFloat(f.minRating));
-      if (f.minYearsInCountry !== "all") out = out.filter((e) => e.yearsInCountry >= parseInt(f.minYearsInCountry, 10));
-      if (f.dateRange !== "all") {
-        const now = new Date();
-        const from = new Date();
-        if (f.dateRange === "today") from.setHours(0, 0, 0, 0);
-        if (f.dateRange === "week") from.setDate(now.getDate() - 7);
-        if (f.dateRange === "month") from.setMonth(now.getMonth() - 1);
-        out = out.filter((e) => e.createdAt >= from);
+
+      // CLIENT-SIDE: Partial match within helpDomains array
+      // Firestore array-contains only supports exact match, not substring matching
+      if (f.helpDomain) {
+        out = out.filter((e) => e.helpDomains.some((d) => d.toLowerCase().includes(f.helpDomain.toLowerCase())));
       }
+
+      // CLIENT-SIDE: Partial match within languages array
+      // Same limitation as helpDomain - Firestore can't do substring match in arrays
+      if (f.language) {
+        out = out.filter((e) => e.languages.some((d) => d.toLowerCase().includes(f.language.toLowerCase())));
+      }
+
+      // CLIENT-SIDE: Rating range filter
+      // Cannot combine multiple range queries on different fields in Firestore
+      // (already using range on createdAt for dateRange)
+      if (f.minRating !== "all") {
+        out = out.filter((e) => e.rating >= parseFloat(f.minRating));
+      }
+
+      // CLIENT-SIDE: Years in country filter
+      // This is a computed field (calculated from expatSince), not stored in Firestore
+      if (f.minYearsInCountry !== "all") {
+        out = out.filter((e) => e.yearsInCountry >= parseInt(f.minYearsInCountry, 10));
+      }
+
       return out;
     },
-    [filters]
+    [filters.searchTerm, filters.helpDomain, filters.language, filters.minRating, filters.minYearsInCountry]
   );
 
   const mapDoc = (d: QueryDocumentSnapshot<DocumentData>): Expat => {
     const data = d.data() as FirestoreExpatDoc;
     const expatSince = data.expatSince?.toDate() || data.movedToCountryAt?.toDate();
     const yearsInCountry = expatSince ? calculateYearsInCountry(expatSince) : data.yearsInCountry || 0;
-    console.log("data===============>>", data);
 
     return {
       id: d.id,
@@ -484,15 +559,16 @@ const AdminExpats: React.FC = () => {
     [applyClientSideFilters, buildBaseQuery, cursor, loadCount, pageSize]
   );
 
+  // Reload from server when server-side filters change
   useEffect(() => {
     void loadPage("init");
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageSize, filters.status, filters.validationStatus]);
+  }, [pageSize, filters.status, filters.validationStatus, filters.country, filters.originCountry, filters.dateRange]);
 
-  // si filtres texte changent -> re-filtrer client-side
+  // Re-filter client-side when client-only filters change (no server round-trip needed)
   useEffect(() => {
     setExpats((prev) => applyClientSideFilters(prev));
-  }, [applyClientSideFilters, filters.searchTerm, filters.country, filters.originCountry, filters.helpDomain, filters.language, filters.minRating, filters.minYearsInCountry, filters.dateRange]);
+  }, [applyClientSideFilters, filters.searchTerm, filters.helpDomain, filters.language, filters.minRating, filters.minYearsInCountry]);
 
   /* ---------------------- Actions ---------------------- */
   const toggleSelect = (id: string, checked: boolean) =>
@@ -668,7 +744,7 @@ const AdminExpats: React.FC = () => {
       case "expatSince":
         return <div className="text-sm text-gray-900">{fmtDate(e.expatSince)}</div>;
       case "hourlyRate":
-        return <div className="text-sm text-green-700">{e.hourlyRate ? `${e.hourlyRate}€` : "—"}</div>;
+        return <div className="text-sm text-green-700">{e.hourlyRate ? `${Number(e.hourlyRate).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€` : "—"}</div>;
       case "profile":
         return (
           <div className="text-sm">
@@ -724,8 +800,6 @@ const AdminExpats: React.FC = () => {
               size="small"
               variant="secondary"
               onClick={() => {
-                console.log("e in admin expat", e);
-
                 setTranslationProviderId(e.id);
                 setTranslationModalOpen(true);
               }}

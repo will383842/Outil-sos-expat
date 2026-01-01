@@ -45,7 +45,7 @@ export default function UserInvoices() {
 
   const PAGE_SIZE = 10;
 
-  // Currency formatting helper
+  // Currency formatting helper - French format with 2 decimals
   const formatCurrency = (amount: number, currency: string = 'EUR'): string => {
     const currencyMap: Record<string, { symbol: string; position: 'before' | 'after' }> = {
       EUR: { symbol: '€', position: 'after' },
@@ -53,11 +53,11 @@ export default function UserInvoices() {
       GBP: { symbol: '£', position: 'before' },
       CHF: { symbol: 'CHF', position: 'after' },
     };
-    
+
     const config = currencyMap[currency.toUpperCase()] || currencyMap.EUR;
-    const formatted = amount.toFixed(2);
-    
-    return config.position === 'before' 
+    const formatted = amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    return config.position === 'before'
       ? `${config.symbol}${formatted}`
       : `${formatted} ${config.symbol}`;
   };
@@ -160,7 +160,7 @@ export default function UserInvoices() {
 
     const tableData = invoices.map((invoice) => [
       invoice.id,
-      invoice.amount.toFixed(2) + ' €',
+      invoice.amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €',
       invoice.status,
       new Date(invoice.createdAt.seconds * 1000).toLocaleDateString(intl.locale),
     ]);

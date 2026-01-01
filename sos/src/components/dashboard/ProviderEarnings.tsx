@@ -203,7 +203,7 @@ export default function ProviderEarnings({ className = "", compact = false }: Pr
               {summary.successfulCalls}
             </div>
             <div className="text-xs text-purple-500 dark:text-purple-400">
-              ~{summary.averageEarningPerCall.toFixed(2)} {summary.currency}/appel
+              ~{summary.averageEarningPerCall.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {summary.currency}/appel
             </div>
           </div>
         </div>

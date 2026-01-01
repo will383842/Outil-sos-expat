@@ -34,6 +34,7 @@ import { doc, onSnapshot, getDoc, collection, query, where, getDocs, limit as fi
 import { db } from "../config/firebase";
 import { useIntl, FormattedMessage } from "react-intl";
 import { generateBothInvoices } from "../services/invoiceGenerator";
+import { usePricingConfig } from "../services/pricingService";
 
 /* =========================
    Types pour l'order / coupon / metadata
@@ -88,10 +89,9 @@ const PROVIDER_DEFAULTS = {
   "4": { type: "expat", price: 19, duration: 30, role: "expat" },
 } as const;
 
-const COMMISSION_RATES = {
-  lawyer: 9,
-  expat: 5,
-} as const;
+// REMOVED: Hardcoded COMMISSION_RATES
+// Commission amounts are now centralized in admin_config/pricing (Firestore)
+// Use usePricingConfig() hook to get connectionFeeAmount
 
 /* =========================
    Page principale
@@ -103,6 +103,9 @@ const SuccessPayment: React.FC = () => {
   const location = useLocation();
   const { language } = useApp();
   const { user } = useAuth();
+
+  // Get centralized pricing configuration from admin_config/pricing
+  const { pricing } = usePricingConfig();
   
   // Extract country from URL path (e.g., /en-de/... → de)
   const { country: urlCountry } = parseLocaleFromPath(location.pathname);
@@ -602,10 +605,13 @@ const SuccessPayment: React.FC = () => {
           platformFee = paymentData.platformFee;
           providerAmountCalc = paymentData.providerAmount;
         } else {
-          // Calculer pour Stripe si non disponibles
-          const commissionRate = callRecord.serviceType === 'lawyer_call' ? 0.09 : 0.05; // 9% avocat, 5% expat
-          platformFee = Math.round(totalAmount * commissionRate * 100) / 100;
-          providerAmountCalc = Math.round((totalAmount - platformFee) * 100) / 100;
+          // Calculate from centralized admin_config/pricing
+          const serviceType = callRecord.serviceType === 'lawyer_call' ? 'lawyer' : 'expat';
+          const pricingConfig = pricing?.[serviceType]?.eur;
+
+          // Use connectionFeeAmount from admin_config/pricing, with fallback
+          platformFee = pricingConfig?.connectionFeeAmount ?? Math.round(totalAmount * 0.39 * 100) / 100;
+          providerAmountCalc = pricingConfig?.providerAmount ?? Math.round((totalAmount - platformFee) * 100) / 100;
         }
 
         const payment = {
@@ -679,7 +685,7 @@ const SuccessPayment: React.FC = () => {
     const n = Number(v ?? 0);
     return Number.isFinite(n) ? n : 0;
   };
-  const fmt = (n: number) => n.toFixed(2);
+  const fmt = (n: number) => n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   /* =========================
      Rendu

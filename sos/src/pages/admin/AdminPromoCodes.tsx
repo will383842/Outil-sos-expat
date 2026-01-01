@@ -587,7 +587,7 @@ const AdminPromoCodes: React.FC = () => {
   }, []);
 
   const formatAmount = (amount: number, type: "fixed" | "percentage"): string =>
-    type === "fixed" ? `${amount.toFixed(2)}€` : `${amount}%`;
+    type === "fixed" ? `${amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€` : `${amount}%`;
 
   const getStatusBadge = (active: boolean) =>
     active ? (
@@ -709,7 +709,7 @@ const AdminPromoCodes: React.FC = () => {
                     Économies totales
                   </p>
                   <p className="text-3xl font-bold text-gray-900 mt-1">
-                    {stats.totalSavings.toFixed(2)}€
+                    {stats.totalSavings.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
@@ -789,7 +789,7 @@ const AdminPromoCodes: React.FC = () => {
                           )}
                           {typeof coupon.maxDiscount === "number" && (
                             <div className="text-xs text-gray-500">
-                              Réduc. max: {coupon.maxDiscount.toFixed(2)}€
+                              Réduc. max: {coupon.maxDiscount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
                             </div>
                           )}
                         </td>
@@ -1318,10 +1318,10 @@ const AdminPromoCodes: React.FC = () => {
                             {usage.orderId}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {usage.order_amount.toFixed(2)}€
+                            {usage.order_amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
-                            -{usage.discount_amount.toFixed(2)}€
+                            -{usage.discount_amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {formatDate(usage.used_at)}

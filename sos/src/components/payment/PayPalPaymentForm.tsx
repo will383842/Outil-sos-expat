@@ -5,7 +5,7 @@ import { httpsCallable } from "firebase/functions";
 import { functions } from "../../config/firebase";
 import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { FormattedMessage } from "react-intl";
-import { useApp } from "../../contexts/AppContext";
+import { usePricingConfig } from "../../services/pricingService";
 
 interface PayPalPaymentFormProps {
   amount: number;
@@ -15,6 +15,7 @@ interface PayPalPaymentFormProps {
   callSessionId: string;
   clientId: string;
   description?: string;
+  serviceType?: 'lawyer' | 'expat'; // Service type for pricing lookup
   onSuccess: (details: PayPalSuccessDetails) => void;
   onError: (error: Error) => void;
   onCancel?: () => void;
@@ -46,6 +47,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   callSessionId,
   clientId,
   description,
+  serviceType = 'expat', // Default to expat if not specified
   onSuccess,
   onError,
   onCancel,
@@ -54,13 +56,16 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   const [{ isPending, isRejected }] = usePayPalScriptReducer();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<"idle" | "processing" | "success" | "error">("idle");
-  const { settings } = useApp();
 
-  // SECURITY FIX: Use commission rate from backend settings instead of hardcoded values
-  // The backend will validate and recalculate these values for security
-  const commissionRate = settings?.commissionRate ?? 0.20; // Default fallback only
-  const platformFee = amount * commissionRate;
-  const providerAmount = amount * (1 - commissionRate);
+  // Get commission amounts from centralized admin_config/pricing (Firestore)
+  const { pricing } = usePricingConfig();
+  const currencyKey = (currency?.toLowerCase() || 'eur') as 'eur' | 'usd';
+  const pricingConfig = pricing?.[serviceType]?.[currencyKey];
+
+  // Use connectionFeeAmount from admin_config/pricing, with sensible fallbacks
+  // Backend will recalculate and validate these values for security
+  const platformFee = pricingConfig?.connectionFeeAmount ?? Math.round(amount * 0.39 * 100) / 100;
+  const providerAmount = pricingConfig?.providerAmount ?? Math.round((amount - platformFee) * 100) / 100;
 
   const createOrder = async (): Promise<string> => {
     try {
@@ -198,7 +203,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
             <FormattedMessage id="payment.total" defaultMessage="Total" />
           </span>
           <span className="text-xl font-bold text-gray-900">
-            {amount.toFixed(2)} {currency.toUpperCase()}
+            {amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency.toUpperCase()}
           </span>
         </div>
         <p className="text-xs text-gray-500">

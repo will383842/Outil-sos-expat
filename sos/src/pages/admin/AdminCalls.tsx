@@ -499,7 +499,7 @@ const AdminCallsMonitoring: React.FC = () => {
   const [soundEnabled, setSoundEnabled] = useState(true);
 
   // Formatters
-  const formatCurrency = (amount: number) => `${amount.toFixed(2)}€`;
+  const formatCurrency = (amount: number) => `${amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€`;
   const formatDateTime = (timestamp: Timestamp | Date) => {
     const date = timestamp instanceof Timestamp ? timestamp.toDate() : timestamp;
     return new Intl.DateTimeFormat('fr-FR', {

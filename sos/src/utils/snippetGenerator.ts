@@ -16,6 +16,7 @@ import { formatPublicName } from './slugGenerator';
 import { getCountryName } from './formatters';
 import { getLawyerSpecialityLabel } from '../data/lawyer-specialties';
 import { getExpatHelpTypeLabel } from '../data/expat-help-types';
+import { getSpecialtyLabel, mapLanguageToLocale } from './specialtyMapper';
 
 // ==========================================
 // 📊 TYPES
@@ -457,13 +458,14 @@ function replacePlaceholders(
   
   const languages = provider.languages.join(', ');
   
-  // ✅ CORRECTION BUG 3 : Traduire les codes en labels
+  // ✅ CORRECTION BUG 3 : Traduire les codes en labels (avec mapping camelCase → SCREAMING_SNAKE_CASE)
+  const mappedLocale = mapLanguageToLocale(locale);
   const specialties = (provider.specialties || [])
-    .map(code => getLawyerSpecialityLabel(code, locale as any))
+    .map(code => getSpecialtyLabel(code, mappedLocale))
     .join(', ');
-  
+
   const helpTypes = (provider.helpTypes || [])
-    .map(code => getExpatHelpTypeLabel(code, locale as any))
+    .map(code => getExpatHelpTypeLabel(code.toUpperCase(), locale as any))
     .join(', ');
   
   const years = provider.yearsAsExpat || provider.yearsOfExperience || 0;

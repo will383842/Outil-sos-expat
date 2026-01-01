@@ -40,6 +40,8 @@ import {
   Shield,
   Scale,
   Briefcase,
+  Check,
+  X,
 } from 'lucide-react';
 import {
   collection,
@@ -52,6 +54,7 @@ import {
   getDocs,
   doc,
   updateDoc,
+  runTransaction,
 } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import AdminLayout from '../../components/admin/AdminLayout';
@@ -80,6 +83,7 @@ interface Provider {
   lastStatusChange?: Timestamp;
   isApproved: boolean;
   approvalStatus?: string;
+  validationStatus?: 'pending' | 'approved' | 'rejected';
   isVisible?: boolean;
   country?: string;
   city?: string;
@@ -509,30 +513,95 @@ const AdminProviders: React.FC = () => {
     URL.revokeObjectURL(url);
   }, [filteredProviders]);
 
-  // Forcer un prestataire hors ligne
+  // Forcer un prestataire hors ligne (using transaction for atomicity)
   const handleForceOffline = useCallback(async (providerId: string) => {
     if (!confirm('Voulez-vous vraiment mettre ce prestataire hors ligne ?')) return;
 
     try {
-      const providerRef = doc(db, 'sos_profiles', providerId);
-      await updateDoc(providerRef, {
-        isOnline: false,
-        availability: 'offline',
-        lastStatusChange: Timestamp.now(),
-      });
+      await runTransaction(db, async (transaction) => {
+        const providerRef = doc(db, 'sos_profiles', providerId);
+        const userRef = doc(db, 'users', providerId);
 
-      // Mettre à jour aussi dans users
-      const userRef = doc(db, 'users', providerId);
-      await updateDoc(userRef, {
-        isOnline: false,
-        availability: 'offline',
-        lastStatusChange: Timestamp.now(),
+        const updateData = {
+          isOnline: false,
+          availability: 'offline',
+          lastStatusChange: Timestamp.now(),
+        };
+
+        transaction.update(providerRef, updateData);
+        transaction.update(userRef, updateData);
       });
 
       console.log(`Prestataire ${providerId} mis hors ligne par l'admin`);
     } catch (error) {
       console.error('Erreur lors de la mise hors ligne:', error);
       alert('Erreur lors de la mise hors ligne du prestataire');
+    }
+  }, []);
+
+  // Approuver un prestataire (using transaction for atomicity)
+  const handleApproveProvider = useCallback(async (providerId: string) => {
+    if (!confirm('Voulez-vous approuver ce prestataire ?')) return;
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        const providerRef = doc(db, 'sos_profiles', providerId);
+        const userRef = doc(db, 'users', providerId);
+
+        const updateData = {
+          isApproved: true,
+          validationStatus: 'approved',
+          approvalStatus: 'approved',
+          updatedAt: Timestamp.now(),
+        };
+
+        transaction.update(providerRef, updateData);
+        transaction.update(userRef, updateData);
+      });
+
+      console.log(`Prestataire ${providerId} approuve par l'admin`);
+      alert('Prestataire approuve avec succes');
+    } catch (error) {
+      console.error('Erreur lors de l\'approbation:', error);
+      logError({
+        origin: 'frontend',
+        error: `Erreur approbation prestataire: ${(error as Error).message}`,
+        context: { component: 'AdminProviders', providerId },
+      });
+      alert('Erreur lors de l\'approbation du prestataire');
+    }
+  }, []);
+
+  // Rejeter un prestataire (using transaction for atomicity)
+  const handleRejectProvider = useCallback(async (providerId: string) => {
+    if (!confirm('Voulez-vous rejeter ce prestataire ?')) return;
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        const providerRef = doc(db, 'sos_profiles', providerId);
+        const userRef = doc(db, 'users', providerId);
+
+        const updateData = {
+          isApproved: false,
+          validationStatus: 'rejected',
+          approvalStatus: 'rejected',
+          updatedAt: Timestamp.now(),
+        };
+
+        transaction.update(providerRef, updateData);
+        transaction.update(userRef, updateData);
+      });
+
+      console.log(`Prestataire ${providerId} rejete par l'admin`);
+      alert('Prestataire rejete');
+    } catch (error) {
+      console.error('Erreur lors du rejet:', error);
+      logError({
+        origin: 'frontend',
+        error: `Erreur rejet prestataire: ${(error as Error).message}`,
+        context: { component: 'AdminProviders', providerId },
+      });
+      alert('Erreur lors du rejet du prestataire');
     }
   }, []);
 
@@ -709,7 +778,7 @@ const AdminProviders: React.FC = () => {
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-purple-600">
-                    {stats.totalRevenueToday.toFixed(0)}€
+                    {stats.totalRevenueToday.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
                   </div>
                   <div className="text-xs text-gray-500">Revenus aujourd'hui</div>
                 </div>
@@ -940,6 +1009,35 @@ const AdminProviders: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center space-x-2">
+                          {/* Approve/Reject buttons for non-approved providers */}
+                          {!provider.isApproved && (
+                            <>
+                              <button
+                                onClick={() => handleApproveProvider(provider.id)}
+                                className="p-1.5 text-green-600 hover:text-green-800 hover:bg-green-50 rounded"
+                                title="Approuver"
+                              >
+                                <Check size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleRejectProvider(provider.id)}
+                                className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+                                title="Rejeter"
+                              >
+                                <X size={16} />
+                              </button>
+                            </>
+                          )}
+                          {/* Show rejection button for approved providers (to revoke approval) */}
+                          {provider.isApproved && (
+                            <button
+                              onClick={() => handleRejectProvider(provider.id)}
+                              className="p-1.5 text-orange-600 hover:text-orange-800 hover:bg-orange-50 rounded"
+                              title="Revoquer l'approbation"
+                            >
+                              <X size={16} />
+                            </button>
+                          )}
                           <button
                             onClick={() => handleViewDetails(provider)}
                             className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
@@ -1089,7 +1187,7 @@ const AdminProviders: React.FC = () => {
                       <span className="text-gray-600">Revenus totaux:</span>
                       <span className="font-medium">
                         {selectedProvider.totalRevenue !== undefined
-                          ? `${selectedProvider.totalRevenue.toFixed(2)}€`
+                          ? `${selectedProvider.totalRevenue.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€`
                           : 'N/A'}
                       </span>
                     </div>
@@ -1175,6 +1273,43 @@ const AdminProviders: React.FC = () => {
                   Fermer
                 </button>
                 <div className="flex space-x-3">
+                  {/* Approve/Reject buttons */}
+                  {!selectedProvider.isApproved && (
+                    <button
+                      onClick={() => {
+                        handleApproveProvider(selectedProvider.id);
+                        setShowDetailModal(false);
+                      }}
+                      className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
+                    >
+                      <Check size={16} className="mr-2" />
+                      Approuver
+                    </button>
+                  )}
+                  {!selectedProvider.isApproved && (
+                    <button
+                      onClick={() => {
+                        handleRejectProvider(selectedProvider.id);
+                        setShowDetailModal(false);
+                      }}
+                      className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center"
+                    >
+                      <X size={16} className="mr-2" />
+                      Rejeter
+                    </button>
+                  )}
+                  {selectedProvider.isApproved && (
+                    <button
+                      onClick={() => {
+                        handleRejectProvider(selectedProvider.id);
+                        setShowDetailModal(false);
+                      }}
+                      className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 flex items-center"
+                    >
+                      <X size={16} className="mr-2" />
+                      Revoquer
+                    </button>
+                  )}
                   {selectedProvider.isOnline && (
                     <button
                       onClick={() => {

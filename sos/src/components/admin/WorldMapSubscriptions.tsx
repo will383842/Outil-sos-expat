@@ -472,7 +472,7 @@ export const WorldMapSubscriptions: React.FC<WorldMapSubscriptionsProps> = ({
                 </div>
                 <div className="bg-emerald-50 rounded-lg p-3">
                   <div className="text-xs text-emerald-600 mb-1">MRR</div>
-                  <div className="text-2xl font-bold text-emerald-700">{selectedCountry.mrrEur.toLocaleString()}€</div>
+                  <div className="text-2xl font-bold text-emerald-700">{selectedCountry.mrrEur.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</div>
                 </div>
               </div>
 

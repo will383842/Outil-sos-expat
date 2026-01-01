@@ -11,9 +11,14 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // Vérifie si l'utilisateur est admin via:
+    // 1. Custom claims Firebase Auth (request.auth.token.role)
+    // 2. OU le document Firestore users/{uid}.role
     function isAdmin() {
-      return request.auth != null &&
-             request.auth.token.role == 'admin';
+      return request.auth != null && (
+        request.auth.token.role == 'admin' ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
     }
 
     // SECURITE: Le role 'dev' est DESACTIVE en production
@@ -130,17 +135,18 @@ service cloud.firestore {
     }
 
     match /call_sessions/{sessionId} {
+      // FIX: clientId et providerId sont dans metadata, pas au niveau racine
       allow read: if isAuthenticated() &&
-                  (resource.data.clientId == request.auth.uid ||
-                   resource.data.providerId == request.auth.uid ||
+                  (resource.data.metadata.clientId == request.auth.uid ||
+                   resource.data.metadata.providerId == request.auth.uid ||
                    isAdmin() || isDev());
       // Seul le client peut créer une session (validation de l'ownership)
       allow create: if isAuthenticated() &&
-                    request.resource.data.clientId == request.auth.uid;
+                    request.resource.data.metadata.clientId == request.auth.uid;
       // Seuls les participants (client ou provider) peuvent mettre à jour
       allow update: if isAuthenticated() &&
-                    (resource.data.clientId == request.auth.uid ||
-                     resource.data.providerId == request.auth.uid ||
+                    (resource.data.metadata.clientId == request.auth.uid ||
+                     resource.data.metadata.providerId == request.auth.uid ||
                      isAdmin() || isDev());
       allow delete: if isAdmin() || isDev();
     }
@@ -325,10 +331,10 @@ service cloud.firestore {
     }
 
     // ================= ADMIN CONFIG COLLECTION =================
-    // P0 FIX: Allow public read for pricing data (needed for public pages)
-    // Only admin/dev can write
+    // P0 FIX: Only pricing document is publicly readable (for public pricing pages)
+    // Other admin_config documents require authentication
     match /admin_config/{docId} {
-      allow read: if true;  // Public read for pricing - needed on public pages
+      allow read: if docId == 'pricing' || isAuthenticated();
       allow write: if isAdmin() || isDev();
     }
 
@@ -671,6 +677,31 @@ service cloud.firestore {
       // P1 FIX: Only Cloud Functions via Admin SDK can create (prevents log forgery)
       allow create: if false;
       allow update, delete: if isAdmin() || isDev();
+    }
+
+    // ================= LEGAL DOCUMENTS COLLECTION =================
+    // Documents légaux (CGU, CGV, Politique de confidentialité, etc.)
+    match /legal_documents/{docId} {
+      // Lecture publique pour les pages légales
+      allow read: if true;
+      // Seuls les admins peuvent modifier
+      allow write: if isAdmin() || isDev();
+    }
+
+    // ================= ADMIN SETTINGS COLLECTION =================
+    // Paramètres d'administration
+    match /admin_settings/{docId} {
+      // Seuls les admins peuvent lire et écrire
+      allow read, write: if isAdmin() || isDev();
+    }
+
+    // ================= AUTH CLAIMS LOGS COLLECTION =================
+    // Logs des changements de claims auth
+    match /auth_claims_logs/{logId} {
+      // Seuls les admins peuvent lire
+      allow read: if isAdmin() || isDev();
+      // Seules les Cloud Functions peuvent écrire
+      allow write: if false;
     }
 
     // ================= BOOKING REQUESTS COLLECTION =================

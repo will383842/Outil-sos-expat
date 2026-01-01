@@ -42,6 +42,8 @@ import {
   query,
   where,
   onSnapshot,
+  limit,
+  orderBy,
 } from "firebase/firestore";
 import { db, functions } from "../../config/firebase";
 import { httpsCallable } from "firebase/functions";
@@ -90,7 +92,12 @@ interface Stats {
   totalRevenue: number;
   platformRevenue: number;
   providerRevenue: number;
+  isEstimate?: boolean; // True when stats are based on limited sample (> STATS_QUERY_LIMIT docs)
 }
+
+// ⚠️ PERFORMANCE: Limit for stats queries to prevent app freeze with large datasets
+// For accurate counts, implement counter documents or use Firestore aggregation queries
+const STATS_QUERY_LIMIT = 1000;
 
 // Helpers de typage & normalisation
 function normalizeAdminSettings(input: unknown): AdminSettings {
@@ -262,10 +269,22 @@ const AdminDashboard: React.FC = () => {
     if (!user) return;
 
     try {
-      // ✅ OPTIMISATION: Requêtes parallèles au lieu de séquentielles
+      // ✅ OPTIMISATION: Requêtes parallèles avec limite pour éviter le freeze
+      // Les requêtes sont limitées à 1000 documents pour les stats du dashboard
+      const callsQuery = query(
+        collection(db, "calls"),
+        orderBy("createdAt", "desc"),
+        limit(STATS_QUERY_LIMIT)
+      );
+      const paymentsQuery = query(
+        collection(db, "payments"),
+        orderBy("createdAt", "desc"),
+        limit(STATS_QUERY_LIMIT)
+      );
+
       const [callsSnapshot, paymentsSnapshot] = await Promise.all([
-        getDocs(collection(db, "calls")),
-        getDocs(collection(db, "payments"))
+        getDocs(callsQuery),
+        getDocs(paymentsQuery)
       ]);
 
       // ✅ Vérifier si toujours monté AVANT de continuer
@@ -303,12 +322,17 @@ const AdminDashboard: React.FC = () => {
       // ✅ Vérifier une dernière fois avant setState
       if (!mountedRef.current) return;
 
+      // Determine if stats are estimates (when we hit the limit)
+      const isEstimate = callsSnapshot.size >= STATS_QUERY_LIMIT ||
+                         paymentsSnapshot.size >= STATS_QUERY_LIMIT;
+
       setStats({
         totalCalls,
         successfulCalls,
         totalRevenue,
         platformRevenue,
         providerRevenue,
+        isEstimate,
       });
     } catch (error) {
       // ✅ Ignorer les erreurs si le composant est démonté
@@ -686,6 +710,19 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {/* Estimate Warning Banner */}
+            {stats.isEstimate && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 flex items-center">
+                <AlertTriangle className="w-5 h-5 text-yellow-600 mr-3 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-yellow-800">
+                    {intl.formatMessage({ id: 'admin.dashboard.stats.estimateWarning' }, { limit: STATS_QUERY_LIMIT }) ||
+                     `Statistics are based on the most recent ${STATS_QUERY_LIMIT.toLocaleString()} records. For accurate totals, use the detailed reports.`}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Statistics Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
               <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
