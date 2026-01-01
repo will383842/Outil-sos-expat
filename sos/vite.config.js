@@ -108,8 +108,44 @@ export default defineConfig(({ mode }) => {
       },
       rollupOptions: {
         output: {
-          // Manual chunks disabled - was causing React useState error in production
-          // TODO: Re-enable with proper chunk splitting that doesn't break React context
+          // Code splitting sécurisé - évite la duplication de React
+          manualChunks: (id) => {
+            // React et ses dépendances DOIVENT rester ensemble
+            if (id.includes('node_modules/react') ||
+                id.includes('node_modules/react-dom') ||
+                id.includes('node_modules/scheduler') ||
+                id.includes('node_modules/react-router') ||
+                id.includes('node_modules/react-intl') ||
+                id.includes('@formatjs')) {
+              return 'vendor-react';
+            }
+
+            // Firebase - gros module, rarement changé
+            if (id.includes('node_modules/firebase') ||
+                id.includes('node_modules/@firebase')) {
+              return 'vendor-firebase';
+            }
+
+            // PDF generation - chargé uniquement quand nécessaire
+            if (id.includes('jspdf') || id.includes('html2canvas')) {
+              return 'vendor-pdf';
+            }
+
+            // Phone number parsing - assez gros
+            if (id.includes('libphonenumber') || id.includes('google-libphonenumber')) {
+              return 'vendor-phone';
+            }
+
+            // Charts - chargé uniquement sur les pages avec graphiques
+            if (id.includes('recharts') || id.includes('d3-')) {
+              return 'vendor-charts';
+            }
+
+            // Autres librairies UI (lucide, etc)
+            if (id.includes('lucide-react')) {
+              return 'vendor-icons';
+            }
+          },
         },
       },
     },

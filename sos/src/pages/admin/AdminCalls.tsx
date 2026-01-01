@@ -85,6 +85,7 @@ import {
   getDocs
 } from "firebase/firestore";
 import { db } from "../../config/firebase";
+import { CALLS_CONFIG } from "../../config/callsConfig";
 import AdminLayout from "../../components/admin/AdminLayout";
 import Modal from "../../components/common/Modal";
 import ErrorBoundary from "../../components/common/ErrorBoundary";
@@ -537,7 +538,7 @@ const AdminCallsMonitoring: React.FC = () => {
         'active'
       ]),
       orderBy('metadata.createdAt', 'desc'),
-      limit(50)
+      limit(CALLS_CONFIG.firestore.liveCallsLimit)
     );
 
     const unsubscribeCalls = onSnapshot(callSessionsQuery, 
@@ -610,7 +611,7 @@ const AdminCallsMonitoring: React.FC = () => {
 
     // Qualité audio moyenne
     const callsWithAudioQuality = liveCalls.filter(call => call.conference.audioQuality);
-    const audioQualityMap = { poor: 1, fair: 2, good: 3, excellent: 4 };
+    const audioQualityMap = CALLS_CONFIG.audioQuality;
     const audioQualityAverage = callsWithAudioQuality.length > 0
       ? callsWithAudioQuality.reduce((sum, call) => {
           return sum + (audioQualityMap[call.conference.audioQuality as keyof typeof audioQualityMap] || 0);
@@ -701,8 +702,8 @@ const AdminCallsMonitoring: React.FC = () => {
     liveCalls.forEach(call => {
       // Alerte pour les appels bloqués
       const timeSinceCreation = Date.now() - call.metadata.createdAt.toDate().getTime();
-      if (['pending', 'provider_connecting', 'client_connecting'].includes(call.status) && 
-          timeSinceCreation > 5 * 60 * 1000) { // Plus de 5 minutes
+      if (['pending', 'provider_connecting', 'client_connecting'].includes(call.status) &&
+          timeSinceCreation > CALLS_CONFIG.alerts.stuckCallThreshold) {
         newAlerts.push({
           id: `stuck_${call.id}`,
           type: 'timeout',
@@ -730,7 +731,7 @@ const AdminCallsMonitoring: React.FC = () => {
       }
 
       // Alerte pour la latence réseau
-      if (call.realTimeData?.latency && call.realTimeData.latency > 300) {
+      if (call.realTimeData?.latency && call.realTimeData.latency > CALLS_CONFIG.alerts.maxLatency) {
         newAlerts.push({
           id: `latency_${call.id}`,
           type: 'connection_issue',
@@ -758,7 +759,7 @@ const AdminCallsMonitoring: React.FC = () => {
     });
 
     // Alerte pour surcharge système
-    if (callMetrics && callMetrics.totalActiveCalls > 30) {
+    if (callMetrics && callMetrics.totalActiveCalls > CALLS_CONFIG.alerts.maxConcurrentCalls) {
       newAlerts.push({
         id: 'system_overload',
         type: 'system_overload',
@@ -774,7 +775,7 @@ const AdminCallsMonitoring: React.FC = () => {
     setCallAlerts(prev => {
       const existingIds = prev.map(alert => alert.id);
       const uniqueNewAlerts = newAlerts.filter(alert => !existingIds.includes(alert.id));
-      return [...prev, ...uniqueNewAlerts].slice(-10); // Garder seulement les 10 dernières
+      return [...prev, ...uniqueNewAlerts].slice(-CALLS_CONFIG.firestore.maxAlerts);
     });
   }, [liveCalls, callMetrics]);
 
@@ -822,7 +823,7 @@ const AdminCallsMonitoring: React.FC = () => {
     };
 
     loadSystemHealth();
-    const interval = setInterval(loadSystemHealth, 30000); // Toutes les 30 secondes
+    const interval = setInterval(loadSystemHealth, CALLS_CONFIG.refresh.systemHealthInterval);
 
     return () => clearInterval(interval);
   }, [liveCalls.length]);
