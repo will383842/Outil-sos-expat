@@ -388,7 +388,7 @@ export const IaTrialConfigTab: React.FC = () => {
     setError(null);
 
     try {
-      const updateTrialFn = httpsCallable(functions, 'subscriptionUpdateTrialConfig');
+      const updateTrialFn = httpsCallable(functions, 'subscriptionUpdateTrialConfigV2');
       await updateTrialFn({
         durationDays: editedTrialDays,
         maxAiCalls: editedTrialCalls,

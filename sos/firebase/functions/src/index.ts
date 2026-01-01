@@ -154,39 +154,36 @@ export {
 };
 
 // PayPal Commerce Platform
-// TEMPORARILY DISABLED imports - requires billing on Secret Manager
-// import {
-//   PAYPAL_CLIENT_ID as _PAYPAL_CLIENT_ID,
-//   PAYPAL_CLIENT_SECRET as _PAYPAL_CLIENT_SECRET,
-//   PAYPAL_WEBHOOK_ID as _PAYPAL_WEBHOOK_ID,
-//   PAYPAL_PARTNER_ID as _PAYPAL_PARTNER_ID,
-//   PAYPAL_MODE as _PAYPAL_MODE,
-// } from "./PayPalManager";
+import {
+  PAYPAL_CLIENT_ID as _PAYPAL_CLIENT_ID,
+  PAYPAL_CLIENT_SECRET as _PAYPAL_CLIENT_SECRET,
+  PAYPAL_WEBHOOK_ID as _PAYPAL_WEBHOOK_ID,
+  PAYPAL_PARTNER_ID as _PAYPAL_PARTNER_ID,
+  PAYPAL_MODE as _PAYPAL_MODE,
+} from "./PayPalManager";
 
-// TEMPORARILY DISABLED - PayPal requires billing on Secret Manager
-// export {
-//   createPayPalOnboardingLink,
-//   checkPayPalMerchantStatus,
-//   createPayPalOrder,
-//   capturePayPalOrder,
-//   paypalWebhook,
-//   getRecommendedPaymentGateway,
-//   createPayPalPayout,
-//   checkPayPalPayoutStatus,
-//   PAYPAL_CLIENT_ID,
-//   PAYPAL_CLIENT_SECRET,
-//   PAYPAL_WEBHOOK_ID,
-//   PAYPAL_PARTNER_ID,
-//   PAYPAL_MODE,
-//   PAYPAL_PLATFORM_MERCHANT_ID,
-// } from "./PayPalManager";
+export {
+  createPayPalOnboardingLink,
+  checkPayPalMerchantStatus,
+  createPayPalOrder,
+  capturePayPalOrder,
+  paypalWebhook,
+  getRecommendedPaymentGateway,
+  createPayPalPayout,
+  checkPayPalPayoutStatus,
+  PAYPAL_CLIENT_ID,
+  PAYPAL_CLIENT_SECRET,
+  PAYPAL_WEBHOOK_ID,
+  PAYPAL_PARTNER_ID,
+  PAYPAL_MODE,
+  PAYPAL_PLATFORM_MERCHANT_ID,
+} from "./PayPalManager";
 
 // Alias pour usage local dans GLOBAL_SECRETS
-// TEMPORARILY DISABLED - requires billing on Secret Manager
-// const PAYPAL_CLIENT_ID = _PAYPAL_CLIENT_ID;
-// const PAYPAL_CLIENT_SECRET = _PAYPAL_CLIENT_SECRET;
-// const PAYPAL_WEBHOOK_ID = _PAYPAL_WEBHOOK_ID;
-// const PAYPAL_PARTNER_ID = _PAYPAL_PARTNER_ID;
+const PAYPAL_CLIENT_ID = _PAYPAL_CLIENT_ID;
+const PAYPAL_CLIENT_SECRET = _PAYPAL_CLIENT_SECRET;
+const PAYPAL_WEBHOOK_ID = _PAYPAL_WEBHOOK_ID;
+const PAYPAL_PARTNER_ID = _PAYPAL_PARTNER_ID;
 
 // Cloud Tasks auth
 export const TASKS_AUTH_SECRET = defineSecret("TASKS_AUTH_SECRET");
@@ -208,12 +205,11 @@ const GLOBAL_SECRETS = [
   STRIPE_SECRET_KEY_TEST,
   STRIPE_SECRET_KEY_LIVE,
   TASKS_AUTH_SECRET,
-  // PayPal Commerce Platform secrets - TEMPORARILY DISABLED (requires billing on Secret Manager)
-  // TODO: Re-enable when billing is activated on the project
-  // PAYPAL_CLIENT_ID,
-  // PAYPAL_CLIENT_SECRET,
-  // PAYPAL_WEBHOOK_ID,
-  // PAYPAL_PARTNER_ID,
+  // PayPal Commerce Platform secrets
+  PAYPAL_CLIENT_ID,
+  PAYPAL_CLIENT_SECRET,
+  PAYPAL_WEBHOOK_ID,
+  PAYPAL_PARTNER_ID,
   // MAILWIZZ_API_KEY and MAILWIZZ_WEBHOOK_SECRET removed - now using static values from environment
 ].filter(Boolean) as any[];
 
@@ -3560,6 +3556,9 @@ export {
   stripeWebhook as subscriptionStripeWebhook,
   updateTrialConfig as subscriptionUpdateTrialConfig,
   updatePlanPricing as subscriptionUpdatePlanPricing,
+  // V2 functions with proper CORS support (for admin IA tab)
+  updateTrialConfigV2 as subscriptionUpdateTrialConfigV2,
+  updatePlanPricingV2 as subscriptionUpdatePlanPricingV2,
   initializeSubscriptionPlans as subscriptionInitializePlans,
   resetMonthlyAiQuotas as subscriptionResetMonthlyQuotas,
   setFreeAiAccess as subscriptionSetFreeAccess,

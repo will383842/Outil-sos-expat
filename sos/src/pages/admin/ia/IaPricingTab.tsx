@@ -457,7 +457,7 @@ export const IaPricingTab: React.FC = () => {
     setError(null);
 
     try {
-      const updatePlanFn = httpsCallable(functions, 'subscriptionUpdatePlanPricing');
+      const updatePlanFn = httpsCallable(functions, 'subscriptionUpdatePlanPricingV2');
       await updatePlanFn({
         planId,
         pricing: updates.pricing,

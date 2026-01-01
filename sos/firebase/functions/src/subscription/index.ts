@@ -1355,6 +1355,139 @@ export const updatePlanPricing = onCall(
   });
 
 /**
+ * Update trial configuration (Admin only) - V2 with CORS support
+ * DUPLICATE: Exact copy of updateTrialConfig for frontend migration to V2 names
+ */
+export const updateTrialConfigV2 = onCall(
+  {
+    region: 'europe-west1',
+    cors: true,
+  },
+  async (request) => {
+    // Verify admin (via custom claims or Firestore)
+    if (!await isAdminV2(request)) {
+      throw new HttpsError('permission-denied', 'Admin access required');
+    }
+
+    const data = request.data;
+    const { durationDays, maxAiCalls, isEnabled } = data as {
+      durationDays?: number;
+      maxAiCalls?: number;
+      isEnabled?: boolean;
+    };
+
+    const updates: any = {
+      'trial.updatedAt': admin.firestore.Timestamp.now(),
+      'trial.updatedBy': request.auth!.uid
+    };
+
+    if (durationDays !== undefined) updates['trial.durationDays'] = durationDays;
+    if (maxAiCalls !== undefined) updates['trial.maxAiCalls'] = maxAiCalls;
+    if (isEnabled !== undefined) updates['trial.isEnabled'] = isEnabled;
+
+    // Get previous config for audit
+    const prevDoc = await getDb().doc('settings/subscription').get();
+    const previousValue = prevDoc.exists ? prevDoc.data()?.trial : null;
+
+    await getDb().doc('settings/subscription').set(updates, { merge: true });
+
+    // AUDIT LOG: Track admin action
+    await logAdminAction({
+      action: 'UPDATE_TRIAL_CONFIG',
+      adminId: request.auth!.uid,
+      adminEmail: request.auth!.token.email,
+      targetId: 'subscription',
+      targetType: 'settings',
+      previousValue,
+      newValue: { durationDays, maxAiCalls, isEnabled }
+    });
+
+    return { success: true };
+  });
+
+/**
+ * Update plan pricing (Admin only) - V2 with CORS support
+ * DUPLICATE: Exact copy of updatePlanPricing for frontend migration to V2 names
+ */
+export const updatePlanPricingV2 = onCall(
+  {
+    region: 'europe-west1',
+    cors: true,
+  },
+  async (request) => {
+    // Verify admin (via custom claims or Firestore)
+    if (!await isAdminV2(request)) {
+      throw new HttpsError('permission-denied', 'Admin access required');
+    }
+
+    const data = request.data;
+
+    // Type for multilingual text (9 languages)
+    type MultilingualText = {
+      fr: string;
+      en: string;
+      es: string;
+      de: string;
+      pt: string;
+      ru: string;
+      hi: string;
+      ar: string;
+      ch: string;
+    };
+
+    const { planId, pricing, annualPricing, stripePriceIds, stripePriceIdsAnnual, aiCallsLimit, annualDiscountPercent, name, description } = data as {
+      planId: string;
+      pricing?: { EUR: number; USD: number };
+      annualPricing?: { EUR: number; USD: number } | null;
+      stripePriceIds?: { EUR: string; USD: string };
+      stripePriceIdsAnnual?: { EUR: string; USD: string };
+      aiCallsLimit?: number;
+      annualDiscountPercent?: number;
+      name?: MultilingualText;
+      description?: MultilingualText;
+    };
+
+    const updates: any = {
+      updatedAt: admin.firestore.Timestamp.now()
+    };
+
+    if (pricing) updates.pricing = pricing;
+    if (annualPricing !== undefined) {
+      if (annualPricing === null) {
+        // Supprimer le prix annuel custom (utiliser le calcul automatique)
+        updates.annualPricing = admin.firestore.FieldValue.delete();
+      } else {
+        updates.annualPricing = annualPricing;
+      }
+    }
+    if (stripePriceIds) updates.stripePriceId = stripePriceIds;
+    if (stripePriceIdsAnnual) updates.stripePriceIdAnnual = stripePriceIdsAnnual;
+    if (aiCallsLimit !== undefined) updates.aiCallsLimit = aiCallsLimit;
+    if (annualDiscountPercent !== undefined) updates.annualDiscountPercent = annualDiscountPercent;
+    if (name) updates.name = name;
+    if (description) updates.description = description;
+
+    // Get previous plan for audit
+    const prevDoc = await getDb().doc(`subscription_plans/${planId}`).get();
+    const previousValue = prevDoc.exists ? prevDoc.data() : null;
+
+    await getDb().doc(`subscription_plans/${planId}`).update(updates);
+
+    // AUDIT LOG: Track admin action
+    await logAdminAction({
+      action: 'UPDATE_PLAN_PRICING',
+      adminId: request.auth!.uid,
+      adminEmail: request.auth!.token.email,
+      targetId: planId,
+      targetType: 'subscription_plan',
+      previousValue: previousValue ? { pricing: previousValue.pricing, aiCallsLimit: previousValue.aiCallsLimit } : null,
+      newValue: { pricing, annualPricing, aiCallsLimit, annualDiscountPercent }
+    });
+
+    return { success: true };
+  });
+
+/**
  * Initialize default subscription plans (Run once)
  */
 export const initializeSubscriptionPlans = functions
