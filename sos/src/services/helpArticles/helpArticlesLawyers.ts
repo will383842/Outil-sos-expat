@@ -493,11 +493,6 @@ Le premier échange est déterminant pour la relation client.
 - Partage de documents
 - Historique conservé
 
-### Visioconférence
-- Pour les consultations visuelles
-- Partage d'écran possible
-- Intégré à la plateforme
-
 ## Préparer le premier appel
 
 ### Avant l'appel
@@ -1829,7 +1824,7 @@ Votre assurance couvre-t-elle :
 
 ## Questions à poser à votre assureur
 
-1. Ma police couvre-t-elle les consultations par téléphone/visio ?
+1. Ma police couvre-t-elle les consultations par téléphone ?
 2. Suis-je couvert pour des clients basés à l'étranger ?
 3. L'utilisation d'une plateforme de mise en relation est-elle incluse ?
 4. Y a-t-il des exclusions spécifiques ?

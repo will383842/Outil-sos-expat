@@ -871,7 +871,7 @@ La Plateforme, ses marques, logos, bases de données et contenus sont protégés
 
 13.1. **Anti-corruption.** L'Aidant s'engage à ne pas offrir, promettre ou verser de pots-de-vin ou avantages indus à des agents publics ou privés. Il respecte les lois anti-corruption applicables (FCPA, UK Bribery Act, loi Sapin II, etc.).
 
-13.2. **Confidentialité des échanges.** Les échanges réalisés via la Plateforme (messages, appels, vidéos) sont **confidentiels**. L'Aidant s'interdit de les enregistrer, divulguer ou utiliser à d'autres fins que la prestation convenue, sauf autorisation écrite ou obligation légale.
+13.2. **Confidentialité des échanges.** Les échanges réalisés via la Plateforme (messages, appels téléphoniques) sont **confidentiels**. L'Aidant s'interdit de les enregistrer, divulguer ou utiliser à d'autres fins que la prestation convenue, sauf autorisation écrite ou obligation légale.
 
 13.3. **Non-sollicitation.** Pendant la durée des CGU et **douze (12) mois** après leur résiliation, l'Aidant s'interdit de solliciter directement les Utilisateurs rencontrés via la Plateforme pour éviter les Frais de Mise en relation.
 

@@ -116,7 +116,6 @@ SOS-Expat est conçu pour être simple et rapide.
 ### Modes de contact
 - Appel téléphonique (via la plateforme)
 - Messagerie sécurisée
-- Visioconférence (si disponible)
 
 ### Après l'échange
 - Évaluez le prestataire
@@ -245,7 +244,7 @@ Australie, Nouvelle-Zélande et îles du Pacifique.
 
 ### Prestataires à distance
 - Experts connaissant bien un pays
-- Consultations par téléphone/visio
+- Consultations par téléphone
 
 ## Langues disponibles
 

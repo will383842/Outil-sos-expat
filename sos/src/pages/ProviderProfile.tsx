@@ -1957,9 +1957,9 @@ const ProviderProfile: React.FC = () => {
         height: IMAGE_SIZES.MODAL_MAX_HEIGHT,
       },
       description: descriptionText,
-      address: { 
-        "@type": "PostalAddress", 
-        addressCountry: provider.country,
+      address: {
+        "@type": "PostalAddress",
+        addressCountry: getCountryName(provider.country, preferredLangKey),
         ...(provider.city && { addressLocality: provider.city })
       },
       jobTitle: roleLabel,
@@ -1993,7 +1993,7 @@ const ProviderProfile: React.FC = () => {
       priceRange: "€€-€€€",
       areaServed: {
         "@type": "Country",
-        name: provider.country
+        name: getCountryName(provider.country, preferredLangKey)
       },
       ...(provider.specialties && provider.specialties.length > 0 && {
         hasOfferCatalog: {
@@ -2001,14 +2001,21 @@ const ProviderProfile: React.FC = () => {
           name: isLawyer
             ? intl.formatMessage({ id: "providerProfile.legalServices", defaultMessage: "Services juridiques" })
             : intl.formatMessage({ id: "providerProfile.consultingServices", defaultMessage: "Services de conseil" }),
-          itemListElement: provider.specialties.slice(0, 5).map((specialty, index) => ({
-            "@type": "Offer",
-            "@id": `${window.location.origin}${window.location.pathname}#service-${index}`,
-            itemOffered: {
-              "@type": "Service",
-              name: specialty
-            }
-          }))
+          itemListElement: provider.specialties.slice(0, 5).map((specialty, index) => {
+            // Translate specialty code to localized label
+            const cleanCode = specialty.trim().toUpperCase();
+            const translatedName = isLawyer
+              ? getLawyerSpecialityLabel(cleanCode, preferredLangKey === 'fr' ? 'fr' : 'en')
+              : getExpatHelpTypeLabel(cleanCode, preferredLangKey === 'fr' ? 'fr' : 'en');
+            return {
+              "@type": "Offer",
+              "@id": `${window.location.origin}${window.location.pathname}#service-${index}`,
+              itemOffered: {
+                "@type": "Service",
+                name: translatedName !== cleanCode ? translatedName : specialty
+              }
+            };
+          })
         }
       }),
       openingHoursSpecification: {
@@ -2028,6 +2035,7 @@ const ProviderProfile: React.FC = () => {
     languagesList,
     providerStats,
     yearsLabel,
+    preferredLangKey,
   ]);
 
   // ✅ BreadcrumbList Schema

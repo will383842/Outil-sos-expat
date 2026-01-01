@@ -1661,7 +1661,7 @@ Chaque prestataire passe par un processus de vérification rigoureux avant de re
 ### Pour les expats aidants (supplémentaire)
 - ✅ Justificatif d'expatriation
 - ✅ Références professionnelles
-- ✅ Entretien vidéo
+- ✅ Entretien téléphonique
 
 ## Méthodes de vérification
 

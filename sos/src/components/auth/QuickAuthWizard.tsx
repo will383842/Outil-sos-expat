@@ -49,6 +49,7 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
   const emailInputRef = useRef<HTMLInputElement>(null);
   const passwordInputRef = useRef<HTMLInputElement>(null);
   const googleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const successTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // FIX: Track previous isOpen state to only reset on actual modal open (false→true transition)
   const wasOpenRef = useRef(false);
 
@@ -71,10 +72,13 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
       // Focus email input after animation
       setTimeout(() => emailInputRef.current?.focus(), 300);
     }
-    // Cleanup timeout on close
+    // Cleanup timeouts on close
     return () => {
       if (googleTimeoutRef.current) {
         clearTimeout(googleTimeoutRef.current);
+      }
+      if (successTimeoutRef.current) {
+        clearTimeout(successTimeoutRef.current);
       }
     };
   }, [isOpen]);
@@ -116,8 +120,9 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
     try {
       // Try to login first
       await login(email, password);
+      setIsSubmitting(false);
       setStep('success');
-      setTimeout(onSuccess, 800);
+      successTimeoutRef.current = setTimeout(onSuccess, 800);
     } catch (err: any) {
       console.error('Login attempt error:', err);
 
@@ -130,8 +135,9 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
             email: email,
             role: 'client',
           }, password);
+          setIsSubmitting(false);
           setStep('success');
-          setTimeout(onSuccess, 800);
+          successTimeoutRef.current = setTimeout(onSuccess, 800);
         } catch (regErr: any) {
           console.error('Register error:', regErr);
           setIsSubmitting(false);
@@ -176,8 +182,9 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
       if (googleTimeoutRef.current) {
         clearTimeout(googleTimeoutRef.current);
       }
+      setIsGoogleLoading(false);
       setStep('success');
-      setTimeout(onSuccess, 800);
+      successTimeoutRef.current = setTimeout(onSuccess, 800);
     } catch (err: any) {
       console.error('Google login error:', err);
       // Clear timeout on error

@@ -70,7 +70,7 @@ const FAQ_TEMPLATES: Record<string, {
     lawyer: [
       {
         question: "Comment contacter {name} ?",
-        answer: "{name} est disponible sur SOS Expat & Travelers pour des consultations en ligne. Vous pouvez réserver un appel vidéo sécurisé directement depuis son profil. {pronounHe} parle {languages} et {pronounIs} spécialisé{eAgreement} en {specialties}."
+        answer: "{name} est disponible sur SOS Expat & Travelers pour des consultations en ligne. Vous pouvez réserver un appel téléphonique sécurisé directement depuis son profil. {pronounHe} parle {languages} et {pronounIs} spécialisé{eAgreement} en {specialties}."
       },
       {
         question: "Quelles sont les spécialités de {name} ?",
@@ -78,7 +78,7 @@ const FAQ_TEMPLATES: Record<string, {
       },
       {
         question: "Combien coûte une consultation avec {name} ?",
-        answer: "Une consultation vidéo de 30 minutes avec {name} coûte {price}. Le paiement est sécurisé et vous pouvez réserver un créneau immédiatement si {pronounHe} est disponible en ligne."
+        answer: "Une consultation téléphonique de 30 minutes avec {name} coûte {price}. Le paiement est sécurisé et vous pouvez réserver un créneau immédiatement si {pronounHe} est disponible en ligne."
       },
       {
         question: "Dans quels pays {name} peut-il intervenir ?",
@@ -124,7 +124,7 @@ const FAQ_TEMPLATES: Record<string, {
     lawyer: [
       {
         question: "How to contact {name}?",
-        answer: "{name} is available on SOS Expat & Travelers for online consultations. You can book a secure video call directly from {pronounHis} profile. {pronounHe} speaks {languages} and specializes in {specialties}."
+        answer: "{name} is available on SOS Expat & Travelers for online consultations. You can book a secure phone call directly from {pronounHis} profile. {pronounHe} speaks {languages} and specializes in {specialties}."
       },
       {
         question: "What are {name}'s specialties?",
@@ -132,7 +132,7 @@ const FAQ_TEMPLATES: Record<string, {
       },
       {
         question: "How much does a consultation with {name} cost?",
-        answer: "A 30-minute video consultation with {name} costs {price}. Payment is secure and you can book a slot immediately if {pronounHe} is available online."
+        answer: "A 30-minute phone consultation with {name} costs {price}. Payment is secure and you can book a slot immediately if {pronounHe} is available online."
       },
       {
         question: "In which countries can {name} intervene?",
@@ -178,7 +178,7 @@ const FAQ_TEMPLATES: Record<string, {
     lawyer: [
       {
         question: "¿Cómo contactar a {name}?",
-        answer: "{name} está disponible en SOS Expat & Travelers para consultas en línea. Puede reservar una videollamada segura directamente desde su perfil. Habla {languages} y se especializa en {specialties}."
+        answer: "{name} está disponible en SOS Expat & Travelers para consultas en línea. Puede reservar una llamada telefónica segura directamente desde su perfil. Habla {languages} y se especializa en {specialties}."
       },
       {
         question: "¿Cuáles son las especialidades de {name}?",
@@ -186,7 +186,7 @@ const FAQ_TEMPLATES: Record<string, {
       },
       {
         question: "¿Cuánto cuesta una consulta con {name}?",
-        answer: "Una consulta de video de 30 minutos con {name} cuesta {price}. El pago es seguro y puede reservar inmediatamente si está disponible en línea."
+        answer: "Una consulta telefónica de 30 minutos con {name} cuesta {price}. El pago es seguro y puede reservar inmediatamente si está disponible en línea."
       },
       {
         question: "¿En qué países puede intervenir {name}?",
@@ -232,7 +232,7 @@ const FAQ_TEMPLATES: Record<string, {
     lawyer: [
       {
         question: "Wie kann ich {name} kontaktieren?",
-        answer: "{name} ist auf SOS Expat & Travelers für Online-Beratungen verfügbar. Sie können direkt über sein Profil einen sicheren Videoanruf buchen. Er spricht {languages} und ist spezialisiert auf {specialties}."
+        answer: "{name} ist auf SOS Expat & Travelers für Online-Beratungen verfügbar. Sie können direkt über sein Profil einen sicheren Telefonanruf buchen. Er spricht {languages} und ist spezialisiert auf {specialties}."
       },
       {
         question: "Was sind die Spezialgebiete von {name}?",
@@ -240,7 +240,7 @@ const FAQ_TEMPLATES: Record<string, {
       },
       {
         question: "Wie viel kostet eine Beratung mit {name}?",
-        answer: "Eine 30-minütige Videoberatung mit {name} kostet {price}. Die Zahlung ist sicher und Sie können sofort einen Termin buchen, wenn er online verfügbar ist."
+        answer: "Eine 30-minütige Telefonberatung mit {name} kostet {price}. Die Zahlung ist sicher und Sie können sofort einen Termin buchen, wenn er online verfügbar ist."
       },
       {
         question: "In welchen Ländern kann {name} tätig werden?",
@@ -286,7 +286,7 @@ const FAQ_TEMPLATES: Record<string, {
     lawyer: [
       {
         question: "Como contactar {name}?",
-        answer: "{name} está disponível no SOS Expat & Travelers para consultas online. Pode reservar uma videochamada segura diretamente do seu perfil. Fala {languages} e é especializado em {specialties}."
+        answer: "{name} está disponível no SOS Expat & Travelers para consultas online. Pode reservar uma chamada telefónica segura diretamente do seu perfil. Fala {languages} e é especializado em {specialties}."
       },
       {
         question: "Quais são as especialidades de {name}?",
@@ -294,7 +294,7 @@ const FAQ_TEMPLATES: Record<string, {
       },
       {
         question: "Quanto custa uma consulta com {name}?",
-        answer: "Uma consulta de vídeo de 30 minutos com {name} custa {price}. O pagamento é seguro e pode reservar imediatamente se estiver disponível online."
+        answer: "Uma consulta telefónica de 30 minutos com {name} custa {price}. O pagamento é seguro e pode reservar imediatamente se estiver disponível online."
       },
       {
         question: "Em que países {name} pode intervir?",
@@ -340,7 +340,7 @@ const FAQ_TEMPLATES: Record<string, {
     lawyer: [
       {
         question: "Как связаться с {name}?",
-        answer: "{name} доступен на SOS Expat & Travelers для онлайн-консультаций. Вы можете забронировать безопасный видеозвонок прямо из его профиля. Он говорит на {languages} и специализируется на {specialties}."
+        answer: "{name} доступен на SOS Expat & Travelers для онлайн-консультаций. Вы можете забронировать безопасный телефонный звонок прямо из его профиля. Он говорит на {languages} и специализируется на {specialties}."
       },
       {
         question: "Какие специализации у {name}?",
@@ -348,7 +348,7 @@ const FAQ_TEMPLATES: Record<string, {
       },
       {
         question: "Сколько стоит консультация с {name}?",
-        answer: "30-минутная видеоконсультация с {name} стоит {price}. Оплата безопасна, и вы можете забронировать сразу, если он доступен онлайн."
+        answer: "30-минутная телефонная консультация с {name} стоит {price}. Оплата безопасна, и вы можете забронировать сразу, если он доступен онлайн."
       },
       {
         question: "В каких странах {name} может оказать помощь?",
