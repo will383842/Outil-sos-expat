@@ -791,41 +791,36 @@ function replaceIsoCodesInBio(bio: string): { updated: string; replacements: str
   const replacements: string[] = [];
   let updated = bio;
 
-  // Patterns courants où les codes ISO apparaissent
-  const patterns = [
-    /\b(en|à|au|aux|depuis|de|du|pour|vers)\s+([A-Z]{2})\b/g,  // "en NI", "à FR"
-    /\b([A-Z]{2})\s+(depuis|pour|avec)\b/g,                      // "NI depuis"
-    /\(([A-Z]{2})\)/g,                                            // "(NI)"
-  ];
+  // Faux positifs à ignorer (mots français courants de 2 lettres)
+  const falsePositives = new Set(['DE', 'EN', 'ES', 'LA', 'LE', 'UN', 'ET', 'OU', 'AU', 'DU', 'AI', 'AS', 'ME', 'MA', 'MO', 'NO', 'SI', 'TA', 'SA', 'CE', 'SE', 'NE', 'ON', 'IL', 'JE', 'TU', 'VA', 'VU', 'LU', 'SU', 'PU', 'EU', 'BU']);
 
-  for (const pattern of patterns) {
-    updated = updated.replace(pattern, (match, ...groups) => {
-      // Trouver le code ISO dans le match
-      for (const group of groups) {
-        if (typeof group === 'string' && group.length === 2 && /^[A-Z]{2}$/.test(group)) {
-          const countryName = ISO_TO_COUNTRY_NAME[group];
-          if (countryName) {
-            replacements.push(`${group} → ${countryName}`);
-            return match.replace(group, countryName);
-          }
-        }
+  // Remplacer directement tous les codes ISO valides entourés de contexte approprié
+  for (const [code, name] of Object.entries(ISO_TO_COUNTRY_NAME)) {
+    // Ignorer les faux positifs
+    if (falsePositives.has(code)) continue;
+
+    // Pattern: préposition + espace + CODE (suivi de ponctuation, espace ou fin)
+    // Exemples: "en NI,", "à FR.", "depuis TH ", "en NI)"
+    const prepositionPattern = new RegExp(
+      `(\\b(?:en|à|au|aux|depuis|de|du|pour|vers|sur|par)\\s+)(${code})([\\s,\\.;:!?\\)\\]']|$)`,
+      'gi'
+    );
+
+    updated = updated.replace(prepositionPattern, (match, prefix, isoCode, suffix) => {
+      if (isoCode.toUpperCase() === code) {
+        replacements.push(`${code} → ${name}`);
+        return prefix + name + suffix;
       }
       return match;
     });
-  }
 
-  // Remplacer aussi les codes ISO isolés (2 lettres majuscules entourées d'espaces ou ponctuation)
-  for (const [code, name] of Object.entries(ISO_TO_COUNTRY_NAME)) {
-    const isoPattern = new RegExp(`\\b${code}\\b`, 'g');
-    if (isoPattern.test(updated) && updated.includes(code)) {
-      // Vérifier que ce n'est pas un faux positif (mot courant comme "DE", "EN", etc.)
-      const falsePositives = ['DE', 'EN', 'ES', 'LA', 'LE', 'UN', 'ET', 'OU', 'AU', 'DU', 'AI', 'AS', 'ME', 'MA', 'MO', 'NO'];
-      if (!falsePositives.includes(code)) {
-        const beforeReplace = updated;
-        updated = updated.replace(isoPattern, name);
-        if (beforeReplace !== updated) {
-          replacements.push(`${code} → ${name}`);
-        }
+    // Pattern: CODE entre parenthèses
+    const parenthesesPattern = new RegExp(`\\(${code}\\)`, 'g');
+    if (parenthesesPattern.test(updated)) {
+      const beforeReplace = updated;
+      updated = updated.replace(parenthesesPattern, `(${name})`);
+      if (beforeReplace !== updated && !replacements.includes(`${code} → ${name}`)) {
+        replacements.push(`${code} → ${name}`);
       }
     }
   }
