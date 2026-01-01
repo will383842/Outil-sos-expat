@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useIntl } from "react-intl";
 import {
   Star,
@@ -17,11 +17,7 @@ import {
 // Import des utilitaires d'internationalisation
 import {
   getCountryName,
-  getCountryFlag,
   getLanguageName,
-  formatCountries,
-  formatLanguages,
-  type LanguageKey
 } from "../../utils/formatters";
 
 import { formatSpecialties, mapLanguageToLocale } from "../../utils/specialtyMapper";
@@ -52,7 +48,7 @@ const TOUCH_TARGETS = {
   badge: 36,
 } as const;
 
-const LANGUAGE_MAP: Record<string, string> = {
+const _LANGUAGE_MAP: Record<string, string> = {
   Français: "Français",
   French: "Français",
   fr: "Français",
@@ -211,11 +207,11 @@ const useStatusColors = (availability: AvailabilityStatus) => {
 
 // Composant ModernProfileCard - Version Production avec Internationalisation
 export const ModernProfileCard = React.memo<ModernProfileCardProps>(
-  ({ 
-    provider, 
-    onProfileClick, 
-    isUserConnected, 
-    index = 0, 
+  ({
+    provider,
+    onProfileClick,
+    isUserConnected: _isUserConnected,
+    index = 0,
     language = 'fr',
     showSpecialties = false // Par défaut, ne pas afficher les spécialités
   }) => {

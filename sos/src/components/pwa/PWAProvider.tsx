@@ -52,7 +52,6 @@ interface PWAProviderProps {
 
 const PWAProvider: React.FC<PWAProviderProps> = ({
   children,
-  showInstallBanner = true,
   showIOSInstructions = true,
   enableOfflineStorage = true,
   enableBadging = true,

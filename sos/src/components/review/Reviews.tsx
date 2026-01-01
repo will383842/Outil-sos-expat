@@ -1,17 +1,10 @@
-import React, { memo, useCallback, useMemo } from 'react';
+import React, { memo, useCallback } from 'react';
 import { Star, MapPin, Calendar, ThumbsUp, Flag } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { formatDate } from '../../utils/localeFormatters';
 
 type FirestoreTimestampLike = { toDate: () => Date };
 type DateLike = Date | string | number | FirestoreTimestampLike;
-
-function hasToDate(x: unknown): x is FirestoreTimestampLike {
-  return !!x
-    && typeof x === 'object'
-    && 'toDate' in x
-    && typeof (x as { toDate: unknown }).toDate === 'function';
-}
 
 type ReviewItem = {
   id: string;
@@ -74,15 +67,6 @@ const Reviews: React.FC<ReviewsProps> = memo(function Reviews({
       format: 'long',
     });
   }, [language]);
-
-  // OPTIMISÉ: useMemo pour pré-calculer les pourcentages une seule fois
-  const percentages = useMemo(() => ({
-    5: !totalReviews ? 0 : Math.round((ratingDistribution[5] / totalReviews) * 100),
-    4: !totalReviews ? 0 : Math.round((ratingDistribution[4] / totalReviews) * 100),
-    3: !totalReviews ? 0 : Math.round((ratingDistribution[3] / totalReviews) * 100),
-    2: !totalReviews ? 0 : Math.round((ratingDistribution[2] / totalReviews) * 100),
-    1: !totalReviews ? 0 : Math.round((ratingDistribution[1] / totalReviews) * 100),
-  }), [totalReviews, ratingDistribution]);
 
   const getPercentage = useCallback((count: number) => (!totalReviews ? 0 : Math.round((count / totalReviews) * 100)), [totalReviews]);
 

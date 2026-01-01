@@ -118,9 +118,9 @@ const TranslationModal: React.FC<Props> = ({ isOpen, onClose, providerId /*, t *
   const {
     translate,
     reloadForLanguage,
-    availableLanguages,
-    isLoading: translationLoading,
-    error: translationError,
+    availableLanguages: _availableLanguages,
+    isLoading: _translationLoading,
+    error: _translationError,
   } = useProviderTranslation(providerId, null);
 
   const dashboardLanguages: SupportedLanguage[] = ["en", "es", "fr", "de", "ru", "pt", "hi", "ch", "ar"];

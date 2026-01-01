@@ -13,7 +13,7 @@ interface Props { className?: string }
  * - Responsive + accessible
  */
 const TopAnnouncementBanner: React.FC<Props> = ({ className = '' }) => {
-  const { language } = useApp();
+  const { language: _language } = useApp();
   const intl = useIntl();
   const [closed, setClosed] = useState(false);
 

@@ -2,7 +2,7 @@
 // Widget de comparaisons temporelles (aujourd'hui vs hier vs semaine dernière)
 // =============================================================================
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   TrendingUp,
   TrendingDown,
@@ -13,10 +13,8 @@ import {
   ArrowUp,
   ArrowDown,
   ChevronLeft,
-  ChevronRight,
   Phone,
   DollarSign,
-  Users,
   CheckCircle,
 } from 'lucide-react';
 import {
@@ -25,7 +23,6 @@ import {
   where,
   getDocs,
   Timestamp,
-  orderBy,
 } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 
@@ -82,7 +79,7 @@ const formatPercent = (value: number): string => {
 };
 
 const TemporalComparisonWidget: React.FC<TemporalComparisonWidgetProps> = ({
-  compact = false,
+  compact: _compact = false,
 }) => {
   const [data, setData] = useState<ComparisonData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -226,7 +223,7 @@ const TemporalComparisonWidget: React.FC<TemporalComparisonWidgetProps> = ({
   }, []);
 
   // Obtenir la valeur sélectionnée pour chaque période
-  const getMetricValue = (stats: PeriodStats, metric: string): number => {
+  const _getMetricValue = (stats: PeriodStats, metric: string): number => {
     switch (metric) {
       case 'calls':
         return stats.calls;

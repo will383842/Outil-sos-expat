@@ -24,7 +24,6 @@ import {
   WifiOff,
   CreditCard,
   Bot,
-  Sparkles,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useApp } from "../../contexts/AppContext";
@@ -759,7 +758,7 @@ const LanguageDropdown = memo<LanguageDropdownProps>(function LanguageDropdown({
       let decodedPathname: string;
       try {
         decodedPathname = decodeURIComponent(location.pathname);
-      } catch (e) {
+      } catch (_e) {
         // If decoding fails (invalid encoding), use original
         decodedPathname = location.pathname;
       }

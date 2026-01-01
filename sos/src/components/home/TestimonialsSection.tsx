@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Star, MapPin, ArrowLeft, ArrowRight, Quote, CheckCircle, TrendingUp, Users } from 'lucide-react';
+import { Star, MapPin, CheckCircle, TrendingUp, Users } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { useIntl } from 'react-intl';
 
 const TestimonialsSection: React.FC = () => {
-  const { language } = useApp();
+  const { language: _language } = useApp();
   const intl = useIntl();
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [_activeIndex, _setActiveIndex] = useState(0);
 
   // ✅ GARDER les données test comme demandé
   const testimonials = [
@@ -48,12 +48,12 @@ const TestimonialsSection: React.FC = () => {
     }
   ];
 
-  const nextTestimonial = () => {
-    setActiveIndex((prevIndex) => (prevIndex + 1) % testimonials.length);
+  const _nextTestimonial = () => {
+    _setActiveIndex((prevIndex) => (prevIndex + 1) % testimonials.length);
   };
 
-  const prevTestimonial = () => {
-    setActiveIndex((prevIndex) => (prevIndex - 1 + testimonials.length) % testimonials.length);
+  const _prevTestimonial = () => {
+    _setActiveIndex((prevIndex) => (prevIndex - 1 + testimonials.length) % testimonials.length);
   };
 
   return (

@@ -42,11 +42,11 @@ const InstallBanner: React.FC<InstallBannerProps> = ({
   if (!shouldShow) return null;
 
   const handleInstall = async () => {
-    try { await install(); } catch {}
+    try { await install(); } catch { /* intentionally empty */ }
   };
 
   const handleClose = () => {
-    try { closeForAWhile(); } catch {}
+    try { closeForAWhile(); } catch { /* intentionally empty */ }
     setClosedNow(true); // masque immédiatement
   };
 

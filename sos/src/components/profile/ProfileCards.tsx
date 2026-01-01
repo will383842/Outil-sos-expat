@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
-import { Star, MapPin, Phone, ChevronLeft, ChevronRight, Globe, Search, ArrowDown, ArrowUp, ChevronDown, Filter, Clock } from 'lucide-react';
+import { Star, MapPin, Phone, ChevronLeft, ChevronRight, Globe, Search, ArrowDown, ArrowUp, ChevronDown, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useIntl } from 'react-intl';
-import { collection, query, onSnapshot, limit, where, orderBy } from 'firebase/firestore';
+import { collection, query, onSnapshot, limit, orderBy } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { useApp } from '../../contexts/AppContext';
 import { getCountryCoordinates } from '../../utils/countryCoordinates';
 import { getCountryName } from '../../utils/formatters';
 import { languagesData, type SupportedLocale } from '../../data/languages-spoken';
-import { getAllProviderTypeKeywords, normalizeLanguageCode } from '../../utils/multilingualSearch';
+import { getAllProviderTypeKeywords } from '../../utils/multilingualSearch';
 
 // Enhanced types for 2025 standards with AI-friendly structure
 interface FirebaseDocumentSnapshot {
@@ -78,7 +78,6 @@ const DEFAULT_ITEMS_PER_PAGE = 9;
 const DEFAULT_MAX_ITEMS = 100;
 const CAROUSEL_VISIBLE_ITEMS = 3;
 const DEBOUNCE_DELAY = 300;
-const IMAGE_SIZES = '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw';
 
 // Extended country and language options
 const COUNTRY_OPTIONS = [
@@ -243,13 +242,6 @@ const getLanguageLabel = (langCode: string, locale: SupportedLocale = 'fr'): str
   return langCode.toUpperCase();
 };
 
-// Text truncation utility
-const truncateText = (text: string, maxLength: number): { text: string; isTruncated: boolean } => {
-  if (text.length <= maxLength) {
-    return { text, isTruncated: false };
-  }
-  return { text: text.substring(0, maxLength) + '...', isTruncated: true };
-};
 
 // Performance optimization hook for debouncing
 const useDebounce = (value: string, delay: number): string => {
@@ -914,7 +906,6 @@ filtered = filtered.filter(p => {
 
     // SOS Style card for maximum impact
     if (cardStyle === 'sos' || mode === 'sos-style') {
-      const { text: truncatedDescription, isTruncated } = truncateText(provider.description, isCarousel ? 80 : 100);
       
       return (
         <article

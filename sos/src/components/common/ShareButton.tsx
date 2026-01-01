@@ -40,7 +40,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
   onShareError,
 }) => {
   const intl = useIntl();
-  const { share, isSupported } = useWebShare();
+  const { share, isSupported: _isSupported } = useWebShare();
   const effectiveLabel = label || intl.formatMessage({ id: 'common.share' });
   const [feedback, setFeedback] = useState<FeedbackState>('idle');
   const [isLoading, setIsLoading] = useState(false);

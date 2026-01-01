@@ -13,7 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader } from "@/components/ui/loader";
-import { FormattedDate, FormattedMessage, useIntl } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import { formatDateTime } from "@/utils/localeFormatters";
 import { useApp } from "@/contexts/AppContext";
 

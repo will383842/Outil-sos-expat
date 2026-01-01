@@ -18,7 +18,7 @@ type Props = {
 const ViewEditLanguageTranslationModal: React.FC<Props> = ({
   isOpen,
   mode,
-  lang,
+  lang: _lang,
   initialData,
   onClose,
   onSave,

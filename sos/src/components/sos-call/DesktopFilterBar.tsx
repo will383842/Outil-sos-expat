@@ -163,7 +163,7 @@ const DesktopFilterBar: React.FC<DesktopFilterBarProps> = ({
     }
   };
 
-  const getStatusIcon = () => {
+  const _getStatusIcon = () => {
     switch (statusFilter) {
       case "online": return <Wifi className="w-4 h-4 text-green-400" />;
       case "offline": return <WifiOff className="w-4 h-4 text-orange-400" />;
@@ -171,7 +171,7 @@ const DesktopFilterBar: React.FC<DesktopFilterBarProps> = ({
     }
   };
 
-  const getStatusLabel = () => {
+  const _getStatusLabel = () => {
     switch (statusFilter) {
       case "online": return <FormattedMessage id="status.online" defaultMessage="En ligne" />;
       case "offline": return <FormattedMessage id="status.offline" defaultMessage="Hors ligne" />;

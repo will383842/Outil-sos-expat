@@ -1,11 +1,10 @@
 import React from 'react';
-import { Scale, Users, Clock, Shield, CheckCircle, Phone, Globe } from 'lucide-react';
+import { Scale, Users, Shield, CheckCircle, Phone, Globe } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
-import { useNavigate } from 'react-router-dom';
 import { useIntl } from 'react-intl';
 
 const ServicesSection: React.FC = () => {
-  const { language, services } = useApp();
+  const { language: _language, services } = useApp();
   const intl = useIntl();
 
   const serviceIcons = {
@@ -63,7 +62,7 @@ const ServicesSection: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-5xl mx-auto mb-20">
           {services.filter(service => service.isActive).map((service) => {
             const Icon = serviceIcons[service.type];
-            const description = serviceDescriptions[service.type];
+            const _description = serviceDescriptions[service.type];
             const isLawyer = service.type === 'lawyer_call';
             
             return (

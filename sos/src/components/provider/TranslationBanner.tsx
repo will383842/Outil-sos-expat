@@ -1,7 +1,7 @@
 // src/components/provider/TranslationBanner.tsx
 import React, { useState } from 'react';
 import { Globe, Loader2 } from 'lucide-react';
-import { FormattedMessage, useIntl } from 'react-intl';
+import { FormattedMessage } from 'react-intl';
 // Removed useNavigate and useLocation imports - no longer needed for login redirect
 import {
   SUPPORTED_LANGUAGES,
@@ -9,8 +9,8 @@ import {
   type SupportedLanguage,
 } from '../../services/providerTranslationService';
 interface TranslationBannerProps {
-  providerId: string;
-  currentLanguage: SupportedLanguage;
+  providerId?: string;
+  currentLanguage?: SupportedLanguage;
   availableLanguages: SupportedLanguage[];
   onTranslationComplete: (language: SupportedLanguage, translation: any) => void;
   onTranslate: (language: SupportedLanguage) => Promise<any>;
@@ -18,14 +18,11 @@ interface TranslationBannerProps {
 }
 
 export const TranslationBanner: React.FC<TranslationBannerProps> = ({
-  providerId,
-  currentLanguage,
   availableLanguages,
   onTranslationComplete,
   onTranslate,
   onViewTranslation,
 }) => {
-  const intl = useIntl();
   const [isTranslating, setIsTranslating] = useState<SupportedLanguage | null>(null);
   const [error, setError] = useState<string | null>(null);
 

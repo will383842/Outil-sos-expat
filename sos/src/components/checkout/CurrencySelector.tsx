@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { DollarSign, Euro } from 'lucide-react';
 import { useIntl } from 'react-intl';
-import { detectUserCurrency, getServicePricing } from '../../services/pricingService';
+import { getServicePricing } from '../../services/pricingService';
 
 interface CurrencySelectorProps {
   serviceType: 'lawyer' | 'expat';

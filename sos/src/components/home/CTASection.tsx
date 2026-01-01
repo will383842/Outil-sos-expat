@@ -1,5 +1,5 @@
 import React from 'react';
-import { Phone, ArrowRight, Shield, Clock, Globe, Users, Rocket, Smartphone, Home, Zap, CheckCircle, Award, ShieldCheck, Star } from 'lucide-react';
+import { ArrowRight, Shield, Rocket, Zap, CheckCircle, Award, ShieldCheck, Star } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { useIntl } from 'react-intl';
 
@@ -26,7 +26,7 @@ const SOSIcon: React.FC<{ className?: string; size?: 'sm' | 'md' | 'lg' | 'xl' }
 };
 
 const CTASection: React.FC = () => {
-  const { language } = useApp();
+  const { language: _language } = useApp();
   const intl = useIntl();
   
   return (

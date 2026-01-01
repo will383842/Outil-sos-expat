@@ -59,7 +59,7 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
     // Append ID only if slug doesn't already contain it
     const finalSlug = nameSlug.includes(provider.id) ? nameSlug : `${nameSlug}-${provider.id}`;
     const seoUrl = `/${typeSlug}/${finalSlug}`;
-    try { sessionStorage.setItem('selectedProvider', JSON.stringify(provider)); } catch {}
+    try { sessionStorage.setItem('selectedProvider', JSON.stringify(provider)); } catch { /* storage quota exceeded */ }
     navigate(seoUrl, { state: { selectedProvider: provider, navigationSource: 'home_carousel' } });
   }, [navigate]);
 
@@ -151,7 +151,7 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
             isBanned: data.isBanned === true,
             isActive: data.isActive !== false,
             isVerified: data.isVerified === true,
-            // @ts-ignore trace interne non typée
+            // @ts-expect-error trace interne non typée
             __isAdmin: isAdmin,
           } as Provider & { __isAdmin?: boolean };
 

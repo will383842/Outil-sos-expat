@@ -61,7 +61,7 @@ export const PricingTable: React.FC<PricingTableProps> = ({
   plans,
   currentTier,
   currentBillingPeriod,
-  providerType,
+  providerType: _providerType,
   currency = 'USD',
   onSelectPlan,
   isLoading = false,

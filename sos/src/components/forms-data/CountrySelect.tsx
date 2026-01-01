@@ -6,6 +6,7 @@ import Select, { MultiValue } from 'react-select';
 import { countriesData } from '@/data';
 import { Locale, getDetectedBrowserLanguage, normalize, getLocalizedLabel, defaultPlaceholderByLocale, makeAdaptiveStyles, SharedOption, getNoOptionsMessage } from './shared';
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface CountryOption extends SharedOption {}
 
 interface CountrySelectProps {

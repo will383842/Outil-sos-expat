@@ -2,7 +2,7 @@
 // src/components/forms-data/MultiLanguageSelect.tsx - VERSION ADAPTATIVE
 // ========================================
 
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import Select, { MultiValue, StylesConfig } from 'react-select';
 import { 
   Language, 
@@ -87,7 +87,7 @@ const MultiLanguageSelectCopy: React.FC<MultiLanguageSelectProps> = React.memo((
 
   // 🎯 STYLES COMPLÈTEMENT ADAPTATIFS - Hérite du parent
   const adaptiveStyles: StylesConfig<LanguageOption, true> = {
-    control: (provided, state) => ({
+    control: (provided, _state) => ({
       ...provided,
       // Réinitialiser tous les styles pour hériter du parent
       border: 'none',
@@ -226,7 +226,7 @@ const MultiLanguageSelectCopy: React.FC<MultiLanguageSelectProps> = React.memo((
     },
     
     multiValueRemove: (provided, state) => {
-      const { data } = state;
+      const { data: _data } = state;
       return {
         ...provided,
         padding: '0.375rem',
@@ -271,9 +271,9 @@ const MultiLanguageSelectCopy: React.FC<MultiLanguageSelectProps> = React.memo((
   // Message "aucune option"
   const noOptionsMessage = useCallback(({ inputValue }: { inputValue: string }) => {
     if (currentLocale === 'fr') {
-      return inputValue ? `Aucune langue trouvée pour \"${inputValue}\"` : "Aucune langue disponible";
+      return inputValue ? `Aucune langue trouvée pour "${inputValue}"` : "Aucune langue disponible";
     } else {
-      return inputValue ? `No language found for \"${inputValue}\"` : "No languages available";
+      return inputValue ? `No language found for "${inputValue}"` : "No languages available";
     }
   }, [currentLocale]);
 

@@ -86,7 +86,7 @@ const WhatsAppInput: React.FC<WhatsAppInputProps> = React.memo(({
   }, [onChange, options, value?.number]);
 
   const handleNumberChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const number = e.target.value.replace(/[^\d\s().+\-]/g, '');
+    const number = e.target.value.replace(/[^\d\s().+-]/g, '');
     onChange({ number, countryCode: value?.countryCode || null, phoneCode: value?.phoneCode || null });
   }, [onChange, value?.countryCode, value?.phoneCode]);
 

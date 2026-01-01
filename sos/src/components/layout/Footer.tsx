@@ -17,7 +17,7 @@ import {
 import { useIntl } from "react-intl";
 import { useApp } from "../../contexts/AppContext";
 import { Link } from "react-router-dom";
-import { collection, query, where, getDocs, orderBy, limit } from "firebase/firestore";
+import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { getLocaleString } from "../../multilingual-system";
 

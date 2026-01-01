@@ -9,10 +9,8 @@ import { useIntl } from 'react-intl';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   User,
-  Settings,
   Phone,
   FileText,
-  Bell,
   Shield,
   LogOut,
   CreditCard,
@@ -20,7 +18,6 @@ import {
   MessageSquare,
   Star,
   Bookmark,
-  Globe,
   Bot,
   Sparkles,
 } from 'lucide-react';
@@ -74,6 +71,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
   const { user, logout, authInitialized } = useAuth();
   const { language } = useApp();
   const [loggingOut, setLoggingOut] = useState(false);
+
+  // 🔍 DEBUG: Afficher les données utilisateur reçues par DashboardLayout
+  console.log("📊 [DashboardLayout] User data:", {
+    role: user?.role,
+    firstName: user?.firstName,
+    lastName: user?.lastName,
+    fullName: (user as any)?.fullName,
+    email: user?.email,
+    authInitialized,
+  });
 
   // AI Quota for sidebar display
   const {

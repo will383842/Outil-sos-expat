@@ -6,7 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useApp } from '../../contexts/AppContext';
 import LoadingSpinner from '../common/LoadingSpinner';
 import InstallBanner from '../common/InstallBanner';
-import CookieBanner, { showCookieBanner } from '../common/CookieBanner';
+import CookieBanner from '../common/CookieBanner';
 
 interface LayoutProps {
   children: ReactNode;
@@ -23,7 +23,7 @@ const Layout: React.FC<LayoutProps> = ({
 }) => {
   const { authInitialized, isLoading } = useAuth();
   const { language, isRTL } = useApp();
-  const [showCookieBannerState, setShowCookieBannerState] = useState(false);
+  const [_showCookieBannerState, setShowCookieBannerState] = useState(false);
 
   // Update document direction for RTL languages
   useEffect(() => {

@@ -11,7 +11,6 @@ import {
   WifiOff,
   ChevronDown,
   ChevronUp,
-  BarChart3,
   TrendingUp,
 } from 'lucide-react';
 import {

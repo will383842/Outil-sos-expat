@@ -86,7 +86,7 @@ const SpecialtySelect: React.FC<SpecialtySelectProps> = ({
 
   // Styles personnalisés pour react-select
   const customStyles: StylesConfig<OptionType, true, GroupBase<OptionType>> = {
-    control: (base, state) => ({
+    control: (base, _state) => ({
       ...base,
       minHeight: '48px',
       border: 'none',

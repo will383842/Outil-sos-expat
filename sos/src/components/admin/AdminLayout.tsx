@@ -53,7 +53,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   // HOOKS
   // =========================================================================
   const navigate = useNavigate();
-  const location = useLocation();
+  const _location = useLocation();
   const outlet = useOutlet();
   
   const authContext = useAuth();
@@ -149,7 +149,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       const success = await updateExistingProfiles();
       setUpdateSuccess(success);
       setTimeout(() => setUpdateSuccess(null), 5000);
-    } catch (error) {
+    } catch (_error) {
       setUpdateSuccess(false);
       setTimeout(() => setUpdateSuccess(null), 5000);
     } finally {

@@ -47,7 +47,6 @@ const ProviderOnlineManager: React.FC<ProviderOnlineManagerProps> = ({ children 
     isVibrationEnabled,
     toggleSound,
     toggleVibration,
-    stopRinging,
   } = useIncomingCallSound({
     userId: user?.uid,
     isOnline: shouldTrack,

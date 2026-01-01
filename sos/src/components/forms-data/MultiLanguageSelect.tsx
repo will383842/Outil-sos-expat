@@ -50,20 +50,24 @@ const MultiLanguageSelect: React.FC<MultiLanguageSelectProps> = React.memo(({
     if (locale) {
       return locale;
     }
-    // Sinon détecter automatiquement
-    return getDetectedBrowserLanguage() as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'hi' | 'ch';
+    // Sinon détecter automatiquement - ✅ FIX: Inclure 'pt' et 'ar' dans le type cast
+    return getDetectedBrowserLanguage() as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'hi' | 'ch' | 'pt' | 'ar';
   }, [locale]);
 
-  // Langues selon la locale
+  // Langues selon la locale - ✅ FIX: Validation des données
   const currentLanguages = useMemo(() => {
+    if (!languagesData || !Array.isArray(languagesData) || languagesData.length === 0) {
+      console.error('[MultiLanguageSelect] languagesData is empty or invalid');
+      return [];
+    }
     return getSortedLanguages(languagesData, currentLocale);
   }, [currentLocale]);
 
-  // Filtrage des langues
+  // Filtrage des langues - ✅ FIX: Retirer currentLocale des dépendances (non utilisé)
   const filteredLanguages = useMemo((): Language[] => {
     if (!inputValue) return currentLanguages;
     return searchLanguagesMultilingual(inputValue);
-  }, [inputValue, currentLanguages, currentLocale]);
+  }, [inputValue, currentLanguages]);
 
   // Options avec compatibilité
   const options = useMemo((): LanguageOption[] => {
@@ -81,13 +85,28 @@ const MultiLanguageSelect: React.FC<MultiLanguageSelectProps> = React.memo(({
   // Trier les options (compatibles en premier)
   const sortedOptions = useMemo(() => {
     if (!highlightShared) return options;
-    
+
     return [...options].sort((a, b) => {
       if (a.isShared && !b.isShared) return -1;
       if (!a.isShared && b.isShared) return 1;
       return 0;
     });
   }, [options, highlightShared]);
+
+  // 🔍 DEBUG: Log des options pour diagnostiquer le problème d'affichage
+  useEffect(() => {
+    console.log('[MultiLanguageSelect] 🔍 Debug:', {
+      languagesDataLength: languagesData?.length ?? 0,
+      currentLocale,
+      currentLanguagesLength: currentLanguages?.length ?? 0,
+      optionsLength: options?.length ?? 0,
+      sortedOptionsLength: sortedOptions?.length ?? 0,
+      firstOption: sortedOptions?.[0] ?? null,
+    });
+    if (sortedOptions?.length === 0) {
+      console.warn('[MultiLanguageSelect] ⚠️ AUCUNE OPTION DISPONIBLE!');
+    }
+  }, [sortedOptions, currentLocale, currentLanguages, options]);
 
   // 🎯 STYLES COMPLÈTEMENT ADAPTATIFS - Hérite du parent
   const adaptiveStyles: StylesConfig<LanguageOption, true> = {
@@ -233,7 +252,7 @@ const MultiLanguageSelect: React.FC<MultiLanguageSelectProps> = React.memo(({
     },
     
     multiValueRemove: (provided, state) => {
-      const { data } = state;
+      const { data: _data } = state;
       return {
         ...provided,
         padding: '0.375rem',

@@ -190,7 +190,7 @@ export const WorldMapSubscriptions: React.FC<WorldMapSubscriptionsProps> = ({
   };
 
   // Get color intensity based on value
-  const getColorIntensity = (value: number): string => {
+  const _getColorIntensity = (value: number): string => {
     if (value === 0) return 'fill-gray-200';
     const ratio = value / maxValue;
     const metric = METRICS.find(m => m.id === selectedMetric);

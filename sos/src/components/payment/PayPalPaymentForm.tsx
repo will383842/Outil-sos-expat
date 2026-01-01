@@ -4,7 +4,7 @@ import { PayPalButtons, usePayPalScriptReducer } from "@paypal/react-paypal-js";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../../config/firebase";
 import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
-import { FormattedMessage, useIntl } from "react-intl";
+import { FormattedMessage } from "react-intl";
 import { useApp } from "../../contexts/AppContext";
 
 interface PayPalPaymentFormProps {
@@ -43,7 +43,6 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   amount,
   currency,
   providerId,
-  providerPayPalMerchantId,
   callSessionId,
   clientId,
   description,
@@ -55,7 +54,6 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   const [{ isPending, isRejected }] = usePayPalScriptReducer();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<"idle" | "processing" | "success" | "error">("idle");
-  const intl = useIntl();
   const { settings } = useApp();
 
   // SECURITY FIX: Use commission rate from backend settings instead of hardcoded values

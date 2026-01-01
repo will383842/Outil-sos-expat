@@ -2,7 +2,7 @@
 import React, { useEffect, Suspense, lazy, useState } from 'react';
 import { IntlProvider } from 'react-intl';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import { Helmet, HelmetProvider } from 'react-helmet-async';
+import { Helmet } from 'react-helmet-async';
 import { useDeviceDetection } from './hooks/useDeviceDetection';
 import { registerSW, measurePerformance } from './utils/performance';
 import LoadingSpinner from './components/common/LoadingSpinner';
@@ -26,9 +26,7 @@ import {
   LocaleRouter,
   getLocaleString,
   parseLocaleFromPath,
-  getTranslatedRouteSlug,
   getAllTranslatedSlugs,
-  getRouteKeyFromSlug,
   type RouteKey,
 } from "./multilingual-system";
 import HreflangLinks from "./multilingual-system/components/HrefLang/HreflangLinks";
@@ -249,7 +247,7 @@ const protectedUserRoutes: RouteConfig[] = [
 const DefaultHelmet: React.FC<{ pathname: string }> = ({ pathname }) => {
   // Remove locale prefix from pathname for metadata lookup
   const { pathWithoutLocale } = parseLocaleFromPath(pathname);
-  const pathForMetadata = pathWithoutLocale === "/" ? "/" : pathWithoutLocale;
+  const _pathForMetadata = pathWithoutLocale === "/" ? "/" : pathWithoutLocale;
 
   const getPageMetadata = (path: string) => {
     const metaMap: Record<string, { title: string; description: string; lang: string }> = {
@@ -314,7 +312,7 @@ type Locale = 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
 // --------------------------------------------
 // PageViewTracker - Tracks route changes for GA4
 // --------------------------------------------
-const PageViewTracker: React.FC = () => {
+const _PageViewTracker: React.FC = () => {
   const location = useLocation();
   
   useEffect(() => {

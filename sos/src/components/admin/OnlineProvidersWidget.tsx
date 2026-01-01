@@ -11,7 +11,6 @@ import {
   Users,
   Scale,
   Globe,
-  Activity,
   ChevronRight,
   AlertTriangle,
 } from 'lucide-react';

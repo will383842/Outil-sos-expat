@@ -1,7 +1,7 @@
 // src/components/common/CookieBanner.tsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useIntl } from 'react-intl';
-import { X, Cookie, Settings, Shield, Check, ChevronDown } from 'lucide-react';
+import { Cookie, Settings, Shield, Check, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
 import Button from './Button';
