@@ -15,12 +15,15 @@ import {
   RefreshCw,
   ChevronLeft,
   ChevronRight,
+  Globe,
+  ChevronDown,
 } from 'lucide-react';
 
 import { adminMenuTree } from '../../config/adminMenu';
 import SidebarItem from './sidebar/SidebarItem';
 
 import { useAuth } from '../../contexts/AuthContext';
+import { useApp } from '../../contexts/AppContext';
 import { useIntl } from 'react-intl';
 import Button from '../common/Button';
 import ErrorBoundary from '../common/ErrorBoundary';
@@ -43,6 +46,104 @@ interface AdminUser {
 interface AdminLayoutProps {
   children?: ReactNode;
 }
+
+// =============================================================================
+// CONFIGURATION LANGUES
+// =============================================================================
+
+type SupportedLanguage = 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
+
+interface LanguageOption {
+  code: SupportedLanguage;
+  name: string;
+  nativeName: string;
+  flag: string;
+}
+
+const ADMIN_LANGUAGES: LanguageOption[] = [
+  { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷' },
+  { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
+  { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' },
+  { code: 'de', name: 'German', nativeName: 'Deutsch', flag: '🇩🇪' },
+  { code: 'pt', name: 'Portuguese', nativeName: 'Português', flag: '🇵🇹' },
+  { code: 'ru', name: 'Russian', nativeName: 'Русский', flag: '🇷🇺' },
+  { code: 'ch', name: 'Chinese', nativeName: '中文', flag: '🇨🇳' },
+  { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳' },
+  { code: 'ar', name: 'Arabic', nativeName: 'العربية', flag: '🇸🇦' },
+];
+
+// =============================================================================
+// COMPOSANT LANGUAGE SELECTOR
+// =============================================================================
+
+const AdminLanguageSelector: React.FC = () => {
+  const { language, setLanguage } = useApp();
+  const intl = useIntl();
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  const currentLang = ADMIN_LANGUAGES.find(l => l.code === language) || ADMIN_LANGUAGES[0];
+
+  // Fermer le dropdown quand on clique ailleurs
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLanguageChange = useCallback((langCode: SupportedLanguage) => {
+    setLanguage(langCode);
+    setIsOpen(false);
+    localStorage.setItem('admin-language', langCode);
+  }, [setLanguage]);
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 transition-colors"
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        aria-label={intl.formatMessage({ id: 'admin.language.select', defaultMessage: 'Changer de langue' })}
+      >
+        <Globe className="w-4 h-4 text-gray-500" />
+        <span className="text-lg">{currentLang.flag}</span>
+        <span className="hidden sm:inline">{currentLang.nativeName}</span>
+        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div
+          className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
+          role="listbox"
+          aria-label={intl.formatMessage({ id: 'admin.language.list', defaultMessage: 'Langues disponibles' })}
+        >
+          {ADMIN_LANGUAGES.map((lang) => (
+            <button
+              key={lang.code}
+              onClick={() => handleLanguageChange(lang.code)}
+              className={`flex items-center gap-3 w-full px-4 py-2 text-sm text-left hover:bg-gray-50 transition-colors ${
+                language === lang.code ? 'bg-red-50 text-red-700 font-medium' : 'text-gray-700'
+              }`}
+              role="option"
+              aria-selected={language === lang.code}
+            >
+              <span className="text-lg">{lang.flag}</span>
+              <span>{lang.nativeName}</span>
+              {language === lang.code && (
+                <span className="ml-auto w-2 h-2 bg-red-500 rounded-full" />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 // =============================================================================
 // COMPOSANT PRINCIPAL
@@ -445,6 +546,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 <span className="text-gray-900 font-medium">{t('admin.layout.administration')}</span>
               </nav>
               <div className="flex items-center space-x-4">
+                <AdminLanguageSelector />
                 <span className="text-sm text-gray-700 hidden sm:block">
                   {user.firstName} {user.lastName}
                 </span>

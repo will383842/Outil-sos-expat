@@ -151,9 +151,9 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
             isBanned: data.isBanned === true,
             isActive: data.isActive !== false,
             isVerified: data.isVerified === true,
-            // @ts-expect-error trace interne non typée
-            __isAdmin: isAdmin,
           } as Provider & { __isAdmin?: boolean };
+          // Add internal trace
+          (provider as any).__isAdmin = isAdmin;
 
           // Règle d'affichage
           const hasValidData = provider.name.trim() !== '' && provider.country.trim() !== '';

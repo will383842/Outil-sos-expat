@@ -1279,18 +1279,48 @@ const AdminProviders: React.FC = () => {
                     <div className="font-medium">{formatRelativeTime(selectedProvider.lastStatusChange)}</div>
                   </div>
                   <div>
-                    <span className="text-gray-600 text-sm">Paiement configuré:</span>
-                    <div className="font-medium">
-                      {selectedProvider.stripeOnboardingComplete || selectedProvider.paypalOnboardingComplete ? (
-                        <span className="text-green-600 flex items-center">
-                          <CheckCircle size={16} className="mr-1" />
-                          Oui ({selectedProvider.paymentGateway || 'Stripe'})
+                    <span className="text-gray-600 text-sm">Configuration paiement:</span>
+                    <div className="font-medium space-y-1">
+                      {/* Stripe */}
+                      <div className="flex items-center">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                          selectedProvider.stripeOnboardingComplete
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {selectedProvider.stripeOnboardingComplete ? (
+                            <><CheckCircle size={12} className="mr-1" /> Stripe OK</>
+                          ) : (
+                            <><XCircle size={12} className="mr-1" /> Stripe</>
+                          )}
                         </span>
-                      ) : (
-                        <span className="text-red-600 flex items-center">
-                          <XCircle size={16} className="mr-1" />
-                          Non
+                      </div>
+                      {/* PayPal */}
+                      <div className="flex items-center">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                          selectedProvider.paypalOnboardingComplete
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {selectedProvider.paypalOnboardingComplete ? (
+                            <><CheckCircle size={12} className="mr-1" /> PayPal OK</>
+                          ) : (
+                            <><XCircle size={12} className="mr-1" /> PayPal</>
+                          )}
                         </span>
+                      </div>
+                      {/* Passerelle active */}
+                      {(selectedProvider.stripeOnboardingComplete || selectedProvider.paypalOnboardingComplete) && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          Passerelle active: <strong>{selectedProvider.paymentGateway || 'Stripe'}</strong>
+                        </div>
+                      )}
+                      {/* Alerte si aucun paiement configuré */}
+                      {!selectedProvider.stripeOnboardingComplete && !selectedProvider.paypalOnboardingComplete && selectedProvider.isApproved && (
+                        <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800">
+                          <AlertTriangle size={12} className="inline mr-1" />
+                          Prestataire approuvé mais aucun paiement configuré
+                        </div>
                       )}
                     </div>
                   </div>

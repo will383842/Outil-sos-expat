@@ -66,6 +66,13 @@ export const adminMenuTree: AdminMenuItem[] = [
         description: "Vue globale de tous les utilisateurs",
         children: [
           {
+            id: "gestion-globale",
+            label: "Gestion globale",
+            path: "/admin/users/all",
+            icon: UsersIcon,
+            description: "Vue et gestion de tous les utilisateurs",
+          },
+          {
             id: "clients",
             label: "Clients",
             path: "/admin/users/clients",

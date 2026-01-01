@@ -1,35 +1,26 @@
-// src/pages/admin/AdminDashboard.tsx - VERSION CORRIGÉE ABORTERROR
+// src/pages/admin/AdminDashboard.tsx - VERSION REFACTORISÉE AVEC GRAPHIQUES
 // =============================================================================
 // CHANGEMENTS :
-// 1. ✅ Ajout d'un ref `mountedRef` pour tracker si le composant est monté
-// 2. ✅ Vérification du flag avant chaque setState après une opération async
-// 3. ✅ Cleanup propre dans le useEffect
+// 1. Intégration du composant DashboardCharts avec graphiques recharts
+// 2. Paramètres Twilio et Notifications déplacés vers AdminSettings
+// 3. Interface épurée focalisée sur les KPIs et la visualisation
 // =============================================================================
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useIntl } from "react-intl";
 import {
-  Phone,
   Settings,
-  Users,
-  DollarSign,
-  BarChart3,
-  Save,
-  Star,
   Shield,
   Trash,
-  Mail,
   CheckCircle,
   AlertTriangle,
-  Wifi,
-  WifiOff,
   UserCheck,
-  Scale,
-  Globe,
   Activity,
+  Cog,
 } from "lucide-react";
 import AdminLayout from "../../components/admin/AdminLayout";
+import DashboardCharts from "../../components/admin/DashboardCharts";
 import Button from "../../components/common/Button";
 import { useAuth } from "../../contexts/AuthContext";
 import {
@@ -37,13 +28,6 @@ import {
   getDoc,
   setDoc,
   serverTimestamp,
-  collection,
-  getDocs,
-  query,
-  where,
-  onSnapshot,
-  limit,
-  orderBy,
 } from "firebase/firestore";
 import { db, functions } from "../../config/firebase";
 import { httpsCallable } from "firebase/functions";
@@ -54,23 +38,6 @@ import {
   validateDataIntegrity,
   cleanupObsoleteData,
 } from "../../utils/firestore";
-import testNotificationSystem from "../../services/notifications/notificationService";
-
-// Interface pour les paramètres admin (SIMPLIFIÉ - sans commission)
-interface AdminSettings {
-  twilioSettings: {
-    maxAttempts: number;
-    timeoutSeconds: number;
-  };
-  notificationSettings: {
-    enableEmail: boolean;
-    enableSMS: boolean;
-    enableWhatsApp: boolean;
-  };
-  createdAt: unknown;
-  updatedAt?: unknown;
-  updatedBy?: string;
-}
 
 // Interface pour le rapport d'intégrité
 interface IntegrityReport {
@@ -85,61 +52,15 @@ interface IntegrityFix {
   data: Record<string, unknown>;
 }
 
-// Interface pour les statistiques
-interface Stats {
-  totalCalls: number;
-  successfulCalls: number;
-  totalRevenue: number;
-  platformRevenue: number;
-  providerRevenue: number;
-  isEstimate?: boolean; // True when stats are based on limited sample (> STATS_QUERY_LIMIT docs)
-}
-
-// ⚠️ PERFORMANCE: Limit for stats queries to prevent app freeze with large datasets
-// For accurate counts, implement counter documents or use Firestore aggregation queries
-const STATS_QUERY_LIMIT = 1000;
-
-// Helpers de typage & normalisation
-function normalizeAdminSettings(input: unknown): AdminSettings {
-  const partial = (input ?? {}) as Partial<AdminSettings>;
-  const twilio =
-    partial.twilioSettings ?? ({} as AdminSettings["twilioSettings"]);
-  const notif =
-    partial.notificationSettings ??
-    ({} as AdminSettings["notificationSettings"]);
-
-  return {
-    twilioSettings: {
-      maxAttempts:
-        typeof twilio.maxAttempts === "number" ? twilio.maxAttempts : 3,
-      timeoutSeconds:
-        typeof twilio.timeoutSeconds === "number" ? twilio.timeoutSeconds : 30,
-    },
-    notificationSettings: {
-      enableEmail:
-        typeof notif.enableEmail === "boolean" ? notif.enableEmail : true,
-      enableSMS: typeof notif.enableSMS === "boolean" ? notif.enableSMS : true,
-      enableWhatsApp:
-        typeof notif.enableWhatsApp === "boolean" ? notif.enableWhatsApp : true,
-    },
-    createdAt: partial.createdAt ?? serverTimestamp(),
-    updatedAt: partial.updatedAt,
-    updatedBy:
-      typeof partial.updatedBy === "string" ? partial.updatedBy : undefined,
-  };
-}
-
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const intl = useIntl();
 
-  // ==========================================================================
-  // ✅ CORRECTION 1: Ref pour tracker si le composant est monté
-  // ==========================================================================
+  // Ref pour tracker si le composant est monté
   const mountedRef = useRef<boolean>(true);
 
-  // extraction sûre de l'ID et du rôle pour éviter any
+  // Extraction sûre de l'ID et du rôle
   const userId =
     typeof (user as { id?: unknown } | null)?.id === "string"
       ? (user as { id?: string }).id
@@ -149,18 +70,12 @@ const AdminDashboard: React.FC = () => {
       ? (user as { role?: string }).role
       : undefined;
 
-  // États avec valeurs par défaut
-  const [settings, setSettings] = useState<AdminSettings | null>(null);
+  // États
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isSaving, setIsSaving] = useState<boolean>(false);
   const [showIntegrityModal, setShowIntegrityModal] = useState<boolean>(false);
-  const [integrityReport, setIntegrityReport] =
-    useState<IntegrityReport | null>(null);
-  const [isCheckingIntegrity, setIsCheckingIntegrity] =
-    useState<boolean>(false);
+  const [integrityReport, setIntegrityReport] = useState<IntegrityReport | null>(null);
+  const [isCheckingIntegrity, setIsCheckingIntegrity] = useState<boolean>(false);
   const [isCleaningData, setIsCleaningData] = useState<boolean>(false);
-  const [isTestingNotifications, setIsTestingNotifications] =
-    useState<boolean>(false);
   const [isRestoringRoles, setIsRestoringRoles] = useState<boolean>(false);
   const [roleRestorationResult, setRoleRestorationResult] = useState<{
     restored: number;
@@ -169,45 +84,7 @@ const AdminDashboard: React.FC = () => {
     skipped: number;
   } | null>(null);
 
-  const [stats, setStats] = useState<Stats>({
-    totalCalls: 0,
-    successfulCalls: 0,
-    totalRevenue: 0,
-    platformRevenue: 0,
-    providerRevenue: 0,
-  });
-
-  // Notification helper (simplifié)
-  const invokeTestNotification = async (providerId: string): Promise<void> => {
-    const candidate = testNotificationSystem as unknown;
-
-    if (typeof candidate === "function") {
-      await (candidate as (id: string) => Promise<unknown>)(providerId);
-      return;
-    }
-
-    if (candidate && typeof candidate === "object") {
-      const methods = [
-        "sendTestNotification",
-        "testNotification",
-        "sendTest",
-        "triggerTest",
-      ];
-      for (const method of methods) {
-        const fn = (candidate as Record<string, unknown>)[method];
-        if (typeof fn === "function") {
-          await (fn as (id: string) => Promise<unknown>)(providerId);
-          return;
-        }
-      }
-    }
-
-    throw new Error(intl.formatMessage({ id: 'admin.dashboard.notifications.serviceUnavailable' }));
-  };
-
-  // ==========================================================================
-  // 🔧 RESTAURATION DES RÔLES (Bug fix 30/12/2025)
-  // ==========================================================================
+  // Restauration des rôles
   const handleRestoreRoles = async () => {
     if (!user || user.role !== 'admin') return;
 
@@ -217,7 +94,6 @@ const AdminDashboard: React.FC = () => {
     try {
       console.log('🔧 Démarrage de la restauration des rôles...');
 
-      // 1. Restaurer les rôles perdus
       const restoreUserRolesFn = httpsCallable<unknown, {
         totalProcessed: number;
         restored: number;
@@ -228,7 +104,6 @@ const AdminDashboard: React.FC = () => {
       const restoreResult = await restoreUserRolesFn();
       console.log('📊 Résultat restauration:', restoreResult.data);
 
-      // 2. Synchroniser tous les Custom Claims
       const syncAllCustomClaimsFn = httpsCallable<unknown, {
         synced: number;
         failed: number;
@@ -262,247 +137,33 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  // ==========================================================================
-  // ✅ CORRECTION 2: loadStats avec vérification du flag mounted
-  // ==========================================================================
-  const loadStats = useCallback(async (): Promise<void> => {
-    if (!user) return;
-
-    try {
-      // ✅ OPTIMISATION: Requêtes parallèles avec limite pour éviter le freeze
-      // Les requêtes sont limitées à 1000 documents pour les stats du dashboard
-      const callsQuery = query(
-        collection(db, "calls"),
-        orderBy("createdAt", "desc"),
-        limit(STATS_QUERY_LIMIT)
-      );
-      const paymentsQuery = query(
-        collection(db, "payments"),
-        orderBy("createdAt", "desc"),
-        limit(STATS_QUERY_LIMIT)
-      );
-
-      const [callsSnapshot, paymentsSnapshot] = await Promise.all([
-        getDocs(callsQuery),
-        getDocs(paymentsQuery)
-      ]);
-
-      // ✅ Vérifier si toujours monté AVANT de continuer
-      if (!mountedRef.current) {
-        console.log('[AdminDashboard] loadStats: component unmounted, aborting');
-        return;
-      }
-
-      let totalCalls = 0;
-      let successfulCalls = 0;
-      let totalRevenue = 0;
-      let platformRevenue = 0;
-      let providerRevenue = 0;
-
-      callsSnapshot.forEach((docSnapshot) => {
-        totalCalls++;
-        const data = docSnapshot.data() as Record<string, unknown>;
-        if ((data.status as string) === "success") successfulCalls++;
-      });
-
-      paymentsSnapshot.forEach((docSnapshot) => {
-        const data = docSnapshot.data() as Record<string, unknown>;
-        const amount = data.amount as number | undefined;
-        const platformFee = (data.platformFee ||
-          data.connectionFeeAmount ||
-          data.commissionAmount) as number | undefined;
-        const providerAmount = data.providerAmount as number | undefined;
-
-        if (typeof amount === "number") totalRevenue += amount;
-        if (typeof platformFee === "number") platformRevenue += platformFee;
-        if (typeof providerAmount === "number")
-          providerRevenue += providerAmount;
-      });
-
-      // ✅ Vérifier une dernière fois avant setState
-      if (!mountedRef.current) return;
-
-      // Determine if stats are estimates (when we hit the limit)
-      const isEstimate = callsSnapshot.size >= STATS_QUERY_LIMIT ||
-                         paymentsSnapshot.size >= STATS_QUERY_LIMIT;
-
-      setStats({
-        totalCalls,
-        successfulCalls,
-        totalRevenue,
-        platformRevenue,
-        providerRevenue,
-        isEstimate,
-      });
-    } catch (error) {
-      // ✅ Ignorer les erreurs si le composant est démonté
-      if (!mountedRef.current) return;
-      
-      // ✅ Ignorer les AbortError silencieusement
-      if (error instanceof Error && 
-          (error.name === 'AbortError' || error.message.includes('aborted'))) {
-        console.log('[AdminDashboard] loadStats: request aborted (normal during unmount)');
-        return;
-      }
-      
-      console.error("Error loading stats:", error);
-    }
-  }, [user]);
-
-  // ==========================================================================
-  // ✅ CORRECTION 3: loadAdminData avec vérification du flag mounted
-  // ==========================================================================
-  const loadAdminData = useCallback(async (): Promise<void> => {
-    if (!user) return;
-
-    try {
-      const settingsRef = doc(db, "admin_settings", "main");
-      const settingsDoc = await getDoc(settingsRef);
-
-      // ✅ Vérifier si toujours monté après getDoc
-      if (!mountedRef.current) {
-        console.log('[AdminDashboard] loadAdminData: component unmounted, aborting');
-        return;
-      }
-
-      if (settingsDoc.exists()) {
-        const data = settingsDoc.data() as Record<string, unknown>;
-        // Migration: exclure sosCommission si présent
-        const { sosCommission, ...cleanSettings } = data as Record<
-          string,
-          unknown
-        >;
-        
-        // ✅ Vérifier avant setState
-        if (!mountedRef.current) return;
-        setSettings(normalizeAdminSettings(cleanSettings));
-
-        // Si sosCommission existait, marquer pour migration
-        if (sosCommission) {
-          console.warn(
-            "🔄 Migration détectée: sosCommission retiré de admin_settings. Utilisez admin_config/pricing."
-          );
-        }
-      } else {
-        // Paramètres par défaut SANS commission
-        const defaultSettings: AdminSettings = {
-          twilioSettings: {
-            maxAttempts: 3,
-            timeoutSeconds: 30,
-          },
-          notificationSettings: {
-            enableEmail: true,
-            enableSMS: true,
-            enableWhatsApp: true,
-          },
-          createdAt: serverTimestamp(),
-        };
-        
-        await setDoc(settingsRef, defaultSettings);
-        
-        // ✅ Vérifier après setDoc
-        if (!mountedRef.current) return;
-        setSettings(defaultSettings);
-      }
-
-      // ✅ loadStats vérifie aussi mountedRef en interne
-      await loadStats();
-      
-    } catch (error) {
-      // ✅ Ignorer les erreurs si le composant est démonté
-      if (!mountedRef.current) return;
-      
-      // ✅ Ignorer les AbortError silencieusement
-      if (error instanceof Error && 
-          (error.name === 'AbortError' || error.message.includes('aborted'))) {
-        console.log('[AdminDashboard] loadAdminData: request aborted (normal during unmount)');
-        return;
-      }
-      
-      console.error("Error loading admin data:", error);
-    } finally {
-      // ✅ Vérifier avant le setState final
-      if (mountedRef.current) {
-        setIsLoading(false);
-      }
-    }
-  }, [user, loadStats]);
-
-  // ==========================================================================
-  // ✅ CORRECTION 4: useEffect avec cleanup propre
-  // ==========================================================================
+  // Chargement initial
   useEffect(() => {
-    // ✅ Marquer comme monté au début
     mountedRef.current = true;
-    
+
     if (user) {
-      void loadAdminData();
+      // Simuler un court délai de chargement pour l'UX
+      const timer = setTimeout(() => {
+        if (mountedRef.current) {
+          setIsLoading(false);
+        }
+      }, 500);
+      return () => clearTimeout(timer);
     }
 
-    // ✅ Cleanup: marquer comme démonté
     return () => {
-      console.log('[AdminDashboard] Component unmounting, setting mountedRef to false');
       mountedRef.current = false;
     };
-  }, [user, loadAdminData]);
+  }, [user]);
 
-  // Handle settings change (SIMPLIFIÉ)
-  const handleSettingsChange = (
-    path: string,
-    value: string | number | boolean
-  ): void => {
-    if (!settings) return;
-
-    const newSettings: AdminSettings = JSON.parse(JSON.stringify(settings));
-    const keys = path.split(".");
-    let current: Record<string, unknown> = newSettings as unknown as Record<
-      string,
-      unknown
-    >;
-
-    for (let i = 0; i < keys.length - 1; i++) {
-      current = current[keys[i]] as Record<string, unknown>;
-    }
-    (current as Record<string, unknown>)[keys[keys.length - 1]] = value;
-
-    setSettings(newSettings);
-  };
-
-  // Save settings (SIMPLIFIÉ)
-  const saveSettings = async (): Promise<void> => {
-    if (!settings || !user) return;
-
-    setIsSaving(true);
-    try {
-      await setDoc(doc(db, "admin_settings", "main"), {
-        ...settings,
-        updatedAt: serverTimestamp(),
-        updatedBy: userId,
-      });
-      
-      // ✅ Vérifier avant setState
-      if (!mountedRef.current) return;
-      alert(intl.formatMessage({ id: 'admin.dashboard.settings.saveSuccess' }));
-    } catch (error) {
-      if (!mountedRef.current) return;
-      console.error("Error saving settings:", error);
-      alert(intl.formatMessage({ id: 'admin.dashboard.settings.saveError' }));
-    } finally {
-      if (mountedRef.current) {
-        setIsSaving(false);
-      }
-    }
-  };
-
-  // Check data integrity
+  // Vérification intégrité des données
   const handleCheckIntegrity = async (): Promise<void> => {
     setIsCheckingIntegrity(true);
     try {
       const report = await validateDataIntegrity();
-      
-      // ✅ Vérifier avant setState
+
       if (!mountedRef.current) return;
-      
+
       const typedReport: IntegrityReport = {
         isValid: report.isValid,
         issues: report.issues,
@@ -521,7 +182,7 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  // Clean obsolete data
+  // Nettoyage des données obsolètes
   const handleCleanupData = async (): Promise<void> => {
     if (
       !confirm(intl.formatMessage({ id: 'admin.dashboard.cleanup.confirmMessage' }))
@@ -532,10 +193,9 @@ const AdminDashboard: React.FC = () => {
     setIsCleaningData(true);
     try {
       const success = await cleanupObsoleteData();
-      
-      // ✅ Vérifier avant setState/alert
+
       if (!mountedRef.current) return;
-      
+
       if (success) {
         alert(intl.formatMessage({ id: 'admin.dashboard.cleanup.success' }));
       } else {
@@ -552,35 +212,6 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  // Test notification system
-  const handleTestNotifications = async (): Promise<void> => {
-    if (!confirm(intl.formatMessage({ id: 'admin.dashboard.notifications.confirmTest' }))) {
-      return;
-    }
-
-    setIsTestingNotifications(true);
-    try {
-      const testProviderId =
-        prompt(intl.formatMessage({ id: 'admin.dashboard.notifications.enterProviderId' })) ||
-        "test-provider-id";
-      await invokeTestNotification(testProviderId);
-      
-      // ✅ Vérifier avant alert
-      if (!mountedRef.current) return;
-      alert(intl.formatMessage({ id: 'admin.dashboard.notifications.testSuccess' }));
-    } catch (error) {
-      if (!mountedRef.current) return;
-      console.error("Erreur lors du test de notification:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : intl.formatMessage({ id: 'admin.dashboard.unknownError' });
-      alert(intl.formatMessage({ id: 'admin.dashboard.notifications.testError' }, { error: errorMessage }));
-    } finally {
-      if (mountedRef.current) {
-        setIsTestingNotifications(false);
-      }
-    }
-  };
-
   // Guards
   if (!user) {
     return (
@@ -592,8 +223,6 @@ const AdminDashboard: React.FC = () => {
     );
   }
 
-  // ✅ Vérification par rôle admin (plus fiable que par email)
-  // user.email peut être undefined si le champ n'existe pas dans Firestore
   if (userRole !== 'admin') {
     return (
       <AdminLayout>
@@ -621,12 +250,14 @@ const AdminDashboard: React.FC = () => {
     return (
       <AdminLayout>
         <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+          <div className="flex flex-col items-center gap-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+            <p className="text-gray-500">Chargement du tableau de bord...</p>
+          </div>
         </div>
       </AdminLayout>
     );
   }
-
 
   return (
     <AdminLayout>
@@ -656,347 +287,116 @@ const AdminDashboard: React.FC = () => {
                     {intl.formatMessage({ id: 'admin.dashboard.subtitle' })}
                   </p>
                 </div>
-                <div className="flex space-x-4">
-                  <Button
-                    onClick={() => navigate("/admin/pricing")}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    <DollarSign size={20} className="mr-2" />
-                    {intl.formatMessage({ id: 'admin.dashboard.buttons.pricingManagement' })}
-                  </Button>
-                  <Button
-                    onClick={saveSettings}
-                    loading={isSaving}
-                    className="bg-red-600 hover:bg-red-700"
-                  >
-                    <Save size={20} className="mr-2" />
-                    {intl.formatMessage({ id: 'admin.dashboard.buttons.save' })}
-                  </Button>
+                <div className="flex items-center space-x-3">
+                  {/* Actions système */}
                   <Button
                     onClick={handleCheckIntegrity}
                     loading={isCheckingIntegrity}
-                    className="bg-blue-600 hover:bg-blue-700"
+                    variant="outline"
+                    className="border-blue-300 text-blue-600 hover:bg-blue-50"
                   >
-                    <Shield size={20} className="mr-2" />
-                    {intl.formatMessage({ id: 'admin.dashboard.buttons.checkIntegrity' })}
+                    <Shield size={18} className="mr-2" />
+                    Intégrité
                   </Button>
                   <Button
                     onClick={handleCleanupData}
                     loading={isCleaningData}
-                    className="bg-orange-600 hover:bg-orange-700"
+                    variant="outline"
+                    className="border-orange-300 text-orange-600 hover:bg-orange-50"
                   >
-                    <Trash size={20} className="mr-2" />
-                    {intl.formatMessage({ id: 'admin.dashboard.buttons.cleanData' })}
-                  </Button>
-                  <Button
-                    onClick={handleTestNotifications}
-                    loading={isTestingNotifications}
-                    className="bg-purple-600 hover:bg-purple-700"
-                  >
-                    <Mail size={20} className="mr-2" />
-                    {intl.formatMessage({ id: 'admin.dashboard.buttons.testNotifications' })}
+                    <Trash size={18} className="mr-2" />
+                    Nettoyer
                   </Button>
                   <Button
                     onClick={handleRestoreRoles}
                     loading={isRestoringRoles}
-                    className="bg-yellow-600 hover:bg-yellow-700"
+                    variant="outline"
+                    className="border-yellow-300 text-yellow-600 hover:bg-yellow-50"
                   >
-                    <UserCheck size={20} className="mr-2" />
-                    🔧 Restaurer les rôles
+                    <UserCheck size={18} className="mr-2" />
+                    Rôles
+                  </Button>
+                  <Button
+                    onClick={() => navigate("/admin/settings")}
+                    variant="outline"
+                    className="border-gray-300 text-gray-600 hover:bg-gray-50"
+                  >
+                    <Cog size={18} className="mr-2" />
+                    Paramètres
                   </Button>
                 </div>
               </div>
             </div>
           </div>
 
+          {/* Main Content - Charts Dashboard */}
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            {/* Estimate Warning Banner */}
-            {stats.isEstimate && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 flex items-center">
-                <AlertTriangle className="w-5 h-5 text-yellow-600 mr-3 flex-shrink-0" />
-                <div>
-                  <p className="text-sm font-medium text-yellow-800">
-                    {intl.formatMessage({ id: 'admin.dashboard.stats.estimateWarning' }, { limit: STATS_QUERY_LIMIT }) ||
-                     `Statistics are based on the most recent ${STATS_QUERY_LIMIT.toLocaleString()} records. For accurate totals, use the detailed reports.`}
-                  </p>
+            {/* Role restoration result banner */}
+            {roleRestorationResult && (
+              <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-center">
+                  <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+                  <div>
+                    <p className="font-medium text-green-800">Restauration terminée</p>
+                    <p className="text-sm text-green-600">
+                      {roleRestorationResult.restored} rôles restaurés, {roleRestorationResult.synced} claims synchronisés
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setRoleRestorationResult(null)}
+                    className="ml-auto text-green-600 hover:text-green-800"
+                  >
+                    ✕
+                  </button>
                 </div>
               </div>
             )}
 
-            {/* Statistics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">
-                      {intl.formatMessage({ id: 'admin.dashboard.stats.totalCalls' })}
-                    </p>
-                    <p className="text-3xl font-bold text-gray-900">
-                      {stats.totalCalls.toLocaleString()}
-                    </p>
-                  </div>
-                  <Phone className="w-8 h-8 text-blue-600" />
-                </div>
-              </div>
-
-              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">
-                      {intl.formatMessage({ id: 'admin.dashboard.stats.successfulCalls' })}
-                    </p>
-                    <p className="text-3xl font-bold text-green-600">
-                      {stats.successfulCalls.toLocaleString()}
-                    </p>
-                  </div>
-                  <BarChart3 className="w-8 h-8 text-green-600" />
-                </div>
-              </div>
-
-              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">
-                      {intl.formatMessage({ id: 'admin.dashboard.stats.totalRevenue' })}
-                    </p>
-                    <p className="text-3xl font-bold text-purple-600">
-                      {stats.totalRevenue.toLocaleString("fr-FR", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                      €
-                    </p>
-                  </div>
-                  <DollarSign className="w-8 h-8 text-purple-600" />
-                </div>
-              </div>
-
-              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">
-                      {intl.formatMessage({ id: 'admin.dashboard.stats.sosCommission' })}
-                    </p>
-                    <p className="text-3xl font-bold text-red-600">
-                      {stats.platformRevenue.toLocaleString("fr-FR", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                      €
-                    </p>
-                  </div>
-                  <Settings className="w-8 h-8 text-red-600" />
-                </div>
-              </div>
-
-              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">
-                      {intl.formatMessage({ id: 'admin.dashboard.stats.providerRevenue' })}
-                    </p>
-                    <p className="text-3xl font-bold text-orange-600">
-                      {stats.providerRevenue.toLocaleString("fr-FR", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                      €
-                    </p>
-                  </div>
-                  <Users className="w-8 h-8 text-orange-600" />
-                </div>
+            {/* Quick Navigation */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-sm font-medium text-gray-500">Accès rapide:</span>
+                <button
+                  onClick={() => navigate("/admin/users/all")}
+                  className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-md text-sm hover:bg-blue-100 transition-colors"
+                >
+                  Utilisateurs
+                </button>
+                <button
+                  onClick={() => navigate("/admin/calls")}
+                  className="px-3 py-1.5 bg-green-50 text-green-700 rounded-md text-sm hover:bg-green-100 transition-colors"
+                >
+                  Appels
+                </button>
+                <button
+                  onClick={() => navigate("/admin/finance/payments")}
+                  className="px-3 py-1.5 bg-purple-50 text-purple-700 rounded-md text-sm hover:bg-purple-100 transition-colors"
+                >
+                  Paiements
+                </button>
+                <button
+                  onClick={() => navigate("/admin/pricing")}
+                  className="px-3 py-1.5 bg-amber-50 text-amber-700 rounded-md text-sm hover:bg-amber-100 transition-colors"
+                >
+                  Tarification
+                </button>
+                <button
+                  onClick={() => navigate("/admin/approvals/lawyers")}
+                  className="px-3 py-1.5 bg-red-50 text-red-700 rounded-md text-sm hover:bg-red-100 transition-colors"
+                >
+                  Validations
+                </button>
+                <button
+                  onClick={() => navigate("/admin/reports/country-stats")}
+                  className="px-3 py-1.5 bg-cyan-50 text-cyan-700 rounded-md text-sm hover:bg-cyan-100 transition-colors"
+                >
+                  Statistiques pays
+                </button>
               </div>
             </div>
 
-            {/* Acces rapides vers autres sections */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <Settings className="w-5 h-5 mr-2 text-blue-600" />
-                  {intl.formatMessage({ id: 'admin.dashboard.quickAccess.title' })}
-                </h2>
-              </div>
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <Button
-                    onClick={() => navigate("/admin/pricing")}
-                    className="bg-green-600 hover:bg-green-700 justify-start"
-                  >
-                    <DollarSign size={20} className="mr-2" />
-                    {intl.formatMessage({ id: 'admin.dashboard.quickAccess.pricingManagement' })}
-                  </Button>
-                  <Button
-                    onClick={() => navigate("/admin/users")}
-                    className="bg-blue-600 hover:bg-blue-700 justify-start"
-                  >
-                    <Users size={20} className="mr-2" />
-                    {intl.formatMessage({ id: 'admin.dashboard.quickAccess.usersManagement' })}
-                  </Button>
-                  <Button
-                    onClick={() => navigate("/admin/calls")}
-                    className="bg-purple-600 hover:bg-purple-700 justify-start"
-                  >
-                    <Phone size={20} className="mr-2" />
-                    {intl.formatMessage({ id: 'admin.dashboard.quickAccess.callsManagement' })}
-                  </Button>
-                  <Button
-                    onClick={() => navigate("/admin/payments")}
-                    className="bg-orange-600 hover:bg-orange-700 justify-start"
-                  >
-                    <DollarSign size={20} className="mr-2" />
-                    {intl.formatMessage({ id: 'admin.dashboard.quickAccess.paymentsManagement' })}
-                  </Button>
-                  <Button
-                    onClick={() => navigate("/admin/reviews")}
-                    className="bg-yellow-600 hover:bg-yellow-700 justify-start"
-                  >
-                    <Star size={20} className="mr-2" />
-                    {intl.formatMessage({ id: 'admin.dashboard.quickAccess.reviewsManagement' })}
-                  </Button>
-                  <Button
-                    onClick={() => navigate("/admin/reports/country-stats")}
-                    className="bg-indigo-600 hover:bg-indigo-700 justify-start"
-                  >
-                    <BarChart3 size={20} className="mr-2" />
-                    {intl.formatMessage({ id: 'admin.dashboard.quickAccess.reportsAnalytics' })}
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Parametres Twilio */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-                    <Phone className="w-5 h-5 mr-2" />
-                    {intl.formatMessage({ id: 'admin.dashboard.twilio.title' })}
-                  </h2>
-                </div>
-                <div className="p-6 space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {intl.formatMessage({ id: 'admin.dashboard.twilio.maxAttempts' })}
-                    </label>
-                    <input
-                      type="number"
-                      min={1}
-                      max={5}
-                      value={settings?.twilioSettings.maxAttempts || 3}
-                      onChange={(e) =>
-                        handleSettingsChange(
-                          "twilioSettings.maxAttempts",
-                          parseInt(e.target.value, 10)
-                        )
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {intl.formatMessage({ id: 'admin.dashboard.twilio.timeoutSeconds' })}
-                    </label>
-                    <input
-                      type="number"
-                      min={10}
-                      max={60}
-                      value={settings?.twilioSettings.timeoutSeconds || 30}
-                      onChange={(e) =>
-                        handleSettingsChange(
-                          "twilioSettings.timeoutSeconds",
-                          parseInt(e.target.value, 10)
-                        )
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Parametres de notifications */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-                    <Mail className="w-5 h-5 mr-2" />
-                    {intl.formatMessage({ id: 'admin.dashboard.notifications.title' })}
-                  </h2>
-                </div>
-                <div className="p-6 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-gray-700">
-                      {intl.formatMessage({ id: 'admin.dashboard.notifications.emailEnabled' })}
-                    </label>
-                    <input
-                      type="checkbox"
-                      checked={
-                        settings?.notificationSettings?.enableEmail ?? true
-                      }
-                      onChange={(e) =>
-                        handleSettingsChange(
-                          "notificationSettings.enableEmail",
-                          e.target.checked
-                        )
-                      }
-                      className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-gray-700">
-                      {intl.formatMessage({ id: 'admin.dashboard.notifications.smsEnabled' })}
-                    </label>
-                    <input
-                      type="checkbox"
-                      checked={
-                        settings?.notificationSettings?.enableSMS ?? true
-                      }
-                      onChange={(e) =>
-                        handleSettingsChange(
-                          "notificationSettings.enableSMS",
-                          e.target.checked
-                        )
-                      }
-                      className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-gray-700">
-                      {intl.formatMessage({ id: 'admin.dashboard.notifications.whatsappEnabled' })}
-                    </label>
-                    <input
-                      type="checkbox"
-                      checked={
-                        settings?.notificationSettings?.enableWhatsApp ?? true
-                      }
-                      onChange={(e) =>
-                        handleSettingsChange(
-                          "notificationSettings.enableWhatsApp",
-                          e.target.checked
-                        )
-                      }
-                      className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Reviews Management */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 mt-8">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <Star className="w-5 h-5 mr-2" />
-                  {intl.formatMessage({ id: 'admin.dashboard.reviews.title' })}
-                </h2>
-              </div>
-              <div className="p-6">
-                <p className="text-gray-600 mb-4">
-                  {intl.formatMessage({ id: 'admin.dashboard.reviews.description' })}
-                </p>
-                <Button onClick={() => navigate("/admin/reviews")}>
-                  {intl.formatMessage({ id: 'admin.dashboard.reviews.accessButton' })}
-                </Button>
-              </div>
-            </div>
+            {/* Dashboard Charts Component */}
+            <DashboardCharts />
           </div>
 
           {/* Integrity Check Modal */}

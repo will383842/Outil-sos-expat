@@ -185,8 +185,8 @@ const routeConfigs: RouteConfig[] = [
   { path: "/sos-appel", component: SOSCall, translated: "sos-call" },
   { path: "/appel-expatrie", component: ExpatCall, translated: "expat-call" },
 
-  // Fournisseurs publics
-  { path: "/providers", component: Providers, translated: "providers" },
+  // Fournisseurs publics (utilise SOSCall sans wizard)
+  { path: "/providers", component: SOSCall, translated: "providers" },
   { path: "/provider/:id", component: ProviderProfile },
   // Simplified route patterns - just type and slug
   { path: "/avocat/:slug", component: ProviderProfile, translated: "lawyer" },

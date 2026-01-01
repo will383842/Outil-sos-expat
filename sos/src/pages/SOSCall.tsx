@@ -2003,7 +2003,7 @@ const FilterBottomSheet: React.FC<{
 ========================= */
 const SOSCall: React.FC = () => {
   const intl = useIntl();
-  const { language } = useApp();
+  const { language, enabledCountries } = useApp();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -2033,8 +2033,13 @@ const SOSCall: React.FC = () => {
   const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
 
   // Guided filter wizard (mobile-first)
+  // Skip wizard if accessing via /providers route (direct profile display)
+  const isProvidersRoute = location.pathname.includes('/providers') ||
+                           location.pathname.includes('/prestataires') ||
+                           location.pathname.includes('/expertos') ||
+                           location.pathname.includes('/anbieter');
   const [showWizard, setShowWizard] = useState<boolean>(false);
-  const [wizardCompleted, setWizardCompleted] = useState<boolean>(false);
+  const [wizardCompleted, setWizardCompleted] = useState<boolean>(isProvidersRoute);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -2056,10 +2061,18 @@ const SOSCall: React.FC = () => {
   const lang = (language as "fr" | "en" | "es" | "de" | "pt" | "ch" | "ar" | "hi" | "ru") || "fr";
   const langCode = language?.split('-')[0] || 'fr';
 
-  // Listes traduites dynamiquement
+  // Listes traduites dynamiquement - filtrées par pays activés dans l'admin
   const countryOptions = useMemo(() => {
-    return getCountryOptions(language || 'fr');
-  }, [language]);
+    const allCountries = getCountryOptions(language || 'fr');
+    // Si aucun pays activé, retourner tous les pays (fallback)
+    if (!enabledCountries || enabledCountries.length === 0) {
+      return allCountries;
+    }
+    // Filtrer pour ne garder que les pays activés
+    return allCountries.filter(country =>
+      enabledCountries.includes(country.code.toUpperCase())
+    );
+  }, [language, enabledCountries]);
   
   const languageOptions = useMemo(() => {
     return getLanguageOptions(language || 'fr');
@@ -3114,7 +3127,7 @@ const SOSCall: React.FC = () => {
               {/* ========================================
                   📱 FILTRES SECTION (Mobile uniquement)
               ======================================== */}
-              <div className="space-y-3 lg:hidden">
+              <div className="space-y-3 lg:hidden relative z-30">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
                   {/* Type */}
                   <div className="space-y-1">
@@ -3562,7 +3575,7 @@ const SOSCall: React.FC = () => {
             ) : filteredProviders.length > 0 ? (
               <>
                 {/* Version Mobile - Scroll horizontal centré */}
-                <div className="lg:hidden">
+                <div className="lg:hidden relative z-10">
                   {/* Container de scroll centré */}
                   <div
                     className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide"
@@ -3602,8 +3615,8 @@ const SOSCall: React.FC = () => {
                 </div>
 
                 {/* Version Desktop - Grille */}
-                <div 
-                  className="hidden lg:grid lg:grid-cols-2 xl:grid-cols-3 gap-5 lg:gap-6 justify-items-center"
+                <div
+                  className="hidden lg:grid lg:grid-cols-2 xl:grid-cols-3 gap-5 lg:gap-6 justify-items-center relative z-10"
                   role="list"
                   aria-label={intl.formatMessage({ id: "sosCall.providerList.desktopAriaLabel" })}
                 >

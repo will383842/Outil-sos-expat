@@ -11,6 +11,7 @@ import {
   limit,
   getDocs,
   doc as fsDoc,
+  getDoc,
   updateDoc,
   type DocumentData,
   type QueryConstraint,
@@ -28,6 +29,8 @@ import {
   AlertTriangle,
   User,
   MapPin,
+  History,
+  UserCheck,
 } from 'lucide-react';
 import Button from '../../components/common/Button';
 import AdminLayout from '../../components/admin/AdminLayout';
@@ -124,6 +127,49 @@ const AdminKYCProviders: React.FC = () => {
     incomplete: 0,
     thisWeek: 0,
   });
+
+  // Cache pour les noms des admins (UID -> nom)
+  const [adminNamesCache, setAdminNamesCache] = useState<Record<string, string>>({});
+
+  // Fonction pour récupérer le nom d'un admin
+  const getAdminName = useCallback(async (adminId: string): Promise<string> => {
+    if (!adminId) return 'Inconnu';
+    if (adminNamesCache[adminId]) return adminNamesCache[adminId];
+
+    try {
+      const userDoc = await getDoc(fsDoc(db, 'users', adminId));
+      if (userDoc.exists()) {
+        const data = userDoc.data();
+        const name = data.displayName || `${data.firstName || ''} ${data.lastName || ''}`.trim() || data.email || adminId;
+        setAdminNamesCache(prev => ({ ...prev, [adminId]: name }));
+        return name;
+      }
+      return adminId.substring(0, 8) + '...';
+    } catch {
+      return adminId.substring(0, 8) + '...';
+    }
+  }, [adminNamesCache]);
+
+  // État pour stocker les noms résolus
+  const [resolvedAdminNames, setResolvedAdminNames] = useState<Record<string, string>>({});
+
+  // États pour le modal de rejet
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejectAction, setRejectAction] = useState<'single' | 'bulk'>('single');
+  const [rejectTargetId, setRejectTargetId] = useState<string | null>(null);
+  const [rejectDocumentIndex, setRejectDocumentIndex] = useState<number | null>(null);
+
+  // Raisons de rejet prédéfinies
+  const rejectionReasons = [
+    'Document illisible ou de mauvaise qualité',
+    'Document expiré',
+    'Document non valide ou frauduleux',
+    'Informations incohérentes',
+    'Document incomplet',
+    'Adresse non conforme',
+    'Photo d\'identité non conforme',
+  ];
 
   const calculateStats = useCallback((providersData: KYCProvider[]) => {
     const now = new Date();
@@ -282,6 +328,28 @@ const AdminKYCProviders: React.FC = () => {
     void loadKYCProviders();
   }, [loadKYCProviders]);
 
+  // Résoudre les noms des admins quand les providers sont chargés
+  useEffect(() => {
+    const resolveNames = async () => {
+      const adminIds = providers
+        .filter(p => p.reviewedBy)
+        .map(p => p.reviewedBy as string);
+
+      const uniqueIds = [...new Set(adminIds)];
+
+      for (const id of uniqueIds) {
+        if (!resolvedAdminNames[id]) {
+          const name = await getAdminName(id);
+          setResolvedAdminNames(prev => ({ ...prev, [id]: name }));
+        }
+      }
+    };
+
+    if (providers.length > 0) {
+      void resolveNames();
+    }
+  }, [providers, getAdminName, resolvedAdminNames]);
+
   const handleKYCStatusChange = async (
     providerId: string,
     newStatus: KYCStatus,
@@ -341,10 +409,12 @@ const AdminKYCProviders: React.FC = () => {
       return;
     }
 
-    let rejectionReason = '';
+    // Pour le rejet, ouvrir le modal
     if (action === 'rejeter') {
-      rejectionReason = prompt(intl.formatMessage({ id: 'admin.kyc.rejectionReason' })) || '';
-      if (!rejectionReason) return;
+      setRejectAction('bulk');
+      setRejectReason('');
+      setShowRejectModal(true);
+      return;
     }
 
     const confirmMessage = intl.formatMessage(
@@ -357,8 +427,8 @@ const AdminKYCProviders: React.FC = () => {
       const promises = selectedProviders.map((providerId) =>
         handleKYCStatusChange(
           providerId,
-          action === 'approuver' ? 'approved' : action === 'rejeter' ? 'rejected' : 'incomplete',
-          rejectionReason,
+          action === 'approuver' ? 'approved' : 'incomplete',
+          '',
         ),
       );
 
@@ -369,6 +439,64 @@ const AdminKYCProviders: React.FC = () => {
       console.error('Erreur action en lot:', error);
       alert(intl.formatMessage({ id: 'admin.kyc.bulkActionError' }));
     }
+  };
+
+  // Fonction pour confirmer le rejet via modal
+  const confirmReject = async () => {
+    if (!rejectReason.trim()) {
+      alert('Veuillez saisir une raison de rejet');
+      return;
+    }
+
+    try {
+      if (rejectAction === 'bulk') {
+        // Rejet en lot
+        const promises = selectedProviders.map((providerId) =>
+          handleKYCStatusChange(providerId, 'rejected', rejectReason)
+        );
+        await Promise.all(promises);
+        setSelectedProviders([]);
+        alert(intl.formatMessage({ id: 'admin.kyc.bulkActionApplied' }, { action: 'rejeter', count: selectedProviders.length }));
+      } else if (rejectTargetId) {
+        // Rejet individuel
+        if (rejectDocumentIndex !== null && selectedProvider) {
+          // Rejet d'un document spécifique
+          const updatedDocs = [...selectedProvider.documents];
+          updatedDocs[rejectDocumentIndex] = {
+            ...updatedDocs[rejectDocumentIndex],
+            verified: false,
+            rejectionReason: rejectReason,
+          };
+          await updateDoc(fsDoc(db, 'sos_profiles', rejectTargetId), {
+            'kyc.documents': updatedDocs,
+          });
+          setSelectedProvider({
+            ...selectedProvider,
+            documents: updatedDocs,
+          });
+        } else {
+          // Rejet du profil KYC complet
+          await handleKYCStatusChange(rejectTargetId, 'rejected', rejectReason);
+        }
+      }
+
+      setShowRejectModal(false);
+      setRejectReason('');
+      setRejectTargetId(null);
+      setRejectDocumentIndex(null);
+    } catch (error) {
+      console.error('Erreur lors du rejet:', error);
+      alert('Erreur lors du rejet');
+    }
+  };
+
+  // Fonction pour ouvrir le modal de rejet pour un utilisateur
+  const openRejectModal = (providerId: string, documentIndex?: number) => {
+    setRejectAction('single');
+    setRejectTargetId(providerId);
+    setRejectDocumentIndex(documentIndex ?? null);
+    setRejectReason('');
+    setShowRejectModal(true);
   };
 
   const openDocumentModal = (provider: KYCProvider) => {
@@ -433,23 +561,35 @@ const AdminKYCProviders: React.FC = () => {
 
   return (
     <AdminLayout>
-      <div className="p-6 space-y-6">
+      <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-              <Shield className="w-8 h-8 mr-3 text-orange-600" />
-              Validation KYC Prestataires
+            <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
+              <Shield className="w-6 h-6 text-orange-600" /> Validation KYC Prestataires
             </h1>
-            <p className="text-gray-600 mt-1">
-              {stats.total} dossiers • {stats.pending} en attente • {stats.thisWeek} cette semaine
+            <p className="text-sm text-gray-500">
+              Vérification des documents et identités des prestataires
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            <Button onClick={() => setShowFilters(!showFilters)} variant="outline" className="flex items-center">
-              <Filter size={16} className="mr-2" />
+          <div className="flex items-center gap-2">
+            <Button onClick={() => setShowFilters(!showFilters)} variant="secondary">
+              <Filter className="w-4 h-4 mr-2" />
               Filtres
+              {Object.values(filters).some(v => v !== 'all' && v !== '' && v !== 'pending') && (
+                <span className="ml-1 bg-orange-500 text-white text-xs rounded-full px-2 py-0.5">
+                  !
+                </span>
+              )}
+            </Button>
+
+            <Button
+              onClick={() => void loadKYCProviders()}
+              variant="secondary"
+              disabled={loading}
+            >
+              {loading ? 'Chargement...' : 'Actualiser'}
             </Button>
           </div>
         </div>
@@ -744,7 +884,16 @@ const AdminKYCProviders: React.FC = () => {
                           )}
                           {provider.reviewedAt && (
                             <div className="text-xs text-gray-500">
-                              Revu le {provider.reviewedAt.toLocaleDateString(getDateLocale(language))}
+                              <div className="flex items-center gap-1">
+                                <Clock size={10} />
+                                {provider.reviewedAt.toLocaleDateString(getDateLocale(language))}
+                              </div>
+                              {provider.reviewedBy && (
+                                <div className="flex items-center gap-1 text-blue-600">
+                                  <UserCheck size={10} />
+                                  {resolvedAdminNames[provider.reviewedBy] || provider.reviewedBy.substring(0, 8) + '...'}
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
@@ -817,12 +966,11 @@ const AdminKYCProviders: React.FC = () => {
                               value={provider.kycStatus}
                               onChange={(e) => {
                                 const newStatus = e.target.value as KYCStatus;
-                                let reason = '';
                                 if (newStatus === 'rejected') {
-                                  reason = prompt(intl.formatMessage({ id: 'admin.kyc.rejectionReason' })) || '';
-                                  if (!reason) return;
+                                  openRejectModal(provider.id);
+                                  return;
                                 }
-                                void handleKYCStatusChange(provider.id, newStatus, reason);
+                                void handleKYCStatusChange(provider.id, newStatus, '');
                               }}
                               className="text-xs border border-gray-300 rounded px-1 py-1"
                             >
@@ -1000,6 +1148,90 @@ const AdminKYCProviders: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* Historique des actions (Audit Trail) */}
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <h4 className="font-medium text-gray-900 mb-3 flex items-center">
+                      <History size={16} className="mr-2 text-blue-600" />
+                      Historique des actions
+                    </h4>
+                    <div className="space-y-3">
+                      {/* Soumission */}
+                      <div className="flex items-start gap-3 text-sm">
+                        <div className="w-2 h-2 mt-1.5 rounded-full bg-gray-400"></div>
+                        <div>
+                          <div className="font-medium text-gray-700">Dossier soumis</div>
+                          <div className="text-xs text-gray-500">
+                            {selectedProvider.submittedAt.toLocaleDateString(getDateLocale(language))} à{' '}
+                            {selectedProvider.submittedAt.toLocaleTimeString(getDateLocale(language), { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Documents uploadés */}
+                      {selectedProvider.documents.map((doc, index) => (
+                        <div key={index} className="flex items-start gap-3 text-sm">
+                          <div className="w-2 h-2 mt-1.5 rounded-full bg-blue-400"></div>
+                          <div>
+                            <div className="font-medium text-gray-700">
+                              Document ajouté: {getDocumentTypeLabel(doc.type)}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {doc.uploadedAt.toLocaleDateString(getDateLocale(language))} à{' '}
+                              {doc.uploadedAt.toLocaleTimeString(getDateLocale(language), { hour: '2-digit', minute: '2-digit' })}
+                              {doc.verified && <span className="ml-2 text-green-600">✓ Vérifié</span>}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* Révision */}
+                      {selectedProvider.reviewedAt && (
+                        <div className="flex items-start gap-3 text-sm">
+                          <div className={`w-2 h-2 mt-1.5 rounded-full ${
+                            selectedProvider.kycStatus === 'approved' ? 'bg-green-500' :
+                            selectedProvider.kycStatus === 'rejected' ? 'bg-red-500' : 'bg-yellow-500'
+                          }`}></div>
+                          <div>
+                            <div className="font-medium text-gray-700 flex items-center gap-2">
+                              <span>
+                                {selectedProvider.kycStatus === 'approved' ? 'KYC approuvé' :
+                                 selectedProvider.kycStatus === 'rejected' ? 'KYC rejeté' : 'KYC en attente'}
+                              </span>
+                              {selectedProvider.reviewedBy && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded bg-blue-100 text-blue-800 text-xs">
+                                  <UserCheck size={10} className="mr-1" />
+                                  {resolvedAdminNames[selectedProvider.reviewedBy] || selectedProvider.reviewedBy.substring(0, 8) + '...'}
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {selectedProvider.reviewedAt.toLocaleDateString(getDateLocale(language))} à{' '}
+                              {selectedProvider.reviewedAt.toLocaleTimeString(getDateLocale(language), { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                            {selectedProvider.rejectionReason && (
+                              <div className="text-xs text-red-600 mt-1">
+                                Motif: {selectedProvider.rejectionReason}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Pas encore révisé */}
+                      {!selectedProvider.reviewedAt && (
+                        <div className="flex items-start gap-3 text-sm">
+                          <div className="w-2 h-2 mt-1.5 rounded-full bg-yellow-400"></div>
+                          <div>
+                            <div className="font-medium text-yellow-700">En attente de révision</div>
+                            <div className="text-xs text-gray-500">
+                              Ce dossier n'a pas encore été examiné par un administrateur
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                   {/* Notes administratives */}
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h4 className="font-medium text-gray-900 mb-3">Notes administratives</h4>
@@ -1023,12 +1255,7 @@ const AdminKYCProviders: React.FC = () => {
                       Approuver KYC
                     </Button>
                     <Button
-                      onClick={() => {
-                        const reason = prompt(intl.formatMessage({ id: 'admin.kyc.rejectionReason' }));
-                        if (reason) {
-                          void handleKYCStatusChange(selectedProvider.id, 'rejected', reason);
-                        }
-                      }}
+                      onClick={() => openRejectModal(selectedProvider.id)}
                       className="flex-1 bg-red-600 hover:bg-red-700 text-white"
                     >
                       <XCircle size={16} className="mr-2" />
@@ -1036,6 +1263,95 @@ const AdminKYCProviders: React.FC = () => {
                     </Button>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de rejet avec raison */}
+        {showRejectModal && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-[60] flex items-center justify-center">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <XCircle className="text-red-600" size={20} />
+                  Raison du rejet
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowRejectModal(false);
+                    setRejectReason('');
+                    setRejectTargetId(null);
+                    setRejectDocumentIndex(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <XCircle size={20} />
+                </button>
+              </div>
+
+              <p className="text-sm text-gray-600 mb-4">
+                {rejectAction === 'bulk'
+                  ? `Rejeter ${selectedProviders.length} dossier(s) sélectionné(s)`
+                  : 'Veuillez indiquer la raison du rejet de ce dossier KYC'}
+              </p>
+
+              {/* Raisons prédéfinies */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Raisons courantes
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {rejectionReasons.map((reason) => (
+                    <button
+                      key={reason}
+                      onClick={() => setRejectReason(reason)}
+                      className={`px-2 py-1 text-xs rounded-full transition-colors ${
+                        rejectReason === reason
+                          ? 'bg-red-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {reason}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Zone de texte libre */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Raison personnalisée
+                </label>
+                <textarea
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="Décrivez la raison du rejet..."
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 h-24 focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                />
+              </div>
+
+              {/* Boutons d'action */}
+              <div className="flex justify-end space-x-3">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowRejectModal(false);
+                    setRejectReason('');
+                    setRejectTargetId(null);
+                    setRejectDocumentIndex(null);
+                  }}
+                >
+                  Annuler
+                </Button>
+                <Button
+                  onClick={confirmReject}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                  disabled={!rejectReason.trim()}
+                >
+                  <XCircle size={16} className="mr-2" />
+                  Confirmer le rejet
+                </Button>
               </div>
             </div>
           </div>

@@ -26,7 +26,6 @@ import {
 import AdminLayout from "../../components/admin/AdminLayout";
 import { db } from "../../config/firebase";
 import { useAuth } from "../../contexts/AuthContext";
-import AdminPromoCodes from "./AdminPromoCodes";
 import { clearPricingCache } from "../../services/pricingService";
 import { refreshAdminClaims } from "../../utils/auth";
 
@@ -88,9 +87,6 @@ const isSumOk = (a: number, b: number, total: number) =>
 const toDate = (t: Timestamp | null | undefined): Date | null =>
   t && typeof t.toDate === "function" ? t.toDate() : null;
 
-const toTs = (d: Date | null): Timestamp | null =>
-  d ? Timestamp.fromDate(d) : null;
-
 const SERVICE_LABEL: Record<ServiceKind, ServiceLabel> = {
   expat: "Expat",
   lawyer: "Avocat",
@@ -105,20 +101,6 @@ const formatPrice = (value: number): string => {
 };
 
 /* ------------- Composants réutilisables ------------- */
-
-const Field: React.FC<{
-  label: string;
-  children: React.ReactNode;
-  help?: string;
-}> = ({ label, children, help }) => (
-  <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1">
-      {label}
-    </label>
-    {children}
-    {help ? <p className="mt-1 text-xs text-gray-500">{help}</p> : null}
-  </div>
-);
 
 const Toggle: React.FC<{
   checked: boolean;
@@ -346,9 +328,10 @@ const AdminPricing: React.FC = () => {
       // Invalidate frontend cache so changes reflect immediately
       clearPricingCache();
       alert("Prix de base enregistré ✅");
-    } catch (error: any) {
+    } catch (error: unknown) {
       // If permission denied, try refreshing admin claims and retry
-      if (error?.code === "permission-denied" || error?.message?.includes("permission")) {
+      const err = error as { code?: string; message?: string };
+      if (err?.code === "permission-denied" || err?.message?.includes("permission")) {
         console.log("[AdminPricing] Permission denied, refreshing admin claims...");
         const claimsRefreshed = await refreshAdminClaims();
         if (claimsRefreshed) {
@@ -364,7 +347,7 @@ const AdminPricing: React.FC = () => {
         alert("Erreur: Permissions insuffisantes. Veuillez vous reconnecter.");
       } else {
         console.error("[AdminPricing] Save error:", error);
-        alert("Erreur lors de l'enregistrement: " + (error?.message || "Erreur inconnue"));
+        alert("Erreur lors de l'enregistrement: " + (err?.message || "Erreur inconnue"));
       }
     }
   };
@@ -422,8 +405,9 @@ const AdminPricing: React.FC = () => {
       // Invalidate frontend cache so changes reflect immediately
       clearPricingCache();
       alert("Prix promotionnel enregistré ✅");
-    } catch (error: any) {
-      if (error?.code === "permission-denied" || error?.message?.includes("permission")) {
+    } catch (error: unknown) {
+      const err = error as { code?: string; message?: string };
+      if (err?.code === "permission-denied" || err?.message?.includes("permission")) {
         console.log("[AdminPricing] Permission denied for promo, refreshing admin claims...");
         const claimsRefreshed = await refreshAdminClaims();
         if (claimsRefreshed) {
@@ -439,7 +423,7 @@ const AdminPricing: React.FC = () => {
         alert("Erreur: Permissions insuffisantes. Veuillez vous reconnecter.");
       } else {
         console.error("[AdminPricing] Promo save error:", error);
-        alert("Erreur lors de l'enregistrement: " + (error?.message || "Erreur inconnue"));
+        alert("Erreur lors de l'enregistrement: " + (err?.message || "Erreur inconnue"));
       }
     }
   };
@@ -456,8 +440,9 @@ const AdminPricing: React.FC = () => {
         { merge: true }
       );
       setStackableDefault(value);
-    } catch (error: any) {
-      if (error?.code === "permission-denied" || error?.message?.includes("permission")) {
+    } catch (error: unknown) {
+      const err = error as { code?: string; message?: string };
+      if (err?.code === "permission-denied" || err?.message?.includes("permission")) {
         const claimsRefreshed = await refreshAdminClaims();
         if (claimsRefreshed) {
           try {
@@ -570,23 +555,6 @@ const AdminPricing: React.FC = () => {
 
   /* ----------- UI ----------- */
 
-  const PriceBadge: React.FC<{
-    value: number;
-    currency: Currency;
-    strike?: boolean;
-  }> = ({ value, currency, strike }) => (
-    <div className="text-lg font-semibold text-gray-900">
-      {strike ? (
-        <span className="line-through text-gray-400 mr-2">
-          {formatPrice(value)}
-        </span>
-      ) : (
-        formatPrice(value)
-      )}{" "}
-      {currency.toUpperCase()}
-    </div>
-  );
-
   const errorSumBase = !isSumOk(
     selBase.connectionFeeAmount,
     selBase.providerAmount,
@@ -607,33 +575,49 @@ const AdminPricing: React.FC = () => {
 
   return (
     <AdminLayout>
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-              <Settings className="w-6 h-6" />
-              Tarification & Promotions
-            </h1>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header moderne avec gradient */}
+        <div className="mb-8">
+          <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-4">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3">
+                  <Settings className="w-8 h-8" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold">Tarification & Promotions</h1>
+                  <p className="text-blue-100 text-sm mt-1">
+                    Configurez les prix de base et les offres promotionnelles
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => void loadConfig()}
+                className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm px-4 py-2 rounded-lg transition-all"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Actualiser
+              </button>
+            </div>
           </div>
-          <p className="text-sm text-gray-600 mt-1">
-            Configure les <strong>prix de base</strong>, puis éventuellement un{" "}
-            <strong>prix promotionnel</strong> (“prix barré”) actif sur une
-            période.
-          </p>
         </div>
 
-        {/* Choix Service / Devise */}
-        <div className="bg-white border rounded-xl p-4 mb-6">
-          <div className="flex flex-col md:flex-row gap-4 justify-between">
-            <div>
-              <div className="text-xs text-gray-500 mb-1">Service</div>
-              <div className="inline-flex rounded-lg border overflow-hidden">
+        {/* Navigation Service / Devise / Options */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-6">
+          <div className="flex flex-col lg:flex-row gap-6 justify-between items-start lg:items-center">
+            {/* Service selector */}
+            <div className="flex-1">
+              <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Service</div>
+              <div className="flex gap-2">
                 {(["expat", "lawyer"] as ServiceKind[]).map((s) => (
                   <button
                     key={s}
                     onClick={() => setService(s)}
-                    className={`px-4 py-2 text-sm ${service === s ? "bg-gray-900 text-white" : "bg-white text-gray-700"}`}
+                    className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      service === s
+                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-200"
+                        : "bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200"
+                    }`}
                   >
                     {SERVICE_LABEL[s]}
                   </button>
@@ -641,434 +625,642 @@ const AdminPricing: React.FC = () => {
               </div>
             </div>
 
-            <div>
-              <div className="text-xs text-gray-500 mb-1">Devise</div>
-              <div className="inline-flex rounded-lg border overflow-hidden">
+            {/* Currency selector */}
+            <div className="flex-1">
+              <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Devise</div>
+              <div className="flex gap-2">
                 <button
                   onClick={() => setCurrency("eur")}
-                  className={`px-4 py-2 text-sm flex items-center gap-1 ${currency === "eur" ? "bg-gray-900 text-white" : "bg-white text-gray-700"}`}
+                  className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                    currency === "eur"
+                      ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-200"
+                      : "bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200"
+                  }`}
                 >
                   <Euro className="w-4 h-4" /> EUR
                 </button>
                 <button
                   onClick={() => setCurrency("usd")}
-                  className={`px-4 py-2 text-sm flex items-center gap-1 ${currency === "usd" ? "bg-gray-900 text-white" : "bg-white text-gray-700"}`}
+                  className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                    currency === "usd"
+                      ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-200"
+                      : "bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200"
+                  }`}
                 >
                   <DollarSign className="w-4 h-4" /> USD
                 </button>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <span className="text-sm">Coupons cumulables par défaut</span>
-              <Toggle
-                checked={stackableDefault}
-                onChange={(v) => void saveGlobalStackable(v)}
-              />
+            {/* Stackable option */}
+            <div className="flex-1">
+              <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Options globales</div>
+              <div className="flex items-center gap-3 bg-gray-50 px-4 py-2.5 rounded-xl border border-gray-200">
+                <Toggle
+                  checked={stackableDefault}
+                  onChange={(v) => void saveGlobalStackable(v)}
+                />
+                <span className="text-sm text-gray-700">Coupons cumulables</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Context indicator */}
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-gray-500">Configuration active:</span>
+              <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-1 rounded-full font-medium">
+                {SERVICE_LABEL[service]} - {currency.toUpperCase()}
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Bloc Prix de base */}
-        <div className="bg-white border rounded-xl p-5 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-gray-900">
-              Prix de base — {SERVICE_LABEL[service]} • {currency.toUpperCase()}
-            </h2>
-            <button
-              onClick={() => void saveBase()}
-              className="inline-flex items-center px-3 py-1.5 rounded-md bg-blue-600 text-white text-sm hover:bg-blue-700"
-            >
-              <Save className="w-4 h-4 mr-2" /> Enregistrer prix de base
-            </button>
+        {/* Bloc Prix de base - Design moderne */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+          {/* Header de section */}
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-blue-100 rounded-lg p-2">
+                  <Euro className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <h2 className="font-semibold text-gray-900">Prix de base</h2>
+                  <p className="text-xs text-gray-500">
+                    {SERVICE_LABEL[service]} • {currency.toUpperCase()}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => void saveBase()}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200"
+              >
+                <Save className="w-4 h-4" /> Enregistrer
+              </button>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 text-black">
-            <Field label="Marge (connection fee)">
-              <input
-                type="number"
-                min={0}
-                step="0.01"
-                value={selBase.connectionFeeAmount}
-                onChange={(e) => {
-                  const v = parseFloat(e.target.value || "0");
-                  setBase((prev) => {
-                    const next = { ...prev };
-                    const provider = next[service][currency].providerAmount;
-                    next[service][currency].connectionFeeAmount = v;
-                    next[service][currency].totalAmount =
-                      Math.round((v + provider) * 100) / 100;
-                    return next;
-                  });
-                }}
-                className="w-full border rounded-md px-3 py-2"
-              />
-            </Field>
-            <Field label="Part prestataire">
-              <input
-                type="number"
-                min={0}
-                step="0.01"
-                value={selBase.providerAmount}
-                onChange={(e) => {
-                  const v = parseFloat(e.target.value || "0");
-                  setBase((prev) => {
-                    const next = { ...prev };
-                    const connection =
-                      next[service][currency].connectionFeeAmount;
-                    next[service][currency].providerAmount = v;
-                    next[service][currency].totalAmount =
-                      Math.round((connection + v) * 100) / 100;
-                    return next;
-                  });
-                }}
-                className="w-full border rounded-md px-3 py-2"
-              />
-            </Field>
-            <Field label="Total client">
-              <input
-                type="number"
-                min={0}
-                step="0.01"
-                value={selBase.totalAmount}
-                onChange={(e) => {
-                  const v = parseFloat(e.target.value || "0");
-                  setBase((prev) => {
-                    const next = { ...prev };
-                    const connection =
-                      next[service][currency].connectionFeeAmount;
-                    next[service][currency].totalAmount = v;
-                    next[service][currency].providerAmount = Math.max(
-                      0,
-                      Math.round((v - connection) * 100) / 100
-                    );
-                    return next;
-                  });
-                }}
-                className="w-full border rounded-md px-3 py-2"
-              />
-            </Field>
-            <Field label="Durée (min)">
-              <input
-                type="number"
-                min={0}
-                step="1"
-                value={selBase.duration}
-                onChange={(e) => {
-                  const v = parseInt(e.target.value || "0", 10);
-                  setBase((prev) => {
-                    const next = { ...prev };
-                    next[service][currency].duration = Math.max(0, v);
-                    return next;
-                  });
-                }}
-                className="w-full border rounded-md px-3 py-2"
-              />
-            </Field>
-            <div className="flex items-end">
+          {/* Contenu */}
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Marge */}
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+                  Marge SOS
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={selBase.connectionFeeAmount}
+                    onChange={(e) => {
+                      const v = parseFloat(e.target.value || "0");
+                      setBase((prev) => {
+                        const next = { ...prev };
+                        const provider = next[service][currency].providerAmount;
+                        next[service][currency].connectionFeeAmount = v;
+                        next[service][currency].totalAmount =
+                          Math.round((v + provider) * 100) / 100;
+                        return next;
+                      });
+                    }}
+                    className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-lg font-semibold text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                    {currency.toUpperCase()}
+                  </span>
+                </div>
+              </div>
+
+              {/* Part prestataire */}
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+                  Part prestataire
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={selBase.providerAmount}
+                    onChange={(e) => {
+                      const v = parseFloat(e.target.value || "0");
+                      setBase((prev) => {
+                        const next = { ...prev };
+                        const connection =
+                          next[service][currency].connectionFeeAmount;
+                        next[service][currency].providerAmount = v;
+                        next[service][currency].totalAmount =
+                          Math.round((connection + v) * 100) / 100;
+                        return next;
+                      });
+                    }}
+                    className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-lg font-semibold text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                    {currency.toUpperCase()}
+                  </span>
+                </div>
+              </div>
+
+              {/* Total client */}
+              <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                <label className="block text-xs font-medium text-blue-600 uppercase tracking-wider mb-2">
+                  Total client
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={selBase.totalAmount}
+                    onChange={(e) => {
+                      const v = parseFloat(e.target.value || "0");
+                      setBase((prev) => {
+                        const next = { ...prev };
+                        const connection =
+                          next[service][currency].connectionFeeAmount;
+                        next[service][currency].totalAmount = v;
+                        next[service][currency].providerAmount = Math.max(
+                          0,
+                          Math.round((v - connection) * 100) / 100
+                        );
+                        return next;
+                      });
+                    }}
+                    className="w-full bg-white border border-blue-200 rounded-lg px-4 py-3 text-lg font-bold text-blue-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-400 text-sm font-medium">
+                    {currency.toUpperCase()}
+                  </span>
+                </div>
+              </div>
+
+              {/* Durée */}
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+                  Durée appel
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min={0}
+                    step="1"
+                    value={selBase.duration}
+                    onChange={(e) => {
+                      const v = parseInt(e.target.value || "0", 10);
+                      setBase((prev) => {
+                        const next = { ...prev };
+                        next[service][currency].duration = Math.max(0, v);
+                        return next;
+                      });
+                    }}
+                    className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-lg font-semibold text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                    min
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Validation status */}
+            <div className="mt-4 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <span>Formule:</span>
+                <code className="bg-gray-100 px-2 py-1 rounded text-xs">
+                  Marge + Part prestataire = Total
+                </code>
+              </div>
               {errorSumBase ? (
-                <div className="text-sm inline-flex items-center text-red-700 bg-red-50 px-2 py-1 rounded border border-red-200">
-                  <X className="w-4 h-4 mr-1" /> Somme incohérente
+                <div className="flex items-center gap-2 text-red-600 bg-red-50 px-3 py-1.5 rounded-lg border border-red-200">
+                  <X className="w-4 h-4" />
+                  <span className="text-sm font-medium">Somme incohérente</span>
                 </div>
               ) : (
-                <div className="text-sm inline-flex items-center text-emerald-700 bg-emerald-50 px-2 py-1 rounded border border-emerald-200">
-                  <Check className="w-4 h-4 mr-1" /> Somme cohérente
+                <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
+                  <Check className="w-4 h-4" />
+                  <span className="text-sm font-medium">Calcul validé</span>
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Bloc Prix promotionnel */}
-        <div className="bg-white border rounded-xl p-5 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-gray-900">
-              Prix promotionnel (affiché comme “prix barré”)
-            </h2>
-            <button
-              onClick={() => void savePromo()}
-              className="inline-flex items-center px-3 py-1.5 rounded-md bg-blue-600 text-white text-sm hover:bg-blue-700"
-            >
-              <Save className="w-4 h-4 mr-2" /> Enregistrer prix promo
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 text-black">
-            <Field label="Activer la promo">
-              <div className="flex items-center gap-3">
-                <Toggle
-                  checked={selPromo.enabled}
-                  onChange={(v) =>
-                    setPromo((prev) => {
-                      const next = { ...prev };
-                      next[service][currency].enabled = v;
-                      return next;
-                    })
-                  }
-                />
-                <span className="text-sm text-gray-700">
-                  {selPromo.enabled ? "Active" : "Inactive"}
-                </span>
+        {/* Bloc Prix promotionnel - Design moderne */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+          {/* Header de section avec toggle */}
+          <div className={`px-6 py-4 border-b ${selPromo.enabled ? 'bg-gradient-to-r from-orange-50 to-amber-50 border-orange-100' : 'bg-gradient-to-r from-gray-50 to-gray-100 border-gray-100'}`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className={`rounded-lg p-2 ${selPromo.enabled ? 'bg-orange-100' : 'bg-gray-200'}`}>
+                  <Calendar className={`w-5 h-5 ${selPromo.enabled ? 'text-orange-600' : 'text-gray-500'}`} />
+                </div>
+                <div className="flex items-center gap-4">
+                  <div>
+                    <h2 className="font-semibold text-gray-900">Prix promotionnel</h2>
+                    <p className="text-xs text-gray-500">Affiché comme "prix barré"</p>
+                  </div>
+                  {/* Toggle intégré au header */}
+                  <div className="flex items-center gap-2 bg-white/80 px-3 py-1.5 rounded-lg border border-gray-200">
+                    <Toggle
+                      checked={selPromo.enabled}
+                      onChange={(v) =>
+                        setPromo((prev) => {
+                          const next = { ...prev };
+                          next[service][currency].enabled = v;
+                          return next;
+                        })
+                      }
+                    />
+                    <span className={`text-sm font-medium ${selPromo.enabled ? 'text-orange-600' : 'text-gray-500'}`}>
+                      {selPromo.enabled ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                </div>
               </div>
-            </Field>
-
-            <Field label="Début">
-              <input
-                type="datetime-local"
-                value={
-                  toDate(selPromo.startsAt)
-                    ? new Date(
-                        toDate(selPromo.startsAt)!.getTime() -
-                          toDate(selPromo.startsAt)!.getTimezoneOffset() * 60000
-                      )
-                        .toISOString()
-                        .slice(0, 16)
-                    : ""
-                }
-                onChange={(e) =>
-                  setPromo((prev) => {
-                    const next = { ...prev };
-                    next[service][currency].startsAt = e.target.value
-                      ? Timestamp.fromDate(new Date(e.target.value))
-                      : null;
-                    return next;
-                  })
-                }
-                className="w-full border rounded-md px-3 py-2"
-              />
-            </Field>
-
-            <Field label="Fin">
-              <input
-                type="datetime-local"
-                value={
-                  toDate(selPromo.endsAt)
-                    ? new Date(
-                        toDate(selPromo.endsAt)!.getTime() -
-                          toDate(selPromo.endsAt)!.getTimezoneOffset() * 60000
-                      )
-                        .toISOString()
-                        .slice(0, 16)
-                    : ""
-                }
-                onChange={(e) =>
-                  setPromo((prev) => {
-                    const next = { ...prev };
-                    next[service][currency].endsAt = e.target.value
-                      ? Timestamp.fromDate(new Date(e.target.value))
-                      : null;
-                    return next;
-                  })
-                }
-                className="w-full border rounded-md px-3 py-2"
-              />
-            </Field>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 text-black">
-            <Field label="Marge (promo)">
-              <input
-                type="number"
-                min={0}
-                step="0.01"
-                value={selPromo.connectionFeeAmount}
-                onChange={(e) => {
-                  const v = parseFloat(e.target.value || "0");
-                  setPromo((prev) => {
-                    const next = { ...prev };
-                    const prov = next[service][currency].providerAmount;
-                    next[service][currency].connectionFeeAmount = v;
-                    next[service][currency].totalAmount =
-                      Math.round((v + prov) * 100) / 100;
-                    return next;
-                  });
-                }}
-                className="w-full border rounded-md px-3 py-2"
-              />
-            </Field>
-            <Field label="Part prestataire (promo)">
-              <input
-                type="number"
-                min={0}
-                step="0.01"
-                value={selPromo.providerAmount}
-                onChange={(e) => {
-                  const v = parseFloat(e.target.value || "0");
-                  setPromo((prev) => {
-                    const next = { ...prev };
-                    const con = next[service][currency].connectionFeeAmount;
-                    next[service][currency].providerAmount = v;
-                    next[service][currency].totalAmount =
-                      Math.round((con + v) * 100) / 100;
-                    return next;
-                  });
-                }}
-                className="w-full border rounded-md px-3 py-2"
-              />
-            </Field>
-            <Field label="Total client (promo)">
-              <input
-                type="number"
-                min={0}
-                step="0.01"
-                value={selPromo.totalAmount}
-                onChange={(e) => {
-                  const v = parseFloat(e.target.value || "0");
-                  setPromo((prev) => {
-                    const next = { ...prev };
-                    const con = next[service][currency].connectionFeeAmount;
-                    next[service][currency].totalAmount = v;
-                    next[service][currency].providerAmount = Math.max(
-                      0,
-                      Math.round((v - con) * 100) / 100
-                    );
-                    return next;
-                  });
-                }}
-                className="w-full border rounded-md px-3 py-2"
-              />
-            </Field>
-            <Field label="Label (affichage)">
-              <input
-                type="text"
-                value={selPromo.label}
-                onChange={(e) =>
-                  setPromo((prev) => {
-                    const next = { ...prev };
-                    next[service][currency].label = e.target.value;
-                    return next;
-                  })
-                }
-                className="w-full border rounded-md px-3 py-2"
-              />
-            </Field>
-            <Field label="Prix barré – cible (strikeTargets)">
-              <input
-                type="text"
-                value={selPromo.strikeTargets}
-                onChange={(e) =>
-                  setPromo((prev) => {
-                    const next = { ...prev };
-                    next[service][currency].strikeTargets =
-                      e.target.value || "default";
-                    return next;
-                  })
-                }
-                className="w-full border rounded-md px-3 py-2"
-              />
-            </Field>
-          </div>
-
-          <div className="mt-3 flex items-center gap-3">
-            {errorSumPromo ? (
-              <div className="text-sm inline-flex items-center text-red-700 bg-red-50 px-2 py-1 rounded border border-red-200">
-                <X className="w-4 h-4 mr-1" /> Somme incohérente (promo)
-              </div>
-            ) : (
-              <div className="text-sm inline-flex items-center text-emerald-700 bg-emerald-50 px-2 py-1 rounded border border-emerald-200">
-                <Check className="w-4 h-4 mr-1" /> Somme cohérente (promo)
-              </div>
-            )}
-            {errorDates ? (
-              <div className="text-sm inline-flex items-center text-red-700 bg-red-50 px-2 py-1 rounded border border-red-200">
-                <Calendar className="w-4 h-4 mr-1" /> Période invalide
-              </div>
-            ) : null}
-          </div>
-
-          {/* Résumé visuel base vs promo */}
-          <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-3 border rounded-lg">
-              <div className="text-xs text-gray-500">Base</div>
-              <PriceBadge value={selBase.totalAmount} currency={currency} />
-            </div>
-            <div className="p-3 border rounded-lg">
-              <div className="text-xs text-gray-500">Prix promotionnel</div>
-              <PriceBadge
-                value={selPromo.totalAmount}
-                currency={currency}
-                strike
-              />
-            </div>
-            <div className="p-3 border rounded-lg">
-              <div className="text-xs text-gray-500">Écart</div>
-              <div className="text-lg font-semibold text-gray-900">
-                {formatPrice(selBase.totalAmount - selPromo.totalAmount)}{" "}
-                {currency.toUpperCase()}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Prévisualisation */}
-        <div className="bg-white border rounded-xl p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-gray-900">
-              Prévisualisation (comme le back)
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
-            <div className="md:col-span-3">
-              <Field label="Coupon (optionnel)">
-                <input
-                  type="text"
-                  value={previewCoupon}
-                  onChange={(e) =>
-                    setPreviewCoupon(e.target.value.toUpperCase())
-                  }
-                  className="w-full border rounded-md px-3 py-2 text-black"
-                  placeholder="WELCOME10"
-                />
-              </Field>
-            </div>
-            <div className="md:col-span-2">
-              <div className="text-xs text-gray-500 mb-1">
-                Promo active maintenant ?
-              </div>
-              <div
-                className={`inline-flex items-center px-2 py-1 rounded ${isPromoActiveNow ? "bg-emerald-100 text-emerald-800" : "bg-gray-100 text-gray-700"}`}
-              >
-                {isPromoActiveNow ? (
-                  <Check className="w-4 h-4 mr-1" />
-                ) : (
-                  <X className="w-4 h-4 mr-1" />
-                )}
-                {isPromoActiveNow ? "Oui" : "Non"}
-              </div>
-            </div>
-            <div>
               <button
-                onClick={() => void runPreview()}
-                className="inline-flex items-center justify-center w-full px-4 py-2 rounded-md bg-emerald-600 text-white text-sm hover:bg-emerald-700"
+                onClick={() => void savePromo()}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-medium transition-colors shadow-sm ${
+                  selPromo.enabled
+                    ? 'bg-orange-500 hover:bg-orange-600 shadow-orange-200'
+                    : 'bg-gray-400 hover:bg-gray-500 shadow-gray-200'
+                }`}
               >
-                <Eye className="w-4 h-4 mr-2" /> Calculer
+                <Save className="w-4 h-4" /> Enregistrer
               </button>
             </div>
           </div>
 
-          {previewTotal !== null && (
-            <div className="mt-3 flex items-center justify-between">
-              <div className="text-sm text-gray-700">{previewDetails}</div>
-              <div className="text-lg font-semibold">
-                Total final: {formatPrice(previewTotal)} {currency.toUpperCase()}
+          {/* Contenu */}
+          <div className={`p-6 ${!selPromo.enabled ? 'opacity-50' : ''}`}>
+            {/* Période */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+                  Date de début
+                </label>
+                <input
+                  type="datetime-local"
+                  value={
+                    toDate(selPromo.startsAt)
+                      ? new Date(
+                          toDate(selPromo.startsAt)!.getTime() -
+                            toDate(selPromo.startsAt)!.getTimezoneOffset() * 60000
+                        )
+                          .toISOString()
+                          .slice(0, 16)
+                      : ""
+                  }
+                  onChange={(e) =>
+                    setPromo((prev) => {
+                      const next = { ...prev };
+                      next[service][currency].startsAt = e.target.value
+                        ? Timestamp.fromDate(new Date(e.target.value))
+                        : null;
+                      return next;
+                    })
+                  }
+                  className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-900 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                />
+              </div>
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+                  Date de fin
+                </label>
+                <input
+                  type="datetime-local"
+                  value={
+                    toDate(selPromo.endsAt)
+                      ? new Date(
+                          toDate(selPromo.endsAt)!.getTime() -
+                            toDate(selPromo.endsAt)!.getTimezoneOffset() * 60000
+                        )
+                          .toISOString()
+                          .slice(0, 16)
+                      : ""
+                  }
+                  onChange={(e) =>
+                    setPromo((prev) => {
+                      const next = { ...prev };
+                      next[service][currency].endsAt = e.target.value
+                        ? Timestamp.fromDate(new Date(e.target.value))
+                        : null;
+                      return next;
+                    })
+                  }
+                  className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-900 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                />
               </div>
             </div>
-          )}
-        </div>
-        {/* <AdminPromoCodes /> */}
 
-        {/* Aide rapide */}
-        <div className="mt-6 text-xs text-gray-500">
-          <p>
-            Astuce : “Prix promotionnel” est ce que le client verra comme{" "}
-            <em>prix barré</em> sur le front.
-          </p>
-          <p>
-            Les <strong>codes promo</strong> se gèrent dans{" "}
-            <code>/admin/promos</code> et peuvent se cumuler selon la case
-            “Coupons cumulables par défaut” ou la case “Cumuler avec coupon” du
-            prix promo.
-          </p>
+            {/* Prix promo */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+                  Marge promo
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={selPromo.connectionFeeAmount}
+                    onChange={(e) => {
+                      const v = parseFloat(e.target.value || "0");
+                      setPromo((prev) => {
+                        const next = { ...prev };
+                        const prov = next[service][currency].providerAmount;
+                        next[service][currency].connectionFeeAmount = v;
+                        next[service][currency].totalAmount =
+                          Math.round((v + prov) * 100) / 100;
+                        return next;
+                      });
+                    }}
+                    className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-lg font-semibold text-gray-900 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                    {currency.toUpperCase()}
+                  </span>
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+                  Part prestataire
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={selPromo.providerAmount}
+                    onChange={(e) => {
+                      const v = parseFloat(e.target.value || "0");
+                      setPromo((prev) => {
+                        const next = { ...prev };
+                        const con = next[service][currency].connectionFeeAmount;
+                        next[service][currency].providerAmount = v;
+                        next[service][currency].totalAmount =
+                          Math.round((con + v) * 100) / 100;
+                        return next;
+                      });
+                    }}
+                    className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-lg font-semibold text-gray-900 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                    {currency.toUpperCase()}
+                  </span>
+                </div>
+              </div>
+              <div className="bg-orange-50 rounded-xl p-4 border border-orange-100">
+                <label className="block text-xs font-medium text-orange-600 uppercase tracking-wider mb-2">
+                  Total client promo
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={selPromo.totalAmount}
+                    onChange={(e) => {
+                      const v = parseFloat(e.target.value || "0");
+                      setPromo((prev) => {
+                        const next = { ...prev };
+                        const con = next[service][currency].connectionFeeAmount;
+                        next[service][currency].totalAmount = v;
+                        next[service][currency].providerAmount = Math.max(
+                          0,
+                          Math.round((v - con) * 100) / 100
+                        );
+                        return next;
+                      });
+                    }}
+                    className="w-full bg-white border border-orange-200 rounded-lg px-4 py-3 text-lg font-bold text-orange-600 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-orange-400 text-sm font-medium">
+                    {currency.toUpperCase()}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Options */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+                  Label promotion
+                </label>
+                <input
+                  type="text"
+                  value={selPromo.label}
+                  onChange={(e) =>
+                    setPromo((prev) => {
+                      const next = { ...prev };
+                      next[service][currency].label = e.target.value;
+                      return next;
+                    })
+                  }
+                  placeholder="Ex: Offre de lancement"
+                  className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-900 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                />
+              </div>
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+                  Cible prix barré
+                </label>
+                <input
+                  type="text"
+                  value={selPromo.strikeTargets}
+                  onChange={(e) =>
+                    setPromo((prev) => {
+                      const next = { ...prev };
+                      next[service][currency].strikeTargets =
+                        e.target.value || "default";
+                      return next;
+                    })
+                  }
+                  placeholder="default"
+                  className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-900 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Validation */}
+            <div className="flex flex-wrap items-center gap-3 mb-6">
+              {errorSumPromo ? (
+                <div className="flex items-center gap-2 text-red-600 bg-red-50 px-3 py-1.5 rounded-lg border border-red-200">
+                  <X className="w-4 h-4" />
+                  <span className="text-sm font-medium">Somme incohérente</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
+                  <Check className="w-4 h-4" />
+                  <span className="text-sm font-medium">Calcul validé</span>
+                </div>
+              )}
+              {errorDates && (
+                <div className="flex items-center gap-2 text-red-600 bg-red-50 px-3 py-1.5 rounded-lg border border-red-200">
+                  <Calendar className="w-4 h-4" />
+                  <span className="text-sm font-medium">Période invalide</span>
+                </div>
+              )}
+            </div>
+
+            {/* Comparaison visuelle */}
+            <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-5 border border-gray-200">
+              <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-4">Comparaison des prix</div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white rounded-xl p-4 border border-gray-200 text-center">
+                  <div className="text-xs text-gray-500 mb-1">Prix de base</div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {formatPrice(selBase.totalAmount)}
+                    <span className="text-sm font-normal text-gray-500 ml-1">{currency.toUpperCase()}</span>
+                  </div>
+                </div>
+                <div className="bg-orange-50 rounded-xl p-4 border border-orange-200 text-center">
+                  <div className="text-xs text-orange-600 mb-1">Prix promo</div>
+                  <div className="text-2xl font-bold text-orange-600">
+                    <span className="line-through text-gray-400 text-lg mr-2">{formatPrice(selBase.totalAmount)}</span>
+                    {formatPrice(selPromo.totalAmount)}
+                    <span className="text-sm font-normal text-orange-400 ml-1">{currency.toUpperCase()}</span>
+                  </div>
+                </div>
+                <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-200 text-center">
+                  <div className="text-xs text-emerald-600 mb-1">Remise</div>
+                  <div className="text-2xl font-bold text-emerald-600">
+                    -{formatPrice(selBase.totalAmount - selPromo.totalAmount)}
+                    <span className="text-sm font-normal text-emerald-400 ml-1">{currency.toUpperCase()}</span>
+                  </div>
+                  <div className="text-xs text-emerald-500 mt-1">
+                    ({selBase.totalAmount > 0 ? Math.round((1 - selPromo.totalAmount / selBase.totalAmount) * 100) : 0}% de réduction)
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Prévisualisation - Design moderne */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-4 border-b border-emerald-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-emerald-100 rounded-lg p-2">
+                  <Eye className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div>
+                  <h2 className="font-semibold text-gray-900">Simulateur de prix</h2>
+                  <p className="text-xs text-gray-500">Testez le calcul final avec un coupon</p>
+                </div>
+              </div>
+              {/* Statut promo */}
+              <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${
+                isPromoActiveNow
+                  ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                  : 'bg-gray-100 text-gray-600 border border-gray-200'
+              }`}>
+                {isPromoActiveNow ? (
+                  <Check className="w-4 h-4" />
+                ) : (
+                  <X className="w-4 h-4" />
+                )}
+                <span className="text-sm font-medium">
+                  Promo {isPromoActiveNow ? "active" : "inactive"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Contenu */}
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+              {/* Coupon input */}
+              <div className="md:col-span-2">
+                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+                  Code coupon (optionnel)
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={previewCoupon}
+                    onChange={(e) =>
+                      setPreviewCoupon(e.target.value.toUpperCase())
+                    }
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-gray-900 font-mono text-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                    placeholder="WELCOME10"
+                  />
+                  {previewCoupon && (
+                    <button
+                      onClick={() => setPreviewCoupon("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Bouton calculer */}
+              <div>
+                <button
+                  onClick={() => void runPreview()}
+                  className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-medium hover:from-emerald-600 hover:to-teal-600 transition-all shadow-md shadow-emerald-200"
+                >
+                  <RefreshCw className="w-5 h-5" />
+                  Calculer le prix
+                </button>
+              </div>
+            </div>
+
+            {/* Résultat */}
+            {previewTotal !== null && (
+              <div className="mt-6">
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-5 border border-gray-200">
+                  {/* Détails du calcul */}
+                  <div className="text-sm text-gray-600 mb-4 flex items-start gap-2">
+                    <div className="bg-gray-200 rounded-full p-1 mt-0.5">
+                      <Check className="w-3 h-3 text-gray-600" />
+                    </div>
+                    <span>{previewDetails}</span>
+                  </div>
+
+                  {/* Prix final */}
+                  <div className="flex items-center justify-between bg-white rounded-xl p-4 border border-gray-200">
+                    <span className="text-gray-700 font-medium">Prix final client</span>
+                    <div className="text-3xl font-bold text-emerald-600">
+                      {formatPrice(previewTotal)}
+                      <span className="text-lg font-normal text-emerald-400 ml-1">
+                        {currency.toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Aide rapide - Design moderne */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-5 border border-blue-100">
+          <div className="flex items-start gap-3">
+            <div className="bg-blue-100 rounded-lg p-2 flex-shrink-0">
+              <Settings className="w-4 h-4 text-blue-600" />
+            </div>
+            <div className="text-sm text-gray-600 space-y-2">
+              <p>
+                <strong className="text-gray-800">Prix promotionnel :</strong> c'est le prix que le client verra comme{" "}
+                <em className="text-orange-600">prix barré</em> sur le front.
+              </p>
+              <p>
+                <strong className="text-gray-800">Codes promo :</strong> gérés dans{" "}
+                <code className="bg-white px-2 py-0.5 rounded text-blue-600 border border-blue-200">/admin/promos</code>
+                {" "}• cumulables selon l'option globale ou celle du prix promo.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </AdminLayout>

@@ -263,7 +263,7 @@ const LEFT_NAVIGATION_ITEMS: readonly NavigationItem[] = [
     showInMobileMenu: true,
   },
   {
-    path: "/sos-appel",
+    path: "/providers",
     labelKey: "header.nav.viewProfiles",
     mobileIcon: "👥",
     desktopIcon: "👥",

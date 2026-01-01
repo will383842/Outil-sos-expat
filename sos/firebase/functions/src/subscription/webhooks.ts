@@ -533,6 +533,8 @@ export async function handleSubscriptionUpdated(
     const updates: Record<string, unknown> = {
       status: newStatus,
       stripePriceId: priceId,
+      // FIX: Inclure currency pour suivre les changements lors d'upgrade/downgrade
+      currency: subscription.currency?.toUpperCase() || previousState?.currency || 'EUR',
       currentPeriodStart: admin.firestore.Timestamp.fromMillis(subscription.current_period_start * 1000),
       currentPeriodEnd: admin.firestore.Timestamp.fromMillis(subscription.current_period_end * 1000),
       cancelAtPeriodEnd: subscription.cancel_at_period_end,
@@ -952,6 +954,14 @@ export async function handleInvoicePaid(
     const subDoc = subsSnapshot.docs[0];
     const providerId = subDoc.id;
     const subData = subDoc.data();
+
+    // FIX: Valider que la devise de la facture correspond à celle de l'abonnement
+    const invoiceCurrency = (invoice.currency || 'eur').toUpperCase();
+    const subscriptionCurrency = subData.currency || 'EUR';
+    if (invoiceCurrency !== subscriptionCurrency) {
+      logger.warn(`[handleInvoicePaid] Currency mismatch for ${providerId}: invoice=${invoiceCurrency}, subscription=${subscriptionCurrency}`);
+      // On continue malgré le mismatch mais on log pour investigation
+    }
 
     // Déterminer si c'est un renouvellement (pas la première facture)
     const isRenewal = invoice.billing_reason === 'subscription_cycle';

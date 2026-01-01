@@ -2749,8 +2749,8 @@ const ProviderProfile: React.FC = () => {
                 )}
                 
                 {/* Section Description complète */}
-                <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200" aria-labelledby="about-heading">
+                  <h3 id="about-heading" className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                     <User size={20} className="text-red-500" />
                     <FormattedMessage id="providerProfile.about" />
                   </h3>
@@ -2788,8 +2788,8 @@ const ProviderProfile: React.FC = () => {
                 </section>
 
                 {/* Section Spécialités */}
-                <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200" aria-labelledby="specialties-heading">
+                  <h3 id="specialties-heading" className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                     <Briefcase size={20} className={isLawyer ? "text-blue-500" : "text-green-500"} />
                     <FormattedMessage id="providerProfile.specialties" />
                   </h3>
@@ -2817,8 +2817,8 @@ const ProviderProfile: React.FC = () => {
 
                 {/* Section Pays d'intervention */}
                 {provider.operatingCountries && provider.operatingCountries.length > 0 && (
-                  <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200">
-                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200" aria-labelledby="countries-heading">
+                    <h3 id="countries-heading" className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                       <MapPin size={20} className="text-red-500" />
                       <FormattedMessage id="providerProfile.operatingCountries" />
                     </h3>
@@ -2836,8 +2836,8 @@ const ProviderProfile: React.FC = () => {
                 )}
 
                 {/* Section Langues */}
-                <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200" aria-labelledby="languages-heading">
+                  <h3 id="languages-heading" className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                     <Globe size={20} className="text-purple-500" />
                     <FormattedMessage id="providerProfile.languages" />
                   </h3>
@@ -2856,8 +2856,8 @@ const ProviderProfile: React.FC = () => {
 
                 {/* Section Formation (avocats uniquement) */}
                 {isLawyer && (educationText || certificationsArray.length > 0) && (
-                  <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200">
-                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200" aria-labelledby="education-heading">
+                    <h3 id="education-heading" className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                       <GraduationCap size={20} className="text-indigo-500" />
                       <FormattedMessage id="providerProfile.educationCertifications" />
                     </h3>
@@ -2891,8 +2891,8 @@ const ProviderProfile: React.FC = () => {
 
                 {/* Section Expérience expatrié */}
                 {isExpat && (
-                  <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200">
-                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200" aria-labelledby="experience-heading">
+                    <h3 id="experience-heading" className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                       <Users size={20} className="text-green-500" />
                       <FormattedMessage id="providerProfile.expatExperience" />
                     </h3>
@@ -2944,9 +2944,9 @@ const ProviderProfile: React.FC = () => {
                 )}
 
                 {/* Section Avis clients */}
-                <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200" id="reviews-section">
+                <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200" id="reviews-section" aria-labelledby="reviews-heading">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <h3 id="reviews-heading" className="text-lg font-bold text-gray-900 flex items-center gap-2">
                       <Star size={20} className="text-yellow-500" />
                       <FormattedMessage id="providerProfile.customerReviews" />
                       <span className="text-gray-500 font-normal">({providerStats.realReviewsCount})</span>
@@ -3004,8 +3004,8 @@ const ProviderProfile: React.FC = () => {
 
                 {/* Section FAQ */}
                 {snippetData?.snippets?.faqContent && snippetData.snippets.faqContent.length > 0 && (
-                  <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200">
-                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200" aria-labelledby="faq-heading">
+                    <h3 id="faq-heading" className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                       <HelpCircle size={20} className="text-cyan-500" />
                       <FormattedMessage id="providerProfile.frequentlyAskedQuestions" />
                     </h3>

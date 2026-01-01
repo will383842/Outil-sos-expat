@@ -100,7 +100,7 @@ const FilterDropdown: React.FC<{
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 z-50 min-w-[220px] max-h-[320px] overflow-auto bg-gray-900/98 backdrop-blur-xl border border-white/15 rounded-2xl shadow-2xl shadow-black/40 py-2">
+        <div className="absolute top-full left-0 mt-2 z-50 min-w-[220px] max-h-[320px] overflow-auto bg-gray-900 border border-white/20 rounded-2xl shadow-2xl shadow-black/50 py-2">
           {children}
         </div>
       )}
@@ -197,7 +197,7 @@ const DesktopFilterBar: React.FC<DesktopFilterBarProps> = ({
   };
 
   return (
-    <div className="hidden lg:block">
+    <div className="hidden lg:block relative z-30">
       {/* Main Filter Bar - Single Row */}
       <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-3">
         <div className="flex items-center gap-3">
@@ -243,7 +243,7 @@ const DesktopFilterBar: React.FC<DesktopFilterBarProps> = ({
 
             {/* Search Suggestions */}
             {showSuggestions && searchSuggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-gray-900/98 backdrop-blur-xl border border-white/15 rounded-xl shadow-2xl shadow-black/40 py-2 max-h-48 overflow-auto">
+              <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-gray-900 border border-white/20 rounded-xl shadow-2xl shadow-black/50 py-2 max-h-48 overflow-auto">
                 {searchSuggestions.map((suggestion, idx) => (
                   <button
                     key={idx}

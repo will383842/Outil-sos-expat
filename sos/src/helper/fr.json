@@ -537,6 +537,8 @@
   "admin.lawyers.validationStatus": "Validation",
   "admin.lawyers.verified": "Vérifié",
   "admin.lawyers.week": "Cette semaine",
+  "admin.language.list": "Langues disponibles",
+  "admin.language.select": "Changer de langue",
   "admin.layout.administration": "Administration",
   "admin.layout.backHome": "Retour à l'accueil",
   "admin.layout.openMenu": "Ouvrir le menu",

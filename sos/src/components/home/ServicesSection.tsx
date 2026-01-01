@@ -1,5 +1,5 @@
 import React from 'react';
-import { Scale, Users, Shield, CheckCircle, Phone, Globe } from 'lucide-react';
+import { Scale, Users, Shield, CheckCircle, Phone, Globe, Clock } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { useIntl } from 'react-intl';
 

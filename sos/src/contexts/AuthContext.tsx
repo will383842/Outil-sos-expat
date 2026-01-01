@@ -685,6 +685,67 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       }
     }, 5000);
 
+    // 🚀 FALLBACK REST API: Si le SDK est complètement bloqué après 10s, utiliser l'API REST directement
+    const restFallbackTimeoutId = setTimeout(async () => {
+      const elapsed = Date.now() - listenerStartTime;
+      if (!firstSnapArrived.current && !cancelled) {
+        console.warn(`🔐 [AuthContext] ⚠️ [${elapsed}ms] SDK Firestore bloqué, tentative REST API...`);
+        try {
+          // Obtenir le token d'authentification
+          const token = await authUser.getIdToken();
+          const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
+          const restUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${uid}`;
+
+          console.log("🔐 [AuthContext] 🌐 Appel REST API:", restUrl);
+          const response = await fetch(restUrl, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (response.ok) {
+            const restData = await response.json();
+            console.log("✅ [AuthContext] REST API réponse:", restData);
+
+            // Convertir le format REST API vers notre format User
+            const fields = restData.fields || {};
+            const userData: Partial<User> = {};
+
+            // Mapper les champs Firestore REST vers notre type User
+            for (const [key, value] of Object.entries(fields)) {
+              const fieldValue = value as { stringValue?: string; integerValue?: string; booleanValue?: boolean; timestampValue?: string };
+              if (fieldValue.stringValue !== undefined) userData[key as keyof User] = fieldValue.stringValue as any;
+              else if (fieldValue.integerValue !== undefined) userData[key as keyof User] = parseInt(fieldValue.integerValue) as any;
+              else if (fieldValue.booleanValue !== undefined) userData[key as keyof User] = fieldValue.booleanValue as any;
+              else if (fieldValue.timestampValue !== undefined) userData[key as keyof User] = new Date(fieldValue.timestampValue) as any;
+            }
+
+            if (!firstSnapArrived.current && !cancelled) {
+              setUser({
+                ...(userData as User),
+                id: uid,
+                uid,
+                email: userData.email || authUser.email || null,
+                isVerifiedEmail: authUser.emailVerified,
+              } as User);
+              firstSnapArrived.current = true;
+              setIsLoading(false);
+              setAuthInitialized(true);
+              console.log("✅ [AuthContext] 🏁 User chargé via REST API fallback - isLoading=false");
+              console.log("💡 [AuthContext] Le SDK Firestore est bloqué mais l'app fonctionne via REST API");
+            }
+          } else if (response.status === 404) {
+            console.warn("⚠️ [AuthContext] REST API: document users/" + uid + " n'existe pas");
+          } else {
+            console.error("❌ [AuthContext] REST API erreur:", response.status, await response.text());
+          }
+        } catch (e) {
+          console.error("❌ [AuthContext] REST API fallback échoué:", e);
+        }
+      }
+    }, 10000);
+
     // Timeout de secours final si rien ne fonctionne
     const authTimeout = 30000; // 30 secondes max
     console.log(`🔐 [AuthContext] ⏰ Timeout final configuré: ${authTimeout}ms`);
@@ -727,6 +788,10 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           clearTimeout(fallbackTimeoutId);
           fallbackTimeoutId = null;
           console.log("🔐 [AuthContext] ⏰ Fallback timeout annulé");
+        }
+        if (restFallbackTimeoutId) {
+          clearTimeout(restFallbackTimeoutId);
+          console.log("🔐 [AuthContext] ⏰ REST API fallback timeout annulé");
         }
 
         // Document n'existe pas → c'est une ANOMALIE car le document devrait exister après inscription

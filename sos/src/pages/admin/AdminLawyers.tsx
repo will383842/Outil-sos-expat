@@ -44,6 +44,7 @@ import AdminLayout from "../../components/admin/AdminLayout";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import TranslationModal from "../../components/admin/TranslationModal";
+import { getCountryName, getCountryFlag } from "../../utils/formatters";
 /* -------------------------------------------------- */
 
 type UserStatus = "active" | "pending" | "blocked" | "suspended";
@@ -63,6 +64,8 @@ type Lawyer = {
   createdAt: Date;
   lastLoginAt?: Date;
   emailVerified: boolean;
+  isOnline: boolean;
+  isVisibleOnMap: boolean;
 
   barId?: string;
   barCountry?: string;
@@ -107,6 +110,9 @@ type FirestoreLawyerDoc = {
   createdAt?: Timestamp;
   lastLoginAt?: Timestamp;
   emailVerified?: boolean;
+  isOnline?: boolean;
+  isVisibleOnMap?: boolean;
+  isVisible?: boolean;
 
   barId?: string;
   barCountry?: string;
@@ -187,10 +193,26 @@ const DEFAULT_WIDTHS: Record<ColId | "select" | "actions", number> = {
   actions: 420,
 };
 
-const DEFAULT_VISIBLE: Record<ColId, boolean> = DEFAULT_ORDER.reduce(
-  (acc, k) => ((acc[k] = true), acc),
-  {} as Record<ColId, boolean>
-);
+// Colonnes essentielles visibles par défaut (design épuré)
+const DEFAULT_VISIBLE: Record<ColId, boolean> = {
+  name: true,
+  email: true,
+  emailVerified: false,
+  phone: false,
+  country: true,
+  city: false,
+  barId: false,
+  barCountry: false,
+  languages: false,
+  specialties: false,
+  rating: true,
+  reviews: false,
+  signup: false,
+  lastLogin: false,
+  accountStatus: true,
+  validation: true,
+  kyc: true,
+};
 
 const useColumnLayout = () => {
   const [order, setOrder] = useState<ColId[]>(
@@ -433,6 +455,8 @@ const AdminLawyers: React.FC = () => {
           createdAt: v.createdAt ? v.createdAt.toDate() : new Date(),
           lastLoginAt: v.lastLoginAt ? v.lastLoginAt.toDate() : undefined,
           emailVerified: !!v.emailVerified,
+          isOnline: v.isOnline ?? false,
+          isVisibleOnMap: v.isVisibleOnMap ?? v.isVisible ?? false,
           barId: v.barId,
           barCountry: v.barCountry,
           isValidated: !!v.isValidated,
@@ -735,6 +759,8 @@ const AdminLawyers: React.FC = () => {
             createdAt: v.createdAt ? v.createdAt.toDate() : new Date(),
             lastLoginAt: v.lastLoginAt ? v.lastLoginAt.toDate() : undefined,
             emailVerified: !!v.emailVerified,
+            isOnline: v.isOnline ?? false,
+            isVisibleOnMap: v.isVisibleOnMap ?? v.isVisible ?? false,
             barId: v.barId,
             barCountry: v.barCountry,
             isValidated: !!v.isValidated,
@@ -913,15 +939,21 @@ const AdminLawyers: React.FC = () => {
       case "phone":
         return <div style={cellStyleFor(col)} className="text-sm truncate">{l.phone || "—"}</div>;
       case "country":
-        return <div style={cellStyleFor(col)} className="text-sm truncate">{l.country || "—"}</div>;
+        return (
+          <div style={cellStyleFor(col)} className="text-sm truncate flex items-center gap-1">
+            <span>{getCountryFlag(l.country)}</span>
+            <span>{getCountryName(l.country, intl.locale) || l.country || "—"}</span>
+          </div>
+        );
       case "city":
         return <div style={cellStyleFor(col)} className="text-sm truncate">{l.city || "—"}</div>;
       case "barId":
         return <div style={cellStyleFor(col)} className="text-sm truncate">{l.barId || "—"}</div>;
       case "barCountry":
         return (
-          <div style={cellStyleFor(col)} className="text-sm truncate">
-            {l.barCountry || "—"}
+          <div style={cellStyleFor(col)} className="text-sm truncate flex items-center gap-1">
+            <span>{getCountryFlag(l.barCountry)}</span>
+            <span>{getCountryName(l.barCountry, intl.locale) || l.barCountry || "—"}</span>
           </div>
         );
       case "languages":
@@ -959,19 +991,28 @@ const AdminLawyers: React.FC = () => {
         );
       case "accountStatus":
         return (
-          <div style={cellStyleFor(col)}>
-            <span
-              className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${l.status === "active"
-                ? "bg-green-100 text-green-800"
-                : l.status === "pending"
-                  ? "bg-yellow-100 text-yellow-800"
-                  : l.status === "suspended"
-                    ? "bg-red-100 text-red-800"
-                    : "bg-gray-100 text-gray-800"
-                }`}
-            >
-              {l.status}
-            </span>
+          <div style={cellStyleFor(col)} className="space-y-1">
+            <div>
+              <span
+                className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${l.status === "active"
+                  ? "bg-green-100 text-green-800"
+                  : l.status === "pending"
+                    ? "bg-yellow-100 text-yellow-800"
+                    : l.status === "suspended"
+                      ? "bg-red-100 text-red-800"
+                      : "bg-gray-100 text-gray-800"
+                  }`}
+              >
+                {l.status}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              <span className={`inline-flex items-center ${l.isOnline ? 'text-green-600' : 'text-gray-400'}`}>
+                <span className={`w-2 h-2 rounded-full mr-1 ${l.isOnline ? 'bg-green-500 animate-pulse' : 'bg-gray-300'}`}></span>
+                {l.isOnline ? 'En ligne' : 'Hors ligne'}
+              </span>
+              {l.isVisibleOnMap && <span className="text-blue-600">📍</span>}
+            </div>
           </div>
         );
       case "validation":

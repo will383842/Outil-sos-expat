@@ -704,6 +704,15 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ================= COUNTRY SETTINGS COLLECTION =================
+    // Paramètres des pays activés/désactivés
+    match /country_settings/{countryId} {
+      // Lecture publique pour charger les pays activés sur le frontend
+      allow read: if true;
+      // Seuls les admins peuvent modifier
+      allow write: if isAdmin() || isDev();
+    }
+
     // ================= BOOKING REQUESTS COLLECTION =================
     match /booking_requests/{bookingId} {
       // Lecture : client ou provider concerné, ou admin/dev

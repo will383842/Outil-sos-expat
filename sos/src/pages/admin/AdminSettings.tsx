@@ -16,6 +16,11 @@ import {
   CreditCard,
   Shield,
   Map,
+  Phone,
+  Mail,
+  Bell,
+  MessageSquare,
+  Save,
 } from "lucide-react";
 import {
   collection,
@@ -26,6 +31,7 @@ import {
   addDoc,
   serverTimestamp,
   getDoc,
+  setDoc,
 } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import AdminLayout from "../../components/admin/AdminLayout";
@@ -34,23 +40,54 @@ import Modal from "../../components/common/Modal";
 import { useAuth } from "../../contexts/AuthContext";
 import { getFunctions, httpsCallable } from "firebase/functions";
 
+// Interface pour les paramètres admin système
+interface AdminSystemSettings {
+  twilioSettings: {
+    maxAttempts: number;
+    timeoutSeconds: number;
+  };
+  notificationSettings: {
+    enableEmail: boolean;
+    enableSMS: boolean;
+    enableWhatsApp: boolean;
+    enablePush: boolean;
+  };
+}
+
+const defaultSystemSettings: AdminSystemSettings = {
+  twilioSettings: {
+    maxAttempts: 3,
+    timeoutSeconds: 30,
+  },
+  notificationSettings: {
+    enableEmail: true,
+    enableSMS: true,
+    enableWhatsApp: true,
+    enablePush: true,
+  },
+};
+
 const AdminSettings: React.FC = () => {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
   const adminT = useAdminTranslations();
   const [isLoading, setIsLoading] = useState(false);
+  const [isSavingSystem, setIsSavingSystem] = useState(false);
   const [showTestModal, setShowTestModal] = useState(false);
   const [countries, setCountries] = useState<any[]>([]);
   const [showBackupModal, setShowBackupModal] = useState(false);
   const [showPWAModal, setShowPWAModal] = useState(false);
   const [showRefundModal, setShowRefundModal] = useState(false);
   const [showMapSettingsModal, setShowMapSettingsModal] = useState(false);
+  const [showTwilioModal, setShowTwilioModal] = useState(false);
+  const [showNotificationsModal, setShowNotificationsModal] = useState(false);
   const [pendingRefunds, setPendingRefunds] = useState<any[]>([]);
   const [backupStatus, setBackupStatus] = useState("");
   const [testResults, setTestResults] = useState<any[]>([]);
   const [mapSettings, setMapSettings] = useState({
     showMapOnHomePage: true,
   });
+  const [systemSettings, setSystemSettings] = useState<AdminSystemSettings>(defaultSystemSettings);
 
   useEffect(() => {
     // Check if user is admin
@@ -62,7 +99,54 @@ const AdminSettings: React.FC = () => {
     loadCountries();
     loadPendingRefunds();
     loadMapSettings();
+    loadSystemSettings();
   }, [currentUser, navigate]);
+
+  // Load system settings (Twilio + Notifications)
+  const loadSystemSettings = async () => {
+    try {
+      const settingsDoc = await getDoc(doc(db, "admin_settings", "main"));
+      if (settingsDoc.exists()) {
+        const data = settingsDoc.data();
+        setSystemSettings({
+          twilioSettings: {
+            maxAttempts: data.twilioSettings?.maxAttempts ?? 3,
+            timeoutSeconds: data.twilioSettings?.timeoutSeconds ?? 30,
+          },
+          notificationSettings: {
+            enableEmail: data.notificationSettings?.enableEmail ?? true,
+            enableSMS: data.notificationSettings?.enableSMS ?? true,
+            enableWhatsApp: data.notificationSettings?.enableWhatsApp ?? true,
+            enablePush: data.notificationSettings?.enablePush ?? true,
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Error loading system settings:", error);
+    }
+  };
+
+  // Save system settings
+  const handleSaveSystemSettings = async () => {
+    try {
+      setIsSavingSystem(true);
+      await setDoc(
+        doc(db, "admin_settings", "main"),
+        {
+          ...systemSettings,
+          updatedAt: serverTimestamp(),
+          updatedBy: currentUser?.id,
+        },
+        { merge: true }
+      );
+      alert("Paramètres système sauvegardés avec succès");
+    } catch (error) {
+      console.error("Error saving system settings:", error);
+      alert("Erreur lors de la sauvegarde des paramètres");
+    } finally {
+      setIsSavingSystem(false);
+    }
+  };
 
   const loadMapSettings = async () => {
     try {
@@ -560,6 +644,52 @@ const AdminSettings: React.FC = () => {
               Créer les index
             </Button>
           </div>
+
+          {/* Twilio Settings */}
+          <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <Phone className="w-6 h-6 text-blue-600 mr-3" />
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Paramètres Twilio
+                </h3>
+              </div>
+            </div>
+            <p className="text-gray-600 mb-4">
+              Configuration des appels téléphoniques
+            </p>
+            <Button
+              onClick={() => setShowTwilioModal(true)}
+              variant="outline"
+              className="w-full"
+            >
+              <Phone className="w-4 h-4 mr-2" />
+              Configurer Twilio
+            </Button>
+          </div>
+
+          {/* Notification Settings */}
+          <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <Bell className="w-6 h-6 text-yellow-600 mr-3" />
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Notifications système
+                </h3>
+              </div>
+            </div>
+            <p className="text-gray-600 mb-4">
+              Activer/désactiver les canaux de notification
+            </p>
+            <Button
+              onClick={() => setShowNotificationsModal(true)}
+              variant="outline"
+              className="w-full"
+            >
+              <Bell className="w-4 h-4 mr-2" />
+              Configurer les notifications
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -773,6 +903,274 @@ const AdminSettings: React.FC = () => {
               <span className="text-gray-600">Mode hors ligne:</span>
               <span className="font-medium text-green-600">✓ Supporté</span>
             </div>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Twilio Settings Modal */}
+      <Modal
+        isOpen={showTwilioModal}
+        onClose={() => setShowTwilioModal(false)}
+        title="Paramètres Twilio"
+        size="medium"
+      >
+        <div className="space-y-6">
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+            <p className="text-sm text-blue-800">
+              Configurez les paramètres des appels téléphoniques via Twilio.
+              Ces paramètres affectent le comportement des appels sur toute la plateforme.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nombre maximum de tentatives d'appel
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={10}
+                value={systemSettings.twilioSettings.maxAttempts}
+                onChange={(e) =>
+                  setSystemSettings((prev) => ({
+                    ...prev,
+                    twilioSettings: {
+                      ...prev.twilioSettings,
+                      maxAttempts: parseInt(e.target.value, 10) || 3,
+                    },
+                  }))
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Nombre de fois où le système tentera d'appeler avant d'abandonner (1-10)
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Délai d'attente (secondes)
+              </label>
+              <input
+                type="number"
+                min={10}
+                max={120}
+                value={systemSettings.twilioSettings.timeoutSeconds}
+                onChange={(e) =>
+                  setSystemSettings((prev) => ({
+                    ...prev,
+                    twilioSettings: {
+                      ...prev.twilioSettings,
+                      timeoutSeconds: parseInt(e.target.value, 10) || 30,
+                    },
+                  }))
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Temps d'attente avant de considérer l'appel comme sans réponse (10-120s)
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4 border-t">
+            <Button
+              onClick={() => setShowTwilioModal(false)}
+              variant="outline"
+            >
+              Annuler
+            </Button>
+            <Button
+              onClick={async () => {
+                await handleSaveSystemSettings();
+                setShowTwilioModal(false);
+              }}
+              className="bg-blue-600 hover:bg-blue-700"
+              loading={isSavingSystem}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Enregistrer
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Notifications Settings Modal */}
+      <Modal
+        isOpen={showNotificationsModal}
+        onClose={() => setShowNotificationsModal(false)}
+        title="Notifications système"
+        size="medium"
+      >
+        <div className="space-y-6">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+            <p className="text-sm text-yellow-800">
+              Activez ou désactivez les différents canaux de notification.
+              Ces paramètres s'appliquent à l'ensemble de la plateforme.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {/* Email */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center">
+                <Mail className="w-5 h-5 text-blue-600 mr-3" />
+                <div>
+                  <p className="font-medium text-gray-900">Notifications Email</p>
+                  <p className="text-sm text-gray-500">Envoi d'emails automatiques</p>
+                </div>
+              </div>
+              <button
+                onClick={() =>
+                  setSystemSettings((prev) => ({
+                    ...prev,
+                    notificationSettings: {
+                      ...prev.notificationSettings,
+                      enableEmail: !prev.notificationSettings.enableEmail,
+                    },
+                  }))
+                }
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  systemSettings.notificationSettings.enableEmail
+                    ? "bg-blue-600"
+                    : "bg-gray-300"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    systemSettings.notificationSettings.enableEmail
+                      ? "translate-x-6"
+                      : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* SMS */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center">
+                <MessageSquare className="w-5 h-5 text-green-600 mr-3" />
+                <div>
+                  <p className="font-medium text-gray-900">Notifications SMS</p>
+                  <p className="text-sm text-gray-500">Envoi de SMS via Twilio</p>
+                </div>
+              </div>
+              <button
+                onClick={() =>
+                  setSystemSettings((prev) => ({
+                    ...prev,
+                    notificationSettings: {
+                      ...prev.notificationSettings,
+                      enableSMS: !prev.notificationSettings.enableSMS,
+                    },
+                  }))
+                }
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  systemSettings.notificationSettings.enableSMS
+                    ? "bg-green-600"
+                    : "bg-gray-300"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    systemSettings.notificationSettings.enableSMS
+                      ? "translate-x-6"
+                      : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* WhatsApp */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center">
+                <MessageSquare className="w-5 h-5 text-emerald-600 mr-3" />
+                <div>
+                  <p className="font-medium text-gray-900">WhatsApp</p>
+                  <p className="text-sm text-gray-500">Messages WhatsApp Business</p>
+                </div>
+              </div>
+              <button
+                onClick={() =>
+                  setSystemSettings((prev) => ({
+                    ...prev,
+                    notificationSettings: {
+                      ...prev.notificationSettings,
+                      enableWhatsApp: !prev.notificationSettings.enableWhatsApp,
+                    },
+                  }))
+                }
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  systemSettings.notificationSettings.enableWhatsApp
+                    ? "bg-emerald-600"
+                    : "bg-gray-300"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    systemSettings.notificationSettings.enableWhatsApp
+                      ? "translate-x-6"
+                      : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* Push */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center">
+                <Bell className="w-5 h-5 text-purple-600 mr-3" />
+                <div>
+                  <p className="font-medium text-gray-900">Notifications Push</p>
+                  <p className="text-sm text-gray-500">Notifications navigateur/mobile</p>
+                </div>
+              </div>
+              <button
+                onClick={() =>
+                  setSystemSettings((prev) => ({
+                    ...prev,
+                    notificationSettings: {
+                      ...prev.notificationSettings,
+                      enablePush: !prev.notificationSettings.enablePush,
+                    },
+                  }))
+                }
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  systemSettings.notificationSettings.enablePush
+                    ? "bg-purple-600"
+                    : "bg-gray-300"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    systemSettings.notificationSettings.enablePush
+                      ? "translate-x-6"
+                      : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4 border-t">
+            <Button
+              onClick={() => setShowNotificationsModal(false)}
+              variant="outline"
+            >
+              Annuler
+            </Button>
+            <Button
+              onClick={async () => {
+                await handleSaveSystemSettings();
+                setShowNotificationsModal(false);
+              }}
+              className="bg-yellow-600 hover:bg-yellow-700"
+              loading={isSavingSystem}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Enregistrer
+            </Button>
           </div>
         </div>
       </Modal>

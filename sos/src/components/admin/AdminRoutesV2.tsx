@@ -106,6 +106,7 @@ const AdminFinanceLedger = lazy(
 );
 
 // ===== LAZY IMPORTS - USERS & PROVIDERS =====
+const AdminUsers = lazy(() => import("../../pages/admin/AdminUsers"));
 const AdminClients = lazy(() => import("../../pages/admin/AdminClients"));
 const AdminLawyers = lazy(() => import("../../pages/admin/AdminLawyers"));
 const AdminExpats = lazy(() => import("../../pages/admin/AdminExpats"));
@@ -353,6 +354,14 @@ const AdminRoutesV2: React.FC = () => {
       />
 
       {/* 👥 UTILISATEURS & PRESTATAIRES */}
+      <Route
+        path="users/all"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminUsers />
+          </Suspense>
+        }
+      />
       <Route
         path="users/clients"
         element={
@@ -839,7 +848,7 @@ const AdminRoutesV2: React.FC = () => {
       />
 
       {/* Routes historiques / alias */}
-      <Route path="users" element={<Navigate to="users/clients" replace />} />
+      <Route path="users" element={<Navigate to="users/all" replace />} />
       <Route
         path="providers"
         element={<Navigate to="users/providers/lawyers" replace />}
@@ -937,6 +946,7 @@ export const useAdminRouteValidation = () => {
     const validPaths = [
       "/admin/login",
       "/admin/dashboard",
+      "/admin/users/all",
       "/admin/users/clients",
       "/admin/users/providers/lawyers",
       "/admin/users/providers/expats",

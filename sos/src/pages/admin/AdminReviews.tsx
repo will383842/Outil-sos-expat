@@ -704,6 +704,7 @@ rows[m][bucketKey] += 1;
         status: 'hidden',
         isPublic: false,
         moderatedAt: serverTimestamp(),
+        moderatorId: currentUser?.id || 'admin',
         moderatorNotes: lang === 'fr' ? "Masqué par l'administrateur" : 'Hidden by admin'
       });
       setReviews((prev) => prev.map((r) => (r.id === reviewId ? { ...r, status: 'hidden' } : r)));
@@ -726,6 +727,7 @@ rows[m][bucketKey] += 1;
         isPublic: true,
         publishedAt: serverTimestamp(),
         moderatedAt: serverTimestamp(),
+        moderatorId: currentUser?.id || 'admin',
         moderatorNotes: lang === 'fr' ? "Approuvé manuellement par l'administrateur" : 'Manually approved by admin'
       });
       setReviews((prev) => prev.map((r) => (r.id === reviewId ? { ...r, status: 'published' } : r)));
@@ -751,6 +753,7 @@ rows[m][bucketKey] += 1;
         status: 'hidden',
         isPublic: false,
         moderatedAt: serverTimestamp(),
+        moderatorId: currentUser?.id || 'admin',
         moderatorNotes: lang === 'fr' ? "Rejeté par l'administrateur" : 'Rejected by admin'
       });
       setReviews((prev) => prev.map((r) => (r.id === reviewId ? { ...r, status: 'hidden' } : r)));
@@ -792,6 +795,7 @@ rows[m][bucketKey] += 1;
           isPublic: true,
           publishedAt: serverTimestamp(),
           moderatedAt: serverTimestamp(),
+          moderatorId: currentUser?.id || 'admin',
           moderatorNotes: lang === 'fr' ? "Approuvé en masse par l'administrateur" : 'Bulk approved by admin'
         });
       });
@@ -833,6 +837,7 @@ rows[m][bucketKey] += 1;
           status: 'hidden',
           isPublic: false,
           moderatedAt: serverTimestamp(),
+          moderatorId: currentUser?.id || 'admin',
           moderatorNotes: lang === 'fr' ? "Rejeté en masse par l'administrateur" : 'Bulk rejected by admin'
         });
       });
@@ -921,6 +926,7 @@ rows[m][bucketKey] += 1;
       await updateDoc(doc(db, 'reviews', selectedReview.id), {
         rating: editedRating,
         moderatedAt: serverTimestamp(),
+        moderatorId: currentUser?.id || 'admin',
         moderatorNotes: lang === 'fr' ? "Note modifiée par l'administrateur" : 'Rating updated by admin'
       });
       setReviews((prev) =>

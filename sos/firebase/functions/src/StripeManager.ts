@@ -114,8 +114,15 @@ interface PaymentDoc {
   amount: number; // cents
   commissionAmount: number; // cents
   providerAmount: number; // cents
-  amountInEuros: number; // lecture facilité
+  /**
+   * @deprecated Nom trompeur - contient le montant en unité principale (EUR ou USD), pas uniquement EUR.
+   * À renommer en amountInMainUnit lors d'une future migration.
+   * Voir currency pour la devise réelle.
+   */
+  amountInEuros: number;
+  /** @deprecated Même problème que amountInEuros */
   commissionAmountEuros: number;
+  /** @deprecated Même problème que amountInEuros */
   providerAmountEuros: number;
   currency: SupportedCurrency;
   serviceType: StripePaymentData['serviceType'];
@@ -935,13 +942,14 @@ export class StripeManager {
     providerAmount: number,
     sessionId: string,
     metadata?: Record<string, string>,
-    secretKey?: string
+    secretKey?: string,
+    currency: SupportedCurrency = 'eur' // FIX: Ajout du paramètre currency au lieu de hardcoder EUR
   ): Promise<PaymentResult & { transferId?: string }> {
     try {
       this.validateConfiguration(secretKey);
       if (!this.stripe) throw new HttpsError('internal', 'Stripe non initialisé');
 
-      console.log(`💸 Initiating transfer to provider ${providerId}: ${providerAmount} EUR`);
+      console.log(`💸 Initiating transfer to provider ${providerId}: ${providerAmount} ${currency.toUpperCase()}`);
 
       // Get provider's Stripe account ID from sos_profiles
       const providerDoc = await this.db
@@ -976,15 +984,20 @@ export class StripeManager {
       }
 
       // Create the transfer
+      // FIX: Utilise la devise originale du paiement au lieu de hardcoder EUR
       const transfer = await this.stripe.transfers.create({
         amount: Math.round(providerAmount * 100), // Convert to cents
-        currency: 'eur',
+        currency: currency, // FIX: Devise dynamique
         destination: stripeAccountId,
         transfer_group: sessionId,
         description: `Payment for call ${sessionId}`,
         metadata: {
           sessionId: sessionId,
           providerId: providerId,
+          // FIX: Nom générique car peut être EUR ou USD
+          providerAmountMainUnit: providerAmount.toFixed(2),
+          providerAmountCurrency: currency.toUpperCase(),
+          // LEGACY: Garder pour compatibilité arrière
           providerAmountEuros: providerAmount.toFixed(2),
           environment: process.env.NODE_ENV || 'development',
           mode: this.mode,

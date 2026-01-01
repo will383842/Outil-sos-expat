@@ -37,6 +37,7 @@ interface AppContextType {
   updateEnhancedSettings: (settings: Partial<EnhancedSettings>) => void;
   isCountryEnabled: (countryCode: string) => boolean;
   countriesLoading: boolean;
+  enabledCountries: string[]; // Liste des codes pays activés (ex: ["FR", "GB", "DE"])
 }
 
 // Default AppContext values to prevent white screens when used outside provider
@@ -77,6 +78,7 @@ const defaultAppContext: AppContextType = {
   updateEnhancedSettings: () => console.warn('[AppContext] Called outside of AppProvider'),
   isCountryEnabled: () => true, // Default to enabled to avoid blocking
   countriesLoading: true,
+  enabledCountries: [], // Empty by default, loaded from Firestore
 };
 
 const AppContext = createContext<AppContextType>(defaultAppContext);
@@ -322,6 +324,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         updateEnhancedSettings,
         isCountryEnabled,
         countriesLoading,
+        enabledCountries: supportedCountries,
       }}
     >
       {children}

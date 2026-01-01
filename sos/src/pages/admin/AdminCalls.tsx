@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useCallAdminTranslations } from "../../utils/adminTranslations";
 import { useApp } from "../../contexts/AppContext";
 import { getDateLocale } from "../../utils/formatters";
@@ -502,6 +502,9 @@ const AdminCallsMonitoring: React.FC = () => {
   const [isRealTimeActive, setIsRealTimeActive] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
+  // ✅ CORRECTION: Ref pour tracker le nombre d'appels précédent (évite ré-abonnements inutiles)
+  const previousCallsCountRef = useRef<number>(0);
+
   // Formatters
   const formatCurrency = (amount: number) => `${amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€`;
   const formatDateTime = (timestamp: Timestamp | Date) => {
@@ -541,7 +544,7 @@ const AdminCallsMonitoring: React.FC = () => {
       limit(CALLS_CONFIG.firestore.liveCallsLimit)
     );
 
-    const unsubscribeCalls = onSnapshot(callSessionsQuery, 
+    const unsubscribeCalls = onSnapshot(callSessionsQuery,
       (snapshot) => {
         const sessions = snapshot.docs.map(doc => {
           const data = doc.data();
@@ -552,12 +555,17 @@ const AdminCallsMonitoring: React.FC = () => {
         });
 
         console.log(`📞 ${sessions.length} appels actifs détectés`);
-        setLiveCalls(sessions);
 
+        // ✅ CORRECTION: Utiliser le ref au lieu de liveCalls.length pour éviter les ré-abonnements
         // Jouer un son pour les nouveaux appels
-        if (soundEnabled && sessions.length > liveCalls.length) {
+        if (soundEnabled && sessions.length > previousCallsCountRef.current) {
           playNotificationSound('new_call');
         }
+
+        // Mettre à jour le ref pour la prochaine comparaison
+        previousCallsCountRef.current = sessions.length;
+
+        setLiveCalls(sessions);
       },
       (error) => {
         console.error('Erreur lors de l\'écoute des appels:', error);
@@ -575,7 +583,8 @@ const AdminCallsMonitoring: React.FC = () => {
       console.log('🔴 Arrêt du monitoring des appels');
       unsubscribeCalls();
     };
-  }, [currentUser, isRealTimeActive, soundEnabled, liveCalls.length]);
+  // ✅ CORRECTION: Retirer liveCalls.length des dépendances pour éviter les ré-abonnements inutiles
+  }, [currentUser, isRealTimeActive, soundEnabled]);
 
   // Calcul des métriques en temps réel basé sur les vraies données 
   useEffect(() => {

@@ -48,6 +48,7 @@ import AdminLayout from "../../components/admin/AdminLayout";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import AdminMapVisibilityToggle from "../../components/admin/AdminMapVisibilityToggle";
+import { getCountryName, getCountryFlag } from "../../utils/formatters";
 import TranslationModal from "../../components/admin/TranslationModal";
 
 /* ---------------------- Types ---------------------- */
@@ -77,6 +78,7 @@ interface Expat {
   expatSince?: Date;
   yearsInCountry: number;
   isVisibleOnMap: boolean;
+  isOnline: boolean;
   profileComplete: number;
   helpDomains: string[];
   description?: string;
@@ -129,6 +131,8 @@ type FirestoreExpatDoc = {
   movedToCountryAt?: Timestamp;
   yearsInCountry?: number;
   isVisibleOnMap?: boolean;
+  isOnline?: boolean;
+  isVisible?: boolean;
   helpDomains?: string[];
   expertiseDomains?: string[];
   servicesOffered?: string[];
@@ -212,10 +216,31 @@ const DEFAULT_WIDTHS: Record<ColId, number> = {
   actions: 240,
 };
 
-const DEFAULT_VISIBLE: Record<ColId, boolean> = DEFAULT_ORDER.reduce(
-  (acc, k) => ((acc[k] = true), acc),
-  {} as Record<ColId, boolean>
-);
+// Colonnes essentielles visibles par défaut (design épuré)
+const DEFAULT_VISIBLE: Record<ColId, boolean> = {
+  select: true,
+  name: true,
+  email: true,
+  emailVerified: false,
+  phone: false,
+  country: true,
+  city: false,
+  origin: false,
+  languages: false,
+  help: false,
+  rating: true,
+  reviews: false,
+  signup: false,
+  lastLogin: false,
+  yearsInCountry: false,
+  expatSince: false,
+  hourlyRate: false,
+  profile: false,
+  map: true,
+  accountStatus: true,
+  validation: true,
+  actions: true,
+};
 
 const useColumnLayout = () => {
   const [order, setOrder] = useState<ColId[]>(
@@ -526,6 +551,7 @@ const AdminExpats: React.FC = () => {
       expatSince,
       yearsInCountry,
       isVisibleOnMap: data.isVisibleOnMap ?? true,
+      isOnline: data.isOnline ?? false,
       profileComplete: calculateProfileCompleteness(data),
       helpDomains: data.helpDomains || data.expertiseDomains || data.servicesOffered || [],
       description: (typeof data.bio === 'string' ? data.bio : data.description) || "",
@@ -735,18 +761,21 @@ const AdminExpats: React.FC = () => {
         return <div className="text-sm text-gray-900">{e.phone || "—"}</div>;
       case "country":
         return (
-          <div className="text-sm text-gray-900 flex items-center">
-            <MapPin className="w-4 h-4 mr-1 text-gray-400" />
-            {e.city ? `${e.city}, ` : ""}{e.country}
+          <div className="text-sm text-gray-900 flex items-center gap-1">
+            <span>{getCountryFlag(e.country)}</span>
+            <span>{e.city ? `${e.city}, ` : ""}{getCountryName(e.country, intl.locale) || e.country}</span>
           </div>
         );
       case "city":
         return <div className="text-sm text-gray-900">{e.city || "—"}</div>;
       case "origin":
         return (
-          <div className="text-sm">
-            <div className="text-gray-900">{e.originCountry || "—"}</div>
-            <div className="text-xs text-gray-500">{t("origin")}</div>
+          <div className="text-sm flex items-center gap-1">
+            <span>{getCountryFlag(e.originCountry)}</span>
+            <div>
+              <div className="text-gray-900">{getCountryName(e.originCountry, intl.locale) || e.originCountry || "—"}</div>
+              <div className="text-xs text-gray-500">{t("origin")}</div>
+            </div>
           </div>
         );
       case "languages":
@@ -793,11 +822,18 @@ const AdminExpats: React.FC = () => {
       case "accountStatus":
         return (
           <div className="space-y-1">
-            <div>
+            <div className="flex items-center gap-1">
               {e.status === "active" && badge("active", "green")}
               {e.status === "suspended" && badge("suspended", "red")}
               {e.status === "pending" && badge("pending", "yellow")}
               {e.status === "banned" && badge("banned", "gray")}
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              <span className={`inline-flex items-center ${e.isOnline ? 'text-green-600' : 'text-gray-400'}`}>
+                <span className={`w-2 h-2 rounded-full mr-1 ${e.isOnline ? 'bg-green-500 animate-pulse' : 'bg-gray-300'}`}></span>
+                {e.isOnline ? 'En ligne' : 'Hors ligne'}
+              </span>
+              {e.isVisibleOnMap && <span className="text-blue-600">📍</span>}
             </div>
           </div>
         );
@@ -931,68 +967,173 @@ const AdminExpats: React.FC = () => {
 
   return (
     <AdminLayout>
-      <div className="p-6 space-y-6">
+      <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-              <Globe className="w-8 h-8 mr-3 text-green-600" />
-              {t("title")}
+            <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
+              <Globe className="w-6 h-6 text-green-600" /> {t("title")}
             </h1>
-            <p className="text-gray-600 mt-1">{t("subtitle")}</p>
-            <p className="text-gray-500 mt-1">
-              {t("totalExact")}: <span className="font-semibold">{total}</span> • {stats.active} {t("active")} • {stats.pending} {t("pending")} • {stats.validated} {t("validated")}
-            </p>
+            <p className="text-sm text-gray-500">{t("subtitle")}</p>
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            <div className="flex items-center space-x-2">
-              <input
-                type="text"
-                placeholder={t("searchPlaceholder")}
-                className="w-72 border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                value={filters.searchTerm}
-                onChange={(e) => setFilters((f) => ({ ...f, searchTerm: e.target.value }))}
-              />
-              <Button onClick={() => setShowFilters((v) => !v)} variant="outline" className="flex items-center">
-                <Filter size={16} className="mr-2" /> {t("filters")}
+          <div className="flex items-center gap-2 relative">
+            <div className="relative">
+              <Button variant="secondary" onClick={() => setShowCols((s) => !s)}>
+                {t("columns")}
               </Button>
-              <Button onClick={() => setShowCols((v) => !v)} variant="outline" className="flex items-center">
-                <GripVertical size={16} className="mr-2" /> {t("columns")}
-              </Button>
+              {showCols && (
+                <div
+                  className="absolute right-0 mt-2 z-20 w-64 bg-white border rounded-lg shadow-lg p-2"
+                  onMouseLeave={() => setShowCols(false)}
+                >
+                  <div className="flex items-center justify-between px-2 pb-2 border-b">
+                    <button
+                      className="text-xs underline"
+                      onClick={() =>
+                        setVisible((v) => {
+                          const all: Record<ColId, boolean> = { ...v };
+                          (Object.keys(all) as ColId[]).forEach((k) => (all[k] = true));
+                          return all;
+                        })
+                      }
+                    >
+                      {t("showAll")}
+                    </button>
+                    <button
+                      className="text-xs underline"
+                      onClick={() =>
+                        setVisible((v) => {
+                          const none: Record<ColId, boolean> = { ...v };
+                          (Object.keys(none) as ColId[]).forEach((k) => (none[k] = false));
+                          return none;
+                        })
+                      }
+                    >
+                      {t("hideAll")}
+                    </button>
+                    <button className="text-xs underline" onClick={resetCols}>
+                      {t("resetLayout")}
+                    </button>
+                  </div>
+                  <div className="max-h-72 overflow-auto pt-2">
+                    {DEFAULT_ORDER.map((c) => (
+                      <label key={c} className="flex items-center gap-2 px-2 py-1 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={visible[c]}
+                          onChange={(e) =>
+                            setVisible((v) => ({ ...v, [c]: e.target.checked }))
+                          }
+                        />
+                        <span>{headerLabel(c)}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div className="flex items-center space-x-2">
-              <select
-                className="border border-gray-300 rounded-md px-2 py-2"
-                value={pageSize}
-                onChange={(e) => setPageSize(parseInt(e.target.value, 10))}
-              >
-                {[10, 25, 50, 100].map((n) => (
-                  <option key={n} value={n}>
-                    {n} {t("perPage")}
-                  </option>
-                ))}
-              </select>
-              <Button onClick={exportPage} variant="outline" className="flex items-center" disabled={!expats.length}>
-                <Download size={16} className="mr-2" /> {t("export")}
-              </Button>
+            <Button variant="secondary" onClick={resetCols}>
+              {t("resetLayout")}
+            </Button>
+
+            <Button variant="secondary" onClick={() => setShowFilters((s) => !s)}>
+              <Filter className="w-4 h-4 mr-2" />
+              {t("filters")}
+            </Button>
+
+            <select
+              className="border border-gray-300 rounded-md px-2 py-2 text-sm"
+              value={pageSize}
+              onChange={(e) => setPageSize(parseInt(e.target.value, 10))}
+            >
+              {[10, 25, 50, 100].map((n) => (
+                <option key={n} value={n}>
+                  {n} {t("perPage")}
+                </option>
+              ))}
+            </select>
+
+            <Button onClick={exportPage}>
+              <Download className="w-4 h-4 mr-2" />
+              {t("export")}
+            </Button>
+          </div>
+        </div>
+
+        {/* Cards synthèse */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex items-center">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Users className="w-6 h-6 text-green-600" />
+              </div>
+              <div className="ml-4">
+                <h3 className="text-sm font-medium text-gray-500">{t("totalExact")}</h3>
+                <p className="text-2xl font-bold text-gray-900">{total ?? "—"}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex items-center">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <CheckCircle className="w-6 h-6 text-blue-600" />
+              </div>
+              <div className="ml-4">
+                <h3 className="text-sm font-medium text-gray-500">{t("active")}</h3>
+                <p className="text-2xl font-bold text-gray-900">{stats.active}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex items-center">
+              <div className="p-2 bg-emerald-100 rounded-lg">
+                <BadgeCheck className="w-6 h-6 text-emerald-600" />
+              </div>
+              <div className="ml-4">
+                <h3 className="text-sm font-medium text-gray-500">{t("validated")}</h3>
+                <p className="text-2xl font-bold text-gray-900">{stats.validated}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex items-center">
+              <div className="p-2 bg-yellow-100 rounded-lg">
+                <Clock className="w-6 h-6 text-yellow-600" />
+              </div>
+              <div className="ml-4">
+                <h3 className="text-sm font-medium text-gray-500">{t("pending")}</h3>
+                <p className="text-2xl font-bold text-gray-900">{stats.pending}</p>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Filtres avancés */}
+        {/* Filtres */}
         {showFilters && (
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">{t("filters")}</h3>
-              <Button onClick={clearFilters} variant="outline" className="text-sm">
-                {t("clearFilters")}
-              </Button>
-            </div>
+          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+              <div className="md:col-span-3">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t("search")}
+                </label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    value={filters.searchTerm}
+                    onChange={(e) => setFilters((f) => ({ ...f, searchTerm: e.target.value }))}
+                    placeholder={t("searchPlaceholder")}
+                    className="w-full pl-9 border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-green-500"
+                  />
+                </div>
+              </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t("status")}</label>
                 <select
                   value={filters.status}
@@ -1003,11 +1144,11 @@ const AdminExpats: React.FC = () => {
                   <option value="active">{t("activate")}</option>
                   <option value="pending">{t("pending")}</option>
                   <option value="suspended">{t("suspend")}</option>
-                  <option value="banned">banned</option>
+                  <option value="banned">Banned</option>
                 </select>
               </div>
 
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t("validation")}</label>
                 <select
                   value={filters.validationStatus}
@@ -1023,7 +1164,7 @@ const AdminExpats: React.FC = () => {
                 </select>
               </div>
 
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t("period")}</label>
                 <select
                   value={filters.dateRange}
@@ -1037,7 +1178,7 @@ const AdminExpats: React.FC = () => {
                 </select>
               </div>
 
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t("country")}</label>
                 <input
                   value={filters.country === "all" ? "" : filters.country}
@@ -1047,7 +1188,13 @@ const AdminExpats: React.FC = () => {
                 />
               </div>
 
-              <div>
+              <div className="md:col-span-1 flex items-end">
+                <Button onClick={clearFilters} variant="outline" className="w-full">
+                  <XCircle className="w-4 h-4" />
+                </Button>
+              </div>
+
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t("originCountry")}</label>
                 <input
                   value={filters.originCountry === "all" ? "" : filters.originCountry}
@@ -1057,7 +1204,7 @@ const AdminExpats: React.FC = () => {
                 />
               </div>
 
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t("helpDomains")}</label>
                 <input
                   value={filters.helpDomain}
@@ -1067,7 +1214,7 @@ const AdminExpats: React.FC = () => {
                 />
               </div>
 
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t("languages")}</label>
                 <input
                   value={filters.language}
@@ -1077,51 +1224,34 @@ const AdminExpats: React.FC = () => {
                 />
               </div>
 
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t("minRating")}</label>
-                <input
-                  value={filters.minRating === "all" ? "" : filters.minRating}
-                  onChange={(e) => setFilters((f) => ({ ...f, minRating: e.target.value || "all" }))}
+                <select
+                  value={filters.minRating}
+                  onChange={(e) => setFilters((f) => ({ ...f, minRating: e.target.value }))}
                   className="w-full border border-gray-300 rounded-md px-3 py-2"
-                  placeholder="4.5"
-                />
+                >
+                  <option value="all">{t("all")}</option>
+                  <option value="4">⭐ 4+</option>
+                  <option value="4.5">⭐ 4.5+</option>
+                  <option value="5">⭐ 5</option>
+                </select>
               </div>
 
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t("minYears")}</label>
-                <input
-                  value={filters.minYearsInCountry === "all" ? "" : filters.minYearsInCountry}
-                  onChange={(e) => setFilters((f) => ({ ...f, minYearsInCountry: e.target.value || "all" }))}
+                <select
+                  value={filters.minYearsInCountry}
+                  onChange={(e) => setFilters((f) => ({ ...f, minYearsInCountry: e.target.value }))}
                   className="w-full border border-gray-300 rounded-md px-3 py-2"
-                  placeholder="2"
-                />
+                >
+                  <option value="all">{t("all")}</option>
+                  <option value="1">1+ an</option>
+                  <option value="2">2+ ans</option>
+                  <option value="5">5+ ans</option>
+                  <option value="10">10+ ans</option>
+                </select>
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* Colonnes visibles */}
-        {showCols && (
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div className="font-semibold">{t("columns")}</div>
-              <div className="space-x-2">
-                <Button variant="outline" onClick={() => setVisible(DEFAULT_VISIBLE)}>{t("showAll")}</Button>
-                <Button variant="outline" onClick={() => setVisible(Object.fromEntries(Object.keys(DEFAULT_VISIBLE).map(k => [k as ColId, false])) as any)}>{t("hideAll")}</Button>
-                <Button variant="outline" onClick={resetCols}>Reset</Button>
-              </div>
-            </div>
-            <div className="mt-3 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-              {order.filter((c) => c !== "select").map((col) => (
-                <label key={col} className="flex items-center space-x-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={visible[col]}
-                    onChange={(e) => setVisible((v) => ({ ...v, [col]: e.target.checked }))}
-                  />
-                  <span>{headerLabel(col)}</span>
-                </label>
-              ))}
             </div>
           </div>
         )}
@@ -1241,8 +1371,8 @@ const AdminExpats: React.FC = () => {
               <div className="text-sm text-gray-700">
                 <div><strong>{t("email")}:</strong> {drawerExpat.email}</div>
                 {drawerExpat.phone ? <div><strong>{t("phone")}:</strong> {drawerExpat.phone}</div> : null}
-                <div><strong>{t("country")}:</strong> {drawerExpat.city ? `${drawerExpat.city}, ` : ""}{drawerExpat.country}</div>
-                {drawerExpat.originCountry ? <div><strong>{t("origin")}:</strong> {drawerExpat.originCountry}</div> : null}
+                <div><strong>{t("country")}:</strong> {getCountryFlag(drawerExpat.country)} {drawerExpat.city ? `${drawerExpat.city}, ` : ""}{getCountryName(drawerExpat.country, intl.locale) || drawerExpat.country}</div>
+                {drawerExpat.originCountry ? <div><strong>{t("origin")}:</strong> {getCountryFlag(drawerExpat.originCountry)} {getCountryName(drawerExpat.originCountry, intl.locale) || drawerExpat.originCountry}</div> : null}
                 <div><strong>{t("langs")}:</strong> {drawerExpat.languages.join(", ") || "—"}</div>
                 <div><strong>{t("help")}:</strong> {drawerExpat.helpDomains.join(", ") || "—"}</div>
                 <div><strong>{t("yearsInCountry")}:</strong> {drawerExpat.yearsInCountry || "—"}</div>

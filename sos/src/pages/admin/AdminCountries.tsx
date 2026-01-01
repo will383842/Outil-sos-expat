@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Globe,
   Search,
   CheckCircle,
   XCircle,
-  Filter,
+  AlertTriangle,
   RefreshCw,
   Save
 } from 'lucide-react';
@@ -25,65 +25,108 @@ interface CountryStatus {
   updatedBy?: string;
 }
 
-// Interface combinée pour l'affichage
-interface CountryDisplay extends CountryData {
-  isActive: boolean;
-  updatedAt?: Date;
-}
-
 type FilterType = 'all' | 'active' | 'inactive';
 type RegionFilter = 'all' | string;
 
+// Fonction pure pour obtenir le nom du pays
+const getCountryName = (country: CountryData, lang: string = 'fr'): string => {
+  switch (lang) {
+    case 'en': return country.nameEn;
+    case 'es': return country.nameEs;
+    case 'de': return country.nameDe;
+    case 'pt': return country.namePt;
+    case 'zh': return country.nameZh;
+    case 'ar': return country.nameAr;
+    case 'ru': return country.nameRu;
+    default: return country.nameFr;
+  }
+};
+
+// Liste des pays filtrés (exclure séparateur et disabled)
+const validCountries = countriesData.filter(c => c.code !== 'SEPARATOR' && !c.disabled);
+
+// Liste des régions uniques (calculée une seule fois)
+const regions = Array.from(new Set(validCountries.map(c => c.region).filter(Boolean))).sort();
+
 const AdminCountries: React.FC = () => {
   const navigate = useNavigate();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, isLoading: authLoading } = useAuth();
 
   // États
-  const [countryStatuses, setCountryStatuses] = useState<Map<string, CountryStatus>>(new Map());
+  const [countryStatuses, setCountryStatuses] = useState<Record<string, CountryStatus>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<FilterType>('all');
   const [regionFilter, setRegionFilter] = useState<RegionFilter>('all');
-  const [pendingChanges, setPendingChanges] = useState<Map<string, boolean>>(new Map());
+  const [pendingChanges, setPendingChanges] = useState<Record<string, boolean>>({});
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Langue de l'interface admin (français par défaut)
-  const lang: string = 'fr';
+  const lang = 'fr';
 
-  // Obtenir le nom du pays selon la langue
-  const getCountryName = (country: CountryData): string => {
-    switch (lang) {
-      case 'en': return country.nameEn;
-      case 'es': return country.nameEs;
-      case 'de': return country.nameDe;
-      case 'pt': return country.namePt;
-      case 'zh': return country.nameZh;
-      case 'ar': return country.nameAr;
-      case 'ru': return country.nameRu;
-      default: return country.nameFr;
+  // Vérification auth et chargement initial
+  useEffect(() => {
+    // Attendre que l'auth soit chargée
+    if (authLoading) return;
+
+    if (!currentUser || currentUser.role !== 'admin') {
+      navigate('/admin/login');
+      return;
     }
-  };
 
-  // Liste des régions uniques
-  const regions = useMemo(() => {
-    const regionSet = new Set<string>();
-    countriesData.forEach(c => {
-      if (c.region && c.code !== 'SEPARATOR') {
-        regionSet.add(c.region);
-      }
-    });
-    return Array.from(regionSet).sort();
+    loadCountryStatuses();
+  }, [currentUser, authLoading, navigate]);
+
+  // Charger les statuts depuis Firestore
+  const loadCountryStatuses = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const statusesQuery = query(collection(db, 'country_settings'));
+      const snapshot = await getDocs(statusesQuery);
+
+      const statusObj: Record<string, CountryStatus> = {};
+      snapshot.docs.forEach(docSnap => {
+        const data = docSnap.data();
+        const code = (data.code || docSnap.id).toUpperCase();
+        statusObj[code] = {
+          code,
+          isActive: data.isActive === true,
+          updatedAt: data.updatedAt?.toDate() || new Date(),
+          updatedBy: data.updatedBy
+        };
+      });
+
+      setCountryStatuses(statusObj);
+      setPendingChanges({});
+
+    } catch (err) {
+      console.error('Erreur chargement statuts pays:', err);
+      setError('Erreur lors du chargement des pays. Veuillez réessayer.');
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  // Filtrer les pays (exclure le séparateur)
+  // Calculer le statut effectif d'un pays (avec pending changes)
+  const getEffectiveStatus = useCallback((code: string): boolean => {
+    if (code in pendingChanges) {
+      return pendingChanges[code];
+    }
+    return countryStatuses[code]?.isActive ?? false;
+  }, [pendingChanges, countryStatuses]);
+
+  // Filtrer les pays
   const filteredCountries = useMemo(() => {
-    return countriesData
-      .filter(country => country.code !== 'SEPARATOR' && !country.disabled)
+    return validCountries
       .filter(country => {
         // Filtre de recherche
         if (searchTerm) {
           const search = searchTerm.toLowerCase();
-          const name = getCountryName(country).toLowerCase();
+          const name = getCountryName(country, lang).toLowerCase();
           const code = country.code.toLowerCase();
           if (!name.includes(search) && !code.includes(search)) {
             return false;
@@ -91,10 +134,7 @@ const AdminCountries: React.FC = () => {
         }
 
         // Filtre par statut
-        const isActive = pendingChanges.has(country.code)
-          ? pendingChanges.get(country.code)
-          : (countryStatuses.get(country.code)?.isActive ?? false);
-
+        const isActive = getEffectiveStatus(country.code);
         if (statusFilter === 'active' && !isActive) return false;
         if (statusFilter === 'inactive' && isActive) return false;
 
@@ -105,84 +145,58 @@ const AdminCountries: React.FC = () => {
       })
       .sort((a, b) => {
         // Priorité d'abord, puis nom
-        if ((a.priority || 999) !== (b.priority || 999)) {
-          return (a.priority || 999) - (b.priority || 999);
+        const priorityA = a.priority || 999;
+        const priorityB = b.priority || 999;
+        if (priorityA !== priorityB) {
+          return priorityA - priorityB;
         }
-        return getCountryName(a).localeCompare(getCountryName(b));
+        return getCountryName(a, lang).localeCompare(getCountryName(b, lang));
       });
-  }, [searchTerm, statusFilter, regionFilter, countryStatuses, pendingChanges]);
+  }, [searchTerm, statusFilter, regionFilter, getEffectiveStatus]);
 
   // Statistiques
   const stats = useMemo(() => {
-    const total = countriesData.filter(c => c.code !== 'SEPARATOR' && !c.disabled).length;
+    const total = validCountries.length;
     let active = 0;
 
-    countriesData.forEach(country => {
-      if (country.code === 'SEPARATOR' || country.disabled) return;
-      const isActive = pendingChanges.has(country.code)
-        ? pendingChanges.get(country.code)
-        : (countryStatuses.get(country.code)?.isActive ?? false);
-      if (isActive) active++;
+    validCountries.forEach(country => {
+      if (getEffectiveStatus(country.code)) {
+        active++;
+      }
     });
 
     return { total, active, inactive: total - active };
-  }, [countryStatuses, pendingChanges]);
+  }, [getEffectiveStatus]);
 
-  useEffect(() => {
-    if (!currentUser || currentUser.role !== 'admin') {
-      navigate('/admin/login');
-      return;
-    }
-    loadCountryStatuses();
-  }, [currentUser, navigate]);
+  // Nombre de modifications en attente
+  const pendingCount = Object.keys(pendingChanges).length;
+  const hasChanges = pendingCount > 0;
 
-  const loadCountryStatuses = async () => {
-    try {
-      setIsLoading(true);
+  // Toggle un pays
+  const handleToggleCountry = useCallback((code: string) => {
+    setPendingChanges(prev => {
+      const currentStatus = code in prev ? prev[code] : (countryStatuses[code]?.isActive ?? false);
+      return {
+        ...prev,
+        [code]: !currentStatus
+      };
+    });
+    setSuccessMessage(null);
+  }, [countryStatuses]);
 
-      // Charger les statuts depuis Firestore
-      const statusesQuery = query(collection(db, 'country_settings'));
-      const snapshot = await getDocs(statusesQuery);
-
-      const statusMap = new Map<string, CountryStatus>();
-      snapshot.docs.forEach(docSnap => {
-        const data = docSnap.data();
-        statusMap.set(docSnap.id.toUpperCase(), {
-          code: docSnap.id.toUpperCase(),
-          isActive: data.isActive ?? false,
-          updatedAt: data.updatedAt?.toDate() || new Date(),
-          updatedBy: data.updatedBy
-        });
-      });
-
-      setCountryStatuses(statusMap);
-      setPendingChanges(new Map());
-
-    } catch (error) {
-      console.error('Erreur chargement statuts pays:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleToggleCountry = (code: string) => {
-    const currentStatus = pendingChanges.has(code)
-      ? pendingChanges.get(code)
-      : (countryStatuses.get(code)?.isActive ?? false);
-
-    const newChanges = new Map(pendingChanges);
-    newChanges.set(code, !currentStatus);
-    setPendingChanges(newChanges);
-  };
-
-  const handleSaveChanges = async () => {
-    if (pendingChanges.size === 0) return;
+  // Sauvegarder les modifications
+  const handleSaveChanges = useCallback(async () => {
+    if (!hasChanges) return;
 
     try {
       setIsSaving(true);
+      setError(null);
+      setSuccessMessage(null);
 
-      // Sauvegarder toutes les modifications en batch
-      const promises = Array.from(pendingChanges.entries()).map(([code, isActive]) => {
+      const entries = Object.entries(pendingChanges);
+
+      // Sauvegarder toutes les modifications
+      const promises = entries.map(([code, isActive]) => {
         return setDoc(doc(db, 'country_settings', code.toLowerCase()), {
           code: code.toUpperCase(),
           isActive,
@@ -193,43 +207,74 @@ const AdminCountries: React.FC = () => {
 
       await Promise.all(promises);
 
-      // Recharger les statuts
-      await loadCountryStatuses();
+      // Mettre à jour l'état local immédiatement
+      setCountryStatuses(prev => {
+        const updated = { ...prev };
+        entries.forEach(([code, isActive]) => {
+          updated[code] = {
+            code,
+            isActive,
+            updatedAt: new Date(),
+            updatedBy: currentUser?.id || 'admin'
+          };
+        });
+        return updated;
+      });
 
-      alert(`${pendingChanges.size} pays mis à jour avec succès`);
+      setPendingChanges({});
+      setSuccessMessage(`${entries.length} pays mis à jour avec succès`);
 
-    } catch (error) {
-      console.error('Erreur sauvegarde:', error);
-      alert('Erreur lors de la sauvegarde');
+      // Effacer le message après 3 secondes
+      setTimeout(() => setSuccessMessage(null), 3000);
+
+    } catch (err) {
+      console.error('Erreur sauvegarde:', err);
+      setError('Erreur lors de la sauvegarde. Veuillez réessayer.');
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [hasChanges, pendingChanges, currentUser?.id]);
 
-  const handleActivateAll = () => {
-    const newChanges = new Map(pendingChanges);
-    filteredCountries.forEach(country => {
-      newChanges.set(country.code, true);
+  // Activer tous les pays filtrés
+  const handleActivateAll = useCallback(() => {
+    setPendingChanges(prev => {
+      const newChanges = { ...prev };
+      filteredCountries.forEach(country => {
+        newChanges[country.code] = true;
+      });
+      return newChanges;
     });
-    setPendingChanges(newChanges);
-  };
+    setSuccessMessage(null);
+  }, [filteredCountries]);
 
-  const handleDeactivateAll = () => {
-    const newChanges = new Map(pendingChanges);
-    filteredCountries.forEach(country => {
-      newChanges.set(country.code, false);
+  // Désactiver tous les pays filtrés
+  const handleDeactivateAll = useCallback(() => {
+    setPendingChanges(prev => {
+      const newChanges = { ...prev };
+      filteredCountries.forEach(country => {
+        newChanges[country.code] = false;
+      });
+      return newChanges;
     });
-    setPendingChanges(newChanges);
-  };
+    setSuccessMessage(null);
+  }, [filteredCountries]);
 
-  const getCountryStatus = (code: string): boolean => {
-    if (pendingChanges.has(code)) {
-      return pendingChanges.get(code)!;
-    }
-    return countryStatuses.get(code)?.isActive ?? false;
-  };
+  // Annuler les modifications
+  const handleCancelChanges = useCallback(() => {
+    setPendingChanges({});
+    setSuccessMessage(null);
+  }, []);
 
-  const hasChanges = pendingChanges.size > 0;
+  // Affichage loading auth
+  if (authLoading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -247,23 +292,60 @@ const AdminCountries: React.FC = () => {
               <Button
                 onClick={loadCountryStatuses}
                 variant="outline"
-                disabled={isLoading}
+                disabled={isLoading || isSaving}
               >
                 <RefreshCw size={16} className={`mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                 Actualiser
               </Button>
               {hasChanges && (
-                <Button
-                  onClick={handleSaveChanges}
-                  className="bg-green-600 hover:bg-green-700"
-                  loading={isSaving}
-                >
-                  <Save size={16} className="mr-2" />
-                  Sauvegarder ({pendingChanges.size})
-                </Button>
+                <>
+                  <Button
+                    onClick={handleCancelChanges}
+                    variant="outline"
+                    disabled={isSaving}
+                  >
+                    Annuler
+                  </Button>
+                  <Button
+                    onClick={handleSaveChanges}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    disabled={isSaving}
+                  >
+                    {isSaving ? (
+                      <>
+                        <RefreshCw size={16} className="mr-2 animate-spin" />
+                        Sauvegarde...
+                      </>
+                    ) : (
+                      <>
+                        <Save size={16} className="mr-2" />
+                        Sauvegarder ({pendingCount})
+                      </>
+                    )}
+                  </Button>
+                </>
               )}
             </div>
           </div>
+
+          {/* Messages d'erreur et succès */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center">
+                <XCircle className="h-5 w-5 text-red-600 mr-2" />
+                <span className="text-red-800">{error}</span>
+              </div>
+            </div>
+          )}
+
+          {successMessage && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center">
+                <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
+                <span className="text-green-800">{successMessage}</span>
+              </div>
+            </div>
+          )}
 
           {/* Filtres */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
@@ -309,6 +391,7 @@ const AdminCountries: React.FC = () => {
                   onClick={handleActivateAll}
                   variant="outline"
                   size="small"
+                  disabled={isSaving || filteredCountries.length === 0}
                   aria-label="Activer tous les pays filtrés"
                 >
                   <CheckCircle size={16} className="mr-1 text-green-600" />
@@ -318,6 +401,7 @@ const AdminCountries: React.FC = () => {
                   onClick={handleDeactivateAll}
                   variant="outline"
                   size="small"
+                  disabled={isSaving || filteredCountries.length === 0}
                   aria-label="Désactiver tous les pays filtrés"
                 >
                   <XCircle size={16} className="mr-1 text-red-600" />
@@ -327,17 +411,19 @@ const AdminCountries: React.FC = () => {
             </div>
           </div>
 
-          {/* Avertissement changements non sauvegardés */}
-          {hasChanges && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-              <div className="flex items-center">
-                <Filter className="h-5 w-5 text-yellow-600 mr-2" />
-                <span className="text-yellow-800 font-medium">
-                  {pendingChanges.size} modification(s) en attente - N'oubliez pas de sauvegarder
-                </span>
+          {/* Avertissement changements non sauvegardés - hauteur fixe pour éviter les sauts */}
+          <div className={`mb-6 transition-opacity duration-200 ${hasChanges ? 'opacity-100' : 'opacity-0 pointer-events-none h-0 mb-0'}`}>
+            {hasChanges && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className="flex items-center">
+                  <AlertTriangle className="h-5 w-5 text-yellow-600 mr-2 flex-shrink-0" />
+                  <span className="text-yellow-800 font-medium">
+                    {pendingCount} modification(s) en attente - N'oubliez pas de sauvegarder
+                  </span>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Grille des pays */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -346,37 +432,52 @@ const AdminCountries: React.FC = () => {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
                 <p className="mt-2 text-gray-500">Chargement des pays...</p>
               </div>
+            ) : filteredCountries.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">
+                <Globe size={48} className="mx-auto mb-4 text-gray-300" />
+                <p>Aucun pays ne correspond aux critères de recherche</p>
+              </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-0">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                 {filteredCountries.map((country) => {
-                  const isActive = getCountryStatus(country.code);
-                  const hasChange = pendingChanges.has(country.code);
+                  const isActive = getEffectiveStatus(country.code);
+                  const hasChange = country.code in pendingChanges;
 
                   return (
                     <div
                       key={country.code}
                       onClick={() => handleToggleCountry(country.code)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          handleToggleCountry(country.code);
+                        }
+                      }}
                       className={`
-                        p-4 border-b border-r border-gray-100 cursor-pointer transition-all
+                        p-4 border-b border-r border-gray-100 cursor-pointer transition-colors duration-150
                         ${isActive ? 'bg-green-50 hover:bg-green-100' : 'bg-white hover:bg-gray-50'}
                         ${hasChange ? 'ring-2 ring-yellow-400 ring-inset' : ''}
+                        focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-inset
                       `}
                     >
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <span className="text-2xl">{country.flag}</span>
-                          <div>
-                            <p className="font-medium text-gray-900 text-sm">
-                              {getCountryName(country)}
+                        <div className="flex items-center space-x-3 min-w-0">
+                          <span className="text-2xl flex-shrink-0">{country.flag}</span>
+                          <div className="min-w-0">
+                            <p className="font-medium text-gray-900 text-sm truncate">
+                              {getCountryName(country, lang)}
                             </p>
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-gray-500 truncate">
                               {country.code} - {country.region}
                             </p>
                           </div>
                         </div>
                         <div className={`
-                          w-6 h-6 rounded-full flex items-center justify-center
+                          w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ml-2
                           ${isActive ? 'bg-green-500' : 'bg-gray-300'}
+                          transition-colors duration-150
                         `}>
                           {isActive ? (
                             <CheckCircle size={14} className="text-white" />
@@ -388,13 +489,6 @@ const AdminCountries: React.FC = () => {
                     </div>
                   );
                 })}
-              </div>
-            )}
-
-            {!isLoading && filteredCountries.length === 0 && (
-              <div className="p-8 text-center text-gray-500">
-                <Globe size={48} className="mx-auto mb-4 text-gray-300" />
-                <p>Aucun pays ne correspond aux critères de recherche</p>
               </div>
             )}
           </div>

@@ -30,23 +30,35 @@ const Modal: React.FC<ModalProps> = memo(function Modal({
   const titleId = useId();
   const modalRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const onCloseRef = useRef(onClose);
+  const wasOpenRef = useRef(false);
+
+  // Keep onClose ref updated without triggering useEffect
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
 
   // Focus trap and restore focus on close
   useEffect(() => {
-    if (isOpen) {
-      // Store previously focused element
+    if (isOpen && !wasOpenRef.current) {
+      // Modal just opened - store previously focused element and focus modal
       previousFocusRef.current = document.activeElement as HTMLElement;
-
-      // Focus the modal container
       modalRef.current?.focus();
+      wasOpenRef.current = true;
+    } else if (!isOpen && wasOpenRef.current) {
+      // Modal just closed - restore focus
+      previousFocusRef.current?.focus();
+      wasOpenRef.current = false;
+    }
 
+    if (isOpen) {
       // Prevent body scroll
       document.body.style.overflow = 'hidden';
 
       // Handle Escape key
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
-          onClose();
+          onCloseRef.current();
         }
       };
       document.addEventListener('keydown', handleKeyDown);
@@ -54,11 +66,9 @@ const Modal: React.FC<ModalProps> = memo(function Modal({
       return () => {
         document.removeEventListener('keydown', handleKeyDown);
         document.body.style.overflow = '';
-        // Restore focus
-        previousFocusRef.current?.focus();
       };
     }
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

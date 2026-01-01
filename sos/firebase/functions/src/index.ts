@@ -154,36 +154,39 @@ export {
 };
 
 // PayPal Commerce Platform
-import {
-  PAYPAL_CLIENT_ID as _PAYPAL_CLIENT_ID,
-  PAYPAL_CLIENT_SECRET as _PAYPAL_CLIENT_SECRET,
-  PAYPAL_WEBHOOK_ID as _PAYPAL_WEBHOOK_ID,
-  PAYPAL_PARTNER_ID as _PAYPAL_PARTNER_ID,
-  PAYPAL_MODE as _PAYPAL_MODE,
-} from "./PayPalManager";
+// TEMPORARILY DISABLED imports - requires billing on Secret Manager
+// import {
+//   PAYPAL_CLIENT_ID as _PAYPAL_CLIENT_ID,
+//   PAYPAL_CLIENT_SECRET as _PAYPAL_CLIENT_SECRET,
+//   PAYPAL_WEBHOOK_ID as _PAYPAL_WEBHOOK_ID,
+//   PAYPAL_PARTNER_ID as _PAYPAL_PARTNER_ID,
+//   PAYPAL_MODE as _PAYPAL_MODE,
+// } from "./PayPalManager";
 
-export {
-  createPayPalOnboardingLink,
-  checkPayPalMerchantStatus,
-  createPayPalOrder,
-  capturePayPalOrder,
-  paypalWebhook,
-  getRecommendedPaymentGateway,
-  createPayPalPayout,
-  checkPayPalPayoutStatus,
-  PAYPAL_CLIENT_ID,
-  PAYPAL_CLIENT_SECRET,
-  PAYPAL_WEBHOOK_ID,
-  PAYPAL_PARTNER_ID,
-  PAYPAL_MODE,
-  PAYPAL_PLATFORM_MERCHANT_ID,
-} from "./PayPalManager";
+// TEMPORARILY DISABLED - PayPal requires billing on Secret Manager
+// export {
+//   createPayPalOnboardingLink,
+//   checkPayPalMerchantStatus,
+//   createPayPalOrder,
+//   capturePayPalOrder,
+//   paypalWebhook,
+//   getRecommendedPaymentGateway,
+//   createPayPalPayout,
+//   checkPayPalPayoutStatus,
+//   PAYPAL_CLIENT_ID,
+//   PAYPAL_CLIENT_SECRET,
+//   PAYPAL_WEBHOOK_ID,
+//   PAYPAL_PARTNER_ID,
+//   PAYPAL_MODE,
+//   PAYPAL_PLATFORM_MERCHANT_ID,
+// } from "./PayPalManager";
 
 // Alias pour usage local dans GLOBAL_SECRETS
-const PAYPAL_CLIENT_ID = _PAYPAL_CLIENT_ID;
-const PAYPAL_CLIENT_SECRET = _PAYPAL_CLIENT_SECRET;
-const PAYPAL_WEBHOOK_ID = _PAYPAL_WEBHOOK_ID;
-const PAYPAL_PARTNER_ID = _PAYPAL_PARTNER_ID;
+// TEMPORARILY DISABLED - requires billing on Secret Manager
+// const PAYPAL_CLIENT_ID = _PAYPAL_CLIENT_ID;
+// const PAYPAL_CLIENT_SECRET = _PAYPAL_CLIENT_SECRET;
+// const PAYPAL_WEBHOOK_ID = _PAYPAL_WEBHOOK_ID;
+// const PAYPAL_PARTNER_ID = _PAYPAL_PARTNER_ID;
 
 // Cloud Tasks auth
 export const TASKS_AUTH_SECRET = defineSecret("TASKS_AUTH_SECRET");
@@ -205,11 +208,12 @@ const GLOBAL_SECRETS = [
   STRIPE_SECRET_KEY_TEST,
   STRIPE_SECRET_KEY_LIVE,
   TASKS_AUTH_SECRET,
-  // PayPal Commerce Platform secrets
-  PAYPAL_CLIENT_ID,
-  PAYPAL_CLIENT_SECRET,
-  PAYPAL_WEBHOOK_ID,
-  PAYPAL_PARTNER_ID,
+  // PayPal Commerce Platform secrets - TEMPORARILY DISABLED (requires billing on Secret Manager)
+  // TODO: Re-enable when billing is activated on the project
+  // PAYPAL_CLIENT_ID,
+  // PAYPAL_CLIENT_SECRET,
+  // PAYPAL_WEBHOOK_ID,
+  // PAYPAL_PARTNER_ID,
   // MAILWIZZ_API_KEY and MAILWIZZ_WEBHOOK_SECRET removed - now using static values from environment
 ].filter(Boolean) as any[];
 
@@ -664,6 +668,9 @@ export { notifyAfterPayment } from "./notifications/notifyAfterPayment";
 // Exports additionnels
 export * from "./notificationPipeline/worker";
 export * from "./admin/callables";
+
+// Triggers de nettoyage automatique (suppression cascade users -> sos_profiles)
+export { onUserDeleted, cleanupOrphanedProfiles } from "./triggers/userCleanupTrigger";
 
 // AI Chat - DEPRECATED: Now handled directly by Outil-sos-expat
 // The AI chat functionality is in Outil-sos-expat, not SOS
@@ -3359,6 +3366,20 @@ export const testWebhook = onRequest(
 export { checkProviderInactivity } from './scheduled/checkProviderInactivity';
 export { updateProviderActivity } from './callables/updateProviderActivity';
 export { setProviderOffline } from './callables/setProviderOffline';
+
+// ========== NETTOYAGE SESSIONS ORPHELINES ==========
+// ✅ CRITICAL: Cette fonction nettoie les sessions d'appel bloquées
+// Elle s'exécute toutes les heures et nettoie:
+// - Sessions "pending" depuis plus de 60 minutes
+// - Sessions "connecting" depuis plus de 45 minutes
+// - Prestataires "busy" depuis plus de 2 heures sans session active
+export { cleanupOrphanedSessions } from './scheduled/cleanupOrphanedSessions';
+
+// Fonctions admin pour nettoyage manuel
+export {
+  adminCleanupOrphanedSessions,
+  adminGetOrphanedSessionsStats,
+} from './callables/adminCleanupOrphanedSessions';
 
 // ========== ALERTES DISPONIBILITE PRESTATAIRES ==========
 export {
