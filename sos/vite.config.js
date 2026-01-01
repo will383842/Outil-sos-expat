@@ -111,11 +111,13 @@ export default defineConfig(({ mode }) => {
           // Code splitting sécurisé - évite la duplication de React
           manualChunks: (id) => {
             // React et ses dépendances DOIVENT rester ensemble
+            // recharts utilise React.forwardRef donc doit être avec React
             if (id.includes('node_modules/react') ||
                 id.includes('node_modules/react-dom') ||
                 id.includes('node_modules/scheduler') ||
                 id.includes('node_modules/react-router') ||
                 id.includes('node_modules/react-intl') ||
+                id.includes('recharts') ||
                 id.includes('@formatjs')) {
               return 'vendor-react';
             }
@@ -136,9 +138,9 @@ export default defineConfig(({ mode }) => {
               return 'vendor-phone';
             }
 
-            // Charts - chargé uniquement sur les pages avec graphiques
-            if (id.includes('recharts') || id.includes('d3-')) {
-              return 'vendor-charts';
+            // D3 utilities for charts (recharts dependencies, no React needed)
+            if (id.includes('d3-')) {
+              return 'vendor-d3';
             }
 
             // Autres librairies UI (lucide, etc)

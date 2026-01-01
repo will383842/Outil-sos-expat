@@ -11,8 +11,6 @@ import { getAuth, connectAuthEmulator, type Auth } from "firebase/auth";
 import {
   getFirestore,
   initializeFirestore,
-  persistentLocalCache,
-  persistentMultipleTabManager,
   connectFirestoreEmulator,
   serverTimestamp,
   setLogLevel,
@@ -30,6 +28,8 @@ import {
 /** ----------------------------------------
  *  Configuration Firebase (variables .env)
  * ---------------------------------------- */
+const CACHE_DISABLED_KEY = 'firestore_cache_disabled';
+
 const firebaseConfig: FirebaseOptions = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY as string,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN as string,
@@ -68,11 +68,60 @@ export const auth: Auth = getAuth(app);
 export const storage: FirebaseStorage = getStorage(app);
 
 // Firestore - Configuration avec Long Polling forcé (contourne les problèmes WebSocket)
+// ⚠️ CRITICAL: Ces options sont ESSENTIELLES pour la stabilité de Firestore
+// NE PAS SUPPRIMER sans comprendre les conséquences (voir commit c40b8f9)
 export const db: Firestore = initializeFirestore(app, {
   experimentalForceLongPolling: true, // Force HTTP au lieu de WebSocket
-  useFetchStreams: false, // Désactive les streams fetch
+  experimentalAutoDetectLongPolling: false, // Désactiver l'auto-détection
+  // ⚠️ CRITICAL: Désactive les Fetch Streams qui peuvent être bloqués par extensions/antivirus
+  // @ts-expect-error - Option non documentée mais critique pour la stabilité
+  useFetchStreams: false,
 });
-console.log("🔧 [Firebase] Firestore initialisé avec LONG POLLING FORCÉ");
+console.log("🔧 [Firebase] Firestore initialisé avec LONG POLLING FORCÉ + useFetchStreams=false");
+
+// 🔧 Fonction pour reset le cache Firestore (appeler depuis la console: window.resetFirestoreCache())
+if (typeof window !== 'undefined') {
+  (window as any).resetFirestoreCache = async () => {
+    console.log("🗑️ [Firebase] Suppression du cache Firestore...");
+    try {
+      // Supprimer toutes les bases IndexedDB liées à Firestore
+      const databases = await indexedDB.databases();
+      const firestoreDbs = databases.filter(db =>
+        db.name?.includes('firestore') ||
+        db.name?.includes('firebase') ||
+        db.name?.includes('__sak')
+      );
+
+      for (const dbInfo of firestoreDbs) {
+        if (dbInfo.name) {
+          console.log(`🗑️ Suppression de ${dbInfo.name}...`);
+          indexedDB.deleteDatabase(dbInfo.name);
+        }
+      }
+
+      // Désactiver le cache pour le prochain reload
+      localStorage.setItem(CACHE_DISABLED_KEY, 'true');
+
+      console.log("✅ [Firebase] Cache supprimé! Rechargez la page.");
+      console.log("💡 [Firebase] Le cache sera désactivé au prochain chargement.");
+      console.log("💡 [Firebase] Pour réactiver: localStorage.removeItem('firestore_cache_disabled')");
+
+      // Forcer un reload
+      setTimeout(() => location.reload(), 1000);
+    } catch (e) {
+      console.error("❌ [Firebase] Erreur lors de la suppression du cache:", e);
+    }
+  };
+
+  // Fonction pour réactiver le cache
+  (window as any).enableFirestoreCache = () => {
+    localStorage.removeItem(CACHE_DISABLED_KEY);
+    console.log("✅ [Firebase] Cache réactivé pour le prochain chargement. Rechargez la page.");
+    setTimeout(() => location.reload(), 500);
+  };
+
+  console.log("💡 [Firebase] Si Firestore est bloqué, exécutez: window.resetFirestoreCache()");
+}
 console.log("🔧 [Firebase] Firestore type:", db.type);
 console.log("🔧 [Firebase] App name:", db.app.name);
 
