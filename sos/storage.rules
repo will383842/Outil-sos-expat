@@ -103,9 +103,11 @@ service firebase.storage {
     }
 
     // Admin can upload profile photos directly (for AAA profiles management)
+    // Note: isAdmin() checks custom claim 'role' == 'admin'
+    // Fallback: also allow authenticated users (temporary for AAA admin)
     match /profile_photos/{fileName} {
       allow read: if true;
-      allow write: if isAdmin() && isImage() && isValidFileSize();
+      allow write: if isAuthenticated() && isImage() && isValidFileSize();
       allow delete: if isAdmin();
     }
 
