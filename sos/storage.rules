@@ -102,6 +102,13 @@ service firebase.storage {
       allow delete: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
     }
 
+    // Admin can upload profile photos directly (for AAA profiles management)
+    match /profile_photos/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin() && isImage() && isValidFileSize();
+      allow delete: if isAdmin();
+    }
+
     match /documents/{userId}/{fileName} {
       allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
       allow write: if isAuthenticated() && request.auth.uid == userId && isValidDocumentType() && isValidFileSize();
