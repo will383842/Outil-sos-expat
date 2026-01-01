@@ -6,6 +6,7 @@
  */
 
 import * as functions from 'firebase-functions/v1';
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import Stripe from 'stripe';
 import { MailwizzAPI } from '../emailMarketing/utils/mailwizz';
@@ -1198,16 +1199,45 @@ async function isAdmin(context: functions.https.CallableContext): Promise<boolea
 }
 
 /**
- * Update trial configuration (Admin only)
+ * Helper: Check if user is admin (V2 API - for onCall v2 functions)
  */
-export const updateTrialConfig = functions
-  .region('europe-west1')
-  .https.onCall(async (data, context) => {
+async function isAdminV2(request: { auth?: { uid: string; token: { admin?: boolean; role?: string; email?: string } } }): Promise<boolean> {
+  if (!request.auth) return false;
+
+  // Check custom claims first (faster)
+  if (request.auth.token.admin === true || request.auth.token.role === 'admin') {
+    return true;
+  }
+
+  // Fallback: check Firestore user document
+  try {
+    const userDoc = await getDb().collection('users').doc(request.auth.uid).get();
+    if (userDoc.exists) {
+      const userData = userDoc.data();
+      return userData?.role === 'admin' || userData?.isAdmin === true;
+    }
+  } catch (e) {
+    console.error('Error checking admin in Firestore:', e);
+  }
+
+  return false;
+}
+
+/**
+ * Update trial configuration (Admin only) - V2 with CORS support
+ */
+export const updateTrialConfig = onCall(
+  {
+    region: 'europe-west1',
+    cors: true,
+  },
+  async (request) => {
     // Verify admin (via custom claims or Firestore)
-    if (!await isAdmin(context)) {
-      throw new functions.https.HttpsError('permission-denied', 'Admin access required');
+    if (!await isAdminV2(request)) {
+      throw new HttpsError('permission-denied', 'Admin access required');
     }
 
+    const data = request.data;
     const { durationDays, maxAiCalls, isEnabled } = data as {
       durationDays?: number;
       maxAiCalls?: number;
@@ -1216,7 +1246,7 @@ export const updateTrialConfig = functions
 
     const updates: any = {
       'trial.updatedAt': admin.firestore.Timestamp.now(),
-      'trial.updatedBy': context.auth.uid
+      'trial.updatedBy': request.auth!.uid
     };
 
     if (durationDays !== undefined) updates['trial.durationDays'] = durationDays;
@@ -1232,8 +1262,8 @@ export const updateTrialConfig = functions
     // AUDIT LOG: Track admin action
     await logAdminAction({
       action: 'UPDATE_TRIAL_CONFIG',
-      adminId: context.auth!.uid,
-      adminEmail: context.auth!.token.email,
+      adminId: request.auth!.uid,
+      adminEmail: request.auth!.token.email,
       targetId: 'subscription',
       targetType: 'settings',
       previousValue,
@@ -1244,15 +1274,20 @@ export const updateTrialConfig = functions
   });
 
 /**
- * Update plan pricing (Admin only)
+ * Update plan pricing (Admin only) - V2 with CORS support
  */
-export const updatePlanPricing = functions
-  .region('europe-west1')
-  .https.onCall(async (data, context) => {
+export const updatePlanPricing = onCall(
+  {
+    region: 'europe-west1',
+    cors: true,
+  },
+  async (request) => {
     // Verify admin (via custom claims or Firestore)
-    if (!await isAdmin(context)) {
-      throw new functions.https.HttpsError('permission-denied', 'Admin access required');
+    if (!await isAdminV2(request)) {
+      throw new HttpsError('permission-denied', 'Admin access required');
     }
+
+    const data = request.data;
 
     // Type for multilingual text (9 languages)
     type MultilingualText = {
@@ -1308,8 +1343,8 @@ export const updatePlanPricing = functions
     // AUDIT LOG: Track admin action
     await logAdminAction({
       action: 'UPDATE_PLAN_PRICING',
-      adminId: context.auth!.uid,
-      adminEmail: context.auth!.token.email,
+      adminId: request.auth!.uid,
+      adminEmail: request.auth!.token.email,
       targetId: planId,
       targetType: 'subscription_plan',
       previousValue: previousValue ? { pricing: previousValue.pricing, aiCallsLimit: previousValue.aiCallsLimit } : null,
