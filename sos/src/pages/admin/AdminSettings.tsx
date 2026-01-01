@@ -564,7 +564,7 @@ const AdminSettings: React.FC = () => {
                       {refund.clientName}
                     </h4>
                     <p className="text-sm text-gray-500">
-                      Montant: {refund.amount}€
+                      Montant: {Number(refund.amount).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
                     </p>
                     <p className="text-sm text-gray-500">
                       Date: {formatDate(refund.createdAt)}

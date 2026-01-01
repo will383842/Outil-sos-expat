@@ -2132,8 +2132,8 @@ const BookingRequest: React.FC = () => {
               <div className="flex items-center justify-between sm:justify-center sm:flex-col bg-gradient-to-r sm:bg-none from-red-50 to-orange-50 sm:bg-white rounded-xl p-3 sm:p-4 border border-red-100 sm:border-gray-200 sm:min-w-[130px]">
                 <div className="flex items-baseline gap-1 sm:block sm:text-center">
                   <div className="text-xl sm:text-3xl font-extrabold text-red-600">{displayEUR.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</div>
-                  <div className="text-sm sm:text-base text-gray-500 sm:hidden">/ ${displayUSD}</div>
-                  <div className="hidden sm:block text-sm text-gray-500">/ ${displayUSD}</div>
+                  <div className="text-sm sm:text-base text-gray-500 sm:hidden">/ ${displayUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                  <div className="hidden sm:block text-sm text-gray-500">/ ${displayUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                 </div>
                 <div className="flex items-center gap-2 sm:flex-col sm:gap-1 sm:mt-1">
                   <div className="text-sm font-semibold text-gray-700 bg-white sm:bg-transparent px-2 py-0.5 rounded-full sm:rounded-none">

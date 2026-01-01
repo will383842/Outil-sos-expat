@@ -254,7 +254,7 @@ export const IaLogsTab: React.FC = () => {
           <div className="text-xs text-gray-500">{iaT.avgResponseTime}</div>
         </div>
         <div className="bg-amber-50 rounded-lg p-3">
-          <div className="text-2xl font-bold text-amber-600">${stats.totalCost.toFixed(2)}</div>
+          <div className="text-2xl font-bold text-amber-600">${stats.totalCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
           <div className="text-xs text-gray-500">{iaT.totalCost}</div>
         </div>
       </div>

@@ -267,9 +267,9 @@ const PlanEditor: React.FC<PlanEditorProps> = ({ plan, onSave, isLoading, global
                 </div>
                 <div className="bg-white rounded-lg p-3">
                   <div className="text-gray-500">USD</div>
-                  <div className="font-bold text-green-700">${calculatedAnnualUSD.toFixed(2)}/an</div>
-                  <div className="text-xs text-gray-500">≈ ${monthlyEquivUSD.toFixed(2)}/mois</div>
-                  <div className="text-xs text-green-600">Économie: ${savingsUSD.toFixed(2)}</div>
+                  <div className="font-bold text-green-700">${calculatedAnnualUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/an</div>
+                  <div className="text-xs text-gray-500">≈ ${monthlyEquivUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/mois</div>
+                  <div className="text-xs text-green-600">Économie: ${savingsUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                 </div>
               </div>
             )}

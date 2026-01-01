@@ -119,13 +119,13 @@ const AdminCommissionRules: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">EUR</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {pricing?.lawyer?.eur?.totalAmount ?? '--'}€
+                    {pricing?.lawyer?.eur?.totalAmount !== undefined ? Number(pricing.lawyer.eur.totalAmount).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '--'}€
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-indigo-600 font-medium">
-                    {pricing?.lawyer?.eur?.connectionFeeAmount ?? '--'}€
+                    {pricing?.lawyer?.eur?.connectionFeeAmount !== undefined ? Number(pricing.lawyer.eur.connectionFeeAmount).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '--'}€
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">
-                    {pricing?.lawyer?.eur?.providerAmount ?? '--'}€
+                    {pricing?.lawyer?.eur?.providerAmount !== undefined ? Number(pricing.lawyer.eur.providerAmount).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '--'}€
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                     {calculateCommission(
@@ -141,13 +141,13 @@ const AdminCommissionRules: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">USD</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    ${pricing?.lawyer?.usd?.totalAmount ?? '--'}
+                    ${pricing?.lawyer?.usd?.totalAmount !== undefined ? Number(pricing.lawyer.usd.totalAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '--'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-indigo-600 font-medium">
-                    ${pricing?.lawyer?.usd?.connectionFeeAmount ?? '--'}
+                    ${pricing?.lawyer?.usd?.connectionFeeAmount !== undefined ? Number(pricing.lawyer.usd.connectionFeeAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '--'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">
-                    ${pricing?.lawyer?.usd?.providerAmount ?? '--'}
+                    ${pricing?.lawyer?.usd?.providerAmount !== undefined ? Number(pricing.lawyer.usd.providerAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '--'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                     {calculateCommission(
@@ -163,13 +163,13 @@ const AdminCommissionRules: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">EUR</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {pricing?.expat?.eur?.totalAmount ?? '--'}€
+                    {pricing?.expat?.eur?.totalAmount !== undefined ? Number(pricing.expat.eur.totalAmount).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '--'}€
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-indigo-600 font-medium">
-                    {pricing?.expat?.eur?.connectionFeeAmount ?? '--'}€
+                    {pricing?.expat?.eur?.connectionFeeAmount !== undefined ? Number(pricing.expat.eur.connectionFeeAmount).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '--'}€
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">
-                    {pricing?.expat?.eur?.providerAmount ?? '--'}€
+                    {pricing?.expat?.eur?.providerAmount !== undefined ? Number(pricing.expat.eur.providerAmount).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '--'}€
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                     {calculateCommission(
@@ -185,13 +185,13 @@ const AdminCommissionRules: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">USD</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    ${pricing?.expat?.usd?.totalAmount ?? '--'}
+                    ${pricing?.expat?.usd?.totalAmount !== undefined ? Number(pricing.expat.usd.totalAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '--'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-indigo-600 font-medium">
-                    ${pricing?.expat?.usd?.connectionFeeAmount ?? '--'}
+                    ${pricing?.expat?.usd?.connectionFeeAmount !== undefined ? Number(pricing.expat.usd.connectionFeeAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '--'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">
-                    ${pricing?.expat?.usd?.providerAmount ?? '--'}
+                    ${pricing?.expat?.usd?.providerAmount !== undefined ? Number(pricing.expat.usd.providerAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '--'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                     {calculateCommission(

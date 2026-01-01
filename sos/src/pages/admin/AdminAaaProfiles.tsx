@@ -67,6 +67,117 @@ if (typeof window !== 'undefined') {
   };
 }
 
+// ==========================================
+// 🛡️ VALIDATION ET LOGGING DES SPÉCIALITÉS
+// ==========================================
+
+// Cache des codes valides pour performance
+let validLawyerCodesCache: Set<string> | null = null;
+let validExpatCodesCache: Set<string> | null = null;
+
+const getValidLawyerCodes = (): Set<string> => {
+  if (!validLawyerCodesCache) {
+    validLawyerCodesCache = new Set(flattenLawyerSpecialities().map(s => s.code));
+  }
+  return validLawyerCodesCache;
+};
+
+const getValidExpatCodes = (): Set<string> => {
+  if (!validExpatCodesCache) {
+    validExpatCodesCache = new Set(expatHelpTypesData.filter(t => !t.disabled).map(t => t.code));
+  }
+  return validExpatCodesCache;
+};
+
+/**
+ * Valide un code de spécialité selon le type de profil
+ */
+const isValidSpecialtyCode = (code: string, profileType: 'lawyer' | 'expat'): boolean => {
+  if (profileType === 'lawyer') {
+    return getValidLawyerCodes().has(code);
+  } else {
+    return getValidExpatCodes().has(code);
+  }
+};
+
+/**
+ * Valide et filtre les codes de spécialité, retourne uniquement les codes valides
+ */
+const validateAndFilterSpecialties = (
+  codes: string[],
+  profileType: 'lawyer' | 'expat',
+  enableLogging: boolean = true
+): { valid: string[]; invalid: string[] } => {
+  const valid: string[] = [];
+  const invalid: string[] = [];
+
+  for (const code of codes) {
+    if (isValidSpecialtyCode(code, profileType)) {
+      valid.push(code);
+    } else {
+      invalid.push(code);
+      if (enableLogging) {
+        console.warn(`[AAA] ⚠️ Code spécialité invalide détecté: "${code}" pour ${profileType}`);
+      }
+    }
+  }
+
+  if (enableLogging && invalid.length > 0) {
+    console.error(`[AAA] ❌ ${invalid.length} code(s) invalide(s) filtré(s):`, invalid);
+  }
+
+  return { valid, invalid };
+};
+
+/**
+ * Log détaillé de la génération d'un profil
+ */
+const logProfileGeneration = (
+  uid: string,
+  role: 'lawyer' | 'expat',
+  specialties: string[],
+  country: string
+) => {
+  console.log(`[AAA] ✅ Profil généré:`, {
+    uid,
+    role,
+    country,
+    specialties,
+    specialtiesCount: specialties.length,
+    validCodes: specialties.every(s => isValidSpecialtyCode(s, role))
+  });
+};
+
+/**
+ * Vérifie un profil après génération
+ */
+const verifyGeneratedProfile = async (
+  uid: string,
+  role: 'lawyer' | 'expat',
+  specialties: string[]
+): Promise<{ success: boolean; issues: string[] }> => {
+  const issues: string[] = [];
+
+  // Vérifier que les spécialités sont valides
+  const { invalid } = validateAndFilterSpecialties(specialties, role, false);
+  if (invalid.length > 0) {
+    issues.push(`Codes invalides: ${invalid.join(', ')}`);
+  }
+
+  // Vérifier le nombre de spécialités
+  if (specialties.length < 1) {
+    issues.push('Aucune spécialité assignée');
+  }
+  if (specialties.length > 10) {
+    issues.push(`Trop de spécialités (${specialties.length})`);
+  }
+
+  return {
+    success: issues.length === 0,
+    issues
+  };
+};
+
 // ✅ IMPORTS CORRIGÉS depuis slugGenerator (generateSlug non utilisé - généré par ProviderProfile)
 import { 
   slugify,
@@ -909,6 +1020,33 @@ function translateSpecialtyCodes(
 }
 
 /**
+ * 🛡️ Assure que la valeur est un nom de pays complet (pas un code ISO)
+ * Si c'est un code ISO, le convertit en nom complet
+ */
+const ensureCountryName = (countryOrCode: string): string => {
+  if (!countryOrCode) return '';
+
+  // Si c'est déjà un nom complet (plus de 3 caractères et pas tout en majuscules)
+  if (countryOrCode.length > 3 || !/^[A-Z]{2,3}$/.test(countryOrCode)) {
+    // Vérifier si c'est dans la liste des noms de pays
+    if (COUNTRIES_LIST.includes(countryOrCode)) {
+      return countryOrCode;
+    }
+  }
+
+  // Sinon, essayer de convertir depuis le code ISO
+  const convertedName = getCountryNameFromCode(countryOrCode);
+  if (convertedName !== '-' && convertedName !== countryOrCode) {
+    console.log(`[AAA] 🔄 Code pays "${countryOrCode}" converti en "${convertedName}"`);
+    return convertedName;
+  }
+
+  // Si pas trouvé, retourner tel quel avec un warning
+  console.warn(`[AAA] ⚠️ Impossible de convertir le code pays: "${countryOrCode}"`);
+  return countryOrCode;
+};
+
+/**
  * 🌍 Génère une bio multilingue pour toutes les langues disponibles
  */
 async function getMultilingualBio(
@@ -921,19 +1059,22 @@ async function getMultilingualBio(
 ): Promise<Record<string, string>> {
   const result: Record<string, string> = {};
   const bioLanguages = ['fr', 'en', 'es', 'de', 'pt', 'ru', 'zh', 'ar', 'hi'];
-  
+
+  // 🛡️ S'assurer que c'est un nom de pays, pas un code ISO
+  const countryName = ensureCountryName(country);
+
   for (const lang of bioLanguages) {
     try {
       const bioTemplate = await getUniqueBio(t, role, lang, profileId);
-      
+
       // ✅ CORRECTION : Traduire les codes en labels
       const translatedSpecialties = translateSpecialtyCodes(specialties, role, lang);
-      
+
       const bio = interpolateBio(bioTemplate, {
         specialties: translatedSpecialties.join(', '),
         help: translatedSpecialties.join(', '),
         services: translatedSpecialties.join(', '),
-        country,
+        country: countryName, // ✅ Utilise le nom complet, pas le code
         experience
       });
       result[lang] = bio;
@@ -944,7 +1085,7 @@ async function getMultilingualBio(
       }
     }
   }
-  
+
   return result;
 }
 
@@ -955,6 +1096,9 @@ async function getMultilingualMotivation(
   country: string,
   experience: number
 ): Promise<Record<string, string>> {
+  // 🛡️ S'assurer que c'est un nom de pays, pas un code ISO
+  const countryName = ensureCountryName(country);
+
   const motivationTemplates: Record<string, string[]> = {
     fr: [
       'Passionné par l\'aide aux expatriés à {country}',
@@ -1029,7 +1173,7 @@ async function getMultilingualMotivation(
     const templates = motivationTemplates[lang] || motivationTemplates['en'];
     const template = templates[Math.floor(Math.random() * templates.length)];
     result[lang] = template
-      .replace('{country}', country)
+      .replace('{country}', countryName) // ✅ Utilise le nom complet, pas le code
       .replace('{experience}', experience.toString());
   }
 
@@ -1678,16 +1822,42 @@ const AdminAaaProfiles: React.FC = () => {
       }
     }
 
+    // 🛡️ VALIDATION DES CODES DE SPÉCIALITÉ
+    const { valid: validatedSpecialties, invalid: invalidSpecialties } = validateAndFilterSpecialties(
+      specialties,
+      role,
+      true // enableLogging
+    );
+
+    // Si des codes invalides sont détectés, les remplacer par des codes valides
+    if (invalidSpecialties.length > 0) {
+      console.warn(`[AAA] 🔄 Remplacement de ${invalidSpecialties.length} code(s) invalide(s) pour ${uid}`);
+      // Ajouter des codes valides pour remplacer les invalides
+      const codeSource = role === 'lawyer' ? LAWYER_SPECIALTIES : EXPAT_HELP_TYPES;
+      while (validatedSpecialties.length < specialties.length) {
+        const replacement = randomChoice(codeSource);
+        if (!validatedSpecialties.includes(replacement)) {
+          validatedSpecialties.push(replacement);
+        }
+      }
+    }
+
+    // Utiliser les spécialités validées
+    const finalSpecialties = validatedSpecialties;
+
+    // 📝 LOG DE GÉNÉRATION
+    logProfileGeneration(uid, role, finalSpecialties, country);
+
     // ✅ Déterminer la langue principale du profil
     const mainLanguage = selectedLanguages[0] || 'Français';
     const langCode = getLanguageCode(mainLanguage);
 
-    // ✅ Bio multilingue
+    // ✅ Bio multilingue (utilise les spécialités validées)
     const bio = await getMultilingualBio(
       t,
       role,
       uid,
-      specialties,
+      finalSpecialties,
       country,
       experience
     );
@@ -1706,7 +1876,8 @@ const AdminAaaProfiles: React.FC = () => {
 
     const baseUser: any = {
       uid, firstName, lastName, fullName, email, phone, phoneCountryCode: '+33',
-      country: countryCode, currentCountry: countryCode, preferredLanguage: langCode, languages: languageCodes,
+      country: countryCode, countryName: country, // ✅ Stocke aussi le nom du pays
+      currentCountry: countryCode, preferredLanguage: langCode, languages: languageCodes,
       profilePhoto, avatar: profilePhoto, isTestProfile: true, isActive: true,
       isApproved: true, isVerified: true, approvalStatus: 'approved', verificationStatus: 'approved',
       isOnline: false, isVisible: true,
@@ -1730,9 +1901,10 @@ const AdminAaaProfiles: React.FC = () => {
       const lawSchool = getUniversity(country);
       const certificationKeys = getMultilingualCertifications(randomInt(1, 3));
       const graduationYear = getGraduationYear(experience, 27);
-      
+
       Object.assign(baseUser, {
-        specialties, practiceCountries: [countryCode], yearsOfExperience: experience,
+        specialties: finalSpecialties, // ✅ Utilise les spécialités validées
+        practiceCountries: [countryCode], yearsOfExperience: experience,
         barNumber: `BAR${randomInt(10000, 99999)}`,
         lawSchool,
         graduationYear,
@@ -1742,10 +1914,12 @@ const AdminAaaProfiles: React.FC = () => {
     } else {
       const previousCountryCodes = previousCountries.map(c => getCountryCode(c));
       const motivation = await getMultilingualMotivation(country, experience);
-      
+
       Object.assign(baseUser, {
-        helpTypes: specialties, specialties, residenceCountry: countryCode,
-        yearsAsExpat: experience, yearsOfExperience: experience, 
+        helpTypes: finalSpecialties, // ✅ Utilise les spécialités validées
+        specialties: finalSpecialties, // ✅ Utilise les spécialités validées
+        residenceCountry: countryCode,
+        yearsAsExpat: experience, yearsOfExperience: experience,
         previousCountries: previousCountryCodes,
         motivation,
         needsVerification: false, verificationStatus: 'approved',
@@ -1844,7 +2018,15 @@ const AdminAaaProfiles: React.FC = () => {
         endedAt: Timestamp.fromDate(callEndDate),
       });
     }
-    
+
+    // 🔍 VÉRIFICATION AUTOMATIQUE APRÈS GÉNÉRATION
+    const verification = await verifyGeneratedProfile(uid, role, finalSpecialties);
+    if (!verification.success) {
+      console.error(`[AAA] ⚠️ Problèmes détectés pour ${uid}:`, verification.issues);
+    } else {
+      console.log(`[AAA] ✅ Profil ${uid} vérifié avec succès`);
+    }
+
     return uid;
   };
 

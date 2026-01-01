@@ -789,7 +789,7 @@ export const IaSubscriptionsTab: React.FC = () => {
               icon={<DollarSign className="w-4 h-4 text-emerald-600" />}
               label="MRR"
               value={`${stats.mrrEur.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€`}
-              subValue={stats.mrrUsd > 0 ? `+ $${stats.mrrUsd.toLocaleString()}` : undefined}
+              subValue={stats.mrrUsd > 0 ? `+ $${stats.mrrUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : undefined}
               color="bg-emerald-50"
             />
             <StatCard

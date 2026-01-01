@@ -784,7 +784,7 @@ const AdminPromoCodes: React.FC = () => {
                           </div>
                           {coupon.min_order_amount > 0 && (
                             <div className="text-xs text-gray-500">
-                              Min: {coupon.min_order_amount}€
+                              Min: {Number(coupon.min_order_amount).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
                             </div>
                           )}
                           {typeof coupon.maxDiscount === "number" && (
