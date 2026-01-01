@@ -134,9 +134,9 @@ export const useAggregateRating = (
       const snapshot = await getDocs(q);
 
       if (snapshot.empty) {
-        // Return default data if no reviews
+        // Return default data if no reviews - 5.0 for perfect score when no reviews
         const defaultData: AggregateRatingData = {
-          ratingValue: 4.9,
+          ratingValue: 5.0,
           ratingCount: 0,
           reviewCount: 0,
           bestRating: 5,
@@ -273,20 +273,21 @@ export const getCachedAggregateRating = (): AggregateRatingData | null => {
 
 /**
  * Default aggregate rating data for SSR/initial render
+ * Note: When no reviews exist, default to 5.0 (perfect score)
  * These values should be updated regularly to match actual data
  */
 export const DEFAULT_AGGREGATE_RATING: AggregateRatingData = {
-  ratingValue: 4.9,
-  ratingCount: 127,
-  reviewCount: 127,
+  ratingValue: 5.0,
+  ratingCount: 0,
+  reviewCount: 0,
   bestRating: 5,
   worstRating: 1,
   distribution: {
     1: 0,
-    2: 1,
-    3: 3,
-    4: 15,
-    5: 108
+    2: 0,
+    3: 0,
+    4: 0,
+    5: 0
   },
   recentReviews: []
 };

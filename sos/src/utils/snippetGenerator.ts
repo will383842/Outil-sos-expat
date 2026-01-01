@@ -79,7 +79,7 @@ const FAQ_TEMPLATES: Record<string, {
       },
       {
         question: "Combien coûte une consultation avec {name} ?",
-        answer: "Une consultation téléphonique de 30 minutes avec {name} coûte {price}. Le paiement est sécurisé et vous pouvez réserver un créneau immédiatement si {pronounHe} est disponible en ligne."
+        answer: "Une consultation téléphonique de 20 minutes avec {name} coûte {price}. Le paiement est sécurisé et vous pouvez réserver un créneau immédiatement si {pronounHe} est disponible en ligne."
       },
       {
         question: "Dans quels pays {name} peut-il intervenir ?",
@@ -133,7 +133,7 @@ const FAQ_TEMPLATES: Record<string, {
       },
       {
         question: "How much does a consultation with {name} cost?",
-        answer: "A 30-minute phone consultation with {name} costs {price}. Payment is secure and you can book a slot immediately if {pronounHe} is available online."
+        answer: "A 20-minute phone consultation with {name} costs {price}. Payment is secure and you can book a slot immediately if {pronounHe} is available online."
       },
       {
         question: "In which countries can {name} intervene?",
@@ -187,7 +187,7 @@ const FAQ_TEMPLATES: Record<string, {
       },
       {
         question: "¿Cuánto cuesta una consulta con {name}?",
-        answer: "Una consulta telefónica de 30 minutos con {name} cuesta {price}. El pago es seguro y puede reservar inmediatamente si está disponible en línea."
+        answer: "Una consulta telefónica de 20 minutos con {name} cuesta {price}. El pago es seguro y puede reservar inmediatamente si está disponible en línea."
       },
       {
         question: "¿En qué países puede intervenir {name}?",
@@ -241,7 +241,7 @@ const FAQ_TEMPLATES: Record<string, {
       },
       {
         question: "Wie viel kostet eine Beratung mit {name}?",
-        answer: "Eine 30-minütige Telefonberatung mit {name} kostet {price}. Die Zahlung ist sicher und Sie können sofort einen Termin buchen, wenn er online verfügbar ist."
+        answer: "Eine 20-minütige Telefonberatung mit {name} kostet {price}. Die Zahlung ist sicher und Sie können sofort einen Termin buchen, wenn er online verfügbar ist."
       },
       {
         question: "In welchen Ländern kann {name} tätig werden?",
@@ -295,7 +295,7 @@ const FAQ_TEMPLATES: Record<string, {
       },
       {
         question: "Quanto custa uma consulta com {name}?",
-        answer: "Uma consulta telefónica de 30 minutos com {name} custa {price}. O pagamento é seguro e pode reservar imediatamente se estiver disponível online."
+        answer: "Uma consulta telefónica de 20 minutos com {name} custa {price}. O pagamento é seguro e pode reservar imediatamente se estiver disponível online."
       },
       {
         question: "Em que países {name} pode intervir?",
@@ -349,7 +349,7 @@ const FAQ_TEMPLATES: Record<string, {
       },
       {
         question: "Сколько стоит консультация с {name}?",
-        answer: "30-минутная телефонная консультация с {name} стоит {price}. Оплата безопасна, и вы можете забронировать сразу, если он доступен онлайн."
+        answer: "20-минутная телефонная консультация с {name} стоит {price}. Оплата безопасна, и вы можете забронировать сразу, если он доступен онлайн."
       },
       {
         question: "В каких странах {name} может оказать помощь?",
@@ -391,7 +391,171 @@ const FAQ_TEMPLATES: Record<string, {
       }
     ]
   },
-  // Ajouter zh, ar, hi...
+  // 中文 (Chinois)
+  ch: {
+    lawyer: [
+      {
+        question: "如何联系{name}？",
+        answer: "{name}可在SOS Expat & Travelers平台进行在线咨询。您可以直接从其个人资料预约安全电话咨询。{pronounHe}会说{languages}，专攻{specialties}。"
+      },
+      {
+        question: "{name}的专业领域是什么？",
+        answer: "{name}是{country}的{title}，拥有{years}年经验。专业领域包括：{specialties}。已处理{calls}个案件，成功率{successRate}%。"
+      },
+      {
+        question: "与{name}咨询费用是多少？",
+        answer: "与{name}进行20分钟电话咨询费用为{price}。支付安全，如果在线可立即预约。"
+      },
+      {
+        question: "{name}可以在哪些国家提供服务？",
+        answer: "{name}主要在{country}{cityInfo}执业。也可就{specialties}相关的国际事务提供咨询。"
+      },
+      {
+        question: "{name}的客户评价如何？",
+        answer: "{name}基于{reviewCount}条客户评价，平均评分为{rating}/5。客户特别赞赏其在{specialties}方面的专业知识和可用性。"
+      },
+      {
+        question: "为什么选择{name}作为{country}的律师？",
+        answer: "凭借在{country}{years}年的经验，{name}将法律专业知识与深厚的当地背景知识相结合。精通{languages}，便于与国际客户沟通。"
+      }
+    ],
+    expat: [
+      {
+        question: "{name}如何帮助在{country}的外籍人士？",
+        answer: "{name}是{country}的{title}，拥有{years}年外派经验。可以帮助您：{helpTypes}。会说{languages}，完全理解外派挑战。"
+      },
+      {
+        question: "{name}为外籍人士提供哪些服务？",
+        answer: "{name}为{country}的外籍人士、旅行者和度假者提供个性化咨询。专业领域包括：{helpTypes}。分享{years}年积累的实践经验。"
+      },
+      {
+        question: "与{name}咨询费用是多少？",
+        answer: "与{name}进行30分钟咨询费用为{price}。您将获得基于其在{country}{years}年个人经验的实用建议。"
+      },
+      {
+        question: "为什么选择{name}帮助移居{country}？",
+        answer: "在{country}生活了{years}年，{name}了解外派的所有实际方面。可以帮助您避免常见错误，节省宝贵时间：{helpTypes}。"
+      },
+      {
+        question: "外籍人士对{name}的评价如何？",
+        answer: "{name}已帮助{calls}位外籍人士，满意度{successRate}%。客户特别赞赏其在{helpTypes}方面的实用建议和可用性。"
+      },
+      {
+        question: "{name}可以用什么语言提供咨询？",
+        answer: "{name}精通{languages}，可以轻松与{country}不同国籍的外籍人士沟通。这种多语言能力是理解文化差异的重要优势。"
+      }
+    ]
+  },
+  // العربية (Arabe)
+  ar: {
+    lawyer: [
+      {
+        question: "كيف يمكنني التواصل مع {name}؟",
+        answer: "{name} متاح على SOS Expat & Travelers للاستشارات عبر الإنترنت. يمكنك حجز مكالمة هاتفية آمنة مباشرة من ملفه الشخصي. يتحدث {languages} ومتخصص في {specialties}."
+      },
+      {
+        question: "ما هي تخصصات {name}؟",
+        answer: "{name} هو {title} في {country} مع {years} سنوات من الخبرة. تشمل تخصصاته: {specialties}. تعامل مع {calls} قضية بمعدل نجاح {successRate}%."
+      },
+      {
+        question: "كم تكلفة الاستشارة مع {name}؟",
+        answer: "استشارة هاتفية لمدة 20 دقيقة مع {name} تكلف {price}. الدفع آمن ويمكنك الحجز فوراً إذا كان متاحاً."
+      },
+      {
+        question: "في أي دول يمكن لـ {name} تقديم خدماته؟",
+        answer: "يعمل {name} بشكل رئيسي في {country}{cityInfo}. يمكنه أيضاً تقديم المشورة في المسائل الدولية المتعلقة بـ {specialties}."
+      },
+      {
+        question: "ما هي تقييمات عملاء {name}؟",
+        answer: "يحصل {name} على تقييم متوسط {rating}/5 بناءً على {reviewCount} تقييم. يقدر العملاء خبرته في {specialties} وتوافره."
+      },
+      {
+        question: "لماذا تختار {name} كمحامي في {country}؟",
+        answer: "مع {years} سنوات من الخبرة في {country}، يجمع {name} بين الخبرة القانونية والمعرفة العميقة بالسياق المحلي. يتحدث {languages} بطلاقة."
+      }
+    ],
+    expat: [
+      {
+        question: "كيف يمكن لـ {name} مساعدة المغتربين في {country}؟",
+        answer: "{name} هو {title} في {country} مع {years} سنوات من الخبرة في الاغتراب. يمكنه مساعدتك في: {helpTypes}. يتحدث {languages} ويفهم تحديات الاغتراب تماماً."
+      },
+      {
+        question: "ما الخدمات التي يقدمها {name} للمغتربين؟",
+        answer: "يقدم {name} استشارات شخصية للمغتربين والمسافرين في {country}. تشمل مجالات خبرته: {helpTypes}. يشارك خبرته العملية المكتسبة خلال {years} سنوات."
+      },
+      {
+        question: "كم تكلفة الاستشارة مع {name}؟",
+        answer: "جلسة استشارية لمدة 30 دقيقة مع {name} تكلف {price}. ستحصل على نصائح عملية بناءً على {years} سنوات من خبرته الشخصية في {country}."
+      },
+      {
+        question: "لماذا تستعين بـ {name} للانتقال إلى {country}؟",
+        answer: "بعد أن عاش {years} سنوات في {country}، يعرف {name} جميع الجوانب العملية للاغتراب. يمكنه مساعدتك في تجنب الأخطاء الشائعة وتوفير وقتك في: {helpTypes}."
+      },
+      {
+        question: "ما تقييمات المغتربين عن {name}؟",
+        answer: "ساعد {name} {calls} مغترب بنسبة رضا {successRate}%. يقدر العملاء نصائحه العملية حول {helpTypes} وتوافره."
+      },
+      {
+        question: "بأي لغة يمكن لـ {name} تقديم الاستشارة؟",
+        answer: "يتحدث {name} {languages} بطلاقة، مما يسهل التواصل مع المغتربين من جنسيات مختلفة في {country}. هذه القدرة اللغوية ميزة كبيرة."
+      }
+    ]
+  },
+  // हिन्दी (Hindi)
+  hi: {
+    lawyer: [
+      {
+        question: "{name} से कैसे संपर्क करें?",
+        answer: "{name} SOS Expat & Travelers पर ऑनलाइन परामर्श के लिए उपलब्ध हैं। आप उनकी प्रोफ़ाइल से सीधे सुरक्षित फ़ोन कॉल बुक कर सकते हैं। वे {languages} बोलते हैं और {specialties} में विशेषज्ञ हैं।"
+      },
+      {
+        question: "{name} की विशेषज्ञताएं क्या हैं?",
+        answer: "{name} {country} में {title} हैं जिनके पास {years} वर्षों का अनुभव है। उनकी विशेषज्ञताओं में शामिल हैं: {specialties}। उन्होंने {successRate}% सफलता दर के साथ {calls} मामले संभाले हैं।"
+      },
+      {
+        question: "{name} के साथ परामर्श की लागत कितनी है?",
+        answer: "{name} के साथ 20 मिनट की फ़ोन परामर्श की लागत {price} है। भुगतान सुरक्षित है और यदि वे ऑनलाइन उपलब्ध हैं तो आप तुरंत बुक कर सकते हैं।"
+      },
+      {
+        question: "{name} किन देशों में सेवा दे सकते हैं?",
+        answer: "{name} मुख्य रूप से {country}{cityInfo} में काम करते हैं। वे {specialties} से संबंधित अंतरराष्ट्रीय मामलों पर भी सलाह दे सकते हैं।"
+      },
+      {
+        question: "{name} के ग्राहकों की समीक्षाएं कैसी हैं?",
+        answer: "{name} की {reviewCount} ग्राहक समीक्षाओं के आधार पर औसत रेटिंग {rating}/5 है। ग्राहक विशेष रूप से {specialties} में उनकी विशेषज्ञता की सराहना करते हैं।"
+      },
+      {
+        question: "{country} में वकील के रूप में {name} को क्यों चुनें?",
+        answer: "{country} में {years} वर्षों के अनुभव के साथ, {name} कानूनी विशेषज्ञता को स्थानीय संदर्भ की गहरी समझ के साथ जोड़ते हैं। वे {languages} धाराप्रवाह बोलते हैं।"
+      }
+    ],
+    expat: [
+      {
+        question: "{name} {country} में प्रवासियों की कैसे मदद कर सकते हैं?",
+        answer: "{name} {country} में {title} हैं जिनके पास {years} वर्षों का प्रवास अनुभव है। वे इनमें आपकी मदद कर सकते हैं: {helpTypes}। वे {languages} बोलते हैं और प्रवास की चुनौतियों को पूरी तरह समझते हैं।"
+      },
+      {
+        question: "{name} प्रवासियों को कौन सी सेवाएं प्रदान करते हैं?",
+        answer: "{name} {country} में प्रवासियों, यात्रियों के लिए व्यक्तिगत परामर्श प्रदान करते हैं। उनकी विशेषज्ञता में शामिल हैं: {helpTypes}। वे {years} वर्षों में अर्जित व्यावहारिक अनुभव साझा करते हैं।"
+      },
+      {
+        question: "{name} के साथ परामर्श की लागत कितनी है?",
+        answer: "{name} के साथ 30 मिनट की सलाह सत्र की लागत {price} है। आपको {country} में उनके {years} वर्षों के व्यक्तिगत अनुभव पर आधारित व्यावहारिक सलाह मिलेगी।"
+      },
+      {
+        question: "{country} जाने के लिए {name} की मदद क्यों लें?",
+        answer: "{country} में {years} वर्ष रहने के बाद, {name} प्रवास के सभी व्यावहारिक पहलुओं को जानते हैं। वे आपको सामान्य गलतियों से बचने में मदद कर सकते हैं: {helpTypes}।"
+      },
+      {
+        question: "प्रवासी {name} के बारे में क्या कहते हैं?",
+        answer: "{name} ने {successRate}% संतुष्टि के साथ {calls} प्रवासियों की मदद की है। ग्राहक {helpTypes} पर उनकी व्यावहारिक सलाह की सराहना करते हैं।"
+      },
+      {
+        question: "{name} किस भाषा में परामर्श दे सकते हैं?",
+        answer: "{name} {languages} धाराप्रवाह बोलते हैं, जिससे {country} में विभिन्न राष्ट्रीयताओं के प्रवासियों के साथ आसान संवाद होता है। यह बहुभाषी क्षमता एक बड़ा फायदा है।"
+      }
+    ]
+  }
 };
 
 // ==========================================
@@ -437,6 +601,9 @@ function getPronouns(locale: string): {
     de: { pronounHe: 'Er', pronounHis: 'Seine', pronounIs: 'ist', eAgreement: '' },
     pt: { pronounHe: 'Ele', pronounHis: 'Seus', pronounIs: 'está', eAgreement: '' },
     ru: { pronounHe: 'Он', pronounHis: 'Его', pronounIs: 'является', eAgreement: '' },
+    ch: { pronounHe: '他', pronounHis: '他的', pronounIs: '是', eAgreement: '' },
+    ar: { pronounHe: 'هو', pronounHis: 'له', pronounIs: 'يكون', eAgreement: '' },
+    hi: { pronounHe: 'वे', pronounHis: 'उनके', pronounIs: 'हैं', eAgreement: '' },
   };
   return pronouns[locale] || pronouns['en'];
 }
@@ -469,9 +636,9 @@ function replacePlaceholders(
     .join(', ');
   
   const years = provider.yearsAsExpat || provider.yearsOfExperience || 0;
-  const rating = provider.rating || 0;
+  const rating = provider.rating || 5.0; // 5.0 par défaut si pas d'avis
   const reviewCount = provider.reviewCount || 0;
-  const successRate = provider.successRate || 95;
+  const successRate = provider.successRate || 100; // 100% par défaut pour profils AAA
   const calls = provider.totalCalls || 0;
   const cityInfo = provider.city ? ` (${provider.city})` : '';
   
@@ -518,11 +685,15 @@ export function generateSnippets(
   const templates = FAQ_TEMPLATES[baseLang] || FAQ_TEMPLATES['en'];
   const providerTemplates = provider.type === 'lawyer' ? templates.lawyer : templates.expat;
   
+  // Prix dynamique selon le type de prestataire
+  // Avocat: 49€ (20 min) | Expat: 19€ (30 min)
+  const dynamicPrice = provider.type === 'lawyer' ? '49€' : '19€';
+
   // Générer les FAQ
   const faqContent = providerTemplates.map(template => ({
     question: replacePlaceholders(template.question, provider, baseLang),
     answer: replacePlaceholders(template.answer, provider, baseLang, {
-      price: includePrice ? '49€' : 'contactez-nous'
+      price: includePrice ? dynamicPrice : 'contactez-nous'
     })
   }));
   

@@ -422,7 +422,7 @@ const provider: Provider = {
         updatedAt: typeof updatedAt === 'number' ? updatedAt : Date.now(),
         timezone: String(data.timezone || '').trim(),
         responseTime: String(data.responseTime || '< 5 minutes'),
-        successRate: Math.max(0, Math.min(100, Number(data.successRate) || 95)),
+        successRate: Math.max(0, Math.min(100, Number(data.successRate) || 100)),
         certifications: Object.freeze(certifications),
         slug: String(data.slug || fullName.toLowerCase().replace(/[^a-z0-9]+/g, '-')),
       };

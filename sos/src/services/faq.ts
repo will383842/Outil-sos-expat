@@ -512,7 +512,79 @@ export const detectLanguage = async (text: string): Promise<string> => {
 };
 
 /**
- * Traduire un texte vers une langue cible
+ * Générer une clé de cache unique pour une traduction
+ */
+const generateTranslationCacheKey = (text: string, fromLang: string, toLang: string): string => {
+  // Hash simple du texte pour créer une clé unique mais courte
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) {
+    const char = text.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return `${fromLang}_${toLang}_${Math.abs(hash).toString(36)}`;
+};
+
+/**
+ * Récupérer une traduction du cache Firestore
+ */
+const getCachedTranslation = async (cacheKey: string): Promise<string | null> => {
+  try {
+    const cacheRef = doc(db, "faq_translations_cache", cacheKey);
+    const cacheSnap = await getDoc(cacheRef);
+    if (cacheSnap.exists()) {
+      const data = cacheSnap.data();
+      // Vérifier si le cache n'est pas expiré (30 jours)
+      const cachedAt = data.cachedAt?.toDate?.() || new Date(0);
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      if (cachedAt > thirtyDaysAgo) {
+        console.log(`[translateText] Cache hit for key: ${cacheKey}`);
+        return data.translatedText || null;
+      }
+    }
+  } catch (error) {
+    console.warn("[getCachedTranslation] Error:", error);
+  }
+  return null;
+};
+
+/**
+ * Sauvegarder une traduction dans le cache Firestore
+ */
+const saveCachedTranslation = async (
+  cacheKey: string,
+  originalText: string,
+  translatedText: string,
+  fromLang: string,
+  toLang: string
+): Promise<void> => {
+  try {
+    const cacheRef = doc(db, "faq_translations_cache", cacheKey);
+    await updateDoc(cacheRef, {
+      originalText: originalText.substring(0, 500), // Limiter pour économiser l'espace
+      translatedText,
+      fromLang,
+      toLang,
+      cachedAt: serverTimestamp(),
+    }).catch(async () => {
+      // Si le document n'existe pas, le créer
+      const { setDoc } = await import("firebase/firestore");
+      await setDoc(cacheRef, {
+        originalText: originalText.substring(0, 500),
+        translatedText,
+        fromLang,
+        toLang,
+        cachedAt: serverTimestamp(),
+      });
+    });
+    console.log(`[translateText] Cached translation for key: ${cacheKey}`);
+  } catch (error) {
+    console.warn("[saveCachedTranslation] Error:", error);
+  }
+};
+
+/**
+ * Traduire un texte vers une langue cible (avec cache Firestore)
  */
 export const translateText = async (
   text: string,
@@ -529,33 +601,49 @@ export const translateText = async (
   const targetLang = languageMap[toLang] || toLang;
   const sourceLang = languageMap[fromLang] || fromLang;
 
-  // Try MyMemory API
+  // 1. Vérifier le cache Firestore
+  const cacheKey = generateTranslationCacheKey(text, sourceLang, targetLang);
+  const cachedResult = await getCachedTranslation(cacheKey);
+  if (cachedResult) {
+    return cachedResult;
+  }
+
+  let translatedText: string | null = null;
+
+  // 2. Try MyMemory API
   try {
     const myMemoryUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${sourceLang}|${targetLang}`;
     const response = await fetch(myMemoryUrl);
     if (response.ok) {
       const data = await response.json() as { responseData?: { translatedText?: string } };
       if (data.responseData?.translatedText) {
-        return data.responseData.translatedText;
+        translatedText = data.responseData.translatedText;
       }
     }
   } catch (error) {
     console.warn("[translateText] MyMemory error:", error);
   }
 
-  // Fallback: Google Translate
-  try {
-    const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
-    const response = await fetch(googleUrl);
-    if (response.ok) {
-      const data = await response.json() as any;
-      if (data && Array.isArray(data) && data[0] && Array.isArray(data[0])) {
-        const translated = data[0].map((item: any[]) => item[0]).join("");
-        if (translated) return translated;
+  // 3. Fallback: Google Translate
+  if (!translatedText) {
+    try {
+      const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+      const response = await fetch(googleUrl);
+      if (response.ok) {
+        const data = await response.json() as any;
+        if (data && Array.isArray(data) && data[0] && Array.isArray(data[0])) {
+          translatedText = data[0].map((item: any[]) => item[0]).join("");
+        }
       }
+    } catch (error) {
+      console.warn("[translateText] Google error:", error);
     }
-  } catch (error) {
-    console.warn("[translateText] Google error:", error);
+  }
+
+  // 4. Sauvegarder dans le cache si traduction réussie
+  if (translatedText && translatedText !== text) {
+    await saveCachedTranslation(cacheKey, text, translatedText, sourceLang, targetLang);
+    return translatedText;
   }
 
   return text;
