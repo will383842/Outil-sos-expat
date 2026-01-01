@@ -6,6 +6,8 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAdminTranslations, useIaAdminTranslations } from '../../../utils/adminTranslations';
+import { useApp } from '../../../contexts/AppContext';
+import { getDateLocale } from '../../../utils/formatters';
 import {
   Users,
   Search,
@@ -72,9 +74,10 @@ interface ProviderDetailModalProps {
   provider: ProviderIAAccess | null;
   onClose: () => void;
   onResetQuota: (provider: ProviderIAAccess) => void;
+  language: string;
 }
 
-const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({ provider, onClose, onResetQuota }) => {
+const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({ provider, onClose, onResetQuota, language }) => {
   if (!provider) return null;
 
   const quotaPercent = provider.aiCallsLimit > 0
@@ -111,12 +114,12 @@ const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({ provider, onC
               </div>
               <div className="flex items-center gap-2 text-gray-600">
                 <Calendar className="w-4 h-4" />
-                <span>Inscrit le {provider.createdAt.toLocaleDateString('fr-FR')}</span>
+                <span>Inscrit le {provider.createdAt.toLocaleDateString(getDateLocale(language))}</span>
               </div>
               {provider.lastLoginAt && (
                 <div className="flex items-center gap-2 text-gray-600">
                   <Clock className="w-4 h-4" />
-                  <span>Derniere connexion: {provider.lastLoginAt.toLocaleDateString('fr-FR')}</span>
+                  <span>Derniere connexion: {provider.lastLoginAt.toLocaleDateString(getDateLocale(language))}</span>
                 </div>
               )}
             </div>
@@ -141,7 +144,7 @@ const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({ provider, onC
             </div>
             {provider.accessStatus === 'trial' && provider.freeTrialUntil && (
               <p className="text-sm text-gray-600">
-                Essai jusqu'au {provider.freeTrialUntil.toLocaleDateString('fr-FR')}
+                Essai jusqu'au {provider.freeTrialUntil.toLocaleDateString(getDateLocale(language))}
               </p>
             )}
             {provider.subscriptionTier && provider.subscriptionTier !== 'trial' && (
@@ -190,7 +193,7 @@ const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({ provider, onC
               )}
               {provider.aiQuotaResetAt && (
                 <p className="text-xs text-gray-500">
-                  Dernier reset: {provider.aiQuotaResetAt.toLocaleDateString('fr-FR')}
+                  Dernier reset: {provider.aiQuotaResetAt.toLocaleDateString(getDateLocale(language))}
                 </p>
               )}
             </div>
@@ -208,6 +211,7 @@ const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({ provider, onC
 export const IaAccessTab: React.FC = () => {
   const adminT = useAdminTranslations();
   const iaT = useIaAdminTranslations();
+  const { language } = useApp();
 
   // State
   const [providers, setProviders] = useState<ProviderIAAccess[]>([]);
@@ -793,7 +797,7 @@ export const IaAccessTab: React.FC = () => {
                           </span>
                           {provider.accessStatus === 'trial' && provider.freeTrialUntil && (
                             <span className="text-xs text-gray-500">
-                              jusqu'au {provider.freeTrialUntil.toLocaleDateString('fr-FR')}
+                              jusqu'au {provider.freeTrialUntil.toLocaleDateString(getDateLocale(language))}
                             </span>
                           )}
                         </div>
@@ -907,6 +911,7 @@ export const IaAccessTab: React.FC = () => {
           resetQuota(p);
           setDetailProvider(null);
         }}
+        language={language}
       />
     </div>
   );

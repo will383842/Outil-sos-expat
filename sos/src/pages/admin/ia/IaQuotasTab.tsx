@@ -5,6 +5,8 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAdminTranslations, useIaAdminTranslations } from '../../../utils/adminTranslations';
+import { useApp } from '../../../contexts/AppContext';
+import { getDateLocale } from '../../../utils/formatters';
 import {
   Search,
   RefreshCw,
@@ -64,9 +66,10 @@ interface ResetHistoryModalProps {
   logs: QuotaResetLog[];
   loading: boolean;
   onClose: () => void;
+  language: string;
 }
 
-const ResetHistoryModal: React.FC<ResetHistoryModalProps> = ({ logs, loading, onClose }) => (
+const ResetHistoryModal: React.FC<ResetHistoryModalProps> = ({ logs, loading, onClose, language }) => (
   <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
     <div className="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
       <div className="p-6 border-b border-gray-200">
@@ -100,7 +103,7 @@ const ResetHistoryModal: React.FC<ResetHistoryModalProps> = ({ logs, loading, on
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-medium text-gray-900">{log.providerName}</span>
                   <span className="text-sm text-gray-500">
-                    {log.createdAt.toLocaleDateString('fr-FR', {
+                    {log.createdAt.toLocaleDateString(getDateLocale(language), {
                       day: '2-digit',
                       month: 'short',
                       year: 'numeric',
@@ -132,6 +135,7 @@ const ResetHistoryModal: React.FC<ResetHistoryModalProps> = ({ logs, loading, on
 export const IaQuotasTab: React.FC = () => {
   const adminT = useAdminTranslations();
   const iaT = useIaAdminTranslations();
+  const { language } = useApp();
 
   // State
   const [providers, setProviders] = useState<ProviderQuota[]>([]);
@@ -719,7 +723,7 @@ export const IaQuotasTab: React.FC = () => {
                       {/* Dernier appel */}
                       <td className="px-4 py-3 text-sm text-gray-500">
                         {provider.aiLastCallAt
-                          ? provider.aiLastCallAt.toLocaleDateString('fr-FR', {
+                          ? provider.aiLastCallAt.toLocaleDateString(getDateLocale(language), {
                               day: '2-digit',
                               month: 'short',
                               hour: '2-digit',
@@ -732,7 +736,7 @@ export const IaQuotasTab: React.FC = () => {
                       {/* Dernier reset */}
                       <td className="px-4 py-3 text-sm text-gray-500">
                         {provider.aiQuotaResetAt
-                          ? provider.aiQuotaResetAt.toLocaleDateString('fr-FR', {
+                          ? provider.aiQuotaResetAt.toLocaleDateString(getDateLocale(language), {
                               day: '2-digit',
                               month: 'short'
                             })
@@ -775,6 +779,7 @@ export const IaQuotasTab: React.FC = () => {
           logs={historyLogs}
           loading={historyLoading}
           onClose={() => setShowHistory(false)}
+          language={language}
         />
       )}
     </div>

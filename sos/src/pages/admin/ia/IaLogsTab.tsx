@@ -4,6 +4,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAdminTranslations, useIaAdminTranslations } from '../../../utils/adminTranslations';
+import { useApp } from '../../../contexts/AppContext';
+import { getDateLocale } from '../../../utils/formatters';
 import {
   Activity,
   RefreshCw,
@@ -27,6 +29,7 @@ import { AiUsageLog } from './types';
 export const IaLogsTab: React.FC = () => {
   const adminT = useAdminTranslations();
   const iaT = useIaAdminTranslations();
+  const { language } = useApp();
 
   const [logs, setLogs] = useState<AiUsageLog[]>([]);
   const [loading, setLoading] = useState(false);
@@ -302,7 +305,7 @@ export const IaLogsTab: React.FC = () => {
               logs.slice(0, 100).map((log) => (
                 <tr key={log.id} className="hover:bg-gray-50">
                   <td className="px-3 py-2 text-gray-600">
-                    {log.createdAt.toLocaleDateString('fr-FR')} {log.createdAt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                    {log.createdAt.toLocaleDateString(getDateLocale(language))} {log.createdAt.toLocaleTimeString(getDateLocale(language), { hour: '2-digit', minute: '2-digit' })}
                   </td>
                   <td className="px-3 py-2 text-gray-900 font-mono text-xs">
                     {log.userId.slice(0, 8)}...

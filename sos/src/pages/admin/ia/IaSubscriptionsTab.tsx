@@ -5,6 +5,8 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAdminTranslations, useIaAdminTranslations } from '../../../utils/adminTranslations';
+import { useApp } from '../../../contexts/AppContext';
+import { getDateLocale } from '../../../utils/formatters';
 import {
   Search,
   RefreshCw,

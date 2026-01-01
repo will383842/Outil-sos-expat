@@ -50,7 +50,7 @@ import { getLawyerSpecialityLabel } from '../../data/lawyer-specialties';
 import { getExpatHelpTypeLabel } from '../../data/expat-help-types';
 
 // Import du script de migration
-import { previewMigration, migrateAllSpecialtyCodes, migrateOneProfile, checkAllProfiles } from '../../scripts/migrateSpecialtyCodes';
+import { previewMigration, migrateAllSpecialtyCodes, migrateOneProfile, checkAllProfiles, previewBioCountryFix, fixAllBiosCountryCodes, fixOneBioCountryCodes } from '../../scripts/migrateSpecialtyCodes';
 import { getSpecialtyLabel, mapLanguageToLocale } from '../../utils/specialtyMapper';
 
 // Import du script de génération massive d'avocats
@@ -64,6 +64,10 @@ if (typeof window !== 'undefined') {
     migrateAll: migrateAllSpecialtyCodes,
     migrateOne: migrateOneProfile,
     checkAll: checkAllProfiles,
+    // Fonctions pour les codes pays dans les bios
+    previewBios: previewBioCountryFix,
+    fixBios: fixAllBiosCountryCodes,
+    fixOneBio: fixOneBioCountryCodes,
   };
 }
 

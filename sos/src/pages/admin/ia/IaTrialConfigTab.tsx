@@ -5,6 +5,8 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAdminTranslations, useIaAdminTranslations } from '../../../utils/adminTranslations';
+import { useApp } from '../../../contexts/AppContext';
+import { getDateLocale } from '../../../utils/formatters';
 import {
   Clock,
   TrendingUp,
@@ -51,9 +53,10 @@ interface TrialProvidersTableProps {
   providers: TrialProvider[];
   loading: boolean;
   onRefresh: () => void;
+  language: string;
 }
 
-const TrialProvidersTable: React.FC<TrialProvidersTableProps> = ({ providers, loading, onRefresh }) => {
+const TrialProvidersTable: React.FC<TrialProvidersTableProps> = ({ providers, loading, onRefresh, language }) => {
   const [expanded, setExpanded] = useState(true);
 
   if (!expanded) {
@@ -148,7 +151,7 @@ const TrialProvidersTable: React.FC<TrialProvidersTableProps> = ({ providers, lo
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
-                      {provider.trialStartedAt.toLocaleDateString('fr-FR')}
+                      {provider.trialStartedAt.toLocaleDateString(getDateLocale(language))}
                     </td>
                     <td className="px-4 py-3">
                       <span className={cn(
@@ -182,7 +185,7 @@ const TrialProvidersTable: React.FC<TrialProvidersTableProps> = ({ providers, lo
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-500">
                       {provider.lastActivityAt
-                        ? provider.lastActivityAt.toLocaleDateString('fr-FR')
+                        ? provider.lastActivityAt.toLocaleDateString(getDateLocale(language))
                         : '-'
                       }
                     </td>
@@ -204,6 +207,7 @@ const TrialProvidersTable: React.FC<TrialProvidersTableProps> = ({ providers, lo
 export const IaTrialConfigTab: React.FC = () => {
   const adminT = useAdminTranslations();
   const iaT = useIaAdminTranslations();
+  const { language } = useApp();
 
   // Trial config state
   const [trialConfig, setTrialConfig] = useState<TrialConfig>(DEFAULT_TRIAL_CONFIG);

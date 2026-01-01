@@ -4,6 +4,8 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { useApp } from '../../../contexts/AppContext';
+import { getDateLocale } from '../../../utils/formatters';
 import {
   Users,
   Sparkles,
