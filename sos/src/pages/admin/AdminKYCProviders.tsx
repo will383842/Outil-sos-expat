@@ -1,6 +1,8 @@
 // src/pages/admin/AdminKYCProviders.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { useIntl } from 'react-intl';
+import { useApp } from '../../contexts/AppContext';
+import { getDateLocale } from '../../utils/formatters';
 import {
   collection,
   query,
@@ -98,6 +100,7 @@ interface Stats {
 const AdminKYCProviders: React.FC = () => {
   const { user: currentUser } = useAuth();
   const intl = useIntl();
+  const { language } = useApp();
   const [providers, setProviders] = useState<KYCProvider[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
@@ -325,26 +328,29 @@ const AdminKYCProviders: React.FC = () => {
         ),
       );
 
-      alert(`✅ Statut KYC mis à jour vers "${newStatus}"`);
+      alert(intl.formatMessage({ id: 'admin.kyc.statusUpdated' }, { status: newStatus }));
     } catch (error) {
       console.error('Erreur mise à jour KYC:', error);
-      alert('❌ Erreur lors de la mise à jour du statut KYC');
+      alert(intl.formatMessage({ id: 'admin.kyc.statusUpdateError' }));
     }
   };
 
   const handleBulkAction = async (action: 'approuver' | 'rejeter' | 'incomplete') => {
     if (selectedProviders.length === 0) {
-      alert('Veuillez sélectionner au moins un prestataire');
+      alert(intl.formatMessage({ id: 'admin.kyc.selectAtLeastOne' }));
       return;
     }
 
     let rejectionReason = '';
     if (action === 'rejeter') {
-      rejectionReason = prompt('Raison du rejet:') || '';
+      rejectionReason = prompt(intl.formatMessage({ id: 'admin.kyc.rejectionReason' })) || '';
       if (!rejectionReason) return;
     }
 
-    const confirmMessage = `Êtes-vous sûr de vouloir ${action} ${selectedProviders.length} dossier(s) KYC ?`;
+    const confirmMessage = intl.formatMessage(
+      { id: 'admin.kyc.confirmBulkAction' },
+      { action, count: selectedProviders.length }
+    );
     if (!confirm(confirmMessage)) return;
 
     try {
@@ -358,10 +364,10 @@ const AdminKYCProviders: React.FC = () => {
 
       await Promise.all(promises);
       setSelectedProviders([]);
-      alert(`✅ Action "${action}" appliquée à ${selectedProviders.length} dossier(s)`);
+      alert(intl.formatMessage({ id: 'admin.kyc.bulkActionApplied' }, { action, count: selectedProviders.length }));
     } catch (error) {
       console.error('Erreur action en lot:', error);
-      alert("❌ Erreur lors de l'action en lot");
+      alert(intl.formatMessage({ id: 'admin.kyc.bulkActionError' }));
     }
   };
 
@@ -402,13 +408,13 @@ const AdminKYCProviders: React.FC = () => {
   const getDocumentTypeLabel = (type: KYCDocument['type']) => {
     switch (type) {
       case 'identity':
-        return "Pièce d'identité";
+        return intl.formatMessage({ id: 'admin.kyc.documentTypeIdentity' });
       case 'proof_address':
-        return 'Justificatif domicile';
+        return intl.formatMessage({ id: 'admin.kyc.documentTypeProofAddress' });
       case 'professional_document':
-        return 'Document professionnel';
+        return intl.formatMessage({ id: 'admin.kyc.documentTypeProfessional' });
       case 'bank_statement':
-        return 'RIB/Relevé bancaire';
+        return intl.formatMessage({ id: 'admin.kyc.documentTypeBank' });
       default:
         return type;
     }
@@ -738,7 +744,7 @@ const AdminKYCProviders: React.FC = () => {
                           )}
                           {provider.reviewedAt && (
                             <div className="text-xs text-gray-500">
-                              Revu le {provider.reviewedAt.toLocaleDateString('fr-FR')}
+                              Revu le {provider.reviewedAt.toLocaleDateString(getDateLocale(language))}
                             </div>
                           )}
                         </div>
@@ -782,7 +788,7 @@ const AdminKYCProviders: React.FC = () => {
                         <div className="space-y-1 text-xs">
                           {provider.personalInfo.nationality && <div>🌍 {provider.personalInfo.nationality}</div>}
                           {provider.personalInfo.birthDate && (
-                            <div>📅 {provider.personalInfo.birthDate.toLocaleDateString('fr-FR')}</div>
+                            <div>📅 {provider.personalInfo.birthDate.toLocaleDateString(getDateLocale(language))}</div>
                           )}
                           {provider.bankInfo.iban && (
                             <div className="font-mono">💳 {provider.bankInfo.iban.substring(0, 10)}...</div>
@@ -793,7 +799,7 @@ const AdminKYCProviders: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {provider.submittedAt.toLocaleDateString('fr-FR')}
+                        {provider.submittedAt.toLocaleDateString(getDateLocale(language))}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end space-x-2">
@@ -813,7 +819,7 @@ const AdminKYCProviders: React.FC = () => {
                                 const newStatus = e.target.value as KYCStatus;
                                 let reason = '';
                                 if (newStatus === 'rejected') {
-                                  reason = prompt('Raison du rejet:') || '';
+                                  reason = prompt(intl.formatMessage({ id: 'admin.kyc.rejectionReason' })) || '';
                                   if (!reason) return;
                                 }
                                 void handleKYCStatusChange(provider.id, newStatus, reason);
@@ -872,7 +878,7 @@ const AdminKYCProviders: React.FC = () => {
                       </div>
                       <div>
                         <strong>Date de naissance:</strong>{' '}
-                        {selectedProvider.personalInfo.birthDate?.toLocaleDateString('fr-FR') || 'Non renseignée'}
+                        {selectedProvider.personalInfo.birthDate?.toLocaleDateString(getDateLocale(language)) || 'Non renseignée'}
                       </div>
                       <div>
                         <strong>Adresse:</strong> {selectedProvider.personalInfo.address || 'Non renseignée'}
@@ -941,7 +947,7 @@ const AdminKYCProviders: React.FC = () => {
                               </span>
                             </div>
                             <div className="text-xs text-gray-500 mb-2">
-                              Envoyé le {doc.uploadedAt.toLocaleDateString('fr-FR')}
+                              Envoyé le {doc.uploadedAt.toLocaleDateString(getDateLocale(language))}
                             </div>
                             {doc.rejectionReason && (
                               <div className="text-xs text-red-600 mb-2">Rejeté: {doc.rejectionReason}</div>
@@ -969,10 +975,10 @@ const AdminKYCProviders: React.FC = () => {
                                     setSelectedProvider((prev) =>
                                       prev ? { ...prev, documents: updatedDocs } : prev
                                     );
-                                    alert('Document validé avec succès');
+                                    alert(intl.formatMessage({ id: 'admin.kyc.documentValidated' }));
                                   } catch (error) {
                                     console.error('Erreur validation document:', error);
-                                    alert('Erreur lors de la validation du document');
+                                    alert(intl.formatMessage({ id: 'admin.kyc.documentValidationError' }));
                                   }
                                 }}
                                 disabled={doc.verified}
@@ -1018,7 +1024,7 @@ const AdminKYCProviders: React.FC = () => {
                     </Button>
                     <Button
                       onClick={() => {
-                        const reason = prompt('Raison du rejet:');
+                        const reason = prompt(intl.formatMessage({ id: 'admin.kyc.rejectionReason' }));
                         if (reason) {
                           void handleKYCStatusChange(selectedProvider.id, 'rejected', reason);
                         }

@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useAdminTranslations } from "../../utils/adminTranslations";
+import { useApp } from "../../contexts/AppContext";
+import { getDateLocale } from "../../utils/formatters";
 import { useNavigate } from "react-router-dom";
 import {
   Phone,
@@ -273,6 +275,7 @@ const AdminCallsSessions: React.FC = () => {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
   const adminT = useAdminTranslations();
+  const { language } = useApp();
 
   // States des données
   const [sessions, setSessions] = useState<CallSession[]>([]);
@@ -519,9 +522,9 @@ const AdminCallsSessions: React.FC = () => {
       'Durée (s)': session.conference.duration || 0,
       'Montant (€)': session.payment.amount,
       'Statut Paiement': session.payment.status,
-      'Date Création': session.metadata.createdAt.toDate().toLocaleString('fr-FR'),
-      'Date Début': session.conference.startedAt?.toDate().toLocaleString('fr-FR') || 'N/A',
-      'Date Fin': session.conference.endedAt?.toDate().toLocaleString('fr-FR') || 'N/A',
+      'Date Création': session.metadata.createdAt.toDate().toLocaleString(getDateLocale(language)),
+      'Date Début': session.conference.startedAt?.toDate().toLocaleString(getDateLocale(language)) || 'N/A',
+      'Date Fin': session.conference.endedAt?.toDate().toLocaleString(getDateLocale(language)) || 'N/A',
       'Tentatives Prestataire': session.participants.provider.attemptCount,
       'Tentatives Client': session.participants.client.attemptCount,
       'URL Enregistrement': session.conference.recordingUrl || 'N/A'
@@ -552,7 +555,7 @@ const AdminCallsSessions: React.FC = () => {
   }, []);
 
   const formatDateTime = (timestamp: Timestamp) => {
-    return timestamp.toDate().toLocaleString('fr-FR', {
+    return timestamp.toDate().toLocaleString(getDateLocale(language), {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',

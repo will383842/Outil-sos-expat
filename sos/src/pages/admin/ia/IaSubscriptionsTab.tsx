@@ -168,7 +168,7 @@ const COUNTRY_NAMES: Record<string, string> = {
 // CSV EXPORT
 // ============================================================================
 
-const exportToCSV = (subscriptions: SubscriptionWithDetails[]) => {
+const exportToCSV = (subscriptions: SubscriptionWithDetails[], language: string) => {
   const headers = [
     'ID',
     'Provider',
@@ -201,8 +201,8 @@ const exportToCSV = (subscriptions: SubscriptionWithDetails[]) => {
     sub.billingPeriod === 'yearly' ? 'Annuel' : 'Mensuel',
     sub.currency,
     sub.amount.toString(),
-    sub.startDate.toLocaleDateString('fr-FR'),
-    sub.endDate.toLocaleDateString('fr-FR'),
+    sub.startDate.toLocaleDateString(getDateLocale(language)),
+    sub.endDate.toLocaleDateString(getDateLocale(language)),
     sub.stripeSubscriptionId || '',
     sub.stripeCustomerId || ''
   ]);
@@ -291,6 +291,7 @@ const DistributionBar: React.FC<DistributionBarProps> = ({ items, title, icon })
 export const IaSubscriptionsTab: React.FC = () => {
   const adminT = useAdminTranslations();
   const iaT = useIaAdminTranslations();
+  const { language } = useApp();
 
   // State
   const [subscriptions, setSubscriptions] = useState<SubscriptionWithDetails[]>([]);
@@ -939,7 +940,7 @@ export const IaSubscriptionsTab: React.FC = () => {
               </button>
 
               <button
-                onClick={() => exportToCSV(filteredSubscriptions)}
+                onClick={() => exportToCSV(filteredSubscriptions, language)}
                 disabled={filteredSubscriptions.length === 0}
                 className="px-3 py-2 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 transition-colors flex items-center gap-2 disabled:opacity-50"
               >
@@ -1116,7 +1117,7 @@ export const IaSubscriptionsTab: React.FC = () => {
                             </span>
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-600">
-                            {sub.startDate.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                            {sub.startDate.toLocaleDateString(getDateLocale(language), { day: '2-digit', month: 'short', year: 'numeric' })}
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2">

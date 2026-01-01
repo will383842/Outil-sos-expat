@@ -289,6 +289,8 @@ const AdminExpats: React.FC = () => {
   const [showCols, setShowCols] = useState(false);
   const [pageSize, setPageSize] = useState<number>(() => Number(localStorage.getItem("admin.expats.pageSize") || 25));
   const [cursor, setCursor] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
+  const cursorHistoryRef = useRef<(QueryDocumentSnapshot<DocumentData> | null)[]>([null]);
+  const [pageIndex, setPageIndex] = useState(1);
   const [hasNext, setHasNext] = useState(false);
   const [total, setTotal] = useState<number>(0);
   const [drawerExpat, setDrawerExpat] = useState<Expat | null>(null);
@@ -535,8 +537,29 @@ const AdminExpats: React.FC = () => {
     async (direction: "init" | "next" | "prev" = "init") => {
       setLoading(true);
       try {
-        if (direction === "init") setCursor(null);
-        const q = buildBaseQuery({ after: direction === "next" ? cursor : null });
+        let targetCursor: QueryDocumentSnapshot<DocumentData> | null = null;
+        let newPageIndex = pageIndex;
+
+        if (direction === "init") {
+          // Reset to first page
+          setCursor(null);
+          cursorHistoryRef.current = [null];
+          newPageIndex = 1;
+        } else if (direction === "next") {
+          // Go to next page - use current cursor
+          targetCursor = cursor;
+          // Store current cursor in history for the next page
+          if (cursorHistoryRef.current.length <= pageIndex) {
+            cursorHistoryRef.current.push(cursor);
+          }
+          newPageIndex = pageIndex + 1;
+        } else if (direction === "prev" && pageIndex > 1) {
+          // Go to previous page - use cursor from history
+          newPageIndex = pageIndex - 1;
+          targetCursor = newPageIndex > 1 ? cursorHistoryRef.current[newPageIndex - 1] : null;
+        }
+
+        const q = buildBaseQuery({ after: targetCursor });
         const snap = await getDocs(q);
 
         const docs = snap.docs.slice(0, pageSize);
@@ -546,7 +569,16 @@ const AdminExpats: React.FC = () => {
         const filtered = applyClientSideFilters(formatted);
         setExpats(filtered);
         setHasNext(hasMore);
-        setCursor(docs.length ? docs[docs.length - 1] : null);
+        setPageIndex(newPageIndex);
+
+        // Store the last doc as cursor for potential next page navigation
+        const newCursor = docs.length ? docs[docs.length - 1] : null;
+        setCursor(newCursor);
+
+        // Store cursor in history for this page
+        if (cursorHistoryRef.current.length <= newPageIndex) {
+          cursorHistoryRef.current[newPageIndex] = newCursor;
+        }
 
         // refresh total (not strictly equal to filtered count)
         void loadCount();
@@ -556,7 +588,7 @@ const AdminExpats: React.FC = () => {
         setLoading(false);
       }
     },
-    [applyClientSideFilters, buildBaseQuery, cursor, loadCount, pageSize]
+    [applyClientSideFilters, buildBaseQuery, cursor, loadCount, pageIndex, pageSize]
   );
 
   // Reload from server when server-side filters change
@@ -1191,9 +1223,10 @@ const AdminExpats: React.FC = () => {
             </div>
             <div className="flex items-center space-x-2">
               <Button variant="outline" onClick={() => void loadPage("init")}><span className="mr-1">↻</span> Refresh</Button>
-              <Button variant="outline" disabled={!cursor} onClick={() => void loadPage("init")}>
+              <Button variant="outline" disabled={pageIndex === 1} onClick={() => void loadPage("prev")}>
                 <ChevronLeft className="w-4 h-4 mr-1" /> Prev
               </Button>
+              <span className="text-sm text-gray-600 px-2">Page {pageIndex}</span>
               <Button variant="outline" disabled={!hasNext} onClick={() => void loadPage("next")}>
                 Next <ChevronRight className="w-4 h-4 ml-1" />
               </Button>

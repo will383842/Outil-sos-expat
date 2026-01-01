@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useCallAdminTranslations } from "../../utils/adminTranslations";
+import { useApp } from "../../contexts/AppContext";
+import { getDateLocale } from "../../utils/formatters";
 import { useNavigate } from "react-router-dom";
 import {
   Phone,
@@ -475,6 +477,7 @@ const AdminCallsMonitoring: React.FC = () => {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
   const callT = useCallAdminTranslations();
+  const { language } = useApp();
 
   // States des données
   const [liveCalls, setLiveCalls] = useState<LiveCallSession[]>([]);
@@ -1189,7 +1192,7 @@ const AdminCallsMonitoring: React.FC = () => {
                           <span className="text-sm font-medium">{alert.message}</span>
                         </div>
                         <div className="text-xs text-gray-500 mt-1">
-                          Session: {alert.callSessionId} • {alert.timestamp.toLocaleTimeString('fr-FR')}
+                          Session: {alert.callSessionId} • {alert.timestamp.toLocaleTimeString(getDateLocale(language))}
                         </div>
                         {alert.autoActions && (
                           <div className="flex space-x-2 mt-2">

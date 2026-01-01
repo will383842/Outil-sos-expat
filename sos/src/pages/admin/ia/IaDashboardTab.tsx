@@ -67,6 +67,7 @@ const TIER_LABELS: Record<SubscriptionTier, string> = {
 // ============================================================================
 
 export const IaDashboardTab: React.FC = () => {
+  const { language } = useApp();
   const [stats, setStats] = useState<SubscriptionStats | null>(null);
   const [dailyData, setDailyData] = useState<DailySubscriberData[]>([]);
   const [usageByPlan, setUsageByPlan] = useState<UsageByPlanData[]>([]);
@@ -186,7 +187,7 @@ export const IaDashboardTab: React.FC = () => {
       // Generate data for each day
       for (let i = 0; i < days; i++) {
         const date = new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000);
-        const dateStr = date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+        const dateStr = date.toLocaleDateString(getDateLocale(language), { day: '2-digit', month: '2-digit' });
 
         let active = 0;
         let trial = 0;

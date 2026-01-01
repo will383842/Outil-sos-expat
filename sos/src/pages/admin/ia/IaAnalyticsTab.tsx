@@ -89,9 +89,10 @@ const RISK_COLORS = {
 interface CohortTableProps {
   cohorts: CohortData[];
   loading: boolean;
+  language: string;
 }
 
-const CohortTable: React.FC<CohortTableProps> = ({ cohorts, loading }) => {
+const CohortTable: React.FC<CohortTableProps> = ({ cohorts, loading, language }) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -129,7 +130,7 @@ const CohortTable: React.FC<CohortTableProps> = ({ cohorts, loading }) => {
           {cohorts.map((cohort, idx) => (
             <tr key={cohort.cohortMonth} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
               <td className="px-4 py-3 font-medium text-gray-900">
-                {new Date(cohort.cohortMonth + '-01').toLocaleDateString('fr-FR', {
+                {new Date(cohort.cohortMonth + '-01').toLocaleDateString(getDateLocale(language), {
                   month: 'short',
                   year: 'numeric'
                 })}
@@ -288,12 +289,14 @@ interface ChurnPredictionListProps {
   predictions: ChurnPrediction[];
   loading: boolean;
   onContactUser: (prediction: ChurnPrediction) => void;
+  language: string;
 }
 
 const ChurnPredictionList: React.FC<ChurnPredictionListProps> = ({
   predictions,
   loading,
-  onContactUser
+  onContactUser,
+  language
 }) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [filterRisk, setFilterRisk] = useState<'all' | 'critical' | 'high' | 'medium'>('all');
@@ -448,7 +451,7 @@ const ChurnPredictionList: React.FC<ChurnPredictionListProps> = ({
                       <div>
                         <p className="text-xs text-gray-500">Dernière activité</p>
                         <p className="text-sm font-medium">
-                          {new Date(prediction.lastActivity).toLocaleDateString('fr-FR')}
+                          {new Date(prediction.lastActivity).toLocaleDateString(getDateLocale(language))}
                         </p>
                       </div>
                       <div>
@@ -552,6 +555,7 @@ const MRRMovementsChart: React.FC<MRRMovementsChartProps> = ({ movements, loadin
 // ============================================================================
 
 export const IaAnalyticsTab: React.FC = () => {
+  const { language } = useApp();
   const [activeSection, setActiveSection] = useState<'cohorts' | 'ltv' | 'churn' | 'mrr'>('cohorts');
   const [loading, setLoading] = useState(true);
 
@@ -904,7 +908,7 @@ export const IaAnalyticsTab: React.FC = () => {
       for (let i = 5; i >= 0; i--) {
         const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
-        const monthStr = monthDate.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
+        const monthStr = monthDate.toLocaleDateString(getDateLocale(language), { month: 'short', year: '2-digit' });
 
         let newMrr = 0;
         let expansionMrr = 0;
@@ -1103,7 +1107,7 @@ export const IaAnalyticsTab: React.FC = () => {
                 Rétention mensuelle par cohorte d'inscription
               </div>
             </div>
-            <CohortTable cohorts={cohorts} loading={loading} />
+            <CohortTable cohorts={cohorts} loading={loading} language={language} />
           </>
         )}
 
@@ -1124,6 +1128,7 @@ export const IaAnalyticsTab: React.FC = () => {
               predictions={churnPredictions}
               loading={loading}
               onContactUser={handleContactUser}
+              language={language}
             />
           </>
         )}

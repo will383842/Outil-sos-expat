@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  Search, 
-  TrendingUp, 
-  Globe, 
-  Target, 
-  BarChart3, 
-  CheckCircle, 
+import { useApp } from '../contexts/AppContext';
+import { getDateLocale } from '../utils/formatters';
+import {
+  Search,
+  TrendingUp,
+  Globe,
+  Target,
+  BarChart3,
+  CheckCircle,
   ArrowUp,
   FileText,
   Zap,
@@ -130,6 +132,7 @@ const SEOService = {
 
 // Composant principal
 const SEO: React.FC = () => {
+  const { language } = useApp();
   const [activeTab, setActiveTab] = useState<TabType>('keywords');
   const [metrics, setMetrics] = useState<SEOMetric[]>([]);
   const [keywordGroups, setKeywordGroups] = useState<KeywordGroup[]>([]);
@@ -288,7 +291,7 @@ const SEO: React.FC = () => {
               </button>
               
               <div className="text-sm text-indigo-200">
-                Dernière mise à jour: {lastRefresh.toLocaleTimeString('fr-FR')}
+                Dernière mise à jour: {lastRefresh.toLocaleTimeString(getDateLocale(language))}
               </div>
             </div>
           </div>
@@ -446,7 +449,7 @@ const SEO: React.FC = () => {
                         </div>
                         <p className="text-gray-600 mb-2">{page.description}</p>
                         <div className="text-xs text-gray-500">
-                          Dernière mise à jour: {new Date(page.lastUpdated).toLocaleDateString('fr-FR')}
+                          Dernière mise à jour: {new Date(page.lastUpdated).toLocaleDateString(getDateLocale(language))}
                         </div>
                       </div>
                       <div className="mt-4 lg:mt-0 lg:ml-6">

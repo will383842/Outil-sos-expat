@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { collection, query, getDocs, where, orderBy, Timestamp, QueryConstraint } from 'firebase/firestore';
 import { db } from '../../config/firebase';
+import { useApp } from '../../contexts/AppContext';
+import { getDateLocale } from '../../utils/formatters';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { TrendingUp, DollarSign, Calendar, Users, Percent, Download } from 'lucide-react';
 import Button from '../common/Button';
@@ -38,6 +40,7 @@ type TimeframeType = '7d' | '30d' | '90d' | '1y';
 type CurrencyType = 'all' | 'eur' | 'usd';
 
 export const FinancialAnalytics: React.FC = () => {
+  const { language } = useApp();
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -167,7 +170,7 @@ export const FinancialAnalytics: React.FC = () => {
       .sort(([a], [b]) => a.localeCompare(b))
       .forEach(([date, data]) => {
         revenueByDay.push({
-          date: new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }),
+          date: new Date(date).toLocaleDateString(getDateLocale(language), { day: '2-digit', month: '2-digit' }),
           ...data
         });
       });
@@ -233,7 +236,7 @@ export const FinancialAnalytics: React.FC = () => {
     if (!analytics || payments.length === 0) return;
 
     const csvData = payments.map(p => ({
-      Date: p.createdAt.toLocaleDateString('fr-FR'),
+      Date: p.createdAt.toLocaleDateString(getDateLocale(language)),
       Montant: p.amount,
       Devise: p.currency.toUpperCase(),
       'Frais Plateforme': p.platformFee,
@@ -517,7 +520,7 @@ export const FinancialAnalytics: React.FC = () => {
               {payments.slice(0, 10).map((payment) => (
                 <tr key={payment.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {payment.createdAt.toLocaleDateString('fr-FR')}
+                    {payment.createdAt.toLocaleDateString(getDateLocale(language))}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {payment.amount.toFixed(2)}

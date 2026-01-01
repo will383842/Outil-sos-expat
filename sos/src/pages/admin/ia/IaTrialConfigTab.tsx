@@ -596,7 +596,7 @@ export const IaTrialConfigTab: React.FC = () => {
               </ul>
               {trialConfig.updatedAt && (
                 <p className="mt-2 text-xs text-gray-500">
-                  Derniere modification : {trialConfig.updatedAt.toLocaleDateString('fr-FR')}
+                  Derniere modification : {trialConfig.updatedAt.toLocaleDateString(getDateLocale(language))}
                 </p>
               )}
             </div>
@@ -689,6 +689,7 @@ export const IaTrialConfigTab: React.FC = () => {
         providers={trialProviders}
         loading={providersLoading}
         onRefresh={loadTrialProviders}
+        language={language}
       />
     </div>
   );

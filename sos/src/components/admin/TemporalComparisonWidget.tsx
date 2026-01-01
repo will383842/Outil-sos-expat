@@ -3,6 +3,8 @@
 // =============================================================================
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useApp } from '../../contexts/AppContext';
+import { getDateLocale } from '../../utils/formatters';
 import {
   TrendingUp,
   TrendingDown,
@@ -81,6 +83,7 @@ const formatPercent = (value: number): string => {
 const TemporalComparisonWidget: React.FC<TemporalComparisonWidgetProps> = ({
   compact: _compact = false,
 }) => {
+  const { language } = useApp();
   const [data, setData] = useState<ComparisonData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedMetric, setSelectedMetric] = useState<'calls' | 'revenue' | 'successRate'>('calls');
@@ -487,7 +490,7 @@ const TemporalComparisonWidget: React.FC<TemporalComparisonWidgetProps> = ({
               </div>
             </div>
             <div className="text-sm text-gray-500">
-              Mis à jour: {new Date().toLocaleTimeString('fr-FR')}
+              Mis à jour: {new Date().toLocaleTimeString(getDateLocale(language))}
             </div>
           </div>
         </div>

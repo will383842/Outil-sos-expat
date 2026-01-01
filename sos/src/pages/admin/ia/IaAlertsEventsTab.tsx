@@ -4,6 +4,8 @@
  */
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useApp } from '../../../contexts/AppContext';
+import { getDateLocale } from '../../../utils/formatters';
 import {
   Bell,
   AlertTriangle,
@@ -145,6 +147,7 @@ interface EventItemProps {
   onMarkRead: (id: string) => void;
   isExpanded: boolean;
   onToggleExpand: () => void;
+  language: string;
 }
 
 const EventItem: React.FC<EventItemProps> = ({
@@ -152,7 +155,8 @@ const EventItem: React.FC<EventItemProps> = ({
   onAcknowledge,
   onMarkRead,
   isExpanded,
-  onToggleExpand
+  onToggleExpand,
+  language
 }) => {
   const config = EVENT_TYPE_CONFIG[event.eventType];
   const colors = SEVERITY_COLORS[event.severity];
@@ -202,7 +206,7 @@ const EventItem: React.FC<EventItemProps> = ({
               <span>{event.providerName}</span>
               <span>{event.providerEmail}</span>
               <span>
-                {new Date(event.createdAt).toLocaleString('fr-FR', {
+                {new Date(event.createdAt).toLocaleString(getDateLocale(language), {
                   day: '2-digit',
                   month: '2-digit',
                   year: 'numeric',
@@ -296,7 +300,7 @@ const EventItem: React.FC<EventItemProps> = ({
           {event.isAcknowledged && (
             <div className="mt-3 pt-3 border-t border-gray-200 text-xs text-gray-500">
               Acquitté par {event.acknowledgedBy} le{' '}
-              {event.acknowledgedAt && new Date(event.acknowledgedAt).toLocaleString('fr-FR')}
+              {event.acknowledgedAt && new Date(event.acknowledgedAt).toLocaleString(getDateLocale(language))}
             </div>
           )}
         </div>
@@ -310,6 +314,7 @@ const EventItem: React.FC<EventItemProps> = ({
 // ============================================================================
 
 export const IaAlertsEventsTab: React.FC = () => {
+  const { language } = useApp();
   // State
   const [events, setEvents] = useState<SubscriptionEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -669,6 +674,7 @@ export const IaAlertsEventsTab: React.FC = () => {
               onToggleExpand={() => setExpandedEventId(
                 expandedEventId === event.id ? null : event.id
               )}
+              language={language}
             />
           ))
         )}

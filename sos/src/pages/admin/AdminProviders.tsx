@@ -268,6 +268,66 @@ const AdminProviders: React.FC = () => {
     return `Il y a ${diffDays}j`;
   };
 
+  // Charger les stats d'appels d'aujourd'hui depuis Firestore
+  const loadTodayCallsStats = useCallback(async () => {
+    try {
+      const now = new Date();
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      const callsQuery = query(
+        collection(db, 'call_sessions'),
+        where('startTime', '>=', Timestamp.fromDate(startOfToday)),
+        where('payment.status', '==', 'captured')
+      );
+
+      const snapshot = await getDocs(callsQuery);
+      let totalCalls = 0;
+      let totalRevenue = 0;
+
+      snapshot.docs.forEach((doc) => {
+        const data = doc.data();
+        if (!data._placeholder) {
+          totalCalls++;
+          // Revenus = montant total de l'appel
+          const amount = data.payment?.amount || data.totalAmount || 0;
+          totalRevenue += Number(amount);
+        }
+      });
+
+      return { totalCallsToday: totalCalls, totalRevenueToday: totalRevenue };
+    } catch (error) {
+      console.error('[AdminProviders] Error loading today calls stats:', error);
+      // Fallback: essayer sans le filtre payment.status si l'index n'existe pas
+      try {
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        const callsQuery = query(
+          collection(db, 'call_sessions'),
+          where('startTime', '>=', Timestamp.fromDate(startOfToday))
+        );
+
+        const snapshot = await getDocs(callsQuery);
+        let totalCalls = 0;
+        let totalRevenue = 0;
+
+        snapshot.docs.forEach((doc) => {
+          const data = doc.data();
+          if (!data._placeholder && data.payment?.status === 'captured') {
+            totalCalls++;
+            const amount = data.payment?.amount || data.totalAmount || 0;
+            totalRevenue += Number(amount);
+          }
+        });
+
+        return { totalCallsToday: totalCalls, totalRevenueToday: totalRevenue };
+      } catch (fallbackError) {
+        console.error('[AdminProviders] Fallback also failed:', fallbackError);
+        return { totalCallsToday: 0, totalRevenueToday: 0 };
+      }
+    }
+  }, []);
+
   // Chargement des prestataires en temps réel
   useEffect(() => {
     if (!currentUser || !isRealTimeActive) return;
@@ -285,7 +345,7 @@ const AdminProviders: React.FC = () => {
 
     const unsubscribe = onSnapshot(
       providersQuery,
-      (snapshot) => {
+      async (snapshot) => {
         if (!mountedRef.current) return;
 
         const providersList = snapshot.docs.map((doc) => ({
@@ -312,6 +372,9 @@ const AdminProviders: React.FC = () => {
         const ratingsCount = providersList.filter(p => p.rating !== undefined).length;
         const averageRating = ratingsCount > 0 ? ratingsSum / ratingsCount : 0;
 
+        // Charger les stats d'appels d'aujourd'hui
+        const todayStats = await loadTodayCallsStats();
+
         setStats({
           totalProviders: providersList.length,
           onlineNow: onlineCount,
@@ -322,8 +385,8 @@ const AdminProviders: React.FC = () => {
           lawyersCount,
           expatsCount,
           averageRating,
-          totalCallsToday: 0, // Sera calculé séparément
-          totalRevenueToday: 0,
+          totalCallsToday: todayStats.totalCallsToday,
+          totalRevenueToday: todayStats.totalRevenueToday,
         });
 
         // Générer des alertes
@@ -346,7 +409,7 @@ const AdminProviders: React.FC = () => {
       mountedRef.current = false;
       unsubscribe();
     };
-  }, [currentUser, isRealTimeActive]);
+  }, [currentUser, isRealTimeActive, loadTodayCallsStats]);
 
   // Générer des alertes basées sur les données
   const generateAlerts = useCallback((providersList: Provider[]) => {
