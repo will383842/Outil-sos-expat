@@ -2,7 +2,7 @@
 // src/components/forms-data/MultiLanguageSelect.tsx - VERSION ADAPTATIVE
 // ========================================
 
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import Select, { MultiValue, StylesConfig } from 'react-select';
 import {
   Language,
@@ -32,8 +32,8 @@ interface MultiLanguageSelectProps {
   disabled?: boolean;
 }
 
-const MultiLanguageSelect: React.FC<MultiLanguageSelectProps> = React.memo(({ 
-  value, 
+const MultiLanguageSelect: React.FC<MultiLanguageSelectProps> = React.memo(({
+  value,
   onChange,
   providerLanguages = [],
   highlightShared = false,
@@ -92,21 +92,6 @@ const MultiLanguageSelect: React.FC<MultiLanguageSelectProps> = React.memo(({
       return 0;
     });
   }, [options, highlightShared]);
-
-  // 🔍 DEBUG: Log des options pour diagnostiquer le problème d'affichage
-  useEffect(() => {
-    console.log('[MultiLanguageSelect] 🔍 Debug:', {
-      languagesDataLength: languagesData?.length ?? 0,
-      currentLocale,
-      currentLanguagesLength: currentLanguages?.length ?? 0,
-      optionsLength: options?.length ?? 0,
-      sortedOptionsLength: sortedOptions?.length ?? 0,
-      firstOption: sortedOptions?.[0] ?? null,
-    });
-    if (sortedOptions?.length === 0) {
-      console.warn('[MultiLanguageSelect] ⚠️ AUCUNE OPTION DISPONIBLE!');
-    }
-  }, [sortedOptions, currentLocale, currentLanguages, options]);
 
   // 🎯 STYLES COMPLÈTEMENT ADAPTATIFS - Hérite du parent
   const adaptiveStyles: StylesConfig<LanguageOption, true> = {
@@ -285,6 +270,12 @@ const MultiLanguageSelect: React.FC<MultiLanguageSelectProps> = React.memo(({
       fontSize: '0.875rem',
       color: '#6b7280',
       padding: '1rem'
+    }),
+
+    // 🎯 Portal styles - Important pour afficher le menu au-dessus de tout
+    menuPortal: (provided) => ({
+      ...provided,
+      zIndex: 9999
     })
   };
 
@@ -322,6 +313,8 @@ const MultiLanguageSelect: React.FC<MultiLanguageSelectProps> = React.memo(({
         isDisabled={disabled}
         noOptionsMessage={noOptionsMessage}
         filterOption={() => true}
+        menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+        menuPosition="fixed"
       />
     </div>
   );

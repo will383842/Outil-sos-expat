@@ -34,7 +34,9 @@ html.dark {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  overflow: hidden;
+  /* ✅ FIX: overflow: visible pour permettre au dropdown de s'afficher */
+  overflow: visible;
+  position: relative;
 }
 
 /* Mobile-first 2026 best practices */

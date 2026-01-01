@@ -1,4 +1,4 @@
-﻿// ========================================
+// ========================================
 // src/data/languages-spoken.ts
 // 100+ LANGUES PARLÉES DANS LE MONDE
 // Traduites dans 9 langues d'interface
