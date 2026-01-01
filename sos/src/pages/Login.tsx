@@ -50,6 +50,13 @@ import {
   fetchSignInMethodsForEmail,
 } from "firebase/auth";
 import { auth } from "../config/firebase";
+import {
+  getLocaleString,
+  getTranslatedRouteSlug,
+  parseLocaleFromPath,
+  hasLocalePrefix,
+  getRouteKeyFromSlug,
+} from "../multilingual-system/core/routing/localeRoutes";
 
 // ==================== TYPES ====================
 interface LoginFormData {
@@ -665,15 +672,76 @@ const Login: React.FC = () => {
 
   // ==================== REDIRECT ====================
   useEffect(() => {
-    if (authInitialized && user) {
+    // ✅ FIX FLASH: Attendre que TOUT soit prêt avant de rediriger
+    // authInitialized = Firestore a répondu
+    // user = données utilisateur chargées
+    // !isLoading = pas de chargement en cours
+    if (authInitialized && user && !isLoading) {
       // Get redirect URL - prioritize sessionStorage (set before navigation) over query params
       // sessionStorage is more reliable because it's set BEFORE navigation happens
       const redirectFromStorage = sessionStorage.getItem("loginRedirect");
       const redirectFromParams = searchParams.get("redirect");
       const redirectToUse = redirectFromStorage || redirectFromParams || "/dashboard";
-      
+
       // Decode the redirect URL (it was encoded when passed to login page)
-      const finalUrl = decodeURIComponent(redirectToUse);
+      let finalUrl = decodeURIComponent(redirectToUse);
+
+      // ✅ FIX MULTILINGUE: Construire l'URL correcte avec locale et slug traduit
+      // pour éviter les redirections multiples par LocaleRouter
+      if (!finalUrl.startsWith('/admin') && !finalUrl.startsWith('/marketing')) {
+        // Obtenir la locale correcte (format "fr-fr", "en-us", etc.)
+        const localePrefix = getLocaleString(currentLang as any);
+
+        // Vérifier si l'URL a déjà un préfixe de locale
+        if (!hasLocalePrefix(finalUrl)) {
+          // Extraire le chemin sans le / initial
+          const pathWithoutSlash = finalUrl.startsWith('/') ? finalUrl.slice(1) : finalUrl;
+
+          // Trouver le slug traduit pour ce chemin
+          // Ex: "dashboard" → "tableau-de-bord" pour le français
+          const pathSegments = pathWithoutSlash.split('/').filter(Boolean);
+          if (pathSegments.length > 0) {
+            // Essayer de trouver une route correspondante
+            let routeKey = getRouteKeyFromSlug(pathWithoutSlash);
+            if (!routeKey && pathSegments.length >= 2) {
+              routeKey = getRouteKeyFromSlug(`${pathSegments[0]}/${pathSegments[1]}`);
+            }
+            if (!routeKey) {
+              routeKey = getRouteKeyFromSlug(pathSegments[0]);
+            }
+
+            if (routeKey) {
+              // On a trouvé une route, utiliser le slug traduit
+              const translatedSlug = getTranslatedRouteSlug(routeKey, currentLang as any);
+              finalUrl = `/${localePrefix}/${translatedSlug}`;
+              console.log("[Login] Built localized URL:", finalUrl, "from routeKey:", routeKey);
+            } else {
+              // Pas de route trouvée, juste ajouter le préfixe de locale
+              finalUrl = `/${localePrefix}${finalUrl.startsWith('/') ? finalUrl : '/' + finalUrl}`;
+              console.log("[Login] Added locale prefix:", finalUrl);
+            }
+          } else {
+            // Chemin vide, aller à la home localisée
+            finalUrl = `/${localePrefix}`;
+          }
+        } else {
+          // L'URL a déjà une locale, vérifier si le slug doit être traduit
+          const { lang, pathWithoutLocale } = parseLocaleFromPath(finalUrl);
+          if (lang && pathWithoutLocale) {
+            const pathSegments = pathWithoutLocale.split('/').filter(Boolean);
+            if (pathSegments.length > 0) {
+              const routeKey = getRouteKeyFromSlug(pathSegments[0]);
+              if (routeKey) {
+                const translatedSlug = getTranslatedRouteSlug(routeKey, lang as any);
+                if (pathSegments[0] !== translatedSlug) {
+                  finalUrl = `/${getLocaleString(lang as any)}/${translatedSlug}`;
+                  console.log("[Login] Corrected slug to:", finalUrl);
+                }
+              }
+            }
+          }
+        }
+      }
 
       // Clear the stored redirect after using it (important to prevent reusing old redirects)
       sessionStorage.removeItem("loginRedirect");
@@ -710,7 +778,7 @@ const Login: React.FC = () => {
       console.log("[Login] Redirecting to:", finalUrl);
       navigate(finalUrl, { replace: true });
     }
-  }, [authInitialized, user, navigate, searchParams]);
+  }, [authInitialized, user, isLoading, navigate, searchParams, currentLang]);
 
   // ==================== FORM SUBMIT ====================
   const handleSubmit = useCallback(
@@ -835,10 +903,14 @@ const Login: React.FC = () => {
 
   const effectiveLoading = isLoading || localLoading;
 
+  // Déterminer s'il y a une erreur à afficher (priorité sur le spinner)
+  const hasError = error || formErrors.general || formErrors.email || formErrors.password;
+
   // ==================== LOADING STATE ====================
-  if (effectiveLoading && !user) {
+  // IMPORTANT: Ne PAS afficher le spinner si une erreur existe (sinon l'utilisateur reste bloqué)
+  if (effectiveLoading && !user && !hasError) {
     return (
-      <div 
+      <div
         className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 px-4"
         role="status"
         aria-live="polite"

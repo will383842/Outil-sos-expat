@@ -132,6 +132,14 @@ const getDeviceInfo = (): DeviceInfo => {
 };
 
 /* =========================================================
+   Timeout adaptatif selon la vitesse de connexion
+   ========================================================= */
+const getAdaptiveTimeout = (): number => {
+  // Timeout très généreux pour éviter les faux positifs après vidage de cache
+  return 60000; // 60 secondes - le spinner restera mais pas de fausse erreur
+};
+
+/* =========================================================
    Helpers email (locaux)
    ========================================================= */
 const normalizeEmail = (s: string): string =>
@@ -549,17 +557,38 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   // Flag déconnexion pour éviter les réinjections via snapshot
   const signingOutRef = useRef<boolean>(false);
 
+  // Garder trace de l'ancien uid pour détecter les changements d'utilisateur
+  const previousAuthUserUidRef = useRef<string | null>(null);
+
   // onAuthStateChanged → ne fait que stocker l'utilisateur auth
   useEffect(() => {
     console.log("🔐 [AuthContext] Initialisation onAuthStateChanged...");
+    console.log("🔐 [AuthContext] auth.currentUser au boot:", auth.currentUser?.uid || "null");
     const unsubAuth = onAuthStateChanged(auth, (u) => {
-      console.log("🔐 [AuthContext] onAuthStateChanged triggered:", {
+      const timestamp = new Date().toISOString();
+      console.log(`🔐 [AuthContext] [${timestamp}] onAuthStateChanged triggered:`, {
         hasUser: !!u,
         uid: u?.uid,
         email: u?.email,
         emailVerified: u?.emailVerified,
+        providerId: u?.providerId,
+        previousUid: previousAuthUserUidRef.current,
       });
+
+      // ✅ FIX FLASH: Si l'utilisateur change (login après logout ou nouveau login),
+      // réinitialiser authInitialized pour éviter que ProtectedRoute redirige
+      // avant que les données Firestore soient chargées
+      const isNewUser = u && u.uid !== previousAuthUserUidRef.current;
+      if (isNewUser) {
+        console.log("🔐 [AuthContext] 🔄 Nouvel utilisateur détecté, reset authInitialized");
+        setAuthInitialized(false);
+        // Note: Ne pas reset subscribed.current et firstSnapArrived.current ici
+        // car le useEffect du listener les gère dans son cleanup/setup
+      }
+      previousAuthUserUidRef.current = u?.uid ?? null;
+
       setIsLoading(true);
+      console.log("🔐 [AuthContext] setAuthUser() appelé avec uid:", u?.uid || "null");
       setAuthUser(u);
       setFirebaseUser(u ?? null);
       if (!u) {
@@ -582,56 +611,122 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   const firstSnapArrived = useRef(false);
 
   useEffect(() => {
-    console.log("🔐 [AuthContext] useEffect users listener - authUser:", authUser?.uid);
+    const effectTimestamp = new Date().toISOString();
+    console.log(`🔐 [AuthContext] [${effectTimestamp}] useEffect users listener TRIGGERED`);
+    console.log("🔐 [AuthContext] État actuel:", {
+      authUserUid: authUser?.uid || "null",
+      subscribedCurrent: subscribed.current,
+      firstSnapArrivedCurrent: firstSnapArrived.current,
+      signingOut: signingOutRef.current,
+    });
+
     if (!authUser) {
-      console.log("🔐 [AuthContext] Pas d'authUser, skip listener");
+      console.log("🔐 [AuthContext] ⏸️ Pas d'authUser, skip listener - attente connexion");
       return;               // attendre l'auth
     }
     if (subscribed.current) {
-      console.log("🔐 [AuthContext] Déjà abonné, skip");
+      console.log("🔐 [AuthContext] ⏸️ Déjà abonné (subscribed.current=true), skip - probablement StrictMode");
       return;      // éviter double abonnement en StrictMode
     }
+
+    console.log("🔐 [AuthContext] ▶️ Démarrage du listener Firestore...");
     subscribed.current = true;
     firstSnapArrived.current = false;
     setIsLoading(true);
 
     const uid = authUser.uid;
     const refUser = doc(db, 'users', uid);
-    console.log("🔐 [AuthContext] Lecture users/" + uid);
+    console.log("🔐 [AuthContext] 📡 Création référence Firestore: users/" + uid);
 
     let unsubUser: undefined | (() => void);
     let cancelled = false;
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let fallbackTimeoutId: ReturnType<typeof setTimeout> | null = null; // ✅ FIX: Variable pour nettoyer le fallback
 
     // OPTIMISATION: Utiliser UNIQUEMENT onSnapshot() qui retourne les données initiales
     // au premier callback. Évite la double lecture (getDoc + onSnapshot).
     // Si le premier callback n'arrive pas dans 15s, on initialise avec les données Auth minimales.
 
-    console.log("🔐 [AuthContext] Setting up onSnapshot listener for users/" + uid);
+    const listenerStartTime = Date.now();
+    console.log("🔐 [AuthContext] 🎯 Setting up onSnapshot listener for users/" + uid);
+    console.log("🔐 [AuthContext] ⏱️ Chrono démarré pour mesurer le temps de réponse Firestore");
 
-    // Timeout de secours si Firestore est trop lent
-    // ⚠️ CORRECTION: Ne PAS écraser le rôle avec 'client' - garder l'état loading
-    // et afficher une erreur à l'utilisateur plutôt que de corrompre son rôle
-    timeoutId = setTimeout(() => {
+    // 🚀 FALLBACK: Si onSnapshot ne répond pas en 5s, essayer getDoc directement
+    fallbackTimeoutId = setTimeout(async () => {
+      const elapsed = Date.now() - listenerStartTime;
+      console.warn(`🔐 [AuthContext] ⚠️ [${elapsed}ms] onSnapshot n'a pas répondu en 5s, tentative getDoc directe...`);
       if (!firstSnapArrived.current && !cancelled) {
-        console.warn("🔐 [AuthContext] onSnapshot timeout (8s) - Firestore trop lent");
-        // Afficher l'erreur ET arrêter le spinner pour que l'utilisateur puisse agir
-        setError('Connexion lente au serveur. Veuillez rafraîchir la page.');
-        setIsLoading(false); // CRITIQUE: Arrêter le spinner pour éviter UI bloquée
-        // Le listener onSnapshot peut encore recevoir les données plus tard
+        try {
+          console.log("🔐 [AuthContext] 📥 Exécution getDoc(users/" + uid + ")...");
+          const directSnap = await getDoc(refUser);
+          const getDocElapsed = Date.now() - listenerStartTime;
+          console.log(`🔐 [AuthContext] 📥 getDoc terminé en ${getDocElapsed}ms, exists=${directSnap.exists()}`);
+          if (directSnap.exists() && !firstSnapArrived.current && !cancelled) {
+            console.log("✅ [AuthContext] getDoc réussi, données:", directSnap.data());
+            const data = directSnap.data() as Partial<User>;
+            setUser({
+              ...(data as User),
+              id: uid,
+              uid,
+              email: data.email || authUser.email || null,
+              isVerifiedEmail: authUser.emailVerified,
+            } as User);
+            firstSnapArrived.current = true;
+            setIsLoading(false);
+            setAuthInitialized(true);
+            console.log("✅ [AuthContext] 🏁 User chargé via fallback getDoc - isLoading=false");
+          } else if (!directSnap.exists()) {
+            console.warn("⚠️ [AuthContext] getDoc: document users/" + uid + " n'existe pas!");
+          }
+        } catch (e) {
+          const errorElapsed = Date.now() - listenerStartTime;
+          console.error(`❌ [AuthContext] [${errorElapsed}ms] getDoc fallback échoué:`, e);
+        }
       }
-    }, 8000);
+    }, 5000);
+
+    // Timeout de secours final si rien ne fonctionne
+    const authTimeout = 30000; // 30 secondes max
+    console.log(`🔐 [AuthContext] ⏰ Timeout final configuré: ${authTimeout}ms`);
+    timeoutId = setTimeout(() => {
+      const elapsed = Date.now() - listenerStartTime;
+      if (!firstSnapArrived.current && !cancelled) {
+        console.error(`❌ [AuthContext] 💀 TIMEOUT FATAL [${elapsed}ms] - Firestore complètement inaccessible!`);
+        console.error(`❌ [AuthContext] Diagnostic:`, {
+          authUserUid: authUser?.uid,
+          subscribedCurrent: subscribed.current,
+          firstSnapArrivedCurrent: firstSnapArrived.current,
+          cancelled,
+          navigator_online: typeof navigator !== 'undefined' ? navigator.onLine : 'N/A',
+        });
+        setError('Impossible de charger votre profil. Vérifiez votre connexion et rafraîchissez.');
+        setIsLoading(false);
+      }
+    }, authTimeout);
 
     // Un seul listener qui gère TOUT : données initiales + mises à jour temps réel
+    console.log("🔐 [AuthContext] 📡 onSnapshot() appelé, en attente du premier callback...");
     unsubUser = onSnapshot(
       refUser,
       async (docSnap) => {
-        if (signingOutRef.current || cancelled) return;
+        const snapshotElapsed = Date.now() - listenerStartTime;
+        console.log(`🔐 [AuthContext] 📨 [${snapshotElapsed}ms] onSnapshot CALLBACK REÇU!`);
 
-        // Annuler le timeout car on a reçu une réponse
+        if (signingOutRef.current || cancelled) {
+          console.log("🔐 [AuthContext] ⏸️ Callback ignoré (signingOut=" + signingOutRef.current + ", cancelled=" + cancelled + ")");
+          return;
+        }
+
+        // Annuler le timeout et fallback car on a reçu une réponse
         if (timeoutId) {
           clearTimeout(timeoutId);
           timeoutId = null;
+          console.log("🔐 [AuthContext] ⏰ Timeout annulé - réponse reçue à temps");
+        }
+        if (fallbackTimeoutId) {
+          clearTimeout(fallbackTimeoutId);
+          fallbackTimeoutId = null;
+          console.log("🔐 [AuthContext] ⏰ Fallback timeout annulé");
         }
 
         // Document n'existe pas → c'est une ANOMALIE car le document devrait exister après inscription
@@ -663,8 +758,42 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
         // Document existe → utiliser les données
         const data = docSnap.data() as Partial<User>;
+        const isFromCache = docSnap.metadata.fromCache;
+        const hasPendingWrites = docSnap.metadata.hasPendingWrites;
+
+        // 🔍 DEBUG COMPLET: Afficher TOUTES les données reçues de Firestore
+        console.log("🔐 [AuthContext] 📊 Snapshot reçu:", {
+          uid,
+          fromCache: isFromCache,
+          hasPendingWrites,
+          // Champs critiques
+          role: data.role,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          fullName: data.fullName,
+          email: data.email,
+          isApproved: data.isApproved,
+          // Liste toutes les clés pour diagnostiquer les champs manquants
+          allKeys: Object.keys(data),
+        });
+
+        // ⚠️ ALERTE si les données critiques sont manquantes
+        if (!data.role) {
+          console.error("❌ [AuthContext] ERREUR CRITIQUE: role est undefined/null dans Firestore!");
+        }
+        if (!data.firstName && !data.lastName && !data.fullName) {
+          console.warn("⚠️ [AuthContext] firstName, lastName et fullName sont tous vides/undefined!");
+        }
 
         setUser((prev) => {
+          // 🔍 DEBUG: Afficher l'état précédent avant merge
+          console.log("🔐 [AuthContext] 🔄 Merge - État précédent (prev):", {
+            prevRole: prev?.role,
+            prevFirstName: prev?.firstName,
+            prevEmail: prev?.email,
+            hasPrev: !!prev,
+          });
+
           const merged: User = {
             ...(prev ?? ({} as User)),
             ...(data as Partial<User>),
@@ -686,24 +815,43 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
                 : new Date(),
             isVerifiedEmail: authUser.emailVerified,
           } as User;
+
+          // 🔍 DEBUG COMPLET: Afficher le rôle final après merge
+          console.log("🔐 [AuthContext] ✅ User merged - résultat final:", {
+            role: merged.role,
+            firstName: merged.firstName,
+            lastName: merged.lastName,
+            email: merged.email,
+            isApproved: merged.isApproved,
+          });
+
           return merged;
         });
 
         if (!firstSnapArrived.current) {
-          console.log("🔐 [AuthContext] First snapshot received for users/" + uid);
+          const finalElapsed = Date.now() - listenerStartTime;
+          console.log(`✅ [AuthContext] 🏁 [${finalElapsed}ms] First snapshot received for users/${uid}`);
+          console.log("✅ [AuthContext] 🏁 setIsLoading(false), setAuthInitialized(true)");
           firstSnapArrived.current = true;
           setIsLoading(false);
           setAuthInitialized(true);
+        } else {
+          console.log("🔐 [AuthContext] 🔄 Snapshot de mise à jour reçu (pas le premier)");
         }
       },
       (err) => {
+        const errorElapsed = Date.now() - listenerStartTime;
         // Annuler le timeout en cas d'erreur
         if (timeoutId) {
           clearTimeout(timeoutId);
           timeoutId = null;
         }
+        if (fallbackTimeoutId) {
+          clearTimeout(fallbackTimeoutId);
+          fallbackTimeoutId = null;
+        }
 
-        console.error(`❌ [AuthContext] [users/${uid}] Erreur listener:`, err);
+        console.error(`❌ [AuthContext] [${errorElapsed}ms] [users/${uid}] Erreur listener:`, err);
         console.error(`❌ [AuthContext] Error details:`, {
           name: (err as Error)?.name,
           message: (err as Error)?.message,
@@ -732,11 +880,17 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
     // cleanup (StrictMode monte/démonte 2x)
     return () => {
+      console.log("🔐 [AuthContext] 🧹 Cleanup: annulation de l'abonnement users/" + uid);
       cancelled = true;
       subscribed.current = false;
+      // ✅ FIX: Nettoyer TOUS les timeouts pour éviter les race conditions
       if (timeoutId) {
         clearTimeout(timeoutId);
         timeoutId = null;
+      }
+      if (fallbackTimeoutId) {
+        clearTimeout(fallbackTimeoutId);
+        fallbackTimeoutId = null;
       }
       unsubUser?.();
     };
@@ -797,29 +951,38 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       ]);
 
       console.log("✅ [AuthContext] login() réussi pour:", cred.user.uid);
-      await logAuthEvent('successful_login', {
+      // Log en arrière-plan (fire-and-forget) pour ne pas bloquer le retour du login
+      logAuthEvent('successful_login', {
         userId: cred.user.uid,
         provider: 'email',
         rememberMe,
         deviceInfo
-      });
+      }).catch(() => { /* ignoré - ne pas bloquer le UI */ });
     } catch (e) {
       console.error("❌ [AuthContext] login() ERREUR:", e);
-      console.error("❌ [AuthContext] login() Error details:", {
-        name: (e as Error)?.name,
-        message: (e as Error)?.message,
-        code: (e as any)?.code,
-        stack: (e as Error)?.stack,
-      });
-      const msg =
-        e instanceof Error && e.message === 'auth/timeout'
-          ? 'Connexion trop lente, réessayez.'
-          : 'Email ou mot de passe invalide.';
+      const errorCode = (e as any)?.code || (e instanceof Error ? e.message : '');
+      console.error("❌ [AuthContext] login() Error code:", errorCode);
+
+      // Mapping des erreurs Firebase Auth vers des messages utilisateur explicites
+      const errorMessages: Record<string, string> = {
+        'auth/timeout': 'Connexion trop lente, réessayez.',
+        'auth/invalid-email': 'Adresse email invalide.',
+        'auth/user-disabled': 'Ce compte a été désactivé. Contactez le support.',
+        'auth/user-not-found': 'Aucun compte trouvé avec cet email.',
+        'auth/wrong-password': 'Mot de passe incorrect.',
+        'auth/invalid-credential': 'Email ou mot de passe incorrect.',
+        'auth/too-many-requests': 'Trop de tentatives. Réessayez dans quelques minutes.',
+        'auth/network-request-failed': 'Erreur réseau. Vérifiez votre connexion.',
+        'auth/internal-error': 'Erreur serveur. Réessayez plus tard.',
+        'auth/popup-closed-by-user': 'Connexion annulée.',
+      };
+
+      const msg = errorMessages[errorCode] || 'Email ou mot de passe invalide.';
       setError(msg);
       setAuthMetrics((m) => ({ ...m, failedLogins: m.failedLogins + 1 }));
       // Log en arrière-plan (ne pas bloquer le UI)
       logAuthEvent('login_failed', {
-        error: e instanceof Error ? e.message : String(e),
+        error: errorCode,
         email: normalizeEmail(email),
         deviceInfo
       }).catch(() => { /* ignoré */ });

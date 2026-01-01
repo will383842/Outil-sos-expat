@@ -9,6 +9,7 @@ if (typeof window !== 'undefined') {
 }
 import { getAuth, connectAuthEmulator, type Auth } from "firebase/auth";
 import {
+  getFirestore,
   initializeFirestore,
   persistentLocalCache,
   persistentMultipleTabManager,
@@ -66,16 +67,56 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 export const auth: Auth = getAuth(app);
 export const storage: FirebaseStorage = getStorage(app);
 
-// Firestore - Configuration optimisée pour performance
-// NOTE: experimentalForceLongPolling a été RETIRÉ car il cause une lenteur extrême (10s+ par requête)
-// Cache réduit à 20MB pour éviter QuotaExceededError sur navigateurs avec quota limité
+// Firestore - Configuration avec Long Polling forcé (contourne les problèmes WebSocket)
 export const db: Firestore = initializeFirestore(app, {
-  localCache: persistentLocalCache({
-    cacheSizeBytes: 20 * 1024 * 1024, // 20MB max (réduit de 50MB)
-    tabManager: persistentMultipleTabManager(),
-  }),
+  experimentalForceLongPolling: true, // Force HTTP au lieu de WebSocket
+  useFetchStreams: false, // Désactive les streams fetch
 });
-console.log("🔧 [Firebase] Firestore initialisé avec cache persistant (20MB max)");
+console.log("🔧 [Firebase] Firestore initialisé avec LONG POLLING FORCÉ");
+console.log("🔧 [Firebase] Firestore type:", db.type);
+console.log("🔧 [Firebase] App name:", db.app.name);
+
+// 🔍 DIAGNOSTIC: Test immédiat de Firestore au boot
+if (typeof window !== 'undefined') {
+  // Log réseau avant le test Firestore
+  console.log("🌐 [Firebase] État réseau:", {
+    online: navigator.onLine,
+    connection: (navigator as any).connection?.effectiveType || 'unknown',
+  });
+
+  import('firebase/firestore').then(({ doc, getDoc, collection, getDocs, query, limit: firestoreLimit, enableNetwork, disableNetwork }) => {
+    console.log("🧪 [Firebase] Test de connectivité Firestore...");
+    console.log("🧪 [Firebase] Timestamp début test:", new Date().toISOString());
+
+    // Test 1: Lecture d'une collection publique (sos_profiles a allow read: if true)
+    const testQuery = query(collection(db, 'sos_profiles'), firestoreLimit(1));
+    const start = Date.now();
+
+    // Timeout de 10s
+    const timeoutId = setTimeout(() => {
+      console.error("❌ [Firebase] Firestore timeout après 10s - connexion bloquée!");
+      console.error("❌ [Firebase] Vérifiez:");
+      console.error("   1. Votre connexion internet");
+      console.error("   2. Aucun bloqueur de réseau (antivirus, extension)");
+      console.error("   3. Le projet Firebase est accessible");
+      console.error("💡 [Firebase] Solution: Essayez en navigation privée ou un autre navigateur");
+    }, 10000);
+
+    getDocs(testQuery)
+      .then((snap) => {
+        clearTimeout(timeoutId);
+        const elapsed = Date.now() - start;
+        console.log(`✅ [Firebase] Firestore connecté en ${elapsed}ms (${snap.size} docs trouvés)`);
+        console.log(`✅ [Firebase] Connectivité OK - les requêtes Firestore fonctionnent`);
+      })
+      .catch((err) => {
+        clearTimeout(timeoutId);
+        const elapsed = Date.now() - start;
+        console.error(`❌ [Firebase] Firestore erreur en ${elapsed}ms:`, err.code, err.message);
+        console.error(`❌ [Firebase] Stack:`, err.stack);
+      });
+  });
+}
 
 // Auto-nettoyage du cache si le stockage est presque plein
 if (typeof navigator !== 'undefined' && 'storage' in navigator) {
