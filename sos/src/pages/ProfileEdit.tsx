@@ -303,7 +303,9 @@ const ProfileEdit: React.FC = () => {
       const extension = getFileExtension(format);
       console.log(`💾 [ProfileEdit] Saving to Firebase Storage as: ${format.toUpperCase()} format (${extension} extension)`);
       const newRef = ref(storage, `profilePhotos/${current.uid}/${Date.now()}${extension}`);
-      const snapshot = await uploadBytes(newRef, optimized.blob);
+      // Pass contentType metadata for Firebase Storage rules validation
+      const metadata = { contentType: format === 'webp' ? 'image/webp' : 'image/jpeg' };
+      const snapshot = await uploadBytes(newRef, optimized.blob, metadata);
       const url = await getDownloadURL(snapshot.ref);
       return url;
     } catch (err) {

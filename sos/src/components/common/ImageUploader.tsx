@@ -750,7 +750,11 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       console.log('📁 Upload path:', `${finalUploadPath}/${fileName}`);
 
       return new Promise((resolve, reject) => {
-        const task = uploadBytesResumable(refObj, optimized.blob);
+        // IMPORTANT: Pass contentType metadata for Firebase Storage rules validation
+        const metadata = {
+          contentType: format === 'webp' ? 'image/webp' : 'image/jpeg'
+        };
+        const task = uploadBytesResumable(refObj, optimized.blob, metadata);
         task.on('state_changed',
           (snap) => {
             const p = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
