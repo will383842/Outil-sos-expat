@@ -96,8 +96,8 @@ const HowItWorks = lazy(() => import('./pages/HowItWorks'));
 
 
 
-// Error pages
-const NotFound = lazy(() => import("./pages/NotFound"));
+// Error pages - NOT lazy loaded to avoid flash during route transitions
+import NotFound from "./pages/NotFound";
 
 // PWA
 const ShareTarget = lazy(() => import('./pages/ShareTarget'));

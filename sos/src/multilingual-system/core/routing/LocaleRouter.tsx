@@ -25,10 +25,17 @@ const LocaleRouter: React.FC<LocaleRouterProps> = ({ children }) => {
   const navigate = useNavigate();
   const { language, setLanguage } = useApp();
   const params = useParams<{ locale?: string }>();
+  // Only validate on initial mount, not on every navigation
+  // This prevents the flash of loading/404 during client-side navigation
   const [isValidating, setIsValidating] = useState(true);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   useEffect(() => {
-    setIsValidating(true);
+    // Only show loading spinner on initial page load, not during navigation
+    // This prevents flash of 404/loading during client-side routing
+    if (!hasInitialized) {
+      setIsValidating(true);
+    }
     const { pathname } = location;
 
     // CRITICAL: Decode URL to handle Unicode characters (Hindi, Chinese, Arabic, Russian)
@@ -162,9 +169,14 @@ const LocaleRouter: React.FC<LocaleRouterProps> = ({ children }) => {
 
     // Validation complete
     setIsValidating(false);
-  }, [location.pathname, language, navigate, setLanguage, params.locale]);
+    if (!hasInitialized) {
+      setHasInitialized(true);
+    }
+  }, [location.pathname, language, navigate, setLanguage, params.locale, hasInitialized]);
 
-  if (isValidating) {
+  // Only show loading spinner on initial page load
+  // After initialization, always render children to prevent flash during navigation
+  if (isValidating && !hasInitialized) {
     return <LoadingSpinner size="large" color="red" />;
   }
 
