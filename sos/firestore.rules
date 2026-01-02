@@ -163,9 +163,9 @@ service cloud.firestore {
       allow create: if isAuthenticated() &&
                     (request.resource.data.userId == request.auth.uid ||
                      request.resource.data.clientId == request.auth.uid) &&
-                    // Validation du montant (min 5€, max 2000€ = 500-200000 centimes)
+                    // Validation du montant (min 0.50€, max 2000€ = 50-200000 centimes)
                     request.resource.data.amount is number &&
-                    request.resource.data.amount >= 500 &&
+                    request.resource.data.amount >= 50 &&
                     request.resource.data.amount <= 200000 &&
                     // Status doit être "pending" ou "requires_capture" à la création
                     request.resource.data.status in ['pending', 'requires_payment_method', 'requires_capture'];
@@ -736,6 +736,44 @@ service cloud.firestore {
 
       // Suppression : admin uniquement
       allow delete: if isAdmin() || isDev();
+    }
+
+    // ================= AUTH LOGS COLLECTION =================
+    match /auth_logs/{logId} {
+      // Seuls les admins peuvent lire
+      allow read: if isAdmin() || isDev();
+      // Utilisateurs authentifiés peuvent créer leurs propres logs
+      allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid;
+      // Cloud Functions seules peuvent modifier/supprimer
+      allow update, delete: if false;
+    }
+
+    // ================= ERROR LOGS COLLECTION =================
+    match /error_logs/{logId} {
+      // Seuls les admins peuvent lire
+      allow read: if isAdmin() || isDev();
+      // Utilisateurs authentifiés peuvent logger les erreurs
+      allow create: if isAuthenticated();
+      // Cloud Functions seules peuvent modifier/supprimer
+      allow update, delete: if false;
+    }
+
+    // ================= ANALYTICS EVENTS COLLECTION =================
+    match /analytics_events/{eventId} {
+      // Seuls les admins peuvent lire
+      allow read: if isAdmin() || isDev();
+      // Utilisateurs authentifiés peuvent créer des événements
+      allow create: if isAuthenticated();
+      // Cloud Functions seules peuvent modifier/supprimer
+      allow update, delete: if false;
+    }
+
+    // ================= FAQ TRANSLATIONS CACHE =================
+    match /faq_translations_cache/{cacheId} {
+      // Lecture publique pour les FAQ traduites
+      allow read: if true;
+      // Seuls les admins peuvent écrire
+      allow write: if isAdmin() || isDev();
     }
 
     // ================= CATCH-ALL (deny by default) =================
