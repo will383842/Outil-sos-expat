@@ -666,16 +666,16 @@ service cloud.firestore {
     }
 
     // ================= INVOICE RECORDS (Prestations) =================
-    // P0 SECURITY FIX: Les factures ne peuvent être créées que par Cloud Functions
-    // Empêche la création de fausses factures par des utilisateurs
     match /invoice_records/{invoiceId} {
       // Les utilisateurs peuvent lire leurs propres factures (client ou provider)
       allow read: if isAuthenticated() &&
                   (resource.data.clientId == request.auth.uid ||
                    resource.data.providerId == request.auth.uid ||
                    isAdmin() || isDev());
-      // Seules les Cloud Functions via Admin SDK peuvent créer des factures
-      allow create: if false;
+      // Le client peut créer une facture dont il est le client
+      // (sécurisé: on vérifie que clientId == uid de l'utilisateur)
+      allow create: if isAuthenticated() &&
+                    request.resource.data.clientId == request.auth.uid;
       // Seuls admins peuvent modifier/supprimer
       allow update, delete: if isAdmin() || isDev();
     }

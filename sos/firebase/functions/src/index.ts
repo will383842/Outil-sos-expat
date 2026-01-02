@@ -284,22 +284,23 @@ export const STRIPE_CONNECT_WEBHOOK_SECRET_LIVE = defineSecret(
 function isLive(): boolean {
   return (STRIPE_MODE.value() || "test").toLowerCase() === "live";
 }
+// P0 FIX: Use .value() instead of process.env for Firebase v2 secrets
 function getStripeSecretKey(): string {
   return isLive()
-    ? process.env.STRIPE_SECRET_KEY_LIVE || ""
-    : process.env.STRIPE_SECRET_KEY_TEST || "";
+    ? STRIPE_SECRET_KEY_LIVE.value() || ""
+    : STRIPE_SECRET_KEY_TEST.value() || "";
 }
 function getStripeWebhookSecret(): string {
   return isLive()
-    ? process.env.STRIPE_WEBHOOK_SECRET_LIVE || ""
-    : process.env.STRIPE_WEBHOOK_SECRET_TEST || "";
+    ? STRIPE_WEBHOOK_SECRET_LIVE.value() || ""
+    : STRIPE_WEBHOOK_SECRET_TEST.value() || "";
 }
 
 // Helper pour le webhook Connect (Direct Charges) - reserve pour utilisation future
 export function getStripeConnectWebhookSecret(): string {
   return isLive()
-    ? process.env.STRIPE_CONNECT_WEBHOOK_SECRET_LIVE || ""
-    : process.env.STRIPE_CONNECT_WEBHOOK_SECRET_TEST || "";
+    ? STRIPE_CONNECT_WEBHOOK_SECRET_LIVE.value() || ""
+    : STRIPE_CONNECT_WEBHOOK_SECRET_TEST.value() || "";
 }
 
 // ====== INTERFACES DE DEBUGGING ======
@@ -1156,8 +1157,13 @@ export const stripeWebhook = onRequest(
   {
     region: "europe-west1",
     memory: "512MiB",
-    // ===== P0 SECURITY FIX: Activer les secrets pour la vérification de signature =====
-    secrets: [STRIPE_WEBHOOK_SECRET_TEST, STRIPE_WEBHOOK_SECRET_LIVE],
+    // P0 FIX: Add Stripe API secrets + webhook secrets for proper initialization
+    secrets: [
+      STRIPE_SECRET_KEY_TEST,
+      STRIPE_SECRET_KEY_LIVE,
+      STRIPE_WEBHOOK_SECRET_TEST,
+      STRIPE_WEBHOOK_SECRET_LIVE
+    ],
     concurrency: 1,
     timeoutSeconds: 30,
     minInstances: 0,
