@@ -217,13 +217,18 @@
       }
     }
 
-    /* ✅ Police Inter */
+    /* ✅ Police Inter - Optimisée pour éviter CLS */
     @font-face {
       font-family: "Inter var";
       src: url("/fonts/inter-var.woff2") format("woff2");
       font-weight: 100 900;
       font-display: swap;
       font-style: normal;
+      /* Ajustements métriques pour éviter le layout shift */
+      size-adjust: 100%;
+      ascent-override: 90%;
+      descent-override: 22%;
+      line-gap-override: 0%;
     }
   </style>
 </head>
@@ -333,18 +338,42 @@
   <!-- App entry - DOIT ÊTRE LE SEUL SCRIPT type="module" -->
   <script type="module" src="/src/main.tsx"></script>
 
-  <!-- 🔥 SCRIPT POUR SUPPRIMER LE LOADING -->
+  <!-- 🔥 SCRIPT POUR SUPPRIMER LE LOADING - Optimisé -->
   <script>
-    // Attendre que React soit monté
-    setTimeout(function () {
-      const loading = document.getElementById('app-loading');
-      if (loading) {
+    // Supprime le loading quand React est monté OU après timeout de sécurité
+    (function() {
+      var loading = document.getElementById('app-loading');
+      var removed = false;
+
+      function removeLoading() {
+        if (removed || !loading) return;
+        removed = true;
         loading.style.opacity = '0';
-        setTimeout(function () {
-          loading.remove();
+        setTimeout(function() {
+          if (loading && loading.parentNode) loading.remove();
         }, 300);
       }
-    }, 1000);
+
+      // Écouter l'événement personnalisé de React (si émis par App)
+      window.addEventListener('app-mounted', removeLoading);
+
+      // Observer le DOM pour détecter quand #root a du contenu
+      if (window.MutationObserver) {
+        var root = document.getElementById('root');
+        if (root) {
+          var observer = new MutationObserver(function(mutations) {
+            if (root.children.length > 0) {
+              observer.disconnect();
+              removeLoading();
+            }
+          });
+          observer.observe(root, { childList: true });
+        }
+      }
+
+      // Fallback: timeout de sécurité (3s max)
+      setTimeout(removeLoading, 3000);
+    })();
   </script>
 
   <!-- ❌ No JS -->

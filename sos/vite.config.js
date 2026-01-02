@@ -128,6 +128,21 @@ export default defineConfig(({ mode }) => {
               return 'vendor-firebase';
             }
 
+            // Maps/Leaflet - chargé uniquement sur pages avec cartes
+            if (id.includes('leaflet') || id.includes('react-leaflet')) {
+              return 'vendor-maps';
+            }
+
+            // Stripe - chargé uniquement pour paiements
+            if (id.includes('@stripe') || id.includes('stripe')) {
+              return 'vendor-stripe';
+            }
+
+            // MUI - Material UI (admin seulement)
+            if (id.includes('@mui') || id.includes('@emotion')) {
+              return 'vendor-mui';
+            }
+
             // PDF generation - chargé uniquement quand nécessaire
             if (id.includes('jspdf') || id.includes('html2canvas')) {
               return 'vendor-pdf';
@@ -146,6 +161,11 @@ export default defineConfig(({ mode }) => {
             // Autres librairies UI (lucide, etc)
             if (id.includes('lucide-react')) {
               return 'vendor-icons';
+            }
+
+            // Date utilities
+            if (id.includes('date-fns')) {
+              return 'vendor-date';
             }
           },
         },
