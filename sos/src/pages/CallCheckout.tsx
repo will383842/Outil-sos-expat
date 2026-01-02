@@ -1469,14 +1469,15 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
     );
 
     const actuallySubmitPayment = useCallback(async () => {
-      console.log("[PaymentForm] actuallySubmitPayment started");
-      console.log("[PaymentForm] stripe object:", stripe);
-      console.log("[PaymentForm] elements object:", elements);
+      // VERSION 8 - LOGS COMPLETS
+      alert("🔵 actuallySubmitPayment: DÉBUT\n\nstripe: " + !!stripe + "\nelements: " + !!elements);
+
       try {
         setIsProcessing(true);
-        console.log("[PaymentForm] Validating payment data...");
+        alert("🔵 actuallySubmitPayment: isProcessing=true, validation...");
+
         validatePaymentData();
-        console.log("[PaymentForm] Payment data validated");
+        alert("🔵 actuallySubmitPayment: Données validées ✅");
 
         // P0-1 FIX: Utiliser le callSessionId STABLE (généré une seule fois)
         // pour garantir l'idempotence en cas de retry
@@ -1535,31 +1536,35 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           ...(couponData && { coupon: couponData }),
         };
 
-        console.log("[createPaymentIntent] data", paymentData);
+        alert("🔵 actuallySubmitPayment: Appel createPaymentIntent...\n\nMontant: " + paymentData.amount + "€\nProvider: " + paymentData.providerId);
 
-        // -------- LOG ciblé sur la callable (sans `any`)
         let resData: PaymentIntentResponse | null = null;
         try {
           const res = await createPaymentIntent(paymentData);
           resData = res.data as PaymentIntentResponse;
-          console.log("[createPaymentIntent] response", resData);
+          alert("🔵 actuallySubmitPayment: createPaymentIntent OK!\n\nclientSecret: " + (resData?.clientSecret ? "✅ reçu" : "❌ manquant"));
         } catch (e: unknown) {
           logCallableError("[createPaymentIntent:error]", e);
-          throw e; // on laisse la gestion d'erreur globale s'occuper de l'affichage
-        }
-
-        if (import.meta.env.DEV) {
-          console.log("[createPaymentIntent] response", resData);
+          alert("❌ ERREUR createPaymentIntent:\n\n" + (e instanceof Error ? e.message : String(e)));
+          throw e;
         }
 
         const clientSecret = resData?.clientSecret;
-        if (!clientSecret) throw new Error(t("err.noClientSecret"));
+        if (!clientSecret) {
+          alert("❌ Pas de clientSecret!");
+          throw new Error(t("err.noClientSecret"));
+        }
 
         const chosenCardElement = isMobile
           ? elements!.getElement(CardElement)
           : elements!.getElement(CardNumberElement);
 
-        if (!chosenCardElement) throw new Error(t("err.noCardElement"));
+        if (!chosenCardElement) {
+          alert("❌ CardElement non trouvé! isMobile=" + isMobile);
+          throw new Error(t("err.noCardElement"));
+        }
+
+        alert("🔵 actuallySubmitPayment: Appel confirmCardPayment...");
 
         const result = await stripe!.confirmCardPayment(clientSecret, {
           payment_method: {
@@ -1571,10 +1576,18 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           },
         });
 
-        if (result.error)
+        if (result.error) {
+          alert("❌ Erreur Stripe: " + result.error.message);
           throw new Error(result.error.message || t("err.stripe"));
+        }
+
         const paymentIntent = result.paymentIntent;
-        if (!paymentIntent) throw new Error(t("err.paymentFailed"));
+        if (!paymentIntent) {
+          alert("❌ Pas de paymentIntent!");
+          throw new Error(t("err.paymentFailed"));
+        }
+
+        alert("✅ Paiement réussi!\n\nID: " + paymentIntent.id + "\nStatus: " + paymentIntent.status);
 
         let status = paymentIntent.status;
         console.log("Status in stripe : ", status);
@@ -1778,40 +1791,45 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
 
     const handlePaymentSubmit = useCallback(
       async (e: React.FormEvent) => {
+        // VERSION 8 - LOGS COMPLETS
+        alert("📍 ÉTAPE 1: handlePaymentSubmit appelée");
+
         e.preventDefault();
-        console.log("[PaymentForm] handlePaymentSubmit called");
-        console.log("[PaymentForm] stripe:", !!stripe);
-        console.log("[PaymentForm] elements:", !!elements);
-        console.log("[PaymentForm] isProcessing:", isProcessing);
+
+        alert("📍 ÉTAPE 2: État actuel\n\nstripe: " + !!stripe + "\nelements: " + !!elements + "\nisProcessing: " + isProcessing + "\nmontant: " + adminPricing.totalAmount + "€");
 
         if (!stripe) {
-          console.error("[PaymentForm] Stripe not ready - button should be disabled");
+          alert("❌ ÉTAPE 2a: Stripe pas prêt!");
           onError("Stripe n'est pas encore prêt. Veuillez patienter.");
           return;
         }
 
         if (!elements) {
-          console.error("[PaymentForm] Elements not ready");
+          alert("❌ ÉTAPE 2b: Elements pas prêt!");
           onError("Le formulaire de paiement n'est pas encore chargé.");
           return;
         }
 
         if (isProcessing) {
-          console.log("[PaymentForm] Already processing, ignoring click");
+          alert("⚠️ ÉTAPE 2c: Déjà en cours de traitement, ignoré");
           return;
         }
 
-        console.log("[PaymentForm] Amount:", adminPricing.totalAmount);
-
         if (adminPricing.totalAmount > 100) {
-          console.log("[PaymentForm] Amount > 100, showing confirmation");
+          alert("📍 ÉTAPE 3a: Montant > 100€, affichage confirmation");
           setPendingSubmit(() => actuallySubmitPayment);
           setShowConfirm(true);
           return;
         }
 
-        console.log("[PaymentForm] Calling actuallySubmitPayment...");
-        await actuallySubmitPayment();
+        alert("📍 ÉTAPE 3b: Appel actuallySubmitPayment...");
+
+        try {
+          await actuallySubmitPayment();
+          alert("✅ ÉTAPE FINALE: actuallySubmitPayment terminée");
+        } catch (err) {
+          alert("❌ ERREUR dans actuallySubmitPayment: " + (err instanceof Error ? err.message : String(err)));
+        }
       },
       [isProcessing, adminPricing.totalAmount, actuallySubmitPayment, stripe, elements, onError]
     );

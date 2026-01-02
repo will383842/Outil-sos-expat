@@ -1023,18 +1023,16 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         new Promise<never>((_, rej) => setTimeout(() => rej(new Error('auth/timeout')), timeout)),
       ]);
 
-      console.log("✅ [AuthContext] login() réussi pour:", cred.user.uid);
-      // Log en arrière-plan (fire-and-forget) pour ne pas bloquer le retour du login
+      console.log("✅ [AuthContext] login() réussi, uid:", cred.user.uid);
       logAuthEvent('successful_login', {
         userId: cred.user.uid,
         provider: 'email',
         rememberMe,
         deviceInfo
-      }).catch(() => { /* ignoré - ne pas bloquer le UI */ });
+      }).catch(() => {});
     } catch (e) {
-      console.error("❌ [AuthContext] login() ERREUR:", e);
       const errorCode = (e as any)?.code || (e instanceof Error ? e.message : '');
-      console.error("❌ [AuthContext] login() Error code:", errorCode);
+      console.error("❌ [AuthContext] login() Error code:", errorCode, e);
 
       // Mapping des erreurs Firebase Auth vers des messages utilisateur explicites
       const errorMessages: Record<string, string> = {
@@ -1066,6 +1064,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   }, [deviceInfo]);
 
   const loginWithGoogle = useCallback(async (rememberMe: boolean = false): Promise<void> => {
+    console.log("🔵 [AuthContext] loginWithGoogle() appelé");
     setIsLoading(true);
     setError(null);
     setAuthMetrics((m) => ({
@@ -1084,13 +1083,11 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       provider.setCustomParameters({ prompt: 'select_account' });
 
       // Always use redirect to avoid COOP (Cross-Origin-Opener-Policy) errors with popup
-      // Note: The result will be handled by the useEffect with getRedirectResult
       await signInWithRedirect(auth, provider);
-      // User is redirected to Google, no further code will execute here
     } catch (e) {
       const errorCode = (e as any)?.code || 'unknown';
       const errorMessage = e instanceof Error ? e.message : String(e);
-      console.error('❌ [Google Auth] Redirect error:', { code: errorCode, message: errorMessage });
+      console.error("❌ [AuthContext] loginWithGoogle() erreur:", errorCode, errorMessage);
 
       let msg = 'Connexion Google impossible.';
       if (errorCode === 'auth/unauthorized-domain') {
