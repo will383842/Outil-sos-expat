@@ -3296,6 +3296,7 @@ const ProviderProfile: React.FC = () => {
         onClose={() => setShowAuthWizard(false)}
         onSuccess={handleAuthSuccess}
         providerName={provider ? formatPublicName(provider) : undefined}
+        bookingRedirectUrl={provider ? `/booking-request/${provider.id}` : undefined}
       />
     </Layout>
   );

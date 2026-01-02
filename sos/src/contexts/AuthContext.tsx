@@ -1090,6 +1090,10 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       provider.setCustomParameters({ prompt: 'select_account' });
 
       console.log("[DEBUG] " + "🔵 GOOGLE LOGIN: Redirect vers Google...");
+      // Save current URL for redirect after Google login
+      const currentPath = window.location.pathname + window.location.search;
+      sessionStorage.setItem('googleAuthRedirect', currentPath);
+      console.log("[DEBUG] " + "🔵 GOOGLE LOGIN: URL sauvegardée: " + currentPath);
       // Always use redirect to avoid COOP (Cross-Origin-Opener-Policy) errors with popup
       await signInWithRedirect(auth, provider);
     } catch (e) {
@@ -1222,9 +1226,18 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           userEmail: googleUser.email,
           deviceInfo
         });
-        
+
         // Log photo URL for debugging
         console.log('[Auth] Google redirect login successful. Photo URL:', googleUser.photoURL);
+
+        // Check for saved redirect URL after Google login
+        const savedRedirect = sessionStorage.getItem('googleAuthRedirect');
+        if (savedRedirect) {
+          sessionStorage.removeItem('googleAuthRedirect');
+          console.log('[Auth] Google redirect: navigating to saved URL:', savedRedirect);
+          // Use window.location for navigation to ensure full page reload with auth state
+          window.location.href = savedRedirect;
+        }
       } catch (e) {
         console.warn('[Auth] getRedirectResult error', e);
       } finally {

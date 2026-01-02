@@ -24,6 +24,8 @@ interface QuickAuthWizardProps {
   onClose: () => void;
   onSuccess: () => void;
   providerName?: string;
+  /** URL to redirect to after Google login (for booking flow) */
+  bookingRedirectUrl?: string;
 }
 
 const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
@@ -31,6 +33,7 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
   onClose,
   onSuccess,
   providerName,
+  bookingRedirectUrl,
 }) => {
   const intl = useIntl();
   const { login, loginWithGoogle, register, user, authInitialized } = useAuth();
@@ -194,6 +197,11 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
     }, 30000);
 
     try {
+      // Save the booking redirect URL BEFORE Google redirect (overrides AuthContext default)
+      if (bookingRedirectUrl) {
+        sessionStorage.setItem('googleAuthRedirect', bookingRedirectUrl);
+        console.log('[QuickAuthWizard] Saved booking redirect URL:', bookingRedirectUrl);
+      }
       await loginWithGoogle(true);
       // Clear timeout on success
       if (googleTimeoutRef.current) {
@@ -226,7 +234,7 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
         setError(intl.formatMessage({ id: 'auth.wizard.error.google' }));
       }
     }
-  }, [loginWithGoogle, intl, onSuccess]);
+  }, [loginWithGoogle, intl, onSuccess, bookingRedirectUrl]);
 
   // Handle form submit based on current step
   const handleSubmit = useCallback((e: React.FormEvent) => {

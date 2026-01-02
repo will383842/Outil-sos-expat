@@ -841,9 +841,9 @@ const Login: React.FC = () => {
   const handleGoogleLogin = useCallback(async () => {
     try {
       setLocalLoading(true);
-      
-      const persistenceType = formData.rememberMe 
-        ? browserLocalPersistence 
+
+      const persistenceType = formData.rememberMe
+        ? browserLocalPersistence
         : browserSessionPersistence;
       await setPersistence(auth, persistenceType);
 
@@ -851,6 +851,14 @@ const Login: React.FC = () => {
         console.log("Google login timeout");
         setLocalLoading(false);
       }, 15000);
+
+      // Save the actual redirect URL (from params or storage) before Google redirect
+      // This overrides AuthContext's default (which saves the login page URL)
+      const savedRedirect = sessionStorage.getItem("loginRedirect") || searchParams.get("redirect");
+      if (savedRedirect) {
+        sessionStorage.setItem('googleAuthRedirect', savedRedirect);
+        console.log('[Login] Saved redirect URL for Google login:', savedRedirect);
+      }
 
       await loginWithGoogle();
 
@@ -880,7 +888,7 @@ const Login: React.FC = () => {
         setFormErrors({ general: intl.formatMessage({ id: "error.googleLogin" }) });
       }
     }
-  }, [loginWithGoogle, formData.rememberMe, intl]);
+  }, [loginWithGoogle, formData.rememberMe, intl, searchParams]);
 
   // ==================== PASSWORD VISIBILITY ====================
   const togglePasswordVisibility = useCallback(() => {
