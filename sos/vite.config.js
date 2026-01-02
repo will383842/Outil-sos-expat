@@ -111,14 +111,16 @@ export default defineConfig(({ mode }) => {
           // Code splitting sécurisé - évite la duplication de React
           manualChunks: (id) => {
             // React et ses dépendances DOIVENT rester ensemble
-            // recharts utilise React.forwardRef donc doit être avec React
+            // @emotion doit aussi être avec React car recharts et autres en dépendent
+            // Evite les dépendances circulaires entre chunks
             if (id.includes('node_modules/react') ||
                 id.includes('node_modules/react-dom') ||
                 id.includes('node_modules/scheduler') ||
                 id.includes('node_modules/react-router') ||
                 id.includes('node_modules/react-intl') ||
                 id.includes('recharts') ||
-                id.includes('@formatjs')) {
+                id.includes('@formatjs') ||
+                id.includes('@emotion')) {
               return 'vendor-react';
             }
 
@@ -139,7 +141,7 @@ export default defineConfig(({ mode }) => {
             }
 
             // MUI - Material UI (admin seulement)
-            if (id.includes('@mui') || id.includes('@emotion')) {
+            if (id.includes('@mui')) {
               return 'vendor-mui';
             }
 
