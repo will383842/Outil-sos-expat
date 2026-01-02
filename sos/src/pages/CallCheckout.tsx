@@ -1140,13 +1140,13 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
     // VERSION 7 - Debug avec alerte obligatoire
     useEffect(() => {
       // Alerte au montage pour confirmer que le code est déployé
-      alert("🔵 VERSION 7 chargée!\n\nStripe: " + (stripe ? "✅ Prêt" : "⏳ En chargement...") + "\nElements: " + (elements ? "✅ Prêt" : "⏳ En chargement..."));
+      console.log("[DEBUG] " + "🔵 VERSION 7 chargée!\n\nStripe: " + (stripe ? "✅ Prêt" : "⏳ En chargement...") + "\nElements: " + (elements ? "✅ Prêt" : "⏳ En chargement..."));
     }, []); // Seulement au montage
 
     // Surveiller quand Stripe devient prêt
     useEffect(() => {
       if (stripe && elements) {
-        alert("✅ Stripe est maintenant PRÊT!\n\nVous pouvez cliquer sur Payer.");
+        console.log("[DEBUG] " + "✅ Stripe est maintenant PRÊT!\n\nVous pouvez cliquer sur Payer.");
       }
     }, [stripe, elements]);
 
@@ -1470,14 +1470,14 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
 
     const actuallySubmitPayment = useCallback(async () => {
       // VERSION 8 - LOGS COMPLETS
-      alert("🔵 actuallySubmitPayment: DÉBUT\n\nstripe: " + !!stripe + "\nelements: " + !!elements);
+      console.log("[DEBUG] " + "🔵 actuallySubmitPayment: DÉBUT\n\nstripe: " + !!stripe + "\nelements: " + !!elements);
 
       try {
         setIsProcessing(true);
-        alert("🔵 actuallySubmitPayment: isProcessing=true, validation...");
+        console.log("[DEBUG] " + "🔵 actuallySubmitPayment: isProcessing=true, validation...");
 
         validatePaymentData();
-        alert("🔵 actuallySubmitPayment: Données validées ✅");
+        console.log("[DEBUG] " + "🔵 actuallySubmitPayment: Données validées ✅");
 
         // P0-1 FIX: Utiliser le callSessionId STABLE (généré une seule fois)
         // pour garantir l'idempotence en cas de retry
@@ -1536,22 +1536,22 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           ...(couponData && { coupon: couponData }),
         };
 
-        alert("🔵 actuallySubmitPayment: Appel createPaymentIntent...\n\nMontant: " + paymentData.amount + "€\nProvider: " + paymentData.providerId);
+        console.log("[DEBUG] " + "🔵 actuallySubmitPayment: Appel createPaymentIntent...\n\nMontant: " + paymentData.amount + "€\nProvider: " + paymentData.providerId);
 
         let resData: PaymentIntentResponse | null = null;
         try {
           const res = await createPaymentIntent(paymentData);
           resData = res.data as PaymentIntentResponse;
-          alert("🔵 actuallySubmitPayment: createPaymentIntent OK!\n\nclientSecret: " + (resData?.clientSecret ? "✅ reçu" : "❌ manquant"));
+          console.log("[DEBUG] " + "🔵 actuallySubmitPayment: createPaymentIntent OK!\n\nclientSecret: " + (resData?.clientSecret ? "✅ reçu" : "❌ manquant"));
         } catch (e: unknown) {
           logCallableError("[createPaymentIntent:error]", e);
-          alert("❌ ERREUR createPaymentIntent:\n\n" + (e instanceof Error ? e.message : String(e)));
+          console.log("[DEBUG] " + "❌ ERREUR createPaymentIntent:\n\n" + (e instanceof Error ? e.message : String(e)));
           throw e;
         }
 
         const clientSecret = resData?.clientSecret;
         if (!clientSecret) {
-          alert("❌ Pas de clientSecret!");
+          console.log("[DEBUG] " + "❌ Pas de clientSecret!");
           throw new Error(t("err.noClientSecret"));
         }
 
@@ -1560,11 +1560,11 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           : elements!.getElement(CardNumberElement);
 
         if (!chosenCardElement) {
-          alert("❌ CardElement non trouvé! isMobile=" + isMobile);
+          console.log("[DEBUG] " + "❌ CardElement non trouvé! isMobile=" + isMobile);
           throw new Error(t("err.noCardElement"));
         }
 
-        alert("🔵 actuallySubmitPayment: Appel confirmCardPayment...");
+        console.log("[DEBUG] " + "🔵 actuallySubmitPayment: Appel confirmCardPayment...");
 
         const result = await stripe!.confirmCardPayment(clientSecret, {
           payment_method: {
@@ -1577,17 +1577,17 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
         });
 
         if (result.error) {
-          alert("❌ Erreur Stripe: " + result.error.message);
+          console.log("[DEBUG] " + "❌ Erreur Stripe: " + result.error.message);
           throw new Error(result.error.message || t("err.stripe"));
         }
 
         const paymentIntent = result.paymentIntent;
         if (!paymentIntent) {
-          alert("❌ Pas de paymentIntent!");
+          console.log("[DEBUG] " + "❌ Pas de paymentIntent!");
           throw new Error(t("err.paymentFailed"));
         }
 
-        alert("✅ Paiement réussi!\n\nID: " + paymentIntent.id + "\nStatus: " + paymentIntent.status);
+        console.log("[DEBUG] " + "✅ Paiement réussi!\n\nID: " + paymentIntent.id + "\nStatus: " + paymentIntent.status);
 
         let status = paymentIntent.status;
         console.log("Status in stripe : ", status);
@@ -1792,43 +1792,43 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
     const handlePaymentSubmit = useCallback(
       async (e: React.FormEvent) => {
         // VERSION 8 - LOGS COMPLETS
-        alert("📍 ÉTAPE 1: handlePaymentSubmit appelée");
+        console.log("[DEBUG] " + "📍 ÉTAPE 1: handlePaymentSubmit appelée");
 
         e.preventDefault();
 
-        alert("📍 ÉTAPE 2: État actuel\n\nstripe: " + !!stripe + "\nelements: " + !!elements + "\nisProcessing: " + isProcessing + "\nmontant: " + adminPricing.totalAmount + "€");
+        console.log("[DEBUG] " + "📍 ÉTAPE 2: État actuel\n\nstripe: " + !!stripe + "\nelements: " + !!elements + "\nisProcessing: " + isProcessing + "\nmontant: " + adminPricing.totalAmount + "€");
 
         if (!stripe) {
-          alert("❌ ÉTAPE 2a: Stripe pas prêt!");
+          console.log("[DEBUG] " + "❌ ÉTAPE 2a: Stripe pas prêt!");
           onError("Stripe n'est pas encore prêt. Veuillez patienter.");
           return;
         }
 
         if (!elements) {
-          alert("❌ ÉTAPE 2b: Elements pas prêt!");
+          console.log("[DEBUG] " + "❌ ÉTAPE 2b: Elements pas prêt!");
           onError("Le formulaire de paiement n'est pas encore chargé.");
           return;
         }
 
         if (isProcessing) {
-          alert("⚠️ ÉTAPE 2c: Déjà en cours de traitement, ignoré");
+          console.log("[DEBUG] " + "⚠️ ÉTAPE 2c: Déjà en cours de traitement, ignoré");
           return;
         }
 
         if (adminPricing.totalAmount > 100) {
-          alert("📍 ÉTAPE 3a: Montant > 100€, affichage confirmation");
+          console.log("[DEBUG] " + "📍 ÉTAPE 3a: Montant > 100€, affichage confirmation");
           setPendingSubmit(() => actuallySubmitPayment);
           setShowConfirm(true);
           return;
         }
 
-        alert("📍 ÉTAPE 3b: Appel actuallySubmitPayment...");
+        console.log("[DEBUG] " + "📍 ÉTAPE 3b: Appel actuallySubmitPayment...");
 
         try {
           await actuallySubmitPayment();
-          alert("✅ ÉTAPE FINALE: actuallySubmitPayment terminée");
+          console.log("[DEBUG] " + "✅ ÉTAPE FINALE: actuallySubmitPayment terminée");
         } catch (err) {
-          alert("❌ ERREUR dans actuallySubmitPayment: " + (err instanceof Error ? err.message : String(err)));
+          console.log("[DEBUG] " + "❌ ERREUR dans actuallySubmitPayment: " + (err instanceof Error ? err.message : String(err)));
         }
       },
       [isProcessing, adminPricing.totalAmount, actuallySubmitPayment, stripe, elements, onError]
@@ -2124,22 +2124,22 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
             disabled={!stripe || !elements || isProcessing}
             onClick={(e) => {
               // VERSION 7 - Alerte à CHAQUE clic
-              alert("🟡 BOUTON CLIQUÉ!\n\nStripe: " + (stripe ? "✅" : "❌") + "\nElements: " + (elements ? "✅" : "❌") + "\nisProcessing: " + isProcessing);
+              console.log("[DEBUG] " + "🟡 BOUTON CLIQUÉ!\n\nStripe: " + (stripe ? "✅" : "❌") + "\nElements: " + (elements ? "✅" : "❌") + "\nisProcessing: " + isProcessing);
 
               e.preventDefault();
               e.stopPropagation();
 
               if (!stripe || !elements) {
-                alert("⚠️ Stripe pas prêt. Attendez...");
+                console.log("[DEBUG] " + "⚠️ Stripe pas prêt. Attendez...");
                 return;
               }
 
-              alert("🚀 Lancement du paiement...");
+              console.log("[DEBUG] " + "🚀 Lancement du paiement...");
 
               try {
                 handlePaymentSubmit(e as unknown as React.FormEvent);
               } catch (err) {
-                alert("❌ ERREUR: " + (err instanceof Error ? err.message : String(err)));
+                console.log("[DEBUG] " + "❌ ERREUR: " + (err instanceof Error ? err.message : String(err)));
               }
             }}
             className={
