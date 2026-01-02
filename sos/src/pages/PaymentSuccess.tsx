@@ -493,9 +493,16 @@ const SuccessPayment: React.FC = () => {
         console.log("🧾 Vérification et génération des factures pour l'appel:", callId);
 
         // 1. Vérifier si les factures existent déjà dans la base
+        // P0 FIX: Ajouter clientId au filtre pour respecter les règles Firestore
+        const currentUserId = user?.uid;
+        if (!currentUserId) {
+          console.warn("⚠️ Utilisateur non connecté, impossible de vérifier les factures");
+          return;
+        }
         const existingInvoicesQuery = query(
           collection(db, 'invoice_records'),
           where('callId', '==', callId),
+          where('clientId', '==', currentUserId),
           firestoreLimit(1)
         );
         const existingInvoices = await getDocs(existingInvoicesQuery);
@@ -519,12 +526,14 @@ const SuccessPayment: React.FC = () => {
         const callSessionData = callSessionSnap.data();
 
         // 3. Récupérer le paiement associé (Stripe ou PayPal)
+        // P0 FIX: Ajouter clientId au filtre pour respecter les règles Firestore
         let paymentData: Record<string, any> | null = null;
 
         // Essayer d'abord la collection 'payments' (Stripe)
         const paymentQuery = query(
           collection(db, 'payments'),
           where('callSessionId', '==', callId),
+          where('clientId', '==', currentUserId),
           firestoreLimit(1)
         );
         const paymentSnap = await getDocs(paymentQuery);
@@ -536,6 +545,7 @@ const SuccessPayment: React.FC = () => {
           const paymentQuery2 = query(
             collection(db, 'payments'),
             where('callId', '==', callId),
+            where('clientId', '==', currentUserId),
             firestoreLimit(1)
           );
           const paymentSnap2 = await getDocs(paymentQuery2);

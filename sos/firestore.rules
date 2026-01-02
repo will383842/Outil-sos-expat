@@ -136,17 +136,25 @@ service cloud.firestore {
 
     match /call_sessions/{sessionId} {
       // FIX: clientId et providerId sont dans metadata, pas au niveau racine
+      // Pour les requêtes avec where(), on vérifie que l'utilisateur demande ses propres sessions
+      // NOTE: Les requêtes DOIVENT filtrer par metadata.clientId ou metadata.providerId
       allow read: if isAuthenticated() &&
                   (resource.data.metadata.clientId == request.auth.uid ||
                    resource.data.metadata.providerId == request.auth.uid ||
+                   // Permettre les requêtes sur clientId au niveau racine (si présent)
+                   (resource.data.clientId != null && resource.data.clientId == request.auth.uid) ||
+                   (resource.data.providerId != null && resource.data.providerId == request.auth.uid) ||
                    isAdmin() || isDev());
       // Seul le client peut créer une session (validation de l'ownership)
       allow create: if isAuthenticated() &&
-                    request.resource.data.metadata.clientId == request.auth.uid;
+                    (request.resource.data.metadata.clientId == request.auth.uid ||
+                     request.resource.data.clientId == request.auth.uid);
       // Seuls les participants (client ou provider) peuvent mettre à jour
       allow update: if isAuthenticated() &&
                     (resource.data.metadata.clientId == request.auth.uid ||
                      resource.data.metadata.providerId == request.auth.uid ||
+                     resource.data.clientId == request.auth.uid ||
+                     resource.data.providerId == request.auth.uid ||
                      isAdmin() || isDev());
       allow delete: if isAdmin() || isDev();
     }
@@ -581,9 +589,10 @@ service cloud.firestore {
     }
 
     // ================= AI USAGE COLLECTION =================
-    match /ai_usage/{providerId} {
-      // Le provider peut lire son propre usage
-      allow read: if isOwner(providerId) || isAdmin() || isDev();
+    match /ai_usage/{userId} {
+      // L'utilisateur peut lire son propre usage (providers et clients)
+      // Note: Les clients n'auront pas de document, mais peuvent vérifier
+      allow read: if isOwner(userId) || isAdmin() || isDev();
       // Seules les Cloud Functions peuvent écrire
       allow write: if false;
     }
@@ -748,6 +757,17 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // ================= LOGS COLLECTION (Auth Events) =================
+    // Collection utilisée par logAuthEvent() dans AuthContext
+    match /logs/{logId} {
+      // Seuls les admins peuvent lire les logs
+      allow read: if isAdmin() || isDev();
+      // Utilisateurs authentifiés peuvent créer des logs
+      allow create: if isAuthenticated();
+      // Cloud Functions seules peuvent modifier/supprimer
+      allow update, delete: if false;
+    }
+
     // ================= ERROR LOGS COLLECTION =================
     match /error_logs/{logId} {
       // Seuls les admins peuvent lire
@@ -766,6 +786,49 @@ service cloud.firestore {
       allow create: if isAuthenticated();
       // Cloud Functions seules peuvent modifier/supprimer
       allow update, delete: if false;
+    }
+
+    // ================= ANALYTICS LANGUAGE MISMATCHES =================
+    match /analytics_language_mismatches/{eventId} {
+      allow read: if isAdmin() || isDev();
+      allow create: if isAuthenticated();
+      allow update, delete: if false;
+    }
+
+    // ================= ANALYTICS USER ACTIONS =================
+    match /analytics_user_actions/{eventId} {
+      allow read: if isAdmin() || isDev();
+      allow create: if isAuthenticated();
+      allow update, delete: if false;
+    }
+
+    // ================= ANALYTICS CONVERSIONS =================
+    match /analytics_conversions/{eventId} {
+      allow read: if isAdmin() || isDev();
+      allow create: if isAuthenticated();
+      allow update, delete: if false;
+    }
+
+    // ================= ANALYTICS ERRORS =================
+    match /analytics_errors/{eventId} {
+      allow read: if isAdmin() || isDev();
+      allow create: if isAuthenticated();
+      allow update, delete: if false;
+    }
+
+    // ================= ANALYTICS PERFORMANCE =================
+    match /analytics_performance/{eventId} {
+      allow read: if isAdmin() || isDev();
+      allow create: if isAuthenticated();
+      allow update, delete: if false;
+    }
+
+    // ================= ANALYTICS COUNTERS =================
+    match /analytics_counters/{counterId} {
+      allow read: if isAdmin() || isDev();
+      // Création et mise à jour par utilisateurs authentifiés (pour incrementCounter)
+      allow create, update: if isAuthenticated();
+      allow delete: if false;
     }
 
     // ================= FAQ TRANSLATIONS CACHE =================

@@ -207,6 +207,8 @@ interface SosProfile {
   yearsOfExperience: number;
   yearsAsExpat?: number;
   isOnline?: boolean;
+  availability?: 'available' | 'busy' | 'offline';
+  busyReason?: 'in_call' | 'break' | 'offline' | 'manually_disabled' | null;
   isActive: boolean;
   isApproved: boolean;
   isVerified: boolean;
@@ -582,8 +584,13 @@ const calculateProviderStats = async (providerId: string): Promise<ProviderStats
     // ✅ Race entre le calcul des stats et le timeout
     const result = await Promise.race([statsPromise, timeoutPromise]);
     return result;
-  } catch (error) {
-    console.warn("Stats calculation failed or timeout:", error);
+  } catch (error: unknown) {
+    // P0 FIX: Ne pas logger les erreurs de permission (normales pour visiteurs)
+    const isPermissionError = error instanceof Error &&
+      error.message?.includes('permission');
+    if (!isPermissionError) {
+      console.warn("Stats calculation failed or timeout:", error);
+    }
     return DEFAULT_STATS;
   }
 };
@@ -1354,10 +1361,17 @@ const ProviderProfile: React.FC = () => {
             lastUpdate: new Date(),
             listenerActive: true,
           }));
-          
+
+          // P0 FIX: Mettre à jour busyReason et availability pour bloquer les réservations si en appel
           setProvider((prev) =>
             prev
-              ? { ...prev, isOnline: newIsOnline, updatedAt: new Date() }
+              ? {
+                  ...prev,
+                  isOnline: newIsOnline,
+                  busyReason: data.busyReason || null,
+                  availability: data.availability,
+                  updatedAt: new Date()
+                }
               : prev
           );
         }
@@ -1378,39 +1392,17 @@ const ProviderProfile: React.FC = () => {
     };
   }, [realProviderId]);
 
+  // P0 FIX: Utiliser busyReason du provider au lieu de requêter call_sessions
+  // Cela évite les erreurs de permissions pour les visiteurs non-participants
   useEffect(() => {
-    if (!realProviderId) return;
-
-    const activeCallStatuses = [
-      "pending",
-      "provider_connecting",
-      "client_connecting",
-      "both_connecting",
-      "active",
-    ];
-
-    const callSessionsQuery = query(
-      collection(db, "call_sessions"),
-      where("metadata.providerId", "==", realProviderId),
-      where("status", "in", activeCallStatuses),
-      limit(1)
-    );
-
-    const unsubscribe = onSnapshot(
-      callSessionsQuery,
-      (snapshot) => {
-        setIsOnCall(!snapshot.empty);
-      },
-      (error) => {
-        console.error("Error listening to call sessions:", error);
-        setIsOnCall(false);
-      }
-    );
-
-    return () => {
-      unsubscribe();
-    };
-  }, [realProviderId]);
+    if (!provider) {
+      setIsOnCall(false);
+      return;
+    }
+    // Le champ busyReason est mis à jour par Cloud Functions (TwilioCallManager)
+    // quand un appel commence/finit via setProviderBusy/setProviderAvailable
+    setIsOnCall(provider.busyReason === 'in_call');
+  }, [provider?.busyReason]);
 
   useEffect(() => {
     if (realProviderId && provider) {
