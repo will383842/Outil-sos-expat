@@ -68,7 +68,7 @@ const HeroSection: React.FC = memo(() => {
 
   // Configuration des statistiques pour éviter la duplication
   const stats = [
-    { icon: Globe, value: '120+', label: t.stats.countries },
+    { icon: Globe, value: '197', label: t.stats.countries },
     { icon: Clock, value: '5', label: t.stats.time },
     { icon: Users, value: '24/7', label: t.stats.support }
   ];
