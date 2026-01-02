@@ -338,6 +338,48 @@
   <!-- App entry - DOIT ÊTRE LE SEUL SCRIPT type="module" -->
   <script type="module" src="/src/main.tsx"></script>
 
+  <!-- 🔧 MODULE LOAD ERROR RECOVERY - Handles stale cache issues -->
+  <script>
+    // Detects when JS modules fail to load (MIME type error from stale cache)
+    // Forces a hard reload to get fresh assets
+    (function() {
+      var reloadAttempted = sessionStorage.getItem('_reload_attempted');
+
+      window.addEventListener('error', function(e) {
+        // Check if it's a module loading error
+        if (e.message && (
+          e.message.includes('Failed to fetch dynamically imported module') ||
+          e.message.includes('Failed to load module script') ||
+          e.message.includes('Loading module') ||
+          e.message.includes('ChunkLoadError')
+        )) {
+          // Only try once per session to avoid infinite reload loops
+          if (!reloadAttempted) {
+            sessionStorage.setItem('_reload_attempted', '1');
+            console.log('[Recovery] Module load error detected, reloading...');
+            // Clear service worker cache and reload
+            if ('caches' in window) {
+              caches.keys().then(function(names) {
+                names.forEach(function(name) { caches.delete(name); });
+              }).finally(function() {
+                window.location.reload(true);
+              });
+            } else {
+              window.location.reload(true);
+            }
+          }
+        }
+      }, true);
+
+      // Clear the flag after successful load
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          sessionStorage.removeItem('_reload_attempted');
+        }, 5000);
+      });
+    })();
+  </script>
+
   <!-- 🔥 SCRIPT POUR SUPPRIMER LE LOADING - Optimisé -->
   <script>
     // Supprime le loading quand React est monté OU après timeout de sécurité

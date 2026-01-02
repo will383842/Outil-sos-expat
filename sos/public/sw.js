@@ -1,5 +1,6 @@
 // Service Worker Mobile First - Version Production Optimisée
-const CACHE_VERSION = 'v2.0.0';
+// CACHE_VERSION is dynamically set during build - DO NOT change this line format
+const CACHE_VERSION = '__BUILD_TIMESTAMP__';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-${CACHE_VERSION}`;
 const IMAGE_CACHE = `images-${CACHE_VERSION}`;

@@ -7,6 +7,27 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PROJECT_ROOT = path.resolve(__dirname, '..');
 
+// Update Service Worker cache version with build timestamp
+function updateServiceWorkerVersion() {
+  const swPath = path.join(PROJECT_ROOT, 'dist', 'sw.js');
+
+  if (!fs.existsSync(swPath)) {
+    console.log('⚠️  sw.js not found in dist/');
+    return;
+  }
+
+  const buildTimestamp = Date.now().toString(36); // Short unique identifier
+  let swContent = fs.readFileSync(swPath, 'utf-8');
+
+  // Replace placeholder with actual build timestamp
+  swContent = swContent.replace('__BUILD_TIMESTAMP__', `v${buildTimestamp}`);
+
+  fs.writeFileSync(swPath, swContent);
+  console.log(`✅ Updated sw.js cache version to v${buildTimestamp}`);
+}
+
+updateServiceWorkerVersion();
+
 const sourceDir = path.join(PROJECT_ROOT, 'src', 'multilingual-system', 'sitemaps');
 const distDir = path.join(PROJECT_ROOT, 'dist', 'sitemaps');
 
