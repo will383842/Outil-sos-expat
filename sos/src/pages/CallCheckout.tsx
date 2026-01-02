@@ -53,8 +53,8 @@ import { PayPalScriptProvider } from "@paypal/react-paypal-js";
 // Conserve la même Promise Stripe à travers les rechargements HMR.
 // → Empêche: "Unsupported prop change on Elements: you cannot change the `stripe` prop after setting it."
 declare global {
-   
   var __STRIPE_PROMISE__: Promise<Stripe | null> | undefined;
+  var __PAYMENT_FORM_MOUNTED__: boolean | undefined;
 }
 const getStripePromise = (): Promise<Stripe | null> => {
   if (!globalThis.__STRIPE_PROMISE__) {
@@ -1137,11 +1137,20 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
     const intl = useIntl();
     const { getTraceAttributes } = usePriceTracing();
 
-    // Debug: Log Stripe initialization state
+    // Debug: Log Stripe initialization state - VERSION 4
     useEffect(() => {
+      // ALERTE AU CHARGEMENT pour vérifier que le code est à jour
+      console.log("🟢🟢🟢 [PaymentForm VERSION 4] COMPOSANT MONTÉ 🟢🟢🟢");
       console.log("[PaymentForm] Stripe ready:", !!stripe);
       console.log("[PaymentForm] Elements ready:", !!elements);
       console.log("[PaymentForm] isProcessing:", isProcessing);
+      // Alerte visuelle au premier montage seulement
+      if (typeof window !== 'undefined' && !window.__PAYMENT_FORM_MOUNTED__) {
+        window.__PAYMENT_FORM_MOUNTED__ = true;
+        setTimeout(() => {
+          alert("✅ VERSION 4 - PaymentForm chargé! Stripe=" + !!stripe + ", Elements=" + !!elements);
+        }, 500);
+      }
     }, [stripe, elements, isProcessing]);
 
     // const bookingMeta: BookingMeta = useMemo(() => {
