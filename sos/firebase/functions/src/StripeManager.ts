@@ -425,9 +425,14 @@ export class StripeManager {
 
       // ===== P0 FIX: Idempotency key pour éviter les doubles charges =====
       // La clé est basée sur clientId + providerId + callSessionId + amount
-      // IMPORTANT: NE PAS inclure Date.now() car cela rend la clé unique à chaque appel
-      // et annule l'effet de l'idempotence (protection contre les doubles charges)
-      const idempotencyKey = `pi_create_${data.clientId}_${data.providerId}_${data.callSessionId || 'no-session'}_${amountCents}`;
+      // Si callSessionId est présent: clé stable pour idempotence (protection contre doubles charges)
+      // Si callSessionId est absent: utiliser timestamp pour éviter conflits avec anciens calls
+      const sessionIdForKey = data.callSessionId || `ts_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+      const idempotencyKey = `pi_create_${data.clientId}_${data.providerId}_${sessionIdForKey}_${amountCents}`;
+      console.log(`[createPaymentIntent] Idempotency key: callSessionId=${data.callSessionId ? 'present' : 'MISSING (using timestamp fallback)'}`);
+      if (!data.callSessionId) {
+        console.warn('[createPaymentIntent] ⚠️ callSessionId absent du frontend - utilisation timestamp fallback. Mettre à jour le frontend!');
+      }
 
       // ===== DIRECT CHARGES: Création sur le compte du provider =====
       // La différence clé avec Destination Charges:
