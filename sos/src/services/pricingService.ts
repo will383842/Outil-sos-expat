@@ -151,12 +151,13 @@ function isValidPricingConfig(cfg: unknown): cfg is PricingConfig {
 /** Lecture Firestore */
 export async function getPricingConfig(): Promise<PricingConfig> {
   const now = Date.now();
-  console.log("🔍 [pricingService] getPricingConfig appelé");
 
+  // Cache hit - retour silencieux pour éviter spam console
   if (_cache.data && now - _cache.ts < CACHE_MS) {
-    console.log("✅ [pricingService] Retour cache (valide)", _cache.data);
     return _cache.data;
   }
+
+  console.log("🔍 [pricingService] getPricingConfig - cache miss, lecture Firestore...");
 
   try {
     console.log("📡 [pricingService] Lecture Firestore admin_config/pricing...");
