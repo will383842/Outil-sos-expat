@@ -996,14 +996,16 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   }, []);
 
   const login = useCallback(async (email: string, password: string, rememberMe: boolean = false): Promise<void> => {
-    console.log("🔐 [AuthContext] login() appelé avec email:", email);
+    // VERSION 8 - DEBUG AUTH
+    alert("🔐 LOGIN: Début\n\nEmail: " + email + "\nRemember: " + rememberMe);
+
     setIsLoading(true);
     setError(null);
     setAuthMetrics((m) => ({ ...m, loginAttempts: m.loginAttempts + 1, lastAttempt: new Date() }));
 
     if (!email || !password) {
       const msg = 'Email et mot de passe sont obligatoires';
-      console.error("❌ [AuthContext] login() - email ou password manquant");
+      alert("❌ LOGIN: Email ou mot de passe manquant");
       setError(msg);
       setIsLoading(false);
       setAuthMetrics((m) => ({ ...m, failedLogins: m.failedLogins + 1 }));
@@ -1011,10 +1013,10 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     }
 
     try {
-      console.log("🔐 [AuthContext] login() - setPersistence...");
+      alert("🔐 LOGIN: setPersistence...");
       const persistenceType = rememberMe ? browserLocalPersistence : browserSessionPersistence;
       await setPersistence(auth, persistenceType);
-      console.log("🔐 [AuthContext] login() - signInWithEmailAndPassword...");
+      alert("🔐 LOGIN: signInWithEmailAndPassword...");
 
       const timeout = deviceInfo.connectionSpeed === 'slow' ? 15000 : 10000;
       const loginPromise = signInWithEmailAndPassword(auth, normalizeEmail(email), password);
@@ -1023,7 +1025,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         new Promise<never>((_, rej) => setTimeout(() => rej(new Error('auth/timeout')), timeout)),
       ]);
 
-      console.log("✅ [AuthContext] login() réussi, uid:", cred.user.uid);
+      alert("✅ LOGIN RÉUSSI!\n\nUID: " + cred.user.uid + "\nEmail: " + cred.user.email);
       logAuthEvent('successful_login', {
         userId: cred.user.uid,
         provider: 'email',
@@ -1032,7 +1034,8 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       }).catch(() => {});
     } catch (e) {
       const errorCode = (e as any)?.code || (e instanceof Error ? e.message : '');
-      console.error("❌ [AuthContext] login() Error code:", errorCode, e);
+      alert("❌ LOGIN ERREUR!\n\nCode: " + errorCode + "\nMessage: " + (e instanceof Error ? e.message : String(e)));
+      console.error("❌ [AuthContext] login() Error code:", errorCode);
 
       // Mapping des erreurs Firebase Auth vers des messages utilisateur explicites
       const errorMessages: Record<string, string> = {
@@ -1064,7 +1067,9 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   }, [deviceInfo]);
 
   const loginWithGoogle = useCallback(async (rememberMe: boolean = false): Promise<void> => {
-    console.log("🔵 [AuthContext] loginWithGoogle() appelé");
+    // VERSION 8 - DEBUG GOOGLE AUTH
+    alert("🔵 GOOGLE LOGIN: Début");
+
     setIsLoading(true);
     setError(null);
     setAuthMetrics((m) => ({
@@ -1074,20 +1079,23 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       lastAttempt: new Date(),
     }));
     try {
+      alert("🔵 GOOGLE LOGIN: setPersistence...");
       const persistenceType = rememberMe ? browserLocalPersistence : browserSessionPersistence;
       await setPersistence(auth, persistenceType);
 
+      alert("🔵 GOOGLE LOGIN: Création provider...");
       const provider = new GoogleAuthProvider();
       provider.addScope('email');
       provider.addScope('profile');
       provider.setCustomParameters({ prompt: 'select_account' });
 
+      alert("🔵 GOOGLE LOGIN: Redirect vers Google...");
       // Always use redirect to avoid COOP (Cross-Origin-Opener-Policy) errors with popup
       await signInWithRedirect(auth, provider);
     } catch (e) {
       const errorCode = (e as any)?.code || 'unknown';
       const errorMessage = e instanceof Error ? e.message : String(e);
-      console.error("❌ [AuthContext] loginWithGoogle() erreur:", errorCode, errorMessage);
+      alert("❌ GOOGLE LOGIN ERREUR!\n\nCode: " + errorCode + "\nMessage: " + errorMessage);
 
       let msg = 'Connexion Google impossible.';
       if (errorCode === 'auth/unauthorized-domain') {
@@ -1120,8 +1128,19 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     (async () => {
       try {
         if (redirectHandledRef.current) return;
+
+        // VERSION 8 - DEBUG GOOGLE REDIRECT RESULT
+        alert("🔵 GOOGLE REDIRECT: Vérification du retour...");
+
         const result = await getRedirectResult(auth);
-        if (!result?.user) return;
+
+        if (!result?.user) {
+          alert("🔵 GOOGLE REDIRECT: Pas de résultat (normal si pas de redirect en cours)");
+          return;
+        }
+
+        alert("✅ GOOGLE REDIRECT: User reçu!\n\nUID: " + result.user.uid + "\nEmail: " + result.user.email);
+
         redirectHandledRef.current = true;
         const googleUser = result.user;
 
@@ -1131,13 +1150,13 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         if (userDoc.exists()) {
           const existing = userDoc.data() as Partial<User>;
           if (existing.role && existing.role !== 'client') {
+            alert("❌ GOOGLE REDIRECT: Rôle non-client détecté - " + existing.role);
             await firebaseSignOut(auth);
             setAuthMetrics((m) => ({
               ...m,
               failedLogins: m.failedLogins + 1,
               roleRestrictionBlocks: m.roleRestrictionBlocks + 1,
             }));
-            // ✅ FIX: Message explicite pour l'utilisateur au lieu d'un code technique
             setError('Les comptes Google sont réservés aux clients. En tant que prestataire, connectez-vous avec votre email et mot de passe.');
             // Log en arrière-plan (ne pas bloquer le UI)
             logAuthEvent('google_login_role_restriction', {
@@ -1236,30 +1255,28 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // REGISTER
+  // REGISTER - VERSION 8 DEBUG
   const register = useCallback(async (userData: Partial<User>, password: string): Promise<void> => {
-    console.log("🔐 [AuthContext] register() appelé avec:", {
-      email: userData.email,
-      role: userData.role,
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-    });
+    alert("🔵 REGISTER: Début\n\nEmail: " + userData.email + "\nRole: " + userData.role);
+
     setIsLoading(true);
     setError(null);
 
     try {
       if (!userData.role || !['client', 'lawyer', 'expat', 'admin'].includes(userData.role)) {
-        console.error("❌ [AuthContext] register() - rôle invalide:", userData.role);
+        alert("❌ REGISTER: Rôle invalide - " + userData.role);
         const err = new Error('Rôle utilisateur invalide ou manquant.') as AppError;
         err.code = 'sos/invalid-role';
         throw err;
       }
       if (!userData.email || !password) {
+        alert("❌ REGISTER: Email ou password manquant");
         const err = new Error('Email et mot de passe sont obligatoires') as AppError;
         err.code = 'sos/missing-credentials';
         throw err;
       }
       if (password.length < 6) {
+        alert("❌ REGISTER: Password trop court (<6 chars)");
         const err = new Error('Le mot de passe doit contenir au moins 6 caractères') as AppError;
         err.code = 'auth/weak-password';
         throw err;
@@ -1267,18 +1284,15 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
       const email = normalizeEmail(userData.email);
       if (!isValidEmail(email)) {
+        alert("❌ REGISTER: Email invalide");
         const err = new Error('Adresse email invalide') as AppError;
         err.code = 'auth/invalid-email';
         throw err;
       }
 
-      // Note: fetchSignInMethodsForEmail est désactivé par Firebase pour la protection
-      // contre l'énumération d'emails. On laisse createUserWithEmailAndPassword
-      // gérer les erreurs d'email déjà utilisé directement.
-
-      console.log("🔐 [AuthContext] register() - createUserWithEmailAndPassword...");
+      alert("🔵 REGISTER: createUserWithEmailAndPassword...");
       const cred = await createUserWithEmailAndPassword(auth, email, password);
-      console.log("✅ [AuthContext] register() - User créé:", cred.user.uid);
+      alert("✅ REGISTER: User créé!\n\nUID: " + cred.user.uid);
 
       let finalProfilePhotoURL = '/default-avatar.png';
       if (userData.profilePhoto?.startsWith('data:image')) {
@@ -1333,7 +1347,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         /* no-op */ void 0;
       }
 
-      console.log("✅ [AuthContext] register() - Inscription réussie!");
+      alert("✅ REGISTER RÉUSSI!\n\nUID: " + cred.user.uid + "\nRole: " + userData.role);
       await logAuthEvent('registration_success', {
         userId: cred.user.uid,
         role: userData.role,
@@ -1344,14 +1358,8 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         deviceInfo
       });
     } catch (err) {
-      console.error("❌ [AuthContext] register() ERREUR:", err);
-      console.error("❌ [AuthContext] register() Error details:", {
-        name: (err as Error)?.name,
-        message: (err as Error)?.message,
-        code: (err as any)?.code,
-        stack: (err as Error)?.stack,
-      });
       const e = err as AppError;
+      alert("❌ REGISTER ERREUR!\n\nCode: " + (e?.code || "unknown") + "\nMessage: " + (e?.message || String(err)));
       let msg = 'Inscription impossible. Réessayez.';
       switch (e?.code) {
         case 'auth/email-already-in-use':
