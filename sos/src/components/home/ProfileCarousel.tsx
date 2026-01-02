@@ -66,11 +66,27 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
   // Sélection intelligente pour la rotation
   const selectVisibleProviders = useCallback((all: Provider[]): Provider[] => {
     if (all.length === 0) return [];
+
+    // Fonction pour vérifier si un profil a une vraie photo
+    const hasRealPhoto = (p: Provider) => {
+      return p.avatar && p.avatar !== DEFAULT_AVATAR && p.avatar.trim() !== "";
+    };
+
+    // Trier: d'abord ceux avec photo, puis aléatoire
+    const sortByPhotoThenRandom = (a: Provider, b: Provider) => {
+      const aHasPhoto = hasRealPhoto(a);
+      const bHasPhoto = hasRealPhoto(b);
+      if (aHasPhoto !== bHasPhoto) {
+        return aHasPhoto ? -1 : 1; // Avec photo en premier
+      }
+      return Math.random() - 0.5; // Aléatoire pour le reste
+    };
+
     const online = all.filter(p => p.isOnline);
     const offline = all.filter(p => !p.isOnline);
-    const shuffledOnline = online.sort(() => Math.random() - 0.5);
-    const shuffledOffline = offline.sort(() => Math.random() - 0.5);
-    const prioritized = [...shuffledOnline, ...shuffledOffline];
+    const sortedOnline = online.sort(sortByPhotoThenRandom);
+    const sortedOffline = offline.sort(sortByPhotoThenRandom);
+    const prioritized = [...sortedOnline, ...sortedOffline];
     const notRecent = prioritized.filter(p => !recentlyShown.current.has(p.id));
 
     let selected = notRecent.slice(0, MAX_VISIBLE);

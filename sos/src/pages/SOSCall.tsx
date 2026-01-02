@@ -2668,10 +2668,23 @@ const SOSCall: React.FC = () => {
     const onlineProviders = next.filter(p => p.isOnline);
     const offlineProviders = next.filter(p => !p.isOnline);
 
-    // Trier par rating (meilleurs en premier) au lieu de mélanger aléatoirement
-    // Cela évite le "saut" de page à chaque rendu
-    const sortedOnline = [...onlineProviders].sort((a, b) => b.rating - a.rating);
-    const sortedOffline = [...offlineProviders].sort((a, b) => b.rating - a.rating);
+    // Fonction pour vérifier si un profil a une vraie photo (pas un avatar par défaut)
+    const hasRealPhoto = (p: Provider) => {
+      return p.avatar && p.avatar !== "/default-avatar.png" && p.avatar.trim() !== "";
+    };
+
+    // Trier: d'abord ceux avec photo, puis par rating
+    const sortByPhotoThenRating = (a: Provider, b: Provider) => {
+      const aHasPhoto = hasRealPhoto(a);
+      const bHasPhoto = hasRealPhoto(b);
+      if (aHasPhoto !== bHasPhoto) {
+        return aHasPhoto ? -1 : 1; // Avec photo en premier
+      }
+      return b.rating - a.rating; // Puis par rating
+    };
+
+    const sortedOnline = [...onlineProviders].sort(sortByPhotoThenRating);
+    const sortedOffline = [...offlineProviders].sort(sortByPhotoThenRating);
 
     // Combiner: online d'abord, puis offline
     const sorted = [...sortedOnline, ...sortedOffline];

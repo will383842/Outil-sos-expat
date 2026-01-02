@@ -600,13 +600,25 @@ filtered = filtered.filter(p => {
       filtered = filtered.filter(provider => provider.isOnline);
     }
     
+    // Fonction pour vérifier si un profil a une vraie photo
+    const hasRealPhoto = (p: TransformedProvider) => {
+      return p.avatar && p.avatar !== DEFAULT_AVATAR && p.avatar.trim() !== "" && !p.avatar.includes('default-avatar');
+    };
+
     // AI-friendly sorting with multiple criteria
     filtered.sort((a, b) => {
       // Priority to online providers
       if (a.isOnline !== b.isOnline) {
         return (b.isOnline ? 1 : 0) - (a.isOnline ? 1 : 0);
       }
-      
+
+      // Priority to profiles with real photos
+      const aHasPhoto = hasRealPhoto(a);
+      const bHasPhoto = hasRealPhoto(b);
+      if (aHasPhoto !== bHasPhoto) {
+        return aHasPhoto ? -1 : 1;
+      }
+
       // Country match priority
       if (selectedCountry !== 'all') {
         const aCountryMatch = a.country === selectedCountry;
@@ -615,9 +627,9 @@ filtered = filtered.filter(p => {
           return aCountryMatch ? -1 : 1;
         }
       }
-      
+
       const factor = sortOrder === 'asc' ? 1 : -1;
-      
+
       switch (sortBy) {
         case 'rating': {
           const ratingDiff = (b.rating - a.rating) * factor;
