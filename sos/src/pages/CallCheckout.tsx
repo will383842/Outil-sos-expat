@@ -2098,6 +2098,15 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           <button
             type="submit"
             disabled={!stripe || !elements || isProcessing}
+            onClick={() => {
+              // DEBUG: Log pour diagnostiquer le problème de clic sur mobile
+              console.log("[PaymentButton] onClick DEBUG:", {
+                stripe: !!stripe,
+                elements: !!elements,
+                isProcessing,
+                disabled: !stripe || !elements || isProcessing,
+              });
+            }}
             className={
               "w-full py-4 rounded-xl font-bold text-white transition-all duration-300 " +
               "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 " +

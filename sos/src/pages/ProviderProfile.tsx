@@ -799,12 +799,12 @@ const ProviderProfile: React.FC = () => {
     }
 
     return {
-      eur: Math.round(finalEur),
-      usd: Math.round(finalUsd),
+      eur: finalEur,
+      usd: finalUsd,
       originalEur: baseEur,
       originalUsd: baseUsd,
-      discountEur: Math.round(discountEur),
-      discountUsd: Math.round(discountUsd),
+      discountEur: discountEur,
+      discountUsd: discountUsd,
       hasDiscount: promoApplies,
       duration: cfg.eur.duration,
       promoCode: promoApplies ? activePromo.code : null,
