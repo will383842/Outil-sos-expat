@@ -1517,6 +1517,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           clientId: user.uid!,
           clientEmail: user.email || "",
           providerName: provider.fullName || provider.name || "",
+          callSessionId: callSessionId, // Important: needed for idempotency key
           description:
             service.serviceType === "lawyer_call"
               ? intl.formatMessage({ id: "checkout.consultation.lawyer" })
