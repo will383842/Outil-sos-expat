@@ -193,14 +193,8 @@ const Layout: React.FC<LayoutProps> = ({
         onPreferencesSaved={() => setShowCookieBannerState(false)}
       />
 
-      {/* Bandeau PWA global — bas-droite, laissé à gauche du bouton "remonter en haut" */}
-      <InstallBanner
-        offsetRightPx={88}                        // laisse la place au bouton scroll-to-top
-        bottomPx={24}                             // aligné avec bottom-6
-        zIndexClass="z-50"
-        gradientClass="from-violet-600 to-fuchsia-600"
-        closeForDays={1}                          // 24 heures après fermeture
-      />
+      {/* Snackbar PWA discret — bas-droite */}
+      <InstallBanner />
       </div>
     </>
   );

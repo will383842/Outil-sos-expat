@@ -69,7 +69,7 @@ const DashboardMessages = lazy(() => import('@/components/dashboard/DashboardMes
 // Services
 const SOSCall = lazy(() => import('./pages/SOSCall'));
 const ExpatCall = lazy(() => import('./pages/ExpatCall'));
-const CallCheckout = lazy(() => import('./pages/CallCheckout'));
+const CallCheckout = lazy(() => import('./pages/CallCheckoutWrapper'));
 const BookingRequest = lazy(() => import('./pages/BookingRequest'));
 const PaymentSuccess = lazy(() => import('./pages/PaymentSuccess'));
 const ProviderProfile = lazy(() => import('./pages/ProviderProfile'));

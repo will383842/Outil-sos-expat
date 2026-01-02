@@ -33,7 +33,7 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
   providerName,
 }) => {
   const intl = useIntl();
-  const { login, loginWithGoogle, register } = useAuth();
+  const { login, loginWithGoogle, register, user, authInitialized } = useAuth();
 
   // Form state
   const [step, setStep] = useState<WizardStep>('email');
@@ -44,6 +44,7 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
+  const [pendingSuccess, setPendingSuccess] = useState(false);
 
   // Refs
   const emailInputRef = useRef<HTMLInputElement>(null);
@@ -69,6 +70,7 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
       setIsSubmitting(false);
       setIsGoogleLoading(false);
       setIsNewUser(false);
+      setPendingSuccess(false);
       // Focus email input after animation
       setTimeout(() => emailInputRef.current?.focus(), 300);
     }
@@ -82,6 +84,19 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
       }
     };
   }, [isOpen]);
+
+  // FIX: Attendre que user Firestore soit chargé avant d'appeler onSuccess
+  // Cela évite les race conditions où BookingRequest se monte avant que user soit disponible
+  useEffect(() => {
+    if (pendingSuccess && step === 'success' && user && authInitialized) {
+      // User Firestore est maintenant chargé, on peut naviguer
+      const timeout = setTimeout(() => {
+        setPendingSuccess(false);
+        onSuccess();
+      }, 300); // Délai court juste pour l'animation
+      return () => clearTimeout(timeout);
+    }
+  }, [pendingSuccess, step, user, authInitialized, onSuccess]);
 
   // Email validation
   const isValidEmail = (email: string): boolean => {
@@ -122,7 +137,8 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
       await login(email, password);
       setIsSubmitting(false);
       setStep('success');
-      successTimeoutRef.current = setTimeout(onSuccess, 800);
+      // FIX: Attendre que user Firestore soit chargé avant de naviguer
+      setPendingSuccess(true);
     } catch (err: any) {
       console.error('Login attempt error:', err);
 
@@ -137,7 +153,8 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
           }, password);
           setIsSubmitting(false);
           setStep('success');
-          successTimeoutRef.current = setTimeout(onSuccess, 800);
+          // FIX: Attendre que user Firestore soit chargé avant de naviguer
+          setPendingSuccess(true);
         } catch (regErr: any) {
           console.error('Register error:', regErr);
           setIsSubmitting(false);
@@ -184,7 +201,8 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
       }
       setIsGoogleLoading(false);
       setStep('success');
-      successTimeoutRef.current = setTimeout(onSuccess, 800);
+      // FIX: Attendre que user Firestore soit chargé avant de naviguer
+      setPendingSuccess(true);
     } catch (err: any) {
       console.error('Google login error:', err);
       // Clear timeout on error
@@ -295,16 +313,28 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
           {/* Success State */}
           {step === 'success' && (
             <div className="flex flex-col items-center py-8">
-              <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4">
-                <CheckCircle className="w-10 h-10 text-green-500" />
-              </div>
-              <p className="text-white font-medium">
-                {isNewUser ? (
-                  <FormattedMessage id="auth.wizard.success.registered" defaultMessage="Compte créé avec succès !" />
-                ) : (
-                  <FormattedMessage id="auth.wizard.success.message" />
-                )}
-              </p>
+              {pendingSuccess && !user ? (
+                // Attente que les données Firestore soient chargées
+                <>
+                  <Loader2 className="w-12 h-12 text-green-500 animate-spin mb-4" />
+                  <p className="text-gray-400 text-sm">
+                    <FormattedMessage id="auth.wizard.success.loading" defaultMessage="Chargement de votre profil..." />
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4">
+                    <CheckCircle className="w-10 h-10 text-green-500" />
+                  </div>
+                  <p className="text-white font-medium">
+                    {isNewUser ? (
+                      <FormattedMessage id="auth.wizard.success.registered" defaultMessage="Compte créé avec succès !" />
+                    ) : (
+                      <FormattedMessage id="auth.wizard.success.message" />
+                    )}
+                  </p>
+                </>
+              )}
             </div>
           )}
 

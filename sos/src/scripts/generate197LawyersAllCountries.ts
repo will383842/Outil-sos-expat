@@ -38,59 +38,51 @@ function getAllCountries(): Array<{ name: string; code: string }> {
 // =============================================================================
 
 const LAWYER_SPECIALTIES_POOL = [
-  // Urgences
-  'URG_ASSISTANCE_PENALE_INTERNATIONALE',
-  'URG_GARDE_A_VUE_ETRANGER',
-  'URG_EXPULSION_URGENTE',
-  'URG_DETENTION_ETRANGER',
-  // Visas & Immigration
-  'VIS_VISA_TRAVAIL',
-  'VIS_VISA_ENTREPRENEUR',
-  'VIS_VISA_INVESTISSEUR',
-  'VIS_VISA_ETUDIANT',
-  'VIS_REGROUPEMENT_FAMILIAL',
-  'VIS_NATURALISATION',
-  'VIS_CARTE_SEJOUR',
-  'VIS_ASILE_REFUGIES',
-  // Droit du travail
-  'DRT_DROIT_TRAVAIL_INTERNATIONAL',
-  'DRT_CONTRATS_TRAVAIL_ETRANGERS',
-  'DRT_LICENCIEMENT_ETRANGER',
-  'DRT_HARCELEMENT_TRAVAIL',
-  'DRT_DISCRIMINATION',
-  // Famille
-  'FAM_DIVORCE_INTERNATIONAL',
-  'FAM_GARDE_ENFANTS_INTERNATIONALE',
-  'FAM_PENSION_ALIMENTAIRE',
-  'FAM_MARIAGE_MIXTE',
-  'FAM_ADOPTION_INTERNATIONALE',
-  'FAM_RECONNAISSANCE_PATERNITE',
-  // Fiscalit\u00e9
-  'FISC_FISCALITE_EXPATS',
-  'FISC_DOUBLE_IMPOSITION',
-  'FISC_OPTIMISATION_FISCALE',
-  'FISC_SUCCESSION_INTERNATIONALE',
-  'FISC_EVASION_FISCALE',
-  // Immobilier
-  'IMM_ACHAT_IMMOBILIER_ETRANGER',
-  'IMM_BAIL_COMMERCIAL_INTERNATIONAL',
-  'IMM_LITIGE_IMMOBILIER',
-  'IMM_COPROPRIETE_INTERNATIONALE',
-  // Entreprise
-  'ENT_CREATION_SOCIETE',
-  'ENT_DROIT_COMMERCIAL_INTERNATIONAL',
-  'ENT_FUSION_ACQUISITION',
-  'ENT_PROPRIETE_INTELLECTUELLE',
-  'ENT_CONTRATS_INTERNATIONAUX',
-  // Civil
-  'CIV_ACCIDENTS_ETRANGER',
-  'CIV_RESPONSABILITE_CIVILE',
-  'CIV_ASSURANCE_INTERNATIONALE',
-  'CIV_LITIGES_CONSOMMATION',
-  // Succession
-  'SUC_TESTAMENT_INTERNATIONAL',
-  'SUC_HERITAGE_TRANSFRONTALIER',
-  'SUC_DROITS_SUCCESSION',
+  // ✅ CORRIGÉ: Codes synchronisés avec lawyer-specialties.ts (58 codes valides)
+  // URG - Urgences (3)
+  'URG_ASSISTANCE_PENALE_INTERNATIONALE', 'URG_ACCIDENTS_RESPONSABILITE_CIVILE', 'URG_RAPATRIEMENT_URGENCE',
+  // CUR - Services courants (3)
+  'CUR_TRADUCTIONS_LEGALISATIONS', 'CUR_RECLAMATIONS_LITIGES_MINEURS', 'CUR_DEMARCHES_ADMINISTRATIVES',
+  // IMMI - Immigration et travail (3)
+  'IMMI_VISAS_PERMIS_SEJOUR', 'IMMI_CONTRATS_TRAVAIL_INTERNATIONAL', 'IMMI_NATURALISATION',
+  // IMMO - Immobilier (3)
+  'IMMO_ACHAT_VENTE', 'IMMO_LOCATION_BAUX', 'IMMO_LITIGES_IMMOBILIERS',
+  // FISC - Fiscalité (3)
+  'FISC_DECLARATIONS_INTERNATIONALES', 'FISC_DOUBLE_IMPOSITION', 'FISC_OPTIMISATION_EXPATRIES',
+  // FAM - Famille (3)
+  'FAM_MARIAGE_DIVORCE', 'FAM_GARDE_ENFANTS_TRANSFRONTALIERE', 'FAM_SCOLARITE_INTERNATIONALE',
+  // PATR - Patrimoine (3)
+  'PATR_SUCCESSIONS_INTERNATIONALES', 'PATR_GESTION_PATRIMOINE', 'PATR_TESTAMENTS',
+  // ENTR - Entreprise (3)
+  'ENTR_CREATION_ENTREPRISE_ETRANGER', 'ENTR_INVESTISSEMENTS', 'ENTR_IMPORT_EXPORT',
+  // ASSU - Assurances et protection (3)
+  'ASSU_ASSURANCES_INTERNATIONALES', 'ASSU_PROTECTION_DONNEES', 'ASSU_CONTENTIEUX_ADMINISTRATIFS',
+  // CONS - Consommation et services (3)
+  'CONS_ACHATS_DEFECTUEUX_ETRANGER', 'CONS_SERVICES_NON_CONFORMES', 'CONS_ECOMMERCE_INTERNATIONAL',
+  // BANK - Banque et finance (3)
+  'BANK_PROBLEMES_COMPTES_BANCAIRES', 'BANK_VIREMENTS_CREDITS', 'BANK_SERVICES_FINANCIERS',
+  // ARGT - Problèmes d'argent (5)
+  'ARGT_RETARDS_SALAIRE_IMPAYES', 'ARGT_ARNAQUES_ESCROQUERIES', 'ARGT_SURENDETTEMENT_PLANS',
+  'ARGT_FRAIS_BANCAIRES_ABUSIFS', 'ARGT_LITIGES_ETABLISSEMENTS_CREDIT',
+  // RELA - Problèmes relationnels (5)
+  'RELA_CONFLITS_VOISINAGE', 'RELA_CONFLITS_TRAVAIL', 'RELA_CONFLITS_FAMILIAUX',
+  'RELA_MEDIATION_RESOLUTION_AMIABLE', 'RELA_DIFFAMATION_REPUTATION',
+  // TRAN - Transport (3)
+  'TRAN_PROBLEMES_AERIENS', 'TRAN_BAGAGES_PERDUS_ENDOMMAGES', 'TRAN_ACCIDENTS_TRANSPORT',
+  // SANT - Santé (3)
+  'SANT_ERREURS_MEDICALES', 'SANT_REMBOURSEMENTS_SOINS', 'SANT_DROIT_MEDICAL',
+  // NUM - Numérique (3)
+  'NUM_CYBERCRIMINALITE', 'NUM_CONTRATS_EN_LIGNE', 'NUM_PROTECTION_NUMERIQUE',
+  // VIO - Violences et discriminations (3)
+  'VIO_HARCELEMENT', 'VIO_VIOLENCES_DOMESTIQUES', 'VIO_DISCRIMINATIONS',
+  // IP - Propriété intellectuelle (3)
+  'IP_CONTREFACONS', 'IP_BREVETS_MARQUES', 'IP_DROITS_AUTEUR',
+  // ENV - Environnement (3)
+  'ENV_NUISANCES', 'ENV_PERMIS_CONSTRUIRE', 'ENV_DROIT_URBANISME',
+  // RET - Retour en France (2)
+  'RET_RAPATRIEMENT_BIENS', 'RET_REINTEGRATION_FISCALE_SOCIALE',
+  // OTH - Autre (1)
+  'OTH_PRECISER_BESOIN',
 ];
 
 // =============================================================================
@@ -559,18 +551,41 @@ function getCoordinates(countryCode: string): { lat: number; lng: number } {
   };
 }
 
+// ✅ CORRIGÉ: Labels synchronisés avec lawyer-specialties.ts
 function getSpecialtyLabel(code: string): string {
   const labels: Record<string, string> = {
-    'URG_ASSISTANCE_PENALE_INTERNATIONALE': 'Assistance p\u00e9nale internationale',
-    'URG_GARDE_A_VUE_ETRANGER': 'Garde \u00e0 vue \u00e0 l\'\u00e9tranger',
-    'VIS_VISA_TRAVAIL': 'Visa de travail',
-    'VIS_VISA_ENTREPRENEUR': 'Visa entrepreneur',
-    'VIS_NATURALISATION': 'Naturalisation',
-    'FAM_DIVORCE_INTERNATIONAL': 'Divorce international',
-    'FAM_GARDE_ENFANTS_INTERNATIONALE': 'Garde d\'enfants internationale',
-    'FISC_FISCALITE_EXPATS': 'Fiscalit\u00e9 des expatri\u00e9s',
-    'IMM_ACHAT_IMMOBILIER_ETRANGER': 'Achat immobilier \u00e0 l\'\u00e9tranger',
-    'ENT_CREATION_SOCIETE': 'Cr\u00e9ation de soci\u00e9t\u00e9',
+    // URG
+    'URG_ASSISTANCE_PENALE_INTERNATIONALE': 'Assistance pénale internationale',
+    'URG_ACCIDENTS_RESPONSABILITE_CIVILE': 'Accidents et responsabilité civile',
+    'URG_RAPATRIEMENT_URGENCE': 'Rapatriement d\'urgence',
+    // CUR
+    'CUR_TRADUCTIONS_LEGALISATIONS': 'Traductions et légalisations',
+    'CUR_RECLAMATIONS_LITIGES_MINEURS': 'Réclamations et litiges mineurs',
+    'CUR_DEMARCHES_ADMINISTRATIVES': 'Démarches administratives',
+    // IMMI
+    'IMMI_VISAS_PERMIS_SEJOUR': 'Visas et permis de séjour',
+    'IMMI_CONTRATS_TRAVAIL_INTERNATIONAL': 'Contrats de travail international',
+    'IMMI_NATURALISATION': 'Naturalisation',
+    // IMMO
+    'IMMO_ACHAT_VENTE': 'Achat/vente à l\'étranger',
+    'IMMO_LOCATION_BAUX': 'Location et baux',
+    'IMMO_LITIGES_IMMOBILIERS': 'Litiges immobiliers',
+    // FISC
+    'FISC_DECLARATIONS_INTERNATIONALES': 'Déclarations fiscales internationales',
+    'FISC_DOUBLE_IMPOSITION': 'Double imposition',
+    'FISC_OPTIMISATION_EXPATRIES': 'Optimisation fiscale expatriés',
+    // FAM
+    'FAM_MARIAGE_DIVORCE': 'Mariage/divorce international',
+    'FAM_GARDE_ENFANTS_TRANSFRONTALIERE': 'Garde d\'enfants transfrontalière',
+    'FAM_SCOLARITE_INTERNATIONALE': 'Scolarité internationale',
+    // PATR
+    'PATR_SUCCESSIONS_INTERNATIONALES': 'Successions internationales',
+    'PATR_GESTION_PATRIMOINE': 'Gestion de patrimoine',
+    'PATR_TESTAMENTS': 'Testaments',
+    // ENTR
+    'ENTR_CREATION_ENTREPRISE_ETRANGER': 'Création d\'entreprise à l\'étranger',
+    'ENTR_INVESTISSEMENTS': 'Investissements',
+    'ENTR_IMPORT_EXPORT': 'Import/export',
   };
   return labels[code] || code.replace(/_/g, ' ').toLowerCase();
 }

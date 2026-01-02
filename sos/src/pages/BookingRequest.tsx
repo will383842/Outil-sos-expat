@@ -22,6 +22,9 @@ import {
   MapPin,
   Languages as LanguagesIcon,
   Sparkles,
+  Shield,
+  Clock,
+  Lock,
 } from "lucide-react";
 
 import { useForm, Controller, SubmitHandler } from "react-hook-form";
@@ -2016,43 +2019,46 @@ const BookingRequest: React.FC = () => {
       />
 
       <div className="min-h-screen bg-[linear-gradient(180deg,#fff7f7_0%,#ffffff_35%,#fff5f8_100%)] py-3 sm:py-8 pb-safe overflow-x-hidden w-full max-w-[100vw] box-border">
-        {/* Hero / Title - Mobile optimized */}
+        {/* Hero / Title - Mobile optimized with glass-morphism 2026 */}
         <header className="px-3 sm:px-4 max-w-3xl mx-auto mb-3 sm:mb-6">
-          <div className="flex items-center gap-2 sm:gap-3 text-gray-700 mb-2">
-            <button
-              onClick={() => navigate(`/provider/${provider!.id}`)}
-              className="p-2.5 -ml-1 rounded-xl hover:bg-gray-100 active:scale-95 transition-transform touch-manipulation"
-              aria-label="Retour"
-            >
-              <ArrowLeft size={22} />
-            </button>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-xl sm:text-3xl font-black tracking-tight text-gray-900 truncate">
-                <span
-                  className={`bg-gradient-to-r ${THEME.gradFrom} ${THEME.gradVia} ${THEME.gradTo} bg-clip-text text-transparent`}
-                >
-                  <FormattedMessage id="bookingRequest.heroTitle" />
-                </span>
-              </h1>
-              <p className="text-xs sm:text-sm text-gray-600 mt-0.5 sm:mt-1 line-clamp-1 sm:line-clamp-none">
-                <FormattedMessage id="bookingRequest.heroSubtitle" />
-              </p>
+          {/* Mobile: Glass card header / Desktop: Standard */}
+          <div className="sm:bg-transparent bg-white/80 backdrop-blur-xl sm:backdrop-blur-none rounded-2xl sm:rounded-none p-3 sm:p-0 shadow-sm sm:shadow-none border border-white/50 sm:border-0 mb-3 sm:mb-0">
+            <div className="flex items-center gap-3 text-gray-700">
+              <button
+                onClick={() => navigate(`/provider/${provider!.id}`)}
+                className="p-2.5 -ml-1 rounded-xl bg-gray-50 sm:bg-transparent hover:bg-gray-100 active:scale-95 transition-all duration-200 touch-manipulation shadow-sm sm:shadow-none"
+                aria-label="Retour"
+              >
+                <ArrowLeft size={22} className="text-gray-700" />
+              </button>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-lg sm:text-3xl font-black tracking-tight text-gray-900 truncate">
+                  <span
+                    className={`bg-gradient-to-r ${THEME.gradFrom} ${THEME.gradVia} ${THEME.gradTo} bg-clip-text text-transparent`}
+                  >
+                    <FormattedMessage id="bookingRequest.heroTitle" />
+                  </span>
+                </h1>
+                <p className="hidden sm:block text-sm text-gray-600 mt-1">
+                  <FormattedMessage id="bookingRequest.heroSubtitle" />
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Progress bar - Mobile optimized */}
+          {/* Progress bar - Mobile optimized with enhanced visual */}
           <div className="mb-2 sm:mb-3">
-            <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center justify-between mb-1.5">
               <span className="text-xs sm:text-sm font-bold text-gray-700">
                 {intl.formatMessage({ id: "bookingRequest.progress" })}
               </span>
-              <span className="text-xs sm:text-sm font-bold text-red-600 tabular-nums">
+              <span className="text-xs sm:text-sm font-bold text-red-600 tabular-nums bg-red-50 px-2 py-0.5 rounded-full sm:bg-transparent sm:px-0 sm:py-0 sm:rounded-none">
                 {formProgress}%
               </span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2 sm:h-2.5 overflow-hidden">
+            <div className="w-full bg-gray-100 sm:bg-gray-200 rounded-full h-2.5 overflow-hidden shadow-inner">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-red-500 to-orange-500 transition-all duration-500 ease-out"
+                className="h-full rounded-full bg-gradient-to-r from-red-500 via-orange-500 to-rose-500 transition-all duration-500 ease-out shadow-sm"
                 style={{ width: `${formProgress}%` }}
               />
             </div>
@@ -2873,8 +2879,24 @@ const BookingRequest: React.FC = () => {
                 </div>
               )}
 
-              {/* CTA - Mobile optimized with sticky behavior */}
+              {/* CTA - Mobile optimized 2026 with trust badges */}
               <div className="p-4 sm:p-6 pb-6 sm:pb-6">
+                {/* Trust badges - Mobile only */}
+                <div className="flex sm:hidden items-center justify-center gap-4 mb-4 text-xs text-gray-500">
+                  <div className="flex items-center gap-1.5">
+                    <Shield size={14} className="text-green-500" />
+                    <span>Sécurisé</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Clock size={14} className="text-blue-500" />
+                    <span>Immédiat</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Lock size={14} className="text-purple-500" />
+                    <span>Confidentiel</span>
+                  </div>
+                </div>
+
                 <Button
                   type="submit"
                   loading={isSubmitting}
@@ -2884,7 +2906,7 @@ const BookingRequest: React.FC = () => {
                     Object.values(validFlags).every(Boolean)
                       ? `bg-gradient-to-r ${THEME.button} hover:opacity-95 transform hover:scale-[1.01] active:scale-[0.98] shadow-lg shadow-red-500/25`
                       : "bg-gray-400 cursor-not-allowed"
-                  } text-white font-bold py-4 sm:py-4 px-4 sm:px-8 rounded-xl transition-all duration-200 ease-out text-sm sm:text-lg touch-manipulation min-h-[56px]`}
+                  } text-white font-bold py-4 sm:py-4 px-4 sm:px-8 rounded-2xl sm:rounded-xl transition-all duration-200 ease-out text-base sm:text-lg touch-manipulation min-h-[58px] sm:min-h-[56px]`}
                   disabled={
                     isSubmitting || !Object.values(validFlags).every(Boolean)
                   }
@@ -2896,7 +2918,7 @@ const BookingRequest: React.FC = () => {
                     </div>
                   ) : (
                     <div className="flex items-center justify-center gap-2">
-                      <Euro size={18} className="flex-shrink-0" />
+                      <Euro size={20} className="flex-shrink-0" />
                       <span className="truncate">
                         {intl.formatMessage({ id: "bookingRequest.continuePay" })}
                       </span>

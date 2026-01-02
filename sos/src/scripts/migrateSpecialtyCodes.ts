@@ -25,6 +25,7 @@ import { db } from '../config/firebase';
 // =============================================
 
 // Mapping des codes invalides vers des codes valides pour les AVOCATS
+// ✅ CORRIGÉ: Tous les codes cibles existent dans lawyer-specialties.ts
 const INVALID_LAWYER_CODE_MAPPING: Record<string, string> = {
   // Texte libre → spécialités valides
   'multitasking': 'CUR_DEMARCHES_ADMINISTRATIVES',
@@ -39,7 +40,7 @@ const INVALID_LAWYER_CODE_MAPPING: Record<string, string> = {
   'family': 'FAM_MARIAGE_DIVORCE',
   'tax': 'FISC_OPTIMISATION_EXPATRIES',
   'business': 'ENTR_CREATION_ENTREPRISE_ETRANGER',
-  'criminal': 'URG_GARDE_A_VUE_ETRANGER',
+  'criminal': 'URG_ASSISTANCE_PENALE_INTERNATIONALE', // ✅ Corrigé: URG_GARDE_A_VUE_ETRANGER n'existe pas
   'labor': 'IMMI_CONTRATS_TRAVAIL_INTERNATIONAL',
   'labour': 'IMMI_CONTRATS_TRAVAIL_INTERNATIONAL',
   'work': 'IMMI_CONTRATS_TRAVAIL_INTERNATIONAL',
@@ -52,6 +53,10 @@ const INVALID_LAWYER_CODE_MAPPING: Record<string, string> = {
   // =============================================
   // CODES AAA GÉNÉRÉS AVEC ANCIENS NOMS
   // =============================================
+
+  // Anciens codes URG obsolètes
+  'URG_GARDE_A_VUE_ETRANGER': 'URG_ASSISTANCE_PENALE_INTERNATIONALE',
+  'URG_EXPULSION_URGENTE': 'URG_RAPATRIEMENT_URGENCE',
 
   // Visas / Immigration
   'VIS_NATURALISATION': 'IMMI_NATURALISATION',
@@ -101,11 +106,13 @@ const INVALID_LAWYER_CODE_MAPPING: Record<string, string> = {
 };
 
 // Mapping des codes invalides vers des codes valides pour les EXPATRIÉS
+// ✅ CORRIGÉ: Tous les codes cibles existent maintenant dans expat-help-types.ts
 const INVALID_EXPAT_CODE_MAPPING: Record<string, string> = {
-  'Phone & internet': 'DEMARCHES_ADMINISTRATIVES',
-  'phone & internet': 'DEMARCHES_ADMINISTRATIVES',
-  'phone': 'DEMARCHES_ADMINISTRATIVES',
-  'internet': 'DEMARCHES_ADMINISTRATIVES',
+  // Texte libre anglais → codes valides
+  'Phone & internet': 'TELEPHONE_INTERNET',
+  'phone & internet': 'TELEPHONE_INTERNET',
+  'phone': 'TELEPHONE_INTERNET',
+  'internet': 'TELEPHONE_INTERNET',
   'housing': 'RECHERCHE_LOGEMENT',
   'bank': 'OUVERTURE_COMPTE_BANCAIRE',
   'banking': 'OUVERTURE_COMPTE_BANCAIRE',
@@ -118,76 +125,129 @@ const INVALID_EXPAT_CODE_MAPPING: Record<string, string> = {
   'work': 'RECHERCHE_EMPLOI',
   'employment': 'RECHERCHE_EMPLOI',
   'insurance': 'ASSURANCES',
-  'tax': 'FISCALITE',
-  'taxes': 'FISCALITE',
-  'legal': 'AIDE_JURIDIQUE',
-  'language': 'COURS_LANGUE',
-  'culture': 'INTEGRATION_CULTURELLE',
-  'moving': 'DEMENAGEMENT',
+  'tax': 'FISCALITE_LOCALE',
+  'taxes': 'FISCALITE_LOCALE',
+  'legal': 'DEMARCHES_ADMINISTRATIVES',
+  'language': 'CULTURE_INTEGRATION',
+  'culture': 'CULTURE_INTEGRATION',
+  'moving': 'INSTALLATION',
   'relocation': 'INSTALLATION',
   'settling': 'INSTALLATION',
   'admin': 'DEMARCHES_ADMINISTRATIVES',
   'administration': 'DEMARCHES_ADMINISTRATIVES',
   'other': 'AUTRE_PRECISER',
+  'security': 'SECURITE',
+  'emergency': 'URGENCES',
+  'money': 'PROBLEMES_ARGENT',
+  'food': 'ALIMENTATION_COURSES',
+  'shopping': 'ALIMENTATION_COURSES',
+  'leisure': 'LOISIRS_SORTIES',
+  'sports': 'SPORTS_ACTIVITES',
+  'visa': 'VISA_IMMIGRATION',
+  'business': 'CREATION_ENTREPRISE',
 
-  // Codes AAA expat avec anciens noms
-  'PARTIR_OU_RENTRER': 'INSTALLATION',
-  'FISCALITE_LOCALE': 'FISCALITE',
-  'SPORTS_ACTIVITES': 'INTEGRATION_CULTURELLE',
-  'PROBLEMES_DIVERS': 'AUTRE_PRECISER',
-  'VISA_IMMIGRATION': 'DEMARCHES_ADMINISTRATIVES',
-  'URGENCES': 'AIDE_JURIDIQUE',
+  // Anciens codes obsolètes → codes valides actuels
+  'FISCALITE': 'FISCALITE_LOCALE',
+  'AIDE_JURIDIQUE': 'DEMARCHES_ADMINISTRATIVES',
+  'COURS_LANGUE': 'CULTURE_INTEGRATION',
+  'INTEGRATION_CULTURELLE': 'CULTURE_INTEGRATION',
+  'DEMENAGEMENT': 'INSTALLATION',
+  'VIE_QUOTIDIENNE': 'ALIMENTATION_COURSES',
+  'LOISIRS': 'LOISIRS_SORTIES',
+  'TRAVAIL': 'RECHERCHE_EMPLOI',
+  'FAMILLE': 'PROBLEMES_RELATIONNELS',
+  'SANTE': 'SYSTEME_SANTE',
 
   // Codes avocat utilisés par erreur pour expats
   'OTH_PRECISER_BESOIN': 'AUTRE_PRECISER',
-  'IMMI_VISAS_PERMIS_SEJOUR': 'DEMARCHES_ADMINISTRATIVES',
+  'IMMI_VISAS_PERMIS_SEJOUR': 'VISA_IMMIGRATION',
 };
 
 // Codes valides pour les avocats (liste de référence)
+// ✅ CORRIGÉ: Synchronisé avec lawyer-specialties.ts (58 codes)
 const VALID_LAWYER_CODES = [
-  'URG_ASSISTANCE_PENALE_INTERNATIONALE', 'URG_GARDE_A_VUE_ETRANGER', 'URG_EXPULSION_URGENTE',
-  'URG_ACCIDENTS_RESPONSABILITE_CIVILE', 'URG_RAPATRIEMENT_URGENCE',
-  'IMMI_VISAS_PERMIS_SEJOUR', 'IMMI_CONTRATS_TRAVAIL_INTERNATIONAL', 'IMMI_NATURALISATION',
-  'FAM_MARIAGE_DIVORCE', 'FAM_GARDE_ENFANTS_TRANSFRONTALIERE', 'FAM_SCOLARITE_INTERNATIONALE',
-  'FISC_DOUBLE_IMPOSITION', 'FISC_OPTIMISATION_EXPATRIES', 'FISC_DECLARATIONS_INTERNATIONALES',
-  'IMMO_ACHAT_VENTE', 'IMMO_LOCATION_BAUX', 'IMMO_LITIGES_IMMOBILIERS',
-  'ENTR_CREATION_ENTREPRISE_ETRANGER', 'ENTR_INVESTISSEMENTS', 'ENTR_IMPORT_EXPORT',
-  'PATR_SUCCESSIONS_INTERNATIONALES', 'PATR_GESTION_PATRIMOINE', 'PATR_TESTAMENTS',
-  'ASSU_ASSURANCES_INTERNATIONALES', 'ASSU_PROTECTION_DONNEES', 'ASSU_CONTENTIEUX_ADMINISTRATIFS',
+  // URG - Urgences (3)
+  'URG_ASSISTANCE_PENALE_INTERNATIONALE', 'URG_ACCIDENTS_RESPONSABILITE_CIVILE', 'URG_RAPATRIEMENT_URGENCE',
+  // CUR - Services courants (3)
   'CUR_TRADUCTIONS_LEGALISATIONS', 'CUR_RECLAMATIONS_LITIGES_MINEURS', 'CUR_DEMARCHES_ADMINISTRATIVES',
+  // IMMI - Immigration et travail (3)
+  'IMMI_VISAS_PERMIS_SEJOUR', 'IMMI_CONTRATS_TRAVAIL_INTERNATIONAL', 'IMMI_NATURALISATION',
+  // IMMO - Immobilier (3)
+  'IMMO_ACHAT_VENTE', 'IMMO_LOCATION_BAUX', 'IMMO_LITIGES_IMMOBILIERS',
+  // FISC - Fiscalité (3)
+  'FISC_DECLARATIONS_INTERNATIONALES', 'FISC_DOUBLE_IMPOSITION', 'FISC_OPTIMISATION_EXPATRIES',
+  // FAM - Famille (3)
+  'FAM_MARIAGE_DIVORCE', 'FAM_GARDE_ENFANTS_TRANSFRONTALIERE', 'FAM_SCOLARITE_INTERNATIONALE',
+  // PATR - Patrimoine (3)
+  'PATR_SUCCESSIONS_INTERNATIONALES', 'PATR_GESTION_PATRIMOINE', 'PATR_TESTAMENTS',
+  // ENTR - Entreprise (3)
+  'ENTR_CREATION_ENTREPRISE_ETRANGER', 'ENTR_INVESTISSEMENTS', 'ENTR_IMPORT_EXPORT',
+  // ASSU - Assurances et protection (3)
+  'ASSU_ASSURANCES_INTERNATIONALES', 'ASSU_PROTECTION_DONNEES', 'ASSU_CONTENTIEUX_ADMINISTRATIFS',
+  // CONS - Consommation et services (3)
+  'CONS_ACHATS_DEFECTUEUX_ETRANGER', 'CONS_SERVICES_NON_CONFORMES', 'CONS_ECOMMERCE_INTERNATIONAL',
+  // BANK - Banque et finance (3)
   'BANK_PROBLEMES_COMPTES_BANCAIRES', 'BANK_VIREMENTS_CREDITS', 'BANK_SERVICES_FINANCIERS',
+  // ARGT - Problèmes d'argent (5)
   'ARGT_RETARDS_SALAIRE_IMPAYES', 'ARGT_ARNAQUES_ESCROQUERIES', 'ARGT_SURENDETTEMENT_PLANS',
   'ARGT_FRAIS_BANCAIRES_ABUSIFS', 'ARGT_LITIGES_ETABLISSEMENTS_CREDIT',
-  'IP_CONTREFACONS', 'IP_BREVETS_MARQUES', 'IP_DROITS_AUTEUR',
-  'SANT_ERREURS_MEDICALES', 'SANT_REMBOURSEMENTS_SOINS', 'SANT_DROIT_MEDICAL',
-  'NUM_CYBERCRIMINALITE', 'NUM_CONTRATS_EN_LIGNE', 'NUM_PROTECTION_NUMERIQUE',
-  'VIO_HARCELEMENT', 'VIO_VIOLENCES_DOMESTIQUES', 'VIO_DISCRIMINATIONS',
+  // RELA - Problèmes relationnels (5)
   'RELA_CONFLITS_VOISINAGE', 'RELA_CONFLITS_TRAVAIL', 'RELA_CONFLITS_FAMILIAUX',
   'RELA_MEDIATION_RESOLUTION_AMIABLE', 'RELA_DIFFAMATION_REPUTATION',
+  // TRAN - Transport (3)
   'TRAN_PROBLEMES_AERIENS', 'TRAN_BAGAGES_PERDUS_ENDOMMAGES', 'TRAN_ACCIDENTS_TRANSPORT',
-  'CONS_ACHATS_DEFECTUEUX_ETRANGER', 'CONS_SERVICES_NON_CONFORMES', 'CONS_ECOMMERCE_INTERNATIONAL',
+  // SANT - Santé (3)
+  'SANT_ERREURS_MEDICALES', 'SANT_REMBOURSEMENTS_SOINS', 'SANT_DROIT_MEDICAL',
+  // NUM - Numérique (3)
+  'NUM_CYBERCRIMINALITE', 'NUM_CONTRATS_EN_LIGNE', 'NUM_PROTECTION_NUMERIQUE',
+  // VIO - Violences et discriminations (3)
+  'VIO_HARCELEMENT', 'VIO_VIOLENCES_DOMESTIQUES', 'VIO_DISCRIMINATIONS',
+  // IP - Propriété intellectuelle (3)
+  'IP_CONTREFACONS', 'IP_BREVETS_MARQUES', 'IP_DROITS_AUTEUR',
+  // ENV - Environnement (3)
   'ENV_NUISANCES', 'ENV_PERMIS_CONSTRUIRE', 'ENV_DROIT_URBANISME',
+  // RET - Retour en France (2)
   'RET_RAPATRIEMENT_BIENS', 'RET_REINTEGRATION_FISCALE_SOCIALE',
+  // OTH - Autre (1)
   'OTH_PRECISER_BESOIN',
 ];
 
 // Codes valides pour les expatriés (liste de référence)
+// ✅ CORRIGÉ: Synchronisé avec expat-help-types.ts (24 codes)
 const VALID_EXPAT_CODES = [
-  'INSTALLATION', 'DEMARCHES_ADMINISTRATIVES', 'RECHERCHE_LOGEMENT',
-  'OUVERTURE_COMPTE_BANCAIRE', 'SYSTEME_SANTE', 'EDUCATION_ECOLES',
-  'TRANSPORT', 'RECHERCHE_EMPLOI', 'ASSURANCES', 'FISCALITE',
-  'AIDE_JURIDIQUE', 'COURS_LANGUE', 'INTEGRATION_CULTURELLE',
-  'DEMENAGEMENT', 'AUTRE_PRECISER',
-  // Codes supplémentaires valides
-  'VIE_QUOTIDIENNE', 'LOISIRS', 'TRAVAIL', 'FAMILLE', 'SANTE',
+  'INSTALLATION',                // S'installer
+  'DEMARCHES_ADMINISTRATIVES',   // Démarches administratives
+  'RECHERCHE_LOGEMENT',          // Recherche de logement
+  'OUVERTURE_COMPTE_BANCAIRE',   // Ouverture de compte bancaire
+  'SYSTEME_SANTE',               // Système de santé
+  'EDUCATION_ECOLES',            // Éducation et écoles
+  'TRANSPORT',                   // Transport
+  'RECHERCHE_EMPLOI',            // Recherche d'emploi
+  'CREATION_ENTREPRISE',         // Création d'entreprise
+  'FISCALITE_LOCALE',            // Fiscalité locale
+  'CULTURE_INTEGRATION',         // Culture et intégration
+  'VISA_IMMIGRATION',            // Visa et immigration
+  'ASSURANCES',                  // Assurances
+  'TELEPHONE_INTERNET',          // Téléphone et internet
+  'ALIMENTATION_COURSES',        // Alimentation et courses
+  'LOISIRS_SORTIES',             // Loisirs et sorties
+  'SPORTS_ACTIVITES',            // Sports et activités
+  'SECURITE',                    // Sécurité
+  'URGENCES',                    // Urgences
+  'PROBLEMES_ARGENT',            // Problèmes d'argent
+  'PROBLEMES_RELATIONNELS',      // Problèmes relationnels
+  'PROBLEMES_DIVERS',            // Problèmes divers
+  'PARTIR_OU_RENTRER',           // Partir ou rentrer
+  'AUTRE_PRECISER',              // Autre (précisez)
 ];
 
 // Mapping des codes camelCase vers SCREAMING_SNAKE_CASE
+// ✅ CORRIGÉ: Tous les codes cibles existent dans lawyer-specialties.ts
 const SPECIALTY_CODE_MAPPING: Record<string, string> = {
-  // Urgences
+  // Urgences (codes obsolètes mappés vers codes valides)
   'urgAssistancePenaleInternationale': 'URG_ASSISTANCE_PENALE_INTERNATIONALE',
-  'urgGardeAVueEtranger': 'URG_GARDE_A_VUE_ETRANGER',
-  'urgExpulsionUrgente': 'URG_EXPULSION_URGENTE',
+  'urgGardeAVueEtranger': 'URG_ASSISTANCE_PENALE_INTERNATIONALE', // ✅ Corrigé: code inexistant → code valide
+  'urgExpulsionUrgente': 'URG_RAPATRIEMENT_URGENCE', // ✅ Corrigé: code inexistant → code valide
   'urgAccidentsResponsabiliteCivile': 'URG_ACCIDENTS_RESPONSABILITE_CIVILE',
   'urgRapatriementUrgence': 'URG_RAPATRIEMENT_URGENCE',
 

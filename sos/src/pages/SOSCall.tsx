@@ -2998,7 +2998,7 @@ const SOSCall: React.FC = () => {
         canonicalUrl="/sos-appel"
       />
 
-      <div className="min-h-screen bg-gray-950">
+      <div className="min-h-screen bg-gray-950 overflow-x-hidden max-w-full">
         {/* ========================================
             HERO SECTION
         ======================================== */}
@@ -3125,9 +3125,10 @@ const SOSCall: React.FC = () => {
               />
 
               {/* ========================================
-                  📱 FILTRES SECTION (Mobile uniquement)
+                  📱 FILTRES SECTION - MASQUÉ sur mobile
+                  Le FAB flottant + FilterBottomSheet remplace cette section
               ======================================== */}
-              <div className="space-y-3 lg:hidden relative z-30">
+              <div className="hidden">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
                   {/* Type */}
                   <div className="space-y-1">

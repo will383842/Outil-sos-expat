@@ -86,6 +86,61 @@ const INVALID_CODE_TO_VALID: Record<string, string> = {
 };
 
 /**
+ * Mapping des entrées texte libre vers des codes valides
+ * Pour les profils créés manuellement avec des mots-clés simples
+ */
+const FREE_TEXT_TO_VALID: Record<string, string> = {
+  // Anglais
+  'immigration': 'IMMI_VISAS_PERMIS_SEJOUR',
+  'visa': 'IMMI_VISAS_PERMIS_SEJOUR',
+  'visas': 'IMMI_VISAS_PERMIS_SEJOUR',
+  'work': 'IMMI_CONTRATS_TRAVAIL_INTERNATIONAL',
+  'employment': 'IMMI_CONTRATS_TRAVAIL_INTERNATIONAL',
+  'family': 'FAM_MARIAGE_DIVORCE',
+  'divorce': 'FAM_MARIAGE_DIVORCE',
+  'marriage': 'FAM_MARIAGE_DIVORCE',
+  'tax': 'FISC_DECLARATIONS_INTERNATIONALES',
+  'taxation': 'FISC_DECLARATIONS_INTERNATIONALES',
+  'taxes': 'FISC_DECLARATIONS_INTERNATIONALES',
+  'real estate': 'IMMO_ACHAT_VENTE',
+  'realestate': 'IMMO_ACHAT_VENTE',
+  'property': 'IMMO_ACHAT_VENTE',
+  'business': 'ENTR_CREATION_ENTREPRISE_ETRANGER',
+  'company': 'ENTR_CREATION_ENTREPRISE_ETRANGER',
+  'inheritance': 'PATR_SUCCESSIONS_INTERNATIONALES',
+  'succession': 'PATR_SUCCESSIONS_INTERNATIONALES',
+  'intellectual property': 'IP_BREVETS_MARQUES',
+  'ip': 'IP_BREVETS_MARQUES',
+  'patent': 'IP_BREVETS_MARQUES',
+  'trademark': 'IP_BREVETS_MARQUES',
+  'copyright': 'IP_DROITS_AUTEUR',
+  'e-commerce': 'CONS_ECOMMERCE_INTERNATIONAL',
+  'ecommerce': 'CONS_ECOMMERCE_INTERNATIONAL',
+  'criminal': 'URG_ASSISTANCE_PENALE_INTERNATIONALE',
+  'emergency': 'URG_RAPATRIEMENT_URGENCE',
+  'insurance': 'ASSU_ASSURANCES_INTERNATIONALES',
+  'banking': 'BANK_PROBLEMES_COMPTES_BANCAIRES',
+  'bank': 'BANK_PROBLEMES_COMPTES_BANCAIRES',
+  'health': 'SANT_DROIT_MEDICAL',
+  'medical': 'SANT_DROIT_MEDICAL',
+  'transport': 'TRAN_PROBLEMES_AERIENS',
+  'digital': 'NUM_PROTECTION_NUMERIQUE',
+  'cyber': 'NUM_CYBERCRIMINALITE',
+  // Français (clés uniques seulement, 'immigration' et 'succession' déjà définies en anglais)
+  'travail': 'IMMI_CONTRATS_TRAVAIL_INTERNATIONAL',
+  'famille': 'FAM_MARIAGE_DIVORCE',
+  'fiscal': 'FISC_DECLARATIONS_INTERNATIONALES',
+  'immobilier': 'IMMO_ACHAT_VENTE',
+  'entreprise': 'ENTR_CREATION_ENTREPRISE_ETRANGER',
+  'assurance': 'ASSU_ASSURANCES_INTERNATIONALES',
+  'banque': 'BANK_PROBLEMES_COMPTES_BANCAIRES',
+  'sante': 'SANT_DROIT_MEDICAL',
+  'santé': 'SANT_DROIT_MEDICAL',
+  'numerique': 'NUM_PROTECTION_NUMERIQUE',
+  'numérique': 'NUM_PROTECTION_NUMERIQUE',
+};
+
+/**
  * Mapping explicite des codes Firestore vers les codes de traduction
  * pour les cas qui ne suivent pas la règle camelCase → SCREAMING_SNAKE_CASE
  */
@@ -268,6 +323,12 @@ function findTranslationCode(firestoreCode: string): string | null {
   // 0. Vérifier d'abord si c'est un code invalide connu
   if (INVALID_CODE_TO_VALID[firestoreCode]) {
     return INVALID_CODE_TO_VALID[firestoreCode];
+  }
+
+  // 0.5. Vérifier si c'est une entrée texte libre
+  const lowerCode = firestoreCode.toLowerCase().trim();
+  if (FREE_TEXT_TO_VALID[lowerCode]) {
+    return FREE_TEXT_TO_VALID[lowerCode];
   }
 
   // 1. Vérifier le mapping explicite camelCase → SCREAMING_SNAKE_CASE

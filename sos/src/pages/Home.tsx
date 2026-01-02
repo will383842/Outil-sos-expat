@@ -1209,7 +1209,7 @@ const OptimizedHomePage: React.FC = () => {
         </script>
       </Helmet>
 
-      <div className="min-h-screen bg-gray-950">
+      <div className="min-h-screen bg-gray-950 overflow-x-hidden max-w-full">
         {/* ================= HERO ================= */}
         <header 
           className="relative pt-20 pb-32 overflow-hidden"
