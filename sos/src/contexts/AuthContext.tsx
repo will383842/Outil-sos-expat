@@ -8,6 +8,7 @@ import {
   updateProfile,
   GoogleAuthProvider,
   signInWithRedirect,
+  signInWithPopup,
   getRedirectResult,
   reload,
   sendEmailVerification,
@@ -1067,8 +1068,8 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   }, [deviceInfo]);
 
   const loginWithGoogle = useCallback(async (rememberMe: boolean = false): Promise<void> => {
-    // VERSION 8 - DEBUG GOOGLE AUTH
-    console.log("[DEBUG] " + "🔵 GOOGLE LOGIN: Début");
+    // VERSION 9 - TRY POPUP FIRST, FALLBACK TO REDIRECT
+    console.log("[DEBUG] " + "🔵 GOOGLE LOGIN: Début (v9 - popup first)");
 
     setIsLoading(true);
     setError(null);
@@ -1089,13 +1090,84 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       provider.addScope('profile');
       provider.setCustomParameters({ prompt: 'select_account' });
 
-      console.log("[DEBUG] " + "🔵 GOOGLE LOGIN: Redirect vers Google...");
-      // Save current URL for redirect after Google login
-      const currentPath = window.location.pathname + window.location.search;
-      sessionStorage.setItem('googleAuthRedirect', currentPath);
-      console.log("[DEBUG] " + "🔵 GOOGLE LOGIN: URL sauvegardée: " + currentPath);
-      // Always use redirect to avoid COOP (Cross-Origin-Opener-Policy) errors with popup
-      await signInWithRedirect(auth, provider);
+      // Try popup first (works better with cross-origin)
+      console.log("[DEBUG] " + "🔵 GOOGLE LOGIN: Tentative POPUP...");
+      try {
+        const result = await signInWithPopup(auth, provider);
+        console.log("[DEBUG] " + "✅ GOOGLE POPUP: Succès! UID: " + result.user.uid);
+
+        // Process the user directly (same logic as redirect handler)
+        const googleUser = result.user;
+        const userRef = doc(db, 'users', googleUser.uid);
+        const userDoc = await getDoc(userRef);
+
+        if (userDoc.exists()) {
+          const existing = userDoc.data() as Partial<User>;
+          if (existing.role && existing.role !== 'client') {
+            console.log("[DEBUG] " + "❌ GOOGLE POPUP: Rôle non-client - " + existing.role);
+            await firebaseSignOut(auth);
+            setError('Les comptes Google sont réservés aux clients.');
+            throw new Error('Role restriction');
+          }
+          await updateDoc(userRef, {
+            lastLoginAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            isActive: true,
+          });
+        } else {
+          // Create new client user
+          await createUserDocumentInFirestore(googleUser, {
+            role: 'client',
+            email: googleUser.email || '',
+            preferredLanguage: 'fr',
+            isApproved: true,
+            approvalStatus: 'approved',
+            isVisible: true,
+            isActive: true,
+            provider: 'google.com',
+            isVerified: googleUser.emailVerified,
+            ...(googleUser.photoURL && { profilePhoto: googleUser.photoURL, photoURL: googleUser.photoURL }),
+          });
+        }
+
+        console.log("[DEBUG] " + "✅ GOOGLE POPUP: Utilisateur traité avec succès");
+        await logAuthEvent('successful_google_login', { userId: googleUser.uid, userEmail: googleUser.email, deviceInfo });
+
+        // Check for saved redirect URL
+        const savedRedirect = sessionStorage.getItem('googleAuthRedirect');
+        if (savedRedirect) {
+          sessionStorage.removeItem('googleAuthRedirect');
+          console.log('[Auth] Google popup: navigating to saved URL:', savedRedirect);
+          window.location.href = savedRedirect;
+        }
+        return;
+      } catch (popupError: any) {
+        // If popup was blocked or closed, try redirect as fallback
+        const popupErrorCode = popupError?.code || '';
+        console.log("[DEBUG] " + "⚠️ GOOGLE POPUP échoué: " + popupErrorCode);
+
+        if (popupErrorCode === 'auth/popup-closed-by-user' ||
+            popupErrorCode === 'auth/cancelled-popup-request') {
+          // User closed popup, don't fallback
+          throw popupError;
+        }
+
+        if (popupErrorCode === 'auth/popup-blocked') {
+          console.log("[DEBUG] " + "🔄 Popup bloqué, fallback vers REDIRECT...");
+          // Save current URL for redirect after Google login
+          const currentPath = window.location.pathname + window.location.search;
+          sessionStorage.setItem('googleAuthRedirect', currentPath);
+          await signInWithRedirect(auth, provider);
+          return;
+        }
+
+        // For other errors, try redirect as fallback
+        console.log("[DEBUG] " + "🔄 Erreur popup, fallback vers REDIRECT...");
+        const currentPath = window.location.pathname + window.location.search;
+        sessionStorage.setItem('googleAuthRedirect', currentPath);
+        await signInWithRedirect(auth, provider);
+        return;
+      }
     } catch (e) {
       const errorCode = (e as any)?.code || 'unknown';
       const errorMessage = e instanceof Error ? e.message : String(e);
