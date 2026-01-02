@@ -2099,13 +2099,16 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
             type="submit"
             disabled={!stripe || !elements || isProcessing}
             onClick={() => {
-              // DEBUG: Log pour diagnostiquer le problème de clic sur mobile
-              console.log("[PaymentButton] onClick DEBUG:", {
+              // DEBUG: Log + alerte pour diagnostiquer le problème de clic sur mobile
+              const debugInfo = {
                 stripe: !!stripe,
                 elements: !!elements,
                 isProcessing,
                 disabled: !stripe || !elements || isProcessing,
-              });
+              };
+              console.log("[PaymentButton] onClick DEBUG:", debugInfo);
+              // ALERTE TEMPORAIRE - à retirer après debug
+              alert("Bouton cliqué! stripe=" + !!stripe + ", elements=" + !!elements + ", isProcessing=" + isProcessing);
             }}
             className={
               "w-full py-4 rounded-xl font-bold text-white transition-all duration-300 " +
