@@ -2099,8 +2099,11 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
             type="button"
             disabled={!stripe || !elements || isProcessing}
             onClick={(e) => {
-              // Appeler directement handlePaymentSubmit au lieu de dépendre du form submit
-              console.log("[PaymentButton] onClick - calling handlePaymentSubmit directly");
+              // VERSION MARKER: 2026-01-02-v3 - Si vous ne voyez pas ce log, le cache n'est pas à jour!
+              console.log("🔴🔴🔴 [PaymentButton v3] CLICK DETECTED 🔴🔴🔴");
+              alert("VERSION 3 - Bouton cliqué!");
+              e.preventDefault();
+              e.stopPropagation();
               handlePaymentSubmit(e as unknown as React.FormEvent);
             }}
             className={
