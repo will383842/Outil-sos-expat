@@ -233,7 +233,7 @@ export class StripeManager {
       throw new HttpsError('invalid-argument', 'Montant invalide');
     }
     if (amount < 5) throw new HttpsError('failed-precondition', 'Montant minimum de 5€ requis');
-    if (amount > 2000) throw new HttpsError('failed-precondition', 'Montant maximum de 2000€ dépassé');
+    if (amount > 500) throw new HttpsError('failed-precondition', 'Montant maximum de 500€ dépassé');
 
     const commission = data.connectionFeeAmount ?? data.commissionAmount ?? 0;
     if (typeof commission !== 'number' || commission < 0) {

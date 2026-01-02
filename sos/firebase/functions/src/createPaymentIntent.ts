@@ -20,15 +20,15 @@ import {
 const LIMITS = {
   RATE_LIMIT: { WINDOW_MS: 10 * 60 * 1000, MAX_REQUESTS: 6 },
   AMOUNT_LIMITS: {
-    MIN_EUR: 1,
+    MIN_EUR: 5,      // Aligné avec paymentValidators.ts
     MAX_EUR: 500,
-    MAX_DAILY_EUR: 1000,
-    MIN_USD: 1,
+    MAX_DAILY_EUR: 2000,  // Aligné avec paymentValidators.ts
+    MIN_USD: 6,      // Aligné avec paymentValidators.ts
     MAX_USD: 600,
-    MAX_DAILY_USD: 1200,
+    MAX_DAILY_USD: 2400,  // Aligné avec paymentValidators.ts
   },
   VALIDATION: {
-    AMOUNT_COHERENCE_TOLERANCE: 0.5,
+    AMOUNT_COHERENCE_TOLERANCE: 0.05,  // Aligné avec StripeManager.ts (était 0.5)
     MAX_DESCRIPTION_LENGTH: 240,
     ALLOWED_CURRENCIES: ['eur', 'usd'] as const,
     ALLOWED_SERVICE_TYPES: ['lawyer_call', 'expat_call'] as const,
@@ -42,15 +42,15 @@ function getLimits() {
     LIMITS ?? {
       RATE_LIMIT: { WINDOW_MS: 10 * 60 * 1000, MAX_REQUESTS: 6 },
       AMOUNT_LIMITS: {
-        MIN_EUR: 1,
+        MIN_EUR: 5,
         MAX_EUR: 500,
-        MAX_DAILY_EUR: 1000,
-        MIN_USD: 1,
+        MAX_DAILY_EUR: 2000,
+        MIN_USD: 6,
         MAX_USD: 600,
-        MAX_DAILY_USD: 1200,
+        MAX_DAILY_USD: 2400,
       },
       VALIDATION: {
-        AMOUNT_COHERENCE_TOLERANCE: 0.5,
+        AMOUNT_COHERENCE_TOLERANCE: 0.05,
         MAX_DESCRIPTION_LENGTH: 240,
         ALLOWED_CURRENCIES: ['eur', 'usd'] as const,
         ALLOWED_SERVICE_TYPES: ['lawyer_call', 'expat_call'] as const,
