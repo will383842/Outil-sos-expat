@@ -633,15 +633,15 @@ const useTranslation = () => {
       ar: "لا يمكنك حجز نفسك"
     },
     "err.minAmount": {
-      fr: "Montant minimum 5€",
-      en: "Minimum amount €5",
-      es: "Monto mínimo 5€",
-      de: "Mindestbetrag 5€",
-      ru: "Минимальная сумма 5€",
-      hi: "न्यूनतम राशि €5",
-      ch: "最低金额 €5",
-      pt: "Valor mínimo €5",
-      ar: "الحد الأدنى للمبلغ 5 يورو"
+      fr: "Montant minimum 0.50€",
+      en: "Minimum amount €0.50",
+      es: "Monto mínimo 0.50€",
+      de: "Mindestbetrag 0.50€",
+      ru: "Минимальная сумма 0.50€",
+      hi: "न्यूनतम राशि €0.50",
+      ch: "最低金额 €0.50",
+      pt: "Valor mínimo €0.50",
+      ar: "الحد الأدنى للمبلغ 0.50 يورو"
     },
     "err.maxAmount": {
       fr: "Montant maximum 500€",
@@ -1220,7 +1220,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
       if (!stripe || !elements) throw new Error(t("err.invalidConfig"));
       if (!user?.uid) throw new Error(t("err.unauth"));
       if (provider.id === user.uid) throw new Error(t("err.sameUser"));
-      if (adminPricing.totalAmount < 5) throw new Error(t("err.minAmount"));
+      if (adminPricing.totalAmount < 0.50) throw new Error(t("err.minAmount"));
       if (adminPricing.totalAmount > 500) throw new Error(t("err.maxAmount"));
       const eq = Math.abs(service.amount - adminPricing.totalAmount) < 0.01;
       if (!eq) throw new Error(t("err.amountMismatch"));

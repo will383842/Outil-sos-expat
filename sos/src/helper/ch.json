@@ -951,7 +951,7 @@
   "checkout.err.invalidMethod": "支付方式无效",
   "checkout.err.invalidPhone": "电话号码无效",
   "checkout.err.maxAmount": "最高金额500€",
-  "checkout.err.minAmount": "最低金额5€",
+  "checkout.err.minAmount": "最低金额0.50€",
   "checkout.err.noCardElement": "找不到卡片字段",
   "checkout.err.noClientSecret": "缺少ClientSecret",
   "checkout.err.paymentFailed": "支付失败",

@@ -951,7 +951,7 @@
   "checkout.err.invalidMethod": "अमान्य भुगतान विधि",
   "checkout.err.invalidPhone": "अमान्य फ़ोन नंबर",
   "checkout.err.maxAmount": "अधिकतम राशि 500€",
-  "checkout.err.minAmount": "न्यूनतम राशि 5€",
+  "checkout.err.minAmount": "न्यूनतम राशि 0.50€",
   "checkout.err.noCardElement": "कार्ड फ़ील्ड नहीं मिला",
   "checkout.err.noClientSecret": "ClientSecret गायब है",
   "checkout.err.paymentFailed": "भुगतान विफल हुआ",

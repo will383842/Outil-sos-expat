@@ -964,7 +964,7 @@
   "checkout.err.invalidMethod": "Méthode de paiement invalide",
   "checkout.err.invalidPhone": "Numéro de téléphone invalide",
   "checkout.err.maxAmount": "Montant maximum 500€",
-  "checkout.err.minAmount": "Montant minimum 5€",
+  "checkout.err.minAmount": "Montant minimum 0.50€",
   "checkout.err.noCardElement": "Champ carte introuvable",
   "checkout.err.noClientSecret": "ClientSecret manquant",
   "checkout.err.paymentFailed": "Le paiement a échoué",

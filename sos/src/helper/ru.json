@@ -951,7 +951,7 @@
   "checkout.err.invalidMethod": "Недействительный способ оплаты",
   "checkout.err.invalidPhone": "Недействительный номер телефона",
   "checkout.err.maxAmount": "Максимальная сумма 500€",
-  "checkout.err.minAmount": "Минимальная сумма 5€",
+  "checkout.err.minAmount": "Минимальная сумма 0.50€",
   "checkout.err.noCardElement": "Поле карты не найдено",
   "checkout.err.noClientSecret": "Отсутствует ClientSecret",
   "checkout.err.paymentFailed": "Оплата не прошла",

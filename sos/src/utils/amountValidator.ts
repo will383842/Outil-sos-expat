@@ -27,7 +27,7 @@ export const validateAmounts = (amounts: AmountSet): {
   }
 
   // Amount limits
-  if (amounts.total < 5) errors.push('Montant minimum: 5 EUR');
+  if (amounts.total < 0.50) errors.push('Montant minimum: 0.50 EUR');
   if (amounts.total > 500) errors.push('Montant maximum: 500 EUR');
 
   // Commission sanity check: must be positive and less than total

@@ -951,7 +951,7 @@
   "checkout.err.invalidMethod": "Ungültige Zahlungsmethode",
   "checkout.err.invalidPhone": "Ungültige Telefonnummer",
   "checkout.err.maxAmount": "Höchstbetrag 500€",
-  "checkout.err.minAmount": "Mindestbetrag 5€",
+  "checkout.err.minAmount": "Mindestbetrag 0.50€",
   "checkout.err.noCardElement": "Kartenfeld nicht gefunden",
   "checkout.err.noClientSecret": "ClientSecret fehlt",
   "checkout.err.paymentFailed": "Die Zahlung ist fehlgeschlagen",

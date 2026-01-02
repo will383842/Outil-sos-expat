@@ -964,7 +964,7 @@
   "checkout.err.invalidMethod": "Invalid payment method",
   "checkout.err.invalidPhone": "Invalid phone number",
   "checkout.err.maxAmount": "Maximum amount €500",
-  "checkout.err.minAmount": "Minimum amount €5",
+  "checkout.err.minAmount": "Minimum amount €0.50",
   "checkout.err.noCardElement": "Card field not found",
   "checkout.err.noClientSecret": "ClientSecret missing",
   "checkout.err.paymentFailed": "Payment failed",

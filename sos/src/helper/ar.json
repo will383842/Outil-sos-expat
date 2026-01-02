@@ -951,7 +951,7 @@
   "checkout.err.invalidMethod": "طريقة دفع غير صالحة",
   "checkout.err.invalidPhone": "رقم الهاتف غير صالح",
   "checkout.err.maxAmount": "الحد الأقصى 500€",
-  "checkout.err.minAmount": "الحد الأدنى 5€",
+  "checkout.err.minAmount": "الحد الأدنى 0.50€",
   "checkout.err.noCardElement": "حقل البطاقة غير موجود",
   "checkout.err.noClientSecret": "ClientSecret مفقود",
   "checkout.err.paymentFailed": "فشل الدفع",

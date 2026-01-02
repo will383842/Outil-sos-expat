@@ -951,7 +951,7 @@
   "checkout.err.invalidMethod": "Método de pago inválido",
   "checkout.err.invalidPhone": "Número de teléfono inválido",
   "checkout.err.maxAmount": "Importe máximo 500€",
-  "checkout.err.minAmount": "Importe mínimo 5€",
+  "checkout.err.minAmount": "Importe mínimo 0.50€",
   "checkout.err.noCardElement": "Campo de tarjeta no encontrado",
   "checkout.err.noClientSecret": "ClientSecret faltante",
   "checkout.err.paymentFailed": "El pago ha fallado",
