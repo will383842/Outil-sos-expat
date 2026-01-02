@@ -1137,19 +1137,13 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
     const intl = useIntl();
     const { getTraceAttributes } = usePriceTracing();
 
-    // Debug: Log Stripe initialization state - VERSION 4
+    // Debug: Log Stripe initialization state - VERSION 5
     useEffect(() => {
-      // ALERTE AU CHARGEMENT pour vérifier que le code est à jour
-      console.log("🟢🟢🟢 [PaymentForm VERSION 4] COMPOSANT MONTÉ 🟢🟢🟢");
-      console.log("[PaymentForm] Stripe ready:", !!stripe);
-      console.log("[PaymentForm] Elements ready:", !!elements);
-      console.log("[PaymentForm] isProcessing:", isProcessing);
-      // Alerte visuelle au premier montage seulement
-      if (typeof window !== 'undefined' && !window.__PAYMENT_FORM_MOUNTED__) {
-        window.__PAYMENT_FORM_MOUNTED__ = true;
-        setTimeout(() => {
-          alert("✅ VERSION 4 - PaymentForm chargé! Stripe=" + !!stripe + ", Elements=" + !!elements);
-        }, 500);
+      console.log("🟢 [PaymentForm v5] État changé - Stripe:", !!stripe, "Elements:", !!elements, "isProcessing:", isProcessing);
+
+      // Quand Stripe devient prêt, afficher une notification
+      if (stripe && elements) {
+        console.log("✅✅✅ [PaymentForm v5] STRIPE ET ELEMENTS PRÊTS! ✅✅✅");
       }
     }, [stripe, elements, isProcessing]);
 
@@ -2108,12 +2102,24 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
             type="button"
             disabled={!stripe || !elements || isProcessing}
             onClick={(e) => {
-              // VERSION MARKER: 2026-01-02-v3 - Si vous ne voyez pas ce log, le cache n'est pas à jour!
-              console.log("🔴🔴🔴 [PaymentButton v3] CLICK DETECTED 🔴🔴🔴");
-              alert("VERSION 3 - Bouton cliqué!");
+              // VERSION 5 - Protection complète
               e.preventDefault();
               e.stopPropagation();
-              handlePaymentSubmit(e as unknown as React.FormEvent);
+
+              console.log("🔴 [PaymentButton v5] CLICK - stripe:", !!stripe, "elements:", !!elements);
+
+              // Vérification AVANT d'appeler handlePaymentSubmit
+              if (!stripe || !elements) {
+                alert("⚠️ Stripe n'est pas encore prêt! Attendez quelques secondes et réessayez.\n\nStripe=" + !!stripe + "\nElements=" + !!elements);
+                return;
+              }
+
+              try {
+                handlePaymentSubmit(e as unknown as React.FormEvent);
+              } catch (err) {
+                console.error("🔴 [PaymentButton] ERREUR:", err);
+                alert("Erreur lors du paiement: " + (err instanceof Error ? err.message : String(err)));
+              }
             }}
             className={
               "w-full py-4 rounded-xl font-bold text-white transition-all duration-300 " +
