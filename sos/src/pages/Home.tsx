@@ -1174,9 +1174,8 @@ const OptimizedHomePage: React.FC = () => {
         <meta name="twitter:site" content={SEO_CONSTANTS.TWITTER_HANDLE} />
         <meta name="twitter:creator" content={SEO_CONSTANTS.TWITTER_HANDLE} />
 
-        {/* Security */}
+        {/* Security - Note: X-Frame-Options is set via HTTP headers in firebase.json */}
         <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
-        <meta httpEquiv="X-Frame-Options" content="SAMEORIGIN" />
         <meta name="referrer" content="strict-origin-when-cross-origin" />
 
         {/* Preconnect */}

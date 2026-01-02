@@ -7,7 +7,6 @@ import {
   onAuthStateChanged,
   updateProfile,
   GoogleAuthProvider,
-  signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
   reload,
@@ -1075,142 +1074,38 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       provider.addScope('profile');
       provider.setCustomParameters({ prompt: 'select_account' });
 
-      if (window.crossOriginIsolated === true) {
-        await signInWithRedirect(auth, provider);
-        return;
-      }
-
-      const result = await signInWithPopup(auth, provider);
-      const googleUser = result.user;
-
-      const userRef = doc(db, 'users', googleUser.uid);
-      const snap = await getDoc(userRef);
-      if (snap.exists()) {
-        const existing = snap.data() as Partial<User>;
-        if (existing.role && existing.role !== 'client') {
-          await firebaseSignOut(auth);
-          setAuthMetrics((m) => ({
-            ...m,
-            failedLogins: m.failedLogins + 1,
-            roleRestrictionBlocks: m.roleRestrictionBlocks + 1,
-          }));
-          setError('GOOGLE_ROLE_RESTRICTION');
-          // Log en arrière-plan (ne pas bloquer le UI)
-          logAuthEvent('google_login_role_restriction', {
-            userId: googleUser.uid,
-            role: existing.role,
-            email: googleUser.email,
-            deviceInfo
-          }).catch(() => { /* ignoré */ });
-          throw new Error('GOOGLE_ROLE_RESTRICTION');
-        }
-        // Split displayName if firstName/lastName are missing
-        const needsNameSplit = !existing.firstName || !existing.lastName;
-        const { firstName, lastName } = needsNameSplit 
-          ? splitDisplayName(googleUser.displayName)
-          : { firstName: existing.firstName, lastName: existing.lastName };
-        
-        // Always update photo from Google to ensure it's current
-        const photoUpdates = googleUser.photoURL ? {
-          photoURL: googleUser.photoURL,
-          profilePhoto: googleUser.photoURL,
-          avatar: googleUser.photoURL,
-        } : {};
-        
-        await updateDoc(userRef, {
-          lastLoginAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-          isActive: true,
-          ...(needsNameSplit && {
-            firstName: firstName || '',
-            lastName: lastName || '',
-            fullName: `${firstName} ${lastName}`.trim() || googleUser.displayName || '',
-          }),
-          ...photoUpdates,
-        });
-      } else {
-        // Create new user - only include photo fields if Google provides them
-        // Les clients Google sont auto-approuvés
-        const newUserData: any = {
-          role: 'client',
-          email: googleUser.email || '',
-          preferredLanguage: 'fr',
-          isApproved: true,
-          approvalStatus: 'approved',
-          isVisible: true,
-          isActive: true,
-          provider: 'google.com',
-          isVerified: googleUser.emailVerified,
-          isVerifiedEmail: googleUser.emailVerified,
-        };
-        
-        // Add photo fields if available from Google
-        if (googleUser.photoURL) {
-          newUserData.profilePhoto = googleUser.photoURL;
-          newUserData.photoURL = googleUser.photoURL;
-          newUserData.avatar = googleUser.photoURL;
-        }
-        
-        await createUserDocumentInFirestore(googleUser, newUserData);
-      }
-
-      await logAuthEvent('successful_google_login', {
-        userId: googleUser.uid,
-        userEmail: googleUser.email,
-        rememberMe,
-        deviceInfo
-      });
-      
-      // Log photo URL for debugging
-      console.log('[Auth] Google login successful. Photo URL:', googleUser.photoURL);
+      // Always use redirect to avoid COOP (Cross-Origin-Opener-Policy) errors with popup
+      // Note: The result will be handled by the useEffect with getRedirectResult
+      await signInWithRedirect(auth, provider);
+      // User is redirected to Google, no further code will execute here
     } catch (e) {
-      if (!(e instanceof Error && e.message === 'GOOGLE_ROLE_RESTRICTION')) {
-        // 🔍 Log détaillé pour debug
-        const errorCode = (e as any)?.code || 'unknown';
-        const errorMessage = e instanceof Error ? e.message : String(e);
-        console.error('❌ [Google Auth] Error details:', {
-          code: errorCode,
-          message: errorMessage,
-          fullError: e
-        });
+      const errorCode = (e as any)?.code || 'unknown';
+      const errorMessage = e instanceof Error ? e.message : String(e);
+      console.error('❌ [Google Auth] Redirect error:', { code: errorCode, message: errorMessage });
 
-        // Messages d'erreur plus spécifiques
-        let msg = 'Connexion Google annulée ou impossible.';
-        if (errorCode === 'auth/popup-blocked') {
-          msg = 'Popup bloqué. Autorisez les popups pour ce site.';
-        } else if (errorCode === 'auth/popup-closed-by-user') {
-          msg = 'Connexion annulée.';
-        } else if (errorCode === 'auth/unauthorized-domain') {
-          msg = 'Domaine non autorisé. Contactez le support.';
-        } else if (errorCode === 'auth/operation-not-allowed') {
-          msg = 'Connexion Google non activée. Contactez le support.';
-        } else if (errorCode === 'auth/network-request-failed') {
-          msg = 'Erreur réseau. Vérifiez votre connexion.';
-        }
-
-        setError(msg);
-        setAuthMetrics((m) => ({ ...m, failedLogins: m.failedLogins + 1 }));
-        // Log en arrière-plan (ne pas bloquer le UI)
-        logAuthEvent('google_login_failed', {
-          error: errorMessage,
-          errorCode,
-          deviceInfo
-        }).catch(() => { /* ignoré */ });
-        throw new Error(msg);
-      } else {
-        throw e;
+      let msg = 'Connexion Google impossible.';
+      if (errorCode === 'auth/unauthorized-domain') {
+        msg = 'Domaine non autorisé. Contactez le support.';
+      } else if (errorCode === 'auth/operation-not-allowed') {
+        msg = 'Connexion Google non activée. Contactez le support.';
+      } else if (errorCode === 'auth/network-request-failed') {
+        msg = 'Erreur réseau. Vérifiez votre connexion.';
       }
+
+      setError(msg);
+      setAuthMetrics((m) => ({ ...m, failedLogins: m.failedLogins + 1 }));
+      logAuthEvent('google_login_failed', { error: errorMessage, errorCode, deviceInfo }).catch(() => {});
+      throw new Error(msg);
     } finally {
       setIsLoading(false);
     }
   }, [deviceInfo]);
 
-  // Récupération redirect Google en contexte crossOriginIsolated
+  // Récupération redirect Google (toujours actif pour éviter erreurs COOP)
   const redirectHandledRef = useRef<boolean>(false);
   useEffect(() => {
     (async () => {
       try {
-        if (window.crossOriginIsolated !== true) return;
         if (redirectHandledRef.current) return;
         const result = await getRedirectResult(auth);
         if (!result?.user) return;

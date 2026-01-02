@@ -6,7 +6,7 @@
   signOut,
   User as FirebaseUser,
   GoogleAuthProvider,
-  signInWithPopup,
+  signInWithRedirect,
   RecaptchaVerifier,
   signInWithPhoneNumber,
   type ConfirmationResult,
@@ -262,81 +262,20 @@ const loginUser = async (
 /*                              Login with Google                             */
 /* -------------------------------------------------------------------------- */
 
-const loginWithGoogle = async (): Promise<FirebaseUser> => {
+/**
+ * Initiates Google login via redirect (not popup) to avoid COOP errors.
+ * The result will be handled by getRedirectResult in AuthContext.
+ * @deprecated Use loginWithGoogle from AuthContext instead
+ */
+const loginWithGoogle = async (): Promise<void> => {
   try {
     const provider = new GoogleAuthProvider();
-    const userCredential = await signInWithPopup(auth, provider);
-    const firebaseUser = userCredential.user;
-
-    const userRef = doc(db, "users", firebaseUser.uid);
-    const userDoc = await getDoc(userRef);
-
-    if (!userDoc.exists()) {
-      const userData = {
-        uid: firebaseUser.uid,
-        id: firebaseUser.uid,
-        email: firebaseUser.email,
-        emailVerified: firebaseUser.emailVerified,
-        isVerifiedEmail: firebaseUser.emailVerified,
-        displayName: firebaseUser.displayName || "",
-        firstName: firebaseUser.displayName?.split(" ")[0] || "",
-        lastName:
-          firebaseUser.displayName?.split(" ").slice(1).join(" ") || "",
-        photoURL: firebaseUser.photoURL,
-        profilePhoto: firebaseUser.photoURL,
-        avatar: firebaseUser.photoURL,
-        role: "client",
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        lastLoginAt: serverTimestamp(),
-        isActive: true,
-        isApproved: true,
-        isBanned: false,
-        isVerified: true,
-        isAdmin: false,
-        isOnline: false,
-        isVisibleOnMap: false,
-        isVisible: false,
-        fullName: firebaseUser.displayName || "",
-        lang: "fr",
-        country: "",
-        points: 0,
-        affiliateCode: `SOS-${firebaseUser.uid.substring(0, 6).toUpperCase()}`,
-        referralBy: null,
-        notificationPreferences: {
-          email: true,
-          push: true,
-          sms: false,
-        },
-      };
-
-      await setDoc(userRef, userData);
-
-      await addDoc(collection(db, "logs"), {
-        type: "google_registration",
-        userId: firebaseUser.uid,
-        userEmail: firebaseUser.email,
-        timestamp: serverTimestamp(),
-      });
-    } else {
-      await updateDoc(userRef, {
-        lastLoginAt: serverTimestamp(),
-        isActive: true,
-        emailVerified: firebaseUser.emailVerified,
-        isVerifiedEmail: firebaseUser.emailVerified,
-      });
-
-      await addDoc(collection(db, "logs"), {
-        type: "google_login",
-        userId: firebaseUser.uid,
-        timestamp: serverTimestamp(),
-      });
-    }
-
-    return firebaseUser;
+    // Use redirect to avoid COOP (Cross-Origin-Opener-Policy) errors
+    await signInWithRedirect(auth, provider);
+    // Note: User will be redirected to Google, result handled by getRedirectResult
   } catch (err: unknown) {
     const msg = getErrorMessage(err);
-    console.error("Error logging in with Google:", err);
+    console.error("Error initiating Google login:", err);
     logError({
       origin: "frontend",
       error: `Google login error: ${msg}`,

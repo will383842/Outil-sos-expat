@@ -601,7 +601,7 @@ filtered = filtered.filter(p => {
     }
     
     // Fonction pour vérifier si un profil a une vraie photo
-    const hasRealPhoto = (p: TransformedProvider) => {
+    const hasRealPhoto = (p: Provider) => {
       return p.avatar && p.avatar !== DEFAULT_AVATAR && p.avatar.trim() !== "" && !p.avatar.includes('default-avatar');
     };
 
