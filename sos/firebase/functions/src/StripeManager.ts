@@ -232,7 +232,7 @@ export class StripeManager {
     if (typeof amount !== 'number' || Number.isNaN(amount) || amount <= 0) {
       throw new HttpsError('invalid-argument', 'Montant invalide');
     }
-    if (amount < 5) throw new HttpsError('failed-precondition', 'Montant minimum de 5€ requis');
+    if (amount < 0.50) throw new HttpsError('failed-precondition', 'Montant minimum de 0.50€ requis');
     if (amount > 500) throw new HttpsError('failed-precondition', 'Montant maximum de 500€ dépassé');
 
     const commission = data.connectionFeeAmount ?? data.commissionAmount ?? 0;
