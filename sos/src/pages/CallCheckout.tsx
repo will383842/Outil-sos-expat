@@ -1137,13 +1137,12 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
     const intl = useIntl();
     const { getTraceAttributes } = usePriceTracing();
 
-    // Debug: Log Stripe initialization state - VERSION 5
+    // Debug: Log Stripe initialization state - VERSION 6 (using console.warn to bypass drop_console)
     useEffect(() => {
-      console.log("🟢 [PaymentForm v5] État changé - Stripe:", !!stripe, "Elements:", !!elements, "isProcessing:", isProcessing);
+      console.warn("[PaymentForm v6] État:", { stripe: !!stripe, elements: !!elements, isProcessing });
 
-      // Quand Stripe devient prêt, afficher une notification
       if (stripe && elements) {
-        console.log("✅✅✅ [PaymentForm v5] STRIPE ET ELEMENTS PRÊTS! ✅✅✅");
+        console.warn("[PaymentForm v6] ✅ STRIPE PRÊT!");
       }
     }, [stripe, elements, isProcessing]);
 
@@ -2102,23 +2101,24 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
             type="button"
             disabled={!stripe || !elements || isProcessing}
             onClick={(e) => {
-              // VERSION 5 - Protection complète
+              // VERSION 6 - Protection complète avec console.warn
               e.preventDefault();
               e.stopPropagation();
 
-              console.log("🔴 [PaymentButton v5] CLICK - stripe:", !!stripe, "elements:", !!elements);
+              console.warn("[PaymentButton v6] CLICK", { stripe: !!stripe, elements: !!elements });
 
-              // Vérification AVANT d'appeler handlePaymentSubmit
               if (!stripe || !elements) {
-                alert("⚠️ Stripe n'est pas encore prêt! Attendez quelques secondes et réessayez.\n\nStripe=" + !!stripe + "\nElements=" + !!elements);
+                alert("⚠️ Stripe n'est pas encore prêt!\n\nStripe=" + !!stripe + "\nElements=" + !!elements + "\n\nAttendez que le formulaire de carte soit chargé.");
                 return;
               }
+
+              console.warn("[PaymentButton v6] Appel handlePaymentSubmit...");
 
               try {
                 handlePaymentSubmit(e as unknown as React.FormEvent);
               } catch (err) {
-                console.error("🔴 [PaymentButton] ERREUR:", err);
-                alert("Erreur lors du paiement: " + (err instanceof Error ? err.message : String(err)));
+                console.error("[PaymentButton v6] ERREUR:", err);
+                alert("Erreur: " + (err instanceof Error ? err.message : String(err)));
               }
             }}
             className={
