@@ -571,7 +571,7 @@ const calculateProviderStats = async (providerId: string): Promise<ProviderStats
         successRate,
         averageRating,
         totalReviews,
-        completedCalls: realReviewsCount,
+        completedCalls, // ✅ P1 FIX: Utiliser la vraie valeur calculée, pas realReviewsCount
         realReviewsCount,
       };
 

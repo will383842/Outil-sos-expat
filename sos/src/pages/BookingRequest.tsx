@@ -9,7 +9,8 @@ import React, {
   Suspense,
   lazy,
 } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
+import { useLocaleNavigate } from "../multilingual-system";
 import {
   ArrowLeft,
   Euro,
@@ -1325,7 +1326,7 @@ const sanitizeInput = (input: string): string =>
 const BookingRequest: React.FC = () => {
   const intl = useIntl();
   const { providerId } = useParams<{ providerId: string }>();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate(); // ✅ P0 UX FIX: Use locale-aware navigation
   const { user, isLoading: authLoading } = useAuth();
   const { language } = useApp();
   const lang = (language as LangKey) || "fr";
@@ -1404,7 +1405,7 @@ const BookingRequest: React.FC = () => {
   // Mobile-first 2026 input classes with 48px minimum touch target (Apple HIG + Google Material 3)
   const inputClass = (hasErr?: boolean) =>
     `w-full max-w-full box-border px-3 sm:px-4 py-3 sm:py-3.5 min-h-[48px] border-2 rounded-xl bg-white text-gray-900 placeholder-gray-400
-    focus:outline-none transition-all duration-200 text-[16px] touch-manipulation overflow-hidden
+    focus:outline-none transition-all duration-200 text-[16px] touch-manipulation
     [&_input]:border-0 [&_input]:outline-none [&_input]:shadow-none [&_input]:bg-transparent [&_input]:w-full [&_input]:max-w-full
     [&_input:focus]:border-0 [&_input:focus]:outline-none [&_input:focus]:shadow-none
     [&_select]:outline-none [&_select:focus]:outline-none [&_select]:bg-transparent [&_select]:w-full
@@ -1923,6 +1924,7 @@ const BookingRequest: React.FC = () => {
         svcProviderAmount = Math.max(0, Math.round((total - fee) * 100) / 100);
       }
 
+      // ✅ P0 UX FIX: Ensure sessionStorage writes complete successfully before navigation
       // Stockage session pour CallCheckout (provider, phone, serviceData + bookingMeta)
       try {
         sessionStorage.setItem(
@@ -1934,21 +1936,19 @@ const BookingRequest: React.FC = () => {
         // Sauvegarde complète du bookingRequest pour récupération en cas de retour arrière
         sessionStorage.setItem("bookingRequest", JSON.stringify(bookingRequest));
 
-        sessionStorage.setItem(
-          "serviceData",
-          JSON.stringify({
-            providerId: selectedProvider.id,
-            serviceType:
-              roleForPricing === "lawyer" ? "lawyer_call" : "expat_call",
-            providerRole: roleForPricing,
-            amount: svcAmount,
-            duration: svcDurationNumber, // number pour l'UI de checkout
-            clientPhone: bookingRequest.clientPhone,
-            commissionAmount: svcCommission,
-            providerAmount: svcProviderAmount,
-            currency: selectedCurrency,
-          })
-        );
+        const serviceData = {
+          providerId: selectedProvider.id,
+          serviceType:
+            roleForPricing === "lawyer" ? "lawyer_call" : "expat_call",
+          providerRole: roleForPricing,
+          amount: svcAmount,
+          duration: svcDurationNumber, // number pour l'UI de checkout
+          clientPhone: bookingRequest.clientPhone,
+          commissionAmount: svcCommission,
+          providerAmount: svcProviderAmount,
+          currency: selectedCurrency,
+        };
+        sessionStorage.setItem("serviceData", JSON.stringify(serviceData));
 
         // Résumé de la demande pour CallCheckout (utilisé pour notifier le prestataire)
         sessionStorage.setItem(
@@ -1960,11 +1960,25 @@ const BookingRequest: React.FC = () => {
             clientFirstName: bookingRequest.clientFirstName,
           })
         );
-      } catch (error) {
-        console.warn("Failed to save booking/session data", error);
-      }
 
-      navigate(`/call-checkout/${providerId}`);
+        // ✅ Verify critical data was saved before navigation
+        const savedProvider = sessionStorage.getItem("selectedProvider");
+        const savedServiceData = sessionStorage.getItem("serviceData");
+        if (!savedProvider || !savedServiceData) {
+          throw new Error("SESSION_STORAGE_WRITE_FAILED");
+        }
+
+        // Navigate only after successful write and verification
+        navigate(`/call-checkout/${providerId}`);
+      } catch (error) {
+        console.error("Failed to save booking/session data", error);
+        setFormError(intl.formatMessage({
+          id: "bookingRequest.errors.sessionStorageFailed",
+          defaultMessage: "Erreur de sauvegarde des données. Veuillez réessayer."
+        }));
+        // Note: isSubmitting from formState will auto-reset when onSubmit returns
+        return;
+      }
     } catch (err) {
       console.error("Submit error", err);
 
@@ -2174,10 +2188,10 @@ const BookingRequest: React.FC = () => {
           </div>
         </div>
 
-        {/* Form - Mobile optimized with strict overflow control */}
+        {/* Form - Mobile optimized with overflow-visible for phone dropdown */}
         <div className="max-w-3xl mx-auto px-3 sm:px-4 w-full box-border">
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden w-full max-w-full">
-            <form onSubmit={handleSubmit(onSubmit)} noValidate className="touch-manipulation w-full max-w-full overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-visible w-full max-w-full">
+            <form onSubmit={handleSubmit(onSubmit)} noValidate className="touch-manipulation w-full max-w-full overflow-visible">
               {/* Section Perso */}
               <section className="p-4 sm:p-6">
                 <SectionHeader
@@ -2675,8 +2689,9 @@ const BookingRequest: React.FC = () => {
 
               {/* Section Contact (RHF + PhoneField) */}
               <section
-                className="p-4 sm:p-6 border-t border-gray-100"
+                className="p-4 sm:p-6 border-t border-gray-100 overflow-visible relative"
                 ref={refPhone}
+                style={{ zIndex: 50 }}
               >
                 <SectionHeader
                   icon={<Phone className="w-5 h-5" />}
@@ -2736,7 +2751,7 @@ const BookingRequest: React.FC = () => {
                 </div> */}
 
                 {/* Téléphone client avec sélecteur de pays */}
-                <div>
+                <div className="relative overflow-visible" style={{ zIndex: 100 }}>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     <Phone size={16} className="inline mr-1" />
                     {/* {t.fields.phone} */}

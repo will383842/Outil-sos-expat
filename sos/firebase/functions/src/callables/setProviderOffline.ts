@@ -40,23 +40,26 @@ export const setProviderOffline = onCall(async (request) => {
     // Mettre à jour les deux collections en batch
     const batch = db.batch();
 
-    // Mettre à jour sos_profiles
-    const profileRef = db.collection('sos_profiles').doc(userId);
-    batch.update(profileRef, {
+    // ✅ P1 FIX: Nettoyer tous les champs de statut d'appel pour éviter les états incohérents
+    const offlineUpdate = {
       isOnline: false,
       availability: 'offline',
       lastStatusChange: now,
       lastActivityCheck: now,
-    });
+      // Nettoyer les champs d'état d'appel
+      currentCallSessionId: admin.firestore.FieldValue.delete(),
+      busySince: admin.firestore.FieldValue.delete(),
+      busyReason: admin.firestore.FieldValue.delete(),
+      busyWith: admin.firestore.FieldValue.delete(),
+    };
+
+    // Mettre à jour sos_profiles
+    const profileRef = db.collection('sos_profiles').doc(userId);
+    batch.update(profileRef, offlineUpdate);
 
     // Mettre à jour users
     const userRef = db.collection('users').doc(userId);
-    batch.update(userRef, {
-      isOnline: false,
-      availability: 'offline',
-      lastStatusChange: now,
-      lastActivityCheck: now,
-    });
+    batch.update(userRef, offlineUpdate);
 
     await batch.commit();
 

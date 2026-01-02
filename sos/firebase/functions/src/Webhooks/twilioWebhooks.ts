@@ -47,14 +47,37 @@ export const twilioCallWebhook = onRequest(
       }
 
       const body: TwilioCallWebhookBody = req.body;
-      console.log('[twilioCallWebhook] Body : ', body);
-      
+
+      // ✅ P1 SECURITY FIX: Sanitize phone numbers in logs (GDPR compliance)
+      const sanitizePhone = (phone: string) => phone ? `${phone.slice(0, 4)}****${phone.slice(-2)}` : 'unknown';
+
       console.log('🔔 Call Webhook reçu:', {
         event: body.CallStatus,
         callSid: body.CallSid,
-        from: body.From,
-        to: body.To,
+        from: sanitizePhone(body.From),
+        to: sanitizePhone(body.To),
         duration: body.CallDuration
+      });
+
+      // ✅ P0 SECURITY FIX: Idempotency check - prevent duplicate webhook processing
+      const db = admin.firestore();
+      const webhookKey = `twilio_${body.CallSid}_${body.CallStatus}`;
+      const webhookEventRef = db.collection("processed_webhook_events").doc(webhookKey);
+      const existingEvent = await webhookEventRef.get();
+
+      if (existingEvent.exists) {
+        console.log(`⚠️ IDEMPOTENCY: Twilio event ${webhookKey} already processed, skipping`);
+        res.status(200).send('OK - duplicate');
+        return;
+      }
+
+      // Mark event as being processed
+      await webhookEventRef.set({
+        eventKey: webhookKey,
+        callSid: body.CallSid,
+        callStatus: body.CallStatus,
+        processedAt: admin.firestore.FieldValue.serverTimestamp(),
+        source: "twilio_call_webhook",
       });
 
       // Trouver la session d'appel par CallSid

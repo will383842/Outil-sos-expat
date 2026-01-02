@@ -535,6 +535,64 @@ export class StripeManager {
         clientSecret: paymentIntent.client_secret || undefined,
       };
     } catch (error) {
+      // ===== GESTION IDEMPOTENCY ERROR =====
+      // Si on reçoit une erreur d'idempotence, cela signifie qu'un PaymentIntent
+      // a DÉJÀ été créé avec la même clé. On doit le récupérer et le retourner.
+      if (error instanceof Error && error.message.includes('idempotent requests')) {
+        console.log('[createPaymentIntent] IdempotencyError détectée - Récupération du PaymentIntent existant...');
+
+        // Essayer de récupérer le PaymentIntent existant depuis notre base
+        if (data.callSessionId) {
+          const existingPaymentDoc = await this.getExistingPaymentBySession(data.callSessionId);
+          if (existingPaymentDoc) {
+            console.log('[createPaymentIntent] PaymentIntent existant trouvé:', {
+              paymentIntentId: existingPaymentDoc.stripePaymentIntentId,
+              status: existingPaymentDoc.status,
+            });
+
+            // Si le paiement a un clientSecret, on le retourne
+            if (existingPaymentDoc.clientSecret) {
+              return {
+                success: true,
+                paymentIntentId: existingPaymentDoc.stripePaymentIntentId,
+                clientSecret: existingPaymentDoc.clientSecret,
+              };
+            }
+
+            // Si on a le paymentIntentId mais pas de clientSecret, essayer de le récupérer de Stripe
+            if (existingPaymentDoc.stripePaymentIntentId && this.stripe) {
+              try {
+                const pi = await this.stripe.paymentIntents.retrieve(
+                  existingPaymentDoc.stripePaymentIntentId,
+                  existingPaymentDoc.providerStripeAccountId ? { stripeAccount: existingPaymentDoc.providerStripeAccountId } : undefined
+                );
+                if (pi.client_secret) {
+                  // Mettre à jour le document avec le clientSecret
+                  await this.db.collection('payments').doc(existingPaymentDoc.id).update({
+                    clientSecret: pi.client_secret,
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                  });
+                  return {
+                    success: true,
+                    paymentIntentId: pi.id,
+                    clientSecret: pi.client_secret,
+                  };
+                }
+              } catch (retrieveError) {
+                console.error('[createPaymentIntent] Erreur récupération PaymentIntent Stripe:', retrieveError);
+              }
+            }
+          }
+        }
+
+        // Si on n'a pas pu récupérer le PaymentIntent existant, on retourne une erreur plus claire
+        console.warn('[createPaymentIntent] Impossible de récupérer le PaymentIntent existant');
+        return {
+          success: false,
+          error: 'Un paiement est déjà en cours pour cette session. Veuillez rafraîchir la page et réessayer.',
+        };
+      }
+
       await logError('StripeManager:createPaymentIntent', error);
       const msg =
         error instanceof HttpsError
@@ -543,6 +601,29 @@ export class StripeManager {
           ? error.message
           : 'Erreur inconnue';
       return { success: false, error: msg };
+    }
+  }
+
+  /**
+   * Récupère un paiement existant par callSessionId
+   */
+  private async getExistingPaymentBySession(
+    callSessionId: string
+  ): Promise<(PaymentDoc & { id: string }) | null> {
+    try {
+      const snapshot = await this.db
+        .collection('payments')
+        .where('callSessionId', '==', callSessionId)
+        .limit(1)
+        .get();
+
+      if (snapshot.empty) return null;
+
+      const doc = snapshot.docs[0];
+      return { id: doc.id, ...(doc.data() as PaymentDoc) };
+    } catch (error) {
+      console.error('[getExistingPaymentBySession] Erreur:', error);
+      return null;
     }
   }
 

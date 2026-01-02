@@ -46,11 +46,11 @@ const LocaleRouter: React.FC<LocaleRouterProps> = ({ children }) => {
       decodedPathname = pathname;
     }
 
-    // Skip locale handling for admin routes, marketing routes, and payment-success
+    // Skip locale handling for admin routes and marketing routes only
+    // ✅ P0 UX FIX: Removed /payment-success exception - it should use locale prefixes like all other routes
     if (
       pathname.startsWith("/admin") ||
-      pathname.startsWith("/marketing") ||
-      pathname.startsWith("/payment-success")
+      pathname.startsWith("/marketing")
     ) {
       setIsValidating(false);
       return;

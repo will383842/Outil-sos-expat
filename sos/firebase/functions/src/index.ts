@@ -1314,6 +1314,25 @@ export const stripeWebhook = onRequest(
           objectId,
         });
 
+        // ✅ P0 SECURITY FIX: Idempotency check - prevent duplicate webhook processing
+        const webhookEventRef = database.collection("processed_webhook_events").doc(event.id);
+        const existingEvent = await webhookEventRef.get();
+
+        if (existingEvent.exists) {
+          console.log(`⚠️ IDEMPOTENCY: Event ${event.id} already processed, skipping`);
+          res.status(200).json({ received: true, duplicate: true, eventId: event.id });
+          return;
+        }
+
+        // Mark event as being processed (before processing to prevent race conditions)
+        await webhookEventRef.set({
+          eventId: event.id,
+          eventType: event.type,
+          processedAt: admin.firestore.FieldValue.serverTimestamp(),
+          status: "processing",
+          objectId,
+        });
+
         // ✅ STEP 6: Event processing with comprehensive handling
         try {
           switch (event.type) {
@@ -1796,6 +1815,13 @@ export const stripeWebhook = onRequest(
           }
 
           console.log("🎉 WEBHOOK SUCCESS");
+
+          // ✅ P0 SECURITY FIX: Mark event as successfully processed
+          await webhookEventRef.update({
+            status: "completed",
+            completedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+
           ultraLogger.info(
             "STRIPE_WEBHOOK_SUCCESS",
             "Webhook traité avec succès",
@@ -1815,6 +1841,15 @@ export const stripeWebhook = onRequest(
           });
         } catch (eventHandlerError) {
           console.log("💥 EVENT HANDLER ERROR:", eventHandlerError);
+
+          // ✅ P0 SECURITY FIX: Mark event as failed but processed
+          await webhookEventRef.update({
+            status: "failed",
+            failedAt: admin.firestore.FieldValue.serverTimestamp(),
+            error: eventHandlerError instanceof Error
+              ? eventHandlerError.message
+              : String(eventHandlerError),
+          });
 
           ultraLogger.error(
             "STRIPE_WEBHOOK_HANDLER",

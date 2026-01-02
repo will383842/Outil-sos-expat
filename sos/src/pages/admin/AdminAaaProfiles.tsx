@@ -1894,6 +1894,7 @@ const AdminAaaProfiles: React.FC = () => {
       availability: 'offline', totalCalls, totalEarnings: 0, averageRating: rating,
       rating, reviewCount, isEarlyProvider: isEarly,
       mapLocation,
+      gender, // ✅ Stocke le genre pour éviter les décalages photo/nom
     };
 
     // ✅ Ajouter earlyBadge seulement si isEarly est true

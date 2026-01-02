@@ -45,12 +45,24 @@ service cloud.firestore {
     }
 
     // ================= USERS COLLECTION =================
+    // P0 SECURITY FIX: Protection des champs de privilèges contre l'escalade
     match /users/{userId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && isOwner(userId);
-      // L'utilisateur peut modifier ses propres données SAUF les champs d'accès IA forcé
+      allow create: if isAuthenticated() && isOwner(userId) &&
+                    // Empêcher la création avec des rôles admin/dev
+                    (!request.resource.data.keys().hasAny(['role']) ||
+                     request.resource.data.role in ['client', 'lawyer', 'expat']);
+      // L'utilisateur peut modifier ses propres données SAUF:
+      // - role, isApproved, approvalStatus: empêche l'escalade de privilèges
+      // - isBanned, bannedAt, bannedReason: empêche la désactivation du ban
+      // - forcedAiAccess, freeTrialUntil: empêche l'accès gratuit non autorisé
+      // - stripeCustomerId: protège l'intégrité financière
       allow update: if (isOwner(userId) &&
-                        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['forcedAiAccess', 'forceAiAccess', 'forcedAIAccess', 'freeTrialUntil', 'freeTrialGrantedBy']))
+                        !request.resource.data.diff(resource.data).affectedKeys()
+                          .hasAny(['role', 'isApproved', 'approvalStatus', 'isBanned',
+                                   'bannedAt', 'bannedReason', 'forcedAiAccess',
+                                   'forceAiAccess', 'forcedAIAccess', 'freeTrialUntil',
+                                   'freeTrialGrantedBy', 'stripeCustomerId']))
                        || isAdmin() || isDev();
       allow delete: if isAdmin() || isDev();
     }
@@ -654,16 +666,16 @@ service cloud.firestore {
     }
 
     // ================= INVOICE RECORDS (Prestations) =================
+    // P0 SECURITY FIX: Les factures ne peuvent être créées que par Cloud Functions
+    // Empêche la création de fausses factures par des utilisateurs
     match /invoice_records/{invoiceId} {
       // Les utilisateurs peuvent lire leurs propres factures (client ou provider)
       allow read: if isAuthenticated() &&
                   (resource.data.clientId == request.auth.uid ||
                    resource.data.providerId == request.auth.uid ||
                    isAdmin() || isDev());
-      // Les utilisateurs authentifiés peuvent créer des factures pour eux-mêmes
-      allow create: if isAuthenticated() &&
-                    (request.resource.data.clientId == request.auth.uid ||
-                     isAdmin() || isDev());
+      // Seules les Cloud Functions via Admin SDK peuvent créer des factures
+      allow create: if false;
       // Seuls admins peuvent modifier/supprimer
       allow update, delete: if isAdmin() || isDev();
     }
@@ -824,11 +836,12 @@ service cloud.firestore {
     }
 
     // ================= ANALYTICS COUNTERS =================
+    // P0 SECURITY FIX: Seules les Cloud Functions peuvent manipuler les compteurs
+    // Empêche la manipulation des métriques par des utilisateurs malveillants
     match /analytics_counters/{counterId} {
       allow read: if isAdmin() || isDev();
-      // Création et mise à jour par utilisateurs authentifiés (pour incrementCounter)
-      allow create, update: if isAuthenticated();
-      allow delete: if false;
+      // Seules les Cloud Functions via Admin SDK peuvent écrire
+      allow write: if false;
     }
 
     // ================= FAQ TRANSLATIONS CACHE =================

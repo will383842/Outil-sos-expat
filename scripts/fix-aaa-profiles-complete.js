@@ -2,9 +2,11 @@
  * Script pour corriger TOUS les profils AAA
  * - Dates d'inscription: 1er octobre 2024 - 30 décembre 2024
  * - Âges: 27-55 ans
- * - Sexe: Hommes uniquement
+ * - Sexe: Respecte le genre existant (male/female)
  * - Langue: Français uniquement
  * - Avis: 1-2 par semaine depuis inscription
+ *
+ * 🛡️ PROTECTION: Si un profil a déjà une photo, son nom/prénom/email ne sera PAS modifié
  */
 
 const admin = require('firebase-admin');
@@ -20,30 +22,30 @@ admin.initializeApp({
 const db = admin.firestore();
 
 // =============================================================================
-// NOMS MASCULINS PAR RÉGION
+// NOMS PAR RÉGION (MASCULINS ET FÉMININS)
 // =============================================================================
 
-const NAMES_FR = { male: ['Jean', 'Pierre', 'Michel', 'Philippe', 'Thomas', 'Nicolas', 'François', 'Laurent', 'Éric', 'David', 'Stéphane', 'Olivier', 'Christophe', 'Frédéric', 'Patrick', 'Antoine', 'Julien', 'Alexandre', 'Sébastien', 'Vincent'], lastNames: ['Martin', 'Bernard', 'Dubois', 'Thomas', 'Robert', 'Richard', 'Petit', 'Durand', 'Leroy', 'Moreau'] };
-const NAMES_DE = { male: ['Hans', 'Peter', 'Wolfgang', 'Klaus', 'Michael', 'Thomas', 'Andreas', 'Stefan', 'Christian', 'Martin'], lastNames: ['Müller', 'Schmidt', 'Schneider', 'Fischer', 'Weber', 'Meyer', 'Wagner', 'Becker', 'Schulz', 'Hoffmann'] };
-const NAMES_ES = { male: ['Antonio', 'José', 'Manuel', 'Francisco', 'Juan', 'David', 'Carlos', 'Miguel', 'Pedro', 'Alejandro'], lastNames: ['García', 'Rodríguez', 'González', 'Fernández', 'López', 'Martínez', 'Sánchez', 'Pérez', 'Gómez', 'Martín'] };
-const NAMES_IT = { male: ['Marco', 'Luca', 'Giuseppe', 'Francesco', 'Antonio', 'Matteo', 'Alessandro', 'Andrea', 'Stefano', 'Paolo'], lastNames: ['Rossi', 'Russo', 'Ferrari', 'Esposito', 'Bianchi', 'Romano', 'Colombo', 'Ricci', 'Marino', 'Greco'] };
-const NAMES_EN = { male: ['James', 'John', 'Robert', 'Michael', 'William', 'David', 'Richard', 'Joseph', 'Thomas', 'Christopher'], lastNames: ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez'] };
-const NAMES_PT = { male: ['José', 'João', 'Antonio', 'Francisco', 'Carlos', 'Paulo', 'Pedro', 'Lucas', 'Luiz', 'Marcos'], lastNames: ['Silva', 'Santos', 'Oliveira', 'Souza', 'Rodrigues', 'Ferreira', 'Alves', 'Pereira', 'Lima', 'Gomes'] };
-const NAMES_AFRICA_FR = { male: ['Moussa', 'Ibrahim', 'Abdoulaye', 'Ousmane', 'Cheikh', 'Mamadou', 'Amadou', 'Issa', 'Aliou', 'Souleymane'], lastNames: ['Diop', 'Ba', 'Ndiaye', 'Traoré', 'Diallo', 'Koné', 'Sy', 'Sarr', 'Cissé', 'Camara'] };
-const NAMES_AFRICA_EN = { male: ['John', 'Michael', 'Samuel', 'David', 'Peter', 'Daniel', 'Joseph', 'Paul', 'Emmanuel', 'James'], lastNames: ['Mensah', 'Okafor', 'Abebe', 'Kamau', 'Okoro', 'Mwangi', 'Ochieng', 'Mutua', 'Nkrumah', 'Adeyemi'] };
-const NAMES_MA = { male: ['Mohamed', 'Ahmed', 'Ali', 'Hassan', 'Omar', 'Youssef', 'Khalid', 'Said', 'Rachid', 'Karim'], lastNames: ['Alami', 'Benjelloun', 'El Amrani', 'Bennis', 'Cherkaoui', 'Idrissi', 'Tazi', 'Fassi', 'El Mansouri', 'Bennani'] };
-const NAMES_CN = { male: ['Wei', 'Ming', 'Jun', 'Feng', 'Lei', 'Bo', 'Jian', 'Peng', 'Yang', 'Hao'], lastNames: ['Wang', 'Li', 'Zhang', 'Liu', 'Chen', 'Yang', 'Huang', 'Zhao', 'Wu', 'Zhou'] };
-const NAMES_JP = { male: ['Hiroshi', 'Takeshi', 'Kenji', 'Yuki', 'Taro', 'Koji', 'Masao', 'Akira', 'Satoshi', 'Kazuo'], lastNames: ['Sato', 'Suzuki', 'Takahashi', 'Tanaka', 'Watanabe', 'Ito', 'Yamamoto', 'Nakamura', 'Kobayashi', 'Kato'] };
-const NAMES_IN = { male: ['Raj', 'Amit', 'Rahul', 'Arun', 'Vijay', 'Suresh', 'Ravi', 'Sanjay', 'Anand', 'Ashok'], lastNames: ['Patel', 'Kumar', 'Singh', 'Sharma', 'Shah', 'Gupta', 'Reddy', 'Iyer', 'Nair', 'Rao'] };
-const NAMES_SLAVIC = { male: ['Ivan', 'Oleg', 'Dmitri', 'Sergei', 'Alexei', 'Nikolai', 'Andrei', 'Vladimir', 'Yuri', 'Mikhail'], lastNames: ['Ivanov', 'Petrov', 'Sidorov', 'Smirnov', 'Kuznetsov', 'Popov', 'Sokolov', 'Orlov', 'Volkov', 'Fedorov'] };
-const NAMES_TURKIC = { male: ['Mehmet', 'Ahmet', 'Mustafa', 'Ali', 'Murat', 'Okan', 'Hakan', 'Yusuf', 'Emre', 'Burak'], lastNames: ['Yılmaz', 'Kaya', 'Demir', 'Şahin', 'Çelik', 'Yıldız', 'Yıldırım', 'Aydın', 'Öztürk', 'Arslan'] };
-const NAMES_SE_ASIA = { male: ['Somchai', 'Somsak', 'Sompong', 'Wichai', 'Niran', 'Kitti', 'Prasert', 'Surachai', 'Thana', 'Amnuay'], lastNames: ['Saetang', 'Chokchai', 'Rattana', 'Siriwan', 'Prasert', 'Niran', 'Chaiyaporn', 'Somchai', 'Wichai', 'Thana'] };
-const NAMES_KOREAN = { male: ['Min-jun', 'Seo-joon', 'Ji-hoon', 'Jae-won', 'Hyun-woo', 'Dong-hyun', 'Sung-min', 'Jong-ho', 'Young-soo', 'Tae-hyun'], lastNames: ['Kim', 'Lee', 'Park', 'Choi', 'Jung', 'Kang', 'Cho', 'Yoon', 'Jang', 'Lim'] };
-const NAMES_VIET = { male: ['Anh', 'Minh', 'Quang', 'Huy', 'Tuan', 'Duc', 'Nam', 'Phong', 'Khanh', 'Long'], lastNames: ['Nguyen', 'Tran', 'Le', 'Pham', 'Hoang', 'Huynh', 'Vu', 'Vo', 'Dang', 'Bui'] };
-const NAMES_INDONESIA = { male: ['Agus', 'Budi', 'Joko', 'Hendra', 'Rizky', 'Andi', 'Yudi', 'Fajar', 'Dedi', 'Imam'], lastNames: ['Pratama', 'Saputra', 'Santoso', 'Wijaya', 'Hidayat', 'Kurniawan', 'Setiawan', 'Nugroho', 'Siregar', 'Gunawan'] };
-const NAMES_NORDIC = { male: ['Lars', 'Ola', 'Erik', 'Mikael', 'Jonas', 'Henrik', 'Anders', 'Nils', 'Per', 'Ole'], lastNames: ['Johansson', 'Andersen', 'Hansen', 'Larsen', 'Nielsen', 'Berg', 'Lund', 'Haug', 'Olsen', 'Persson'] };
-const NAMES_PERSIAN = { male: ['Ali', 'Hassan', 'Reza', 'Hossein', 'Mahmoud', 'Farid', 'Omid', 'Saeed', 'Amir', 'Javad'], lastNames: ['Hosseini', 'Rezai', 'Rahimi', 'Karimi', 'Ahmadi', 'Jafari', 'Moradi', 'Farhadi', 'Ebrahimi', 'Nasseri'] };
-const NAMES_HEBREW = { male: ['David', 'Yosef', 'Moshe', 'Avi', 'Yaakov', 'Yehuda', 'Noam', 'Alon', 'Eitan', 'Yair'], lastNames: ['Cohen', 'Levi', 'Mizrahi', 'Biton', 'Goldstein', 'Katz', 'Azoulay', 'Ohayon', 'Peretz', 'Ben-David'] };
+const NAMES_FR = { male: ['Jean', 'Pierre', 'Michel', 'Philippe', 'Thomas', 'Nicolas', 'François', 'Laurent', 'Éric', 'David', 'Stéphane', 'Olivier', 'Christophe', 'Frédéric', 'Patrick', 'Antoine', 'Julien', 'Alexandre', 'Sébastien', 'Vincent'], female: ['Marie', 'Sophie', 'Isabelle', 'Nathalie', 'Catherine', 'Valérie', 'Céline', 'Sandrine', 'Aurélie', 'Émilie', 'Julie', 'Camille', 'Claire', 'Laura', 'Pauline', 'Léa', 'Manon', 'Chloé', 'Marion', 'Anaïs'], lastNames: ['Martin', 'Bernard', 'Dubois', 'Thomas', 'Robert', 'Richard', 'Petit', 'Durand', 'Leroy', 'Moreau'] };
+const NAMES_DE = { male: ['Hans', 'Peter', 'Wolfgang', 'Klaus', 'Michael', 'Thomas', 'Andreas', 'Stefan', 'Christian', 'Martin'], female: ['Anna', 'Maria', 'Sophie', 'Emma', 'Hannah', 'Laura', 'Julia', 'Lena', 'Sarah', 'Lisa'], lastNames: ['Müller', 'Schmidt', 'Schneider', 'Fischer', 'Weber', 'Meyer', 'Wagner', 'Becker', 'Schulz', 'Hoffmann'] };
+const NAMES_ES = { male: ['Antonio', 'José', 'Manuel', 'Francisco', 'Juan', 'David', 'Carlos', 'Miguel', 'Pedro', 'Alejandro'], female: ['María', 'Carmen', 'Ana', 'Isabel', 'Laura', 'Lucía', 'Marta', 'Paula', 'Elena', 'Sara'], lastNames: ['García', 'Rodríguez', 'González', 'Fernández', 'López', 'Martínez', 'Sánchez', 'Pérez', 'Gómez', 'Martín'] };
+const NAMES_IT = { male: ['Marco', 'Luca', 'Giuseppe', 'Francesco', 'Antonio', 'Matteo', 'Alessandro', 'Andrea', 'Stefano', 'Paolo'], female: ['Maria', 'Anna', 'Giulia', 'Francesca', 'Sara', 'Elena', 'Chiara', 'Valentina', 'Alessia', 'Martina'], lastNames: ['Rossi', 'Russo', 'Ferrari', 'Esposito', 'Bianchi', 'Romano', 'Colombo', 'Ricci', 'Marino', 'Greco'] };
+const NAMES_EN = { male: ['James', 'John', 'Robert', 'Michael', 'William', 'David', 'Richard', 'Joseph', 'Thomas', 'Christopher'], female: ['Mary', 'Emma', 'Sarah', 'Emily', 'Jessica', 'Ashley', 'Amanda', 'Jennifer', 'Elizabeth', 'Olivia'], lastNames: ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez'] };
+const NAMES_PT = { male: ['José', 'João', 'Antonio', 'Francisco', 'Carlos', 'Paulo', 'Pedro', 'Lucas', 'Luiz', 'Marcos'], female: ['Maria', 'Ana', 'Juliana', 'Fernanda', 'Patricia', 'Camila', 'Bruna', 'Larissa', 'Beatriz', 'Carolina'], lastNames: ['Silva', 'Santos', 'Oliveira', 'Souza', 'Rodrigues', 'Ferreira', 'Alves', 'Pereira', 'Lima', 'Gomes'] };
+const NAMES_AFRICA_FR = { male: ['Moussa', 'Ibrahim', 'Abdoulaye', 'Ousmane', 'Cheikh', 'Mamadou', 'Amadou', 'Issa', 'Aliou', 'Souleymane'], female: ['Fatou', 'Aminata', 'Awa', 'Mariama', 'Aïssatou', 'Khady', 'Djeneba', 'Rama', 'Coumba', 'Oumou'], lastNames: ['Diop', 'Ba', 'Ndiaye', 'Traoré', 'Diallo', 'Koné', 'Sy', 'Sarr', 'Cissé', 'Camara'] };
+const NAMES_AFRICA_EN = { male: ['John', 'Michael', 'Samuel', 'David', 'Peter', 'Daniel', 'Joseph', 'Paul', 'Emmanuel', 'James'], female: ['Grace', 'Faith', 'Joy', 'Peace', 'Blessing', 'Mercy', 'Patience', 'Comfort', 'Hope', 'Charity'], lastNames: ['Mensah', 'Okafor', 'Abebe', 'Kamau', 'Okoro', 'Mwangi', 'Ochieng', 'Mutua', 'Nkrumah', 'Adeyemi'] };
+const NAMES_MA = { male: ['Mohamed', 'Ahmed', 'Ali', 'Hassan', 'Omar', 'Youssef', 'Khalid', 'Said', 'Rachid', 'Karim'], female: ['Fatima', 'Aisha', 'Khadija', 'Maryam', 'Zineb', 'Salma', 'Nadia', 'Layla', 'Amina', 'Hana'], lastNames: ['Alami', 'Benjelloun', 'El Amrani', 'Bennis', 'Cherkaoui', 'Idrissi', 'Tazi', 'Fassi', 'El Mansouri', 'Bennani'] };
+const NAMES_CN = { male: ['Wei', 'Ming', 'Jun', 'Feng', 'Lei', 'Bo', 'Jian', 'Peng', 'Yang', 'Hao'], female: ['Mei', 'Ling', 'Xia', 'Yan', 'Hui', 'Jing', 'Fang', 'Yun', 'Xiu', 'Hong'], lastNames: ['Wang', 'Li', 'Zhang', 'Liu', 'Chen', 'Yang', 'Huang', 'Zhao', 'Wu', 'Zhou'] };
+const NAMES_JP = { male: ['Hiroshi', 'Takeshi', 'Kenji', 'Yuki', 'Taro', 'Koji', 'Masao', 'Akira', 'Satoshi', 'Kazuo'], female: ['Yuki', 'Sakura', 'Aiko', 'Hana', 'Keiko', 'Yumi', 'Mika', 'Emi', 'Naomi', 'Rina'], lastNames: ['Sato', 'Suzuki', 'Takahashi', 'Tanaka', 'Watanabe', 'Ito', 'Yamamoto', 'Nakamura', 'Kobayashi', 'Kato'] };
+const NAMES_IN = { male: ['Raj', 'Amit', 'Rahul', 'Arun', 'Vijay', 'Suresh', 'Ravi', 'Sanjay', 'Anand', 'Ashok'], female: ['Priya', 'Anjali', 'Pooja', 'Neha', 'Sunita', 'Kavita', 'Deepa', 'Meera', 'Lakshmi', 'Divya'], lastNames: ['Patel', 'Kumar', 'Singh', 'Sharma', 'Shah', 'Gupta', 'Reddy', 'Iyer', 'Nair', 'Rao'] };
+const NAMES_SLAVIC = { male: ['Ivan', 'Oleg', 'Dmitri', 'Sergei', 'Alexei', 'Nikolai', 'Andrei', 'Vladimir', 'Yuri', 'Mikhail'], female: ['Anna', 'Maria', 'Elena', 'Olga', 'Natalia', 'Svetlana', 'Tatiana', 'Irina', 'Ekaterina', 'Anastasia'], lastNames: ['Ivanov', 'Petrov', 'Sidorov', 'Smirnov', 'Kuznetsov', 'Popov', 'Sokolov', 'Orlov', 'Volkov', 'Fedorov'] };
+const NAMES_TURKIC = { male: ['Mehmet', 'Ahmet', 'Mustafa', 'Ali', 'Murat', 'Okan', 'Hakan', 'Yusuf', 'Emre', 'Burak'], female: ['Ayşe', 'Fatma', 'Elif', 'Zeynep', 'Esra', 'Merve', 'Seda', 'Melis', 'Deniz', 'Ceren'], lastNames: ['Yılmaz', 'Kaya', 'Demir', 'Şahin', 'Çelik', 'Yıldız', 'Yıldırım', 'Aydın', 'Öztürk', 'Arslan'] };
+const NAMES_SE_ASIA = { male: ['Somchai', 'Somsak', 'Sompong', 'Wichai', 'Niran', 'Kitti', 'Prasert', 'Surachai', 'Thana', 'Amnuay'], female: ['Siri', 'Mali', 'Noi', 'Ploy', 'Pim', 'Fah', 'Dao', 'Kwan', 'Joy', 'Nuch'], lastNames: ['Saetang', 'Chokchai', 'Rattana', 'Siriwan', 'Prasert', 'Niran', 'Chaiyaporn', 'Somchai', 'Wichai', 'Thana'] };
+const NAMES_KOREAN = { male: ['Min-jun', 'Seo-joon', 'Ji-hoon', 'Jae-won', 'Hyun-woo', 'Dong-hyun', 'Sung-min', 'Jong-ho', 'Young-soo', 'Tae-hyun'], female: ['Ji-yeon', 'Soo-jin', 'Min-ji', 'Hye-won', 'Yun-ah', 'Eun-bi', 'Ha-na', 'Se-young', 'Yu-ri', 'Da-hee'], lastNames: ['Kim', 'Lee', 'Park', 'Choi', 'Jung', 'Kang', 'Cho', 'Yoon', 'Jang', 'Lim'] };
+const NAMES_VIET = { male: ['Anh', 'Minh', 'Quang', 'Huy', 'Tuan', 'Duc', 'Nam', 'Phong', 'Khanh', 'Long'], female: ['Linh', 'Huong', 'Mai', 'Thao', 'Lan', 'Ngoc', 'Trang', 'Hoa', 'Yen', 'Chi'], lastNames: ['Nguyen', 'Tran', 'Le', 'Pham', 'Hoang', 'Huynh', 'Vu', 'Vo', 'Dang', 'Bui'] };
+const NAMES_INDONESIA = { male: ['Agus', 'Budi', 'Joko', 'Hendra', 'Rizky', 'Andi', 'Yudi', 'Fajar', 'Dedi', 'Imam'], female: ['Siti', 'Dewi', 'Putri', 'Rina', 'Wati', 'Ani', 'Yuni', 'Sri', 'Ratna', 'Dian'], lastNames: ['Pratama', 'Saputra', 'Santoso', 'Wijaya', 'Hidayat', 'Kurniawan', 'Setiawan', 'Nugroho', 'Siregar', 'Gunawan'] };
+const NAMES_NORDIC = { male: ['Lars', 'Ola', 'Erik', 'Mikael', 'Jonas', 'Henrik', 'Anders', 'Nils', 'Per', 'Ole'], female: ['Emma', 'Anna', 'Ida', 'Sofia', 'Ella', 'Maja', 'Ebba', 'Wilma', 'Saga', 'Freja'], lastNames: ['Johansson', 'Andersen', 'Hansen', 'Larsen', 'Nielsen', 'Berg', 'Lund', 'Haug', 'Olsen', 'Persson'] };
+const NAMES_PERSIAN = { male: ['Ali', 'Hassan', 'Reza', 'Hossein', 'Mahmoud', 'Farid', 'Omid', 'Saeed', 'Amir', 'Javad'], female: ['Maryam', 'Zahra', 'Sara', 'Fateme', 'Leila', 'Shirin', 'Nazanin', 'Parisa', 'Mina', 'Azar'], lastNames: ['Hosseini', 'Rezai', 'Rahimi', 'Karimi', 'Ahmadi', 'Jafari', 'Moradi', 'Farhadi', 'Ebrahimi', 'Nasseri'] };
+const NAMES_HEBREW = { male: ['David', 'Yosef', 'Moshe', 'Avi', 'Yaakov', 'Yehuda', 'Noam', 'Alon', 'Eitan', 'Yair'], female: ['Sarah', 'Rachel', 'Miriam', 'Leah', 'Rivka', 'Tamar', 'Naomi', 'Ruth', 'Esther', 'Shira'], lastNames: ['Cohen', 'Levi', 'Mizrahi', 'Biton', 'Goldstein', 'Katz', 'Azoulay', 'Ohayon', 'Peretz', 'Ben-David'] };
 
 function getNamesByCountryCode(code) {
   const FR_COUNTRIES = ['FR', 'BE', 'LU', 'MC', 'HT', 'CH'];
@@ -194,12 +196,28 @@ async function fixAllAaaProfiles() {
     const uid = doc.id;
     const countryCode = profile.country || 'FR';
 
-    // 1. Générer un nouveau nom MASCULIN selon le pays
-    const namesData = getNamesByCountryCode(countryCode);
-    const firstName = randomChoice(namesData.male);
-    const lastName = randomChoice(namesData.lastNames);
-    const fullName = `${firstName} ${lastName}`;
-    const email = `${slugify(firstName)}.${slugify(lastName)}.${randomInt(1, 999)}@test-sos.com`;
+    // 🛡️ PROTECTION: Ne JAMAIS changer le nom si une photo existe déjà
+    const hasPhoto = profile.profilePhoto && profile.profilePhoto.trim() !== '' && !profile.profilePhoto.includes('default-avatar');
+
+    let firstName, lastName, fullName, email;
+
+    if (hasPhoto) {
+      // Garder le nom existant si une photo est assignée
+      firstName = profile.firstName;
+      lastName = profile.lastName;
+      fullName = profile.fullName;
+      email = profile.email;
+      console.log(`   ⚠️ Photo existante pour ${uid}, nom conservé: ${fullName}`);
+    } else {
+      // Générer un nouveau nom selon le genre existant ou masculin par défaut
+      const namesData = getNamesByCountryCode(countryCode);
+      const gender = profile.gender || 'male';
+      const namesList = gender === 'female' && namesData.female ? namesData.female : namesData.male;
+      firstName = randomChoice(namesList);
+      lastName = randomChoice(namesData.lastNames);
+      fullName = `${firstName} ${lastName}`;
+      email = `${slugify(firstName)}.${slugify(lastName)}.${randomInt(1, 999)}@test-sos.com`;
+    }
 
     // 2. Nouvelle date d'inscription (oct-déc 2024)
     const createdAt = randomDateBetween(START_DATE, END_DATE);
@@ -228,7 +246,16 @@ async function fixAllAaaProfiles() {
     const rating = parseFloat((4.0 + Math.random() * 1.0).toFixed(2));
 
     // 6. Mettre à jour le profil dans toutes les collections
-    const updateData = {
+    // 🛡️ Si photo existante, ne PAS modifier les données d'identité
+    const updateData = hasPhoto ? {
+      // Conserver l'identité, ne mettre à jour que les stats
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      reviewCount,
+      totalCalls,
+      rating,
+      averageRating: rating,
+    } : {
+      // Nouveau profil sans photo : tout mettre à jour
       firstName,
       lastName,
       fullName,
@@ -251,11 +278,17 @@ async function fixAllAaaProfiles() {
 
     await db.collection('users').doc(uid).update(updateData);
     await db.collection('sos_profiles').doc(uid).update(updateData);
-    await db.collection('ui_profile_cards').doc(uid).update({
+
+    // 🛡️ Ne pas changer le titre si photo existante
+    const cardUpdate = hasPhoto ? {
+      rating,
+      reviewCount,
+    } : {
       title: fullName,
       rating,
       reviewCount,
-    });
+    };
+    await db.collection('ui_profile_cards').doc(uid).update(cardUpdate);
 
     // 7. Supprimer les anciens avis
     const oldReviews = await db.collection('reviews').where('providerId', '==', uid).get();

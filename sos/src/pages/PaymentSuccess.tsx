@@ -1284,7 +1284,7 @@ const SuccessPayment: React.FC = () => {
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button
-                  onClick={() => (window.location.href = "/dashboard")}
+                  onClick={() => navigate("/dashboard")} // ✅ P0 UX FIX: Use navigate instead of window.location.href
                   className="bg-white/10 backdrop-blur-sm border border-white/20 text-white py-4 px-8 rounded-2xl hover:bg-white/20 transition-all duration-300 font-bold inline-flex items-center justify-center gap-3"
                 >
                   {/* {t.goToDashboard} */}
