@@ -1,8 +1,16 @@
 // firebase/functions/src/createAndScheduleCallFunction.ts - Version rectifiée sans planification
 import { onCall, CallableRequest, HttpsError } from 'firebase-functions/v2/https';
+import { defineSecret } from 'firebase-functions/params';
 import { createCallSession } from './callScheduler';
 import { logError } from './utils/logs/logError';
 import * as admin from 'firebase-admin';
+import { stripeManager } from './StripeManager';
+
+// Secret for phone number encryption
+const ENCRYPTION_KEY = defineSecret('ENCRYPTION_KEY');
+// Secrets for Stripe (needed for payment cancellation on error)
+const STRIPE_SECRET_KEY_TEST = defineSecret('STRIPE_SECRET_KEY_TEST');
+const STRIPE_SECRET_KEY_LIVE = defineSecret('STRIPE_SECRET_KEY_LIVE');
 // import { twilioCallManager } from './TwilioCallManager';
 
 // ✅ Interface corrigée pour correspondre exactement aux données frontend
@@ -48,7 +56,8 @@ export const createAndScheduleCallHTTPS = onCall(
     concurrency: 1,
     timeoutSeconds: 60,
     cors: true,
-    // ✅ Pas de secrets Twilio ici - ils sont gérés dans lib/twilio et importés dans index.ts
+    // ✅ Secrets: encryption + Stripe (pour annuler paiement en cas d'échec)
+    secrets: [ENCRYPTION_KEY, STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE],
   },
   async (request: CallableRequest<CreateCallRequest>) => {
     const requestId = `call_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
@@ -403,6 +412,26 @@ export const createAndScheduleCallHTTPS = onCall(
         hasClientPhone: errorDetails.requestData.hasClientPhone,
         newFlow: errorDetails.newFlow
       });
+
+      // ========================================
+      // 11.1 ANNULATION AUTOMATIQUE DU PAIEMENT EN CAS D'ÉCHEC
+      // ========================================
+      const paymentIntentId = request.data?.paymentIntentId;
+      if (paymentIntentId && paymentIntentId.startsWith('pi_')) {
+        try {
+          console.log(`💳 [${requestId}] Annulation du PaymentIntent suite à l'échec: ${paymentIntentId}`);
+          await stripeManager.cancelPayment(
+            paymentIntentId,
+            `Échec création session: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            requestId
+          );
+          console.log(`✅ [${requestId}] PaymentIntent annulé avec succès - Argent libéré pour le client`);
+        } catch (cancelError) {
+          console.error(`⚠️ [${requestId}] Impossible d'annuler le PaymentIntent:`, cancelError);
+          // On continue quand même pour retourner l'erreur originale
+          // Le paiement expirera automatiquement sous 7 jours
+        }
+      }
 
       // Si c'est déjà une HttpsError Firebase, la relancer telle quelle
       if (error instanceof HttpsError) {

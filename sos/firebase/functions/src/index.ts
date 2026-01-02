@@ -50,6 +50,9 @@ export const TWILIO_PHONE_NUMBER = defineSecret("TWILIO_PHONE_NUMBER");
 export const STRIPE_SECRET_KEY_TEST = defineSecret("STRIPE_SECRET_KEY_TEST");
 export const STRIPE_SECRET_KEY_LIVE = defineSecret("STRIPE_SECRET_KEY_LIVE");
 
+// Encryption (GDPR - phone numbers)
+export const ENCRYPTION_KEY = defineSecret("ENCRYPTION_KEY");
+
 // MAILWIZZ_API_KEY and MAILWIZZ_WEBHOOK_SECRET are now static values from config.ts
 
 // kyc
@@ -686,6 +689,8 @@ export const executeCallTask = onRequest(
     maxInstances: 10,
     minInstances: 0,
     concurrency: 1,
+    // Secret for phone number decryption (GDPR)
+    secrets: [ENCRYPTION_KEY, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER],
   },
   (req, res) => runExecuteCallTask(req as any, res as any)
 );
