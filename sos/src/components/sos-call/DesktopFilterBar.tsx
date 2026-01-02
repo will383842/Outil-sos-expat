@@ -323,7 +323,7 @@ const DesktopFilterBar: React.FC<DesktopFilterBarProps> = ({
                 {selectedCountryCode === "all" && <Check className="w-4 h-4" />}
               </button>
               <div className="h-px bg-white/10 my-1" />
-              {countryOptions.slice(0, 20).map((country) => (
+              {countryOptions.map((country) => (
                 <button
                   key={country.code}
                   onClick={() => {
@@ -360,7 +360,7 @@ const DesktopFilterBar: React.FC<DesktopFilterBarProps> = ({
               <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
                 <FormattedMessage id="language.selectMultiple" defaultMessage="Sélection multiple" />
               </div>
-              {languageOptions.slice(0, 15).map((lang) => {
+              {languageOptions.map((lang) => {
                 const isSelected = selectedLanguageCodes.includes(lang.code);
                 return (
                   <button
