@@ -574,15 +574,18 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         previousUid: previousAuthUserUidRef.current,
       });
 
-      // ✅ FIX FLASH: Si l'utilisateur change (login après logout ou nouveau login),
-      // réinitialiser authInitialized pour éviter que ProtectedRoute redirige
-      // avant que les données Firestore soient chargées
+      // ✅ FIX: Si l'utilisateur change (login après logout ou nouveau login),
+      // NE PAS reset authInitialized car cela cause des redirections vers /login
+      // pendant que Firestore charge les données. À la place, on reset seulement
+      // les refs de subscription pour que le nouveau listener démarre proprement.
       const isNewUser = u && u.uid !== previousAuthUserUidRef.current;
       if (isNewUser) {
-        console.log("🔐 [AuthContext] 🔄 Nouvel utilisateur détecté, reset authInitialized");
-        setAuthInitialized(false);
-        // Note: Ne pas reset subscribed.current et firstSnapArrived.current ici
-        // car le useEffect du listener les gère dans son cleanup/setup
+        console.log("🔐 [AuthContext] 🔄 Nouvel utilisateur détecté, reset des refs de subscription");
+        // Reset les refs pour permettre un nouveau listener Firestore
+        subscribed.current = false;
+        firstSnapArrived.current = false;
+        // NE PAS faire setAuthInitialized(false) - cela cause le bug de redirection!
+        // authInitialized reste true pour éviter que ProtectedRoute redirige prématurément
       }
       previousAuthUserUidRef.current = u?.uid ?? null;
 
@@ -640,7 +643,8 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     let unsubUser: undefined | (() => void);
     let cancelled = false;
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
-    let fallbackTimeoutId: ReturnType<typeof setTimeout> | null = null; // ✅ FIX: Variable pour nettoyer le fallback
+    let fallbackTimeoutId: ReturnType<typeof setTimeout> | null = null;
+    let restFallbackTimeoutId: ReturnType<typeof setTimeout> | null = null; // ✅ FIX: Variable pour REST API fallback
 
     // OPTIMISATION: Utiliser UNIQUEMENT onSnapshot() qui retourne les données initiales
     // au premier callback. Évite la double lecture (getDoc + onSnapshot).
@@ -685,7 +689,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     }, 5000);
 
     // 🚀 FALLBACK REST API: Si le SDK est complètement bloqué après 10s, utiliser l'API REST directement
-    const restFallbackTimeoutId = setTimeout(async () => {
+    restFallbackTimeoutId = setTimeout(async () => {
       const elapsed = Date.now() - listenerStartTime;
       if (!firstSnapArrived.current && !cancelled) {
         console.warn(`🔐 [AuthContext] ⚠️ [${elapsed}ms] SDK Firestore bloqué, tentative REST API...`);
@@ -956,6 +960,11 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         clearTimeout(fallbackTimeoutId);
         fallbackTimeoutId = null;
       }
+      // ✅ FIX: Nettoyer aussi le REST API fallback timeout
+      if (restFallbackTimeoutId) {
+        clearTimeout(restFallbackTimeoutId);
+        restFallbackTimeoutId = null;
+      }
       unsubUser?.();
     };
   }, [authUser?.uid]);
@@ -1103,6 +1112,13 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
   // Récupération redirect Google (toujours actif pour éviter erreurs COOP)
   const redirectHandledRef = useRef<boolean>(false);
+
+  // ✅ FIX: Reset redirectHandledRef quand l'utilisateur change (logout/login)
+  // Cela permet de réessayer Google Sign-In après un échec ou logout
+  useEffect(() => {
+    redirectHandledRef.current = false;
+  }, [authUser?.uid]);
+
   useEffect(() => {
     (async () => {
       try {
@@ -1124,7 +1140,8 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
               failedLogins: m.failedLogins + 1,
               roleRestrictionBlocks: m.roleRestrictionBlocks + 1,
             }));
-            setError('GOOGLE_ROLE_RESTRICTION');
+            // ✅ FIX: Message explicite pour l'utilisateur au lieu d'un code technique
+            setError('Les comptes Google sont réservés aux clients. En tant que prestataire, connectez-vous avec votre email et mot de passe.');
             // Log en arrière-plan (ne pas bloquer le UI)
             logAuthEvent('google_login_role_restriction', {
               userId: googleUser.uid,

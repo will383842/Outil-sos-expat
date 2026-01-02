@@ -618,6 +618,8 @@ const RegisterLawyer: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get("redirect") || "/dashboard";
+  // ✅ FIX: Récupérer l'email depuis les searchParams (passé depuis Login.tsx)
+  const prefillEmail = searchParams.get("email") || "";
   const { register, isLoading } = useAuth();
   const { language } = useApp();
   const lang = language as "fr" | "en" | "es" | "de" | "ru" | "hi" | "pt" | "ch" | "ar";
@@ -632,7 +634,7 @@ const RegisterLawyer: React.FC = () => {
   const initial: LawyerFormData = {
     firstName: "",
     lastName: "",
-    email: "",
+    email: prefillEmail,  // ✅ FIX: Pré-remplir depuis l'URL
     password: "",
     phone: "",
     currentCountry: "",

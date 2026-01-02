@@ -888,18 +888,9 @@ const Login: React.FC = () => {
   }, []);
 
   // ==================== REDIRECT RESULT ====================
-  const redirectHandledRef = useRef(false);
-  useEffect(() => {
-    (async () => {
-      try {
-        if (!window.crossOriginIsolated || redirectHandledRef.current) return;
-        const result = await getRedirectResult(auth);
-        if (result?.user) redirectHandledRef.current = true;
-      } catch (e) {
-        console.warn("[Auth] getRedirectResult error", e);
-      }
-    })();
-  }, []);
+  // ✅ FIX: Handler supprimé - géré uniquement dans AuthContext.tsx
+  // Le double handler causait des race conditions où le premier tirait le résultat
+  // et le second recevait null, bloquant la connexion Google.
 
   const effectiveLoading = isLoading || localLoading;
 

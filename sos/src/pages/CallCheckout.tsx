@@ -1137,14 +1137,18 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
     const intl = useIntl();
     const { getTraceAttributes } = usePriceTracing();
 
-    // Debug: Log Stripe initialization state - VERSION 6 (using console.warn to bypass drop_console)
+    // VERSION 7 - Debug avec alerte obligatoire
     useEffect(() => {
-      console.warn("[PaymentForm v6] État:", { stripe: !!stripe, elements: !!elements, isProcessing });
+      // Alerte au montage pour confirmer que le code est déployé
+      alert("🔵 VERSION 7 chargée!\n\nStripe: " + (stripe ? "✅ Prêt" : "⏳ En chargement...") + "\nElements: " + (elements ? "✅ Prêt" : "⏳ En chargement..."));
+    }, []); // Seulement au montage
 
+    // Surveiller quand Stripe devient prêt
+    useEffect(() => {
       if (stripe && elements) {
-        console.warn("[PaymentForm v6] ✅ STRIPE PRÊT!");
+        alert("✅ Stripe est maintenant PRÊT!\n\nVous pouvez cliquer sur Payer.");
       }
-    }, [stripe, elements, isProcessing]);
+    }, [stripe, elements]);
 
     // const bookingMeta: BookingMeta = useMemo(() => {
     //   try {
@@ -2101,24 +2105,23 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
             type="button"
             disabled={!stripe || !elements || isProcessing}
             onClick={(e) => {
-              // VERSION 6 - Protection complète avec console.warn
+              // VERSION 7 - Alerte à CHAQUE clic
+              alert("🟡 BOUTON CLIQUÉ!\n\nStripe: " + (stripe ? "✅" : "❌") + "\nElements: " + (elements ? "✅" : "❌") + "\nisProcessing: " + isProcessing);
+
               e.preventDefault();
               e.stopPropagation();
 
-              console.warn("[PaymentButton v6] CLICK", { stripe: !!stripe, elements: !!elements });
-
               if (!stripe || !elements) {
-                alert("⚠️ Stripe n'est pas encore prêt!\n\nStripe=" + !!stripe + "\nElements=" + !!elements + "\n\nAttendez que le formulaire de carte soit chargé.");
+                alert("⚠️ Stripe pas prêt. Attendez...");
                 return;
               }
 
-              console.warn("[PaymentButton v6] Appel handlePaymentSubmit...");
+              alert("🚀 Lancement du paiement...");
 
               try {
                 handlePaymentSubmit(e as unknown as React.FormEvent);
               } catch (err) {
-                console.error("[PaymentButton v6] ERREUR:", err);
-                alert("Erreur: " + (err instanceof Error ? err.message : String(err)));
+                alert("❌ ERREUR: " + (err instanceof Error ? err.message : String(err)));
               }
             }}
             className={
