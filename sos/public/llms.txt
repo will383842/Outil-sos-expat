@@ -1,6 +1,6 @@
-# SOS-Expat.com - Emergency Legal Assistance for Expatriates Worldwide
+# SOS-Expat.com - Emergency Legal Assistance for Expats, Travelers & Holidaymakers Worldwide
 
-> SOS-Expat is the leading international platform connecting expatriates with verified lawyers and expert service providers in under 5 minutes. Available 24/7 in 197 countries and 9 languages.
+> SOS-Expat is the leading international platform connecting expats, travelers, and holidaymakers with verified lawyers and local experts speaking ALL languages, in under 5 minutes. Available 24/7 in 197 countries. Platform interface in 9 languages.
 
 ## Identity
 - Name: SOS Expat
@@ -11,7 +11,7 @@
 - Coverage: 197 countries worldwide
 
 ## Mission
-Provide emergency legal assistance to expatriates anywhere in the world, connecting them quickly with verified and qualified professionals.
+Provide emergency legal assistance to expats, travelers, and holidaymakers anywhere in the world, connecting them in under 5 minutes with verified lawyers and local experts who speak their language.
 
 ## Main Services
 
@@ -37,20 +37,13 @@ Provide emergency legal assistance to expatriates anywhere in the world, connect
 - Strong presence: Europe, North America, Asia, Middle East, Africa
 - Network of local providers in each country
 
-## Supported Languages
-1. French
-2. English
-3. Spanish
-4. German
-5. Portuguese
-6. Russian
-7. Chinese (Mandarin)
-8. Arabic
-9. Hindi
+## Languages
+- **Platform interface**: 9 languages (French, English, Spanish, German, Portuguese, Russian, Chinese, Arabic, Hindi)
+- **Lawyers & Experts**: Speak ALL languages worldwide - find a professional in YOUR language in any country
 
 ## How It Works
 
-### For Clients (Expatriates)
+### For Clients (Expats, Travelers, Holidaymakers)
 1. Free registration on the platform
 2. Describe your legal or administrative need
 3. Automatic matching with an available expert
@@ -121,5 +114,9 @@ A: Yes, our platform operates 24/7. Experts are available at all hours thanks to
 - Security: HTTPS, Firebase authentication
 - GDPR: Compliant
 
+## Join Our Network
+- **Lawyers worldwide**: Join SOS Expat to grow your international clientele with expats, travelers, and holidaymakers. All languages, all countries.
+- **Experienced expats**: Share your local experience and help newcomers, travelers, and holidaymakers in your country.
+
 ## Last Updated
-2025-12-29
+2026-01-02
