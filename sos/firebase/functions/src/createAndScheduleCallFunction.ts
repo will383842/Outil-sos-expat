@@ -1,17 +1,20 @@
-// firebase/functions/src/createAndScheduleCallFunction.ts - Version rectifiée sans planification
+// firebase/functions/src/createAndScheduleCallFunction.ts - Version avec planification directe
 import { onCall, CallableRequest, HttpsError } from 'firebase-functions/v2/https';
 import { defineSecret } from 'firebase-functions/params';
 import { createCallSession } from './callScheduler';
 import { logError } from './utils/logs/logError';
 import * as admin from 'firebase-admin';
 import { stripeManager } from './StripeManager';
+// P0 FIX: Import scheduleCallTask pour planifier l'appel directement (sans attendre webhook)
+import { scheduleCallTask } from './lib/tasks';
 
 // Secret for phone number encryption
 const ENCRYPTION_KEY = defineSecret('ENCRYPTION_KEY');
 // Secrets for Stripe (needed for payment cancellation on error)
 const STRIPE_SECRET_KEY_TEST = defineSecret('STRIPE_SECRET_KEY_TEST');
 const STRIPE_SECRET_KEY_LIVE = defineSecret('STRIPE_SECRET_KEY_LIVE');
-// import { twilioCallManager } from './TwilioCallManager';
+// Secret for Cloud Tasks authentication
+const TASKS_AUTH_SECRET = defineSecret('TASKS_AUTH_SECRET');
 
 // ✅ Interface corrigée pour correspondre exactement aux données frontend
 interface CreateCallRequest {
@@ -56,8 +59,8 @@ export const createAndScheduleCallHTTPS = onCall(
     concurrency: 1,
     timeoutSeconds: 60,
     cors: true,
-    // ✅ Secrets: encryption + Stripe (pour annuler paiement en cas d'échec)
-    secrets: [ENCRYPTION_KEY, STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE],
+    // Secrets: encryption + Stripe + Cloud Tasks
+    secrets: [ENCRYPTION_KEY, STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE, TASKS_AUTH_SECRET],
   },
   async (request: CallableRequest<CreateCallRequest>) => {
     const requestId = `call_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
@@ -318,23 +321,27 @@ export const createAndScheduleCallHTTPS = onCall(
         console.warn(`⚠️ [${requestId}] Session créée mais lien payments échoué - webhook pourra toujours fonctionner`);
       }
 
-      // ✅ RECTIFICATION MAJEURE: Plus de planification ici
-      // La planification sera désormais gérée par le webhook Stripe à payment_intent.succeeded
-      // qui créera une Cloud Task programmée à +5 minutes
-
+      // ========================================
+      // 9. PLANIFICATION DE L'APPEL VIA CLOUD TASKS
+      // ========================================
+      // P0 FIX: Planifier l'appel ICI (pas via webhook) car avec capture_method=manual,
+      // l'événement payment_intent.succeeded n'arrive qu'APRÈS capture (trop tard!)
+      const CALL_DELAY_SECONDS = 240; // 4 minutes
       console.log(`📅 [${requestId}] Status: ${callSession.status}`);
-      console.log(`⏰ [${requestId}] Planification: Sera gérée par webhook Stripe à +5 min`);
+      console.log(`⏰ [${requestId}] Planification de l'appel dans ${CALL_DELAY_SECONDS}s via Cloud Tasks...`);
 
+      try {
+        const taskId = await scheduleCallTask(callSession.id, CALL_DELAY_SECONDS);
+        console.log(`✅ [${requestId}] Cloud Task créée: ${taskId}`);
+        console.log(`🚀 [${requestId}] Appel planifié dans ${CALL_DELAY_SECONDS/60} minutes`);
+      } catch (scheduleError) {
+        console.error(`❌ [${requestId}] Erreur planification Cloud Task:`, scheduleError);
+        // On ne fait pas échouer la création de session, juste un warning
+        // L'appel pourra être relancé manuellement si besoin
+      }
 
-        // CRITICAL : 🚀 Schedule call locally (non-persistent) for quick testing
-      // try {
-      //   await twilioCallManager.initiateCallSequence(callSession.id, 5);
-      //   console.log(`🚀 [${requestId}] Séquence d'appel planifiée dans 5 min`);
-      // } catch (e) {
-      //   console.warn(`⚠️ [${requestId}] Échec de la planification locale:`, e);
-      // }
-      // Calculer l'heure théorique de programmation (pour info uniquement)
-      const theoreticalScheduledTime = new Date(Date.now() + (5 * 60 * 1000)); // +5 min fixe
+      // Calculer l'heure de programmation
+      const theoreticalScheduledTime = new Date(Date.now() + (CALL_DELAY_SECONDS * 1000));
 
       // ========================================
       // 10. RÉPONSE DE SUCCÈS
@@ -350,17 +357,17 @@ export const createAndScheduleCallHTTPS = onCall(
           dateStyle: 'short',
           timeStyle: 'short'
         }),
-        message: `Session d'appel créée. Planification dans 5 minutes via webhook Stripe.`,
+        message: `Session d'appel créée et planifiée dans 4 minutes.`,
         amount: amount, // ✅ Retourner en euros
         serviceType,
         providerType,
         requestId,
         paymentIntentId,
-        delayMinutes: 5, // ✅ Fixe à 5 minutes maintenant
+        delayMinutes: 4, // 240 secondes = 4 minutes
         timestamp: new Date().toISOString(),
-        // ✅ NOUVEAU: Indiquer le nouveau flux
-        schedulingMethod: 'stripe_webhook', // vs 'immediate' dans l'ancien flux
-        note: 'L\'appel sera automatiquement planifié par Stripe webhook une fois le paiement confirmé'
+        // P0 FIX: Planification directe (pas via webhook)
+        schedulingMethod: 'cloud_tasks_direct',
+        note: 'L\'appel sera automatiquement déclenché dans 4 minutes via Cloud Tasks'
       };
 
       console.log(`🎉 [${requestId}] Réponse envoyée:`, {

@@ -23,6 +23,7 @@ type UserData = {
   email: string;
   firstName?: string;
   lastName?: string;
+  fullName?: string;
   role: Role;
   phone?: string;
   phoneCode?: string;
@@ -30,17 +31,24 @@ type UserData = {
   country?: string;
   currentCountry?: string;
   languages?: string;
+  languagesSpoken?: string[];
   photoURL?: string;
   barNumber?: string;
   experienceYears?: number;
+  yearsOfExperience?: number;
   diplomaYear?: number;
   description?: string;
+  bio?: string;
   specialties?: string;
   interventionCountries?: string;
   certifications?: string;
+  // Champs Expat
   expatYears?: number;
+  yearsAsExpat?: number;
   expDescription?: string;
   whyHelp?: string;
+  helpTypes?: string[];
+  // Champs Client
   status?: string;
   language?: string;
 };
@@ -392,11 +400,89 @@ const ProfileEdit: React.FC = () => {
 
         if (refreshUser) refreshUser();
 
+        // Synchroniser vers sos_profiles pour les providers (lawyer/expat)
         if ((userData?.role ?? "client") !== "client") {
-          await updateDoc(doc(db, "sos_profiles", ctxUser.uid), {
+          const sosProfileUpdate: Record<string, unknown> = {
             photoURL,
             updatedAt: serverTimestamp() as Timestamp,
-          }).catch((err) => console.warn("Erreur mise à jour sos_profiles :", err));
+          };
+
+          // Champs communs pour tous les providers
+          if (formData.description !== undefined) {
+            sosProfileUpdate.description = formData.description;
+            sosProfileUpdate.bio = formData.description;
+          }
+          if (formData.languages !== undefined) {
+            sosProfileUpdate.languages = formData.languages.split(',').map(l => l.trim()).filter(Boolean);
+            sosProfileUpdate.languagesSpoken = formData.languages.split(',').map(l => l.trim()).filter(Boolean);
+          }
+          if (formData.country !== undefined) {
+            sosProfileUpdate.country = formData.country;
+            sosProfileUpdate.residenceCountry = formData.country;
+          }
+          if (formData.currentCountry !== undefined) {
+            sosProfileUpdate.currentCountry = formData.currentCountry;
+            sosProfileUpdate.currentPresenceCountry = formData.currentCountry;
+          }
+          if (formData.interventionCountries !== undefined) {
+            sosProfileUpdate.interventionCountries = formData.interventionCountries.split(',').map(c => c.trim()).filter(Boolean);
+            sosProfileUpdate.practiceCountries = formData.interventionCountries.split(',').map(c => c.trim()).filter(Boolean);
+          }
+          if (formData.phone !== undefined) {
+            sosProfileUpdate.phone = formData.phone;
+            sosProfileUpdate.phoneNumber = formData.phone;
+          }
+
+          // Champs spécifiques Lawyer
+          if (userData?.role === "lawyer") {
+            if (formData.specialties !== undefined) {
+              sosProfileUpdate.specialties = formData.specialties.split(',').map(s => s.trim()).filter(Boolean);
+            }
+            if (formData.experienceYears !== undefined) {
+              sosProfileUpdate.yearsOfExperience = formData.experienceYears;
+              sosProfileUpdate.experienceYears = formData.experienceYears;
+            }
+            if (formData.barNumber !== undefined) {
+              sosProfileUpdate.barNumber = formData.barNumber;
+            }
+            if (formData.certifications !== undefined) {
+              sosProfileUpdate.certifications = formData.certifications.split(',').map(c => c.trim()).filter(Boolean);
+            }
+          }
+
+          // Champs spécifiques Expat
+          if (userData?.role === "expat") {
+            if (formData.expatYears !== undefined) {
+              sosProfileUpdate.yearsAsExpat = formData.expatYears;
+              sosProfileUpdate.expatYears = formData.expatYears;
+            }
+            if (formData.expDescription !== undefined) {
+              sosProfileUpdate.description = formData.expDescription;
+              sosProfileUpdate.bio = formData.expDescription;
+            }
+            if (formData.whyHelp !== undefined) {
+              sosProfileUpdate.motivation = formData.whyHelp;
+              sosProfileUpdate.whyHelp = formData.whyHelp;
+            }
+            if (formData.helpTypes !== undefined && Array.isArray(formData.helpTypes)) {
+              sosProfileUpdate.helpTypes = formData.helpTypes;
+              sosProfileUpdate.specialties = formData.helpTypes; // Pour compatibilité
+            }
+          }
+
+          // Nom complet
+          if (formData.firstName || formData.lastName) {
+            const fullName = `${formData.firstName || ''} ${formData.lastName || ''}`.trim();
+            if (fullName) {
+              sosProfileUpdate.name = fullName;
+              sosProfileUpdate.fullName = fullName;
+              sosProfileUpdate.firstName = formData.firstName;
+              sosProfileUpdate.lastName = formData.lastName;
+            }
+          }
+
+          await updateDoc(doc(db, "sos_profiles", ctxUser.uid), sosProfileUpdate)
+            .catch((err) => console.warn("Erreur mise à jour sos_profiles :", err));
         }
 
         setMessages((p) => ({ ...p, success: "Profil mis à jour avec succès !" }));
@@ -775,6 +861,67 @@ const ProfileEdit: React.FC = () => {
                     className={styles.input}
                     placeholder="Langues parlées (séparées par des virgules)"
                   />
+
+                  {/* Types d'aide */}
+                  <div>
+                    <label className="block mb-2 text-sm font-medium text-gray-700">
+                      {t("profileEdit.expat.helpTypes")}
+                    </label>
+                    {/* Affichage des types d'aide sélectionnés */}
+                    {(formData.helpTypes || []).length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {(formData.helpTypes || []).map((helpType, idx) => (
+                          <span
+                            key={idx}
+                            className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-red-100 text-red-700"
+                          >
+                            {helpType}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  helpTypes: (prev.helpTypes || []).filter((h) => h !== helpType),
+                                }));
+                              }}
+                              className="ml-2 text-red-500 hover:text-red-700"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {/* Sélecteur pour ajouter des types d'aide */}
+                    <select
+                      className={styles.input}
+                      value=""
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value && !(formData.helpTypes || []).includes(value)) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            helpTypes: [...(prev.helpTypes || []), value],
+                          }));
+                        }
+                      }}
+                    >
+                      <option value="">{t("profileEdit.expat.helpTypesPlaceholder")}</option>
+                      {Array.from({ length: 13 }, (_, i) => {
+                        const typeKey = `registerExpat.helpTypes.type${i + 1}`;
+                        const label = t(typeKey);
+                        return (
+                          <option
+                            key={i}
+                            value={label}
+                            disabled={(formData.helpTypes || []).includes(label)}
+                          >
+                            {label}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
                 </div>
               </section>
             )}

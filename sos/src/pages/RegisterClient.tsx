@@ -41,6 +41,7 @@ import {
   Clock,
   Users,
   HelpCircle,
+  User,
 } from "lucide-react";
 import Layout from "../components/layout/Layout";
 import Button from "../components/common/Button";
@@ -79,6 +80,8 @@ const GOOGLE_TIMEOUT = 5000; // 5 secondes
 interface CreateUserData {
   role: "client";
   firstName: string;
+  lastName: string;
+  fullName: string;
   email: string;
   languagesSpoken: string[];
   phone?: string;
@@ -90,6 +93,8 @@ interface CreateUserData {
 }
 
 interface FormData {
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
   languagesSpoken: string[];
@@ -97,6 +102,8 @@ interface FormData {
 }
 
 interface FieldErrors {
+  firstName?: string;
+  lastName?: string;
   email?: string;
   password?: string;
   languagesSpoken?: string;
@@ -360,6 +367,8 @@ const RegisterClient: React.FC = () => {
 
   // Form state
   const [formData, setFormData] = useState<FormData>({
+    firstName: "",
+    lastName: "",
     email: prefillEmail,
     password: "",
     languagesSpoken: [],
@@ -376,6 +385,8 @@ const RegisterClient: React.FC = () => {
   // Refs
   const googleTimeoutRef = useRef<number | null>(null);
   const fieldRefs = {
+    firstName: useRef<HTMLInputElement | null>(null),
+    lastName: useRef<HTMLInputElement | null>(null),
     email: useRef<HTMLInputElement | null>(null),
     password: useRef<HTMLInputElement | null>(null),
   };
@@ -655,6 +666,24 @@ const RegisterClient: React.FC = () => {
   const validateField = useCallback(
     (field: keyof FormData | "terms", value: string | string[] | boolean): string | undefined => {
       switch (field) {
+        case "firstName":
+          if (!value || (typeof value === "string" && !value.trim())) {
+            return intl.formatMessage({ id: "registerClient.errors.firstNameRequired" });
+          }
+          if (typeof value === "string" && value.trim().length < 2) {
+            return intl.formatMessage({ id: "registerClient.errors.firstNameTooShort" });
+          }
+          return undefined;
+
+        case "lastName":
+          if (!value || (typeof value === "string" && !value.trim())) {
+            return intl.formatMessage({ id: "registerClient.errors.lastNameRequired" });
+          }
+          if (typeof value === "string" && value.trim().length < 2) {
+            return intl.formatMessage({ id: "registerClient.errors.lastNameTooShort" });
+          }
+          return undefined;
+
         case "email":
           if (!value || (typeof value === "string" && !value.trim())) {
             return intl.formatMessage({ id: "registerClient.errors.emailRequired" });
@@ -819,6 +848,8 @@ const RegisterClient: React.FC = () => {
 
       // Mark all fields as touched
       setTouched({
+        firstName: true,
+        lastName: true,
         email: true,
         password: true,
         languagesSpoken: true,
@@ -830,6 +861,8 @@ const RegisterClient: React.FC = () => {
 
       // Validate all fields
       const errors: FieldErrors = {};
+      errors.firstName = validateField("firstName", formData.firstName);
+      errors.lastName = validateField("lastName", formData.lastName);
       errors.email = validateField("email", formData.email);
       errors.password = validateField("password", formData.password);
       errors.languagesSpoken = validateField("languagesSpoken", formData.languagesSpoken);
@@ -843,7 +876,11 @@ const RegisterClient: React.FC = () => {
       if (Object.keys(filtered).length > 0) {
         setFieldErrors(filtered);
         // Focus first error field
-        if (filtered.email && fieldRefs.email.current) {
+        if (filtered.firstName && fieldRefs.firstName.current) {
+          fieldRefs.firstName.current.focus();
+        } else if (filtered.lastName && fieldRefs.lastName.current) {
+          fieldRefs.lastName.current.focus();
+        } else if (filtered.email && fieldRefs.email.current) {
           fieldRefs.email.current.focus();
         } else if (filtered.password && fieldRefs.password.current) {
           fieldRefs.password.current.focus();
@@ -865,12 +902,18 @@ const RegisterClient: React.FC = () => {
           }
         }
 
-        const firstName =
-          formData.email.split("@")[0].replace(/[^a-zA-Z]/g, "") || "User";
+        // Utiliser les vrais noms du formulaire
+        const trimmedFirstName = sanitizeString(formData.firstName.trim());
+        const trimmedLastName = sanitizeString(formData.lastName.trim());
+        const capitalizedFirstName = trimmedFirstName.charAt(0).toUpperCase() + trimmedFirstName.slice(1).toLowerCase();
+        const capitalizedLastName = trimmedLastName.charAt(0).toUpperCase() + trimmedLastName.slice(1).toLowerCase();
+        const fullName = `${capitalizedFirstName} ${capitalizedLastName}`;
 
         const userData: CreateUserData = {
           role: "client",
-          firstName: sanitizeString(firstName.charAt(0).toUpperCase() + firstName.slice(1)),
+          firstName: capitalizedFirstName,
+          lastName: capitalizedLastName,
+          fullName: fullName,
           email: sanitizeEmail(formData.email),
           languagesSpoken: formData.languagesSpoken,
           phone: phoneE164,
@@ -928,6 +971,10 @@ const RegisterClient: React.FC = () => {
   // ===========================================================================
   const isFormValid = useMemo(() => {
     return (
+      formData.firstName &&
+      formData.firstName.trim().length >= 2 &&
+      formData.lastName &&
+      formData.lastName.trim().length >= 2 &&
       formData.email &&
       EMAIL_REGEX.test(formData.email) &&
       formData.password.length >= MIN_PASSWORD_LENGTH &&
@@ -1093,6 +1140,71 @@ const RegisterClient: React.FC = () => {
               className="space-y-3"
               aria-label={intl.formatMessage({ id: "registerClient.ui.formTitle" })}
             >
+              {/* FirstName & LastName - Side by side */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* FirstName */}
+                <div>
+                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-300 mb-1.5">
+                    <span className="flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5" aria-hidden="true" />
+                      <FormattedMessage id="registerClient.fields.firstName" />
+                      <span className="text-red-400" aria-hidden="true">*</span>
+                    </span>
+                  </label>
+                  <input
+                    id="firstName"
+                    name="firstName"
+                    type="text"
+                    ref={fieldRefs.firstName}
+                    autoComplete="given-name"
+                    required
+                    aria-required="true"
+                    aria-invalid={!!(fieldErrors.firstName && touched.firstName)}
+                    aria-describedby={fieldErrors.firstName && touched.firstName ? "firstName-error" : undefined}
+                    value={formData.firstName}
+                    onChange={handleInputChange}
+                    onBlur={() => handleBlur("firstName")}
+                    className={getInputClass("firstName")}
+                    placeholder={intl.formatMessage({ id: "registerClient.help.firstNamePlaceholder" })}
+                  />
+                  <FieldError
+                    error={fieldErrors.firstName}
+                    show={!!(fieldErrors.firstName && touched.firstName)}
+                  />
+                </div>
+
+                {/* LastName */}
+                <div>
+                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-300 mb-1.5">
+                    <span className="flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5" aria-hidden="true" />
+                      <FormattedMessage id="registerClient.fields.lastName" />
+                      <span className="text-red-400" aria-hidden="true">*</span>
+                    </span>
+                  </label>
+                  <input
+                    id="lastName"
+                    name="lastName"
+                    type="text"
+                    ref={fieldRefs.lastName}
+                    autoComplete="family-name"
+                    required
+                    aria-required="true"
+                    aria-invalid={!!(fieldErrors.lastName && touched.lastName)}
+                    aria-describedby={fieldErrors.lastName && touched.lastName ? "lastName-error" : undefined}
+                    value={formData.lastName}
+                    onChange={handleInputChange}
+                    onBlur={() => handleBlur("lastName")}
+                    className={getInputClass("lastName")}
+                    placeholder={intl.formatMessage({ id: "registerClient.help.lastNamePlaceholder" })}
+                  />
+                  <FieldError
+                    error={fieldErrors.lastName}
+                    show={!!(fieldErrors.lastName && touched.lastName)}
+                  />
+                </div>
+              </div>
+
               {/* Email */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1.5">
@@ -1119,9 +1231,9 @@ const RegisterClient: React.FC = () => {
                   className={getInputClass("email")}
                   placeholder={intl.formatMessage({ id: "registerClient.help.emailPlaceholder" })}
                 />
-                <FieldError 
-                  error={fieldErrors.email} 
-                  show={!!(fieldErrors.email && touched.email)} 
+                <FieldError
+                  error={fieldErrors.email}
+                  show={!!(fieldErrors.email && touched.email)}
                 />
                 <FieldSuccess
                   show={!fieldErrors.email && !!touched.email && EMAIL_REGEX.test(formData.email)}

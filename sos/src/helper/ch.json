@@ -2320,6 +2320,8 @@
   "registerClient.errors.emailRequired": "需要您的邮箱才能联系您 📧",
   "registerClient.errors.firstNameRequired": "我们想知道您的名字！😊",
   "registerClient.errors.firstNameTooShort": "名字至少需要2个字符 ✨",
+  "registerClient.errors.lastNameRequired": "我们想知道您的姓氏！😊",
+  "registerClient.errors.lastNameTooShort": "姓氏至少需要2个字符 ✨",
   "registerClient.errors.googleFailed": "Google登录错误",
   "registerClient.errors.languagesRequired": "告诉我们您会说什么语言，这很有用 🌍",
   "registerClient.errors.networkError": "连接问题。请检查您的网络并重试 📶",
