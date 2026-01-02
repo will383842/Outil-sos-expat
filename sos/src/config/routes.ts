@@ -31,10 +31,10 @@ export const createRouteWithMeta = (
 // Métadonnées par défaut pour les pages principales
 export const defaultMetadata = {
   home: {
-    title: 'Consultation Juridique pour Expatriés Francophones',
-    description: 'Service de consultation juridique spécialisé pour les expatriés francophones. Avocats qualifiés, conseils personnalisés.',
+    title: 'Avocat ou Expatrié en ligne en 5 min - 197 pays',
+    description: 'Parlez à un avocat ou expatrié dans votre langue en moins de 5 min. 197 pays, toutes langues. Plateforme disponible en 9 langues.',
     lang: 'fr',
-    keywords: ['consultation juridique', 'expatriés', 'avocats', 'conseil juridique', 'francophones']
+    keywords: ['avocat expatrié', 'consultation téléphonique', 'urgence', '197 pays', '5 minutes', 'toutes langues', 'international']
   },
   login: {
     title: 'Connexion - Espace Client',
@@ -53,6 +53,18 @@ export const defaultMetadata = {
     description: 'Inscrivez-vous comme client, avocat ou expatrié pour bénéficier de nos services juridiques.',
     lang: 'fr',
     keywords: ['inscription', 'register', 'compte', 'nouveau client']
+  },
+  registerLawyer: {
+    title: 'Devenir Avocat Partenaire - Rejoignez notre réseau mondial',
+    description: 'Avocats du monde entier, rejoignez SOS Expat. Toutes langues, tous pays. Développez votre clientèle internationale avec des expatriés.',
+    lang: 'fr',
+    keywords: ['avocat partenaire', 'réseau avocat international', 'clientèle expatriés', 'devenir partenaire', 'avocat multilingue']
+  },
+  registerExpat: {
+    title: 'Devenir Expatrié Partenaire - Aidez les nouveaux arrivants',
+    description: 'Expatriés expérimentés, rejoignez notre réseau. Partagez votre expérience locale et aidez les nouveaux arrivants dans votre pays.',
+    lang: 'fr',
+    keywords: ['expatrié partenaire', 'aide expatriés', 'réseau expat', 'devenir conseiller', 'expérience locale']
   },
   dashboard: {
     title: 'Tableau de bord - Mon espace',
@@ -79,10 +91,10 @@ export const defaultMetadata = {
     keywords: ['témoignages', 'avis clients', 'expériences', 'retours']
   },
   providers: {
-    title: 'Nos Avocats - Réseau de professionnels',
-    description: 'Découvrez notre réseau d\'avocats spécialisés dans l\'accompagnement des expatriés francophones.',
+    title: 'Nos Avocats - Réseau mondial multilingue',
+    description: 'Réseau d\'avocats dans 197 pays parlant toutes les langues. Trouvez un avocat qui parle votre langue, où que vous soyez.',
     lang: 'fr',
-    keywords: ['avocats', 'professionnels', 'réseau', 'spécialistes']
+    keywords: ['avocats', 'professionnels', 'réseau mondial', 'multilingue', 'toutes langues', '197 pays']
   },
   howItWorks: {
     title: 'Comment ça marche - Guide d\'utilisation',

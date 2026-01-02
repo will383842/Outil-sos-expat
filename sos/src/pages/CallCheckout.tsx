@@ -59,7 +59,16 @@ declare global {
 const getStripePromise = (): Promise<Stripe | null> => {
   if (!globalThis.__STRIPE_PROMISE__) {
     const pk = import.meta.env.VITE_STRIPE_PUBLIC_KEY as string;
+    console.log("[Stripe] Initializing with public key:", pk ? `${pk.substring(0, 20)}...` : "MISSING!");
+    if (!pk) {
+      console.error("[Stripe] CRITICAL: VITE_STRIPE_PUBLIC_KEY is not defined!");
+    }
     globalThis.__STRIPE_PROMISE__ = loadStripe(pk);
+    globalThis.__STRIPE_PROMISE__.then((stripe) => {
+      console.log("[Stripe] Loaded successfully:", !!stripe);
+    }).catch((err) => {
+      console.error("[Stripe] Failed to load:", err);
+    });
   }
   return globalThis.__STRIPE_PROMISE__;
 };
@@ -1128,6 +1137,13 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
     const intl = useIntl();
     const { getTraceAttributes } = usePriceTracing();
 
+    // Debug: Log Stripe initialization state
+    useEffect(() => {
+      console.log("[PaymentForm] Stripe ready:", !!stripe);
+      console.log("[PaymentForm] Elements ready:", !!elements);
+      console.log("[PaymentForm] isProcessing:", isProcessing);
+    }, [stripe, elements, isProcessing]);
+
     // const bookingMeta: BookingMeta = useMemo(() => {
     //   try {
     //     const raw = sessionStorage.getItem("bookingMeta");
@@ -1447,9 +1463,14 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
     );
 
     const actuallySubmitPayment = useCallback(async () => {
+      console.log("[PaymentForm] actuallySubmitPayment started");
+      console.log("[PaymentForm] stripe object:", stripe);
+      console.log("[PaymentForm] elements object:", elements);
       try {
         setIsProcessing(true);
+        console.log("[PaymentForm] Validating payment data...");
         validatePaymentData();
+        console.log("[PaymentForm] Payment data validated");
 
         // P0-1 FIX: Utiliser le callSessionId STABLE (généré une seule fois)
         // pour garantir l'idempotence en cas de retry
@@ -1752,17 +1773,41 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
     const handlePaymentSubmit = useCallback(
       async (e: React.FormEvent) => {
         e.preventDefault();
-        if (isProcessing) return;
+        console.log("[PaymentForm] handlePaymentSubmit called");
+        console.log("[PaymentForm] stripe:", !!stripe);
+        console.log("[PaymentForm] elements:", !!elements);
+        console.log("[PaymentForm] isProcessing:", isProcessing);
+
+        if (!stripe) {
+          console.error("[PaymentForm] Stripe not ready - button should be disabled");
+          onError("Stripe n'est pas encore prêt. Veuillez patienter.");
+          return;
+        }
+
+        if (!elements) {
+          console.error("[PaymentForm] Elements not ready");
+          onError("Le formulaire de paiement n'est pas encore chargé.");
+          return;
+        }
+
+        if (isProcessing) {
+          console.log("[PaymentForm] Already processing, ignoring click");
+          return;
+        }
+
+        console.log("[PaymentForm] Amount:", adminPricing.totalAmount);
 
         if (adminPricing.totalAmount > 100) {
+          console.log("[PaymentForm] Amount > 100, showing confirmation");
           setPendingSubmit(() => actuallySubmitPayment);
           setShowConfirm(true);
           return;
         }
 
+        console.log("[PaymentForm] Calling actuallySubmitPayment...");
         await actuallySubmitPayment();
       },
-      [isProcessing, adminPricing.totalAmount, actuallySubmitPayment]
+      [isProcessing, adminPricing.totalAmount, actuallySubmitPayment, stripe, elements, onError]
     );
 
     // Use name (public format "Prénom N.") for display, fallback to build from first/last
@@ -2052,12 +2097,12 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
 
           <button
             type="submit"
-            disabled={!stripe || isProcessing}
+            disabled={!stripe || !elements || isProcessing}
             className={
               "w-full py-4 rounded-xl font-bold text-white transition-all duration-300 " +
               "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 " +
               "active:scale-[0.98] touch-manipulation relative overflow-hidden " +
-              (!stripe || isProcessing
+              (!stripe || !elements || isProcessing
                 ? "bg-gray-400 cursor-not-allowed opacity-60"
                 : "bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 shadow-lg hover:shadow-xl")
             }
@@ -2066,10 +2111,19 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
               minimumFractionDigits: 2,
             })}`}
           >
-            {isProcessing ? (
+            {!stripe || !elements ? (
               <div className="flex items-center justify-center space-x-2">
                 <div className="animate-spin rounded-full border-2 border-white border-t-transparent w-5 h-5" />
-                <span>...</span>
+                <span>
+                  {language === "fr" ? "Chargement..." : "Loading..."}
+                </span>
+              </div>
+            ) : isProcessing ? (
+              <div className="flex items-center justify-center space-x-2">
+                <div className="animate-spin rounded-full border-2 border-white border-t-transparent w-5 h-5" />
+                <span>
+                  {language === "fr" ? "Traitement..." : "Processing..."}
+                </span>
               </div>
             ) : (
               <div className="flex items-center justify-center space-x-2">

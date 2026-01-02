@@ -31,7 +31,7 @@ StatCard.displayName = 'StatCard';
 const content = {
   fr: {
     title: 'Besoin d\'un conseil à l\'étranger ?',
-    subtitle: 'Mise en relation instantanée - Service disponible 24h/24, 7j/7 dans plus de 120 pays',
+    subtitle: 'Mise en relation instantanée - Service disponible 24h/24, 7j/7 dans 197 pays',
     stats: {
       countries: 'Pays couverts',
       time: 'Minutes pour être en ligne',
@@ -41,11 +41,11 @@ const content = {
       urgent: 'SOS Appel Urgent',
       expat: 'Appel Expatrié'
     },
-    disclaimer: 'Disponible uniquement pour les expatriés francophones et anglophones dans le monde entier.'
+    disclaimer: 'Pour expatriés, voyageurs et vacanciers. 197 pays, toutes langues. Rejoignez notre réseau !'
   },
   en: {
     title: 'Need help or advice quickly while abroad?',
-    subtitle: 'Instant connection - Service available 24/7 in over 120 countries',
+    subtitle: 'Instant connection - Service available 24/7 in 197 countries',
     stats: {
       countries: 'Countries covered',
       time: 'Minutes to be online',
@@ -55,7 +55,7 @@ const content = {
       urgent: 'SOS Urgent Call',
       expat: 'Expat Call'
     },
-    disclaimer: 'Available only for French and English-speaking expats worldwide.'
+    disclaimer: 'For expats, travelers and holidaymakers. 197 countries, all languages. Join our network!'
   }
 };
 

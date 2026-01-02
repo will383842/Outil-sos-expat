@@ -252,8 +252,8 @@ const DefaultHelmet: React.FC<{ pathname: string }> = ({ pathname }) => {
   const getPageMetadata = (path: string) => {
     const metaMap: Record<string, { title: string; description: string; lang: string }> = {
       '/': {
-        title: 'Accueil - Consultation Juridique Expatriés',
-        description: 'Service de consultation juridique pour expatriés francophones',
+        title: 'Avocat ou Expert Local en 5 min - 197 pays',
+        description: 'Parlez à un avocat ou expert local dans votre langue en moins de 5 min. 197 pays, toutes langues. Pour expatriés, voyageurs, vacanciers.',
         lang: 'fr',
       },
       '/login': {
