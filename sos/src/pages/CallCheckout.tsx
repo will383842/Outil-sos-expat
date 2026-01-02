@@ -2669,7 +2669,7 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
             </p>
             <div className="space-y-2">
               <button
-                onClick={() => navigate("/login")}
+                onClick={() => navigate(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`)}
                 className="w-full px-4 py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-red-500 to-red-600 text-white"
               >
                 {intl.formatMessage({ id: "checkout.signIn" })}

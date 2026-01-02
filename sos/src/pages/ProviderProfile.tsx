@@ -1696,7 +1696,7 @@ const ProviderProfile: React.FC = () => {
   const handleHelpfulClick = useCallback(
     async (reviewId: string) => {
       if (!user) {
-        navigate("/login");
+        navigate(`/login?redirect=${encodeURIComponent(location.pathname)}`);
         return;
       }
       try {
@@ -1718,7 +1718,7 @@ const ProviderProfile: React.FC = () => {
   const handleReportClick = useCallback(
     async (reviewId: string) => {
       if (!user) {
-        navigate("/login");
+        navigate(`/login?redirect=${encodeURIComponent(location.pathname)}`);
         return;
       }
       const reason = window.prompt(intl.formatMessage({ id: "providerProfile.reportReason" }));

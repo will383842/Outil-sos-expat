@@ -196,11 +196,11 @@ export const createAndScheduleCallHTTPS = onCall(
         );
       }
 
-      if (amount < 5) {
+      if (amount < 0.50) {
         console.error(`❌ [${requestId}] Montant trop faible:`, amount);
         throw new HttpsError(
           'invalid-argument',
-          'Montant minimum de 5€ requis.'
+          'Montant minimum de 0.50€ requis.'
         );
       }
 

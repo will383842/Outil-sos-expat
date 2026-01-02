@@ -418,8 +418,8 @@ export const createCallSession = async (
     }
 
     // ✅ Validation min/max (toujours en euros)
-    if (params.amount < 5) {
-      throw new Error('Montant minimum de 5€ requis');
+    if (params.amount < 0.50) {
+      throw new Error('Montant minimum de 0.50€ requis');
     }
     if (params.amount > 500) {
       throw new Error('Montant maximum de 500€ dépassé');
