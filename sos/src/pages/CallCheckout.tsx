@@ -1836,7 +1836,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
 
     return (
       <>
-        <form onSubmit={handlePaymentSubmit} className="space-y-4" noValidate>
+        <form onSubmit={(e) => { e.preventDefault(); console.log("[Form] onSubmit intercepted"); handlePaymentSubmit(e); }} className="space-y-4" noValidate>
           <div className="space-y-4">
             <label className="block text-sm font-semibold text-gray-700">
               <div className="flex items-center space-x-2">
