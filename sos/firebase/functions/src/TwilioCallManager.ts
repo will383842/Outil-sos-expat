@@ -432,7 +432,7 @@ export class TwilioCallManager {
         }
       }
 
-      const maxDuration = params.providerType === "lawyer" ? 1500 : 2100; // 25/35 min
+      const maxDuration = params.providerType === "lawyer" ? 1320 : 1920; // 22/32 min
       const conferenceName = `conf_${params.sessionId}_${Date.now()}`;
 
       // Encrypt phone numbers for storage (GDPR/PII protection)
@@ -789,8 +789,9 @@ export class TwilioCallManager {
           record: true,
           recordingStatusCallback: `${base}/twilioRecordingWebhook`,
           recordingStatusCallbackMethod: "POST",
-          machineDetection: "Enable",
-          machineDetectionTimeout: 10,
+          // AMD désactivé - non utilisé et coûteux (~0.007€/appel)
+          // machineDetection: "Enable",
+          // machineDetectionTimeout: 10,
         });
         console.log("call : ", call);
 
@@ -948,7 +949,7 @@ export class TwilioCallManager {
       beep="false"
       startConferenceOnEnter="${participantType === "provider"}"
       trim="trim-silence"
-      recordingChannels="dual"
+      recordingChannels="mono"
       endConferenceOnExit="true"
     >${conferenceName}</Conference>
   </Dial>
