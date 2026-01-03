@@ -89,6 +89,8 @@ import { CALLS_CONFIG } from "../../config/callsConfig";
 import AdminLayout from "../../components/admin/AdminLayout";
 import Modal from "../../components/common/Modal";
 import ErrorBoundary from "../../components/common/ErrorBoundary";
+import RealtimeSuspendedBanner, { RealtimeCountdown } from "../../components/admin/RealtimeSuspendedBanner";
+import { useAutoSuspendRealtime } from "../../hooks/useAutoSuspendRealtime";
 import { useAuth } from "../../contexts/AuthContext";
 import { logError } from "../../utils/logging";
 import { httpsCallable } from "firebase/functions";
@@ -499,8 +501,19 @@ const AdminCallsMonitoring: React.FC = () => {
     showCompleted: false,
   });
   const [searchTerm, setSearchTerm] = useState('');
-  const [isRealTimeActive, setIsRealTimeActive] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
+
+  // ✅ OPTIMISATION: Auto-suspension du temps réel après 5 min d'inactivité
+  const {
+    isRealtimeActive: isRealTimeActive,
+    isSuspendedDueToInactivity,
+    resumeRealtime,
+    suspendRealtime,
+    timeUntilSuspend,
+  } = useAutoSuspendRealtime({
+    inactivityDelay: 5 * 60 * 1000, // 5 minutes
+    enabled: true,
+  });
 
   // ✅ CORRECTION: Ref pour tracker le nombre d'appels précédent (évite ré-abonnements inutiles)
   const previousCallsCountRef = useRef<number>(0);
@@ -1057,6 +1070,11 @@ const AdminCallsMonitoring: React.FC = () => {
           </div>
         }
       >
+        {/* ✅ Bannière quand temps réel suspendu pour économiser les coûts */}
+        {isSuspendedDueToInactivity && (
+          <RealtimeSuspendedBanner onResume={resumeRealtime} reason="inactivity" />
+        )}
+
         <div className="px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
           <div className="flex justify-between items-center mb-8">
@@ -1107,18 +1125,21 @@ const AdminCallsMonitoring: React.FC = () => {
                 {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
               </button>
 
-              {/* Mode temps réel */}
-              <button
-                onClick={() => setIsRealTimeActive(!isRealTimeActive)}
-                className={`p-2 rounded-lg border transition-colors ${
-                  isRealTimeActive 
-                    ? 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100' 
-                    : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
-                }`}
-                title={isRealTimeActive ? 'Pause temps réel' : 'Activer temps réel'}
-              >
-                {isRealTimeActive ? <Pause size={20} /> : <Play size={20} />}
-              </button>
+              {/* Mode temps réel + countdown */}
+              <div className="flex items-center space-x-2">
+                <RealtimeCountdown seconds={timeUntilSuspend} isActive={isRealTimeActive} />
+                <button
+                  onClick={() => isRealTimeActive ? suspendRealtime() : resumeRealtime()}
+                  className={`p-2 rounded-lg border transition-colors ${
+                    isRealTimeActive
+                      ? 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100'
+                      : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                  title={isRealTimeActive ? 'Pause temps réel' : 'Activer temps réel'}
+                >
+                  {isRealTimeActive ? <Pause size={20} /> : <Play size={20} />}
+                </button>
+              </div>
 
               {/* Stats System */}
               <button

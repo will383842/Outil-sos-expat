@@ -60,6 +60,8 @@ import { db } from '../../config/firebase';
 import AdminLayout from '../../components/admin/AdminLayout';
 import Modal from '../../components/common/Modal';
 import ErrorBoundary from '../../components/common/ErrorBoundary';
+import RealtimeSuspendedBanner, { RealtimeCountdown } from '../../components/admin/RealtimeSuspendedBanner';
+import { useAutoSuspendRealtime } from '../../hooks/useAutoSuspendRealtime';
 import { useAuth } from '../../contexts/AuthContext';
 import { logError } from '../../utils/logging';
 
@@ -231,8 +233,20 @@ const AdminProviders: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showStatsModal, setShowStatsModal] = useState(false);
-  const [isRealTimeActive, setIsRealTimeActive] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // ✅ OPTIMISATION: Auto-suspension du temps réel après 5 min d'inactivité
+  // Économie estimée: ~90% des lectures quand l'onglet est ouvert mais inactif
+  const {
+    isRealtimeActive: isRealTimeActive,
+    isSuspendedDueToInactivity,
+    resumeRealtime,
+    suspendRealtime,
+    timeUntilSuspend,
+  } = useAutoSuspendRealtime({
+    inactivityDelay: 5 * 60 * 1000, // 5 minutes
+    enabled: true,
+  });
   const [filters, setFilters] = useState({
     status: 'all',
     type: 'all',
@@ -726,6 +740,11 @@ const AdminProviders: React.FC = () => {
           </div>
         }
       >
+        {/* ✅ Bannière quand temps réel suspendu pour économiser les coûts */}
+        {isSuspendedDueToInactivity && (
+          <RealtimeSuspendedBanner onResume={resumeRealtime} reason="inactivity" />
+        )}
+
         <div className="px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
           <div className="flex justify-between items-center mb-8">
@@ -764,18 +783,21 @@ const AdminProviders: React.FC = () => {
                 )}
               </button>
 
-              {/* Mode temps réel */}
-              <button
-                onClick={() => setIsRealTimeActive(!isRealTimeActive)}
-                className={`p-2 rounded-lg border transition-colors ${
-                  isRealTimeActive
-                    ? 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100'
-                    : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
-                }`}
-                title={isRealTimeActive ? 'Pause temps réel' : 'Activer temps réel'}
-              >
-                <Activity size={20} />
-              </button>
+              {/* Mode temps réel + countdown */}
+              <div className="flex items-center space-x-2">
+                <RealtimeCountdown seconds={timeUntilSuspend} isActive={isRealTimeActive} />
+                <button
+                  onClick={() => isRealTimeActive ? suspendRealtime() : resumeRealtime()}
+                  className={`p-2 rounded-lg border transition-colors ${
+                    isRealTimeActive
+                      ? 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100'
+                      : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                  title={isRealTimeActive ? 'Pause temps réel' : 'Activer temps réel'}
+                >
+                  <Activity size={20} />
+                </button>
+              </div>
 
               {/* Export */}
               <button
