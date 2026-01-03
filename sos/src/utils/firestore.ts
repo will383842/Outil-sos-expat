@@ -1276,7 +1276,7 @@ export const logAnalyticsEvent = async (eventData: {
   eventData: Record<string, unknown>;
 }) => {
   try {
-    const analyticsRef = collection(db, "analytics");
+    const analyticsRef = collection(db, "analytics_events");
     await addDoc(analyticsRef, {
       ...eventData,
       timestamp: serverTimestamp(),
