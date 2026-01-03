@@ -2750,10 +2750,45 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
         historyLength: window.history.length
       });
 
-      // Exécuter la navigation
+      // P0 FIX: Sauvegarder les données critiques dans sessionStorage AVANT navigation
+      // En cas de F5 par l'utilisateur, ces données seront récupérables
       try {
-        navigate(targetUrl, { replace: false });
+        const paymentSuccessData = {
+          paymentIntentId: payload.paymentIntentId,
+          call: payload.call,
+          callId: payload.callId,
+          orderId: payload.orderId,
+          providerId: provider?.id,
+          savedAt: Date.now()
+        };
+        sessionStorage.setItem('lastPaymentSuccess', JSON.stringify(paymentSuccessData));
+        console.log("💾 [NAVIGATION_DEBUG] Payment data saved to sessionStorage:", paymentSuccessData);
+      } catch (storageErr) {
+        console.warn("⚠️ [NAVIGATION_DEBUG] Failed to save to sessionStorage:", storageErr);
+      }
+
+      // P0 FIX: Navigation avec fallback robuste
+      // 1. Mettre à jour l'URL immédiatement avec history.pushState (synchrone)
+      // 2. Puis utiliser navigate() pour la transition React
+      // 3. Si après 800ms la page n'a pas changé, forcer avec window.location
+      try {
+        // D'abord, mettre à jour l'historique du navigateur de façon synchrone
+        const fullTargetUrl = window.location.origin + targetUrl;
+        window.history.pushState({ paymentSuccess: true, ...payload }, '', fullTargetUrl);
+        console.log("✅ [NAVIGATION_DEBUG] history.pushState completed");
+
+        // Ensuite, utiliser navigate pour déclencher la transition React
+        navigate(targetUrl, { replace: true });
         console.log("✅ [NAVIGATION_DEBUG] navigate() called successfully");
+
+        // Vérification: si après 800ms on est toujours sur la même page, forcer la navigation
+        setTimeout(() => {
+          if (window.location.pathname.includes('checkout') ||
+              window.location.pathname.includes('call-checkout')) {
+            console.warn("⚠️ [NAVIGATION_DEBUG] Still on checkout page after 800ms, forcing navigation...");
+            window.location.href = targetUrl;
+          }
+        }, 800);
       } catch (navError) {
         console.error("❌ [NAVIGATION_DEBUG] navigate() threw error:", navError);
         // Fallback: utiliser window.location si navigate échoue

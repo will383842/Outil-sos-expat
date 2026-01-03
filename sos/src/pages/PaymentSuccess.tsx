@@ -115,7 +115,30 @@ const SuccessPayment: React.FC = () => {
   const callStatus = searchParams.get("call");
   const providerId =
     searchParams.get("providerId") || searchParams.get("provider") || "1";
-  const callId = searchParams.get("callId") || `call_${Date.now()}`;
+  // P0 FIX: Recuperer callId depuis URL ou sessionStorage (en cas de F5)
+  // IMPORTANT: Ne JAMAIS generer un nouveau callId car il ne correspondra a aucun document Firestore
+  const callId = useMemo(() => {
+    const urlCallId = searchParams.get("callId");
+    if (urlCallId) {
+      console.log("✅ [SUCCESS_PAGE] callId from URL:", urlCallId);
+      return urlCallId;
+    }
+    // Fallback: recuperer depuis sessionStorage (sauvegarde avant navigation)
+    try {
+      const savedData = sessionStorage.getItem('lastPaymentSuccess');
+      if (savedData) {
+        const parsed = JSON.parse(savedData);
+        if (parsed.callId && parsed.savedAt && (Date.now() - parsed.savedAt) < 10 * 60 * 1000) {
+          console.log("✅ [SUCCESS_PAGE] callId recovered from sessionStorage:", parsed.callId);
+          return parsed.callId;
+        }
+      }
+    } catch (e) {
+      console.warn("⚠️ [SUCCESS_PAGE] Error reading sessionStorage:", e);
+    }
+    console.error("❌ [SUCCESS_PAGE] No valid callId found");
+    return null;
+  }, [searchParams]);
   const paymentIntentId = searchParams.get("paymentIntentId");
 
   // >>> orderId pour le bloc "total payé + économies"
