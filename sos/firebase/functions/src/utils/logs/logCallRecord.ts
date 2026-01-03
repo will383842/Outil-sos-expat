@@ -1,6 +1,7 @@
 import { db, FieldValue } from '../firebase';
 import { CallRecordData } from '../types';
 import { logError } from '../logs/logError';
+import { truncateId, safeLogData } from './truncateId';
 
 // ✅ UNE SEULE fonction qui gère les deux cas
 export async function logCallRecord(data: {
@@ -63,11 +64,13 @@ export async function logCallRecord(data: {
       });
     }
 
-    console.log(`[CALL RECORD] ${callId}: ${status} (retry: ${retryCount})`);
+    // P2-2 FIX: Tronquer l'ID dans les logs
+    console.log(`[CALL RECORD] ${truncateId(callId)}: ${status} (retry: ${retryCount})`);
 
   } catch (error) {
     console.error('Failed to log call record:', error);
-    console.error('Call record data:', data);
+    // P2-2 FIX: Masquer les données sensibles dans les logs d'erreur
+    console.error('Call record data:', safeLogData(data as Record<string, unknown>));
     
     try {
       await logError('logCallRecord:failure', error);

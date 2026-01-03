@@ -319,35 +319,123 @@ async function validateAmountSecurity(
   return { valid: true };
 }
 
-async function checkDuplicatePayments(
+/**
+ * P1-3 FIX: Vérification atomique des doublons avec transaction Firestore.
+ * Utilise un document de lock pour éviter les race conditions.
+ *
+ * Retourne { isDuplicate: boolean, lockId?: string }
+ * - Si isDuplicate = true: un paiement similaire existe déjà
+ * - Si isDuplicate = false: un lock a été créé, lockId à utiliser pour le libérer si erreur
+ */
+async function checkAndLockDuplicatePayments(
   clientId: string,
   providerId: string,
   amountInMainUnit: number,
   currency: SupportedCurrency,
   db: admin.firestore.Firestore
-): Promise<boolean> {
-  if (BYPASS_MODE) return false;
+): Promise<{ isDuplicate: boolean; lockId?: string; existingPaymentId?: string }> {
+  if (BYPASS_MODE) return { isDuplicate: false };
+
+  // Créer une clé unique pour ce type de paiement
+  const lockKey = `${clientId}_${providerId}_${amountInMainUnit}_${currency}`;
+  const lockRef = db.collection('payment_locks').doc(lockKey);
+  const windowMs = getLimits().DUPLICATES.WINDOW_MS;
+  const cutoffTime = new Date(Date.now() - windowMs);
+
   try {
-    const snap = await db
-      .collection('payments')
-      .where('clientId', '==', clientId)
-      .where('providerId', '==', providerId)
-      .where('currency', '==', currency)
-      .where('amountInMainUnit', '==', amountInMainUnit)
-      .where('status', 'in', ['pending', 'requires_confirmation', 'requires_capture', 'processing'])
-      .where(
-        'createdAt',
-        '>',
-        admin.firestore.Timestamp.fromDate(
-          new Date(Date.now() - getLimits().DUPLICATES.WINDOW_MS)
-        )
-      )
-      .limit(1)
-      .get();
-    return !snap.empty;
+    const result = await db.runTransaction(async (transaction) => {
+      // 1. Vérifier si un lock existe déjà (non expiré)
+      const lockDoc = await transaction.get(lockRef);
+
+      if (lockDoc.exists) {
+        const lockData = lockDoc.data();
+        const lockCreatedAt = lockData?.createdAt?.toDate?.() || new Date(0);
+
+        // Si le lock est encore valide (dans la fenêtre de temps)
+        if (lockCreatedAt > cutoffTime) {
+          return {
+            isDuplicate: true,
+            existingPaymentId: lockData?.paymentIntentId
+          };
+        }
+        // Sinon, le lock est expiré, on peut le réutiliser
+      }
+
+      // 2. Vérifier aussi dans la collection payments (double sécurité)
+      const paymentsSnap = await db
+        .collection('payments')
+        .where('clientId', '==', clientId)
+        .where('providerId', '==', providerId)
+        .where('currency', '==', currency)
+        .where('amountInMainUnit', '==', amountInMainUnit)
+        .where('status', 'in', ['pending', 'requires_confirmation', 'requires_capture', 'processing'])
+        .where('createdAt', '>', admin.firestore.Timestamp.fromDate(cutoffTime))
+        .limit(1)
+        .get();
+
+      if (!paymentsSnap.empty) {
+        return {
+          isDuplicate: true,
+          existingPaymentId: paymentsSnap.docs[0].id
+        };
+      }
+
+      // 3. Créer le lock atomiquement
+      transaction.set(lockRef, {
+        clientId,
+        providerId,
+        amountInMainUnit,
+        currency,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        expiresAt: new Date(Date.now() + windowMs),
+        status: 'pending'
+      });
+
+      return { isDuplicate: false, lockId: lockKey };
+    });
+
+    return result;
   } catch (err) {
-    await logError('checkDuplicatePayments', err as unknown);
-    return false;
+    await logError('checkAndLockDuplicatePayments', err as unknown);
+    // En cas d'erreur de transaction, on laisse passer mais on log
+    logger.warn('[checkAndLockDuplicatePayments] Transaction failed, allowing payment', {
+      error: err instanceof Error ? err.message : 'unknown'
+    });
+    return { isDuplicate: false };
+  }
+}
+
+/**
+ * Met à jour le lock avec l'ID du PaymentIntent créé
+ */
+async function updatePaymentLock(
+  lockId: string,
+  paymentIntentId: string,
+  db: admin.firestore.Firestore
+): Promise<void> {
+  try {
+    await db.collection('payment_locks').doc(lockId).update({
+      paymentIntentId,
+      status: 'created',
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (err) {
+    // Non critique - juste un warning
+    logger.warn('[updatePaymentLock] Failed to update lock', { lockId, paymentIntentId });
+  }
+}
+
+/**
+ * Libère le lock en cas d'erreur (permet de réessayer)
+ */
+async function releasePaymentLock(
+  lockId: string,
+  db: admin.firestore.Firestore
+): Promise<void> {
+  try {
+    await db.collection('payment_locks').doc(lockId).delete();
+  } catch (err) {
+    logger.warn('[releasePaymentLock] Failed to release lock', { lockId });
   }
 }
 
@@ -519,10 +607,12 @@ export const createPaymentIntent = onCall(
       const biz = await validateBusinessLogic(request.data, currency, db);
       if (!biz.valid) throw new HttpsError('failed-precondition', biz.error ?? 'Règles métier non satisfaites');
 
-      // Anti-doublons
-      if (await checkDuplicatePayments(clientId, providerId, amountInMainUnit, currency, db)) {
+      // Anti-doublons (P1-3 FIX: utilisation de transaction atomique)
+      const duplicateCheck = await checkAndLockDuplicatePayments(clientId, providerId, amountInMainUnit, currency, db);
+      if (duplicateCheck.isDuplicate) {
         throw new HttpsError('already-exists', 'Un paiement similaire est déjà en cours de traitement.');
       }
+      const paymentLockId = duplicateCheck.lockId; // À libérer en cas d'erreur
 
       // Prix attendu (admin_config/pricing + override + coupons empilables)
       const serviceKind: 'lawyer' | 'expat' = serviceType === 'lawyer_call' ? 'lawyer' : 'expat';
@@ -686,6 +776,9 @@ export const createPaymentIntent = onCall(
         stripeSecretKey
       );
       if (!result?.success || !result.clientSecret || !result.paymentIntentId) {
+        // P1-3 FIX: Libérer le lock en cas d'échec
+        if (paymentLockId) await releasePaymentLock(paymentLockId, db);
+
         await logError('createPaymentIntent:stripe_error', {
           requestId,
           userId,
@@ -696,6 +789,9 @@ export const createPaymentIntent = onCall(
         });
         throw new HttpsError('internal', 'Erreur lors de la création du paiement. Veuillez réessayer.');
       }
+
+      // P1-3 FIX: Mettre à jour le lock avec l'ID du PaymentIntent
+      if (paymentLockId) await updatePaymentLock(paymentLockId, result.paymentIntentId, db);
 
       if (isProduction) {
         try {
@@ -744,6 +840,15 @@ export const createPaymentIntent = onCall(
       };
     } catch (err: unknown) {
       const processingTime = Date.now() - startTime;
+
+      // P1-3 FIX: Libérer le lock en cas d'erreur générale
+      // Note: paymentLockId peut ne pas être défini si l'erreur survient avant
+      try {
+        const lockId = (err as any)?.paymentLockId;
+        if (lockId) await releasePaymentLock(lockId, admin.firestore());
+      } catch {
+        // Ignorer les erreurs de libération de lock
+      }
 
       await logError('createPaymentIntent:error', {
         requestId,

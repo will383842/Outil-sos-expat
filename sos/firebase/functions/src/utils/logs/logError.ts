@@ -1,9 +1,13 @@
 import { db, FieldValue } from '../firebase';
+import { safeLogData } from './truncateId';
 
 function safeStringify(obj: unknown): string {
   const seen = new WeakSet();
   try {
-    return JSON.stringify(obj, (_key, value) => {
+    // P2-2 FIX: Appliquer le masquage des IDs avant stringify
+    const safeObj = typeof obj === 'object' && obj !== null ? safeLogData(obj as Record<string, unknown>) : obj;
+
+    return JSON.stringify(safeObj, (_key, value) => {
       if (typeof value === 'object' && value !== null) {
         if (seen.has(value)) {
           return '[Circular]';

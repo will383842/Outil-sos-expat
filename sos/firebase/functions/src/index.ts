@@ -86,6 +86,12 @@ export {
   listRestoreTestReports,
 } from "./scheduled/quarterlyRestoreTest";
 
+// P2-3 FIX: GDPR Recording Cleanup (90 days retention)
+export {
+  rgpdRecordingCleanup,
+  triggerRgpdCleanup,
+} from "./scheduled/rgpdRecordingCleanup";
+
 // Dispute handling
 import {
   handleDisputeCreated,
@@ -181,6 +187,9 @@ export {
   PAYPAL_MODE,
   PAYPAL_PLATFORM_MERCHANT_ID,
 } from "./PayPalManager";
+
+// Payout Retry Tasks (P0-2 FIX)
+export { executePayoutRetryTask } from "./lib/payoutRetryTasks";
 
 // Alias pour usage local dans GLOBAL_SECRETS
 const PAYPAL_CLIENT_ID = _PAYPAL_CLIENT_ID;

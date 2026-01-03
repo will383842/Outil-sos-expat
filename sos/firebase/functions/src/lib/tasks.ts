@@ -302,8 +302,8 @@ export async function taskExists(taskId: string): Promise<boolean> {
 }
 
 /**
- * Planifie un appel avec vérification d'idempotence.
- * Vérifie d'abord si l'appel n'est pas déjà planifié ou en cours avant de créer une nouvelle tâche.
+ * Planifie un appel avec vérification d'idempotence via transaction atomique.
+ * Utilise une transaction Firestore pour éviter les race conditions et doublons.
  *
  * @param callSessionId ID de la session d'appel
  * @param delaySeconds Délai avant exécution (en secondes)
@@ -315,84 +315,55 @@ export async function scheduleCallTaskWithIdempotence(
   delaySeconds: number,
   db?: FirebaseFirestore.Firestore
 ): Promise<{ taskId: string | null; skipped: boolean; reason?: string }> {
-  try {
-    // Import dynamique de firebase-admin si db non fourni
-    if (!db) {
-      const admin = await import("firebase-admin");
-      db = admin.firestore();
-    }
+  if (!db) {
+    const admin = await import("firebase-admin");
+    db = admin.firestore();
+  }
 
-    // Vérifier l'état actuel de la session
-    const sessionDoc = await db.collection("call_sessions").doc(callSessionId).get();
+  // UTILISER TRANSACTION ATOMIQUE pour éviter les race conditions
+  return await db.runTransaction(async (transaction) => {
+    const sessionRef = db!.collection("call_sessions").doc(callSessionId);
+    const sessionDoc = await transaction.get(sessionRef);
 
     if (!sessionDoc.exists) {
-      console.warn(`⚠️ [CloudTasks] Session ${callSessionId} n'existe pas, scheduling quand même`);
-    } else {
-      const sessionData = sessionDoc.data();
-      const status = sessionData?.status;
-      const existingTaskId = sessionData?.taskId || sessionData?.scheduledTaskId;
+      // Créer quand même si session n'existe pas
+      console.warn(`⚠️ [CloudTasks] Session ${callSessionId} n'existe pas`);
+    }
 
-      // Statuts qui indiquent que l'appel ne doit pas être (re)planifié
-      const nonSchedulableStatuses = [
-        "scheduled",
-        "provider_connecting",
-        "client_connecting",
-        "both_connecting",
-        "active",
-        "completed",
-        "failed",
-        "cancelled",
-        "refunded"
-      ];
+    const data = sessionDoc.data() || {};
+    const status = data.status;
+    const existingTaskId = data.taskId || data.scheduledTaskId;
 
-      if (nonSchedulableStatuses.includes(status)) {
-        console.log(`⚠️ [CloudTasks] Session ${callSessionId} a le statut "${status}", skip scheduling`);
-        return {
-          taskId: existingTaskId || null,
-          skipped: true,
-          reason: `Session already in status: ${status}`
-        };
-      }
+    const nonSchedulableStatuses = [
+      "scheduled", "provider_connecting", "client_connecting",
+      "both_connecting", "active", "completed", "failed", "cancelled", "refunded"
+    ];
 
-      // Si une tâche existe déjà, vérifier si elle est toujours active
-      if (existingTaskId) {
-        const taskStillExists = await taskExists(existingTaskId);
-        if (taskStillExists) {
-          console.log(`⚠️ [CloudTasks] Tâche ${existingTaskId} existe déjà pour session ${callSessionId}, skip`);
-          return {
-            taskId: existingTaskId,
-            skipped: true,
-            reason: `Task ${existingTaskId} already exists`
-          };
-        }
-        console.log(`ℹ️ [CloudTasks] Ancienne tâche ${existingTaskId} n'existe plus, création nouvelle tâche`);
+    if (nonSchedulableStatuses.includes(status)) {
+      return { taskId: existingTaskId || null, skipped: true, reason: `Status: ${status}` };
+    }
+
+    if (existingTaskId) {
+      const taskStillExists = await taskExists(existingTaskId);
+      if (taskStillExists) {
+        return { taskId: existingTaskId, skipped: true, reason: 'Task exists' };
       }
     }
 
-    // Créer la nouvelle tâche
+    // Créer la tâche AVANT la mise à jour transactionnelle
     const taskId = await scheduleCallTask(callSessionId, delaySeconds);
 
-    // Mettre à jour la session avec le taskId pour éviter les doublons futurs
-    try {
-      await db.collection("call_sessions").doc(callSessionId).update({
-        status: "scheduled",
-        taskId: taskId,
-        scheduledTaskId: taskId,
-        scheduledAt: new Date(),
-        scheduledDelaySeconds: delaySeconds,
-        updatedAt: new Date()
-      });
-      console.log(`✅ [CloudTasks] Session ${callSessionId} mise à jour avec taskId ${taskId}`);
-    } catch (updateError) {
-      console.warn(`⚠️ [CloudTasks] Erreur mise à jour session (non bloquant):`, updateError);
-    }
+    // Mise à jour atomique dans la transaction
+    transaction.update(sessionRef, {
+      status: "scheduled",
+      taskId: taskId,
+      scheduledTaskId: taskId,
+      scheduledAt: new Date(),
+      updatedAt: new Date()
+    });
 
     return { taskId, skipped: false };
-
-  } catch (error) {
-    await logError("scheduleCallTaskWithIdempotence", error);
-    throw error;
-  }
+  });
 }
 
 /**

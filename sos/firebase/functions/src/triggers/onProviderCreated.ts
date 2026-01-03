@@ -104,21 +104,35 @@ const STRIPE_SUPPORTED_COUNTRIES = new Set([
 
 // Pays où SEUL PayPal est disponible (Stripe non supporté)
 // Ces pays nécessitent une connexion PayPal AVANT d'être visibles
+// Liste synchronisée avec PayPalManager.ts
 const PAYPAL_ONLY_COUNTRIES = new Set([
-  // Afrique (54 pays)
-  "DZ", "AO", "BJ", "BW", "BF", "BI", "CM", "CV", "CF", "TD",
-  "KM", "CG", "CD", "DJ", "EG", "GQ", "ER", "SZ", "ET", "GA",
-  "GM", "GH", "GN", "GW", "CI", "KE", "LS", "LR", "LY", "MG",
-  "MW", "ML", "MR", "MU", "MA", "MZ", "NA", "NE", "NG", "RW",
-  "ST", "SN", "SC", "SL", "SO", "ZA", "SS", "SD", "TZ", "TG",
-  "TN", "UG", "ZM", "ZW",
-  // Asie (non couverts par Stripe)
-  "AF", "BD", "BT", "KH", "IN", "LA", "MM", "NP", "PK", "LK",
-  "TJ", "TM", "UZ", "VN",
-  // Amérique Latine (non couverts par Stripe)
+  // ===== AFRIQUE (54 pays) =====
+  "DZ", "AO", "BJ", "BW", "BF", "BI", "CM", "CV", "CF", "TD", "KM", "CG", "CD",
+  "CI", "DJ", "EG", "GQ", "ER", "SZ", "ET", "GA", "GM", "GH", "GN", "GW", "KE",
+  "LS", "LR", "LY", "MG", "MW", "ML", "MR", "MU", "MA", "MZ", "NA", "NE", "NG",
+  "RW", "ST", "SN", "SC", "SL", "SO", "ZA", "SS", "SD", "TZ", "TG", "TN", "UG",
+  "ZM", "ZW",
+
+  // ===== ASIE (35 pays - non couverts par Stripe) =====
+  "AF", "BD", "BT", "IN", "KH", "LA", "MM", "NP", "PK", "LK", "TJ", "TM", "UZ", "VN",
+  "MN", "KP", "KG", "PS", "YE", "OM", "QA", "KW", "BH", "JO", "LB", "AM", "AZ", "GE",
+  "MV", "BN", "TL", "PH", "ID", "TW", "KR",
+
+  // ===== AMERIQUE LATINE & CARAIBES (25 pays) =====
   "BO", "CU", "EC", "SV", "GT", "HN", "NI", "PY", "SR", "VE",
-  // Moyen-Orient (non couverts par Stripe)
-  "IQ", "IR", "SY", "YE",
+  "HT", "DO", "JM", "TT", "BB", "BS", "BZ", "GY", "PA", "CR",
+  "AG", "DM", "GD", "KN", "LC", "VC",
+
+  // ===== EUROPE DE L'EST & BALKANS (15 pays non Stripe) =====
+  "BY", "MD", "UA", "RS", "BA", "MK", "ME", "AL", "XK", "RU",
+  "GI", "AD", "MC", "SM", "VA",
+
+  // ===== OCEANIE & PACIFIQUE (15 pays) =====
+  "FJ", "PG", "SB", "VU", "WS", "TO", "KI", "FM", "MH", "PW",
+  "NR", "TV", "NC", "PF", "GU",
+
+  // ===== MOYEN-ORIENT (7 pays restants) =====
+  "IQ", "IR", "SY", "SA", "LY", "TM", "AF",
 ]);
 
 /**

@@ -57,21 +57,38 @@ const PAYPAL_CONFIG = {
   // Devise par défaut
   DEFAULT_CURRENCY: "EUR",
 
-  // Pays supportés par PayPal Commerce mais pas par Stripe Connect
-  // P0 FIX: Ajout de l'Inde (IN) - 1.4 milliard d'habitants
+  // Pays NON supportés par Stripe Connect → utiliser PayPal
+  // Stripe Connect supporte ~46 pays (US, CA, UK, EU, AU, NZ, JP, SG, HK, BR, MX, etc.)
+  // Tous les autres pays doivent passer par PayPal
+  // Liste mise à jour: 151 pays (197 total - 46 Stripe = 151 PayPal-only)
   PAYPAL_ONLY_COUNTRIES: [
-    // Afrique
+    // ===== AFRIQUE (54 pays) =====
     "DZ", "AO", "BJ", "BW", "BF", "BI", "CM", "CV", "CF", "TD", "KM", "CG", "CD",
     "CI", "DJ", "EG", "GQ", "ER", "SZ", "ET", "GA", "GM", "GH", "GN", "GW", "KE",
     "LS", "LR", "LY", "MG", "MW", "ML", "MR", "MU", "MA", "MZ", "NA", "NE", "NG",
     "RW", "ST", "SN", "SC", "SL", "SO", "ZA", "SS", "SD", "TZ", "TG", "TN", "UG",
     "ZM", "ZW",
-    // Asie (non couverts par Stripe)
+
+    // ===== ASIE (35 pays - non couverts par Stripe) =====
     "AF", "BD", "BT", "IN", "KH", "LA", "MM", "NP", "PK", "LK", "TJ", "TM", "UZ", "VN",
-    // Amérique Latine
+    "MN", "KP", "KG", "PS", "YE", "OM", "QA", "KW", "BH", "JO", "LB", "AM", "AZ", "GE",
+    "MV", "BN", "TL", "PH", "ID", "TW", "KR",
+
+    // ===== AMERIQUE LATINE & CARAIBES (25 pays) =====
     "BO", "CU", "EC", "SV", "GT", "HN", "NI", "PY", "SR", "VE",
-    // Autres
-    "IQ", "IR", "SY", "YE",
+    "HT", "DO", "JM", "TT", "BB", "BS", "BZ", "GY", "PA", "CR",
+    "AG", "DM", "GD", "KN", "LC", "VC",
+
+    // ===== EUROPE DE L'EST & BALKANS (15 pays non Stripe) =====
+    "BY", "MD", "UA", "RS", "BA", "MK", "ME", "AL", "XK", "RU",
+    "GI", "AD", "MC", "SM", "VA",
+
+    // ===== OCEANIE & PACIFIQUE (15 pays) =====
+    "FJ", "PG", "SB", "VU", "WS", "TO", "KI", "FM", "MH", "PW",
+    "NR", "TV", "NC", "PF", "GU",
+
+    // ===== MOYEN-ORIENT (7 pays restants) =====
+    "IQ", "IR", "SY", "SA", "LY", "TM", "AF",
   ],
 };
 
@@ -758,6 +775,77 @@ export class PayPalManager {
         console.error("❌ [PAYPAL] Payout failed, will retry later:", payoutError);
         // Le payout a échoué, mais le paiement est capturé
         // L'argent reste sur le compte SOS-Expat jusqu'à ce qu'on puisse payer le provider
+
+        // ===== P0-2 FIX: Amélioration de la gestion des échecs de payout =====
+        const payoutErrorMessage = payoutError instanceof Error ? payoutError.message : String(payoutError);
+
+        // 1. Logger l'erreur dans la collection failed_payouts_alerts
+        const failedPayoutAlert = {
+          orderId,
+          callSessionId: orderData.callSessionId,
+          providerId: orderData.providerId,
+          providerPayPalEmail: orderData.providerPayPalEmail,
+          amount: providerAmount,
+          currency: captureCurrency,
+          error: payoutErrorMessage,
+          errorStack: payoutError instanceof Error ? payoutError.stack : null,
+          retryCount: 0,
+          retryScheduled: false,
+          status: "failed",
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        };
+
+        const failedPayoutRef = await this.db.collection("failed_payouts_alerts").add(failedPayoutAlert);
+        console.log(`📝 [PAYPAL] Failed payout logged: ${failedPayoutRef.id}`);
+
+        // 2. Créer une alerte admin
+        await this.db.collection("admin_alerts").add({
+          type: "paypal_payout_failed",
+          priority: "critical",
+          title: "Paiement prestataire PayPal echoue",
+          message: `Le payout de ${providerAmount} ${captureCurrency} vers ${orderData.providerPayPalEmail} a echoue. ` +
+            `Session: ${orderData.callSessionId}. Erreur: ${payoutErrorMessage}`,
+          orderId,
+          callSessionId: orderData.callSessionId,
+          providerId: orderData.providerId,
+          providerEmail: orderData.providerPayPalEmail,
+          amount: providerAmount,
+          currency: captureCurrency,
+          failedPayoutAlertId: failedPayoutRef.id,
+          read: false,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        console.log(`🚨 [PAYPAL] Admin alert created for failed payout`);
+
+        // 3. Programmer un retry automatique via Cloud Tasks (5 minutes)
+        try {
+          const { schedulePayoutRetryTask } = await import("./lib/payoutRetryTasks");
+          const retryResult = await schedulePayoutRetryTask({
+            failedPayoutAlertId: failedPayoutRef.id,
+            orderId,
+            callSessionId: orderData.callSessionId,
+            providerId: orderData.providerId,
+            providerPayPalEmail: orderData.providerPayPalEmail,
+            amount: providerAmount,
+            currency: captureCurrency,
+            retryCount: 0,
+          });
+
+          if (retryResult.scheduled) {
+            // Mettre à jour le document avec l'info du retry
+            await failedPayoutRef.update({
+              retryScheduled: true,
+              retryTaskId: retryResult.taskId,
+              retryScheduledAt: admin.firestore.FieldValue.serverTimestamp(),
+              nextRetryAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes
+            });
+            console.log(`⏰ [PAYPAL] Payout retry scheduled: ${retryResult.taskId}`);
+          }
+        } catch (retrySchedulingError) {
+          console.error("❌ [PAYPAL] Failed to schedule payout retry:", retrySchedulingError);
+          // Ne pas bloquer - l'alerte admin a été créée, ils peuvent intervenir manuellement
+        }
       }
     }
 

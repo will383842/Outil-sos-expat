@@ -20,19 +20,29 @@ interface UsePaymentGatewayReturn {
 }
 
 // Liste des pays PayPal-only (cache local pour éviter les appels inutiles)
+// Synchronisée avec PayPalManager.ts du backend
 const PAYPAL_ONLY_COUNTRIES = new Set([
-  // Afrique
+  // AFRIQUE (54 pays)
   "DZ", "AO", "BJ", "BW", "BF", "BI", "CM", "CV", "CF", "TD", "KM", "CG", "CD",
   "CI", "DJ", "EG", "GQ", "ER", "SZ", "ET", "GA", "GM", "GH", "GN", "GW", "KE",
   "LS", "LR", "LY", "MG", "MW", "ML", "MR", "MU", "MA", "MZ", "NA", "NE", "NG",
   "RW", "ST", "SN", "SC", "SL", "SO", "ZA", "SS", "SD", "TZ", "TG", "TN", "UG",
   "ZM", "ZW",
-  // Asie (non couverts par Stripe)
-  "AF", "BD", "BT", "IN", "KH", "LA", "MM", "NP", "PK", "LK", "TJ", "TM", "UZ", "VN",
-  // Amérique Latine
-  "BO", "CU", "EC", "SV", "GT", "HN", "NI", "PY", "SR", "VE",
-  // Autres
-  "IQ", "IR", "SY", "YE",
+  // ASIE (35 pays)
+  "AF", "BD", "BT", "IN", "KH", "LA", "MM", "NP", "PK", "LK", "TJ", "TM", "UZ",
+  "VN", "MN", "KP", "KG", "PS", "YE", "OM", "QA", "KW", "BH", "JO", "LB", "AM",
+  "AZ", "GE", "MV", "BN", "TL", "PH", "ID", "TW", "KR",
+  // AMERIQUE LATINE & CARAIBES (25 pays)
+  "BO", "CU", "EC", "SV", "GT", "HN", "NI", "PY", "SR", "VE", "HT", "DO", "JM",
+  "TT", "BB", "BS", "BZ", "GY", "PA", "CR", "AG", "DM", "GD", "KN", "LC", "VC",
+  // EUROPE DE L'EST & BALKANS (15 pays)
+  "BY", "MD", "UA", "RS", "BA", "MK", "ME", "AL", "XK", "RU", "GI", "AD", "MC",
+  "SM", "VA",
+  // OCEANIE & PACIFIQUE (15 pays)
+  "FJ", "PG", "SB", "VU", "WS", "TO", "KI", "FM", "MH", "PW", "NR", "TV", "NC",
+  "PF", "GU",
+  // MOYEN-ORIENT (7 pays)
+  "IQ", "IR", "SY", "SA",
 ]);
 
 // Cache pour éviter les appels répétés
