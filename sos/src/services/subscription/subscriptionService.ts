@@ -154,18 +154,26 @@ export function subscribeToTrialConfig(
 ): () => void {
   const settingsRef = doc(db, COLLECTIONS.SETTINGS, 'subscription');
 
-  return onSnapshot(settingsRef, (snapshot) => {
-    if (!snapshot.exists() || !snapshot.data().trial) {
-      callback(DEFAULT_TRIAL_CONFIG);
-      return;
-    }
+  return onSnapshot(
+    settingsRef,
+    (snapshot) => {
+      if (!snapshot.exists() || !snapshot.data().trial) {
+        callback(DEFAULT_TRIAL_CONFIG);
+        return;
+      }
 
-    const trial = snapshot.data().trial;
-    callback({
-      ...trial,
-      updatedAt: trial.updatedAt?.toDate()
-    });
-  });
+      const trial = snapshot.data().trial;
+      callback({
+        ...trial,
+        updatedAt: trial.updatedAt?.toDate()
+      });
+    },
+    (error) => {
+      // Handle Firestore permission errors gracefully
+      console.warn('[subscribeToTrialConfig] Error (using default config):', error.message);
+      callback(DEFAULT_TRIAL_CONFIG);
+    }
+  );
 }
 
 // ============================================================================
@@ -515,13 +523,22 @@ export function subscribeToAiUsage(
 ): () => void {
   const usageRef = doc(db, COLLECTIONS.AI_USAGE, providerId);
 
-  return onSnapshot(usageRef, (snapshot) => {
-    if (!snapshot.exists()) {
+  return onSnapshot(
+    usageRef,
+    (snapshot) => {
+      if (!snapshot.exists()) {
+        callback(null);
+        return;
+      }
+      callback(parseAiUsage(snapshot.data()));
+    },
+    (error) => {
+      // Handle Firestore permission errors gracefully
+      // This can happen if user is not a provider or document doesn't exist
+      console.warn('[subscribeToAiUsage] Error:', error.message);
       callback(null);
-      return;
     }
-    callback(parseAiUsage(snapshot.data()));
-  });
+  );
 }
 
 /**

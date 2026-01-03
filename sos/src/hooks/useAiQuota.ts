@@ -77,26 +77,54 @@ export function useAiQuota(): UseAiQuotaReturn {
     return () => unsubscribe();
   }, [user?.uid]);
 
-  // Subscribe to trial config changes
+  // Subscribe to trial config changes - ONLY when authenticated
+  // Firestore rule: settings/{docId} requires isAuthenticated()
   useEffect(() => {
+    // Don't subscribe if not authenticated - avoids permission error
+    if (!user?.uid) {
+      setTrialConfig(DEFAULT_TRIAL_CONFIG);
+      return;
+    }
+
     const unsubscribe = subscribeToTrialConfig((config) => {
       setTrialConfig(config);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [user?.uid]);
 
   // Check quota when usage changes
   useEffect(() => {
     const uid = user?.uid;
-    if (!uid) return;
+    if (!uid) {
+      // Reset quota check for non-authenticated users
+      setQuotaCheck(null);
+      return;
+    }
 
     const checkQuotaAsync = async () => {
       try {
         const result = await checkAiQuota(uid);
         setQuotaCheck(result);
+        setError(null); // Clear error on success
       } catch (err: unknown) {
-        console.error('Error checking quota:', err);
+        // Log error but don't crash - set safe fallback
+        console.warn('[useAiQuota] Error checking quota (user may not have subscription):',
+          err instanceof Error ? err.message : err
+        );
+        // Set a safe fallback - allow access but with error state
+        setQuotaCheck({
+          allowed: false,
+          reason: 'no_subscription',
+          currentUsage: 0,
+          limit: 0,
+          remaining: 0,
+          isInTrial: false
+        });
+        // Only set error state for non-permission errors
+        if (err instanceof Error && !err.message.includes('permissions')) {
+          setError(err.message);
+        }
       }
     };
 
