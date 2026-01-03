@@ -2569,6 +2569,102 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string>("");
 
+  // ========================================
+  // P0 FIX: callSessionId stable pour PayPal (généré une seule fois)
+  // ========================================
+  const [paypalCallSessionId] = useState<string>(() =>
+    `call_session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+  );
+
+  // ========================================
+  // P0 FIX: Fonction pour persister les données PayPal (comme Stripe)
+  // ========================================
+  const persistPayPalDocs = useCallback(
+    async (paypalOrderId: string, callSessionId: string) => {
+      if (!provider || !user?.uid || !adminPricing || !service) {
+        console.warn("❌ [PAYPAL] Missing data for persistPayPalDocs");
+        return null;
+      }
+
+      const orderId = `order_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
+      const baseDoc = {
+        paymentIntentId: paypalOrderId, // ID PayPal
+        paymentMethod: "paypal",
+        providerId: provider.id,
+        providerName: provider.fullName || provider.name || "",
+        providerRole: provider.role || provider.type || "expat",
+        clientId: user.uid,
+        clientEmail: user.email || "",
+        clientName: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+        serviceType: service.serviceType,
+        duration: adminPricing.duration,
+        amount: adminPricing.totalAmount,
+        commissionAmount: adminPricing.connectionFeeAmount,
+        providerAmount: adminPricing.providerAmount,
+        currency: selectedCurrency,
+        status: "pending",
+        createdAt: serverTimestamp(),
+        callSessionId,
+      };
+
+      const orderDoc = {
+        id: orderId,
+        amount: adminPricing.totalAmount,
+        currency: selectedCurrency as "eur" | "usd",
+        paymentIntentId: paypalOrderId,
+        paymentMethod: "paypal",
+        providerId: provider.id,
+        providerName: provider.fullName || provider.name,
+        clientId: user.uid,
+        clientEmail: user.email,
+        serviceType: service.serviceType,
+        status: "pending",
+        createdAt: serverTimestamp(),
+        callSessionId,
+        metadata: {
+          price_origin: "standard",
+          override_label: null,
+          original_standard_amount: adminPricing.totalAmount,
+          effective_base_amount: adminPricing.totalAmount,
+        },
+        coupon: activePromo ? {
+          code: activePromo.code,
+          discountAmount: activePromo.discountType === "percentage"
+            ? adminPricing.totalAmount * (activePromo.discountValue / 100)
+            : activePromo.discountValue,
+        } : null,
+        totalSaved: 0,
+        appliedDiscounts: [],
+      };
+
+      try {
+        await setDoc(doc(db, "payments", paypalOrderId), baseDoc, { merge: true });
+        console.log("✅ [PAYPAL] Payment doc created");
+      } catch (e) {
+        console.warn("⚠️ [PAYPAL] Error creating payment doc:", e);
+      }
+
+      try {
+        await setDoc(doc(db, "users", user.uid, "payments", paypalOrderId), baseDoc, { merge: true });
+      } catch { /* no-op */ }
+
+      try {
+        await setDoc(doc(db, "providers", provider.id, "payments", paypalOrderId), baseDoc, { merge: true });
+      } catch { /* no-op */ }
+
+      try {
+        await setDoc(doc(db, "orders", orderId), orderDoc, { merge: true });
+        console.log("✅ [PAYPAL] Order created:", orderId);
+      } catch (e) {
+        console.warn("⚠️ [PAYPAL] Error creating order:", e);
+      }
+
+      return orderId;
+    },
+    [provider, user, adminPricing, service, selectedCurrency, activePromo]
+  );
+
   const handlePaymentSuccess = useCallback(
     (payload: {
       paymentIntentId: string;
@@ -2579,18 +2675,58 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
       setCurrentStep("calling");
       setCallProgress(1);
 
-      const params = new URLSearchParams({
-        paymentIntentId: payload.paymentIntentId,
-        providerId: provider?.id || "",
-        call: payload.call,
-        orderId: payload.orderId || "",
-      });
+      // P0 FIX: Ne pas ajouter de paramètres vides à l'URL
+      const params = new URLSearchParams();
+      params.set("paymentIntentId", payload.paymentIntentId);
+      params.set("providerId", provider?.id || "");
+      params.set("call", payload.call);
+
+      // Ajouter seulement si les valeurs existent
       if (payload.callId) params.set("callId", payload.callId);
       if (payload.orderId) params.set("orderId", payload.orderId);
 
+      console.log("🚀 Navigation vers payment-success avec params:", Object.fromEntries(params));
       navigate(`/payment-success?${params.toString()}`, { replace: false });
     },
     [navigate, provider?.id]
+  );
+
+  // ========================================
+  // P0 FIX: Handler spécifique pour PayPal success
+  // ========================================
+  const handlePayPalPaymentSuccess = useCallback(
+    async (details: { orderId: string; payerId: string; status: string; captureId?: string }) => {
+      console.log("🎉 [PAYPAL] Payment success:", details);
+      console.log("🔗 [PAYPAL] Using callSessionId:", paypalCallSessionId);
+      setIsProcessing(true);
+
+      try {
+        // Utiliser le même callSessionId que celui passé au backend PayPal
+        const internalOrderId = await persistPayPalDocs(details.orderId, paypalCallSessionId);
+
+        if (!internalOrderId) {
+          console.error("❌ [PAYPAL] Failed to create order");
+        }
+
+        // Naviguer vers la page de succès avec l'orderId interne
+        handlePaymentSuccess({
+          paymentIntentId: details.orderId,
+          call: "scheduled",
+          callId: paypalCallSessionId, // Utiliser le même callSessionId
+          orderId: internalOrderId || undefined,
+        });
+      } catch (error) {
+        console.error("❌ [PAYPAL] Error in handlePayPalPaymentSuccess:", error);
+        handlePaymentSuccess({
+          paymentIntentId: details.orderId,
+          call: "scheduled",
+          callId: paypalCallSessionId,
+        });
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [persistPayPalDocs, handlePaymentSuccess, paypalCallSessionId]
   );
 
   const handlePaymentError = useCallback((msg: string) => setError(msg), []);
@@ -2922,16 +3058,13 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
                     currency={selectedCurrency.toUpperCase()}
                     providerId={provider?.id || ""}
                     providerPayPalMerchantId={provider?.paypalMerchantId}
-                    callSessionId={`session_${Date.now()}`}
+                    callSessionId={paypalCallSessionId}
                     clientId={user?.uid || ""}
+                    serviceType={providerRole === "lawyer" ? "lawyer" : "expat"}
                     description={`Appel ${providerRole === "lawyer" ? "avocat" : "expat"} - ${provider?.name || "Expert"}`}
                     onSuccess={(details) => {
-                      console.log("PayPal payment success:", details);
-                      handlePaymentSuccess({
-                        paymentIntentId: details.orderId,
-                        call: "scheduled",
-                        orderId: details.orderId,
-                      });
+                      // P0 FIX: Utiliser le handler dédié qui crée l'orderId interne
+                      handlePayPalPaymentSuccess(details);
                     }}
                     onError={(error) => {
                       console.error("PayPal payment error:", error);

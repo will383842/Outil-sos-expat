@@ -45,6 +45,9 @@ const prompts = promptsJson as VoicePrompts;
 
 export interface CallSessionState {
   id: string;
+  // P0 FIX: Ajouter clientId et providerId au niveau racine pour Firestore rules
+  clientId?: string;
+  providerId?: string;
   status:
     | "pending"
     | "provider_connecting"
@@ -442,6 +445,9 @@ export class TwilioCallManager {
       const callSession: CallSessionState = {
         id: params.sessionId,
         status: "pending",
+        // P0 FIX: Ajouter clientId et providerId au niveau racine pour compatibilité Firestore rules
+        clientId: params.clientId,
+        providerId: params.providerId,
         participants: {
           provider: {
             phone: encryptedProviderPhone,

@@ -5,8 +5,8 @@ import { createCallSession } from './callScheduler';
 import { logError } from './utils/logs/logError';
 import * as admin from 'firebase-admin';
 import { stripeManager } from './StripeManager';
-// P0 FIX: Import scheduleCallTask pour planifier l'appel directement (sans attendre webhook)
-import { scheduleCallTask } from './lib/tasks';
+// P0 FIX: Import scheduleCallTaskWithIdempotence pour planifier avec vérification des doublons
+import { scheduleCallTaskWithIdempotence } from './lib/tasks';
 
 // Secret for phone number encryption
 const ENCRYPTION_KEY = defineSecret('ENCRYPTION_KEY');
@@ -331,9 +331,19 @@ export const createAndScheduleCallHTTPS = onCall(
       console.log(`⏰ [${requestId}] Planification de l'appel dans ${CALL_DELAY_SECONDS}s via Cloud Tasks...`);
 
       try {
-        const taskId = await scheduleCallTask(callSession.id, CALL_DELAY_SECONDS);
-        console.log(`✅ [${requestId}] Cloud Task créée: ${taskId}`);
-        console.log(`🚀 [${requestId}] Appel planifié dans ${CALL_DELAY_SECONDS/60} minutes`);
+        // Utiliser la version avec idempotence pour éviter les doublons
+        const schedulingResult = await scheduleCallTaskWithIdempotence(
+          callSession.id,
+          CALL_DELAY_SECONDS,
+          admin.firestore()
+        );
+
+        if (schedulingResult.skipped) {
+          console.log(`⚠️ [${requestId}] Scheduling skipped: ${schedulingResult.reason}`);
+        } else {
+          console.log(`✅ [${requestId}] Cloud Task créée: ${schedulingResult.taskId}`);
+          console.log(`🚀 [${requestId}] Appel planifié dans ${CALL_DELAY_SECONDS/60} minutes`);
+        }
       } catch (scheduleError) {
         console.error(`❌ [${requestId}] Erreur planification Cloud Task:`, scheduleError);
         // On ne fait pas échouer la création de session, juste un warning

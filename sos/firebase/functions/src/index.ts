@@ -254,7 +254,8 @@ import Stripe from "stripe";
 import type { Request as ExpressRequest, Response } from "express";
 
 // 🦾 Cloud Tasks helper
-import { scheduleCallTask } from "./lib/tasks";
+// P0 FIX: scheduleCallTask n'est plus utilisé ici - scheduling géré dans createAndScheduleCallHTTPS
+// import { scheduleCallTask } from "./lib/tasks";
 
 // ====== IMPORTS DES MODULES PRINCIPAUX ======
 import { createAndScheduleCallHTTPS } from "./createAndScheduleCallFunction";
@@ -1403,8 +1404,10 @@ export const stripeWebhook = onRequest(
                 //   console.log("💥 Error updating call session:", error);
                 // }
 
-                console.log("⏰ Scheduling task...");
-                await scheduleCallTask(callSessionId, 240);
+                // P0 FIX: Ne plus planifier ici - createAndScheduleCallHTTPS le fait déjà
+                // Le double scheduling causait des appels en double
+                // await scheduleCallTask(callSessionId, 240);
+                console.log("⚠️ [checkout.session.completed] Scheduling skipped - handled by createAndScheduleCallHTTPS");
 
                 console.log("📨 Sending notifications...");
                 await sendPaymentNotifications(callSessionId, database);
@@ -2093,24 +2096,23 @@ const handlePaymentIntentSucceeded = traceFunction(
           //   console.log("💥 Error updating call session:", error);
           // }
 
-          console.log("✅ Call session updated, scheduling task...");
+          console.log("✅ Call session found, processing...");
 
-          // Schedule call task
-
-          await scheduleCallTask(callSessionId, 240);
-
-          console.log("✅ Call task scheduled, sending notifications...");
+          // P0 FIX: Ne plus planifier ici - createAndScheduleCallHTTPS le fait déjà
+          // Le double scheduling causait des appels en double
+          // await scheduleCallTask(callSessionId, 240);
+          console.log("⚠️ [payment_intent.succeeded] Scheduling skipped - handled by createAndScheduleCallHTTPS");
 
           ultraLogger.info(
             "STRIPE_PAYMENT_SUCCEEDED",
-            "Cloud Task créée pour appel à +300s",
+            "Paiement confirmé - scheduling déjà effectué par createAndScheduleCallHTTPS",
             {
               callSessionId,
-              delaySeconds: 240,
+              note: "Scheduling moved to createAndScheduleCallHTTPS to avoid duplicates"
             }
           );
 
-          // Send notifications
+          // Send notifications (on garde les notifications)
           try {
             await sendPaymentNotifications(callSessionId, database);
             console.log("✅ Notifications sent successfully");
@@ -2120,9 +2122,9 @@ const handlePaymentIntentSucceeded = traceFunction(
               notificationError
             );
           }
-        } catch (callSchedulingError) {
-          console.log("💥 Call scheduling error:", callSchedulingError);
-          throw callSchedulingError; // Re-throw to be caught by outer try-catch
+        } catch (notificationError) {
+          console.log("⚠️ Notification processing error:", notificationError);
+          // Ne pas throw ici - les notifications ne sont pas critiques
         }
       } else {
         console.log("❌ No callSessionId available after all fallbacks");

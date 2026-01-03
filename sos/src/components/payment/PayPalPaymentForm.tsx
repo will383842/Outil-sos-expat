@@ -82,6 +82,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
           providerId: string;
           clientId: string;
           description?: string;
+          serviceType?: string; // P0 FIX: Ajout du serviceType
         },
         CreateOrderResponse
       >(functions, "createPayPalOrder");
@@ -95,6 +96,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
         providerId,
         clientId,
         description: description || `Appel SOS-Expat - Session ${callSessionId}`,
+        serviceType, // P0 FIX: Passer le serviceType au backend
       });
 
       return result.data.orderId;

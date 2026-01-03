@@ -461,14 +461,35 @@ export class PayPalManager {
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    // Mettre à jour la session d'appel
-    await this.db.collection("call_sessions").doc(data.callSessionId).update({
-      "payment.paypalOrderId": response.id,
-      "payment.paymentMethod": "paypal",
-      "payment.paymentFlow": "simple_payout", // Indique le flux utilisé
-      "payment.status": "pending_approval",
+    // P0 FIX: Créer ou mettre à jour la session d'appel (utiliser set avec merge au lieu de update)
+    await this.db.collection("call_sessions").doc(data.callSessionId).set({
+      id: data.callSessionId,
+      status: "pending",
+      payment: {
+        paypalOrderId: response.id,
+        paymentMethod: "paypal",
+        paymentFlow: "simple_payout",
+        status: "pending_approval",
+        amount: data.amount,
+        currency: data.currency,
+      },
+      participants: {
+        provider: {
+          id: data.providerId,
+          type: "provider",
+        },
+        client: {
+          id: data.clientId,
+          type: "client",
+        },
+      },
+      metadata: {
+        providerId: data.providerId,
+        clientId: data.clientId,
+      },
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
+    }, { merge: true });
 
     console.log("✅ [PAYPAL] Simple order created:", response.id);
 
@@ -604,13 +625,35 @@ export class PayPalManager {
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    // Mettre à jour la session d'appel
-    await this.db.collection("call_sessions").doc(data.callSessionId).update({
-      "payment.paypalOrderId": response.id,
-      "payment.paymentMethod": "paypal",
-      "payment.status": "pending_approval",
+    // P0 FIX: Créer ou mettre à jour la session d'appel (utiliser set avec merge au lieu de update)
+    await this.db.collection("call_sessions").doc(data.callSessionId).set({
+      id: data.callSessionId,
+      status: "pending",
+      payment: {
+        paypalOrderId: response.id,
+        paymentMethod: "paypal",
+        paymentFlow: "direct_split",
+        status: "pending_approval",
+        amount: data.amount,
+        currency: data.currency,
+      },
+      participants: {
+        provider: {
+          id: data.providerId,
+          type: "provider",
+        },
+        client: {
+          id: data.clientId,
+          type: "client",
+        },
+      },
+      metadata: {
+        providerId: data.providerId,
+        clientId: data.clientId,
+      },
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
+    }, { merge: true });
 
     console.log("✅ [PAYPAL] Order created:", response.id);
 
@@ -756,6 +799,40 @@ export class PayPalManager {
         "payment.refundBlocked": true,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
+
+      // ========================================
+      // P0 FIX: PLANIFIER L'APPEL TWILIO APRÈS CAPTURE PAYPAL
+      // ========================================
+      // Importer et utiliser scheduleCallTaskWithIdempotence pour éviter les doublons
+      try {
+        const { scheduleCallTaskWithIdempotence } = await import("./lib/tasks");
+        const CALL_DELAY_SECONDS = 240; // 4 minutes de délai
+
+        console.log(`📞 [PAYPAL] Scheduling call for session: ${orderData.callSessionId}`);
+
+        const schedulingResult = await scheduleCallTaskWithIdempotence(
+          orderData.callSessionId,
+          CALL_DELAY_SECONDS,
+          this.db
+        );
+
+        if (schedulingResult.skipped) {
+          console.log(`⚠️ [PAYPAL] Call scheduling skipped: ${schedulingResult.reason}`);
+        } else {
+          console.log(`✅ [PAYPAL] Call scheduled with taskId: ${schedulingResult.taskId}`);
+        }
+      } catch (schedulingError) {
+        // Log l'erreur mais ne pas échouer la capture - le paiement est déjà effectué
+        console.error(`❌ [PAYPAL] Error scheduling call (non-blocking):`, schedulingError);
+        // Logger dans Firestore pour suivi
+        await this.db.collection("scheduling_errors").add({
+          callSessionId: orderData.callSessionId,
+          orderId,
+          paymentMethod: "paypal",
+          error: schedulingError instanceof Error ? schedulingError.message : String(schedulingError),
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      }
     }
 
     // Mettre à jour les earnings du provider
