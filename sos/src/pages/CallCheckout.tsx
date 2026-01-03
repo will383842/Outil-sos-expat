@@ -2774,18 +2774,11 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
         console.warn("⚠️ [NAVIGATION_DEBUG] Failed to save to sessionStorage:", storageErr);
       }
 
-      // P0 FIX SIMPLIFIÉ: Utiliser navigate() directement
-      // React Router v6 gère correctement la navigation
-      // Le sessionStorage sert de backup en cas de F5
-      try {
-        console.log("🚀 [NAVIGATION] Navigating to:", targetUrl);
-        navigate(targetUrl);
-        console.log("✅ [NAVIGATION] navigate() called successfully");
-      } catch (navError) {
-        console.error("❌ [NAVIGATION] navigate() threw error:", navError);
-        // Fallback: utiliser window.location si navigate échoue
-        window.location.href = targetUrl;
-      }
+      // P0 FIX CRITIQUE: Utiliser window.location.href au lieu de navigate()
+      // React Router navigate() ne fonctionne pas correctement dans ce contexte
+      // (appelé depuis un callback setTimeout après confirmPayment)
+      console.log("🚀 [NAVIGATION] Redirecting with window.location.href to:", targetUrl);
+      window.location.href = targetUrl;
     },
     [navigate, provider?.id, language]
   );
