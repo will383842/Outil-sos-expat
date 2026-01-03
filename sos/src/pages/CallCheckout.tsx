@@ -49,6 +49,7 @@ import { usePaymentGateway } from "../hooks/usePaymentGateway";
 import { PayPalPaymentForm, GatewayIndicator } from "../components/payment";
 import { PayPalScriptProvider } from "@paypal/react-paypal-js";
 import { paymentLogger, navigationLogger, callLogger } from "../utils/debugLogger";
+import { getLocaleString, getTranslatedRouteSlug } from "../multilingual-system/core/routing/localeRoutes";
 
 /* -------------------------- Stripe singleton (HMR-safe) ------------------ */
 // Conserve la même Promise Stripe à travers les rechargements HMR.
@@ -2736,8 +2737,11 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
       if (payload.callId) params.set("callId", payload.callId);
       if (payload.orderId) params.set("orderId", payload.orderId);
 
-      // P0 FIX: Ajouter le préfixe de locale pour que React Router trouve la route
-      const targetUrl = `/${language}/payment-success?${params.toString()}`;
+      // P0 FIX: Utiliser le système de routing multilingue complet
+      // La route doit être /{locale}/{slug-traduit} ex: /fr-fr/paiement-reussi
+      const locale = getLocaleString(language as "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar");
+      const translatedSlug = getTranslatedRouteSlug("payment-success", language as "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar");
+      const targetUrl = `/${locale}/${translatedSlug}?${params.toString()}`;
 
       // DEBUG: Log la navigation
       navigationLogger.beforeNavigate({

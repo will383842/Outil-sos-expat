@@ -585,7 +585,9 @@ const SuccessPayment: React.FC = () => {
       unsub();
       if (retryTimeout) clearTimeout(retryTimeout);
     };
-  }, [callId, callState, sessionRetryCount, reviewModelShown]);
+  // P0 FIX: Ne PAS inclure callState dans les dépendances - cause une boucle infinie
+  // car chaque changement de callState déclenche un nouveau onSnapshot qui change callState
+  }, [callId, sessionRetryCount, reviewModelShown]);
 
   /* =========================
      Utils

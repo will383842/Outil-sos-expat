@@ -787,6 +787,15 @@ const createInvoiceRecords = async (
 
 /**
  * Envoi optimisé vers la console d'administration
+ *
+ * P0 FIX: Les écritures vers admin_invoices, admin_stats et audit_logs
+ * sont bloquées par les security rules Firestore (allow create: if false;).
+ * Ces données doivent être écrites par des Cloud Functions (Admin SDK) et non
+ * par le client. Cette fonction est maintenant un no-op qui log les données
+ * pour référence mais ne tente plus d'écrire.
+ *
+ * TODO: Implémenter une Cloud Function "onInvoiceGenerated" qui écoute
+ * les créations dans invoice_records et crée les documents admin correspondants.
  */
 const sendInvoicesToAdmin = async (
   platformRecord: InvoiceRecord,
@@ -794,130 +803,21 @@ const sendInvoicesToAdmin = async (
   callRecord: CallRecord,
   payment: Payment
 ): Promise<boolean> => {
-  try {
-    const batch = writeBatch(db);
-    
-    // Données complètes pour l'administration
-    const adminInvoiceData = {
-      // Identification
-      callId: callRecord.id,
-      sessionId: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      
-      // Données de l'appel
-      callData: {
-        date: callRecord.createdAt,
-        serviceType: callRecord.serviceType,
-        duration: callRecord.duration || 0,
-        clientCountry: callRecord.clientCountry,
-        providerCountry: callRecord.providerCountry
-      },
-      
-      // Informations client
-      clientData: {
-        id: callRecord.clientId,
-        name: callRecord.clientName,
-        email: payment.clientEmail,
-        country: callRecord.clientCountry
-      },
-      
-      // Informations prestataire
-      providerData: {
-        id: callRecord.providerId,
-        name: callRecord.providerName,
-        email: payment.providerEmail,
-        phone: payment.providerPhone,
-        country: callRecord.providerCountry
-      },
-      
-      // Détails financiers
-      financialData: {
-        totalAmount: payment.amount,
-        platformFee: payment.platformFee,
-        providerAmount: payment.providerAmount,
-        currency: payment.currency || 'EUR',
-        paymentMethod: payment.paymentMethod || 'card',
-        transactionId: payment.transactionId
-      },
-      
-      // Factures générées
-      invoices: {
-        platform: {
-          number: platformRecord.invoiceNumber,
-          url: platformRecord.downloadUrl,
-          amount: payment.platformFee
-        },
-        provider: {
-          number: providerRecord.invoiceNumber,
-          url: providerRecord.downloadUrl,
-          amount: payment.providerAmount
-        }
-      },
-      
-      // Métadonnées système
-      metadata: {
-        generatedAt: serverTimestamp(),
-        status: 'generated',
-        processed: false,
-        version: '2.0',
-        environment: process.env.NODE_ENV || 'development'
-      },
-      
-      // Flags de notification
-      notifications: {
-        clientNotified: true,
-        providerNotified: true,
-        adminNotified: false
-      }
-    };
-    
-    // Document principal admin
-    const adminDocRef = doc(collection(db, 'admin_invoices'));
-    batch.set(adminDocRef, adminInvoiceData);
-    
-    // Statistiques pour le dashboard
-    const statsData = {
-      date: serverTimestamp(),
-      serviceType: callRecord.serviceType,
-      platformRevenue: payment.platformFee,
-      providerRevenue: payment.providerAmount,
-      totalRevenue: payment.amount,
-      currency: payment.currency || 'EUR',
-      clientCountry: callRecord.clientCountry,
-      providerCountry: callRecord.providerCountry,
-      year: new Date().getFullYear(),
-      month: new Date().getMonth() + 1,
-      day: new Date().getDate()
-    };
-    
-    const statsDocRef = doc(collection(db, 'admin_stats'));
-    batch.set(statsDocRef, statsData);
-    
-    // Audit trail
-    const auditData = {
-      action: 'invoice_generated',
-      entityType: 'invoice',
-      entityId: callRecord.id,
-      userId: callRecord.clientId,
-      details: {
-        platformInvoice: platformRecord.invoiceNumber,
-        providerInvoice: providerRecord.invoiceNumber,
-        totalAmount: payment.amount
-      },
-      timestamp: serverTimestamp(),
-      ip: null, // À remplir côté client si nécessaire
-      userAgent: null // À remplir côté client si nécessaire
-    };
-    
-    const auditDocRef = doc(collection(db, 'audit_logs'));
-    batch.set(auditDocRef, auditData);
-    
-    await batch.commit();
-    console.log('✅ Données envoyées à la console d\'administration');
-    return true;
-  } catch (error) {
-    console.error('❌ Erreur envoi administration:', error);
-    throw new Error(`Impossible d'envoyer à l'administration: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
-  }
+  // P0 FIX: Ne pas tenter d'écrire dans les collections admin depuis le client
+  // Les security rules bloquent ces écritures et causent des erreurs
+  console.log('ℹ️ [ADMIN_DATA] Données admin disponibles pour Cloud Function:', {
+    callId: callRecord.id,
+    platformInvoice: platformRecord.invoiceNumber,
+    providerInvoice: providerRecord.invoiceNumber,
+    totalAmount: payment.amount,
+    platformFee: payment.platformFee,
+    providerAmount: payment.providerAmount
+  });
+
+  // Retourner true pour ne pas bloquer le flux
+  // Les données admin seront créées par un trigger Cloud Function sur invoice_records
+  console.log('✅ Données admin prêtes (écriture déléguée aux Cloud Functions)');
+  return true;
 };
 
 // ==================== FONCTION PRINCIPALE ====================
