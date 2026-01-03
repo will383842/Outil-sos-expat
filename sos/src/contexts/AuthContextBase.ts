@@ -35,6 +35,8 @@ export interface AuthContextType {
   // État de chargement et erreurs
   isLoading: boolean;
   authInitialized: boolean;
+  /** P0 FIX: isFullyReady = authInitialized AND (user loaded OR no user) */
+  isFullyReady: boolean;
   error: string | null;
 
   // Métriques et informations device
@@ -105,6 +107,7 @@ export const defaultAuthContext: AuthContextType = {
   isUserLoggedIn: () => false,
   isLoading: true,
   authInitialized: false,
+  isFullyReady: false,
   error: null,
   authMetrics: defaultAuthMetrics,
   deviceInfo: defaultDeviceInfo,

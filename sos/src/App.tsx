@@ -6,6 +6,7 @@ import { Helmet } from 'react-helmet-async';
 import { useDeviceDetection } from './hooks/useDeviceDetection';
 import { registerSW, measurePerformance } from './utils/performance';
 import LoadingSpinner from './components/common/LoadingSpinner';
+import ErrorBoundary from './components/common/ErrorBoundary';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AdminRoutesV2 from '@/components/admin/AdminRoutesV2';
 import { trackEvent, hasAnalyticsConsent } from './utils/ga4';
@@ -537,6 +538,8 @@ const App: React.FC = () => {
 
             {/* Dynamically generate hreflang links for all locales */}
             <HreflangLinks pathname={location.pathname} />
+            {/* P0 FIX: ErrorBoundary pour capturer les erreurs de lazy loading */}
+            <ErrorBoundary>
             <Suspense fallback={<LoadingSpinner size="large" color="red" />}>
               {/* Routes de l'app */}
               <Routes>
@@ -563,6 +566,7 @@ const App: React.FC = () => {
 
               {/* Routes admin gérées par AdminRoutesV2 (handled above outside LocaleRouter) */}
             </Suspense>
+            </ErrorBoundary>
           </div>
         </LocaleRouter>
       )}

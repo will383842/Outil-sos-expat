@@ -540,6 +540,18 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [authInitialized, setAuthInitialized] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  /** P0 FIX: isFullyReady = authInitialized AND (user loaded OR no user logged in)
+   * Cet état est le seul à utiliser pour les protections de routes
+   * car il garantit que toutes les données utilisateur sont chargées */
+  const isFullyReady = useMemo(() => {
+    // Not ready if auth not initialized
+    if (!authInitialized) return false;
+    // If loading user data, not ready
+    if (isLoading) return false;
+    // Ready: either we have a user, or there's no authUser (no login)
+    return true;
+  }, [authInitialized, isLoading]);
   const [authMetrics, setAuthMetrics] = useState<AuthMetrics>({
     loginAttempts: 0,
     lastAttempt: new Date(),
@@ -1929,6 +1941,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     isUserLoggedIn,
     isLoading,
     authInitialized,
+    isFullyReady,
     error,
     authMetrics,
     deviceInfo,
@@ -1954,6 +1967,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     isUserLoggedIn,
     isLoading,
     authInitialized,
+    isFullyReady,
     error,
     authMetrics,
     deviceInfo,

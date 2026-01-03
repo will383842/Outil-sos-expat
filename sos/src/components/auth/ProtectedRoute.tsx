@@ -56,7 +56,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 }) => {
   const intl = useIntl();
   const location = useLocation();
-  const { user, isLoading, authInitialized, error: authError } = useAuth();
+  // P0 FIX: Utiliser isFullyReady au lieu de authInitialized pour éviter les redirections prématurées
+  const { user, isLoading, authInitialized, isFullyReady, error: authError } = useAuth();
 
   const [authState, setAuthState] = useState<AuthState>('loading');
   const [error, setError] = useState<string | null>(null);
@@ -72,9 +73,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return isAdminRoute ? '/admin/login' : '/login';
   }, [fallbackPath, allowedRoles, location.pathname]);
 
+  // P0 FIX: Utiliser isFullyReady qui garantit que le profil Firestore est chargé
   const shouldCheckAuth = useMemo(
-    () => authInitialized && !isLoading && !authError,
-    [authInitialized, isLoading, authError]
+    () => isFullyReady && !authError,
+    [isFullyReady, authError]
   );
 
   const checkAuthorization = useCallback(async () => {

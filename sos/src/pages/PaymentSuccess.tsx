@@ -355,51 +355,42 @@ const SuccessPayment: React.FC = () => {
 
   /* =========================
      Écoute Firestore : état de l'appel
+     P1 FIX: Ajout de retry si le document n'existe pas encore
      ========================= */
+  const [sessionRetryCount, setSessionRetryCount] = useState(0);
+  const MAX_SESSION_RETRIES = 10; // 10 retries x 2s = 20s max wait
+
   useEffect(() => {
     if (!callId) return;
 
-    // const ref = doc(db, "calls", callId);
-    // console.log("changing ui based on the call state...");
     const ref = doc(db, "call_sessions", callId);
-    // console.log(ref, ": ref to change Ui");
+    let retryTimeout: NodeJS.Timeout | null = null;
+
     const unsub = onSnapshot(ref, (snap) => {
-      // console.log("🔍 [call_sessions] Snapshot exists:", snap.exists());
-      // console.log("🔍 [call_sessions] Snapshot ID:", snap.id);
-      // console.log("🔍 [call_sessions] Full data:", snap.data());
+      // P1 FIX: Si le document n'existe pas, retry après délai
+      if (!snap.exists()) {
+        console.log(`⏳ [PaymentSuccess] call_sessions/${callId} not found, retry ${sessionRetryCount + 1}/${MAX_SESSION_RETRIES}`);
+
+        if (sessionRetryCount < MAX_SESSION_RETRIES) {
+          retryTimeout = setTimeout(() => {
+            setSessionRetryCount(prev => prev + 1);
+          }, 2000); // Retry every 2 seconds
+        }
+        return;
+      }
+
+      // Document exists, reset retry counter
+      if (sessionRetryCount > 0) {
+        console.log(`✅ [PaymentSuccess] call_sessions/${callId} found after ${sessionRetryCount} retries`);
+        setSessionRetryCount(0);
+      }
+
       const data = snap.data() as any;
-      // console.log("📄 data status to change Ui:", data.status);
 
-      // if (!data) return;
-      // console.log("📄 data status to change Ui:", data.status);
-      // CHANGE_BACK : remove this call State console
-      // switch (data.status) {
-      //   case "scheduled":
-      //     if (callState === "connecting") {
-      //       // keep “connecting”
-      //     } else {
-      //       setCallState("connecting");
-      //     }
-      //     break;
-      //   case "in_progress":
-      //     setCallState("in_progress");
-      //     break;
-      //   case "completed":
-      //     setCallState("completed");
-      //     break;
-      //   case "failed":
-      //     setCallState("failed");
-      //     break;
-      //   default:
-      //     break;
-      // }
-
-      // new handling logic
-      switch (data.status) {
+      // Handle status changes
+      switch (data?.status) {
         case "scheduled":
-          if (callState === "connecting") {
-            // keep “connecting”
-          } else {
+          if (callState !== "connecting") {
             setCallState("connecting");
           }
           break;
@@ -407,8 +398,6 @@ const SuccessPayment: React.FC = () => {
           setCallState("ready_to_ring");
           break;
         case "active":
-          setCallState("in_progress");
-          break;
         case "both_connecting":
           setCallState("in_progress");
           break;
@@ -422,16 +411,27 @@ const SuccessPayment: React.FC = () => {
           break;
       }
 
-      if (data.status === "completed" && !reviewModelShown) {
+      if (data?.status === "completed" && !reviewModelShown) {
         setTimeout(() => {
           setShowReviewModal(true);
           setReviewModelShown(true);
         }, 1500);
       }
+    }, (error) => {
+      // P1 FIX: Handle errors with retry
+      console.error(`❌ [PaymentSuccess] onSnapshot error:`, error);
+      if (sessionRetryCount < MAX_SESSION_RETRIES) {
+        retryTimeout = setTimeout(() => {
+          setSessionRetryCount(prev => prev + 1);
+        }, 3000);
+      }
     });
 
-    return () => unsub();
-  }, [callId, callState]);
+    return () => {
+      unsub();
+      if (retryTimeout) clearTimeout(retryTimeout);
+    };
+  }, [callId, callState, sessionRetryCount, reviewModelShown]);
 
   /* =========================
      Utils
@@ -443,34 +443,59 @@ const SuccessPayment: React.FC = () => {
   }, []);
 
   /* =========================
-     >>> PARTIE “ORDER” pour Total payé + Économies
+     >>> PARTIE "ORDER" pour Total payé + Économies
+     P1 FIX: Ajout de retry si le document n'existe pas encore
      ========================= */
   const [order, setOrder] = useState<OrderDoc | null>(null);
   const [orderLoading, setOrderLoading] = useState<boolean>(true);
+  const [orderRetryCount, setOrderRetryCount] = useState(0);
+  const MAX_ORDER_RETRIES = 8; // 8 retries x 2s = 16s max wait
 
   useEffect(() => {
-    console.log(orderId, " : orderId");
     if (!orderId) {
       setOrderLoading(false);
       return;
     }
-    console.log("Fetching order...");
+
     const ref = doc(db, "orders", orderId);
     setOrderLoading(true);
+    let retryTimeout: NodeJS.Timeout | null = null;
+
     const unsub = onSnapshot(
       ref,
       (snap) => {
-        setOrderLoading(false);
         if (snap.exists()) {
+          setOrderLoading(false);
           setOrder({ id: snap.id, ...(snap.data() as OrderDoc) });
+          if (orderRetryCount > 0) {
+            console.log(`✅ [PaymentSuccess] orders/${orderId} found after ${orderRetryCount} retries`);
+            setOrderRetryCount(0);
+          }
         } else {
-          setOrder(null);
+          // P1 FIX: Document doesn't exist yet, retry
+          console.log(`⏳ [PaymentSuccess] orders/${orderId} not found, retry ${orderRetryCount + 1}/${MAX_ORDER_RETRIES}`);
+
+          if (orderRetryCount < MAX_ORDER_RETRIES) {
+            retryTimeout = setTimeout(() => {
+              setOrderRetryCount(prev => prev + 1);
+            }, 2000);
+          } else {
+            setOrderLoading(false);
+            setOrder(null);
+          }
         }
       },
-      () => setOrderLoading(false)
+      (error) => {
+        console.error(`❌ [PaymentSuccess] Order onSnapshot error:`, error);
+        setOrderLoading(false);
+      }
     );
-    return () => unsub();
-  }, [orderId]);
+
+    return () => {
+      unsub();
+      if (retryTimeout) clearTimeout(retryTimeout);
+    };
+  }, [orderId, orderRetryCount]);
 
   /* =========================
      GÉNÉRATION AUTOMATIQUE DES FACTURES
