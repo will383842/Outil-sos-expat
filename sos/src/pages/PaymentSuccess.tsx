@@ -103,7 +103,7 @@ const SuccessPayment: React.FC = () => {
   const navigate = useLocaleNavigate();
   const location = useLocation();
   const { language } = useApp();
-  const { user } = useAuth();
+  const { user, isFullyReady } = useAuth();
 
   // Get centralized pricing configuration from admin_config/pricing
   const { pricing } = usePricingConfig();
@@ -326,9 +326,10 @@ const SuccessPayment: React.FC = () => {
 
   /* =========================
      Timestamp de paiement (PaymentIntent) - inchangé
+     P0 FIX: Attendre que l'auth soit prête avant d'accéder à Firestore
      ========================= */
   useEffect(() => {
-    if (!paymentIntentId) return;
+    if (!paymentIntentId || !isFullyReady) return;
 
     const sessionKey = `payment_timestamp_${paymentIntentId}`;
     try {
@@ -385,7 +386,7 @@ const SuccessPayment: React.FC = () => {
     };
 
     fetchPaymentTimestamp();
-  }, [paymentIntentId]);
+  }, [paymentIntentId, isFullyReady]);
 
   /* =========================
      Compte à rebours “ready_to_ring”
@@ -442,7 +443,8 @@ const SuccessPayment: React.FC = () => {
   const MAX_SESSION_RETRIES = 10; // 10 retries x 2s = 20s max wait
 
   useEffect(() => {
-    if (!callId) return;
+    // P0 FIX: Attendre que l'auth soit prête avant d'écouter Firestore
+    if (!callId || !isFullyReady) return;
 
     const ref = doc(db, "call_sessions", callId);
     let retryTimeout: NodeJS.Timeout | null = null;
@@ -587,7 +589,8 @@ const SuccessPayment: React.FC = () => {
     };
   // P0 FIX: Ne PAS inclure callState dans les dépendances - cause une boucle infinie
   // car chaque changement de callState déclenche un nouveau onSnapshot qui change callState
-  }, [callId, sessionRetryCount, reviewModelShown]);
+  // P0 FIX: Inclure isFullyReady pour attendre que l'auth soit prête
+  }, [callId, sessionRetryCount, reviewModelShown, isFullyReady]);
 
   /* =========================
      Utils
@@ -612,6 +615,8 @@ const SuccessPayment: React.FC = () => {
       setOrderLoading(false);
       return;
     }
+    // P0 FIX: Attendre que l'auth soit prête avant d'écouter Firestore
+    if (!isFullyReady) return;
 
     const ref = doc(db, "orders", orderId);
     setOrderLoading(true);
@@ -692,7 +697,8 @@ const SuccessPayment: React.FC = () => {
       unsub();
       if (retryTimeout) clearTimeout(retryTimeout);
     };
-  }, [orderId, orderRetryCount]);
+  // P0 FIX: Inclure isFullyReady pour attendre que l'auth soit prête
+  }, [orderId, orderRetryCount, isFullyReady]);
 
   /* =========================
      GÉNÉRATION AUTOMATIQUE DES FACTURES
@@ -701,7 +707,8 @@ const SuccessPayment: React.FC = () => {
 
   useEffect(() => {
     // Ne générer qu'une seule fois et seulement si on a les données nécessaires
-    if (!callId || !user?.uid || invoiceGenerated) return;
+    // P0 FIX: Attendre que l'auth soit prête avant d'accéder à Firestore
+    if (!callId || !user?.uid || invoiceGenerated || !isFullyReady) return;
 
     // Vérifier dans sessionStorage si déjà généré pour cette session
     const invoiceKey = `invoice_generated_${callId}`;
@@ -906,7 +913,8 @@ const SuccessPayment: React.FC = () => {
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, [callId, user?.uid, invoiceGenerated, language, paidAmount, paidDuration, paymentIntentId]);
+  // P0 FIX: Inclure isFullyReady pour attendre que l'auth soit prête
+  }, [callId, user?.uid, invoiceGenerated, language, paidAmount, paidDuration, paymentIntentId, isFullyReady, pricing]);
 
   // Devise / symbole (pour le bloc order)
   const orderCurrency: Currency = (order?.currency as Currency) ?? "eur";

@@ -223,6 +223,8 @@ const AdminProviders: React.FC = () => {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [stats, setStats] = useState<ProviderStats | null>(null);
   const [alerts, setAlerts] = useState<ProviderAlert[]>([]);
+  // ✅ OPTIMISATION: Stats séparées pour éviter les lectures excessives
+  const [todayCallsStats, setTodayCallsStats] = useState({ totalCallsToday: 0, totalRevenueToday: 0 });
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
 
   // States UI
@@ -372,9 +374,8 @@ const AdminProviders: React.FC = () => {
         const ratingsCount = providersList.filter(p => p.rating !== undefined).length;
         const averageRating = ratingsCount > 0 ? ratingsSum / ratingsCount : 0;
 
-        // Charger les stats d'appels d'aujourd'hui
-        const todayStats = await loadTodayCallsStats();
-
+        // ✅ OPTIMISATION: Ne plus charger les stats à chaque snapshot
+        // Les stats d'appels sont maintenant chargées indépendamment (voir useEffect séparé)
         setStats({
           totalProviders: providersList.length,
           onlineNow: onlineCount,
@@ -385,8 +386,8 @@ const AdminProviders: React.FC = () => {
           lawyersCount,
           expatsCount,
           averageRating,
-          totalCallsToday: todayStats.totalCallsToday,
-          totalRevenueToday: todayStats.totalRevenueToday,
+          totalCallsToday: todayCallsStats.totalCallsToday,
+          totalRevenueToday: todayCallsStats.totalRevenueToday,
         });
 
         // Générer des alertes
@@ -409,7 +410,33 @@ const AdminProviders: React.FC = () => {
       mountedRef.current = false;
       unsubscribe();
     };
-  }, [currentUser, isRealTimeActive, loadTodayCallsStats]);
+  }, [currentUser, isRealTimeActive, todayCallsStats]);
+
+  // ✅ OPTIMISATION: Charger les stats d'appels indépendamment (toutes les 60 secondes)
+  // Économie estimée: ~15-20€/mois en lectures Firestore
+  useEffect(() => {
+    if (!currentUser) return;
+
+    // Charger immédiatement au montage
+    loadTodayCallsStats().then(stats => {
+      if (mountedRef.current) {
+        setTodayCallsStats(stats);
+      }
+    });
+
+    // Puis rafraîchir toutes les 60 secondes
+    const intervalId = setInterval(() => {
+      loadTodayCallsStats().then(stats => {
+        if (mountedRef.current) {
+          setTodayCallsStats(stats);
+        }
+      });
+    }, 60000); // 60 secondes
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [currentUser, loadTodayCallsStats]);
 
   // Générer des alertes basées sur les données
   const generateAlerts = useCallback((providersList: Provider[]) => {

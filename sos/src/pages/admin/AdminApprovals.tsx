@@ -12,7 +12,8 @@ import {
   Timestamp,
   writeBatch,
   deleteField,
-  getDocs
+  getDocs,
+  limit // ✅ OPTIMISATION: Ajout de limit pour réduire les lectures
 } from 'firebase/firestore';
 import {
   Check,
@@ -90,26 +91,31 @@ type StatusTab = 'pending' | 'approved' | 'rejected';
   useEffect(() => {
     let q;
 
+    // ✅ OPTIMISATION: Ajout de limit(100) pour réduire les lectures Firestore
+    // Économie estimée: ~5-10€/mois
     if (statusTab === 'pending') {
       q = query(
-        collection(db, 'sos_profiles'),  // ✅ CORRIGÉ
-        where('type', 'in', ['lawyer', 'expat']),  // ✅ CORRIGÉ (type au lieu de role)
+        collection(db, 'sos_profiles'),
+        where('type', 'in', ['lawyer', 'expat']),
         where('approvalStatus', '==', 'pending'),
-        orderBy('createdAt', 'desc')
+        orderBy('createdAt', 'desc'),
+        limit(100) // ✅ OPTIMISATION
       );
     } else if (statusTab === 'approved') {
       q = query(
-        collection(db, 'sos_profiles'),  // ✅ CORRIGÉ
-        where('type', 'in', ['lawyer', 'expat']),  // ✅ CORRIGÉ (type au lieu de role)
+        collection(db, 'sos_profiles'),
+        where('type', 'in', ['lawyer', 'expat']),
         where('approvalStatus', '==', 'approved'),
-        orderBy('createdAt', 'desc')  // ✅ CORRIGÉ (createdAt au lieu de approvedAt)
+        orderBy('createdAt', 'desc'),
+        limit(100) // ✅ OPTIMISATION
       );
     } else {
       q = query(
-        collection(db, 'sos_profiles'),  // ✅ CORRIGÉ
-        where('type', 'in', ['lawyer', 'expat']),  // ✅ CORRIGÉ (type au lieu de role)
+        collection(db, 'sos_profiles'),
+        where('type', 'in', ['lawyer', 'expat']),
         where('approvalStatus', '==', 'rejected'),
-        orderBy('createdAt', 'desc')
+        orderBy('createdAt', 'desc'),
+        limit(100) // ✅ OPTIMISATION
       );
     }
 

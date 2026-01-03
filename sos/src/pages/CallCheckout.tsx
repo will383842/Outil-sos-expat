@@ -2774,32 +2774,16 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
         console.warn("⚠️ [NAVIGATION_DEBUG] Failed to save to sessionStorage:", storageErr);
       }
 
-      // P0 FIX: Navigation avec fallback robuste
-      // 1. Mettre à jour l'URL immédiatement avec history.pushState (synchrone)
-      // 2. Puis utiliser navigate() pour la transition React
-      // 3. Si après 800ms la page n'a pas changé, forcer avec window.location
+      // P0 FIX SIMPLIFIÉ: Utiliser navigate() directement
+      // React Router v6 gère correctement la navigation
+      // Le sessionStorage sert de backup en cas de F5
       try {
-        // D'abord, mettre à jour l'historique du navigateur de façon synchrone
-        const fullTargetUrl = window.location.origin + targetUrl;
-        window.history.pushState({ paymentSuccess: true, ...payload }, '', fullTargetUrl);
-        console.log("✅ [NAVIGATION_DEBUG] history.pushState completed");
-
-        // Ensuite, utiliser navigate pour déclencher la transition React
-        navigate(targetUrl, { replace: true });
-        console.log("✅ [NAVIGATION_DEBUG] navigate() called successfully");
-
-        // Vérification: si après 800ms on est toujours sur la même page, forcer la navigation
-        setTimeout(() => {
-          if (window.location.pathname.includes('checkout') ||
-              window.location.pathname.includes('call-checkout')) {
-            console.warn("⚠️ [NAVIGATION_DEBUG] Still on checkout page after 800ms, forcing navigation...");
-            window.location.href = targetUrl;
-          }
-        }, 800);
+        console.log("🚀 [NAVIGATION] Navigating to:", targetUrl);
+        navigate(targetUrl);
+        console.log("✅ [NAVIGATION] navigate() called successfully");
       } catch (navError) {
-        console.error("❌ [NAVIGATION_DEBUG] navigate() threw error:", navError);
+        console.error("❌ [NAVIGATION] navigate() threw error:", navError);
         // Fallback: utiliser window.location si navigate échoue
-        console.log("🔄 [NAVIGATION_DEBUG] Trying fallback with window.location...");
         window.location.href = targetUrl;
       }
     },

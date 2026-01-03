@@ -97,6 +97,28 @@ export {
 // P2-1/3/13 FIX: Payment data cleanup (locks, expired orders, archiving)
 export { paymentDataCleanup } from "./scheduled/paymentDataCleanup";
 
+// P0-2 FIX: Stuck payments recovery (requires_capture > 10min)
+export {
+  stuckPaymentsRecovery,
+  triggerStuckPaymentsRecovery,
+} from "./scheduled/stuckPaymentsRecovery";
+
+// P1-6 FIX: Notification retry mechanism
+export {
+  notificationRetry,
+  triggerNotificationRetry,
+  retrySpecificDelivery,
+  getDLQStats,
+} from "./scheduled/notificationRetry";
+
+// P0-3 FIX: Invoice creation trigger and distributed lock
+export {
+  onInvoiceRecordCreated,
+  acquireInvoiceLock,
+  releaseInvoiceLock,
+  checkInvoicesExist,
+} from "./triggers/onInvoiceCreated";
+
 // Dispute handling
 import {
   handleDisputeCreated,

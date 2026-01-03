@@ -375,12 +375,19 @@ service cloud.firestore {
     }
 
     // ================= INVOICES COLLECTION =================
+    // P0 FIX: Permet aux clients de créer leurs propres factures après paiement
+    // La validation côté client assure que clientId == uid de l'utilisateur
     match /invoices/{invoiceId} {
       allow read: if isAuthenticated() &&
                   (resource.data.userId == request.auth.uid ||
                    resource.data.clientId == request.auth.uid ||
+                   resource.data.providerId == request.auth.uid ||
                    isAdmin() || isDev());
-      allow create, update, delete: if isAdmin() || isDev();
+      // Le client peut créer une facture dont il est le client
+      allow create: if isAuthenticated() &&
+                    request.resource.data.clientId == request.auth.uid;
+      // Seuls admins peuvent modifier/supprimer
+      allow update, delete: if isAdmin() || isDev();
     }
 
     // ================= COUPONS COLLECTION =================
@@ -787,6 +794,45 @@ service cloud.firestore {
       // Utilisateurs authentifiés peuvent logger les erreurs
       allow create: if isAuthenticated();
       // Cloud Functions seules peuvent modifier/supprimer
+      allow update, delete: if false;
+    }
+
+    // ================= PERFORMANCE METRICS COLLECTION =================
+    // P0 FIX: Permet aux utilisateurs authentifiés de logger les métriques de performance
+    // (ex: temps de génération des factures, latence des appels, etc.)
+    match /performance_metrics/{metricId} {
+      // Seuls les admins peuvent lire les métriques
+      allow read: if isAdmin() || isDev();
+      // Utilisateurs authentifiés peuvent créer des métriques
+      allow create: if isAuthenticated();
+      // Cloud Functions seules peuvent modifier/supprimer
+      allow update, delete: if false;
+    }
+
+    // ================= INVOICE LOCKS COLLECTION =================
+    // P0-3 FIX: Distributed lock pour empêcher la génération de factures en double
+    // Géré via Cloud Functions (acquireInvoiceLock, releaseInvoiceLock)
+    match /invoice_locks/{lockId} {
+      // Lecture pour vérifier si un lock existe
+      allow read: if isAuthenticated();
+      // Création/modification/suppression via Cloud Functions uniquement
+      allow create, update, delete: if false;
+    }
+
+    // ================= NOTIFICATION DLQ COLLECTION =================
+    // P1-6 FIX: Dead Letter Queue pour les notifications échouées
+    match /notification_dlq/{docId} {
+      // Seuls les admins peuvent lire
+      allow read: if isAdmin() || isDev();
+      // Cloud Functions seules peuvent créer/modifier
+      allow create, update, delete: if false;
+    }
+
+    // ================= SCHEDULING ERRORS COLLECTION =================
+    // Logs des erreurs de planification d'appels
+    match /scheduling_errors/{errorId} {
+      allow read: if isAdmin() || isDev();
+      allow create: if false; // Cloud Functions only
       allow update, delete: if false;
     }
 
