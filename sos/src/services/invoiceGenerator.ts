@@ -727,10 +727,10 @@ const createInvoiceRecords = async (
   try {
     const batch = writeBatch(db);
     
-    // Collection principale des factures
+    // Collection principale des factures (2 factures: platform + provider pour le client)
+    // La copie provider pour le prestataire est créée par Cloud Functions
     const platformDocRef = doc(collection(db, 'invoices'));
     const providerDocRef = doc(collection(db, 'invoices'));
-    const providerCopyDocRef = doc(collection(db, 'invoices'));
     
     // Facture plateforme pour le client
     batch.set(platformDocRef, {
@@ -750,16 +750,13 @@ const createInvoiceRecords = async (
       updatedAt: serverTimestamp()
     });
 
-    // Facture prestataire pour le prestataire lui-même
+    // P0 FIX: La copie pour le prestataire est déléguée aux Cloud Functions
+    // car les rules exigent clientId == auth.uid (l'utilisateur courant est le CLIENT)
+    // Un trigger onInvoiceCreated créera la copie pour le provider
     if (payment.providerId) {
-      batch.set(providerCopyDocRef, {
-        ...providerData,
-        clientId: payment.providerId,
-        forProvider: true,
-        status: 'issued',
-        sentToAdmin: true,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+      console.log('ℹ️ [PROVIDER_COPY] Provider invoice copy will be created by Cloud Function:', {
+        providerId: payment.providerId,
+        invoiceNumber: providerData.invoiceNumber
       });
     }
     
