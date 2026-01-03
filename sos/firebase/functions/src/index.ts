@@ -680,6 +680,9 @@ export { unifiedWebhook } from "./Webhooks/unifiedWebhook";
 export { initializeMessageTemplates } from "./initializeMessageTemplates";
 export { notifyAfterPayment } from "./notifications/notifyAfterPayment";
 
+// Contact reply (admin responds to contact form messages)
+export { sendContactReply } from "./sendContactReplyFunction";
+
 // Exports additionnels
 export * from "./notificationPipeline/worker";
 export * from "./admin/callables";

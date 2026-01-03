@@ -1,5 +1,8 @@
 // src/api/sendContactReply.ts
 
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import app from '../config/firebase';
+
 export interface SendContactReplyParams {
   to: string;
   firstName: string;
@@ -8,27 +11,46 @@ export interface SendContactReplyParams {
   messageId: string;
 }
 
+interface SendContactReplyResponse {
+  success: boolean;
+  emailId?: string;
+}
+
 export const sendContactReply = async ({
   to,
   firstName,
   userMessage,
   adminReply,
   messageId,
-}: SendContactReplyParams) => {
+}: SendContactReplyParams): Promise<{ success: boolean; error?: string }> => {
   try {
-    const response = await fetch('/api/sendContactReply', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ to, firstName, userMessage, adminReply, messageId }),
+    const functions = getFunctions(app, 'europe-west1');
+    const sendContactReplyFn = httpsCallable<SendContactReplyParams, SendContactReplyResponse>(
+      functions,
+      'sendContactReply'
+    );
+
+    const result = await sendContactReplyFn({
+      to,
+      firstName,
+      userMessage,
+      adminReply,
+      messageId,
     });
 
-    const result = await response.json();
-    if (!response.ok || !result.success) throw new Error(result.error || 'Erreur serveur');
-
-    return { success: true };
+    if (result.data.success) {
+      return { success: true };
+    } else {
+      return { success: false, error: 'Erreur lors de l\'envoi' };
+    }
   } catch (err: unknown) {
+    console.error('[sendContactReply] Error:', err);
     if (err instanceof Error) {
-      return { success: false, error: err.message };
+      // Firebase functions error format
+      const message = err.message.includes('internal')
+        ? 'Erreur lors de l\'envoi de l\'email'
+        : err.message;
+      return { success: false, error: message };
     }
     return { success: false, error: 'Erreur inconnue' };
   }
