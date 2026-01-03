@@ -58,25 +58,32 @@ const AdminContactMessages: React.FC = () => {
 
     setLoading(true);
     try {
-      // Adapter à la signature attendue: { to, firstName, userMessage, adminReply }
+      // Adapter à la signature attendue: { to, firstName, userMessage, adminReply, messageId }
       const firstName = msg.name?.split(' ')[0] ?? 'there';
-      await sendContactReply({
+      const result = await sendContactReply({
         to: msg.email,
         firstName,
         userMessage: msg.message,
         adminReply: text,
+        messageId: msg.id,
       });
+
+      if (!result.success) {
+        throw new Error(result.error || 'Erreur envoi email');
+      }
 
       await updateDoc(doc(db, 'contact_messages', msg.id), {
         reply: text,
         repliedAt: serverTimestamp(),
         isRead: true,
+        responded: true,
       });
 
       setReplyText((prev) => ({ ...prev, [msg.id]: '' }));
       await loadMessages();
     } catch (error) {
       console.error(t('admin.contactMessages.sendError'), error);
+      alert(t('admin.contactMessages.sendError'));
     } finally {
       setLoading(false);
     }

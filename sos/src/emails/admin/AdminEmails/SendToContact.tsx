@@ -1,9 +1,11 @@
 // src/emails/admin/AdminEmails/SendToContact.tsx
 
 import React, { useState } from 'react';
-import { sendContactReply } from '../../../api/sendContactReply.ts'; // <-- adapter si nécessaire
+import { sendContactReply } from '../../../api/sendContactReply';
 import { updateContactMessageStatus } from '../../../firebase/contactMessages';
+
 const SendToContact: React.FC = () => {
+  const [messageId, setMessageId] = useState('');
   const [email, setEmail] = useState('');
   const [firstName, setFirstName] = useState('');
   const [userMessage, setUserMessage] = useState('');
@@ -12,13 +14,24 @@ const SendToContact: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   const handleSend = async () => {
+    if (!messageId.trim()) {
+      setStatus('❌ Message ID requis');
+      return;
+    }
+
     setLoading(true);
     setStatus('');
 
-    const result = await sendContactReply({ to: email, firstName, userMessage, adminReply });
+    const result = await sendContactReply({
+      to: email,
+      firstName,
+      userMessage,
+      adminReply,
+      messageId: messageId.trim(),
+    });
 
     try {
-      await updateContactMessageStatus(email, {
+      await updateContactMessageStatus(messageId, {
         status: result.success ? 'sent' : 'error',
         adminReply: adminReply,
         repliedAt: new Date(),
@@ -28,8 +41,9 @@ const SendToContact: React.FC = () => {
       });
 
       setStatus(result.success ? '✅ Message envoyé avec succès' : `❌ Erreur : ${result.error}`);
-    } catch (e: any) {
-      setStatus(`❌ Erreur Firestore : ${e.message}`);
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : 'Erreur inconnue';
+      setStatus(`❌ Erreur Firestore : ${errorMessage}`);
     }
 
     setLoading(false);
@@ -37,8 +51,14 @@ const SendToContact: React.FC = () => {
 
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-4">✉️ Répondre à un contact</h2>
+      <h2 className="text-xl font-semibold mb-4">Répondre à un contact</h2>
       <div className="grid grid-cols-1 gap-4">
+        <input
+          placeholder="Message ID (Firestore document ID)"
+          value={messageId}
+          onChange={e => setMessageId(e.target.value)}
+          className="input"
+        />
         <input
           placeholder="Email du contact"
           value={email}

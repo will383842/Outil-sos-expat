@@ -172,23 +172,22 @@ service cloud.firestore {
     }
 
     // ================= PAYMENTS COLLECTION =================
-    // P0 SECURITY FIX: Ajout de validation stricte pour éviter les manipulations
+    // P0-7 SECURITY FIX: Les paiements ne peuvent être créés que par Cloud Functions
+    // La création côté client permettrait:
+    // - Création de faux paiements
+    // - Manipulation des montants
+    // - Bypass de la validation Stripe/PayPal
     match /payments/{paymentId} {
       allow read: if isAuthenticated() &&
                   (resource.data.userId == request.auth.uid ||
                    resource.data.clientId == request.auth.uid ||
                    resource.data.providerId == request.auth.uid ||
                    isAdmin() || isDev());
-      // Seul le client peut créer un paiement avec validation stricte
-      allow create: if isAuthenticated() &&
-                    (request.resource.data.userId == request.auth.uid ||
-                     request.resource.data.clientId == request.auth.uid) &&
-                    // Validation du montant (min 0.50€, max 2000€ = 50-200000 centimes)
-                    request.resource.data.amount is number &&
-                    request.resource.data.amount >= 50 &&
-                    request.resource.data.amount <= 200000 &&
-                    // Status doit être "pending" ou "requires_capture" à la création
-                    request.resource.data.status in ['pending', 'requires_payment_method', 'requires_capture'];
+      // P0-7 FIX: SEULES les Cloud Functions (Admin SDK) peuvent créer des paiements
+      // Anciennement: allow create avec validation côté client (VULNÉRABLE)
+      // Les paiements doivent passer par createPaymentIntent/PayPal qui valident:
+      // - Rate limiting, doublons, cohérence montants, validation métier
+      allow create: if false;
       // Seules les Cloud Functions peuvent mettre à jour (via Admin SDK)
       allow update: if false;
       allow delete: if isAdmin() || isDev();
@@ -385,10 +384,11 @@ service cloud.firestore {
     }
 
     // ================= COUPONS COLLECTION =================
-    // P1 SECURITY FIX: Require authentication to prevent coupon enumeration
-    // Valid coupons are validated server-side via Cloud Functions
+    // P1-7 SECURITY FIX: Bloquer lecture directe pour empêcher énumération/brute-force
+    // Les coupons sont validés via Cloud Functions (validateCoupon) qui utilise Admin SDK
+    // Anciennement: allow read: if isAuthenticated(); → permettait brute-force des codes
     match /coupons/{couponId} {
-      allow read: if isAuthenticated();
+      allow read: if false; // Validation via Cloud Functions uniquement
       allow write: if isAdmin() || isDev();
     }
 
@@ -850,6 +850,33 @@ service cloud.firestore {
       allow read: if true;
       // Seuls les admins peuvent écrire
       allow write: if isAdmin() || isDev();
+    }
+
+    // ================= CONTACT MESSAGES COLLECTION =================
+    // Messages de contact depuis le formulaire footer et page contact
+    match /contact_messages/{messageId} {
+      // Seuls les admins peuvent lire les messages de contact
+      allow read: if isAdmin() || isDev();
+      // Tout le monde peut créer un message de contact (formulaire public)
+      // Validation des champs requis pour éviter le spam
+      allow create: if request.resource.data.email is string &&
+                    request.resource.data.email.size() > 5 &&
+                    request.resource.data.message is string &&
+                    request.resource.data.message.size() >= 10 &&
+                    request.resource.data.message.size() <= 5000;
+      // Seuls les admins peuvent mettre à jour (marquer comme lu, répondre)
+      allow update: if isAdmin() || isDev();
+      // Seuls les admins peuvent supprimer
+      allow delete: if isAdmin() || isDev();
+    }
+
+    // ================= EMAIL LOGS COLLECTION =================
+    // Logs des emails envoyés (pour traçabilité)
+    match /email_logs/{logId} {
+      // Seuls les admins peuvent lire les logs
+      allow read: if isAdmin() || isDev();
+      // Seules les Cloud Functions peuvent écrire
+      allow write: if false;
     }
 
     // ================= CATCH-ALL (deny by default) =================

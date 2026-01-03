@@ -1,21 +1,25 @@
 // src/api/sendContactReply.ts
 
+export interface SendContactReplyParams {
+  to: string;
+  firstName: string;
+  userMessage: string;
+  adminReply: string;
+  messageId: string;
+}
+
 export const sendContactReply = async ({
   to,
   firstName,
   userMessage,
   adminReply,
-}: {
-  to: string;
-  firstName: string;
-  userMessage: string;
-  adminReply: string;
-}) => {
+  messageId,
+}: SendContactReplyParams) => {
   try {
     const response = await fetch('/api/sendContactReply', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ to, firstName, userMessage, adminReply }),
+      body: JSON.stringify({ to, firstName, userMessage, adminReply, messageId }),
     });
 
     const result = await response.json();
