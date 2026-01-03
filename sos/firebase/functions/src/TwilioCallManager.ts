@@ -867,9 +867,10 @@ export class TwilioCallManager {
             "initiated",
           ],
           timeout: CALL_CONFIG.CALL_TIMEOUT,
-          record: true,
-          recordingStatusCallback: `${base}/twilioRecordingWebhook`,
-          recordingStatusCallbackMethod: "POST",
+          // ENREGISTREMENT DÉSACTIVÉ - Illégal sans consentement explicite (RGPD)
+          // record: true,
+          // recordingStatusCallback: `${base}/twilioRecordingWebhook`,
+          // recordingStatusCallbackMethod: "POST",
           // AMD désactivé - non utilisé et coûteux (~0.007€/appel)
           // machineDetection: "Enable",
           // machineDetectionTimeout: 10,
@@ -1020,9 +1021,6 @@ export class TwilioCallManager {
       statusCallback="${base}/twilioConferenceWebhook"
       statusCallbackMethod="POST"
       statusCallbackEvent="start end join leave mute hold"
-      record="record-from-start"
-      recordingStatusCallback="${base}/twilioRecordingWebhook"
-      recordingStatusCallbackMethod="POST"
       participantLabel="${participantLabel}"
       sessionId="${sessionId}"
       waitUrl="${waitUrl}"
@@ -1030,7 +1028,6 @@ export class TwilioCallManager {
       beep="false"
       startConferenceOnEnter="${participantType === "provider"}"
       trim="trim-silence"
-      recordingChannels="mono"
       endConferenceOnExit="true"
     >${conferenceName}</Conference>
   </Dial>
