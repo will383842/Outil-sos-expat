@@ -121,15 +121,21 @@ export async function scheduleCallTask(
       scheduledAt: new Date().toISOString(),
       taskId};
 
+    // P0 FIX: URL corrigée - était .net au lieu de .cloudfunctions.net
+    const fallbackUrl = 'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/executeCallTask';
+    const finalUrl = callbackUrl || fallbackUrl;
+
+    console.log(`📋 [CloudTasks] Using URL: ${finalUrl} (callbackUrl=${callbackUrl}, fallback=${fallbackUrl})`);
+
     const task = {
       name: `${queuePath}/tasks/${taskId}`,
       scheduleTime: {
         seconds: Math.floor(scheduleTime.getTime() / 1000)},
       httpRequest: {
         httpMethod: "POST" as const,
-        url: callbackUrl || 'https://europe-west1-sos-urgently-ac307.net/executeCallTask',
+        url: finalUrl,
         headers: {
-          "Content-Type": "application/json", 
+          "Content-Type": "application/json",
           // ⚠️ Utilise le secret paramétré (Firebase v2)
           "X-Task-Auth": TASKS_AUTH_SECRET.value()},
         body: Buffer.from(JSON.stringify(payload))

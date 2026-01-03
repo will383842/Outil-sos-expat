@@ -52,8 +52,9 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
 
     // ✅ ÉTAPE 2: Extraction du payload
     const requestBody = req.body || {};
-    // todo: give callSessionId here 
-    callSessionId = requestBody.callSessionId || 'call_session_1758524756192_9cyod31g6';
+
+    // P0 FIX: Suppression du fallback hardcodé - DOIT échouer si pas de callSessionId
+    callSessionId = requestBody.callSessionId;
 
     console.log('📋 [executeCallTask] Payload extracted:', {
       hasBody: !!req.body,
@@ -65,7 +66,15 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
     if (!callSessionId) {
       console.error('❌ [executeCallTask] Missing callSessionId in request body');
       console.error('❌ [executeCallTask] Available keys:', Object.keys(requestBody));
-      res.status(400).send("Missing callSessionId in request body");
+      await logError('executeCallTask:missingCallSessionId', {
+        body: requestBody,
+        keys: Object.keys(requestBody)
+      });
+      res.status(400).json({
+        success: false,
+        error: "Missing callSessionId in request body",
+        availableKeys: Object.keys(requestBody)
+      });
       return;
     }
 
