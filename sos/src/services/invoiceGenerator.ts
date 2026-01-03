@@ -680,7 +680,9 @@ const saveInvoiceToStorage = async (
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const fileName = `${invoiceNumber}.pdf`;
-      const path = `invoices/${type}/${new Date().getFullYear()}/${new Date().getMonth() + 1}/${fileName}`;
+      // P0 FIX: Le mois doit avoir un zéro initial (01-12) pour correspondre à la regex des storage rules
+      const month = String(new Date().getMonth() + 1).padStart(2, '0');
+      const path = `invoices/${type}/${new Date().getFullYear()}/${month}/${fileName}`;
       const storageRef = ref(storage, path);
       
       // Métadonnées pour améliorer l'organisation

@@ -1748,8 +1748,10 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           });
         }
 
+        // P0 FIX: Réduit de 3000ms à 500ms - le délai de 3s était inutile
+        // car toutes les opérations async sont déjà terminées à ce stade
         setTimeout(() => {
-          console.log("🚀 [STRIPE_DEBUG] 3s timeout complete, calling onSuccess now...");
+          console.log("🚀 [STRIPE_DEBUG] 500ms timeout complete, calling onSuccess now...");
           try {
             onSuccess({
               paymentIntentId: paymentIntent.id,
@@ -1765,7 +1767,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
               paymentIntentId: paymentIntent.id
             });
           }
-        }, 3000);
+        }, 500);
       } catch (err: unknown) {
         console.error("Payment error:", err);
 
@@ -2734,7 +2736,8 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
       if (payload.callId) params.set("callId", payload.callId);
       if (payload.orderId) params.set("orderId", payload.orderId);
 
-      const targetUrl = `/payment-success?${params.toString()}`;
+      // P0 FIX: Ajouter le préfixe de locale pour que React Router trouve la route
+      const targetUrl = `/${language}/payment-success?${params.toString()}`;
 
       // DEBUG: Log la navigation
       navigationLogger.beforeNavigate({
@@ -2796,7 +2799,7 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
         window.location.href = targetUrl;
       }
     },
-    [navigate, provider?.id]
+    [navigate, provider?.id, language]
   );
 
   // ========================================

@@ -139,7 +139,30 @@ const SuccessPayment: React.FC = () => {
     console.error("❌ [SUCCESS_PAGE] No valid callId found");
     return null;
   }, [searchParams]);
-  const paymentIntentId = searchParams.get("paymentIntentId");
+
+  // P0 FIX: Recuperer paymentIntentId depuis URL ou sessionStorage (en cas de F5)
+  const paymentIntentId = useMemo(() => {
+    const urlPaymentIntentId = searchParams.get("paymentIntentId");
+    if (urlPaymentIntentId && urlPaymentIntentId !== "undefined") {
+      console.log("✅ [SUCCESS_PAGE] paymentIntentId from URL:", urlPaymentIntentId.substring(0, 15) + '...');
+      return urlPaymentIntentId;
+    }
+    // Fallback: recuperer depuis sessionStorage (sauvegarde avant navigation)
+    try {
+      const savedData = sessionStorage.getItem('lastPaymentSuccess');
+      if (savedData) {
+        const parsed = JSON.parse(savedData);
+        if (parsed.paymentIntentId && parsed.savedAt && (Date.now() - parsed.savedAt) < 10 * 60 * 1000) {
+          console.log("✅ [SUCCESS_PAGE] paymentIntentId recovered from sessionStorage:", parsed.paymentIntentId.substring(0, 15) + '...');
+          return parsed.paymentIntentId;
+        }
+      }
+    } catch (e) {
+      console.warn("⚠️ [SUCCESS_PAGE] Error reading paymentIntentId from sessionStorage:", e);
+    }
+    console.warn("⚠️ [SUCCESS_PAGE] No valid paymentIntentId found");
+    return null;
+  }, [searchParams]);
 
   // >>> orderId pour le bloc "total payé + économies"
   // const { orderId } = useParams<{ orderId: string }>();
@@ -494,13 +517,17 @@ const SuccessPayment: React.FC = () => {
       }
 
       // Handle status changes
+      // P0 FIX: "pending" est le statut initial du backend (TwilioCallManager)
+      // Il doit être mappé vers "connecting" côté frontend
       switch (data?.status) {
+        case "pending":
         case "scheduled":
           if (callState !== "connecting") {
             setCallState("connecting");
           }
           break;
         case "provider_connecting":
+        case "client_connecting":
           setCallState("ready_to_ring");
           break;
         case "active":
@@ -511,6 +538,7 @@ const SuccessPayment: React.FC = () => {
           setCallState("completed");
           break;
         case "failed":
+        case "cancelled":
           setCallState("failed");
           break;
         default:
