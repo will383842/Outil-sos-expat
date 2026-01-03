@@ -763,18 +763,14 @@ const createInvoiceRecords = async (
       });
     }
     
-    // Index pour recherche rapide
-    const indexDocRef = doc(collection(db, 'invoice_index'));
-    batch.set(indexDocRef, {
+    // P0 FIX: L'écriture dans invoice_index est déléguée aux Cloud Functions
+    // car cette collection n'a pas de règles Firestore pour les clients
+    console.log('ℹ️ [INVOICE_INDEX] Index data for Cloud Function:', {
       callId: callRecord.id,
       clientId: callRecord.clientId,
       providerId: callRecord.providerId,
       platformInvoiceId: platformDocRef.id,
-      providerInvoiceId: providerDocRef.id,
-      providerCopyInvoiceId: payment.providerId ? providerCopyDocRef.id : null,
-      createdAt: serverTimestamp(),
-      totalAmount: payment.amount,
-      currency: payment.currency || 'EUR'
+      providerInvoiceId: providerDocRef.id
     });
     
     await batch.commit();

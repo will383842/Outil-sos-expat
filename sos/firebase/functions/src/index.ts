@@ -730,8 +730,8 @@ export const executeCallTask = onRequest(
     maxInstances: 10,
     minInstances: 0,
     concurrency: 1,
-    // Secret for phone number decryption (GDPR)
-    secrets: [ENCRYPTION_KEY, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER],
+    // Secrets: TASKS_AUTH_SECRET for Cloud Tasks auth + Twilio + ENCRYPTION_KEY
+    secrets: [TASKS_AUTH_SECRET, ENCRYPTION_KEY, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER],
   },
   (req, res) => runExecuteCallTask(req as any, res as any)
 );
