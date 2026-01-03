@@ -1020,12 +1020,59 @@ const sendPaymentNotifications = traceFunction(
         title,
       });
 
-      // SMS/WhatsApp notifications have been removed
-      // Voice call will be scheduled via scheduleCallTask instead
-      ultraLogger.info("PAYMENT_NOTIFICATIONS", "SMS/WhatsApp disabled - voice call will be scheduled", {
+      // P0 FIX: Envoyer des notifications via le pipeline message_events
+      const clientId = cs?.participants?.client?.id ?? cs?.clientId ?? "";
+      const providerId = cs?.participants?.provider?.id ?? cs?.providerId ?? "";
+      const clientEmail = cs?.participants?.client?.email ?? cs?.clientEmail ?? "";
+      const providerEmail = cs?.participants?.provider?.email ?? cs?.providerEmail ?? "";
+      const scheduledTime = cs?.scheduledAt?.toDate?.() ?? cs?.scheduledAt ?? new Date();
+
+      // Notification au client: Appel programmé
+      if (clientId || clientEmail) {
+        await database.collection("message_events").add({
+          eventId: "call.scheduled.client",
+          locale: language,
+          to: {
+            uid: clientId || null,
+            email: clientEmail || null,
+            phone: clientPhone || null,
+          },
+          context: {
+            callSessionId,
+            title,
+            scheduledTime: scheduledTime instanceof Date ? scheduledTime.toISOString() : scheduledTime,
+            providerName: cs?.participants?.provider?.name ?? cs?.providerName ?? "Expert",
+          },
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        ultraLogger.info("PAYMENT_NOTIFICATIONS", "Notification client créée", { callSessionId, clientId });
+      }
+
+      // Notification au provider: Appel entrant programmé
+      if (providerId || providerEmail) {
+        await database.collection("message_events").add({
+          eventId: "call.scheduled.provider",
+          locale: language,
+          to: {
+            uid: providerId || null,
+            email: providerEmail || null,
+            phone: providerPhone || null,
+          },
+          context: {
+            callSessionId,
+            title,
+            scheduledTime: scheduledTime instanceof Date ? scheduledTime.toISOString() : scheduledTime,
+            clientName: cs?.participants?.client?.name ?? cs?.clientName ?? "Client",
+          },
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        ultraLogger.info("PAYMENT_NOTIFICATIONS", "Notification provider créée", { callSessionId, providerId });
+      }
+
+      ultraLogger.info("PAYMENT_NOTIFICATIONS", "Notifications envoyées avec succès", {
         callSessionId,
-        providerPhone: providerPhone ? "present" : "missing",
-        clientPhone: clientPhone ? "present" : "missing",
+        clientNotified: !!(clientId || clientEmail),
+        providerNotified: !!(providerId || providerEmail),
       });
     } catch (error) {
       ultraLogger.error(
