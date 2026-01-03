@@ -121,11 +121,15 @@ export async function scheduleCallTask(
       scheduledAt: new Date().toISOString(),
       taskId};
 
-    // P0 FIX: URL corrigée - était .net au lieu de .cloudfunctions.net
-    const fallbackUrl = 'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/executeCallTask';
-    const finalUrl = callbackUrl || fallbackUrl;
+    // P0 FIX CRITIQUE: Firebase Functions v2 utilise Cloud Run avec URLs différentes
+    // L'URL n'est PAS .cloudfunctions.net mais une URL Cloud Run spécifique
+    // Format: https://{function-name-hash}-{region}.a.run.app
+    const CLOUD_RUN_URL = 'https://executecalltask-5tfnuxa2hq-ew.a.run.app';
 
-    console.log(`📋 [CloudTasks] Using URL: ${finalUrl} (callbackUrl=${callbackUrl}, fallback=${fallbackUrl})`);
+    // Utiliser l'URL Cloud Run directe (la plus fiable)
+    const finalUrl = CLOUD_RUN_URL;
+
+    console.log(`📋 [CloudTasks] Using Cloud Run URL: ${finalUrl}`);
 
     const task = {
       name: `${queuePath}/tasks/${taskId}`,
