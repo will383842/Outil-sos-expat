@@ -16,6 +16,8 @@ import * as admin from "firebase-admin";
 import { StripeManager } from "./StripeManager";
 import { logError } from "./utils/logs/logError";
 import { logCallRecord } from "./utils/logs/logCallRecord";
+// P1-13: Sync atomique payments <-> call_sessions
+import { syncPaymentStatus } from "./utils/paymentSync";
 
 // Types
 interface PendingTransfer {
@@ -132,30 +134,23 @@ export async function processPendingTransfersForProvider(
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
           });
 
-          // Mettre a jour la session d'appel si elle existe
-          if (transfer.callSessionId) {
-            try {
-              await database.collection("call_sessions").doc(transfer.callSessionId).update({
-                "payment.transferId": transferResult.transferId,
-                "payment.transferredAt": admin.firestore.FieldValue.serverTimestamp(),
-                "payment.transferStatus": "succeeded",
-                "payment.transferredAfterKyc": true,
-                "metadata.updatedAt": admin.firestore.FieldValue.serverTimestamp(),
-              });
-            } catch (updateErr) {
-              console.warn(`[PENDING_TRANSFER] Could not update call_session ${transfer.callSessionId}:`, updateErr);
-            }
-          }
-
-          // Mettre a jour le document de paiement
+          // P1-13 FIX: Sync atomique payments <-> call_sessions
           try {
-            await database.collection("payments").doc(transfer.paymentIntentId).update({
+            await syncPaymentStatus(database, transfer.paymentIntentId, transfer.callSessionId, {
               transferId: transferResult.transferId,
-              transferredAt: admin.firestore.FieldValue.serverTimestamp(),
+              transferCreatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              transferStatus: "succeeded",
+              transferredAfterKyc: true,
               pendingTransferResolved: true,
             });
+            // Mise à jour metadata séparément
+            if (transfer.callSessionId) {
+              await database.collection("call_sessions").doc(transfer.callSessionId).update({
+                "metadata.updatedAt": admin.firestore.FieldValue.serverTimestamp(),
+              });
+            }
           } catch (updateErr) {
-            console.warn(`[PENDING_TRANSFER] Could not update payment ${transfer.paymentIntentId}:`, updateErr);
+            console.warn(`[PENDING_TRANSFER] Could not sync payment status:`, updateErr);
           }
 
           // Log le succes

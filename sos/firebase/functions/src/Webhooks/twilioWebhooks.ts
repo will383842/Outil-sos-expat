@@ -2,6 +2,7 @@ import { onRequest } from 'firebase-functions/v2/https';
 import { twilioCallManager } from '../TwilioCallManager';
 import { logCallRecord } from '../utils/logs/logCallRecord';
 import { logError } from '../utils/logs/logError';
+import { logger as prodLogger } from '../utils/productionLogger';
 import { Response } from 'express';
 import * as admin from 'firebase-admin';
 import { Request } from 'firebase-functions/v2/https';
@@ -37,12 +38,20 @@ export const twilioCallWebhook = onRequest(
     concurrency: 1
   },
   async (req: Request, res: Response) => {
+    const requestId = `twilio-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
     try {
       console.log("[twilioCallWebhook] === Twilio Webhook Execution Started ===");
+      prodLogger.info('TWILIO_WEBHOOK_START', `[${requestId}] Twilio call webhook received`, {
+        requestId,
+        method: req.method,
+        timestamp: new Date().toISOString()
+      });
 
       // ===== P0 SECURITY FIX: Validate Twilio signature =====
       if (!validateTwilioWebhookSignature(req as any, res as any)) {
         console.error("[twilioCallWebhook] Invalid Twilio signature - rejecting request");
+        prodLogger.warn('TWILIO_WEBHOOK_INVALID_SIGNATURE', `[${requestId}] Invalid Twilio signature`, { requestId });
         return; // Response already sent by validateTwilioWebhookSignature
       }
 
@@ -50,6 +59,13 @@ export const twilioCallWebhook = onRequest(
 
       // ✅ P1 SECURITY FIX: Sanitize phone numbers in logs (GDPR compliance)
       const sanitizePhone = (phone: string) => phone ? `${phone.slice(0, 4)}****${phone.slice(-2)}` : 'unknown';
+
+      prodLogger.info('TWILIO_WEBHOOK_EVENT', `[${requestId}] Call event: ${body.CallStatus}`, {
+        requestId,
+        callSid: body.CallSid?.slice(0, 20) + '...',
+        callStatus: body.CallStatus,
+        duration: body.CallDuration
+      });
 
       console.log('🔔 Call Webhook reçu:', {
         event: body.CallStatus,
@@ -82,13 +98,23 @@ export const twilioCallWebhook = onRequest(
 
       // Trouver la session d'appel par CallSid
       const sessionResult = await twilioCallManager.findSessionByCallSid(body.CallSid);
-      
+
       if (!sessionResult) {
         console.warn(`Session non trouvée pour CallSid: ${body.CallSid}`);
+        prodLogger.warn('TWILIO_WEBHOOK_SESSION_NOT_FOUND', `[${requestId}] Session not found for CallSid`, {
+          requestId,
+          callSid: body.CallSid?.slice(0, 20) + '...',
+          callStatus: body.CallStatus
+        });
         res.status(200).send('Session not found');
         return;
       }
       console.log('[twilioCallWebhook] Session Result : ', sessionResult);
+      prodLogger.debug('TWILIO_WEBHOOK_SESSION_FOUND', `[${requestId}] Session found`, {
+        requestId,
+        sessionId: sessionResult.session.id,
+        participantType: sessionResult.participantType
+      });
 
       const { session, participantType } = sessionResult;
       const sessionId = session.id;
@@ -116,12 +142,29 @@ export const twilioCallWebhook = onRequest(
           
         default:
           console.log(`Statut d'appel non géré: ${body.CallStatus}`);
+          prodLogger.debug('TWILIO_WEBHOOK_UNHANDLED_STATUS', `[${requestId}] Unhandled call status: ${body.CallStatus}`, {
+            requestId,
+            callStatus: body.CallStatus,
+            sessionId
+          });
       }
+
+      prodLogger.info('TWILIO_WEBHOOK_SUCCESS', `[${requestId}] Webhook processed successfully`, {
+        requestId,
+        sessionId,
+        callStatus: body.CallStatus,
+        participantType
+      });
 
       res.status(200).send('OK');
 
     } catch (error) {
       console.error('❌ Erreur webhook appel:', error);
+      prodLogger.error('TWILIO_WEBHOOK_ERROR', `[${requestId}] Webhook processing failed`, {
+        requestId,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack?.slice(0, 500) : undefined
+      });
       await logError('twilioCallWebhook:error', error);
       res.status(500).send('Webhook error');
     }
@@ -132,12 +175,17 @@ export const twilioCallWebhook = onRequest(
  * Gère le statut "ringing"
  */
 async function handleCallRinging(
-  sessionId: string, 
-  participantType: 'provider' | 'client', 
+  sessionId: string,
+  participantType: 'provider' | 'client',
   body: TwilioCallWebhookBody
 ) {
   try {
     console.log(`📞 ${participantType} en cours de sonnerie: ${sessionId}`);
+    prodLogger.info('TWILIO_CALL_RINGING', `Call ringing for ${participantType}`, {
+      sessionId,
+      participantType,
+      callSid: body.CallSid?.slice(0, 20) + '...'
+    });
     
     await twilioCallManager.updateParticipantStatus(
       sessionId,
@@ -170,6 +218,11 @@ async function handleCallAnswered(
 ) {
   try {
     console.log(`✅ ${participantType} a répondu: ${sessionId}`);
+    prodLogger.info('TWILIO_CALL_ANSWERED', `Call answered by ${participantType}`, {
+      sessionId,
+      participantType,
+      callSid: body.CallSid?.slice(0, 20) + '...'
+    });
 
     await twilioCallManager.updateParticipantStatus(
       sessionId,
@@ -229,13 +282,20 @@ async function handleCallAnswered(
  * Gère le statut "completed"
  */
 async function handleCallCompleted(
-  sessionId: string, 
-  participantType: 'provider' | 'client', 
+  sessionId: string,
+  participantType: 'provider' | 'client',
   body: TwilioCallWebhookBody
 ) {
   try {
     const duration = parseInt(body.CallDuration || '0');
     console.log(`🏁 Appel ${participantType} terminé: ${sessionId}, durée: ${duration}s`);
+    prodLogger.info('TWILIO_CALL_COMPLETED', `Call completed for ${participantType}`, {
+      sessionId,
+      participantType,
+      duration,
+      callSid: body.CallSid?.slice(0, 20) + '...',
+      earlyDisconnection: duration < 120
+    });
     
     await twilioCallManager.updateParticipantStatus(
       sessionId,
@@ -279,12 +339,18 @@ async function handleCallCompleted(
  * Gère les échecs d'appel
  */
 async function handleCallFailed(
-  sessionId: string, 
-  participantType: 'provider' | 'client', 
+  sessionId: string,
+  participantType: 'provider' | 'client',
   body: TwilioCallWebhookBody
 ) {
   try {
     console.log(`❌ Appel ${participantType} échoué: ${sessionId}, raison: ${body.CallStatus}`);
+    prodLogger.warn('TWILIO_CALL_FAILED', `Call failed for ${participantType}: ${body.CallStatus}`, {
+      sessionId,
+      participantType,
+      failureReason: body.CallStatus,
+      callSid: body.CallSid?.slice(0, 20) + '...'
+    });
     
     await twilioCallManager.updateParticipantStatus(
       sessionId,

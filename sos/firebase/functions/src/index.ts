@@ -6,6 +6,8 @@ import {
   traceFunction,
   traceGlobalImport,
 } from "./utils/ultraDebugLogger";
+// P1-13: Sync atomique payments <-> call_sessions
+import { syncPaymentStatus, findCallSessionByPaymentId } from "./utils/paymentSync";
 
 // Tracer tous les imports principaux
 traceGlobalImport("firebase-functions/v2", "index.ts");
@@ -91,6 +93,9 @@ export {
   rgpdRecordingCleanup,
   triggerRgpdCleanup,
 } from "./scheduled/rgpdRecordingCleanup";
+
+// P2-1/3/13 FIX: Payment data cleanup (locks, expired orders, archiving)
+export { paymentDataCleanup } from "./scheduled/paymentDataCleanup";
 
 // Dispute handling
 import {
@@ -1175,7 +1180,7 @@ export const stripeWebhook = onRequest(
       STRIPE_WEBHOOK_SECRET_LIVE
     ],
     concurrency: 1,
-    timeoutSeconds: 30,
+    timeoutSeconds: 60, // P2-4 FIX: Augmenté de 30s à 60s pour éviter les timeouts
     minInstances: 0,
     maxInstances: 5,
   },
@@ -2318,18 +2323,27 @@ const handlePaymentIntentCanceled = traceFunction(
   "STRIPE_WEBHOOKS"
 );
 
+/**
+ * P1-1 FIX: Gestion complète du 3D Secure (SCA - Strong Customer Authentication)
+ *
+ * Ce handler est appelé quand Stripe requiert une action utilisateur (typiquement 3D Secure).
+ * IMPORTANT: L'appel NE DOIT PAS être lancé tant que le paiement n'est pas confirmé.
+ */
 const handlePaymentIntentRequiresAction = traceFunction(
   async (
     paymentIntent: Stripe.PaymentIntent,
     database: admin.firestore.Firestore
   ) => {
     try {
+      const nextActionType = paymentIntent.next_action?.type;
+
       ultraLogger.info(
         "STRIPE_PAYMENT_REQUIRES_ACTION",
-        "Paiement nécessite une action",
+        "Paiement nécessite une action (3D Secure)",
         {
           paymentIntentId: paymentIntent.id,
-          nextAction: paymentIntent.next_action?.type,
+          nextAction: nextActionType,
+          nextActionUrl: paymentIntent.next_action?.redirect_to_url?.url,
         }
       );
 
@@ -2340,11 +2354,67 @@ const handlePaymentIntentRequiresAction = traceFunction(
 
       if (!paymentsSnapshot.empty) {
         const paymentDoc = paymentsSnapshot.docs[0];
+        const paymentData = paymentDoc.data();
+
+        // P1-1 FIX: Mettre à jour le statut ET marquer que 3D Secure est requis
         await paymentDoc.ref.update({
           status: "requires_action",
+          requires3DSecure: true,
+          nextActionType: nextActionType || null,
           currency: paymentIntent.currency ?? "eur",
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
+
+        // P1-1 FIX: Si une session d'appel existe, mettre son statut en "awaiting_payment_confirmation"
+        // Cela empêche le scheduling de l'appel tant que le 3D Secure n'est pas complété
+        const callSessionId = paymentData?.callSessionId;
+        if (callSessionId) {
+          try {
+            const sessionRef = database.collection("call_sessions").doc(callSessionId);
+            const sessionDoc = await sessionRef.get();
+
+            if (sessionDoc.exists) {
+              const sessionData = sessionDoc.data();
+              // Ne mettre à jour que si le status est encore "pending" ou "scheduled"
+              if (sessionData?.status === "pending" || sessionData?.status === "scheduled") {
+                await sessionRef.update({
+                  status: "awaiting_payment_confirmation",
+                  "payment.requires3DSecure": true,
+                  "payment.status": "requires_action",
+                  updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+
+                console.log(`🔐 [3D Secure] Call session ${callSessionId} set to awaiting_payment_confirmation`);
+              }
+            }
+          } catch (sessionError) {
+            console.error(`⚠️ [3D Secure] Error updating call session:`, sessionError);
+            // Non bloquant - on continue
+          }
+        }
+
+        // P1-1 FIX: Créer une notification pour informer le client
+        const clientId = paymentData?.clientId;
+        if (clientId) {
+          try {
+            await database.collection("inapp_notifications").add({
+              uid: clientId,
+              type: "payment_requires_action",
+              title: "Vérification de paiement requise",
+              body: "Votre banque demande une vérification supplémentaire. Veuillez compléter l'authentification 3D Secure pour finaliser votre paiement.",
+              data: {
+                paymentIntentId: paymentIntent.id,
+                callSessionId: callSessionId || null,
+                nextActionType: nextActionType,
+              },
+              read: false,
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+            console.log(`📱 [3D Secure] Notification sent to client ${clientId}`);
+          } catch (notifError) {
+            console.error(`⚠️ [3D Secure] Error sending notification:`, notifError);
+          }
+        }
       }
 
       return true;
@@ -2399,56 +2469,49 @@ const handleTransferCreated = traceFunction(
       });
 
       // Extraire le callSessionId depuis les metadata du transfert ou du PaymentIntent source
-      const callSessionId = transfer.metadata?.callSessionId || transfer.metadata?.sessionId || "";
+      let callSessionId = transfer.metadata?.callSessionId || transfer.metadata?.sessionId || "";
+      const paymentId = transfer.source_transaction as string || null;
 
-      if (callSessionId) {
-        // Mettre a jour call_sessions avec le statut du transfert
+      // Si pas de callSessionId dans metadata, chercher via paymentId
+      if (!callSessionId && paymentId) {
+        callSessionId = await findCallSessionByPaymentId(database, paymentId) || "";
+      }
+
+      // P1-13 FIX: Sync atomique payments <-> call_sessions
+      const transferData = {
+        transferId: transfer.id,
+        transferStatus: "succeeded",
+        transferAmount: transfer.amount,
+        transferCurrency: transfer.currency,
+        transferDestination: typeof transfer.destination === "string"
+          ? transfer.destination
+          : transfer.destination?.id || "",
+        transferCreatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      };
+
+      if (paymentId) {
+        await syncPaymentStatus(database, paymentId, callSessionId || null, transferData);
+        ultraLogger.info("STRIPE_TRANSFER_CREATED", "Sync atomique payments + call_sessions", {
+          paymentId,
+          callSessionId: callSessionId || "unknown",
+          transferId: transfer.id,
+          transferStatus: "succeeded",
+        });
+      } else if (callSessionId) {
+        // Fallback: mise à jour call_sessions uniquement si pas de paymentId
         await database.collection("call_sessions").doc(callSessionId).update({
           "payment.transferId": transfer.id,
           "payment.transferStatus": "succeeded",
           "payment.transferAmount": transfer.amount,
           "payment.transferCurrency": transfer.currency,
-          "payment.transferDestination": transfer.destination,
+          "payment.transferDestination": transferData.transferDestination,
           "payment.transferCreatedAt": admin.firestore.FieldValue.serverTimestamp(),
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
-
-        ultraLogger.info("STRIPE_TRANSFER_CREATED", "call_sessions mis a jour avec transferStatus", {
+        ultraLogger.info("STRIPE_TRANSFER_CREATED", "call_sessions mis a jour (fallback)", {
           callSessionId,
           transferId: transfer.id,
-          transferStatus: "succeeded",
         });
-      } else {
-        // Chercher la session via le PaymentIntent source
-        if (transfer.source_transaction) {
-          const paymentQuery = await database
-            .collection("payments")
-            .where("stripePaymentIntentId", "==", transfer.source_transaction)
-            .limit(1)
-            .get();
-
-          if (!paymentQuery.empty) {
-            const paymentData = paymentQuery.docs[0].data();
-            const sessionId = paymentData.callSessionId;
-
-            if (sessionId) {
-              await database.collection("call_sessions").doc(sessionId).update({
-                "payment.transferId": transfer.id,
-                "payment.transferStatus": "succeeded",
-                "payment.transferAmount": transfer.amount,
-                "payment.transferCurrency": transfer.currency,
-                "payment.transferDestination": transfer.destination,
-                "payment.transferCreatedAt": admin.firestore.FieldValue.serverTimestamp(),
-                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-              });
-
-              ultraLogger.info("STRIPE_TRANSFER_CREATED", "call_sessions trouve via payment et mis a jour", {
-                callSessionId: sessionId,
-                transferId: transfer.id,
-              });
-            }
-          }
-        }
       }
 
       // Enregistrer le transfert dans la collection transfers
@@ -3895,3 +3958,14 @@ export {
   configureStorageLifecycle,
   getStorageConfig
 } from './admin/enableStorageVersioning';
+
+// ========== PAYMENT MONITORING (PHASE 4) ==========
+// Surveillance spécifique des flux de paiement Stripe/PayPal/Twilio
+export {
+  runPaymentHealthCheck,
+  collectDailyPaymentMetrics,
+  cleanupOldPaymentAlerts,
+  getPaymentAlerts,
+  resolvePaymentAlert,
+  getPaymentMetrics
+} from './monitoring/paymentMonitoring';

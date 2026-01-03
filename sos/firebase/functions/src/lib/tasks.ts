@@ -2,6 +2,7 @@
 import { CloudTasksClient } from "@google-cloud/tasks";
 import { defineSecret, defineString } from "firebase-functions/params";
 import { logError } from "../utils/logs/logError";
+import { logger as prodLogger } from "../utils/productionLogger";
 
 // Types pour améliorer la sécurité du code
 interface TaskPayload {
@@ -92,6 +93,11 @@ export async function scheduleCallTask(
   callSessionId: string,
   delaySeconds: number
 ): Promise<string> {
+  prodLogger.info('CLOUD_TASKS_SCHEDULE_START', `Scheduling call task for session ${callSessionId}`, {
+    callSessionId,
+    delaySeconds
+  });
+
   try {
     const client = getTasksClient();
     const cfg = getTasksConfig();
@@ -139,8 +145,20 @@ export async function scheduleCallTask(
     const [response] = await client.createTask({ parent: queuePath, task });
 
     console.log(`✅ [CloudTasks] Tâche créée: ${response.name}`);
+    prodLogger.info('CLOUD_TASKS_SCHEDULE_SUCCESS', `Task created successfully`, {
+      callSessionId,
+      taskId,
+      delaySeconds,
+      scheduledAt: scheduleTime.toISOString(),
+      queueName: cfg.queueName
+    });
     return taskId;
   } catch (error) {
+    prodLogger.error('CLOUD_TASKS_SCHEDULE_ERROR', `Failed to create task`, {
+      callSessionId,
+      delaySeconds,
+      error: error instanceof Error ? error.message : String(error)
+    });
     await logError("scheduleCallTask", error);
     throw new Error(
       `Erreur création tâche Cloud Tasks: ${
@@ -154,6 +172,8 @@ export async function scheduleCallTask(
  * Annule une tâche Cloud Tasks si elle existe encore.
  */
 export async function cancelCallTask(taskId: string): Promise<void> {
+  prodLogger.info('CLOUD_TASKS_CANCEL_START', `Cancelling task ${taskId}`, { taskId });
+
   try {
     const client = getTasksClient();
     const cfg = getTasksConfig();
@@ -163,6 +183,7 @@ export async function cancelCallTask(taskId: string): Promise<void> {
     console.log(`🚫 [CloudTasks] Annulation tâche: ${taskId}`);
     await client.deleteTask({ name: taskPath });
     console.log(`✅ [CloudTasks] Tâche annulée: ${taskId}`);
+    prodLogger.info('CLOUD_TASKS_CANCEL_SUCCESS', `Task cancelled successfully`, { taskId });
   } catch (error) {
     // Ignorer si déjà exécutée/supprimée
     if (
@@ -170,8 +191,13 @@ export async function cancelCallTask(taskId: string): Promise<void> {
       (error.message.includes("NOT_FOUND") || error.message.includes("already completed"))
     ) {
       console.log(`ℹ️ [CloudTasks] Tâche ${taskId} déjà exécutée ou inexistante`);
+      prodLogger.debug('CLOUD_TASKS_CANCEL_ALREADY_DONE', `Task already executed or not found`, { taskId });
       return;
     }
+    prodLogger.error('CLOUD_TASKS_CANCEL_ERROR', `Failed to cancel task`, {
+      taskId,
+      error: error instanceof Error ? error.message : String(error)
+    });
     await logError("cancelCallTask", error);
     throw new Error(
       `Erreur annulation tâche Cloud Tasks: ${
@@ -315,6 +341,11 @@ export async function scheduleCallTaskWithIdempotence(
   delaySeconds: number,
   db?: FirebaseFirestore.Firestore
 ): Promise<{ taskId: string | null; skipped: boolean; reason?: string }> {
+  prodLogger.info('CLOUD_TASKS_IDEMPOTENT_START', `Idempotent scheduling for session ${callSessionId}`, {
+    callSessionId,
+    delaySeconds
+  });
+
   if (!db) {
     const admin = await import("firebase-admin");
     db = admin.firestore();
@@ -328,6 +359,7 @@ export async function scheduleCallTaskWithIdempotence(
     if (!sessionDoc.exists) {
       // Créer quand même si session n'existe pas
       console.warn(`⚠️ [CloudTasks] Session ${callSessionId} n'existe pas`);
+      prodLogger.warn('CLOUD_TASKS_IDEMPOTENT_NO_SESSION', `Session not found`, { callSessionId });
     }
 
     const data = sessionDoc.data() || {};
@@ -340,12 +372,21 @@ export async function scheduleCallTaskWithIdempotence(
     ];
 
     if (nonSchedulableStatuses.includes(status)) {
+      prodLogger.info('CLOUD_TASKS_IDEMPOTENT_SKIPPED', `Skipped - non-schedulable status: ${status}`, {
+        callSessionId,
+        status,
+        existingTaskId
+      });
       return { taskId: existingTaskId || null, skipped: true, reason: `Status: ${status}` };
     }
 
     if (existingTaskId) {
       const taskStillExists = await taskExists(existingTaskId);
       if (taskStillExists) {
+        prodLogger.info('CLOUD_TASKS_IDEMPOTENT_TASK_EXISTS', `Skipped - task already exists`, {
+          callSessionId,
+          existingTaskId
+        });
         return { taskId: existingTaskId, skipped: true, reason: 'Task exists' };
       }
     }
@@ -360,6 +401,12 @@ export async function scheduleCallTaskWithIdempotence(
       scheduledTaskId: taskId,
       scheduledAt: new Date(),
       updatedAt: new Date()
+    });
+
+    prodLogger.info('CLOUD_TASKS_IDEMPOTENT_SUCCESS', `Task scheduled successfully via idempotent call`, {
+      callSessionId,
+      taskId,
+      delaySeconds
     });
 
     return { taskId, skipped: false };

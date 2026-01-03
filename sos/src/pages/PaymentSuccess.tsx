@@ -35,6 +35,7 @@ import { db } from "../config/firebase";
 import { useIntl, FormattedMessage } from "react-intl";
 import { generateBothInvoices } from "../services/invoiceGenerator";
 import { usePricingConfig } from "../services/pricingService";
+import { navigationLogger, firestoreLogger, callLogger } from "../utils/debugLogger";
 
 /* =========================
    Types pour l'order / coupon / metadata
@@ -117,9 +118,43 @@ const SuccessPayment: React.FC = () => {
   const callId = searchParams.get("callId") || `call_${Date.now()}`;
   const paymentIntentId = searchParams.get("paymentIntentId");
 
-  // >>> orderId pour le bloc “total payé + économies”
+  // >>> orderId pour le bloc "total payé + économies"
   // const { orderId } = useParams<{ orderId: string }>();
   const orderId = searchParams.get("orderId");
+
+  // DEBUG: Log l'arrivée sur la page avec tous les paramètres
+  useEffect(() => {
+    const allParams = Object.fromEntries(searchParams.entries());
+
+    navigationLogger.afterNavigate({
+      path: location.pathname,
+      searchParams: allParams
+    });
+
+    console.log("📍 [SUCCESS_PAGE_DEBUG] Page loaded with params:", {
+      callStatus,
+      providerId,
+      callId,
+      paymentIntentId: paymentIntentId?.substring(0, 15) + '...',
+      orderId,
+      allParams,
+      timestamp: new Date().toISOString(),
+      referrer: document.referrer
+    });
+
+    // Vérifier les paramètres manquants critiques
+    const missingParams: string[] = [];
+    if (!callId) missingParams.push('callId');
+    if (!paymentIntentId) missingParams.push('paymentIntentId');
+
+    if (missingParams.length > 0) {
+      navigationLogger.urlParamsMissing({
+        page: 'PaymentSuccess',
+        missingParams
+      });
+      console.warn("⚠️ [SUCCESS_PAGE_DEBUG] Missing critical params:", missingParams);
+    }
+  }, []);
 
   // UI state (appel)
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -369,23 +404,71 @@ const SuccessPayment: React.FC = () => {
     const unsub = onSnapshot(ref, (snap) => {
       // P1 FIX: Si le document n'existe pas, retry après délai
       if (!snap.exists()) {
-        console.log(`⏳ [PaymentSuccess] call_sessions/${callId} not found, retry ${sessionRetryCount + 1}/${MAX_SESSION_RETRIES}`);
+        // DEBUG: Log détaillé pour le retry
+        firestoreLogger.retry({
+          collection: 'call_sessions',
+          docId: callId,
+          attempt: sessionRetryCount + 1,
+          maxAttempts: MAX_SESSION_RETRIES
+        });
+
+        callLogger.docNotFound({
+          callSessionId: callId,
+          retryCount: sessionRetryCount + 1
+        });
+
+        console.log(`⏳ [SUCCESS_PAGE_DEBUG] call_sessions/${callId} not found`, {
+          retryCount: sessionRetryCount + 1,
+          maxRetries: MAX_SESSION_RETRIES,
+          waitTime: '2000ms',
+          timestamp: new Date().toISOString()
+        });
 
         if (sessionRetryCount < MAX_SESSION_RETRIES) {
           retryTimeout = setTimeout(() => {
             setSessionRetryCount(prev => prev + 1);
           }, 2000); // Retry every 2 seconds
+        } else {
+          console.error(`❌ [SUCCESS_PAGE_DEBUG] Max retries reached for call_sessions/${callId}`);
         }
         return;
       }
 
       // Document exists, reset retry counter
+      firestoreLogger.snapshot({
+        collection: 'call_sessions',
+        docId: callId,
+        exists: true,
+        status: snap.data()?.status
+      });
+
       if (sessionRetryCount > 0) {
-        console.log(`✅ [PaymentSuccess] call_sessions/${callId} found after ${sessionRetryCount} retries`);
+        callLogger.docFound({
+          callSessionId: callId,
+          status: snap.data()?.status || 'unknown'
+        });
+        console.log(`✅ [SUCCESS_PAGE_DEBUG] call_sessions/${callId} found after ${sessionRetryCount} retries`, {
+          status: snap.data()?.status,
+          timestamp: new Date().toISOString()
+        });
         setSessionRetryCount(0);
       }
 
       const data = snap.data() as any;
+
+      // DEBUG: Log le changement de statut
+      const newStatus = data?.status;
+      if (newStatus && newStatus !== callState) {
+        callLogger.statusChange({
+          callSessionId: callId,
+          prevStatus: callState,
+          newStatus: newStatus
+        });
+        console.log(`🔄 [SUCCESS_PAGE_DEBUG] Call status changed: ${callState} → ${newStatus}`, {
+          callId,
+          timestamp: new Date().toISOString()
+        });
+      }
 
       // Handle status changes
       switch (data?.status) {
@@ -408,10 +491,14 @@ const SuccessPayment: React.FC = () => {
           setCallState("failed");
           break;
         default:
+          if (data?.status) {
+            console.log(`🔵 [SUCCESS_PAGE_DEBUG] Unknown call status: ${data.status}`);
+          }
           break;
       }
 
       if (data?.status === "completed" && !reviewModelShown) {
+        console.log("🔵 [SUCCESS_PAGE_DEBUG] Call completed, showing review modal in 1.5s");
         setTimeout(() => {
           setShowReviewModal(true);
           setReviewModelShown(true);
@@ -419,11 +506,27 @@ const SuccessPayment: React.FC = () => {
       }
     }, (error) => {
       // P1 FIX: Handle errors with retry
-      console.error(`❌ [PaymentSuccess] onSnapshot error:`, error);
+      firestoreLogger.snapshotError({
+        collection: 'call_sessions',
+        docId: callId,
+        error: error?.message || String(error)
+      });
+
+      console.error(`❌ [SUCCESS_PAGE_DEBUG] onSnapshot error for call_sessions/${callId}:`, {
+        error: error?.message || String(error),
+        code: error?.code,
+        retryCount: sessionRetryCount,
+        maxRetries: MAX_SESSION_RETRIES,
+        timestamp: new Date().toISOString()
+      });
+
       if (sessionRetryCount < MAX_SESSION_RETRIES) {
+        console.log(`🔄 [SUCCESS_PAGE_DEBUG] Retrying onSnapshot in 3s...`);
         retryTimeout = setTimeout(() => {
           setSessionRetryCount(prev => prev + 1);
         }, 3000);
+      } else {
+        console.error(`❌ [SUCCESS_PAGE_DEBUG] Max retries reached, giving up on call_sessions/${callId}`);
       }
     });
 
@@ -466,27 +569,68 @@ const SuccessPayment: React.FC = () => {
       (snap) => {
         if (snap.exists()) {
           setOrderLoading(false);
-          setOrder({ id: snap.id, ...(snap.data() as OrderDoc) });
+          const orderData = { id: snap.id, ...(snap.data() as OrderDoc) };
+          setOrder(orderData);
+
+          firestoreLogger.snapshot({
+            collection: 'orders',
+            docId: orderId,
+            exists: true
+          });
+
           if (orderRetryCount > 0) {
-            console.log(`✅ [PaymentSuccess] orders/${orderId} found after ${orderRetryCount} retries`);
+            console.log(`✅ [SUCCESS_PAGE_DEBUG] orders/${orderId} found after ${orderRetryCount} retries`, {
+              amount: orderData.amount,
+              currency: orderData.currency,
+              timestamp: new Date().toISOString()
+            });
             setOrderRetryCount(0);
+          } else {
+            console.log(`🔵 [SUCCESS_PAGE_DEBUG] Order loaded:`, {
+              orderId,
+              amount: orderData.amount,
+              currency: orderData.currency
+            });
           }
         } else {
           // P1 FIX: Document doesn't exist yet, retry
-          console.log(`⏳ [PaymentSuccess] orders/${orderId} not found, retry ${orderRetryCount + 1}/${MAX_ORDER_RETRIES}`);
+          firestoreLogger.retry({
+            collection: 'orders',
+            docId: orderId,
+            attempt: orderRetryCount + 1,
+            maxAttempts: MAX_ORDER_RETRIES
+          });
+
+          console.log(`⏳ [SUCCESS_PAGE_DEBUG] orders/${orderId} not found`, {
+            retryCount: orderRetryCount + 1,
+            maxRetries: MAX_ORDER_RETRIES,
+            waitTime: '2000ms',
+            timestamp: new Date().toISOString()
+          });
 
           if (orderRetryCount < MAX_ORDER_RETRIES) {
             retryTimeout = setTimeout(() => {
               setOrderRetryCount(prev => prev + 1);
             }, 2000);
           } else {
+            console.warn(`⚠️ [SUCCESS_PAGE_DEBUG] Max retries reached for orders/${orderId}, giving up`);
             setOrderLoading(false);
             setOrder(null);
           }
         }
       },
       (error) => {
-        console.error(`❌ [PaymentSuccess] Order onSnapshot error:`, error);
+        firestoreLogger.snapshotError({
+          collection: 'orders',
+          docId: orderId,
+          error: error?.message || String(error)
+        });
+
+        console.error(`❌ [SUCCESS_PAGE_DEBUG] Order onSnapshot error:`, {
+          orderId,
+          error: error?.message || String(error),
+          timestamp: new Date().toISOString()
+        });
         setOrderLoading(false);
       }
     );

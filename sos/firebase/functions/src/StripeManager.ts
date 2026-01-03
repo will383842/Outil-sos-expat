@@ -4,6 +4,7 @@ import Stripe from 'stripe';
 import { HttpsError } from 'firebase-functions/v2/https';
 import { logError } from './utils/logs/logError';
 import { db } from './utils/firebase';
+import { logger as prodLogger } from './utils/productionLogger';
 
 /* ===================================================================
  * Utils
@@ -276,7 +277,19 @@ export class StripeManager {
     data: StripePaymentData,
     secretKey?: string
   ): Promise<PaymentResult> {
+    const requestId = `pi_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+
     try {
+      prodLogger.info('STRIPE_PAYMENT_START', `[${requestId}] Creating PaymentIntent`, {
+        requestId,
+        clientId: data.clientId,
+        providerId: data.providerId,
+        amount: data.amount,
+        currency: data.currency,
+        serviceType: data.serviceType,
+        callSessionId: data.callSessionId,
+      });
+
       this.validateConfiguration(secretKey);
       if (!this.stripe) throw new HttpsError('internal', 'Stripe non initialisé');
 
@@ -357,6 +370,21 @@ export class StripeManager {
           useDirectCharges = false;
           providerKycComplete = false;
           pendingTransferRequired = true;
+
+          // P2-10 FIX: Alert admin when Stripe Connect verification fails
+          const errorMsg = stripeError instanceof Error ? stripeError.message : 'Unknown error';
+          await this.db.collection('admin_alerts').add({
+            type: 'stripe_connect_verification_failed',
+            priority: 'medium',
+            title: 'Échec vérification compte Stripe Connect',
+            message: `Impossible de vérifier le compte Connect ${providerStripeAccountId} du provider ${data.providerId}. Fallback vers mode plateforme.`,
+            providerId: data.providerId,
+            stripeAccountId: providerStripeAccountId,
+            error: errorMsg,
+            callSessionId: data.callSessionId || null,
+            read: false,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
         }
       } else {
         // Pas de compte Stripe - mode plateforme avec transfert différé
@@ -423,16 +451,23 @@ export class StripeManager {
         receipt_email: await this.getClientEmail(data.clientId),
       };
 
-      // ===== P0 FIX: Idempotency key pour éviter les doubles charges =====
-      // La clé est basée sur clientId + providerId + callSessionId + amount
-      // Si callSessionId est présent: clé stable pour idempotence (protection contre doubles charges)
-      // Si callSessionId est absent: utiliser timestamp pour éviter conflits avec anciens calls
+      // ===== P1-2 SECURITY FIX: callSessionId OBLIGATOIRE pour idempotence =====
+      // Sans callSessionId, chaque retry crée un nouveau PaymentIntent (doublons possibles)
+      // En production: rejeter. En dev: warning + fallback pour compatibilité tests
+      if (!data.callSessionId) {
+        if (isProd) {
+          console.error('[createPaymentIntent] ❌ callSessionId MANQUANT - rejet obligatoire en production');
+          throw new HttpsError(
+            'invalid-argument',
+            'callSessionId requis pour créer un paiement. Assurez-vous que le frontend envoie ce paramètre.'
+          );
+        }
+        console.warn('[createPaymentIntent] ⚠️ callSessionId absent - fallback timestamp (UNIQUEMENT EN DEV)');
+      }
       const sessionIdForKey = data.callSessionId || `ts_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
       const idempotencyKey = `pi_create_${data.clientId}_${data.providerId}_${sessionIdForKey}_${amountCents}`;
-      console.log(`[createPaymentIntent] Idempotency key: callSessionId=${data.callSessionId ? 'present' : 'MISSING (using timestamp fallback)'}`);
-      if (!data.callSessionId) {
-        console.warn('[createPaymentIntent] ⚠️ callSessionId absent du frontend - utilisation timestamp fallback. Mettre à jour le frontend!');
-      }
+      console.log(`[createPaymentIntent] Idempotency key: callSessionId=${data.callSessionId ? 'present' : 'MISSING (DEV fallback)'}`);
+
 
       // ===== DIRECT CHARGES: Création sur le compte du provider =====
       // La différence clé avec Destination Charges:
@@ -529,12 +564,32 @@ export class StripeManager {
         }
       }
 
+      // Log de succès final
+      prodLogger.info('STRIPE_PAYMENT_SUCCESS', `[${requestId}] PaymentIntent created successfully`, {
+        requestId,
+        paymentIntentId: paymentIntent.id,
+        status: paymentIntent.status,
+        amount: paymentIntent.amount,
+        currency: paymentIntent.currency,
+        useDirectCharges,
+        pendingTransferRequired,
+      });
+
       return {
         success: true,
         paymentIntentId: paymentIntent.id,
         clientSecret: paymentIntent.client_secret || undefined,
       };
     } catch (error) {
+      // Log d'erreur
+      prodLogger.error('STRIPE_PAYMENT_ERROR', `[${requestId}] PaymentIntent creation failed`, {
+        requestId,
+        clientId: data.clientId,
+        providerId: data.providerId,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+
       // ===== GESTION IDEMPOTENCY ERROR =====
       // Si on reçoit une erreur d'idempotence, cela signifie qu'un PaymentIntent
       // a DÉJÀ été créé avec la même clé. On doit le récupérer et le retourner.
@@ -632,12 +687,34 @@ export class StripeManager {
     sessionId?: string,
     secretKey?: string
   ): Promise<PaymentResult> {
+    const captureRequestId = `cap_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+
     try {
+      prodLogger.info('STRIPE_CAPTURE_START', `[${captureRequestId}] Starting payment capture`, {
+        captureRequestId,
+        paymentIntentId,
+        sessionId,
+      });
+
       this.validateConfiguration(secretKey);
       if (!this.stripe) throw new HttpsError('internal', 'Stripe non initialisé');
 
       const paymentIntent = await this.stripe.paymentIntents.retrieve(paymentIntentId);
+
+      prodLogger.debug('STRIPE_CAPTURE_STATUS', `[${captureRequestId}] PaymentIntent status check`, {
+        captureRequestId,
+        paymentIntentId,
+        currentStatus: paymentIntent.status,
+        amount: paymentIntent.amount,
+        currency: paymentIntent.currency,
+      });
+
       if (paymentIntent.status !== 'requires_capture') {
+        prodLogger.warn('STRIPE_CAPTURE_SKIP', `[${captureRequestId}] Cannot capture - wrong status`, {
+          captureRequestId,
+          paymentIntentId,
+          status: paymentIntent.status,
+        });
         throw new HttpsError(
           'failed-precondition',
           `Impossible de capturer un paiement au statut: ${paymentIntent.status}`
@@ -786,6 +863,17 @@ export class StripeManager {
 
       await this.db.collection('payments').doc(paymentIntentId).update(updateData);
 
+      // Log de succès avec prodLogger
+      prodLogger.info('STRIPE_CAPTURE_SUCCESS', `[${captureRequestId}] Payment captured successfully`, {
+        captureRequestId,
+        paymentIntentId,
+        capturedAmount: captured.amount_received || captured.amount,
+        currency: captured.currency,
+        status: captured.status,
+        transferId: transferId || null,
+        sessionId,
+      });
+
       console.log('[capturePayment] Paiement capture avec succes:', {
         id: paymentIntentId,
         capturedAmount: captured.amount_received || captured.amount,
@@ -827,17 +915,23 @@ export class StripeManager {
       this.validateConfiguration(secretKey);
       if (!this.stripe) throw new HttpsError('internal', 'Stripe non initialisé');
 
-      // Verifier si ce paiement utilisait Destination Charges
+      // Verifier si ce paiement utilisait Destination Charges ou Direct Charges
       const paymentDoc = await this.db.collection('payments').doc(paymentIntentId).get();
       const paymentData = paymentDoc.data();
+      // P0-5 FIX: Vérifier AUSSI useDirectCharges (nouveau modèle)
+      // - useDestinationCharges: ancien modèle (transfer_data vers provider)
+      // - useDirectCharges: nouveau modèle (charge sur compte provider avec application_fee)
       const usedDestinationCharges = paymentData?.useDestinationCharges === true;
+      const usedDirectCharges = paymentData?.useDirectCharges === true;
       const wasTransferred = !!paymentData?.transferId || !!paymentData?.destinationAccountId;
 
-      console.log('[refundPayment] Verification Destination Charges:', {
+      console.log('[refundPayment] Verification Charges type:', {
         paymentIntentId,
         usedDestinationCharges,
+        usedDirectCharges,
         wasTransferred,
         destinationAccountId: paymentData?.destinationAccountId || null,
+        providerStripeAccountId: paymentData?.providerStripeAccountId || null,
       });
 
       type RefundReason = Stripe.RefundCreateParams.Reason;
@@ -858,6 +952,7 @@ export class StripeManager {
           refundReason: reason,
           mode: this.mode,
           usedDestinationCharges: String(usedDestinationCharges),
+          usedDirectCharges: String(usedDirectCharges),
         },
       };
 
@@ -869,15 +964,26 @@ export class StripeManager {
         console.log('[refundPayment] reverse_transfer active - le transfert au prestataire sera inverse');
       }
 
+      // ===== P0-5 FIX: DIRECT CHARGES - Remboursement sur le compte du provider =====
+      // Avec Direct Charges:
+      // - La charge a été créée DIRECTEMENT sur le compte du provider (providerStripeAccountId)
+      // - Le remboursement doit aussi être fait sur ce compte connecté
+      // - On peut optionnellement rembourser l'application_fee (commission SOS-Expat)
+      let stripeOptions: Stripe.RequestOptions = { idempotencyKey: '' };
+      if (usedDirectCharges && paymentData?.providerStripeAccountId) {
+        stripeOptions.stripeAccount = paymentData.providerStripeAccountId;
+        // Rembourser aussi la commission SOS-Expat au client
+        refundData.refund_application_fee = true;
+        console.log('[refundPayment] Direct Charges - remboursement sur compte provider:', paymentData.providerStripeAccountId);
+      }
+
       if (amount !== undefined) refundData.amount = toCents(amount);
 
       // ===== P0 FIX: Idempotency key pour le remboursement =====
       // IMPORTANT: NE PAS inclure Date.now() - un remboursement ne doit se faire qu'une seule fois
       const refundIdempotencyKey = `refund_${paymentIntentId}_${amount || 'full'}`;
-      const refund = await this.stripe.refunds.create(
-        refundData,
-        { idempotencyKey: refundIdempotencyKey.substring(0, 255) }
-      );
+      stripeOptions.idempotencyKey = refundIdempotencyKey.substring(0, 255);
+      const refund = await this.stripe.refunds.create(refundData, stripeOptions);
 
       // Mise a jour du document payment avec les infos de remboursement
       const refundUpdate: Record<string, unknown> = {
@@ -911,7 +1017,9 @@ export class StripeManager {
         providerId: paymentData?.providerId || null,
         sessionId: sessionId || paymentData?.callSessionId || null,
         usedDestinationCharges: usedDestinationCharges,
+        usedDirectCharges: usedDirectCharges,
         transferReversed: usedDestinationCharges || wasTransferred,
+        applicationFeeRefunded: usedDirectCharges,
         metadata: {
           paymentAmount: paymentData?.amount || null,
           paymentCurrency: paymentData?.currency || null,
@@ -1295,11 +1403,15 @@ async cancelPayment(
         sessionId: sessionId ? sessionId.substring(0, 8) + '...' : '—',
       });
 
+      // P2-18 FIX: Ajouter 'authorized' (capture manuelle) et contrainte de temps (24h)
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
       let query: admin.firestore.Query<admin.firestore.DocumentData> = this.db
         .collection('payments')
         .where('clientId', '==', clientId)
         .where('providerId', '==', providerId)
-        .where('status', 'in', ['succeeded', 'requires_capture']);
+        .where('status', 'in', ['succeeded', 'requires_capture', 'authorized', 'processing'])
+        .where('createdAt', '>=', twentyFourHoursAgo);
 
       if (sessionId && sessionId.trim() !== '') {
         query = query.where('callSessionId', '==', sessionId);
@@ -1309,7 +1421,7 @@ async cancelPayment(
       return !snapshot.empty;
     } catch (error) {
       await logError('StripeManager:findExistingPayment', error);
-      // En cas d’erreur, on préfère **ne pas** bloquer
+      // En cas d'erreur, on préfère **ne pas** bloquer
       return false;
     }
   }

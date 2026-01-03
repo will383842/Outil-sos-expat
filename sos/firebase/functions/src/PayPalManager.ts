@@ -18,6 +18,12 @@
 import * as admin from "firebase-admin";
 import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
 import { defineSecret, defineString } from "firebase-functions/params";
+// P1-13: Sync atomique payments <-> call_sessions
+import { syncPaymentStatus } from "./utils/paymentSync";
+// P2-2: Unified payment status checks
+import { isPaymentCompleted } from "./utils/paymentStatusUtils";
+// Production logger
+import { logger as prodLogger } from "./utils/productionLogger";
 
 // Secrets PayPal
 export const PAYPAL_CLIENT_ID = defineSecret("PAYPAL_CLIENT_ID");
@@ -87,8 +93,8 @@ const PAYPAL_CONFIG = {
     "FJ", "PG", "SB", "VU", "WS", "TO", "KI", "FM", "MH", "PW",
     "NR", "TV", "NC", "PF", "GU",
 
-    // ===== MOYEN-ORIENT (7 pays restants) =====
-    "IQ", "IR", "SY", "SA", "LY", "TM", "AF",
+    // ===== MOYEN-ORIENT (4 pays restants - LY/TM/AF déjà dans listes régionales) =====
+    "IQ", "IR", "SY", "SA",
   ],
 };
 
@@ -222,32 +228,90 @@ export class PayPalManager {
   }
 
   /**
-   * Effectue une requête à l'API PayPal
+   * Effectue une requête à l'API PayPal avec timeout et retry
+   * P1-12 FIX: Ajout d'un timeout pour éviter que les Cloud Functions bloquent 540s
+   * P2-9 FIX: Ajout d'exponential backoff pour les erreurs transitoires
    */
   private async apiRequest<T>(
     method: string,
     endpoint: string,
-    body?: any
+    body?: unknown,
+    timeoutMs: number = 15000, // 15 secondes par défaut
+    maxRetries: number = 3
   ): Promise<T> {
-    const token = await this.getAccessToken();
+    let lastError: Error | null = null;
 
-    const response = await fetch(`${PAYPAL_CONFIG.BASE_URL}${endpoint}`, {
-      method,
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json",
-        "PayPal-Partner-Attribution-Id": PAYPAL_PARTNER_ID.value() || "SOS-Expat_SP",
-      },
-      body: body ? JSON.stringify(body) : undefined,
-    });
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        const token = await this.getAccessToken();
 
-    if (!response.ok) {
-      const error = await response.text();
-      console.error(`❌ [PAYPAL] API error (${endpoint}):`, error);
-      throw new Error(`PayPal API error: ${error}`);
+        // P1-12: Créer un AbortController pour le timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+        try {
+          const response = await fetch(`${PAYPAL_CONFIG.BASE_URL}${endpoint}`, {
+            method,
+            signal: controller.signal,
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json",
+              "PayPal-Partner-Attribution-Id": PAYPAL_PARTNER_ID.value() || "SOS-Expat_SP",
+            },
+            body: body ? JSON.stringify(body) : undefined,
+          });
+
+          clearTimeout(timeoutId);
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            const statusCode = response.status;
+
+            // P2-9: Retry only on transient errors (5xx, 429)
+            if (statusCode >= 500 || statusCode === 429) {
+              throw new Error(`PayPal API transient error (${statusCode}): ${errorText}`);
+            }
+
+            // Client errors (4xx except 429) - don't retry
+            console.error(`❌ [PAYPAL] API error (${endpoint}):`, errorText);
+            throw new Error(`PayPal API error: ${errorText}`);
+          }
+
+          return response.json() as Promise<T>;
+        } catch (error) {
+          clearTimeout(timeoutId);
+          throw error;
+        }
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+
+        // P1-12: Handle timeout specifically
+        if (lastError.name === 'AbortError') {
+          console.error(`❌ [PAYPAL] API timeout after ${timeoutMs}ms for ${endpoint}`);
+          lastError = new Error(`PayPal API timeout: Request exceeded ${timeoutMs}ms`);
+        }
+
+        // P2-9: Check if we should retry (transient errors only)
+        const isTransientError = lastError.message.includes('transient error') ||
+          lastError.message.includes('timeout') ||
+          lastError.message.includes('ECONNRESET') ||
+          lastError.message.includes('network');
+
+        if (isTransientError && attempt < maxRetries - 1) {
+          // Exponential backoff: 1s, 2s, 4s
+          const delayMs = Math.pow(2, attempt) * 1000;
+          console.warn(`⚠️ [PAYPAL] Retry ${attempt + 1}/${maxRetries} for ${endpoint} in ${delayMs}ms`);
+          await new Promise(resolve => setTimeout(resolve, delayMs));
+          continue;
+        }
+
+        // Non-retryable error or max retries reached
+        throw lastError;
+      }
     }
 
-    return response.json() as Promise<T>;
+    // Should never reach here, but TypeScript needs it
+    throw lastError || new Error('Unknown error');
   }
 
   // ====== ONBOARDING MARCHAND ======
@@ -482,6 +546,10 @@ export class PayPalManager {
     await this.db.collection("call_sessions").doc(data.callSessionId).set({
       id: data.callSessionId,
       status: "pending",
+      // P1-13 FIX: FK vers paypal_orders collection (source of truth unique)
+      paymentId: response.id,
+      clientId: data.clientId,
+      providerId: data.providerId,
       payment: {
         paypalOrderId: response.id,
         paymentMethod: "paypal",
@@ -646,6 +714,10 @@ export class PayPalManager {
     await this.db.collection("call_sessions").doc(data.callSessionId).set({
       id: data.callSessionId,
       status: "pending",
+      // P1-13 FIX: FK vers paypal_orders collection (source of truth unique)
+      paymentId: response.id,
+      clientId: data.clientId,
+      providerId: data.providerId,
       payment: {
         paypalOrderId: response.id,
         paymentMethod: "paypal",
@@ -844,7 +916,17 @@ export class PayPalManager {
           }
         } catch (retrySchedulingError) {
           console.error("❌ [PAYPAL] Failed to schedule payout retry:", retrySchedulingError);
-          // Ne pas bloquer - l'alerte admin a été créée, ils peuvent intervenir manuellement
+          // P2-5 FIX: Log scheduling failure to failed_payouts_alerts for admin visibility
+          const scheduleError = retrySchedulingError instanceof Error
+            ? retrySchedulingError.message
+            : "Unknown scheduling error";
+          await failedPayoutRef.update({
+            retryScheduled: false,
+            retrySchedulingFailed: true,
+            retrySchedulingError: scheduleError,
+            requiresManualIntervention: true,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
         }
       }
     }
@@ -872,20 +954,19 @@ export class PayPalManager {
     });
 
     if (orderData?.callSessionId) {
-      await this.db.collection("call_sessions").doc(orderData.callSessionId).update({
-        "payment.status": "captured",
-        "payment.capturedAt": admin.firestore.FieldValue.serverTimestamp(),
-        "payment.paypalCaptureId": capture?.id,
-        "payment.paymentFlow": isSimpleFlow ? "simple_payout" : "direct_split",
-        "payment.providerPaidDirectly": !isSimpleFlow,
-        "payment.providerAmount": providerAmount,
-        "payment.connectionFee": connectionFeeAmount,
-        "payment.payoutTriggered": payoutTriggered,
-        "payment.payoutId": payoutId || null,
-        // Protection remboursement
-        "payment.serviceDelivered": true,
-        "payment.refundBlocked": true,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      // P1-13 FIX: Sync atomique paypal_orders <-> call_sessions
+      await syncPaymentStatus(this.db, orderId, orderData.callSessionId, {
+        status: "captured",
+        capturedAt: admin.firestore.FieldValue.serverTimestamp(),
+        paypalCaptureId: capture?.id,
+        paymentFlow: isSimpleFlow ? "simple_payout" : "direct_split",
+        providerPaidDirectly: !isSimpleFlow,
+        providerAmount: providerAmount,
+        connectionFee: connectionFeeAmount,
+        payoutTriggered: payoutTriggered,
+        payoutId: payoutId || undefined,
+        serviceDelivered: true,
+        refundBlocked: true,
       });
 
       // ========================================
@@ -1060,6 +1141,24 @@ export class PayPalManager {
     // Si on arrive ici, le remboursement est autorisé
     console.log("💸 [PAYPAL] Refund authorized, processing...");
 
+    // P1-4 SECURITY FIX: Valider que le montant de remboursement <= montant capturé
+    // Empêche les remboursements supérieurs au paiement original
+    if (amount !== undefined && !ordersQuery.empty) {
+      const orderData = ordersQuery.docs[0].data();
+      const capturedAmount = orderData.capturedGrossAmount || orderData.amount || 0;
+
+      if (amount > capturedAmount) {
+        console.error(`🚫 [PAYPAL] Refund amount ${amount} exceeds captured amount ${capturedAmount}`);
+        return {
+          success: false,
+          refundId: "",
+          status: "REJECTED",
+          blocked: true,
+          blockReason: `Le montant de remboursement (${amount}) dépasse le montant capturé (${capturedAmount})`,
+        };
+      }
+    }
+
     const refundData: any = {};
 
     if (amount && currency) {
@@ -1118,10 +1217,28 @@ export class PayPalManager {
     console.log("💸 [PAYPAL] Creating payout for provider:", data.providerId);
 
     try {
+      // P2-15 FIX: Check for existing payout to prevent duplicates
+      const existingPayout = await this.db.collection("paypal_payouts")
+        .where("sessionId", "==", data.sessionId)
+        .where("providerId", "==", data.providerId)
+        .limit(1)
+        .get();
+
+      if (!existingPayout.empty) {
+        const existing = existingPayout.docs[0].data();
+        console.log(`⚠️ [PAYPAL] Payout already exists for session ${data.sessionId}: ${existing.payoutBatchId}`);
+        return {
+          success: true, // Already paid = success
+          payoutBatchId: existing.payoutBatchId,
+          payoutItemId: existing.payoutItemId || "",
+          status: existing.status || "ALREADY_PAID",
+        };
+      }
+
       // Créer un batch de payout (PayPal exige un batch même pour un seul paiement)
       const payoutData = {
         sender_batch_header: {
-          sender_batch_id: `payout_${data.sessionId}_${Date.now()}`,
+          sender_batch_id: `payout_${data.sessionId}`, // P2-11 FIX: Removed Date.now() - sessionId is already unique
           email_subject: "Vous avez reçu un paiement de SOS Expat",
           email_message: data.note || "Paiement pour consultation effectuée via SOS Expat",
         },
@@ -1362,6 +1479,8 @@ export const createPayPalOrder = onCall(
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_PARTNER_ID, PAYPAL_PLATFORM_MERCHANT_ID],
   },
   async (request) => {
+    const requestId = `pp_order_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
@@ -1374,6 +1493,16 @@ export const createPayPalOrder = onCall(
       serviceType, // 'lawyer' ou 'expat'
       description,
     } = request.data;
+
+    prodLogger.info('PAYPAL_ORDER_START', `[${requestId}] Creating PayPal order`, {
+      requestId,
+      callSessionId,
+      amount,
+      currency,
+      providerId,
+      serviceType,
+      clientId: request.auth.uid,
+    });
 
     if (!callSessionId || !amount || !providerId) {
       throw new HttpsError("invalid-argument", "Missing required fields");
@@ -1466,6 +1595,16 @@ export const createPayPalOrder = onCall(
         });
       }
 
+      // Log de succès
+      prodLogger.info('PAYPAL_ORDER_SUCCESS', `[${requestId}] PayPal order created successfully`, {
+        requestId,
+        orderId: result.orderId,
+        callSessionId,
+        flow: hasMerchantId ? "direct" : "simple",
+        amount: serverPricing.totalAmount,
+        currency: normalizedCurrency,
+      });
+
       return {
         success: true,
         ...result,
@@ -1473,6 +1612,12 @@ export const createPayPalOrder = onCall(
       };
 
     } catch (error) {
+      prodLogger.error('PAYPAL_ORDER_ERROR', `[${requestId}] PayPal order creation failed`, {
+        requestId,
+        callSessionId,
+        providerId,
+        error: error instanceof Error ? error.message : String(error),
+      });
       console.error("Error creating PayPal order:", error);
       throw new HttpsError("internal", "Failed to create order");
     }
@@ -1490,11 +1635,19 @@ export const capturePayPalOrder = onCall(
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
   },
   async (request) => {
+    const captureRequestId = `pp_cap_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
     const { orderId } = request.data;
+
+    prodLogger.info('PAYPAL_CAPTURE_START', `[${captureRequestId}] Starting PayPal order capture`, {
+      captureRequestId,
+      orderId,
+      clientId: request.auth.uid,
+    });
 
     if (!orderId) {
       throw new HttpsError("invalid-argument", "orderId is required");
@@ -1528,8 +1681,8 @@ export const capturePayPalOrder = onCall(
       );
     }
 
-    // Vérifier que le paiement n'a pas déjà été capturé
-    if (paymentData.status === "captured" || paymentData.status === "succeeded") {
+    // P2-2 FIX: Vérifier que le paiement n'a pas déjà été capturé
+    if (isPaymentCompleted(paymentData.status)) {
       console.warn(`[PAYPAL] Order ${orderId} already captured`);
       return {
         success: true,
@@ -1542,8 +1695,21 @@ export const capturePayPalOrder = onCall(
 
     try {
       const result = await manager.captureOrder(orderId);
+
+      prodLogger.info('PAYPAL_CAPTURE_SUCCESS', `[${captureRequestId}] PayPal order captured successfully`, {
+        captureRequestId,
+        orderId,
+        captureId: result.captureId,
+        status: result.status,
+      });
+
       return result;
     } catch (error) {
+      prodLogger.error('PAYPAL_CAPTURE_ERROR', `[${captureRequestId}] PayPal order capture failed`, {
+        captureRequestId,
+        orderId,
+        error: error instanceof Error ? error.message : String(error),
+      });
       console.error("Error capturing PayPal order:", error);
       throw new HttpsError("internal", "Failed to capture order");
     }
@@ -1666,12 +1832,11 @@ export const paypalWebhook = onRequest(
       }
     } catch (sigError) {
       console.error("❌ [PAYPAL] Error verifying webhook signature:", sigError);
-      // En production, on rejette. En dev/test, on peut être plus permissif
-      if (process.env.NODE_ENV === "production") {
-        res.status(401).send("Signature verification failed");
-        return;
-      }
-      console.warn("⚠️ [PAYPAL] Skipping signature verification in non-production environment");
+      // P1-3 SECURITY FIX: TOUJOURS rejeter les signatures invalides
+      // Anciennement: Skip en non-production (vulnérable aux webhooks forgés en staging)
+      // Maintenant: Rejet systématique pour éviter les attaques sur tous environnements
+      res.status(401).send("Signature verification failed");
+      return;
     }
 
     try {
@@ -1749,71 +1914,21 @@ export const paypalWebhook = onRequest(
           break;
 
         // ===== GESTION DES DISPUTES PAYPAL =====
+        // Note: Les providers sont payés via Stripe Connect, pas PayPal.
+        // Donc les disputes PayPal sont entre client et SOS-Expat uniquement.
+        // Pas besoin de bloquer la balance du provider.
         case "CUSTOMER.DISPUTE.CREATED":
-          // Un litige a été ouvert
+          // Un litige a été ouvert - juste logger et alerter l'admin
           const disputeCreated = event.resource;
           console.log("⚠️ [PAYPAL] Dispute created:", disputeCreated?.dispute_id);
 
           if (disputeCreated?.dispute_id) {
-            // Extraire les informations du litige
             const disputeAmount = disputeCreated.dispute_amount?.value || 0;
             const disputeCurrency = disputeCreated.dispute_amount?.currency_code || "EUR";
             const disputeReason = disputeCreated.reason || "UNKNOWN";
             const transactionId = disputeCreated.disputed_transactions?.[0]?.seller_transaction_id;
 
-            // ===== P0 FIX: RÉSERVE DE BALANCE PROVIDER =====
-            // Trouver le provider associé à cette transaction pour réserver les fonds
-            let providerId: string | null = null;
-            let reserveCreated = false;
-
-            if (transactionId) {
-              // Chercher dans paypal_orders par orderId ou transactionId
-              const ordersQuery = await db.collection("paypal_orders")
-                .where("status", "==", "COMPLETED")
-                .limit(100)
-                .get();
-
-              // Trouver l'ordre correspondant
-              for (const orderDoc of ordersQuery.docs) {
-                const orderData = orderDoc.data();
-                // PayPal peut utiliser différents IDs, on vérifie plusieurs champs
-                if (orderData.orderId === transactionId ||
-                    orderData.captureId === transactionId) {
-                  providerId = orderData.providerId;
-                  break;
-                }
-              }
-
-              // Si on a trouvé le provider, créer une réserve de balance
-              if (providerId) {
-                const reserveAmount = parseFloat(disputeAmount);
-
-                // Créer un enregistrement de réserve de balance
-                await db.collection("provider_balance_adjustments").add({
-                  providerId,
-                  type: "dispute_reserve",
-                  amount: -reserveAmount, // Montant négatif = réserve/blocage
-                  currency: disputeCurrency,
-                  reason: `Litige PayPal #${disputeCreated.dispute_id}`,
-                  disputeId: disputeCreated.dispute_id,
-                  transactionId,
-                  status: "pending",
-                  createdAt: admin.firestore.FieldValue.serverTimestamp(),
-                });
-
-                // Mettre à jour le solde bloqué du provider
-                await db.collection("sos_profiles").doc(providerId).update({
-                  reservedBalance: admin.firestore.FieldValue.increment(reserveAmount),
-                  lastDisputeAt: admin.firestore.FieldValue.serverTimestamp(),
-                  hasActiveDispute: true,
-                });
-
-                reserveCreated = true;
-                console.log(`💰 [PAYPAL] Balance reserve created for provider ${providerId}: ${reserveAmount} ${disputeCurrency}`);
-              }
-            }
-
-            // Créer un record de dispute
+            // Créer un record de dispute (pour suivi)
             const disputeDocRef = await db.collection("disputes").add({
               type: "paypal",
               disputeId: disputeCreated.dispute_id,
@@ -1822,28 +1937,24 @@ export const paypalWebhook = onRequest(
               amount: parseFloat(disputeAmount),
               currency: disputeCurrency,
               transactionId: transactionId || null,
-              providerId: providerId || null,
-              balanceReserved: reserveCreated,
               paypalData: disputeCreated,
               createdAt: admin.firestore.FieldValue.serverTimestamp(),
               updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             });
 
-            // Créer une alerte admin
+            // Créer une alerte admin critique
             await db.collection("admin_alerts").add({
               type: "paypal_dispute_created",
-              priority: "critical", // Upgraded to critical
+              priority: "critical",
               title: "🚨 Nouveau litige PayPal",
-              message: `Un litige de ${disputeAmount} ${disputeCurrency} a été ouvert. Raison: ${disputeReason}. ${reserveCreated ? 'Balance réservée.' : 'Aucune balance réservée (provider non identifié).'}`,
+              message: `Un litige de ${disputeAmount} ${disputeCurrency} a été ouvert. Raison: ${disputeReason}. Transaction: ${transactionId || 'N/A'}`,
               disputeId: disputeCreated.dispute_id,
               disputeDocId: disputeDocRef.id,
-              providerId: providerId || null,
-              balanceReserved: reserveCreated,
               read: false,
               createdAt: admin.firestore.FieldValue.serverTimestamp(),
             });
 
-            console.log("✅ [PAYPAL] Dispute recorded:", disputeCreated.dispute_id, "Balance reserved:", reserveCreated);
+            console.log("✅ [PAYPAL] Dispute recorded:", disputeCreated.dispute_id);
           }
           break;
 
@@ -1871,30 +1982,22 @@ export const paypalWebhook = onRequest(
           break;
 
         case "CUSTOMER.DISPUTE.RESOLVED":
-          // Litige résolu
+          // Litige résolu - juste mettre à jour le record et alerter l'admin
           const disputeResolved = event.resource;
           console.log("✅ [PAYPAL] Dispute resolved:", disputeResolved?.dispute_id);
 
           if (disputeResolved?.dispute_id) {
             const outcome = disputeResolved.dispute_outcome?.outcome_code || "UNKNOWN";
-            const isWon = outcome === "RESOLVED_BUYER_FAVOUR" ? false : true;
+            const isWon = outcome !== "RESOLVED_BUYER_FAVOUR";
 
-            // Mettre à jour le record
+            // Mettre à jour le record de dispute
             const resolvedQuery = await db.collection("disputes")
               .where("disputeId", "==", disputeResolved.dispute_id)
               .limit(1)
               .get();
 
-            let resolvedProviderId: string | null = null;
-            let resolvedAmount = 0;
-
             if (!resolvedQuery.empty) {
-              const disputeDoc = resolvedQuery.docs[0];
-              const disputeData = disputeDoc.data();
-              resolvedProviderId = disputeData.providerId;
-              resolvedAmount = disputeData.amount || 0;
-
-              await disputeDoc.ref.update({
+              await resolvedQuery.docs[0].ref.update({
                 status: "RESOLVED",
                 outcome: outcome,
                 isWon: isWon,
@@ -1902,34 +2005,6 @@ export const paypalWebhook = onRequest(
                 paypalData: disputeResolved,
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
               });
-
-              // ===== P0 FIX: LIBÉRER LA RÉSERVE DE BALANCE =====
-              if (resolvedProviderId && disputeData.balanceReserved) {
-                // Créer un ajustement pour libérer la réserve
-                await db.collection("provider_balance_adjustments").add({
-                  providerId: resolvedProviderId,
-                  type: isWon ? "dispute_reserve_released" : "dispute_deduction",
-                  amount: isWon ? resolvedAmount : 0, // Si gagné, on libère; si perdu, c'est déjà déduit
-                  currency: disputeData.currency || "EUR",
-                  reason: isWon
-                    ? `Litige PayPal #${disputeResolved.dispute_id} résolu en faveur du marchand`
-                    : `Litige PayPal #${disputeResolved.dispute_id} résolu en faveur du client`,
-                  disputeId: disputeResolved.dispute_id,
-                  outcome,
-                  status: "completed",
-                  createdAt: admin.firestore.FieldValue.serverTimestamp(),
-                });
-
-                // Mettre à jour le solde bloqué du provider
-                await db.collection("sos_profiles").doc(resolvedProviderId).update({
-                  reservedBalance: admin.firestore.FieldValue.increment(-resolvedAmount),
-                  hasActiveDispute: false,
-                  lastDisputeResolvedAt: admin.firestore.FieldValue.serverTimestamp(),
-                  lastDisputeOutcome: outcome,
-                });
-
-                console.log(`💰 [PAYPAL] Balance reserve ${isWon ? 'released' : 'deducted'} for provider ${resolvedProviderId}: ${resolvedAmount}`);
-              }
             }
 
             // Alerte admin
@@ -1937,9 +2012,8 @@ export const paypalWebhook = onRequest(
               type: "paypal_dispute_resolved",
               priority: isWon ? "medium" : "critical",
               title: isWon ? "✅ Litige PayPal gagné" : "❌ Litige PayPal perdu",
-              message: `Le litige ${disputeResolved.dispute_id} a été ${isWon ? "gagné" : "perdu"}. Résultat: ${outcome}. ${resolvedProviderId ? `Provider: ${resolvedProviderId}` : ''}`,
+              message: `Le litige ${disputeResolved.dispute_id} a été ${isWon ? "gagné" : "perdu"}. Résultat: ${outcome}.`,
               disputeId: disputeResolved.dispute_id,
-              providerId: resolvedProviderId,
               outcome,
               read: false,
               createdAt: admin.firestore.FieldValue.serverTimestamp(),

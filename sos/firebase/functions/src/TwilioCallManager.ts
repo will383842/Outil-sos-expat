@@ -8,6 +8,10 @@ import { stripeManager } from "./StripeManager";
 import { setProviderBusy, setProviderAvailable } from "./callables/providerStatusManager";
 // 🔒 Phone number encryption
 import { encryptPhoneNumber, decryptPhoneNumber } from "./utils/encryption";
+// P1-13: Sync atomique payments <-> call_sessions
+import { syncPaymentStatus } from "./utils/paymentSync";
+// Production logger
+import { logger as prodLogger } from "./utils/productionLogger";
 
 // =============================
 // Typage fort du JSON de prompts
@@ -48,6 +52,8 @@ export interface CallSessionState {
   // P0 FIX: Ajouter clientId et providerId au niveau racine pour Firestore rules
   clientId?: string;
   providerId?: string;
+  // P1-13 FIX: FK vers payments collection (source of truth unique)
+  paymentId?: string;
   status:
     | "pending"
     | "provider_connecting"
@@ -448,6 +454,8 @@ export class TwilioCallManager {
         // P0 FIX: Ajouter clientId et providerId au niveau racine pour compatibilité Firestore rules
         clientId: params.clientId,
         providerId: params.providerId,
+        // P1-13 FIX: Ajouter paymentId comme FK vers payments collection (source of truth unique)
+        paymentId: params.paymentIntentId,
         participants: {
           provider: {
             phone: encryptedProviderPhone,
@@ -514,28 +522,67 @@ export class TwilioCallManager {
     sessionId: string,
     delayMinutes: number = 4
   ): Promise<void> {
+    const callRequestId = `call_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+
     try {
+      prodLogger.info('TWILIO_CALL_INIT', `[${callRequestId}] Initiating call sequence`, {
+        callRequestId,
+        sessionId,
+        delayMinutes,
+      });
+
       console.log(
         `🚀 Init séquence d'appel ${sessionId} dans ${delayMinutes} min`
       );
 
       const callSession = await this.getCallSession(sessionId);
       if (!callSession) {
+        prodLogger.error('TWILIO_CALL_ERROR', `[${callRequestId}] Session not found`, {
+          callRequestId,
+          sessionId,
+        });
         throw new Error(`Session ${sessionId} not found`);
       }
 
+      prodLogger.debug('TWILIO_SESSION_LOADED', `[${callRequestId}] Call session loaded`, {
+        callRequestId,
+        sessionId,
+        status: callSession.status,
+        clientId: callSession.clientId,
+        providerId: callSession.providerId,
+        paymentIntentId: callSession.payment?.intentId,
+      });
+
+      // P2-7 FIX: Ensure metadata defaults are persisted to Firestore
+      let metadataUpdated = false;
       if (!callSession.metadata) {
         console.warn(
           `No metadata found for session ${sessionId}, creating minimal metadata`
         );
+        callSession.metadata = {
+          clientLanguages: ["en"],
+          providerLanguages: ["en"],
+        } as typeof callSession.metadata;
+        metadataUpdated = true;
       } else {
         // Just update the existing metadata with language defaults
         if (!callSession.metadata.clientLanguages) {
           callSession.metadata.clientLanguages = ["en"];
+          metadataUpdated = true;
         }
         if (!callSession.metadata.providerLanguages) {
           callSession.metadata.providerLanguages = ["en"];
+          metadataUpdated = true;
         }
+      }
+      // Persist metadata fallback to Firestore
+      if (metadataUpdated) {
+        await this.db.collection("call_sessions").doc(sessionId).update({
+          "metadata.clientLanguages": callSession.metadata.clientLanguages,
+          "metadata.providerLanguages": callSession.metadata.providerLanguages,
+          "metadata.updatedAt": admin.firestore.FieldValue.serverTimestamp(),
+        });
+        console.log(`📄 Persisted metadata fallback for session ${sessionId}`);
       }
 
       if (delayMinutes > 0) {
@@ -560,13 +607,27 @@ export class TwilioCallManager {
   }
 
   private async executeCallSequence(sessionId: string): Promise<void> {
+    const execId = `exec_${Date.now().toString(36)}`;
+
+    prodLogger.info('TWILIO_EXEC_START', `[${execId}] Executing call sequence`, {
+      execId,
+      sessionId,
+    });
+
     console.log("i am in executeCallSequence with the session id", sessionId);
     const callSession = await this.getCallSession(sessionId);
-    if (!callSession)
+    if (!callSession) {
+      prodLogger.error('TWILIO_EXEC_ERROR', `[${execId}] Session not found`, { execId, sessionId });
       throw new Error(`Session d'appel non trouvée: ${sessionId}`);
+    }
     console.log("[executeCallSequence] callSession:", callSession);
 
     if (callSession.status === "cancelled" || callSession.status === "failed") {
+      prodLogger.warn('TWILIO_EXEC_SKIP', `[${execId}] Session already ${callSession.status}`, {
+        execId,
+        sessionId,
+        status: callSession.status,
+      });
       console.log(`Session ${sessionId} déjà ${callSession.status}, stop`);
       return;
     }
@@ -575,7 +636,21 @@ export class TwilioCallManager {
     const paymentValid = BYPASS_VALIDATIONS
       ? true
       : await this.validatePaymentStatus(callSession.payment.intentId);
+
+    prodLogger.debug('TWILIO_PAYMENT_CHECK', `[${execId}] Payment validation`, {
+      execId,
+      sessionId,
+      paymentIntentId: callSession.payment?.intentId,
+      paymentValid,
+      bypassed: BYPASS_VALIDATIONS,
+    });
+
     if (!paymentValid) {
+      prodLogger.error('TWILIO_PAYMENT_INVALID', `[${execId}] Payment invalid - failing call`, {
+        execId,
+        sessionId,
+        paymentIntentId: callSession.payment?.intentId,
+      });
       await this.handleCallFailure(sessionId, "payment_invalid");
       return;
     }
@@ -1212,10 +1287,17 @@ export class TwilioCallManager {
 
       if (result.success) {
         const newStatus = paymentStatus === "authorized" ? "cancelled" : "refunded";
+        // P1-13 FIX: Sync atomique payments <-> call_sessions
+        const paymentId = callSession.paymentId || callSession.payment.intentId || callSession.payment.paypalOrderId;
+        if (paymentId) {
+          await syncPaymentStatus(this.db, paymentId, sessionId, {
+            status: newStatus,
+            refundedAt: admin.firestore.FieldValue.serverTimestamp(),
+            refundReason: reason,
+          });
+        }
+        // Mise à jour metadata séparément (pas dans payments collection)
         await this.db.collection("call_sessions").doc(sessionId).update({
-          "payment.status": newStatus,
-          "payment.refundedAt": admin.firestore.Timestamp.now(),
-          "payment.refundReason": reason,
           "metadata.updatedAt": admin.firestore.Timestamp.now(),
         });
         console.log(`✅ Paiement ${sessionId} traité avec succès: ${newStatus}`);
@@ -1410,14 +1492,69 @@ export class TwilioCallManager {
   }
 
   async capturePaymentForSession(sessionId: string): Promise<boolean> {
+    const captureId = `capture_${Date.now().toString(36)}`;
+
     try {
+      prodLogger.info('TWILIO_CAPTURE_START', `[${captureId}] Starting payment capture for call session`, {
+        captureId,
+        sessionId,
+      });
+
       console.log(`📄 Capturing payment for session: ${sessionId}`);
+
+      // P2-4 FIX: Atomic lock to prevent race conditions on concurrent capture attempts
+      const sessionRef = this.db.collection("call_sessions").doc(sessionId);
+      let lockAcquired = false;
+
+      try {
+        await this.db.runTransaction(async (transaction) => {
+          const sessionDoc = await transaction.get(sessionRef);
+          if (!sessionDoc.exists) {
+            throw new Error("Session not found");
+          }
+          const data = sessionDoc.data();
+
+          // Already captured
+          if (data?.payment?.status === "captured") {
+            console.log(`📄 Payment already captured for session: ${sessionId}`);
+            return; // Exit transaction without changes
+          }
+
+          // Check if another process is capturing (using captureLock field)
+          const captureLock = data?.captureLock as admin.firestore.Timestamp | undefined;
+          if (captureLock) {
+            const lockTime = captureLock.toDate();
+            const lockAge = Date.now() - lockTime.getTime();
+            // Lock expires after 2 minutes (capture should not take longer)
+            if (lockAge < 2 * 60 * 1000) {
+              console.log(`📄 Capture already in progress for session: ${sessionId} (lock age: ${lockAge}ms)`);
+              return;
+            }
+          }
+
+          // Set atomic lock
+          transaction.update(sessionRef, {
+            captureLock: admin.firestore.FieldValue.serverTimestamp(),
+          });
+          lockAcquired = true;
+        });
+      } catch (lockError) {
+        console.error(`❌ Failed to acquire capture lock: ${lockError}`);
+        return false;
+      }
+
+      if (!lockAcquired) {
+        console.log(`📄 Could not acquire lock or already captured for session: ${sessionId}`);
+        return true; // Either already captured or in progress - not a failure
+      }
+
+      // Re-fetch session after acquiring lock
       const session = await this.getCallSession(sessionId);
       if (!session) return false;
 
       console.log(`📄 Session payment status: ${session.payment.status}`);
 
-      // Already captured (e.g., Stripe automatic capture) - ensure invoices exist once
+      // Already captured (double-check after lock) - ensure invoices exist once
       if (session.payment.status === "captured") {
         console.log(`📄 Payment already captured for session: ${sessionId}`);
         if (!session.metadata?.invoicesCreated) {
@@ -1484,11 +1621,19 @@ export class TwilioCallManager {
 
       console.log("📄 Capture result:", JSON.stringify(captureResult, null, 2));
 
+      // P1-13 FIX: Obtenir le paymentId pour sync atomique
+      const paymentId = session.paymentId || session.payment.intentId || session.payment.paypalOrderId;
+
       if (!captureResult.success) {
         console.error(`❌ Payment capture failed: ${captureResult.error}`);
+        // P1-13 FIX: Sync atomique payments <-> call_sessions
+        if (paymentId) {
+          await syncPaymentStatus(this.db, paymentId, sessionId, {
+            status: "failed",
+            failureReason: captureResult.error || "Capture failed",
+          });
+        }
         await this.db.collection("call_sessions").doc(sessionId).update({
-          "payment.status": "failed",
-          "payment.failureReason": captureResult.error || "Capture failed",
           "metadata.updatedAt": admin.firestore.Timestamp.now(),
         });
 
@@ -1504,20 +1649,21 @@ export class TwilioCallManager {
         return false;
       }
 
-      // Mise a jour avec les informations de paiement et transfert automatique
-      const paymentUpdate: Record<string, unknown> = {
-        "payment.status": "captured",
-        "payment.capturedAt": admin.firestore.Timestamp.now(),
-        "metadata.updatedAt": admin.firestore.Timestamp.now(),
+      // P1-13 FIX: Préparer les données de capture pour sync atomique
+      const captureData: Record<string, unknown> = {
+        status: "captured",
+        capturedAt: admin.firestore.FieldValue.serverTimestamp(),
+        serviceDelivered: true,
+        refundBlocked: true,
       };
 
       // Si Destination Charges est utilise, le transfert est automatique
       if (captureResult.transferId) {
         console.log(`✅ Automatic transfer via Destination Charges: ${captureResult.transferId}`);
-        paymentUpdate["payment.transferId"] = captureResult.transferId;
-        paymentUpdate["payment.transferAmount"] = providerAmountCents;
-        paymentUpdate["payment.transferredAt"] = admin.firestore.Timestamp.now();
-        paymentUpdate["payment.transferStatus"] = "automatic";
+        captureData.transferId = captureResult.transferId;
+        captureData.transferAmount = providerAmountCents;
+        captureData.transferCreatedAt = admin.firestore.FieldValue.serverTimestamp();
+        captureData.transferStatus = "automatic";
 
         // Recuperer le destinationAccountId depuis le payment record
         try {
@@ -1525,7 +1671,7 @@ export class TwilioCallManager {
           if (paymentDoc.exists) {
             const paymentData = paymentDoc.data();
             if (paymentData?.destinationAccountId) {
-              paymentUpdate["payment.destinationAccountId"] = paymentData.destinationAccountId;
+              captureData.destinationAccountId = paymentData.destinationAccountId;
             }
           }
         } catch (err) {
@@ -1534,10 +1680,17 @@ export class TwilioCallManager {
       } else {
         // Pas de Destination Charges configure - le transfert devra etre fait manuellement
         console.log(`⚠️ No automatic transfer - Destination Charges not configured for this payment`);
-        paymentUpdate["payment.transferStatus"] = "pending";
+        captureData.transferStatus = "pending";
       }
 
-      await this.db.collection("call_sessions").doc(sessionId).update(paymentUpdate);
+      // P1-13 FIX: Sync atomique payments <-> call_sessions
+      if (paymentId) {
+        await syncPaymentStatus(this.db, paymentId, sessionId, captureData);
+      }
+      // Mise à jour metadata séparément
+      await this.db.collection("call_sessions").doc(sessionId).update({
+        "metadata.updatedAt": admin.firestore.Timestamp.now(),
+      });
       console.log(`📄 Updated call session with capture info: ${sessionId}`);
 
       // Create review request
@@ -1563,9 +1716,24 @@ export class TwilioCallManager {
         },
       });
 
+      // Log de succès
+      prodLogger.info('TWILIO_CAPTURE_SUCCESS', `[${captureId}] Payment captured successfully`, {
+        captureId,
+        sessionId,
+        amount: session.payment.amount,
+        duration: session.conference.duration,
+        transferId: captureResult.transferId || null,
+        gateway: isPayPal ? 'paypal' : 'stripe',
+      });
+
       return true;
 
     } catch (error) {
+      prodLogger.error('TWILIO_CAPTURE_ERROR', `[${captureId}] Payment capture failed`, {
+        captureId,
+        sessionId,
+        error: error instanceof Error ? error.message : String(error),
+      });
       await logError(
         "TwilioCallManager:capturePaymentForSession",
         error as unknown

@@ -7,6 +7,8 @@ import * as admin from 'firebase-admin';
 import { stripeManager } from './StripeManager';
 // P0 FIX: Import scheduleCallTaskWithIdempotence pour planifier avec vérification des doublons
 import { scheduleCallTaskWithIdempotence } from './lib/tasks';
+// Production logger
+import { logger as prodLogger } from './utils/productionLogger';
 
 // Secret for phone number encryption
 const ENCRYPTION_KEY = defineSecret('ENCRYPTION_KEY');
@@ -64,12 +66,23 @@ export const createAndScheduleCallHTTPS = onCall(
   },
   async (request: CallableRequest<CreateCallRequest>) => {
     const requestId = `call_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-    
+
+    prodLogger.info('CALL_SCHEDULE_START', `[${requestId}] Creating and scheduling call`, {
+      requestId,
+      providerId: request.data?.providerId,
+      clientId: request.data?.clientId,
+      serviceType: request.data?.serviceType,
+      paymentIntentId: request.data?.paymentIntentId,
+      callSessionId: request.data?.callSessionId,
+      amount: request.data?.amount,
+    });
+
     try {
       // ========================================
       // 1. VALIDATION DE L'AUTHENTIFICATION
       // ========================================
       if (!request.auth) {
+        prodLogger.error('CALL_SCHEDULE_AUTH_ERROR', `[${requestId}] Authentication missing`, { requestId });
         console.error(`❌ [${requestId}] Authentification manquante`);
         throw new HttpsError(
           'unauthenticated',
@@ -380,6 +393,17 @@ export const createAndScheduleCallHTTPS = onCall(
         note: 'L\'appel sera automatiquement déclenché dans 4 minutes via Cloud Tasks'
       };
 
+      // Log de succès
+      prodLogger.info('CALL_SCHEDULE_SUCCESS', `[${requestId}] Call session created and scheduled`, {
+        requestId,
+        sessionId: response.sessionId,
+        status: response.status,
+        amount: response.amount,
+        paymentIntentId,
+        schedulingMethod: response.schedulingMethod,
+        delayMinutes: 4,
+      });
+
       console.log(`🎉 [${requestId}] Réponse envoyée:`, {
         sessionId: response.sessionId,
         status: response.status,
@@ -391,6 +415,15 @@ export const createAndScheduleCallHTTPS = onCall(
       return response;
 
     } catch (error: unknown) {
+      // Log d'erreur
+      prodLogger.error('CALL_SCHEDULE_ERROR', `[${requestId}] Call scheduling failed`, {
+        requestId,
+        providerId: request.data?.providerId,
+        clientId: request.data?.clientId,
+        paymentIntentId: request.data?.paymentIntentId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+
       // ========================================
       // 11. GESTION D'ERREURS COMPLÈTE
       // ========================================

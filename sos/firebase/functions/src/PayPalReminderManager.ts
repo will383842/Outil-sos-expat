@@ -570,6 +570,17 @@ export async function onPayPalConnected(
 
   await batch.commit();
 
+  // P2-11 FIX: Log visibility change for detection/monitoring
+  await db.collection("visibility_changes").add({
+    userId,
+    previousVisibility: false,
+    newVisibility: true,
+    reason: "paypal_connected",
+    trigger: "PayPalReminderManager:onPayPalConnected",
+    paypalMerchantId,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
   // Log d'audit
   await db.collection("paypal_account_logs").add({
     userId,

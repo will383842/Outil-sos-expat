@@ -94,6 +94,23 @@ export function maskPhone(phone: string | null | undefined): string {
 }
 
 /**
+ * P2-6 FIX: Masque un montant pour les logs
+ * Affiche seulement la plage: "<10€", "10-50€", "50-100€", ">100€"
+ */
+export function maskAmount(amount: number | null | undefined, currency = "EUR"): string {
+  if (amount === null || amount === undefined) return "[null]";
+  if (typeof amount !== "number" || isNaN(amount)) return "[invalid]";
+
+  const symbol = currency === "USD" ? "$" : "€";
+
+  if (amount < 10) return `<10${symbol}`;
+  if (amount < 50) return `10-50${symbol}`;
+  if (amount < 100) return `50-100${symbol}`;
+  if (amount < 500) return `100-500${symbol}`;
+  return `>500${symbol}`;
+}
+
+/**
  * Crée un objet de log sécurisé en masquant automatiquement les champs sensibles
  */
 export function safeLogData(data: Record<string, unknown>): Record<string, unknown> {
@@ -108,6 +125,8 @@ export function safeLogData(data: Record<string, unknown>): Record<string, unkno
 
   const emailFields = ["email", "clientEmail", "providerEmail", "userEmail"];
   const phoneFields = ["phone", "phoneNumber", "clientPhone", "providerPhone"];
+  // P2-6: Champs de montant à masquer
+  const amountFields = ["amount", "totalAmount", "providerAmount", "commissionAmount", "refundAmount", "payoutAmount"];
 
   for (const [key, value] of Object.entries(data)) {
     if (value === undefined || value === null) {
@@ -130,6 +149,13 @@ export function safeLogData(data: Record<string, unknown>): Record<string, unkno
     // Phones
     if (phoneFields.some(f => key.toLowerCase().includes(f.toLowerCase())) && typeof value === "string") {
       result[key] = maskPhone(value);
+      continue;
+    }
+
+    // P2-6: Amounts
+    if (amountFields.some(f => key.toLowerCase().includes(f.toLowerCase())) && typeof value === "number") {
+      const currency = (data.currency as string) || "EUR";
+      result[key] = maskAmount(value, currency);
       continue;
     }
 

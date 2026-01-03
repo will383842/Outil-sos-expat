@@ -3,6 +3,8 @@ import * as admin from "firebase-admin";
 import { MailwizzAPI } from "../utils/mailwizz";
 import { logGA4Event, logTrustpilotEvent } from "../utils/analytics";
 import { getLanguageCode } from "../config";
+// P2-2 FIX: Unified payment status checks
+import { isPaymentCompleted } from "../../utils/paymentStatusUtils";
 
 /**
  * FUNCTION 3: Handle Call Completed
@@ -394,8 +396,8 @@ export const handlePaymentReceived = onDocumentCreated(
       return;
     }
 
-    // Check if payment succeeded
-    if (payment.status === "succeeded" || payment.status === "captured") {
+    // P2-2 FIX: Check if payment succeeded using unified utility
+    if (isPaymentCompleted(payment.status)) {
       try {
         const mailwizz = new MailwizzAPI();
 

@@ -48,6 +48,7 @@ import { getDateLocale } from "../utils/formatters";
 import { usePaymentGateway } from "../hooks/usePaymentGateway";
 import { PayPalPaymentForm, GatewayIndicator } from "../components/payment";
 import { PayPalScriptProvider } from "@paypal/react-paypal-js";
+import { paymentLogger, navigationLogger, callLogger } from "../utils/debugLogger";
 
 /* -------------------------- Stripe singleton (HMR-safe) ------------------ */
 // Conserve la même Promise Stripe à travers les rechargements HMR.
@@ -1708,7 +1709,10 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           console.warn("Missing/invalid phone(s). Skipping call scheduling.");
         }
 
+        console.log("🔵 [STRIPE_DEBUG] Persisting payment documents...");
         const orderId = await persistPaymentDocs(paymentIntent.id);
+        console.log("🔵 [STRIPE_DEBUG] persistPaymentDocs result:", { orderId });
+
         void sendProviderNotifications(
           paymentIntent.id,
           clientPhoneE164,
@@ -1724,13 +1728,43 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           amount: adminPricing.totalAmount,
           call_status: callStatus,
         });
-        setTimeout(() => {
-          onSuccess({
-            paymentIntentId: paymentIntent.id,
-            call: callStatus,
-            callId: callId,
-            orderId: orderId,
+
+        // DEBUG: Log avant le setTimeout pour la redirection
+        console.log("🔵 [STRIPE_DEBUG] Payment complete, scheduling navigation in 3s...", {
+          paymentIntentId: paymentIntent.id,
+          callStatus,
+          callId,
+          orderId,
+          currentPath: window.location.pathname,
+          timestamp: new Date().toISOString()
+        });
+
+        // Log pour la call session si créée
+        if (callId) {
+          callLogger.sessionCreated({
+            callSessionId: callId,
+            providerId: provider.id,
+            clientId: user.uid!
           });
+        }
+
+        setTimeout(() => {
+          console.log("🚀 [STRIPE_DEBUG] 3s timeout complete, calling onSuccess now...");
+          try {
+            onSuccess({
+              paymentIntentId: paymentIntent.id,
+              call: callStatus,
+              callId: callId,
+              orderId: orderId,
+            });
+            console.log("✅ [STRIPE_DEBUG] onSuccess called successfully");
+          } catch (successError) {
+            console.error("❌ [STRIPE_DEBUG] onSuccess threw error:", successError);
+            paymentLogger.paymentError(successError instanceof Error ? successError : String(successError), {
+              step: 'onSuccess callback',
+              paymentIntentId: paymentIntent.id
+            });
+          }
         }, 3000);
       } catch (err: unknown) {
         console.error("Payment error:", err);
@@ -2672,6 +2706,21 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
       callId?: string;
       orderId?: string;
     }) => {
+      // DEBUG: Log détaillé avant la navigation
+      paymentLogger.paymentSuccess({
+        paymentIntentId: payload.paymentIntentId,
+        status: payload.call
+      });
+
+      console.log("🔵 [NAVIGATION_DEBUG] handlePaymentSuccess called with:", {
+        paymentIntentId: payload.paymentIntentId.substring(0, 15) + '...',
+        call: payload.call,
+        callId: payload.callId,
+        orderId: payload.orderId,
+        currentPath: window.location.pathname,
+        timestamp: new Date().toISOString()
+      });
+
       setCurrentStep("calling");
       setCallProgress(1);
 
@@ -2685,8 +2734,32 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
       if (payload.callId) params.set("callId", payload.callId);
       if (payload.orderId) params.set("orderId", payload.orderId);
 
-      console.log("🚀 Navigation vers payment-success avec params:", Object.fromEntries(params));
-      navigate(`/payment-success?${params.toString()}`, { replace: false });
+      const targetUrl = `/payment-success?${params.toString()}`;
+
+      // DEBUG: Log la navigation
+      navigationLogger.beforeNavigate({
+        from: window.location.pathname,
+        to: targetUrl,
+        params: Object.fromEntries(params)
+      });
+
+      console.log("🚀 [NAVIGATION_DEBUG] About to navigate:", {
+        targetUrl,
+        currentUrl: window.location.href,
+        navigateFunction: typeof navigate,
+        historyLength: window.history.length
+      });
+
+      // Exécuter la navigation
+      try {
+        navigate(targetUrl, { replace: false });
+        console.log("✅ [NAVIGATION_DEBUG] navigate() called successfully");
+      } catch (navError) {
+        console.error("❌ [NAVIGATION_DEBUG] navigate() threw error:", navError);
+        // Fallback: utiliser window.location si navigate échoue
+        console.log("🔄 [NAVIGATION_DEBUG] Trying fallback with window.location...");
+        window.location.href = targetUrl;
+      }
     },
     [navigate, provider?.id]
   );
@@ -2696,19 +2769,43 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
   // ========================================
   const handlePayPalPaymentSuccess = useCallback(
     async (details: { orderId: string; payerId: string; status: string; captureId?: string }) => {
-      console.log("🎉 [PAYPAL] Payment success:", details);
-      console.log("🔗 [PAYPAL] Using callSessionId:", paypalCallSessionId);
+      // DEBUG: Log détaillé pour PayPal
+      paymentLogger.paypalSuccess({
+        orderId: details.orderId,
+        payerId: details.payerId,
+        callSessionId: paypalCallSessionId
+      });
+
+      console.log("🎉 [PAYPAL_DEBUG] Payment success details:", {
+        orderId: details.orderId,
+        payerId: details.payerId,
+        status: details.status,
+        captureId: details.captureId,
+        callSessionId: paypalCallSessionId,
+        timestamp: new Date().toISOString()
+      });
+
       setIsProcessing(true);
 
       try {
+        console.log("🔵 [PAYPAL_DEBUG] Calling persistPayPalDocs...");
         // Utiliser le même callSessionId que celui passé au backend PayPal
         const internalOrderId = await persistPayPalDocs(details.orderId, paypalCallSessionId);
+        console.log("🔵 [PAYPAL_DEBUG] persistPayPalDocs result:", { internalOrderId });
 
         if (!internalOrderId) {
-          console.error("❌ [PAYPAL] Failed to create order");
+          console.error("❌ [PAYPAL_DEBUG] Failed to create order - internalOrderId is null/undefined");
+          paymentLogger.paypalError("Failed to create internal order", { orderId: details.orderId });
         }
 
         // Naviguer vers la page de succès avec l'orderId interne
+        console.log("🔵 [PAYPAL_DEBUG] About to call handlePaymentSuccess with:", {
+          paymentIntentId: details.orderId,
+          call: "scheduled",
+          callId: paypalCallSessionId,
+          orderId: internalOrderId
+        });
+
         handlePaymentSuccess({
           paymentIntentId: details.orderId,
           call: "scheduled",
@@ -2716,7 +2813,14 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
           orderId: internalOrderId || undefined,
         });
       } catch (error) {
-        console.error("❌ [PAYPAL] Error in handlePayPalPaymentSuccess:", error);
+        console.error("❌ [PAYPAL_DEBUG] Error in handlePayPalPaymentSuccess:", error);
+        paymentLogger.paypalError(error instanceof Error ? error : String(error), {
+          orderId: details.orderId,
+          step: 'handlePayPalPaymentSuccess'
+        });
+
+        // Fallback: naviguer quand même vers success sans orderId
+        console.log("🔄 [PAYPAL_DEBUG] Fallback navigation without orderId");
         handlePaymentSuccess({
           paymentIntentId: details.orderId,
           call: "scheduled",
@@ -2724,6 +2828,7 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
         });
       } finally {
         setIsProcessing(false);
+        console.log("🔵 [PAYPAL_DEBUG] handlePayPalPaymentSuccess completed");
       }
     },
     [persistPayPalDocs, handlePaymentSuccess, paypalCallSessionId]

@@ -3,6 +3,9 @@ import { onSchedule } from "firebase-functions/v2/scheduler";
 import { StripeManager } from "./StripeManager";
 import { logError } from "./utils/logs/logError";
 import { logCallRecord } from "./utils/logs/logCallRecord";
+import { logger as prodLogger } from "./utils/productionLogger";
+// P1-13: Sync atomique payments <-> call_sessions
+import { syncPaymentStatus } from "./utils/paymentSync";
 
 /**
  * LEGACY FUNCTION - Scheduled for deprecation
@@ -37,7 +40,13 @@ export const processScheduledTransfers = onSchedule(
     memory: "256MiB", // OPTIMIZED: Reduced from 512MiB - legacy function with simple queries
   },
   async () => {
+    const executionId = `legacy-transfer-${Date.now()}`;
     const now = new Date();
+
+    prodLogger.info('LEGACY_TRANSFER_START', `[${executionId}] Legacy scheduled transfers execution started`, {
+      executionId,
+      timestamp: now.toISOString()
+    });
 
     // Check if transition period has ended
     if (now > TRANSITION_END_DATE) {
@@ -49,6 +58,11 @@ export const processScheduledTransfers = onSchedule(
       console.log("This function can now be safely removed from deployment.");
       console.log("To remove: Delete export from index.ts and remove this file.");
       console.log("========================================");
+
+      prodLogger.info('LEGACY_TRANSFER_DISABLED', `[${executionId}] Legacy function disabled - transition ended`, {
+        executionId,
+        transitionEndDate: TRANSITION_END_DATE.toISOString()
+      });
       return;
     }
 
@@ -80,6 +94,11 @@ export const processScheduledTransfers = onSchedule(
         .get();
 
       console.log(`Found ${pendingSnapshot.size} legacy transfers to process`);
+      prodLogger.info('LEGACY_TRANSFER_FOUND', `[${executionId}] Found ${pendingSnapshot.size} legacy transfers`, {
+        executionId,
+        count: pendingSnapshot.size,
+        daysRemaining
+      });
 
       if (pendingSnapshot.size === 0) {
         console.log("========================================");
@@ -87,6 +106,9 @@ export const processScheduledTransfers = onSchedule(
         console.log("All pre-migration transfers have been processed.");
         console.log("Consider removing this function after transition period ends.");
         console.log("========================================");
+        prodLogger.info('LEGACY_TRANSFER_NONE', `[${executionId}] No legacy transfers to process`, {
+          executionId
+        });
         return;
       }
 
@@ -123,11 +145,20 @@ export const processScheduledTransfers = onSchedule(
               processedAs: "legacy_transfer", // Mark as legacy for audit
             });
 
-            // Update call_session with transfer info
+            // P1-13 FIX: Récupérer paymentId depuis call_session et sync atomique
+            const sessionDoc = await db.collection("call_sessions").doc(transfer.sessionId).get();
+            const sessionData = sessionDoc.data();
+            const paymentId = sessionData?.paymentId || sessionData?.payment?.intentId;
+
+            if (paymentId) {
+              await syncPaymentStatus(db, paymentId, transfer.sessionId, {
+                transferId: transferResult.transferId,
+                transferCreatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                transferStatus: "succeeded",
+              });
+            }
+            // Mise à jour metadata séparément
             await db.collection("call_sessions").doc(transfer.sessionId).update({
-              "payment.transferId": transferResult.transferId,
-              "payment.transferredAt": admin.firestore.FieldValue.serverTimestamp(),
-              "payment.transferStatus": "succeeded",
               "metadata.updatedAt": admin.firestore.FieldValue.serverTimestamp(),
             });
 
@@ -149,6 +180,13 @@ export const processScheduledTransfers = onSchedule(
             results.succeeded++;
             results.totalAmount += transfer.amount;
             console.log(`[LEGACY] Transfer ${doc.id} completed successfully`);
+            prodLogger.info('LEGACY_TRANSFER_SUCCESS', `[${executionId}] Transfer succeeded`, {
+              executionId,
+              transferId: doc.id,
+              providerId: transfer.providerId,
+              amount: transfer.amount,
+              sessionId: transfer.sessionId
+            });
           } else {
             // Transfer failed - mark as failed
             await doc.ref.update({
@@ -159,10 +197,18 @@ export const processScheduledTransfers = onSchedule(
               retryCount: admin.firestore.FieldValue.increment(1),
             });
 
-            // Update call_session
+            // P1-13 FIX: Sync atomique pour le statut d'échec
+            const failSessionDoc = await db.collection("call_sessions").doc(transfer.sessionId).get();
+            const failSessionData = failSessionDoc.data();
+            const failPaymentId = failSessionData?.paymentId || failSessionData?.payment?.intentId;
+
+            if (failPaymentId) {
+              await syncPaymentStatus(db, failPaymentId, transfer.sessionId, {
+                transferStatus: "failed",
+                transferError: transferResult.error || "Unknown error",
+              });
+            }
             await db.collection("call_sessions").doc(transfer.sessionId).update({
-              "payment.transferStatus": "failed",
-              "payment.transferFailureReason": transferResult.error || "Unknown error",
               "metadata.updatedAt": admin.firestore.FieldValue.serverTimestamp(),
             });
 
@@ -183,10 +229,22 @@ export const processScheduledTransfers = onSchedule(
 
             results.failed++;
             console.error(`[LEGACY] Transfer ${doc.id} failed: ${transferResult.error}`);
+            prodLogger.error('LEGACY_TRANSFER_FAILED', `[${executionId}] Transfer failed`, {
+              executionId,
+              transferId: doc.id,
+              providerId: transfer.providerId,
+              amount: transfer.amount,
+              error: transferResult.error
+            });
           }
         } catch (error) {
           results.failed++;
           console.error(`[LEGACY] Error processing transfer ${doc.id}:`, error);
+          prodLogger.error('LEGACY_TRANSFER_ERROR', `[${executionId}] Transfer error`, {
+            executionId,
+            transferId: doc.id,
+            error: error instanceof Error ? error.message : String(error)
+          });
           await logError("processScheduledTransfers:legacy_transfer", error);
 
           // Mark as failed with error details
@@ -199,11 +257,19 @@ export const processScheduledTransfers = onSchedule(
             processedAs: "legacy_transfer",
           });
 
-          // Try to update call_session
+          // P1-13 FIX: Sync atomique pour le statut d'erreur
           try {
+            const errSessionDoc = await db.collection("call_sessions").doc(transfer.sessionId).get();
+            const errSessionData = errSessionDoc.data();
+            const errPaymentId = errSessionData?.paymentId || errSessionData?.payment?.intentId;
+
+            if (errPaymentId) {
+              await syncPaymentStatus(db, errPaymentId, transfer.sessionId, {
+                transferStatus: "failed",
+                transferError: error instanceof Error ? error.message : "Unknown error",
+              });
+            }
             await db.collection("call_sessions").doc(transfer.sessionId).update({
-              "payment.transferStatus": "failed",
-              "payment.transferFailureReason": error instanceof Error ? error.message : "Unknown error",
               "metadata.updatedAt": admin.firestore.FieldValue.serverTimestamp(),
             });
           } catch (updateError) {
@@ -219,8 +285,22 @@ export const processScheduledTransfers = onSchedule(
       console.log(`Total amount transferred: ${results.totalAmount} EUR`);
       console.log(`Days remaining in transition: ${daysRemaining}`);
       console.log("========================================");
+
+      prodLogger.info('LEGACY_TRANSFER_COMPLETE', `[${executionId}] Legacy transfers processing complete`, {
+        executionId,
+        total: results.total,
+        succeeded: results.succeeded,
+        failed: results.failed,
+        totalAmount: results.totalAmount,
+        daysRemaining
+      });
     } catch (error) {
       console.error("[LEGACY] Scheduled transfer processing failed:", error);
+      prodLogger.error('LEGACY_TRANSFER_CRITICAL_ERROR', `[${executionId}] Critical error in legacy transfers`, {
+        executionId,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack?.slice(0, 500) : undefined
+      });
       await logError("processScheduledTransfers:legacy", error);
       throw error;
     }

@@ -7,12 +7,16 @@ import Stripe from 'stripe';
 // -- App code existant --
 import { stripeManager } from './StripeManager';
 import { logError } from './utils/logs/logError';
+// PHASE 2: Production Logger pour debug détaillé
+import { logger as prodLogger } from './utils/productionLogger';
 import {
   toCents,
   checkDailyLimit,
   logPaymentAudit,
   getPricingConfig,
 } from './utils/paymentValidators';
+// P2-10 FIX: Centralized currency utilities
+import { roundAmount, calculateTotal, formatAmount } from './utils/currencyUtils';
 
 /* ────────────────────────────────────────────────────────────────────────────
    (A) LIMITS — placé tout en haut, avant toute utilisation
@@ -87,6 +91,16 @@ logger.info(
   `🌍 Env=${process.env.NODE_ENV || 'development'} | PROD=${isProduction} | BYPASS=${BYPASS_MODE} | StripeMode=${STRIPE_MODE.value() || '(unset)'}`
 );
 
+// P0-2 SECURITY FIX: Bloquer BYPASS_SECURITY en production
+// Cette variable ne doit JAMAIS être activée en production car elle bypasse:
+// - Rate limiting (checkRateLimit)
+// - Validation métier (validateBusinessLogic)
+// - Détection des doublons (checkAndLockDuplicatePayments)
+if (isProduction && BYPASS_MODE) {
+  logger.error('🚨 [SECURITY] BYPASS_SECURITY=true detected in production! This is forbidden.');
+  throw new Error('BYPASS_SECURITY is forbidden in production environment');
+}
+
 /* Secrets Stripe — lecture SAFE via process.env (les secrets sont injectés via l’option `secrets`) */
 function getStripeSecretKeySafe(): string {
   const mode = (STRIPE_MODE.value() || 'test').toLowerCase();
@@ -118,7 +132,7 @@ interface PaymentIntentRequestData {
   description?: string;
   commissionAmount: number;
   providerAmount: number;
-  callSessionId?: string;
+  callSessionId: string; // P2-15 FIX: Made required for traceability
   metadata?: Record<string, string>;
   coupon?: {
     code: string;
@@ -164,7 +178,7 @@ interface StripeCreatePIPayload {
   providerType: 'lawyer' | 'expat';
   commissionAmount: number;
   providerAmount: number;
-  callSessionId?: string;
+  callSessionId: string; // P2-15 FIX: Made required
   metadata: Record<string, string>;
   /** Stripe Account ID du prestataire pour Destination Charges (split automatique) */
   destinationAccountId?: string;
@@ -397,11 +411,18 @@ async function checkAndLockDuplicatePayments(
     return result;
   } catch (err) {
     await logError('checkAndLockDuplicatePayments', err as unknown);
-    // En cas d'erreur de transaction, on laisse passer mais on log
-    logger.warn('[checkAndLockDuplicatePayments] Transaction failed, allowing payment', {
-      error: err instanceof Error ? err.message : 'unknown'
+    // P0-3 SECURITY FIX: En cas d'erreur de transaction, on REFUSE le paiement
+    // Anciennement on retournait { isDuplicate: false } ce qui permettait des doublons
+    // lors de race conditions (plusieurs requêtes simultanées pendant l'échec)
+    logger.error('[checkAndLockDuplicatePayments] Transaction failed - BLOCKING payment for safety', {
+      error: err instanceof Error ? err.message : 'unknown',
+      clientId,
+      providerId,
     });
-    return { isDuplicate: false };
+    throw new HttpsError(
+      'aborted',
+      'Vérification de doublon impossible. Veuillez réessayer dans quelques secondes.'
+    );
   }
 }
 
@@ -439,19 +460,20 @@ async function releasePaymentLock(
   }
 }
 
+// P2-10 FIX: Using centralized currency utilities for consistent rounding
 function validateAmountCoherence(
   totalAmount: number,
   commissionAmount: number,
   providerAmount: number
 ): { valid: boolean; error?: string; difference: number } {
-  const totalCalculated = Math.round((commissionAmount + providerAmount) * 100) / 100;
-  const amountRounded = Math.round(totalAmount * 100) / 100;
+  const totalCalculated = calculateTotal(commissionAmount, providerAmount);
+  const amountRounded = roundAmount(totalAmount);
   const difference = Math.abs(totalCalculated - amountRounded);
   const tolerance = getLimits().VALIDATION.AMOUNT_COHERENCE_TOLERANCE;
   if (difference > tolerance) {
     return {
       valid: false,
-      error: `Incohérence montants: ${difference.toFixed(2)} (tolérance ${tolerance.toFixed(2)})`,
+      error: `Incohérence montants: ${formatAmount(difference)} (tolérance ${formatAmount(tolerance)})`,
       difference,
     };
   }
@@ -533,6 +555,26 @@ export const createPaymentIntent = onCall(
     const requestId = `req_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const startTime = Date.now();
 
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 🔍 DEBUG ENTRY POINT - Capture toutes les données entrantes
+    // ═══════════════════════════════════════════════════════════════════════════
+    prodLogger.info('PAYMENT_START', `[${requestId}] Nouvelle demande de paiement`, {
+      requestId,
+      userId: request.auth?.uid || 'ANONYMOUS',
+      inputData: {
+        amount: request.data?.amount,
+        currency: request.data?.currency,
+        serviceType: request.data?.serviceType,
+        providerId: request.data?.providerId,
+        clientId: request.data?.clientId,
+        callSessionId: request.data?.callSessionId,
+        commissionAmount: request.data?.commissionAmount,
+        providerAmount: request.data?.providerAmount,
+        hasCoupon: !!request.data?.coupon?.code,
+      },
+      timestamp: new Date().toISOString(),
+    });
+
     /* 🔒 Garde-fou fail-fast sur les limites */
     {
       const L = getLimits();
@@ -560,13 +602,21 @@ export const createPaymentIntent = onCall(
       }
 
       // Rate limit robuste (patch)
+      prodLogger.debug('PAYMENT_STEP', `[${requestId}] Vérification rate limit pour ${userId}`);
       const rl = checkRateLimit(userId);
       if (!rl.allowed) {
         const waitMin = Math.ceil(((rl.resetTime ?? Date.now()) - Date.now()) / 60000);
+        prodLogger.warn('PAYMENT_BLOCKED', `[${requestId}] Rate limit atteint`, {
+          userId,
+          resetTime: rl.resetTime,
+          waitMinutes: waitMin,
+        });
         throw new HttpsError('resource-exhausted', `Trop de tentatives. Réessayez dans ${waitMin} min.`);
       }
+      prodLogger.debug('PAYMENT_STEP', `[${requestId}] ✓ Rate limit OK`);
 
       // Normalisation
+      prodLogger.debug('PAYMENT_STEP', `[${requestId}] Normalisation des données...`);
       const s = sanitizeAndConvertInput(request.data);
       const {
         amountInMainUnit,
@@ -584,8 +634,21 @@ export const createPaymentIntent = onCall(
         metadata,
         coupon,
       } = s;
-      console.log("[createPaymentIntent] Sanitized input:", s);
-      console.log("[createPaymentIntent] Sanitized callSessionId:", callSessionId);
+      // 🔍 DEBUG: Données normalisées avec tous les détails
+      prodLogger.info('PAYMENT_NORMALIZED', `[${requestId}] Données normalisées`, {
+        requestId,
+        amountInMainUnit,
+        amountInCents,
+        commissionAmountInMainUnit,
+        providerAmountInMainUnit,
+        currency,
+        serviceType,
+        providerId: providerId?.substring(0, 10) + '...',
+        clientId: clientId?.substring(0, 10) + '...',
+        callSessionId,
+        hasCoupon: !!coupon?.code,
+        couponCode: coupon?.code || null,
+      });
 
       const V = getLimits().VALIDATION;
       if (!V.ALLOWED_SERVICE_TYPES.includes(serviceType)) {
@@ -593,26 +656,69 @@ export const createPaymentIntent = onCall(
       }
       if (!providerId || providerId.length < 5) throw new HttpsError('invalid-argument', 'ID prestataire invalide');
       if (!clientId || clientId.length < 5) throw new HttpsError('invalid-argument', 'ID client invalide');
+      // P2-15 FIX: callSessionId is now required for payment traceability
+      if (!callSessionId || callSessionId.length < 10) throw new HttpsError('invalid-argument', 'ID session invalide');
       if (!V.ALLOWED_CURRENCIES.includes(currency)) {
         throw new HttpsError('invalid-argument', `Devise non supportée: ${currency}`);
       }
 
       const db = admin.firestore();
 
-      // Limites montants + quota quotidien
+      // ═══════════════════════════════════════════════════════════════════════════
+      // 🔍 VALIDATION ÉTAPE 1: Limites montants + quota quotidien
+      // ═══════════════════════════════════════════════════════════════════════════
+      prodLogger.debug('PAYMENT_VALIDATION', `[${requestId}] Validation sécurité montant...`, {
+        amountInMainUnit,
+        currency,
+        userId,
+      });
       const sec = await validateAmountSecurity(amountInMainUnit, currency, userId, db);
-      if (!sec.valid) throw new HttpsError('invalid-argument', sec.error ?? 'Montant non valide');
+      if (!sec.valid) {
+        prodLogger.error('PAYMENT_VALIDATION_FAILED', `[${requestId}] Échec validation sécurité`, {
+          error: sec.error,
+          amountInMainUnit,
+          currency,
+          userId,
+        });
+        throw new HttpsError('invalid-argument', sec.error ?? 'Montant non valide');
+      }
+      prodLogger.debug('PAYMENT_VALIDATION', `[${requestId}] ✓ Validation sécurité OK`);
 
-      // Règles métier
+      // ═══════════════════════════════════════════════════════════════════════════
+      // 🔍 VALIDATION ÉTAPE 2: Règles métier (provider disponible, etc.)
+      // ═══════════════════════════════════════════════════════════════════════════
+      prodLogger.debug('PAYMENT_VALIDATION', `[${requestId}] Validation règles métier...`);
       const biz = await validateBusinessLogic(request.data, currency, db);
-      if (!biz.valid) throw new HttpsError('failed-precondition', biz.error ?? 'Règles métier non satisfaites');
+      if (!biz.valid) {
+        prodLogger.error('PAYMENT_VALIDATION_FAILED', `[${requestId}] Échec règles métier`, {
+          error: biz.error,
+          providerId,
+          serviceType,
+        });
+        throw new HttpsError('failed-precondition', biz.error ?? 'Règles métier non satisfaites');
+      }
+      prodLogger.debug('PAYMENT_VALIDATION', `[${requestId}] ✓ Règles métier OK`);
 
-      // Anti-doublons (P1-3 FIX: utilisation de transaction atomique)
+      // ═══════════════════════════════════════════════════════════════════════════
+      // 🔍 VALIDATION ÉTAPE 3: Anti-doublons (transaction atomique)
+      // ═══════════════════════════════════════════════════════════════════════════
+      prodLogger.debug('PAYMENT_VALIDATION', `[${requestId}] Vérification doublons...`, {
+        clientId: clientId?.substring(0, 10),
+        providerId: providerId?.substring(0, 10),
+        amountInMainUnit,
+      });
       const duplicateCheck = await checkAndLockDuplicatePayments(clientId, providerId, amountInMainUnit, currency, db);
       if (duplicateCheck.isDuplicate) {
+        prodLogger.warn('PAYMENT_DUPLICATE', `[${requestId}] Paiement doublon détecté!`, {
+          clientId: clientId?.substring(0, 10),
+          providerId: providerId?.substring(0, 10),
+          amountInMainUnit,
+          existingPaymentId: duplicateCheck.existingPaymentId,
+        });
         throw new HttpsError('already-exists', 'Un paiement similaire est déjà en cours de traitement.');
       }
-      const paymentLockId = duplicateCheck.lockId; // À libérer en cas d'erreur
+      const paymentLockId = duplicateCheck.lockId;
+      prodLogger.debug('PAYMENT_VALIDATION', `[${requestId}] ✓ Pas de doublon, lock créé: ${paymentLockId}`)
 
       // Prix attendu (admin_config/pricing + override + coupons empilables)
       const serviceKind: 'lawyer' | 'expat' = serviceType === 'lawyer_call' ? 'lawyer' : 'expat';
@@ -668,25 +774,22 @@ export const createPaymentIntent = onCall(
         }
       }
 
-      // ===== VALIDATION MONTANT (P0 SECURITY FIX - NE PAS COMMENTER EN PRODUCTION) =====
+      // ===== VALIDATION MONTANT (P1-14 SECURITY FIX - STRICT TOUS ENVIRONNEMENTS) =====
       // Cette validation empêche la manipulation des prix côté client
+      // P1-14 FIX: Validation stricte en TOUS environnements (pas seulement production)
+      // Anciennement: En dev, on log un warning mais on continue (vulnérable)
+      // Maintenant: Rejet systématique pour détecter les bugs en dev
       const diff = Math.abs(Number(amountInMainUnit) - Number(expected));
       // Tolérance de 0.5€ pour les arrondis de coupons/promotions
-      if (diff > 0.5 && isProduction) {
-        logger.error('[createPaymentIntent] Amount mismatch detected', {
+      if (diff > 0.5) {
+        logger.error('[createPaymentIntent] Amount mismatch detected - REJECTING', {
           received: amountInMainUnit,
           expected,
           difference: diff,
           userId: request.auth?.uid,
+          environment: process.env.NODE_ENV || 'unknown',
         });
         throw new HttpsError('invalid-argument', `Montant inattendu (reçu ${amountInMainUnit}, attendu ${expected})`);
-      } else if (diff > 0.5) {
-        // En dev, on log un warning mais on continue
-        logger.warn('[createPaymentIntent] Amount mismatch in dev mode', {
-          received: amountInMainUnit,
-          expected,
-          difference: diff,
-        });
       }
 
       const coherence = validateAmountCoherence(
@@ -737,6 +840,9 @@ export const createPaymentIntent = onCall(
       }
 
       const providerType: 'lawyer' | 'expat' = serviceType === 'lawyer_call' ? 'lawyer' : 'expat';
+      // ═══════════════════════════════════════════════════════════════════════════
+      // 🔍 STRIPE API CALL - Création du PaymentIntent
+      // ═══════════════════════════════════════════════════════════════════════════
       const stripePayload: StripeCreatePIPayload = {
         amount: amountInMainUnit,
         currency,
@@ -771,13 +877,51 @@ export const createPaymentIntent = onCall(
         },
       };
 
+      prodLogger.info('STRIPE_API_CALL', `[${requestId}] Appel Stripe createPaymentIntent...`, {
+        requestId,
+        amount: amountInMainUnit,
+        amountCents: amountInCents,
+        currency,
+        serviceType,
+        hasDestinationAccount: !!providerStripeAccountId,
+        destinationAccount: providerStripeAccountId?.substring(0, 12) || null,
+        callSessionId,
+        stripeMode: STRIPE_MODE.value() || 'test',
+      });
+
+      const stripeCallStart = Date.now();
       const result: StripeCreatePIResult = await stripeManager.createPaymentIntent(
         stripePayload,
         stripeSecretKey
       );
+      const stripeCallDuration = Date.now() - stripeCallStart;
+
+      prodLogger.info('STRIPE_API_RESPONSE', `[${requestId}] Réponse Stripe reçue en ${stripeCallDuration}ms`, {
+        requestId,
+        success: result?.success,
+        hasClientSecret: !!result?.clientSecret,
+        paymentIntentId: result?.paymentIntentId?.substring(0, 15) || null,
+        error: result?.error || null,
+        durationMs: stripeCallDuration,
+      });
+
       if (!result?.success || !result.clientSecret || !result.paymentIntentId) {
         // P1-3 FIX: Libérer le lock en cas d'échec
         if (paymentLockId) await releasePaymentLock(paymentLockId, db);
+
+        prodLogger.error('STRIPE_API_ERROR', `[${requestId}] ❌ ÉCHEC création PaymentIntent`, {
+          requestId,
+          userId,
+          serviceType,
+          amountInMainUnit,
+          amountInCents,
+          currency,
+          providerId: providerId?.substring(0, 10),
+          stripeError: result?.error ?? 'unknown',
+          hasClientSecret: !!result?.clientSecret,
+          hasPaymentIntentId: !!result?.paymentIntentId,
+          callSessionId,
+        });
 
         await logError('createPaymentIntent:stripe_error', {
           requestId,
@@ -826,6 +970,26 @@ export const createPaymentIntent = onCall(
         logger.warn("Impossible de récupérer l'account Stripe", err as unknown);
       }
 
+      // ═══════════════════════════════════════════════════════════════════════════
+      // ✅ SUCCÈS - Log final avec toutes les informations
+      // ═══════════════════════════════════════════════════════════════════════════
+      const totalProcessingTime = Date.now() - startTime;
+      prodLogger.info('PAYMENT_SUCCESS', `[${requestId}] ✅ PaymentIntent créé avec succès en ${totalProcessingTime}ms`, {
+        requestId,
+        paymentIntentId: result.paymentIntentId,
+        clientSecretPrefix: result.clientSecret?.substring(0, 20) + '...',
+        amount: amountInCents,
+        currency,
+        serviceType,
+        providerId: providerId?.substring(0, 10) + '...',
+        clientId: clientId?.substring(0, 10) + '...',
+        callSessionId,
+        stripeMode: STRIPE_MODE.value() || 'test',
+        stripeAccountId: accountId?.substring(0, 12) || null,
+        totalProcessingTimeMs: totalProcessingTime,
+        status: 'requires_payment_method',
+      });
+
       return {
         success: true,
         clientSecret: result.clientSecret,
@@ -840,6 +1004,29 @@ export const createPaymentIntent = onCall(
       };
     } catch (err: unknown) {
       const processingTime = Date.now() - startTime;
+
+      // ═══════════════════════════════════════════════════════════════════════════
+      // ❌ ERREUR GLOBALE - Log détaillé pour diagnostic
+      // ═══════════════════════════════════════════════════════════════════════════
+      prodLogger.error('PAYMENT_FATAL_ERROR', `[${requestId}] ❌ Erreur fatale dans createPaymentIntent`, {
+        requestId,
+        errorType: err instanceof HttpsError ? 'HttpsError' : 'UnknownError',
+        errorMessage: err instanceof Error ? err.message : String(err),
+        errorCode: err instanceof HttpsError ? err.code : 'unknown',
+        errorStack: err instanceof Error ? err.stack?.substring(0, 500) : null,
+        processingTimeMs: processingTime,
+        inputData: {
+          amount: request.data?.amount,
+          serviceType: request.data?.serviceType,
+          currency: request.data?.currency,
+          providerId: request.data?.providerId?.substring(0, 10),
+          clientId: request.data?.clientId?.substring(0, 10),
+          callSessionId: request.data?.callSessionId,
+        },
+        userId: request.auth?.uid || 'not-authenticated',
+        environment: process.env.NODE_ENV,
+        stripeMode: STRIPE_MODE.value() || 'test',
+      });
 
       // P1-3 FIX: Libérer le lock en cas d'erreur générale
       // Note: paymentLockId peut ne pas être défini si l'erreur survient avant

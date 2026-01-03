@@ -15,6 +15,8 @@ import { defineSecret, defineString } from "firebase-functions/params";
 import { onRequest } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import { logError } from "../utils/logs/logError";
+// P1-13: Sync atomique payments <-> call_sessions
+import { syncPaymentStatus } from "../utils/paymentSync";
 
 // Configuration Cloud Tasks
 const CLOUD_TASKS_LOCATION = defineString("CLOUD_TASKS_LOCATION", { default: "europe-west1" });
@@ -250,12 +252,11 @@ export const executePayoutRetryTask = onRequest(
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
 
-        // Mettre à jour la session d'appel
-        await db.collection("call_sessions").doc(payload.callSessionId).update({
-          "payment.payoutTriggered": true,
-          "payment.payoutId": payoutResult.payoutBatchId,
-          "payment.payoutRetryCount": payload.retryCount,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        // P1-13 FIX: Sync atomique paypal_orders <-> call_sessions
+        await syncPaymentStatus(db, payload.orderId, payload.callSessionId, {
+          payoutTriggered: true,
+          payoutId: payoutResult.payoutBatchId,
+          payoutRetryCount: payload.retryCount,
         });
 
         // Notifier l'admin du succès

@@ -18,6 +18,8 @@
 
 import * as admin from "firebase-admin";
 import Stripe from "stripe";
+// P1-13: Sync atomique payments <-> call_sessions
+import { syncPaymentStatus } from "./utils/paymentSync";
 
 // Detecter si on est en environnement live
 function isLive(): boolean {
@@ -192,12 +194,12 @@ export class RefundManager {
           processedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
 
-        // Mettre a jour la session d'appel
-        await this.db.collection("call_sessions").doc(data.callSessionId).update({
-          "payment.refunded": true,
-          "payment.refundId": refund.id,
-          "payment.refundedAt": admin.firestore.FieldValue.serverTimestamp(),
-          "payment.refundReason": data.reason,
+        // P1-13 FIX: Sync atomique payments <-> call_sessions
+        await syncPaymentStatus(this.db, data.paymentIntentId, data.callSessionId, {
+          status: "refunded",
+          refundedAt: admin.firestore.FieldValue.serverTimestamp(),
+          refundReason: data.reason,
+          refundId: refund.id,
         });
 
         console.log("[REFUND] Refund successful:", refund.id);
