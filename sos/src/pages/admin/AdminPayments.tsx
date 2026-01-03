@@ -108,7 +108,8 @@ const AdminPayments: React.FC = () => {
 
   const mapSnapToPayment = (docSnap: QueryDocumentSnapshot<DocumentData>): PaymentRecord => {
     const data = docSnap.data() as {
-      amount?: number;
+      amount?: number;          // en centimes (legacy)
+      amountInEuros?: number;   // en euros (nouvelle valeur)
       currency?: string;
       status?: PaymentStatus;
       providerId?: string;
@@ -118,10 +119,10 @@ const AdminPayments: React.FC = () => {
       createdAt?: Timestamp | Date;
       callSessionId?: string;
       sessionId?: string;
-      providerAmount?: number;
-      providerAmountEuros?: number;
-      commissionAmount?: number;
-      commissionAmountEuros?: number;
+      providerAmount?: number;       // en centimes (legacy)
+      providerAmountEuros?: number;  // en euros (nouvelle valeur)
+      commissionAmount?: number;     // en centimes (legacy)
+      commissionAmountEuros?: number;// en euros (nouvelle valeur)
       duration?: number;
     };
 
@@ -136,7 +137,8 @@ const AdminPayments: React.FC = () => {
 
     return {
       id: docSnap.id,
-      amount: data.amount ?? 0,
+      // P0 FIX: Préférer amountInEuros (euros) à amount (centimes)
+      amount: data.amountInEuros ?? (data.amount ? data.amount / 100 : 0),
       currency: data.currency ?? 'EUR',
       status: (data.status ?? 'pending') as PaymentStatus,
       providerId: data.providerId ?? '',
@@ -145,8 +147,11 @@ const AdminPayments: React.FC = () => {
       clientName: data.clientName,
       createdAt: createdAtDate,
       callSessionId: data.callSessionId || data.sessionId,
-      providerAmount: data.providerAmount ?? data.providerAmountEuros,
-      commissionAmount: data.commissionAmount ?? data.commissionAmountEuros,
+      // P0 FIX: Utiliser les valeurs en euros, pas en centimes
+      // providerAmount/commissionAmount sont stockés en centimes (150 = 1.50€)
+      // providerAmountEuros/commissionAmountEuros sont stockés en euros (1.50)
+      providerAmount: data.providerAmountEuros ?? (data.providerAmount ? data.providerAmount / 100 : undefined),
+      commissionAmount: data.commissionAmountEuros ?? (data.commissionAmount ? data.commissionAmount / 100 : undefined),
       duration: data.duration,
     };
   };
