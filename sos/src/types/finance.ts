@@ -47,7 +47,35 @@ export type CurrencyCode = 'EUR' | 'USD' | 'GBP' | 'CHF' | 'CAD' | 'AUD' | 'JPY'
 /** @deprecated Use CurrencyCode instead */
 export type Currency = 'EUR' | 'USD';
 
-export type DisputeStatus = 'open' | 'under_review' | 'won' | 'lost' | 'closed';
+// P0 FIX: Unified DisputeStatus - includes both frontend simplified statuses and Stripe statuses
+export type DisputeStatus =
+  // Frontend simplified statuses
+  | 'open'              // New dispute, needs response
+  | 'under_review'      // Evidence submitted, waiting for decision
+  | 'won'               // Dispute resolved in our favor
+  | 'lost'              // Dispute resolved in customer's favor
+  | 'closed'            // Deprecated: use 'won', 'lost', or 'accepted'
+  | 'accepted'          // We accepted the dispute (refunded customer)
+  // Stripe native statuses (mapped from backend)
+  | 'needs_response'    // = 'open'
+  | 'warning_needs_response'
+  | 'warning_under_review'
+  | 'warning_closed';
+
+// Helper to map Stripe status to frontend status
+export const mapStripeDisputeStatus = (stripeStatus: string): DisputeStatus => {
+  const mapping: Record<string, DisputeStatus> = {
+    'needs_response': 'open',
+    'warning_needs_response': 'open',
+    'under_review': 'under_review',
+    'warning_under_review': 'under_review',
+    'won': 'won',
+    'lost': 'lost',
+    'warning_closed': 'closed',
+    'closed': 'closed',
+  };
+  return mapping[stripeStatus] || (stripeStatus as DisputeStatus);
+};
 
 export type RefundRequestStatus = 'pending' | 'approved' | 'rejected' | 'processing' | 'completed';
 

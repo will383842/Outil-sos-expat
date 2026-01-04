@@ -204,8 +204,7 @@ const COUNTRY_THRESHOLDS: Record<string, ThresholdConfig> = {
 // US Sales Tax Nexus states (simplified - professional services often exempt)
 // Note: Most US states exempt professional/legal services from sales tax
 // This list is maintained for future use if nexus rules change
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _US_STATES_WITH_NEXUS: string[] = [
+export const US_STATES_WITH_NEXUS: string[] = [
   // Only a few states tax some professional services (currently none applicable)
 ];
 

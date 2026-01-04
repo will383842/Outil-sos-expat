@@ -33,11 +33,11 @@ import {
   getDocs,
   doc,
   updateDoc,
-  addDoc,
   serverTimestamp,
   orderBy
 } from 'firebase/firestore';
-import { db } from '../../../config/firebase';
+import { httpsCallable } from 'firebase/functions';
+import { db, functions } from '../../../config/firebase';
 import { useAuth } from '../../../contexts/AuthContext';
 import { cn } from '../../../utils/cn';
 import { QuotaResetLog } from './types';
@@ -298,32 +298,21 @@ export const IaQuotasTab: React.FC = () => {
     setError(null);
 
     try {
-      // Log the reset
-      await addDoc(collection(db, 'quota_reset_logs'), {
+      // P0 FIX: Use Cloud Function instead of direct Firestore write
+      // This avoids the quota_reset_logs write permission issue
+      const adminResetQuotaFn = httpsCallable(functions, 'adminResetQuota');
+      const result = await adminResetQuotaFn({
         providerId: provider.id,
-        providerName: provider.displayName,
-        resetBy: currentUser?.id || currentUser?.uid || 'unknown',
-        resetByName: currentUser?.displayName || currentUser?.email || 'Admin',
-        previousUsage: provider.aiCallsUsed,
-        quotaLimit: provider.aiCallsLimit,
-        reason: reason || 'Reset manuel',
-        createdAt: serverTimestamp()
+        reason: reason || 'Reset manuel depuis admin IA'
       });
 
-      const resetData = {
-        aiCallsUsed: 0,
-        aiQuotaResetAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      };
+      const data = result.data as { success: boolean; previousCalls?: number };
 
-      await updateDoc(doc(db, 'users', provider.id), resetData);
-
-      try {
-        await updateDoc(doc(db, 'sos_profiles', provider.id), resetData);
-      } catch (syncErr) {
-        console.warn('[IaQuotasTab] Could not update sos_profiles for reset:', syncErr);
+      if (!data.success) {
+        throw new Error('Cloud Function returned failure');
       }
 
+      // Update local state
       setProviders(prev => prev.map(p =>
         p.id === provider.id ? { ...p, aiCallsUsed: 0, aiQuotaResetAt: new Date(), quotaPercent: 0 } : p
       ));
@@ -332,7 +321,11 @@ export const IaQuotasTab: React.FC = () => {
       setTimeout(() => setSuccess(null), 3000);
     } catch (err: any) {
       console.error('Error resetting quota:', err);
-      setError(err.message || iaT.errorReset);
+      // Handle Firebase callable errors
+      const message = err.code === 'functions/permission-denied'
+        ? 'Permission refusée - Accès admin requis'
+        : err.message || iaT.errorReset;
+      setError(message);
     } finally {
       setSaving(null);
     }

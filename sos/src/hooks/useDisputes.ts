@@ -23,12 +23,15 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../config/firebase';
+// P0 FIX: Import unified DisputeStatus from finance types
+import { DisputeStatus } from '../types/finance';
 
 // =============================================================================
 // TYPES
 // =============================================================================
 
-export type DisputeStatus = 'open' | 'under_review' | 'won' | 'lost' | 'accepted';
+// Re-export DisputeStatus for backward compatibility
+export { DisputeStatus };
 export type PaymentMethod = 'stripe' | 'paypal';
 export type UrgencyLevel = 'urgent' | 'medium' | 'normal';
 export type DisputeEventType = 'created' | 'evidence_submitted' | 'status_changed' | 'note_added' | 'response_received';

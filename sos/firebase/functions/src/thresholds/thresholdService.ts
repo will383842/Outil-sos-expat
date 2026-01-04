@@ -11,6 +11,7 @@ import {
   ThresholdConfig,
   ThresholdStatus,
   ThresholdAlertType,
+  CustomerType,
   THRESHOLD_CONFIGS,
   ALERT_THRESHOLDS,
   convertCurrency,

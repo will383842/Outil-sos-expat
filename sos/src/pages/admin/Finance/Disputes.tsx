@@ -53,12 +53,13 @@ import {
   History,
 } from 'lucide-react';
 import { useIntl, FormattedMessage } from 'react-intl';
+// P0 FIX: Import unified DisputeStatus from finance types
+import { DisputeStatus } from '../../../types/finance';
 
 // =============================================================================
 // TYPES
 // =============================================================================
 
-type DisputeStatus = 'open' | 'under_review' | 'won' | 'lost' | 'accepted';
 type PaymentMethod = 'stripe' | 'paypal';
 type UrgencyLevel = 'urgent' | 'medium' | 'normal';
 

@@ -520,3 +520,322 @@ export async function handleDisputeClosed(
   const manager = new DisputeManager(db, stripe);
   await manager.handleDisputeClosed(dispute);
 }
+
+// ============================================================================
+// ADMIN CALLABLE FUNCTIONS (P0 FIX)
+// ============================================================================
+
+import * as functions from 'firebase-functions/v1';
+
+// Initialize admin if not already initialized
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
+
+// Lazy Stripe initialization
+let stripeInstance: Stripe | null = null;
+function getStripe(): Stripe {
+  if (!stripeInstance) {
+    const secretKey = process.env.STRIPE_SECRET_KEY_LIVE || process.env.STRIPE_SECRET_KEY_TEST || process.env.STRIPE_SECRET_KEY || '';
+    if (!secretKey) {
+      throw new Error('Stripe secret key not configured');
+    }
+    stripeInstance = new Stripe(secretKey, {
+      apiVersion: '2023-10-16'
+    });
+  }
+  return stripeInstance;
+}
+
+// Lazy db initialization
+const getDb = () => admin.firestore();
+
+/**
+ * Check if user is admin (via custom claims OR Firestore role)
+ */
+async function isAdmin(context: functions.https.CallableContext): Promise<boolean> {
+  if (!context.auth) return false;
+
+  if (context.auth.token.admin === true || context.auth.token.role === 'admin') {
+    return true;
+  }
+
+  try {
+    const userDoc = await getDb().collection('users').doc(context.auth.uid).get();
+    if (userDoc.exists) {
+      const userData = userDoc.data();
+      return userData?.role === 'admin' || userData?.isAdmin === true;
+    }
+  } catch (e) {
+    console.error('Error checking admin in Firestore:', e);
+  }
+
+  return false;
+}
+
+/**
+ * Admin: Add a note to a dispute
+ * P0 FIX: Allows admin to add internal notes without direct Firestore write
+ */
+export const adminAddDisputeNote = functions
+  .region('europe-west1')
+  .https.onCall(async (data, context) => {
+    if (!await isAdmin(context)) {
+      throw new functions.https.HttpsError('permission-denied', 'Admin access required');
+    }
+
+    const adminId = context.auth!.uid;
+    const { disputeId, note } = data as {
+      disputeId: string;
+      note: string;
+    };
+
+    if (!disputeId || !note) {
+      throw new functions.https.HttpsError('invalid-argument', 'disputeId and note are required');
+    }
+
+    try {
+      const disputeRef = getDb().doc(`disputes/${disputeId}`);
+      const disputeDoc = await disputeRef.get();
+
+      if (!disputeDoc.exists) {
+        throw new functions.https.HttpsError('not-found', 'Dispute not found');
+      }
+
+      const existingData = disputeDoc.data() as DisputeRecord;
+      const now = admin.firestore.FieldValue.serverTimestamp();
+
+      // Add note to timeline
+      const timeline = existingData.statusHistory || [];
+      timeline.push({
+        status: existingData.status,
+        timestamp: new Date(),
+        reason: `Note admin: ${note}`,
+      });
+
+      // Add to internal notes array
+      const internalNotes = (existingData as any).internalNotes || [];
+      internalNotes.push({
+        author: adminId,
+        content: note,
+        createdAt: new Date().toISOString(),
+      });
+
+      await disputeRef.update({
+        statusHistory: timeline,
+        internalNotes,
+        updatedAt: now,
+      });
+
+      console.log(`[adminAddDisputeNote] Note added to dispute ${disputeId} by admin ${adminId}`);
+
+      return {
+        success: true,
+        disputeId,
+        message: 'Note added successfully',
+      };
+    } catch (error: any) {
+      console.error('Error adding dispute note:', error);
+      throw new functions.https.HttpsError('internal', error.message || 'Failed to add note');
+    }
+  });
+
+/**
+ * Admin: Acknowledge a dispute
+ * Marks the dispute as seen by admin
+ */
+export const adminAcknowledgeDispute = functions
+  .region('europe-west1')
+  .https.onCall(async (data, context) => {
+    if (!await isAdmin(context)) {
+      throw new functions.https.HttpsError('permission-denied', 'Admin access required');
+    }
+
+    const adminId = context.auth!.uid;
+    const { disputeId } = data as { disputeId: string };
+
+    if (!disputeId) {
+      throw new functions.https.HttpsError('invalid-argument', 'disputeId is required');
+    }
+
+    try {
+      const disputeRef = getDb().doc(`disputes/${disputeId}`);
+      const disputeDoc = await disputeRef.get();
+
+      if (!disputeDoc.exists) {
+        throw new functions.https.HttpsError('not-found', 'Dispute not found');
+      }
+
+      const now = admin.firestore.FieldValue.serverTimestamp();
+
+      await disputeRef.update({
+        isAcknowledged: true,
+        acknowledgedAt: now,
+        acknowledgedBy: adminId,
+        updatedAt: now,
+      });
+
+      console.log(`[adminAcknowledgeDispute] Dispute ${disputeId} acknowledged by admin ${adminId}`);
+
+      return {
+        success: true,
+        disputeId,
+        message: 'Dispute acknowledged',
+      };
+    } catch (error: any) {
+      console.error('Error acknowledging dispute:', error);
+      throw new functions.https.HttpsError('internal', error.message || 'Failed to acknowledge');
+    }
+  });
+
+/**
+ * Admin: Assign a dispute to an admin
+ */
+export const adminAssignDispute = functions
+  .region('europe-west1')
+  .https.onCall(async (data, context) => {
+    if (!await isAdmin(context)) {
+      throw new functions.https.HttpsError('permission-denied', 'Admin access required');
+    }
+
+    const currentAdminId = context.auth!.uid;
+    const { disputeId, assigneeId } = data as {
+      disputeId: string;
+      assigneeId: string;
+    };
+
+    if (!disputeId || !assigneeId) {
+      throw new functions.https.HttpsError('invalid-argument', 'disputeId and assigneeId are required');
+    }
+
+    try {
+      const disputeRef = getDb().doc(`disputes/${disputeId}`);
+      const disputeDoc = await disputeRef.get();
+
+      if (!disputeDoc.exists) {
+        throw new functions.https.HttpsError('not-found', 'Dispute not found');
+      }
+
+      // Verify assignee is admin
+      const assigneeDoc = await getDb().doc(`users/${assigneeId}`).get();
+      if (!assigneeDoc.exists) {
+        throw new functions.https.HttpsError('not-found', 'Assignee not found');
+      }
+      const assigneeData = assigneeDoc.data();
+      if (assigneeData?.role !== 'admin' && !assigneeData?.isAdmin) {
+        throw new functions.https.HttpsError('invalid-argument', 'Assignee must be an admin');
+      }
+
+      const now = admin.firestore.FieldValue.serverTimestamp();
+
+      await disputeRef.update({
+        adminAssignee: assigneeId,
+        assignedAt: now,
+        assignedBy: currentAdminId,
+        updatedAt: now,
+      });
+
+      console.log(`[adminAssignDispute] Dispute ${disputeId} assigned to ${assigneeId} by ${currentAdminId}`);
+
+      return {
+        success: true,
+        disputeId,
+        assigneeId,
+        message: 'Dispute assigned successfully',
+      };
+    } catch (error: any) {
+      console.error('Error assigning dispute:', error);
+      throw new functions.https.HttpsError('internal', error.message || 'Failed to assign');
+    }
+  });
+
+/**
+ * Admin: Get dispute details with Stripe data
+ * Fetches fresh data from Stripe and combines with Firestore
+ */
+export const adminGetDisputeDetails = functions
+  .region('europe-west1')
+  .https.onCall(async (data, context) => {
+    if (!await isAdmin(context)) {
+      throw new functions.https.HttpsError('permission-denied', 'Admin access required');
+    }
+
+    const { disputeId } = data as { disputeId: string };
+
+    if (!disputeId) {
+      throw new functions.https.HttpsError('invalid-argument', 'disputeId is required');
+    }
+
+    try {
+      const disputeRef = getDb().doc(`disputes/${disputeId}`);
+      const disputeDoc = await disputeRef.get();
+
+      if (!disputeDoc.exists) {
+        throw new functions.https.HttpsError('not-found', 'Dispute not found');
+      }
+
+      const firestoreData = disputeDoc.data() as DisputeRecord;
+      let stripeData = null;
+
+      // Try to get fresh data from Stripe
+      if (firestoreData.stripeDisputeId) {
+        try {
+          stripeData = await getStripe().disputes.retrieve(firestoreData.stripeDisputeId);
+        } catch (stripeError) {
+          console.warn('Could not fetch Stripe dispute:', stripeError);
+        }
+      }
+
+      // Get related call session
+      let callSession = null;
+      if (firestoreData.callSessionId) {
+        const sessionDoc = await getDb().doc(`call_sessions/${firestoreData.callSessionId}`).get();
+        if (sessionDoc.exists) {
+          callSession = { id: sessionDoc.id, ...sessionDoc.data() };
+        }
+      }
+
+      // Get provider info
+      let provider = null;
+      if (firestoreData.providerId) {
+        const providerDoc = await getDb().doc(`users/${firestoreData.providerId}`).get();
+        if (providerDoc.exists) {
+          const pd = providerDoc.data();
+          provider = {
+            id: firestoreData.providerId,
+            name: pd?.displayName || pd?.firstName + ' ' + pd?.lastName,
+            email: pd?.email,
+          };
+        }
+      }
+
+      // Get client info
+      let client = null;
+      if (firestoreData.clientId) {
+        const clientDoc = await getDb().doc(`users/${firestoreData.clientId}`).get();
+        if (clientDoc.exists) {
+          const cd = clientDoc.data();
+          client = {
+            id: firestoreData.clientId,
+            name: cd?.displayName || cd?.firstName + ' ' + cd?.lastName,
+            email: cd?.email,
+          };
+        }
+      }
+
+      return {
+        success: true,
+        dispute: {
+          ...firestoreData,
+          id: disputeId,
+        },
+        stripeData,
+        callSession,
+        provider,
+        client,
+      };
+    } catch (error: any) {
+      console.error('Error getting dispute details:', error);
+      throw new functions.https.HttpsError('internal', error.message || 'Failed to get details');
+    }
+  });

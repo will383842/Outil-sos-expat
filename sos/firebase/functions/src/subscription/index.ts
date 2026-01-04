@@ -2176,6 +2176,9 @@ export {
   adminGetSubscriptionStats,
   adminSyncStripePrices,
   adminGetProviderSubscriptionHistory,
+  // P0 FIX: Export new pause/resume functions for admin
+  adminPauseSubscription,
+  adminResumeSubscription,
 } from './adminFunctions';
 
 

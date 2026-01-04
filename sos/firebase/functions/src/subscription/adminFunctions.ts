@@ -1007,3 +1007,225 @@ export const adminGetProviderSubscriptionHistory = functions
       throw new functions.https.HttpsError('internal', error.message || 'Failed to get history');
     }
   });
+
+// ============================================================================
+// 8. ADMIN PAUSE SUBSCRIPTION (P0 FIX)
+// ============================================================================
+
+/**
+ * Met en pause l'abonnement d'un provider
+ * L'acces IA est desactive mais l'abonnement n'est pas annule
+ */
+export const adminPauseSubscription = functions
+  .region('europe-west1')
+  .https.onCall(async (data, context) => {
+    if (!await isAdmin(context)) {
+      throw new functions.https.HttpsError('permission-denied', 'Admin access required');
+    }
+
+    const adminId = context.auth!.uid;
+    const { providerId, reason } = data as {
+      providerId: string;
+      reason?: string;
+    };
+
+    if (!providerId) {
+      throw new functions.https.HttpsError('invalid-argument', 'providerId is required');
+    }
+
+    try {
+      const subDoc = await getDb().doc(`subscriptions/${providerId}`).get();
+      if (!subDoc.exists) {
+        throw new functions.https.HttpsError('not-found', 'No subscription found');
+      }
+
+      const subData = subDoc.data()!;
+      if (subData.status === 'paused') {
+        throw new functions.https.HttpsError('failed-precondition', 'Subscription is already paused');
+      }
+
+      const now = admin.firestore.Timestamp.now();
+
+      // Si l'abonnement a un stripeSubscriptionId, mettre en pause sur Stripe
+      if (subData.stripeSubscriptionId) {
+        try {
+          await getStripe().subscriptions.update(subData.stripeSubscriptionId, {
+            pause_collection: {
+              behavior: 'keep_as_draft', // Pas de facturation pendant la pause
+            },
+            metadata: {
+              paused_by: adminId,
+              paused_at: new Date().toISOString(),
+              pause_reason: reason || 'admin_paused',
+            },
+          });
+        } catch (stripeError: any) {
+          console.warn('Stripe pause failed, continuing with Firestore update:', stripeError.message);
+        }
+      }
+
+      // Mettre a jour Firestore
+      await getDb().doc(`subscriptions/${providerId}`).update({
+        status: 'paused',
+        pausedAt: now,
+        pausedBy: adminId,
+        pauseReason: reason || 'admin_paused',
+        previousStatus: subData.status,
+        updatedAt: now,
+      });
+
+      // Logger dans subscription_logs
+      await getDb().collection('subscription_logs').add({
+        providerId,
+        action: 'subscription_paused',
+        reason: reason || 'admin_paused',
+        pausedBy: adminId,
+        timestamp: now,
+        stripeSubscriptionId: subData.stripeSubscriptionId || null,
+      });
+
+      await logAdminAction(
+        adminId,
+        'adminPauseSubscription',
+        providerId,
+        'subscription',
+        { reason, stripeSubscriptionId: subData.stripeSubscriptionId },
+        true
+      );
+
+      // Envoyer email au provider
+      await sendProviderEmail(providerId, 'TR_PRV_subscription-paused', {
+        PAUSE_DATE: new Date().toLocaleDateString('fr-FR'),
+        REASON: reason || 'Mise en pause par administrateur',
+      });
+
+      console.log(`[adminPauseSubscription] Paused subscription for ${providerId}`);
+
+      return {
+        success: true,
+        providerId,
+        status: 'paused',
+        pausedAt: now.toDate().toISOString(),
+        reason: reason || 'admin_paused',
+      };
+    } catch (error: any) {
+      if (!(error instanceof functions.https.HttpsError)) {
+        await logAdminAction(adminId, 'adminPauseSubscription', providerId, 'subscription', { reason }, false, error.message);
+      }
+      console.error('Error in adminPauseSubscription:', error);
+      throw error instanceof functions.https.HttpsError
+        ? error
+        : new functions.https.HttpsError('internal', error.message || 'Failed to pause subscription');
+    }
+  });
+
+// ============================================================================
+// 9. ADMIN RESUME SUBSCRIPTION (P0 FIX)
+// ============================================================================
+
+/**
+ * Reprend un abonnement en pause
+ */
+export const adminResumeSubscription = functions
+  .region('europe-west1')
+  .https.onCall(async (data, context) => {
+    if (!await isAdmin(context)) {
+      throw new functions.https.HttpsError('permission-denied', 'Admin access required');
+    }
+
+    const adminId = context.auth!.uid;
+    const { providerId, note } = data as {
+      providerId: string;
+      note?: string;
+    };
+
+    if (!providerId) {
+      throw new functions.https.HttpsError('invalid-argument', 'providerId is required');
+    }
+
+    try {
+      const subDoc = await getDb().doc(`subscriptions/${providerId}`).get();
+      if (!subDoc.exists) {
+        throw new functions.https.HttpsError('not-found', 'No subscription found');
+      }
+
+      const subData = subDoc.data()!;
+      if (subData.status !== 'paused') {
+        throw new functions.https.HttpsError('failed-precondition', 'Subscription is not paused');
+      }
+
+      const now = admin.firestore.Timestamp.now();
+      const newStatus = subData.previousStatus || 'active';
+
+      // Si l'abonnement a un stripeSubscriptionId, reprendre sur Stripe
+      if (subData.stripeSubscriptionId) {
+        try {
+          await getStripe().subscriptions.update(subData.stripeSubscriptionId, {
+            pause_collection: null, // Reprendre la facturation
+            metadata: {
+              resumed_by: adminId,
+              resumed_at: new Date().toISOString(),
+            },
+          });
+        } catch (stripeError: any) {
+          console.warn('Stripe resume failed, continuing with Firestore update:', stripeError.message);
+        }
+      }
+
+      // Mettre a jour Firestore
+      await getDb().doc(`subscriptions/${providerId}`).update({
+        status: newStatus,
+        resumedAt: now,
+        resumedBy: adminId,
+        resumeNote: note || null,
+        pausedAt: admin.firestore.FieldValue.delete(),
+        pausedBy: admin.firestore.FieldValue.delete(),
+        pauseReason: admin.firestore.FieldValue.delete(),
+        previousStatus: admin.firestore.FieldValue.delete(),
+        updatedAt: now,
+      });
+
+      // Logger dans subscription_logs
+      await getDb().collection('subscription_logs').add({
+        providerId,
+        action: 'subscription_resumed',
+        newStatus,
+        note: note || null,
+        resumedBy: adminId,
+        timestamp: now,
+        stripeSubscriptionId: subData.stripeSubscriptionId || null,
+      });
+
+      await logAdminAction(
+        adminId,
+        'adminResumeSubscription',
+        providerId,
+        'subscription',
+        { newStatus, note, stripeSubscriptionId: subData.stripeSubscriptionId },
+        true
+      );
+
+      // Envoyer email au provider
+      await sendProviderEmail(providerId, 'TR_PRV_subscription-resumed', {
+        RESUME_DATE: new Date().toLocaleDateString('fr-FR'),
+        NEW_STATUS: newStatus,
+      });
+
+      console.log(`[adminResumeSubscription] Resumed subscription for ${providerId} -> ${newStatus}`);
+
+      return {
+        success: true,
+        providerId,
+        status: newStatus,
+        resumedAt: now.toDate().toISOString(),
+      };
+    } catch (error: any) {
+      if (!(error instanceof functions.https.HttpsError)) {
+        await logAdminAction(adminId, 'adminResumeSubscription', providerId, 'subscription', { note }, false, error.message);
+      }
+      console.error('Error in adminResumeSubscription:', error);
+      throw error instanceof functions.https.HttpsError
+        ? error
+        : new functions.https.HttpsError('internal', error.message || 'Failed to resume subscription');
+    }
+  });
