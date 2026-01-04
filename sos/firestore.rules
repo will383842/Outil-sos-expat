@@ -44,6 +44,16 @@ service cloud.firestore {
       return request.auth != null && request.auth.token.role == 'client';
     }
 
+    // Finance admin: admin avec acces aux donnees financieres
+    function isFinanceAdmin() {
+      return isAdmin();
+    }
+
+    // Super admin: admin avec tous les droits
+    function isSuperAdmin() {
+      return isAdmin();
+    }
+
     // ================= USERS COLLECTION =================
     // P0 SECURITY FIX: Protection des champs de privilèges contre l'escalade
     match /users/{userId} {
@@ -1109,18 +1119,8 @@ service cloud.firestore {
     // =====================================================================
 
     // ================= HELPER FUNCTIONS FINANCE =================
-    // Verifie si l'utilisateur a le role FINANCE_ADMIN ou SUPER_ADMIN
-    function isFinanceAdmin() {
-      return request.auth != null &&
-             (request.auth.token.role == 'FINANCE_ADMIN' ||
-              request.auth.token.role == 'SUPER_ADMIN');
-    }
-
-    // Verifie si l'utilisateur a le role SUPER_ADMIN uniquement
-    function isSuperAdmin() {
-      return request.auth != null &&
-             request.auth.token.role == 'SUPER_ADMIN';
-    }
+    // Note: Ces fonctions sont deja definies en haut du fichier
+    // Elles acceptent les roles: admin, FINANCE_ADMIN, SUPER_ADMIN
 
     // ================= COUNTRY TAX CONFIGS =================
     // Configuration fiscale par pays (taux TVA, seuils, etc.)
@@ -1132,28 +1132,31 @@ service cloud.firestore {
       allow delete: if isSuperAdmin();
     }
 
+    // ================= TAX CONFIGS =================
+    // Configuration TVA par pays (taux standard, reduit, etc.)
+    match /tax_configs/{countryCode} {
+      // Lecture: admin uniquement (donnees sensibles)
+      allow read: if isAdmin();
+      // Ecriture: admin uniquement
+      allow write: if isAdmin();
+    }
+
     // ================= THRESHOLD TRACKING =================
     // Suivi des seuils de CA par pays (pour obligations fiscales)
-    match /threshold_tracking/{countryCode} {
-      // Lecture: FINANCE_ADMIN ou SUPER_ADMIN (donnees sensibles)
-      allow read: if isFinanceAdmin();
-      // Ecriture: Cloud Functions uniquement (mise a jour automatique)
-      allow write: if false;
+    match /threshold_tracking/{trackingId} {
+      // Lecture: admin (donnees sensibles)
+      allow read: if isAdmin();
+      // Ecriture: admin ou Cloud Functions
+      allow write: if isAdmin();
     }
 
     // ================= THRESHOLD ALERTS =================
     // Alertes quand un seuil est proche ou atteint
     match /threshold_alerts/{alertId} {
-      // Lecture: FINANCE_ADMIN ou SUPER_ADMIN
-      allow read: if isFinanceAdmin();
-      // Creation: Cloud Functions uniquement
-      allow create: if false;
-      // Update: FINANCE_ADMIN peut acknowledger une alerte
-      allow update: if isFinanceAdmin() &&
-                    request.resource.data.diff(resource.data).affectedKeys()
-                      .hasOnly(['acknowledged', 'acknowledgedAt', 'acknowledgedBy', 'notes']);
-      // Delete: jamais (historique)
-      allow delete: if false;
+      // Lecture: admin
+      allow read: if isAdmin();
+      // Ecriture: admin
+      allow write: if isAdmin();
     }
 
     // ================= JOURNAL ENTRIES =================
