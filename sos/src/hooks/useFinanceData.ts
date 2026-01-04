@@ -31,7 +31,8 @@ import {
   PaymentStatus,
   PaymentMethod,
   TransactionType,
-  CurrencyCode
+  CurrencyCode,
+  SUCCESSFUL_PAYMENT_STATUSES
 } from '../types/finance';
 
 // ============================================================================
@@ -609,28 +610,27 @@ export function useFinanceKPIs(dateRange: { from: Date; to: Date }): UseFinanceK
       const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
 
       // Calculate KPIs
-      // P1 FIX: Include 'succeeded' status (Stripe uses this for successful payments)
-      const SUCCESSFUL_STATUSES = ['paid', 'captured', 'succeeded'];
+      // P1 FIX: Use centralized SUCCESSFUL_PAYMENT_STATUSES from types/finance.ts
       const totalRevenue = payments
-        .filter(p => SUCCESSFUL_STATUSES.includes(p.status))
+        .filter(p => (SUCCESSFUL_PAYMENT_STATUSES as readonly string[]).includes(p.status))
         .reduce((sum, p) => sum + p.amount, 0);
 
       const totalTransactions = payments.length;
       const avgTransactionValue = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
 
-      // Revenue by period (using SUCCESSFUL_STATUSES defined above)
+      // Revenue by period (using centralized SUCCESSFUL_PAYMENT_STATUSES)
       const revenueByPeriod = {
         today: payments
-          .filter(p => SUCCESSFUL_STATUSES.includes(p.status) && p.createdAt >= startOfToday)
+          .filter(p => (SUCCESSFUL_PAYMENT_STATUSES as readonly string[]).includes(p.status) && p.createdAt >= startOfToday)
           .reduce((sum, p) => sum + p.amount, 0),
         thisWeek: payments
-          .filter(p => SUCCESSFUL_STATUSES.includes(p.status) && p.createdAt >= startOfWeek)
+          .filter(p => (SUCCESSFUL_PAYMENT_STATUSES as readonly string[]).includes(p.status) && p.createdAt >= startOfWeek)
           .reduce((sum, p) => sum + p.amount, 0),
         thisMonth: payments
-          .filter(p => SUCCESSFUL_STATUSES.includes(p.status) && p.createdAt >= startOfMonth)
+          .filter(p => (SUCCESSFUL_PAYMENT_STATUSES as readonly string[]).includes(p.status) && p.createdAt >= startOfMonth)
           .reduce((sum, p) => sum + p.amount, 0),
         lastMonth: payments
-          .filter(p => SUCCESSFUL_STATUSES.includes(p.status) &&
+          .filter(p => (SUCCESSFUL_PAYMENT_STATUSES as readonly string[]).includes(p.status) &&
             p.createdAt >= startOfLastMonth && p.createdAt <= endOfLastMonth)
           .reduce((sum, p) => sum + p.amount, 0)
       };
@@ -683,10 +683,10 @@ export function useFinanceKPIs(dateRange: { from: Date; to: Date }): UseFinanceK
         ? (canceledCount / totalAtPeriodStart) * 100
         : 0;
 
-      // Top countries (using SUCCESSFUL_STATUSES)
+      // Top countries (using centralized SUCCESSFUL_PAYMENT_STATUSES)
       const countryRevenue: Record<string, { revenue: number; count: number }> = {};
       payments
-        .filter(p => SUCCESSFUL_STATUSES.includes(p.status))
+        .filter(p => (SUCCESSFUL_PAYMENT_STATUSES as readonly string[]).includes(p.status))
         .forEach(p => {
           const country = p.clientCountry || 'Unknown';
           if (!countryRevenue[country]) {
