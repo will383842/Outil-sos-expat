@@ -30,9 +30,44 @@ export function bucketsVat(invoices: Invoice[]): VatBucket[] {
   return Array.from(map.values());
 }
 
-export function toCsv(rows: Record<string, any>[]): string {
+/**
+ * Convert array of objects to CSV string with proper Excel compatibility
+ * @param rows - Array of records to convert
+ * @param options - Optional configuration
+ * @returns CSV string with BOM for Excel UTF-8 support
+ */
+export function toCsv(
+  rows: Record<string, unknown>[],
+  options?: { includeBom?: boolean; delimiter?: string }
+): string {
   if (!rows.length) return '';
+
+  const { includeBom = true, delimiter = ',' } = options || {};
   const headers = Object.keys(rows[0]);
-  const esc = (v:any)=> `"${String(v??'').replace(/"/g,'""')}"`;
-  return [headers.join(','), ...rows.map(r=>headers.map(h=>esc(r[h])).join(','))].join('\n');
+
+  // Escape function: handles quotes, newlines, and special characters
+  const esc = (v: unknown): string => {
+    if (v === null || v === undefined) return '""';
+
+    // Handle objects/arrays by JSON stringifying
+    const str = typeof v === 'object' ? JSON.stringify(v) : String(v);
+
+    // Escape quotes and wrap in quotes if contains special chars
+    const escaped = str.replace(/"/g, '""');
+    const needsQuotes = escaped.includes(delimiter) ||
+                        escaped.includes('\n') ||
+                        escaped.includes('\r') ||
+                        escaped.includes('"');
+
+    return needsQuotes ? `"${escaped}"` : escaped;
+  };
+
+  const csvContent = [
+    headers.join(delimiter),
+    ...rows.map(r => headers.map(h => esc(r[h])).join(delimiter))
+  ].join('\n');
+
+  // Add BOM for Excel UTF-8 compatibility
+  const BOM = '\uFEFF';
+  return includeBom ? BOM + csvContent : csvContent;
 }

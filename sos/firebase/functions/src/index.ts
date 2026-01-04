@@ -216,6 +216,93 @@ export {
 // Payout Retry Tasks (P0-2 FIX)
 export { executePayoutRetryTask } from "./lib/payoutRetryTasks";
 
+// ============================================================================
+// TAX ENGINE - VAT/GST Calculation for B2B/B2C transactions
+// Seller: SOS-Expat OU (Estonia, EE) - OSS registered
+// ============================================================================
+export {
+  calculateTax,
+  calculateTaxCallable,
+  getTaxThresholdStatus,
+  validateVAT,
+  calculateTaxForTransaction,
+  // Constants
+  EU_COUNTRIES,
+  EU_VAT_RATES,
+  COUNTRY_THRESHOLDS,
+  OSS_THRESHOLD_EUR,
+  INVOICE_MENTIONS,
+  SELLER_COUNTRY,
+  SELLER_VAT_RATE,
+  // Types
+  type TaxCalculationInput,
+  type TaxCalculationResult,
+} from "./tax/calculateTax";
+
+// ============================================================================
+// VAT VALIDATION - VIES (EU) & HMRC (UK) Integration
+// For B2B reverse charge eligibility verification
+// ============================================================================
+export {
+  // Cloud Functions (Callables)
+  validateVat,
+  checkReverseCharge,
+  cleanupVatCache,
+} from "./tax/vatCallables";
+
+export {
+  // Validation service
+  validateVatNumber,
+  validateFullVatNumber,
+  validateMultipleVatNumbers,
+  isEligibleForReverseCharge,
+  // Cache management
+  invalidateCache as invalidateVatCache,
+  cleanupExpiredCache as cleanupExpiredVatCache,
+  // Helpers
+  isEUCountry,
+  isUkCountry,
+  // Constants
+  VAT_CACHE_COLLECTION,
+  CACHE_TTL_DAYS,
+  // Types
+  type VatValidationResult,
+  type VatValidationOptions,
+} from "./tax/vatValidation";
+
+// ============================================================================
+// ACCOUNTING ENGINE - Automatic Journal Entry Generation
+// SOS-Expat OU (Estonia) - EUR accounting
+// ============================================================================
+export {
+  // Triggers - Automatic journal entry generation
+  onPaymentCompleted,
+  onRefundCreated,
+  onRefundCompleted,
+  onPayoutCompleted,
+  onSubscriptionPaymentReceived,
+
+  // Admin Callable Functions
+  postJournalEntry,
+  reverseJournalEntry,
+  regenerateJournalEntry,
+  getAccountingStats,
+  generateOssVatDeclaration,
+  getAccountBalances,
+
+  // Types (re-exported for client use)
+  type JournalEntry,
+  type JournalLine,
+  type JournalEntryStatus,
+  type SourceDocumentType,
+  type PaymentData,
+  type RefundData,
+  type PayoutData,
+  type SubscriptionData,
+  type AccountBalance,
+  type OssVatDeclaration,
+} from "./accounting";
+
 // Alias pour usage local dans GLOBAL_SECRETS
 const PAYPAL_CLIENT_ID = _PAYPAL_CLIENT_ID;
 const PAYPAL_CLIENT_SECRET = _PAYPAL_CLIENT_SECRET;
@@ -709,6 +796,19 @@ export * from "./admin/callables";
 
 // Triggers de nettoyage automatique (suppression cascade users -> sos_profiles)
 export { onUserDeleted, cleanupOrphanedProfiles } from "./triggers/userCleanupTrigger";
+
+// Tax Filings Module - Declaration fiscales automatiques
+export {
+  generateTaxFiling,
+  generateAllTaxFilings,
+  sendFilingReminders,
+  triggerFilingReminders,
+  exportFilingToFormat,
+  exportFilingAllFormats,
+  updateFilingStatus,
+  deleteFilingDraft,
+  updateFilingAmounts,
+} from "./taxFilings";
 
 // ========================================
 // 🔒 SECURITY ALERTS MODULE - TEMPORARILY DISABLED
@@ -4072,3 +4172,21 @@ export {
   resolvePaymentAlert,
   getPaymentMetrics
 } from './monitoring/paymentMonitoring';
+
+// ========== TAX THRESHOLD TRACKING SYSTEM ==========
+// Surveillance des seuils fiscaux internationaux (OSS EU, UK VAT, CH TVA, etc.)
+export {
+  // Triggers on payments
+  onPaymentCreatedUpdateThreshold,
+  onPaymentUpdatedCheckThreshold,
+  // Scheduled functions
+  checkThresholdsDaily,
+  sendWeeklyThresholdReport,
+  // Callable functions for admin dashboard
+  getThresholdDashboard,
+  getCountryThreshold,
+  markCountryAsRegistered,
+  acknowledgeThresholdAlert,
+  initializeThresholdTracking,
+  triggerThresholdRecalculation,
+} from './thresholds';

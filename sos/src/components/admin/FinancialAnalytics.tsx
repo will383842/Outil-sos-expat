@@ -218,13 +218,22 @@ export const FinancialAnalytics: React.FC = () => {
       ? ((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 
       : 0;
 
+    // Calcul du taux de conversion basé sur les paiements réussis vs total
+    // Note: Pour un vrai taux de conversion, il faudrait comparer avec booking_requests
+    const successfulPayments = paymentsData.filter(p =>
+      p.status === 'captured' || p.status === 'succeeded'
+    ).length;
+    const conversionRate = paymentCount > 0
+      ? (successfulPayments / paymentCount) * 100
+      : 0;
+
     setAnalytics({
       totalRevenue,
       totalPlatformFees,
       totalProviderPayouts,
       paymentCount,
       avgTransactionValue,
-      conversionRate: 85, // Placeholder - vous pouvez calculer depuis vos données
+      conversionRate,
       revenueByDay,
       revenueByService,
       revenueByCurrency,
@@ -354,7 +363,9 @@ export const FinancialAnalytics: React.FC = () => {
                 })}
               </p>
               <p className="text-green-100 text-sm">
-                {((analytics.totalPlatformFees / analytics.totalRevenue) * 100).toFixed(1)}% du total
+                {analytics.totalRevenue > 0
+                  ? ((analytics.totalPlatformFees / analytics.totalRevenue) * 100).toFixed(1)
+                  : '0.0'}% du total
               </p>
             </div>
             <Percent className="w-12 h-12 text-green-200" />
@@ -385,7 +396,9 @@ export const FinancialAnalytics: React.FC = () => {
                 })}
               </p>
               <p className="text-orange-100 text-sm">
-                {((analytics.totalProviderPayouts / analytics.totalRevenue) * 100).toFixed(1)}% du total
+                {analytics.totalRevenue > 0
+                  ? ((analytics.totalProviderPayouts / analytics.totalRevenue) * 100).toFixed(1)
+                  : '0.0'}% du total
               </p>
             </div>
             <Users className="w-12 h-12 text-orange-200" />

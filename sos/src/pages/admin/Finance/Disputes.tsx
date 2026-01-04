@@ -20,6 +20,7 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../../../config/firebase';
+import { useAuth } from '../../../contexts/AuthContext';
 import AdminLayout from '../../../components/admin/AdminLayout';
 import Button from '../../../components/common/Button';
 import {
@@ -1045,6 +1046,7 @@ const DisputeRow: React.FC<DisputeRowProps> = ({
 
 const AdminFinanceDisputes: React.FC = () => {
   const intl = useIntl();
+  const { user: currentUser } = useAuth();
 
   // State
   const [disputes, setDisputes] = useState<DisputeRecord[]>([]);
@@ -1270,7 +1272,7 @@ const AdminFinanceDisputes: React.FC = () => {
       ...ev,
       id: `ev_${Date.now()}_${Math.random().toString(36).substring(7)}`,
       uploadedAt: new Date(),
-      uploadedBy: 'admin', // TODO: Get from auth context
+      uploadedBy: currentUser?.id || currentUser?.uid || 'unknown',
     }));
 
     const newTimelineEvent: DisputeEvent = {
@@ -1331,8 +1333,8 @@ const AdminFinanceDisputes: React.FC = () => {
       id: `note_${Date.now()}`,
       content: noteContent,
       createdAt: new Date(),
-      createdBy: 'admin', // TODO: Get from auth context
-      createdByName: 'Admin',
+      createdBy: currentUser?.id || currentUser?.uid || 'unknown',
+      createdByName: currentUser?.displayName || currentUser?.email || 'Admin',
     };
 
     const newTimelineEvent: DisputeEvent = {

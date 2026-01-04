@@ -478,11 +478,16 @@ const FinanceDashboard: React.FC = () => {
       });
 
       // Calculate KPIs
+      // P1 FIX: Use successful transaction count for average, not total count
+      const successfulTransactionCount = currentPayments.filter(
+        p => p.status === 'succeeded' || p.status === 'captured' || p.status === 'paid'
+      ).length;
       const currentTransactionCount = currentPayments.length;
       const currentNetRevenue = currentTotalRevenue - currentRefunds;
       const previousNetRevenue = previousTotalRevenue - previousRefunds;
-      const currentAvgTransaction = currentTransactionCount > 0
-        ? currentTotalRevenue / currentTransactionCount
+      // Average should be revenue / successful transactions (not all transactions)
+      const currentAvgTransaction = successfulTransactionCount > 0
+        ? currentTotalRevenue / successfulTransactionCount
         : 0;
       const previousAvgTransaction = previousTransactionCount > 0
         ? previousTotalRevenue / previousTransactionCount

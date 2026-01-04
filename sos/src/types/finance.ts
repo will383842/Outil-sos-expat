@@ -390,6 +390,20 @@ export const CURRENCY_CODES: readonly CurrencyCode[] = [
   'EUR', 'USD', 'GBP', 'CHF', 'CAD', 'AUD', 'JPY', 'CNY', 'INR', 'BRL'
 ] as const;
 
+/**
+ * Statuts considérés comme "paiement réussi" pour les calculs de KPI
+ * IMPORTANT: Utiliser cette constante dans tous les fichiers pour garantir la cohérence
+ */
+export const SUCCESSFUL_PAYMENT_STATUSES = ['succeeded', 'captured', 'paid'] as const;
+export type SuccessfulPaymentStatus = typeof SUCCESSFUL_PAYMENT_STATUSES[number];
+
+/**
+ * Vérifie si un statut est considéré comme un paiement réussi
+ */
+export function isSuccessfulPaymentStatus(status: string): status is SuccessfulPaymentStatus {
+  return (SUCCESSFUL_PAYMENT_STATUSES as readonly string[]).includes(status);
+}
+
 export const DISPUTE_STATUSES: readonly DisputeStatus[] = [
   'open', 'under_review', 'won', 'lost', 'closed'
 ] as const;

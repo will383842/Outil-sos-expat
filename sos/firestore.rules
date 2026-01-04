@@ -205,6 +205,30 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ================= JOURNAL_ENTRIES COLLECTION (Accounting) =================
+    // Ecritures comptables generees automatiquement par les Cloud Functions
+    match /journal_entries/{entryId} {
+      // Lecture: admin uniquement (donnees comptables sensibles)
+      allow read: if isAdmin();
+      // Ecriture: Cloud Functions uniquement (via Admin SDK)
+      // Les ecritures sont generees automatiquement par les triggers
+      allow write: if false;
+    }
+
+    // ================= ACCOUNTING_SEQUENCES COLLECTION =================
+    // Sequences de numerotation des ecritures comptables
+    match /accounting_sequences/{seqId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // ================= ACCOUNTING_PERIODS COLLECTION =================
+    // Periodes comptables (clotures, reporting)
+    match /accounting_periods/{periodId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
     // ================= ORDERS COLLECTION =================
     match /orders/{orderId} {
       allow read: if isAuthenticated() &&
@@ -924,6 +948,30 @@ service cloud.firestore {
       allow delete: if isAdmin() || isDev();
     }
 
+    // ================= USER REPORTS COLLECTION =================
+    // Signalements utilisateurs (avis inappropriés, profils suspects, etc.)
+    match /reports/{reportId} {
+      // L'utilisateur peut lire ses propres signalements, admins peuvent tout lire
+      allow read: if isAuthenticated() &&
+                  (resource.data.reporterId == request.auth.uid || isAdmin() || isDev());
+
+      // Utilisateurs authentifiés peuvent créer un signalement
+      // - Doit être le reporter (pas d'usurpation)
+      // - Ne peut pas se signaler soi-même
+      // - Doit avoir une raison valide
+      allow create: if isAuthenticated() &&
+                    request.resource.data.reporterId == request.auth.uid &&
+                    request.resource.data.targetId != request.auth.uid &&
+                    request.resource.data.reason is string &&
+                    request.resource.data.reason.size() >= 5;
+
+      // Seuls les admins peuvent mettre à jour (résoudre, rejeter)
+      allow update: if isAdmin() || isDev();
+
+      // Seuls les admins peuvent supprimer
+      allow delete: if isAdmin() || isDev();
+    }
+
     // ================= EMAIL LOGS COLLECTION =================
     // Logs des emails envoyés (pour traçabilité)
     match /email_logs/{logId} {
@@ -1027,6 +1075,189 @@ service cloud.firestore {
     match /security_routing/{configId} {
       allow read: if isAdmin() || isDev();
       allow write: if isAdmin() || isDev();
+    }
+
+    // =====================================================================
+    // SECTION COMPTABILITE / FINANCE - NOUVELLES COLLECTIONS
+    // Roles: SUPER_ADMIN, FINANCE_ADMIN, VIEWER
+    // =====================================================================
+
+    // ================= HELPER FUNCTIONS FINANCE =================
+    // Verifie si l'utilisateur a le role FINANCE_ADMIN ou SUPER_ADMIN
+    function isFinanceAdmin() {
+      return request.auth != null &&
+             (request.auth.token.role == 'FINANCE_ADMIN' ||
+              request.auth.token.role == 'SUPER_ADMIN');
+    }
+
+    // Verifie si l'utilisateur a le role SUPER_ADMIN uniquement
+    function isSuperAdmin() {
+      return request.auth != null &&
+             request.auth.token.role == 'SUPER_ADMIN';
+    }
+
+    // ================= COUNTRY TAX CONFIGS =================
+    // Configuration fiscale par pays (taux TVA, seuils, etc.)
+    match /country_tax_configs/{countryCode} {
+      // Lecture: tout utilisateur authentifie (pour afficher les prix TTC)
+      allow read: if isAuthenticated();
+      // Ecriture: FINANCE_ADMIN ou SUPER_ADMIN uniquement
+      allow create, update: if isFinanceAdmin();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ================= THRESHOLD TRACKING =================
+    // Suivi des seuils de CA par pays (pour obligations fiscales)
+    match /threshold_tracking/{countryCode} {
+      // Lecture: FINANCE_ADMIN ou SUPER_ADMIN (donnees sensibles)
+      allow read: if isFinanceAdmin();
+      // Ecriture: Cloud Functions uniquement (mise a jour automatique)
+      allow write: if false;
+    }
+
+    // ================= THRESHOLD ALERTS =================
+    // Alertes quand un seuil est proche ou atteint
+    match /threshold_alerts/{alertId} {
+      // Lecture: FINANCE_ADMIN ou SUPER_ADMIN
+      allow read: if isFinanceAdmin();
+      // Creation: Cloud Functions uniquement
+      allow create: if false;
+      // Update: FINANCE_ADMIN peut acknowledger une alerte
+      allow update: if isFinanceAdmin() &&
+                    request.resource.data.diff(resource.data).affectedKeys()
+                      .hasOnly(['acknowledged', 'acknowledgedAt', 'acknowledgedBy', 'notes']);
+      // Delete: jamais (historique)
+      allow delete: if false;
+    }
+
+    // ================= JOURNAL ENTRIES =================
+    // Ecritures comptables (debit/credit)
+    // IMMUTABILITE: une ecriture POSTED ne peut plus etre modifiee
+    match /journal_entries/{entryId} {
+      // Lecture: FINANCE_ADMIN ou SUPER_ADMIN
+      allow read: if isFinanceAdmin();
+      // Creation: Cloud Functions uniquement (genere automatiquement)
+      allow create: if false;
+      // Update: FINANCE_ADMIN peut faire passer DRAFT -> POSTED uniquement
+      // Une fois POSTED, plus aucune modification possible
+      allow update: if isFinanceAdmin() &&
+                    resource.data.status == 'DRAFT' &&
+                    request.resource.data.status in ['DRAFT', 'POSTED'] &&
+                    // Seuls ces champs peuvent etre modifies en DRAFT
+                    request.resource.data.diff(resource.data).affectedKeys()
+                      .hasOnly(['status', 'postedAt', 'postedBy', 'notes', 'description']);
+      // Delete: JAMAIS (immutabilite comptable)
+      allow delete: if false;
+    }
+
+    // ================= CHART OF ACCOUNTS =================
+    // Plan comptable (liste des comptes: 411000 Clients, 701000 Ventes, etc.)
+    match /chart_of_accounts/{accountCode} {
+      // Lecture: FINANCE_ADMIN ou SUPER_ADMIN
+      allow read: if isFinanceAdmin();
+      // Ecriture: SUPER_ADMIN uniquement (modification du plan comptable = risque)
+      allow create, update, delete: if isSuperAdmin();
+    }
+
+    // ================= ACCOUNTING PERIODS =================
+    // Periodes comptables (mois, trimestres, annees)
+    match /accounting_periods/{periodId} {
+      // Lecture: FINANCE_ADMIN ou SUPER_ADMIN
+      allow read: if isFinanceAdmin();
+      // Creation/Suppression: SUPER_ADMIN uniquement
+      allow create, delete: if isSuperAdmin();
+      // Update: FINANCE_ADMIN peut cloturer une periode (status: OPEN -> CLOSED)
+      // SUPER_ADMIN peut tout modifier
+      allow update: if isSuperAdmin() ||
+                    (isFinanceAdmin() &&
+                     resource.data.status == 'OPEN' &&
+                     request.resource.data.status == 'CLOSED' &&
+                     request.resource.data.diff(resource.data).affectedKeys()
+                       .hasOnly(['status', 'closedAt', 'closedBy']));
+    }
+
+    // ================= TAX FILINGS =================
+    // Declarations fiscales (TVA mensuelle, trimestrielle, annuelle)
+    match /tax_filings/{filingId} {
+      // Lecture: FINANCE_ADMIN ou SUPER_ADMIN
+      allow read: if isFinanceAdmin();
+      // Creation: Cloud Functions uniquement (genere automatiquement)
+      allow create: if false;
+      // Update: FINANCE_ADMIN peut changer le statut et ajouter des notes
+      allow update: if isFinanceAdmin() &&
+                    request.resource.data.diff(resource.data).affectedKeys()
+                      .hasOnly(['status', 'filedAt', 'filedBy', 'referenceNumber',
+                               'notes', 'attachments', 'submittedAt', 'submittedBy']);
+      // Delete: JAMAIS (obligation legale de conservation)
+      allow delete: if false;
+    }
+
+    // ================= VAT VALIDATIONS =================
+    // Cache des validations de numeros de TVA intracommunautaire (VIES)
+    match /vat_validations/{validationId} {
+      // Lecture: tout utilisateur authentifie (pour checkout B2B)
+      allow read: if isAuthenticated();
+      // Ecriture: Cloud Functions uniquement (via API VIES)
+      allow write: if false;
+    }
+
+    // ================= COUNTRY PRICING =================
+    // Prix par pays (conversion devises, ajustements locaux)
+    match /country_pricing/{countryCode} {
+      // Lecture: tout utilisateur authentifie (pour afficher les prix)
+      allow read: if isAuthenticated();
+      // Ecriture: SUPER_ADMIN uniquement (impact business majeur)
+      allow write: if isSuperAdmin();
+    }
+
+    // ================= RECONCILIATION RECORDS =================
+    // Rapprochements bancaires et comptables
+    match /reconciliation_records/{recordId} {
+      // Lecture: FINANCE_ADMIN ou SUPER_ADMIN
+      allow read: if isFinanceAdmin();
+      // Ecriture: FINANCE_ADMIN ou SUPER_ADMIN
+      allow create, update: if isFinanceAdmin();
+      // Delete: SUPER_ADMIN uniquement (pour correction d'erreurs)
+      allow delete: if isSuperAdmin();
+    }
+
+    // ================= FINANCE AUDIT LOGS =================
+    // Logs d'audit specifiques aux operations comptables
+    // Toute modification comptable doit etre tracee ici
+    match /finance_audit_logs/{logId} {
+      // Lecture: FINANCE_ADMIN ou SUPER_ADMIN
+      allow read: if isFinanceAdmin();
+      // Ecriture: Cloud Functions uniquement (audit automatique)
+      allow write: if false;
+    }
+
+    // ================= TAX FILINGS COLLECTION =================
+    // Declarations fiscales (TVA Estonie, OSS UE, DES, UK VAT, CH VAT)
+    // SECURITE: Donnees fiscales sensibles - acces admin uniquement
+    match /tax_filings/{filingId} {
+      // Lecture: Admin uniquement (donnees fiscales confidentielles)
+      allow read: if isAdmin();
+      // Ecriture: Cloud Functions uniquement via Admin SDK
+      // Les modifications passent par generateTaxFiling, updateFilingStatus, etc.
+      allow write: if false;
+    }
+
+    // ================= TAX FILING NOTIFICATIONS =================
+    // Rappels automatiques pour echeances fiscales
+    match /tax_filing_notifications/{notifId} {
+      // Lecture: Admin uniquement
+      allow read: if isAdmin();
+      // Ecriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // ================= TAX FILING CONFIGS =================
+    // Configuration par type de declaration (seuils, emails de notification)
+    match /tax_filing_configs/{configId} {
+      // Lecture: Admin uniquement
+      allow read: if isAdmin();
+      // Ecriture: Admin uniquement (configuration manuelle)
+      allow write: if isAdmin();
     }
 
     // ================= CATCH-ALL (deny by default) =================

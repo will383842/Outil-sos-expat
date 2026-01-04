@@ -38,6 +38,7 @@ import {
   orderBy
 } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
+import { useAuth } from '../../../contexts/AuthContext';
 import { cn } from '../../../utils/cn';
 import { QuotaResetLog } from './types';
 
@@ -136,6 +137,7 @@ export const IaQuotasTab: React.FC = () => {
   const adminT = useAdminTranslations();
   const iaT = useIaAdminTranslations();
   const { language } = useApp();
+  const { user: currentUser } = useAuth();
 
   // State
   const [providers, setProviders] = useState<ProviderQuota[]>([]);
@@ -300,8 +302,8 @@ export const IaQuotasTab: React.FC = () => {
       await addDoc(collection(db, 'quota_reset_logs'), {
         providerId: provider.id,
         providerName: provider.displayName,
-        resetBy: 'admin', // TODO: Get actual admin UID
-        resetByName: 'Admin',
+        resetBy: currentUser?.id || currentUser?.uid || 'unknown',
+        resetByName: currentUser?.displayName || currentUser?.email || 'Admin',
         previousUsage: provider.aiCallsUsed,
         quotaLimit: provider.aiCallsLimit,
         reason: reason || 'Reset manuel',

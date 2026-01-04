@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useApp } from '../../../contexts/AppContext';
+import { useAuth } from '../../../contexts/AuthContext';
 import { getDateLocale } from '../../../utils/formatters';
 import {
   Bell,
@@ -315,6 +316,7 @@ const EventItem: React.FC<EventItemProps> = ({
 
 export const IaAlertsEventsTab: React.FC = () => {
   const { language } = useApp();
+  const { user: currentUser } = useAuth();
   // State
   const [events, setEvents] = useState<SubscriptionEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -454,7 +456,7 @@ export const IaAlertsEventsTab: React.FC = () => {
     try {
       await updateDoc(doc(db, 'subscription_events', eventId), {
         isAcknowledged: true,
-        acknowledgedBy: 'Admin', // TODO: Use actual admin name
+        acknowledgedBy: currentUser?.displayName || currentUser?.email || 'Admin',
         acknowledgedAt: Timestamp.now(),
         isRead: true,
       });

@@ -275,6 +275,22 @@ export const adminMenuTree: AdminMenuItem[] = [
             description: "Gestion TVA et fiscalité par pays",
           },
           {
+            id: "tax-filings",
+            label: "Declarations fiscales",
+            path: "/admin/finance/filings",
+            icon: FileText,
+            badge: "NEW",
+            description: "TVA EE, OSS, DES - Generation automatique",
+          },
+          {
+            id: "thresholds",
+            label: "Seuils fiscaux",
+            path: "/admin/finance/thresholds",
+            icon: Globe,
+            badge: "NEW",
+            description: "Surveillance des seuils internationaux",
+          },
+          {
             id: "reconciliation",
             label: "Rapprochement bancaire",
             path: "/admin/finance/reconciliation",

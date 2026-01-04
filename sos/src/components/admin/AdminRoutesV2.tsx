@@ -86,6 +86,7 @@ const AdminFinanceTaxes = lazy(() => import("../../pages/admin/Finance/Taxes"));
 const AdminFinanceTaxesByCountry = lazy(
   () => import("../../pages/admin/Finance/TaxesByCountry")
 );
+const AdminTaxFilings = lazy(() => import("../../pages/admin/Finance/TaxFilings"));
 const AdminFinanceReconciliation = lazy(
   () => import("../../pages/admin/AdminFinanceReconciliation")
 );
@@ -111,6 +112,7 @@ const AdminTransactions = lazy(() => import("../../pages/admin/Finance/Transacti
 const AdminSubscriptions = lazy(() => import("../../pages/admin/Finance/Subscriptions"));
 const AdminRefunds = lazy(() => import("../../pages/admin/Finance/Refunds"));
 const AdminDisputes = lazy(() => import("../../pages/admin/Finance/Disputes"));
+const AdminThresholds = lazy(() => import("../../pages/admin/Finance/Thresholds"));
 
 // ===== LAZY IMPORTS - USERS & PROVIDERS =====
 const AdminUsers = lazy(() => import("../../pages/admin/AdminUsers"));
@@ -515,6 +517,22 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminFinanceTaxesByCountry />
+          </Suspense>
+        }
+      />
+      <Route
+        path="finance/thresholds"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminThresholds />
+          </Suspense>
+        }
+      />
+      <Route
+        path="finance/filings"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminTaxFilings />
           </Suspense>
         }
       />
@@ -1008,6 +1026,8 @@ export const useAdminRouteValidation = () => {
       "/admin/finance/invoices",
       "/admin/finance/taxes",
       "/admin/finance/taxes/by-country",
+      "/admin/finance/thresholds",
+      "/admin/finance/filings",
       "/admin/finance/reconciliation",
       "/admin/finance/payouts",
       "/admin/finance/exports",

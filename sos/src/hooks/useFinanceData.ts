@@ -559,10 +559,18 @@ export function useFinanceKPIs(dateRange: { from: Date; to: Date }): UseFinanceK
         orderBy('createdAt', 'desc')
       );
 
-      // Fetch subscriptions
+      // Fetch active subscriptions
       const subscriptionsQuery = query(
         collection(db, 'subscriptions'),
-        where('status', '==', 'active')
+        where('status', 'in', ['active', 'trialing'])
+      );
+
+      // Fetch canceled subscriptions for churn rate calculation
+      const canceledSubscriptionsQuery = query(
+        collection(db, 'subscriptions'),
+        where('status', '==', 'canceled'),
+        where('canceledAt', '>=', Timestamp.fromDate(dateRange.from)),
+        where('canceledAt', '<=', Timestamp.fromDate(dateRange.to))
       );
 
       // Fetch disputes
@@ -578,9 +586,10 @@ export function useFinanceKPIs(dateRange: { from: Date; to: Date }): UseFinanceK
         where('createdAt', '<=', Timestamp.fromDate(dateRange.to))
       );
 
-      const [paymentsSnap, subsSnap, disputesSnap, refundsSnap] = await Promise.all([
+      const [paymentsSnap, subsSnap, canceledSubsSnap, disputesSnap, refundsSnap] = await Promise.all([
         getDocs(paymentsQuery),
         getDocs(subscriptionsQuery),
+        getDocs(canceledSubscriptionsQuery),
         getDocs(disputesQuery),
         getDocs(refundsQuery)
       ]);
@@ -658,8 +667,13 @@ export function useFinanceKPIs(dateRange: { from: Date; to: Date }): UseFinanceK
         return sum + Number(data.currentPeriodAmount || data.pricePerMonth || 0);
       }, 0);
 
-      // TODO: Calculate churn rate (requires historical data)
-      const subscriptionsChurnRate = 0;
+      // Calculate churn rate: (canceled subscriptions / total at period start) * 100
+      // Total at period start = currently active + those canceled during period
+      const canceledCount = canceledSubsSnap.docs.filter(doc => !doc.data()._placeholder).length;
+      const totalAtPeriodStart = subscriptionsActive + canceledCount;
+      const subscriptionsChurnRate = totalAtPeriodStart > 0
+        ? (canceledCount / totalAtPeriodStart) * 100
+        : 0;
 
       // Top countries
       const countryRevenue: Record<string, { revenue: number; count: number }> = {};

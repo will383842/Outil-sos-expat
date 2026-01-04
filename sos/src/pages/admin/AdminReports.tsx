@@ -189,26 +189,43 @@ const AdminReports: React.FC = () => {
         };
       });
 
-      // 2) Mock (ou charge les autres reports de ta collection si tu en as une)
-      const otherReports: Report[] = [
-        {
-          id: 'demo-review-1',
-          type: 'review',
-          status: 'pending',
-          reporterId: 'user_123',
-          reporterName: 'Jean Dupont',
-          targetId: 'review_456',
-          targetType: 'review',
-          reason: 'Contenu inapproprié',
-          details: 'Cet avis contient des propos offensants.',
-          createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-          updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-          priority: 'normal',
-        },
-      ];
+      // 2) Charger les signalements utilisateurs depuis Firestore (si la collection existe)
+      let userReports: Report[] = [];
+      try {
+        const reportsQuery = query(
+          collection(db, 'reports'),
+          orderBy('createdAt', 'desc'),
+          limit(50)
+        );
+        const reportsSnapshot = await getDocs(reportsQuery);
+
+        userReports = reportsSnapshot.docs.map((d) => {
+          const data = d.data();
+          return {
+            id: d.id,
+            type: (data.type as ReportType) || 'review',
+            status: isReportStatus(data.status) ? data.status : 'pending',
+            reporterId: data.reporterId || 'unknown',
+            reporterName: data.reporterName || 'Utilisateur',
+            targetId: data.targetId || d.id,
+            targetType: (data.targetType as TargetType) || 'review',
+            reason: data.reason || 'Signalement',
+            details: data.details,
+            createdAt: toDate(data.createdAt),
+            updatedAt: data.updatedAt ? toDate(data.updatedAt) : undefined,
+            resolvedAt: data.resolvedAt ? toDate(data.resolvedAt) : undefined,
+            resolvedBy: data.resolvedBy,
+            adminNotes: data.adminNotes,
+            priority: data.priority ?? 'normal',
+          };
+        });
+      } catch (reportsError) {
+        // La collection 'reports' n'existe peut-être pas encore - c'est OK
+        console.log('Collection reports non trouvée ou vide:', reportsError);
+      }
 
       // 3) Agréger proprement (un seul setReports)
-      setReports([...contactReports, ...otherReports]);
+      setReports([...contactReports, ...userReports]);
     } catch (error) {
        
       console.error('Error loading reports:', error);

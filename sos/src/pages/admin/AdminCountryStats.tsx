@@ -163,15 +163,20 @@ const AdminCountryStats: React.FC = () => {
       // Initialize country stats map
       const countryStatsMap: Record<string, CountryStats> = {};
 
-      // Helper to get country from user (with normalization)
-      // Priority: country > currentCountry > Unknown
-      const getUserCountry = (userId: string): string => {
-        const userDoc = usersSnapshot.docs.find(doc => doc.id === userId);
-        if (!userDoc) return 'Unknown';
-        const userData = userDoc.data() as Record<string, unknown>;
-        // Priority: country first, then currentCountry, then Unknown
+      // OPTIMISATION P1: Construire un Map des pays utilisateurs UNE SEULE FOIS
+      // Avant: O(n*m) - find() appelé pour chaque call/payment
+      // Après: O(n+m) - Map lookup O(1) pour chaque call/payment
+      const userCountryMap = new Map<string, string>();
+      usersSnapshot.docs.forEach(doc => {
+        const userData = doc.data() as Record<string, unknown>;
         const rawCountry = (userData.country || userData.currentCountry || 'Unknown') as string;
-        return normalizeCountryName(rawCountry);
+        userCountryMap.set(doc.id, normalizeCountryName(rawCountry));
+      });
+
+      // Helper to get country from user (with normalization)
+      // Utilise le Map pré-construit pour O(1) lookup
+      const getUserCountry = (userId: string): string => {
+        return userCountryMap.get(userId) || 'Unknown';
       };
 
       // Helper to initialize country stats if not exists

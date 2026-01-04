@@ -12,6 +12,7 @@ import {
   deleteDoc,
   doc,
   Timestamp,
+  QueryConstraint,
 } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/useAuth';
@@ -428,23 +429,33 @@ export default function FinanceExports() {
       const collectionName = collectionMap[dataType];
       const dataRef = collection(db, collectionName);
 
-      // Build query with proper typing
-      let q = query(
-        dataRef,
+      // P1 FIX: Build query with server-side filters when possible
+      // This reduces data transfer and improves performance
+      const constraints: QueryConstraint[] = [
         where('createdAt', '>=', Timestamp.fromDate(new Date(dateFrom))),
         where('createdAt', '<=', Timestamp.fromDate(new Date(dateTo + 'T23:59:59'))),
-        orderBy('createdAt', 'desc')
-      );
+      ];
+
+      // Add server-side status filter (Firestore supports 'in' with up to 30 values)
+      if (filters.status.length > 0 && filters.status.length <= 10) {
+        constraints.push(where('status', 'in', filters.status));
+      }
+
+      // Add server-side currency filter if single value
+      if (filters.currency.length === 1) {
+        constraints.push(where('currency', '==', filters.currency[0]));
+      } else if (filters.currency.length > 1 && filters.currency.length <= 10) {
+        constraints.push(where('currency', 'in', filters.currency));
+      }
+
+      // Add orderBy last (required by Firestore)
+      constraints.push(orderBy('createdAt', 'desc'));
 
       if (previewOnly) {
-        q = query(
-          dataRef,
-          where('createdAt', '>=', Timestamp.fromDate(new Date(dateFrom))),
-          where('createdAt', '<=', Timestamp.fromDate(new Date(dateTo + 'T23:59:59'))),
-          orderBy('createdAt', 'desc'),
-          limit(10)
-        );
+        constraints.push(limit(10));
       }
+
+      const q = query(dataRef, ...constraints);
 
       const snapshot = await getDocs(q);
 
@@ -460,16 +471,20 @@ export default function FinanceExports() {
           } as PreviewRow;
         });
 
-      // Apply client-side filters
-      if (filters.status.length > 0) {
+      // Apply remaining client-side filters (for filters not applied server-side)
+      // Status: client-side only if > 10 values (Firestore 'in' limit)
+      if (filters.status.length > 10) {
         rows = rows.filter((r) => filters.status.includes(String(r.status)));
       }
+      // Country: always client-side (requires composite index with createdAt)
       if (filters.country.length > 0) {
         rows = rows.filter((r) => filters.country.includes(String(r.country)));
       }
-      if (filters.currency.length > 0) {
+      // Currency: client-side only if > 10 values
+      if (filters.currency.length > 10) {
         rows = rows.filter((r) => filters.currency.includes(r.currency as Currency));
       }
+      // Method: always client-side (requires composite index)
       if (filters.method.length > 0) {
         rows = rows.filter((r) => filters.method.includes(String(r.method || r.paymentMethod)));
       }
