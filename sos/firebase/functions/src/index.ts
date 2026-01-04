@@ -4190,9 +4190,9 @@ export {
 // ========== TAX THRESHOLD TRACKING SYSTEM ==========
 // Surveillance des seuils fiscaux internationaux (OSS EU, UK VAT, CH TVA, etc.)
 export {
-  // Triggers on payments
-  onPaymentCreatedUpdateThreshold,
-  onPaymentUpdatedCheckThreshold,
+  // Triggers on payments (renamed to avoid conflict with previously deployed HTTPS functions)
+  thresholdOnPaymentCreate,
+  thresholdOnPaymentUpdate,
   // Scheduled functions
   checkThresholdsDaily,
   sendWeeklyThresholdReport,

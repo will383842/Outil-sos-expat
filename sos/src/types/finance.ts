@@ -480,6 +480,11 @@ export const DISPUTE_STATUS_LABELS: Record<DisputeStatus, string> = {
   won: 'Gagné',
   lost: 'Perdu',
   closed: 'Fermé',
+  accepted: 'Accepté',
+  needs_response: 'Réponse requise',
+  warning_needs_response: 'Alerte: Réponse requise',
+  warning_under_review: 'Alerte: En examen',
+  warning_closed: 'Alerte: Fermé',
 };
 
 export const CURRENCY_SYMBOLS: Record<CurrencyCode, string> = {

@@ -40,6 +40,8 @@ import {
   FileSpreadsheet,
   ArrowLeftRight,
   BookOpen,
+  Scale,
+  ArrowDownUp,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -303,6 +305,30 @@ export const adminMenuTree: AdminMenuItem[] = [
             path: "/admin/finance/ledger",
             icon: BookOpen,
             description: "Comptabilité générale",
+          },
+          {
+            id: "balance-sheet",
+            label: "Bilan",
+            path: "/admin/finance/balance-sheet",
+            icon: Scale,
+            badge: "NEW",
+            description: "Actifs, Passifs, Capitaux propres",
+          },
+          {
+            id: "profit-loss",
+            label: "Compte de résultat",
+            path: "/admin/finance/profit-loss",
+            icon: TrendingUp,
+            badge: "NEW",
+            description: "Produits et charges",
+          },
+          {
+            id: "cash-flow",
+            label: "Flux de trésorerie",
+            path: "/admin/finance/cash-flow",
+            icon: ArrowDownUp,
+            badge: "NEW",
+            description: "Tableau des flux de trésorerie",
           },
         ],
       },

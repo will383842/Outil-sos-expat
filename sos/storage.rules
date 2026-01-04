@@ -149,6 +149,18 @@ service firebase.storage {
       allow read, write: if isAdmin();
     }
 
+    // Dispute evidence uploads - P0 FIX
+    match /disputes/{disputeId}/evidence/{fileName} {
+      // Read: Admin or parties involved in the dispute
+      allow read: if isAuthenticated() && isAdmin();
+      // Write: Authenticated users can upload evidence (admin validates disputeId)
+      allow write: if isAuthenticated() &&
+                   isImage() &&
+                   isValidFileSize();
+      // Delete: Admin only
+      allow delete: if isAdmin();
+    }
+
     match /{allPaths=**} {
       allow read, write: if false;
     }

@@ -31,7 +31,7 @@ import { DisputeStatus } from '../types/finance';
 // =============================================================================
 
 // Re-export DisputeStatus for backward compatibility
-export { DisputeStatus };
+export type { DisputeStatus };
 export type PaymentMethod = 'stripe' | 'paypal';
 export type UrgencyLevel = 'urgent' | 'medium' | 'normal';
 export type DisputeEventType = 'created' | 'evidence_submitted' | 'status_changed' | 'note_added' | 'response_received';

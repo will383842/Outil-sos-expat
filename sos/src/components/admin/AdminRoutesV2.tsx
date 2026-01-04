@@ -90,12 +90,6 @@ const AdminTaxFilings = lazy(() => import("../../pages/admin/Finance/TaxFilings"
 const AdminFinanceReconciliation = lazy(
   () => import("../../pages/admin/AdminFinanceReconciliation")
 );
-const AdminFinanceDisputes = lazy(
-  () => import("../../pages/admin/AdminFinanceDisputes")
-);
-const AdminFinanceRefunds = lazy(
-  () => import("../../pages/admin/AdminFinanceRefunds")
-);
 const AdminFinancePayouts = lazy(
   () => import("../../pages/admin/Finance/Payouts")
 );
@@ -113,6 +107,9 @@ const AdminSubscriptions = lazy(() => import("../../pages/admin/Finance/Subscrip
 const AdminRefunds = lazy(() => import("../../pages/admin/Finance/Refunds"));
 const AdminDisputes = lazy(() => import("../../pages/admin/Finance/Disputes"));
 const AdminThresholds = lazy(() => import("../../pages/admin/Finance/Thresholds"));
+const AdminBalanceSheet = lazy(() => import("../../pages/admin/Finance/BalanceSheet"));
+const AdminProfitLoss = lazy(() => import("../../pages/admin/Finance/ProfitLoss"));
+const AdminCashFlow = lazy(() => import("../../pages/admin/Finance/CashFlow"));
 
 // ===== LAZY IMPORTS - USERS & PROVIDERS =====
 const AdminUsers = lazy(() => import("../../pages/admin/AdminUsers"));
@@ -565,6 +562,30 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminFinanceLedger />
+          </Suspense>
+        }
+      />
+      <Route
+        path="finance/balance-sheet"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminBalanceSheet />
+          </Suspense>
+        }
+      />
+      <Route
+        path="finance/profit-loss"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminProfitLoss />
+          </Suspense>
+        }
+      />
+      <Route
+        path="finance/cash-flow"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminCashFlow />
           </Suspense>
         }
       />
@@ -1032,6 +1053,9 @@ export const useAdminRouteValidation = () => {
       "/admin/finance/payouts",
       "/admin/finance/exports",
       "/admin/finance/ledger",
+      "/admin/finance/balance-sheet",
+      "/admin/finance/profit-loss",
+      "/admin/finance/cash-flow",
       "/admin/calls",
       "/admin/calls/sessions",
       "/admin/comms/campaigns",

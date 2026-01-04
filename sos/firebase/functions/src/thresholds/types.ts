@@ -11,7 +11,11 @@ import { Timestamp } from 'firebase-admin/firestore';
 
 export type ThresholdPeriodType = 'CALENDAR_YEAR' | 'ROLLING_12M' | 'QUARTER';
 export type ThresholdStatus = 'SAFE' | 'WARNING_70' | 'WARNING_90' | 'EXCEEDED' | 'REGISTERED';
-export type ThresholdCurrency = 'EUR' | 'GBP' | 'CHF' | 'AUD' | 'JPY' | 'SGD' | 'INR' | 'CAD' | 'KRW' | 'MXN' | 'USD';
+export type ThresholdCurrency =
+  | 'EUR' | 'GBP' | 'CHF' | 'AUD' | 'JPY' | 'SGD' | 'INR' | 'CAD' | 'KRW' | 'MXN' | 'USD'
+  | 'NOK' | 'NZD' | 'SAR' | 'AED' | 'BRL' | 'CLP' | 'COP' | 'ARS' | 'IDR' | 'THB'
+  | 'VND' | 'PHP' | 'MYR' | 'TRY' | 'ILS' | 'ZAR' | 'TWD' | 'HKD' | 'PLN' | 'SEK'
+  | 'DKK' | 'CZK' | 'HUF' | 'RON' | 'BGN' | 'RUB' | 'UAH' | 'EGP' | 'NGN' | 'KES';
 export type CustomerType = 'B2C' | 'B2B';
 export type ThresholdAlertType = 'WARNING_70' | 'WARNING_90' | 'EXCEEDED';
 
@@ -245,17 +249,53 @@ export const THRESHOLD_CONFIGS: ThresholdConfig[] = [
 ];
 
 export const EXCHANGE_RATES_TO_EUR: Record<ThresholdCurrency, number> = {
+  // Major currencies
   EUR: 1,
+  USD: 0.92,
   GBP: 1.17,
   CHF: 1.05,
-  AUD: 0.61,
   JPY: 0.0067,
-  SGD: 0.69,
-  INR: 0.011,
   CAD: 0.68,
+  AUD: 0.61,
+  NZD: 0.57,
+  // Asia
+  SGD: 0.69,
+  HKD: 0.12,
+  TWD: 0.029,
   KRW: 0.00069,
+  INR: 0.011,
+  IDR: 0.000059,
+  THB: 0.026,
+  VND: 0.000038,
+  PHP: 0.016,
+  MYR: 0.20,
+  // Middle East
+  SAR: 0.25,
+  AED: 0.25,
+  ILS: 0.25,
+  TRY: 0.029,
+  // Americas
   MXN: 0.054,
-  USD: 0.92
+  BRL: 0.19,
+  CLP: 0.0010,
+  COP: 0.00023,
+  ARS: 0.0011,
+  // Europe (non-EUR)
+  NOK: 0.086,
+  SEK: 0.088,
+  DKK: 0.13,
+  PLN: 0.23,
+  CZK: 0.040,
+  HUF: 0.0026,
+  RON: 0.20,
+  BGN: 0.51,
+  RUB: 0.010,
+  UAH: 0.024,
+  // Africa
+  ZAR: 0.051,
+  EGP: 0.019,
+  NGN: 0.00059,
+  KES: 0.0058,
 };
 
 export const ALERT_THRESHOLDS = {

@@ -53,7 +53,7 @@ const scheduledConfig = {
 /**
  * Trigger on payment creation to update threshold tracking
  */
-export const onPaymentCreatedUpdateThreshold = onDocumentCreated(
+export const thresholdOnPaymentCreate = onDocumentCreated(
   {
     document: 'payments/{paymentId}',
     ...standardConfig,
@@ -82,7 +82,7 @@ export const onPaymentCreatedUpdateThreshold = onDocumentCreated(
 /**
  * Trigger on payment update (for status changes)
  */
-export const onPaymentUpdatedCheckThreshold = onDocumentUpdated(
+export const thresholdOnPaymentUpdate = onDocumentUpdated(
   {
     document: 'payments/{paymentId}',
     ...standardConfig,
