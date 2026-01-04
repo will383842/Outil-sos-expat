@@ -1141,6 +1141,24 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ================= COUNTRIES =================
+    // Liste des pays (pour les selecteurs)
+    match /countries/{countryId} {
+      // Lecture: tout utilisateur authentifie
+      allow read: if isAuthenticated();
+      // Ecriture: admin uniquement
+      allow write: if isAdmin();
+    }
+
+    // ================= TAX DECLARATIONS =================
+    // Declarations TVA par pays/periode
+    match /tax_declarations/{declarationId} {
+      // Lecture: admin uniquement
+      allow read: if isAdmin();
+      // Ecriture: admin uniquement
+      allow write: if isAdmin();
+    }
+
     // ================= THRESHOLD TRACKING =================
     // Suivi des seuils de CA par pays (pour obligations fiscales)
     match /threshold_tracking/{trackingId} {
