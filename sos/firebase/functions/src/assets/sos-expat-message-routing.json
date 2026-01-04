@@ -79,6 +79,15 @@
       ],
       "rate_limit_h": 1
     },
+    "booking_paid_provider": {
+      "channels": [
+        "email",
+        "sms",
+        "push",
+        "inapp"
+      ],
+      "rate_limit_h": 0
+    },
     "handoff.started.client": {
       "channels": [
         "email",

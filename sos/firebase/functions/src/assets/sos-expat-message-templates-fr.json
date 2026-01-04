@@ -319,6 +319,40 @@
       }
     },
     {
+      "id": "booking_paid_provider",
+      "roles": [
+        "provider"
+      ],
+      "channels": {
+        "email": true,
+        "sms": true,
+        "push": true,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "email": {
+        "subject": "Nouveau client — {{request.title}}",
+        "html": "<p>Un nouveau client vous a contacté !</p><p><strong>Client:</strong> {{client.firstName}} ({{client.country}})</p><p><strong>Demande:</strong> {{request.title}}</p><p>{{request.description}}</p>",
+        "text": "Nouveau client: {{client.firstName}} ({{client.country}})\nDemande: {{request.title}}\n{{request.description}}"
+      },
+      "sms": {
+        "text": "Nouveau client: {{client.firstName}} ({{client.country}})\nLangue: {{locale}}\nDemande: {{request.title}}\n{{request.description}}"
+      },
+      "push": {
+        "title": "Nouveau client",
+        "body": "{{client.firstName}} - {{request.title}}",
+        "deeplink": "sos-expat://provider/dashboard"
+      },
+      "inapp": {
+        "title": "Nouveau client",
+        "body": "{{client.firstName}} vous a contacté pour: {{request.title}}",
+        "action": {
+          "label": "Voir",
+          "deeplink": "/provider/dashboard"
+        }
+      }
+    },
+    {
       "id": "handoff.started.client",
       "roles": [
         "client"
