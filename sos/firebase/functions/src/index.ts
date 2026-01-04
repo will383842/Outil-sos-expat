@@ -161,6 +161,11 @@ export { initKYCReminderTemplates } from "./seeds/kycReminderTemplates";
 // Unclaimed Funds Templates Seed
 export { initUnclaimedFundsTemplates } from "./seeds/unclaimedFundsTemplates";
 
+// Country Fiscal Configs Seed (200 countries + 64 USA/Canada subdivisions)
+// NOTE: Data already seeded via local script (scripts/seedCountryData.js)
+// Commented out to avoid Cloud Run CPU quota issues on deployment
+// export { initCountryConfigs, seedCountryConfigsHttp } from "./seeds/initCountryConfigs";
+
 // Refund Management (simplifie pour Direct Charges)
 // Note: Les fonctions scheduledUnclaimedFundsCheck, getUnclaimedFundsStats, resolveUnclaimedFund
 // ont ete supprimees car avec Direct Charges, les fonds vont directement au provider.

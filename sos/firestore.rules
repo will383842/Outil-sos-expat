@@ -1286,6 +1286,26 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ================= COUNTRY FISCAL CONFIGS =================
+    // Configuration fiscale complete pour 197 pays
+    // (VAT/GST/Sales Tax, seuils, regimes digital services, etc.)
+    match /country_fiscal_configs/{countryCode} {
+      // Lecture publique (pour afficher prix TTC, info paiement)
+      allow read: if true;
+      // Ecriture: Admin uniquement (Cloud Functions pour seed)
+      allow write: if isAdmin() || isDev();
+    }
+
+    // ================= COUNTRY SUBDIVISIONS =================
+    // USA states (51) + Canada provinces (13)
+    // Taxes specifiques par etat/province (Sales Tax, GST/HST/PST/QST)
+    match /country_subdivisions/{subdivisionId} {
+      // Lecture publique (pour calculs de taxe)
+      allow read: if true;
+      // Ecriture: Admin uniquement
+      allow write: if isAdmin() || isDev();
+    }
+
     // ================= CATCH-ALL (deny by default) =================
     // SECURITE: Refuse TOUT acces non explicitement autorise
     // Le role 'dev' est desactive en production
