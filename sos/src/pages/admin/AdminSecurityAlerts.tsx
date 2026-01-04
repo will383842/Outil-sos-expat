@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useIntl } from 'react-intl';
 import {
   collection,
   query,
@@ -85,14 +85,14 @@ interface ThreatLevelIndicatorProps {
 }
 
 const ThreatLevelIndicator: React.FC<ThreatLevelIndicatorProps> = ({ level }) => {
-  const { t } = useTranslation();
+  const intl = useIntl();
 
   const levelLabels: Record<ThreatLevel, string> = {
-    normal: t('admin.security.threatLevel.normal', 'Normal'),
-    low: t('admin.security.threatLevel.low', 'Bas'),
-    moderate: t('admin.security.threatLevel.moderate', 'Modere'),
-    elevated: t('admin.security.threatLevel.elevated', 'Eleve'),
-    critical: t('admin.security.threatLevel.critical', 'Critique'),
+    normal: intl.formatMessage({ id: 'admin.security.threatLevel.normal', defaultMessage: 'Normal' }),
+    low: intl.formatMessage({ id: 'admin.security.threatLevel.low', defaultMessage: 'Bas' }),
+    moderate: intl.formatMessage({ id: 'admin.security.threatLevel.moderate', defaultMessage: 'Modéré' }),
+    elevated: intl.formatMessage({ id: 'admin.security.threatLevel.elevated', defaultMessage: 'Élevé' }),
+    critical: intl.formatMessage({ id: 'admin.security.threatLevel.critical', defaultMessage: 'Critique' }),
   };
 
   const levelBars: Record<ThreatLevel, number> = {
@@ -115,7 +115,7 @@ const ThreatLevelIndicator: React.FC<ThreatLevelIndicatorProps> = ({ level }) =>
     <div className="bg-white rounded-lg shadow p-4">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-sm font-medium text-gray-500">
-          {t('admin.security.threatLevel.title', 'Niveau de menace')}
+          {intl.formatMessage({ id: 'admin.security.threatLevel.title', defaultMessage: 'Niveau de menace' })}
         </h3>
         <span className={`text-lg font-bold ${THREAT_LEVEL_COLORS[level]}`}>
           {levelLabels[level]}
@@ -187,7 +187,7 @@ const AlertRow: React.FC<AlertRowProps> = ({
   onInvestigate,
   onBlockIP,
 }) => {
-  const { t, i18n } = useTranslation();
+  const intl = useIntl();
   const [expanded, setExpanded] = useState(false);
 
   const severityBadge = (
@@ -215,7 +215,7 @@ const AlertRow: React.FC<AlertRowProps> = ({
             </div>
             <div>
               <p className="text-sm font-medium text-gray-900">
-                {getAlertTypeLabel(alert.type, i18n.language)}
+                {getAlertTypeLabel(alert.type, intl.locale)}
               </p>
               <p className="text-xs text-gray-500">
                 {alert.source.ip && `IP: ${alert.source.ip}`}
@@ -231,7 +231,7 @@ const AlertRow: React.FC<AlertRowProps> = ({
               </span>
             )}
             <span className="text-xs text-gray-500">
-              {formatTimeAgo(alert.createdAt, i18n.language)}
+              {formatTimeAgo(alert.createdAt, intl.locale)}
             </span>
           </div>
         </div>
@@ -242,7 +242,7 @@ const AlertRow: React.FC<AlertRowProps> = ({
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
               <h4 className="text-xs font-medium text-gray-500 uppercase mb-2">
-                {t('admin.security.details', 'Details')}
+                {intl.formatMessage({ id: 'admin.security.details', defaultMessage: 'Détails' })}
               </h4>
               <dl className="text-sm">
                 {alert.context.ip && (
@@ -253,19 +253,19 @@ const AlertRow: React.FC<AlertRowProps> = ({
                 )}
                 {alert.context.country && (
                   <div className="flex justify-between py-1">
-                    <dt className="text-gray-500">{t('admin.security.country', 'Pays')}</dt>
+                    <dt className="text-gray-500">{intl.formatMessage({ id: 'admin.security.country', defaultMessage: 'Pays' })}</dt>
                     <dd>{alert.context.countryName || alert.context.country}</dd>
                   </div>
                 )}
                 {alert.context.attemptCount && (
                   <div className="flex justify-between py-1">
-                    <dt className="text-gray-500">{t('admin.security.attempts', 'Tentatives')}</dt>
+                    <dt className="text-gray-500">{intl.formatMessage({ id: 'admin.security.attempts', defaultMessage: 'Tentatives' })}</dt>
                     <dd>{alert.context.attemptCount}</dd>
                   </div>
                 )}
                 {alert.context.riskScore && (
                   <div className="flex justify-between py-1">
-                    <dt className="text-gray-500">{t('admin.security.riskScore', 'Score risque')}</dt>
+                    <dt className="text-gray-500">{intl.formatMessage({ id: 'admin.security.riskScore', defaultMessage: 'Score de risque' })}</dt>
                     <dd className={alert.context.riskScore > 70 ? 'text-red-600 font-bold' : ''}>
                       {alert.context.riskScore}%
                     </dd>
@@ -275,7 +275,7 @@ const AlertRow: React.FC<AlertRowProps> = ({
             </div>
             <div>
               <h4 className="text-xs font-medium text-gray-500 uppercase mb-2">
-                {t('admin.security.actions', 'Actions')}
+                {intl.formatMessage({ id: 'admin.security.actions', defaultMessage: 'Actions' })}
               </h4>
               <div className="flex flex-wrap gap-2">
                 {alert.status === 'pending' && (
@@ -283,7 +283,7 @@ const AlertRow: React.FC<AlertRowProps> = ({
                     onClick={(e) => { e.stopPropagation(); onAcknowledge(alert.id); }}
                     className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
                   >
-                    <CheckIcon /> {t('admin.security.acknowledge', 'Acquitter')}
+                    <CheckIcon /> {intl.formatMessage({ id: 'admin.security.acknowledge', defaultMessage: 'Acquitter' })}
                   </button>
                 )}
                 {(alert.status === 'pending' || alert.status === 'acknowledged') && (
@@ -291,7 +291,7 @@ const AlertRow: React.FC<AlertRowProps> = ({
                     onClick={(e) => { e.stopPropagation(); onInvestigate(alert.id); }}
                     className="px-3 py-1 text-xs bg-purple-500 text-white rounded hover:bg-purple-600"
                   >
-                    <EyeIcon /> {t('admin.security.investigate', 'Investiguer')}
+                    <EyeIcon /> {intl.formatMessage({ id: 'admin.security.investigate', defaultMessage: 'Investiguer' })}
                   </button>
                 )}
                 {alert.status !== 'resolved' && (
@@ -299,7 +299,7 @@ const AlertRow: React.FC<AlertRowProps> = ({
                     onClick={(e) => { e.stopPropagation(); onResolve(alert.id); }}
                     className="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
                   >
-                    {t('admin.security.resolve', 'Resoudre')}
+                    {intl.formatMessage({ id: 'admin.security.resolve', defaultMessage: 'Résoudre' })}
                   </button>
                 )}
                 {alert.source.ip && (
@@ -307,7 +307,7 @@ const AlertRow: React.FC<AlertRowProps> = ({
                     onClick={(e) => { e.stopPropagation(); onBlockIP(alert.source.ip!); }}
                     className="px-3 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
                   >
-                    <BlockIcon /> {t('admin.security.blockIP', 'Bloquer IP')}
+                    <BlockIcon /> {intl.formatMessage({ id: 'admin.security.blockIP', defaultMessage: 'Bloquer IP' })}
                   </button>
                 )}
               </div>
@@ -316,7 +316,7 @@ const AlertRow: React.FC<AlertRowProps> = ({
           {alert.context.riskFactors && alert.context.riskFactors.length > 0 && (
             <div className="mt-2">
               <h4 className="text-xs font-medium text-gray-500 uppercase mb-1">
-                {t('admin.security.riskFactors', 'Facteurs de risque')}
+                {intl.formatMessage({ id: 'admin.security.riskFactors', defaultMessage: 'Facteurs de risque' })}
               </h4>
               <div className="flex flex-wrap gap-1">
                 {alert.context.riskFactors.map((factor, idx) => (
@@ -343,7 +343,7 @@ interface QuickActionsPanelProps {
 }
 
 const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ onBlockIP, onRefresh }) => {
-  const { t } = useTranslation();
+  const intl = useIntl();
   const [ipToBlock, setIpToBlock] = useState('');
 
   const handleBlockIP = () => {
@@ -356,13 +356,13 @@ const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ onBlockIP, onRefr
   return (
     <div className="bg-white rounded-lg shadow p-4">
       <h3 className="text-sm font-medium text-gray-900 mb-4">
-        {t('admin.security.quickActions', 'Actions rapides')}
+        {intl.formatMessage({ id: 'admin.security.quickActions', defaultMessage: 'Actions rapides' })}
       </h3>
       <div className="space-y-3">
         <div className="flex space-x-2">
           <input
             type="text"
-            placeholder="IP a bloquer..."
+            placeholder={intl.formatMessage({ id: 'admin.security.ipPlaceholder', defaultMessage: 'IP à bloquer...' })}
             value={ipToBlock}
             onChange={(e) => setIpToBlock(e.target.value)}
             className="flex-1 px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-red-500"
@@ -380,7 +380,7 @@ const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ onBlockIP, onRefr
           className="w-full px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 flex items-center justify-center"
         >
           <RefreshIcon />
-          <span className="ml-2">{t('admin.security.refresh', 'Actualiser')}</span>
+          <span className="ml-2">{intl.formatMessage({ id: 'admin.security.refresh', defaultMessage: 'Actualiser' })}</span>
         </button>
       </div>
     </div>
@@ -392,7 +392,7 @@ const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ onBlockIP, onRefr
 // ==========================================
 
 const AdminSecurityAlerts: React.FC = () => {
-  const { t, i18n } = useTranslation();
+  const intl = useIntl();
   const { firebaseUser } = useAuth();
 
   // State
@@ -553,12 +553,12 @@ const AdminSecurityAlerts: React.FC = () => {
         adminId: firebaseUser.uid,
         notes: 'Blocked from admin dashboard',
       });
-      alert(t('admin.security.ipBlocked', 'IP bloquee avec succes'));
+      alert(intl.formatMessage({ id: 'admin.security.ipBlocked', defaultMessage: 'IP bloquée avec succès' }));
     } catch (error) {
       console.error('Error blocking IP:', error);
-      alert(t('admin.security.error', 'Erreur lors du blocage'));
+      alert(intl.formatMessage({ id: 'admin.security.error', defaultMessage: 'Erreur lors du blocage' }));
     }
-  }, [firebaseUser, t]);
+  }, [firebaseUser, intl]);
 
   const handleRefresh = useCallback(() => {
     // Force re-render by updating a filter
@@ -584,11 +584,11 @@ const AdminSecurityAlerts: React.FC = () => {
         <div className="flex items-center">
           <ShieldIcon />
           <h1 className="ml-3 text-2xl font-bold text-gray-900">
-            {t('admin.security.title', 'Alertes de securite')}
+            {intl.formatMessage({ id: 'admin.security.title', defaultMessage: 'Alertes de sécurité' })}
           </h1>
         </div>
         <div className="text-sm text-gray-500">
-          {t('admin.security.lastUpdate', 'Mise a jour en temps reel')}
+          {intl.formatMessage({ id: 'admin.security.lastUpdate', defaultMessage: 'Mise à jour en temps réel' })}
         </div>
       </div>
 
@@ -596,19 +596,19 @@ const AdminSecurityAlerts: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <ThreatLevelIndicator level={threatLevel} />
         <StatCard
-          title={t('admin.security.totalAlerts', 'Total alertes')}
+          title={intl.formatMessage({ id: 'admin.security.totalAlerts', defaultMessage: 'Total alertes' })}
           value={stats.total}
           icon={<AlertIcon />}
           color="bg-blue-100 text-blue-600"
         />
         <StatCard
-          title={t('admin.security.pendingAlerts', 'En attente')}
+          title={intl.formatMessage({ id: 'admin.security.pendingAlerts', defaultMessage: 'En attente' })}
           value={stats.pending}
           icon={<AlertIcon />}
           color="bg-yellow-100 text-yellow-600"
         />
         <StatCard
-          title={t('admin.security.criticalAlerts', 'Critiques')}
+          title={intl.formatMessage({ id: 'admin.security.criticalAlerts', defaultMessage: 'Critiques' })}
           value={stats.critical}
           icon={<AlertIcon />}
           color="bg-red-100 text-red-600"
@@ -623,7 +623,7 @@ const AdminSecurityAlerts: React.FC = () => {
             <div className="flex flex-wrap gap-4">
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1">
-                  {t('admin.security.filterSeverity', 'Severite')}
+                  {intl.formatMessage({ id: 'admin.security.filterSeverity', defaultMessage: 'Sévérité' })}
                 </label>
                 <div className="flex flex-wrap gap-1">
                   {severityOptions.map((sev) => (
@@ -650,7 +650,7 @@ const AdminSecurityAlerts: React.FC = () => {
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1">
-                  {t('admin.security.filterStatus', 'Statut')}
+                  {intl.formatMessage({ id: 'admin.security.filterStatus', defaultMessage: 'Statut' })}
                 </label>
                 <div className="flex flex-wrap gap-1">
                   {statusOptions.map((status) => (
@@ -682,13 +682,13 @@ const AdminSecurityAlerts: React.FC = () => {
           <div className="bg-white rounded-lg shadow overflow-hidden">
             <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
               <h2 className="text-sm font-medium text-gray-700">
-                {t('admin.security.recentAlerts', 'Alertes recentes')} ({alerts.length})
+                {intl.formatMessage({ id: 'admin.security.recentAlerts', defaultMessage: 'Alertes récentes' })} ({alerts.length})
               </h2>
             </div>
             {alerts.length === 0 ? (
               <div className="p-8 text-center text-gray-500">
                 <ShieldIcon />
-                <p className="mt-2">{t('admin.security.noAlerts', 'Aucune alerte')}</p>
+                <p className="mt-2">{intl.formatMessage({ id: 'admin.security.noAlerts', defaultMessage: 'Aucune alerte' })}</p>
               </div>
             ) : (
               <div className="divide-y divide-gray-200">
@@ -721,10 +721,10 @@ const AdminSecurityAlerts: React.FC = () => {
           {/* Blocked entities */}
           <div className="bg-white rounded-lg shadow p-4">
             <h3 className="text-sm font-medium text-gray-900 mb-3">
-              {t('admin.security.blockedEntities', 'Entites bloquees')} ({blockedEntities.length})
+              {intl.formatMessage({ id: 'admin.security.blockedEntities', defaultMessage: 'Entités bloquées' })} ({blockedEntities.length})
             </h3>
             {blockedEntities.length === 0 ? (
-              <p className="text-xs text-gray-500">{t('admin.security.noBlocked', 'Aucune')}</p>
+              <p className="text-xs text-gray-500">{intl.formatMessage({ id: 'admin.security.noBlocked', defaultMessage: 'Aucune' })}</p>
             ) : (
               <ul className="space-y-2 max-h-60 overflow-y-auto">
                 {blockedEntities.slice(0, 10).map((entity) => (

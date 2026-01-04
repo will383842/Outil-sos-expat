@@ -40,7 +40,7 @@ import {
   ChevronUp,
   Loader2,
 } from 'lucide-react';
-import { toCsv } from '@/services/finance/reports';
+import { toCsv, toExcel, downloadBlob } from '@/services/finance/reports';
 import type { Currency } from '@/types/finance';
 
 // ============================================================================
@@ -564,41 +564,27 @@ export default function FinanceExports() {
         });
 
         // Generate export based on format
-        let content: string;
-        let mimeType: string;
-        let extension: string;
+        const reportName = template?.id || `${config.dataType}-export`;
+        const filename = `${reportName}-${new Date().toISOString().split('T')[0]}`;
+        let blob: Blob;
 
         if (config.format === 'csv') {
-          content = toCsv(filteredData as Record<string, unknown>[]);
-          mimeType = 'text/csv;charset=utf-8;';
-          extension = '.csv';
+          const content = toCsv(filteredData as Record<string, unknown>[]);
+          blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+          downloadBlob(blob, `${filename}.csv`);
         } else if (config.format === 'excel') {
-          // For Excel, we'll generate CSV as a fallback since xlsx library is not available
-          // In a real implementation, you would use SheetJS (xlsx) library here
-          content = toCsv(filteredData as Record<string, unknown>[]);
-          mimeType = 'text/csv;charset=utf-8;';
-          extension = '.csv'; // Fallback to CSV
-          console.warn('[Exports] Excel export not available, falling back to CSV');
+          // Use SheetJS (xlsx) library for proper Excel export
+          blob = toExcel(filteredData as Record<string, unknown>[], {
+            sheetName: template?.name || 'Export',
+          });
+          downloadBlob(blob, `${filename}.xlsx`);
         } else {
-          // PDF - use CSV as fallback
-          content = toCsv(filteredData as Record<string, unknown>[]);
-          mimeType = 'text/csv;charset=utf-8;';
-          extension = '.csv';
+          // PDF - use CSV as fallback for now
+          const content = toCsv(filteredData as Record<string, unknown>[]);
+          blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+          downloadBlob(blob, `${filename}.csv`);
           console.warn('[Exports] PDF export not available, falling back to CSV');
         }
-
-        // Create and trigger download
-        const blob = new Blob([content], { type: mimeType });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        const reportName = template?.id || `${config.dataType}-export`;
-        const filename = `${reportName}-${new Date().toISOString().split('T')[0]}${extension}`;
-        link.setAttribute('href', url);
-        link.setAttribute('download', filename);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
 
         // Log export to Firestore
         const exportRecord: Omit<ExportRecord, 'id'> = {

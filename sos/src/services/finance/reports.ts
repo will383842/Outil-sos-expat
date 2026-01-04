@@ -1,4 +1,5 @@
 import type { Payment, Invoice, CountryAmount, VatBucket, Currency } from '@/types/finance';
+import * as XLSX from 'xlsx';
 
 export function aggregateByCountry(payments: Payment[], invoices: Invoice[]) : CountryAmount[] {
   const map = new Map<string, CountryAmount>();
@@ -70,4 +71,82 @@ export function toCsv(
   // Add BOM for Excel UTF-8 compatibility
   const BOM = '\uFEFF';
   return includeBom ? BOM + csvContent : csvContent;
+}
+
+/**
+ * Convert array of objects to Excel file (XLSX format)
+ * Uses SheetJS (xlsx) library for proper Excel file generation
+ * @param rows - Array of records to convert
+ * @param options - Optional configuration
+ * @returns Blob containing Excel file
+ */
+export function toExcel(
+  rows: Record<string, unknown>[],
+  options?: {
+    sheetName?: string;
+    includeHeaders?: boolean;
+    columnWidths?: Record<string, number>;
+  }
+): Blob {
+  const { sheetName = 'Export', includeHeaders = true, columnWidths } = options || {};
+
+  // Create worksheet from JSON data
+  const worksheet = XLSX.utils.json_to_sheet(rows, {
+    header: includeHeaders ? Object.keys(rows[0] || {}) : undefined,
+  });
+
+  // Apply column widths if specified
+  if (columnWidths) {
+    const cols: XLSX.ColInfo[] = Object.keys(rows[0] || {}).map((key) => ({
+      wch: columnWidths[key] || 15, // Default width of 15 characters
+    }));
+    worksheet['!cols'] = cols;
+  } else {
+    // Auto-calculate column widths based on content
+    const headers = Object.keys(rows[0] || {});
+    const cols: XLSX.ColInfo[] = headers.map((header) => {
+      // Find max content length for this column
+      const maxContentLength = Math.max(
+        header.length,
+        ...rows.map((row) => {
+          const value = row[header];
+          if (value === null || value === undefined) return 0;
+          return String(value).length;
+        })
+      );
+      return { wch: Math.min(Math.max(maxContentLength + 2, 10), 50) }; // Min 10, Max 50
+    });
+    worksheet['!cols'] = cols;
+  }
+
+  // Create workbook
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+
+  // Generate Excel file as array buffer
+  const excelBuffer = XLSX.write(workbook, {
+    bookType: 'xlsx',
+    type: 'array',
+  });
+
+  // Convert to Blob
+  return new Blob([excelBuffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  });
+}
+
+/**
+ * Download a Blob as a file
+ * @param blob - The Blob to download
+ * @param filename - The filename for the download
+ */
+export function downloadBlob(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
