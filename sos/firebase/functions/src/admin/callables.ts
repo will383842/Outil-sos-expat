@@ -345,3 +345,111 @@ export const admin_trigger_unclaimed_funds_processing = onCall({
 
   return { success: true, result };
 });
+
+// ========== ADMIN REFUND PAYMENT ==========
+
+import { StripeManager } from "../StripeManager";
+
+/**
+ * Admin callable to refund a payment
+ * Requires admin claim
+ */
+export const adminRefundPayment = onCall({
+  region: "europe-west1",
+  memory: "512MiB",
+  timeoutSeconds: 120,
+}, async (req) => {
+  assertAdmin(req);
+
+  const { paymentId, reason, amount } = req.data || {};
+
+  if (!paymentId) {
+    throw new HttpsError("invalid-argument", "paymentId is required");
+  }
+
+  if (!reason) {
+    throw new HttpsError("invalid-argument", "reason is required");
+  }
+
+  const stripeManager = new StripeManager();
+  const result = await stripeManager.refundPayment(
+    paymentId,
+    reason,
+    undefined, // sessionId
+    amount || undefined // partial refund amount in EUR
+  );
+
+  if (!result.success) {
+    throw new HttpsError("internal", result.error || "Refund failed");
+  }
+
+  return {
+    success: true,
+    refundId: result.refundId,
+    message: `Payment ${paymentId} refunded successfully`,
+  };
+});
+
+/**
+ * Admin callable for bulk refunds
+ * Processes multiple refunds in sequence with error handling
+ */
+export const adminBulkRefund = onCall({
+  region: "europe-west1",
+  memory: "512MiB",
+  timeoutSeconds: 300,
+}, async (req) => {
+  assertAdmin(req);
+
+  const { paymentIds, reason } = req.data || {};
+
+  if (!Array.isArray(paymentIds) || paymentIds.length === 0) {
+    throw new HttpsError("invalid-argument", "paymentIds array is required and must not be empty");
+  }
+
+  if (!reason) {
+    throw new HttpsError("invalid-argument", "reason is required");
+  }
+
+  if (paymentIds.length > 50) {
+    throw new HttpsError("invalid-argument", "Maximum 50 refunds per batch");
+  }
+
+  const stripeManager = new StripeManager();
+  const results: Array<{ paymentId: string; success: boolean; error?: string; refundId?: string }> = [];
+
+  for (const paymentId of paymentIds) {
+    try {
+      const result = await stripeManager.refundPayment(
+        paymentId,
+        reason,
+        undefined,
+        undefined
+      );
+
+      results.push({
+        paymentId,
+        success: result.success,
+        refundId: result.refundId,
+        error: result.error,
+      });
+    } catch (error) {
+      results.push({
+        paymentId,
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+
+  const successful = results.filter((r) => r.success).length;
+  const failed = results.filter((r) => !r.success).length;
+
+  return {
+    success: failed === 0,
+    total: paymentIds.length,
+    successful,
+    failed,
+    results,
+  };
+});

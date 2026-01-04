@@ -7,6 +7,7 @@ import {
   Settings,
   TrendingUp,
   Shield,
+  ShieldAlert,
   Globe,
   FileText,
   Star,
@@ -28,6 +29,17 @@ import {
   HelpCircle,
   Bot,
   Activity,
+  // Finance icons
+  LayoutDashboard,
+  Repeat,
+  RotateCcw,
+  AlertTriangle,
+  Calculator,
+  Receipt,
+  Banknote,
+  FileSpreadsheet,
+  ArrowLeftRight,
+  BookOpen,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -172,6 +184,14 @@ export const adminMenuTree: AdminMenuItem[] = [
     icon: DollarSign,
     description: "Gestion financière complète",
     children: [
+      // Dashboard Financier
+      {
+        id: "finance-dashboard",
+        label: "Dashboard Financier",
+        path: "/admin/finance/dashboard",
+        icon: LayoutDashboard,
+        description: "Vue d'ensemble financière avec KPIs",
+      },
       // Sous-section : Transactions & Paiements
       {
         id: "finance-transactions",
@@ -180,98 +200,104 @@ export const adminMenuTree: AdminMenuItem[] = [
         description: "Gestion des paiements et transactions",
         children: [
           {
+            id: "all-transactions",
+            label: "Toutes les transactions",
+            path: "/admin/finance/transactions",
+            icon: CreditCard,
+            description: "Vue complète de toutes les transactions",
+          },
+          {
             id: "payments",
-            label: "Paiements",
+            label: "Paiements appels",
             path: "/admin/finance/payments",
             icon: CreditCard,
-            description: "Suivi des paiements clients",
+            description: "Paiements des sessions d'appels",
           },
-          // NOTE: Pages placeholder - à activer quand implémentées
-          // {
-          //   id: "refunds",
-          //   label: "Remboursements",
-          //   path: "/admin/finance/refunds",
-          //   icon: RotateCcw,
-          //   description: "Traitement des remboursements",
-          // },
-          // {
-          //   id: "disputes",
-          //   label: "Litiges & Contestations",
-          //   path: "/admin/finance/disputes",
-          //   icon: AlertCircle,
-          //   badge: "2",
-          //   description: "Gestion des litiges Stripe/PayPal",
-          // },
+          {
+            id: "subscriptions",
+            label: "Abonnements",
+            path: "/admin/finance/subscriptions",
+            icon: Repeat,
+            description: "Gestion des abonnements clients",
+          },
         ],
       },
-      // NOTE: Section Comptabilité - pages placeholder, à activer quand implémentées
-      // {
-      //   id: "finance-accounting",
-      //   label: "Comptabilité & Fiscalité",
-      //   icon: Calculator,
-      //   description: "Facturation et obligations fiscales",
-      //   children: [
-      //     {
-      //       id: "invoices",
-      //       label: "Facturation",
-      //       path: "/admin/finance/invoices",
-      //       icon: Receipt,
-      //       description: "Génération et envoi des factures",
-      //     },
-      //     {
-      //       id: "taxes",
-      //       label: "TVA & Déclarations",
-      //       path: "/admin/finance/taxes",
-      //       icon: Calculator,
-      //       description: "Gestion TVA et fiscalité",
-      //     },
-      //     {
-      //       id: "reconciliation",
-      //       label: "Rapprochement bancaire",
-      //       path: "/admin/finance/reconciliation",
-      //       icon: ArrowLeftRight,
-      //       description: "Rapprochement des comptes",
-      //     },
-      //     {
-      //       id: "ledger",
-      //       label: "Grand livre",
-      //       path: "/admin/finance/ledger",
-      //       icon: Database,
-      //       description: "Comptabilité générale",
-      //     },
-      //   ],
-      // },
-      // NOTE: Section Rémunérations - pages placeholder, à activer quand implémentées
-      // {
-      //   id: "finance-payouts",
-      //   label: "Rémunérations",
-      //   icon: Banknote,
-      //   description: "Paiements aux prestataires et affiliés",
-      //   children: [
-      //     {
-      //       id: "provider-payouts",
-      //       label: "Payouts prestataires",
-      //       path: "/admin/finance/payouts",
-      //       icon: Banknote,
-      //       description: "Virements aux avocats/expatriés",
-      //     },
-      //     {
-      //       id: "affiliate-payouts",
-      //       label: "Commissions affiliés",
-      //       path: "/admin/affiliates/payouts",
-      //       icon: Gift,
-      //       description: "Paiements du programme d'affiliation",
-      //     },
-      //   ],
-      // },
-      // NOTE: Rapports financiers - page placeholder
-      // {
-      //   id: "finance-reports",
-      //   label: "Rapports & Exports",
-      //   path: "/admin/finance/exports",
-      //   icon: FileSpreadsheet,
-      //   description: "Rapports financiers et exports",
-      // },
+      // Sous-section : Remboursements & Litiges
+      {
+        id: "finance-disputes-refunds",
+        label: "Remboursements & Litiges",
+        icon: AlertTriangle,
+        description: "Gestion des remboursements et contestations",
+        children: [
+          {
+            id: "refunds",
+            label: "Remboursements",
+            path: "/admin/finance/refunds",
+            icon: RotateCcw,
+            description: "Traitement des demandes de remboursement",
+          },
+          {
+            id: "disputes",
+            label: "Litiges & Contestations",
+            path: "/admin/finance/disputes",
+            icon: AlertCircle,
+            badge: "2",
+            description: "Gestion des litiges Stripe/PayPal",
+          },
+        ],
+      },
+      // Sous-section : Comptabilité & Fiscalité
+      {
+        id: "finance-accounting",
+        label: "Comptabilité & Fiscalité",
+        icon: Calculator,
+        description: "Facturation et obligations fiscales",
+        children: [
+          {
+            id: "invoices",
+            label: "Facturation",
+            path: "/admin/finance/invoices",
+            icon: Receipt,
+            description: "Génération et envoi des factures",
+          },
+          {
+            id: "payouts",
+            label: "Reversements prestataires",
+            path: "/admin/finance/payouts",
+            icon: Banknote,
+            description: "Virements aux avocats/expatriés",
+          },
+          {
+            id: "taxes",
+            label: "TVA & Déclarations",
+            path: "/admin/finance/taxes",
+            icon: Calculator,
+            description: "Gestion TVA et fiscalité par pays",
+          },
+          {
+            id: "reconciliation",
+            label: "Rapprochement bancaire",
+            path: "/admin/finance/reconciliation",
+            icon: ArrowLeftRight,
+            description: "Rapprochement des comptes",
+          },
+          {
+            id: "ledger",
+            label: "Grand livre",
+            path: "/admin/finance/ledger",
+            icon: BookOpen,
+            description: "Comptabilité générale",
+          },
+        ],
+      },
+      // Rapports & Exports
+      {
+        id: "finance-reports",
+        label: "Rapports & Exports",
+        path: "/admin/finance/exports",
+        icon: FileSpreadsheet,
+        description: "Rapports financiers et exports CSV/Excel",
+      },
     ],
   },
 
@@ -290,13 +316,14 @@ export const adminMenuTree: AdminMenuItem[] = [
       //   icon: Megaphone,
       //   description: "Campagnes email et newsletters",
       // },
-      {
-        id: "automations",
-        label: "Automations",
-        path: "/admin/comms/automations",
-        icon: Zap,
-        description: "Workflows automatisés",
-      },
+      // NOTE: Automations - désactivé
+      // {
+      //   id: "automations",
+      //   label: "Automations",
+      //   path: "/admin/comms/automations",
+      //   icon: Zap,
+      //   description: "Workflows automatisés",
+      // },
       // NOTE: Segments - page placeholder
       // {
       //   id: "segments",
@@ -305,13 +332,14 @@ export const adminMenuTree: AdminMenuItem[] = [
       //   icon: Target,
       //   description: "Segmentation des utilisateurs",
       // },
-      {
-        id: "templates",
-        label: "Templates emails",
-        path: "/admin/comms/templates",
-        icon: FileText,
-        description: "Modèles d'emails et SMS",
-      },
+      // NOTE: Templates emails - désactivé
+      // {
+      //   id: "templates",
+      //   label: "Templates emails",
+      //   path: "/admin/comms/templates",
+      //   icon: FileText,
+      //   description: "Modèles d'emails et SMS",
+      // },
       {
         id: "promo-codes",
         label: "Codes promo",
@@ -432,41 +460,75 @@ export const adminMenuTree: AdminMenuItem[] = [
     icon: TrendingUp,
     description: "Business Intelligence et reporting",
     children: [
+      // Sous-section : STATISTIQUES
       {
-        id: "country-stats",
-        label: "Statistiques par pays",
-        path: "/admin/reports/country-stats",
-        icon: Globe,
-        description: "Statistiques globales et par pays",
+        id: "statistics",
+        label: "Statistiques",
+        icon: BarChart3,
+        description: "Statistiques et métriques",
+        children: [
+          {
+            id: "country-stats",
+            label: "Statistiques par pays",
+            path: "/admin/reports/country-stats",
+            icon: Globe,
+            description: "Statistiques globales et par pays",
+          },
+          // NOTE: Pages placeholder - à activer quand implémentées
+          // {
+          //   id: "financial-reports",
+          //   label: "Rapports financiers",
+          //   path: "/admin/reports/financial",
+          //   icon: PieChart,
+          //   description: "P&L, revenus, marges",
+          // },
+          // {
+          //   id: "user-analytics",
+          //   label: "Comportement utilisateurs",
+          //   path: "/admin/reports/users",
+          //   icon: Users,
+          //   description: "Funnel, rétention, engagement",
+          // },
+          // {
+          //   id: "platform-performance",
+          //   label: "Performance plateforme",
+          //   path: "/admin/reports/performance",
+          //   icon: BarChart3,
+          //   description: "Uptime, vitesse, erreurs",
+          // },
+        ],
       },
-      // NOTE: Pages placeholder - à activer quand implémentées
-      // {
-      //   id: "financial-reports",
-      //   label: "Rapports financiers",
-      //   path: "/admin/reports/financial",
-      //   icon: PieChart,
-      //   description: "P&L, revenus, marges",
-      // },
-      // {
-      //   id: "user-analytics",
-      //   label: "Comportement utilisateurs",
-      //   path: "/admin/reports/users",
-      //   icon: Users,
-      //   description: "Funnel, rétention, engagement",
-      // },
-      // {
-      //   id: "platform-performance",
-      //   label: "Performance plateforme",
-      //   path: "/admin/reports/performance",
-      //   icon: BarChart3,
-      //   description: "Uptime, vitesse, erreurs",
-      // },
+      // Sous-section : ERREURS, HACKS, ALERTES
       {
-        id: "error-logs",
-        label: "Suivi des erreurs",
-        path: "/admin/reports/error-logs",
-        icon: AlertCircle,
-        description: "Logs d'erreurs et suivi des incidents",
+        id: "errors-security",
+        label: "Erreurs, hacks, alertes",
+        icon: Shield,
+        description: "Surveillance sécurité et incidents",
+        children: [
+          {
+            id: "error-logs",
+            label: "Suivi des erreurs",
+            path: "/admin/reports/error-logs",
+            icon: AlertCircle,
+            description: "Logs d'erreurs et suivi des incidents",
+          },
+          {
+            id: "security-alerts",
+            label: "Alertes securite",
+            path: "/admin/security/alerts",
+            icon: ShieldAlert,
+            badge: "LIVE",
+            description: "Monitoring temps reel des menaces et incidents",
+          },
+          // NOTE: Logs d'audit - à activer quand implémenté
+          // {
+          //   id: "audit-logs",
+          //   label: "Logs d'audit",
+          //   path: "/admin/reports/audit-logs",
+          //   icon: FileText,
+          //   description: "Journal des actions sensibles",
+          // },
+        ],
       },
       // NOTE: Exports - page placeholder
       // {

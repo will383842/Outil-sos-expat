@@ -96,7 +96,7 @@ const AdminFinanceRefunds = lazy(
   () => import("../../pages/admin/AdminFinanceRefunds")
 );
 const AdminFinancePayouts = lazy(
-  () => import("../../pages/admin/AdminFinancePayouts")
+  () => import("../../pages/admin/Finance/Payouts")
 );
 const AdminFinanceExports = lazy(
   () => import("../../pages/admin/Finance/Exports")
@@ -104,6 +104,13 @@ const AdminFinanceExports = lazy(
 const AdminFinanceLedger = lazy(
   () => import("../../pages/admin/AdminFinanceLedger")
 );
+
+// ===== LAZY IMPORTS - FINANCE (NEW) =====
+const AdminFinanceDashboard = lazy(() => import("../../pages/admin/Finance/Dashboard"));
+const AdminTransactions = lazy(() => import("../../pages/admin/Finance/Transactions"));
+const AdminSubscriptions = lazy(() => import("../../pages/admin/Finance/Subscriptions"));
+const AdminRefunds = lazy(() => import("../../pages/admin/Finance/Refunds"));
+const AdminDisputes = lazy(() => import("../../pages/admin/Finance/Disputes"));
 
 // ===== LAZY IMPORTS - USERS & PROVIDERS =====
 const AdminUsers = lazy(() => import("../../pages/admin/AdminUsers"));
@@ -292,6 +299,9 @@ const AdminCountryStats = lazy(() =>
 const AdminErrorLogs = lazy(() =>
   import("../../pages/admin/AdminErrorLogs")
 );
+const AdminSecurityAlerts = lazy(() =>
+  import("../../pages/admin/AdminSecurityAlerts")
+);
 const AdminFinancialReports = lazy(() =>
   Promise.resolve({ default: () => <DevPage pageKey="financialReports" /> })
 );
@@ -433,6 +443,48 @@ const AdminRoutesV2: React.FC = () => {
         element={<Navigate to="../approvals/lawyers" replace />}
       />
 
+      {/* 💰 FINANCES - NEW COMPREHENSIVE ROUTES */}
+      <Route
+        path="finance/dashboard"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminFinanceDashboard />
+          </Suspense>
+        }
+      />
+      <Route
+        path="finance/transactions"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminTransactions />
+          </Suspense>
+        }
+      />
+      <Route
+        path="finance/subscriptions"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminSubscriptions />
+          </Suspense>
+        }
+      />
+      <Route
+        path="finance/refunds"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminRefunds />
+          </Suspense>
+        }
+      />
+      <Route
+        path="finance/disputes"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminDisputes />
+          </Suspense>
+        }
+      />
+
       {/* 💰 FINANCES */}
       <Route
         path="finance/payments"
@@ -471,22 +523,6 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminFinanceReconciliation />
-          </Suspense>
-        }
-      />
-      <Route
-        path="finance/disputes"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <AdminFinanceDisputes />
-          </Suspense>
-        }
-      />
-      <Route
-        path="finance/refunds"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <AdminFinanceRefunds />
           </Suspense>
         }
       />
@@ -815,6 +851,14 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
       <Route
+        path="security/alerts"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminSecurityAlerts />
+          </Suspense>
+        }
+      />
+      <Route
         path="reports/financial"
         element={
           <Suspense fallback={<LoadingSpinner />}>
@@ -883,7 +927,7 @@ const AdminRoutesV2: React.FC = () => {
       />
       <Route
         path="finance"
-        element={<Navigate to="finance/payments" replace />}
+        element={<Navigate to="finance/dashboard" replace />}
       />
       <Route
         path="users/all"
@@ -955,13 +999,16 @@ export const useAdminRouteValidation = () => {
       "/admin/kyc/providers",
       "/admin/reviews",
       "/admin/validation",
+      "/admin/finance/dashboard",
+      "/admin/finance/transactions",
+      "/admin/finance/subscriptions",
+      "/admin/finance/refunds",
+      "/admin/finance/disputes",
       "/admin/finance/payments",
       "/admin/finance/invoices",
       "/admin/finance/taxes",
       "/admin/finance/taxes/by-country",
       "/admin/finance/reconciliation",
-      "/admin/finance/disputes",
-      "/admin/finance/refunds",
       "/admin/finance/payouts",
       "/admin/finance/exports",
       "/admin/finance/ledger",
@@ -998,6 +1045,7 @@ export const useAdminRouteValidation = () => {
       "/admin/reports/users",
       "/admin/reports/performance",
       "/admin/reports/exports",
+      "/admin/security/alerts",
       "/admin/promos/codes",
       "/admin/help/center",
       "/admin/ia",

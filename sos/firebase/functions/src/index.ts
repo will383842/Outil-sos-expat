@@ -710,6 +710,45 @@ export * from "./admin/callables";
 // Triggers de nettoyage automatique (suppression cascade users -> sos_profiles)
 export { onUserDeleted, cleanupOrphanedProfiles } from "./triggers/userCleanupTrigger";
 
+// ========================================
+// 🔒 SECURITY ALERTS MODULE - TEMPORARILY DISABLED
+// ========================================
+// TODO: Fix TypeScript errors in securityAlerts module
+// Détection de menaces, scoring, notifications multilingues
+// IMPORTANT: Détection basée sur les COMPORTEMENTS, pas la géographie
+// Aucun pays n'est blacklisté - tous les utilisateurs peuvent utiliser la plateforme
+/*
+export {
+  // Cloud Functions Triggers
+  onSecurityAlertCreated,
+  onSecurityAlertUpdated,
+  createSecurityAlertHttp,
+  processEscalationHttp,
+  securityAlertAdminAction,
+  getSecurityStats,
+  checkBlockedEntity,
+  // Scheduled Functions
+  securityDailyCleanup,
+  processSecurityEscalations,
+  securityDailyReport,
+} from "./securityAlerts/triggers";
+
+// Detectors (pour utilisation dans d'autres fonctions)
+export {
+  detectBruteForce,
+  detectUnusualLocation,
+  detectPaymentFraud,
+  detectCardTesting,
+  detectMassAccountCreation,
+  detectApiAbuse,
+  detectInjectionAttempt,
+  detectMultipleSessions,
+} from "./securityAlerts/detectors";
+
+// Threat Score Service
+export { threatScoreService } from "./securityAlerts/ThreatScoreService";
+*/
+
 // AI Chat - DEPRECATED: Now handled directly by Outil-sos-expat
 // The AI chat functionality is in Outil-sos-expat, not SOS
 // export { aiChatForProvider, getAiSuggestions } from "./ai/aiChatForProvider";

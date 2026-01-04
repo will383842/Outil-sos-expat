@@ -18,7 +18,7 @@
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
-import { defineSecret } from "firebase-functions/params";
+import { defineSecret, defineString } from "firebase-functions/params";
 import Stripe from "stripe";
 import { logError } from "../utils/logs/logError";
 import { syncPaymentStatus } from "../utils/paymentSync";
@@ -26,7 +26,8 @@ import { syncPaymentStatus } from "../utils/paymentSync";
 // Secrets
 const STRIPE_SECRET_KEY_TEST = defineSecret("STRIPE_SECRET_KEY_TEST");
 const STRIPE_SECRET_KEY_LIVE = defineSecret("STRIPE_SECRET_KEY_LIVE");
-const STRIPE_MODE = defineSecret("STRIPE_MODE");
+// Note: STRIPE_MODE is a string param, not a secret
+const STRIPE_MODE = defineString("STRIPE_MODE");
 
 // Configuration
 const RECOVERY_CONFIG = {
@@ -64,7 +65,7 @@ export const stuckPaymentsRecovery = onSchedule(
     timeZone: "Europe/Paris",
     timeoutSeconds: 300,
     memory: "512MiB",
-    secrets: [STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE, STRIPE_MODE],
+    secrets: [STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE],
   },
   async () => {
     console.log("🔧 [StuckPayments] Starting stuck payments recovery...");
@@ -373,7 +374,7 @@ async function alertStuckPayments(
 export const triggerStuckPaymentsRecovery = onCall(
   {
     region: "europe-west1",
-    secrets: [STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE, STRIPE_MODE],
+    secrets: [STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE],
   },
   async (request) => {
     if (!request.auth) {

@@ -933,6 +933,102 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ================= SECURITY ALERTS COLLECTION =================
+    // Alertes de sécurité (brute force, fraude, etc.)
+    // NOTE: Aucun pays n'est blacklisté - détection basée sur comportements anormaux
+    match /security_alerts/{alertId} {
+      // Seuls les admins peuvent lire les alertes de sécurité
+      allow read: if isAdmin() || isDev();
+      // Admins peuvent mettre à jour (acknowledge, resolve)
+      allow update: if isAdmin() || isDev();
+      // Seules les Cloud Functions peuvent créer/supprimer
+      allow create, delete: if false;
+    }
+
+    // ================= ALERT RATE LIMITS =================
+    // Rate limiting pour éviter le spam d'alertes
+    match /alert_rate_limits/{limitId} {
+      allow read: if isAdmin() || isDev();
+      allow write: if false; // Cloud Functions only
+    }
+
+    // ================= ADMIN ALERT PREFERENCES =================
+    // Préférences de notification des admins
+    match /admin_alert_preferences/{adminId} {
+      // Admin peut lire/modifier ses propres préférences
+      allow read: if isOwner(adminId) || isAdmin() || isDev();
+      allow write: if isOwner(adminId) || isAdmin() || isDev();
+    }
+
+    // ================= THREAT SCORES =================
+    // Scores de menace par utilisateur/IP
+    match /threat_scores/{entityId} {
+      allow read: if isAdmin() || isDev();
+      allow write: if false; // Cloud Functions only
+    }
+
+    // ================= BLOCKED ENTITIES =================
+    // Entités bloquées (utilisateurs, IPs)
+    match /blocked_entities/{entityId} {
+      allow read: if isAdmin() || isDev();
+      // Admins peuvent débloquer manuellement
+      allow update, delete: if isAdmin() || isDev();
+      allow create: if false; // Cloud Functions only
+    }
+
+    // ================= GEO PROFILES =================
+    // Profils géographiques des utilisateurs (pour détection anomalies)
+    match /geo_profiles/{userId} {
+      // L'utilisateur peut voir son propre profil, admins tout
+      allow read: if isOwner(userId) || isAdmin() || isDev();
+      allow write: if false; // Cloud Functions only
+    }
+
+    // ================= FRAUD PATTERNS =================
+    // Patterns de fraude détectés
+    match /fraud_patterns/{patternId} {
+      allow read: if isAdmin() || isDev();
+      allow write: if false; // Cloud Functions only
+    }
+
+    // ================= API ABUSE LOGS =================
+    // Logs d'abus API (scraping, injection, etc.)
+    match /api_abuse_logs/{logId} {
+      allow read: if isAdmin() || isDev();
+      allow write: if false; // Cloud Functions only
+    }
+
+    // ================= SECURITY EVENTS (raw events) =================
+    // Événements de sécurité bruts avant traitement
+    match /security_events/{eventId} {
+      allow read: if isAdmin() || isDev();
+      allow write: if false; // Cloud Functions only
+    }
+
+    // ================= LOGIN ATTEMPTS =================
+    // Tentatives de login (pour détection brute force)
+    match /login_attempts/{attemptId} {
+      allow read: if isAdmin() || isDev();
+      // Les Cloud Functions créent les entrées lors des tentatives de connexion
+      allow write: if false;
+    }
+
+    // ================= ADMIN SECURITY ACTIONS =================
+    // Actions de sécurité prises par les admins (audit trail)
+    match /admin_security_actions/{actionId} {
+      allow read: if isAdmin() || isDev();
+      // Admins peuvent créer des actions (avec leur uid)
+      allow create: if isAdmin() && request.resource.data.adminId == request.auth.uid;
+      allow update, delete: if false; // Immutable audit trail
+    }
+
+    // ================= SECURITY ROUTING CONFIG =================
+    // Configuration du routing des alertes de sécurité
+    match /security_routing/{configId} {
+      allow read: if isAdmin() || isDev();
+      allow write: if isAdmin() || isDev();
+    }
+
     // ================= CATCH-ALL (deny by default) =================
     // SECURITE: Refuse TOUT acces non explicitement autorise
     // Le role 'dev' est desactive en production

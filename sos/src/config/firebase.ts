@@ -77,7 +77,6 @@ export const db: Firestore = initializeFirestore(app, {
   // @ts-expect-error - Option non documentée mais critique pour la stabilité
   useFetchStreams: false,
   // P1 FIX: Limiter le cache local pour éviter les problèmes de mémoire
-  // @ts-expect-error - Option non documentée
   cacheSizeBytes: 40 * 1024 * 1024, // 40 MB max (défaut illimité)
 });
 console.log("🔧 [Firebase] Firestore initialisé avec LONG POLLING FORCÉ + useFetchStreams=false + cache 40MB");

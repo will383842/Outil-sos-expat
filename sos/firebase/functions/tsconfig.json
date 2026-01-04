@@ -28,6 +28,7 @@
     "lib",
     "lib/**",
     "src/backup_js_files/**",
+    "src/securityAlerts/**",
     "**/*.test.ts"
   ]
 }

@@ -99,6 +99,8 @@ export interface PaymentResult {
   capturedAmount?: number;
   /** ID du transfert auto-cree par Stripe (Destination Charges) */
   transferId?: string;
+  /** ID du remboursement (refund) */
+  refundId?: string;
 }
 
 /** Shape minimale des docs "users" qu’on lit. */
@@ -1118,7 +1120,7 @@ export class StripeManager {
         transferReversed: usedDestinationCharges || wasTransferred,
       });
 
-      return { success: true, paymentIntentId };
+      return { success: true, paymentIntentId, refundId: refund.id };
     } catch (error) {
       await logError('StripeManager:refundPayment', error);
       const msg =
