@@ -615,20 +615,20 @@ const NOUS_CONTACTER: HelpArticleData[] = [
 
 Plusieurs moyens pour nous joindre selon votre besoin.
 
-## Email
+## Formulaire de contact
 
-### Adresse
-support@sos-expat.com
+### Accès
+Page Contact accessible depuis le menu principal
 
 ### Délai de réponse
-24-48 heures ouvrées
+48 heures ouvrées
 
 ### Idéal pour
 - Questions non urgentes
 - Demandes détaillées
 - Envoi de documents
 
-## Formulaire de contact
+## Centre d'aide
 
 ### Accès
 Site web → Centre d'aide → "Nous contacter"
@@ -710,9 +710,9 @@ Aidez-nous à améliorer la plateforme en signalant les bugs.
 3. Joignez des captures d'écran
 4. Envoyez
 
-### Via email
-Envoyez à support@sos-expat.com avec :
-- Objet : [BUG] Description courte
+### Via le formulaire de contact
+Rendez-vous sur la page Contact et sélectionnez "Signaler un bug" avec :
+- Objet : Description courte du problème
 - Corps : Détails complets
 - Pièces jointes : captures d'écran
 
@@ -764,9 +764,10 @@ SOS-Expat évolue grâce aux retours de ses utilisateurs.
 3. Expliquez le problème qu'elle résout
 4. Envoyez
 
-### Via email
-support@sos-expat.com avec :
-- Objet : [SUGGESTION] Titre de l'idée
+### Via le formulaire de contact
+Rendez-vous sur la page Contact avec :
+- Catégorie : Suggestion
+- Objet : Titre de l'idée
 - Corps : Description détaillée
 
 ## Ce qui fait une bonne suggestion
@@ -905,7 +906,7 @@ const INFORMATIONS_LEGALES: HelpArticleData[] = [
 - Numéro TVA intracommunautaire : [À compléter]
 
 ### Contact
-- Email : contact@sos-expat.com
+- Page Contact accessible depuis le menu principal
 - Téléphone : [À compléter]
 
 ### Directeur de la publication
@@ -1052,7 +1053,7 @@ Vos données ne sont JAMAIS :
 ### Exercer vos droits
 
 - Paramètres de votre compte
-- Email : dpo@sos-expat.com
+- Formulaire de contact (catégorie : Protection des données)
 - Délai de réponse : 30 jours max
 
 ### Conservation des données
@@ -1064,11 +1065,11 @@ Vos données ne sont JAMAIS :
 ### Contact DPO
 
 Pour toute question sur vos données :
-dpo@sos-expat.com`,
+Utilisez le formulaire de contact (catégorie : Protection des données)`,
     tags: ["confidentialité", "RGPD", "données personnelles", "vie privée", "protection"],
     faqSuggestions: [
       { question: "Mes données sont-elles vendues ?", answer: "Non, jamais. Nous ne vendons aucune donnée personnelle à des tiers." },
-      { question: "Comment supprimer mes données ?", answer: "Via les paramètres de votre compte ou en contactant notre DPO." },
+      { question: "Comment supprimer mes données ?", answer: "Via les paramètres de votre compte ou via le formulaire de contact." },
       { question: "Combien de temps gardez-vous mes données ?", answer: "Durée du compte + 3 ans, sauf obligations légales (factures : 10 ans)." }
     ],
     seoKeywords: ["confidentialité SOS-Expat", "RGPD", "protection données", "vie privée"],

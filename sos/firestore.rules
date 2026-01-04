@@ -612,6 +612,45 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ================= FAILED PAYOUTS ALERTS (PayPal KYC pending) =================
+    match /failed_payouts_alerts/{alertId} {
+      // Providers can read their own failed payouts
+      allow read: if isAuthenticated() &&
+                  (resource.data.providerId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Only Cloud Functions can write
+      allow write: if false;
+    }
+
+    // ================= AAA INTERNAL PAYOUTS =================
+    // Logs for AAA profiles where money stays on platform
+    match /aaa_internal_payouts/{payoutId} {
+      allow read: if isAdmin() || isDev();
+      allow write: if false; // Only Cloud Functions
+    }
+
+    // ================= AAA EXTERNAL PAYOUTS =================
+    // Logs for AAA profiles paid to consolidated external account
+    match /aaa_external_payouts/{payoutId} {
+      allow read: if isAdmin() || isDev();
+      allow write: if false; // Only Cloud Functions
+    }
+
+    // ================= KYC REMINDERS (tracking sent reminders) =================
+    match /kyc_reminders/{reminderId} {
+      // Only Cloud Functions and admins
+      allow read: if isAdmin() || isDev();
+      allow write: if false;
+    }
+
+    // ================= ESCROW REPORTS (daily monitoring reports) =================
+    match /escrow_reports/{reportId} {
+      // Only admins can read escrow reports
+      allow read: if isAdmin() || isDev();
+      // Only Cloud Functions can write
+      allow write: if false;
+    }
+
     // ================= FAILED TRANSFERS LOG =================
     match /failed_transfers_log/{logId} {
       // Only admins can read failed transfer logs

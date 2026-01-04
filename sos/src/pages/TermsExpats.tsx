@@ -793,7 +793,7 @@ const TermsExpats: React.FC = () => {
 
 ### Fonds non réclamés et vérification KYC
 
-8.6. **Conservation des fonds en attente.** Lorsqu'un paiement est effectué par un Utilisateur pour une prestation réalisée par un Aidant n'ayant pas complété sa vérification KYC, les fonds correspondant à la part de l'Aidant (déduction faite de la commission de la Plateforme) sont conservés en attente sur un compte séquestre. La Plateforme s'engage à :
+8.6. **Conservation des fonds en attente.** Lorsqu'un paiement est effectué par un Utilisateur pour une prestation réalisée par un Aidant n'ayant pas complété sa vérification KYC, les fonds correspondant à la part de l'Aidant (déduction faite des frais de mise en relation de la Plateforme) sont conservés en attente sur un compte séquestre. La Plateforme s'engage à :
 - Notifier l'Aidant par email de l'existence de fonds en attente ;
 - Envoyer des rappels réguliers (à 7 jours, 30 jours, 60 jours, 90 jours, 120 jours et 150 jours) ;
 - Fournir à l'Aidant tous les moyens nécessaires pour compléter sa vérification KYC.
@@ -1030,7 +1030,7 @@ Pour toute question ou demande légale, contactez-nous :
 
 ### Unclaimed Funds and KYC Verification
 
-8.6. **Holding of pending funds.** When a payment is made by a User for a service provided by a Helper who has not completed KYC verification, the funds corresponding to the Helper's share (after deduction of the Platform's commission) are held in escrow. The Platform commits to:
+8.6. **Holding of pending funds.** When a payment is made by a User for a service provided by a Helper who has not completed KYC verification, the funds corresponding to the Helper's share (after deduction of the Platform's connection fees) are held in escrow. The Platform commits to:
 - Notify the Helper by email of the existence of pending funds;
 - Send regular reminders (at 7 days, 30 days, 60 days, 90 days, 120 days, and 150 days);
 - Provide the Helper with all necessary means to complete their KYC verification.

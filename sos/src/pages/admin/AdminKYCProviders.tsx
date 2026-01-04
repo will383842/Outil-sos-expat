@@ -211,8 +211,14 @@ const AdminKYCProviders: React.FC = () => {
       let providersData: KYCProvider[] = [];
 
       // Pour chaque profil, récupérer la sous-collection des documents
+      // Exclure les profils AAA (gérés en interne, pas de KYC nécessaire)
       for (const snap of snapshot.docs) {
         const data = snap.data() as DocumentData;
+
+        // Skip AAA profiles - they don't need KYC verification
+        if (data.isAAA === true) {
+          continue;
+        }
 
         const documentsSnapshot = await getDocs(
           query(collection(db, 'sos_profiles', snap.id, 'kyc_documents')),
@@ -571,6 +577,9 @@ const AdminKYCProviders: React.FC = () => {
             </h1>
             <p className="text-sm text-gray-500">
               Vérification des documents et identités des prestataires
+              <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                Les profils AAA sont exclus (KYC délégué)
+              </span>
             </p>
           </div>
 

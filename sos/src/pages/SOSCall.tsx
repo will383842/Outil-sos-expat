@@ -2909,7 +2909,7 @@ const SOSCall: React.FC = () => {
         <meta name="copyright" content={`© ${new Date().getFullYear()} SOS Expat`} />
         <meta name="owner" content="SOS Expat" />
         <meta name="designer" content="SOS Expat" />
-        <meta name="reply-to" content="contact@sos-expat.com" />
+        <meta name="reply-to" content="" />
         
         {/* ===== CANONICAL & ALTERNATE ===== */}
         <link rel="canonical" href={canonicalUrl} />

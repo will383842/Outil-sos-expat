@@ -151,6 +151,31 @@ export interface PartnerReferralStatus {
   canReceivePayments: boolean;
 }
 
+// ====== AAA PAYOUT CONFIG TYPES ======
+interface AaaExternalAccount {
+  id: string;
+  name: string;
+  gateway: "paypal" | "stripe";
+  accountId: string;
+  email?: string;
+  holderName: string;
+  country: string;
+  isActive: boolean;
+}
+
+interface AaaPayoutConfig {
+  externalAccounts: AaaExternalAccount[];
+  defaultMode: string; // 'internal' or external account ID
+}
+
+interface AaaPayoutDecision {
+  isAAA: boolean;
+  mode: "internal" | "external";
+  skipPayout: boolean;
+  externalAccount?: AaaExternalAccount;
+  reason: string;
+}
+
 interface CreateOrderData {
   callSessionId: string;
   amount: number;
@@ -186,6 +211,89 @@ export class PayPalManager {
 
   constructor(db?: admin.firestore.Firestore) {
     this.db = db || admin.firestore();
+  }
+
+  /**
+   * Check if a provider is AAA and determine payout behavior
+   * - AAA + internal mode → Skip payout (money stays on platform)
+   * - AAA + external mode → Use consolidated AAA account
+   * - Non-AAA → Normal payout flow
+   */
+  async getAaaPayoutDecision(providerId: string): Promise<AaaPayoutDecision> {
+    try {
+      // Get provider document
+      const providerDoc = await this.db.collection("sos_profiles").doc(providerId).get();
+      const provider = providerDoc.data();
+
+      if (!provider || !provider.isAAA) {
+        return {
+          isAAA: false,
+          mode: "external",
+          skipPayout: false,
+          reason: "Not an AAA profile - normal payout flow",
+        };
+      }
+
+      // Provider is AAA - check payout mode
+      const aaaPayoutMode = provider.aaaPayoutMode || "internal";
+
+      if (aaaPayoutMode === "internal") {
+        console.log(`💼 [AAA] Provider ${providerId} is AAA with INTERNAL mode - skipping payout`);
+        return {
+          isAAA: true,
+          mode: "internal",
+          skipPayout: true,
+          reason: "AAA profile with internal mode - money stays on SOS-Expat",
+        };
+      }
+
+      // External mode - get the consolidated AAA account
+      const configDoc = await this.db.collection("admin_config").doc("aaa_payout").get();
+      const config = configDoc.data() as AaaPayoutConfig | undefined;
+
+      if (!config || !config.externalAccounts || config.externalAccounts.length === 0) {
+        console.warn(`⚠️ [AAA] No external accounts configured - falling back to internal`);
+        return {
+          isAAA: true,
+          mode: "internal",
+          skipPayout: true,
+          reason: "AAA profile but no external accounts configured - fallback to internal",
+        };
+      }
+
+      // Find the external account
+      const externalAccount = config.externalAccounts.find(
+        (acc) => acc.id === aaaPayoutMode && acc.isActive
+      );
+
+      if (!externalAccount) {
+        console.warn(`⚠️ [AAA] External account ${aaaPayoutMode} not found or inactive - falling back to internal`);
+        return {
+          isAAA: true,
+          mode: "internal",
+          skipPayout: true,
+          reason: `External account ${aaaPayoutMode} not found - fallback to internal`,
+        };
+      }
+
+      console.log(`💼 [AAA] Provider ${providerId} is AAA with EXTERNAL mode → ${externalAccount.name}`);
+      return {
+        isAAA: true,
+        mode: "external",
+        skipPayout: false,
+        externalAccount,
+        reason: `AAA profile routing to ${externalAccount.name} (${externalAccount.gateway})`,
+      };
+    } catch (error) {
+      console.error(`❌ [AAA] Error checking AAA status for ${providerId}:`, error);
+      // On error, fallback to internal (safer)
+      return {
+        isAAA: false,
+        mode: "internal",
+        skipPayout: false,
+        reason: `Error checking AAA status: ${error}`,
+      };
+    }
   }
 
   /**
@@ -824,27 +932,97 @@ export class PayPalManager {
 
     let payoutTriggered = false;
     let payoutId: string | undefined;
+    let aaaDecision: AaaPayoutDecision | null = null;
+
+    // ===== CHECK FOR AAA PROFILE =====
+    if (orderData.providerId) {
+      aaaDecision = await this.getAaaPayoutDecision(orderData.providerId);
+      console.log(`💼 [AAA] Decision for ${orderData.providerId}: ${aaaDecision.reason}`);
+    }
 
     // ===== FLUX SIMPLE: Déclencher le Payout automatiquement =====
-    if (isSimpleFlow && orderData.providerPayPalEmail && providerAmount > 0) {
-      console.log(`💰 [PAYPAL] Triggering automatic payout to ${orderData.providerPayPalEmail}`);
+    if (isSimpleFlow && providerAmount > 0) {
+      // AAA Internal Mode: Skip payout - money stays on platform
+      if (aaaDecision?.skipPayout) {
+        console.log(`💼 [AAA] SKIPPING payout for AAA profile ${orderData.providerId} (internal mode)`);
+        payoutTriggered = true; // Mark as "handled" even though no actual payout
+        payoutId = `AAA_INTERNAL_${orderData.callSessionId}`;
 
-      try {
-        const payoutResult = await this.createPayout({
+        // Log the internal AAA payout
+        await this.db.collection("aaa_internal_payouts").add({
+          callSessionId: orderData.callSessionId,
+          orderId,
           providerId: orderData.providerId,
-          providerPayPalEmail: orderData.providerPayPalEmail,
-          amount: providerAmount,
-          currency: captureCurrency as "EUR" | "USD",
-          sessionId: orderData.callSessionId,
-          note: `Paiement pour consultation SOS-Expat - Session ${orderData.callSessionId}`,
+          providerAmount,
+          currency: captureCurrency,
+          mode: "internal",
+          reason: aaaDecision.reason,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
+      }
+      // AAA External Mode: Use consolidated AAA account
+      else if (aaaDecision?.isAAA && aaaDecision.externalAccount) {
+        const aaaAccount = aaaDecision.externalAccount;
+        console.log(`💰 [AAA] Triggering payout to AAA consolidated account: ${aaaAccount.name}`);
 
-        payoutTriggered = payoutResult.success;
-        payoutId = payoutResult.payoutBatchId;
+        if (aaaAccount.gateway === "paypal" && aaaAccount.email) {
+          try {
+            const payoutResult = await this.createPayout({
+              providerId: orderData.providerId,
+              providerPayPalEmail: aaaAccount.email,
+              amount: providerAmount,
+              currency: captureCurrency as "EUR" | "USD",
+              sessionId: orderData.callSessionId,
+              note: `[AAA] Paiement consolidé - Session ${orderData.callSessionId} - Profile ${orderData.providerId}`,
+            });
 
-        console.log(`💰 [PAYPAL] Payout ${payoutTriggered ? "SUCCESS" : "FAILED"}: ${payoutId}`);
-      } catch (payoutError) {
-        console.error("❌ [PAYPAL] Payout failed, will retry later:", payoutError);
+            payoutTriggered = payoutResult.success;
+            payoutId = payoutResult.payoutBatchId;
+
+            // Log the AAA external payout
+            await this.db.collection("aaa_external_payouts").add({
+              callSessionId: orderData.callSessionId,
+              orderId,
+              providerId: orderData.providerId,
+              providerAmount,
+              currency: captureCurrency,
+              mode: "external",
+              externalAccountId: aaaAccount.id,
+              externalAccountName: aaaAccount.name,
+              payoutId,
+              success: payoutTriggered,
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+
+            console.log(`💰 [AAA] Payout to ${aaaAccount.name} ${payoutTriggered ? "SUCCESS" : "FAILED"}: ${payoutId}`);
+          } catch (payoutError) {
+            console.error(`❌ [AAA] Payout to consolidated account failed:`, payoutError);
+            // Fall through to error handling below
+          }
+        } else {
+          console.warn(`⚠️ [AAA] External account ${aaaAccount.name} is not PayPal or missing email`);
+        }
+      }
+      // Normal flow: Payout to provider's own PayPal account
+      else if (orderData.providerPayPalEmail) {
+        console.log(`💰 [PAYPAL] Triggering automatic payout to ${orderData.providerPayPalEmail}`);
+
+        try {
+          const payoutResult = await this.createPayout({
+            providerId: orderData.providerId,
+            providerPayPalEmail: orderData.providerPayPalEmail,
+            amount: providerAmount,
+            currency: captureCurrency as "EUR" | "USD",
+            sessionId: orderData.callSessionId,
+            note: `Paiement pour consultation SOS-Expat - Session ${orderData.callSessionId}`,
+          });
+
+          payoutTriggered = payoutResult.success;
+          payoutId = payoutResult.payoutBatchId;
+
+          console.log(`💰 [PAYPAL] Payout ${payoutTriggered ? "SUCCESS" : "FAILED"}: ${payoutId}`);
+        } catch (payoutError) {
+          console.error("❌ [PAYPAL] Payout failed, will retry later:", payoutError);
         // Le payout a échoué, mais le paiement est capturé
         // L'argent reste sur le compte SOS-Expat jusqu'à ce qu'on puisse payer le provider
 
@@ -1910,6 +2088,74 @@ export const paypalWebhook = onRequest(
             }, { merge: true });
 
             console.log("✅ [PAYPAL] Merchant onboarding complete:", trackingId);
+
+            // ========== GARDE-FOU B: Relancer les payouts échoués ==========
+            // Quand un provider fait son KYC PayPal, on relance automatiquement
+            // tous les payouts qui avaient échoué précédemment
+            try {
+              const failedPayoutsSnapshot = await db.collection("failed_payouts_alerts")
+                .where("providerId", "==", trackingId)
+                .where("status", "in", ["pending", "failed", "max_retries_reached"])
+                .get();
+
+              if (!failedPayoutsSnapshot.empty) {
+                console.log(`🔄 [PAYPAL] Found ${failedPayoutsSnapshot.size} failed payouts to retry for ${trackingId}`);
+
+                const { schedulePayoutRetryTask } = await import("./lib/payoutRetryTasks");
+
+                for (const doc of failedPayoutsSnapshot.docs) {
+                  const payout = doc.data();
+
+                  // Reset le statut et programmer un retry
+                  await doc.ref.update({
+                    status: "pending_retry_after_kyc",
+                    kycCompletedAt: admin.firestore.FieldValue.serverTimestamp(),
+                    retryCount: 0, // Reset le compteur
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                  });
+
+                  // Programmer le retry via Cloud Tasks
+                  await schedulePayoutRetryTask({
+                    failedPayoutAlertId: doc.id,
+                    orderId: payout.orderId,
+                    callSessionId: payout.callSessionId,
+                    providerId: trackingId,
+                    providerPayPalEmail: payout.providerPayPalEmail,
+                    amount: payout.amount,
+                    currency: payout.currency,
+                    retryCount: 0, // Reset pour avoir 3 nouvelles tentatives
+                  });
+
+                  console.log(`📋 [PAYPAL] Scheduled retry for payout ${doc.id}`);
+                }
+
+                // Alerte admin
+                await db.collection("admin_alerts").add({
+                  type: "paypal_kyc_retry_triggered",
+                  priority: "medium",
+                  title: "KYC PayPal complété - Payouts relancés",
+                  message: `Le provider ${trackingId} a complété son KYC PayPal. ${failedPayoutsSnapshot.size} payout(s) échoué(s) ont été reprogrammés.`,
+                  providerId: trackingId,
+                  merchantId: merchantId,
+                  payoutsRetried: failedPayoutsSnapshot.size,
+                  read: false,
+                  createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+              }
+            } catch (retryError) {
+              console.error("❌ [PAYPAL] Error retrying failed payouts after KYC:", retryError);
+              // Ne pas faire échouer le webhook pour autant
+              await db.collection("admin_alerts").add({
+                type: "paypal_kyc_retry_error",
+                priority: "high",
+                title: "Erreur retry payouts après KYC",
+                message: `Erreur lors de la relance des payouts pour ${trackingId}: ${retryError instanceof Error ? retryError.message : "Unknown"}`,
+                providerId: trackingId,
+                error: retryError instanceof Error ? retryError.message : "Unknown",
+                read: false,
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              });
+            }
           }
           break;
 

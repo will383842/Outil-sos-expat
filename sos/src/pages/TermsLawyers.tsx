@@ -785,7 +785,7 @@ const TermsLawyers: React.FC = () => {
 
 8.4. **Obligation de compléter le processus de vérification (KYC).** Pour recevoir les paiements issus des prestations réalisées via la Plateforme, l'Avocat s'engage à compléter le processus de vérification d'identité (KYC - Know Your Customer) auprès de notre partenaire de paiement Stripe dans les meilleurs délais suivant son inscription. L'Avocat reconnaît que l'absence de vérification KYC complète empêche techniquement le versement des fonds sur son compte bancaire.
 
-8.5. **Conservation des fonds en attente.** Lorsqu'un paiement est effectué par un Utilisateur pour une prestation réalisée par un Avocat n'ayant pas complété sa vérification KYC, les fonds correspondant à la part de l'Avocat (déduction faite de la commission de la Plateforme) sont conservés en attente sur un compte séquestre. La Plateforme s'engage à :
+8.5. **Conservation des fonds en attente.** Lorsqu'un paiement est effectué par un Utilisateur pour une prestation réalisée par un Avocat n'ayant pas complété sa vérification KYC, les fonds correspondant à la part de l'Avocat (déduction faite des frais de mise en relation de la Plateforme) sont conservés en attente sur un compte séquestre. La Plateforme s'engage à :
 - Notifier l'Avocat par email de l'existence de fonds en attente ;
 - Envoyer des rappels réguliers (à 7 jours, 30 jours, 60 jours, 90 jours, 120 jours et 150 jours) ;
 - Fournir à l'Avocat tous les moyens nécessaires pour compléter sa vérification KYC.
@@ -1021,7 +1021,7 @@ Pour toute question ou demande légale : **https://sos-expat.com/contact**
 
 8.4. **Obligation to complete the verification process (KYC).** To receive payments from services provided through the Platform, the Lawyer agrees to complete the identity verification process (KYC - Know Your Customer) with our payment partner Stripe as soon as possible following registration. The Lawyer acknowledges that failure to complete KYC verification technically prevents the transfer of funds to their bank account.
 
-8.5. **Holding of pending funds.** When a payment is made by a User for a service provided by a Lawyer who has not completed KYC verification, the funds corresponding to the Lawyer's share (after deduction of the Platform's commission) are held in escrow. The Platform commits to:
+8.5. **Holding of pending funds.** When a payment is made by a User for a service provided by a Lawyer who has not completed KYC verification, the funds corresponding to the Lawyer's share (after deduction of the Platform's connection fees) are held in escrow. The Platform commits to:
 - Notify the Lawyer by email of the existence of pending funds;
 - Send regular reminders (at 7 days, 30 days, 60 days, 90 days, 120 days, and 150 days);
 - Provide the Lawyer with all necessary means to complete their KYC verification.

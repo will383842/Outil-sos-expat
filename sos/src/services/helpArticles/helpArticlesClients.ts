@@ -1559,7 +1559,7 @@ Vous avez le droit de :
 ## Exercer vos droits
 
 1. Accédez à "Paramètres" → "Mes données"
-2. Ou contactez notre DPO : dpo@sos-expat.com
+2. Ou utilisez le formulaire de contact (catégorie : Protection des données)
 3. Délai de réponse : 30 jours maximum
 
 ## Durée de conservation
@@ -1726,7 +1726,7 @@ Soyez vigilant face à ces signaux d'alerte.
 4. Décrivez la situation
 
 ### Signalement détaillé
-Envoyez à security@sos-expat.com :
+Utilisez le formulaire de contact (catégorie : Signaler une fraude) avec :
 - Captures d'écran des échanges
 - Description chronologique
 - Tout élément utile
@@ -1792,8 +1792,8 @@ Vous pouvez retirer votre consentement à tout moment.
 ### En ligne
 Accédez à "Paramètres" → "Mes données" → "Exercer mes droits"
 
-### Par email
-Contactez notre DPO : dpo@sos-expat.com
+### Via le formulaire de contact
+Utilisez le formulaire de contact (catégorie : Protection des données)
 
 ### Par courrier
 SOS-Expat - DPO

@@ -86,7 +86,7 @@ const LocalBusinessSchema: React.FC<LocalBusinessSchemaProps> = ({
   logo = 'https://sos-expat.com/sos-logo.webp',
   image = 'https://sos-expat.com/og-image.jpg',
   telephone,
-  email = 'contact@sos-expat.com',
+  email = '',
   priceRange = '€€',
   aggregateRating,
   reviews = [],

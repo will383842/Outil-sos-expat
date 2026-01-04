@@ -387,7 +387,7 @@ const Login: React.FC = () => {
             contactPoint: {
               "@type": "ContactPoint",
               contactType: "Customer Support",
-              email: "support@sos-expat.com",
+              url: "https://sos-expat.com/contact",
               availableLanguage: ["French", "English", "Spanish", "German", "Russian", "Chinese", "Portuguese", "Arabic", "Hindi"],
             },
           },

@@ -95,6 +95,16 @@ export interface Provider {
   busySince?: Timestamp | null;
   /** Raison de l'indisponibilité */
   busyReason?: 'in_call' | 'break' | 'offline' | 'manually_disabled' | null;
+
+  // ========== PROFILS AAA (GÉRÉS EN INTERNE) ==========
+  /** Profil AAA géré en interne par SOS-Expat */
+  isAAA?: boolean;
+  /** ID du compte de payout consolidé pour les profils AAA */
+  aaaPayoutAccountId?: string;
+  /** Gateway de payout pour le compte AAA consolidé */
+  aaaPayoutGateway?: 'stripe' | 'paypal';
+  /** Statut KYC délégué au compte consolidé */
+  kycDelegated?: boolean;
 }
 
 /**
@@ -280,6 +290,14 @@ export function normalizeProvider(providerData: unknown): Provider {
     currentCallSessionId,
     busySince,
     busyReason,
+
+    // Champs AAA (profils gérés en interne)
+    isAAA: toBool(o.isAAA, false),
+    aaaPayoutAccountId: toStr(o.aaaPayoutAccountId),
+    aaaPayoutGateway: o.aaaPayoutGateway === 'stripe' || o.aaaPayoutGateway === 'paypal'
+      ? o.aaaPayoutGateway
+      : undefined,
+    kycDelegated: toBool(o.kycDelegated, false),
   };
 }
 
@@ -364,5 +382,11 @@ export function createDefaultProvider(providerId: string): Provider {
     currentCallSessionId: null,
     busySince: null,
     busyReason: null,
+
+    // Champs AAA
+    isAAA: false,
+    aaaPayoutAccountId: '',
+    aaaPayoutGateway: undefined,
+    kycDelegated: false,
   };
 }

@@ -109,6 +109,13 @@ export {
   getDLQStats,
 } from "./scheduled/notificationRetry";
 
+// ESCROW SAFEGUARDS: Daily monitoring of pending_transfers & failed_payouts
+// - Alerts if escrow > 1000€
+// - KYC reminders (D+1, D+7, D+30, D+90)
+// - Auto-refund after 6 months without KYC
+// - Stripe balance check
+export { escrowMonitoringDaily } from "./scheduled/escrowMonitoring";
+
 // P0-3 FIX: Invoice creation trigger and distributed lock
 export {
   onInvoiceRecordCreated,

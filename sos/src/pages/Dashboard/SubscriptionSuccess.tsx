@@ -199,7 +199,7 @@ const ErrorState: React.FC<ErrorStateProps> = ({ error, onRetry }) => {
             </button>
 
             <a
-              href="mailto:support@sos-expat.com"
+              href="/contact"
               className="inline-flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-700"
             >
               <HelpCircle className="w-4 h-4" />

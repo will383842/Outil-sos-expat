@@ -45,7 +45,7 @@ const defaultAppContext: AppContextType = {
   services: [],
   settings: {
     platformName: 'SOS Expat',
-    platformEmail: 'contact@sos-expat.com',
+    platformEmail: '',
     lawyerBasePrice: 49,
     expatBasePrice: 19,
     lawyerCallDuration: 20,

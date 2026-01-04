@@ -65,9 +65,9 @@ const DISCOVER_FAQS: FAQSource[] = [
   },
   {
     question: "Comment contacter le support ?",
-    answer: "Plusieurs moyens de nous contacter :\n• Formulaire de contact sur le site (réponse sous 24h)\n• Email : support@sos-expat.com\n• Chat en direct (disponible 24/7)\n\nNotre équipe support est multilingue et disponible pour vous aider dans votre langue.",
+    answer: "Pour nous contacter :\n• Utilisez le formulaire de contact sur notre site (réponse sous 24h)\n• Rendez-vous sur la page Contact accessible depuis le menu\n• Chat en direct (disponible 24/7)\n\nNotre équipe support est multilingue et disponible pour vous aider dans votre langue.",
     category: "discover",
-    tags: ["support", "contact", "aide", "email"],
+    tags: ["support", "contact", "aide"],
     order: 6,
     isActive: true,
     isFooter: false
@@ -194,9 +194,9 @@ const PROVIDERS_FAQS: FAQSource[] = [
   },
   {
     question: "Comment suis-je payé ?",
-    answer: "Les paiements sont effectués via Stripe Connect :\n• Après chaque appel réussi, votre commission est créditée sur votre compte Stripe\n• Vous recevez 70% du montant payé par le client\n• Les virements vers votre compte bancaire sont automatiques (quotidien, hebdomadaire ou mensuel)\n• Vous pouvez suivre tous vos revenus dans votre tableau de bord",
+    answer: "Les paiements sont effectués via Stripe Connect :\n• Après chaque appel réussi, le montant de votre rémunération est crédité sur votre compte Stripe\n• Les tarifs sont fixés par SOS-Expat (49€ pour avocats, 19€ pour expats aidants)\n• La facture client est scindée entre frais de mise en relation et votre rémunération\n• Aucune commission n'est prélevée sur votre rémunération\n• Les virements vers votre compte bancaire sont automatiques (quotidien, hebdomadaire ou mensuel)\n• Vous pouvez suivre tous vos revenus dans votre tableau de bord",
     category: "providers",
-    tags: ["paiement", "revenus", "stripe", "commission"],
+    tags: ["paiement", "revenus", "stripe", "rémunération"],
     order: 22,
     isActive: true,
     isFooter: true
@@ -220,10 +220,10 @@ const PROVIDERS_FAQS: FAQSource[] = [
     isFooter: false
   },
   {
-    question: "Quel pourcentage prend la plateforme ?",
-    answer: "SOS-Expat prélève 30% du montant de chaque consultation :\n• Avocat : vous recevez 34,30€ sur 49€\n• Expat aidant : vous recevez 13,30€ sur 19€\n\nCes frais couvrent la technologie, le marketing, le support client et les frais de paiement.",
+    question: "Comment fonctionne la rémunération sur SOS-Expat ?",
+    answer: "SOS-Expat est une plateforme de mise en relation avec des tarifs fixes :\n• Les tarifs sont définis par SOS-Expat : 49€ pour avocats (20 min), 19€ pour expats aidants (30 min)\n• La facture client est scindée : frais de mise en relation + votre rémunération\n• Aucune commission n'est prélevée sur votre rémunération\n• Seuls les frais de transaction Stripe (~2.9%) sont déduits\n\nVous recevez l'intégralité de votre part sans commission.",
     category: "providers",
-    tags: ["commission", "pourcentage", "frais"],
+    tags: ["rémunération", "frais", "tarification"],
     order: 25,
     isActive: true,
     isFooter: false

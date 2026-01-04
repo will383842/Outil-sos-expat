@@ -27,11 +27,12 @@ import { useIntl } from 'react-intl';
 import type { DocumentData as FirestoreData } from 'firebase/firestore';
 import {
   Users, UserPlus, Scale, Flag, Check, AlertCircle, Loader, RefreshCw,
-  Save, AlertTriangle, Edit, Eye, Trash, EyeOff, Star, Search, List, Calendar, X
+  Save, AlertTriangle, Edit, Eye, Trash, EyeOff, Star, Search, List, Calendar, X,
+  Wallet, CreditCard, Building, Plus, Settings, DollarSign
 } from 'lucide-react';
 import {
   collection, addDoc, setDoc, doc, serverTimestamp, getDocs, query,
-  where, updateDoc, deleteDoc, runTransaction, Timestamp, orderBy, limit
+  where, updateDoc, deleteDoc, runTransaction, Timestamp, orderBy, limit, getDoc
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../../config/firebase';
@@ -1405,6 +1406,29 @@ interface AaaProfile {
   lawSchool?: string; certifications?: string[]; motivation?: string | Record<string, string>; responseTime?: string;
   previousCountries?: string[]; mapLocation?: { lat: number; lng: number }; slug?: string;
   bio?: string | Record<string, string>; barNumber?: string;
+  // AAA Payout fields
+  isAAA?: boolean;
+  aaaPayoutMode?: 'internal' | string; // 'internal' or external account ID
+}
+
+// AAA External Account configuration
+interface AaaExternalAccount {
+  id: string;
+  name: string; // Display name (e.g., "PayPal Thaïlande", "Stripe EU")
+  gateway: 'paypal' | 'stripe';
+  accountId: string; // PayPal Merchant ID or Stripe Account ID
+  email?: string;
+  holderName: string;
+  country: string;
+  isActive: boolean;
+  createdAt: Date;
+}
+
+// AAA Payout Config
+interface AaaPayoutConfig {
+  externalAccounts: AaaExternalAccount[];
+  defaultMode: 'internal' | string; // Default for new profiles
+  lastUpdated?: Date;
 }
 
 interface GenerationForm {
@@ -1533,18 +1557,153 @@ const AdminAaaProfiles: React.FC = () => {
     role: 'expat' as Role, genderBias: { male: 50, female: 50 }, languages: ['Français', 'Anglais'],
   });
 
+  // ========== AAA PAYOUT CONFIG ==========
+  const [aaaPayoutConfig, setAaaPayoutConfig] = useState<AaaPayoutConfig>({
+    externalAccounts: [],
+    defaultMode: 'internal',
+  });
+  const [showPayoutConfigModal, setShowPayoutConfigModal] = useState(false);
+  const [showAddAccountModal, setShowAddAccountModal] = useState(false);
+  const [editingAccount, setEditingAccount] = useState<AaaExternalAccount | null>(null);
+  const [newAccountForm, setNewAccountForm] = useState<Partial<AaaExternalAccount>>({
+    gateway: 'paypal',
+    isActive: true,
+  });
+  const [savingPayoutConfig, setSavingPayoutConfig] = useState(false);
+
+  // ========== AAA PAYOUT CONFIG FUNCTIONS ==========
+  const loadAaaPayoutConfig = async () => {
+    try {
+      const configDoc = await getDoc(doc(db, 'admin_config', 'aaa_payout'));
+      if (configDoc.exists()) {
+        const data = configDoc.data();
+        setAaaPayoutConfig({
+          externalAccounts: (data.externalAccounts || []).map((acc: any) => ({
+            ...acc,
+            createdAt: acc.createdAt?.toDate?.() || new Date(),
+          })),
+          defaultMode: data.defaultMode || 'internal',
+          lastUpdated: data.lastUpdated?.toDate?.() || undefined,
+        });
+        console.log('[AAA Payout] Config loaded:', data.externalAccounts?.length || 0, 'external accounts');
+      } else {
+        console.log('[AAA Payout] No config found, using defaults (internal mode)');
+      }
+    } catch (err) {
+      console.error('[AAA Payout] Error loading config:', err);
+    }
+  };
+
+  const saveAaaPayoutConfig = async (config: AaaPayoutConfig) => {
+    setSavingPayoutConfig(true);
+    try {
+      await setDoc(doc(db, 'admin_config', 'aaa_payout'), {
+        externalAccounts: config.externalAccounts.map(acc => ({
+          ...acc,
+          createdAt: Timestamp.fromDate(acc.createdAt),
+        })),
+        defaultMode: config.defaultMode,
+        lastUpdated: serverTimestamp(),
+      });
+      setAaaPayoutConfig(config);
+      setSuccess('Configuration payout AAA sauvegardée');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err: any) {
+      console.error('[AAA Payout] Error saving config:', err);
+      setError(`Erreur sauvegarde config: ${err.message}`);
+    } finally {
+      setSavingPayoutConfig(false);
+    }
+  };
+
+  const addExternalAccount = () => {
+    if (!newAccountForm.name || !newAccountForm.accountId || !newAccountForm.holderName) {
+      setError('Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+    const newAccount: AaaExternalAccount = {
+      id: `ext_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      name: newAccountForm.name!,
+      gateway: newAccountForm.gateway || 'paypal',
+      accountId: newAccountForm.accountId!,
+      email: newAccountForm.email,
+      holderName: newAccountForm.holderName!,
+      country: newAccountForm.country || 'TH',
+      isActive: newAccountForm.isActive ?? true,
+      createdAt: new Date(),
+    };
+    const updatedConfig = {
+      ...aaaPayoutConfig,
+      externalAccounts: [...aaaPayoutConfig.externalAccounts, newAccount],
+    };
+    saveAaaPayoutConfig(updatedConfig);
+    setNewAccountForm({ gateway: 'paypal', isActive: true });
+    setShowAddAccountModal(false);
+  };
+
+  const updateExternalAccount = (accountId: string, updates: Partial<AaaExternalAccount>) => {
+    const updatedAccounts = aaaPayoutConfig.externalAccounts.map(acc =>
+      acc.id === accountId ? { ...acc, ...updates } : acc
+    );
+    saveAaaPayoutConfig({ ...aaaPayoutConfig, externalAccounts: updatedAccounts });
+  };
+
+  const deleteExternalAccount = (accountId: string) => {
+    const updatedAccounts = aaaPayoutConfig.externalAccounts.filter(acc => acc.id !== accountId);
+    // Also reset any profiles using this account to internal
+    const updatedConfig = {
+      ...aaaPayoutConfig,
+      externalAccounts: updatedAccounts,
+      defaultMode: aaaPayoutConfig.defaultMode === accountId ? 'internal' : aaaPayoutConfig.defaultMode,
+    };
+    saveAaaPayoutConfig(updatedConfig);
+  };
+
+  const updateProfilePayoutMode = async (profileId: string, mode: 'internal' | string) => {
+    try {
+      // Update in sos_profiles
+      await updateDoc(doc(db, 'sos_profiles', profileId), {
+        aaaPayoutMode: mode,
+        isAAA: true,
+      });
+      // Update in users
+      await updateDoc(doc(db, 'users', profileId), {
+        aaaPayoutMode: mode,
+        isAAA: true,
+      });
+      // Update local state
+      setExistingProfiles(prev => prev.map(p =>
+        p.id === profileId ? { ...p, aaaPayoutMode: mode, isAAA: true } : p
+      ));
+      setSuccess(`Mode payout mis à jour: ${mode === 'internal' ? 'Interne (SOS-Expat)' : aaaPayoutConfig.externalAccounts.find(a => a.id === mode)?.name || mode}`);
+      setTimeout(() => setSuccess(null), 2000);
+    } catch (err: any) {
+      console.error('[AAA Payout] Error updating profile mode:', err);
+      setError(`Erreur mise à jour: ${err.message}`);
+    }
+  };
+
+  const getPayoutModeLabel = (mode: string | undefined): string => {
+    if (!mode || mode === 'internal') return 'Interne (SOS-Expat)';
+    const account = aaaPayoutConfig.externalAccounts.find(a => a.id === mode);
+    return account ? `${account.name} (${account.gateway.toUpperCase()})` : mode;
+  };
+
   useEffect(() => {
     if (!currentUser || (currentUser as { role?: string }).role !== 'admin') {
       navigate('/admin/login');
       return;
     }
-    
+
     // ✅ CHARGER LE CONTENU UTILISÉ AU DÉMARRAGE
     loadUsedContent().catch((error) => {
       console.error('❌ Erreur chargement contenu utilisé:', error);
       setError(`Impossible de charger le contenu utilisé: ${error.message}`);
     });
-    
+
+    // ✅ CHARGER LA CONFIG PAYOUT AAA
+    loadAaaPayoutConfig();
+
     if (activeTab === 'manage') loadExistingProfiles().catch(() => {});
   }, [currentUser, navigate, activeTab]);
 
@@ -1939,10 +2098,20 @@ const AdminAaaProfiles: React.FC = () => {
       return acc;
     }, {} as any);
 
+    // ✅ AJOUTER LES CHAMPS AAA
+    cleanBaseUser.isAAA = true;
+    cleanBaseUser.aaaPayoutMode = aaaPayoutConfig.defaultMode; // 'internal' par défaut
+    cleanBaseUser.kycDelegated = true;
+    cleanBaseUser.kycStatus = 'not_required';
+
     await setDoc(doc(db, 'users', uid), cleanBaseUser);
 
     const providerProfile: FirestoreData = {
       ...cleanBaseUser, uid, type: role, fullName, createdByAdmin: true, profileCompleted: true,
+      isAAA: true,
+      aaaPayoutMode: aaaPayoutConfig.defaultMode,
+      kycDelegated: true,
+      kycStatus: 'not_required',
     };
     await setDoc(doc(db, 'sos_profiles', uid), providerProfile);
 
@@ -2535,6 +2704,9 @@ const AdminAaaProfiles: React.FC = () => {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold text-gray-900">Profils AAA</h1>
           <div className="flex gap-2">
+            <button onClick={() => setShowPayoutConfigModal(true)} className="px-4 py-2 rounded-md font-medium transition-colors flex items-center bg-purple-600 text-white hover:bg-purple-700">
+              <Wallet className="mr-2" size={18} /> Payout Config
+            </button>
             <button onClick={() => setActiveTab('generate')} className={`px-4 py-2 rounded-md font-medium transition-colors flex items-center ${activeTab === 'generate' ? 'bg-red-600 text-white hover:bg-red-700' : 'border border-gray-300 text-gray-700 hover:bg-gray-50'}`}>
               <UserPlus className="mr-2" size={18} /> Générer
             </button>
@@ -2896,13 +3068,19 @@ const AdminAaaProfiles: React.FC = () => {
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Inscription</th>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div className="flex items-center gap-1">
+                          <Wallet size={14} />
+                          Payout
+                        </div>
+                      </th>
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {isLoadingProfiles ? (
                       <tr>
-                        <td colSpan={12} className="px-6 py-4 text-center">
+                        <td colSpan={13} className="px-6 py-4 text-center">
                           <div className="flex justify-center">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
                           </div>
@@ -3065,7 +3243,27 @@ const AdminAaaProfiles: React.FC = () => {
                               {profile.createdAt ? formatDate(new Date(profile.createdAt)) : '-'}
                             </div>
                           </td>
-                          
+
+                          {/* Payout Mode */}
+                          <td className="px-3 py-4 whitespace-nowrap">
+                            <select
+                              value={profile.aaaPayoutMode || 'internal'}
+                              onChange={(e) => updateProfilePayoutMode(profile.id, e.target.value)}
+                              className={`text-xs px-2 py-1 rounded-md border focus:ring-2 focus:ring-purple-500 ${
+                                profile.aaaPayoutMode === 'internal' || !profile.aaaPayoutMode
+                                  ? 'bg-gray-100 border-gray-300 text-gray-700'
+                                  : 'bg-purple-50 border-purple-300 text-purple-700'
+                              }`}
+                            >
+                              <option value="internal">Interne</option>
+                              {aaaPayoutConfig.externalAccounts.filter(a => a.isActive).map(acc => (
+                                <option key={acc.id} value={acc.id}>
+                                  {acc.name}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+
                           {/* Actions */}
                           <td className="px-3 py-4 whitespace-nowrap">
                             <div className="flex gap-1">
@@ -3091,7 +3289,7 @@ const AdminAaaProfiles: React.FC = () => {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={12} className="px-6 py-4 text-center text-gray-500">
+                        <td colSpan={13} className="px-6 py-4 text-center text-gray-500">
                           Aucun profil trouvé
                         </td>
                       </tr>
@@ -3776,6 +3974,230 @@ const AdminAaaProfiles: React.FC = () => {
               </div>
             </div>
           )}
+        </Modal>
+
+        {/* ========== PAYOUT CONFIG MODAL ========== */}
+        <Modal isOpen={showPayoutConfigModal} onClose={() => setShowPayoutConfigModal(false)} title="Configuration Payout AAA">
+          <div className="space-y-6">
+            {/* Default Mode */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Mode par défaut pour nouveaux profils</label>
+              <select
+                value={aaaPayoutConfig.defaultMode}
+                onChange={(e) => saveAaaPayoutConfig({ ...aaaPayoutConfig, defaultMode: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="internal">Interne (SOS-Expat)</option>
+                {aaaPayoutConfig.externalAccounts.filter(a => a.isActive).map(acc => (
+                  <option key={acc.id} value={acc.id}>{acc.name} ({acc.gateway.toUpperCase()})</option>
+                ))}
+              </select>
+            </div>
+
+            {/* External Accounts List */}
+            <div>
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-sm font-medium text-gray-700">Comptes externes ({aaaPayoutConfig.externalAccounts.length})</h3>
+                <button
+                  onClick={() => setShowAddAccountModal(true)}
+                  className="px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 flex items-center"
+                >
+                  <Plus size={16} className="mr-1" /> Ajouter
+                </button>
+              </div>
+
+              {aaaPayoutConfig.externalAccounts.length === 0 ? (
+                <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                  <Wallet className="mx-auto h-12 w-12 text-gray-400" />
+                  <p className="mt-2 text-sm text-gray-500">Aucun compte externe configuré</p>
+                  <p className="text-xs text-gray-400">Tous les payouts AAA resteront sur SOS-Expat</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {aaaPayoutConfig.externalAccounts.map(acc => (
+                    <div key={acc.id} className={`p-4 rounded-lg border ${acc.isActive ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-300 opacity-60'}`}>
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-3">
+                          {acc.gateway === 'paypal' ? (
+                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                              <CreditCard className="text-blue-600" size={20} />
+                            </div>
+                          ) : (
+                            <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                              <CreditCard className="text-purple-600" size={20} />
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-medium text-gray-900">{acc.name}</p>
+                            <p className="text-sm text-gray-500">{acc.gateway.toUpperCase()} • {acc.holderName}</p>
+                            <p className="text-xs text-gray-400">{acc.accountId}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => updateExternalAccount(acc.id, { isActive: !acc.isActive })}
+                            className={`px-2 py-1 text-xs rounded ${acc.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}`}
+                          >
+                            {acc.isActive ? 'Actif' : 'Inactif'}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setEditingAccount(acc);
+                              setNewAccountForm(acc);
+                              setShowAddAccountModal(true);
+                            }}
+                            className="p-1 text-gray-400 hover:text-blue-600"
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm(`Supprimer le compte "${acc.name}" ?`)) {
+                                deleteExternalAccount(acc.id);
+                              }
+                            }}
+                            className="p-1 text-gray-400 hover:text-red-600"
+                          >
+                            <Trash size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Stats */}
+            <div className="pt-4 border-t border-gray-200">
+              <p className="text-xs text-gray-500">
+                Dernière mise à jour: {aaaPayoutConfig.lastUpdated ? aaaPayoutConfig.lastUpdated.toLocaleString('fr-FR') : 'Jamais'}
+              </p>
+            </div>
+          </div>
+        </Modal>
+
+        {/* ========== ADD/EDIT ACCOUNT MODAL ========== */}
+        <Modal
+          isOpen={showAddAccountModal}
+          onClose={() => {
+            setShowAddAccountModal(false);
+            setEditingAccount(null);
+            setNewAccountForm({ gateway: 'paypal', isActive: true });
+          }}
+          title={editingAccount ? 'Modifier le compte' : 'Ajouter un compte externe'}
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nom du compte *</label>
+              <input
+                type="text"
+                value={newAccountForm.name || ''}
+                onChange={(e) => setNewAccountForm({ ...newAccountForm, name: e.target.value })}
+                placeholder="Ex: PayPal Thaïlande"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Gateway *</label>
+              <select
+                value={newAccountForm.gateway || 'paypal'}
+                onChange={(e) => setNewAccountForm({ ...newAccountForm, gateway: e.target.value as 'paypal' | 'stripe' })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="paypal">PayPal</option>
+                <option value="stripe">Stripe</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {newAccountForm.gateway === 'paypal' ? 'PayPal Merchant ID *' : 'Stripe Account ID *'}
+              </label>
+              <input
+                type="text"
+                value={newAccountForm.accountId || ''}
+                onChange={(e) => setNewAccountForm({ ...newAccountForm, accountId: e.target.value })}
+                placeholder={newAccountForm.gateway === 'paypal' ? 'XXXXXXXXXX' : 'acct_XXXXXXXXX'}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email (optionnel)</label>
+              <input
+                type="email"
+                value={newAccountForm.email || ''}
+                onChange={(e) => setNewAccountForm({ ...newAccountForm, email: e.target.value })}
+                placeholder="email@example.com"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Titulaire du compte *</label>
+              <input
+                type="text"
+                value={newAccountForm.holderName || ''}
+                onChange={(e) => setNewAccountForm({ ...newAccountForm, holderName: e.target.value })}
+                placeholder="Prénom Nom"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Pays du compte</label>
+              <input
+                type="text"
+                value={newAccountForm.country || ''}
+                onChange={(e) => setNewAccountForm({ ...newAccountForm, country: e.target.value })}
+                placeholder="TH, FR, US..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="accountActive"
+                checked={newAccountForm.isActive ?? true}
+                onChange={(e) => setNewAccountForm({ ...newAccountForm, isActive: e.target.checked })}
+                className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+              />
+              <label htmlFor="accountActive" className="ml-2 text-sm text-gray-700">Compte actif</label>
+            </div>
+
+            <div className="flex justify-end space-x-3 pt-4">
+              <button
+                onClick={() => {
+                  setShowAddAccountModal(false);
+                  setEditingAccount(null);
+                  setNewAccountForm({ gateway: 'paypal', isActive: true });
+                }}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => {
+                  if (editingAccount) {
+                    updateExternalAccount(editingAccount.id, newAccountForm);
+                    setShowAddAccountModal(false);
+                    setEditingAccount(null);
+                    setNewAccountForm({ gateway: 'paypal', isActive: true });
+                  } else {
+                    addExternalAccount();
+                  }
+                }}
+                disabled={savingPayoutConfig}
+                className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 flex items-center"
+              >
+                {savingPayoutConfig ? <Loader className="animate-spin mr-2" size={16} /> : <Save className="mr-2" size={16} />}
+                {editingAccount ? 'Mettre à jour' : 'Ajouter'}
+              </button>
+            </div>
+          </div>
         </Modal>
       </div>
     </AdminLayout>

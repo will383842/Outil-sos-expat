@@ -96,7 +96,7 @@ const ProfileStatusAlert: React.FC<ProfileStatusAlertProps> = ({ user }) => {
 
             <div className="flex flex-col sm:flex-row gap-3">
               <a
-                href="mailto:support@sos-expat.com"
+                href="/contact"
                 className="inline-flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
               >
                 <Mail className="w-5 h-5" />

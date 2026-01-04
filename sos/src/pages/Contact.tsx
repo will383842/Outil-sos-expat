@@ -23,6 +23,7 @@ import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
 import Button from "../components/common/Button";
 import { useApp } from "../contexts/AppContext";
+import { phoneCodesData } from "../data/phone-codes";
 import {
   collection,
   addDoc,
@@ -92,6 +93,8 @@ const Contact: React.FC = () => {
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [showErrors, setShowErrors] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
+  // Honeypot anti-spam field (should remain empty)
+  const [honeypot, setHoneypot] = useState("");
 
   // Optimisations performance et accessibility
   useEffect(() => {
@@ -587,6 +590,24 @@ const Contact: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Anti-spam: Check honeypot field (bots fill this hidden field)
+    if (honeypot) {
+      console.warn("Spam detected: honeypot field filled");
+      // Simulate success to not alert the bot
+      setIsSubmitted(true);
+      return;
+    }
+
+    // Anti-spam: Check minimum form completion time (bots are too fast)
+    const completionTime = Date.now() - formStartTime;
+    const MIN_COMPLETION_TIME_MS = 3000; // 3 seconds minimum
+    if (completionTime < MIN_COMPLETION_TIME_MS) {
+      console.warn("Spam detected: form submitted too quickly");
+      // Simulate success to not alert the bot
+      setIsSubmitted(true);
+      return;
+    }
+
     // Validation du formulaire
     if (!validateForm()) {
       setShowErrors(true);
@@ -605,8 +626,7 @@ const Contact: React.FC = () => {
     setShowErrors(false);
 
     try {
-      // Analytics de completion time
-      const completionTime = Date.now() - formStartTime;
+      // Analytics de completion time (already calculated above)
 
       // Vérifier si l'utilisateur existe déjà
       const usersQuery = query(
@@ -804,28 +824,33 @@ const Contact: React.FC = () => {
     [lang, t.other]
   );
 
-  const countryCodes = useMemo(
-    () => [
-      { value: "+33", label: "🇫🇷 +33 (France)" },
-      { value: "+1", label: "🇺🇸 +1 (USA/Canada)" },
-      { value: "+44", label: "🇬🇧 +44 (UK)" },
-      { value: "+49", label: "🇩🇪 +49 (Germany)" },
-      { value: "+39", label: "🇮🇹 +39 (Italy)" },
-      { value: "+34", label: "🇪🇸 +34 (Spain)" },
-      { value: "+32", label: "🇧🇪 +32 (Belgium)" },
-      { value: "+41", label: "🇨🇭 +41 (Switzerland)" },
-      { value: "+31", label: "🇳🇱 +31 (Netherlands)" },
-      { value: "+352", label: "🇱🇺 +352 (Luxembourg)" },
-      { value: "+213", label: "🇩🇿 +213 (Algeria)" },
-      { value: "+212", label: "🇲🇦 +212 (Morocco)" },
-      { value: "+216", label: "🇹🇳 +216 (Tunisia)" },
-      { value: "+86", label: "🇨🇳 +86 (China)" },
-      { value: "+91", label: "🇮🇳 +91 (India)" },
-      { value: "+55", label: "🇧🇷 +55 (Brazil)" },
-      { value: "+other", label: `🌍 ${t.other}` },
-    ],
-    [t.other]
-  );
+  // Map ISO country codes to flag emojis
+  const getFlagEmoji = (countryCode: string) => {
+    const codePoints = countryCode
+      .toUpperCase()
+      .split('')
+      .map(char => 127397 + char.charCodeAt(0));
+    return String.fromCodePoint(...codePoints);
+  };
+
+  // Generate country codes from phone-codes.ts data (200 countries)
+  const countryCodes = useMemo(() => {
+    const langKey = (lang === 'fr' ? 'fr' : lang === 'en' ? 'en' : lang === 'es' ? 'es' : lang === 'de' ? 'de' : lang === 'pt' ? 'pt' : 'en') as keyof typeof phoneCodesData[0];
+
+    const codes = phoneCodesData.map(country => ({
+      value: country.phoneCode,
+      label: `${getFlagEmoji(country.code)} ${country.phoneCode} (${country[langKey] || country.en})`,
+      sortName: country[langKey] || country.en
+    }));
+
+    // Sort alphabetically by country name
+    codes.sort((a, b) => (a.sortName as string).localeCompare(b.sortName as string, lang));
+
+    // Add "Other" option at the end
+    codes.push({ value: "+other", label: `🌍 ${t.other}`, sortName: "ZZZZZ" });
+
+    return codes;
+  }, [lang, t.other]);
 
   // Progress calculation
   const progress = useMemo(() => {
@@ -1252,6 +1277,30 @@ const Contact: React.FC = () => {
                   className="p-6 space-y-6"
                   noValidate
                 >
+                  {/* Honeypot anti-spam field - hidden from users, bots will fill it */}
+                  <div
+                    aria-hidden="true"
+                    tabIndex={-1}
+                    style={{
+                      position: 'absolute',
+                      left: '-9999px',
+                      top: '-9999px',
+                      opacity: 0,
+                      height: 0,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <label htmlFor="website_url">Website URL</label>
+                    <input
+                      type="text"
+                      id="website_url"
+                      name="website_url"
+                      value={honeypot}
+                      onChange={(e) => setHoneypot(e.target.value)}
+                      autoComplete="off"
+                      tabIndex={-1}
+                    />
+                  </div>
                   {/* Section 1: Qui êtes-vous ? */}
                   <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-2xl p-6 border border-emerald-200">
                     <h3 className="text-xl font-black text-gray-900 mb-4 flex items-center">
