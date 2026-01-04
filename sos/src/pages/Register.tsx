@@ -8,10 +8,10 @@ import React, {
 } from "react";
 import {
   Link,
-  useNavigate,
   useSearchParams,
   useLocation,
 } from "react-router-dom";
+import { useLocaleNavigate } from "../multilingual-system";
 import {
   Scale,
   Users,
@@ -271,7 +271,7 @@ function PWAInstallSection({ canInstall, onInstall }: PWAInstallSectionProps) {
 
 const Register: React.FC = () => {
   const intl = useIntl();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const { language } = useApp();

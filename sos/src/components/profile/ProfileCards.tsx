@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { Star, MapPin, Phone, ChevronLeft, ChevronRight, Globe, Search, ArrowDown, ArrowUp, ChevronDown, Clock } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { useIntl } from 'react-intl';
+import { useLocaleNavigate } from '../../multilingual-system';
 import { collection, query, onSnapshot, limit, orderBy } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { useApp } from '../../contexts/AppContext';
@@ -276,7 +276,7 @@ const ProfileCards: React.FC<ProfileCardsProps> = ({
 }) => {
   const { language = 'fr' } = useApp();
   const intl = useIntl();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   
   // Core states with performance optimization
   const [providers, setProviders] = useState<readonly Provider[]>([]);

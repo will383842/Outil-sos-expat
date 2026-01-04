@@ -2,7 +2,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
   useSearchParams,
-  useNavigate,
   useParams,
   Link,
   useLocation,

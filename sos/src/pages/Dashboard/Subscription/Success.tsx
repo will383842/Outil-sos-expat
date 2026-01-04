@@ -5,7 +5,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { useIntl } from 'react-intl';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
+import { useLocaleNavigate } from '../../../multilingual-system';
 import { CheckCircle, Sparkles, ArrowRight, Zap, Gift } from 'lucide-react';
 import Confetti from 'react-confetti';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
@@ -17,7 +18,7 @@ import { cn } from '../../../utils/cn';
 export const SubscriptionSuccessPage: React.FC = () => {
   const intl = useIntl();
   const { language: locale } = useApp();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [searchParams] = useSearchParams();
 
   const { subscription, plans, refresh } = useSubscription();

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../multilingual-system';
 import { Search, Star, MapPin, Phone, Clock } from 'lucide-react';
 import Layout from '../components/layout/Layout';
 import SEOHead from '../components/layout/SEOHead';
@@ -94,7 +94,7 @@ const getCountryCoordinates = (country: string): { lat: number; lng: number } | 
 
 const Providers: React.FC = () => {
   const { language } = useApp();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
 
   // Get centralized pricing configuration from admin_config/pricing
   const { pricing } = usePricingConfig();

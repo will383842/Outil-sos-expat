@@ -1,6 +1,7 @@
 // src/pages/ProviderProfile.tsx - VERSION FUSIONNÉE COMPLÈTE
 import React, { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
+import { useLocaleNavigate } from "../multilingual-system";
 import { parseLocaleFromPath, getLocaleString } from "../utils/localeRoutes";
 import {
   Star,
@@ -613,7 +614,7 @@ const ProviderProfile: React.FC = () => {
     typeCountry,
   } = params;
   const location = useLocation();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const { user, isLoading: authLoading } = useAuth();
   const { language } = useApp();
 

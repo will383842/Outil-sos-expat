@@ -1,6 +1,7 @@
 // src/pages/CallCheckoutWrapper.tsx - Version corrigée complète
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
+import { useLocaleNavigate } from '../multilingual-system';
 import CallCheckout from './CallCheckout';
 import { AlertCircle } from 'lucide-react';
 import { Provider, normalizeProvider, createDefaultProvider } from '../types/provider';
@@ -228,7 +229,7 @@ const createImprovedDefaultProvider = (providerId: string): Provider => {
 const CallCheckoutWrapper: React.FC = () => {
   const { t } = useTranslation();
   const location = useLocation() as { state: RouterState };
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const { providerId } = useParams<{ providerId: string }>();
 
   // Devise sélectionnée (source d'autorité côté wrapper)

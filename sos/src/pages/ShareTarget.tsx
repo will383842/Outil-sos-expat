@@ -7,7 +7,8 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
+import { useLocaleNavigate } from '../multilingual-system';
 import { Share2, FileText, Link2, MessageSquare, Loader2 } from 'lucide-react';
 
 interface SharedData {
@@ -18,7 +19,7 @@ interface SharedData {
 }
 
 const ShareTarget: React.FC = () => {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [searchParams] = useSearchParams();
   const [sharedData, setSharedData] = useState<SharedData | null>(null);
   const [isProcessing, setIsProcessing] = useState(true);

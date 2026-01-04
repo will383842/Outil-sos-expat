@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocaleNavigate } from "../multilingual-system";
 import { Helmet } from "react-helmet-async";
 import {
   Star,
@@ -288,7 +288,7 @@ const SEO_BASE_URL = "https://sos-expat.com";
 const Testimonials: React.FC = () => {
   const intl = useIntl();
   const { language } = useApp();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
 
   // ✅ Aggregate Rating for Google Rich Snippets
   const aggregateRating = useAggregateRatingWithDefault();

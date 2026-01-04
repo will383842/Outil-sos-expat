@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useIntl } from 'react-intl';
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../../../multilingual-system';
 import { useApp } from '../../../contexts/AppContext';
 import { ArrowLeft, Check, Shield, CreditCard, Loader2 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
@@ -372,7 +372,7 @@ const DEFAULT_EXPAT_PLANS: SubscriptionPlan[] = [
 export const PlansPage: React.FC = () => {
   const intl = useIntl();
   const { language: locale } = useApp();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
 
   const { user } = useAuth();
   const { subscription, plans, loading } = useSubscription();

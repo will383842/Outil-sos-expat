@@ -6,9 +6,9 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useIntl } from "react-intl";
-import { getLocaleString, parseLocaleFromPath, getRouteKeyFromSlug, getTranslatedRouteSlug } from "../../multilingual-system";
+import { getLocaleString, parseLocaleFromPath, getRouteKeyFromSlug, getTranslatedRouteSlug, useLocaleNavigate } from "../../multilingual-system";
 import {
   Menu,
   X,
@@ -729,7 +729,7 @@ const LanguageDropdown = memo<LanguageDropdownProps>(function LanguageDropdown({
   const intl = useIntl();
   const { language, setLanguage } = useApp();
   const location = useLocation();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -1060,7 +1060,7 @@ const UserMenu = memo<UserMenuProps>(function UserMenu({
   const intl = useIntl();
   const { user, logout } = useAuth();
   const typedUser = user as WithAuthExtras | null;
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [open, setOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const ref = useRef<HTMLDivElement>(null);

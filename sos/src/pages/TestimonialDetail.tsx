@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { useLocaleNavigate } from "../multilingual-system";
 import {
   Star,
   MapPin,
@@ -1641,12 +1642,12 @@ const TestimonialDetail: React.FC = () => {
   const intl = useIntl();
   // ✅ NEW: Parse URL params
   const { country, language: urlLanguage, reviewType } = useParams<{ 
-    country: string; 
-    language: string; 
+    country: string;
+    language: string;
     reviewType: string;
   }>();
-  
-  const navigate = useNavigate();
+
+  const navigate = useLocaleNavigate();
   const { language } = useApp();
   
   // ✅ Check if current language is RTL

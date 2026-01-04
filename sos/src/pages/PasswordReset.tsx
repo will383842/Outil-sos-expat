@@ -1,6 +1,7 @@
 // src/pages/PasswordReset.tsx
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import { useLocaleNavigate } from '../multilingual-system';
 import { Mail, ArrowLeft, CheckCircle, AlertCircle, Shield, Globe, Smartphone, RefreshCw, Sparkles, Lock, Zap, ChevronRight } from 'lucide-react';
 import Layout from '../components/layout/Layout';
 import Button from '../components/common/Button';
@@ -319,9 +320,9 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ resetErrorBoundary }) => 
 
 const PasswordReset: React.FC = () => {
   const { t, language } = useTranslation();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [searchParams] = useSearchParams();
-  const { user, authInitialized } = useAuth();
+  const { user, authInitialized, isFullyReady } = useAuth();
   
   const [formData, setFormData] = useState<FormData>({
     email: searchParams.get('email') || ''
@@ -410,11 +411,12 @@ const PasswordReset: React.FC = () => {
   }, [cooldownTime]);
 
   // Redirect if already logged in
+  // ✅ FIX FLASH P0: Utiliser isFullyReady pour éviter les redirections prématurées
   useEffect(() => {
-    if (authInitialized && user) {
+    if (isFullyReady && user) {
       navigate('/dashboard', { replace: true });
     }
-  }, [authInitialized, user, navigate]);
+  }, [isFullyReady, user, navigate]);
 
   // SEO & Social Media Meta Data with i18n
   const metaData = useMemo(() => ({
@@ -771,7 +773,8 @@ const PasswordReset: React.FC = () => {
 
   const isFormValid = !formErrors.email && formData.email && emailRegex.test(formData.email);
 
-  if (authInitialized && user) {
+  // ✅ FIX FLASH P0: Utiliser isFullyReady pour éviter les flashs
+  if (isFullyReady && user) {
     return null;
   }
 

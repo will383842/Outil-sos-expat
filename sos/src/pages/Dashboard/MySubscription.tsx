@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useIntl } from 'react-intl';
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../../multilingual-system';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSubscription } from '../../hooks/useSubscription';
@@ -266,7 +266,7 @@ export const MySubscription: React.FC = () => {
   const intl = useIntl();
   const { language } = useApp();
   const locale = language as SupportedLanguage;
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const { user } = useAuth();
 
   // SECURITY: Block clients from accessing this page

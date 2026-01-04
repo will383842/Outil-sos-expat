@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useIntl } from 'react-intl';
 import { useAuth } from '../../contexts/AuthContext';
@@ -48,6 +48,12 @@ interface ProtectedRouteProps {
 
 type AuthState = 'loading' | 'checking' | 'authorized' | 'unauthorized' | 'error' | 'banned';
 
+/**
+ * P0 FIX: Délai minimum avant de rediriger vers login
+ * Cela évite les flash de 404/login quand l'auth est en cours de chargement
+ */
+const MIN_AUTH_WAIT_MS = 500;
+
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
   allowedRoles,
@@ -62,6 +68,18 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const [authState, setAuthState] = useState<AuthState>('loading');
   const [error, setError] = useState<string | null>(null);
 
+  // P0 FIX: Track time since component mounted to prevent premature redirects
+  const mountTimeRef = useRef<number>(Date.now());
+  const [hasWaitedMinTime, setHasWaitedMinTime] = useState(false);
+
+  // P0 FIX: Wait minimum time before allowing redirects
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setHasWaitedMinTime(true);
+    }, MIN_AUTH_WAIT_MS);
+    return () => clearTimeout(timer);
+  }, []);
+
   // ⚠️ Fallback robuste : admin → /admin/login, sinon → /login
   const computedFallbackPath = useMemo(() => {
     if (fallbackPath) return fallbackPath;
@@ -73,10 +91,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return isAdminRoute ? '/admin/login' : '/login';
   }, [fallbackPath, allowedRoles, location.pathname]);
 
-  // P0 FIX: Utiliser isFullyReady qui garantit que le profil Firestore est chargé
+  // P0 FIX: Ne check l'auth que si isFullyReady ET on a attendu le temps minimum
+  // Cela évite les redirections prématurées vers login
   const shouldCheckAuth = useMemo(
-    () => isFullyReady && !authError,
-    [isFullyReady, authError]
+    () => isFullyReady && !authError && hasWaitedMinTime,
+    [isFullyReady, authError, hasWaitedMinTime]
   );
 
   const checkAuthorization = useCallback(async () => {
@@ -86,6 +105,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       userRole: user?.role,
       allowedRoles,
       path: location.pathname,
+      timeSinceMount: Date.now() - mountTimeRef.current,
     });
 
     if (!user) {
@@ -121,23 +141,23 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         setAuthState('authorized');
       }
     } catch (err) {
-       
+
       console.error('Authorization check failed:', err);
       setError(err instanceof Error ? err.message : 'Authorization failed');
       setAuthState('error');
     }
-  }, [user, allowedRoles]);
+  }, [user, allowedRoles, location.pathname]);
 
   useEffect(() => {
     if (shouldCheckAuth) {
       checkAuthorization();
-    } else if (authError) {
+    } else if (authError && hasWaitedMinTime) {
       setAuthState('error');
       setError(intl.formatMessage({ id: 'auth.failed' }));
     } else {
       setAuthState('loading');
     }
-  }, [shouldCheckAuth, checkAuthorization, authError, intl]);
+  }, [shouldCheckAuth, checkAuthorization, authError, intl, hasWaitedMinTime]);
 
   const fullPath = useMemo(
     () => location.pathname + location.search + location.hash,

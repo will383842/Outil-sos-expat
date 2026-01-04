@@ -1,16 +1,16 @@
 // src/pages/NotFound.tsx
 import React, { useState, useMemo } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useIntl, FormattedMessage } from "react-intl";
 import { Home, Search, ArrowLeft, AlertCircle } from "lucide-react";
 import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
 import { useApp } from "../contexts/AppContext";
-import { parseLocaleFromPath, getLocaleString, getTranslatedRouteSlug } from "../multilingual-system";
+import { parseLocaleFromPath, getLocaleString, getTranslatedRouteSlug, useLocaleNavigate } from "../multilingual-system";
 
 const NotFound: React.FC = () => {
   const intl = useIntl();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const location = useLocation();
   const { language } = useApp();
 

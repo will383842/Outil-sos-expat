@@ -16,7 +16,6 @@ import {
   Calendar,
   X,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { useLocaleNavigate } from "../multilingual-system";
 import { useAuth } from "../contexts/AuthContext";
 import { loadStripe, Stripe } from "@stripe/stripe-js";

@@ -16,10 +16,10 @@ import React, {
 } from "react";
 import {
   Link,
-  useNavigate,
   useSearchParams,
   useLocation,
 } from "react-router-dom";
+import { useLocaleNavigate } from "../multilingual-system";
 import { useIntl } from "react-intl";
 import {
   Eye,
@@ -256,10 +256,10 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ resetErrorBoundary }) => 
 const Login: React.FC = () => {
   const intl = useIntl();
   const { language } = useApp();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [searchParams] = useSearchParams();
   const location = useLocation();
-  const { login, loginWithGoogle, isLoading, error, user, authInitialized } = useAuth();
+  const { login, loginWithGoogle, isLoading, error, user, authInitialized, isFullyReady } = useAuth();
 
   // Helper function to translate auth error codes
   const translateAuthError = (errorCode: string | null): string | null => {
@@ -672,11 +672,10 @@ const Login: React.FC = () => {
 
   // ==================== REDIRECT ====================
   useEffect(() => {
-    // ✅ FIX FLASH: Attendre que TOUT soit prêt avant de rediriger
-    // authInitialized = Firestore a répondu
-    // user = données utilisateur chargées
-    // !isLoading = pas de chargement en cours
-    if (authInitialized && user && !isLoading) {
+    // ✅ FIX FLASH P0: Utiliser isFullyReady qui garantit que TOUT est chargé
+    // isFullyReady = authInitialized AND !isLoading (défini dans AuthContext)
+    // Cela évite les race conditions entre les différents états
+    if (isFullyReady && user) {
       // Get redirect URL - prioritize sessionStorage (set before navigation) over query params
       // sessionStorage is more reliable because it's set BEFORE navigation happens
       const redirectFromStorage = sessionStorage.getItem("loginRedirect");
@@ -778,7 +777,7 @@ const Login: React.FC = () => {
       console.log("[Login] Redirecting to:", finalUrl);
       navigate(finalUrl, { replace: true });
     }
-  }, [authInitialized, user, isLoading, navigate, searchParams, currentLang]);
+  }, [isFullyReady, user, navigate, searchParams, currentLang]);
 
   // ==================== FORM SUBMIT ====================
   const handleSubmit = useCallback(
@@ -906,8 +905,14 @@ const Login: React.FC = () => {
   const hasError = error || formErrors.general || formErrors.email || formErrors.password;
 
   // ==================== LOADING STATE ====================
-  // IMPORTANT: Ne PAS afficher le spinner si une erreur existe (sinon l'utilisateur reste bloqué)
-  if (effectiveLoading && !user && !hasError) {
+  // ✅ FIX FLASH P0: Garder le spinner pendant TOUTE la transition post-login
+  // localLoading = true après submit, JAMAIS remis à false après succès
+  // → Le spinner reste affiché jusqu'à la redirection (navigate dans useEffect)
+  // → Évite le flash du formulaire entre "user chargé" et "redirection effectuée"
+  // isLoading = chargement initial auth/Firestore (seulement si pas encore d'user)
+  const shouldShowSpinner = (localLoading || (isLoading && !user)) && !hasError;
+
+  if (shouldShowSpinner) {
     return (
       <div
         className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 px-4"

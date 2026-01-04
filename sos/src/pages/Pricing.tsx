@@ -16,8 +16,8 @@ import {
   ArrowRight,
   AlertCircle,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/Layout";
+import { useLocaleNavigate } from "../multilingual-system";
 import SEOHead from "../components/layout/SEOHead";
 import { useApp } from "../contexts/AppContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -71,7 +71,7 @@ const Pricing: React.FC = () => {
   const intl = useIntl();
   const { language } = useApp();
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
 
   const {
     pricing,

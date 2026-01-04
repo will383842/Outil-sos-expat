@@ -4,7 +4,8 @@
  */
 
 import React, { useEffect, useState, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { useLocaleNavigate } from "../../../multilingual-system";
 import { useIntl } from "react-intl";
 import { useApp } from "../../../contexts/AppContext";
 import {
@@ -218,7 +219,7 @@ const PAGE_SIZE = 10;
 export const ConversationHistory: React.FC = () => {
   const intl = useIntl();
   const { language: locale } = useApp();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);

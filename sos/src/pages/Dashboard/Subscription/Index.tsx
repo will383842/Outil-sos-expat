@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useIntl } from 'react-intl';
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../../../multilingual-system';
 import { useApp } from '../../../contexts/AppContext';
 import {
   CreditCard,
@@ -138,7 +138,7 @@ const InvoiceRow: React.FC<InvoiceRowProps> = ({ invoice, locale, intl }) => {
 export const SubscriptionPage: React.FC = () => {
   const intl = useIntl();
   const { language: locale } = useApp();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
 
   const { user } = useAuth();
   const {

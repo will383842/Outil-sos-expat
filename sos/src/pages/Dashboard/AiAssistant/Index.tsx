@@ -10,7 +10,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useIntl } from 'react-intl';
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../../../multilingual-system';
 import { useApp } from '../../../contexts/AppContext';
 import {
   Bot,
@@ -157,7 +157,7 @@ function getTimeAgo(date: Date, locale: string, intl: ReturnType<typeof useIntl>
 export const AiAssistantPage: React.FC = () => {
   const intl = useIntl();
   const { language } = useApp();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const locale = language;
   const { user } = useAuth();
 

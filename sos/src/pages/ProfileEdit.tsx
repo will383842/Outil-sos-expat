@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { useLocaleNavigate } from "../multilingual-system";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { doc, updateDoc, getDoc, getDocs, collection, query, where, Timestamp, serverTimestamp } from "firebase/firestore";
 import { db, auth, storage } from "../config/firebase";
@@ -88,7 +89,7 @@ const UPLOAD_CONFIG = {
 };
 
 const ProfileEdit: React.FC = () => {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const { userId } = useParams<{ userId?: string }>();
   const { user: ctxUser, authInitialized, refreshUser } = useAuth();
   const intl = useIntl();

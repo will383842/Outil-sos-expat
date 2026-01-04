@@ -20,10 +20,10 @@ import React, {
 } from "react";
 import {
   Link,
-  useNavigate,
   useLocation,
   useSearchParams,
 } from "react-router-dom";
+import { useLocaleNavigate } from "../multilingual-system";
 import {
   Mail,
   Lock,
@@ -355,13 +355,13 @@ TrustBadges.displayName = "TrustBadges";
 // =============================================================================
 const RegisterClient: React.FC = () => {
   const intl = useIntl();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get("redirect") || "/dashboard";
   const prefillEmail = searchParams.get("email") || "";
 
-  const { register, loginWithGoogle, isLoading, error, user, authInitialized } = useAuth();
+  const { register, loginWithGoogle, isLoading, error, user, authInitialized, isFullyReady } = useAuth();
   const { language } = useApp();
   const currentLang = (language || "fr") as "fr" | "en" | "es" | "de" | "ru" | "hi" | "pt" | "ch" | "ar";
 
@@ -654,11 +654,12 @@ const RegisterClient: React.FC = () => {
   }, [phoneValue, intl, touched.phone]);
 
   // Redirect if already logged in
+  // ✅ FIX FLASH P0: Utiliser isFullyReady pour s'assurer que tout est chargé
   useEffect(() => {
-    if (authInitialized && user) {
+    if (isFullyReady && user) {
       navigate(redirect, { replace: true });
     }
-  }, [authInitialized, user, navigate, redirect]);
+  }, [isFullyReady, user, navigate, redirect]);
 
   // ===========================================================================
   // VALIDATION

@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useIntl } from 'react-intl';
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../../multilingual-system';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../../config/firebase';
 import { useApp } from '../../contexts/AppContext';
@@ -473,7 +473,7 @@ const PlanCard: React.FC<PlanCardProps> = ({
 
 export const ChoosePlan: React.FC = () => {
   const intl = useIntl();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const { language } = useApp();
   const { user } = useAuth();
   const { subscription, plans, loading: subscriptionLoading, isTrialing } = useSubscription();

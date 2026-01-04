@@ -6,7 +6,8 @@
 
 import React, { ReactNode, useState, useCallback } from 'react';
 import { useIntl } from 'react-intl';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import { useLocaleNavigate } from '../../multilingual-system';
 import {
   User,
   Phone,
@@ -66,7 +67,7 @@ interface DashboardLayoutProps {
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }) => {
   const intl = useIntl();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const location = useLocation();
   const { user, logout, authInitialized } = useAuth();
   const { language } = useApp();

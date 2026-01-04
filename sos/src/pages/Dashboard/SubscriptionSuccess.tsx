@@ -12,7 +12,8 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useIntl } from 'react-intl';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
+import { useLocaleNavigate } from '../../multilingual-system';
 import { httpsCallable } from 'firebase/functions';
 import {
   CheckCircle,
@@ -159,7 +160,7 @@ interface ErrorStateProps {
 
 const ErrorState: React.FC<ErrorStateProps> = ({ error, onRetry }) => {
   const intl = useIntl();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
 
   return (
     <div className="bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center p-4 min-h-[60vh]">
@@ -219,7 +220,7 @@ const ErrorState: React.FC<ErrorStateProps> = ({ error, onRetry }) => {
 export const SubscriptionSuccessPage: React.FC = () => {
   const intl = useIntl();
   const { language: locale } = useApp();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
 

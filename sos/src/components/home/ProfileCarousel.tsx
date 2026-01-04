@@ -1,6 +1,6 @@
 // src/components/home/ProfileCarousel.tsx - VERSION FINALE avec conversion des langues + REST API fallback
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocaleNavigate } from '../../multilingual-system';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { collection, query, where, getDocs, limit as fsLimit, onSnapshot } from 'firebase/firestore';
@@ -33,7 +33,7 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
 }) => {
   const { language } = useApp();
   const { user, isLoading: authLoading } = useAuth();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [onlineProviders, setOnlineProviders] = useState<Provider[]>([]);
   const [visibleProviders, setVisibleProviders] = useState<Provider[]>([]);
   const [isLoading, setIsLoading] = useState(true);

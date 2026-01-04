@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
+import { useSearchParams, useLocation } from "react-router-dom";
+import { useLocaleNavigate } from "../multilingual-system";
 import { Helmet } from "react-helmet-async";
 import {
   Phone,
@@ -2005,7 +2006,7 @@ const SOSCall: React.FC = () => {
   const intl = useIntl();
   const { language, enabledCountries } = useApp();
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const location = useLocation();
 
   // Protection contre le double-clic sur navigation

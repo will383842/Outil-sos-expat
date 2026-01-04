@@ -1,12 +1,12 @@
 // src/pages/HelpArticle.tsx
 import React, { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 import { ChevronLeft, Clock } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import Layout from "../components/layout/Layout";
 import { useApp } from "../contexts/AppContext";
 import { useIntl } from "react-intl";
-import { parseLocaleFromPath, getLocaleString } from "../multilingual-system";
+import { parseLocaleFromPath, getLocaleString, useLocaleNavigate } from "../multilingual-system";
 import {
   listHelpArticles,
   HelpArticle as HelpArticleType,
@@ -95,7 +95,7 @@ const mdToHtml = (md: string): string => {
 
 const HelpArticle: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const location = useLocation();
   const intl = useIntl();
   const { language } = useApp();

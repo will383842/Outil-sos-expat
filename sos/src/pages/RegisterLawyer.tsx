@@ -18,7 +18,8 @@ import React, {
   Suspense,
   useRef,
 } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import { useLocaleNavigate } from "../multilingual-system";
 import {
   Scale,
   Mail,
@@ -615,7 +616,7 @@ FAQSection.displayName = "FAQSection";
 
 const RegisterLawyer: React.FC = () => {
   const intl = useIntl();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get("redirect") || "/dashboard";
   // ✅ FIX: Récupérer l'email depuis les searchParams (passé depuis Login.tsx)
