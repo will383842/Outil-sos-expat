@@ -3,7 +3,6 @@
  * Exports all threshold-related functions
  */
 
-import * as functions from 'firebase-functions/v2';
 import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';

@@ -3,7 +3,7 @@
  * Core business logic for threshold monitoring
  */
 
-import { getFirestore, Timestamp, FieldValue } from 'firebase-admin/firestore';
+import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import {
   ThresholdTracking,
   ThresholdAlert,
@@ -11,9 +11,6 @@ import {
   ThresholdConfig,
   ThresholdStatus,
   ThresholdAlertType,
-  ThresholdCurrency,
-  CustomerType,
-  AlertsSent,
   THRESHOLD_CONFIGS,
   ALERT_THRESHOLDS,
   convertCurrency,

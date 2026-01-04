@@ -609,26 +609,28 @@ export function useFinanceKPIs(dateRange: { from: Date; to: Date }): UseFinanceK
       const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
 
       // Calculate KPIs
+      // P1 FIX: Include 'succeeded' status (Stripe uses this for successful payments)
+      const SUCCESSFUL_STATUSES = ['paid', 'captured', 'succeeded'];
       const totalRevenue = payments
-        .filter(p => p.status === 'paid' || p.status === 'captured')
+        .filter(p => SUCCESSFUL_STATUSES.includes(p.status))
         .reduce((sum, p) => sum + p.amount, 0);
 
       const totalTransactions = payments.length;
       const avgTransactionValue = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
 
-      // Revenue by period
+      // Revenue by period (using SUCCESSFUL_STATUSES defined above)
       const revenueByPeriod = {
         today: payments
-          .filter(p => (p.status === 'paid' || p.status === 'captured') && p.createdAt >= startOfToday)
+          .filter(p => SUCCESSFUL_STATUSES.includes(p.status) && p.createdAt >= startOfToday)
           .reduce((sum, p) => sum + p.amount, 0),
         thisWeek: payments
-          .filter(p => (p.status === 'paid' || p.status === 'captured') && p.createdAt >= startOfWeek)
+          .filter(p => SUCCESSFUL_STATUSES.includes(p.status) && p.createdAt >= startOfWeek)
           .reduce((sum, p) => sum + p.amount, 0),
         thisMonth: payments
-          .filter(p => (p.status === 'paid' || p.status === 'captured') && p.createdAt >= startOfMonth)
+          .filter(p => SUCCESSFUL_STATUSES.includes(p.status) && p.createdAt >= startOfMonth)
           .reduce((sum, p) => sum + p.amount, 0),
         lastMonth: payments
-          .filter(p => (p.status === 'paid' || p.status === 'captured') &&
+          .filter(p => SUCCESSFUL_STATUSES.includes(p.status) &&
             p.createdAt >= startOfLastMonth && p.createdAt <= endOfLastMonth)
           .reduce((sum, p) => sum + p.amount, 0)
       };
@@ -662,9 +664,15 @@ export function useFinanceKPIs(dateRange: { from: Date; to: Date }): UseFinanceK
       // Subscriptions
       const activeSubscriptions = subsSnap.docs.filter(doc => !doc.data()._placeholder);
       const subscriptionsActive = activeSubscriptions.length;
+      // P0 FIX: MRR calculation must account for yearly billing cycles
+      // For yearly subscriptions, divide by 12 to get Monthly Recurring Revenue
       const subscriptionsMRR = activeSubscriptions.reduce((sum, doc) => {
         const data = doc.data();
-        return sum + Number(data.currentPeriodAmount || data.pricePerMonth || 0);
+        const amount = Number(data.currentPeriodAmount || data.pricePerMonth || 0);
+        const billingCycle = data.billingCycle || 'monthly';
+        // If yearly billing, divide by 12 to get monthly equivalent
+        const monthlyAmount = billingCycle === 'yearly' ? amount / 12 : amount;
+        return sum + monthlyAmount;
       }, 0);
 
       // Calculate churn rate: (canceled subscriptions / total at period start) * 100
@@ -675,10 +683,10 @@ export function useFinanceKPIs(dateRange: { from: Date; to: Date }): UseFinanceK
         ? (canceledCount / totalAtPeriodStart) * 100
         : 0;
 
-      // Top countries
+      // Top countries (using SUCCESSFUL_STATUSES)
       const countryRevenue: Record<string, { revenue: number; count: number }> = {};
       payments
-        .filter(p => p.status === 'paid' || p.status === 'captured')
+        .filter(p => SUCCESSFUL_STATUSES.includes(p.status))
         .forEach(p => {
           const country = p.clientCountry || 'Unknown';
           if (!countryRevenue[country]) {
