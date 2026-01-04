@@ -1,14 +1,16 @@
-export type Channel = "email" | "push" | "inapp";
+export type Channel = "email" | "push" | "inapp" | "sms";
 
 export type TemplateEmail = { enabled: boolean; subject: string; html?: string; text?: string };
 export type TemplatePush  = { enabled: boolean; title: string; body: string; deeplink?: string };
 export type TemplateInApp = { enabled: boolean; title: string; body: string };
+export type TemplateSms = { enabled: boolean; text: string };
 
 export type TemplatesByEvent = {
   _meta?: { updatedAt?: string; updatedBy?: string };
   email?: TemplateEmail;
   push?: TemplatePush;
   inapp?: TemplateInApp;
+  sms?: TemplateSms;
 };
 
 export type ChannelConfig = {
