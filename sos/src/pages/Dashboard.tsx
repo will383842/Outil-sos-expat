@@ -205,7 +205,7 @@ type TabType =
   | "favorites"
   | "translations";
 
-type CallStatus = "completed" | "pending" | "in_progress" | "failed";
+type CallStatus = "completed" | "pending" | "in_progress" | "failed" | "scheduled" | "cancelled" | "no_show";
 
 
 
@@ -880,9 +880,28 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
           "px-2 py-1 bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-300 rounded-full text-xs font-medium",
         textId: "status.failed",
       },
+      scheduled: {
+        className:
+          "px-2 py-1 bg-purple-100 text-purple-800 dark:bg-purple-500/15 dark:text-purple-300 rounded-full text-xs font-medium",
+        textId: "status.scheduled",
+      },
+      cancelled: {
+        className:
+          "px-2 py-1 bg-gray-100 text-gray-800 dark:bg-gray-500/15 dark:text-gray-300 rounded-full text-xs font-medium",
+        textId: "status.cancelled",
+      },
+      no_show: {
+        className:
+          "px-2 py-1 bg-orange-100 text-orange-800 dark:bg-orange-500/15 dark:text-orange-300 rounded-full text-xs font-medium",
+        textId: "status.noShow",
+      },
     };
     const config = statusConfig[status];
-    return <span>{intl.formatMessage({ id: config.textId })}</span>;
+    // Fallback pour les status inconnus
+    if (!config) {
+      return <span className="px-2 py-1 bg-gray-100 text-gray-800 dark:bg-gray-500/15 dark:text-gray-300 rounded-full text-xs font-medium">{status}</span>;
+    }
+    return <span className={config.className}>{intl.formatMessage({ id: config.textId })}</span>;
   };
 
   // Palette alignée Home (fallback si rôle non défini)
