@@ -1,6 +1,6 @@
 // src/pages/admin/Finance/ProfitLoss.tsx
 // Profit & Loss Statement (Compte de resultat) - Income and Expenses
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useIntl } from 'react-intl';
 import {
   collection,
@@ -88,13 +88,13 @@ interface DateRange {
 // CONSTANTS
 // =============================================================================
 
-const PERIOD_PRESETS: { label: string; getValue: () => DateRange }[] = [
+const getPeriodPresets = (intl: ReturnType<typeof useIntl>): { label: string; getValue: () => DateRange }[] => [
   {
     label: 'thisMonth',
     getValue: () => {
       const now = new Date();
       return {
-        label: 'Ce mois',
+        label: intl.formatMessage({ id: 'admin.accounting.datePresets.thisMonth', defaultMessage: 'This month' }),
         startDate: new Date(now.getFullYear(), now.getMonth(), 1),
         endDate: now,
       };
@@ -105,7 +105,7 @@ const PERIOD_PRESETS: { label: string; getValue: () => DateRange }[] = [
     getValue: () => {
       const now = new Date();
       return {
-        label: 'Mois dernier',
+        label: intl.formatMessage({ id: 'admin.accounting.datePresets.lastMonth', defaultMessage: 'Last month' }),
         startDate: new Date(now.getFullYear(), now.getMonth() - 1, 1),
         endDate: new Date(now.getFullYear(), now.getMonth(), 0),
       };
@@ -117,7 +117,7 @@ const PERIOD_PRESETS: { label: string; getValue: () => DateRange }[] = [
       const now = new Date();
       const quarterStart = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
       return {
-        label: 'Ce trimestre',
+        label: intl.formatMessage({ id: 'admin.accounting.datePresets.thisQuarter', defaultMessage: 'This quarter' }),
         startDate: quarterStart,
         endDate: now,
       };
@@ -128,7 +128,7 @@ const PERIOD_PRESETS: { label: string; getValue: () => DateRange }[] = [
     getValue: () => {
       const now = new Date();
       return {
-        label: 'Cette annee',
+        label: intl.formatMessage({ id: 'admin.accounting.datePresets.thisYear', defaultMessage: 'This year' }),
         startDate: new Date(now.getFullYear(), 0, 1),
         endDate: now,
       };
@@ -139,7 +139,7 @@ const PERIOD_PRESETS: { label: string; getValue: () => DateRange }[] = [
     getValue: () => {
       const now = new Date();
       return {
-        label: 'Annee derniere',
+        label: intl.formatMessage({ id: 'admin.accounting.datePresets.lastYear', defaultMessage: 'Last year' }),
         startDate: new Date(now.getFullYear() - 1, 0, 1),
         endDate: new Date(now.getFullYear() - 1, 11, 31),
       };
@@ -340,8 +340,9 @@ const Section: React.FC<SectionProps> = ({
 
 const ProfitLoss: React.FC = () => {
   const intl = useIntl();
+  const PERIOD_PRESETS = useMemo(() => getPeriodPresets(intl), [intl]);
   const [loading, setLoading] = useState(true);
-  const [dateRange, setDateRange] = useState<DateRange>(() => PERIOD_PRESETS[3].getValue()); // This year
+  const [dateRange, setDateRange] = useState<DateRange>(() => getPeriodPresets(intl)[3].getValue()); // This year
   const [plData, setPlData] = useState<ProfitLossData | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -694,7 +695,7 @@ const ProfitLoss: React.FC = () => {
                     : 'bg-white border-gray-300 hover:bg-gray-50'
                 }`}
               >
-                Comparer N-1
+                {intl.formatMessage({ id: 'admin.accounting.balanceSheet.compareN1', defaultMessage: 'Compare Y-1' })}
               </button>
 
               {/* Export Buttons */}
@@ -728,7 +729,7 @@ const ProfitLoss: React.FC = () => {
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <div className="flex items-center gap-2 text-green-700 mb-2">
                 <DollarSign size={20} />
-                <span className="font-medium">Chiffre d'Affaires</span>
+                <span className="font-medium">{intl.formatMessage({ id: 'admin.accounting.profitLoss.revenue', defaultMessage: 'Revenue' })}</span>
               </div>
               <p className="text-2xl font-bold text-green-900">
                 {formatCurrency(plData.revenue.total)}
@@ -750,7 +751,7 @@ const ProfitLoss: React.FC = () => {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-center gap-2 text-blue-700 mb-2">
                 <Percent size={20} />
-                <span className="font-medium">Marge Brute</span>
+                <span className="font-medium">{intl.formatMessage({ id: 'admin.accounting.profitLoss.grossMargin', defaultMessage: 'Gross Margin' })}</span>
               </div>
               <p className="text-2xl font-bold text-blue-900">
                 {formatPercent(plData.grossMargin)}
@@ -763,7 +764,7 @@ const ProfitLoss: React.FC = () => {
             <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
               <div className="flex items-center gap-2 text-purple-700 mb-2">
                 <Receipt size={20} />
-                <span className="font-medium">Resultat Exploitation</span>
+                <span className="font-medium">{intl.formatMessage({ id: 'admin.accounting.profitLoss.operatingProfit', defaultMessage: 'Operating Profit' })}</span>
               </div>
               <p className={`text-2xl font-bold ${plData.operatingIncome >= 0 ? 'text-purple-900' : 'text-red-600'}`}>
                 {formatCurrency(plData.operatingIncome)}
@@ -776,7 +777,7 @@ const ProfitLoss: React.FC = () => {
             <div className={`${plData.netIncome >= 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'} border rounded-lg p-4`}>
               <div className={`flex items-center gap-2 ${plData.netIncome >= 0 ? 'text-emerald-700' : 'text-red-700'} mb-2`}>
                 {plData.netIncome >= 0 ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
-                <span className="font-medium">Resultat Net</span>
+                <span className="font-medium">{intl.formatMessage({ id: 'admin.accounting.profitLoss.netProfit', defaultMessage: 'Net Profit' })}</span>
               </div>
               <p className={`text-2xl font-bold ${plData.netIncome >= 0 ? 'text-emerald-900' : 'text-red-600'}`}>
                 {formatCurrency(plData.netIncome)}
@@ -891,8 +892,8 @@ const ProfitLoss: React.FC = () => {
 
         {/* Company Footer */}
         <div className="mt-8 pt-6 border-t border-gray-200 text-center text-sm text-gray-500">
-          <p>SOS-Expat OU - Registre du Commerce d'Estonie</p>
-          <p>Exercice: {formatPeriod(dateRange.startDate, dateRange.endDate)}</p>
+          <p>{intl.formatMessage({ id: 'admin.accounting.company', defaultMessage: 'SOS-Expat OÜ - Estonian Commercial Register' })}</p>
+          <p>{intl.formatMessage({ id: 'admin.accounting.period', defaultMessage: 'Period: {start} - {end}' }, { start: formatDate(dateRange.startDate), end: formatDate(dateRange.endDate) })}</p>
         </div>
       </div>
     </AdminLayout>

@@ -1,6 +1,6 @@
 // src/pages/admin/Finance/CashFlow.tsx
 // Cash Flow Statement (Tableau des flux de tresorerie)
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useIntl } from 'react-intl';
 import {
   collection,
@@ -72,13 +72,13 @@ interface DateRange {
 // CONSTANTS
 // =============================================================================
 
-const PERIOD_PRESETS: { label: string; getValue: () => DateRange }[] = [
+const getPeriodPresets = (intl: ReturnType<typeof useIntl>): { label: string; getValue: () => DateRange }[] => [
   {
     label: 'thisMonth',
     getValue: () => {
       const now = new Date();
       return {
-        label: 'Ce mois',
+        label: intl.formatMessage({ id: 'admin.accounting.datePresets.thisMonth', defaultMessage: 'This month' }),
         startDate: new Date(now.getFullYear(), now.getMonth(), 1),
         endDate: now,
       };
@@ -89,7 +89,7 @@ const PERIOD_PRESETS: { label: string; getValue: () => DateRange }[] = [
     getValue: () => {
       const now = new Date();
       return {
-        label: 'Mois dernier',
+        label: intl.formatMessage({ id: 'admin.accounting.datePresets.lastMonth', defaultMessage: 'Last month' }),
         startDate: new Date(now.getFullYear(), now.getMonth() - 1, 1),
         endDate: new Date(now.getFullYear(), now.getMonth(), 0),
       };
@@ -101,7 +101,7 @@ const PERIOD_PRESETS: { label: string; getValue: () => DateRange }[] = [
       const now = new Date();
       const quarterStart = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
       return {
-        label: 'Ce trimestre',
+        label: intl.formatMessage({ id: 'admin.accounting.datePresets.thisQuarter', defaultMessage: 'This quarter' }),
         startDate: quarterStart,
         endDate: now,
       };
@@ -112,7 +112,7 @@ const PERIOD_PRESETS: { label: string; getValue: () => DateRange }[] = [
     getValue: () => {
       const now = new Date();
       return {
-        label: 'Cette annee',
+        label: intl.formatMessage({ id: 'admin.accounting.datePresets.thisYear', defaultMessage: 'This year' }),
         startDate: new Date(now.getFullYear(), 0, 1),
         endDate: now,
       };
@@ -123,7 +123,7 @@ const PERIOD_PRESETS: { label: string; getValue: () => DateRange }[] = [
     getValue: () => {
       const now = new Date();
       return {
-        label: 'Annee derniere',
+        label: intl.formatMessage({ id: 'admin.accounting.datePresets.lastYear', defaultMessage: 'Last year' }),
         startDate: new Date(now.getFullYear() - 1, 0, 1),
         endDate: new Date(now.getFullYear() - 1, 11, 31),
       };
@@ -303,8 +303,9 @@ const SectionCard: React.FC<SectionCardProps> = ({ section, icon, color, showCom
 
 const CashFlow: React.FC = () => {
   const intl = useIntl();
+  const PERIOD_PRESETS = useMemo(() => getPeriodPresets(intl), [intl]);
   const [loading, setLoading] = useState(true);
-  const [dateRange, setDateRange] = useState<DateRange>(() => PERIOD_PRESETS[3].getValue()); // This year
+  const [dateRange, setDateRange] = useState<DateRange>(() => getPeriodPresets(intl)[3].getValue()); // This year
   const [cashFlowData, setCashFlowData] = useState<CashFlowData | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showComparison, setShowComparison] = useState(false);

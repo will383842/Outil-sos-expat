@@ -77,13 +77,13 @@ interface DateRange {
 // CONSTANTS
 // =============================================================================
 
-const DATE_PRESETS: { label: string; getValue: () => DateRange }[] = [
+const getDatePresets = (intl: ReturnType<typeof useIntl>): { label: string; getValue: () => DateRange }[] => [
   {
     label: 'today',
     getValue: () => {
       const now = new Date();
       return {
-        label: 'Aujourd\'hui',
+        label: intl.formatMessage({ id: 'admin.accounting.datePresets.today', defaultMessage: 'Today' }),
         startDate: new Date(now.getFullYear(), 0, 1),
         endDate: now,
       };
@@ -96,7 +96,7 @@ const DATE_PRESETS: { label: string; getValue: () => DateRange }[] = [
       const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
       return {
-        label: 'Mois dernier',
+        label: intl.formatMessage({ id: 'admin.accounting.datePresets.lastMonth', defaultMessage: 'Last month' }),
         startDate: new Date(lastMonth.getFullYear(), 0, 1),
         endDate: endOfLastMonth,
       };
@@ -109,7 +109,7 @@ const DATE_PRESETS: { label: string; getValue: () => DateRange }[] = [
       const currentQuarter = Math.floor(now.getMonth() / 3);
       const lastQuarterEnd = new Date(now.getFullYear(), currentQuarter * 3, 0);
       return {
-        label: 'Trimestre dernier',
+        label: intl.formatMessage({ id: 'admin.accounting.datePresets.lastQuarter', defaultMessage: 'Last quarter' }),
         startDate: new Date(lastQuarterEnd.getFullYear(), 0, 1),
         endDate: lastQuarterEnd,
       };
@@ -120,7 +120,7 @@ const DATE_PRESETS: { label: string; getValue: () => DateRange }[] = [
     getValue: () => {
       const now = new Date();
       return {
-        label: 'Annee derniere',
+        label: intl.formatMessage({ id: 'admin.accounting.datePresets.lastYear', defaultMessage: 'Last year' }),
         startDate: new Date(now.getFullYear() - 1, 0, 1),
         endDate: new Date(now.getFullYear() - 1, 11, 31),
       };
@@ -260,8 +260,9 @@ const Section: React.FC<SectionProps> = ({
 
 const BalanceSheet: React.FC = () => {
   const intl = useIntl();
+  const DATE_PRESETS = useMemo(() => getDatePresets(intl), [intl]);
   const [loading, setLoading] = useState(true);
-  const [dateRange, setDateRange] = useState<DateRange>(() => DATE_PRESETS[0].getValue());
+  const [dateRange, setDateRange] = useState<DateRange>(() => getDatePresets(intl)[0].getValue());
   const [balanceData, setBalanceData] = useState<BalanceSheetData | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -551,7 +552,7 @@ const BalanceSheet: React.FC = () => {
                 {intl.formatMessage({ id: 'admin.finance.balanceSheet', defaultMessage: 'Bilan' })}
               </h1>
               <p className="text-gray-500 mt-1">
-                Au {formatDate(dateRange.endDate)}
+                {intl.formatMessage({ id: 'admin.accounting.asOf', defaultMessage: 'As of {date}' }, { date: formatDate(dateRange.endDate) })}
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -592,7 +593,7 @@ const BalanceSheet: React.FC = () => {
                     : 'bg-white border-gray-300 hover:bg-gray-50'
                 }`}
               >
-                Comparer N-1
+                {intl.formatMessage({ id: 'admin.accounting.balanceSheet.compareN1', defaultMessage: 'Compare Y-1' })}
               </button>
 
               {/* Export Buttons */}
@@ -625,9 +626,9 @@ const BalanceSheet: React.FC = () => {
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
             <AlertTriangle className="text-red-600" size={24} />
             <div>
-              <p className="font-medium text-red-800">Bilan non equilibre</p>
+              <p className="font-medium text-red-800">{intl.formatMessage({ id: 'admin.accounting.balanceSheet.unbalanced', defaultMessage: 'Unbalanced' })}</p>
               <p className="text-red-600 text-sm">
-                Difference: {formatCurrency(balanceData.balanceDifference)}
+                {intl.formatMessage({ id: 'admin.accounting.balanceSheet.difference', defaultMessage: 'Difference' })}: {formatCurrency(balanceData.balanceDifference)}
               </p>
             </div>
           </div>
@@ -639,7 +640,7 @@ const BalanceSheet: React.FC = () => {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-center gap-2 text-blue-700 mb-2">
                 <Wallet size={20} />
-                <span className="font-medium">Total Actifs</span>
+                <span className="font-medium">{intl.formatMessage({ id: 'admin.accounting.balanceSheet.totalAssets', defaultMessage: 'Total Assets' })}</span>
               </div>
               <p className="text-2xl font-bold text-blue-900">
                 {formatCurrency(balanceData.assets.total)}
@@ -654,7 +655,7 @@ const BalanceSheet: React.FC = () => {
                   <span className={balanceData.assets.total >= comparisonData.assets.total ? 'text-green-600' : 'text-red-600'}>
                     {((balanceData.assets.total - comparisonData.assets.total) / comparisonData.assets.total * 100).toFixed(1)}%
                   </span>
-                  <span className="text-gray-500">vs N-1</span>
+                  <span className="text-gray-500">{intl.formatMessage({ id: 'admin.accounting.balanceSheet.vsN1', defaultMessage: 'vs Y-1' })}</span>
                 </div>
               )}
             </div>
@@ -662,7 +663,7 @@ const BalanceSheet: React.FC = () => {
             <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
               <div className="flex items-center gap-2 text-orange-700 mb-2">
                 <CreditCard size={20} />
-                <span className="font-medium">Total Passifs</span>
+                <span className="font-medium">{intl.formatMessage({ id: 'admin.accounting.balanceSheet.totalLiabilities', defaultMessage: 'Total Liabilities' })}</span>
               </div>
               <p className="text-2xl font-bold text-orange-900">
                 {formatCurrency(balanceData.liabilities.total)}
@@ -672,7 +673,7 @@ const BalanceSheet: React.FC = () => {
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <div className="flex items-center gap-2 text-green-700 mb-2">
                 <PiggyBank size={20} />
-                <span className="font-medium">Capitaux Propres</span>
+                <span className="font-medium">{intl.formatMessage({ id: 'admin.accounting.balanceSheet.equity', defaultMessage: 'Equity' })}</span>
               </div>
               <p className="text-2xl font-bold text-green-900">
                 {formatCurrency(balanceData.equity.total)}
@@ -682,10 +683,10 @@ const BalanceSheet: React.FC = () => {
             <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
               <div className="flex items-center gap-2 text-purple-700 mb-2">
                 <Building2 size={20} />
-                <span className="font-medium">Equilibre</span>
+                <span className="font-medium">{intl.formatMessage({ id: 'admin.accounting.balanceSheet.balance', defaultMessage: 'Balance' })}</span>
               </div>
               <p className={`text-2xl font-bold ${balanceData.isBalanced ? 'text-green-600' : 'text-red-600'}`}>
-                {balanceData.isBalanced ? 'OK' : 'Erreur'}
+                {balanceData.isBalanced ? intl.formatMessage({ id: 'admin.accounting.balanceSheet.ok', defaultMessage: 'OK' }) : intl.formatMessage({ id: 'admin.accounting.balanceSheet.error', defaultMessage: 'Error' })}
               </p>
             </div>
           </div>
@@ -697,7 +698,7 @@ const BalanceSheet: React.FC = () => {
             {/* Left Column - Assets */}
             <div>
               <Section
-                title="Actifs Courants"
+                title={intl.formatMessage({ id: 'admin.accounting.balanceSheet.currentAssets', defaultMessage: 'Current Assets' })}
                 icon={<Wallet size={20} className="text-blue-600" />}
                 balances={balanceData.assets.current}
                 total={balanceData.assets.totalCurrent}
@@ -707,7 +708,7 @@ const BalanceSheet: React.FC = () => {
               />
 
               <Section
-                title="Actifs Non Courants"
+                title={intl.formatMessage({ id: 'admin.accounting.balanceSheet.nonCurrentAssets', defaultMessage: 'Non-Current Assets' })}
                 icon={<Building2 size={20} className="text-blue-600" />}
                 balances={balanceData.assets.nonCurrent}
                 total={balanceData.assets.totalNonCurrent}
@@ -718,7 +719,7 @@ const BalanceSheet: React.FC = () => {
 
               {/* Total Assets */}
               <div className="bg-blue-600 text-white px-4 py-3 rounded-lg flex justify-between items-center">
-                <span className="font-bold">TOTAL ACTIFS</span>
+                <span className="font-bold">{intl.formatMessage({ id: 'admin.accounting.balanceSheet.totalAssets', defaultMessage: 'Total Assets' }).toUpperCase()}</span>
                 <span className="text-xl font-bold">{formatCurrency(balanceData.assets.total)}</span>
               </div>
             </div>
@@ -726,7 +727,7 @@ const BalanceSheet: React.FC = () => {
             {/* Right Column - Liabilities & Equity */}
             <div>
               <Section
-                title="Passifs Courants"
+                title={intl.formatMessage({ id: 'admin.accounting.balanceSheet.currentLiabilities', defaultMessage: 'Current Liabilities' })}
                 icon={<CreditCard size={20} className="text-orange-600" />}
                 balances={balanceData.liabilities.current}
                 total={balanceData.liabilities.totalCurrent}
@@ -736,7 +737,7 @@ const BalanceSheet: React.FC = () => {
               />
 
               <Section
-                title="Passifs Non Courants"
+                title={intl.formatMessage({ id: 'admin.accounting.balanceSheet.nonCurrentLiabilities', defaultMessage: 'Non-Current Liabilities' })}
                 icon={<CreditCard size={20} className="text-orange-600" />}
                 balances={balanceData.liabilities.nonCurrent}
                 total={balanceData.liabilities.totalNonCurrent}
@@ -746,7 +747,7 @@ const BalanceSheet: React.FC = () => {
               />
 
               <Section
-                title="Capitaux Propres"
+                title={intl.formatMessage({ id: 'admin.accounting.balanceSheet.equity', defaultMessage: 'Equity' })}
                 icon={<PiggyBank size={20} className="text-green-600" />}
                 balances={balanceData.equity.items}
                 total={balanceData.equity.total}
@@ -757,7 +758,7 @@ const BalanceSheet: React.FC = () => {
 
               {/* Total Liabilities + Equity */}
               <div className="bg-gray-800 text-white px-4 py-3 rounded-lg flex justify-between items-center">
-                <span className="font-bold">TOTAL PASSIFS + CAPITAUX PROPRES</span>
+                <span className="font-bold">{intl.formatMessage({ id: 'admin.accounting.balanceSheet.totalLiabilitiesEquity', defaultMessage: 'Total Liabilities + Equity' }).toUpperCase()}</span>
                 <span className="text-xl font-bold">{formatCurrency(balanceData.totalLiabilitiesAndEquity)}</span>
               </div>
             </div>
@@ -766,8 +767,8 @@ const BalanceSheet: React.FC = () => {
 
         {/* Company Info Footer */}
         <div className="mt-8 pt-6 border-t border-gray-200 text-center text-sm text-gray-500">
-          <p>SOS-Expat OU - Registre du Commerce d'Estonie</p>
-          <p>Devise comptable: EUR</p>
+          <p>{intl.formatMessage({ id: 'admin.accounting.company', defaultMessage: 'SOS-Expat OÜ - Estonian Commercial Register' })}</p>
+          <p>{intl.formatMessage({ id: 'admin.accounting.accountingCurrency', defaultMessage: 'Accounting currency: EUR' })}</p>
         </div>
       </div>
     </AdminLayout>
