@@ -1108,6 +1108,7 @@ export class PayPalManager {
         }
       }
     }
+    } // Fin du bloc if (isSimpleFlow && providerAmount > 0)
 
     // Mettre à jour l'ordre avec les détails de capture
     await this.db.collection("paypal_orders").doc(orderId).update({
