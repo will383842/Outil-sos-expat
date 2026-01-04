@@ -110,6 +110,7 @@ const AdminThresholds = lazy(() => import("../../pages/admin/Finance/Thresholds"
 const AdminBalanceSheet = lazy(() => import("../../pages/admin/Finance/BalanceSheet"));
 const AdminProfitLoss = lazy(() => import("../../pages/admin/Finance/ProfitLoss"));
 const AdminCashFlow = lazy(() => import("../../pages/admin/Finance/CashFlow"));
+const AdminEscrow = lazy(() => import("../../pages/admin/Finance/Escrow"));
 
 // ===== LAZY IMPORTS - USERS & PROVIDERS =====
 const AdminUsers = lazy(() => import("../../pages/admin/AdminUsers"));
@@ -546,6 +547,14 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminFinancePayouts />
+          </Suspense>
+        }
+      />
+      <Route
+        path="finance/escrow"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminEscrow />
           </Suspense>
         }
       />

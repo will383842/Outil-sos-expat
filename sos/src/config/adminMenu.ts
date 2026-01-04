@@ -270,6 +270,14 @@ export const adminMenuTree: AdminMenuItem[] = [
             description: "Virements aux avocats/expatriés",
           },
           {
+            id: "escrow",
+            label: "Fonds en Transit",
+            path: "/admin/finance/escrow",
+            icon: Shield,
+            badge: "NEW",
+            description: "Paiements en attente KYC provider",
+          },
+          {
             id: "taxes",
             label: "TVA & Déclarations",
             path: "/admin/finance/taxes",
