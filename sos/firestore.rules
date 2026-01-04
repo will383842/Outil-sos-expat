@@ -467,6 +467,14 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ================= OUTIL IA SYNC RETRY QUEUE (P0-4 FIX) =================
+    match /outil_sync_retry_queue/{bookingId} {
+      // Only admins can read (for monitoring)
+      allow read: if isAuthenticated() && isAdmin();
+      // Only Cloud Functions can write (via Admin SDK)
+      allow write: if false;
+    }
+
     // ================= PAYPAL REMINDERS LOG =================
     match /paypal_reminders_log/{logId} {
       // Only admins can read reminder logs

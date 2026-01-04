@@ -10,13 +10,14 @@ export async function getRouting(eventId: string): Promise<RoutingPerEvent> {
   const eventRouting = routing[eventId];
   
   if (!eventRouting) {
-    // Configuration par défaut (SMS/WhatsApp supprimés)
+    // Configuration par défaut
     return {
       strategy: 'parallel',
       channels: {
         email: { enabled: true, provider: 'zoho', rateLimitH: 0, retries: 1, delaySec: 0 },
         push: { enabled: false, provider: 'fcm', rateLimitH: 0, retries: 1, delaySec: 0 },
-        inapp: { enabled: false, provider: 'firestore', rateLimitH: 0, retries: 1, delaySec: 0 }
+        inapp: { enabled: false, provider: 'firestore', rateLimitH: 0, retries: 1, delaySec: 0 },
+        sms: { enabled: false, provider: 'twilio', rateLimitH: 0, retries: 1, delaySec: 0 }
       }
     };
   }
@@ -49,6 +50,13 @@ export async function getRouting(eventId: string): Promise<RoutingPerEvent> {
       inapp: {
         enabled: oldChannels.includes("inapp"),
         provider: "firestore",
+        rateLimitH: rateLimitH,
+        retries: 1,
+        delaySec: 0
+      },
+      sms: {
+        enabled: oldChannels.includes("sms"),
+        provider: "twilio",
         rateLimitH: rateLimitH,
         retries: 1,
         delaySec: 0

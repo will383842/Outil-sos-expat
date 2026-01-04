@@ -1495,6 +1495,17 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           throw new Error(t("err.invalidPhone"));
         }
 
+        // P0-2 FIX: Valider le téléphone du PRESTATAIRE avant le paiement
+        // Si le prestataire n'a pas de numéro valide, l'appel Twilio échouera
+        const providerPhoneForValidation = toE164(
+          provider.phoneNumber || provider.phone || ""
+        );
+        if (!/^\+[1-9]\d{8,14}$/.test(providerPhoneForValidation)) {
+          console.error("[P0-2] Provider phone invalid:", providerPhoneForValidation);
+          onError(t("checkout.err.providerPhoneInvalid") || "Le prestataire n'a pas de numéro de téléphone valide. Veuillez contacter le support.");
+          throw new Error("Provider phone invalid");
+        }
+
         const createPaymentIntent: HttpsCallable<
           PaymentIntentData,
           PaymentIntentResponse

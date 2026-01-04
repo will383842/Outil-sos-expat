@@ -18,8 +18,10 @@
  */
 
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
+import { onSchedule } from "firebase-functions/v2/scheduler";
 import { defineSecret } from "firebase-functions/params";
 import { logger } from "firebase-functions";
+import * as admin from "firebase-admin";
 
 // Secret pour l'authentification avec Outil-sos-expat
 const OUTIL_SYNC_API_KEY = defineSecret("OUTIL_SYNC_API_KEY");
@@ -240,12 +242,123 @@ export const onBookingRequestCreated = onDocumentCreated(
 
     if (!result.ok) {
       logger.error("[onBookingRequestCreated] Échec sync pour:", bookingId, result.error);
-      // TODO: Ajouter à une queue de retry ou marquer le booking
+      // P0-4 FIX: Ajouter à la queue de retry
+      await addToRetryQueue(bookingId, payload, result.error || "Unknown error");
     } else {
       logger.info("[onBookingRequestCreated] Booking synchronisé:", {
         sosBookingId: bookingId,
         outilBookingId: result.bookingId,
       });
+    }
+  }
+);
+
+// =============================================================================
+// P0-4 FIX: RETRY MECHANISM FOR FAILED SYNCS
+// =============================================================================
+
+const MAX_RETRIES = 3;
+const RETRY_COLLECTION = "outil_sync_retry_queue";
+
+/**
+ * Ajoute un booking échoué à la queue de retry
+ */
+async function addToRetryQueue(
+  bookingId: string,
+  payload: OutilBookingPayload,
+  error: string
+): Promise<void> {
+  try {
+    const db = admin.firestore();
+    await db.collection(RETRY_COLLECTION).doc(bookingId).set({
+      bookingId,
+      payload,
+      error,
+      retryCount: 0,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      nextRetryAt: admin.firestore.FieldValue.serverTimestamp(),
+      status: "pending",
+    });
+    logger.info("[addToRetryQueue] Booking ajouté à la queue de retry:", bookingId);
+  } catch (err) {
+    logger.error("[addToRetryQueue] Erreur:", err);
+  }
+}
+
+/**
+ * Fonction planifiée pour réessayer les syncs échouées
+ * S'exécute toutes les 10 minutes
+ */
+export const retryOutilSync = onSchedule(
+  {
+    schedule: "every 10 minutes",
+    region: "europe-west1",
+    secrets: [OUTIL_SYNC_API_KEY],
+    timeoutSeconds: 120,
+  },
+  async () => {
+    const db = admin.firestore();
+    const now = admin.firestore.Timestamp.now();
+
+    // Récupérer les bookings en attente de retry
+    const pendingRetries = await db
+      .collection(RETRY_COLLECTION)
+      .where("status", "==", "pending")
+      .where("retryCount", "<", MAX_RETRIES)
+      .where("nextRetryAt", "<=", now)
+      .limit(10)
+      .get();
+
+    if (pendingRetries.empty) {
+      logger.info("[retryOutilSync] Pas de retry en attente");
+      return;
+    }
+
+    logger.info("[retryOutilSync] Traitement de", pendingRetries.size, "retries");
+
+    for (const doc of pendingRetries.docs) {
+      const data = doc.data();
+      const bookingId = data.bookingId;
+      const payload = data.payload as OutilBookingPayload;
+      const retryCount = data.retryCount || 0;
+
+      logger.info("[retryOutilSync] Retry #" + (retryCount + 1) + " pour:", bookingId);
+
+      const result = await syncToOutil(payload);
+
+      if (result.ok) {
+        // Succès: marquer comme terminé
+        await doc.ref.update({
+          status: "completed",
+          completedAt: admin.firestore.FieldValue.serverTimestamp(),
+          outilBookingId: result.bookingId,
+        });
+        logger.info("[retryOutilSync] ✅ Retry réussi pour:", bookingId);
+      } else {
+        const newRetryCount = retryCount + 1;
+
+        if (newRetryCount >= MAX_RETRIES) {
+          // Max retries atteint: marquer comme échoué définitivement
+          await doc.ref.update({
+            status: "failed",
+            failedAt: admin.firestore.FieldValue.serverTimestamp(),
+            lastError: result.error,
+            retryCount: newRetryCount,
+          });
+          logger.error("[retryOutilSync] ❌ Max retries atteint pour:", bookingId);
+        } else {
+          // Planifier le prochain retry avec backoff exponentiel
+          const backoffMinutes = Math.pow(2, newRetryCount) * 5; // 5, 10, 20 minutes
+          const nextRetryAt = new Date(Date.now() + backoffMinutes * 60 * 1000);
+
+          await doc.ref.update({
+            retryCount: newRetryCount,
+            nextRetryAt: admin.firestore.Timestamp.fromDate(nextRetryAt),
+            lastError: result.error,
+          });
+          logger.warn("[retryOutilSync] Retry planifié dans", backoffMinutes, "min pour:", bookingId);
+        }
+      }
     }
   }
 );

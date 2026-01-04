@@ -1266,7 +1266,6 @@ export const stripeWebhook = onRequest(
 
       const signature = req.headers["stripe-signature"];
       console.log("🔑 Stripe signature present:", !!signature);
-      console.log("🔑 Signature preview:", signature?.slice(0, 30) + "...");
 
       if (!signature) {
         console.log("❌ STRIPE WEBHOOK ERROR: Missing signature");
@@ -1319,9 +1318,9 @@ export const stripeWebhook = onRequest(
             res.status(500).send("Invalid webhook secret configuration");
             return;
           }
-          console.log("🔐 Webhook secret validated (length:", webhookSecret.length, ")");
+          console.log("🔐 Webhook secret format validated");
         } catch (secretError) {
-          console.log("❌ Secret retrieval error:", secretError);
+          console.log("❌ Secret retrieval error");
           res.status(500).send("Secret configuration error");
           return;
         }
@@ -1340,8 +1339,7 @@ export const stripeWebhook = onRequest(
           const bodyString = rawBodyBuffer.toString("utf8");
           console.log("🔄 Body string length:", bodyString.length);
           console.log("🔄 Body string preview:", bodyString.slice(0, 200));
-          console.log("🔄 Using signature:", signature.slice(0, 50) + "...");
-          console.log("🔄 Using secret length:", webhookSecret.length);
+          console.log("🔄 Verifying webhook signature...");
 
           event = stripeInstance.webhooks.constructEvent(
             bodyString,
@@ -1375,9 +1373,7 @@ export const stripeWebhook = onRequest(
           );
 
           console.log("💥 Body length:", rawBodyBuffer.length);
-          console.log("💥 Signature length:", signature.length);
-          console.log("💥 Secret length:", webhookSecret.length);
-          console.log("💥 Secret preview:", webhookSecret.slice(0, 15) + "...");
+          // P0-3 SECURITY FIX: Ne jamais logger les secrets ou signatures
 
           res
             .status(400)
@@ -3998,7 +3994,7 @@ export { onProviderCreated } from './triggers/onProviderCreated';
 export { onUserCreatedSyncClaims, onUserUpdatedSyncClaims } from './triggers/syncRoleClaims';
 
 // ========== SYNC BOOKINGS TO OUTIL-SOS-EXPAT (AI TRIGGER) ==========
-export { onBookingRequestCreated } from './triggers/syncBookingsToOutil';
+export { onBookingRequestCreated, retryOutilSync } from './triggers/syncBookingsToOutil';
 
 // ========== REVERSE SYNC: RECEIVE UPDATES FROM OUTIL-SOS-EXPAT ==========
 export { syncFromOutil } from './triggers/syncFromOutil';
