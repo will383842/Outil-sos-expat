@@ -301,10 +301,10 @@
       "email": {
         "subject": "Oops — payment failed",
         "html": "<p>It happens. Try another card or ping support — we've got you 💬</p><p><a href='{{webappUrl}}/checkout/{{request.id}}'>Try again</a></p>",
-        "text": "Payment failed for "{{request.title}}". Try again: {{webappUrl}}/checkout/{{request.id}}"
+        "text": "Payment failed for «{{request.title}}». Try again: {{webappUrl}}/checkout/{{request.id}}"
       },
       "sms": {
-        "text": "⚠️ Payment failed for "{{request.title}}". Try again: {{webappUrl}}/checkout/{{request.id}}"
+        "text": "Payment failed for «{{request.title}}». Try again: {{webappUrl}}/checkout/{{request.id}}"
       },
       "inapp": {
         "title": "Payment failed 😕",
@@ -312,6 +312,74 @@
         "action": {
           "label": "Retry",
           "deeplink": "/checkout/{{request.id}}"
+        }
+      }
+    },
+    {
+      "id": "call.scheduled.client",
+      "roles": [
+        "client"
+      ],
+      "channels": {
+        "email": true,
+        "sms": true,
+        "push": true,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "email": {
+        "subject": "Call scheduled — {{title}}",
+        "html": "<p>Your call with {{providerName}} is confirmed!</p><p><strong>Topic:</strong> {{title}}</p><p><strong>Time:</strong> {{scheduledTime}}</p><p>You will receive an automated call.</p>",
+        "text": "Call confirmed with {{providerName}} for «{{title}}». Time: {{scheduledTime}}"
+      },
+      "sms": {
+        "text": "SOS Expat: Call confirmed with {{providerName}} for «{{title}}». You will be called at {{scheduledTime}}."
+      },
+      "push": {
+        "title": "Call scheduled ✅",
+        "body": "Call with {{providerName}} confirmed",
+        "deeplink": "sos-expat://calls"
+      },
+      "inapp": {
+        "title": "Call scheduled",
+        "body": "Your call with {{providerName}} for «{{title}}» is confirmed",
+        "action": {
+          "label": "View",
+          "deeplink": "/calls"
+        }
+      }
+    },
+    {
+      "id": "call.scheduled.provider",
+      "roles": [
+        "provider"
+      ],
+      "channels": {
+        "email": true,
+        "sms": true,
+        "push": true,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "email": {
+        "subject": "New client call — {{title}}",
+        "html": "<p>A client has booked you!</p><p><strong>Client:</strong> {{clientName}}</p><p><strong>Topic:</strong> {{title}}</p><p><strong>Time:</strong> {{scheduledTime}}</p><p>You will receive an automated call.</p>",
+        "text": "New client: {{clientName}}\nTopic: {{title}}\nTime: {{scheduledTime}}"
+      },
+      "sms": {
+        "text": "SOS Expat: New client {{clientName}} for «{{title}}». Call scheduled at {{scheduledTime}}."
+      },
+      "push": {
+        "title": "New client 🔔",
+        "body": "{{clientName}} - {{title}}",
+        "deeplink": "sos-expat://provider/dashboard"
+      },
+      "inapp": {
+        "title": "New client",
+        "body": "{{clientName}} booked you for: {{title}}",
+        "action": {
+          "label": "View",
+          "deeplink": "/provider/dashboard"
         }
       }
     },

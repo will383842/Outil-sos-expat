@@ -93,44 +93,88 @@ export async function scheduleCallTask(
   callSessionId: string,
   delaySeconds: number
 ): Promise<string> {
+  const debugId = `task_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
+  const startTime = Date.now();
+
+  console.log(`\n`);
+  console.log(`=======================================================================`);
+  console.log(`📋 [CloudTasks][${debugId}] ========== SCHEDULE CALL TASK ==========`);
+  console.log(`=======================================================================`);
+  console.log(`📋 [CloudTasks][${debugId}] CallSessionId: ${callSessionId}`);
+  console.log(`📋 [CloudTasks][${debugId}] DelaySeconds: ${delaySeconds}`);
+  console.log(`📋 [CloudTasks][${debugId}] Timestamp: ${new Date().toISOString()}`);
+
   prodLogger.info('CLOUD_TASKS_SCHEDULE_START', `Scheduling call task for session ${callSessionId}`, {
     callSessionId,
-    delaySeconds
+    delaySeconds,
+    debugId
   });
 
   try {
+    // STEP 1: Get Cloud Tasks client
+    console.log(`\n📋 [CloudTasks][${debugId}] STEP 1: Getting Cloud Tasks client...`);
     const client = getTasksClient();
-    const cfg = getTasksConfig();
+    console.log(`✅ [CloudTasks][${debugId}] Client obtained`);
 
+    // STEP 2: Get configuration
+    console.log(`\n📋 [CloudTasks][${debugId}] STEP 2: Getting configuration...`);
+    const cfg = getTasksConfig();
+    console.log(`📋 [CloudTasks][${debugId}] Config:`, JSON.stringify({
+      projectId: cfg.projectId,
+      location: cfg.location,
+      queueName: cfg.queueName,
+      callbackBaseUrl: cfg.callbackBaseUrl,
+      functionName: cfg.functionName
+    }, null, 2));
+
+    // STEP 3: Build queue path
+    console.log(`\n📋 [CloudTasks][${debugId}] STEP 3: Building queue path...`);
     const queuePath = client.queuePath(cfg.projectId, cfg.location, cfg.queueName);
+    console.log(`📋 [CloudTasks][${debugId}] Queue path: ${queuePath}`);
 
     // ID unique et stable
     const taskId = `call-${callSessionId}-${Date.now()}`;
+    console.log(`📋 [CloudTasks][${debugId}] Task ID: ${taskId}`);
 
-    // URL complète de callback
+    // URL complète de callback (not used but logged for reference)
     const callbackUrl = `${cfg.callbackBaseUrl}/${cfg.functionName}`;
-    console.log(`📋 [CloudTasks] URL de callback: ${callbackUrl}`);
+    console.log(`📋 [CloudTasks][${debugId}] Computed callback URL: ${callbackUrl}`);
 
     // Horodatage d'exécution
     const scheduleTime = new Date();
     scheduleTime.setSeconds(scheduleTime.getSeconds() + delaySeconds);
+    console.log(`📋 [CloudTasks][${debugId}] Schedule time: ${scheduleTime.toISOString()}`);
 
     // Corps de requête
     const payload: TaskPayload = {
       callSessionId,
       scheduledAt: new Date().toISOString(),
       taskId};
+    console.log(`📋 [CloudTasks][${debugId}] Payload:`, JSON.stringify(payload, null, 2));
 
     // P0 FIX CRITIQUE: Firebase Functions v2 utilise Cloud Run avec URLs différentes
-    // L'URL n'est PAS .cloudfunctions.net mais une URL Cloud Run spécifique
-    // Format: https://{function-name-hash}-{region}.a.run.app
     const CLOUD_RUN_URL = 'https://executecalltask-5tfnuxa2hq-ew.a.run.app';
-
-    // Utiliser l'URL Cloud Run directe (la plus fiable)
     const finalUrl = CLOUD_RUN_URL;
 
-    console.log(`📋 [CloudTasks] Using Cloud Run URL: ${finalUrl}`);
+    console.log(`\n📋 [CloudTasks][${debugId}] STEP 4: URL Configuration:`);
+    console.log(`📋 [CloudTasks][${debugId}]   Computed URL (NOT USED): ${callbackUrl}`);
+    console.log(`📋 [CloudTasks][${debugId}]   Cloud Run URL (USED): ${finalUrl}`);
 
+    // STEP 5: Check auth secret
+    console.log(`\n📋 [CloudTasks][${debugId}] STEP 5: Auth secret check...`);
+    const authSecret = TASKS_AUTH_SECRET.value();
+    console.log(`📋 [CloudTasks][${debugId}] Auth secret:`, {
+      hasValue: !!authSecret,
+      length: authSecret?.length || 0,
+      prefix: authSecret ? authSecret.substring(0, 8) + '...' : 'MISSING'
+    });
+
+    if (!authSecret) {
+      console.error(`❌ [CloudTasks][${debugId}] CRITICAL: TASKS_AUTH_SECRET is missing!`);
+    }
+
+    // STEP 6: Create task object
+    console.log(`\n📋 [CloudTasks][${debugId}] STEP 6: Creating task object...`);
     const task = {
       name: `${queuePath}/tasks/${taskId}`,
       scheduleTime: {
@@ -140,35 +184,70 @@ export async function scheduleCallTask(
         url: finalUrl,
         headers: {
           "Content-Type": "application/json",
-          // ⚠️ Utilise le secret paramétré (Firebase v2)
-          "X-Task-Auth": TASKS_AUTH_SECRET.value()},
+          "X-Task-Auth": authSecret},
         body: Buffer.from(JSON.stringify(payload))
       }
     };
-    console.log("task created : ", task)
 
+    console.log(`📋 [CloudTasks][${debugId}] Task object created:`, {
+      name: task.name,
+      scheduleTimeSeconds: task.scheduleTime.seconds,
+      httpMethod: task.httpRequest.httpMethod,
+      url: task.httpRequest.url,
+      contentType: task.httpRequest.headers["Content-Type"],
+      hasAuth: !!task.httpRequest.headers["X-Task-Auth"],
+      bodyLength: task.httpRequest.body.length
+    });
 
-    console.log(
-      `📋 [CloudTasks] Création tâche ${taskId} (queue=${cfg.queueName}, region=${cfg.location}) → ${delaySeconds}s`
-    );
-
+    // STEP 7: Create task in Cloud Tasks
+    console.log(`\n📋 [CloudTasks][${debugId}] STEP 7: Calling client.createTask()...`);
+    const createStart = Date.now();
     const [response] = await client.createTask({ parent: queuePath, task });
+    const createDuration = Date.now() - createStart;
 
-    console.log(`✅ [CloudTasks] Tâche créée: ${response.name}`);
+    console.log(`\n=======================================================================`);
+    console.log(`✅ [CloudTasks][${debugId}] ========== TASK CREATED SUCCESSFULLY ==========`);
+    console.log(`=======================================================================`);
+    console.log(`✅ [CloudTasks][${debugId}] Task name: ${response.name}`);
+    console.log(`✅ [CloudTasks][${debugId}] Create duration: ${createDuration}ms`);
+    console.log(`✅ [CloudTasks][${debugId}] Total duration: ${Date.now() - startTime}ms`);
+    console.log(`✅ [CloudTasks][${debugId}] Scheduled for: ${scheduleTime.toISOString()}`);
+    console.log(`=======================================================================\n`);
+
     prodLogger.info('CLOUD_TASKS_SCHEDULE_SUCCESS', `Task created successfully`, {
       callSessionId,
       taskId,
       delaySeconds,
       scheduledAt: scheduleTime.toISOString(),
-      queueName: cfg.queueName
+      queueName: cfg.queueName,
+      debugId,
+      createDurationMs: createDuration,
+      totalDurationMs: Date.now() - startTime
     });
+
     return taskId;
   } catch (error) {
+    const errorDuration = Date.now() - startTime;
+
+    console.error(`\n=======================================================================`);
+    console.error(`❌ [CloudTasks][${debugId}] ========== TASK CREATION FAILED ==========`);
+    console.error(`=======================================================================`);
+    console.error(`❌ [CloudTasks][${debugId}] CallSessionId: ${callSessionId}`);
+    console.error(`❌ [CloudTasks][${debugId}] Duration before error: ${errorDuration}ms`);
+    console.error(`❌ [CloudTasks][${debugId}] Error type: ${error instanceof Error ? error.constructor.name : typeof error}`);
+    console.error(`❌ [CloudTasks][${debugId}] Error message: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(`❌ [CloudTasks][${debugId}] Error stack:`, error instanceof Error ? error.stack : 'No stack');
+    console.error(`=======================================================================\n`);
+
     prodLogger.error('CLOUD_TASKS_SCHEDULE_ERROR', `Failed to create task`, {
       callSessionId,
       delaySeconds,
-      error: error instanceof Error ? error.message : String(error)
+      debugId,
+      durationBeforeErrorMs: errorDuration,
+      error: error instanceof Error ? error.message : String(error),
+      errorType: error instanceof Error ? error.constructor.name : 'Unknown'
     });
+
     await logError("scheduleCallTask", error);
     throw new Error(
       `Erreur création tâche Cloud Tasks: ${

@@ -40,6 +40,15 @@
       ],
       "rate_limit_h": 0
     },
+    "request.created.provider": {
+      "channels": [
+        "email",
+        "sms",
+        "push",
+        "inapp"
+      ],
+      "rate_limit_h": 0
+    },
     "request.needs_changes.client": {
       "channels": [
         "email",
@@ -63,6 +72,24 @@
       "rate_limit_h": 24
     },
     "payment.succeeded.client": {
+      "channels": [
+        "email",
+        "sms",
+        "push",
+        "inapp"
+      ],
+      "rate_limit_h": 0
+    },
+    "call.scheduled.client": {
+      "channels": [
+        "email",
+        "sms",
+        "push",
+        "inapp"
+      ],
+      "rate_limit_h": 0
+    },
+    "call.scheduled.provider": {
       "channels": [
         "email",
         "sms",

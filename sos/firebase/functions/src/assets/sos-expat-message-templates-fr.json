@@ -319,6 +319,74 @@
       }
     },
     {
+      "id": "call.scheduled.client",
+      "roles": [
+        "client"
+      ],
+      "channels": {
+        "email": true,
+        "sms": true,
+        "push": true,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "email": {
+        "subject": "Appel programmé — {{title}}",
+        "html": "<p>Votre appel avec {{providerName}} est confirmé !</p><p><strong>Sujet:</strong> {{title}}</p><p><strong>Horaire:</strong> {{scheduledTime}}</p><p>Vous recevrez un appel automatique.</p>",
+        "text": "Appel confirmé avec {{providerName}} pour «{{title}}». Horaire: {{scheduledTime}}"
+      },
+      "sms": {
+        "text": "SOS Expat: Appel confirmé avec {{providerName}} pour «{{title}}». Vous serez appelé à {{scheduledTime}}."
+      },
+      "push": {
+        "title": "Appel programmé ✅",
+        "body": "Appel avec {{providerName}} confirmé",
+        "deeplink": "sos-expat://calls"
+      },
+      "inapp": {
+        "title": "Appel programmé",
+        "body": "Votre appel avec {{providerName}} pour «{{title}}» est confirmé",
+        "action": {
+          "label": "Voir",
+          "deeplink": "/calls"
+        }
+      }
+    },
+    {
+      "id": "call.scheduled.provider",
+      "roles": [
+        "provider"
+      ],
+      "channels": {
+        "email": true,
+        "sms": true,
+        "push": true,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "email": {
+        "subject": "Nouvel appel client — {{title}}",
+        "html": "<p>Un client vous a réservé !</p><p><strong>Client:</strong> {{clientName}}</p><p><strong>Sujet:</strong> {{title}}</p><p><strong>Horaire:</strong> {{scheduledTime}}</p><p>Vous recevrez un appel automatique.</p>",
+        "text": "Nouveau client: {{clientName}}\nSujet: {{title}}\nHoraire: {{scheduledTime}}"
+      },
+      "sms": {
+        "text": "SOS Expat: Nouveau client {{clientName}} pour «{{title}}». Appel prévu à {{scheduledTime}}."
+      },
+      "push": {
+        "title": "Nouveau client 🔔",
+        "body": "{{clientName}} - {{title}}",
+        "deeplink": "sos-expat://provider/dashboard"
+      },
+      "inapp": {
+        "title": "Nouveau client",
+        "body": "{{clientName}} vous a réservé pour: {{title}}",
+        "action": {
+          "label": "Voir",
+          "deeplink": "/provider/dashboard"
+        }
+      }
+    },
+    {
       "id": "booking_paid_provider",
       "roles": [
         "provider"

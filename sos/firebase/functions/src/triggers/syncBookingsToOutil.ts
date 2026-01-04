@@ -250,6 +250,9 @@ export const onBookingRequestCreated = onDocumentCreated(
         outilBookingId: result.bookingId,
       });
     }
+
+    // Note: La notification SMS au provider est envoyée APRÈS le paiement
+    // via sendPaymentNotifications() dans index.ts (eventId: call.scheduled.provider)
   }
 );
 

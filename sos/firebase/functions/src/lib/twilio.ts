@@ -1,23 +1,128 @@
 import twilio from "twilio";
 import { Request, Response } from "express";
+import { defineSecret } from "firebase-functions/params";
 
-const ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID as string;
-const AUTH_TOKEN  = process.env.TWILIO_AUTH_TOKEN as string;
-const PHONE_NUMBER  = process.env.TWILIO_PHONE_NUMBER as string;
+// ============================================================================
+// P0 CRITICAL FIX: Use Firebase v2 defineSecret instead of process.env
+// process.env does NOT work for Firebase v2 secrets!
+// ============================================================================
+
+// Define secrets using Firebase v2 params
+const TWILIO_ACCOUNT_SID_SECRET = defineSecret("TWILIO_ACCOUNT_SID");
+const TWILIO_AUTH_TOKEN_SECRET = defineSecret("TWILIO_AUTH_TOKEN");
+const TWILIO_PHONE_NUMBER_SECRET = defineSecret("TWILIO_PHONE_NUMBER");
+
+// Fallback to process.env for backwards compatibility (emulator, local dev)
+function getAccountSid(): string {
+  // Try Firebase v2 secret first
+  try {
+    const secretValue = TWILIO_ACCOUNT_SID_SECRET.value();
+    if (secretValue && secretValue.length > 0) {
+      console.log(`🔐 [Twilio] ACCOUNT_SID loaded from Firebase Secret (length: ${secretValue.length})`);
+      return secretValue;
+    }
+  } catch (e) {
+    console.log(`⚠️ [Twilio] Firebase Secret not available, trying process.env`);
+  }
+
+  // Fallback to process.env
+  const envValue = process.env.TWILIO_ACCOUNT_SID;
+  if (envValue && envValue.length > 0) {
+    console.log(`🔐 [Twilio] ACCOUNT_SID loaded from process.env (length: ${envValue.length})`);
+    return envValue;
+  }
+
+  console.error(`❌ [Twilio] ACCOUNT_SID NOT FOUND in Secret OR process.env`);
+  return "";
+}
+
+function getAuthToken(): string {
+  // Try Firebase v2 secret first
+  try {
+    const secretValue = TWILIO_AUTH_TOKEN_SECRET.value();
+    if (secretValue && secretValue.length > 0) {
+      console.log(`🔐 [Twilio] AUTH_TOKEN loaded from Firebase Secret (length: ${secretValue.length})`);
+      return secretValue;
+    }
+  } catch (e) {
+    console.log(`⚠️ [Twilio] Firebase Secret not available, trying process.env`);
+  }
+
+  // Fallback to process.env
+  const envValue = process.env.TWILIO_AUTH_TOKEN;
+  if (envValue && envValue.length > 0) {
+    console.log(`🔐 [Twilio] AUTH_TOKEN loaded from process.env (length: ${envValue.length})`);
+    return envValue;
+  }
+
+  console.error(`❌ [Twilio] AUTH_TOKEN NOT FOUND in Secret OR process.env`);
+  return "";
+}
+
+function getPhoneNumber(): string {
+  // Try Firebase v2 secret first
+  try {
+    const secretValue = TWILIO_PHONE_NUMBER_SECRET.value();
+    if (secretValue && secretValue.length > 0) {
+      console.log(`🔐 [Twilio] PHONE_NUMBER loaded from Firebase Secret: ${secretValue.substring(0, 5)}...`);
+      return secretValue;
+    }
+  } catch (e) {
+    console.log(`⚠️ [Twilio] Firebase Secret not available, trying process.env`);
+  }
+
+  // Fallback to process.env
+  const envValue = process.env.TWILIO_PHONE_NUMBER;
+  if (envValue && envValue.length > 0) {
+    console.log(`🔐 [Twilio] PHONE_NUMBER loaded from process.env: ${envValue.substring(0, 5)}...`);
+    return envValue;
+  }
+
+  console.error(`❌ [Twilio] PHONE_NUMBER NOT FOUND in Secret OR process.env`);
+  return "";
+}
 
 export function getTwilioClient() {
-  // SECURITY FIX: Removed credential logging - 2025-12-23
-  if (!ACCOUNT_SID || !AUTH_TOKEN) {
-    throw new Error("Twilio credentials missing (TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN).");
+  console.log(`📞 [Twilio] === getTwilioClient() CALLED ===`);
+
+  const accountSid = getAccountSid();
+  const authToken = getAuthToken();
+
+  console.log(`📞 [Twilio] Credential check:`, {
+    hasAccountSid: !!accountSid,
+    accountSidLength: accountSid?.length || 0,
+    accountSidPrefix: accountSid ? accountSid.substring(0, 6) : 'MISSING',
+    hasAuthToken: !!authToken,
+    authTokenLength: authToken?.length || 0,
+  });
+
+  if (!accountSid || !authToken) {
+    console.error(`❌ [Twilio] CRITICAL: Twilio credentials missing!`);
+    console.error(`❌ [Twilio] ACCOUNT_SID: ${accountSid ? 'OK' : 'MISSING'}`);
+    console.error(`❌ [Twilio] AUTH_TOKEN: ${authToken ? 'OK' : 'MISSING'}`);
+    throw new Error("Twilio credentials missing (TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN). Check Firebase Secrets.");
   }
-  return twilio(ACCOUNT_SID, AUTH_TOKEN);
+
+  console.log(`✅ [Twilio] Creating Twilio client with SID: ${accountSid.substring(0, 6)}...`);
+  return twilio(accountSid, authToken);
 }
 
 export function getTwilioPhoneNumber() {
-  if (!PHONE_NUMBER) throw new Error("TWILIO_PHONE_NUMBER missing.");
-  // SECURITY FIX: Removed phone number logging - 2025-12-23
-  return PHONE_NUMBER;
+  console.log(`📞 [Twilio] === getTwilioPhoneNumber() CALLED ===`);
+
+  const phoneNumber = getPhoneNumber();
+
+  if (!phoneNumber) {
+    console.error(`❌ [Twilio] CRITICAL: TWILIO_PHONE_NUMBER missing!`);
+    throw new Error("TWILIO_PHONE_NUMBER missing. Check Firebase Secrets.");
+  }
+
+  console.log(`✅ [Twilio] Phone number: ${phoneNumber.substring(0, 5)}...`);
+  return phoneNumber;
 }
+
+// Export secrets for functions that need to declare them
+export { TWILIO_ACCOUNT_SID_SECRET, TWILIO_AUTH_TOKEN_SECRET, TWILIO_PHONE_NUMBER_SECRET };
 
 /**
  * Valide la signature d'un webhook Twilio
@@ -104,6 +209,7 @@ export function twilioValidationMiddleware(
 }
 
 /** Compat: certains fichiers importent encore ces constantes */
-export const TWILIO_ACCOUNT_SID = ACCOUNT_SID;
-export const TWILIO_AUTH_TOKEN  = AUTH_TOKEN;
-export const TWILIO_PHONE_NUMBER = PHONE_NUMBER;
+// Note: Ces exports sont des getters dynamiques pour compatibilité
+export const getTwilioAccountSid = getAccountSid;
+export const getTwilioAuthToken = getAuthToken;
+export const getTwilioPhoneNumberExport = getPhoneNumber;
