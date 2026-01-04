@@ -143,3 +143,4 @@ public/firebase-config.js
 # ================================
 users.json
 temp-users.json
+sos/full_users.json

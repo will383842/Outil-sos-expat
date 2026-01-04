@@ -433,11 +433,22 @@ service cloud.firestore {
     }
 
     // ================= DISPUTES COLLECTION (Chargebacks) =================
+    // P0 FIX: Permettre les mises à jour admin pour la gestion des litiges
     match /disputes/{disputeId} {
       // Only admins can read disputes (sensitive financial data)
       allow read: if isAdmin() || isDev();
-      // Only Cloud Functions can write (via webhooks)
-      allow write: if false;
+      // P0 FIX: Admin peut mettre à jour (notes, timeline, status, evidence, assignee)
+      // Pour les actions critiques (submit evidence to Stripe), utiliser Cloud Functions
+      allow update: if (isAdmin() || isDev()) &&
+                    request.resource.data.diff(resource.data).affectedKeys()
+                      .hasOnly(['notes', 'timeline', 'updatedAt', 'isAcknowledged',
+                               'internalNotes', 'adminAssignee', 'adminNotes',
+                               'evidenceFiles', 'evidenceSubmittedAt', 'status',
+                               'resolvedAt', 'resolvedBy', 'resolution']);
+      // Create: Cloud Functions only (via Stripe webhooks)
+      allow create: if false;
+      // Delete: jamais (audit trail)
+      allow delete: if false;
     }
 
     // ================= ADMIN ALERTS COLLECTION =================
@@ -654,6 +665,21 @@ service cloud.firestore {
       allow read: if isAdmin() || isDev();
       // Seules les Cloud Functions peuvent écrire
       allow write: if false;
+    }
+
+    // ================= SUBSCRIPTION EVENTS COLLECTION =================
+    // P0 FIX: Événements d'abonnement pour l'onglet IA Analytics
+    // (upgrades, downgrades, cancellations, renewals, trials, etc.)
+    match /subscription_events/{eventId} {
+      // Lecture: Admin uniquement (données sensibles)
+      allow read: if isAdmin() || isDev();
+      // Admin peut mettre à jour (acknowledge, notes)
+      allow update: if (isAdmin() || isDev()) &&
+                    request.resource.data.diff(resource.data).affectedKeys()
+                      .hasOnly(['isAcknowledged', 'acknowledgedAt', 'acknowledgedBy',
+                               'notes', 'internalNotes', 'updatedAt']);
+      // Création: Cloud Functions uniquement (via triggers Stripe)
+      allow create, delete: if false;
     }
 
     // ================= PROCESSED STRIPE EVENTS (Idempotency) =================

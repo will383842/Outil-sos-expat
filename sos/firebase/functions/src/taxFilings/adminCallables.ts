@@ -4,7 +4,8 @@
  * Administrative functions for managing tax filings
  */
 
-import * as functions from 'firebase-functions';
+import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https';
+import { logger } from 'firebase-functions/v2';
 import { getFirestore, Timestamp, FieldValue } from 'firebase-admin/firestore';
 import { TaxFiling, TaxFilingStatus } from './types';
 
@@ -32,34 +33,36 @@ interface UpdateStatusResponse {
 /**
  * Update the status of a tax filing
  */
-export const updateFilingStatus = functions
-  .region('europe-west1')
-  .runWith({
+export const updateFilingStatus = onCall<UpdateStatusRequest, Promise<UpdateStatusResponse>>(
+  {
+    region: 'europe-west1',
     timeoutSeconds: 30,
-    memory: '256MB',
-  })
-  .https.onCall(async (data: UpdateStatusRequest, context): Promise<UpdateStatusResponse> => {
+    memory: '256MiB',
+  },
+  async (request: CallableRequest<UpdateStatusRequest>): Promise<UpdateStatusResponse> => {
+    const { auth, data } = request;
+
     // Check authentication
-    if (!context.auth) {
-      throw new functions.https.HttpsError('unauthenticated', 'Authentication required');
+    if (!auth) {
+      throw new HttpsError('unauthenticated', 'Authentication required');
     }
 
     // Check admin claim
-    const customClaims = context.auth.token;
+    const customClaims = auth.token;
     if (!customClaims.admin && !customClaims.superAdmin) {
-      throw new functions.https.HttpsError('permission-denied', 'Admin access required');
+      throw new HttpsError('permission-denied', 'Admin access required');
     }
 
     const { filingId, newStatus, reason, confirmationNumber, paymentReference, notes } = data;
 
     // Validate inputs
     if (!filingId) {
-      throw new functions.https.HttpsError('invalid-argument', 'Filing ID is required');
+      throw new HttpsError('invalid-argument', 'Filing ID is required');
     }
 
     const validStatuses: TaxFilingStatus[] = ['DRAFT', 'PENDING_REVIEW', 'SUBMITTED', 'ACCEPTED', 'REJECTED', 'PAID'];
     if (!newStatus || !validStatuses.includes(newStatus)) {
-      throw new functions.https.HttpsError('invalid-argument', 'Invalid status');
+      throw new HttpsError('invalid-argument', 'Invalid status');
     }
 
     try {
@@ -67,7 +70,7 @@ export const updateFilingStatus = functions
       const filingDoc = await filingRef.get();
 
       if (!filingDoc.exists) {
-        throw new functions.https.HttpsError('not-found', 'Filing not found');
+        throw new HttpsError('not-found', 'Filing not found');
       }
 
       const currentFiling = filingDoc.data() as TaxFiling;
@@ -77,11 +80,11 @@ export const updateFilingStatus = functions
       const updateData: Record<string, unknown> = {
         status: newStatus,
         updatedAt: now,
-        updatedBy: context.auth.uid,
+        updatedBy: auth.uid,
         statusHistory: FieldValue.arrayUnion({
           status: newStatus,
           changedAt: now,
-          changedBy: context.auth.uid,
+          changedBy: auth.uid,
           reason: reason || `Status changed to ${newStatus}`,
         }),
       };
@@ -89,7 +92,7 @@ export const updateFilingStatus = functions
       // Add status-specific fields
       if (newStatus === 'SUBMITTED') {
         updateData.submittedAt = now;
-        updateData.submittedBy = context.auth.uid;
+        updateData.submittedBy = auth.uid;
         if (confirmationNumber) {
           updateData.confirmationNumber = confirmationNumber;
         }
@@ -112,11 +115,11 @@ export const updateFilingStatus = functions
 
       await filingRef.update(updateData);
 
-      functions.logger.info(`Tax filing status updated`, {
+      logger.info(`Tax filing status updated`, {
         filingId,
         oldStatus: currentFiling.status,
         newStatus,
-        updatedBy: context.auth.uid,
+        updatedBy: auth.uid,
       });
 
       // Get updated filing
@@ -129,15 +132,16 @@ export const updateFilingStatus = functions
       };
 
     } catch (error) {
-      functions.logger.error('Error updating filing status:', error);
+      logger.error('Error updating filing status:', error);
 
-      if (error instanceof functions.https.HttpsError) {
+      if (error instanceof HttpsError) {
         throw error;
       }
 
-      throw new functions.https.HttpsError('internal', `Failed to update status: ${error}`);
+      throw new HttpsError('internal', `Failed to update status: ${error}`);
     }
-  });
+  }
+);
 
 // ============================================================================
 // DELETE DRAFT FILING
@@ -151,32 +155,34 @@ interface DeleteDraftRequest {
 /**
  * Delete a draft tax filing (only DRAFT status can be deleted)
  */
-export const deleteFilingDraft = functions
-  .region('europe-west1')
-  .runWith({
+export const deleteFilingDraft = onCall<DeleteDraftRequest>(
+  {
+    region: 'europe-west1',
     timeoutSeconds: 30,
-    memory: '256MB',
-  })
-  .https.onCall(async (data: DeleteDraftRequest, context) => {
+    memory: '256MiB',
+  },
+  async (request: CallableRequest<DeleteDraftRequest>) => {
+    const { auth, data } = request;
+
     // Check authentication
-    if (!context.auth) {
-      throw new functions.https.HttpsError('unauthenticated', 'Authentication required');
+    if (!auth) {
+      throw new HttpsError('unauthenticated', 'Authentication required');
     }
 
     // Check admin claim
-    const customClaims = context.auth.token;
+    const customClaims = auth.token;
     if (!customClaims.admin && !customClaims.superAdmin) {
-      throw new functions.https.HttpsError('permission-denied', 'Admin access required');
+      throw new HttpsError('permission-denied', 'Admin access required');
     }
 
     const { filingId, confirm } = data;
 
     if (!filingId) {
-      throw new functions.https.HttpsError('invalid-argument', 'Filing ID is required');
+      throw new HttpsError('invalid-argument', 'Filing ID is required');
     }
 
     if (!confirm) {
-      throw new functions.https.HttpsError('failed-precondition', 'Deletion not confirmed');
+      throw new HttpsError('failed-precondition', 'Deletion not confirmed');
     }
 
     try {
@@ -184,14 +190,14 @@ export const deleteFilingDraft = functions
       const filingDoc = await filingRef.get();
 
       if (!filingDoc.exists) {
-        throw new functions.https.HttpsError('not-found', 'Filing not found');
+        throw new HttpsError('not-found', 'Filing not found');
       }
 
       const filing = filingDoc.data() as TaxFiling;
 
       // Only allow deletion of DRAFT status
       if (filing.status !== 'DRAFT') {
-        throw new functions.https.HttpsError(
+        throw new HttpsError(
           'failed-precondition',
           `Cannot delete filing with status ${filing.status}. Only DRAFT filings can be deleted.`
         );
@@ -200,11 +206,11 @@ export const deleteFilingDraft = functions
       // Delete the filing
       await filingRef.delete();
 
-      functions.logger.info(`Tax filing draft deleted`, {
+      logger.info(`Tax filing draft deleted`, {
         filingId,
         type: filing.type,
         period: filing.period,
-        deletedBy: context.auth.uid,
+        deletedBy: auth.uid,
       });
 
       return {
@@ -213,15 +219,16 @@ export const deleteFilingDraft = functions
       };
 
     } catch (error) {
-      functions.logger.error('Error deleting filing draft:', error);
+      logger.error('Error deleting filing draft:', error);
 
-      if (error instanceof functions.https.HttpsError) {
+      if (error instanceof HttpsError) {
         throw error;
       }
 
-      throw new functions.https.HttpsError('internal', `Failed to delete draft: ${error}`);
+      throw new HttpsError('internal', `Failed to delete draft: ${error}`);
     }
-  });
+  }
+);
 
 // ============================================================================
 // UPDATE FILING AMOUNTS
@@ -241,28 +248,30 @@ interface UpdateAmountsRequest {
 /**
  * Update amounts in a filing (e.g., add deductible VAT)
  */
-export const updateFilingAmounts = functions
-  .region('europe-west1')
-  .runWith({
+export const updateFilingAmounts = onCall<UpdateAmountsRequest>(
+  {
+    region: 'europe-west1',
     timeoutSeconds: 30,
-    memory: '256MB',
-  })
-  .https.onCall(async (data: UpdateAmountsRequest, context) => {
+    memory: '256MiB',
+  },
+  async (request: CallableRequest<UpdateAmountsRequest>) => {
+    const { auth, data } = request;
+
     // Check authentication
-    if (!context.auth) {
-      throw new functions.https.HttpsError('unauthenticated', 'Authentication required');
+    if (!auth) {
+      throw new HttpsError('unauthenticated', 'Authentication required');
     }
 
     // Check admin claim
-    const customClaims = context.auth.token;
+    const customClaims = auth.token;
     if (!customClaims.admin && !customClaims.superAdmin) {
-      throw new functions.https.HttpsError('permission-denied', 'Admin access required');
+      throw new HttpsError('permission-denied', 'Admin access required');
     }
 
     const { filingId, taxDeductible, notes, lines } = data;
 
     if (!filingId) {
-      throw new functions.https.HttpsError('invalid-argument', 'Filing ID is required');
+      throw new HttpsError('invalid-argument', 'Filing ID is required');
     }
 
     try {
@@ -270,14 +279,14 @@ export const updateFilingAmounts = functions
       const filingDoc = await filingRef.get();
 
       if (!filingDoc.exists) {
-        throw new functions.https.HttpsError('not-found', 'Filing not found');
+        throw new HttpsError('not-found', 'Filing not found');
       }
 
       const filing = filingDoc.data() as TaxFiling;
 
       // Only allow updates to DRAFT or PENDING_REVIEW status
       if (!['DRAFT', 'PENDING_REVIEW'].includes(filing.status)) {
-        throw new functions.https.HttpsError(
+        throw new HttpsError(
           'failed-precondition',
           `Cannot update filing with status ${filing.status}`
         );
@@ -286,7 +295,7 @@ export const updateFilingAmounts = functions
       const now = Timestamp.now();
       const updateData: Record<string, unknown> = {
         updatedAt: now,
-        updatedBy: context.auth.uid,
+        updatedBy: auth.uid,
       };
 
       // Update deductible VAT
@@ -330,9 +339,9 @@ export const updateFilingAmounts = functions
 
       await filingRef.update(updateData);
 
-      functions.logger.info(`Tax filing amounts updated`, {
+      logger.info(`Tax filing amounts updated`, {
         filingId,
-        updatedBy: context.auth.uid,
+        updatedBy: auth.uid,
       });
 
       // Get updated filing
@@ -345,12 +354,13 @@ export const updateFilingAmounts = functions
       };
 
     } catch (error) {
-      functions.logger.error('Error updating filing amounts:', error);
+      logger.error('Error updating filing amounts:', error);
 
-      if (error instanceof functions.https.HttpsError) {
+      if (error instanceof HttpsError) {
         throw error;
       }
 
-      throw new functions.https.HttpsError('internal', `Failed to update amounts: ${error}`);
+      throw new HttpsError('internal', `Failed to update amounts: ${error}`);
     }
-  });
+  }
+);
