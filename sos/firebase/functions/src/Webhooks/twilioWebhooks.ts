@@ -529,21 +529,23 @@ export const twilioConferenceWebhook = onRequest(
 );
 
 /**
- * Webhook pour les événements d'enregistrement (délégué au système moderne)
+ * Webhook pour les événements d'enregistrement
+ * DESACTIVE - L'enregistrement des appels est desactive pour conformite RGPD (commit 12a83a9)
+ * Cette fonction reste deployee pour eviter les erreurs 404 si Twilio envoie des callbacks
  */
 export const twilioRecordingWebhook = onRequest(
   {
     region: 'europe-west1',
-    memory: '256MiB',
-    cpu: 0.25,
-    maxInstances: 3,
+    memory: '128MiB',
+    cpu: 0.083,
+    maxInstances: 1,
     minInstances: 0,
     concurrency: 1
   },
-  async (req: Request, res: Response) => {
-    // Rediriger vers le webhook d'enregistrement moderne
-    const { twilioRecordingWebhook: modernWebhook } = await import('./TwilioRecordingWebhook');
-    return modernWebhook(req as Request, res);
+  async (_req: Request, res: Response) => {
+    // Recording desactive - retourner 200 OK pour eviter les retries Twilio
+    console.log('[twilioRecordingWebhook] Recording desactive - ignoring callback');
+    res.status(200).send('Recording disabled for GDPR compliance');
   }
 );
 

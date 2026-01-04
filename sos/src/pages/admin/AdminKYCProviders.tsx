@@ -190,18 +190,19 @@ const AdminKYCProviders: React.FC = () => {
       setLoading(true);
 
       // Requête pour récupérer les profils avec état KYC
+      // P2 FIX: Limite réduite à 30 pour économiser le cache
       const constraints: QueryConstraint[] = [
         where('kycStatus', '!=', null),
         orderBy('kycStatus'),
         orderBy('submittedAt', 'desc'),
-        limit(100),
+        limit(30), // P2 FIX: Réduit de 100 à 30
       ];
 
       // Si filtre précis sur kycStatus
       if (filters.kycStatus !== 'all') {
         // Quand on filtre par égalité, on ne peut pas garder un orderBy('kycStatus') redondant
         constraints.length = 0;
-        constraints.push(where('kycStatus', '==', filters.kycStatus), orderBy('submittedAt', 'desc'), limit(100));
+        constraints.push(where('kycStatus', '==', filters.kycStatus), orderBy('submittedAt', 'desc'), limit(30)); // P2 FIX
       }
 
       const providersQuery = query(collection(db, 'sos_profiles'), ...constraints);

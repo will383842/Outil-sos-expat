@@ -91,15 +91,15 @@ type StatusTab = 'pending' | 'approved' | 'rejected';
   useEffect(() => {
     let q;
 
-    // ✅ OPTIMISATION: Ajout de limit(100) pour réduire les lectures Firestore
-    // Économie estimée: ~5-10€/mois
+    // ✅ OPTIMISATION: Limite réduite à 30 pour économiser le cache IndexedDB
+    // P2 FIX: Réduction de 100 à 30 docs = 70% moins de cache utilisé
     if (statusTab === 'pending') {
       q = query(
         collection(db, 'sos_profiles'),
         where('type', 'in', ['lawyer', 'expat']),
         where('approvalStatus', '==', 'pending'),
         orderBy('createdAt', 'desc'),
-        limit(100) // ✅ OPTIMISATION
+        limit(30) // P2 FIX: Réduit de 100 à 30
       );
     } else if (statusTab === 'approved') {
       q = query(
@@ -107,7 +107,7 @@ type StatusTab = 'pending' | 'approved' | 'rejected';
         where('type', 'in', ['lawyer', 'expat']),
         where('approvalStatus', '==', 'approved'),
         orderBy('createdAt', 'desc'),
-        limit(100) // ✅ OPTIMISATION
+        limit(30) // P2 FIX: Réduit de 100 à 30
       );
     } else {
       q = query(
@@ -115,7 +115,7 @@ type StatusTab = 'pending' | 'approved' | 'rejected';
         where('type', 'in', ['lawyer', 'expat']),
         where('approvalStatus', '==', 'rejected'),
         orderBy('createdAt', 'desc'),
-        limit(100) // ✅ OPTIMISATION
+        limit(30) // P2 FIX: Réduit de 100 à 30
       );
     }
 

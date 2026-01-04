@@ -90,10 +90,11 @@ const AdminNotifications: React.FC = () => {
     try {
       setIsLoading(true);
 
+      // P2 FIX: Limite réduite à 30 pour économiser le cache
       const notificationsQuery = query(
         collection(db, 'notification_logs'),
         orderBy('timestamp', 'desc'),
-        limit(100)
+        limit(30) // P2 FIX: Réduit de 100 à 30
       );
 
       const notificationsSnapshot = await getDocs(notificationsQuery);

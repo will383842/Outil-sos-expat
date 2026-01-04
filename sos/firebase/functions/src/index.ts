@@ -88,11 +88,9 @@ export {
   listRestoreTestReports,
 } from "./scheduled/quarterlyRestoreTest";
 
-// P2-3 FIX: GDPR Recording Cleanup (90 days retention)
-export {
-  rgpdRecordingCleanup,
-  triggerRgpdCleanup,
-} from "./scheduled/rgpdRecordingCleanup";
+// P2-3 FIX: GDPR Recording Cleanup - SUPPRIME (recording desactive pour RGPD)
+// Les fonctions rgpdRecordingCleanup et triggerRgpdCleanup ont ete supprimees
+// car l'enregistrement des appels est desactive (commit 12a83a9)
 
 // P2-1/3/13 FIX: Payment data cleanup (locks, expired orders, archiving)
 export { paymentDataCleanup } from "./scheduled/paymentDataCleanup";
@@ -3583,13 +3581,11 @@ export {
   adminGetDLQStats
 } from './scheduled/processDLQ';
 
-// ========== TWILIO RECORDINGS BACKUP ==========
-export {
-  backupTwilioRecordings,
-  retryFailedTwilioBackups,
-  triggerTwilioBackup,
-  getTwilioBackupStats
-} from './scheduled/backupTwilioRecordings';
+// ========== TWILIO RECORDINGS BACKUP - SUPPRIME ==========
+// Les fonctions de backup recording ont ete supprimees car l'enregistrement
+// des appels est desactive pour conformite RGPD (commit 12a83a9)
+// Fonctions supprimees: backupTwilioRecordings, retryFailedTwilioBackups,
+//                       triggerTwilioBackup, getTwilioBackupStats
 
 // ========== PHONE NUMBER ENCRYPTION MIGRATION ==========
 export {

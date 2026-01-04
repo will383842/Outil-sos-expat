@@ -50,9 +50,10 @@ const AdminDocuments: React.FC = () => {
       setIsLoading(true);
 
       // Construire la requête Firestore avec les filtres
+      // P2 FIX: Limite réduite à 30 pour économiser le cache
       const constraints: Parameters<typeof query>[1][] = [
         orderBy('uploadedAt', 'desc'),
-        limit(100)
+        limit(30) // P2 FIX: Réduit de 100 à 30
       ];
 
       // Appliquer les filtres
