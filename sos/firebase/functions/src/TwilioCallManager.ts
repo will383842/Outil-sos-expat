@@ -5,7 +5,8 @@ import { getFunctionsBaseUrl } from "./utils/urlBase";
 import { logError } from "./utils/logs/logError";
 import { logCallRecord } from "./utils/logs/logCallRecord";
 import { stripeManager } from "./StripeManager";
-import { setProviderBusy, setProviderAvailable } from "./callables/providerStatusManager";
+// P1-1 FIX: setProviderBusy removed - now only called from twilioWebhooks.ts
+import { setProviderAvailable } from "./callables/providerStatusManager";
 // 🔒 Phone number encryption
 import { encryptPhoneNumber, decryptPhoneNumber } from "./utils/encryption";
 // P1-13: Sync atomique payments <-> call_sessions
@@ -139,6 +140,12 @@ export interface CallSessionState {
     selectedLanguage?: string;
     ttsLocale?: string;
     invoicesCreated?: boolean;
+    // P2-2 FIX: Idempotency flags for webhook processing
+    earlyDisconnectProcessed?: boolean;
+    earlyDisconnectBy?: string;
+    earlyDisconnectDuration?: number;
+    earlyDisconnectAt?: admin.firestore.Timestamp;
+    providerSetOffline?: boolean;
   };
 }
 
@@ -746,18 +753,9 @@ export class TwilioCallManager {
       return;
     }
 
-    // ===== NOUVEAU: Mettre le prestataire en statut "busy" =====
-    try {
-      await setProviderBusy(
-        callSession.metadata.providerId,
-        sessionId,
-        'in_call'
-      );
-      console.log(`📞 Provider ${callSession.metadata.providerId} marked as BUSY`);
-    } catch (busyError) {
-      console.error(`⚠️ Failed to set provider busy (non-blocking):`, busyError);
-      // Continue - ne pas bloquer l'appel si la mise à jour échoue
-    }
+    // P1-1 FIX: setProviderBusy supprimé ici - doublon avec twilioWebhooks.ts:239
+    // Le webhook est le bon endroit car il confirme que le provider a réellement répondu.
+    // Ici, providerConnected=true signifie juste que l'appel a été placé, pas répondu.
 
     await this.updateCallSessionStatus(sessionId, "both_connecting");
 
@@ -1043,6 +1041,28 @@ export class TwilioCallManager {
     try {
       const session = await this.getCallSession(sessionId);
       if (!session) return;
+
+      // P1-2 FIX: Idempotency check - prevent double processing of early disconnection
+      // This can happen when both participants disconnect and both webhooks arrive
+      const finalStatuses = ['completed', 'failed', 'cancelled', 'refunded'];
+      if (finalStatuses.includes(session.status)) {
+        console.log(`📄 [IDEMPOTENCY] Session ${sessionId} already in final state: ${session.status}, skipping handleEarlyDisconnection`);
+        return;
+      }
+
+      // Check if early_disconnect was already processed for this session
+      if (session.metadata?.earlyDisconnectProcessed) {
+        console.log(`📄 [IDEMPOTENCY] Early disconnect already processed for session: ${sessionId}`);
+        return;
+      }
+
+      // Mark as being processed (atomic update)
+      await this.db.collection("call_sessions").doc(sessionId).update({
+        "metadata.earlyDisconnectProcessed": true,
+        "metadata.earlyDisconnectBy": participantType,
+        "metadata.earlyDisconnectDuration": duration,
+        "metadata.earlyDisconnectAt": admin.firestore.FieldValue.serverTimestamp()
+      });
 
       if (duration < CALL_CONFIG.MIN_CALL_DURATION) {
         console.log(`📄 Early disconnect: ${sessionId}`);
@@ -1522,8 +1542,9 @@ export class TwilioCallManager {
           if (captureLock) {
             const lockTime = captureLock.toDate();
             const lockAge = Date.now() - lockTime.getTime();
-            // Lock expires after 2 minutes (capture should not take longer)
-            if (lockAge < 2 * 60 * 1000) {
+            // P0-2 FIX: Lock expires after 10 minutes (was 2 min - too short for PayPal/Stripe timeouts)
+            // Some payment captures can take up to 5-7 minutes with network retries
+            if (lockAge < 10 * 60 * 1000) {
               console.log(`📄 Capture already in progress for session: ${sessionId} (lock age: ${lockAge}ms)`);
               return;
             }
