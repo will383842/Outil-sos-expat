@@ -81,15 +81,14 @@
     },
     "call.scheduled.client": {
       "channels": [
-        "email",
-        "push",
         "inapp"
       ],
       "rate_limit_h": 0
     },
     "call.scheduled.provider": {
       "channels": [
-        "sms"
+        "sms",
+        "inapp"
       ],
       "rate_limit_h": 0
     },

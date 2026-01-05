@@ -19,11 +19,19 @@
         "email": false,
         "sms": true,
         "push": false,
-        "inapp": false,
+        "inapp": true,
         "whatsapp": false
       },
       "sms": {
         "text": "SOS Expat: Nouvelle demande de {{clientName}} ({{clientCountry}})\nLangue: {{clientLanguage}}\nTitre: {{title}}\nDétail: {{description}}\nAppel dans 5 minutes."
+      },
+      "inapp": {
+        "title": "Nouvelle demande",
+        "body": "{{clientName}} ({{clientCountry}}) - {{title}}",
+        "action": {
+          "label": "Voir",
+          "deeplink": "/provider/dashboard"
+        }
       }
     },
     {
@@ -33,8 +41,16 @@
         "email": false,
         "sms": false,
         "push": false,
-        "inapp": false,
+        "inapp": true,
         "whatsapp": false
+      },
+      "inapp": {
+        "title": "Appel programmé",
+        "body": "Votre appel avec {{providerName}} pour «{{title}}» est confirmé",
+        "action": {
+          "label": "Voir",
+          "deeplink": "/calls"
+        }
       }
     },
     {
