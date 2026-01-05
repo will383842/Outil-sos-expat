@@ -325,7 +325,7 @@
       ],
       "channels": {
         "email": true,
-        "sms": true,
+        "sms": false,
         "push": true,
         "inapp": true,
         "whatsapp": false
@@ -359,7 +359,7 @@
       ],
       "channels": {
         "email": true,
-        "sms": true,
+        "sms": false,
         "push": true,
         "inapp": true,
         "whatsapp": false

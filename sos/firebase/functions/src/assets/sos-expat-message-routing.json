@@ -82,7 +82,6 @@
     "call.scheduled.client": {
       "channels": [
         "email",
-        "sms",
         "push",
         "inapp"
       ],
@@ -91,7 +90,6 @@
     "call.scheduled.provider": {
       "channels": [
         "email",
-        "sms",
         "push",
         "inapp"
       ],
