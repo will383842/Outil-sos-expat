@@ -75,26 +75,43 @@ export const twilioCallWebhook = onRequest(
         duration: body.CallDuration
       });
 
-      // ✅ P0 SECURITY FIX: Idempotency check - prevent duplicate webhook processing
+      // ✅ P1-3 FIX: Atomic idempotency check using Firestore transaction
+      // This prevents race conditions where two webhook calls arrive simultaneously
       const db = admin.firestore();
       const webhookKey = `twilio_${body.CallSid}_${body.CallStatus}`;
       const webhookEventRef = db.collection("processed_webhook_events").doc(webhookKey);
-      const existingEvent = await webhookEventRef.get();
 
-      if (existingEvent.exists) {
+      let isDuplicate = false;
+      try {
+        await db.runTransaction(async (transaction) => {
+          const existingEvent = await transaction.get(webhookEventRef);
+
+          if (existingEvent.exists) {
+            isDuplicate = true;
+            return; // Exit transaction - this is a duplicate
+          }
+
+          // Atomically mark event as being processed within the transaction
+          transaction.set(webhookEventRef, {
+            eventKey: webhookKey,
+            callSid: body.CallSid,
+            callStatus: body.CallStatus,
+            processedAt: admin.firestore.FieldValue.serverTimestamp(),
+            source: "twilio_call_webhook",
+          });
+        });
+      } catch (txError) {
+        console.error(`❌ Transaction error for webhook idempotency: ${txError}`);
+        // On transaction failure, treat as potentially duplicate to be safe
+        res.status(200).send('OK - transaction error, treated as duplicate');
+        return;
+      }
+
+      if (isDuplicate) {
         console.log(`⚠️ IDEMPOTENCY: Twilio event ${webhookKey} already processed, skipping`);
         res.status(200).send('OK - duplicate');
         return;
       }
-
-      // Mark event as being processed
-      await webhookEventRef.set({
-        eventKey: webhookKey,
-        callSid: body.CallSid,
-        callStatus: body.CallStatus,
-        processedAt: admin.firestore.FieldValue.serverTimestamp(),
-        source: "twilio_call_webhook",
-      });
 
       // Trouver la session d'appel par CallSid
       const sessionResult = await twilioCallManager.findSessionByCallSid(body.CallSid);
@@ -359,61 +376,81 @@ async function handleCallFailed(
     );
 
     // 🔴 FONCTIONNALITÉ BONUS: Mise hors ligne automatique du prestataire sur no-answer
-    // IMPORTANT: On attend la dernière tentative (après tous les retries Twilio)
+    // P2-2 FIX: Improved with idempotency, atomic batch updates, and better logging
     if (participantType === 'provider' && body.CallStatus === 'no-answer') {
       // Fonction async auto-exécutée pour isolation totale
       (async () => {
         try {
           console.log(`[BONUS] No-answer détecté pour prestataire, session: ${sessionId}`);
-          
+          prodLogger.info('PROVIDER_OFFLINE_START', `No-answer detected, checking if should set offline`, { sessionId });
+
           const db = admin.firestore();
           const session = await twilioCallManager.getCallSession(sessionId);
-          
+
           if (!session) {
             console.log(`[BONUS] Session non trouvée: ${sessionId}`);
             return;
           }
-          
+
           // 🛡️ PROTECTION CRITIQUE: Vérifier que c'est la DERNIÈRE tentative
           // Ne pas mettre offline si Twilio va encore réessayer
           if (session.status !== 'failed' && session.status !== 'cancelled') {
             console.log(`[BONUS] Session status: ${session.status} - Twilio va réessayer, on ne déconnecte pas encore`);
             return;
           }
-          
+
+          // P2-2 FIX: Idempotency check - prevent double offline processing
+          if (session.metadata?.providerSetOffline) {
+            console.log(`[BONUS] Provider already set offline for session: ${sessionId}`);
+            return;
+          }
+
           console.log(`[BONUS] Session définitivement échouée (status: ${session.status}), on peut mettre offline`);
-          
+
           const providerId = session.metadata?.providerId;
-          
+
           if (!providerId) {
             console.log(`[BONUS] ProviderId non trouvé dans session: ${sessionId}`);
             return;
           }
-          
+
           // Vérifier que le prestataire est bien en ligne avant de le déconnecter
           const providerDoc = await db.collection('sos_profiles').doc(providerId).get();
           const providerData = providerDoc.data();
-          
+
           if (!providerData?.isOnline) {
             console.log(`[BONUS] Prestataire ${providerId} déjà hors ligne, rien à faire`);
             return;
           }
-          
+
           console.log(`[BONUS] Mise hors ligne du prestataire: ${providerId}`);
-          
-          // Mettre isOnline à false dans sos_profiles
-          await db.collection('sos_profiles').doc(providerId).update({
+          prodLogger.info('PROVIDER_OFFLINE_PROCESSING', `Setting provider offline after no-answer`, { sessionId, providerId });
+
+          // P2-2 FIX: Use batch for atomic updates across collections
+          const batch = db.batch();
+
+          // Update sos_profiles
+          batch.update(db.collection('sos_profiles').doc(providerId), {
             isOnline: false,
             availability: 'offline',
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
           });
-          
-          // Mettre isOnline à false dans users
-          await db.collection('users').doc(providerId).update({
+
+          // Update users
+          batch.update(db.collection('users').doc(providerId), {
             isOnline: false,
             availability: 'offline',
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
           });
+
+          // Mark session as processed (idempotency)
+          batch.update(db.collection('call_sessions').doc(sessionId), {
+            'metadata.providerSetOffline': true,
+            'metadata.providerSetOfflineAt': admin.firestore.FieldValue.serverTimestamp(),
+          });
+
+          // Commit all updates atomically
+          await batch.commit();
           
           // Récupérer la langue préférée pour la notification
           const preferredLanguage = providerData?.preferredLanguage || 'fr';
@@ -471,10 +508,15 @@ async function handleCallFailed(
           });
           
           console.log(`✅ [BONUS] Prestataire ${providerId} mis hors ligne avec succès après échec définitif`);
-          
+          prodLogger.info('PROVIDER_OFFLINE_SUCCESS', `Provider set offline successfully`, { sessionId, providerId });
+
         } catch (bonusError) {
           // Erreur isolée - n'affecte PAS le flux principal
           console.error('⚠️ [BONUS] Erreur mise hors ligne prestataire (fonctionnalité bonus):', bonusError);
+          prodLogger.error('PROVIDER_OFFLINE_ERROR', `Failed to set provider offline`, {
+            sessionId,
+            error: bonusError instanceof Error ? bonusError.message : String(bonusError)
+          });
           // On ne throw PAS l'erreur - le flux principal continue normalement
         }
       })(); // Fonction async auto-exécutée et isolée
@@ -509,24 +551,10 @@ async function handleCallFailed(
   }
 }
 
-/**
- * Webhook pour les événements de conférence (délégué au système moderne)
- */
-export const twilioConferenceWebhook = onRequest(
-  {
-    region: 'europe-west1',
-    memory: '256MiB',
-    cpu: 0.25,
-    maxInstances: 3,
-    minInstances: 0,
-    concurrency: 1
-  },
-  async (req: Request, res: Response) => {
-    // Rediriger vers le webhook de conférence moderne
-    const { twilioConferenceWebhook: modernWebhook } = await import('./TwilioConferenceWebhook');
-    return modernWebhook(req as Request, res);
-  }
-);
+// P0-1 FIX: Suppression du double export twilioConferenceWebhook
+// Ce webhook est défini et exporté directement depuis ./TwilioConferenceWebhook.ts
+// L'ancienne redirection ici causait de la confusion et un double déploiement.
+// IMPORTANT: L'export se fait maintenant via index.ts -> TwilioConferenceWebhook.ts
 
 /**
  * Webhook pour les événements d'enregistrement

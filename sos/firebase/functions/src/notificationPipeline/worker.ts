@@ -231,6 +231,7 @@ async function logDelivery(params: {
 // }
 
 // ----- Worker principal
+// DEBUG VERSION: Exhaustive logging for SMS/notification debugging
 export const onMessageEventCreate = onDocumentCreated(
   {
     region: "europe-west1",
@@ -246,47 +247,85 @@ export const onMessageEventCreate = onDocumentCreated(
     ],
   },
   async (event) => {
+    const debugId = `worker_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
+    const docId = event.params?.id || 'unknown';
+
+    console.log(`\n`);
+    console.log(`=======================================================================`);
+    console.log(`📬 [NotifWorker][${debugId}] ========== MESSAGE EVENT TRIGGERED ==========`);
+    console.log(`=======================================================================`);
+    console.log(`📬 [${debugId}] Document ID: ${docId}`);
+    console.log(`📬 [${debugId}] Timestamp: ${new Date().toISOString()}`);
+
     // 0) Interrupteur global
     const enabled = true;
     if (!enabled) {
-      console.log("🔒 Messaging disabled: ignoring event");
+      console.log("🔒 [${debugId}] Messaging disabled: ignoring event");
       return;
     }
 
     // 1) Récupérer l'événement
     const evt = event.data?.data() as MessageEvent | undefined;
     if (!evt) {
-      console.log("❌ No event paayload, abort");
+      console.error(`❌ [${debugId}] No event payload, abort`);
       return;
     }
 
+    console.log(`\n📬 [${debugId}] STEP 1: Event payload analysis:`);
+    console.log(`📬 [${debugId}]   eventId: ${evt.eventId}`);
+    console.log(`📬 [${debugId}]   locale: ${evt.locale || 'auto'}`);
+    console.log(`📬 [${debugId}]   to.uid: ${evt.to?.uid || 'none'}`);
+    console.log(`📬 [${debugId}]   to.email: ${evt.to?.email || 'none'}`);
+    console.log(`📬 [${debugId}]   to.phone: ${evt.to?.phone ? evt.to.phone.slice(0, 8) + '...' : 'none'}`);
+    console.log(`📬 [${debugId}]   channels: ${evt.channels?.join(', ') || 'auto'}`);
+    console.log(`📬 [${debugId}]   context keys: ${Object.keys(evt.context || {}).join(', ') || 'none'}`);
+
     console.log(
-      `📨 Processing event: ${evt.eventId} | Locale: ${evt.locale || "auto"}`
+      `📨 [${debugId}] Processing event: ${evt.eventId} | Locale: ${evt.locale || "auto"}`
     );
 
     // 2) Résolution de la langue
+    console.log(`\n📬 [${debugId}] STEP 2: Language resolution...`);
     const lang = resolveLang(
       evt?.locale || evt?.context?.user?.preferredLanguage
     );
     const debugLocale = resolveLang(evt?.locale);
     const debugUserLocale = resolveLang(evt?.context?.user?.preferredLanguage);
-    console.log(`🌐 Detected locale: ${debugLocale}`);
-    console.log(`🌐 Detected user locale: ${debugUserLocale}`);
-    console.log(`🌐 Resolved language: ${lang}`);
-    
-    
+    console.log(`🌐 [${debugId}] Detected locale from evt.locale: ${debugLocale}`);
+    console.log(`🌐 [${debugId}] Detected locale from user.preferredLanguage: ${debugUserLocale}`);
+    console.log(`🌐 [${debugId}] Final resolved language: ${lang}`);
 
     // 3) Lecture du template Firestore + fallback EN
+    console.log(`\n📬 [${debugId}] STEP 3: Loading template...`);
     const canonicalId = normalizeEventId(evt.eventId);
+    console.log(`📬 [${debugId}]   Original eventId: ${evt.eventId}`);
+    console.log(`📬 [${debugId}]   Canonical eventId: ${canonicalId}`);
+
     const templates = await getTemplate(lang, canonicalId);
     if (!templates) {
-      console.warn(`⚠️  No template for ${canonicalId} in language ${lang}`);
+      console.error(`❌ [${debugId}] CRITICAL: No template found for ${canonicalId} in language ${lang}`);
+      console.error(`❌ [${debugId}] This will prevent SMS/Email from being sent!`);
+      console.error(`❌ [${debugId}] Check Firestore collection: message_templates/${lang}/events/${canonicalId}`);
       return;
     }
-    console.log(`✅ Template loaded for ${canonicalId}`);
+    console.log(`✅ [${debugId}] Template loaded for ${canonicalId}`);
+    console.log(`📬 [${debugId}]   Template has email: ${!!templates.email?.enabled}`);
+    console.log(`📬 [${debugId}]   Template has sms: ${!!templates.sms?.enabled}`);
+    console.log(`📬 [${debugId}]   Template has push: ${!!templates.push?.enabled}`);
+    console.log(`📬 [${debugId}]   Template has inapp: ${!!templates.inapp?.enabled}`);
+    if (templates.sms?.enabled) {
+      console.log(`📬 [${debugId}]   SMS text template: ${templates.sms.text?.slice(0, 50)}...`);
+    }
 
     // 4) Routing + rate-limit
+    console.log(`\n📬 [${debugId}] STEP 4: Loading routing...`);
     const routing = await getRouting(canonicalId);
+    console.log(`📬 [${debugId}]   Routing strategy: ${routing.strategy}`);
+    console.log(`📬 [${debugId}]   Routing order: ${routing.order?.join(', ') || 'default'}`);
+    console.log(`📬 [${debugId}]   Routing channels:`);
+    Object.entries(routing.channels).forEach(([ch, cfg]) => {
+      console.log(`📬 [${debugId}]     ${ch}: enabled=${cfg.enabled}, provider=${cfg.provider}, rateLimitH=${cfg.rateLimitH}`);
+    });
 
     const uidForLimit = evt?.uid || evt?.context?.user?.uid || "unknown";
 
@@ -307,11 +346,20 @@ export const onMessageEventCreate = onDocumentCreated(
     }
 
     // 5) Sélection des canaux à tenter
+    console.log(`\n📬 [${debugId}] STEP 5: Channel selection...`);
     const context: Context = {
       ...(evt.context ?? {}),
       locale: lang,
       to: evt.to,
     };
+
+    // Debug: Check hasContact for each channel
+    console.log(`📬 [${debugId}]   Checking contact availability per channel:`);
+    console.log(`📬 [${debugId}]     email: hasContact=${hasContact('email', context)}, user.email=${context.user?.email || 'none'}, to.email=${context.to?.email || 'none'}`);
+    console.log(`📬 [${debugId}]     sms: hasContact=${hasContact('sms', context)}, user.phoneNumber=${context.user?.phoneNumber || 'none'}, to.phone=${context.to?.phone ? context.to.phone.slice(0, 8) + '...' : 'none'}`);
+    console.log(`📬 [${debugId}]     push: hasContact=${hasContact('push', context)}, fcmTokens=${context.user?.fcmTokens?.length || 0}`);
+    console.log(`📬 [${debugId}]     inapp: hasContact=${hasContact('inapp', context)}, uid=${context.user?.uid || 'none'}`);
+
     const channelsToTry = channelsToAttempt(
       routing.strategy,
       routing.order,
@@ -321,11 +369,16 @@ export const onMessageEventCreate = onDocumentCreated(
     );
 
     console.log(
-      `📋 Channels to attempt: ${channelsToTry.join(", ")} (strategy: ${routing.strategy})`
+      `📋 [${debugId}] Channels to attempt: [${channelsToTry.join(", ")}] (strategy: ${routing.strategy})`
     );
 
     if (channelsToTry.length === 0) {
-      console.log("⚠️  No available channels for this event");
+      console.error(`❌ [${debugId}] CRITICAL: No available channels for this event!`);
+      console.error(`❌ [${debugId}] Possible causes:`);
+      console.error(`❌ [${debugId}]   - SMS template not enabled in message_templates`);
+      console.error(`❌ [${debugId}]   - SMS channel not enabled in message_routing`);
+      console.error(`❌ [${debugId}]   - No phone number provided in to.phone`);
+      console.error(`❌ [${debugId}]   - Event data: ${JSON.stringify(evt, null, 2)}`);
       return;
     }
 
@@ -418,11 +471,15 @@ export const onMessageEventCreate = onDocumentCreated(
       }
 
       if (!success) {
-        console.error("💥 All channels failed for fallback strategy");
+        console.error(`💥 [${debugId}] All channels failed for fallback strategy`);
       }
     }
 
-    console.log(`🎉 Event ${evt.eventId} processing completed`);
+    console.log(`\n=======================================================================`);
+    console.log(`🎉 [NotifWorker][${debugId}] ========== PROCESSING COMPLETED ==========`);
+    console.log(`🎉 [${debugId}] Event: ${evt.eventId}`);
+    console.log(`🎉 [${debugId}] Channels attempted: ${channelsToTry.join(', ')}`);
+    console.log(`=======================================================================\n`);
   }
 );
 

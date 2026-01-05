@@ -179,6 +179,41 @@ export const createAndScheduleCallHTTPS = onCall(
       console.log(`✅ [${requestId}] Permissions validées`);
 
       // ========================================
+      // 3.5 P2-3 FIX: VALIDATION CLIENT/PROVIDER EXIST
+      // ========================================
+      const db = admin.firestore();
+
+      // Check provider exists in sos_profiles
+      const providerDoc = await db.collection('sos_profiles').doc(providerId).get();
+      if (!providerDoc.exists) {
+        console.error(`❌ [${requestId}] Provider not found: ${providerId.substring(0, 8)}...`);
+        throw new HttpsError(
+          'not-found',
+          'Le prestataire sélectionné n\'existe pas ou n\'est plus disponible.'
+        );
+      }
+      const providerData = providerDoc.data();
+      if (!providerData?.isActive || providerData?.status === 'banned') {
+        console.error(`❌ [${requestId}] Provider inactive or banned: ${providerId.substring(0, 8)}...`);
+        throw new HttpsError(
+          'failed-precondition',
+          'Le prestataire sélectionné n\'est pas disponible actuellement.'
+        );
+      }
+      console.log(`✅ [${requestId}] Provider exists and is active`);
+
+      // Check client exists in users
+      const clientDoc = await db.collection('users').doc(clientId).get();
+      if (!clientDoc.exists) {
+        console.error(`❌ [${requestId}] Client not found: ${clientId.substring(0, 8)}...`);
+        throw new HttpsError(
+          'not-found',
+          'Votre compte utilisateur est introuvable.'
+        );
+      }
+      console.log(`✅ [${requestId}] Client exists`);
+
+      // ========================================
       // 4. VALIDATION DES TYPES DE SERVICE
       // ========================================
       const allowedServiceTypes = ['lawyer_call', 'expat_call'];
@@ -340,10 +375,22 @@ export const createAndScheduleCallHTTPS = onCall(
       // P0 FIX: Planifier l'appel ICI (pas via webhook) car avec capture_method=manual,
       // l'événement payment_intent.succeeded n'arrive qu'APRÈS capture (trop tard!)
       const CALL_DELAY_SECONDS = 240; // 4 minutes
-      console.log(`📅 [${requestId}] Status: ${callSession.status}`);
-      console.log(`⏰ [${requestId}] Planification de l'appel dans ${CALL_DELAY_SECONDS}s via Cloud Tasks...`);
+
+      console.log(`\n`);
+      console.log(`=======================================================================`);
+      console.log(`📅 [createAndScheduleCall][${requestId}] ========== CLOUD TASKS SCHEDULING ==========`);
+      console.log(`=======================================================================`);
+      console.log(`📅 [${requestId}] CallSessionId: ${callSession.id}`);
+      console.log(`📅 [${requestId}] Session status: ${callSession.status}`);
+      console.log(`📅 [${requestId}] Delay: ${CALL_DELAY_SECONDS}s (${CALL_DELAY_SECONDS/60} minutes)`);
+      console.log(`📅 [${requestId}] PaymentIntentId: ${paymentIntentId}`);
+      console.log(`📅 [${requestId}] ProviderId: ${providerId}`);
+      console.log(`📅 [${requestId}] ClientId: ${clientId}`);
+      console.log(`📅 [${requestId}] ServiceType: ${serviceType}`);
+      console.log(`📅 [${requestId}] Timestamp: ${new Date().toISOString()}`);
 
       try {
+        console.log(`\n📅 [${requestId}] Calling scheduleCallTaskWithIdempotence...`);
         // Utiliser la version avec idempotence pour éviter les doublons
         const schedulingResult = await scheduleCallTaskWithIdempotence(
           callSession.id,
@@ -352,10 +399,15 @@ export const createAndScheduleCallHTTPS = onCall(
         );
 
         if (schedulingResult.skipped) {
-          console.log(`⚠️ [${requestId}] Scheduling skipped: ${schedulingResult.reason}`);
+          console.log(`⚠️ [${requestId}] Scheduling SKIPPED!`);
+          console.log(`⚠️ [${requestId}] Reason: ${schedulingResult.reason}`);
+          console.log(`⚠️ [${requestId}] Existing taskId: ${schedulingResult.taskId || 'none'}`);
         } else {
-          console.log(`✅ [${requestId}] Cloud Task créée: ${schedulingResult.taskId}`);
-          console.log(`🚀 [${requestId}] Appel planifié dans ${CALL_DELAY_SECONDS/60} minutes`);
+          console.log(`\n=======================================================================`);
+          console.log(`✅ [createAndScheduleCall][${requestId}] ========== SCHEDULING SUCCESS ==========`);
+          console.log(`✅ [${requestId}] Cloud Task ID: ${schedulingResult.taskId}`);
+          console.log(`✅ [${requestId}] Call will trigger at: ${new Date(Date.now() + CALL_DELAY_SECONDS * 1000).toISOString()}`);
+          console.log(`=======================================================================\n`);
         }
       } catch (scheduleError) {
         console.error(`❌ [${requestId}] Erreur planification Cloud Task:`, scheduleError);

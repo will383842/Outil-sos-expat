@@ -73,17 +73,78 @@ async function checkRateLimit(to: string): Promise<{ allowed: boolean; reason?: 
 }
 
 export async function sendSms(to: string, text: string): Promise<string> {
+  // ============================================================================
+  // DEBUG LOGGING: Trace complet de l'envoi SMS
+  // ============================================================================
+  const debugId = `sms_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
+
+  console.log(`📱 [TwilioSMS][${debugId}] ========== SEND SMS START ==========`);
+  console.log(`📱 [TwilioSMS][${debugId}] Destination: ${to ? `${to.slice(0, 5)}***${to.slice(-2)}` : 'NULL/UNDEFINED'}`);
+  console.log(`📱 [TwilioSMS][${debugId}] Text length: ${text?.length || 0} chars`);
+  console.log(`📱 [TwilioSMS][${debugId}] Text preview: ${text?.slice(0, 50)}...`);
+
+  // Validation du numéro de destination
+  if (!to || typeof to !== 'string') {
+    console.error(`❌ [TwilioSMS][${debugId}] ERREUR: Numéro de destination invalide: ${to}`);
+    throw new Error(`SMS destination invalide: ${to}`);
+  }
+
+  if (!to.startsWith('+')) {
+    console.warn(`⚠️ [TwilioSMS][${debugId}] ATTENTION: Numéro sans préfixe international: ${to}`);
+  }
+
   // P0 SECURITY: Check rate limit avant envoi
+  console.log(`📱 [TwilioSMS][${debugId}] Step 1: Checking rate limit...`);
   const rateLimitCheck = await checkRateLimit(to);
+  console.log(`📱 [TwilioSMS][${debugId}] Rate limit result: allowed=${rateLimitCheck.allowed}, reason=${rateLimitCheck.reason || 'N/A'}`);
+
   if (!rateLimitCheck.allowed) {
-    console.error(`🚫 [SMS] BLOCKED by rate limit: ${rateLimitCheck.reason}`);
+    console.error(`🚫 [TwilioSMS][${debugId}] BLOCKED by rate limit: ${rateLimitCheck.reason}`);
     throw new Error(`SMS rate limit exceeded: ${rateLimitCheck.reason}`);
   }
 
-  const client = getTwilioClient();
-  const from = getTwilioPhoneNumber();
-  console.log(`📱 [SMS] Sending SMS to ${to.slice(0, 5)}*** from ${from}`);
-  const res = await client.messages.create({ to, from, body: text });
-  console.log(`✅ [SMS] Message sent with SID: ${res.sid}`);
-  return res.sid;
+  console.log(`📱 [TwilioSMS][${debugId}] Step 2: Getting Twilio client...`);
+  let client;
+  try {
+    client = getTwilioClient();
+    console.log(`📱 [TwilioSMS][${debugId}] Twilio client obtained: ${client ? 'OK' : 'NULL'}`);
+  } catch (clientError) {
+    console.error(`❌ [TwilioSMS][${debugId}] ERREUR Twilio client:`, clientError);
+    throw clientError;
+  }
+
+  console.log(`📱 [TwilioSMS][${debugId}] Step 3: Getting Twilio phone number...`);
+  let from;
+  try {
+    from = getTwilioPhoneNumber();
+    console.log(`📱 [TwilioSMS][${debugId}] From number: ${from ? `${from.slice(0, 5)}***` : 'NULL/UNDEFINED'}`);
+  } catch (phoneError) {
+    console.error(`❌ [TwilioSMS][${debugId}] ERREUR récupération numéro Twilio:`, phoneError);
+    throw phoneError;
+  }
+
+  if (!from) {
+    console.error(`❌ [TwilioSMS][${debugId}] ERREUR: Numéro Twilio source non configuré!`);
+    throw new Error('TWILIO_PHONE_NUMBER non configuré');
+  }
+
+  console.log(`📱 [TwilioSMS][${debugId}] Step 4: Creating Twilio message...`);
+  console.log(`📱 [TwilioSMS][${debugId}] Payload: { to: ${to.slice(0, 5)}***, from: ${from.slice(0, 5)}***, body: ${text?.length} chars }`);
+
+  try {
+    const res = await client.messages.create({ to, from, body: text });
+    console.log(`✅ [TwilioSMS][${debugId}] ========== SMS SENT SUCCESSFULLY ==========`);
+    console.log(`✅ [TwilioSMS][${debugId}] Message SID: ${res.sid}`);
+    console.log(`✅ [TwilioSMS][${debugId}] Status: ${res.status}`);
+    console.log(`✅ [TwilioSMS][${debugId}] To: ${res.to}`);
+    console.log(`✅ [TwilioSMS][${debugId}] Price: ${res.price || 'pending'} ${res.priceUnit || ''}`);
+    return res.sid;
+  } catch (sendError: unknown) {
+    console.error(`❌ [TwilioSMS][${debugId}] ========== SMS SEND FAILED ==========`);
+    console.error(`❌ [TwilioSMS][${debugId}] Error type: ${(sendError as Error)?.constructor?.name}`);
+    console.error(`❌ [TwilioSMS][${debugId}] Error message: ${(sendError as Error)?.message}`);
+    console.error(`❌ [TwilioSMS][${debugId}] Error code: ${(sendError as {code?: number})?.code || 'N/A'}`);
+    console.error(`❌ [TwilioSMS][${debugId}] Full error:`, sendError);
+    throw sendError;
+  }
 }

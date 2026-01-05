@@ -32,6 +32,11 @@ const CLOUD_TASKS_LOCATION = defineString("CLOUD_TASKS_LOCATION", { default: "eu
 const CLOUD_TASKS_QUEUE = defineString("CLOUD_TASKS_QUEUE", { default: "call-scheduler-queue" });
 const FUNCTIONS_BASE_URL_PARAM = defineString("FUNCTIONS_BASE_URL"); // optionnel
 const TASKS_AUTH_SECRET = defineSecret("TASKS_AUTH_SECRET");
+// P1-4 FIX: Cloud Run URL now configurable via environment variable
+// Firebase Functions v2 uses Cloud Run with different URL format than v1
+const EXECUTE_CALL_TASK_URL = defineString("EXECUTE_CALL_TASK_URL", {
+  default: "https://executecalltask-5tfnuxa2hq-ew.a.run.app"
+});
 
 // Récupère le projectId depuis l'environnement Functions (standard)
 function getProjectId(): string {
@@ -152,13 +157,13 @@ export async function scheduleCallTask(
       taskId};
     console.log(`📋 [CloudTasks][${debugId}] Payload:`, JSON.stringify(payload, null, 2));
 
-    // P0 FIX CRITIQUE: Firebase Functions v2 utilise Cloud Run avec URLs différentes
-    const CLOUD_RUN_URL = 'https://executecalltask-5tfnuxa2hq-ew.a.run.app';
-    const finalUrl = CLOUD_RUN_URL;
+    // P1-4 FIX: Cloud Run URL now from environment variable (was hardcoded)
+    // Firebase Functions v2 uses Cloud Run with different URL format than v1
+    const finalUrl = EXECUTE_CALL_TASK_URL.value() || 'https://executecalltask-5tfnuxa2hq-ew.a.run.app';
 
     console.log(`\n📋 [CloudTasks][${debugId}] STEP 4: URL Configuration:`);
     console.log(`📋 [CloudTasks][${debugId}]   Computed URL (NOT USED): ${callbackUrl}`);
-    console.log(`📋 [CloudTasks][${debugId}]   Cloud Run URL (USED): ${finalUrl}`);
+    console.log(`📋 [CloudTasks][${debugId}]   Cloud Run URL (FROM ENV): ${finalUrl}`);
 
     // STEP 5: Check auth secret
     console.log(`\n📋 [CloudTasks][${debugId}] STEP 5: Auth secret check...`);

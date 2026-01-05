@@ -1174,27 +1174,49 @@ export const getStripe = traceFunction(
 );
 
 // ====== HELPER POUR ENVOI AUTOMATIQUE DES MESSAGES ======
+// DEBUG VERSION: Exhaustive logging to trace booking request SMS flow
 const sendPaymentNotifications = traceFunction(
   async (callSessionId: string, database: admin.firestore.Firestore) => {
+    const debugId = `notif_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
+
+    console.log(`\n`);
+    console.log(`=======================================================================`);
+    console.log(`📨 [sendPaymentNotifications][${debugId}] ========== START ==========`);
+    console.log(`=======================================================================`);
+    console.log(`📨 [${debugId}] CallSessionId: ${callSessionId}`);
+    console.log(`📨 [${debugId}] Timestamp: ${new Date().toISOString()}`);
+
     try {
       ultraLogger.info(
         "PAYMENT_NOTIFICATIONS",
         "Envoi des notifications post-paiement",
-        { callSessionId }
+        { callSessionId, debugId }
       );
 
+      // STEP 1: Fetch call session
+      console.log(`\n📨 [${debugId}] STEP 1: Fetching call_sessions document...`);
       const snap = await database
         .collection("call_sessions")
         .doc(callSessionId)
         .get();
+
+      console.log(`📨 [${debugId}] Document exists: ${snap.exists}`);
+
       if (!snap.exists) {
+        console.error(`❌ [${debugId}] CRITICAL: Session ${callSessionId} NOT FOUND!`);
         ultraLogger.warn("PAYMENT_NOTIFICATIONS", "Session introuvable", {
           callSessionId,
+          debugId,
         });
         return;
       }
 
       const cs: any = snap.data();
+
+      // STEP 2: Extract all data for debugging
+      console.log(`\n📨 [${debugId}] STEP 2: Extracting session data...`);
+      console.log(`📨 [${debugId}] Session status: ${cs?.status}`);
+      console.log(`📨 [${debugId}] Session createdAt: ${cs?.createdAt?.toDate?.() || cs?.createdAt}`);
 
       const providerPhone =
         cs?.participants?.provider?.phone ?? cs?.providerPhone ?? "";
@@ -1203,15 +1225,15 @@ const sendPaymentNotifications = traceFunction(
       const language = cs?.metadata?.clientLanguages?.[0] ?? "fr";
       const title = cs?.metadata?.title ?? cs?.title ?? "Consultation";
 
-      ultraLogger.debug("PAYMENT_NOTIFICATIONS", "Données extraites", {
-        callSessionId,
-        providerPhone: providerPhone
-          ? `${providerPhone.slice(0, 4)}...`
-          : "none",
-        clientPhone: clientPhone ? `${clientPhone.slice(0, 4)}...` : "none",
-        language,
-        title,
-      });
+      console.log(`\n📨 [${debugId}] STEP 3: Phone numbers analysis:`);
+      console.log(`📨 [${debugId}]   providerPhone exists: ${!!providerPhone}`);
+      console.log(`📨 [${debugId}]   providerPhone preview: ${providerPhone ? providerPhone.slice(0, 8) + '...' : 'MISSING'}`);
+      console.log(`📨 [${debugId}]   providerPhone length: ${providerPhone?.length || 0}`);
+      console.log(`📨 [${debugId}]   clientPhone exists: ${!!clientPhone}`);
+      console.log(`📨 [${debugId}]   clientPhone preview: ${clientPhone ? clientPhone.slice(0, 8) + '...' : 'MISSING'}`);
+      console.log(`📨 [${debugId}]   clientPhone length: ${clientPhone?.length || 0}`);
+      console.log(`📨 [${debugId}]   language: ${language}`);
+      console.log(`📨 [${debugId}]   title: ${title}`);
 
       // P0 FIX: Envoyer des notifications via le pipeline message_events
       const clientId = cs?.participants?.client?.id ?? cs?.clientId ?? "";
@@ -1220,9 +1242,21 @@ const sendPaymentNotifications = traceFunction(
       const providerEmail = cs?.participants?.provider?.email ?? cs?.providerEmail ?? "";
       const scheduledTime = cs?.scheduledAt?.toDate?.() ?? cs?.scheduledAt ?? new Date();
 
+      console.log(`\n📨 [${debugId}] STEP 4: User IDs analysis:`);
+      console.log(`📨 [${debugId}]   clientId: ${clientId || 'MISSING'}`);
+      console.log(`📨 [${debugId}]   providerId: ${providerId || 'MISSING'}`);
+      console.log(`📨 [${debugId}]   clientEmail: ${clientEmail || 'MISSING'}`);
+      console.log(`📨 [${debugId}]   providerEmail: ${providerEmail || 'MISSING'}`);
+      console.log(`📨 [${debugId}]   scheduledTime: ${scheduledTime instanceof Date ? scheduledTime.toISOString() : scheduledTime}`);
+
+      // STEP 5: Create message_events
+      console.log(`\n📨 [${debugId}] STEP 5: Creating message_events...`);
+
       // Notification au client: Appel programmé
       if (clientId || clientEmail) {
-        await database.collection("message_events").add({
+        console.log(`📨 [${debugId}] Creating CLIENT notification (call.scheduled.client)...`);
+
+        const clientEventData = {
           eventId: "call.scheduled.client",
           locale: language,
           to: {
@@ -1237,13 +1271,25 @@ const sendPaymentNotifications = traceFunction(
             providerName: cs?.participants?.provider?.name ?? cs?.providerName ?? "Expert",
           },
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-        ultraLogger.info("PAYMENT_NOTIFICATIONS", "Notification client créée", { callSessionId, clientId });
+        };
+
+        console.log(`📨 [${debugId}] Client event data:`, JSON.stringify({
+          ...clientEventData,
+          createdAt: 'serverTimestamp()'
+        }, null, 2));
+
+        const clientEventRef = await database.collection("message_events").add(clientEventData);
+        console.log(`✅ [${debugId}] Client notification created: ${clientEventRef.id}`);
+        ultraLogger.info("PAYMENT_NOTIFICATIONS", "Notification client créée", { callSessionId, clientId, eventDocId: clientEventRef.id, debugId });
+      } else {
+        console.log(`⚠️ [${debugId}] SKIPPED client notification - no clientId or clientEmail`);
       }
 
       // Notification au provider: Appel entrant programmé
       if (providerId || providerEmail) {
-        await database.collection("message_events").add({
+        console.log(`📨 [${debugId}] Creating PROVIDER notification (call.scheduled.provider)...`);
+
+        const providerEventData = {
           eventId: "call.scheduled.provider",
           locale: language,
           to: {
@@ -1258,21 +1304,48 @@ const sendPaymentNotifications = traceFunction(
             clientName: cs?.participants?.client?.name ?? cs?.clientName ?? "Client",
           },
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-        ultraLogger.info("PAYMENT_NOTIFICATIONS", "Notification provider créée", { callSessionId, providerId });
+        };
+
+        console.log(`📨 [${debugId}] Provider event data:`, JSON.stringify({
+          ...providerEventData,
+          createdAt: 'serverTimestamp()'
+        }, null, 2));
+
+        const providerEventRef = await database.collection("message_events").add(providerEventData);
+        console.log(`✅ [${debugId}] Provider notification created: ${providerEventRef.id}`);
+        ultraLogger.info("PAYMENT_NOTIFICATIONS", "Notification provider créée", { callSessionId, providerId, eventDocId: providerEventRef.id, debugId });
+      } else {
+        console.log(`⚠️ [${debugId}] SKIPPED provider notification - no providerId or providerEmail`);
       }
+
+      console.log(`\n=======================================================================`);
+      console.log(`✅ [sendPaymentNotifications][${debugId}] ========== SUCCESS ==========`);
+      console.log(`✅ [${debugId}] Client notified: ${!!(clientId || clientEmail)}`);
+      console.log(`✅ [${debugId}] Provider notified: ${!!(providerId || providerEmail)}`);
+      console.log(`=======================================================================\n`);
 
       ultraLogger.info("PAYMENT_NOTIFICATIONS", "Notifications envoyées avec succès", {
         callSessionId,
+        debugId,
         clientNotified: !!(clientId || clientEmail),
         providerNotified: !!(providerId || providerEmail),
       });
     } catch (error) {
+      console.error(`\n=======================================================================`);
+      console.error(`❌ [sendPaymentNotifications][${debugId}] ========== ERROR ==========`);
+      console.error(`=======================================================================`);
+      console.error(`❌ [${debugId}] CallSessionId: ${callSessionId}`);
+      console.error(`❌ [${debugId}] Error type: ${error instanceof Error ? error.constructor.name : typeof error}`);
+      console.error(`❌ [${debugId}] Error message: ${error instanceof Error ? error.message : String(error)}`);
+      console.error(`❌ [${debugId}] Error stack:`, error instanceof Error ? error.stack : 'No stack');
+      console.error(`=======================================================================\n`);
+
       ultraLogger.error(
         "PAYMENT_NOTIFICATIONS",
         "Erreur envoi notifications",
         {
           callSessionId,
+          debugId,
           error: error instanceof Error ? error.message : String(error),
         },
         error instanceof Error ? error : undefined
