@@ -429,29 +429,53 @@ export const createAndScheduleCallHTTPS = onCall(
       console.log(`=======================================================================`);
       console.log(`📨 [createAndScheduleCall][${requestId}] ========== NOTIFICATIONS ==========`);
       console.log(`=======================================================================`);
+      console.log(`📨 [${requestId}] STEP N1: Starting notification flow...`);
+      console.log(`📨 [${requestId}]   - callSessionId: ${callSession.id}`);
+      console.log(`📨 [${requestId}]   - providerId: ${providerId}`);
+      console.log(`📨 [${requestId}]   - clientId: ${clientId}`);
+      console.log(`📨 [${requestId}]   - serviceType: ${serviceType}`);
 
       try {
         // Get client and provider data for notifications
+        console.log(`📨 [${requestId}] STEP N2: Fetching client/provider data...`);
         const clientData = clientDoc.data();
         const providerDocData = providerData; // Already fetched earlier
+        console.log(`📨 [${requestId}]   - clientData: ${clientData ? 'EXISTS' : 'NULL'}`);
+        console.log(`📨 [${requestId}]   - providerDocData: ${providerDocData ? 'EXISTS' : 'NULL'}`);
+        console.log(`📨 [${requestId}]   - clientData.country: ${clientData?.country || 'NOT_SET'}`);
+        console.log(`📨 [${requestId}]   - clientData.firstName: ${clientData?.firstName || 'NOT_SET'}`);
+        console.log(`📨 [${requestId}]   - clientData.displayName: ${clientData?.displayName || 'NOT_SET'}`);
 
         // Decrypt phone numbers (they may be encrypted for GDPR)
+        console.log(`📨 [${requestId}] STEP N3: Decrypting phone numbers...`);
+        console.log(`📨 [${requestId}]   - providerPhone raw: ${providerPhone ? providerPhone.substring(0, 10) + '...' : 'NULL'}`);
+        console.log(`📨 [${requestId}]   - clientPhone raw: ${clientPhone ? clientPhone.substring(0, 10) + '...' : 'NULL'}`);
+        console.log(`📨 [${requestId}]   - providerPhone encrypted? ${providerPhone?.startsWith('enc:') || false}`);
+        console.log(`📨 [${requestId}]   - clientPhone encrypted? ${clientPhone?.startsWith('enc:') || false}`);
+
         let decryptedProviderPhone = providerPhone;
         let decryptedClientPhone = clientPhone;
 
         try {
           if (providerPhone.startsWith('enc:')) {
             decryptedProviderPhone = decryptPhoneNumber(providerPhone);
-            console.log(`📨 [${requestId}] Provider phone decrypted: ${decryptedProviderPhone.slice(0, 5)}***`);
+            console.log(`📨 [${requestId}]   ✅ Provider phone decrypted: ${decryptedProviderPhone.slice(0, 5)}***`);
+          } else {
+            console.log(`📨 [${requestId}]   ℹ️ Provider phone not encrypted, using as-is`);
           }
           if (clientPhone.startsWith('enc:')) {
             decryptedClientPhone = decryptPhoneNumber(clientPhone);
-            console.log(`📨 [${requestId}] Client phone decrypted: ${decryptedClientPhone.slice(0, 5)}***`);
+            console.log(`📨 [${requestId}]   ✅ Client phone decrypted: ${decryptedClientPhone.slice(0, 5)}***`);
+          } else {
+            console.log(`📨 [${requestId}]   ℹ️ Client phone not encrypted, using as-is`);
           }
         } catch (decryptError) {
           console.warn(`⚠️ [${requestId}] Phone decryption failed, using original:`, decryptError);
+          console.warn(`⚠️ [${requestId}]   Error type: ${decryptError?.constructor?.name}`);
+          console.warn(`⚠️ [${requestId}]   Error message: ${decryptError instanceof Error ? decryptError.message : String(decryptError)}`);
         }
 
+        console.log(`📨 [${requestId}] STEP N4: Building notification context...`);
         const scheduledTime = new Date(Date.now() + CALL_DELAY_SECONDS * 1000);
         const language = clientLanguages?.[0] || 'fr';
         const clientName = clientData?.displayName || clientData?.firstName || 'Client';
@@ -460,9 +484,22 @@ export const createAndScheduleCallHTTPS = onCall(
         const providerEmail = providerDocData?.email || '';
         const title = serviceType === 'lawyer_call' ? 'Consultation avocat' : 'Consultation expat';
 
+        console.log(`📨 [${requestId}]   - scheduledTime: ${scheduledTime.toISOString()}`);
+        console.log(`📨 [${requestId}]   - language: ${language}`);
+        console.log(`📨 [${requestId}]   - clientName: ${clientName}`);
+        console.log(`📨 [${requestId}]   - clientCountry: ${clientData?.country || 'N/A'}`);
+        console.log(`📨 [${requestId}]   - providerName: ${providerName}`);
+        console.log(`📨 [${requestId}]   - clientEmail: ${clientEmail ? clientEmail.substring(0, 5) + '***' : 'NOT_SET'}`);
+        console.log(`📨 [${requestId}]   - providerEmail: ${providerEmail ? providerEmail.substring(0, 5) + '***' : 'NOT_SET'}`);
+        console.log(`📨 [${requestId}]   - title: ${title}`);
+
         // Create message_events for client
+        console.log(`📨 [${requestId}] STEP N5: Creating CLIENT message_event...`);
+        console.log(`📨 [${requestId}]   - clientId: ${clientId || 'NOT_SET'}`);
+        console.log(`📨 [${requestId}]   - clientEmail: ${clientEmail ? 'SET' : 'NOT_SET'}`);
+        console.log(`📨 [${requestId}]   - Will create event? ${!!(clientId || clientEmail)}`);
+
         if (clientId || clientEmail) {
-          console.log(`📨 [${requestId}] Creating CLIENT notification (call.scheduled.client)...`);
           const clientEventData = {
             eventId: 'call.scheduled.client',
             locale: language,
@@ -479,13 +516,29 @@ export const createAndScheduleCallHTTPS = onCall(
             },
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
           };
+          console.log(`📨 [${requestId}]   Client event data prepared:`);
+          console.log(`📨 [${requestId}]     - eventId: ${clientEventData.eventId}`);
+          console.log(`📨 [${requestId}]     - locale: ${clientEventData.locale}`);
+          console.log(`📨 [${requestId}]     - to.uid: ${clientEventData.to.uid}`);
+          console.log(`📨 [${requestId}]     - to.phone: ${clientEventData.to.phone ? clientEventData.to.phone.substring(0, 5) + '***' : 'NULL'}`);
+          console.log(`📨 [${requestId}]     - context.title: ${clientEventData.context.title}`);
+          console.log(`📨 [${requestId}]   Writing to Firestore message_events...`);
+
           const clientEventRef = await db.collection('message_events').add(clientEventData);
-          console.log(`✅ [${requestId}] Client notification created: ${clientEventRef.id}`);
+          console.log(`✅ [${requestId}] CLIENT notification created: ${clientEventRef.id}`);
+          console.log(`✅ [${requestId}]   → NOTE: inapp=true only (no SMS/email/push for client)`);
+        } else {
+          console.log(`⚠️ [${requestId}] SKIPPING client notification - no clientId or email`);
         }
 
         // Create message_events for provider - ONLY SMS with booking details
+        console.log(`📨 [${requestId}] STEP N6: Creating PROVIDER message_event (SMS enabled)...`);
+        console.log(`📨 [${requestId}]   - providerId: ${providerId || 'NOT_SET'}`);
+        console.log(`📨 [${requestId}]   - providerEmail: ${providerEmail ? 'SET' : 'NOT_SET'}`);
+        console.log(`📨 [${requestId}]   - decryptedProviderPhone: ${decryptedProviderPhone ? decryptedProviderPhone.substring(0, 5) + '***' : 'NOT_SET'}`);
+        console.log(`📨 [${requestId}]   - Will create event? ${!!(providerId || providerEmail)}`);
+
         if (providerId || providerEmail) {
-          console.log(`📨 [${requestId}] Creating PROVIDER notification (call.scheduled.provider) - SMS with booking details...`);
           const providerEventData = {
             eventId: 'call.scheduled.provider',
             locale: language,
@@ -506,8 +559,24 @@ export const createAndScheduleCallHTTPS = onCall(
             },
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
           };
+          console.log(`📨 [${requestId}]   Provider event data prepared (with booking details):`);
+          console.log(`📨 [${requestId}]     - eventId: ${providerEventData.eventId}`);
+          console.log(`📨 [${requestId}]     - locale: ${providerEventData.locale}`);
+          console.log(`📨 [${requestId}]     - to.uid: ${providerEventData.to.uid}`);
+          console.log(`📨 [${requestId}]     - to.phone: ${providerEventData.to.phone ? providerEventData.to.phone.substring(0, 5) + '***' : 'NULL'}`);
+          console.log(`📨 [${requestId}]     - context.clientName: ${providerEventData.context.clientName}`);
+          console.log(`📨 [${requestId}]     - context.clientCountry: ${providerEventData.context.clientCountry}`);
+          console.log(`📨 [${requestId}]     - context.clientLanguage: ${providerEventData.context.clientLanguage}`);
+          console.log(`📨 [${requestId}]     - context.title: ${providerEventData.context.title}`);
+          console.log(`📨 [${requestId}]     - context.description: ${providerEventData.context.description}`);
+          console.log(`📨 [${requestId}]   Writing to Firestore message_events...`);
+
           const providerEventRef = await db.collection('message_events').add(providerEventData);
-          console.log(`✅ [${requestId}] Provider notification created: ${providerEventRef.id}`);
+          console.log(`✅ [${requestId}] PROVIDER notification created: ${providerEventRef.id}`);
+          console.log(`✅ [${requestId}]   → SMS will be sent with: "${providerEventData.context.clientName} (${providerEventData.context.clientCountry})"`);
+          console.log(`✅ [${requestId}]   → Inapp notification will also appear in dashboard`);
+        } else {
+          console.log(`⚠️ [${requestId}] SKIPPING provider notification - no providerId or email`);
         }
 
         // Sync to Outil-sos-expat (non-blocking)

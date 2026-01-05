@@ -921,11 +921,14 @@ export class TwilioCallManager {
     const maxRetries = CALL_CONFIG.MAX_RETRIES;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      // Define retryId BEFORE try block so it's accessible in catch block
+      const retryId = `retry_${Date.now().toString(36)}_${attempt}`;
+
       try {
         // 🛑 STOP if session is already failed/cancelled (prevents unnecessary retries)
         const sessionCheck = await this.getCallSession(sessionId);
         if (sessionCheck && (sessionCheck.status === "failed" || sessionCheck.status === "cancelled")) {
-          console.log(`🛑 Stopping retries for ${participantType}: session is ${sessionCheck.status}`);
+          console.log(`🛑 [${retryId}] Stopping retries for ${participantType}: session is ${sessionCheck.status}`);
           await logCallRecord({
             callId: sessionId,
             status: `${participantType}_retries_stopped_session_${sessionCheck.status}`,
@@ -940,7 +943,7 @@ export class TwilioCallManager {
           : sessionCheck?.participants.client;
 
         if (participant?.status === "connected") {
-          console.log(`✅ [IDEMPOTENT] ${participantType} already connected, no need to retry`);
+          console.log(`✅ [${retryId}] [IDEMPOTENT] ${participantType} already connected, no need to retry`);
           await logCallRecord({
             callId: sessionId,
             status: `${participantType}_already_connected_skip_retry`,
@@ -955,18 +958,24 @@ export class TwilioCallManager {
             const twilioClient = getTwilioClient();
             const existingCall = await twilioClient.calls(participant.callSid).fetch();
             if (existingCall.status === "in-progress" || existingCall.status === "ringing" || existingCall.status === "queued") {
-              console.log(`📴 [CLEANUP] Hanging up previous call ${participant.callSid} (status: ${existingCall.status})`);
+              console.log(`📴 [${retryId}] [CLEANUP] Hanging up previous call ${participant.callSid} (status: ${existingCall.status})`);
               await twilioClient.calls(participant.callSid).update({ status: "completed" });
               await this.delay(1000); // Wait for Twilio to process
             }
           } catch (hangupError) {
-            console.warn(`⚠️ [CLEANUP] Could not hangup previous call:`, hangupError);
+            console.warn(`⚠️ [${retryId}] [CLEANUP] Could not hangup previous call:`, hangupError);
           }
         }
-
-        console.log(
-          `📞 Tentative ${attempt}/${maxRetries} → ${participantType} (${sessionId})`
-        );
+        console.log(`\n${'▓'.repeat(70)}`);
+        console.log(`📞 [${retryId}] TWILIO CALL ATTEMPT ${attempt}/${maxRetries}`);
+        console.log(`📞 [${retryId}]   sessionId: ${sessionId}`);
+        console.log(`📞 [${retryId}]   participantType: ${participantType}`);
+        console.log(`📞 [${retryId}]   phoneNumber: ${phoneNumber.substring(0, 6)}****`);
+        console.log(`📞 [${retryId}]   conferenceName: ${conferenceName}`);
+        console.log(`📞 [${retryId}]   timeLimit: ${timeLimit}s`);
+        console.log(`📞 [${retryId}]   langKey: ${langKey}`);
+        console.log(`📞 [${retryId}]   ttsLocale: ${ttsLocale}`);
+        console.log(`${'▓'.repeat(70)}`);
 
         await this.incrementAttemptCount(sessionId, participantType);
 
@@ -976,7 +985,10 @@ export class TwilioCallManager {
           retryCount: attempt,
         });
 
+        console.log(`📞 [${retryId}] STEP A: Generating TwiML...`);
         const welcomeMessage = getIntroText(participantType, langKey);
+        console.log(`📞 [${retryId}]   welcomeMessage: "${welcomeMessage.substring(0, 50)}..."`);
+
         const twiml = this.generateConferenceTwiML(
           conferenceName,
           participantType,
@@ -985,11 +997,26 @@ export class TwilioCallManager {
           ttsLocale,
           welcomeMessage
         );
+        console.log(`📞 [${retryId}]   TwiML generated (${twiml.length} chars)`);
+        console.log(`📞 [${retryId}]   TwiML preview: ${twiml.substring(0, 200)}...`);
 
+        console.log(`📞 [${retryId}] STEP B: Getting Twilio credentials...`);
         const twilioClient = getTwilioClient();
         const fromNumber = getTwilioPhoneNumber();
         const base = getFunctionsBaseUrl();
+        console.log(`📞 [${retryId}]   fromNumber: ${fromNumber}`);
+        console.log(`📞 [${retryId}]   base URL: ${base}`);
+        console.log(`📞 [${retryId}]   statusCallback: ${base}/twilioCallWebhook`);
 
+        console.log(`📞 [${retryId}] STEP C: Creating Twilio call via API...`);
+        console.log(`📞 [${retryId}]   twilioClient.calls.create({`);
+        console.log(`📞 [${retryId}]     to: ${phoneNumber.substring(0, 6)}****,`);
+        console.log(`📞 [${retryId}]     from: ${fromNumber},`);
+        console.log(`📞 [${retryId}]     timeout: ${CALL_CONFIG.CALL_TIMEOUT},`);
+        console.log(`📞 [${retryId}]     machineDetection: "Enable",`);
+        console.log(`📞 [${retryId}]   })`);
+
+        const twilioApiStartTime = Date.now();
         const call = await twilioClient.calls.create({
           to: phoneNumber,
           from: fromNumber,
@@ -1017,21 +1044,42 @@ export class TwilioCallManager {
           // Callback pour recevoir le résultat AMD (human ou machine)
           machineDetectionSilenceTimeout: 3000, // 3 secondes de silence avant de considérer comme humain
         });
-        console.log("call : ", call);
+        const twilioApiDuration = Date.now() - twilioApiStartTime;
 
-        console.log(`📞 Appel créé: ${call.sid} (${participantType})`);
+        console.log(`📞 [${retryId}] STEP D: Twilio API response received in ${twilioApiDuration}ms`);
+        console.log(`📞 [${retryId}]   call.sid: ${call.sid}`);
+        console.log(`📞 [${retryId}]   call.status: ${call.status}`);
+        console.log(`📞 [${retryId}]   call.to: ${call.to}`);
+        console.log(`📞 [${retryId}]   call.from: ${call.from}`);
+        console.log(`📞 [${retryId}]   call.direction: ${call.direction}`);
+        console.log(`📞 [${retryId}]   call.dateCreated: ${call.dateCreated}`);
+
+        console.log(`📞 [${retryId}] STEP E: Saving callSid to Firestore...`);
         await this.updateParticipantCallSid(
           sessionId,
           participantType,
           call.sid
         );
+        console.log(`📞 [${retryId}]   ✅ CallSid saved`);
 
+        console.log(`📞 [${retryId}] STEP F: Waiting for connection (waitForConnection)...`);
+        console.log(`📞 [${retryId}]   This will poll Firestore for status="connected"`);
+        console.log(`📞 [${retryId}]   Timeout: ${CALL_CONFIG.CONNECTION_WAIT_TIME}ms`);
+
+        const waitStartTime = Date.now();
         const connected = await this.waitForConnection(
           sessionId,
           participantType,
           attempt
         );
+        const waitDuration = Date.now() - waitStartTime;
+
+        console.log(`📞 [${retryId}] STEP G: waitForConnection returned after ${waitDuration}ms`);
+        console.log(`📞 [${retryId}]   connected: ${connected}`);
+
         if (connected) {
+          console.log(`📞 [${retryId}] ✅✅✅ ${participantType.toUpperCase()} CONNECTED! ✅✅✅`);
+          console.log(`${'▓'.repeat(70)}\n`);
           await logCallRecord({
             callId: sessionId,
             status: `${participantType}_connected_attempt_${attempt}`,
@@ -1040,11 +1088,26 @@ export class TwilioCallManager {
           return true;
         }
 
+        // Connection failed - log why
+        console.log(`📞 [${retryId}] ❌ ${participantType} NOT CONNECTED after attempt ${attempt}`);
+        console.log(`📞 [${retryId}]   waitForConnection returned: ${connected}`);
+        console.log(`📞 [${retryId}]   This means either timeout, disconnected, or no_answer`);
+
         if (attempt < maxRetries) {
           // 🛑 Check again before retrying - session might have been marked as failed
+          console.log(`📞 [${retryId}] STEP H: Checking session status before retry...`);
           const sessionCheckBeforeRetry = await this.getCallSession(sessionId);
+          const currentParticipant = participantType === "provider"
+            ? sessionCheckBeforeRetry?.participants.provider
+            : sessionCheckBeforeRetry?.participants.client;
+
+          console.log(`📞 [${retryId}]   session.status: ${sessionCheckBeforeRetry?.status}`);
+          console.log(`📞 [${retryId}]   participant.status: ${currentParticipant?.status}`);
+          console.log(`📞 [${retryId}]   participant.callSid: ${currentParticipant?.callSid}`);
+
           if (sessionCheckBeforeRetry && (sessionCheckBeforeRetry.status === "failed" || sessionCheckBeforeRetry.status === "cancelled")) {
-            console.log(`🛑 Stopping retries before attempt ${attempt + 1}: session is ${sessionCheckBeforeRetry.status}`);
+            console.log(`📞 [${retryId}] 🛑 STOPPING RETRIES: session is ${sessionCheckBeforeRetry.status}`);
+            console.log(`${'▓'.repeat(70)}\n`);
             await logCallRecord({
               callId: sessionId,
               status: `${participantType}_retries_stopped_before_attempt_${attempt + 1}`,
@@ -1053,14 +1116,24 @@ export class TwilioCallManager {
             return false;
           }
 
-          if (typeof backoffOverrideMs === "number") {
-            await this.delay(backoffOverrideMs);
-          } else {
-            const progressive = 15_000 + attempt * 5_000;
-            await this.delay(progressive);
-          }
+          const backoffTime = typeof backoffOverrideMs === "number"
+            ? backoffOverrideMs
+            : 15_000 + attempt * 5_000;
+
+          console.log(`📞 [${retryId}] STEP I: Waiting ${backoffTime}ms before retry ${attempt + 1}...`);
+          await this.delay(backoffTime);
+          console.log(`📞 [${retryId}]   Backoff complete, starting next attempt`);
+        } else {
+          console.log(`📞 [${retryId}] ❌ MAX RETRIES REACHED - No more attempts`);
         }
+        console.log(`${'▓'.repeat(70)}\n`);
       } catch (error) {
+        console.error(`📞 [${retryId}] ❌❌❌ EXCEPTION during Twilio call attempt ${attempt} ❌❌❌`);
+        console.error(`📞 [${retryId}]   Error type: ${error?.constructor?.name}`);
+        console.error(`📞 [${retryId}]   Error message: ${error instanceof Error ? error.message : String(error)}`);
+        console.error(`📞 [${retryId}]   Error stack: ${error instanceof Error ? error.stack : 'N/A'}`);
+        console.log(`${'▓'.repeat(70)}\n`);
+
         await logError(
           `TwilioCallManager:callParticipant:${participantType}:attempt_${attempt}`,
           error as unknown
@@ -1077,6 +1150,12 @@ export class TwilioCallManager {
         if (attempt === maxRetries) break;
       }
     }
+
+    console.log(`\n${'█'.repeat(70)}`);
+    console.log(`❌ [callParticipantWithRetries] FINAL RESULT: ${participantType} FAILED ALL ${maxRetries} ATTEMPTS`);
+    console.log(`❌ [callParticipantWithRetries]   sessionId: ${sessionId}`);
+    console.log(`❌ [callParticipantWithRetries]   phoneNumber: ${phoneNumber.substring(0, 6)}****`);
+    console.log(`${'█'.repeat(70)}\n`);
 
     await logCallRecord({
       callId: sessionId,
