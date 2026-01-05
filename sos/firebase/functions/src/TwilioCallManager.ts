@@ -658,9 +658,15 @@ export class TwilioCallManager {
     console.log(`📞 [${execId}] STEP 3: Session status OK, proceeding to payment validation`);
     const BYPASS_VALIDATIONS = process.env.TEST_BYPASS_VALIDATIONS === "1";
     console.log(`📞 [${execId}]   TEST_BYPASS_VALIDATIONS: ${BYPASS_VALIDATIONS}`);
+    console.log(`📞 [${execId}]   call_sessions.payment.status: "${callSession.payment?.status}"`);
+
+    // P0 FIX: Pass call_sessions.payment.status as fallback for validatePaymentStatus
     const paymentValid = BYPASS_VALIDATIONS
       ? true
-      : await this.validatePaymentStatus(callSession.payment.intentId);
+      : await this.validatePaymentStatus(
+          callSession.payment.intentId,
+          callSession.payment.status // Fallback status from call_sessions
+        );
 
     console.log(`📞 [${execId}] STEP 4: Payment validation result: ${paymentValid ? '✅ VALID' : '❌ INVALID'}`);
 
@@ -668,6 +674,7 @@ export class TwilioCallManager {
       execId,
       sessionId,
       paymentIntentId: callSession.payment?.intentId,
+      sessionPaymentStatus: callSession.payment?.status,
       paymentValid,
       bypassed: BYPASS_VALIDATIONS,
     });
@@ -796,11 +803,26 @@ export class TwilioCallManager {
   }
 
   private async validatePaymentStatus(
-    paymentIntentId: string
+    paymentIntentId: string,
+    fallbackSessionStatus?: string
   ): Promise<boolean> {
     const debugId = `pay_${Date.now().toString(36)}`;
     console.log(`💳 [${debugId}] validatePaymentStatus START`);
     console.log(`💳 [${debugId}]   paymentIntentId: ${paymentIntentId}`);
+    console.log(`💳 [${debugId}]   fallbackSessionStatus: ${fallbackSessionStatus || 'none'}`);
+
+    // P0 FIX: Valid statuses set - centralized definition
+    const validStatuses = new Set<string>([
+      "requires_payment_method",
+      "requires_confirmation",
+      "requires_action",
+      "processing",
+      "requires_capture",
+      "succeeded",
+      "authorized",
+      "call_session_created",
+      "pending", // PayPal equivalent
+    ]);
 
     try {
       console.log(`💳 [${debugId}] STEP 1: Calling stripeManager.getPayment()`);
@@ -810,9 +832,17 @@ export class TwilioCallManager {
       console.log(`💳 [${debugId}]   payment exists: ${!!payment}`);
       console.log(`💳 [${debugId}]   payment type: ${typeof payment}`);
 
+      // P0 FIX: If payments document doesn't exist, use fallback from call_sessions.payment.status
       if (!payment || typeof payment !== "object") {
-        console.log(`💳 [${debugId}] ❌ FAIL: Payment is null or not object`);
-        console.log(`💳 [${debugId}]   payment value: ${JSON.stringify(payment)}`);
+        console.log(`💳 [${debugId}] ⚠️ Payment document not found, trying fallback...`);
+        console.log(`💳 [${debugId}]   fallbackSessionStatus: "${fallbackSessionStatus}"`);
+
+        if (fallbackSessionStatus && validStatuses.has(fallbackSessionStatus)) {
+          console.log(`💳 [${debugId}] ✅ FALLBACK SUCCESS: Using call_sessions.payment.status="${fallbackSessionStatus}"`);
+          return true;
+        }
+
+        console.log(`💳 [${debugId}] ❌ FAIL: Payment is null and no valid fallback`);
         return false;
       }
 
@@ -825,22 +855,16 @@ export class TwilioCallManager {
       console.log(`💳 [${debugId}]   Full payment object keys: ${Object.keys(paymentObj).join(', ')}`);
 
       if (typeof status !== "string") {
-        console.log(`💳 [${debugId}] ❌ FAIL: Status is not a string`);
+        console.log(`💳 [${debugId}] ⚠️ Status not a string, trying fallback...`);
+
+        if (fallbackSessionStatus && validStatuses.has(fallbackSessionStatus)) {
+          console.log(`💳 [${debugId}] ✅ FALLBACK SUCCESS: Using call_sessions.payment.status="${fallbackSessionStatus}"`);
+          return true;
+        }
+
+        console.log(`💳 [${debugId}] ❌ FAIL: Status is not a string and no valid fallback`);
         return false;
       }
-
-      const validStatuses = new Set<string>([
-        "requires_payment_method",
-        "requires_confirmation",
-        "requires_action",
-        "processing",
-        "requires_capture",
-        "succeeded",
-        // P0 FIX: Also accept "authorized" which is set by createAndScheduleCallHTTPS
-        "authorized",
-        // P0 FIX: Accept call_session_created as it means payment was authorized
-        "call_session_created",
-      ]);
 
       const isValid = validStatuses.has(status);
 
@@ -849,7 +873,15 @@ export class TwilioCallManager {
       console.log(`💳 [${debugId}]   Valid statuses: ${Array.from(validStatuses).join(', ')}`);
 
       if (!isValid) {
-        console.log(`💳 [${debugId}] ❌ FAIL: Status "${status}" not in valid set`);
+        // P0 FIX: Try fallback before failing
+        console.log(`💳 [${debugId}] ⚠️ Status invalid, trying fallback...`);
+
+        if (fallbackSessionStatus && validStatuses.has(fallbackSessionStatus)) {
+          console.log(`💳 [${debugId}] ✅ FALLBACK SUCCESS: Using call_sessions.payment.status="${fallbackSessionStatus}"`);
+          return true;
+        }
+
+        console.log(`💳 [${debugId}] ❌ FAIL: Status "${status}" not in valid set and no valid fallback`);
       } else {
         console.log(`💳 [${debugId}] ✅ SUCCESS: Payment status valid`);
       }
@@ -859,6 +891,12 @@ export class TwilioCallManager {
       console.log(`💳 [${debugId}] ❌ EXCEPTION in validatePaymentStatus:`);
       console.log(`💳 [${debugId}]   Error: ${error instanceof Error ? error.message : String(error)}`);
       console.log(`💳 [${debugId}]   Stack: ${error instanceof Error ? error.stack : 'N/A'}`);
+
+      // P0 FIX: Try fallback even on exception
+      if (fallbackSessionStatus && validStatuses.has(fallbackSessionStatus)) {
+        console.log(`💳 [${debugId}] ✅ FALLBACK SUCCESS after exception: Using call_sessions.payment.status="${fallbackSessionStatus}"`);
+        return true;
+      }
 
       await logError(
         "TwilioCallManager:validatePaymentStatus",

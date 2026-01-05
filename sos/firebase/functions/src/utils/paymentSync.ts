@@ -13,6 +13,8 @@ import * as admin from "firebase-admin";
 
 type Firestore = admin.firestore.Firestore;
 type FieldValue = admin.firestore.FieldValue;
+type DocumentSnapshot = admin.firestore.DocumentSnapshot;
+type DocumentReference = admin.firestore.DocumentReference;
 
 export interface PaymentStatusUpdate {
   status?: string;
@@ -68,10 +70,21 @@ export async function syncPaymentStatus(
   callSessionUpdates["paymentId"] = paymentId;
 
   await db.runTransaction(async (transaction) => {
-    // 1. Mettre à jour payments collection
+    // P0 FIX: ALL reads MUST happen BEFORE any writes in Firestore transactions
+
+    // === STEP 1: ALL READS FIRST ===
     const paymentRef = db.collection("payments").doc(paymentId);
     const paymentDoc = await transaction.get(paymentRef);
 
+    let sessionDoc: DocumentSnapshot | null = null;
+    let sessionRef: DocumentReference | null = null;
+
+    if (callSessionId) {
+      sessionRef = db.collection("call_sessions").doc(callSessionId);
+      sessionDoc = await transaction.get(sessionRef);
+    }
+
+    // === STEP 2: ALL WRITES AFTER ===
     if (paymentDoc.exists) {
       transaction.update(paymentRef, {
         ...updates,
@@ -79,18 +92,12 @@ export async function syncPaymentStatus(
       });
     }
 
-    // 2. Mettre à jour call_sessions si callSessionId fourni
-    if (callSessionId) {
-      const sessionRef = db.collection("call_sessions").doc(callSessionId);
-      const sessionDoc = await transaction.get(sessionRef);
-
-      if (sessionDoc.exists) {
-        transaction.update(sessionRef, {
-          ...callSessionUpdates,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-      }
-    } else {
+    if (callSessionId && sessionRef && sessionDoc?.exists) {
+      transaction.update(sessionRef, {
+        ...callSessionUpdates,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    } else if (!callSessionId) {
       // Chercher la session via paymentId/intentId
       // Note: On ne peut pas faire de query dans une transaction,
       // donc on log un warning. Le callSessionId devrait toujours être fourni.
