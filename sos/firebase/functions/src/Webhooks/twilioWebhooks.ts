@@ -229,20 +229,36 @@ async function handleCallRinging(
 
 /**
  * Gère le statut "answered"
+ * P0 CRITICAL: Cette fonction met le statut à "connected" - waitForConnection() attend ce statut
  */
 async function handleCallAnswered(
   sessionId: string,
   participantType: 'provider' | 'client',
   body: TwilioCallWebhookBody
 ) {
+  const webhookId = `answered_${Date.now().toString(36)}`;
+
   try {
+    console.log(`\n${'═'.repeat(70)}`);
+    console.log(`📞 [${webhookId}] handleCallAnswered START`);
+    console.log(`📞 [${webhookId}]   sessionId: ${sessionId}`);
+    console.log(`📞 [${webhookId}]   participantType: ${participantType}`);
+    console.log(`📞 [${webhookId}]   callSid: ${body.CallSid}`);
+    console.log(`📞 [${webhookId}]   callStatus: ${body.CallStatus}`);
+    console.log(`📞 [${webhookId}]   answeredBy: ${body.AnsweredBy || 'not_provided'}`);
+    console.log(`${'═'.repeat(70)}`);
+
     // P0 FIX: Vérifier si c'est un répondeur qui a répondu (AMD - Answering Machine Detection)
     // Les valeurs possibles pour une machine: machine_start, machine_end_beep, machine_end_silence, machine_end_other, fax
     const answeredBy = body.AnsweredBy || 'human';
     const isMachine = answeredBy.startsWith('machine') || answeredBy === 'fax';
 
+    console.log(`📞 [${webhookId}] STEP 1: AMD Detection`);
+    console.log(`📞 [${webhookId}]   answeredBy value: "${answeredBy}"`);
+    console.log(`📞 [${webhookId}]   isMachine: ${isMachine}`);
+
     if (isMachine) {
-      console.log(`🤖 [AMD] Répondeur détecté pour ${participantType}: ${answeredBy} - Raccrochage immédiat`);
+      console.log(`📞 [${webhookId}] ⚠️ MACHINE DETECTED - Setting status to "no_answer" and hanging up`);
       prodLogger.info('TWILIO_CALL_ANSWERED_MACHINE', `Answering machine detected for ${participantType}`, {
         sessionId,
         participantType,
@@ -255,17 +271,19 @@ async function handleCallAnswered(
         const { getTwilioClient } = await import('../lib/twilio');
         const twilioClient = getTwilioClient();
         await twilioClient.calls(body.CallSid).update({ status: 'completed' });
-        console.log(`📴 [AMD] Appel ${body.CallSid} raccroché (répondeur)`);
+        console.log(`📞 [${webhookId}] ✅ Call ${body.CallSid} hung up (voicemail)`);
       } catch (hangupError) {
-        console.error(`⚠️ [AMD] Erreur raccrochage:`, hangupError);
+        console.error(`📞 [${webhookId}] ⚠️ Hangup error:`, hangupError);
       }
 
       // Mettre à jour le statut comme "no_answer" pour permettre les retries
+      console.log(`📞 [${webhookId}] Setting participant status to "no_answer"...`);
       await twilioCallManager.updateParticipantStatus(
         sessionId,
         participantType,
         'no_answer'
       );
+      console.log(`📞 [${webhookId}] ✅ Status set to "no_answer"`);
 
       await logCallRecord({
         callId: sessionId,
@@ -278,10 +296,15 @@ async function handleCallAnswered(
         }
       });
 
+      console.log(`📞 [${webhookId}] END - Machine detected, returning early`);
+      console.log(`${'═'.repeat(70)}\n`);
       return; // Ne pas continuer avec le traitement normal
     }
 
-    console.log(`✅ ${participantType} a répondu: ${sessionId} (humain: ${answeredBy})`);
+    // HUMAN ANSWERED
+    console.log(`📞 [${webhookId}] STEP 2: HUMAN ANSWERED - Setting status to "connected"`);
+    console.log(`📞 [${webhookId}]   This is the CRITICAL step that allows waitForConnection() to succeed!`);
+
     prodLogger.info('TWILIO_CALL_ANSWERED', `Call answered by ${participantType}`, {
       sessionId,
       participantType,
@@ -289,12 +312,28 @@ async function handleCallAnswered(
       callSid: body.CallSid?.slice(0, 20) + '...'
     });
 
+    // Get current status before update for debugging
+    const sessionBefore = await twilioCallManager.getCallSession(sessionId);
+    const participantBefore = participantType === 'provider'
+      ? sessionBefore?.participants.provider
+      : sessionBefore?.participants.client;
+    console.log(`📞 [${webhookId}]   Status BEFORE update: "${participantBefore?.status}"`);
+
     await twilioCallManager.updateParticipantStatus(
       sessionId,
       participantType,
       'connected',
       admin.firestore.Timestamp.fromDate(new Date())
     );
+
+    // Verify status was updated
+    const sessionAfter = await twilioCallManager.getCallSession(sessionId);
+    const participantAfter = participantType === 'provider'
+      ? sessionAfter?.participants.provider
+      : sessionAfter?.participants.client;
+    console.log(`📞 [${webhookId}]   Status AFTER update: "${participantAfter?.status}"`);
+    console.log(`📞 [${webhookId}] ✅ Status update complete - waitForConnection() should now see "connected"`);
+    console.log(`${'═'.repeat(70)}\n`);
 
     // ===== NOUVEAU: Mettre le prestataire en statut "busy" quand il répond =====
     if (participantType === 'provider') {

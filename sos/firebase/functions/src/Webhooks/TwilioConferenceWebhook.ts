@@ -48,16 +48,21 @@ export const twilioConferenceWebhook = onRequest(
     secrets: [TWILIO_AUTH_TOKEN_SECRET]
   },
   async (req: Request, res: Response) => {
+    const confWebhookId = `conf_${Date.now().toString(36)}`;
+
     try {
+      console.log(`\n${'▓'.repeat(70)}`);
+      console.log(`🎤 [${confWebhookId}] twilioConferenceWebhook START`);
+
       // ===== P0 SECURITY FIX: Validate Twilio signature =====
       if (!validateTwilioWebhookSignature(req, res)) {
-        console.error("[twilioConferenceWebhook] Invalid Twilio signature - rejecting request");
+        console.error(`🎤 [${confWebhookId}] Invalid Twilio signature - rejecting request`);
         return; // Response already sent by validateTwilioWebhookSignature
       }
 
       const body: TwilioConferenceWebhookBody = req.body;
 
-      console.log('🔔 Conference Webhook reçu:', {
+      console.log(`🎤 [${confWebhookId}] Conference Webhook reçu:`, {
         event: body.StatusCallbackEvent,
         conferenceSid: body.ConferenceSid,
         conferenceStatus: body.ConferenceStatus,
@@ -65,16 +70,54 @@ export const twilioConferenceWebhook = onRequest(
         callSid: body.CallSid
       });
 
+      // ===== P0 FIX: IDEMPOTENCY CHECK =====
+      // Prevent duplicate processing of conference events (same fix as twilioCallWebhook)
+      const db = admin.firestore();
+      const webhookKey = `conf_${body.ConferenceSid}_${body.StatusCallbackEvent}_${body.CallSid || 'no_call'}`;
+      const webhookEventRef = db.collection("processed_webhook_events").doc(webhookKey);
+
+      let isDuplicate = false;
+      try {
+        await db.runTransaction(async (transaction) => {
+          const existingEvent = await transaction.get(webhookEventRef);
+
+          if (existingEvent.exists) {
+            isDuplicate = true;
+            return;
+          }
+
+          transaction.set(webhookEventRef, {
+            eventKey: webhookKey,
+            conferenceSid: body.ConferenceSid,
+            statusCallbackEvent: body.StatusCallbackEvent,
+            callSid: body.CallSid,
+            processedAt: admin.firestore.FieldValue.serverTimestamp(),
+            source: "twilio_conference_webhook",
+          });
+        });
+      } catch (txError) {
+        console.error(`🎤 [${confWebhookId}] ❌ Transaction error for webhook idempotency: ${txError}`);
+        res.status(200).send('OK - transaction error, treated as duplicate');
+        return;
+      }
+
+      if (isDuplicate) {
+        console.log(`🎤 [${confWebhookId}] ⚠️ IDEMPOTENCY: Conference event ${webhookKey} already processed, skipping`);
+        res.status(200).send('OK - duplicate');
+        return;
+      }
+
       // Trouver la session d'appel par le nom de la conférence
       const session = await twilioCallManager.findSessionByConferenceSid(body.ConferenceSid);
-      
+
       if (!session) {
-        console.warn(`Session non trouvée pour conférence: ${body.ConferenceSid}`);
+        console.warn(`🎤 [${confWebhookId}] Session non trouvée pour conférence: ${body.ConferenceSid}`);
         res.status(200).send('Session not found');
         return;
       }
 
       const sessionId = session.id;
+      console.log(`🎤 [${confWebhookId}] Session found: ${sessionId}`);
 
       switch (body.StatusCallbackEvent) {
         case 'conference-start':

@@ -1111,33 +1111,96 @@ export class TwilioCallManager {
   private async waitForConnection(
     sessionId: string,
     participantType: "provider" | "client",
-    _attempt: number // ← renommé pour lever TS6133
+    attempt: number
   ): Promise<boolean> {
+    const waitId = `wait_${Date.now().toString(36)}`;
     const maxWaitTime = CALL_CONFIG.CONNECTION_WAIT_TIME;
-    const checkInterval = 3000;
+    const checkInterval = 3000; // 3 seconds
     const maxChecks = Math.floor(maxWaitTime / checkInterval);
 
+    console.log(`\n${'─'.repeat(60)}`);
+    console.log(`⏳ [${waitId}] waitForConnection START`);
+    console.log(`⏳ [${waitId}]   sessionId: ${sessionId}`);
+    console.log(`⏳ [${waitId}]   participantType: ${participantType}`);
+    console.log(`⏳ [${waitId}]   attempt: ${attempt}`);
+    console.log(`⏳ [${waitId}]   maxWaitTime: ${maxWaitTime}ms (${maxWaitTime/1000}s)`);
+    console.log(`⏳ [${waitId}]   checkInterval: ${checkInterval}ms`);
+    console.log(`⏳ [${waitId}]   maxChecks: ${maxChecks}`);
+
+    // P0 FIX: Check status IMMEDIATELY before first delay
+    // The previous code waited 3 seconds BEFORE the first check, which was a bug
     for (let check = 0; check < maxChecks; check++) {
-      await this.delay(checkInterval);
       try {
+        // STEP 1: Check status FIRST (before delay on subsequent iterations)
         const session = await this.getCallSession(sessionId);
-        if (!session) return false;
+
+        if (!session) {
+          console.log(`⏳ [${waitId}] ❌ Check ${check}: Session NOT FOUND - returning false`);
+          return false;
+        }
 
         const participant =
           participantType === "provider"
             ? session.participants.provider
             : session.participants.client;
 
-        if (participant.status === "connected") return true;
-        if (
-          participant.status === "disconnected" ||
-          participant.status === "no_answer"
-        )
+        const currentStatus = participant?.status || 'undefined';
+        const callSid = participant?.callSid || 'no_callSid';
+
+        console.log(`⏳ [${waitId}] Check ${check}/${maxChecks}: status="${currentStatus}", callSid=${callSid?.slice(0,15)}...`);
+
+        // Check for terminal statuses
+        if (currentStatus === "connected") {
+          console.log(`⏳ [${waitId}] ✅ SUCCESS: ${participantType} is CONNECTED after ${check * checkInterval / 1000}s`);
+          console.log(`${'─'.repeat(60)}\n`);
+          return true;
+        }
+
+        if (currentStatus === "disconnected") {
+          console.log(`⏳ [${waitId}] ❌ FAIL: ${participantType} DISCONNECTED - returning false`);
+          console.log(`${'─'.repeat(60)}\n`);
           return false;
+        }
+
+        if (currentStatus === "no_answer") {
+          console.log(`⏳ [${waitId}] ❌ FAIL: ${participantType} NO_ANSWER - returning false`);
+          console.log(`${'─'.repeat(60)}\n`);
+          return false;
+        }
+
+        // Log other statuses for debugging
+        if (check === 0) {
+          console.log(`⏳ [${waitId}]   Initial status: "${currentStatus}" - waiting for "connected"...`);
+        }
+
+        // STEP 2: Wait before next check (skip on last iteration)
+        if (check < maxChecks - 1) {
+          await this.delay(checkInterval);
+        }
+
       } catch (error) {
-        console.warn(`Erreur waitForConnection: ${String(error)}`);
+        console.warn(`⏳ [${waitId}] ⚠️ Check ${check} ERROR: ${String(error)}`);
+        // Continue trying on errors
+        await this.delay(checkInterval);
       }
     }
+
+    // Timeout reached
+    console.log(`⏳ [${waitId}] ❌ TIMEOUT: ${participantType} did not connect within ${maxWaitTime/1000}s`);
+    console.log(`⏳ [${waitId}]   Total time waited: ~${maxChecks * checkInterval / 1000}s`);
+    console.log(`${'─'.repeat(60)}\n`);
+
+    // Log final state for debugging
+    try {
+      const finalSession = await this.getCallSession(sessionId);
+      const finalParticipant = participantType === "provider"
+        ? finalSession?.participants.provider
+        : finalSession?.participants.client;
+      console.log(`⏳ [${waitId}] Final state: status="${finalParticipant?.status}", callSid=${finalParticipant?.callSid?.slice(0,15)}...`);
+    } catch (e) {
+      console.log(`⏳ [${waitId}] Could not fetch final state: ${String(e)}`);
+    }
+
     return false;
   }
 

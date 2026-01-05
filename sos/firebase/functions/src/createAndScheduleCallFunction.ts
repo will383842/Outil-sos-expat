@@ -517,12 +517,13 @@ export const createAndScheduleCallHTTPS = onCall(
             clientName: clientName,
             clientEmail: clientEmail,
             clientPhone: decryptedClientPhone,
+            clientWhatsapp: clientWhatsapp || decryptedClientPhone,  // Required by schema
             clientCurrentCountry: clientData?.country || '',
             clientLanguages: clientLanguages || ['fr'],
             title,
             description: `${title} - ${serviceType}`,
             serviceType,
-            priority: 'normal',
+            priority: 'medium',  // Must be: low, medium, high, urgent, critical
             providerId,
             providerType,
             providerName,
