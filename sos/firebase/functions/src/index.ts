@@ -364,6 +364,8 @@ export const TASKS_AUTH_SECRET = defineSecret("TASKS_AUTH_SECRET");
 
 // Outil-sos-expat API Key (for AI proxy)
 export const OUTIL_API_KEY = defineSecret("OUTIL_API_KEY");
+// Outil-sos-expat Sync API Key (for booking sync after payment)
+export const OUTIL_SYNC_API_KEY = defineSecret("OUTIL_SYNC_API_KEY");
 
 // MailWizz Email Marketing
 // import { MAILWIZZ_API_KEY, MAILWIZZ_WEBHOOK_SECRET } from "./emailMarketing/config";
@@ -1176,6 +1178,126 @@ export const getStripe = traceFunction(
   "INDEX"
 );
 
+// ====== HELPER: SYNC CALL SESSION TO OUTIL AFTER PAYMENT ======
+const OUTIL_INGEST_ENDPOINT = "https://europe-west1-outils-sos-expat.cloudfunctions.net/ingestBooking";
+
+/**
+ * Sync call_session to Outil-sos-expat AFTER payment is validated
+ * This triggers the AI system to process the booking
+ */
+async function syncCallSessionToOutil(
+  callSessionId: string,
+  cs: FirebaseFirestore.DocumentData,
+  debugId: string
+): Promise<void> {
+  try {
+    const apiKey = OUTIL_SYNC_API_KEY.value();
+    if (!apiKey) {
+      console.warn(`[${debugId}] OUTIL_SYNC_API_KEY not configured - skipping sync`);
+      return;
+    }
+
+    // Build payload from call_session data
+    const payload = {
+      // Client info
+      clientFirstName: cs?.participants?.client?.firstName || cs?.clientFirstName,
+      clientLastName: cs?.participants?.client?.lastName || cs?.clientLastName,
+      clientName: cs?.participants?.client?.name || cs?.clientName,
+      clientEmail: cs?.participants?.client?.email || cs?.clientEmail,
+      clientPhone: cs?.participants?.client?.phone ? decryptPhoneNumber(cs.participants.client.phone) : cs?.clientPhone,
+      clientWhatsapp: cs?.clientWhatsapp,
+      clientCurrentCountry: cs?.clientCurrentCountry,
+      clientNationality: cs?.clientNationality,
+      clientLanguages: cs?.metadata?.clientLanguages || cs?.clientLanguages,
+
+      // Request details
+      title: cs?.metadata?.title || cs?.title || "Consultation",
+      description: cs?.description,
+      serviceType: cs?.metadata?.serviceType || cs?.serviceType,
+      priority: "normal",
+
+      // Provider info
+      providerId: cs?.metadata?.providerId || cs?.providerId || "",
+      providerType: cs?.metadata?.providerType || cs?.providerType,
+      providerName: cs?.participants?.provider?.name || cs?.providerName,
+      providerCountry: cs?.providerCountry,
+
+      // Source tracking
+      source: "sos-expat-payment-validated",
+      externalId: callSessionId,
+      metadata: {
+        callSessionId,
+        paymentIntentId: cs?.payment?.intentId || cs?.paymentIntentId,
+        amount: cs?.payment?.amount,
+        scheduledAt: cs?.scheduledAt?.toDate?.()?.toISOString(),
+        syncedAfterPayment: true,
+      },
+    };
+
+    console.log(`🔄 [${debugId}] Syncing to Outil after payment...`);
+    console.log(`🔄 [${debugId}] Payload:`, JSON.stringify({
+      externalId: payload.externalId,
+      providerId: payload.providerId,
+      clientName: payload.clientName,
+      source: payload.source,
+    }));
+
+    // P0 PRODUCTION FIX: Add timeout to prevent hanging if Outil is unresponsive
+    const OUTIL_TIMEOUT_MS = 10000; // 10 seconds
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), OUTIL_TIMEOUT_MS);
+
+    try {
+      const response = await fetch(OUTIL_INGEST_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`❌ [${debugId}] Outil sync failed: HTTP ${response.status}: ${errorText}`);
+        ultraLogger.error("OUTIL_SYNC", "Échec sync vers Outil après paiement", {
+          callSessionId,
+          status: response.status,
+          error: errorText,
+        });
+      } else {
+        const result = await response.json() as { bookingId?: string };
+        console.log(`✅ [${debugId}] Outil sync success! OutilBookingId: ${result.bookingId}`);
+        ultraLogger.info("OUTIL_SYNC", "Sync vers Outil réussi après paiement", {
+          callSessionId,
+          outilBookingId: result.bookingId,
+        });
+      }
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+        console.error(`⏱️ [${debugId}] Outil sync timeout after ${OUTIL_TIMEOUT_MS}ms`);
+        ultraLogger.warn("OUTIL_SYNC", "Timeout sync vers Outil", {
+          callSessionId,
+          timeoutMs: OUTIL_TIMEOUT_MS,
+        });
+      } else {
+        throw fetchError; // Re-throw to be caught by outer catch
+      }
+    }
+  } catch (error) {
+    console.error(`❌ [${debugId}] Outil sync exception:`, error);
+    ultraLogger.error("OUTIL_SYNC", "Exception sync vers Outil", {
+      callSessionId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    // Non-blocking: don't throw, just log
+  }
+}
+
 // ====== HELPER POUR ENVOI AUTOMATIQUE DES MESSAGES ======
 // DEBUG VERSION: Exhaustive logging to trace booking request SMS flow
 const sendPaymentNotifications = traceFunction(
@@ -1326,6 +1448,10 @@ const sendPaymentNotifications = traceFunction(
       } else {
         console.log(`⚠️ [${debugId}] SKIPPED provider notification - no providerId or providerEmail`);
       }
+
+      // STEP 6: Sync to Outil after payment (non-blocking)
+      console.log(`\n📨 [${debugId}] STEP 6: Syncing to Outil IA...`);
+      await syncCallSessionToOutil(callSessionId, cs, debugId);
 
       console.log(`\n=======================================================================`);
       console.log(`✅ [sendPaymentNotifications][${debugId}] ========== SUCCESS ==========`);
@@ -1519,12 +1645,14 @@ export const stripeWebhook = onRequest(
   {
     region: "europe-west1",
     memory: "512MiB",
-    // P0 FIX: Add Stripe API secrets + webhook secrets for proper initialization
+    // P0 FIX: Add Stripe API secrets + webhook secrets + ENCRYPTION_KEY + OUTIL_SYNC_API_KEY
     secrets: [
       STRIPE_SECRET_KEY_TEST,
       STRIPE_SECRET_KEY_LIVE,
       STRIPE_WEBHOOK_SECRET_TEST,
-      STRIPE_WEBHOOK_SECRET_LIVE
+      STRIPE_WEBHOOK_SECRET_LIVE,
+      ENCRYPTION_KEY, // P0 FIX: Required for decryptPhoneNumber in sendPaymentNotifications
+      OUTIL_SYNC_API_KEY, // P0 FIX: Required for syncCallSessionToOutil after payment
     ],
     concurrency: 1,
     timeoutSeconds: 60, // P2-4 FIX: Augmenté de 30s à 60s pour éviter les timeouts

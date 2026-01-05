@@ -4,7 +4,6 @@ import React, {
   useMemo,
   useCallback,
   memo,
-  useRef,
 } from "react";
 import {
   Phone,
@@ -13,9 +12,6 @@ import {
   Twitter,
   Linkedin,
   ArrowUp,
-  Send,
-  CheckCircle,
-  Loader2,
   type LucideIcon,
 } from "lucide-react";
 import { useIntl } from "react-intl";
@@ -438,192 +434,6 @@ const ScrollToTopButton = memo<ScrollToTopButtonProps>(
 );
 
 // ============================================================================
-// FOOTER CONTACT FORM COMPONENT
-// ============================================================================
-
-interface FooterContactFormProps {
-  readonly language: SupportedLanguage;
-}
-
-const FooterContactForm = memo<FooterContactFormProps>(function FooterContactForm({ language }) {
-  const intl = useIntl();
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const formRef = useRef<HTMLFormElement>(null);
-
-  const validateEmail = (emailValue: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(emailValue);
-  };
-
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-
-    // Validation
-    if (!email.trim() || !message.trim()) {
-      setError(intl.formatMessage({ id: "footer.contactForm.errorRequired" }));
-      return;
-    }
-
-    if (!validateEmail(email)) {
-      setError(intl.formatMessage({ id: "footer.contactForm.errorInvalidEmail" }));
-      return;
-    }
-
-    if (message.trim().length < 10) {
-      setError(intl.formatMessage({ id: "footer.contactForm.errorMessageTooShort" }));
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      // Call Cloud Function to create contact message
-      const response = await fetch(
-        "https://europe-west1-sos-urgently-ac307.cloudfunctions.net/createContactMessage",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: email.trim(),
-            message: message.trim(),
-            name: email.split("@")[0],
-            source: "footer_contact_form",
-            language,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}`);
-      }
-
-      // Note: Admin notifications are managed via contact_messages collection
-      // Admins see new messages in AdminContactMessages page
-
-      setIsSubmitted(true);
-      setEmail("");
-      setMessage("");
-
-      // Reset form after 5 seconds
-      setTimeout(() => {
-        setIsSubmitted(false);
-      }, 5000);
-    } catch (err) {
-      console.error("[FooterContactForm] Error submitting:", err);
-      setError(intl.formatMessage({ id: "footer.contactForm.errorSubmit" }));
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [email, message, language, intl]);
-
-  if (isSubmitted) {
-    return (
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-          {intl.formatMessage({ id: "footer.contactForm.title" })}
-          <span
-            className="w-6 h-px bg-gradient-to-r from-red-500 to-red-600"
-            aria-hidden="true"
-          />
-        </h3>
-        <div className="flex items-center gap-3 p-4 rounded-xl bg-green-500/10 border border-green-500/20">
-          <CheckCircle className="text-green-400 flex-shrink-0" size={24} />
-          <p className="text-green-300 text-sm">
-            {intl.formatMessage({ id: "footer.contactForm.successMessage" })}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-        {intl.formatMessage({ id: "footer.contactForm.title" })}
-        <span
-          className="w-6 h-px bg-gradient-to-r from-red-500 to-red-600"
-          aria-hidden="true"
-        />
-      </h3>
-      <p className="text-gray-400 text-sm">
-        {intl.formatMessage({ id: "footer.contactForm.subtitle" })}
-      </p>
-
-      <form ref={formRef} onSubmit={handleSubmit} className="space-y-3">
-        <div>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder={intl.formatMessage({ id: "footer.contactForm.emailPlaceholder" })}
-            disabled={isSubmitting}
-            className="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10
-              text-white placeholder-gray-500 text-sm
-              focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50
-              hover:bg-white/10 transition-all duration-300
-              disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label={intl.formatMessage({ id: "footer.contactForm.emailAriaLabel" })}
-          />
-        </div>
-
-        <div>
-          <textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder={intl.formatMessage({ id: "footer.contactForm.messagePlaceholder" })}
-            disabled={isSubmitting}
-            rows={3}
-            className="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10
-              text-white placeholder-gray-500 text-sm resize-none
-              focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50
-              hover:bg-white/10 transition-all duration-300
-              disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label={intl.formatMessage({ id: "footer.contactForm.messageAriaLabel" })}
-          />
-        </div>
-
-        {error && (
-          <p className="text-red-400 text-xs" role="alert">
-            {error}
-          </p>
-        )}
-
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5
-            rounded-lg bg-gradient-to-r from-red-500 to-red-600
-            text-white text-sm font-medium
-            hover:from-red-600 hover:to-red-700
-            focus:outline-none focus:ring-2 focus:ring-red-500/50
-            transition-all duration-300
-            disabled:opacity-50 disabled:cursor-not-allowed
-            active:scale-[0.98]"
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 size={16} className="animate-spin" />
-              {intl.formatMessage({ id: "footer.contactForm.sending" })}
-            </>
-          ) : (
-            <>
-              <Send size={16} />
-              {intl.formatMessage({ id: "footer.contactForm.sendButton" })}
-            </>
-          )}
-        </button>
-      </form>
-    </div>
-  );
-});
-
-// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
@@ -944,7 +754,7 @@ const Footer: React.FC = () => {
       {/* Main content */}
       <div className="relative backdrop-blur-sm bg-black/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12 mb-12">
             {/* Company Info */}
             <div className="lg:col-span-1 space-y-6">
               <div className="group">
@@ -999,9 +809,6 @@ const Footer: React.FC = () => {
               links={footerSections.support.links}
               navAriaLabel={intl.formatMessage({ id: "footer.support.navAria" })}
             />
-
-            {/* Contact Form */}
-            <FooterContactForm language={resolvedLang} />
           </div>
 
           {/* Contact Info Row - below main grid */}
