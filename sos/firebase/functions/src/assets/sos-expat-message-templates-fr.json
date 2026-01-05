@@ -17,17 +17,14 @@
       "roles": ["provider"],
       "channels": {
         "email": false,
-        "sms": true,
+        "sms": false,
         "push": false,
         "inapp": true,
         "whatsapp": false
       },
-      "sms": {
-        "text": "SOS Expat: Nouvelle demande de {{clientName}} ({{clientCountry}})\nLangue: {{clientLanguage}}\nTitre: {{title}}\nDétail: {{description}}\nAppel dans 5 minutes."
-      },
       "inapp": {
-        "title": "Nouvelle demande",
-        "body": "{{clientName}} ({{clientCountry}}) - {{title}}",
+        "title": "Appel programmé",
+        "body": "Appel avec {{clientName}} dans 5 minutes",
         "action": {
           "label": "Voir",
           "deeplink": "/provider/dashboard"
@@ -179,10 +176,21 @@
       "roles": ["provider"],
       "channels": {
         "email": false,
-        "sms": false,
+        "sms": true,
         "push": false,
-        "inapp": false,
+        "inapp": true,
         "whatsapp": false
+      },
+      "sms": {
+        "text": "SOS Expat: Nouvelle réservation payée!\n\nClient: {{client.firstName}} ({{request.country}})\nTitre: {{request.title}}\nDétail: {{request.description}}\nMontant: {{booking.amount}} {{booking.currency}}\n\nConnectez-vous pour voir les détails."
+      },
+      "inapp": {
+        "title": "Nouvelle réservation payée",
+        "body": "{{client.firstName}} ({{request.country}}) - {{request.title}}",
+        "action": {
+          "label": "Voir",
+          "deeplink": "/provider/dashboard"
+        }
       }
     },
     {
