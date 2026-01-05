@@ -232,8 +232,10 @@ export class StripeManager {
     if (typeof amount !== 'number' || Number.isNaN(amount) || amount <= 0) {
       throw new HttpsError('invalid-argument', 'Montant invalide');
     }
-    if (amount < 0.50) throw new HttpsError('failed-precondition', 'Montant minimum de 0.50€ requis');
-    if (amount > 500) throw new HttpsError('failed-precondition', 'Montant maximum de 500€ dépassé');
+    // P1 FIX: Afficher le symbole correct selon la devise
+    const currencySymbol = (data.currency?.toString().toLowerCase() === 'usd') ? '$' : '€';
+    if (amount < 0.50) throw new HttpsError('failed-precondition', `Montant minimum de 0.50${currencySymbol} requis`);
+    if (amount > 500) throw new HttpsError('failed-precondition', `Montant maximum de 500${currencySymbol} dépassé`);
 
     const commission = data.connectionFeeAmount ?? data.commissionAmount ?? 0;
     if (typeof commission !== 'number' || commission < 0) {

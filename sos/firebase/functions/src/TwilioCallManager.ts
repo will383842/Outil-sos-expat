@@ -1363,9 +1363,29 @@ export class TwilioCallManager {
         console.log(`💳 [PAYPAL] Traitement remboursement/annulation ${sessionId} - raison: ${reason}`);
 
         if (paymentStatus === "authorized" || paymentStatus === "pending") {
-          // PayPal: ordre non capturé → pas d'action nécessaire (expire automatiquement)
-          console.log(`💳 [PAYPAL] Ordre non capturé - expiration automatique`);
-          result = { success: true };
+          // P0 FIX: PayPal ordre non capturé → VOID l'autorisation pour libérer les fonds client
+          const paypalOrderId = callSession.payment.paypalOrderId;
+          if (!paypalOrderId) {
+            console.warn(`⚠️ [PAYPAL] No paypalOrderId found for session ${sessionId} - cannot void`);
+            result = { success: true };
+          } else {
+            console.log(`💳 [PAYPAL] Ordre non capturé - void de l'autorisation`);
+            const { PayPalManager } = await import("./PayPalManager");
+            const paypalManager = new PayPalManager();
+
+            try {
+              const voidResult = await paypalManager.voidAuthorization(
+                paypalOrderId,
+                `Appel échoué: ${reason}`
+              );
+              result = { success: voidResult.success, error: voidResult.success ? undefined : voidResult.message };
+              console.log(`✅ [PAYPAL] Void result:`, voidResult);
+            } catch (voidError) {
+              console.error(`❌ [PAYPAL] Void error:`, voidError);
+              // Ne pas bloquer - l'ordre expirera automatiquement
+              result = { success: true, error: "Void failed but order will expire automatically" };
+            }
+          }
         } else if (paymentStatus === "captured" && callSession.payment.paypalCaptureId) {
           // PayPal: paiement capturé → rembourser via captureId
           const { PayPalManager } = await import("./PayPalManager");

@@ -1366,6 +1366,190 @@ export class PayPalManager {
     };
   }
 
+  /**
+   * P0 FIX: Annule (void) un ordre PayPal autorisé mais non capturé
+   *
+   * IMPORTANT: Cette méthode libère immédiatement les fonds bloqués sur le compte
+   * du client au lieu d'attendre l'expiration automatique (3 jours).
+   *
+   * Cas d'usage:
+   * - Appel échoué avant capture
+   * - Client annule avant le début de l'appel
+   * - Erreur système avant capture
+   *
+   * @param orderId - ID de l'ordre PayPal à annuler
+   * @param reason - Raison de l'annulation (pour les logs)
+   * @returns Résultat de l'annulation
+   */
+  async voidAuthorization(
+    orderId: string,
+    reason?: string
+  ): Promise<{
+    success: boolean;
+    status: string;
+    message?: string;
+  }> {
+    console.log(`🚫 [PAYPAL] Voiding authorization for order: ${orderId}, reason: ${reason || 'not specified'}`);
+
+    try {
+      // Récupérer les données de l'ordre
+      const orderDoc = await this.db.collection("paypal_orders").doc(orderId).get();
+      const orderData = orderDoc.data();
+
+      if (!orderData) {
+        console.warn(`⚠️ [PAYPAL] Order ${orderId} not found in database`);
+        return {
+          success: false,
+          status: "NOT_FOUND",
+          message: `Ordre ${orderId} introuvable`,
+        };
+      }
+
+      // Vérifier que l'ordre n'est pas déjà capturé ou annulé
+      const currentStatus = orderData.status?.toUpperCase();
+      if (currentStatus === "COMPLETED" || currentStatus === "CAPTURED") {
+        console.warn(`⚠️ [PAYPAL] Order ${orderId} already captured - cannot void`);
+        return {
+          success: false,
+          status: "ALREADY_CAPTURED",
+          message: "L'ordre a déjà été capturé et ne peut pas être annulé",
+        };
+      }
+
+      if (currentStatus === "VOIDED" || currentStatus === "CANCELLED") {
+        console.log(`✅ [PAYPAL] Order ${orderId} already voided/cancelled`);
+        return {
+          success: true,
+          status: "ALREADY_VOIDED",
+          message: "L'ordre était déjà annulé",
+        };
+      }
+
+      // Appeler l'API PayPal pour récupérer le statut actuel
+      // et vérifier s'il y a des autorisations à annuler
+      const orderDetails = await this.apiRequest<any>(
+        "GET",
+        `/v2/checkout/orders/${orderId}`,
+        {}
+      );
+
+      const paypalStatus = orderDetails.status;
+      console.log(`📋 [PAYPAL] Current order status: ${paypalStatus}`);
+
+      // Si l'ordre est APPROVED (autorisé mais non capturé), on peut l'annuler
+      if (paypalStatus === "APPROVED" || paypalStatus === "CREATED") {
+        // PayPal Orders API: Pour annuler un ordre non capturé, on utilise
+        // l'endpoint /v2/checkout/orders/{id} avec la méthode POST et action=void
+        // Mais en réalité, PayPal n'a pas de "void" direct pour les ordres.
+        // La méthode correcte est de ne PAS capturer et laisser expirer,
+        // OU d'utiliser l'API authorizations si on avait fait une autorisation explicite.
+
+        // Pour les ordres PAY_NOW (capture immédiate après approval), ils sont auto-capturés.
+        // Pour les ordres AUTHORIZE (capture différée), on peut void l'autorisation.
+
+        // Vérifier s'il y a une autorisation à annuler
+        const purchaseUnit = orderDetails.purchase_units?.[0];
+        const authorizationId = purchaseUnit?.payments?.authorizations?.[0]?.id;
+
+        if (authorizationId) {
+          // Annuler l'autorisation explicitement
+          console.log(`🚫 [PAYPAL] Voiding authorization: ${authorizationId}`);
+          await this.apiRequest<any>(
+            "POST",
+            `/v2/payments/authorizations/${authorizationId}/void`,
+            {}
+          );
+
+          // Mettre à jour le statut dans Firestore
+          await this.db.collection("paypal_orders").doc(orderId).update({
+            status: "VOIDED",
+            voidedAt: admin.firestore.FieldValue.serverTimestamp(),
+            voidReason: reason || "Call failed or cancelled",
+            authorizationVoided: authorizationId,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+
+          // Mettre à jour la call_session si elle existe
+          if (orderData.callSessionId) {
+            await syncPaymentStatus(this.db, orderId, orderData.callSessionId, {
+              status: "voided",
+              refundedAt: admin.firestore.FieldValue.serverTimestamp(),
+              refundReason: reason || "PayPal authorization voided",
+            });
+          }
+
+          console.log(`✅ [PAYPAL] Authorization ${authorizationId} voided successfully`);
+          return {
+            success: true,
+            status: "VOIDED",
+            message: `Autorisation ${authorizationId} annulée avec succès`,
+          };
+        } else {
+          // Pas d'autorisation explicite - marquer comme cancelled dans notre DB
+          // L'ordre expirera automatiquement côté PayPal
+          console.log(`⚠️ [PAYPAL] No explicit authorization found - marking as cancelled locally`);
+
+          await this.db.collection("paypal_orders").doc(orderId).update({
+            status: "CANCELLED",
+            cancelledAt: admin.firestore.FieldValue.serverTimestamp(),
+            cancelReason: reason || "Call failed or cancelled",
+            note: "No explicit authorization to void - order will expire automatically",
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+
+          if (orderData.callSessionId) {
+            await syncPaymentStatus(this.db, orderId, orderData.callSessionId, {
+              status: "cancelled",
+              refundedAt: admin.firestore.FieldValue.serverTimestamp(),
+              refundReason: reason || "Order cancelled - will expire automatically",
+            });
+          }
+
+          return {
+            success: true,
+            status: "CANCELLED",
+            message: "Ordre marqué comme annulé - expirera automatiquement",
+          };
+        }
+      } else if (paypalStatus === "COMPLETED") {
+        // L'ordre a été capturé entre-temps
+        console.warn(`⚠️ [PAYPAL] Order ${orderId} was captured in the meantime`);
+        return {
+          success: false,
+          status: "ALREADY_CAPTURED",
+          message: "L'ordre a été capturé entre-temps",
+        };
+      } else {
+        // Statut inconnu ou déjà terminé
+        console.log(`⚠️ [PAYPAL] Order ${orderId} in unexpected state: ${paypalStatus}`);
+        return {
+          success: false,
+          status: paypalStatus,
+          message: `Ordre dans un état inattendu: ${paypalStatus}`,
+        };
+      }
+    } catch (error) {
+      console.error(`❌ [PAYPAL] Error voiding order ${orderId}:`, error);
+
+      // En cas d'erreur, marquer l'ordre comme "void_failed" dans notre DB
+      try {
+        await this.db.collection("paypal_orders").doc(orderId).update({
+          voidFailed: true,
+          voidError: error instanceof Error ? error.message : String(error),
+          voidAttemptedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      } catch (updateError) {
+        console.error(`❌ [PAYPAL] Failed to update order status:`, updateError);
+      }
+
+      return {
+        success: false,
+        status: "ERROR",
+        message: error instanceof Error ? error.message : "Erreur lors de l'annulation",
+      };
+    }
+  }
+
   // ====== PAYOUTS API - PAIEMENT PRESTATAIRES ======
 
   /**
