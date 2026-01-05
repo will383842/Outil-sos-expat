@@ -274,7 +274,7 @@ export const onMessageEventCreate = onDocumentCreated(
     console.log(`\n📬 [${debugId}] STEP 1: Event payload analysis:`);
     console.log(`📬 [${debugId}]   eventId: ${evt.eventId}`);
     console.log(`📬 [${debugId}]   locale: ${evt.locale || 'auto'}`);
-    console.log(`📬 [${debugId}]   to.uid: ${evt.to?.uid || 'none'}`);
+    console.log(`📬 [${debugId}]   uid: ${evt.uid || 'none'}`);
     console.log(`📬 [${debugId}]   to.email: ${evt.to?.email || 'none'}`);
     console.log(`📬 [${debugId}]   to.phone: ${evt.to?.phone ? evt.to.phone.slice(0, 8) + '...' : 'none'}`);
     console.log(`📬 [${debugId}]   channels: ${evt.channels?.join(', ') || 'auto'}`);
