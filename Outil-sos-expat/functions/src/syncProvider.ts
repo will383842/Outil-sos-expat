@@ -52,6 +52,9 @@ interface ProviderData {
   aiCallsLimit?: number;
   aiCallsUsed?: number;
   aiQuotaResetAt?: unknown;
+  // P0 FIX: Champs d'accès IA manuels (admin console)
+  forcedAIAccess?: boolean;
+  freeTrialUntil?: FirebaseFirestore.Timestamp | string | null;
 }
 
 interface SyncProviderPayload {
@@ -73,6 +76,9 @@ interface SyncProviderPayload {
   aiCallsLimit?: number;
   aiCallsUsed?: number;
   aiQuotaResetAt?: unknown;
+  // P0 FIX: Champs d'accès IA manuels (admin console)
+  forcedAIAccess?: boolean;
+  freeTrialUntil?: string | null; // ISO date string
 }
 
 // CORS restrictif
@@ -157,6 +163,16 @@ export const syncProvider = onRequest(
       if (data.aiCallsLimit !== undefined) providerData.aiCallsLimit = data.aiCallsLimit;
       if (data.aiCallsUsed !== undefined) providerData.aiCallsUsed = data.aiCallsUsed;
       if (data.aiQuotaResetAt !== undefined) providerData.aiQuotaResetAt = data.aiQuotaResetAt;
+      // P0 FIX: Champs d'accès IA manuels (admin console)
+      if (data.forcedAIAccess !== undefined) providerData.forcedAIAccess = data.forcedAIAccess;
+      if (data.freeTrialUntil !== undefined) {
+        // Convertir en Timestamp Firestore si c'est une string ISO
+        if (data.freeTrialUntil === null) {
+          providerData.freeTrialUntil = null;
+        } else if (typeof data.freeTrialUntil === "string") {
+          providerData.freeTrialUntil = admin.firestore.Timestamp.fromDate(new Date(data.freeTrialUntil));
+        }
+      }
 
       const existingDoc = await providerRef.get();
       if (!existingDoc.exists) {

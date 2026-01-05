@@ -4262,6 +4262,10 @@ export {
   onSosProfileUpdated,
 } from './triggers/syncSosProfilesToOutil';
 
+// ========== P0 FIX: SYNC ACCESS TO OUTIL-SOS-EXPAT ==========
+// Synchronise forcedAIAccess et freeTrialUntil vers Outil pour l'acces IA
+export { onUserAccessUpdated } from './triggers/syncAccessToOutil';
+
 // ========== AUTOMATIC STRIPE EXPRESS ACCOUNT CREATION ==========
 export { onProviderCreated } from './triggers/onProviderCreated';
 
