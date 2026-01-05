@@ -1,7 +1,7 @@
 import * as admin from "firebase-admin";
 // 🔧 Twilio client & num
 import { getTwilioClient, getTwilioPhoneNumber } from "./lib/twilio";
-import { getFunctionsBaseUrl } from "./utils/urlBase";
+import { getFunctionsBaseUrl, getTwilioCallWebhookUrl, getTwilioConferenceWebhookUrl } from "./utils/urlBase";
 import { logError } from "./utils/logs/logError";
 import { logCallRecord } from "./utils/logs/logCallRecord";
 import { stripeManager } from "./StripeManager";
@@ -1003,10 +1003,10 @@ export class TwilioCallManager {
         console.log(`📞 [${retryId}] STEP B: Getting Twilio credentials...`);
         const twilioClient = getTwilioClient();
         const fromNumber = getTwilioPhoneNumber();
-        const base = getFunctionsBaseUrl();
+        // P0 CRITICAL FIX: Use dedicated Cloud Run URL instead of base + function name
+        const twilioCallWebhookUrl = getTwilioCallWebhookUrl();
         console.log(`📞 [${retryId}]   fromNumber: ${fromNumber}`);
-        console.log(`📞 [${retryId}]   base URL: ${base}`);
-        console.log(`📞 [${retryId}]   statusCallback: ${base}/twilioCallWebhook`);
+        console.log(`📞 [${retryId}]   statusCallback (Cloud Run): ${twilioCallWebhookUrl}`);
 
         console.log(`📞 [${retryId}] STEP C: Creating Twilio call via API...`);
         console.log(`📞 [${retryId}]   twilioClient.calls.create({`);
@@ -1021,7 +1021,8 @@ export class TwilioCallManager {
           to: phoneNumber,
           from: fromNumber,
           twiml,
-          statusCallback: `${base}/twilioCallWebhook`,
+          // P0 CRITICAL FIX: Use Cloud Run URL directly (not base + function name)
+          statusCallback: twilioCallWebhookUrl,
           statusCallbackMethod: "POST",
           statusCallbackEvent: [
             "ringing",
@@ -1295,14 +1296,15 @@ export class TwilioCallManager {
       participantType === "provider" ? "provider" : "client";
     const waitUrl =
       "http://twimlets.com/holdmusic?Bucket=com.twilio.music.ambient";
-    const base = getFunctionsBaseUrl();
+    // P0 CRITICAL FIX: Use dedicated Cloud Run URL instead of base + function name
+    const conferenceWebhookUrl = getTwilioConferenceWebhookUrl();
 
     return `
 <Response>
   <Say voice="alice" language="${ttsLocale}">${escapeXml(welcomeMessage)}</Say>
   <Dial timeout="${CALL_CONFIG.CALL_TIMEOUT}" timeLimit="${timeLimit}">
     <Conference
-      statusCallback="${base}/twilioConferenceWebhook"
+      statusCallback="${conferenceWebhookUrl}"
       statusCallbackMethod="POST"
       statusCallbackEvent="start end join leave mute hold"
       participantLabel="${participantLabel}"
