@@ -23,8 +23,8 @@ import { logger } from "firebase-functions";
 // Secret pour l'authentification avec Outil-sos-expat
 const OUTIL_SYNC_API_KEY = defineSecret("OUTIL_SYNC_API_KEY");
 
-// URL de l'endpoint syncProvider dans Outil-sos-expat
-const OUTIL_SYNC_ENDPOINT = "https://europe-west1-outils-sos-expat.cloudfunctions.net/syncProvider";
+// URL de l'endpoint syncProvider dans Outil-sos-expat (Cloud Run v2)
+const OUTIL_SYNC_ENDPOINT = "https://syncprovider-r47sd2uiqa-ew.a.run.app";
 
 interface UserAccessData {
   forcedAIAccess?: boolean;
