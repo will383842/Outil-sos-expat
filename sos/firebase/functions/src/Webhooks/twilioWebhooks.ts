@@ -390,9 +390,20 @@ async function handleCallCompleted(
   participantType: 'provider' | 'client',
   body: TwilioCallWebhookBody
 ) {
+  const completedId = `completed_${Date.now().toString(36)}`;
+
   try {
     const duration = parseInt(body.CallDuration || '0');
-    console.log(`🏁 Appel ${participantType} terminé: ${sessionId}, durée: ${duration}s`);
+
+    console.log(`\n${'─'.repeat(60)}`);
+    console.log(`🏁 [${completedId}] handleCallCompleted START`);
+    console.log(`🏁 [${completedId}]   sessionId: ${sessionId}`);
+    console.log(`🏁 [${completedId}]   participantType: ${participantType}`);
+    console.log(`🏁 [${completedId}]   callSid: ${body.CallSid}`);
+    console.log(`🏁 [${completedId}]   duration: ${duration}s`);
+    console.log(`🏁 [${completedId}]   earlyDisconnection: ${duration < 120 ? 'YES' : 'NO'}`);
+    console.log(`${'─'.repeat(60)}`);
+
     prodLogger.info('TWILIO_CALL_COMPLETED', `Call completed for ${participantType}`, {
       sessionId,
       participantType,
@@ -400,28 +411,38 @@ async function handleCallCompleted(
       callSid: body.CallSid?.slice(0, 20) + '...',
       earlyDisconnection: duration < 120
     });
-    
+
+    console.log(`🏁 [${completedId}] STEP 1: Setting participant status to "disconnected"...`);
     await twilioCallManager.updateParticipantStatus(
       sessionId,
       participantType,
       'disconnected',
       admin.firestore.Timestamp.fromDate(new Date())
     );
+    console.log(`🏁 [${completedId}]   ✅ Status updated`);
 
     // Récupérer la session pour déterminer le traitement approprié
+    console.log(`🏁 [${completedId}] STEP 2: Fetching session to determine next action...`);
     const session = await twilioCallManager.getCallSession(sessionId);
     if (!session) {
-      console.warn(`Session non trouvée lors de la completion: ${sessionId}`);
+      console.warn(`🏁 [${completedId}] ⚠️ Session non trouvée lors de la completion: ${sessionId}`);
+      console.log(`${'─'.repeat(60)}\n`);
       return;
     }
 
+    console.log(`🏁 [${completedId}]   session.status: ${session.status}`);
+    console.log(`🏁 [${completedId}]   client.status: ${session.participants.client.status}`);
+    console.log(`🏁 [${completedId}]   provider.status: ${session.participants.provider.status}`);
+
     // Si c'est une déconnexion normale (durée suffisante)
     if (duration >= 120) {
+      console.log(`🏁 [${completedId}] STEP 3: Duration >= 120s → handleCallCompletion (capture payment)`);
       await twilioCallManager.handleCallCompletion(sessionId, duration);
     } else {
-      // Déconnexion précoce - utiliser la méthode du TwilioCallManager
+      console.log(`🏁 [${completedId}] STEP 3: Duration < 120s → handleEarlyDisconnection (may refund)`);
       await twilioCallManager.handleEarlyDisconnection(sessionId, participantType, duration);
     }
+    console.log(`🏁 [${completedId}]   ✅ Post-completion handling done`);
 
     await logCallRecord({
       callId: sessionId,
@@ -434,7 +455,11 @@ async function handleCallCompleted(
       }
     });
 
+    console.log(`🏁 [${completedId}] END`);
+    console.log(`${'─'.repeat(60)}\n`);
+
   } catch (error) {
+    console.error(`🏁 [${completedId}] ❌ ERROR:`, error);
     await logError('handleCallCompleted', error);
   }
 }
@@ -447,20 +472,34 @@ async function handleCallFailed(
   participantType: 'provider' | 'client',
   body: TwilioCallWebhookBody
 ) {
+  const failedId = `failed_${Date.now().toString(36)}`;
+
   try {
-    console.log(`❌ Appel ${participantType} échoué: ${sessionId}, raison: ${body.CallStatus}`);
+    console.log(`\n${'▓'.repeat(60)}`);
+    console.log(`❌ [${failedId}] handleCallFailed START`);
+    console.log(`❌ [${failedId}]   sessionId: ${sessionId}`);
+    console.log(`❌ [${failedId}]   participantType: ${participantType}`);
+    console.log(`❌ [${failedId}]   callSid: ${body.CallSid}`);
+    console.log(`❌ [${failedId}]   CallStatus: ${body.CallStatus}`);
+    console.log(`❌ [${failedId}]   AnsweredBy: ${body.AnsweredBy || 'N/A'}`);
+    console.log(`${'▓'.repeat(60)}`);
+
     prodLogger.warn('TWILIO_CALL_FAILED', `Call failed for ${participantType}: ${body.CallStatus}`, {
       sessionId,
       participantType,
       failureReason: body.CallStatus,
       callSid: body.CallSid?.slice(0, 20) + '...'
     });
-    
+
+    const newStatus = body.CallStatus === 'no-answer' ? 'no_answer' : 'disconnected';
+    console.log(`❌ [${failedId}] STEP 1: Setting participant status to "${newStatus}"...`);
+
     await twilioCallManager.updateParticipantStatus(
       sessionId,
       participantType,
-      body.CallStatus === 'no-answer' ? 'no_answer' : 'disconnected'
+      newStatus
     );
+    console.log(`❌ [${failedId}]   ✅ Status updated to "${newStatus}"`);
 
     // 🔴 FONCTIONNALITÉ BONUS: Mise hors ligne automatique du prestataire sur no-answer
     // P2-2 FIX: Improved with idempotency, atomic batch updates, and better logging
