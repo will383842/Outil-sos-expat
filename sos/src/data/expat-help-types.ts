@@ -299,6 +299,318 @@ export const expatHelpTypesData: ExpatHelpType[] = [
     labelAr: "المغادرة أو العودة",
     labelHi: "जाना या लौटना"
   },
+
+  // ========================================
+  // VOYAGEURS ET TOURISTES
+  // ========================================
+  {
+    code: "ARNAQUE_VOL",
+    labelFr: "Arnaque ou vol",
+    labelEn: "Scam or theft",
+    labelEs: "Estafa o robo",
+    labelDe: "Betrug oder Diebstahl",
+    labelPt: "Fraude ou roubo",
+    labelRu: "Мошенничество или кража",
+    labelZh: "诈骗或盗窃",
+    labelAr: "احتيال أو سرقة",
+    labelHi: "धोखाधड़ी या चोरी"
+  },
+  {
+    code: "PERTE_DOCUMENTS",
+    labelFr: "Perte de documents (passeport, carte d'identité)",
+    labelEn: "Lost documents (passport, ID card)",
+    labelEs: "Pérdida de documentos (pasaporte, DNI)",
+    labelDe: "Verlorene Dokumente (Reisepass, Ausweis)",
+    labelPt: "Perda de documentos (passaporte, BI)",
+    labelRu: "Потеря документов (паспорт, удостоверение)",
+    labelZh: "证件丢失（护照、身份证）",
+    labelAr: "فقدان الوثائق (جواز السفر، بطاقة الهوية)",
+    labelHi: "दस्तावेज़ खोना (पासपोर्ट, आईडी कार्ड)"
+  },
+  {
+    code: "ASSISTANCE_CONSULAIRE",
+    labelFr: "Assistance consulaire et ambassade",
+    labelEn: "Consular and embassy assistance",
+    labelEs: "Asistencia consular y embajada",
+    labelDe: "Konsular- und Botschaftshilfe",
+    labelPt: "Assistência consular e embaixada",
+    labelRu: "Консульская помощь и посольство",
+    labelZh: "领事馆和大使馆协助",
+    labelAr: "المساعدة القنصلية والسفارة",
+    labelHi: "कांसुलर और दूतावास सहायता"
+  },
+  {
+    code: "HEBERGEMENT_URGENCE",
+    labelFr: "Hébergement d'urgence",
+    labelEn: "Emergency accommodation",
+    labelEs: "Alojamiento de emergencia",
+    labelDe: "Notunterkunft",
+    labelPt: "Alojamento de emergência",
+    labelRu: "Экстренное жилье",
+    labelZh: "紧急住宿",
+    labelAr: "سكن طوارئ",
+    labelHi: "आपातकालीन आवास"
+  },
+  {
+    code: "TRADUCTION_INTERPRETATION",
+    labelFr: "Traduction et interprétation",
+    labelEn: "Translation and interpretation",
+    labelEs: "Traducción e interpretación",
+    labelDe: "Übersetzung und Dolmetschen",
+    labelPt: "Tradução e interpretação",
+    labelRu: "Перевод и устный перевод",
+    labelZh: "翻译和口译",
+    labelAr: "الترجمة التحريرية والشفوية",
+    labelHi: "अनुवाद और व्याख्या"
+  },
+  {
+    code: "PROBLEMES_VOYAGE",
+    labelFr: "Problèmes de voyage (vol annulé, retards)",
+    labelEn: "Travel problems (cancelled flights, delays)",
+    labelEs: "Problemas de viaje (vuelos cancelados, retrasos)",
+    labelDe: "Reiseprobleme (Flugausfälle, Verspätungen)",
+    labelPt: "Problemas de viagem (voos cancelados, atrasos)",
+    labelRu: "Проблемы с путешествиями (отмены, задержки)",
+    labelZh: "旅行问题（航班取消、延误）",
+    labelAr: "مشاكل السفر (إلغاء الرحلات، التأخير)",
+    labelHi: "यात्रा समस्याएं (उड़ान रद्द, देरी)"
+  },
+
+  // ========================================
+  // NOMADES DIGITAUX
+  // ========================================
+  {
+    code: "TRAVAIL_DISTANCE",
+    labelFr: "Travail à distance / Freelance",
+    labelEn: "Remote work / Freelance",
+    labelEs: "Trabajo remoto / Freelance",
+    labelDe: "Remote-Arbeit / Freiberuflich",
+    labelPt: "Trabalho remoto / Freelancer",
+    labelRu: "Удаленная работа / Фриланс",
+    labelZh: "远程工作 / 自由职业",
+    labelAr: "العمل عن بُعد / العمل الحر",
+    labelHi: "दूरस्थ कार्य / फ्रीलांस"
+  },
+  {
+    code: "COWORKING_COLIVING",
+    labelFr: "Coworking et coliving",
+    labelEn: "Coworking and coliving",
+    labelEs: "Coworking y coliving",
+    labelDe: "Coworking und Coliving",
+    labelPt: "Coworking e coliving",
+    labelRu: "Коворкинг и коливинг",
+    labelZh: "共享办公和共居",
+    labelAr: "العمل المشترك والسكن المشترك",
+    labelHi: "कोवर्किंग और कोलिविंग"
+  },
+  {
+    code: "FISCALITE_NOMADE",
+    labelFr: "Fiscalité nomade digital",
+    labelEn: "Digital nomad taxation",
+    labelEs: "Fiscalidad de nómadas digitales",
+    labelDe: "Besteuerung für digitale Nomaden",
+    labelPt: "Fiscalidade de nômades digitais",
+    labelRu: "Налогообложение цифровых кочевников",
+    labelZh: "数字游民税务",
+    labelAr: "ضرائب الرحالة الرقميين",
+    labelHi: "डिजिटल नोमैड कराधान"
+  },
+
+  // ========================================
+  // ÉTUDIANTS INTERNATIONAUX
+  // ========================================
+  {
+    code: "ETUDES_INTERNATIONALES",
+    labelFr: "Études à l'étranger",
+    labelEn: "Studying abroad",
+    labelEs: "Estudiar en el extranjero",
+    labelDe: "Studieren im Ausland",
+    labelPt: "Estudar no estrangeiro",
+    labelRu: "Учеба за границей",
+    labelZh: "留学",
+    labelAr: "الدراسة في الخارج",
+    labelHi: "विदेश में पढ़ाई"
+  },
+  {
+    code: "LOGEMENT_ETUDIANT",
+    labelFr: "Logement étudiant",
+    labelEn: "Student housing",
+    labelEs: "Alojamiento estudiantil",
+    labelDe: "Studentenwohnung",
+    labelPt: "Alojamento estudantil",
+    labelRu: "Студенческое жилье",
+    labelZh: "学生住宿",
+    labelAr: "سكن طلابي",
+    labelHi: "छात्र आवास"
+  },
+  {
+    code: "BOURSE_FINANCEMENT",
+    labelFr: "Bourses et financement études",
+    labelEn: "Scholarships and study funding",
+    labelEs: "Becas y financiación de estudios",
+    labelDe: "Stipendien und Studienfinanzierung",
+    labelPt: "Bolsas e financiamento de estudos",
+    labelRu: "Стипендии и финансирование обучения",
+    labelZh: "奖学金和学习资助",
+    labelAr: "المنح الدراسية وتمويل الدراسة",
+    labelHi: "छात्रवृत्ति और अध्ययन वित्तपोषण"
+  },
+  {
+    code: "STAGE_INTERNATIONAL",
+    labelFr: "Stage à l'international",
+    labelEn: "International internship",
+    labelEs: "Prácticas internacionales",
+    labelDe: "Internationales Praktikum",
+    labelPt: "Estágio internacional",
+    labelRu: "Международная стажировка",
+    labelZh: "国际实习",
+    labelAr: "تدريب دولي",
+    labelHi: "अंतर्राष्ट्रीय इंटर्नशिप"
+  },
+
+  // ========================================
+  // RETRAITÉS EXPATRIÉS
+  // ========================================
+  {
+    code: "RETRAITE_ETRANGER",
+    labelFr: "Retraite à l'étranger",
+    labelEn: "Retirement abroad",
+    labelEs: "Jubilación en el extranjero",
+    labelDe: "Ruhestand im Ausland",
+    labelPt: "Aposentadoria no estrangeiro",
+    labelRu: "Пенсия за границей",
+    labelZh: "海外退休",
+    labelAr: "التقاعد في الخارج",
+    labelHi: "विदेश में सेवानिवृत्ति"
+  },
+  {
+    code: "SANTE_SENIORS",
+    labelFr: "Santé et soins pour seniors",
+    labelEn: "Senior health and care",
+    labelEs: "Salud y cuidados para mayores",
+    labelDe: "Gesundheit und Pflege für Senioren",
+    labelPt: "Saúde e cuidados para idosos",
+    labelRu: "Здоровье и уход за пожилыми",
+    labelZh: "老年人健康和护理",
+    labelAr: "صحة ورعاية كبار السن",
+    labelHi: "वरिष्ठ स्वास्थ्य और देखभाल"
+  },
+  {
+    code: "PENSION_INTERNATIONALE",
+    labelFr: "Pension et retraite internationale",
+    labelEn: "International pension",
+    labelEs: "Pensión internacional",
+    labelDe: "Internationale Rente",
+    labelPt: "Pensão internacional",
+    labelRu: "Международная пенсия",
+    labelZh: "国际养老金",
+    labelAr: "المعاش الدولي",
+    labelHi: "अंतर्राष्ट्रीय पेंशन"
+  },
+
+  // ========================================
+  // FAMILLES EXPATRIÉES
+  // ========================================
+  {
+    code: "SCOLARITE_ENFANTS",
+    labelFr: "Scolarité des enfants",
+    labelEn: "Children's schooling",
+    labelEs: "Escolarización de los hijos",
+    labelDe: "Schulbildung der Kinder",
+    labelPt: "Escolaridade dos filhos",
+    labelRu: "Обучение детей",
+    labelZh: "子女教育",
+    labelAr: "تعليم الأطفال",
+    labelHi: "बच्चों की शिक्षा"
+  },
+  {
+    code: "GARDE_ENFANTS",
+    labelFr: "Garde d'enfants (nounou, crèche)",
+    labelEn: "Childcare (nanny, daycare)",
+    labelEs: "Cuidado de niños (niñera, guardería)",
+    labelDe: "Kinderbetreuung (Kindermädchen, Krippe)",
+    labelPt: "Cuidado de crianças (babá, creche)",
+    labelRu: "Уход за детьми (няня, ясли)",
+    labelZh: "托儿服务（保姆、托儿所）",
+    labelAr: "رعاية الأطفال (مربية، حضانة)",
+    labelHi: "बच्चों की देखभाल (आया, क्रेच)"
+  },
+  {
+    code: "ACTIVITES_ENFANTS",
+    labelFr: "Activités pour enfants",
+    labelEn: "Children's activities",
+    labelEs: "Actividades para niños",
+    labelDe: "Aktivitäten für Kinder",
+    labelPt: "Atividades para crianças",
+    labelRu: "Занятия для детей",
+    labelZh: "儿童活动",
+    labelAr: "أنشطة للأطفال",
+    labelHi: "बच्चों की गतिविधियां"
+  },
+
+  // ========================================
+  // SERVICES SPÉCIALISÉS
+  // ========================================
+  {
+    code: "DEMENAGEMENT_INTERNATIONAL",
+    labelFr: "Déménagement international",
+    labelEn: "International moving",
+    labelEs: "Mudanza internacional",
+    labelDe: "Internationaler Umzug",
+    labelPt: "Mudança internacional",
+    labelRu: "Международный переезд",
+    labelZh: "国际搬家",
+    labelAr: "النقل الدولي",
+    labelHi: "अंतर्राष्ट्रीय स्थानांतरण"
+  },
+  {
+    code: "ANIMAUX_COMPAGNIE",
+    labelFr: "Animaux de compagnie (import, vétérinaire)",
+    labelEn: "Pets (import, veterinarian)",
+    labelEs: "Mascotas (importación, veterinario)",
+    labelDe: "Haustiere (Import, Tierarzt)",
+    labelPt: "Animais de estimação (importação, veterinário)",
+    labelRu: "Домашние животные (ввоз, ветеринар)",
+    labelZh: "宠物（进口、兽医）",
+    labelAr: "الحيوانات الأليفة (الاستيراد، البيطري)",
+    labelHi: "पालतू जानवर (आयात, पशु चिकित्सक)"
+  },
+  {
+    code: "PERMIS_CONDUIRE",
+    labelFr: "Permis de conduire (échange, obtention)",
+    labelEn: "Driver's license (exchange, obtaining)",
+    labelEs: "Permiso de conducir (canje, obtención)",
+    labelDe: "Führerschein (Umtausch, Erwerb)",
+    labelPt: "Carta de condução (troca, obtenção)",
+    labelRu: "Водительские права (обмен, получение)",
+    labelZh: "驾驶执照（更换、获取）",
+    labelAr: "رخصة القيادة (التبديل، الحصول)",
+    labelHi: "ड्राइविंग लाइसेंस (विनिमय, प्राप्त करना)"
+  },
+  {
+    code: "COMMUNAUTE_EXPATRIES",
+    labelFr: "Communauté d'expatriés",
+    labelEn: "Expat community",
+    labelEs: "Comunidad de expatriados",
+    labelDe: "Expat-Gemeinschaft",
+    labelPt: "Comunidade de expatriados",
+    labelRu: "Сообщество экспатов",
+    labelZh: "外籍人士社区",
+    labelAr: "مجتمع المغتربين",
+    labelHi: "प्रवासी समुदाय"
+  },
+  {
+    code: "SOUTIEN_PSYCHOLOGIQUE",
+    labelFr: "Soutien psychologique (adaptation, isolement)",
+    labelEn: "Psychological support (adaptation, isolation)",
+    labelEs: "Apoyo psicológico (adaptación, aislamiento)",
+    labelDe: "Psychologische Unterstützung (Anpassung, Isolation)",
+    labelPt: "Apoio psicológico (adaptação, isolamento)",
+    labelRu: "Психологическая поддержка (адаптация, изоляция)",
+    labelZh: "心理支持（适应、孤立）",
+    labelAr: "الدعم النفسي (التكيف، العزلة)",
+    labelHi: "मनोवैज्ञानिक सहायता (अनुकूलन, अलगाव)"
+  },
   {
     code: "AUTRE_PRECISER",
     labelFr: "Autre (précisez)",

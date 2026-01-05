@@ -20,18 +20,18 @@ interface FAQSource {
 const DISCOVER_FAQS: FAQSource[] = [
   {
     question: "Qu'est-ce que SOS-Expat ?",
-    answer: "SOS-Expat est une plateforme qui met en relation des expatriés en difficulté avec des avocats spécialisés et des expats aidants locaux. Notre mission : vous apporter une aide immédiate, personnalisée et multilingue, où que vous soyez dans le monde. Nous couvrons 197 pays et proposons nos services en 9 langues.",
+    answer: "SOS-Expat est une plateforme de mise en relation qui offre un premier contact rapide avec des avocats spécialisés et des expats aidants locaux. Notre mission : apporter une première aide immédiate, personnalisée et multilingue à tout expatrié, voyageur ou vacancier, quelle que soit sa nationalité, sa langue ou son pays. Nous couvrons 197 pays et proposons nos services en 9 langues.",
     category: "discover",
-    tags: ["présentation", "plateforme", "mission", "expatriés"],
+    tags: ["présentation", "plateforme", "mission", "expatriés", "voyageurs", "vacanciers"],
     order: 1,
     isActive: true,
     isFooter: true
   },
   {
     question: "Comment fonctionne la plateforme ?",
-    answer: "1. Créez votre compte gratuitement\n2. Décrivez votre situation et choisissez un prestataire (avocat ou expat aidant)\n3. Payez les frais de mise en relation (19€ ou 49€)\n4. Soyez mis en relation immédiatement par téléphone\n5. Évaluez votre prestataire après l'appel\n\nLe processus est simple, rapide et sécurisé.",
+    answer: "SOS-Expat vous connecte à des prestataires pour un premier contact d'aide rapide :\n\n1. Créez votre compte gratuitement\n2. Choisissez un prestataire (avocat 49€/20min ou expat aidant 19€/30min)\n3. Effectuez un paiement unique (rémunération prestataire + frais de mise en relation)\n4. Soyez mis en relation immédiatement par téléphone\n5. Évaluez votre prestataire après l'appel\n\nCes appels sont conçus pour apporter une première aide. Toute ouverture de dossier ou collaboration se poursuit directement avec le prestataire, en dehors de la plateforme.",
     category: "discover",
-    tags: ["fonctionnement", "étapes", "processus", "inscription"],
+    tags: ["fonctionnement", "étapes", "processus", "inscription", "premier contact"],
     order: 2,
     isActive: true,
     isFooter: true
@@ -56,9 +56,9 @@ const DISCOVER_FAQS: FAQSource[] = [
   },
   {
     question: "Quelle différence entre avocat et expat aidant ?",
-    answer: "• Avocat (49€ / 20 min) : Professionnel du droit diplômé, inscrit au barreau, pour des conseils juridiques (contrats, litiges, immigration, droit du travail...)\n\n• Expat Aidant (19€ / 30 min) : Expatrié expérimenté vivant dans votre pays de destination, pour des conseils pratiques (démarches administratives, logement, culture locale, vie quotidienne...)",
+    answer: "SOS-Expat propose un premier contact rapide avec deux types de prestataires :\n\n• Avocat (49€ / 20 min) : Professionnel du droit diplômé, inscrit au barreau. Premier conseil juridique sur contrats, litiges, immigration, droit du travail...\n\n• Expat Aidant (19€ / 30 min) : Expatrié expérimenté vivant dans votre pays de destination. Premiers conseils pratiques sur démarches administratives, logement, culture locale...\n\nCes appels constituent une première aide rapide. Si un suivi ou l'ouverture d'un dossier est nécessaire, cela se fait directement entre vous et le prestataire, en dehors de la plateforme SOS-Expat.",
     category: "discover",
-    tags: ["avocat", "expat aidant", "différence", "prestataire"],
+    tags: ["avocat", "expat aidant", "différence", "prestataire", "premier contact"],
     order: 5,
     isActive: true,
     isFooter: true
@@ -83,9 +83,9 @@ const DISCOVER_FAQS: FAQSource[] = [
   },
   {
     question: "Qui sont les prestataires sur SOS-Expat ?",
-    answer: "Nos prestataires sont des professionnels vérifiés :\n• Avocats : diplômés et inscrits au barreau de leur pays\n• Expats aidants : expatriés expérimentés vivant depuis au moins 2 ans dans leur pays d'accueil\n\nTous passent par un processus de vérification (KYC) et sont notés par les utilisateurs.",
+    answer: "Nos prestataires sont des professionnels vérifiés qui offrent un premier contact d'aide rapide :\n• Avocats : diplômés et inscrits au barreau de leur pays (49€/20min)\n• Expats aidants : expatriés expérimentés vivant depuis au moins 2 ans dans leur pays d'accueil (19€/30min)\n\nTous passent par un processus de vérification (KYC) et sont notés par les utilisateurs. Les tarifs sont fixés par SOS-Expat, les prestataires ne fixent pas leurs propres prix.",
     category: "discover",
-    tags: ["prestataires", "vérification", "qualité"],
+    tags: ["prestataires", "vérification", "qualité", "tarifs fixes"],
     order: 8,
     isActive: true,
     isFooter: false
@@ -134,9 +134,9 @@ const CLIENTS_FAQS: FAQSource[] = [
   },
   {
     question: "Combien de temps dure un appel ?",
-    answer: "• Appel avec un avocat : 20 minutes pour 49€\n• Appel avec un expat aidant : 30 minutes pour 19€\n\nUn compteur visible affiche le temps restant pendant l'appel. Si vous avez besoin de plus de temps, vous pouvez programmer un nouvel appel.",
+    answer: "Les durées sont fixes et adaptées à un premier contact d'aide rapide :\n\n• Appel Avocat : 20 minutes pour 49€\n• Appel Expat Aidant : 30 minutes pour 19€\n\nUn compteur affiche le temps restant pendant l'appel. Ces appels permettent d'obtenir une première aide. Pour un suivi plus approfondi ou l'ouverture d'un dossier, vous pouvez poursuivre directement avec le prestataire en dehors de la plateforme.",
     category: "clients",
-    tags: ["durée", "temps", "appel"],
+    tags: ["durée", "temps", "appel", "premier contact"],
     order: 14,
     isActive: true,
     isFooter: false
@@ -176,7 +176,7 @@ const CLIENTS_FAQS: FAQSource[] = [
 const PROVIDERS_FAQS: FAQSource[] = [
   {
     question: "Comment devenir prestataire ?",
-    answer: "1. Cliquez sur \"Devenir prestataire\"\n2. Choisissez votre profil : Avocat ou Expat Aidant\n3. Remplissez le formulaire avec vos informations\n4. Téléchargez les documents requis (diplôme pour avocats, preuve de résidence pour expats)\n5. Complétez la vérification d'identité (KYC)\n6. Attendez la validation (généralement 24-48h)",
+    answer: "SOS-Expat est une plateforme de mise en relation pour des premiers contacts rapides avec des expatriés, voyageurs et vacanciers du monde entier.\n\n1. Cliquez sur \"Devenir prestataire\"\n2. Choisissez votre profil : Avocat ou Expat Aidant\n3. Remplissez le formulaire avec vos informations\n4. Téléchargez les documents requis (diplôme pour avocats, preuve de résidence pour expats)\n5. Complétez la vérification d'identité (KYC)\n6. Attendez la validation (généralement 24-48h)\n\nNote importante : Les tarifs sont définis par SOS-Expat (49€/20min pour avocats, 19€/30min pour expats). Vous n'avez pas à fixer vos propres tarifs.",
     category: "providers",
     tags: ["prestataire", "inscription", "devenir", "avocat", "expat"],
     order: 20,
@@ -194,7 +194,7 @@ const PROVIDERS_FAQS: FAQSource[] = [
   },
   {
     question: "Comment suis-je payé ?",
-    answer: "Les paiements sont effectués via Stripe Connect :\n• Après chaque appel réussi, le montant de votre rémunération est crédité sur votre compte Stripe\n• Les tarifs sont fixés par SOS-Expat (49€ pour avocats, 19€ pour expats aidants)\n• La facture client est scindée entre frais de mise en relation et votre rémunération\n• Aucune commission n'est prélevée sur votre rémunération\n• Les virements vers votre compte bancaire sont automatiques (quotidien, hebdomadaire ou mensuel)\n• Vous pouvez suivre tous vos revenus dans votre tableau de bord",
+    answer: "Les paiements sont effectués via Stripe Connect :\n• Après chaque appel réussi, votre rémunération est créditée sur votre compte Stripe\n• Les tarifs sont fixés par SOS-Expat : 49€ (20 min) pour avocats, 19€ (30 min) pour expats aidants\n• Le client fait un paiement unique, scindé entre votre rémunération et les frais de mise en relation SOS-Expat\n• Seuls les frais Stripe (~2.9%) sont déduits de votre part\n• Virements automatiques vers votre compte bancaire (quotidien, hebdomadaire ou mensuel)\n• Suivi de vos revenus dans votre tableau de bord",
     category: "providers",
     tags: ["paiement", "revenus", "stripe", "rémunération"],
     order: 22,
@@ -221,9 +221,9 @@ const PROVIDERS_FAQS: FAQSource[] = [
   },
   {
     question: "Comment fonctionne la rémunération sur SOS-Expat ?",
-    answer: "SOS-Expat est une plateforme de mise en relation avec des tarifs fixes :\n• Les tarifs sont définis par SOS-Expat : 49€ pour avocats (20 min), 19€ pour expats aidants (30 min)\n• La facture client est scindée : frais de mise en relation + votre rémunération\n• Aucune commission n'est prélevée sur votre rémunération\n• Seuls les frais de transaction Stripe (~2.9%) sont déduits\n\nVous recevez l'intégralité de votre part sans commission.",
+    answer: "SOS-Expat est une plateforme de mise en relation pour des premiers contacts rapides. Le modèle est simple :\n\n• Tarifs fixes définis par SOS-Expat : 49€ (20 min avocat), 19€ (30 min expat aidant)\n• Le client fait un SEUL paiement qui comprend :\n  - Votre rémunération de prestataire\n  - Les frais de mise en relation SOS-Expat (couvrant Twilio, plateforme, fonctionnalités)\n• Seuls les frais de transaction Stripe (~2.9%) sont déduits de votre part\n\nImportant : Ces appels sont un premier contact d'aide rapide. Si le client souhaite ouvrir un dossier ou poursuivre la collaboration, cela se fait directement avec vous, en dehors de la plateforme SOS-Expat.",
     category: "providers",
-    tags: ["rémunération", "frais", "tarification"],
+    tags: ["rémunération", "frais", "tarification", "premier contact"],
     order: 25,
     isActive: true,
     isFooter: false
@@ -254,18 +254,18 @@ const PROVIDERS_FAQS: FAQSource[] = [
 const PAYMENTS_FAQS: FAQSource[] = [
   {
     question: "Comment fonctionne le paiement ?",
-    answer: "Le paiement s'effectue avant la mise en relation, de manière 100% sécurisée via Stripe :\n1. Vous choisissez votre prestataire\n2. Vous payez les frais de mise en relation (19€ ou 49€)\n3. Le système vous met en relation immédiatement\n4. Si l'appel n'aboutit pas, vous êtes remboursé automatiquement",
+    answer: "Le paiement s'effectue avant la mise en relation, de manière 100% sécurisée via Stripe :\n\n1. Vous choisissez votre prestataire (avocat ou expat aidant)\n2. Vous effectuez un paiement unique (19€ ou 49€) qui comprend :\n   - La rémunération du prestataire\n   - Les frais de mise en relation SOS-Expat (Twilio, plateforme)\n3. Vous êtes mis en relation immédiatement par téléphone\n4. Si l'appel n'aboutit pas, remboursement automatique à 100%\n\nCe premier contact vous permet d'obtenir une aide rapide. Toute suite (dossier, collaboration) se fait directement avec le prestataire, en dehors de SOS-Expat.",
     category: "payments",
-    tags: ["paiement", "stripe", "sécurité", "frais"],
+    tags: ["paiement", "stripe", "sécurité", "frais", "premier contact"],
     order: 30,
     isActive: true,
     isFooter: true
   },
   {
     question: "Quels sont les tarifs ?",
-    answer: "Nos tarifs sont simples et transparents :\n\n• Appel avec un Avocat : 49€ pour 20 minutes de consultation juridique\n• Appel avec un Expat Aidant : 19€ pour 30 minutes de conseils pratiques\n\nAucun frais caché. Paiement sécurisé. Remboursement si l'appel n'aboutit pas.",
+    answer: "Nos tarifs sont simples, fixes et transparents :\n\n• Appel Avocat : 49€ pour 20 minutes de premier conseil juridique\n• Appel Expat Aidant : 19€ pour 30 minutes de premiers conseils pratiques\n\nCe tarif unique comprend la rémunération du prestataire + les frais de mise en relation SOS-Expat. Aucun frais caché. Remboursement à 100% si l'appel n'aboutit pas.\n\nCes appels sont conçus pour apporter une première aide rapide aux expatriés, voyageurs et vacanciers du monde entier.",
     category: "payments",
-    tags: ["tarifs", "prix", "avocat", "expat"],
+    tags: ["tarifs", "prix", "avocat", "expat", "premier contact"],
     order: 31,
     isActive: true,
     isFooter: true

@@ -10,12 +10,25 @@
 
 import axios from "axios";
 
+// SECURITY: API key MUST be provided via environment variable
+// Run: export MAILWIZZ_API_KEY="your-api-key" before executing this script
 const MAILWIZZ_CONFIG = {
-  apiUrl: "https://app.mail-ulixai.com/api/index.php",
-  apiKey: process.env.MAILWIZZ_API_KEY || "63f17459fa45961cbb742a61ddebc157169bd3c1",
-  listUid: "yl089ehqpgb96",
-  customerId: "2",
+  apiUrl: process.env.MAILWIZZ_API_URL || "https://app.mail-ulixai.com/api/index.php",
+  apiKey: process.env.MAILWIZZ_API_KEY || "",
+  listUid: process.env.MAILWIZZ_LIST_UID || "",
+  customerId: process.env.MAILWIZZ_CUSTOMER_ID || "",
 };
+
+// Validate required environment variables
+if (!MAILWIZZ_CONFIG.apiKey) {
+  console.error("❌ MAILWIZZ_API_KEY environment variable is required");
+  console.error("   Run: export MAILWIZZ_API_KEY='your-api-key'");
+  process.exit(1);
+}
+if (!MAILWIZZ_CONFIG.listUid) {
+  console.error("❌ MAILWIZZ_LIST_UID environment variable is required");
+  process.exit(1);
+}
 
 async function testConnection() {
   console.log("🧪 Testing MailWizz API Connection...\n");

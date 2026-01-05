@@ -2026,7 +2026,31 @@ export const paypalWebhook = onRequest(
 
       const db = admin.firestore();
 
-      // Logger l'événement
+      // ========== P0 FIX: IDEMPOTENCE - Prevent duplicate processing ==========
+      // PayPal may send the same webhook multiple times. We must ensure we only
+      // process each event once to prevent duplicate transactions/updates.
+      const webhookKey = `paypal_${event.id}`;
+      const webhookEventRef = db.collection("processed_webhook_events").doc(webhookKey);
+
+      const existingEvent = await webhookEventRef.get();
+      if (existingEvent.exists) {
+        console.log(`⚠️ [PAYPAL] IDEMPOTENCY: Event ${event.id} already processed, skipping`);
+        res.status(200).json({ received: true, duplicate: true, eventId: event.id });
+        return;
+      }
+
+      // Mark event as being processed BEFORE processing (prevents race conditions)
+      await webhookEventRef.set({
+        eventKey: webhookKey,
+        eventId: event.id,
+        eventType,
+        processedAt: admin.firestore.FieldValue.serverTimestamp(),
+        status: "processing",
+        source: "paypal_webhook",
+      });
+      // ========== END P0 FIX ==========
+
+      // Logger l'événement (kept for audit trail)
       await db.collection("paypal_webhook_events").add({
         eventId: event.id,
         eventType,

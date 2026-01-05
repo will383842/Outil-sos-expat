@@ -846,6 +846,7 @@ export { sendContactReply } from "./sendContactReplyFunction";
 // Exports additionnels
 export * from "./notificationPipeline/worker";
 export * from "./admin/callables";
+export { adminResetFAQs } from "./admin/resetFAQsCallable";
 
 // Triggers de nettoyage automatique (suppression cascade users -> sos_profiles)
 export { onUserDeleted, cleanupOrphanedProfiles } from "./triggers/userCleanupTrigger";

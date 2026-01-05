@@ -191,6 +191,156 @@ export const lawyerSpecialitiesData: LawyerSpecialityGroup[] = [
         labelZh: "入籍",
         labelAr: "التجنس",
         labelHi: "नागरिकता प्राप्ति"
+      },
+      {
+        code: "IMMI_VISA_ETUDIANT",
+        labelFr: "Visa étudiant",
+        labelEn: "Student visa",
+        labelEs: "Visa de estudiante",
+        labelDe: "Studentenvisum",
+        labelPt: "Visto de estudante",
+        labelRu: "Студенческая виза",
+        labelZh: "学生签证",
+        labelAr: "تأشيرة طالب",
+        labelHi: "छात्र वीज़ा"
+      },
+      {
+        code: "IMMI_VISA_INVESTISSEUR",
+        labelFr: "Visa investisseur / Golden Visa",
+        labelEn: "Investor visa / Golden Visa",
+        labelEs: "Visa de inversor / Golden Visa",
+        labelDe: "Investorenvisum / Golden Visa",
+        labelPt: "Visto de investidor / Golden Visa",
+        labelRu: "Инвесторская виза / Золотая виза",
+        labelZh: "投资者签证 / 黄金签证",
+        labelAr: "تأشيرة مستثمر / التأشيرة الذهبية",
+        labelHi: "निवेशक वीज़ा / गोल्डन वीज़ा"
+      },
+      {
+        code: "IMMI_VISA_RETRAITE",
+        labelFr: "Visa retraité",
+        labelEn: "Retirement visa",
+        labelEs: "Visa de jubilado",
+        labelDe: "Rentnervisum",
+        labelPt: "Visto de aposentado",
+        labelRu: "Пенсионная виза",
+        labelZh: "退休签证",
+        labelAr: "تأشيرة متقاعد",
+        labelHi: "सेवानिवृत्ति वीज़ा"
+      },
+      {
+        code: "IMMI_VISA_NOMADE_DIGITAL",
+        labelFr: "Visa nomade digital",
+        labelEn: "Digital nomad visa",
+        labelEs: "Visa de nómada digital",
+        labelDe: "Visum für digitale Nomaden",
+        labelPt: "Visto de nômade digital",
+        labelRu: "Виза цифрового кочевника",
+        labelZh: "数字游民签证",
+        labelAr: "تأشيرة الرحالة الرقمي",
+        labelHi: "डिजिटल नोमैड वीज़ा"
+      },
+      {
+        code: "IMMI_REGROUPEMENT_FAMILIAL",
+        labelFr: "Regroupement familial",
+        labelEn: "Family reunification",
+        labelEs: "Reagrupación familiar",
+        labelDe: "Familienzusammenführung",
+        labelPt: "Reagrupamento familiar",
+        labelRu: "Воссоединение семьи",
+        labelZh: "家庭团聚",
+        labelAr: "لم شمل الأسرة",
+        labelHi: "परिवार पुनर्मिलन"
+      }
+    ]
+  },
+
+  // ========================================
+  // DROIT DU TRAVAIL INTERNATIONAL
+  // ========================================
+  {
+    code: "TRAV",
+    labelFr: "Droit du travail international",
+    labelEn: "International labor law",
+    labelEs: "Derecho laboral internacional",
+    labelDe: "Internationales Arbeitsrecht",
+    labelPt: "Direito do trabalho internacional",
+    labelRu: "Международное трудовое право",
+    labelZh: "国际劳动法",
+    labelAr: "قانون العمل الدولي",
+    labelHi: "अंतर्राष्ट्रीय श्रम कानून",
+    items: [
+      {
+        code: "TRAV_DROITS_TRAVAILLEURS",
+        labelFr: "Droits des travailleurs expatriés",
+        labelEn: "Expatriate workers' rights",
+        labelEs: "Derechos de los trabajadores expatriados",
+        labelDe: "Rechte von Arbeitnehmern im Ausland",
+        labelPt: "Direitos dos trabalhadores expatriados",
+        labelRu: "Права работников-экспатов",
+        labelZh: "外籍劳工权利",
+        labelAr: "حقوق العمال المغتربين",
+        labelHi: "प्रवासी श्रमिकों के अधिकार"
+      },
+      {
+        code: "TRAV_LICENCIEMENT_INTERNATIONAL",
+        labelFr: "Licenciement à l'international",
+        labelEn: "International dismissal",
+        labelEs: "Despido internacional",
+        labelDe: "Internationale Kündigung",
+        labelPt: "Despedimento internacional",
+        labelRu: "Международное увольнение",
+        labelZh: "国际解雇",
+        labelAr: "الفصل الدولي",
+        labelHi: "अंतर्राष्ट्रीय बर्खास्तगी"
+      },
+      {
+        code: "TRAV_SECURITE_SOCIALE_INTERNATIONALE",
+        labelFr: "Sécurité sociale internationale",
+        labelEn: "International social security",
+        labelEs: "Seguridad social internacional",
+        labelDe: "Internationale Sozialversicherung",
+        labelPt: "Segurança social internacional",
+        labelRu: "Международное социальное страхование",
+        labelZh: "国际社会保障",
+        labelAr: "الضمان الاجتماعي الدولي",
+        labelHi: "अंतर्राष्ट्रीय सामाजिक सुरक्षा"
+      },
+      {
+        code: "TRAV_RETRAITE_INTERNATIONALE",
+        labelFr: "Retraite internationale",
+        labelEn: "International pension/retirement",
+        labelEs: "Jubilación internacional",
+        labelDe: "Internationale Rente",
+        labelPt: "Aposentadoria internacional",
+        labelRu: "Международная пенсия",
+        labelZh: "国际养老金",
+        labelAr: "التقاعد الدولي",
+        labelHi: "अंतर्राष्ट्रीय पेंशन"
+      },
+      {
+        code: "TRAV_DETACHEMENT_EXPATRIATION",
+        labelFr: "Détachement et expatriation",
+        labelEn: "Secondment and expatriation",
+        labelEs: "Destacamento y expatriación",
+        labelDe: "Entsendung und Expatriierung",
+        labelPt: "Destacamento e expatriação",
+        labelRu: "Командирование и экспатриация",
+        labelZh: "外派和派遣",
+        labelAr: "الإعارة والاغتراب",
+        labelHi: "प्रतिनियुक्ति और प्रवास"
+      },
+      {
+        code: "TRAV_DISCRIMINATION_TRAVAIL",
+        labelFr: "Discrimination au travail",
+        labelEn: "Workplace discrimination",
+        labelEs: "Discriminación laboral",
+        labelDe: "Arbeitsplatzdiskriminierung",
+        labelPt: "Discriminação no trabalho",
+        labelRu: "Дискриминация на рабочем месте",
+        labelZh: "职场歧视",
+        labelAr: "التمييز في العمل",
+        labelHi: "कार्यस्थल भेदभाव"
       }
     ]
   },
@@ -1108,19 +1258,163 @@ export const lawyerSpecialitiesData: LawyerSpecialityGroup[] = [
   },
 
   // ========================================
-  // RETOUR EN FRANCE
+  // DROIT COMPARÉ INTERNATIONAL
+  // ========================================
+  {
+    code: "COMP",
+    labelFr: "Droit comparé international",
+    labelEn: "International comparative law",
+    labelEs: "Derecho comparado internacional",
+    labelDe: "Internationales Rechtsvergleichung",
+    labelPt: "Direito comparado internacional",
+    labelRu: "Международное сравнительное право",
+    labelZh: "国际比较法",
+    labelAr: "القانون المقارن الدولي",
+    labelHi: "अंतर्राष्ट्रीय तुलनात्मक कानून",
+    items: [
+      {
+        code: "COMP_DROIT_ISLAMIQUE",
+        labelFr: "Droit islamique (Charia)",
+        labelEn: "Islamic law (Sharia)",
+        labelEs: "Derecho islámico (Sharia)",
+        labelDe: "Islamisches Recht (Scharia)",
+        labelPt: "Direito islâmico (Sharia)",
+        labelRu: "Исламское право (Шариат)",
+        labelZh: "伊斯兰法律（沙里亚）",
+        labelAr: "الشريعة الإسلامية",
+        labelHi: "इस्लामी कानून (शरीयत)"
+      },
+      {
+        code: "COMP_COMMON_LAW",
+        labelFr: "Common Law (pays anglophones)",
+        labelEn: "Common Law (English-speaking countries)",
+        labelEs: "Common Law (países angloparlantes)",
+        labelDe: "Common Law (englischsprachige Länder)",
+        labelPt: "Common Law (países anglófonos)",
+        labelRu: "Общее право (англоязычные страны)",
+        labelZh: "普通法（英语国家）",
+        labelAr: "القانون العام (الدول الناطقة بالإنجليزية)",
+        labelHi: "कॉमन लॉ (अंग्रेजी भाषी देश)"
+      },
+      {
+        code: "COMP_DROIT_ASIATIQUE",
+        labelFr: "Droit asiatique (Chine, Japon, Corée)",
+        labelEn: "Asian law (China, Japan, Korea)",
+        labelEs: "Derecho asiático (China, Japón, Corea)",
+        labelDe: "Asiatisches Recht (China, Japan, Korea)",
+        labelPt: "Direito asiático (China, Japão, Coreia)",
+        labelRu: "Азиатское право (Китай, Япония, Корея)",
+        labelZh: "亚洲法律（中国、日本、韩国）",
+        labelAr: "القانون الآسيوي (الصين، اليابان، كوريا)",
+        labelHi: "एशियाई कानून (चीन, जापान, कोरिया)"
+      },
+      {
+        code: "COMP_DROIT_AFRICAIN",
+        labelFr: "Droit africain",
+        labelEn: "African law",
+        labelEs: "Derecho africano",
+        labelDe: "Afrikanisches Recht",
+        labelPt: "Direito africano",
+        labelRu: "Африканское право",
+        labelZh: "非洲法律",
+        labelAr: "القانون الأفريقي",
+        labelHi: "अफ्रीकी कानून"
+      },
+      {
+        code: "COMP_DROIT_LATINO",
+        labelFr: "Droit latino-américain",
+        labelEn: "Latin American law",
+        labelEs: "Derecho latinoamericano",
+        labelDe: "Lateinamerikanisches Recht",
+        labelPt: "Direito latino-americano",
+        labelRu: "Латиноамериканское право",
+        labelZh: "拉丁美洲法律",
+        labelAr: "قانون أمريكا اللاتينية",
+        labelHi: "लैटिन अमेरिकी कानून"
+      },
+      {
+        code: "COMP_RECONNAISSANCE_JUGEMENTS",
+        labelFr: "Reconnaissance de jugements étrangers",
+        labelEn: "Recognition of foreign judgments",
+        labelEs: "Reconocimiento de sentencias extranjeras",
+        labelDe: "Anerkennung ausländischer Urteile",
+        labelPt: "Reconhecimento de sentenças estrangeiras",
+        labelRu: "Признание иностранных судебных решений",
+        labelZh: "外国判决的承认",
+        labelAr: "الاعتراف بالأحكام الأجنبية",
+        labelHi: "विदेशी निर्णयों की मान्यता"
+      }
+    ]
+  },
+
+  // ========================================
+  // ÉDUCATION ET RECONNAISSANCE
+  // ========================================
+  {
+    code: "EDUC",
+    labelFr: "Éducation et reconnaissance",
+    labelEn: "Education and recognition",
+    labelEs: "Educación y reconocimiento",
+    labelDe: "Bildung und Anerkennung",
+    labelPt: "Educação e reconhecimento",
+    labelRu: "Образование и признание",
+    labelZh: "教育和认可",
+    labelAr: "التعليم والاعتراف",
+    labelHi: "शिक्षा और मान्यता",
+    items: [
+      {
+        code: "EDUC_RECONNAISSANCE_DIPLOMES",
+        labelFr: "Reconnaissance de diplômes étrangers",
+        labelEn: "Recognition of foreign diplomas",
+        labelEs: "Reconocimiento de títulos extranjeros",
+        labelDe: "Anerkennung ausländischer Diplome",
+        labelPt: "Reconhecimento de diplomas estrangeiros",
+        labelRu: "Признание иностранных дипломов",
+        labelZh: "外国文凭认可",
+        labelAr: "الاعتراف بالشهادات الأجنبية",
+        labelHi: "विदेशी डिप्लोमा की मान्यता"
+      },
+      {
+        code: "EDUC_EQUIVALENCES",
+        labelFr: "Équivalences académiques",
+        labelEn: "Academic equivalences",
+        labelEs: "Equivalencias académicas",
+        labelDe: "Akademische Gleichwertigkeit",
+        labelPt: "Equivalências académicas",
+        labelRu: "Академические эквиваленты",
+        labelZh: "学术等值认定",
+        labelAr: "المعادلات الأكاديمية",
+        labelHi: "अकादमिक समकक्षता"
+      },
+      {
+        code: "EDUC_QUALIFICATIONS_PROFESSIONNELLES",
+        labelFr: "Qualifications professionnelles",
+        labelEn: "Professional qualifications",
+        labelEs: "Cualificaciones profesionales",
+        labelDe: "Berufsqualifikationen",
+        labelPt: "Qualificações profissionais",
+        labelRu: "Профессиональные квалификации",
+        labelZh: "专业资格认定",
+        labelAr: "المؤهلات المهنية",
+        labelHi: "व्यावसायिक योग्यता"
+      }
+    ]
+  },
+
+  // ========================================
+  // RETOUR AU PAYS D'ORIGINE
   // ========================================
   {
     code: "RET",
-    labelFr: "Retour en France",
-    labelEn: "Return to France",
-    labelEs: "Regreso a Francia",
-    labelDe: "Rückkehr nach Frankreich",
-    labelPt: "Retorno à França",
-    labelRu: "Возвращение во Францию",
-    labelZh: "返回法国",
-    labelAr: "العودة إلى فرنسا",
-    labelHi: "फ्रांस में वापसी",
+    labelFr: "Retour au pays d'origine",
+    labelEn: "Return to home country",
+    labelEs: "Regreso al país de origen",
+    labelDe: "Rückkehr ins Heimatland",
+    labelPt: "Retorno ao país de origem",
+    labelRu: "Возвращение на родину",
+    labelZh: "返回祖国",
+    labelAr: "العودة إلى الوطن",
+    labelHi: "स्वदेश वापसी",
     items: [
       {
         code: "RET_RAPATRIEMENT_BIENS",
@@ -1145,6 +1439,30 @@ export const lawyerSpecialitiesData: LawyerSpecialityGroup[] = [
         labelZh: "财税和社会重新融入",
         labelAr: "إعادة الإدماج المالي والاجتماعي",
         labelHi: "राजकोषीय और सामाजिक पुन: एकीकरण"
+      },
+      {
+        code: "RET_TRANSFERT_PATRIMOINE",
+        labelFr: "Transfert de patrimoine",
+        labelEn: "Asset transfer",
+        labelEs: "Transferencia de patrimonio",
+        labelDe: "Vermögensübertragung",
+        labelPt: "Transferência de patrimônio",
+        labelRu: "Передача активов",
+        labelZh: "资产转移",
+        labelAr: "نقل الأصول",
+        labelHi: "संपत्ति हस्तांतरण"
+      },
+      {
+        code: "RET_CLOTURE_COMPTES",
+        labelFr: "Clôture de comptes et contrats",
+        labelEn: "Account and contract closure",
+        labelEs: "Cierre de cuentas y contratos",
+        labelDe: "Konto- und Vertragsschließung",
+        labelPt: "Encerramento de contas e contratos",
+        labelRu: "Закрытие счетов и контрактов",
+        labelZh: "账户和合同关闭",
+        labelAr: "إغلاق الحسابات والعقود",
+        labelHi: "खाता और अनुबंध समापन"
       }
     ]
   },

@@ -312,8 +312,9 @@ type Locale = 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
 
 // --------------------------------------------
 // PageViewTracker - Tracks route changes for GA4
+// P1-1 FIX: Renamed from _PageViewTracker and now rendered in JSX
 // --------------------------------------------
-const _PageViewTracker: React.FC = () => {
+const PageViewTracker: React.FC = () => {
   const location = useLocation();
   
   useEffect(() => {
@@ -533,6 +534,8 @@ const App: React.FC = () => {
         </Routes>
       ) : (
         <LocaleRouter>
+          {/* P1-1 FIX: Track page views for GA4 analytics */}
+          <PageViewTracker />
           <div className={`App ${isMobile ? "mobile-layout" : "desktop-layout"}`}>
             <DefaultHelmet pathname={location.pathname} />
 

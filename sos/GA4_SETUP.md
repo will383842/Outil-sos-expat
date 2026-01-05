@@ -8,6 +8,18 @@ This project now has complete GA4 integration with:
 - ✅ Cookie consent integration
 - ✅ Privacy-compliant implementation
 
+## IMPORTANT: GA4 ID Consistency (P1-2 FIX)
+
+**CRITICAL:** You MUST use the SAME Measurement ID for both frontend and backend:
+
+| Environment Variable | Location | Must Be Identical |
+|---------------------|----------|-------------------|
+| `VITE_GA4_MEASUREMENT_ID` | Frontend `.env` | Same ID |
+| `GA4_MEASUREMENT_ID` | Backend `.env` | Same ID |
+
+If the IDs don't match, analytics data will be fragmented across two properties,
+making it impossible to correlate frontend user journeys with backend events.
+
 ## Quick Setup
 
 ### 1. Get Your GA4 Credentials

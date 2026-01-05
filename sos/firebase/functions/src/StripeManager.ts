@@ -5,6 +5,8 @@ import { HttpsError } from 'firebase-functions/v2/https';
 import { logError } from './utils/logs/logError';
 import { db } from './utils/firebase';
 import { logger as prodLogger } from './utils/productionLogger';
+// P0-3 FIX: Use centralized Stripe secrets helper
+import { getStripeSecretKey, getStripeSecretKeyLegacy, getStripeMode } from './lib/stripe';
 
 /* ===================================================================
  * Utils
@@ -190,42 +192,37 @@ export class StripeManager {
   /**
    * Résolution de configuration :
    * 1) si une clé est fournie en paramètre → on l'utilise
-   * 2) sinon on tente via variables d'env (STRIPE_SECRET_KEY_LIVE/TEST),
+   * 2) sinon on tente via Firebase Secrets (STRIPE_SECRET_KEY_LIVE/TEST),
    *    avec STRIPE_MODE (live|test) ou NODE_ENV pour choisir.
    * 3) fallback STRIPE_SECRET_KEY (ancien schéma)
+   *
+   * P0-3 FIX: Use centralized helper with defineSecret().value() + process.env fallback
    */
   private validateConfiguration(secretKey?: string): void {
     if (secretKey) {
       this.initializeStripe(secretKey);
       return;
     }
-       
-    const envMode: 'live' | 'test' =
-      process.env.STRIPE_MODE === 'live' || process.env.STRIPE_MODE === 'test'
-        ? (process.env.STRIPE_MODE as 'live' | 'test')
-        : isProd
-        ? 'live'
-        : 'test';
 
-    const keyFromEnv =
-      envMode === 'live'
-        ? process.env.STRIPE_SECRET_KEY_LIVE
-        : process.env.STRIPE_SECRET_KEY_TEST;
+    // P0-3 FIX: Use helper that properly accesses Firebase v2 secrets
+    const envMode = getStripeMode();
+    const keyFromSecrets = getStripeSecretKey(envMode);
 
-    if (keyFromEnv) {
-      this.initializeStripe(keyFromEnv);
+    if (keyFromSecrets) {
+      this.initializeStripe(keyFromSecrets);
       return;
     }
 
     // Dernier fallback : ancien nom unique (déconseillé)
-    if (process.env.STRIPE_SECRET_KEY) {
-      this.initializeStripe(process.env.STRIPE_SECRET_KEY);
+    const legacyKey = getStripeSecretKeyLegacy();
+    if (legacyKey) {
+      this.initializeStripe(legacyKey);
       return;
     }
 
     throw new HttpsError(
       'failed-precondition',
-      'Aucune clé Stripe disponible. Passe une clé en argument ou définis STRIPE_SECRET_KEY_LIVE / STRIPE_SECRET_KEY_TEST.'
+      'Aucune clé Stripe disponible. Passe une clé en argument ou définis STRIPE_SECRET_KEY_LIVE / STRIPE_SECRET_KEY_TEST dans Secret Manager.'
     );
   }
 
