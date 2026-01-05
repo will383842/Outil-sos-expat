@@ -1,5 +1,5 @@
-// ✅ Import corrigé - utilisation de la nouvelle planification par tâches
-import { scheduleCallTask } from '../lib/tasks';
+// ✅ Import corrigé - utilisation de la planification idempotente par tâches
+import { scheduleCallTaskWithIdempotence } from '../lib/tasks';
 import { getFirestore } from 'firebase-admin/firestore';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions/v2';
@@ -101,8 +101,9 @@ export async function notifyAfterPaymentInternal(callId: string): Promise<void> 
     // 🔁 Planification de l'appel vocal
     try {
       // 🔧 FIX: Utiliser callId comme sessionId par défaut si non spécifié
+      // P1-1 FIX: Utiliser la version idempotente pour éviter les appels multiples
       const callSessionId = callData.sessionId || callId;
-      await scheduleCallTask(callSessionId, 5 * 60); // 5 minutes
+      await scheduleCallTaskWithIdempotence(callSessionId, 5 * 60); // 5 minutes
 
       logger.info(`⏰ Tâche d'appel planifiée`, {
         callId,

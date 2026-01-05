@@ -532,8 +532,13 @@ async function handleCallFailed(
       failureReason = `${participantType}_failed`;
     }
 
-    // Utiliser la logique de gestion d'échec du TwilioCallManager
-    await twilioCallManager.handleCallFailure(sessionId, failureReason);
+    // P1-2 FIX: NE PAS appeler handleCallFailure ici !
+    // TwilioCallManager a sa propre logique de retry interne (3 tentatives via callParticipantWithRetries).
+    // Appeler handleCallFailure depuis ce webhook interfère avec les retries internes
+    // et peut déclencher un remboursement prématuré avant que les 3 tentatives soient épuisées.
+    // handleCallFailure sera appelé par TwilioCallManager.executeCallSequence après tous les retries.
+    console.log(`📞 [twilioWebhooks] Call failed for ${participantType}, reason: ${failureReason} - NOT calling handleCallFailure (handled by TwilioCallManager retry logic)`);
+    // REMOVED: await twilioCallManager.handleCallFailure(sessionId, failureReason);
 
     await logCallRecord({
       callId: sessionId,

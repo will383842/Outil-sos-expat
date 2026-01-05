@@ -97,8 +97,9 @@ interface OutilBookingPayload {
 
 /**
  * Transforme les données booking_requests en payload pour Outil
+ * Exporté pour usage potentiel dans d'autres modules
  */
-function transformToOutilPayload(
+export function transformToOutilPayload(
   docId: string,
   data: BookingRequestData
 ): OutilBookingPayload {
@@ -203,8 +204,12 @@ async function syncToOutil(
 
 /**
  * Trigger: booking_requests/{bookingId} - onCreate
- * Synchronise automatiquement les nouveaux bookings vers Outil-sos-expat
- * pour déclencher le système IA
+ *
+ * ⚠️ DÉSACTIVÉ - Le sync vers Outil se fait maintenant APRÈS paiement validé
+ * via syncCallSessionToOutil() dans sendPaymentNotifications() (index.ts)
+ *
+ * L'ancien comportement synchronisait AVANT paiement, ce qui était incorrect
+ * car l'IA ne devrait travailler que sur des bookings payés.
  */
 export const onBookingRequestCreated = onDocumentCreated(
   {
@@ -214,45 +219,50 @@ export const onBookingRequestCreated = onDocumentCreated(
   },
   async (event) => {
     const bookingId = event.params.bookingId;
-    const data = event.data?.data() as BookingRequestData | undefined;
 
-    if (!data) {
-      logger.warn("[onBookingRequestCreated] Pas de données pour:", bookingId);
-      return;
-    }
+    // P0 FIX: Désactivé - le sync se fait après paiement dans sendPaymentNotifications()
+    logger.info("[onBookingRequestCreated] DISABLED - Sync now happens after payment validation", {
+      bookingId,
+      note: "Use syncCallSessionToOutil() in sendPaymentNotifications() instead",
+    });
+    return;
 
-    // Vérifier que le providerId existe
-    if (!data.providerId) {
-      logger.warn("[onBookingRequestCreated] Pas de providerId pour:", bookingId);
-      return;
-    }
-
-    // Vérifier le status (ne synchroniser que les pending)
-    if (data.status !== "pending") {
-      logger.info("[onBookingRequestCreated] Status non-pending ignoré:", {
-        bookingId,
-        status: data.status,
-      });
-      return;
-    }
-
-    // Transformer et envoyer à Outil
-    const payload = transformToOutilPayload(bookingId, data);
-    const result = await syncToOutil(payload);
-
-    if (!result.ok) {
-      logger.error("[onBookingRequestCreated] Échec sync pour:", bookingId, result.error);
-      // P0-4 FIX: Ajouter à la queue de retry
-      await addToRetryQueue(bookingId, payload, result.error || "Unknown error");
-    } else {
-      logger.info("[onBookingRequestCreated] Booking synchronisé:", {
-        sosBookingId: bookingId,
-        outilBookingId: result.bookingId,
-      });
-    }
-
-    // Note: La notification SMS au provider est envoyée APRÈS le paiement
-    // via sendPaymentNotifications() dans index.ts (eventId: call.scheduled.provider)
+    // ========== ANCIEN CODE DÉSACTIVÉ ==========
+    // const data = event.data?.data() as BookingRequestData | undefined;
+    //
+    // if (!data) {
+    //   logger.warn("[onBookingRequestCreated] Pas de données pour:", bookingId);
+    //   return;
+    // }
+    //
+    // // Vérifier que le providerId existe
+    // if (!data.providerId) {
+    //   logger.warn("[onBookingRequestCreated] Pas de providerId pour:", bookingId);
+    //   return;
+    // }
+    //
+    // // Vérifier le status (ne synchroniser que les pending)
+    // if (data.status !== "pending") {
+    //   logger.info("[onBookingRequestCreated] Status non-pending ignoré:", {
+    //     bookingId,
+    //     status: data.status,
+    //   });
+    //   return;
+    // }
+    //
+    // // Transformer et envoyer à Outil
+    // const payload = transformToOutilPayload(bookingId, data);
+    // const result = await syncToOutil(payload);
+    //
+    // if (!result.ok) {
+    //   logger.error("[onBookingRequestCreated] Échec sync pour:", bookingId, result.error);
+    //   await addToRetryQueue(bookingId, payload, result.error || "Unknown error");
+    // } else {
+    //   logger.info("[onBookingRequestCreated] Booking synchronisé:", {
+    //     sosBookingId: bookingId,
+    //     outilBookingId: result.bookingId,
+    //   });
+    // }
   }
 );
 
@@ -265,8 +275,9 @@ const RETRY_COLLECTION = "outil_sync_retry_queue";
 
 /**
  * Ajoute un booking échoué à la queue de retry
+ * Exporté pour usage potentiel dans d'autres modules
  */
-async function addToRetryQueue(
+export async function addToRetryQueue(
   bookingId: string,
   payload: OutilBookingPayload,
   error: string

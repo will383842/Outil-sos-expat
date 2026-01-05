@@ -2,10 +2,13 @@
 import { Request, Response } from "express";
 import { defineSecret } from "firebase-functions/params";
 // import { onRequest } from "firebase-functions/v2/https";
+import { getFirestore } from "firebase-admin/firestore";
 import { getTwilioClient, getTwilioPhoneNumber } from "../lib/twilio";
 import { beginOutboundCallForSession } from "../services/twilioCallManagerAdapter";
 import { logError } from "../utils/logs/logError";
 import { logCallRecord } from "../utils/logs/logCallRecord";
+
+const db = getFirestore();
 
 // --- Secrets (v2) ---
 export const TASKS_AUTH_SECRET = defineSecret("TASKS_AUTH_SECRET");
@@ -80,7 +83,38 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
 
     console.log(`📞 [executeCallTask] Processing call session: ${callSessionId}`);
 
-    // ✅ ÉTAPE 3: Log initial
+    // ✅ ÉTAPE 3: IDEMPOTENCE CHECK - Empêcher les exécutions multiples
+    const lockRef = db.collection('call_execution_locks').doc(callSessionId);
+    const lockDoc = await lockRef.get();
+
+    if (lockDoc.exists) {
+      const lockData = lockDoc.data();
+      const lockStatus = lockData?.status;
+      const lockAge = Date.now() - (lockData?.createdAt?.toMillis() || 0);
+
+      // Si déjà en cours d'exécution ou complété (et lock < 10 minutes)
+      if ((lockStatus === 'executing' || lockStatus === 'completed') && lockAge < 10 * 60 * 1000) {
+        console.log(`⏭️ [executeCallTask] IDEMPOTENCE: Session ${callSessionId} already ${lockStatus}, skipping`);
+        res.status(200).json({
+          success: true,
+          message: `Call already ${lockStatus}`,
+          callSessionId,
+          idempotent: true
+        });
+        return;
+      }
+    }
+
+    // Créer/mettre à jour le lock
+    await lockRef.set({
+      status: 'executing',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }, { merge: true });
+
+    console.log(`🔒 [executeCallTask] Lock acquired for session: ${callSessionId}`);
+
+    // ✅ ÉTAPE 4: Log initial
     await logCallRecord({
       callId: callSessionId,
       status: 'cloud_task_received',
@@ -124,7 +158,13 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
       hasResult: !!callResult
     });
 
-    // ✅ ÉTAPE 6: Log de succès
+    // ✅ ÉTAPE 6: Log de succès + mise à jour du lock
+    await lockRef.update({
+      status: 'completed',
+      updatedAt: new Date(),
+      completedAt: new Date()
+    });
+
     await logCallRecord({
       callId: callSessionId,
       status: 'cloud_task_completed_successfully',
@@ -167,6 +207,18 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
     await logError('executeCallTask:runExecuteCallTask', error);
 
     if (callSessionId) {
+      // Mettre à jour le lock avec l'échec
+      try {
+        await db.collection('call_execution_locks').doc(callSessionId).update({
+          status: 'failed',
+          updatedAt: new Date(),
+          failedAt: new Date(),
+          error: error instanceof Error ? error.message : String(error)
+        });
+      } catch (lockError) {
+        console.error('Failed to update lock:', lockError);
+      }
+
       await logCallRecord({
         callId: callSessionId,
         status: 'cloud_task_failed',
@@ -185,10 +237,13 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
       error: error instanceof Error ? error.message : String(error),
       callSessionId: callSessionId || 'unknown',
       executionTimeMs: executionTime,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      handled: true  // Indique que l'erreur a été traitée
     };
 
-    res.status(500).json(errorResponse);
+    // P0 FIX: Retourner 200 pour éviter les retries Cloud Tasks
+    // L'erreur est loggée et traitée, pas besoin de retry automatique
+    res.status(200).json(errorResponse);
     return;
   }
 }

@@ -1135,7 +1135,7 @@ export class TwilioCallManager {
       waitUrl="${waitUrl}"
       maxParticipants="2"
       beep="false"
-      startConferenceOnEnter="${participantType === "provider"}"
+      startConferenceOnEnter="${participantType === "client"}"
       trim="trim-silence"
       endConferenceOnExit="true"
     >${conferenceName}</Conference>

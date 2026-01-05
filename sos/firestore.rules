@@ -184,6 +184,14 @@ service cloud.firestore {
       allow delete: if isAdmin() || isDev();
     }
 
+    // ================= CALL EXECUTION LOCKS =================
+    // P0 IDEMPOTENCE: Locks pour empêcher les exécutions multiples de Cloud Tasks
+    // Gérés uniquement par Cloud Functions (Admin SDK)
+    match /call_execution_locks/{lockId} {
+      allow read: if isAdmin();
+      allow write: if false; // Cloud Functions uniquement via Admin SDK
+    }
+
     // ================= PAYMENTS COLLECTION =================
     // P0-7 SECURITY FIX: Les paiements ne peuvent être créés que par Cloud Functions
     // La création côté client permettrait:
@@ -1385,6 +1393,94 @@ service cloud.firestore {
       allow read: if true;
       // Ecriture: Admin uniquement
       allow write: if isAdmin() || isDev();
+    }
+
+    // ================= SYSTEM ALERTS =================
+    // Alertes systeme critiques (DLQ, backups, disputes, erreurs)
+    // Cloud Functions creent les alertes, admin les lit et acquitte
+    match /system_alerts/{alertId} {
+      // Lecture: Admin uniquement
+      allow read: if isAdmin();
+      // Creation: Cloud Functions uniquement (via Admin SDK)
+      allow create: if false;
+      // Mise a jour: Admin peut acquitter les alertes
+      allow update: if isAdmin();
+      // Suppression: Admin uniquement (cleanup)
+      allow delete: if isAdmin();
+    }
+
+    // ================= WEBHOOK DLQ (Dead Letter Queue) =================
+    // Evenements webhook en echec pour retry manuel
+    match /webhook_dlq/{eventId} {
+      // Lecture: Admin uniquement
+      allow read: if isAdmin();
+      // Ecriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // ================= RATE LIMITS =================
+    // Limites de taux pour protection anti-spam
+    match /rate_limits/{limitId} {
+      // Lecture: Admin uniquement (debug)
+      allow read: if isAdmin();
+      // Ecriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // ================= ERROR LOGS =================
+    // Logs d'erreurs systeme
+    match /error_logs/{logId} {
+      // Lecture: Admin uniquement
+      allow read: if isAdmin();
+      // Creation: Utilisateurs authentifies peuvent logger des erreurs
+      allow create: if isAuthenticated();
+      // Mise a jour/suppression: Cloud Functions uniquement
+      allow update, delete: if false;
+    }
+
+    // ================= SYSTEM LOGS =================
+    // Logs systeme (backups, migrations, etc.)
+    match /system_logs/{logId} {
+      // Lecture: Admin uniquement
+      allow read: if isAdmin();
+      // Ecriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // ================= AUTH BACKUPS =================
+    // Metadonnees des backups Firebase Auth
+    match /auth_backups/{backupId} {
+      // Lecture: Admin uniquement
+      allow read: if isAdmin();
+      // Ecriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // ================= MAIL (Firebase Email Extension) =================
+    // Collection pour envoi d'emails via extension
+    match /mail/{mailId} {
+      // Lecture: Admin uniquement (debug)
+      allow read: if isAdmin();
+      // Ecriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // ================= DR TEST REPORTS =================
+    // Rapports de tests Disaster Recovery
+    match /dr_test_reports/{reportId} {
+      // Lecture: Admin uniquement
+      allow read: if isAdmin();
+      // Ecriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // ================= SYSTEM CONFIG =================
+    // Configuration systeme (seuils d'alertes, etc.)
+    match /system_config/{configId} {
+      // Lecture: Admin uniquement
+      allow read: if isAdmin();
+      // Ecriture: Admin uniquement
+      allow write: if isAdmin();
     }
 
     // ================= CATCH-ALL (deny by default) =================
