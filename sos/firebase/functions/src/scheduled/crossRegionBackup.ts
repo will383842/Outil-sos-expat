@@ -102,6 +102,7 @@ export const dailyCrossRegionBackup = onSchedule(
     timeZone: "Europe/Paris",
     region: "europe-west1",
     memory: "1GiB",
+    cpu: 1,
     timeoutSeconds: 540, // 9 minutes
   },
   async () => {
