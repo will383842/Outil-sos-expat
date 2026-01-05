@@ -81,12 +81,11 @@ service cloud.firestore {
     // P0 SECURITY: Les IDs Stripe/PayPal ne doivent JAMAIS être exposés côté client
     // Ces champs sont gérés uniquement par Cloud Functions via Admin SDK
     match /sos_profiles/{profileId} {
-      // P0 SECURITY: Lecture limitée pour éviter les scans massifs (denial of wallet)
-      // - get() (lecture individuelle): public pour afficher un profil spécifique
-      // - list() (requête collection): requiert authentification pour éviter les abus
+      // P0 SECURITY: Les IDs Stripe/PayPal ne doivent JAMAIS être exposés côté client
+      // Ces champs sont gérés uniquement par Cloud Functions via Admin SDK
       // NOTE: stripeAccountId, paypalMerchantId ne sont pas inclus dans les projections frontend
-      allow get: if true;
-      allow list: if isAuthenticated();
+      // La lecture est publique car les profils doivent être visibles par tous (page SOSCall)
+      allow read: if true;
 
       // Écriture : propriétaire ou admin
       // NOTE: On ne peut pas utiliser isProvider() ici car les custom claims

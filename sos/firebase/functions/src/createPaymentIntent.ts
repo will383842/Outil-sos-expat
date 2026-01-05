@@ -17,6 +17,8 @@ import {
 } from './utils/paymentValidators';
 // P2-10 FIX: Centralized currency utilities
 import { roundAmount, calculateTotal, formatAmount } from './utils/currencyUtils';
+// P0-3 FIX: Use centralized Stripe secrets helper
+import { getStripeSecretKey, getStripeMode as getStripeModeFromHelper } from './lib/stripe';
 
 /* ────────────────────────────────────────────────────────────────────────────
    (A) LIMITS — placé tout en haut, avant toute utilisation
@@ -74,6 +76,13 @@ const FUNCTION_OPTIONS = {
   timeoutSeconds: 60,
   minInstances: 0,
   maxInstances: 3,
+  cors: [
+    'https://sos-expat.com',
+    'https://www.sos-expat.com',
+    'https://outils-sos-expat.web.app',
+    'http://localhost:5173',
+    'http://localhost:3000',
+  ],
 };
 
 const STRIPE_SECRET_KEY_TEST = defineSecret('STRIPE_SECRET_KEY_TEST');
@@ -101,11 +110,10 @@ if (isProduction && BYPASS_MODE) {
   throw new Error('BYPASS_SECURITY is forbidden in production environment');
 }
 
-/* Secrets Stripe — lecture SAFE via process.env (les secrets sont injectés via l’option `secrets`) */
+/* Secrets Stripe — P0-3 FIX: Use centralized helper with defineSecret().value() + fallback */
 function getStripeSecretKeySafe(): string {
-  const mode = (STRIPE_MODE.value() || 'test').toLowerCase();
-  const key =
-    mode === 'live' ? process.env.STRIPE_SECRET_KEY_LIVE : process.env.STRIPE_SECRET_KEY_TEST;
+  const mode = getStripeModeFromHelper();
+  const key = getStripeSecretKey(mode);
   if (!key) {
     throw new HttpsError(
       'failed-precondition',
