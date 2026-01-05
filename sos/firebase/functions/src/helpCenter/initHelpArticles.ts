@@ -70,6 +70,7 @@ export const initHelpArticlesBatch = onRequest(
   {
     region: 'europe-west1',
     memory: '1GiB',
+    cpu: 1,
     timeoutSeconds: 540,
     cors: CORS_ORIGINS,
   },
