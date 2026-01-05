@@ -34,19 +34,129 @@ const DISCLAIMERS = {
 
 // Patterns génériques pour identifier les sources gouvernementales de N'IMPORTE QUEL pays
 const OFFICIAL_DOMAIN_PATTERNS = [
-  // Domaines gouvernementaux génériques (tous pays)
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DOMAINES GOUVERNEMENTAUX GÉNÉRIQUES (tous pays)
+  // ═══════════════════════════════════════════════════════════════════════════
   /\.gov\./i,           // .gov.xx (USA, UK, AU, etc.)
   /\.gouv\./i,          // .gouv.xx (France, Canada FR, etc.)
-  /\.gob\./i,           // .gob.xx (Espagne, Mexique, etc.)
+  /\.gob\./i,           // .gob.xx (Espagne, Mexique, Argentine, etc.)
   /\.gov$/i,            // .gov (USA federal)
-  /\.go\./i,            // .go.xx (Japon, Kenya, etc.)
-  /\.govt\./i,          // .govt.xx (NZ, etc.)
+  /\.go\./i,            // .go.xx (Japon, Kenya, Thaïlande, etc.)
+  /\.govt\./i,          // .govt.xx (NZ, Inde, etc.)
   /\.gc\./i,            // .gc.ca (Canada)
   /\.admin\./i,         // .admin.ch (Suisse)
   /\.bundesregierung/i, // Allemagne
   /\.regierung/i,       // Allemagne/Autriche
 
-  // Organisations internationales
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 🌎 AMÉRIQUE LATINE - Domaines spécifiques (+10% fiabilité)
+  // ═══════════════════════════════════════════════════════════════════════════
+  /\.gob\.ar/i,         // Argentine
+  /\.gov\.br/i,         // Brésil
+  /\.gob\.cl/i,         // Chili
+  /\.gov\.co/i,         // Colombie
+  /\.gob\.mx/i,         // Mexique
+  /\.gob\.pe/i,         // Pérou
+  /\.gub\.uy/i,         // Uruguay
+  /\.gob\.ve/i,         // Venezuela
+  /\.gob\.ec/i,         // Équateur
+  /\.gob\.bo/i,         // Bolivie
+  /\.gob\.py/i,         // Paraguay
+  /\.gob\.pa/i,         // Panama
+  /\.gob\.gt/i,         // Guatemala
+  /\.gob\.hn/i,         // Honduras
+  /\.gob\.sv/i,         // El Salvador
+  /\.gob\.ni/i,         // Nicaragua
+  /\.gob\.cr/i,         // Costa Rica
+  /\.gob\.cu/i,         // Cuba
+  /\.gob\.do/i,         // République Dominicaine
+  /mercosur\.int/i,     // MERCOSUR
+  /sica\.int/i,         // SICA (Amérique Centrale)
+  /comunidadandina/i,   // Communauté Andine
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 🌏 ASIE DÉVELOPPÉE - Domaines spécifiques (+10% fiabilité)
+  // ═══════════════════════════════════════════════════════════════════════════
+  /\.go\.jp/i,          // Japon
+  /\.gov\.sg/i,         // Singapour
+  /\.go\.kr/i,          // Corée du Sud
+  /\.gov\.tw/i,         // Taïwan
+  /\.gov\.hk/i,         // Hong Kong
+  /\.gov\.mo/i,         // Macao
+  /\.gov\.my/i,         // Malaisie
+  /\.go\.th/i,          // Thaïlande
+  /\.gov\.ph/i,         // Philippines
+  /\.gov\.vn/i,         // Vietnam
+  /\.gov\.id/i,         // Indonésie
+  /asean\.org/i,        // ASEAN
+  /apec\.org/i,         // APEC
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 🌍 AFRIQUE & MOYEN-ORIENT - Domaines spécifiques (+15% fiabilité)
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Afrique du Nord
+  /\.gov\.ma/i,         // Maroc
+  /\.gov\.dz/i,         // Algérie
+  /\.gov\.tn/i,         // Tunisie
+  /\.gov\.eg/i,         // Égypte
+  /\.gov\.ly/i,         // Libye
+  // Afrique Sub-saharienne
+  /\.gov\.za/i,         // Afrique du Sud
+  /\.gov\.ng/i,         // Nigeria
+  /\.gov\.ke/i,         // Kenya
+  /\.gov\.gh/i,         // Ghana
+  /\.gov\.et/i,         // Éthiopie
+  /\.gov\.tz/i,         // Tanzanie
+  /\.gov\.ug/i,         // Ouganda
+  /\.gov\.sn/i,         // Sénégal
+  /\.gov\.ci/i,         // Côte d'Ivoire
+  /\.gov\.cm/i,         // Cameroun
+  /\.gov\.rw/i,         // Rwanda
+  // Moyen-Orient
+  /\.gov\.sa/i,         // Arabie Saoudite
+  /\.gov\.ae/i,         // Émirats Arabes Unis
+  /\.gov\.qa/i,         // Qatar
+  /\.gov\.kw/i,         // Koweït
+  /\.gov\.bh/i,         // Bahreïn
+  /\.gov\.om/i,         // Oman
+  /\.gov\.jo/i,         // Jordanie
+  /\.gov\.lb/i,         // Liban
+  /\.gov\.il/i,         // Israël
+  /\.gov\.tr/i,         // Turquie
+  /\.gov\.ir/i,         // Iran
+  /\.gov\.iq/i,         // Irak
+  // Organisations régionales
+  /au\.int/i,           // Union Africaine
+  /ecowas\.int/i,       // CEDEAO (Afrique de l'Ouest)
+  /gccsg\.org/i,        // GCC (Golfe)
+  /arableague/i,        // Ligue Arabe
+  /sadc\.int/i,         // SADC (Afrique Australe)
+  /comesa\.int/i,       // COMESA (Afrique Est/Sud)
+  /igad\.int/i,         // IGAD (Corne de l'Afrique)
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 🌏 ASIE CENTRALE & SUD - Domaines spécifiques (+15% fiabilité)
+  // ═══════════════════════════════════════════════════════════════════════════
+  /\.gov\.kz/i,         // Kazakhstan
+  /\.gov\.uz/i,         // Ouzbékistan
+  /\.gov\.kg/i,         // Kirghizistan
+  /\.gov\.tj/i,         // Tadjikistan
+  /\.gov\.tm/i,         // Turkménistan
+  /\.gov\.az/i,         // Azerbaïdjan
+  /\.gov\.ge/i,         // Géorgie
+  /\.gov\.am/i,         // Arménie
+  /\.gov\.mn/i,         // Mongolie
+  /\.gov\.in/i,         // Inde
+  /\.gov\.pk/i,         // Pakistan
+  /\.gov\.bd/i,         // Bangladesh
+  /\.gov\.lk/i,         // Sri Lanka
+  /\.gov\.np/i,         // Népal
+  /sco\.int/i,          // Shanghai Cooperation Organisation
+  /saarc-sec/i,         // SAARC (Asie du Sud)
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ORGANISATIONS INTERNATIONALES
+  // ═══════════════════════════════════════════════════════════════════════════
   /europa\.eu/i,        // Union Européenne
   /eur-lex/i,           // Législation UE
   /un\.org/i,           // Nations Unies
@@ -56,14 +166,27 @@ const OFFICIAL_DOMAIN_PATTERNS = [
   /who\.int/i,          // OMS
   /imf\.org/i,          // FMI
   /worldbank\.org/i,    // Banque Mondiale
+  /unhcr\.org/i,        // HCR (réfugiés)
+  /iom\.int/i,          // OIM (migrations)
+  /icj-cij\.org/i,      // Cour Internationale de Justice
+  /hcch\.net/i,         // Conférence de La Haye
 
-  // Ambassades et consulats (tous pays)
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AMBASSADES ET CONSULATS (multilingue)
+  // ═══════════════════════════════════════════════════════════════════════════
   /embassy/i,
   /consulate/i,
   /ambassade/i,
   /consulat/i,
-  /embajada/i,
-  /botschaft/i,
+  /embajada/i,          // Espagnol
+  /consulado/i,         // Espagnol/Portugais
+  /botschaft/i,         // Allemand
+  /konsulat/i,          // Allemand
+  /embaixada/i,         // Portugais
+  /ambasciata/i,        // Italien
+  /سفارة/i,             // Arabe (sifāra)
+  /大使馆/i,             // Chinois (dàshǐguǎn)
+  /대사관/i,             // Coréen (daesagwan)
 ];
 
 /**
@@ -72,6 +195,256 @@ const OFFICIAL_DOMAIN_PATTERNS = [
  */
 function isOfficialSource(url: string): boolean {
   return OFFICIAL_DOMAIN_PATTERNS.some(pattern => pattern.test(url));
+}
+
+// =============================================================================
+// 🆕 CONTEXTE JURIDIQUE RÉGIONAL
+// =============================================================================
+
+type LegalSystem = "civil_law" | "common_law" | "islamic_law" | "mixed" | "socialist" | "customary";
+
+interface RegionalContext {
+  region: string;
+  legalSystem: LegalSystem;
+  keyOrganizations: string[];
+  searchKeywords: string[];
+  citationFormats: string[];
+}
+
+/**
+ * Retourne le contexte régional pour améliorer les recherches et réponses
+ */
+function getRegionalContext(country?: string): RegionalContext | null {
+  if (!country) return null;
+
+  const countryLower = country.toLowerCase();
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 🌎 AMÉRIQUE LATINE (Droit civil - tradition espagnole/portugaise)
+  // ═══════════════════════════════════════════════════════════════════════════
+  const latinAmerica = [
+    "argentina", "argentine", "brazil", "brasil", "brésil", "mexico", "mexique",
+    "colombia", "colombie", "peru", "pérou", "chile", "chili", "venezuela",
+    "ecuador", "équateur", "bolivia", "bolivie", "paraguay", "uruguay",
+    "panama", "costa rica", "guatemala", "honduras", "el salvador", "nicaragua",
+    "cuba", "dominican republic", "république dominicaine", "puerto rico", "haiti"
+  ];
+
+  if (latinAmerica.some(c => countryLower.includes(c))) {
+    return {
+      region: "latin_america",
+      legalSystem: "civil_law",
+      keyOrganizations: ["MERCOSUR", "Comunidad Andina", "SICA", "OEA/OAS"],
+      searchKeywords: [
+        "código civil", "ley de extranjería", "migración",
+        "resolución", "decreto", "norma oficial", "trámite",
+        "visa de residencia", "permiso de trabajo"
+      ],
+      citationFormats: [
+        "Ley XX/YYYY art. X",
+        "Decreto Supremo N° XXX",
+        "Resolución N° XXX-YYYY"
+      ]
+    };
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 🌏 ASIE DÉVELOPPÉE (Mix droit civil + influences locales)
+  // ═══════════════════════════════════════════════════════════════════════════
+  const developedAsia = [
+    "japan", "japon", "south korea", "corée du sud", "korea", "corée",
+    "singapore", "singapour", "hong kong", "taiwan", "taïwan",
+    "malaysia", "malaisie", "thailand", "thaïlande"
+  ];
+
+  if (developedAsia.some(c => countryLower.includes(c))) {
+    return {
+      region: "developed_asia",
+      legalSystem: countryLower.includes("singapore") || countryLower.includes("hong kong") ? "common_law" : "civil_law",
+      keyOrganizations: ["ASEAN", "APEC"],
+      searchKeywords: [
+        "immigration law", "work permit", "employment pass",
+        "resident visa", "在留資格", "ビザ", "工作签证", "거주비자",
+        "visa requirements", "foreign worker"
+      ],
+      citationFormats: [
+        "法律第XX号 (Japan)",
+        "Immigration Act Chapter XX (SG/HK)",
+        "입국관리법 제X조 (Korea)"
+      ]
+    };
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 🌏 ASIE DU SUD-EST (Mix common law + civil law)
+  // ═══════════════════════════════════════════════════════════════════════════
+  const southeastAsia = [
+    "philippines", "indonesia", "indonésie", "vietnam", "viêtnam",
+    "cambodia", "cambodge", "laos", "myanmar", "birmanie"
+  ];
+
+  if (southeastAsia.some(c => countryLower.includes(c))) {
+    return {
+      region: "southeast_asia",
+      legalSystem: "mixed",
+      keyOrganizations: ["ASEAN"],
+      searchKeywords: [
+        "immigration bureau", "work permit", "special visa",
+        "foreign employment", "KITAS", "work authorization"
+      ],
+      citationFormats: [
+        "Republic Act No. XXXX (Philippines)",
+        "Law No. XX/YYYY (Indonesia/Vietnam)"
+      ]
+    };
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 🌍 MOYEN-ORIENT (Droit islamique + civil)
+  // ═══════════════════════════════════════════════════════════════════════════
+  const middleEast = [
+    "saudi arabia", "arabie saoudite", "uae", "emirats", "émirats", "dubai",
+    "qatar", "kuwait", "koweït", "bahrain", "bahreïn", "oman",
+    "jordan", "jordanie", "lebanon", "liban", "iraq", "irak"
+  ];
+
+  if (middleEast.some(c => countryLower.includes(c))) {
+    return {
+      region: "middle_east",
+      legalSystem: "islamic_law",
+      keyOrganizations: ["GCC", "Arab League"],
+      searchKeywords: [
+        "kafala", "iqama", "residency permit", "sponsorship",
+        "work visa", "قانون العمل", "إقامة", "تأشيرة",
+        "labour law", "ministry of interior"
+      ],
+      citationFormats: [
+        "Royal Decree No. M/XX (Saudi)",
+        "Federal Law No. X of YYYY (UAE)",
+        "قانون رقم X لسنة YYYY"
+      ]
+    };
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 🌍 AFRIQUE DU NORD (Droit civil + islamique)
+  // ═══════════════════════════════════════════════════════════════════════════
+  const northAfrica = [
+    "morocco", "maroc", "algeria", "algérie", "tunisia", "tunisie",
+    "egypt", "égypte", "libya", "libye"
+  ];
+
+  if (northAfrica.some(c => countryLower.includes(c))) {
+    return {
+      region: "north_africa",
+      legalSystem: "mixed",
+      keyOrganizations: ["Arab League", "African Union", "Union du Maghreb Arabe"],
+      searchKeywords: [
+        "séjour des étrangers", "carte de résidence", "visa de travail",
+        "code de la nationalité", "dahir", "décret", "loi organique",
+        "قانون الإقامة", "تصريح العمل"
+      ],
+      citationFormats: [
+        "Dahir n° X-XX-XXX (Morocco)",
+        "Loi n° XX-YYYY (Algeria/Tunisia)",
+        "Décret présidentiel n° XX-XXX"
+      ]
+    };
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 🌍 AFRIQUE SUB-SAHARIENNE (Mix common law + civil law)
+  // ═══════════════════════════════════════════════════════════════════════════
+  const subSaharanAfrica = [
+    "south africa", "afrique du sud", "nigeria", "nigéria", "kenya",
+    "ghana", "ethiopia", "éthiopie", "tanzania", "tanzanie",
+    "uganda", "ouganda", "senegal", "sénégal", "ivory coast", "côte d'ivoire",
+    "cameroon", "cameroun", "rwanda", "congo", "mali", "niger"
+  ];
+
+  if (subSaharanAfrica.some(c => countryLower.includes(c))) {
+    // Distinguer common law (anciennes colonies UK) vs civil law (anciennes colonies FR)
+    const commonLawAfrica = ["south africa", "nigeria", "kenya", "ghana", "uganda", "tanzania", "rwanda"];
+    const isCommonLaw = commonLawAfrica.some(c => countryLower.includes(c));
+
+    return {
+      region: "sub_saharan_africa",
+      legalSystem: isCommonLaw ? "common_law" : "civil_law",
+      keyOrganizations: ["African Union", "ECOWAS", "SADC", "COMESA", "EAC"],
+      searchKeywords: isCommonLaw ? [
+        "immigration act", "work permit", "residence permit",
+        "foreign nationals", "visa requirements", "ministry of home affairs"
+      ] : [
+        "titre de séjour", "carte de résident", "permis de travail",
+        "loi sur l'immigration", "code des étrangers", "visa long séjour"
+      ],
+      citationFormats: isCommonLaw ? [
+        "Act No. XX of YYYY",
+        "Immigration Act, Section XX",
+        "Statutory Instrument No. XX"
+      ] : [
+        "Loi n° YYYY-XX",
+        "Décret n° YYYY-XXXX",
+        "Arrêté n° XXX"
+      ]
+    };
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 🌏 ASIE CENTRALE (Post-soviétique - droit civil)
+  // ═══════════════════════════════════════════════════════════════════════════
+  const centralAsia = [
+    "kazakhstan", "uzbekistan", "ouzbékistan", "kyrgyzstan", "kirghizistan",
+    "tajikistan", "tadjikistan", "turkmenistan", "turkménistan",
+    "azerbaijan", "azerbaïdjan", "georgia", "géorgie", "armenia", "arménie",
+    "mongolia", "mongolie"
+  ];
+
+  if (centralAsia.some(c => countryLower.includes(c))) {
+    return {
+      region: "central_asia",
+      legalSystem: "civil_law",
+      keyOrganizations: ["SCO", "CIS", "EAEU"],
+      searchKeywords: [
+        "migration law", "work permit", "residence registration",
+        "foreign citizen", "visa regime", "закон о миграции",
+        "разрешение на работу", "регистрация иностранцев"
+      ],
+      citationFormats: [
+        "Law No. XXX-Z (Kazakhstan)",
+        "Law of the Republic of X, Article XX",
+        "Закон № XXX от DD.MM.YYYY"
+      ]
+    };
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 🌏 ASIE DU SUD (Mix common law + traditions locales)
+  // ═══════════════════════════════════════════════════════════════════════════
+  const southAsia = [
+    "india", "inde", "pakistan", "bangladesh", "sri lanka",
+    "nepal", "népal", "bhutan", "bhoutan", "maldives"
+  ];
+
+  if (southAsia.some(c => countryLower.includes(c))) {
+    return {
+      region: "south_asia",
+      legalSystem: "common_law",
+      keyOrganizations: ["SAARC", "BIMSTEC"],
+      searchKeywords: [
+        "foreigners act", "visa regulations", "work permit",
+        "registration of foreigners", "FRRO", "employment visa",
+        "overseas citizen", "residence permit"
+      ],
+      citationFormats: [
+        "Foreigners Act, 1946 (India)",
+        "Immigration Ordinance YYYY",
+        "Section XX of Act YYYY"
+      ]
+    };
+  }
+
+  return null;
 }
 
 // =============================================================================
@@ -84,11 +457,12 @@ function calculateConfidence(params: {
   citationsCount: number;
   fallbackUsed: boolean;
   hasCountryContext: boolean;
+  regionalContext?: RegionalContext | null;
 }): ConfidenceInfo {
   let score = 50;  // Score de base
   const reasons: string[] = [];
 
-  // +25 si recherche web effectuée
+  // +15 si recherche web effectuée
   if (params.searchPerformed) {
     score += 15;
     reasons.push("Recherche web effectuée");
@@ -120,6 +494,12 @@ function calculateConfidence(params: {
   if (params.hasCountryContext) {
     score += 10;
     reasons.push("Contexte pays précis");
+  }
+
+  // 🆕 +5 si contexte régional détecté (meilleure recherche)
+  if (params.regionalContext) {
+    score += 5;
+    reasons.push(`Contexte régional: ${params.regionalContext.region}`);
   }
 
   // Normaliser entre 0 et 100
@@ -248,6 +628,9 @@ export class HybridAIService {
       isFactual: isFactualQuestion(userMessage)
     });
 
+    // 🆕 Obtenir le contexte régional
+    const regionalContext = getRegionalContext(context?.country);
+
     // Étape 1: Recherche web si question factuelle
     let searchContext = "";
     let citations: string[] | undefined;
@@ -292,13 +675,14 @@ export class HybridAIService {
         llmUsed = mainProvider;
       }
 
-      // 🆕 Calculer le score de confiance
+      // 🆕 Calculer le score de confiance (avec contexte régional)
       const confidence = calculateConfidence({
         searchPerformed,
         officialSourcesUsed,
         citationsCount: citations?.length || 0,
         fallbackUsed: response.fallbackUsed || false,
-        hasCountryContext: Boolean(context?.country)
+        hasCountryContext: Boolean(context?.country),
+        regionalContext  // 🆕 Ajout du contexte régional
       });
 
       logger.info("[HybridAI] Confiance calculée", {
@@ -336,6 +720,9 @@ export class HybridAIService {
     query: string,
     context?: AIRequestContext
   ): Promise<{ content: string; citations?: string[]; officialSourcesUsed: boolean }> {
+    // 🆕 Obtenir le contexte régional pour améliorer la recherche
+    const regionalContext = getRegionalContext(context?.country);
+
     // Construire une requête de recherche ciblée par pays (INTERNATIONAL)
     const searchParts: string[] = [];
 
@@ -358,15 +745,38 @@ export class HybridAIService {
       searchParts.push(context.category);
     }
 
-    // 5. Contexte expatrié/voyageur (termes internationaux)
+    // 5. 🆕 Mots-clés régionaux spécifiques
+    if (regionalContext) {
+      // Ajouter 2-3 mots-clés régionaux pertinents
+      const relevantKeywords = regionalContext.searchKeywords.slice(0, 3);
+      searchParts.push(...relevantKeywords);
+
+      // Ajouter les organisations régionales
+      if (regionalContext.keyOrganizations.length > 0) {
+        searchParts.push(regionalContext.keyOrganizations[0]);
+      }
+    }
+
+    // 6. Contexte expatrié/voyageur (termes internationaux)
     searchParts.push("official government site requirements foreigners");
 
     const enrichedQuery = searchParts.join(" ");
 
     logger.info("[HybridAI] Recherche internationale", {
       country: context?.country || "non spécifié",
-      nationality: context?.nationality || "non spécifiée"
+      nationality: context?.nationality || "non spécifiée",
+      region: regionalContext?.region || "global",
+      legalSystem: regionalContext?.legalSystem || "unknown"
     });
+
+    // 🆕 Prompt de recherche enrichi avec contexte régional
+    const regionalInstructions = regionalContext ? `
+
+🌍 REGIONAL CONTEXT (${regionalContext.region.toUpperCase()}):
+- Legal System: ${regionalContext.legalSystem}
+- Key Organizations: ${regionalContext.keyOrganizations.join(", ")}
+- Citation Formats to use: ${regionalContext.citationFormats.join(" | ")}
+- Search in local terms: ${regionalContext.searchKeywords.slice(0, 5).join(", ")}` : "";
 
     // Prompt de recherche INTERNATIONAL pour Perplexity
     const searchSystemPrompt = `You are an expert researcher for international expatriates and travelers.
@@ -375,22 +785,25 @@ MISSION: Find PRECISE and CURRENT information for this context:
 ${context?.country ? `- TARGET COUNTRY: ${context.country} (MANDATORY - ALL information MUST be about THIS specific country)` : ""}
 ${context?.nationality ? `- CLIENT NATIONALITY: ${context.nationality}` : ""}
 ${context?.category ? `- DOMAIN: ${context.category}` : ""}
+${regionalInstructions}
 
 🔴 PRIORITY SOURCES (MANDATORY):
 - Official government websites of the target country (.gov, .gouv, .gob, .go, .govt, etc.)
 - Official immigration and visa portals
 - Embassy and consulate websites
-- International organizations (UN, ILO, WHO, etc.) when relevant
+- Regional organization websites (${regionalContext?.keyOrganizations.join(", ") || "relevant regional bodies"})
+- International organizations (UN, ILO, WHO, IOM, etc.) when relevant
 - ⚠️ AVOID: blogs, forums, non-official commercial sites
 
 CRITICAL RULES:
 1. ONLY provide information from OFFICIAL SOURCES of ${context?.country || "the target country"}
-2. CITE local laws with numbers and dates (format varies by country)
+2. CITE local laws with numbers and dates using the country's format
 3. ALWAYS include the official source URL
 4. Provide CURRENT fees and timelines (2024-2025)
 5. If info comes from non-official source, MARK IT with ⚠️
 6. NEVER give generic information that doesn't apply to the specific country
-7. Consider bilateral agreements between ${context?.nationality || "client's country"} and ${context?.country || "target country"}`;
+7. Consider bilateral agreements between ${context?.nationality || "client's country"} and ${context?.country || "target country"}
+8. Search in BOTH English AND local language for better results`;
 
     const result = await withExponentialBackoff(
       () => this.perplexity.search({
