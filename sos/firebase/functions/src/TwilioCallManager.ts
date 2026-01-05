@@ -919,7 +919,7 @@ export class TwilioCallManager {
     // 3 tentatives pour le client ET le prestataire
     // Le remboursement ne se fait qu'après les 3 tentatives échouées
     const maxRetries = CALL_CONFIG.MAX_RETRIES;
-    
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         // 🛑 STOP if session is already failed/cancelled (prevents unnecessary retries)
@@ -932,6 +932,36 @@ export class TwilioCallManager {
             retryCount: attempt - 1,
           });
           return false;
+        }
+
+        // P0 FIX: 🛑 STOP if participant is already connected (prevents duplicate calls)
+        const participant = participantType === "provider"
+          ? sessionCheck?.participants.provider
+          : sessionCheck?.participants.client;
+
+        if (participant?.status === "connected") {
+          console.log(`✅ [IDEMPOTENT] ${participantType} already connected, no need to retry`);
+          await logCallRecord({
+            callId: sessionId,
+            status: `${participantType}_already_connected_skip_retry`,
+            retryCount: attempt - 1,
+          });
+          return true; // Already connected!
+        }
+
+        // P0 FIX: If there's an active call from previous attempt, hangup before creating new one
+        if (attempt > 1 && participant?.callSid) {
+          try {
+            const twilioClient = getTwilioClient();
+            const existingCall = await twilioClient.calls(participant.callSid).fetch();
+            if (existingCall.status === "in-progress" || existingCall.status === "ringing" || existingCall.status === "queued") {
+              console.log(`📴 [CLEANUP] Hanging up previous call ${participant.callSid} (status: ${existingCall.status})`);
+              await twilioClient.calls(participant.callSid).update({ status: "completed" });
+              await this.delay(1000); // Wait for Twilio to process
+            }
+          } catch (hangupError) {
+            console.warn(`⚠️ [CLEANUP] Could not hangup previous call:`, hangupError);
+          }
         }
 
         console.log(
