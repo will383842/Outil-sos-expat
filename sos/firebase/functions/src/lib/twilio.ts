@@ -144,10 +144,11 @@ export function validateTwilioWebhookSignature(
     return true;
   }
 
-  // Recuperer le token d'auth Twilio
-  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  // P0 CRITICAL FIX: Use getAuthToken() instead of process.env.TWILIO_AUTH_TOKEN
+  // process.env does NOT work for Firebase v2 secrets!
+  const authToken = getAuthToken();
   if (!authToken) {
-    console.error("[TWILIO_VALIDATION] Missing TWILIO_AUTH_TOKEN");
+    console.error("[TWILIO_VALIDATION] Missing TWILIO_AUTH_TOKEN - getAuthToken() returned empty");
     if (res) res.status(500).send("Server configuration error");
     return false;
   }

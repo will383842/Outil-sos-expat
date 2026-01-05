@@ -4,8 +4,10 @@ import { logCallRecord } from '../utils/logs/logCallRecord';
 import { logError } from '../utils/logs/logError';
 import { Request, Response } from 'express';
 import * as admin from 'firebase-admin';
-import { validateTwilioWebhookSignature } from '../lib/twilio';
+import { validateTwilioWebhookSignature, TWILIO_AUTH_TOKEN_SECRET } from '../lib/twilio';
 
+// Ensure TypeScript recognizes the secret is used in the secrets array
+void TWILIO_AUTH_TOKEN_SECRET;
 
 interface TwilioConferenceWebhookBody {
   ConferenceSid: string;
@@ -41,7 +43,9 @@ export const twilioConferenceWebhook = onRequest(
     cpu: 0.25,
     maxInstances: 3,
     minInstances: 0,
-    concurrency: 1
+    concurrency: 1,
+    // P0 CRITICAL FIX: Add TWILIO_AUTH_TOKEN secret for signature validation
+    secrets: [TWILIO_AUTH_TOKEN_SECRET]
   },
   async (req: Request, res: Response) => {
     try {

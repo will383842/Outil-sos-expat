@@ -6,7 +6,7 @@ import { logger as prodLogger } from '../utils/productionLogger';
 import { Response } from 'express';
 import * as admin from 'firebase-admin';
 import { Request } from 'firebase-functions/v2/https';
-import { validateTwilioWebhookSignature } from '../lib/twilio';
+import { validateTwilioWebhookSignature, TWILIO_AUTH_TOKEN_SECRET } from '../lib/twilio';
 import { setProviderBusy } from '../callables/providerStatusManager';
 
 
@@ -35,7 +35,9 @@ export const twilioCallWebhook = onRequest(
     cpu: 0.25,
     maxInstances: 3,
     minInstances: 0,
-    concurrency: 1
+    concurrency: 1,
+    // P0 CRITICAL FIX: Add TWILIO_AUTH_TOKEN secret for signature validation
+    secrets: [TWILIO_AUTH_TOKEN_SECRET]
   },
   async (req: Request, res: Response) => {
     const requestId = `twilio-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
