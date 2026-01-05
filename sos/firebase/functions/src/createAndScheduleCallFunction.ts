@@ -483,9 +483,9 @@ export const createAndScheduleCallHTTPS = onCall(
           console.log(`✅ [${requestId}] Client notification created: ${clientEventRef.id}`);
         }
 
-        // Create message_events for provider
+        // Create message_events for provider - ONLY SMS with booking details
         if (providerId || providerEmail) {
-          console.log(`📨 [${requestId}] Creating PROVIDER notification (call.scheduled.provider)...`);
+          console.log(`📨 [${requestId}] Creating PROVIDER notification (call.scheduled.provider) - SMS with booking details...`);
           const providerEventData = {
             eventId: 'call.scheduled.provider',
             locale: language,
@@ -496,9 +496,13 @@ export const createAndScheduleCallHTTPS = onCall(
             },
             context: {
               callSessionId: callSession.id,
-              title,
-              scheduledTime: scheduledTime.toISOString(),
+              // Booking request details for SMS template
               clientName,
+              clientCountry: clientData?.country || 'N/A',
+              clientLanguage: language,
+              title,
+              description: `${title} - ${serviceType}`,
+              scheduledTime: scheduledTime.toISOString(),
             },
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
           };

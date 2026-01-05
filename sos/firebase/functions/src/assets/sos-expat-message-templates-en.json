@@ -2,881 +2,347 @@
   "version": 1,
   "app": "SOS Expat",
   "schema": "sos-expat.message.template/v1",
-  "locale": "en-GB",
+  "locale": "en",
   "defaults": {
     "from_email": "SOS Expat <no-reply@sos-expat.app>",
-    "reply_to": "Support SOS Expat <support@sos-expat.app>",
+    "reply_to": "SOS Expat Support <support@sos-expat.app>",
     "sms_sender_id": "SOSXPAT",
     "push_icon": "ic_notification",
     "push_channel_id": "general",
-    "deeplink_base": "sose-xpat://"
+    "deeplink_base": "sos-expat://"
   },
   "templates": [
     {
-      "id": "user.signup.success",
-      "roles": [
-        "client"
-      ],
+      "id": "call.scheduled.provider",
+      "roles": ["provider"],
       "channels": {
-        "email": true,
+        "email": false,
         "sms": true,
-        "push": true,
-        "inapp": true,
-        "whatsapp": false
-      },
-      "email": {
-        "subject": "Welcome aboard, {{user.firstName}} 👋",
-        "html": "<h1>Welcome!</h1><p>Your account is ready. Two minutes to complete your profile and you're good ✨</p><p><a href='{{webappUrl}}/profile'>Complete profile</a></p>",
-        "text": "Welcome {{user.firstName}}! Your profile is here: {{webappUrl}}/profile"
-      },
-      "sms": {
-        "text": "Welcome {{user.firstName}}! Ready to roll? Complete your profile: {{webappUrl}}/profile"
-      },
-      "push": {
-        "title": "Welcome!",
-        "body": "Complete your profile to get matched faster ✨",
-        "deeplink": "sos-expat://profile"
-      },
-      "inapp": {
-        "title": "Welcome 👋",
-        "body": "Add a few details and you're ready.",
-        "action": {
-          "label": "Complete",
-          "deeplink": "/profile"
-        }
-      }
-    },
-    {
-      "id": "provider.signup.success",
-      "roles": [
-        "provider"
-      ],
-      "channels": {
-        "email": true,
-        "sms": false,
-        "push": true,
-        "inapp": true,
-        "whatsapp": false
-      },
-      "email": {
-        "subject": "Welcome, provider {{user.firstName}} 🚀",
-        "html": "<h1>Welcome!</h1><p>Complete your profile (skills, countries, availability) to start getting requests 💼</p><p><a href='{{webappUrl}}/provider/profile'>Complete provider profile</a></p>",
-        "text": "Welcome {{user.firstName}}! Finish your provider profile: {{webappUrl}}/provider/profile"
-      },
-      "push": {
-        "title": "Provider account ready",
-        "body": "Add skills & availability to appear ✨",
-        "deeplink": "sos-expat://provider/profile"
-      },
-      "inapp": {
-        "title": "Hello pro 👋",
-        "body": "Checklist ready to boost visibility.",
-        "action": {
-          "label": "Complete",
-          "deeplink": "/provider/profile"
-        }
-      }
-    },
-    {
-      "id": "user.profile.incomplete.d1",
-      "roles": [
-        "client"
-      ],
-      "channels": {
-        "email": true,
-        "sms": false,
-        "push": true,
-        "inapp": false,
-        "whatsapp": false
-      },
-      "email": {
-        "subject": "Your profile is almost perfect ✨",
-        "html": "<p>Add one tiny detail and you're ready to match with the best providers.</p><p><a href='{{webappUrl}}/profile'>Complete now</a></p>",
-        "text": "One tiny detail left! {{webappUrl}}/profile"
-      },
-      "push": {
-        "title": "Almost there 😎",
-        "body": "Finish your profile (1 min) and we'll take it from there.",
-        "deeplink": "sos-expat://profile"
-      }
-    },
-    {
-      "id": "provider.profile.incomplete.d1",
-      "roles": [
-        "provider"
-      ],
-      "channels": {
-        "email": true,
-        "sms": false,
-        "push": true,
-        "inapp": false,
-        "whatsapp": false
-      },
-      "email": {
-        "subject": "Boost visibility: complete your profile 💡",
-        "html": "<p>Add skills & countries to receive more qualified requests.</p><p><a href='{{webappUrl}}/provider/profile'>Complete</a></p>",
-        "text": "Add your skills & countries: {{webappUrl}}/provider/profile"
-      },
-      "push": {
-        "title": "Need a boost? ✨",
-        "body": "Complete your pro profile and shine on SOS Expat.",
-        "deeplink": "sos-expat://provider/profile"
-      }
-    },
-    {
-      "id": "request.created.client",
-      "roles": [
-        "client"
-      ],
-      "channels": {
-        "email": true,
-        "sms": false,
-        "push": true,
-        "inapp": true,
-        "whatsapp": false
-      },
-      "email": {
-        "subject": "Request received ✅ — \"{{request.title}}\"",
-        "html": "<p>We're reviewing and will update you super fast.</p><p><a href='{{webappUrl}}/requests/{{request.id}}'>View request</a></p>",
-        "text": "Request saved for \"{{request.title}}\". Track: {{webappUrl}}/requests/{{request.id}}"
-      },
-      "push": {
-        "title": "Request saved",
-        "body": "We've got you ⏳",
-        "deeplink": "sos-expat://requests/{{request.id}}"
-      },
-      "inapp": {
-        "title": "Under review",
-        "body": "We'll be quick 😉",
-        "action": {
-          "label": "View",
-          "deeplink": "/requests/{{request.id}}"
-        }
-      }
-    },
-    {
-      "id": "request.created.provider",
-      "channels": {
-        "email": true,
-        "sms": false,
-        "whatsapp": false,
-        "push": false,
-        "inapp": false
-      },
-      "email": {
-        "subject": "New client request",
-        "html": "",
-        "text": "You received a request from {{clientName}} ({{clientCountry}}): {{requestTitle}}. Budget ~{{amountEUR}}€. {{requestDescription}}"
-      },
-      "sms": {
-        "text": "New request from {{clientName}} ({{clientCountry}}): \"{{requestTitle}}\". ~{{amountEUR}}€ — {{requestDescription}}"
-      }
-    },
-    {
-      "id": "request.needs_changes.client",
-      "roles": [
-        "client"
-      ],
-      "channels": {
-        "email": true,
-        "sms": false,
-        "push": true,
-        "inapp": true,
-        "whatsapp": false
-      },
-      "email": {
-        "subject": "Tiny tweak and we're golden ✨",
-        "html": "<p>We just need a detail: {{review.note}}</p><p><a href='{{webappUrl}}/requests/{{request.id}}/edit'>Complete</a></p>",
-        "text": "We're missing a detail: {{review.note}} — {{webappUrl}}/requests/{{request.id}}/edit"
-      },
-      "push": {
-        "title": "Action needed",
-        "body": "Add the missing info (1 min ⏱️)",
-        "deeplink": "sos-expat://requests/{{request.id}}/edit"
-      },
-      "inapp": {
-        "title": "Quick fix ✍️",
-        "body": "Add what's missing for quick approval.",
-        "action": {
-          "label": "Complete",
-          "deeplink": "/requests/{{request.id}}/edit"
-        }
-      }
-    },
-    {
-      "id": "request.approved.client",
-      "roles": [
-        "client"
-      ],
-      "channels": {
-        "email": true,
-        "sms": false,
-        "push": true,
-        "inapp": true,
-        "whatsapp": false
-      },
-      "email": {
-        "subject": "Approved 🎉 — \"{{request.title}}\"",
-        "html": "<p>Let's go! Head to payment to kick things off.</p><p><a href='{{webappUrl}}/checkout/{{request.id}}'>Pay now</a></p>",
-        "text": "Approved. Pay here: {{webappUrl}}/checkout/{{request.id}}"
-      },
-      "push": {
-        "title": "Request approved",
-        "body": "Let's go 🚀",
-        "deeplink": "sos-expat://checkout/{{request.id}}"
-      },
-      "inapp": {
-        "title": "Go time 🎉",
-        "body": "Make payment and we'll connect your provider.",
-        "action": {
-          "label": "Pay",
-          "deeplink": "/checkout/{{request.id}}"
-        }
-      }
-    },
-    {
-      "id": "checkout.abandoned.client.24h",
-      "roles": [
-        "client"
-      ],
-      "channels": {
-        "email": true,
-        "sms": false,
         "push": false,
         "inapp": false,
         "whatsapp": false
       },
-      "email": {
-        "subject": "We saved your request 🔥",
-        "html": "<p>Finish in one minute, promise.</p><p><a href='{{webappUrl}}/checkout/{{request.id}}'>Complete payment</a></p>",
-        "text": "Your request is waiting 😌 : {{webappUrl}}/checkout/{{request.id}}"
-      }
-    },
-    {
-      "id": "payment.succeeded.client",
-      "roles": [
-        "client"
-      ],
-      "channels": {
-        "email": true,
-        "sms": true,
-        "push": true,
-        "inapp": true,
-        "whatsapp": false
-      },
-      "email": {
-        "subject": "Payment confirmed — {{request.title}}",
-        "html": "<p>Thank you 🙏 Your provider is notified. Chat is open 🔓</p><p><a href='{{webappUrl}}/requests/{{request.id}}'>View my request</a></p>",
-        "text": "Payment confirmed for \"{{request.title}}\". Your provider is notified. {{webappUrl}}/requests/{{request.id}}"
-      },
       "sms": {
-        "text": "✅ Payment OK for \"{{request.title}}\". Your provider will reach out shortly."
-      },
-      "push": {
-        "title": "Payment confirmed",
-        "body": "Chat ready. Let's chat 💬",
-        "deeplink": "sos-expat://requests/{request.id}"
-      },
-      "inapp": {
-        "title": "Thank you ✨",
-        "body": "Your provider has been notified.",
-        "action": {
-          "label": "View request",
-          "deeplink": "/requests/{{request.id}}"
-        }
-      }
-    },
-    {
-      "id": "payment.failed.client",
-      "roles": [
-        "client"
-      ],
-      "channels": {
-        "email": true,
-        "sms": true,
-        "push": false,
-        "inapp": true,
-        "whatsapp": false
-      },
-      "email": {
-        "subject": "Oops — payment failed",
-        "html": "<p>It happens. Try another card or ping support — we've got you 💬</p><p><a href='{{webappUrl}}/checkout/{{request.id}}'>Try again</a></p>",
-        "text": "Payment failed for «{{request.title}}». Try again: {{webappUrl}}/checkout/{{request.id}}"
-      },
-      "sms": {
-        "text": "Payment failed for «{{request.title}}». Try again: {{webappUrl}}/checkout/{{request.id}}"
-      },
-      "inapp": {
-        "title": "Payment failed 😕",
-        "body": "Shall we try again?",
-        "action": {
-          "label": "Retry",
-          "deeplink": "/checkout/{{request.id}}"
-        }
+        "text": "SOS Expat: New request from {{clientName}} ({{clientCountry}})\nLanguage: {{clientLanguage}}\nTitle: {{title}}\nDetails: {{description}}\nCall in 5 minutes."
       }
     },
     {
       "id": "call.scheduled.client",
-      "roles": [
-        "client"
-      ],
+      "roles": ["client"],
       "channels": {
-        "email": true,
+        "email": false,
         "sms": false,
-        "push": true,
-        "inapp": true,
+        "push": false,
+        "inapp": false,
         "whatsapp": false
-      },
-      "email": {
-        "subject": "Call scheduled — {{title}}",
-        "html": "<p>Your call with {{providerName}} is confirmed!</p><p><strong>Topic:</strong> {{title}}</p><p><strong>Time:</strong> {{scheduledTime}}</p><p>You will receive an automated call.</p>",
-        "text": "Call confirmed with {{providerName}} for «{{title}}». Time: {{scheduledTime}}"
-      },
-      "sms": {
-        "text": "SOS Expat: Call confirmed with {{providerName}} for «{{title}}». You will be called at {{scheduledTime}}."
-      },
-      "push": {
-        "title": "Call scheduled ✅",
-        "body": "Call with {{providerName}} confirmed",
-        "deeplink": "sos-expat://calls"
-      },
-      "inapp": {
-        "title": "Call scheduled",
-        "body": "Your call with {{providerName}} for «{{title}}» is confirmed",
-        "action": {
-          "label": "View",
-          "deeplink": "/calls"
-        }
       }
     },
     {
-      "id": "call.scheduled.provider",
-      "roles": [
-        "provider"
-      ],
+      "id": "user.signup.success",
+      "roles": ["client"],
       "channels": {
-        "email": true,
+        "email": false,
         "sms": false,
-        "push": true,
-        "inapp": true,
+        "push": false,
+        "inapp": false,
         "whatsapp": false
-      },
-      "email": {
-        "subject": "New client call — {{title}}",
-        "html": "<p>A client has booked you!</p><p><strong>Client:</strong> {{clientName}}</p><p><strong>Topic:</strong> {{title}}</p><p><strong>Time:</strong> {{scheduledTime}}</p><p>You will receive an automated call.</p>",
-        "text": "New client: {{clientName}}\nTopic: {{title}}\nTime: {{scheduledTime}}"
-      },
-      "sms": {
-        "text": "SOS Expat: New client {{clientName}} for «{{title}}». Call scheduled at {{scheduledTime}}."
-      },
-      "push": {
-        "title": "New client 🔔",
-        "body": "{{clientName}} - {{title}}",
-        "deeplink": "sos-expat://provider/dashboard"
-      },
-      "inapp": {
-        "title": "New client",
-        "body": "{{clientName}} booked you for: {{title}}",
-        "action": {
-          "label": "View",
-          "deeplink": "/provider/dashboard"
-        }
+      }
+    },
+    {
+      "id": "provider.signup.success",
+      "roles": ["provider"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": false,
+        "inapp": false,
+        "whatsapp": false
+      }
+    },
+    {
+      "id": "user.profile.incomplete.d1",
+      "roles": ["client"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": false,
+        "inapp": false,
+        "whatsapp": false
+      }
+    },
+    {
+      "id": "provider.profile.incomplete.d1",
+      "roles": ["provider"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": false,
+        "inapp": false,
+        "whatsapp": false
+      }
+    },
+    {
+      "id": "request.created.client",
+      "roles": ["client"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": false,
+        "inapp": false,
+        "whatsapp": false
+      }
+    },
+    {
+      "id": "request.created.provider",
+      "roles": ["provider"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": false,
+        "inapp": false,
+        "whatsapp": false
+      }
+    },
+    {
+      "id": "request.needs_changes.client",
+      "roles": ["client"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": false,
+        "inapp": false,
+        "whatsapp": false
+      }
+    },
+    {
+      "id": "request.approved.client",
+      "roles": ["client"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": false,
+        "inapp": false,
+        "whatsapp": false
+      }
+    },
+    {
+      "id": "checkout.abandoned.client.24h",
+      "roles": ["client"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": false,
+        "inapp": false,
+        "whatsapp": false
+      }
+    },
+    {
+      "id": "payment.succeeded.client",
+      "roles": ["client"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": false,
+        "inapp": false,
+        "whatsapp": false
+      }
+    },
+    {
+      "id": "payment.failed.client",
+      "roles": ["client"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": false,
+        "inapp": false,
+        "whatsapp": false
       }
     },
     {
       "id": "booking_paid_provider",
-      "roles": [
-        "provider"
-      ],
+      "roles": ["provider"],
       "channels": {
-        "email": true,
-        "sms": true,
-        "push": true,
-        "inapp": true,
+        "email": false,
+        "sms": false,
+        "push": false,
+        "inapp": false,
         "whatsapp": false
-      },
-      "email": {
-        "subject": "New client — {{request.title}}",
-        "html": "<p>A new client has contacted you!</p><p><strong>Client:</strong> {{client.firstName}} ({{client.country}})</p><p><strong>Request:</strong> {{request.title}}</p><p>{{request.description}}</p>",
-        "text": "New client: {{client.firstName}} ({{client.country}})\nRequest: {{request.title}}\n{{request.description}}"
-      },
-      "sms": {
-        "text": "New client: {{client.firstName}} ({{client.country}})\nLanguage: {{locale}}\nRequest: {{request.title}}\n{{request.description}}"
-      },
-      "push": {
-        "title": "New client",
-        "body": "{{client.firstName}} - {{request.title}}",
-        "deeplink": "sos-expat://provider/dashboard"
-      },
-      "inapp": {
-        "title": "New client",
-        "body": "{{client.firstName}} contacted you for: {{request.title}}",
-        "action": {
-          "label": "View",
-          "deeplink": "/provider/dashboard"
-        }
       }
     },
     {
       "id": "handoff.started.client",
-      "roles": [
-        "client"
-      ],
+      "roles": ["client"],
       "channels": {
-        "email": true,
+        "email": false,
         "sms": false,
-        "push": true,
-        "inapp": true,
+        "push": false,
+        "inapp": false,
         "whatsapp": false
-      },
-      "email": {
-        "subject": "Connecting you now 🤝",
-        "html": "<p>Your provider is joining the chat. Get your questions ready!</p><p><a href='{{webappUrl}}/messages'>Open chat</a></p>",
-        "text": "It's happening! Your provider is joining the chat: {{webappUrl}}/messages"
-      },
-      "push": {
-        "title": "It's happening ✨",
-        "body": "Your provider is on the way to chat.",
-        "deeplink": "sos-expat://messages"
-      },
-      "inapp": {
-        "title": "Connecting the dots 🤝",
-        "body": "You'll chat in real time.",
-        "action": {
-          "label": "Open chat",
-          "deeplink": "/messages"
-        }
       }
     },
     {
       "id": "handoff.to.provider",
-      "roles": [
-        "provider"
-      ],
+      "roles": ["provider"],
       "channels": {
-        "email": true,
+        "email": false,
         "sms": false,
-        "push": true,
-        "inapp": true,
-        "whatsapp": true
-      },
-      "email": {
-        "subject": "New client confirmed — {{request.title}}",
-        "html": "<p>Client paid ✅ Here's the recap and direct chat link.</p><p><a href='{{webappUrl}}/provider/messages/{{thread.id}}'>Open chat</a></p>",
-        "text": "New client confirmed. Chat: {{webappUrl}}/provider/messages/{{thread.id}}"
-      },
-      "push": {
-        "title": "New client 🎉",
-        "body": "Open the chat and say hi 💬",
-        "deeplink": "sos-expat://provider/messages/{thread.id}"
-      },
-      "inapp": {
-        "title": "Client confirmed",
-        "body": "Thread is ready for you.",
-        "action": {
-          "label": "Open chat",
-          "deeplink": "/provider/messages/{{thread.id}}"
-        }
-      },
-      "whatsapp": {
-        "twilio_template_name": "new_client_confirmed",
-        "params": [
-          "{{client.firstName}}",
-          "{{client.nationality}}",
-          "{{request.country}}",
-          "{{request.title}}",
-          "{{request.description}}",
-          "{{client.language}}",
-          "{{webappUrl}}/provider/messages/{{thread.id}}"
-        ]
+        "push": false,
+        "inapp": false,
+        "whatsapp": false
       }
     },
     {
       "id": "message.new.client",
-      "roles": [
-        "client"
-      ],
+      "roles": ["client"],
       "channels": {
         "email": false,
         "sms": false,
-        "push": true,
-        "inapp": true,
+        "push": false,
+        "inapp": false,
         "whatsapp": false
-      },
-      "push": {
-        "title": "New message 💬",
-        "body": "From {{provider.firstName}} — your turn 😉",
-        "deeplink": "sos-expat://messages/{thread.id}"
-      },
-      "inapp": {
-        "title": "New message",
-        "body": "Reply when you can 😉",
-        "action": {
-          "label": "Open",
-          "deeplink": "/messages/{{thread.id}}"
-        }
       }
     },
     {
       "id": "message.new.provider",
-      "roles": [
-        "provider"
-      ],
+      "roles": ["provider"],
       "channels": {
         "email": false,
         "sms": false,
-        "push": true,
-        "inapp": true,
+        "push": false,
+        "inapp": false,
         "whatsapp": false
-      },
-      "push": {
-        "title": "Message from {{client.firstName}} 💬",
-        "body": "A quick reply goes a long way ✨",
-        "deeplink": "sos-expat://provider/messages/{thread.id}"
-      },
-      "inapp": {
-        "title": "New message",
-        "body": "Fast replies = happy clients ✨",
-        "action": {
-          "label": "Reply",
-          "deeplink": "/provider/messages/{{thread.id}}"
-        }
       }
     },
     {
       "id": "messages.digest.client.daily",
-      "roles": [
-        "client"
-      ],
+      "roles": ["client"],
       "channels": {
-        "email": true,
+        "email": false,
         "sms": false,
         "push": false,
         "inapp": false,
         "whatsapp": false
-      },
-      "email": {
-        "subject": "You have {{unreadCount}} unread message(s) 💌",
-        "html": "<p>Time for a quick catch‑up?</p><p><a href='{{webappUrl}}/messages'>Reply now</a></p>",
-        "text": "You have {{unreadCount}} unread message(s). Reply here: {{webappUrl}}/messages"
       }
     },
     {
       "id": "request.closed.client",
-      "roles": [
-        "client"
-      ],
+      "roles": ["client"],
       "channels": {
-        "email": true,
+        "email": false,
         "sms": false,
-        "push": true,
-        "inapp": true,
+        "push": false,
+        "inapp": false,
         "whatsapp": false
-      },
-      "email": {
-        "subject": "All done ✅",
-        "html": "<p>Thanks a bunch! Mind dropping a quick rating?</p><p><a href='{{webappUrl}}/reviews/new?requestId={{request.id}}'>Rate provider</a></p>",
-        "text": "Thanks! Leave a rating: {{webappUrl}}/reviews/new?requestId={{request.id}}"
-      },
-      "push": {
-        "title": "Request completed",
-        "body": "Rate your provider ✨",
-        "deeplink": "sos-expat://reviews/new?requestId={request.id}"
-      },
-      "inapp": {
-        "title": "Thank you 🙏",
-        "body": "Your review helps others.",
-        "action": {
-          "label": "Rate",
-          "deeplink": "/reviews/new?requestId={{request.id}}"
-        }
       }
     },
     {
       "id": "request.closed.provider",
-      "roles": [
-        "provider"
-      ],
+      "roles": ["provider"],
       "channels": {
-        "email": true,
+        "email": false,
         "sms": false,
-        "push": true,
-        "inapp": true,
+        "push": false,
+        "inapp": false,
         "whatsapp": false
-      },
-      "email": {
-        "subject": "Job completed — nice one ✨",
-        "html": "<p>{{client.firstName}}'s request is closed. Your stats have been updated.</p><p><a href='{{webappUrl}}/provider/stats'>View stats</a></p>",
-        "text": "Job completed for {{client.firstName}}. Stats updated: {{webappUrl}}/provider/stats"
-      },
-      "push": {
-        "title": "Request closed",
-        "body": "Your performance has been updated.",
-        "deeplink": "sos-expat://provider/stats"
-      },
-      "inapp": {
-        "title": "Nice job 👏",
-        "body": "Have a look at your stats.",
-        "action": {
-          "label": "View stats",
-          "deeplink": "/provider/stats"
-        }
       }
     },
     {
       "id": "client.post_closure.d7",
-      "roles": [
-        "client"
-      ],
+      "roles": ["client"],
       "channels": {
-        "email": true,
+        "email": false,
         "sms": false,
-        "push": true,
+        "push": false,
         "inapp": false,
         "whatsapp": false
-      },
-      "email": {
-        "subject": "What's next? We can help 💡",
-        "html": "<p>We can also assist with {{suggestions.topCountry}} or {{suggestions.topService}}.</p><p><a href='{{webappUrl}}/services'>Explore</a></p>",
-        "text": "Need a hand? {{webappUrl}}/services"
-      },
-      "push": {
-        "title": "Need help?",
-        "body": "We've got ideas for your next step 😉",
-        "deeplink": "sos-expat://services"
       }
     },
     {
       "id": "security.suspicious_login",
-      "roles": [
-        "client",
-        "provider"
-      ],
+      "roles": ["client", "provider"],
       "channels": {
-        "email": true,
-        "sms": true,
+        "email": false,
+        "sms": false,
         "push": false,
-        "inapp": true,
+        "inapp": false,
         "whatsapp": false
-      },
-      "email": {
-        "subject": "Security alert 🔒",
-        "html": "<p>Login from {{security.city}}, {{security.country}} ({{security.ip}}).</p><p>If this wasn't you, change your password.</p><p><a href='{{webappUrl}}/security'>Secure my account</a></p>",
-        "text": "Suspicious login detected. If not you: {{webappUrl}}/security"
-      },
-      "sms": {
-        "text": "⚠️ Suspicious login. Secure your account: {{webappUrl}}/security"
-      },
-      "inapp": {
-        "title": "Security",
-        "body": "We've got your back. Update your password if needed.",
-        "action": {
-          "label": "Secure",
-          "deeplink": "/security"
-        }
       }
     },
     {
       "id": "provider.monthly.report",
-      "roles": [
-        "provider"
-      ],
+      "roles": ["provider"],
       "channels": {
-        "email": true,
+        "email": false,
         "sms": false,
-        "push": true,
-        "inapp": true,
+        "push": false,
+        "inapp": false,
         "whatsapp": false
-      },
-      "email": {
-        "subject": "Your month at a glance — {{date.monthName}} {{date.year}}",
-        "html": "<p>{{metrics.clients}} clients • €{{metrics.revenue}} • {{metrics.rating}}★</p><p><a href='{{webappUrl}}/provider/stats?period=month'>See details</a></p>",
-        "text": "Report: {{metrics.clients}} clients • €{{metrics.revenue}} • {{metrics.rating}}★"
-      },
-      "push": {
-        "title": "Monthly report 📈",
-        "body": "Your monthly stats are ready.",
-        "deeplink": "sos-expat://provider/stats?period=month"
-      },
-      "inapp": {
-        "title": "Monthly report",
-        "body": "Look what you achieved 👏",
-        "action": {
-          "label": "Open",
-          "deeplink": "/provider/stats?period=month"
-        }
       }
     },
     {
       "id": "budget.alert.warning",
       "roles": ["admin"],
       "channels": {
-        "email": true,
+        "email": false,
         "sms": false,
-        "push": true,
-        "inapp": true,
+        "push": false,
+        "inapp": false,
         "whatsapp": false
-      },
-      "email": {
-        "subject": "⚠️ Budget alert: {{budget.percentage}}% of budget consumed",
-        "html": "<h1>Budget Alert</h1><p>Budget {{budget.name}} has reached {{budget.percentage}}% consumption.</p><p>Amount used: €{{budget.used}} / €{{budget.total}}</p><p><a href='{{webappUrl}}/admin/finance/budget'>View details</a></p>",
-        "text": "Budget alert: {{budget.name}} at {{budget.percentage}}% (€{{budget.used}} / €{{budget.total}})"
-      },
-      "push": {
-        "title": "Budget alert ⚠️",
-        "body": "{{budget.name}}: {{budget.percentage}}% consumed",
-        "deeplink": "sos-expat://admin/finance/budget"
-      },
-      "inapp": {
-        "title": "Budget {{budget.name}}",
-        "body": "{{budget.percentage}}% of budget consumed",
-        "action": {
-          "label": "View",
-          "deeplink": "/admin/finance/budget"
-        }
       }
     },
     {
       "id": "budget.alert.critical",
       "roles": ["admin"],
       "channels": {
-        "email": true,
-        "sms": true,
-        "push": true,
-        "inapp": true,
+        "email": false,
+        "sms": false,
+        "push": false,
+        "inapp": false,
         "whatsapp": false
-      },
-      "email": {
-        "subject": "🚨 CRITICAL: Budget {{budget.name}} exceeded!",
-        "html": "<h1>🚨 Critical Budget</h1><p>Budget {{budget.name}} has exceeded the critical threshold ({{budget.percentage}}%).</p><p>Amount used: €{{budget.used}} / €{{budget.total}}</p><p><a href='{{webappUrl}}/admin/finance/budget'>Action required</a></p>",
-        "text": "🚨 CRITICAL: Budget {{budget.name}} at {{budget.percentage}}% - Action required!"
-      },
-      "sms": {
-        "text": "🚨 SOS-Expat: Budget {{budget.name}} CRITICAL ({{budget.percentage}}%)"
-      },
-      "push": {
-        "title": "🚨 Critical budget",
-        "body": "{{budget.name}}: {{budget.percentage}}% - Action required",
-        "deeplink": "sos-expat://admin/finance/budget"
-      },
-      "inapp": {
-        "title": "Critical budget 🚨",
-        "body": "{{budget.name}} has exceeded threshold",
-        "action": {
-          "label": "Act",
-          "deeplink": "/admin/finance/budget"
-        }
       }
     },
     {
       "id": "security.daily_report",
       "roles": ["admin"],
       "channels": {
-        "email": true,
+        "email": false,
         "sms": false,
         "push": false,
-        "inapp": true,
+        "inapp": false,
         "whatsapp": false
-      },
-      "email": {
-        "subject": "🔒 Daily security report — {{date.day}}/{{date.month}}/{{date.year}}",
-        "html": "<h1>Security Report</h1><p>Events in the last 24 hours:</p><ul><li>Suspicious logins: {{security.suspiciousLogins}}</li><li>Failed attempts: {{security.failedAttempts}}</li><li>Active alerts: {{security.activeAlerts}}</li></ul><p><a href='{{webappUrl}}/admin/security'>View details</a></p>",
-        "text": "Security report: {{security.suspiciousLogins}} suspicious logins, {{security.failedAttempts}} failures"
-      },
-      "inapp": {
-        "title": "Security report",
-        "body": "{{security.suspiciousLogins}} suspicious logins today",
-        "action": {
-          "label": "View",
-          "deeplink": "/admin/security"
-        }
       }
     },
     {
       "id": "provider.payout.received",
       "roles": ["provider"],
       "channels": {
-        "email": true,
+        "email": false,
         "sms": false,
-        "push": true,
-        "inapp": true,
+        "push": false,
+        "inapp": false,
         "whatsapp": false
-      },
-      "email": {
-        "subject": "💰 Payment received: €{{payout.amount}}",
-        "html": "<h1>Payment received!</h1><p>Great news! You've received €{{payout.amount}} in your account.</p><p>Reference: {{payout.reference}}</p><p><a href='{{webappUrl}}/provider/earnings'>View my earnings</a></p>",
-        "text": "You received €{{payout.amount}}! Ref: {{payout.reference}}"
-      },
-      "push": {
-        "title": "Payment received 💰",
-        "body": "€{{payout.amount}} just arrived in your account",
-        "deeplink": "sos-expat://provider/earnings"
-      },
-      "inapp": {
-        "title": "Payment received",
-        "body": "€{{payout.amount}} transferred",
-        "action": {
-          "label": "View",
-          "deeplink": "/provider/earnings"
-        }
       }
     },
     {
       "id": "payment_refunded",
       "roles": ["client"],
       "channels": {
-        "email": true,
+        "email": false,
         "sms": false,
-        "push": true,
-        "inapp": true,
+        "push": false,
+        "inapp": false,
         "whatsapp": false
-      },
-      "email": {
-        "subject": "Refund processed: €{{refund.amount}}",
-        "html": "<h1>Refund confirmed</h1><p>A refund of €{{refund.amount}} has been processed.</p><p>Reason: {{refund.reason}}</p><p>It will appear in your account within 5-10 business days.</p><p><a href='{{webappUrl}}/payments'>View my payments</a></p>",
-        "text": "Refund of €{{refund.amount}} processed. Expected: 5-10 business days."
-      },
-      "push": {
-        "title": "Refund processed",
-        "body": "€{{refund.amount}} refunded within 5-10 days",
-        "deeplink": "sos-expat://payments"
-      },
-      "inapp": {
-        "title": "Refund",
-        "body": "€{{refund.amount}} will be credited within 5-10 days",
-        "action": {
-          "label": "View",
-          "deeplink": "/payments"
-        }
       }
     },
     {
       "id": "subscription.reminder",
       "roles": ["client", "provider"],
       "channels": {
-        "email": true,
+        "email": false,
         "sms": false,
-        "push": true,
-        "inapp": true,
+        "push": false,
+        "inapp": false,
         "whatsapp": false
-      },
-      "email": {
-        "subject": "Your subscription expires in {{subscription.daysRemaining}} days",
-        "html": "<h1>Subscription reminder</h1><p>Your {{subscription.plan}} subscription expires on {{subscription.endDate}}.</p><p><a href='{{webappUrl}}/subscription'>Renew now</a></p>",
-        "text": "{{subscription.plan}} subscription expires in {{subscription.daysRemaining}} days. Renew: {{webappUrl}}/subscription"
-      },
-      "push": {
-        "title": "Subscription expiring soon",
-        "body": "{{subscription.daysRemaining}} days remaining",
-        "deeplink": "sos-expat://subscription"
-      },
-      "inapp": {
-        "title": "Renewal",
-        "body": "Your subscription expires in {{subscription.daysRemaining}} days",
-        "action": {
-          "label": "Renew",
-          "deeplink": "/subscription"
-        }
       }
     }
   ]

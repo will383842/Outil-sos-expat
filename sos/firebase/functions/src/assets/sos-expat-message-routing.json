@@ -89,9 +89,7 @@
     },
     "call.scheduled.provider": {
       "channels": [
-        "email",
-        "push",
-        "inapp"
+        "sms"
       ],
       "rate_limit_h": 0
     },
