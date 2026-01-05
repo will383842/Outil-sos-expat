@@ -980,9 +980,12 @@ export class TwilioCallManager {
           // record: true,
           // recordingStatusCallback: `${base}/twilioRecordingWebhook`,
           // recordingStatusCallbackMethod: "POST",
-          // AMD désactivé - non utilisé et coûteux (~0.007€/appel)
-          // machineDetection: "Enable",
-          // machineDetectionTimeout: 10,
+          // P0 FIX: Activer AMD pour détecter les répondeurs et éviter de laisser des messages
+          // Si un répondeur répond, on raccroche immédiatement et on compte comme "no_answer"
+          machineDetection: "Enable",
+          machineDetectionTimeout: 10,
+          // Callback pour recevoir le résultat AMD (human ou machine)
+          machineDetectionSilenceTimeout: 3000, // 3 secondes de silence avant de considérer comme humain
         });
         console.log("call : ", call);
 

@@ -17,6 +17,7 @@ import type { MessageData, ConversationData, BookingData } from "../core/types";
 import {
   getAISettings,
   getProviderType,
+  getProviderLanguage,
   buildConversationHistory,
   checkProviderAIStatus,
   incrementAiUsage,
@@ -239,13 +240,17 @@ export const aiOnProviderMessage = onDocumentCreated(
         return;
       }
 
-      // Determine provider type
+      // Determine provider type AND language (optimized: single read if aiStatus has providerData)
       const providerType = convo.providerType || (await getProviderType(providerId));
+
+      // 🆕 Get provider's preferred language for AI responses
+      const providerLanguage = await getProviderLanguage(providerId);
+      logger.info("[AI] Provider language for response", { providerId, providerLanguage });
 
       // Get INTELLIGENT conversation history (preserves initial context + recent)
       const history = await buildConversationHistory(db, conversationId, convo);
 
-      // Create service and call AI with enriched context
+      // Create service and call AI with enriched context (including provider language)
       const service = createService();
       const response = await service.chat(history, providerType, {
         providerType,
@@ -254,6 +259,7 @@ export const aiOnProviderMessage = onDocumentCreated(
         category: convo.bookingContext?.category,
         urgency: convo.bookingContext?.urgency,
         specialties: convo.bookingContext?.specialties,
+        providerLanguage,  // 🆕 Force AI to respond in provider's language
       });
 
       // Batch for atomic operations

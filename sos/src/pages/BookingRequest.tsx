@@ -127,8 +127,8 @@ const I18N = {
     continuePay: "Continuer vers le paiement",
     errorsTitle: "Oups, quelques retouches et c’est parfait ✨",
     hints: {
-      title: "Plus votre titre est précis, mieux c’est !",
-      desc: "Contexte, objectif, délais… donnez-nous de la matière 🔎",
+      title: "Plus votre titre est précis, mieux c'est !",
+      desc: "Plus vous détaillez votre situation, meilleure sera la réponse de l'expert ! Contexte, objectifs, délais… 🎯",
       phone:
         "Aucun spam — jamais. Seulement pour vous connecter à l’expert. 📵",
       whatsapp:
@@ -200,7 +200,7 @@ const I18N = {
     "errorsTitle": "بعض التعديلات الصغيرة وسنكون جاهزين ✨",
     "hints": {
       "title": "كلما كان العنوان أوضح، كان أفضل!",
-      "desc": "أضف السياق، الهدف، والجداول الزمنية… أعطنا تفاصيل 🔎",
+      "desc": "كلما قدمت تفاصيل أكثر، كانت إجابة الخبير أفضل! السياق، الأهداف، المواعيد… 🎯",
       "phone": "لن نرسل أي رسائل مزعجة — فقط للاتصال بالخبير. 📵",
       "whatsapp": "اختياري ولكنه مفيد لتحديثات فورية. 💬"
     },
@@ -269,7 +269,7 @@ const I18N = {
     "errorsTitle": "只需一点小调整，我们就准备好了 ✨",
     "hints": {
       "title": "标题越清晰越好！",
-      "desc": "请提供背景、目标、时间线……让我们更好地了解您的情况 🔎",
+      "desc": "您提供的细节越多，专家的回答就越好！背景、目标、时间线… 🎯",
       "phone": "绝不会发送垃圾信息 — 仅用于联系专家。📵",
       "whatsapp": "可选，但有助于实时更新。💬"
     },
@@ -340,7 +340,7 @@ const I18N = {
     errorsTitle: "Tiny tweaks and we’re there ✨",
     hints: {
       title: "The clearer your title, the better!",
-      desc: "Context, goal, timelines… give us material 🔎",
+      desc: "The more details you provide, the better the expert's response! Context, goals, timeline… 🎯",
       phone: "No spam — ever. Only to connect you to the expert. 📵",
       whatsapp: "Optional but handy for real-time updates. 💬",
     },
@@ -413,7 +413,7 @@ const I18N = {
     errorsTitle: "Pequeños ajustes y listo ✨",
     hints: {
       title: "¡Cuanto más preciso sea tu título, mejor!",
-      desc: "Contexto, objetivo, plazos… danos información 🔎",
+      desc: "¡Cuantos más detalles proporciones, mejor será la respuesta del experto! Contexto, objetivos, plazos… 🎯",
       phone: "Sin spam — nunca. Solo para conectarte con el experto. 📵",
       whatsapp:
         "Opcional pero práctico para actualizaciones en tiempo real. 💬",
@@ -486,7 +486,7 @@ const I18N = {
     errorsTitle: "Kleine Anpassungen und wir sind fertig ✨",
     hints: {
       title: "Je klarer Ihr Titel, desto besser!",
-      desc: "Kontext, Ziel, Fristen… geben Sie uns Material 🔎",
+      desc: "Je mehr Details Sie angeben, desto besser die Antwort des Experten! Kontext, Ziele, Fristen… 🎯",
       phone: "Kein Spam — niemals. Nur um Sie mit dem Experten zu verbinden. 📵",
       whatsapp: "Optional, aber praktisch fur Echtzeit-Updates. 💬",
     },
@@ -558,7 +558,7 @@ const I18N = {
     errorsTitle: "Pequenos ajustes e pronto ✨",
     hints: {
       title: "Quanto mais claro seu titulo, melhor!",
-      desc: "Contexto, objetivo, prazos… nos de material 🔎",
+      desc: "Quanto mais detalhes voce fornecer, melhor sera a resposta do especialista! Contexto, objetivos, prazos… 🎯",
       phone: "Sem spam — nunca. Apenas para conecta-lo ao especialista. 📵",
       whatsapp: "Opcional, mas pratico para atualizacoes em tempo real. 💬",
     },
@@ -630,7 +630,7 @@ const I18N = {
     errorsTitle: "Небольшие корректировки, и готово ✨",
     hints: {
       title: "Чем точнее заголовок, тем лучше!",
-      desc: "Контекст, цель, сроки… дайте нам материал 🔎",
+      desc: "Чем больше деталей вы укажете, тем лучше будет ответ эксперта! Контекст, цели, сроки… 🎯",
       phone: "Никакого спама — никогда. Только для связи с экспертом. 📵",
       whatsapp: "Необязательно, но удобно для обновлений в реальном времени. 💬",
     },
@@ -702,7 +702,7 @@ const I18N = {
     errorsTitle: "छोटे समायोजन और हम तैयार हैं ✨",
     hints: {
       title: "आपका शीर्षक जितना स्पष्ट होगा, उतना बेहतर!",
-      desc: "संदर्भ, लक्ष्य, समय-सीमा… हमें सामग्री दें 🔎",
+      desc: "आप जितना अधिक विवरण देंगे, विशेषज्ञ की प्रतिक्रिया उतनी बेहतर होगी! संदर्भ, लक्ष्य, समय-सीमा… 🎯",
       phone: "कोई स्पैम नहीं — कभी नहीं। केवल विशेषज्ञ से जोड़ने के लिए। 📵",
       whatsapp: "वैकल्पिक लेकिन रीयल-टाइम अपडेट के लिए उपयोगी। 💬",
     },

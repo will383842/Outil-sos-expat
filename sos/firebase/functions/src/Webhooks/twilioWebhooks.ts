@@ -6,7 +6,7 @@ import { logger as prodLogger } from '../utils/productionLogger';
 import { Response } from 'express';
 import * as admin from 'firebase-admin';
 import { Request } from 'firebase-functions/v2/https';
-import { validateTwilioWebhookSignature, TWILIO_AUTH_TOKEN_SECRET } from '../lib/twilio';
+import { validateTwilioWebhookSignature, TWILIO_AUTH_TOKEN_SECRET, TWILIO_ACCOUNT_SID_SECRET } from '../lib/twilio';
 import { setProviderBusy } from '../callables/providerStatusManager';
 
 
@@ -36,8 +36,8 @@ export const twilioCallWebhook = onRequest(
     maxInstances: 3,
     minInstances: 0,
     concurrency: 1,
-    // P0 CRITICAL FIX: Add TWILIO_AUTH_TOKEN secret for signature validation
-    secrets: [TWILIO_AUTH_TOKEN_SECRET]
+    // P0 CRITICAL FIX: Add Twilio secrets for signature validation + hangup calls to voicemail
+    secrets: [TWILIO_AUTH_TOKEN_SECRET, TWILIO_ACCOUNT_SID_SECRET]
   },
   async (req: Request, res: Response) => {
     const requestId = `twilio-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -236,10 +236,56 @@ async function handleCallAnswered(
   body: TwilioCallWebhookBody
 ) {
   try {
-    console.log(`✅ ${participantType} a répondu: ${sessionId}`);
+    // P0 FIX: Vérifier si c'est un répondeur qui a répondu (AMD - Answering Machine Detection)
+    // Les valeurs possibles pour une machine: machine_start, machine_end_beep, machine_end_silence, machine_end_other, fax
+    const answeredBy = body.AnsweredBy || 'human';
+    const isMachine = answeredBy.startsWith('machine') || answeredBy === 'fax';
+
+    if (isMachine) {
+      console.log(`🤖 [AMD] Répondeur détecté pour ${participantType}: ${answeredBy} - Raccrochage immédiat`);
+      prodLogger.info('TWILIO_CALL_ANSWERED_MACHINE', `Answering machine detected for ${participantType}`, {
+        sessionId,
+        participantType,
+        answeredBy,
+        callSid: body.CallSid?.slice(0, 20) + '...'
+      });
+
+      // Raccrocher l'appel immédiatement pour éviter de laisser un message
+      try {
+        const { getTwilioClient } = await import('../lib/twilio');
+        const twilioClient = getTwilioClient();
+        await twilioClient.calls(body.CallSid).update({ status: 'completed' });
+        console.log(`📴 [AMD] Appel ${body.CallSid} raccroché (répondeur)`);
+      } catch (hangupError) {
+        console.error(`⚠️ [AMD] Erreur raccrochage:`, hangupError);
+      }
+
+      // Mettre à jour le statut comme "no_answer" pour permettre les retries
+      await twilioCallManager.updateParticipantStatus(
+        sessionId,
+        participantType,
+        'no_answer'
+      );
+
+      await logCallRecord({
+        callId: sessionId,
+        status: `${participantType}_answered_by_machine`,
+        retryCount: 0,
+        additionalData: {
+          callSid: body.CallSid,
+          answeredBy,
+          action: 'hangup_and_retry'
+        }
+      });
+
+      return; // Ne pas continuer avec le traitement normal
+    }
+
+    console.log(`✅ ${participantType} a répondu: ${sessionId} (humain: ${answeredBy})`);
     prodLogger.info('TWILIO_CALL_ANSWERED', `Call answered by ${participantType}`, {
       sessionId,
       participantType,
+      answeredBy,
       callSid: body.CallSid?.slice(0, 20) + '...'
     });
 

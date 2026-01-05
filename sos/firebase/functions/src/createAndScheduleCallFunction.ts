@@ -9,6 +9,8 @@ import { stripeManager } from './StripeManager';
 import { scheduleCallTaskWithIdempotence } from './lib/tasks';
 // Production logger
 import { logger as prodLogger } from './utils/productionLogger';
+// P0 FIX: Import decryptPhoneNumber for SMS notifications
+import { decryptPhoneNumber } from './utils/encryption';
 
 // Secret for phone number encryption
 const ENCRYPTION_KEY = defineSecret('ENCRYPTION_KEY');
@@ -17,6 +19,8 @@ const STRIPE_SECRET_KEY_TEST = defineSecret('STRIPE_SECRET_KEY_TEST');
 const STRIPE_SECRET_KEY_LIVE = defineSecret('STRIPE_SECRET_KEY_LIVE');
 // Secret for Cloud Tasks authentication
 const TASKS_AUTH_SECRET = defineSecret('TASKS_AUTH_SECRET');
+// Secret for Outil-sos-expat sync
+const OUTIL_SYNC_API_KEY = defineSecret('OUTIL_SYNC_API_KEY');
 
 // ✅ Interface corrigée pour correspondre exactement aux données frontend
 interface CreateCallRequest {
@@ -61,8 +65,8 @@ export const createAndScheduleCallHTTPS = onCall(
     concurrency: 1,
     timeoutSeconds: 60,
     cors: true,
-    // Secrets: encryption + Stripe + Cloud Tasks
-    secrets: [ENCRYPTION_KEY, STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE, TASKS_AUTH_SECRET],
+    // Secrets: encryption + Stripe + Cloud Tasks + Outil sync
+    secrets: [ENCRYPTION_KEY, STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE, TASKS_AUTH_SECRET, OUTIL_SYNC_API_KEY],
   },
   async (request: CallableRequest<CreateCallRequest>) => {
     const requestId = `call_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
@@ -413,6 +417,171 @@ export const createAndScheduleCallHTTPS = onCall(
         console.error(`❌ [${requestId}] Erreur planification Cloud Task:`, scheduleError);
         // On ne fait pas échouer la création de session, juste un warning
         // L'appel pourra être relancé manuellement si besoin
+      }
+
+      // ========================================
+      // 10. P0 FIX: ENVOI DES NOTIFICATIONS SMS + SYNC OUTIL
+      // ========================================
+      // CRITICAL: Ce code était auparavant dans stripeWebhook.payment_intent.succeeded
+      // Mais avec capture_method=manual, cet événement ne se déclenche JAMAIS
+      // (il ne se déclenche qu'après capture, qui arrive APRÈS l'appel terminé)
+      console.log(`\n`);
+      console.log(`=======================================================================`);
+      console.log(`📨 [createAndScheduleCall][${requestId}] ========== NOTIFICATIONS ==========`);
+      console.log(`=======================================================================`);
+
+      try {
+        // Get client and provider data for notifications
+        const clientData = clientDoc.data();
+        const providerDocData = providerData; // Already fetched earlier
+
+        // Decrypt phone numbers (they may be encrypted for GDPR)
+        let decryptedProviderPhone = providerPhone;
+        let decryptedClientPhone = clientPhone;
+
+        try {
+          if (providerPhone.startsWith('enc:')) {
+            decryptedProviderPhone = decryptPhoneNumber(providerPhone);
+            console.log(`📨 [${requestId}] Provider phone decrypted: ${decryptedProviderPhone.slice(0, 5)}***`);
+          }
+          if (clientPhone.startsWith('enc:')) {
+            decryptedClientPhone = decryptPhoneNumber(clientPhone);
+            console.log(`📨 [${requestId}] Client phone decrypted: ${decryptedClientPhone.slice(0, 5)}***`);
+          }
+        } catch (decryptError) {
+          console.warn(`⚠️ [${requestId}] Phone decryption failed, using original:`, decryptError);
+        }
+
+        const scheduledTime = new Date(Date.now() + CALL_DELAY_SECONDS * 1000);
+        const language = clientLanguages?.[0] || 'fr';
+        const clientName = clientData?.displayName || clientData?.firstName || 'Client';
+        const providerName = providerDocData?.displayName || providerDocData?.firstName || 'Expert';
+        const clientEmail = clientData?.email || '';
+        const providerEmail = providerDocData?.email || '';
+        const title = serviceType === 'lawyer_call' ? 'Consultation avocat' : 'Consultation expat';
+
+        // Create message_events for client
+        if (clientId || clientEmail) {
+          console.log(`📨 [${requestId}] Creating CLIENT notification (call.scheduled.client)...`);
+          const clientEventData = {
+            eventId: 'call.scheduled.client',
+            locale: language,
+            to: {
+              uid: clientId || null,
+              email: clientEmail || null,
+              phone: decryptedClientPhone || null,
+            },
+            context: {
+              callSessionId: callSession.id,
+              title,
+              scheduledTime: scheduledTime.toISOString(),
+              providerName,
+            },
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          };
+          const clientEventRef = await db.collection('message_events').add(clientEventData);
+          console.log(`✅ [${requestId}] Client notification created: ${clientEventRef.id}`);
+        }
+
+        // Create message_events for provider
+        if (providerId || providerEmail) {
+          console.log(`📨 [${requestId}] Creating PROVIDER notification (call.scheduled.provider)...`);
+          const providerEventData = {
+            eventId: 'call.scheduled.provider',
+            locale: language,
+            to: {
+              uid: providerId || null,
+              email: providerEmail || null,
+              phone: decryptedProviderPhone || null,
+            },
+            context: {
+              callSessionId: callSession.id,
+              title,
+              scheduledTime: scheduledTime.toISOString(),
+              clientName,
+            },
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          };
+          const providerEventRef = await db.collection('message_events').add(providerEventData);
+          console.log(`✅ [${requestId}] Provider notification created: ${providerEventRef.id}`);
+        }
+
+        // Sync to Outil-sos-expat (non-blocking)
+        console.log(`📨 [${requestId}] Syncing to Outil IA...`);
+        const outilApiKey = OUTIL_SYNC_API_KEY.value();
+        if (outilApiKey) {
+          const OUTIL_INGEST_ENDPOINT = 'https://europe-west1-outils-sos-expat.cloudfunctions.net/ingestBooking';
+          const outilPayload = {
+            clientFirstName: clientData?.firstName || clientName,
+            clientLastName: clientData?.lastName || '',
+            clientName: clientName,
+            clientEmail: clientEmail,
+            clientPhone: decryptedClientPhone,
+            clientCurrentCountry: clientData?.country || '',
+            clientLanguages: clientLanguages || ['fr'],
+            title,
+            description: `${title} - ${serviceType}`,
+            serviceType,
+            priority: 'normal',
+            providerId,
+            providerType,
+            providerName,
+            providerCountry: providerDocData?.country || '',
+            source: 'sos-expat-app',
+            externalId: callSession.id,
+            metadata: {
+              clientId,
+              sosBookingId: callSession.id,
+              providerEmail,
+              providerPhone: decryptedProviderPhone,
+              providerLanguages: providerLanguages || ['fr'],
+              originalServiceType: serviceType,
+              paymentIntentId,
+              amount,
+              createdAt: new Date().toISOString(),
+            },
+          };
+
+          // Non-blocking fetch with timeout
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+          try {
+            const response = await fetch(OUTIL_INGEST_ENDPOINT, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': outilApiKey,
+              },
+              body: JSON.stringify(outilPayload),
+              signal: controller.signal,
+            });
+            clearTimeout(timeoutId);
+
+            if (response.ok) {
+              const result = await response.json() as { bookingId?: string };
+              console.log(`✅ [${requestId}] Outil sync successful - bookingId: ${result.bookingId}`);
+            } else {
+              console.warn(`⚠️ [${requestId}] Outil sync failed: HTTP ${response.status}`);
+            }
+          } catch (fetchError) {
+            clearTimeout(timeoutId);
+            if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+              console.warn(`⚠️ [${requestId}] Outil sync timeout after 10s`);
+            } else {
+              console.warn(`⚠️ [${requestId}] Outil sync error:`, fetchError);
+            }
+          }
+        } else {
+          console.warn(`⚠️ [${requestId}] OUTIL_SYNC_API_KEY not configured - skipping sync`);
+        }
+
+        console.log(`✅ [${requestId}] Notifications and sync completed`);
+        console.log(`=======================================================================\n`);
+
+      } catch (notifError) {
+        // Non-blocking: notifications are not critical
+        console.error(`⚠️ [${requestId}] Notification error (non-critical):`, notifError);
       }
 
       // Calculer l'heure de programmation

@@ -17,6 +17,7 @@ import type { BookingData } from "../core/types";
 import {
   getAISettings,
   getProviderType,
+  getProviderLanguage,
   normalizeCountry,
   checkProviderAIStatus,
   incrementAiUsage,
@@ -136,6 +137,10 @@ export const aiOnBookingCreated = onDocumentCreated(
       // Determine provider type
       const providerType = booking.providerType || (await getProviderType(providerId));
 
+      // 🆕 Get provider's preferred language for AI responses
+      const providerLanguage = await getProviderLanguage(providerId);
+      logger.info("[AI] Provider language for initial response", { providerId, providerLanguage });
+
       // Build context
       const country = normalizeCountry(booking.clientCurrentCountry);
       const clientName = booking.clientFirstName || booking.clientName || "Client";
@@ -143,7 +148,7 @@ export const aiOnBookingCreated = onDocumentCreated(
       // Build initial message
       const userMessage = buildBookingMessage(booking, clientName, country);
 
-      // Create service and call AI
+      // Create service and call AI (with provider language)
       const service = createService();
       const response = await service.chat(
         [{ role: "user", content: userMessage }],
@@ -156,6 +161,7 @@ export const aiOnBookingCreated = onDocumentCreated(
           urgency: booking.urgency,
           bookingTitle: booking.title,
           specialties: booking.providerSpecialties,
+          providerLanguage,  // 🆕 Force AI to respond in provider's language
         }
       );
 

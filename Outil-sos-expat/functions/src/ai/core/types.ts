@@ -168,6 +168,17 @@ export interface PerplexityResponse {
 // RÉPONSE HYBRIDE (ORCHESTRATION)
 // =============================================================================
 
+// 🆕 Niveau de confiance de la réponse
+export type ConfidenceLevel = "high" | "medium" | "low";
+
+export interface ConfidenceInfo {
+  level: ConfidenceLevel;
+  score: number;  // 0-100
+  reasons: string[];  // Explication du score
+  officialSourcesUsed: boolean;
+  disclaimer?: string;  // Avertissement à afficher
+}
+
 export interface HybridResponse {
   response: string;
   model: string;
@@ -176,6 +187,8 @@ export interface HybridResponse {
   searchPerformed?: boolean;
   fallbackUsed?: boolean;
   llmUsed?: "claude" | "gpt" | "claude+perplexity" | "gpt+perplexity";
+  // 🆕 Informations de confiance
+  confidence?: ConfidenceInfo;
 }
 
 // =============================================================================
@@ -204,4 +217,7 @@ export interface AIRequestContext {
   category?: string;
   urgency?: UrgencyLevel;
   specialties?: string[];
+
+  // 🆕 Langue du prestataire (prioritaire pour les réponses IA)
+  providerLanguage?: string;     // Langue préférée du prestataire qui paie l'abonnement (ex: "fr", "de", "en")
 }

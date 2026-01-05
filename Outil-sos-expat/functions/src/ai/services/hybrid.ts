@@ -11,12 +11,138 @@
  */
 
 import { logger } from "firebase-functions";
-import type { HybridResponse, LLMMessage, ProviderType, AIRequestContext } from "../core/types";
+import type { HybridResponse, LLMMessage, ProviderType, AIRequestContext, ConfidenceInfo, ConfidenceLevel } from "../core/types";
 import { ClaudeProvider } from "../providers/claude";
 import { OpenAIProvider } from "../providers/openai";
 import { PerplexityProvider, isFactualQuestion } from "../providers/perplexity";
 import { getSystemPrompt } from "../prompts";
 import { withExponentialBackoff } from "./utils";
+
+// =============================================================================
+// 🆕 DISCLAIMERS PAR NIVEAU DE CONFIANCE
+// =============================================================================
+
+const DISCLAIMERS = {
+  high: null,  // Pas de disclaimer si confiance haute
+  medium: "⚠️ Informations indicatives - vérifiez sur le site officiel du gouvernement concerné.",
+  low: "⚠️ Sources non-officielles utilisées - vérifiez impérativement sur les sites gouvernementaux avant d'appliquer.",
+};
+
+// =============================================================================
+// 🆕 DÉTECTION SOURCES OFFICIELLES (INTERNATIONAL - 197 PAYS)
+// =============================================================================
+
+// Patterns génériques pour identifier les sources gouvernementales de N'IMPORTE QUEL pays
+const OFFICIAL_DOMAIN_PATTERNS = [
+  // Domaines gouvernementaux génériques (tous pays)
+  /\.gov\./i,           // .gov.xx (USA, UK, AU, etc.)
+  /\.gouv\./i,          // .gouv.xx (France, Canada FR, etc.)
+  /\.gob\./i,           // .gob.xx (Espagne, Mexique, etc.)
+  /\.gov$/i,            // .gov (USA federal)
+  /\.go\./i,            // .go.xx (Japon, Kenya, etc.)
+  /\.govt\./i,          // .govt.xx (NZ, etc.)
+  /\.gc\./i,            // .gc.ca (Canada)
+  /\.admin\./i,         // .admin.ch (Suisse)
+  /\.bundesregierung/i, // Allemagne
+  /\.regierung/i,       // Allemagne/Autriche
+
+  // Organisations internationales
+  /europa\.eu/i,        // Union Européenne
+  /eur-lex/i,           // Législation UE
+  /un\.org/i,           // Nations Unies
+  /ilo\.org/i,          // Organisation Internationale du Travail
+  /wto\.org/i,          // OMC
+  /oecd\.org/i,         // OCDE
+  /who\.int/i,          // OMS
+  /imf\.org/i,          // FMI
+  /worldbank\.org/i,    // Banque Mondiale
+
+  // Ambassades et consulats (tous pays)
+  /embassy/i,
+  /consulate/i,
+  /ambassade/i,
+  /consulat/i,
+  /embajada/i,
+  /botschaft/i,
+];
+
+/**
+ * Vérifie si une URL provient d'une source officielle (gouvernement, organisation internationale)
+ * Fonctionne pour N'IMPORTE QUEL pays du monde
+ */
+function isOfficialSource(url: string): boolean {
+  return OFFICIAL_DOMAIN_PATTERNS.some(pattern => pattern.test(url));
+}
+
+// =============================================================================
+// 🆕 CALCUL DU SCORE DE CONFIANCE
+// =============================================================================
+
+function calculateConfidence(params: {
+  searchPerformed: boolean;
+  officialSourcesUsed: boolean;
+  citationsCount: number;
+  fallbackUsed: boolean;
+  hasCountryContext: boolean;
+}): ConfidenceInfo {
+  let score = 50;  // Score de base
+  const reasons: string[] = [];
+
+  // +25 si recherche web effectuée
+  if (params.searchPerformed) {
+    score += 15;
+    reasons.push("Recherche web effectuée");
+  }
+
+  // +25 si sources officielles utilisées
+  if (params.officialSourcesUsed) {
+    score += 25;
+    reasons.push("Sources officielles utilisées");
+  } else if (params.searchPerformed) {
+    score -= 10;
+    reasons.push("Sources non-officielles");
+  }
+
+  // +5 par citation (max +15)
+  const citationBonus = Math.min(params.citationsCount * 5, 15);
+  score += citationBonus;
+  if (params.citationsCount > 0) {
+    reasons.push(`${params.citationsCount} citation(s) fournie(s)`);
+  }
+
+  // -15 si fallback utilisé
+  if (params.fallbackUsed) {
+    score -= 15;
+    reasons.push("LLM de secours utilisé");
+  }
+
+  // +10 si contexte pays précis
+  if (params.hasCountryContext) {
+    score += 10;
+    reasons.push("Contexte pays précis");
+  }
+
+  // Normaliser entre 0 et 100
+  score = Math.max(0, Math.min(100, score));
+
+  // Déterminer le niveau
+  let level: ConfidenceLevel;
+  if (score >= 75) {
+    level = "high";
+  } else if (score >= 50) {
+    level = "medium";
+  } else {
+    level = "low";
+  }
+
+  return {
+    level,
+    score,
+    reasons,
+    officialSourcesUsed: params.officialSourcesUsed,
+    disclaimer: DISCLAIMERS[level] || undefined
+  };
+}
 
 // =============================================================================
 // INTERFACE DE CONFIGURATION
@@ -126,6 +252,7 @@ export class HybridAIService {
     let searchContext = "";
     let citations: string[] | undefined;
     let searchPerformed = false;
+    let officialSourcesUsed = false;
 
     if (this.config.usePerplexityForFactual && isFactualQuestion(userMessage)) {
       try {
@@ -133,7 +260,11 @@ export class HybridAIService {
         searchContext = searchResult.content;
         citations = searchResult.citations;
         searchPerformed = true;
-        logger.info("[HybridAI] Recherche web effectuée", { citationsCount: citations?.length });
+        officialSourcesUsed = searchResult.officialSourcesUsed;
+        logger.info("[HybridAI] Recherche web effectuée", {
+          citationsCount: citations?.length,
+          officialSourcesUsed
+        });
       } catch (error) {
         logger.warn("[HybridAI] Recherche web échouée, continue sans", { error });
       }
@@ -161,6 +292,21 @@ export class HybridAIService {
         llmUsed = mainProvider;
       }
 
+      // 🆕 Calculer le score de confiance
+      const confidence = calculateConfidence({
+        searchPerformed,
+        officialSourcesUsed,
+        citationsCount: citations?.length || 0,
+        fallbackUsed: response.fallbackUsed || false,
+        hasCountryContext: Boolean(context?.country)
+      });
+
+      logger.info("[HybridAI] Confiance calculée", {
+        level: confidence.level,
+        score: confidence.score,
+        reasons: confidence.reasons
+      });
+
       return {
         response: response.content,
         model: response.model,
@@ -168,7 +314,8 @@ export class HybridAIService {
         citations,
         searchPerformed,
         llmUsed,
-        fallbackUsed: response.fallbackUsed || false
+        fallbackUsed: response.fallbackUsed || false,
+        confidence  // 🆕 Ajout du score de confiance
       };
     } catch (error) {
       logger.error("[HybridAI] Tous les LLMs ont échoué", { error });
@@ -188,8 +335,8 @@ export class HybridAIService {
   private async performWebSearch(
     query: string,
     context?: AIRequestContext
-  ): Promise<{ content: string; citations?: string[] }> {
-    // Construire une requête de recherche TRÈS ciblée par pays
+  ): Promise<{ content: string; citations?: string[]; officialSourcesUsed: boolean }> {
+    // Construire une requête de recherche ciblée par pays (INTERNATIONAL)
     const searchParts: string[] = [];
 
     // 1. La question originale
@@ -198,12 +345,12 @@ export class HybridAIService {
     // 2. Contexte pays OBLIGATOIRE et PRÉCIS
     if (context?.country) {
       searchParts.push(`in ${context.country}`);
-      searchParts.push(`${context.country} laws regulations 2024 2025`);
+      searchParts.push(`${context.country} official government laws regulations 2024 2025`);
     }
 
     // 3. Nationalité si différente du pays
     if (context?.nationality && context.nationality !== context.country) {
-      searchParts.push(`${context.nationality} citizen`);
+      searchParts.push(`${context.nationality} citizen nationals`);
     }
 
     // 4. Catégorie si disponible
@@ -211,39 +358,68 @@ export class HybridAIService {
       searchParts.push(context.category);
     }
 
-    // 5. Contexte expatrié/voyageur
-    searchParts.push("expatriate foreigner requirements");
+    // 5. Contexte expatrié/voyageur (termes internationaux)
+    searchParts.push("official government site requirements foreigners");
 
     const enrichedQuery = searchParts.join(" ");
 
-    // Prompt de recherche TRÈS précis pour Perplexity
-    const searchSystemPrompt = `Tu es un expert en recherche d'informations pour expatriés.
+    logger.info("[HybridAI] Recherche internationale", {
+      country: context?.country || "non spécifié",
+      nationality: context?.nationality || "non spécifiée"
+    });
 
-MISSION: Trouver des informations PRÉCISES et ACTUELLES pour ce contexte:
-${context?.country ? `- PAYS CONCERNÉ: ${context.country} (OBLIGATOIRE - toutes les infos doivent concerner CE pays)` : ""}
-${context?.nationality ? `- NATIONALITÉ DU CLIENT: ${context.nationality}` : ""}
-${context?.category ? `- DOMAINE: ${context.category}` : ""}
+    // Prompt de recherche INTERNATIONAL pour Perplexity
+    const searchSystemPrompt = `You are an expert researcher for international expatriates and travelers.
 
-RÈGLES CRITIQUES:
-1. Ne donne QUE des informations qui s'appliquent au pays ${context?.country || "concerné"}
-2. Cite les LOIS LOCALES avec numéros et dates
-3. Indique les sites OFFICIELS du gouvernement de ce pays
-4. Donne les TARIFS et DÉLAIS actuels (2024-2025)
-5. Si une info est incertaine, DIS-LE clairement
-6. JAMAIS d'informations générales qui ne s'appliquent pas au pays spécifique`;
+MISSION: Find PRECISE and CURRENT information for this context:
+${context?.country ? `- TARGET COUNTRY: ${context.country} (MANDATORY - ALL information MUST be about THIS specific country)` : ""}
+${context?.nationality ? `- CLIENT NATIONALITY: ${context.nationality}` : ""}
+${context?.category ? `- DOMAIN: ${context.category}` : ""}
+
+🔴 PRIORITY SOURCES (MANDATORY):
+- Official government websites of the target country (.gov, .gouv, .gob, .go, .govt, etc.)
+- Official immigration and visa portals
+- Embassy and consulate websites
+- International organizations (UN, ILO, WHO, etc.) when relevant
+- ⚠️ AVOID: blogs, forums, non-official commercial sites
+
+CRITICAL RULES:
+1. ONLY provide information from OFFICIAL SOURCES of ${context?.country || "the target country"}
+2. CITE local laws with numbers and dates (format varies by country)
+3. ALWAYS include the official source URL
+4. Provide CURRENT fees and timelines (2024-2025)
+5. If info comes from non-official source, MARK IT with ⚠️
+6. NEVER give generic information that doesn't apply to the specific country
+7. Consider bilateral agreements between ${context?.nationality || "client's country"} and ${context?.country || "target country"}`;
 
     const result = await withExponentialBackoff(
       () => this.perplexity.search({
         messages: [{ role: "user", content: enrichedQuery }],
         systemPrompt: searchSystemPrompt,
         returnCitations: true
+        // PAS de domainFilter fixe - Perplexity cherche librement dans tous les pays
       }),
       { logContext: `[Perplexity Search] ${context?.country || "global"}` }
     );
 
+    // 🆕 Vérifier si les citations incluent des sources officielles (INTERNATIONAL)
+    const officialSourcesUsed = result.citations?.some(url => isOfficialSource(url)) ?? false;
+
+    // Compter les sources officielles vs non-officielles
+    const officialCount = result.citations?.filter(url => isOfficialSource(url)).length || 0;
+    const totalCount = result.citations?.length || 0;
+
+    logger.info("[HybridAI] Recherche internationale terminée", {
+      country: context?.country,
+      citationsCount: totalCount,
+      officialSourcesCount: officialCount,
+      officialSourcesUsed
+    });
+
     return {
       content: result.content,
-      citations: result.citations
+      citations: result.citations,
+      officialSourcesUsed
     };
   }
 

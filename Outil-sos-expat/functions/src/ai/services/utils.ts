@@ -660,6 +660,78 @@ export async function getProviderType(providerId: string): Promise<ProviderType>
 }
 
 // =============================================================================
+// RÉCUPÉRATION LANGUE DU PRESTATAIRE
+// =============================================================================
+
+/**
+ * Récupère la langue préférée du prestataire.
+ * Utilise la première langue du tableau `languages` ou "fr" par défaut.
+ *
+ * @param providerId - ID du provider
+ * @returns Code langue (ex: "fr", "en", "de")
+ */
+export async function getProviderLanguage(providerId: string): Promise<string> {
+  try {
+    const db = admin.firestore();
+    const providerDoc = await db.collection("providers").doc(providerId).get();
+
+    if (!providerDoc.exists) {
+      return "fr"; // Français par défaut
+    }
+
+    const data = providerDoc.data();
+
+    // Priorité: preferredLanguage > languages[0] > "fr"
+    if (data?.preferredLanguage) {
+      return data.preferredLanguage;
+    }
+
+    if (data?.languages && Array.isArray(data.languages) && data.languages.length > 0) {
+      return data.languages[0];
+    }
+
+    return "fr";
+  } catch {
+    return "fr";
+  }
+}
+
+/**
+ * Récupère le type ET la langue du prestataire en une seule lecture.
+ * Optimisé pour éviter les double lectures Firestore.
+ */
+export async function getProviderInfo(providerId: string): Promise<{
+  type: ProviderType;
+  language: string;
+}> {
+  try {
+    const db = admin.firestore();
+    const providerDoc = await db.collection("providers").doc(providerId).get();
+
+    if (!providerDoc.exists) {
+      return { type: "expat", language: "fr" };
+    }
+
+    const data = providerDoc.data();
+
+    // Type
+    const type: ProviderType = data?.providerType === "lawyer" ? "lawyer" : "expat";
+
+    // Langue: preferredLanguage > languages[0] > "fr"
+    let language = "fr";
+    if (data?.preferredLanguage) {
+      language = data.preferredLanguage;
+    } else if (data?.languages && Array.isArray(data.languages) && data.languages.length > 0) {
+      language = data.languages[0];
+    }
+
+    return { type, language };
+  } catch {
+    return { type: "expat", language: "fr" };
+  }
+}
+
+// =============================================================================
 // SANITIZATION DES ENTRÉES UTILISATEUR
 // =============================================================================
 

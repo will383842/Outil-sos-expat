@@ -25,6 +25,7 @@ import type { LLMMessage, ConversationData, ProviderType } from "../core/types";
 import { AI_CONFIG } from "../core/config";
 import {
   getProviderType,
+  getProviderLanguage,
   checkUserSubscription,
   sanitizeUserInput,
   buildConversationHistory,
@@ -345,6 +346,7 @@ export const aiChatStream = onRequest(
       let providerType: ProviderType = reqProviderType || "expat";
       let convoData: ConversationData | null = null;
       let providerId: string | null = null;
+      let providerLanguage: string | undefined = undefined;  // 🆕 Langue du prestataire
 
       if (conversationId) {
         convoRef = db.collection("conversations").doc(conversationId);
@@ -357,6 +359,9 @@ export const aiChatStream = onRequest(
             providerType =
               convoData.providerType ||
               (await getProviderType(convoData.providerId));
+            // 🆕 Récupérer la langue préférée du prestataire (il paie l'abonnement)
+            providerLanguage = await getProviderLanguage(convoData.providerId);
+            logger.info("[aiChatStream] Provider language", { providerId, providerLanguage });
           }
           history = await buildConversationHistory(db, conversationId, convoData);
         }
@@ -405,8 +410,8 @@ export const aiChatStream = onRequest(
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
       });
 
-      // Prepare messages for API
-      const systemPrompt = buildSystemPrompt(providerType, convoData);
+      // Prepare messages for API (🆕 avec langue du prestataire)
+      const systemPrompt = buildSystemPrompt(providerType, convoData, providerLanguage);
       const formattedMessages = [
         { role: "system", content: systemPrompt },
         ...history.map((m) => ({ role: m.role, content: m.content })),
@@ -556,8 +561,17 @@ export const aiChatStream = onRequest(
 
 function buildSystemPrompt(
   providerType: ProviderType,
-  convoData: ConversationData | null
+  convoData: ConversationData | null,
+  providerLanguage?: string
 ): string {
+  // 🆕 Instruction de langue PRIORITAIRE (le prestataire paie l'abonnement)
+  const languageInstruction = providerLanguage
+    ? `🔴 LANGUE DE RÉPONSE OBLIGATOIRE: Tu DOIS répondre UNIQUEMENT en ${providerLanguage.toUpperCase()}.
+Le prestataire qui paie l'abonnement a choisi cette langue. C'est une exigence absolue.
+
+`
+    : "";
+
   const basePrompt =
     providerType === "lawyer"
       ? `Tu es un assistant juridique expert en droit de l'immigration et de l'expatriation.
@@ -569,7 +583,7 @@ Sois clair, pratique et encourageant dans tes réponses.`;
 
   if (convoData?.bookingContext) {
     const ctx = convoData.bookingContext;
-    return `${basePrompt}
+    return `${languageInstruction}${basePrompt}
 
 Contexte du dossier:
 - Client: ${ctx.clientName || "Non spécifié"}
@@ -578,5 +592,5 @@ Contexte du dossier:
 - Urgence: ${ctx.urgency || "Normal"}`;
   }
 
-  return basePrompt;
+  return `${languageInstruction}${basePrompt}`;
 }

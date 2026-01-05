@@ -33,8 +33,12 @@ export function formatContextBlock(context: AIRequestContext): string {
     parts.push(`PAYS D'ORIGINE: ${context.originCountry}`);
   }
 
+  if (context.providerLanguage) {
+    parts.push(`🔴 LANGUE DE RÉPONSE OBLIGATOIRE: ${context.providerLanguage.toUpperCase()}`);
+  }
+
   if (context.language) {
-    parts.push(`LANGUE PRÉFÉRÉE: ${context.language}`);
+    parts.push(`Langue du client: ${context.language}`);
   }
 
   if (context.category) {
@@ -125,10 +129,13 @@ export const COMMON_RULES = {
 3. Donne des informations générales applicables dans des cas similaires
 4. Ne reste JAMAIS sans proposition d'action concrète`,
 
-  MULTILINGUAL_RESPONSE: `LANGUE DE RÉPONSE:
-- Réponds dans la langue de la question du client si possible
-- Par défaut, réponds en français
-- Pour les termes techniques, indique le terme local si différent`,
+  MULTILINGUAL_RESPONSE: `LANGUE DE RÉPONSE (PRIORITAIRE):
+⚠️ RÈGLE ABSOLUE: Tu DOIS TOUJOURS répondre dans la langue du PRESTATAIRE (indiquée dans le contexte).
+- Le prestataire PAIE l'abonnement, c'est SA langue qui prime
+- Si la langue du prestataire est indiquée dans le contexte → UTILISE-LA OBLIGATOIREMENT
+- Si aucune langue prestataire indiquée → réponds dans la langue de la question
+- Par défaut si rien n'est spécifié → réponds en français
+- Pour les termes techniques locaux → indique aussi le terme dans la langue du pays concerné`,
 
   BE_PRECISE: `PRÉCISION:
 - Utilise des chiffres, dates et références PRÉCIS quand disponibles
@@ -153,7 +160,42 @@ export const COMMON_RULES = {
 7. PRÉFÈRE dire "je ne suis pas certain pour [PAYS]" que donner une info d'un autre pays
 8. Utilise les informations de recherche web fournies comme source principale`,
 
-  LEGAL_DISCLAIMER: "Pour les questions juridiques sensibles, rappelle qu'une consultation avec un avocat local est recommandée pour un avis définitif adapté à la situation spécifique",
+  // 🆕 AMÉLIORATION FIABILITÉ JURIDIQUE - Règles renforcées (INTERNATIONAL)
+  MANDATORY_CITATIONS: `CITATIONS OBLIGATOIRES (FIABILITÉ JURIDIQUE - INTERNATIONAL):
+⚠️ Pour TOUTE information juridique, tu DOIS:
+1. CITER la source précise avec le FORMAT DU PAYS concerné:
+   - Ex France: "Article L.123-4 du CESEDA"
+   - Ex USA: "8 U.S.C. § 1101"
+   - Ex UK: "Immigration Act 1971, Section 3"
+   - Ex Allemagne: "§ 4 AufenthG"
+   - Etc. selon le pays
+2. INDIQUER la date de la loi/règlement si connue
+3. MENTIONNER le site officiel du GOUVERNEMENT DU PAYS concerné
+4. Si tu n'as PAS de source précise → DIS-LE: "⚠️ À vérifier sur le site officiel de [PAYS]"
+5. NE JAMAIS inventer de numéro d'article ou de référence légale`,
+
+  UNCERTAINTY_HONESTY: `HONNÊTETÉ + RÉPONSE OBLIGATOIRE:
+🎯 Tu DOIS TOUJOURS fournir une réponse utile et actionnable.
+MAIS marque clairement ton niveau de certitude:
+- ✅ "Selon l'article X..." → Information vérifiée avec source
+- ⚬ "Généralement..." ou "En principe..." → Information probable
+- ⚠️ "À vérifier: ..." → Information à confirmer
+
+⛔ NE JAMAIS dire "je ne sais pas" sans proposer d'alternative.
+✅ TOUJOURS donner: une réponse + des pistes + un contact officiel
+Exemple: "D'après les pratiques courantes, le délai est d'environ X jours.
+Je recommande de confirmer auprès de [autorité] au [contact]."`,
+
+  TEMPORAL_ACCURACY: `PRÉCISION TEMPORELLE:
+Les lois CHANGENT. Pour toute information juridique:
+1. Précise "En date de [année]" ou "Selon la législation actuelle (2024-2025)"
+2. Avertis si l'info peut être obsolète: "⚠️ Cette règle peut avoir évolué"
+3. Pour les montants/seuils: "En 2024, le montant était de X€ - à vérifier pour l'année en cours"
+4. Recommande TOUJOURS de vérifier sur le site officiel du gouvernement concerné`,
+
+  LEGAL_DISCLAIMER: `AVERTISSEMENT JURIDIQUE (pour cas complexes):
+"📋 Ces informations sont fournies à titre indicatif. Pour les cas complexes, une vérification
+sur les sources officielles (sites gouvernementaux) est recommandée avant application."`,
 
   STRUCTURED: "Structure ta réponse de manière claire avec les sections appropriées"
 } as const;
