@@ -43,7 +43,6 @@
     "request.created.provider": {
       "channels": [
         "email",
-        "sms",
         "push",
         "inapp"
       ],
@@ -184,6 +183,54 @@
       "rate_limit_h": 12
     },
     "provider.monthly.report": {
+      "channels": [
+        "email",
+        "push",
+        "inapp"
+      ],
+      "rate_limit_h": 24
+    },
+    "budget.alert.warning": {
+      "channels": [
+        "email",
+        "push",
+        "inapp"
+      ],
+      "rate_limit_h": 1
+    },
+    "budget.alert.critical": {
+      "channels": [
+        "email",
+        "sms",
+        "push",
+        "inapp"
+      ],
+      "rate_limit_h": 0
+    },
+    "security.daily_report": {
+      "channels": [
+        "email",
+        "inapp"
+      ],
+      "rate_limit_h": 24
+    },
+    "provider.payout.received": {
+      "channels": [
+        "email",
+        "push",
+        "inapp"
+      ],
+      "rate_limit_h": 0
+    },
+    "payment_refunded": {
+      "channels": [
+        "email",
+        "push",
+        "inapp"
+      ],
+      "rate_limit_h": 0
+    },
+    "subscription.reminder": {
       "channels": [
         "email",
         "push",

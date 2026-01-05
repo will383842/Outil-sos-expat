@@ -161,10 +161,10 @@
       ],
       "channels": {
         "email": true,
-        "sms": true,
+        "sms": false,
         "whatsapp": false,
-        "push": false,
-        "inapp": false
+        "push": true,
+        "inapp": true
       },
       "email": {
         "subject": "Nouvelle demande client",
@@ -707,6 +707,178 @@
         "action": {
           "label": "Voir",
           "deeplink": "/provider/stats?period=month"
+        }
+      }
+    },
+    {
+      "id": "budget.alert.warning",
+      "roles": ["admin"],
+      "channels": {
+        "email": true,
+        "sms": false,
+        "push": true,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "email": {
+        "subject": "⚠️ Alerte budget : {{budget.percentage}}% du budget consommé",
+        "html": "<h1>Alerte Budget</h1><p>Le budget {{budget.name}} a atteint {{budget.percentage}}% de consommation.</p><p>Montant utilisé : {{budget.used}}€ / {{budget.total}}€</p><p><a href='{{webappUrl}}/admin/finance/budget'>Voir les détails</a></p>",
+        "text": "Alerte budget : {{budget.name}} à {{budget.percentage}}% ({{budget.used}}€ / {{budget.total}}€)"
+      },
+      "push": {
+        "title": "Alerte budget ⚠️",
+        "body": "{{budget.name}} : {{budget.percentage}}% consommé",
+        "deeplink": "sos-expat://admin/finance/budget"
+      },
+      "inapp": {
+        "title": "Budget {{budget.name}}",
+        "body": "{{budget.percentage}}% du budget consommé",
+        "action": {
+          "label": "Voir",
+          "deeplink": "/admin/finance/budget"
+        }
+      }
+    },
+    {
+      "id": "budget.alert.critical",
+      "roles": ["admin"],
+      "channels": {
+        "email": true,
+        "sms": true,
+        "push": true,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "email": {
+        "subject": "🚨 CRITIQUE : Budget {{budget.name}} dépassé !",
+        "html": "<h1>🚨 Budget Critique</h1><p>Le budget {{budget.name}} a dépassé le seuil critique ({{budget.percentage}}%).</p><p>Montant utilisé : {{budget.used}}€ / {{budget.total}}€</p><p><a href='{{webappUrl}}/admin/finance/budget'>Action requise</a></p>",
+        "text": "🚨 CRITIQUE : Budget {{budget.name}} à {{budget.percentage}}% - Action requise !"
+      },
+      "sms": {
+        "text": "🚨 SOS-Expat: Budget {{budget.name}} CRITIQUE ({{budget.percentage}}%)"
+      },
+      "push": {
+        "title": "🚨 Budget critique",
+        "body": "{{budget.name}} : {{budget.percentage}}% - Action requise",
+        "deeplink": "sos-expat://admin/finance/budget"
+      },
+      "inapp": {
+        "title": "Budget critique 🚨",
+        "body": "{{budget.name}} a dépassé le seuil",
+        "action": {
+          "label": "Agir",
+          "deeplink": "/admin/finance/budget"
+        }
+      }
+    },
+    {
+      "id": "security.daily_report",
+      "roles": ["admin"],
+      "channels": {
+        "email": true,
+        "sms": false,
+        "push": false,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "email": {
+        "subject": "🔒 Rapport sécurité quotidien — {{date.day}}/{{date.month}}/{{date.year}}",
+        "html": "<h1>Rapport Sécurité</h1><p>Événements des dernières 24h :</p><ul><li>Connexions suspectes : {{security.suspiciousLogins}}</li><li>Tentatives échouées : {{security.failedAttempts}}</li><li>Alertes actives : {{security.activeAlerts}}</li></ul><p><a href='{{webappUrl}}/admin/security'>Voir le détail</a></p>",
+        "text": "Rapport sécurité : {{security.suspiciousLogins}} connexions suspectes, {{security.failedAttempts}} échecs"
+      },
+      "inapp": {
+        "title": "Rapport sécurité",
+        "body": "{{security.suspiciousLogins}} connexions suspectes aujourd'hui",
+        "action": {
+          "label": "Voir",
+          "deeplink": "/admin/security"
+        }
+      }
+    },
+    {
+      "id": "provider.payout.received",
+      "roles": ["provider"],
+      "channels": {
+        "email": true,
+        "sms": false,
+        "push": true,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "email": {
+        "subject": "💰 Paiement reçu : {{payout.amount}}€",
+        "html": "<h1>Paiement reçu !</h1><p>Bonne nouvelle ! Tu as reçu {{payout.amount}}€ sur ton compte.</p><p>Référence : {{payout.reference}}</p><p><a href='{{webappUrl}}/provider/earnings'>Voir mes revenus</a></p>",
+        "text": "Tu as reçu {{payout.amount}}€ ! Réf: {{payout.reference}}"
+      },
+      "push": {
+        "title": "Paiement reçu 💰",
+        "body": "{{payout.amount}}€ vient d'arriver sur ton compte",
+        "deeplink": "sos-expat://provider/earnings"
+      },
+      "inapp": {
+        "title": "Paiement reçu",
+        "body": "{{payout.amount}}€ transféré",
+        "action": {
+          "label": "Voir",
+          "deeplink": "/provider/earnings"
+        }
+      }
+    },
+    {
+      "id": "payment_refunded",
+      "roles": ["client"],
+      "channels": {
+        "email": true,
+        "sms": false,
+        "push": true,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "email": {
+        "subject": "Remboursement effectué : {{refund.amount}}€",
+        "html": "<h1>Remboursement confirmé</h1><p>Un remboursement de {{refund.amount}}€ a été effectué.</p><p>Motif : {{refund.reason}}</p><p>Il apparaîtra sur ton compte sous 5-10 jours ouvrés.</p><p><a href='{{webappUrl}}/payments'>Voir mes paiements</a></p>",
+        "text": "Remboursement de {{refund.amount}}€ effectué. Délai : 5-10 jours ouvrés."
+      },
+      "push": {
+        "title": "Remboursement effectué",
+        "body": "{{refund.amount}}€ remboursé sous 5-10 jours",
+        "deeplink": "sos-expat://payments"
+      },
+      "inapp": {
+        "title": "Remboursement",
+        "body": "{{refund.amount}}€ sera crédité sous 5-10 jours",
+        "action": {
+          "label": "Voir",
+          "deeplink": "/payments"
+        }
+      }
+    },
+    {
+      "id": "subscription.reminder",
+      "roles": ["client", "provider"],
+      "channels": {
+        "email": true,
+        "sms": false,
+        "push": true,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "email": {
+        "subject": "Ton abonnement expire dans {{subscription.daysRemaining}} jours",
+        "html": "<h1>Rappel abonnement</h1><p>Ton abonnement {{subscription.plan}} expire le {{subscription.endDate}}.</p><p><a href='{{webappUrl}}/subscription'>Renouveler maintenant</a></p>",
+        "text": "Abonnement {{subscription.plan}} expire dans {{subscription.daysRemaining}} jours. Renouvelle : {{webappUrl}}/subscription"
+      },
+      "push": {
+        "title": "Abonnement bientôt expiré",
+        "body": "{{subscription.daysRemaining}} jours restants",
+        "deeplink": "sos-expat://subscription"
+      },
+      "inapp": {
+        "title": "Renouvellement",
+        "body": "Ton abonnement expire dans {{subscription.daysRemaining}} jours",
+        "action": {
+          "label": "Renouveler",
+          "deeplink": "/subscription"
         }
       }
     }
