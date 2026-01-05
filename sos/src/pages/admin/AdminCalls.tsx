@@ -76,7 +76,6 @@ import {
   orderBy,
   limit,
   where,
-  onSnapshot,
   doc,
   updateDoc,
   deleteDoc,
@@ -543,22 +542,27 @@ const AdminCallsMonitoring: React.FC = () => {
 
     console.log('🔴 Démarrage du monitoring des appels en temps réel');
 
-    // Écoute des sessions d'appel actives et en cours
-    const callSessionsQuery = query(
-      collection(db, 'call_sessions'),
-      where('status', 'in', [
-        'pending', 
-        'provider_connecting', 
-        'client_connecting', 
-        'both_connecting', 
-        'active'
-      ]),
-      orderBy('metadata.createdAt', 'desc'),
-      limit(CALLS_CONFIG.firestore.liveCallsLimit)
-    );
+    // ✅ OPTIMISATION COÛTS GCP: Polling 30s au lieu de onSnapshot pour les appels
+    let isMounted = true;
 
-    const unsubscribeCalls = onSnapshot(callSessionsQuery,
-      (snapshot) => {
+    const loadCalls = async () => {
+      try {
+        const callSessionsQuery = query(
+          collection(db, 'call_sessions'),
+          where('status', 'in', [
+            'pending',
+            'provider_connecting',
+            'client_connecting',
+            'both_connecting',
+            'active'
+          ]),
+          orderBy('metadata.createdAt', 'desc'),
+          limit(CALLS_CONFIG.firestore.liveCallsLimit)
+        );
+
+        const snapshot = await getDocs(callSessionsQuery);
+        if (!isMounted) return;
+
         const sessions = snapshot.docs.map(doc => {
           const data = doc.data();
           return {
@@ -569,34 +573,33 @@ const AdminCallsMonitoring: React.FC = () => {
 
         console.log(`📞 ${sessions.length} appels actifs détectés`);
 
-        // ✅ CORRECTION: Utiliser le ref au lieu de liveCalls.length pour éviter les ré-abonnements
         // Jouer un son pour les nouveaux appels
         if (soundEnabled && sessions.length > previousCallsCountRef.current) {
           playNotificationSound('new_call');
         }
 
-        // Mettre à jour le ref pour la prochaine comparaison
         previousCallsCountRef.current = sessions.length;
-
         setLiveCalls(sessions);
-      },
-      (error) => {
-        console.error('Erreur lors de l\'écoute des appels:', error);
+      } catch (error: any) {
+        console.error('Erreur lors du chargement des appels:', error);
         logError({
           origin: 'frontend',
           error: `Erreur monitoring appels: ${error.message}`,
           context: { component: 'AdminCallsMonitoring' },
         });
       }
-    );
+    };
+
+    loadCalls();
+    const intervalId = setInterval(loadCalls, 30000); // Poll every 30s
 
     setIsLoading(false);
 
     return () => {
+      isMounted = false;
       console.log('🔴 Arrêt du monitoring des appels');
-      unsubscribeCalls();
+      clearInterval(intervalId);
     };
-  // ✅ CORRECTION: Retirer liveCalls.length des dépendances pour éviter les ré-abonnements inutiles
   }, [currentUser, isRealTimeActive, soundEnabled]);
 
   // Calcul des métriques en temps réel basé sur les vraies données 

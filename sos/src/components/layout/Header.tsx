@@ -31,7 +31,6 @@ import {
   doc,
   updateDoc,
   setDoc,
-  onSnapshot,
   getDoc,
   getDocs,
   query,
@@ -474,16 +473,20 @@ const useAvailabilityToggle = () => {
     [typedUser, userId]
   );
 
+  // ✅ OPTIMISATION COÛTS GCP: Polling 30s au lieu de onSnapshot pour le status provider
   useEffect(() => {
     if (!typedUser || !isProvider || !userId) return;
     if (sosSnapshotSubscribed.current) return;
     sosSnapshotSubscribed.current = true;
 
-    const sosRef = doc(db, "sos_profiles", userId);
+    let isMounted = true;
 
-    const unsubscribe = onSnapshot(
-      sosRef,
-      (snap) => {
+    const loadSosProfile = async () => {
+      try {
+        const sosRef = doc(db, "sos_profiles", userId);
+        const snap = await getDoc(sosRef);
+        if (!isMounted) return;
+
         if (!snap.exists()) return;
         const data = snap.data();
         if (!data) return;
@@ -495,13 +498,18 @@ const useAvailabilityToggle = () => {
           isApproved: data.isApproved === true,
           approvalStatus: data.approvalStatus || 'pending',
         });
-      },
-      (err) => console.error("Snapshot error sos_profiles:", err)
-    );
+      } catch (err) {
+        console.error("Error loading sos_profiles:", err);
+      }
+    };
+
+    loadSosProfile();
+    const intervalId = setInterval(loadSosProfile, 30000); // Poll every 30s
 
     return () => {
+      isMounted = false;
       sosSnapshotSubscribed.current = false;
-      unsubscribe();
+      clearInterval(intervalId);
     };
   }, [typedUser, isProvider, userId]);
 

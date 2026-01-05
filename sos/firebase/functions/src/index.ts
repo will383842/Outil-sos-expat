@@ -88,6 +88,22 @@ export {
   listRestoreTestReports,
 } from "./scheduled/quarterlyRestoreTest";
 
+// backup - Storage to DR (photos, documents, invoices)
+export { backupStorageToDR } from "./scheduled/backupStorageToDR";
+
+// backup - Admin restore functions (callable from admin console)
+export {
+  adminListBackups,
+  adminPreviewRestore,
+  adminGetRestoreConfirmationCode,
+  adminRestoreFirestore,
+  adminRestoreAuth,
+  adminCheckRestoreStatus,
+  adminCreateManualBackup,
+  adminDeleteBackup,
+  adminListGcpBackups,
+} from "./admin/backupRestoreAdmin";
+
 // P2-3 FIX: GDPR Recording Cleanup - SUPPRIME (recording desactive pour RGPD)
 // Les fonctions rgpdRecordingCleanup et triggerRgpdCleanup ont ete supprimees
 // car l'enregistrement des appels est desactive (commit 12a83a9)
@@ -798,7 +814,9 @@ export { createAndScheduleCallHTTPS };
 export { createAndScheduleCallHTTPS as createAndScheduleCall };
 export { createPaymentIntent } from "./createPaymentIntent";
 export { api } from "./adminApi";
-export { testTwilioCall } from "./testTwilioCall";
+// P0 SECURITY: testTwilioCall DISABLED - Public endpoint that could generate unlimited Twilio costs
+// export { testTwilioCall } from "./testTwilioCall";
+// TODO: If needed for testing, add admin authentication before re-enabling
 export { twilioCallWebhook } from "./Webhooks/twilioWebhooks";
 export { providerNoAnswerTwiML } from "./Webhooks/providerNoAnswerTwiML";
 export { enqueueMessageEvent } from "./messaging/enqueueMessageEvent";

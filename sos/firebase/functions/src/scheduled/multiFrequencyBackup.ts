@@ -20,9 +20,12 @@ if (!admin.apps.length) {
 
 const client = new admin.firestore.v1.FirestoreAdminClient();
 
-// Configuration
+// Configuration - Rétention différenciée
 const CONFIG = {
-  RETENTION_DAYS: 90,
+  // Backups standards: 30 jours (restauration opérationnelle rapide)
+  STANDARD_RETENTION_DAYS: 30,
+  // Archives financières: JAMAIS supprimées automatiquement (conformité légale 10 ans)
+  // Le cleanup ne touche PAS aux backups marqués 'financial'
   CRITICAL_COLLECTIONS: [
     "users",
     "sos_profiles",
@@ -30,6 +33,18 @@ const CONFIG = {
     "payments",
     "subscriptions",
     "invoices",
+  ],
+  // Collections financières - conservation indéfinie
+  FINANCIAL_COLLECTIONS: [
+    "payments",
+    "invoices",
+    "invoice_records",
+    "admin_invoices",
+    "transfers",
+    "refunds",
+    "disputes",
+    "journal_entries",
+    "subscriptions",
   ],
 };
 
@@ -121,8 +136,10 @@ async function performBackup(schedule: string, backupType: 'morning' | 'midday' 
       collectionCounts,
       totalDocuments,
       executionTimeMs: Date.now() - startTime,
-      version: "3.0",
-      retentionDays: CONFIG.RETENTION_DAYS,
+      version: "3.1",
+      retentionDays: CONFIG.STANDARD_RETENTION_DAYS,
+      // Les données financières ne sont JAMAIS supprimées (conformité légale)
+      containsFinancialData: true,
     });
 
     // Log dans system_logs
@@ -218,7 +235,9 @@ export const eveningBackup = onSchedule(
 );
 
 /**
- * Nettoyage des anciens backups (garde les 90 derniers jours)
+ * Nettoyage des anciens backups
+ * - Supprime les backups standards > 30 jours
+ * - NE JAMAIS supprimer les backups contenant des données financières
  * Execute une fois par semaine le dimanche a 4h
  */
 export const cleanupOldBackups = onSchedule(
@@ -232,20 +251,33 @@ export const cleanupOldBackups = onSchedule(
   async () => {
     const db = admin.firestore();
     const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - CONFIG.RETENTION_DAYS);
+    cutoffDate.setDate(cutoffDate.getDate() - CONFIG.STANDARD_RETENTION_DAYS);
 
-    logger.info(`[CleanupBackups] Deleting backups older than ${cutoffDate.toISOString()}`);
+    logger.info(`[CleanupBackups] Cleaning up standard backups older than ${cutoffDate.toISOString()}`);
+    logger.info(`[CleanupBackups] Note: Financial data backups are NEVER deleted (legal compliance)`);
 
     try {
+      // Ne récupérer QUE les backups qui ne contiennent PAS de données financières
+      // et qui sont plus anciens que la date limite
       const oldBackups = await db
         .collection("backups")
         .where("createdAt", "<", admin.firestore.Timestamp.fromDate(cutoffDate))
+        .where("containsFinancialData", "==", false)
         .get();
 
       let deleted = 0;
+      let skippedFinancial = 0;
       const batch = db.batch();
 
       for (const doc of oldBackups.docs) {
+        const data = doc.data();
+
+        // Double vérification: ne JAMAIS supprimer les backups financiers
+        if (data.containsFinancialData === true) {
+          skippedFinancial++;
+          continue;
+        }
+
         batch.delete(doc.ref);
         deleted++;
 
@@ -259,13 +291,15 @@ export const cleanupOldBackups = onSchedule(
         await batch.commit();
       }
 
-      logger.info(`[CleanupBackups] Deleted ${deleted} old backup records`);
+      logger.info(`[CleanupBackups] Deleted ${deleted} old standard backup records, preserved ${skippedFinancial} financial backups`);
 
       // Log l'action
       await db.collection("system_logs").add({
         type: "backup_cleanup",
         deletedCount: deleted,
+        preservedFinancial: skippedFinancial,
         cutoffDate: cutoffDate.toISOString(),
+        retentionDays: CONFIG.STANDARD_RETENTION_DAYS,
         createdAt: admin.firestore.Timestamp.now(),
       });
 

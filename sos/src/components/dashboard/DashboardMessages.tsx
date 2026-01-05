@@ -5,7 +5,7 @@ import {
   query,
   where,
   orderBy,
-  onSnapshot,
+  getDocs,
   updateDoc,
   doc,
 } from "firebase/firestore";
@@ -39,42 +39,50 @@ const DashboardMessages: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // ✅ OPTIMISATION COÛTS GCP: Polling 60s au lieu de onSnapshot pour les messages
   useEffect(() => {
-    // attendre que l’auth soit prête
+    // attendre que l'auth soit prête
     const uid = auth.currentUser?.uid;
     if (!uid) return;
 
+    let isMounted = true;
+
     // Alerte utile si jamais ton contexte n'a pas le même identifiant
     if (user?.id && user.id !== uid) {
-      // Cela arrive souvent quand user.id = id du doc Firestore et pas l’UID Auth
-      console.warn("[Messages] user.id != auth.uid → j’utilise auth.uid pour la requête", { userId: user.id, authUid: uid });
+      console.warn("[Messages] user.id != auth.uid → j'utilise auth.uid pour la requête", { userId: user.id, authUid: uid });
     }
 
-    const messagesRef = collection(db, "providerMessageOrderCustomers");
-    const q = query(
-      messagesRef,
-      where("providerId", "==", uid),        // ← FILTRE SUR L’UID AUTH
-      orderBy("createdAt", "desc")
-    );
+    const loadMessages = async () => {
+      try {
+        const messagesRef = collection(db, "providerMessageOrderCustomers");
+        const q = query(
+          messagesRef,
+          where("providerId", "==", uid),
+          orderBy("createdAt", "desc")
+        );
 
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
+        const snapshot = await getDocs(q);
+        if (!isMounted) return;
+
         const fetched: Message[] = snapshot.docs.map((d) => {
           const data = d.data() as Omit<Message, "id">;
-        return { id: d.id, ...data };
+          return { id: d.id, ...data };
         });
         setMessages(fetched);
         setLoading(false);
-      },
-      (err: unknown) => {
-        console.error("onSnapshot messages error:", err);
-        setLoading(false);
-        unsubscribe(); // coupe pour éviter le spam si permission-denied
+      } catch (err: unknown) {
+        console.error("Error loading messages:", err);
+        if (isMounted) setLoading(false);
       }
-    );
+    };
 
-    return () => unsubscribe();
+    loadMessages();
+    const intervalId = setInterval(loadMessages, 60000); // Poll every 60s
+
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
   }, [user]); // le hook se relance si le contexte change
 
   const markAsRead = async (messageId: string) => {

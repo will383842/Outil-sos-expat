@@ -36,7 +36,7 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
   bookingRedirectUrl,
 }) => {
   const intl = useIntl();
-  const { login, loginWithGoogle, register, user, authInitialized } = useAuth();
+  const { login, loginWithGoogle, register, user, authInitialized, isFullyReady } = useAuth();
 
   // Form state
   const [step, setStep] = useState<WizardStep>('email');
@@ -88,10 +88,11 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
     };
   }, [isOpen]);
 
-  // FIX: Attendre que user Firestore soit chargé avant d'appeler onSuccess
+  // ✅ FIX FLASH P0: Attendre que user Firestore soit COMPLÈTEMENT chargé avant d'appeler onSuccess
+  // isFullyReady = authInitialized AND !isLoading (garantit que tout est prêt)
   // Cela évite les race conditions où BookingRequest se monte avant que user soit disponible
   useEffect(() => {
-    if (pendingSuccess && step === 'success' && user && authInitialized) {
+    if (pendingSuccess && step === 'success' && user && isFullyReady) {
       // User Firestore est maintenant chargé, on peut naviguer
       const timeout = setTimeout(() => {
         setPendingSuccess(false);
@@ -99,7 +100,7 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
       }, 300); // Délai court juste pour l'animation
       return () => clearTimeout(timeout);
     }
-  }, [pendingSuccess, step, user, authInitialized, onSuccess]);
+  }, [pendingSuccess, step, user, isFullyReady, onSuccess]);
 
   // Email validation
   const isValidEmail = (email: string): boolean => {

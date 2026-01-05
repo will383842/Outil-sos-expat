@@ -87,6 +87,8 @@ service cloud.firestore {
       allow read: if true;
 
       // Écriture : propriétaire ou admin
+      // NOTE: On ne peut pas utiliser isProvider() ici car les custom claims
+      // ne sont définis qu'APRÈS la création du profil (via onProviderCreated trigger)
       // Le propriétaire NE PEUT PAS modifier les champs financiers sensibles
       allow create: if isAuthenticated() && isOwner(profileId) &&
                     !request.resource.data.keys().hasAny(['stripeAccountId', 'paypalMerchantId', 'stripeCustomerId']);
@@ -776,6 +778,14 @@ service cloud.firestore {
       // Seuls les admins peuvent lire les logs d'audit
       allow read: if isAdmin() || isDev();
       // Seules les Cloud Functions peuvent écrire (immuable)
+      allow write: if false;
+    }
+
+    // ================= RESTORE OPERATIONS (Backup Restore Tracking) =================
+    match /restore_operations/{operationId} {
+      // Seuls les admins peuvent lire les opérations de restauration
+      allow read: if isAdmin() || isDev();
+      // Seules les Cloud Functions peuvent écrire
       allow write: if false;
     }
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'reac
 import { Star, MapPin, Phone, ChevronLeft, ChevronRight, Globe, Search, ArrowDown, ArrowUp, ChevronDown, Clock } from 'lucide-react';
 import { useIntl } from 'react-intl';
 import { useLocaleNavigate } from '../../multilingual-system';
-import { collection, query, onSnapshot, limit, orderBy } from 'firebase/firestore';
+import { collection, query, getDocs, limit, orderBy } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { useApp } from '../../contexts/AppContext';
 import { getCountryCoordinates } from '../../utils/countryCoordinates';
@@ -442,11 +442,11 @@ const provider: Provider = {
     }
   }, [language]);
 
-  // Enhanced Firebase query with 2025 optimization
-  const loadProviders = useCallback(() => {
+  // Enhanced Firebase query with 2025 optimization - using getDocs + polling for cost savings
+  const loadProviders = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       // AI-optimized Firebase query with proper indexing
       let firestoreQuery = query(
@@ -466,51 +466,48 @@ const provider: Provider = {
           limit(maxItems)
         );
       }
-      
-      const unsubscribe = onSnapshot(
-        firestoreQuery, 
-        (snapshot) => {
-          const validProviders: Provider[] = [];
 
-          snapshot.docs.forEach((doc) => {
-            const provider = transformFirestoreDoc(doc);
-            if (provider) {
-              validProviders.push(provider);
-            }
-          });
+      const snapshot = await getDocs(firestoreQuery);
+      const validProviders: Provider[] = [];
 
-          // Performance optimization: freeze array
-          setProviders(Object.freeze(validProviders));
-          setIsLoading(false);
-          
-          if (validProviders.length === 0 && !error) {
-            setError('Aucun prestataire trouvé');
-          }
-        }, 
-        (firebaseError) => {
-          console.error('[ProfileCards] Firebase error:', firebaseError);
-          setError('Erreur de chargement des prestataires');
-          setProviders([]);
-          setIsLoading(false);
+      snapshot.docs.forEach((doc) => {
+        const provider = transformFirestoreDoc(doc);
+        if (provider) {
+          validProviders.push(provider);
         }
-      );
+      });
 
-      return unsubscribe;
-    } catch (error) {
-      console.error('[ProfileCards] Query construction error:', error);
-      setError('Erreur de configuration');
+      // Performance optimization: freeze array
+      setProviders(Object.freeze(validProviders));
       setIsLoading(false);
-      return () => {};
-    }
-  }, [maxItems, filter, transformFirestoreDoc, error]);
 
-  // Effect with cleanup for memory optimization
-  useEffect(() => {
-    const unsubscribe = loadProviders();
-    return () => {
-      if (typeof unsubscribe === 'function') {
-        unsubscribe();
+      if (validProviders.length === 0) {
+        setError('Aucun prestataire trouvé');
       }
+    } catch (firebaseError) {
+      console.error('[ProfileCards] Firebase error:', firebaseError);
+      setError('Erreur de chargement des prestataires');
+      setProviders([]);
+      setIsLoading(false);
+    }
+  }, [maxItems, filter, transformFirestoreDoc]);
+
+  // Effect with polling for cost optimization (60s instead of real-time)
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchData = async () => {
+      if (isMounted) {
+        await loadProviders();
+      }
+    };
+
+    fetchData();
+    const intervalId = setInterval(fetchData, 60000); // Poll every 60 seconds
+
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
     };
   }, [loadProviders]);
 

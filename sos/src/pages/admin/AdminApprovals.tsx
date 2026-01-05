@@ -5,7 +5,6 @@ import {
   query,
   where,
   orderBy,
-  onSnapshot,
   updateDoc,
   doc,
   serverTimestamp,
@@ -87,56 +86,67 @@ type StatusTab = 'pending' | 'approved' | 'rejected';
   const [isFixingData, setIsFixingData] = useState(false);
   const [fixedCount, setFixedCount] = useState<number | null>(null);
 
-  // ✅ CORRECTION 1: Charger les profils depuis sos_profiles
+  // ✅ OPTIMISATION COÛTS GCP: Polling 60s au lieu de onSnapshot pour les approbations
   useEffect(() => {
-    let q;
+    let isMounted = true;
 
-    // ✅ OPTIMISATION: Limite réduite à 30 pour économiser le cache IndexedDB
-    // P2 FIX: Réduction de 100 à 30 docs = 70% moins de cache utilisé
-    if (statusTab === 'pending') {
-      q = query(
-        collection(db, 'sos_profiles'),
-        where('type', 'in', ['lawyer', 'expat']),
-        where('approvalStatus', '==', 'pending'),
-        orderBy('createdAt', 'desc'),
-        limit(30) // P2 FIX: Réduit de 100 à 30
-      );
-    } else if (statusTab === 'approved') {
-      q = query(
-        collection(db, 'sos_profiles'),
-        where('type', 'in', ['lawyer', 'expat']),
-        where('approvalStatus', '==', 'approved'),
-        orderBy('createdAt', 'desc'),
-        limit(30) // P2 FIX: Réduit de 100 à 30
-      );
-    } else {
-      q = query(
-        collection(db, 'sos_profiles'),
-        where('type', 'in', ['lawyer', 'expat']),
-        where('approvalStatus', '==', 'rejected'),
-        orderBy('createdAt', 'desc'),
-        limit(30) // P2 FIX: Réduit de 100 à 30
-      );
-    }
+    const loadProfiles = async () => {
+      try {
+        let q;
 
-    const unsubscribe = onSnapshot(q, 
-      (snapshot) => {
+        // ✅ OPTIMISATION: Limite réduite à 30 pour économiser le cache IndexedDB
+        if (statusTab === 'pending') {
+          q = query(
+            collection(db, 'sos_profiles'),
+            where('type', 'in', ['lawyer', 'expat']),
+            where('approvalStatus', '==', 'pending'),
+            orderBy('createdAt', 'desc'),
+            limit(30)
+          );
+        } else if (statusTab === 'approved') {
+          q = query(
+            collection(db, 'sos_profiles'),
+            where('type', 'in', ['lawyer', 'expat']),
+            where('approvalStatus', '==', 'approved'),
+            orderBy('createdAt', 'desc'),
+            limit(30)
+          );
+        } else {
+          q = query(
+            collection(db, 'sos_profiles'),
+            where('type', 'in', ['lawyer', 'expat']),
+            where('approvalStatus', '==', 'rejected'),
+            orderBy('createdAt', 'desc'),
+            limit(30)
+          );
+        }
+
+        const snapshot = await getDocs(q);
+        if (!isMounted) return;
+
         const profilesData = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         })) as PendingProfile[];
-        
+
         setProfiles(profilesData);
         setLoading(false);
-      },
-      (error) => {
+      } catch (error) {
         console.error('Error loading profiles:', error);
-        setErrorMessage(t('admin.approvals.error.loading'));
-        setLoading(false);
+        if (isMounted) {
+          setErrorMessage(t('admin.approvals.error.loading'));
+          setLoading(false);
+        }
       }
-    );
+    };
 
-    return () => unsubscribe();
+    loadProfiles();
+    const intervalId = setInterval(loadProfiles, 60000); // Poll every 60s
+
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
   }, [statusTab]);
 
   // Auto-clear messages

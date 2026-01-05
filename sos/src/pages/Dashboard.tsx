@@ -54,7 +54,6 @@ import {
   limit,
   getDocs,
   getDoc,
-  onSnapshot,
   doc,
   updateDoc,
   serverTimestamp,
@@ -438,49 +437,56 @@ const Dashboard: React.FC = () => {
     }));
   };
 
+  // ✅ OPTIMISATION COÛTS GCP: Polling 60s au lieu de onSnapshot pour les reviews
   useEffect(() => {
-  if (!user?.id) return;
+    if (!user?.id) return;
+    let isMounted = true;
 
-  const qRef = query(
-    collection(db, "reviews"),
-    where("providerId", "==", user.id),
-  
-  );
+    const loadReviews = async () => {
+      try {
+        const qRef = query(
+          collection(db, "reviews"),
+          where("providerId", "==", user.id),
+        );
+        const snap = await getDocs(qRef);
+        if (!isMounted) return;
 
-  const unsub = onSnapshot(
-    qRef,
-    (snap) => {
-      const items: ProviderReview[] = snap.docs.map((d) => {
-        const data = d.data() as any;
-        return {
-          id: d.id,
-          clientName: data.clientName || "",
-          comment: data.comment || "",
-          rating: data.rating || 0,
-          status: (data.status || "pending") as ReviewStatus,
-          createdAt: data.createdAt?.toDate?.(),
-          moderatedAt: data.moderatedAt?.toDate?.(),
-          isPublic: data.isPublic || false,
-          clientId: data.clientId || "",
-          providerId: data.providerId || "",
-          providerUid: data.providerUid || "",
-          providerName: data.providerName || "",
-          providerEmail: data.providerEmail || "",
-          providerPhone: data.providerPhone || "",
-          providerCountry: data.providerCountry || "",
-          providerCity: data.providerCity || "",
-        };
-      });
-      setReviews(items);
-    },
-    (err) => {
-      console.error("Error listening to reviews:", err);
-      setReviews([]);
-    }
-  );
+        const items: ProviderReview[] = snap.docs.map((d) => {
+          const data = d.data() as any;
+          return {
+            id: d.id,
+            clientName: data.clientName || "",
+            comment: data.comment || "",
+            rating: data.rating || 0,
+            status: (data.status || "pending") as ReviewStatus,
+            createdAt: data.createdAt?.toDate?.(),
+            moderatedAt: data.moderatedAt?.toDate?.(),
+            isPublic: data.isPublic || false,
+            clientId: data.clientId || "",
+            providerId: data.providerId || "",
+            providerUid: data.providerUid || "",
+            providerName: data.providerName || "",
+            providerEmail: data.providerEmail || "",
+            providerPhone: data.providerPhone || "",
+            providerCountry: data.providerCountry || "",
+            providerCity: data.providerCity || "",
+          };
+        });
+        setReviews(items);
+      } catch (err) {
+        console.error("Error loading reviews:", err);
+        if (isMounted) setReviews([]);
+      }
+    };
 
-  return () => unsub();
-}, [user?.id]);
+    loadReviews();
+    const intervalId = setInterval(loadReviews, 60000); // Poll every 60s
+
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
+  }, [user?.id]);
 
   // Helper to get user's full name safely
   const getUserFullName = useCallback(() => {
@@ -714,51 +720,43 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
 // // }, [user?.uid, user?.role, kycRefreshAttempted]); // ← Added kycRefreshAttempted to deps
 // }, [user?.id]); // ← Added kycRefreshAttempted to deps
 
-  // Status en temps réel (priorité = sos_profiles, fallback = users)
-
+  // ✅ OPTIMISATION COÛTS GCP: Polling 60s au lieu de onSnapshot pour le status
   useEffect(() => {
     if (!user?.id) return;
+    let isMounted = true;
 
-    const sosRef = doc(db, "sos_profiles", user.id);
-    const userRef = doc(db, "users", user.id);
+    const loadStatus = async () => {
+      try {
+        const sosRef = doc(db, "sos_profiles", user.id);
+        const sosSnap = await getDoc(sosRef);
 
-    let unsubUsers: null | (() => void) = null;
+        if (!isMounted) return;
 
-    const unsubSos = onSnapshot(
-      sosRef,
-      (snap) => {
-        if (snap.exists()) {
-          if (unsubUsers) {
-            unsubUsers();
-            unsubUsers = null;
-          }
-          const data = snap.data() as { isOnline?: boolean };
+        if (sosSnap.exists()) {
+          const data = sosSnap.data() as { isOnline?: boolean };
           setCurrentStatus(data?.isOnline === true);
         } else {
-          if (!unsubUsers) {
-            unsubUsers = onSnapshot(
-              userRef,
-              (s) => {
-                if (s.exists()) {
-                  const udata = s.data() as { isOnline?: boolean };
-                  setCurrentStatus(udata?.isOnline === true);
-                }
-              },
-              () => {
-                /* silent */
-              }
-            );
+          // Fallback to users collection
+          const userRef = doc(db, "users", user.id);
+          const userSnap = await getDoc(userRef);
+          if (!isMounted) return;
+
+          if (userSnap.exists()) {
+            const udata = userSnap.data() as { isOnline?: boolean };
+            setCurrentStatus(udata?.isOnline === true);
           }
         }
-      },
-      () => {
+      } catch {
         /* silent */
       }
-    );
+    };
+
+    loadStatus();
+    const intervalId = setInterval(loadStatus, 60000); // Poll every 60s
 
     return () => {
-      unsubSos();
-      if (unsubUsers) unsubUsers();
+      isMounted = false;
+      clearInterval(intervalId);
     };
   }, [user?.id]);
 

@@ -11,7 +11,6 @@ import {
   where,
   orderBy,
   limit,
-  onSnapshot,
   doc,
   updateDoc,
   Timestamp,
@@ -441,45 +440,55 @@ const AdminSecurityAlerts: React.FC = () => {
     }
   }, [stats]);
 
-  // Real-time listener for alerts
+  // ✅ OPTIMISATION COÛTS GCP: Polling 30s au lieu de onSnapshot pour les alertes sécurité
   const { isRealtimeActive } = useAutoSuspendRealtime();
 
   useEffect(() => {
-    setLoading(true);
+    let isMounted = true;
 
-    const alertsRef = collection(db, 'security_alerts');
-    let alertsQuery = query(
-      alertsRef,
-      orderBy('createdAt', 'desc'),
-      limit(100)
-    );
+    const loadAlerts = async () => {
+      if (!isMounted) return;
+      setLoading(true);
 
-    if (filters.status && filters.status.length > 0) {
-      alertsQuery = query(
-        alertsRef,
-        where('status', 'in', filters.status),
-        orderBy('createdAt', 'desc'),
-        limit(100)
-      );
-    }
+      try {
+        const alertsRef = collection(db, 'security_alerts');
+        let alertsQuery = query(
+          alertsRef,
+          orderBy('createdAt', 'desc'),
+          limit(100)
+        );
 
-    const unsubscribe = onSnapshot(
-      alertsQuery,
-      (snapshot) => {
+        if (filters.status && filters.status.length > 0) {
+          alertsQuery = query(
+            alertsRef,
+            where('status', 'in', filters.status),
+            orderBy('createdAt', 'desc'),
+            limit(100)
+          );
+        }
+
+        const snapshot = await getDocs(alertsQuery);
+        if (!isMounted) return;
+
         const alertsData: SecurityAlert[] = [];
         snapshot.forEach((doc) => {
           alertsData.push({ id: doc.id, ...doc.data() } as SecurityAlert);
         });
         setAlerts(alertsData);
-        setLoading(false);
-      },
-      (error) => {
+      } catch (error) {
         console.error('[AdminSecurityAlerts] Error:', error);
-        setLoading(false);
+      } finally {
+        if (isMounted) setLoading(false);
       }
-    );
+    };
 
-    return () => unsubscribe();
+    loadAlerts();
+    const intervalId = setInterval(loadAlerts, 30000); // Poll every 30s
+
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
   }, [filters.status]);
 
   // Load blocked entities
