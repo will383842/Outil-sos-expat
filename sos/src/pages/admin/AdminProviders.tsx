@@ -42,6 +42,7 @@ import {
   Briefcase,
   Check,
   X,
+  Trash2,
 } from 'lucide-react';
 import {
   collection,
@@ -55,6 +56,7 @@ import {
   doc,
   updateDoc,
   runTransaction,
+  Unsubscribe,
 } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import AdminLayout from '../../components/admin/AdminLayout';
@@ -231,6 +233,8 @@ const AdminProviders: React.FC = () => {
 
   // States UI
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showStatsModal, setShowStatsModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -344,114 +348,6 @@ const AdminProviders: React.FC = () => {
     }
   }, []);
 
-  // Chargement des prestataires en temps réel
-  useEffect(() => {
-    if (!currentUser || !isRealTimeActive) return;
-
-    mountedRef.current = true;
-    console.log('🟢 Démarrage du monitoring des prestataires');
-
-    // Écoute de tous les prestataires (lawyers + expats)
-    const providersQuery = query(
-      collection(db, 'sos_profiles'),
-      where('type', 'in', ['lawyer', 'expat']),
-      orderBy('lastActivity', 'desc'),
-      limit(500)
-    );
-
-    const unsubscribe = onSnapshot(
-      providersQuery,
-      async (snapshot) => {
-        if (!mountedRef.current) return;
-
-        const providersList = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        } as Provider));
-
-        console.log(`👥 ${providersList.length} prestataires chargés`);
-        setProviders(providersList);
-        setIsLoading(false);
-
-        // Calculer les stats
-        const onlineCount = providersList.filter(p => p.isOnline && p.availability === 'available').length;
-        const busyCount = providersList.filter(p => p.isOnline && p.availability === 'busy').length;
-        const offlineCount = providersList.filter(p => !p.isOnline || p.availability === 'offline').length;
-        const approvedCount = providersList.filter(p => p.isApproved).length;
-        const pendingCount = providersList.filter(p => !p.isApproved && p.approvalStatus === 'pending').length;
-        const lawyersCount = providersList.filter(p => p.type === 'lawyer').length;
-        const expatsCount = providersList.filter(p => p.type === 'expat').length;
-
-        const ratingsSum = providersList
-          .filter(p => p.rating !== undefined)
-          .reduce((sum, p) => sum + (p.rating || 0), 0);
-        const ratingsCount = providersList.filter(p => p.rating !== undefined).length;
-        const averageRating = ratingsCount > 0 ? ratingsSum / ratingsCount : 0;
-
-        // ✅ OPTIMISATION: Ne plus charger les stats à chaque snapshot
-        // Les stats d'appels sont maintenant chargées indépendamment (voir useEffect séparé)
-        setStats({
-          totalProviders: providersList.length,
-          onlineNow: onlineCount,
-          busyNow: busyCount,
-          offlineNow: offlineCount,
-          approvedProviders: approvedCount,
-          pendingApproval: pendingCount,
-          lawyersCount,
-          expatsCount,
-          averageRating,
-          totalCallsToday: todayCallsStats.totalCallsToday,
-          totalRevenueToday: todayCallsStats.totalRevenueToday,
-        });
-
-        // Générer des alertes
-        generateAlerts(providersList);
-      },
-      (error) => {
-        if (!mountedRef.current) return;
-        console.error('Erreur lors du chargement des prestataires:', error);
-        logError({
-          origin: 'frontend',
-          error: `Erreur monitoring prestataires: ${error.message}`,
-          context: { component: 'AdminProviders' },
-        });
-        setIsLoading(false);
-      }
-    );
-
-    return () => {
-      console.log('🔴 Arrêt du monitoring des prestataires');
-      mountedRef.current = false;
-      unsubscribe();
-    };
-  }, [currentUser, isRealTimeActive, todayCallsStats]);
-
-  // ✅ OPTIMISATION: Charger les stats d'appels indépendamment (toutes les 60 secondes)
-  // Économie estimée: ~15-20€/mois en lectures Firestore
-  useEffect(() => {
-    if (!currentUser) return;
-
-    // Charger immédiatement au montage
-    loadTodayCallsStats().then(stats => {
-      if (mountedRef.current) {
-        setTodayCallsStats(stats);
-      }
-    });
-
-    // Puis rafraîchir toutes les 60 secondes
-    const intervalId = setInterval(() => {
-      loadTodayCallsStats().then(stats => {
-        if (mountedRef.current) {
-          setTodayCallsStats(stats);
-        }
-      });
-    }, 60000); // 60 secondes
-
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [currentUser, loadTodayCallsStats]);
-
   // Générer des alertes basées sur les données
   const generateAlerts = useCallback((providersList: Provider[]) => {
     const newAlerts: ProviderAlert[] = [];
@@ -506,6 +402,136 @@ const AdminProviders: React.FC = () => {
 
     setAlerts(newAlerts.slice(0, 20)); // Garder les 20 premières
   }, []);
+
+  // ✅ OPTIMISATION COÛTS GCP: Fonction de chargement ponctuel (getDocs au lieu de onSnapshot)
+  // Économie estimée: ~20€/mois en lectures Firestore
+  const loadProviders = useCallback(async (showRefreshIndicator = false) => {
+    if (!currentUser) return;
+
+    if (showRefreshIndicator) {
+      setIsRefreshing(true);
+    }
+
+    try {
+      const providersQuery = query(
+        collection(db, 'sos_profiles'),
+        where('type', 'in', ['lawyer', 'expat']),
+        orderBy('lastActivity', 'desc'),
+        limit(200) // ✅ Réduit de 500 à 200 pour économiser les lectures
+      );
+
+      const snapshot = await getDocs(providersQuery);
+
+      if (!mountedRef.current) return;
+
+      const providersList = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      } as Provider));
+
+      console.log(`👥 ${providersList.length} prestataires chargés (mode économique)`);
+      setProviders(providersList);
+      setLastRefreshTime(new Date());
+      setIsLoading(false);
+
+      // Calculer les stats
+      const onlineCount = providersList.filter(p => p.isOnline && p.availability === 'available').length;
+      const busyCount = providersList.filter(p => p.isOnline && p.availability === 'busy').length;
+      const offlineCount = providersList.filter(p => !p.isOnline || p.availability === 'offline').length;
+      const approvedCount = providersList.filter(p => p.isApproved).length;
+      const pendingCount = providersList.filter(p => !p.isApproved && p.approvalStatus === 'pending').length;
+      const lawyersCount = providersList.filter(p => p.type === 'lawyer').length;
+      const expatsCount = providersList.filter(p => p.type === 'expat').length;
+
+      const ratingsSum = providersList
+        .filter(p => p.rating !== undefined)
+        .reduce((sum, p) => sum + (p.rating || 0), 0);
+      const ratingsCount = providersList.filter(p => p.rating !== undefined).length;
+      const averageRating = ratingsCount > 0 ? ratingsSum / ratingsCount : 0;
+
+      setStats({
+        totalProviders: providersList.length,
+        onlineNow: onlineCount,
+        busyNow: busyCount,
+        offlineNow: offlineCount,
+        approvedProviders: approvedCount,
+        pendingApproval: pendingCount,
+        lawyersCount,
+        expatsCount,
+        averageRating,
+        totalCallsToday: todayCallsStats.totalCallsToday,
+        totalRevenueToday: todayCallsStats.totalRevenueToday,
+      });
+
+      // Générer des alertes
+      generateAlerts(providersList);
+    } catch (error) {
+      if (!mountedRef.current) return;
+      console.error('Erreur lors du chargement des prestataires:', error);
+      logError({
+        origin: 'frontend',
+        error: `Erreur chargement prestataires: ${(error as Error).message}`,
+        context: { component: 'AdminProviders' },
+      });
+      setIsLoading(false);
+    } finally {
+      if (showRefreshIndicator) {
+        setIsRefreshing(false);
+      }
+    }
+  }, [currentUser, todayCallsStats, generateAlerts]);
+
+  // Chargement initial + rafraîchissement automatique toutes les 30 secondes
+  // ✅ OPTIMISATION: Remplace onSnapshot (coûteux) par polling (économique)
+  useEffect(() => {
+    if (!currentUser) return;
+
+    mountedRef.current = true;
+    console.log('🟢 Démarrage du chargement des prestataires (mode économique)');
+
+    // Chargement initial
+    loadProviders();
+
+    // Rafraîchissement automatique toutes les 30 secondes (au lieu de temps réel)
+    // Économie: ~95% de lectures en moins vs onSnapshot
+    const intervalId = setInterval(() => {
+      if (mountedRef.current && isRealTimeActive) {
+        loadProviders();
+      }
+    }, 30000); // 30 secondes
+
+    return () => {
+      console.log('🔴 Arrêt du chargement des prestataires');
+      mountedRef.current = false;
+      clearInterval(intervalId);
+    };
+  }, [currentUser, isRealTimeActive, loadProviders]);
+
+  // ✅ OPTIMISATION: Charger les stats d'appels indépendamment (toutes les 60 secondes)
+  // Économie estimée: ~15-20€/mois en lectures Firestore
+  useEffect(() => {
+    if (!currentUser) return;
+
+    // Charger immédiatement au montage
+    loadTodayCallsStats().then(stats => {
+      if (mountedRef.current) {
+        setTodayCallsStats(stats);
+      }
+    });
+
+    // Puis rafraîchir toutes les 60 secondes
+    const intervalId = setInterval(() => {
+      loadTodayCallsStats().then(stats => {
+        if (mountedRef.current) {
+          setTodayCallsStats(stats);
+        }
+      });
+    }, 60000); // 60 secondes
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [currentUser, loadTodayCallsStats]);
 
   // Filtrage et tri des prestataires
   const filteredProviders = useMemo(() => {
@@ -709,6 +735,64 @@ const AdminProviders: React.FC = () => {
     }
   }, []);
 
+  // Supprimer un prestataire (soft delete for GDPR compliance)
+  const handleDeleteProvider = useCallback(async (providerId: string, providerName: string) => {
+    const confirmMessage = `ATTENTION: Vous allez supprimer le prestataire "${providerName}".\n\nCette action va:\n- Désactiver le compte\n- Retirer de la liste des prestataires actifs\n- Conserver les données pour audit\n\nContinuer ?`;
+
+    if (!confirm(confirmMessage)) return;
+
+    // Double confirmation pour éviter les erreurs
+    const doubleConfirm = prompt('Tapez "SUPPRIMER" pour confirmer la suppression:');
+    if (doubleConfirm !== 'SUPPRIMER') {
+      alert('Suppression annulée');
+      return;
+    }
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        const providerRef = doc(db, 'sos_profiles', providerId);
+        const userRef = doc(db, 'users', providerId);
+
+        const deleteData = {
+          isDeleted: true,
+          deletedAt: Timestamp.now(),
+          deletedBy: currentUser?.id || 'admin',
+          isApproved: false,
+          isOnline: false,
+          availability: 'offline',
+          isVisible: false,
+          isActive: false,
+          validationStatus: 'deleted',
+          approvalStatus: 'deleted',
+          updatedAt: Timestamp.now(),
+        };
+
+        transaction.update(providerRef, deleteData);
+        transaction.update(userRef, {
+          isDeleted: true,
+          deletedAt: Timestamp.now(),
+          deletedBy: currentUser?.id || 'admin',
+          isActive: false,
+          updatedAt: Timestamp.now(),
+        });
+      });
+
+      // Retirer de la liste locale
+      setProviders((prev) => prev.filter((p) => p.id !== providerId));
+
+      console.log(`Prestataire ${providerId} supprime (soft delete) par l'admin`);
+      alert('Prestataire supprime avec succes');
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      logError({
+        origin: 'frontend',
+        error: `Erreur suppression prestataire: ${(error as Error).message}`,
+        context: { component: 'AdminProviders', providerId },
+      });
+      alert('Erreur lors de la suppression du prestataire');
+    }
+  }, [currentUser]);
+
   // Voir les détails d'un prestataire
   const handleViewDetails = useCallback((provider: Provider) => {
     setSelectedProvider(provider);
@@ -808,13 +892,23 @@ const AdminProviders: React.FC = () => {
                 <Download size={20} />
               </button>
 
-              {/* Refresh */}
+              {/* Refresh - ✅ OPTIMISÉ: Utilise loadProviders au lieu de reload complet */}
               <button
-                onClick={() => window.location.reload()}
-                className="p-2 border border-gray-300 rounded-lg bg-white text-gray-700 hover:bg-gray-50 transition-colors"
-                title="Actualiser"
+                onClick={() => loadProviders(true)}
+                disabled={isRefreshing}
+                className={`p-2 border rounded-lg transition-colors flex items-center space-x-1 ${
+                  isRefreshing
+                    ? 'border-blue-300 bg-blue-50 text-blue-600'
+                    : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                }`}
+                title={lastRefreshTime ? `Dernière MAJ: ${lastRefreshTime.toLocaleTimeString('fr-FR')}` : 'Actualiser'}
               >
-                <RefreshCw size={20} />
+                <RefreshCw size={20} className={isRefreshing ? 'animate-spin' : ''} />
+                {lastRefreshTime && (
+                  <span className="text-xs hidden sm:inline">
+                    {lastRefreshTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                )}
               </button>
             </div>
           </div>
@@ -1173,6 +1267,16 @@ const AdminProviders: React.FC = () => {
                           >
                             <Settings size={16} />
                           </button>
+                          <button
+                            onClick={() => handleDeleteProvider(
+                              provider.id,
+                              provider.displayName || `${provider.firstName || ''} ${provider.lastName || ''}`.trim() || provider.email
+                            )}
+                            className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+                            title="Supprimer le prestataire"
+                          >
+                            <Trash2 size={16} />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -1470,6 +1574,19 @@ const AdminProviders: React.FC = () => {
                   >
                     <Settings size={16} className="mr-2" />
                     Voir profil complet
+                  </button>
+                  <button
+                    onClick={() => {
+                      const name = selectedProvider.displayName ||
+                        `${selectedProvider.firstName || ''} ${selectedProvider.lastName || ''}`.trim() ||
+                        selectedProvider.email;
+                      handleDeleteProvider(selectedProvider.id, name);
+                      setShowDetailModal(false);
+                    }}
+                    className="px-4 py-2 bg-red-700 text-white rounded-md hover:bg-red-800 flex items-center"
+                  >
+                    <Trash2 size={16} className="mr-2" />
+                    Supprimer
                   </button>
                 </div>
               </div>

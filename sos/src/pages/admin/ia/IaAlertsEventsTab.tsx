@@ -41,7 +41,6 @@ import {
   query,
   orderBy,
   limit,
-  onSnapshot,
   doc,
   updateDoc,
   where,
@@ -349,72 +348,89 @@ export const IaAlertsEventsTab: React.FC = () => {
     };
   }, [events]);
 
-  // Load events from Firestore
+  // Load events from Firestore with polling (30s) instead of real-time for cost savings
   useEffect(() => {
-    setLoading(true);
+    let isMounted = true;
 
-    // Calculate date filter
-    let dateFilter: Date | null = null;
-    const now = new Date();
-    switch (dateRange) {
-      case '24h':
-        dateFilter = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        break;
-      case '7d':
-        dateFilter = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case '30d':
-        dateFilter = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        break;
-      default:
-        dateFilter = null;
-    }
+    const loadEvents = async () => {
+      if (!isMounted) return;
+      setLoading(true);
 
-    let q = query(
-      collection(db, 'subscription_events'),
-      orderBy('createdAt', 'desc'),
-      limit(500)
-    );
+      try {
+        // Calculate date filter
+        let dateFilter: Date | null = null;
+        const now = new Date();
+        switch (dateRange) {
+          case '24h':
+            dateFilter = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            break;
+          case '7d':
+            dateFilter = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            break;
+          case '30d':
+            dateFilter = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            break;
+          default:
+            dateFilter = null;
+        }
 
-    if (dateFilter) {
-      q = query(
-        collection(db, 'subscription_events'),
-        where('createdAt', '>=', Timestamp.fromDate(dateFilter)),
-        orderBy('createdAt', 'desc'),
-        limit(500)
-      );
-    }
+        let q = query(
+          collection(db, 'subscription_events'),
+          orderBy('createdAt', 'desc'),
+          limit(500)
+        );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const loadedEvents: SubscriptionEvent[] = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          eventType: data.eventType,
-          severity: data.severity || EVENT_TYPE_CONFIG[data.eventType as SubscriptionEventType]?.defaultSeverity || 'info',
-          providerId: data.providerId,
-          providerName: data.providerName || 'N/A',
-          providerEmail: data.providerEmail || 'N/A',
-          providerType: data.providerType || 'expat_aidant',
-          title: data.title || getEventTitle(data.eventType),
-          description: data.description || '',
-          metadata: data.metadata,
-          isRead: data.isRead || false,
-          isAcknowledged: data.isAcknowledged || false,
-          acknowledgedBy: data.acknowledgedBy,
-          acknowledgedAt: data.acknowledgedAt?.toDate(),
-          createdAt: data.createdAt?.toDate() || new Date(),
-        };
-      });
+        if (dateFilter) {
+          q = query(
+            collection(db, 'subscription_events'),
+            where('createdAt', '>=', Timestamp.fromDate(dateFilter)),
+            orderBy('createdAt', 'desc'),
+            limit(500)
+          );
+        }
 
-      setEvents(loadedEvents);
-      setLoading(false);
-    }, (error) => {
-      console.error('Error loading events:', error);
-      setLoading(false);
-    });
+        const snapshot = await getDocs(q);
+        if (!isMounted) return;
 
-    return () => unsubscribe();
+        const loadedEvents: SubscriptionEvent[] = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            eventType: data.eventType,
+            severity: data.severity || EVENT_TYPE_CONFIG[data.eventType as SubscriptionEventType]?.defaultSeverity || 'info',
+            providerId: data.providerId,
+            providerName: data.providerName || 'N/A',
+            providerEmail: data.providerEmail || 'N/A',
+            providerType: data.providerType || 'expat_aidant',
+            title: data.title || getEventTitle(data.eventType),
+            description: data.description || '',
+            metadata: data.metadata,
+            isRead: data.isRead || false,
+            isAcknowledged: data.isAcknowledged || false,
+            acknowledgedBy: data.acknowledgedBy,
+            acknowledgedAt: data.acknowledgedAt?.toDate(),
+            createdAt: data.createdAt?.toDate() || new Date(),
+          };
+        });
+
+        setEvents(loadedEvents);
+      } catch (error) {
+        console.error('Error loading events:', error);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadEvents();
+    // Poll every 30 seconds instead of real-time onSnapshot
+    const intervalId = setInterval(loadEvents, 30000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
   }, [dateRange]);
 
   // Filter events

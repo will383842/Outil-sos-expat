@@ -2,6 +2,8 @@ import React, { useCallback, useMemo } from "react";
 import PhoneInput, { CountryData } from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
+import { phoneCodesData } from "@/data/phone-codes";
+import { Locale, getDetectedBrowserLanguage } from "./shared";
 
 interface IntlPhoneInputProps {
   value?: string;
@@ -17,7 +19,40 @@ interface IntlPhoneInputProps {
   "aria-required"?: boolean;
   "aria-invalid"?: boolean;
   "aria-describedby"?: string;
+  /** Locale for country names (fr, en, es, de, pt, ru, ch, hi, ar) */
+  locale?: Locale;
 }
+
+// Map locale to phoneCodesData field
+const localeToField: Record<Locale, keyof typeof phoneCodesData[0]> = {
+  fr: 'fr',
+  en: 'en',
+  es: 'es',
+  de: 'de',
+  pt: 'pt',
+  ru: 'ru',
+  ch: 'zh',
+  hi: 'hi',
+  ar: 'ar',
+};
+
+// Build localization object from phoneCodesData
+const buildLocalization = (locale: Locale): Record<string, string> => {
+  const field = localeToField[locale] || 'en';
+  const localization: Record<string, string> = {};
+
+  phoneCodesData.forEach((country) => {
+    if (!country.disabled) {
+      // react-phone-input-2 uses lowercase country codes
+      localization[country.code.toLowerCase()] = country[field] as string;
+    }
+  });
+
+  return localization;
+};
+
+// Preferred countries (most common)
+const PREFERRED_COUNTRIES = ['fr', 'us', 'gb', 'de', 'es', 'it', 'be', 'ch', 'ca', 'au'];
 
 const normalizeCountry = (country?: string): string => {
   if (!country) return "fr";
@@ -26,6 +61,7 @@ const normalizeCountry = (country?: string): string => {
 
 /**
  * Composant de saisie téléphonique international
+ * Utilise les données de phone-codes.ts pour la localisation des noms de pays
  * Utilise UNIQUEMENT le CSS externe pour le styling (pas de styles inline)
  */
 const IntlPhoneInput: React.FC<IntlPhoneInputProps> = ({
@@ -42,7 +78,14 @@ const IntlPhoneInput: React.FC<IntlPhoneInputProps> = ({
   "aria-required": ariaRequired,
   "aria-invalid": ariaInvalid,
   "aria-describedby": ariaDescribedBy,
+  locale,
 }) => {
+  // Detect current locale
+  const currentLocale: Locale = useMemo(() => locale || getDetectedBrowserLanguage(), [locale]);
+
+  // Build localization object based on current locale
+  const localization = useMemo(() => buildLocalization(currentLocale), [currentLocale]);
+
   // Formater la valeur (retirer le +)
   const formattedValue = useMemo(
     () => (value ? value.replace(/^\+/, "") : ""),
@@ -101,6 +144,10 @@ const IntlPhoneInput: React.FC<IntlPhoneInputProps> = ({
         specialLabel=""
         placeholder={placeholder}
         disabled={disabled}
+        // ✅ Utilise les données de phone-codes.ts pour les noms de pays localisés
+        localization={localization}
+        // ✅ Pays prioritaires en haut de la liste
+        preferredCountries={PREFERRED_COUNTRIES}
         inputProps={{
           name,
           id,

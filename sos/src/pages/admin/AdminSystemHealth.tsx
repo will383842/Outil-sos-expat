@@ -13,6 +13,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useIntl } from 'react-intl';
+import AdminLayout from '@/components/admin/AdminLayout';
 import {
   Shield,
   AlertTriangle,
@@ -199,14 +200,17 @@ const AdminSystemHealth: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <RefreshCw className="w-8 h-8 animate-spin text-blue-500" />
-      </div>
+      <AdminLayout>
+        <div className="flex items-center justify-center h-64">
+          <RefreshCw className="w-8 h-8 animate-spin text-blue-500" />
+        </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <AdminLayout>
+      <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -418,7 +422,8 @@ const AdminSystemHealth: React.FC = () => {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </AdminLayout>
   );
 };
 

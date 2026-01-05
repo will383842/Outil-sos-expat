@@ -932,7 +932,7 @@ const FinanceDashboard: React.FC = () => {
                       border: '1px solid #E5E7EB',
                       boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                     }}
-                    formatter={(value: number) => [formatCurrency(value), 'Revenus']}
+                    formatter={(value) => [formatCurrency(typeof value === 'number' ? value : 0), 'Revenus']}
                   />
                   <Line
                     type="monotone"
@@ -973,7 +973,7 @@ const FinanceDashboard: React.FC = () => {
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value: number) => [formatCurrency(value), 'Revenus']}
+                    formatter={(value) => [formatCurrency(typeof value === 'number' ? value : 0), 'Revenus']}
                   />
                   <Legend
                     layout="horizontal"

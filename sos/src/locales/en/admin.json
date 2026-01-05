@@ -950,5 +950,44 @@
   "admin.taxFilings.type.OSS": "OSS EU",
   "admin.taxFilings.type.DES": "DES",
   "admin.taxFilings.type.UK_VAT": "UK VAT",
-  "admin.taxFilings.type.CH_VAT": "Swiss VAT"
+  "admin.taxFilings.type.CH_VAT": "Swiss VAT",
+
+  "===== ADMIN SYSTEM HEALTH =====": "",
+  "systemHealth.title": "System Health Dashboard",
+  "systemHealth.lastCheck": "Last checked",
+  "systemHealth.issues": "System Issues",
+  "systemHealth.never": "Never",
+
+  "systemHealth.metrics.activeAlerts": "Active Alerts",
+  "systemHealth.metrics.errorsLastHour": "Errors (Last Hour)",
+  "systemHealth.metrics.openDisputes": "Open Disputes",
+  "systemHealth.metrics.backupAuth": "Auth Backup",
+
+  "systemHealth.alerts.title": "Active Alerts",
+  "systemHealth.alerts.noAlerts": "No active alerts",
+  "systemHealth.alerts.acknowledge": "Acknowledge",
+
+  "systemHealth.dr.title": "Disaster Recovery Tests",
+  "systemHealth.dr.runTest": "Run DR Test",
+  "systemHealth.dr.running": "Running...",
+  "systemHealth.dr.date": "Date",
+  "systemHealth.dr.status": "Status",
+  "systemHealth.dr.results": "Results",
+  "systemHealth.dr.duration": "Duration",
+  "systemHealth.dr.noTests": "No DR tests found",
+
+  "systemHealth.errors.loading": "Error loading system health",
+  "systemHealth.errors.drTest": "Error running DR test",
+
+  "===== ADMIN COSTS MONITORING =====": "",
+  "admin.costs.title": "Cost Monitoring",
+  "admin.costs.period": "Period",
+  "admin.costs.twilio": "Twilio (SMS/Calls)",
+  "admin.costs.firestore": "Firestore",
+  "admin.costs.functions": "Cloud Functions",
+  "admin.costs.storage": "Storage",
+  "admin.costs.total": "Estimated Total",
+  "admin.costs.budget": "Budget",
+  "admin.costs.alerts": "Alerts",
+  "admin.costs.rateLimits": "Rate Limits"
 }

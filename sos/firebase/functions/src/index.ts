@@ -132,6 +132,15 @@ export {
 // - Stripe balance check
 export { escrowMonitoringDaily } from "./scheduled/escrowMonitoring";
 
+// Budget Alert Notifications - Email alerts when costs exceed thresholds
+// - Warning email at 80% of budget
+// - Urgent email at 100% of budget
+export {
+  checkBudgetAlertsScheduled,
+  triggerBudgetAlertCheck,
+  checkSingleServiceBudget,
+} from "./scheduled/budgetAlertNotifications";
+
 // P0-3 FIX: Invoice creation trigger and distributed lock
 export {
   onInvoiceRecordCreated,
@@ -823,6 +832,9 @@ export { enqueueMessageEvent } from "./messaging/enqueueMessageEvent";
 
 // Webhooks
 export { unifiedWebhook } from "./Webhooks/unifiedWebhook";
+
+// P0 SECURITY: Contact form with rate limiting (replaces direct Firestore writes)
+export { createContactMessage } from "./contact/createContactMessage";
 
 // Utilitaires complémentaires
 export { initializeMessageTemplates } from "./initializeMessageTemplates";
@@ -4216,6 +4228,9 @@ export {
   resolvePaymentAlert,
   getPaymentMetrics
 } from './monitoring/paymentMonitoring';
+
+// Cost monitoring
+export { getCostMetrics } from "./monitoring/getCostMetrics";
 
 // ========== TAX THRESHOLD TRACKING SYSTEM ==========
 // Surveillance des seuils fiscaux internationaux (OSS EU, UK VAT, CH TVA, etc.)

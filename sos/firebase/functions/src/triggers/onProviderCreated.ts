@@ -31,6 +31,7 @@ import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import * as admin from "firebase-admin";
 import Stripe from "stripe";
 import { defineSecret, defineString } from "firebase-functions/params";
+import { getStorage } from "firebase-admin/storage";
 
 // Secrets Stripe
 const STRIPE_SECRET_KEY_TEST = defineSecret("STRIPE_SECRET_KEY_TEST");
@@ -48,6 +49,10 @@ interface ProviderProfileData {
   role?: string;
   country?: string;
   currentCountry?: string;
+  // Photo fields
+  profilePhoto?: string;
+  photoURL?: string;
+  avatar?: string;
   // Stripe fields (peuvent déjà exister si créé manuellement)
   stripeAccountId?: string;
   stripeAccountStatus?: string;
@@ -134,6 +139,123 @@ const PAYPAL_ONLY_COUNTRIES = new Set([
   // ===== MOYEN-ORIENT (7 pays restants) =====
   "IQ", "IR", "SY", "SA", "LY", "TM", "AF",
 ]);
+
+/**
+ * Migre l'image de profil de registration_temp vers profilePhotos/{userId}
+ * - Copie le fichier vers le nouvel emplacement
+ * - Met à jour les URLs dans Firestore
+ * - Supprime l'ancien fichier
+ *
+ * @returns La nouvelle URL ou null si pas de migration nécessaire
+ */
+async function migrateProfileImage(
+  uid: string,
+  photoUrl: string | undefined,
+  providerType: string
+): Promise<string | null> {
+  // Vérifier si migration nécessaire
+  if (!photoUrl || !photoUrl.includes("registration_temp")) {
+    console.log(`[migrateProfileImage] Pas de migration nécessaire pour ${uid}`);
+    return null;
+  }
+
+  console.log(`[migrateProfileImage] Migration de l'image pour ${uid}...`);
+
+  try {
+    const bucket = getStorage().bucket();
+
+    // Extraire le chemin du fichier depuis l'URL Firebase Storage
+    // URL format: https://firebasestorage.googleapis.com/v0/b/BUCKET/o/PATH?...
+    const urlObj = new URL(photoUrl);
+    const encodedPath = urlObj.pathname.split("/o/")[1]?.split("?")[0];
+
+    if (!encodedPath) {
+      console.error(`[migrateProfileImage] Impossible d'extraire le chemin depuis: ${photoUrl}`);
+      return null;
+    }
+
+    const oldPath = decodeURIComponent(encodedPath);
+    const fileName = oldPath.split("/").pop();
+
+    if (!fileName) {
+      console.error(`[migrateProfileImage] Impossible d'extraire le nom de fichier depuis: ${oldPath}`);
+      return null;
+    }
+
+    const newPath = `profilePhotos/${uid}/${fileName}`;
+
+    console.log(`[migrateProfileImage] Copie: ${oldPath} -> ${newPath}`);
+
+    // Vérifier que le fichier source existe
+    const [sourceExists] = await bucket.file(oldPath).exists();
+    if (!sourceExists) {
+      console.warn(`[migrateProfileImage] Fichier source introuvable: ${oldPath}`);
+      return null;
+    }
+
+    // Copier le fichier vers le nouvel emplacement
+    await bucket.file(oldPath).copy(bucket.file(newPath));
+
+    // Rendre le nouveau fichier public (comme l'ancien)
+    await bucket.file(newPath).makePublic();
+
+    // Construire la nouvelle URL
+    const bucketName = bucket.name;
+    const newUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(newPath)}?alt=media`;
+
+    console.log(`[migrateProfileImage] Nouvelle URL: ${newUrl}`);
+
+    // Mettre à jour Firestore avec la nouvelle URL
+    const updateData = {
+      profilePhoto: newUrl,
+      photoURL: newUrl,
+      avatar: newUrl,
+      profilePhotoMigratedAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+
+    const batch = admin.firestore().batch();
+
+    // Mettre à jour sos_profiles
+    batch.update(admin.firestore().collection("sos_profiles").doc(uid), updateData);
+
+    // Mettre à jour la collection spécifique (lawyers ou expats)
+    const collectionName = providerType === "lawyer" ? "lawyers" : "expats";
+    batch.set(
+      admin.firestore().collection(collectionName).doc(uid),
+      updateData,
+      { merge: true }
+    );
+
+    // Mettre à jour users
+    batch.set(
+      admin.firestore().collection("users").doc(uid),
+      updateData,
+      { merge: true }
+    );
+
+    await batch.commit();
+
+    console.log(`[migrateProfileImage] Firestore mis à jour pour ${uid}`);
+
+    // Supprimer l'ancien fichier (en arrière-plan, sans bloquer)
+    bucket.file(oldPath).delete().then(() => {
+      console.log(`[migrateProfileImage] Ancien fichier supprimé: ${oldPath}`);
+    }).catch((err) => {
+      // Log mais ne pas échouer si la suppression échoue
+      console.warn(`[migrateProfileImage] Échec suppression ancien fichier: ${oldPath}`, err);
+    });
+
+    console.log(`[migrateProfileImage] ✅ Migration réussie pour ${uid}`);
+    return newUrl;
+
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error(`[migrateProfileImage] ❌ Erreur migration pour ${uid}: ${errorMessage}`, error);
+    // Ne pas échouer le trigger entier si la migration échoue
+    // L'ancienne URL fonctionne toujours
+    return null;
+  }
+}
 
 /**
  * Type de gateway de paiement recommandé
@@ -250,6 +372,11 @@ export const onProviderCreated = onDocumentCreated(
       console.error(`[onProviderCreated] ❌ Erreur définition Custom Claims pour ${uid}:`, claimsError);
       // Continuer même si les claims échouent - on peut les définir manuellement plus tard
     }
+
+    // 📸 Migrer l'image de profil de registration_temp vers profilePhotos/{userId}
+    // Cette opération est non-bloquante : si elle échoue, l'ancienne URL fonctionne toujours
+    const photoUrl = data.profilePhoto || data.photoURL || data.avatar;
+    await migrateProfileImage(uid, photoUrl, providerType);
 
     // Vérifier si un compte Stripe existe déjà
     if (data.stripeAccountId) {

@@ -81,10 +81,12 @@ service cloud.firestore {
     // P0 SECURITY: Les IDs Stripe/PayPal ne doivent JAMAIS être exposés côté client
     // Ces champs sont gérés uniquement par Cloud Functions via Admin SDK
     match /sos_profiles/{profileId} {
-      // Lecture publique pour afficher les profils des prestataires
-      // NOTE: stripeAccountId, paypalMerchantId sont stockés mais non exposés via getDoc()
-      // car ils ne sont pas inclus dans les projections frontend
-      allow read: if true;
+      // P0 SECURITY: Lecture limitée pour éviter les scans massifs (denial of wallet)
+      // - get() (lecture individuelle): public pour afficher un profil spécifique
+      // - list() (requête collection): requiert authentification pour éviter les abus
+      // NOTE: stripeAccountId, paypalMerchantId ne sont pas inclus dans les projections frontend
+      allow get: if true;
+      allow list: if isAuthenticated();
 
       // Écriture : propriétaire ou admin
       // NOTE: On ne peut pas utiliser isProvider() ici car les custom claims
@@ -685,6 +687,18 @@ service cloud.firestore {
       allow create, delete: if false; // Only Cloud Functions
     }
 
+    // ================= COST MONITORING =================
+    match /cost_metrics/{docId} {
+      allow read: if isAdmin();
+      allow write: if false; // Cloud Functions only
+    }
+
+    match /cost_alerts/{alertId} {
+      allow read: if isAdmin();
+      allow update: if isAdmin(); // Pour marquer comme lu
+      allow create, delete: if false; // Cloud Functions only
+    }
+
     // ================= SUBSCRIPTIONS COLLECTION =================
     match /subscriptions/{providerId} {
       // Le provider peut lire son propre abonnement
@@ -1017,16 +1031,14 @@ service cloud.firestore {
 
     // ================= CONTACT MESSAGES COLLECTION =================
     // Messages de contact depuis le formulaire footer et page contact
+    // P0 SECURITY: Création via Cloud Function avec reCAPTCHA pour éviter le spam
     match /contact_messages/{messageId} {
       // Seuls les admins peuvent lire les messages de contact
       allow read: if isAdmin() || isDev();
-      // Tout le monde peut créer un message de contact (formulaire public)
-      // Validation des champs requis pour éviter le spam
-      allow create: if request.resource.data.email is string &&
-                    request.resource.data.email.size() > 5 &&
-                    request.resource.data.message is string &&
-                    request.resource.data.message.size() >= 10 &&
-                    request.resource.data.message.size() <= 5000;
+      // P0 SECURITY: Création désactivée directement depuis le client
+      // Utiliser la Cloud Function createContactMessage avec reCAPTCHA
+      // Cette protection évite le spam et les attaques "denial of wallet"
+      allow create: if false;
       // Seuls les admins peuvent mettre à jour (marquer comme lu, répondre)
       allow update: if isAdmin() || isDev();
       // Seuls les admins peuvent supprimer

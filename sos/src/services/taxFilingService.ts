@@ -14,7 +14,6 @@ import {
   getDocs,
   doc,
   getDoc,
-  onSnapshot,
   Timestamp,
   QueryConstraint,
   Unsubscribe,
@@ -237,39 +236,44 @@ export async function fetchTaxFilingById(filingId: string): Promise<(TaxFiling &
 }
 
 /**
- * Subscribe to tax filings updates (real-time)
+ * Subscribe to tax filings updates with polling (cost-optimized)
+ * @deprecated Use fetchTaxFilings() with manual refresh or polling instead
+ * This function now uses polling (90s) instead of real-time onSnapshot for cost savings
  */
 export function subscribeTaxFilings(
   filters: TaxFilingFilters,
   callback: (filings: (TaxFiling & { id: string })[]) => void
 ): Unsubscribe {
-  const constraints: QueryConstraint[] = [
-    orderBy('dueDate', 'desc'),
-  ];
+  console.warn('[TaxFilingService] subscribeTaxFilings is deprecated. Use fetchTaxFilings() with polling instead.');
 
-  if (filters.type && filters.type !== 'all') {
-    constraints.push(where('type', '==', filters.type));
-  }
+  let isCancelled = false;
 
-  if (filters.status && filters.status !== 'all') {
-    constraints.push(where('status', '==', filters.status));
-  }
+  const fetchAndCallback = async () => {
+    if (isCancelled) return;
+    try {
+      const filings = await fetchTaxFilings(filters);
+      if (!isCancelled) {
+        callback(filings);
+      }
+    } catch (error) {
+      console.error('[TaxFilingService] Error fetching filings:', error);
+      if (!isCancelled) {
+        callback([]);
+      }
+    }
+  };
 
-  const q = query(collection(db, COLLECTION), ...constraints);
+  // Initial fetch
+  fetchAndCallback();
 
-  return onSnapshot(q, (snapshot) => {
-    const filings: (TaxFiling & { id: string })[] = [];
+  // Poll every 90 seconds instead of real-time
+  const intervalId = setInterval(fetchAndCallback, 90000);
 
-    snapshot.forEach((docSnap) => {
-      const data = docSnap.data();
-      filings.push(convertFirestoreFiling(docSnap.id, data));
-    });
-
-    callback(filings);
-  }, (error) => {
-    console.error('[TaxFilingService] Error in subscription:', error);
-    callback([]);
-  });
+  // Return cleanup function
+  return () => {
+    isCancelled = true;
+    clearInterval(intervalId);
+  };
 }
 
 // ============================================================================

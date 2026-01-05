@@ -730,11 +730,49 @@ const Contact: React.FC = () => {
         },
       };
 
-      // Sauvegarder dans Firebase
-      const docRef = await addDoc(
-        collection(db, "contact_messages"),
-        contactData
+      // Sauvegarder via Cloud Function
+      const response = await fetch(
+        "https://europe-west1-sos-urgently-ac307.cloudfunctions.net/createContactMessage",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(contactData),
+        }
       );
+
+      // Gestion des erreurs HTTP
+      if (!response.ok) {
+        if (response.status === 429) {
+          // Rate limit dépassé
+          const errorMsg =
+            lang === "fr"
+              ? "Trop de messages envoyés. Veuillez réessayer dans quelques minutes."
+              : "Too many messages sent. Please try again in a few minutes.";
+          alert(errorMsg);
+          return;
+        } else if (response.status === 400) {
+          // Erreur de validation
+          const errorData = await response.json().catch(() => ({}));
+          const errorMsg =
+            errorData.error ||
+            (lang === "fr"
+              ? "Données invalides. Veuillez vérifier le formulaire."
+              : "Invalid data. Please check the form.");
+          alert(errorMsg);
+          return;
+        } else {
+          // Erreur serveur (500 ou autre)
+          const errorMsg =
+            lang === "fr"
+              ? "Une erreur serveur est survenue. Veuillez réessayer plus tard."
+              : "A server error occurred. Please try again later.";
+          alert(errorMsg);
+          return;
+        }
+      }
+
+      const responseData = await response.json();
+      const docId = responseData.id;
 
       // Notification admin
       await addDoc(collection(db, "admin_notifications"), {
@@ -744,7 +782,7 @@ const Contact: React.FC = () => {
         category: formData.category,
         priority: formData.category === "urgent" ? "high" : "normal",
         isExistingUser: userInfo.isExistingUser,
-        contactMessageId: docRef.id,
+        contactMessageId: docId,
         userEmail: formData.email,
         userPhone: `${finalPhoneCode}${formData.phoneNumber}`,
         createdAt: serverTimestamp(),

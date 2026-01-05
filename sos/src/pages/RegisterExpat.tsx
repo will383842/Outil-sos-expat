@@ -45,6 +45,7 @@ import { browserLocalPersistence, setPersistence } from "firebase/auth";
 import { auth } from "@/config/firebase";
 import IntlPhoneInput from "@/components/forms-data/IntlPhoneInput";
 import { countriesData } from "@/data/countries";
+import { expatHelpTypesData, getExpatHelpTypeLabel } from "@/data/expat-help-types";
 import '../styles/multi-language-select.css';
 
 // Lazy imports pour optimisation du bundle
@@ -652,13 +653,22 @@ const RegisterExpat: React.FC = () => {
       }));
   }, [lang]);
 
-  // Options d'aide
+  // Options d'aide - Utilise expatHelpTypesData depuis @/data/expat-help-types
   const helpTypeOptions = useMemo(() => {
-    return Array.from({ length: 13 }, (_, i) => ({
-      value: intl.formatMessage({ id: `registerExpat.helpTypes.type${i + 1}` }),
-      label: intl.formatMessage({ id: `registerExpat.helpTypes.type${i + 1}` }),
-    }));
-  }, [intl]);
+    // Map 'ch' -> 'zh' pour correspondre aux clés de expatHelpTypesData
+    const localeMap: Record<string, 'fr' | 'en' | 'es' | 'de' | 'pt' | 'ru' | 'zh' | 'ar' | 'hi'> = {
+      fr: 'fr', en: 'en', es: 'es', de: 'de', pt: 'pt', ru: 'ru', ch: 'zh', hi: 'hi', ar: 'ar'
+    };
+    const mappedLocale = localeMap[lang] || 'fr';
+
+    return expatHelpTypesData
+      .filter(item => !item.disabled)
+      .map(item => ({
+        value: item.code,
+        label: getExpatHelpTypeLabel(item.code, mappedLocale),
+        requiresDetails: item.requiresDetails
+      }));
+  }, [lang]);
 
   const pwdStrength = useMemo(() => computePasswordStrength(form.password), [form.password]);
 
@@ -699,19 +709,19 @@ const RegisterExpat: React.FC = () => {
   const onHelpSelect = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     const v = e.target.value;
     if (!v) return;
-    
-    const otherLabel = intl.formatMessage({ id: "registerExpat.helpTypes.type13" });
-    if (v === otherLabel) {
+
+    // Vérifie si c'est le code "AUTRE_PRECISER" qui nécessite des détails
+    if (v === "AUTRE_PRECISER") {
       setShowCustomHelp(true);
       e.target.value = "";
       return;
     }
-    
+
     if (!form.helpTypes.includes(v)) {
       setForm((prev) => ({ ...prev, helpTypes: [...prev.helpTypes, v] }));
     }
     e.target.value = "";
-    
+
     if (fieldErrors.helpTypes) {
       setFieldErrors((prev) => {
         const rest = { ...prev };
@@ -719,7 +729,7 @@ const RegisterExpat: React.FC = () => {
         return rest;
       });
     }
-  }, [form.helpTypes, fieldErrors, intl]);
+  }, [form.helpTypes, fieldErrors]);
 
   const removeHelp = useCallback((v: string) => {
     setForm((prev) => ({
@@ -1476,9 +1486,9 @@ const RegisterExpat: React.FC = () => {
                           return rest;
                         });
                       } else if (!parsed || !parsed.isValid()) {
-                        setFieldErrors((prev) => ({ 
-                          ...prev, 
-                          phone: intl.formatMessage({ id: "registerExpat.errors.phoneInvalid" }) 
+                        setFieldErrors((prev) => ({
+                          ...prev,
+                          phone: intl.formatMessage({ id: "registerExpat.errors.phoneInvalid" })
                         }));
                       } else {
                         setFieldErrors((prev) => {
@@ -1488,8 +1498,9 @@ const RegisterExpat: React.FC = () => {
                       }
                     }}
                     onBlur={() => markTouched("phone")}
-                    defaultCountry="us"
-                    placeholder="+1 234 567 8900"
+                    defaultCountry="fr"
+                    placeholder="+33 6 12 34 56 78"
+                    locale={lang}
                     name="phone"
                     inputProps={{
                       id: "phone",
@@ -1763,14 +1774,21 @@ const RegisterExpat: React.FC = () => {
                   
                   {form.helpTypes.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-3" role="list" aria-label={intl.formatMessage({ id: "registerExpat.ui.selectedHelp" })}>
-                      {form.helpTypes.map((h, idx) => (
-                        <TagChip 
-                          key={`${h}-${idx}`} 
-                          value={h} 
-                          onRemove={() => removeHelp(h)}
-                          ariaLabel={intl.formatMessage({ id: "registerExpat.ui.removeHelp" }, { help: h })}
-                        />
-                      ))}
+                      {form.helpTypes.map((h, idx) => {
+                        // Affiche le label traduit depuis expatHelpTypesData
+                        const localeMap: Record<string, 'fr' | 'en' | 'es' | 'de' | 'pt' | 'ru' | 'zh' | 'ar' | 'hi'> = {
+                          fr: 'fr', en: 'en', es: 'es', de: 'de', pt: 'pt', ru: 'ru', ch: 'zh', hi: 'hi', ar: 'ar'
+                        };
+                        const displayLabel = getExpatHelpTypeLabel(h, localeMap[lang] || 'fr');
+                        return (
+                          <TagChip
+                            key={`${h}-${idx}`}
+                            value={displayLabel}
+                            onRemove={() => removeHelp(h)}
+                            ariaLabel={intl.formatMessage({ id: "registerExpat.ui.removeHelp" }, { help: displayLabel })}
+                          />
+                        );
+                      })}
                     </div>
                   )}
                   

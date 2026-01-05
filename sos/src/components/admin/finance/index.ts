@@ -4,6 +4,17 @@
 // KPI Card
 export { KPICard, type KPICardProps } from './KPICard';
 
+// Cost KPI Card
+export {
+  CostKPICard,
+  CostKPICardGrid,
+  type CostKPICardProps,
+  type CostKPICardGridProps,
+  type CostServiceType,
+  type TrendDirection,
+  type BudgetLevel,
+} from './CostKPICard';
+
 // Status Badge
 export {
   StatusBadge,
@@ -54,3 +65,20 @@ export {
   type QuickSelectPreset,
   type DateRange,
 } from './DateRangeQuickSelect';
+
+// Usage Chart
+export {
+  UsageChart,
+  type UsageChartProps,
+  type UsageDataPoint,
+  type PeriodType,
+  type SeriesConfig,
+} from './UsageChart';
+
+// Rate Limit Stats
+export {
+  RateLimitStats,
+  type RateLimitStatsProps,
+  type RateLimitData,
+  type RateLimitType,
+} from './RateLimitStats';

@@ -111,6 +111,7 @@ const AdminBalanceSheet = lazy(() => import("../../pages/admin/Finance/BalanceSh
 const AdminProfitLoss = lazy(() => import("../../pages/admin/Finance/ProfitLoss"));
 const AdminCashFlow = lazy(() => import("../../pages/admin/Finance/CashFlow"));
 const AdminEscrow = lazy(() => import("../../pages/admin/Finance/Escrow"));
+const CostMonitoring = lazy(() => import("../../pages/admin/Finance/CostMonitoring"));
 
 // ===== LAZY IMPORTS - USERS & PROVIDERS =====
 const AdminUsers = lazy(() => import("../../pages/admin/AdminUsers"));
@@ -598,6 +599,14 @@ const AdminRoutesV2: React.FC = () => {
           </Suspense>
         }
       />
+      <Route
+        path="finance/costs"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <CostMonitoring />
+          </Suspense>
+        }
+      />
 
       {/* 📞 APPELS */}
       <Route
@@ -1065,6 +1074,7 @@ export const useAdminRouteValidation = () => {
       "/admin/finance/balance-sheet",
       "/admin/finance/profit-loss",
       "/admin/finance/cash-flow",
+      "/admin/finance/costs",
       "/admin/calls",
       "/admin/calls/sessions",
       "/admin/comms/campaigns",

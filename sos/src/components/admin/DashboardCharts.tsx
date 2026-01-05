@@ -638,7 +638,7 @@ const DashboardCharts: React.FC = () => {
                   <YAxis tick={{ fontSize: 12 }} stroke="#9CA3AF" />
                   <Tooltip
                     contentStyle={{ borderRadius: 8, border: "1px solid #E5E7EB" }}
-                    formatter={(value: number) => [value, "Utilisateurs"]}
+                    formatter={(value) => [value ?? 0, "Utilisateurs"]}
                   />
                   <Area
                     type="monotone"
@@ -670,7 +670,7 @@ const DashboardCharts: React.FC = () => {
                   <YAxis tick={{ fontSize: 12 }} stroke="#9CA3AF" />
                   <Tooltip
                     contentStyle={{ borderRadius: 8, border: "1px solid #E5E7EB" }}
-                    formatter={(value: number) => [value, "Appels"]}
+                    formatter={(value) => [value ?? 0, "Appels"]}
                   />
                   <Area
                     type="monotone"
@@ -699,7 +699,7 @@ const DashboardCharts: React.FC = () => {
                   <YAxis tick={{ fontSize: 12 }} stroke="#9CA3AF" />
                   <Tooltip
                     contentStyle={{ borderRadius: 8, border: "1px solid #E5E7EB" }}
-                    formatter={(value: number) => [`${value.toLocaleString("fr-FR")} €`, "CA"]}
+                    formatter={(value) => [`${(value ?? 0).toLocaleString("fr-FR")} €`, "CA"]}
                   />
                   <Bar dataKey="value" fill={COLORS.primary} radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -719,7 +719,7 @@ const DashboardCharts: React.FC = () => {
                   <YAxis tick={{ fontSize: 12 }} stroke="#9CA3AF" />
                   <Tooltip
                     contentStyle={{ borderRadius: 8, border: "1px solid #E5E7EB" }}
-                    formatter={(value: number) => [value, "Prestataires"]}
+                    formatter={(value) => [value ?? 0, "Prestataires"]}
                   />
                   <Line
                     type="monotone"
@@ -757,7 +757,7 @@ const DashboardCharts: React.FC = () => {
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value: number, name: string) => [value, name]}
+                    formatter={(value, name) => [value ?? 0, name]}
                   />
                   <Legend
                     layout="vertical"
@@ -791,7 +791,7 @@ const DashboardCharts: React.FC = () => {
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value: number, name: string) => [value, name]}
+                    formatter={(value, name) => [value ?? 0, name]}
                   />
                   <Legend
                     layout="vertical"
@@ -825,7 +825,7 @@ const DashboardCharts: React.FC = () => {
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value: number, name: string) => [`${value.toLocaleString("fr-FR")} €`, name]}
+                    formatter={(value, name) => [`${(value ?? 0).toLocaleString("fr-FR")} €`, name]}
                   />
                   <Legend
                     layout="vertical"

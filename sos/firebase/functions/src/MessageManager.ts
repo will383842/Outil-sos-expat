@@ -2,6 +2,74 @@ import * as admin from 'firebase-admin';
 import { getTwilioClient, getTwilioPhoneNumber } from './lib/twilio';
 import { logError } from './utils/logs/logError';
 
+// ============================================================================
+// P0 SECURITY: Rate limiting pour éviter les abus de coûts Twilio (appels vocaux)
+// ============================================================================
+
+interface VoiceRateLimitEntry {
+  count: number;
+  windowStart: number;
+}
+
+// Rate limit: 5 appels par numéro par heure, 50 appels globaux par heure
+const VOICE_RATE_LIMIT = {
+  PER_NUMBER_MAX: 5,
+  GLOBAL_MAX: 50,
+  WINDOW_MS: 60 * 60 * 1000, // 1 heure
+};
+
+// Cache en mémoire pour rate limiting
+const voiceRateLimitCache: Map<string, VoiceRateLimitEntry> = new Map();
+
+async function checkVoiceRateLimit(to: string): Promise<{ allowed: boolean; reason?: string }> {
+  const now = Date.now();
+  const db = admin.firestore();
+
+  // 1. Check rate limit par numéro de destination
+  const perNumberKey = `voice:${to}`;
+  const perNumberEntry = voiceRateLimitCache.get(perNumberKey);
+
+  if (perNumberEntry) {
+    if (now - perNumberEntry.windowStart > VOICE_RATE_LIMIT.WINDOW_MS) {
+      voiceRateLimitCache.set(perNumberKey, { count: 1, windowStart: now });
+    } else if (perNumberEntry.count >= VOICE_RATE_LIMIT.PER_NUMBER_MAX) {
+      console.warn(`🚫 [VOICE] Rate limit exceeded for number ${to.slice(0, 5)}***: ${perNumberEntry.count}/${VOICE_RATE_LIMIT.PER_NUMBER_MAX}`);
+      return { allowed: false, reason: `Rate limit exceeded: max ${VOICE_RATE_LIMIT.PER_NUMBER_MAX} calls per hour per number` };
+    } else {
+      perNumberEntry.count++;
+    }
+  } else {
+    voiceRateLimitCache.set(perNumberKey, { count: 1, windowStart: now });
+  }
+
+  // 2. Check rate limit global via Firestore
+  const globalRef = db.collection("rate_limits").doc("voice_global");
+
+  try {
+    const result = await db.runTransaction(async (transaction) => {
+      const doc = await transaction.get(globalRef);
+      const data = doc.data();
+
+      if (!data || now - data.windowStart > VOICE_RATE_LIMIT.WINDOW_MS) {
+        transaction.set(globalRef, { count: 1, windowStart: now });
+        return { allowed: true };
+      }
+
+      if (data.count >= VOICE_RATE_LIMIT.GLOBAL_MAX) {
+        return { allowed: false, reason: `Global rate limit exceeded: max ${VOICE_RATE_LIMIT.GLOBAL_MAX} calls per hour` };
+      }
+
+      transaction.update(globalRef, { count: admin.firestore.FieldValue.increment(1) });
+      return { allowed: true };
+    });
+
+    return result;
+  } catch (error) {
+    console.error("🚫 [VOICE] Rate limit check failed:", error);
+    return { allowed: true };
+  }
+}
+
 export interface MessageTemplate {
   id: string;
   name: string;
@@ -63,6 +131,7 @@ export class MessageManager {
 
   /**
    * Envoie un appel vocal avec template
+   * P0 SECURITY: Rate limiting pour éviter les abus de coûts
    */
   async sendVoiceCall(params: {
     to: string;
@@ -71,6 +140,14 @@ export class MessageManager {
     language?: string;
   }): Promise<boolean> {
     try {
+      // P0 SECURITY: Check rate limit avant envoi
+      const rateLimitCheck = await checkVoiceRateLimit(params.to);
+      if (!rateLimitCheck.allowed) {
+        console.error(`🚫 [VOICE] BLOCKED by rate limit: ${rateLimitCheck.reason}`);
+        await logError('MessageManager:sendVoiceCall:RateLimited', new Error(rateLimitCheck.reason));
+        return false;
+      }
+
       const template = await this.getTemplate(params.templateId);
 
       if (!template || !template.isActive) {

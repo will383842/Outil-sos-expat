@@ -21,7 +21,7 @@ import {
 import { useIntl } from "react-intl";
 import { useApp } from "../../contexts/AppContext";
 import { Link } from "react-router-dom";
-import { collection, query, where, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { getLocaleString } from "../../multilingual-system";
 
@@ -482,38 +482,26 @@ const FooterContactForm = memo<FooterContactFormProps>(function FooterContactFor
     setIsSubmitting(true);
 
     try {
-      // Save to Firestore
-      await addDoc(collection(db, "contact_messages"), {
-        // User data
-        email: email.trim(),
-        message: message.trim(),
-        name: email.split("@")[0], // Use email prefix as name for quick messages
+      // Call Cloud Function to create contact message
+      const response = await fetch(
+        "https://europe-west1-sos-urgently-ac307.cloudfunctions.net/createContactMessage",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: email.trim(),
+            message: message.trim(),
+            name: email.split("@")[0],
+            source: "footer_contact_form",
+            language,
+          }),
+        }
+      );
 
-        // Status
-        status: "new",
-        isRead: false,
-        responded: false,
-        priority: "normal",
-
-        // Source info
-        source: "footer_contact_form",
-        formVersion: "1.0",
-        language,
-
-        // Timestamps
-        createdAt: serverTimestamp(),
-        submittedAt: new Date().toISOString(),
-
-        // Metadata
-        userAgent: navigator.userAgent,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        screenResolution: `${window.screen.width}x${window.screen.height}`,
-        deviceType: window.innerWidth < 768 ? "mobile" : "desktop",
-
-        // For admin console compatibility
-        type: "contact_message",
-        adminNotified: false,
-      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      }
 
       // Note: Admin notifications are managed via contact_messages collection
       // Admins see new messages in AdminContactMessages page

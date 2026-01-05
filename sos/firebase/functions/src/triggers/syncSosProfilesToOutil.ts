@@ -169,6 +169,8 @@ export const onSosProfileCreated = onDocumentCreated(
 /**
  * Trigger: sos_profiles/{uid} - onUpdate
  * Synchronise les mises à jour vers Outil-sos-expat
+ *
+ * P0 SECURITY: Protection contre boucle infinie SOS <-> Outil
  */
 export const onSosProfileUpdated = onDocumentUpdated(
   {
@@ -178,12 +180,42 @@ export const onSosProfileUpdated = onDocumentUpdated(
   },
   async (event) => {
     const uid = event.params.uid;
-    const beforeData = event.data?.before?.data() as SosProfileData | undefined;
-    const afterData = event.data?.after?.data() as SosProfileData | undefined;
+    const beforeData = event.data?.before?.data() as (SosProfileData & { lastSyncFromOutil?: unknown; updatedAt?: unknown }) | undefined;
+    const afterData = event.data?.after?.data() as (SosProfileData & { lastSyncFromOutil?: unknown; updatedAt?: unknown }) | undefined;
 
     if (!afterData) {
       console.warn("[onSosProfileUpdated] Pas de données after pour:", uid);
       return;
+    }
+
+    // ============================================================================
+    // P0 SECURITY: PROTECTION BOUCLE INFINIE
+    // Si la mise à jour provient de syncFromOutil, NE PAS re-synchroniser vers Outil
+    // Cela évite: SOS -> Outil -> SOS -> Outil -> ... (boucle infinie)
+    // ============================================================================
+    const beforeLastSync = beforeData?.lastSyncFromOutil;
+    const afterLastSync = afterData.lastSyncFromOutil;
+
+    // Si lastSyncFromOutil a été mis à jour, c'est une sync provenant de Outil -> ignorer
+    if (afterLastSync && beforeLastSync !== afterLastSync) {
+      console.log("[onSosProfileUpdated] P0 SECURITY: Ignoring update from Outil sync to prevent infinite loop:", uid);
+      return;
+    }
+
+    // Protection supplémentaire: si seul updatedAt a changé, ignorer
+    const beforeUpdatedAt = JSON.stringify(beforeData?.updatedAt);
+    const afterUpdatedAt = JSON.stringify(afterData.updatedAt);
+    if (beforeUpdatedAt !== afterUpdatedAt) {
+      // Vérifier s'il y a d'autres changements que updatedAt et lastSyncFromOutil
+      const otherChanges = Object.keys(afterData).some(key => {
+        if (key === 'updatedAt' || key === 'lastSyncFromOutil') return false;
+        return JSON.stringify(beforeData?.[key as keyof typeof beforeData]) !== JSON.stringify(afterData[key as keyof typeof afterData]);
+      });
+
+      if (!otherChanges) {
+        console.log("[onSosProfileUpdated] P0 SECURITY: Only metadata changed, skipping sync:", uid);
+        return;
+      }
     }
 
     // Ne synchroniser que les lawyer et expat

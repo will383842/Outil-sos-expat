@@ -6,6 +6,7 @@ import {
   Phone,
   Settings,
   TrendingUp,
+  TrendingDown,
   Shield,
   ShieldAlert,
   Globe,
@@ -347,6 +348,14 @@ export const adminMenuTree: AdminMenuItem[] = [
         path: "/admin/finance/exports",
         icon: FileSpreadsheet,
         description: "Rapports financiers et exports CSV/Excel",
+      },
+      // Suivi des Coûts Cloud
+      {
+        id: "cost-monitoring",
+        label: "Suivi des Coûts",
+        path: "/admin/finance/costs",
+        icon: TrendingDown,
+        description: "Monitoring des coûts cloud et alertes",
       },
     ],
   },

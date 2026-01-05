@@ -531,7 +531,7 @@ const MRRMovementsChart: React.FC<MRRMovementsChartProps> = ({ movements, loadin
           <XAxis dataKey="date" tick={{ fontSize: 11 }} />
           <YAxis tick={{ fontSize: 11 }} tickFormatter={(value) => `${value}€`} />
           <Tooltip
-            formatter={(value: number) => [`${value.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€`]}
+            formatter={(value) => [`${(value ?? 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€`]}
             contentStyle={{
               backgroundColor: 'white',
               border: '1px solid #E5E7EB',

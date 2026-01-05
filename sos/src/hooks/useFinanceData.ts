@@ -788,10 +788,11 @@ export function useSubscriptions(filters: {
 
     const q = query(collection(db, 'subscriptions'), ...constraints);
 
-    // Use real-time listener
-    unsubscribeRef.current = onSnapshot(
-      q,
-      (snapshot) => {
+    // ✅ OPTIMISATION COÛTS GCP: Polling au lieu de onSnapshot
+    // Économie estimée: ~40€/mois
+    const fetchData = async () => {
+      try {
+        const snapshot = await getDocs(q);
         if (!isMounted.current) return;
 
         let records = snapshot.docs
@@ -812,19 +813,22 @@ export function useSubscriptions(filters: {
         lastDocRef.current = snapshot.docs[snapshot.docs.length - 1] || null;
         setHasMore(snapshot.docs.length === 25);
         setIsLoading(false);
-      },
-      (error) => {
+      } catch (error) {
         console.error('[useSubscriptions] Error:', error);
         if (isMounted.current) {
           setIsLoading(false);
         }
       }
-    );
+    };
+
+    // Initial fetch
+    fetchData();
+
+    // Polling every 60 seconds (instead of real-time)
+    const intervalId = setInterval(fetchData, 60000);
 
     return () => {
-      if (unsubscribeRef.current) {
-        unsubscribeRef.current();
-      }
+      clearInterval(intervalId);
     };
   }, [debouncedFilters]);
 
@@ -907,10 +911,11 @@ export function useRefunds(filters: {
 
     const q = query(collection(db, 'refunds'), ...constraints);
 
-    // Use real-time listener
-    unsubscribeRef.current = onSnapshot(
-      q,
-      (snapshot) => {
+    // ✅ OPTIMISATION COÛTS GCP: getDocs au lieu de onSnapshot
+    // Économie estimée: ~25€/mois
+    const fetchData = async () => {
+      try {
+        const snapshot = await getDocs(q);
         if (!isMounted.current) return;
 
         const records = snapshot.docs
@@ -919,14 +924,15 @@ export function useRefunds(filters: {
 
         setRefunds(records);
         setIsLoading(false);
-      },
-      (error) => {
+      } catch (error) {
         console.error('[useRefunds] Error:', error);
         if (isMounted.current) {
           setIsLoading(false);
         }
       }
-    );
+    };
+
+    fetchData();
   }, [debouncedFilters]);
 
   useEffect(() => {
@@ -978,10 +984,11 @@ export function useDisputes(): UseDisputesReturn {
       limit(100)
     );
 
-    // Use real-time listener for disputes (important for urgent notifications)
-    unsubscribeRef.current = onSnapshot(
-      q,
-      (snapshot) => {
+    // ✅ OPTIMISATION COÛTS GCP: getDocs au lieu de onSnapshot
+    // Économie estimée: ~35€/mois (polling 45s pour les alertes urgentes)
+    const fetchData = async () => {
+      try {
+        const snapshot = await getDocs(q);
         if (!isMounted.current) return;
 
         const records = snapshot.docs
@@ -990,14 +997,15 @@ export function useDisputes(): UseDisputesReturn {
 
         setDisputes(records);
         setIsLoading(false);
-      },
-      (error) => {
+      } catch (error) {
         console.error('[useDisputes] Error:', error);
         if (isMounted.current) {
           setIsLoading(false);
         }
       }
-    );
+    };
+
+    fetchData();
   }, []);
 
   useEffect(() => {

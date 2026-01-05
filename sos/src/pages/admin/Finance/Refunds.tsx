@@ -1223,7 +1223,7 @@ const Refunds: React.FC = () => {
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value: number) => [value, intl.formatMessage({ id: 'admin.refunds.refunds' })]} />
+                  <Tooltip formatter={(value) => [value ?? 0, intl.formatMessage({ id: 'admin.refunds.refunds' })]} />
                   <Legend layout="vertical" align="right" verticalAlign="middle" iconSize={10} />
                 </PieChart>
               </ResponsiveContainer>

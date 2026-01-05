@@ -1807,9 +1807,9 @@ const RegisterLawyer: React.FC = () => {
                           return rest;
                         });
                       } else if (!parsed || !parsed.isValid()) {
-                        setFieldErrors((prev) => ({ 
-                          ...prev, 
-                          phone: intl.formatMessage({ id: "registerLawyer.errors.phoneInvalid" }) 
+                        setFieldErrors((prev) => ({
+                          ...prev,
+                          phone: intl.formatMessage({ id: "registerLawyer.errors.phoneInvalid" })
                         }));
                       } else {
                         setFieldErrors((prev) => {
@@ -1819,8 +1819,9 @@ const RegisterLawyer: React.FC = () => {
                       }
                     }}
                     onBlur={() => markTouched("phone")}
-                    defaultCountry="us"
-                    placeholder="+1 234 567 8900"
+                    defaultCountry="fr"
+                    placeholder="+33 6 12 34 56 78"
+                    locale={lang}
                     name="phone"
                     inputProps={{
                       id: "phone",

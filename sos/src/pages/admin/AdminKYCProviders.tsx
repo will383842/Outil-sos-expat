@@ -190,19 +190,18 @@ const AdminKYCProviders: React.FC = () => {
       setLoading(true);
 
       // Requête pour récupérer les profils avec état KYC
-      // P2 FIX: Limite réduite à 30 pour économiser le cache
       const constraints: QueryConstraint[] = [
         where('kycStatus', '!=', null),
         orderBy('kycStatus'),
         orderBy('submittedAt', 'desc'),
-        limit(30), // P2 FIX: Réduit de 100 à 30
+        limit(100), // Limite augmentée à 100 pour une meilleure visibilité
       ];
 
       // Si filtre précis sur kycStatus
       if (filters.kycStatus !== 'all') {
         // Quand on filtre par égalité, on ne peut pas garder un orderBy('kycStatus') redondant
         constraints.length = 0;
-        constraints.push(where('kycStatus', '==', filters.kycStatus), orderBy('submittedAt', 'desc'), limit(30)); // P2 FIX
+        constraints.push(where('kycStatus', '==', filters.kycStatus), orderBy('submittedAt', 'desc'), limit(100));
       }
 
       const providersQuery = query(collection(db, 'sos_profiles'), ...constraints);
@@ -1123,10 +1122,11 @@ const AdminKYCProviders: React.FC = () => {
                                   try {
                                     // Mettre à jour le document comme vérifié
                                     const updatedDocs = selectedProvider.documents.map((d) =>
-                                      d.url === doc.url ? { ...d, verified: true } : d
+                                      d.url === doc.url ? { ...d, verified: true, rejectionReason: undefined } : d
                                     );
+                                    // Utiliser le même chemin que le rejet pour cohérence
                                     await updateDoc(fsDoc(db, 'sos_profiles', selectedProvider.id), {
-                                      documents: updatedDocs,
+                                      'kyc.documents': updatedDocs,
                                       updatedAt: new Date(),
                                     });
                                     // Mettre à jour l'état local
@@ -1253,12 +1253,46 @@ const AdminKYCProviders: React.FC = () => {
                       }
                       className="w-full h-24 p-3 border border-gray-300 rounded-md text-sm"
                     />
+                    <div className="mt-2 flex justify-end">
+                      <Button
+                        onClick={async () => {
+                          if (!selectedProvider) return;
+                          try {
+                            await updateDoc(fsDoc(db, 'sos_profiles', selectedProvider.id), {
+                              kycNotes: selectedProvider.notes || '',
+                              updatedAt: new Date(),
+                            });
+                            // Mettre à jour la liste locale
+                            setProviders((prev) =>
+                              prev.map((p) =>
+                                p.id === selectedProvider.id ? { ...p, notes: selectedProvider.notes } : p
+                              )
+                            );
+                            alert(intl.formatMessage({ id: 'admin.kyc.notesSaved' }, { defaultMessage: 'Notes sauvegardées avec succès' }));
+                          } catch (error) {
+                            console.error('Erreur sauvegarde notes:', error);
+                            alert(intl.formatMessage({ id: 'admin.kyc.notesSaveError' }, { defaultMessage: 'Erreur lors de la sauvegarde des notes' }));
+                          }
+                        }}
+                        className="bg-blue-600 hover:bg-blue-700 text-white text-sm"
+                      >
+                        Sauvegarder les notes
+                      </Button>
+                    </div>
                   </div>
 
                   {/* Actions rapides */}
                   <div className="flex space-x-3">
                     <Button
-                      onClick={() => handleKYCStatusChange(selectedProvider.id, 'approved')}
+                      onClick={() => {
+                        const confirmMessage = intl.formatMessage(
+                          { id: 'admin.kyc.confirmApprove' },
+                          { name: `${selectedProvider.firstName} ${selectedProvider.lastName}`, defaultMessage: `Voulez-vous vraiment approuver le KYC de ${selectedProvider.firstName} ${selectedProvider.lastName} ?` }
+                        );
+                        if (confirm(confirmMessage)) {
+                          handleKYCStatusChange(selectedProvider.id, 'approved');
+                        }
+                      }}
                       className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                     >
                       <CheckCircle size={16} className="mr-2" />

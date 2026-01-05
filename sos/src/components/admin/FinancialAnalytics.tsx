@@ -418,8 +418,8 @@ export const FinancialAnalytics: React.FC = () => {
                 <XAxis dataKey="date" />
                 <YAxis />
                 <Tooltip
-                  formatter={(value: number, name: string) => [
-                    `${value.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€`,
+                  formatter={(value, name) => [
+                    `${(value ?? 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€`,
                     name === 'revenue' ? 'Revenus' : 'Frais'
                   ]}
                 />
@@ -462,7 +462,7 @@ export const FinancialAnalytics: React.FC = () => {
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value: number) => [`${value.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€`, 'Revenus']} />
+                <Tooltip formatter={(value) => [`${(value ?? 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€`, 'Revenus']} />
               </PieChart>
             </ResponsiveContainer>
           </div>

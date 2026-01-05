@@ -3,7 +3,6 @@ import { useAdminTranslations } from "../../utils/adminTranslations";
 import { useNavigate } from "react-router-dom";
 import {
   Settings,
-  Globe,
   Database,
   TestTube,
   Download,
@@ -74,7 +73,6 @@ const AdminSettings: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSavingSystem, setIsSavingSystem] = useState(false);
   const [showTestModal, setShowTestModal] = useState(false);
-  const [countries, setCountries] = useState<any[]>([]);
   const [showBackupModal, setShowBackupModal] = useState(false);
   const [showPWAModal, setShowPWAModal] = useState(false);
   const [showRefundModal, setShowRefundModal] = useState(false);
@@ -89,6 +87,92 @@ const AdminSettings: React.FC = () => {
   });
   const [systemSettings, setSystemSettings] = useState<AdminSystemSettings>(defaultSystemSettings);
 
+  // PWA Status - vérifie réellement le statut
+  const [pwaStatus, setPwaStatus] = useState({
+    manifest: { status: 'checking' as 'checking' | 'ok' | 'error', message: '' },
+    serviceWorker: { status: 'checking' as 'checking' | 'ok' | 'error', message: '' },
+    icons: { status: 'checking' as 'checking' | 'ok' | 'error', message: '' },
+    offline: { status: 'checking' as 'checking' | 'ok' | 'error', message: '' },
+  });
+
+  // Vérifie le statut PWA réel
+  const checkPWAStatus = async () => {
+    const newStatus = { ...pwaStatus };
+
+    // Vérifier le manifest
+    try {
+      const manifestLink = document.querySelector('link[rel="manifest"]');
+      if (manifestLink) {
+        const response = await fetch((manifestLink as HTMLLinkElement).href);
+        if (response.ok) {
+          const manifest = await response.json();
+          newStatus.manifest = {
+            status: manifest.name ? 'ok' : 'error',
+            message: manifest.name ? `${manifest.name}` : 'Manifest incomplet'
+          };
+        } else {
+          newStatus.manifest = { status: 'error', message: 'Manifest non accessible' };
+        }
+      } else {
+        newStatus.manifest = { status: 'error', message: 'Manifest non trouvé' };
+      }
+    } catch {
+      newStatus.manifest = { status: 'error', message: 'Erreur de chargement' };
+    }
+
+    // Vérifier le Service Worker
+    if ('serviceWorker' in navigator) {
+      try {
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (registration?.active) {
+          newStatus.serviceWorker = { status: 'ok', message: 'Actif' };
+        } else if (registration?.installing || registration?.waiting) {
+          newStatus.serviceWorker = { status: 'ok', message: 'En cours d\'installation' };
+        } else {
+          newStatus.serviceWorker = { status: 'error', message: 'Non enregistré' };
+        }
+      } catch {
+        newStatus.serviceWorker = { status: 'error', message: 'Erreur de vérification' };
+      }
+    } else {
+      newStatus.serviceWorker = { status: 'error', message: 'Non supporté' };
+    }
+
+    // Vérifier les icônes (via manifest)
+    try {
+      const manifestLink = document.querySelector('link[rel="manifest"]');
+      if (manifestLink) {
+        const response = await fetch((manifestLink as HTMLLinkElement).href);
+        const manifest = await response.json();
+        if (manifest.icons && manifest.icons.length > 0) {
+          newStatus.icons = { status: 'ok', message: `${manifest.icons.length} icônes` };
+        } else {
+          newStatus.icons = { status: 'error', message: 'Aucune icône définie' };
+        }
+      }
+    } catch {
+      newStatus.icons = { status: 'error', message: 'Impossible de vérifier' };
+    }
+
+    // Vérifier le mode hors ligne (via Cache API)
+    if ('caches' in window) {
+      try {
+        const cacheNames = await caches.keys();
+        if (cacheNames.length > 0) {
+          newStatus.offline = { status: 'ok', message: `${cacheNames.length} caches actifs` };
+        } else {
+          newStatus.offline = { status: 'error', message: 'Aucun cache' };
+        }
+      } catch {
+        newStatus.offline = { status: 'error', message: 'Erreur de vérification' };
+      }
+    } else {
+      newStatus.offline = { status: 'error', message: 'Cache API non supportée' };
+    }
+
+    setPwaStatus(newStatus);
+  };
+
   useEffect(() => {
     // Check if user is admin
     if (!currentUser || currentUser.role !== "admin") {
@@ -96,10 +180,10 @@ const AdminSettings: React.FC = () => {
       return;
     }
 
-    loadCountries();
     loadPendingRefunds();
     loadMapSettings();
     loadSystemSettings();
+    checkPWAStatus();
   }, [currentUser, navigate]);
 
   // Load system settings (Twilio + Notifications)
@@ -161,22 +245,6 @@ const AdminSettings: React.FC = () => {
     }
   };
 
-  const loadCountries = async () => {
-    try {
-      const countriesQuery = query(collection(db, "countries"));
-      const countriesSnapshot = await getDocs(countriesQuery);
-
-      const countriesData = countriesSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      setCountries(countriesData);
-    } catch (error) {
-      console.error("Error loading countries:", error);
-    }
-  };
-
   const loadPendingRefunds = async () => {
     try {
       const refundsQuery = query(
@@ -194,33 +262,6 @@ const AdminSettings: React.FC = () => {
       setPendingRefunds(refundsData);
     } catch (error) {
       console.error("Error loading pending refunds:", error);
-    }
-  };
-
-  const handleCountryToggle = async (countryId: string, isActive: boolean) => {
-    try {
-      setIsLoading(true);
-
-      await updateDoc(doc(db, "countries", countryId), {
-        isActive: !isActive,
-        updatedAt: serverTimestamp(),
-      });
-
-      // Update local state
-      setCountries((prev) =>
-        prev.map((country) =>
-          country.id === countryId
-            ? { ...country, isActive: !isActive }
-            : country
-        )
-      );
-
-      alert(`Pays ${!isActive ? "activé" : "désactivé"} avec succès`);
-    } catch (error) {
-      console.error("Error updating country:", error);
-      alert("Erreur lors de la mise à jour du pays");
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -247,17 +288,6 @@ const AdminSettings: React.FC = () => {
     try {
       setIsLoading(true);
       setBackupStatus("Sauvegarde en cours...");
-
-      // Simulate backup process
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-
-      // // Create backup record
-      // await addDoc(collection(db, "backups"), {
-      //   type: "manual",
-      //   status: "completed",
-      //   createdAt: serverTimestamp(),
-      //   createdBy: currentUser?.id,
-      // });
 
       // ✅ Get functions instance with europe-west1 region
       const europeFunctions = getFunctions(undefined, "europe-west1");
@@ -456,46 +486,6 @@ const AdminSettings: React.FC = () => {
 
         {/* Settings Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {/* Countries Management */}
-          <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center">
-                <Globe className="w-6 h-6 text-blue-600 mr-3" />
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Pays disponibles
-                </h3>
-              </div>
-            </div>
-            <p className="text-gray-600 mb-4">
-              Gérer la disponibilité de la plateforme par pays
-            </p>
-            <div className="space-y-2 max-h-40 overflow-y-auto">
-              {countries.map((country) => (
-                <div
-                  key={country.id}
-                  className="flex items-center justify-between"
-                >
-                  <span className="text-sm text-gray-700">{country.name}</span>
-                  <button
-                    onClick={() =>
-                      handleCountryToggle(country.id, country.isActive)
-                    }
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      country.isActive ? "bg-green-600" : "bg-gray-200"
-                    }`}
-                    disabled={isLoading}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        country.isActive ? "translate-x-6" : "translate-x-1"
-                      }`}
-                    />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* Backup Management */}
           <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
             <div className="flex items-center justify-between mb-4">
@@ -861,7 +851,7 @@ const AdminSettings: React.FC = () => {
         </div>
       </Modal>
 
-      {/* PWA Modal */}
+      {/* PWA Modal - Vérifie réellement le statut PWA */}
       <Modal
         isOpen={showPWAModal}
         onClose={() => setShowPWAModal(false)}
@@ -869,40 +859,89 @@ const AdminSettings: React.FC = () => {
         size="medium"
       >
         <div className="space-y-4">
-          <div className="bg-green-50 border border-green-200 rounded-md p-4">
-            <div className="flex">
-              <CheckCircle className="h-5 w-5 text-green-400" />
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-green-800">
-                  PWA configurée
-                </h3>
-                <div className="mt-2 text-sm text-green-700">
-                  <p>
-                    L'application est déjà configurée comme PWA installable. Les
-                    utilisateurs peuvent l'installer depuis leur navigateur.
-                  </p>
+          {/* Status global basé sur les vérifications réelles */}
+          {Object.values(pwaStatus).every(s => s.status === 'ok') ? (
+            <div className="bg-green-50 border border-green-200 rounded-md p-4">
+              <div className="flex">
+                <CheckCircle className="h-5 w-5 text-green-400" />
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-green-800">
+                    PWA entièrement configurée
+                  </h3>
+                  <div className="mt-2 text-sm text-green-700">
+                    <p>
+                      L'application est configurée comme PWA installable. Les
+                      utilisateurs peuvent l'installer depuis leur navigateur.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          ) : Object.values(pwaStatus).some(s => s.status === 'error') ? (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+              <div className="flex">
+                <AlertTriangle className="h-5 w-5 text-yellow-400" />
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-yellow-800">
+                    Configuration PWA partielle
+                  </h3>
+                  <div className="mt-2 text-sm text-yellow-700">
+                    <p>
+                      Certains éléments PWA nécessitent votre attention.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+              <div className="flex">
+                <RefreshCw className="h-5 w-5 text-blue-400 animate-spin" />
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-blue-800">
+                    Vérification en cours...
+                  </h3>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="space-y-3">
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <span className="text-gray-600">Manifest:</span>
-              <span className="font-medium text-green-600">✓ Configuré</span>
+              <span className={`font-medium ${pwaStatus.manifest.status === 'ok' ? 'text-green-600' : pwaStatus.manifest.status === 'error' ? 'text-red-600' : 'text-gray-400'}`}>
+                {pwaStatus.manifest.status === 'ok' ? '✓' : pwaStatus.manifest.status === 'error' ? '✗' : '...'} {pwaStatus.manifest.message || 'Vérification...'}
+              </span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <span className="text-gray-600">Service Worker:</span>
-              <span className="font-medium text-green-600">✓ Actif</span>
+              <span className={`font-medium ${pwaStatus.serviceWorker.status === 'ok' ? 'text-green-600' : pwaStatus.serviceWorker.status === 'error' ? 'text-red-600' : 'text-gray-400'}`}>
+                {pwaStatus.serviceWorker.status === 'ok' ? '✓' : pwaStatus.serviceWorker.status === 'error' ? '✗' : '...'} {pwaStatus.serviceWorker.message || 'Vérification...'}
+              </span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <span className="text-gray-600">Icônes:</span>
-              <span className="font-medium text-green-600">✓ Disponibles</span>
+              <span className={`font-medium ${pwaStatus.icons.status === 'ok' ? 'text-green-600' : pwaStatus.icons.status === 'error' ? 'text-red-600' : 'text-gray-400'}`}>
+                {pwaStatus.icons.status === 'ok' ? '✓' : pwaStatus.icons.status === 'error' ? '✗' : '...'} {pwaStatus.icons.message || 'Vérification...'}
+              </span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <span className="text-gray-600">Mode hors ligne:</span>
-              <span className="font-medium text-green-600">✓ Supporté</span>
+              <span className={`font-medium ${pwaStatus.offline.status === 'ok' ? 'text-green-600' : pwaStatus.offline.status === 'error' ? 'text-red-600' : 'text-gray-400'}`}>
+                {pwaStatus.offline.status === 'ok' ? '✓' : pwaStatus.offline.status === 'error' ? '✗' : '...'} {pwaStatus.offline.message || 'Vérification...'}
+              </span>
             </div>
+          </div>
+
+          <div className="pt-4 border-t">
+            <Button
+              onClick={() => checkPWAStatus()}
+              variant="outline"
+              className="w-full"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Revérifier le statut PWA
+            </Button>
           </div>
         </div>
       </Modal>

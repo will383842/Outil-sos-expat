@@ -950,5 +950,44 @@
   "admin.taxFilings.type.OSS": "OSS UE",
   "admin.taxFilings.type.DES": "DES",
   "admin.taxFilings.type.UK_VAT": "TVA UK",
-  "admin.taxFilings.type.CH_VAT": "TVA Suisse"
+  "admin.taxFilings.type.CH_VAT": "TVA Suisse",
+
+  "===== ADMIN SANTE DU SYSTEME =====": "",
+  "systemHealth.title": "Dashboard Santé Système",
+  "systemHealth.lastCheck": "Dernier contrôle",
+  "systemHealth.issues": "Problèmes système",
+  "systemHealth.never": "Jamais",
+
+  "systemHealth.metrics.activeAlerts": "Alertes Actives",
+  "systemHealth.metrics.errorsLastHour": "Erreurs (dernière heure)",
+  "systemHealth.metrics.openDisputes": "Litiges Ouverts",
+  "systemHealth.metrics.backupAuth": "Sauvegarde Auth",
+
+  "systemHealth.alerts.title": "Alertes Actives",
+  "systemHealth.alerts.noAlerts": "Aucune alerte active",
+  "systemHealth.alerts.acknowledge": "Accuser réception",
+
+  "systemHealth.dr.title": "Tests de Récupération",
+  "systemHealth.dr.runTest": "Exécuter test DR",
+  "systemHealth.dr.running": "Exécution en cours...",
+  "systemHealth.dr.date": "Date",
+  "systemHealth.dr.status": "Statut",
+  "systemHealth.dr.results": "Résultats",
+  "systemHealth.dr.duration": "Durée",
+  "systemHealth.dr.noTests": "Aucun test DR trouvé",
+
+  "systemHealth.errors.loading": "Erreur lors du chargement de la santé du système",
+  "systemHealth.errors.drTest": "Erreur lors de l'exécution du test DR",
+
+  "===== ADMIN COSTS MONITORING =====": "",
+  "admin.costs.title": "Suivi des Coûts",
+  "admin.costs.period": "Période",
+  "admin.costs.twilio": "Twilio (SMS/Appels)",
+  "admin.costs.firestore": "Firestore",
+  "admin.costs.functions": "Cloud Functions",
+  "admin.costs.storage": "Storage",
+  "admin.costs.total": "Total estimé",
+  "admin.costs.budget": "Budget",
+  "admin.costs.alerts": "Alertes",
+  "admin.costs.rateLimits": "Limites de débit"
 }

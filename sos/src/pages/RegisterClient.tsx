@@ -1529,6 +1529,7 @@ const RegisterClient: React.FC = () => {
                           onBlur={() => markTouched("phone")}
                           defaultCountry="fr"
                           placeholder="+33 6 12 34 56 78"
+                          locale={currentLang}
                           name="phone"
                           inputProps={{
                             id: "phone",

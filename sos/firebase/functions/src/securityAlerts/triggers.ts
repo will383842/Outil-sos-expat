@@ -375,6 +375,7 @@ async function unsuspendUser(userId: string, adminId: string): Promise<void> {
 
 /**
  * Endpoint pour récupérer les statistiques de sécurité
+ * P0 SECURITY: Requiert authentification admin
  */
 export const getSecurityStats = onRequest(
   {
@@ -385,6 +386,34 @@ export const getSecurityStats = onRequest(
   async (req, res) => {
     if (req.method !== 'GET') {
       res.status(405).json({ error: 'Method not allowed' });
+      return;
+    }
+
+    // P0 SECURITY: Vérifier l'authentification admin
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith('Bearer ')) {
+      res.status(401).json({ error: 'Unauthorized - Bearer token required' });
+      return;
+    }
+
+    try {
+      // Vérifier le token Firebase
+      const token = authHeader.split('Bearer ')[1];
+      const admin = await import('firebase-admin');
+      const decodedToken = await admin.auth().verifyIdToken(token);
+
+      // Vérifier le rôle admin via custom claims ou Firestore
+      const isAdmin = decodedToken.role === 'admin';
+      if (!isAdmin) {
+        const userDoc = await db.collection('users').doc(decodedToken.uid).get();
+        if (!userDoc.exists || userDoc.data()?.role !== 'admin') {
+          res.status(403).json({ error: 'Forbidden - Admin access required' });
+          return;
+        }
+      }
+    } catch (authError) {
+      console.error('[HTTP] Auth error:', authError);
+      res.status(401).json({ error: 'Invalid token' });
       return;
     }
 
@@ -580,14 +609,31 @@ export const securityDailyReport = onSchedule(
 
 /**
  * Vérifie si une IP ou un utilisateur est bloqué
+ * P0 SECURITY: Requiert authentification pour éviter l'énumération
  */
 export const checkBlockedEntity = onRequest(
   {
     region: REGION,
     cors: true,
-    maxInstances: 100,
+    maxInstances: 50, // Réduit de 100 à 50
   },
   async (req, res) => {
+    // P0 SECURITY: Vérifier l'authentification
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith('Bearer ')) {
+      res.status(401).json({ error: 'Unauthorized - Bearer token required' });
+      return;
+    }
+
+    try {
+      const token = authHeader.split('Bearer ')[1];
+      const admin = await import('firebase-admin');
+      await admin.auth().verifyIdToken(token);
+    } catch (authError) {
+      res.status(401).json({ error: 'Invalid token' });
+      return;
+    }
+
     const { ip, userId } = req.query;
 
     if (!ip && !userId) {
