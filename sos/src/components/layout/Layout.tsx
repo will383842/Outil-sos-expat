@@ -4,6 +4,7 @@ import Header from './Header';
 import Footer from './Footer';
 import { useAuth } from '../../contexts/AuthContext';
 import { useApp } from '../../contexts/AppContext';
+import { useWizard } from '../../contexts/WizardContext';
 import LoadingSpinner from '../common/LoadingSpinner';
 import InstallBanner from '../common/InstallBanner';
 import CookieBanner from '../common/CookieBanner';
@@ -23,6 +24,7 @@ const Layout: React.FC<LayoutProps> = ({
 }) => {
   const { authInitialized, isLoading } = useAuth();
   const { language, isRTL } = useApp();
+  const { isWizardOpen } = useWizard();
   const [_showCookieBannerState, setShowCookieBannerState] = useState(false);
 
   // Update document direction for RTL languages
@@ -188,13 +190,17 @@ const Layout: React.FC<LayoutProps> = ({
       {showFooter && <Footer />}
 
       {/* Cookie Consent Banner - GDPR compliant */}
-      <CookieBanner
-        zIndexClass="z-[100]"
-        onPreferencesSaved={() => setShowCookieBannerState(false)}
-      />
+      {/* Hidden during wizard steps to avoid distracting the user */}
+      {!isWizardOpen && (
+        <CookieBanner
+          zIndexClass="z-[100]"
+          onPreferencesSaved={() => setShowCookieBannerState(false)}
+        />
+      )}
 
       {/* Snackbar PWA discret — bas-droite */}
-      <InstallBanner />
+      {/* Hidden during wizard steps to avoid distracting the user */}
+      {!isWizardOpen && <InstallBanner />}
       </div>
     </>
   );

@@ -39,6 +39,7 @@ import { getCollectionRest } from "../utils/firestoreRestApi";
 import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
 import { useApp } from "../contexts/AppContext";
+import { useWizard } from "../contexts/WizardContext";
 import GuidedFilterWizard from "../components/sos-call/GuidedFilterWizard";
 import DesktopFilterBar from "../components/sos-call/DesktopFilterBar";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -2005,6 +2006,7 @@ const FilterBottomSheet: React.FC<{
 const SOSCall: React.FC = () => {
   const intl = useIntl();
   const { language, enabledCountries } = useApp();
+  const { setWizardOpen } = useWizard();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useLocaleNavigate();
   const location = useLocation();
@@ -2085,6 +2087,15 @@ const SOSCall: React.FC = () => {
       setShowWizard(true);
     }
   }, [wizardCompleted]);
+
+  // Sync wizard state with global context (to hide cookie banner & PWA popup)
+  useEffect(() => {
+    setWizardOpen(showWizard);
+    // Cleanup: reset wizard state when leaving the page
+    return () => {
+      setWizardOpen(false);
+    };
+  }, [showWizard, setWizardOpen]);
 
   // Handle wizard completion (supports multi-language selection)
   const handleWizardComplete = useCallback((filters: {

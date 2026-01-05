@@ -12,6 +12,7 @@ import AdminRoutesV2 from '@/components/admin/AdminRoutesV2';
 import { trackEvent, hasAnalyticsConsent } from './utils/ga4';
 import './App.css';
 import PWAProvider from './components/pwa/PWAProvider';
+import { WizardProvider } from './contexts/WizardContext';
 // Marketing routes moved to AdminRoutesV2 (accessible via /admin/marketing/*)
 import enMessages from "./helper/en.json";
 import esMessages from "./helper/es.json";
@@ -502,6 +503,7 @@ const App: React.FC = () => {
 
   return (
     <IntlProvider locale={locale} messages={messages[locale] as unknown as Record<string, string>} defaultLocale="fr" >
+      <WizardProvider>
       <PWAProvider
         showInstallBanner={!showAdminLayout}
         showIOSInstructions={!showAdminLayout}
@@ -574,6 +576,7 @@ const App: React.FC = () => {
         </LocaleRouter>
       )}
       </PWAProvider>
+      </WizardProvider>
     </IntlProvider>
   );
 };
