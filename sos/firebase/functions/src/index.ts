@@ -8,6 +8,8 @@ import {
 } from "./utils/ultraDebugLogger";
 // P1-13: Sync atomique payments <-> call_sessions
 import { syncPaymentStatus, findCallSessionByPaymentId } from "./utils/paymentSync";
+// 🔒 Phone number decryption for notifications
+import { decryptPhoneNumber } from "./utils/encryption";
 
 // Tracer tous les imports principaux
 traceGlobalImport("firebase-functions/v2", "index.ts");
@@ -1219,20 +1221,26 @@ const sendPaymentNotifications = traceFunction(
       console.log(`📨 [${debugId}] Session status: ${cs?.status}`);
       console.log(`📨 [${debugId}] Session createdAt: ${cs?.createdAt?.toDate?.() || cs?.createdAt}`);
 
-      const providerPhone =
+      // P0 FIX: Decrypt phone numbers before sending to notification pipeline
+      const providerPhoneRaw =
         cs?.participants?.provider?.phone ?? cs?.providerPhone ?? "";
-      const clientPhone =
+      const clientPhoneRaw =
         cs?.participants?.client?.phone ?? cs?.clientPhone ?? "";
+
+      // Decrypt phone numbers (they are stored encrypted for GDPR compliance)
+      const providerPhone = providerPhoneRaw ? decryptPhoneNumber(providerPhoneRaw) : "";
+      const clientPhone = clientPhoneRaw ? decryptPhoneNumber(clientPhoneRaw) : "";
+
       const language = cs?.metadata?.clientLanguages?.[0] ?? "fr";
       const title = cs?.metadata?.title ?? cs?.title ?? "Consultation";
 
-      console.log(`\n📨 [${debugId}] STEP 3: Phone numbers analysis:`);
+      console.log(`\n📨 [${debugId}] STEP 3: Phone numbers analysis (decrypted):`);
+      console.log(`📨 [${debugId}]   providerPhoneRaw encrypted: ${providerPhoneRaw?.startsWith('enc:') || false}`);
       console.log(`📨 [${debugId}]   providerPhone exists: ${!!providerPhone}`);
-      console.log(`📨 [${debugId}]   providerPhone preview: ${providerPhone ? providerPhone.slice(0, 8) + '...' : 'MISSING'}`);
-      console.log(`📨 [${debugId}]   providerPhone length: ${providerPhone?.length || 0}`);
+      console.log(`📨 [${debugId}]   providerPhone preview: ${providerPhone ? providerPhone.slice(0, 5) + '***' : 'MISSING'}`);
+      console.log(`📨 [${debugId}]   clientPhoneRaw encrypted: ${clientPhoneRaw?.startsWith('enc:') || false}`);
       console.log(`📨 [${debugId}]   clientPhone exists: ${!!clientPhone}`);
-      console.log(`📨 [${debugId}]   clientPhone preview: ${clientPhone ? clientPhone.slice(0, 8) + '...' : 'MISSING'}`);
-      console.log(`📨 [${debugId}]   clientPhone length: ${clientPhone?.length || 0}`);
+      console.log(`📨 [${debugId}]   clientPhone preview: ${clientPhone ? clientPhone.slice(0, 5) + '***' : 'MISSING'}`);
       console.log(`📨 [${debugId}]   language: ${language}`);
       console.log(`📨 [${debugId}]   title: ${title}`);
 

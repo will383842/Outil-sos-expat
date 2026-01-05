@@ -616,33 +616,53 @@ export class TwilioCallManager {
   private async executeCallSequence(sessionId: string): Promise<void> {
     const execId = `exec_${Date.now().toString(36)}`;
 
+    console.log(`\n${'='.repeat(80)}`);
+    console.log(`📞 [${execId}] executeCallSequence START`);
+    console.log(`${'='.repeat(80)}`);
+    console.log(`📞 [${execId}]   sessionId: ${sessionId}`);
+    console.log(`📞 [${execId}]   timestamp: ${new Date().toISOString()}`);
+
     prodLogger.info('TWILIO_EXEC_START', `[${execId}] Executing call sequence`, {
       execId,
       sessionId,
     });
 
-    console.log("i am in executeCallSequence with the session id", sessionId);
+    console.log(`📞 [${execId}] STEP 1: Fetching call session from Firestore`);
     const callSession = await this.getCallSession(sessionId);
     if (!callSession) {
+      console.log(`📞 [${execId}] ❌ FATAL: Session NOT FOUND in Firestore`);
       prodLogger.error('TWILIO_EXEC_ERROR', `[${execId}] Session not found`, { execId, sessionId });
       throw new Error(`Session d'appel non trouvée: ${sessionId}`);
     }
-    console.log("[executeCallSequence] callSession:", callSession);
+
+    console.log(`📞 [${execId}] STEP 2: Session found, analyzing state:`);
+    console.log(`📞 [${execId}]   session.status: "${callSession.status}"`);
+    console.log(`📞 [${execId}]   payment.intentId: ${callSession.payment?.intentId || 'MISSING'}`);
+    console.log(`📞 [${execId}]   payment.status: ${callSession.payment?.status || 'MISSING'}`);
+    console.log(`📞 [${execId}]   client.phone exists: ${!!callSession.participants?.client?.phone}`);
+    console.log(`📞 [${execId}]   provider.phone exists: ${!!callSession.participants?.provider?.phone}`);
+    console.log(`📞 [${execId}]   client.attemptCount: ${callSession.participants?.client?.attemptCount || 0}`);
+    console.log(`📞 [${execId}]   provider.attemptCount: ${callSession.participants?.provider?.attemptCount || 0}`);
 
     if (callSession.status === "cancelled" || callSession.status === "failed") {
+      console.log(`📞 [${execId}] ⚠️ Session already in terminal state: ${callSession.status}`);
+      console.log(`📞 [${execId}]   → SKIPPING call execution`);
       prodLogger.warn('TWILIO_EXEC_SKIP', `[${execId}] Session already ${callSession.status}`, {
         execId,
         sessionId,
         status: callSession.status,
       });
-      console.log(`Session ${sessionId} déjà ${callSession.status}, stop`);
       return;
     }
 
+    console.log(`📞 [${execId}] STEP 3: Session status OK, proceeding to payment validation`);
     const BYPASS_VALIDATIONS = process.env.TEST_BYPASS_VALIDATIONS === "1";
+    console.log(`📞 [${execId}]   TEST_BYPASS_VALIDATIONS: ${BYPASS_VALIDATIONS}`);
     const paymentValid = BYPASS_VALIDATIONS
       ? true
       : await this.validatePaymentStatus(callSession.payment.intentId);
+
+    console.log(`📞 [${execId}] STEP 4: Payment validation result: ${paymentValid ? '✅ VALID' : '❌ INVALID'}`);
 
     prodLogger.debug('TWILIO_PAYMENT_CHECK', `[${execId}] Payment validation`, {
       execId,
@@ -653,6 +673,10 @@ export class TwilioCallManager {
     });
 
     if (!paymentValid) {
+      console.log(`📞 [${execId}] ❌ PAYMENT INVALID - Aborting call sequence`);
+      console.log(`📞 [${execId}]   → Calling handleCallFailure("payment_invalid")`);
+      console.log(`📞 [${execId}]   → CLIENT PHONE WILL NOT RING`);
+      console.log(`📞 [${execId}]   → PROVIDER PHONE WILL NOT RING`);
       prodLogger.error('TWILIO_PAYMENT_INVALID', `[${execId}] Payment invalid - failing call`, {
         execId,
         sessionId,
@@ -661,6 +685,9 @@ export class TwilioCallManager {
       await this.handleCallFailure(sessionId, "payment_invalid");
       return;
     }
+
+    console.log(`📞 [${execId}] STEP 5: Payment valid, preparing Twilio calls`);
+    console.log(`📞 [${execId}]   → NEXT: Call CLIENT phone first`);
 
     // 🔧 Add null checks for language arrays
     if (!callSession.metadata.clientLanguages) {
@@ -771,11 +798,36 @@ export class TwilioCallManager {
   private async validatePaymentStatus(
     paymentIntentId: string
   ): Promise<boolean> {
+    const debugId = `pay_${Date.now().toString(36)}`;
+    console.log(`💳 [${debugId}] validatePaymentStatus START`);
+    console.log(`💳 [${debugId}]   paymentIntentId: ${paymentIntentId}`);
+
     try {
+      console.log(`💳 [${debugId}] STEP 1: Calling stripeManager.getPayment()`);
       const payment = await stripeManager.getPayment(paymentIntentId);
-      if (!payment || typeof payment !== "object") return false;
-      const status = (payment as Record<string, unknown>).status;
-      if (typeof status !== "string") return false;
+
+      console.log(`💳 [${debugId}] STEP 2: Payment lookup result:`);
+      console.log(`💳 [${debugId}]   payment exists: ${!!payment}`);
+      console.log(`💳 [${debugId}]   payment type: ${typeof payment}`);
+
+      if (!payment || typeof payment !== "object") {
+        console.log(`💳 [${debugId}] ❌ FAIL: Payment is null or not object`);
+        console.log(`💳 [${debugId}]   payment value: ${JSON.stringify(payment)}`);
+        return false;
+      }
+
+      const paymentObj = payment as Record<string, unknown>;
+      const status = paymentObj.status;
+
+      console.log(`💳 [${debugId}] STEP 3: Payment status analysis:`);
+      console.log(`💳 [${debugId}]   status value: "${status}"`);
+      console.log(`💳 [${debugId}]   status type: ${typeof status}`);
+      console.log(`💳 [${debugId}]   Full payment object keys: ${Object.keys(paymentObj).join(', ')}`);
+
+      if (typeof status !== "string") {
+        console.log(`💳 [${debugId}] ❌ FAIL: Status is not a string`);
+        return false;
+      }
 
       const validStatuses = new Set<string>([
         "requires_payment_method",
@@ -784,9 +836,30 @@ export class TwilioCallManager {
         "processing",
         "requires_capture",
         "succeeded",
+        // P0 FIX: Also accept "authorized" which is set by createAndScheduleCallHTTPS
+        "authorized",
+        // P0 FIX: Accept call_session_created as it means payment was authorized
+        "call_session_created",
       ]);
-      return validStatuses.has(status);
+
+      const isValid = validStatuses.has(status);
+
+      console.log(`💳 [${debugId}] STEP 4: Validation result:`);
+      console.log(`💳 [${debugId}]   Status "${status}" is valid: ${isValid}`);
+      console.log(`💳 [${debugId}]   Valid statuses: ${Array.from(validStatuses).join(', ')}`);
+
+      if (!isValid) {
+        console.log(`💳 [${debugId}] ❌ FAIL: Status "${status}" not in valid set`);
+      } else {
+        console.log(`💳 [${debugId}] ✅ SUCCESS: Payment status valid`);
+      }
+
+      return isValid;
     } catch (error) {
+      console.log(`💳 [${debugId}] ❌ EXCEPTION in validatePaymentStatus:`);
+      console.log(`💳 [${debugId}]   Error: ${error instanceof Error ? error.message : String(error)}`);
+      console.log(`💳 [${debugId}]   Stack: ${error instanceof Error ? error.stack : 'N/A'}`);
+
       await logError(
         "TwilioCallManager:validatePaymentStatus",
         error as unknown

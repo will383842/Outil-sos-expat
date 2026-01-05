@@ -47,6 +47,7 @@ export const generateSitemaps = onRequest(
     region: 'europe-west1',
     timeoutSeconds: 540, // 9 minutes (max for v2)
     memory: '1GiB', // More memory for large operations
+    cpu: 1, // Required when memory > 512MiB
     maxInstances: 1, // Only one at a time to avoid conflicts
     minInstances: 0,
     concurrency: 1,
@@ -86,6 +87,7 @@ export const onProviderChange = onDocumentWritten(
     region: 'europe-west1',
     timeoutSeconds: 540,
     memory: '1GiB',
+    cpu: 1, // Required when memory > 512MiB
     maxInstances: 1,
     minInstances: 0,
     concurrency: 1,
@@ -129,6 +131,7 @@ export const scheduledSitemapGeneration = onSchedule(
     region: 'europe-west1',
     timeoutSeconds: 540,
     memory: '1GiB',
+    cpu: 1, // Required when memory > 512MiB
     maxInstances: 1,
     minInstances: 0,
     schedule: 'every 24 hours',
