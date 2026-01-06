@@ -11,6 +11,8 @@ import { scheduleCallTaskWithIdempotence } from './lib/tasks';
 import { logger as prodLogger } from './utils/productionLogger';
 // P0 FIX: Import decryptPhoneNumber for SMS notifications
 import { decryptPhoneNumber } from './utils/encryption';
+// Import pricing service to calculate provider earnings
+import { getServiceAmounts } from './services/pricingService';
 
 // Secret for phone number encryption
 const ENCRYPTION_KEY = defineSecret('ENCRYPTION_KEY');
@@ -84,6 +86,41 @@ function formatLanguages(languages: string[]): string {
   return languages
     .map(code => LANGUAGE_NAMES[code.toLowerCase()] || code.toUpperCase())
     .join(', ');
+}
+
+/**
+ * Retourne le symbole de devise approprié
+ */
+function getCurrencySymbol(currency: string): string {
+  const currencyLower = currency?.toLowerCase() || 'eur';
+  return currencyLower === 'usd' ? '$' : '€';
+}
+
+/**
+ * Calcule les gains du prestataire (montant total - frais de mise en relation)
+ */
+async function calculateProviderEarnings(
+  serviceType: string,
+  currency: 'eur' | 'usd' = 'eur'
+): Promise<{ providerEarnings: number; currencySymbol: string }> {
+  try {
+    // Convert serviceType (lawyer_call/expat_call) to pricing key (lawyer/expat)
+    const pricingKey = serviceType === 'lawyer_call' ? 'lawyer' : 'expat';
+    const serviceConfig = await getServiceAmounts(pricingKey as 'lawyer' | 'expat', currency);
+
+    return {
+      providerEarnings: serviceConfig.providerAmount,
+      currencySymbol: getCurrencySymbol(currency),
+    };
+  } catch (error) {
+    console.error('Error calculating provider earnings:', error);
+    // Fallback values based on default pricing
+    const defaultEarnings = serviceType === 'lawyer_call' ? 30 : 10;
+    return {
+      providerEarnings: defaultEarnings,
+      currencySymbol: '€',
+    };
+  }
 }
 
 /**
@@ -583,6 +620,10 @@ export const createAndScheduleCallHTTPS = onCall(
         console.log(`📨 [${requestId}]   - decryptedProviderPhone: ${decryptedProviderPhone ? decryptedProviderPhone.substring(0, 5) + '***' : 'NOT_SET'}`);
         console.log(`📨 [${requestId}]   - Will create event? ${!!(providerId || providerEmail)}`);
 
+        // Calculate provider earnings for SMS
+        const { providerEarnings, currencySymbol } = await calculateProviderEarnings(serviceType, 'eur');
+        console.log(`📨 [${requestId}]   - providerEarnings: ${providerEarnings}${currencySymbol}`);
+
         if (providerId || providerEmail) {
           // P0 FIX: Use booking_paid_provider template which has SMS enabled
           // Template variables: {{client.firstName}}, {{request.country}}, {{request.title}},
@@ -612,12 +653,20 @@ export const createAndScheduleCallHTTPS = onCall(
                 amount: amount || 0,
                 currency: 'EUR',  // Default currency for SOS Expat
               },
+              // Provider earnings info for SMS
+              earnings: {
+                amount: providerEarnings,
+                symbol: currencySymbol,
+                formatted: `${providerEarnings}${currencySymbol}`,
+              },
               // Legacy flat fields for inapp compatibility
               clientName: clientDisplayName,
               clientCountry: interventionCountry,
               clientLanguage: language,
               clientLanguages: clientLanguages || [language],
               clientLanguagesFormatted: formatLanguages(clientLanguages || [language]),
+              providerEarnings,
+              currencySymbol,
               title,
               description,
               scheduledTime: scheduledTime.toISOString(),
