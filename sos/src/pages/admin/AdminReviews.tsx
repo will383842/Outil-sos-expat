@@ -697,7 +697,7 @@ rows[m][bucketKey] += 1;
     setShowReviewModal(true);
   };
 
-  const handleHideReview = async (reviewId: string) => {
+  const handleHideReview = async (reviewId: string, providerId?: string) => {
     try {
       setIsActionLoading(true);
       await updateDoc(doc(db, 'reviews', reviewId), {
@@ -707,13 +707,44 @@ rows[m][bucketKey] += 1;
         moderatorId: currentUser?.id || 'admin',
         moderatorNotes: lang === 'fr' ? "Masqué par l'administrateur" : 'Hidden by admin'
       });
-      setReviews((prev) => prev.map((r) => (r.id === reviewId ? { ...r, status: 'hidden' } : r)));
-      if (selectedReview?.id === reviewId) setSelectedReview({ ...selectedReview, status: 'hidden' });
+      setReviews((prev) => prev.map((r) => (r.id === reviewId ? { ...r, status: 'hidden', isPublic: false } : r)));
+      if (selectedReview?.id === reviewId) setSelectedReview({ ...selectedReview, status: 'hidden', isPublic: false });
+      // Recalculate provider stats after hiding
+      if (providerId) {
+        await recalculateProviderStats(providerId);
+      }
       alert(lang === 'fr' ? 'Avis masqué avec succès' : 'Review hidden');
       await loadStats();
     } catch (err) {
       console.error('Error hiding review:', err);
       alert(lang === 'fr' ? "Erreur lors du masquage de l'avis" : 'Failed to hide review');
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const handleShowReview = async (reviewId: string, providerId?: string) => {
+    try {
+      setIsActionLoading(true);
+      await updateDoc(doc(db, 'reviews', reviewId), {
+        status: 'published',
+        isPublic: true,
+        publishedAt: serverTimestamp(),
+        moderatedAt: serverTimestamp(),
+        moderatorId: currentUser?.id || 'admin',
+        moderatorNotes: lang === 'fr' ? "Republié par l'administrateur" : 'Republished by admin'
+      });
+      setReviews((prev) => prev.map((r) => (r.id === reviewId ? { ...r, status: 'published', isPublic: true } : r)));
+      if (selectedReview?.id === reviewId) setSelectedReview({ ...selectedReview, status: 'published', isPublic: true });
+      // Recalculate provider stats after republishing
+      if (providerId) {
+        await recalculateProviderStats(providerId);
+      }
+      alert(lang === 'fr' ? 'Avis republié avec succès' : 'Review republished');
+      await loadStats();
+    } catch (err) {
+      console.error('Error republishing review:', err);
+      alert(lang === 'fr' ? "Erreur lors de la republication de l'avis" : 'Failed to republish review');
     } finally {
       setIsActionLoading(false);
     }
@@ -746,7 +777,7 @@ rows[m][bucketKey] += 1;
     }
   };
 
-  const handleRejectReview = async (reviewId: string) => {
+  const handleRejectReview = async (reviewId: string, providerId?: string) => {
     try {
       setIsActionLoading(true);
       await updateDoc(doc(db, 'reviews', reviewId), {
@@ -756,8 +787,12 @@ rows[m][bucketKey] += 1;
         moderatorId: currentUser?.id || 'admin',
         moderatorNotes: lang === 'fr' ? "Rejeté par l'administrateur" : 'Rejected by admin'
       });
-      setReviews((prev) => prev.map((r) => (r.id === reviewId ? { ...r, status: 'hidden' } : r)));
-      if (selectedReview?.id === reviewId) setSelectedReview({ ...selectedReview, status: 'hidden' });
+      setReviews((prev) => prev.map((r) => (r.id === reviewId ? { ...r, status: 'hidden', isPublic: false } : r)));
+      if (selectedReview?.id === reviewId) setSelectedReview({ ...selectedReview, status: 'hidden', isPublic: false });
+      // Recalculate provider stats after rejection
+      if (providerId) {
+        await recalculateProviderStats(providerId);
+      }
       alert(t('reviewRejected'));
       await loadStats();
     } catch (err) {
@@ -829,6 +864,11 @@ rows[m][bucketKey] += 1;
         : `Reject ${pendingIds.length} pending review(s)?`
     );
     if (!ok) return;
+    // Collect unique provider IDs for stats recalculation
+    const providerIds = new Set<string>();
+    pendingIds.forEach((r) => {
+      if (r.providerId) providerIds.add(r.providerId);
+    });
     try {
       setIsActionLoading(true);
       const batch = writeBatch(db);
@@ -843,9 +883,11 @@ rows[m][bucketKey] += 1;
       });
       await batch.commit();
       setReviews((prev) =>
-        prev.map((r) => (selectedIds.has(r.id) && (r.status === 'pending' || !r.status) ? { ...r, status: 'hidden' } : r))
+        prev.map((r) => (selectedIds.has(r.id) && (r.status === 'pending' || !r.status) ? { ...r, status: 'hidden', isPublic: false } : r))
       );
       setSelectedIds(new Set());
+      // Recalculate stats for all affected providers
+      await Promise.all(Array.from(providerIds).map((pid) => recalculateProviderStats(pid)));
       alert(lang === 'fr' ? 'Avis rejetés avec succès' : 'Reviews rejected');
       await loadStats();
     } catch (err) {
@@ -1756,7 +1798,7 @@ rows[m][bucketKey] += 1;
                                   <ThumbsUp size={18} />
                                 </button>
                                 <button
-                                  onClick={() => handleRejectReview(review.id)}
+                                  onClick={() => handleRejectReview(review.id, review.providerId)}
                                   className="text-red-600 hover:text-red-800"
                                   title={t('reject')}
                                   disabled={isActionLoading}
@@ -1767,8 +1809,14 @@ rows[m][bucketKey] += 1;
                             )}
                             {/* Show hide button for published reviews */}
                             {review.status === 'published' && (
-                              <button onClick={() => handleHideReview(review.id)} className="text-yellow-600 hover:text-yellow-700" title={t('hide')}>
-                                <XCircle size={18} />
+                              <button onClick={() => handleHideReview(review.id, review.providerId)} className="text-yellow-600 hover:text-yellow-700" title={t('hide')} disabled={isActionLoading}>
+                                <EyeOff size={18} />
+                              </button>
+                            )}
+                            {/* Show button for hidden reviews to republish them */}
+                            {review.status === 'hidden' && (
+                              <button onClick={() => handleShowReview(review.id, review.providerId)} className="text-green-600 hover:text-green-700" title={t('show')} disabled={isActionLoading}>
+                                <Eye size={18} />
                               </button>
                             )}
                             <button
@@ -1889,7 +1937,7 @@ rows[m][bucketKey] += 1;
                           <CheckCircle size={16} className="mr-2" /> {t('approve')}
                         </Button>
                         <Button
-                          onClick={() => handleRejectReview(selectedReview.id)}
+                          onClick={() => handleRejectReview(selectedReview.id, selectedReview.providerId)}
                           fullWidth className="bg-orange-600 hover:bg-orange-700" disabled={isActionLoading}
                         >
                           <XCircle size={16} className="mr-2" /> {t('reject')}
@@ -1899,10 +1947,19 @@ rows[m][bucketKey] += 1;
                     {/* Show hide button for published reviews */}
                     {selectedReview.status === 'published' && (
                       <Button
-                        onClick={() => handleHideReview(selectedReview.id)}
+                        onClick={() => handleHideReview(selectedReview.id, selectedReview.providerId)}
                         fullWidth className="bg-yellow-600 hover:bg-yellow-700" disabled={isActionLoading}
                       >
                         <EyeOff size={16} className="mr-2" /> {t('hide')}
+                      </Button>
+                    )}
+                    {/* Show button for hidden reviews to republish them */}
+                    {selectedReview.status === 'hidden' && (
+                      <Button
+                        onClick={() => handleShowReview(selectedReview.id, selectedReview.providerId)}
+                        fullWidth className="bg-green-600 hover:bg-green-700" disabled={isActionLoading}
+                      >
+                        <Eye size={16} className="mr-2" /> {t('show')}
                       </Button>
                     )}
                     <Button
