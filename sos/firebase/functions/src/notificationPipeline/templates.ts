@@ -1,14 +1,20 @@
 import { getFirestore } from 'firebase-admin/firestore';
 import { TemplatesByEvent } from './types';
+import { Lang } from './i18n';
 
 const db = getFirestore();
 
-export async function getTemplate(locale: 'fr-FR'|'en', eventId: string): Promise<TemplatesByEvent | null> {
+/**
+ * Get template for a specific locale and event.
+ * Falls back to English if template doesn't exist for the requested locale.
+ */
+export async function getTemplate(locale: Lang, eventId: string): Promise<TemplatesByEvent | null> {
   const col = db.collection('message_templates').doc(locale);
   let doc = await col.collection('items').doc(eventId).get();
-  
-  // Fallback vers 'en' si le template n'existe pas dans la locale demandée
+
+  // Fallback to English if template doesn't exist for requested locale
   if (!doc.exists && locale !== 'en') {
+    console.log(`[getTemplate] Template ${eventId} not found for locale ${locale}, falling back to 'en'`);
     doc = await db.collection('message_templates').doc('en').collection('items').doc(eventId).get();
   }
   

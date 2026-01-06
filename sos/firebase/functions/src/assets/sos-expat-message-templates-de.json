@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "app": "SOS Expat",
+  "schema": "sos-expat.message.template/v1",
+  "locale": "de",
+  "defaults": {
+    "from_email": "SOS Expat <no-reply@sos-expat.app>",
+    "reply_to": "SOS Expat Support <support@sos-expat.app>",
+    "sms_sender_id": "SOSXPAT",
+    "push_icon": "ic_notification",
+    "push_channel_id": "general",
+    "deeplink_base": "sos-expat://"
+  },
+  "templates": [
+    {
+      "id": "call.scheduled.provider",
+      "roles": ["provider"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": false,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "inapp": {
+        "title": "Anruf geplant",
+        "body": "Anruf mit {{clientName}} in 5 Minuten",
+        "action": {
+          "label": "Ansehen",
+          "deeplink": "/provider/dashboard"
+        }
+      }
+    },
+    {
+      "id": "call.scheduled.client",
+      "roles": ["client"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": false,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "inapp": {
+        "title": "Anruf geplant",
+        "body": "Ihr Anruf mit {{providerName}} für «{{title}}» ist bestätigt",
+        "action": {
+          "label": "Ansehen",
+          "deeplink": "/calls"
+        }
+      }
+    },
+    {
+      "id": "booking_paid_provider",
+      "roles": ["provider"],
+      "channels": {
+        "email": false,
+        "sms": true,
+        "push": false,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "sms": {
+        "text": "SOS Expat: Neue Buchung!\n\nKunde: {{client.firstName}}\nNationalität: {{client.nationality}}\nEinsatzland: {{request.country}}\nGesprochene Sprachen: {{clientLanguagesFormatted}}\n\nTitel: {{request.title}}\nDetails: {{request.description}}\n\nFür diesen Anruf verdienen Sie {{providerEarnings}}{{currencySymbol}} (kann je nach Wechselkurs Ihrer Bank leicht variieren).\n\nMelden Sie sich bei Ihrem KI-Tool an, um Hilfe bei Ihren Antworten zu erhalten.\n\n⚠️ ACHTUNG: Wenn Sie den Anruf nicht annehmen, werden Sie automatisch offline geschaltet und müssen sich manuell wieder verbinden. Dies wirkt sich auch auf Ihre Sichtbarkeitsbewertung aus."
+      },
+      "inapp": {
+        "title": "Neue bezahlte Buchung",
+        "body": "{{client.firstName}} ({{request.country}}) - {{request.title}}",
+        "action": {
+          "label": "Ansehen",
+          "deeplink": "/provider/dashboard"
+        }
+      }
+    }
+  ]
+}

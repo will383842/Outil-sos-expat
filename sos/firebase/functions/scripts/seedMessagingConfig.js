@@ -1,5 +1,6 @@
 /**
  * Script pour synchroniser les templates et routing vers Firestore
+ * Supporte 9 langues: fr, en, es, de, pt, ru, ar, hi, ch
  * Usage: node scripts/seedMessagingConfig.js
  */
 
@@ -16,19 +17,31 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
+// All supported languages (same as i18n.ts)
+const SUPPORTED_LANGUAGES = ['fr', 'en', 'es', 'de', 'pt', 'ru', 'ar', 'hi', 'ch'];
+
+async function syncTemplatesForLocale(locale, templates) {
+  const templateArray = templates.templates || templates.items || [];
+  let count = 0;
+  for (const template of templateArray) {
+    if (template && template.id) {
+      const plainTemplate = JSON.parse(JSON.stringify(template));
+      await db.doc(`message_templates/${locale}/items/${template.id}`).set(plainTemplate, { merge: true });
+      console.log(`  ✅ ${locale.toUpperCase()}: ${template.id}`);
+      count++;
+    }
+  }
+  return count;
+}
+
 async function seedMessagingConfig() {
-  console.log('🚀 Starting messaging config sync...\n');
+  console.log('🚀 Starting messaging config sync (9 languages)...\n');
 
   const assetsDir = path.join(__dirname, '..', 'src', 'assets');
 
-  // Load JSON files
-  console.log('📂 Loading JSON files...');
-  const fr = JSON.parse(fs.readFileSync(path.join(assetsDir, 'sos-expat-message-templates-fr.json'), 'utf8'));
-  const en = JSON.parse(fs.readFileSync(path.join(assetsDir, 'sos-expat-message-templates-en.json'), 'utf8'));
+  // Load routing
+  console.log('📂 Loading routing config...');
   const routing = JSON.parse(fs.readFileSync(path.join(assetsDir, 'sos-expat-message-routing.json'), 'utf8'));
-
-  console.log(`  ✅ FR templates loaded: ${fr.items ? Object.keys(fr.items).length : (fr.length || 'array')}`);
-  console.log(`  ✅ EN templates loaded: ${en.items ? Object.keys(en.items).length : (en.length || 'array')}`);
   console.log(`  ✅ Routing loaded: ${Object.keys(routing.routing || routing).length} events`);
 
   // Sync routing
@@ -36,31 +49,21 @@ async function seedMessagingConfig() {
   await db.doc('message_routing/config').set(routing, { merge: true });
   console.log('  ✅ Routing synced');
 
-  // Sync FR templates
-  console.log('\n📤 Syncing FR templates...');
-  const frTemplates = fr.templates || fr.items || [];
-  for (const template of frTemplates) {
-    if (template && template.id) {
-      // Convert to plain object if needed
-      const plainTemplate = JSON.parse(JSON.stringify(template));
-      await db.doc(`message_templates/fr-FR/items/${template.id}`).set(plainTemplate, { merge: true });
-      console.log(`  ✅ FR: ${template.id}`);
+  // Sync templates for each language
+  for (const locale of SUPPORTED_LANGUAGES) {
+    const templateFile = path.join(assetsDir, `sos-expat-message-templates-${locale}.json`);
+
+    if (fs.existsSync(templateFile)) {
+      console.log(`\n📤 Syncing ${locale.toUpperCase()} templates...`);
+      const templates = JSON.parse(fs.readFileSync(templateFile, 'utf8'));
+      const count = await syncTemplatesForLocale(locale, templates);
+      console.log(`  📊 ${count} templates synced for ${locale.toUpperCase()}`);
+    } else {
+      console.log(`\n⚠️  Template file not found for ${locale.toUpperCase()}: ${templateFile}`);
     }
   }
 
-  // Sync EN templates
-  console.log('\n📤 Syncing EN templates...');
-  const enTemplates = en.templates || en.items || [];
-  for (const template of enTemplates) {
-    if (template && template.id) {
-      // Convert to plain object if needed
-      const plainTemplate = JSON.parse(JSON.stringify(template));
-      await db.doc(`message_templates/en/items/${template.id}`).set(plainTemplate, { merge: true });
-      console.log(`  ✅ EN: ${template.id}`);
-    }
-  }
-
-  console.log('\n🎉 Messaging config sync complete!');
+  console.log('\n🎉 Messaging config sync complete for all 9 languages!');
 }
 
 seedMessagingConfig()

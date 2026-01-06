@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "app": "SOS Expat",
+  "schema": "sos-expat.message.template/v1",
+  "locale": "ch",
+  "defaults": {
+    "from_email": "SOS Expat <no-reply@sos-expat.app>",
+    "reply_to": "SOS Expat 支持 <support@sos-expat.app>",
+    "sms_sender_id": "SOSXPAT",
+    "push_icon": "ic_notification",
+    "push_channel_id": "general",
+    "deeplink_base": "sos-expat://"
+  },
+  "templates": [
+    {
+      "id": "call.scheduled.provider",
+      "roles": ["provider"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": false,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "inapp": {
+        "title": "通话已安排",
+        "body": "5分钟后与 {{clientName}} 通话",
+        "action": {
+          "label": "查看",
+          "deeplink": "/provider/dashboard"
+        }
+      }
+    },
+    {
+      "id": "call.scheduled.client",
+      "roles": ["client"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": false,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "inapp": {
+        "title": "通话已安排",
+        "body": "您与 {{providerName}} 关于「{{title}}」的通话已确认",
+        "action": {
+          "label": "查看",
+          "deeplink": "/calls"
+        }
+      }
+    },
+    {
+      "id": "booking_paid_provider",
+      "roles": ["provider"],
+      "channels": {
+        "email": false,
+        "sms": true,
+        "push": false,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "sms": {
+        "text": "SOS Expat: 新预订！\n\n客户: {{client.firstName}}\n国籍: {{client.nationality}}\n服务国家: {{request.country}}\n使用语言: {{clientLanguagesFormatted}}\n\n标题: {{request.title}}\n详情: {{request.description}}\n\n此次通话您将赚取 {{providerEarnings}}{{currencySymbol}}（根据您银行的汇率可能略有不同）。\n\n登录您的AI工具以获取回复帮助。\n\n⚠️ 警告：如果您未接听电话，您将自动设为离线状态，需要手动重新连接。这也会影响您的曝光度评分。"
+      },
+      "inapp": {
+        "title": "新的付费预订",
+        "body": "{{client.firstName}} ({{request.country}}) - {{request.title}}",
+        "action": {
+          "label": "查看",
+          "deeplink": "/provider/dashboard"
+        }
+      }
+    }
+  ]
+}

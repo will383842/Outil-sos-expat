@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "app": "SOS Expat",
+  "schema": "sos-expat.message.template/v1",
+  "locale": "hi",
+  "defaults": {
+    "from_email": "SOS Expat <no-reply@sos-expat.app>",
+    "reply_to": "SOS Expat सहायता <support@sos-expat.app>",
+    "sms_sender_id": "SOSXPAT",
+    "push_icon": "ic_notification",
+    "push_channel_id": "general",
+    "deeplink_base": "sos-expat://"
+  },
+  "templates": [
+    {
+      "id": "call.scheduled.provider",
+      "roles": ["provider"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": false,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "inapp": {
+        "title": "कॉल निर्धारित",
+        "body": "{{clientName}} के साथ 5 मिनट में कॉल",
+        "action": {
+          "label": "देखें",
+          "deeplink": "/provider/dashboard"
+        }
+      }
+    },
+    {
+      "id": "call.scheduled.client",
+      "roles": ["client"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": false,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "inapp": {
+        "title": "कॉल निर्धारित",
+        "body": "«{{title}}» के लिए {{providerName}} के साथ आपकी कॉल की पुष्टि हो गई है",
+        "action": {
+          "label": "देखें",
+          "deeplink": "/calls"
+        }
+      }
+    },
+    {
+      "id": "booking_paid_provider",
+      "roles": ["provider"],
+      "channels": {
+        "email": false,
+        "sms": true,
+        "push": false,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "sms": {
+        "text": "SOS Expat: नई बुकिंग!\n\nग्राहक: {{client.firstName}}\nराष्ट्रीयता: {{client.nationality}}\nहस्तक्षेप देश: {{request.country}}\nबोली जाने वाली भाषाएं: {{clientLanguagesFormatted}}\n\nशीर्षक: {{request.title}}\nविवरण: {{request.description}}\n\nइस कॉल से आप {{providerEarnings}}{{currencySymbol}} कमाएंगे (आपके बैंक की विनिमय दरों के आधार पर थोड़ा भिन्न हो सकता है)।\n\nअपने जवाबों में मदद के लिए अपने AI टूल में लॉग इन करें।\n\n⚠️ चेतावनी: यदि आप कॉल का जवाब नहीं देते हैं, तो आपको स्वचालित रूप से ऑफ़लाइन कर दिया जाएगा और आपको मैन्युअल रूप से फिर से कनेक्ट करना होगा। इससे आपकी दृश्यता रेटिंग भी प्रभावित होगी।"
+      },
+      "inapp": {
+        "title": "नई भुगतान बुकिंग",
+        "body": "{{client.firstName}} ({{request.country}}) - {{request.title}}",
+        "action": {
+          "label": "देखें",
+          "deeplink": "/provider/dashboard"
+        }
+      }
+    }
+  ]
+}

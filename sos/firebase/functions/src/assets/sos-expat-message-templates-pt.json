@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "app": "SOS Expat",
+  "schema": "sos-expat.message.template/v1",
+  "locale": "pt",
+  "defaults": {
+    "from_email": "SOS Expat <no-reply@sos-expat.app>",
+    "reply_to": "Suporte SOS Expat <support@sos-expat.app>",
+    "sms_sender_id": "SOSXPAT",
+    "push_icon": "ic_notification",
+    "push_channel_id": "general",
+    "deeplink_base": "sos-expat://"
+  },
+  "templates": [
+    {
+      "id": "call.scheduled.provider",
+      "roles": ["provider"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": false,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "inapp": {
+        "title": "Chamada agendada",
+        "body": "Chamada com {{clientName}} em 5 minutos",
+        "action": {
+          "label": "Ver",
+          "deeplink": "/provider/dashboard"
+        }
+      }
+    },
+    {
+      "id": "call.scheduled.client",
+      "roles": ["client"],
+      "channels": {
+        "email": false,
+        "sms": false,
+        "push": false,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "inapp": {
+        "title": "Chamada agendada",
+        "body": "Sua chamada com {{providerName}} para «{{title}}» está confirmada",
+        "action": {
+          "label": "Ver",
+          "deeplink": "/calls"
+        }
+      }
+    },
+    {
+      "id": "booking_paid_provider",
+      "roles": ["provider"],
+      "channels": {
+        "email": false,
+        "sms": true,
+        "push": false,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "sms": {
+        "text": "SOS Expat: Nova reserva!\n\nCliente: {{client.firstName}}\nNacionalidade: {{client.nationality}}\nPaís de intervenção: {{request.country}}\nIdiomas falados: {{clientLanguagesFormatted}}\n\nTítulo: {{request.title}}\nDetalhes: {{request.description}}\n\nPor esta chamada você ganhará {{providerEarnings}}{{currencySymbol}} (pode variar ligeiramente dependendo das taxas de câmbio do seu banco).\n\nFaça login na sua ferramenta de IA para ajudá-lo com suas respostas.\n\n⚠️ ATENÇÃO: Se você não atender a chamada, será automaticamente colocado offline e precisará se reconectar manualmente. Isso também afetará sua pontuação de visibilidade."
+      },
+      "inapp": {
+        "title": "Nova reserva paga",
+        "body": "{{client.firstName}} ({{request.country}}) - {{request.title}}",
+        "action": {
+          "label": "Ver",
+          "deeplink": "/provider/dashboard"
+        }
+      }
+    }
+  ]
+}
