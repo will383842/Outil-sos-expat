@@ -11,10 +11,6 @@ import {
   Award,
   Globe,
   Users,
-  Share2,
-  Facebook,
-  Twitter,
-  Linkedin,
   GraduationCap,
   Briefcase,
   Languages as LanguagesIcon,
@@ -107,6 +103,7 @@ const aaaTranslationsMap: Record<string, any> = {
 
 import { FormattedMessage, useIntl } from "react-intl";
 import QuickAuthWizard from "../components/auth/QuickAuthWizard";
+import { ProviderSocialShare } from "../components/share";
 import { getLawyerSpecialityLabel } from "../data/lawyer-specialties";
 import { getExpatHelpTypeLabel } from "../data/expat-help-types";
 import { getSpecialtyLabel, mapLanguageToLocale } from "../utils/specialtyMapper";
@@ -1614,78 +1611,6 @@ const ProviderProfile: React.FC = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [provider, navigate]);
 
-  const shareProfile = useCallback(
-    (platform: "facebook" | "twitter" | "linkedin" | "copy") => {
-      if (!provider) return;
-      const isLawyer = provider.type === "lawyer";
-      // Extract locale and language from current pathname to preserve it
-      const { locale: currentLocale, lang: currentLang } = parseLocaleFromPath(location.pathname);
-      
-      // Use translated route slug based on current language
-      const routeKey = isLawyer ? "lawyer" : "expat";
-      const displayType = currentLang 
-        ? getTranslatedRouteSlug(routeKey, currentLang)
-        : (isLawyer ? "avocat" : "expatrie");
-      
-      // Use translated slug if available
-      const nameSlug =
-        translation && !showOriginal && translation.slug
-          ? translation.slug
-          : (provider.slug || safeNormalize(`${provider.firstName}-${provider.lastName}`));
-      const finalSlug = nameSlug.includes(provider.id || '') ? nameSlug : `${nameSlug}-${provider.id}`;
-      
-      const seoPath = `/${displayType}/${finalSlug}`;
-      const fullSeoPath = currentLocale ? `/${currentLocale}${seoPath}` : seoPath;
-      const currentUrl = `${window.location.origin}${fullSeoPath}`;
-      const displayName = formatPublicName(provider);
-      
-      const roleLabel = isLawyer
-        ? intl.formatMessage({ id: "providerProfile.lawyer" })
-        : intl.formatMessage({ id: "providerProfile.expat" });
-      
-      const title = `${displayName} - ${roleLabel} ${intl.formatMessage({ id: "providerProfile.in" })} ${getCountryName(provider.country, preferredLangKey)}`;
-
-      switch (platform) {
-        case "facebook":
-          window.open(
-            `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentUrl)}`,
-            "_blank",
-            "noopener,noreferrer"
-          );
-          break;
-        case "twitter":
-          window.open(
-            `https://twitter.com/intent/tweet?url=${encodeURIComponent(currentUrl)}&text=${encodeURIComponent(title)}`,
-            "_blank",
-            "noopener,noreferrer"
-          );
-          break;
-        case "linkedin":
-          window.open(
-            `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(currentUrl)}`,
-            "_blank",
-            "noopener,noreferrer"
-          );
-          break;
-        case "copy":
-          if (navigator.clipboard?.writeText) {
-            navigator.clipboard.writeText(currentUrl);
-            alert(intl.formatMessage({ id: "providerProfile.linkCopied" }));
-          } else {
-            const textArea = document.createElement("textarea");
-            textArea.value = currentUrl;
-            document.body.appendChild(textArea);
-            textArea.select();
-            document.execCommand("copy");
-            document.body.removeChild(textArea);
-            alert(intl.formatMessage({ id: "providerProfile.linkCopied" }));
-          }
-          break;
-      }
-    },
-    [provider, intl, language, preferredLangKey, location.pathname, translation, showOriginal]
-  );
-
   const handleHelpfulClick = useCallback(
     async (reviewId: string) => {
       if (!user) {
@@ -2439,39 +2364,34 @@ const ProviderProfile: React.FC = () => {
                       {descriptionText}
                     </p>
 
-                    {/* Social sharing */}
-                    <div className="flex items-center gap-3 mt-5">
-                      <span className="text-gray-400 text-sm">
-                        <FormattedMessage id="providerProfile.share" />
-                      </span>
-                      <button
-                        onClick={() => shareProfile("facebook")}
-                        className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white/90 hover:text-white transition-all"
-                        aria-label="Share on Facebook"
-                      >
-                        <Facebook size={18} />
-                      </button>
-                      <button
-                        onClick={() => shareProfile("twitter")}
-                        className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white/90 hover:text-white transition-all"
-                        aria-label="Share on X"
-                      >
-                        <Twitter size={18} />
-                      </button>
-                      <button
-                        onClick={() => shareProfile("linkedin")}
-                        className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white/90 hover:text-white transition-all"
-                        aria-label="Share on LinkedIn"
-                      >
-                        <Linkedin size={18} />
-                      </button>
-                      <button
-                        onClick={() => shareProfile("copy")}
-                        className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white/90 hover:text-white transition-all"
-                        aria-label={intl.formatMessage({ id: "providerProfile.copyLink" })}
-                      >
-                        <Share2 size={18} />
-                      </button>
+                    {/* Social sharing - Nouveau composant 2025 */}
+                    <div className="mt-5">
+                      <ProviderSocialShare
+                        provider={{
+                          id: provider.id || '',
+                          firstName: provider.firstName || '',
+                          lastName: provider.lastName,
+                          fullName: formatPublicName(provider),
+                          type: provider.type as 'lawyer' | 'expat',
+                          country: provider.country || '',
+                          specialties: provider.specialties,
+                          rating: providerStats.averageRating || provider.rating,
+                          profilePhoto: provider.profilePhoto,
+                          slug: provider.slug,
+                        }}
+                        shareUrl={window.location.href}
+                        variant="inline"
+                        onShare={(platform) => {
+                          logAnalyticsEvent({
+                            eventType: 'share_provider_profile',
+                            eventData: {
+                              provider_id: provider.id,
+                              provider_type: provider.type,
+                              platform,
+                            },
+                          });
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
