@@ -314,7 +314,8 @@ export interface ConversationDocument {
   summaryUpdatedAt?: Timestamp;
 
   // Stats
-  messageCount: number;
+  // FIX: Backend writes "messagesCount" (with 's'), not "messageCount"
+  messagesCount: number;
   lastMessageAt?: Timestamp;
   lastMessageRole?: MessageRole;
 

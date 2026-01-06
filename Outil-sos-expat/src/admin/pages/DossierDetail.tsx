@@ -365,7 +365,8 @@ function AIChat({
           </div>
         ) : (
           messages.map((message) => {
-            const isAI = message.source === "gpt" || message.role === "assistant";
+            // FIX: Also detect Claude AI messages (source === "claude")
+            const isAI = message.source === "gpt" || message.source === "claude" || message.role === "assistant";
             const isError = message.source === "gpt-error";
             
             return (

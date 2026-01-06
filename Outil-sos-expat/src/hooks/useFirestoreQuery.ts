@@ -379,7 +379,8 @@ export function useBookingConversations(bookingId: string | null, options: Query
 export function useConversationMessages(conversationId: string | null, options: QueryOptions = {}) {
   return useFirestoreCollection<Message>(
     `conversations/${conversationId}/messages`,
-    [orderBy("timestamp", "asc")],
+    // FIX: Use "createdAt" - backend writes createdAt, not timestamp
+    [orderBy("createdAt", "asc")],
     { ...options, enabled: !!conversationId && options.enabled !== false }
   );
 }
