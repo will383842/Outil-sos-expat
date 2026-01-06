@@ -41,6 +41,9 @@ import MultiLanguageSelect from "../components/forms-data/MultiLanguageSelect";
 import ProfileStatusAlert from "../components/common/ProfileStatusAlert";
 import ReviewModal from "../components/review/ReviewModal";
 import { useAiQuota } from "../hooks/useAiQuota";
+import MobileBottomNav from "../components/dashboard/MobileBottomNav";
+import MobileSideDrawer from "../components/dashboard/MobileSideDrawer";
+import KYCBannerCompact from "../components/dashboard/KYCBannerCompact";
 
 import { useAuth } from "../contexts/AuthContext";
 import { useApp } from "../contexts/AppContext";
@@ -555,6 +558,7 @@ const Dashboard: React.FC = () => {
   const [isEditMode, setIsEditMode] = useState<boolean>(false); // Toggle Vue/Édition dans l'onglet Profil
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [loggingOut, setLoggingOut] = useState<boolean>(false);
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState<boolean>(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -1504,34 +1508,13 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
         (user?.kycStatus === "not_started" ||
           user?.kycStatus === "in_progress" ||
           !user?.stripeOnboardingComplete) && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="mb-8 bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl shadow-xl overflow-hidden">
-              <div className="px-6 py-8 sm:px-8">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h2 className="text-2xl font-bold text-white mb-2">
-                      <FormattedMessage
-                        id="dashboard.kyc.title"
-                        defaultMessage="Complete Your Verification"
-                      />
-                    </h2>
-                    <p className="text-indigo-100">
-                      <FormattedMessage
-                        id="dashboard.kyc.description"
-                        defaultMessage="Verify your identity to start receiving payments. This process takes about 5 minutes."
-                      />
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <StripeKYC
-                  userType={user.role as "lawyer" | "expat"}
-                  onComplete={() => window.location.reload()}
-                />
-              </div>
-            </div>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 lg:py-8">
+            <KYCBannerCompact user={user} kycType="stripe">
+              <StripeKYC
+                userType={user.role as "lawyer" | "expat"}
+                onComplete={() => window.location.reload()}
+              />
+            </KYCBannerCompact>
           </div>
         )}
 
@@ -1541,40 +1524,19 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
         (user.role === "lawyer" || user.role === "expat") &&
         user?.paymentGateway === "paypal" &&
         (user?.paypalAccountStatus === "not_connected" || !user?.paypalOnboardingComplete) && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="mb-8 bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl shadow-xl overflow-hidden">
-              <div className="px-6 py-8 sm:px-8">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h2 className="text-2xl font-bold text-white mb-2">
-                      <FormattedMessage
-                        id="dashboard.paypal.title"
-                        defaultMessage="Connect Your PayPal Account"
-                      />
-                    </h2>
-                    <p className="text-blue-100">
-                      <FormattedMessage
-                        id="dashboard.paypal.description"
-                        defaultMessage="Connect your PayPal account to receive payments from clients worldwide."
-                      />
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <PayPalOnboarding
-                  providerId={user.id}
-                  providerEmail={user.email}
-                  providerType={user.role as "lawyer" | "expat"}
-                  onStatusChange={(status) => {
-                    if (status === "active") {
-                      window.location.reload();
-                    }
-                  }}
-                />
-              </div>
-            </div>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 lg:py-8">
+            <KYCBannerCompact user={user} kycType="paypal">
+              <PayPalOnboarding
+                providerId={user.id}
+                providerEmail={user.email}
+                providerType={user.role as "lawyer" | "expat"}
+                onStatusChange={(status) => {
+                  if (status === "active") {
+                    window.location.reload();
+                  }
+                }}
+              />
+            </KYCBannerCompact>
           </div>
         )}
 
@@ -1798,10 +1760,30 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
       {/* ========================================== */}
 
       <div className="min-h-screen bg-gradient-to-b from-gray-50 via-rose-50/40 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* SIDEBAR GAUCHE */}
-            <div className="lg:col-span-1">
+        {/* Mobile Bottom Navigation */}
+        <MobileBottomNav
+          userRole={user?.role}
+          onMoreClick={() => setIsMobileDrawerOpen(true)}
+        />
+
+        {/* Mobile Side Drawer */}
+        <MobileSideDrawer
+          isOpen={isMobileDrawerOpen}
+          onClose={() => setIsMobileDrawerOpen(false)}
+          aiQuota={{
+            currentUsage: aiCurrentUsage,
+            limit: aiLimit,
+            remaining: aiRemaining,
+            isInTrial: aiIsInTrial,
+            trialDaysRemaining: aiTrialDaysRemaining,
+            canMakeAiCall,
+          }}
+        />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-8 pb-24 lg:pb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
+            {/* SIDEBAR GAUCHE - Hidden on mobile */}
+            <div className="hidden lg:block lg:col-span-1">
               <div className={`${softCard} overflow-hidden`}>
                 <div className={`p-6 ${headerGradient}`}>
                   <div className="flex items-center space-x-4">
@@ -2129,8 +2111,8 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
               </div>
             </div>
 
-            {/* CONTENU PRINCIPAL */}
-            <div className="lg:col-span-3 space-y-8">
+            {/* CONTENU PRINCIPAL - ID for auto-scroll */}
+            <div id="dashboard-content" className="lg:col-span-3 space-y-6 lg:space-y-8">
               {/* PROFIL — Vue et Édition unifiées */}
               {activeTab === "profile" && (
                 <div className={`${softCard} overflow-hidden`}>

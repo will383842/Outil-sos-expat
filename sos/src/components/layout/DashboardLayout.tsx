@@ -2,6 +2,8 @@
  * DashboardLayout - Layout wrapper avec sidebar pour les pages du dashboard
  * Utilisé par les pages séparées (AI Assistant, Subscription) pour maintenir
  * une expérience utilisateur cohérente avec le sidebar
+ *
+ * Mobile-first: Bottom nav + drawer pour mobile, sidebar pour desktop
  */
 
 import React, { ReactNode, useState, useCallback } from 'react';
@@ -27,6 +29,8 @@ import { useApp } from '../../contexts/AppContext';
 import { useAiQuota } from '../../hooks/useAiQuota';
 import Layout from './Layout';
 import AvailabilityToggle from '../dashboard/AvailabilityToggle';
+import MobileBottomNav from '../dashboard/MobileBottomNav';
+import MobileSideDrawer from '../dashboard/MobileSideDrawer';
 
 // Design tokens
 const UI = {
@@ -72,6 +76,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
   const { user, logout, authInitialized } = useAuth();
   const { language } = useApp();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
 
   // AI Quota for sidebar display
   const {
@@ -207,13 +212,36 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
 
   const allMenuItems: MenuItem[] = [...menuItems, ...aiMenuItems];
 
+  // AI Quota object for mobile drawer
+  const aiQuotaData = {
+    currentUsage: aiCurrentUsage,
+    limit: aiLimit,
+    remaining: aiRemaining,
+    isInTrial: aiIsInTrial,
+    trialDaysRemaining: aiTrialDaysRemaining,
+    canMakeAiCall,
+  };
+
   return (
     <Layout showFooter={false}>
       <div className="min-h-screen bg-gradient-to-b from-gray-50 via-rose-50/40 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* SIDEBAR GAUCHE */}
-            <div className="lg:col-span-1">
+        {/* Mobile Bottom Navigation */}
+        <MobileBottomNav
+          userRole={user?.role}
+          onMoreClick={() => setIsMobileDrawerOpen(true)}
+        />
+
+        {/* Mobile Side Drawer */}
+        <MobileSideDrawer
+          isOpen={isMobileDrawerOpen}
+          onClose={() => setIsMobileDrawerOpen(false)}
+          aiQuota={aiQuotaData}
+        />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-8 pb-24 lg:pb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
+            {/* SIDEBAR GAUCHE - Hidden on mobile, visible on desktop */}
+            <div className="hidden lg:block lg:col-span-1">
               <div className={`${softCard} overflow-hidden sticky top-8`}>
                 {/* Header avec photo et infos utilisateur */}
                 <div className={`p-6 ${headerGradient}`}>
@@ -420,7 +448,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
             </div>
 
             {/* CONTENU PRINCIPAL */}
-            <div className="lg:col-span-3">
+            <div id="dashboard-content" className="lg:col-span-3">
               {children}
             </div>
           </div>

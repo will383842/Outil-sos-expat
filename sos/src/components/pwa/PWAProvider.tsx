@@ -3,17 +3,16 @@
  * PWA Provider Component
  *
  * Integrates all PWA functionality into the app:
- * - Install banner (Android/Desktop)
- * - iOS install instructions
+ * - Install banner (Android/Desktop/iOS) - managed in Layout.tsx
  * - Offline storage initialization
  * - Badge updates from notifications
  * - Service Worker update notifications
+ * - Online/offline status tracking
  */
 
 import React, { useEffect, useState, useCallback, createContext, useContext } from 'react';
 import { useIntl } from 'react-intl';
-// InstallBanner est géré dans Layout.tsx
-import IOSInstallInstructions from '../common/IOSInstallInstructions';
+// InstallBanner (unified for all platforms) is managed in Layout.tsx
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { useBadging } from '@/hooks/useBadging';
 import { initOfflineStorage, requestPersistentStorage } from '@/services/offlineStorage';
@@ -40,10 +39,6 @@ export const usePWA = () => {
 
 interface PWAProviderProps {
   children: React.ReactNode;
-  /** Show install banner */
-  showInstallBanner?: boolean;
-  /** Show iOS instructions */
-  showIOSInstructions?: boolean;
   /** Enable offline storage */
   enableOfflineStorage?: boolean;
   /** Enable badge updates */
@@ -52,7 +47,6 @@ interface PWAProviderProps {
 
 const PWAProvider: React.FC<PWAProviderProps> = ({
   children,
-  showIOSInstructions = true,
   enableOfflineStorage = true,
   enableBadging = true,
 }) => {
@@ -60,7 +54,6 @@ const PWAProvider: React.FC<PWAProviderProps> = ({
   const { canPrompt, installed, install } = usePWAInstall();
   const { updateBadge } = useBadging();
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
-  const [showIOSPrompt, setShowIOSPrompt] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
   // Initialize offline storage
@@ -109,19 +102,7 @@ const PWAProvider: React.FC<PWAProviderProps> = ({
     }
   }, [unreadCount, enableBadging, installed, updateBadge]);
 
-  // iOS detection for instructions
-  useEffect(() => {
-    if (showIOSInstructions && !installed) {
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      const isStandalone = window.matchMedia?.('(display-mode: standalone)').matches;
-
-      if (isIOS && !isStandalone) {
-        // Show iOS instructions after delay
-        const timer = setTimeout(() => setShowIOSPrompt(true), 5000);
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [showIOSInstructions, installed]);
+  // Note: iOS install instructions are now handled by InstallBanner component
 
   // Trigger install
   const triggerInstall = useCallback(async () => {
@@ -144,16 +125,13 @@ const PWAProvider: React.FC<PWAProviderProps> = ({
     <PWAContext.Provider value={contextValue}>
       {children}
 
-      {/* Install Banner géré dans Layout.tsx pour éviter double rendu */}
-
-      {/* iOS Install Instructions */}
-      {showIOSPrompt && (
-        <IOSInstallInstructions onClose={() => setShowIOSPrompt(false)} />
-      )}
+      {/* Install Banner (all platforms) is managed in Layout.tsx */}
 
       {/* Offline indicator */}
       {!isOnline && (
-        <div className="fixed bottom-0 left-0 right-0 bg-amber-500 text-white text-center py-2 text-sm font-medium z-[100] safe-area-inset-bottom">
+        <div className="fixed bottom-0 left-0 right-0 bg-amber-500 text-white text-center py-2 text-sm font-medium z-[100]"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        >
           <span className="inline-flex items-center gap-2">
             <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
             {intl.formatMessage({ id: 'pwa.offline.message' })}
