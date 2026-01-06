@@ -755,11 +755,11 @@ export const twilioRecordingWebhook = onRequest(
 export const twilioAmdTwiml = onRequest(
   {
     region: 'europe-west1',
-    memory: '128MiB',
-    cpu: 0.083,
+    memory: '256MiB',  // P0 FIX: 128MiB was too low (firebase-admin requires ~150MB)
+    cpu: 0.25,
     maxInstances: 10,
     minInstances: 0,
-    concurrency: 1  // Must be 1 when cpu < 1
+    concurrency: 1
   },
   async (req: Request, res: Response) => {
     const amdId = `amd_${Date.now().toString(36)}`;
