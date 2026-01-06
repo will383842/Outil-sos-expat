@@ -32,6 +32,8 @@ import {
   limit,
   where,
   getDocs,
+  getDoc,
+  doc,
   Timestamp,
   startAfter,
   DocumentSnapshot
@@ -326,27 +328,18 @@ const AdminCallsSessions: React.FC = () => {
     const baseQuery = collection(db, 'call_sessions');
     const constraints: any[] = [];
 
-    // Filtres de statut
+    // ✅ IMPORTANT: Pour éviter les erreurs d'index Firestore, on utilise uniquement
+    // les combinaisons de filtres qui ont des index:
+    // - status + metadata.createdAt (index existe)
+    // - metadata.createdAt seul (orderBy)
+    // Les autres filtres (serviceType, providerType, paymentStatus) sont appliqués côté client
+
+    // Filtre de statut (a un index avec metadata.createdAt)
     if (filters.status !== 'all') {
       constraints.push(where('status', '==', filters.status));
     }
 
-    // Filtres de type de service
-    if (filters.serviceType !== 'all') {
-      constraints.push(where('metadata.serviceType', '==', filters.serviceType));
-    }
-
-    // Filtres de type de prestataire
-    if (filters.providerType !== 'all') {
-      constraints.push(where('metadata.providerType', '==', filters.providerType));
-    }
-
-    // Filtres de statut de paiement
-    if (filters.paymentStatus !== 'all') {
-      constraints.push(where('payment.status', '==', filters.paymentStatus));
-    }
-
-    // Filtres de date
+    // Filtre de date (metadata.createdAt)
     if (filters.dateRange !== 'all') {
       const now = new Date();
       let startDate: Date;
@@ -371,15 +364,15 @@ const AdminCallsSessions: React.FC = () => {
       constraints.push(where('metadata.createdAt', '>=', Timestamp.fromDate(startDate)));
     }
 
-    // Tri
-    const orderByField = sortBy === 'createdAt' ? 'metadata.createdAt' : 
-                        sortBy === 'duration' ? 'conference.duration' :
-                        'payment.amount';
-    
-    constraints.push(orderBy(orderByField, sortOrder));
+    // Tri - toujours par metadata.createdAt pour utiliser l'index existant
+    // Le tri par duration/amount sera fait côté client si nécessaire
+    constraints.push(orderBy('metadata.createdAt', sortOrder));
 
-    // Limite
-    constraints.push(limit(ITEMS_PER_PAGE));
+    // Limite - charger plus pour compenser le filtrage côté client
+    const loadLimit = (filters.serviceType !== 'all' || filters.providerType !== 'all' || filters.paymentStatus !== 'all')
+      ? ITEMS_PER_PAGE * 3  // Charger plus si filtrage côté client nécessaire
+      : ITEMS_PER_PAGE;
+    constraints.push(limit(loadLimit));
 
     // Pagination
     if (!isInitial && lastDoc) {
@@ -387,6 +380,159 @@ const AdminCallsSessions: React.FC = () => {
     }
 
     return query(baseQuery, ...constraints);
+  };
+
+  // Fonction de filtrage côté client pour les filtres sans index Firestore
+  const applyClientSideFilters = (sessions: CallSession[]): CallSession[] => {
+    return sessions.filter(session => {
+      // Filtre type de service
+      if (filters.serviceType !== 'all' && session.metadata.serviceType !== filters.serviceType) {
+        return false;
+      }
+      // Filtre type de prestataire
+      if (filters.providerType !== 'all' && session.metadata.providerType !== filters.providerType) {
+        return false;
+      }
+      // Filtre statut de paiement
+      if (filters.paymentStatus !== 'all' && session.payment.status !== filters.paymentStatus) {
+        return false;
+      }
+      return true;
+    });
+  };
+
+  // Fonction de tri côté client si nécessaire
+  const applySorting = (sessions: CallSession[]): CallSession[] => {
+    if (sortBy === 'createdAt') {
+      return sessions; // Déjà trié par Firestore
+    }
+
+    return [...sessions].sort((a, b) => {
+      let valueA: number, valueB: number;
+
+      if (sortBy === 'duration') {
+        valueA = a.conference.duration || 0;
+        valueB = b.conference.duration || 0;
+      } else { // amount
+        valueA = a.payment.amount || 0;
+        valueB = b.payment.amount || 0;
+      }
+
+      return sortOrder === 'asc' ? valueA - valueB : valueB - valueA;
+    });
+  };
+
+  // Cache pour les noms des utilisateurs (évite les requêtes répétées)
+  const [userNamesCache, setUserNamesCache] = useState<Record<string, { firstName?: string; lastName?: string; displayName?: string }>>({});
+
+  // Fonction pour enrichir les sessions avec les vrais noms des utilisateurs
+  const enrichSessionsWithNames = async (sessions: CallSession[]): Promise<CallSession[]> => {
+    // Collecter les IDs uniques qui n'ont pas de nom ou ne sont pas en cache
+    const missingClientIds = new Set<string>();
+    const missingProviderIds = new Set<string>();
+
+    sessions.forEach(session => {
+      // Si le nom client est manquant et pas en cache
+      if (!session.metadata.clientName && session.metadata.clientId && !userNamesCache[session.metadata.clientId]) {
+        missingClientIds.add(session.metadata.clientId);
+      }
+      // Si le nom prestataire est manquant et pas en cache
+      if (!session.metadata.providerName && session.metadata.providerId && !userNamesCache[session.metadata.providerId]) {
+        missingProviderIds.add(session.metadata.providerId);
+      }
+    });
+
+    // Si aucun nom manquant, retourner les sessions telles quelles
+    if (missingClientIds.size === 0 && missingProviderIds.size === 0) {
+      // Appliquer le cache existant
+      return sessions.map(session => ({
+        ...session,
+        metadata: {
+          ...session.metadata,
+          clientName: session.metadata.clientName || formatUserName(userNamesCache[session.metadata.clientId]),
+          providerName: session.metadata.providerName || formatUserName(userNamesCache[session.metadata.providerId])
+        }
+      }));
+    }
+
+    const newCache: Record<string, { firstName?: string; lastName?: string; displayName?: string }> = { ...userNamesCache };
+
+    // Charger les noms des clients depuis "users"
+    const clientPromises = Array.from(missingClientIds).map(async (clientId) => {
+      try {
+        const userDoc = await getDoc(doc(db, 'users', clientId));
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          newCache[clientId] = {
+            firstName: data.firstName,
+            lastName: data.lastName,
+            displayName: data.displayName || data.name
+          };
+        }
+      } catch (error) {
+        console.error(`Erreur chargement user ${clientId}:`, error);
+      }
+    });
+
+    // Charger les noms des prestataires depuis "sos_profiles"
+    const providerPromises = Array.from(missingProviderIds).map(async (providerId) => {
+      try {
+        // D'abord essayer sos_profiles
+        const profileDoc = await getDoc(doc(db, 'sos_profiles', providerId));
+        if (profileDoc.exists()) {
+          const data = profileDoc.data();
+          newCache[providerId] = {
+            firstName: data.firstName,
+            lastName: data.lastName,
+            displayName: data.displayName || data.name
+          };
+        } else {
+          // Fallback vers users
+          const userDoc = await getDoc(doc(db, 'users', providerId));
+          if (userDoc.exists()) {
+            const data = userDoc.data();
+            newCache[providerId] = {
+              firstName: data.firstName,
+              lastName: data.lastName,
+              displayName: data.displayName || data.name
+            };
+          }
+        }
+      } catch (error) {
+        console.error(`Erreur chargement provider ${providerId}:`, error);
+      }
+    });
+
+    // Attendre toutes les requêtes
+    await Promise.all([...clientPromises, ...providerPromises]);
+
+    // Mettre à jour le cache
+    setUserNamesCache(newCache);
+
+    // Enrichir les sessions avec les noms
+    return sessions.map(session => ({
+      ...session,
+      metadata: {
+        ...session.metadata,
+        clientName: session.metadata.clientName || formatUserName(newCache[session.metadata.clientId]),
+        providerName: session.metadata.providerName || formatUserName(newCache[session.metadata.providerId])
+      }
+    }));
+  };
+
+  // Formater le nom d'un utilisateur
+  const formatUserName = (user?: { firstName?: string; lastName?: string; displayName?: string }): string => {
+    if (!user) return '';
+    if (user.firstName && user.lastName) {
+      return `${user.firstName} ${user.lastName}`;
+    }
+    if (user.displayName) {
+      return user.displayName;
+    }
+    if (user.firstName) {
+      return user.firstName;
+    }
+    return '';
   };
 
   const loadSessions = async (isInitial: boolean = true) => {
@@ -408,19 +554,34 @@ const AdminCallsSessions: React.FC = () => {
         return;
       }
 
-      const newSessions = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
+      // Récupérer les données brutes
+      const rawSessions = snapshot.docs.map(docSnapshot => ({
+        id: docSnapshot.id,
+        ...docSnapshot.data()
       } as CallSession));
 
+      // Appliquer les filtres côté client
+      const filteredSessions = applyClientSideFilters(rawSessions);
+
+      // Appliquer le tri côté client si nécessaire
+      const sortedSessions = applySorting(filteredSessions);
+
+      // Limiter au nombre demandé
+      const limitedSessions = sortedSessions.slice(0, ITEMS_PER_PAGE);
+
+      // ✅ Enrichir avec les vrais noms des utilisateurs
+      const enrichedSessions = await enrichSessionsWithNames(limitedSessions);
+
       if (isInitial) {
-        setSessions(newSessions);
+        setSessions(enrichedSessions);
       } else {
-        setSessions(prev => [...prev, ...newSessions]);
+        // Pour le "load more", aussi enrichir les nouvelles sessions
+        setSessions(prev => [...prev, ...enrichedSessions]);
       }
 
       setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
-      setHasMore(snapshot.docs.length === ITEMS_PER_PAGE);
+      // S'il y a eu filtrage, on peut avoir plus de données disponibles
+      setHasMore(snapshot.docs.length >= ITEMS_PER_PAGE);
 
     } catch (error) {
       console.error('Erreur lors du chargement des sessions:', error);
@@ -682,20 +843,69 @@ const AdminCallsSessions: React.FC = () => {
 
           {/* Filtres et contrôles */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            {/* Première ligne de filtres */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Prestataire</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Statut session</label>
+                <select
+                  value={filters.status}
+                  onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="all">Tous les statuts</option>
+                  <option value="completed">✅ Terminé</option>
+                  <option value="active">🔵 Actif</option>
+                  <option value="pending">⏳ En attente</option>
+                  <option value="failed">❌ Échoué</option>
+                  <option value="cancelled">🚫 Annulé</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Statut paiement</label>
+                <select
+                  value={filters.paymentStatus}
+                  onChange={(e) => setFilters(prev => ({ ...prev, paymentStatus: e.target.value }))}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="all">Tous les paiements</option>
+                  <option value="captured">💰 Capturé</option>
+                  <option value="authorized">🔒 Autorisé</option>
+                  <option value="refunded">↩️ Remboursé</option>
+                  <option value="failed">❌ Échoué</option>
+                  <option value="pending">⏳ En attente</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Type service</label>
+                <select
+                  value={filters.serviceType}
+                  onChange={(e) => setFilters(prev => ({ ...prev, serviceType: e.target.value }))}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="all">Tous les services</option>
+                  <option value="lawyer_call">⚖️ Appel avocat</option>
+                  <option value="expat_call">🌍 Appel expatrié</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Type prestataire</label>
                 <select
                   value={filters.providerType}
                   onChange={(e) => setFilters(prev => ({ ...prev, providerType: e.target.value }))}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="all">Tous types</option>
-                  <option value="lawyer">Avocat</option>
-                  <option value="expat">Expatrié</option>
+                  <option value="lawyer">⚖️ Avocat</option>
+                  <option value="expat">🌍 Expatrié</option>
                 </select>
               </div>
+            </div>
 
+            {/* Deuxième ligne de filtres */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Période</label>
                 <select
@@ -731,6 +941,22 @@ const AdminCallsSessions: React.FC = () => {
                     <ArrowUpDown size={16} />
                   </button>
                 </div>
+              </div>
+
+              {/* Bouton reset filtres */}
+              <div className="flex items-end">
+                <button
+                  onClick={() => setFilters({
+                    status: 'all',
+                    serviceType: 'all',
+                    dateRange: '7d',
+                    paymentStatus: 'all',
+                    providerType: 'all'
+                  })}
+                  className="w-full px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  Réinitialiser les filtres
+                </button>
               </div>
             </div>
 

@@ -547,15 +547,29 @@ const AdminCallsMonitoring: React.FC = () => {
 
     const loadCalls = async () => {
       try {
+        // ✅ FIX: Construire la liste des statuts dynamiquement selon les filtres
+        const activeStatuses = [
+          'pending',
+          'provider_connecting',
+          'client_connecting',
+          'both_connecting',
+          'active'
+        ];
+        const completedStatuses = ['completed', 'failed', 'cancelled'];
+
+        // Si showCompleted est activé, inclure les statuts terminés
+        const statusesToQuery = filters.showCompleted
+          ? [...activeStatuses, ...completedStatuses]
+          : activeStatuses;
+
+        // Si un statut spécifique est sélectionné dans le filtre, l'utiliser
+        const finalStatuses = filters.status !== 'all'
+          ? [filters.status]
+          : statusesToQuery;
+
         const callSessionsQuery = query(
           collection(db, 'call_sessions'),
-          where('status', 'in', [
-            'pending',
-            'provider_connecting',
-            'client_connecting',
-            'both_connecting',
-            'active'
-          ]),
+          where('status', 'in', finalStatuses),
           orderBy('metadata.createdAt', 'desc'),
           limit(CALLS_CONFIG.firestore.liveCallsLimit)
         );
@@ -600,7 +614,7 @@ const AdminCallsMonitoring: React.FC = () => {
       console.log('🔴 Arrêt du monitoring des appels');
       clearInterval(intervalId);
     };
-  }, [currentUser, isRealTimeActive, soundEnabled]);
+  }, [currentUser, isRealTimeActive, soundEnabled, filters.showCompleted, filters.status]);
 
   // Calcul des métriques en temps réel basé sur les vraies données 
   useEffect(() => {
@@ -1286,6 +1300,14 @@ const AdminCallsMonitoring: React.FC = () => {
                 <option value="provider_connecting">Appel prestataire</option>
                 <option value="client_connecting">Appel client</option>
                 <option value="pending">En attente</option>
+                {/* Statuts terminés - visibles uniquement si showCompleted activé */}
+                {filters.showCompleted && (
+                  <>
+                    <option value="completed">✅ Terminés</option>
+                    <option value="failed">❌ Échoués</option>
+                    <option value="cancelled">🚫 Annulés</option>
+                  </>
+                )}
               </select>
 
               <select
@@ -1302,7 +1324,19 @@ const AdminCallsMonitoring: React.FC = () => {
                 <input
                   type="checkbox"
                   checked={filters.showCompleted}
-                  onChange={(e) => setFilters(prev => ({ ...prev, showCompleted: e.target.checked }))}
+                  onChange={(e) => {
+                    const newShowCompleted = e.target.checked;
+                    setFilters(prev => {
+                      // Si on décoche et qu'un statut terminé était sélectionné, réinitialiser
+                      const completedStatuses = ['completed', 'failed', 'cancelled'];
+                      const shouldResetStatus = !newShowCompleted && completedStatuses.includes(prev.status);
+                      return {
+                        ...prev,
+                        showCompleted: newShowCompleted,
+                        status: shouldResetStatus ? 'all' : prev.status
+                      };
+                    });
+                  }}
                   className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded mr-2"
                 />
                 <span className="text-sm text-gray-700">Inclure terminés</span>

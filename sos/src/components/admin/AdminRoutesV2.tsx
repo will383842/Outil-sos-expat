@@ -134,6 +134,9 @@ const AdminCalls = lazy(() => import("../../pages/admin/AdminCalls"));
 const AdminCallsSessions = lazy(
   () => import("../../pages/admin/AdminCallsSessions")
 );
+const AdminReceivedCalls = lazy(
+  () => import("../../pages/admin/AdminReceivedCalls")
+);
 
 // ===== LAZY IMPORTS - COMMUNICATIONS =====
 const AdminCommsCampaigns = lazy(
@@ -622,6 +625,14 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminCallsSessions />
+          </Suspense>
+        }
+      />
+      <Route
+        path="calls/received"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminReceivedCalls />
           </Suspense>
         }
       />
