@@ -71,6 +71,28 @@
           "deeplink": "/provider/dashboard"
         }
       }
+    },
+    {
+      "id": "call.cancelled.client_no_answer",
+      "roles": ["provider"],
+      "channels": {
+        "email": false,
+        "sms": true,
+        "push": false,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "sms": {
+        "text": "SOS Expat: Приносим извинения, клиент {{clientName}} не ответил на звонок после нескольких попыток. Звонок был отменён, клиенту возвращены деньги.\n\nВы ничего не сделали неправильно - такое иногда случается. Вы остаётесь доступны для новых бронирований.\n\nСпасибо за понимание."
+      },
+      "inapp": {
+        "title": "Звонок отменён",
+        "body": "Клиент {{clientName}} не ответил на звонок",
+        "action": {
+          "label": "Смотреть",
+          "deeplink": "/provider/dashboard"
+        }
+      }
     }
   ]
 }

@@ -71,6 +71,28 @@
           "deeplink": "/provider/dashboard"
         }
       }
+    },
+    {
+      "id": "call.cancelled.client_no_answer",
+      "roles": ["provider"],
+      "channels": {
+        "email": false,
+        "sms": true,
+        "push": false,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "sms": {
+        "text": "SOS Expat: نعتذر، لم يرد العميل {{clientName}} على المكالمة بعد عدة محاولات. تم إلغاء المكالمة واسترداد الأموال للعميل.\n\nلم تفعل شيئاً خاطئاً - هذا يحدث أحياناً. تظل متاحاً للحجوزات الجديدة.\n\nشكراً لتفهمك."
+      },
+      "inapp": {
+        "title": "تم إلغاء المكالمة",
+        "body": "العميل {{clientName}} لم يرد على المكالمة",
+        "action": {
+          "label": "عرض",
+          "deeplink": "/provider/dashboard"
+        }
+      }
     }
   ]
 }

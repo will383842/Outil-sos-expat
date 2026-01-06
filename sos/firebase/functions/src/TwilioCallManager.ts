@@ -1512,8 +1512,38 @@ export class TwilioCallManager {
         }
       }                                                                                                                                                                                                                                                                                                                              
 
-      // SMS/WhatsApp notifications removed - only voice calls are used for notifications
-      console.log(`[TwilioCallManager] Call failure notification skipped (SMS/WhatsApp disabled), reason: ${reason}`);
+      // 🆕 NEW: Notify provider when CLIENT doesn't answer (after 3 attempts)
+      if (reason === "client_no_answer") {
+        try {
+          const providerLanguage = callSession.metadata?.providerLanguages?.[0] || "en";
+          const clientName = callSession.metadata?.clientName || "Client";
+
+          // Create message_event to notify provider via SMS
+          const providerNotificationData = {
+            eventId: 'call.cancelled.client_no_answer',
+            locale: providerLanguage,
+            to: {
+              uid: callSession.metadata?.providerId || null,
+              phone: callSession.participants?.provider?.phoneNumber
+                ? decryptPhoneNumber(callSession.participants.provider.phoneNumber)
+                : null,
+            },
+            context: {
+              clientName,
+              sessionId,
+            },
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            status: 'pending',
+          };
+
+          const notifRef = await this.db.collection('message_events').add(providerNotificationData);
+          console.log(`📨 [handleCallFailure] Provider notification created for client_no_answer: ${notifRef.id}`);
+          console.log(`📨   → Provider will receive SMS: "Client ${clientName} did not answer"`);
+        } catch (notifError) {
+          console.error(`⚠️ Failed to send provider notification (non-blocking):`, notifError);
+          await logError('TwilioCallManager:handleCallFailure:providerNotification', notifError as unknown);
+        }
+      }
 
       await this.processRefund(sessionId, `failed_${reason}`);
 

@@ -71,6 +71,28 @@
           "deeplink": "/provider/dashboard"
         }
       }
+    },
+    {
+      "id": "call.cancelled.client_no_answer",
+      "roles": ["provider"],
+      "channels": {
+        "email": false,
+        "sms": true,
+        "push": false,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "sms": {
+        "text": "SOS Expat: Wir entschuldigen uns, der Kunde {{clientName}} hat den Anruf nach mehreren Versuchen nicht angenommen. Der Anruf wurde abgebrochen und der Kunde wurde erstattet.\n\nSie haben nichts falsch gemacht - das passiert manchmal. Sie bleiben für neue Buchungen verfügbar.\n\nVielen Dank für Ihr Verständnis."
+      },
+      "inapp": {
+        "title": "Anruf abgebrochen",
+        "body": "Der Kunde {{clientName}} hat den Anruf nicht angenommen",
+        "action": {
+          "label": "Ansehen",
+          "deeplink": "/provider/dashboard"
+        }
+      }
     }
   ]
 }

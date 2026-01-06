@@ -71,6 +71,28 @@
           "deeplink": "/provider/dashboard"
         }
       }
+    },
+    {
+      "id": "call.cancelled.client_no_answer",
+      "roles": ["provider"],
+      "channels": {
+        "email": false,
+        "sms": true,
+        "push": false,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "sms": {
+        "text": "SOS Expat: हमें खेद है, ग्राहक {{clientName}} ने कई प्रयासों के बाद भी कॉल का जवाब नहीं दिया। कॉल रद्द कर दी गई है और ग्राहक को धनवापसी कर दी गई है।\n\nआपने कुछ गलत नहीं किया - ऐसा कभी-कभी होता है। आप नई बुकिंग के लिए उपलब्ध रहते हैं।\n\nआपकी समझ के लिए धन्यवाद।"
+      },
+      "inapp": {
+        "title": "कॉल रद्द",
+        "body": "ग्राहक {{clientName}} ने कॉल का जवाब नहीं दिया",
+        "action": {
+          "label": "देखें",
+          "deeplink": "/provider/dashboard"
+        }
+      }
     }
   ]
 }

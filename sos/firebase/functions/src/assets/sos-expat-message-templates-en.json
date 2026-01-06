@@ -194,6 +194,28 @@
       }
     },
     {
+      "id": "call.cancelled.client_no_answer",
+      "roles": ["provider"],
+      "channels": {
+        "email": false,
+        "sms": true,
+        "push": false,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "sms": {
+        "text": "SOS Expat: We apologize, the client {{clientName}} did not answer the call after several attempts. The call has been cancelled and the client has been refunded.\n\nYou did nothing wrong - this happens sometimes. You remain available for new bookings.\n\nThank you for your understanding."
+      },
+      "inapp": {
+        "title": "Call cancelled",
+        "body": "Client {{clientName}} did not answer the call",
+        "action": {
+          "label": "View",
+          "deeplink": "/provider/dashboard"
+        }
+      }
+    },
+    {
       "id": "handoff.started.client",
       "roles": ["client"],
       "channels": {

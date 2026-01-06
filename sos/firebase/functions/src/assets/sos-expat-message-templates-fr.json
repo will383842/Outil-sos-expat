@@ -194,6 +194,28 @@
       }
     },
     {
+      "id": "call.cancelled.client_no_answer",
+      "roles": ["provider"],
+      "channels": {
+        "email": false,
+        "sms": true,
+        "push": false,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "sms": {
+        "text": "SOS Expat: Nous vous prions de nous excuser, le client {{clientName}} n'a pas répondu à l'appel après plusieurs tentatives. L'appel a été annulé et le client a été remboursé.\n\nVous n'avez rien fait de mal - cela arrive parfois. Vous restez disponible pour de nouvelles réservations.\n\nMerci de votre compréhension."
+      },
+      "inapp": {
+        "title": "Appel annulé",
+        "body": "Le client {{clientName}} n'a pas répondu à l'appel",
+        "action": {
+          "label": "Voir",
+          "deeplink": "/provider/dashboard"
+        }
+      }
+    },
+    {
       "id": "handoff.started.client",
       "roles": ["client"],
       "channels": {

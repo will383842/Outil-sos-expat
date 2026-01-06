@@ -71,6 +71,28 @@
           "deeplink": "/provider/dashboard"
         }
       }
+    },
+    {
+      "id": "call.cancelled.client_no_answer",
+      "roles": ["provider"],
+      "channels": {
+        "email": false,
+        "sms": true,
+        "push": false,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "sms": {
+        "text": "SOS Expat: 非常抱歉，客户 {{clientName}} 在多次尝试后未接听电话。通话已取消，客户已获得退款。\n\n您没有做错任何事 - 这种情况时有发生。您仍可接受新的预订。\n\n感谢您的理解。"
+      },
+      "inapp": {
+        "title": "通话已取消",
+        "body": "客户 {{clientName}} 未接听电话",
+        "action": {
+          "label": "查看",
+          "deeplink": "/provider/dashboard"
+        }
+      }
     }
   ]
 }

@@ -71,6 +71,28 @@
           "deeplink": "/provider/dashboard"
         }
       }
+    },
+    {
+      "id": "call.cancelled.client_no_answer",
+      "roles": ["provider"],
+      "channels": {
+        "email": false,
+        "sms": true,
+        "push": false,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "sms": {
+        "text": "SOS Expat: Le pedimos disculpas, el cliente {{clientName}} no respondió a la llamada después de varios intentos. La llamada ha sido cancelada y el cliente ha sido reembolsado.\n\nNo ha hecho nada mal - esto sucede a veces. Permanece disponible para nuevas reservas.\n\nGracias por su comprensión."
+      },
+      "inapp": {
+        "title": "Llamada cancelada",
+        "body": "El cliente {{clientName}} no respondió a la llamada",
+        "action": {
+          "label": "Ver",
+          "deeplink": "/provider/dashboard"
+        }
+      }
     }
   ]
 }
