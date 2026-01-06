@@ -50,6 +50,9 @@ import {
   FileText,
   Maximize2,
   Minimize2,
+  Mail,
+  Phone,
+  MessageCircle,
 } from "lucide-react";
 
 // =============================================================================
@@ -219,6 +222,14 @@ function useConversationExpiration(booking: Booking | null) {
 // COMPOSANT CHAT IA (Panneau droit)
 // =============================================================================
 
+// P0 FIX: Type pour les données de progression
+interface ProgressData {
+  step: "initializing" | "validating" | "searching" | "analyzing" | "generating" | "finalizing";
+  stepNumber: number;
+  totalSteps: number;
+  message: string;
+}
+
 function AIChat({
   messages,
   onSendMessage,
@@ -229,6 +240,7 @@ function AIChat({
   disabledReason = "",
   remainingTime,
   isExpired,
+  progress,  // P0 FIX: État de progression
 }: {
   messages: Message[];
   onSendMessage: (message: string) => Promise<void>;
@@ -239,6 +251,7 @@ function AIChat({
   disabledReason?: string;
   remainingTime?: string | null;
   isExpired?: boolean;
+  progress?: ProgressData | null;  // P0 FIX: État de progression
 }) {
   const { t } = useLanguage({ mode: "provider" });
   const [input, setInput] = useState("");
@@ -431,18 +444,44 @@ function AIChat({
           })
         )}
         
-        {/* Loading indicator */}
+        {/* P0 FIX: Loading indicator avec progression step-by-step */}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3 shadow-sm">
-              <div className="flex items-center gap-3">
+            <div className="bg-white border border-gray-200 rounded-2xl px-4 py-4 shadow-sm max-w-sm">
+              {/* En-tête avec étape actuelle */}
+              <div className="flex items-center gap-3 mb-3">
                 <div className="flex space-x-1">
                   <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
                   <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
                   <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
                 </div>
-                <span className="text-sm text-gray-600">{t("aiChat.analyzing")}</span>
+                <span className="text-sm font-medium text-gray-700">
+                  {progress?.message || t("aiChat.analyzing")}
+                </span>
               </div>
+
+              {/* Barre de progression */}
+              {progress && (
+                <div className="space-y-2">
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-purple-500 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${(progress.stepNumber / progress.totalSteps) * 100}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>{t("aiChat.step")} {progress.stepNumber}/{progress.totalSteps}</span>
+                    <span className="text-purple-600 font-medium">
+                      {progress.step === "validating" && "✓ Vérifications"}
+                      {progress.step === "initializing" && "✓ Préparation"}
+                      {progress.step === "searching" && "🔍 Recherche..."}
+                      {progress.step === "analyzing" && "📊 Analyse..."}
+                      {progress.step === "generating" && "✍️ Rédaction..."}
+                      {progress.step === "finalizing" && "✓ Finalisation"}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -664,6 +703,44 @@ function ClientInfoPanel({
                     {lang.toUpperCase()}
                   </span>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* P0 FIX: Affichage des coordonnées client (email, téléphone, WhatsApp) */}
+          {(booking.clientEmail || booking.clientPhone || booking.clientWhatsapp) && (
+            <div className="pt-3 mt-3 border-t border-gray-100">
+              <span className="text-xs text-gray-500 uppercase tracking-wide">{t("clientInfo.contact")}</span>
+              <div className="mt-2 space-y-2">
+                {booking.clientEmail && (
+                  <a
+                    href={`mailto:${booking.clientEmail}`}
+                    className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
+                  >
+                    <Mail className="w-4 h-4" />
+                    {booking.clientEmail}
+                  </a>
+                )}
+                {booking.clientPhone && (
+                  <a
+                    href={`tel:${booking.clientPhone}`}
+                    className="flex items-center gap-2 text-sm text-gray-700 hover:text-gray-900"
+                  >
+                    <Phone className="w-4 h-4" />
+                    {booking.clientPhone}
+                  </a>
+                )}
+                {booking.clientWhatsapp && booking.clientWhatsapp !== booking.clientPhone && (
+                  <a
+                    href={`https://wa.me/${booking.clientWhatsapp.replace(/[^0-9]/g, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-sm text-green-600 hover:text-green-800"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    WhatsApp: {booking.clientWhatsapp}
+                  </a>
+                )}
               </div>
             </div>
           )}

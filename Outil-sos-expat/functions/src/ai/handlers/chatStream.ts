@@ -43,8 +43,18 @@ import { moderateInput, moderateOutput, MODERATION_OPENAI_KEY } from "../../mode
 // =============================================================================
 
 interface SSEEvent {
-  event: "start" | "chunk" | "done" | "error" | "warning";
+  event: "start" | "chunk" | "done" | "error" | "warning" | "progress";
   data: Record<string, unknown>;
+}
+
+// P0 FIX: Types pour les étapes de progression
+type ProgressStep = "initializing" | "validating" | "searching" | "analyzing" | "generating" | "finalizing";
+
+interface ProgressData {
+  step: ProgressStep;
+  stepNumber: number;
+  totalSteps: number;
+  message: string;
 }
 
 // =============================================================================
@@ -252,7 +262,9 @@ export const aiChatStream = onRequest(
     cors: [/sos-expat.*$/i, /localhost(:\d+)?$/i, /ulixai.*$/i],
     // Note: MODERATION_OPENAI_KEY est déjà inclus dans AI_SECRETS (même secret)
     secrets: AI_SECRETS,
-    timeoutSeconds: 60,
+    // P0 FIX: Timeout augmenté de 60s à 120s pour éviter les "10 minutes bloquées"
+    // Avec les nouveaux timeouts API (25s) et retries réduits (2x1.5), le pire cas est ~65s
+    timeoutSeconds: 120,
     // NOTE: minInstances désactivé pour respecter quota CPU région (cold start ~3-10s)
     minInstances: 0,
     maxInstances: 20,
@@ -335,14 +347,33 @@ export const aiChatStream = onRequest(
     // ==========================================================
     setupSSEHeaders(res);
 
-    // Handle client disconnect
+    // Handle client disconnect - MUST be declared first
     let clientDisconnected = false;
+
+    // P0 FIX: Helper pour envoyer les événements de progression
+    const sendProgress = (step: ProgressStep, stepNumber: number, message: string) => {
+      if (!clientDisconnected) {
+        sendSSE(res, {
+          event: "progress",
+          data: {
+            step,
+            stepNumber,
+            totalSteps: 4,
+            message,
+          } as Record<string, unknown>,
+        });
+      }
+    };
+
+    // Étape 1: Validation terminée - envoi immédiat pour feedback utilisateur
+    sendProgress("validating", 1, "Vérifications en cours...");
     req.on("close", () => {
       clientDisconnected = true;
       logger.info("[aiChatStream] Client disconnected");
     });
 
     // P0 FIX: Heartbeat keepalive pour éviter coupure proxy après 60s inactivité
+    // P0 FIX: Réduit de 25s à 15s pour garantir maintien de connexion
     let heartbeatInterval: NodeJS.Timeout | null = setInterval(() => {
       if (!clientDisconnected && heartbeatInterval) {
         res.write(": keepalive\n\n");
@@ -350,7 +381,7 @@ export const aiChatStream = onRequest(
           (res as unknown as { flush: () => void }).flush();
         }
       }
-    }, 25000); // 25 secondes (avant le timeout proxy de 30-60s)
+    }, 15000); // 15 secondes (avant le timeout proxy de 30-60s)
 
     // Helper pour nettoyer heartbeat et terminer la réponse
     const endResponse = () => {
@@ -371,6 +402,9 @@ export const aiChatStream = onRequest(
 
     try {
       const db = admin.firestore();
+
+      // Étape 2: Préparation du dossier
+      sendProgress("initializing", 2, "Préparation du dossier...");
 
       // Get or create conversation
       let convoRef;
@@ -451,6 +485,9 @@ export const aiChatStream = onRequest(
         event: "start",
         data: { conversationId: convoRef.id },
       });
+
+      // Étape 3: Analyse et génération de la réponse
+      sendProgress("analyzing", 3, "Analyse juridique en cours...");
 
       // Add user message
       history.push({ role: "user", content: safeMessage });

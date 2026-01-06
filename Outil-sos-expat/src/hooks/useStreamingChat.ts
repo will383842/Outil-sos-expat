@@ -29,8 +29,16 @@ export interface ChatMessage {
   provider?: string;
 }
 
+// P0 FIX: Types pour les événements de progression
+export interface ProgressData {
+  step: "initializing" | "validating" | "searching" | "analyzing" | "generating" | "finalizing";
+  stepNumber: number;
+  totalSteps: number;
+  message: string;
+}
+
 interface StreamEvent {
-  event: "start" | "chunk" | "done" | "error";
+  event: "start" | "chunk" | "done" | "error" | "progress" | "warning";
   data: Record<string, unknown>;
 }
 
@@ -39,6 +47,7 @@ interface UseStreamingChatReturn {
   sendMessage: (text: string) => Promise<void>;
   streaming: boolean;
   error: string | null;
+  progress: ProgressData | null;  // P0 FIX: État de progression
   clearError: () => void;
   clearMessages: () => void;
 }
@@ -48,6 +57,7 @@ interface StreamingChatOptions {
   onChunk?: (text: string, fullText: string) => void;
   onDone?: (response: { conversationId: string; messageId: string }) => void;
   onError?: (error: string) => void;
+  onProgress?: (progress: ProgressData) => void;  // P0 FIX: Callback de progression
   fallbackToClassic?: boolean;
 }
 
@@ -70,6 +80,7 @@ export function useStreamingChat(
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<ProgressData | null>(null);  // P0 FIX: État progression
   const [currentConversationId, setCurrentConversationId] = useState<string | undefined>(conversationId);
 
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -144,6 +155,7 @@ export function useStreamingChat(
 
       setStreaming(true);
       setError(null);
+      setProgress(null);  // P0 FIX: Reset progress
       streamingMessageRef.current = "";
 
       // Add user message immediately
@@ -264,6 +276,23 @@ export function useStreamingChat(
                 });
                 break;
 
+              case "progress":
+                // P0 FIX: Gérer les événements de progression
+                const progressData: ProgressData = {
+                  step: event.data.step as ProgressData["step"],
+                  stepNumber: event.data.stepNumber as number,
+                  totalSteps: event.data.totalSteps as number,
+                  message: event.data.message as string,
+                };
+                setProgress(progressData);
+                options.onProgress?.(progressData);
+                break;
+
+              case "warning":
+                // P0 FIX: Gérer les warnings de modération
+                console.warn("[useStreamingChat] Warning:", event.data);
+                break;
+
               case "error":
                 throw new Error((event.data.error as string) || "Erreur streaming");
             }
@@ -301,6 +330,7 @@ export function useStreamingChat(
         }
       } finally {
         setStreaming(false);
+        setProgress(null);  // P0 FIX: Reset progress when done
         abortControllerRef.current = null;
       }
     },
@@ -372,6 +402,7 @@ export function useStreamingChat(
     sendMessage,
     streaming,
     error,
+    progress,  // P0 FIX: Exposer l'état de progression
     clearError,
     clearMessages,
   };

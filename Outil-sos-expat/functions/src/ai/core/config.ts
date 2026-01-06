@@ -8,14 +8,14 @@
  */
 
 export const AI_CONFIG = {
-  // Timeouts et retries
-  API_TIMEOUT_MS: 12000,  // 12s max pour éviter blocages Cloud Functions
-  MAX_RETRIES: 3,
-  INITIAL_RETRY_DELAY_MS: 1000,
+  // Timeouts et retries - P0 FIX: Timeouts augmentés pour éviter les 10min bloqués
+  API_TIMEOUT_MS: 25000,  // 25s (augmenté de 12s) pour recherches juridiques complexes
+  MAX_RETRIES: 2,         // Réduit de 3 à 2 pour éviter les délais cumulés
+  INITIAL_RETRY_DELAY_MS: 500,  // Réduit de 1000ms à 500ms
 
-  // Exponential backoff strategy
-  RETRY_BACKOFF_MULTIPLIER: 2,    // Double le délai à chaque retry
-  RETRY_MAX_DELAY_MS: 16000,      // Délai max 16 secondes
+  // Exponential backoff strategy - P0 FIX: Délais réduits
+  RETRY_BACKOFF_MULTIPLIER: 1.5,  // Réduit de 2 à 1.5 (moins d'attente entre retries)
+  RETRY_MAX_DELAY_MS: 8000,       // Réduit de 16s à 8s max
   RETRY_JITTER: true,             // Ajoute du random pour éviter thundering herd
 
   // Codes HTTP retryables
