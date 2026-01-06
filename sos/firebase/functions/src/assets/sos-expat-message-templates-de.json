@@ -61,7 +61,7 @@
         "whatsapp": false
       },
       "sms": {
-        "text": "SOS Expat: Neue Buchung!\n\nKunde: {{client.firstName}}\nNationalität: {{client.nationality}}\nEinsatzland: {{request.country}}\nGesprochene Sprachen: {{clientLanguagesFormatted}}\n\nTitel: {{request.title}}\nDetails: {{request.description}}\n\nFür diesen Anruf verdienen Sie {{providerEarnings}}{{currencySymbol}} (kann je nach Wechselkurs Ihrer Bank leicht variieren).\n\nMelden Sie sich bei Ihrem KI-Tool an, um Hilfe bei Ihren Antworten zu erhalten:\n👉 https://sos-expat.com/de-de/dashboard/subscription\n\n⚠️ ACHTUNG: Wenn Sie den Anruf nicht annehmen, werden Sie automatisch offline geschaltet und müssen sich manuell wieder verbinden. Dies wirkt sich auch auf Ihre Sichtbarkeitsbewertung aus."
+        "text": "SOS Expat: Neue Buchung!\n\nKunde: {{client.firstName}}\nNationalität: {{client.nationality}}\nEinsatzland: {{request.country}}\nGesprochene Sprachen: {{clientLanguagesFormatted}}\n\nTitel: {{request.title}}\nDetails: {{request.description}}\n\nFür diesen Anruf verdienen Sie {{providerEarnings}}{{currencySymbol}} (kann je nach Wechselkurs Ihrer Bank leicht variieren).\n\nMelden Sie sich bei Ihrem KI-Tool an, um Hilfe bei Ihren Antworten zu erhalten:\n👉 https://sos-expat.com/de-de/dashboard/abonnement\n\n⚠️ ACHTUNG: Wenn Sie den Anruf nicht annehmen, werden Sie automatisch offline geschaltet und müssen sich manuell wieder verbinden. Dies wirkt sich auch auf Ihre Sichtbarkeitsbewertung aus."
       },
       "inapp": {
         "title": "Neue bezahlte Buchung",
