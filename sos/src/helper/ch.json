@@ -4945,6 +4945,8 @@
   "success.expert": "专家",
   "success.expertComing": "您的专家即将接通电话！ 📞",
   "success.expertNoAnswer": "糟糕！专家在 3 次尝试后未接听。自动退款中！ 💸",
+  "success.clientNoAnswer": "您在 3 次通话尝试后未接听。通话已取消，您已获得退款。如有需要，您可以重新预约。💸",
+  "success.clientNoAnswerTitle": "未接来电 📵",
   "success.goToDashboard": "查看我的空间",
   "success.home": "首页",
   "success.lawyerCall": "律师咨询",

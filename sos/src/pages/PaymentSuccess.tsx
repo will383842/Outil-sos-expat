@@ -212,6 +212,8 @@ const SuccessPayment: React.FC = () => {
   const [paymentTimestamp, setPaymentTimestamp] = useState<number | null>(null);
   // P0 FIX: Track failure reason to display the correct message (client vs provider no_answer)
   const [failureReason, setFailureReason] = useState<string | null>(null);
+  // P0 FIX: Track actual call duration to prevent review if call didn't happen
+  const [callDuration, setCallDuration] = useState<number>(0);
 
   // Service data
   const [paidAmount, setPaidAmount] = useState<number>(0);
@@ -539,6 +541,9 @@ const SuccessPayment: React.FC = () => {
           break;
         case "completed":
           setCallState("completed");
+          // P0 FIX: Store actual call duration to check before allowing review
+          const duration = data?.actualDuration || data?.duration || 0;
+          setCallDuration(duration);
           break;
         case "failed":
         case "cancelled":
@@ -556,12 +561,17 @@ const SuccessPayment: React.FC = () => {
           break;
       }
 
-      if (data?.status === "completed" && !reviewModelShown) {
-        console.log("🔵 [SUCCESS_PAGE_DEBUG] Call completed, showing review modal in 1.5s");
+      // P0 FIX: Only show review modal if call actually happened (duration >= 5 minutes)
+      const actualDuration = data?.actualDuration || data?.duration || 0;
+      const MIN_DURATION_FOR_REVIEW = 300; // 5 minutes
+      if (data?.status === "completed" && !reviewModelShown && actualDuration >= MIN_DURATION_FOR_REVIEW) {
+        console.log(`🔵 [SUCCESS_PAGE_DEBUG] Call completed with duration ${actualDuration}s, showing review modal in 1.5s`);
         setTimeout(() => {
           setShowReviewModal(true);
           setReviewModelShown(true);
         }, 1500);
+      } else if (data?.status === "completed" && !reviewModelShown && actualDuration < MIN_DURATION_FOR_REVIEW) {
+        console.log(`🔵 [SUCCESS_PAGE_DEBUG] Call completed but duration too short (${actualDuration}s < ${MIN_DURATION_FOR_REVIEW}s), NOT showing review modal`);
       }
     }, (error) => {
       // P1 FIX: Handle errors with retry
@@ -1509,8 +1519,9 @@ const SuccessPayment: React.FC = () => {
         <section className="py-16 bg-gray-950">
           <div className="max-w-4xl mx-auto px-6 text-center">
             <div className="space-y-4">
-              {/* Laisser un avis -> uniquement quand l'appel est terminé */}
-              {callState === "completed" && (
+              {/* Laisser un avis -> uniquement quand l'appel est terminé ET a duré au moins 5 minutes */}
+              {/* P0 FIX: Only show review button if call actually happened (duration >= 5 min) */}
+              {callState === "completed" && callDuration >= 300 && (
                 <button
                   onClick={() => setShowReviewModal(true)}
                   className="w-full sm:w-auto bg-gradient-to-r from-yellow-500 to-yellow-600 text-white py-4 px-8 rounded-2xl hover:scale-105 transition-all duration-300 font-bold text-lg inline-flex items-center justify-center gap-3"

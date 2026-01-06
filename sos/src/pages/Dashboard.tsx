@@ -3260,9 +3260,11 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                               </div>
                               <div className="flex flex-col items-end space-y-2">
                                 {getStatusBadge(call.status)}
+                                {/* P0 FIX: Only show review button if call actually happened (duration >= 5 min) */}
                                 {call.status === "completed" &&
                                   user.role === "client" &&
-                                  !call.hasReview && (
+                                  !call.hasReview &&
+                                  call.duration >= 300 && (
                                     <Button
                                       size="small"
                                       variant="outline"

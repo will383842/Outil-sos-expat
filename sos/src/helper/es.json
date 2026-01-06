@@ -4874,6 +4874,8 @@
   "success.expert": "Experto",
   "success.expertComing": "¡Tu experto está marcando! 📞",
   "success.expertNoAnswer": "¡Ups! El experto no contestó después de 3 intentos. ¡Reembolso automático en camino! 💸",
+  "success.clientNoAnswer": "No contestaste después de 3 intentos de llamada. La llamada ha sido cancelada y se te ha reembolsado. Puedes reservar de nuevo si lo deseas. 💸",
+  "success.clientNoAnswerTitle": "Llamada perdida 📵",
   "success.goToDashboard": "Ver mi espacio",
   "success.home": "Inicio",
   "success.lawyerCall": "Consulta con Abogado",

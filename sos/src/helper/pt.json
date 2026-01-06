@@ -5029,6 +5029,8 @@
   "success.expert": "Especialista",
   "success.expertComing": "Seu especialista está chegando na linha! 📞",
   "success.expertNoAnswer": "Que pena! O especialista não atendeu após 3 tentativas. Reembolso automático em andamento! 💸",
+  "success.clientNoAnswer": "Você não atendeu após 3 tentativas de chamada. A chamada foi cancelada e você foi reembolsado. Você pode reservar novamente se desejar. 💸",
+  "success.clientNoAnswerTitle": "Chamada perdida 📵",
   "success.goToDashboard": "Ir ao meu espaço",
   "success.home": "Início",
   "success.lawyerCall": "Consulta Advogado",
