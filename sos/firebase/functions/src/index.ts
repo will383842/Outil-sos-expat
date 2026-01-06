@@ -189,6 +189,13 @@ export {
   onPayPalConnected,
 } from "./PayPalReminderManager";
 
+// PayPal Email Verification (code-based verification)
+export {
+  sendPayPalVerificationCode,
+  verifyPayPalCode,
+  resendPayPalVerificationCode,
+} from "./paypal/emailVerification";
+
 // KYC Templates Seed
 export { initKYCReminderTemplates } from "./seeds/kycReminderTemplates";
 
