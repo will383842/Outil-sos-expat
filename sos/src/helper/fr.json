@@ -1578,6 +1578,7 @@
   "admin.receivedCalls.modal.twilioCost": "Twilio (Voix)",
   "admin.receivedCalls.modal.gcpCost": "Google Cloud",
   "admin.receivedCalls.modal.otherCosts": "Autres coûts",
+  "admin.receivedCalls.modal.stripeFeesNote": "Les frais Stripe/PayPal sont payés par le prestataire (modèle Direct Charges)",
   "admin.receivedCalls.modal.totalCosts": "Coûts totaux",
   "admin.receivedCalls.modal.netProfit": "Bénéfice net (après coûts)",
   "admin.receivedCalls.modal.payoutInfo": "Informations de versement",

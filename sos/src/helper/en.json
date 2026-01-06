@@ -1576,6 +1576,7 @@
   "admin.receivedCalls.modal.twilioCost": "Twilio (Voice)",
   "admin.receivedCalls.modal.gcpCost": "Google Cloud",
   "admin.receivedCalls.modal.otherCosts": "Other Costs",
+  "admin.receivedCalls.modal.stripeFeesNote": "Stripe/PayPal fees are paid by the provider (Direct Charges model)",
   "admin.receivedCalls.modal.totalCosts": "Total Costs",
   "admin.receivedCalls.modal.netProfit": "Net Profit (after costs)",
   "admin.receivedCalls.modal.payoutInfo": "Payout Information",

@@ -2,6 +2,38 @@ import { getTwilioClient, getTwilioPhoneNumber } from "../../../lib/twilio";
 import * as admin from "firebase-admin";
 
 // ============================================================================
+// ALPHANUMERIC SENDER ID - Meilleure délivrabilité internationale
+// ============================================================================
+
+const ALPHANUMERIC_SENDER_ID = "SOS-Expat"; // Max 11 chars, lettres/chiffres
+
+// Pays qui NE supportent PAS les Alphanumeric Sender IDs
+// Ces pays recevront les SMS depuis le numéro UK (+447427874305)
+const COUNTRIES_REQUIRING_PHONE_NUMBER = [
+  "+1",    // USA & Canada - pas de support alphanumeric
+  "+86",   // Chine - très restrictif
+  "+55",   // Brésil - requiert numéro local
+];
+
+/**
+ * Détermine le meilleur expéditeur SMS selon le pays de destination
+ * - Alphanumeric "SOS-Expat" pour la plupart des pays (meilleure délivrabilité)
+ * - Numéro UK pour USA/Canada/Chine (pas de support alphanumeric)
+ */
+function getBestSender(destinationNumber: string): { from: string; type: "alphanumeric" | "phone" } {
+  // Vérifier si le pays de destination nécessite un numéro de téléphone
+  for (const prefix of COUNTRIES_REQUIRING_PHONE_NUMBER) {
+    if (destinationNumber.startsWith(prefix)) {
+      const phoneNumber = getTwilioPhoneNumber();
+      return { from: phoneNumber, type: "phone" };
+    }
+  }
+
+  // Pour tous les autres pays, utiliser l'Alphanumeric Sender ID
+  return { from: ALPHANUMERIC_SENDER_ID, type: "alphanumeric" };
+}
+
+// ============================================================================
 // P0 SECURITY: Rate limiting pour éviter les abus de coûts Twilio
 // ============================================================================
 
@@ -113,23 +145,33 @@ export async function sendSms(to: string, text: string): Promise<string> {
     throw clientError;
   }
 
-  console.log(`📱 [TwilioSMS][${debugId}] Step 3: Getting Twilio phone number...`);
-  let from;
+  console.log(`📱 [TwilioSMS][${debugId}] Step 3: Determining best sender for destination...`);
+  let from: string;
+  let senderType: "alphanumeric" | "phone";
+
   try {
-    from = getTwilioPhoneNumber();
-    console.log(`📱 [TwilioSMS][${debugId}] From number: ${from ? `${from.slice(0, 5)}***` : 'NULL/UNDEFINED'}`);
-  } catch (phoneError) {
-    console.error(`❌ [TwilioSMS][${debugId}] ERREUR récupération numéro Twilio:`, phoneError);
-    throw phoneError;
+    const sender = getBestSender(to);
+    from = sender.from;
+    senderType = sender.type;
+    console.log(`📱 [TwilioSMS][${debugId}] Sender selected:`, {
+      type: senderType,
+      from: senderType === "alphanumeric" ? from : `${from.slice(0, 5)}***`,
+      reason: senderType === "alphanumeric"
+        ? "Alphanumeric for better international deliverability"
+        : "Phone number required for this country"
+    });
+  } catch (senderError) {
+    console.error(`❌ [TwilioSMS][${debugId}] ERREUR sélection expéditeur:`, senderError);
+    throw senderError;
   }
 
   if (!from) {
-    console.error(`❌ [TwilioSMS][${debugId}] ERREUR: Numéro Twilio source non configuré!`);
-    throw new Error('TWILIO_PHONE_NUMBER non configuré');
+    console.error(`❌ [TwilioSMS][${debugId}] ERREUR: Expéditeur SMS non configuré!`);
+    throw new Error('SMS sender non configuré');
   }
 
   console.log(`📱 [TwilioSMS][${debugId}] Step 4: Creating Twilio message...`);
-  console.log(`📱 [TwilioSMS][${debugId}] Payload: { to: ${to.slice(0, 5)}***, from: ${from.slice(0, 5)}***, body: ${text?.length} chars }`);
+  console.log(`📱 [TwilioSMS][${debugId}] Payload: { to: ${to.slice(0, 5)}***, from: "${senderType === "alphanumeric" ? from : from.slice(0, 5) + "***"}", body: ${text?.length} chars }`);
 
   try {
     const res = await client.messages.create({ to, from, body: text });

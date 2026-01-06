@@ -1007,9 +1007,9 @@ const CostMonitoring: React.FC = () => {
                       border: '1px solid #E5E7EB',
                       boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                     }}
-                    formatter={(value: number, name: string) => [
-                      formatCurrency(value),
-                      name.charAt(0).toUpperCase() + name.slice(1),
+                    formatter={(value: number | undefined, name: string | undefined) => [
+                      formatCurrency(value ?? 0),
+                      (name ?? '').charAt(0).toUpperCase() + (name ?? '').slice(1),
                     ]}
                   />
                   <Legend

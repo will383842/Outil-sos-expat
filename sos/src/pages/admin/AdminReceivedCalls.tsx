@@ -103,9 +103,10 @@ interface ReceivedCall {
   costs?: {
     twilio: number;
     gcp: number;
-    other: number;
     total: number;
     isReal?: boolean; // true = real costs from Twilio API, false = estimates
+    // NOTE: Payment processing fees (Stripe/PayPal) are NOT included
+    // because they are paid by the PROVIDER via Direct Charges model
   };
 }
 
@@ -129,6 +130,8 @@ interface CallStats {
 
 // ============ COST CALCULATION CONSTANTS ============
 // Based on actual pricing from getCostMetrics.ts
+// NOTE: Stripe/PayPal fees are NOT included because they are paid by the PROVIDER
+// (Direct Charges model = fees deducted from provider's Stripe Connect account)
 const COST_PRICING = {
   // Twilio pricing (Europe)
   TWILIO: {
@@ -143,23 +146,20 @@ const COST_PRICING = {
     FIRESTORE_PER_CALL_EUR: 0.001,         // ~10-20 reads/writes par appel
     CLOUD_TASKS_PER_CALL_EUR: 0.0005,      // Scheduling
   },
-  // Other costs
-  OTHER: {
-    STRIPE_PERCENTAGE: 0.014,  // 1.4% + 0.25€ par transaction
-    STRIPE_FIXED_EUR: 0.25,
-    PAYPAL_PERCENTAGE: 0.029,  // 2.9% + 0.35€
-    PAYPAL_FIXED_EUR: 0.35,
-  }
+  // Stripe/PayPal fees: NOT a cost for SOS Expat
+  // With Direct Charges model, these are paid by the provider on their connected account
+  // Provider receives: amount - stripe_fees - application_fee
+  // SOS Expat receives: application_fee (commission) directly, no fees deducted
 };
 
 /**
- * Calculate costs for a single call based on duration and payment amount
+ * Calculate costs for a single call based on duration
+ * NOTE: Payment processing fees (Stripe/PayPal) are NOT included because
+ * they are paid by the PROVIDER via Direct Charges model, not by SOS Expat
  */
 const calculateCallCosts = (
-  durationSeconds: number,
-  paymentAmount: number,
-  paymentMethod: 'stripe' | 'paypal' = 'stripe'
-): { twilio: number; gcp: number; other: number; total: number } => {
+  durationSeconds: number
+): { twilio: number; gcp: number; total: number } => {
   // Twilio cost: duration in minutes × rate × conference multiplier
   const durationMinutes = Math.ceil(durationSeconds / 60); // Round up to next minute
   const twilioCost = durationMinutes * COST_PRICING.TWILIO.VOICE_PER_MINUTE_EUR * COST_PRICING.TWILIO.CONFERENCE_MULTIPLIER;
@@ -170,20 +170,14 @@ const calculateCallCosts = (
     COST_PRICING.GCP.FIRESTORE_PER_CALL_EUR +
     COST_PRICING.GCP.CLOUD_TASKS_PER_CALL_EUR;
 
-  // Payment processing cost
-  let otherCost = 0;
-  if (paymentMethod === 'stripe') {
-    otherCost = (paymentAmount * COST_PRICING.OTHER.STRIPE_PERCENTAGE) + COST_PRICING.OTHER.STRIPE_FIXED_EUR;
-  } else if (paymentMethod === 'paypal') {
-    otherCost = (paymentAmount * COST_PRICING.OTHER.PAYPAL_PERCENTAGE) + COST_PRICING.OTHER.PAYPAL_FIXED_EUR;
-  }
+  // NO payment processing fees for SOS Expat
+  // These are deducted from the provider's Stripe Connect account (Direct Charges)
 
-  const total = twilioCost + gcpCost + otherCost;
+  const total = twilioCost + gcpCost;
 
   return {
     twilio: Math.round(twilioCost * 100) / 100,
     gcp: Math.round(gcpCost * 100) / 100,
-    other: Math.round(otherCost * 100) / 100,
     total: Math.round(total * 100) / 100
   };
 };
@@ -409,6 +403,8 @@ const AdminReceivedCalls: React.FC = () => {
   };
 
   // Use real costs from Firestore if available, otherwise calculate estimates
+  // NOTE: Only Twilio + GCP costs are tracked - payment fees are NOT SOS Expat's costs
+  // (Stripe/PayPal fees are paid by the provider via Direct Charges model)
   const enrichCallsWithCosts = (callsList: ReceivedCall[]): ReceivedCall[] => {
     return callsList.map(call => {
       // Check if real costs are stored in Firestore (fetched from Twilio API)
@@ -419,25 +415,15 @@ const AdminReceivedCalls: React.FC = () => {
         const twilioCost = firestoreCosts.twilio || 0;
         const gcpCost = firestoreCosts.gcp || 0.0035;
 
-        // Calculate payment processing fees (these are estimates)
-        const paymentAmount = call.payment?.amount || 0;
-        const paymentMethod: 'stripe' | 'paypal' =
-          call.payment?.intentId?.startsWith('pi_') ? 'stripe' : 'paypal';
-
-        let paymentFees = 0;
-        if (paymentMethod === 'stripe') {
-          paymentFees = (paymentAmount * COST_PRICING.OTHER.STRIPE_PERCENTAGE) + COST_PRICING.OTHER.STRIPE_FIXED_EUR;
-        } else if (paymentMethod === 'paypal') {
-          paymentFees = (paymentAmount * COST_PRICING.OTHER.PAYPAL_PERCENTAGE) + COST_PRICING.OTHER.PAYPAL_FIXED_EUR;
-        }
+        // NO payment processing fees for SOS Expat
+        // These are deducted from the provider's Stripe Connect account
 
         return {
           ...call,
           costs: {
             twilio: Math.round(twilioCost * 100) / 100,
             gcp: Math.round(gcpCost * 100) / 100,
-            other: Math.round(paymentFees * 100) / 100,
-            total: Math.round((twilioCost + gcpCost + paymentFees) * 100) / 100,
+            total: Math.round((twilioCost + gcpCost) * 100) / 100,
             isReal: true, // Flag to indicate these are real costs
           }
         };
@@ -445,11 +431,7 @@ const AdminReceivedCalls: React.FC = () => {
 
       // Fallback to ESTIMATES if real costs not yet fetched
       const duration = call.conference?.duration || 0;
-      const paymentAmount = call.payment?.amount || 0;
-      const paymentMethod: 'stripe' | 'paypal' =
-        call.payment?.intentId?.startsWith('pi_') ? 'stripe' : 'paypal';
-
-      const costs = calculateCallCosts(duration, paymentAmount, paymentMethod);
+      const costs = calculateCallCosts(duration);
 
       return {
         ...call,
@@ -1313,9 +1295,8 @@ const AdminReceivedCalls: React.FC = () => {
                           <span className="text-gray-600">{t('admin.receivedCalls.modal.gcpCost')}:</span>
                           <span className="text-red-600">-{formatAmount(selectedCall.costs.gcp, selectedCall.payment.currency)}</span>
                         </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">{t('admin.receivedCalls.modal.otherCosts')}:</span>
-                          <span className="text-red-600">-{formatAmount(selectedCall.costs.other, selectedCall.payment.currency)}</span>
+                        <div className="text-xs text-gray-500 mt-2 italic">
+                          {t('admin.receivedCalls.modal.stripeFeesNote')}
                         </div>
                       </div>
                       <div className="flex justify-between border-t pt-2">

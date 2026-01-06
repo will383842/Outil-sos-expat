@@ -1094,6 +1094,7 @@ type BookingMeta = {
   description?: string;
   country?: string;
   clientFirstName?: string;
+  clientNationality?: string;
 };
 
 /* ---------------------- HttpsError type guard (front) -------------------- */
@@ -1710,7 +1711,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
             bookingTitle: bookingMeta?.title || "",
             bookingDescription: bookingMeta?.description || "",
             clientCurrentCountry: bookingMeta?.country || "",
-            clientFirstName: bookingMeta?.clientFirstName || user?.displayName?.split(" ")[0] || "",
+            clientFirstName: bookingMeta?.clientFirstName || user?.firstName || user?.fullName?.split(" ")[0] || "",
             clientNationality: bookingMeta?.clientNationality || "",
           };
 
