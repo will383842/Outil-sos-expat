@@ -570,6 +570,159 @@ export async function incrementAiUsage(providerId: string, increment: number = 1
   }
 }
 
+// =============================================================================
+// P0 FIX: RÉSERVATION ATOMIQUE DU QUOTA (évite race conditions)
+// =============================================================================
+
+export interface QuotaReservationResult {
+  reserved: boolean;
+  reason?: string;
+  used: number;
+  limit: number;
+  remaining: number;
+}
+
+/**
+ * Réserve atomiquement 1 crédit de quota IA.
+ *
+ * P0 FIX: Cette fonction fait le CHECK + INCREMENT en UNE SEULE transaction.
+ * Cela évite la race condition où 2 requêtes passent le check simultanément.
+ *
+ * FLOW:
+ * 1. Transaction: lire quota actuel
+ * 2. Transaction: si quota disponible, incrémenter
+ * 3. Transaction: commit (atomique)
+ * 4. Si commit réussit → quota réservé
+ * 5. Si commit échoue (race) → Firestore retry automatique
+ *
+ * @param providerId - ID du provider
+ * @returns Résultat avec reserved=true si quota réservé avec succès
+ */
+export async function reserveAiQuota(providerId: string): Promise<QuotaReservationResult> {
+  try {
+    const db = admin.firestore();
+    const providerRef = db.collection("providers").doc(providerId);
+
+    const result = await db.runTransaction(async (transaction) => {
+      const providerDoc = await transaction.get(providerRef);
+
+      if (!providerDoc.exists) {
+        return {
+          reserved: false,
+          reason: "provider_not_found",
+          used: 0,
+          limit: 0,
+          remaining: 0,
+        };
+      }
+
+      const provider = providerDoc.data();
+      if (!provider) {
+        return {
+          reserved: false,
+          reason: "provider_data_empty",
+          used: 0,
+          limit: 0,
+          remaining: 0,
+        };
+      }
+
+      // Bypass admin: quota illimité si forcedAIAccess
+      if (provider.forcedAIAccess === true) {
+        // Incrémenter quand même pour les stats, mais toujours autoriser
+        const currentUsage = provider.aiCallsUsed || 0;
+        transaction.update(providerRef, {
+          aiCallsUsed: currentUsage + 1,
+          aiLastCallAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        return {
+          reserved: true,
+          reason: "forced_access",
+          used: currentUsage + 1,
+          limit: -1, // -1 = illimité
+          remaining: -1,
+        };
+      }
+
+      // Vérifier le quota
+      const currentUsage = provider.aiCallsUsed || 0;
+      const quotaLimit = provider.aiCallsLimit || AI_CONFIG.DEFAULT_QUOTA_LIMIT || 100;
+
+      if (currentUsage >= quotaLimit) {
+        return {
+          reserved: false,
+          reason: "quota_exceeded",
+          used: currentUsage,
+          limit: quotaLimit,
+          remaining: 0,
+        };
+      }
+
+      // ATOMIQUE: Incrémenter le quota
+      const newUsage = currentUsage + 1;
+      transaction.update(providerRef, {
+        aiCallsUsed: newUsage,
+        aiLastCallAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      return {
+        reserved: true,
+        used: newUsage,
+        limit: quotaLimit,
+        remaining: Math.max(0, quotaLimit - newUsage),
+      };
+    });
+
+    // Invalider le cache après modification
+    invalidateQuotaCache(providerId);
+
+    return result;
+  } catch (error) {
+    console.error("[reserveAiQuota] Erreur:", error);
+    return {
+      reserved: false,
+      reason: "error_reserving_quota",
+      used: 0,
+      limit: 0,
+      remaining: 0,
+    };
+  }
+}
+
+/**
+ * Libère 1 crédit de quota (en cas d'échec de génération IA).
+ *
+ * @param providerId - ID du provider
+ */
+export async function releaseAiQuota(providerId: string): Promise<boolean> {
+  try {
+    const db = admin.firestore();
+    const providerRef = db.collection("providers").doc(providerId);
+
+    await db.runTransaction(async (transaction) => {
+      const providerDoc = await transaction.get(providerRef);
+
+      if (!providerDoc.exists) return;
+
+      const provider = providerDoc.data();
+      const currentUsage = provider?.aiCallsUsed || 0;
+
+      // Ne pas aller en dessous de 0
+      if (currentUsage > 0) {
+        transaction.update(providerRef, {
+          aiCallsUsed: currentUsage - 1,
+        });
+      }
+    });
+
+    invalidateQuotaCache(providerId);
+    return true;
+  } catch (error) {
+    console.error("[releaseAiQuota] Erreur:", error);
+    return false;
+  }
+}
+
 /**
  * Réinitialise le quota IA d'un provider (pour reset mensuel ou admin).
  *

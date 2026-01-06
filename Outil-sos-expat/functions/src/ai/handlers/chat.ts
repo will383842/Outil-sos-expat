@@ -124,7 +124,7 @@ import { AI_SECRETS, createService } from "./shared";
 
 // Rate limiting et modération
 import { checkRateLimit, getRateLimitHeaders } from "../../rateLimiter";
-import { moderateInput, MODERATION_OPENAI_KEY } from "../../moderation";
+import { moderateInput, moderateOutput, MODERATION_OPENAI_KEY } from "../../moderation";
 
 // =============================================================================
 // OUTPUT SANITIZATION - Protection XSS sur réponses IA
@@ -360,6 +360,24 @@ export const aiChat = onRequest(
         specialties: convoData?.bookingContext?.specialties,
       });
 
+      // P0 FIX: Modération de l'output IA
+      let outputFlagged = false;
+      let flaggedCategories: string[] = [];
+      if (response.response && response.response.length >= 50) {
+        const outputModeration = await moderateOutput(response.response);
+        if (!outputModeration.ok) {
+          outputFlagged = true;
+          flaggedCategories = outputModeration.categories || [];
+          logger.warn("[aiChat] AI output was flagged by moderation", {
+            userId,
+            providerId,
+            conversationId: conversationId || convoRef.id,
+            categories: flaggedCategories,
+            responseLength: response.response.length,
+          });
+        }
+      }
+
       // Batch for parallel operations
       const batch = db.batch();
       const now = admin.firestore.FieldValue.serverTimestamp();
@@ -376,12 +394,26 @@ export const aiChat = onRequest(
         citations: response.citations || null,
         fallbackUsed: response.fallbackUsed || false,
         timestamp: now,
+        // P0 FIX: Flag pour modération output
+        ...(outputFlagged && {
+          moderation: {
+            flagged: true,
+            categories: flaggedCategories,
+            flaggedAt: now,
+            reviewed: false,
+          },
+        }),
       });
 
       // Update conversation
       batch.update(convoRef, {
         updatedAt: now,
         messageCount: admin.firestore.FieldValue.increment(2),
+        // P0 FIX: Flag conversation pour review admin si contenu flaggé
+        ...(outputFlagged && {
+          hasFlaggedContent: true,
+          lastFlaggedAt: now,
+        }),
       });
 
       await batch.commit();
@@ -409,6 +441,8 @@ export const aiChat = onRequest(
         processingTimeMs,
         inputTokens: (response as unknown as { usage?: { inputTokens?: number } }).usage?.inputTokens,
         outputTokens: (response as unknown as { usage?: { outputTokens?: number } }).usage?.outputTokens,
+        outputFlagged,
+        ...(outputFlagged && { flaggedCategories }),
       });
 
       res.status(200).json({
@@ -421,6 +455,14 @@ export const aiChat = onRequest(
         citations: response.citations,
         fallbackUsed: response.fallbackUsed || false,
         processingTimeMs,
+        // P0 FIX: Inclure warning si output flaggé
+        ...(outputFlagged && {
+          warning: {
+            type: "content_warning",
+            message: "Cette réponse a été signalée pour révision.",
+            categories: flaggedCategories,
+          },
+        }),
       });
     } catch (error) {
       const processingTimeMs = Date.now() - startTime;

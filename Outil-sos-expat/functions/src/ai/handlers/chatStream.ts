@@ -30,19 +30,20 @@ import {
   sanitizeUserInput,
   buildConversationHistory,
   checkProviderAIStatus,
-  incrementAiUsage,
+  reserveAiQuota,
+  releaseAiQuota,
 } from "../services/utils";
 
 import { AI_SECRETS } from "./shared";
 import { checkRateLimit } from "../../rateLimiter";
-import { moderateInput, MODERATION_OPENAI_KEY } from "../../moderation";
+import { moderateInput, moderateOutput, MODERATION_OPENAI_KEY } from "../../moderation";
 
 // =============================================================================
 // TYPES SSE
 // =============================================================================
 
 interface SSEEvent {
-  event: "start" | "chunk" | "done" | "error";
+  event: "start" | "chunk" | "done" | "error" | "warning";
   data: Record<string, unknown>;
 }
 
@@ -78,6 +79,10 @@ async function verifyAuthToken(req: Request): Promise<DecodedIdToken | null> {
 function sendSSE(res: Response, event: SSEEvent): void {
   res.write(`event: ${event.event}\n`);
   res.write(`data: ${JSON.stringify(event.data)}\n\n`);
+  // P0 FIX: Force flush buffer pour envoi immédiat
+  if (typeof (res as unknown as { flush?: () => void }).flush === "function") {
+    (res as unknown as { flush: () => void }).flush();
+  }
 }
 
 function setupSSEHeaders(res: Response): void {
@@ -337,6 +342,33 @@ export const aiChatStream = onRequest(
       logger.info("[aiChatStream] Client disconnected");
     });
 
+    // P0 FIX: Heartbeat keepalive pour éviter coupure proxy après 60s inactivité
+    let heartbeatInterval: NodeJS.Timeout | null = setInterval(() => {
+      if (!clientDisconnected && heartbeatInterval) {
+        res.write(": keepalive\n\n");
+        if (typeof (res as unknown as { flush?: () => void }).flush === "function") {
+          (res as unknown as { flush: () => void }).flush();
+        }
+      }
+    }, 25000); // 25 secondes (avant le timeout proxy de 30-60s)
+
+    // Helper pour nettoyer heartbeat et terminer la réponse
+    const endResponse = () => {
+      if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+        heartbeatInterval = null;
+      }
+      res.end();
+    };
+
+    // Cleanup heartbeat on disconnect
+    req.on("close", () => {
+      if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+        heartbeatInterval = null;
+      }
+    });
+
     try {
       const db = admin.firestore();
 
@@ -376,21 +408,37 @@ export const aiChatStream = onRequest(
         });
       }
 
-      // Quota check
+      // P0 FIX: Quota check + reserve ATOMIQUE (évite race condition)
+      let quotaReserved = false;
       if (providerId) {
         const aiStatus = await checkProviderAIStatus(providerId);
-        if (!aiStatus.hasAccess || !aiStatus.hasQuota) {
+        if (!aiStatus.hasAccess) {
+          sendSSE(res, {
+            event: "error",
+            data: {
+              error: "Accès IA non autorisé",
+              reason: aiStatus.accessReason,
+            },
+          });
+          endResponse();
+          return;
+        }
+
+        // Réserver le quota de manière atomique AVANT de générer
+        const reservation = await reserveAiQuota(providerId);
+        if (!reservation.reserved) {
           sendSSE(res, {
             event: "error",
             data: {
               error: "Quota IA épuisé",
-              quotaUsed: aiStatus.quotaUsed,
-              quotaLimit: aiStatus.quotaLimit,
+              quotaUsed: reservation.used,
+              quotaLimit: reservation.limit,
             },
           });
-          res.end();
+          endResponse();
           return;
         }
+        quotaReserved = true;
       }
 
       // Send start event
@@ -467,19 +515,59 @@ export const aiChatStream = onRequest(
           error: (streamError as Error).message,
         });
 
+        // P0 FIX: Libérer le quota réservé en cas d'échec de génération
+        if (quotaReserved && providerId) {
+          await releaseAiQuota(providerId);
+          logger.info("[aiChatStream] Quota released due to streaming error", { providerId });
+        }
+
         if (!clientDisconnected) {
           sendSSE(res, {
             event: "error",
             data: { error: "Erreur lors du streaming. Veuillez réessayer." },
           });
         }
-        res.end();
+        endResponse();
         return;
       }
 
       if (clientDisconnected) {
         logger.info("[aiChatStream] Aborted due to client disconnect");
+        // P0 FIX: Libérer le quota si client déconnecté avant fin de génération
+        if (quotaReserved && providerId && fullResponse.length === 0) {
+          await releaseAiQuota(providerId);
+          logger.info("[aiChatStream] Quota released due to client disconnect (no content generated)", { providerId });
+        }
         return;
+      }
+
+      // P0 FIX: Modération de l'output IA
+      // Note: Le contenu a déjà été streamé au client, on log uniquement pour audit
+      let outputFlagged = false;
+      let flaggedCategories: string[] = [];
+      if (fullResponse.length >= 50) {
+        const openaiKey = process.env.OPENAI_API_KEY || "";
+        const outputModeration = await moderateOutput(fullResponse, openaiKey);
+        if (!outputModeration.ok) {
+          outputFlagged = true;
+          flaggedCategories = outputModeration.categories || [];
+          logger.warn("[aiChatStream] AI output was flagged by moderation", {
+            userId,
+            providerId,
+            conversationId: conversationId || convoRef.id,
+            categories: flaggedCategories,
+            responseLength: fullResponse.length,
+          });
+          // Envoyer un warning au client (le contenu a déjà été streamé)
+          sendSSE(res, {
+            event: "warning",
+            data: {
+              type: "content_warning",
+              message: "Cette réponse a été signalée pour révision.",
+              categories: flaggedCategories,
+            },
+          });
+        }
       }
 
       // Save AI response
@@ -495,19 +583,30 @@ export const aiChatStream = onRequest(
         provider,
         streamed: true,
         timestamp: now,
+        // P0 FIX: Flag pour modération output
+        ...(outputFlagged && {
+          moderation: {
+            flagged: true,
+            categories: flaggedCategories,
+            flaggedAt: now,
+            reviewed: false,
+          },
+        }),
       });
 
       batch.update(convoRef, {
         updatedAt: now,
         messageCount: admin.firestore.FieldValue.increment(2),
+        // P0 FIX: Flag conversation pour review admin si contenu flaggé
+        ...(outputFlagged && {
+          hasFlaggedContent: true,
+          lastFlaggedAt: now,
+        }),
       });
 
       await batch.commit();
 
-      // Increment quota
-      if (providerId) {
-        await incrementAiUsage(providerId);
-      }
+      // NOTE: Quota déjà incrémenté dans reserveAiQuota() (P0 FIX atomique)
 
       const processingTimeMs = Date.now() - startTime;
 
@@ -531,9 +630,11 @@ export const aiChatStream = onRequest(
         provider,
         processingTimeMs,
         responseLength: fullResponse.length,
+        outputFlagged,
+        ...(outputFlagged && { flaggedCategories }),
       });
 
-      res.end();
+      endResponse();
     } catch (error) {
       const processingTimeMs = Date.now() - startTime;
       logger.error("[aiChatStream] Error", {
@@ -550,7 +651,7 @@ export const aiChatStream = onRequest(
         });
       }
 
-      res.end();
+      endResponse();
     }
   }
 );

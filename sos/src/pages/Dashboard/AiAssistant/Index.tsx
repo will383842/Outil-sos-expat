@@ -185,30 +185,42 @@ export const AiAssistantPage: React.FC = () => {
 
   // Fetch recent conversations from Outil
   useEffect(() => {
+    // P0 FIX: isMounted flag pour éviter setState après unmount
+    let isMounted = true;
+
     const fetchRecentConversations = async () => {
       if (!user?.uid) return;
 
       try {
-        setConversationsLoading(true);
+        if (isMounted) setConversationsLoading(true);
 
         // TODO: Implement API call to Outil to fetch recent conversations
         // For now, we'll show a placeholder
         // const response = await fetch(`${OUTIL_API_URL}/provider/${user.uid}/conversations?limit=5`);
         // const data = await response.json();
-        // setRecentConversations(data.conversations);
+        // if (isMounted) setRecentConversations(data.conversations);
 
         // Placeholder - will be replaced with actual API call
-        setRecentConversations([]);
-        setConversationsError(null);
+        if (isMounted) {
+          setRecentConversations([]);
+          setConversationsError(null);
+        }
       } catch (error) {
         console.error('Error fetching conversations:', error);
-        setConversationsError(intl.formatMessage({ id: 'aiAssistant.errors.loadConversations' }));
+        if (isMounted) {
+          setConversationsError(intl.formatMessage({ id: 'aiAssistant.errors.loadConversations' }));
+        }
       } finally {
-        setConversationsLoading(false);
+        if (isMounted) setConversationsLoading(false);
       }
     };
 
     fetchRecentConversations();
+
+    // Cleanup: marquer comme démonté
+    return () => {
+      isMounted = false;
+    };
   }, [user?.uid, locale]);
 
   // Handle access to Outil with SSO

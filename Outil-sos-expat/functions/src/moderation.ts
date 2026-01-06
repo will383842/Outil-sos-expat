@@ -60,6 +60,70 @@ export async function moderateInput(
 }
 
 /**
+ * Modère l'output généré par l'IA
+ * Appelé après génération pour détecter contenu inapproprié dans la réponse
+ *
+ * @param text - Texte généré par l'IA
+ * @param openaiKey - Clé API OpenAI
+ * @returns {ok: boolean, reason?: string, categories?: string[]}
+ */
+export async function moderateOutput(
+  text: string,
+  openaiKey?: string
+): Promise<{ ok: boolean; reason?: string; categories?: string[] }> {
+  // Pas de modération pour réponses courtes
+  if (!text || text.trim().length < 50) {
+    return { ok: true };
+  }
+
+  try {
+    const apiKey = openaiKey || OPENAI_API_KEY.value();
+
+    if (!apiKey) {
+      // Pour l'output, on laisse passer si modération non configurée
+      // car l'IA est déjà censée être safe (contrairement à l'input user)
+      console.warn('[moderation] No API key for output moderation, skipping');
+      return { ok: true };
+    }
+
+    const resp = await axios.post(
+      'https://api.openai.com/v1/moderations',
+      { model: 'omni-moderation-latest', input: text },
+      {
+        headers: { Authorization: `Bearer ${apiKey}` },
+        timeout: 8000 // 8s timeout pour output plus long
+      }
+    );
+
+    const result = resp.data?.results?.[0];
+    if (result?.flagged) {
+      // Extraire les catégories flaggées pour le logging
+      const flaggedCategories = Object.entries(result.categories || {})
+        .filter(([, flagged]) => flagged)
+        .map(([category]) => category);
+
+      console.warn('[moderation] AI output flagged:', {
+        categories: flaggedCategories,
+        textLength: text.length,
+      });
+
+      return {
+        ok: false,
+        reason: 'output_flagged',
+        categories: flaggedCategories
+      };
+    }
+
+    return { ok: true };
+  } catch (error) {
+    // Pour l'output, on est plus permissif en cas d'erreur
+    // L'IA est normalement safe, on ne bloque pas la réponse
+    console.warn('[moderation] Output moderation failed, allowing (fail-open for output):', error);
+    return { ok: true };
+  }
+}
+
+/**
  * Export du secret pour utilisation dans les Cloud Functions
  * Les fonctions appelantes doivent inclure ce secret dans leur config
  */
