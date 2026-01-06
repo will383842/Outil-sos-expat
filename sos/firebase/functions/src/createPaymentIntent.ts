@@ -354,6 +354,7 @@ async function checkAndLockDuplicatePayments(
   providerId: string,
   amountInMainUnit: number,
   currency: SupportedCurrency,
+  callSessionId: string,
   db: admin.firestore.Firestore
 ): Promise<{ isDuplicate: boolean; lockId?: string; existingPaymentId?: string }> {
   if (BYPASS_MODE) return { isDuplicate: false };
@@ -469,6 +470,7 @@ async function checkAndLockDuplicatePayments(
       providerId,
       amountInMainUnit,
       currency,
+      callSessionId,  // P0 FIX: Include callSessionId to enable retry after failed calls
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       expiresAt: new Date(Date.now() + windowMs),
       status: 'pending'
@@ -772,8 +774,9 @@ export const createPaymentIntent = onCall(
         clientId: clientId?.substring(0, 10),
         providerId: providerId?.substring(0, 10),
         amountInMainUnit,
+        callSessionId,
       });
-      const duplicateCheck = await checkAndLockDuplicatePayments(clientId, providerId, amountInMainUnit, currency, db);
+      const duplicateCheck = await checkAndLockDuplicatePayments(clientId, providerId, amountInMainUnit, currency, callSessionId, db);
       if (duplicateCheck.isDuplicate) {
         prodLogger.warn('PAYMENT_DUPLICATE', `[${requestId}] Paiement doublon détecté!`, {
           clientId: clientId?.substring(0, 10),
