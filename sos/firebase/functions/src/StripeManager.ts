@@ -1404,14 +1404,15 @@ async cancelPayment(
         sessionId: sessionId ? sessionId.substring(0, 8) + '...' : '—',
       });
 
-      // P2-18 FIX: Ajouter 'authorized' (capture manuelle) et contrainte de temps (24h)
+      // P0 FIX: Anti-doublons complet - vérifier TOUS les statuts de paiement valides
+      // Inclut: succeeded (Stripe), captured (interne), requires_capture, authorized, processing
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
       let query: admin.firestore.Query<admin.firestore.DocumentData> = this.db
         .collection('payments')
         .where('clientId', '==', clientId)
         .where('providerId', '==', providerId)
-        .where('status', 'in', ['succeeded', 'requires_capture', 'authorized', 'processing'])
+        .where('status', 'in', ['succeeded', 'captured', 'requires_capture', 'authorized', 'processing'])
         .where('createdAt', '>=', twentyFourHoursAgo);
 
       if (sessionId && sessionId.trim() !== '') {

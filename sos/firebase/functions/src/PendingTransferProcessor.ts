@@ -71,6 +71,31 @@ export async function processPendingTransfersForProvider(
   let failed = 0;
 
   try {
+    // P0 FIX: Récupérer les transferts bloqués en "processing" depuis > 1 heure
+    // Race condition: si le processus crash pendant le traitement, le transfert reste bloqué
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const stuckSnapshot = await database
+      .collection("pending_transfers")
+      .where("providerId", "==", providerId)
+      .where("status", "==", "processing")
+      .where("processingStartedAt", "<", oneHourAgo)
+      .get();
+
+    if (!stuckSnapshot.empty) {
+      console.log(`[PENDING_TRANSFER] ⚠️ Found ${stuckSnapshot.size} stuck transfers in "processing" state`);
+      const batch = database.batch();
+      stuckSnapshot.docs.forEach((doc) => {
+        batch.update(doc.ref, {
+          status: "pending_kyc",
+          processingStartedAt: admin.firestore.FieldValue.delete(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          recoveredFromStuck: true,
+        });
+      });
+      await batch.commit();
+      console.log(`[PENDING_TRANSFER] ✅ Reset ${stuckSnapshot.size} stuck transfers to "pending_kyc"`);
+    }
+
     // Recuperer tous les transferts en attente de KYC pour ce provider
     const pendingSnapshot = await database
       .collection("pending_transfers")
@@ -364,4 +389,108 @@ export async function retryFailedTransfersForProvider(
     succeeded: result.succeeded,
     failed: result.failed,
   };
+}
+
+/**
+ * P0 FIX: Récupère les transferts bloqués en "processing" depuis > 1 heure
+ * À appeler depuis un scheduled job pour récupérer les transferts orphelins
+ */
+export async function recoverStuckTransfers(
+  db?: admin.firestore.Firestore
+): Promise<{
+  recovered: number;
+  processed: number;
+  succeeded: number;
+  failed: number;
+}> {
+  const database = db || admin.firestore();
+
+  console.log(`[PENDING_TRANSFER] 🔄 Starting global stuck transfers recovery`);
+
+  // Récupérer les transferts bloqués en "processing" depuis > 1 heure
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+  const stuckSnapshot = await database
+    .collection("pending_transfers")
+    .where("status", "==", "processing")
+    .where("processingStartedAt", "<", oneHourAgo)
+    .get();
+
+  if (stuckSnapshot.empty) {
+    console.log(`[PENDING_TRANSFER] ✅ No stuck transfers found`);
+    return { recovered: 0, processed: 0, succeeded: 0, failed: 0 };
+  }
+
+  console.log(`[PENDING_TRANSFER] ⚠️ Found ${stuckSnapshot.size} stuck transfers globally`);
+
+  // Grouper par providerId pour traiter en batch
+  const providerTransfers = new Map<string, admin.firestore.QueryDocumentSnapshot[]>();
+  stuckSnapshot.docs.forEach((doc) => {
+    const providerId = doc.data().providerId;
+    if (!providerTransfers.has(providerId)) {
+      providerTransfers.set(providerId, []);
+    }
+    providerTransfers.get(providerId)!.push(doc);
+  });
+
+  let recovered = 0;
+  let processed = 0;
+  let succeeded = 0;
+  let failed = 0;
+
+  // Traiter chaque provider
+  for (const [providerId, docs] of providerTransfers.entries()) {
+    try {
+      // Remettre en pending_kyc
+      const batch = database.batch();
+      docs.forEach((doc) => {
+        batch.update(doc.ref, {
+          status: "pending_kyc",
+          processingStartedAt: admin.firestore.FieldValue.delete(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          recoveredFromStuck: true,
+          recoveredAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      });
+      await batch.commit();
+      recovered += docs.length;
+
+      // Récupérer le stripeAccountId du provider
+      const providerDoc = await database.collection("users").doc(providerId).get();
+      const providerData = providerDoc.data();
+      const stripeAccountId = providerData?.stripeAccountId;
+
+      // Si le provider a un compte Stripe et KYC complété, retraiter
+      if (stripeAccountId && providerData?.chargesEnabled) {
+        const result = await processPendingTransfersForProvider(providerId, stripeAccountId, database);
+        processed += result.processed;
+        succeeded += result.succeeded;
+        failed += result.failed;
+      } else {
+        console.log(`[PENDING_TRANSFER] Provider ${providerId} not ready for transfer (KYC incomplete)`);
+      }
+    } catch (error) {
+      console.error(`[PENDING_TRANSFER] Error recovering transfers for provider ${providerId}:`, error);
+      await logError("PendingTransferProcessor:recoverStuckTransfers", error);
+    }
+  }
+
+  console.log(`[PENDING_TRANSFER] 🔄 Recovery complete: ${recovered} recovered, ${succeeded} succeeded, ${failed} failed`);
+
+  // Alerte admin si des transferts ont été récupérés
+  if (recovered > 0) {
+    await database.collection("admin_alerts").add({
+      type: "stuck_transfers_recovered",
+      priority: "medium",
+      title: "Transferts bloqués récupérés",
+      message: `${recovered} transferts bloqués en "processing" ont été récupérés. ${succeeded} réussis, ${failed} échoués.`,
+      recovered,
+      processed,
+      succeeded,
+      failed,
+      read: false,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  }
+
+  return { recovered, processed, succeeded, failed };
 }

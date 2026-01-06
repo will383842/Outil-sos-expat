@@ -22,6 +22,8 @@ import { defineSecret, defineString } from "firebase-functions/params";
 import Stripe from "stripe";
 import { logError } from "../utils/logs/logError";
 import { syncPaymentStatus } from "../utils/paymentSync";
+// P0 FIX: Import stuck transfers recovery
+import { recoverStuckTransfers } from "../PendingTransferProcessor";
 
 // Secrets
 const STRIPE_SECRET_KEY_TEST = defineSecret("STRIPE_SECRET_KEY_TEST");
@@ -76,6 +78,10 @@ export const stuckPaymentsRecovery = onSchedule(
       refunded: 0,
       alerted: 0,
       errors: 0,
+      // P0 FIX: Add stuck transfers recovery results
+      transfersRecovered: 0,
+      transfersSucceeded: 0,
+      transfersFailed: 0,
     };
 
     try {
@@ -88,15 +94,31 @@ export const stuckPaymentsRecovery = onSchedule(
       // 3. Alert about remaining stuck payments
       await alertStuckPayments(db, results);
 
+      // 4. P0 FIX: Recover stuck pending_transfers (in "processing" for > 1 hour)
+      try {
+        const transferResults = await recoverStuckTransfers(db);
+        results.transfersRecovered = transferResults.recovered;
+        results.transfersSucceeded = transferResults.succeeded;
+        results.transfersFailed = transferResults.failed;
+        console.log("🔄 [StuckPayments] Stuck transfers recovery:", transferResults);
+      } catch (transferError) {
+        console.error("❌ [StuckPayments] Stuck transfers recovery failed:", transferError);
+        results.errors++;
+      }
+
       console.log("✅ [StuckPayments] Recovery completed:", results);
 
       // Log summary if any action was taken
-      if (results.captured > 0 || results.refunded > 0 || results.alerted > 0) {
+      const hasPaymentActions = results.captured > 0 || results.refunded > 0 || results.alerted > 0;
+      const hasTransferActions = results.transfersRecovered > 0;
+
+      if (hasPaymentActions || hasTransferActions) {
         await db.collection("admin_alerts").add({
           type: "stuck_payments_recovery",
-          priority: results.refunded > 0 ? "high" : "medium",
-          title: "Récupération paiements bloqués",
-          message: `Capturés: ${results.captured}, Remboursés: ${results.refunded}, Alertes: ${results.alerted}`,
+          priority: results.refunded > 0 || results.transfersFailed > 0 ? "high" : "medium",
+          title: "Récupération paiements/transferts bloqués",
+          message: `Paiements - Capturés: ${results.captured}, Remboursés: ${results.refunded}, Alertes: ${results.alerted}. ` +
+            `Transferts - Récupérés: ${results.transfersRecovered}, Réussis: ${results.transfersSucceeded}, Échoués: ${results.transfersFailed}`,
           results,
           read: false,
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
