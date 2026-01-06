@@ -6,6 +6,9 @@
  * Cette fonction génère un Custom Token Firebase pour permettre au prestataire
  * de se connecter automatiquement à l'Outil IA sans avoir à se reconnecter.
  *
+ * IMPORTANT: Le token DOIT être signé par le service account de l'OUTIL project
+ * (outils-sos-expat), pas celui de SOS, sinon signInWithCustomToken() échouera.
+ *
  * Flux:
  * 1. Le prestataire clique sur "Assistant IA" dans SOS
  * 2. SOS appelle cette fonction avec l'UID du prestataire
@@ -17,7 +20,43 @@
  */
 
 import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
+
+// Secret contenant le JSON du service account de l'Outil project
+// IMPORTANT: Créer ce secret avec la clé JSON du service account outils-sos-expat
+const OUTIL_SERVICE_ACCOUNT = defineSecret("OUTIL_SERVICE_ACCOUNT_KEY");
+
+// Instance Firebase Admin pour l'Outil project (pour générer les custom tokens)
+let outilApp: admin.app.App | null = null;
+
+/**
+ * Initialise ou récupère l'instance Firebase Admin pour l'Outil project
+ */
+function getOutilAuth(): admin.auth.Auth {
+  if (!outilApp) {
+    const serviceAccountJson = OUTIL_SERVICE_ACCOUNT.value();
+    if (!serviceAccountJson) {
+      throw new Error("OUTIL_SERVICE_ACCOUNT_KEY secret not configured");
+    }
+
+    try {
+      const serviceAccount = JSON.parse(serviceAccountJson);
+      outilApp = admin.initializeApp(
+        {
+          credential: admin.credential.cert(serviceAccount),
+          projectId: "outils-sos-expat",
+        },
+        "outil-sso" // Nom unique pour cette app
+      );
+      console.log("[generateOutilToken] Outil Firebase Admin initialized");
+    } catch (e) {
+      console.error("[generateOutilToken] Failed to parse service account JSON:", e);
+      throw new Error("Invalid OUTIL_SERVICE_ACCOUNT_KEY configuration");
+    }
+  }
+  return admin.auth(outilApp);
+}
 
 /**
  * Génère un Custom Token pour l'accès SSO à l'Outil IA
@@ -31,16 +70,20 @@ export const generateOutilToken = onCall(
     cors: true,
     // Use the App Engine default service account which has Firestore access
     serviceAccount: "sos-urgently-ac307@appspot.gserviceaccount.com",
+    // CRITICAL: Include the Outil service account secret
+    secrets: [OUTIL_SERVICE_ACCOUNT],
   },
   async (request) => {
     console.log("[generateOutilToken] Function called");
 
-    // Initialize Firebase Admin inside function context
+    // Initialize Firebase Admin for SOS (Firestore access)
     if (!admin.apps.length) {
       admin.initializeApp();
     }
     const db = admin.firestore();
-    const auth = admin.auth();
+
+    // Get the Outil Auth instance for creating cross-project tokens
+    const outilAuth = getOutilAuth();
 
     console.log("[generateOutilToken] Firebase Admin initialized");
 
@@ -88,7 +131,7 @@ export const generateOutilToken = onCall(
         };
 
         console.log("[generateOutilToken] Creating custom token with claims:", customClaims);
-        const customToken = await auth.createCustomToken(uid, customClaims);
+        const customToken = await outilAuth.createCustomToken(uid, customClaims);
         console.log("[generateOutilToken] Token created successfully");
 
         // Logger l'accès
@@ -121,7 +164,7 @@ export const generateOutilToken = onCall(
           tokenGeneratedAt: Date.now(),
         };
 
-        const customToken = await auth.createCustomToken(uid, customClaims);
+        const customToken = await outilAuth.createCustomToken(uid, customClaims);
 
         // Logger l'accès
         await db.collection("ssoLogs").add({
@@ -241,7 +284,7 @@ export const generateOutilToken = onCall(
       };
 
       console.log("[generateOutilToken] Creating custom token...");
-      const customToken = await auth.createCustomToken(uid, customClaims);
+      const customToken = await outilAuth.createCustomToken(uid, customClaims);
       console.log("[generateOutilToken] Token created successfully");
 
       // 7. Logger l'accès pour le monitoring
