@@ -1,12 +1,13 @@
 /**
  * MobileBottomNav - Navigation mobile moderne style 2026
  * Design fluide avec glassmorphism et animations modernes
+ *
+ * P0 FIX: Navigation via URL query params + indicateur actif clair
  */
 
 import React from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { useLocaleNavigate } from '../../multilingual-system';
-import { useIntl } from 'react-intl';
 import {
   User,
   Phone,
@@ -23,45 +24,50 @@ interface MobileBottomNavProps {
 const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userRole, onMoreClick }) => {
   const navigate = useLocaleNavigate();
   const location = useLocation();
-  const intl = useIntl();
+  const [searchParams] = useSearchParams();
 
-  // Determine active tab based on URL
-  const getActiveTab = () => {
+  // P0 FIX: Determine active tab based on URL + query params
+  const getActiveTab = (): string => {
     const path = location.pathname;
-    const search = location.search;
+    const tabParam = searchParams.get('tab');
 
+    // Check query param first (most specific)
+    if (tabParam === 'calls') return 'calls';
+
+    // Check path for sub-routes
     if (path.includes('/ai-assistant')) return 'ai';
     if (path.includes('/subscription')) return 'subscription';
-    if (search.includes('tab=calls')) return 'calls';
-    if (path === '/dashboard' || path.endsWith('/dashboard') || path.includes('/tableau-de-bord')) return 'profile';
+
+    // Default to profile for dashboard root
+    if (path.includes('/dashboard') || path.includes('/tableau-de-bord')) {
+      return tabParam || 'profile';
+    }
+
     return 'profile';
   };
 
   const activeTab = getActiveTab();
 
-  // Navigation items - core items for bottom nav
+  // Navigation items with SHORT labels (max 5 chars)
   const navItems = [
     {
       key: 'profile',
       icon: User,
       route: '/dashboard',
-      labelKey: 'dashboard.profile',
-      defaultLabel: 'Profil',
+      label: 'Profil',
     },
     {
       key: 'calls',
       icon: Phone,
       route: '/dashboard?tab=calls',
-      labelKey: 'dashboard.calls',
-      defaultLabel: 'Appels',
+      label: 'Appels',
     },
     // AI Assistant only for providers and admin
     ...(userRole === 'lawyer' || userRole === 'expat' || userRole === 'admin' ? [{
       key: 'ai',
       icon: Bot,
       route: '/dashboard/ai-assistant',
-      labelKey: 'dashboard.aiAssistant',
-      defaultLabel: 'IA',
+      label: 'IA',
       badge: true,
     }] : []),
     // Subscription only for providers
@@ -69,15 +75,13 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userRole, onMoreClick
       key: 'subscription',
       icon: CreditCard,
       route: '/dashboard/subscription',
-      labelKey: 'dashboard.subscription',
-      defaultLabel: 'Abo',
+      label: 'Abo',
     }] : []),
     {
       key: 'more',
       icon: Menu,
       route: '',
-      labelKey: 'common.more',
-      defaultLabel: 'Plus',
+      label: 'Menu',
       isMore: true,
     },
   ];
@@ -88,15 +92,12 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userRole, onMoreClick
       return;
     }
 
+    // P0 FIX: Use window.location for navigation with query params
+    // This ensures the URL changes correctly and React Router picks it up
     navigate(item.route);
 
-    // Auto-scroll to content after navigation
-    setTimeout(() => {
-      const contentEl = document.getElementById('dashboard-content');
-      if (contentEl) {
-        contentEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }, 100);
+    // Scroll to top of content
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -105,76 +106,68 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userRole, onMoreClick
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       {/* Glassmorphism background */}
-      <div className="absolute inset-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-2xl border-t border-gray-200/60 dark:border-white/10 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.3)]" />
+      <div className="absolute inset-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-t border-gray-200 dark:border-gray-700" />
 
       {/* Navigation content */}
-      <div className="relative flex items-center justify-around h-[68px] px-1">
+      <div className="relative flex items-center justify-around h-16 px-2">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.key;
-          const label = intl.formatMessage({ id: item.labelKey, defaultMessage: item.defaultLabel });
 
           return (
             <button
               key={item.key}
               onClick={() => handleNavClick(item)}
               className={`
-                relative flex flex-col items-center justify-center flex-1 h-full py-2 px-1
-                transition-all duration-300 ease-out
-                ${isActive
-                  ? 'scale-100'
-                  : 'scale-95 hover:scale-100 active:scale-90'
-                }
+                relative flex flex-col items-center justify-center min-w-[56px] h-full py-1
+                transition-all duration-200
+                ${isActive ? 'scale-105' : 'opacity-70 hover:opacity-100'}
               `}
-              aria-label={label}
+              aria-label={item.label}
               aria-current={isActive ? 'page' : undefined}
             >
-              {/* Icon container with animated background */}
+              {/* Active pill background - VERY VISIBLE */}
+              {isActive && (
+                <div className="absolute inset-x-1 top-1 bottom-1 bg-red-500/10 dark:bg-red-500/20 rounded-xl" />
+              )}
+
+              {/* Icon container */}
               <div className={`
-                relative flex items-center justify-center w-12 h-9 rounded-2xl
-                transition-all duration-300 ease-out
+                relative flex items-center justify-center w-10 h-8 rounded-xl
+                transition-all duration-200
                 ${isActive
-                  ? 'bg-gradient-to-br from-red-500 to-orange-500 shadow-lg shadow-red-500/25'
-                  : 'bg-transparent hover:bg-gray-100 dark:hover:bg-white/10'
+                  ? 'bg-red-500 shadow-lg shadow-red-500/30'
+                  : 'bg-gray-100 dark:bg-gray-800'
                 }
               `}>
                 <Icon
-                  className={`
-                    w-[22px] h-[22px] transition-all duration-300
-                    ${isActive
-                      ? 'text-white'
-                      : 'text-gray-500 dark:text-gray-400'
-                    }
-                  `}
+                  className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}
                   strokeWidth={isActive ? 2.5 : 2}
                 />
 
-                {/* AI badge pulse */}
+                {/* AI badge */}
                 {'badge' in item && item.badge && (
                   <span className={`
-                    absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full
-                    ${isActive
-                      ? 'bg-white shadow-sm'
-                      : 'bg-gradient-to-r from-purple-500 to-pink-500 animate-pulse'
-                    }
+                    absolute -top-1 -right-1 w-2 h-2 rounded-full
+                    ${isActive ? 'bg-white' : 'bg-purple-500 animate-pulse'}
                   `} />
                 )}
               </div>
 
-              {/* Label with smooth transition */}
+              {/* Label - SHORT and BOLD when active */}
               <span className={`
-                text-[11px] font-semibold mt-1 transition-all duration-300
+                text-[10px] mt-0.5 truncate max-w-[50px]
                 ${isActive
-                  ? 'text-red-600 dark:text-red-400'
-                  : 'text-gray-500 dark:text-gray-400'
+                  ? 'font-bold text-red-600 dark:text-red-400'
+                  : 'font-medium text-gray-500 dark:text-gray-400'
                 }
               `}>
-                {label}
+                {item.label}
               </span>
 
-              {/* Active indicator dot */}
+              {/* Active dot indicator at bottom */}
               {isActive && (
-                <span className="absolute bottom-1 w-1 h-1 bg-red-500 rounded-full" />
+                <span className="absolute bottom-0.5 w-4 h-1 bg-red-500 rounded-full" />
               )}
             </button>
           );
@@ -183,7 +176,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userRole, onMoreClick
 
       {/* Safe area padding for iOS */}
       <div
-        className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-2xl"
+        className="bg-white/95 dark:bg-gray-900/95"
         style={{ height: 'env(safe-area-inset-bottom, 0px)' }}
       />
     </nav>

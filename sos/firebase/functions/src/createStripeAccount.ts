@@ -1,17 +1,26 @@
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { defineSecret } from "firebase-functions/params";
 import { getStripe } from "./index";
+
+// ✅ P0 FIX: Declare secrets for Firebase v2 functions
+const STRIPE_SECRET_KEY_TEST = defineSecret("STRIPE_SECRET_KEY_TEST");
+const STRIPE_SECRET_KEY_LIVE = defineSecret("STRIPE_SECRET_KEY_LIVE");
 
 interface CreateAccountData {
   email: string;
   currentCountry: string;
   firstName?: string;
   lastName?: string;
-  userType: "lawyer" | "expat"; // ✅ NEW: Key to differentiate
+  userType: "lawyer" | "expat";
 }
 
 export const createStripeAccount = onCall<CreateAccountData>(
-  { region: "europe-west1" },
+  {
+    region: "europe-west1",
+    // ✅ P0 FIX: Secrets must be declared in function config
+    secrets: [STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE],
+  },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "User must be authenticated");

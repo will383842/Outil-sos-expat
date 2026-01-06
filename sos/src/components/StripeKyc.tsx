@@ -7,6 +7,7 @@ import {
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIntl } from "react-intl";
+import { AlertTriangle, RefreshCw } from "lucide-react";
 
 interface Props {
   onComplete?: () => void;
@@ -18,8 +19,48 @@ export default function StripeKYC({ onComplete, userType }: Props) {
   const { user } = useAuth();
   const [stripeConnectInstance, setStripeConnectInstance] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [isKycComplete, setIsKycComplete] = useState(false); // ✅ NEW: Track completion
+  const [isKycComplete, setIsKycComplete] = useState(false);
+  const [error, setError] = useState<string | null>(null); // ✅ P0 FIX: Track errors
+  const [isCreatingNewAccount, setIsCreatingNewAccount] = useState(false); // ✅ P0 FIX: Creating new account state
   const initStartedRef = useRef(false);
+
+  // ✅ P0 FIX: Function to create new Stripe account
+  const createNewAccount = async () => {
+    if (!user?.uid || !user?.email) return;
+
+    setIsCreatingNewAccount(true);
+    setError(null);
+
+    try {
+      const functions = getFunctions(undefined, "europe-west1");
+      const createStripeAccount = httpsCallable(functions, "createStripeAccount");
+
+      // Get user data for account creation
+      const result = await createStripeAccount({
+        email: user.email,
+        currentCountry: "FR", // Default, will be updated in onboarding
+        userType: userType,
+      });
+
+      const data = result.data as { success: boolean; accountId: string };
+
+      if (data.success) {
+        // Reset state and restart initialization
+        initStartedRef.current = false;
+        const checkKey = `stripe_kyc_${user.uid}_${userType}_check_in_progress`;
+        sessionStorage.removeItem(checkKey);
+        setIsCreatingNewAccount(false);
+        setLoading(true);
+
+        // Trigger re-initialization
+        window.location.reload();
+      }
+    } catch (err: any) {
+      console.error("[StripeKYC] Failed to create new account:", err);
+      setError(err.message || "Impossible de créer un nouveau compte");
+      setIsCreatingNewAccount(false);
+    }
+  };
 
   useEffect(() => {
     if (!user?.uid) {
@@ -33,25 +74,21 @@ export default function StripeKYC({ onComplete, userType }: Props) {
 
     // ✅ Guard 1: Check sessionStorage
     if (sessionStorage.getItem(checkKey) === "true") {
-      // ✅ P0 FIX: Remove verbose logging to reduce console spam
       setLoading(false);
       return;
     }
 
     if (sessionStorage.getItem(completedKey) === "true") {
-      // ✅ P0 FIX: Remove verbose logging to reduce console spam
-      setIsKycComplete(true); // ✅ Set completed state
+      setIsKycComplete(true);
       setLoading(false);
       return;
     }
 
     // ✅ Guard 2: Check ref
     if (initStartedRef.current) {
-      // ✅ P0 FIX: Remove verbose logging to reduce console spam
       return;
     }
 
-    // ✅ P0 FIX: Remove verbose logging to reduce console spam
     initStartedRef.current = true;
     sessionStorage.setItem(checkKey, "true");
 
@@ -59,13 +96,12 @@ export default function StripeKYC({ onComplete, userType }: Props) {
       try {
         const functions = getFunctions(undefined, "europe-west1");
 
-        // ✅ P0 FIX: Remove verbose logging to reduce console spam
+        // ✅ Check existing account status
         try {
           const checkStatus = httpsCallable(
             functions,
             "checkStripeAccountStatus"
           );
-          // ✅ Pass userType to backend
           const statusResult = await checkStatus({ userType });
           const statusData = statusResult.data as {
             kycCompleted: boolean;
@@ -74,7 +110,6 @@ export default function StripeKYC({ onComplete, userType }: Props) {
             requirementsCurrentlyDue: string[];
           };
 
-          // ✅ P0 FIX: Only log in development mode
           if (import.meta.env.DEV) {
             console.log("[StripeKYC] Status:", statusData.kycCompleted ? "complete" : "incomplete");
           }
@@ -82,7 +117,7 @@ export default function StripeKYC({ onComplete, userType }: Props) {
           if (statusData.kycCompleted) {
             sessionStorage.setItem(completedKey, "true");
             sessionStorage.removeItem(checkKey);
-            setIsKycComplete(true); // ✅ Set completed state
+            setIsKycComplete(true);
             setLoading(false);
 
             setTimeout(() => {
@@ -91,29 +126,38 @@ export default function StripeKYC({ onComplete, userType }: Props) {
 
             return;
           }
-        } catch (error: any) {
-          if (error.code !== "failed-precondition") {
-            // Only log unexpected errors
-            console.error("[StripeKYC] Status check error:", error.message || error);
+        } catch (err: any) {
+          const errorMsg = err.message || "";
+
+          // ✅ P0 FIX: Detect invalid/revoked Stripe account
+          if (errorMsg.includes("does not have access to account") ||
+              errorMsg.includes("No such account") ||
+              errorMsg.includes("account has been deleted")) {
+            console.error("[StripeKYC] Invalid Stripe account detected");
+            setError("Votre compte Stripe précédent n'est plus valide. Veuillez en créer un nouveau.");
+            setLoading(false);
+            sessionStorage.removeItem(checkKey);
+            return;
+          }
+
+          if (err.code !== "failed-precondition") {
+            console.error("[StripeKYC] Status check error:", errorMsg);
           }
           // No account yet - will create one below
         }
 
-        // ✅ P0 FIX: Remove verbose logging
+        // ✅ Get account session
         const getStripeAccountSession = httpsCallable(
           functions,
           "getStripeAccountSession"
         );
 
-        // ✅ Pass userType to backend
         const result = await getStripeAccountSession({ userType });
         const data = result.data as {
           success: boolean;
           accountId: string;
           clientSecret: string;
         };
-
-        // ✅ P0 FIX: Remove verbose logging
 
         const instance = loadConnectAndInitialize({
           publishableKey: import.meta.env.VITE_STRIPE_PUBLIC_KEY,
@@ -129,15 +173,26 @@ export default function StripeKYC({ onComplete, userType }: Props) {
         setStripeConnectInstance(instance);
         setLoading(false);
         sessionStorage.removeItem(checkKey);
-      } catch (error) {
-        console.error("[StripeKYC] Initialization error:", error);
+      } catch (err: any) {
+        const errorMsg = err.message || "";
+
+        // ✅ P0 FIX: Detect invalid/revoked Stripe account in session creation too
+        if (errorMsg.includes("does not have access to account") ||
+            errorMsg.includes("No such account") ||
+            errorMsg.includes("account has been deleted")) {
+          setError("Votre compte Stripe précédent n'est plus valide. Veuillez en créer un nouveau.");
+        } else {
+          setError("Erreur de connexion à Stripe. Veuillez réessayer.");
+        }
+
+        console.error("[StripeKYC] Initialization error:", err);
         setLoading(false);
         sessionStorage.removeItem(checkKey);
       }
     };
 
     initializeStripe();
-  }, [user?.uid, userType, onComplete]); // ✅ Add userType to dependencies
+  }, [user?.uid, userType, onComplete]);
 
   // ✅ Show loading state while checking
   if (loading) {
@@ -160,16 +215,57 @@ export default function StripeKYC({ onComplete, userType }: Props) {
     );
   }
 
-  // ✅ If no Stripe instance and not complete, show error state
+  // ✅ P0 FIX: Show error state with option to create new account
+  if (error) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center max-w-md">
+          <div className="mx-auto w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mb-4">
+            <AlertTriangle className="w-8 h-8 text-amber-600" />
+          </div>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">
+            {intl.formatMessage({ id: 'stripe.kyc.accountError' }, { defaultMessage: 'Problème avec votre compte Stripe' })}
+          </h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+
+          <button
+            onClick={createNewAccount}
+            disabled={isCreatingNewAccount}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {isCreatingNewAccount ? (
+              <>
+                <RefreshCw className="w-5 h-5 animate-spin" />
+                {intl.formatMessage({ id: 'stripe.kyc.creatingAccount' }, { defaultMessage: 'Création en cours...' })}
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-5 h-5" />
+                {intl.formatMessage({ id: 'stripe.kyc.createNewAccount' }, { defaultMessage: 'Créer un nouveau compte Stripe' })}
+              </>
+            )}
+          </button>
+
+          <p className="mt-4 text-sm text-gray-500">
+            {intl.formatMessage({ id: 'stripe.kyc.createNewAccountNote' }, { defaultMessage: 'Un nouveau compte sera créé pour recevoir vos paiements.' })}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ If no Stripe instance and not complete, show loading state
   if (!stripeConnectInstance) {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
-          {/* <div className="text-red-600 text-6xl mb-4">⚠️</div> */}
-          <h2 className="text-2xl font-semibold text-gray-800 mb-2">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <h2 className="text-lg font-medium text-gray-800 mb-2">
            {intl.formatMessage({ id: 'stripe.kyc.stripeLoading' })}
           </h2>
-          {/* <p className="text-gray-600">Please refresh the page to try again.</p> */}
+          <p className="text-sm text-gray-500">
+            {intl.formatMessage({ id: 'stripe.kyc.pleaseWait' }, { defaultMessage: 'Connexion à Stripe...' })}
+          </p>
         </div>
       </div>
     );
