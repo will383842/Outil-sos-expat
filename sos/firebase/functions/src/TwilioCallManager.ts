@@ -1,7 +1,7 @@
 import * as admin from "firebase-admin";
 // 🔧 Twilio client & num
 import { getTwilioClient, getTwilioPhoneNumber } from "./lib/twilio";
-import { getFunctionsBaseUrl, getTwilioCallWebhookUrl, getTwilioConferenceWebhookUrl } from "./utils/urlBase";
+import { getTwilioCallWebhookUrl, getTwilioConferenceWebhookUrl } from "./utils/urlBase";
 import { logError } from "./utils/logs/logError";
 import { logCallRecord } from "./utils/logs/logCallRecord";
 import { stripeManager } from "./StripeManager";
@@ -1476,12 +1476,14 @@ export class TwilioCallManager {
       const clientLanguage = callSession.metadata?.clientLanguages?.[0] || "en";
 
       // 🆕 NEW: If provider doesn't answer and client is already connected, redirect their call to play voice message
-      if (reason === "provider_no_answer" && 
-          callSession.participants.client.status === "connected" && 
+      if (reason === "provider_no_answer" &&
+          callSession.participants.client.status === "connected" &&
           callSession.participants.client.callSid) {
         try {
-          const base = getFunctionsBaseUrl();
-          const redirectUrl = `${base}/providerNoAnswerTwiML?sessionId=${sessionId}&lang=${clientLanguage}`;
+          // P0 FIX: Use Cloud Run URL instead of cloudfunctions.net
+          const { getProviderNoAnswerTwiMLUrl } = await import("./utils/urlBase");
+          const baseUrl = getProviderNoAnswerTwiMLUrl();
+          const redirectUrl = `${baseUrl}?sessionId=${sessionId}&lang=${clientLanguage}`;
           
           const twilioClient = getTwilioClient();
           await twilioClient.calls(callSession.participants.client.callSid).update({

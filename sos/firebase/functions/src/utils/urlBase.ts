@@ -8,6 +8,7 @@ const FUNCTIONS_BASE_URL_PARAM = defineString("FUNCTIONS_BASE_URL");
 // These URLs are DIFFERENT from the cloudfunctions.net format
 const TWILIO_CALL_WEBHOOK_URL_PARAM = defineString("TWILIO_CALL_WEBHOOK_URL");
 const TWILIO_CONFERENCE_WEBHOOK_URL_PARAM = defineString("TWILIO_CONFERENCE_WEBHOOK_URL");
+const PROVIDER_NO_ANSWER_TWIML_URL_PARAM = defineString("PROVIDER_NO_ANSWER_TWIML_URL");
 
 function getProjectId(): string {
   return (
@@ -93,6 +94,40 @@ export function getTwilioConferenceWebhookUrl(): string {
   const base = getFunctionsBaseUrl();
   const fallbackUrl = `${base}/twilioConferenceWebhook`;
   console.warn(`⚠️ [urlBase] TWILIO_CONFERENCE_WEBHOOK_URL not set! Using legacy fallback: ${fallbackUrl}`);
+  console.warn(`⚠️ [urlBase] This may NOT work with Firebase Functions v2 (Cloud Run)!`);
+  return fallbackUrl;
+}
+
+/**
+ * P0 CRITICAL FIX: Get the correct Cloud Run URL for providerNoAnswerTwiML
+ * This is the TwiML endpoint that plays a message and hangs up when provider doesn't answer
+ *
+ * Format: https://functionname-projectnumber.region.run.app
+ * Example: https://providernoanswertwiml-5tfnuxa2hq-ew.a.run.app
+ */
+export function getProviderNoAnswerTwiMLUrl(): string {
+  // 1. Try defineString param first (Firebase v2 recommended)
+  try {
+    const fromParam = (PROVIDER_NO_ANSWER_TWIML_URL_PARAM.value() || "").trim();
+    if (fromParam) {
+      console.log(`🔗 [urlBase] PROVIDER_NO_ANSWER_TWIML_URL from Firebase param: ${fromParam}`);
+      return fromParam;
+    }
+  } catch {
+    // defineString not available
+  }
+
+  // 2. Try process.env
+  const fromEnv = (process.env.PROVIDER_NO_ANSWER_TWIML_URL || "").trim();
+  if (fromEnv) {
+    console.log(`🔗 [urlBase] PROVIDER_NO_ANSWER_TWIML_URL from process.env: ${fromEnv}`);
+    return fromEnv;
+  }
+
+  // 3. Fallback to legacy format (WARNING: may not work with Firebase v2!)
+  const base = getFunctionsBaseUrl();
+  const fallbackUrl = `${base}/providerNoAnswerTwiML`;
+  console.warn(`⚠️ [urlBase] PROVIDER_NO_ANSWER_TWIML_URL not set! Using legacy fallback: ${fallbackUrl}`);
   console.warn(`⚠️ [urlBase] This may NOT work with Firebase Functions v2 (Cloud Run)!`);
   return fallbackUrl;
 }
