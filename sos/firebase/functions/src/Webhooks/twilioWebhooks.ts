@@ -265,25 +265,19 @@ async function handleCallAnswered(
     console.log(`📞 [${webhookId}]   answeredBy value: "${answeredBy || 'UNDEFINED'}"`);
     console.log(`📞 [${webhookId}]   participantType: ${participantType}`);
 
-    // P0 FIX v2: Handle undefined AnsweredBy based on participant type
-    // - For CLIENT: If AnsweredBy is undefined, treat as voicemail/no_answer (safer - triggers retry)
-    //   This prevents calling the provider when the client's voicemail answered
-    // - For PROVIDER: If AnsweredBy is undefined, treat as human (safer - don't lose the connection)
-    //   The client already answered and is waiting, so we should connect
+    // P0 FIX v3: With asyncAmd="true", AnsweredBy does NOT arrive in this webhook!
+    // AnsweredBy only arrives via asyncAmdStatusCallback → twilioAmdTwiml
+    // So if AnsweredBy is undefined here, we should NOT treat it as machine
+    // Let twilioAmdTwiml handle AMD detection via its dedicated callback
     let effectiveAnsweredBy: string;
 
     if (!answeredBy) {
-      if (participantType === 'client') {
-        // CLIENT: undefined AnsweredBy likely means voicemail → treat as no_answer to retry
-        console.log(`📞 [${webhookId}] ⚠️ CLIENT AnsweredBy is UNDEFINED - treating as VOICEMAIL (safe default)`);
-        console.log(`📞 [${webhookId}]   This will trigger retry instead of calling provider`);
-        effectiveAnsweredBy = 'machine_assumed';
-      } else {
-        // PROVIDER: undefined AnsweredBy → treat as human (client is waiting!)
-        console.log(`📞 [${webhookId}] ⚠️ PROVIDER AnsweredBy is UNDEFINED - treating as HUMAN (safe default)`);
-        console.log(`📞 [${webhookId}]   Client is already connected and waiting, so we should proceed`);
-        effectiveAnsweredBy = 'human_assumed';
-      }
+      // asyncAmd="true" means AMD result comes via twilioAmdTwiml, not here
+      // Treat undefined as "pending AMD" and proceed normally
+      console.log(`📞 [${webhookId}] ⚠️ AnsweredBy is UNDEFINED - asyncAmd mode active`);
+      console.log(`📞 [${webhookId}]   AMD detection is handled by twilioAmdTwiml callback`);
+      console.log(`📞 [${webhookId}]   Proceeding as human (AMD callback will correct if needed)`);
+      effectiveAnsweredBy = 'human_assumed';
     } else {
       effectiveAnsweredBy = answeredBy;
     }
