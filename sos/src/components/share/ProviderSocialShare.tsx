@@ -37,64 +37,64 @@ export interface ProviderSocialShareProps {
 
 const getShareMessages = (lang: string) => {
   const messages: Record<string, { whatsapp: string; social: string; email: string }> = {
-    // 🇫🇷 French - Casual, friendly "tu", playful slang
+    // French
     fr: {
-      whatsapp: "Heyyyy 👋 J'ai trouvé LA pépite pour tes galères d'expat !\n\n{name} - {specialty}\n⭐ {rating}/5\n\nÇa m'a sauvé la vie 👇",
-      social: "🌟 {name} - {specialty} ⭐{rating}/5 - Le contact qui m'a sauvé !",
-      email: "Un contact en or 🌟\n\nSalut !\n\n{name} est spécialisé(e) en {specialty}.\nNote : {rating}/5 ⭐\n\nVraiment quelqu'un de confiance !",
+      whatsapp: "Salut ! Je te recommande ce contact pour les expats :\n\n{name}\n{specialty}\nNote : {rating}/5\n\nTrès professionnel, je te le conseille.",
+      social: "{name} - {specialty} ({rating}/5) - Un contact de confiance pour les expats",
+      email: "Recommandation\n\nBonjour,\n\nJe te recommande {name}, spécialisé(e) en {specialty}.\nNote : {rating}/5\n\nUn contact fiable pour les expatriés.",
     },
-    // 🇺🇸 English - Casual American, enthusiastic
+    // English
     en: {
-      whatsapp: "Heyyyy 👋 Found THE gem for your expat struggles!\n\n{name} - {specialty}\n⭐ {rating}/5\n\nLiterally saved my life 👇",
-      social: "🌟 {name} - {specialty} ⭐{rating}/5 - The contact that saved me!",
-      email: "A golden contact 🌟\n\nHi!\n\n{name} specializes in {specialty}.\nRating: {rating}/5 ⭐\n\nSomeone you can really trust!",
+      whatsapp: "Hi! I recommend this contact for expats:\n\n{name}\n{specialty}\nRating: {rating}/5\n\nVery professional, highly recommended.",
+      social: "{name} - {specialty} ({rating}/5) - A trusted contact for expats",
+      email: "Recommendation\n\nHi,\n\nI recommend {name}, specialized in {specialty}.\nRating: {rating}/5\n\nA reliable contact for expatriates.",
     },
-    // 🇪🇸 Spanish - Warm, expressive
+    // Spanish
     es: {
-      whatsapp: "¡Oye! 👋 ¡Mira lo que encontré para expatriados!\n\n{name} - {specialty}\n⭐ {rating}/5\n\n¡Me salvó la vida! 👇",
-      social: "🌟 {name} - {specialty} ⭐{rating}/5 - ¡El contacto que me salvó!",
-      email: "¡Un contacto de oro! 🌟\n\n¡Hola!\n\n{name} se especializa en {specialty}.\nValoración: {rating}/5 ⭐",
+      whatsapp: "Hola! Te recomiendo este contacto para expatriados:\n\n{name}\n{specialty}\nValoración: {rating}/5\n\nMuy profesional, lo recomiendo.",
+      social: "{name} - {specialty} ({rating}/5) - Un contacto de confianza para expats",
+      email: "Recomendación\n\nHola,\n\nTe recomiendo a {name}, especializado en {specialty}.\nValoración: {rating}/5\n\nUn contacto fiable para expatriados.",
     },
-    // 🇩🇪 German - Direct, practical
+    // German
     de: {
-      whatsapp: "Schau mal 👋 Top-Tipp für Expats!\n\n{name} - {specialty}\n⭐ {rating}/5\n\nEcht empfehlenswert 👇",
-      social: "🌟 {name} - {specialty} ⭐{rating}/5 - Top-Empfehlung!",
-      email: "Empfehlung für Expats 🌟\n\nHallo!\n\n{name} ist Experte für {specialty}.\nBewertung: {rating}/5 ⭐",
+      whatsapp: "Hallo! Ich empfehle diesen Kontakt für Expats:\n\n{name}\n{specialty}\nBewertung: {rating}/5\n\nSehr professionell, empfehlenswert.",
+      social: "{name} - {specialty} ({rating}/5) - Ein vertrauenswürdiger Kontakt für Expats",
+      email: "Empfehlung\n\nHallo,\n\nIch empfehle {name}, spezialisiert auf {specialty}.\nBewertung: {rating}/5\n\nEin zuverlässiger Kontakt für Expats.",
     },
-    // 🇧🇷 Portuguese - Brazilian warmth
+    // Portuguese
     pt: {
-      whatsapp: "Olha só! 👋 Contato incrível pra quem tá no exterior!\n\n{name} - {specialty}\n⭐ {rating}/5\n\nMe ajudou muito 👇",
-      social: "🌟 {name} - {specialty} ⭐{rating}/5 - Super indico!",
-      email: "Contato de ouro! 🌟\n\nOi!\n\n{name} é especialista em {specialty}.\nNota: {rating}/5 ⭐",
+      whatsapp: "Oi! Recomendo este contato para expatriados:\n\n{name}\n{specialty}\nNota: {rating}/5\n\nMuito profissional, recomendo.",
+      social: "{name} - {specialty} ({rating}/5) - Um contato de confiança para expats",
+      email: "Recomendação\n\nOlá,\n\nRecomendo {name}, especialista em {specialty}.\nNota: {rating}/5\n\nUm contato confiável para expatriados.",
     },
-    // 🇷🇺 Russian - Friendly informal
+    // Russian
     ru: {
-      whatsapp: "Слушай 👋 Крутой специалист для экспатов!\n\n{name} - {specialty}\n⭐ {rating}/5\n\nОчень помог 👇",
-      social: "🌟 {name} - {specialty} ⭐{rating}/5 - Рекомендую!",
-      email: "Рекомендую! 🌟\n\nПривет!\n\n{name} — специалист по {specialty}.\nОценка: {rating}/5 ⭐",
+      whatsapp: "Привет! Рекомендую этот контакт для экспатов:\n\n{name}\n{specialty}\nОценка: {rating}/5\n\nОчень профессионально, рекомендую.",
+      social: "{name} - {specialty} ({rating}/5) - Надёжный контакт для экспатов",
+      email: "Рекомендация\n\nПривет,\n\nРекомендую {name}, специалист по {specialty}.\nОценка: {rating}/5\n\nНадёжный контакт для экспатов.",
     },
-    // 🇮🇳 Hindi - Desi expressions
+    // Hindi
     hi: {
-      whatsapp: "अरे यार 👋 देख क्या मिला expats के लिए!\n\n{name} - {specialty}\n⭐ {rating}/5\n\nमेरा काम बना दिया 🙏👇",
-      social: "🙏 {name} - {specialty} ⭐{rating}/5 - भरोसेमंद!",
-      email: "भाई सुन 🌟\n\nनमस्ते!\n\n{name} - {specialty} में expert हैं।\nRating: {rating}/5 ⭐",
+      whatsapp: "नमस्ते! Expats के लिए यह contact recommend करता हूं:\n\n{name}\n{specialty}\nRating: {rating}/5\n\nबहुत professional, recommend करता हूं।",
+      social: "{name} - {specialty} ({rating}/5) - Expats के लिए भरोसेमंद contact",
+      email: "Recommendation\n\nनमस्ते,\n\n{name} को recommend करता हूं, {specialty} में specialist।\nRating: {rating}/5\n\nExpats के लिए reliable contact।",
     },
-    // 🇸🇦 Arabic - Respectful Islamic greeting
+    // Arabic
     ar: {
-      whatsapp: "السلام عليكم 👋\n\nوالله لقيت شخص ممتاز للمغتربين!\n\n{name} - {specialty}\n⭐ {rating}/5\n\nالحمد لله ساعدني 👇",
-      social: "🌟 {name} - {specialty} ⭐{rating}/5 - موثوق 👍",
-      email: "توصية مهمة 🌟\n\nالسلام عليكم!\n\n{name} متخصص في {specialty}\nالتقييم: {rating}/5 ⭐",
+      whatsapp: "السلام عليكم! أنصحك بهذا الشخص للمغتربين:\n\n{name}\n{specialty}\nالتقييم: {rating}/5\n\nمحترف جداً، أنصح به.",
+      social: "{name} - {specialty} ({rating}/5) - شخص موثوق للمغتربين",
+      email: "توصية\n\nالسلام عليكم،\n\nأنصح بـ {name}، متخصص في {specialty}.\nالتقييم: {rating}/5\n\nشخص موثوق للمغتربين.",
     },
-    // 🇨🇳 Chinese - WeChat style
+    // Chinese
     zh: {
-      whatsapp: "亲，推荐一个靠谱的海外专家！\n\n{name} - {specialty}\n评分：{rating}/5 ⭐\n\n帮了我大忙～",
-      social: "{name} - {specialty} {rating}/5分 - 靠谱专家！",
-      email: "推荐专家\n\n你好！\n\n{name}，专业领域：{specialty}\n评分：{rating}/5",
+      whatsapp: "你好！推荐这位海外服务专家：\n\n{name}\n{specialty}\n评分：{rating}/5\n\n非常专业，值得信赖。",
+      social: "{name} - {specialty} ({rating}/5) - 海外华人的可靠专家",
+      email: "推荐\n\n你好，\n\n推荐{name}，专业领域：{specialty}。\n评分：{rating}/5\n\n海外人士的可靠联系人。",
     },
     ch: {
-      whatsapp: "亲，推荐一个靠谱的海外专家！\n\n{name} - {specialty}\n评分：{rating}/5 ⭐\n\n帮了我大忙～",
-      social: "{name} - {specialty} {rating}/5分 - 靠谱专家！",
-      email: "推荐专家\n\n你好！\n\n{name}，专业领域：{specialty}\n评分：{rating}/5",
+      whatsapp: "你好！推荐这位海外服务专家：\n\n{name}\n{specialty}\n评分：{rating}/5\n\n非常专业，值得信赖。",
+      social: "{name} - {specialty} ({rating}/5) - 海外华人的可靠专家",
+      email: "推荐\n\n你好，\n\n推荐{name}，专业领域：{specialty}。\n评分：{rating}/5\n\n海外人士的可靠联系人。",
     },
   };
   return messages[lang] || messages.en;

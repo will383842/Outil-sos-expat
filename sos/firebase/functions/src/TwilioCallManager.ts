@@ -99,7 +99,8 @@ export interface CallSessionState {
     name: string;
     startedAt?: admin.firestore.Timestamp;
     endedAt?: admin.firestore.Timestamp;
-    duration?: number;
+    duration?: number; // Total Twilio conference duration
+    billingDuration?: number; // P0 FIX: Duration from when BOTH participants connected (for billing)
     recordingUrl?: string;
     recordingSid?: string;
   };

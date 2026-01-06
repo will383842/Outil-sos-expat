@@ -230,16 +230,14 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
   const endId = `conf_end_${Date.now().toString(36)}`;
 
   try {
-    const duration = parseInt(body.Duration || '0');
+    const twilioDuration = parseInt(body.Duration || '0');
+    const conferenceEndTime = new Date();
 
     console.log(`\n${'█'.repeat(70)}`);
     console.log(`🏁 [${endId}] handleConferenceEnd START`);
     console.log(`🏁 [${endId}]   sessionId: ${sessionId}`);
     console.log(`🏁 [${endId}]   conferenceSid: ${body.ConferenceSid}`);
-    console.log(`🏁 [${endId}]   duration: ${duration}s`);
-    console.log(`🏁 [${endId}]   durationMinutes: ${(duration / 60).toFixed(1)} min`);
-    console.log(`🏁 [${endId}]   minDurationForCapture: 120s (2 min)`);
-    console.log(`🏁 [${endId}]   willCapture: ${duration >= 120 ? 'YES' : 'NO - will refund/cancel'}`);
+    console.log(`🏁 [${endId}]   twilioDuration (total conference): ${twilioDuration}s`);
     console.log(`${'█'.repeat(70)}`);
 
     console.log(`🏁 [${endId}] STEP 1: Fetching session state BEFORE update...`);
@@ -250,38 +248,65 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
       console.log(`🏁 [${endId}]   payment.intentId: ${sessionBefore.payment?.intentId?.slice(0, 20) || 'N/A'}...`);
       console.log(`🏁 [${endId}]   client.status: ${sessionBefore.participants.client.status}`);
       console.log(`🏁 [${endId}]   provider.status: ${sessionBefore.participants.provider.status}`);
+      console.log(`🏁 [${endId}]   provider.connectedAt: ${sessionBefore.participants.provider.connectedAt?.toDate?.() || 'N/A'}`);
     }
+
+    // P0 FIX: Calculate BILLING duration from when BOTH participants are connected
+    // This is fairer to the client - they shouldn't pay for time waiting for the provider
+    let billingDuration = 0;
+    const providerConnectedAt = sessionBefore?.participants.provider.connectedAt;
+
+    if (providerConnectedAt) {
+      // Provider was connected - calculate billing duration from provider connection to now
+      const providerConnectedTime = providerConnectedAt.toDate();
+      billingDuration = Math.floor((conferenceEndTime.getTime() - providerConnectedTime.getTime()) / 1000);
+      console.log(`🏁 [${endId}]   providerConnectedAt: ${providerConnectedTime.toISOString()}`);
+      console.log(`🏁 [${endId}]   conferenceEndTime: ${conferenceEndTime.toISOString()}`);
+      console.log(`🏁 [${endId}]   billingDuration (from provider connect): ${billingDuration}s`);
+    } else {
+      // Provider never connected - no billing
+      console.log(`🏁 [${endId}]   ⚠️ Provider never connected - billingDuration = 0`);
+      billingDuration = 0;
+    }
+
+    console.log(`🏁 [${endId}]   twilioDuration (total): ${twilioDuration}s (${(twilioDuration / 60).toFixed(1)} min)`);
+    console.log(`🏁 [${endId}]   billingDuration (both connected): ${billingDuration}s (${(billingDuration / 60).toFixed(1)} min)`);
+    console.log(`🏁 [${endId}]   minDurationForCapture: 120s (2 min)`);
+    console.log(`🏁 [${endId}]   willCapture: ${billingDuration >= 120 ? 'YES' : 'NO - will refund/cancel'}`);
 
     console.log(`🏁 [${endId}] STEP 2: Updating conference info (endedAt + duration)...`);
     await twilioCallManager.updateConferenceInfo(sessionId, {
-      endedAt: admin.firestore.Timestamp.fromDate(new Date()),
-      duration: duration
+      endedAt: admin.firestore.Timestamp.fromDate(conferenceEndTime),
+      duration: twilioDuration,
+      billingDuration: billingDuration // Store both for transparency
     });
     console.log(`🏁 [${endId}]   ✅ Conference info updated`);
 
-    // Log si appel trop court (pour monitoring)
-    if (duration < 120) {
-      console.log(`🏁 [${endId}] ⚠️ CALL TOO SHORT: ${duration}s < 120s minimum`);
+    // Log si appel trop court (pour monitoring) - use BILLING duration
+    if (billingDuration < 120) {
+      console.log(`🏁 [${endId}] ⚠️ BILLING DURATION TOO SHORT: ${billingDuration}s < 120s minimum`);
       console.log(`🏁 [${endId}]   Action: Will trigger refund/cancel via handleCallCompletion`);
       await logCallRecord({
         callId: sessionId,
         status: 'call_too_short',
         retryCount: 0,
         additionalData: {
-          duration,
-          reason: 'Duration less than 2 minutes - will trigger refund/cancel'
+          twilioDuration,
+          billingDuration,
+          reason: 'Billing duration (from both connected) less than 2 minutes - will trigger refund/cancel'
         }
       });
     } else {
-      console.log(`🏁 [${endId}] ✅ CALL DURATION OK: ${duration}s >= 120s minimum`);
+      console.log(`🏁 [${endId}] ✅ BILLING DURATION OK: ${billingDuration}s >= 120s minimum`);
       console.log(`🏁 [${endId}]   Action: Will capture payment via handleCallCompletion`);
     }
 
     // handleCallCompletion gère TOUS les cas:
     // - Si durée >= 120s → capture paiement + schedule transfer prestataire
     // - Si durée < 120s  → processRefund (cancel ou refund selon état paiement)
-    console.log(`🏁 [${endId}] STEP 3: Calling handleCallCompletion(sessionId, ${duration})...`);
-    await twilioCallManager.handleCallCompletion(sessionId, duration);
+    // P0 FIX: Pass BILLING duration (from when both connected), not Twilio's total duration
+    console.log(`🏁 [${endId}] STEP 3: Calling handleCallCompletion(sessionId, ${billingDuration})...`);
+    await twilioCallManager.handleCallCompletion(sessionId, billingDuration);
     console.log(`🏁 [${endId}]   ✅ handleCallCompletion completed`);
 
     console.log(`🏁 [${endId}] STEP 4: Fetching session state AFTER completion...`);
@@ -296,7 +321,8 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
       status: 'conference_ended',
       retryCount: 0,
       additionalData: {
-        duration,
+        twilioDuration,
+        billingDuration,
         conferenceSid: body.ConferenceSid
       }
     });
@@ -442,18 +468,31 @@ async function handleParticipantLeave(sessionId: string, body: TwilioConferenceW
     );
     console.log(`👋 [${leaveId}]   ✅ Status updated to "disconnected"`);
 
-    // Récupérer la durée de la conférence si disponible
+    // P0 FIX: Calculate BILLING duration from when BOTH participants are connected
+    // This is fairer to the client - they shouldn't pay for time waiting for the provider
     const session = await twilioCallManager.getCallSession(sessionId);
-    const duration = session?.conference.duration || 0;
+    const leaveTime = new Date();
+    let billingDuration = 0;
+
+    const providerConnectedAt = session?.participants.provider.connectedAt;
+    if (providerConnectedAt) {
+      const providerConnectedTime = providerConnectedAt.toDate();
+      billingDuration = Math.floor((leaveTime.getTime() - providerConnectedTime.getTime()) / 1000);
+      console.log(`👋 [${leaveId}]   providerConnectedAt: ${providerConnectedTime.toISOString()}`);
+      console.log(`👋 [${leaveId}]   leaveTime: ${leaveTime.toISOString()}`);
+    } else {
+      console.log(`👋 [${leaveId}]   ⚠️ Provider never connected - billingDuration = 0`);
+    }
 
     console.log(`👋 [${leaveId}] STEP 3: Checking if early disconnection...`);
-    console.log(`👋 [${leaveId}]   duration: ${duration}s`);
+    console.log(`👋 [${leaveId}]   billingDuration (from both connected): ${billingDuration}s`);
     console.log(`👋 [${leaveId}]   minDuration: 120s`);
-    console.log(`👋 [${leaveId}]   isEarlyDisconnection: ${duration < 120}`);
+    console.log(`👋 [${leaveId}]   isEarlyDisconnection: ${billingDuration < 120}`);
 
     // Gérer la déconnexion selon le participant et la durée
+    // P0 FIX: Pass BILLING duration (from when both connected)
     console.log(`👋 [${leaveId}] STEP 4: Calling handleEarlyDisconnection...`);
-    await twilioCallManager.handleEarlyDisconnection(sessionId, participantType, duration);
+    await twilioCallManager.handleEarlyDisconnection(sessionId, participantType, billingDuration);
     console.log(`👋 [${leaveId}]   ✅ handleEarlyDisconnection completed`);
 
     // Verify final state
@@ -472,7 +511,7 @@ async function handleParticipantLeave(sessionId: string, body: TwilioConferenceW
       additionalData: {
         callSid,
         conferenceSid: body.ConferenceSid,
-        duration
+        billingDuration
       }
     });
 
