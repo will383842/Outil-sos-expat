@@ -208,11 +208,7 @@ export default function StripeKYC({ onComplete, userType }: Props) {
 
   // ✅ If KYC is complete, render nothing (component will unmount/hide)
   if (isKycComplete) {
-    return (
-        <h2 className="text-2xl font-semibold text-gray-800 mb-2">
-            {intl.formatMessage({ id: 'stripe.kyc.verified' })}
-          </h2>
-    );
+    return null;
   }
 
   // ✅ P0 FIX: Show error state with option to create new account
