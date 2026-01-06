@@ -923,9 +923,13 @@ ultraLogger.info("EXPORTS", "Exports directs configurés");
 export const executeCallTask = onRequest(
   {
     region: "europe-west1",
-    timeoutSeconds: 120,
+    // P0 FIX: Timeout increased from 120s to 540s (9 minutes)
+    // Each provider retry: ~150s (60s call + 90s wait) + 15s backoff
+    // 3 retries: 3*150 + 2*15 = 480s minimum
+    // 120s was causing premature function timeout → only 2 retries executed
+    timeoutSeconds: 540,
     memory: "512MiB",
-    cpu: 0.25,
+    cpu: 1,  // Required for memory > 512MiB or long-running functions
     maxInstances: 10,
     minInstances: 0,
     concurrency: 1,
