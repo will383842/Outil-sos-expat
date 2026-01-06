@@ -81,15 +81,16 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }, []);
 
   // ⚠️ Fallback robuste : admin → /admin/login, sinon → /login
+  // FIX: Only check pathname, not allowedRoles - prevents redirect to /admin/login
+  // when route has 'admin' in allowedRoles but is not an admin route
   const computedFallbackPath = useMemo(() => {
     if (fallbackPath) return fallbackPath;
 
-    const isAdminRoute =
-      (Array.isArray(allowedRoles) ? allowedRoles.includes('admin') : allowedRoles === 'admin') ||
-      location.pathname.startsWith('/admin');
+    // Only redirect to /admin/login if the path actually starts with /admin
+    const isAdminRoute = location.pathname.startsWith('/admin');
 
     return isAdminRoute ? '/admin/login' : '/login';
-  }, [fallbackPath, allowedRoles, location.pathname]);
+  }, [fallbackPath, location.pathname]);
 
   // P0 FIX: Ne check l'auth que si isFullyReady ET on a attendu le temps minimum
   // Cela évite les redirections prématurées vers login
