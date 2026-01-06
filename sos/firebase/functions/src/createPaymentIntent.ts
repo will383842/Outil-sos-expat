@@ -364,9 +364,25 @@ async function checkAndLockDuplicatePayments(
   const windowMs = getLimits().DUPLICATES.WINDOW_MS;
   const cutoffTime = new Date(Date.now() - windowMs);
 
+  // P0 FIX: Statuts de call_session qui permettent de réessayer un paiement
+  const failedCallStatuses = ['failed', 'cancelled', 'refunded', 'no_answer'];
+
+  /**
+   * Vérifie si un call_session est en échec (permet retry)
+   */
+  async function isCallSessionFailed(callSessionId: string): Promise<boolean> {
+    const callSessionDoc = await db.collection('call_sessions').doc(callSessionId).get();
+    if (!callSessionDoc.exists) {
+      // Call session n'existe plus → considérer comme échoué (orphelin)
+      return true;
+    }
+    const callStatus = callSessionDoc.data()?.status;
+    return failedCallStatuses.includes(callStatus);
+  }
+
   try {
-    const result = await db.runTransaction(async (transaction) => {
-      // 1. Vérifier si un lock existe déjà (non expiré)
+    // ÉTAPE 1: Vérifier le lock dans une transaction
+    const lockCheckResult = await db.runTransaction(async (transaction) => {
       const lockDoc = await transaction.get(lockRef);
 
       if (lockDoc.exists) {
@@ -376,47 +392,89 @@ async function checkAndLockDuplicatePayments(
         // Si le lock est encore valide (dans la fenêtre de temps)
         if (lockCreatedAt > cutoffTime) {
           return {
-            isDuplicate: true,
-            existingPaymentId: lockData?.paymentIntentId
+            hasValidLock: true,
+            lockData,
           };
         }
-        // Sinon, le lock est expiré, on peut le réutiliser
       }
-
-      // 2. Vérifier aussi dans la collection payments (double sécurité)
-      const paymentsSnap = await db
-        .collection('payments')
-        .where('clientId', '==', clientId)
-        .where('providerId', '==', providerId)
-        .where('currency', '==', currency)
-        .where('amountInMainUnit', '==', amountInMainUnit)
-        .where('status', 'in', ['pending', 'requires_confirmation', 'requires_capture', 'processing'])
-        .where('createdAt', '>', admin.firestore.Timestamp.fromDate(cutoffTime))
-        .limit(1)
-        .get();
-
-      if (!paymentsSnap.empty) {
-        return {
-          isDuplicate: true,
-          existingPaymentId: paymentsSnap.docs[0].id
-        };
-      }
-
-      // 3. Créer le lock atomiquement
-      transaction.set(lockRef, {
-        clientId,
-        providerId,
-        amountInMainUnit,
-        currency,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        expiresAt: new Date(Date.now() + windowMs),
-        status: 'pending'
-      });
-
-      return { isDuplicate: false, lockId: lockKey };
+      return { hasValidLock: false };
     });
 
-    return result;
+    // ÉTAPE 2: Si un lock valide existe, vérifier si l'appel a échoué
+    if (lockCheckResult.hasValidLock && lockCheckResult.lockData) {
+      const callSessionId = lockCheckResult.lockData.callSessionId;
+
+      // Si le lock a un callSessionId, vérifier le statut
+      if (callSessionId) {
+        const isFailed = await isCallSessionFailed(callSessionId);
+        if (isFailed) {
+          console.log(`🔍 Lock ${lockKey} existe mais appel en échec - autoriser retry`);
+          // L'appel a échoué → permettre de réessayer (ne pas retourner isDuplicate)
+        } else {
+          // L'appel est actif → bloquer
+          return {
+            isDuplicate: true,
+            existingPaymentId: lockCheckResult.lockData.paymentIntentId
+          };
+        }
+      } else {
+        // Pas de callSessionId sur le lock → bloquer par sécurité
+        return {
+          isDuplicate: true,
+          existingPaymentId: lockCheckResult.lockData.paymentIntentId
+        };
+      }
+    }
+
+    // ÉTAPE 3: Vérifier aussi dans la collection payments (double sécurité)
+    const paymentsSnap = await db
+      .collection('payments')
+      .where('clientId', '==', clientId)
+      .where('providerId', '==', providerId)
+      .where('currency', '==', currency)
+      .where('amountInMainUnit', '==', amountInMainUnit)
+      .where('status', 'in', ['pending', 'requires_confirmation', 'requires_capture', 'processing'])
+      .where('createdAt', '>', admin.firestore.Timestamp.fromDate(cutoffTime))
+      .limit(5)
+      .get();
+
+    // P0 FIX: Vérifier le statut de chaque call_session associée
+    for (const paymentDoc of paymentsSnap.docs) {
+      const paymentData = paymentDoc.data();
+      const callSessionId = paymentData.callSessionId;
+
+      if (!callSessionId) {
+        // Paiement sans call_session → potentiellement actif, bloquer
+        console.log(`🔍 Paiement ${paymentDoc.id} sans callSessionId - BLOQUÉ`);
+        return { isDuplicate: true, existingPaymentId: paymentDoc.id };
+      }
+
+      const isFailed = await isCallSessionFailed(callSessionId);
+      if (isFailed) {
+        console.log(`🔍 Call session ${callSessionId} en échec - OK pour retry`);
+        continue;
+      }
+
+      // Appel actif ou réussi → bloquer
+      const callSessionDoc = await db.collection('call_sessions').doc(callSessionId).get();
+      const callStatus = callSessionDoc.data()?.status || 'unknown';
+      console.log(`🔍 Paiement ${paymentDoc.id} avec appel actif (${callStatus}) - BLOQUÉ`);
+      return { isDuplicate: true, existingPaymentId: paymentDoc.id };
+    }
+
+    // ÉTAPE 4: Aucun doublon trouvé → créer le lock
+    console.log('🔍 Pas de doublon actif trouvé - création du lock');
+    await db.collection('payment_locks').doc(lockKey).set({
+      clientId,
+      providerId,
+      amountInMainUnit,
+      currency,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      expiresAt: new Date(Date.now() + windowMs),
+      status: 'pending'
+    });
+
+    return { isDuplicate: false, lockId: lockKey };
   } catch (err) {
     await logError('checkAndLockDuplicatePayments', err as unknown);
     // P0-3 SECURITY FIX: En cas d'erreur de transaction, on REFUSE le paiement

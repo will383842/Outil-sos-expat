@@ -1404,8 +1404,8 @@ async cancelPayment(
         sessionId: sessionId ? sessionId.substring(0, 8) + '...' : '—',
       });
 
-      // P0 FIX: Anti-doublons complet - vérifier TOUS les statuts de paiement valides
-      // Inclut: succeeded (Stripe), captured (interne), requires_capture, authorized, processing
+      // P0 FIX: Anti-doublons - vérifier TOUS les statuts de paiement valides
+      // MAIS autoriser un nouveau paiement si l'appel précédent a échoué
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
       let query: admin.firestore.Query<admin.firestore.DocumentData> = this.db
@@ -1420,7 +1420,65 @@ async cancelPayment(
       }
 
       const snapshot = await query.limit(5).get();
-      return !snapshot.empty;
+
+      if (snapshot.empty) {
+        console.log('🔍 Aucun paiement existant trouvé - OK pour créer');
+        return false;
+      }
+
+      // P0 FIX: Si des paiements sont trouvés, vérifier le statut de leurs call_sessions
+      // Si TOUTES les call_sessions associées sont en échec, autoriser un nouveau paiement
+      console.log(`🔍 ${snapshot.size} paiement(s) existant(s) trouvé(s) - vérification des call_sessions...`);
+
+      for (const paymentDoc of snapshot.docs) {
+        const paymentData = paymentDoc.data();
+        const callSessionId = paymentData.callSessionId;
+
+        if (!callSessionId) {
+          // Paiement sans call_session → potentiellement encore en cours, bloquer
+          console.log(`🔍 Paiement ${paymentDoc.id} sans callSessionId - BLOQUÉ`);
+          return true;
+        }
+
+        // Récupérer la call_session associée
+        const callSessionDoc = await this.db.collection('call_sessions').doc(callSessionId).get();
+
+        if (!callSessionDoc.exists) {
+          // Call session n'existe plus, paiement orphelin - autoriser nouveau paiement
+          console.log(`🔍 Call session ${callSessionId} n'existe plus - OK pour continuer`);
+          continue;
+        }
+
+        const callSessionData = callSessionDoc.data();
+        const callStatus = callSessionData?.status;
+
+        // Statuts terminaux d'échec → autoriser nouveau paiement
+        const failedStatuses = ['failed', 'cancelled', 'refunded', 'no_answer'];
+
+        if (failedStatuses.includes(callStatus)) {
+          console.log(`🔍 Call session ${callSessionId} en statut "${callStatus}" - OK pour réessayer`);
+          continue;
+        }
+
+        // Statut completed avec paiement capturé → bloquer (appel réussi)
+        if (callStatus === 'completed' && ['succeeded', 'captured'].includes(paymentData.status)) {
+          console.log(`🔍 Paiement ${paymentDoc.id} pour appel réussi (${callStatus}/${paymentData.status}) - BLOQUÉ`);
+          return true;
+        }
+
+        // Paiement en cours pour appel actif → bloquer
+        const activeStatuses = ['pending', 'scheduled', 'client_connecting', 'provider_connecting', 'both_connecting', 'in_progress'];
+        if (activeStatuses.includes(callStatus)) {
+          console.log(`🔍 Paiement ${paymentDoc.id} pour appel actif (${callStatus}) - BLOQUÉ`);
+          return true;
+        }
+
+        console.log(`🔍 Call session ${callSessionId} en statut "${callStatus}" - statut non-bloquant`);
+      }
+
+      // Tous les paiements trouvés sont pour des appels échoués → autoriser
+      console.log('🔍 Tous les paiements existants sont pour des appels échoués - OK pour nouveau paiement');
+      return false;
     } catch (error) {
       await logError('StripeManager:findExistingPayment', error);
       // En cas d'erreur, on préfère **ne pas** bloquer
