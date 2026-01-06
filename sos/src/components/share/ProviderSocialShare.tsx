@@ -30,60 +30,69 @@ export interface ProviderSocialShareProps {
 }
 
 // ============================================================================
-// FUN MESSAGES - Platform-specific, viral-worthy copy
+// FUN MESSAGES - Culturally adapted, platform-specific, viral-worthy copy
 // ============================================================================
 
 const getShareMessages = (lang: string) => {
   const messages: Record<string, { whatsapp: string; email: string; native: string }> = {
+    // 🇫🇷 French - Casual, friendly "tu", playful slang
     fr: {
       whatsapp: "Heyyyy 👋 J'ai trouvé LA pépite pour tes galères d'expat !\n\n{name} - {specialty}\n⭐ {rating}/5\n\nÇa m'a sauvé la vie, je te partage 👇",
       email: "Un contact en or 🌟\n\nSalut !\n\n{name} est spécialisé(e) en {specialty}.\nNote : {rating}/5 ⭐\n\nVraiment quelqu'un de confiance pour les expats !",
       native: "🌟 {name} - {specialty} ⭐{rating}/5\nLe contact qui m'a sauvé !",
     },
+    // 🇺🇸 English - Casual American, enthusiastic
     en: {
       whatsapp: "Heyyyy 👋 Found THE gem for your expat struggles!\n\n{name} - {specialty}\n⭐ {rating}/5\n\nLiterally saved my life, sharing with you 👇",
       email: "A golden contact 🌟\n\nHi!\n\n{name} specializes in {specialty}.\nRating: {rating}/5 ⭐\n\nSomeone you can really trust for expat stuff!",
       native: "🌟 {name} - {specialty} ⭐{rating}/5\nThe contact that saved me!",
     },
+    // 🇪🇸 Spanish - Warm, expressive with "¡Mira!" / "¡Oye!"
     es: {
-      whatsapp: "Heyyyy 👋 ¡Encontré LA joya para tus problemas de expat!\n\n{name} - {specialty}\n⭐ {rating}/5\n\nMe salvó la vida, te lo comparto 👇",
-      email: "Un contacto de oro 🌟\n\n¡Hola!\n\n{name} se especializa en {specialty}.\nNota: {rating}/5 ⭐\n\n¡Alguien de confianza para expats!",
+      whatsapp: "¡Oye! 👋 ¡Mira lo que encontré para los expatriados!\n\n{name} - {specialty}\n⭐ {rating}/5\n\n¡Me salvó la vida! Te lo paso 👇",
+      email: "¡Un contacto de oro! 🌟\n\n¡Hola!\n\n{name} se especializa en {specialty}.\nValoración: {rating}/5 ⭐\n\n¡Súper recomendado para expatriados!",
       native: "🌟 {name} - {specialty} ⭐{rating}/5\n¡El contacto que me salvó!",
     },
+    // 🇩🇪 German - Direct, practical, "Schau mal" style
     de: {
-      whatsapp: "Heyyyy 👋 Ich hab DEN Geheimtipp für deine Expat-Probleme!\n\n{name} - {specialty}\n⭐ {rating}/5\n\nHat mir das Leben gerettet 👇",
-      email: "Ein goldener Kontakt 🌟\n\nHi!\n\n{name} ist spezialisiert auf {specialty}.\nBewertung: {rating}/5 ⭐\n\nEcht vertrauenswürdig für Expats!",
-      native: "🌟 {name} - {specialty} ⭐{rating}/5\nDer Kontakt, der mich gerettet hat!",
+      whatsapp: "Schau mal 👋 Hab einen Top-Tipp für Expats gefunden!\n\n{name} - {specialty}\n⭐ {rating}/5\n\nEcht empfehlenswert, hier der Link 👇",
+      email: "Empfehlung für Expats 🌟\n\nHallo!\n\n{name} ist Experte für {specialty}.\nBewertung: {rating}/5 ⭐\n\nSehr zu empfehlen!",
+      native: "🌟 {name} - {specialty} ⭐{rating}/5\nTop-Empfehlung für Expats!",
     },
+    // 🇧🇷 Portuguese - Brazilian warmth, "Olha só!"
     pt: {
-      whatsapp: "Heyyyy 👋 Achei A joia para seus problemas de expat!\n\n{name} - {specialty}\n⭐ {rating}/5\n\nSalvou minha vida, compartilho contigo 👇",
-      email: "Um contato de ouro 🌟\n\nOi!\n\n{name} é especialista em {specialty}.\nNota: {rating}/5 ⭐\n\nAlguém de confiança para expats!",
+      whatsapp: "Olha só! 👋 Achei um contato incrível pra quem tá no exterior!\n\n{name} - {specialty}\n⭐ {rating}/5\n\nMe ajudou muito, vou te passar 👇",
+      email: "Contato de ouro! 🌟\n\nOi!\n\n{name} é especialista em {specialty}.\nNota: {rating}/5 ⭐\n\nSuper indico pra expatriados!",
       native: "🌟 {name} - {specialty} ⭐{rating}/5\nO contato que me salvou!",
     },
+    // 🇷🇺 Russian - "Слушай" (listen), friendly informal
     ru: {
-      whatsapp: "Привет 👋 Нашёл СУПЕР контакт для экспатов!\n\n{name} - {specialty}\n⭐ {rating}/5\n\nСпас мне жизнь, делюсь с тобой 👇",
-      email: "Золотой контакт 🌟\n\nПривет!\n\n{name} специализируется на {specialty}.\nРейтинг: {rating}/5 ⭐\n\nНадёжный специалист для экспатов!",
-      native: "🌟 {name} - {specialty} ⭐{rating}/5\nКонтакт, который меня спас!",
+      whatsapp: "Слушай 👋 Нашёл крутого специалиста для экспатов!\n\n{name} - {specialty}\n⭐ {rating}/5\n\nОчень помог, делюсь контактом 👇",
+      email: "Рекомендую! 🌟\n\nПривет!\n\n{name} — специалист по {specialty}.\nОценка: {rating}/5 ⭐\n\nПроверенный контакт для экспатов!",
+      native: "🌟 {name} - {specialty} ⭐{rating}/5\nКонтакт, который реально помог!",
     },
+    // 🇮🇳 Hindi - "अरे यार" (arrey yaar), desi expressions, 🙏 emoji
     hi: {
-      whatsapp: "हेलो 👋 एक्सपैट समस्याओं के लिए बेस्ट कॉन्टैक्ट मिला!\n\n{name} - {specialty}\n⭐ {rating}/5\n\nमेरी जान बचाई, तुम्हें भी शेयर कर रहा 👇",
-      email: "गोल्डन कॉन्टैक्ट 🌟\n\nहाय!\n\n{name} {specialty} में स्पेशलिस्ट हैं।\nरेटिंग: {rating}/5 ⭐\n\nएक्सपैट्स के लिए भरोसेमंद!",
-      native: "🌟 {name} - {specialty} ⭐{rating}/5\nजिसने मुझे बचाया!",
+      whatsapp: "अरे यार 👋 देख क्या मिला expats के लिए!\n\n{name} - {specialty}\n⭐ {rating}/5\n\nमेरा काम बना दिया इन्होंने 🙏 ले भाई 👇",
+      email: "भाई सुन 🌟\n\nनमस्ते!\n\n{name} - {specialty} में expert हैं।\nRating: {rating}/5 ⭐\n\nExpats के लिए सही आदमी! 🙏",
+      native: "🙏 {name} - {specialty} ⭐{rating}/5\nभरोसेमंद contact!",
     },
+    // 🇸🇦 Arabic - "السلام عليكم", respectful, الحمد لله
     ar: {
-      whatsapp: "مرحبا 👋 لقيت الكنز للمغتربين!\n\n{name} - {specialty}\n⭐ {rating}/5\n\nأنقذني حياتي، بشاركك 👇",
-      email: "جهة اتصال ذهبية 🌟\n\nمرحبا!\n\n{name} متخصص في {specialty}.\nالتقييم: {rating}/5 ⭐\n\nشخص موثوق للمغتربين!",
-      native: "🌟 {name} - {specialty} ⭐{rating}/5\nالشخص اللي أنقذني!",
+      whatsapp: "السلام عليكم 👋\n\nوالله لقيت شخص ممتاز للمغتربين!\n\n{name} - {specialty}\n⭐ {rating}/5\n\nالحمد لله ساعدني كثير، خذ الرابط 👇",
+      email: "توصية مهمة 🌟\n\nالسلام عليكم!\n\n{name} متخصص في {specialty}\nالتقييم: {rating}/5 ⭐\n\nإن شاء الله يفيدك!",
+      native: "🌟 {name} - {specialty} ⭐{rating}/5\nموثوق للمغتربين 👍",
     },
+    // 🇨🇳 Chinese - WeChat style, "亲" (dear), less emoji, practical
     zh: {
-      whatsapp: "嘿 👋 找到了外派人士的宝藏联系人!\n\n{name} - {specialty}\n⭐ {rating}/5\n\n救了我的命，分享给你 👇",
-      email: "黄金联系人 🌟\n\n你好!\n\n{name} 专门从事 {specialty}。\n评分: {rating}/5 ⭐\n\n外派人士的可靠专家!",
-      native: "🌟 {name} - {specialty} ⭐{rating}/5\n救我的联系人!",
+      whatsapp: "亲，给你推荐一个靠谱的海外服务专家！\n\n{name} - {specialty}\n评分：{rating}/5 ⭐\n\n帮了我大忙，分享给你～",
+      email: "推荐专家\n\n你好！\n\n{name}，专业领域：{specialty}\n评分：{rating}/5\n\n海外华人的好帮手，值得信赖！",
+      native: "{name} - {specialty} {rating}/5分\n海外华人靠谱专家！",
     },
-    ch: { // Alias for zh
-      whatsapp: "嘿 👋 找到了外派人士的宝藏联系人!\n\n{name} - {specialty}\n⭐ {rating}/5\n\n救了我的命，分享给你 👇",
-      email: "黄金联系人 🌟\n\n你好!\n\n{name} 专门从事 {specialty}。\n评分: {rating}/5 ⭐\n\n外派人士的可靠专家!",
-      native: "🌟 {name} - {specialty} ⭐{rating}/5\n救我的联系人!",
+    ch: { // Alias for zh - same content
+      whatsapp: "亲，给你推荐一个靠谱的海外服务专家！\n\n{name} - {specialty}\n评分：{rating}/5 ⭐\n\n帮了我大忙，分享给你～",
+      email: "推荐专家\n\n你好！\n\n{name}，专业领域：{specialty}\n评分：{rating}/5\n\n海外华人的好帮手，值得信赖！",
+      native: "{name} - {specialty} {rating}/5分\n海外华人靠谱专家！",
     },
   };
   return messages[lang] || messages.en;
