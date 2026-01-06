@@ -90,8 +90,10 @@ export const syncFromOutil = onRequest(
     }
 
     // Vérifier l'API Key
+    // P0 FIX: Trim pour supprimer CRLF trailing des secrets GCP
     const apiKey = req.headers["x-api-key"];
-    if (!apiKey || apiKey !== SOS_SYNC_API_KEY.value()) {
+    const expectedKey = SOS_SYNC_API_KEY.value().trim();
+    if (!apiKey || String(apiKey).trim() !== expectedKey) {
       logger.warn("[syncFromOutil] Tentative non autorisée", {
         ip: req.ip || req.headers["x-forwarded-for"],
       });
