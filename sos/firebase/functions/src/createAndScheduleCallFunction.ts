@@ -539,8 +539,11 @@ export const createAndScheduleCallHTTPS = onCall(
         console.log(`📨 [${requestId}]   - Will create event? ${!!(providerId || providerEmail)}`);
 
         if (providerId || providerEmail) {
+          // P0 FIX: Use booking_paid_provider template which has SMS enabled
+          // Template variables: {{client.firstName}}, {{request.country}}, {{request.title}},
+          //                     {{request.description}}, {{booking.amount}}, {{booking.currency}}
           const providerEventData = {
-            eventId: 'call.scheduled.provider',
+            eventId: 'booking_paid_provider',  // Changed from call.scheduled.provider (sms:false) to booking_paid_provider (sms:true)
             locale: language,
             to: {
               uid: providerId || null,
@@ -549,7 +552,21 @@ export const createAndScheduleCallHTTPS = onCall(
             },
             context: {
               callSessionId: callSession.id,
-              // Booking request details for SMS template
+              // Structured context to match SMS template variables
+              client: {
+                firstName: clientName,
+                name: clientName,
+              },
+              request: {
+                country: clientData?.country || 'N/A',
+                title: title,
+                description: `${title} - ${serviceType}`,
+              },
+              booking: {
+                amount: amount || 0,
+                currency: 'EUR',  // Default currency for SOS Expat
+              },
+              // Legacy flat fields for inapp compatibility
               clientName,
               clientCountry: clientData?.country || 'N/A',
               clientLanguage: language,
@@ -560,20 +577,21 @@ export const createAndScheduleCallHTTPS = onCall(
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
           };
           console.log(`📨 [${requestId}]   Provider event data prepared (with booking details):`);
-          console.log(`📨 [${requestId}]     - eventId: ${providerEventData.eventId}`);
+          console.log(`📨 [${requestId}]     - eventId: ${providerEventData.eventId} (SMS ENABLED)`);
           console.log(`📨 [${requestId}]     - locale: ${providerEventData.locale}`);
           console.log(`📨 [${requestId}]     - to.uid: ${providerEventData.to.uid}`);
           console.log(`📨 [${requestId}]     - to.phone: ${providerEventData.to.phone ? providerEventData.to.phone.substring(0, 5) + '***' : 'NULL'}`);
-          console.log(`📨 [${requestId}]     - context.clientName: ${providerEventData.context.clientName}`);
-          console.log(`📨 [${requestId}]     - context.clientCountry: ${providerEventData.context.clientCountry}`);
-          console.log(`📨 [${requestId}]     - context.clientLanguage: ${providerEventData.context.clientLanguage}`);
-          console.log(`📨 [${requestId}]     - context.title: ${providerEventData.context.title}`);
-          console.log(`📨 [${requestId}]     - context.description: ${providerEventData.context.description}`);
+          console.log(`📨 [${requestId}]     - context.client.firstName: ${providerEventData.context.client.firstName}`);
+          console.log(`📨 [${requestId}]     - context.request.country: ${providerEventData.context.request.country}`);
+          console.log(`📨 [${requestId}]     - context.request.title: ${providerEventData.context.request.title}`);
+          console.log(`📨 [${requestId}]     - context.request.description: ${providerEventData.context.request.description}`);
+          console.log(`📨 [${requestId}]     - context.booking.amount: ${providerEventData.context.booking.amount}`);
+          console.log(`📨 [${requestId}]     - context.booking.currency: ${providerEventData.context.booking.currency}`);
           console.log(`📨 [${requestId}]   Writing to Firestore message_events...`);
 
           const providerEventRef = await db.collection('message_events').add(providerEventData);
           console.log(`✅ [${requestId}] PROVIDER notification created: ${providerEventRef.id}`);
-          console.log(`✅ [${requestId}]   → SMS will be sent with: "${providerEventData.context.clientName} (${providerEventData.context.clientCountry})"`);
+          console.log(`✅ [${requestId}]   → SMS will be sent: "Client: ${providerEventData.context.client.firstName} (${providerEventData.context.request.country}) - ${providerEventData.context.booking.amount}${providerEventData.context.booking.currency}"`);
           console.log(`✅ [${requestId}]   → Inapp notification will also appear in dashboard`);
         } else {
           console.log(`⚠️ [${requestId}] SKIPPING provider notification - no providerId or email`);

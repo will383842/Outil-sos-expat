@@ -1418,12 +1418,20 @@ const sendPaymentNotifications = traceFunction(
         console.log(`⚠️ [${debugId}] SKIPPED client notification - no clientId or clientEmail`);
       }
 
-      // Notification au provider: Appel entrant programmé
+      // Notification au provider: Appel entrant programmé avec détails booking
+      // P0 FIX: Use booking_paid_provider template which has SMS enabled
       if (providerId || providerEmail) {
-        console.log(`📨 [${debugId}] Creating PROVIDER notification (call.scheduled.provider)...`);
+        console.log(`📨 [${debugId}] Creating PROVIDER notification (booking_paid_provider - SMS ENABLED)...`);
+
+        const clientName = cs?.participants?.client?.name ?? cs?.clientName ?? "Client";
+        const clientCountry = cs?.clientCurrentCountry ?? cs?.metadata?.clientCountry ?? "N/A";
+        const amount = cs?.payment?.amount ?? cs?.metadata?.amount ?? 0;
+        const currency = cs?.payment?.currency ?? cs?.currency ?? "EUR";
+        const serviceType = cs?.metadata?.serviceType ?? cs?.serviceType ?? "consultation";
+        const description = cs?.description ?? `${title} - ${serviceType}`;
 
         const providerEventData = {
-          eventId: "call.scheduled.provider",
+          eventId: "booking_paid_provider",  // P0 FIX: Changed from call.scheduled.provider (sms:false) to booking_paid_provider (sms:true)
           locale: language,
           to: {
             uid: providerId || null,
@@ -1432,9 +1440,24 @@ const sendPaymentNotifications = traceFunction(
           },
           context: {
             callSessionId,
+            // Structured context to match SMS template variables
+            client: {
+              firstName: clientName,
+              name: clientName,
+            },
+            request: {
+              country: clientCountry,
+              title: title,
+              description: description,
+            },
+            booking: {
+              amount: amount,
+              currency: currency,
+            },
+            // Legacy flat fields for inapp compatibility
             title,
             scheduledTime: scheduledTime instanceof Date ? scheduledTime.toISOString() : scheduledTime,
-            clientName: cs?.participants?.client?.name ?? cs?.clientName ?? "Client",
+            clientName,
           },
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
         };
@@ -1446,7 +1469,8 @@ const sendPaymentNotifications = traceFunction(
 
         const providerEventRef = await database.collection("message_events").add(providerEventData);
         console.log(`✅ [${debugId}] Provider notification created: ${providerEventRef.id}`);
-        ultraLogger.info("PAYMENT_NOTIFICATIONS", "Notification provider créée", { callSessionId, providerId, eventDocId: providerEventRef.id, debugId });
+        console.log(`✅ [${debugId}]   → SMS will be sent: "Client: ${clientName} (${clientCountry}) - ${amount}${currency}"`);
+        ultraLogger.info("PAYMENT_NOTIFICATIONS", "Notification provider créée (SMS enabled)", { callSessionId, providerId, eventDocId: providerEventRef.id, debugId });
       } else {
         console.log(`⚠️ [${debugId}] SKIPPED provider notification - no providerId or providerEmail`);
       }
