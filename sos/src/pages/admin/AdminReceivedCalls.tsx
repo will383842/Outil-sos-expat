@@ -126,6 +126,67 @@ interface CallStats {
   blockedKyc: number;
 }
 
+// ============ COST CALCULATION CONSTANTS ============
+// Based on actual pricing from getCostMetrics.ts
+const COST_PRICING = {
+  // Twilio pricing (Europe)
+  TWILIO: {
+    VOICE_PER_MINUTE_EUR: 0.014,  // Prix par minute d'appel sortant
+    // Pour un appel conférence: 2 participants × 2 legs = ~4× le tarif de base
+    // + frais de conférence Twilio
+    CONFERENCE_MULTIPLIER: 4.2,
+  },
+  // GCP costs (estimated per call)
+  GCP: {
+    CLOUD_FUNCTIONS_PER_CALL_EUR: 0.002,  // ~2 invocations par appel
+    FIRESTORE_PER_CALL_EUR: 0.001,         // ~10-20 reads/writes par appel
+    CLOUD_TASKS_PER_CALL_EUR: 0.0005,      // Scheduling
+  },
+  // Other costs
+  OTHER: {
+    STRIPE_PERCENTAGE: 0.014,  // 1.4% + 0.25€ par transaction
+    STRIPE_FIXED_EUR: 0.25,
+    PAYPAL_PERCENTAGE: 0.029,  // 2.9% + 0.35€
+    PAYPAL_FIXED_EUR: 0.35,
+  }
+};
+
+/**
+ * Calculate costs for a single call based on duration and payment amount
+ */
+const calculateCallCosts = (
+  durationSeconds: number,
+  paymentAmount: number,
+  paymentMethod: 'stripe' | 'paypal' = 'stripe'
+): { twilio: number; gcp: number; other: number; total: number } => {
+  // Twilio cost: duration in minutes × rate × conference multiplier
+  const durationMinutes = Math.ceil(durationSeconds / 60); // Round up to next minute
+  const twilioCost = durationMinutes * COST_PRICING.TWILIO.VOICE_PER_MINUTE_EUR * COST_PRICING.TWILIO.CONFERENCE_MULTIPLIER;
+
+  // GCP cost: fixed overhead per call
+  const gcpCost =
+    COST_PRICING.GCP.CLOUD_FUNCTIONS_PER_CALL_EUR +
+    COST_PRICING.GCP.FIRESTORE_PER_CALL_EUR +
+    COST_PRICING.GCP.CLOUD_TASKS_PER_CALL_EUR;
+
+  // Payment processing cost
+  let otherCost = 0;
+  if (paymentMethod === 'stripe') {
+    otherCost = (paymentAmount * COST_PRICING.OTHER.STRIPE_PERCENTAGE) + COST_PRICING.OTHER.STRIPE_FIXED_EUR;
+  } else if (paymentMethod === 'paypal') {
+    otherCost = (paymentAmount * COST_PRICING.OTHER.PAYPAL_PERCENTAGE) + COST_PRICING.OTHER.PAYPAL_FIXED_EUR;
+  }
+
+  const total = twilioCost + gcpCost + otherCost;
+
+  return {
+    twilio: Math.round(twilioCost * 100) / 100,
+    gcp: Math.round(gcpCost * 100) / 100,
+    other: Math.round(otherCost * 100) / 100,
+    total: Math.round(total * 100) / 100
+  };
+};
+
 // ============ MAIN COMPONENT ============
 const AdminReceivedCalls: React.FC = () => {
   const navigate = useNavigate();
@@ -286,6 +347,83 @@ const AdminReceivedCalls: React.FC = () => {
         providerName: call.metadata.providerName || formatUserName(newCache[call.metadata.providerId])
       }
     }));
+  };
+
+  // Fetch providerAmount and commissionAmount from payments collection
+  const enrichCallsWithPaymentData = async (callsList: ReceivedCall[]): Promise<ReceivedCall[]> => {
+    const paymentIds = callsList
+      .map(c => c.payment?.intentId)
+      .filter((id): id is string => !!id && id.length > 0);
+
+    if (paymentIds.length === 0) return callsList;
+
+    // Load payment data from payments collection
+    const paymentsMap: Record<string, { providerAmount?: number; commissionAmount?: number; currency?: string }> = {};
+
+    try {
+      // Batch load payment documents
+      const batchSize = 10;
+      for (let i = 0; i < paymentIds.length; i += batchSize) {
+        const batch = paymentIds.slice(i, i + batchSize);
+        const promises = batch.map(async (paymentId) => {
+          try {
+            const paymentDoc = await getDoc(doc(db, 'payments', paymentId));
+            if (paymentDoc.exists()) {
+              const data = paymentDoc.data();
+              // Amounts in payments collection are stored in cents - convert to main unit
+              paymentsMap[paymentId] = {
+                providerAmount: typeof data.providerAmount === 'number' ? data.providerAmount / 100 : undefined,
+                commissionAmount: typeof data.commissionAmount === 'number' ? data.commissionAmount / 100 : undefined,
+                currency: data.currency?.toUpperCase() || 'EUR'
+              };
+            }
+          } catch (error) {
+            console.error(`Error loading payment ${paymentId}:`, error);
+          }
+        });
+        await Promise.all(promises);
+      }
+    } catch (error) {
+      console.error('Error loading payment data:', error);
+    }
+
+    // Enrich calls with payment amounts
+    return callsList.map(call => {
+      const paymentId = call.payment?.intentId;
+      const paymentData = paymentId ? paymentsMap[paymentId] : undefined;
+
+      if (paymentData) {
+        return {
+          ...call,
+          payment: {
+            ...call.payment,
+            providerAmount: paymentData.providerAmount ?? call.payment.providerAmount,
+            commissionAmount: paymentData.commissionAmount ?? call.payment.commissionAmount,
+            currency: paymentData.currency ?? call.payment.currency ?? 'EUR'
+          }
+        };
+      }
+      return call;
+    });
+  };
+
+  // Calculate costs for each call based on duration and payment
+  const enrichCallsWithCosts = (callsList: ReceivedCall[]): ReceivedCall[] => {
+    return callsList.map(call => {
+      const duration = call.conference?.duration || 0;
+      const paymentAmount = call.payment?.amount || 0;
+
+      // Detect payment method from intentId prefix
+      const paymentMethod: 'stripe' | 'paypal' =
+        call.payment?.intentId?.startsWith('pi_') ? 'stripe' : 'paypal';
+
+      const costs = calculateCallCosts(duration, paymentAmount, paymentMethod);
+
+      return {
+        ...call,
+        costs
+      };
+    });
   };
 
   const enrichCallsWithPayoutStatus = async (callsList: ReceivedCall[]): Promise<ReceivedCall[]> => {
@@ -480,8 +618,14 @@ const AdminReceivedCalls: React.FC = () => {
       // Enrich with names
       const enrichedWithNames = await enrichCallsWithNames(limitedCalls);
 
+      // Enrich with payment data (providerAmount, commissionAmount from payments collection)
+      const enrichedWithPayments = await enrichCallsWithPaymentData(enrichedWithNames);
+
+      // Calculate costs for each call (Twilio, GCP, payment processing fees)
+      const enrichedWithCosts = enrichCallsWithCosts(enrichedWithPayments);
+
       // Enrich with payout status
-      const enrichedCalls = await enrichCallsWithPayoutStatus(enrichedWithNames);
+      const enrichedCalls = await enrichCallsWithPayoutStatus(enrichedWithCosts);
 
       // Filter by payout status if needed
       let finalCalls = enrichedCalls;
