@@ -1,5 +1,6 @@
 // src/pages/Dashboard.tsx
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useLocaleNavigate } from "../multilingual-system/hooks/useLocaleNavigate";
 import {
   User,
@@ -76,6 +77,7 @@ import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { useForm, Controller } from "react-hook-form";
 import ProviderOnlineManager from '../components/providers/ProviderOnlineManager';
 import { getProviderTranslation, type SupportedLanguage } from "../services/providerTranslationService";
+import { getSpecialtyLabel, mapLanguageToLocale } from "../utils/specialtyMapper";
 
 import { requestUpdateProviderTranslation } from '../services/providerTranslationService';
 
@@ -330,7 +332,8 @@ const PillsRow: React.FC<{
   label: string;
   items: string[];
   color: "blue" | "green" | "red";
-}> = ({ label, items, color }) => {
+  mapItem?: (item: string) => string;
+}> = ({ label, items, color, mapItem }) => {
   const colorMap: Record<"blue" | "green" | "red", string> = {
     blue: "bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-300",
     green:
@@ -349,7 +352,7 @@ const PillsRow: React.FC<{
               key={`${it}-${i}`}
               className={`px-2 py-1 ${colorMap[color]} text-xs rounded-full`}
             >
-              {it}
+              {mapItem ? mapItem(it) : it}
             </span>
           ))
         ) : (
@@ -412,16 +415,7 @@ const Dashboard: React.FC = () => {
     canMakeAiCall
   } = useAiQuota();
 
-  // Debug: Afficher le role pour diagnostic
-  useEffect(() => {
-    console.log('[Dashboard] Auth state:', {
-      authInitialized,
-      authLoading,
-      userId: user?.id || user?.uid,
-      userRole: user?.role,
-      userEmail: user?.email,
-    });
-  }, [authInitialized, authLoading, user?.id, user?.uid, user?.role, user?.email]);
+  // ✅ P0 FIX: Remove debug logging to reduce console spam (was running on every auth state change)
   const [reviews, setReviews] = useState<ProviderReview[]>([]); //define the type here 
 
 
@@ -553,8 +547,33 @@ const Dashboard: React.FC = () => {
   // const phoneValue = watchPhone('phone');
   // const whatsappValue = watchPhone('whatsappNumber');
 
-  // UI & feedback
-  const [activeTab, setActiveTab] = useState<TabType>("profile");
+  // URL query params for tab navigation - SINGLE SOURCE OF TRUTH
+  const [searchParams] = useSearchParams();
+
+  // Valid tabs constant
+  const VALID_TABS: TabType[] = ['profile', 'settings', 'calls', 'invoices', 'reviews', 'notifications', 'messages', 'favorites', 'translations'];
+
+  // ✅ P0 FIX: Compute tab from URL directly - not memoized to ensure fresh reads
+  const getTabFromUrl = useCallback((): TabType => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && VALID_TABS.includes(tabParam as TabType)) {
+      return tabParam as TabType;
+    }
+    return 'profile';
+  }, [searchParams]);
+
+  // Current tab from URL (recomputed on every searchParams change)
+  const tabFromUrl = getTabFromUrl();
+
+  // UI & feedback - initialize from URL to avoid flash
+  const [activeTab, setActiveTab] = useState<TabType>(() => {
+    // Initial value from window.location.search (sync read at mount)
+    const tabParam = new URLSearchParams(window.location.search).get('tab');
+    if (tabParam && VALID_TABS.includes(tabParam as TabType)) {
+      return tabParam as TabType;
+    }
+    return 'profile';
+  });
   const [isEditMode, setIsEditMode] = useState<boolean>(false); // Toggle Vue/Édition dans l'onglet Profil
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [loggingOut, setLoggingOut] = useState<boolean>(false);
@@ -669,7 +688,7 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
   // Redirect si pas loggé
   useEffect(() => {
     if (!user) navigate("/login");
-    console.log(user, " : this is the user .");
+    // ✅ P0 FIX: Remove verbose logging
   }, [user, navigate]);
 
   // ✅ Set userDataReady to true once user is loaded
@@ -723,6 +742,19 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
 //   checkAndRefreshUserData();
 // // }, [user?.uid, user?.role, kycRefreshAttempted]); // ← Added kycRefreshAttempted to deps
 // }, [user?.id]); // ← Added kycRefreshAttempted to deps
+
+  // ✅ P0 FIX: Sync activeTab with URL query params when URL changes
+  // Always set activeTab from URL - this ensures the UI reflects the URL state
+  useEffect(() => {
+    const urlTab = getTabFromUrl();
+    // Only update if actually different to avoid unnecessary re-renders
+    setActiveTab(prev => {
+      if (prev !== urlTab) {
+        return urlTab;
+      }
+      return prev;
+    });
+  }, [searchParams, getTabFromUrl]);
 
   // ✅ OPTIMISATION COÛTS GCP: Polling 60s au lieu de onSnapshot pour le status
   useEffect(() => {
@@ -1152,25 +1184,27 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
         ) || allFieldsUpdated.length > 0; // Update if any field changed
         
         if (hasTranslationRelevantChanges && allFieldsUpdated.length > 0) {
-          console.log('[saveSettings] Requesting translation update for fields:', allFieldsUpdated);
-          console.log('[saveSettings] Translation-relevant fields detected:', 
-            allFieldsUpdated.filter(f => translationRelevantFields.includes(f)));
-          
+          // ✅ P0 FIX: Only log in development mode
+          if (import.meta.env.DEV) {
+            console.log('[saveSettings] Requesting translation update for fields:', allFieldsUpdated);
+          }
+
           const translationResult = await requestUpdateProviderTranslation(
             user.id,
             allFieldsUpdated
           );
-          
-          if (translationResult.success && translationResult.updatedLanguages.length > 0) {
-            console.log('[saveSettings] ✓ Translations updated for languages:', 
-              translationResult.updatedLanguages);
-          } else if (!translationResult.success) {
-            console.warn('[saveSettings] ⚠ Translation update had issues:', 
-              translationResult.message);
-            // Continue - profile was saved successfully, translation update is secondary
-          } else {
-            console.log('[saveSettings] Translation update completed (no languages to update or all were frozen)');
+
+          // ✅ P0 FIX: Only log in development mode
+          if (import.meta.env.DEV) {
+            if (translationResult.success && translationResult.updatedLanguages.length > 0) {
+              console.log('[saveSettings] ✓ Translations updated for languages:',
+                translationResult.updatedLanguages);
+            } else if (!translationResult.success) {
+              console.warn('[saveSettings] ⚠ Translation update had issues:',
+                translationResult.message);
+            }
           }
+          // Continue - profile was saved successfully, translation update is secondary
         }
       }
 
@@ -1907,8 +1941,9 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                       },
                       // AI Subscription items - for lawyers, expats, and admins
                       // Note: authInitialized must be true to ensure role is loaded
+                      // ✅ P0 FIX: Remove inline console.log that was causing spam on every render
                       ...(authInitialized && (user.role === "lawyer" || user.role === "expat" || user.role === "admin")
-                        ? (console.log('[Dashboard] AI menu visible for role:', user.role), [
+                        ? [
                             {
                               key: "ai-assistant",
                               icon: <Bot className="mr-3 h-5 w-5" />,
@@ -1938,8 +1973,8 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                               ar: "اشتراكي",
                               route: "/dashboard/subscription",
                             },
-                          ])
-                        : (console.log('[Dashboard] AI menu NOT visible - role:', user.role, 'authInitialized:', authInitialized), [])),
+                          ]
+                        : []),
                     ].map((item) => (
                       <li key={item.key}>
                         <button
@@ -1948,7 +1983,8 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                             if ('route' in item && item.route) {
                               navigate(item.route);
                             } else {
-                              setActiveTab(item.key as TabType);
+                              // ✅ P0 FIX: Update URL instead of just state - enables refresh/history
+                              navigate(`/dashboard?tab=${item.key}`);
                             }
                           }}
                           className={`group relative w-full flex items-center px-4 py-2 text-sm font-medium ${UI.radiusSm} transition-all
@@ -2263,6 +2299,7 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                                     .specialties || []
                                 }
                                 color="blue"
+                                mapItem={(code) => getSpecialtyLabel(code, mapLanguageToLocale(language))}
                               />
                               <PillsRow
                                 label={intl.formatMessage({
@@ -2310,6 +2347,7 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                                     .helpTypes || []
                                 }
                                 color="green"
+                                mapItem={(code) => getSpecialtyLabel(code, mapLanguageToLocale(language))}
                               />
                               <PillsRow
                                 label={intl.formatMessage({

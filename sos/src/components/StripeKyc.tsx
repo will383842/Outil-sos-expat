@@ -33,13 +33,13 @@ export default function StripeKYC({ onComplete, userType }: Props) {
 
     // ✅ Guard 1: Check sessionStorage
     if (sessionStorage.getItem(checkKey) === "true") {
-      console.log("⚠️ Check already in progress, skipping...");
+      // ✅ P0 FIX: Remove verbose logging to reduce console spam
       setLoading(false);
       return;
     }
 
     if (sessionStorage.getItem(completedKey) === "true") {
-      console.log("⚠️ Already completed in this session, skipping...");
+      // ✅ P0 FIX: Remove verbose logging to reduce console spam
       setIsKycComplete(true); // ✅ Set completed state
       setLoading(false);
       return;
@@ -47,11 +47,11 @@ export default function StripeKYC({ onComplete, userType }: Props) {
 
     // ✅ Guard 2: Check ref
     if (initStartedRef.current) {
-      console.log("⚠️ Already initialized, skipping...");
+      // ✅ P0 FIX: Remove verbose logging to reduce console spam
       return;
     }
 
-    console.log(`🚀 Starting initialization for ${userType}...`);
+    // ✅ P0 FIX: Remove verbose logging to reduce console spam
     initStartedRef.current = true;
     sessionStorage.setItem(checkKey, "true");
 
@@ -59,7 +59,7 @@ export default function StripeKYC({ onComplete, userType }: Props) {
       try {
         const functions = getFunctions(undefined, "europe-west1");
 
-        console.log("🔍 Checking KYC status...");
+        // ✅ P0 FIX: Remove verbose logging to reduce console spam
         try {
           const checkStatus = httpsCallable(
             functions,
@@ -74,11 +74,12 @@ export default function StripeKYC({ onComplete, userType }: Props) {
             requirementsCurrentlyDue: string[];
           };
 
-          console.log("📊 Initial KYC Status:", statusData);
+          // ✅ P0 FIX: Only log in development mode
+          if (import.meta.env.DEV) {
+            console.log("[StripeKYC] Status:", statusData.kycCompleted ? "complete" : "incomplete");
+          }
 
           if (statusData.kycCompleted) {
-            console.log("✅ KYC fully completed!");
-
             sessionStorage.setItem(completedKey, "true");
             sessionStorage.removeItem(checkKey);
             setIsKycComplete(true); // ✅ Set completed state
@@ -90,17 +91,15 @@ export default function StripeKYC({ onComplete, userType }: Props) {
 
             return;
           }
-
-          console.log("⏳ KYC incomplete, loading form...");
         } catch (error: any) {
-          if (error.code === "failed-precondition") {
-            console.log("No Stripe account yet, creating one...");
-          } else {
-            console.error("Error checking status:", error);
+          if (error.code !== "failed-precondition") {
+            // Only log unexpected errors
+            console.error("[StripeKYC] Status check error:", error.message || error);
           }
+          // No account yet - will create one below
         }
 
-        console.log("📝 Loading KYC form...");
+        // ✅ P0 FIX: Remove verbose logging
         const getStripeAccountSession = httpsCallable(
           functions,
           "getStripeAccountSession"
@@ -114,7 +113,7 @@ export default function StripeKYC({ onComplete, userType }: Props) {
           clientSecret: string;
         };
 
-        console.log("✅ Got client secret for account:", data.accountId);
+        // ✅ P0 FIX: Remove verbose logging
 
         const instance = loadConnectAndInitialize({
           publishableKey: import.meta.env.VITE_STRIPE_PUBLIC_KEY,
@@ -131,7 +130,7 @@ export default function StripeKYC({ onComplete, userType }: Props) {
         setLoading(false);
         sessionStorage.removeItem(checkKey);
       } catch (error) {
-        console.error("Error initializing Stripe:", error);
+        console.error("[StripeKYC] Initialization error:", error);
         setLoading(false);
         sessionStorage.removeItem(checkKey);
       }
@@ -186,13 +185,13 @@ export default function StripeKYC({ onComplete, userType }: Props) {
             futureRequirements: "include",
           }}
           onExit={async () => {
-            console.log("User exited onboarding, checking status...");
+            // ✅ P0 FIX: Remove verbose logging
 
             // ✅ Include userType in session key
             const completedKey = `stripe_kyc_${user?.uid}_${userType}_completed`;
 
             if (sessionStorage.getItem(completedKey) === "true") {
-              console.log("⚠️ Already completed, skipping...");
+              // ✅ P0 FIX: Already completed, skip silently
               return;
             }
 
@@ -211,26 +210,22 @@ export default function StripeKYC({ onComplete, userType }: Props) {
                 requirementsCurrentlyDue: string[];
               };
 
-              console.log("📊 Final Status Check:", data);
+              // ✅ P0 FIX: Only log in development mode
+              if (import.meta.env.DEV) {
+                console.log("[StripeKYC] Exit status:", data.kycCompleted ? "complete" : "incomplete");
+              }
 
               if (data.kycCompleted) {
-                console.log("✅ KYC Complete!");
-
                 sessionStorage.setItem(completedKey, "true");
                 setIsKycComplete(true); // ✅ Update state
 
                 setTimeout(() => {
                   onComplete?.();
                 }, 100);
-              } else {
-                console.log("⏳ KYC still incomplete:", {
-                  detailsSubmitted: data.detailsSubmitted,
-                  chargesEnabled: data.chargesEnabled,
-                  stillNeeded: data.requirementsCurrentlyDue,
-                });
               }
+              // ✅ P0 FIX: Remove verbose incomplete logging
             } catch (error) {
-              console.error("Error checking status:", error);
+              console.error("[StripeKYC] Exit status check error:", error);
             }
           }}
         />

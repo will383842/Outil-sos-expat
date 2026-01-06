@@ -1,18 +1,18 @@
 /**
  * MobileBottomNav - Navigation mobile moderne style 2026
- * Bottom navigation avec icônes et animations fluides
+ * Design fluide avec glassmorphism et animations modernes
  */
 
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { useLocaleNavigate } from '../../multilingual-system';
-import { useApp } from '../../contexts/AppContext';
+import { useIntl } from 'react-intl';
 import {
   User,
   Phone,
   Bot,
   CreditCard,
-  MoreHorizontal,
+  Menu,
 } from 'lucide-react';
 
 interface MobileBottomNavProps {
@@ -23,7 +23,7 @@ interface MobileBottomNavProps {
 const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userRole, onMoreClick }) => {
   const navigate = useLocaleNavigate();
   const location = useLocation();
-  const { language } = useApp();
+  const intl = useIntl();
 
   // Determine active tab based on URL
   const getActiveTab = () => {
@@ -33,7 +33,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userRole, onMoreClick
     if (path.includes('/ai-assistant')) return 'ai';
     if (path.includes('/subscription')) return 'subscription';
     if (search.includes('tab=calls')) return 'calls';
-    if (path === '/dashboard' || path.endsWith('/dashboard')) return 'profile';
+    if (path === '/dashboard' || path.endsWith('/dashboard') || path.includes('/tableau-de-bord')) return 'profile';
     return 'profile';
   };
 
@@ -45,20 +45,23 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userRole, onMoreClick
       key: 'profile',
       icon: User,
       route: '/dashboard',
-      labels: { fr: 'Profil', en: 'Profile', es: 'Perfil', de: 'Profil' },
+      labelKey: 'dashboard.profile',
+      defaultLabel: 'Profil',
     },
     {
       key: 'calls',
       icon: Phone,
       route: '/dashboard?tab=calls',
-      labels: { fr: 'Appels', en: 'Calls', es: 'Llamadas', de: 'Anrufe' },
+      labelKey: 'dashboard.calls',
+      defaultLabel: 'Appels',
     },
-    // AI Assistant only for providers
+    // AI Assistant only for providers and admin
     ...(userRole === 'lawyer' || userRole === 'expat' || userRole === 'admin' ? [{
       key: 'ai',
       icon: Bot,
       route: '/dashboard/ai-assistant',
-      labels: { fr: 'IA', en: 'AI', es: 'IA', de: 'KI' },
+      labelKey: 'dashboard.aiAssistant',
+      defaultLabel: 'IA',
       badge: true,
     }] : []),
     // Subscription only for providers
@@ -66,13 +69,15 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userRole, onMoreClick
       key: 'subscription',
       icon: CreditCard,
       route: '/dashboard/subscription',
-      labels: { fr: 'Abo', en: 'Plan', es: 'Plan', de: 'Abo' },
+      labelKey: 'dashboard.subscription',
+      defaultLabel: 'Abo',
     }] : []),
     {
       key: 'more',
-      icon: MoreHorizontal,
+      icon: Menu,
       route: '',
-      labels: { fr: 'Plus', en: 'More', es: 'Más', de: 'Mehr' },
+      labelKey: 'common.more',
+      defaultLabel: 'Plus',
       isMore: true,
     },
   ];
@@ -95,66 +100,92 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userRole, onMoreClick
   };
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-t border-gray-200/50 dark:border-white/10 safe-area-inset-bottom">
-      <div className="flex items-center justify-around h-16 px-2">
+    <nav
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-50"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+    >
+      {/* Glassmorphism background */}
+      <div className="absolute inset-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-2xl border-t border-gray-200/60 dark:border-white/10 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.3)]" />
+
+      {/* Navigation content */}
+      <div className="relative flex items-center justify-around h-[68px] px-1">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.key;
-          const label = item.labels[language as keyof typeof item.labels] || item.labels.en;
+          const label = intl.formatMessage({ id: item.labelKey, defaultMessage: item.defaultLabel });
 
           return (
             <button
               key={item.key}
               onClick={() => handleNavClick(item)}
               className={`
-                relative flex flex-col items-center justify-center flex-1 h-full py-1 px-1
-                transition-all duration-200 ease-out
+                relative flex flex-col items-center justify-center flex-1 h-full py-2 px-1
+                transition-all duration-300 ease-out
                 ${isActive
-                  ? 'text-red-600 dark:text-red-400'
-                  : 'text-gray-500 dark:text-gray-400 active:scale-95'
+                  ? 'scale-100'
+                  : 'scale-95 hover:scale-100 active:scale-90'
                 }
               `}
               aria-label={label}
+              aria-current={isActive ? 'page' : undefined}
             >
-              {/* Active indicator pill */}
-              {isActive && (
-                <span className="absolute top-1 w-8 h-1 bg-gradient-to-r from-red-500 to-orange-500 rounded-full" />
-              )}
-
-              {/* Icon container */}
-              <span className={`
-                relative flex items-center justify-center w-10 h-10 rounded-xl
-                transition-all duration-200
+              {/* Icon container with animated background */}
+              <div className={`
+                relative flex items-center justify-center w-12 h-9 rounded-2xl
+                transition-all duration-300 ease-out
                 ${isActive
-                  ? 'bg-red-50 dark:bg-red-500/10'
-                  : 'hover:bg-gray-100 dark:hover:bg-white/5'
+                  ? 'bg-gradient-to-br from-red-500 to-orange-500 shadow-lg shadow-red-500/25'
+                  : 'bg-transparent hover:bg-gray-100 dark:hover:bg-white/10'
                 }
               `}>
                 <Icon
-                  className={`w-5 h-5 transition-transform duration-200 ${isActive ? 'scale-110' : ''}`}
+                  className={`
+                    w-[22px] h-[22px] transition-all duration-300
+                    ${isActive
+                      ? 'text-white'
+                      : 'text-gray-500 dark:text-gray-400'
+                    }
+                  `}
                   strokeWidth={isActive ? 2.5 : 2}
                 />
 
-                {/* NEW badge for AI */}
+                {/* AI badge pulse */}
                 {'badge' in item && item.badge && (
-                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-pulse" />
+                  <span className={`
+                    absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full
+                    ${isActive
+                      ? 'bg-white shadow-sm'
+                      : 'bg-gradient-to-r from-purple-500 to-pink-500 animate-pulse'
+                    }
+                  `} />
                 )}
-              </span>
+              </div>
 
-              {/* Label */}
+              {/* Label with smooth transition */}
               <span className={`
-                text-[10px] font-medium mt-0.5 transition-all duration-200
-                ${isActive ? 'opacity-100' : 'opacity-70'}
+                text-[11px] font-semibold mt-1 transition-all duration-300
+                ${isActive
+                  ? 'text-red-600 dark:text-red-400'
+                  : 'text-gray-500 dark:text-gray-400'
+                }
               `}>
                 {label}
               </span>
+
+              {/* Active indicator dot */}
+              {isActive && (
+                <span className="absolute bottom-1 w-1 h-1 bg-red-500 rounded-full" />
+              )}
             </button>
           );
         })}
       </div>
 
-      {/* Safe area spacer for iOS */}
-      <div className="h-safe-area-inset-bottom bg-white/95 dark:bg-gray-900/95" />
+      {/* Safe area padding for iOS */}
+      <div
+        className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-2xl"
+        style={{ height: 'env(safe-area-inset-bottom, 0px)' }}
+      />
     </nav>
   );
 };
