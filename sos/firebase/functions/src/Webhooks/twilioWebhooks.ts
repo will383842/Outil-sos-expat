@@ -759,7 +759,7 @@ export const twilioAmdTwiml = onRequest(
     cpu: 0.083,
     maxInstances: 10,
     minInstances: 0,
-    concurrency: 10
+    concurrency: 1  // Must be 1 when cpu < 1
   },
   async (req: Request, res: Response) => {
     const amdId = `amd_${Date.now().toString(36)}`;
