@@ -291,13 +291,18 @@ export const aiChat = onRequest(
           history = await buildConversationHistory(db, conversationId, convoData);
         }
       } else {
+        // FIX: Add status and lastMessageAt for frontend compatibility
         convoRef = db.collection("conversations").doc();
+        const now = admin.firestore.FieldValue.serverTimestamp();
         await convoRef.set({
           userId,
+          providerId: providerId || null,
           providerType,
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-          messageCount: 0,
+          status: "active",
+          createdAt: now,
+          updatedAt: now,
+          lastMessageAt: now,
+          messagesCount: 0,
         });
       }
 
@@ -342,11 +347,12 @@ export const aiChat = onRequest(
       history.push({ role: "user", content: safeMessage });
 
       // Save user message
+      // FIX: Use 'createdAt' instead of 'timestamp' - frontend queries by createdAt
       await convoRef.collection("messages").add({
         role: "user",
         source: "user",
         content: safeMessage,
-        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
       });
 
       // Call AI with enriched context
@@ -383,17 +389,19 @@ export const aiChat = onRequest(
       const now = admin.firestore.FieldValue.serverTimestamp();
 
       // Save AI response
+      // FIX: Use 'createdAt' instead of 'timestamp', and proper 'source' value
       const aiMsgRef = convoRef.collection("messages").doc();
       batch.set(aiMsgRef, {
         role: "assistant",
-        source: "ai",
+        // FIX: Frontend checks source === "gpt" or "claude" for AI message styling
+        source: response.provider === "claude" ? "claude" : "gpt",
         content: response.response,
         model: response.model,
         provider: response.provider,
         searchPerformed: response.searchPerformed,
         citations: response.citations || null,
         fallbackUsed: response.fallbackUsed || false,
-        timestamp: now,
+        createdAt: now,
         // P0 FIX: Flag pour modération output
         ...(outputFlagged && {
           moderation: {
@@ -408,7 +416,7 @@ export const aiChat = onRequest(
       // Update conversation
       batch.update(convoRef, {
         updatedAt: now,
-        messageCount: admin.firestore.FieldValue.increment(2),
+        messagesCount: admin.firestore.FieldValue.increment(2),
         // P0 FIX: Flag conversation pour review admin si contenu flaggé
         ...(outputFlagged && {
           hasFlaggedContent: true,

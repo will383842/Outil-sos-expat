@@ -435,7 +435,7 @@ export default function ConversationHistory() {
                 <button
                   key={option.value}
                   onClick={() => setStatusFilter(option.value as FilterStatus)}
-                  className={`px-3 py-1.5 text-sm rounded-full transition-colors ${
+                  className={`px-4 py-2.5 text-sm rounded-full transition-colors min-h-[44px] ${
                     statusFilter === option.value
                       ? "bg-red-600 text-white"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"

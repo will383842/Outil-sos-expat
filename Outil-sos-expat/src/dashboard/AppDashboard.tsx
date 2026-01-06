@@ -17,14 +17,14 @@
  */
 
 import { Routes, Route, Navigate, Link, useSearchParams } from "react-router-dom";
-import { lazy, Suspense, memo } from "react";
+import { lazy, Suspense, memo, useState, useCallback } from "react";
 import { signOut } from "firebase/auth";
 import { auth } from "../lib/firebase";
 import { useAuth, useProvider, useSubscription } from "../contexts/UnifiedUserContext";
 import { useLanguage } from "../hooks/useLanguage";
 import ProviderSidebar from "./components/ProviderSidebar";
 import DevTestTools from "./components/DevTestTools";
-import { Loader2, ShieldAlert, UserX } from "lucide-react";
+import { Loader2, ShieldAlert, UserX, Menu } from "lucide-react";
 
 // Mock provider for dev mode
 const MOCK_PROVIDER = {
@@ -44,6 +44,32 @@ const ProviderHome = lazy(() => import("./pages/ProviderHome"));
 const ConversationHistory = lazy(() => import("./pages/ConversationHistory"));
 const ConversationDetail = lazy(() => import("./pages/ConversationDetail"));
 // Note: ProviderProfile removed - not useful for SSO users, profile is managed on SOS Expat
+
+// =============================================================================
+// MOBILE HEADER COMPONENT - Hamburger menu for mobile navigation
+// =============================================================================
+
+interface MobileHeaderProps {
+  onMenuClick: () => void;
+}
+
+const MobileHeader = memo(function MobileHeader({ onMenuClick }: MobileHeaderProps) {
+  return (
+    <header className="lg:hidden sticky top-0 z-30 flex items-center h-14 px-4 bg-slate-900 border-b border-slate-700/50">
+      <button
+        onClick={onMenuClick}
+        className="p-2 -ml-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors min-h-[48px] min-w-[48px] flex items-center justify-center"
+        aria-label="Ouvrir le menu"
+      >
+        <Menu className="w-6 h-6" />
+      </button>
+      <div className="flex items-center gap-2 ml-3">
+        <span className="font-bold text-white">SOS-Expat</span>
+        <span className="text-xs text-slate-400">Pro</span>
+      </div>
+    </header>
+  );
+});
 
 // =============================================================================
 // PAGE LOADER COMPONENT
@@ -182,6 +208,11 @@ export default function DashboardApp() {
   const { hasAllowedRole } = useSubscription();
   const [searchParams] = useSearchParams();
 
+  // Mobile sidebar state
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const openSidebar = useCallback(() => setSidebarOpen(true), []);
+  const closeSidebar = useCallback(() => setSidebarOpen(false), []);
+
   // DEV MODE BYPASS
   const isDev = import.meta.env.DEV || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
   const devBypass = isDev && (searchParams.get("dev") === "true" || sessionStorage.getItem("devMode") === "true");
@@ -193,23 +224,31 @@ export default function DashboardApp() {
 
     return (
       <div className="flex h-screen bg-gray-100">
-        <ProviderSidebar />
-        <main className="flex-1 overflow-auto">
-          <div className="p-6 lg:p-8 max-w-5xl mx-auto">
-            {/* Dev Mode Banner */}
-            <div className="mb-4 p-3 bg-amber-100 border border-amber-300 rounded-lg text-amber-800 text-sm">
-              🔧 Mode développement actif - Utilisez le bouton "Dev Tools" en bas à droite pour créer des données de test
+        {/* Mobile Sidebar Drawer */}
+        <ProviderSidebar isOpen={sidebarOpen} onClose={closeSidebar} />
+
+        {/* Main content area */}
+        <div className="flex-1 flex flex-col min-w-0 lg:ml-0">
+          {/* Mobile Header with hamburger */}
+          <MobileHeader onMenuClick={openSidebar} />
+
+          <main className="flex-1 overflow-auto">
+            <div className="p-4 lg:p-8 max-w-5xl mx-auto">
+              {/* Dev Mode Banner */}
+              <div className="mb-4 p-3 bg-amber-100 border border-amber-300 rounded-lg text-amber-800 text-sm">
+                🔧 Mode développement actif - Utilisez le bouton "Dev Tools" en bas à droite pour créer des données de test
+              </div>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route index element={<ProviderHome />} />
+                  <Route path="historique" element={<ConversationHistory />} />
+                  <Route path="conversation/:id" element={<ConversationDetail />} />
+                  <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                </Routes>
+              </Suspense>
             </div>
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route index element={<ProviderHome />} />
-                <Route path="historique" element={<ConversationHistory />} />
-                <Route path="conversation/:id" element={<ConversationDetail />} />
-                <Route path="*" element={<Navigate to="/dashboard" replace />} />
-              </Routes>
-            </Suspense>
-          </div>
-        </main>
+          </main>
+        </div>
         {/* Outils de test (dev mode uniquement) */}
         <DevTestTools />
       </div>
@@ -245,29 +284,35 @@ export default function DashboardApp() {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
-      <ProviderSidebar />
+      {/* Mobile Sidebar Drawer */}
+      <ProviderSidebar isOpen={sidebarOpen} onClose={closeSidebar} />
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto">
-        <div className="p-6 lg:p-8 max-w-5xl mx-auto">
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              {/* Page d'accueil - Conversations */}
-              <Route index element={<ProviderHome />} />
+      {/* Main content area */}
+      <div className="flex-1 flex flex-col min-w-0 lg:ml-0">
+        {/* Mobile Header with hamburger */}
+        <MobileHeader onMenuClick={openSidebar} />
 
-              {/* Historique des conversations */}
-              <Route path="historique" element={<ConversationHistory />} />
+        {/* Main Content */}
+        <main className="flex-1 overflow-auto">
+          <div className="p-4 lg:p-8 max-w-5xl mx-auto">
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                {/* Page d'accueil - Conversations */}
+                <Route index element={<ProviderHome />} />
 
-              {/* Détail d'une conversation */}
-              <Route path="conversation/:id" element={<ConversationDetail />} />
+                {/* Historique des conversations */}
+                <Route path="historique" element={<ConversationHistory />} />
 
-              {/* Route par défaut */}
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
-            </Routes>
-          </Suspense>
-        </div>
-      </main>
+                {/* Détail d'une conversation */}
+                <Route path="conversation/:id" element={<ConversationDetail />} />
+
+                {/* Route par défaut */}
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              </Routes>
+            </Suspense>
+          </div>
+        </main>
+      </div>
 
       {/* Outils de test (dev mode uniquement) */}
       <DevTestTools />

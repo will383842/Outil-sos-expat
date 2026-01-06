@@ -326,7 +326,8 @@ function AIChat({
           </div>
         ) : (
           messages.map((message) => {
-            const isAI = message.source === "gpt" || message.role === "assistant";
+            // FIX: Also detect Claude AI messages (source === "claude")
+            const isAI = message.source === "gpt" || message.source === "claude" || message.role === "assistant";
             const isError = message.source === "gpt-error";
 
             return (
@@ -822,7 +823,8 @@ export default function ConversationDetail() {
         setMessages(msgs);
 
         const lastMsg = msgs[msgs.length - 1];
-        if (lastMsg?.source === "gpt" || lastMsg?.source === "gpt-error") {
+        // FIX: Also detect Claude AI messages for loading state
+        if (lastMsg?.source === "gpt" || lastMsg?.source === "gpt-error" || lastMsg?.source === "claude") {
           setAiLoading(false);
         }
       });

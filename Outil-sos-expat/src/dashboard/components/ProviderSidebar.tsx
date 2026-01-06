@@ -31,8 +31,9 @@ import {
   CreditCard,
   Check,
   MessagesSquare,
+  X,
 } from "lucide-react";
-import { useState, memo } from "react";
+import { useState, memo, useEffect } from "react";
 
 // =============================================================================
 // TYPES
@@ -76,7 +77,7 @@ const ProviderSelector = memo(function ProviderSelector({
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-slate-700/50 transition-colors"
+        className="w-full flex items-center justify-between px-3 py-3 rounded-lg hover:bg-slate-700/50 transition-colors min-h-[48px]"
       >
         <div className="text-left min-w-0">
           <p className="text-sm font-medium text-white truncate">
@@ -84,7 +85,7 @@ const ProviderSelector = memo(function ProviderSelector({
           </p>
           <p className="text-xs text-slate-400 truncate">{t("provider:sidebar.providersCount", { count: providers.length })}</p>
         </div>
-        <ChevronDown className={cn("w-4 h-4 text-slate-400 transition-transform", isOpen && "rotate-180")} />
+        <ChevronDown className={cn("w-5 h-5 text-slate-400 transition-transform", isOpen && "rotate-180")} />
       </button>
 
       {isOpen && (
@@ -97,7 +98,7 @@ const ProviderSelector = memo(function ProviderSelector({
                 setIsOpen(false);
               }}
               className={cn(
-                "w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-slate-700 transition-colors",
+                "w-full flex items-center gap-2 px-3 py-3 text-left hover:bg-slate-700 transition-colors min-h-[48px]",
                 provider.id === activeProvider?.id && "bg-slate-700/50"
               )}
             >
@@ -110,7 +111,7 @@ const ProviderSelector = memo(function ProviderSelector({
                 </p>
               </div>
               {provider.id === activeProvider?.id && (
-                <Check className="w-4 h-4 text-green-400" />
+                <Check className="w-5 h-5 text-green-400" />
               )}
             </button>
           ))}
@@ -136,15 +137,16 @@ const NavItemComponent = memo(function NavItemComponent({ item, isActive }: NavI
     <Link
       to={item.to}
       className={cn(
-        "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
-        "hover:bg-white/10",
+        // Base styles with 48px min touch target (2026 mobile best practice)
+        "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 min-h-[48px]",
+        "hover:bg-white/10 active:scale-[0.98]",
         isActive
-          ? "bg-white/15 text-white font-medium"
+          ? "bg-white/15 text-white font-medium shadow-sm"
           : "text-slate-300 hover:text-white"
       )}
     >
       <Icon className={cn("w-5 h-5 flex-shrink-0", isActive && "text-red-400")} />
-      <span>{item.label}</span>
+      <span className="text-base">{item.label}</span>
     </Link>
   );
 });
@@ -169,12 +171,31 @@ const getNavItems = (t: (key: string) => string): NavItem[] => [
   },
 ];
 
-export default function ProviderSidebar() {
+// =============================================================================
+// PROPS INTERFACE FOR MOBILE RESPONSIVENESS
+// =============================================================================
+
+interface ProviderSidebarProps {
+  /** Mobile drawer open state */
+  isOpen?: boolean;
+  /** Callback to close mobile drawer */
+  onClose?: () => void;
+}
+
+export default function ProviderSidebar({ isOpen = false, onClose }: ProviderSidebarProps) {
   const location = useLocation();
   const { user } = useAuth();
   const { t } = useLanguage({ mode: "provider" });
   const { linkedProviders, activeProvider, switchProvider } = useProvider();
   const { status: subscriptionStatus } = useSubscription();
+
+  // Close sidebar when route changes (mobile)
+  useEffect(() => {
+    if (isOpen && onClose) {
+      onClose();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
   // Get translated nav items
   const navItems = getNavItems(t);
@@ -200,17 +221,47 @@ export default function ProviderSidebar() {
   };
 
   return (
-    <aside className="flex flex-col h-screen w-64 bg-slate-900 text-white">
-      {/* Header avec logo */}
-      <div className="flex items-center h-16 px-4 border-b border-slate-700/50">
-        <Link to="/dashboard" className="flex items-center gap-2">
-          <Building2 className="w-8 h-8 text-red-500" />
-          <div>
-            <span className="font-bold text-lg">SOS-Expat</span>
-            <span className="text-xs text-slate-400 block -mt-1">{t("provider:sidebar.proSpace")}</span>
-          </div>
-        </Link>
-      </div>
+    <>
+      {/* Mobile Backdrop Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 z-40 lg:hidden backdrop-blur-sm"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Sidebar - Hidden on mobile by default, shown as drawer when isOpen */}
+      <aside
+        className={cn(
+          // Base styles
+          "flex flex-col h-screen w-72 bg-slate-900 text-white",
+          // Mobile: Fixed position drawer from left
+          "fixed inset-y-0 left-0 z-50 lg:relative lg:z-auto",
+          // Transform for mobile drawer animation
+          "transform transition-transform duration-300 ease-in-out",
+          // Show/hide based on isOpen state (mobile only)
+          isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        )}
+      >
+        {/* Header avec logo + bouton fermer mobile */}
+        <div className="flex items-center justify-between h-16 px-4 border-b border-slate-700/50">
+          <Link to="/dashboard" className="flex items-center gap-2" onClick={onClose}>
+            <Building2 className="w-8 h-8 text-red-500" />
+            <div>
+              <span className="font-bold text-lg">SOS-Expat</span>
+              <span className="text-xs text-slate-400 block -mt-1">{t("provider:sidebar.proSpace")}</span>
+            </div>
+          </Link>
+          {/* Close button - Mobile only */}
+          <button
+            onClick={onClose}
+            className="lg:hidden p-2 -mr-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors min-h-[48px] min-w-[48px] flex items-center justify-center"
+            aria-label="Fermer le menu"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
 
       {/* Sélecteur de prestataire (si multi) */}
       {linkedProviders.length > 0 && (
@@ -223,8 +274,8 @@ export default function ProviderSidebar() {
         </div>
       )}
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+      {/* Navigation - Increased spacing for better touch targets */}
+      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-2">
         {navItems.map((item) => (
           <NavItemComponent
             key={item.to}
@@ -280,15 +331,16 @@ export default function ProviderSidebar() {
           </div>
         )}
 
-        {/* Logout button */}
+        {/* Logout button - Touch target 48px */}
         <button
           onClick={() => signOut(auth)}
-          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-slate-300 hover:text-white hover:bg-red-500/20 transition-colors"
+          className="flex items-center gap-3 w-full px-3 py-3 rounded-lg text-slate-300 hover:text-white hover:bg-red-500/20 transition-colors min-h-[48px]"
         >
           <LogOut className="w-5 h-5" />
           <span>{t("provider:sidebar.signOut")}</span>
         </button>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }

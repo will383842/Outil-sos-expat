@@ -152,6 +152,7 @@ export const aiOnProviderMessage = onDocumentCreated(
               });
 
               // 2. Ajouter un message système visible dans le chat
+              // FIX: Use 'createdAt' instead of 'timestamp' - frontend queries by createdAt
               const systemMsgRef = db
                 .collection("conversations")
                 .doc(conversationId)
@@ -161,7 +162,7 @@ export const aiOnProviderMessage = onDocumentCreated(
                 role: "system",
                 source: "system",
                 content: `⏱️ Temps de consultation écoulé (${durationMinutes} minutes). L'assistant IA ne peut plus répondre. L'historique de la conversation reste consultable.`,
-                timestamp: serverNow,
+                createdAt: serverNow,
                 isExpirationNotice: true,
               });
 
@@ -267,6 +268,7 @@ export const aiOnProviderMessage = onDocumentCreated(
       const now = admin.firestore.FieldValue.serverTimestamp();
 
       // Save AI response
+      // FIX: Use 'createdAt' instead of 'timestamp', and proper 'source' value
       const aiMsgRef = db
         .collection("conversations")
         .doc(conversationId)
@@ -274,14 +276,15 @@ export const aiOnProviderMessage = onDocumentCreated(
         .doc();
       batch.set(aiMsgRef, {
         role: "assistant",
-        source: "ai",
+        // FIX: Frontend checks source === "gpt" or "claude" for AI message styling
+        source: response.provider === "claude" ? "claude" : "gpt",
         content: response.response,
         model: response.model,
         provider: response.provider,
         searchPerformed: response.searchPerformed,
         citations: response.citations || null,
         fallbackUsed: response.fallbackUsed || false,
-        timestamp: now,
+        createdAt: now,
       });
 
       // Mark original message as processed
@@ -294,7 +297,7 @@ export const aiOnProviderMessage = onDocumentCreated(
       // Update conversation
       batch.update(db.collection("conversations").doc(conversationId), {
         updatedAt: now,
-        messageCount: admin.firestore.FieldValue.increment(2),
+        messagesCount: admin.firestore.FieldValue.increment(2),
       });
 
       await batch.commit();

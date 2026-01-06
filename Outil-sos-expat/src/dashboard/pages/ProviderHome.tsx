@@ -200,7 +200,7 @@ function ConversationListItem({ conversation }: { conversation: Conversation }) 
   return (
     <Link
       to={`/dashboard/conversation/${conversation.bookingId || conversation.id}`}
-      className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors rounded-lg group"
+      className="flex items-center gap-4 p-4 hover:bg-gray-50 active:bg-gray-100 transition-colors rounded-lg group min-h-[56px]"
     >
       {/* Avatar */}
       <div className={`p-2 rounded-lg ${isLawyer ? "bg-blue-50" : "bg-green-50"}`}>

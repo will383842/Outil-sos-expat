@@ -47,47 +47,134 @@ export const aiOnBookingCreated = onDocumentCreated(
     minInstances: 0,
   },
   async (event) => {
+    const debugId = `debug_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+
+    // ============================================================
+    // DEBUG STEP 1: Trigger fired
+    // ============================================================
+    logger.info(`🚀 [AI-DEBUG-${debugId}] STEP 1: aiOnBookingCreated TRIGGER FIRED`, {
+      eventParams: event.params,
+      hasData: !!event.data,
+      timestamp: new Date().toISOString(),
+    });
+
     const snap = event.data;
-    if (!snap) return;
+    if (!snap) {
+      logger.error(`❌ [AI-DEBUG-${debugId}] STEP 1 FAILED: No snapshot data`);
+      return;
+    }
 
     const bookingId = event.params.bookingId;
     const booking = snap.data() as BookingData;
 
+    // ============================================================
+    // DEBUG STEP 2: Booking data received
+    // ============================================================
+    const bookingAny = booking as Record<string, unknown>;
+    logger.info(`📦 [AI-DEBUG-${debugId}] STEP 2: BOOKING DATA RECEIVED`, {
+      bookingId,
+      hasBookingData: !!booking,
+      bookingKeys: booking ? Object.keys(booking) : [],
+      providerId: booking?.providerId || "MISSING",
+      providerType: booking?.providerType || "MISSING",
+      clientName: booking?.clientName || booking?.clientFirstName || "MISSING",
+      clientCurrentCountry: booking?.clientCurrentCountry || "MISSING",
+      title: booking?.title || "MISSING",
+      aiProcessed: booking?.aiProcessed,
+      aiSkipped: bookingAny?.aiSkipped,
+      aiSkippedReason: bookingAny?.aiSkippedReason,
+      source: bookingAny?.source || "MISSING",
+    });
+
     // Check if already processed
     if (booking.aiProcessed) {
-      logger.info("[AI] Booking already processed", { bookingId });
+      logger.info(`⏭️ [AI-DEBUG-${debugId}] STEP 2 EXIT: Booking already processed`, { bookingId });
       return;
     }
 
-    // Get settings
+    // ============================================================
+    // DEBUG STEP 3: Check AI settings
+    // ============================================================
+    logger.info(`⚙️ [AI-DEBUG-${debugId}] STEP 3: Fetching AI settings...`);
     const settings = await getAISettings();
+    logger.info(`⚙️ [AI-DEBUG-${debugId}] STEP 3: AI SETTINGS RETRIEVED`, {
+      enabled: settings.enabled,
+      replyOnBookingCreated: settings.replyOnBookingCreated,
+      replyOnUserMessage: settings.replyOnUserMessage,
+      model: settings.model,
+      useClaudeForLawyers: settings.useClaudeForLawyers,
+    });
+
     if (!settings.enabled || !settings.replyOnBookingCreated) {
-      logger.info("[AI] AI disabled", { bookingId });
+      logger.warn(`❌ [AI-DEBUG-${debugId}] STEP 3 EXIT: AI disabled in settings`, {
+        bookingId,
+        enabled: settings.enabled,
+        replyOnBookingCreated: settings.replyOnBookingCreated,
+        FIX: "Vérifiez le document Firestore: settings/ai - enabled et replyOnBookingCreated doivent être true",
+      });
       return;
     }
 
+    // ============================================================
+    // DEBUG STEP 4: Check providerId
+    // ============================================================
     const providerId = booking.providerId;
+    logger.info(`👤 [AI-DEBUG-${debugId}] STEP 4: PROVIDER ID CHECK`, {
+      providerId,
+      providerIdType: typeof providerId,
+      providerIdLength: providerId?.length || 0,
+      isEmpty: !providerId,
+      isEmptyString: providerId === "",
+    });
+
     if (!providerId) {
-      logger.warn("[AI] No provider", { bookingId });
+      logger.error(`❌ [AI-DEBUG-${debugId}] STEP 4 EXIT: No providerId in booking`, {
+        bookingId,
+        FIX: "Le booking doit contenir un providerId. Vérifiez que SOS envoie bien le providerId dans ingestBooking.",
+      });
       return;
     }
 
-    logger.info("[AI] Processing booking", { bookingId, providerId });
+    logger.info(`✅ [AI-DEBUG-${debugId}] STEP 4 PASSED: Processing booking`, { bookingId, providerId });
 
     try {
       const db = admin.firestore();
 
-      // ==========================================================
-      // ACCESS + QUOTA CHECK COMBINÉ (OPTIMISATION: 1 lecture au lieu de 2)
-      // ==========================================================
+      // ============================================================
+      // DEBUG STEP 5: Check provider AI status (access + quota)
+      // ============================================================
+      logger.info(`🔍 [AI-DEBUG-${debugId}] STEP 5: Calling checkProviderAIStatus...`, { providerId });
       const aiStatus = await checkProviderAIStatus(providerId);
+      logger.info(`🔍 [AI-DEBUG-${debugId}] STEP 5: PROVIDER AI STATUS RESULT`, {
+        providerId,
+        hasAccess: aiStatus.hasAccess,
+        accessReason: aiStatus.accessReason,
+        hasQuota: aiStatus.hasQuota,
+        quotaUsed: aiStatus.quotaUsed,
+        quotaLimit: aiStatus.quotaLimit,
+        quotaRemaining: aiStatus.quotaRemaining,
+        providerDataKeys: aiStatus.providerData ? Object.keys(aiStatus.providerData) : "NO_PROVIDER_DATA",
+      });
 
-      // Vérifier accès
+      // ============================================================
+      // DEBUG STEP 6: Access check
+      // ============================================================
       if (!aiStatus.hasAccess) {
-        logger.info("[AI] Provider without AI access", {
+        logger.error(`❌ [AI-DEBUG-${debugId}] STEP 6 EXIT: Provider WITHOUT AI access`, {
           bookingId,
           providerId,
           reason: aiStatus.accessReason,
+          providerData: aiStatus.providerData ? {
+            forcedAIAccess: aiStatus.providerData.forcedAIAccess,
+            freeTrialUntil: aiStatus.providerData.freeTrialUntil,
+            subscriptionStatus: aiStatus.providerData.subscriptionStatus,
+            hasActiveSubscription: aiStatus.providerData.hasActiveSubscription,
+          } : "NO_DATA",
+          FIX: `Le provider ${providerId} n'a pas accès à l'IA. Raison: ${aiStatus.accessReason}.
+                Pour donner accès:
+                1. Mettre forcedAIAccess=true dans providers/${providerId}
+                2. OU définir freeTrialUntil à une date future
+                3. OU définir subscriptionStatus="active"`,
         });
 
         await snap.ref.update({
@@ -100,13 +187,21 @@ export const aiOnBookingCreated = onDocumentCreated(
         return;
       }
 
-      // Vérifier quota
+      logger.info(`✅ [AI-DEBUG-${debugId}] STEP 6 PASSED: Provider has AI access`, {
+        providerId,
+        accessReason: aiStatus.accessReason,
+      });
+
+      // ============================================================
+      // DEBUG STEP 7: Quota check
+      // ============================================================
       if (!aiStatus.hasQuota) {
-        logger.info("[AI] AI quota exhausted", {
+        logger.error(`❌ [AI-DEBUG-${debugId}] STEP 7 EXIT: Quota exhausted`, {
           bookingId,
           providerId,
-          used: aiStatus.quotaUsed,
-          limit: aiStatus.quotaLimit,
+          quotaUsed: aiStatus.quotaUsed,
+          quotaLimit: aiStatus.quotaLimit,
+          FIX: "Augmentez aiCallsLimit dans providers/${providerId} ou réinitialisez aiCallsUsed à 0",
         });
 
         await snap.ref.update({
@@ -127,28 +222,46 @@ export const aiOnBookingCreated = onDocumentCreated(
         return;
       }
 
-      logger.info("[AI] Access and quota OK", {
+      logger.info(`✅ [AI-DEBUG-${debugId}] STEP 7 PASSED: Quota OK`, {
         bookingId,
         providerId,
         accessReason: aiStatus.accessReason,
+        quotaUsed: aiStatus.quotaUsed,
+        quotaLimit: aiStatus.quotaLimit,
         quotaRemaining: aiStatus.quotaRemaining,
       });
 
-      // Determine provider type
+      // ============================================================
+      // DEBUG STEP 8: Build AI context
+      // ============================================================
       const providerType = booking.providerType || (await getProviderType(providerId));
-
-      // 🆕 Get provider's preferred language for AI responses
       const providerLanguage = await getProviderLanguage(providerId);
-      logger.info("[AI] Provider language for initial response", { providerId, providerLanguage });
-
-      // Build context
       const country = normalizeCountry(booking.clientCurrentCountry);
       const clientName = booking.clientFirstName || booking.clientName || "Client";
-
-      // Build initial message
       const userMessage = buildBookingMessage(booking, clientName, country);
 
-      // Create service and call AI (with provider language)
+      logger.info(`📝 [AI-DEBUG-${debugId}] STEP 8: AI CONTEXT BUILT`, {
+        bookingId,
+        providerId,
+        providerType,
+        providerLanguage,
+        country,
+        clientName,
+        category: booking.category,
+        urgency: booking.urgency,
+        title: booking.title,
+        userMessageLength: userMessage?.length || 0,
+        userMessagePreview: userMessage?.substring(0, 200) + "...",
+      });
+
+      // ============================================================
+      // DEBUG STEP 9: Call AI service
+      // ============================================================
+      logger.info(`🤖 [AI-DEBUG-${debugId}] STEP 9: Calling AI service...`, {
+        providerType,
+        model: providerType === "lawyer" ? "claude" : "gpt-4o",
+      });
+
       const service = createService();
       const response = await service.chat(
         [{ role: "user", content: userMessage }],
@@ -161,31 +274,48 @@ export const aiOnBookingCreated = onDocumentCreated(
           urgency: booking.urgency,
           bookingTitle: booking.title,
           specialties: booking.providerSpecialties,
-          providerLanguage,  // 🆕 Force AI to respond in provider's language
+          providerLanguage,
         }
       );
 
-      logger.info("[AI] Response generated", {
+      logger.info(`✅ [AI-DEBUG-${debugId}] STEP 9: AI RESPONSE GENERATED`, {
         bookingId,
         model: response.model,
         provider: response.provider,
         searchPerformed: response.searchPerformed,
+        responseLength: response.response?.length || 0,
+        responsePreview: response.response?.substring(0, 200) + "...",
+        hasCitations: !!response.citations,
+        fallbackUsed: response.fallbackUsed,
       });
 
-      // Create conversation and save messages atomically
+      // ============================================================
+      // DEBUG STEP 10: Create conversation and save to Firestore
+      // ============================================================
+      logger.info(`💾 [AI-DEBUG-${debugId}] STEP 10: Creating conversation...`);
+
       const convoRef = db.collection("conversations").doc();
       const now = admin.firestore.FieldValue.serverTimestamp();
 
       const batch = db.batch();
 
       // 1. Create conversation with PERSISTENT BOOKING CONTEXT
+      // FIX: Add status, clientName, messagesCount (with 's') to match frontend expectations
       batch.set(convoRef, {
         bookingId,
         providerId,
         providerType,
+        // FIX: Frontend expects these fields at root level
+        status: "active",
+        clientName: booking.clientFirstName || booking.clientName || "Client",
+        clientFirstName: booking.clientFirstName || null,
+        title: booking.title || "Consultation",
+        subject: booking.title || "Consultation",
         createdAt: now,
         updatedAt: now,
-        messageCount: 2,
+        lastMessageAt: now,
+        // FIX: Frontend expects 'messagesCount' (with 's'), not 'messageCount'
+        messagesCount: 2,
         bookingContext: {
           clientName: booking.clientFirstName || booking.clientName || "Client",
           country: country,
@@ -199,26 +329,29 @@ export const aiOnBookingCreated = onDocumentCreated(
       });
 
       // 2. Save initial user message (booking context)
+      // FIX: Use 'createdAt' instead of 'timestamp' - frontend queries by createdAt
       const userMsgRef = convoRef.collection("messages").doc();
       batch.set(userMsgRef, {
         role: "user",
         source: "system",
         content: userMessage,
-        timestamp: now,
+        createdAt: now,
       });
 
       // 3. Save AI response
+      // FIX: Use 'createdAt' instead of 'timestamp', and 'source: gpt' for proper icon rendering
       const aiMsgRef = convoRef.collection("messages").doc();
       batch.set(aiMsgRef, {
         role: "assistant",
-        source: "ai",
+        // FIX: Frontend checks source === "gpt" for AI message styling
+        source: response.provider === "claude" ? "claude" : "gpt",
         content: response.response,
         model: response.model,
         provider: response.provider,
         searchPerformed: response.searchPerformed,
         citations: response.citations || null,
         fallbackUsed: response.fallbackUsed || false,
-        timestamp: now,
+        createdAt: now,
       });
 
       // 4. Mark booking as processed
@@ -230,17 +363,41 @@ export const aiOnBookingCreated = onDocumentCreated(
 
       await batch.commit();
 
+      logger.info(`💾 [AI-DEBUG-${debugId}] STEP 10: Firestore batch committed`, {
+        conversationId: convoRef.id,
+        userMsgId: userMsgRef.id,
+        aiMsgId: aiMsgRef.id,
+      });
+
       // Increment AI usage after success
       await incrementAiUsage(providerId);
 
-      logger.info("[AI] Booking processed successfully", {
+      // ============================================================
+      // DEBUG STEP 11: SUCCESS!
+      // ============================================================
+      logger.info(`🎉 [AI-DEBUG-${debugId}] STEP 11: SUCCESS! Booking processed`, {
         bookingId,
         conversationId: convoRef.id,
+        providerId,
+        providerType,
         quotaUsedAfter: aiStatus.quotaUsed + 1,
+        responseModel: response.model,
+        totalSteps: 11,
       });
+
     } catch (error) {
+      // ============================================================
+      // DEBUG CATCH: Error during processing
+      // ============================================================
       const errorMessage = (error as Error).message;
-      logger.error("[AI] Error processing booking", { bookingId, error: errorMessage });
+      const errorStack = (error as Error).stack;
+      logger.error(`💥 [AI-DEBUG-${debugId}] CATCH: Error processing booking`, {
+        bookingId,
+        providerId: booking.providerId,
+        errorMessage,
+        errorStack,
+        errorName: (error as Error).name,
+      });
 
       await snap.ref.update({
         aiProcessed: false,
