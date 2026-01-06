@@ -795,13 +795,15 @@ export const twilioAmdTwiml = onRequest(
         answeredBy === 'fax'
       );
 
-      // P0 FIX: If AnsweredBy is undefined for CLIENT, treat as machine (safer - prevents calling provider)
-      // For PROVIDER, treat undefined as human (client is waiting)
-      const shouldHangup = isMachine || (participantType === 'client' && !answeredBy);
+      // P0 FIX: With asyncAmd="true", the first callback via `url` does NOT have AnsweredBy yet
+      // AnsweredBy only arrives via asyncAmdStatusCallback AFTER AMD analysis completes
+      // So we should ONLY hangup if we have CONFIRMED it's a machine, not if AnsweredBy is undefined
+      // If AnsweredBy is undefined, proceed to conference - the AMD callback will correct if needed
+      const shouldHangup = isMachine;
 
       if (shouldHangup) {
-        // MACHINE OR UNDEFINED CLIENT → Hangup immediately with NO audio
-        console.log(`🎯 [${amdId}] ⚠️ MACHINE/NO_ANSWER DETECTED - Returning HANGUP TwiML (NO AUDIO!)`);
+        // MACHINE CONFIRMED → Hangup immediately with NO audio (prevents voicemail recording)
+        console.log(`🎯 [${amdId}] ⚠️ MACHINE CONFIRMED - Returning HANGUP TwiML (NO AUDIO!)`);
         console.log(`🎯 [${amdId}]   answeredBy: ${answeredBy || 'UNDEFINED'}`);
         console.log(`🎯 [${amdId}]   participantType: ${participantType}`);
         console.log(`🎯 [${amdId}]   This prevents voicemail from recording our message!`);
