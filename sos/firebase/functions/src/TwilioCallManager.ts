@@ -1516,7 +1516,8 @@ export class TwilioCallManager {
       if (reason === "client_no_answer") {
         try {
           const providerLanguage = callSession.metadata?.providerLanguages?.[0] || "en";
-          const clientName = callSession.metadata?.clientName || "Client";
+          // clientName n'existe pas sur metadata - utiliser un placeholder ou récupérer de users
+          const clientName = "Client";
 
           // Create message_event to notify provider via SMS
           const providerNotificationData = {
@@ -1524,8 +1525,9 @@ export class TwilioCallManager {
             locale: providerLanguage,
             to: {
               uid: callSession.metadata?.providerId || null,
-              phone: callSession.participants?.provider?.phoneNumber
-                ? decryptPhoneNumber(callSession.participants.provider.phoneNumber)
+              // Fix: utiliser 'phone' pas 'phoneNumber'
+              phone: callSession.participants?.provider?.phone
+                ? decryptPhoneNumber(callSession.participants.provider.phone)
                 : null,
             },
             context: {

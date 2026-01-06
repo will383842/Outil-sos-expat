@@ -256,16 +256,18 @@ async function handleCallAnswered(
     console.log(`📞 [${webhookId}] STEP 1: AMD Detection`);
     console.log(`📞 [${webhookId}]   answeredBy value: "${answeredBy || 'UNDEFINED'}"`);
 
-    // P0 FIX: Si AnsweredBy est undefined, on ne peut pas savoir si c'est un humain ou une machine
-    // Dans ce cas, on attend le prochain webhook avec le résultat AMD
+    // P0 FIX: Si AnsweredBy est undefined, on traite comme humain (défaut sûr)
+    // AVANT: On retournait sans setter "connected" → waitForConnection timeout → provider jamais appelé
+    // MAINTENANT: On traite comme humain pour ne pas bloquer le flux d'appels
+    // Si c'est vraiment une machine, l'appel échouera de toute façon et sera remboursé
+    const effectiveAnsweredBy = answeredBy || 'human_assumed';
+
     if (!answeredBy) {
-      console.log(`📞 [${webhookId}] ⚠️ AnsweredBy is UNDEFINED - waiting for AMD result webhook`);
-      console.log(`📞 [${webhookId}]   NOT setting status to "connected" yet`);
-      console.log(`${'═'.repeat(70)}\n`);
-      return; // Ne pas traiter ce webhook, attendre celui avec AnsweredBy
+      console.log(`📞 [${webhookId}] ⚠️ AnsweredBy is UNDEFINED - defaulting to human (safe default)`);
+      console.log(`📞 [${webhookId}]   Proceeding with "connected" status to unblock waitForConnection()`);
     }
 
-    const isMachine = answeredBy.startsWith('machine') || answeredBy === 'fax';
+    const isMachine = effectiveAnsweredBy.startsWith('machine') || effectiveAnsweredBy === 'fax';
     console.log(`📞 [${webhookId}]   isMachine: ${isMachine}`);
 
     if (isMachine) {
