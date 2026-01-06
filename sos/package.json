@@ -10,7 +10,7 @@
     "predev": "node scripts/gen-firebase-config.cjs",
     "dev": "vite",
     "prebuild": "node scripts/gen-firebase-config.cjs && node scripts/download-sitemaps.js",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node scripts/copy-sitemaps-to-dist.js",
     "preview": "vite preview --strictPort",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
