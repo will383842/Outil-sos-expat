@@ -29,10 +29,11 @@ export const AI_SECRETS = [OPENAI_API_KEY, PERPLEXITY_API_KEY, ANTHROPIC_API_KEY
  * Creates a configured hybrid AI service
  */
 export function createService(): ReturnType<typeof createHybridService> {
+  // P0 FIX: Add .trim() to remove trailing CRLF from GCP Secret Manager values
   const config: HybridServiceConfig = {
-    openaiApiKey: OPENAI_API_KEY.value(),
-    claudeApiKey: ANTHROPIC_API_KEY.value(),
-    perplexityApiKey: PERPLEXITY_API_KEY.value(),
+    openaiApiKey: OPENAI_API_KEY.value().trim(),
+    claudeApiKey: ANTHROPIC_API_KEY.value().trim(),
+    perplexityApiKey: PERPLEXITY_API_KEY.value().trim(),
     useClaudeForLawyers: true,
     usePerplexityForFactual: true,
   };
