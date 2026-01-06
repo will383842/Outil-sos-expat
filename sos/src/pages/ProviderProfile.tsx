@@ -2376,18 +2376,16 @@ const ProviderProfile: React.FC = () => {
                           country: provider.country || '',
                           specialties: provider.specialties,
                           rating: providerStats.averageRating || provider.rating,
-                          profilePhoto: provider.profilePhoto,
-                          slug: provider.slug,
                         }}
                         shareUrl={window.location.href}
-                        variant="inline"
-                        onShare={(platform) => {
+                        onShare={(platform, success) => {
                           logAnalyticsEvent({
                             eventType: 'share_provider_profile',
                             eventData: {
                               provider_id: provider.id,
                               provider_type: provider.type,
                               platform,
+                              success,
                             },
                           });
                         }}
