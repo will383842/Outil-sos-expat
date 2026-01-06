@@ -5046,6 +5046,8 @@
   "success.expert": "Expert",
   "success.expertComing": "Votre expert arrive en ligne ! 📞",
   "success.expertNoAnswer": "Zut ! L'expert n'a pas décroché après 3 tentatives. Remboursement automatique en route ! 💸",
+  "success.clientNoAnswer": "Vous n'avez pas répondu après 3 tentatives d'appel. L'appel a été annulé et vous avez été remboursé. Vous pouvez réserver de nouveau si vous le souhaitez. 💸",
+  "success.clientNoAnswerTitle": "Appel manqué 📵",
   "success.goToDashboard": "Voir mon espace",
   "success.home": "Accueil",
   "success.lawyerCall": "Consultation Avocat",

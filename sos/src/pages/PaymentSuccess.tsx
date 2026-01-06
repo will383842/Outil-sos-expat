@@ -210,6 +210,8 @@ const SuccessPayment: React.FC = () => {
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [countdownToCall, setCountdownToCall] = useState(240); // 5 minutes
   const [paymentTimestamp, setPaymentTimestamp] = useState<number | null>(null);
+  // P0 FIX: Track failure reason to display the correct message (client vs provider no_answer)
+  const [failureReason, setFailureReason] = useState<string | null>(null);
 
   // Service data
   const [paidAmount, setPaidAmount] = useState<number>(0);
@@ -541,6 +543,11 @@ const SuccessPayment: React.FC = () => {
         case "failed":
         case "cancelled":
           setCallState("failed");
+          // P0 FIX: Extract failure reason to show correct message (client vs provider no_answer)
+          if (data?.payment?.refundReason) {
+            setFailureReason(data.payment.refundReason);
+            console.log(`🔵 [SUCCESS_PAGE_DEBUG] Failure reason: ${data.payment.refundReason}`);
+          }
           break;
         default:
           if (data?.status) {
@@ -1145,8 +1152,10 @@ const SuccessPayment: React.FC = () => {
               <>
                 <h1 className="text-4xl md:text-6xl font-black mb-6 leading-tight">
                   <span className="bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">
-                    {/* {t.callFailed} */}
-                    {intl.formatMessage({ id: "success.callFailed" })}
+                    {/* P0 FIX: Show different title based on who didn't answer */}
+                    {failureReason?.includes("client_no_answer")
+                      ? intl.formatMessage({ id: "success.clientNoAnswerTitle" })
+                      : intl.formatMessage({ id: "success.callFailed" })}
                   </span>
                 </h1>
 
@@ -1155,8 +1164,10 @@ const SuccessPayment: React.FC = () => {
                     <AlertCircle className="w-16 h-16 text-white" />
                   </div>
                   <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-6">
-                    {/* {t.expertNoAnswer} */}
-                    {intl.formatMessage({ id: "success.expertNoAnswer" })}
+                    {/* P0 FIX: Show different message based on who didn't answer */}
+                    {failureReason?.includes("client_no_answer")
+                      ? intl.formatMessage({ id: "success.clientNoAnswer" })
+                      : intl.formatMessage({ id: "success.expertNoAnswer" })}
                   </p>
                   <button
                     onClick={() => navigate("/prestataires")}

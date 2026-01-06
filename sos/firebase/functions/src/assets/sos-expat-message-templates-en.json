@@ -182,7 +182,7 @@
         "whatsapp": false
       },
       "sms": {
-        "text": "SOS Expat: New booking!\n\nClient: {{client.firstName}}\nNationality: {{client.nationality}}\nIntervention country: {{request.country}}\nSpoken languages: {{clientLanguagesFormatted}}\n\nTitle: {{request.title}}\nDetails: {{request.description}}\n\nFor this call you will earn {{providerEarnings}}{{currencySymbol}} (may vary slightly depending on your bank's exchange rates).\n\nLog in to your AI tool for help with your responses.\n\n⚠️ WARNING: If you miss the call, you will be automatically set offline and will need to reconnect manually. This will also impact your visibility score."
+        "text": "SOS Expat: New booking!\n\nClient: {{client.firstName}}\nNationality: {{client.nationality}}\nIntervention country: {{request.country}}\nSpoken languages: {{clientLanguagesFormatted}}\n\nTitle: {{request.title}}\nDetails: {{request.description}}\n\nFor this call you will earn {{providerEarnings}}{{currencySymbol}} (may vary slightly depending on your bank's exchange rates).\n\nLog in to your AI tool for help with your responses:\n👉 https://outils-sos-expat.web.app\n\n⚠️ WARNING: If you miss the call, you will be automatically set offline and will need to reconnect manually. This will also impact your visibility score."
       },
       "inapp": {
         "title": "New paid booking",
