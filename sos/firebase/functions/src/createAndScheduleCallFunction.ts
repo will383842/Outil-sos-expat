@@ -33,7 +33,8 @@ interface CreateCallRequest {
   serviceType: 'lawyer_call' | 'expat_call';
   providerType: 'lawyer' | 'expat';
   paymentIntentId: string;
-  amount: number; // EN EUROS - Interface simplifiée
+  amount: number; // Montant total du paiement
+  currency?: 'EUR' | 'USD' | 'eur' | 'usd'; // Devise du paiement
   delayMinutes?: number; // ✅ Garde le champ pour compatibilité mais ne l'utilise plus
   clientLanguages?: string[];
   providerLanguages?: string[];
@@ -194,7 +195,8 @@ export const createAndScheduleCallHTTPS = onCall(
         providerType,
         paymentIntentId,
         amount,
-         callSessionId,
+        currency: requestCurrency, // Devise du paiement (EUR ou USD)
+        callSessionId,
         delayMinutes = 5, // ✅ Garde pour compatibilité mais ne sera plus utilisé
         clientLanguages,
         providerLanguages,
@@ -205,6 +207,9 @@ export const createAndScheduleCallHTTPS = onCall(
         clientCurrentCountry,
         clientFirstName,
         clientNationality} = request.data;
+
+      // Normaliser la devise (eur ou usd, minuscule)
+      const currency = (requestCurrency?.toLowerCase() || 'eur') as 'eur' | 'usd';
 
       // ✅ Évite l'avertissement TypeScript 6133 (variable assigned but never used)
       void delayMinutes;
@@ -620,9 +625,9 @@ export const createAndScheduleCallHTTPS = onCall(
         console.log(`📨 [${requestId}]   - decryptedProviderPhone: ${decryptedProviderPhone ? decryptedProviderPhone.substring(0, 5) + '***' : 'NOT_SET'}`);
         console.log(`📨 [${requestId}]   - Will create event? ${!!(providerId || providerEmail)}`);
 
-        // Calculate provider earnings for SMS
-        const { providerEarnings, currencySymbol } = await calculateProviderEarnings(serviceType, 'eur');
-        console.log(`📨 [${requestId}]   - providerEarnings: ${providerEarnings}${currencySymbol}`);
+        // Calculate provider earnings for SMS - use actual currency from payment
+        const { providerEarnings, currencySymbol } = await calculateProviderEarnings(serviceType, currency);
+        console.log(`📨 [${requestId}]   - providerEarnings: ${providerEarnings}${currencySymbol} (currency: ${currency.toUpperCase()})`);
 
         if (providerId || providerEmail) {
           // P0 FIX: Use booking_paid_provider template which has SMS enabled
@@ -651,7 +656,7 @@ export const createAndScheduleCallHTTPS = onCall(
               },
               booking: {
                 amount: amount || 0,
-                currency: 'EUR',  // Default currency for SOS Expat
+                currency: currency.toUpperCase(),  // Actual currency from payment (EUR or USD)
               },
               // Provider earnings info for SMS
               earnings: {
