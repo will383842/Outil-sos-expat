@@ -61,7 +61,7 @@
         "whatsapp": false
       },
       "sms": {
-        "text": "SOS Expat: 新预订！\n\n客户: {{client.firstName}}\n国籍: {{client.nationality}}\n服务国家: {{request.country}}\n使用语言: {{clientLanguagesFormatted}}\n\n标题: {{request.title}}\n详情: {{request.description}}\n\n此次通话您将赚取 {{providerEarnings}}{{currencySymbol}}（根据您银行的汇率可能略有不同）。\n\n登录您的AI工具以获取回复帮助。\n\n⚠️ 警告：如果您未接听电话，您将自动设为离线状态，需要手动重新连接。这也会影响您的曝光度评分。"
+        "text": "SOS Expat: 新预订！\n\n客户: {{client.firstName}}\n国籍: {{client.nationality}}\n服务国家: {{request.country}}\n使用语言: {{clientLanguagesFormatted}}\n\n标题: {{request.title}}\n详情: {{request.description}}\n\n此次通话您将赚取 {{providerEarnings}}{{currencySymbol}}（根据您银行的汇率可能略有不同）。\n\n登录您的AI工具以获取回复帮助:\n👉 https://sos-expat.com/zh-cn/dashboard/subscription\n\n⚠️ 警告：如果您未接听电话，您将自动设为离线状态，需要手动重新连接。这也会影响您的曝光度评分。"
       },
       "inapp": {
         "title": "新的付费预订",

@@ -61,7 +61,7 @@
         "whatsapp": false
       },
       "sms": {
-        "text": "SOS Expat: ¡Nueva reserva!\n\nCliente: {{client.firstName}}\nNacionalidad: {{client.nationality}}\nPaís de intervención: {{request.country}}\nIdiomas hablados: {{clientLanguagesFormatted}}\n\nTítulo: {{request.title}}\nDetalles: {{request.description}}\n\nPor esta llamada ganará {{providerEarnings}}{{currencySymbol}} (puede variar ligeramente según los tipos de cambio de su banco).\n\nInicie sesión en su herramienta de IA para ayudarle con sus respuestas.\n\n⚠️ ATENCIÓN: Si no responde a la llamada, se le pondrá automáticamente fuera de línea y tendrá que volver a conectarse manualmente. Esto también afectará su puntuación de visibilidad."
+        "text": "SOS Expat: ¡Nueva reserva!\n\nCliente: {{client.firstName}}\nNacionalidad: {{client.nationality}}\nPaís de intervención: {{request.country}}\nIdiomas hablados: {{clientLanguagesFormatted}}\n\nTítulo: {{request.title}}\nDetalles: {{request.description}}\n\nPor esta llamada ganará {{providerEarnings}}{{currencySymbol}} (puede variar ligeramente según los tipos de cambio de su banco).\n\nInicie sesión en su herramienta de IA para ayudarle con sus respuestas:\n👉 https://sos-expat.com/es-es/dashboard/subscription\n\n⚠️ ATENCIÓN: Si no responde a la llamada, se le pondrá automáticamente fuera de línea y tendrá que volver a conectarse manualmente. Esto también afectará su puntuación de visibilidad."
       },
       "inapp": {
         "title": "Nueva reserva pagada",
