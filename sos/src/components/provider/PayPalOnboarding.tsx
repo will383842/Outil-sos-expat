@@ -316,53 +316,10 @@ export const PayPalOnboarding: React.FC<PayPalOnboardingProps> = ({
     );
   }
 
-  // Statut connecté et vérifié
+  // ✅ P0 FIX: Si PayPal est vérifié, retourner null pour que le banner parent disparaisse
+  // Le reload est déclenché par onStatusChange("active") dans verifyCode()
   if (step === "success" && savedEmail) {
-    return (
-      <div className={`bg-green-50 border border-green-200 rounded-lg p-4 ${className}`}>
-        <div className="flex items-center">
-          <CheckCircle className="w-6 h-6 text-green-500 mr-3 flex-shrink-0" />
-          <div>
-            <h4 className="font-semibold text-green-800">
-              <FormattedMessage
-                id="provider.paypal.connected"
-                defaultMessage="PayPal connecté"
-              />
-            </h4>
-            <p className="text-sm text-green-700 mt-1">
-              <FormattedMessage
-                id="provider.paypal.ready"
-                defaultMessage="Vous pouvez recevoir des paiements via PayPal"
-              />
-            </p>
-            <p className="text-sm text-green-600 mt-2 flex items-center">
-              <Mail className="w-4 h-4 mr-1" />
-              {savedEmail}
-              <Shield className="w-4 h-4 ml-2 text-green-500" aria-label="Email vérifié" />
-            </p>
-          </div>
-        </div>
-
-        {/* Option pour modifier l'email */}
-        <div className="mt-4 pt-4 border-t border-green-200">
-          <button
-            onClick={() => {
-              setStep("email");
-              setStatus("not_connected");
-              setSavedEmail(null);
-              setPaypalEmail("");
-              setVerificationCode(["", "", "", "", "", ""]);
-            }}
-            className="text-sm text-green-600 hover:text-green-800 underline"
-          >
-            <FormattedMessage
-              id="provider.paypal.changeEmail"
-              defaultMessage="Modifier l'adresse email PayPal"
-            />
-          </button>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   // Étape de vérification du code
