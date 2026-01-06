@@ -184,6 +184,37 @@ export const syncProvider = onRequest(
 
       await providerRef.set(providerData, { merge: true });
 
+      // P0 FIX: Auto-create users document for Firestore rules
+      // isAssignedProvider() requires users/{uid}.linkedProviderIds to include providerId
+      const userRef = db.collection("users").doc(providerId);
+      const userDoc = await userRef.get();
+
+      if (!userDoc.exists) {
+        logger.info("[syncProvider] Creating users document for provider:", { providerId });
+        await userRef.set({
+          linkedProviderIds: [providerId],
+          activeProviderId: providerId,
+          subscriptionStatus: data.hasActiveSubscription ? "active" : "inactive",
+          role: "provider",
+          email: data.email?.toLowerCase() || "",
+          name: data.name || "Provider",
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          source: "auto-created-by-sync",
+        }, { merge: true });
+      } else {
+        // Ensure providerId is in linkedProviderIds
+        const userData = userDoc.data();
+        const linkedIds = userData?.linkedProviderIds || [];
+        if (!linkedIds.includes(providerId)) {
+          await userRef.update({
+            linkedProviderIds: admin.firestore.FieldValue.arrayUnion(providerId),
+            activeProviderId: providerId,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+        }
+      }
+
       logger.info("[syncProvider] Provider synchronisé", { providerId });
       res.status(200).json({ ok: true, message: "Provider synchronisé", providerId });
     } catch (error: unknown) {

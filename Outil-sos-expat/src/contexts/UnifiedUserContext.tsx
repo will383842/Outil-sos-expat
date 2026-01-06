@@ -40,11 +40,13 @@ import {
   doc,
   getDoc,
   getDocs,
+  setDoc,
   updateDoc,
   onSnapshot,
   query,
   where,
   documentId,
+  serverTimestamp,
 } from "firebase/firestore";
 
 // =============================================================================
@@ -309,6 +311,44 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
               aiQuota: data.aiQuota,
             });
             setIsProvider(true);
+
+            // AUTO-CREATE USER DOCUMENT if it doesn't exist
+            // Required for Firestore rules (isAssignedProvider checks users/{uid})
+            const userRef = doc(db, "users", firebaseUser.uid);
+            const userSnap = await getDoc(userRef);
+
+            if (!userSnap.exists()) {
+              console.log("[UnifiedUser] Creating missing users document for provider:", providerDoc.id);
+              try {
+                await setDoc(userRef, {
+                  linkedProviderIds: [providerDoc.id],
+                  activeProviderId: providerDoc.id,
+                  subscriptionStatus: subscription.hasActiveSubscription ? "active" : "inactive",
+                  subscriptionTier: subscription.planName || "free",
+                  role: "provider",
+                  email: emailLower,
+                  name: data.name || "Provider",
+                  createdAt: serverTimestamp(),
+                  updatedAt: serverTimestamp(),
+                  source: "auto-created-on-sso-login",
+                }, { merge: true });
+                console.log("[UnifiedUser] Users document created successfully");
+              } catch (createErr) {
+                console.error("[UnifiedUser] Failed to create users document:", createErr);
+              }
+            } else {
+              // Update linkedProviderIds if provider not already linked
+              const userData = userSnap.data();
+              const linkedIds = userData.linkedProviderIds || [];
+              if (!linkedIds.includes(providerDoc.id)) {
+                console.log("[UnifiedUser] Adding provider to linkedProviderIds:", providerDoc.id);
+                await updateDoc(userRef, {
+                  linkedProviderIds: [...linkedIds, providerDoc.id],
+                  activeProviderId: providerDoc.id,
+                  updatedAt: serverTimestamp(),
+                });
+              }
+            }
           }
         }
       } catch (err) {
