@@ -89,7 +89,8 @@ function hasRelevantChanges(
  */
 async function syncToSos(payload: SyncPayload): Promise<{ ok: boolean; error?: string }> {
   try {
-    const apiKey = SOS_SYNC_API_KEY.value();
+    // P0 FIX: Trim secret value to remove trailing CRLF
+    const apiKey = SOS_SYNC_API_KEY.value().trim();
 
     if (!apiKey) {
       logger.warn("[syncProvidersToSos] SOS_SYNC_API_KEY non configuré");

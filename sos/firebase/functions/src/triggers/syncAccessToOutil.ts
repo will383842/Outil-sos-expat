@@ -47,7 +47,8 @@ async function syncAccessToOutil(
   payload: SyncAccessPayload
 ): Promise<{ ok: boolean; error?: string }> {
   try {
-    const apiKey = OUTIL_SYNC_API_KEY.value();
+    // P0 FIX: Trim secret value to remove trailing CRLF
+    const apiKey = OUTIL_SYNC_API_KEY.value().trim();
 
     if (!apiKey) {
       logger.warn("[syncAccessToOutil] OUTIL_SYNC_API_KEY non configure");

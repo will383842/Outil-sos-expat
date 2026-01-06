@@ -167,7 +167,9 @@ export const ingestBooking = onRequest(
       // 3. VÉRIFICATION API KEY
       // =========================================================================
       const apiKey = req.header("x-api-key");
-      if (!apiKey || apiKey !== SOS_PLATFORM_API_KEY.value()) {
+      // P0 FIX: Trim secret value to remove trailing CRLF that was accidentally included in the secret
+      const expectedApiKey = SOS_PLATFORM_API_KEY.value().trim();
+      if (!apiKey || apiKey.trim() !== expectedApiKey) {
         logger.warn("[ingestBooking] Tentative non autorisée", createSecureLogContext(req, { requestId }));
         res.status(401).json({ ok: false, error: "Unauthorized" });
         return;
@@ -571,7 +573,9 @@ export const updateBookingStatus = onRequest(
       // 3. VÉRIFICATION API KEY
       // =========================================================================
       const apiKey = req.header("x-api-key");
-      if (!apiKey || apiKey !== SOS_PLATFORM_API_KEY.value()) {
+      // P0 FIX: Trim secret value to remove trailing CRLF
+      const expectedApiKey = SOS_PLATFORM_API_KEY.value().trim();
+      if (!apiKey || apiKey.trim() !== expectedApiKey) {
         logger.warn("[updateBookingStatus] Tentative non autorisée", createSecureLogContext(req, { requestId }));
         res.status(401).json({ ok: false, error: "Unauthorized" });
         return;

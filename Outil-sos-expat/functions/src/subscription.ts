@@ -254,7 +254,9 @@ export const syncSubscription = onRequest(
 
       // Vérification API Key
       const apiKey = req.header("x-api-key");
-      if (!apiKey || apiKey !== SOS_PLATFORM_API_KEY.value()) {
+      // P0 FIX: Trim secret value to remove trailing CRLF
+      const expectedApiKey = SOS_PLATFORM_API_KEY.value().trim();
+      if (!apiKey || apiKey.trim() !== expectedApiKey) {
         logger.warn("[syncSubscription] Tentative non autorisée", {
           ip: getTrustedClientIp(req),
           userAgent: req.header("user-agent")?.substring(0, 100),
@@ -444,7 +446,9 @@ export const checkSubscription = onRequest(
 
       // Vérification API Key
       const apiKey = req.header("x-api-key");
-      if (!apiKey || apiKey !== SOS_PLATFORM_API_KEY.value()) {
+      // P0 FIX: Trim secret value to remove trailing CRLF
+      const expectedApiKey = SOS_PLATFORM_API_KEY.value().trim();
+      if (!apiKey || apiKey.trim() !== expectedApiKey) {
         logger.warn("[checkSubscription] Tentative non autorisée", {
           ip: getTrustedClientIp(req),
         });

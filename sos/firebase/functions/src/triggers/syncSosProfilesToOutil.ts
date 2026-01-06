@@ -98,7 +98,8 @@ function transformToSyncPayload(uid: string, data: SosProfileData, action: "upse
  */
 async function syncToOutil(payload: SyncPayload): Promise<{ ok: boolean; error?: string }> {
   try {
-    const apiKey = OUTIL_SYNC_API_KEY.value();
+    // P0 FIX: Trim secret value to remove trailing CRLF
+    const apiKey = OUTIL_SYNC_API_KEY.value().trim();
 
     if (!apiKey) {
       console.warn("[syncSosProfilesToOutil] OUTIL_SYNC_API_KEY non configuré");

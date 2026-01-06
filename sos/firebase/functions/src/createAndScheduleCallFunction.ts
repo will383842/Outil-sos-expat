@@ -581,7 +581,8 @@ export const createAndScheduleCallHTTPS = onCall(
 
         // Sync to Outil-sos-expat (non-blocking)
         console.log(`📨 [${requestId}] Syncing to Outil IA...`);
-        const outilApiKey = OUTIL_SYNC_API_KEY.value();
+        // P0 FIX: Trim secret value to remove trailing CRLF
+        const outilApiKey = OUTIL_SYNC_API_KEY.value().trim();
         if (outilApiKey) {
           const OUTIL_INGEST_ENDPOINT = 'https://europe-west1-outils-sos-expat.cloudfunctions.net/ingestBooking';
           const outilPayload = {

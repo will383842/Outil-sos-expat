@@ -153,7 +153,8 @@ async function syncToOutil(
   payload: OutilBookingPayload
 ): Promise<{ ok: boolean; bookingId?: string; error?: string }> {
   try {
-    const apiKey = OUTIL_SYNC_API_KEY.value();
+    // P0 FIX: Trim secret value to remove trailing CRLF
+    const apiKey = OUTIL_SYNC_API_KEY.value().trim();
 
     if (!apiKey) {
       logger.warn("[syncBookingsToOutil] OUTIL_SYNC_API_KEY non configuré");

@@ -111,7 +111,9 @@ export const syncProvider = onRequest(
     }
 
     const apiKey = req.headers["x-api-key"];
-    if (!apiKey || apiKey !== SYNC_PROVIDER_API_KEY.value()) {
+    // P0 FIX: Trim secret value to remove trailing CRLF
+    const expectedApiKey = SYNC_PROVIDER_API_KEY.value().trim();
+    if (!apiKey || String(apiKey).trim() !== expectedApiKey) {
       logger.warn("[syncProvider] Tentative non autorisée", {
         ip: getTrustedClientIp(req),
       });
@@ -215,7 +217,9 @@ export const syncProvidersBulk = onRequest(
     }
 
     const apiKey = req.headers["x-api-key"];
-    if (!apiKey || apiKey !== SYNC_PROVIDER_API_KEY.value()) {
+    // P0 FIX: Trim secret value to remove trailing CRLF
+    const expectedApiKey = SYNC_PROVIDER_API_KEY.value().trim();
+    if (!apiKey || String(apiKey).trim() !== expectedApiKey) {
       logger.warn("[syncProvidersBulk] Tentative non autorisée", {
         ip: getTrustedClientIp(req),
       });

@@ -1192,7 +1192,8 @@ async function syncCallSessionToOutil(
   debugId: string
 ): Promise<void> {
   try {
-    const apiKey = OUTIL_SYNC_API_KEY.value();
+    // P0 FIX: Trim secret value to remove trailing CRLF
+    const apiKey = OUTIL_SYNC_API_KEY.value().trim();
     if (!apiKey) {
       console.warn(`[${debugId}] OUTIL_SYNC_API_KEY not configured - skipping sync`);
       return;

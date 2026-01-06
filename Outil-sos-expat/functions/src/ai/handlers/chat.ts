@@ -71,8 +71,9 @@ async function verifyAuthToken(req: Request): Promise<DecodedIdToken | null> {
  */
 function verifyApiKey(req: Request): AuthResult {
   const apiKey = req.header("x-api-key");
-
-  if (!apiKey || apiKey !== SOS_PLATFORM_API_KEY.value()) {
+  // P0 FIX: Trim secret value to remove trailing CRLF
+  const expectedApiKey = SOS_PLATFORM_API_KEY.value().trim();
+  if (!apiKey || apiKey.trim() !== expectedApiKey) {
     return { authenticated: false, userId: null, method: null };
   }
 
