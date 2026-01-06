@@ -73,16 +73,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
   const { language } = useApp();
   const [loggingOut, setLoggingOut] = useState(false);
 
-  // 🔍 DEBUG: Afficher les données utilisateur reçues par DashboardLayout
-  console.log("📊 [DashboardLayout] User data:", {
-    role: user?.role,
-    firstName: user?.firstName,
-    lastName: user?.lastName,
-    fullName: (user as any)?.fullName,
-    email: user?.email,
-    authInitialized,
-  });
-
   // AI Quota for sidebar display
   const {
     currentUsage: aiCurrentUsage,

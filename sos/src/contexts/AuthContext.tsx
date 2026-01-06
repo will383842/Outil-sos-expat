@@ -574,40 +574,20 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
   // onAuthStateChanged → ne fait que stocker l'utilisateur auth
   useEffect(() => {
-    console.log("🔐 [AuthContext] Initialisation onAuthStateChanged...");
-    console.log("🔐 [AuthContext] auth.currentUser au boot:", auth.currentUser?.uid || "null");
     const unsubAuth = onAuthStateChanged(auth, (u) => {
-      const timestamp = new Date().toISOString();
-      console.log(`🔐 [AuthContext] [${timestamp}] onAuthStateChanged triggered:`, {
-        hasUser: !!u,
-        uid: u?.uid,
-        email: u?.email,
-        emailVerified: u?.emailVerified,
-        providerId: u?.providerId,
-        previousUid: previousAuthUserUidRef.current,
-      });
-
-      // ✅ FIX: Si l'utilisateur change (login après logout ou nouveau login),
-      // NE PAS reset authInitialized car cela cause des redirections vers /login
-      // pendant que Firestore charge les données. À la place, on reset seulement
-      // les refs de subscription pour que le nouveau listener démarre proprement.
+      // Si l'utilisateur change (login après logout ou nouveau login),
+      // reset les refs de subscription pour que le nouveau listener démarre proprement
       const isNewUser = u && u.uid !== previousAuthUserUidRef.current;
       if (isNewUser) {
-        console.log("🔐 [AuthContext] 🔄 Nouvel utilisateur détecté, reset des refs de subscription");
-        // Reset les refs pour permettre un nouveau listener Firestore
         subscribed.current = false;
         firstSnapArrived.current = false;
-        // NE PAS faire setAuthInitialized(false) - cela cause le bug de redirection!
-        // authInitialized reste true pour éviter que ProtectedRoute redirige prématurément
       }
       previousAuthUserUidRef.current = u?.uid ?? null;
 
       setIsLoading(true);
-      console.log("🔐 [AuthContext] setAuthUser() appelé avec uid:", u?.uid || "null");
       setAuthUser(u);
       setFirebaseUser(u ?? null);
       if (!u) {
-        console.log("🔐 [AuthContext] Pas d'utilisateur connecté, nettoyage état");
         // Pas d'utilisateur → on nettoie l'état applicatif
         setUser(null);
         signingOutRef.current = false;
@@ -626,46 +606,31 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   const firstSnapArrived = useRef(false);
 
   useEffect(() => {
-    const effectTimestamp = new Date().toISOString();
-    console.log(`🔐 [AuthContext] [${effectTimestamp}] useEffect users listener TRIGGERED`);
-    console.log("🔐 [AuthContext] État actuel:", {
-      authUserUid: authUser?.uid || "null",
-      subscribedCurrent: subscribed.current,
-      firstSnapArrivedCurrent: firstSnapArrived.current,
-      signingOut: signingOutRef.current,
-    });
-
     if (!authUser) {
-      console.log("🔐 [AuthContext] ⏸️ Pas d'authUser, skip listener - attente connexion");
       return;               // attendre l'auth
     }
     if (subscribed.current) {
-      console.log("🔐 [AuthContext] ⏸️ Déjà abonné (subscribed.current=true), skip - probablement StrictMode");
       return;      // éviter double abonnement en StrictMode
     }
 
-    console.log("🔐 [AuthContext] ▶️ Démarrage du listener Firestore...");
     subscribed.current = true;
     firstSnapArrived.current = false;
     setIsLoading(true);
 
     const uid = authUser.uid;
     const refUser = doc(db, 'users', uid);
-    console.log("🔐 [AuthContext] 📡 Création référence Firestore: users/" + uid);
 
     let unsubUser: undefined | (() => void);
     let cancelled = false;
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
     let fallbackTimeoutId: ReturnType<typeof setTimeout> | null = null;
-    let restFallbackTimeoutId: ReturnType<typeof setTimeout> | null = null; // ✅ FIX: Variable pour REST API fallback
+    let restFallbackTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
     // OPTIMISATION: Utiliser UNIQUEMENT onSnapshot() qui retourne les données initiales
     // au premier callback. Évite la double lecture (getDoc + onSnapshot).
     // Si le premier callback n'arrive pas dans 15s, on initialise avec les données Auth minimales.
 
     const listenerStartTime = Date.now();
-    console.log("🔐 [AuthContext] 🎯 Setting up onSnapshot listener for users/" + uid);
-    console.log("🔐 [AuthContext] ⏱️ Chrono démarré pour mesurer le temps de réponse Firestore");
 
     // 🚀 FALLBACK: Si onSnapshot ne répond pas en 5s, essayer getDoc directement
     fallbackTimeoutId = setTimeout(async () => {
@@ -782,15 +747,10 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     }, authTimeout);
 
     // Un seul listener qui gère TOUT : données initiales + mises à jour temps réel
-    console.log("🔐 [AuthContext] 📡 onSnapshot() appelé, en attente du premier callback...");
     unsubUser = onSnapshot(
       refUser,
       async (docSnap) => {
-        const snapshotElapsed = Date.now() - listenerStartTime;
-        console.log(`🔐 [AuthContext] 📨 [${snapshotElapsed}ms] onSnapshot CALLBACK REÇU!`);
-
         if (signingOutRef.current || cancelled) {
-          console.log("🔐 [AuthContext] ⏸️ Callback ignoré (signingOut=" + signingOutRef.current + ", cancelled=" + cancelled + ")");
           return;
         }
 
@@ -798,16 +758,13 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         if (timeoutId) {
           clearTimeout(timeoutId);
           timeoutId = null;
-          console.log("🔐 [AuthContext] ⏰ Timeout annulé - réponse reçue à temps");
         }
         if (fallbackTimeoutId) {
           clearTimeout(fallbackTimeoutId);
           fallbackTimeoutId = null;
-          console.log("🔐 [AuthContext] ⏰ Fallback timeout annulé");
         }
         if (restFallbackTimeoutId) {
           clearTimeout(restFallbackTimeoutId);
-          console.log("🔐 [AuthContext] ⏰ REST API fallback timeout annulé");
         }
 
         // Document n'existe pas → c'est une ANOMALIE car le document devrait exister après inscription
@@ -839,41 +796,8 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
         // Document existe → utiliser les données
         const data = docSnap.data() as Partial<User>;
-        const isFromCache = docSnap.metadata.fromCache;
-        const hasPendingWrites = docSnap.metadata.hasPendingWrites;
-
-        // 🔍 DEBUG COMPLET: Afficher TOUTES les données reçues de Firestore
-        console.log("🔐 [AuthContext] 📊 Snapshot reçu:", {
-          uid,
-          fromCache: isFromCache,
-          hasPendingWrites,
-          // Champs critiques
-          role: data.role,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          fullName: data.fullName,
-          email: data.email,
-          isApproved: data.isApproved,
-          // Liste toutes les clés pour diagnostiquer les champs manquants
-          allKeys: Object.keys(data),
-        });
-
-        // ⚠️ ALERTE si les données critiques sont manquantes
-        if (!data.role) {
-          console.error("❌ [AuthContext] ERREUR CRITIQUE: role est undefined/null dans Firestore!");
-        }
-        if (!data.firstName && !data.lastName && !data.fullName) {
-          console.warn("⚠️ [AuthContext] firstName, lastName et fullName sont tous vides/undefined!");
-        }
 
         setUser((prev) => {
-          // 🔍 DEBUG: Afficher l'état précédent avant merge
-          console.log("🔐 [AuthContext] 🔄 Merge - État précédent (prev):", {
-            prevRole: prev?.role,
-            prevFirstName: prev?.firstName,
-            prevEmail: prev?.email,
-            hasPrev: !!prev,
-          });
 
           const merged: User = {
             ...(prev ?? ({} as User)),
@@ -897,27 +821,14 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
             isVerifiedEmail: authUser.emailVerified,
           } as User;
 
-          // 🔍 DEBUG COMPLET: Afficher le rôle final après merge
-          console.log("🔐 [AuthContext] ✅ User merged - résultat final:", {
-            role: merged.role,
-            firstName: merged.firstName,
-            lastName: merged.lastName,
-            email: merged.email,
-            isApproved: merged.isApproved,
-          });
-
           return merged;
         });
 
         if (!firstSnapArrived.current) {
-          const finalElapsed = Date.now() - listenerStartTime;
-          console.log(`✅ [AuthContext] 🏁 [${finalElapsed}ms] First snapshot received for users/${uid}`);
-          console.log("✅ [AuthContext] 🏁 setIsLoading(false), setAuthInitialized(true)");
+          console.log(`✅ [AuthContext] First snapshot for users/${uid}`);
           firstSnapArrived.current = true;
           setIsLoading(false);
           setAuthInitialized(true);
-        } else {
-          console.log("🔐 [AuthContext] 🔄 Snapshot de mise à jour reçu (pas le premier)");
         }
       },
       (err) => {
@@ -961,7 +872,6 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
     // cleanup (StrictMode monte/démonte 2x)
     return () => {
-      console.log("🔐 [AuthContext] 🧹 Cleanup: annulation de l'abonnement users/" + uid);
       cancelled = true;
       subscribed.current = false;
       // ✅ FIX: Nettoyer TOUS les timeouts pour éviter les race conditions

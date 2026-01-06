@@ -100,15 +100,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   );
 
   const checkAuthorization = useCallback(async () => {
-    // 🔍 DEBUG: Afficher l'utilisateur et son rôle
-    console.log("🛡️ [ProtectedRoute] checkAuthorization:", {
-      hasUser: !!user,
-      userRole: user?.role,
-      allowedRoles,
-      path: location.pathname,
-      timeSinceMount: Date.now() - mountTimeRef.current,
-    });
-
     if (!user) {
       setAuthState('unauthorized');
       return;
@@ -131,12 +122,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
       if (allowedRoles) {
         const hasRole = checkUserRole(user, allowedRoles);
-        // 🔍 DEBUG: Résultat du check de rôle
-        console.log("🛡️ [ProtectedRoute] checkUserRole result:", {
-          userRole: user.role,
-          allowedRoles,
-          hasRole,
-        });
         setAuthState(hasRole ? 'authorized' : 'unauthorized');
       } else {
         setAuthState('authorized');
