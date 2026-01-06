@@ -1599,6 +1599,8 @@
   "admin.receivedCalls.modal.copySessionId": "Copier ID Session",
   "admin.receivedCalls.results": "{count} appel(s) trouvé(s)",
   "admin.receivedCalls.loading": "Chargement des appels...",
+  "admin.receivedCalls.costs.real": "Réel",
+  "admin.receivedCalls.costs.estimated": "Estimé",
   "admin.refunds.approve": "Approuver",
   "admin.refunds.auditTrail": "Piste d'audit",
   "admin.refunds.bulkApprove": "Approbation groupée",

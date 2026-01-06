@@ -1728,6 +1728,17 @@ export class TwilioCallManager {
         retryCount: 0,
         additionalData: { duration },
       });
+
+      // ===== FETCH AND STORE REAL TWILIO COSTS =====
+      // Delay slightly to ensure Twilio has updated the call record with pricing
+      setTimeout(async () => {
+        try {
+          await this.fetchAndStoreRealCosts(sessionId);
+        } catch (costError) {
+          console.error(`[handleCallCompletion] Failed to fetch costs (non-blocking):`, costError);
+        }
+      }, 5000); // 5 second delay to allow Twilio to calculate costs
+
     } catch (error) {
       await logError(
         "TwilioCallManager:handleCallCompletion",
@@ -2330,6 +2341,81 @@ export class TwilioCallManager {
       await twilioClient.calls(callSid).update({ status: "completed" });
     } catch (error) {
       console.warn(`Impossible d'annuler l'appel Twilio ${callSid}:`, error);
+    }
+  }
+
+  /**
+   * Fetch REAL Twilio costs from the API after call completion
+   * Twilio provides actual costs in the call resource after completion
+   */
+  async fetchAndStoreRealCosts(sessionId: string): Promise<void> {
+    try {
+      const callSession = await this.getCallSession(sessionId);
+      if (!callSession) {
+        console.warn(`[fetchAndStoreRealCosts] Session ${sessionId} not found`);
+        return;
+      }
+
+      const twilioClient = getTwilioClient();
+      let totalTwilioCost = 0;
+      const callDetails: { client?: any; provider?: any } = {};
+
+      // Fetch client call details and cost
+      if (callSession.participants.client.callSid) {
+        try {
+          const clientCall = await twilioClient.calls(callSession.participants.client.callSid).fetch();
+          const clientPrice = parseFloat(clientCall.price || '0');
+          totalTwilioCost += Math.abs(clientPrice); // Twilio returns negative prices
+          callDetails.client = {
+            callSid: clientCall.sid,
+            duration: clientCall.duration,
+            price: Math.abs(clientPrice),
+            priceUnit: clientCall.priceUnit || 'USD',
+            status: clientCall.status,
+          };
+          console.log(`[fetchAndStoreRealCosts] Client call cost: ${clientPrice} ${clientCall.priceUnit}`);
+        } catch (error) {
+          console.warn(`[fetchAndStoreRealCosts] Failed to fetch client call:`, error);
+        }
+      }
+
+      // Fetch provider call details and cost
+      if (callSession.participants.provider.callSid) {
+        try {
+          const providerCall = await twilioClient.calls(callSession.participants.provider.callSid).fetch();
+          const providerPrice = parseFloat(providerCall.price || '0');
+          totalTwilioCost += Math.abs(providerPrice);
+          callDetails.provider = {
+            callSid: providerCall.sid,
+            duration: providerCall.duration,
+            price: Math.abs(providerPrice),
+            priceUnit: providerCall.priceUnit || 'USD',
+            status: providerCall.status,
+          };
+          console.log(`[fetchAndStoreRealCosts] Provider call cost: ${providerPrice} ${providerCall.priceUnit}`);
+        } catch (error) {
+          console.warn(`[fetchAndStoreRealCosts] Failed to fetch provider call:`, error);
+        }
+      }
+
+      // Estimate GCP costs (Cloud Functions + Firestore + Cloud Tasks)
+      // These are rough estimates - for exact costs, use Cloud Billing API
+      const gcpCostEstimate = 0.0035; // ~$0.0035 per call (2 function invocations + 20 Firestore ops + 1 task)
+
+      // Store the real costs in Firestore
+      await this.db.collection("call_sessions").doc(sessionId).update({
+        "costs.twilio": Math.round(totalTwilioCost * 100) / 100,
+        "costs.twilioCurrency": callDetails.client?.priceUnit || callDetails.provider?.priceUnit || 'USD',
+        "costs.gcp": gcpCostEstimate,
+        "costs.twilioDetails": callDetails,
+        "costs.fetchedAt": admin.firestore.Timestamp.now(),
+        "metadata.updatedAt": admin.firestore.Timestamp.now(),
+      });
+
+      console.log(`[fetchAndStoreRealCosts] Stored costs for session ${sessionId}: Twilio=${totalTwilioCost}, GCP=${gcpCostEstimate}`);
+    } catch (error) {
+      console.error(`[fetchAndStoreRealCosts] Error:`, error);
+      await logError("TwilioCallManager:fetchAndStoreRealCosts", error as unknown);
     }
   }
 

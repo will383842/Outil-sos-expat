@@ -105,6 +105,7 @@ interface ReceivedCall {
     gcp: number;
     other: number;
     total: number;
+    isReal?: boolean; // true = real costs from Twilio API, false = estimates
   };
 }
 
@@ -407,13 +408,44 @@ const AdminReceivedCalls: React.FC = () => {
     });
   };
 
-  // Calculate costs for each call based on duration and payment
+  // Use real costs from Firestore if available, otherwise calculate estimates
   const enrichCallsWithCosts = (callsList: ReceivedCall[]): ReceivedCall[] => {
     return callsList.map(call => {
+      // Check if real costs are stored in Firestore (fetched from Twilio API)
+      const firestoreCosts = (call as any).costs;
+
+      if (firestoreCosts?.twilio !== undefined && firestoreCosts?.fetchedAt) {
+        // Use REAL costs from Firestore (fetched from Twilio API)
+        const twilioCost = firestoreCosts.twilio || 0;
+        const gcpCost = firestoreCosts.gcp || 0.0035;
+
+        // Calculate payment processing fees (these are estimates)
+        const paymentAmount = call.payment?.amount || 0;
+        const paymentMethod: 'stripe' | 'paypal' =
+          call.payment?.intentId?.startsWith('pi_') ? 'stripe' : 'paypal';
+
+        let paymentFees = 0;
+        if (paymentMethod === 'stripe') {
+          paymentFees = (paymentAmount * COST_PRICING.OTHER.STRIPE_PERCENTAGE) + COST_PRICING.OTHER.STRIPE_FIXED_EUR;
+        } else if (paymentMethod === 'paypal') {
+          paymentFees = (paymentAmount * COST_PRICING.OTHER.PAYPAL_PERCENTAGE) + COST_PRICING.OTHER.PAYPAL_FIXED_EUR;
+        }
+
+        return {
+          ...call,
+          costs: {
+            twilio: Math.round(twilioCost * 100) / 100,
+            gcp: Math.round(gcpCost * 100) / 100,
+            other: Math.round(paymentFees * 100) / 100,
+            total: Math.round((twilioCost + gcpCost + paymentFees) * 100) / 100,
+            isReal: true, // Flag to indicate these are real costs
+          }
+        };
+      }
+
+      // Fallback to ESTIMATES if real costs not yet fetched
       const duration = call.conference?.duration || 0;
       const paymentAmount = call.payment?.amount || 0;
-
-      // Detect payment method from intentId prefix
       const paymentMethod: 'stripe' | 'paypal' =
         call.payment?.intentId?.startsWith('pi_') ? 'stripe' : 'paypal';
 
@@ -421,7 +453,10 @@ const AdminReceivedCalls: React.FC = () => {
 
       return {
         ...call,
-        costs
+        costs: {
+          ...costs,
+          isReal: false, // Flag to indicate these are estimates
+        }
       };
     });
   };
@@ -1258,7 +1293,18 @@ const AdminReceivedCalls: React.FC = () => {
                   {selectedCall.costs && (
                     <>
                       <div className="border-t pt-2 mt-2">
-                        <div className="text-sm font-medium text-gray-700 mb-2">{t('admin.receivedCalls.modal.costsBreakdown')}:</div>
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm font-medium text-gray-700">{t('admin.receivedCalls.modal.costsBreakdown')}:</span>
+                          {selectedCall.costs.isReal ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                              ✓ {t('admin.receivedCalls.costs.real')}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                              ~ {t('admin.receivedCalls.costs.estimated')}
+                            </span>
+                          )}
+                        </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">{t('admin.receivedCalls.modal.twilioCost')}:</span>
                           <span className="text-red-600">-{formatAmount(selectedCall.costs.twilio, selectedCall.payment.currency)}</span>
