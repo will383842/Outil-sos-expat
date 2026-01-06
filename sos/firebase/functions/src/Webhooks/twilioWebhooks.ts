@@ -265,23 +265,47 @@ async function handleCallAnswered(
     console.log(`📞 [${webhookId}]   answeredBy value: "${answeredBy || 'UNDEFINED'}"`);
     console.log(`📞 [${webhookId}]   participantType: ${participantType}`);
 
-    // P0 FIX v3: With asyncAmd="true", AnsweredBy does NOT arrive in this webhook!
-    // AnsweredBy only arrives via asyncAmdStatusCallback → twilioAmdTwiml
-    // So if AnsweredBy is undefined here, we should NOT treat it as machine
-    // Let twilioAmdTwiml handle AMD detection via its dedicated callback
-    let effectiveAnsweredBy: string;
+    // P0 FIX: RACE CONDITION FIX
+    // With asyncAmd="true", the AMD result comes via twilioAmdTwiml callback, NOT here!
+    // If answeredBy is undefined, we MUST NOT set status to "connected" yet.
+    // The twilioAmdTwiml callback will determine human vs machine and set the correct status.
+    // Setting "connected" here would cause waitForConnection() to return true BEFORE
+    // we know if it's a human or voicemail, causing the provider to be called incorrectly.
 
     if (!answeredBy) {
       // asyncAmd="true" means AMD result comes via twilioAmdTwiml, not here
-      // Treat undefined as "pending AMD" and proceed normally
+      // DO NOT set status to "connected" - wait for twilioAmdTwiml to decide
       console.log(`📞 [${webhookId}] ⚠️ AnsweredBy is UNDEFINED - asyncAmd mode active`);
       console.log(`📞 [${webhookId}]   AMD detection is handled by twilioAmdTwiml callback`);
-      console.log(`📞 [${webhookId}]   Proceeding as human (AMD callback will correct if needed)`);
-      effectiveAnsweredBy = 'human_assumed';
-    } else {
-      effectiveAnsweredBy = answeredBy;
+      console.log(`📞 [${webhookId}]   ⛔ NOT setting status to "connected" - waiting for AMD callback`);
+      console.log(`📞 [${webhookId}]   twilioAmdTwiml will set: "connected" if human, "no_answer" if machine`);
+      console.log(`${'═'.repeat(70)}\n`);
+
+      // Set status to "amd_pending" to indicate we're waiting for AMD callback
+      // This prevents waitForConnection() from seeing "connected" prematurely
+      await twilioCallManager.updateParticipantStatus(
+        sessionId,
+        participantType,
+        'amd_pending'
+      );
+      console.log(`📞 [${webhookId}] ✅ Status set to "amd_pending" - waiting for AMD callback`);
+
+      await logCallRecord({
+        callId: sessionId,
+        status: `${participantType}_answered_amd_pending`,
+        retryCount: 0,
+        additionalData: {
+          callSid: body.CallSid,
+          answeredBy: 'undefined',
+          action: 'waiting_for_amd_callback'
+        }
+      });
+
+      return; // Return early - let twilioAmdTwiml handle the status update
     }
 
+    // If answeredBy IS provided (rare case without asyncAmd), process it here
+    const effectiveAnsweredBy = answeredBy;
     const isMachine = effectiveAnsweredBy.startsWith('machine') || effectiveAnsweredBy === 'fax';
     console.log(`📞 [${webhookId}]   isMachine: ${isMachine}`);
 
@@ -329,7 +353,7 @@ async function handleCallAnswered(
       return; // Ne pas continuer avec le traitement normal
     }
 
-    // HUMAN ANSWERED
+    // HUMAN ANSWERED (only reaches here if answeredBy was explicitly provided)
     console.log(`📞 [${webhookId}] STEP 2: HUMAN ANSWERED - Setting status to "connected"`);
     console.log(`📞 [${webhookId}]   This is the CRITICAL step that allows waitForConnection() to succeed!`);
 

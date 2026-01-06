@@ -72,7 +72,8 @@ export interface CallSessionState {
         | "ringing"
         | "connected"
         | "disconnected"
-        | "no_answer";
+        | "no_answer"
+        | "amd_pending"; // P0 FIX: Waiting for AMD callback
       callSid?: string;
       connectedAt?: admin.firestore.Timestamp;
       disconnectedAt?: admin.firestore.Timestamp;
@@ -85,7 +86,8 @@ export interface CallSessionState {
         | "ringing"
         | "connected"
         | "disconnected"
-        | "no_answer";
+        | "no_answer"
+        | "amd_pending"; // P0 FIX: Waiting for AMD callback
       callSid?: string;
       connectedAt?: admin.firestore.Timestamp;
       disconnectedAt?: admin.firestore.Timestamp;
