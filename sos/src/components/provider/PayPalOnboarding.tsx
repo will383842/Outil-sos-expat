@@ -316,10 +316,34 @@ export const PayPalOnboarding: React.FC<PayPalOnboardingProps> = ({
     );
   }
 
-  // ✅ P0 FIX: Si PayPal est vérifié, retourner null pour que le banner parent disparaisse
-  // Le reload est déclenché par onStatusChange("active") dans verifyCode()
+  // Statut connecté et vérifié - Afficher confirmation avant reload
   if (step === "success" && savedEmail) {
-    return null;
+    return (
+      <div className={`bg-green-50 border border-green-200 rounded-lg p-4 ${className}`}>
+        <div className="flex items-center">
+          <CheckCircle className="w-6 h-6 text-green-500 mr-3 flex-shrink-0" />
+          <div>
+            <h4 className="font-semibold text-green-800">
+              <FormattedMessage
+                id="provider.paypal.connected"
+                defaultMessage="PayPal connecté"
+              />
+            </h4>
+            <p className="text-sm text-green-700 mt-1">
+              <FormattedMessage
+                id="provider.paypal.ready"
+                defaultMessage="Vous pouvez recevoir des paiements via PayPal"
+              />
+            </p>
+            <p className="text-sm text-green-600 mt-2 flex items-center">
+              <Mail className="w-4 h-4 mr-1" />
+              {savedEmail}
+              <Shield className="w-4 h-4 ml-2 text-green-500" aria-label="Email vérifié" />
+            </p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Étape de vérification du code
