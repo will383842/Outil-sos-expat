@@ -1875,6 +1875,16 @@ export const stripeWebhook = onRequest(
               console.log("✅ Handled payment_intent.requires_action");
               break;
 
+            // P0 FIX: Handle 3D Secure completion - reset payment status to "authorized"
+            case "payment_intent.amount_capturable_updated":
+              console.log("💳 Processing payment_intent.amount_capturable_updated (3D Secure completed)");
+              await handlePaymentIntentAmountCapturableUpdated(
+                event.data.object as Stripe.PaymentIntent,
+                database
+              );
+              console.log("✅ Handled payment_intent.amount_capturable_updated");
+              break;
+
             case "checkout.session.completed":
               console.log("🛒 Processing checkout.session.completed");
               const cs = event.data.object as Stripe.Checkout.Session;
@@ -2931,6 +2941,142 @@ const handlePaymentIntentRequiresAction = traceFunction(
     }
   },
   "handlePaymentIntentRequiresAction",
+  "STRIPE_WEBHOOKS"
+);
+
+/**
+ * P0 FIX: Handler pour payment_intent.amount_capturable_updated
+ *
+ * Cet événement est envoyé par Stripe quand:
+ * - Le paiement avec capture_method=manual passe de "requires_action" à "requires_capture"
+ * - C'est-à-dire: 3D Secure est complété avec succès
+ *
+ * CRITIQUE: On doit remettre call_sessions.payment.status à "authorized"
+ * sinon shouldCapturePayment() retournera false et le paiement ne sera jamais capturé!
+ */
+const handlePaymentIntentAmountCapturableUpdated = traceFunction(
+  async (
+    paymentIntent: Stripe.PaymentIntent,
+    database: admin.firestore.Firestore
+  ) => {
+    try {
+      console.log(`💳 [3DS_COMPLETE] === payment_intent.amount_capturable_updated ===`);
+      console.log(`💳 [3DS_COMPLETE] PaymentIntent ID: ${paymentIntent.id}`);
+      console.log(`💳 [3DS_COMPLETE] Status: ${paymentIntent.status}`);
+      console.log(`💳 [3DS_COMPLETE] Amount capturable: ${paymentIntent.amount_capturable}`);
+
+      ultraLogger.info(
+        "STRIPE_AMOUNT_CAPTURABLE_UPDATED",
+        "3D Secure complété - Paiement prêt à être capturé",
+        {
+          paymentIntentId: paymentIntent.id,
+          status: paymentIntent.status,
+          amountCapturable: paymentIntent.amount_capturable,
+        }
+      );
+
+      // 1. Mettre à jour la collection payments
+      const paymentsQuery = database
+        .collection("payments")
+        .where("stripePaymentIntentId", "==", paymentIntent.id);
+      const paymentsSnapshot = await paymentsQuery.get();
+
+      let callSessionId: string | null = null;
+
+      if (!paymentsSnapshot.empty) {
+        const paymentDoc = paymentsSnapshot.docs[0];
+        const paymentData = paymentDoc.data();
+        callSessionId = paymentData?.callSessionId || null;
+
+        // Mettre à jour payments avec status = authorized (prêt pour capture)
+        await paymentDoc.ref.update({
+          status: "authorized",
+          requires3DSecure: true, // Marquer que 3D Secure a été utilisé
+          threeDSecureCompleted: true,
+          amountCapturable: paymentIntent.amount_capturable,
+          currency: paymentIntent.currency ?? "eur",
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        console.log(`✅ [3DS_COMPLETE] payments document updated to "authorized"`);
+      }
+
+      // 2. Fallback: chercher callSessionId dans les metadata
+      if (!callSessionId) {
+        callSessionId = paymentIntent.metadata?.callSessionId || null;
+        console.log(`🔍 [3DS_COMPLETE] callSessionId from metadata: ${callSessionId}`);
+      }
+
+      // 3. CRITIQUE: Mettre à jour call_sessions.payment.status = "authorized"
+      if (callSessionId) {
+        try {
+          const sessionRef = database.collection("call_sessions").doc(callSessionId);
+          const sessionDoc = await sessionRef.get();
+
+          if (sessionDoc.exists) {
+            const sessionData = sessionDoc.data();
+            const currentPaymentStatus = sessionData?.payment?.status;
+            const currentSessionStatus = sessionData?.status;
+
+            console.log(`📋 [3DS_COMPLETE] Current session status: ${currentSessionStatus}`);
+            console.log(`📋 [3DS_COMPLETE] Current payment.status: ${currentPaymentStatus}`);
+
+            // Mettre à jour seulement si le status est "requires_action" ou "awaiting_payment_confirmation"
+            if (
+              currentPaymentStatus === "requires_action" ||
+              currentSessionStatus === "awaiting_payment_confirmation"
+            ) {
+              await sessionRef.update({
+                status: "scheduled", // Remettre en scheduled pour que l'appel puisse être lancé
+                "payment.status": "authorized", // CRITIQUE: permet shouldCapturePayment() de retourner true
+                "payment.threeDSecureCompleted": true,
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              });
+
+              console.log(`✅ [3DS_COMPLETE] call_session ${callSessionId} updated:`);
+              console.log(`   - status: scheduled`);
+              console.log(`   - payment.status: authorized`);
+
+              ultraLogger.info(
+                "STRIPE_AMOUNT_CAPTURABLE_UPDATED",
+                "Call session mis à jour après 3D Secure",
+                {
+                  callSessionId,
+                  previousPaymentStatus: currentPaymentStatus,
+                  newPaymentStatus: "authorized",
+                }
+              );
+            } else {
+              console.log(`⚠️ [3DS_COMPLETE] Session not updated (already in correct state)`);
+              console.log(`   - currentPaymentStatus: ${currentPaymentStatus}`);
+              console.log(`   - currentSessionStatus: ${currentSessionStatus}`);
+            }
+          } else {
+            console.log(`⚠️ [3DS_COMPLETE] Call session ${callSessionId} not found`);
+          }
+        } catch (sessionError) {
+          console.error(`❌ [3DS_COMPLETE] Error updating call session:`, sessionError);
+          // Non bloquant - on continue
+        }
+      } else {
+        console.log(`⚠️ [3DS_COMPLETE] No callSessionId found - cannot update session`);
+      }
+
+      return true;
+    } catch (error: unknown) {
+      console.error(`💥 [3DS_COMPLETE] Error:`, error);
+      ultraLogger.error(
+        "STRIPE_AMOUNT_CAPTURABLE_UPDATED",
+        "Erreur traitement amount_capturable_updated",
+        {
+          error: error instanceof Error ? error.message : String(error),
+        },
+        error instanceof Error ? error : undefined
+      );
+      return false;
+    }
+  },
+  "handlePaymentIntentAmountCapturableUpdated",
   "STRIPE_WEBHOOKS"
 );
 

@@ -249,12 +249,23 @@ async function handleCallAnswered(
     console.log(`${'═'.repeat(70)}`);
 
     // P0 FIX: Vérifier si c'est un répondeur qui a répondu (AMD - Answering Machine Detection)
-    // Les valeurs possibles pour une machine: machine_start, machine_end_beep, machine_end_silence, machine_end_other, fax
-    const answeredBy = body.AnsweredBy || 'human';
-    const isMachine = answeredBy.startsWith('machine') || answeredBy === 'fax';
+    // Avec machineDetection: "DetectMessageEnd", AnsweredBy devrait TOUJOURS être défini
+    // Valeurs possibles: human, machine_start, machine_end_beep, machine_end_silence, machine_end_other, fax
+    const answeredBy = body.AnsweredBy;
 
     console.log(`📞 [${webhookId}] STEP 1: AMD Detection`);
-    console.log(`📞 [${webhookId}]   answeredBy value: "${answeredBy}"`);
+    console.log(`📞 [${webhookId}]   answeredBy value: "${answeredBy || 'UNDEFINED'}"`);
+
+    // P0 FIX: Si AnsweredBy est undefined, on ne peut pas savoir si c'est un humain ou une machine
+    // Dans ce cas, on attend le prochain webhook avec le résultat AMD
+    if (!answeredBy) {
+      console.log(`📞 [${webhookId}] ⚠️ AnsweredBy is UNDEFINED - waiting for AMD result webhook`);
+      console.log(`📞 [${webhookId}]   NOT setting status to "connected" yet`);
+      console.log(`${'═'.repeat(70)}\n`);
+      return; // Ne pas traiter ce webhook, attendre celui avec AnsweredBy
+    }
+
+    const isMachine = answeredBy.startsWith('machine') || answeredBy === 'fax';
     console.log(`📞 [${webhookId}]   isMachine: ${isMachine}`);
 
     if (isMachine) {

@@ -103,7 +103,8 @@ export interface CallSessionState {
   };
   payment: {
     intentId: string;
-    status: "pending" | "authorized" | "captured" | "refunded" | "cancelled" | "failed";
+    // P0 FIX: Added "requires_action" for 3D Secure payments
+    status: "pending" | "authorized" | "captured" | "refunded" | "cancelled" | "failed" | "requires_action";
     amount: number;
     capturedAt?: admin.firestore.Timestamp;
     refundedAt?: admin.firestore.Timestamp;
@@ -1066,12 +1067,17 @@ export class TwilioCallManager {
           // record: true,
           // recordingStatusCallback: `${base}/twilioRecordingWebhook`,
           // recordingStatusCallbackMethod: "POST",
-          // P0 FIX: Activer AMD pour détecter les répondeurs et éviter de laisser des messages
-          // Si un répondeur répond, on raccroche immédiatement et on compte comme "no_answer"
-          machineDetection: "Enable",
-          machineDetectionTimeout: 10,
-          // Callback pour recevoir le résultat AMD (human ou machine)
-          machineDetectionSilenceTimeout: 3000, // 3 secondes de silence avant de considérer comme humain
+          // P0 FIX: AMD (Answering Machine Detection) pour éviter les messages vocaux
+          // IMPORTANT: Utiliser "DetectMessageEnd" au lieu de "Enable":
+          // - "Enable" joue le TwiML IMMÉDIATEMENT avant de connaître le résultat AMD
+          // - "DetectMessageEnd" attend que AMD termine AVANT de jouer le TwiML
+          // Avec "DetectMessageEnd", si un répondeur répond:
+          // 1. Twilio détecte la machine (analyse le message du répondeur)
+          // 2. Webhook envoyé avec AnsweredBy="machine_*" AVANT que TwiML ne joue
+          // 3. Notre code peut raccrocher AVANT que la musique ne joue
+          machineDetection: "DetectMessageEnd",
+          machineDetectionTimeout: 30, // Max 30s pour l'analyse AMD
+          machineDetectionSilenceTimeout: 5000, // 5s de silence = humain
         });
         const twilioApiDuration = Date.now() - twilioApiStartTime;
 
@@ -1834,12 +1840,24 @@ export class TwilioCallManager {
       return false;
     }
     
-    if (session.payment.status !== "authorized") {
-      console.log(`📄 ❌ Payment status check failed: ${session.payment.status} !== "authorized" - returning false`);
+    // P0 FIX: Accept both "authorized" and "requires_action" (3D Secure)
+    // When 3D Secure is used, the webhook payment_intent.amount_capturable_updated
+    // should have set status to "authorized". But if the webhook is delayed,
+    // we also accept "requires_action" and let Stripe reject if not ready.
+    const validPaymentStatuses = ["authorized", "requires_action"];
+
+    if (!validPaymentStatuses.includes(session.payment.status)) {
+      console.log(`📄 ❌ Payment status check failed: ${session.payment.status} not in ${validPaymentStatuses.join(", ")} - returning false`);
       return false;
     }
-    
-    console.log(`📄 ✅ Payment status check passed: ${session.payment.status} === "authorized"`);
+
+    if (session.payment.status === "requires_action") {
+      console.log(`📄 ⚠️ Payment status is "requires_action" (3D Secure) - attempting capture anyway`);
+      console.log(`📄    If 3D Secure wasn't completed, Stripe will reject the capture`);
+    } else {
+      console.log(`📄 ✅ Payment status check passed: ${session.payment.status} === "authorized"`);
+    }
+
     console.log(`📄 ✅ All checks passed - returning true`);
     return true;
   }
