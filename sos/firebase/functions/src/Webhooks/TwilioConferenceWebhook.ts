@@ -5,10 +5,13 @@ import { logError } from '../utils/logs/logError';
 import { Request, Response } from 'express';
 import * as admin from 'firebase-admin';
 import { validateTwilioWebhookSignature, TWILIO_AUTH_TOKEN_SECRET, TWILIO_ACCOUNT_SID_SECRET } from '../lib/twilio';
+import { STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST } from '../lib/stripe';
 
 // Ensure TypeScript recognizes the secrets are used in the secrets array
 void TWILIO_AUTH_TOKEN_SECRET;
 void TWILIO_ACCOUNT_SID_SECRET;
+void STRIPE_SECRET_KEY_LIVE;
+void STRIPE_SECRET_KEY_TEST;
 
 interface TwilioConferenceWebhookBody {
   ConferenceSid: string;
@@ -45,8 +48,8 @@ export const twilioConferenceWebhook = onRequest(
     maxInstances: 3,
     minInstances: 0,
     concurrency: 1,
-    // P0 CRITICAL FIX: Add Twilio secrets for signature validation (both needed!)
-    secrets: [TWILIO_AUTH_TOKEN_SECRET, TWILIO_ACCOUNT_SID_SECRET]
+    // P0 CRITICAL FIX: Add Twilio secrets for signature validation + Stripe secrets for payment capture
+    secrets: [TWILIO_AUTH_TOKEN_SECRET, TWILIO_ACCOUNT_SID_SECRET, STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST]
   },
   async (req: Request, res: Response) => {
     const confWebhookId = `conf_${Date.now().toString(36)}`;
