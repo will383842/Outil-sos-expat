@@ -80,9 +80,10 @@ const InvoiceRow: React.FC<InvoiceRowProps> = ({ invoice, locale, intl }) => {
     }).format(date);
   };
 
-  const formatAmount = (amount: number, currency: string) => {
+  const formatAmount = (amount: number | undefined, currency: string) => {
     const symbol = currency === 'EUR' ? '€' : '$';
-    const formatted = amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const safeAmount = amount ?? 0;
+    const formatted = safeAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     return `${formatted} ${symbol}`;
   };
 
