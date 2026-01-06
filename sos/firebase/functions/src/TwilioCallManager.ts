@@ -187,6 +187,33 @@ const VOICE_LOCALES: Record<string, string> = {
   pl: "pl-PL",
 };
 
+// Full language names for logging and display
+const LANGUAGE_NAMES: Record<string, string> = {
+  fr: "Français",
+  en: "English",
+  pt: "Português",
+  es: "Español",
+  de: "Deutsch",
+  ru: "Русский",
+  zh: "中文",
+  ar: "العربية",
+  hi: "हिन्दी",
+  bn: "বাংলা",
+  ur: "اردو",
+  id: "Bahasa Indonesia",
+  ja: "日本語",
+  tr: "Türkçe",
+  it: "Italiano",
+  ko: "한국어",
+  vi: "Tiếng Việt",
+  fa: "فارسی",
+  pl: "Polski",
+};
+
+function getLanguageName(langKey: string): string {
+  return LANGUAGE_NAMES[langKey] || langKey.toUpperCase();
+}
+
 // =============================
 // Helpers langue & prompts
 // =============================
@@ -732,8 +759,8 @@ export class TwilioCallManager {
     const providerLangKey = providerLangs.find(l => supportedLangs.has(l as LangCode)) || "en";
     const providerTtsLocale = localeFor(providerLangKey);
 
-    console.log(`🌍 [LANG] Client language: ${clientLangKey} (${clientTtsLocale})`);
-    console.log(`🌍 [LANG] Provider language: ${providerLangKey} (${providerTtsLocale})`);
+    console.log(`🌍 [LANG] Client language: ${getLanguageName(clientLangKey)} (${clientLangKey})`);
+    console.log(`🌍 [LANG] Provider language: ${getLanguageName(providerLangKey)} (${providerLangKey})`);
 
     await this.saveWithRetry(() =>
       this.db.collection("call_sessions").doc(sessionId).update({
@@ -751,7 +778,7 @@ export class TwilioCallManager {
     const clientPhone = decryptPhoneNumber(callSession.participants.client.phone);
     const providerPhone = decryptPhoneNumber(callSession.participants.provider.phone);
 
-    console.log(`📞 Étape 1: Appel client ${sessionId} (langue: ${clientLangKey})`);
+    console.log(`📞 Étape 1: Appel client ${sessionId} (langue: ${getLanguageName(clientLangKey)})`);
     const clientConnected = await this.callParticipantWithRetries(
       sessionId,
       "client",
@@ -770,7 +797,7 @@ export class TwilioCallManager {
 
     await this.updateCallSessionStatus(sessionId, "provider_connecting");
 
-    console.log(`📞 Étape 2: Appel prestataire ${sessionId} (langue: ${providerLangKey})`);
+    console.log(`📞 Étape 2: Appel prestataire ${sessionId} (langue: ${getLanguageName(providerLangKey)})`);
     const providerConnected = await this.callParticipantWithRetries(
       sessionId,
       "provider",

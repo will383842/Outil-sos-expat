@@ -831,8 +831,8 @@ export const updatePaymentRecord = async (
 // };
 
 export const createReviewRecord = async (reviewData: Partial<Review>) => {
-  // Auto-publication si note >= 4
-  const auto = (Number(reviewData.rating) || 0) >= 4;
+  // Auto-publication de TOUS les avis (toutes notes confondues)
+  const auto = true;
   const currentUser = auth.currentUser;
 
   // Check authentication first
@@ -840,23 +840,41 @@ export const createReviewRecord = async (reviewData: Partial<Review>) => {
     throw new Error("User is not authenticated");
   }
 
-  // Use transaction for atomicity - prevents race conditions on uniqueness check
-  return await runTransaction(db, async (transaction) => {
-    // Check if review already exists for this call (unicité)
-    if (reviewData.callId) {
-      const existingReviewQuery = query(
-        collection(db, "reviews"),
-        where("callId", "==", reviewData.callId),
-        where("clientId", "==", currentUser.uid),
-        fsLimit(1)
-      );
-      const existingReviewSnap = await getDocs(existingReviewQuery);
+  // Check if review already exists for this call BEFORE transaction (unicité)
+  if (reviewData.callId) {
+    const existingReviewQuery = query(
+      collection(db, "reviews"),
+      where("callId", "==", reviewData.callId),
+      where("clientId", "==", currentUser.uid),
+      fsLimit(1)
+    );
+    const existingReviewSnap = await getDocs(existingReviewQuery);
 
-      if (!existingReviewSnap.empty) {
-        throw new Error("You have already submitted a review for this call");
+    if (!existingReviewSnap.empty) {
+      throw new Error("You have already submitted a review for this call");
+    }
+  }
+
+  // Use transaction for atomicity
+  // CRITICAL: All reads MUST happen BEFORE all writes in Firestore transactions
+  return await runTransaction(db, async (transaction) => {
+    // === PHASE 1: ALL READS FIRST ===
+    let sosSnap = null;
+    let userSnap = null;
+    const providerId = reviewData.providerId as string | undefined;
+
+    // Only read provider docs if we need to update stats (auto-publish + has rating)
+    if (auto && providerId && truthy(reviewData.rating)) {
+      const sosRef = doc(db, "sos_profiles", providerId);
+      sosSnap = await transaction.get(sosRef);
+
+      if (sosSnap.exists()) {
+        const userRef = doc(db, "users", providerId);
+        userSnap = await transaction.get(userRef);
       }
     }
 
+    // === PHASE 2: ALL WRITES AFTER ===
     const payload: Dict = {
       ...(reviewData as Dict),
       status: auto ? "published" : "pending",
@@ -873,38 +891,30 @@ export const createReviewRecord = async (reviewData: Partial<Review>) => {
 
     // Update provider aggregates ONLY for auto-published reviews (rating >= 4)
     // Pending reviews will have their stats updated when admin approves them
-    if (auto && reviewData.providerId && truthy(reviewData.rating)) {
-      const providerId = reviewData.providerId as string;
+    if (auto && providerId && truthy(reviewData.rating) && sosSnap?.exists()) {
+      const p = asDict(sosSnap.data());
+      const currentRating = getNum(p.rating, 0);
+      const currentCount = getNum(p.reviewCount, 0);
+      const newRating =
+        (currentRating * currentCount + Number(reviewData.rating)) /
+        (currentCount + 1);
 
-      // Get provider document
+      // Update sos_profiles
       const sosRef = doc(db, "sos_profiles", providerId);
-      const sosSnap = await transaction.get(sosRef);
+      transaction.update(sosRef, {
+        rating: newRating,
+        reviewCount: currentCount + 1,
+        updatedAt: serverTimestamp(),
+      });
 
-      if (sosSnap.exists()) {
-        const p = asDict(sosSnap.data());
-        const currentRating = getNum(p.rating, 0);
-        const currentCount = getNum(p.reviewCount, 0);
-        const newRating =
-          (currentRating * currentCount + Number(reviewData.rating)) /
-          (currentCount + 1);
-
-        // Update sos_profiles
-        transaction.update(sosRef, {
+      // Update users document
+      if (userSnap?.exists()) {
+        const userRef = doc(db, "users", providerId);
+        transaction.update(userRef, {
           rating: newRating,
           reviewCount: currentCount + 1,
           updatedAt: serverTimestamp(),
         });
-
-        // Update users document
-        const userRef = doc(db, "users", providerId);
-        const userSnap = await transaction.get(userRef);
-        if (userSnap.exists()) {
-          transaction.update(userRef, {
-            rating: newRating,
-            reviewCount: currentCount + 1,
-            updatedAt: serverTimestamp(),
-          });
-        }
       }
     }
 

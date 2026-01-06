@@ -409,7 +409,7 @@ const OptimizedHomePage: React.FC = () => {
   const { language } = useApp();
 
   // ======= Aggregate Rating for Google Stars =======
-  const aggregateRating = useAggregateRatingWithDefault();
+  const aggregateRating = useAggregateRatingWithDefault({ minRating: 4 });
 
   // ======= URL Construction =======
   const currentPath = "/";

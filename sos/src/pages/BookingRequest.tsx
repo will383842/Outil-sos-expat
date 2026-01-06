@@ -1951,6 +1951,7 @@ const BookingRequest: React.FC = () => {
         sessionStorage.setItem("serviceData", JSON.stringify(serviceData));
 
         // Résumé de la demande pour CallCheckout (utilisé pour notifier le prestataire)
+        // P0 FIX: Include all booking form data for SMS notifications
         sessionStorage.setItem(
           "bookingMeta",
           JSON.stringify({
@@ -1958,6 +1959,8 @@ const BookingRequest: React.FC = () => {
             description: (bookingRequest.description || "").toString().trim(),
             country: bookingRequest.clientCurrentCountry || "",
             clientFirstName: bookingRequest.clientFirstName,
+            clientNationality: bookingRequest.clientNationality || "",
+            clientLanguages: bookingRequest.clientLanguages || [],
           })
         );
 

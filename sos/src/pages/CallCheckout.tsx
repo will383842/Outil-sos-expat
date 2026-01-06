@@ -149,6 +149,12 @@ interface CreateAndScheduleCallData {
   providerLanguages?: string[];
   clientWhatsapp?: string;
   callSessionId?: string;
+  // P0 FIX: Add booking form data for SMS notifications
+  bookingTitle?: string;
+  bookingDescription?: string;
+  clientCurrentCountry?: string;
+  clientFirstName?: string;
+  clientNationality?: string;
 }
 
 type StepType = "payment" | "calling" | "completed";
@@ -1700,6 +1706,12 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
             providerLanguages: provider.languagesSpoken ||
               provider.languages || ["fr"],
             callSessionId: callSessionId,
+            // P0 FIX: Pass booking form data for SMS notifications to provider
+            bookingTitle: bookingMeta?.title || "",
+            bookingDescription: bookingMeta?.description || "",
+            clientCurrentCountry: bookingMeta?.country || "",
+            clientFirstName: bookingMeta?.clientFirstName || user?.displayName?.split(" ")[0] || "",
+            clientNationality: bookingMeta?.clientNationality || "",
           };
 
           console.log("[createAndScheduleCall] data", callData);

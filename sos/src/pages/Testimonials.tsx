@@ -291,7 +291,7 @@ const Testimonials: React.FC = () => {
   const navigate = useLocaleNavigate();
 
   // ✅ Aggregate Rating for Google Rich Snippets
-  const aggregateRating = useAggregateRatingWithDefault();
+  const aggregateRating = useAggregateRatingWithDefault({ minRating: 4 });
 
   // ✅ Check if current language is RTL
   const isRTL = language === 'ar';
@@ -426,12 +426,13 @@ const Testimonials: React.FC = () => {
       try {
         const firestoreReviews = await getAllReviews({
           status: "published",
+          minRating: 4, // Only show reviews with 4+ stars on public pages
           limit: 100,
         });
 
         // Map Firestore reviews to ReviewType with all required fields
         realReviews = firestoreReviews
-          .filter((r) => r.isPublic === true)
+          .filter((r) => r.isPublic === true && r.rating >= 4)
           .map((r) => ({
             id: r.id,
             callId: r.callId || "",
