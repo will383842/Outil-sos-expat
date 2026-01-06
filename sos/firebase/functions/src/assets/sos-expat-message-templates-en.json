@@ -182,7 +182,7 @@
         "whatsapp": false
       },
       "sms": {
-        "text": "SOS Expat: New paid booking!\n\nClient: {{client.firstName}} ({{request.country}})\nTitle: {{request.title}}\nDetails: {{request.description}}\nAmount: {{booking.amount}} {{booking.currency}}\n\nLog in to see the details."
+        "text": "SOS Expat: New booking!\n\nClient: {{client.firstName}}\nNationality: {{client.nationality}}\nIntervention country: {{request.country}}\nSpoken languages: {{clientLanguagesFormatted}}\n\nTitle: {{request.title}}\nDetails: {{request.description}}\n\nLog in to your AI tool for help with your responses."
       },
       "inapp": {
         "title": "New paid booking",

@@ -36,7 +36,13 @@ interface CreateCallRequest {
   clientLanguages?: string[];
   providerLanguages?: string[];
   clientWhatsapp?: string;
-  callSessionId?: string;  
+  callSessionId?: string;
+  // P0 FIX: Booking form data for SMS notifications
+  bookingTitle?: string;
+  bookingDescription?: string;
+  clientCurrentCountry?: string;
+  clientFirstName?: string;
+  clientNationality?: string;
 }
 
 /**
@@ -49,6 +55,35 @@ interface CreateCallRequest {
 export function assertE164(phone: string, who: 'provider' | 'client') {
   if (!/^\+[1-9]\d{8,14}$/.test(phone || '')) throw new Error(`Invalid ${who} phone: ${phone}`);
   return phone;
+}
+
+/**
+ * Convertit les codes langue ISO en noms complets
+ */
+const LANGUAGE_NAMES: Record<string, string> = {
+  fr: 'Français',
+  en: 'English',
+  es: 'Español',
+  de: 'Deutsch',
+  pt: 'Português',
+  ru: 'Русский',
+  ar: 'العربية',
+  hi: 'हिन्दी',
+  ch: '中文',
+  zh: '中文',
+  it: 'Italiano',
+  nl: 'Nederlands',
+  pl: 'Polski',
+  tr: 'Türkçe',
+  ja: '日本語',
+  ko: '한국어',
+};
+
+function formatLanguages(languages: string[]): string {
+  if (!languages || languages.length === 0) return 'Non spécifié';
+  return languages
+    .map(code => LANGUAGE_NAMES[code.toLowerCase()] || code.toUpperCase())
+    .join(', ');
 }
 
 /**
@@ -126,7 +161,13 @@ export const createAndScheduleCallHTTPS = onCall(
         delayMinutes = 5, // ✅ Garde pour compatibilité mais ne sera plus utilisé
         clientLanguages,
         providerLanguages,
-        clientWhatsapp} = request.data;
+        clientWhatsapp,
+        // P0 FIX: Booking form data for SMS notifications
+        bookingTitle,
+        bookingDescription,
+        clientCurrentCountry,
+        clientFirstName,
+        clientNationality} = request.data;
 
       // ✅ Évite l'avertissement TypeScript 6133 (variable assigned but never used)
       void delayMinutes;
@@ -482,7 +523,11 @@ export const createAndScheduleCallHTTPS = onCall(
         const providerName = providerDocData?.displayName || providerDocData?.firstName || 'Expert';
         const clientEmail = clientData?.email || '';
         const providerEmail = providerDocData?.email || '';
-        const title = serviceType === 'lawyer_call' ? 'Consultation avocat' : 'Consultation expat';
+        // P0 FIX: Use actual booking form data for SMS notifications instead of hardcoded values
+        const title = bookingTitle || (serviceType === 'lawyer_call' ? 'Consultation avocat' : 'Consultation expat');
+        const description = bookingDescription || `${title} - ${serviceType}`;
+        const interventionCountry = clientCurrentCountry || clientData?.country || 'N/A';
+        const clientDisplayName = clientFirstName || clientData?.firstName || clientName;
 
         console.log(`📨 [${requestId}]   - scheduledTime: ${scheduledTime.toISOString()}`);
         console.log(`📨 [${requestId}]   - language: ${language}`);
@@ -554,24 +599,27 @@ export const createAndScheduleCallHTTPS = onCall(
               callSessionId: callSession.id,
               // Structured context to match SMS template variables
               client: {
-                firstName: clientName,
-                name: clientName,
+                firstName: clientDisplayName,
+                name: clientDisplayName,
+                nationality: clientNationality || 'N/A',
               },
               request: {
-                country: clientData?.country || 'N/A',
+                country: interventionCountry,
                 title: title,
-                description: `${title} - ${serviceType}`,
+                description: description,
               },
               booking: {
                 amount: amount || 0,
                 currency: 'EUR',  // Default currency for SOS Expat
               },
               // Legacy flat fields for inapp compatibility
-              clientName,
-              clientCountry: clientData?.country || 'N/A',
+              clientName: clientDisplayName,
+              clientCountry: interventionCountry,
               clientLanguage: language,
+              clientLanguages: clientLanguages || [language],
+              clientLanguagesFormatted: formatLanguages(clientLanguages || [language]),
               title,
-              description: `${title} - ${serviceType}`,
+              description,
               scheduledTime: scheduledTime.toISOString(),
             },
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -581,10 +629,12 @@ export const createAndScheduleCallHTTPS = onCall(
           console.log(`📨 [${requestId}]     - locale: ${providerEventData.locale}`);
           console.log(`📨 [${requestId}]     - to.uid: ${providerEventData.to.uid}`);
           console.log(`📨 [${requestId}]     - to.phone: ${providerEventData.to.phone ? providerEventData.to.phone.substring(0, 5) + '***' : 'NULL'}`);
-          console.log(`📨 [${requestId}]     - context.client.firstName: ${providerEventData.context.client.firstName}`);
-          console.log(`📨 [${requestId}]     - context.request.country: ${providerEventData.context.request.country}`);
-          console.log(`📨 [${requestId}]     - context.request.title: ${providerEventData.context.request.title}`);
-          console.log(`📨 [${requestId}]     - context.request.description: ${providerEventData.context.request.description}`);
+          console.log(`📨 [${requestId}]     - context.client.firstName: ${providerEventData.context.client.firstName} (from booking form: ${!!clientFirstName})`);
+          console.log(`📨 [${requestId}]     - context.client.nationality: ${providerEventData.context.client.nationality} (from booking form: ${!!clientNationality})`);
+          console.log(`📨 [${requestId}]     - context.request.country: ${providerEventData.context.request.country} (from booking form: ${!!clientCurrentCountry})`);
+          console.log(`📨 [${requestId}]     - context.request.title: ${providerEventData.context.request.title} (from booking form: ${!!bookingTitle})`);
+          console.log(`📨 [${requestId}]     - context.request.description: ${providerEventData.context.request.description} (from booking form: ${!!bookingDescription})`);
+          console.log(`📨 [${requestId}]     - context.clientLanguages: ${JSON.stringify(providerEventData.context.clientLanguages)}`);
           console.log(`📨 [${requestId}]     - context.booking.amount: ${providerEventData.context.booking.amount}`);
           console.log(`📨 [${requestId}]     - context.booking.currency: ${providerEventData.context.booking.currency}`);
           console.log(`📨 [${requestId}]   Writing to Firestore message_events...`);
@@ -603,17 +653,19 @@ export const createAndScheduleCallHTTPS = onCall(
         const outilApiKey = OUTIL_SYNC_API_KEY.value().trim();
         if (outilApiKey) {
           const OUTIL_INGEST_ENDPOINT = 'https://europe-west1-outils-sos-expat.cloudfunctions.net/ingestBooking';
+          // P0 FIX: Use real booking form data instead of defaults
           const outilPayload = {
-            clientFirstName: clientData?.firstName || clientName,
+            clientFirstName: clientDisplayName,
             clientLastName: clientData?.lastName || '',
-            clientName: clientName,
+            clientName: clientDisplayName,
             clientEmail: clientEmail,
             clientPhone: decryptedClientPhone,
             clientWhatsapp: clientWhatsapp || decryptedClientPhone,  // Required by schema
-            clientCurrentCountry: clientData?.country || '',
-            clientLanguages: clientLanguages || ['fr'],
+            clientCurrentCountry: interventionCountry,
+            clientNationality: clientNationality || '',
+            clientLanguages: clientLanguages || [language],
             title,
-            description: `${title} - ${serviceType}`,
+            description,
             serviceType,
             priority: 'medium',  // Must be: low, medium, high, urgent, critical
             providerId,
@@ -632,6 +684,11 @@ export const createAndScheduleCallHTTPS = onCall(
               paymentIntentId,
               amount,
               createdAt: new Date().toISOString(),
+              // P0 FIX: Include booking form data for audit
+              bookingTitle,
+              bookingDescription,
+              clientCurrentCountry,
+              clientNationality,
             },
           };
 

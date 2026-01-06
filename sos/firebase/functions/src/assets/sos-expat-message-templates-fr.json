@@ -182,7 +182,7 @@
         "whatsapp": false
       },
       "sms": {
-        "text": "SOS Expat: Nouvelle réservation payée!\n\nClient: {{client.firstName}} ({{request.country}})\nTitre: {{request.title}}\nDétail: {{request.description}}\nMontant: {{booking.amount}} {{booking.currency}}\n\nConnectez-vous pour voir les détails."
+        "text": "SOS Expat: Nouvelle réservation!\n\nClient: {{client.firstName}}\nNationalité: {{client.nationality}}\nPays d'intervention: {{request.country}}\nLangues parlées: {{clientLanguagesFormatted}}\n\nTitre: {{request.title}}\nDétail: {{request.description}}\n\nConnectez-vous à votre outil IA pour vous aider dans vos réponses."
       },
       "inapp": {
         "title": "Nouvelle réservation payée",

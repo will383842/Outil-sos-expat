@@ -208,21 +208,7 @@ function availablePromptLangs(): LangCode[] {
   return providerLangs.filter((l) => clientLangs.includes(l));
 }
 
-function pickSessionLanguage(
-  clientLangs: string[],
-  providerLangs: string[]
-): string {
-  const supported = new Set(availablePromptLangs());
-  const c = normalizeLangList(clientLangs).filter((l) =>
-    supported.has(l as LangCode)
-  );
-  const p = normalizeLangList(providerLangs).filter((l) =>
-    supported.has(l as LangCode)
-  );
-  for (const lang of c) if (p.includes(lang)) return lang;
-  if (c.length) return c[0];
-  return "en";
-}
+// pickSessionLanguage removed - now each participant gets their own language (P2 fix)
 
 function localeFor(langKey: string): string {
   return VOICE_LOCALES[langKey] || VOICE_LOCALES["en"];
@@ -729,17 +715,32 @@ export class TwilioCallManager {
       callSession.metadata.providerLanguages = ["en"];
     }
 
-    const langKey = pickSessionLanguage(
-      callSession.metadata.clientLanguages || ["en"],
-      callSession.metadata.providerLanguages || ["en"]
-    );
+    // =========================================================================
+    // P2 FIX: Each participant hears the message in THEIR OWN language
+    // - Client hears in client's first language
+    // - Provider hears in provider's first language
+    // =========================================================================
+    const supportedLangs = new Set(availablePromptLangs());
 
-    const ttsLocale = localeFor(langKey);
+    // Get client's preferred language (first one that's supported, or "en")
+    const clientLangs = normalizeLangList(callSession.metadata.clientLanguages || ["en"]);
+    const clientLangKey = clientLangs.find(l => supportedLangs.has(l as LangCode)) || "en";
+    const clientTtsLocale = localeFor(clientLangKey);
+
+    // Get provider's preferred language (first one that's supported, or "en")
+    const providerLangs = normalizeLangList(callSession.metadata.providerLanguages || ["en"]);
+    const providerLangKey = providerLangs.find(l => supportedLangs.has(l as LangCode)) || "en";
+    const providerTtsLocale = localeFor(providerLangKey);
+
+    console.log(`🌍 [LANG] Client language: ${clientLangKey} (${clientTtsLocale})`);
+    console.log(`🌍 [LANG] Provider language: ${providerLangKey} (${providerTtsLocale})`);
 
     await this.saveWithRetry(() =>
       this.db.collection("call_sessions").doc(sessionId).update({
-        "metadata.selectedLanguage": langKey,
-        "metadata.ttsLocale": ttsLocale,
+        "metadata.clientLanguage": clientLangKey,
+        "metadata.clientTtsLocale": clientTtsLocale,
+        "metadata.providerLanguage": providerLangKey,
+        "metadata.providerTtsLocale": providerTtsLocale,
         "metadata.updatedAt": admin.firestore.Timestamp.now(),
       })
     );
@@ -750,15 +751,15 @@ export class TwilioCallManager {
     const clientPhone = decryptPhoneNumber(callSession.participants.client.phone);
     const providerPhone = decryptPhoneNumber(callSession.participants.provider.phone);
 
-    console.log(`📞 Étape 1: Appel client ${sessionId}`);
+    console.log(`📞 Étape 1: Appel client ${sessionId} (langue: ${clientLangKey})`);
     const clientConnected = await this.callParticipantWithRetries(
       sessionId,
       "client",
       clientPhone,
       callSession.conference.name,
       callSession.metadata.maxDuration,
-      ttsLocale,
-      langKey
+      clientTtsLocale,
+      clientLangKey
     );
     console.log("client connected :", clientConnected);
 
@@ -769,15 +770,15 @@ export class TwilioCallManager {
 
     await this.updateCallSessionStatus(sessionId, "provider_connecting");
 
-    console.log(`📞 Étape 2: Appel prestataire (avocat) ${sessionId}`);
+    console.log(`📞 Étape 2: Appel prestataire ${sessionId} (langue: ${providerLangKey})`);
     const providerConnected = await this.callParticipantWithRetries(
       sessionId,
       "provider",
       providerPhone,
       callSession.conference.name,
       callSession.metadata.maxDuration,
-      ttsLocale,
-      langKey,
+      providerTtsLocale,
+      providerLangKey,
       15_000
     );
     console.log("provider connected : ", providerConnected);
