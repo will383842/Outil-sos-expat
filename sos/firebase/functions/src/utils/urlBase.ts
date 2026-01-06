@@ -9,6 +9,7 @@ const FUNCTIONS_BASE_URL_PARAM = defineString("FUNCTIONS_BASE_URL");
 const TWILIO_CALL_WEBHOOK_URL_PARAM = defineString("TWILIO_CALL_WEBHOOK_URL");
 const TWILIO_CONFERENCE_WEBHOOK_URL_PARAM = defineString("TWILIO_CONFERENCE_WEBHOOK_URL");
 const PROVIDER_NO_ANSWER_TWIML_URL_PARAM = defineString("PROVIDER_NO_ANSWER_TWIML_URL");
+const TWILIO_AMD_TWIML_URL_PARAM = defineString("TWILIO_AMD_TWIML_URL");
 
 function getProjectId(): string {
   return (
@@ -128,6 +129,41 @@ export function getProviderNoAnswerTwiMLUrl(): string {
   const base = getFunctionsBaseUrl();
   const fallbackUrl = `${base}/providerNoAnswerTwiML`;
   console.warn(`⚠️ [urlBase] PROVIDER_NO_ANSWER_TWIML_URL not set! Using legacy fallback: ${fallbackUrl}`);
+  console.warn(`⚠️ [urlBase] This may NOT work with Firebase Functions v2 (Cloud Run)!`);
+  return fallbackUrl;
+}
+
+/**
+ * P0 CRITICAL FIX: Get the correct Cloud Run URL for twilioAmdTwiml
+ * This endpoint returns TwiML AFTER checking AMD result (human vs machine).
+ * Using this prevents voicemail from recording our conference message.
+ *
+ * Format: https://functionname-projectnumber.region.run.app
+ * Example: https://twilioamdtwiml-5tfnuxa2hq-ew.a.run.app
+ */
+export function getTwilioAmdTwimlUrl(): string {
+  // 1. Try defineString param first (Firebase v2 recommended)
+  try {
+    const fromParam = (TWILIO_AMD_TWIML_URL_PARAM.value() || "").trim();
+    if (fromParam) {
+      console.log(`🔗 [urlBase] TWILIO_AMD_TWIML_URL from Firebase param: ${fromParam}`);
+      return fromParam;
+    }
+  } catch {
+    // defineString not available
+  }
+
+  // 2. Try process.env
+  const fromEnv = (process.env.TWILIO_AMD_TWIML_URL || "").trim();
+  if (fromEnv) {
+    console.log(`🔗 [urlBase] TWILIO_AMD_TWIML_URL from process.env: ${fromEnv}`);
+    return fromEnv;
+  }
+
+  // 3. Fallback to legacy format (WARNING: may not work with Firebase v2!)
+  const base = getFunctionsBaseUrl();
+  const fallbackUrl = `${base}/twilioAmdTwiml`;
+  console.warn(`⚠️ [urlBase] TWILIO_AMD_TWIML_URL not set! Using legacy fallback: ${fallbackUrl}`);
   console.warn(`⚠️ [urlBase] This may NOT work with Firebase Functions v2 (Cloud Run)!`);
   return fallbackUrl;
 }

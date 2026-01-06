@@ -8,6 +8,14 @@ import * as admin from 'firebase-admin';
 import { Request } from 'firebase-functions/v2/https';
 import { validateTwilioWebhookSignature, TWILIO_AUTH_TOKEN_SECRET, TWILIO_ACCOUNT_SID_SECRET } from '../lib/twilio';
 import { setProviderBusy } from '../callables/providerStatusManager';
+import voicePromptsJson from '../content/voicePrompts.json';
+
+// Helper function to get intro text based on participant type and language
+function getIntroText(participant: "provider" | "client", langKey: string): string {
+  const prompts = voicePromptsJson as Record<string, Record<string, string>>;
+  const table = participant === "provider" ? prompts.provider_intro : prompts.client_intro;
+  return table[langKey] ?? table.en ?? "Please hold.";
+}
 
 
 interface TwilioCallWebhookBody {
@@ -255,16 +263,29 @@ async function handleCallAnswered(
 
     console.log(`📞 [${webhookId}] STEP 1: AMD Detection`);
     console.log(`📞 [${webhookId}]   answeredBy value: "${answeredBy || 'UNDEFINED'}"`);
+    console.log(`📞 [${webhookId}]   participantType: ${participantType}`);
 
-    // P0 FIX: Si AnsweredBy est undefined, on traite comme humain (défaut sûr)
-    // AVANT: On retournait sans setter "connected" → waitForConnection timeout → provider jamais appelé
-    // MAINTENANT: On traite comme humain pour ne pas bloquer le flux d'appels
-    // Si c'est vraiment une machine, l'appel échouera de toute façon et sera remboursé
-    const effectiveAnsweredBy = answeredBy || 'human_assumed';
+    // P0 FIX v2: Handle undefined AnsweredBy based on participant type
+    // - For CLIENT: If AnsweredBy is undefined, treat as voicemail/no_answer (safer - triggers retry)
+    //   This prevents calling the provider when the client's voicemail answered
+    // - For PROVIDER: If AnsweredBy is undefined, treat as human (safer - don't lose the connection)
+    //   The client already answered and is waiting, so we should connect
+    let effectiveAnsweredBy: string;
 
     if (!answeredBy) {
-      console.log(`📞 [${webhookId}] ⚠️ AnsweredBy is UNDEFINED - defaulting to human (safe default)`);
-      console.log(`📞 [${webhookId}]   Proceeding with "connected" status to unblock waitForConnection()`);
+      if (participantType === 'client') {
+        // CLIENT: undefined AnsweredBy likely means voicemail → treat as no_answer to retry
+        console.log(`📞 [${webhookId}] ⚠️ CLIENT AnsweredBy is UNDEFINED - treating as VOICEMAIL (safe default)`);
+        console.log(`📞 [${webhookId}]   This will trigger retry instead of calling provider`);
+        effectiveAnsweredBy = 'machine_assumed';
+      } else {
+        // PROVIDER: undefined AnsweredBy → treat as human (client is waiting!)
+        console.log(`📞 [${webhookId}] ⚠️ PROVIDER AnsweredBy is UNDEFINED - treating as HUMAN (safe default)`);
+        console.log(`📞 [${webhookId}]   Client is already connected and waiting, so we should proceed`);
+        effectiveAnsweredBy = 'human_assumed';
+      }
+    } else {
+      effectiveAnsweredBy = answeredBy;
     }
 
     const isMachine = effectiveAnsweredBy.startsWith('machine') || effectiveAnsweredBy === 'fax';
@@ -718,6 +739,153 @@ export const twilioRecordingWebhook = onRequest(
     // Recording desactive - retourner 200 OK pour eviter les retries Twilio
     console.log('[twilioRecordingWebhook] Recording desactive - ignoring callback');
     res.status(200).send('Recording disabled for GDPR compliance');
+  }
+);
+
+/**
+ * P0 FIX: TwiML endpoint that checks AMD BEFORE returning TwiML
+ *
+ * This is called by Twilio AFTER the call is answered (and AMD analysis is complete).
+ * By using this URL instead of inline TwiML, we can:
+ * - Check if AnsweredBy indicates a machine → return hangup TwiML (no message played!)
+ * - Check if AnsweredBy indicates a human → return conference TwiML with welcome message
+ *
+ * This prevents voicemail systems from recording our "vous allez être mis en relation" message.
+ */
+export const twilioAmdTwiml = onRequest(
+  {
+    region: 'europe-west1',
+    memory: '128MiB',
+    cpu: 0.083,
+    maxInstances: 10,
+    minInstances: 0,
+    concurrency: 10
+  },
+  async (req: Request, res: Response) => {
+    const amdId = `amd_${Date.now().toString(36)}`;
+
+    try {
+      // Parse query parameters
+      const sessionId = req.query.sessionId as string;
+      const participantType = req.query.participantType as 'client' | 'provider';
+      const conferenceName = req.query.conferenceName as string;
+      const timeLimit = parseInt(req.query.timeLimit as string) || 1200;
+      const ttsLocale = req.query.ttsLocale as string || 'fr-FR';
+      const langKey = req.query.langKey as string || 'fr';
+
+      // Get AMD result from Twilio callback
+      const answeredBy = req.body?.AnsweredBy || req.query.AnsweredBy;
+      const callSid = req.body?.CallSid || req.query.CallSid;
+
+      console.log(`\n${'▓'.repeat(60)}`);
+      console.log(`🎯 [${amdId}] twilioAmdTwiml START`);
+      console.log(`🎯 [${amdId}]   sessionId: ${sessionId}`);
+      console.log(`🎯 [${amdId}]   participantType: ${participantType}`);
+      console.log(`🎯 [${amdId}]   conferenceName: ${conferenceName}`);
+      console.log(`🎯 [${amdId}]   timeLimit: ${timeLimit}`);
+      console.log(`🎯 [${amdId}]   ttsLocale: ${ttsLocale}`);
+      console.log(`🎯 [${amdId}]   langKey: ${langKey}`);
+      console.log(`🎯 [${amdId}]   answeredBy: ${answeredBy || 'NOT_PROVIDED'}`);
+      console.log(`🎯 [${amdId}]   callSid: ${callSid || 'NOT_PROVIDED'}`);
+      console.log(`${'▓'.repeat(60)}`);
+
+      // Check if answered by machine
+      const isMachine = answeredBy && (
+        answeredBy.startsWith('machine') ||
+        answeredBy === 'fax'
+      );
+
+      // P0 FIX: If AnsweredBy is undefined for CLIENT, treat as machine (safer - prevents calling provider)
+      // For PROVIDER, treat undefined as human (client is waiting)
+      const shouldHangup = isMachine || (participantType === 'client' && !answeredBy);
+
+      if (shouldHangup) {
+        // MACHINE OR UNDEFINED CLIENT → Hangup immediately with NO audio
+        console.log(`🎯 [${amdId}] ⚠️ MACHINE/NO_ANSWER DETECTED - Returning HANGUP TwiML (NO AUDIO!)`);
+        console.log(`🎯 [${amdId}]   answeredBy: ${answeredBy || 'UNDEFINED'}`);
+        console.log(`🎯 [${amdId}]   participantType: ${participantType}`);
+        console.log(`🎯 [${amdId}]   This prevents voicemail from recording our message!`);
+
+        // Update participant status to no_answer for retry logic
+        if (sessionId) {
+          try {
+            await twilioCallManager.updateParticipantStatus(sessionId, participantType, 'no_answer');
+            console.log(`🎯 [${amdId}]   ✅ Status set to no_answer - retry will be triggered`);
+          } catch (statusError) {
+            console.error(`🎯 [${amdId}]   ⚠️ Failed to update status:`, statusError);
+          }
+        }
+
+        // Return hangup TwiML - NO SAY, NO AUDIO, JUST HANGUP
+        const hangupTwiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Hangup/>
+</Response>`;
+
+        res.type('text/xml');
+        res.send(hangupTwiml);
+        console.log(`🎯 [${amdId}] END - Sent HANGUP TwiML\n`);
+        return;
+      }
+
+      // HUMAN ANSWERED → Return conference TwiML with welcome message
+      console.log(`🎯 [${amdId}] ✅ HUMAN DETECTED - Returning CONFERENCE TwiML`);
+
+      // Get welcome message based on language
+      const welcomeMessage = getIntroText(participantType, langKey);
+      console.log(`🎯 [${amdId}]   welcomeMessage: "${welcomeMessage.substring(0, 50)}..."`);
+
+      // Update participant status to connected
+      if (sessionId) {
+        try {
+          await twilioCallManager.updateParticipantStatus(
+            sessionId,
+            participantType,
+            'connected',
+            admin.firestore.Timestamp.fromDate(new Date())
+          );
+          console.log(`🎯 [${amdId}]   ✅ Status set to connected`);
+        } catch (statusError) {
+          console.error(`🎯 [${amdId}]   ⚠️ Failed to update status:`, statusError);
+        }
+      }
+
+      // Generate conference TwiML
+      // Client starts conference (startConferenceOnEnter=true)
+      // Provider joins existing conference (startConferenceOnEnter=false)
+      const startConference = participantType === 'client';
+
+      const conferenceTwiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say voice="alice" language="${ttsLocale}">${welcomeMessage}</Say>
+  <Dial timeout="60" timeLimit="${timeLimit}">
+    <Conference
+      waitUrl="http://twimlets.com/holdmusic?Bucket=com.twilio.music.classical"
+      startConferenceOnEnter="${startConference}"
+      endConferenceOnExit="true"
+      statusCallback="${process.env.TWILIO_CONFERENCE_WEBHOOK_URL || ''}"
+      statusCallbackEvent="start end join leave"
+      statusCallbackMethod="POST"
+    >${conferenceName}</Conference>
+  </Dial>
+</Response>`;
+
+      res.type('text/xml');
+      res.send(conferenceTwiml);
+      console.log(`🎯 [${amdId}] END - Sent CONFERENCE TwiML\n`);
+
+    } catch (error) {
+      console.error(`🎯 [${amdId}] ❌ ERROR:`, error);
+      await logError('twilioAmdTwiml', error);
+
+      // On error, return hangup to prevent any audio playing
+      const errorTwiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Hangup/>
+</Response>`;
+      res.type('text/xml');
+      res.send(errorTwiml);
+    }
   }
 );
 

@@ -1,7 +1,7 @@
 import * as admin from "firebase-admin";
 // 🔧 Twilio client & num
 import { getTwilioClient, getTwilioPhoneNumber } from "./lib/twilio";
-import { getTwilioCallWebhookUrl, getTwilioConferenceWebhookUrl } from "./utils/urlBase";
+import { getTwilioCallWebhookUrl, getTwilioAmdTwimlUrl } from "./utils/urlBase";
 import { logError } from "./utils/logs/logError";
 import { logCallRecord } from "./utils/logs/logCallRecord";
 import { stripeManager } from "./StripeManager";
@@ -240,19 +240,6 @@ function availablePromptLangs(): LangCode[] {
 
 function localeFor(langKey: string): string {
   return VOICE_LOCALES[langKey] || VOICE_LOCALES["en"];
-}
-
-function getIntroText(
-  participant: "provider" | "client",
-  langKey: string
-): string {
-  const langs = availablePromptLangs();
-  const safeLang = (
-    langs.includes(langKey as LangCode) ? langKey : "en"
-  ) as LangCode;
-  const table =
-    participant === "provider" ? prompts.provider_intro : prompts.client_intro;
-  return table[safeLang] ?? table.en ?? "Please hold.";
 }
 
 // =====================================
@@ -1014,20 +1001,12 @@ export class TwilioCallManager {
           retryCount: attempt,
         });
 
-        console.log(`📞 [${retryId}] STEP A: Generating TwiML...`);
-        const welcomeMessage = getIntroText(participantType, langKey);
-        console.log(`📞 [${retryId}]   welcomeMessage: "${welcomeMessage.substring(0, 50)}..."`);
-
-        const twiml = this.generateConferenceTwiML(
-          conferenceName,
-          participantType,
-          timeLimit,
-          sessionId,
-          ttsLocale,
-          welcomeMessage
-        );
-        console.log(`📞 [${retryId}]   TwiML generated (${twiml.length} chars)`);
-        console.log(`📞 [${retryId}]   TwiML preview: ${twiml.substring(0, 200)}...`);
+        // P0 FIX: Instead of inline TwiML, use URL callback that checks AMD BEFORE playing audio
+        // This prevents voicemail from recording our "vous allez être mis en relation" message
+        console.log(`📞 [${retryId}] STEP A: Building AMD TwiML URL...`);
+        const amdTwimlBaseUrl = getTwilioAmdTwimlUrl();
+        const amdTwimlUrl = `${amdTwimlBaseUrl}?sessionId=${encodeURIComponent(sessionId)}&participantType=${participantType}&conferenceName=${encodeURIComponent(conferenceName)}&timeLimit=${timeLimit}&ttsLocale=${encodeURIComponent(ttsLocale)}&langKey=${encodeURIComponent(langKey)}`;
+        console.log(`📞 [${retryId}]   amdTwimlUrl: ${amdTwimlUrl.substring(0, 100)}...`);
 
         console.log(`📞 [${retryId}] STEP B: Getting Twilio credentials...`);
         const twilioClient = getTwilioClient();
@@ -1043,13 +1022,19 @@ export class TwilioCallManager {
         console.log(`📞 [${retryId}]     from: ${fromNumber},`);
         console.log(`📞 [${retryId}]     timeout: ${CALL_CONFIG.CALL_TIMEOUT},`);
         console.log(`📞 [${retryId}]     machineDetection: "Enable",`);
+        console.log(`📞 [${retryId}]     url: ${amdTwimlUrl.substring(0, 50)}...`);
         console.log(`📞 [${retryId}]   })`);
 
         const twilioApiStartTime = Date.now();
         const call = await twilioClient.calls.create({
           to: phoneNumber,
           from: fromNumber,
-          twiml,
+          // P0 CRITICAL FIX: Use URL instead of inline TwiML
+          // The URL endpoint (twilioAmdTwiml) will check AnsweredBy and return:
+          // - Hangup TwiML if machine/voicemail (NO AUDIO played!)
+          // - Conference TwiML if human
+          url: amdTwimlUrl,
+          method: "POST",
           // P0 CRITICAL FIX: Use Cloud Run URL directly (not base + function name)
           statusCallback: twilioCallWebhookUrl,
           statusCallbackMethod: "POST",
@@ -1067,17 +1052,19 @@ export class TwilioCallManager {
           // record: true,
           // recordingStatusCallback: `${base}/twilioRecordingWebhook`,
           // recordingStatusCallbackMethod: "POST",
-          // P0 FIX: AMD (Answering Machine Detection) pour éviter les messages vocaux
-          // IMPORTANT: Utiliser "DetectMessageEnd" au lieu de "Enable":
-          // - "Enable" joue le TwiML IMMÉDIATEMENT avant de connaître le résultat AMD
-          // - "DetectMessageEnd" attend que AMD termine AVANT de jouer le TwiML
-          // Avec "DetectMessageEnd", si un répondeur répond:
-          // 1. Twilio détecte la machine (analyse le message du répondeur)
-          // 2. Webhook envoyé avec AnsweredBy="machine_*" AVANT que TwiML ne joue
-          // 3. Notre code peut raccrocher AVANT que la musique ne joue
-          machineDetection: "DetectMessageEnd",
+          // P0 FIX: AMD (Answering Machine Detection) - use "Enable" with URL callback
+          // With URL callback, Twilio will:
+          // 1. Make the call
+          // 2. When answered, call our URL with AnsweredBy parameter
+          // 3. Our URL returns appropriate TwiML based on human/machine
+          // This is different from "DetectMessageEnd" which executes TwiML after AMD
+          machineDetection: "Enable",
           machineDetectionTimeout: 30, // Max 30s pour l'analyse AMD
           machineDetectionSilenceTimeout: 5000, // 5s de silence = humain
+          // P0 FIX: asyncAmd sends AMD result to our URL callback
+          asyncAmd: "true",
+          asyncAmdStatusCallback: amdTwimlUrl,
+          asyncAmdStatusCallbackMethod: "POST",
         });
         const twilioApiDuration = Date.now() - twilioApiStartTime;
 
@@ -1316,43 +1303,6 @@ export class TwilioCallManager {
     }
 
     return false;
-  }
-
-  private generateConferenceTwiML(
-    conferenceName: string,
-    participantType: "provider" | "client",
-    timeLimit: number,
-    sessionId: string,
-    ttsLocale: string,
-    welcomeMessage: string
-  ): string {
-    const participantLabel =
-      participantType === "provider" ? "provider" : "client";
-    const waitUrl =
-      "http://twimlets.com/holdmusic?Bucket=com.twilio.music.ambient";
-    // P0 CRITICAL FIX: Use dedicated Cloud Run URL instead of base + function name
-    const conferenceWebhookUrl = getTwilioConferenceWebhookUrl();
-
-    return `
-<Response>
-  <Say voice="alice" language="${ttsLocale}">${escapeXml(welcomeMessage)}</Say>
-  <Dial timeout="${CALL_CONFIG.CALL_TIMEOUT}" timeLimit="${timeLimit}">
-    <Conference
-      statusCallback="${conferenceWebhookUrl}"
-      statusCallbackMethod="POST"
-      statusCallbackEvent="start end join leave mute hold"
-      participantLabel="${participantLabel}"
-      sessionId="${sessionId}"
-      waitUrl="${waitUrl}"
-      maxParticipants="2"
-      beep="false"
-      startConferenceOnEnter="${participantType === "client"}"
-      trim="trim-silence"
-      endConferenceOnExit="true"
-    >${conferenceName}</Conference>
-  </Dial>
-</Response>
-    `.trim();
   }
 
   async handleEarlyDisconnection(
@@ -2860,16 +2810,6 @@ export class TwilioCallManager {
       return { deleted: 0, errors: 1 };
     }
   }
-}
-
-// 🔒 petite aide XML
-function escapeXml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
 }
 
 // 🔧 Singleton export

@@ -830,7 +830,7 @@ export { api } from "./adminApi";
 // P0 SECURITY: testTwilioCall DISABLED - Public endpoint that could generate unlimited Twilio costs
 // export { testTwilioCall } from "./testTwilioCall";
 // TODO: If needed for testing, add admin authentication before re-enabling
-export { twilioCallWebhook } from "./Webhooks/twilioWebhooks";
+export { twilioCallWebhook, twilioAmdTwiml } from "./Webhooks/twilioWebhooks";
 export { twilioConferenceWebhook } from "./Webhooks/TwilioConferenceWebhook";
 export { providerNoAnswerTwiML } from "./Webhooks/providerNoAnswerTwiML";
 export { enqueueMessageEvent } from "./messaging/enqueueMessageEvent";
