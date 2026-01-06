@@ -31,6 +31,10 @@ export default function StripeKYC({ onComplete, userType }: Props) {
     setIsCreatingNewAccount(true);
     setError(null);
 
+    // ✅ Clear error from sessionStorage to allow re-initialization after reload
+    const errorKey = `stripe_kyc_${user.uid}_${userType}_error`;
+    sessionStorage.removeItem(errorKey);
+
     try {
       const functions = getFunctions(undefined, "europe-west1");
       const createStripeAccount = httpsCallable(functions, "createStripeAccount");
@@ -71,20 +75,30 @@ export default function StripeKYC({ onComplete, userType }: Props) {
     // ✅ Include userType in session keys
     const checkKey = `stripe_kyc_${user.uid}_${userType}_check_in_progress`;
     const completedKey = `stripe_kyc_${user.uid}_${userType}_completed`;
+    const errorKey = `stripe_kyc_${user.uid}_${userType}_error`; // ✅ P0 FIX: Track errors in sessionStorage
 
-    // ✅ Guard 1: Check sessionStorage
+    // ✅ Guard 1: Check if error already detected (prevents repeated API calls)
+    const savedError = sessionStorage.getItem(errorKey);
+    if (savedError) {
+      setError(savedError);
+      setLoading(false);
+      return;
+    }
+
+    // ✅ Guard 2: Check if check in progress
     if (sessionStorage.getItem(checkKey) === "true") {
       setLoading(false);
       return;
     }
 
+    // ✅ Guard 3: Check if already completed
     if (sessionStorage.getItem(completedKey) === "true") {
       setIsKycComplete(true);
       setLoading(false);
       return;
     }
 
-    // ✅ Guard 2: Check ref
+    // ✅ Guard 4: Check ref (for same-mount re-renders)
     if (initStartedRef.current) {
       return;
     }
@@ -133,10 +147,12 @@ export default function StripeKYC({ onComplete, userType }: Props) {
           if (errorMsg.includes("does not have access to account") ||
               errorMsg.includes("No such account") ||
               errorMsg.includes("account has been deleted")) {
+            const errorMessage = "Votre compte Stripe précédent n'est plus valide. Veuillez en créer un nouveau.";
             console.error("[StripeKYC] Invalid Stripe account detected");
-            setError("Votre compte Stripe précédent n'est plus valide. Veuillez en créer un nouveau.");
-            setLoading(false);
+            sessionStorage.setItem(errorKey, errorMessage); // ✅ Save error to prevent re-calls
             sessionStorage.removeItem(checkKey);
+            setError(errorMessage);
+            setLoading(false);
             return;
           }
 
@@ -175,24 +191,27 @@ export default function StripeKYC({ onComplete, userType }: Props) {
         sessionStorage.removeItem(checkKey);
       } catch (err: any) {
         const errorMsg = err.message || "";
+        let errorMessage: string;
 
         // ✅ P0 FIX: Detect invalid/revoked Stripe account in session creation too
         if (errorMsg.includes("does not have access to account") ||
             errorMsg.includes("No such account") ||
             errorMsg.includes("account has been deleted")) {
-          setError("Votre compte Stripe précédent n'est plus valide. Veuillez en créer un nouveau.");
+          errorMessage = "Votre compte Stripe précédent n'est plus valide. Veuillez en créer un nouveau.";
         } else {
-          setError("Erreur de connexion à Stripe. Veuillez réessayer.");
+          errorMessage = "Erreur de connexion à Stripe. Veuillez réessayer.";
         }
 
         console.error("[StripeKYC] Initialization error:", err);
-        setLoading(false);
+        sessionStorage.setItem(errorKey, errorMessage); // ✅ Save error to prevent re-calls
         sessionStorage.removeItem(checkKey);
+        setError(errorMessage);
+        setLoading(false);
       }
     };
 
     initializeStripe();
-  }, [user?.uid, userType, onComplete]);
+  }, [user?.uid, userType]); // ✅ Remove onComplete from deps to prevent re-runs
 
   // ✅ Show loading state while checking
   if (loading) {
