@@ -16,7 +16,7 @@ const TWILIO_PHONE_NUMBER_SECRET = defineSecret("TWILIO_PHONE_NUMBER");
 function getAccountSid(): string {
   // Try Firebase v2 secret first
   try {
-    const secretValue = TWILIO_ACCOUNT_SID_SECRET.value();
+    const secretValue = TWILIO_ACCOUNT_SID_SECRET.value()?.trim();
     if (secretValue && secretValue.length > 0) {
       console.log(`🔐 [Twilio] ACCOUNT_SID loaded from Firebase Secret (length: ${secretValue.length})`);
       return secretValue;
@@ -26,7 +26,7 @@ function getAccountSid(): string {
   }
 
   // Fallback to process.env
-  const envValue = process.env.TWILIO_ACCOUNT_SID;
+  const envValue = process.env.TWILIO_ACCOUNT_SID?.trim();
   if (envValue && envValue.length > 0) {
     console.log(`🔐 [Twilio] ACCOUNT_SID loaded from process.env (length: ${envValue.length})`);
     return envValue;
@@ -39,7 +39,7 @@ function getAccountSid(): string {
 function getAuthToken(): string {
   // Try Firebase v2 secret first
   try {
-    const secretValue = TWILIO_AUTH_TOKEN_SECRET.value();
+    const secretValue = TWILIO_AUTH_TOKEN_SECRET.value()?.trim();
     if (secretValue && secretValue.length > 0) {
       console.log(`🔐 [Twilio] AUTH_TOKEN loaded from Firebase Secret (length: ${secretValue.length})`);
       return secretValue;
@@ -49,7 +49,7 @@ function getAuthToken(): string {
   }
 
   // Fallback to process.env
-  const envValue = process.env.TWILIO_AUTH_TOKEN;
+  const envValue = process.env.TWILIO_AUTH_TOKEN?.trim();
   if (envValue && envValue.length > 0) {
     console.log(`🔐 [Twilio] AUTH_TOKEN loaded from process.env (length: ${envValue.length})`);
     return envValue;
@@ -62,7 +62,7 @@ function getAuthToken(): string {
 function getPhoneNumber(): string {
   // Try Firebase v2 secret first
   try {
-    const secretValue = TWILIO_PHONE_NUMBER_SECRET.value();
+    const secretValue = TWILIO_PHONE_NUMBER_SECRET.value()?.trim();
     if (secretValue && secretValue.length > 0) {
       console.log(`🔐 [Twilio] PHONE_NUMBER loaded from Firebase Secret: ${secretValue.substring(0, 5)}...`);
       return secretValue;
@@ -72,7 +72,7 @@ function getPhoneNumber(): string {
   }
 
   // Fallback to process.env
-  const envValue = process.env.TWILIO_PHONE_NUMBER;
+  const envValue = process.env.TWILIO_PHONE_NUMBER?.trim();
   if (envValue && envValue.length > 0) {
     console.log(`🔐 [Twilio] PHONE_NUMBER loaded from process.env: ${envValue.substring(0, 5)}...`);
     return envValue;
