@@ -23,10 +23,18 @@ export class OpenAIProvider extends BaseLLMProvider {
   constructor(apiKey: string) {
     super();
     this.apiKey = apiKey;
+    // DEBUG: Log API key info at construction
+    logger.info("[OpenAI] Provider initialisé", {
+      apiKeyLength: apiKey?.length || 0,
+      apiKeyPrefix: apiKey?.substring(0, 10) || "EMPTY",
+      apiKeyHasWhitespace: apiKey !== apiKey?.trim(),
+    });
   }
 
   isAvailable(): boolean {
-    return Boolean(this.apiKey && this.apiKey.length > 0);
+    const available = Boolean(this.apiKey && this.apiKey.length > 0);
+    logger.debug("[OpenAI] isAvailable check", { available, keyLength: this.apiKey?.length });
+    return available;
   }
 
   async chat(options: ChatOptions): Promise<LLMResponse> {
@@ -90,13 +98,24 @@ export class OpenAIProvider extends BaseLLMProvider {
   }
 
   private async makeRequest(body: object): Promise<OpenAIResponse> {
+    const requestId = `openai_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const controller = new AbortController();
     const timeoutId = setTimeout(
       () => controller.abort(),
       AI_CONFIG.API_TIMEOUT_MS
     );
 
+    logger.info(`[OpenAI] [${requestId}] STEP 1: Préparation requête`, {
+      url: AI_CONFIG.OPENAI.API_URL,
+      timeout: AI_CONFIG.API_TIMEOUT_MS,
+      apiKeyLength: this.apiKey?.length,
+      apiKeyValid: this.apiKey?.startsWith("sk-"),
+    });
+
     try {
+      const startTime = Date.now();
+      logger.info(`[OpenAI] [${requestId}] STEP 2: Envoi fetch...`);
+
       const response = await fetch(AI_CONFIG.OPENAI.API_URL, {
         method: "POST",
         headers: {
@@ -107,16 +126,43 @@ export class OpenAIProvider extends BaseLLMProvider {
         signal: controller.signal
       });
 
+      const elapsed = Date.now() - startTime;
+      logger.info(`[OpenAI] [${requestId}] STEP 3: Réponse reçue`, {
+        status: response.status,
+        statusText: response.statusText,
+        elapsed: `${elapsed}ms`,
+      });
+
       if (!response.ok) {
         const errorText = await response.text();
+        logger.error(`[OpenAI] [${requestId}] STEP 4: ERREUR HTTP`, {
+          status: response.status,
+          statusText: response.statusText,
+          errorBody: errorText.substring(0, 500),
+          elapsed: `${elapsed}ms`,
+        });
         throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
-      return await response.json() as OpenAIResponse;
+      const jsonResponse = await response.json() as OpenAIResponse;
+      logger.info(`[OpenAI] [${requestId}] STEP 5: Succès`, {
+        model: jsonResponse.model,
+        promptTokens: jsonResponse.usage?.prompt_tokens,
+        completionTokens: jsonResponse.usage?.completion_tokens,
+        elapsed: `${elapsed}ms`,
+      });
+
+      return jsonResponse;
     } catch (error) {
-      if ((error as Error).name === "AbortError") {
+      const err = error as Error;
+      if (err.name === "AbortError") {
+        logger.error(`[OpenAI] [${requestId}] TIMEOUT après ${AI_CONFIG.API_TIMEOUT_MS}ms`);
         throw new Error(`Timeout après ${AI_CONFIG.API_TIMEOUT_MS}ms`);
       }
+      logger.error(`[OpenAI] [${requestId}] EXCEPTION`, {
+        errorName: err.name,
+        errorMessage: err.message,
+      });
       throw error;
     } finally {
       clearTimeout(timeoutId);

@@ -30,10 +30,36 @@ export const AI_SECRETS = [OPENAI_API_KEY, PERPLEXITY_API_KEY, ANTHROPIC_API_KEY
  */
 export function createService(): ReturnType<typeof createHybridService> {
   // P0 FIX: Add .trim() to remove trailing CRLF from GCP Secret Manager values
+  const openaiKey = OPENAI_API_KEY.value().trim();
+  const claudeKey = ANTHROPIC_API_KEY.value().trim();
+  const perplexityKey = PERPLEXITY_API_KEY.value().trim();
+
+  // DEBUG: Log API key loading info
+  console.log("[createService] DEBUG: Chargement des clés API", {
+    openai: {
+      rawLength: OPENAI_API_KEY.value().length,
+      trimmedLength: openaiKey.length,
+      prefix: openaiKey.substring(0, 10),
+      valid: openaiKey.startsWith("sk-"),
+    },
+    claude: {
+      rawLength: ANTHROPIC_API_KEY.value().length,
+      trimmedLength: claudeKey.length,
+      prefix: claudeKey.substring(0, 15),
+      valid: claudeKey.startsWith("sk-ant-"),
+    },
+    perplexity: {
+      rawLength: PERPLEXITY_API_KEY.value().length,
+      trimmedLength: perplexityKey.length,
+      prefix: perplexityKey.substring(0, 10),
+      valid: perplexityKey.startsWith("pplx-"),
+    },
+  });
+
   const config: HybridServiceConfig = {
-    openaiApiKey: OPENAI_API_KEY.value().trim(),
-    claudeApiKey: ANTHROPIC_API_KEY.value().trim(),
-    perplexityApiKey: PERPLEXITY_API_KEY.value().trim(),
+    openaiApiKey: openaiKey,
+    claudeApiKey: claudeKey,
+    perplexityApiKey: perplexityKey,
     useClaudeForLawyers: true,
     usePerplexityForFactual: true,
   };

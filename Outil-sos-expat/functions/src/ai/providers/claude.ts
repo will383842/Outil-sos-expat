@@ -23,10 +23,19 @@ export class ClaudeProvider extends BaseLLMProvider {
   constructor(apiKey: string) {
     super();
     this.apiKey = apiKey;
+    // DEBUG: Log API key info at construction
+    logger.info("[Claude] Provider initialisé", {
+      apiKeyLength: apiKey?.length || 0,
+      apiKeyPrefix: apiKey?.substring(0, 15) || "EMPTY",
+      apiKeyHasWhitespace: apiKey !== apiKey?.trim(),
+      apiKeyEndsWithCRLF: apiKey?.endsWith("\r\n") || apiKey?.endsWith("\n"),
+    });
   }
 
   isAvailable(): boolean {
-    return Boolean(this.apiKey && this.apiKey.length > 0);
+    const available = Boolean(this.apiKey && this.apiKey.length > 0);
+    logger.debug("[Claude] isAvailable check", { available, keyLength: this.apiKey?.length });
+    return available;
   }
 
   async chat(options: ChatOptions): Promise<LLMResponse> {
@@ -78,13 +87,25 @@ export class ClaudeProvider extends BaseLLMProvider {
   }
 
   private async makeRequest(body: object): Promise<ClaudeResponse> {
+    const requestId = `claude_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const controller = new AbortController();
     const timeoutId = setTimeout(
       () => controller.abort(),
       AI_CONFIG.API_TIMEOUT_MS
     );
 
+    logger.info(`[Claude] [${requestId}] STEP 1: Préparation requête`, {
+      url: AI_CONFIG.CLAUDE.API_URL,
+      timeout: AI_CONFIG.API_TIMEOUT_MS,
+      apiVersion: AI_CONFIG.CLAUDE.API_VERSION,
+      apiKeyLength: this.apiKey?.length,
+      apiKeyValid: this.apiKey?.startsWith("sk-ant-"),
+    });
+
     try {
+      const startTime = Date.now();
+      logger.info(`[Claude] [${requestId}] STEP 2: Envoi fetch...`);
+
       const response = await fetch(AI_CONFIG.CLAUDE.API_URL, {
         method: "POST",
         headers: {
@@ -96,16 +117,49 @@ export class ClaudeProvider extends BaseLLMProvider {
         signal: controller.signal
       });
 
+      const elapsed = Date.now() - startTime;
+      logger.info(`[Claude] [${requestId}] STEP 3: Réponse reçue`, {
+        status: response.status,
+        statusText: response.statusText,
+        elapsed: `${elapsed}ms`,
+        headers: {
+          contentType: response.headers.get("content-type"),
+          requestId: response.headers.get("request-id"),
+        },
+      });
+
       if (!response.ok) {
         const errorText = await response.text();
+        logger.error(`[Claude] [${requestId}] STEP 4: ERREUR HTTP`, {
+          status: response.status,
+          statusText: response.statusText,
+          errorBody: errorText.substring(0, 500), // Limite à 500 chars
+          elapsed: `${elapsed}ms`,
+        });
         throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
-      return await response.json() as ClaudeResponse;
+      const jsonResponse = await response.json() as ClaudeResponse;
+      logger.info(`[Claude] [${requestId}] STEP 5: Succès`, {
+        model: jsonResponse.model,
+        stopReason: (jsonResponse as any).stop_reason || "N/A",
+        inputTokens: jsonResponse.usage?.input_tokens,
+        outputTokens: jsonResponse.usage?.output_tokens,
+        elapsed: `${elapsed}ms`,
+      });
+
+      return jsonResponse;
     } catch (error) {
-      if ((error as Error).name === "AbortError") {
+      const err = error as Error;
+      if (err.name === "AbortError") {
+        logger.error(`[Claude] [${requestId}] TIMEOUT après ${AI_CONFIG.API_TIMEOUT_MS}ms`);
         throw new Error(`Timeout après ${AI_CONFIG.API_TIMEOUT_MS}ms`);
       }
+      logger.error(`[Claude] [${requestId}] EXCEPTION`, {
+        errorName: err.name,
+        errorMessage: err.message,
+        errorStack: err.stack?.substring(0, 300),
+      });
       throw error;
     } finally {
       clearTimeout(timeoutId);
