@@ -1162,10 +1162,14 @@ const SuccessPayment: React.FC = () => {
               <>
                 <h1 className="text-4xl md:text-6xl font-black mb-6 leading-tight">
                   <span className="bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">
-                    {/* P0 FIX: Show different title based on who didn't answer */}
+                    {/* P0 FIX: Show different title based on failure reason */}
                     {failureReason?.includes("client_no_answer")
                       ? intl.formatMessage({ id: "success.clientNoAnswerTitle" })
-                      : intl.formatMessage({ id: "success.callFailed" })}
+                      : failureReason?.includes("provider_no_answer")
+                        ? intl.formatMessage({ id: "success.callFailed" })
+                        : failureReason?.includes("early_disconnect")
+                          ? intl.formatMessage({ id: "success.callTooShortTitle" })
+                          : intl.formatMessage({ id: "success.technicalErrorTitle" })}
                   </span>
                 </h1>
 
@@ -1174,10 +1178,14 @@ const SuccessPayment: React.FC = () => {
                     <AlertCircle className="w-16 h-16 text-white" />
                   </div>
                   <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-6">
-                    {/* P0 FIX: Show different message based on who didn't answer */}
+                    {/* P0 FIX: Show different message based on failure reason */}
                     {failureReason?.includes("client_no_answer")
                       ? intl.formatMessage({ id: "success.clientNoAnswer" })
-                      : intl.formatMessage({ id: "success.expertNoAnswer" })}
+                      : failureReason?.includes("provider_no_answer")
+                        ? intl.formatMessage({ id: "success.expertNoAnswer" })
+                        : failureReason?.includes("early_disconnect")
+                          ? intl.formatMessage({ id: "success.callTooShort" })
+                          : intl.formatMessage({ id: "success.technicalError" })}
                   </p>
                   <button
                     onClick={() => navigate("/prestataires")}
