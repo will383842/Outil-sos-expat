@@ -38,6 +38,14 @@ const EXECUTE_CALL_TASK_URL = defineString("EXECUTE_CALL_TASK_URL", {
   default: "https://executecalltask-5tfnuxa2hq-ew.a.run.app"
 });
 
+// Provider availability cooldown task URL
+const SET_PROVIDER_AVAILABLE_TASK_URL = defineString("SET_PROVIDER_AVAILABLE_TASK_URL", {
+  default: "" // Will be set after deployment
+});
+
+// Cooldown duration in seconds (5 minutes)
+const PROVIDER_COOLDOWN_SECONDS = 5 * 60;
+
 // Récupère le projectId depuis l'environnement Functions (standard)
 function getProjectId(): string {
   return (
@@ -545,4 +553,136 @@ export async function createTestTask(
     await logError("createTestTask", error);
     throw error;
   }
+}
+
+// ============================================================
+// PROVIDER COOLDOWN - 5 minute delay before setting available
+// ============================================================
+
+interface ProviderAvailablePayload {
+  providerId: string;
+  reason: string;
+  scheduledAt: string;
+  taskId: string;
+}
+
+/**
+ * Schedule a task to set provider available after cooldown period (5 minutes).
+ * This is used after a call ends to give the provider a break before accepting new calls.
+ *
+ * @param providerId - ID of the provider
+ * @param reason - Reason for the availability change (for audit)
+ * @returns taskId of the created task
+ */
+export async function scheduleProviderAvailableTask(
+  providerId: string,
+  reason: string = 'call_completed'
+): Promise<string> {
+  const debugId = `prov_avail_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
+
+  console.log(`\n📋 [ProviderCooldown][${debugId}] Scheduling provider available task`);
+  console.log(`📋 [ProviderCooldown][${debugId}] ProviderId: ${providerId}`);
+  console.log(`📋 [ProviderCooldown][${debugId}] Reason: ${reason}`);
+  console.log(`📋 [ProviderCooldown][${debugId}] Cooldown: ${PROVIDER_COOLDOWN_SECONDS} seconds (5 min)`);
+
+  prodLogger.info('PROVIDER_COOLDOWN_START', `Scheduling provider available task`, {
+    providerId,
+    reason,
+    cooldownSeconds: PROVIDER_COOLDOWN_SECONDS,
+    debugId
+  });
+
+  // Check if URL is configured
+  const taskUrl = SET_PROVIDER_AVAILABLE_TASK_URL.value();
+  if (!taskUrl) {
+    // Fallback: call setProviderAvailable directly (no delay)
+    console.warn(`⚠️ [ProviderCooldown][${debugId}] SET_PROVIDER_AVAILABLE_TASK_URL not configured, calling directly`);
+    prodLogger.warn('PROVIDER_COOLDOWN_NO_URL', `Task URL not configured, will call setProviderAvailable directly`, {
+      providerId,
+      reason
+    });
+
+    // Import and call directly without delay
+    const { setProviderAvailable } = await import('../callables/providerStatusManager');
+    await setProviderAvailable(providerId, reason);
+    return `direct_${debugId}`;
+  }
+
+  try {
+    const client = getTasksClient();
+    const cfg = getTasksConfig();
+
+    const queuePath = client.queuePath(cfg.projectId, cfg.location, cfg.queueName);
+    const taskId = `provider-available-${providerId}-${Date.now()}`;
+
+    const scheduleTime = new Date();
+    scheduleTime.setSeconds(scheduleTime.getSeconds() + PROVIDER_COOLDOWN_SECONDS);
+
+    const payload: ProviderAvailablePayload = {
+      providerId,
+      reason,
+      scheduledAt: new Date().toISOString(),
+      taskId
+    };
+
+    const authSecret = TASKS_AUTH_SECRET.value();
+
+    const task = {
+      name: `${queuePath}/tasks/${taskId}`,
+      scheduleTime: {
+        seconds: Math.floor(scheduleTime.getTime() / 1000)
+      },
+      httpRequest: {
+        httpMethod: "POST" as const,
+        url: taskUrl,
+        headers: {
+          "Content-Type": "application/json",
+          "X-Task-Auth": authSecret
+        },
+        body: Buffer.from(JSON.stringify(payload))
+      }
+    };
+
+    console.log(`📋 [ProviderCooldown][${debugId}] Creating task...`);
+    console.log(`📋 [ProviderCooldown][${debugId}] URL: ${taskUrl}`);
+    console.log(`📋 [ProviderCooldown][${debugId}] Scheduled for: ${scheduleTime.toISOString()}`);
+
+    const [response] = await client.createTask({ parent: queuePath, task });
+
+    console.log(`✅ [ProviderCooldown][${debugId}] Task created: ${response.name}`);
+    console.log(`✅ [ProviderCooldown][${debugId}] Provider ${providerId} will be available at ${scheduleTime.toISOString()}`);
+
+    prodLogger.info('PROVIDER_COOLDOWN_SUCCESS', `Task created successfully`, {
+      providerId,
+      taskId,
+      reason,
+      scheduledAt: scheduleTime.toISOString(),
+      debugId
+    });
+
+    return taskId;
+  } catch (error) {
+    console.error(`❌ [ProviderCooldown][${debugId}] Error creating task:`, error);
+    prodLogger.error('PROVIDER_COOLDOWN_ERROR', `Failed to create task, calling directly`, {
+      providerId,
+      reason,
+      error: error instanceof Error ? error.message : String(error),
+      debugId
+    });
+
+    // Fallback: call setProviderAvailable directly (no delay)
+    console.log(`⚠️ [ProviderCooldown][${debugId}] Fallback: calling setProviderAvailable directly`);
+    const { setProviderAvailable } = await import('../callables/providerStatusManager');
+    await setProviderAvailable(providerId, reason);
+
+    await logError("scheduleProviderAvailableTask", error);
+    return `fallback_${debugId}`;
+  }
+}
+
+/**
+ * Get the cooldown duration in seconds.
+ */
+export function getProviderCooldownSeconds(): number {
+  return PROVIDER_COOLDOWN_SECONDS;
 }

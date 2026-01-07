@@ -6,10 +6,11 @@
  * Mobile-first: Bottom nav + drawer pour mobile, sidebar pour desktop
  */
 
-import React, { ReactNode, useState, useCallback } from 'react';
+import React, { ReactNode, useState, useCallback, useMemo } from 'react';
 import { useIntl } from 'react-intl';
 import { useLocation } from 'react-router-dom';
 import { useLocaleNavigate } from '../../multilingual-system';
+import { getTranslatedRouteSlug, type RouteKey } from '../../multilingual-system/core/routing/localeRoutes';
 import {
   User,
   Phone,
@@ -112,6 +113,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
     return user.email?.split('@')[0] || 'User';
   };
 
+  // P0 FIX: Get translated routes based on current language (defined early for use in handleLogout)
+  const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
+
+  // P0 FIX: Get login route early for handleLogout (needs to be outside the callback due to hook rules)
+  const loginRoute = useMemo(() => {
+    const loginSlug = getTranslatedRouteSlug('login' as RouteKey, langCode);
+    return `/${loginSlug}`;
+  }, [langCode]);
+
   const handleLogout = useCallback(async (e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
@@ -122,14 +132,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
     setLoggingOut(true);
     try {
       await logout();
-      navigate('/login');
+      navigate(loginRoute);
     } catch (error) {
       console.error("Logout error:", error);
-      navigate('/login');
+      navigate(loginRoute);
     } finally {
       setLoggingOut(false);
     }
-  }, [logout, navigate, loggingOut]);
+  }, [logout, navigate, loggingOut, loginRoute]);
 
   // Déterminer la clé active basée sur l'URL si non fournie
   const getCurrentActiveKey = () => {
@@ -142,6 +152,28 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
   };
 
   const currentKey = getCurrentActiveKey();
+
+  // Get translated routes using langCode defined above
+  const translatedRoutes = useMemo(() => {
+    const dashboardSlug = getTranslatedRouteSlug('dashboard' as RouteKey, langCode);
+    const aiAssistantSlug = getTranslatedRouteSlug('dashboard-ai-assistant' as RouteKey, langCode);
+    const subscriptionSlug = getTranslatedRouteSlug('dashboard-subscription' as RouteKey, langCode);
+    const subscriptionPlansSlug = getTranslatedRouteSlug('dashboard-subscription-plans' as RouteKey, langCode);
+    const loginSlug = getTranslatedRouteSlug('login' as RouteKey, langCode);
+
+    return {
+      dashboard: `/${dashboardSlug}`,
+      dashboardCalls: `/${dashboardSlug}?tab=calls`,
+      dashboardInvoices: `/${dashboardSlug}?tab=invoices`,
+      dashboardReviews: `/${dashboardSlug}?tab=reviews`,
+      dashboardMessages: `/${dashboardSlug}?tab=messages`,
+      dashboardFavorites: `/${dashboardSlug}?tab=favorites`,
+      aiAssistant: `/${aiAssistantSlug}`,
+      subscription: `/${subscriptionSlug}`,
+      subscriptionPlans: `/${subscriptionPlansSlug}`,
+      login: `/${loginSlug}`,
+    };
+  }, [langCode]);
 
   // Menu items
   type MenuItem = {
@@ -156,37 +188,37 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
     {
       key: "profile",
       icon: <User className="mr-3 h-5 w-5" />,
-      route: "/dashboard",
+      route: translatedRoutes.dashboard,
       labels: { fr: "Mon profil", en: "My profile", es: "Mi perfil", de: "Mein Profil", ru: "Мой профиль", hi: "मेरी प्रोफ़ाइल", ch: "我的个人资料", pt: "Meu perfil", ar: "ملفي الشخصي" },
     },
     {
       key: "calls",
       icon: <Phone className="mr-3 h-5 w-5" />,
-      route: "/dashboard?tab=calls",
+      route: translatedRoutes.dashboardCalls,
       labels: { fr: "Mes appels", en: "My calls", es: "Mis llamadas", de: "Meine Anrufe", ru: "Мои звонки", hi: "मेरी कॉलें", ch: "我的来电", pt: "Minhas chamadas", ar: "مكالماتي" },
     },
     {
       key: "invoices",
       icon: <FileText className="mr-3 h-5 w-5" />,
-      route: "/dashboard?tab=invoices",
+      route: translatedRoutes.dashboardInvoices,
       labels: { fr: "Mes factures", en: "My invoices", es: "Mis facturas", de: "Meine Rechnungen", ru: "Мои счета", hi: "मेरे बिल", ch: "我的发票", pt: "Minhas faturas", ar: "فواتيري" },
     },
     {
       key: "reviews",
       icon: <Star className="mr-3 h-5 w-5" />,
-      route: "/dashboard?tab=reviews",
+      route: translatedRoutes.dashboardReviews,
       labels: { fr: "Mes avis", en: "My reviews", es: "Mis reseñas", de: "Meine Bewertungen", ru: "Мои отзывы", hi: "मेरी समीक्षाएं", ch: "我的评论", pt: "Minhas avaliações", ar: "تقييماتي" },
     },
     {
       key: "messages",
       icon: <MessageSquare className="mr-3 h-5 w-5" />,
-      route: "/dashboard?tab=messages",
+      route: translatedRoutes.dashboardMessages,
       labels: { fr: "Mes messages", en: "My messages", es: "Mis mensajes", de: "Meine Nachrichten", ru: "Мои сообщения", hi: "मेरे संदेश", ch: "我的留言", pt: "Minhas mensagens", ar: "رسائلي" },
     },
     {
       key: "favorites",
       icon: <Bookmark className="mr-3 h-5 w-5" />,
-      route: "/dashboard?tab=favorites",
+      route: translatedRoutes.dashboardFavorites,
       labels: { fr: "Mes favoris", en: "My favorites", es: "Mis favoritos", de: "Meine Favoriten", ru: "Мои избранные", hi: "मेरे पसंदीदा", ch: "我的最爱", pt: "Meus favoritos", ar: "المفضلة لدي" },
     },
   ];
@@ -197,14 +229,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
         {
           key: "ai-assistant",
           icon: <Bot className="mr-3 h-5 w-5" />,
-          route: "/dashboard/ai-assistant",
+          route: translatedRoutes.aiAssistant,
           labels: { fr: "Assistant IA", en: "AI Assistant", es: "Asistente IA", de: "KI-Assistent", ru: "ИИ Ассистент", hi: "एआई सहायक", ch: "AI助手", pt: "Assistente IA", ar: "مساعد الذكاء الاصطناعي" },
           badge: "NEW",
         },
         {
           key: "subscription",
           icon: <CreditCard className="mr-3 h-5 w-5" />,
-          route: "/dashboard/subscription",
+          route: translatedRoutes.subscription,
           labels: { fr: "Mon Abonnement", en: "My Subscription", es: "Mi Suscripción", de: "Mein Abo", ru: "Моя подписка", hi: "मेरी सदस्यता", ch: "我的订阅", pt: "Minha Assinatura", ar: "اشتراكي" },
         },
       ]
@@ -421,7 +453,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
                       {/* Upgrade button if needed */}
                       {!canMakeAiCall && (
                         <button
-                          onClick={() => navigate("/dashboard/subscription/plans")}
+                          onClick={() => navigate(translatedRoutes.subscriptionPlans)}
                           className="w-full mt-3 py-2 text-xs font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all"
                         >
                           {intl.formatMessage({ id: "dashboard.choosePlan" })}

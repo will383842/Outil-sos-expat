@@ -198,6 +198,8 @@ export interface MultiProviderAccount {
     isActive: boolean;
   }[];
   createdAt: Date;
+  /** Si true, tous les prestataires liés passent en "busy" quand l'un d'eux est en appel */
+  shareBusyStatus?: boolean;
 }
 
 // ============================================================================

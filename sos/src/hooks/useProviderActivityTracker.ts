@@ -30,9 +30,10 @@ export const useProviderActivityTracker = ({
     try {
       const updateProviderActivity = httpsCallable(functions, 'updateProviderActivity');
       await updateProviderActivity({ userId });
-      console.log('Activity updated in Firebase');
+      // ✅ P0 FIX: Remove verbose logging to reduce console spam
     } catch (error) {
-      console.error('Error updating activity:', error);
+      // Only log errors, not routine updates
+      console.error('[ActivityTracker] Error updating activity:', error);
     }
   }, [userId, isOnline, isProvider]);
 
@@ -52,8 +53,9 @@ export const useProviderActivityTracker = ({
       clearTimeout(debounceTimerRef.current);
     }
 
+    // ✅ P0 FIX: Remove verbose activity logging - was causing console spam on every mousemove
     debounceTimerRef.current = setTimeout(() => {
-      console.log('Activity detected:', activityEvent.type);
+      // Activity timestamp updated silently
     }, PROVIDER_ACTIVITY_CONFIG.EVENT_DEBOUNCE_MS);
   }, [isOnline, isProvider]);
 
@@ -67,11 +69,11 @@ export const useProviderActivityTracker = ({
         // L'onglet redevient visible → reset le timer d'inactivité
         pauseInactivityCheck.current = false;
         lastActivityRef.current = new Date();
-        console.log('Tab visible: activity timer reset');
+        // ✅ P0 FIX: Remove verbose logging
       } else {
         // L'onglet passe en arrière-plan → pause le tracking d'inactivité
         pauseInactivityCheck.current = true;
-        console.log('Tab hidden: inactivity tracking paused');
+        // ✅ P0 FIX: Remove verbose logging
       }
     };
 

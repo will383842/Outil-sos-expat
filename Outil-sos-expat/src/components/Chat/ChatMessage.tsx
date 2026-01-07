@@ -130,21 +130,22 @@ function formatMarkdown(text: string): React.ReactNode {
 
 /**
  * Get icon based on message source
+ * NOTE: Technical names (GPT, Claude, Perplexity) are hidden from users
+ * All AI responses show as "Assistant IA" for professional appearance
  */
 function getSourceIcon(source?: string): { icon: typeof Bot; label: string } {
   switch (source) {
     case "gpt":
     case "gpt-4":
     case "gpt-4o":
-      return { icon: Sparkles, label: "GPT-4" };
     case "claude":
-      return { icon: Bot, label: "Claude" };
     case "perplexity":
-      return { icon: Bot, label: "Perplexity" };
+      // Hide technical AI provider names - show generic "Assistant IA"
+      return { icon: Sparkles, label: "Assistant IA" };
     case "gpt-error":
       return { icon: AlertCircle, label: "Erreur" };
     default:
-      return { icon: Bot, label: "Assistant Juridique" };
+      return { icon: Bot, label: "Assistant IA" };
   }
 }
 

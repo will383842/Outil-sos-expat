@@ -222,12 +222,13 @@ function useConversationExpiration(booking: Booking | null) {
 // COMPOSANT CHAT IA (Panneau droit)
 // =============================================================================
 
-// P0 FIX: Type pour les données de progression
-interface ProgressData {
-  step: "initializing" | "validating" | "searching" | "analyzing" | "generating" | "finalizing";
-  stepNumber: number;
-  totalSteps: number;
+// 🆕 Type pour les logs de réflexion temps réel (remplace progress simulé)
+interface ThinkingLogDisplay {
+  id: string;
+  step: string;
   message: string;
+  details?: string;
+  order: number;
 }
 
 function AIChat({
@@ -240,7 +241,7 @@ function AIChat({
   disabledReason = "",
   remainingTime,
   isExpired,
-  progress,  // P0 FIX: État de progression
+  thinkingLogs = [],  // 🆕 Logs temps réel (remplace progress simulé)
 }: {
   messages: Message[];
   onSendMessage: (message: string) => Promise<void>;
@@ -251,7 +252,7 @@ function AIChat({
   disabledReason?: string;
   remainingTime?: string | null;
   isExpired?: boolean;
-  progress?: ProgressData | null;  // P0 FIX: État de progression
+  thinkingLogs?: ThinkingLogDisplay[];  // 🆕 Logs temps réel
 }) {
   const { t } = useLanguage({ mode: "provider" });
   const [input, setInput] = useState("");
@@ -444,41 +445,93 @@ function AIChat({
           })
         )}
         
-        {/* P0 FIX: Loading indicator avec progression step-by-step */}
+        {/* ═══════════════════════════════════════════════════════════════════════
+            🆕 THINKING LOGS: Affichage temps réel des recherches IA
+            Mobile-first (2026 best practices):
+            - Touch targets: 48px minimum
+            - Text: 16px base (prevents iOS zoom)
+            - Responsive width: full on mobile, max-w-md on desktop
+            - Reduced motion: respects prefers-reduced-motion
+            - NO technical names (Claude, GPT, Perplexity) - just user-friendly messages
+            ═══════════════════════════════════════════════════════════════════════ */}
         {isLoading && (
-          <div className="flex justify-start">
-            <div className="bg-white border border-gray-200 rounded-2xl px-4 py-4 shadow-sm max-w-sm">
-              {/* En-tête avec étape actuelle */}
+          <div className="flex justify-start px-2 sm:px-0">
+            <div
+              className="bg-white border border-gray-200 rounded-2xl px-4 py-4 sm:px-5 sm:py-5 shadow-lg w-full max-w-[calc(100vw-2rem)] sm:max-w-md"
+              role="status"
+              aria-live="polite"
+              aria-label={thinkingLogs.length > 0 ? thinkingLogs[thinkingLogs.length - 1].message : t("aiChat.analyzing")}
+            >
+              {/* En-tête avec animation */}
               <div className="flex items-center gap-3 mb-3">
-                <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                {/* Dots animation - plus gros pour mobile */}
+                <div className="flex space-x-1.5 motion-reduce:hidden">
+                  <div className="w-2.5 h-2.5 sm:w-2 sm:h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <div className="w-2.5 h-2.5 sm:w-2 sm:h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <div className="w-2.5 h-2.5 sm:w-2 sm:h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
                 </div>
-                <span className="text-sm font-medium text-gray-700">
-                  {progress?.message || t("aiChat.analyzing")}
+                {/* Fallback pour reduced motion */}
+                <div className="hidden motion-reduce:block">
+                  <Loader2 className="w-5 h-5 text-purple-500 animate-spin" />
+                </div>
+                {/* Titre principal */}
+                <span className="text-base sm:text-sm font-semibold text-gray-800">
+                  {t("aiChat.analyzing")}
                 </span>
               </div>
 
-              {/* Barre de progression */}
-              {progress && (
-                <div className="space-y-2">
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+              {/* ═══════════════════════════════════════════════════════════════
+                  🆕 LOGS TEMPS RÉEL: Les recherches s'affichent une par une
+                  Le prestataire voit exactement ce que l'IA recherche
+                  ═══════════════════════════════════════════════════════════════ */}
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {thinkingLogs.length > 0 ? (
+                  thinkingLogs.map((log, index) => (
                     <div
-                      className="bg-purple-500 h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${(progress.stepNumber / progress.totalSteps) * 100}%` }}
-                    />
+                      key={log.id}
+                      className={`flex items-start gap-2 text-sm transition-all duration-300 ${
+                        index === thinkingLogs.length - 1
+                          ? "text-purple-700 font-medium"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      {/* Icône selon le type d'étape */}
+                      <span className="flex-shrink-0 mt-0.5">
+                        {log.step === "analyzing_question" && "📋"}
+                        {log.step === "searching_web" && "🔍"}
+                        {log.step === "search_query" && "🔎"}
+                        {log.step === "search_results" && "📄"}
+                        {log.step === "analyzing_sources" && "📊"}
+                        {log.step === "generating_response" && "✍️"}
+                        {log.step === "finalizing" && "✓"}
+                      </span>
+                      {/* Message (sans noms techniques) */}
+                      <span className="leading-snug">{log.message}</span>
+                    </div>
+                  ))
+                ) : (
+                  /* Fallback si pas encore de logs */
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <span>📋</span>
+                    <span>{t("aiChat.preparingResponse")}</span>
                   </div>
-                  <div className="flex justify-between text-xs text-gray-500">
-                    <span>{t("aiChat.step")} {progress.stepNumber}/{progress.totalSteps}</span>
-                    <span className="text-purple-600 font-medium">
-                      {progress.step === "validating" && "✓ Vérifications"}
-                      {progress.step === "initializing" && "✓ Préparation"}
-                      {progress.step === "searching" && "🔍 Recherche..."}
-                      {progress.step === "analyzing" && "📊 Analyse..."}
-                      {progress.step === "generating" && "✍️ Rédaction..."}
-                      {progress.step === "finalizing" && "✓ Finalisation"}
-                    </span>
+                )}
+              </div>
+
+              {/* Indicateur de progression visuel */}
+              {thinkingLogs.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <div className="flex justify-between gap-1">
+                    {[1, 2, 3, 4, 5].map((step) => (
+                      <div
+                        key={step}
+                        className={`flex-1 h-1.5 rounded-full transition-all duration-500 ${
+                          step <= Math.min(thinkingLogs.length, 5)
+                            ? "bg-purple-500"
+                            : "bg-gray-200"
+                        }`}
+                      />
+                    ))}
                   </div>
                 </div>
               )}
@@ -841,8 +894,58 @@ export default function DossierDetail() {
   const [aiLoading, setAiLoading] = useState(false);
   const [chatExpanded, setChatExpanded] = useState(false);
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 🆕 THINKING LOGS: Affichage temps réel des recherches IA
+  // Le prestataire voit exactement ce que l'IA recherche
+  // ═══════════════════════════════════════════════════════════════════════════
+  interface ThinkingLogUI {
+    id: string;
+    step: string;
+    message: string;
+    details?: string;
+    order: number;
+  }
+  const [thinkingLogs, setThinkingLogs] = useState<ThinkingLogUI[]>([]);
+
   // Hook pour calculer l'expiration de la conversation
   const { isExpired, formattedTime, durationMinutes } = useConversationExpiration(booking);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 🆕 LISTENER TEMPS RÉEL: thinking_logs subcollection
+  // Affiche les recherches IA en direct (comme GPT/Claude)
+  // ═══════════════════════════════════════════════════════════════════════════
+  useEffect(() => {
+    // Ne pas écouter si pas de conversation ou pas en loading
+    if (!conversation?.id || !aiLoading) {
+      setThinkingLogs([]);
+      return;
+    }
+
+    // Écouter la sous-collection thinking_logs en temps réel
+    const logsQuery = query(
+      collection(db, "conversations", conversation.id, "thinking_logs"),
+      orderBy("order", "asc")
+    );
+
+    const unsubscribe = onSnapshot(logsQuery, (snapshot) => {
+      const logs = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        step: doc.data().step || "",
+        message: doc.data().message || "",
+        details: doc.data().details,
+        order: doc.data().order || 0,
+      })) as ThinkingLogUI[];
+
+      setThinkingLogs(logs);
+    }, (error) => {
+      console.error("[DossierDetail] Erreur listener thinking_logs:", error);
+    });
+
+    return () => {
+      unsubscribe();
+      setThinkingLogs([]);
+    };
+  }, [conversation?.id, aiLoading]);
 
   // Charger le booking avec vérification d'accès
   useEffect(() => {
@@ -948,10 +1051,10 @@ export default function DossierDetail() {
           ...doc.data(),
         })) as Message[];
         setMessages(msgs);
-        
-        // Désactiver le loading quand une réponse IA arrive
+
+        // Désactiver le loading quand une réponse IA arrive (GPT ou Claude)
         const lastMsg = msgs[msgs.length - 1];
-        if (lastMsg?.source === "gpt" || lastMsg?.source === "gpt-error") {
+        if (lastMsg?.source === "gpt" || lastMsg?.source === "claude" || lastMsg?.source === "gpt-error") {
           setAiLoading(false);
         }
       });
@@ -1083,6 +1186,7 @@ export default function DossierDetail() {
               messages={messages}
               onSendMessage={handleSendMessage}
               isLoading={aiLoading}
+              thinkingLogs={thinkingLogs}
               isExpanded={chatExpanded}
               onToggleExpand={() => setChatExpanded(!chatExpanded)}
               disabled={isExpired}

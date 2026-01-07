@@ -11,7 +11,7 @@
  */
 
 import { logger } from "firebase-functions";
-import type { HybridResponse, LLMMessage, ProviderType, AIRequestContext, ConfidenceInfo, ConfidenceLevel } from "../core/types";
+import type { HybridResponse, LLMMessage, ProviderType, AIRequestContext, ConfidenceInfo, ConfidenceLevel, ThinkingCallback, ThinkingLog } from "../core/types";
 import { ClaudeProvider } from "../providers/claude";
 import { OpenAIProvider } from "../providers/openai";
 import { PerplexityProvider, isFactualQuestion } from "../providers/perplexity";
@@ -613,14 +613,34 @@ export class HybridAIService {
 
   /**
    * Point d'entrée principal - route vers le bon LLM selon le contexte
+   * @param onThinking - Callback optionnel pour afficher les étapes en temps réel
    */
   async chat(
     messages: LLMMessage[],
     providerType: ProviderType,
-    context?: AIRequestContext
+    context?: AIRequestContext,
+    onThinking?: ThinkingCallback
   ): Promise<HybridResponse> {
     const userMessage = this.getLastUserMessage(messages);
     const systemPrompt = getSystemPrompt(providerType);
+    let stepOrder = 0;
+
+    // Helper pour envoyer un log de réflexion
+    const sendThinking = async (step: ThinkingLog["step"], message: string, details?: string) => {
+      if (onThinking) {
+        try {
+          await onThinking({
+            step,
+            message,
+            details,
+            timestamp: new Date(),
+            order: stepOrder++,
+          });
+        } catch (e) {
+          logger.warn("[HybridAI] Erreur envoi thinking log", { error: e });
+        }
+      }
+    };
 
     logger.info("[HybridAI] Requête entrante", {
       providerType,
@@ -628,10 +648,13 @@ export class HybridAIService {
       isFactual: isFactualQuestion(userMessage)
     });
 
+    // 🆕 Étape 1: Analyse de la question
+    await sendThinking("analyzing_question", "📋 Analyse de votre question...");
+
     // 🆕 Obtenir le contexte régional
     const regionalContext = getRegionalContext(context?.country);
 
-    // Étape 1: Recherche web si question factuelle
+    // Étape 2: Recherche web si question factuelle
     let searchContext = "";
     let citations: string[] | undefined;
     let searchPerformed = false;
@@ -639,22 +662,48 @@ export class HybridAIService {
 
     if (this.config.usePerplexityForFactual && isFactualQuestion(userMessage)) {
       try {
-        const searchResult = await this.performWebSearch(userMessage, context);
+        // 🆕 Log: Début de recherche
+        await sendThinking("searching_web", "🔍 Recherche d'informations officielles...");
+
+        const searchResult = await this.performWebSearch(userMessage, context, sendThinking);
         searchContext = searchResult.content;
         citations = searchResult.citations;
         searchPerformed = true;
         officialSourcesUsed = searchResult.officialSourcesUsed;
+
+        // 🆕 Log: Résultats trouvés
+        const sourcesCount = citations?.length || 0;
+        await sendThinking(
+          "search_results",
+          `📄 ${sourcesCount} source${sourcesCount > 1 ? "s" : ""} ${officialSourcesUsed ? "officielle" : ""}${sourcesCount > 1 ? "s" : ""} trouvée${sourcesCount > 1 ? "s" : ""}`,
+          citations?.slice(0, 3).join("\n")
+        );
+
         logger.info("[HybridAI] Recherche web effectuée", {
           citationsCount: citations?.length,
           officialSourcesUsed
         });
       } catch (error) {
         logger.warn("[HybridAI] Recherche web échouée, continue sans", { error });
+        await sendThinking("search_results", "⚠️ Recherche web indisponible, analyse directe...");
       }
     }
 
     // Étape 2: Choisir le LLM principal selon providerType
     const useClaude = providerType === "lawyer" && this.config.useClaudeForLawyers;
+
+    // 🆕 Log: Analyse des sources (si recherche effectuée)
+    if (searchPerformed) {
+      await sendThinking("analyzing_sources", "📊 Analyse des informations collectées...");
+    }
+
+    // 🆕 Log: Génération de la réponse
+    await sendThinking(
+      "generating_response",
+      providerType === "lawyer"
+        ? "⚖️ Rédaction de l'analyse juridique..."
+        : "✍️ Rédaction de la réponse personnalisée..."
+    );
 
     // Étape 3: Appeler le LLM avec fallback
     try {
@@ -665,6 +714,9 @@ export class HybridAIService {
         citations,  // Passer les citations pour injection
         useClaude
       );
+
+      // 🆕 Log: Finalisation
+      await sendThinking("finalizing", "✅ Finalisation de la réponse...");
 
       // Déterminer le llmUsed basé sur le provider principal
       const mainProvider = response.provider as "claude" | "gpt";
@@ -716,9 +768,26 @@ export class HybridAIService {
     return userMessages[userMessages.length - 1]?.content || "";
   }
 
+  /**
+   * Construit une requête de recherche lisible pour l'affichage au prestataire
+   * (sans les termes techniques ajoutés pour optimiser la recherche)
+   */
+  private buildDisplayQuery(query: string, context?: AIRequestContext): string {
+    // Limiter la longueur de la question
+    const shortQuery = query.length > 60 ? query.substring(0, 60) + "..." : query;
+
+    // Ajouter le contexte pays si disponible
+    if (context?.country) {
+      return `${shortQuery} (${context.country})`;
+    }
+
+    return shortQuery;
+  }
+
   private async performWebSearch(
     query: string,
-    context?: AIRequestContext
+    context?: AIRequestContext,
+    sendThinking?: (step: ThinkingLog["step"], message: string, details?: string) => Promise<void>
   ): Promise<{ content: string; citations?: string[]; officialSourcesUsed: boolean }> {
     // 🆕 Obtenir le contexte régional pour améliorer la recherche
     const regionalContext = getRegionalContext(context?.country);
@@ -761,6 +830,12 @@ export class HybridAIService {
     searchParts.push("official government site requirements foreigners");
 
     const enrichedQuery = searchParts.join(" ");
+
+    // 🆕 Log: Afficher la requête de recherche (version simplifiée pour le prestataire)
+    const displayQuery = this.buildDisplayQuery(query, context);
+    if (sendThinking) {
+      await sendThinking("search_query", `🔎 « ${displayQuery} »`);
+    }
 
     logger.info("[HybridAI] Recherche internationale", {
       country: context?.country || "non spécifié",

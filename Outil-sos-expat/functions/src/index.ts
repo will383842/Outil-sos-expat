@@ -246,6 +246,48 @@ export const ingestBooking = onRequest(
       // =========================================================================
       const db = admin.firestore();
 
+      // ============================================================
+      // DEBUG: Log incoming payload from SOS
+      // ============================================================
+      logger.info(`📥 [ingestBooking-${requestId}] PAYLOAD RECEIVED FROM SOS:`, {
+        providerId: payload.providerId,
+        providerIdType: typeof payload.providerId,
+        providerIdLength: payload.providerId?.length || 0,
+        providerIdIsEmpty: !payload.providerId,
+        providerType: payload.providerType,
+        providerName: payload.providerName,
+        clientFirstName: payload.clientFirstName,
+        clientLastName: payload.clientLastName,
+        clientCurrentCountry: payload.clientCurrentCountry,
+        title: payload.title,
+        source: payload.source,
+        externalId: payload.externalId,
+        allPayloadKeys: Object.keys(payload),
+      });
+
+      // ============================================================
+      // DEBUG: Check if provider exists in Outil Firestore
+      // ============================================================
+      if (payload.providerId) {
+        const providerCheck = await db.collection("providers").doc(payload.providerId).get();
+        logger.info(`🔍 [ingestBooking-${requestId}] PROVIDER CHECK IN OUTIL:`, {
+          providerId: payload.providerId,
+          existsInOutil: providerCheck.exists,
+          providerData: providerCheck.exists ? {
+            name: providerCheck.data()?.name,
+            email: providerCheck.data()?.email,
+            forcedAIAccess: providerCheck.data()?.forcedAIAccess,
+            subscriptionStatus: providerCheck.data()?.subscriptionStatus,
+            hasActiveSubscription: providerCheck.data()?.hasActiveSubscription,
+          } : "PROVIDER_NOT_FOUND_IN_OUTIL",
+          FIX_IF_NOT_FOUND: `Si le provider n'existe pas, il faut le créer via syncProvider ou manuellement dans Firestore: providers/${payload.providerId}`,
+        });
+      } else {
+        logger.error(`❌ [ingestBooking-${requestId}] NO PROVIDER ID IN PAYLOAD!`, {
+          FIX: "SOS n'envoie pas de providerId. Vérifiez que createAndScheduleCallFunction inclut providerId dans outilPayload.",
+        });
+      }
+
       const bookingData = {
         // Client
         clientFirstName: payload.clientFirstName,
@@ -288,11 +330,29 @@ export const ingestBooking = onRequest(
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       };
 
+      // ============================================================
+      // DEBUG: Log booking data being saved
+      // ============================================================
+      logger.info(`💾 [ingestBooking-${requestId}] BOOKING DATA TO SAVE:`, {
+        providerId: bookingData.providerId,
+        providerType: bookingData.providerType,
+        aiProcessed: bookingData.aiProcessed,
+        clientName: bookingData.clientName,
+        title: bookingData.title,
+        NOTE: "aiOnBookingCreated trigger will fire after this save",
+      });
+
       // =========================================================================
       // 7. CRÉATION EN BASE
       // =========================================================================
       const bookingRef = db.collection("bookings").doc();
       await bookingRef.set(bookingData);
+
+      logger.info(`✅ [ingestBooking-${requestId}] BOOKING CREATED IN FIRESTORE`, {
+        bookingId: bookingRef.id,
+        providerId: bookingData.providerId,
+        NOTE: "aiOnBookingCreated trigger should fire now!",
+      });
 
       // =========================================================================
       // 8. LOG AUDIT

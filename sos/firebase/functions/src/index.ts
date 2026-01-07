@@ -441,6 +441,7 @@ import type { Request as ExpressRequest, Response } from "express";
 import { createAndScheduleCallHTTPS } from "./createAndScheduleCallFunction";
 
 import { runExecuteCallTask } from "./runtime/executeCallTask";
+import { runSetProviderAvailableTask, TASKS_AUTH_SECRET as PROVIDER_TASK_AUTH_SECRET } from "./runtime/setProviderAvailableTask";
 
 ultraLogger.debug("IMPORTS", "Imports principaux chargés avec succès");
 
@@ -944,6 +945,23 @@ export const executeCallTask = onRequest(
     secrets: [TASKS_AUTH_SECRET, ENCRYPTION_KEY, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER, STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST],
   },
   (req, res) => runExecuteCallTask(req as any, res as any)
+);
+
+// ========================================
+// 🕐 ENDPOINT CLOUD TASKS : set provider available after cooldown
+// ========================================
+export const setProviderAvailableTask = onRequest(
+  {
+    region: "europe-west1",
+    timeoutSeconds: 30,
+    memory: "256MiB" as const,
+    maxInstances: 10,
+    minInstances: 0,
+    concurrency: 1,
+    // Only needs TASKS_AUTH_SECRET for Cloud Tasks auth
+    secrets: [PROVIDER_TASK_AUTH_SECRET],
+  },
+  (req, res) => runSetProviderAvailableTask(req as any, res as any)
 );
 
 // ========================================

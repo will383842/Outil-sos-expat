@@ -6,7 +6,8 @@ import { logError } from "./utils/logs/logError";
 import { logCallRecord } from "./utils/logs/logCallRecord";
 import { stripeManager } from "./StripeManager";
 // P1-1 FIX: setProviderBusy removed - now only called from twilioWebhooks.ts
-import { setProviderAvailable } from "./callables/providerStatusManager";
+// 🕐 COOLDOWN: Use Cloud Task for delayed provider availability (5 min after call ends)
+import { scheduleProviderAvailableTask } from "./lib/tasks";
 // 🔒 Phone number encryption
 import { encryptPhoneNumber, decryptPhoneNumber } from "./utils/encryption";
 // P1-13: Sync atomique payments <-> call_sessions
@@ -1513,16 +1514,16 @@ export class TwilioCallManager {
         });
       }
 
-      // ===== NOUVEAU: Remettre le prestataire en statut "available" =====
+      // ===== COOLDOWN: Schedule provider to become available in 5 minutes =====
       try {
-        await setProviderAvailable(
+        const taskId = await scheduleProviderAvailableTask(
           callSession.metadata.providerId,
           `call_failed_${reason}`
         );
-        console.log(`✅ Provider ${callSession.metadata.providerId} marked as AVAILABLE after failure`);
+        console.log(`🕐 Provider ${callSession.metadata.providerId} will be AVAILABLE in 5 min (task: ${taskId})`);
       } catch (availableError) {
-        console.error(`⚠️ Failed to set provider available after failure (non-blocking):`, availableError);
-        await logError('TwilioCallManager:handleCallFailure:setAvailable', availableError as unknown);
+        console.error(`⚠️ Failed to schedule provider available task after failure (non-blocking):`, availableError);
+        await logError('TwilioCallManager:handleCallFailure:scheduleAvailable', availableError as unknown);
       }
 
       await logCallRecord({
@@ -1697,16 +1698,16 @@ export class TwilioCallManager {
       
       console.log(`📄 Just logging the record : ${sessionId}`);
 
-      // ===== NOUVEAU: Remettre le prestataire en statut "available" =====
+      // ===== COOLDOWN: Schedule provider to become available in 5 minutes =====
       try {
-        await setProviderAvailable(
+        const taskId = await scheduleProviderAvailableTask(
           callSession.metadata.providerId,
           'call_completed'
         );
-        console.log(`✅ Provider ${callSession.metadata.providerId} marked as AVAILABLE`);
+        console.log(`🕐 Provider ${callSession.metadata.providerId} will be AVAILABLE in 5 min (task: ${taskId})`);
       } catch (availableError) {
-        console.error(`⚠️ Failed to set provider available (non-blocking):`, availableError);
-        await logError('TwilioCallManager:handleCallCompletion:setAvailable', availableError as unknown);
+        console.error(`⚠️ Failed to schedule provider available task (non-blocking):`, availableError);
+        await logError('TwilioCallManager:handleCallCompletion:scheduleAvailable', availableError as unknown);
       }
 
       await logCallRecord({

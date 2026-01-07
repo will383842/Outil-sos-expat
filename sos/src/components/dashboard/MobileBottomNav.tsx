@@ -5,9 +5,11 @@
  * P0 FIX: Navigation via URL query params + indicateur actif clair
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { useLocaleNavigate } from '../../multilingual-system';
+import { getTranslatedRouteSlug, type RouteKey } from '../../multilingual-system/core/routing/localeRoutes';
+import { useApp } from '../../contexts/AppContext';
 import {
   User,
   Phone,
@@ -25,6 +27,23 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userRole, onMoreClick
   const navigate = useLocaleNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
+  const { language } = useApp();
+
+  // P0 FIX: Get translated routes based on current language
+  const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
+
+  const translatedRoutes = useMemo(() => {
+    const dashboardSlug = getTranslatedRouteSlug('dashboard' as RouteKey, langCode);
+    const aiAssistantSlug = getTranslatedRouteSlug('dashboard-ai-assistant' as RouteKey, langCode);
+    const subscriptionSlug = getTranslatedRouteSlug('dashboard-subscription' as RouteKey, langCode);
+
+    return {
+      dashboard: `/${dashboardSlug}`,
+      dashboardCalls: `/${dashboardSlug}?tab=calls`,
+      aiAssistant: `/${aiAssistantSlug}`,
+      subscription: `/${subscriptionSlug}`,
+    };
+  }, [langCode]);
 
   // P0 FIX: Determine active tab based on URL + query params
   const getActiveTab = (): string => {
@@ -34,12 +53,12 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userRole, onMoreClick
     // Check query param first (most specific)
     if (tabParam === 'calls') return 'calls';
 
-    // Check path for sub-routes
-    if (path.includes('/ai-assistant')) return 'ai';
-    if (path.includes('/subscription')) return 'subscription';
+    // Check path for sub-routes (match both translated and English paths)
+    if (path.includes('/ai-assistant') || path.includes('/assistant-ia')) return 'ai';
+    if (path.includes('/subscription') || path.includes('/abonnement')) return 'subscription';
 
     // Default to profile for dashboard root
-    if (path.includes('/dashboard') || path.includes('/tableau-de-bord')) {
+    if (path.includes('/dashboard') || path.includes('/tableau-de-bord') || path.includes('/panel')) {
       return tabParam || 'profile';
     }
 
@@ -48,25 +67,25 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userRole, onMoreClick
 
   const activeTab = getActiveTab();
 
-  // Navigation items with SHORT labels (max 5 chars)
+  // Navigation items with SHORT labels (max 5 chars) - using translated routes
   const navItems = [
     {
       key: 'profile',
       icon: User,
-      route: '/dashboard',
+      route: translatedRoutes.dashboard,
       label: 'Profil',
     },
     {
       key: 'calls',
       icon: Phone,
-      route: '/dashboard?tab=calls',
+      route: translatedRoutes.dashboardCalls,
       label: 'Appels',
     },
     // AI Assistant only for providers and admin
     ...(userRole === 'lawyer' || userRole === 'expat' || userRole === 'admin' ? [{
       key: 'ai',
       icon: Bot,
-      route: '/dashboard/ai-assistant',
+      route: translatedRoutes.aiAssistant,
       label: 'IA',
       badge: true,
     }] : []),
@@ -74,7 +93,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userRole, onMoreClick
     ...(userRole === 'lawyer' || userRole === 'expat' ? [{
       key: 'subscription',
       icon: CreditCard,
-      route: '/dashboard/subscription',
+      route: translatedRoutes.subscription,
       label: 'Abo',
     }] : []),
     {

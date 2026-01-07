@@ -3,9 +3,10 @@
  * S'ouvre depuis la droite avec animation fluide
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useLocaleNavigate } from '../../multilingual-system';
+import { getTranslatedRouteSlug, type RouteKey } from '../../multilingual-system/core/routing/localeRoutes';
 import { useIntl } from 'react-intl';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -86,60 +87,83 @@ const MobileSideDrawer: React.FC<MobileSideDrawerProps> = ({
 
   const activeKey = getActiveKey();
 
-  // All menu items
+  // P0 FIX: Get translated dashboard slug based on current language
+  const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
+
+  // Get translated routes for current language
+  const translatedRoutes = useMemo(() => {
+    const dashboardSlug = getTranslatedRouteSlug('dashboard' as RouteKey, langCode);
+    const aiAssistantSlug = getTranslatedRouteSlug('dashboard-ai-assistant' as RouteKey, langCode);
+    const subscriptionSlug = getTranslatedRouteSlug('dashboard-subscription' as RouteKey, langCode);
+    const loginSlug = getTranslatedRouteSlug('login' as RouteKey, langCode);
+
+    return {
+      dashboard: `/${dashboardSlug}`,
+      dashboardCalls: `/${dashboardSlug}?tab=calls`,
+      dashboardInvoices: `/${dashboardSlug}?tab=invoices`,
+      dashboardReviews: `/${dashboardSlug}?tab=reviews`,
+      dashboardMessages: `/${dashboardSlug}?tab=messages`,
+      dashboardFavorites: `/${dashboardSlug}?tab=favorites`,
+      aiAssistant: `/${aiAssistantSlug}`,
+      subscription: `/${subscriptionSlug}`,
+      login: `/${loginSlug}`,
+    };
+  }, [langCode]);
+
+  // All menu items (all 9 supported languages)
   const menuItems = [
     {
       key: 'profile',
       icon: User,
-      route: '/dashboard',
-      labels: { fr: 'Mon profil', en: 'My profile', es: 'Mi perfil', de: 'Mein Profil' },
+      route: translatedRoutes.dashboard,
+      labels: { fr: 'Mon profil', en: 'My profile', es: 'Mi perfil', de: 'Mein Profil', ru: 'Мой профиль', pt: 'Meu perfil', ch: '我的资料', hi: 'मेरी प्रोफ़ाइल', ar: 'ملفي' },
     },
     {
       key: 'calls',
       icon: Phone,
-      route: '/dashboard?tab=calls',
-      labels: { fr: 'Mes appels', en: 'My calls', es: 'Mis llamadas', de: 'Meine Anrufe' },
+      route: translatedRoutes.dashboardCalls,
+      labels: { fr: 'Mes appels', en: 'My calls', es: 'Mis llamadas', de: 'Meine Anrufe', ru: 'Мои звонки', pt: 'Minhas chamadas', ch: '我的通话', hi: 'मेरी कॉल', ar: 'مكالماتي' },
     },
     {
       key: 'invoices',
       icon: FileText,
-      route: '/dashboard?tab=invoices',
-      labels: { fr: 'Mes factures', en: 'My invoices', es: 'Mis facturas', de: 'Meine Rechnungen' },
+      route: translatedRoutes.dashboardInvoices,
+      labels: { fr: 'Mes factures', en: 'My invoices', es: 'Mis facturas', de: 'Meine Rechnungen', ru: 'Мои счета', pt: 'Minhas faturas', ch: '我的发票', hi: 'मेरे इनवॉयस', ar: 'فواتيري' },
     },
     {
       key: 'reviews',
       icon: Star,
-      route: '/dashboard?tab=reviews',
-      labels: { fr: 'Mes avis', en: 'My reviews', es: 'Mis reseñas', de: 'Meine Bewertungen' },
+      route: translatedRoutes.dashboardReviews,
+      labels: { fr: 'Mes avis', en: 'My reviews', es: 'Mis reseñas', de: 'Meine Bewertungen', ru: 'Мои отзывы', pt: 'Minhas avaliações', ch: '我的评价', hi: 'मेरी समीक्षाएं', ar: 'تقييماتي' },
     },
     {
       key: 'messages',
       icon: MessageSquare,
-      route: '/dashboard?tab=messages',
-      labels: { fr: 'Mes messages', en: 'My messages', es: 'Mis mensajes', de: 'Meine Nachrichten' },
+      route: translatedRoutes.dashboardMessages,
+      labels: { fr: 'Mes messages', en: 'My messages', es: 'Mis mensajes', de: 'Meine Nachrichten', ru: 'Мои сообщения', pt: 'Minhas mensagens', ch: '我的消息', hi: 'मेरे संदेश', ar: 'رسائلي' },
     },
     {
       key: 'favorites',
       icon: Bookmark,
-      route: '/dashboard?tab=favorites',
-      labels: { fr: 'Mes favoris', en: 'My favorites', es: 'Mis favoritos', de: 'Meine Favoriten' },
+      route: translatedRoutes.dashboardFavorites,
+      labels: { fr: 'Mes favoris', en: 'My favorites', es: 'Mis favoritos', de: 'Meine Favoriten', ru: 'Мое избранное', pt: 'Meus favoritos', ch: '我的收藏', hi: 'मेरे पसंदीदा', ar: 'مفضلاتي' },
     },
   ];
 
-  // AI items for providers
+  // AI items for providers (all 9 supported languages)
   const aiItems = (user?.role === 'lawyer' || user?.role === 'expat' || user?.role === 'admin') ? [
     {
       key: 'ai-assistant',
       icon: Bot,
-      route: '/dashboard/ai-assistant',
-      labels: { fr: 'Assistant IA', en: 'AI Assistant', es: 'Asistente IA', de: 'KI-Assistent' },
+      route: translatedRoutes.aiAssistant,
+      labels: { fr: 'Assistant IA', en: 'AI Assistant', es: 'Asistente IA', de: 'KI-Assistent', ru: 'ИИ Ассистент', pt: 'Assistente IA', ch: 'AI助手', hi: 'एआई सहायक', ar: 'مساعد الذكاء' },
       badge: 'NEW',
     },
     {
       key: 'subscription',
       icon: CreditCard,
-      route: '/dashboard/subscription',
-      labels: { fr: 'Mon Abonnement', en: 'My Subscription', es: 'Mi Suscripción', de: 'Mein Abo' },
+      route: translatedRoutes.subscription,
+      labels: { fr: 'Mon Abonnement', en: 'My Subscription', es: 'Mi Suscripción', de: 'Mein Abo', ru: 'Моя подписка', pt: 'Minha Assinatura', ch: '我的订阅', hi: 'मेरी सदस्यता', ar: 'اشتراكي' },
     },
   ] : [];
 
@@ -159,7 +183,7 @@ const MobileSideDrawer: React.FC<MobileSideDrawerProps> = ({
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/login');
+      navigate(translatedRoutes.login);
     } catch (error) {
       console.error('Logout error:', error);
     }

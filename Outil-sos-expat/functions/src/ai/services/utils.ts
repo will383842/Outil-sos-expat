@@ -194,13 +194,28 @@ export interface ProviderAIStatusResult {
  * @returns Résultat combiné avec accès et quota
  */
 export async function checkProviderAIStatus(providerId: string): Promise<ProviderAIStatusResult> {
+  const debugId = `status_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+
   try {
     const db = admin.firestore();
 
-    // 🔥 UNE SEULE lecture Firestore
+    // ============================================================
+    // DEBUG: Reading provider document
+    // ============================================================
+    console.log(`🔍 [checkProviderAIStatus-${debugId}] START: Reading providers/${providerId}`);
+
     const providerDoc = await db.collection("providers").doc(providerId).get();
 
+    console.log(`🔍 [checkProviderAIStatus-${debugId}] Provider doc exists: ${providerDoc.exists}`);
+
     if (!providerDoc.exists) {
+      console.error(`❌ [checkProviderAIStatus-${debugId}] PROVIDER NOT FOUND in Firestore!`, {
+        providerId,
+        collection: "providers",
+        FIX: `Le provider ${providerId} n'existe pas dans Firestore (outils-sos-expat).
+              Vérifiez que syncProvider a bien créé ce document.
+              Pour créer manuellement: Firestore > providers > ${providerId}`,
+      });
       return {
         hasAccess: false,
         accessReason: "provider_not_found",
@@ -213,6 +228,7 @@ export async function checkProviderAIStatus(providerId: string): Promise<Provide
 
     const provider = providerDoc.data();
     if (!provider) {
+      console.error(`❌ [checkProviderAIStatus-${debugId}] Provider data is empty!`);
       return {
         hasAccess: false,
         accessReason: "provider_data_empty",
@@ -223,41 +239,95 @@ export async function checkProviderAIStatus(providerId: string): Promise<Provide
       };
     }
 
+    // ============================================================
+    // DEBUG: Log all provider fields relevant to access
+    // ============================================================
+    console.log(`📋 [checkProviderAIStatus-${debugId}] PROVIDER DATA FOUND:`, {
+      providerId,
+      name: provider.name || provider.fullName || "NO_NAME",
+      email: provider.email || "NO_EMAIL",
+      type: provider.type || provider.providerType || "NO_TYPE",
+      // Access fields
+      forcedAIAccess: provider.forcedAIAccess,
+      forcedAIAccessType: typeof provider.forcedAIAccess,
+      freeTrialUntil: provider.freeTrialUntil,
+      subscriptionStatus: provider.subscriptionStatus,
+      "subscription.status": provider.subscription?.status,
+      hasActiveSubscription: provider.hasActiveSubscription,
+      // Quota fields
+      aiCallsUsed: provider.aiCallsUsed,
+      aiCallsLimit: provider.aiCallsLimit,
+      aiQuota: provider.aiQuota,
+      // All keys (for debugging)
+      allKeys: Object.keys(provider),
+    });
+
     // =====================================================
-    // VÉRIFICATION ACCÈS
+    // VÉRIFICATION ACCÈS - WITH DEBUG LOGGING
     // =====================================================
     let hasAccess = false;
     let accessReason = "no_active_subscription";
 
     // 1. Bypass admin: forcedAIAccess
+    console.log(`🔍 [checkProviderAIStatus-${debugId}] CHECK 1: forcedAIAccess === true?`, {
+      value: provider.forcedAIAccess,
+      type: typeof provider.forcedAIAccess,
+      isTrue: provider.forcedAIAccess === true,
+    });
     if (provider.forcedAIAccess === true) {
       hasAccess = true;
       accessReason = "forced_access";
+      console.log(`✅ [checkProviderAIStatus-${debugId}] ACCESS GRANTED: forcedAIAccess = true`);
     }
+
     // 2. Période d'essai gratuite
-    else if (provider.freeTrialUntil) {
+    if (!hasAccess && provider.freeTrialUntil) {
       const trialEnd = provider.freeTrialUntil.toDate?.() || new Date(provider.freeTrialUntil);
-      if (trialEnd > new Date()) {
+      const now = new Date();
+      console.log(`🔍 [checkProviderAIStatus-${debugId}] CHECK 2: freeTrialUntil`, {
+        trialEnd: trialEnd.toISOString(),
+        now: now.toISOString(),
+        isValid: trialEnd > now,
+      });
+      if (trialEnd > now) {
         hasAccess = true;
         accessReason = "free_trial";
+        console.log(`✅ [checkProviderAIStatus-${debugId}] ACCESS GRANTED: Free trial active until ${trialEnd.toISOString()}`);
       }
     }
+
     // 3. Vérifier le statut d'abonnement
     if (!hasAccess) {
       const subscriptionStatus = provider.subscriptionStatus || provider.subscription?.status;
+      console.log(`🔍 [checkProviderAIStatus-${debugId}] CHECK 3: subscriptionStatus`, {
+        subscriptionStatus,
+        "provider.subscriptionStatus": provider.subscriptionStatus,
+        "provider.subscription?.status": provider.subscription?.status,
+        isActiveOrTrialing: subscriptionStatus === "active" || subscriptionStatus === "trialing",
+      });
       if (subscriptionStatus === "active" || subscriptionStatus === "trialing") {
         hasAccess = true;
         accessReason = "subscription_active";
+        console.log(`✅ [checkProviderAIStatus-${debugId}] ACCESS GRANTED: Subscription status = ${subscriptionStatus}`);
       }
     }
+
     // 4. Flag legacy hasActiveSubscription
-    if (!hasAccess && provider.hasActiveSubscription === true) {
-      hasAccess = true;
-      accessReason = "subscription_active";
+    if (!hasAccess) {
+      console.log(`🔍 [checkProviderAIStatus-${debugId}] CHECK 4: hasActiveSubscription`, {
+        value: provider.hasActiveSubscription,
+        type: typeof provider.hasActiveSubscription,
+      });
+      if (provider.hasActiveSubscription === true) {
+        hasAccess = true;
+        accessReason = "subscription_active";
+        console.log(`✅ [checkProviderAIStatus-${debugId}] ACCESS GRANTED: hasActiveSubscription = true`);
+      }
     }
 
     // 5. Si toujours pas d'accès, vérifier sous-collection (rare)
     if (!hasAccess) {
+      console.log(`🔍 [checkProviderAIStatus-${debugId}] CHECK 5: Checking subscriptions subcollection...`);
       const subscriptionsSnap = await db
         .collection("providers")
         .doc(providerId)
@@ -266,14 +336,42 @@ export async function checkProviderAIStatus(providerId: string): Promise<Provide
         .limit(1)
         .get();
 
+      console.log(`🔍 [checkProviderAIStatus-${debugId}] CHECK 5: Subcollection result`, {
+        isEmpty: subscriptionsSnap.empty,
+        count: subscriptionsSnap.size,
+      });
+
       if (!subscriptionsSnap.empty) {
         hasAccess = true;
         accessReason = "subscription_active";
+        console.log(`✅ [checkProviderAIStatus-${debugId}] ACCESS GRANTED: Found active subscription in subcollection`);
       }
     }
 
+    // ============================================================
+    // DEBUG: Final access result
+    // ============================================================
+    if (!hasAccess) {
+      console.error(`❌ [checkProviderAIStatus-${debugId}] ACCESS DENIED!`, {
+        providerId,
+        reason: accessReason,
+        checkedFields: {
+          forcedAIAccess: provider.forcedAIAccess,
+          freeTrialUntil: provider.freeTrialUntil,
+          subscriptionStatus: provider.subscriptionStatus,
+          hasActiveSubscription: provider.hasActiveSubscription,
+        },
+        FIX: `Pour donner accès à l'IA au provider ${providerId}:
+              1. Firestore > providers > ${providerId} > forcedAIAccess = true
+              OU
+              2. Firestore > providers > ${providerId} > subscriptionStatus = "active"
+              OU
+              3. Firestore > providers > ${providerId} > hasActiveSubscription = true`,
+      });
+    }
+
     // =====================================================
-    // VÉRIFICATION QUOTA
+    // VÉRIFICATION QUOTA - WITH DEBUG LOGGING
     // =====================================================
     let hasQuota = true;
     const quotaUsed = provider.aiCallsUsed || 0;
@@ -288,6 +386,14 @@ export async function checkProviderAIStatus(providerId: string): Promise<Provide
 
     const quotaRemaining = quotaLimit === -1 ? -1 : Math.max(0, quotaLimit - quotaUsed);
 
+    console.log(`📊 [checkProviderAIStatus-${debugId}] QUOTA CHECK:`, {
+      quotaUsed,
+      quotaLimit,
+      quotaRemaining,
+      hasQuota,
+      isUnlimited: quotaLimit === -1,
+    });
+
     // Mettre en cache le résultat du quota
     if (hasQuota || !hasAccess) {
       const cacheResult: QuotaCheckResult = {
@@ -300,6 +406,15 @@ export async function checkProviderAIStatus(providerId: string): Promise<Provide
       quotaCache.set(providerId, { result: cacheResult, expiresAt: Date.now() + QUOTA_CACHE_TTL_MS });
     }
 
+    console.log(`🏁 [checkProviderAIStatus-${debugId}] FINAL RESULT:`, {
+      providerId,
+      hasAccess,
+      accessReason,
+      hasQuota,
+      quotaUsed,
+      quotaLimit,
+    });
+
     return {
       hasAccess,
       accessReason,
@@ -311,7 +426,7 @@ export async function checkProviderAIStatus(providerId: string): Promise<Provide
     };
 
   } catch (error) {
-    console.error("[checkProviderAIStatus] Erreur:", error);
+    console.error(`💥 [checkProviderAIStatus-${debugId}] EXCEPTION:`, error);
     return {
       hasAccess: false,
       accessReason: "error_checking_status",

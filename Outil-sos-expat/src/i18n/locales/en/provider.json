@@ -121,7 +121,9 @@
     "legalAssistant": "Legal Assistant",
     "yourQuestion": "Your question",
     "copyResponse": "Copy response",
-    "analyzing": "Legal analysis in progress...",
+    "analyzing": "Analysis in progress...",
+    "preparingResponse": "Preparing response...",
+    "step": "Step",
     "inputPlaceholder": "Type the client's question...",
     "keyboardHint": "Enter to send • Shift+Enter for new line"
   },

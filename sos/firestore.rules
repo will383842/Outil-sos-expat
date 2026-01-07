@@ -1447,6 +1447,16 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ================= PROVIDER STATUS LOGS =================
+    // Logs de changement de statut des prestataires (busy/available)
+    // Utilisé pour le feature shareBusyStatus (multi-providers)
+    match /provider_status_logs/{logId} {
+      // Lecture: Admin uniquement
+      allow read: if isAdmin();
+      // Ecriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
     // ================= AUTH BACKUPS =================
     // Metadonnees des backups Firebase Auth
     match /auth_backups/{backupId} {

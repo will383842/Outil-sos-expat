@@ -13,7 +13,7 @@ import * as admin from "firebase-admin";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { logger } from "firebase-functions";
 
-import type { MessageData, ConversationData, BookingData } from "../core/types";
+import type { MessageData, ConversationData, BookingData, ThinkingLog } from "../core/types";
 import {
   getAISettings,
   getProviderType,
@@ -251,17 +251,52 @@ export const aiOnProviderMessage = onDocumentCreated(
       // Get INTELLIGENT conversation history (preserves initial context + recent)
       const history = await buildConversationHistory(db, conversationId, convo);
 
+      // ═══════════════════════════════════════════════════════════════════════════
+      // 🆕 THINKING LOGS: Callback pour écrire les étapes en temps réel
+      // Le prestataire verra les recherches en direct dans l'interface
+      // ═══════════════════════════════════════════════════════════════════════════
+      const thinkingLogsRef = db
+        .collection("conversations")
+        .doc(conversationId)
+        .collection("thinking_logs");
+
+      // Nettoyer les anciens logs avant de commencer
+      const existingLogs = await thinkingLogsRef.get();
+      const cleanupBatch = db.batch();
+      existingLogs.docs.forEach(doc => cleanupBatch.delete(doc.ref));
+      if (!existingLogs.empty) {
+        await cleanupBatch.commit();
+      }
+
+      // Callback pour écrire chaque étape en temps réel
+      const onThinking = async (log: ThinkingLog): Promise<void> => {
+        try {
+          await thinkingLogsRef.add({
+            ...log,
+            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+          });
+          logger.debug("[AI] Thinking log écrit", { step: log.step, message: log.message });
+        } catch (e) {
+          logger.warn("[AI] Erreur écriture thinking log", { error: e });
+        }
+      };
+
       // Create service and call AI with enriched context (including provider language)
       const service = createService();
-      const response = await service.chat(history, providerType, {
+      const response = await service.chat(
+        history,
         providerType,
-        country: convo.bookingContext?.country,
-        clientName: convo.bookingContext?.clientName,
-        category: convo.bookingContext?.category,
-        urgency: convo.bookingContext?.urgency,
-        specialties: convo.bookingContext?.specialties,
-        providerLanguage,  // 🆕 Force AI to respond in provider's language
-      });
+        {
+          providerType,
+          country: convo.bookingContext?.country,
+          clientName: convo.bookingContext?.clientName,
+          category: convo.bookingContext?.category,
+          urgency: convo.bookingContext?.urgency,
+          specialties: convo.bookingContext?.specialties,
+          providerLanguage,  // 🆕 Force AI to respond in provider's language
+        },
+        onThinking  // 🆕 Passer le callback pour les logs temps réel
+      );
 
       // Batch for atomic operations
       const batch = db.batch();
@@ -301,6 +336,20 @@ export const aiOnProviderMessage = onDocumentCreated(
       });
 
       await batch.commit();
+
+      // 🆕 Nettoyer les thinking_logs après succès (le prestataire verra la réponse finale)
+      try {
+        const logsToDelete = await thinkingLogsRef.get();
+        if (!logsToDelete.empty) {
+          const deleteBatch = db.batch();
+          logsToDelete.docs.forEach(doc => deleteBatch.delete(doc.ref));
+          await deleteBatch.commit();
+          logger.debug("[AI] Thinking logs nettoyés", { count: logsToDelete.size });
+        }
+      } catch (cleanupError) {
+        // Pas critique si le nettoyage échoue
+        logger.warn("[AI] Erreur nettoyage thinking_logs", { error: cleanupError });
+      }
 
       // Increment AI usage after success
       await incrementAiUsage(providerId);

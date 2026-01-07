@@ -192,6 +192,38 @@ export interface HybridResponse {
 }
 
 // =============================================================================
+// 🆕 THINKING LOGS (Affichage temps réel des recherches)
+// =============================================================================
+
+/**
+ * Type d'étape de réflexion (affiché en temps réel au prestataire)
+ */
+export type ThinkingStep =
+  | "analyzing_question"    // Analyse de la question
+  | "searching_web"         // Recherche web en cours
+  | "search_query"          // Requête de recherche envoyée
+  | "search_results"        // Résultats trouvés
+  | "analyzing_sources"     // Analyse des sources
+  | "generating_response"   // Génération de la réponse
+  | "finalizing";           // Finalisation
+
+/**
+ * Log de réflexion (stocké dans Firestore pour affichage temps réel)
+ */
+export interface ThinkingLog {
+  step: ThinkingStep;
+  message: string;           // Message à afficher (ex: "🔍 Recherche: visa travail France")
+  details?: string;          // Détails supplémentaires optionnels
+  timestamp: Date;
+  order: number;             // Ordre d'affichage
+}
+
+/**
+ * Callback pour envoyer les logs de réflexion
+ */
+export type ThinkingCallback = (log: ThinkingLog) => Promise<void>;
+
+// =============================================================================
 // CONTEXTE DE REQUÊTE
 // =============================================================================
 

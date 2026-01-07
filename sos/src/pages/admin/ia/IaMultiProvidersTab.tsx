@@ -20,7 +20,10 @@ import {
   Unlink,
   Plus,
   X,
-  UserPlus
+  UserPlus,
+  Phone,
+  ToggleLeft,
+  ToggleRight
 } from 'lucide-react';
 import {
   collection,
@@ -138,7 +141,8 @@ export const IaMultiProvidersTab: React.FC = () => {
             activeProviderId: data.activeProviderId,
             providersCount: linkedIds.length,
             providers: providersDetails,
-            createdAt: data.createdAt?.toDate() || new Date()
+            createdAt: data.createdAt?.toDate() || new Date(),
+            shareBusyStatus: data.shareBusyStatus || false
           });
         }
       }
@@ -391,6 +395,42 @@ export const IaMultiProvidersTab: React.FC = () => {
     }
   };
 
+  /**
+   * Toggle shareBusyStatus - Quand activé, tous les prestataires liés
+   * passent en "busy" quand l'un d'eux est en appel
+   */
+  const toggleShareBusyStatus = async (account: MultiProviderAccount) => {
+    setSaving(account.userId);
+    setError(null);
+
+    try {
+      const newValue = !account.shareBusyStatus;
+
+      await updateDoc(doc(db, 'users', account.userId), {
+        shareBusyStatus: newValue,
+        updatedAt: serverTimestamp()
+      });
+
+      setAccounts(prev => prev.map(a => {
+        if (a.userId === account.userId) {
+          return { ...a, shareBusyStatus: newValue };
+        }
+        return a;
+      }));
+
+      setSuccess(newValue
+        ? 'Statut occupé partagé activé - Tous les prestataires seront busy ensemble'
+        : 'Statut occupé partagé désactivé - Prestataires indépendants'
+      );
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err: any) {
+      console.error('Error toggling shareBusyStatus:', err);
+      setError(err.message || 'Erreur lors de la modification');
+    } finally {
+      setSaving(null);
+    }
+  };
+
   const closeLinkModal = () => {
     setShowLinkModal(false);
     setLinkStep(1);
@@ -599,6 +639,50 @@ export const IaMultiProvidersTab: React.FC = () => {
 
                 {isExpanded && (
                   <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
+                    {/* Toggle pour partager le statut busy entre prestataires */}
+                    {account.providersCount >= 2 && (
+                      <div className="mb-4 p-3 bg-white rounded-lg border border-gray-200">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className={cn(
+                              'p-2 rounded-lg',
+                              account.shareBusyStatus ? 'bg-orange-100' : 'bg-gray-100'
+                            )}>
+                              <Phone className={cn(
+                                'w-4 h-4',
+                                account.shareBusyStatus ? 'text-orange-600' : 'text-gray-500'
+                              )} />
+                            </div>
+                            <div>
+                              <div className="font-medium text-gray-900">
+                                Partager le statut "Occupé"
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {account.shareBusyStatus
+                                  ? 'Tous les prestataires sont busy quand l\'un est en appel'
+                                  : 'Chaque prestataire est indépendant'
+                                }
+                              </div>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => toggleShareBusyStatus(account)}
+                            disabled={saving === account.userId}
+                            className={cn(
+                              'p-1 rounded-lg transition-colors',
+                              saving === account.userId && 'opacity-50 cursor-wait'
+                            )}
+                          >
+                            {account.shareBusyStatus ? (
+                              <ToggleRight className="w-10 h-10 text-orange-500" />
+                            ) : (
+                              <ToggleLeft className="w-10 h-10 text-gray-400" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="flex items-center justify-between mb-3">
                       <div className="text-sm font-medium text-gray-700">
                         Prestataires liés :

@@ -505,8 +505,6 @@ const App: React.FC = () => {
     <IntlProvider locale={locale} messages={messages[locale] as unknown as Record<string, string>} defaultLocale="fr" >
       <WizardProvider>
       <PWAProvider
-        showInstallBanner={!showAdminLayout}
-        showIOSInstructions={!showAdminLayout}
         enableOfflineStorage={true}
         enableBadging={true}
       >

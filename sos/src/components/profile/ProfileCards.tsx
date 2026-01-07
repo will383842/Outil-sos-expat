@@ -54,6 +54,8 @@ interface Provider {
   // Gestion statut busy pendant appels
   readonly availability?: 'available' | 'busy' | 'offline';
   readonly currentCallSessionId?: string | null;
+  readonly busySince?: number | null; // Timestamp when provider became busy
+  readonly busyBySibling?: boolean; // True if busy because a sibling provider is on a call
 }
 
 interface ProfileCardsProps {
@@ -78,6 +80,30 @@ const DEFAULT_ITEMS_PER_PAGE = 9;
 const DEFAULT_MAX_ITEMS = 100;
 const CAROUSEL_VISIBLE_ITEMS = 3;
 const DEBOUNCE_DELAY = 300;
+
+// Call duration constants (in minutes) + 5 min cooldown
+const CALL_DURATION_LAWYER = 20; // 20 min max for lawyers
+const CALL_DURATION_EXPAT = 30;  // 30 min max for expats
+const COOLDOWN_MINUTES = 5;      // 5 min cooldown after call
+
+/**
+ * Calculate remaining minutes until provider becomes available
+ * Based on busySince timestamp + max call duration + cooldown
+ */
+function calculateRemainingMinutes(
+  busySince: number | null | undefined,
+  providerType: 'lawyer' | 'expat'
+): number {
+  if (!busySince) return providerType === 'lawyer' ? CALL_DURATION_LAWYER : CALL_DURATION_EXPAT;
+
+  const maxDuration = providerType === 'lawyer' ? CALL_DURATION_LAWYER : CALL_DURATION_EXPAT;
+  const totalDuration = maxDuration + COOLDOWN_MINUTES; // call + 5 min cooldown
+  const elapsedMs = Date.now() - busySince;
+  const elapsedMinutes = Math.floor(elapsedMs / 60000);
+  const remaining = Math.max(1, totalDuration - elapsedMinutes);
+
+  return remaining;
+}
 
 // Extended country and language options
 const COUNTRY_OPTIONS = [
@@ -404,6 +430,8 @@ const provider: Provider = {
         availability: (data.availability === 'busy' ? 'busy' :
                        data.availability === 'offline' || !data.isOnline ? 'offline' : 'available') as 'available' | 'busy' | 'offline',
         currentCallSessionId: typeof data.currentCallSessionId === 'string' ? data.currentCallSessionId : null,
+        busySince: data.busySince?.toMillis?.() || (typeof data.busySince === 'number' ? data.busySince : null),
+        busyBySibling: data.busyBySibling === true,
         isApproved: data.isApproved === true,
         isVisible: data.isVisible !== false,
         isActive: data.isActive !== false,
@@ -994,8 +1022,26 @@ filtered = filtered.filter(p => {
                 )}
               </div>
             </div>
+
+            {/* Busy provider message with countdown */}
+            {provider.availability === 'busy' && (
+              <div className="absolute bottom-4 left-4 right-16 bg-orange-500/95 backdrop-blur-sm text-white px-3 py-2 rounded-xl text-xs">
+                <div className="font-semibold">
+                  {intl.formatMessage({ id: provider.busyBySibling ? 'card.busy.siblingMessage' : 'card.busy.message' })}
+                </div>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <Clock className="w-3 h-3" />
+                  <span>
+                    {provider.busyBySibling
+                      ? intl.formatMessage({ id: 'card.busy.siblingAvailableIn' }, { minutes: provider.type === 'lawyer' ? 20 : 30 })
+                      : intl.formatMessage({ id: 'card.busy.availableIn' }, { minutes: calculateRemainingMinutes(provider.busySince, provider.type) })
+                    }
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
-          
+
           <div className="p-6 flex flex-col h-80">
             <div className="mb-4">
               <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-red-600 transition-colors" itemProp="name">
@@ -1137,15 +1183,33 @@ filtered = filtered.filter(p => {
           
           <div className="absolute top-4 right-4">
             <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
-              provider.type === 'lawyer' 
-                ? 'bg-blue-500 text-white' 
+              provider.type === 'lawyer'
+                ? 'bg-blue-500 text-white'
                 : 'bg-purple-500 text-white'
             }`}>
               {provider.type === 'lawyer' ? intl.formatMessage({ id: 'role.lawyer' }) : intl.formatMessage({ id: 'role.expat' })}
             </div>
           </div>
+
+          {/* Busy provider message with countdown */}
+          {provider.availability === 'busy' && (
+            <div className="absolute bottom-3 left-3 right-3 bg-orange-500/95 backdrop-blur-sm text-white px-3 py-2 rounded-xl text-xs">
+              <div className="font-semibold">
+                {intl.formatMessage({ id: provider.busyBySibling ? 'card.busy.siblingMessage' : 'card.busy.message' })}
+              </div>
+              <div className="flex items-center gap-1 mt-0.5">
+                <Clock className="w-3 h-3" />
+                <span>
+                  {provider.busyBySibling
+                    ? intl.formatMessage({ id: 'card.busy.siblingAvailableIn' }, { minutes: provider.type === 'lawyer' ? 20 : 30 })
+                    : intl.formatMessage({ id: 'card.busy.availableIn' }, { minutes: calculateRemainingMinutes(provider.busySince, provider.type) })
+                  }
+                </span>
+              </div>
+            </div>
+          )}
         </div>
-        
+
         <div className="p-6">
           <h3 className="text-xl font-bold text-gray-900 mb-2" itemProp="name">
             {provider.name}

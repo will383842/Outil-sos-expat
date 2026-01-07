@@ -120,7 +120,9 @@
     "legalAssistant": "Assistant Juridique",
     "yourQuestion": "Votre question",
     "copyResponse": "Copier la réponse",
-    "analyzing": "Analyse juridique en cours...",
+    "analyzing": "Analyse en cours...",
+    "preparingResponse": "Préparation de la réponse...",
+    "step": "Étape",
     "inputPlaceholder": "Tapez la question du client...",
     "keyboardHint": "Entrée pour envoyer • Shift+Entrée pour retour à la ligne"
   },

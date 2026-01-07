@@ -568,7 +568,10 @@ export const createAndScheduleCallHTTPS = onCall(
         // P0 FIX: Use actual booking form data for SMS notifications instead of hardcoded values
         const title = bookingTitle || (serviceType === 'lawyer_call' ? 'Consultation avocat' : 'Consultation expat');
         const description = bookingDescription || `${title} - ${serviceType}`;
-        const interventionCountry = clientCurrentCountry || clientData?.country || 'N/A';
+        // P0 CRITICAL FIX: Use PROVIDER's country as intervention country
+        // The client contacts a provider based in Thailand for Thailand-related questions
+        // clientCurrentCountry often contains the client's residence (France) instead of the intervention country
+        const interventionCountry = providerDocData?.country || clientCurrentCountry || 'N/A';
         const clientDisplayName = clientFirstName || clientData?.firstName || clientName;
 
         console.log(`📨 [${requestId}]   - scheduledTime: ${scheduledTime.toISOString()}`);

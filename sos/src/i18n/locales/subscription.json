@@ -208,7 +208,7 @@
       "send": "Envoyer",
       "callsRemaining": "{count} appels restants ce mois",
       "unlimitedCalls": "Appels illimites",
-      "poweredBy": "Propulse par Claude & GPT-4",
+      "poweredBy": "Intelligence artificielle avancee",
       "tips": {
         "title": "Conseils",
         "tip1": "Soyez precis dans vos questions",
@@ -437,7 +437,7 @@
       "send": "Send",
       "callsRemaining": "{count} calls remaining this month",
       "unlimitedCalls": "Unlimited calls",
-      "poweredBy": "Powered by Claude & GPT-4",
+      "poweredBy": "Advanced AI technology",
       "tips": {
         "title": "Tips",
         "tip1": "Be specific in your questions",
@@ -666,7 +666,7 @@
       "send": "Enviar",
       "callsRemaining": "{count} llamadas restantes este mes",
       "unlimitedCalls": "Llamadas ilimitadas",
-      "poweredBy": "Impulsado por Claude & GPT-4",
+      "poweredBy": "Tecnologia IA avanzada",
       "tips": {
         "title": "Consejos",
         "tip1": "Se especifico en tus preguntas",
@@ -895,7 +895,7 @@
       "send": "Senden",
       "callsRemaining": "{count} Anrufe verbleibend diesen Monat",
       "unlimitedCalls": "Unbegrenzte Anrufe",
-      "poweredBy": "Betrieben von Claude & GPT-4",
+      "poweredBy": "Fortschrittliche KI-Technologie",
       "tips": {
         "title": "Tipps",
         "tip1": "Seien Sie spezifisch in Ihren Fragen",
@@ -1124,7 +1124,7 @@
       "send": "Enviar",
       "callsRemaining": "{count} chamadas restantes este mes",
       "unlimitedCalls": "Chamadas ilimitadas",
-      "poweredBy": "Desenvolvido por Claude & GPT-4",
+      "poweredBy": "Tecnologia IA avancada",
       "tips": {
         "title": "Dicas",
         "tip1": "Seja especifico em suas perguntas",
@@ -1353,7 +1353,7 @@
       "send": "Otpravit'",
       "callsRemaining": "{count} vyzovov ostalos' v etom mesyatse",
       "unlimitedCalls": "Neogranichennyye vyzovy",
-      "poweredBy": "Rabotayet na Claude & GPT-4",
+      "poweredBy": "Peredovyye tekhnologii II",
       "tips": {
         "title": "Sovety",
         "tip1": "Bud'te konkretny v voprosakh",
@@ -1582,7 +1582,7 @@
       "send": "Bheje",
       "callsRemaining": "Is mahine {count} call shesh",
       "unlimitedCalls": "Asimit call",
-      "poweredBy": "Claude & GPT-4 dvara sanchaalit",
+      "poweredBy": "Unnat AI taknik",
       "tips": {
         "title": "Sujhav",
         "tip1": "Apne savalo me vishisht rahe",
@@ -1811,7 +1811,7 @@
       "send": "Irsal",
       "callsRemaining": "{count} mukalamat mutabaqiya hadha al-shahr",
       "unlimitedCalls": "Mukalamat ghayr mahduda",
-      "poweredBy": "Ya'mal bi-wasilat Claude & GPT-4",
+      "poweredBy": "Tiqniyat dhaka' istina'i mutaqaddima",
       "tips": {
         "title": "Nasa'ih",
         "tip1": "Kun muhaddadan fi as'ilatik",
@@ -2040,7 +2040,7 @@
       "send": "Fasong",
       "callsRemaining": "Benyue shengyu {count} ci tonghua",
       "unlimitedCalls": "Wuxian tonghua",
-      "poweredBy": "You Claude he GPT-4 qudong",
+      "poweredBy": "Xianjin rengong zhineng jishu",
       "tips": {
         "title": "Tishi",
         "tip1": "Wenti yao juti",
