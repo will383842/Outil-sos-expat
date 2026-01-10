@@ -79,8 +79,6 @@ export { setRole } from "./admin";
 export { onUserCreate, initAdmin } from "./auth";
 export { backfillUsers } from "./backfill";
 
-// TEMPORAIRE - À SUPPRIMER APRÈS USAGE
-export { fixAdminAccess } from "./fix-admin-temp";
 
 // AI
 export { aiOnBookingCreated, aiOnProviderMessage, aiChat, aiChatStream } from "./ai";

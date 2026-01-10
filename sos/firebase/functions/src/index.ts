@@ -646,7 +646,7 @@ const initializeFirebase = traceFunction(
 
 // ====== ADMIN ACCESS HELPER ======
 // Vérifie les custom claims ET Firestore pour l'accès admin
-const ADMIN_EMAILS = ['williamsjullin@gmail.com', 'julienvalentine1@gmail.com'];
+const ADMIN_EMAILS = ['williamsjullin@gmail.com', 'williamjullin@gmail.com', 'julienvalentine1@gmail.com'];
 
 async function checkAdminAccess(request: { auth?: { uid: string; token: { email?: string; role?: string } } }): Promise<boolean> {
   if (!request.auth) return false;
