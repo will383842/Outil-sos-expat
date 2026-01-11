@@ -116,6 +116,50 @@ const Pricing: React.FC = () => {
     });
   }, []);
 
+  // ✅ FIX: Move effectivePrices and dynamicServices before handleSelectService
+  const effectivePrices = useMemo(() => {
+    if (!pricing) return { lawyer: null, expat: null };
+
+    return {
+      lawyer: getEffectivePrice(pricing as any, "lawyer", selectedCurrency),
+      expat: getEffectivePrice(pricing as any, "expat", selectedCurrency),
+    };
+  }, [pricing, selectedCurrency]);
+
+  const dynamicServices = useMemo<DynamicService[]>(() => {
+    if (!pricing || !effectivePrices.lawyer || !effectivePrices.expat)
+      return [];
+
+    return [
+      {
+        id: "expat_call",
+        type: "expat_call",
+        title: intl.formatMessage({ id: "pricing.expatTitle" }),
+        price: effectivePrices.expat.price.totalAmount,
+        duration: effectivePrices.expat.price.duration,
+        currency: selectedCurrency,
+        description: intl.formatMessage({ id: "pricing.expatDescription" }),
+        isActive: true,
+        connectionFee: effectivePrices.expat.price.connectionFeeAmount,
+        providerAmount: effectivePrices.expat.price.providerAmount,
+        effectivePrice: effectivePrices.expat,
+      },
+      {
+        id: "lawyer_call",
+        type: "lawyer_call",
+        title: intl.formatMessage({ id: "pricing.lawyerTitle" }),
+        price: effectivePrices.lawyer.price.totalAmount,
+        duration: effectivePrices.lawyer.price.duration,
+        currency: selectedCurrency,
+        description: intl.formatMessage({ id: "pricing.lawyerDescription" }),
+        isActive: true,
+        connectionFee: effectivePrices.lawyer.price.connectionFeeAmount,
+        providerAmount: effectivePrices.lawyer.price.providerAmount,
+        effectivePrice: effectivePrices.lawyer,
+      },
+    ];
+  }, [pricing, effectivePrices, selectedCurrency, intl]);
+
   const handleSelectService = useCallback(
     (serviceType: ServiceType | string) => {
       // Get price for selected service
@@ -252,49 +296,6 @@ const Pricing: React.FC = () => {
     },
     [intl]
   );
-
-  const effectivePrices = useMemo(() => {
-    if (!pricing) return { lawyer: null, expat: null };
-
-    return {
-      lawyer: getEffectivePrice(pricing as any, "lawyer", selectedCurrency),
-      expat: getEffectivePrice(pricing as any, "expat", selectedCurrency),
-    };
-  }, [pricing, selectedCurrency]);
-
-  const dynamicServices = useMemo<DynamicService[]>(() => {
-    if (!pricing || !effectivePrices.lawyer || !effectivePrices.expat)
-      return [];
-
-    return [
-      {
-        id: "expat_call",
-        type: "expat_call",
-        title: intl.formatMessage({ id: "pricing.expatTitle" }),
-        price: effectivePrices.expat.price.totalAmount,
-        duration: effectivePrices.expat.price.duration,
-        currency: selectedCurrency,
-        description: intl.formatMessage({ id: "pricing.expatDescription" }),
-        isActive: true,
-        connectionFee: effectivePrices.expat.price.connectionFeeAmount,
-        providerAmount: effectivePrices.expat.price.providerAmount,
-        effectivePrice: effectivePrices.expat,
-      },
-      {
-        id: "lawyer_call",
-        type: "lawyer_call",
-        title: intl.formatMessage({ id: "pricing.lawyerTitle" }),
-        price: effectivePrices.lawyer.price.totalAmount,
-        duration: effectivePrices.lawyer.price.duration,
-        currency: selectedCurrency,
-        description: intl.formatMessage({ id: "pricing.lawyerDescription" }),
-        isActive: true,
-        connectionFee: effectivePrices.lawyer.price.connectionFeeAmount,
-        providerAmount: effectivePrices.lawyer.price.providerAmount,
-        effectivePrice: effectivePrices.lawyer,
-      },
-    ];
-  }, [pricing, effectivePrices, selectedCurrency, intl]);
 
   const calculateDiscountedPrice = useCallback(
     (service: DynamicService): number => {

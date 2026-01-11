@@ -116,7 +116,11 @@ const buildMessage = (template: string, provider: ShareableProvider): string => 
 
 const haptic = (type: 'light' | 'success' = 'light') => {
   if ('vibrate' in navigator) {
-    navigator.vibrate(type === 'success' ? [10, 50, 10] : 10);
+    try {
+      navigator.vibrate(type === 'success' ? [10, 50, 10] : 10);
+    } catch {
+      // Ignore - vibration blocked by browser if no user interaction
+    }
   }
 };
 

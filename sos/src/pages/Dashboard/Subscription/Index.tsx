@@ -3,9 +3,10 @@
  * Page de gestion de l'abonnement du prestataire
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useIntl } from 'react-intl';
 import { useLocaleNavigate } from '../../../multilingual-system';
+import { getTranslatedRouteSlug, type RouteKey } from '../../../multilingual-system/core/routing/localeRoutes';
 import { useApp } from '../../../contexts/AppContext';
 import {
   CreditCard,
@@ -140,6 +141,17 @@ export const SubscriptionPage: React.FC = () => {
   const intl = useIntl();
   const { language: locale } = useApp();
   const navigate = useLocaleNavigate();
+
+  // ✅ FIX: Calculate translated routes based on current language
+  const langCode = (locale || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
+  const translatedRoutes = useMemo(() => {
+    const aiAssistantSlug = getTranslatedRouteSlug('dashboard-ai-assistant' as RouteKey, langCode);
+    const subscriptionPlansSlug = getTranslatedRouteSlug('dashboard-subscription-plans' as RouteKey, langCode);
+    return {
+      aiAssistant: `/${aiAssistantSlug}`,
+      subscriptionPlans: `/${subscriptionPlansSlug}`,
+    };
+  }, [langCode]);
 
   const { user } = useAuth();
   const {
@@ -293,7 +305,7 @@ export const SubscriptionPage: React.FC = () => {
                 subscription={subscription}
                 plan={currentPlan || null}
                 onManageBilling={openBillingPortal}
-                onChangePlan={() => navigate('/dashboard/subscription/plans')}
+                onChangePlan={() => navigate(translatedRoutes.subscriptionPlans)}
                 onCancelSubscription={() => setShowCancelModal(true)}
                 onReactivate={subscription.cancelAtPeriodEnd ? reactivateSubscription : undefined}
                 isLoading={subLoading}
@@ -308,7 +320,7 @@ export const SubscriptionPage: React.FC = () => {
               trialDaysRemaining={trialDaysRemaining}
               trialCallsRemaining={trialCallsRemaining}
               showUpgradePrompt
-              onUpgradeClick={() => navigate('/dashboard/subscription/plans')}
+              onUpgradeClick={() => navigate(translatedRoutes.subscriptionPlans)}
             />
           </div>
 
@@ -321,7 +333,7 @@ export const SubscriptionPage: React.FC = () => {
               </h3>
               <div className="space-y-2">
                 <button
-                  onClick={() => navigate('/dashboard/ai-assistant')}
+                  onClick={() => navigate(translatedRoutes.aiAssistant)}
                   className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors group"
                 >
                   <span className="flex items-center gap-3">
@@ -334,7 +346,7 @@ export const SubscriptionPage: React.FC = () => {
                 </button>
 
                 <button
-                  onClick={() => navigate('/dashboard/subscription/plans')}
+                  onClick={() => navigate(translatedRoutes.subscriptionPlans)}
                   className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors group"
                 >
                   <span className="flex items-center gap-3">

@@ -2,6 +2,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useLocaleNavigate } from "../multilingual-system/hooks/useLocaleNavigate";
+import { getTranslatedRouteSlug, type RouteKey } from "../multilingual-system/core/routing/localeRoutes";
 import {
   User,
   Settings,
@@ -414,6 +415,23 @@ const Dashboard: React.FC = () => {
     trialCallsRemaining: aiTrialCallsRemaining,
     canMakeAiCall
   } = useAiQuota();
+
+  // ✅ FIX: Calculate translated routes based on current language
+  const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
+
+  const translatedRoutes = useMemo(() => {
+    const dashboardSlug = getTranslatedRouteSlug('dashboard' as RouteKey, langCode);
+    const aiAssistantSlug = getTranslatedRouteSlug('dashboard-ai-assistant' as RouteKey, langCode);
+    const subscriptionSlug = getTranslatedRouteSlug('dashboard-subscription' as RouteKey, langCode);
+    const subscriptionPlansSlug = getTranslatedRouteSlug('dashboard-subscription-plans' as RouteKey, langCode);
+
+    return {
+      dashboard: `/${dashboardSlug}`,
+      aiAssistant: `/${aiAssistantSlug}`,
+      subscription: `/${subscriptionSlug}`,
+      subscriptionPlans: `/${subscriptionPlansSlug}`,
+    };
+  }, [langCode]);
 
   // ✅ P0 FIX: Remove debug logging to reduce console spam (was running on every auth state change)
   const [reviews, setReviews] = useState<ProviderReview[]>([]); //define the type here 
@@ -1956,7 +1974,7 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                               ch: "AI助手",
                               pt: "Assistente IA",
                               ar: "مساعد الذكاء الاصطناعي",
-                              route: "/dashboard/ai-assistant",
+                              route: translatedRoutes.aiAssistant,
                               badge: "NEW",
                             },
                             {
@@ -1971,7 +1989,7 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                               ch: "我的订阅",
                               pt: "Minha Assinatura",
                               ar: "اشتراكي",
-                              route: "/dashboard/subscription",
+                              route: translatedRoutes.subscription,
                             },
                           ]
                         : []),
@@ -1983,8 +2001,8 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                             if ('route' in item && item.route) {
                               navigate(item.route);
                             } else {
-                              // ✅ P0 FIX: Update URL instead of just state - enables refresh/history
-                              navigate(`/dashboard?tab=${item.key}`);
+                              // ✅ FIX: Use translated dashboard route with query param
+                              navigate(`${translatedRoutes.dashboard}?tab=${item.key}`);
                             }
                           }}
                           className={`group relative w-full flex items-center px-4 py-2 text-sm font-medium ${UI.radiusSm} transition-all
@@ -2120,7 +2138,7 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                       {/* Upgrade button if needed */}
                       {!canMakeAiCall && (
                         <button
-                          onClick={() => navigate("/dashboard/subscription/plans")}
+                          onClick={() => navigate(translatedRoutes.subscriptionPlans)}
                           className="w-full mt-3 py-2 text-xs font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all"
                         >
                           {intl.formatMessage({ id: "dashboard.choosePlan" })}

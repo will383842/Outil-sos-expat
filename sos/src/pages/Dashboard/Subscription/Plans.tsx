@@ -3,9 +3,10 @@
  * Page de sélection des plans d'abonnement
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useIntl } from 'react-intl';
 import { useLocaleNavigate } from '../../../multilingual-system';
+import { getTranslatedRouteSlug, type RouteKey } from '../../../multilingual-system/core/routing/localeRoutes';
 import { useApp } from '../../../contexts/AppContext';
 import { ArrowLeft, Check, Shield, CreditCard, Loader2 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
@@ -31,6 +32,7 @@ interface CheckoutFormProps {
   onSuccess: () => void;
   onCancel: () => void;
   locale: SupportedLanguage;
+  successUrl: string;
 }
 
 const CheckoutForm: React.FC<CheckoutFormProps> = ({
@@ -38,7 +40,8 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
   currency,
   onSuccess,
   onCancel,
-  locale
+  locale,
+  successUrl
 }) => {
   const intl = useIntl();
   const stripe = useStripe();
@@ -79,7 +82,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
           elements,
           clientSecret: result.clientSecret,
           confirmParams: {
-            return_url: `${window.location.origin}/dashboard/subscription/success`
+            return_url: successUrl
           }
         });
 
@@ -374,6 +377,15 @@ export const PlansPage: React.FC = () => {
   const { language: locale } = useApp();
   const navigate = useLocaleNavigate();
 
+  // ✅ FIX: Calculate translated routes based on current language
+  const langCode = (locale || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
+  const translatedRoutes = useMemo(() => {
+    const subscriptionSuccessSlug = getTranslatedRouteSlug('dashboard-subscription-success' as RouteKey, langCode);
+    return {
+      subscriptionSuccess: `/${subscriptionSuccessSlug}`,
+    };
+  }, [langCode]);
+
   const { user } = useAuth();
   const { subscription, plans, loading } = useSubscription();
 
@@ -401,7 +413,7 @@ export const PlansPage: React.FC = () => {
 
   // Handle successful subscription
   const handleSuccess = () => {
-    navigate('/dashboard/subscription/success');
+    navigate(translatedRoutes.subscriptionSuccess);
   };
 
   // Calculate price based on billing period
@@ -491,6 +503,7 @@ export const PlansPage: React.FC = () => {
                     onSuccess={handleSuccess}
                     onCancel={() => setShowCheckout(false)}
                     locale={locale}
+                    successUrl={`${window.location.origin}/${langCode}${translatedRoutes.subscriptionSuccess}`}
                   />
                 </Elements>
               )}

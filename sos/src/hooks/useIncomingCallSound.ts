@@ -200,9 +200,13 @@ const playSoftRingtone = async (): Promise<void> => {
 // Vibration douce (pour mobiles)
 const triggerVibration = (): void => {
   if ('vibrate' in navigator) {
-    // Pattern de vibration DOUX: courtes impulsions légères avec longues pauses
-    // 100ms vibration, 300ms pause, 100ms vibration, 500ms pause
-    navigator.vibrate([100, 300, 100, 500, 80]);
+    try {
+      // Pattern de vibration DOUX: courtes impulsions légères avec longues pauses
+      // 100ms vibration, 300ms pause, 100ms vibration, 500ms pause
+      navigator.vibrate([100, 300, 100, 500, 80]);
+    } catch {
+      // Ignore - vibration blocked by browser if no user interaction
+    }
   }
 };
 
@@ -239,7 +243,11 @@ export const useIncomingCallSound = ({
     }
     // Arrêter la vibration
     if ('vibrate' in navigator) {
-      navigator.vibrate(0);
+      try {
+        navigator.vibrate(0);
+      } catch {
+        // Ignore - vibration blocked by browser
+      }
     }
   }, []);
 

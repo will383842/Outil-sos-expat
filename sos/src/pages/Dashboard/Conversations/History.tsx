@@ -6,6 +6,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useLocaleNavigate } from "../../../multilingual-system";
+import { getTranslatedRouteSlug, type RouteKey } from "../../../multilingual-system/core/routing/localeRoutes";
 import { useIntl } from "react-intl";
 import { useApp } from "../../../contexts/AppContext";
 import {
@@ -222,6 +223,15 @@ export const ConversationHistory: React.FC = () => {
   const navigate = useLocaleNavigate();
   const { user } = useAuth();
 
+  // ✅ FIX: Calculate translated routes based on current language
+  const langCode = (locale || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
+  const translatedRoutes = useMemo(() => {
+    const aiAssistantSlug = getTranslatedRouteSlug('dashboard-ai-assistant' as RouteKey, langCode);
+    return {
+      aiAssistant: `/${aiAssistantSlug}`,
+    };
+  }, [langCode]);
+
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -343,7 +353,7 @@ export const ConversationHistory: React.FC = () => {
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
           <button
-            onClick={() => navigate("/dashboard/ai-assistant")}
+            onClick={() => navigate(translatedRoutes.aiAssistant)}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-gray-600" />

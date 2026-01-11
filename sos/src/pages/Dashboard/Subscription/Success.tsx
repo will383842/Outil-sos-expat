@@ -3,10 +3,11 @@
  * Page de confirmation après abonnement réussi
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useIntl } from 'react-intl';
 import { useSearchParams } from 'react-router-dom';
 import { useLocaleNavigate } from '../../../multilingual-system';
+import { getTranslatedRouteSlug, type RouteKey } from '../../../multilingual-system/core/routing/localeRoutes';
 import { CheckCircle, Sparkles, ArrowRight, Zap, Gift } from 'lucide-react';
 import Confetti from 'react-confetti';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
@@ -20,6 +21,17 @@ export const SubscriptionSuccessPage: React.FC = () => {
   const { language: locale } = useApp();
   const navigate = useLocaleNavigate();
   const [searchParams] = useSearchParams();
+
+  // ✅ FIX: Calculate translated routes based on current language
+  const langCode = (locale || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
+  const translatedRoutes = useMemo(() => {
+    const aiAssistantSlug = getTranslatedRouteSlug('dashboard-ai-assistant' as RouteKey, langCode);
+    const subscriptionSlug = getTranslatedRouteSlug('dashboard-subscription' as RouteKey, langCode);
+    return {
+      aiAssistant: `/${aiAssistantSlug}`,
+      subscription: `/${subscriptionSlug}`,
+    };
+  }, [langCode]);
 
   const { subscription, plans, refresh } = useSubscription();
   const [showConfetti, setShowConfetti] = useState(true);
@@ -105,7 +117,7 @@ export const SubscriptionSuccessPage: React.FC = () => {
           {/* CTA Buttons */}
           <div className="space-y-3">
             <button
-              onClick={() => navigate('/dashboard/ai-assistant')}
+              onClick={() => navigate(translatedRoutes.aiAssistant)}
               className="w-full py-4 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
             >
               {intl.formatMessage({ id: 'subscription.success.startUsing' })}
@@ -113,7 +125,7 @@ export const SubscriptionSuccessPage: React.FC = () => {
             </button>
 
             <button
-              onClick={() => navigate('/dashboard/subscription')}
+              onClick={() => navigate(translatedRoutes.subscription)}
               className="w-full py-3 px-6 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
             >
               {intl.formatMessage({ id: 'subscription.success.viewSubscription' })}

@@ -8,9 +8,10 @@
  * - Cette page sert de "passerelle" vers l'Outil
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useIntl } from 'react-intl';
 import { useLocaleNavigate } from '../../../multilingual-system';
+import { getTranslatedRouteSlug, type RouteKey } from '../../../multilingual-system/core/routing/localeRoutes';
 import { useApp } from '../../../contexts/AppContext';
 import {
   Bot,
@@ -161,6 +162,17 @@ export const AiAssistantPage: React.FC = () => {
   const locale = language;
   const { user } = useAuth();
 
+  // ✅ FIX: Calculate translated routes based on current language
+  const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
+  const translatedRoutes = useMemo(() => {
+    const subscriptionSlug = getTranslatedRouteSlug('dashboard-subscription' as RouteKey, langCode);
+    const subscriptionPlansSlug = getTranslatedRouteSlug('dashboard-subscription-plans' as RouteKey, langCode);
+    return {
+      subscription: `/${subscriptionSlug}`,
+      subscriptionPlans: `/${subscriptionPlansSlug}`,
+    };
+  }, [langCode]);
+
   // Hooks
   const {
     currentUsage,
@@ -227,7 +239,7 @@ export const AiAssistantPage: React.FC = () => {
   const handleAccessOutil = async () => {
     if (!canMakeAiCall) {
       // Show upgrade modal or redirect to plans
-      navigate('/dashboard/subscription/plans');
+      navigate(translatedRoutes.subscriptionPlans);
       return;
     }
 
@@ -360,7 +372,7 @@ export const AiAssistantPage: React.FC = () => {
 
               {!canMakeAiCall && (
                 <button
-                  onClick={() => navigate('/dashboard/subscription/plans')}
+                  onClick={() => navigate(translatedRoutes.subscriptionPlans)}
                   className="w-full mt-3 py-2 text-sm text-white/80 hover:text-white underline"
                 >
                   {intl.formatMessage({ id: 'subscription.viewPlans' })}
@@ -376,7 +388,7 @@ export const AiAssistantPage: React.FC = () => {
               trialDaysRemaining={trialDaysRemaining}
               trialCallsRemaining={trialCallsRemaining}
               showUpgradePrompt={isNearQuotaLimit}
-              onUpgradeClick={() => navigate('/dashboard/subscription/plans')}
+              onUpgradeClick={() => navigate(translatedRoutes.subscriptionPlans)}
             />
 
             {/* Subscription Info */}
@@ -418,7 +430,7 @@ export const AiAssistantPage: React.FC = () => {
                 </div>
 
                 <button
-                  onClick={() => navigate('/dashboard/subscription')}
+                  onClick={() => navigate(translatedRoutes.subscription)}
                   className="w-full mt-2 py-2 text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center justify-center gap-1"
                 >
                   {intl.formatMessage({ id: 'subscription.manageBilling' })}
