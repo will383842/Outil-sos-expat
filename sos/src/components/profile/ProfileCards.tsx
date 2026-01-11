@@ -56,6 +56,10 @@ interface Provider {
   readonly currentCallSessionId?: string | null;
   readonly busySince?: number | null; // Timestamp when provider became busy
   readonly busyBySibling?: boolean; // True if busy because a sibling provider is on a call
+  // Pays d'intervention (intervention countries)
+  readonly practiceCountries?: readonly string[];
+  readonly operatingCountries?: readonly string[];
+  readonly interventionCountries?: readonly string[];
 }
 
 interface ProfileCardsProps {
@@ -397,10 +401,19 @@ const ProfileCards: React.FC<ProfileCardsProps> = ({
         ? data.specialties.filter((spec: unknown) => typeof spec === 'string' && spec.trim().length > 0)
         : [];
         
-      const certifications = Array.isArray(data.certifications) 
+      const certifications = Array.isArray(data.certifications)
         ? data.certifications.filter((cert: unknown) => typeof cert === 'string' && cert.trim().length > 0)
         : [];
-      
+
+      // ✅ Pays d'intervention (avec fallback entre les 3 formats)
+      const practiceCountries = Array.isArray(data.practiceCountries)
+        ? data.practiceCountries.filter((c: unknown) => typeof c === 'string' && c.trim().length > 0)
+        : Array.isArray(data.operatingCountries)
+        ? data.operatingCountries.filter((c: unknown) => typeof c === 'string' && c.trim().length > 0)
+        : Array.isArray(data.interventionCountries)
+        ? data.interventionCountries.filter((c: unknown) => typeof c === 'string' && c.trim().length > 0)
+        : [];
+
       // Safe timestamp conversion
       const createdAt = data.createdAt?.toMillis ? data.createdAt.toMillis() : (data.createdAt || Date.now());
       const updatedAt = data.updatedAt?.toMillis ? data.updatedAt.toMillis() : (data.updatedAt || Date.now());
@@ -453,13 +466,18 @@ const provider: Provider = {
         successRate: Math.max(0, Math.min(100, Number(data.successRate) || 100)),
         certifications: Object.freeze(certifications),
         slug: String(data.slug || fullName.toLowerCase().replace(/[^a-z0-9]+/g, '-')),
+        // ✅ Pays d'intervention (avec alias pour compatibilité)
+        practiceCountries: Object.freeze(practiceCountries),
+        operatingCountries: Object.freeze(practiceCountries), // Alias
+        interventionCountries: Object.freeze(practiceCountries), // Alias
       };
-      
+
       console.log('✅ Provider créé:', {
         id: provider.id,
         name: provider.name,
         languages: provider.languages,
         languagesCount: provider.languages.length,
+        practiceCountries: practiceCountries.length,
       });
       
       return provider;
