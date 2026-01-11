@@ -2,6 +2,7 @@ import React from 'react';
 import { ArrowRight, Shield, Rocket, Zap, CheckCircle, Award, ShieldCheck, Star } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { useIntl } from 'react-intl';
+import { trackMetaLead } from '../../utils/metaPixel';
 
 // ? SOSIcon du code home.tsx
 const SOSIcon: React.FC<{ className?: string; size?: 'sm' | 'md' | 'lg' | 'xl' }> = ({ 
@@ -80,6 +81,7 @@ const CTASection: React.FC = () => {
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center mb-8 sm:mb-12">
             <a
               href="/sos-appel"
+              onClick={() => trackMetaLead({ content_name: 'cta_start_now', content_category: 'general' })}
               className="group px-8 sm:px-10 py-4 sm:py-5 bg-white text-red-600 font-bold rounded-xl sm:rounded-2xl shadow-2xl hover:shadow-3xl hover:scale-105 transition-all text-base sm:text-lg"
             >
               <span className="flex items-center justify-center gap-3">

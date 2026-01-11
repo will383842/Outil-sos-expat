@@ -41,6 +41,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import type { User } from "../../contexts/types";
+import { trackMetaLead } from "../../utils/metaPixel";
 
 // ============================================================================
 // TYPES
@@ -1547,6 +1548,7 @@ const Header: React.FC = () => {
                   <div className="mx-6">
                     <Link
                       to="/sos-appel"
+                      onClick={() => trackMetaLead({ content_name: 'header_sos_call', content_category: 'general' })}
                       className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800
                         text-white px-3 py-1 rounded-2xl font-bold flex items-center space-x-2
                         shadow-lg border-2 border-white/20 transition-all"
@@ -1631,6 +1633,7 @@ const Header: React.FC = () => {
             <div className="flex items-center gap-3">
               <Link
                 to="/sos-appel"
+                onClick={() => trackMetaLead({ content_name: 'mobile_header_sos_call', content_category: 'general' })}
                 className="bg-gradient-to-r from-red-600 to-red-700 text-white px-7 py-2.5
                   rounded-2xl font-bold text-base flex items-center space-x-2 border border-white/20"
                 aria-label={t.sosCall}

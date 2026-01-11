@@ -120,50 +120,41 @@
     })();
   </script>
 
-  <!-- ✅✅✅ META PIXEL (Facebook) — AJOUT MINIMAL -->
+  <!-- ✅✅✅ META PIXEL (Facebook) — SANS GDPR (TRACK DIRECT) -->
   <script>
     (function () {
       var PIXEL_ID = '1887073748568784';
 
       !function (f, b, e, v, n, t, s) {
-        if (f.fbq) return; n = f.fbq = function () {
+        if (f.fbq) return;
+        n = f.fbq = function () {
           n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments)
         };
-        if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
-        n.queue = []; t = b.createElement(e); t.async = !0;
-        t.src = v; s = b.getElementsByTagName(e)[0];
+        if (!f._fbq) f._fbq = n;
+        n.push = n;
+        n.loaded = !0;
+        n.version = '2.0';
+        n.queue = [];
+        t = b.createElement(e);
+        t.async = !0;
+        t.src = v;
+        s = b.getElementsByTagName(e)[0];
         s.parentNode.insertBefore(t, s)
       }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
 
       fbq('init', PIXEL_ID);
 
-      // Default: blocked (GDPR)
-      try { fbq('consent', 'revoke'); } catch (e) { }
+      // ✅ Track immédiatement (aucun consentement / GDPR)
+      fbq('track', 'PageView');
 
-      // Restore consent if marketing already accepted
-      try {
-        var saved = localStorage.getItem('cookie_preferences');
-        if (saved) {
-          var prefs = JSON.parse(saved);
-          if (prefs && prefs.marketing === true) {
-            try { fbq('consent', 'grant'); } catch (e) { }
-            fbq('track', 'PageView');
-          }
-        }
-      } catch (e) { }
+      // Flag éventuel si tu veux conditionner des events côté app
+      window.__metaMarketingGranted = true;
 
-      // Helper for your cookie banner
-      window.metaPixelConsent = function (marketingGranted) {
-        try { fbq('consent', marketingGranted ? 'grant' : 'revoke'); } catch (e) { }
-        if (marketingGranted) fbq('track', 'PageView');
-      };
+      // On garde la fonction pour ne rien casser si ta bannière l'appelle
+      window.metaPixelConsent = function () { };
     })();
   </script>
-  <noscript>
-    <img height="1" width="1" style="display:none"
-      src="https://www.facebook.com/tr?id=1887073748568784&ev=PageView&noscript=1" />
-  </noscript>
-  <!-- ✅✅✅ FIN META PIXEL -->
+  <!-- ✅✅✅ FIN META PIXEL (noscript moved to body) -->
 
   <!-- 🚀 PERFORMANCE HINTS -->
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
@@ -212,7 +203,7 @@
   <!-- 🔍 BOTS -->
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
   <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-  <meta name="bingbot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+  <meta name="bingbot" content="index, follow, max-snippet:-1, max-image-preview:-1, max-video-preview:-1" />
 
   <!-- 🎨 CRITICAL CSS - TOUT EN CSS STATIQUE -->
   <style>
@@ -309,6 +300,12 @@
 </head>
 
 <body>
+  <!-- Meta Pixel noscript fallback -->
+  <noscript>
+    <img height="1" width="1" style="display:none"
+      src="https://www.facebook.com/tr?id=1887073748568784&ev=PageView&noscript=1" />
+  </noscript>
+
   <!-- 🌍 LOCALE REDIRECT - Must be FIRST before anything else -->
   <script>
     (function () {

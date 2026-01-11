@@ -67,6 +67,7 @@ import {
 } from '../data/languages-spoken';
 
 import { formatSpecialties, mapLanguageToLocale } from '../utils/specialtyMapper';
+import { trackMetaLead, trackMetaViewContent } from '../utils/metaPixel';
 
 
 /* =========================
@@ -2771,6 +2772,12 @@ const SOSCall: React.FC = () => {
   const handleProviderClick = useCallback((provider: Provider) => {
     // Protection contre le double-clic
     if (isNavigatingRef.current) return;
+
+    // Track Meta Pixel Lead - utilisateur a selectionne un provider
+    trackMetaLead({
+      content_name: 'provider_selected',
+      content_category: provider.type,
+    });
 
     const typeSlug = provider.type === "lawyer" ? "avocat" : "expatrie";
     const countrySlug = slugify(provider.country);

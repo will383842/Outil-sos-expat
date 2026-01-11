@@ -10,6 +10,7 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AdminRoutesV2 from '@/components/admin/AdminRoutesV2';
 import { trackEvent, hasAnalyticsConsent } from './utils/ga4';
+import MetaPageViewTracker from './components/common/MetaPageViewTracker';
 import './App.css';
 import PWAProvider from './components/pwa/PWAProvider';
 import { WizardProvider } from './contexts/WizardContext';
@@ -188,7 +189,7 @@ const routeConfigs: RouteConfig[] = [
   { path: "/appel-expatrie", component: ExpatCall, translated: "expat-call" },
 
   // Fournisseurs publics (utilise SOSCall sans wizard)
-  { path: "/providers", component: SOSCall, translated: "providers" },
+  { path: "/providers", component: SOSCall, alias: "/nos-experts", translated: "providers" },
   { path: "/provider/:id", component: ProviderProfile },
   // Simplified route patterns - just type and slug
   { path: "/avocat/:slug", component: ProviderProfile, translated: "lawyer" },
@@ -536,6 +537,8 @@ const App: React.FC = () => {
         <LocaleRouter>
           {/* P1-1 FIX: Track page views for GA4 analytics */}
           <PageViewTracker />
+          {/* Meta Pixel: Track page views for Facebook/Meta ads */}
+          <MetaPageViewTracker />
           <div className={`App ${isMobile ? "mobile-layout" : "desktop-layout"}`}>
             <DefaultHelmet pathname={location.pathname} />
 

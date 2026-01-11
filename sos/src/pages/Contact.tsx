@@ -24,6 +24,7 @@ import SEOHead from "../components/layout/SEOHead";
 import Button from "../components/common/Button";
 import { useApp } from "../contexts/AppContext";
 import { phoneCodesData } from "../data/phone-codes";
+import { languagesData, type SupportedLocale } from "../data/languages-spoken";
 import {
   collection,
   addDoc,
@@ -513,50 +514,18 @@ const Contact: React.FC = () => {
     [formErrors]
   );
 
-  // Liste des langues disponibles
-  const availableLanguages = useMemo(
-    () => [
-      "Français",
-      "English",
-      "العربية",
-      "Español",
-      "Italiano",
-      "Deutsch",
-      "Português",
-      "中文",
-      "日本語",
-      "한국어",
-      "Русский",
-      "Nederlands",
-      "Polski",
-      "Türkçe",
-      "Svenska",
-      "Norsk",
-      "Dansk",
-      "Suomi",
-      "Ελληνικά",
-      "हिन्दी",
-      "Čeština",
-      "Slovenčina",
-      "Magyar",
-      "Română",
-      "Hrvatski",
-      "Srpski",
-      "Български",
-      "Lietuvių",
-      "Latviešu",
-      "Eesti",
-      "Slovenščina",
-      "עברית",
-      "فارسی",
-      "ไทย",
-      "Tiếng Việt",
-      "Bahasa Indonesia",
-      "Bahasa Malaysia",
-      "Filipino",
-    ],
-    []
-  );
+  // Liste des langues disponibles depuis languages-spoken.ts
+  const availableLanguages = useMemo(() => {
+    // Mapper la locale courante vers le format de languagesData
+    const localeKey = (lang === 'fr' ? 'fr' : lang === 'en' ? 'en' : lang === 'es' ? 'es' :
+                       lang === 'de' ? 'de' : lang === 'pt' ? 'pt' : lang === 'ru' ? 'ru' :
+                       lang === 'hi' ? 'hi' : lang === 'ar' ? 'ar' : 'en') as SupportedLocale;
+
+    return languagesData.map(language => {
+      // Utiliser le label traduit ou le nom natif comme fallback
+      return language.labels[localeKey] || language.nativeName || language.name;
+    }).sort((a, b) => a.localeCompare(b, lang));
+  }, [lang]);
 
   // Fonction pour gérer les changements de langues
   const handleLanguageToggle = useCallback(
@@ -2192,7 +2161,7 @@ const Contact: React.FC = () => {
                   {intl.formatMessage({ id: "contact.helpCenter" })}
                 </a>
                 <a
-                  href="/conditions-generales-clients"
+                  href="/cgu-clients"
                   className="hover:text-emerald-600 underline transition-colors"
                 >
                   📋 {intl.formatMessage({ id: "contact.termsConditions" })}

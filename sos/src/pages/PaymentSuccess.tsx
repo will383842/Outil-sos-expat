@@ -35,6 +35,7 @@ import { useIntl, FormattedMessage } from "react-intl";
 import { generateBothInvoices } from "../services/invoiceGenerator";
 import { usePricingConfig } from "../services/pricingService";
 import { navigationLogger, firestoreLogger, callLogger } from "../utils/debugLogger";
+import { trackMetaPurchase } from "../utils/metaPixel";
 
 /* =========================
    Types pour l'order / coupon / metadata
@@ -934,6 +935,58 @@ const SuccessPayment: React.FC = () => {
 
   // Devise / symbole (pour le bloc order)
   const orderCurrency: Currency = (order?.currency as Currency) ?? "eur";
+
+  /* =========================
+     META PIXEL - TRACKING PURCHASE
+     Track l'evenement Purchase pour Meta Ads quand le paiement est confirme
+     ========================= */
+  const [purchaseTracked, setPurchaseTracked] = useState(false);
+
+  useEffect(() => {
+    // Ne tracker qu'une seule fois et seulement si on a les donnees necessaires
+    if (purchaseTracked) return;
+    if (!order?.amount && !paidAmount) return;
+    if (!orderId && !callId) return;
+
+    // Verifier dans sessionStorage si deja tracke (protection contre F5)
+    const purchaseKey = `meta_purchase_tracked_${orderId || callId}`;
+    if (sessionStorage.getItem(purchaseKey)) {
+      setPurchaseTracked(true);
+      return;
+    }
+
+    // Track le Purchase avec les donnees de la commande
+    const toNumLocal = (v: unknown): number => {
+      const n = Number(v ?? 0);
+      return Number.isFinite(n) ? n : 0;
+    };
+    const amount = toNumLocal(order?.amount) || paidAmount || 0;
+    const currency = orderCurrency || 'eur';
+
+    if (amount > 0) {
+      trackMetaPurchase({
+        value: amount,
+        currency: currency.toUpperCase(),
+        content_name: isLawyer ? 'lawyer_call' : 'expat_call',
+        content_type: 'service',
+        content_id: callId || undefined,
+        order_id: orderId || undefined,
+      });
+
+      // Marquer comme tracke
+      sessionStorage.setItem(purchaseKey, 'true');
+      setPurchaseTracked(true);
+
+      console.log('✅ [META_PIXEL] Purchase tracked:', {
+        value: amount,
+        currency: currency.toUpperCase(),
+        content_name: isLawyer ? 'lawyer_call' : 'expat_call',
+        orderId,
+        callId,
+      });
+    }
+  }, [order?.amount, paidAmount, orderId, callId, isLawyer, orderCurrency, purchaseTracked]);
+
   const C = orderCurrency === "eur" ? "€" : "$";
 
   // Helpers numériques pour bloc order

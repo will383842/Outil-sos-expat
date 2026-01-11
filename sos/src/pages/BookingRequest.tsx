@@ -59,6 +59,7 @@ import { createBookingRequest } from "../services/booking";
 import PhoneField from "@/components/PhoneField";
 import { FormattedMessage, useIntl } from "react-intl";
 import IntlPhoneInput from "@/components/forms-data/IntlPhoneInput";
+import { trackMetaLead, trackMetaInitiateCheckout } from "@/utils/metaPixel";
 
 /** ===== Types complémentaires ===== */
 type LangKey = keyof typeof I18N;
@@ -1857,6 +1858,23 @@ const BookingRequest: React.FC = () => {
 
       // 👇 littéral 20 | 30 garanti (pas un number)
       const svcDuration: 20 | 30 = isLawyer ? 20 : 30;
+
+      // Track Meta Pixel Lead - demande de reservation soumise
+      trackMetaLead({
+        content_name: 'booking_request_submitted',
+        content_category: isLawyer ? 'lawyer' : 'expat',
+        value: eurTotalForDisplay,
+        currency: 'EUR',
+      });
+
+      // Track InitiateCheckout - debut du processus de paiement
+      trackMetaInitiateCheckout({
+        value: eurTotalForDisplay,
+        currency: 'EUR',
+        content_name: isLawyer ? 'lawyer_call' : 'expat_call',
+        content_category: isLawyer ? 'lawyer' : 'expat',
+        num_items: 1,
+      });
 
       // Création du booking centralisée (sans clientId, avec svcDuration)
       await createBookingRequest({
