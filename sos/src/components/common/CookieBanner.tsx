@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
 import { updateGA4Consent } from '../../utils/ga4';
 import { initializeGTM, updateConsentFromPreferences } from '../../utils/gtm';
+import { updateMetaPixelNativeConsent } from '../../utils/metaPixel';
 
 /**
  * Cookie Consent Banner Component
@@ -169,6 +170,9 @@ const CookieBanner: React.FC<CookieBannerProps> = ({
 
     // Update GA4 consent as well (for direct GA4 tracking)
     updateGA4Consent(consentPrefs);
+
+    // Update Meta Pixel consent via native fbq API (GDPR compliant)
+    updateMetaPixelNativeConsent(prefs.marketing);
 
     // Initialize GTM/GA4 if analytics is granted
     if (prefs.analytics) {

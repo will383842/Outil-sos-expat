@@ -57,6 +57,9 @@ export const STRIPE_SECRET_KEY_LIVE = defineSecret("STRIPE_SECRET_KEY_LIVE");
 // Encryption (GDPR - phone numbers)
 export const ENCRYPTION_KEY = defineSecret("ENCRYPTION_KEY");
 
+// Meta Conversions API (CAPI) - for Facebook Ads attribution
+import { trackStripePurchase, META_CAPI_TOKEN } from "./metaConversionsApi";
+
 // MAILWIZZ_API_KEY and MAILWIZZ_WEBHOOK_SECRET are now static values from config.ts
 
 // kyc
@@ -1708,6 +1711,7 @@ export const stripeWebhook = onRequest(
       STRIPE_WEBHOOK_SECRET_LIVE,
       ENCRYPTION_KEY, // P0 FIX: Required for decryptPhoneNumber in sendPaymentNotifications
       OUTIL_SYNC_API_KEY, // P0 FIX: Required for syncCallSessionToOutil after payment
+      META_CAPI_TOKEN, // Meta Conversions API for Facebook Ads attribution
     ],
     concurrency: 1,
     timeoutSeconds: 60, // P2-4 FIX: Augmenté de 30s à 60s pour éviter les timeouts
@@ -1968,10 +1972,36 @@ export const stripeWebhook = onRequest(
 
             case "payment_intent.succeeded":
               console.log("✅ Processing payment_intent.succeeded");
-              await handlePaymentIntentSucceeded(
-                event.data.object as Stripe.PaymentIntent,
-                database
-              );
+              {
+                const paymentIntentData = event.data.object as Stripe.PaymentIntent;
+
+                // Track via Meta Conversions API (CAPI) for Facebook Ads attribution
+                try {
+                  const capiResult = await trackStripePurchase(paymentIntentData, {
+                    serviceType: paymentIntentData.metadata?.serviceType,
+                    providerType: paymentIntentData.metadata?.providerType,
+                    contentName: `SOS-Expat ${paymentIntentData.metadata?.serviceType || "Service"}`,
+                    eventSourceUrl: "https://sos-expat.com",
+                  });
+
+                  if (capiResult.success) {
+                    console.log("✅ [CAPI] Purchase tracked successfully", {
+                      event_id: capiResult.eventId,
+                      events_received: capiResult.eventsReceived,
+                    });
+                  } else {
+                    console.warn("⚠️ [CAPI] Failed to track purchase", {
+                      error: capiResult.error,
+                      event_id: capiResult.eventId,
+                    });
+                  }
+                } catch (capiError) {
+                  // Log but don't fail the webhook - CAPI is non-critical
+                  console.error("❌ [CAPI] Exception tracking purchase:", capiError);
+                }
+
+                await handlePaymentIntentSucceeded(paymentIntentData, database);
+              }
               break;
 
             case "payment_intent.payment_failed":
@@ -4255,6 +4285,11 @@ export * from './seo';
 // ========== SITEMAP GENERATOR (Advanced 3-level system) ==========
 export { generateSitemaps, onProviderChange, scheduledSitemapGeneration } from './sitemap';
 
+// ========== META DYNAMIC ADS - PROVIDER CATALOG FEED ==========
+// HTTP endpoint: https://us-central1-sos-expat.cloudfunctions.net/providerCatalogFeed
+// Generates CSV feed of active providers for Facebook Product Catalog
+export { providerCatalogFeed, generateProviderFeed } from './providerCatalogFeed';
+
 // ========== TRANSLATION FUNCTIONS ==========
 export * from './translation/translateProvider';
 export * from './translation/initializeProviderTranslation';
@@ -4602,6 +4637,15 @@ export { onProviderCreated } from './triggers/onProviderCreated';
 // Ces triggers synchronisent le rôle Firestore avec les Custom Claims Firebase
 // Sans cela, les Firestore Rules qui vérifient request.auth.token.role ne fonctionnent pas
 export { onUserCreatedSyncClaims, onUserUpdatedSyncClaims } from './triggers/syncRoleClaims';
+
+// ========== META CAPI TRACKING TRIGGERS ==========
+// These triggers send server-side conversion events to Meta CAPI
+// for accurate attribution even when browser tracking is blocked
+export {
+  onBookingRequestCreatedTrackLead,
+  onUserCreatedTrackRegistration,
+  onCallSessionPaymentAuthorized,
+} from './triggers/capiTracking';
 
 // ========== SYNC BOOKINGS TO OUTIL-SOS-EXPAT (AI TRIGGER) ==========
 export { onBookingRequestCreated, retryOutilSync } from './triggers/syncBookingsToOutil';

@@ -28,6 +28,7 @@ import {
   getEffectivePrice,
 } from "../services/pricingService";
 import { FormattedMessage } from "react-intl";
+import { trackMetaViewContent, trackMetaInitiateCheckout, trackMetaAddToCart } from "../utils/metaPixel";
 
 interface PromoCode {
   id: string;
@@ -106,8 +107,39 @@ const Pricing: React.FC = () => {
     }
   }, [selectedCurrency]);
 
+  // Track Meta Pixel ViewContent - page Pricing vue
+  useEffect(() => {
+    trackMetaViewContent({
+      content_name: 'pricing_page',
+      content_category: 'pricing',
+      content_type: 'service',
+    });
+  }, []);
+
   const handleSelectService = useCallback(
     (serviceType: ServiceType | string) => {
+      // Get price for selected service
+      const selectedService = dynamicServices.find(s => s.type === serviceType);
+      const price = selectedService?.price || 0;
+      const currency = selectedCurrency.toUpperCase();
+
+      // Track AddToCart - before InitiateCheckout
+      trackMetaAddToCart({
+        content_name: serviceType === "lawyer_call" ? "lawyer_consultation" : "expat_consultation",
+        content_category: "sos_call",
+        content_type: "service",
+        value: price,
+        currency: currency,
+      });
+
+      // Track InitiateCheckout for Meta Pixel
+      trackMetaInitiateCheckout({
+        content_name: serviceType === "lawyer_call" ? "lawyer_consultation" : "expat_consultation",
+        content_category: "sos_call",
+        value: price,
+        currency: currency,
+      });
+
       if (serviceType === "lawyer_call") {
         navigate("/sos-appel?tab=avocat");
       } else if (serviceType === "expat_call") {
@@ -116,7 +148,7 @@ const Pricing: React.FC = () => {
         navigate("/sos-appel");
       }
     },
-    [navigate]
+    [navigate, dynamicServices, selectedCurrency]
   );
 
   const fetchAndSetPromoCode = useCallback(async () => {

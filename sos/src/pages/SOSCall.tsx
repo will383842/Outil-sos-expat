@@ -67,7 +67,7 @@ import {
 } from '../data/languages-spoken';
 
 import { formatSpecialties, mapLanguageToLocale } from '../utils/specialtyMapper';
-import { trackMetaLead, trackMetaViewContent } from '../utils/metaPixel';
+import { trackMetaLead, trackMetaViewContent, trackMetaSearch } from '../utils/metaPixel';
 import { trackAdLead } from '../services/adAttributionService';
 
 
@@ -2093,6 +2093,30 @@ const SOSCall: React.FC = () => {
       setShowWizard(true);
     }
   }, [wizardCompleted]);
+
+  // Track ViewContent when page loads with providers
+  useEffect(() => {
+    if (!isLoadingProviders && realProviders.length > 0) {
+      trackMetaViewContent({
+        content_name: `sos_call_listing_${selectedType || 'all'}`,
+        content_category: selectedType || 'all',
+        content_type: 'service',
+      });
+    }
+  }, [isLoadingProviders, realProviders.length, selectedType]);
+
+  // Track Search with debounce (500ms) when user searches
+  useEffect(() => {
+    if (!searchQuery.trim()) return;
+
+    const debounceTimer = setTimeout(() => {
+      trackMetaSearch({
+        search_string: searchQuery.trim(),
+      });
+    }, 500);
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchQuery]);
 
   // Sync wizard state with global context (to hide cookie banner & PWA popup)
   useEffect(() => {

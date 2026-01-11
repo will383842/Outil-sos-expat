@@ -45,12 +45,12 @@ export const isFbqAvailable = (): boolean => {
 
 /**
  * Verifie si le marketing est autorise
- * Mode actuel: SANS GDPR (track direct)
+ * Mode GDPR strict: consent requis par defaut
  */
 export const hasMarketingConsent = (): boolean => {
-  // Mode SANS GDPR : toujours true si le flag est set
-  if (window.__metaMarketingGranted === true) {
-    return true;
+  // Check explicit window flag (set by consent manager)
+  if (typeof window.__metaMarketingGranted === 'boolean') {
+    return window.__metaMarketingGranted;
   }
 
   // Fallback: verifier localStorage pour GDPR
@@ -64,8 +64,32 @@ export const hasMarketingConsent = (): boolean => {
     // Ignore errors
   }
 
-  // Par defaut en mode sans GDPR: autorise
-  return true;
+  // GDPR strict: par defaut PAS de tracking sans consentement explicite
+  return false;
+};
+
+/**
+ * Met a jour le consentement Meta Pixel via l'API native fbq
+ */
+export const updateMetaPixelNativeConsent = (granted: boolean): void => {
+  window.__metaMarketingGranted = granted;
+
+  if (!isFbqAvailable()) return;
+
+  try {
+    if (granted) {
+      window.fbq!('consent', 'grant');
+      // Track PageView apres consentement
+      trackMetaPageView();
+    } else {
+      window.fbq!('consent', 'revoke');
+    }
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`%c[MetaPixel] Consent ${granted ? 'GRANTED' : 'REVOKED'}`, 'color: #1877F2; font-weight: bold');
+    }
+  } catch (error) {
+    console.error('[MetaPixel] Erreur consent:', error);
+  }
 };
 
 /**
@@ -638,6 +662,7 @@ export default {
   trackMetaAddPaymentInfo,
   trackMetaCustomEvent,
   updateMetaPixelConsent,
+  updateMetaPixelNativeConsent,
   setMetaPixelUserData,
   clearMetaPixelUserData,
   PIXEL_ID,
