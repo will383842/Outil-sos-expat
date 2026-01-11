@@ -338,6 +338,8 @@ const TemplatesEmails = lazy(() => import("../../pages/admin/marketing/Templates
 const NotificationsRouting = lazy(() => import("../../pages/admin/marketing/Notifications"));
 const DelivrabiliteLogs = lazy(() => import("../../pages/admin/marketing/Delivrabilite"));
 const MessagesTempsReel = lazy(() => import("../../pages/admin/marketing/MessagesTempsReel"));
+const AdminAdsAnalytics = lazy(() => import("../../pages/admin/AdminAdsAnalytics"));
+const AdminTrustpilot = lazy(() => import("../../pages/admin/AdminTrustpilot"));
 
 // ===== COMPOSANT PRINCIPAL =====
 const AdminRoutesV2: React.FC = () => {
@@ -1043,6 +1045,22 @@ const AdminRoutesV2: React.FC = () => {
           </Suspense>
         }
       />
+      <Route
+        path="marketing/ads-analytics"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminAdsAnalytics />
+          </Suspense>
+        }
+      />
+      <Route
+        path="marketing/trustpilot"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminTrustpilot />
+          </Suspense>
+        }
+      />
       <Route path="marketing" element={<Navigate to="marketing/templates-emails" replace />} />
 
       {/* 404 admin */}
@@ -1123,6 +1141,8 @@ export const useAdminRouteValidation = () => {
       "/admin/promos/codes",
       "/admin/help/center",
       "/admin/ia",
+      "/admin/marketing/ads-analytics",
+      "/admin/marketing/trustpilot",
     ];
     return validPaths.includes(path);
   };

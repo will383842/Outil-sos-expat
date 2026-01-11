@@ -351,8 +351,28 @@ const createUserDocumentInFirestore = async (
         country: additionalData.country || additionalData.currentCountry || '',
         currentCountry: additionalData.currentCountry || additionalData.country || '',
         currentPresenceCountry: additionalData.currentCountry || additionalData.country || '',
-        practiceCountries: additionalData.practiceCountries || [],
-        interventionCountries: additionalData.practiceCountries || [],
+        // ✅ Support des 3 formats de pays d'intervention (tableau ou singulier)
+        practiceCountries: ((): string[] => {
+          if (Array.isArray(additionalData.practiceCountries) && additionalData.practiceCountries.length > 0) return additionalData.practiceCountries;
+          if (Array.isArray(additionalData.operatingCountries) && additionalData.operatingCountries.length > 0) return additionalData.operatingCountries;
+          if (Array.isArray(additionalData.interventionCountries) && additionalData.interventionCountries.length > 0) return additionalData.interventionCountries;
+          if (additionalData.interventionCountry) return [additionalData.interventionCountry];
+          return [];
+        })(),
+        interventionCountries: ((): string[] => {
+          if (Array.isArray(additionalData.interventionCountries) && additionalData.interventionCountries.length > 0) return additionalData.interventionCountries;
+          if (Array.isArray(additionalData.practiceCountries) && additionalData.practiceCountries.length > 0) return additionalData.practiceCountries;
+          if (Array.isArray(additionalData.operatingCountries) && additionalData.operatingCountries.length > 0) return additionalData.operatingCountries;
+          if (additionalData.interventionCountry) return [additionalData.interventionCountry];
+          return [];
+        })(),
+        operatingCountries: ((): string[] => {
+          if (Array.isArray(additionalData.operatingCountries) && additionalData.operatingCountries.length > 0) return additionalData.operatingCountries;
+          if (Array.isArray(additionalData.practiceCountries) && additionalData.practiceCountries.length > 0) return additionalData.practiceCountries;
+          if (Array.isArray(additionalData.interventionCountries) && additionalData.interventionCountries.length > 0) return additionalData.interventionCountries;
+          if (additionalData.interventionCountry) return [additionalData.interventionCountry];
+          return [];
+        })(),
         
         // ===== LANGUES =====
         languages: additionalData.languages || additionalData.languagesSpoken || [],

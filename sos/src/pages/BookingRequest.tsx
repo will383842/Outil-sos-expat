@@ -60,6 +60,7 @@ import PhoneField from "@/components/PhoneField";
 import { FormattedMessage, useIntl } from "react-intl";
 import IntlPhoneInput from "@/components/forms-data/IntlPhoneInput";
 import { trackMetaLead, trackMetaInitiateCheckout } from "@/utils/metaPixel";
+import { trackAdLead, trackAdInitiateCheckout } from "@/services/adAttributionService";
 
 /** ===== Types complémentaires ===== */
 type LangKey = keyof typeof I18N;
@@ -1874,6 +1875,24 @@ const BookingRequest: React.FC = () => {
         content_name: isLawyer ? 'lawyer_call' : 'expat_call',
         content_category: isLawyer ? 'lawyer' : 'expat',
         num_items: 1,
+      });
+
+      // Track Ad Attribution Lead (Firestore - pour dashboard admin)
+      trackAdLead({
+        contentName: 'booking_request_submitted',
+        contentCategory: isLawyer ? 'lawyer' : 'expat',
+        value: eurTotalForDisplay,
+        providerId: selectedProvider.id,
+        providerType: isLawyer ? 'lawyer' : 'expat',
+      });
+
+      // Track Ad Attribution InitiateCheckout (Firestore)
+      trackAdInitiateCheckout({
+        value: eurTotalForDisplay,
+        currency: 'EUR',
+        contentName: isLawyer ? 'lawyer_call' : 'expat_call',
+        providerId: selectedProvider.id,
+        providerType: isLawyer ? 'lawyer' : 'expat',
       });
 
       // Création du booking centralisée (sans clientId, avec svcDuration)

@@ -48,6 +48,8 @@ import { auth } from "@/config/firebase";
 import IntlPhoneInput from "@/components/forms-data/IntlPhoneInput";
 import { countriesData } from "@/data/countries";
 import '../styles/multi-language-select.css';
+import { trackMetaCompleteRegistration, trackMetaStartRegistration } from "../utils/metaPixel";
+import { trackAdRegistration } from "../services/adAttributionService";
 
 // Lazy imports pour optimisation du bundle
 const ImageUploader = lazy(() => import("../components/common/ImageUploader"));
@@ -681,6 +683,11 @@ const RegisterLawyer: React.FC = () => {
     };
   }, []);
 
+  // 📊 Meta Pixel: Track StartRegistration
+  useEffect(() => {
+    trackMetaStartRegistration({ content_name: 'lawyer_registration' });
+  }, []);
+
   // 🔍 SEO PERFECTIONNÉ
   useEffect(() => {
     const baseUrl = window.location.origin;
@@ -1216,7 +1223,18 @@ const RegisterLawyer: React.FC = () => {
         
         // Navigation réussie même sans compte Stripe
         hasNavigatedRef.current = true;
-        
+
+        // Track Meta Pixel CompleteRegistration - inscription avocat reussie (sans Stripe)
+        trackMetaCompleteRegistration({
+          content_name: 'lawyer_registration_no_stripe',
+          status: 'completed',
+        });
+
+        // Track Ad Attribution Registration (Firestore - pour dashboard admin)
+        trackAdRegistration({
+          contentName: 'lawyer_registration_no_stripe',
+        });
+
         navigate(redirect, {
           replace: true,
           state: {
@@ -1243,7 +1261,18 @@ const RegisterLawyer: React.FC = () => {
         
         // ✅ Succès complet - inscription + Stripe
         hasNavigatedRef.current = true;
-        
+
+        // Track Meta Pixel CompleteRegistration - inscription avocat reussie
+        trackMetaCompleteRegistration({
+          content_name: 'lawyer_registration',
+          status: 'completed',
+        });
+
+        // Track Ad Attribution Registration (Firestore - pour dashboard admin)
+        trackAdRegistration({
+          contentName: 'lawyer_registration',
+        });
+
         navigate(redirect, {
           replace: true,
           state: {
@@ -1254,9 +1283,20 @@ const RegisterLawyer: React.FC = () => {
       } catch (stripeError: unknown) {
         // ✅ Erreur Stripe MAIS inscription Firebase réussie - on redirige quand même
         console.error('⚠️ [RegisterLawyer] Erreur Stripe (compte utilisateur créé):', stripeError);
-        
+
         hasNavigatedRef.current = true;
-        
+
+        // Track Meta Pixel CompleteRegistration - inscription avocat reussie (sans Stripe complet)
+        trackMetaCompleteRegistration({
+          content_name: 'lawyer_registration_partial',
+          status: 'completed',
+        });
+
+        // Track Ad Attribution Registration (Firestore - pour dashboard admin)
+        trackAdRegistration({
+          contentName: 'lawyer_registration_partial',
+        });
+
         // On redirige vers le dashboard avec un message d'avertissement
         navigate(redirect, {
           replace: true,

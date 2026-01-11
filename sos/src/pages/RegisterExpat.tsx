@@ -47,6 +47,8 @@ import IntlPhoneInput from "@/components/forms-data/IntlPhoneInput";
 import { countriesData } from "@/data/countries";
 import { expatHelpTypesData, getExpatHelpTypeLabel } from "@/data/expat-help-types";
 import '../styles/multi-language-select.css';
+import { trackMetaCompleteRegistration, trackMetaStartRegistration } from "../utils/metaPixel";
+import { trackAdRegistration } from "../services/adAttributionService";
 
 // Lazy imports pour optimisation du bundle
 const ImageUploader = lazy(() => import("../components/common/ImageUploader"));
@@ -456,6 +458,11 @@ const RegisterExpat: React.FC = () => {
     return () => {
       isMountedRef.current = false;
     };
+  }, []);
+
+  // 📊 Meta Pixel: Track StartRegistration
+  useEffect(() => {
+    trackMetaStartRegistration({ content_name: 'expat_registration' });
   }, []);
 
   // 🔍 SEO PERFECTIONNÉ
@@ -907,6 +914,10 @@ const RegisterExpat: React.FC = () => {
         // Code ISO 2 lettres du pays de résidence (pour détection gateway Stripe/PayPal)
         countryCode: residenceCountryCode,
         interventionCountry: form.interventionCountry,
+        // ✅ Ajouter les champs en tableau pour compatibilité avec ProviderProfile
+        practiceCountries: [form.interventionCountry],
+        interventionCountries: [form.interventionCountry],
+        operatingCountries: [form.interventionCountry],
         profilePhoto: form.profilePhoto,
         photoURL: form.profilePhoto,
         avatar: form.profilePhoto,
@@ -955,7 +966,18 @@ const RegisterExpat: React.FC = () => {
         
         // ✅ Succès complet - inscription + Stripe
         hasNavigatedRef.current = true;
-        
+
+        // Track Meta Pixel CompleteRegistration - inscription expat reussie
+        trackMetaCompleteRegistration({
+          content_name: 'expat_registration',
+          status: 'completed',
+        });
+
+        // Track Ad Attribution Registration (Firestore - pour dashboard admin)
+        trackAdRegistration({
+          contentName: 'expat_registration',
+        });
+
         navigate(redirect, {
           replace: true,
           state: {
@@ -966,9 +988,20 @@ const RegisterExpat: React.FC = () => {
       } catch (stripeError: unknown) {
         // ✅ Erreur Stripe MAIS inscription Firebase réussie - on redirige quand même
         console.error('⚠️ [RegisterExpat] Erreur Stripe (compte utilisateur créé):', stripeError);
-        
+
         hasNavigatedRef.current = true;
-        
+
+        // Track Meta Pixel CompleteRegistration - inscription expat reussie (sans Stripe)
+        trackMetaCompleteRegistration({
+          content_name: 'expat_registration_partial',
+          status: 'completed',
+        });
+
+        // Track Ad Attribution Registration (Firestore - pour dashboard admin)
+        trackAdRegistration({
+          contentName: 'expat_registration_partial',
+        });
+
         // On redirige vers le dashboard avec un message d'avertissement
         navigate(redirect, {
           replace: true,

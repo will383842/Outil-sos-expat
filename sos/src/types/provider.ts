@@ -85,6 +85,8 @@ export interface Provider {
   lastStatusChange?: Timestamp;
   nationality?: string;
   practiceCountries?: string[]; // Pays d'intervention
+  operatingCountries?: string[]; // Alias pour pays d'intervention (compatibilité ProviderProfile)
+  interventionCountries?: string[]; // Alias pour pays d'intervention (compatibilité SOSCall)
 
   // ========== GESTION STATUT BUSY PENDANT APPELS ==========
   /** Statut de disponibilité du prestataire */
@@ -120,6 +122,20 @@ export function normalizeProvider(providerData: unknown): Provider {
   // helpers
   const toStr = (v: unknown, fb = ''): string =>
     typeof v === 'string' ? v : fb;
+
+  // Helper pour extraire un texte depuis un objet localisé {fr: "...", en: "..."} ou une string
+  const toLocalizedStr = (v: unknown, fb = ''): string => {
+    if (typeof v === 'string') return v;
+    if (typeof v === 'object' && v !== null) {
+      const obj = v as Record<string, unknown>;
+      // Priorité: fr > en > première valeur non-vide
+      for (const key of ['fr', 'en', ...Object.keys(obj)]) {
+        const val = obj[key];
+        if (typeof val === 'string' && val.trim()) return val.trim();
+      }
+    }
+    return fb;
+  };
 
   const toNum = (v: unknown, fb = 0): number => {
     if (typeof v === 'number' && Number.isFinite(v)) return v;
@@ -204,9 +220,14 @@ export function normalizeProvider(providerData: unknown): Provider {
   // years of experience
   const yearsOfExperience = Math.max(0, toNum(o.yearsOfExperience, toNum(o.yearsAsExpat, 1)));
 
-  // media / description
+  // media / description (utilise toLocalizedStr pour gérer les objets {fr: "...", en: "..."})
   const avatar = toStr(o.avatar) || toStr(o.profilePhoto) || toStr(o.providerAvatar) || '/default-avatar.png';
-  const description = toStr(o.description) || toStr(o.bio) || '';
+  const description = toLocalizedStr(o.description) || toLocalizedStr(o.bio) || toLocalizedStr(o.professionalDescription) || toLocalizedStr(o.experienceDescription) || '';
+
+  // Pays d'intervention (practiceCountries, operatingCountries, interventionCountries)
+  const practiceCountries = toStrArray(o.practiceCountries) || toStrArray(o.operatingCountries) || toStrArray(o.interventionCountries, []);
+  const operatingCountries = practiceCountries; // Alias pour compatibilité
+  const interventionCountries = practiceCountries; // Alias pour compatibilité
 
   // contact
   const phone = toStr(o.phone) || toStr(o.phoneNumber) || toStr(o.providerPhone);
@@ -284,6 +305,11 @@ export function normalizeProvider(providerData: unknown): Provider {
     graduationYear,
     expatriationYear,
     isActive,
+
+    // Pays d'intervention (avec alias pour compatibilité tous composants)
+    practiceCountries,
+    operatingCountries,
+    interventionCountries,
 
     // Nouveaux champs statut busy
     availability,
@@ -376,6 +402,11 @@ export function createDefaultProvider(providerId: string): Provider {
     graduationYear: '',
     expatriationYear: '',
     isActive: true,
+
+    // Pays d'intervention
+    practiceCountries: [],
+    operatingCountries: [],
+    interventionCountries: [],
 
     // Nouveaux champs statut busy
     availability: 'offline',

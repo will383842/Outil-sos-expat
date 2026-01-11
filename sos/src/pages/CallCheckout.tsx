@@ -49,6 +49,7 @@ import { PayPalPaymentForm, GatewayIndicator } from "../components/payment";
 import { PayPalScriptProvider } from "@paypal/react-paypal-js";
 import { paymentLogger, navigationLogger, callLogger } from "../utils/debugLogger";
 import { getLocaleString, getTranslatedRouteSlug } from "../multilingual-system/core/routing/localeRoutes";
+import { getStoredMetaIdentifiers } from "../utils/fbpCookie";
 
 /* -------------------------- Stripe singleton (HMR-safe) ------------------ */
 // Conserve la même Promise Stripe à travers les rechargements HMR.
@@ -1286,6 +1287,14 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
             override_label: null, // Set to string if you have custom pricing labels
             original_standard_amount: adminPricing.totalAmount, // ✅ With underscores
             effective_base_amount: adminPricing.totalAmount, // ✅ With underscores
+            // Meta CAPI identifiers for purchase attribution
+            ...(() => {
+              const metaIds = getStoredMetaIdentifiers();
+              return {
+                ...(metaIds.fbp && { fbp: metaIds.fbp }),
+                ...(metaIds.fbc && { fbc: metaIds.fbc }),
+              };
+            })(),
           },
 
           // ✅ Add coupon support (null for now, but ready for discounts)
@@ -1551,6 +1560,14 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
             requestTitle: bookingMeta?.title || "",
             timestamp: new Date().toISOString(),
             callSessionId: callSessionId,
+            // Meta CAPI identifiers for purchase attribution
+            ...(() => {
+              const metaIds = getStoredMetaIdentifiers();
+              return {
+                ...(metaIds.fbp && { fbp: metaIds.fbp }),
+                ...(metaIds.fbc && { fbc: metaIds.fbc }),
+              };
+            })(),
           },
           // Include coupon information if active
           ...(couponData && { coupon: couponData }),
@@ -2687,6 +2704,14 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
           override_label: null,
           original_standard_amount: adminPricing.totalAmount,
           effective_base_amount: adminPricing.totalAmount,
+          // Meta CAPI identifiers for purchase attribution
+          ...(() => {
+            const metaIds = getStoredMetaIdentifiers();
+            return {
+              ...(metaIds.fbp && { fbp: metaIds.fbp }),
+              ...(metaIds.fbc && { fbc: metaIds.fbc }),
+            };
+          })(),
         },
         coupon: activePromo ? {
           code: activePromo.code,

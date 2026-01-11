@@ -5,7 +5,7 @@
  * Ce job exporte régulièrement les données utilisateurs vers Firestore
  * et/ou Cloud Storage pour permettre une restauration en cas de problème.
  *
- * Exécute hebdomadairement le dimanche à 3h du matin.
+ * Exécute quotidiennement à 3h du matin (modifié de hebdomadaire à quotidien).
  */
 
 import { onSchedule } from 'firebase-functions/v2/scheduler';
@@ -123,12 +123,13 @@ async function* listAllUsers(): AsyncGenerator<admin.auth.UserRecord[], void, un
 // ============================================================================
 
 /**
- * Backup hebdomadaire des utilisateurs Firebase Auth
- * Exécute tous les dimanches à 3h du matin
+ * Backup quotidien des utilisateurs Firebase Auth
+ * Exécute tous les jours à 3h du matin
+ * RPO réduit de 7 jours à 24 heures
  */
 export const backupFirebaseAuth = onSchedule(
   {
-    schedule: '0 3 * * 0', // Dimanche 3h
+    schedule: '0 3 * * *', // Tous les jours à 3h
     timeZone: 'Europe/Paris',
     region: 'europe-west1',
     memory: '1GiB',
@@ -136,7 +137,7 @@ export const backupFirebaseAuth = onSchedule(
     timeoutSeconds: 540
   },
   async () => {
-    logger.info('[AuthBackup] Starting weekly auth backup...');
+    logger.info('[AuthBackup] Starting daily auth backup...');
 
     const db = admin.firestore();
     const storage = admin.storage().bucket();

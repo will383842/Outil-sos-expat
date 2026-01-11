@@ -1,9 +1,10 @@
 // App.tsx
-import React, { useEffect, Suspense, lazy, useState } from 'react';
+import React, { useEffect, Suspense, lazy, useState, useRef } from 'react';
 import { IntlProvider } from 'react-intl';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useDeviceDetection } from './hooks/useDeviceDetection';
+import { useAuth } from './contexts/AuthContext';
 import { registerSW, measurePerformance } from './utils/performance';
 import LoadingSpinner from './components/common/LoadingSpinner';
 import ErrorBoundary from './components/common/ErrorBoundary';
@@ -11,6 +12,8 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import AdminRoutesV2 from '@/components/admin/AdminRoutesV2';
 import { trackEvent, hasAnalyticsConsent } from './utils/ga4';
 import MetaPageViewTracker from './components/common/MetaPageViewTracker';
+import { setMetaPixelUserData, clearMetaPixelUserData } from './utils/metaPixel';
+import { captureTrafficSource } from './utils/trafficSource';
 import './App.css';
 import PWAProvider from './components/pwa/PWAProvider';
 import { WizardProvider } from './contexts/WizardContext';
@@ -318,7 +321,7 @@ type Locale = 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
 // --------------------------------------------
 const PageViewTracker: React.FC = () => {
   const location = useLocation();
-  
+
   useEffect(() => {
     // Only track if consent is granted
     if (hasAnalyticsConsent()) {
@@ -330,7 +333,71 @@ const PageViewTracker: React.FC = () => {
       console.log('📊 GA4: Page view tracked for:', location.pathname);
     }
   }, [location]);
-  
+
+  return null;
+};
+
+// --------------------------------------------
+// MetaPixelUserTracker - Advanced Matching pour Meta Pixel
+// Envoie les donnees utilisateur a Meta pour meilleur retargeting
+// --------------------------------------------
+const MetaPixelUserTracker: React.FC = () => {
+  const { user, isLoading } = useAuth();
+  const lastUserIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    // Attendre que l'auth soit prete
+    if (isLoading) return;
+
+    const currentUserId = user?.uid || null;
+
+    // Si l'utilisateur n'a pas change, ne rien faire
+    if (currentUserId === lastUserIdRef.current) return;
+
+    lastUserIdRef.current = currentUserId;
+
+    if (user) {
+      // Utilisateur connecte - envoyer les donnees a Meta pour Advanced Matching
+      setMetaPixelUserData({
+        email: user.email || undefined,
+        phone: user.phone || user.phoneNumber || undefined,
+        firstName: user.firstName || user.displayName?.split(' ')[0] || undefined,
+        lastName: user.lastName || user.displayName?.split(' ').slice(1).join(' ') || undefined,
+        country: user.country || user.currentCountry || undefined,
+      });
+    } else {
+      // Utilisateur deconnecte - effacer les donnees
+      clearMetaPixelUserData();
+    }
+  }, [user, isLoading]);
+
+  return null;
+};
+
+// --------------------------------------------
+// TrafficSourceCapture - Capture UTM parameters et sources publicitaires
+// Pour attribution des conversions (Facebook Ads, Google Ads, etc.)
+// --------------------------------------------
+const TrafficSourceCapture: React.FC = () => {
+  const location = useLocation();
+  const capturedRef = useRef(false);
+
+  useEffect(() => {
+    // Capturer uniquement au premier rendu avec des parametres UTM ou click IDs
+    if (capturedRef.current) return;
+
+    const searchParams = new URLSearchParams(location.search);
+    const hasTrackingParams = searchParams.has('utm_source') ||
+                              searchParams.has('fbclid') ||
+                              searchParams.has('gclid') ||
+                              searchParams.has('ttclid');
+
+    if (hasTrackingParams || !capturedRef.current) {
+      captureTrafficSource();
+      capturedRef.current = true;
+    }
+  }, [location.search]);
+
   return null;
 };
 
@@ -539,6 +606,10 @@ const App: React.FC = () => {
           <PageViewTracker />
           {/* Meta Pixel: Track page views for Facebook/Meta ads */}
           <MetaPageViewTracker />
+          {/* Meta Pixel: Advanced Matching - send user data for better retargeting */}
+          <MetaPixelUserTracker />
+          {/* Traffic Source: Capture UTM parameters for ad attribution */}
+          <TrafficSourceCapture />
           <div className={`App ${isMobile ? "mobile-layout" : "desktop-layout"}`}>
             <DefaultHelmet pathname={location.pathname} />
 

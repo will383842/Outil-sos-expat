@@ -35,6 +35,8 @@ import {
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 import { useIntl } from "react-intl";
+import { trackMetaContact } from "../utils/metaPixel";
+import { trackAdContact } from "../services/adAttributionService";
 
 // Interface pour Navigator avec connection
 interface NavigatorConnection {
@@ -767,6 +769,18 @@ const Contact: React.FC = () => {
           interventionCountry: formData.interventionCountry,
           message: formData.message.substring(0, 150) + "...",
         },
+      });
+
+      // Track Meta Pixel Contact - formulaire contact soumis avec succes
+      trackMetaContact({
+        content_name: 'contact_form_submitted',
+        content_category: formData.category || 'general',
+      });
+
+      // Track Ad Attribution Contact (Firestore - pour dashboard admin)
+      trackAdContact({
+        contentName: 'contact_form_submitted',
+        contentCategory: formData.category || 'general',
       });
 
       setIsSubmitted(true);

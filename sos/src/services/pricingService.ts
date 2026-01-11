@@ -1,5 +1,5 @@
 // src/services/pricingService.ts
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, onSnapshot } from "firebase/firestore";
 import { db } from "@/config/firebase";
 import { useEffect, useState } from "react";
 
@@ -62,9 +62,9 @@ export interface FirestorePricingDoc {
 
 const PRICING_REF = doc(db, "admin_config", "pricing");
 
-/** Cache mémoire (5 min) */
+/** Cache mémoire (24 heures) - très économique car les prix changent ~1 fois/an */
 let _cache: { data: PricingConfig | null; ts: number } = { data: null, ts: 0 };
-const CACHE_MS = 5 * 60 * 1000;
+const CACHE_MS = 24 * 60 * 60 * 1000; // 24 heures
 
 /** Fallback - Doit correspondre aux prix backend et admin (lawyer: 20min, expat: 30min) */
 const DEFAULT_FALLBACK: PricingConfig = {
@@ -282,7 +282,67 @@ export function clearPricingCache() {
   _cache = { data: null, ts: 0 };
 }
 
-/** Hook React */
+/**
+ * Listener temps réel pour les changements de prix
+ * Utilise onSnapshot au lieu de getDoc pour une synchronisation automatique
+ */
+export function subscribeToPricing(
+  callback: (config: PricingConfig) => void,
+  onError?: (error: Error) => void
+): () => void {
+  console.log("🔔 [pricingService] subscribeToPricing - démarrage listener temps réel");
+
+  const unsubscribe = onSnapshot(
+    PRICING_REF,
+    (snap) => {
+      console.log("🔔 [pricingService] onSnapshot triggered - document changed");
+
+      if (!snap.exists()) {
+        console.warn("⚠️ [pricingService] Document pricing n'existe pas! Utilisation fallback");
+        _cache = { data: DEFAULT_FALLBACK, ts: Date.now() };
+        callback(DEFAULT_FALLBACK);
+        return;
+      }
+
+      const data = snap.data() as FirestorePricingDoc;
+      const normalized = normalizeFirestoreDocument(data);
+
+      if (!isValidPricingConfig(normalized)) {
+        console.warn("⚠️ [pricingService] Config invalide, utilisation fallback");
+        _cache = { data: DEFAULT_FALLBACK, ts: Date.now() };
+        callback(DEFAULT_FALLBACK);
+        return;
+      }
+
+      console.log("✅ [pricingService] Config mise à jour en temps réel:", {
+        lawyerEur: normalized.lawyer.eur.totalAmount,
+        lawyerUsd: normalized.lawyer.usd.totalAmount,
+        expatEur: normalized.expat.eur.totalAmount,
+        expatUsd: normalized.expat.usd.totalAmount,
+      });
+
+      // Mise à jour du cache
+      _cache = { data: normalized, ts: Date.now() };
+      callback(normalized);
+    },
+    (error) => {
+      console.error("❌ [pricingService] onSnapshot error:", error);
+      if (onError) {
+        onError(error);
+      }
+      // En cas d'erreur, on utilise le cache ou le fallback
+      if (_cache.data) {
+        callback(_cache.data);
+      } else {
+        callback(DEFAULT_FALLBACK);
+      }
+    }
+  );
+
+  return unsubscribe;
+}
+
+/** Hook React avec cache simple (économique) */
 export function usePricingConfig() {
   const [pricing, setPricing] = useState<PricingConfig | null>(null);
   const [loading, setLoading] = useState(true);
@@ -293,7 +353,6 @@ export function usePricingConfig() {
     setError(null);
     try {
       const cfg = await getPricingConfig();
-      // console.log("pricing in service ===", cfg);
       setPricing(cfg);
     } catch (e) {
       console.error("[usePricingConfig] load error:", e);

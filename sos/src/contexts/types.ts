@@ -126,6 +126,8 @@ export interface User {
 
   // Pays d'intervention
   practiceCountries?: string[];
+  interventionCountries?: string[];
+  operatingCountries?: string[];
   previousCountries?: string[];
 
   // Statuts et disponibilité

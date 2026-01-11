@@ -56,6 +56,8 @@ import { Controller, useForm } from "react-hook-form";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { setPersistence, browserLocalPersistence } from "firebase/auth";
 import { auth } from "../config/firebase";
+import { trackMetaCompleteRegistration, trackMetaStartRegistration } from "../utils/metaPixel";
+import { trackAdRegistration } from "../services/adAttributionService";
 import "../styles/multi-language-select.css";
 
 // Lazy imports pour optimisation du bundle
@@ -400,6 +402,17 @@ const RegisterClient: React.FC = () => {
 
   // Password strength
   const pwdStrength = useMemo(() => computePasswordStrength(formData.password), [formData.password]);
+
+  // ===========================================================================
+  // Meta Pixel: Track StartRegistration on component mount
+  // ===========================================================================
+  useEffect(() => {
+    // Track that user started the registration process
+    trackMetaStartRegistration({ content_name: 'client_registration' });
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[RegisterClient] StartRegistration tracked');
+    }
+  }, []);
 
   // ===========================================================================
   // SEO: Meta tags, JSON-LD, Canonical, Hreflang - 100% INTERNATIONALISÉ
@@ -818,6 +831,17 @@ const RegisterClient: React.FC = () => {
         googleTimeoutRef.current = null;
       }
       setLocalLoading(false);
+
+      // Track Meta Pixel CompleteRegistration - inscription Google reussie
+      trackMetaCompleteRegistration({
+        content_name: 'client_registration_google',
+        status: 'completed',
+      });
+
+      // Track Ad Attribution Registration (Firestore - pour dashboard admin)
+      trackAdRegistration({
+        contentName: 'client_registration_google',
+      });
     } catch (err) {
       if (googleTimeoutRef.current) {
         window.clearTimeout(googleTimeoutRef.current);
@@ -929,8 +953,19 @@ const RegisterClient: React.FC = () => {
           userData as unknown as Parameters<typeof register>[0],
           formData.password
         );
-        
-        navigate(redirect, { 
+
+        // Track Meta Pixel CompleteRegistration - inscription client reussie
+        trackMetaCompleteRegistration({
+          content_name: 'client_registration',
+          status: 'completed',
+        });
+
+        // Track Ad Attribution Registration (Firestore - pour dashboard admin)
+        trackAdRegistration({
+          contentName: 'client_registration',
+        });
+
+        navigate(redirect, {
           replace: true,
           state: {
             message: intl.formatMessage({ id: "registerClient.success.registered" }),

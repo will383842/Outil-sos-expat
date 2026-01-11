@@ -415,6 +415,22 @@ export const adminMenuTree: AdminMenuItem[] = [
         icon: Percent,
         description: "Créer, activer, suivre les coupons",
       },
+      {
+        id: "trustpilot",
+        label: "Trustpilot",
+        path: "/admin/marketing/trustpilot",
+        icon: Star,
+        badge: "NEW",
+        description: "Suivi des invitations et avis Trustpilot",
+      },
+      {
+        id: "ads-analytics",
+        label: "Ads Analytics",
+        path: "/admin/marketing/ads-analytics",
+        icon: TrendingUp,
+        badge: "NEW",
+        description: "Attribution des conversions Meta/Google Ads",
+      },
       // NOTE: Messages temps réel - à vérifier si fonctionnel
       // {
       //   id: "messages-realtime",

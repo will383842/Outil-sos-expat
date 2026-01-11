@@ -36,6 +36,7 @@ import { generateBothInvoices } from "../services/invoiceGenerator";
 import { usePricingConfig } from "../services/pricingService";
 import { navigationLogger, firestoreLogger, callLogger } from "../utils/debugLogger";
 import { trackMetaPurchase } from "../utils/metaPixel";
+import { trackAdPurchase } from "../services/adAttributionService";
 
 /* =========================
    Types pour l'order / coupon / metadata
@@ -964,6 +965,7 @@ const SuccessPayment: React.FC = () => {
     const currency = orderCurrency || 'eur';
 
     if (amount > 0) {
+      // Meta Pixel tracking
       trackMetaPurchase({
         value: amount,
         currency: currency.toUpperCase(),
@@ -971,6 +973,17 @@ const SuccessPayment: React.FC = () => {
         content_type: 'service',
         content_id: callId || undefined,
         order_id: orderId || undefined,
+      });
+
+      // Ad Attribution tracking (Firestore - pour dashboard admin)
+      trackAdPurchase({
+        value: amount,
+        currency: currency.toUpperCase(),
+        orderId: orderId || undefined,
+        contentName: isLawyer ? 'lawyer_call' : 'expat_call',
+        providerId: providerId || undefined,
+        providerType: isLawyer ? 'lawyer' : 'expat',
+        userId: user?.uid || undefined,
       });
 
       // Marquer comme tracke

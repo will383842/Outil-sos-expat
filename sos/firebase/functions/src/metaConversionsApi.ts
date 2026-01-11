@@ -1,0 +1,816 @@
+/**
+ * Meta Conversions API (CAPI) Implementation
+ *
+ * Server-side tracking for Meta (Facebook) Ads conversion events.
+ * This module provides functions to send conversion events directly to Meta's
+ * Conversions API, enabling accurate attribution even with browser restrictions.
+ *
+ * Features:
+ * - SHA256 hashing for all user data (Advanced Matching)
+ * - Support for Purchase, Lead, InitiateCheckout, CompleteRegistration events
+ * - Stripe user data extraction
+ * - Unique event ID generation for deduplication
+ *
+ * @see https://developers.facebook.com/docs/marketing-api/conversions-api
+ */
+
+import { createHash } from "crypto";
+import { defineSecret } from "firebase-functions/params";
+import { logger } from "firebase-functions/v2";
+import Stripe from "stripe";
+
+// ============================================================================
+// Configuration
+// ============================================================================
+
+/** Meta Pixel ID */
+const META_PIXEL_ID = "1887073768568784";
+
+/** Meta Conversions API endpoint */
+const META_CAPI_ENDPOINT = `https://graph.facebook.com/v18.0/${META_PIXEL_ID}/events`;
+
+/** Meta CAPI Access Token (stored as Firebase Secret) */
+export const META_CAPI_TOKEN = defineSecret("META_CAPI_TOKEN");
+
+// ============================================================================
+// Interfaces
+// ============================================================================
+
+/**
+ * User data for Advanced Matching
+ * All fields should be lowercase and trimmed before hashing
+ * @see https://developers.facebook.com/docs/marketing-api/conversions-api/parameters/customer-information-parameters
+ */
+export interface UserData {
+  /** Email address (will be hashed) */
+  em?: string;
+  /** Phone number in E.164 format (will be hashed) */
+  ph?: string;
+  /** First name (will be hashed) */
+  fn?: string;
+  /** Last name (will be hashed) */
+  ln?: string;
+  /** City (will be hashed) */
+  ct?: string;
+  /** State/Region (2-letter code, will be hashed) */
+  st?: string;
+  /** Zip/Postal code (will be hashed) */
+  zp?: string;
+  /** Country (2-letter ISO code, will be hashed) */
+  country?: string;
+  /** External ID - your unique user identifier (will be hashed) */
+  external_id?: string;
+  /** Client IP address (NOT hashed) */
+  client_ip_address?: string;
+  /** Client User Agent (NOT hashed) */
+  client_user_agent?: string;
+  /** Facebook Click ID from URL parameter (NOT hashed) */
+  fbc?: string;
+  /** Facebook Browser ID from _fbp cookie (NOT hashed) */
+  fbp?: string;
+}
+
+/**
+ * Custom data for conversion events
+ */
+export interface CustomData {
+  /** Currency code (ISO 4217) */
+  currency?: string;
+  /** Total value of the conversion */
+  value?: number;
+  /** Content name or product name */
+  content_name?: string;
+  /** Content category */
+  content_category?: string;
+  /** Content IDs (product IDs) */
+  content_ids?: string[];
+  /** Content type: 'product' or 'product_group' */
+  content_type?: string;
+  /** Number of items */
+  num_items?: number;
+  /** Order ID for Purchase events */
+  order_id?: string;
+  /** Search string for Search events */
+  search_string?: string;
+  /** Registration status */
+  status?: string;
+  /** Service type (custom for SOS-Expat) */
+  service_type?: string;
+  /** Provider type (custom for SOS-Expat) */
+  provider_type?: string;
+}
+
+/**
+ * Meta CAPI Event structure
+ * @see https://developers.facebook.com/docs/marketing-api/conversions-api/parameters/server-event
+ */
+export interface MetaCAPIEvent {
+  /** Event name (e.g., 'Purchase', 'Lead', 'InitiateCheckout') */
+  event_name: string;
+  /** Unix timestamp in seconds */
+  event_time: number;
+  /** Unique event ID for deduplication with browser pixel */
+  event_id: string;
+  /** Action source: 'website', 'app', 'email', etc. */
+  action_source: "website" | "app" | "email" | "phone_call" | "chat" | "physical_store" | "system_generated" | "other";
+  /** Event source URL */
+  event_source_url?: string;
+  /** User data for matching */
+  user_data: HashedUserData;
+  /** Custom data (conversion details) */
+  custom_data?: CustomData;
+  /** Opt-out flag */
+  opt_out?: boolean;
+  /** Data processing options for CCPA/LDU */
+  data_processing_options?: string[];
+  /** Data processing options country */
+  data_processing_options_country?: number;
+  /** Data processing options state */
+  data_processing_options_state?: number;
+}
+
+/**
+ * User data after hashing (sent to Meta)
+ */
+export interface HashedUserData {
+  em?: string[];
+  ph?: string[];
+  fn?: string;
+  ln?: string;
+  ct?: string;
+  st?: string;
+  zp?: string;
+  country?: string;
+  external_id?: string[];
+  client_ip_address?: string;
+  client_user_agent?: string;
+  fbc?: string;
+  fbp?: string;
+}
+
+/**
+ * Meta CAPI Response
+ */
+export interface MetaCAPIResponse {
+  events_received?: number;
+  messages?: string[];
+  fbtrace_id?: string;
+  error?: {
+    message: string;
+    type: string;
+    code: number;
+    fbtrace_id: string;
+  };
+}
+
+/**
+ * Result of sending a CAPI event
+ */
+export interface CAPIEventResult {
+  success: boolean;
+  eventId: string;
+  eventsReceived?: number;
+  fbtraceId?: string;
+  error?: string;
+}
+
+// ============================================================================
+// Utility Functions
+// ============================================================================
+
+/**
+ * Generate a unique event ID for deduplication
+ * Format: {prefix}_{timestamp}_{random}
+ */
+export function generateEventId(prefix: string = "capi"): string {
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).substring(2, 15);
+  return `${prefix}_${timestamp}_${random}`;
+}
+
+/**
+ * Hash a string using SHA256
+ * Returns lowercase hex string
+ */
+function sha256Hash(value: string): string {
+  return createHash("sha256").update(value).digest("hex");
+}
+
+/**
+ * Normalize and hash a user data value
+ * - Trims whitespace
+ * - Converts to lowercase
+ * - Hashes with SHA256
+ */
+function normalizeAndHash(value: string | undefined | null): string | undefined {
+  if (!value || typeof value !== "string") {
+    return undefined;
+  }
+  const normalized = value.trim().toLowerCase();
+  if (normalized.length === 0) {
+    return undefined;
+  }
+  return sha256Hash(normalized);
+}
+
+/**
+ * Normalize phone number to E.164 format (digits only, with country code)
+ * Removes spaces, dashes, parentheses, and leading zeros
+ */
+function normalizePhoneNumber(phone: string | undefined | null): string | undefined {
+  if (!phone || typeof phone !== "string") {
+    return undefined;
+  }
+
+  // Remove all non-digit characters except leading +
+  let normalized = phone.replace(/[^\d+]/g, "");
+
+  // If starts with +, keep it for country code detection
+  const hasPlus = normalized.startsWith("+");
+  normalized = normalized.replace(/\+/g, "");
+
+  // Remove leading zeros (except for country codes starting with 0)
+  normalized = normalized.replace(/^0+/, "");
+
+  if (normalized.length === 0) {
+    return undefined;
+  }
+
+  // For French numbers without country code (9 digits after removing leading 0)
+  if (!hasPlus && normalized.length === 9) {
+    normalized = "33" + normalized;
+  }
+
+  return normalized;
+}
+
+/**
+ * Hash user data for Meta CAPI
+ * Only hashes PII fields; leaves ip, user_agent, fbc, fbp unhashed
+ */
+export function hashUserData(userData: UserData): HashedUserData {
+  const hashed: HashedUserData = {};
+
+  // Hash email (can be array for multiple emails)
+  const hashedEmail = normalizeAndHash(userData.em);
+  if (hashedEmail) {
+    hashed.em = [hashedEmail];
+  }
+
+  // Hash phone (normalize to E.164 first, can be array)
+  const normalizedPhone = normalizePhoneNumber(userData.ph);
+  if (normalizedPhone) {
+    hashed.ph = [sha256Hash(normalizedPhone)];
+  }
+
+  // Hash name fields
+  const hashedFn = normalizeAndHash(userData.fn);
+  if (hashedFn) {
+    hashed.fn = hashedFn;
+  }
+
+  const hashedLn = normalizeAndHash(userData.ln);
+  if (hashedLn) {
+    hashed.ln = hashedLn;
+  }
+
+  // Hash location fields
+  const hashedCt = normalizeAndHash(userData.ct);
+  if (hashedCt) {
+    hashed.ct = hashedCt;
+  }
+
+  const hashedSt = normalizeAndHash(userData.st);
+  if (hashedSt) {
+    hashed.st = hashedSt;
+  }
+
+  const hashedZp = normalizeAndHash(userData.zp);
+  if (hashedZp) {
+    hashed.zp = hashedZp;
+  }
+
+  const hashedCountry = normalizeAndHash(userData.country);
+  if (hashedCountry) {
+    hashed.country = hashedCountry;
+  }
+
+  // Hash external ID (can be array)
+  const hashedExternalId = normalizeAndHash(userData.external_id);
+  if (hashedExternalId) {
+    hashed.external_id = [hashedExternalId];
+  }
+
+  // Non-hashed fields (pass through as-is)
+  if (userData.client_ip_address) {
+    hashed.client_ip_address = userData.client_ip_address;
+  }
+
+  if (userData.client_user_agent) {
+    hashed.client_user_agent = userData.client_user_agent;
+  }
+
+  if (userData.fbc) {
+    hashed.fbc = userData.fbc;
+  }
+
+  if (userData.fbp) {
+    hashed.fbp = userData.fbp;
+  }
+
+  return hashed;
+}
+
+// ============================================================================
+// Core CAPI Function
+// ============================================================================
+
+/**
+ * Send an event to Meta Conversions API
+ *
+ * @param event - The event to send
+ * @param testEventCode - Optional test event code for debugging (removes in production)
+ * @returns Result of the API call
+ */
+export async function sendCAPIEvent(
+  event: MetaCAPIEvent,
+  testEventCode?: string
+): Promise<CAPIEventResult> {
+  const logPrefix = `[Meta CAPI] [${event.event_name}]`;
+
+  try {
+    // Get access token from Firebase secret
+    let accessToken: string;
+    try {
+      accessToken = META_CAPI_TOKEN.value();
+      if (!accessToken || accessToken.length === 0) {
+        throw new Error("META_CAPI_TOKEN is empty");
+      }
+    } catch (secretError) {
+      // Fallback to process.env for local development
+      accessToken = process.env.META_CAPI_TOKEN || "";
+      if (!accessToken) {
+        logger.error(`${logPrefix} META_CAPI_TOKEN not configured`);
+        return {
+          success: false,
+          eventId: event.event_id,
+          error: "META_CAPI_TOKEN not configured",
+        };
+      }
+    }
+
+    // Build request body
+    const requestBody: {
+      data: MetaCAPIEvent[];
+      access_token: string;
+      test_event_code?: string;
+    } = {
+      data: [event],
+      access_token: accessToken,
+    };
+
+    // Add test event code if provided (for debugging in Events Manager)
+    if (testEventCode) {
+      requestBody.test_event_code = testEventCode;
+    }
+
+    logger.info(`${logPrefix} Sending event`, {
+      eventId: event.event_id,
+      eventName: event.event_name,
+      actionSource: event.action_source,
+      hasUserData: Object.keys(event.user_data).length > 0,
+      hasCustomData: !!event.custom_data,
+      testMode: !!testEventCode,
+    });
+
+    // Send request to Meta CAPI
+    const response = await fetch(META_CAPI_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    const responseData = await response.json() as MetaCAPIResponse;
+
+    // Check for errors
+    if (!response.ok || responseData.error) {
+      const errorMessage = responseData.error?.message || `HTTP ${response.status}`;
+      logger.error(`${logPrefix} API Error`, {
+        eventId: event.event_id,
+        status: response.status,
+        error: responseData.error,
+        fbtraceId: responseData.fbtrace_id || responseData.error?.fbtrace_id,
+      });
+
+      return {
+        success: false,
+        eventId: event.event_id,
+        fbtraceId: responseData.fbtrace_id || responseData.error?.fbtrace_id,
+        error: errorMessage,
+      };
+    }
+
+    logger.info(`${logPrefix} Event sent successfully`, {
+      eventId: event.event_id,
+      eventsReceived: responseData.events_received,
+      fbtraceId: responseData.fbtrace_id,
+    });
+
+    return {
+      success: true,
+      eventId: event.event_id,
+      eventsReceived: responseData.events_received,
+      fbtraceId: responseData.fbtrace_id,
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    logger.error(`${logPrefix} Exception`, {
+      eventId: event.event_id,
+      error: errorMessage,
+    });
+
+    return {
+      success: false,
+      eventId: event.event_id,
+      error: errorMessage,
+    };
+  }
+}
+
+// ============================================================================
+// Event Tracking Functions
+// ============================================================================
+
+/**
+ * Track a Purchase event
+ * Sent when a customer completes a payment
+ */
+export async function trackCAPIPurchase(params: {
+  userData: UserData;
+  value: number;
+  currency: string;
+  orderId?: string;
+  contentName?: string;
+  contentCategory?: string;
+  contentIds?: string[];
+  serviceType?: string;
+  providerType?: string;
+  eventSourceUrl?: string;
+  eventId?: string;
+  testEventCode?: string;
+}): Promise<CAPIEventResult> {
+  const eventId = params.eventId || generateEventId("purchase");
+
+  const event: MetaCAPIEvent = {
+    event_name: "Purchase",
+    event_time: Math.floor(Date.now() / 1000),
+    event_id: eventId,
+    action_source: "website",
+    event_source_url: params.eventSourceUrl,
+    user_data: hashUserData(params.userData),
+    custom_data: {
+      currency: params.currency.toUpperCase(),
+      value: params.value,
+      order_id: params.orderId,
+      content_name: params.contentName,
+      content_category: params.contentCategory,
+      content_ids: params.contentIds,
+      content_type: "product",
+      service_type: params.serviceType,
+      provider_type: params.providerType,
+    },
+  };
+
+  return sendCAPIEvent(event, params.testEventCode);
+}
+
+/**
+ * Track a Lead event
+ * Sent when a user submits their information (contact form, callback request, etc.)
+ */
+export async function trackCAPILead(params: {
+  userData: UserData;
+  value?: number;
+  currency?: string;
+  contentName?: string;
+  contentCategory?: string;
+  serviceType?: string;
+  eventSourceUrl?: string;
+  eventId?: string;
+  testEventCode?: string;
+}): Promise<CAPIEventResult> {
+  const eventId = params.eventId || generateEventId("lead");
+
+  const event: MetaCAPIEvent = {
+    event_name: "Lead",
+    event_time: Math.floor(Date.now() / 1000),
+    event_id: eventId,
+    action_source: "website",
+    event_source_url: params.eventSourceUrl,
+    user_data: hashUserData(params.userData),
+    custom_data: {
+      currency: params.currency?.toUpperCase(),
+      value: params.value,
+      content_name: params.contentName,
+      content_category: params.contentCategory,
+      service_type: params.serviceType,
+    },
+  };
+
+  return sendCAPIEvent(event, params.testEventCode);
+}
+
+/**
+ * Track an InitiateCheckout event
+ * Sent when a user starts the checkout/payment process
+ */
+export async function trackCAPIInitiateCheckout(params: {
+  userData: UserData;
+  value?: number;
+  currency?: string;
+  contentName?: string;
+  contentCategory?: string;
+  contentIds?: string[];
+  numItems?: number;
+  serviceType?: string;
+  providerType?: string;
+  eventSourceUrl?: string;
+  eventId?: string;
+  testEventCode?: string;
+}): Promise<CAPIEventResult> {
+  const eventId = params.eventId || generateEventId("checkout");
+
+  const event: MetaCAPIEvent = {
+    event_name: "InitiateCheckout",
+    event_time: Math.floor(Date.now() / 1000),
+    event_id: eventId,
+    action_source: "website",
+    event_source_url: params.eventSourceUrl,
+    user_data: hashUserData(params.userData),
+    custom_data: {
+      currency: params.currency?.toUpperCase(),
+      value: params.value,
+      content_name: params.contentName,
+      content_category: params.contentCategory,
+      content_ids: params.contentIds,
+      content_type: "product",
+      num_items: params.numItems,
+      service_type: params.serviceType,
+      provider_type: params.providerType,
+    },
+  };
+
+  return sendCAPIEvent(event, params.testEventCode);
+}
+
+/**
+ * Track a CompleteRegistration event
+ * Sent when a user completes their account registration
+ */
+export async function trackCAPICompleteRegistration(params: {
+  userData: UserData;
+  value?: number;
+  currency?: string;
+  contentName?: string;
+  status?: string;
+  eventSourceUrl?: string;
+  eventId?: string;
+  testEventCode?: string;
+}): Promise<CAPIEventResult> {
+  const eventId = params.eventId || generateEventId("registration");
+
+  const event: MetaCAPIEvent = {
+    event_name: "CompleteRegistration",
+    event_time: Math.floor(Date.now() / 1000),
+    event_id: eventId,
+    action_source: "website",
+    event_source_url: params.eventSourceUrl,
+    user_data: hashUserData(params.userData),
+    custom_data: {
+      currency: params.currency?.toUpperCase(),
+      value: params.value,
+      content_name: params.contentName,
+      status: params.status || "completed",
+    },
+  };
+
+  return sendCAPIEvent(event, params.testEventCode);
+}
+
+/**
+ * Track a StartRegistration event (custom event)
+ * Sent when a user starts the registration process
+ */
+export async function trackCAPIStartRegistration(params: {
+  userData: UserData;
+  contentName?: string;
+  contentCategory?: string;
+  eventSourceUrl?: string;
+  eventId?: string;
+  testEventCode?: string;
+}): Promise<CAPIEventResult> {
+  const eventId = params.eventId || generateEventId("start_reg");
+
+  const event: MetaCAPIEvent = {
+    event_name: "StartRegistration",
+    event_time: Math.floor(Date.now() / 1000),
+    event_id: eventId,
+    action_source: "website",
+    event_source_url: params.eventSourceUrl,
+    user_data: hashUserData(params.userData),
+    custom_data: {
+      content_name: params.contentName,
+      content_category: params.contentCategory,
+    },
+  };
+
+  return sendCAPIEvent(event, params.testEventCode);
+}
+
+// ============================================================================
+// Stripe Integration
+// ============================================================================
+
+/**
+ * Extract user data from a Stripe PaymentIntent or Charge
+ * Useful for tracking Purchase events from Stripe webhooks
+ */
+export function extractUserDataFromStripe(
+  stripeObject: Stripe.PaymentIntent | Stripe.Charge | Stripe.Customer,
+  additionalData?: Partial<UserData>
+): UserData {
+  const userData: UserData = {};
+
+  // Handle different Stripe object types
+  if ("customer" in stripeObject && typeof stripeObject.customer === "object" && stripeObject.customer !== null) {
+    // PaymentIntent or Charge with expanded customer
+    const customer = stripeObject.customer as Stripe.Customer;
+    if (customer.email) userData.em = customer.email;
+    if (customer.phone) userData.ph = customer.phone;
+    if (customer.name) {
+      const nameParts = customer.name.split(" ");
+      if (nameParts.length >= 1) userData.fn = nameParts[0];
+      if (nameParts.length >= 2) userData.ln = nameParts.slice(1).join(" ");
+    }
+    if (customer.address) {
+      if (customer.address.city) userData.ct = customer.address.city;
+      if (customer.address.state) userData.st = customer.address.state;
+      if (customer.address.postal_code) userData.zp = customer.address.postal_code;
+      if (customer.address.country) userData.country = customer.address.country;
+    }
+    // Use customer ID as external_id
+    userData.external_id = customer.id;
+  } else if ("email" in stripeObject && stripeObject.email) {
+    // Direct Customer object
+    const customer = stripeObject as Stripe.Customer;
+    userData.em = customer.email || undefined;
+    if (customer.phone) userData.ph = customer.phone;
+    if (customer.name) {
+      const nameParts = customer.name.split(" ");
+      if (nameParts.length >= 1) userData.fn = nameParts[0];
+      if (nameParts.length >= 2) userData.ln = nameParts.slice(1).join(" ");
+    }
+    if (customer.address) {
+      if (customer.address.city) userData.ct = customer.address.city;
+      if (customer.address.state) userData.st = customer.address.state;
+      if (customer.address.postal_code) userData.zp = customer.address.postal_code;
+      if (customer.address.country) userData.country = customer.address.country;
+    }
+    userData.external_id = customer.id;
+  }
+
+  // For PaymentIntent, check billing_details on latest_charge
+  if ("latest_charge" in stripeObject && typeof stripeObject.latest_charge === "object" && stripeObject.latest_charge !== null) {
+    const charge = stripeObject.latest_charge as Stripe.Charge;
+    if (charge.billing_details) {
+      if (charge.billing_details.email && !userData.em) {
+        userData.em = charge.billing_details.email;
+      }
+      if (charge.billing_details.phone && !userData.ph) {
+        userData.ph = charge.billing_details.phone;
+      }
+      if (charge.billing_details.name && !userData.fn) {
+        const nameParts = charge.billing_details.name.split(" ");
+        if (nameParts.length >= 1) userData.fn = nameParts[0];
+        if (nameParts.length >= 2) userData.ln = nameParts.slice(1).join(" ");
+      }
+      if (charge.billing_details.address) {
+        const addr = charge.billing_details.address;
+        if (addr.city && !userData.ct) userData.ct = addr.city;
+        if (addr.state && !userData.st) userData.st = addr.state;
+        if (addr.postal_code && !userData.zp) userData.zp = addr.postal_code;
+        if (addr.country && !userData.country) userData.country = addr.country;
+      }
+    }
+  }
+
+  // For Charge directly
+  if ("billing_details" in stripeObject && stripeObject.billing_details) {
+    const charge = stripeObject as Stripe.Charge;
+    if (charge.billing_details.email && !userData.em) {
+      userData.em = charge.billing_details.email;
+    }
+    if (charge.billing_details.phone && !userData.ph) {
+      userData.ph = charge.billing_details.phone;
+    }
+    if (charge.billing_details.name && !userData.fn) {
+      const nameParts = charge.billing_details.name.split(" ");
+      if (nameParts.length >= 1) userData.fn = nameParts[0];
+      if (nameParts.length >= 2) userData.ln = nameParts.slice(1).join(" ");
+    }
+    if (charge.billing_details.address) {
+      const addr = charge.billing_details.address;
+      if (addr.city && !userData.ct) userData.ct = addr.city;
+      if (addr.state && !userData.st) userData.st = addr.state;
+      if (addr.postal_code && !userData.zp) userData.zp = addr.postal_code;
+      if (addr.country && !userData.country) userData.country = addr.country;
+    }
+  }
+
+  // Check metadata for additional user info
+  if ("metadata" in stripeObject && stripeObject.metadata) {
+    const metadata = stripeObject.metadata;
+    if (metadata.client_id && !userData.external_id) {
+      userData.external_id = metadata.client_id;
+    }
+    if (metadata.user_id && !userData.external_id) {
+      userData.external_id = metadata.user_id;
+    }
+    if (metadata.email && !userData.em) {
+      userData.em = metadata.email;
+    }
+    if (metadata.phone && !userData.ph) {
+      userData.ph = metadata.phone;
+    }
+    // Facebook tracking parameters from metadata
+    if (metadata.fbc) {
+      userData.fbc = metadata.fbc;
+    }
+    if (metadata.fbp) {
+      userData.fbp = metadata.fbp;
+    }
+    if (metadata.client_ip_address) {
+      userData.client_ip_address = metadata.client_ip_address;
+    }
+    if (metadata.client_user_agent) {
+      userData.client_user_agent = metadata.client_user_agent;
+    }
+  }
+
+  // Merge with additional data (additionalData takes precedence)
+  return {
+    ...userData,
+    ...additionalData,
+  };
+}
+
+/**
+ * Track a Purchase from Stripe PaymentIntent
+ * Convenience function for Stripe webhook handlers
+ */
+export async function trackStripePurchase(
+  paymentIntent: Stripe.PaymentIntent,
+  options?: {
+    serviceType?: string;
+    providerType?: string;
+    contentName?: string;
+    contentCategory?: string;
+    eventSourceUrl?: string;
+    eventId?: string;
+    testEventCode?: string;
+    additionalUserData?: Partial<UserData>;
+  }
+): Promise<CAPIEventResult> {
+  const userData = extractUserDataFromStripe(paymentIntent, options?.additionalUserData);
+
+  // Get order ID from metadata
+  const orderId = paymentIntent.metadata?.order_id ||
+                  paymentIntent.metadata?.call_session_id ||
+                  paymentIntent.id;
+
+  return trackCAPIPurchase({
+    userData,
+    value: paymentIntent.amount / 100, // Convert from cents
+    currency: paymentIntent.currency,
+    orderId,
+    contentName: options?.contentName || paymentIntent.metadata?.service_type || "SOS-Expat Service",
+    contentCategory: options?.contentCategory || paymentIntent.metadata?.provider_type,
+    contentIds: paymentIntent.metadata?.call_session_id ? [paymentIntent.metadata.call_session_id] : undefined,
+    serviceType: options?.serviceType || paymentIntent.metadata?.service_type,
+    providerType: options?.providerType || paymentIntent.metadata?.provider_type,
+    eventSourceUrl: options?.eventSourceUrl,
+    eventId: options?.eventId,
+    testEventCode: options?.testEventCode,
+  });
+}
+
+// ============================================================================
+// Exports
+// ============================================================================
+
+export {
+  META_PIXEL_ID,
+  META_CAPI_ENDPOINT,
+};
