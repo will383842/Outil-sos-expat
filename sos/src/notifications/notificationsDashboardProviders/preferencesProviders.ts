@@ -29,10 +29,18 @@ export const getNotificationPreferences = (): NotificationPreferences => {
 
 /**
  * Sauvegarde les préférences de notification dans le localStorage.
+ * ✅ FIX: Synchronise avec les clés utilisées par useProviderReminderSystem
  */
 export const saveNotificationPreferences = (prefs: NotificationPreferences): void => {
   try {
+    // Sauvegarde principale (objet JSON)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+
+    // ✅ FIX: Synchroniser avec les clés lues par useProviderReminderSystem
+    // Ces clés sont définies dans providerActivityConfig.ts
+    localStorage.setItem('soundEnabled', String(prefs.enableSound));
+    localStorage.setItem('voiceEnabled', String(prefs.enableVoice));
+    localStorage.setItem('modalEnabled', String(prefs.enableModal));
   } catch (err) {
     console.error('Erreur sauvegarde préférences notifications:', err);
   }

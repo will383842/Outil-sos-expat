@@ -330,16 +330,19 @@ export function normalizeProvider(providerData: unknown): Provider {
 /**
  * Valide qu'un provider a les données minimales requises
  * Filtre les prestataires inactifs, non approuvés, bannis ou cachés
+ *
+ * ⚠️ IMPORTANT: Validation STRICTE - seuls les profils explicitement
+ * approuvés (isApproved === true) et visibles (isVisible === true) passent
  */
 export function validateProvider(provider: Provider | null): provider is Provider {
   if (!provider) return false;
 
-  // Critères de validation :
+  // Critères de validation STRICTS :
   // - ID valide et nom valide
-  // - Compte actif (isActive !== false)
-  // - Profil approuvé (isApproved !== false)
+  // - Compte actif (isActive === true ou non défini)
+  // - Profil EXPLICITEMENT approuvé (isApproved === true) ⚠️ STRICT
   // - Non banni (isBanned !== true)
-  // - Visible (isVisible !== false)
+  // - EXPLICITEMENT visible (isVisible === true) ⚠️ STRICT
   // - Pas un admin
   const rawProvider = provider as unknown as Record<string, unknown>;
   const roleStr = String(rawProvider.role ?? '');
@@ -349,9 +352,9 @@ export function validateProvider(provider: Provider | null): provider is Provide
     provider.id.trim() &&
     provider.name.trim() &&
     provider.isActive !== false &&
-    provider.isApproved !== false &&
+    provider.isApproved === true &&      // ✅ STRICT: doit être explicitement true
     !provider.isBanned &&
-    provider.isVisible !== false &&
+    provider.isVisible === true &&        // ✅ STRICT: doit être explicitement true
     notAdmin
   );
 }

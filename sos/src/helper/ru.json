@@ -2862,6 +2862,7 @@
   "header.nav.viewProfiles": "Профили специалистов",
   "header.status.approvalRequired": "Ваш аккаунт должен быть одобрен администратором для выхода в сеть",
   "header.status.approvalRequiredShort": "Ваш аккаунт должен быть одобрен для изменения доступности",
+  "header.status.pendingApprovalHint": "Эта кнопка активируется после одобрения вашего профиля",
   "header.status.busy": "На звонке",
   "header.status.close": "Закрыть",
   "header.status.errorOccurred": "Произошла ошибка",

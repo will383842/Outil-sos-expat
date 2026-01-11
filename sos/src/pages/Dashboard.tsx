@@ -76,7 +76,8 @@ import PayPalOnboarding from "@/components/provider/PayPalOnboarding";
 import IntlPhoneInput from "@/components/forms-data/IntlPhoneInput";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { useForm, Controller } from "react-hook-form";
-import ProviderOnlineManager from '../components/providers/ProviderOnlineManager';
+// ✅ FIX: ProviderOnlineManager est maintenant monté au niveau App.tsx pour tracking global
+// import ProviderOnlineManager from '../components/providers/ProviderOnlineManager';
 import { getProviderTranslation, type SupportedLanguage } from "../services/providerTranslationService";
 import { getSpecialtyLabel, mapLanguageToLocale } from "../utils/specialtyMapper";
 
@@ -160,14 +161,6 @@ interface Invoice {
   downloadUrl: string;
 }
 
-interface NotificationItem {
-  id: string;
-  title: string;
-  message: string;
-  isRead: boolean;
-  createdAt: Date;
-}
-
 interface ProfileData {
   email: string;
   phone: string;
@@ -205,7 +198,6 @@ type TabType =
   | "calls"
   | "invoices"
   | "reviews"
-  | "notifications"
   | "messages"
   | "favorites"
   | "translations";
@@ -569,7 +561,7 @@ const Dashboard: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Valid tabs constant
-  const VALID_TABS: TabType[] = ['profile', 'settings', 'calls', 'invoices', 'reviews', 'notifications', 'messages', 'favorites', 'translations'];
+  const VALID_TABS: TabType[] = ['profile', 'settings', 'calls', 'invoices', 'reviews', 'messages', 'favorites', 'translations'];
 
   // ✅ P0 FIX: Compute tab from URL directly - not memoized to ensure fresh reads
   const getTabFromUrl = useCallback((): TabType => {
@@ -609,7 +601,6 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
     user?.isOnline ?? false
   );
   const [calls, setCalls] = useState<Call[]>([]);
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [favorites, setFavorites] = useState<
     Array<{
       id: string;
@@ -848,11 +839,6 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
       }
     })();
   }, [user?.id]);
-
-  // Historique notifications (optionnel – placeholder)
-  useEffect(() => {
-    setNotifications([]);
-  }, []);
 
   // Fetch call sessions from Firestore
   useEffect(() => {
@@ -1519,7 +1505,7 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
   // ===============================
   return (
     <Layout>
-      <ProviderOnlineManager>
+      {/* ✅ FIX: ProviderOnlineManager retiré - maintenant monté au niveau App.tsx */}
       {/* ✨ PROFILE COMPLETION ALERT */}
       {user && (user.role === 'lawyer' || user.role === 'expat') && (
         <ProfileStatusAlert user={user} />
@@ -3463,74 +3449,6 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                 </div>
               )}
 
-              {/* NOTIFICATIONS */}
-              {activeTab === "notifications" && (
-                <div className={`${softCard} overflow-hidden`}>
-                  <div className={`px-6 py-4 ${headerGradient}`}>
-                    <h2 className="text-xl font-semibold">
-                      {intl.formatMessage({ id: "dashboard.notifications" })}
-                    </h2>
-                  </div>
-                  <div className="p-6">
-                    {(user?.role === "lawyer" || user?.role === "expat") && (
-                      <div className="mb-8">
-                        <h3 className={`${UI.sectionTitle} mb-4`}>
-                          {intl.formatMessage({
-                            id: "dashboard.notificationPreferences",
-                          })}
-                        </h3>
-                        <NotificationSettings />
-                      </div>
-                    )}
-
-                    <div>
-                      <h3 className={`${UI.sectionTitle} mb-4`}>
-                        {/* {language === "fr"
-                          ? "Historique des notifications"
-                          : "Notification history"} */}
-                        {intl.formatMessage({
-                          id: "dashboard.notificationHistory",
-                        })}
-                      </h3>
-                      {notifications.length > 0 ? (
-                        <div className="space-y-4">
-                          {notifications.map((n) => (
-                            <div
-                              key={n.id}
-                              className={`p-4 rounded-lg border ${n.isRead
-                                ? "bg-white dark:bg-white/5 border-gray-200 dark:border-white/10"
-                                : "bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/20"
-                                }`}
-                            >
-                              <div className="flex justify-between">
-                                <h4 className="font-medium text-gray-900 dark:text-gray-100">
-                                  {n.title}
-                                </h4>
-                                <span className="text-sm text-gray-500 dark:text-gray-400">
-                                  {formatDate(n.createdAt)}
-                                </span>
-                              </div>
-                              <p className="mt-1 text-gray-600 dark:text-gray-300">
-                                {n.message}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className={`${UI.textMuted} text-center py-8`}>
-                          {/* {language === "fr"
-                            ? "Vous n'avez pas de notifications."
-                            : "You don't have any notifications."} */}
-                          {intl.formatMessage({
-                            id: "dashboard.noNotifications",
-                          })}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {/* FAVORIS */}
               {activeTab === "favorites" && (
                 <div className={`${softCard} overflow-hidden`}>
@@ -3776,7 +3694,7 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
           serviceType={selectedCallForReview.serviceType === "lawyer_call" ? "lawyer_call" : "expat_call"}
         />
       )}
-      </ProviderOnlineManager>
+      {/* ✅ FIX: </ProviderOnlineManager> retiré */}
     </Layout>
   );
 };

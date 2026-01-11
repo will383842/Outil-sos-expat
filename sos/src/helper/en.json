@@ -2867,6 +2867,7 @@
   "header.nav.viewProfiles": "Provider Profiles",
   "header.status.approvalRequired": "Your account must be approved by an administrator to go online",
   "header.status.approvalRequiredShort": "Your account must be approved to change your availability",
+  "header.status.pendingApprovalHint": "This button will activate once your profile is approved",
   "header.status.busy": "On call",
   "header.status.close": "Close",
   "header.status.errorOccurred": "An error occurred",

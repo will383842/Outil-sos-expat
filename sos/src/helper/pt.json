@@ -2862,6 +2862,7 @@
   "header.nav.viewProfiles": "Perfis de prestadores",
   "header.status.approvalRequired": "A sua conta deve ser aprovada por um administrador para ficar online",
   "header.status.approvalRequiredShort": "A sua conta deve ser aprovada para alterar a sua disponibilidade",
+  "header.status.pendingApprovalHint": "Este botão será ativado após a aprovação do seu perfil",
   "header.status.busy": "Em chamada",
   "header.status.close": "Fechar",
   "header.status.errorOccurred": "Ocorreu um erro",

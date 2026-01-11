@@ -17,6 +17,7 @@ import { captureTrafficSource } from './utils/trafficSource';
 import './App.css';
 import PWAProvider from './components/pwa/PWAProvider';
 import { WizardProvider } from './contexts/WizardContext';
+import ProviderOnlineManager from './components/providers/ProviderOnlineManager';
 // Marketing routes moved to AdminRoutesV2 (accessible via /admin/marketing/*)
 import enMessages from "./helper/en.json";
 import esMessages from "./helper/es.json";
@@ -617,6 +618,8 @@ const App: React.FC = () => {
             <HreflangLinks pathname={location.pathname} />
             {/* P0 FIX: ErrorBoundary pour capturer les erreurs de lazy loading */}
             <ErrorBoundary>
+            {/* ✅ FIX: ProviderOnlineManager monté au niveau global pour tracking sur toutes les pages */}
+            <ProviderOnlineManager>
             <Suspense fallback={<LoadingSpinner size="large" color="red" />}>
               {/* Routes de l'app */}
               <Routes>
@@ -643,6 +646,7 @@ const App: React.FC = () => {
 
               {/* Routes admin gérées par AdminRoutesV2 (handled above outside LocaleRouter) */}
             </Suspense>
+            </ProviderOnlineManager>
             </ErrorBoundary>
           </div>
         </LocaleRouter>

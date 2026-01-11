@@ -4,7 +4,7 @@ import { Search, Star, MapPin, Phone, Clock } from 'lucide-react';
 import Layout from '../components/layout/Layout';
 import SEOHead from '../components/layout/SEOHead';
 import { useApp } from '../contexts/AppContext';
-import { collection, query, getDocs, limit, where, DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
+import { collection, query, getDocs, where, limit, DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import type { Provider } from '../types/provider';
 import { normalizeProvider, validateProvider } from '../types/provider';
@@ -15,7 +15,8 @@ type SortOption = 'rating' | 'price' | 'experience';
 
 // Configuration constants
 const CONFIG = {
-  FIRESTORE_LIMIT: 100,
+  // ⚠️ Pas de limite - on charge tous les profils approuvés et visibles
+  // Le filtrage se fait côté Firestore avec where clauses
   DEFAULT_AVATAR: '/default-avatar.png',
   PRICES: {
     lawyer: 49,
@@ -192,19 +193,37 @@ const Providers: React.FC = () => {
   }, []);
 
   // Load providers from Firestore
+  // ⚠️ OPTIMISATION: Filtrage par langue de l'utilisateur pour réduire la charge
+  // Accessible aux utilisateurs non connectés (lecture publique)
   const loadProviders = useCallback(async () => {
     try {
       setIsLoading(true);
       setError('');
-      
+
+      // Mapper les codes de langue vers les codes Firestore
+      const langMap: Record<string, string> = {
+        'fr': 'fr', 'en': 'en', 'es': 'es', 'de': 'de',
+        'pt': 'pt', 'ru': 'ru', 'ch': 'zh', 'hi': 'hi', 'ar': 'ar'
+      };
+      const userLang = langMap[language] || 'fr';
+
+      // ✅ OPTIMISATION: Filtrer par langue de l'utilisateur
+      // Charge uniquement les providers qui parlent la langue de l'utilisateur
+      // Cela réduit drastiquement le nombre de documents chargés
       const sosProfilesQuery = query(
         collection(db, "sos_profiles"),
-        limit(CONFIG.FIRESTORE_LIMIT)
+        where('isApproved', '==', true),              // ✅ Seulement approuvés
+        where('isVisible', '==', true),               // ✅ Seulement visibles
+        where('languages', 'array-contains', userLang), // ✅ Parlent la langue de l'utilisateur
+        limit(200)                                     // Limite raisonnable
       );
-      
+
       const snapshot = await getDocs(sosProfilesQuery);
+
+      // Filtrer pour garder seulement lawyers et expats (type filtré côté client car incompatible avec array-contains)
       const providersData = snapshot.docs
         .map(transformFirestoreData)
+        .filter(p => p && (p.type === 'lawyer' || p.type === 'expat'))
         .filter(validateProvider);
       
       setProviders(providersData);
@@ -218,7 +237,7 @@ const Providers: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [transformFirestoreData]);
+  }, [transformFirestoreData, language]);
 
   // Initialize component
   useEffect(() => {

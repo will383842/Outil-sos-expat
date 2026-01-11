@@ -2778,6 +2778,7 @@
   "header.nav.viewProfiles": "ملفات مقدمي الخدمات",
   "header.status.approvalRequired": "يجب أن تتم الموافقة على حسابك من قبل المسؤول للاتصال",
   "header.status.approvalRequiredShort": "يجب الموافقة على حسابك لتغيير حالة التوفر",
+  "header.status.pendingApprovalHint": "سيتم تفعيل هذا الزر بعد الموافقة على ملفك الشخصي",
   "header.status.busy": "في مكالمة",
   "header.status.close": "إغلاق",
   "header.status.errorOccurred": "حدث خطأ",

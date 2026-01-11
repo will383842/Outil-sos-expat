@@ -1,0 +1,36 @@
+{
+  "indexes": [
+    {
+      "__comment": "Index principal pour Providers et ProfileCarousel - filtrage par langue",
+      "collectionGroup": "sos_profiles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "isApproved", "order": "ASCENDING" },
+        { "fieldPath": "isVisible", "order": "ASCENDING" },
+        { "fieldPath": "languages", "arrayConfig": "CONTAINS" }
+      ]
+    },
+    {
+      "__comment": "Index avec tri par date de création",
+      "collectionGroup": "sos_profiles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "isApproved", "order": "ASCENDING" },
+        { "fieldPath": "isVisible", "order": "ASCENDING" },
+        { "fieldPath": "languages", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "__comment": "Index pour AdminApprovals - filtrage par statut d'approbation",
+      "collectionGroup": "sos_profiles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "type", "order": "ASCENDING" },
+        { "fieldPath": "approvalStatus", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

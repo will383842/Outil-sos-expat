@@ -2707,6 +2707,7 @@
   "header.nav.viewProfiles": "Dienstleisterprofile",
   "header.status.approvalRequired": "Ihr Konto muss von einem Administrator genehmigt werden, um online zu gehen",
   "header.status.approvalRequiredShort": "Ihr Konto muss genehmigt werden, um Ihre Verfügbarkeit zu ändern",
+  "header.status.pendingApprovalHint": "Diese Schaltfläche wird aktiviert, sobald Ihr Profil genehmigt wurde",
   "header.status.busy": "Im Anruf",
   "header.status.close": "Schließen",
   "header.status.errorOccurred": "Ein Fehler ist aufgetreten",

@@ -3,12 +3,12 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useLocaleNavigate } from '../../multilingual-system';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { collection, query, where, getDocs, limit as fsLimit, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { getDownloadURL, ref } from 'firebase/storage';
 import { storage } from '../../config/firebase';
 import { getCountryName } from '../../utils/formatters';
-import { getCollectionRest } from '../../utils/firestoreRestApi';
+import { runQueryRest } from '../../utils/firestoreRestApi';
 import ModernProfileCard from './ModernProfileCard';
 import type { Provider } from '@/types/provider';
 
@@ -179,14 +179,15 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
           // Add internal trace
           (provider as any).__isAdmin = isAdmin;
 
-          // Règle d'affichage
+          // Règle d'affichage - ⚠️ CORRECTION: Vérifier isApproved
           const hasValidData = provider.name.trim() !== '' && provider.country.trim() !== '';
           const notBanned = data.isBanned !== true;
           const notAdmin = !(provider as any).__isAdmin;
           const visible = data.isVisible !== false;
+          const approved = data.isApproved === true;  // ✅ AJOUT: Vérifier l'approbation
           const validType = provider.type === 'lawyer' || provider.type === 'expat';
 
-          if (hasValidData && notBanned && notAdmin && visible && validType) {
+          if (hasValidData && notBanned && notAdmin && visible && approved && validType) {
             return provider;
           }
           return null;
@@ -198,17 +199,28 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
 
       let items: Provider[] = [];
 
-      // Tentative 1: REST API
+      // Mapper la langue utilisateur
+      const langMap: Record<string, string> = {
+        'fr': 'fr', 'en': 'en', 'es': 'es', 'de': 'de',
+        'pt': 'pt', 'ru': 'ru', 'ch': 'zh', 'hi': 'hi', 'ar': 'ar'
+      };
+      const userLang = langMap[language] || 'fr';
+
+      // Tentative 1: REST API avec filtres d'approbation + langue
       try {
-        const docs = await getCollectionRest<any>("sos_profiles", {
-          pageSize: 50,
+        // ✅ OPTIMISATION: Filtrer par langue de l'utilisateur
+        const docs = await runQueryRest<any>("sos_profiles", [
+          { field: 'isApproved', op: 'EQUAL', value: true },
+          { field: 'isVisible', op: 'EQUAL', value: true },
+          { field: 'languages', op: 'ARRAY_CONTAINS', value: userLang }
+        ], {
+          limit: 100,  // Limite raisonnable
           timeoutMs: FIRESTORE_TIMEOUT_MS,
         });
 
-        console.log(`✅ [ProfileCarousel] REST API: ${docs.length} documents reçus`);
+        console.log(`✅ [ProfileCarousel] REST API: ${docs.length} documents (langue: ${userLang})`);
 
         const transformedPromises = docs
-          .filter(doc => doc.data.type === "lawyer" || doc.data.type === "expat")
           .map(doc => transformDoc(doc.id, doc.data));
 
         const transformed = await Promise.all(transformedPromises);
@@ -228,10 +240,12 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
       console.log("🏠 [ProfileCarousel] Tentative 2: SDK Firestore...");
 
       try {
+        // ✅ OPTIMISATION: Filtrer par langue de l'utilisateur
         const sosProfilesQuery = query(
           collection(db, 'sos_profiles'),
-          where('type', 'in', ['lawyer', 'expat']),
-          fsLimit(50)
+          where('isApproved', '==', true),              // ✅ Seulement approuvés
+          where('isVisible', '==', true),               // ✅ Seulement visibles
+          where('languages', 'array-contains', userLang) // ✅ Parlent la langue utilisateur
         );
 
         const timeoutPromise = new Promise<never>((_, reject) => {

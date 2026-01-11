@@ -13,7 +13,7 @@
  * - Configuration des capabilities (card_payments, transfers)
  * - Sauvegarde du stripeAccountId dans Firestore
  * - Status initial: stripeAccountStatus = 'pending_verification'
- * - Provider immédiatement visible (isVisible = true)
+ * - Provider NON visible jusqu'à approbation admin (isVisible = false)
  *
  * PAYPAL (151+ pays non supportés par Stripe):
  * - Pas de création automatique de compte
@@ -493,6 +493,8 @@ async function handleStripeProvider(
     console.log(`[onProviderCreated] Compte Stripe créé avec succès: ${account.id}`);
 
     // Données Stripe à sauvegarder
+    // ⚠️ CORRECTION: isVisible = false jusqu'à approbation admin
+    // Les providers ne doivent pas être visibles avant validation manuelle
     const stripeData = {
       stripeAccountId: account.id,
       stripeAccountType: "express",
@@ -502,7 +504,7 @@ async function handleStripeProvider(
       chargesEnabled: false,
       payoutsEnabled: false,
       paymentGateway: "stripe" as const,
-      isVisible: true, // Le provider Stripe est immédiatement visible
+      isVisible: false, // ⚠️ Provider NON visible jusqu'à approbation admin
       stripeCreatedAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     };

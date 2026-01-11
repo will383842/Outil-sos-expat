@@ -2869,6 +2869,7 @@
   "header.nav.viewProfiles": "Profils prestataires",
   "header.status.approvalRequired": "Votre compte doit être approuvé par un administrateur pour vous mettre en ligne",
   "header.status.approvalRequiredShort": "Votre compte doit être approuvé pour modifier votre disponibilité",
+  "header.status.pendingApprovalHint": "Ce bouton s'activera après approbation de votre profil",
   "header.status.busy": "En appel",
   "header.status.close": "Fermer",
   "header.status.errorOccurred": "Une erreur est survenue",

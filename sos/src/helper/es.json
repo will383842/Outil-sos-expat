@@ -2707,6 +2707,7 @@
   "header.nav.viewProfiles": "Perfiles de proveedores",
   "header.status.approvalRequired": "Su cuenta debe ser aprobada por un administrador para conectarse",
   "header.status.approvalRequiredShort": "Su cuenta debe ser aprobada para modificar su disponibilidad",
+  "header.status.pendingApprovalHint": "Este botón se activará cuando su perfil sea aprobado",
   "header.status.busy": "En llamada",
   "header.status.close": "Cerrar",
   "header.status.errorOccurred": "Ha ocurrido un error",

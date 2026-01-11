@@ -53,11 +53,14 @@ export const useProviderActivityTracker = ({
       clearTimeout(debounceTimerRef.current);
     }
 
-    // ✅ P0 FIX: Remove verbose activity logging - was causing console spam on every mousemove
+    // ✅ P0 FIX: Debounce avec mise à jour Firebase après le délai
     debounceTimerRef.current = setTimeout(() => {
-      // Activity timestamp updated silently
+      // Mettre à jour Firebase après le debounce (évite les appels trop fréquents)
+      if (!pauseInactivityCheck.current) {
+        updateActivityInFirebase();
+      }
     }, PROVIDER_ACTIVITY_CONFIG.EVENT_DEBOUNCE_MS);
-  }, [isOnline, isProvider]);
+  }, [isOnline, isProvider, updateActivityInFirebase]);
 
   // 🔒 Gestion de la visibilité de l'onglet (tab en arrière-plan)
   useEffect(() => {

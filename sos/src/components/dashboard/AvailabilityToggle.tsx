@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useIntl } from "react-intl";
+import { Lock } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 
 type Props = {
@@ -25,11 +26,21 @@ const AvailabilityToggle: React.FC<Props> = ({ className = "" }) => {
     return user?.availability === "busy";
   }, [user]);
 
+  // Vérifier si le prestataire est approuvé
+  const isApproved = useMemo(() => {
+    if (!user) return false;
+    return user.isApproved === true && user.approvalStatus === 'approved';
+  }, [user]);
+
+  // Le bouton est verrouillé si le compte n'est pas approuvé
+  const isLockedPendingApproval = !isApproved && (user?.role === "lawyer" || user?.role === "expat");
+
   const disabled =
     saving ||
     isLoading ||
     !user ||
     isBusy || // Désactiver le toggle quand en appel
+    isLockedPendingApproval || // Verrouiller si non approuvé
     (user?.role !== "lawyer" && user?.role !== "expat");
 
   const handleToggle = async () => {
@@ -64,11 +75,13 @@ const AvailabilityToggle: React.FC<Props> = ({ className = "" }) => {
     }
   };
 
-  const stateClasses = isBusy
-    ? "bg-orange-100 border-orange-500 text-orange-800"
-    : isOnline
-      ? "bg-emerald-100 border-emerald-500 text-emerald-800"
-      : "bg-gray-100 border-gray-300 text-gray-700";
+  const stateClasses = isLockedPendingApproval
+    ? "bg-gray-100 border-gray-300 text-gray-400" // Style verrouillé
+    : isBusy
+      ? "bg-orange-100 border-orange-500 text-orange-800"
+      : isOnline
+        ? "bg-emerald-100 border-emerald-500 text-emerald-800"
+        : "bg-gray-100 border-gray-300 text-gray-700";
 
   return (
     <div className={className}>
@@ -95,22 +108,28 @@ const AvailabilityToggle: React.FC<Props> = ({ className = "" }) => {
               ? intl.formatMessage({ id: "header.status.goOffline" })
               : intl.formatMessage({ id: "header.status.goOnline" })}
         >
-          {/* Bulle verte/orange/rouge */}
-          <span
-            aria-hidden
-            className={[
-              "inline-block w-2.5 h-2.5 rounded-full",
-              isBusy ? "bg-orange-500" : isOnline ? "bg-emerald-500" : "bg-red-500",
-              "shadow-[0_0_0_3px_rgba(0,0,0,0.04)]",
-            ].join(" ")}
-          />
+          {/* Icône de verrouillage si non approuvé, sinon bulle de statut */}
+          {isLockedPendingApproval ? (
+            <Lock className="w-4 h-4 text-gray-400" aria-hidden="true" />
+          ) : (
+            <span
+              aria-hidden
+              className={[
+                "inline-block w-2.5 h-2.5 rounded-full",
+                isBusy ? "bg-orange-500" : isOnline ? "bg-emerald-500" : "bg-red-500",
+                "shadow-[0_0_0_3px_rgba(0,0,0,0.04)]",
+              ].join(" ")}
+            />
+          )}
           {/* Texte */}
           <span className="inline-block font-medium tracking-tight text-sm">
-            {isBusy
-              ? intl.formatMessage({ id: "header.status.busy", defaultMessage: "En appel" })
-              : isOnline
-                ? intl.formatMessage({ id: "header.status.online" })
-                : intl.formatMessage({ id: "header.status.offline" })}
+            {isLockedPendingApproval
+              ? intl.formatMessage({ id: "header.status.offline" })
+              : isBusy
+                ? intl.formatMessage({ id: "header.status.busy", defaultMessage: "En appel" })
+                : isOnline
+                  ? intl.formatMessage({ id: "header.status.online" })
+                  : intl.formatMessage({ id: "header.status.offline" })}
           </span>
         </button>
 
@@ -145,7 +164,16 @@ const AvailabilityToggle: React.FC<Props> = ({ className = "" }) => {
         )}
       </div>
 
-      {errorCode && (
+      {/* Message permanent si compte non approuvé */}
+      {isLockedPendingApproval && (
+        <p className="mt-2 text-xs text-amber-600 flex items-center gap-1">
+          <Lock className="w-3 h-3" aria-hidden="true" />
+          {intl.formatMessage({ id: "header.status.pendingApprovalHint" })}
+        </p>
+      )}
+
+      {/* Message d'erreur temporaire (seulement si approuvé et erreur) */}
+      {!isLockedPendingApproval && errorCode && (
         <p role="status" aria-live="polite" className="mt-2 text-xs text-red-500">
           {errorCode === 'APPROVAL_REQUIRED_SHORT'
             ? intl.formatMessage({ id: "header.status.approvalRequiredShort" })

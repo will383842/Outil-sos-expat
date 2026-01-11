@@ -1,0 +1,21 @@
+{
+  "name": "firebase-security-audit",
+  "version": "1.0.0",
+  "description": "Assistant interactif pour sécuriser un projet Firebase après retrait d'un développeur",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "audit": "node security-check.js",
+    "update-credentials": "node update-credentials.js",
+    "guide": "node guide.js"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "inquirer": "^9.2.12",
+    "ora": "^7.0.1",
+    "dotenv": "^16.3.1",
+    "cli-table3": "^0.6.3",
+    "boxen": "^7.1.1"
+  }
+}

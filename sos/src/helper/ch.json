@@ -2778,6 +2778,7 @@
   "header.nav.viewProfiles": "服务提供者档案",
   "header.status.approvalRequired": "您的账户必须经管理员批准后才能上线",
   "header.status.approvalRequiredShort": "您的账户必须获得批准才能更改可用性",
+  "header.status.pendingApprovalHint": "此按钮将在您的个人资料获得批准后激活",
   "header.status.busy": "通话中",
   "header.status.close": "关闭",
   "header.status.errorOccurred": "发生错误",

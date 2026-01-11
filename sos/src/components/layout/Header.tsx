@@ -24,6 +24,7 @@ import {
   WifiOff,
   CreditCard,
   Bot,
+  Lock,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useApp } from "../../contexts/AppContext";
@@ -578,7 +579,14 @@ const useAvailabilityToggle = () => {
 
   const clearError = useCallback(() => setErrorMessage(null), []);
 
-  return { isOnline, isUpdating, isProvider, toggle, errorMessage, clearError };
+  // Calcul du statut d'approbation combiné (users + sos_profiles)
+  const isApproved = useMemo(() => {
+    const isApprovedFromUsers = typedUser?.isApproved === true && typedUser?.approvalStatus === 'approved';
+    const isApprovedFromSosProfiles = sosProfileApproval?.isApproved === true && sosProfileApproval?.approvalStatus === 'approved';
+    return isApprovedFromUsers || isApprovedFromSosProfiles;
+  }, [typedUser?.isApproved, typedUser?.approvalStatus, sosProfileApproval]);
+
+  return { isOnline, isUpdating, isProvider, toggle, errorMessage, clearError, isApproved };
 };
 
 // ============================================================================
@@ -592,13 +600,18 @@ interface HeaderAvailabilityToggleProps {
 const HeaderAvailabilityToggle = memo<HeaderAvailabilityToggleProps>(
   function HeaderAvailabilityToggle({ className = "" }) {
     const intl = useIntl();
-    const { isOnline, isUpdating, isProvider, toggle, errorMessage, clearError } = useAvailabilityToggle();
+    const { isOnline, isUpdating, isProvider, toggle, errorMessage, clearError, isApproved } = useAvailabilityToggle();
 
     if (!isProvider) return null;
 
-    const statusText = isOnline
-      ? intl.formatMessage({ id: "header.status.online" })
-      : intl.formatMessage({ id: "header.status.offline" });
+    // Le bouton est verrouillé si le compte n'est pas approuvé
+    const isLockedPendingApproval = !isApproved;
+
+    const statusText = isLockedPendingApproval
+      ? intl.formatMessage({ id: "header.status.offline" })
+      : isOnline
+        ? intl.formatMessage({ id: "header.status.online" })
+        : intl.formatMessage({ id: "header.status.offline" });
 
     const toggleAriaLabel = intl.formatMessage(
       { id: "header.status.toggleAria" },
@@ -609,19 +622,23 @@ const HeaderAvailabilityToggle = memo<HeaderAvailabilityToggleProps>(
       }
     );
 
+    // Classes du bouton selon l'état
+    const buttonClasses = isLockedPendingApproval
+      ? "bg-gray-400 text-white/80 cursor-not-allowed shadow-lg" // Style verrouillé
+      : isOnline
+        ? "bg-green-500 hover:bg-green-600 text-white shadow-lg"
+        : "bg-gray-500 hover:bg-gray-600 text-white shadow-lg";
+
     return (
       <div className="relative">
         <button
-          onClick={toggle}
-          disabled={isUpdating}
+          onClick={isLockedPendingApproval ? undefined : toggle}
+          disabled={isUpdating || isLockedPendingApproval}
           type="button"
           className={`group flex items-center px-4 py-2.5 rounded-xl font-semibold text-sm
             focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 min-h-[44px]
             border-2 border-white box-border
-            ${isOnline
-              ? "bg-green-500 hover:bg-green-600 text-white shadow-lg"
-              : "bg-gray-500 hover:bg-gray-600 text-white shadow-lg"
-            }
+            ${buttonClasses}
             ${isUpdating ? "opacity-75 cursor-not-allowed" : ""}
             ${className}`}
           aria-label={toggleAriaLabel}
@@ -632,18 +649,35 @@ const HeaderAvailabilityToggle = memo<HeaderAvailabilityToggleProps>(
               className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"
               aria-hidden="true"
             />
+          ) : isLockedPendingApproval ? (
+            <Lock className="w-4 h-4 mr-2" aria-hidden="true" />
           ) : isOnline ? (
             <Wifi className="w-4 h-4 mr-2" aria-hidden="true" />
           ) : (
             <WifiOff className="w-4 h-4 mr-2" aria-hidden="true" />
           )}
           <span>
-            {isOnline ? "🟢" : "🔴"} {statusText}
+            {isLockedPendingApproval ? "🔒" : isOnline ? "🟢" : "🔴"} {statusText}
           </span>
         </button>
 
-        {/* 🔒 Message d'erreur visible pour prestataire non approuve */}
-        {errorMessage && (
+        {/* 🔒 Message permanent pour prestataire en attente d'approbation */}
+        {isLockedPendingApproval && (
+          <div
+            className="absolute top-full left-0 right-0 mt-2 z-50 min-w-[280px]"
+            role="status"
+          >
+            <div className="bg-amber-500 text-white px-4 py-3 rounded-xl shadow-xl border border-amber-400 flex items-start gap-2">
+              <Lock className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden="true" />
+              <p className="text-sm font-medium">
+                {intl.formatMessage({ id: "header.status.pendingApprovalHint" })}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Message d'erreur temporaire (seulement si approuvé et erreur) */}
+        {!isLockedPendingApproval && errorMessage && (
           <div
             className="absolute top-full left-0 right-0 mt-2 z-50 min-w-[280px]"
             role="alert"
@@ -1438,7 +1472,8 @@ const Header: React.FC = () => {
   const scrolled = useScrolled();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const { isOnline, isUpdating, isProvider, toggle } = useAvailabilityToggle();
+  const { isOnline, isUpdating, isProvider, toggle, isApproved } = useAvailabilityToggle();
+  const isLockedPendingApproval = isProvider && !isApproved;
 
   const isActive = useCallback(
     (path: string) => location.pathname === path,
@@ -1644,19 +1679,23 @@ const Header: React.FC = () => {
 
               {isProvider && (
                 <button
-                  onClick={() => !isUpdating && toggle()}
-                  disabled={isUpdating}
-                  className="relative w-7 h-7 rounded-full border-2 border-white/40
+                  onClick={() => !isUpdating && !isLockedPendingApproval && toggle()}
+                  disabled={isUpdating || isLockedPendingApproval}
+                  className={`relative w-7 h-7 rounded-full border-2 border-white/40
                     flex items-center justify-center focus:outline-none
-                    focus-visible:ring-2 focus-visible:ring-white/50"
-                  aria-label={isOnline ? t.goOffline : t.goOnline}
+                    focus-visible:ring-2 focus-visible:ring-white/50
+                    ${isLockedPendingApproval ? "opacity-50 cursor-not-allowed" : ""}`}
+                  aria-label={isLockedPendingApproval ? intl.formatMessage({ id: "header.status.pendingApprovalHint" }) : isOnline ? t.goOffline : t.goOnline}
                   aria-pressed={isOnline}
+                  title={isLockedPendingApproval ? intl.formatMessage({ id: "header.status.pendingApprovalHint" }) : undefined}
                 >
                   {isUpdating ? (
                     <div
                       className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin"
                       aria-hidden="true"
                     />
+                  ) : isLockedPendingApproval ? (
+                    <Lock className="w-3.5 h-3.5 text-white/70" aria-hidden="true" />
                   ) : (
                     <span
                       className={`block w-4 h-4 rounded-full ${

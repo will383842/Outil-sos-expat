@@ -1,0 +1,38 @@
+# ============================================================================
+# GITIGNORE - AUDIT DE SÉCURITÉ
+# ============================================================================
+#
+# Ces fichiers NE DOIVENT JAMAIS être versionnés car ils contiennent
+# des informations sensibles.
+# ============================================================================
+
+# Dépendances
+node_modules/
+
+# Rapports générés (peuvent contenir des infos sensibles)
+reports/*.json
+
+# Backups de configuration
+backups/
+
+# État de la checklist (peut révéler la progression de sécurité)
+checklist-state.json
+
+# Templates remplis avec des vraies valeurs
+templates/*.txt
+!templates/credentials-template.txt
+!templates/gcloud-commands.sh
+
+# Clés et credentials
+*.json
+!package.json
+*.pem
+*.key
+
+# Fichiers temporaires
+*.tmp
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db

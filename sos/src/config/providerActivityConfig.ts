@@ -1,13 +1,13 @@
 // Configuration centralisée pour le système d'activité des prestataires
 export const PROVIDER_ACTIVITY_CONFIG = {
   // Délais d'inactivité (en minutes)
-  INACTIVITY_WARNING_MINUTES: 15,
-  INACTIVITY_AUTO_OFFLINE_MINUTES: 60,
-  
-  // Intervalles de rappels (en minutes)
-  REMINDER_MODAL_INTERVAL_MINUTES: 15,
-  SOUND_INTERVAL_MINUTES: 30,
-  VOICE_INTERVAL_MINUTES: 60,
+  INACTIVITY_WARNING_MINUTES: 60,        // ✅ FIX: 1 heure au lieu de 15 min
+  INACTIVITY_AUTO_OFFLINE_MINUTES: 120,  // ✅ FIX: 2 heures au lieu de 60 min
+
+  // Intervalles de rappels (en minutes) - après le premier avertissement
+  REMINDER_MODAL_INTERVAL_MINUTES: 30,   // ✅ FIX: Rappel popup toutes les 30 min
+  SOUND_INTERVAL_MINUTES: 15,            // ✅ FIX: Son toutes les 15 min
+  VOICE_INTERVAL_MINUTES: 30,            // ✅ FIX: Voix toutes les 30 min
   
   // Intervalles de mise à jour (en minutes)
   ACTIVITY_UPDATE_INTERVAL_MINUTES: 3,
