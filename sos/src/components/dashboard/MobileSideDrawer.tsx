@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useRef, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { useLocaleNavigate } from '../../multilingual-system';
 import { getTranslatedRouteSlug, type RouteKey } from '../../multilingual-system/core/routing/localeRoutes';
 import { useIntl } from 'react-intl';
@@ -47,6 +47,7 @@ const MobileSideDrawer: React.FC<MobileSideDrawerProps> = ({
   const intl = useIntl();
   const navigate = useLocaleNavigate();
   const location = useLocation();
+  const [, setSearchParams] = useSearchParams();
   const { user, logout } = useAuth();
   const { language } = useApp();
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -111,50 +112,59 @@ const MobileSideDrawer: React.FC<MobileSideDrawerProps> = ({
   }, [langCode]);
 
   // All menu items (all 9 supported languages)
+  // ✅ FIX: Mark items as internal tabs (use setSearchParams) vs external routes (use navigate)
   const menuItems = [
     {
       key: 'profile',
       icon: User,
-      route: translatedRoutes.dashboard,
+      isInternalTab: true, // Uses setSearchParams
+      tabKey: null, // profile = no tab param
       labels: { fr: 'Mon profil', en: 'My profile', es: 'Mi perfil', de: 'Mein Profil', ru: 'Мой профиль', pt: 'Meu perfil', ch: '我的资料', hi: 'मेरी प्रोफ़ाइल', ar: 'ملفي' },
     },
     {
       key: 'calls',
       icon: Phone,
-      route: translatedRoutes.dashboardCalls,
+      isInternalTab: true,
+      tabKey: 'calls',
       labels: { fr: 'Mes appels', en: 'My calls', es: 'Mis llamadas', de: 'Meine Anrufe', ru: 'Мои звонки', pt: 'Minhas chamadas', ch: '我的通话', hi: 'मेरी कॉल', ar: 'مكالماتي' },
     },
     {
       key: 'invoices',
       icon: FileText,
-      route: translatedRoutes.dashboardInvoices,
+      isInternalTab: true,
+      tabKey: 'invoices',
       labels: { fr: 'Mes factures', en: 'My invoices', es: 'Mis facturas', de: 'Meine Rechnungen', ru: 'Мои счета', pt: 'Minhas faturas', ch: '我的发票', hi: 'मेरे इनवॉयस', ar: 'فواتيري' },
     },
     {
       key: 'reviews',
       icon: Star,
-      route: translatedRoutes.dashboardReviews,
+      isInternalTab: true,
+      tabKey: 'reviews',
       labels: { fr: 'Mes avis', en: 'My reviews', es: 'Mis reseñas', de: 'Meine Bewertungen', ru: 'Мои отзывы', pt: 'Minhas avaliações', ch: '我的评价', hi: 'मेरी समीक्षाएं', ar: 'تقييماتي' },
     },
     {
       key: 'messages',
       icon: MessageSquare,
-      route: translatedRoutes.dashboardMessages,
+      isInternalTab: true,
+      tabKey: 'messages',
       labels: { fr: 'Mes messages', en: 'My messages', es: 'Mis mensajes', de: 'Meine Nachrichten', ru: 'Мои сообщения', pt: 'Minhas mensagens', ch: '我的消息', hi: 'मेरे संदेश', ar: 'رسائلي' },
     },
     {
       key: 'favorites',
       icon: Bookmark,
-      route: translatedRoutes.dashboardFavorites,
+      isInternalTab: true,
+      tabKey: 'favorites',
       labels: { fr: 'Mes favoris', en: 'My favorites', es: 'Mis favoritos', de: 'Meine Favoriten', ru: 'Мое избранное', pt: 'Meus favoritos', ch: '我的收藏', hi: 'मेरे पसंदीदा', ar: 'مفضلاتي' },
     },
   ];
 
   // AI items for providers (all 9 supported languages)
+  // These are external routes (separate pages), not internal tabs
   const aiItems = (user?.role === 'lawyer' || user?.role === 'expat' || user?.role === 'admin') ? [
     {
       key: 'ai-assistant',
       icon: Bot,
+      isInternalTab: false,
       route: translatedRoutes.aiAssistant,
       labels: { fr: 'Assistant IA', en: 'AI Assistant', es: 'Asistente IA', de: 'KI-Assistent', ru: 'ИИ Ассистент', pt: 'Assistente IA', ch: 'AI助手', hi: 'एआई सहायक', ar: 'مساعد الذكاء' },
       badge: 'NEW',
@@ -162,13 +172,27 @@ const MobileSideDrawer: React.FC<MobileSideDrawerProps> = ({
     {
       key: 'subscription',
       icon: CreditCard,
+      isInternalTab: false,
       route: translatedRoutes.subscription,
       labels: { fr: 'Mon Abonnement', en: 'My Subscription', es: 'Mi Suscripción', de: 'Mein Abo', ru: 'Моя подписка', pt: 'Minha Assinatura', ch: '我的订阅', hi: 'मेरी सदस्यता', ar: 'اشتراكي' },
     },
   ] : [];
 
-  const handleNavClick = (route: string) => {
-    navigate(route);
+  // ✅ FIX: Handle both internal tabs (setSearchParams) and external routes (navigate)
+  const handleNavClick = (item: { isInternalTab?: boolean; tabKey?: string | null; route?: string }) => {
+    if (item.isInternalTab) {
+      // Internal tab - use setSearchParams to change tab
+      if (item.tabKey === null) {
+        // Profile tab - remove tab param
+        setSearchParams({});
+      } else if (item.tabKey) {
+        setSearchParams({ tab: item.tabKey });
+      }
+    } else if (item.route) {
+      // External route - use navigate
+      navigate(item.route);
+    }
+
     onClose();
 
     // Auto-scroll to content
@@ -261,7 +285,7 @@ const MobileSideDrawer: React.FC<MobileSideDrawerProps> = ({
               return (
                 <button
                   key={item.key}
-                  onClick={() => handleNavClick(item.route)}
+                  onClick={() => handleNavClick(item)}
                   className={`
                     w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-1
                     transition-all duration-200
@@ -299,7 +323,7 @@ const MobileSideDrawer: React.FC<MobileSideDrawerProps> = ({
                   return (
                     <button
                       key={item.key}
-                      onClick={() => handleNavClick(item.route)}
+                      onClick={() => handleNavClick(item)}
                       className={`
                         w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-1
                         transition-all duration-200
@@ -329,7 +353,7 @@ const MobileSideDrawer: React.FC<MobileSideDrawerProps> = ({
               <div className="h-px bg-gray-200 dark:bg-white/10 my-3 mx-4" />
               <div className="px-2">
                 <button
-                  onClick={() => handleNavClick('/admin/dashboard')}
+                  onClick={() => handleNavClick({ isInternalTab: false, route: '/admin/dashboard' })}
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5"
                 >
                   <Shield className="w-5 h-5" />

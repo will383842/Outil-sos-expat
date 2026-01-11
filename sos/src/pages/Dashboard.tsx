@@ -566,7 +566,7 @@ const Dashboard: React.FC = () => {
   // const whatsappValue = watchPhone('whatsappNumber');
 
   // URL query params for tab navigation - SINGLE SOURCE OF TRUTH
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Valid tabs constant
   const VALID_TABS: TabType[] = ['profile', 'settings', 'calls', 'invoices', 'reviews', 'notifications', 'messages', 'favorites', 'translations'];
@@ -1997,12 +1997,19 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                       <li key={item.key}>
                         <button
                           onClick={() => {
-                            // If item has a route, navigate to it
+                            // If item has a route (external page), navigate to it
                             if ('route' in item && item.route) {
                               navigate(item.route);
                             } else {
-                              // ✅ FIX: Use translated dashboard route with query param
-                              navigate(`${translatedRoutes.dashboard}?tab=${item.key}`);
+                              // ✅ FIX: Use setSearchParams to update tab - more reliable than navigate
+                              if (item.key === 'profile') {
+                                // For profile tab, remove the tab param entirely
+                                setSearchParams({});
+                              } else {
+                                setSearchParams({ tab: item.key });
+                              }
+                              // Also update activeTab immediately for instant UI feedback
+                              setActiveTab(item.key as TabType);
                             }
                           }}
                           className={`group relative w-full flex items-center px-4 py-2 text-sm font-medium ${UI.radiusSm} transition-all

@@ -5,7 +5,7 @@
  * P0 FIX: Navigation via URL query params + indicateur actif clair
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { useLocaleNavigate } from '../../multilingual-system';
 import { getTranslatedRouteSlug, type RouteKey } from '../../multilingual-system/core/routing/localeRoutes';
@@ -26,7 +26,7 @@ interface MobileBottomNavProps {
 const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userRole, onMoreClick }) => {
   const navigate = useLocaleNavigate();
   const location = useLocation();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { language } = useApp();
 
   // P0 FIX: Get translated routes based on current language
@@ -68,23 +68,27 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userRole, onMoreClick
   const activeTab = getActiveTab();
 
   // Navigation items with SHORT labels (max 5 chars) - using translated routes
+  // ✅ FIX: Mark items as internal tabs (use setSearchParams) vs external routes (use navigate)
   const navItems = [
     {
       key: 'profile',
       icon: User,
-      route: translatedRoutes.dashboard,
+      isInternalTab: true,
+      tabKey: null, // profile = no tab param
       label: 'Profil',
     },
     {
       key: 'calls',
       icon: Phone,
-      route: translatedRoutes.dashboardCalls,
+      isInternalTab: true,
+      tabKey: 'calls',
       label: 'Appels',
     },
     // AI Assistant only for providers and admin
     ...(userRole === 'lawyer' || userRole === 'expat' || userRole === 'admin' ? [{
       key: 'ai',
       icon: Bot,
+      isInternalTab: false,
       route: translatedRoutes.aiAssistant,
       label: 'IA',
       badge: true,
@@ -93,31 +97,41 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userRole, onMoreClick
     ...(userRole === 'lawyer' || userRole === 'expat' ? [{
       key: 'subscription',
       icon: CreditCard,
+      isInternalTab: false,
       route: translatedRoutes.subscription,
       label: 'Abo',
     }] : []),
     {
       key: 'more',
       icon: Menu,
-      route: '',
-      label: 'Menu',
       isMore: true,
+      label: 'Menu',
     },
   ];
 
-  const handleNavClick = (item: typeof navItems[0]) => {
+  // ✅ FIX: Handle both internal tabs (setSearchParams) and external routes (navigate)
+  const handleNavClick = useCallback((item: typeof navItems[0]) => {
     if (item.isMore) {
       onMoreClick();
       return;
     }
 
-    // P0 FIX: Use window.location for navigation with query params
-    // This ensures the URL changes correctly and React Router picks it up
-    navigate(item.route);
+    if (item.isInternalTab) {
+      // Internal tab - use setSearchParams to change tab
+      if ('tabKey' in item && item.tabKey === null) {
+        // Profile tab - remove tab param
+        setSearchParams({});
+      } else if ('tabKey' in item && item.tabKey) {
+        setSearchParams({ tab: item.tabKey });
+      }
+    } else if ('route' in item && item.route) {
+      // External route - use navigate
+      navigate(item.route);
+    }
 
     // Scroll to top of content
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  }, [navigate, onMoreClick, setSearchParams]);
 
   return (
     <nav
