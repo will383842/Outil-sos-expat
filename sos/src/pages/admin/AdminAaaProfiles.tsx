@@ -1661,17 +1661,33 @@ const AdminAaaProfiles: React.FC = () => {
 
   const updateProfilePayoutMode = async (profileId: string, mode: 'internal' | string) => {
     try {
-      // Update in sos_profiles
-      await updateDoc(doc(db, 'sos_profiles', profileId), {
-        aaaPayoutMode: mode,
-        isAAA: true,
+      // Use transaction to ensure atomic update across both collections
+      await runTransaction(db, async (transaction) => {
+        const sosProfileRef = doc(db, 'sos_profiles', profileId);
+        const userRef = doc(db, 'users', profileId);
+
+        // Read both documents first (required by Firestore transaction rules)
+        const sosProfileDoc = await transaction.get(sosProfileRef);
+        const userDoc = await transaction.get(userRef);
+
+        // Update sos_profiles
+        if (sosProfileDoc.exists()) {
+          transaction.update(sosProfileRef, {
+            aaaPayoutMode: mode,
+            isAAA: true,
+          });
+        }
+
+        // Update users
+        if (userDoc.exists()) {
+          transaction.update(userRef, {
+            aaaPayoutMode: mode,
+            isAAA: true,
+          });
+        }
       });
-      // Update in users
-      await updateDoc(doc(db, 'users', profileId), {
-        aaaPayoutMode: mode,
-        isAAA: true,
-      });
-      // Update local state
+
+      // Update local state only after successful transaction
       setExistingProfiles(prev => prev.map(p =>
         p.id === profileId ? { ...p, aaaPayoutMode: mode, isAAA: true } : p
       ));

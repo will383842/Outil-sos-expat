@@ -58,10 +58,12 @@ service cloud.firestore {
     // P0 SECURITY FIX: Protection des champs de privilèges contre l'escalade
     match /users/{userId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && isOwner(userId) &&
-                    // Empêcher la création avec des rôles admin/dev
+      // Création : propriétaire OU admin/dev (pour les profils AAA)
+      allow create: if (isAuthenticated() && isOwner(userId) &&
+                    // Empêcher la création avec des rôles admin/dev par les utilisateurs normaux
                     (!request.resource.data.keys().hasAny(['role']) ||
-                     request.resource.data.role in ['client', 'lawyer', 'expat']);
+                     request.resource.data.role in ['client', 'lawyer', 'expat']))
+                    || isAdmin() || isDev();
       // L'utilisateur peut modifier ses propres données SAUF:
       // - role, isApproved, approvalStatus: empêche l'escalade de privilèges
       // - isBanned, bannedAt, bannedReason: empêche la désactivation du ban
@@ -91,8 +93,10 @@ service cloud.firestore {
       // NOTE: On ne peut pas utiliser isProvider() ici car les custom claims
       // ne sont définis qu'APRÈS la création du profil (via onProviderCreated trigger)
       // Le propriétaire NE PEUT PAS modifier les champs financiers sensibles
-      allow create: if isAuthenticated() && isOwner(profileId) &&
-                    !request.resource.data.keys().hasAny(['stripeAccountId', 'paypalMerchantId', 'stripeCustomerId']);
+      // Admin/Dev peuvent créer des profils AAA (profils gérés en interne)
+      allow create: if (isAuthenticated() && isOwner(profileId) &&
+                    !request.resource.data.keys().hasAny(['stripeAccountId', 'paypalMerchantId', 'stripeCustomerId']))
+                    || isAdmin() || isDev();
       allow update: if (isOwner(profileId) &&
                         !request.resource.data.diff(resource.data).affectedKeys()
                           .hasAny(['stripeAccountId', 'paypalMerchantId', 'stripeCustomerId',
@@ -357,6 +361,22 @@ service cloud.firestore {
     match /aaa_profiles/{profileId} {
       allow read: if isAdmin() || isDev();
       allow write: if isAdmin() || isDev();
+    }
+
+    // ================= UI_PROFILE_CARDS COLLECTION =================
+    // Cards de profil pour l'affichage UI (carrousel, grille, etc.)
+    match /ui_profile_cards/{profileId} {
+      allow read: if true;
+      allow create, update: if isOwner(profileId) || isAdmin() || isDev();
+      allow delete: if isAdmin() || isDev();
+    }
+
+    // ================= UI_PROFILE_CAROUSEL COLLECTION =================
+    // Données pour le carrousel de profils
+    match /ui_profile_carousel/{profileId} {
+      allow read: if true;
+      allow create, update: if isOwner(profileId) || isAdmin() || isDev();
+      allow delete: if isAdmin() || isDev();
     }
 
     // ================= PROVIDER MESSAGE ORDER CUSTOMERS =================
@@ -1026,6 +1046,19 @@ service cloud.firestore {
       allow read: if isAdmin() || isDev();
       // Seules les Cloud Functions via Admin SDK peuvent écrire
       allow write: if false;
+    }
+
+    // ================= AD CONVERSIONS (Attribution Publicitaire) =================
+    // Collection pour tracker les conversions avec attribution de source de trafic
+    // (Facebook Ads, Google Ads, TikTok, etc.)
+    match /ad_conversions/{conversionId} {
+      // Seuls les admins peuvent lire les données d'attribution
+      allow read: if isAdmin() || isDev();
+      // Tout utilisateur authentifié peut créer une conversion (tracking)
+      // Même non-auth pour permettre le tracking des visiteurs anonymes
+      allow create: if true;
+      // Les conversions ne peuvent jamais être modifiées ou supprimées (audit trail)
+      allow update, delete: if false;
     }
 
     // ================= FAQ TRANSLATIONS CACHE =================

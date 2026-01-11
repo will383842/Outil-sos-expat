@@ -56,6 +56,12 @@ interface ProviderProfileData {
   // Stripe fields (peuvent déjà exister si créé manuellement)
   stripeAccountId?: string;
   stripeAccountStatus?: string;
+  // AAA Profile fields (profils gérés en interne)
+  isAAA?: boolean;
+  isTestProfile?: boolean;
+  isSOS?: boolean;
+  aaaPayoutMode?: string;
+  kycDelegated?: boolean;
 }
 
 // Mapping pays vers code Stripe
@@ -377,6 +383,19 @@ export const onProviderCreated = onDocumentCreated(
     // Cette opération est non-bloquante : si elle échoue, l'ancienne URL fonctionne toujours
     const photoUrl = data.profilePhoto || data.photoURL || data.avatar;
     await migrateProfileImage(uid, photoUrl, providerType);
+
+    // ⚠️ PROFILS AAA: Ignorer la création automatique de compte Stripe/PayPal
+    // Les profils AAA (gérés en interne par SOS-Expat) utilisent le système de paiement consolidé
+    // Ils ont kycDelegated=true et kycStatus='not_required'
+    const isAaaProfile = data.isAAA === true ||
+                         data.isTestProfile === true ||
+                         data.isSOS === true ||
+                         uid.startsWith("aaa_");
+    if (isAaaProfile) {
+      console.log(`[onProviderCreated] ⚠️ Profil AAA détecté: ${uid} - Skip création compte paiement automatique`);
+      console.log(`[onProviderCreated] ✅ Profil AAA prêt avec système de paiement consolidé`);
+      return;
+    }
 
     // Vérifier si un compte Stripe existe déjà
     if (data.stripeAccountId) {

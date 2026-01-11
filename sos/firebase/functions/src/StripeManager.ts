@@ -161,7 +161,38 @@ interface PaymentDoc {
 }
 
 /* ===================================================================
- * Helpers d’instanciation Stripe
+ * AAA Profile Payout Types (for internal test profiles)
+ * =================================================================== */
+
+/** Configuration d'un compte externe pour les profils AAA */
+interface AaaExternalAccount {
+  id: string;
+  name: string;
+  gateway: 'paypal' | 'stripe';
+  accountId: string;
+  email?: string;
+  holderName: string;
+  country: string;
+  isActive: boolean;
+}
+
+/** Configuration globale des payouts AAA */
+interface AaaPayoutConfig {
+  externalAccounts: AaaExternalAccount[];
+  defaultMode: string; // 'internal' ou ID de compte externe
+}
+
+/** Décision de payout pour un profil AAA */
+interface AaaPayoutDecision {
+  isAAA: boolean;
+  mode: 'internal' | 'external';
+  skipPayout: boolean;
+  externalAccount?: AaaExternalAccount;
+  reason: string;
+}
+
+/* ===================================================================
+ * Helpers d'instanciation Stripe
  * =================================================================== */
 
 export function makeStripeClient(secret: string): Stripe {
@@ -267,6 +298,95 @@ export class StripeManager {
         'failed-precondition',
         `Incohérence montants: ${amount}€ != ${calculatedTotal}€ (delta: ${delta.toFixed(2)}€)`
       );
+    }
+  }
+
+  /* -------------------------------------------------------------------
+   * AAA Payout Decision
+   * Determines how to handle payouts for AAA profiles (internal test profiles)
+   * - Internal mode: Money stays on SOS-Expat platform
+   * - External mode: Money goes to a consolidated external account
+   * ------------------------------------------------------------------- */
+
+  /**
+   * Détermine comment gérer le payout pour un profil AAA
+   * @param providerId - ID du provider
+   * @returns Décision de payout AAA
+   */
+  async getAaaPayoutDecision(providerId: string): Promise<AaaPayoutDecision> {
+    try {
+      // Récupérer le document provider
+      const providerDoc = await this.db.collection('sos_profiles').doc(providerId).get();
+      const provider = providerDoc.data();
+
+      if (!provider || !provider.isAAA) {
+        return {
+          isAAA: false,
+          mode: 'external',
+          skipPayout: false,
+          reason: 'Not an AAA profile - normal payout flow',
+        };
+      }
+
+      // Provider est AAA - vérifier le mode de payout
+      const aaaPayoutMode = provider.aaaPayoutMode || 'internal';
+
+      if (aaaPayoutMode === 'internal') {
+        console.log(`💼 [AAA-STRIPE] Provider ${providerId} is AAA with INTERNAL mode - skipping transfer`);
+        return {
+          isAAA: true,
+          mode: 'internal',
+          skipPayout: true,
+          reason: 'AAA profile with internal mode - money stays on SOS-Expat',
+        };
+      }
+
+      // Mode externe - récupérer le compte consolidé AAA
+      const configDoc = await this.db.collection('admin_config').doc('aaa_payout').get();
+      const config = configDoc.data() as AaaPayoutConfig | undefined;
+
+      if (!config || !config.externalAccounts || config.externalAccounts.length === 0) {
+        console.warn(`⚠️ [AAA-STRIPE] No external accounts configured - falling back to internal`);
+        return {
+          isAAA: true,
+          mode: 'internal',
+          skipPayout: true,
+          reason: 'AAA profile but no external accounts configured - fallback to internal',
+        };
+      }
+
+      // Trouver le compte externe
+      const externalAccount = config.externalAccounts.find(
+        (acc) => acc.id === aaaPayoutMode && acc.isActive
+      );
+
+      if (!externalAccount) {
+        console.warn(`⚠️ [AAA-STRIPE] External account ${aaaPayoutMode} not found or inactive - falling back to internal`);
+        return {
+          isAAA: true,
+          mode: 'internal',
+          skipPayout: true,
+          reason: `External account ${aaaPayoutMode} not found - fallback to internal`,
+        };
+      }
+
+      console.log(`💼 [AAA-STRIPE] Provider ${providerId} is AAA with EXTERNAL mode → ${externalAccount.name}`);
+      return {
+        isAAA: true,
+        mode: 'external',
+        skipPayout: false,
+        externalAccount,
+        reason: `AAA profile routing to ${externalAccount.name} (${externalAccount.gateway})`,
+      };
+    } catch (error) {
+      console.error(`❌ [AAA-STRIPE] Error checking AAA status for ${providerId}:`, error);
+      // En cas d'erreur, fallback vers internal (plus sûr)
+      return {
+        isAAA: false,
+        mode: 'internal',
+        skipPayout: false,
+        reason: `Error checking AAA status: ${error}`,
+      };
     }
   }
 
@@ -736,9 +856,121 @@ export class StripeManager {
           if (providerDoc.exists) {
             const providerData = providerDoc.data();
             const kycStatus = providerData?.kycStatus;
-            const VALID_KYC_STATUSES = ['completed', 'verified'];
+            const isAaaProfile = providerData?.isAAA === true ||
+                                 providerData?.kycDelegated === true ||
+                                 providerData?.isTestProfile === true ||
+                                 providerId.startsWith('aaa_');
+            const VALID_KYC_STATUSES = ['completed', 'verified', 'not_required'];
 
-            if (!kycStatus || !VALID_KYC_STATUSES.includes(kycStatus)) {
+            // Profils AAA: KYC délégué, pas de vérification nécessaire
+            if (isAaaProfile) {
+              // Utiliser getAaaPayoutDecision pour déterminer le mode de payout
+              const aaaDecision = await this.getAaaPayoutDecision(providerId);
+
+              console.log('[capturePayment] Profil AAA détecté - KYC délégué:', {
+                providerId,
+                isAAA: providerData?.isAAA,
+                kycDelegated: providerData?.kycDelegated,
+                aaaPayoutMode: aaaDecision.mode,
+                decision: aaaDecision.reason,
+              });
+
+              if (aaaDecision.mode === 'internal') {
+                // Mode INTERNAL: L'argent reste sur SOS-Expat
+                await this.db.collection('aaa_internal_payouts').add({
+                  paymentIntentId: paymentIntentId,
+                  providerId: providerId,
+                  amount: paymentIntent.amount,
+                  currency: paymentIntent.currency,
+                  mode: 'internal',
+                  reason: aaaDecision.reason,
+                  sessionId: sessionId || null,
+                  createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+                console.log('[capturePayment] AAA Internal payout logged');
+              } else if (aaaDecision.mode === 'external' && aaaDecision.externalAccount) {
+                // Mode EXTERNAL: Transfer vers le compte Stripe consolidé
+                const aaaAccount = aaaDecision.externalAccount;
+
+                if (aaaAccount.gateway === 'stripe' && aaaAccount.accountId) {
+                  try {
+                    // Calculer le montant du provider (excluant la commission SOS)
+                    const providerAmountCents = paymentIntent.metadata?.providerAmountCents
+                      ? parseInt(paymentIntent.metadata.providerAmountCents, 10)
+                      : Math.round(paymentIntent.amount * 0.8); // 80% par défaut si non spécifié
+
+                    // Créer un transfert vers le compte Stripe externe consolidé
+                    const transfer = await this.stripe!.transfers.create({
+                      amount: providerAmountCents,
+                      currency: paymentIntent.currency,
+                      destination: aaaAccount.accountId,
+                      transfer_group: `aaa_${sessionId || paymentIntentId}`,
+                      metadata: {
+                        type: 'aaa_external_payout',
+                        originalProviderId: providerId,
+                        externalAccountId: aaaAccount.id,
+                        externalAccountName: aaaAccount.name,
+                        paymentIntentId: paymentIntentId,
+                        sessionId: sessionId || '',
+                      },
+                    }, {
+                      idempotencyKey: `aaa_transfer_${paymentIntentId}_${aaaAccount.id}`.substring(0, 255),
+                    });
+
+                    // Log le payout externe
+                    await this.db.collection('aaa_external_payouts').add({
+                      paymentIntentId: paymentIntentId,
+                      providerId: providerId,
+                      amount: providerAmountCents,
+                      currency: paymentIntent.currency,
+                      mode: 'external',
+                      externalAccountId: aaaAccount.id,
+                      externalAccountName: aaaAccount.name,
+                      transferId: transfer.id,
+                      sessionId: sessionId || null,
+                      success: true,
+                      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    });
+
+                    console.log(`[capturePayment] AAA External payout SUCCESS to ${aaaAccount.name}: ${transfer.id}`);
+                  } catch (transferError) {
+                    console.error('[capturePayment] AAA External transfer failed:', transferError);
+                    // Log l'échec
+                    await this.db.collection('aaa_external_payouts').add({
+                      paymentIntentId: paymentIntentId,
+                      providerId: providerId,
+                      amount: paymentIntent.amount,
+                      currency: paymentIntent.currency,
+                      mode: 'external',
+                      externalAccountId: aaaAccount.id,
+                      externalAccountName: aaaAccount.name,
+                      error: String(transferError),
+                      sessionId: sessionId || null,
+                      success: false,
+                      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    });
+                  }
+                } else {
+                  console.warn(`[capturePayment] AAA External account ${aaaAccount.name} is not Stripe - skipping transfer`);
+                  // Si le compte externe est PayPal, logguer pour traitement manuel
+                  await this.db.collection('aaa_external_payouts').add({
+                    paymentIntentId: paymentIntentId,
+                    providerId: providerId,
+                    amount: paymentIntent.amount,
+                    currency: paymentIntent.currency,
+                    mode: 'external',
+                    externalAccountId: aaaAccount.id,
+                    externalAccountName: aaaAccount.name,
+                    gateway: aaaAccount.gateway,
+                    note: 'Stripe payment but PayPal external account - requires manual processing',
+                    sessionId: sessionId || null,
+                    success: false,
+                    requiresManualProcessing: true,
+                    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                  });
+                }
+              }
+            } else if (!kycStatus || !VALID_KYC_STATUSES.includes(kycStatus)) {
               console.warn('[capturePayment] KYC provider non vérifié', {
                 providerId,
                 kycStatus: kycStatus || 'undefined',
@@ -757,14 +989,6 @@ export class StripeManager {
                 createdAt: admin.firestore.FieldValue.serverTimestamp(),
                 resolved: false,
               });
-
-              // En production, on peut choisir de bloquer ou juste alerter
-              // Pour l'instant, on alerte mais on continue la capture
-              // Pour bloquer, décommenter les lignes suivantes:
-              // throw new HttpsError(
-              //   'failed-precondition',
-              //   'Impossible de capturer: KYC du prestataire non vérifié'
-              // );
             } else {
               console.log('[capturePayment] KYC provider vérifié:', kycStatus);
             }
