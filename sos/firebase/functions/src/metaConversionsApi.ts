@@ -24,7 +24,7 @@ import Stripe from "stripe";
 // ============================================================================
 
 /** Meta Pixel ID */
-const META_PIXEL_ID = "1887073768568784";
+const META_PIXEL_ID = "1887073748568784";
 
 /** Meta Conversions API endpoint */
 const META_CAPI_ENDPOINT = `https://graph.facebook.com/v18.0/${META_PIXEL_ID}/events`;
