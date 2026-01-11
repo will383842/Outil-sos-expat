@@ -146,11 +146,19 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
           const rawRole = typeof data.role === 'string' ? data.role.toLowerCase() : undefined;
           const isAdmin = data.isAdmin === true || rawRole === 'admin';
 
+          // Pays d'intervention - prendre practiceCountries ou operatingCountries
+          const practiceCountries: string[] = Array.isArray(data.practiceCountries) && data.practiceCountries.length > 0
+            ? data.practiceCountries
+            : Array.isArray(data.operatingCountries) && data.operatingCountries.length > 0
+              ? data.operatingCountries
+              : [];
+
           const provider: Provider = {
             id,
             name: publicDisplayName,
             type,
             country,
+            practiceCountries, // Pays d'intervention pour l'affichage
             languages: Array.isArray(data.languages) ? data.languages : ['Français'],
             specialties: Array.isArray(data.specialties) ? data.specialties : [],
             rating: typeof data.rating === 'number' && data.rating >= 0 && data.rating <= 5 ? data.rating : 4.5,

@@ -68,6 +68,7 @@ import {
 
 import { formatSpecialties, mapLanguageToLocale } from '../utils/specialtyMapper';
 import { trackMetaLead, trackMetaViewContent } from '../utils/metaPixel';
+import { trackAdLead } from '../services/adAttributionService';
 
 
 /* =========================
@@ -137,6 +138,10 @@ interface RawProfile extends DocumentData {
   education?: any;
   certifications?: any;
   lawSchool?: string;
+  // Pays d'intervention
+  practiceCountries?: string[];
+  operatingCountries?: string[];
+  interventionCountries?: string[];
 }
 
 interface FAQItem {
@@ -2272,6 +2277,14 @@ const SOSCall: React.FC = () => {
         education: data.education || data.lawSchool || undefined,
         certifications: data.certifications || undefined,
         lawSchool: typeof data.lawSchool === "string" ? data.lawSchool : undefined,
+        // Pays d'intervention - prendre practiceCountries, operatingCountries ou interventionCountries
+        interventionCountries: Array.isArray(data.practiceCountries) && data.practiceCountries.length > 0
+          ? data.practiceCountries
+          : Array.isArray(data.operatingCountries) && data.operatingCountries.length > 0
+            ? data.operatingCountries
+            : Array.isArray(data.interventionCountries) && data.interventionCountries.length > 0
+              ? data.interventionCountries
+              : undefined,
       };
     };
 
@@ -2777,6 +2790,14 @@ const SOSCall: React.FC = () => {
     trackMetaLead({
       content_name: 'provider_selected',
       content_category: provider.type,
+    });
+
+    // Track Ad Attribution Lead (Firestore - pour dashboard admin)
+    trackAdLead({
+      contentName: 'provider_selected',
+      contentCategory: provider.type,
+      providerId: provider.id,
+      providerType: provider.type as 'lawyer' | 'expat',
     });
 
     const typeSlug = provider.type === "lawyer" ? "avocat" : "expatrie";

@@ -58,6 +58,7 @@ const Reviews = lazy(() => import("../components/review/Reviews"));
 
 // 👉 Pricing admin
 import { usePricingConfig } from "../services/pricingService";
+import { trackMetaViewContent, trackMetaLead } from "../utils/metaPixel";
 
 // Imports des traductions AAA
 import aaaTranslationsFr from '../helper/aaaprofiles/admin_aaa_fr.json';
@@ -768,6 +769,18 @@ const ProviderProfile: React.FC = () => {
     }
   }, []);
 
+  // Track Meta Pixel ViewContent - profil provider consulte
+  useEffect(() => {
+    if (provider?.id && provider?.type) {
+      trackMetaViewContent({
+        content_name: `provider_profile_${provider.type}`,
+        content_category: provider.type,
+        content_type: 'service',
+        content_ids: [provider.id],
+      });
+    }
+  }, [provider?.id, provider?.type]);
+
   const serviceTypeForPricing: "lawyer" | "expat" | undefined = provider?.type;
 
   const bookingPrice = useMemo(() => {
@@ -929,7 +942,10 @@ const ProviderProfile: React.FC = () => {
               isActive: true,
               isApproved: true,
               isVerified: !!navData.isVerified,
-              operatingCountries: toArrayFromAny(navData.operatingCountries, preferredLangKey),
+              // Pays d'intervention: prendre operatingCountries ou practiceCountries
+              operatingCountries: toArrayFromAny(navData.operatingCountries, preferredLangKey).length > 0
+                ? toArrayFromAny(navData.operatingCountries, preferredLangKey)
+                : toArrayFromAny((navData as any).practiceCountries, preferredLangKey),
               residenceCountry: navData.residenceCountry || navData.country,
               isOnline: navIsOnline, // ✅ Statut en ligne depuis navigation state
             } as SosProfile;
@@ -1041,7 +1057,10 @@ const ProviderProfile: React.FC = () => {
                 description: pickDescription(safeProvider as any, preferredLangKey, intl),
                 specialties: toArrayFromAny(data?.specialties, preferredLangKey),
                 helpTypes: toArrayFromAny(data?.helpTypes, preferredLangKey),
-                operatingCountries: toArrayFromAny(data?.operatingCountries, preferredLangKey),
+                // Pays d'intervention: prendre operatingCountries ou practiceCountries
+                operatingCountries: toArrayFromAny(data?.operatingCountries, preferredLangKey).length > 0
+                  ? toArrayFromAny(data?.operatingCountries, preferredLangKey)
+                  : toArrayFromAny(data?.practiceCountries, preferredLangKey),
                 residenceCountry: data?.residenceCountry || data?.country,
                 education: data?.education,
                 yearsOfExperience: data?.yearsOfExperience || 0,
@@ -1088,7 +1107,10 @@ const ProviderProfile: React.FC = () => {
               description: pickDescription(safeProvider as any, preferredLangKey, intl),
               specialties: toArrayFromAny(data?.specialties, preferredLangKey),
               helpTypes: toArrayFromAny(data?.helpTypes, preferredLangKey),
-              operatingCountries: toArrayFromAny(data?.operatingCountries, preferredLangKey),
+              // Pays d'intervention: prendre operatingCountries ou practiceCountries
+              operatingCountries: toArrayFromAny(data?.operatingCountries, preferredLangKey).length > 0
+                ? toArrayFromAny(data?.operatingCountries, preferredLangKey)
+                : toArrayFromAny(data?.practiceCountries, preferredLangKey),
               residenceCountry: data?.residenceCountry || data?.country,
               education: data?.education,
               yearsOfExperience: data?.yearsOfExperience || 0,
@@ -1132,7 +1154,10 @@ const ProviderProfile: React.FC = () => {
               description: pickDescription(safeProvider as any, preferredLangKey, intl),
               specialties: toArrayFromAny(data?.specialties, preferredLangKey),
               helpTypes: toArrayFromAny(data?.helpTypes, preferredLangKey),
-              operatingCountries: toArrayFromAny(data?.operatingCountries, preferredLangKey),
+              // Pays d'intervention: prendre operatingCountries ou practiceCountries
+              operatingCountries: toArrayFromAny(data?.operatingCountries, preferredLangKey).length > 0
+                ? toArrayFromAny(data?.operatingCountries, preferredLangKey)
+                : toArrayFromAny(data?.practiceCountries, preferredLangKey),
               residenceCountry: data?.residenceCountry || data?.country,
               education: data?.education,
               yearsOfExperience: data?.yearsOfExperience || 0,
@@ -1560,6 +1585,13 @@ const ProviderProfile: React.FC = () => {
         is_online: onlineStatus.isOnline,
       });
     }
+
+    // Track Meta Pixel Lead event for ad attribution
+    trackMetaLead({
+      content_name: `${provider.type}_consultation`,
+      content_category: provider.type || "provider",
+    });
+
     const authUserId = getAuthUserId(user);
     if (authUserId) {
       logAnalyticsEvent({
