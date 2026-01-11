@@ -81,7 +81,7 @@ export const useProviderReminderSystem = ({
           enableSound: preferences.soundEnabled,
           enableVoice: preferences.voiceEnabled,
           enableModal: preferences.modalEnabled,
-        });
+        }, preferredLanguage);
         setReminderState(prev => ({ ...prev, lastSoundPlayed: now }));
       }
 
@@ -95,7 +95,7 @@ export const useProviderReminderSystem = ({
           enableSound: preferences.soundEnabled,
           enableVoice: preferences.voiceEnabled,
           enableModal: preferences.modalEnabled,
-        });
+        }, preferredLanguage);
         setReminderState(prev => ({ ...prev, lastVoicePlayed: now }));
       }
 

@@ -24,7 +24,12 @@ const ReminderModal: React.FC<ReminderModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      playAvailabilityReminder(langCode);
+      // Jouer un son quand le modal s'ouvre pour attirer l'attention
+      playAvailabilityReminder('sound', {
+        enableSound: true,
+        enableVoice: false,
+        enableModal: true,
+      }, langCode);
     }
   }, [isOpen, langCode]);
 
