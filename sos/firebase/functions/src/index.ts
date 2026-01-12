@@ -4356,7 +4356,10 @@ export {
 } from './subscription/scheduledTasks';
 
 // Stripe sync
-export { syncSubscriptionPlansToStripe } from './subscription/stripeSync';
+export {
+  syncSubscriptionPlansToStripe,
+  onSubscriptionPlanPricingUpdate, // Trigger automatique: sync prix vers Stripe
+} from './subscription/stripeSync';
 
 // Webhook handlers (exported for testing and direct use)
 export {

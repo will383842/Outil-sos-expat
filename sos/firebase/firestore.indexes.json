@@ -1,6 +1,16 @@
 {
   "indexes": [
     {
+      "__comment": "Index pour le debounce du trigger auto-sync prix Stripe",
+      "collectionGroup": "stripe_sync_logs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "planId", "order": "ASCENDING" },
+        { "fieldPath": "action", "order": "ASCENDING" },
+        { "fieldPath": "timestamp", "order": "DESCENDING" }
+      ]
+    },
+    {
       "__comment": "Index principal pour Providers et ProfileCarousel - filtrage par langue",
       "collectionGroup": "sos_profiles",
       "queryScope": "COLLECTION",

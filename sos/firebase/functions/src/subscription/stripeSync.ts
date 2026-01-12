@@ -920,3 +920,327 @@ export const reactivateStripePlan = functions
       throw new functions.https.HttpsError('internal', error.message || 'Reactivation failed');
     }
   });
+
+// ============================================================================
+// 5. AUTOMATIC FIRESTORE TRIGGER - Sync prices on change
+// ============================================================================
+
+/**
+ * Configuration pour le trigger automatique
+ * Protections contre les couts excessifs:
+ * 1. DEBOUNCE_SECONDS - Ignore les changements rapproches
+ * 2. Detection de changement reel - Ne sync que si prix different
+ * 3. Verification prix Stripe existant - Ne cree pas de doublon
+ */
+const AUTO_SYNC_CONFIG = {
+  DEBOUNCE_SECONDS: 30, // Ignore les updates dans les 30 secondes suivant le dernier sync
+  ENABLED: true, // Peut etre desactive via config
+};
+
+/**
+ * Verifie si les prix ont reellement change entre ancien et nouveau document
+ */
+function hasPricingChanged(
+  before: SubscriptionPlan | undefined,
+  after: SubscriptionPlan | undefined
+): boolean {
+  if (!before || !after) return false;
+
+  // Verifier les prix mensuels
+  const monthlyChanged =
+    before.pricing?.EUR !== after.pricing?.EUR ||
+    before.pricing?.USD !== after.pricing?.USD;
+
+  // Verifier les prix annuels
+  const annualChanged =
+    before.annualPricing?.EUR !== after.annualPricing?.EUR ||
+    before.annualPricing?.USD !== after.annualPricing?.USD;
+
+  // Verifier le pourcentage de remise annuelle
+  const discountChanged =
+    before.annualDiscountPercent !== after.annualDiscountPercent;
+
+  return monthlyChanged || annualChanged || discountChanged;
+}
+
+/**
+ * Verifie si le prix Stripe actuel correspond deja au nouveau montant
+ * Evite de creer des prix en double si l'admin fait une modification annulee
+ */
+async function isStripePriceAlreadyCorrect(
+  priceId: string,
+  expectedAmountCents: number
+): Promise<boolean> {
+  if (!priceId) return false;
+
+  try {
+    const stripeClient = getStripe();
+    const price = await stripeClient.prices.retrieve(priceId);
+    return price.unit_amount === expectedAmountCents && price.active;
+  } catch (error) {
+    console.warn(`[autoSyncPricing] Could not verify price ${priceId}:`, error);
+    return false;
+  }
+}
+
+/**
+ * Verifie le debounce - Retourne true si on doit ignorer ce changement
+ */
+async function shouldDebounce(planId: string): Promise<boolean> {
+  try {
+    const db = getDb();
+    const recentSync = await db
+      .collection('stripe_sync_logs')
+      .where('planId', '==', planId)
+      .where('action', '==', 'auto_sync')
+      .orderBy('timestamp', 'desc')
+      .limit(1)
+      .get();
+
+    if (recentSync.empty) return false;
+
+    const lastSync = recentSync.docs[0].data();
+    const lastSyncTime = lastSync.timestamp?.toDate?.() || new Date(0);
+    const secondsSinceLastSync = (Date.now() - lastSyncTime.getTime()) / 1000;
+
+    if (secondsSinceLastSync < AUTO_SYNC_CONFIG.DEBOUNCE_SECONDS) {
+      console.log(
+        `[autoSyncPricing] Debouncing plan ${planId}: last sync ${secondsSinceLastSync.toFixed(1)}s ago`
+      );
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    console.warn('[autoSyncPricing] Debounce check failed:', error);
+    return false; // En cas d'erreur, on permet le sync
+  }
+}
+
+/**
+ * TRIGGER AUTOMATIQUE: Synchronise les prix vers Stripe quand ils changent dans Firestore
+ *
+ * Protections contre les couts:
+ * - Ne se declenche que sur modification (pas creation/suppression)
+ * - Verifie que les prix ont reellement change
+ * - Debounce de 30 secondes entre les syncs
+ * - Verifie que le prix Stripe est different avant de creer un nouveau
+ * - Logs detailles pour audit
+ */
+export const onSubscriptionPlanPricingUpdate = functions
+  .region('europe-west1')
+  .runWith({
+    timeoutSeconds: 120,
+    memory: '256MB',
+    // Limiter les invocations pour controler les couts
+    maxInstances: 5,
+  })
+  .firestore.document('subscription_plans/{planId}')
+  .onUpdate(async (change, context) => {
+    const planId = context.params.planId;
+    const before = change.before.data() as SubscriptionPlan;
+    const after = change.after.data() as SubscriptionPlan;
+
+    console.log(`[autoSyncPricing] Trigger fired for plan: ${planId}`);
+
+    // Protection 1: Verifier si le trigger est active
+    if (!AUTO_SYNC_CONFIG.ENABLED) {
+      console.log('[autoSyncPricing] Auto-sync is disabled');
+      return null;
+    }
+
+    // Protection 2: Verifier si les prix ont change
+    if (!hasPricingChanged(before, after)) {
+      console.log(`[autoSyncPricing] No pricing change detected for plan ${planId}`);
+      return null;
+    }
+
+    console.log(`[autoSyncPricing] Pricing change detected for plan ${planId}`);
+    console.log(`[autoSyncPricing] Before: EUR ${before.pricing?.EUR}, USD ${before.pricing?.USD}`);
+    console.log(`[autoSyncPricing] After: EUR ${after.pricing?.EUR}, USD ${after.pricing?.USD}`);
+
+    // Protection 3: Debounce - Eviter les syncs trop rapproches
+    if (await shouldDebounce(planId)) {
+      return null;
+    }
+
+    // Protection 4: Verifier que le plan a un produit Stripe
+    if (!after.stripeProductId) {
+      console.log(
+        `[autoSyncPricing] Plan ${planId} has no Stripe product. Run manual sync first.`
+      );
+      return null;
+    }
+
+    const db = getDb();
+    const stripeClient = getStripe();
+    const syncStartTime = Date.now();
+
+    try {
+      const currencies: Currency[] = ['EUR', 'USD'];
+      const newPriceIds: { EUR: string; USD: string } = { EUR: '', USD: '' };
+      const newAnnualPriceIds: { EUR: string; USD: string } = { EUR: '', USD: '' };
+      const archivedPrices: string[] = [];
+      let pricesCreated = 0;
+      let pricesSkipped = 0;
+
+      for (const currency of currencies) {
+        const newMonthlyAmount = after.pricing[currency];
+        const newMonthlyAmountCents = Math.round(newMonthlyAmount * 100);
+        const oldPriceId = after.stripePriceId?.[currency];
+
+        // Protection 5: Verifier si le prix Stripe est deja correct
+        if (oldPriceId && (await isStripePriceAlreadyCorrect(oldPriceId, newMonthlyAmountCents))) {
+          console.log(
+            `[autoSyncPricing] ${currency} monthly price already correct (${oldPriceId}), skipping`
+          );
+          newPriceIds[currency] = oldPriceId;
+          pricesSkipped++;
+        } else {
+          // Archive l'ancien prix si existe
+          if (oldPriceId) {
+            try {
+              await stripeClient.prices.update(oldPriceId, { active: false });
+              archivedPrices.push(oldPriceId);
+              console.log(`[autoSyncPricing] Archived old monthly price: ${oldPriceId}`);
+            } catch (archiveError) {
+              console.warn(`[autoSyncPricing] Could not archive price ${oldPriceId}:`, archiveError);
+            }
+          }
+
+          // Creer le nouveau prix mensuel
+          const newMonthlyPrice = await stripeClient.prices.create({
+            product: after.stripeProductId,
+            currency: currency.toLowerCase(),
+            unit_amount: newMonthlyAmountCents,
+            recurring: { interval: 'month' },
+            metadata: {
+              planId: planId,
+              currency: currency,
+              period: 'monthly',
+              autoSynced: 'true',
+              previousPriceId: oldPriceId || '',
+            },
+            nickname: `${after.name?.en || planId} - Monthly ${currency}`,
+          });
+          newPriceIds[currency] = newMonthlyPrice.id;
+          pricesCreated++;
+          console.log(`[autoSyncPricing] Created new monthly price: ${newMonthlyPrice.id}`);
+        }
+
+        // Prix annuel
+        const discountPercent = after.annualDiscountPercent ?? DEFAULT_ANNUAL_DISCOUNT_PERCENT;
+        const newAnnualAmount =
+          after.annualPricing?.[currency] ?? calculateAnnualPrice(newMonthlyAmount, discountPercent);
+        const newAnnualAmountCents = Math.round(newAnnualAmount * 100);
+        const oldAnnualPriceId = after.stripePriceIdAnnual?.[currency];
+
+        // Protection 5 (annuel): Verifier si le prix annuel Stripe est deja correct
+        if (
+          oldAnnualPriceId &&
+          (await isStripePriceAlreadyCorrect(oldAnnualPriceId, newAnnualAmountCents))
+        ) {
+          console.log(
+            `[autoSyncPricing] ${currency} annual price already correct (${oldAnnualPriceId}), skipping`
+          );
+          newAnnualPriceIds[currency] = oldAnnualPriceId;
+          pricesSkipped++;
+        } else {
+          // Archive l'ancien prix annuel si existe
+          if (oldAnnualPriceId) {
+            try {
+              await stripeClient.prices.update(oldAnnualPriceId, { active: false });
+              archivedPrices.push(oldAnnualPriceId);
+              console.log(`[autoSyncPricing] Archived old annual price: ${oldAnnualPriceId}`);
+            } catch (archiveError) {
+              console.warn(
+                `[autoSyncPricing] Could not archive annual price ${oldAnnualPriceId}:`,
+                archiveError
+              );
+            }
+          }
+
+          // Creer le nouveau prix annuel
+          const newAnnualPrice = await stripeClient.prices.create({
+            product: after.stripeProductId,
+            currency: currency.toLowerCase(),
+            unit_amount: newAnnualAmountCents,
+            recurring: { interval: 'year' },
+            metadata: {
+              planId: planId,
+              currency: currency,
+              period: 'yearly',
+              discountPercent: String(discountPercent),
+              autoSynced: 'true',
+              previousPriceId: oldAnnualPriceId || '',
+            },
+            nickname: `${after.name?.en || planId} - Yearly ${currency}`,
+          });
+          newAnnualPriceIds[currency] = newAnnualPrice.id;
+          pricesCreated++;
+          console.log(`[autoSyncPricing] Created new annual price: ${newAnnualPrice.id}`);
+        }
+      }
+
+      // Mettre a jour Firestore avec les nouveaux IDs (seulement si crees)
+      const updateData: Record<string, any> = {
+        stripePriceId: newPriceIds,
+        stripePriceIdAnnual: newAnnualPriceIds,
+        lastAutoSyncAt: admin.firestore.Timestamp.now(),
+      };
+
+      await db.doc(`subscription_plans/${planId}`).update(updateData);
+
+      // Log de l'operation
+      const syncDuration = Date.now() - syncStartTime;
+      await db.collection('stripe_sync_logs').add({
+        action: 'auto_sync',
+        planId,
+        details: {
+          trigger: 'firestore_update',
+          pricingBefore: before.pricing,
+          pricingAfter: after.pricing,
+          annualPricingBefore: before.annualPricing,
+          annualPricingAfter: after.annualPricing,
+          pricesCreated,
+          pricesSkipped,
+          archivedPrices,
+          newPriceIds,
+          newAnnualPriceIds,
+          durationMs: syncDuration,
+        },
+        success: true,
+        adminId: 'system_trigger',
+        timestamp: admin.firestore.Timestamp.now(),
+      });
+
+      console.log(
+        `[autoSyncPricing] Plan ${planId} synced successfully in ${syncDuration}ms. ` +
+          `Created: ${pricesCreated}, Skipped: ${pricesSkipped}`
+      );
+
+      return { success: true, pricesCreated, pricesSkipped };
+    } catch (error: any) {
+      await logError('stripeSync:autoSyncPricing', error);
+
+      // Log l'echec
+      await db.collection('stripe_sync_logs').add({
+        action: 'auto_sync',
+        planId,
+        details: {
+          trigger: 'firestore_update',
+          error: error.message,
+          pricingBefore: before.pricing,
+          pricingAfter: after.pricing,
+        },
+        success: false,
+        error: error.message,
+        adminId: 'system_trigger',
+        timestamp: admin.firestore.Timestamp.now(),
+      });
+
+      console.error(`[autoSyncPricing] Failed to sync plan ${planId}:`, error);
+      // Ne pas throw - le trigger ne doit pas bloquer les updates Firestore
+      return { success: false, error: error.message };
+    }
+  });

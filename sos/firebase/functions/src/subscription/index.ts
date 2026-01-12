@@ -2197,6 +2197,8 @@ export {
   updateStripePrices,
   deactivateStripePlan,
   reactivateStripePlan,
+  // Trigger automatique: sync prix Firestore -> Stripe
+  onSubscriptionPlanPricingUpdate,
 } from './stripeSync';
 
 // ============================================================================
