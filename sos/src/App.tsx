@@ -200,18 +200,37 @@ const routeConfigs: RouteConfig[] = [
 
   // ====================================
   // NOUVEAU FORMAT SEO OPTIMISÉ (< 70 chars)
-  // Format: /{lang}/{role-pays}/{prenom-specialite-shortid}
-  // Ex: /fr/avocat-thailande/julien-visa-k7m2p9
+  // Format: /{lang}-{locale}/{role-pays}/{prenom-specialite-shortid}
+  // Ex: /fr-fr/avocat-thailande/julien-visa-k7m2p9
+  // Ex: /en-us/lawyer-thailand/julien-visa-k7m2p9
+  // Ex: /fr-de/avocat-allemagne/pierre-fiscal-a2b3c4 (français en Allemagne)
   // ====================================
-  { path: "/fr/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
-  { path: "/en/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
-  { path: "/es/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
-  { path: "/de/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
-  { path: "/pt/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
-  { path: "/ru/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
-  { path: "/zh/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
-  { path: "/ar/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
-  { path: "/hi/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  // Routes avec lang-locale (format complet pour SEO)
+  { path: "/fr-fr/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/fr-be/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/fr-ch/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/fr-ca/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/fr-ma/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/en-us/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/en-gb/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/en-au/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/en-ca/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/es-es/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/es-mx/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/es-ar/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/de-de/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/de-at/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/de-ch/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/pt-br/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/pt-pt/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/ru-ru/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/zh-cn/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/zh-tw/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/ar-sa/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/ar-ae/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/hi-in/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  // Route générique pour toute combinaison lang-locale non listée
+  { path: "/:langLocale/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
 
   // Simplified route patterns - just type and slug (rétrocompatibilité)
   { path: "/avocat/:slug", component: ProviderProfile, translated: "lawyer" },

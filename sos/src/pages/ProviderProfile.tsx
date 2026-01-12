@@ -269,6 +269,8 @@ interface RouteParams extends Record<string, string | undefined> {
   localeRegion?: string;
   lang?: string;
   nameSlugWithUid?: string;
+  langLocale?: string; // Format: fr-fr, en-us, fr-de, etc.
+  roleCountry?: string; // Format: avocat-thailande, lawyer-thailand, etc.
 }
 
 /* ===================================================================== */
@@ -612,7 +614,12 @@ const ProviderProfile: React.FC = () => {
     type: typeParam,
     nameSlug,
     typeCountry,
+    langLocale, // Format: fr-fr, en-us, fr-de, etc.
+    roleCountry, // Format: avocat-thailande, lawyer-thailand, etc.
   } = params;
+
+  // Extraire la langue depuis langLocale (ex: "fr-fr" → "fr")
+  const langFromLocale = langLocale?.split('-')[0];
   const location = useLocation();
   const navigate = useLocaleNavigate();
   const { user, isLoading: authLoading } = useAuth();

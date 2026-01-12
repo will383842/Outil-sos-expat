@@ -831,7 +831,7 @@ export function generateSlug(options: GenerateSlugOptions): string {
   const userLanguage = languages[0] || 'Français';
   const userLangCode = getLanguageCode(userLanguage);
 
-  // On utilise une locale simple (fr, en, es...) pour des URLs plus courtes
+  // On utilise une locale complète (fr-fr, en-us, etc.) pour SEO
   let baseLang = providedLocale?.split('-')[0] || userLangCode;
 
   // Fallback to 'fr' for non-standard languages
@@ -839,6 +839,20 @@ export function generateSlug(options: GenerateSlugOptions): string {
   if (!supportedLangs.includes(baseLang)) {
     baseLang = 'fr';
   }
+
+  // Déterminer le locale (région/pays de l'utilisateur ou défaut)
+  // Format: {lang}-{region} ex: fr-fr, en-us, fr-de (français en Allemagne)
+  const defaultLocales: Record<string, string> = {
+    'fr': 'fr', 'en': 'us', 'es': 'es', 'de': 'de', 'pt': 'br',
+    'ru': 'ru', 'zh': 'cn', 'ar': 'sa', 'hi': 'in'
+  };
+
+  // Si userCountry est fourni, l'utiliser comme locale
+  const localeRegion = userCountry
+    ? getCountryCode(userCountry)
+    : defaultLocales[baseLang] || baseLang;
+
+  const langLocale = `${baseLang}-${localeRegion}`;
 
   // Traduire le rôle et le pays
   const roleWord = getRoleTranslation(role, baseLang);
@@ -858,8 +872,8 @@ export function generateSlug(options: GenerateSlugOptions): string {
   const shortId = uid ? generateShortId(uid) : '';
 
   // Construire le slug final
-  // Format: {lang}/{role-pays}/{prenom-specialite-shortid}
-  const basePath = `${baseLang}/${categoryCountry}`;
+  // Format: {lang}-{locale}/{role-pays}/{prenom-specialite-shortid}
+  const basePath = `${langLocale}/${categoryCountry}`;
 
   // Calculer l'espace disponible pour la partie finale
   // Format: prenom-specialite-shortid (shortId = 6 chars + tiret = 7)

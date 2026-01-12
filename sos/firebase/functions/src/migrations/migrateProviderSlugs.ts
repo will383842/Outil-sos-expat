@@ -95,8 +95,16 @@ function getCountryTranslation(country: string, lang: string): string {
   return slugify(country);
 }
 
+// Mapping lang -> default locale region
+const DEFAULT_LOCALES: Record<string, string> = {
+  "fr": "fr", "en": "us", "es": "es", "de": "de", "pt": "br",
+  "ru": "ru", "zh": "cn", "ar": "sa", "hi": "in"
+};
+
 /**
  * Genere un slug pour une langue donnee
+ * Format: {lang}-{locale}/{role-pays}/{prenom-specialite-shortid}
+ * Ex: fr-fr/avocat-thailande/julien-visa-k7m2p9
  */
 function generateSlugForLang(
   firstName: string,
@@ -104,7 +112,8 @@ function generateSlugForLang(
   country: string,
   specialty: string,
   shortId: string,
-  lang: string
+  lang: string,
+  userCountry?: string
 ): string {
   const roleWord = getRoleTranslation(role, lang);
   const countryWord = getCountryTranslation(country, lang);
@@ -112,32 +121,39 @@ function generateSlugForLang(
   const firstNameSlug = slugify(firstName);
   const specialtySlug = slugify(specialty).substring(0, 15);
 
+  // Determiner le locale (region) - utiliser le pays du provider ou default
+  const localeRegion = userCountry
+    ? slugify(userCountry).substring(0, 2)
+    : DEFAULT_LOCALES[lang] || lang;
+  const langLocale = `${lang}-${localeRegion}`;
+
   let namePart = specialtySlug ? `${firstNameSlug}-${specialtySlug}` : firstNameSlug;
 
-  // Truncate if needed
-  const maxNameLength = 70 - lang.length - categoryCountry.length - shortId.length - 4;
+  // Truncate if needed (compte pour le format lang-locale)
+  const maxNameLength = 70 - langLocale.length - categoryCountry.length - shortId.length - 4;
   if (namePart.length > maxNameLength) {
     namePart = firstNameSlug;
   }
 
-  return `${lang}/${categoryCountry}/${namePart}-${shortId}`;
+  return `${langLocale}/${categoryCountry}/${namePart}-${shortId}`;
 }
 
 /**
- * Genere les slugs multilingues
+ * Genere les slugs multilingues avec format {lang}-{locale}
  */
 function generateMultilingualSlugs(
   firstName: string,
   role: "lawyer" | "expat",
   country: string,
   specialty: string,
-  shortId: string
+  shortId: string,
+  userCountry?: string
 ): Record<string, string> {
   const langs = ["fr", "en", "es", "de", "pt", "ru", "zh", "ar", "hi"];
   const slugs: Record<string, string> = {};
 
   for (const lang of langs) {
-    slugs[lang] = generateSlugForLang(firstName, role, country, specialty, shortId, lang);
+    slugs[lang] = generateSlugForLang(firstName, role, country, specialty, shortId, lang, userCountry);
   }
 
   return slugs;
@@ -226,12 +242,14 @@ export const migrateProviderSlugs = functions.onRequest(
             ? (Array.isArray(data.specialties) ? data.specialties[0] : "")
             : (Array.isArray(data.helpTypes) ? data.helpTypes[0] : "");
 
+          const providerCountry = data.country || data.residenceCountry || "";
           const slugs = generateMultilingualSlugs(
             data.firstName || "profil",
             role,
-            data.country || data.residenceCountry || "",
+            providerCountry,
             specialty || "",
-            shortId
+            shortId,
+            providerCountry // userCountry pour le locale
           );
 
           logger.info(`Provider ${providerId}:`, {
