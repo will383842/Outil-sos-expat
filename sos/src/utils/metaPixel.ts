@@ -1,6 +1,6 @@
 // src/utils/metaPixel.ts
 // Utilitaire Meta Pixel complet pour SPA React
-// Pixel ID: 1887073748568784
+// Pixel ID: 2204016713738311
 
 import { generateSharedEventId } from './sharedEventId';
 import { detectUserCountry } from './trafficSource';
@@ -25,7 +25,7 @@ declare global {
   }
 }
 
-export const PIXEL_ID = '1887073748568784';
+export const PIXEL_ID = '2204016713738311';
 
 /**
  * Genere un ID d'evenement unique pour la deduplication Pixel/CAPI
