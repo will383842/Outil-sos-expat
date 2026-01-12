@@ -629,6 +629,190 @@ export async function trackCAPIStartRegistration(params: {
   return sendCAPIEvent(event, params.testEventCode);
 }
 
+/**
+ * Track a Search event
+ * Sent when a user searches for providers/services
+ */
+export async function trackCAPISearch(params: {
+  userData: UserData;
+  searchString?: string;
+  contentCategory?: string;
+  contentIds?: string[];
+  eventSourceUrl?: string;
+  eventId?: string;
+  testEventCode?: string;
+}): Promise<CAPIEventResult> {
+  const eventId = params.eventId || generateEventId("search");
+
+  const event: MetaCAPIEvent = {
+    event_name: "Search",
+    event_time: Math.floor(Date.now() / 1000),
+    event_id: eventId,
+    action_source: "website",
+    event_source_url: params.eventSourceUrl,
+    user_data: hashUserData(params.userData),
+    custom_data: {
+      search_string: params.searchString,
+      content_category: params.contentCategory,
+      content_ids: params.contentIds,
+    },
+  };
+
+  return sendCAPIEvent(event, params.testEventCode);
+}
+
+/**
+ * Track a ViewContent event
+ * Sent when a user views important content (provider profile, service details)
+ */
+export async function trackCAPIViewContent(params: {
+  userData: UserData;
+  contentName?: string;
+  contentCategory?: string;
+  contentIds?: string[];
+  contentType?: string;
+  value?: number;
+  currency?: string;
+  eventSourceUrl?: string;
+  eventId?: string;
+  testEventCode?: string;
+}): Promise<CAPIEventResult> {
+  const eventId = params.eventId || generateEventId("view");
+
+  const event: MetaCAPIEvent = {
+    event_name: "ViewContent",
+    event_time: Math.floor(Date.now() / 1000),
+    event_id: eventId,
+    action_source: "website",
+    event_source_url: params.eventSourceUrl,
+    user_data: hashUserData(params.userData),
+    custom_data: {
+      content_name: params.contentName,
+      content_category: params.contentCategory,
+      content_ids: params.contentIds,
+      content_type: params.contentType || "product",
+      value: params.value,
+      currency: params.currency?.toUpperCase(),
+    },
+  };
+
+  return sendCAPIEvent(event, params.testEventCode);
+}
+
+/**
+ * Track an AddToCart event
+ * Sent when a user adds a service/plan to their selection
+ */
+export async function trackCAPIAddToCart(params: {
+  userData: UserData;
+  contentName?: string;
+  contentCategory?: string;
+  contentIds?: string[];
+  value?: number;
+  currency?: string;
+  numItems?: number;
+  eventSourceUrl?: string;
+  eventId?: string;
+  testEventCode?: string;
+}): Promise<CAPIEventResult> {
+  const eventId = params.eventId || generateEventId("cart");
+
+  const event: MetaCAPIEvent = {
+    event_name: "AddToCart",
+    event_time: Math.floor(Date.now() / 1000),
+    event_id: eventId,
+    action_source: "website",
+    event_source_url: params.eventSourceUrl,
+    user_data: hashUserData(params.userData),
+    custom_data: {
+      content_name: params.contentName,
+      content_category: params.contentCategory,
+      content_ids: params.contentIds,
+      content_type: "product",
+      value: params.value,
+      currency: params.currency?.toUpperCase(),
+      num_items: params.numItems || 1,
+    },
+  };
+
+  return sendCAPIEvent(event, params.testEventCode);
+}
+
+/**
+ * Track a StartTrial event (custom event)
+ * Sent when a user starts a subscription trial
+ */
+export async function trackCAPIStartTrial(params: {
+  userData: UserData;
+  contentName?: string;
+  contentCategory?: string;
+  value?: number;
+  currency?: string;
+  subscriptionId?: string;
+  trialDays?: number;
+  eventSourceUrl?: string;
+  eventId?: string;
+  testEventCode?: string;
+}): Promise<CAPIEventResult> {
+  const eventId = params.eventId || generateEventId("trial");
+
+  const event: MetaCAPIEvent = {
+    event_name: "StartTrial",
+    event_time: Math.floor(Date.now() / 1000),
+    event_id: eventId,
+    action_source: "website",
+    event_source_url: params.eventSourceUrl,
+    user_data: hashUserData(params.userData),
+    custom_data: {
+      content_name: params.contentName,
+      content_category: params.contentCategory,
+      value: params.value,
+      currency: params.currency?.toUpperCase(),
+      order_id: params.subscriptionId,
+      num_items: params.trialDays,
+    },
+  };
+
+  return sendCAPIEvent(event, params.testEventCode);
+}
+
+/**
+ * Track an AddPaymentInfo event
+ * Sent when a user submits payment information
+ */
+export async function trackCAPIAddPaymentInfo(params: {
+  userData: UserData;
+  contentName?: string;
+  contentCategory?: string;
+  contentIds?: string[];
+  value?: number;
+  currency?: string;
+  eventSourceUrl?: string;
+  eventId?: string;
+  testEventCode?: string;
+}): Promise<CAPIEventResult> {
+  const eventId = params.eventId || generateEventId("payment_info");
+
+  const event: MetaCAPIEvent = {
+    event_name: "AddPaymentInfo",
+    event_time: Math.floor(Date.now() / 1000),
+    event_id: eventId,
+    action_source: "website",
+    event_source_url: params.eventSourceUrl,
+    user_data: hashUserData(params.userData),
+    custom_data: {
+      content_name: params.contentName,
+      content_category: params.contentCategory,
+      content_ids: params.contentIds,
+      content_type: "product",
+      value: params.value,
+      currency: params.currency?.toUpperCase(),
+    },
+  };
+
+  return sendCAPIEvent(event, params.testEventCode);
+}
+
 // ============================================================================
 // Stripe Integration
 // ============================================================================

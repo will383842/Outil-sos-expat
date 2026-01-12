@@ -11,7 +11,7 @@
 import * as admin from 'firebase-admin';
 import Stripe from 'stripe';
 import { logger } from 'firebase-functions';
-import { trackCAPIPurchase, UserData } from '../metaConversionsApi';
+import { trackCAPIPurchase, trackCAPIStartTrial, UserData } from '../metaConversionsApi';
 
 // ============================================================================
 // TYPES
@@ -561,9 +561,41 @@ export async function handleSubscriptionCreated(
       } else {
         logger.warn(`⚠️ [CAPI Subscription] Failed to track purchase for ${providerId}:`, capiResult.error);
       }
+
+      // Track StartTrial event if subscription has a trial
+      if (subscription.trial_start && subscription.trial_end) {
+        const trialDays = Math.round((subscription.trial_end - subscription.trial_start) / (24 * 60 * 60));
+
+        const trialResult = await trackCAPIStartTrial({
+          userData,
+          contentName: `trial_${tier}_${trialDays}days`,
+          contentCategory: 'subscription_trial',
+          value: 0, // Trial is free
+          currency: subscriptionCurrency,
+          subscriptionId: subscription.id,
+          trialDays: trialDays,
+          eventSourceUrl: 'https://sos-expat.com/dashboard/subscription',
+        });
+
+        if (trialResult.success) {
+          logger.info(`✅ [CAPI Subscription] StartTrial tracked for ${providerId}`, {
+            eventId: trialResult.eventId,
+            trialDays,
+            tier,
+          });
+
+          // Store CAPI tracking info
+          await db.doc(`subscriptions/${providerId}`).update({
+            'capiTracking.trialStartEventId': trialResult.eventId,
+            'capiTracking.trialStartTrackedAt': admin.firestore.FieldValue.serverTimestamp(),
+          });
+        } else {
+          logger.warn(`⚠️ [CAPI Subscription] Failed to track trial start for ${providerId}:`, trialResult.error);
+        }
+      }
     } catch (capiError) {
       // Don't fail the webhook if CAPI tracking fails
-      logger.error(`❌ [CAPI Subscription] Error tracking purchase for ${providerId}:`, capiError);
+      logger.error(`❌ [CAPI Subscription] Error tracking events for ${providerId}:`, capiError);
     }
     // ========== END META CAPI TRACKING ==========
 

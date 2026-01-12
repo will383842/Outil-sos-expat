@@ -9,6 +9,7 @@ import * as admin from 'firebase-admin';
 import Stripe from 'stripe';
 import * as logger from 'firebase-functions/logger';
 import { createCheckoutSchema, validateInput } from './validation';
+import { META_CAPI_TOKEN, trackCAPIInitiateCheckout, UserData } from '../metaConversionsApi';
 
 // ============================================================================
 // SECRETS & PARAMS
@@ -393,7 +394,7 @@ function getAppBaseUrl(): string {
 export const createSubscriptionCheckout = onCall<CheckoutInput, Promise<CheckoutResult>>(
   {
     region: 'europe-west1',
-    secrets: [STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE],
+    secrets: [STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE, META_CAPI_TOKEN],
     memory: '256MiB',
     timeoutSeconds: 60,
   },
@@ -717,7 +718,54 @@ export const createSubscriptionCheckout = onCall<CheckoutInput, Promise<Checkout
       }
 
       // ======================================================================
-      // 11. Log Success and Return
+      // 11. META CAPI TRACKING - InitiateCheckout
+      // ======================================================================
+
+      try {
+        const price = billingPeriod === 'yearly'
+          ? (plan.annualPricing?.[currency] || plan.pricing[currency])
+          : plan.pricing[currency];
+
+        const userData: UserData = {
+          external_id: providerId,
+          em: providerData.email?.toLowerCase().trim(),
+          ph: providerData.phone?.replace(/[^0-9+]/g, ''),
+          fn: (providerData.firstName || providerData.displayName?.split(' ')[0])?.toLowerCase().trim(),
+          ln: providerData.lastName?.toLowerCase().trim(),
+          country: providerCountry?.toLowerCase(),
+        };
+
+        const capiResult = await trackCAPIInitiateCheckout({
+          userData,
+          value: price,
+          currency: currency,
+          contentName: `subscription_${plan.tier}_${billingPeriod}`,
+          contentCategory: 'subscription',
+          contentIds: [planId],
+          numItems: 1,
+          serviceType: 'subscription',
+          providerType: providerType,
+          eventSourceUrl: `https://sos-expat.com/dashboard/subscription/plans`,
+        });
+
+        if (capiResult.success) {
+          logger.info(`✅ [CAPI Subscription] InitiateCheckout tracked`, {
+            eventId: capiResult.eventId,
+            providerId,
+            planId,
+            value: price,
+            currency,
+          });
+        } else {
+          logger.warn(`⚠️ [CAPI Subscription] Failed to track InitiateCheckout:`, capiResult.error);
+        }
+      } catch (capiError) {
+        // Don't fail the checkout if CAPI tracking fails
+        logger.error(`❌ [CAPI Subscription] Error tracking InitiateCheckout:`, capiError);
+      }
+
+      // ======================================================================
+      // 12. Log Success and Return
       // ======================================================================
 
       const duration = Date.now() - startTime;

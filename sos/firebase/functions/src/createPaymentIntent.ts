@@ -96,9 +96,8 @@ const isDevelopment =
 const isProduction = process.env.NODE_ENV === 'production';
 const BYPASS_MODE = process.env.BYPASS_SECURITY === 'true';
 
-logger.info(
-  `🌍 Env=${process.env.NODE_ENV || 'development'} | PROD=${isProduction} | BYPASS=${BYPASS_MODE} | StripeMode=${STRIPE_MODE.value() || '(unset)'}`
-);
+// Log moved inside function to avoid STRIPE_MODE.value() call during deployment
+// Will be logged on first function invocation instead
 
 // P0-2 SECURITY FIX: Bloquer BYPASS_SECURITY en production
 // Cette variable ne doit JAMAIS être activée en production car elle bypasse:
@@ -596,11 +595,7 @@ function sanitizeAndConvertInput(data: PaymentIntentRequestData) {
   };
 }
 
-/* (E) Log safe (aucune référence directe à LIMITS) */
-{
-  const L = getLimits();
-  logger.info('[PI] LIMITS_ACTIVE', { hasLimits: !!L.RATE_LIMIT });
-}
+/* (E) LIMITS check removed from module level to avoid deployment timeouts */
 
 /* ────────────────────────────────────────────────────────────────────────────
    Signature de build (constante de fichier)
@@ -926,8 +921,12 @@ export const createPaymentIntent = onCall(
         // sera automatiquement splitté à la capture (providerAmount → prestataire, reste → plateforme)
         destinationAccountId: providerStripeAccountId,
         metadata: {
+          // User identifiers for CAPI attribution
+          client_id: clientId, // External ID for Meta CAPI matching
+          user_id: userId, // Firebase Auth UID
           clientEmail: clientEmail || '',
           providerName: providerName || '',
+          providerId: providerId,
           description: description || `Service ${serviceType}`,
           requestId,
           environment: process.env.NODE_ENV || 'development',
@@ -942,6 +941,7 @@ export const createPaymentIntent = onCall(
           promo_stackable: String(stackable),
           callSessionId : String(callSessionId),
           useDestinationCharges: String(!!providerStripeAccountId),
+          // Meta CAPI identifiers (passed from frontend)
           ...metadata,
         },
       };

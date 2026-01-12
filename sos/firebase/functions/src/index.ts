@@ -852,6 +852,9 @@ export { unifiedWebhook } from "./Webhooks/unifiedWebhook";
 // P0 SECURITY: Contact form with rate limiting (replaces direct Firestore writes)
 export { createContactMessage } from "./contact/createContactMessage";
 
+// Meta CAPI Event Tracking (Search, ViewContent, AddToCart)
+export { trackCAPIEvent } from "./tracking/capiEvents";
+
 // Utilitaires complémentaires
 export { initializeMessageTemplates } from "./initializeMessageTemplates";
 export { notifyAfterPayment } from "./notifications/notifyAfterPayment";
@@ -863,6 +866,8 @@ export { sendContactReply } from "./sendContactReplyFunction";
 export * from "./notificationPipeline/worker";
 export * from "./admin/callables";
 export { adminResetFAQs } from "./admin/resetFAQsCallable";
+// Provider bulk management actions (hide, block, suspend, delete)
+export * from "./admin/providerActions";
 
 // Triggers de nettoyage automatique (suppression cascade users -> sos_profiles)
 export { onUserDeleted, cleanupOrphanedProfiles } from "./triggers/userCleanupTrigger";
@@ -4704,8 +4709,73 @@ export {
 // Cost monitoring
 export { getCostMetrics } from "./monitoring/getCostMetrics";
 
+// Firebase/GCP usage monitoring
+export { getFirebaseUsage } from "./monitoring/getFirebaseUsage";
+
 // Agent monitoring dashboard
 export { getAgentMetrics, saveAgentMetricsHistory } from "./monitoring/getAgentMetrics";
+
+// OpenAI usage monitoring
+export { getOpenAIUsage } from "./monitoring/getOpenAIUsage";
+
+// Perplexity usage monitoring
+export { getPerplexityUsage } from "./monitoring/getPerplexityUsage";
+
+// Anthropic usage monitoring
+export { getAnthropicUsage } from "./monitoring/getAnthropicUsage";
+
+// Twilio balance monitoring
+export { getTwilioBalance } from "./monitoring/getTwilioBalance";
+
+// Stripe balance monitoring
+export { getStripeBalance } from "./monitoring/getStripeBalance";
+
+// Service Balance Alerts - Low balance monitoring for external services
+export {
+  // Scheduled function (runs hourly)
+  checkServiceBalances,
+  // Callable functions
+  getServiceBalanceAlerts,
+  acknowledgeServiceBalanceAlert,
+  updateServiceBalanceThreshold,
+  getServiceBalanceThresholds,
+  triggerServiceBalanceCheck,
+  // Types
+  type ServiceType as ServiceBalanceServiceType,
+  type AlertLevel as ServiceBalanceAlertLevel,
+  type ServiceBalanceThreshold,
+  type ServiceBalanceAlert,
+} from "./monitoring/serviceAlerts";
+
+// Unified Analytics - Centralized analytics aggregation
+export {
+  getUnifiedAnalytics,
+  getHistoricalAnalytics,
+  aggregateDailyAnalytics,
+  cleanupOldAnalytics,
+} from "./analytics";
+
+// Connection logging system - tracks logins, logouts, API access, admin actions
+export {
+  logConnection,
+  getConnectionLogs,
+  getConnectionStats,
+  onUserSignIn,
+  onUserDeletedConnectionLog,
+  logConnectionV1,
+  // Helper functions for server-side logging
+  logAdminAction,
+  logServiceConnection,
+  createApiAccessLogger,
+  // Types
+  type ConnectionEventType,
+  type ConnectionService,
+  type ConnectionLog,
+  type ConnectionLogsFilter,
+  type ConnectionStats,
+  type GeoLocation,
+  type DeviceInfo,
+} from "./monitoring/connectionLogs";
 
 // ========== TAX THRESHOLD TRACKING SYSTEM ==========
 // Surveillance des seuils fiscaux internationaux (OSS EU, UK VAT, CH TVA, etc.)
@@ -4728,3 +4798,41 @@ export {
 // ========== MIGRATIONS ==========
 // Scripts de migration one-time
 export { migrateProviderSlugs } from './migrations/migrateProviderSlugs';
+
+// ========== PROVIDER PROFILE VALIDATION WORKFLOW ==========
+// Complete validation workflow for provider profiles (lawyers/expats)
+// Includes: submission, assignment, approval, rejection, change requests
+export {
+  submitForValidation,
+  assignValidation,
+  approveProfile,
+  rejectProfile,
+  requestChanges,
+  getValidationQueue,
+  getValidationHistory,
+  resubmitForValidation,
+  onValidationCreated,
+  onValidationDecision,
+} from './admin/profileValidation';
+
+// ========== PROVIDER ACTIONS (ADMIN) ==========
+// Actions to manage providers: hide, block, suspend, delete (soft & GDPR hard delete)
+export {
+  hideProvider,
+  unhideProvider,
+  blockProvider,
+  unblockProvider,
+  suspendProvider,
+  unsuspendProvider,
+  softDeleteProvider,
+  hardDeleteProvider,
+  bulkHideProviders,
+  bulkUnhideProviders,
+  bulkBlockProviders,
+  bulkUnblockProviders,
+  bulkSuspendProviders,
+  bulkUnsuspendProviders,
+  bulkDeleteProviders,
+  getProviderActionLogs,
+  getAllProviderActionLogs,
+} from './admin/providerActions';
