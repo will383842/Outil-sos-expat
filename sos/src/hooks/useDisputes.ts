@@ -717,8 +717,9 @@ export function useDisputeStats(): { stats: DisputeStats; isLoading: boolean; er
     setError(null);
 
     try {
-      // Fetch all disputes for stats calculation
-      const q = query(collection(db, 'disputes'));
+      // Fetch disputes for stats calculation
+      // ✅ OPTIMISATION COÛTS: Ajout de limit pour éviter de charger trop de documents
+      const q = query(collection(db, 'disputes'), limit(2000));
       const snap = await getDocs(q);
       const disputes = snap.docs.map(mapDocToDispute);
 

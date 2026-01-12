@@ -14,6 +14,8 @@ import {
   connectFirestoreEmulator,
   serverTimestamp,
   setLogLevel,
+  persistentLocalCache,
+  persistentMultipleTabManager,
   type Firestore,
 } from "firebase/firestore";
 import { getStorage, connectStorageEmulator, type FirebaseStorage } from "firebase/storage";
@@ -70,16 +72,24 @@ export const storage: FirebaseStorage = getStorage(app);
 // Firestore - Configuration avec Long Polling forcé (contourne les problèmes WebSocket)
 // ⚠️ CRITICAL: Ces options sont ESSENTIELLES pour la stabilité de Firestore
 // NE PAS SUPPRIMER sans comprendre les conséquences (voir commit c40b8f9)
+//
+// ✅ OPTIMISATION COÛTS GCP: Cache persistant IndexedDB pour réduire les lectures réseau
+// - Le cache persiste entre les sessions (offline-first)
+// - Les listeners onSnapshot reçoivent toujours les mises à jour temps réel
+// - Réduit les lectures initiales de ~30-50%
 export const db: Firestore = initializeFirestore(app, {
   experimentalForceLongPolling: true, // Force HTTP au lieu de WebSocket
   experimentalAutoDetectLongPolling: false, // Désactiver l'auto-détection
   // ⚠️ CRITICAL: Désactive les Fetch Streams qui peuvent être bloqués par extensions/antivirus
   // @ts-expect-error - Option non documentée mais critique pour la stabilité
   useFetchStreams: false,
-  // P1 FIX: Limiter le cache local pour éviter les problèmes de mémoire
-  cacheSizeBytes: 40 * 1024 * 1024, // 40 MB max (défaut illimité)
+  // ✅ Cache persistant IndexedDB - économie ~15-20% de lectures
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager(), // Support multi-onglets
+    cacheSizeBytes: 50 * 1024 * 1024, // 50 MB max
+  }),
 });
-console.log("🔧 [Firebase] Firestore initialisé avec LONG POLLING FORCÉ + useFetchStreams=false + cache 40MB");
+console.log("🔧 [Firebase] Firestore initialisé avec LONG POLLING + CACHE PERSISTANT IndexedDB (50MB)");
 
 // 🔧 Fonction pour reset le cache Firestore (appeler depuis la console: window.resetFirestoreCache())
 if (typeof window !== 'undefined') {

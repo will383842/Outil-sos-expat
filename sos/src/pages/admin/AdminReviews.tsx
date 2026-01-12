@@ -633,7 +633,8 @@ const AdminReviews: React.FC = () => {
     const from = startOfYear(years[0]);
     const to = endOfYear(currentYear);
     try {
-      const qRef = query(collection(db, 'reviews'), where('createdAt', '>=', from), where('createdAt', '<=', to));
+      // ✅ OPTIMISATION COÛTS: Ajout de limit pour éviter de charger trop de documents
+      const qRef = query(collection(db, 'reviews'), where('createdAt', '>=', from), where('createdAt', '<=', to), limit(5000));
       const snap = await getDocs(qRef);
       const all = snap.docs.map((d) => {
         const data = d.data() as DocumentData;
@@ -666,7 +667,8 @@ const AdminReviews: React.FC = () => {
     const from = startOfYear(currentYear);
     const to = endOfYear(currentYear);
     try {
-      const qRef = query(collection(db, 'reviews'), where('createdAt', '>=', from), where('createdAt', '<=', to));
+      // ✅ OPTIMISATION COÛTS: Ajout de limit pour éviter de charger trop de documents
+      const qRef = query(collection(db, 'reviews'), where('createdAt', '>=', from), where('createdAt', '<=', to), limit(5000));
       const snap = await getDocs(qRef);
       const all = snap.docs.map((d) => {
         const data = d.data() as DocumentData;

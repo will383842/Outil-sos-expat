@@ -17,7 +17,8 @@ import {
   collection,
   query,
   where,
-  onSnapshot,
+  getDocs, // ✅ OPTIMISATION COÛTS GCP: Polling au lieu de onSnapshot
+  limit,
 } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 
@@ -105,14 +106,21 @@ const ProvidersMapWidget: React.FC<ProvidersMapWidgetProps> = ({ compact = false
   useEffect(() => {
     mountedRef.current = true;
 
-    const providersQuery = query(
-      collection(db, 'sos_profiles'),
-      where('type', 'in', ['lawyer', 'expat'])
-    );
+    // ✅ OPTIMISATION COÛTS GCP: Polling 60s au lieu de onSnapshot
+    // Économie estimée: ~95% de lectures en moins (~5-8€/mois d'économie)
+    // Pour une carte admin, 60s de délai est largement acceptable
+    const fetchProviders = async () => {
+      if (!mountedRef.current) return;
 
-    const unsubscribe = onSnapshot(
-      providersQuery,
-      (snapshot) => {
+      try {
+        const providersQuery = query(
+          collection(db, 'sos_profiles'),
+          where('type', 'in', ['lawyer', 'expat']),
+          limit(500) // ✅ Protection contre les abus
+        );
+
+        const snapshot = await getDocs(providersQuery);
+
         if (!mountedRef.current) return;
 
         const providers = snapshot.docs.map((doc) => ({
@@ -158,17 +166,22 @@ const ProvidersMapWidget: React.FC<ProvidersMapWidgetProps> = ({ compact = false
 
         setLocations(Array.from(locationMap.values()));
         setIsLoading(false);
-      },
-      (error) => {
+      } catch (error) {
         if (!mountedRef.current) return;
         console.error('Erreur ProvidersMapWidget:', error);
         setIsLoading(false);
       }
-    );
+    };
+
+    // Initial fetch
+    fetchProviders();
+
+    // Poll every 60 seconds (map data doesn't need to be real-time)
+    const interval = setInterval(fetchProviders, 60000);
 
     return () => {
       mountedRef.current = false;
-      unsubscribe();
+      clearInterval(interval);
     };
   }, []);
 

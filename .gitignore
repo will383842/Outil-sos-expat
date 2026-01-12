@@ -5,6 +5,12 @@ node_modules/
 **/node_modules/
 
 # ================================
+# Claude Code temporary directories
+# ================================
+tmpclaude-*/
+**/tmpclaude-*/
+
+# ================================
 # Builds / artefacts
 # ================================
 /dist/

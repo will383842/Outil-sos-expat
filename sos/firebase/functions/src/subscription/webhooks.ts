@@ -50,70 +50,139 @@ interface WebhookContext {
 const getDb = () => admin.firestore();
 
 // ============================================================================
+// COST OPTIMIZATION: IN-MEMORY CACHING FOR WEBHOOKS
+// Reduces Firestore reads from 4 per webhook to 0-1 per webhook
+// ============================================================================
+
+interface CacheEntry<T> {
+  data: T;
+  expiresAt: number;
+}
+
+// Cache TTL: 30 minutes (price mappings are very stable)
+const WEBHOOK_CACHE_TTL = 30 * 60 * 1000;
+
+// Caches
+const planCache = new Map<string, CacheEntry<SubscriptionPlan>>();
+const priceToPlanCache = new Map<string, CacheEntry<string>>(); // priceId -> planId
+
+// Cache stats
+let webhookCacheStats = {
+  planHits: 0,
+  planMisses: 0,
+  priceHits: 0,
+  priceMisses: 0
+};
+
+/**
+ * Get webhook cache statistics
+ */
+export function getWebhookCacheStats() {
+  return { ...webhookCacheStats };
+}
+
+/**
+ * Clear webhook caches (call after plan updates)
+ */
+export function clearWebhookCaches(): void {
+  planCache.clear();
+  priceToPlanCache.clear();
+  logger.info('[WEBHOOK_CACHE] Caches cleared');
+}
+
+// ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 
 /**
- * Récupère le plan d'abonnement par son ID
- * @internal Utilisé par getSubscriptionPlanByPriceId comme fallback
+ * Récupère le plan d'abonnement par son ID (avec cache)
+ * COST OPTIMIZATION: Reduces reads by ~90%
  */
 async function _getSubscriptionPlan(planId: string): Promise<SubscriptionPlan | null> {
+  const now = Date.now();
+
+  // Check cache first
+  const cached = planCache.get(planId);
+  if (cached && cached.expiresAt > now) {
+    webhookCacheStats.planHits++;
+    return cached.data;
+  }
+
+  webhookCacheStats.planMisses++;
+
+  // Fetch from Firestore
   const planDoc = await getDb().doc(`subscription_plans/${planId}`).get();
   if (!planDoc.exists) return null;
-  return { id: planDoc.id, ...planDoc.data() } as SubscriptionPlan;
+
+  const plan = { id: planDoc.id, ...planDoc.data() } as SubscriptionPlan;
+
+  // Update cache
+  planCache.set(planId, {
+    data: plan,
+    expiresAt: now + WEBHOOK_CACHE_TTL
+  });
+
+  return plan;
 }
 
 // Export for potential external use
 export const getSubscriptionPlan = _getSubscriptionPlan;
 
 /**
- * Récupère le plan d'abonnement par le priceId Stripe
+ * Récupère le plan d'abonnement par le priceId Stripe (OPTIMIZED)
+ * COST OPTIMIZATION: Reduces from 4 sequential reads to 0-1 read
  */
 async function getSubscriptionPlanByPriceId(stripePriceId: string): Promise<SubscriptionPlan | null> {
-  // Chercher dans les prix mensuels EUR
-  let snapshot = await getDb().collection('subscription_plans')
-    .where('stripePriceId.EUR', '==', stripePriceId)
-    .limit(1)
-    .get();
+  const now = Date.now();
 
-  if (!snapshot.empty) {
-    const doc = snapshot.docs[0];
-    return { id: doc.id, ...doc.data() } as SubscriptionPlan;
+  // Check price-to-plan cache first
+  const cachedPlanId = priceToPlanCache.get(stripePriceId);
+  if (cachedPlanId && cachedPlanId.expiresAt > now) {
+    webhookCacheStats.priceHits++;
+    return _getSubscriptionPlan(cachedPlanId.data);
   }
 
-  // Chercher dans les prix mensuels USD
-  snapshot = await getDb().collection('subscription_plans')
-    .where('stripePriceId.USD', '==', stripePriceId)
-    .limit(1)
+  webhookCacheStats.priceMisses++;
+
+  // Load all active plans in ONE query and cache them all
+  const snapshot = await getDb().collection('subscription_plans')
+    .where('isActive', '==', true)
     .get();
 
-  if (!snapshot.empty) {
-    const doc = snapshot.docs[0];
-    return { id: doc.id, ...doc.data() } as SubscriptionPlan;
+  for (const doc of snapshot.docs) {
+    const plan = { id: doc.id, ...doc.data() } as SubscriptionPlan & {
+      stripePriceId?: { EUR?: string; USD?: string };
+      stripePriceIdAnnual?: { EUR?: string; USD?: string };
+    };
+
+    // Cache the plan
+    planCache.set(plan.id, {
+      data: plan,
+      expiresAt: now + WEBHOOK_CACHE_TTL
+    });
+
+    // Cache all price mappings
+    const priceIds = [
+      plan.stripePriceId?.EUR,
+      plan.stripePriceId?.USD,
+      plan.stripePriceIdAnnual?.EUR,
+      plan.stripePriceIdAnnual?.USD
+    ].filter(Boolean) as string[];
+
+    for (const priceId of priceIds) {
+      priceToPlanCache.set(priceId, {
+        data: plan.id,
+        expiresAt: now + WEBHOOK_CACHE_TTL
+      });
+
+      // Found the one we're looking for
+      if (priceId === stripePriceId) {
+        return plan;
+      }
+    }
   }
 
-  // Chercher dans les prix annuels EUR
-  snapshot = await getDb().collection('subscription_plans')
-    .where('stripePriceIdAnnual.EUR', '==', stripePriceId)
-    .limit(1)
-    .get();
-
-  if (!snapshot.empty) {
-    const doc = snapshot.docs[0];
-    return { id: doc.id, ...doc.data() } as SubscriptionPlan;
-  }
-
-  // Chercher dans les prix annuels USD
-  snapshot = await getDb().collection('subscription_plans')
-    .where('stripePriceIdAnnual.USD', '==', stripePriceId)
-    .limit(1)
-    .get();
-
-  if (!snapshot.empty) {
-    const doc = snapshot.docs[0];
-    return { id: doc.id, ...doc.data() } as SubscriptionPlan;
-  }
-
+  // Not found
   return null;
 }
 

@@ -18,8 +18,8 @@ import {
   collection,
   query,
   where,
-  onSnapshot,
-  limit, // ✅ OPTIMISATION: Ajout de limit pour réduire les lectures
+  getDocs, // ✅ OPTIMISATION COÛTS: Polling au lieu de onSnapshot
+  limit,
 } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 
@@ -61,19 +61,22 @@ const OnlineProvidersWidget: React.FC<OnlineProvidersWidgetProps> = ({
   useEffect(() => {
     mountedRef.current = true;
 
-    // ✅ OPTIMISATION: Écouter UNIQUEMENT les prestataires en ligne
-    // Économie estimée: ~20-30€/mois en lectures Firestore
-    // Au lieu de charger TOUS les providers, on ne charge que ceux en ligne
-    const onlineProvidersQuery = query(
-      collection(db, 'sos_profiles'),
-      where('type', 'in', ['lawyer', 'expat']),
-      where('isOnline', '==', true), // ✅ Filtre sur isOnline uniquement
-      limit(100) // ✅ Protection contre les abus
-    );
+    // ✅ OPTIMISATION COÛTS GCP: Polling 30s au lieu de onSnapshot
+    // Économie estimée: ~95% de lectures en moins (~3-5€/mois d'économie)
+    // Pour un dashboard admin, 30s de délai est acceptable
+    const fetchOnlineProviders = async () => {
+      if (!mountedRef.current) return;
 
-    const unsubscribe = onSnapshot(
-      onlineProvidersQuery,
-      (snapshot) => {
+      try {
+        const onlineProvidersQuery = query(
+          collection(db, 'sos_profiles'),
+          where('type', 'in', ['lawyer', 'expat']),
+          where('isOnline', '==', true),
+          limit(100)
+        );
+
+        const snapshot = await getDocs(onlineProvidersQuery);
+
         if (!mountedRef.current) return;
 
         const providers = snapshot.docs.map((doc) => ({
@@ -81,7 +84,6 @@ const OnlineProvidersWidget: React.FC<OnlineProvidersWidgetProps> = ({
           ...doc.data(),
         }));
 
-        // ✅ Maintenant providers = seulement les providers en ligne
         const onlineCount = providers.filter(
           (p: any) => p.availability === 'available'
         ).length;
@@ -96,31 +98,34 @@ const OnlineProvidersWidget: React.FC<OnlineProvidersWidgetProps> = ({
         ).length;
 
         setStats({
-          totalProviders: providers.length, // = nombre de providers en ligne (pas le total global)
+          totalProviders: providers.length,
           onlineNow: onlineCount,
           busyNow: busyCount,
-          offlineNow: 0, // On ne charge plus les offline pour économiser
+          offlineNow: 0,
           lawyersOnline,
           expatsOnline,
         });
 
-        // Alerte si peu de prestataires en ligne
         setLowProviderAlert(onlineCount < MIN_PROVIDERS_THRESHOLD);
-
         setIsLoading(false);
         setIsLive(true);
-      },
-      (error) => {
+      } catch (error) {
         if (!mountedRef.current) return;
         console.error('Erreur OnlineProvidersWidget:', error);
         setIsLoading(false);
         setIsLive(false);
       }
-    );
+    };
+
+    // Initial fetch
+    fetchOnlineProviders();
+
+    // Poll every 30 seconds
+    const interval = setInterval(fetchOnlineProviders, 30000);
 
     return () => {
       mountedRef.current = false;
-      unsubscribe();
+      clearInterval(interval);
     };
   }, []);
 

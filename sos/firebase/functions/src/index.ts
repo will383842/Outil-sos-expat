@@ -4193,6 +4193,16 @@ export { setProviderOffline } from './callables/setProviderOffline';
 // - Prestataires "busy" depuis plus de 2 heures sans session active
 export { cleanupOrphanedSessions } from './scheduled/cleanupOrphanedSessions';
 
+// ========== CLEANUP AGENT TASKS ORPHELINES ==========
+// Nettoie les tasks agents orphelines pour éviter memory exhaustion
+// Elle s'exécute toutes les heures et nettoie:
+// - Tasks en "IN_PROGRESS" depuis plus de 30 minutes (stuck)
+// - Tasks schedulées non exécutées depuis plus de 2 heures
+// - error_logs plus vieux que 30 jours (TTL)
+// - agent_tasks completées plus vieilles que 7 jours
+// - agent_states avec currentTasks orphelines
+export { cleanupOrphanedAgentTasks } from './scheduled/cleanupOrphanedAgentTasks';
+
 // Fonctions admin pour nettoyage manuel
 export {
   adminCleanupOrphanedSessions,
@@ -4693,6 +4703,9 @@ export {
 
 // Cost monitoring
 export { getCostMetrics } from "./monitoring/getCostMetrics";
+
+// Agent monitoring dashboard
+export { getAgentMetrics, saveAgentMetricsHistory } from "./monitoring/getAgentMetrics";
 
 // ========== TAX THRESHOLD TRACKING SYSTEM ==========
 // Surveillance des seuils fiscaux internationaux (OSS EU, UK VAT, CH TVA, etc.)
