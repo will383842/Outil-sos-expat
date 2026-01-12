@@ -24,6 +24,8 @@ import { syncPaymentStatus } from "./utils/paymentSync";
 import { isPaymentCompleted } from "./utils/paymentStatusUtils";
 // Production logger
 import { logger as prodLogger } from "./utils/productionLogger";
+// Meta CAPI for server-side tracking
+import { META_CAPI_TOKEN, trackCAPIPurchase, UserData } from "./metaConversionsApi";
 
 // Secrets PayPal
 export const PAYPAL_CLIENT_ID = defineSecret("PAYPAL_CLIENT_ID");
@@ -2160,7 +2162,7 @@ async function verifyPayPalWebhookSignature(
 export const paypalWebhook = onRequest(
   {
     region: "europe-west1",
-    secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_WEBHOOK_ID],
+    secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_WEBHOOK_ID, META_CAPI_TOKEN],
   },
   async (req, res) => {
     console.log("🔔 [PAYPAL] Webhook received");
@@ -2258,17 +2260,79 @@ export const paypalWebhook = onRequest(
         case "PAYMENT.CAPTURE.COMPLETED":
           // Paiement capturé avec succès
           const orderId = event.resource?.supplementary_data?.related_ids?.order_id;
+          const captureAmount = event.resource?.amount?.value;
+          const captureCurrency = event.resource?.amount?.currency_code || "EUR";
 
           if (orderId) {
             const orderDoc = await db.collection("paypal_orders").doc(orderId).get();
             const orderData = orderDoc.data();
 
             if (orderData?.callSessionId) {
+              // Update call session
               await db.collection("call_sessions").doc(orderData.callSessionId).update({
                 "payment.status": "captured",
                 "payment.capturedAt": admin.firestore.FieldValue.serverTimestamp(),
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
               });
+
+              // ========== META CAPI TRACKING ==========
+              // Track Purchase event server-side for Facebook Ads attribution
+              try {
+                // Get call session for user data
+                const sessionDoc = await db.collection("call_sessions").doc(orderData.callSessionId).get();
+                const sessionData = sessionDoc.data();
+
+                const userData: UserData = {};
+                if (sessionData?.clientEmail) {
+                  userData.em = sessionData.clientEmail.toLowerCase().trim();
+                }
+                if (sessionData?.clientPhone) {
+                  userData.ph = sessionData.clientPhone.replace(/[^0-9+]/g, "");
+                }
+                if (sessionData?.clientName) {
+                  const nameParts = sessionData.clientName.split(" ");
+                  if (nameParts.length > 0) userData.fn = nameParts[0].toLowerCase().trim();
+                  if (nameParts.length > 1) userData.ln = nameParts.slice(1).join(" ").toLowerCase().trim();
+                }
+                // Facebook identifiers from session (if captured during checkout)
+                if (sessionData?.fbp) userData.fbp = sessionData.fbp;
+                if (sessionData?.fbc) userData.fbc = sessionData.fbc;
+                if (sessionData?.client_ip_address) userData.client_ip_address = sessionData.client_ip_address;
+                if (sessionData?.client_user_agent) userData.client_user_agent = sessionData.client_user_agent;
+
+                const capiResult = await trackCAPIPurchase({
+                  userData,
+                  value: parseFloat(captureAmount) || sessionData?.payment?.amount || 0,
+                  currency: captureCurrency,
+                  orderId: orderId,
+                  contentName: `${sessionData?.providerType || "service"}_call_paypal`,
+                  contentCategory: sessionData?.providerType || "service",
+                  contentIds: sessionData?.providerId ? [sessionData.providerId] : undefined,
+                  serviceType: sessionData?.serviceType,
+                  providerType: sessionData?.providerType,
+                  eventSourceUrl: "https://sos-expat.com",
+                });
+
+                if (capiResult.success) {
+                  console.log(`✅ [PAYPAL CAPI] Purchase tracked for order ${orderId}`, {
+                    eventId: capiResult.eventId,
+                    amount: captureAmount,
+                    currency: captureCurrency,
+                  });
+
+                  // Store CAPI tracking info
+                  await db.collection("call_sessions").doc(orderData.callSessionId).update({
+                    "capiTracking.paypalPurchaseEventId": capiResult.eventId,
+                    "capiTracking.paypalPurchaseTrackedAt": admin.firestore.FieldValue.serverTimestamp(),
+                  });
+                } else {
+                  console.warn(`⚠️ [PAYPAL CAPI] Failed to track purchase for order ${orderId}:`, capiResult.error);
+                }
+              } catch (capiError) {
+                // Don't fail the webhook if CAPI tracking fails
+                console.error(`❌ [PAYPAL CAPI] Error tracking purchase for order ${orderId}:`, capiError);
+              }
+              // ========== END META CAPI TRACKING ==========
             }
           }
           break;
