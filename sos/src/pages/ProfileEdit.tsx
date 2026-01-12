@@ -6,6 +6,7 @@ import { doc, updateDoc, getDoc, getDocs, collection, query, where, Timestamp, s
 import { db, auth, storage } from "../config/firebase";
 import { useAuth } from "../contexts/AuthContext";
 import { useIntl } from "react-intl";
+import { generateShortId, generateMultilingualSlugs } from "../utils/slugGenerator";
 import Layout from "../components/layout/Layout";
 import Button from "../components/common/Button";
 import {
@@ -481,6 +482,31 @@ const ProfileEdit: React.FC = () => {
               sosProfileUpdate.lastName = formData.lastName;
             }
           }
+
+          // Génération automatique des slugs SEO
+          const currentProfile = await getDoc(doc(db, "sos_profiles", ctxUser.uid));
+          const profileData = currentProfile.data();
+          const providerRole = userData?.role === 'lawyer' ? 'lawyer' : 'expat';
+
+          // Générer shortId si inexistant
+          if (!profileData?.shortId) {
+            sosProfileUpdate.shortId = generateShortId(ctxUser.uid);
+          }
+
+          // Toujours régénérer les slugs quand le profil change
+          const slugs = generateMultilingualSlugs({
+            firstName: formData.firstName || profileData?.firstName || 'profil',
+            lastName: formData.lastName || profileData?.lastName || '',
+            role: providerRole,
+            country: profileData?.country || profileData?.residenceCountry || '',
+            languages: profileData?.languages || [],
+            specialties: providerRole === 'lawyer'
+              ? (profileData?.specialties || [])
+              : (profileData?.helpTypes || formData.helpTypes || []),
+            uid: ctxUser.uid,
+          });
+          sosProfileUpdate.slugs = slugs;
+          sosProfileUpdate.slugsUpdatedAt = serverTimestamp();
 
           await updateDoc(doc(db, "sos_profiles", ctxUser.uid), sosProfileUpdate)
             .catch((err) => console.warn("Erreur mise à jour sos_profiles :", err));

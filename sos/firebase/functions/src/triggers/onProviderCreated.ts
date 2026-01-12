@@ -38,6 +38,88 @@ const STRIPE_SECRET_KEY_TEST = defineSecret("STRIPE_SECRET_KEY_TEST");
 const STRIPE_SECRET_KEY_LIVE = defineSecret("STRIPE_SECRET_KEY_LIVE");
 const STRIPE_MODE = defineString("STRIPE_MODE");
 
+// =============================================================================
+// SLUG GENERATION UTILITIES (SEO URLs)
+// =============================================================================
+
+const SHORT_ID_CHARS = '23456789abcdefghjkmnpqrstuvwxyz';
+
+function generateShortId(firebaseUid: string): string {
+  let hash = 0;
+  for (let i = 0; i < firebaseUid.length; i++) {
+    const char = firebaseUid.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  const absHash = Math.abs(hash);
+  let shortId = '';
+  let remaining = absHash;
+  for (let i = 0; i < 6; i++) {
+    shortId += SHORT_ID_CHARS[remaining % SHORT_ID_CHARS.length];
+    remaining = Math.floor(remaining / SHORT_ID_CHARS.length);
+  }
+  return shortId;
+}
+
+function slugify(str: string): string {
+  if (!str) return '';
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '');
+}
+
+const ROLE_TRANSLATIONS: Record<string, Record<string, string>> = {
+  lawyer: { fr: 'avocat', en: 'lawyer', es: 'abogado', pt: 'advogado', de: 'anwalt', ru: 'advokat', zh: 'lawyer', ar: 'lawyer', hi: 'lawyer' },
+  expat: { fr: 'expatrie', en: 'expat', es: 'expatriado', pt: 'expatriado', de: 'expat', ru: 'expat', zh: 'expat', ar: 'expat', hi: 'expat' },
+};
+
+const COUNTRY_TRANSLATIONS: Record<string, Record<string, string>> = {
+  'France': { fr: 'france', en: 'france', es: 'francia', de: 'frankreich' },
+  'Thaïlande': { fr: 'thailande', en: 'thailand', es: 'tailandia', de: 'thailand' },
+  'Thailand': { fr: 'thailande', en: 'thailand', es: 'tailandia', de: 'thailand' },
+  'Allemagne': { fr: 'allemagne', en: 'germany', es: 'alemania', de: 'deutschland' },
+  'Germany': { fr: 'allemagne', en: 'germany', es: 'alemania', de: 'deutschland' },
+};
+
+const DEFAULT_LOCALES: Record<string, string> = {
+  'fr': 'fr', 'en': 'us', 'es': 'es', 'de': 'de', 'pt': 'br',
+  'ru': 'ru', 'zh': 'cn', 'ar': 'sa', 'hi': 'in'
+};
+
+function getRoleTranslation(role: string, lang: string): string {
+  return ROLE_TRANSLATIONS[role]?.[lang] || (role === 'lawyer' ? 'lawyer' : 'expat');
+}
+
+function getCountryTranslation(country: string, lang: string): string {
+  return COUNTRY_TRANSLATIONS[country]?.[lang] || slugify(country);
+}
+
+function generateSlugForLang(firstName: string, role: string, country: string, specialty: string, shortId: string, lang: string): string {
+  const roleWord = getRoleTranslation(role, lang);
+  const countryWord = getCountryTranslation(country, lang);
+  const categoryCountry = `${roleWord}-${countryWord}`;
+  const firstNameSlug = slugify(firstName);
+  const specialtySlug = slugify(specialty).substring(0, 15);
+  const localeRegion = DEFAULT_LOCALES[lang] || lang;
+  const langLocale = `${lang}-${localeRegion}`;
+  let namePart = specialtySlug ? `${firstNameSlug}-${specialtySlug}` : firstNameSlug;
+  const maxNameLength = 70 - langLocale.length - categoryCountry.length - shortId.length - 4;
+  if (namePart.length > maxNameLength) namePart = firstNameSlug;
+  return `${langLocale}/${categoryCountry}/${namePart}-${shortId}`;
+}
+
+function generateMultilingualSlugs(firstName: string, role: string, country: string, specialty: string, shortId: string): Record<string, string> {
+  const langs = ['fr', 'en', 'es', 'de', 'pt', 'ru', 'zh', 'ar', 'hi'];
+  const slugs: Record<string, string> = {};
+  for (const lang of langs) {
+    slugs[lang] = generateSlugForLang(firstName, role, country, specialty, shortId, lang);
+  }
+  return slugs;
+}
+
 // Interface pour les données du profil provider
 interface ProviderProfileData {
   email?: string;
@@ -49,6 +131,10 @@ interface ProviderProfileData {
   role?: string;
   country?: string;
   currentCountry?: string;
+  residenceCountry?: string;
+  // Specialties
+  specialties?: string[];
+  helpTypes?: string[];
   // Photo fields
   profilePhoto?: string;
   photoURL?: string;
@@ -377,6 +463,33 @@ export const onProviderCreated = onDocumentCreated(
     } catch (claimsError) {
       console.error(`[onProviderCreated] ❌ Erreur définition Custom Claims pour ${uid}:`, claimsError);
       // Continuer même si les claims échouent - on peut les définir manuellement plus tard
+    }
+
+    // 🔗 GÉNÉRATION AUTOMATIQUE DES SLUGS SEO
+    // Format: {lang}-{locale}/{role-pays}/{prenom-specialite-shortid}
+    try {
+      const shortId = generateShortId(uid);
+      const specialty = providerType === 'lawyer'
+        ? (Array.isArray(data.specialties) ? data.specialties[0] : '')
+        : (Array.isArray(data.helpTypes) ? data.helpTypes[0] : '');
+      const slugs = generateMultilingualSlugs(
+        data.firstName || 'profil',
+        providerType,
+        data.country || data.residenceCountry || '',
+        specialty || '',
+        shortId
+      );
+      await admin.firestore().collection("sos_profiles").doc(uid).update({
+        shortId,
+        slugs,
+        slugsUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      console.log(`[onProviderCreated] ✅ Slugs SEO générés pour: ${uid}`);
+      console.log(`[onProviderCreated] 🇫🇷 FR: ${slugs.fr}`);
+      console.log(`[onProviderCreated] 🇺🇸 EN: ${slugs.en}`);
+    } catch (slugError) {
+      console.error(`[onProviderCreated] ❌ Erreur génération slugs pour ${uid}:`, slugError);
+      // Non-bloquant: le profil peut fonctionner sans slugs SEO
     }
 
     // 📸 Migrer l'image de profil de registration_temp vers profilePhotos/{userId}
