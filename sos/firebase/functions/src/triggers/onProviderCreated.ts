@@ -32,6 +32,7 @@ import * as admin from "firebase-admin";
 import Stripe from "stripe";
 import { defineSecret, defineString } from "firebase-functions/params";
 import { getStorage } from "firebase-admin/storage";
+import { META_CAPI_TOKEN, trackCAPILead, UserData } from "../metaConversionsApi";
 
 // Secrets Stripe
 const STRIPE_SECRET_KEY_TEST = defineSecret("STRIPE_SECRET_KEY_TEST");
@@ -139,6 +140,10 @@ interface ProviderProfileData {
   profilePhoto?: string;
   photoURL?: string;
   avatar?: string;
+  // Contact fields
+  phone?: string;
+  phoneNumber?: string;
+  city?: string;
   // Stripe fields (peuvent déjà exister si créé manuellement)
   stripeAccountId?: string;
   stripeAccountStatus?: string;
@@ -148,6 +153,10 @@ interface ProviderProfileData {
   isSOS?: boolean;
   aaaPayoutMode?: string;
   kycDelegated?: boolean;
+  // Meta/Facebook tracking fields
+  fbp?: string;
+  fbc?: string;
+  fbclid?: string;
 }
 
 // Mapping pays vers code Stripe
@@ -435,7 +444,7 @@ export const onProviderCreated = onDocumentCreated(
   {
     document: "sos_profiles/{uid}",
     region: "europe-west1",
-    secrets: [STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE],
+    secrets: [STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE, META_CAPI_TOKEN],
   },
   async (event) => {
     const uid = event.params.uid;
@@ -454,6 +463,70 @@ export const onProviderCreated = onDocumentCreated(
       console.log(`[onProviderCreated] Type non éligible: ${providerType} pour: ${uid}`);
       return;
     }
+
+    // ========== META CAPI TRACKING ==========
+    // Track Lead event for provider signup (lawyer or expat registration)
+    try {
+      const userData: UserData = {
+        external_id: uid,
+      };
+
+      // Email
+      if (data.email) {
+        userData.em = data.email.toLowerCase().trim();
+      }
+
+      // Phone
+      if (data.phone || data.phoneNumber) {
+        userData.ph = (data.phone || data.phoneNumber)?.replace(/[^0-9+]/g, "");
+      }
+
+      // Names
+      if (data.firstName) {
+        userData.fn = data.firstName.toLowerCase().trim();
+      }
+      if (data.lastName) {
+        userData.ln = data.lastName.toLowerCase().trim();
+      }
+
+      // Location
+      if (data.country || data.residenceCountry || data.currentCountry) {
+        userData.country = (data.country || data.residenceCountry || data.currentCountry)?.toLowerCase().trim();
+      }
+      if (data.city) {
+        userData.ct = data.city.toLowerCase().trim();
+      }
+
+      // Facebook identifiers (if captured during registration)
+      if (data.fbp) userData.fbp = data.fbp;
+      if (data.fbc) userData.fbc = data.fbc;
+      if (data.fbclid) userData.fbc = `fb.1.${Date.now()}.${data.fbclid}`;
+
+      const capiResult = await trackCAPILead({
+        userData,
+        contentName: `${providerType}_signup`,
+        contentCategory: providerType,
+        eventSourceUrl: "https://sos-expat.com/become-provider",
+      });
+
+      if (capiResult.success) {
+        console.log(`✅ [CAPI Provider] Lead tracked for ${providerType} ${uid}`, {
+          eventId: capiResult.eventId,
+        });
+
+        // Store CAPI tracking info
+        await admin.firestore().collection("sos_profiles").doc(uid).update({
+          "capiTracking.signupLeadEventId": capiResult.eventId,
+          "capiTracking.signupTrackedAt": admin.firestore.FieldValue.serverTimestamp(),
+        });
+      } else {
+        console.warn(`⚠️ [CAPI Provider] Failed to track lead for ${uid}:`, capiResult.error);
+      }
+    } catch (capiError) {
+      // Don't fail the trigger if CAPI tracking fails
+      console.error(`❌ [CAPI Provider] Error tracking lead for ${uid}:`, capiError);
+    }
+    // ========== END META CAPI TRACKING ==========
 
     // ⚠️ CORRECTION CRITIQUE: Définir les Custom Claims Firebase pour le provider
     // Sans cela, les Firestore Rules qui utilisent request.auth.token.role ne fonctionnent pas

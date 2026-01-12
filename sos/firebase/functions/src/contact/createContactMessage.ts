@@ -13,6 +13,7 @@
 import { onRequest } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import { Timestamp } from "firebase-admin/firestore";
+import { META_CAPI_TOKEN, trackCAPILead, UserData } from "../metaConversionsApi";
 
 const REGION = "europe-west1";
 
@@ -121,6 +122,7 @@ export const createContactMessage = onRequest(
     region: REGION,
     cors: true,
     maxInstances: 10,
+    secrets: [META_CAPI_TOKEN],
   },
   async (req, res) => {
     // Seulement POST
@@ -172,6 +174,58 @@ export const createContactMessage = onRequest(
       });
 
       console.log(`[createContactMessage] Message created: ${messageDoc.id}`);
+
+      // ========== META CAPI TRACKING ==========
+      // Track Lead event for contact form submissions
+      try {
+        const userData: UserData = {
+          em: validation.data.email,
+          client_ip_address: clientIp !== "unknown" ? clientIp : undefined,
+          client_user_agent: req.headers["user-agent"]?.toString(),
+        };
+
+        // Extract name if provided
+        if (validation.data.name) {
+          const nameParts = validation.data.name.split(" ");
+          if (nameParts.length > 0) userData.fn = nameParts[0].toLowerCase().trim();
+          if (nameParts.length > 1) userData.ln = nameParts.slice(1).join(" ").toLowerCase().trim();
+        }
+
+        // Extract phone if provided
+        if (validation.data.phone) {
+          userData.ph = validation.data.phone.replace(/[^0-9+]/g, "");
+        }
+
+        // Extract fbp/fbc from request body if sent from frontend
+        const body = req.body as Record<string, unknown>;
+        if (typeof body.fbp === "string") userData.fbp = body.fbp;
+        if (typeof body.fbc === "string") userData.fbc = body.fbc;
+
+        const capiResult = await trackCAPILead({
+          userData,
+          contentName: "contact_form",
+          contentCategory: "contact",
+          eventSourceUrl: req.headers["referer"]?.toString() || "https://sos-expat.com/contact",
+        });
+
+        if (capiResult.success) {
+          console.log(`✅ [CAPI Contact] Lead tracked for message ${messageDoc.id}`, {
+            eventId: capiResult.eventId,
+          });
+
+          // Store CAPI tracking info
+          await messageDoc.update({
+            "capiTracking.leadEventId": capiResult.eventId,
+            "capiTracking.trackedAt": Timestamp.now(),
+          });
+        } else {
+          console.warn(`⚠️ [CAPI Contact] Failed to track lead:`, capiResult.error);
+        }
+      } catch (capiError) {
+        // Don't fail the request if CAPI tracking fails
+        console.error(`❌ [CAPI Contact] Error tracking lead:`, capiError);
+      }
+      // ========== END META CAPI TRACKING ==========
 
       res.status(201).json({
         success: true,

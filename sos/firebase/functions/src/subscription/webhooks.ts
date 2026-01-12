@@ -11,6 +11,7 @@
 import * as admin from 'firebase-admin';
 import Stripe from 'stripe';
 import { logger } from 'firebase-functions';
+import { trackCAPIPurchase, UserData } from '../metaConversionsApi';
 
 // ============================================================================
 // TYPES
@@ -497,6 +498,74 @@ export async function handleSubscriptionCreated(
         logger.info(`[handleSubscriptionCreated] Reactivated sos_profile for ${providerId}`);
       }
     }
+
+    // ========== META CAPI TRACKING ==========
+    // Track Purchase event for subscription creation (provider subscribing to a plan)
+    try {
+      const providerDoc = await db.doc(`sos_profiles/${providerId}`).get();
+      const providerData = providerDoc.data();
+
+      const userData: UserData = {
+        external_id: providerId,
+      };
+
+      if (providerData?.email) {
+        userData.em = providerData.email.toLowerCase().trim();
+      }
+      if (providerData?.phone || providerData?.phoneNumber) {
+        userData.ph = (providerData.phone || providerData.phoneNumber)?.replace(/[^0-9+]/g, "");
+      }
+      if (providerData?.firstName) {
+        userData.fn = providerData.firstName.toLowerCase().trim();
+      }
+      if (providerData?.lastName) {
+        userData.ln = providerData.lastName.toLowerCase().trim();
+      }
+      if (providerData?.country) {
+        userData.country = providerData.country.toLowerCase().trim();
+      }
+      // Facebook identifiers
+      if (providerData?.fbp) userData.fbp = providerData.fbp;
+      if (providerData?.fbc) userData.fbc = providerData.fbc;
+
+      // Calculate subscription value from Stripe
+      const subscriptionAmount = subscription.items.data[0]?.price.unit_amount || 0;
+      const subscriptionCurrency = subscription.currency?.toUpperCase() || 'EUR';
+
+      const capiResult = await trackCAPIPurchase({
+        userData,
+        value: subscriptionAmount / 100, // Convert from cents
+        currency: subscriptionCurrency,
+        orderId: subscription.id,
+        contentName: `subscription_${tier}_${billingPeriod}`,
+        contentCategory: 'subscription',
+        contentIds: [planId],
+        serviceType: 'provider_subscription',
+        providerType: providerData?.type || 'provider',
+        eventSourceUrl: 'https://sos-expat.com/dashboard/subscription',
+      });
+
+      if (capiResult.success) {
+        logger.info(`✅ [CAPI Subscription] Purchase tracked for ${providerId}`, {
+          eventId: capiResult.eventId,
+          amount: subscriptionAmount / 100,
+          currency: subscriptionCurrency,
+          tier,
+        });
+
+        // Store CAPI tracking info
+        await db.doc(`subscriptions/${providerId}`).update({
+          'capiTracking.purchaseEventId': capiResult.eventId,
+          'capiTracking.purchaseTrackedAt': admin.firestore.FieldValue.serverTimestamp(),
+        });
+      } else {
+        logger.warn(`⚠️ [CAPI Subscription] Failed to track purchase for ${providerId}:`, capiResult.error);
+      }
+    } catch (capiError) {
+      // Don't fail the webhook if CAPI tracking fails
+      logger.error(`❌ [CAPI Subscription] Error tracking purchase for ${providerId}:`, capiError);
+    }
+    // ========== END META CAPI TRACKING ==========
 
     // Logger l'action
     await logSubscriptionAction({
@@ -1099,6 +1168,73 @@ export async function handleInvoicePaid(
     } catch {
       // Pas de dunning record, c'est normal
     }
+
+    // ========== META CAPI TRACKING ==========
+    // Track Purchase event for subscription payment (renewal or first payment)
+    try {
+      const providerDoc = await db.doc(`sos_profiles/${providerId}`).get();
+      const providerData = providerDoc.data();
+
+      const userData: UserData = {
+        external_id: providerId,
+      };
+
+      if (providerData?.email) {
+        userData.em = providerData.email.toLowerCase().trim();
+      }
+      if (providerData?.phone || providerData?.phoneNumber) {
+        userData.ph = (providerData.phone || providerData.phoneNumber)?.replace(/[^0-9+]/g, "");
+      }
+      if (providerData?.firstName) {
+        userData.fn = providerData.firstName.toLowerCase().trim();
+      }
+      if (providerData?.lastName) {
+        userData.ln = providerData.lastName.toLowerCase().trim();
+      }
+      if (providerData?.country) {
+        userData.country = providerData.country.toLowerCase().trim();
+      }
+      // Facebook identifiers
+      if (providerData?.fbp) userData.fbp = providerData.fbp;
+      if (providerData?.fbc) userData.fbc = providerData.fbc;
+
+      const invoiceAmount = (invoice.amount_paid || 0) / 100;
+      const invoiceCurrency = (invoice.currency || 'eur').toUpperCase();
+
+      const capiResult = await trackCAPIPurchase({
+        userData,
+        value: invoiceAmount,
+        currency: invoiceCurrency,
+        orderId: invoice.id,
+        contentName: isRenewal ? `subscription_renewal_${subData.tier}` : `subscription_payment_${subData.tier}`,
+        contentCategory: 'subscription',
+        contentIds: [subData.planId || 'subscription'],
+        serviceType: 'provider_subscription',
+        providerType: providerData?.type || 'provider',
+        eventSourceUrl: 'https://sos-expat.com/dashboard/subscription',
+      });
+
+      if (capiResult.success) {
+        logger.info(`✅ [CAPI Invoice] Purchase tracked for ${providerId}`, {
+          eventId: capiResult.eventId,
+          amount: invoiceAmount,
+          currency: invoiceCurrency,
+          isRenewal,
+        });
+
+        // Store CAPI tracking info
+        await db.collection('invoices').doc(invoice.id).update({
+          'capiTracking.purchaseEventId': capiResult.eventId,
+          'capiTracking.purchaseTrackedAt': admin.firestore.FieldValue.serverTimestamp(),
+        });
+      } else {
+        logger.warn(`⚠️ [CAPI Invoice] Failed to track purchase for ${providerId}:`, capiResult.error);
+      }
+    } catch (capiError) {
+      // Don't fail the webhook if CAPI tracking fails
+      logger.error(`❌ [CAPI Invoice] Error tracking purchase for ${providerId}:`, capiError);
+    }
+    // ========== END META CAPI TRACKING ==========
 
     // Logger l'action
     await logSubscriptionAction({

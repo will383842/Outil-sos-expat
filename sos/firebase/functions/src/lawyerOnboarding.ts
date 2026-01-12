@@ -1,6 +1,12 @@
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { defineSecret } from "firebase-functions/params";
 import { getStripe } from "./index";
+import { trackCAPILead, UserData } from "./metaConversionsApi";
+
+// Secret for Meta CAPI - used in secrets array below
+const META_CAPI_TOKEN = defineSecret("META_CAPI_TOKEN");
+void META_CAPI_TOKEN; // Suppress TS unused warning - actually used in secrets array
 
 interface LawyerOnboardingData {
   firstName: string;
@@ -24,6 +30,9 @@ interface LawyerOnboardingData {
 }
 
 export const completeLawyerOnboarding = onCall<LawyerOnboardingData>(
+  {
+    secrets: [META_CAPI_TOKEN],
+  },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "User must be authenticated");
@@ -117,7 +126,46 @@ export const completeLawyerOnboarding = onCall<LawyerOnboardingData>(
       console.log("✅ Firestore updated");
 
       // ==========================================
-      // STEP 4: Return Onboarding URL
+      // STEP 4: META CAPI TRACKING
+      // ==========================================
+      // Track Lead event for lawyer profile submission
+      try {
+        const userData: UserData = {
+          external_id: userId,
+          em: data.email?.toLowerCase().trim(),
+          ph: data.phone?.replace(/[^0-9+]/g, ""),
+          fn: data.firstName?.toLowerCase().trim(),
+          ln: data.lastName?.toLowerCase().trim(),
+          country: (data.currentCountry || data.currentPresenceCountry)?.toLowerCase().trim(),
+        };
+
+        const capiResult = await trackCAPILead({
+          userData,
+          contentName: "lawyer_onboarding",
+          contentCategory: "lawyer",
+          eventSourceUrl: "https://sos-expat.com/register/lawyer",
+        });
+
+        if (capiResult.success) {
+          console.log(`✅ [CAPI Lawyer] Lead tracked for ${userId}`, {
+            eventId: capiResult.eventId,
+          });
+
+          // Store CAPI tracking info
+          await lawyerRef.update({
+            "capiTracking.onboardingLeadEventId": capiResult.eventId,
+            "capiTracking.onboardingTrackedAt": admin.firestore.FieldValue.serverTimestamp(),
+          });
+        } else {
+          console.warn(`⚠️ [CAPI Lawyer] Failed to track lead:`, capiResult.error);
+        }
+      } catch (capiError) {
+        // Don't fail the onboarding if CAPI tracking fails
+        console.error(`❌ [CAPI Lawyer] Error tracking lead:`, capiError);
+      }
+
+      // ==========================================
+      // STEP 5: Return Onboarding URL
       // ==========================================
       return {
         success: true,
