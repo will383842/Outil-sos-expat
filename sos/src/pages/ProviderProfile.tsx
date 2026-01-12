@@ -77,10 +77,12 @@ import {
 } from "../utils/formatters";
 
 // ✅ Import du système de slugs
-import { 
-  generateSlug, 
+import {
+  generateSlug,
   formatPublicName,
-  slugify 
+  slugify,
+  extractShortIdFromSlug,
+  generateShortId
 } from "../utils/slugGenerator";
 import { useSnippetGenerator } from '../hooks/useSnippetGenerator';
 
@@ -1041,9 +1043,75 @@ const ProviderProfile: React.FC = () => {
           }
         }
 
+        // ✅ Pattern 4: NOUVEAU FORMAT SEO - ShortId (6 caractères à la fin)
+        // Ex: "julien-visa-k7m2p9" → shortId = "k7m2p9"
+        let detectedShortId: string | null = null;
+        const nameSlugValue = nameSlug || params.slug || location.pathname.split("/").pop();
+        if (nameSlugValue) {
+          detectedShortId = extractShortIdFromSlug(`/${nameSlugValue}`);
+          if (detectedShortId) {
+            console.log(`🔍 [ProviderProfile] Detected ShortId: ${detectedShortId}`);
+          }
+        }
+
         // Mettre les IDs extraits en premier (plus probables), puis les IDs bruts
         const potentialUids = [...new Set([...extractedIds, ...rawIds])];
         console.log("🔍 [ProviderProfile] Potential UIDs to search (ordered):", potentialUids);
+
+        // ✅ PHASE 0: Recherche par ShortId (NOUVEAU FORMAT SEO)
+        // Si on a détecté un shortId, chercher le provider par ce shortId
+        if (detectedShortId && !providerData) {
+          console.log(`🔍 [ProviderProfile] PHASE 0: Searching by shortId: ${detectedShortId}`);
+          try {
+            // Chercher dans sos_profiles un document dont le shortId correspond
+            const shortIdQuery = query(
+              collection(db, 'sos_profiles'),
+              where('shortId', '==', detectedShortId),
+              where('isActive', '==', true),
+              limit(1)
+            );
+            const shortIdSnapshot = await getDocs(shortIdQuery);
+
+            if (!shortIdSnapshot.empty) {
+              const docSnap = shortIdSnapshot.docs[0];
+              const data = docSnap.data();
+              const normalized = normalizeUserData(data, docSnap.id);
+              const { type: _type, education: _education, ...restNormalized } = normalized as any;
+              const safeType: "lawyer" | "expat" = (data?.type === "lawyer" || data?.type === "expat") ? data.type : "expat";
+              const safeProvider = { ...restNormalized, type: safeType, ...data };
+
+              providerData = {
+                ...restNormalized,
+                id: docSnap.id,
+                uid: normalized.uid || docSnap.id,
+                type: safeType,
+                description: pickDescription(safeProvider as any, preferredLangKey, intl),
+                specialties: toArrayFromAny(data?.specialties, preferredLangKey),
+                helpTypes: toArrayFromAny(data?.helpTypes, preferredLangKey),
+                operatingCountries: (() => {
+                  const opCountries = toArrayFromAny(data?.operatingCountries, preferredLangKey);
+                  if (opCountries.length > 0) return opCountries;
+                  const practiceCountries = toArrayFromAny(data?.practiceCountries, preferredLangKey);
+                  if (practiceCountries.length > 0) return practiceCountries;
+                  return toArrayFromAny(data?.interventionCountries, preferredLangKey);
+                })(),
+                residenceCountry: data?.residenceCountry || data?.country,
+                education: data?.education,
+                yearsOfExperience: data?.yearsOfExperience || 0,
+                yearsAsExpat: data?.yearsAsExpat || data?.yearsOfExperience || 0,
+                rating: data?.rating || data?.averageRating || 0,
+                reviewCount: data?.reviewCount || 0,
+                totalCalls: data?.totalCalls || 0,
+                createdAt: data?.createdAt,
+                isOnline: !!data?.isOnline,
+              } as SosProfile;
+              foundProviderId = docSnap.id;
+              console.log(`✅ [ProviderProfile] Found via ShortId: ${foundProviderId}`);
+            }
+          } catch (shortIdErr) {
+            console.warn('ShortId search error:', shortIdErr);
+          }
+        }
 
         // PHASE 1: Essayer TOUS les IDs via REST API (rapide, pas de timeout)
         for (const testId of potentialUids) {

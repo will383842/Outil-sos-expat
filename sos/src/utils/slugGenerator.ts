@@ -1,18 +1,72 @@
 /**
  * 🌍 GÉNÉRATEUR DE SLUG SEO UNIVERSEL - 197 PAYS
  * =================================================
- * 
- * Structure : /{locale}/{category-country}/{name-specialty}
- * Maximum : 70 caractères garantis
- * 
+ *
+ * NOUVEAU FORMAT OPTIMISE SEO (< 70 caracteres):
+ * /{lang}/{role-pays}/{prenom-specialite-shortid}
+ *
  * ⚠️ RÈGLE STRICTE : PRÉNOM SEUL dans les slugs (pas de nom de famille)
- * 
- * Exemples :
- * - /fr-th/avocat-thailande/pierre-ecommerce
- * - /en-us/lawyer-thailand/john-immigration
- * - /ar-ae/lawyer-thailand/fawad-business
- * - /fr/avocat-thailande/pierre-ecommerce (fallback)
+ *
+ * Exemples par langue:
+ * - FR: /fr/avocat-thailande/julien-visa-k7m2p9
+ * - EN: /en/lawyer-thailand/julien-visa-k7m2p9
+ * - ES: /es/abogado-tailandia/julien-visa-k7m2p9
+ * - DE: /de/anwalt-thailand/julien-visum-k7m2p9
+ *
+ * Avantages:
+ * - Maximum 50-60 caracteres (vs 85+ avant)
+ * - Mots-cles SEO optimises et traduits
+ * - ShortId de 6 caracteres (vs 28 chars Firebase UID)
+ * - 100% multilingue
  */
+
+import { getSpecialtySlug, getFirstSpecialtySlug } from '../data/specialty-slug-mappings';
+
+// ==========================================
+// 🔑 GÉNÉRATION DE SHORT ID (6 caractères)
+// ==========================================
+
+/**
+ * Caractères alphanumériques pour shortId (sans caractères ambigus)
+ * Exclut: 0/O, 1/l/I pour éviter confusion
+ */
+const SHORT_ID_CHARS = '23456789abcdefghjkmnpqrstuvwxyz';
+
+/**
+ * Génère un shortId de 6 caractères à partir d'un Firebase UID
+ * Le même UID génère toujours le même shortId (déterministe)
+ */
+export function generateShortId(firebaseUid: string): string {
+  let hash = 0;
+  for (let i = 0; i < firebaseUid.length; i++) {
+    const char = firebaseUid.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+
+  // Utiliser le hash absolu pour générer le shortId
+  const absHash = Math.abs(hash);
+  let shortId = '';
+  let remaining = absHash;
+
+  for (let i = 0; i < 6; i++) {
+    shortId += SHORT_ID_CHARS[remaining % SHORT_ID_CHARS.length];
+    remaining = Math.floor(remaining / SHORT_ID_CHARS.length);
+  }
+
+  return shortId;
+}
+
+/**
+ * Extrait le shortId d'un slug
+ * Ex: "julien-visa-k7m2p9" → "k7m2p9"
+ */
+export function extractShortIdFromSlug(slug: string): string | null {
+  const parts = slug.split('/');
+  const lastPart = parts[parts.length - 1];
+  const match = lastPart.match(/-([a-z0-9]{6})$/);
+  return match ? match[1] : null;
+}
 
 // ==========================================
 // 🌐 LOCALES COMPOSÉES (langue-pays)
@@ -733,13 +787,19 @@ export interface GenerateSlugOptions {
   specialties: string[];
   locale?: string;
   userCountry?: string;
+  /** Firebase UID pour générer le shortId */
+  uid?: string;
 }
 
 /**
- * 🌍 GÉNÈRE UN SLUG SEO (MAX 70 CARACTÈRES)
- * 
+ * 🌍 GÉNÈRE UN SLUG SEO OPTIMISÉ (MAX 70 CARACTÈRES)
+ *
+ * NOUVEAU FORMAT: /{lang}/{role-pays}/{prenom-specialite-shortid}
+ *
  * ⚠️ PRÉNOM SEUL dans le slug (protection vie privée)
- * 
+ * ✅ Spécialités traduites et courtes (max 15 chars)
+ * ✅ ShortId de 6 caractères (au lieu de 28 chars Firebase UID)
+ *
  * @example
  * generateSlug({
  *   firstName: 'Pierre',
@@ -747,66 +807,116 @@ export interface GenerateSlugOptions {
  *   role: 'lawyer',
  *   country: 'Thaïlande',
  *   languages: ['Français'],
- *   specialties: ['E-commerce'],
+ *   specialties: ['IMMI_VISAS_PERMIS_SEJOUR'],
  *   locale: 'fr',
- *   userCountry: 'Thaïlande'
+ *   uid: 'DfDbWASBaeaVEZrqg6Wlcd3zpYX2'
  * })
- * // Retourne : "fr-th/avocat-thailande/pierre-ecommerce"
+ * // FR: "fr/avocat-thailande/pierre-visa-k7m2p9" (~42 chars)
+ * // EN: "en/lawyer-thailand/pierre-visa-k7m2p9" (~40 chars)
+ * // ES: "es/abogado-tailandia/pierre-visa-k7m2p9" (~44 chars)
  */
 export function generateSlug(options: GenerateSlugOptions): string {
-  const { 
-    firstName, 
-    role, 
-    country, 
-    languages, 
-    specialties, 
+  const {
+    firstName,
+    role,
+    country,
+    languages,
+    specialties,
     locale: providedLocale,
-    userCountry 
+    userCountry,
+    uid
   } = options;
-  
-  // Déterminer la locale (simple ou composée)
+
+  // Déterminer la langue (simple, sans pays)
   const userLanguage = languages[0] || 'Français';
   const userLangCode = getLanguageCode(userLanguage);
-  
-  let locale = providedLocale || userLangCode;
-  
-  // Si on a un pays utilisateur, essayer de créer une locale composée
-  if (userCountry && !locale.includes('-')) {
-    const countryCode = getCountryCode(userCountry);
-    const composedLocale = buildLocale(locale, countryCode);
-    if (isValidLocale(composedLocale)) {
-      locale = composedLocale;
-    }
+
+  // On utilise une locale simple (fr, en, es...) pour des URLs plus courtes
+  let baseLang = providedLocale?.split('-')[0] || userLangCode;
+
+  // Fallback to 'fr' for non-standard languages
+  const supportedLangs = ['fr', 'en', 'es', 'de', 'pt', 'ru', 'zh', 'ar', 'hi'];
+  if (!supportedLangs.includes(baseLang)) {
+    baseLang = 'fr';
   }
-  
-  // Extraire la langue de base pour les traductions
-  const baseLang = locale.split('-')[0];
-  
+
+  // Traduire le rôle et le pays
   const roleWord = getRoleTranslation(role, baseLang);
   const countryWord = getCountryTranslation(country, baseLang);
   const categoryCountry = `${roleWord}-${countryWord}`;
-  
+
   // ✅ PRÉNOM SEUL (pas de nom de famille)
   const firstNameSlug = slugify(firstName);
-  const specialtySlug = specialties.length > 0 ? slugify(specialties[0]) : '';
-  
-  const basePath = `${locale}/${categoryCountry}`;
-  const maxFinalPartLength = 70 - basePath.length - 1;
-  
-  let finalPart = specialtySlug ? `${firstNameSlug}-${specialtySlug}` : firstNameSlug;
-  
-  if (finalPart.length > maxFinalPartLength) {
-    const maxSpecialtyLength = maxFinalPartLength - firstNameSlug.length - 1;
-    if (maxSpecialtyLength >= 5 && specialtySlug) {
-      const truncatedSpecialty = truncateAtWordBoundary(specialtySlug, maxSpecialtyLength);
-      finalPart = `${firstNameSlug}-${truncatedSpecialty}`;
+
+  // ✅ SPÉCIALITÉ TRADUITE ET COURTE (depuis le mapping)
+  const providerType = role === 'lawyer' ? 'lawyer' : 'expat';
+  const specialtySlug = specialties.length > 0
+    ? getSpecialtySlug(specialties[0], baseLang, providerType)
+    : '';
+
+  // ✅ SHORT ID (6 caractères)
+  const shortId = uid ? generateShortId(uid) : '';
+
+  // Construire le slug final
+  // Format: {lang}/{role-pays}/{prenom-specialite-shortid}
+  const basePath = `${baseLang}/${categoryCountry}`;
+
+  // Calculer l'espace disponible pour la partie finale
+  // Format: prenom-specialite-shortid (shortId = 6 chars + tiret = 7)
+  const shortIdPart = shortId ? `-${shortId}` : '';
+  const maxFinalPartLength = 70 - basePath.length - 1 - shortIdPart.length;
+
+  let namePart = firstNameSlug;
+
+  // Ajouter la spécialité si l'espace le permet
+  if (specialtySlug) {
+    const withSpecialty = `${firstNameSlug}-${specialtySlug}`;
+    if (withSpecialty.length <= maxFinalPartLength) {
+      namePart = withSpecialty;
     } else {
-      finalPart = firstNameSlug;
+      // Tronquer la spécialité si nécessaire
+      const maxSpecialtyLength = maxFinalPartLength - firstNameSlug.length - 1;
+      if (maxSpecialtyLength >= 4) {
+        const truncatedSpecialty = truncateAtWordBoundary(specialtySlug, maxSpecialtyLength);
+        namePart = `${firstNameSlug}-${truncatedSpecialty}`;
+      }
     }
   }
-  
+
+  // Assembler le slug final
+  const finalPart = shortId ? `${namePart}-${shortId}` : namePart;
   const finalSlug = `${basePath}/${finalPart}`;
+
   return finalSlug.length > 70 ? finalSlug.substring(0, 70) : finalSlug;
+}
+
+/**
+ * 🔄 GÉNÈRE TOUS LES SLUGS MULTILINGUES POUR UN PRESTATAIRE
+ *
+ * Génère les 9 versions du slug dans chaque langue supportée
+ * pour le système hreflang.
+ *
+ * @example
+ * generateMultilingualSlugs({...})
+ * // → {
+ * //     fr: 'fr/avocat-thailande/pierre-visa-k7m2p9',
+ * //     en: 'en/lawyer-thailand/pierre-visa-k7m2p9',
+ * //     es: 'es/abogado-tailandia/pierre-visa-k7m2p9',
+ * //     ...
+ * //   }
+ */
+export function generateMultilingualSlugs(options: GenerateSlugOptions): Record<string, string> {
+  const supportedLangs = ['fr', 'en', 'es', 'de', 'pt', 'ru', 'zh', 'ar', 'hi'];
+  const slugs: Record<string, string> = {};
+
+  for (const lang of supportedLangs) {
+    slugs[lang] = generateSlug({
+      ...options,
+      locale: lang
+    });
+  }
+
+  return slugs;
 }
 
 /**
@@ -874,4 +984,5 @@ export {
   COUNTRY_TRANSLATIONS,
   ROLE_TRANSLATIONS,
   COUNTRY_TO_ISO_CODE,
+  SHORT_ID_CHARS,
 };

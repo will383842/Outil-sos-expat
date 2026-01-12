@@ -67,6 +67,7 @@ const RegisterExpat = lazy(() => import('./pages/RegisterExpat'));
 const RegisterLawyer = lazy(() => import('./pages/RegisterLawyer'));
 const RegisterClient = lazy(() => import('./pages/RegisterClient'));
 const PasswordReset = lazy(() => import('./pages/PasswordReset'));
+const PasswordResetConfirm = lazy(() => import('./pages/PasswordResetConfirm'));
 
 // Utilisateur
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -146,6 +147,7 @@ const routeConfigs: RouteConfig[] = [
   { path: "/register/lawyer", component: RegisterLawyer, translated: "register-lawyer" },
   { path: "/register/expat", component: RegisterExpat, translated: "register-expat" },
   { path: "/password-reset", component: PasswordReset, translated: "password-reset" },
+  { path: "/password-reset-confirm", component: PasswordResetConfirm },
 
   // Tarifs (alias FR/EN)
   { path: "/tarifs", component: Pricing, alias: "/pricing", preload: true, translated: "pricing" },
@@ -195,12 +197,29 @@ const routeConfigs: RouteConfig[] = [
   // Fournisseurs publics (utilise SOSCall sans wizard)
   { path: "/providers", component: SOSCall, alias: "/nos-experts", translated: "providers" },
   { path: "/provider/:id", component: ProviderProfile },
-  // Simplified route patterns - just type and slug
+
+  // ====================================
+  // NOUVEAU FORMAT SEO OPTIMISÉ (< 70 chars)
+  // Format: /{lang}/{role-pays}/{prenom-specialite-shortid}
+  // Ex: /fr/avocat-thailande/julien-visa-k7m2p9
+  // ====================================
+  { path: "/fr/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/en/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/es/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/de/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/pt/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/ru/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/zh/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/ar/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/hi/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+
+  // Simplified route patterns - just type and slug (rétrocompatibilité)
   { path: "/avocat/:slug", component: ProviderProfile, translated: "lawyer" },
   { path: "/lawyers/:slug", component: ProviderProfile, translated: "lawyer" },
   { path: "/expatrie/:slug", component: ProviderProfile, translated: "expat" },
   { path: "/expats/:slug", component: ProviderProfile, translated: "expat" },
-  // Legacy routes for backward compatibility
+
+  // Legacy routes for backward compatibility (ancien format)
   { path: "/avocat/:country/:language/:nameId", component: ProviderProfile, translated: "lawyer" },
   { path: "/avocat/:country/:language/*", component: ProviderProfile, translated: "lawyer" },
   { path: "/expatrie/:country/:language/:nameId", component: ProviderProfile, translated: "expat" },
