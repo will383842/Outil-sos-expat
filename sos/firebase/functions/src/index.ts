@@ -4711,3 +4711,7 @@ export {
   initializeThresholdTracking,
   triggerThresholdRecalculation,
 } from './thresholds';
+
+// ========== MIGRATIONS ==========
+// Scripts de migration one-time
+export { migrateProviderSlugs } from './migrations/migrateProviderSlugs';
