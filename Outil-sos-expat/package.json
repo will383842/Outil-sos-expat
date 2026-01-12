@@ -16,6 +16,7 @@
   "scripts": {
     "dev": "vite --host",
     "build": "vite build && npm run build:functions",
+    "build:pages": "vite build",
     "build:strict": "npm run type-check && vite build && npm run build:functions",
     "build:functions": "cd functions && npm run build",
     "lint": "eslint . --max-warnings 0",
