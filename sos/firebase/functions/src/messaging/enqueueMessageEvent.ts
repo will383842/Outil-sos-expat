@@ -1,7 +1,27 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 
-const db = admin.firestore();
+// Lazy initialization to prevent deployment timeout
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
+}
+
+function getDb() {
+  ensureInitialized();
+  return admin.firestore();
+}
 
 export const enqueueMessageEvent = onCall({ region: "europe-west1" }, async (req) => {
 
@@ -27,7 +47,7 @@ export const enqueueMessageEvent = onCall({ region: "europe-west1" }, async (req
     requestedBy: authUid,
     createdAt: admin.firestore.FieldValue.serverTimestamp()};
 
-    await db.collection("message_events").add(doc);
+    await getDb().collection("message_events").add(doc);
     console.log("enqueueMessageEvent done - Event added to queue");
     return { ok: true };
     console.log("enqueueMessageEvent done");

@@ -1,7 +1,26 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 
-const db = admin.firestore();
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
+}
+
+function getDb() {
+  ensureInitialized();
+  return admin.firestore();
+}
 
 export const setProviderOffline = onCall(async (request) => {
   // Vérifier l'authentification
@@ -17,7 +36,7 @@ export const setProviderOffline = onCall(async (request) => {
 
   try {
     // Vérifier que l'utilisateur est un prestataire
-    const userDoc = await db.collection('users').doc(userId).get();
+    const userDoc = await getDb().collection('users').doc(userId).get();
     const userData = userDoc.data();
 
     if (!userData) {
@@ -38,7 +57,7 @@ export const setProviderOffline = onCall(async (request) => {
     }
 
     // Mettre à jour les deux collections en batch
-    const batch = db.batch();
+    const batch = getDb().batch();
 
     // ✅ P1 FIX: Nettoyer tous les champs de statut d'appel pour éviter les états incohérents
     const offlineUpdate = {
@@ -54,11 +73,11 @@ export const setProviderOffline = onCall(async (request) => {
     };
 
     // Mettre à jour sos_profiles
-    const profileRef = db.collection('sos_profiles').doc(userId);
+    const profileRef = getDb().collection('sos_profiles').doc(userId);
     batch.update(profileRef, offlineUpdate);
 
     // Mettre à jour users
-    const userRef = db.collection('users').doc(userId);
+    const userRef = getDb().collection('users').doc(userId);
     batch.update(userRef, offlineUpdate);
 
     await batch.commit();

@@ -9,6 +9,7 @@
  */
 
 import * as functions from "firebase-functions/v1";
+import { onCall as onCallV2, HttpsError as HttpsErrorV2 } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import { logger } from "firebase-functions";
 
@@ -396,27 +397,27 @@ function generateConfirmationCode(): string {
 /**
  * Génère un code de confirmation pour une restauration
  * L'admin doit retaper ce code pour confirmer la restauration
- * @updated 2026-01-13 - Force redeploy
+ * @updated 2026-01-13 - Migrated to Gen2 to avoid 10s load timeout
  */
-export const adminGetRestoreConfirmationCode = functions
-  .region("europe-west1")
-  .runWith({ timeoutSeconds: 30, memory: "128MB" })
-  .https.onCall(async (data: { backupId: string }, context) => {
-    if (!context.auth) {
-      throw new functions.https.HttpsError("unauthenticated", "Authentication required");
+export const adminGetRestoreConfirmationCode = onCallV2(
+  { region: "europe-west1", timeoutSeconds: 30, memory: "128MiB" },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsErrorV2("unauthenticated", "Authentication required");
     }
 
-    if (!(await isAdmin(context.auth.uid))) {
-      throw new functions.https.HttpsError("permission-denied", "Admin access required");
+    if (!(await isAdmin(request.auth.uid))) {
+      throw new HttpsErrorV2("permission-denied", "Admin access required");
     }
 
+    const data = request.data as { backupId: string };
     const code = generateConfirmationCode();
 
     // Log la demande de code (pour audit)
     const db = getDb();
     await db.collection("admin_audit_logs").add({
       action: "RESTORE_CONFIRMATION_CODE_REQUESTED",
-      adminId: context.auth.uid,
+      adminId: request.auth.uid,
       metadata: { backupId: data.backupId, codeGenerated: code },
       createdAt: admin.firestore.Timestamp.now(),
     });
@@ -427,7 +428,8 @@ export const adminGetRestoreConfirmationCode = functions
       message: "Tapez ce code exactement pour confirmer la restauration",
       expiresIn: "5 minutes", // Le code n'a pas vraiment d'expiration mais ça ajoute de l'urgence
     };
-  });
+  }
+);
 
 /**
  * Exécute une restauration Firestore via l'API importDocuments

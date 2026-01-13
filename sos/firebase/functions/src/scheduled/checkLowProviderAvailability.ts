@@ -7,6 +7,28 @@
 import * as functions from 'firebase-functions/v1';
 import * as admin from 'firebase-admin';
 
+// Lazy initialization to prevent deployment timeout
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
+}
+
+function getDb() {
+  ensureInitialized();
+  return admin.firestore();
+}
+
 // Configuration
 const CONFIG = {
   // Seuil minimum de prestataires en ligne
@@ -49,8 +71,6 @@ interface AlertRecord {
   details: ProviderStats;
 }
 
-// Initialiser Firestore
-const db = admin.firestore();
 
 /**
  * Vérifie si on est dans les heures de service
@@ -68,7 +88,7 @@ async function wasAlertSentRecently(alertType: string): Promise<boolean> {
   const minAgo = new Date();
   minAgo.setMinutes(minAgo.getMinutes() - CONFIG.MIN_ALERT_INTERVAL_MINUTES);
 
-  const recentAlerts = await db
+  const recentAlerts = await getDb()
     .collection(CONFIG.ALERTS_COLLECTION)
     .where('type', '==', alertType)
     .where('timestamp', '>', admin.firestore.Timestamp.fromDate(minAgo))
@@ -93,7 +113,7 @@ async function sendAlertEmail(
   // ou une intégration comme SendGrid/Mailgun
   for (const email of CONFIG.ADMIN_EMAILS) {
     try {
-      await db.collection('mail').add({
+      await getDb().collection('mail').add({
         to: email,
         message: {
           subject: `[SOS Expats ALERT] ${subject}`,
@@ -172,7 +192,7 @@ async function sendAlertEmail(
  * Récupère les statistiques actuelles des prestataires
  */
 async function getProviderStats(): Promise<ProviderStats> {
-  const snapshot = await db
+  const snapshot = await getDb()
     .collection('sos_profiles')
     .where('type', 'in', ['lawyer', 'expat'])
     .get();
@@ -184,7 +204,7 @@ async function getProviderStats(): Promise<ProviderStats> {
   let lawyersOnline = 0;
   let expatsOnline = 0;
 
-  snapshot.forEach((doc) => {
+  snapshot.forEach((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
     const data = doc.data();
     totalProviders++;
 
@@ -214,14 +234,14 @@ async function getProviderStats(): Promise<ProviderStats> {
  * Enregistre l'alerte dans l'historique
  */
 async function recordAlert(alert: AlertRecord): Promise<void> {
-  await db.collection(CONFIG.ALERTS_COLLECTION).add(alert);
+  await getDb().collection(CONFIG.ALERTS_COLLECTION).add(alert);
 }
 
 /**
  * Met à jour les statistiques temps réel pour le dashboard
  */
 async function updateRealtimeStats(stats: ProviderStats): Promise<void> {
-  await db.collection('admin_realtime').doc('provider_stats').set(
+  await getDb().collection('admin_realtime').doc('provider_stats').set(
     {
       ...stats,
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -361,13 +381,13 @@ export const getProviderAvailabilityStats = functions
       const stats = await getProviderStats();
 
       // Récupérer l'historique des alertes récentes
-      const recentAlerts = await db
+      const recentAlerts = await getDb()
         .collection(CONFIG.ALERTS_COLLECTION)
         .orderBy('timestamp', 'desc')
         .limit(10)
         .get();
 
-      const alerts = recentAlerts.docs.map((doc) => ({
+      const alerts = recentAlerts.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => ({
         id: doc.id,
         ...doc.data(),
       }));

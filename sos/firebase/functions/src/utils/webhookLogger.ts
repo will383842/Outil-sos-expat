@@ -15,7 +15,27 @@ import { defineSecret } from 'firebase-functions/params';
 // Secret Sentry DSN (optionnel)
 export const SENTRY_DSN = defineSecret('SENTRY_DSN');
 
-const db = admin.firestore();
+// Lazy initialization to prevent deployment timeout
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
+}
+
+function getDb() {
+  ensureInitialized();
+  return admin.firestore();
+}
 
 // ============================================================================
 // TYPES
@@ -135,7 +155,7 @@ export async function logWebhookReceived(
     updatedAt: now,
   };
 
-  const docRef = await db.collection('webhook_logs').add(log);
+  const docRef = await getDb().collection('webhook_logs').add(log);
 
   logger.info(`[Webhook:${source}] Reçu:`, {
     logId: docRef.id,
@@ -153,7 +173,7 @@ export async function logWebhookSuccess(
   logId: string,
   processingTimeMs: number
 ): Promise<void> {
-  await db.collection('webhook_logs').doc(logId).update({
+  await getDb().collection('webhook_logs').doc(logId).update({
     status: 'success',
     processingTimeMs,
     updatedAt: admin.firestore.Timestamp.now(),
@@ -183,14 +203,14 @@ export async function logWebhookError(
   };
 
   // Mettre à jour le log Firestore
-  await db.collection('webhook_logs').doc(logId).update({
+  await getDb().collection('webhook_logs').doc(logId).update({
     status: 'failed',
     error: errorData,
     updatedAt: admin.firestore.Timestamp.now(),
   });
 
   // Récupérer le log complet pour Sentry
-  const logDoc = await db.collection('webhook_logs').doc(logId).get();
+  const logDoc = await getDb().collection('webhook_logs').doc(logId).get();
   const logData = logDoc.data() as WebhookLog;
 
   // Logger vers Cloud Functions
@@ -230,7 +250,7 @@ export async function logWebhookError(
   }
 
   // Ajouter aux failed_webhooks pour review manuel
-  await db.collection('failed_webhooks').add({
+  await getDb().collection('failed_webhooks').add({
     webhookLogId: logId,
     source: logData?.source,
     eventType: logData?.eventType,
@@ -362,7 +382,7 @@ function sanitizePayload(
 export async function getFailedWebhooks(
   limit: number = 50
 ): Promise<Array<{ id: string; data: Record<string, unknown> }>> {
-  const snapshot = await db
+  const snapshot = await getDb()
     .collection('failed_webhooks')
     .where('requiresManualReview', '==', true)
     .where('reviewedAt', '==', null)
@@ -370,9 +390,9 @@ export async function getFailedWebhooks(
     .limit(limit)
     .get();
 
-  return snapshot.docs.map(doc => ({
+  return snapshot.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => ({
     id: doc.id,
-    data: doc.data(),
+    data: doc.data() as Record<string, unknown>,
   }));
 }
 
@@ -384,7 +404,7 @@ export async function markWebhookReviewed(
   resolution: 'resolved' | 'ignored' | 'retried',
   notes?: string
 ): Promise<void> {
-  await db.collection('failed_webhooks').doc(failedWebhookId).update({
+  await getDb().collection('failed_webhooks').doc(failedWebhookId).update({
     requiresManualReview: false,
     reviewedAt: admin.firestore.Timestamp.now(),
     resolution,

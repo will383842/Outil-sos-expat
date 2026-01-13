@@ -6,7 +6,26 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 
-const db = admin.firestore();
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
+}
+
+function getDb() {
+  ensureInitialized();
+  return admin.firestore();
+}
 
 // Les 9 langues supportées
 const SUPPORTED_LANGUAGES = ['fr', 'en', 'es', 'de', 'pt', 'ru', 'hi', 'ar', 'ch'];
@@ -230,7 +249,7 @@ export const adminResetFAQs = onCall(
       throw new HttpsError("unauthenticated", "Vous devez être connecté");
     }
 
-    const userDoc = await db.collection("users").doc(request.auth.uid).get();
+    const userDoc = await getDb().collection("users").doc(request.auth.uid).get();
     const userData = userDoc.data();
 
     if (!userData?.roles?.includes("admin") && !userData?.isAdmin) {
@@ -248,7 +267,7 @@ export const adminResetFAQs = onCall(
     try {
       // 1. Supprimer les FAQ existantes qui correspondent aux FAQ modifiées
       console.log("[adminResetFAQs] Suppression des FAQ existantes...");
-      const snapshot = await db.collection("faqs").get();
+      const snapshot = await getDb().collection("faqs").get();
 
       for (const doc of snapshot.docs) {
         const data = doc.data();
@@ -290,7 +309,7 @@ export const adminResetFAQs = onCall(
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
           };
 
-          await db.collection("faqs").add(faqData);
+          await getDb().collection("faqs").add(faqData);
           results.created++;
           console.log(`[adminResetFAQs] Créée: ${faq.question.substring(0, 40)}...`);
 

@@ -30,7 +30,27 @@ function getStripe(): Stripe {
   return stripeClient;
 }
 
-const db = admin.firestore();
+// Lazy initialization to prevent deployment timeout
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
+}
+
+function getDb() {
+  ensureInitialized();
+  return admin.firestore();
+}
 
 // ============================================================================
 // TYPES
@@ -127,7 +147,7 @@ export async function createDunningRecord(
     updatedAt: now,
   };
 
-  const docRef = await db.collection('dunning_records').add(dunningRecord);
+  const docRef = await getDb().collection('dunning_records').add(dunningRecord);
 
   logger.info('[Dunning] Record créé:', {
     dunningId: docRef.id,
@@ -204,7 +224,7 @@ export async function updateDunningStatus(
   dunningId: string,
   updates: Partial<DunningRecord>
 ): Promise<void> {
-  await db.collection('dunning_records').doc(dunningId).update({
+  await getDb().collection('dunning_records').doc(dunningId).update({
     ...updates,
     updatedAt: admin.firestore.Timestamp.now(),
   });
@@ -219,7 +239,7 @@ async function sendDunningEmail(
 ): Promise<string | null> {
   try {
     // Récupérer les infos utilisateur
-    const userDoc = await db.collection('users').doc(userId).get();
+    const userDoc = await getDb().collection('users').doc(userId).get();
     const userData = userDoc.data();
 
     if (!userData?.email) {
@@ -231,7 +251,7 @@ async function sendDunningEmail(
     if (!template) return null;
 
     // Créer l'entrée dans mail_queue pour envoi par Cloud Function dédiée
-    const emailDoc = await db.collection('mail_queue').add({
+    const emailDoc = await getDb().collection('mail_queue').add({
       to: userData.email,
       template: template.templateId,
       subject: template.subject,
@@ -262,7 +282,7 @@ async function sendDunningEmail(
 async function suspendSubscription(dunningRecord: DunningRecord): Promise<void> {
   try {
     // Mettre à jour le statut dans Firestore
-    await db.collection('subscriptions').doc(dunningRecord.userId).update({
+    await getDb().collection('subscriptions').doc(dunningRecord.userId).update({
       status: 'suspended',
       suspendedAt: admin.firestore.Timestamp.now(),
       suspensionReason: 'payment_failed',
@@ -294,7 +314,7 @@ async function suspendSubscription(dunningRecord: DunningRecord): Promise<void> 
 export async function markDunningRecovered(
   stripeInvoiceId: string
 ): Promise<void> {
-  const snapshot = await db
+  const snapshot = await getDb()
     .collection('dunning_records')
     .where('stripeInvoiceId', '==', stripeInvoiceId)
     .where('status', 'in', ['pending', 'retrying'])
@@ -311,7 +331,7 @@ export async function markDunningRecovered(
 
   // Réactiver l'abonnement si suspendu
   const dunningRecord = doc.data() as DunningRecord;
-  const subscriptionDoc = await db
+  const subscriptionDoc = await getDb()
     .collection('subscriptions')
     .doc(dunningRecord.userId)
     .get();
@@ -353,7 +373,7 @@ export const processDunningQueue = onSchedule(
     const now = admin.firestore.Timestamp.now();
 
     // Récupérer les dunning records à traiter
-    const snapshot = await db
+    const snapshot = await getDb()
       .collection('dunning_records')
       .where('status', 'in', ['pending', 'retrying'])
       .where('nextRetryDate', '<=', now)
@@ -398,7 +418,7 @@ export const processDunningQueue = onSchedule(
           });
 
           // Réactiver l'abonnement
-          await db.collection('subscriptions').doc(record.userId).update({
+          await getDb().collection('subscriptions').doc(record.userId).update({
             status: 'active',
             aiCallsUsed: 0, // Reset du compteur
             updatedAt: admin.firestore.Timestamp.now(),

@@ -20,7 +20,26 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import { logger } from "firebase-functions/v2";
 
-const db = admin.firestore();
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
+}
+
+function getDb() {
+  ensureInitialized();
+  return admin.firestore();
+}
 
 // ============================================================================
 // CONFIGURATION
@@ -132,7 +151,7 @@ async function logProviderAction(
 ): Promise<string> {
   const logId = `action_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-  await db.collection("provider_action_logs").doc(logId).set({
+  await getDb().collection("provider_action_logs").doc(logId).set({
     id: logId,
     adminUid,
     providerId,
@@ -163,7 +182,7 @@ async function notifyProvider(
 ): Promise<void> {
   try {
     // Get provider info for notification
-    const userDoc = await db.collection("users").doc(providerId).get();
+    const userDoc = await getDb().collection("users").doc(providerId).get();
     const userData = userDoc.data();
 
     if (!userData) {
@@ -172,7 +191,7 @@ async function notifyProvider(
     }
 
     // Create message event for notification pipeline
-    await db.collection("message_events").add({
+    await getDb().collection("message_events").add({
       eventId,
       locale: userData.preferredLanguage || "fr-FR",
       to: {
@@ -212,10 +231,10 @@ async function updateProviderAtomic(
   providerId: string,
   updateData: Record<string, unknown>
 ): Promise<void> {
-  const batch = db.batch();
+  const batch = getDb().batch();
 
-  const userRef = db.collection("users").doc(providerId);
-  const profileRef = db.collection("sos_profiles").doc(providerId);
+  const userRef = getDb().collection("users").doc(providerId);
+  const profileRef = getDb().collection("sos_profiles").doc(providerId);
 
   // Add updatedAt timestamp
   const dataWithTimestamp = {
@@ -238,7 +257,7 @@ async function updateProviderAtomic(
  * Verify provider exists
  */
 async function verifyProviderExists(providerId: string): Promise<boolean> {
-  const userDoc = await db.collection("users").doc(providerId).get();
+  const userDoc = await getDb().collection("users").doc(providerId).get();
   return userDoc.exists;
 }
 
@@ -600,7 +619,7 @@ export const hardDeleteProvider = onCall(HARD_DELETE_CONFIG, async (req) => {
   }
 
   // Get provider data before deletion for logging
-  const userDoc = await db.collection("users").doc(providerId).get();
+  const userDoc = await getDb().collection("users").doc(providerId).get();
   if (!userDoc.exists) {
     throw new HttpsError("not-found", `Provider ${providerId} not found`);
   }
@@ -630,7 +649,7 @@ export const hardDeleteProvider = onCall(HARD_DELETE_CONFIG, async (req) => {
   try {
     logger.info(`[PROVIDER_ACTION] Starting GDPR Article 17 hard delete for ${providerId}`);
 
-    await db.collection("gdpr_audit_logs").doc(gdprAuditId).set({
+    await getDb().collection("gdpr_audit_logs").doc(gdprAuditId).set({
       id: gdprAuditId,
       eventType: "GDPR_HARD_DELETE",
       providerId,
@@ -660,7 +679,7 @@ export const hardDeleteProvider = onCall(HARD_DELETE_CONFIG, async (req) => {
     // =========================================================================
     // STEP 1: Delete all sub-collections from sos_profiles
     // =========================================================================
-    const profileRef = db.collection("sos_profiles").doc(providerId);
+    const profileRef = getDb().collection("sos_profiles").doc(providerId);
     for (const subCollection of PROVIDER_SUB_COLLECTIONS) {
       try {
         const subDocs = await profileRef.collection(subCollection).listDocuments();
@@ -676,7 +695,7 @@ export const hardDeleteProvider = onCall(HARD_DELETE_CONFIG, async (req) => {
     // =========================================================================
     // STEP 2: Delete all sub-collections from users
     // =========================================================================
-    const userRef = db.collection("users").doc(providerId);
+    const userRef = getDb().collection("users").doc(providerId);
     for (const subCollection of PROVIDER_SUB_COLLECTIONS) {
       try {
         const subDocs = await userRef.collection(subCollection).listDocuments();
@@ -698,15 +717,15 @@ export const hardDeleteProvider = onCall(HARD_DELETE_CONFIG, async (req) => {
         let query: FirebaseFirestore.Query;
 
         if (isArray) {
-          query = db.collection(collectionName).where(field, "array-contains", providerId);
+          query = getDb().collection(collectionName).where(field, "array-contains", providerId);
         } else {
-          query = db.collection(collectionName).where(field, "==", providerId);
+          query = getDb().collection(collectionName).where(field, "==", providerId);
         }
 
         const docs = await query.get();
 
         if (docs.size > 0) {
-          const batch = db.batch();
+          const batch = getDb().batch();
           let count = 0;
 
           for (const doc of docs.docs) {
@@ -752,7 +771,7 @@ export const hardDeleteProvider = onCall(HARD_DELETE_CONFIG, async (req) => {
     // STEP 4: Delete KYC documents
     // =========================================================================
     try {
-      await db.collection("kyc_documents").doc(providerId).delete();
+      await getDb().collection("kyc_documents").doc(providerId).delete();
       deletionSummary.deletedCollections.push("kyc_documents");
       logger.info(`[PROVIDER_ACTION] Deleted KYC documents for ${providerId}`);
     } catch (kycError) {
@@ -763,9 +782,9 @@ export const hardDeleteProvider = onCall(HARD_DELETE_CONFIG, async (req) => {
     // STEP 5: Delete provider notifications
     // =========================================================================
     try {
-      const notificationsQuery = db.collection("notifications").where("userId", "==", providerId);
+      const notificationsQuery = getDb().collection("notifications").where("userId", "==", providerId);
       const notifications = await notificationsQuery.get();
-      const notifBatch = db.batch();
+      const notifBatch = getDb().batch();
       notifications.docs.forEach((doc) => notifBatch.delete(doc.ref));
       await notifBatch.commit();
       deletionSummary.deletedCollections.push("notifications");
@@ -816,7 +835,7 @@ export const hardDeleteProvider = onCall(HARD_DELETE_CONFIG, async (req) => {
     // =========================================================================
     // STEP 10: Update GDPR audit log with completion status
     // =========================================================================
-    await db.collection("gdpr_audit_logs").doc(gdprAuditId).update({
+    await getDb().collection("gdpr_audit_logs").doc(gdprAuditId).update({
       status: "completed",
       completedAt: admin.firestore.FieldValue.serverTimestamp(),
       summary: {
@@ -859,7 +878,7 @@ export const hardDeleteProvider = onCall(HARD_DELETE_CONFIG, async (req) => {
   } catch (error) {
     // Update GDPR audit log with failure status
     try {
-      await db.collection("gdpr_audit_logs").doc(gdprAuditId).update({
+      await getDb().collection("gdpr_audit_logs").doc(gdprAuditId).update({
         status: "failed",
         failedAt: admin.firestore.FieldValue.serverTimestamp(),
         error: error instanceof Error ? error.message : "Unknown error",
@@ -1423,14 +1442,14 @@ export const getProviderActionLogs = onCall(FUNCTION_CONFIG, async (req) => {
   }
 
   try {
-    const logsSnapshot = await db
+    const logsSnapshot = await getDb()
       .collection("provider_action_logs")
       .where("providerId", "==", providerId)
       .orderBy("timestamp", "desc")
       .limit(Math.min(queryLimit, 200))
       .get();
 
-    const logs = logsSnapshot.docs.map((doc) => {
+    const logs = logsSnapshot.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
       const data = doc.data();
       return {
         id: doc.id,
@@ -1467,7 +1486,7 @@ export const getAllProviderActionLogs = onCall(FUNCTION_CONFIG, async (req) => {
   const { limit: queryLimit = 100, action, startAfter } = req.data || {};
 
   try {
-    let query: FirebaseFirestore.Query = db
+    let query: FirebaseFirestore.Query = getDb()
       .collection("provider_action_logs")
       .orderBy("timestamp", "desc");
 
@@ -1476,7 +1495,7 @@ export const getAllProviderActionLogs = onCall(FUNCTION_CONFIG, async (req) => {
     }
 
     if (startAfter) {
-      const startDoc = await db.collection("provider_action_logs").doc(startAfter).get();
+      const startDoc = await getDb().collection("provider_action_logs").doc(startAfter).get();
       if (startDoc.exists) {
         query = query.startAfter(startDoc);
       }

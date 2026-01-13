@@ -13,7 +13,26 @@
 import * as admin from 'firebase-admin';
 import { logError } from '../utils/logs/logError';
 
-const db = admin.firestore();
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
+}
+
+function getDb() {
+  ensureInitialized();
+  return admin.firestore();
+}
 
 // =============================
 // Types
@@ -61,7 +80,7 @@ export async function setProviderBusy(
 
   try {
     // 1. Récupérer le statut actuel
-    const userRef = db.collection('users').doc(providerId);
+    const userRef = getDb().collection('users').doc(providerId);
     const userDoc = await userRef.get();
 
     if (!userDoc.exists) {
@@ -100,7 +119,7 @@ export async function setProviderBusy(
     }
 
     // 3. Mise à jour atomique avec batch
-    const batch = db.batch();
+    const batch = getDb().batch();
 
     const updateData = {
       availability: 'busy',
@@ -118,14 +137,14 @@ export async function setProviderBusy(
     batch.update(userRef, updateData);
 
     // Mettre à jour sos_profiles
-    const profileRef = db.collection('sos_profiles').doc(providerId);
+    const profileRef = getDb().collection('sos_profiles').doc(providerId);
     const profileDoc = await profileRef.get();
     if (profileDoc.exists) {
       batch.update(profileRef, updateData);
     }
 
     // Log d'audit
-    batch.set(db.collection('provider_status_logs').doc(), {
+    batch.set(getDb().collection('provider_status_logs').doc(), {
       providerId,
       action: 'SET_BUSY',
       previousStatus,
@@ -182,7 +201,7 @@ async function propagateBusyToSiblings(
   callSessionId: string,
   now: admin.firestore.Timestamp
 ): Promise<void> {
-  const batch = db.batch();
+  const batch = getDb().batch();
   let propagatedCount = 0;
 
   for (const siblingId of linkedProviderIds) {
@@ -190,7 +209,7 @@ async function propagateBusyToSiblings(
     if (siblingId === originProviderId) continue;
 
     try {
-      const siblingUserRef = db.collection('users').doc(siblingId);
+      const siblingUserRef = getDb().collection('users').doc(siblingId);
       const siblingUserDoc = await siblingUserRef.get();
 
       if (!siblingUserDoc.exists) {
@@ -223,14 +242,14 @@ async function propagateBusyToSiblings(
       batch.update(siblingUserRef, siblingUpdateData);
 
       // Mettre à jour sos_profiles
-      const siblingProfileRef = db.collection('sos_profiles').doc(siblingId);
+      const siblingProfileRef = getDb().collection('sos_profiles').doc(siblingId);
       const siblingProfileDoc = await siblingProfileRef.get();
       if (siblingProfileDoc.exists) {
         batch.update(siblingProfileRef, siblingUpdateData);
       }
 
       // Log d'audit
-      batch.set(db.collection('provider_status_logs').doc(), {
+      batch.set(getDb().collection('provider_status_logs').doc(), {
         providerId: siblingId,
         action: 'SET_BUSY_BY_SIBLING',
         previousStatus: siblingStatus || 'available',
@@ -268,7 +287,7 @@ export async function setProviderAvailable(
 
   try {
     // 1. Récupérer le statut actuel
-    const userRef = db.collection('users').doc(providerId);
+    const userRef = getDb().collection('users').doc(providerId);
     const userDoc = await userRef.get();
 
     if (!userDoc.exists) {
@@ -301,7 +320,7 @@ export async function setProviderAvailable(
     }
 
     // 3. Mise à jour atomique avec batch
-    const batch = db.batch();
+    const batch = getDb().batch();
 
     const updateData = {
       availability: 'available',
@@ -322,14 +341,14 @@ export async function setProviderAvailable(
     batch.update(userRef, updateData);
 
     // Mettre à jour sos_profiles
-    const profileRef = db.collection('sos_profiles').doc(providerId);
+    const profileRef = getDb().collection('sos_profiles').doc(providerId);
     const profileDoc = await profileRef.get();
     if (profileDoc.exists) {
       batch.update(profileRef, updateData);
     }
 
     // Log d'audit
-    batch.set(db.collection('provider_status_logs').doc(), {
+    batch.set(getDb().collection('provider_status_logs').doc(), {
       providerId,
       action: 'SET_AVAILABLE',
       previousStatus,
@@ -384,7 +403,7 @@ async function releaseSiblingsFromBusy(
   linkedProviderIds: string[],
   now: admin.firestore.Timestamp
 ): Promise<void> {
-  const batch = db.batch();
+  const batch = getDb().batch();
   let releasedCount = 0;
 
   for (const siblingId of linkedProviderIds) {
@@ -392,7 +411,7 @@ async function releaseSiblingsFromBusy(
     if (siblingId === originProviderId) continue;
 
     try {
-      const siblingUserRef = db.collection('users').doc(siblingId);
+      const siblingUserRef = getDb().collection('users').doc(siblingId);
       const siblingUserDoc = await siblingUserRef.get();
 
       if (!siblingUserDoc.exists) continue;
@@ -428,14 +447,14 @@ async function releaseSiblingsFromBusy(
       batch.update(siblingUserRef, releaseData);
 
       // Mettre à jour sos_profiles
-      const siblingProfileRef = db.collection('sos_profiles').doc(siblingId);
+      const siblingProfileRef = getDb().collection('sos_profiles').doc(siblingId);
       const siblingProfileDoc = await siblingProfileRef.get();
       if (siblingProfileDoc.exists) {
         batch.update(siblingProfileRef, releaseData);
       }
 
       // Log d'audit
-      batch.set(db.collection('provider_status_logs').doc(), {
+      batch.set(getDb().collection('provider_status_logs').doc(), {
         providerId: siblingId,
         action: 'RELEASE_FROM_SIBLING_BUSY',
         previousStatus: 'busy',
@@ -486,7 +505,7 @@ export async function updateProviderStatusAtomic(
   const now = admin.firestore.Timestamp.now();
 
   try {
-    const userRef = db.collection('users').doc(providerId);
+    const userRef = getDb().collection('users').doc(providerId);
     const userDoc = await userRef.get();
 
     if (!userDoc.exists) {
@@ -504,7 +523,7 @@ export async function updateProviderStatusAtomic(
     const previousStatus: AvailabilityStatus =
       (userData?.availability as AvailabilityStatus) || 'available';
 
-    const batch = db.batch();
+    const batch = getDb().batch();
 
     const updateData = {
       availability: newStatus,
@@ -516,14 +535,14 @@ export async function updateProviderStatusAtomic(
 
     batch.update(userRef, updateData);
 
-    const profileRef = db.collection('sos_profiles').doc(providerId);
+    const profileRef = getDb().collection('sos_profiles').doc(providerId);
     const profileDoc = await profileRef.get();
     if (profileDoc.exists) {
       batch.update(profileRef, updateData);
     }
 
     if (!options?.skipAuditLog) {
-      batch.set(db.collection('provider_status_logs').doc(), {
+      batch.set(getDb().collection('provider_status_logs').doc(), {
         providerId,
         action: `SET_${newStatus.toUpperCase()}`,
         previousStatus,
@@ -567,7 +586,7 @@ export async function updateProviderStatusAtomic(
  */
 export async function isProviderAvailable(providerId: string): Promise<boolean> {
   try {
-    const profileRef = db.collection('sos_profiles').doc(providerId);
+    const profileRef = getDb().collection('sos_profiles').doc(providerId);
     const profileDoc = await profileRef.get();
 
     if (!profileDoc.exists) {
@@ -598,7 +617,7 @@ export async function getProviderStatus(
   busySince?: admin.firestore.Timestamp;
 } | null> {
   try {
-    const profileRef = db.collection('sos_profiles').doc(providerId);
+    const profileRef = getDb().collection('sos_profiles').doc(providerId);
     const profileDoc = await profileRef.get();
 
     if (!profileDoc.exists) {

@@ -14,8 +14,27 @@ import { Timestamp } from "firebase-admin/firestore";
 // sendZoho import reserved for future direct email alerts
 // import { sendZoho } from "./providers/email/zohoSmtp";
 
-// Initialize Firestore
-const db = admin.firestore();
+// Lazy initialization to prevent deployment timeout
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
+}
+
+function getDb() {
+  ensureInitialized();
+  return admin.firestore();
+}
 
 // ==========================================
 // TYPES
@@ -75,14 +94,14 @@ interface AdminRecipient {
 async function getAdminRecipients(): Promise<AdminRecipient[]> {
   try {
     // Get admins from users collection
-    const adminsSnapshot = await db
+    const adminsSnapshot = await getDb()
       .collection("users")
       .where("role", "in", ["admin", "super_admin"])
       .get();
 
     const recipients: AdminRecipient[] = [];
 
-    adminsSnapshot.docs.forEach((doc) => {
+    adminsSnapshot.docs.forEach((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
       const data = doc.data();
       if (data.email) {
         recipients.push({
@@ -95,7 +114,7 @@ async function getAdminRecipients(): Promise<AdminRecipient[]> {
 
     // Fallback: if no admins found, try admin_alert_preferences
     if (recipients.length === 0) {
-      const prefsSnapshot = await db.collection("admin_alert_preferences").get();
+      const prefsSnapshot = await getDb().collection("admin_alert_preferences").get();
 
       prefsSnapshot.docs.forEach((doc) => {
         const data = doc.data();
@@ -129,7 +148,7 @@ async function isAlertInCooldown(
 ): Promise<boolean> {
   try {
     const cooldownKey = `budget_alert_${service}_${level}`;
-    const cooldownDoc = await db.collection("alert_cooldowns").doc(cooldownKey).get();
+    const cooldownDoc = await getDb().collection("alert_cooldowns").doc(cooldownKey).get();
 
     if (!cooldownDoc.exists) {
       return false;
@@ -158,7 +177,7 @@ async function markAlertSent(
   level: BudgetAlertLevel
 ): Promise<void> {
   const cooldownKey = `budget_alert_${service}_${level}`;
-  await db.collection("alert_cooldowns").doc(cooldownKey).set({
+  await getDb().collection("alert_cooldowns").doc(cooldownKey).set({
     service,
     level,
     lastSentAt: Timestamp.now(),
@@ -526,7 +545,7 @@ async function sendBudgetAlertNotification(
 
     try {
       // Create message_event for email delivery
-      await db.collection("message_events").add({
+      await getDb().collection("message_events").add({
         eventId: `budget.alert.${level}`,
         locale: recipient.locale,
         to: {
@@ -642,7 +661,7 @@ export async function checkBudgetAndAlert(
     await markAlertSent(service, alertLevel);
 
     // Log to admin_notifications collection for dashboard visibility
-    await db.collection("admin_notifications").add({
+    await getDb().collection("admin_notifications").add({
       type: "budget_alert",
       severity: alertLevel === "critical" ? "critical" : "high",
       title: alertLevel === "critical"
@@ -685,7 +704,7 @@ export async function checkAllBudgetsAndAlert(): Promise<Record<BudgetServiceTyp
 
   try {
     // Get budget config
-    const configDoc = await db.collection("budget_config").doc("default").get();
+    const configDoc = await getDb().collection("budget_config").doc("default").get();
     if (!configDoc.exists) {
       console.warn("[BudgetAlerts] No budget config found");
       return results;
@@ -701,7 +720,7 @@ export async function checkAllBudgetsAndAlert(): Promise<Record<BudgetServiceTyp
 
     // Get current costs (from cost_tracking collection)
     const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
-    const costsDoc = await db.collection("cost_tracking").doc(currentMonth).get();
+    const costsDoc = await getDb().collection("cost_tracking").doc(currentMonth).get();
     const costs = costsDoc.exists ? costsDoc.data() : {};
 
     const period = new Date().toLocaleDateString("fr-FR", { month: "long", year: "numeric" });

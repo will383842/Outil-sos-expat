@@ -36,7 +36,26 @@ import {
 // INITIALISATION
 // =============================================================================
 
-const db = admin.firestore();
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
+}
+
+function getDb() {
+  ensureInitialized();
+  return admin.firestore();
+}
 
 // Collections Firestore
 const COLLECTIONS = {
@@ -75,9 +94,9 @@ async function getNextSequence(
   type: 'PAYMENT' | 'REFUND' | 'PAYOUT' | 'SUBSCRIPTION',
   year: number
 ): Promise<number> {
-  const docRef = db.collection(COLLECTIONS.ACCOUNTING_SEQUENCES).doc(`${type}_${year}`);
+  const docRef = getDb().collection(COLLECTIONS.ACCOUNTING_SEQUENCES).doc(`${type}_${year}`);
 
-  const result = await db.runTransaction(async (transaction) => {
+  const result = await getDb().runTransaction(async (transaction) => {
     const doc = await transaction.get(docRef);
 
     if (!doc.exists) {
@@ -131,7 +150,7 @@ export class AccountingService {
       logger.info('AccountingService: Creating payment entry', { paymentId });
 
       // Recuperer les donnees du paiement
-      const paymentDoc = await db.collection(COLLECTIONS.PAYMENTS).doc(paymentId).get();
+      const paymentDoc = await getDb().collection(COLLECTIONS.PAYMENTS).doc(paymentId).get();
 
       if (!paymentDoc.exists) {
         logger.error('AccountingService: Payment not found', { paymentId });
@@ -145,7 +164,7 @@ export class AccountingService {
       }
 
       // Verifier si une ecriture existe deja
-      const existingEntry = await db
+      const existingEntry = await getDb()
         .collection(COLLECTIONS.JOURNAL_ENTRIES)
         .where('sourceDocument.type', '==', 'PAYMENT')
         .where('sourceDocument.id', '==', paymentId)
@@ -210,7 +229,7 @@ export class AccountingService {
       }
 
       // Sauvegarder dans Firestore
-      await db.collection(COLLECTIONS.JOURNAL_ENTRIES).doc(entry.id).set(entry);
+      await getDb().collection(COLLECTIONS.JOURNAL_ENTRIES).doc(entry.id).set(entry);
 
       logger.info('AccountingService: Payment entry created', {
         paymentId,
@@ -236,7 +255,7 @@ export class AccountingService {
       logger.info('AccountingService: Creating refund entry', { refundId });
 
       // Recuperer les donnees du remboursement
-      const refundDoc = await db.collection(COLLECTIONS.REFUNDS).doc(refundId).get();
+      const refundDoc = await getDb().collection(COLLECTIONS.REFUNDS).doc(refundId).get();
 
       if (!refundDoc.exists) {
         logger.error('AccountingService: Refund not found', { refundId });
@@ -249,7 +268,7 @@ export class AccountingService {
       }
 
       // Verifier si une ecriture existe deja
-      const existingEntry = await db
+      const existingEntry = await getDb()
         .collection(COLLECTIONS.JOURNAL_ENTRIES)
         .where('sourceDocument.type', '==', 'REFUND')
         .where('sourceDocument.id', '==', refundId)
@@ -293,7 +312,7 @@ export class AccountingService {
         entry.metadata = { ...entry.metadata, validationErrors: validation.errors };
       }
 
-      await db.collection(COLLECTIONS.JOURNAL_ENTRIES).doc(entry.id).set(entry);
+      await getDb().collection(COLLECTIONS.JOURNAL_ENTRIES).doc(entry.id).set(entry);
 
       logger.info('AccountingService: Refund entry created', {
         refundId,
@@ -318,7 +337,7 @@ export class AccountingService {
     try {
       logger.info('AccountingService: Creating payout entry', { payoutId });
 
-      const payoutDoc = await db.collection(COLLECTIONS.PAYOUTS).doc(payoutId).get();
+      const payoutDoc = await getDb().collection(COLLECTIONS.PAYOUTS).doc(payoutId).get();
 
       if (!payoutDoc.exists) {
         logger.error('AccountingService: Payout not found', { payoutId });
@@ -331,7 +350,7 @@ export class AccountingService {
       }
 
       // Verifier si une ecriture existe deja
-      const existingEntry = await db
+      const existingEntry = await getDb()
         .collection(COLLECTIONS.JOURNAL_ENTRIES)
         .where('sourceDocument.type', '==', 'PAYOUT')
         .where('sourceDocument.id', '==', payoutId)
@@ -368,7 +387,7 @@ export class AccountingService {
         entry.metadata = { ...entry.metadata, validationErrors: validation.errors };
       }
 
-      await db.collection(COLLECTIONS.JOURNAL_ENTRIES).doc(entry.id).set(entry);
+      await getDb().collection(COLLECTIONS.JOURNAL_ENTRIES).doc(entry.id).set(entry);
 
       logger.info('AccountingService: Payout entry created', {
         payoutId,
@@ -393,7 +412,7 @@ export class AccountingService {
     try {
       logger.info('AccountingService: Creating subscription entry', { subscriptionId });
 
-      const subDoc = await db.collection(COLLECTIONS.SUBSCRIPTIONS).doc(subscriptionId).get();
+      const subDoc = await getDb().collection(COLLECTIONS.SUBSCRIPTIONS).doc(subscriptionId).get();
 
       if (!subDoc.exists) {
         logger.error('AccountingService: Subscription not found', { subscriptionId });
@@ -406,7 +425,7 @@ export class AccountingService {
       }
 
       // Verifier si une ecriture existe deja
-      const existingEntry = await db
+      const existingEntry = await getDb()
         .collection(COLLECTIONS.JOURNAL_ENTRIES)
         .where('sourceDocument.type', '==', 'SUBSCRIPTION')
         .where('sourceDocument.id', '==', subscriptionId)
@@ -444,7 +463,7 @@ export class AccountingService {
         entry.metadata = { ...entry.metadata, validationErrors: validation.errors };
       }
 
-      await db.collection(COLLECTIONS.JOURNAL_ENTRIES).doc(entry.id).set(entry);
+      await getDb().collection(COLLECTIONS.JOURNAL_ENTRIES).doc(entry.id).set(entry);
 
       logger.info('AccountingService: Subscription entry created', {
         subscriptionId,
@@ -467,7 +486,7 @@ export class AccountingService {
    */
   async postEntry(entryId: string, userId: string): Promise<boolean> {
     try {
-      const entryRef = db.collection(COLLECTIONS.JOURNAL_ENTRIES).doc(entryId);
+      const entryRef = getDb().collection(COLLECTIONS.JOURNAL_ENTRIES).doc(entryId);
       const entryDoc = await entryRef.get();
 
       if (!entryDoc.exists) {
@@ -517,7 +536,7 @@ export class AccountingService {
    */
   async reverseEntry(entryId: string, userId: string, reason: string): Promise<JournalEntry | null> {
     try {
-      const entryRef = db.collection(COLLECTIONS.JOURNAL_ENTRIES).doc(entryId);
+      const entryRef = getDb().collection(COLLECTIONS.JOURNAL_ENTRIES).doc(entryId);
       const entryDoc = await entryRef.get();
 
       if (!entryDoc.exists) {
@@ -556,7 +575,7 @@ export class AccountingService {
       };
 
       // Sauvegarder l'extourne
-      await db.collection(COLLECTIONS.JOURNAL_ENTRIES).doc(reversalEntry.id).set(reversalEntry);
+      await getDb().collection(COLLECTIONS.JOURNAL_ENTRIES).doc(reversalEntry.id).set(reversalEntry);
 
       // Marquer l'ecriture originale comme extournee
       await entryRef.update({
@@ -585,7 +604,7 @@ export class AccountingService {
    */
   private async getCustomerInfo(userId: string): Promise<CustomerInfo> {
     try {
-      const userDoc = await db.collection(COLLECTIONS.USERS).doc(userId).get();
+      const userDoc = await getDb().collection(COLLECTIONS.USERS).doc(userId).get();
 
       if (!userDoc.exists) {
         return {
@@ -621,7 +640,7 @@ export class AccountingService {
     type: 'PAYMENT' | 'REFUND' | 'PAYOUT' | 'SUBSCRIPTION',
     documentId: string
   ): Promise<JournalEntry | null> {
-    const snapshot = await db
+    const snapshot = await getDb()
       .collection(COLLECTIONS.JOURNAL_ENTRIES)
       .where('sourceDocument.type', '==', type)
       .where('sourceDocument.id', '==', documentId)
@@ -642,7 +661,7 @@ export class AccountingService {
     period: string,
     status?: JournalEntryStatus
   ): Promise<JournalEntry[]> {
-    let query = db
+    let query = getDb()
       .collection(COLLECTIONS.JOURNAL_ENTRIES)
       .where('period', '==', period) as FirebaseFirestore.Query;
 
