@@ -29,14 +29,13 @@ interface BatchResult {
 }
 
 /**
- * Obtient un client authentifié pour l'API Google Indexing
+ * Obtient un GoogleAuth pour l'API Google Indexing
  * Utilise les credentials du service account Firebase (ADC)
  */
-async function getAuthClient() {
-  const auth = new google.auth.GoogleAuth({
+function getGoogleAuth() {
+  return new google.auth.GoogleAuth({
     scopes: SCOPES,
   });
-  return auth.getClient();
 }
 
 /**
@@ -49,7 +48,7 @@ export async function submitToGoogleIndexing(
   type: 'URL_UPDATED' | 'URL_DELETED' = 'URL_UPDATED'
 ): Promise<GoogleIndexingResult> {
   try {
-    const auth = await getAuthClient();
+    const auth = getGoogleAuth();
     const indexing = google.indexing({ version: 'v3', auth });
 
     console.log(`🔍 Google Indexing: Soumission de ${url} (${type})...`);
@@ -156,7 +155,7 @@ export async function getUrlIndexingStatus(url: string): Promise<{
   error?: string;
 }> {
   try {
-    const auth = await getAuthClient();
+    const auth = getGoogleAuth();
     const indexing = google.indexing({ version: 'v3', auth });
 
     const response = await indexing.urlNotifications.getMetadata({
