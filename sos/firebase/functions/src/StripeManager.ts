@@ -116,6 +116,8 @@ interface PaymentDoc {
   stripePaymentIntentId: string;
   clientId: string;
   providerId: string;
+  /** Client's country for analytics (resolved at payment time) */
+  clientCountry?: string;
   amount: number; // cents
   commissionAmount: number; // cents
   providerAmount: number; // cents
@@ -1739,6 +1741,44 @@ async cancelPayment(
     }
   }
 
+  /**
+   * Get client's country for payment analytics
+   * Checks multiple fields in priority order: country, currentCountry, residenceCountry
+   */
+  private async getClientCountry(clientId: string): Promise<string | undefined> {
+    try {
+      // Check users collection first
+      const clientDoc = await this.db.collection('users').doc(clientId).get();
+      if (clientDoc.exists) {
+        const data = clientDoc.data();
+        const country = data?.country || data?.currentCountry || data?.currentPresenceCountry || data?.residenceCountry;
+        if (country && typeof country === 'string' && country.trim() !== '') {
+          return country;
+        }
+      }
+
+      // Fallback to sos_profiles (if client is also a provider)
+      const sosDoc = await this.db.collection('sos_profiles').doc(clientId).get();
+      if (sosDoc.exists) {
+        const data = sosDoc.data();
+        const country = data?.country || data?.currentCountry || data?.interventionCountry;
+        if (country && typeof country === 'string' && country.trim() !== '') {
+          return country;
+        }
+        // Try array fields
+        const practiceCountries = data?.practiceCountries as string[] | undefined;
+        if (Array.isArray(practiceCountries) && practiceCountries.length > 0) {
+          return practiceCountries[0];
+        }
+      }
+
+      return undefined;
+    } catch (error) {
+      console.warn("Impossible de récupérer le pays client:", error);
+      return undefined;
+    }
+  }
+
   private async savePaymentRecord(
     paymentIntent: Stripe.PaymentIntent,
     dataEuros: StripePaymentData & { commissionAmount: number },
@@ -1760,10 +1800,15 @@ async cancelPayment(
       providerKycComplete?: boolean;
     }
   ): Promise<void> {
+    // FIX: Get client country for analytics
+    const clientCountry = await this.getClientCountry(dataEuros.clientId);
+
     const paymentRecord: PaymentDoc = {
       stripePaymentIntentId: paymentIntent.id,
       clientId: dataEuros.clientId,
       providerId: dataEuros.providerId,
+      // Store client country for analytics (avoids lookup in AdminCountryStats)
+      ...(clientCountry ? { clientCountry } : {}),
 
       // Montants en cents (source de verite chiffree)
       amount: cents.amountCents,
@@ -1813,6 +1858,7 @@ async cancelPayment(
       amountCents: cents.amountCents,
       amountEuros: dataEuros.amount,
       mode: this.mode,
+      clientCountry: clientCountry || 'Unknown',
       hasCallSessionId: Boolean(paymentRecord.callSessionId),
       useDirectCharges: cents.useDirectCharges || false,
       providerKycComplete: cents.providerKycComplete || false,

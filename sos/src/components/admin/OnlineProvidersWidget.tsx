@@ -3,6 +3,7 @@
 // =============================================================================
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useIntl } from 'react-intl';
 import { useNavigate } from 'react-router-dom';
 import {
   Wifi,
@@ -41,6 +42,8 @@ const OnlineProvidersWidget: React.FC<OnlineProvidersWidgetProps> = ({
   compact = false,
   showLink = true,
 }) => {
+  const intl = useIntl();
+  const t = (id: string) => intl.formatMessage({ id });
   const navigate = useNavigate();
   const [stats, setStats] = useState<ProviderStats>({
     totalProviders: 0,
@@ -164,7 +167,7 @@ const OnlineProvidersWidget: React.FC<OnlineProvidersWidgetProps> = ({
             <div>
               <div className="flex items-center">
                 <span className="text-2xl font-bold text-gray-900">{stats.onlineNow}</span>
-                <span className="text-sm text-gray-500 ml-2">en ligne</span>
+                <span className="text-sm text-gray-500 ml-2">{t('admin.onlineProviders.online')}</span>
                 {isLive && (
                   <div className="ml-2 flex items-center">
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
@@ -205,7 +208,7 @@ const OnlineProvidersWidget: React.FC<OnlineProvidersWidgetProps> = ({
             {isLive && (
               <div className="flex items-center">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-1"></div>
-                <span className="text-xs text-green-600 font-medium">LIVE</span>
+                <span className="text-xs text-green-600 font-medium">{t('admin.onlineProviders.live')}</span>
               </div>
             )}
             {showLink && (
@@ -241,39 +244,39 @@ const OnlineProvidersWidget: React.FC<OnlineProvidersWidgetProps> = ({
               <Wifi className="text-green-600" size={24} />
             </div>
             <div className="text-3xl font-bold text-green-600">{stats.onlineNow}</div>
-            <div className="text-xs text-gray-600">En ligne</div>
+            <div className="text-xs text-gray-600">{t('admin.onlineProviders.onlineStatus')}</div>
           </div>
           <div className="text-center p-4 bg-orange-50 rounded-lg">
             <div className="flex items-center justify-center mb-2">
               <Phone className="text-orange-600" size={24} />
             </div>
             <div className="text-3xl font-bold text-orange-600">{stats.busyNow}</div>
-            <div className="text-xs text-gray-600">En appel</div>
+            <div className="text-xs text-gray-600">{t('admin.onlineProviders.busyStatus')}</div>
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-lg">
             <div className="flex items-center justify-center mb-2">
               <WifiOff className="text-gray-500" size={24} />
             </div>
             <div className="text-3xl font-bold text-gray-600">{stats.offlineNow}</div>
-            <div className="text-xs text-gray-600">Hors ligne</div>
+            <div className="text-xs text-gray-600">{t('admin.onlineProviders.offlineStatus')}</div>
           </div>
         </div>
 
         {/* Répartition par type */}
         <div className="border-t border-gray-200 pt-4">
-          <div className="text-sm text-gray-600 mb-3">Répartition par type:</div>
+          <div className="text-sm text-gray-600 mb-3">{t('admin.onlineProviders.distributionByType')}</div>
           <div className="grid grid-cols-2 gap-4">
             <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
               <div className="flex items-center">
                 <Scale className="text-blue-600 mr-2" size={18} />
-                <span className="text-sm font-medium text-gray-700">Avocats</span>
+                <span className="text-sm font-medium text-gray-700">{t('admin.onlineProviders.lawyers')}</span>
               </div>
               <span className="text-lg font-bold text-blue-600">{stats.lawyersOnline}</span>
             </div>
             <div className="flex items-center justify-between p-3 bg-teal-50 rounded-lg">
               <div className="flex items-center">
                 <Globe className="text-teal-600 mr-2" size={18} />
-                <span className="text-sm font-medium text-gray-700">Expatriés</span>
+                <span className="text-sm font-medium text-gray-700">{t('admin.onlineProviders.expats')}</span>
               </div>
               <span className="text-lg font-bold text-teal-600">{stats.expatsOnline}</span>
             </div>
@@ -283,7 +286,7 @@ const OnlineProvidersWidget: React.FC<OnlineProvidersWidgetProps> = ({
         {/* Taux de présence */}
         <div className="mt-4 pt-4 border-t border-gray-200">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Taux de présence:</span>
+            <span className="text-sm text-gray-600">{t('admin.onlineProviders.presenceRate')}</span>
             <span className="text-lg font-bold text-gray-900">
               {stats.totalProviders > 0
                 ? `${Math.round(((stats.onlineNow + stats.busyNow) / stats.totalProviders) * 100)}%`

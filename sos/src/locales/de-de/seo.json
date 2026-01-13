@@ -1,0 +1,60 @@
+{
+  "meta": {
+    "home": {
+      "title": "SOS Expat - 24/7 Rechtsberatung fur Expats | 197 Lander",
+      "description": "Sprechen Sie mit einem Anwalt oder lokalen Experten in weniger als 5 Min. 197 Lander, 9 Sprachen. 24/7 Unterstutzung fur Expats und Reisende."
+    },
+    "pricing": {
+      "title": "Preise - SOS Expat | Beratungen ab 19EUR",
+      "description": "Erschwingliche Rechtsberatung: 49EUR/20Min Anwalt, 19EUR/30Min Expat-Experte. Sichere Zahlung, 24/7 verfugbar."
+    },
+    "faq": {
+      "title": "FAQ - Haufige Fragen | SOS Expat",
+      "description": "Antworten zu Expatriierung, Visa, internationales Steuerrecht, Arbeitsrecht im Ausland."
+    },
+    "contact": {
+      "title": "Kontakt - SOS Expat | Kontaktieren Sie uns",
+      "description": "Kontaktieren Sie unser Team, 24/7 verfugbar fur alle Fragen zu unseren internationalen Rechtsdienstleistungen."
+    },
+    "helpCenter": {
+      "title": "Hilfezentrum - SOS Expat | Expat-Ratgeber",
+      "description": "Ratgeber und praktische Artikel fur Ihre Auswanderung: Visa, Steuern, Arbeitsrecht, Verwaltungsverfahren."
+    },
+    "howItWorks": {
+      "title": "Wie es funktioniert - SOS Expat | Beratung in 5 Min",
+      "description": "Erfahren Sie, wie Sie in weniger als 5 Minuten eine Rechtsberatung erhalten. Einfach, schnell und sicher."
+    },
+    "testimonials": {
+      "title": "Erfahrungsberichte - Kundenbewertungen | SOS Expat",
+      "description": "Bewertungen und Erfahrungsberichte von unseren Expat- und Reisekunden. Entdecken Sie ihre Erfahrungen."
+    },
+    "privacyPolicy": {
+      "title": "Datenschutzrichtlinie - SOS Expat | DSGVO",
+      "description": "Wie SOS Expat Ihre personlichen Daten gemas DSGVO und internationalen Vorschriften schutzt."
+    },
+    "termsClients": {
+      "title": "AGB fur Kunden - SOS Expat | Nutzungsbedingungen",
+      "description": "Allgemeine Geschaftsbedingungen fur SOS Expat Kunden. Rechte und Pflichten der Nutzer."
+    },
+    "termsLawyers": {
+      "title": "AGB fur Anwalte - SOS Expat | Partnerbedingungen",
+      "description": "Allgemeine Geschaftsbedingungen fur SOS Expat Partneranwalte. Registrierung, Provisionen, Pflichten."
+    },
+    "termsExpats": {
+      "title": "AGB fur Expat-Experten - SOS Expat | Bedingungen",
+      "description": "Allgemeine Geschaftsbedingungen fur SOS Expat Partner-Expat-Experten."
+    },
+    "cookies": {
+      "title": "Cookie-Richtlinie - SOS Expat",
+      "description": "Verwendung von Cookies auf SOS Expat. Verwalten Sie Ihre Einstellungen und DSGVO-Zustimmung."
+    },
+    "login": {
+      "title": "Anmeldung - SOS Expat",
+      "description": "Melden Sie sich bei Ihrem SOS Expat Konto an, um auf Ihre Beratungen und Nachrichten zuzugreifen."
+    },
+    "register": {
+      "title": "Registrierung - SOS Expat | Konto erstellen",
+      "description": "Erstellen Sie Ihr kostenloses SOS Expat Konto fur 24/7 Rechtsberatung."
+    }
+  }
+}

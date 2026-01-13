@@ -71,7 +71,6 @@ export function useBadging(): UseBadgingReturn {
           await nav.setAppBadge?.(); // Shows dot without count
         }
         lastCount.current = count;
-        console.log(`[Badging] Badge set to ${count}`);
         return true;
       } catch (error) {
         console.error('[Badging] Failed to set badge:', error);
@@ -93,7 +92,6 @@ export function useBadging(): UseBadgingReturn {
       const nav = navigator as Navigator;
       await nav.clearAppBadge?.();
       lastCount.current = 0;
-      console.log('[Badging] Badge cleared');
       return true;
     } catch (error) {
       console.error('[Badging] Failed to clear badge:', error);

@@ -1,0 +1,108 @@
+# SOS Expat - Cloudflare Worker Configuration
+# This worker handles bot detection and SSR redirect for provider profiles
+
+name = "sos-expat-bot-ssr"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# Account configuration
+account_id = "fe7c0b2676e091898d565b8eba1544ad"
+
+# Workers configuration
+workers_dev = false
+
+# Route configuration for production
+routes = [
+  { pattern = "sos-expat.com/*", zone_name = "sos-expat.com" },
+  { pattern = "www.sos-expat.com/*", zone_name = "sos-expat.com" }
+]
+
+# Environment-specific configurations
+[env.production]
+name = "sos-expat-bot-ssr-prod"
+# routes = [
+#   { pattern = "sos-expat.com/*", zone_name = "sos-expat.com" },
+#   { pattern = "www.sos-expat.com/*", zone_name = "sos-expat.com" }
+# ]
+
+[env.staging]
+name = "sos-expat-bot-ssr-staging"
+# routes = [
+#   { pattern = "staging.sos-expat.com/*", zone_name = "sos-expat.com" }
+# ]
+
+[env.development]
+name = "sos-expat-bot-ssr-dev"
+workers_dev = true
+
+# Variables available to the worker
+[vars]
+ENVIRONMENT = "production"
+SSR_FUNCTION_URL = "https://europe-west1-sos-urgently-ac307.cloudfunctions.net/renderForBotsV2"
+
+[env.production.vars]
+ENVIRONMENT = "production"
+SSR_FUNCTION_URL = "https://europe-west1-sos-urgently-ac307.cloudfunctions.net/renderForBotsV2"
+
+[env.staging.vars]
+ENVIRONMENT = "staging"
+SSR_FUNCTION_URL = "https://europe-west1-sos-urgently-ac307.cloudfunctions.net/renderForBotsV2"
+
+[env.development.vars]
+ENVIRONMENT = "development"
+SSR_FUNCTION_URL = "https://europe-west1-sos-urgently-ac307.cloudfunctions.net/renderForBotsV2"
+
+# Observability settings
+[observability]
+enabled = true
+
+# Logging configuration
+[observability.logs]
+enabled = true
+invocation_logs = true
+
+# Build configuration (if using build step)
+# [build]
+# command = "npm run build"
+
+# Limits configuration
+[limits]
+cpu_ms = 50
+
+# Placement configuration (optional - for specific regions)
+# [placement]
+# mode = "smart"
+
+# Triggers configuration (optional - for cron triggers)
+# [triggers]
+# crons = ["0 * * * *"]
+
+# Secrets (configured via wrangler secret put)
+# These are sensitive values that should not be committed to version control
+# Use: wrangler secret put SECRET_NAME
+# Available secrets:
+# - FIREBASE_API_KEY (if needed for authentication)
+
+# KV Namespaces (if caching is needed in the future)
+# [[kv_namespaces]]
+# binding = "BOT_CACHE"
+# id = "your-kv-namespace-id"
+
+# [env.production.kv_namespaces]
+# [[env.production.kv_namespaces]]
+# binding = "BOT_CACHE"
+# id = "your-production-kv-namespace-id"
+
+# Durable Objects (if stateful processing is needed)
+# [[durable_objects.bindings]]
+# name = "BOT_COUNTER"
+# class_name = "BotCounter"
+
+# R2 Buckets (if storage is needed)
+# [[r2_buckets]]
+# binding = "SSR_CACHE"
+# bucket_name = "sos-expat-ssr-cache"
+
+# Analytics Engine (for custom analytics)
+# [[analytics_engine_datasets]]
+# binding = "BOT_ANALYTICS"

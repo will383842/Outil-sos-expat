@@ -143,14 +143,7 @@ const logProfileGeneration = (
   specialties: string[],
   country: string
 ) => {
-  console.log(`[AAA] ✅ Profil généré:`, {
-    uid,
-    role,
-    country,
-    specialties,
-    specialtiesCount: specialties.length,
-    validCodes: specialties.every(s => isValidSpecialtyCode(s, role))
-  });
+  // Debug logging removed for production
 };
 
 /**
@@ -768,8 +761,6 @@ const memoryCache = {
 async function loadUsedContent(): Promise<void> {
   if (memoryCache.isLoaded) return;
   
-  console.log('📄 Chargement du contenu utilisé depuis Firestore...');
-  
   try {
     const usedContentRef = collection(db, 'aaa_used_content');
     const snapshot = await getDocs(usedContentRef);
@@ -800,16 +791,6 @@ async function loadUsedContent(): Promise<void> {
     });
     
     memoryCache.isLoaded = true;
-    
-    console.log('✅ Contenu chargé avec succès:', {
-      totalDocuments: snapshot.size,
-      bios: biosCount,
-      reviews: reviewsCount,
-      détail: {
-        bios: Array.from(memoryCache.usedBios.entries()).map(([k, v]) => `${k}: ${v.size} utilisées`),
-        reviews: Array.from(memoryCache.usedReviews.entries()).map(([k, v]) => `${k}: ${v.size} utilisées`)
-      }
-    });
   } catch (error) {
     console.error('❌ Erreur lors du chargement du contenu:', error);
     throw new Error(`Impossible de charger le contenu utilisé: ${error}`);
@@ -843,8 +824,6 @@ async function saveUsedBio(
       memoryCache.usedBios.set(key, new Set());
     }
     memoryCache.usedBios.get(key)!.add(bioIndex);
-    
-    console.log(`💾 Bio sauvegardée: ${docId}`);
   } catch (error) {
     console.error('❌ Erreur sauvegarde bio:', error);
     throw error;
@@ -877,8 +856,6 @@ async function saveUsedReview(
       memoryCache.usedReviews.set(langCode, new Set());
     }
     memoryCache.usedReviews.get(langCode)!.add(reviewKey);
-    
-    console.log(`💾 Review sauvegardée: ${docId}`);
   } catch (error) {
     console.error('❌ Erreur sauvegarde review:', error);
     throw error;
@@ -977,16 +954,9 @@ async function getUniqueBio(
   
   // 💾 Sauvegarder dans Firestore + cache
   await saveUsedBio(role, langCode, index, profileId);
-  
-  const progress = `${used.size + 1}/${templates.length}`;
+
   const percentage = Math.round(((used.size + 1) / templates.length) * 100);
-  
-  console.log(
-    `✅ Bio unique trouvée: ${role}_${langCode}_${index}\n` +
-    `   Progression: ${progress} (${percentage}%)\n` +
-    `   ProfileId: ${profileId}`
-  );
-  
+
   // ⚠️ Avertissement si on approche de la limite
   if (percentage >= 80) {
     console.warn(
@@ -995,7 +965,7 @@ async function getUniqueBio(
       `   Préparez des templates supplémentaires.`
     );
   }
-  
+
   return templates[index];
 }
 
@@ -1042,12 +1012,10 @@ const ensureCountryName = (countryOrCode: string): string => {
   // Sinon, essayer de convertir depuis le code ISO
   const convertedName = getCountryNameFromCode(countryOrCode);
   if (convertedName !== '-' && convertedName !== countryOrCode) {
-    console.log(`[AAA] 🔄 Code pays "${countryOrCode}" converti en "${convertedName}"`);
     return convertedName;
   }
 
-  // Si pas trouvé, retourner tel quel avec un warning
-  console.warn(`[AAA] ⚠️ Impossible de convertir le code pays: "${countryOrCode}"`);
+  // Si pas trouvé, retourner tel quel
   return countryOrCode;
 };
 
@@ -1329,16 +1297,9 @@ async function getUniqueReviewComment(
   
   // 💾 Sauvegarder dans Firestore + cache
   await saveUsedReview(reviewLang, key, profileId);
-  
-  const progress = `${used.size + 1}/${allKeys.length}`;
+
   const percentage = Math.round(((used.size + 1) / allKeys.length) * 100);
-  
-  console.log(
-    `✅ Review unique trouvée: ${reviewLang}_${key}\n` +
-    `   Progression: ${progress} (${percentage}%)\n` +
-    `   ProfileId: ${profileId}`
-  );
-  
+
   // ⚠️ Avertissement si on approche de la limite
   if (percentage >= 80) {
     console.warn(
@@ -1347,16 +1308,10 @@ async function getUniqueReviewComment(
       `   Préparez des templates supplémentaires.`
     );
   }
-  
+
   // ✅ Toujours utiliser FR comme fallback
   const fallbackText = t(key, { lng: 'fr' });
-  
-  console.log(`✅ Review générée:`, {
-    key,
-    profileLanguages,
-    fallbackPreview: fallbackText.substring(0, 50) + '...'
-  });
-  
+
   return { key, text: fallbackText };
 }
 
@@ -1585,9 +1540,6 @@ const AdminAaaProfiles: React.FC = () => {
           defaultMode: data.defaultMode || 'internal',
           lastUpdated: data.lastUpdated?.toDate?.() || undefined,
         });
-        console.log('[AAA Payout] Config loaded:', data.externalAccounts?.length || 0, 'external accounts');
-      } else {
-        console.log('[AAA Payout] No config found, using defaults (internal mode)');
       }
     } catch (err) {
       console.error('[AAA Payout] Error loading config:', err);
@@ -2212,9 +2164,7 @@ const AdminAaaProfiles: React.FC = () => {
     // 🔍 VÉRIFICATION AUTOMATIQUE APRÈS GÉNÉRATION
     const verification = await verifyGeneratedProfile(uid, role, finalSpecialties);
     if (!verification.success) {
-      console.error(`[AAA] ⚠️ Problèmes détectés pour ${uid}:`, verification.issues);
-    } else {
-      console.log(`[AAA] ✅ Profil ${uid} vérifié avec succès`);
+      console.error(`[AAA] Problèmes détectés pour ${uid}:`, verification.issues);
     }
 
     return uid;
@@ -2393,7 +2343,6 @@ const AdminAaaProfiles: React.FC = () => {
         await updateDoc(sosProfileRef, cleanData);
       } catch (sosError: any) {
         if (sosError.code === 'not-found') {
-          console.log('⚠️ sos_profiles inexistant, création...');
           await setDoc(sosProfileRef, {
             ...cleanData,
             uid: selectedProfile.id,
@@ -2422,7 +2371,6 @@ const AdminAaaProfiles: React.FC = () => {
         await updateDoc(doc(db, 'ui_profile_cards', selectedProfile.id), cardUpdate);
       } catch (cardError: any) {
         if (cardError.code === 'not-found') {
-          console.log('⚠️ ui_profile_cards inexistant, création...');
           await setDoc(doc(db, 'ui_profile_cards', selectedProfile.id), {
             id: selectedProfile.id,
             uid: selectedProfile.id,
@@ -2446,7 +2394,6 @@ const AdminAaaProfiles: React.FC = () => {
         await updateDoc(doc(db, 'ui_profile_carousel', selectedProfile.id), cardUpdate);
       } catch (carouselError: any) {
         if (carouselError.code === 'not-found') {
-          console.log('⚠️ ui_profile_carousel inexistant, création...');
           await setDoc(doc(db, 'ui_profile_carousel', selectedProfile.id), {
             id: selectedProfile.id,
             uid: selectedProfile.id,

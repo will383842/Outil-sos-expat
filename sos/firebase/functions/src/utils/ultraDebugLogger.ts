@@ -13,6 +13,10 @@ const IS_LOCAL =
   process.env.FIREBASE_EMULATOR_HUB ||
   (!process.env.GOOGLE_CLOUD_PROJECT && !process.env.GCP_PROJECT);
 
+// Désactiver les logs verbeux pendant le déploiement (quand Firebase analyse le code)
+// Cela évite le timeout de 10 secondes lors du déploiement
+const IS_DEPLOYMENT_ANALYSIS = !process.env.K_REVISION && IS_LOCAL;
+
 interface DebugLogEntry {
   timestamp: string;
   level: 'INFO' | 'WARN' | 'ERROR' | 'DEBUG' | 'TRACE';
@@ -47,9 +51,12 @@ class UltraDebugLogger {
   private sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
   private constructor() {
-    console.log(`🚀 [ULTRA DEBUG] Logger initialisé avec session: ${this.sessionId}`);
-    if (IS_LOCAL) {
-      console.log(`🔧 [ULTRA DEBUG] Mode local détecté - Firestore logs désactivés`);
+    // Skip verbose logging during deployment analysis to avoid 10s timeout
+    if (!IS_DEPLOYMENT_ANALYSIS) {
+      console.log(`🚀 [ULTRA DEBUG] Logger initialisé avec session: ${this.sessionId}`);
+      if (IS_LOCAL) {
+        console.log(`🔧 [ULTRA DEBUG] Mode local détecté - Firestore logs désactivés`);
+      }
     }
     this.setupGlobalErrorHandlers();
   }
@@ -188,6 +195,11 @@ class UltraDebugLogger {
   }
 
   private logToConsole(entry: DebugLogEntry) {
+    // Skip all console logging during deployment analysis to avoid 10s timeout
+    if (IS_DEPLOYMENT_ANALYSIS) {
+      return;
+    }
+
     const emoji = {
       INFO: '📝',
       WARN: '⚠️',
@@ -197,9 +209,9 @@ class UltraDebugLogger {
     }[entry.level];
 
     const prefix = `${emoji} [ULTRA DEBUG] [${entry.level}] [${entry.source}]`;
-    
+
     console.log(`${prefix} ${entry.message}`);
-    
+
     if (entry.data) {
       try {
         console.log(`${prefix} DATA:`, JSON.stringify(entry.data, null, 2));
@@ -207,11 +219,11 @@ class UltraDebugLogger {
         console.log(`${prefix} DATA: [Unable to stringify data]`);
       }
     }
-    
+
     if (entry.stack) {
       console.log(`${prefix} STACK:`, entry.stack);
     }
-    
+
     if (entry.context) {
       try {
         console.log(`${prefix} CONTEXT:`, JSON.stringify(entry.context, null, 2));
@@ -259,9 +271,11 @@ class UltraDebugLogger {
   }
 
   private async saveToFirestore(entry: DebugLogEntry) {
-    // Skip Firestore en local
-    if (IS_LOCAL) {
-      console.log("[ULTRA DEBUG] (local) skip Firestore log");
+    // Skip Firestore en local or during deployment analysis
+    if (IS_LOCAL || IS_DEPLOYMENT_ANALYSIS) {
+      if (!IS_DEPLOYMENT_ANALYSIS) {
+        console.log("[ULTRA DEBUG] (local) skip Firestore log");
+      }
       return;
     }
 

@@ -11,7 +11,6 @@ import {
   signInWithPopup,
   getRedirectResult,
   reload,
-  sendEmailVerification,
   fetchSignInMethodsForEmail,
   deleteUser,
   User as FirebaseUser,
@@ -1368,12 +1367,6 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         }).catch(() => { /* no-op */ });
       }
 
-      try {
-        await sendEmailVerification(cred.user);
-      } catch {
-        /* no-op */ void 0;
-      }
-
       console.log("[DEBUG] " + "✅ REGISTER RÉUSSI!\n\nUID: " + cred.user.uid + "\nRole: " + userData.role);
       await logAuthEvent('registration_success', {
         userId: cred.user.uid,
@@ -1605,8 +1598,6 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         updatedAt: serverTimestamp(),
       });
 
-      await sendEmailVerification(firebaseUser);
-
       await logAuthEvent('email_updated', {
         userId: firebaseUser.uid,
         oldEmail: user?.email,
@@ -1701,28 +1692,11 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     }
   }, [deviceInfo]);
 
+  // Email verification disabled - no-op function kept for interface compatibility
   const sendVerificationEmail = useCallback(async (): Promise<void> => {
-    if (!firebaseUser) throw new Error('Utilisateur non connecté');
-
-    try {
-      await sendEmailVerification(firebaseUser);
-
-      await logAuthEvent('verification_email_sent', {
-        userId: firebaseUser.uid,
-        email: firebaseUser.email,
-        deviceInfo
-      });
-
-    } catch (error) {
-      // Log en arrière-plan (ne pas bloquer le UI)
-      logAuthEvent('verification_email_failed', {
-        userId: firebaseUser.uid,
-        error: error instanceof Error ? error.message : String(error),
-        deviceInfo
-      }).catch(() => { /* ignoré */ });
-      throw error;
-    }
-  }, [firebaseUser, deviceInfo]);
+    // Email verification is disabled
+    console.log('[AUTH] Email verification is disabled');
+  }, []);
 
   const deleteUserAccount = useCallback(async (): Promise<void> => {
     if (!firebaseUser || !user) throw new Error('Utilisateur non connecté');

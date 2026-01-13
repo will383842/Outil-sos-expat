@@ -233,12 +233,23 @@ interface PricingDoc {
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
-   Mémoire rate limit
+   Rate Limiting - Firestore-based (P1 FIX: persistant entre redeploys)
    ──────────────────────────────────────────────────────────────────────────── */
-const rateLimitStore = new Map<string, RateLimitBucket>();
 
-/* (D) checkRateLimit — **patch pare-balle** : n’utilise pas getLimits() ici */
-function checkRateLimit(userId: string): { allowed: boolean; resetTime?: number } {
+// In-memory cache pour éviter les lectures Firestore répétées (court TTL)
+const rateLimitCache = new Map<string, { bucket: RateLimitBucket; cachedAt: number }>();
+const RATE_LIMIT_CACHE_TTL = 5000; // 5 secondes de cache local
+
+/**
+ * P1 FIX: Rate limiting persistant avec Firestore
+ * - Utilise Firestore pour la persistance entre redeploys/scaling
+ * - Cache local de 5s pour éviter les lectures répétées
+ * - Transaction atomique pour éviter les race conditions
+ */
+async function checkRateLimitFirestore(
+  userId: string,
+  db: admin.firestore.Firestore
+): Promise<{ allowed: boolean; resetTime?: number }> {
   if (BYPASS_MODE) return { allowed: true };
 
   // 🔒 Pare-feu anti-undefined (plus robuste qu'un simple getLimits())
@@ -248,18 +259,65 @@ function checkRateLimit(userId: string): { allowed: boolean; resetTime?: number 
       : { WINDOW_MS: 10 * 60 * 1000, MAX_REQUESTS: 6 };
 
   const now = Date.now();
-  const key = `payment_${userId}`;
+  const key = `payment_rate_${userId}`;
 
-  let bucket = rateLimitStore.get(key);
-  if (!bucket || now > bucket.resetTime) {
-    bucket = { count: 0, resetTime: now + L.WINDOW_MS };
-    rateLimitStore.set(key, bucket);
+  // Vérifier le cache local d'abord (évite les lectures Firestore répétées)
+  const cached = rateLimitCache.get(key);
+  if (cached && (now - cached.cachedAt) < RATE_LIMIT_CACHE_TTL) {
+    if (cached.bucket.count >= L.MAX_REQUESTS && now < cached.bucket.resetTime) {
+      return { allowed: false, resetTime: cached.bucket.resetTime };
+    }
   }
-  if (bucket.count >= L.MAX_REQUESTS) {
-    return { allowed: false, resetTime: bucket.resetTime };
+
+  const rateLimitRef = db.collection('rate_limits').doc(key);
+
+  try {
+    const result = await db.runTransaction(async (transaction) => {
+      const doc = await transaction.get(rateLimitRef);
+      const data = doc.data() as RateLimitBucket | undefined;
+
+      let bucket: RateLimitBucket;
+
+      if (!data || now > data.resetTime) {
+        // Nouveau bucket ou expiré
+        bucket = { count: 1, resetTime: now + L.WINDOW_MS };
+        transaction.set(rateLimitRef, {
+          ...bucket,
+          userId,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          // TTL pour cleanup automatique (Firestore TTL policy)
+          expireAt: admin.firestore.Timestamp.fromMillis(bucket.resetTime + 60000), // +1 min de marge
+        });
+        return { allowed: true, bucket };
+      }
+
+      if (data.count >= L.MAX_REQUESTS) {
+        // Limite atteinte
+        return { allowed: false, resetTime: data.resetTime, bucket: data };
+      }
+
+      // Incrémenter le compteur
+      bucket = { count: data.count + 1, resetTime: data.resetTime };
+      transaction.update(rateLimitRef, {
+        count: admin.firestore.FieldValue.increment(1),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      return { allowed: true, bucket };
+    });
+
+    // Mettre à jour le cache local
+    rateLimitCache.set(key, { bucket: result.bucket, cachedAt: now });
+
+    return { allowed: result.allowed, resetTime: result.resetTime };
+  } catch (err) {
+    // En cas d'erreur Firestore, fallback sur autorisation (mieux que bloquer)
+    logger.warn('[checkRateLimitFirestore] Transaction failed, allowing request', {
+      userId,
+      error: err instanceof Error ? err.message : 'unknown',
+    });
+    return { allowed: true };
   }
-  bucket.count += 1;
-  return { allowed: true };
 }
 
 /* Validations */
@@ -664,9 +722,10 @@ export const createPaymentIntent = onCall(
         throw new HttpsError('invalid-argument', 'Montant prestataire invalide');
       }
 
-      // Rate limit robuste (patch)
+      // P1 FIX: Rate limit Firestore-based (persistant entre redeploys)
+      const db = admin.firestore();
       prodLogger.debug('PAYMENT_STEP', `[${requestId}] Vérification rate limit pour ${userId}`);
-      const rl = checkRateLimit(userId);
+      const rl = await checkRateLimitFirestore(userId, db);
       if (!rl.allowed) {
         const waitMin = Math.ceil(((rl.resetTime ?? Date.now()) - Date.now()) / 60000);
         prodLogger.warn('PAYMENT_BLOCKED', `[${requestId}] Rate limit atteint`, {
@@ -676,7 +735,7 @@ export const createPaymentIntent = onCall(
         });
         throw new HttpsError('resource-exhausted', `Trop de tentatives. Réessayez dans ${waitMin} min.`);
       }
-      prodLogger.debug('PAYMENT_STEP', `[${requestId}] ✓ Rate limit OK`);
+      prodLogger.debug('PAYMENT_STEP', `[${requestId}] ✓ Rate limit OK (Firestore)`);
 
       // Normalisation
       prodLogger.debug('PAYMENT_STEP', `[${requestId}] Normalisation des données...`);
@@ -725,7 +784,7 @@ export const createPaymentIntent = onCall(
         throw new HttpsError('invalid-argument', `Devise non supportée: ${currency}`);
       }
 
-      const db = admin.firestore();
+      // Note: db already initialized above for rate limiting (P1 FIX)
 
       // ═══════════════════════════════════════════════════════════════════════════
       // 🔍 VALIDATION ÉTAPE 1: Limites montants + quota quotidien

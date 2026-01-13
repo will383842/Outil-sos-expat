@@ -206,31 +206,32 @@ const routeConfigs: RouteConfig[] = [
   // Ex: /fr-de/avocat-allemagne/pierre-fiscal-a2b3c4 (français en Allemagne)
   // ====================================
   // Routes avec lang-locale (format complet pour SEO)
-  { path: "/fr-fr/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
-  { path: "/fr-be/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
-  { path: "/fr-ch/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
-  { path: "/fr-ca/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
-  { path: "/fr-ma/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
-  { path: "/en-us/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
-  { path: "/en-gb/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
-  { path: "/en-au/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
-  { path: "/en-ca/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
-  { path: "/es-es/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
-  { path: "/es-mx/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
-  { path: "/es-ar/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
-  { path: "/de-de/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
-  { path: "/de-at/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
-  { path: "/de-ch/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
-  { path: "/pt-br/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
-  { path: "/pt-pt/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
-  { path: "/ru-ru/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
-  { path: "/zh-cn/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
-  { path: "/zh-tw/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
-  { path: "/ar-sa/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
-  { path: "/ar-ae/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
-  { path: "/hi-in/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  // Note: NO translated property - these routes match 3-segment URLs directly
+  { path: "/fr-fr/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/fr-be/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/fr-ch/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/fr-ca/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/fr-ma/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/en-us/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/en-gb/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/en-au/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/en-ca/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/es-es/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/es-mx/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/es-ar/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/de-de/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/de-at/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/de-ch/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/pt-br/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/pt-pt/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/ru-ru/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/zh-cn/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/zh-tw/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/ar-sa/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/ar-ae/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/hi-in/:roleCountry/:nameSlug", component: ProviderProfile },
   // Route générique pour toute combinaison lang-locale non listée
-  { path: "/:langLocale/:roleCountry/:nameSlug", component: ProviderProfile, translated: "lawyer" },
+  { path: "/:langLocale/:roleCountry/:nameSlug", component: ProviderProfile },
 
   // Simplified route patterns - just type and slug (rétrocompatibilité)
   { path: "/avocat/:slug", component: ProviderProfile, translated: "lawyer" },
@@ -449,6 +450,14 @@ const App: React.FC = () => {
   const { isMobile } = useDeviceDetection();
   const [locale, setLocale] = useState<Locale>("fr"); // Default to French since your site is French
 
+  // Signal pour react-snap que le rendu est terminé
+  useEffect(() => {
+    // Marquer la page comme prête pour react-snap
+    document.body.setAttribute('data-react-snap-ready', 'true');
+
+    // Signal pour le loading screen
+    window.dispatchEvent(new Event('app-mounted'));
+  }, []);
 
   // SW + perf
   useEffect(() => {
@@ -558,10 +567,20 @@ const App: React.FC = () => {
       }
     } else {
       // Regular routes
-      routes = [
-        `${localePrefix}${path}`,
-        ...(alias ? [`${localePrefix}${alias}`] : []),
-      ];
+      // Check if path already has a locale-like prefix (e.g., /fr-fr/, /en-us/, /:langLocale/)
+      const hasLocalePrefix = /^\/[a-z]{2}-[a-z]{2}\/|^\/:langLocale\//.test(path);
+      if (hasLocalePrefix) {
+        // Path already has locale, register as-is
+        routes = [
+          `${path}`,
+          ...(alias ? [`${alias}`] : []),
+        ];
+      } else {
+        routes = [
+          `${localePrefix}${path}`,
+          ...(alias ? [`${localePrefix}${alias}`] : []),
+        ];
+      }
     }
 
     return routes.map((routePath, i) => {

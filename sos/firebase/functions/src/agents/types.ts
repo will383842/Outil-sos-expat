@@ -346,7 +346,10 @@ export const AGENT_HIERARCHY: Record<AgentId, AgentConfig> = {
     ],
     priority: AgentPriority.HIGH,
     maxConcurrentTasks: 20,
-    timeoutMs: 300000,
+    // OPTIMIZED: Reduced from 300s to 120s (2min)
+    // Long GDPR tasks should be split into batches by the cleanupOrphanedAgentTasks job
+    // This prevents Cloud Functions from timing out and blocking resources
+    timeoutMs: 120000,
     retryPolicy: { maxRetries: 3, initialDelayMs: 5000, maxDelayMs: 60000, backoffMultiplier: 2 },
     enabled: true
   },
@@ -639,6 +642,8 @@ export const AGENT_HIERARCHY: Record<AgentId, AgentConfig> = {
     ],
     priority: AgentPriority.MEDIUM,
     maxConcurrentTasks: 20,
+    // NOTE: 120s is justified for transcription tasks which can be lengthy
+    // Large recordings should be processed in chunks via Cloud Tasks for better reliability
     timeoutMs: 120000,
     retryPolicy: { maxRetries: 3, initialDelayMs: 5000, maxDelayMs: 60000, backoffMultiplier: 2 },
     enabled: true

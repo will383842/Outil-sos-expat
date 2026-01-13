@@ -2,17 +2,28 @@
 import { Timestamp } from 'firebase/firestore';
 
 // Types de prestataires disponibles
-export type ProviderType = 
-  | 'lawyer' 
-  | 'expat' 
-  | 'accountant' 
-  | 'notary' 
-  | 'tax_consultant' 
-  | 'real_estate' 
-  | 'translator' 
-  | 'hr_consultant' 
-  | 'financial_advisor' 
+export type ProviderType =
+  | 'lawyer'
+  | 'expat'
+  | 'accountant'
+  | 'notary'
+  | 'tax_consultant'
+  | 'real_estate'
+  | 'translator'
+  | 'hr_consultant'
+  | 'financial_advisor'
   | 'insurance_broker';
+
+// Statuts de validation du profil
+export type ValidationStatus = 'pending' | 'in_review' | 'approved' | 'rejected' | 'changes_requested';
+
+// Structure de la dernière décision de validation
+export interface ValidationDecision {
+  status: string;
+  by: string;
+  at: Timestamp;
+  reason?: string;
+}
 
 // Interface Provider unifiée pour assurer la cohérence entre tous les composants
 export interface Provider {
@@ -107,6 +118,26 @@ export interface Provider {
   aaaPayoutGateway?: 'stripe' | 'paypal';
   /** Statut KYC délégué au compte consolidé */
   kycDelegated?: boolean;
+
+  // ========== SUSPENSION FIELDS ==========
+  /** Indique si le prestataire est suspendu */
+  isSuspended?: boolean;
+  /** Timestamp de la suspension */
+  suspendedAt?: Timestamp | null;
+  /** Timestamp de fin de suspension (null = indéfini) */
+  suspendedUntil?: Timestamp | null;
+  /** Raison de la suspension */
+  suspendReason?: string;
+
+  // ========== ENHANCED VALIDATION FIELDS ==========
+  /** Statut de validation du profil */
+  validationStatus?: ValidationStatus;
+  /** Timestamp de la demande de validation */
+  validationRequestedAt?: Timestamp;
+  /** Dernière décision de validation */
+  lastValidationDecision?: ValidationDecision;
+  /** Liste des changements demandés */
+  requestedChanges?: string[];
 }
 
 /**
@@ -329,7 +360,7 @@ export function normalizeProvider(providerData: unknown): Provider {
 
 /**
  * Valide qu'un provider a les données minimales requises
- * Filtre les prestataires inactifs, non approuvés, bannis ou cachés
+ * Filtre les prestataires inactifs, non approuvés, bannis, cachés ou suspendus
  *
  * ⚠️ IMPORTANT: Validation STRICTE - seuls les profils explicitement
  * approuvés (isApproved === true) et visibles (isVisible === true) passent
@@ -342,11 +373,16 @@ export function validateProvider(provider: Provider | null): provider is Provide
   // - Compte actif (isActive === true ou non défini)
   // - Profil EXPLICITEMENT approuvé (isApproved === true) ⚠️ STRICT
   // - Non banni (isBanned !== true)
+  // - Non suspendu (isSuspended !== true)
   // - EXPLICITEMENT visible (isVisible === true) ⚠️ STRICT
+  // - Si validationStatus existe, doit être 'approved'
   // - Pas un admin
   const rawProvider = provider as unknown as Record<string, unknown>;
   const roleStr = String(rawProvider.role ?? '');
   const notAdmin = roleStr !== 'admin' && rawProvider.isAdmin !== true;
+
+  // Validation du statut de validation (si le champ existe)
+  const validationOk = provider.validationStatus === undefined || provider.validationStatus === 'approved';
 
   return Boolean(
     provider.id.trim() &&
@@ -354,7 +390,9 @@ export function validateProvider(provider: Provider | null): provider is Provide
     provider.isActive !== false &&
     provider.isApproved === true &&      // ✅ STRICT: doit être explicitement true
     !provider.isBanned &&
+    !provider.isSuspended &&             // ✅ Non suspendu
     provider.isVisible === true &&        // ✅ STRICT: doit être explicitement true
+    validationOk &&                       // ✅ Validation status approved (si existe)
     notAdmin
   );
 }
@@ -422,5 +460,117 @@ export function createDefaultProvider(providerId: string): Provider {
     aaaPayoutAccountId: '',
     aaaPayoutGateway: undefined,
     kycDelegated: false,
+
+    // Champs de suspension (défauts)
+    isSuspended: false,
+    suspendedAt: null,
+    suspendedUntil: null,
+    suspendReason: '',
+
+    // Champs de validation (défauts)
+    validationStatus: undefined,
+    validationRequestedAt: undefined,
+    lastValidationDecision: undefined,
+    requestedChanges: [],
+  };
+}
+
+/**
+ * Interface étendue pour l'administration incluant tous les champs admin-only
+ */
+export interface ProviderAdmin extends Provider {
+  // Champs de suspension (requis pour admin)
+  isSuspended: boolean;
+  suspendedAt: Timestamp | null;
+  suspendedUntil: Timestamp | null;
+  suspendReason: string;
+
+  // Champs de validation (requis pour admin)
+  validationStatus: ValidationStatus;
+  validationRequestedAt?: Timestamp;
+  lastValidationDecision?: ValidationDecision;
+  requestedChanges: string[];
+
+  // Métadonnées admin supplémentaires
+  _adminNotes?: string;
+  _lastAdminAction?: {
+    action: string;
+    by: string;
+    at: Timestamp;
+  };
+}
+
+/**
+ * Normalise les données d'un provider pour l'administration
+ * Inclut tous les champs admin-only avec des valeurs par défaut
+ *
+ * @param providerData - Données brutes du provider
+ * @returns Provider normalisé avec tous les champs admin
+ */
+export function normalizeProviderForAdmin(providerData: unknown): ProviderAdmin {
+  // D'abord, normaliser avec la fonction standard
+  const baseProvider = normalizeProvider(providerData);
+
+  // Cast pour accéder aux champs potentiellement présents
+  const o = (providerData as Record<string, unknown>) || {};
+
+  // Helper pour les strings
+  const toStr = (v: unknown, fb = ''): string =>
+    typeof v === 'string' ? v : fb;
+
+  // Helper pour les arrays de strings
+  const toStrArray = (v: unknown, fb: string[] = []): string[] => {
+    if (!Array.isArray(v)) return fb;
+    const arr = v.filter((x) => typeof x === 'string') as string[];
+    return arr.length ? arr : fb;
+  };
+
+  // Normaliser le statut de validation
+  const validValidationStatuses: ValidationStatus[] = ['pending', 'in_review', 'approved', 'rejected', 'changes_requested'];
+  const rawValidationStatus = o.validationStatus;
+  const validationStatus: ValidationStatus =
+    typeof rawValidationStatus === 'string' && validValidationStatuses.includes(rawValidationStatus as ValidationStatus)
+      ? (rawValidationStatus as ValidationStatus)
+      : 'pending';
+
+  // Normaliser la dernière décision de validation
+  const rawDecision = o.lastValidationDecision as Record<string, unknown> | undefined;
+  const lastValidationDecision: ValidationDecision | undefined = rawDecision
+    ? {
+        status: toStr(rawDecision.status, ''),
+        by: toStr(rawDecision.by, ''),
+        at: rawDecision.at as Timestamp,
+        reason: rawDecision.reason ? toStr(rawDecision.reason) : undefined,
+      }
+    : undefined;
+
+  // Normaliser les métadonnées admin
+  const rawLastAdminAction = o._lastAdminAction as Record<string, unknown> | undefined;
+  const _lastAdminAction = rawLastAdminAction
+    ? {
+        action: toStr(rawLastAdminAction.action, ''),
+        by: toStr(rawLastAdminAction.by, ''),
+        at: rawLastAdminAction.at as Timestamp,
+      }
+    : undefined;
+
+  return {
+    ...baseProvider,
+
+    // Champs de suspension
+    isSuspended: o.isSuspended === true,
+    suspendedAt: (o.suspendedAt as Timestamp | null) ?? null,
+    suspendedUntil: (o.suspendedUntil as Timestamp | null) ?? null,
+    suspendReason: toStr(o.suspendReason, ''),
+
+    // Champs de validation
+    validationStatus,
+    validationRequestedAt: o.validationRequestedAt as Timestamp | undefined,
+    lastValidationDecision,
+    requestedChanges: toStrArray(o.requestedChanges, []),
+
+    // Métadonnées admin
+    _adminNotes: toStr(o._adminNotes),
+    _lastAdminAction,
   };
 }

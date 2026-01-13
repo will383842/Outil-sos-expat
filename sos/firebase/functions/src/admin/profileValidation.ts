@@ -742,6 +742,7 @@ export const requestChanges = onCall(
 /**
  * Get validation queue with optional filters
  * FIX: Updated to match frontend expected format
+ * OPTIMIZATION: Batch fetch profiles and admin data to avoid N+1 queries
  */
 export const getValidationQueue = onCall(
   {
@@ -796,45 +797,73 @@ export const getValidationQueue = onCall(
 
     const snapshot = await query.get();
 
-    // FIX: Fetch full profile data for each validation item
-    const validationItems = await Promise.all(
-      snapshot.docs.map(async (doc) => {
-        const data = doc.data();
+    // OPTIMIZATION: Batch fetch all profiles and admins upfront to avoid N+1 queries
+    // Collect unique IDs
+    const providerIds = new Set<string>();
+    const adminIds = new Set<string>();
 
-        // Fetch provider profile data for display
-        let profileData: Record<string, unknown> = {};
+    snapshot.docs.forEach((doc) => {
+      const data = doc.data();
+      if (data.providerId) providerIds.add(data.providerId);
+      if (data.assignedTo) adminIds.add(data.assignedTo);
+    });
+
+    // Batch fetch all provider profiles (max 10 per getAll call in Firestore)
+    const profilesMap = new Map<string, Record<string, unknown>>();
+    if (providerIds.size > 0) {
+      const providerIdArray = Array.from(providerIds);
+      // Split into chunks of 10 for getAll (Firestore limit)
+      for (let i = 0; i < providerIdArray.length; i += 10) {
+        const chunk = providerIdArray.slice(i, i + 10);
+        const profileRefs = chunk.map(id => db.collection("sos_profiles").doc(id));
         try {
-          const profileDoc = await db.collection("sos_profiles").doc(data.providerId).get();
-          if (profileDoc.exists) {
-            profileData = profileDoc.data() || {};
-          }
-        } catch (profileError) {
-          console.warn(`[getValidationQueue] Could not fetch profile ${data.providerId}:`, profileError);
-        }
-
-        // Get admin name if assigned
-        let assignedToName: string | null = null;
-        if (data.assignedTo) {
-          try {
-            const adminDoc = await db.collection("users").doc(data.assignedTo).get();
-            if (adminDoc.exists) {
-              const adminData = adminDoc.data();
-              assignedToName = adminData?.displayName || adminData?.email || data.assignedTo;
+          const profileDocs = await db.getAll(...profileRefs);
+          profileDocs.forEach((doc) => {
+            if (doc.exists) {
+              profilesMap.set(doc.id, doc.data() || {});
             }
-          } catch {
-            // Ignore error, use null
-          }
+          });
+        } catch (err) {
+          console.warn(`[getValidationQueue] Batch profile fetch error:`, err);
         }
+      }
+    }
 
-        // Get validation history from sub-collection
-        let validationHistory: unknown[] = [];
+    // Batch fetch all admin users
+    const adminsMap = new Map<string, { displayName?: string; email?: string }>();
+    if (adminIds.size > 0) {
+      const adminIdArray = Array.from(adminIds);
+      for (let i = 0; i < adminIdArray.length; i += 10) {
+        const chunk = adminIdArray.slice(i, i + 10);
+        const adminRefs = chunk.map(id => db.collection("users").doc(id));
         try {
-          const historySnapshot = await doc.ref
-            .collection("validation_history")
-            .orderBy("performedAt", "desc")
-            .limit(20)
-            .get();
-          validationHistory = historySnapshot.docs.map((hDoc) => {
+          const adminDocs = await db.getAll(...adminRefs);
+          adminDocs.forEach((doc) => {
+            if (doc.exists) {
+              const data = doc.data();
+              adminsMap.set(doc.id, {
+                displayName: data?.displayName,
+                email: data?.email,
+              });
+            }
+          });
+        } catch (err) {
+          console.warn(`[getValidationQueue] Batch admin fetch error:`, err);
+        }
+      }
+    }
+
+    // OPTIMIZATION: Fetch validation histories in parallel for all docs
+    const historyPromises = snapshot.docs.map(async (doc) => {
+      try {
+        const historySnapshot = await doc.ref
+          .collection("validation_history")
+          .orderBy("performedAt", "desc")
+          .limit(20)
+          .get();
+        return {
+          docId: doc.id,
+          history: historySnapshot.docs.map((hDoc) => {
             const hData = hDoc.data();
             return {
               action: hData.action,
@@ -843,52 +872,68 @@ export const getValidationQueue = onCall(
               at: hData.performedAt,
               reason: hData.details?.reason || hData.details?.changes?.join(", "),
             };
-          });
-        } catch {
-          // Ignore history fetch errors
-        }
-
-        // FIX: Return data in format expected by frontend ValidationItem interface
-        return {
-          id: doc.id,
-          providerId: data.providerId,
-          providerName: data.providerName || profileData.fullName || profileData.displayName || "Unknown",
-          providerEmail: data.providerEmail || profileData.email || "",
-          providerPhone: profileData.phone || profileData.phoneNumber || undefined,
-          providerType: data.providerType,
-          profilePhoto: profileData.photoURL || profileData.profilePhoto || profileData.avatar || undefined,
-          bio: profileData.bio || profileData.description || undefined,
-          specializations: profileData.specializations || profileData.expertise || [],
-          languages: profileData.languages || profileData.spokenLanguages || [],
-          country: profileData.country || profileData.currentCountry || undefined,
-          city: profileData.city || undefined,
-          yearsExperience: profileData.yearsExperience || profileData.experience || undefined,
-          barAssociation: profileData.barAssociation || profileData.barreau || undefined,
-          documents: profileData.documents || [],
-          kycDocuments: {
-            idDocument: profileData.idDocumentUrl || profileData.kycIdDocument || undefined,
-            proofOfAddress: profileData.proofOfAddressUrl || profileData.kycProofOfAddress || undefined,
-            professionalLicense: profileData.professionalLicenseUrl || profileData.kycProfessionalLicense || undefined,
-          },
-          submittedAt: data.submittedAt,
-          status: data.status,
-          assignedTo: data.assignedTo,
-          assignedToName,
-          assignedAt: data.assignedAt,
-          reviewNotes: data.decisionReason,
-          requestedChanges: data.requestedChanges?.map((change: string, _idx: number) => ({
-            field: "other",
-            message: change,
-            requestedAt: data.decisionAt || data.updatedAt,
-          })) || [],
-          validationHistory,
-          createdAt: data.createdAt,
-          updatedAt: data.updatedAt,
+          }),
         };
-      })
-    );
+      } catch {
+        return { docId: doc.id, history: [] };
+      }
+    });
 
-    // Get counts by status for stats
+    const historiesResults = await Promise.all(historyPromises);
+    const historiesMap = new Map(historiesResults.map(r => [r.docId, r.history]));
+
+    // Build validation items using pre-fetched data (no additional queries)
+    const validationItems = snapshot.docs.map((doc) => {
+      const data = doc.data();
+      const profileData = profilesMap.get(data.providerId) || {};
+      const adminData = data.assignedTo ? adminsMap.get(data.assignedTo) : null;
+      const validationHistory = historiesMap.get(doc.id) || [];
+
+      // Get admin name from pre-fetched data
+      const assignedToName = adminData
+        ? (adminData.displayName || adminData.email || data.assignedTo)
+        : null;
+
+      // Return data in format expected by frontend ValidationItem interface
+      return {
+        id: doc.id,
+        providerId: data.providerId,
+        providerName: data.providerName || profileData.fullName || profileData.displayName || "Unknown",
+        providerEmail: data.providerEmail || profileData.email || "",
+        providerPhone: profileData.phone || profileData.phoneNumber || undefined,
+        providerType: data.providerType,
+        profilePhoto: profileData.photoURL || profileData.profilePhoto || profileData.avatar || undefined,
+        bio: profileData.bio || profileData.description || undefined,
+        specializations: profileData.specializations || profileData.expertise || [],
+        languages: profileData.languages || profileData.spokenLanguages || [],
+        country: profileData.country || profileData.currentCountry || undefined,
+        city: profileData.city || undefined,
+        yearsExperience: profileData.yearsExperience || profileData.experience || undefined,
+        barAssociation: profileData.barAssociation || profileData.barreau || undefined,
+        documents: profileData.documents || [],
+        kycDocuments: {
+          idDocument: profileData.idDocumentUrl || profileData.kycIdDocument || undefined,
+          proofOfAddress: profileData.proofOfAddressUrl || profileData.kycProofOfAddress || undefined,
+          professionalLicense: profileData.professionalLicenseUrl || profileData.kycProfessionalLicense || undefined,
+        },
+        submittedAt: data.submittedAt,
+        status: data.status,
+        assignedTo: data.assignedTo,
+        assignedToName,
+        assignedAt: data.assignedAt,
+        reviewNotes: data.decisionReason,
+        requestedChanges: data.requestedChanges?.map((change: string, _idx: number) => ({
+          field: "other",
+          message: change,
+          requestedAt: data.decisionAt || data.updatedAt,
+        })) || [],
+        validationHistory,
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt,
+      };
+    });
+
+    // OPTIMIZATION: Fetch all counts in parallel
     const countPromises = ['pending', 'in_review', 'approved', 'rejected', 'changes_requested'].map(async (s) => {
       const countSnapshot = await db
         .collection("validation_queue")
@@ -898,43 +943,37 @@ export const getValidationQueue = onCall(
       return [s, countSnapshot.data().count];
     });
 
-    const counts = Object.fromEntries(await Promise.all(countPromises));
-
-    // Get today's approved/rejected counts
+    // Get today's approved/rejected counts in parallel with status counts
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
-    let approvedToday = 0;
-    let rejectedToday = 0;
-    try {
-      const approvedTodaySnapshot = await db
-        .collection("validation_queue")
+    const [counts, approvedTodayResult, rejectedTodayResult] = await Promise.all([
+      Promise.all(countPromises).then(results => Object.fromEntries(results)),
+      db.collection("validation_queue")
         .where("status", "==", "approved")
         .where("decisionAt", ">=", todayStart)
         .count()
-        .get();
-      approvedToday = approvedTodaySnapshot.data().count;
-
-      const rejectedTodaySnapshot = await db
-        .collection("validation_queue")
+        .get()
+        .then(snap => snap.data().count)
+        .catch(() => 0),
+      db.collection("validation_queue")
         .where("status", "==", "rejected")
         .where("decisionAt", ">=", todayStart)
         .count()
-        .get();
-      rejectedToday = rejectedTodaySnapshot.data().count;
-    } catch {
-      // Ignore - counts will be 0
-    }
+        .get()
+        .then(snap => snap.data().count)
+        .catch(() => 0),
+    ]);
 
-    // FIX: Return data in format expected by frontend
+    // Return data in format expected by frontend
     return {
       success: true,
       items: validationItems,
       stats: {
         pending: counts.pending || 0,
         inReview: counts.in_review || 0,
-        approvedToday,
-        rejectedToday,
+        approvedToday: approvedTodayResult,
+        rejectedToday: rejectedTodayResult,
       },
       // Also include legacy format for backward compatibility
       validations: validationItems,

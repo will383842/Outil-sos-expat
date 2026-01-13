@@ -53,14 +53,52 @@ const AdminLogin: React.FC = () => {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // P0 SECURITY FIX: Check admin status from Firestore ONLY (no frontend whitelist)
-      // Admin role must be set by backend (Cloud Functions) or existing admins
+      // STEP 1: Appeler bootstrapFirstAdmin pour créer/mettre à jour le document admin
+      // Cette fonction vérifie côté serveur si l'email est whitelisté
+      // et crée automatiquement le document Firestore avec role: 'admin'
+      try {
+        console.log('[AdminLogin] Calling bootstrapFirstAdmin...');
+        const bootstrapFn = httpsCallable(functions, 'bootstrapFirstAdmin');
+        const result = await bootstrapFn();
+        console.log('[AdminLogin] bootstrapFirstAdmin result:', result.data);
+
+        // Force token refresh to get new custom claims
+        await user.getIdToken(true);
+        console.log('[AdminLogin] Token refreshed');
+      } catch (bootstrapError: any) {
+        console.error('[AdminLogin] bootstrapFirstAdmin error:', bootstrapError);
+
+        // Si permission-denied, l'email n'est pas whitelisté
+        if (bootstrapError?.code === 'functions/permission-denied' ||
+            bootstrapError?.message?.includes('permission-denied')) {
+          setError(intl.formatMessage({ id: 'admin.login.error.unauthorized' }));
+          setIsLoading(false);
+          try {
+            await signOut(auth);
+          } catch (signOutError) {
+            console.error('Error signing out:', signOutError);
+          }
+          return;
+        }
+
+        // Pour les autres erreurs, essayer quand même avec setAdminClaims
+        // (l'utilisateur est peut-être déjà admin)
+        console.warn('[AdminLogin] Trying setAdminClaims as fallback...');
+        try {
+          const setAdminClaimsFn = httpsCallable(functions, 'setAdminClaims');
+          await setAdminClaimsFn();
+          await user.getIdToken(true);
+        } catch (claimsError) {
+          console.warn('[AdminLogin] setAdminClaims also failed:', claimsError);
+        }
+      }
+
+      // STEP 2: Vérifier que le document Firestore a bien role: admin
       const userRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userRef);
 
-      // Verify user exists and has admin role in Firestore
-      if (!userDoc.exists()) {
-        // User doesn't exist in Firestore - cannot be admin
+      if (!userDoc.exists() || userDoc.data()?.role !== 'admin') {
+        console.error('[AdminLogin] User document missing or not admin after bootstrap');
         setError(intl.formatMessage({ id: 'admin.login.error.unauthorized' }));
         setIsLoading(false);
         try {
@@ -71,41 +109,13 @@ const AdminLogin: React.FC = () => {
         return;
       }
 
-      const userData = userDoc.data();
-      const isAdmin = userData?.role === 'admin';
-
-      if (!isAdmin) {
-        // User exists but is not admin - deny access
-        setError(intl.formatMessage({ id: 'admin.login.error.unauthorized' }));
-        setIsLoading(false);
-        try {
-          await signOut(auth);
-        } catch (signOutError) {
-          console.error('Error signing out:', signOutError);
-        }
-        return;
-      }
-
-      // User is verified admin - set custom claims via Cloud Function
-      // This is CRITICAL for Firestore security rules to work
-      try {
-        const setAdminClaimsFn = httpsCallable(functions, 'setAdminClaims');
-        await setAdminClaimsFn();
-        console.log('[AdminLogin] Custom claims set successfully');
-
-        // Force token refresh to get new claims
-        await user.getIdToken(true);
-        console.log('[AdminLogin] Token refreshed with new claims');
-      } catch (claimsError) {
-        console.warn('[AdminLogin] Could not set custom claims:', claimsError);
-        // Continue anyway - claims might already be set
-      }
-
-      // Update last login timestamp
+      // STEP 3: Update last login timestamp
       await setDoc(userRef, {
         lastLoginAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       }, { merge: true });
+
+      console.log('[AdminLogin] Login successful, navigating to dashboard...');
 
       // Activer la navigation en attente - le useEffect surveillera AuthContext
       setPendingNavigation(true);

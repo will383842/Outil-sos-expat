@@ -101,6 +101,10 @@ export abstract class BaseAgent {
 
   /**
    * Submit a task to this agent
+   *
+   * Uses Firestore transaction to prevent race conditions when:
+   * - Multiple tasks are submitted simultaneously
+   * - Capacity check and currentTasks update must be atomic
    */
   async submitTask(
     taskType: string,
@@ -118,14 +122,10 @@ export abstract class BaseAgent {
       throw new Error(`Agent ${this.config.id} cannot handle task type: ${taskType}`);
     }
 
-    // Check capacity
-    if (this.state.currentTasks.length >= this.config.maxConcurrentTasks) {
-      throw new Error(`Agent ${this.config.id} at maximum capacity`);
-    }
-
-    // Create task
+    // Create task (ID generated before transaction)
+    const taskId = this.generateTaskId();
     const task: AgentTask = {
-      id: this.generateTaskId(),
+      id: taskId,
       agentId: this.config.id,
       type: taskType,
       priority,
@@ -143,12 +143,42 @@ export abstract class BaseAgent {
       }
     };
 
-    // Save task to Firestore
-    await this.saveTask(task);
+    // Use transaction to atomically check capacity and add task
+    await db.runTransaction(async (transaction) => {
+      const stateRef = db.collection('agent_states').doc(this.config.id);
+      const stateDoc = await transaction.get(stateRef);
 
-    // Add to current tasks
-    this.state.currentTasks.push(task.id);
-    await this.saveState();
+      let currentTasks: string[] = [];
+      if (stateDoc.exists) {
+        const stateData = stateDoc.data();
+        currentTasks = stateData?.currentTasks || [];
+      }
+
+      // Check capacity inside transaction (atomic)
+      if (currentTasks.length >= this.config.maxConcurrentTasks) {
+        throw new Error(`Agent ${this.config.id} at maximum capacity (${currentTasks.length}/${this.config.maxConcurrentTasks})`);
+      }
+
+      // Save task
+      const taskRef = db.collection('agent_tasks').doc(task.id);
+      transaction.set(taskRef, {
+        ...task,
+        updatedAt: FieldValue.serverTimestamp()
+      });
+
+      // Update state with new task
+      currentTasks.push(task.id);
+      transaction.set(stateRef, {
+        agentId: this.config.id,
+        status: AgentStatus.IDLE,
+        currentTasks,
+        lastActivityAt: Timestamp.now(),
+        updatedAt: FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      // Update local state
+      this.state.currentTasks = currentTasks;
+    });
 
     logger.info(`Task submitted to agent ${this.config.id}`, {
       taskId: task.id,
@@ -223,12 +253,47 @@ export abstract class BaseAgent {
       });
     }
 
-    // Remove from current tasks
-    this.state.currentTasks = this.state.currentTasks.filter(id => id !== taskId);
-    this.state.status = this.state.currentTasks.length > 0 ? AgentStatus.PROCESSING : AgentStatus.IDLE;
-    this.state.lastActivityAt = Timestamp.now();
+    // Use transaction to atomically update task and agent state
+    // This prevents race conditions when multiple tasks complete simultaneously
+    await db.runTransaction(async (transaction) => {
+      const stateRef = db.collection('agent_states').doc(this.config.id);
+      const taskRef = db.collection('agent_tasks').doc(taskId);
 
-    await Promise.all([this.saveTask(task), this.saveState()]);
+      // Get current state
+      const stateDoc = await transaction.get(stateRef);
+      let currentTasks: string[] = [];
+      if (stateDoc.exists) {
+        const stateData = stateDoc.data();
+        currentTasks = stateData?.currentTasks || [];
+      }
+
+      // Remove this task from currentTasks
+      currentTasks = currentTasks.filter(id => id !== taskId);
+
+      // Update task
+      transaction.set(taskRef, {
+        ...task,
+        updatedAt: FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      // Update state
+      const newStatus = currentTasks.length > 0 ? AgentStatus.PROCESSING : AgentStatus.IDLE;
+      transaction.set(stateRef, {
+        agentId: this.config.id,
+        status: newStatus,
+        currentTasks,
+        completedTasksCount: this.state.completedTasksCount,
+        failedTasksCount: this.state.failedTasksCount,
+        metrics: this.state.metrics,
+        lastActivityAt: Timestamp.now(),
+        updatedAt: FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      // Update local state
+      this.state.currentTasks = currentTasks;
+      this.state.status = newStatus;
+      this.state.lastActivityAt = Timestamp.now();
+    });
 
     return task;
   }
@@ -405,14 +470,27 @@ export abstract class BaseAgent {
   }
 
   /**
-   * Schedule a task retry
+   * Schedule a task retry with exponential backoff and jitter
+   *
+   * Jitter prevents "thundering herd" problem where all failed tasks
+   * retry at exactly the same time, potentially overloading the service.
+   *
+   * Formula: delay = baseDelay * (multiplier ^ retryCount) + jitter(±15%)
    */
   protected async scheduleRetry(task: AgentTask): Promise<void> {
     const retryCount = task.metadata.retryCount + 1;
-    const delay = Math.min(
+
+    // Calculate base exponential delay
+    let baseDelay = Math.min(
       this.config.retryPolicy.initialDelayMs * Math.pow(this.config.retryPolicy.backoffMultiplier, retryCount),
       this.config.retryPolicy.maxDelayMs
     );
+
+    // Add jitter (±15%) to prevent thundering herd
+    // This spreads out retries so they don't all hit at the same moment
+    const jitterPercent = 0.15;
+    const jitter = baseDelay * jitterPercent * (2 * Math.random() - 1); // Random between -15% and +15%
+    const delay = Math.round(Math.max(100, baseDelay + jitter)); // Minimum 100ms
 
     // Create retry task
     const retryTask: AgentTask = {
@@ -436,11 +514,13 @@ export abstract class BaseAgent {
       agentId: this.config.id
     });
 
-    logger.info(`Task scheduled for retry`, {
+    logger.info(`Task scheduled for retry with jitter`, {
       taskId: task.id,
       retryTaskId: retryTask.id,
       retryCount,
-      delayMs: delay
+      baseDelayMs: baseDelay,
+      jitterMs: Math.round(jitter),
+      finalDelayMs: delay
     });
   }
 

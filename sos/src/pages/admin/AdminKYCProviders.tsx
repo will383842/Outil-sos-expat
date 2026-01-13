@@ -160,15 +160,15 @@ const AdminKYCProviders: React.FC = () => {
   const [rejectTargetId, setRejectTargetId] = useState<string | null>(null);
   const [rejectDocumentIndex, setRejectDocumentIndex] = useState<number | null>(null);
 
-  // Raisons de rejet prédéfinies
+  // Raisons de rejet prédéfinies (traduites via intl)
   const rejectionReasons = [
-    'Document illisible ou de mauvaise qualité',
-    'Document expiré',
-    'Document non valide ou frauduleux',
-    'Informations incohérentes',
-    'Document incomplet',
-    'Adresse non conforme',
-    'Photo d\'identité non conforme',
+    intl.formatMessage({ id: 'admin.kyc.rejectionReasons.illegible', defaultMessage: 'Document illisible ou de mauvaise qualité' }),
+    intl.formatMessage({ id: 'admin.kyc.rejectionReasons.expired', defaultMessage: 'Document expiré' }),
+    intl.formatMessage({ id: 'admin.kyc.rejectionReasons.invalid', defaultMessage: 'Document non valide ou frauduleux' }),
+    intl.formatMessage({ id: 'admin.kyc.rejectionReasons.inconsistent', defaultMessage: 'Informations incohérentes' }),
+    intl.formatMessage({ id: 'admin.kyc.rejectionReasons.incomplete', defaultMessage: 'Document incomplet' }),
+    intl.formatMessage({ id: 'admin.kyc.rejectionReasons.addressInvalid', defaultMessage: 'Adresse non conforme' }),
+    intl.formatMessage({ id: 'admin.kyc.rejectionReasons.photoInvalid', defaultMessage: 'Photo d\'identité non conforme' }),
   ];
 
   const calculateStats = useCallback((providersData: KYCProvider[]) => {
@@ -572,12 +572,12 @@ const AdminKYCProviders: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
-              <Shield className="w-6 h-6 text-orange-600" /> Validation KYC Prestataires
+              <Shield className="w-6 h-6 text-orange-600" /> {intl.formatMessage({ id: 'admin.kyc.title', defaultMessage: 'Validation KYC Prestataires' })}
             </h1>
             <p className="text-sm text-gray-500">
-              Vérification des documents et identités des prestataires
+              {intl.formatMessage({ id: 'admin.kyc.subtitle', defaultMessage: 'Vérification des documents et identités des prestataires' })}
               <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                Les profils AAA sont exclus (KYC délégué)
+                {intl.formatMessage({ id: 'admin.kyc.aaaExcluded', defaultMessage: 'Les profils AAA sont exclus (KYC délégué)' })}
               </span>
             </p>
           </div>
@@ -585,7 +585,7 @@ const AdminKYCProviders: React.FC = () => {
           <div className="flex items-center gap-2">
             <Button onClick={() => setShowFilters(!showFilters)} variant="secondary">
               <Filter className="w-4 h-4 mr-2" />
-              Filtres
+              {intl.formatMessage({ id: 'admin.kyc.filters', defaultMessage: 'Filtres' })}
               {Object.values(filters).some(v => v !== 'all' && v !== '' && v !== 'pending') && (
                 <span className="ml-1 bg-orange-500 text-white text-xs rounded-full px-2 py-0.5">
                   !
@@ -598,7 +598,7 @@ const AdminKYCProviders: React.FC = () => {
               variant="secondary"
               disabled={loading}
             >
-              {loading ? 'Chargement...' : 'Actualiser'}
+              {loading ? intl.formatMessage({ id: 'admin.kyc.loading', defaultMessage: 'Chargement...' }) : intl.formatMessage({ id: 'admin.kyc.refresh', defaultMessage: 'Actualiser' })}
             </Button>
           </div>
         </div>
@@ -611,7 +611,7 @@ const AdminKYCProviders: React.FC = () => {
                 <Shield className="w-6 h-6 text-orange-600" />
               </div>
               <div className="ml-4">
-                <h3 className="text-sm font-medium text-gray-500">Total Dossiers</h3>
+                <h3 className="text-sm font-medium text-gray-500">{intl.formatMessage({ id: 'admin.kyc.totalFiles', defaultMessage: 'Total Dossiers' })}</h3>
                 <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
               </div>
             </div>
@@ -623,7 +623,7 @@ const AdminKYCProviders: React.FC = () => {
                 <Clock className="w-6 h-6 text-yellow-600" />
               </div>
               <div className="ml-4">
-                <h3 className="text-sm font-medium text-gray-500">En attente</h3>
+                <h3 className="text-sm font-medium text-gray-500">{intl.formatMessage({ id: 'admin.kyc.pending', defaultMessage: 'En attente' })}</h3>
                 <p className="text-2xl font-bold text-gray-900">{stats.pending}</p>
               </div>
             </div>
@@ -635,7 +635,7 @@ const AdminKYCProviders: React.FC = () => {
                 <CheckCircle className="w-6 h-6 text-green-600" />
               </div>
               <div className="ml-4">
-                <h3 className="text-sm font-medium text-gray-500">Approuvés</h3>
+                <h3 className="text-sm font-medium text-gray-500">{intl.formatMessage({ id: 'admin.kyc.approved', defaultMessage: 'Approuvés' })}</h3>
                 <p className="text-2xl font-bold text-gray-900">{stats.approved}</p>
               </div>
             </div>
@@ -647,7 +647,7 @@ const AdminKYCProviders: React.FC = () => {
                 <XCircle className="w-6 h-6 text-red-600" />
               </div>
               <div className="ml-4">
-                <h3 className="text-sm font-medium text-gray-500">Rejetés</h3>
+                <h3 className="text-sm font-medium text-gray-500">{intl.formatMessage({ id: 'admin.kyc.rejected', defaultMessage: 'Rejetés' })}</h3>
                 <p className="text-2xl font-bold text-gray-900">{stats.rejected}</p>
               </div>
             </div>
@@ -659,7 +659,7 @@ const AdminKYCProviders: React.FC = () => {
                 <AlertTriangle className="w-6 h-6 text-gray-600" />
               </div>
               <div className="ml-4">
-                <h3 className="text-sm font-medium text-gray-500">Incomplets</h3>
+                <h3 className="text-sm font-medium text-gray-500">{intl.formatMessage({ id: 'admin.kyc.incomplete', defaultMessage: 'Incomplets' })}</h3>
                 <p className="text-2xl font-bold text-gray-900">{stats.incomplete}</p>
               </div>
             </div>

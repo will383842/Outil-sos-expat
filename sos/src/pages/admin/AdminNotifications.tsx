@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAdminTranslations } from '../../utils/adminTranslations';
+import { useIntl } from 'react-intl';
 import { useNavigate } from 'react-router-dom';
 import {
   Bell,
@@ -60,7 +60,7 @@ interface NotificationStats {
 const AdminNotifications: React.FC = () => {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
-  const adminT = useAdminTranslations();
+  const intl = useIntl();
 
   const [notificationLogs, setNotificationLogs] = useState<NotificationLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -157,17 +157,17 @@ const AdminNotifications: React.FC = () => {
   const handleTestNotifications = async () => {
     const providerId = testProviderId.trim();
     if (!providerId) {
-      alert('Veuillez entrer un ID de prestataire valide');
+      alert(intl.formatMessage({ id: 'admin.notifications.test.enterValidId' }));
       return;
     }
 
     setIsTestingNotifications(true);
     try {
-      // Récupérer le prestataire pour avoir email/phone/etc.
+      // Get provider data for email/phone/etc.
       const providerRef = fsDoc(db, 'sos_profiles', providerId);
       const snap = await getDoc(providerRef);
       if (!snap.exists()) {
-        throw new Error("Prestataire introuvable");
+        throw new Error(intl.formatMessage({ id: 'admin.notifications.test.providerNotFound' }));
       }
       const p = snap.data() as {
         email?: string;
@@ -181,41 +181,41 @@ const AdminNotifications: React.FC = () => {
       const recipientName =
         p.name || [p.firstName, p.lastName].filter(Boolean).join(' ') || `Provider ${providerId}`;
 
-      // Construire la notification de test multi-canaux
+      // Build multi-channel test notification
       const payload: MultiChannelNotification = {
         type: 'admin_test',
         recipientEmail: p.email,
         recipientName,
         recipientCountry: p.country,
-        emailSubject: 'Test de notification • Admin',
+        emailSubject: intl.formatMessage({ id: 'admin.notifications.test.emailSubject' }),
         emailHtml: `
-          <h2>Test de notification</h2>
-          <p>Ceci est un envoi de test depuis l'interface admin.</p>
-          <p><strong>Prestataire:</strong> ${recipientName} (${providerId})</p>
+          <h2>${intl.formatMessage({ id: 'admin.notifications.test.emailTitle' })}</h2>
+          <p>${intl.formatMessage({ id: 'admin.notifications.test.emailBody' })}</p>
+          <p><strong>${intl.formatMessage({ id: 'admin.notifications.test.provider' })}:</strong> ${recipientName} (${providerId})</p>
         `.trim(),
       };
 
       const ok = await notificationService.sendMultiChannelNotification(payload);
 
       if (ok) {
-        alert('Test de notification envoyé avec succès ! Vérifiez les logs pour les détails.');
+        alert(intl.formatMessage({ id: 'admin.notifications.test.success' }));
         setShowTestModal(false);
         setTestProviderId('');
         void loadNotificationLogs();
       } else {
-        alert("L’envoi de test n’a pas abouti (voir logs).");
+        alert(intl.formatMessage({ id: 'admin.notifications.test.failed' }));
       }
     } catch (error) {
-      console.error('Erreur lors du test de notification:', error);
+      console.error('Error during notification test:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      alert(`Erreur lors du test de notification: ${errorMessage}`);
+      alert(intl.formatMessage({ id: 'admin.notifications.test.error' }, { error: errorMessage }));
     } finally {
       setIsTestingNotifications(false);
     }
   };
 
   const formatDate = (date: Date) =>
-    new Intl.DateTimeFormat('fr-FR', {
+    new Intl.DateTimeFormat(intl.locale, {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -239,32 +239,32 @@ const AdminNotifications: React.FC = () => {
     success ? (
       <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium flex items-center">
         <CheckCircle size={12} className="mr-1" />
-        Succès
+        {intl.formatMessage({ id: 'admin.notifications.status.success' })}
       </span>
     ) : (
       <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium flex items-center">
         <XCircle size={12} className="mr-1" />
-        Échec
+        {intl.formatMessage({ id: 'admin.notifications.status.failed' })}
       </span>
     );
 
   return (
     <AdminLayout>
-      <ErrorBoundary fallback={<div className="p-8 text-center">Une erreur est survenue lors du chargement des notifications. Veuillez réessayer.</div>}>
+      <ErrorBoundary fallback={<div className="p-8 text-center">{intl.formatMessage({ id: 'admin.notifications.error.loading' })}</div>}>
         <div className="px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-2xl font-bold text-gray-900">Système de notifications</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{intl.formatMessage({ id: 'admin.notifications.title' })}</h1>
             <div className="flex items-center space-x-4">
               <Button
                 onClick={() => setShowTestModal(true)}
                 className="bg-purple-600 hover:bg-purple-700"
               >
                 <Send size={18} className="mr-2" />
-                Tester les notifications
+                {intl.formatMessage({ id: 'admin.notifications.testButton' })}
               </Button>
               <Button onClick={loadNotificationLogs} variant="outline">
                 <RefreshCw size={18} className="mr-2" />
-                Actualiser
+                {intl.formatMessage({ id: 'admin.notifications.refresh' })}
               </Button>
             </div>
           </div>
@@ -274,7 +274,7 @@ const AdminNotifications: React.FC = () => {
             <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total notifications</p>
+                  <p className="text-sm font-medium text-gray-600">{intl.formatMessage({ id: 'admin.notifications.stats.total' })}</p>
                   <p className="text-3xl font-bold text-gray-900 mt-1">{stats.totalNotifications}</p>
                 </div>
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -286,7 +286,7 @@ const AdminNotifications: React.FC = () => {
             <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Succès</p>
+                  <p className="text-sm font-medium text-gray-600">{intl.formatMessage({ id: 'admin.notifications.stats.successful' })}</p>
                   <p className="text-3xl font-bold text-green-600 mt-1">
                     {stats.successfulNotifications}
                   </p>
@@ -300,7 +300,7 @@ const AdminNotifications: React.FC = () => {
             <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Échecs</p>
+                  <p className="text-sm font-medium text-gray-600">{intl.formatMessage({ id: 'admin.notifications.stats.failed' })}</p>
                   <p className="text-3xl font-bold text-red-600 mt-1">
                     {stats.failedNotifications}
                   </p>
@@ -314,7 +314,7 @@ const AdminNotifications: React.FC = () => {
             <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Taux de succès</p>
+                  <p className="text-sm font-medium text-gray-600">{intl.formatMessage({ id: 'admin.notifications.stats.successRate' })}</p>
                   <p className="text-3xl font-bold text-blue-600 mt-1">
                     {stats.totalNotifications > 0
                       ? Math.round((stats.successfulNotifications / stats.totalNotifications) * 100)
@@ -331,16 +331,16 @@ const AdminNotifications: React.FC = () => {
 
           {/* Channel Stats */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Statistiques par canal</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{intl.formatMessage({ id: 'admin.notifications.channelStats.title' })}</h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center">
                 <Mail className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-                <p className="text-sm text-gray-600">Email</p>
+                <p className="text-sm text-gray-600">{intl.formatMessage({ id: 'admin.notifications.channel.email' })}</p>
                 <p className="text-xl font-bold text-blue-600">{stats.emailSuccess}</p>
               </div>
               <div className="text-center">
                 <Smartphone className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-                <p className="text-sm text-gray-600">Push</p>
+                <p className="text-sm text-gray-600">{intl.formatMessage({ id: 'admin.notifications.channel.push' })}</p>
                 <p className="text-xl font-bold text-purple-600">{stats.pushSuccess}</p>
               </div>
             </div>
@@ -349,26 +349,26 @@ const AdminNotifications: React.FC = () => {
           {/* Notification Logs Table */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Historique des notifications</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{intl.formatMessage({ id: 'admin.notifications.history.title' })}</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Destinataire
+                      {intl.formatMessage({ id: 'admin.notifications.table.recipient' })}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Type
+                      {intl.formatMessage({ id: 'admin.notifications.table.type' })}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Canaux
+                      {intl.formatMessage({ id: 'admin.notifications.table.channels' })}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Statut
+                      {intl.formatMessage({ id: 'admin.notifications.table.status' })}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date
+                      {intl.formatMessage({ id: 'admin.notifications.table.date' })}
                     </th>
                   </tr>
                 </thead>
@@ -379,7 +379,7 @@ const AdminNotifications: React.FC = () => {
                         <div className="flex justify-center">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600" />
                         </div>
-                        <p className="mt-2">{adminT.loading}</p>
+                        <p className="mt-2">{intl.formatMessage({ id: 'admin.notifications.loading' })}</p>
                       </td>
                     </tr>
                   ) : notificationLogs.length > 0 ? (
@@ -412,9 +412,9 @@ const AdminNotifications: React.FC = () => {
                             }`}
                           >
                             {notification.type === 'call_request'
-                              ? "Demande d'appel"
+                              ? intl.formatMessage({ id: 'admin.notifications.type.callRequest' })
                               : notification.type === 'call_missed'
-                              ? 'Appel manqué'
+                              ? intl.formatMessage({ id: 'admin.notifications.type.callMissed' })
                               : notification.type}
                           </span>
                         </td>
@@ -443,7 +443,7 @@ const AdminNotifications: React.FC = () => {
                   ) : (
                     <tr>
                       <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
-                        {adminT.noResults}
+                        {intl.formatMessage({ id: 'admin.notifications.noResults' })}
                       </td>
                     </tr>
                   )}
@@ -457,7 +457,7 @@ const AdminNotifications: React.FC = () => {
         <Modal
           isOpen={showTestModal}
           onClose={() => setShowTestModal(false)}
-          title="Tester le système de notifications"
+          title={intl.formatMessage({ id: 'admin.notifications.modal.title' })}
           size="medium"
         >
           <div className="space-y-4">
@@ -466,12 +466,11 @@ const AdminNotifications: React.FC = () => {
                 <AlertTriangle className="h-5 w-5 text-blue-400" />
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-blue-800">
-                    Test du système de notifications
+                    {intl.formatMessage({ id: 'admin.notifications.modal.infoTitle' })}
                   </h3>
                   <div className="mt-2 text-sm text-blue-700">
                     <p>
-                      Ce test enverra une notification de démonstration au prestataire sélectionné
-                      via les canaux disponibles (email, push).
+                      {intl.formatMessage({ id: 'admin.notifications.modal.infoDescription' })}
                     </p>
                   </div>
                 </div>
@@ -480,7 +479,7 @@ const AdminNotifications: React.FC = () => {
 
             <div>
               <label htmlFor="testProviderId" className="block text-sm font-medium text-gray-700 mb-1">
-                ID du prestataire à tester
+                {intl.formatMessage({ id: 'admin.notifications.modal.providerIdLabel' })}
               </label>
               <input
                 id="testProviderId"
@@ -488,10 +487,10 @@ const AdminNotifications: React.FC = () => {
                 value={testProviderId}
                 onChange={(e) => setTestProviderId(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                placeholder="Entrez l'ID du prestataire (ex: user123)"
+                placeholder={intl.formatMessage({ id: 'admin.notifications.modal.providerIdPlaceholder' })}
               />
               <p className="text-xs text-gray-500 mt-1">
-                L'ID doit correspondre à un prestataire existant dans la base de données
+                {intl.formatMessage({ id: 'admin.notifications.modal.providerIdHelp' })}
               </p>
             </div>
 
@@ -501,7 +500,7 @@ const AdminNotifications: React.FC = () => {
                 variant="outline"
                 disabled={isTestingNotifications}
               >
-                Annuler
+                {intl.formatMessage({ id: 'admin.notifications.modal.cancel' })}
               </Button>
               <Button
                 onClick={handleTestNotifications}
@@ -510,7 +509,7 @@ const AdminNotifications: React.FC = () => {
                 disabled={!testProviderId.trim()}
               >
                 <Send size={16} className="mr-2" />
-                Envoyer le test
+                {intl.formatMessage({ id: 'admin.notifications.modal.sendTest' })}
               </Button>
             </div>
           </div>

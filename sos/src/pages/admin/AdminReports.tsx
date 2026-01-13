@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useIntl } from 'react-intl';
 import {
   AlertTriangle,
   Search,
@@ -117,6 +118,8 @@ const safeLower = (v?: string): string => (v ?? '').toLowerCase();
 
 const AdminReports: React.FC = () => {
   const navigate = useNavigate();
+  const intl = useIntl();
+  const t = (id: string, values?: Record<string, string | number>) => intl.formatMessage({ id }, values);
   const { user: rawUser } = useAuth() as { user: CurrentUser };
   const currentUser = rawUser;
 
@@ -162,17 +165,17 @@ const AdminReports: React.FC = () => {
           : 'pending';
 
         // Remonter le contenu textuel dans "details" pour une recherche générique
-        const details = data.message ?? data.subject ?? 'Message de contact';
+        const details = data.message ?? data.subject ?? t('admin.reports.fallback.contactMessage');
 
         return {
           id: d.id,
           type: 'contact',
           status: normalizedStatus,
           reporterId: 'system',
-          reporterName: 'Système',
+          reporterName: t('admin.reports.fallback.system'),
           targetId: d.id,
           targetType: 'contact',
-          reason: 'Message de contact',
+          reason: t('admin.reports.fallback.contactMessage'),
           details,
           createdAt,
           updatedAt,
@@ -206,10 +209,10 @@ const AdminReports: React.FC = () => {
             type: (data.type as ReportType) || 'review',
             status: isReportStatus(data.status) ? data.status : 'pending',
             reporterId: data.reporterId || 'unknown',
-            reporterName: data.reporterName || 'Utilisateur',
+            reporterName: data.reporterName || t('admin.reports.fallback.user'),
             targetId: data.targetId || d.id,
             targetType: (data.targetType as TargetType) || 'review',
-            reason: data.reason || 'Signalement',
+            reason: data.reason || t('admin.reports.fallback.report'),
             details: data.details,
             createdAt: toDate(data.createdAt),
             updatedAt: data.updatedAt ? toDate(data.updatedAt) : undefined,
@@ -221,7 +224,6 @@ const AdminReports: React.FC = () => {
         });
       } catch (reportsError) {
         // La collection 'reports' n'existe peut-être pas encore - c'est OK
-        console.log('Collection reports non trouvée ou vide:', reportsError);
       }
 
       // 3) Agréger proprement (un seul setReports)
@@ -274,13 +276,13 @@ const AdminReports: React.FC = () => {
       setShowReportModal(false);
       setSelectedReport(null);
       // Optionnel: remplace par ton système de toast
-       
-      alert('Message traité avec succès');
+
+      alert(t('admin.reports.alert.successResolved'));
     } catch (error) {
-       
+
       console.error('Error resolving report:', error);
-       
-      alert('Erreur lors du traitement du message');
+
+      alert(t('admin.reports.alert.errorResolving'));
     } finally {
       setIsActionLoading(false);
     }
@@ -301,14 +303,14 @@ const AdminReports: React.FC = () => {
         return (
           <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium inline-flex items-center">
             <CheckCircle size={12} className="mr-1" />
-            Résolu
+            {t('admin.reports.status.resolved')}
           </span>
         );
       case 'dismissed':
         return (
           <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium inline-flex items-center">
             <XCircle size={12} className="mr-1" />
-            Ignoré
+            {t('admin.reports.status.dismissed')}
           </span>
         );
       case 'pending':
@@ -316,7 +318,7 @@ const AdminReports: React.FC = () => {
         return (
           <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium inline-flex items-center">
             <AlertTriangle size={12} className="mr-1" />
-            En attente
+            {t('admin.reports.status.pending')}
           </span>
         );
     }
@@ -328,14 +330,14 @@ const AdminReports: React.FC = () => {
         return (
           <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium inline-flex items-center">
             <Mail size={12} className="mr-1" />
-            Contact
+            {t('admin.reports.targetType.contact')}
           </span>
         );
       case 'review':
         return (
           <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium inline-flex items-center">
             <Star size={12} className="mr-1" />
-            Avis
+            {t('admin.reports.targetType.review')}
           </span>
         );
       default:
@@ -371,15 +373,15 @@ const AdminReports: React.FC = () => {
 
   return (
     <AdminLayout>
-      <ErrorBoundary fallback={<div className="p-8 text-center">Une erreur est survenue lors du chargement des signalements. Veuillez réessayer.</div>}>
+      <ErrorBoundary fallback={<div className="p-8 text-center">{t('admin.reports.errorBoundary')}</div>}>
         <div className="px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-2xl font-bold text-gray-900">Messages de contact et signalements</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t('admin.reports.title')}</h1>
             <div className="flex items-center space-x-4">
               <form onSubmit={(e) => e.preventDefault()} className="relative">
                 <input
                   type="text"
-                  placeholder="Rechercher..."
+                  placeholder={t('admin.reports.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
@@ -391,10 +393,10 @@ const AdminReports: React.FC = () => {
                 onChange={(e) => setSelectedStatus(e.target.value as SelectedStatusFilter)}
                 className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
               >
-                <option value="all">Tous les statuts</option>
-                <option value="pending">En attente</option>
-                <option value="resolved">Résolus</option>
-                <option value="dismissed">Ignorés</option>
+                <option value="all">{t('admin.reports.allStatuses')}</option>
+                <option value="pending">{t('admin.reports.pending')}</option>
+                <option value="resolved">{t('admin.reports.resolved')}</option>
+                <option value="dismissed">{t('admin.reports.dismissed')}</option>
               </select>
             </div>
           </div>
@@ -405,22 +407,22 @@ const AdminReports: React.FC = () => {
                 <thead className="bg-gray-50">
                   <tr>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Expéditeur
+                      {t('admin.reports.table.sender')}
                     </th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Type
+                      {t('admin.reports.table.type')}
                     </th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Sujet
+                      {t('admin.reports.table.subject')}
                     </th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date
+                      {t('admin.reports.table.date')}
                     </th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Statut
+                      {t('admin.reports.table.status')}
                     </th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
+                      {t('admin.reports.table.actions')}
                     </th>
                   </tr>
                 </thead>
@@ -431,7 +433,7 @@ const AdminReports: React.FC = () => {
                         <div className="flex justify-center">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600" />
                         </div>
-                        <p className="mt-2">Chargement...</p>
+                        <p className="mt-2">{t('admin.reports.loading')}</p>
                       </td>
                     </tr>
                   ) : filteredReports.length > 0 ? (
@@ -446,7 +448,7 @@ const AdminReports: React.FC = () => {
                               <div className="text-sm font-medium text-gray-900">
                                 {report.firstName && report.lastName
                                   ? `${report.firstName} ${report.lastName}`
-                                  : report.reporterName ?? 'Utilisateur'}
+                                  : report.reporterName ?? t('admin.reports.fallback.user')}
                               </div>
                               <div className="text-sm text-gray-500">
                                 {report.email ?? report.reporterId}
@@ -473,7 +475,7 @@ const AdminReports: React.FC = () => {
                             <button
                               onClick={() => handleViewReport(report)}
                               className="text-blue-600 hover:text-blue-800"
-                              title="Voir détails"
+                              title={t('admin.reports.modal.viewDetails')}
                             >
                               <Eye size={18} />
                             </button>
@@ -484,7 +486,7 @@ const AdminReports: React.FC = () => {
                   ) : (
                     <tr>
                       <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                        Aucun message trouvé
+                        {t('admin.reports.noMessages')}
                       </td>
                     </tr>
                   )}
@@ -497,7 +499,7 @@ const AdminReports: React.FC = () => {
         <Modal
           isOpen={showReportModal}
           onClose={() => setShowReportModal(false)}
-          title="Détails du message"
+          title={t('admin.reports.modal.title')}
           size="large"
         >
           {selectedReport && (
@@ -506,8 +508,8 @@ const AdminReports: React.FC = () => {
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900">
                     {selectedReport.type === 'contact'
-                      ? 'Message de contact'
-                      : `Signalement #${selectedReport.id.substring(0, 8)}`}
+                      ? t('admin.reports.modal.contactMessage')
+                      : t('admin.reports.modal.reportId', { id: selectedReport.id.substring(0, 8) })}
                   </h3>
                   <div className="flex items-center space-x-2 mt-1">
                     {getTargetTypeBadge(selectedReport.targetType)}
@@ -516,41 +518,41 @@ const AdminReports: React.FC = () => {
                 </div>
                 <div className="text-right">
                   <div className="text-sm text-gray-500">
-                    Reçu le {formatDate(selectedReport.createdAt)}
+                    {t('admin.reports.modal.receivedOn', { date: formatDate(selectedReport.createdAt) })}
                   </div>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h4 className="text-sm font-medium text-gray-500 mb-2">Informations de l'expéditeur</h4>
+                  <h4 className="text-sm font-medium text-gray-500 mb-2">{t('admin.reports.modal.senderInfo')}</h4>
                   <div className="bg-gray-50 rounded-lg p-4 space-y-4">
                     <div>
-                      <h5 className="text-sm font-medium text-gray-700 mb-1">Nom</h5>
+                      <h5 className="text-sm font-medium text-gray-700 mb-1">{t('admin.reports.modal.name')}</h5>
                       <div className="text-sm font-medium">
                         {selectedReport.firstName && selectedReport.lastName
                           ? `${selectedReport.firstName} ${selectedReport.lastName}`
-                          : selectedReport.reporterName ?? 'Non spécifié'}
+                          : selectedReport.reporterName ?? t('admin.reports.modal.notSpecified')}
                       </div>
                     </div>
 
                     {selectedReport.email && (
                       <div>
-                        <h5 className="text-sm font-medium text-gray-700 mb-1">Email</h5>
+                        <h5 className="text-sm font-medium text-gray-700 mb-1">{t('admin.reports.modal.email')}</h5>
                         <div className="text-sm text-gray-700">{selectedReport.email}</div>
                       </div>
                     )}
 
                     {selectedReport.category && (
                       <div>
-                        <h5 className="text-sm font-medium text-gray-700 mb-1">Catégorie</h5>
+                        <h5 className="text-sm font-medium text-gray-700 mb-1">{t('admin.reports.modal.category')}</h5>
                         <div className="text-sm text-gray-700">{selectedReport.category}</div>
                       </div>
                     )}
 
                     {selectedReport.priority && (
                       <div>
-                        <h5 className="text-sm font-medium text-gray-700 mb-1">Priorité</h5>
+                        <h5 className="text-sm font-medium text-gray-700 mb-1">{t('admin.reports.modal.priority')}</h5>
                         <span
                           className={`px-2 py-1 rounded-full text-xs font-medium ${
                             selectedReport.priority === 'high'
@@ -568,17 +570,17 @@ const AdminReports: React.FC = () => {
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-medium text-gray-500 mb-2">Contenu du message</h4>
+                  <h4 className="text-sm font-medium text-gray-500 mb-2">{t('admin.reports.modal.messageContent')}</h4>
                   <div className="bg-gray-50 rounded-lg p-4 space-y-4">
                     {selectedReport.subject && (
                       <div>
-                        <h5 className="text-sm font-medium text-gray-700 mb-1">Sujet</h5>
+                        <h5 className="text-sm font-medium text-gray-700 mb-1">{t('admin.reports.modal.subject')}</h5>
                         <p className="text-sm text-gray-700">{selectedReport.subject}</p>
                       </div>
                     )}
 
                     <div>
-                      <h5 className="text-sm font-medium text-gray-700 mb-1">Message</h5>
+                      <h5 className="text-sm font-medium text-gray-700 mb-1">{t('admin.reports.modal.message')}</h5>
                       <p className="text-sm text-gray-700 whitespace-pre-line">
                         {selectedReport.message ?? selectedReport.details ?? ''}
                       </p>
@@ -590,7 +592,7 @@ const AdminReports: React.FC = () => {
               {selectedReport.status === 'pending' && (
                 <div>
                   <label htmlFor="adminNotes" className="block text-sm font-medium text-gray-700 mb-1">
-                    Réponse
+                    {t('admin.reports.modal.response')}
                   </label>
                   <textarea
                     id="adminNotes"
@@ -598,14 +600,14 @@ const AdminReports: React.FC = () => {
                     onChange={(e) => setAdminNotes(e.target.value)}
                     rows={4}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                    placeholder="Rédigez votre réponse..."
+                    placeholder={t('admin.reports.modal.responsePlaceholder')}
                   />
                 </div>
               )}
 
               <div className="flex justify-end space-x-3 pt-4">
                 <Button onClick={() => setShowReportModal(false)} variant="outline">
-                  Fermer
+                  {t('admin.reports.modal.close')}
                 </Button>
 
                 {selectedReport.status === 'pending' && (
@@ -615,7 +617,7 @@ const AdminReports: React.FC = () => {
                     disabled={isActionLoading}
                   >
                     <CheckCircle size={16} className="mr-2" />
-                    Marquer comme traité
+                    {t('admin.reports.modal.markAsResolved')}
                   </Button>
                 )}
               </div>

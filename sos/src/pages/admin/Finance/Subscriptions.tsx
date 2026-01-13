@@ -154,7 +154,12 @@ const TIER_CONFIG: Record<SubscriptionTier, { label: string; color: string; bgCo
   unlimited: { label: 'Enterprise', color: 'text-amber-700', bgColor: 'bg-amber-100' },
 };
 
-const PAGE_SIZE = 20;
+// P2 FIX: Configurable page sizes for pagination
+const PAGE_SIZES = [20, 50, 100] as const;
+const DEFAULT_PAGE_SIZE = 20;
+// P2 FIX: Increased Firestore limit to handle larger datasets
+// Note: For very large datasets (>5000), implement cursor-based server-side pagination
+const FIRESTORE_FETCH_LIMIT = 5000;
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -600,8 +605,10 @@ const Subscriptions: React.FC = () => {
   const [sortField, setSortField] = useState<SortField>('period');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
-  // Pagination
+  // Pagination - P2 FIX: Configurable page size
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
+  const [totalFetched, setTotalFetched] = useState(0);
 
   // Selection
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -619,16 +626,34 @@ const Subscriptions: React.FC = () => {
     setError(null);
 
     try {
-      // Load subscriptions from Firestore
-      const subsQuery = query(
-        collection(db, 'subscriptions'),
-        orderBy('createdAt', 'desc'),
-        limit(1000)
-      );
-      const snapshot = await getDocs(subsQuery);
+      // Step 1: Load subscriptions from Firestore
+      console.log('[Subscriptions] Step 1: Loading subscriptions...');
+      let snapshot;
+      try {
+        // P2 FIX: Increased limit for larger datasets
+        const subsQuery = query(
+          collection(db, 'subscriptions'),
+          orderBy('createdAt', 'desc'),
+          limit(FIRESTORE_FETCH_LIMIT)
+        );
+        snapshot = await getDocs(subsQuery);
+        setTotalFetched(snapshot.docs.length);
+        console.log(`[Subscriptions] Step 1 OK: ${snapshot.docs.length} subscriptions loaded (limit: ${FIRESTORE_FETCH_LIMIT})`);
+      } catch (e: any) {
+        console.error('[Subscriptions] Step 1 FAILED - subscriptions query:', e);
+        throw new Error(`Failed to load subscriptions: ${e.message}`);
+      }
 
-      // Load providers for user data
-      const providersSnapshot = await getDocs(collection(db, 'providers'));
+      // Step 2: Load providers for user data - using sos_profiles collection
+      console.log('[Subscriptions] Step 2: Loading sos_profiles...');
+      let providersSnapshot;
+      try {
+        providersSnapshot = await getDocs(collection(db, 'sos_profiles'));
+        console.log(`[Subscriptions] Step 2 OK: ${providersSnapshot.docs.length} profiles loaded`);
+      } catch (e: any) {
+        console.error('[Subscriptions] Step 2 FAILED - sos_profiles query:', e);
+        throw new Error(`Failed to load profiles: ${e.message}`);
+      }
       const providersMap = new Map<string, {
         name: string;
         email: string;
@@ -639,34 +664,48 @@ const Subscriptions: React.FC = () => {
       providersSnapshot.docs.forEach((docSnap) => {
         const data = docSnap.data();
         providersMap.set(docSnap.id, {
-          name: data.displayName || `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'Unknown',
+          name: data.displayName || `${data.firstName || ''} ${data.lastName || ''}`.trim() || data.name || 'Unknown',
           email: data.email || '',
-          avatar: data.photoURL,
-          type: (data.type === 'lawyer' ? 'lawyer' : 'expat_aidant') as 'lawyer' | 'expat_aidant',
+          avatar: data.photoURL || data.profilePhoto,
+          type: (data.providerType === 'lawyer' || data.type === 'lawyer' ? 'lawyer' : 'expat_aidant') as 'lawyer' | 'expat_aidant',
         });
       });
 
-      // Also load users as fallback
-      const usersSnapshot = await getDocs(collection(db, 'users'));
-      usersSnapshot.docs.forEach((docSnap) => {
-        if (!providersMap.has(docSnap.id)) {
-          const data = docSnap.data();
-          providersMap.set(docSnap.id, {
-            name: data.displayName || `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'Unknown',
-            email: data.email || '',
-            avatar: data.photoURL,
-            type: (data.providerType === 'lawyer' ? 'lawyer' : 'expat_aidant') as 'lawyer' | 'expat_aidant',
-          });
-        }
-      });
+      // Step 3: Load users as fallback
+      console.log('[Subscriptions] Step 3: Loading users...');
+      try {
+        const usersSnapshot = await getDocs(collection(db, 'users'));
+        console.log(`[Subscriptions] Step 3 OK: ${usersSnapshot.docs.length} users loaded`);
+        usersSnapshot.docs.forEach((docSnap) => {
+          if (!providersMap.has(docSnap.id)) {
+            const data = docSnap.data();
+            providersMap.set(docSnap.id, {
+              name: data.displayName || `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'Unknown',
+              email: data.email || '',
+              avatar: data.photoURL,
+              type: (data.providerType === 'lawyer' ? 'lawyer' : 'expat_aidant') as 'lawyer' | 'expat_aidant',
+            });
+          }
+        });
+      } catch (e: any) {
+        // Non-blocking: continue without users fallback data
+        console.warn('[Subscriptions] Step 3 WARNING - users query failed (non-blocking):', e.message);
+      }
 
-      // Load plans for plan names
-      const plansSnapshot = await getDocs(collection(db, 'subscription_plans'));
+      // Step 4: Load plans for plan names
+      console.log('[Subscriptions] Step 4: Loading subscription_plans...');
       const plansMap = new Map<string, string>();
-      plansSnapshot.docs.forEach((docSnap) => {
-        const data = docSnap.data();
-        plansMap.set(docSnap.id, data.name?.fr || data.name || docSnap.id);
-      });
+      try {
+        const plansSnapshot = await getDocs(collection(db, 'subscription_plans'));
+        console.log(`[Subscriptions] Step 4 OK: ${plansSnapshot.docs.length} plans loaded`);
+        plansSnapshot.docs.forEach((docSnap) => {
+          const data = docSnap.data();
+          plansMap.set(docSnap.id, data.name?.fr || data.name || docSnap.id);
+        });
+      } catch (e: any) {
+        // Non-blocking: continue without plan names
+        console.warn('[Subscriptions] Step 4 WARNING - subscription_plans query failed (non-blocking):', e.message);
+      }
 
       // Transform subscriptions
       const subsList: SubscriptionRecord[] = snapshot.docs.map((docSnap) => {
@@ -839,12 +878,18 @@ const Subscriptions: React.FC = () => {
     return result;
   }, [subscriptions, statusFilter, planFilter, billingFilter, searchQuery, sortField, sortOrder]);
 
-  // Pagination
-  const totalPages = Math.ceil(filteredSubscriptions.length / PAGE_SIZE);
+  // Pagination - P2 FIX: Use configurable pageSize
+  const totalPages = Math.ceil(filteredSubscriptions.length / pageSize);
   const paginatedSubscriptions = useMemo(() => {
-    const start = (currentPage - 1) * PAGE_SIZE;
-    return filteredSubscriptions.slice(start, start + PAGE_SIZE);
-  }, [filteredSubscriptions, currentPage]);
+    const start = (currentPage - 1) * pageSize;
+    return filteredSubscriptions.slice(start, start + pageSize);
+  }, [filteredSubscriptions, currentPage, pageSize]);
+
+  // P2 FIX: Reset to page 1 when pageSize changes
+  const handlePageSizeChange = useCallback((newSize: number) => {
+    setPageSize(newSize);
+    setCurrentPage(1);
+  }, []);
 
   // ============================================================================
   // HANDLERS
@@ -1454,17 +1499,55 @@ const Subscriptions: React.FC = () => {
             </table>
           </div>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50">
+          {/* Pagination - P2 FIX: Enhanced with page size selector */}
+          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50">
+            {/* Left: Info and page size selector */}
+            <div className="flex items-center gap-4">
               <div className="text-sm text-gray-500">
                 <FormattedMessage
-                  id="admin.finance.subscriptions.pagination"
-                  defaultMessage="Page {current} of {total}"
-                  values={{ current: currentPage, total: totalPages }}
+                  id="admin.finance.subscriptions.showing"
+                  defaultMessage="Showing {start}-{end} of {total}"
+                  values={{
+                    start: Math.min((currentPage - 1) * pageSize + 1, filteredSubscriptions.length),
+                    end: Math.min(currentPage * pageSize, filteredSubscriptions.length),
+                    total: filteredSubscriptions.length,
+                  }}
                 />
+                {totalFetched >= FIRESTORE_FETCH_LIMIT && (
+                  <span className="ml-2 text-amber-600" title="More subscriptions may exist">
+                    (limit: {FIRESTORE_FETCH_LIMIT})
+                  </span>
+                )}
               </div>
+              {/* Page size selector */}
               <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-500">
+                  <FormattedMessage id="admin.finance.subscriptions.perPage" defaultMessage="Per page:" />
+                </span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                  className="text-sm border border-gray-300 rounded-md px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  {PAGE_SIZES.map((size) => (
+                    <option key={size} value={size}>
+                      {size}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Right: Pagination controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-500 mr-2">
+                  <FormattedMessage
+                    id="admin.finance.subscriptions.pagination"
+                    defaultMessage="Page {current} of {total}"
+                    values={{ current: currentPage, total: totalPages }}
+                  />
+                </span>
                 <button
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
@@ -1506,8 +1589,8 @@ const Subscriptions: React.FC = () => {
                   <ChevronRight className="w-5 h-5" />
                 </button>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Subscription Detail Panel */}

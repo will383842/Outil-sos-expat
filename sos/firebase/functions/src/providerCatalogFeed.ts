@@ -6,7 +6,7 @@
  * Cloud Function HTTP qui genere un feed catalogue de prestataires
  * au format Facebook Product Catalog pour les Dynamic Ads.
  *
- * URL: https://us-central1-sos-expat.cloudfunctions.net/providerCatalogFeed
+ * URL: https://europe-west1-sos-expat.cloudfunctions.net/providerCatalogFeed
  *
  * Format: CSV avec les colonnes requises par Facebook:
  * - id, title, description, availability, condition, price, link,
@@ -358,7 +358,7 @@ function generateCSVFeed(providers: Array<{ id: string; data: ProviderData }>): 
  * Cloud Function HTTP pour generer le feed catalogue des prestataires
  *
  * Usage:
- *   GET https://us-central1-sos-expat.cloudfunctions.net/providerCatalogFeed
+ *   GET https://europe-west1-sos-expat.cloudfunctions.net/providerCatalogFeed
  *
  * Parametres de requete optionnels:
  *   - type: Filtrer par type (lawyer, expat)
@@ -371,7 +371,7 @@ function generateCSVFeed(providers: Array<{ id: string; data: ProviderData }>): 
  */
 export const providerCatalogFeed = onRequest(
   {
-    region: "us-central1", // Region specifiee dans les specs
+    region: "europe-west1", // Changed from us-central1 to reduce egress costs
     timeoutSeconds: 300, // 5 minutes max
     memory: "512MiB",
     cpu: 1,

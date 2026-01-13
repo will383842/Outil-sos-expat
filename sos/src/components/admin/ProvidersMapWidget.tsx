@@ -3,6 +3,7 @@
 // =============================================================================
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useIntl } from 'react-intl';
 import {
   MapPin,
   Globe,
@@ -97,6 +98,9 @@ const getCountryInfo = (country: string | undefined): { name: string; flag: stri
 };
 
 const ProvidersMapWidget: React.FC<ProvidersMapWidgetProps> = ({ compact = false }) => {
+  const intl = useIntl();
+  const t = (key: string, values?: Record<string, string | number>) =>
+    intl.formatMessage({ id: key }, values);
   const [locations, setLocations] = useState<ProviderLocation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isExpanded, setIsExpanded] = useState(!compact);
@@ -240,11 +244,11 @@ const ProvidersMapWidget: React.FC<ProvidersMapWidgetProps> = ({ compact = false
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center">
             <Globe className="mr-2 text-blue-600" size={20} />
-            Répartition géographique
+            {t('admin.providersMap.title')}
           </h3>
           <div className="flex items-center space-x-4">
             <span className="text-sm text-gray-500">
-              {globalStats.countries} pays | {globalStats.online + globalStats.busy} en ligne
+              {globalStats.countries} {t('admin.providersMap.countries')} | {globalStats.online + globalStats.busy} {t('admin.providersMap.online')}
             </span>
             {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
           </div>
@@ -257,25 +261,25 @@ const ProvidersMapWidget: React.FC<ProvidersMapWidgetProps> = ({ compact = false
           <div className="grid grid-cols-4 gap-4 p-4 bg-gray-50 border-b border-gray-200">
             <div className="text-center">
               <div className="text-2xl font-bold text-gray-900">{globalStats.countries}</div>
-              <div className="text-xs text-gray-500">Pays</div>
+              <div className="text-xs text-gray-500">{t('admin.providersMap.countries')}</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">{globalStats.online}</div>
-              <div className="text-xs text-gray-500">En ligne</div>
+              <div className="text-xs text-gray-500">{t('admin.providersMap.online')}</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-orange-600">{globalStats.busy}</div>
-              <div className="text-xs text-gray-500">En appel</div>
+              <div className="text-xs text-gray-500">{t('admin.providersMap.onCall')}</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-gray-500">{globalStats.offline}</div>
-              <div className="text-xs text-gray-500">Hors ligne</div>
+              <div className="text-xs text-gray-500">{t('admin.providersMap.offline')}</div>
             </div>
           </div>
 
           {/* Contrôles de tri */}
           <div className="px-4 py-2 border-b border-gray-200 flex items-center space-x-2">
-            <span className="text-sm text-gray-500">Trier par:</span>
+            <span className="text-sm text-gray-500">{t('admin.providersMap.sortBy')}</span>
             <button
               onClick={() => setSortBy('online')}
               className={`px-3 py-1 text-xs rounded-full ${
@@ -284,7 +288,7 @@ const ProvidersMapWidget: React.FC<ProvidersMapWidgetProps> = ({ compact = false
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              En ligne
+              {t('admin.providersMap.online')}
             </button>
             <button
               onClick={() => setSortBy('total')}
@@ -294,7 +298,7 @@ const ProvidersMapWidget: React.FC<ProvidersMapWidgetProps> = ({ compact = false
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              Total
+              {t('admin.providersMap.sortTotal')}
             </button>
             <button
               onClick={() => setSortBy('name')}
@@ -304,7 +308,7 @@ const ProvidersMapWidget: React.FC<ProvidersMapWidgetProps> = ({ compact = false
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              Nom
+              {t('admin.providersMap.sortName')}
             </button>
           </div>
 
@@ -313,7 +317,7 @@ const ProvidersMapWidget: React.FC<ProvidersMapWidgetProps> = ({ compact = false
             {sortedLocations.length === 0 ? (
               <div className="p-8 text-center text-gray-500">
                 <MapPin className="mx-auto h-12 w-12 text-gray-300 mb-4" />
-                <p>Aucun prestataire trouvé</p>
+                <p>{t('admin.providersMap.noProviders')}</p>
               </div>
             ) : (
               <div className="divide-y divide-gray-100">
@@ -336,9 +340,9 @@ const ProvidersMapWidget: React.FC<ProvidersMapWidgetProps> = ({ compact = false
                               {countryInfo.name}
                             </div>
                             <div className="text-xs text-gray-500 flex items-center space-x-2">
-                              <span>{location.lawyers} avocat(s)</span>
+                              <span>{location.lawyers} {t('admin.providersMap.lawyers')}</span>
                               <span>•</span>
-                              <span>{location.expats} expatrié(s)</span>
+                              <span>{location.expats} {t('admin.providersMap.expats')}</span>
                             </div>
                           </div>
                         </div>
@@ -353,7 +357,7 @@ const ProvidersMapWidget: React.FC<ProvidersMapWidgetProps> = ({ compact = false
                               ></div>
                             </div>
                             <div className="text-xs text-gray-500 text-center mt-1">
-                              {onlinePercent}% actifs
+                              {onlinePercent}% {t('admin.providersMap.active')}
                             </div>
                           </div>
 
@@ -396,7 +400,7 @@ const ProvidersMapWidget: React.FC<ProvidersMapWidgetProps> = ({ compact = false
                 Top: {sortedLocations[0]?.country && getCountryInfo(sortedLocations[0].country).name}
               </span>
               <span>
-                Mise à jour en temps réel
+                {t('admin.providersMap.realtimeUpdate')}
               </span>
             </div>
           </div>

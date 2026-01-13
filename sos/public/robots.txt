@@ -1,6 +1,6 @@
 # Robots.txt pour SOS-Expat.com
 # https://sos-expat.com
-# Dernière mise à jour: 2025-12-29
+# Dernière mise à jour: 2026-01-13
 
 # ===========================================
 # RÈGLES PAR DÉFAUT (Tous les robots)
@@ -236,7 +236,8 @@ Disallow: /
 Sitemap: https://sos-expat.com/sitemap.xml
 Sitemap: https://sos-expat.com/sitemap-static.xml
 Sitemap: https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapProfiles
-Sitemap: https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapBlog
+Sitemap: https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapHelp
+Sitemap: https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapFaq
 Sitemap: https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapLanding
 
 # ===========================================

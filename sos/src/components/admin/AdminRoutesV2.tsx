@@ -112,6 +112,7 @@ const AdminProfitLoss = lazy(() => import("../../pages/admin/Finance/ProfitLoss"
 const AdminCashFlow = lazy(() => import("../../pages/admin/Finance/CashFlow"));
 const AdminEscrow = lazy(() => import("../../pages/admin/Finance/Escrow"));
 const CostMonitoring = lazy(() => import("../../pages/admin/Finance/CostMonitoring"));
+const AdminGcpCosts = lazy(() => import("../../pages/admin/Finance/AdminGcpCosts"));
 
 // ===== LAZY IMPORTS - USERS & PROVIDERS =====
 const AdminUsers = lazy(() => import("../../pages/admin/AdminUsers"));
@@ -128,6 +129,9 @@ const AdminKYCProviders = lazy(
   () => import("../../pages/admin/AdminKYCProviders")
 );
 const AdminReviews = lazy(() => import("../../pages/admin/AdminReviews"));
+const AdminProfileValidation = lazy(
+  () => import("../../pages/admin/AdminProfileValidation")
+);
 
 // ===== LAZY IMPORTS - CALLS =====
 const AdminCalls = lazy(() => import("../../pages/admin/AdminCalls"));
@@ -245,6 +249,39 @@ const devPageTexts: Record<string, Record<string, { title: string; desc: string 
     ch: { title: '数据导出', desc: '页面开发中' },
     hi: { title: 'डेटा निर्यात', desc: 'पृष्ठ विकास में है' },
     ar: { title: 'تصدير البيانات', desc: 'الصفحة قيد التطوير' }
+  },
+  profileValidation: {
+    fr: { title: 'Validation des Profils', desc: 'Page en cours de développement' },
+    en: { title: 'Profile Validation', desc: 'Page under development' },
+    es: { title: 'Validación de Perfiles', desc: 'Página en desarrollo' },
+    de: { title: 'Profilvalidierung', desc: 'Seite in Entwicklung' },
+    pt: { title: 'Validação de Perfis', desc: 'Página em desenvolvimento' },
+    ru: { title: 'Проверка профилей', desc: 'Страница в разработке' },
+    ch: { title: '资料验证', desc: '页面开发中' },
+    hi: { title: 'प्रोफ़ाइल सत्यापन', desc: 'पृष्ठ विकास में है' },
+    ar: { title: 'التحقق من الملف الشخصي', desc: 'الصفحة قيد التطوير' }
+  },
+  connectionLogs: {
+    fr: { title: 'Logs de Connexion', desc: 'Page en cours de développement' },
+    en: { title: 'Connection Logs', desc: 'Page under development' },
+    es: { title: 'Registros de Conexión', desc: 'Página en desarrollo' },
+    de: { title: 'Verbindungsprotokolle', desc: 'Seite in Entwicklung' },
+    pt: { title: 'Logs de Conexão', desc: 'Página em desenvolvimento' },
+    ru: { title: 'Логи подключений', desc: 'Страница в разработке' },
+    ch: { title: '连接日志', desc: '页面开发中' },
+    hi: { title: 'कनेक्शन लॉग', desc: 'पृष्ठ विकास में है' },
+    ar: { title: 'سجلات الاتصال', desc: 'الصفحة قيد التطوير' }
+  },
+  unifiedAnalytics: {
+    fr: { title: 'Analytics Centralisés', desc: 'Page en cours de développement' },
+    en: { title: 'Unified Analytics', desc: 'Page under development' },
+    es: { title: 'Analíticas Unificadas', desc: 'Página en desarrollo' },
+    de: { title: 'Zentrale Analysen', desc: 'Seite in Entwicklung' },
+    pt: { title: 'Analytics Unificados', desc: 'Página em desenvolvimento' },
+    ru: { title: 'Единая аналитика', desc: 'Страница в разработке' },
+    ch: { title: '统一分析', desc: '页面开发中' },
+    hi: { title: 'एकीकृत विश्लेषण', desc: 'पृष्ठ विकास में है' },
+    ar: { title: 'التحليلات الموحدة', desc: 'الصفحة قيد التطوير' }
   }
 };
 
@@ -285,6 +322,10 @@ const AdminB2BInvoices = lazy(
 );
 const AdminB2BReports = lazy(() => import("../../pages/admin/AdminB2BReports"));
 
+// ===== LAZY IMPORTS - MONITORING =====
+const AdminAgentMonitoring = lazy(() => import("../../pages/admin/AdminAgentMonitoring"));
+const AdminConnectionLogs = lazy(() => import("../../pages/admin/AdminConnectionLogs"));
+
 // ===== LAZY IMPORTS - SETTINGS & TOOLS =====
 const AdminPricing = lazy(() => import("../../pages/admin/AdminPricing"));
 const AdminCountries = lazy(() => import("../../pages/admin/AdminCountries"));
@@ -318,6 +359,9 @@ const AdminPlatformPerformance = lazy(() =>
 const AdminDataExports = lazy(() =>
   Promise.resolve({ default: () => <DevPage pageKey="dataExports" /> })
 );
+const AdminUnifiedAnalytics = lazy(() =>
+  import("../../pages/admin/AdminUnifiedAnalytics")
+);
 
 // ===== LAZY IMPORTS - HELP CENTER =====
 const AdminHelpCenter = lazy(() => import("../../pages/admin/AdminHelpCenter"));
@@ -340,6 +384,7 @@ const DelivrabiliteLogs = lazy(() => import("../../pages/admin/marketing/Delivra
 const MessagesTempsReel = lazy(() => import("../../pages/admin/marketing/MessagesTempsReel"));
 const AdminAdsAnalytics = lazy(() => import("../../pages/admin/AdminAdsAnalytics"));
 const AdminTrustpilot = lazy(() => import("../../pages/admin/AdminTrustpilot"));
+const AdminMetaAnalytics = lazy(() => import("../../pages/admin/AdminMetaAnalytics"));
 
 // ===== COMPOSANT PRINCIPAL =====
 const AdminRoutesV2: React.FC = () => {
@@ -431,6 +476,14 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminReviews />
+          </Suspense>
+        }
+      />
+      <Route
+        path="validation"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminProfileValidation />
           </Suspense>
         }
       />
@@ -609,6 +662,14 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <CostMonitoring />
+          </Suspense>
+        }
+      />
+      <Route
+        path="finance/gcp-costs"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminGcpCosts />
           </Suspense>
         }
       />
@@ -877,6 +938,22 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
       <Route
+        path="monitoring/agents"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminAgentMonitoring />
+          </Suspense>
+        }
+      />
+      <Route
+        path="connection-logs"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminConnectionLogs />
+          </Suspense>
+        }
+      />
+      <Route
         path="settings"
         element={
           <Suspense fallback={<LoadingSpinner />}>
@@ -904,6 +981,14 @@ const AdminRoutesV2: React.FC = () => {
       />
 
       {/* 📊 RAPPORTS & ANALYTICS */}
+      <Route
+        path="analytics/unified"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminUnifiedAnalytics />
+          </Suspense>
+        }
+      />
       <Route
         path="reports/country-stats"
         element={
@@ -1061,6 +1146,14 @@ const AdminRoutesV2: React.FC = () => {
           </Suspense>
         }
       />
+      <Route
+        path="marketing/meta-analytics"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminMetaAnalytics />
+          </Suspense>
+        }
+      />
       <Route path="marketing" element={<Navigate to="marketing/templates-emails" replace />} />
 
       {/* 404 admin */}
@@ -1131,6 +1224,8 @@ export const useAdminRouteValidation = () => {
       "/admin/documents",
       "/admin/backups",
       "/admin/system-health",
+      "/admin/monitoring/agents",
+      "/admin/connection-logs",
       "/admin/settings",
       "/admin/reports/country-stats",
       "/admin/reports/financial",
@@ -1143,6 +1238,7 @@ export const useAdminRouteValidation = () => {
       "/admin/ia",
       "/admin/marketing/ads-analytics",
       "/admin/marketing/trustpilot",
+      "/admin/analytics/unified",
     ];
     return validPaths.includes(path);
   };

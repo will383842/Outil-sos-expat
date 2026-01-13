@@ -274,30 +274,7 @@ export const MySubscription: React.FC = () => {
   // Note: Only check for 'client' as valid UserRole; 'user' is not a valid role in the type system
   const isClient = userRole === 'client';
 
-  // Redirect clients to dashboard
-  useEffect(() => {
-    if (user && isClient) {
-      navigate('/dashboard', { replace: true });
-    }
-  }, [user, isClient, navigate]);
-
-  // If user is a client, show error and redirect
-  if (isClient) {
-    return (
-      <DashboardLayout>
-        <div className="flex flex-col items-center justify-center min-h-[400px]">
-          <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            {intl.formatMessage({ id: 'subscription.errors.clientNotAllowed', defaultMessage: 'Accès non autorisé' })}
-          </h2>
-          <p className="text-gray-600 text-center max-w-md">
-            {intl.formatMessage({ id: 'subscription.errors.clientNotAllowedMessage', defaultMessage: 'Seuls les prestataires (avocats et expatriés aidants) peuvent accéder aux abonnements.' })}
-          </p>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
+  // ALL HOOKS MUST BE CALLED BEFORE ANY EARLY RETURNS
   // Hooks
   const {
     subscription,
@@ -330,6 +307,13 @@ export const MySubscription: React.FC = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
 
+  // Redirect clients to dashboard
+  useEffect(() => {
+    if (user && isClient) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, isClient, navigate]);
+
   // Load invoices
   useEffect(() => {
     if (!user?.uid) return;
@@ -347,6 +331,23 @@ export const MySubscription: React.FC = () => {
   const currentPlan = useMemo(() => {
     return plans.find(p => p.id === subscription?.planId);
   }, [plans, subscription?.planId]);
+
+  // If user is a client, show error and redirect
+  if (isClient) {
+    return (
+      <DashboardLayout>
+        <div className="flex flex-col items-center justify-center min-h-[400px]">
+          <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            {intl.formatMessage({ id: 'subscription.errors.clientNotAllowed', defaultMessage: 'Accès non autorisé' })}
+          </h2>
+          <p className="text-gray-600 text-center max-w-md">
+            {intl.formatMessage({ id: 'subscription.errors.clientNotAllowedMessage', defaultMessage: 'Seuls les prestataires (avocats et expatriés aidants) peuvent accéder aux abonnements.' })}
+          </p>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   // Format date
   const formatDate = (date: Date | null) => {

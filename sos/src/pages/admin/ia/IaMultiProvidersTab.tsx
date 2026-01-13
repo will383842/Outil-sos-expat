@@ -23,7 +23,11 @@ import {
   UserPlus,
   Phone,
   ToggleLeft,
-  ToggleRight
+  ToggleRight,
+  Filter,
+  Languages,
+  MapPin,
+  Star
 } from 'lucide-react';
 import {
   collection,
@@ -32,10 +36,7 @@ import {
   updateDoc,
   getDoc,
   serverTimestamp,
-  arrayUnion,
-  query,
-  where,
-  limit
+  arrayUnion
 } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
 import { cn } from '../../../utils/cn';
@@ -51,6 +52,10 @@ interface SearchResult {
   displayName: string;
   role?: string;
   type?: string;
+  languages?: string[];
+  country?: string;
+  interventionCountries?: string[];
+  isAAA?: boolean;
 }
 
 // ============================================================================
@@ -86,6 +91,15 @@ export const IaMultiProvidersTab: React.FC = () => {
   const [providerSearchResults, setProviderSearchResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
 
+  // Filtres pour la recherche de prestataires
+  const [allAvailableProviders, setAllAvailableProviders] = useState<SearchResult[]>([]);
+  const [languageFilter, setLanguageFilter] = useState<string>('');
+  const [countryFilter, setCountryFilter] = useState<string>('');
+  const [aaaFilter, setAaaFilter] = useState<'all' | 'aaa' | 'non-aaa'>('all');
+  const [availableLanguages, setAvailableLanguages] = useState<string[]>([]);
+  const [availableCountries, setAvailableCountries] = useState<string[]>([]);
+  const [linkedProviderIdsForUser, setLinkedProviderIdsForUser] = useState<string[]>([]);
+
   // ============================================================================
   // DATA LOADING
   // ============================================================================
@@ -107,16 +121,18 @@ export const IaMultiProvidersTab: React.FC = () => {
 
           for (const providerId of linkedIds) {
             try {
-              const providerDoc = await getDoc(doc(db, 'providers', providerId));
-              if (providerDoc.exists()) {
-                const providerData = providerDoc.data();
+              // Chercher d'abord dans sos_profiles
+              const profileDoc = await getDoc(doc(db, 'sos_profiles', providerId));
+              if (profileDoc.exists()) {
+                const profileData = profileDoc.data();
                 providersDetails.push({
                   id: providerId,
-                  name: providerData.name || providerData.displayName || 'N/A',
-                  type: providerData.type || 'lawyer',
+                  name: profileData.name || profileData.displayName || profileData.fullName || 'N/A',
+                  type: profileData.providerType || profileData.type || 'lawyer',
                   isActive: data.activeProviderId === providerId
                 });
               } else {
+                // Fallback: chercher dans users
                 const userProviderDoc = await getDoc(doc(db, 'users', providerId));
                 if (userProviderDoc.exists()) {
                   const userProviderData = userProviderDoc.data();
@@ -200,75 +216,178 @@ export const IaMultiProvidersTab: React.FC = () => {
     }
   }, []);
 
-  const searchProviders = useCallback(async (searchTerm: string) => {
-    if (searchTerm.length < 2) {
-      setProviderSearchResults([]);
-      return;
-    }
-
+  /**
+   * Charge tous les prestataires disponibles depuis sos_profiles et users
+   * Cette fonction est appelée quand le modal passe à l'étape 2
+   */
+  const loadAllAvailableProviders = useCallback(async (excludeIds: string[] = []) => {
     setSearching(true);
     try {
       const results: SearchResult[] = [];
-      const term = searchTerm.toLowerCase();
+      const allLanguages = new Set<string>();
+      const allCountries = new Set<string>();
 
-      // Chercher dans la collection providers
-      const providersSnapshot = await getDocs(collection(db, 'providers'));
-      providersSnapshot.docs.forEach(docSnap => {
+      console.log('[MultiProviders] Loading all available providers...');
+
+      // Charger depuis sos_profiles (source principale)
+      const profilesSnapshot = await getDocs(collection(db, 'sos_profiles'));
+      console.log(`[MultiProviders] Found ${profilesSnapshot.docs.length} sos_profiles`);
+
+      profilesSnapshot.docs.forEach(docSnap => {
         const data = docSnap.data();
-        const name = (data.name || data.displayName || '').toLowerCase();
-        const email = (data.email || '').toLowerCase();
+        // Exclure les prestataires déjà liés
+        if (excludeIds.includes(docSnap.id)) return;
 
-        if (name.includes(term) || email.includes(term)) {
-          results.push({
-            id: docSnap.id,
-            email: data.email || '',
-            displayName: data.name || data.displayName || 'N/A',
-            type: data.type || 'lawyer'
-          });
-        }
+        const languages = data.languages || data.languagesSpoken || [];
+        const country = data.country || '';
+        const interventionCountries = data.interventionCountries || data.practiceCountries || [];
+
+        // Collecter les langues et pays disponibles
+        languages.forEach((lang: string) => allLanguages.add(lang));
+        if (country) allCountries.add(country);
+        interventionCountries.forEach((c: string) => allCountries.add(c));
+
+        results.push({
+          id: docSnap.id,
+          email: data.email || '',
+          displayName: data.name || data.displayName || data.fullName || 'N/A',
+          type: data.providerType || data.type || 'lawyer',
+          languages,
+          country,
+          interventionCountries,
+          isAAA: data.isAAA === true
+        });
       });
 
-      // Chercher aussi dans users avec role prestataire
+      // Charger aussi depuis users avec role prestataire (fallback)
       const usersSnapshot = await getDocs(collection(db, 'users'));
       usersSnapshot.docs.forEach(docSnap => {
         const data = docSnap.data();
-        if (data.role === 'lawyer' || data.role === 'expat_aidant' || data.role === 'provider') {
-          const displayName = (data.displayName || `${data.firstName || ''} ${data.lastName || ''}`).toLowerCase();
-          const email = (data.email || '').toLowerCase();
+        // Ne garder que les prestataires
+        if (data.role !== 'lawyer' && data.role !== 'expat_aidant' && data.role !== 'provider') return;
+        // Exclure les prestataires déjà liés
+        if (excludeIds.includes(docSnap.id)) return;
+        // Éviter les doublons avec sos_profiles
+        if (results.find(r => r.id === docSnap.id)) return;
 
-          if (displayName.includes(term) || email.includes(term)) {
-            // Éviter les doublons
-            if (!results.find(r => r.id === docSnap.id)) {
-              results.push({
-                id: docSnap.id,
-                email: data.email || '',
-                displayName: data.displayName || `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'N/A',
-                type: data.role === 'expat_aidant' ? 'expat' : 'lawyer'
-              });
-            }
-          }
-        }
+        const languages = data.languages || data.languagesSpoken || [];
+        const country = data.country || '';
+        const interventionCountries = data.interventionCountries || data.practiceCountries || [];
+
+        // Collecter les langues et pays disponibles
+        languages.forEach((lang: string) => allLanguages.add(lang));
+        if (country) allCountries.add(country);
+        interventionCountries.forEach((c: string) => allCountries.add(c));
+
+        results.push({
+          id: docSnap.id,
+          email: data.email || '',
+          displayName: data.displayName || `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'N/A',
+          type: data.role === 'expat_aidant' ? 'expat' : 'lawyer',
+          languages,
+          country,
+          interventionCountries,
+          isAAA: data.isAAA === true
+        });
       });
 
-      setProviderSearchResults(results.slice(0, 10));
+      console.log(`[MultiProviders] Total available providers: ${results.length}`);
+
+      setAllAvailableProviders(results);
+      setAvailableLanguages(Array.from(allLanguages).sort());
+      setAvailableCountries(Array.from(allCountries).sort());
+      setProviderSearchResults(results); // Afficher tous par défaut
     } catch (err) {
-      console.error('Error searching providers:', err);
+      console.error('[MultiProviders] Error loading providers:', err);
     } finally {
       setSearching(false);
     }
   }, []);
 
-  // Debounce search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (linkStep === 1) {
-        searchUsers(userSearchQuery);
-      } else {
-        searchProviders(providerSearchQuery);
+  /**
+   * Filtre les prestataires selon les critères
+   */
+  const filterProviders = useCallback(() => {
+    const term = providerSearchQuery.toLowerCase();
+
+    const filtered = allAvailableProviders.filter(provider => {
+      // Filtre par texte de recherche
+      if (term.length >= 2) {
+        const displayName = provider.displayName.toLowerCase();
+        const email = (provider.email || '').toLowerCase();
+        if (!displayName.includes(term) && !email.includes(term)) {
+          return false;
+        }
       }
+
+      // Filtre par langue
+      if (languageFilter) {
+        const providerLanguages = provider.languages || [];
+        if (!providerLanguages.includes(languageFilter)) {
+          return false;
+        }
+      }
+
+      // Filtre par pays (pays d'origine ou pays d'intervention)
+      if (countryFilter) {
+        const providerCountry = provider.country || '';
+        const interventionCountries = provider.interventionCountries || [];
+        if (providerCountry !== countryFilter && !interventionCountries.includes(countryFilter)) {
+          return false;
+        }
+      }
+
+      // Filtre par AAA profile
+      if (aaaFilter === 'aaa' && !provider.isAAA) {
+        return false;
+      }
+      if (aaaFilter === 'non-aaa' && provider.isAAA) {
+        return false;
+      }
+
+      return true;
+    });
+
+    setProviderSearchResults(filtered);
+  }, [allAvailableProviders, providerSearchQuery, languageFilter, countryFilter, aaaFilter]);
+
+  // Debounce search pour users (step 1)
+  useEffect(() => {
+    if (linkStep !== 1) return;
+    const timer = setTimeout(() => {
+      searchUsers(userSearchQuery);
     }, 300);
     return () => clearTimeout(timer);
-  }, [userSearchQuery, providerSearchQuery, linkStep, searchUsers, searchProviders]);
+  }, [userSearchQuery, linkStep, searchUsers]);
+
+  // Filtrer les prestataires quand les critères changent (step 2)
+  useEffect(() => {
+    if (linkStep !== 2) return;
+    const timer = setTimeout(() => {
+      filterProviders();
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [providerSearchQuery, languageFilter, countryFilter, aaaFilter, linkStep, filterProviders]);
+
+  // Charger les prestataires disponibles quand on passe à l'étape 2
+  useEffect(() => {
+    if (linkStep === 2 && selectedUser) {
+      // Récupérer les IDs des prestataires déjà liés à l'utilisateur sélectionné
+      const fetchLinkedIds = async () => {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', selectedUser.id));
+          const linkedIds = userDoc.data()?.linkedProviderIds || [];
+          setLinkedProviderIdsForUser(linkedIds);
+          // Charger tous les prestataires en excluant ceux déjà liés
+          loadAllAvailableProviders(linkedIds);
+        } catch (err) {
+          console.error('[MultiProviders] Error fetching linked IDs:', err);
+          loadAllAvailableProviders([]);
+        }
+      };
+      fetchLinkedIds();
+    }
+  }, [linkStep, selectedUser, loadAllAvailableProviders]);
 
   // ============================================================================
   // ACTIONS
@@ -440,6 +559,14 @@ export const IaMultiProvidersTab: React.FC = () => {
     setProviderSearchQuery('');
     setUserSearchResults([]);
     setProviderSearchResults([]);
+    // Reset filter states
+    setAllAvailableProviders([]);
+    setLanguageFilter('');
+    setCountryFilter('');
+    setAaaFilter('all');
+    setAvailableLanguages([]);
+    setAvailableCountries([]);
+    setLinkedProviderIdsForUser([]);
   };
 
   // ============================================================================
@@ -858,11 +985,81 @@ export const IaMultiProvidersTab: React.FC = () => {
                     <div className="text-sm text-indigo-600 mb-1">Compte sélectionné :</div>
                     <div className="font-medium text-indigo-900">{selectedUser?.displayName}</div>
                     <div className="text-sm text-indigo-700">{selectedUser?.email}</div>
+                    {linkedProviderIdsForUser.length > 0 && (
+                      <div className="text-xs text-indigo-500 mt-1">
+                        {linkedProviderIdsForUser.length} prestataire(s) déjà lié(s)
+                      </div>
+                    )}
                   </div>
 
+                  {/* Filtres par langue, pays et AAA */}
+                  <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Filter className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm font-medium text-gray-700">Filtrer les prestataires</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      {/* Filtre par langue */}
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-1 flex items-center gap-1">
+                          <Languages className="w-3 h-3" />
+                          Langue
+                        </label>
+                        <select
+                          value={languageFilter}
+                          onChange={(e) => setLanguageFilter(e.target.value)}
+                          className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        >
+                          <option value="">Toutes les langues</option>
+                          {availableLanguages.map((lang) => (
+                            <option key={lang} value={lang}>
+                              {lang.toUpperCase()}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      {/* Filtre par pays */}
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-1 flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />
+                          Pays
+                        </label>
+                        <select
+                          value={countryFilter}
+                          onChange={(e) => setCountryFilter(e.target.value)}
+                          className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        >
+                          <option value="">Tous les pays</option>
+                          {availableCountries.map((country) => (
+                            <option key={country} value={country}>
+                              {country}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      {/* Filtre AAA Profile */}
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-1 flex items-center gap-1">
+                          <Star className="w-3 h-3" />
+                          Type
+                        </label>
+                        <select
+                          value={aaaFilter}
+                          onChange={(e) => setAaaFilter(e.target.value as 'all' | 'aaa' | 'non-aaa')}
+                          className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        >
+                          <option value="all">Tous</option>
+                          <option value="aaa">AAA uniquement</option>
+                          <option value="non-aaa">Non-AAA uniquement</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Recherche par texte */}
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Rechercher un prestataire à lier
+                      Rechercher un prestataire (optionnel)
                     </label>
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -872,12 +1069,29 @@ export const IaMultiProvidersTab: React.FC = () => {
                         value={providerSearchQuery}
                         onChange={(e) => setProviderSearchQuery(e.target.value)}
                         className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        autoFocus
                       />
                     </div>
                   </div>
 
-                  {/* Résultats de recherche prestataires */}
+                  {/* Compteur de résultats */}
+                  <div className="mb-2 text-sm text-gray-500">
+                    {providerSearchResults.length} prestataire(s) disponible(s)
+                    {(languageFilter || countryFilter || aaaFilter !== 'all' || providerSearchQuery) && (
+                      <button
+                        onClick={() => {
+                          setLanguageFilter('');
+                          setCountryFilter('');
+                          setAaaFilter('all');
+                          setProviderSearchQuery('');
+                        }}
+                        className="ml-2 text-indigo-600 hover:text-indigo-700"
+                      >
+                        Réinitialiser les filtres
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Liste des prestataires */}
                   <div className="max-h-60 overflow-y-auto space-y-2">
                     {searching && (
                       <div className="text-center py-4 text-gray-500">
@@ -885,9 +1099,13 @@ export const IaMultiProvidersTab: React.FC = () => {
                         {iaT.searching}
                       </div>
                     )}
-                    {!searching && providerSearchQuery.length >= 2 && providerSearchResults.length === 0 && (
+                    {!searching && providerSearchResults.length === 0 && (
                       <div className="text-center py-4 text-gray-500">
-                        {adminT.noResults}
+                        <Users className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                        Aucun prestataire disponible
+                        {(languageFilter || countryFilter) && (
+                          <p className="text-xs mt-1">Essayez de modifier les filtres</p>
+                        )}
                       </div>
                     )}
                     {providerSearchResults.map((provider) => (
@@ -912,26 +1130,41 @@ export const IaMultiProvidersTab: React.FC = () => {
                               <Globe className="w-4 h-4 text-green-600" />
                             )}
                           </div>
-                          <div>
+                          <div className="flex-1 min-w-0">
                             <div className="font-medium text-gray-900">{provider.displayName}</div>
-                            <div className="text-sm text-gray-500">{provider.email}</div>
-                            <div className="text-xs text-gray-400">
-                              {provider.type === 'lawyer' ? 'Avocat' : 'Expatrié'} • ID: {provider.id.slice(0, 12)}...
+                            <div className="text-sm text-gray-500 truncate">{provider.email}</div>
+                            <div className="flex flex-wrap items-center gap-2 mt-1">
+                              <span className="text-xs text-gray-400">
+                                {provider.type === 'lawyer' ? 'Avocat' : 'Expatrié'}
+                              </span>
+                              {provider.languages && provider.languages.length > 0 && (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-blue-50 text-blue-600 text-xs rounded">
+                                  <Languages className="w-3 h-3" />
+                                  {provider.languages.slice(0, 3).map(l => l.toUpperCase()).join(', ')}
+                                  {provider.languages.length > 3 && '...'}
+                                </span>
+                              )}
+                              {provider.country && (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-green-50 text-green-600 text-xs rounded">
+                                  <MapPin className="w-3 h-3" />
+                                  {provider.country}
+                                </span>
+                              )}
+                              {provider.isAAA && (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-amber-50 text-amber-600 text-xs rounded font-medium">
+                                  <Star className="w-3 h-3" />
+                                  AAA
+                                </span>
+                              )}
                             </div>
                           </div>
                           {selectedProvider?.id === provider.id && (
-                            <Check className="w-5 h-5 text-indigo-600 ml-auto" />
+                            <Check className="w-5 h-5 text-indigo-600 flex-shrink-0" />
                           )}
                         </div>
                       </button>
                     ))}
                   </div>
-
-                  {providerSearchQuery.length < 2 && (
-                    <p className="text-sm text-gray-400 text-center mt-4">
-                      {iaT.minChars}
-                    </p>
-                  )}
                 </>
               )}
             </div>
@@ -944,6 +1177,14 @@ export const IaMultiProvidersTab: React.FC = () => {
                     setLinkStep(1);
                     setSelectedProvider(null);
                     setProviderSearchQuery('');
+                    // Reset filter states when going back
+                    setAllAvailableProviders([]);
+                    setLanguageFilter('');
+                    setCountryFilter('');
+                    setAaaFilter('all');
+                    setAvailableLanguages([]);
+                    setAvailableCountries([]);
+                    setLinkedProviderIdsForUser([]);
                   } else {
                     closeLinkModal();
                   }

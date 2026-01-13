@@ -1,9 +1,11 @@
 // src/pages/admin/AdminProviders.tsx
-// Page de gestion et monitoring des prestataires en temps réel
+// Page de gestion et monitoring des prestataires en temps reel
+// Avec actions en masse et gestion des statuts (hide, block, suspend, delete)
 // =============================================================================
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useIntl } from 'react-intl';
 import {
   UserCheck,
   Users,
@@ -18,6 +20,7 @@ import {
   RefreshCw,
   Download,
   Eye,
+  EyeOff,
   AlertTriangle,
   CheckCircle,
   XCircle,
@@ -43,6 +46,13 @@ import {
   Check,
   X,
   Trash2,
+  ShieldX,
+  Ban,
+  Pause,
+  Play,
+  Square,
+  CheckSquare,
+  MinusSquare,
 } from 'lucide-react';
 import {
   collection,
@@ -58,7 +68,8 @@ import {
   runTransaction,
   Unsubscribe,
 } from 'firebase/firestore';
-import { db } from '../../config/firebase';
+import { httpsCallable } from 'firebase/functions';
+import { db, functions } from '../../config/firebase';
 import AdminLayout from '../../components/admin/AdminLayout';
 import Modal from '../../components/common/Modal';
 import ErrorBoundary from '../../components/common/ErrorBoundary';
@@ -66,6 +77,9 @@ import RealtimeSuspendedBanner, { RealtimeCountdown } from '../../components/adm
 import { useAutoSuspendRealtime } from '../../hooks/useAutoSuspendRealtime';
 import { useAuth } from '../../contexts/AuthContext';
 import { logError } from '../../utils/logging';
+import AdminGdprPurgeModal from '../../components/admin/AdminGdprPurgeModal';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // ============ TYPES ============
 interface Provider {
@@ -89,6 +103,12 @@ interface Provider {
   approvalStatus?: string;
   validationStatus?: 'pending' | 'approved' | 'rejected';
   isVisible?: boolean;
+  isDeleted?: boolean;
+  isBanned?: boolean;
+  isSuspended?: boolean;
+  suspendedAt?: Timestamp;
+  suspendedUntil?: Timestamp;
+  suspendReason?: string;
   country?: string;
   city?: string;
   languages?: string[];
@@ -130,16 +150,86 @@ interface ProviderAlert {
   timestamp: Date;
 }
 
+interface ProviderActionResult {
+  success: boolean;
+  providerId: string;
+  action: string;
+  timestamp: string;
+  error?: string;
+}
+
+interface BulkActionResult {
+  success: boolean;
+  total: number;
+  successful: number;
+  failed: number;
+  results: ProviderActionResult[];
+}
+
+type BulkActionType = 'hide' | 'block' | 'suspend' | 'delete';
+
+// ============ TYPES TRADUCTIONS ============
+interface ProviderTranslations {
+  statusOffline: string;
+  statusBusy: string;
+  statusOnline: string;
+  typeLawyer: string;
+  typeExpat: string;
+  badgeSuspended: string;
+  badgeSuspendedUntil: string;
+  badgeBlocked: string;
+  badgeHidden: string;
+  badgeDeleted: string;
+  liveIndicator: string;
+  vsYesterday: string;
+}
+
+interface ModalTranslations {
+  hideTitle: string;
+  blockTitle: string;
+  suspendTitle: string;
+  deleteTitle: string;
+  confirmHide: string;
+  confirmBlock: string;
+  confirmSuspend: string;
+  confirmDelete: string;
+  reasonRequired: string;
+  reasonPlaceholder: string;
+  cancel: string;
+  confirm: string;
+  bulkHide: string;
+  bulkBlock: string;
+  bulkSuspend: string;
+  bulkDelete: string;
+  toastReasonRequired: string;
+  suspendReason: string;
+  suspendReasonPlaceholder: string;
+  suspendSetEndDate: string;
+  suspendEndDate: string;
+  suspendWarning: string;
+  // Delete modal translations
+  deleteHardTitle: string;
+  deleteHardWarning: string;
+  deleteSoftWarning: string;
+  deleteTypeToConfirm: string;
+  deleteConfirmText: string;
+  deleteHardConfirmText: string;
+  // Block modal translations
+  blockReason: string;
+  blockReasonPlaceholder: string;
+  blockWarning: string;
+}
+
 // ============ COMPOSANTS UTILITAIRES ============
-const StatusBadge: React.FC<{ status: 'available' | 'busy' | 'offline'; isOnline: boolean }> = ({ status, isOnline }) => {
+const StatusBadge: React.FC<{ status: 'available' | 'busy' | 'offline'; isOnline: boolean; translations: ProviderTranslations }> = ({ status, isOnline, translations }) => {
   const getConfig = () => {
     if (!isOnline || status === 'offline') {
-      return { color: 'bg-gray-100 text-gray-800 border-gray-200', icon: WifiOff, label: 'Hors ligne' };
+      return { color: 'bg-gray-100 text-gray-800 border-gray-200', icon: WifiOff, label: translations.statusOffline };
     }
     if (status === 'busy') {
-      return { color: 'bg-orange-100 text-orange-800 border-orange-200', icon: Phone, label: 'En appel', pulse: true };
+      return { color: 'bg-orange-100 text-orange-800 border-orange-200', icon: Phone, label: translations.statusBusy, pulse: true };
     }
-    return { color: 'bg-green-100 text-green-800 border-green-200', icon: Wifi, label: 'En ligne', pulse: true };
+    return { color: 'bg-green-100 text-green-800 border-green-200', icon: Wifi, label: translations.statusOnline, pulse: true };
   };
 
   const config = getConfig();
@@ -155,20 +245,57 @@ const StatusBadge: React.FC<{ status: 'available' | 'busy' | 'offline'; isOnline
   );
 };
 
-const ProviderTypeBadge: React.FC<{ type: 'lawyer' | 'expat' }> = ({ type }) => {
+const ProviderTypeBadge: React.FC<{ type: 'lawyer' | 'expat'; translations: ProviderTranslations }> = ({ type, translations }) => {
   if (type === 'lawyer') {
     return (
       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
         <Scale size={12} className="mr-1" />
-        Avocat
+        {translations.typeLawyer}
       </span>
     );
   }
   return (
     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
       <Globe size={12} className="mr-1" />
-      Expatrié
+      {translations.typeExpat}
     </span>
+  );
+};
+
+// Status indicators for isSuspended, isBanned, isVisible
+const ProviderStatusIndicators: React.FC<{ provider: Provider; translations: ProviderTranslations; locale: string }> = ({ provider, translations, locale }) => {
+  return (
+    <div className="flex flex-wrap gap-1 mt-1">
+      {provider.isSuspended && (
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
+          <Pause size={10} className="mr-1" />
+          {translations.badgeSuspended}
+          {provider.suspendedUntil && (
+            <span className="ml-1 text-yellow-600">
+              {translations.badgeSuspendedUntil.replace('{date}', new Date(provider.suspendedUntil.toDate()).toLocaleDateString(locale))}
+            </span>
+          )}
+        </span>
+      )}
+      {provider.isBanned && (
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 border border-red-200">
+          <Ban size={10} className="mr-1" />
+          {translations.badgeBlocked}
+        </span>
+      )}
+      {provider.isVisible === false && (
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+          <EyeOff size={10} className="mr-1" />
+          {translations.badgeHidden}
+        </span>
+      )}
+      {provider.isDeleted && (
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-200 text-red-900 border border-red-300">
+          <Trash2 size={10} className="mr-1" />
+          {translations.badgeDeleted}
+        </span>
+      )}
+    </div>
   );
 };
 
@@ -180,12 +307,14 @@ const MetricCard: React.FC<{
   color: string;
   subtitle?: string;
   isLive?: boolean;
-}> = ({ title, value, change, icon: Icon, color, subtitle, isLive }) => (
+  liveLabel?: string;
+  vsYesterdayLabel?: string;
+}> = ({ title, value, change, icon: Icon, color, subtitle, isLive, liveLabel = 'LIVE', vsYesterdayLabel = 'vs yesterday' }) => (
   <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 relative overflow-hidden">
     {isLive && (
       <div className="absolute top-2 right-2 flex items-center">
         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-1"></div>
-        <span className="text-xs text-green-600 font-medium">LIVE</span>
+        <span className="text-xs text-green-600 font-medium">{liveLabel}</span>
       </div>
     )}
     <div className="flex items-center justify-between">
@@ -205,7 +334,7 @@ const MetricCard: React.FC<{
             <span className={`text-sm ml-1 ${
               change > 0 ? 'text-green-600' : change < 0 ? 'text-red-600' : 'text-gray-500'
             }`}>
-              {Math.abs(change)}% vs hier
+              {Math.abs(change)}% {vsYesterdayLabel}
             </span>
           </div>
         )}
@@ -217,30 +346,453 @@ const MetricCard: React.FC<{
   </div>
 );
 
+// ============ MODALS ============
+
+// Bulk Action Confirmation Modal
+const BulkActionModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  actionType: BulkActionType;
+  selectedCount: number;
+  onConfirm: (reason?: string) => void;
+  isLoading: boolean;
+  translations: ModalTranslations;
+}> = ({ isOpen, onClose, actionType, selectedCount, onConfirm, isLoading, translations }) => {
+  const [reason, setReason] = useState('');
+
+  const getActionConfig = () => ({
+    hide: {
+      title: translations.hideTitle,
+      description: translations.confirmHide.replace('{count}', String(selectedCount)),
+      confirmText: translations.bulkHide,
+      color: 'bg-gray-600 hover:bg-gray-700',
+      requiresReason: false,
+    },
+    block: {
+      title: translations.blockTitle,
+      description: translations.confirmBlock.replace('{count}', String(selectedCount)),
+      confirmText: translations.bulkBlock,
+      color: 'bg-red-600 hover:bg-red-700',
+      requiresReason: true,
+    },
+    suspend: {
+      title: translations.suspendTitle,
+      description: translations.confirmSuspend.replace('{count}', String(selectedCount)),
+      confirmText: translations.bulkSuspend,
+      color: 'bg-yellow-600 hover:bg-yellow-700',
+      requiresReason: true,
+    },
+    delete: {
+      title: translations.deleteTitle,
+      description: translations.confirmDelete.replace('{count}', String(selectedCount)),
+      confirmText: translations.bulkDelete,
+      color: 'bg-red-700 hover:bg-red-800',
+      requiresReason: false,
+    },
+  });
+
+  const config = getActionConfig()[actionType];
+
+  const handleConfirm = () => {
+    if (config.requiresReason && !reason.trim()) {
+      toast.error(translations.toastReasonRequired);
+      return;
+    }
+    onConfirm(reason || undefined);
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title={config.title} size="small">
+      <div className="space-y-4">
+        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="flex items-start">
+            <AlertTriangle className="text-yellow-600 mr-3 flex-shrink-0" size={20} />
+            <p className="text-sm text-yellow-800">{config.description}</p>
+          </div>
+        </div>
+
+        {config.requiresReason && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {translations.reasonRequired}
+            </label>
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+              rows={3}
+              placeholder={translations.reasonPlaceholder}
+            />
+          </div>
+        )}
+
+        <div className="flex justify-end space-x-3 pt-4">
+          <button
+            onClick={onClose}
+            disabled={isLoading}
+            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 disabled:opacity-50"
+          >
+            {translations.cancel}
+          </button>
+          <button
+            onClick={handleConfirm}
+            disabled={isLoading || (config.requiresReason && !reason.trim())}
+            className={`px-4 py-2 text-white rounded-md disabled:opacity-50 flex items-center ${config.color}`}
+          >
+            {isLoading && (
+              <RefreshCw size={16} className="mr-2 animate-spin" />
+            )}
+            {config.confirmText} ({selectedCount})
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
+// Suspend Modal (for individual suspend)
+const SuspendModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  provider: Provider | null;
+  onConfirm: (reason: string, until?: string) => void;
+  isLoading: boolean;
+  translations: ModalTranslations;
+}> = ({ isOpen, onClose, provider, onConfirm, isLoading, translations }) => {
+  const [reason, setReason] = useState('');
+  const [hasEndDate, setHasEndDate] = useState(false);
+  const [endDate, setEndDate] = useState('');
+
+  const handleConfirm = () => {
+    if (!reason.trim()) {
+      toast.error(translations.toastReasonRequired);
+      return;
+    }
+    onConfirm(reason, hasEndDate ? endDate : undefined);
+  };
+
+  const providerName = provider?.displayName || provider?.email || '';
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title={translations.suspendTitle} size="medium">
+      <div className="space-y-4">
+        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="flex items-start">
+            <Pause className="text-yellow-600 mr-3 flex-shrink-0" size={20} />
+            <div>
+              <p className="text-sm font-medium text-yellow-800">
+                {providerName}
+              </p>
+              <p className="text-xs text-yellow-700 mt-1">
+                {translations.suspendWarning}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            {translations.suspendReason}
+          </label>
+          <textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+            rows={3}
+            placeholder={translations.suspendReasonPlaceholder}
+          />
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            id="hasEndDate"
+            checked={hasEndDate}
+            onChange={(e) => setHasEndDate(e.target.checked)}
+            className="rounded border-gray-300"
+          />
+          <label htmlFor="hasEndDate" className="text-sm text-gray-700">
+            {translations.suspendSetEndDate}
+          </label>
+        </div>
+
+        {hasEndDate && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {translations.suspendEndDate}
+            </label>
+            <input
+              type="datetime-local"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+              min={new Date().toISOString().slice(0, 16)}
+            />
+          </div>
+        )}
+
+        <div className="flex justify-end space-x-3 pt-4">
+          <button
+            onClick={onClose}
+            disabled={isLoading}
+            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 disabled:opacity-50"
+          >
+            {translations.cancel}
+          </button>
+          <button
+            onClick={handleConfirm}
+            disabled={isLoading || !reason.trim()}
+            className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 disabled:opacity-50 flex items-center"
+          >
+            {isLoading && <RefreshCw size={16} className="mr-2 animate-spin" />}
+            {translations.bulkSuspend}
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
+// Delete Confirm Modal (with type to confirm)
+const DeleteConfirmModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  provider: Provider | null;
+  onConfirm: () => void;
+  isLoading: boolean;
+  isHardDelete?: boolean;
+  translations: ModalTranslations;
+}> = ({ isOpen, onClose, provider, onConfirm, isLoading, isHardDelete = false, translations }) => {
+  const [confirmText, setConfirmText] = useState('');
+
+  const providerName = provider?.displayName || provider?.email || '';
+  const expectedText = isHardDelete ? translations.deleteHardConfirmText : translations.deleteConfirmText;
+
+  const handleConfirm = () => {
+    if (confirmText !== expectedText) {
+      toast.error(translations.deleteTypeToConfirm.replace('{text}', expectedText));
+      return;
+    }
+    onConfirm();
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title={isHardDelete ? translations.deleteHardTitle : translations.deleteTitle} size="medium">
+      <div className="space-y-4">
+        <div className={`p-4 ${isHardDelete ? 'bg-red-100' : 'bg-red-50'} border border-red-200 rounded-lg`}>
+          <div className="flex items-start">
+            <AlertTriangle className="text-red-600 mr-3 flex-shrink-0" size={20} />
+            <div>
+              <p className="text-sm font-medium text-red-800">
+                {isHardDelete
+                  ? translations.deleteHardWarning
+                  : translations.deleteSoftWarning.replace('{name}', providerName)
+                }
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            {translations.deleteTypeToConfirm.replace('{text}', '')} <span className="font-bold text-red-600">{expectedText}</span>
+          </label>
+          <input
+            type="text"
+            value={confirmText}
+            onChange={(e) => setConfirmText(e.target.value)}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+            placeholder={expectedText}
+          />
+        </div>
+
+        <div className="flex justify-end space-x-3 pt-4">
+          <button
+            onClick={onClose}
+            disabled={isLoading}
+            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 disabled:opacity-50"
+          >
+            {translations.cancel}
+          </button>
+          <button
+            onClick={handleConfirm}
+            disabled={isLoading || confirmText !== expectedText}
+            className={`px-4 py-2 text-white rounded-md disabled:opacity-50 flex items-center ${
+              isHardDelete ? 'bg-red-700 hover:bg-red-800' : 'bg-red-600 hover:bg-red-700'
+            }`}
+          >
+            {isLoading && <RefreshCw size={16} className="mr-2 animate-spin" />}
+            <Trash2 size={16} className="mr-2" />
+            {translations.bulkDelete}
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
+// Block Reason Modal
+const BlockReasonModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  provider: Provider | null;
+  onConfirm: (reason: string) => void;
+  isLoading: boolean;
+  translations: ModalTranslations;
+}> = ({ isOpen, onClose, provider, onConfirm, isLoading, translations }) => {
+  const [reason, setReason] = useState('');
+
+  const handleConfirm = () => {
+    if (!reason.trim()) {
+      toast.error(translations.toastReasonRequired);
+      return;
+    }
+    onConfirm(reason);
+  };
+
+  const providerName = provider?.displayName || provider?.email || '';
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title={translations.blockTitle} size="medium">
+      <div className="space-y-4">
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="flex items-start">
+            <Ban className="text-red-600 mr-3 flex-shrink-0" size={20} />
+            <div>
+              <p className="text-sm font-medium text-red-800">
+                {providerName}
+              </p>
+              <p className="text-xs text-red-700 mt-1">
+                {translations.blockWarning}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            {translations.blockReason}
+          </label>
+          <textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+            rows={3}
+            placeholder={translations.blockReasonPlaceholder}
+          />
+        </div>
+
+        <div className="flex justify-end space-x-3 pt-4">
+          <button
+            onClick={onClose}
+            disabled={isLoading}
+            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 disabled:opacity-50"
+          >
+            {translations.cancel}
+          </button>
+          <button
+            onClick={handleConfirm}
+            disabled={isLoading || !reason.trim()}
+            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 flex items-center"
+          >
+            {isLoading && <RefreshCw size={16} className="mr-2 animate-spin" />}
+            <Ban size={16} className="mr-2" />
+            {translations.bulkBlock}
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
 // ============ COMPOSANT PRINCIPAL ============
 const AdminProviders: React.FC = () => {
   const navigate = useNavigate();
+  const intl = useIntl();
+  const t = (id: string, values?: Record<string, any>) => intl.formatMessage({ id }, values);
   const { user: currentUser } = useAuth();
   const mountedRef = useRef<boolean>(true);
+  const locale = intl.locale;
 
-  // States des données
+  // Translation objects for sub-components
+  const providerTranslations: ProviderTranslations = useMemo(() => ({
+    statusOffline: t('admin.providers.status.offline'),
+    statusBusy: t('admin.providers.status.busy'),
+    statusOnline: t('admin.providers.status.online'),
+    typeLawyer: t('admin.providers.type.lawyer'),
+    typeExpat: t('admin.providers.type.expat'),
+    badgeSuspended: t('admin.providers.statusBadge.suspended'),
+    badgeSuspendedUntil: t('admin.providers.statusBadge.suspendedUntil'),
+    badgeBlocked: t('admin.providers.statusBadge.blocked'),
+    badgeHidden: t('admin.providers.statusBadge.hidden'),
+    badgeDeleted: t('admin.providers.statusBadge.deleted'),
+    liveIndicator: t('admin.providers.liveIndicator'),
+    vsYesterday: t('admin.providers.comparison.vsYesterday'),
+  }), [t]);
+
+  const modalTranslations: ModalTranslations = useMemo(() => ({
+    hideTitle: t('admin.providers.modal.hideTitle'),
+    blockTitle: t('admin.providers.modal.blockTitle'),
+    suspendTitle: t('admin.providers.suspend.title'),
+    deleteTitle: t('admin.providers.modal.deleteTitle'),
+    confirmHide: t('admin.providers.bulkActions.confirmHide'),
+    confirmBlock: t('admin.providers.bulkActions.confirmBlock'),
+    confirmSuspend: t('admin.providers.bulkActions.confirmSuspend'),
+    confirmDelete: t('admin.providers.bulkActions.confirmDelete'),
+    reasonRequired: t('admin.providers.modal.reasonRequired'),
+    reasonPlaceholder: t('admin.providers.modal.reasonPlaceholder'),
+    cancel: t('admin.providers.modal.cancel'),
+    confirm: t('admin.providers.modal.confirm'),
+    bulkHide: t('admin.providers.bulkActions.hide'),
+    bulkBlock: t('admin.providers.bulkActions.block'),
+    bulkSuspend: t('admin.providers.bulkActions.suspend'),
+    bulkDelete: t('admin.providers.bulkActions.delete'),
+    toastReasonRequired: t('admin.providers.toast.reasonRequired'),
+    suspendReason: t('admin.providers.suspend.reason'),
+    suspendReasonPlaceholder: t('admin.providers.suspend.reasonPlaceholder'),
+    suspendSetEndDate: t('admin.providers.suspend.setEndDate'),
+    suspendEndDate: t('admin.providers.suspend.endDate'),
+    suspendWarning: t('admin.providers.suspend.warning'),
+    deleteHardTitle: t('admin.providers.actions.deleteGdpr'),
+    deleteHardWarning: t('admin.providers.toast.error'),
+    deleteSoftWarning: t('admin.providers.bulkActions.confirmDelete'),
+    deleteTypeToConfirm: t('admin.providers.modal.confirm'),
+    deleteConfirmText: t('admin.providers.bulkActions.delete').toUpperCase(),
+    deleteHardConfirmText: t('admin.providers.actions.deleteGdpr').toUpperCase(),
+    blockReason: t('admin.providers.modal.reasonRequired'),
+    blockReasonPlaceholder: t('admin.providers.modal.reasonPlaceholder'),
+    blockWarning: t('admin.providers.bulkActions.confirmBlock').replace('{count}', '1'),
+  }), [t]);
+
+  // States des donnees
   const [providers, setProviders] = useState<Provider[]>([]);
   const [stats, setStats] = useState<ProviderStats | null>(null);
   const [alerts, setAlerts] = useState<ProviderAlert[]>([]);
-  // ✅ OPTIMISATION: Stats séparées pour éviter les lectures excessives
   const [todayCallsStats, setTodayCallsStats] = useState({ totalCallsToday: 0, totalRevenueToday: 0 });
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
+
+  // Multi-select states
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isAllSelected, setIsAllSelected] = useState(false);
+
+  // Modal states
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showStatsModal, setShowStatsModal] = useState(false);
+  const [showGdprPurgeModal, setShowGdprPurgeModal] = useState(false);
+  const [gdprPurgeProvider, setGdprPurgeProvider] = useState<Provider | null>(null);
+  const [showBulkActionModal, setShowBulkActionModal] = useState(false);
+  const [showSuspendModal, setShowSuspendModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showBlockModal, setShowBlockModal] = useState(false);
+  const [bulkActionType, setBulkActionType] = useState<BulkActionType>('hide');
+  const [isActionLoading, setIsActionLoading] = useState(false);
 
   // States UI
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [showStatsModal, setShowStatsModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // ✅ OPTIMISATION: Auto-suspension du temps réel après 5 min d'inactivité
-  // Économie estimée: ~90% des lectures quand l'onglet est ouvert mais inactif
   const {
     isRealtimeActive: isRealTimeActive,
     isSuspendedDueToInactivity,
@@ -248,13 +800,15 @@ const AdminProviders: React.FC = () => {
     suspendRealtime,
     timeUntilSuspend,
   } = useAutoSuspendRealtime({
-    inactivityDelay: 5 * 60 * 1000, // 5 minutes
+    inactivityDelay: 5 * 60 * 1000,
     enabled: true,
   });
+
   const [filters, setFilters] = useState({
     status: 'all',
     type: 'all',
     approval: 'all',
+    visibility: 'all',
     country: 'all',
   });
   const [sortBy, setSortBy] = useState<'name' | 'status' | 'lastActivity' | 'rating'>('status');
@@ -282,13 +836,26 @@ const AdminProviders: React.FC = () => {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'À l\'instant';
+    if (diffMins < 1) return 'A l\'instant';
     if (diffMins < 60) return `Il y a ${diffMins} min`;
     if (diffHours < 24) return `Il y a ${diffHours}h`;
     return `Il y a ${diffDays}j`;
   };
 
-  // Charger les stats d'appels d'aujourd'hui depuis Firestore
+  // Cloud Function calls
+  const callHideProvider = httpsCallable<{ providerId: string }, ProviderActionResult>(functions, 'hideProvider');
+  const callUnhideProvider = httpsCallable<{ providerId: string }, ProviderActionResult>(functions, 'unhideProvider');
+  const callBlockProvider = httpsCallable<{ providerId: string; reason: string }, ProviderActionResult>(functions, 'blockProvider');
+  const callUnblockProvider = httpsCallable<{ providerId: string }, ProviderActionResult>(functions, 'unblockProvider');
+  const callSuspendProvider = httpsCallable<{ providerId: string; reason: string; until?: string }, ProviderActionResult>(functions, 'suspendProvider');
+  const callUnsuspendProvider = httpsCallable<{ providerId: string }, ProviderActionResult>(functions, 'unsuspendProvider');
+  const callSoftDeleteProvider = httpsCallable<{ providerId: string; reason?: string }, ProviderActionResult>(functions, 'softDeleteProvider');
+  const callBulkHideProviders = httpsCallable<{ providerIds: string[] }, BulkActionResult>(functions, 'bulkHideProviders');
+  const callBulkBlockProviders = httpsCallable<{ providerIds: string[]; reason: string }, BulkActionResult>(functions, 'bulkBlockProviders');
+  const callBulkSuspendProviders = httpsCallable<{ providerIds: string[]; reason: string; until?: string }, BulkActionResult>(functions, 'bulkSuspendProviders');
+  const callBulkDeleteProviders = httpsCallable<{ providerIds: string[]; reason?: string }, BulkActionResult>(functions, 'bulkDeleteProviders');
+
+  // Charger les stats d'appels d'aujourd'hui
   const loadTodayCallsStats = useCallback(async () => {
     try {
       const now = new Date();
@@ -308,7 +875,6 @@ const AdminProviders: React.FC = () => {
         const data = doc.data();
         if (!data._placeholder) {
           totalCalls++;
-          // Revenus = montant total de l'appel
           const amount = data.payment?.amount || data.totalAmount || 0;
           totalRevenue += Number(amount);
         }
@@ -317,7 +883,6 @@ const AdminProviders: React.FC = () => {
       return { totalCallsToday: totalCalls, totalRevenueToday: totalRevenue };
     } catch (error) {
       console.error('[AdminProviders] Error loading today calls stats:', error);
-      // Fallback: essayer sans le filtre payment.status si l'index n'existe pas
       try {
         const now = new Date();
         const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -348,13 +913,12 @@ const AdminProviders: React.FC = () => {
     }
   }, []);
 
-  // Générer des alertes basées sur les données
+  // Generer des alertes basees sur les donnees
   const generateAlerts = useCallback((providersList: Provider[]) => {
     const newAlerts: ProviderAlert[] = [];
     const now = Date.now();
 
     providersList.forEach((provider) => {
-      // Alerte: en ligne depuis longtemps sans activité
       if (provider.isOnline && provider.lastActivity) {
         const lastActivityTime = provider.lastActivity.toDate().getTime();
         const inactivityMs = now - lastActivityTime;
@@ -373,7 +937,6 @@ const AdminProviders: React.FC = () => {
         }
       }
 
-      // Alerte: taux de réponse faible
       if (provider.responseRate !== undefined && provider.responseRate < 50 && provider.totalCalls && provider.totalCalls > 5) {
         newAlerts.push({
           id: `response_${provider.id}`,
@@ -381,12 +944,11 @@ const AdminProviders: React.FC = () => {
           providerName: provider.displayName || provider.email,
           type: 'low_response_rate',
           severity: provider.responseRate < 30 ? 'high' : 'medium',
-          message: `Taux de réponse faible: ${provider.responseRate.toFixed(0)}%`,
+          message: `Taux de reponse faible: ${provider.responseRate.toFixed(0)}%`,
           timestamp: new Date(),
         });
       }
 
-      // Alerte: KYC incomplet
       if (provider.isApproved && !provider.stripeOnboardingComplete && !provider.paypalOnboardingComplete) {
         newAlerts.push({
           id: `kyc_${provider.id}`,
@@ -394,17 +956,16 @@ const AdminProviders: React.FC = () => {
           providerName: provider.displayName || provider.email,
           type: 'kyc_incomplete',
           severity: 'high',
-          message: 'KYC/Paiement non configuré',
+          message: 'KYC/Paiement non configure',
           timestamp: new Date(),
         });
       }
     });
 
-    setAlerts(newAlerts.slice(0, 20)); // Garder les 20 premières
+    setAlerts(newAlerts.slice(0, 20));
   }, []);
 
-  // ✅ OPTIMISATION COÛTS GCP: Fonction de chargement ponctuel (getDocs au lieu de onSnapshot)
-  // Économie estimée: ~20€/mois en lectures Firestore
+  // Charger les prestataires
   const loadProviders = useCallback(async (showRefreshIndicator = false) => {
     if (!currentUser) return;
 
@@ -417,7 +978,7 @@ const AdminProviders: React.FC = () => {
         collection(db, 'sos_profiles'),
         where('type', 'in', ['lawyer', 'expat']),
         orderBy('lastActivity', 'desc'),
-        limit(200) // ✅ Réduit de 500 à 200 pour économiser les lectures
+        limit(200)
       );
 
       const snapshot = await getDocs(providersQuery);
@@ -429,7 +990,6 @@ const AdminProviders: React.FC = () => {
         ...doc.data(),
       } as Provider));
 
-      console.log(`👥 ${providersList.length} prestataires chargés (mode économique)`);
       setProviders(providersList);
       setLastRefreshTime(new Date());
       setIsLoading(false);
@@ -463,7 +1023,6 @@ const AdminProviders: React.FC = () => {
         totalRevenueToday: todayCallsStats.totalRevenueToday,
       });
 
-      // Générer des alertes
       generateAlerts(providersList);
     } catch (error) {
       if (!mountedRef.current) return;
@@ -481,52 +1040,43 @@ const AdminProviders: React.FC = () => {
     }
   }, [currentUser, todayCallsStats, generateAlerts]);
 
-  // Chargement initial + rafraîchissement automatique toutes les 30 secondes
-  // ✅ OPTIMISATION: Remplace onSnapshot (coûteux) par polling (économique)
+  // Chargement initial + rafraichissement automatique
   useEffect(() => {
     if (!currentUser) return;
 
     mountedRef.current = true;
-    console.log('🟢 Démarrage du chargement des prestataires (mode économique)');
 
-    // Chargement initial
     loadProviders();
 
-    // Rafraîchissement automatique toutes les 30 secondes (au lieu de temps réel)
-    // Économie: ~95% de lectures en moins vs onSnapshot
     const intervalId = setInterval(() => {
       if (mountedRef.current && isRealTimeActive) {
         loadProviders();
       }
-    }, 30000); // 30 secondes
+    }, 30000);
 
     return () => {
-      console.log('🔴 Arrêt du chargement des prestataires');
       mountedRef.current = false;
       clearInterval(intervalId);
     };
   }, [currentUser, isRealTimeActive, loadProviders]);
 
-  // ✅ OPTIMISATION: Charger les stats d'appels indépendamment (toutes les 60 secondes)
-  // Économie estimée: ~15-20€/mois en lectures Firestore
+  // Charger les stats d'appels independamment
   useEffect(() => {
     if (!currentUser) return;
 
-    // Charger immédiatement au montage
     loadTodayCallsStats().then(stats => {
       if (mountedRef.current) {
         setTodayCallsStats(stats);
       }
     });
 
-    // Puis rafraîchir toutes les 60 secondes
     const intervalId = setInterval(() => {
       loadTodayCallsStats().then(stats => {
         if (mountedRef.current) {
           setTodayCallsStats(stats);
         }
       });
-    }, 60000); // 60 secondes
+    }, 60000);
 
     return () => {
       clearInterval(intervalId);
@@ -536,7 +1086,6 @@ const AdminProviders: React.FC = () => {
   // Filtrage et tri des prestataires
   const filteredProviders = useMemo(() => {
     let result = providers.filter((provider) => {
-      // Filtre par recherche
       if (searchTerm) {
         const search = searchTerm.toLowerCase();
         const matchesSearch =
@@ -550,27 +1099,30 @@ const AdminProviders: React.FC = () => {
         if (!matchesSearch) return false;
       }
 
-      // Filtre par statut
       if (filters.status !== 'all') {
         if (filters.status === 'online' && (!provider.isOnline || provider.availability !== 'available')) return false;
         if (filters.status === 'busy' && (!provider.isOnline || provider.availability !== 'busy')) return false;
         if (filters.status === 'offline' && (provider.isOnline && provider.availability !== 'offline')) return false;
+        if (filters.status === 'suspended' && !provider.isSuspended) return false;
+        if (filters.status === 'banned' && !provider.isBanned) return false;
       }
 
-      // Filtre par type
       if (filters.type !== 'all' && provider.type !== filters.type) return false;
 
-      // Filtre par approbation
       if (filters.approval !== 'all') {
         if (filters.approval === 'approved' && !provider.isApproved) return false;
         if (filters.approval === 'pending' && (provider.isApproved || provider.approvalStatus !== 'pending')) return false;
         if (filters.approval === 'rejected' && provider.approvalStatus !== 'rejected') return false;
       }
 
+      if (filters.visibility !== 'all') {
+        if (filters.visibility === 'visible' && provider.isVisible === false) return false;
+        if (filters.visibility === 'hidden' && provider.isVisible !== false) return false;
+      }
+
       return true;
     });
 
-    // Tri
     result.sort((a, b) => {
       let comparison = 0;
 
@@ -579,7 +1131,6 @@ const AdminProviders: React.FC = () => {
           comparison = (a.displayName || a.email).localeCompare(b.displayName || b.email);
           break;
         case 'status':
-          // Online > Busy > Offline
           const statusOrder = { available: 3, busy: 2, offline: 1 };
           const aStatus = a.isOnline ? (statusOrder[a.availability] || 1) : 0;
           const bStatus = b.isOnline ? (statusOrder[b.availability] || 1) : 0;
@@ -601,6 +1152,202 @@ const AdminProviders: React.FC = () => {
     return result;
   }, [providers, searchTerm, filters, sortBy, sortOrder]);
 
+  // Selection handlers
+  const handleSelectAll = useCallback(() => {
+    if (isAllSelected) {
+      setSelectedIds(new Set());
+      setIsAllSelected(false);
+    } else {
+      setSelectedIds(new Set(filteredProviders.map(p => p.id)));
+      setIsAllSelected(true);
+    }
+  }, [isAllSelected, filteredProviders]);
+
+  const handleSelectOne = useCallback((providerId: string) => {
+    setSelectedIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(providerId)) {
+        newSet.delete(providerId);
+      } else {
+        newSet.add(providerId);
+      }
+      return newSet;
+    });
+  }, []);
+
+  // Update isAllSelected when selection changes
+  useEffect(() => {
+    setIsAllSelected(
+      filteredProviders.length > 0 &&
+      filteredProviders.every(p => selectedIds.has(p.id))
+    );
+  }, [selectedIds, filteredProviders]);
+
+  // Clear selection when filters change
+  useEffect(() => {
+    setSelectedIds(new Set());
+    setIsAllSelected(false);
+  }, [filters, searchTerm]);
+
+  // Individual action handlers
+  const handleHideProvider = useCallback(async (provider: Provider) => {
+    setIsActionLoading(true);
+    try {
+      if (provider.isVisible === false) {
+        await callUnhideProvider({ providerId: provider.id });
+        toast.success(`${provider.displayName || provider.email} est maintenant visible`);
+      } else {
+        await callHideProvider({ providerId: provider.id });
+        toast.success(`${provider.displayName || provider.email} a ete masque`);
+      }
+      loadProviders(true);
+    } catch (error) {
+      console.error('Error toggling visibility:', error);
+      toast.error('Erreur lors du changement de visibilite');
+    } finally {
+      setIsActionLoading(false);
+    }
+  }, [callHideProvider, callUnhideProvider, loadProviders]);
+
+  const handleBlockProvider = useCallback(async (reason: string) => {
+    if (!selectedProvider) return;
+    setIsActionLoading(true);
+    try {
+      if (selectedProvider.isBanned) {
+        await callUnblockProvider({ providerId: selectedProvider.id });
+        toast.success(`${selectedProvider.displayName || selectedProvider.email} a ete debloque`);
+      } else {
+        await callBlockProvider({ providerId: selectedProvider.id, reason });
+        toast.success(`${selectedProvider.displayName || selectedProvider.email} a ete bloque`);
+      }
+      setShowBlockModal(false);
+      loadProviders(true);
+    } catch (error) {
+      console.error('Error toggling block:', error);
+      toast.error('Erreur lors du blocage/deblocage');
+    } finally {
+      setIsActionLoading(false);
+    }
+  }, [selectedProvider, callBlockProvider, callUnblockProvider, loadProviders]);
+
+  const handleSuspendProvider = useCallback(async (reason: string, until?: string) => {
+    if (!selectedProvider) return;
+    setIsActionLoading(true);
+    try {
+      if (selectedProvider.isSuspended) {
+        await callUnsuspendProvider({ providerId: selectedProvider.id });
+        toast.success(`${selectedProvider.displayName || selectedProvider.email} n'est plus suspendu`);
+      } else {
+        await callSuspendProvider({
+          providerId: selectedProvider.id,
+          reason,
+          until: until || undefined
+        });
+        toast.success(`${selectedProvider.displayName || selectedProvider.email} a ete suspendu`);
+      }
+      setShowSuspendModal(false);
+      loadProviders(true);
+    } catch (error) {
+      console.error('Error toggling suspend:', error);
+      toast.error('Erreur lors de la suspension');
+    } finally {
+      setIsActionLoading(false);
+    }
+  }, [selectedProvider, callSuspendProvider, callUnsuspendProvider, loadProviders]);
+
+  const handleDeleteProviderConfirmed = useCallback(async () => {
+    if (!selectedProvider) return;
+    setIsActionLoading(true);
+    try {
+      await callSoftDeleteProvider({ providerId: selectedProvider.id });
+      toast.success(`${selectedProvider.displayName || selectedProvider.email} a ete supprime`);
+      setShowDeleteModal(false);
+      loadProviders(true);
+    } catch (error) {
+      console.error('Error deleting provider:', error);
+      toast.error('Erreur lors de la suppression');
+    } finally {
+      setIsActionLoading(false);
+    }
+  }, [selectedProvider, callSoftDeleteProvider, loadProviders]);
+
+  // Bulk action handlers
+  const handleBulkAction = useCallback(async (reason?: string) => {
+    const providerIds = Array.from(selectedIds);
+    if (providerIds.length === 0) return;
+
+    setIsActionLoading(true);
+    try {
+      let result: BulkActionResult;
+
+      switch (bulkActionType) {
+        case 'hide':
+          result = (await callBulkHideProviders({ providerIds })).data;
+          break;
+        case 'block':
+          result = (await callBulkBlockProviders({ providerIds, reason: reason || 'Action admin en masse' })).data;
+          break;
+        case 'suspend':
+          result = (await callBulkSuspendProviders({ providerIds, reason: reason || 'Suspension en masse' })).data;
+          break;
+        case 'delete':
+          result = (await callBulkDeleteProviders({ providerIds, reason })).data;
+          break;
+      }
+
+      if (result.success) {
+        toast.success(`${result.successful} prestataire(s) traite(s) avec succes`);
+      } else {
+        toast.warning(`${result.successful} reussi(s), ${result.failed} echec(s)`);
+      }
+
+      setShowBulkActionModal(false);
+      setSelectedIds(new Set());
+      loadProviders(true);
+    } catch (error) {
+      console.error('Error in bulk action:', error);
+      toast.error('Erreur lors de l\'action en masse');
+    } finally {
+      setIsActionLoading(false);
+    }
+  }, [
+    selectedIds,
+    bulkActionType,
+    callBulkHideProviders,
+    callBulkBlockProviders,
+    callBulkSuspendProviders,
+    callBulkDeleteProviders,
+    loadProviders
+  ]);
+
+  const openBulkActionModal = (actionType: BulkActionType) => {
+    setBulkActionType(actionType);
+    setShowBulkActionModal(true);
+  };
+
+  // View details handler
+  const handleViewDetails = useCallback((provider: Provider) => {
+    setSelectedProvider(provider);
+    setShowDetailModal(true);
+  }, []);
+
+  // GDPR Purge handlers
+  const handleGdprPurge = useCallback((provider: Provider) => {
+    const confirmMessage = `ATTENTION - SUPPRESSION RGPD DEFINITIVE\n\nVous etes sur le point de lancer la procedure de suppression RGPD pour "${provider.displayName || provider.email}".\n\nCette action est IRREVERSIBLE et supprimera definitivement toutes les donnees.\n\nContinuer ?`;
+
+    if (!confirm(confirmMessage)) return;
+
+    setGdprPurgeProvider(provider);
+    setShowGdprPurgeModal(true);
+  }, []);
+
+  const handleGdprPurgeSuccess = useCallback((providerId: string) => {
+    setProviders((prev) => prev.filter((p) => p.id !== providerId));
+    setShowDetailModal(false);
+    setSelectedProvider(null);
+    toast.success('Purge RGPD effectuee avec succes');
+  }, []);
+
   // Export CSV
   const handleExportCSV = useCallback(() => {
     const headers = [
@@ -610,12 +1357,15 @@ const AdminProviders: React.FC = () => {
       'Type',
       'Statut',
       'En ligne',
+      'Visible',
+      'Suspendu',
+      'Bloque',
       'Pays',
       'Ville',
       'Note',
       'Appels totaux',
-      'Taux de réponse',
-      'Dernière activité',
+      'Taux de reponse',
+      'Derniere activite',
     ];
 
     const rows = filteredProviders.map((p) => [
@@ -625,6 +1375,9 @@ const AdminProviders: React.FC = () => {
       p.type,
       p.availability,
       p.isOnline ? 'Oui' : 'Non',
+      p.isVisible === false ? 'Non' : 'Oui',
+      p.isSuspended ? 'Oui' : 'Non',
+      p.isBanned ? 'Oui' : 'Non',
       p.country || '',
       p.city || '',
       p.rating?.toFixed(1) || '',
@@ -643,7 +1396,7 @@ const AdminProviders: React.FC = () => {
     URL.revokeObjectURL(url);
   }, [filteredProviders]);
 
-  // Forcer un prestataire hors ligne (using transaction for atomicity)
+  // Forcer un prestataire hors ligne
   const handleForceOffline = useCallback(async (providerId: string) => {
     if (!confirm('Voulez-vous vraiment mettre ce prestataire hors ligne ?')) return;
 
@@ -662,14 +1415,15 @@ const AdminProviders: React.FC = () => {
         transaction.update(userRef, updateData);
       });
 
-      console.log(`Prestataire ${providerId} mis hors ligne par l'admin`);
+      toast.success('Prestataire mis hors ligne');
+      loadProviders(true);
     } catch (error) {
       console.error('Erreur lors de la mise hors ligne:', error);
-      alert('Erreur lors de la mise hors ligne du prestataire');
+      toast.error('Erreur lors de la mise hors ligne du prestataire');
     }
-  }, []);
+  }, [loadProviders]);
 
-  // Approuver un prestataire (using transaction for atomicity)
+  // Approuver un prestataire
   const handleApproveProvider = useCallback(async (providerId: string) => {
     if (!confirm('Voulez-vous approuver ce prestataire ?')) return;
 
@@ -689,20 +1443,15 @@ const AdminProviders: React.FC = () => {
         transaction.update(userRef, updateData);
       });
 
-      console.log(`Prestataire ${providerId} approuve par l'admin`);
-      alert('Prestataire approuve avec succes');
+      toast.success('Prestataire approuve avec succes');
+      loadProviders(true);
     } catch (error) {
       console.error('Erreur lors de l\'approbation:', error);
-      logError({
-        origin: 'frontend',
-        error: `Erreur approbation prestataire: ${(error as Error).message}`,
-        context: { component: 'AdminProviders', providerId },
-      });
-      alert('Erreur lors de l\'approbation du prestataire');
+      toast.error('Erreur lors de l\'approbation du prestataire');
     }
-  }, []);
+  }, [loadProviders]);
 
-  // Rejeter un prestataire (using transaction for atomicity)
+  // Rejeter un prestataire
   const handleRejectProvider = useCallback(async (providerId: string) => {
     if (!confirm('Voulez-vous rejeter ce prestataire ?')) return;
 
@@ -722,84 +1471,19 @@ const AdminProviders: React.FC = () => {
         transaction.update(userRef, updateData);
       });
 
-      console.log(`Prestataire ${providerId} rejete par l'admin`);
-      alert('Prestataire rejete');
+      toast.success('Prestataire rejete');
+      loadProviders(true);
     } catch (error) {
       console.error('Erreur lors du rejet:', error);
-      logError({
-        origin: 'frontend',
-        error: `Erreur rejet prestataire: ${(error as Error).message}`,
-        context: { component: 'AdminProviders', providerId },
-      });
-      alert('Erreur lors du rejet du prestataire');
+      toast.error('Erreur lors du rejet du prestataire');
     }
-  }, []);
+  }, [loadProviders]);
 
-  // Supprimer un prestataire (soft delete for GDPR compliance)
-  const handleDeleteProvider = useCallback(async (providerId: string, providerName: string) => {
-    const confirmMessage = `ATTENTION: Vous allez supprimer le prestataire "${providerName}".\n\nCette action va:\n- Désactiver le compte\n- Retirer de la liste des prestataires actifs\n- Conserver les données pour audit\n\nContinuer ?`;
-
-    if (!confirm(confirmMessage)) return;
-
-    // Double confirmation pour éviter les erreurs
-    const doubleConfirm = prompt('Tapez "SUPPRIMER" pour confirmer la suppression:');
-    if (doubleConfirm !== 'SUPPRIMER') {
-      alert('Suppression annulée');
-      return;
-    }
-
-    try {
-      await runTransaction(db, async (transaction) => {
-        const providerRef = doc(db, 'sos_profiles', providerId);
-        const userRef = doc(db, 'users', providerId);
-
-        const deleteData = {
-          isDeleted: true,
-          deletedAt: Timestamp.now(),
-          deletedBy: currentUser?.id || 'admin',
-          isApproved: false,
-          isOnline: false,
-          availability: 'offline',
-          isVisible: false,
-          isActive: false,
-          validationStatus: 'deleted',
-          approvalStatus: 'deleted',
-          updatedAt: Timestamp.now(),
-        };
-
-        transaction.update(providerRef, deleteData);
-        transaction.update(userRef, {
-          isDeleted: true,
-          deletedAt: Timestamp.now(),
-          deletedBy: currentUser?.id || 'admin',
-          isActive: false,
-          updatedAt: Timestamp.now(),
-        });
-      });
-
-      // Retirer de la liste locale
-      setProviders((prev) => prev.filter((p) => p.id !== providerId));
-
-      console.log(`Prestataire ${providerId} supprime (soft delete) par l'admin`);
-      alert('Prestataire supprime avec succes');
-    } catch (error) {
-      console.error('Erreur lors de la suppression:', error);
-      logError({
-        origin: 'frontend',
-        error: `Erreur suppression prestataire: ${(error as Error).message}`,
-        context: { component: 'AdminProviders', providerId },
-      });
-      alert('Erreur lors de la suppression du prestataire');
-    }
+  // Verifier si l'utilisateur a la permission de purge GDPR
+  const canPerformGdprPurge = useMemo(() => {
+    return currentUser?.role === 'admin';
   }, [currentUser]);
 
-  // Voir les détails d'un prestataire
-  const handleViewDetails = useCallback((provider: Provider) => {
-    setSelectedProvider(provider);
-    setShowDetailModal(true);
-  }, []);
-
-  // Nombre d'alertes non résolues
   const unreadAlertsCount = alerts.length;
 
   if (isLoading) {
@@ -808,7 +1492,7 @@ const AdminProviders: React.FC = () => {
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Chargement des prestataires...</p>
+            <p className="text-gray-600">{t('admin.providers.loading')}</p>
           </div>
         </div>
       </AdminLayout>
@@ -820,11 +1504,19 @@ const AdminProviders: React.FC = () => {
       <ErrorBoundary
         fallback={
           <div className="p-8 text-center">
-            Une erreur est survenue lors du chargement des prestataires.
+            {t('admin.providers.toast.error')}
           </div>
         }
       >
-        {/* ✅ Bannière quand temps réel suspendu pour économiser les coûts */}
+        <ToastContainer
+          position="top-right"
+          autoClose={4000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          pauseOnHover
+        />
+
         {isSuspendedDueToInactivity && (
           <RealtimeSuspendedBanner onResume={resumeRealtime} reason="inactivity" />
         )}
@@ -835,21 +1527,20 @@ const AdminProviders: React.FC = () => {
             <div>
               <h1 className="text-2xl font-bold text-gray-900 flex items-center">
                 <UserCheck className="mr-3 text-blue-600" size={28} />
-                Gestion des Prestataires
+                {t('admin.providers.title')}
                 {isRealTimeActive && (
                   <div className="ml-3 flex items-center">
                     <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse mr-2"></div>
-                    <span className="text-sm text-green-600 font-medium">LIVE</span>
+                    <span className="text-sm text-green-600 font-medium">{providerTranslations.liveIndicator}</span>
                   </div>
                 )}
               </h1>
               <p className="text-gray-600 mt-1">
-                Monitoring et gestion des avocats et expatriés partenaires
+                {t('admin.providers.subtitle')}
               </p>
             </div>
 
             <div className="flex items-center space-x-3">
-              {/* Alertes */}
               <button
                 onClick={() => setShowStatsModal(true)}
                 className={`relative p-2 rounded-lg border transition-colors ${
@@ -867,7 +1558,6 @@ const AdminProviders: React.FC = () => {
                 )}
               </button>
 
-              {/* Mode temps réel + countdown */}
               <div className="flex items-center space-x-2">
                 <RealtimeCountdown seconds={timeUntilSuspend} isActive={isRealTimeActive} />
                 <button
@@ -877,13 +1567,12 @@ const AdminProviders: React.FC = () => {
                       ? 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100'
                       : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                   }`}
-                  title={isRealTimeActive ? 'Pause temps réel' : 'Activer temps réel'}
+                  title={isRealTimeActive ? 'Pause temps reel' : 'Activer temps reel'}
                 >
                   <Activity size={20} />
                 </button>
               </div>
 
-              {/* Export */}
               <button
                 onClick={handleExportCSV}
                 className="p-2 border border-gray-300 rounded-lg bg-white text-gray-700 hover:bg-gray-50 transition-colors"
@@ -892,7 +1581,6 @@ const AdminProviders: React.FC = () => {
                 <Download size={20} />
               </button>
 
-              {/* Refresh - ✅ OPTIMISÉ: Utilise loadProviders au lieu de reload complet */}
               <button
                 onClick={() => loadProviders(true)}
                 disabled={isRefreshing}
@@ -901,7 +1589,7 @@ const AdminProviders: React.FC = () => {
                     ? 'border-blue-300 bg-blue-50 text-blue-600'
                     : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                 }`}
-                title={lastRefreshTime ? `Dernière MAJ: ${lastRefreshTime.toLocaleTimeString('fr-FR')}` : 'Actualiser'}
+                title={lastRefreshTime ? `Derniere MAJ: ${lastRefreshTime.toLocaleTimeString('fr-FR')}` : 'Actualiser'}
               >
                 <RefreshCw size={20} className={isRefreshing ? 'animate-spin' : ''} />
                 {lastRefreshTime && (
@@ -913,80 +1601,138 @@ const AdminProviders: React.FC = () => {
             </div>
           </div>
 
-          {/* Métriques principales */}
+          {/* Bulk Action Toolbar */}
+          {selectedIds.size > 0 && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex items-center justify-between">
+              <div className="flex items-center">
+                <CheckSquare className="text-blue-600 mr-2" size={20} />
+                <span className="font-medium text-blue-900">
+                  {t('admin.providers.bulkActions.selected', { count: selectedIds.size })}
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => openBulkActionModal('hide')}
+                  className="px-3 py-1.5 bg-gray-600 text-white text-sm rounded-md hover:bg-gray-700 flex items-center"
+                >
+                  <EyeOff size={14} className="mr-1" />
+                  {t('admin.providers.bulkActions.hide')}
+                </button>
+                <button
+                  onClick={() => openBulkActionModal('block')}
+                  className="px-3 py-1.5 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 flex items-center"
+                >
+                  <Ban size={14} className="mr-1" />
+                  {t('admin.providers.bulkActions.block')}
+                </button>
+                <button
+                  onClick={() => openBulkActionModal('suspend')}
+                  className="px-3 py-1.5 bg-yellow-600 text-white text-sm rounded-md hover:bg-yellow-700 flex items-center"
+                >
+                  <Pause size={14} className="mr-1" />
+                  {t('admin.providers.bulkActions.suspend')}
+                </button>
+                <button
+                  onClick={() => openBulkActionModal('delete')}
+                  className="px-3 py-1.5 bg-red-700 text-white text-sm rounded-md hover:bg-red-800 flex items-center"
+                >
+                  <Trash2 size={14} className="mr-1" />
+                  {t('admin.providers.bulkActions.delete')}
+                </button>
+                <button
+                  onClick={() => {
+                    setSelectedIds(new Set());
+                    setIsAllSelected(false);
+                  }}
+                  className="px-3 py-1.5 border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50"
+                >
+                  {t('admin.providers.modal.cancel')}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Metriques principales */}
           {stats && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-8">
               <MetricCard
-                title="En ligne maintenant"
+                title={t('admin.providers.stats.onlineNow')}
                 value={stats.onlineNow}
                 icon={Wifi}
                 color="bg-green-500"
-                subtitle={`sur ${stats.totalProviders} prestataires`}
+                subtitle={`${stats.totalProviders} ${t('admin.providers.stats.totalProviders').toLowerCase()}`}
                 isLive
+                liveLabel={providerTranslations.liveIndicator}
+                vsYesterdayLabel={providerTranslations.vsYesterday}
               />
               <MetricCard
-                title="En appel"
+                title={t('admin.providers.stats.busyNow')}
                 value={stats.busyNow}
                 icon={Phone}
                 color="bg-orange-500"
                 isLive
+                liveLabel={providerTranslations.liveIndicator}
+                vsYesterdayLabel={providerTranslations.vsYesterday}
               />
               <MetricCard
-                title="Hors ligne"
+                title={t('admin.providers.stats.offlineNow')}
                 value={stats.offlineNow}
                 icon={WifiOff}
                 color="bg-gray-500"
+                vsYesterdayLabel={providerTranslations.vsYesterday}
               />
               <MetricCard
-                title="Avocats"
+                title={t('admin.providers.stats.lawyersCount')}
                 value={stats.lawyersCount}
                 icon={Scale}
                 color="bg-blue-500"
-                subtitle={`${providers.filter(p => p.type === 'lawyer' && p.isOnline).length} en ligne`}
+                subtitle={`${providers.filter(p => p.type === 'lawyer' && p.isOnline).length} ${t('admin.providers.filters.online').toLowerCase()}`}
+                vsYesterdayLabel={providerTranslations.vsYesterday}
               />
               <MetricCard
-                title="Expatriés"
+                title={t('admin.providers.stats.expatsCount')}
                 value={stats.expatsCount}
                 icon={Globe}
                 color="bg-teal-500"
-                subtitle={`${providers.filter(p => p.type === 'expat' && p.isOnline).length} en ligne`}
+                subtitle={`${providers.filter(p => p.type === 'expat' && p.isOnline).length} ${t('admin.providers.filters.online').toLowerCase()}`}
+                vsYesterdayLabel={providerTranslations.vsYesterday}
               />
             </div>
           )}
 
-          {/* Barre de statistiques supplémentaires */}
+          {/* Barre de statistiques supplementaires */}
           {stats && (
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-center">
                 <div>
                   <div className="text-2xl font-bold text-gray-900">{stats.approvedProviders}</div>
-                  <div className="text-xs text-gray-500">Approuvés</div>
+                  <div className="text-xs text-gray-500">{t('admin.providers.filters.approved')}</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-yellow-600">{stats.pendingApproval}</div>
-                  <div className="text-xs text-gray-500">En attente</div>
+                  <div className="text-xs text-gray-500">{t('admin.providers.filters.pending')}</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-gray-900">
                     {stats.averageRating > 0 ? stats.averageRating.toFixed(1) : 'N/A'}
                   </div>
-                  <div className="text-xs text-gray-500">Note moyenne</div>
+                  <div className="text-xs text-gray-500">{t('admin.providers.stats.averageRating')}</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-gray-900">
                     {((stats.onlineNow / stats.totalProviders) * 100).toFixed(0)}%
                   </div>
-                  <div className="text-xs text-gray-500">Taux de présence</div>
+                  <div className="text-xs text-gray-500">{t('admin.providers.filters.online')}</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-green-600">{stats.totalCallsToday}</div>
-                  <div className="text-xs text-gray-500">Appels aujourd'hui</div>
+                  <div className="text-xs text-gray-500">{t('admin.providers.stats.totalCallsToday')}</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-purple-600">
-                    {stats.totalRevenueToday.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
+                    {stats.totalRevenueToday.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}EUR
                   </div>
-                  <div className="text-xs text-gray-500">Revenus aujourd'hui</div>
+                  <div className="text-xs text-gray-500">{t('admin.providers.stats.totalRevenueToday')}</div>
                 </div>
               </div>
             </div>
@@ -997,7 +1743,7 @@ const AdminProviders: React.FC = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
                 <AlertTriangle className="mr-2 text-yellow-500" size={20} />
-                Alertes ({alerts.length})
+                {t('admin.providers.alerts.title')} ({alerts.length})
               </h3>
               <div className="space-y-2 max-h-40 overflow-y-auto">
                 {alerts.slice(0, 5).map((alert) => (
@@ -1035,7 +1781,7 @@ const AdminProviders: React.FC = () => {
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center space-x-2">
                 <Filter size={16} className="text-gray-400" />
-                <span className="text-sm font-medium text-gray-700">Filtres:</span>
+                <span className="text-sm font-medium text-gray-700">{t('admin.providers.filters.title')}:</span>
               </div>
 
               <select
@@ -1043,10 +1789,12 @@ const AdminProviders: React.FC = () => {
                 onChange={(e) => setFilters((prev) => ({ ...prev, status: e.target.value }))}
                 className="border border-gray-300 rounded-md px-3 py-1.5 text-sm"
               >
-                <option value="all">Tous les statuts</option>
-                <option value="online">En ligne</option>
-                <option value="busy">En appel</option>
-                <option value="offline">Hors ligne</option>
+                <option value="all">{t('admin.providers.filters.all')} {t('admin.providers.filters.status').toLowerCase()}</option>
+                <option value="online">{t('admin.providers.filters.online')}</option>
+                <option value="busy">{t('admin.providers.filters.busy')}</option>
+                <option value="offline">{t('admin.providers.filters.offline')}</option>
+                <option value="suspended">{t('admin.providers.filters.suspended')}</option>
+                <option value="banned">{t('admin.providers.filters.blocked')}</option>
               </select>
 
               <select
@@ -1054,9 +1802,9 @@ const AdminProviders: React.FC = () => {
                 onChange={(e) => setFilters((prev) => ({ ...prev, type: e.target.value }))}
                 className="border border-gray-300 rounded-md px-3 py-1.5 text-sm"
               >
-                <option value="all">Tous les types</option>
-                <option value="lawyer">Avocats</option>
-                <option value="expat">Expatriés</option>
+                <option value="all">{t('admin.providers.filters.all')} {t('admin.providers.filters.type').toLowerCase()}</option>
+                <option value="lawyer">{t('admin.providers.stats.lawyersCount')}</option>
+                <option value="expat">{t('admin.providers.stats.expatsCount')}</option>
               </select>
 
               <select
@@ -1064,10 +1812,20 @@ const AdminProviders: React.FC = () => {
                 onChange={(e) => setFilters((prev) => ({ ...prev, approval: e.target.value }))}
                 className="border border-gray-300 rounded-md px-3 py-1.5 text-sm"
               >
-                <option value="all">Toutes approbations</option>
-                <option value="approved">Approuvés</option>
-                <option value="pending">En attente</option>
-                <option value="rejected">Rejetés</option>
+                <option value="all">{t('admin.providers.filters.all')}</option>
+                <option value="approved">{t('admin.providers.filters.approved')}</option>
+                <option value="pending">{t('admin.providers.filters.pending')}</option>
+                <option value="rejected">{t('admin.providers.filters.blocked')}</option>
+              </select>
+
+              <select
+                value={filters.visibility}
+                onChange={(e) => setFilters((prev) => ({ ...prev, visibility: e.target.value }))}
+                className="border border-gray-300 rounded-md px-3 py-1.5 text-sm"
+              >
+                <option value="all">{t('admin.providers.filters.all')}</option>
+                <option value="visible">{t('admin.providers.actions.show')}</option>
+                <option value="hidden">{t('admin.providers.filters.hidden')}</option>
               </select>
 
               <select
@@ -1075,10 +1833,10 @@ const AdminProviders: React.FC = () => {
                 onChange={(e) => setSortBy(e.target.value as any)}
                 className="border border-gray-300 rounded-md px-3 py-1.5 text-sm"
               >
-                <option value="status">Trier par statut</option>
-                <option value="name">Trier par nom</option>
-                <option value="lastActivity">Trier par activité</option>
-                <option value="rating">Trier par note</option>
+                <option value="status">{t('admin.providers.table.status')}</option>
+                <option value="name">{t('admin.providers.table.name')}</option>
+                <option value="lastActivity">{t('admin.providers.table.lastActivity')}</option>
+                <option value="rating">{t('admin.providers.table.rating')}</option>
               </select>
 
               <button
@@ -1093,7 +1851,7 @@ const AdminProviders: React.FC = () => {
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="Rechercher nom, email, pays..."
+                  placeholder={t('admin.providers.search.placeholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-8 pr-4 py-1.5 border border-gray-300 rounded-md text-sm w-64"
@@ -1102,7 +1860,7 @@ const AdminProviders: React.FC = () => {
               </div>
 
               <span className="text-sm text-gray-500">
-                {filteredProviders.length} résultat(s)
+                {filteredProviders.length} resultat(s)
               </span>
             </div>
           </div>
@@ -1113,35 +1871,61 @@ const AdminProviders: React.FC = () => {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Prestataire
+                    <th className="px-4 py-3 text-left">
+                      <button
+                        onClick={handleSelectAll}
+                        className="flex items-center text-gray-500 hover:text-gray-700"
+                      >
+                        {isAllSelected ? (
+                          <CheckSquare size={18} className="text-blue-600" />
+                        ) : selectedIds.size > 0 ? (
+                          <MinusSquare size={18} className="text-blue-600" />
+                        ) : (
+                          <Square size={18} />
+                        )}
+                      </button>
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Statut
+                      {t('admin.providers.table.name')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Type
+                      {t('admin.providers.table.status')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Localisation
+                      {t('admin.providers.table.type')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Dernière activité
+                      {t('admin.providers.table.country')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Note
+                      {t('admin.providers.table.lastActivity')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Appels
+                      {t('admin.providers.table.rating')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
+                      {t('admin.providers.table.calls')}
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('admin.providers.table.actions')}
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredProviders.map((provider) => (
-                    <tr key={provider.id} className="hover:bg-gray-50">
+                    <tr key={provider.id} className={`hover:bg-gray-50 ${selectedIds.has(provider.id) ? 'bg-blue-50' : ''}`}>
+                      <td className="px-4 py-4">
+                        <button
+                          onClick={() => handleSelectOne(provider.id)}
+                          className="text-gray-500 hover:text-gray-700"
+                        >
+                          {selectedIds.has(provider.id) ? (
+                            <CheckSquare size={18} className="text-blue-600" />
+                          ) : (
+                            <Square size={18} />
+                          )}
+                        </button>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-10 w-10">
@@ -1162,11 +1946,12 @@ const AdminProviders: React.FC = () => {
                               {provider.displayName || `${provider.firstName || ''} ${provider.lastName || ''}`.trim() || 'N/A'}
                             </div>
                             <div className="text-sm text-gray-500">{provider.email}</div>
+                            <ProviderStatusIndicators provider={provider} translations={providerTranslations} locale={locale} />
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <StatusBadge status={provider.availability} isOnline={provider.isOnline} />
+                        <StatusBadge status={provider.availability} isOnline={provider.isOnline} translations={providerTranslations} />
                         {provider.availability === 'busy' && provider.busySince && (
                           <div className="text-xs text-gray-500 mt-1">
                             depuis {formatRelativeTime(provider.busySince)}
@@ -1174,10 +1959,10 @@ const AdminProviders: React.FC = () => {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <ProviderTypeBadge type={provider.type} />
+                        <ProviderTypeBadge type={provider.type} translations={providerTranslations} />
                         {!provider.isApproved && (
                           <span className="ml-2 px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">
-                            Non approuvé
+                            {t('admin.providers.filters.pending')}
                           </span>
                         )}
                       </td>
@@ -1214,8 +1999,80 @@ const AdminProviders: React.FC = () => {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center space-x-2">
-                          {/* Approve/Reject buttons for non-approved providers */}
+                        <div className="flex items-center space-x-1">
+                          {/* Hide/Unhide toggle */}
+                          <button
+                            onClick={() => handleHideProvider(provider)}
+                            className={`p-1.5 rounded ${
+                              provider.isVisible === false
+                                ? 'text-green-600 hover:text-green-800 hover:bg-green-50'
+                                : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                            }`}
+                            title={provider.isVisible === false ? 'Afficher' : 'Masquer'}
+                          >
+                            {provider.isVisible === false ? <Eye size={16} /> : <EyeOff size={16} />}
+                          </button>
+
+                          {/* Block/Unblock toggle */}
+                          <button
+                            onClick={() => {
+                              setSelectedProvider(provider);
+                              if (provider.isBanned) {
+                                callUnblockProvider({ providerId: provider.id })
+                                  .then(() => {
+                                    toast.success('Prestataire debloque');
+                                    loadProviders(true);
+                                  })
+                                  .catch(() => toast.error('Erreur lors du deblocage'));
+                              } else {
+                                setShowBlockModal(true);
+                              }
+                            }}
+                            className={`p-1.5 rounded ${
+                              provider.isBanned
+                                ? 'text-green-600 hover:text-green-800 hover:bg-green-50'
+                                : 'text-red-600 hover:text-red-800 hover:bg-red-50'
+                            }`}
+                            title={provider.isBanned ? 'Debloquer' : 'Bloquer'}
+                          >
+                            {provider.isBanned ? <Play size={16} /> : <Ban size={16} />}
+                          </button>
+
+                          {/* Suspend/Unsuspend toggle */}
+                          <button
+                            onClick={() => {
+                              setSelectedProvider(provider);
+                              if (provider.isSuspended) {
+                                callUnsuspendProvider({ providerId: provider.id })
+                                  .then(() => {
+                                    toast.success('Suspension levee');
+                                    loadProviders(true);
+                                  })
+                                  .catch(() => toast.error('Erreur lors de la levee de suspension'));
+                              } else {
+                                setShowSuspendModal(true);
+                              }
+                            }}
+                            className={`p-1.5 rounded ${
+                              provider.isSuspended
+                                ? 'text-green-600 hover:text-green-800 hover:bg-green-50'
+                                : 'text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50'
+                            }`}
+                            title={provider.isSuspended ? 'Lever la suspension' : 'Suspendre'}
+                          >
+                            {provider.isSuspended ? <Play size={16} /> : <Pause size={16} />}
+                          </button>
+
+                          {/* View details */}
+                          <button
+                            onClick={() => handleViewDetails(provider)}
+                            className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
+                            title="Voir details"
+                          >
+                            <Eye size={16} />
+                          </button>
+
+                          {/* Approve/Reject for non-approved */}
                           {!provider.isApproved && (
                             <>
                               <button
@@ -1234,23 +2091,8 @@ const AdminProviders: React.FC = () => {
                               </button>
                             </>
                           )}
-                          {/* Show rejection button for approved providers (to revoke approval) */}
-                          {provider.isApproved && (
-                            <button
-                              onClick={() => handleRejectProvider(provider.id)}
-                              className="p-1.5 text-orange-600 hover:text-orange-800 hover:bg-orange-50 rounded"
-                              title="Revoquer l'approbation"
-                            >
-                              <X size={16} />
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleViewDetails(provider)}
-                            className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
-                            title="Voir détails"
-                          >
-                            <Eye size={16} />
-                          </button>
+
+                          {/* Force offline if online */}
                           {provider.isOnline && (
                             <button
                               onClick={() => handleForceOffline(provider.id)}
@@ -1260,6 +2102,8 @@ const AdminProviders: React.FC = () => {
                               <WifiOff size={16} />
                             </button>
                           )}
+
+                          {/* Settings */}
                           <button
                             onClick={() => navigate(`/admin/users?id=${provider.id}`)}
                             className="p-1.5 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded"
@@ -1267,16 +2111,29 @@ const AdminProviders: React.FC = () => {
                           >
                             <Settings size={16} />
                           </button>
+
+                          {/* Delete */}
                           <button
-                            onClick={() => handleDeleteProvider(
-                              provider.id,
-                              provider.displayName || `${provider.firstName || ''} ${provider.lastName || ''}`.trim() || provider.email
-                            )}
+                            onClick={() => {
+                              setSelectedProvider(provider);
+                              setShowDeleteModal(true);
+                            }}
                             className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
                             title="Supprimer le prestataire"
                           >
                             <Trash2 size={16} />
                           </button>
+
+                          {/* GDPR Purge */}
+                          {canPerformGdprPurge && (
+                            <button
+                              onClick={() => handleGdprPurge(provider)}
+                              className="p-1.5 text-purple-700 hover:text-purple-900 hover:bg-purple-50 rounded"
+                              title="Purge RGPD (suppression definitive)"
+                            >
+                              <ShieldX size={16} />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -1288,20 +2145,20 @@ const AdminProviders: React.FC = () => {
             {filteredProviders.length === 0 && (
               <div className="p-12 text-center">
                 <Users className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun prestataire trouvé</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">{t('admin.providers.empty.title')}</h3>
                 <p className="text-gray-600">
-                  Essayez de modifier vos filtres ou votre recherche.
+                  {t('admin.providers.empty.message')}
                 </p>
               </div>
             )}
           </div>
         </div>
 
-        {/* Modal détails du prestataire */}
+        {/* Modal details du prestataire */}
         <Modal
           isOpen={showDetailModal}
           onClose={() => setShowDetailModal(false)}
-          title="Détails du prestataire"
+          title="Details du prestataire"
           size="large"
         >
           {selectedProvider && (
@@ -1328,9 +2185,10 @@ const AdminProviders: React.FC = () => {
                     </h3>
                     <p className="text-gray-500">{selectedProvider.email}</p>
                     <div className="flex items-center space-x-2 mt-2">
-                      <StatusBadge status={selectedProvider.availability} isOnline={selectedProvider.isOnline} />
-                      <ProviderTypeBadge type={selectedProvider.type} />
+                      <StatusBadge status={selectedProvider.availability} isOnline={selectedProvider.isOnline} translations={providerTranslations} />
+                      <ProviderTypeBadge type={selectedProvider.type} translations={providerTranslations} />
                     </div>
+                    <ProviderStatusIndicators provider={selectedProvider} translations={providerTranslations} locale={locale} />
                   </div>
                 </div>
                 <div className="text-right">
@@ -1347,10 +2205,31 @@ const AdminProviders: React.FC = () => {
                         : 'bg-yellow-100 text-yellow-800'
                     }`}
                   >
-                    {selectedProvider.isApproved ? 'Approuvé' : 'Non approuvé'}
+                    {selectedProvider.isApproved ? 'Approuve' : 'Non approuve'}
                   </span>
                 </div>
               </div>
+
+              {/* Suspension info if suspended */}
+              {selectedProvider.isSuspended && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <h4 className="font-medium text-yellow-800 flex items-center mb-2">
+                    <Pause size={16} className="mr-2" />
+                    Prestataire suspendu
+                  </h4>
+                  <div className="text-sm text-yellow-700 space-y-1">
+                    {selectedProvider.suspendReason && (
+                      <p><strong>Raison:</strong> {selectedProvider.suspendReason}</p>
+                    )}
+                    {selectedProvider.suspendedAt && (
+                      <p><strong>Depuis:</strong> {formatDateTime(selectedProvider.suspendedAt)}</p>
+                    )}
+                    {selectedProvider.suspendedUntil && (
+                      <p><strong>Jusqu'au:</strong> {formatDateTime(selectedProvider.suspendedUntil)}</p>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Informations */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1362,7 +2241,7 @@ const AdminProviders: React.FC = () => {
                       <span className="font-mono text-sm">{selectedProvider.id}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Téléphone:</span>
+                      <span className="text-gray-600">Telephone:</span>
                       <span>{selectedProvider.phone || 'N/A'}</span>
                     </div>
                     <div className="flex justify-between">
@@ -1388,11 +2267,11 @@ const AdminProviders: React.FC = () => {
                       <span className="font-medium">{selectedProvider.totalCalls || 0}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Appels réussis:</span>
+                      <span className="text-gray-600">Appels reussis:</span>
                       <span className="font-medium">{selectedProvider.successfulCalls || 0}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Taux de réponse:</span>
+                      <span className="text-gray-600">Taux de reponse:</span>
                       <span className="font-medium">
                         {selectedProvider.responseRate !== undefined
                           ? `${selectedProvider.responseRate.toFixed(0)}%`
@@ -1403,12 +2282,12 @@ const AdminProviders: React.FC = () => {
                       <span className="text-gray-600">Revenus totaux:</span>
                       <span className="font-medium">
                         {selectedProvider.totalRevenue !== undefined
-                          ? `${selectedProvider.totalRevenue.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€`
+                          ? `${selectedProvider.totalRevenue.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}EUR`
                           : 'N/A'}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Durée moyenne:</span>
+                      <span className="text-gray-600">Duree moyenne:</span>
                       <span className="font-medium">
                         {selectedProvider.averageCallDuration !== undefined
                           ? `${Math.round(selectedProvider.averageCallDuration / 60)} min`
@@ -1419,12 +2298,12 @@ const AdminProviders: React.FC = () => {
                 </div>
               </div>
 
-              {/* Activité */}
+              {/* Activite */}
               <div className="space-y-4">
-                <h4 className="font-medium text-gray-900">Activité</h4>
+                <h4 className="font-medium text-gray-900">Activite</h4>
                 <div className="bg-gray-50 rounded-lg p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <span className="text-gray-600 text-sm">Dernière activité:</span>
+                    <span className="text-gray-600 text-sm">Derniere activite:</span>
                     <div className="font-medium">{formatRelativeTime(selectedProvider.lastActivity)}</div>
                   </div>
                   <div>
@@ -1434,7 +2313,6 @@ const AdminProviders: React.FC = () => {
                   <div>
                     <span className="text-gray-600 text-sm">Configuration paiement:</span>
                     <div className="font-medium space-y-1">
-                      {/* Stripe */}
                       <div className="flex items-center">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                           selectedProvider.stripeOnboardingComplete
@@ -1448,7 +2326,6 @@ const AdminProviders: React.FC = () => {
                           )}
                         </span>
                       </div>
-                      {/* PayPal */}
                       <div className="flex items-center">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                           selectedProvider.paypalOnboardingComplete
@@ -1462,17 +2339,15 @@ const AdminProviders: React.FC = () => {
                           )}
                         </span>
                       </div>
-                      {/* Passerelle active */}
                       {(selectedProvider.stripeOnboardingComplete || selectedProvider.paypalOnboardingComplete) && (
                         <div className="text-xs text-gray-500 mt-1">
                           Passerelle active: <strong>{selectedProvider.paymentGateway || 'Stripe'}</strong>
                         </div>
                       )}
-                      {/* Alerte si aucun paiement configuré */}
                       {!selectedProvider.stripeOnboardingComplete && !selectedProvider.paypalOnboardingComplete && selectedProvider.isApproved && (
                         <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800">
                           <AlertTriangle size={12} className="inline mr-1" />
-                          Prestataire approuvé mais aucun paiement configuré
+                          Prestataire approuve mais aucun paiement configure
                         </div>
                       )}
                     </div>
@@ -1480,7 +2355,7 @@ const AdminProviders: React.FC = () => {
                 </div>
               </div>
 
-              {/* Langues et spécialisations */}
+              {/* Langues et specialisations */}
               {(selectedProvider.languages?.length || selectedProvider.specializations?.length) && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {selectedProvider.languages?.length && (
@@ -1497,7 +2372,7 @@ const AdminProviders: React.FC = () => {
                   )}
                   {selectedProvider.specializations?.length && (
                     <div>
-                      <h4 className="font-medium text-gray-900 mb-2">Spécialisations</h4>
+                      <h4 className="font-medium text-gray-900 mb-2">Specialisations</h4>
                       <div className="flex flex-wrap gap-2">
                         {selectedProvider.specializations.map((spec) => (
                           <span key={spec} className="px-2 py-1 bg-green-100 text-green-800 text-sm rounded-full">
@@ -1519,7 +2394,6 @@ const AdminProviders: React.FC = () => {
                   Fermer
                 </button>
                 <div className="flex space-x-3">
-                  {/* Approve/Reject buttons */}
                   {!selectedProvider.isApproved && (
                     <button
                       onClick={() => {
@@ -1530,30 +2404,6 @@ const AdminProviders: React.FC = () => {
                     >
                       <Check size={16} className="mr-2" />
                       Approuver
-                    </button>
-                  )}
-                  {!selectedProvider.isApproved && (
-                    <button
-                      onClick={() => {
-                        handleRejectProvider(selectedProvider.id);
-                        setShowDetailModal(false);
-                      }}
-                      className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center"
-                    >
-                      <X size={16} className="mr-2" />
-                      Rejeter
-                    </button>
-                  )}
-                  {selectedProvider.isApproved && (
-                    <button
-                      onClick={() => {
-                        handleRejectProvider(selectedProvider.id);
-                        setShowDetailModal(false);
-                      }}
-                      className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 flex items-center"
-                    >
-                      <X size={16} className="mr-2" />
-                      Revoquer
                     </button>
                   )}
                   {selectedProvider.isOnline && (
@@ -1575,19 +2425,15 @@ const AdminProviders: React.FC = () => {
                     <Settings size={16} className="mr-2" />
                     Voir profil complet
                   </button>
-                  <button
-                    onClick={() => {
-                      const name = selectedProvider.displayName ||
-                        `${selectedProvider.firstName || ''} ${selectedProvider.lastName || ''}`.trim() ||
-                        selectedProvider.email;
-                      handleDeleteProvider(selectedProvider.id, name);
-                      setShowDetailModal(false);
-                    }}
-                    className="px-4 py-2 bg-red-700 text-white rounded-md hover:bg-red-800 flex items-center"
-                  >
-                    <Trash2 size={16} className="mr-2" />
-                    Supprimer
-                  </button>
+                  {canPerformGdprPurge && (
+                    <button
+                      onClick={() => handleGdprPurge(selectedProvider)}
+                      className="px-4 py-2 bg-purple-700 text-white rounded-md hover:bg-purple-800 flex items-center"
+                    >
+                      <ShieldX size={16} className="mr-2" />
+                      Purge RGPD
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -1598,12 +2444,12 @@ const AdminProviders: React.FC = () => {
         <Modal
           isOpen={showStatsModal}
           onClose={() => setShowStatsModal(false)}
-          title="Alertes et statistiques"
+          title={t('admin.providers.alerts.title')}
           size="large"
         >
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Alertes actives ({alerts.length})</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('admin.providers.alerts.title')} ({alerts.length})</h3>
               {alerts.length > 0 ? (
                 <div className="space-y-3 max-h-64 overflow-y-auto">
                   {alerts.map((alert) => (
@@ -1622,7 +2468,7 @@ const AdminProviders: React.FC = () => {
                           <span className="font-medium text-gray-900">{alert.providerName}</span>
                           <p className="text-sm text-gray-600 mt-1">{alert.message}</p>
                           <p className="text-xs text-gray-400 mt-1">
-                            Type: {alert.type.replace('_', ' ')} | Sévérité: {alert.severity}
+                            {t('admin.providers.filters.type')}: {alert.type.replace('_', ' ')}
                           </p>
                         </div>
                         <button
@@ -1644,44 +2490,96 @@ const AdminProviders: React.FC = () => {
               ) : (
                 <div className="text-center py-8 text-gray-500">
                   <CheckCircle className="mx-auto h-12 w-12 text-green-400 mb-4" />
-                  <p>Aucune alerte active</p>
+                  <p>{t('admin.providers.empty.title')}</p>
                 </div>
               )}
             </div>
 
             {stats && (
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Résumé des statistiques</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('admin.providers.stats.totalProviders')}</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="bg-green-50 p-4 rounded-lg text-center">
                     <div className="text-3xl font-bold text-green-600">{stats.onlineNow}</div>
-                    <div className="text-sm text-gray-600">En ligne</div>
+                    <div className="text-sm text-gray-600">{t('admin.providers.filters.online')}</div>
                   </div>
                   <div className="bg-orange-50 p-4 rounded-lg text-center">
                     <div className="text-3xl font-bold text-orange-600">{stats.busyNow}</div>
-                    <div className="text-sm text-gray-600">En appel</div>
+                    <div className="text-sm text-gray-600">{t('admin.providers.filters.busy')}</div>
                   </div>
                   <div className="bg-gray-50 p-4 rounded-lg text-center">
                     <div className="text-3xl font-bold text-gray-600">{stats.offlineNow}</div>
-                    <div className="text-sm text-gray-600">Hors ligne</div>
+                    <div className="text-sm text-gray-600">{t('admin.providers.filters.offline')}</div>
                   </div>
                   <div className="bg-blue-50 p-4 rounded-lg text-center">
                     <div className="text-3xl font-bold text-blue-600">{stats.lawyersCount}</div>
-                    <div className="text-sm text-gray-600">Avocats</div>
+                    <div className="text-sm text-gray-600">{t('admin.providers.stats.lawyersCount')}</div>
                   </div>
                   <div className="bg-teal-50 p-4 rounded-lg text-center">
                     <div className="text-3xl font-bold text-teal-600">{stats.expatsCount}</div>
-                    <div className="text-sm text-gray-600">Expatriés</div>
+                    <div className="text-sm text-gray-600">{t('admin.providers.stats.expatsCount')}</div>
                   </div>
                   <div className="bg-yellow-50 p-4 rounded-lg text-center">
                     <div className="text-3xl font-bold text-yellow-600">{stats.pendingApproval}</div>
-                    <div className="text-sm text-gray-600">En attente</div>
+                    <div className="text-sm text-gray-600">{t('admin.providers.filters.pending')}</div>
                   </div>
                 </div>
               </div>
             )}
           </div>
         </Modal>
+
+        {/* Bulk Action Modal */}
+        <BulkActionModal
+          isOpen={showBulkActionModal}
+          onClose={() => setShowBulkActionModal(false)}
+          actionType={bulkActionType}
+          selectedCount={selectedIds.size}
+          onConfirm={handleBulkAction}
+          isLoading={isActionLoading}
+          translations={modalTranslations}
+        />
+
+        {/* Suspend Modal */}
+        <SuspendModal
+          isOpen={showSuspendModal}
+          onClose={() => setShowSuspendModal(false)}
+          provider={selectedProvider}
+          onConfirm={handleSuspendProvider}
+          isLoading={isActionLoading}
+          translations={modalTranslations}
+        />
+
+        {/* Delete Confirm Modal */}
+        <DeleteConfirmModal
+          isOpen={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          provider={selectedProvider}
+          onConfirm={handleDeleteProviderConfirmed}
+          isLoading={isActionLoading}
+          translations={modalTranslations}
+        />
+
+        {/* Block Reason Modal */}
+        <BlockReasonModal
+          isOpen={showBlockModal}
+          onClose={() => setShowBlockModal(false)}
+          provider={selectedProvider}
+          onConfirm={handleBlockProvider}
+          isLoading={isActionLoading}
+          translations={modalTranslations}
+        />
+
+        {/* GDPR Purge Modal */}
+        <AdminGdprPurgeModal
+          isOpen={showGdprPurgeModal}
+          onClose={() => {
+            setShowGdprPurgeModal(false);
+            setGdprPurgeProvider(null);
+          }}
+          provider={gdprPurgeProvider}
+          onSuccess={handleGdprPurgeSuccess}
+        />
       </ErrorBoundary>
     </AdminLayout>
   );

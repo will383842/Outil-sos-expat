@@ -62,10 +62,7 @@ export function usePaymentGateway(providerCountryCode: string | undefined): UseP
   const [isPayPalOnly, setIsPayPalOnly] = useState(false);
 
   const determineGateway = useCallback(async () => {
-    console.log("[usePaymentGateway] Determining gateway for country:", providerCountryCode);
-
     if (!providerCountryCode) {
-      console.log("[usePaymentGateway] No country code, defaulting to Stripe");
       setGateway("stripe");
       setIsLoading(false);
       setIsPayPalOnly(false);
@@ -77,7 +74,6 @@ export function usePaymentGateway(providerCountryCode: string | undefined): UseP
     // Vérifier le cache d'abord
     if (gatewayCache.has(countryCode)) {
       const cachedGateway = gatewayCache.get(countryCode)!;
-      console.log("[usePaymentGateway] Using cached gateway:", cachedGateway);
       setGateway(cachedGateway);
       setIsPayPalOnly(cachedGateway === "paypal");
       setIsLoading(false);
@@ -86,7 +82,6 @@ export function usePaymentGateway(providerCountryCode: string | undefined): UseP
 
     // Vérification locale rapide
     if (PAYPAL_ONLY_COUNTRIES.has(countryCode)) {
-      console.log("[usePaymentGateway] PayPal-only country detected:", countryCode);
       setGateway("paypal");
       setIsPayPalOnly(true);
       setIsLoading(false);
@@ -96,7 +91,6 @@ export function usePaymentGateway(providerCountryCode: string | undefined): UseP
 
     // Pour les pays non-PayPal, on utilise Stripe par défaut sans appel backend
     // Cela évite le blocage du formulaire en cas de timeout de Cloud Function
-    console.log("[usePaymentGateway] Stripe-supported country, using Stripe:", countryCode);
     setGateway("stripe");
     setIsPayPalOnly(false);
     setIsLoading(false);
@@ -122,14 +116,12 @@ export function usePaymentGateway(providerCountryCode: string | undefined): UseP
 
       // Mettre à jour seulement si différent (rare)
       if (recommendedGateway !== "stripe") {
-        console.log("[usePaymentGateway] Backend recommends different gateway:", recommendedGateway);
         setGateway(recommendedGateway);
         setIsPayPalOnly(paypalOnly);
         gatewayCache.set(countryCode, recommendedGateway);
       }
     } catch (err) {
       // Ignorer les erreurs - on a déjà un fallback Stripe actif
-      console.warn("[usePaymentGateway] Backend call failed (using Stripe fallback):", err);
     }
   }, [providerCountryCode]);
 

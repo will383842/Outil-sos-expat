@@ -96,9 +96,59 @@ export const generateOutilToken = onCall(
       );
     }
 
-    const uid = request.auth.uid;
-    const email = request.auth.token.email;
-    console.log("[generateOutilToken] User:", { uid, email });
+    const callerUid = request.auth.uid;
+    const callerEmail = request.auth.token.email;
+
+    // Support pour le switch de prestataire (multi-provider)
+    const { asProviderId } = request.data || {};
+
+    // Déterminer l'UID cible (soit le prestataire lié, soit l'utilisateur connecté)
+    let targetUid = callerUid;
+    let targetEmail = callerEmail;
+    let isActingAsProvider = false;
+
+    // Si asProviderId est fourni, vérifier que l'utilisateur a le droit d'agir en tant que ce prestataire
+    if (asProviderId && asProviderId !== callerUid) {
+      console.log("[generateOutilToken] Acting as provider:", asProviderId);
+
+      // Vérifier que le prestataire cible est lié à l'utilisateur connecté
+      const callerDoc = await db.collection("users").doc(callerUid).get();
+      const callerData = callerDoc.data();
+      const linkedProviderIds: string[] = callerData?.linkedProviderIds || [];
+
+      if (!linkedProviderIds.includes(asProviderId)) {
+        console.warn(`[generateOutilToken] SECURITY: User ${callerUid} tried to act as unlinked provider ${asProviderId}`);
+        throw new HttpsError(
+          "permission-denied",
+          "Vous n'êtes pas autorisé à accéder à ce prestataire"
+        );
+      }
+
+      // Récupérer les informations du prestataire cible
+      const targetProviderDoc = await db.collection("sos_profiles").doc(asProviderId).get();
+      if (!targetProviderDoc.exists) {
+        // Essayer dans users si pas dans sos_profiles
+        const targetUserDoc = await db.collection("users").doc(asProviderId).get();
+        if (!targetUserDoc.exists) {
+          throw new HttpsError(
+            "not-found",
+            "Le prestataire cible n'existe pas"
+          );
+        }
+        targetEmail = targetUserDoc.data()?.email || callerEmail;
+      } else {
+        targetEmail = targetProviderDoc.data()?.email || callerEmail;
+      }
+
+      targetUid = asProviderId;
+      isActingAsProvider = true;
+      console.log(`[generateOutilToken] Validated: ${callerEmail} acting as provider ${targetUid} (${targetEmail})`);
+    }
+
+    // Variables de compatibilité pour le reste du code
+    const uid = targetUid;
+    const email = targetEmail;
+    console.log("[generateOutilToken] User:", { callerUid, callerEmail, targetUid: uid, targetEmail: email, isActingAsProvider });
 
     try {
       // 2. Vérifier que l'utilisateur est un prestataire
@@ -121,7 +171,7 @@ export const generateOutilToken = onCall(
       // Si accès forcé par admin, générer directement le token (bypass tout)
       if (hasForcedAccess) {
         console.log("[generateOutilToken] User has forced access, generating token...");
-        const customClaims = {
+        const customClaims: Record<string, any> = {
           provider: true,
           subscriptionTier: "unlimited",
           subscriptionStatus: "active",
@@ -129,6 +179,13 @@ export const generateOutilToken = onCall(
           email: email,
           tokenGeneratedAt: Date.now(),
         };
+
+        // Ajouter les infos de switch si applicable
+        if (isActingAsProvider) {
+          customClaims.actingAsProvider = true;
+          customClaims.originalUserId = callerUid;
+          customClaims.originalUserEmail = callerEmail;
+        }
 
         console.log("[generateOutilToken] Creating custom token with claims:", customClaims);
         const customToken = await outilAuth.createCustomToken(uid, customClaims);
@@ -143,6 +200,12 @@ export const generateOutilToken = onCall(
           success: true,
           subscriptionTier: "forced_access",
           accessType: "admin_forced",
+          // Info de switch si applicable
+          ...(isActingAsProvider && {
+            actingAsProvider: true,
+            originalUserId: callerUid,
+            originalUserEmail: callerEmail,
+          }),
         });
 
         return {
@@ -155,7 +218,7 @@ export const generateOutilToken = onCall(
       // Si essai gratuit manuel (freeTrialUntil), accorder l'accès
       if (freeTrialUntil) {
         console.log("[generateOutilToken] User has free trial until:", freeTrialUntil);
-        const customClaims = {
+        const customClaims: Record<string, any> = {
           provider: true,
           subscriptionTier: "trial",
           subscriptionStatus: "trialing",
@@ -163,6 +226,13 @@ export const generateOutilToken = onCall(
           email: email,
           tokenGeneratedAt: Date.now(),
         };
+
+        // Ajouter les infos de switch si applicable
+        if (isActingAsProvider) {
+          customClaims.actingAsProvider = true;
+          customClaims.originalUserId = callerUid;
+          customClaims.originalUserEmail = callerEmail;
+        }
 
         const customToken = await outilAuth.createCustomToken(uid, customClaims);
 
@@ -176,6 +246,12 @@ export const generateOutilToken = onCall(
           subscriptionTier: "manual_trial",
           accessType: "free_trial_until",
           trialEndsAt: freeTrialUntil,
+          // Info de switch si applicable
+          ...(isActingAsProvider && {
+            actingAsProvider: true,
+            originalUserId: callerUid,
+            originalUserEmail: callerEmail,
+          }),
         });
 
         return {
@@ -274,7 +350,7 @@ export const generateOutilToken = onCall(
       }
 
       // 6. Générer le Custom Token avec des claims personnalisés
-      const customClaims = {
+      const customClaims: Record<string, any> = {
         provider: true,
         subscriptionTier: tier,
         subscriptionStatus: subscriptionData.status,
@@ -282,6 +358,13 @@ export const generateOutilToken = onCall(
         // Ajouter un timestamp pour invalider les vieux tokens
         tokenGeneratedAt: Date.now(),
       };
+
+      // Ajouter les infos de switch si applicable
+      if (isActingAsProvider) {
+        customClaims.actingAsProvider = true;
+        customClaims.originalUserId = callerUid;
+        customClaims.originalUserEmail = callerEmail;
+      }
 
       console.log("[generateOutilToken] Creating custom token...");
       const customToken = await outilAuth.createCustomToken(uid, customClaims);
@@ -295,6 +378,12 @@ export const generateOutilToken = onCall(
         timestamp: new Date(),
         success: true,
         subscriptionTier: tier,
+        // Info de switch si applicable
+        ...(isActingAsProvider && {
+          actingAsProvider: true,
+          originalUserId: callerUid,
+          originalUserEmail: callerEmail,
+        }),
       });
 
       return {

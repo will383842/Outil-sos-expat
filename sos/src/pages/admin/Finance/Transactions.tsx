@@ -300,6 +300,10 @@ const Transactions: React.FC = () => {
   const [isSticky, setIsSticky] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  // Cache for client and provider names to avoid repeated fetches
+  const clientNamesCache = useRef<Map<string, { name: string; country?: string }>>(new Map());
+  const providerNamesCache = useRef<Map<string, { name: string; country?: string }>>(new Map());
+
   // Quick filters (status tabs)
   const [quickFilter, setQuickFilter] = useState<TransactionStatus>('all');
 
@@ -435,11 +439,133 @@ const Transactions: React.FC = () => {
     }
   }, []);
 
+  // Fetch client name from users collection
+  const fetchClientName = useCallback(async (clientId: string): Promise<{ name: string; country?: string } | null> => {
+    if (!clientId) return null;
+    try {
+      const userDoc = await getDoc(doc(db, 'users', clientId));
+      if (userDoc.exists()) {
+        const data = userDoc.data();
+        // Try multiple name fields
+        const displayName = data.displayName || data.fullName;
+        const firstName = data.firstName || data.prenom || '';
+        const lastName = data.lastName || data.nom || '';
+        const combinedName = `${firstName} ${lastName}`.trim();
+        const name = displayName || combinedName || data.email?.split('@')[0] || null;
+        const country = data.country || data.currentCountry || data.residenceCountry;
+        return name ? { name, country } : null;
+      }
+    } catch (error) {
+      console.error('Error fetching client:', error);
+    }
+    return null;
+  }, []);
+
+  // Fetch provider name from sos_profiles collection
+  const fetchProviderName = useCallback(async (providerId: string): Promise<{ name: string; country?: string } | null> => {
+    if (!providerId) return null;
+    try {
+      // First try sos_profiles
+      const profileDoc = await getDoc(doc(db, 'sos_profiles', providerId));
+      if (profileDoc.exists()) {
+        const data = profileDoc.data();
+        const displayName = data.displayName || data.fullName;
+        const firstName = data.firstName || data.prenom || '';
+        const lastName = data.lastName || data.nom || '';
+        const combinedName = `${firstName} ${lastName}`.trim();
+        const name = displayName || combinedName || null;
+        const country = data.country || data.currentCountry || data.interventionCountry;
+        if (name) return { name, country };
+      }
+
+      // Fallback to users collection
+      const userDoc = await getDoc(doc(db, 'users', providerId));
+      if (userDoc.exists()) {
+        const data = userDoc.data();
+        const displayName = data.displayName || data.fullName;
+        const firstName = data.firstName || data.prenom || '';
+        const lastName = data.lastName || data.nom || '';
+        const combinedName = `${firstName} ${lastName}`.trim();
+        const name = displayName || combinedName || data.email?.split('@')[0] || null;
+        const country = data.country || data.currentCountry;
+        return name ? { name, country } : null;
+      }
+    } catch (error) {
+      console.error('Error fetching provider:', error);
+    }
+    return null;
+  }, []);
+
   // Enrich transactions with additional data
   const enrichTransactions = useCallback(async (records: TransactionRecord[]): Promise<TransactionRecord[]> => {
+    // First, collect all unique client and provider IDs that need name resolution
+    // Skip IDs that are already in cache
+    const clientIdsToFetch = new Set<string>();
+    const providerIdsToFetch = new Set<string>();
+
+    records.forEach((t) => {
+      if (!t.clientName && t.clientId && !clientNamesCache.current.has(t.clientId)) {
+        clientIdsToFetch.add(t.clientId);
+      }
+      if (!t.providerName && t.providerId && !providerNamesCache.current.has(t.providerId)) {
+        providerIdsToFetch.add(t.providerId);
+      }
+    });
+
+    // Fetch client names in parallel (only uncached ones)
+    const clientPromises = Array.from(clientIdsToFetch).map(async (id) => {
+      const result = await fetchClientName(id);
+      if (result) {
+        clientNamesCache.current.set(id, result);
+      }
+    });
+
+    // Fetch provider names in parallel (only uncached ones)
+    const providerPromises = Array.from(providerIdsToFetch).map(async (id) => {
+      const result = await fetchProviderName(id);
+      if (result) {
+        providerNamesCache.current.set(id, result);
+      }
+    });
+
+    // Wait for all name fetches
+    await Promise.all([...clientPromises, ...providerPromises]);
+
+    // Now enrich each transaction using cached names
     return Promise.all(
       records.map(async (transaction) => {
-        if (!transaction.callSessionId) return transaction;
+        // Apply resolved names from cache
+        let clientName = transaction.clientName;
+        let clientCountry = transaction.clientCountry;
+        let providerName = transaction.providerName;
+        let providerCountry = transaction.providerCountry;
+
+        if (!clientName && transaction.clientId) {
+          const clientData = clientNamesCache.current.get(transaction.clientId);
+          if (clientData) {
+            clientName = clientData.name;
+            if (!clientCountry) clientCountry = clientData.country;
+          }
+        }
+
+        if (!providerName && transaction.providerId) {
+          const providerData = providerNamesCache.current.get(transaction.providerId);
+          if (providerData) {
+            providerName = providerData.name;
+            if (!providerCountry) providerCountry = providerData.country;
+          }
+        }
+
+        // If no call session, just return with resolved names
+        if (!transaction.callSessionId) {
+          return {
+            ...transaction,
+            clientName,
+            clientCountry,
+            providerName,
+            providerCountry,
+          };
+        }
 
         const [callSession, invoices] = await Promise.all([
           fetchCallSession(transaction.callSessionId),
@@ -499,6 +625,10 @@ const Transactions: React.FC = () => {
 
         return {
           ...transaction,
+          clientName,
+          clientCountry,
+          providerName,
+          providerCountry,
           callSession: callSession ?? undefined,
           invoices,
           callDate,
@@ -506,7 +636,7 @@ const Transactions: React.FC = () => {
         };
       })
     );
-  }, [fetchCallSession, fetchInvoices]);
+  }, [fetchCallSession, fetchInvoices, fetchClientName, fetchProviderName]);
 
   // ==========================================================================
   // DATA FETCHING

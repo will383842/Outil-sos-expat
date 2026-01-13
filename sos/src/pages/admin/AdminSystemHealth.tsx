@@ -255,13 +255,13 @@ const AdminSystemHealth: React.FC = () => {
       {/* Metrics Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <MetricCard
-          title="DLQ Pending"
+          title={t('systemHealth.metrics.dlqPending')}
           value={healthSummary?.metrics.dlq.pending ?? '-'}
           icon={<Database className="w-6 h-6" />}
           status={healthSummary?.metrics.dlq.pending && healthSummary.metrics.dlq.pending > 10 ? 'warning' : 'ok'}
         />
         <MetricCard
-          title="DLQ Failed"
+          title={t('systemHealth.metrics.dlqFailed')}
           value={healthSummary?.metrics.dlq.failed ?? '-'}
           icon={<XCircle className="w-6 h-6" />}
           status={healthSummary?.metrics.dlq.failed && healthSummary.metrics.dlq.failed > 0 ? 'error' : 'ok'}
@@ -285,7 +285,7 @@ const AdminSystemHealth: React.FC = () => {
           status={healthSummary?.metrics.disputes.open && healthSummary.metrics.disputes.open > 5 ? 'warning' : 'ok'}
         />
         <MetricCard
-          title="Backup Firestore"
+          title={t('systemHealth.metrics.backupFirestore')}
           value={healthSummary?.metrics.backups.firestore ? '✓' : '✗'}
           icon={<Server className="w-6 h-6" />}
           status={healthSummary?.metrics.backups.firestore ? 'ok' : 'error'}

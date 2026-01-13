@@ -22,6 +22,18 @@ export type { ReviewItem, ReviewAuthor, ReviewRating, ReviewedItem } from './Rev
 export { default as LocalBusinessSchema, generateLocalBusinessSchema } from './LocalBusinessSchema';
 export type { LocalBusinessSchemaProps, LocalBusinessRating, LocalBusinessReview } from './LocalBusinessSchema';
 
+// Article schema for help center and blog posts
+export { default as ArticleSchema, generateArticleSchema } from './ArticleSchema';
+export type { ArticleSchemaProps } from './ArticleSchema';
+
+// Service schema for pricing page
+export { default as ServiceSchema, generateServiceSchema } from './ServiceSchema';
+export type { ServiceSchemaProps, ServiceOffer } from './ServiceSchema';
+
+// FAQPage schema for FAQ pages
+export { default as FAQPageSchema, generateFAQPageSchema } from './FAQPageSchema';
+export type { FAQPageSchemaProps, FAQItem } from './FAQPageSchema';
+
 // Re-export SEOHead from layout for convenience
 export { default as SEOHead } from '../layout/SEOHead';
 

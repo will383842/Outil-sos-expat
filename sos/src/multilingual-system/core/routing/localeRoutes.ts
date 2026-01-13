@@ -62,8 +62,30 @@ export function getLocaleString(lang: Language, country?: string): string {
 }
 
 /**
+ * Normalize language code from URL to internal code
+ * Maps non-standard URL codes to internal Language type
+ * Example: "zh" (URL standard) -> "ch" (internal code for Chinese)
+ */
+function normalizeLanguageCode(urlLang: string): Language | null {
+  const langMap: Record<string, Language> = {
+    fr: 'fr',
+    en: 'en',
+    es: 'es',
+    de: 'de',
+    ru: 'ru',
+    pt: 'pt',
+    ch: 'ch',
+    zh: 'ch', // Map URL "zh" to internal "ch" for Chinese
+    hi: 'hi',
+    ar: 'ar',
+  };
+  return langMap[urlLang.toLowerCase()] || null;
+}
+
+/**
  * Parse locale from URL path
  * Example: "/en-us/dashboard" -> { locale: "en-us", lang: "en", country: "us", pathWithoutLocale: "/dashboard" }
+ * Example: "/zh-cn/dashboard" -> { locale: "zh-cn", lang: "ch", country: "cn", pathWithoutLocale: "/dashboard" }
  **/
 export function parseLocaleFromPath(pathname: string): {
   locale: string | null;
@@ -75,12 +97,18 @@ export function parseLocaleFromPath(pathname: string): {
   const match = pathname.match(localePattern);
 
   if (match) {
-    return {
-      locale: `${match[1]}-${match[2]}`,
-      lang: match[1] as Language,
-      country: match[2],
-      pathWithoutLocale: match[3] || "/",
-    };
+    const urlLang = match[1];
+    const normalizedLang = normalizeLanguageCode(urlLang);
+
+    // Only return valid locale if language is supported
+    if (normalizedLang) {
+      return {
+        locale: `${urlLang}-${match[2]}`, // Keep original URL format for display
+        lang: normalizedLang, // Use normalized internal code
+        country: match[2],
+        pathWithoutLocale: match[3] || "/",
+      };
+    }
   }
 
   return {

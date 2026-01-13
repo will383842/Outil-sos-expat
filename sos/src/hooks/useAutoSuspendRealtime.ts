@@ -74,7 +74,6 @@ export function useAutoSuspendRealtime(
       setIsRealtimeActive(true);
       setIsSuspendedDueToInactivity(false);
       onResume?.();
-      console.log('🟢 [AutoSuspend] Temps réel repris (activité détectée)');
     }
 
     // Réinitialiser le timeout de suspension
@@ -87,7 +86,6 @@ export function useAutoSuspendRealtime(
         setIsRealtimeActive(false);
         setIsSuspendedDueToInactivity(true);
         onSuspend?.();
-        console.log('🔴 [AutoSuspend] Temps réel suspendu (inactivité)');
       }, inactivityDelay);
     }
   }, [enabled, inactivityDelay, isSuspendedDueToInactivity, onResume, onSuspend]);
@@ -98,7 +96,6 @@ export function useAutoSuspendRealtime(
     setIsSuspendedDueToInactivity(false);
     resetInactivityTimer();
     onResume?.();
-    console.log('🟢 [AutoSuspend] Temps réel repris (manuel)');
   }, [resetInactivityTimer, onResume]);
 
   // Forcer la suspension
@@ -109,7 +106,6 @@ export function useAutoSuspendRealtime(
       clearTimeout(suspendTimeoutRef.current);
     }
     onSuspend?.();
-    console.log('🔴 [AutoSuspend] Temps réel suspendu (manuel)');
   }, [onSuspend]);
 
   // Écouter les événements d'activité

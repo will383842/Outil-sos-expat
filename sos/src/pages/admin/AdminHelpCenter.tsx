@@ -1,6 +1,7 @@
 // src/pages/admin/AdminHelpCenter.tsx
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useIntl } from "react-intl";
 import {
   Plus,
   Edit,
@@ -321,6 +322,8 @@ const defaultArticleForm = (
 const AdminHelpCenter: React.FC = () => {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
+  const intl = useIntl();
+  const t = (id: string, values?: Record<string, string | number>) => intl.formatMessage({ id }, values);
 
   const [locale, setLocale] = useState<string>("fr");
   const [categories, setCategories] = useState<HelpCategory[]>([]);
@@ -639,7 +642,7 @@ const AdminHelpCenter: React.FC = () => {
   const handleSaveCategory = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!categoryNameInput.trim()) {
-      alert("Please enter a category name.");
+      alert(t('admin.helpCenter.alertCategoryName'));
       return;
     }
     setIsSaving(true);
@@ -672,7 +675,7 @@ const AdminHelpCenter: React.FC = () => {
       }, 100);
     } catch (error) {
       console.error("Error saving category", error);
-      alert("Error saving category. Please try again.");
+      alert(t('admin.helpCenter.alertSaveCategoryError'));
     } finally {
       setIsSaving(false);
       setTranslating(false);
@@ -683,7 +686,7 @@ const AdminHelpCenter: React.FC = () => {
     const hasArticles = articles.some((a) => a.categoryId === categoryId);
     if (
       hasArticles &&
-      !window.confirm("This category has articles. Delete anyway?")
+      !window.confirm(t('admin.helpCenter.deleteConfirm'))
     ) {
       return;
     }
@@ -701,11 +704,11 @@ const AdminHelpCenter: React.FC = () => {
   const handleSaveArticle = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!articleForm.categoryId) {
-      alert("Select a category for the article.");
+      alert(t('admin.helpCenter.alertSelectCategory'));
       return;
     }
     if (!articleTitleInput.trim() || !articleExcerptInput.trim() || !articleContentInput.trim()) {
-      alert("Please fill in title, excerpt, and content.");
+      alert(t('admin.helpCenter.alertFillFields'));
       return;
     }
     setIsSaving(true);
@@ -759,7 +762,7 @@ const AdminHelpCenter: React.FC = () => {
       }, 100);
     } catch (error) {
       console.error("Error saving article", error);
-      alert("Error saving article. Please try again.");
+      alert(t('admin.helpCenter.alertSaveArticleError'));
     } finally {
       setIsSaving(false);
       setTranslating(false);
@@ -894,7 +897,7 @@ const AdminHelpCenter: React.FC = () => {
       await refreshAll();
     } catch (error) {
       console.error("Error resetting Help Center:", error);
-      alert("Erreur lors de la réinitialisation: " + (error instanceof Error ? error.message : String(error)));
+      alert(t('admin.helpCenter.alertResetError') + " " + (error instanceof Error ? error.message : String(error)));
     } finally {
       setIsResetting(false);
     }
@@ -907,9 +910,9 @@ const AdminHelpCenter: React.FC = () => {
     <AdminLayout>
       <div className="flex items-center justify-between mb-6 p-5">
         <div>
-          <p className="text-sm text-gray-500">Help Center</p>
+          <p className="text-sm text-gray-500">{t('admin.helpCenter.title')}</p>
           <h1 className="text-2xl font-semibold text-gray-900">
-            Manage content
+            {t('admin.helpCenter.subtitle')}
           </h1>
         </div>
         <div className="flex items-center space-x-3">
@@ -919,14 +922,14 @@ const AdminHelpCenter: React.FC = () => {
             className="bg-red-50 border-red-300 text-red-700 hover:bg-red-100"
           >
             <Trash className="h-4 w-4 mr-2" />
-            Reset complet
+            {t('admin.helpCenter.resetComplete')}
           </Button>
           <Button
             variant="outline"
             onClick={() => setIsInitModalOpen(true)}
           >
             <Database className="h-4 w-4 mr-2" />
-            Init 25 catégories
+            {t('admin.helpCenter.initCategories')}
           </Button>
           <Button
             variant="outline"
@@ -934,7 +937,7 @@ const AdminHelpCenter: React.FC = () => {
             className="bg-green-50 border-green-300 text-green-700 hover:bg-green-100"
           >
             <BookOpen className="h-4 w-4 mr-2" />
-            Init 119 articles
+            {t('admin.helpCenter.initArticles')}
           </Button>
           <Button
             variant="primary"
@@ -942,11 +945,11 @@ const AdminHelpCenter: React.FC = () => {
             disabled={categories.length === 0}
           >
             <Plus className="h-4 w-4 mr-2" />
-            New article
+            {t('admin.helpCenter.newArticle')}
           </Button>
           <Button variant="outline" onClick={() => openCategoryModal()}>
             <Plus className="h-4 w-4 mr-2" />
-            New category
+            {t('admin.helpCenter.newCategory')}
           </Button>
         </div>
       </div>
@@ -956,7 +959,7 @@ const AdminHelpCenter: React.FC = () => {
           <div className="p-4 border-b border-gray-100 flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <BookOpen className="h-5 w-5 text-red-600" />
-              <h2 className="font-semibold text-gray-900">Categories</h2>
+              <h2 className="font-semibold text-gray-900">{t('admin.helpCenter.categories')}</h2>
             </div>
             <Button
               size="small"
@@ -964,17 +967,17 @@ const AdminHelpCenter: React.FC = () => {
               onClick={() => openCategoryModal()}
             >
               <Plus className="h-4 w-4 mr-1" />
-              Add
+              {t('admin.helpCenter.add')}
             </Button>
           </div>
           {isLoading ? (
             <div className="p-6 flex items-center justify-center text-gray-500">
               <Loader2 className="h-5 w-5 animate-spin mr-2" />
-              Loading categories...
+              {t('admin.helpCenter.loadingCategories')}
             </div>
           ) : categories.length === 0 ? (
             <div className="p-6 text-sm text-gray-500 text-center">
-              No categories yet.
+              {t('admin.helpCenter.noCategories')}
             </div>
           ) : (
             <div className="divide-y divide-gray-100">
@@ -987,7 +990,7 @@ const AdminHelpCenter: React.FC = () => {
               >
                 <div className="flex items-center space-x-2">
                   <BookOpen className="h-4 w-4 text-gray-500" />
-                  <span className="font-medium text-gray-900">All articles</span>
+                  <span className="font-medium text-gray-900">{t('admin.helpCenter.allArticles')}</span>
                 </div>
                 <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
                   {articles.length}
@@ -1033,16 +1036,16 @@ const AdminHelpCenter: React.FC = () => {
                           <span className="font-medium text-gray-900">
                             {typeof category.name === "string"
                               ? category.name
-                              : getTranslationForLocale(category.name, locale, "Untitled Category")}
+                              : getTranslationForLocale(category.name, locale, t('admin.helpCenter.untitledCategory'))}
                           </span>
                           {category.isPublished ? (
                             <span className="inline-flex items-center px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700">
                               <CheckCircle2 className="h-3 w-3 mr-1" />
-                              Published
+                              {t('admin.helpCenter.published')}
                             </span>
                           ) : (
                             <span className="inline-flex items-center px-2 py-0.5 text-xs rounded-full bg-yellow-100 text-yellow-700">
-                              Draft
+                              {t('admin.helpCenter.draft')}
                             </span>
                           )}
                           <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
@@ -1050,7 +1053,7 @@ const AdminHelpCenter: React.FC = () => {
                           </span>
                         </div>
                         <div className="text-xs text-gray-500 space-x-2 ml-6">
-                          <span>Order: {category.order}</span>
+                          <span>{t('admin.helpCenter.order')}: {category.order}</span>
                         </div>
                       </div>
                       <div className="flex items-center space-x-1">
@@ -1144,7 +1147,7 @@ const AdminHelpCenter: React.FC = () => {
           <div className="p-4 border-b border-gray-100 flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Tag className="h-5 w-5 text-red-600" />
-              <h2 className="font-semibold text-gray-900">Articles</h2>
+              <h2 className="font-semibold text-gray-900">{t('admin.helpCenter.articles')}</h2>
             </div>
             <Button
               size="small"
@@ -1153,18 +1156,18 @@ const AdminHelpCenter: React.FC = () => {
               disabled={categories.length === 0}
             >
               <Plus className="h-4 w-4 mr-1" />
-              Add article
+              {t('admin.helpCenter.addArticle')}
             </Button>
           </div>
 
           {isLoading ? (
             <div className="p-6 flex items-center justify-center text-gray-500">
               <Loader2 className="h-5 w-5 animate-spin mr-2" />
-              Loading articles...
+              {t('admin.helpCenter.loadingArticles')}
             </div>
           ) : filteredArticles.length === 0 ? (
             <div className="p-6 text-sm text-gray-500 text-center">
-              No articles in this locale/category yet.
+              {t('admin.helpCenter.noArticles')}
             </div>
           ) : (
             <div className="divide-y divide-gray-100">
@@ -1175,23 +1178,23 @@ const AdminHelpCenter: React.FC = () => {
                       <span className="font-semibold text-gray-900">
                         {typeof article.title === "string"
                           ? article.title
-                          : getTranslationForLocale(article.title, locale, "Untitled Article")}
+                          : getTranslationForLocale(article.title, locale, t('admin.helpCenter.untitledArticle'))}
                       </span>
                       {article.isPublished ? (
                         <span className="inline-flex items-center px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700">
                           <CheckCircle2 className="h-3 w-3 mr-1" />
-                          Published
+                          {t('admin.helpCenter.published')}
                         </span>
                       ) : (
                         <span className="inline-flex items-center px-2 py-0.5 text-xs rounded-full bg-yellow-100 text-yellow-700">
-                          Draft
+                          {t('admin.helpCenter.draft')}
                         </span>
                       )}
                       <span className="text-xs text-gray-500">
-                        Read: {article.readTime} min
+                        {t('admin.helpCenter.readTime')}: {article.readTime} min
                       </span>
                       <span className="text-xs text-gray-500">
-                        Order: {article.order}
+                        {t('admin.helpCenter.order')}: {article.order}
                       </span>
                     </div>
                     <p className="text-sm text-gray-700 line-clamp-2">
@@ -1247,7 +1250,7 @@ const AdminHelpCenter: React.FC = () => {
       <Modal
         isOpen={isCategoryModalOpen}
         onClose={() => setIsCategoryModalOpen(false)}
-        title={editingCategoryId ? "Edit category" : "New category"}
+        title={editingCategoryId ? t('admin.helpCenter.editCategory') : t('admin.helpCenter.newCategoryModal')}
         size="large"
       >
         <form className="space-y-4" onSubmit={handleSaveCategory}>
@@ -1257,10 +1260,10 @@ const AdminHelpCenter: React.FC = () => {
               <Globe className="w-5 h-5 text-blue-600 mt-0.5" />
               <div>
                 <p className="text-sm font-medium text-blue-900 mb-1">
-                  Auto-Translation Enabled
+                  {t('admin.helpCenter.autoTranslationEnabled')}
                 </p>
                 <p className="text-xs text-blue-700">
-                  Enter the category name in any language. The system will automatically detect the language and translate it to all 9 supported languages when you save.
+                  {t('admin.helpCenter.autoTranslationCategoryDesc')}
                 </p>
               </div>
             </div>
@@ -1268,25 +1271,25 @@ const AdminHelpCenter: React.FC = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Name <span className="text-red-500">*</span>
+              {t('admin.helpCenter.nameLabel')} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               className="mt-1 w-full border rounded-md px-3 py-2"
               value={categoryNameInput}
               onChange={(e) => setCategoryNameInput(e.target.value)}
-              placeholder="Enter category name in any language..."
+              placeholder={t('admin.helpCenter.namePlaceholder')}
               required
               disabled={translating}
             />
             <p className="mt-1 text-xs text-gray-500">
-              Language will be auto-detected automatically
+              {t('admin.helpCenter.languageAutoDetect')}
             </p>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Order
+                {t('admin.helpCenter.orderLabel')}
               </label>
               <input
                 type="number"
@@ -1321,13 +1324,13 @@ const AdminHelpCenter: React.FC = () => {
                 htmlFor="category-published"
                 className="text-sm text-gray-700"
               >
-                Published
+                {t('admin.helpCenter.publishedLabel')}
               </label>
             </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Icon (optional, emoji or class)
+              {t('admin.helpCenter.iconLabel')}
             </label>
             <input
               type="text"
@@ -1339,7 +1342,7 @@ const AdminHelpCenter: React.FC = () => {
                   icon: e.target.value,
                 }))
               }
-              placeholder="ex: 🚑 or lucide icon name"
+              placeholder={t('admin.helpCenter.iconPlaceholder')}
             />
           </div>
           <div className="flex justify-end space-x-3">
@@ -1347,14 +1350,14 @@ const AdminHelpCenter: React.FC = () => {
               variant="ghost"
               onClick={() => setIsCategoryModalOpen(false)}
             >
-              Cancel
+              {t('admin.helpCenter.cancel')}
             </Button>
             <Button type="submit" variant="primary" loading={isSaving || translating} disabled={translating}>
               {translating
-                ? "Translating..."
+                ? t('admin.helpCenter.translating')
                 : editingCategoryId
-                ? "Update"
-                : "Create & Translate"}
+                ? t('admin.helpCenter.update')
+                : t('admin.helpCenter.createAndTranslate')}
             </Button>
           </div>
         </form>
@@ -1363,7 +1366,7 @@ const AdminHelpCenter: React.FC = () => {
       <Modal
         isOpen={isArticleModalOpen}
         onClose={() => setIsArticleModalOpen(false)}
-        title={editingArticleId ? "Edit article" : "New article"}
+        title={editingArticleId ? t('admin.helpCenter.editArticle') : t('admin.helpCenter.newArticleModal')}
         size="large"
       >
         <form className="space-y-4" onSubmit={handleSaveArticle}>
@@ -1373,10 +1376,10 @@ const AdminHelpCenter: React.FC = () => {
               <Globe className="w-5 h-5 text-blue-600 mt-0.5" />
               <div>
                 <p className="text-sm font-medium text-blue-900 mb-1">
-                  Auto-Translation Enabled
+                  {t('admin.helpCenter.autoTranslationEnabled')}
                 </p>
                 <p className="text-xs text-blue-700">
-                  Enter your article content in any language. The system will automatically detect the language and translate it to all 9 supported languages when you save.
+                  {t('admin.helpCenter.autoTranslationArticleDesc')}
                 </p>
               </div>
             </div>
@@ -1384,25 +1387,25 @@ const AdminHelpCenter: React.FC = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Title <span className="text-red-500">*</span>
+              {t('admin.helpCenter.titleLabel')} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               className="mt-1 w-full border rounded-md px-3 py-2"
               value={articleTitleInput}
               onChange={(e) => setArticleTitleInput(e.target.value)}
-              placeholder="Enter article title in any language..."
+              placeholder={t('admin.helpCenter.titlePlaceholder')}
               required
               disabled={translating}
             />
             <p className="mt-1 text-xs text-gray-500">
-              Language will be auto-detected automatically
+              {t('admin.helpCenter.languageAutoDetect')}
             </p>
           </div>
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Category
+                {t('admin.helpCenter.categoryLabel')}
               </label>
               <select
                 className="mt-1 w-full border rounded-md px-3 py-2"
@@ -1415,19 +1418,19 @@ const AdminHelpCenter: React.FC = () => {
                 }
                 required
               >
-                <option value="">Select...</option>
+                <option value="">{t('admin.helpCenter.selectOption')}</option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
                     {typeof c.name === "string"
                       ? c.name
-                      : getTranslationForLocale(c.name, locale, "Untitled Category")}
+                      : getTranslationForLocale(c.name, locale, t('admin.helpCenter.untitledCategory'))}
                   </option>
                 ))}
               </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Locale
+                {t('admin.helpCenter.localeLabel')}
               </label>
               <select
                 className="mt-1 w-full border rounded-md px-3 py-2"
@@ -1439,13 +1442,13 @@ const AdminHelpCenter: React.FC = () => {
                   }))
                 }
               >
-                <option value="fr">Français</option>
-                <option value="en">English</option>
+                <option value="fr">{t('admin.helpCenter.french')}</option>
+                <option value="en">{t('admin.helpCenter.english')}</option>
               </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Read time (min)
+                {t('admin.helpCenter.readTimeLabel')}
               </label>
               <input
                 type="number"
@@ -1464,14 +1467,14 @@ const AdminHelpCenter: React.FC = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Excerpt <span className="text-red-500">*</span>
+              {t('admin.helpCenter.excerptLabel')} <span className="text-red-500">*</span>
             </label>
             <textarea
               className="mt-1 w-full border rounded-md px-3 py-2"
               rows={3}
               value={articleExcerptInput}
               onChange={(e) => setArticleExcerptInput(e.target.value)}
-              placeholder="Enter article excerpt in any language..."
+              placeholder={t('admin.helpCenter.excerptPlaceholder')}
               required
               disabled={translating}
             />
@@ -1479,7 +1482,7 @@ const AdminHelpCenter: React.FC = () => {
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Order
+                {t('admin.helpCenter.orderLabel')}
               </label>
               <input
                 type="number"
@@ -1511,42 +1514,42 @@ const AdminHelpCenter: React.FC = () => {
                   htmlFor="article-published"
                   className="text-sm text-gray-700"
                 >
-                  Published
+                  {t('admin.helpCenter.publishedLabel')}
                 </label>
               </div>
             </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Content (markdown supported) <span className="text-red-500">*</span>
+              {t('admin.helpCenter.contentLabel')} <span className="text-red-500">*</span>
             </label>
             <textarea
               className="mt-1 w-full border rounded-md px-3 py-2 font-mono text-sm"
               rows={12}
               value={articleContentInput}
               onChange={(e) => setArticleContentInput(e.target.value)}
-              placeholder="Enter article content in any language (markdown supported)..."
+              placeholder={t('admin.helpCenter.contentPlaceholder')}
               required
               disabled={translating}
             />
             <p className="mt-1 text-xs text-gray-500">
-              {articleContentInput.length} characters
+              {articleContentInput.length} {t('admin.helpCenter.characters')}
             </p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Tags (comma separated)
+              {t('admin.helpCenter.tagsLabel')}
             </label>
             <input
               type="text"
               className="mt-1 w-full border rounded-md px-3 py-2"
               value={tagInput}
               onChange={(e) => setTagInput(e.target.value)}
-              placeholder="sos, urgence, international"
+              placeholder={t('admin.helpCenter.tagsPlaceholder')}
               disabled={translating}
             />
             <p className="mt-1 text-xs text-gray-500">
-              Tags will be translated to all languages automatically
+              {t('admin.helpCenter.tagsDescription')}
             </p>
           </div>
           <div className="flex justify-end space-x-3">
@@ -1554,14 +1557,14 @@ const AdminHelpCenter: React.FC = () => {
               variant="ghost"
               onClick={() => setIsArticleModalOpen(false)}
             >
-              Cancel
+              {t('admin.helpCenter.cancel')}
             </Button>
             <Button type="submit" variant="primary" loading={isSaving || translating} disabled={translating}>
               {translating
-                ? "Translating..."
+                ? t('admin.helpCenter.translating')
                 : editingArticleId
-                ? "Update"
-                : "Create & Translate"}
+                ? t('admin.helpCenter.update')
+                : t('admin.helpCenter.createAndTranslate')}
             </Button>
           </div>
         </form>
@@ -1574,7 +1577,7 @@ const AdminHelpCenter: React.FC = () => {
           setIsInitModalOpen(false);
           setInitResult(null);
         }}
-        title="Initialiser les catégories du Centre d'Aide"
+        title={t('admin.helpCenter.initCategoriesTitle')}
         size="large"
       >
         <div className="space-y-4">
@@ -1585,25 +1588,25 @@ const AdminHelpCenter: React.FC = () => {
                   <Database className="w-5 h-5 text-blue-600 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-blue-900 mb-1">
-                      25 catégories prêtes à être créées
+                      {t('admin.helpCenter.categoriesReady')}
                     </p>
                     <p className="text-xs text-blue-700 mb-2">
-                      Ce script va créer les catégories suivantes, toutes traduites dans les 9 langues (FR, EN, ES, DE, PT, RU, HI, AR, CH):
+                      {t('admin.helpCenter.categoriesDescription')}
                     </p>
                     <ul className="text-xs text-blue-700 space-y-1 ml-4 list-disc">
-                      <li><strong>5 catégories principales:</strong> Clients Expatriés, Prestataires Avocats, Prestataires Expat Aidant, Comprendre SOS-Expat, Guides par Situation</li>
-                      <li><strong>5 sous-catégories Clients:</strong> Urgences, Paiements, Mon Compte, Évaluations, Sécurité</li>
-                      <li><strong>5 sous-catégories Avocats:</strong> Rejoindre, Missions, Paiements, Performance, Déontologie</li>
-                      <li><strong>4 sous-catégories Expat Aidant:</strong> Devenir, Interventions, Paiements, Développer</li>
-                      <li><strong>4 sous-catégories Comprendre:</strong> Présentation, FAQ, Contact, Légal</li>
-                      <li><strong>2 sous-catégories Guides:</strong> Urgences, Pays</li>
+                      <li><strong>{t('admin.helpCenter.categoriesList.main')}</strong></li>
+                      <li><strong>{t('admin.helpCenter.categoriesList.clients')}</strong></li>
+                      <li><strong>{t('admin.helpCenter.categoriesList.lawyers')}</strong></li>
+                      <li><strong>{t('admin.helpCenter.categoriesList.expats')}</strong></li>
+                      <li><strong>{t('admin.helpCenter.categoriesList.understand')}</strong></li>
+                      <li><strong>{t('admin.helpCenter.categoriesList.guides')}</strong></li>
                     </ul>
                   </div>
                 </div>
               </div>
               <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <p className="text-sm text-yellow-800">
-                  <strong>Note:</strong> Les catégories existantes ne seront pas dupliquées (vérification par slug français).
+                  {t('admin.helpCenter.categoriesNote')}
                 </p>
               </div>
               <div className="flex justify-end space-x-3">
@@ -1611,7 +1614,7 @@ const AdminHelpCenter: React.FC = () => {
                   variant="ghost"
                   onClick={() => setIsInitModalOpen(false)}
                 >
-                  Annuler
+                  {t('admin.helpCenter.cancel')}
                 </Button>
                 <Button
                   variant="primary"
@@ -1622,12 +1625,12 @@ const AdminHelpCenter: React.FC = () => {
                   {isInitializing ? (
                     <>
                       <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      Initialisation...
+                      {t('admin.helpCenter.initializing')}
                     </>
                   ) : (
                     <>
                       <Database className="h-4 w-4 mr-2" />
-                      Initialiser maintenant
+                      {t('admin.helpCenter.initializeNow')}
                     </>
                   )}
                 </Button>
@@ -1651,17 +1654,17 @@ const AdminHelpCenter: React.FC = () => {
                       initResult.success ? "text-green-900" : "text-red-900"
                     }`}>
                       {initResult.success
-                        ? "Initialisation terminée avec succès!"
-                        : "Initialisation terminée avec des erreurs"}
+                        ? t('admin.helpCenter.initSuccess')
+                        : t('admin.helpCenter.initWithErrors')}
                     </p>
                     <ul className={`text-xs space-y-1 ${
                       initResult.success ? "text-green-700" : "text-red-700"
                     }`}>
-                      <li>Total: {initResult.total} catégories</li>
-                      <li>Créées: {initResult.created}</li>
-                      <li>Ignorées (déjà existantes): {initResult.skipped}</li>
+                      <li>{t('admin.helpCenter.totalCategories', { total: initResult.total })}</li>
+                      <li>{t('admin.helpCenter.created', { count: initResult.created })}</li>
+                      <li>{t('admin.helpCenter.skipped', { count: initResult.skipped })}</li>
                       {initResult.errors.length > 0 && (
-                        <li>Erreurs: {initResult.errors.length}</li>
+                        <li>{t('admin.helpCenter.errors', { count: initResult.errors.length })}</li>
                       )}
                     </ul>
                     {initResult.errors.length > 0 && (
@@ -1682,7 +1685,7 @@ const AdminHelpCenter: React.FC = () => {
                     setInitResult(null);
                   }}
                 >
-                  Fermer
+                  {t('admin.helpCenter.close')}
                 </Button>
               </div>
             </>
@@ -1697,7 +1700,7 @@ const AdminHelpCenter: React.FC = () => {
           setIsFaqModalOpen(false);
           setSelectedArticleFaqs(null);
         }}
-        title={`FAQ - ${selectedArticleFaqs?.title || "Article"}`}
+        title={t('admin.helpCenter.faqTitle', { title: selectedArticleFaqs?.title || "Article" })}
         size="large"
       >
         <div className="space-y-4">
@@ -1705,7 +1708,7 @@ const AdminHelpCenter: React.FC = () => {
             <>
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-xs text-blue-700">
-                  Ces FAQ ont été générées automatiquement et sont affichées avec le Schema.org FAQPage pour le SEO.
+                  {t('admin.helpCenter.faqDescription')}
                 </p>
               </div>
               <div className="divide-y divide-gray-200">
@@ -1715,7 +1718,7 @@ const AdminHelpCenter: React.FC = () => {
                     : getTranslationForLocale(faq.question, locale, "Question");
                   const answer = typeof faq.answer === "string"
                     ? faq.answer
-                    : getTranslationForLocale(faq.answer, locale, "Réponse");
+                    : getTranslationForLocale(faq.answer, locale, "Answer");
                   return (
                     <div key={index} className="py-4">
                       <h4 className="font-medium text-gray-900 mb-2 flex items-start gap-2">
@@ -1733,9 +1736,9 @@ const AdminHelpCenter: React.FC = () => {
           ) : (
             <div className="p-6 text-center text-gray-500">
               <MessageCircleQuestion className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-              <p>Aucune FAQ générée pour cet article.</p>
+              <p>{t('admin.helpCenter.noFaqs')}</p>
               <p className="text-xs mt-2">
-                Les FAQ sont générées automatiquement lors de la création/modification de l'article.
+                {t('admin.helpCenter.faqAutoGenerated')}
               </p>
             </div>
           )}
@@ -1747,7 +1750,7 @@ const AdminHelpCenter: React.FC = () => {
                 setSelectedArticleFaqs(null);
               }}
             >
-              Fermer
+              {t('admin.helpCenter.close')}
             </Button>
           </div>
         </div>
@@ -1764,7 +1767,7 @@ const AdminHelpCenter: React.FC = () => {
             setCategoriesCheckResult(null);
           }
         }}
-        title="Initialiser les 119 articles du Help Center"
+        title={t('admin.helpCenter.articlesInitTitle')}
         size="large"
       >
         <div className="space-y-4">
@@ -1777,20 +1780,20 @@ const AdminHelpCenter: React.FC = () => {
                   <BookOpen className="w-5 h-5 text-blue-600 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-blue-900 mb-1">
-                      119 articles prêts à être créés
+                      {t('admin.helpCenter.articlesReady')}
                     </p>
                     <p className="text-xs text-blue-700 mb-2">
-                      Les articles seront traduits automatiquement en 9 langues (FR, EN, ES, DE, PT, RU, HI, AR, CH) via API gratuite.
+                      {t('admin.helpCenter.articlesDescription')}
                     </p>
                     <ul className="text-xs text-blue-700 space-y-1 ml-4 list-disc">
-                      <li><strong>Clients Expatriés:</strong> 31 articles</li>
-                      <li><strong>Prestataires Avocats:</strong> 27 articles</li>
-                      <li><strong>Prestataires Expat Aidant:</strong> 19 articles</li>
-                      <li><strong>Comprendre SOS-Expat:</strong> 17 articles</li>
-                      <li><strong>Guides par Situation:</strong> 25 articles</li>
+                      <li><strong>{t('admin.helpCenter.articlesCounts.clients')}</strong></li>
+                      <li><strong>{t('admin.helpCenter.articlesCounts.lawyers')}</strong></li>
+                      <li><strong>{t('admin.helpCenter.articlesCounts.expats')}</strong></li>
+                      <li><strong>{t('admin.helpCenter.articlesCounts.understand')}</strong></li>
+                      <li><strong>{t('admin.helpCenter.articlesCounts.guides')}</strong></li>
                     </ul>
                     <p className="text-xs text-blue-600 mt-2 font-medium">
-                      Total: 119 articles × 9 langues = 1071 versions traduites
+                      {t('admin.helpCenter.articlesTotal')}
                     </p>
                   </div>
                 </div>
@@ -1800,7 +1803,7 @@ const AdminHelpCenter: React.FC = () => {
               {categoriesCheckResult === null ? (
                 <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-3">
                   <Loader2 className="w-5 h-5 animate-spin text-gray-500" />
-                  <span className="text-sm text-gray-600">Vérification des catégories...</span>
+                  <span className="text-sm text-gray-600">{t('admin.helpCenter.checkingCategories')}</span>
                 </div>
               ) : categoriesCheckResult.exists ? (
                 <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
@@ -1808,10 +1811,10 @@ const AdminHelpCenter: React.FC = () => {
                     <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
                     <div>
                       <p className="text-sm font-medium text-green-900">
-                        Toutes les catégories existent dans Firestore
+                        {t('admin.helpCenter.allCategoriesExist')}
                       </p>
                       <p className="text-xs text-green-700">
-                        {categoriesCheckResult.found.length} catégories trouvées. Prêt pour l'initialisation des articles.
+                        {t('admin.helpCenter.categoriesFoundReady', { count: categoriesCheckResult.found.length })}
                       </p>
                     </div>
                   </div>
@@ -1822,13 +1825,13 @@ const AdminHelpCenter: React.FC = () => {
                     <Trash className="w-5 h-5 text-red-600 mt-0.5" />
                     <div>
                       <p className="text-sm font-medium text-red-900">
-                        {categoriesCheckResult.missing.length} sous-catégories manquantes!
+                        {t('admin.helpCenter.missingCategories', { count: categoriesCheckResult.missing.length })}
                       </p>
                       <p className="text-xs text-red-700 mb-2">
-                        Cliquez d'abord sur <strong>"Init 25 catégories"</strong> pour créer toutes les catégories.
+                        {t('admin.helpCenter.initCategoriesFirst')}
                       </p>
                       <div className="text-xs text-green-700 mb-1">
-                        ✓ Trouvées: {categoriesCheckResult.found.length}/20
+                        ✓ {t('admin.helpCenter.categoriesFound', { found: categoriesCheckResult.found.length })}
                       </div>
                       <div className="max-h-24 overflow-y-auto">
                         <ul className="text-xs text-red-600 list-disc ml-4">
@@ -1836,7 +1839,7 @@ const AdminHelpCenter: React.FC = () => {
                             <li key={i}>{m}</li>
                           ))}
                           {categoriesCheckResult.missing.length > 10 && (
-                            <li className="font-medium">... et {categoriesCheckResult.missing.length - 10} autres</li>
+                            <li className="font-medium">{t('admin.helpCenter.moreErrors', { count: categoriesCheckResult.missing.length - 10 })}</li>
                           )}
                         </ul>
                       </div>
@@ -1848,8 +1851,7 @@ const AdminHelpCenter: React.FC = () => {
               {/* Avertissement temps */}
               <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <p className="text-sm text-yellow-800">
-                  <strong>Note:</strong> L'initialisation peut prendre 15-30 minutes en raison des traductions API.
-                  Ne fermez pas cette fenêtre pendant le processus.
+                  {t('admin.helpCenter.timeWarning')}
                 </p>
               </div>
 
@@ -1858,7 +1860,7 @@ const AdminHelpCenter: React.FC = () => {
                   variant="ghost"
                   onClick={() => setIsArticlesInitModalOpen(false)}
                 >
-                  Annuler
+                  {t('admin.helpCenter.cancel')}
                 </Button>
                 <Button
                   variant="primary"
@@ -1866,7 +1868,7 @@ const AdminHelpCenter: React.FC = () => {
                   disabled={!categoriesCheckResult?.exists}
                 >
                   <BookOpen className="h-4 w-4 mr-2" />
-                  Initialiser les 119 articles
+                  {t('admin.helpCenter.initArticlesButton')}
                 </Button>
               </div>
             </>
@@ -1879,7 +1881,7 @@ const AdminHelpCenter: React.FC = () => {
                 <div className="flex items-center gap-3 mb-3">
                   <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
                   <span className="text-sm font-medium text-blue-900">
-                    Initialisation en cours...
+                    {t('admin.helpCenter.initInProgress')}
                   </span>
                 </div>
 
@@ -1892,18 +1894,18 @@ const AdminHelpCenter: React.FC = () => {
                 </div>
 
                 <div className="flex justify-between text-xs text-blue-700">
-                  <span>{articlesInitProgress.completed} / {articlesInitProgress.total} articles</span>
+                  <span>{t('admin.helpCenter.progressLabel', { completed: articlesInitProgress.completed, total: articlesInitProgress.total })}</span>
                   <span>{Math.round((articlesInitProgress.completed / articlesInitProgress.total) * 100)}%</span>
                 </div>
 
                 <p className="text-xs text-blue-600 mt-2 truncate">
-                  En cours: {articlesInitProgress.currentArticle}
+                  {t('admin.helpCenter.currentArticle', { article: articlesInitProgress.currentArticle })}
                 </p>
               </div>
 
               <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <p className="text-xs text-yellow-700">
-                  Ne fermez pas cette fenêtre. Chaque article est traduit en 9 langues via API gratuite.
+                  {t('admin.helpCenter.doNotClose')}
                 </p>
               </div>
             </div>
@@ -1930,14 +1932,14 @@ const AdminHelpCenter: React.FC = () => {
                       articlesInitResult.failed === 0 ? "text-green-900" : "text-yellow-900"
                     }`}>
                       {articlesInitResult.failed === 0
-                        ? "Initialisation terminée avec succès!"
-                        : `Initialisation partielle: ${articlesInitResult.success}/${articlesInitResult.total}`}
+                        ? t('admin.helpCenter.initSuccess')
+                        : t('admin.helpCenter.initPartial', { success: articlesInitResult.success, total: articlesInitResult.total })}
                     </p>
                     <ul className="text-xs space-y-1 text-gray-700">
-                      <li>Total: {articlesInitResult.total} articles</li>
-                      <li className="text-green-700">Réussis: {articlesInitResult.success}</li>
+                      <li>{t('admin.helpCenter.total', { count: articlesInitResult.total })}</li>
+                      <li className="text-green-700">{t('admin.helpCenter.success', { count: articlesInitResult.success })}</li>
                       {articlesInitResult.failed > 0 && (
-                        <li className="text-red-700">Échoués: {articlesInitResult.failed}</li>
+                        <li className="text-red-700">{t('admin.helpCenter.failed', { count: articlesInitResult.failed })}</li>
                       )}
                     </ul>
                     {articlesInitResult.errors.length > 0 && (
@@ -1947,7 +1949,7 @@ const AdminHelpCenter: React.FC = () => {
                         ))}
                         {articlesInitResult.errors.length > 5 && (
                           <p className="text-red-600 font-medium">
-                            ... et {articlesInitResult.errors.length - 5} autres erreurs
+                            {t('admin.helpCenter.moreErrors', { count: articlesInitResult.errors.length - 5 })}
                           </p>
                         )}
                       </div>
@@ -1963,7 +1965,7 @@ const AdminHelpCenter: React.FC = () => {
                     setArticlesInitResult(null);
                   }}
                 >
-                  Fermer
+                  {t('admin.helpCenter.close')}
                 </Button>
               </div>
             </>
@@ -1980,7 +1982,7 @@ const AdminHelpCenter: React.FC = () => {
             setResetResult(null);
           }
         }}
-        title="Reset complet du Help Center"
+        title={t('admin.helpCenter.resetTitle')}
         size="medium"
       >
         <div className="space-y-4">
@@ -1991,10 +1993,10 @@ const AdminHelpCenter: React.FC = () => {
                   <Trash className="w-5 h-5 text-red-600 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-red-900 mb-1">
-                      Attention : Cette action est irréversible!
+                      {t('admin.helpCenter.resetWarning')}
                     </p>
                     <p className="text-xs text-red-700">
-                      Cette action va supprimer TOUTES les catégories ({categories.length}) et TOUS les articles ({articles.length}) du Help Center.
+                      {t('admin.helpCenter.resetDescription', { categories: categories.length, articles: articles.length })}
                     </p>
                   </div>
                 </div>
@@ -2002,11 +2004,11 @@ const AdminHelpCenter: React.FC = () => {
 
               <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
                 <p className="text-sm text-gray-700 mb-2">
-                  <strong>Étapes recommandées après le reset :</strong>
+                  <strong>{t('admin.helpCenter.resetStepsTitle')}</strong>
                 </p>
                 <ol className="text-xs text-gray-600 list-decimal ml-4 space-y-1">
-                  <li>Cliquez sur <strong>"Init 25 catégories"</strong> pour recréer la structure</li>
-                  <li>Cliquez sur <strong>"Init 119 articles"</strong> pour créer tous les articles</li>
+                  <li>{t('admin.helpCenter.resetStep1')}</li>
+                  <li>{t('admin.helpCenter.resetStep2')}</li>
                 </ol>
               </div>
 
@@ -2015,7 +2017,7 @@ const AdminHelpCenter: React.FC = () => {
                   variant="outline"
                   onClick={() => setIsResetModalOpen(false)}
                 >
-                  Annuler
+                  {t('admin.helpCenter.cancel')}
                 </Button>
                 <Button
                   variant="primary"
@@ -2023,7 +2025,7 @@ const AdminHelpCenter: React.FC = () => {
                   className="bg-red-600 hover:bg-red-700"
                 >
                   <Trash className="h-4 w-4 mr-2" />
-                  Confirmer le reset
+                  {t('admin.helpCenter.confirmReset')}
                 </Button>
               </div>
             </>
@@ -2032,7 +2034,7 @@ const AdminHelpCenter: React.FC = () => {
           {isResetting && (
             <div className="p-6 flex flex-col items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-red-600 mb-4" />
-              <p className="text-sm text-gray-600">Suppression en cours...</p>
+              <p className="text-sm text-gray-600">{t('admin.helpCenter.resetting')}</p>
             </div>
           )}
 
@@ -2043,11 +2045,11 @@ const AdminHelpCenter: React.FC = () => {
                   <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-green-900 mb-1">
-                      Reset terminé avec succès!
+                      {t('admin.helpCenter.resetSuccess')}
                     </p>
                     <ul className="text-xs text-green-700 space-y-1">
-                      <li>{resetResult.categoriesDeleted} catégories supprimées</li>
-                      <li>{resetResult.articlesDeleted} articles supprimés</li>
+                      <li>{t('admin.helpCenter.categoriesDeleted', { count: resetResult.categoriesDeleted })}</li>
+                      <li>{t('admin.helpCenter.articlesDeleted', { count: resetResult.articlesDeleted })}</li>
                     </ul>
                   </div>
                 </div>
@@ -2060,7 +2062,7 @@ const AdminHelpCenter: React.FC = () => {
                     setResetResult(null);
                   }}
                 >
-                  Fermer
+                  {t('admin.helpCenter.close')}
                 </Button>
               </div>
             </>

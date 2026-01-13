@@ -901,6 +901,14 @@ export const IaAnalyticsTab: React.FC = () => {
     try {
       const subsSnapshot = await getDocs(collection(db, 'subscriptions'));
 
+      // Load subscription logs for upgrade/downgrade tracking
+      const logsSnapshot = await getDocs(
+        query(
+          collection(db, 'subscription_logs'),
+          where('action', '==', 'subscription_updated')
+        )
+      );
+
       const now = new Date();
       const movements: MRRMovement[] = [];
 
@@ -936,8 +944,32 @@ export const IaAnalyticsTab: React.FC = () => {
           if (canceledAt && canceledAt >= monthDate && canceledAt <= monthEnd) {
             churnedMrr -= monthlyPrice;
           }
+        });
 
-          // TODO: Track upgrades/downgrades for expansion/contraction
+        // Track upgrades/downgrades for expansion/contraction from subscription logs
+        logsSnapshot.docs.forEach(doc => {
+          const log = doc.data();
+          const logDate = log.createdAt?.toDate?.();
+          const metadata = log.metadata || {};
+
+          if (!logDate || logDate < monthDate || logDate > monthEnd) return;
+
+          const previousTier = metadata.previousTier as SubscriptionTier | undefined;
+          const newTier = metadata.newTier as SubscriptionTier | undefined;
+
+          if (!previousTier || !newTier || previousTier === newTier) return;
+
+          const previousPrice = TIER_PRICES[previousTier] || 0;
+          const newPrice = TIER_PRICES[newTier] || 0;
+          const priceDiff = newPrice - previousPrice;
+
+          if (metadata.isUpgrade && priceDiff > 0) {
+            // Expansion MRR - upgrades increase revenue
+            expansionMrr += priceDiff;
+          } else if (metadata.isDowngrade && priceDiff < 0) {
+            // Contraction MRR - downgrades decrease revenue (stored as negative)
+            contractionMrr += priceDiff;
+          }
         });
 
         movements.push({

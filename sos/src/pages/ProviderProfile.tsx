@@ -2137,7 +2137,7 @@ const ProviderProfile: React.FC = () => {
 
     return (
       <Layout>
-        <div className="min-h-screen bg-gray-950 px-4 py-12">
+        <div className="min-h-screen bg-gray-950 px-4 py-12" data-provider-not-found="true">
           <div className="max-w-2xl mx-auto">
             {/* Message principal */}
             <div className="text-center mb-10">
@@ -2322,8 +2322,8 @@ const ProviderProfile: React.FC = () => {
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       <link rel="preconnect" href="https://firestore.googleapis.com" />
 
-      <div className="min-h-screen bg-gray-950 pb-24 lg:pb-8">
-        
+      <div className="min-h-screen bg-gray-950 pb-24 lg:pb-8" data-provider-loaded="true">
+
         {/* ========================================== */}
         {/* HERO SECTION - DARK DESIGN                */}
         {/* ========================================== */}

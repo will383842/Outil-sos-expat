@@ -1,0 +1,844 @@
+/**
+ * AI Assistant Mobile Styles
+ * Mobile-optimized styles for the AI Dashboard
+ *
+ * Breakpoints:
+ * - sm (640px): Stack layout, compact spacing
+ * - md (768px): Adjusted spacing, larger touch targets
+ * - lg (1024px): Full layout, standard sizing
+ *
+ * Design principles:
+ * - Mobile-first approach
+ * - Touch-friendly 44px minimum targets
+ * - Smooth animations and transitions
+ * - Glassmorphism for modern feel
+ */
+
+/* ============================================================================
+   CSS CUSTOM PROPERTIES (Mobile-first)
+   ============================================================================ */
+:root {
+  /* Touch target sizes */
+  --touch-target-min: 44px;
+  --touch-target-comfortable: 48px;
+  --touch-target-large: 56px;
+
+  /* Mobile spacing */
+  --mobile-padding-xs: 8px;
+  --mobile-padding-sm: 12px;
+  --mobile-padding-md: 16px;
+  --mobile-padding-lg: 20px;
+  --mobile-padding-xl: 24px;
+
+  /* Safe area insets */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+
+  /* Animation timing */
+  --animation-fast: 150ms;
+  --animation-normal: 250ms;
+  --animation-slow: 350ms;
+
+  /* Bottom sheet heights */
+  --bottom-sheet-peek: 120px;
+  --bottom-sheet-half: 50vh;
+  --bottom-sheet-full: calc(100vh - var(--safe-area-top) - 48px);
+}
+
+/* ============================================================================
+   BASE MOBILE STYLES (< 640px)
+   ============================================================================ */
+
+/* AI Assistant Container - Mobile First */
+.ai-assistant-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding-bottom: calc(var(--safe-area-bottom) + 80px);
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile Header - Sticky with Glassmorphism */
+.ai-assistant-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  padding: var(--mobile-padding-md);
+  padding-top: calc(var(--safe-area-top) + var(--mobile-padding-md));
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  transition: transform var(--animation-normal) ease;
+}
+
+.ai-assistant-header.header-hidden {
+  transform: translateY(-100%);
+}
+
+/* Mobile Content Area */
+.ai-assistant-content {
+  flex: 1;
+  padding: var(--mobile-padding-md);
+  padding-bottom: var(--mobile-padding-xl);
+}
+
+/* Mobile Grid - Single Column */
+.ai-assistant-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--mobile-padding-md);
+}
+
+/* ============================================================================
+   TOUCH-FRIENDLY COMPONENTS
+   ============================================================================ */
+
+/* Touch-friendly buttons (44px minimum) */
+.touch-btn {
+  min-height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-weight: 600;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--animation-fast) ease,
+              background-color var(--animation-fast) ease,
+              box-shadow var(--animation-fast) ease;
+}
+
+.touch-btn:active {
+  transform: scale(0.97);
+}
+
+/* Primary CTA button - Extra large for easy tapping */
+.touch-btn-primary {
+  min-height: var(--touch-target-large);
+  width: 100%;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+  font-size: 1rem;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+}
+
+.touch-btn-primary:active {
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+}
+
+/* Touch-friendly cards */
+.touch-card {
+  padding: var(--mobile-padding-md);
+  border-radius: 16px;
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  touch-action: manipulation;
+}
+
+/* Tappable card with feedback */
+.touch-card-tappable {
+  cursor: pointer;
+  transition: transform var(--animation-fast) ease,
+              box-shadow var(--animation-fast) ease;
+}
+
+.touch-card-tappable:active {
+  transform: scale(0.98);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* ============================================================================
+   FLOATING ACTION BUTTON (FAB)
+   ============================================================================ */
+
+.fab-container {
+  position: fixed;
+  bottom: calc(var(--safe-area-bottom) + 88px);
+  right: var(--mobile-padding-md);
+  z-index: 45;
+}
+
+.fab-button {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--animation-fast) ease,
+              box-shadow var(--animation-fast) ease;
+}
+
+.fab-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 24px rgba(99, 102, 241, 0.5);
+}
+
+.fab-button:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 12px rgba(99, 102, 241, 0.3);
+}
+
+.fab-button.fab-pulse {
+  animation: fabPulse 2s infinite;
+}
+
+@keyframes fabPulse {
+  0%, 100% {
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+  }
+  50% {
+    box-shadow: 0 4px 30px rgba(99, 102, 241, 0.6), 0 0 0 8px rgba(99, 102, 241, 0.1);
+  }
+}
+
+/* ============================================================================
+   BOTTOM SHEET COMPONENT
+   ============================================================================ */
+
+.bottom-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 50;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--animation-normal) ease,
+              visibility var(--animation-normal) ease;
+}
+
+.bottom-sheet-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.bottom-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 51;
+  background: white;
+  border-radius: 24px 24px 0 0;
+  max-height: var(--bottom-sheet-full);
+  transform: translateY(100%);
+  transition: transform var(--animation-slow) cubic-bezier(0.32, 0.72, 0, 1);
+  padding-bottom: var(--safe-area-bottom);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  touch-action: pan-y;
+}
+
+.bottom-sheet.open {
+  transform: translateY(0);
+}
+
+.bottom-sheet.half {
+  max-height: var(--bottom-sheet-half);
+}
+
+.bottom-sheet.peek {
+  max-height: var(--bottom-sheet-peek);
+}
+
+.bottom-sheet-handle {
+  display: flex;
+  justify-content: center;
+  padding: 12px;
+  cursor: grab;
+}
+
+.bottom-sheet-handle::after {
+  content: '';
+  width: 36px;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 2px;
+}
+
+.bottom-sheet-handle:active {
+  cursor: grabbing;
+}
+
+.bottom-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--mobile-padding-md) var(--mobile-padding-md);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.bottom-sheet-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.bottom-sheet-close {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.05);
+  color: #6b7280;
+  transition: background-color var(--animation-fast) ease;
+}
+
+.bottom-sheet-close:active {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.bottom-sheet-content {
+  padding: var(--mobile-padding-md);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  max-height: calc(var(--bottom-sheet-full) - 80px);
+}
+
+/* ============================================================================
+   COLLAPSIBLE SECTIONS
+   ============================================================================ */
+
+.collapsible-section {
+  border-radius: 16px;
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  margin-bottom: var(--mobile-padding-md);
+}
+
+.collapsible-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--mobile-padding-md);
+  min-height: var(--touch-target-min);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  background: rgba(0, 0, 0, 0.02);
+  transition: background-color var(--animation-fast) ease;
+}
+
+.collapsible-header:active {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.collapsible-icon {
+  width: 20px;
+  height: 20px;
+  color: #6b7280;
+  transition: transform var(--animation-normal) ease;
+}
+
+.collapsible-section.expanded .collapsible-icon {
+  transform: rotate(180deg);
+}
+
+.collapsible-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height var(--animation-normal) ease;
+}
+
+.collapsible-section.expanded .collapsible-content {
+  max-height: 1000px;
+}
+
+.collapsible-body {
+  padding: var(--mobile-padding-md);
+  padding-top: 0;
+}
+
+/* ============================================================================
+   PULL-TO-REFRESH INDICATOR
+   ============================================================================ */
+
+.pull-refresh-container {
+  position: relative;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+.pull-refresh-indicator {
+  position: absolute;
+  top: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--animation-fast) ease,
+              transform var(--animation-fast) ease;
+}
+
+.pull-refresh-container.pulling .pull-refresh-indicator {
+  opacity: 1;
+  transform: translateX(-50%) translateY(70px);
+}
+
+.pull-refresh-container.refreshing .pull-refresh-indicator {
+  opacity: 1;
+  transform: translateX(-50%) translateY(70px);
+}
+
+.pull-refresh-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(99, 102, 241, 0.2);
+  border-top-color: #6366f1;
+  border-radius: 50%;
+}
+
+.pull-refresh-container.refreshing .pull-refresh-spinner {
+  animation: pullRefreshSpin 0.8s linear infinite;
+}
+
+@keyframes pullRefreshSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================================================
+   PROVIDER SELECTOR LIST (Mobile optimized)
+   ============================================================================ */
+
+.provider-list-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mobile-padding-sm);
+}
+
+.provider-item-mobile {
+  display: flex;
+  align-items: center;
+  gap: var(--mobile-padding-sm);
+  padding: var(--mobile-padding-md);
+  min-height: var(--touch-target-comfortable);
+  border-radius: 12px;
+  background: white;
+  border: 2px solid transparent;
+  transition: border-color var(--animation-fast) ease,
+              background-color var(--animation-fast) ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.provider-item-mobile:active {
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.provider-item-mobile.selected {
+  border-color: #6366f1;
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.provider-item-mobile.has-notification {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.provider-item-mobile.urgent {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+  animation: urgentPulse 2s infinite;
+}
+
+@keyframes urgentPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+}
+
+.provider-avatar-mobile {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.provider-info-mobile {
+  flex: 1;
+  min-width: 0;
+}
+
+.provider-name-mobile {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.provider-meta-mobile {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.provider-badge-mobile {
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* ============================================================================
+   CONVERSATION CARDS (Mobile optimized)
+   ============================================================================ */
+
+.conversation-card-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mobile-padding-sm);
+  padding: var(--mobile-padding-md);
+  border-radius: 16px;
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--animation-fast) ease,
+              box-shadow var(--animation-fast) ease;
+}
+
+.conversation-card-mobile:active {
+  transform: scale(0.98);
+}
+
+/* ============================================================================
+   QUOTA PROGRESS BAR (Mobile)
+   ============================================================================ */
+
+.quota-bar-mobile {
+  height: 8px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.quota-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #6366f1, #8b5cf6);
+  transition: width var(--animation-slow) ease;
+}
+
+.quota-bar-fill.warning {
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.quota-bar-fill.danger {
+  background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+/* ============================================================================
+   TABLET BREAKPOINT (md: 768px)
+   ============================================================================ */
+
+@media (min-width: 768px) {
+  :root {
+    --mobile-padding-md: 20px;
+    --mobile-padding-lg: 24px;
+  }
+
+  .ai-assistant-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--mobile-padding-lg);
+  }
+
+  .ai-assistant-content {
+    padding: var(--mobile-padding-lg);
+  }
+
+  .touch-btn {
+    padding: 14px 20px;
+  }
+
+  .touch-card {
+    padding: var(--mobile-padding-lg);
+  }
+
+  .fab-container {
+    bottom: calc(var(--safe-area-bottom) + 24px);
+    right: var(--mobile-padding-lg);
+  }
+
+  .bottom-sheet {
+    max-width: 560px;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%) translateY(100%);
+    border-radius: 24px 24px 0 0;
+  }
+
+  .bottom-sheet.open {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .provider-list-mobile {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ============================================================================
+   DESKTOP BREAKPOINT (lg: 1024px)
+   ============================================================================ */
+
+@media (min-width: 1024px) {
+  :root {
+    --mobile-padding-md: 24px;
+    --mobile-padding-lg: 32px;
+  }
+
+  .ai-assistant-container {
+    padding-bottom: 0;
+  }
+
+  .ai-assistant-header {
+    position: relative;
+    background: transparent;
+    backdrop-filter: none;
+    border-bottom: none;
+  }
+
+  .ai-assistant-grid {
+    grid-template-columns: 1fr 2fr;
+    gap: var(--mobile-padding-lg);
+  }
+
+  .fab-container {
+    display: none;
+  }
+
+  .bottom-sheet {
+    bottom: auto;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
+    opacity: 0;
+    visibility: hidden;
+    max-width: 480px;
+    max-height: 80vh;
+    border-radius: 24px;
+    transition: transform var(--animation-normal) ease,
+                opacity var(--animation-normal) ease,
+                visibility var(--animation-normal) ease;
+  }
+
+  .bottom-sheet.open {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .provider-list-mobile {
+    grid-template-columns: 1fr;
+  }
+
+  .collapsible-content {
+    max-height: none !important;
+  }
+
+  .collapsible-icon {
+    display: none;
+  }
+}
+
+/* ============================================================================
+   SMALL MOBILE ADJUSTMENTS (< 375px)
+   ============================================================================ */
+
+@media (max-width: 374px) {
+  :root {
+    --mobile-padding-md: 12px;
+    --mobile-padding-lg: 16px;
+  }
+
+  .touch-btn-primary {
+    font-size: 0.9375rem;
+  }
+
+  .provider-avatar-mobile {
+    width: 40px;
+    height: 40px;
+  }
+
+  .bottom-sheet-title {
+    font-size: 1rem;
+  }
+}
+
+/* ============================================================================
+   LANDSCAPE MODE ADJUSTMENTS
+   ============================================================================ */
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .ai-assistant-header {
+    padding-top: var(--mobile-padding-sm);
+    padding-bottom: var(--mobile-padding-sm);
+  }
+
+  .bottom-sheet {
+    max-height: 85vh;
+  }
+
+  .fab-container {
+    bottom: calc(var(--safe-area-bottom) + 16px);
+  }
+}
+
+/* ============================================================================
+   REDUCED MOTION PREFERENCES
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .fab-button.fab-pulse {
+    animation: none;
+  }
+
+  .provider-item-mobile.urgent {
+    animation: none;
+  }
+}
+
+/* ============================================================================
+   DARK MODE SUPPORT
+   ============================================================================ */
+
+@media (prefers-color-scheme: dark) {
+  .ai-assistant-header {
+    background: rgba(17, 24, 39, 0.95);
+    border-bottom-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .touch-card,
+  .collapsible-section,
+  .conversation-card-mobile,
+  .provider-item-mobile {
+    background: #1f2937;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .bottom-sheet {
+    background: #1f2937;
+  }
+
+  .bottom-sheet-handle::after {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .bottom-sheet-title,
+  .provider-name-mobile {
+    color: #f9fafb;
+  }
+
+  .provider-meta-mobile {
+    color: #9ca3af;
+  }
+
+  .quota-bar-mobile {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .collapsible-header {
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .collapsible-header:active {
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+
+/* ============================================================================
+   UTILITY CLASSES
+   ============================================================================ */
+
+.hide-mobile {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .hide-mobile {
+    display: block;
+  }
+}
+
+.show-mobile-only {
+  display: block;
+}
+
+@media (min-width: 768px) {
+  .show-mobile-only {
+    display: none;
+  }
+}
+
+.touch-size {
+  min-height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
+}
+
+.scroll-snap-x {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.scroll-snap-x::-webkit-scrollbar {
+  display: none;
+}
+
+.scroll-snap-item {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+
+.safe-area-top {
+  padding-top: var(--safe-area-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: var(--safe-area-bottom);
+}
+
+.safe-area-all {
+  padding-top: var(--safe-area-top);
+  padding-bottom: var(--safe-area-bottom);
+  padding-left: var(--safe-area-left);
+  padding-right: var(--safe-area-right);
+}

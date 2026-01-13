@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
+import BreadcrumbSchema from "../components/seo/BreadcrumbSchema";
 import Button from "../components/common/Button";
 import { useApp } from "../contexts/AppContext";
 import { phoneCodesData } from "../data/phone-codes";
@@ -431,6 +432,9 @@ const Contact: React.FC = () => {
         id: "contact.termsAndConditions",
       }),
       termsLink: intl.formatMessage({ id: "contact.termsLink" }),
+
+      // Breadcrumb
+      home: intl.formatMessage({ id: "common.home" }),
 
       // Other
       other: intl.formatMessage({ id: "contact.other" }),
@@ -1099,6 +1103,12 @@ const Contact: React.FC = () => {
         structuredData={contactStructuredData}
         contentType="ContactPage"
         aiSummary="Page de contact SOS Expat pour demander de l'aide juridique ou des informations sur l'expatriation"
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: t.home || "Accueil", url: `/${language}` },
+          { name: t.pageTitle || "Contact" }
+        ]}
       />
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50">
         {/* Header avec design fun et énergique */}

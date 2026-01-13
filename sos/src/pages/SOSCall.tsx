@@ -1701,8 +1701,7 @@ const Pagination: React.FC<{
   onChange: (p: number) => void;
   intl: ReturnType<typeof useIntl>;
 }> = React.memo(({ page, totalPages, onChange, intl }) => {
-  if (totalPages <= 1) return null;
-
+  // All hooks must be called before any early returns
   const go = useCallback((p: number) => {
     const np = Math.min(totalPages, Math.max(1, p));
     if (np !== page) {
@@ -1741,6 +1740,9 @@ const Pagination: React.FC<{
     }
     return withEllipses;
   }, [page, totalPages]);
+
+  // Early return after all hooks
+  if (totalPages <= 1) return null;
 
   return (
     <nav 

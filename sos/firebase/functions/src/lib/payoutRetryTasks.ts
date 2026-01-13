@@ -12,7 +12,7 @@
 
 import { CloudTasksClient } from "@google-cloud/tasks";
 import { defineSecret, defineString } from "firebase-functions/params";
-import { onRequest } from "firebase-functions/v2/https";
+import { onRequest, onCall, HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import { logError } from "../utils/logs/logError";
 // P1-13: Sync atomique payments <-> call_sessions
@@ -403,3 +403,139 @@ export async function cancelPayoutRetryTask(taskId: string): Promise<void> {
     throw error;
   }
 }
+
+/**
+ * Callable function pour permettre à l'admin de retrier manuellement un payout échoué.
+ * Appelée depuis la page Escrow de l'admin.
+ */
+export const retryFailedPayout = onCall(
+  {
+    region: "europe-west1",
+    secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
+  },
+  async (request) => {
+    // Vérifier l'authentification
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    // Vérifier le rôle admin
+    const db = admin.firestore();
+    const userDoc = await db.collection("users").doc(request.auth.uid).get();
+    const userData = userDoc.data();
+
+    if (!userData?.role || !["admin", "dev"].includes(userData.role)) {
+      throw new HttpsError("permission-denied", "Only admins can retry payouts");
+    }
+
+    const { failedPayoutAlertId } = request.data;
+
+    if (!failedPayoutAlertId) {
+      throw new HttpsError("invalid-argument", "failedPayoutAlertId is required");
+    }
+
+    console.log(`🔄 [retryFailedPayout] Admin ${request.auth.uid} triggering retry for alert ${failedPayoutAlertId}`);
+
+    // Récupérer les données de l'alerte
+    const alertDoc = await db.collection("failed_payouts_alerts").doc(failedPayoutAlertId).get();
+
+    if (!alertDoc.exists) {
+      throw new HttpsError("not-found", "Failed payout alert not found");
+    }
+
+    const alertData = alertDoc.data();
+
+    if (!alertData) {
+      throw new HttpsError("not-found", "Alert data is empty");
+    }
+
+    // Vérifier que le payout n'est pas déjà résolu
+    if (alertData.status === "success" || alertData.status === "resolved") {
+      throw new HttpsError("failed-precondition", "This payout has already been resolved");
+    }
+
+    // Importer PayPalManager
+    const { PayPalManager } = await import("../PayPalManager");
+    const manager = new PayPalManager(db);
+
+    const currentRetryCount = (alertData.retryCount || 0) + 1;
+
+    try {
+      // Tenter le payout
+      const payoutResult = await manager.createPayout({
+        providerId: alertData.providerId,
+        providerPayPalEmail: alertData.providerPayPalEmail,
+        amount: alertData.amount,
+        currency: (alertData.currency as "EUR" | "USD") || "EUR",
+        sessionId: alertData.callSessionId,
+        note: `Paiement SOS-Expat (retry manuel #${currentRetryCount}) - Session ${alertData.callSessionId}`,
+      });
+
+      if (payoutResult.success) {
+        console.log(`✅ [retryFailedPayout] Manual retry succeeded: ${payoutResult.payoutBatchId}`);
+
+        // Mettre à jour l'alerte comme résolue
+        await alertDoc.ref.update({
+          status: "success",
+          resolvedAt: admin.firestore.FieldValue.serverTimestamp(),
+          resolvedBy: request.auth.uid,
+          resolvedMethod: "manual_admin_retry",
+          successfulRetryCount: currentRetryCount,
+          payoutBatchId: payoutResult.payoutBatchId,
+          payoutItemId: payoutResult.payoutItemId,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        // Mettre à jour la commande PayPal
+        if (alertData.orderId) {
+          await db.collection("paypal_orders").doc(alertData.orderId).update({
+            payoutTriggered: true,
+            payoutId: payoutResult.payoutBatchId,
+            payoutStatus: "pending",
+            manualRetryBy: request.auth.uid,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+
+          // Sync avec call_sessions
+          if (alertData.callSessionId) {
+            await syncPaymentStatus(db, alertData.orderId, alertData.callSessionId, {
+              payoutTriggered: true,
+              payoutId: payoutResult.payoutBatchId,
+              manualRetryCount: currentRetryCount,
+            });
+          }
+        }
+
+        return {
+          success: true,
+          payoutBatchId: payoutResult.payoutBatchId,
+          message: "Payout retry successful",
+        };
+
+      } else {
+        // Le payout a échoué
+        console.error(`❌ [retryFailedPayout] Manual retry failed: ${payoutResult.error}`);
+
+        await alertDoc.ref.update({
+          retryCount: currentRetryCount,
+          lastRetryError: payoutResult.error || "Unknown error",
+          lastRetryAt: admin.firestore.FieldValue.serverTimestamp(),
+          lastRetryBy: request.auth.uid,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        throw new HttpsError("internal", `Payout failed: ${payoutResult.error}`);
+      }
+
+    } catch (error) {
+      console.error(`❌ [retryFailedPayout] Error:`, error);
+
+      if (error instanceof HttpsError) {
+        throw error;
+      }
+
+      await logError("retryFailedPayout", error);
+      throw new HttpsError("internal", `Failed to retry payout: ${(error as Error).message}`);
+    }
+  }
+);

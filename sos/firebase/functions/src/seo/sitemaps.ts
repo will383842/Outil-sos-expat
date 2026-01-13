@@ -172,9 +172,9 @@ ${hreflangs}
 );
 
 // ============================================
-// 📝 SITEMAP: Articles du Centre d'Aide / Help Center
+// 📚 SITEMAP: Articles du Centre d'Aide / Help Center
 // ============================================
-export const sitemapBlog = onRequest(
+export const sitemapHelp = onRequest(
   {
     region: 'europe-west1',
     memory: '256MiB',
@@ -366,6 +366,109 @@ ${hreflangs}
     } catch (error) {
       console.error('❌ Erreur sitemap landing:', error);
       res.status(500).send('Error generating landing sitemap');
+    }
+  }
+);
+
+// ============================================
+// ❓ SITEMAP: FAQ individuels
+// ============================================
+export const sitemapFaq = onRequest(
+  {
+    region: 'europe-west1',
+    memory: '256MiB',
+    timeoutSeconds: 60,
+    maxInstances: 3,
+    minInstances: 0,
+    serviceAccount: 'firebase-adminsdk-fbsvc@sos-urgently-ac307.iam.gserviceaccount.com',
+  },
+  async (_req, res) => {
+    try {
+      console.log('🔄 Début génération sitemap FAQ...');
+
+      const db = admin.firestore();
+
+      // Récupère les FAQ actives
+      const snapshot = await db.collection('faqs')
+        .where('isActive', '==', true)
+        .limit(500)
+        .get();
+
+      console.log(`📄 ${snapshot.docs.length} FAQs trouvées`);
+
+      const today = new Date().toISOString().split('T')[0];
+
+      // Si aucun FAQ, retourne un sitemap vide mais valide
+      if (snapshot.docs.length === 0) {
+        const emptyXml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+</urlset>`;
+        res.set('Content-Type', 'application/xml; charset=utf-8');
+        res.set('Cache-Control', 'public, max-age=3600');
+        res.status(200).send(emptyXml);
+        console.log(`⚠️ Sitemap FAQ: 0 FAQs actives`);
+        return;
+      }
+
+      const urlBlocks: string[] = [];
+
+      urlBlocks.push(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">`);
+
+      snapshot.docs.forEach(doc => {
+        const faq = doc.data();
+
+        // Le slug peut être un objet multilingue ou un string
+        const slugs = faq.slug as Record<string, string> | string | undefined;
+        const hasSlugs = slugs && typeof slugs === 'object' && Object.keys(slugs).length > 0;
+
+        // Si pas de slug, utiliser l'ID du document
+        const getSlug = (lang: string): string => {
+          if (typeof slugs === 'string') return slugs;
+          if (hasSlugs) return (slugs as Record<string, string>)[lang] || (slugs as Record<string, string>)['fr'] || doc.id;
+          return doc.id;
+        };
+
+        LANGUAGES.forEach(lang => {
+          const slug = getSlug(lang);
+          const url = `${SITE_URL}/${lang}/faq/${slug}`;
+
+          // Génère tous les hreflang
+          const hreflangs = LANGUAGES.map(hrefLang => {
+            const hrefSlug = getSlug(hrefLang);
+            return `    <xhtml:link rel="alternate" hreflang="${getHreflangCode(hrefLang)}" href="${escapeXml(`${SITE_URL}/${hrefLang}/faq/${hrefSlug}`)}"/>`;
+          }).join('\n');
+
+          urlBlocks.push(`  <url>
+    <loc>${escapeXml(url)}</loc>
+${hreflangs}
+    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(`${SITE_URL}/fr/faq/${getSlug('fr')}`)}"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+    <lastmod>${faq.updatedAt?.toDate?.()?.toISOString?.()?.split('T')[0] || today}</lastmod>
+  </url>`);
+        });
+      });
+
+      urlBlocks.push(`</urlset>`);
+      const xml = urlBlocks.join('\n');
+
+      res.set('Content-Type', 'application/xml; charset=utf-8');
+      res.set('Cache-Control', 'public, max-age=3600');
+      res.status(200).send(xml);
+
+      console.log(`✅ Sitemap FAQ: ${snapshot.docs.length} FAQs (${snapshot.docs.length * LANGUAGES.length} URLs)`);
+
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error('❌ Erreur sitemap FAQ:', {
+        message: err.message,
+        stack: err.stack,
+        name: err.name
+      });
+      res.status(500).send(`Error generating FAQ sitemap: ${err.message}`);
     }
   }
 );

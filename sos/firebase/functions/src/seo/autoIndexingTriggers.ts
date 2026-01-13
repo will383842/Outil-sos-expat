@@ -335,6 +335,94 @@ export const onLandingPageCreated = onDocumentCreated(
 );
 
 // ============================================
+// ❓ TRIGGER: Nouveau FAQ créé
+// ============================================
+export const onFaqCreated = onDocumentCreated(
+  {
+    document: 'faqs/{faqId}',
+    region: REGION,
+    memory: '256MiB',
+    timeoutSeconds: 60,
+  },
+  async (event) => {
+    const snapshot = event.data;
+    if (!snapshot) return;
+
+    const faq = snapshot.data();
+    const faqId = event.params.faqId;
+
+    console.log(`❓ Nouveau FAQ: ${faqId}`);
+
+    // Vérifier que le FAQ est actif
+    if (!faq.isActive) {
+      console.log('⏭️ FAQ inactif, indexation différée');
+      return;
+    }
+
+    const slug = typeof faq.slug === 'object' ? (faq.slug?.fr || faq.slug?.en || faqId) : (faq.slug || faqId);
+    const urls = generateFaqUrls(slug);
+
+    console.log(`🔗 URLs FAQ à indexer: ${urls.length}`);
+
+    // Soumettre en parallèle à IndexNow et Google
+    const [indexNowResult, googleResult] = await Promise.all([
+      submitToIndexNow(urls),
+      submitBatchToGoogleIndexing(urls, 9),
+    ]);
+    await pingSitemap();
+    await logIndexingEvent('faq', faqId, urls, {
+      success: indexNowResult.success,
+      urls,
+      googleSuccess: googleResult.successCount,
+    });
+
+    console.log(`✅ FAQ ${faqId} indexé (Google: ${googleResult.successCount}/${urls.length})`);
+  }
+);
+
+// ============================================
+// ❓ TRIGGER: FAQ mis à jour (activation)
+// ============================================
+export const onFaqUpdated = onDocumentUpdated(
+  {
+    document: 'faqs/{faqId}',
+    region: REGION,
+    memory: '256MiB',
+    timeoutSeconds: 60,
+  },
+  async (event) => {
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+    const faqId = event.params.faqId;
+
+    if (!before || !after) return;
+
+    const wasInactive = !before.isActive;
+    const isNowActive = after.isActive;
+
+    if (wasInactive && isNowActive) {
+      console.log(`❓ FAQ ${faqId} vient d'être activé`);
+
+      const slug = typeof after.slug === 'object' ? (after.slug?.fr || after.slug?.en || faqId) : (after.slug || faqId);
+      const urls = generateFaqUrls(slug);
+
+      const [indexNowResult, googleResult] = await Promise.all([
+        submitToIndexNow(urls),
+        submitBatchToGoogleIndexing(urls, 9),
+      ]);
+      await pingSitemap();
+      await logIndexingEvent('faq_activated', faqId, urls, {
+        success: indexNowResult.success,
+        urls,
+        googleSuccess: googleResult.successCount,
+      });
+
+      console.log(`✅ FAQ ${faqId} indexé après activation`);
+    }
+  }
+);
+
+// ============================================
 // ⏰ SCHEDULED: Ping sitemap toutes les heures
 // ============================================
 export const scheduledSitemapPing = onSchedule(
@@ -440,6 +528,14 @@ function generateHelpCenterUrls(slug: string): string[] {
   return LANGUAGES.map(lang =>
     `${SITE_URL}/${lang}/${helpCenterSlugs[lang] || 'help-center'}/${slug}`
   );
+}
+
+/**
+ * Génère les URLs pour un FAQ (9 langues)
+ * Route: /{lang}/faq/{slug}
+ */
+function generateFaqUrls(slug: string): string[] {
+  return LANGUAGES.map(lang => `${SITE_URL}/${lang}/faq/${slug}`);
 }
 
 /**

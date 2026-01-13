@@ -1526,6 +1526,113 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ================= VALIDATION QUEUE =================
+    // File d'attente de validation des profils prestataires
+    // Audit trail: suppression interdite pour tracabilite complete
+    match /validation_queue/{validationId} {
+      // Lecture: Admin uniquement
+      allow read: if isAdmin();
+      // Creation: Cloud Functions uniquement (via Admin SDK)
+      allow create: if false;
+      // Mise a jour: Admin uniquement (pour valider/rejeter)
+      allow update: if isAdmin();
+      // Suppression: JAMAIS (audit trail obligatoire)
+      allow delete: if false;
+
+      // Sous-collection: historique des validations
+      match /validation_history/{historyId} {
+        // Lecture: Admin uniquement
+        allow read: if isAdmin();
+        // Ecriture: Cloud Functions uniquement (via Admin SDK)
+        allow write: if false;
+      }
+    }
+
+    // ================= PROVIDER ACTION LOGS =================
+    // Logs des actions des prestataires (connexion, deconnexion, modifications profil)
+    // Immutable: ecriture Cloud Functions uniquement
+    match /provider_action_logs/{logId} {
+      // Lecture: Admin uniquement
+      allow read: if isAdmin();
+      // Ecriture: Cloud Functions uniquement (via Admin SDK)
+      allow write: if false;
+    }
+
+    // ================= CONNECTION LOGS =================
+    // Logs de connexion/deconnexion des utilisateurs
+    // Immutable apres creation: pas de modification ni suppression
+    match /connection_logs/{logId} {
+      // Lecture: Admin uniquement
+      allow read: if isAdmin();
+      // Creation: Cloud Functions uniquement (via Admin SDK)
+      // Note: Les Cloud Functions valident les champs requis (userId, timestamp, eventType, etc.)
+      allow create: if false;
+      // Mise a jour: JAMAIS (immutable)
+      allow update: if false;
+      // Suppression: JAMAIS (audit trail)
+      allow delete: if false;
+    }
+
+    // ================= SERVICE BALANCE ALERTS =================
+    // Alertes sur les soldes de services (credits faibles, etc.)
+    match /service_balance_alerts/{alertId} {
+      // Lecture: Admin uniquement
+      allow read: if isAdmin();
+      // Ecriture: Admin uniquement (pour acquitter les alertes)
+      allow write: if isAdmin();
+    }
+
+    // ================= SERVICE BALANCE THRESHOLDS =================
+    // Configuration des seuils d'alerte pour les soldes de services
+    match /service_balance_thresholds/{thresholdId} {
+      // Lecture: Admin uniquement
+      allow read: if isAdmin();
+      // Ecriture: Admin uniquement
+      allow write: if isAdmin();
+    }
+
+    // ================= ANALYTICS DAILY =================
+    // Metriques analytiques agregees par jour
+    // Immutable: genere automatiquement par Cloud Functions
+    match /analytics_daily/{dateId} {
+      // Lecture: Admin uniquement
+      allow read: if isAdmin();
+      // Ecriture: Cloud Functions uniquement (via Admin SDK)
+      allow write: if false;
+    }
+
+    // ================= AI CALL LOGS =================
+    // Logs des appels IA (GPT, Claude, Perplexity, etc.)
+    // Usage: Console admin pour monitoring des couts et performances IA
+    match /ai_call_logs/{logId} {
+      // Lecture: Admin uniquement (donnees sensibles - couts, tokens)
+      allow read: if isAdmin() || isDev();
+      // Ecriture: Cloud Functions uniquement (via Admin SDK)
+      allow write: if false;
+    }
+
+    // ================= OPENAI USAGE METRICS =================
+    // Metriques d'utilisation OpenAI (tokens, couts par modele)
+    // Usage: Console admin - onglet IA Analytics
+    match /openai_usage_metrics/{metricId} {
+      // Lecture: Admin uniquement
+      allow read: if isAdmin() || isDev();
+      // Ecriture: Cloud Functions uniquement (via Admin SDK)
+      allow write: if false;
+    }
+
+    // ================= SERVICE ALERTS =================
+    // Alertes des services externes (Twilio, Stripe, OpenAI, etc.)
+    // Usage: Console admin - widget alertes services
+    match /service_alerts/{alertId} {
+      // Lecture: Admin uniquement
+      allow read: if isAdmin() || isDev();
+      // Mise a jour: Admin peut acquitter les alertes
+      allow update: if isAdmin() || isDev();
+      // Creation/Suppression: Cloud Functions uniquement
+      allow create, delete: if false;
+    }
+
     // ================= CATCH-ALL (deny by default) =================
     // SECURITE: Refuse TOUT acces non explicitement autorise
     // Le role 'dev' est desactive en production

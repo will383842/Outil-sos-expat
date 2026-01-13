@@ -33,6 +33,7 @@ interface ContactMessageData {
 
 /**
  * Valide les données du message de contact
+ * FIX: Accepte à la fois 'name' ou 'firstName'+'lastName' du formulaire
  */
 function validateContactData(data: unknown): { valid: boolean; error?: string; data?: ContactMessageData } {
   if (!data || typeof data !== "object") {
@@ -55,14 +56,34 @@ function validateContactData(data: unknown): { valid: boolean; error?: string; d
     return { valid: false, error: "Message must be less than 5000 characters" };
   }
 
+  // FIX: Accepter 'name' OU 'firstName'+'lastName' du formulaire Contact.tsx
+  let name: string | undefined;
+  if (typeof body.name === "string" && body.name.trim()) {
+    name = body.name.trim();
+  } else if (typeof body.firstName === "string" || typeof body.lastName === "string") {
+    // Combiner firstName et lastName du formulaire
+    const firstName = typeof body.firstName === "string" ? body.firstName.trim() : "";
+    const lastName = typeof body.lastName === "string" ? body.lastName.trim() : "";
+    name = `${firstName} ${lastName}`.trim() || undefined;
+  }
+
+  // FIX: Accepter 'phone' OU 'phoneCountryCode'+'phoneNumber' du formulaire
+  let phone: string | undefined;
+  if (typeof body.phone === "string" && body.phone.trim()) {
+    phone = body.phone.trim();
+  } else if (typeof body.phoneNumber === "string" && body.phoneNumber.trim()) {
+    const countryCode = typeof body.phoneCountryCode === "string" ? body.phoneCountryCode : "";
+    phone = `${countryCode}${body.phoneNumber.trim()}`.trim() || undefined;
+  }
+
   return {
     valid: true,
     data: {
       email: body.email.toLowerCase().trim(),
-      name: typeof body.name === "string" ? body.name.trim() : undefined,
+      name,
       subject: typeof body.subject === "string" ? body.subject.trim() : undefined,
       message: body.message.trim(),
-      phone: typeof body.phone === "string" ? body.phone.trim() : undefined,
+      phone,
     },
   };
 }
@@ -161,9 +182,11 @@ export const createContactMessage = onRequest(
       const db = admin.firestore();
 
       // Créer le message de contact
+      // FIX: Ajouter isRead: false pour compatibilité avec AdminContactMessages
       const messageDoc = await db.collection("contact_messages").add({
         ...validation.data,
         status: "unread",
+        isRead: false, // AdminContactMessages utilise ce champ
         createdAt: Timestamp.now(),
         source: "contact_form",
         clientIp: clientIp.slice(0, 20), // Stocker partiellement pour audit

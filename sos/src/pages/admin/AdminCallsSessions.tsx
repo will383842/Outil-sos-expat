@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { useAdminTranslations } from "../../utils/adminTranslations";
+import { useAdminTranslations, useCallAdminTranslations } from "../../utils/adminTranslations";
+import { useIntl } from "react-intl";
 import { useApp } from "../../contexts/AppContext";
 import { getDateLocale } from "../../utils/formatters";
 import { useNavigate } from "react-router-dom";
@@ -123,19 +124,27 @@ interface SessionStats {
 }
 
 // ============ COMPOSANTS UTILITAIRES ============
-const StatusBadge: React.FC<{ status: string; size?: 'sm' | 'md' }> = ({ status, size = 'sm' }) => {
+interface StatusLabels {
+  completed: string;
+  failed: string;
+  cancelled: string;
+  active: string;
+  pending: string;
+}
+
+const StatusBadge: React.FC<{ status: string; size?: 'sm' | 'md'; labels: StatusLabels }> = ({ status, size = 'sm', labels }) => {
   const getConfig = () => {
     switch (status) {
       case 'completed':
-        return { color: 'bg-green-100 text-green-800 border-green-200', icon: CheckCircle, label: 'Terminé' };
+        return { color: 'bg-green-100 text-green-800 border-green-200', icon: CheckCircle, label: labels.completed };
       case 'failed':
-        return { color: 'bg-red-100 text-red-800 border-red-200', icon: XCircle, label: 'Échoué' };
+        return { color: 'bg-red-100 text-red-800 border-red-200', icon: XCircle, label: labels.failed };
       case 'cancelled':
-        return { color: 'bg-gray-100 text-gray-800 border-gray-200', icon: StopCircle, label: 'Annulé' };
+        return { color: 'bg-gray-100 text-gray-800 border-gray-200', icon: StopCircle, label: labels.cancelled };
       case 'active':
-        return { color: 'bg-blue-100 text-blue-800 border-blue-200', icon: PlayCircle, label: 'Actif' };
+        return { color: 'bg-blue-100 text-blue-800 border-blue-200', icon: PlayCircle, label: labels.active };
       case 'pending':
-        return { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', icon: Clock, label: 'En attente' };
+        return { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', icon: Clock, label: labels.pending };
       default:
         return { color: 'bg-gray-100 text-gray-800 border-gray-200', icon: AlertTriangle, label: status };
     }
@@ -155,19 +164,27 @@ const StatusBadge: React.FC<{ status: string; size?: 'sm' | 'md' }> = ({ status,
   );
 };
 
-const PaymentStatusBadge: React.FC<{ status: string; amount: number }> = ({ status, amount }) => {
+interface PaymentLabels {
+  captured: string;
+  authorized: string;
+  refunded: string;
+  failed: string;
+  pending: string;
+}
+
+const PaymentStatusBadge: React.FC<{ status: string; amount: number; labels: PaymentLabels; locale?: string }> = ({ status, amount, labels, locale = 'fr-FR' }) => {
   const getConfig = () => {
     switch (status) {
       case 'captured':
-        return { color: 'bg-green-100 text-green-800', label: 'Capturé' };
+        return { color: 'bg-green-100 text-green-800', label: labels.captured };
       case 'authorized':
-        return { color: 'bg-blue-100 text-blue-800', label: 'Autorisé' };
+        return { color: 'bg-blue-100 text-blue-800', label: labels.authorized };
       case 'refunded':
-        return { color: 'bg-orange-100 text-orange-800', label: 'Remboursé' };
+        return { color: 'bg-orange-100 text-orange-800', label: labels.refunded };
       case 'failed':
-        return { color: 'bg-red-100 text-red-800', label: 'Échoué' };
+        return { color: 'bg-red-100 text-red-800', label: labels.failed };
       case 'pending':
-        return { color: 'bg-yellow-100 text-yellow-800', label: 'En attente' };
+        return { color: 'bg-yellow-100 text-yellow-800', label: labels.pending };
       default:
         return { color: 'bg-gray-100 text-gray-800', label: status };
     }
@@ -182,7 +199,7 @@ const PaymentStatusBadge: React.FC<{ status: string; amount: number }> = ({ stat
         {config.label}
       </span>
       <div className="text-sm font-medium text-gray-900 mt-1">
-        {amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
+        {amount.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
       </div>
     </div>
   );
@@ -228,11 +245,23 @@ const DurationDisplay: React.FC<{
   );
 };
 
+interface ParticipantLabels {
+  provider: string;
+  client: string;
+  connected: string;
+  disconnected: string;
+  ringing: string;
+  noAnswer: string;
+  pending: string;
+  attempts: string;
+}
+
 const ParticipantInfo: React.FC<{
   participant: CallSession['participants']['provider'] | CallSession['participants']['client'];
   name?: string;
   type: 'provider' | 'client';
-}> = ({ participant, name, type }) => {
+  labels: ParticipantLabels;
+}> = ({ participant, name, type, labels }) => {
   const getStatusColor = () => {
     switch (participant.status) {
       case 'connected': return 'text-green-600';
@@ -243,6 +272,16 @@ const ParticipantInfo: React.FC<{
     }
   };
 
+  const getStatusLabel = () => {
+    switch (participant.status) {
+      case 'connected': return labels.connected;
+      case 'disconnected': return labels.disconnected;
+      case 'ringing': return labels.ringing;
+      case 'no_answer': return labels.noAnswer;
+      default: return labels.pending;
+    }
+  };
+
   return (
     <div className="flex items-center space-x-2">
       <div className="flex-shrink-0">
@@ -250,22 +289,18 @@ const ParticipantInfo: React.FC<{
       </div>
       <div className="min-w-0 flex-1">
         <div className="text-sm font-medium text-gray-900 truncate">
-          {name || (type === 'provider' ? 'Prestataire' : 'Client')}
+          {name || (type === 'provider' ? labels.provider : labels.client)}
         </div>
         <div className="text-xs text-gray-500 font-mono">
           {participant.phone}
         </div>
         <div className={`text-xs font-medium ${getStatusColor()}`}>
-          {participant.status === 'connected' ? 'Connecté' :
-           participant.status === 'disconnected' ? 'Déconnecté' :
-           participant.status === 'ringing' ? 'Sonnerie' :
-           participant.status === 'no_answer' ? 'Pas de réponse' :
-           'En attente'}
+          {getStatusLabel()}
         </div>
       </div>
       {participant.attemptCount > 1 && (
         <div className="text-xs text-orange-600 bg-orange-50 px-1 rounded">
-          {participant.attemptCount} essais
+          {participant.attemptCount} {labels.attempts}
         </div>
       )}
     </div>
@@ -277,7 +312,37 @@ const AdminCallsSessions: React.FC = () => {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
   const adminT = useAdminTranslations();
+  const callT = useCallAdminTranslations();
+  const intl = useIntl();
   const { language } = useApp();
+
+  // Translation objects for helper components
+  const statusLabels: StatusLabels = useMemo(() => ({
+    completed: callT.finished,
+    failed: callT.failed,
+    cancelled: callT.cancelled,
+    active: callT.inProgress,
+    pending: callT.waiting
+  }), [callT]);
+
+  const paymentLabels: PaymentLabels = useMemo(() => ({
+    captured: intl.formatMessage({ id: 'admin.callSessions.payment.captured', defaultMessage: 'Capturé' }),
+    authorized: intl.formatMessage({ id: 'admin.callSessions.payment.authorized', defaultMessage: 'Autorisé' }),
+    refunded: intl.formatMessage({ id: 'admin.callSessions.payment.refunded', defaultMessage: 'Remboursé' }),
+    failed: callT.failed,
+    pending: callT.waiting
+  }), [intl, callT]);
+
+  const participantLabels: ParticipantLabels = useMemo(() => ({
+    provider: intl.formatMessage({ id: 'admin.callSessions.provider', defaultMessage: 'Prestataire' }),
+    client: intl.formatMessage({ id: 'admin.callSessions.client', defaultMessage: 'Client' }),
+    connected: callT.connected,
+    disconnected: callT.disconnected,
+    ringing: callT.ringing,
+    noAnswer: callT.noAnswer,
+    pending: callT.waiting,
+    attempts: intl.formatMessage({ id: 'admin.callSessions.attempts', defaultMessage: 'essais' })
+  }), [intl, callT]);
 
   // States des données
   const [sessions, setSessions] = useState<CallSession[]>([]);
@@ -732,7 +797,7 @@ const AdminCallsSessions: React.FC = () => {
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Chargement de l'historique des sessions...</p>
+            <p className="text-gray-600">{intl.formatMessage({ id: 'admin.callSessions.loadingHistory', defaultMessage: "Chargement de l'historique des sessions..." })}</p>
           </div>
         </div>
       </AdminLayout>
@@ -748,13 +813,13 @@ const AdminCallsSessions: React.FC = () => {
             <div>
               <h1 className="text-2xl font-bold text-gray-900 flex items-center">
                 <Clock className="w-7 h-7 mr-2 text-blue-600" />
-                Historique des Sessions d'Appels
+                {intl.formatMessage({ id: 'admin.callSessions.title', defaultMessage: "Historique des Sessions d'Appels" })}
               </h1>
               <p className="text-gray-600 mt-1">
-                Consultation et analyse des sessions d'appels passées
+                {intl.formatMessage({ id: 'admin.callSessions.subtitle', defaultMessage: "Consultation et analyse des sessions d'appels passées" })}
               </p>
             </div>
-            
+
             <div className="flex items-center space-x-3">
               {sessionStats && (
                 <Button
@@ -763,10 +828,10 @@ const AdminCallsSessions: React.FC = () => {
                   className="flex items-center"
                 >
                   <BarChart3 size={16} className="mr-2" />
-                  Statistiques
+                  {intl.formatMessage({ id: 'admin.callSessions.statistics', defaultMessage: 'Statistiques' })}
                 </Button>
               )}
-              
+
               <Button
                 onClick={handleExportCSV}
                 variant="outline"
@@ -774,7 +839,7 @@ const AdminCallsSessions: React.FC = () => {
                 disabled={sessions.length === 0}
               >
                 <Download size={16} className="mr-2" />
-                Exporter CSV
+                {adminT.downloadCsv}
               </Button>
               
               <Button
@@ -783,7 +848,7 @@ const AdminCallsSessions: React.FC = () => {
                 className="flex items-center"
               >
                 <RefreshCw size={16} className="mr-2" />
-                Actualiser
+                {adminT.refresh}
               </Button>
             </div>
           </div>
@@ -794,7 +859,7 @@ const AdminCallsSessions: React.FC = () => {
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Total Sessions</p>
+                    <p className="text-sm font-medium text-gray-600">{intl.formatMessage({ id: 'admin.callSessions.totalSessions', defaultMessage: 'Total Sessions' })}</p>
                     <p className="text-2xl font-bold text-gray-900">{sessionStats.totalSessions}</p>
                   </div>
                   <div className="p-3 rounded-full bg-blue-100">
@@ -806,7 +871,7 @@ const AdminCallsSessions: React.FC = () => {
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Taux de Succès</p>
+                    <p className="text-sm font-medium text-gray-600">{intl.formatMessage({ id: 'admin.callSessions.successRate', defaultMessage: 'Taux de Succès' })}</p>
                     <p className="text-2xl font-bold text-gray-900">{sessionStats.successRate.toFixed(1)}%</p>
                   </div>
                   <div className="p-3 rounded-full bg-green-100">
@@ -818,8 +883,8 @@ const AdminCallsSessions: React.FC = () => {
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Revenus Total</p>
-                    <p className="text-2xl font-bold text-gray-900">{sessionStats.totalRevenue.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</p>
+                    <p className="text-sm font-medium text-gray-600">{intl.formatMessage({ id: 'admin.callSessions.totalRevenue', defaultMessage: 'Revenus Total' })}</p>
+                    <p className="text-2xl font-bold text-gray-900">{sessionStats.totalRevenue.toLocaleString(language, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</p>
                   </div>
                   <div className="p-3 rounded-full bg-purple-100">
                     <DollarSign className="w-6 h-6 text-purple-600" />
@@ -830,7 +895,7 @@ const AdminCallsSessions: React.FC = () => {
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Durée Moyenne</p>
+                    <p className="text-sm font-medium text-gray-600">{intl.formatMessage({ id: 'admin.callSessions.averageDuration', defaultMessage: 'Durée Moyenne' })}</p>
                     <p className="text-2xl font-bold text-gray-900">{Math.round(sessionStats.averageDuration / 60)}min</p>
                   </div>
                   <div className="p-3 rounded-full bg-orange-100">
@@ -846,60 +911,60 @@ const AdminCallsSessions: React.FC = () => {
             {/* Première ligne de filtres */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Statut session</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{intl.formatMessage({ id: 'admin.callSessions.sessionStatus', defaultMessage: 'Statut session' })}</label>
                 <select
                   value={filters.status}
                   onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="all">Tous les statuts</option>
-                  <option value="completed">✅ Terminé</option>
-                  <option value="active">🔵 Actif</option>
-                  <option value="pending">⏳ En attente</option>
-                  <option value="failed">❌ Échoué</option>
-                  <option value="cancelled">🚫 Annulé</option>
+                  <option value="all">{intl.formatMessage({ id: 'admin.callSessions.allStatuses', defaultMessage: 'Tous les statuts' })}</option>
+                  <option value="completed">✅ {statusLabels.completed}</option>
+                  <option value="active">🔵 {statusLabels.active}</option>
+                  <option value="pending">⏳ {statusLabels.pending}</option>
+                  <option value="failed">❌ {statusLabels.failed}</option>
+                  <option value="cancelled">🚫 {statusLabels.cancelled}</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Statut paiement</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{intl.formatMessage({ id: 'admin.callSessions.paymentStatus', defaultMessage: 'Statut paiement' })}</label>
                 <select
                   value={filters.paymentStatus}
                   onChange={(e) => setFilters(prev => ({ ...prev, paymentStatus: e.target.value }))}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="all">Tous les paiements</option>
-                  <option value="captured">💰 Capturé</option>
-                  <option value="authorized">🔒 Autorisé</option>
-                  <option value="refunded">↩️ Remboursé</option>
-                  <option value="failed">❌ Échoué</option>
-                  <option value="pending">⏳ En attente</option>
+                  <option value="all">{intl.formatMessage({ id: 'admin.callSessions.allPayments', defaultMessage: 'Tous les paiements' })}</option>
+                  <option value="captured">💰 {paymentLabels.captured}</option>
+                  <option value="authorized">🔒 {paymentLabels.authorized}</option>
+                  <option value="refunded">↩️ {paymentLabels.refunded}</option>
+                  <option value="failed">❌ {paymentLabels.failed}</option>
+                  <option value="pending">⏳ {paymentLabels.pending}</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Type service</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{intl.formatMessage({ id: 'admin.callSessions.serviceType', defaultMessage: 'Type de service' })}</label>
                 <select
                   value={filters.serviceType}
                   onChange={(e) => setFilters(prev => ({ ...prev, serviceType: e.target.value }))}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="all">Tous les services</option>
-                  <option value="lawyer_call">⚖️ Appel avocat</option>
-                  <option value="expat_call">🌍 Appel expatrié</option>
+                  <option value="all">{intl.formatMessage({ id: 'admin.callSessions.allServices', defaultMessage: 'Tous les services' })}</option>
+                  <option value="lawyer_call">⚖️ {intl.formatMessage({ id: 'admin.callSessions.lawyerCall', defaultMessage: 'Appel avocat' })}</option>
+                  <option value="expat_call">🌍 {intl.formatMessage({ id: 'admin.callSessions.expatCall', defaultMessage: 'Appel expatrié' })}</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Type prestataire</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{intl.formatMessage({ id: 'admin.callSessions.providerType', defaultMessage: 'Type prestataire' })}</label>
                 <select
                   value={filters.providerType}
                   onChange={(e) => setFilters(prev => ({ ...prev, providerType: e.target.value }))}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="all">Tous types</option>
-                  <option value="lawyer">⚖️ Avocat</option>
-                  <option value="expat">🌍 Expatrié</option>
+                  <option value="all">{intl.formatMessage({ id: 'admin.callSessions.allTypes', defaultMessage: 'Tous types' })}</option>
+                  <option value="lawyer">⚖️ {intl.formatMessage({ id: 'admin.callSessions.lawyer', defaultMessage: 'Avocat' })}</option>
+                  <option value="expat">🌍 {intl.formatMessage({ id: 'admin.callSessions.expat', defaultMessage: 'Expatrié' })}</option>
                 </select>
               </div>
             </div>
@@ -907,36 +972,38 @@ const AdminCallsSessions: React.FC = () => {
             {/* Deuxième ligne de filtres */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Période</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{intl.formatMessage({ id: 'admin.callSessions.dateRange', defaultMessage: 'Période' })}</label>
                 <select
                   value={filters.dateRange}
                   onChange={(e) => setFilters(prev => ({ ...prev, dateRange: e.target.value }))}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="1d">Dernières 24h</option>
-                  <option value="7d">7 derniers jours</option>
-                  <option value="30d">30 derniers jours</option>
-                  <option value="90d">90 derniers jours</option>
-                  <option value="all">Toutes les périodes</option>
+                  <option value="1d">{intl.formatMessage({ id: 'admin.callSessions.last24h', defaultMessage: 'Dernières 24h' })}</option>
+                  <option value="7d">{intl.formatMessage({ id: 'admin.callSessions.last7d', defaultMessage: '7 derniers jours' })}</option>
+                  <option value="30d">{intl.formatMessage({ id: 'admin.callSessions.last30d', defaultMessage: '30 derniers jours' })}</option>
+                  <option value="90d">{intl.formatMessage({ id: 'admin.callSessions.last90d', defaultMessage: '90 derniers jours' })}</option>
+                  <option value="all">{intl.formatMessage({ id: 'admin.callSessions.allTime', defaultMessage: 'Toutes les périodes' })}</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tri</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{intl.formatMessage({ id: 'admin.callSessions.sort', defaultMessage: 'Tri' })}</label>
                 <div className="flex space-x-2">
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as any)}
                     className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="createdAt">Date création</option>
-                    <option value="duration">Durée</option>
-                    <option value="amount">Montant</option>
+                    <option value="createdAt">{intl.formatMessage({ id: 'admin.callSessions.sortByDate', defaultMessage: 'Date création' })}</option>
+                    <option value="duration">{intl.formatMessage({ id: 'admin.callSessions.sortByDuration', defaultMessage: 'Durée' })}</option>
+                    <option value="amount">{intl.formatMessage({ id: 'admin.callSessions.sortByAmount', defaultMessage: 'Montant' })}</option>
                   </select>
                   <button
                     onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
                     className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    title={`Tri ${sortOrder === 'asc' ? 'croissant' : 'décroissant'}`}
+                    title={sortOrder === 'asc'
+                      ? intl.formatMessage({ id: 'admin.callSessions.sortAsc', defaultMessage: 'Tri croissant' })
+                      : intl.formatMessage({ id: 'admin.callSessions.sortDesc', defaultMessage: 'Tri décroissant' })}
                   >
                     <ArrowUpDown size={16} />
                   </button>
@@ -955,7 +1022,7 @@ const AdminCallsSessions: React.FC = () => {
                   })}
                   className="w-full px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  Réinitialiser les filtres
+                  {intl.formatMessage({ id: 'admin.callSessions.resetFilters', defaultMessage: 'Réinitialiser les filtres' })}
                 </button>
               </div>
             </div>
@@ -964,16 +1031,19 @@ const AdminCallsSessions: React.FC = () => {
               <div className="flex-1 relative">
                 <input
                   type="text"
-                  placeholder="Rechercher par ID session, nom, téléphone, Intent ID..."
+                  placeholder={intl.formatMessage({ id: 'admin.callSessions.searchPlaceholder', defaultMessage: 'Rechercher par ID session, nom, téléphone...' })}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
               </div>
-              
+
               <div className="text-sm text-gray-600">
-                {filteredSessions.length} session{filteredSessions.length > 1 ? 's' : ''} trouvée{filteredSessions.length > 1 ? 's' : ''}
+                {intl.formatMessage(
+                  { id: 'admin.callSessions.sessionsFound', defaultMessage: '{count} session(s) trouvée(s)' },
+                  { count: filteredSessions.length }
+                )}
               </div>
             </div>
           </div>
@@ -985,25 +1055,25 @@ const AdminCallsSessions: React.FC = () => {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Session
+                      {intl.formatMessage({ id: 'admin.callSessions.table.session', defaultMessage: 'Session' })}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Statut
+                      {intl.formatMessage({ id: 'admin.callSessions.table.status', defaultMessage: 'Statut' })}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Participants
+                      {intl.formatMessage({ id: 'admin.callSessions.table.participants', defaultMessage: 'Participants' })}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Durée
+                      {intl.formatMessage({ id: 'admin.callSessions.table.duration', defaultMessage: 'Durée' })}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Paiement
+                      {intl.formatMessage({ id: 'admin.callSessions.table.payment', defaultMessage: 'Paiement' })}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date
+                      {intl.formatMessage({ id: 'admin.callSessions.table.date', defaultMessage: 'Date' })}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
+                      {intl.formatMessage({ id: 'admin.callSessions.table.actions', defaultMessage: 'Actions' })}
                     </th>
                   </tr>
                 </thead>
@@ -1016,30 +1086,34 @@ const AdminCallsSessions: React.FC = () => {
                             {session.id.substring(0, 12)}...
                           </div>
                           <div className="text-xs text-gray-500">
-                            {session.metadata.serviceType === 'lawyer_call' ? '⚖️ Avocat' : '🌍 Expatrié'}
+                            {session.metadata.serviceType === 'lawyer_call'
+                              ? `⚖️ ${intl.formatMessage({ id: 'admin.callSessions.lawyer', defaultMessage: 'Avocat' })}`
+                              : `🌍 ${intl.formatMessage({ id: 'admin.callSessions.expat', defaultMessage: 'Expatrié' })}`}
                           </div>
                         </div>
                       </td>
                       
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <StatusBadge status={session.status} />
+                        <StatusBadge status={session.status} labels={statusLabels} />
                       </td>
-                      
+
                       <td className="px-6 py-4">
                         <div className="space-y-2">
                           <ParticipantInfo
                             participant={session.participants.provider}
                             name={session.metadata.providerName}
                             type="provider"
+                            labels={participantLabels}
                           />
                           <ParticipantInfo
                             participant={session.participants.client}
                             name={session.metadata.clientName}
                             type="client"
+                            labels={participantLabels}
                           />
                         </div>
                       </td>
-                      
+
                       <td className="px-6 py-4 whitespace-nowrap">
                         <DurationDisplay
                           duration={session.conference.duration}
@@ -1047,21 +1121,23 @@ const AdminCallsSessions: React.FC = () => {
                           endTime={session.conference.endedAt}
                         />
                       </td>
-                      
+
                       <td className="px-6 py-4 whitespace-nowrap">
                         <PaymentStatusBadge
                           status={session.payment.status}
                           amount={session.payment.amount}
+                          labels={paymentLabels}
+                          locale={language}
                         />
                       </td>
-                      
+
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
                           {formatDateTime(session.metadata.createdAt)}
                         </div>
                         {session.conference.startedAt && (
                           <div className="text-xs text-gray-500">
-                            Démarré: {formatDateTime(session.conference.startedAt)}
+                            {intl.formatMessage({ id: 'admin.callSessions.started', defaultMessage: 'Démarré' })}: {formatDateTime(session.conference.startedAt)}
                           </div>
                         )}
                       </td>
@@ -1074,24 +1150,24 @@ const AdminCallsSessions: React.FC = () => {
                               setShowDetailModal(true);
                             }}
                             className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="Voir détails"
+                            title={intl.formatMessage({ id: 'admin.callSessions.viewDetails', defaultMessage: 'Voir détails' })}
                           >
                             <Eye size={16} />
                           </button>
-                          
+
                           <button
                             onClick={() => copyToClipboard(session.id)}
                             className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
-                            title="Copier ID"
+                            title={intl.formatMessage({ id: 'admin.callSessions.copyId', defaultMessage: 'Copier ID' })}
                           >
                             <Copy size={16} />
                           </button>
-                          
+
                           {session.conference.recordingUrl && (
                             <button
                               onClick={() => window.open(session.conference.recordingUrl, '_blank')}
                               className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-colors"
-                              title="Écouter enregistrement"
+                              title={intl.formatMessage({ id: 'admin.callSessions.listenRecording', defaultMessage: 'Écouter enregistrement' })}
                             >
                               <Volume2 size={16} />
                             </button>
@@ -1108,9 +1184,11 @@ const AdminCallsSessions: React.FC = () => {
             {filteredSessions.length === 0 && (
               <div className="text-center py-12">
                 <Clock className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune session trouvée</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {intl.formatMessage({ id: 'admin.callSessions.noSessionsFound', defaultMessage: 'Aucune session trouvée' })}
+                </h3>
                 <p className="text-gray-600">
-                  Aucune session ne correspond aux critères de recherche sélectionnés.
+                  {intl.formatMessage({ id: 'admin.callSessions.noSessionsFoundDesc', defaultMessage: 'Aucune session ne correspond aux critères de recherche sélectionnés.' })}
                 </p>
               </div>
             )}
@@ -1135,7 +1213,7 @@ const AdminCallsSessions: React.FC = () => {
         <Modal
           isOpen={showDetailModal}
           onClose={() => setShowDetailModal(false)}
-          title="Détails de la session"
+          title={intl.formatMessage({ id: 'admin.callSessions.modal.sessionDetails', defaultMessage: 'Détails de la session' })}
           size="large"
         >
           {selectedSession && (
@@ -1144,16 +1222,18 @@ const AdminCallsSessions: React.FC = () => {
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    Session #{selectedSession.id}
+                    {intl.formatMessage({ id: 'admin.callSessions.sessionId', defaultMessage: 'Session' })} #{selectedSession.id}
                   </h3>
                   <div className="flex items-center space-x-3">
-                    <StatusBadge status={selectedSession.status} size="md" />
+                    <StatusBadge status={selectedSession.status} size="md" labels={statusLabels} />
                     <span className={`px-3 py-1 text-sm rounded-full ${
                       selectedSession.metadata.serviceType === 'lawyer_call'
                         ? 'bg-blue-100 text-blue-800'
                         : 'bg-green-100 text-green-800'
                     }`}>
-                      {selectedSession.metadata.serviceType === 'lawyer_call' ? '⚖️ Appel Avocat' : '🌍 Appel Expatrié'}
+                      {selectedSession.metadata.serviceType === 'lawyer_call'
+                        ? `⚖️ ${intl.formatMessage({ id: 'admin.callSessions.lawyerCall', defaultMessage: 'Appel Avocat' })}`
+                        : `🌍 ${intl.formatMessage({ id: 'admin.callSessions.expatCall', defaultMessage: 'Appel Expatrié' })}`}
                     </span>
                   </div>
                 </div>
@@ -1164,7 +1244,7 @@ const AdminCallsSessions: React.FC = () => {
                     endTime={selectedSession.conference.endedAt}
                   />
                   <div className="text-sm text-gray-500 mt-1">
-                    {selectedSession.payment.amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
+                    {selectedSession.payment.amount.toLocaleString(language, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
                   </div>
                 </div>
               </div>
@@ -1174,27 +1254,27 @@ const AdminCallsSessions: React.FC = () => {
                 <div>
                   <h4 className="font-medium text-gray-700 mb-3 flex items-center">
                     <Users className="mr-2" size={16} />
-                    Prestataire
+                    {participantLabels.provider}
                   </h4>
                   <div className="bg-gray-50 rounded-lg p-4 space-y-3">
                     <div>
-                      <span className="text-sm text-gray-600">Nom:</span>
-                      <span className="text-sm font-medium ml-2">{selectedSession.metadata.providerName || 'Non disponible'}</span>
+                      <span className="text-sm text-gray-600">{intl.formatMessage({ id: 'admin.callSessions.modal.name', defaultMessage: 'Nom' })}:</span>
+                      <span className="text-sm font-medium ml-2">{selectedSession.metadata.providerName || intl.formatMessage({ id: 'admin.callSessions.modal.notAvailable', defaultMessage: 'Non disponible' })}</span>
                     </div>
                     <div>
                       <span className="text-sm text-gray-600">ID:</span>
                       <span className="text-sm font-mono ml-2">{selectedSession.metadata.providerId.substring(0, 12)}...</span>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Téléphone:</span>
+                      <span className="text-sm text-gray-600">{intl.formatMessage({ id: 'admin.callSessions.modal.phone', defaultMessage: 'Téléphone' })}:</span>
                       <span className="text-sm font-mono ml-2">{selectedSession.participants.provider.phone}</span>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Statut:</span>
+                      <span className="text-sm text-gray-600">{intl.formatMessage({ id: 'admin.callSessions.modal.status', defaultMessage: 'Statut' })}:</span>
                       <span className="text-sm font-medium ml-2">{selectedSession.participants.provider.status}</span>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Tentatives:</span>
+                      <span className="text-sm text-gray-600">{intl.formatMessage({ id: 'admin.callSessions.modal.attempts', defaultMessage: 'Tentatives' })}:</span>
                       <span className="text-sm font-medium ml-2">{selectedSession.participants.provider.attemptCount}</span>
                     </div>
                   </div>
@@ -1203,27 +1283,27 @@ const AdminCallsSessions: React.FC = () => {
                 <div>
                   <h4 className="font-medium text-gray-700 mb-3 flex items-center">
                     <Users className="mr-2" size={16} />
-                    Client
+                    {participantLabels.client}
                   </h4>
                   <div className="bg-gray-50 rounded-lg p-4 space-y-3">
                     <div>
-                      <span className="text-sm text-gray-600">Nom:</span>
-                      <span className="text-sm font-medium ml-2">{selectedSession.metadata.clientName || 'Non disponible'}</span>
+                      <span className="text-sm text-gray-600">{intl.formatMessage({ id: 'admin.callSessions.modal.name', defaultMessage: 'Nom' })}:</span>
+                      <span className="text-sm font-medium ml-2">{selectedSession.metadata.clientName || intl.formatMessage({ id: 'admin.callSessions.modal.notAvailable', defaultMessage: 'Non disponible' })}</span>
                     </div>
                     <div>
                       <span className="text-sm text-gray-600">ID:</span>
                       <span className="text-sm font-mono ml-2">{selectedSession.metadata.clientId.substring(0, 12)}...</span>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Téléphone:</span>
+                      <span className="text-sm text-gray-600">{intl.formatMessage({ id: 'admin.callSessions.modal.phone', defaultMessage: 'Téléphone' })}:</span>
                       <span className="text-sm font-mono ml-2">{selectedSession.participants.client.phone}</span>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Statut:</span>
+                      <span className="text-sm text-gray-600">{intl.formatMessage({ id: 'admin.callSessions.modal.status', defaultMessage: 'Statut' })}:</span>
                       <span className="text-sm font-medium ml-2">{selectedSession.participants.client.status}</span>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Tentatives:</span>
+                      <span className="text-sm text-gray-600">{intl.formatMessage({ id: 'admin.callSessions.modal.attempts', defaultMessage: 'Tentatives' })}:</span>
                       <span className="text-sm font-medium ml-2">{selectedSession.participants.client.attemptCount}</span>
                     </div>
                   </div>
@@ -1235,15 +1315,15 @@ const AdminCallsSessions: React.FC = () => {
                 <div>
                   <h4 className="font-medium text-gray-700 mb-3 flex items-center">
                     <DollarSign className="mr-2" size={16} />
-                    Paiement
+                    {intl.formatMessage({ id: 'admin.callSessions.modal.payment', defaultMessage: 'Paiement' })}
                   </h4>
                   <div className="bg-gray-50 rounded-lg p-4 space-y-3">
                     <div>
-                      <span className="text-sm text-gray-600">Montant:</span>
-                      <span className="text-sm font-medium ml-2">{selectedSession.payment.amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</span>
+                      <span className="text-sm text-gray-600">{intl.formatMessage({ id: 'admin.callSessions.modal.amount', defaultMessage: 'Montant' })}:</span>
+                      <span className="text-sm font-medium ml-2">{selectedSession.payment.amount.toLocaleString(language, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</span>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Statut:</span>
+                      <span className="text-sm text-gray-600">{intl.formatMessage({ id: 'admin.callSessions.modal.status', defaultMessage: 'Statut' })}:</span>
                       <span className="text-sm font-medium ml-2">{selectedSession.payment.status}</span>
                     </div>
                     <div>
@@ -1256,19 +1336,19 @@ const AdminCallsSessions: React.FC = () => {
                 <div>
                   <h4 className="font-medium text-gray-700 mb-3 flex items-center">
                     <FileText className="mr-2" size={16} />
-                    Métadonnées
+                    {intl.formatMessage({ id: 'admin.callSessions.modal.metadata', defaultMessage: 'Métadonnées' })}
                   </h4>
                   <div className="bg-gray-50 rounded-lg p-4 space-y-3">
                     <div>
-                      <span className="text-sm text-gray-600">Type:</span>
+                      <span className="text-sm text-gray-600">{intl.formatMessage({ id: 'admin.callSessions.modal.type', defaultMessage: 'Type' })}:</span>
                       <span className="text-sm font-medium ml-2">{selectedSession.metadata.providerType}</span>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Durée max:</span>
+                      <span className="text-sm text-gray-600">{intl.formatMessage({ id: 'admin.callSessions.modal.maxDuration', defaultMessage: 'Durée max' })}:</span>
                       <span className="text-sm font-medium ml-2">{selectedSession.metadata.maxDuration / 60} min</span>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Créée:</span>
+                      <span className="text-sm text-gray-600">{intl.formatMessage({ id: 'admin.callSessions.modal.created', defaultMessage: 'Créée' })}:</span>
                       <span className="text-sm font-medium ml-2">{formatDateTime(selectedSession.metadata.createdAt)}</span>
                     </div>
                   </div>
@@ -1284,9 +1364,9 @@ const AdminCallsSessions: React.FC = () => {
                     className="flex items-center"
                   >
                     <Copy size={16} className="mr-2" />
-                    Copier ID
+                    {intl.formatMessage({ id: 'admin.callSessions.copyId', defaultMessage: 'Copier ID' })}
                   </Button>
-                  
+
                   {selectedSession.conference.recordingUrl && (
                     <Button
                       onClick={() => window.open(selectedSession.conference.recordingUrl, '_blank')}
@@ -1294,16 +1374,16 @@ const AdminCallsSessions: React.FC = () => {
                       className="flex items-center"
                     >
                       <ExternalLink size={16} className="mr-2" />
-                      Enregistrement
+                      {intl.formatMessage({ id: 'admin.callSessions.recording', defaultMessage: 'Enregistrement' })}
                     </Button>
                   )}
                 </div>
-                
+
                 <Button
                   onClick={() => setShowDetailModal(false)}
                   variant="primary"
                 >
-                  Fermer
+                  {intl.formatMessage({ id: 'admin.common.close', defaultMessage: 'Fermer' })}
                 </Button>
               </div>
             </div>
@@ -1314,7 +1394,7 @@ const AdminCallsSessions: React.FC = () => {
         <Modal
           isOpen={showStatsModal}
           onClose={() => setShowStatsModal(false)}
-          title="Statistiques détaillées"
+          title={intl.formatMessage({ id: 'admin.callSessions.modal.detailedStats', defaultMessage: 'Statistiques détaillées' })}
           size="large"
         >
           {sessionStats && (
@@ -1322,15 +1402,15 @@ const AdminCallsSessions: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="text-center p-6 bg-blue-50 rounded-lg">
                   <div className="text-3xl font-bold text-blue-600 mb-2">{sessionStats.totalSessions}</div>
-                  <div className="text-sm text-blue-800">Sessions Total</div>
+                  <div className="text-sm text-blue-800">{intl.formatMessage({ id: 'admin.callSessions.totalSessionsLabel', defaultMessage: 'Sessions Total' })}</div>
                 </div>
                 <div className="text-center p-6 bg-green-50 rounded-lg">
                   <div className="text-3xl font-bold text-green-600 mb-2">{sessionStats.completedSessions}</div>
-                  <div className="text-sm text-green-800">Sessions Réussies</div>
+                  <div className="text-sm text-green-800">{intl.formatMessage({ id: 'admin.callSessions.completedSessions', defaultMessage: 'Sessions Réussies' })}</div>
                 </div>
                 <div className="text-center p-6 bg-red-50 rounded-lg">
                   <div className="text-3xl font-bold text-red-600 mb-2">{sessionStats.failedSessions}</div>
-                  <div className="text-sm text-red-800">Sessions Échouées</div>
+                  <div className="text-sm text-red-800">{intl.formatMessage({ id: 'admin.callSessions.failedSessions', defaultMessage: 'Sessions Échouées' })}</div>
                 </div>
               </div>
 
@@ -1339,7 +1419,7 @@ const AdminCallsSessions: React.FC = () => {
                   onClick={() => setShowStatsModal(false)}
                   variant="primary"
                 >
-                  Fermer
+                  {intl.formatMessage({ id: 'admin.common.close', defaultMessage: 'Fermer' })}
                 </Button>
               </div>
             </div>

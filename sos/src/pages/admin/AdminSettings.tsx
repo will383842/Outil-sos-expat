@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useIntl } from "react-intl";
 import { useAdminTranslations } from "../../utils/adminTranslations";
 import { useNavigate } from "react-router-dom";
 import {
@@ -68,6 +69,7 @@ const defaultSystemSettings: AdminSystemSettings = {
 
 const AdminSettings: React.FC = () => {
   const navigate = useNavigate();
+  const intl = useIntl();
   const { user: currentUser } = useAuth();
   const adminT = useAdminTranslations();
   const [isLoading, setIsLoading] = useState(false);
@@ -108,16 +110,16 @@ const AdminSettings: React.FC = () => {
           const manifest = await response.json();
           newStatus.manifest = {
             status: manifest.name ? 'ok' : 'error',
-            message: manifest.name ? `${manifest.name}` : 'Manifest incomplet'
+            message: manifest.name ? `${manifest.name}` : intl.formatMessage({ id: 'admin.settings.pwa.manifestIncomplete' })
           };
         } else {
-          newStatus.manifest = { status: 'error', message: 'Manifest non accessible' };
+          newStatus.manifest = { status: 'error', message: intl.formatMessage({ id: 'admin.settings.pwa.manifestNotAccessible' }) };
         }
       } else {
-        newStatus.manifest = { status: 'error', message: 'Manifest non trouvé' };
+        newStatus.manifest = { status: 'error', message: intl.formatMessage({ id: 'admin.settings.pwa.manifestNotFound' }) };
       }
     } catch {
-      newStatus.manifest = { status: 'error', message: 'Erreur de chargement' };
+      newStatus.manifest = { status: 'error', message: intl.formatMessage({ id: 'admin.settings.pwa.loadError' }) };
     }
 
     // Vérifier le Service Worker
@@ -125,17 +127,17 @@ const AdminSettings: React.FC = () => {
       try {
         const registration = await navigator.serviceWorker.getRegistration();
         if (registration?.active) {
-          newStatus.serviceWorker = { status: 'ok', message: 'Actif' };
+          newStatus.serviceWorker = { status: 'ok', message: intl.formatMessage({ id: 'admin.settings.pwa.swActive' }) };
         } else if (registration?.installing || registration?.waiting) {
-          newStatus.serviceWorker = { status: 'ok', message: 'En cours d\'installation' };
+          newStatus.serviceWorker = { status: 'ok', message: intl.formatMessage({ id: 'admin.settings.pwa.swInstalling' }) };
         } else {
-          newStatus.serviceWorker = { status: 'error', message: 'Non enregistré' };
+          newStatus.serviceWorker = { status: 'error', message: intl.formatMessage({ id: 'admin.settings.pwa.swNotRegistered' }) };
         }
       } catch {
-        newStatus.serviceWorker = { status: 'error', message: 'Erreur de vérification' };
+        newStatus.serviceWorker = { status: 'error', message: intl.formatMessage({ id: 'admin.settings.pwa.swVerifyError' }) };
       }
     } else {
-      newStatus.serviceWorker = { status: 'error', message: 'Non supporté' };
+      newStatus.serviceWorker = { status: 'error', message: intl.formatMessage({ id: 'admin.settings.pwa.swNotSupported' }) };
     }
 
     // Vérifier les icônes (via manifest)
@@ -145,13 +147,13 @@ const AdminSettings: React.FC = () => {
         const response = await fetch((manifestLink as HTMLLinkElement).href);
         const manifest = await response.json();
         if (manifest.icons && manifest.icons.length > 0) {
-          newStatus.icons = { status: 'ok', message: `${manifest.icons.length} icônes` };
+          newStatus.icons = { status: 'ok', message: intl.formatMessage({ id: 'admin.settings.pwa.iconsCount' }, { count: manifest.icons.length }) };
         } else {
-          newStatus.icons = { status: 'error', message: 'Aucune icône définie' };
+          newStatus.icons = { status: 'error', message: intl.formatMessage({ id: 'admin.settings.pwa.noIcons' }) };
         }
       }
     } catch {
-      newStatus.icons = { status: 'error', message: 'Impossible de vérifier' };
+      newStatus.icons = { status: 'error', message: intl.formatMessage({ id: 'admin.settings.pwa.cannotVerify' }) };
     }
 
     // Vérifier le mode hors ligne (via Cache API)
@@ -159,15 +161,15 @@ const AdminSettings: React.FC = () => {
       try {
         const cacheNames = await caches.keys();
         if (cacheNames.length > 0) {
-          newStatus.offline = { status: 'ok', message: `${cacheNames.length} caches actifs` };
+          newStatus.offline = { status: 'ok', message: intl.formatMessage({ id: 'admin.settings.pwa.activeCaches' }, { count: cacheNames.length }) };
         } else {
-          newStatus.offline = { status: 'error', message: 'Aucun cache' };
+          newStatus.offline = { status: 'error', message: intl.formatMessage({ id: 'admin.settings.pwa.noCache' }) };
         }
       } catch {
-        newStatus.offline = { status: 'error', message: 'Erreur de vérification' };
+        newStatus.offline = { status: 'error', message: intl.formatMessage({ id: 'admin.settings.pwa.swVerifyError' }) };
       }
     } else {
-      newStatus.offline = { status: 'error', message: 'Cache API non supportée' };
+      newStatus.offline = { status: 'error', message: intl.formatMessage({ id: 'admin.settings.pwa.cacheNotSupported' }) };
     }
 
     setPwaStatus(newStatus);
@@ -223,10 +225,10 @@ const AdminSettings: React.FC = () => {
         },
         { merge: true }
       );
-      alert("Paramètres système sauvegardés avec succès");
+      alert(intl.formatMessage({ id: 'admin.settings.common.saveSuccess' }));
     } catch (error) {
       console.error("Error saving system settings:", error);
-      alert("Erreur lors de la sauvegarde des paramètres");
+      alert(intl.formatMessage({ id: 'admin.settings.common.saveError' }));
     } finally {
       setIsSavingSystem(false);
     }
@@ -275,10 +277,10 @@ const AdminSettings: React.FC = () => {
       });
 
       setShowMapSettingsModal(false);
-      alert("Paramètres de la carte mis à jour avec succès");
+      alert(intl.formatMessage({ id: 'admin.settings.map.saveSuccess' }));
     } catch (error) {
       console.error("Error saving map settings:", error);
-      alert("Erreur lors de la sauvegarde des paramètres de la carte");
+      alert(intl.formatMessage({ id: 'admin.settings.map.saveError' }));
     } finally {
       setIsLoading(false);
     }
@@ -287,7 +289,7 @@ const AdminSettings: React.FC = () => {
   const handleBackupNow = async () => {
     try {
       setIsLoading(true);
-      setBackupStatus("Sauvegarde en cours...");
+      setBackupStatus(intl.formatMessage({ id: 'admin.settings.backups.inProgress' }));
 
       // ✅ Get functions instance with europe-west1 region
       const europeFunctions = getFunctions(undefined, "europe-west1");
@@ -299,13 +301,11 @@ const AdminSettings: React.FC = () => {
       );
       const result = await backupFunction();
 
-      console.log("Backup result:", result.data);
-
-      setBackupStatus("Sauvegarde terminée avec succès");
+      setBackupStatus(intl.formatMessage({ id: 'admin.settings.backups.success' }));
       setTimeout(() => setBackupStatus(""), 3000);
     } catch (error) {
       console.error("Error creating backup:", error);
-      setBackupStatus("Erreur lors de la sauvegarde");
+      setBackupStatus(intl.formatMessage({ id: 'admin.settings.backups.error' }));
     } finally {
       setIsLoading(false);
     }
@@ -317,11 +317,11 @@ const AdminSettings: React.FC = () => {
       setTestResults([]);
 
       const tests = [
-        { name: "Connexion Firebase", status: "running" },
-        { name: "API Stripe", status: "running" },
-        { name: "Service Twilio", status: "running" },
-        { name: "Génération PDF", status: "running" },
-        { name: "Upload fichiers", status: "running" },
+        { name: intl.formatMessage({ id: 'admin.settings.tests.firebaseConnection' }), status: "running" },
+        { name: intl.formatMessage({ id: 'admin.settings.tests.stripeApi' }), status: "running" },
+        { name: intl.formatMessage({ id: 'admin.settings.tests.twilioService' }), status: "running" },
+        { name: intl.formatMessage({ id: 'admin.settings.tests.pdfGeneration' }), status: "running" },
+        { name: intl.formatMessage({ id: 'admin.settings.tests.fileUpload' }), status: "running" },
       ];
 
       setTestResults(tests);
@@ -425,11 +425,13 @@ const AdminSettings: React.FC = () => {
       );
 
       alert(
-        `Remboursement ${action === "approve" ? "approuvé" : "rejeté"} avec succès`
+        action === "approve"
+          ? intl.formatMessage({ id: 'admin.settings.refunds.approveSuccess' })
+          : intl.formatMessage({ id: 'admin.settings.refunds.rejectSuccess' })
       );
     } catch (error) {
       console.error("Error processing refund:", error);
-      alert("Erreur lors du traitement du remboursement");
+      alert(intl.formatMessage({ id: 'admin.settings.refunds.error' }));
     } finally {
       setIsLoading(false);
     }
@@ -441,19 +443,17 @@ const AdminSettings: React.FC = () => {
 
       // This would typically require Firebase Admin SDK
       // For now, we'll show instructions
-      alert(
-        "Pour créer les index automatiquement, exécutez la commande suivante dans votre terminal :\n\nfirebase deploy --only firestore:indexes"
-      );
+      alert(intl.formatMessage({ id: 'admin.settings.firebase.instructions' }));
     } catch (error) {
       console.error("Error creating indexes:", error);
-      alert("Erreur lors de la création des index");
+      alert(intl.formatMessage({ id: 'admin.settings.firebase.error' }));
     } finally {
       setIsLoading(false);
     }
   };
 
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat("fr-FR", {
+    return new Intl.DateTimeFormat(intl.locale, {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -480,7 +480,7 @@ const AdminSettings: React.FC = () => {
       <div className="px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold text-gray-900">
-            Paramètres de la plateforme
+            {intl.formatMessage({ id: 'admin.settings.title' })}
           </h1>
         </div>
 
@@ -492,12 +492,12 @@ const AdminSettings: React.FC = () => {
               <div className="flex items-center">
                 <Database className="w-6 h-6 text-green-600 mr-3" />
                 <h3 className="text-lg font-semibold text-gray-900">
-                  Sauvegardes
+                  {intl.formatMessage({ id: 'admin.settings.backups.title' })}
                 </h3>
               </div>
             </div>
             <p className="text-gray-600 mb-4">
-              Sauvegarde automatique toutes les 12h
+              {intl.formatMessage({ id: 'admin.settings.backups.description' })}
             </p>
             {backupStatus && (
               <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
@@ -510,7 +510,7 @@ const AdminSettings: React.FC = () => {
               className="w-full"
             >
               <Download className="w-4 h-4 mr-2" />
-              Sauvegarder maintenant
+              {intl.formatMessage({ id: 'admin.settings.backups.button' })}
             </Button>
           </div>
 
@@ -520,12 +520,12 @@ const AdminSettings: React.FC = () => {
               <div className="flex items-center">
                 <TestTube className="w-6 h-6 text-purple-600 mr-3" />
                 <h3 className="text-lg font-semibold text-gray-900">
-                  Mode test
+                  {intl.formatMessage({ id: 'admin.settings.testMode.title' })}
                 </h3>
               </div>
             </div>
             <p className="text-gray-600 mb-4">
-              Tester les fonctionnalités critiques
+              {intl.formatMessage({ id: 'admin.settings.testMode.description' })}
             </p>
             <Button
               onClick={() => navigate("/test-production")}
@@ -533,7 +533,7 @@ const AdminSettings: React.FC = () => {
               className="w-full"
             >
               <TestTube className="w-4 h-4 mr-2" />
-              Ouvrir la page de test
+              {intl.formatMessage({ id: 'admin.settings.testMode.button' })}
             </Button>
           </div>
 
@@ -543,7 +543,7 @@ const AdminSettings: React.FC = () => {
               <div className="flex items-center">
                 <CreditCard className="w-6 h-6 text-red-600 mr-3" />
                 <h3 className="text-lg font-semibold text-gray-900">
-                  Remboursements
+                  {intl.formatMessage({ id: 'admin.settings.refunds.title' })}
                 </h3>
               </div>
               {pendingRefunds.length > 0 && (
@@ -553,7 +553,7 @@ const AdminSettings: React.FC = () => {
               )}
             </div>
             <p className="text-gray-600 mb-4">
-              Gérer les demandes de remboursement
+              {intl.formatMessage({ id: 'admin.settings.refunds.description' })}
             </p>
             <Button
               onClick={() => setShowRefundModal(true)}
@@ -561,7 +561,7 @@ const AdminSettings: React.FC = () => {
               className="w-full"
             >
               <CreditCard className="w-4 h-4 mr-2" />
-              Voir les demandes
+              {intl.formatMessage({ id: 'admin.settings.refunds.button' })}
             </Button>
           </div>
 
@@ -571,12 +571,12 @@ const AdminSettings: React.FC = () => {
               <div className="flex items-center">
                 <Smartphone className="w-6 h-6 text-indigo-600 mr-3" />
                 <h3 className="text-lg font-semibold text-gray-900">
-                  Application PWA
+                  {intl.formatMessage({ id: 'admin.settings.pwa.title' })}
                 </h3>
               </div>
             </div>
             <p className="text-gray-600 mb-4">
-              Configuration de l'app installable
+              {intl.formatMessage({ id: 'admin.settings.pwa.description' })}
             </p>
             <Button
               onClick={() => setShowPWAModal(true)}
@@ -584,7 +584,7 @@ const AdminSettings: React.FC = () => {
               className="w-full"
             >
               <Smartphone className="w-4 h-4 mr-2" />
-              Configurer PWA
+              {intl.formatMessage({ id: 'admin.settings.pwa.button' })}
             </Button>
           </div>
 
@@ -594,12 +594,12 @@ const AdminSettings: React.FC = () => {
               <div className="flex items-center">
                 <Map className="w-6 h-6 text-purple-600 mr-3" />
                 <h3 className="text-lg font-semibold text-gray-900">
-                  Paramètres de la carte
+                  {intl.formatMessage({ id: 'admin.settings.map.title' })}
                 </h3>
               </div>
             </div>
             <p className="text-gray-600 mb-4">
-              Configuration de l'affichage de la carte mondiale
+              {intl.formatMessage({ id: 'admin.settings.map.description' })}
             </p>
             <Button
               onClick={() => setShowMapSettingsModal(true)}
@@ -607,7 +607,7 @@ const AdminSettings: React.FC = () => {
               className="w-full"
             >
               <Map className="w-4 h-4 mr-2" />
-              Configurer la carte
+              {intl.formatMessage({ id: 'admin.settings.map.button' })}
             </Button>
           </div>
 
@@ -617,12 +617,12 @@ const AdminSettings: React.FC = () => {
               <div className="flex items-center">
                 <Shield className="w-6 h-6 text-orange-600 mr-3" />
                 <h3 className="text-lg font-semibold text-gray-900">
-                  Index Firebase
+                  {intl.formatMessage({ id: 'admin.settings.firebase.title' })}
                 </h3>
               </div>
             </div>
             <p className="text-gray-600 mb-4">
-              Créer tous les index nécessaires
+              {intl.formatMessage({ id: 'admin.settings.firebase.description' })}
             </p>
             <Button
               onClick={handleCreateIndexes}
@@ -631,7 +631,7 @@ const AdminSettings: React.FC = () => {
               disabled={isLoading}
             >
               <Upload className="w-4 h-4 mr-2" />
-              Créer les index
+              {intl.formatMessage({ id: 'admin.settings.firebase.button' })}
             </Button>
           </div>
 
@@ -641,12 +641,12 @@ const AdminSettings: React.FC = () => {
               <div className="flex items-center">
                 <Phone className="w-6 h-6 text-blue-600 mr-3" />
                 <h3 className="text-lg font-semibold text-gray-900">
-                  Paramètres Twilio
+                  {intl.formatMessage({ id: 'admin.settings.twilio.title' })}
                 </h3>
               </div>
             </div>
             <p className="text-gray-600 mb-4">
-              Configuration des appels téléphoniques
+              {intl.formatMessage({ id: 'admin.settings.twilio.description' })}
             </p>
             <Button
               onClick={() => setShowTwilioModal(true)}
@@ -654,7 +654,7 @@ const AdminSettings: React.FC = () => {
               className="w-full"
             >
               <Phone className="w-4 h-4 mr-2" />
-              Configurer Twilio
+              {intl.formatMessage({ id: 'admin.settings.twilio.button' })}
             </Button>
           </div>
 
@@ -664,12 +664,12 @@ const AdminSettings: React.FC = () => {
               <div className="flex items-center">
                 <Bell className="w-6 h-6 text-yellow-600 mr-3" />
                 <h3 className="text-lg font-semibold text-gray-900">
-                  Notifications système
+                  {intl.formatMessage({ id: 'admin.settings.notifications.title' })}
                 </h3>
               </div>
             </div>
             <p className="text-gray-600 mb-4">
-              Activer/désactiver les canaux de notification
+              {intl.formatMessage({ id: 'admin.settings.notifications.description' })}
             </p>
             <Button
               onClick={() => setShowNotificationsModal(true)}
@@ -677,7 +677,7 @@ const AdminSettings: React.FC = () => {
               className="w-full"
             >
               <Bell className="w-4 h-4 mr-2" />
-              Configurer les notifications
+              {intl.formatMessage({ id: 'admin.settings.notifications.button' })}
             </Button>
           </div>
         </div>
@@ -687,14 +687,13 @@ const AdminSettings: React.FC = () => {
       <Modal
         isOpen={showTestModal}
         onClose={() => setShowTestModal(false)}
-        title="Tests de la plateforme"
+        title={intl.formatMessage({ id: 'admin.settings.tests.modalTitle' })}
         size="large"
       >
         <div className="space-y-4">
           <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
             <p className="text-sm text-blue-800">
-              Ces tests vérifient le bon fonctionnement des services critiques
-              de la plateforme.
+              {intl.formatMessage({ id: 'admin.settings.tests.description' })}
             </p>
           </div>
 
@@ -714,10 +713,10 @@ const AdminSettings: React.FC = () => {
 
           <div className="flex justify-end space-x-3">
             <Button onClick={() => setShowTestModal(false)} variant="outline">
-              Fermer
+              {intl.formatMessage({ id: 'admin.settings.common.close' })}
             </Button>
             <Button onClick={handleRunTests} disabled={isLoading}>
-              {isLoading ? "Tests en cours..." : "Lancer les tests"}
+              {isLoading ? intl.formatMessage({ id: 'admin.settings.tests.running' }) : intl.formatMessage({ id: 'admin.settings.tests.runTests' })}
             </Button>
           </div>
         </div>
@@ -727,7 +726,7 @@ const AdminSettings: React.FC = () => {
       <Modal
         isOpen={showRefundModal}
         onClose={() => setShowRefundModal(false)}
-        title="Demandes de remboursement"
+        title={intl.formatMessage({ id: 'admin.settings.refunds.modalTitle' })}
         size="large"
       >
         <div className="space-y-4">
@@ -743,10 +742,10 @@ const AdminSettings: React.FC = () => {
                       {refund.clientName}
                     </h4>
                     <p className="text-sm text-gray-500">
-                      Montant: {Number(refund.amount).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
+                      {intl.formatMessage({ id: 'admin.settings.refunds.amount' })}: {Number(refund.amount).toLocaleString(intl.locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
                     </p>
                     <p className="text-sm text-gray-500">
-                      Date: {formatDate(refund.createdAt)}
+                      {intl.formatMessage({ id: 'admin.settings.refunds.date' })}: {formatDate(refund.createdAt)}
                     </p>
                   </div>
                   <div className="flex space-x-2">
@@ -756,7 +755,7 @@ const AdminSettings: React.FC = () => {
                       className="bg-green-600 hover:bg-green-700"
                       disabled={isLoading}
                     >
-                      Approuver
+                      {intl.formatMessage({ id: 'admin.settings.refunds.approve' })}
                     </Button>
                     <Button
                       onClick={() => handleRefundAction(refund.id, "reject")}
@@ -765,7 +764,7 @@ const AdminSettings: React.FC = () => {
                       className="text-red-600 border-red-600 hover:bg-red-50"
                       disabled={isLoading}
                     >
-                      Rejeter
+                      {intl.formatMessage({ id: 'admin.settings.refunds.reject' })}
                     </Button>
                   </div>
                 </div>
@@ -784,20 +783,20 @@ const AdminSettings: React.FC = () => {
       <Modal
         isOpen={showMapSettingsModal}
         onClose={() => setShowMapSettingsModal(false)}
-        title="Paramètres de la carte"
+        title={intl.formatMessage({ id: 'admin.settings.map.modalTitle' })}
         size="medium"
       >
         <div className="space-y-4">
           <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
             <p className="text-sm text-blue-800">
-              Configurez l'affichage de la carte mondiale sur la plateforme.
+              {intl.formatMessage({ id: 'admin.settings.map.modalDescription' })}
             </p>
           </div>
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <label className="text-gray-700 font-medium">
-                Afficher la carte sur la page d'accueil
+                {intl.formatMessage({ id: 'admin.settings.map.showOnHomePage' })}
               </label>
               <div className="relative inline-block w-12 h-6 transition duration-200 ease-in-out rounded-full cursor-pointer">
                 <input
@@ -838,14 +837,14 @@ const AdminSettings: React.FC = () => {
               variant="outline"
               disabled={isLoading}
             >
-              Annuler
+              {intl.formatMessage({ id: 'admin.settings.common.cancel' })}
             </Button>
             <Button
               onClick={handleSaveMapSettings}
               className="bg-blue-600 hover:bg-blue-700"
               loading={isLoading}
             >
-              Enregistrer les paramètres
+              {intl.formatMessage({ id: 'admin.settings.common.saveSettings' })}
             </Button>
           </div>
         </div>
@@ -855,7 +854,7 @@ const AdminSettings: React.FC = () => {
       <Modal
         isOpen={showPWAModal}
         onClose={() => setShowPWAModal(false)}
-        title="Configuration PWA"
+        title={intl.formatMessage({ id: 'admin.settings.pwa.modalTitle' })}
         size="medium"
       >
         <div className="space-y-4">
@@ -866,12 +865,11 @@ const AdminSettings: React.FC = () => {
                 <CheckCircle className="h-5 w-5 text-green-400" />
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-green-800">
-                    PWA entièrement configurée
+                    {intl.formatMessage({ id: 'admin.settings.pwa.fullyConfigured' })}
                   </h3>
                   <div className="mt-2 text-sm text-green-700">
                     <p>
-                      L'application est configurée comme PWA installable. Les
-                      utilisateurs peuvent l'installer depuis leur navigateur.
+                      {intl.formatMessage({ id: 'admin.settings.pwa.fullyConfiguredDescription' })}
                     </p>
                   </div>
                 </div>
@@ -883,11 +881,11 @@ const AdminSettings: React.FC = () => {
                 <AlertTriangle className="h-5 w-5 text-yellow-400" />
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-yellow-800">
-                    Configuration PWA partielle
+                    {intl.formatMessage({ id: 'admin.settings.pwa.partialConfig' })}
                   </h3>
                   <div className="mt-2 text-sm text-yellow-700">
                     <p>
-                      Certains éléments PWA nécessitent votre attention.
+                      {intl.formatMessage({ id: 'admin.settings.pwa.partialConfigDescription' })}
                     </p>
                   </div>
                 </div>
@@ -899,7 +897,7 @@ const AdminSettings: React.FC = () => {
                 <RefreshCw className="h-5 w-5 text-blue-400 animate-spin" />
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-blue-800">
-                    Vérification en cours...
+                    {intl.formatMessage({ id: 'admin.settings.pwa.checking' })}
                   </h3>
                 </div>
               </div>
@@ -908,27 +906,27 @@ const AdminSettings: React.FC = () => {
 
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Manifest:</span>
+              <span className="text-gray-600">{intl.formatMessage({ id: 'admin.settings.pwa.manifest' })}:</span>
               <span className={`font-medium ${pwaStatus.manifest.status === 'ok' ? 'text-green-600' : pwaStatus.manifest.status === 'error' ? 'text-red-600' : 'text-gray-400'}`}>
-                {pwaStatus.manifest.status === 'ok' ? '✓' : pwaStatus.manifest.status === 'error' ? '✗' : '...'} {pwaStatus.manifest.message || 'Vérification...'}
+                {pwaStatus.manifest.status === 'ok' ? '✓' : pwaStatus.manifest.status === 'error' ? '✗' : '...'} {pwaStatus.manifest.message || intl.formatMessage({ id: 'admin.settings.pwa.statusVerifying' })}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Service Worker:</span>
+              <span className="text-gray-600">{intl.formatMessage({ id: 'admin.settings.pwa.serviceWorker' })}:</span>
               <span className={`font-medium ${pwaStatus.serviceWorker.status === 'ok' ? 'text-green-600' : pwaStatus.serviceWorker.status === 'error' ? 'text-red-600' : 'text-gray-400'}`}>
-                {pwaStatus.serviceWorker.status === 'ok' ? '✓' : pwaStatus.serviceWorker.status === 'error' ? '✗' : '...'} {pwaStatus.serviceWorker.message || 'Vérification...'}
+                {pwaStatus.serviceWorker.status === 'ok' ? '✓' : pwaStatus.serviceWorker.status === 'error' ? '✗' : '...'} {pwaStatus.serviceWorker.message || intl.formatMessage({ id: 'admin.settings.pwa.statusVerifying' })}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Icônes:</span>
+              <span className="text-gray-600">{intl.formatMessage({ id: 'admin.settings.pwa.icons' })}:</span>
               <span className={`font-medium ${pwaStatus.icons.status === 'ok' ? 'text-green-600' : pwaStatus.icons.status === 'error' ? 'text-red-600' : 'text-gray-400'}`}>
-                {pwaStatus.icons.status === 'ok' ? '✓' : pwaStatus.icons.status === 'error' ? '✗' : '...'} {pwaStatus.icons.message || 'Vérification...'}
+                {pwaStatus.icons.status === 'ok' ? '✓' : pwaStatus.icons.status === 'error' ? '✗' : '...'} {pwaStatus.icons.message || intl.formatMessage({ id: 'admin.settings.pwa.statusVerifying' })}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Mode hors ligne:</span>
+              <span className="text-gray-600">{intl.formatMessage({ id: 'admin.settings.pwa.offlineMode' })}:</span>
               <span className={`font-medium ${pwaStatus.offline.status === 'ok' ? 'text-green-600' : pwaStatus.offline.status === 'error' ? 'text-red-600' : 'text-gray-400'}`}>
-                {pwaStatus.offline.status === 'ok' ? '✓' : pwaStatus.offline.status === 'error' ? '✗' : '...'} {pwaStatus.offline.message || 'Vérification...'}
+                {pwaStatus.offline.status === 'ok' ? '✓' : pwaStatus.offline.status === 'error' ? '✗' : '...'} {pwaStatus.offline.message || intl.formatMessage({ id: 'admin.settings.pwa.statusVerifying' })}
               </span>
             </div>
           </div>
@@ -940,7 +938,7 @@ const AdminSettings: React.FC = () => {
               className="w-full"
             >
               <RefreshCw className="w-4 h-4 mr-2" />
-              Revérifier le statut PWA
+              {intl.formatMessage({ id: 'admin.settings.pwa.recheckButton' })}
             </Button>
           </div>
         </div>
@@ -950,21 +948,20 @@ const AdminSettings: React.FC = () => {
       <Modal
         isOpen={showTwilioModal}
         onClose={() => setShowTwilioModal(false)}
-        title="Paramètres Twilio"
+        title={intl.formatMessage({ id: 'admin.settings.twilio.modalTitle' })}
         size="medium"
       >
         <div className="space-y-6">
           <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
             <p className="text-sm text-blue-800">
-              Configurez les paramètres des appels téléphoniques via Twilio.
-              Ces paramètres affectent le comportement des appels sur toute la plateforme.
+              {intl.formatMessage({ id: 'admin.settings.twilio.modalDescription' })}
             </p>
           </div>
 
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nombre maximum de tentatives d'appel
+                {intl.formatMessage({ id: 'admin.settings.twilio.maxAttempts' })}
               </label>
               <input
                 type="number"
@@ -983,13 +980,13 @@ const AdminSettings: React.FC = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <p className="mt-1 text-xs text-gray-500">
-                Nombre de fois où le système tentera d'appeler avant d'abandonner (1-10)
+                {intl.formatMessage({ id: 'admin.settings.twilio.maxAttemptsHelp' })}
               </p>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Délai d'attente (secondes)
+                {intl.formatMessage({ id: 'admin.settings.twilio.timeout' })}
               </label>
               <input
                 type="number"
@@ -1008,7 +1005,7 @@ const AdminSettings: React.FC = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <p className="mt-1 text-xs text-gray-500">
-                Temps d'attente avant de considérer l'appel comme sans réponse (10-120s)
+                {intl.formatMessage({ id: 'admin.settings.twilio.timeoutHelp' })}
               </p>
             </div>
           </div>
@@ -1018,7 +1015,7 @@ const AdminSettings: React.FC = () => {
               onClick={() => setShowTwilioModal(false)}
               variant="outline"
             >
-              Annuler
+              {intl.formatMessage({ id: 'admin.settings.common.cancel' })}
             </Button>
             <Button
               onClick={async () => {
@@ -1029,7 +1026,7 @@ const AdminSettings: React.FC = () => {
               loading={isSavingSystem}
             >
               <Save className="w-4 h-4 mr-2" />
-              Enregistrer
+              {intl.formatMessage({ id: 'admin.settings.common.save' })}
             </Button>
           </div>
         </div>
@@ -1039,14 +1036,13 @@ const AdminSettings: React.FC = () => {
       <Modal
         isOpen={showNotificationsModal}
         onClose={() => setShowNotificationsModal(false)}
-        title="Notifications système"
+        title={intl.formatMessage({ id: 'admin.settings.notifications.modalTitle' })}
         size="medium"
       >
         <div className="space-y-6">
           <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
             <p className="text-sm text-yellow-800">
-              Activez ou désactivez les différents canaux de notification.
-              Ces paramètres s'appliquent à l'ensemble de la plateforme.
+              {intl.formatMessage({ id: 'admin.settings.notifications.modalDescription' })}
             </p>
           </div>
 
@@ -1056,8 +1052,8 @@ const AdminSettings: React.FC = () => {
               <div className="flex items-center">
                 <Mail className="w-5 h-5 text-blue-600 mr-3" />
                 <div>
-                  <p className="font-medium text-gray-900">Notifications Email</p>
-                  <p className="text-sm text-gray-500">Envoi d'emails automatiques</p>
+                  <p className="font-medium text-gray-900">{intl.formatMessage({ id: 'admin.settings.notifications.email' })}</p>
+                  <p className="text-sm text-gray-500">{intl.formatMessage({ id: 'admin.settings.notifications.emailDescription' })}</p>
                 </div>
               </div>
               <button
@@ -1091,8 +1087,8 @@ const AdminSettings: React.FC = () => {
               <div className="flex items-center">
                 <MessageSquare className="w-5 h-5 text-green-600 mr-3" />
                 <div>
-                  <p className="font-medium text-gray-900">Notifications SMS</p>
-                  <p className="text-sm text-gray-500">Envoi de SMS via Twilio</p>
+                  <p className="font-medium text-gray-900">{intl.formatMessage({ id: 'admin.settings.notifications.sms' })}</p>
+                  <p className="text-sm text-gray-500">{intl.formatMessage({ id: 'admin.settings.notifications.smsDescription' })}</p>
                 </div>
               </div>
               <button
@@ -1126,8 +1122,8 @@ const AdminSettings: React.FC = () => {
               <div className="flex items-center">
                 <MessageSquare className="w-5 h-5 text-emerald-600 mr-3" />
                 <div>
-                  <p className="font-medium text-gray-900">WhatsApp</p>
-                  <p className="text-sm text-gray-500">Messages WhatsApp Business</p>
+                  <p className="font-medium text-gray-900">{intl.formatMessage({ id: 'admin.settings.notifications.whatsapp' })}</p>
+                  <p className="text-sm text-gray-500">{intl.formatMessage({ id: 'admin.settings.notifications.whatsappDescription' })}</p>
                 </div>
               </div>
               <button
@@ -1161,8 +1157,8 @@ const AdminSettings: React.FC = () => {
               <div className="flex items-center">
                 <Bell className="w-5 h-5 text-purple-600 mr-3" />
                 <div>
-                  <p className="font-medium text-gray-900">Notifications Push</p>
-                  <p className="text-sm text-gray-500">Notifications navigateur/mobile</p>
+                  <p className="font-medium text-gray-900">{intl.formatMessage({ id: 'admin.settings.notifications.push' })}</p>
+                  <p className="text-sm text-gray-500">{intl.formatMessage({ id: 'admin.settings.notifications.pushDescription' })}</p>
                 </div>
               </div>
               <button
@@ -1197,7 +1193,7 @@ const AdminSettings: React.FC = () => {
               onClick={() => setShowNotificationsModal(false)}
               variant="outline"
             >
-              Annuler
+              {intl.formatMessage({ id: 'admin.settings.common.cancel' })}
             </Button>
             <Button
               onClick={async () => {
@@ -1208,7 +1204,7 @@ const AdminSettings: React.FC = () => {
               loading={isSavingSystem}
             >
               <Save className="w-4 h-4 mr-2" />
-              Enregistrer
+              {intl.formatMessage({ id: 'admin.settings.common.save' })}
             </Button>
           </div>
         </div>

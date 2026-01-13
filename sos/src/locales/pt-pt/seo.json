@@ -1,0 +1,60 @@
+{
+  "meta": {
+    "home": {
+      "title": "SOS Expat - Assistencia Juridica 24/7 para Expatriados | 197 Paises",
+      "description": "Fale com um advogado ou especialista local em menos de 5 min. 197 paises, 9 idiomas. Assistencia 24/7 para expatriados e viajantes."
+    },
+    "pricing": {
+      "title": "Precos - SOS Expat | Consultas a partir de 19EUR",
+      "description": "Consultas juridicas acessiveis: 49EUR/20min advogado, 19EUR/30min especialista em expatriacao. Pagamento seguro, disponivel 24/7."
+    },
+    "faq": {
+      "title": "Perguntas Frequentes - FAQ | SOS Expat",
+      "description": "Respostas sobre expatriacao, vistos, tributacao internacional, direito do trabalho no exterior."
+    },
+    "contact": {
+      "title": "Contacto - SOS Expat | Fale Connosco",
+      "description": "Contacte a nossa equipa disponivel 24/7 para qualquer questao sobre os nossos servicos de assistencia juridica."
+    },
+    "helpCenter": {
+      "title": "Centro de Ajuda - SOS Expat | Guias de Expatriacao",
+      "description": "Guias e artigos praticos para a sua expatriacao: vistos, impostos, direito do trabalho, procedimentos administrativos."
+    },
+    "howItWorks": {
+      "title": "Como Funciona - SOS Expat | Consulta em 5 min",
+      "description": "Descubra como obter uma consulta juridica em menos de 5 minutos. Simples, rapido e seguro."
+    },
+    "testimonials": {
+      "title": "Testemunhos - Avaliacoes de Clientes | SOS Expat",
+      "description": "Avaliacoes e testemunhos dos nossos clientes expatriados e viajantes. Descubra as suas experiencias."
+    },
+    "privacyPolicy": {
+      "title": "Politica de Privacidade - SOS Expat | RGPD",
+      "description": "Como a SOS Expat protege os seus dados pessoais em conformidade com o RGPD e regulamentos internacionais."
+    },
+    "termsClients": {
+      "title": "Termos para Clientes - SOS Expat | Condicoes",
+      "description": "Termos e condicoes gerais para clientes da SOS Expat. Direitos e obrigacoes dos utilizadores."
+    },
+    "termsLawyers": {
+      "title": "Termos para Advogados - SOS Expat | Condicoes Parceiros",
+      "description": "Termos e condicoes para advogados parceiros da SOS Expat. Registo, comissoes, obrigacoes."
+    },
+    "termsExpats": {
+      "title": "Termos para Especialistas Expatriados - SOS Expat",
+      "description": "Termos e condicoes para especialistas expatriados parceiros da SOS Expat."
+    },
+    "cookies": {
+      "title": "Politica de Cookies - SOS Expat",
+      "description": "Utilizacao de cookies na SOS Expat. Gerencie as suas preferencias e consentimento RGPD."
+    },
+    "login": {
+      "title": "Entrar - SOS Expat",
+      "description": "Aceda a sua conta SOS Expat para ver as suas consultas e mensagens."
+    },
+    "register": {
+      "title": "Registo - SOS Expat | Criar Conta",
+      "description": "Crie a sua conta gratuita SOS Expat para aceder a assistencia juridica 24/7."
+    }
+  }
+}

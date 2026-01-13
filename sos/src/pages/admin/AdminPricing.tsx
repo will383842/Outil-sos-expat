@@ -1,5 +1,6 @@
 // src/pages/admin/AdminPricing.tsx
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useIntl } from "react-intl";
 import {
   Settings,
   Save,
@@ -33,7 +34,7 @@ import { refreshAdminClaims } from "../../utils/auth";
 
 type Currency = "eur" | "usd";
 type ServiceKind = "expat" | "lawyer";
-type ServiceLabel = "Expat" | "Avocat";
+type ServiceLabelKey = "admin.pricing.serviceExpat" | "admin.pricing.serviceLawyer";
 
 interface PricingNode {
   connectionFeeAmount: number; // notre marge
@@ -87,9 +88,9 @@ const isSumOk = (a: number, b: number, total: number) =>
 const toDate = (t: Timestamp | null | undefined): Date | null =>
   t && typeof t.toDate === "function" ? t.toDate() : null;
 
-const SERVICE_LABEL: Record<ServiceKind, ServiceLabel> = {
-  expat: "Expat",
-  lawyer: "Avocat",
+const SERVICE_LABEL_KEY: Record<ServiceKind, ServiceLabelKey> = {
+  expat: "admin.pricing.serviceExpat",
+  lawyer: "admin.pricing.serviceLawyer",
 };
 
 // Formater un prix avec 2 décimales et virgule (format français)
@@ -121,6 +122,7 @@ const Toggle: React.FC<{
 /* ------------- Page ------------- */
 
 const AdminPricing: React.FC = () => {
+  const intl = useIntl();
   const { user } = useAuth();
 
   // filtres de travail
@@ -299,7 +301,7 @@ const AdminPricing: React.FC = () => {
         selBase.totalAmount
       )
     ) {
-      alert("La somme 'Marge + Part prestataire' doit = Total");
+      alert(intl.formatMessage({ id: "admin.pricing.alertSumError" }));
       return;
     }
 
@@ -327,27 +329,26 @@ const AdminPricing: React.FC = () => {
       await performSave();
       // Invalidate frontend cache so changes reflect immediately
       clearPricingCache();
-      alert("Prix de base enregistré ✅");
+      alert(intl.formatMessage({ id: "admin.pricing.alertBasePriceSaved" }));
     } catch (error: unknown) {
       // If permission denied, try refreshing admin claims and retry
       const err = error as { code?: string; message?: string };
       if (err?.code === "permission-denied" || err?.message?.includes("permission")) {
-        console.log("[AdminPricing] Permission denied, refreshing admin claims...");
         const claimsRefreshed = await refreshAdminClaims();
         if (claimsRefreshed) {
           try {
             await performSave();
             clearPricingCache();
-            alert("Prix de base enregistré ✅");
+            alert(intl.formatMessage({ id: "admin.pricing.alertBasePriceSaved" }));
             return;
           } catch (retryError) {
             console.error("[AdminPricing] Save failed after claims refresh:", retryError);
           }
         }
-        alert("Erreur: Permissions insuffisantes. Veuillez vous reconnecter.");
+        alert(intl.formatMessage({ id: "admin.pricing.alertPermissionError" }));
       } else {
         console.error("[AdminPricing] Save error:", error);
-        alert("Erreur lors de l'enregistrement: " + (err?.message || "Erreur inconnue"));
+        alert(intl.formatMessage({ id: "admin.pricing.alertSaveError" }) + " " + (err?.message || intl.formatMessage({ id: "admin.pricing.alertUnknownError" })));
       }
     }
   };
@@ -358,7 +359,7 @@ const AdminPricing: React.FC = () => {
         const s = toDate(selPromo.startsAt)!;
         const e = toDate(selPromo.endsAt)!;
         if (s >= e) {
-          alert("La date de début doit précéder la date de fin");
+          alert(intl.formatMessage({ id: "admin.pricing.alertDateError" }));
           return;
         }
       }
@@ -369,7 +370,7 @@ const AdminPricing: React.FC = () => {
           selPromo.totalAmount
         )
       ) {
-        alert("La somme 'Marge + Part prestataire' doit = Total (promo)");
+        alert(intl.formatMessage({ id: "admin.pricing.alertSumErrorPromo" }));
         return;
       }
     }
@@ -404,26 +405,25 @@ const AdminPricing: React.FC = () => {
       await performSave();
       // Invalidate frontend cache so changes reflect immediately
       clearPricingCache();
-      alert("Prix promotionnel enregistré ✅");
+      alert(intl.formatMessage({ id: "admin.pricing.alertPromoPriceSaved" }));
     } catch (error: unknown) {
       const err = error as { code?: string; message?: string };
       if (err?.code === "permission-denied" || err?.message?.includes("permission")) {
-        console.log("[AdminPricing] Permission denied for promo, refreshing admin claims...");
         const claimsRefreshed = await refreshAdminClaims();
         if (claimsRefreshed) {
           try {
             await performSave();
             clearPricingCache();
-            alert("Prix promotionnel enregistré ✅");
+            alert(intl.formatMessage({ id: "admin.pricing.alertPromoPriceSaved" }));
             return;
           } catch (retryError) {
             console.error("[AdminPricing] Promo save failed after claims refresh:", retryError);
           }
         }
-        alert("Erreur: Permissions insuffisantes. Veuillez vous reconnecter.");
+        alert(intl.formatMessage({ id: "admin.pricing.alertPermissionError" }));
       } else {
         console.error("[AdminPricing] Promo save error:", error);
-        alert("Erreur lors de l'enregistrement: " + (err?.message || "Erreur inconnue"));
+        alert(intl.formatMessage({ id: "admin.pricing.alertSaveError" }) + " " + (err?.message || intl.formatMessage({ id: "admin.pricing.alertUnknownError" })));
       }
     }
   };
@@ -461,10 +461,10 @@ const AdminPricing: React.FC = () => {
             console.error("[AdminPricing] Stackable save failed after claims refresh:", retryError);
           }
         }
-        alert("Erreur: Permissions insuffisantes. Veuillez vous reconnecter.");
+        alert(intl.formatMessage({ id: "admin.pricing.alertPermissionError" }));
       } else {
         console.error("[AdminPricing] Stackable save error:", error);
-        alert("Erreur lors de l'enregistrement");
+        alert(intl.formatMessage({ id: "admin.pricing.alertSaveError" }));
       }
     }
   };
@@ -482,11 +482,17 @@ const AdminPricing: React.FC = () => {
 
   const runPreview = useCallback(async () => {
     let total = selBase.totalAmount;
-    let explanation = `Prix de base: ${formatPrice(total)} ${currency.toUpperCase()}`;
+    let explanation = intl.formatMessage(
+      { id: "admin.pricing.previewBasePrice" },
+      { price: formatPrice(total), currency: currency.toUpperCase() }
+    );
 
     if (isPromoActiveNow) {
       total = selPromo.totalAmount;
-      explanation += ` → Promo active ("prix barré"): ${formatPrice(total)} ${currency.toUpperCase()}`;
+      explanation += ` → ${intl.formatMessage(
+        { id: "admin.pricing.previewPromoActive" },
+        { price: formatPrice(total), currency: currency.toUpperCase() }
+      )}`;
     }
 
     // coupon si empilable (vérification légère, comme le back)
@@ -496,7 +502,7 @@ const AdminPricing: React.FC = () => {
         : stackableDefault;
 
       if (!canStack && isPromoActiveNow) {
-        explanation += " • Coupon ignoré (promo non cumulable).";
+        explanation += ` • ${intl.formatMessage({ id: "admin.pricing.previewCouponIgnored" })}`;
       } else {
         const q = query(
           collection(db, "coupons"),
@@ -531,12 +537,15 @@ const AdminPricing: React.FC = () => {
               discount = Math.min(discount, c.maxDiscount);
             discount = Math.min(discount, total);
             total = Math.max(0, Math.round((total - discount) * 100) / 100);
-            explanation += ` • Coupon "${previewCoupon.toUpperCase()}" appliqué: -${formatPrice(discount)}.`;
+            explanation += ` • ${intl.formatMessage(
+              { id: "admin.pricing.previewCouponApplied" },
+              { code: previewCoupon.toUpperCase(), discount: formatPrice(discount) }
+            )}`;
           } else {
-            explanation += " • Coupon non applicable.";
+            explanation += ` • ${intl.formatMessage({ id: "admin.pricing.previewCouponNotApplicable" })}`;
           }
         } else {
-          explanation += " • Coupon introuvable.";
+          explanation += ` • ${intl.formatMessage({ id: "admin.pricing.previewCouponNotFound" })}`;
         }
       }
     }
@@ -551,6 +560,7 @@ const AdminPricing: React.FC = () => {
     service,
     currency,
     stackableDefault,
+    intl,
   ]);
 
   /* ----------- UI ----------- */
@@ -585,9 +595,9 @@ const AdminPricing: React.FC = () => {
                   <Settings className="w-8 h-8" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold">Tarification & Promotions</h1>
+                  <h1 className="text-2xl font-bold">{intl.formatMessage({ id: "admin.pricing.title" })}</h1>
                   <p className="text-blue-100 text-sm mt-1">
-                    Configurez les prix de base et les offres promotionnelles
+                    {intl.formatMessage({ id: "admin.pricing.subtitle" })}
                   </p>
                 </div>
               </div>
@@ -596,7 +606,7 @@ const AdminPricing: React.FC = () => {
                 className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm px-4 py-2 rounded-lg transition-all"
               >
                 <RefreshCw className="w-4 h-4" />
-                Actualiser
+                {intl.formatMessage({ id: "admin.pricing.refresh" })}
               </button>
             </div>
           </div>
@@ -607,7 +617,7 @@ const AdminPricing: React.FC = () => {
           <div className="flex flex-col lg:flex-row gap-6 justify-between items-start lg:items-center">
             {/* Service selector */}
             <div className="flex-1">
-              <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Service</div>
+              <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">{intl.formatMessage({ id: "admin.pricing.service" })}</div>
               <div className="flex gap-2">
                 {(["expat", "lawyer"] as ServiceKind[]).map((s) => (
                   <button
@@ -619,7 +629,7 @@ const AdminPricing: React.FC = () => {
                         : "bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200"
                     }`}
                   >
-                    {SERVICE_LABEL[s]}
+                    {intl.formatMessage({ id: SERVICE_LABEL_KEY[s] })}
                   </button>
                 ))}
               </div>
@@ -627,7 +637,7 @@ const AdminPricing: React.FC = () => {
 
             {/* Currency selector */}
             <div className="flex-1">
-              <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Devise</div>
+              <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">{intl.formatMessage({ id: "admin.pricing.currency" })}</div>
               <div className="flex gap-2">
                 <button
                   onClick={() => setCurrency("eur")}
@@ -654,13 +664,13 @@ const AdminPricing: React.FC = () => {
 
             {/* Stackable option */}
             <div className="flex-1">
-              <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Options globales</div>
+              <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">{intl.formatMessage({ id: "admin.pricing.globalOptions" })}</div>
               <div className="flex items-center gap-3 bg-gray-50 px-4 py-2.5 rounded-xl border border-gray-200">
                 <Toggle
                   checked={stackableDefault}
                   onChange={(v) => void saveGlobalStackable(v)}
                 />
-                <span className="text-sm text-gray-700">Coupons cumulables</span>
+                <span className="text-sm text-gray-700">{intl.formatMessage({ id: "admin.pricing.stackableCoupons" })}</span>
               </div>
             </div>
           </div>
@@ -668,9 +678,9 @@ const AdminPricing: React.FC = () => {
           {/* Context indicator */}
           <div className="mt-4 pt-4 border-t border-gray-100">
             <div className="flex items-center gap-2 text-sm">
-              <span className="text-gray-500">Configuration active:</span>
+              <span className="text-gray-500">{intl.formatMessage({ id: "admin.pricing.activeConfiguration" })}</span>
               <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-1 rounded-full font-medium">
-                {SERVICE_LABEL[service]} - {currency.toUpperCase()}
+                {intl.formatMessage({ id: SERVICE_LABEL_KEY[service] })} - {currency.toUpperCase()}
               </span>
             </div>
           </div>
@@ -686,9 +696,9 @@ const AdminPricing: React.FC = () => {
                   <Euro className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
-                  <h2 className="font-semibold text-gray-900">Prix de base</h2>
+                  <h2 className="font-semibold text-gray-900">{intl.formatMessage({ id: "admin.pricing.basePrice" })}</h2>
                   <p className="text-xs text-gray-500">
-                    {SERVICE_LABEL[service]} • {currency.toUpperCase()}
+                    {intl.formatMessage({ id: SERVICE_LABEL_KEY[service] })} • {currency.toUpperCase()}
                   </p>
                 </div>
               </div>
@@ -696,7 +706,7 @@ const AdminPricing: React.FC = () => {
                 onClick={() => void saveBase()}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200"
               >
-                <Save className="w-4 h-4" /> Enregistrer
+                <Save className="w-4 h-4" /> {intl.formatMessage({ id: "admin.pricing.save" })}
               </button>
             </div>
           </div>
@@ -707,7 +717,7 @@ const AdminPricing: React.FC = () => {
               {/* Marge */}
               <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
-                  Marge SOS
+                  {intl.formatMessage({ id: "admin.pricing.sosMargin" })}
                 </label>
                 <div className="relative">
                   <input
@@ -737,7 +747,7 @@ const AdminPricing: React.FC = () => {
               {/* Part prestataire */}
               <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
-                  Part prestataire
+                  {intl.formatMessage({ id: "admin.pricing.providerShare" })}
                 </label>
                 <div className="relative">
                   <input
@@ -768,7 +778,7 @@ const AdminPricing: React.FC = () => {
               {/* Total client */}
               <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
                 <label className="block text-xs font-medium text-blue-600 uppercase tracking-wider mb-2">
-                  Total client
+                  {intl.formatMessage({ id: "admin.pricing.clientTotal" })}
                 </label>
                 <div className="relative">
                   <input
@@ -801,7 +811,7 @@ const AdminPricing: React.FC = () => {
               {/* Durée */}
               <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
-                  Durée appel
+                  {intl.formatMessage({ id: "admin.pricing.callDuration" })}
                 </label>
                 <div className="relative">
                   <input
@@ -820,7 +830,7 @@ const AdminPricing: React.FC = () => {
                     className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-lg font-semibold text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
-                    min
+                    {intl.formatMessage({ id: "admin.pricing.durationUnit" })}
                   </span>
                 </div>
               </div>
@@ -829,20 +839,20 @@ const AdminPricing: React.FC = () => {
             {/* Validation status */}
             <div className="mt-4 flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm text-gray-500">
-                <span>Formule:</span>
+                <span>{intl.formatMessage({ id: "admin.pricing.formula" })}</span>
                 <code className="bg-gray-100 px-2 py-1 rounded text-xs">
-                  Marge + Part prestataire = Total
+                  {intl.formatMessage({ id: "admin.pricing.formulaDescription" })}
                 </code>
               </div>
               {errorSumBase ? (
                 <div className="flex items-center gap-2 text-red-600 bg-red-50 px-3 py-1.5 rounded-lg border border-red-200">
                   <X className="w-4 h-4" />
-                  <span className="text-sm font-medium">Somme incohérente</span>
+                  <span className="text-sm font-medium">{intl.formatMessage({ id: "admin.pricing.sumInconsistent" })}</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
                   <Check className="w-4 h-4" />
-                  <span className="text-sm font-medium">Calcul validé</span>
+                  <span className="text-sm font-medium">{intl.formatMessage({ id: "admin.pricing.calculationValidated" })}</span>
                 </div>
               )}
             </div>
@@ -860,8 +870,8 @@ const AdminPricing: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-4">
                   <div>
-                    <h2 className="font-semibold text-gray-900">Prix promotionnel</h2>
-                    <p className="text-xs text-gray-500">Affiché comme "prix barré"</p>
+                    <h2 className="font-semibold text-gray-900">{intl.formatMessage({ id: "admin.pricing.promoPrice" })}</h2>
+                    <p className="text-xs text-gray-500">{intl.formatMessage({ id: "admin.pricing.promoPriceDescription" })}</p>
                   </div>
                   {/* Toggle intégré au header */}
                   <div className="flex items-center gap-2 bg-white/80 px-3 py-1.5 rounded-lg border border-gray-200">
@@ -876,7 +886,7 @@ const AdminPricing: React.FC = () => {
                       }
                     />
                     <span className={`text-sm font-medium ${selPromo.enabled ? 'text-orange-600' : 'text-gray-500'}`}>
-                      {selPromo.enabled ? "Active" : "Inactive"}
+                      {selPromo.enabled ? intl.formatMessage({ id: "admin.pricing.active" }) : intl.formatMessage({ id: "admin.pricing.inactive" })}
                     </span>
                   </div>
                 </div>
@@ -889,7 +899,7 @@ const AdminPricing: React.FC = () => {
                     : 'bg-gray-400 hover:bg-gray-500 shadow-gray-200'
                 }`}
               >
-                <Save className="w-4 h-4" /> Enregistrer
+                <Save className="w-4 h-4" /> {intl.formatMessage({ id: "admin.pricing.save" })}
               </button>
             </div>
           </div>
@@ -900,7 +910,7 @@ const AdminPricing: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
-                  Date de début
+                  {intl.formatMessage({ id: "admin.pricing.startDate" })}
                 </label>
                 <input
                   type="datetime-local"
@@ -928,7 +938,7 @@ const AdminPricing: React.FC = () => {
               </div>
               <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
-                  Date de fin
+                  {intl.formatMessage({ id: "admin.pricing.endDate" })}
                 </label>
                 <input
                   type="datetime-local"
@@ -960,7 +970,7 @@ const AdminPricing: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
-                  Marge promo
+                  {intl.formatMessage({ id: "admin.pricing.promoMargin" })}
                 </label>
                 <div className="relative">
                   <input
@@ -988,7 +998,7 @@ const AdminPricing: React.FC = () => {
               </div>
               <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
-                  Part prestataire
+                  {intl.formatMessage({ id: "admin.pricing.providerShare" })}
                 </label>
                 <div className="relative">
                   <input
@@ -1016,7 +1026,7 @@ const AdminPricing: React.FC = () => {
               </div>
               <div className="bg-orange-50 rounded-xl p-4 border border-orange-100">
                 <label className="block text-xs font-medium text-orange-600 uppercase tracking-wider mb-2">
-                  Total client promo
+                  {intl.formatMessage({ id: "admin.pricing.promoClientTotal" })}
                 </label>
                 <div className="relative">
                   <input
@@ -1050,7 +1060,7 @@ const AdminPricing: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
-                  Label promotion
+                  {intl.formatMessage({ id: "admin.pricing.promoLabel" })}
                 </label>
                 <input
                   type="text"
@@ -1062,13 +1072,13 @@ const AdminPricing: React.FC = () => {
                       return next;
                     })
                   }
-                  placeholder="Ex: Offre de lancement"
+                  placeholder={intl.formatMessage({ id: "admin.pricing.promoLabelPlaceholder" })}
                   className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-900 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                 />
               </div>
               <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
-                  Cible prix barré
+                  {intl.formatMessage({ id: "admin.pricing.strikeTarget" })}
                 </label>
                 <input
                   type="text"
@@ -1092,35 +1102,35 @@ const AdminPricing: React.FC = () => {
               {errorSumPromo ? (
                 <div className="flex items-center gap-2 text-red-600 bg-red-50 px-3 py-1.5 rounded-lg border border-red-200">
                   <X className="w-4 h-4" />
-                  <span className="text-sm font-medium">Somme incohérente</span>
+                  <span className="text-sm font-medium">{intl.formatMessage({ id: "admin.pricing.sumInconsistent" })}</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
                   <Check className="w-4 h-4" />
-                  <span className="text-sm font-medium">Calcul validé</span>
+                  <span className="text-sm font-medium">{intl.formatMessage({ id: "admin.pricing.calculationValidated" })}</span>
                 </div>
               )}
               {errorDates && (
                 <div className="flex items-center gap-2 text-red-600 bg-red-50 px-3 py-1.5 rounded-lg border border-red-200">
                   <Calendar className="w-4 h-4" />
-                  <span className="text-sm font-medium">Période invalide</span>
+                  <span className="text-sm font-medium">{intl.formatMessage({ id: "admin.pricing.invalidPeriod" })}</span>
                 </div>
               )}
             </div>
 
             {/* Comparaison visuelle */}
             <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-5 border border-gray-200">
-              <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-4">Comparaison des prix</div>
+              <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-4">{intl.formatMessage({ id: "admin.pricing.priceComparison" })}</div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-white rounded-xl p-4 border border-gray-200 text-center">
-                  <div className="text-xs text-gray-500 mb-1">Prix de base</div>
+                  <div className="text-xs text-gray-500 mb-1">{intl.formatMessage({ id: "admin.pricing.basePrice" })}</div>
                   <div className="text-2xl font-bold text-gray-900">
                     {formatPrice(selBase.totalAmount)}
                     <span className="text-sm font-normal text-gray-500 ml-1">{currency.toUpperCase()}</span>
                   </div>
                 </div>
                 <div className="bg-orange-50 rounded-xl p-4 border border-orange-200 text-center">
-                  <div className="text-xs text-orange-600 mb-1">Prix promo</div>
+                  <div className="text-xs text-orange-600 mb-1">{intl.formatMessage({ id: "admin.pricing.promoPriceShort" })}</div>
                   <div className="text-2xl font-bold text-orange-600">
                     <span className="line-through text-gray-400 text-lg mr-2">{formatPrice(selBase.totalAmount)}</span>
                     {formatPrice(selPromo.totalAmount)}
@@ -1128,13 +1138,13 @@ const AdminPricing: React.FC = () => {
                   </div>
                 </div>
                 <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-200 text-center">
-                  <div className="text-xs text-emerald-600 mb-1">Remise</div>
+                  <div className="text-xs text-emerald-600 mb-1">{intl.formatMessage({ id: "admin.pricing.discount" })}</div>
                   <div className="text-2xl font-bold text-emerald-600">
                     -{formatPrice(selBase.totalAmount - selPromo.totalAmount)}
                     <span className="text-sm font-normal text-emerald-400 ml-1">{currency.toUpperCase()}</span>
                   </div>
                   <div className="text-xs text-emerald-500 mt-1">
-                    ({selBase.totalAmount > 0 ? Math.round((1 - selPromo.totalAmount / selBase.totalAmount) * 100) : 0}% de réduction)
+                    ({intl.formatMessage({ id: "admin.pricing.discountPercentage" }, { percentage: selBase.totalAmount > 0 ? Math.round((1 - selPromo.totalAmount / selBase.totalAmount) * 100) : 0 })})
                   </div>
                 </div>
               </div>
@@ -1152,8 +1162,8 @@ const AdminPricing: React.FC = () => {
                   <Eye className="w-5 h-5 text-emerald-600" />
                 </div>
                 <div>
-                  <h2 className="font-semibold text-gray-900">Simulateur de prix</h2>
-                  <p className="text-xs text-gray-500">Testez le calcul final avec un coupon</p>
+                  <h2 className="font-semibold text-gray-900">{intl.formatMessage({ id: "admin.pricing.priceSimulator" })}</h2>
+                  <p className="text-xs text-gray-500">{intl.formatMessage({ id: "admin.pricing.priceSimulatorDescription" })}</p>
                 </div>
               </div>
               {/* Statut promo */}
@@ -1168,7 +1178,7 @@ const AdminPricing: React.FC = () => {
                   <X className="w-4 h-4" />
                 )}
                 <span className="text-sm font-medium">
-                  Promo {isPromoActiveNow ? "active" : "inactive"}
+                  {isPromoActiveNow ? intl.formatMessage({ id: "admin.pricing.promoActive" }) : intl.formatMessage({ id: "admin.pricing.promoInactive" })}
                 </span>
               </div>
             </div>
@@ -1180,7 +1190,7 @@ const AdminPricing: React.FC = () => {
               {/* Coupon input */}
               <div className="md:col-span-2">
                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
-                  Code coupon (optionnel)
+                  {intl.formatMessage({ id: "admin.pricing.couponCode" })}
                 </label>
                 <div className="relative">
                   <input
@@ -1190,7 +1200,7 @@ const AdminPricing: React.FC = () => {
                       setPreviewCoupon(e.target.value.toUpperCase())
                     }
                     className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-gray-900 font-mono text-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                    placeholder="WELCOME10"
+                    placeholder={intl.formatMessage({ id: "admin.pricing.couponPlaceholder" })}
                   />
                   {previewCoupon && (
                     <button
@@ -1210,7 +1220,7 @@ const AdminPricing: React.FC = () => {
                   className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-medium hover:from-emerald-600 hover:to-teal-600 transition-all shadow-md shadow-emerald-200"
                 >
                   <RefreshCw className="w-5 h-5" />
-                  Calculer le prix
+                  {intl.formatMessage({ id: "admin.pricing.calculatePrice" })}
                 </button>
               </div>
             </div>
@@ -1229,7 +1239,7 @@ const AdminPricing: React.FC = () => {
 
                   {/* Prix final */}
                   <div className="flex items-center justify-between bg-white rounded-xl p-4 border border-gray-200">
-                    <span className="text-gray-700 font-medium">Prix final client</span>
+                    <span className="text-gray-700 font-medium">{intl.formatMessage({ id: "admin.pricing.finalClientPrice" })}</span>
                     <div className="text-3xl font-bold text-emerald-600">
                       {formatPrice(previewTotal)}
                       <span className="text-lg font-normal text-emerald-400 ml-1">
@@ -1251,13 +1261,12 @@ const AdminPricing: React.FC = () => {
             </div>
             <div className="text-sm text-gray-600 space-y-2">
               <p>
-                <strong className="text-gray-800">Prix promotionnel :</strong> c'est le prix que le client verra comme{" "}
-                <em className="text-orange-600">prix barré</em> sur le front.
+                <strong className="text-gray-800">{intl.formatMessage({ id: "admin.pricing.helpPromoTitle" })}</strong> {intl.formatMessage({ id: "admin.pricing.helpPromoDescription" })}
               </p>
               <p>
-                <strong className="text-gray-800">Codes promo :</strong> gérés dans{" "}
-                <code className="bg-white px-2 py-0.5 rounded text-blue-600 border border-blue-200">/admin/promos</code>
-                {" "}• cumulables selon l'option globale ou celle du prix promo.
+                <strong className="text-gray-800">{intl.formatMessage({ id: "admin.pricing.helpCouponsTitle" })}</strong> {intl.formatMessage({ id: "admin.pricing.helpCouponsDescription" })}{" "}
+                <code className="bg-white px-2 py-0.5 rounded text-blue-600 border border-blue-200">{intl.formatMessage({ id: "admin.pricing.helpCouponsPath" })}</code>
+                {" "} • {intl.formatMessage({ id: "admin.pricing.helpCouponsStackable" })}
               </p>
             </div>
           </div>

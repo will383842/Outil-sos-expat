@@ -201,33 +201,39 @@ const KPICard: React.FC<{
   icon: React.ReactNode;
   color: string;
   suffix?: string;
-}> = ({ title, value, change, icon, color, suffix }) => (
-  <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
-    <div className="flex items-center justify-between">
-      <div className="flex-1">
-        <p className="text-sm font-medium text-gray-500">{title}</p>
-        <p className={`text-2xl font-bold ${color}`}>
-          {typeof value === "number" ? value.toLocaleString("fr-FR") : value}
-          {suffix && <span className="text-sm font-normal ml-1">{suffix}</span>}
-        </p>
-        {change !== undefined && (
-          <div className={`flex items-center text-sm mt-1 ${change >= 0 ? "text-green-600" : "text-red-600"}`}>
-            {change >= 0 ? <TrendingUp size={14} className="mr-1" /> : <TrendingDown size={14} className="mr-1" />}
-            <span>{change >= 0 ? "+" : ""}{change.toFixed(1)}%</span>
-            <span className="text-gray-400 ml-1">vs période précédente</span>
-          </div>
-        )}
-      </div>
-      <div className={`p-3 rounded-full bg-opacity-10 ${color.replace("text-", "bg-")}`}>
-        {icon}
+}> = ({ title, value, change, icon, color, suffix }) => {
+  const intl = useIntl();
+  const t = (key: string) => intl.formatMessage({ id: key });
+
+  return (
+    <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          <p className="text-sm font-medium text-gray-500">{title}</p>
+          <p className={`text-2xl font-bold ${color}`}>
+            {typeof value === "number" ? value.toLocaleString("fr-FR") : value}
+            {suffix && <span className="text-sm font-normal ml-1">{suffix}</span>}
+          </p>
+          {change !== undefined && (
+            <div className={`flex items-center text-sm mt-1 ${change >= 0 ? "text-green-600" : "text-red-600"}`}>
+              {change >= 0 ? <TrendingUp size={14} className="mr-1" /> : <TrendingDown size={14} className="mr-1" />}
+              <span>{change >= 0 ? "+" : ""}{change.toFixed(1)}%</span>
+              <span className="text-gray-400 ml-1">{t("admin.charts.vsPreviousPeriod")}</span>
+            </div>
+          )}
+        </div>
+        <div className={`p-3 rounded-full bg-opacity-10 ${color.replace("text-", "bg-")}`}>
+          {icon}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // Main Component
 const DashboardCharts: React.FC = () => {
   const intl = useIntl();
+  const t = (key: string) => intl.formatMessage({ id: key });
   const mountedRef = useRef(true);
 
   const [filters, setFilters] = useState<FilterState>({
@@ -378,7 +384,7 @@ const DashboardCharts: React.FC = () => {
       // Calculate pie chart data
       const usersByCountryMap = new Map<string, number>();
       filteredUsers.forEach(u => {
-        const country = u.country || "Inconnu";
+        const country = u.country || t("admin.charts.unknown");
         usersByCountryMap.set(country, (usersByCountryMap.get(country) || 0) + 1);
       });
       const usersByCountry: PieDataPoint[] = Array.from(usersByCountryMap.entries())
@@ -392,7 +398,7 @@ const DashboardCharts: React.FC = () => {
 
       const providersByTypeMap = new Map<string, number>();
       filteredUsers.filter(u => u.role === "lawyer" || u.role === "expat").forEach(u => {
-        const type = u.role === "lawyer" ? "Avocats" : "Expatriés";
+        const type = u.role === "lawyer" ? t("admin.charts.lawyers") : t("admin.charts.expats");
         providersByTypeMap.set(type, (providersByTypeMap.get(type) || 0) + 1);
       });
       const providersByType: PieDataPoint[] = Array.from(providersByTypeMap.entries())
@@ -404,7 +410,7 @@ const DashboardCharts: React.FC = () => {
 
       const revenueByTypeMap = new Map<string, number>();
       paymentsData.forEach(p => {
-        const type = p.type === "lawyer" ? "Avocats" : p.type === "expat" ? "Expatriés" : "Autre";
+        const type = p.type === "lawyer" ? t("admin.charts.lawyers") : p.type === "expat" ? t("admin.charts.expats") : t("admin.charts.other");
         revenueByTypeMap.set(type, (revenueByTypeMap.get(type) || 0) + p.amount);
       });
       const revenueByType: PieDataPoint[] = Array.from(revenueByTypeMap.entries())
@@ -453,7 +459,7 @@ const DashboardCharts: React.FC = () => {
     } catch (err) {
       console.error("Error loading dashboard data:", err);
       if (mountedRef.current) {
-        setError("Erreur lors du chargement des données");
+        setError(t("admin.charts.error"));
       }
     } finally {
       if (mountedRef.current) {
@@ -501,7 +507,7 @@ const DashboardCharts: React.FC = () => {
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
             <Filter size={18} className="text-gray-500" />
-            <span className="font-medium text-gray-700">Filtres:</span>
+            <span className="font-medium text-gray-700">{t("admin.charts.filters")}</span>
           </div>
 
           {/* Period Filter */}
@@ -512,11 +518,11 @@ const DashboardCharts: React.FC = () => {
               onChange={(e) => handleFilterChange("period", e.target.value)}
               className="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500"
             >
-              <option value="7d">7 derniers jours</option>
-              <option value="30d">30 derniers jours</option>
-              <option value="90d">90 derniers jours</option>
-              <option value="365d">12 derniers mois</option>
-              <option value="all">Tout</option>
+              <option value="7d">{t("admin.charts.last7Days")}</option>
+              <option value="30d">{t("admin.charts.last30Days")}</option>
+              <option value="90d">{t("admin.charts.last90Days")}</option>
+              <option value="365d">{t("admin.charts.last12Months")}</option>
+              <option value="all">{t("admin.charts.all")}</option>
             </select>
           </div>
 
@@ -528,7 +534,7 @@ const DashboardCharts: React.FC = () => {
               onChange={(e) => handleFilterChange("country", e.target.value)}
               className="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500"
             >
-              <option value="all">Tous les pays</option>
+              <option value="all">{t("admin.charts.allCountries")}</option>
               {countries.map((country) => (
                 <option key={country.code} value={country.code}>
                   {country.name}
@@ -553,7 +559,7 @@ const DashboardCharts: React.FC = () => {
         <div className="flex items-center justify-center h-96">
           <div className="flex flex-col items-center gap-4">
             <RefreshCw size={32} className="animate-spin text-red-600" />
-            <p className="text-gray-500">Chargement des données...</p>
+            <p className="text-gray-500">{t("admin.charts.loading")}</p>
           </div>
         </div>
       ) : stats ? (
@@ -561,32 +567,32 @@ const DashboardCharts: React.FC = () => {
           {/* KPI Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             <KPICard
-              title="Nouveaux utilisateurs"
+              title={t("admin.charts.newUsers")}
               value={stats.kpis.totalNewUsers}
               change={stats.kpis.userGrowth}
               icon={<UserPlus size={24} className="text-blue-600" />}
               color="text-blue-600"
             />
             <KPICard
-              title="Nouveaux prestataires"
+              title={t("admin.charts.newProviders")}
               value={stats.kpis.totalNewProviders}
               icon={<Briefcase size={24} className="text-purple-600" />}
               color="text-purple-600"
             />
             <KPICard
-              title="Appels totaux"
+              title={t("admin.charts.totalCalls")}
               value={stats.kpis.totalCalls}
               icon={<Phone size={24} className="text-green-600" />}
               color="text-green-600"
             />
             <KPICard
-              title="Taux de succès"
+              title={t("admin.charts.successRate")}
               value={`${stats.kpis.conversionRate.toFixed(1)}%`}
               icon={<TrendingUp size={24} className="text-amber-600" />}
               color="text-amber-600"
             />
             <KPICard
-              title="Chiffre d'affaires"
+              title={t("admin.charts.revenue")}
               value={stats.kpis.totalRevenue.toLocaleString("fr-FR", { minimumFractionDigits: 2 })}
               change={stats.kpis.revenueGrowth}
               icon={<DollarSign size={24} className="text-red-600" />}
@@ -598,19 +604,19 @@ const DashboardCharts: React.FC = () => {
           {/* Revenue Breakdown */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
-              <p className="text-sm font-medium text-gray-500">Commission plateforme</p>
+              <p className="text-sm font-medium text-gray-500">{t("admin.charts.platformCommission")}</p>
               <p className="text-2xl font-bold text-red-600">
                 {stats.kpis.platformRevenue.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €
               </p>
             </div>
             <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
-              <p className="text-sm font-medium text-gray-500">Revenus prestataires</p>
+              <p className="text-sm font-medium text-gray-500">{t("admin.charts.providerRevenue")}</p>
               <p className="text-2xl font-bold text-green-600">
                 {stats.kpis.providerRevenue.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €
               </p>
             </div>
             <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
-              <p className="text-sm font-medium text-gray-500">Durée moyenne appel</p>
+              <p className="text-sm font-medium text-gray-500">{t("admin.charts.avgCallDuration")}</p>
               <p className="text-2xl font-bold text-blue-600">
                 {Math.round(stats.kpis.avgCallDuration / 60)} min
               </p>
@@ -638,7 +644,7 @@ const DashboardCharts: React.FC = () => {
                   <YAxis tick={{ fontSize: 12 }} stroke="#9CA3AF" />
                   <Tooltip
                     contentStyle={{ borderRadius: 8, border: "1px solid #E5E7EB" }}
-                    formatter={(value) => [value ?? 0, "Utilisateurs"]}
+                    formatter={(value) => [value ?? 0, t("admin.charts.users")]}
                   />
                   <Area
                     type="monotone"
@@ -670,7 +676,7 @@ const DashboardCharts: React.FC = () => {
                   <YAxis tick={{ fontSize: 12 }} stroke="#9CA3AF" />
                   <Tooltip
                     contentStyle={{ borderRadius: 8, border: "1px solid #E5E7EB" }}
-                    formatter={(value) => [value ?? 0, "Appels"]}
+                    formatter={(value) => [value ?? 0, t("admin.charts.calls")]}
                   />
                   <Area
                     type="monotone"
@@ -719,7 +725,7 @@ const DashboardCharts: React.FC = () => {
                   <YAxis tick={{ fontSize: 12 }} stroke="#9CA3AF" />
                   <Tooltip
                     contentStyle={{ borderRadius: 8, border: "1px solid #E5E7EB" }}
-                    formatter={(value) => [value ?? 0, "Prestataires"]}
+                    formatter={(value) => [value ?? 0, t("admin.charts.providers")]}
                   />
                   <Line
                     type="monotone"

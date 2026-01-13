@@ -1,0 +1,60 @@
+{
+  "meta": {
+    "home": {
+      "title": "SOS Expat - 外籍人士24/7法律援助 | 覆盖197个国家",
+      "description": "5分钟内与律师或当地专家交谈。覆盖197个国家，9种语言。为外籍人士、旅行者和度假者提供24/7援助。"
+    },
+    "pricing": {
+      "title": "价格 - SOS Expat | 咨询起价19欧元",
+      "description": "经济实惠的法律咨询：律师49欧元/20分钟，外派专家19欧元/30分钟。安全支付，24/7可用。"
+    },
+    "faq": {
+      "title": "常见问题 - FAQ | SOS Expat",
+      "description": "关于外派、签证、国际税务、海外劳动法的问题解答。"
+    },
+    "contact": {
+      "title": "联系我们 - SOS Expat | 取得联系",
+      "description": "联系我们24/7在线团队，咨询我们的国际法律援助服务。"
+    },
+    "helpCenter": {
+      "title": "帮助中心 - SOS Expat | 外派指南",
+      "description": "外派实用指南和文章：签证、税务、劳动法、行政程序。"
+    },
+    "howItWorks": {
+      "title": "如何运作 - SOS Expat | 5分钟获得咨询",
+      "description": "了解如何在5分钟内获得法律咨询。简单、快速、安全。"
+    },
+    "testimonials": {
+      "title": "用户评价 - 客户反馈 | SOS Expat",
+      "description": "我们外籍人士和旅行者客户的评价和见证。了解他们使用SOS Expat的体验。"
+    },
+    "privacyPolicy": {
+      "title": "隐私政策 - SOS Expat | GDPR合规",
+      "description": "SOS Expat如何根据GDPR和国际法规保护您的个人数据。"
+    },
+    "termsClients": {
+      "title": "客户条款 - SOS Expat | 使用条款",
+      "description": "SOS Expat客户的一般使用条款和条件。用户的权利和义务。"
+    },
+    "termsLawyers": {
+      "title": "律师条款 - SOS Expat | 合作伙伴条件",
+      "description": "SOS Expat合作律师的一般条款和条件。注册、佣金、义务。"
+    },
+    "termsExpats": {
+      "title": "外派专家条款 - SOS Expat | 条件",
+      "description": "SOS Expat合作外派专家的一般条款和条件。"
+    },
+    "cookies": {
+      "title": "Cookie政策 - SOS Expat",
+      "description": "SOS Expat的Cookie使用。管理您的偏好和GDPR同意。"
+    },
+    "login": {
+      "title": "登录 - SOS Expat",
+      "description": "登录您的SOS Expat账户以访问您的咨询和消息。"
+    },
+    "register": {
+      "title": "注册 - SOS Expat | 创建账户",
+      "description": "创建您的免费SOS Expat账户，获得24/7法律援助。"
+    }
+  }
+}

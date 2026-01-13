@@ -11,6 +11,8 @@ export {
   onBlogPostUpdated,
   onHelpArticleCreated,
   onHelpArticleUpdated,
+  onFaqCreated,
+  onFaqUpdated,
   onLandingPageCreated,
   scheduledSitemapPing,
 } from './autoIndexingTriggers';
@@ -18,7 +20,8 @@ export {
 // Sitemaps dynamiques
 export {
   sitemapProfiles,
-  sitemapBlog,
+  sitemapHelp,    // Centre d'aide / Help Center articles
+  sitemapFaq,     // FAQ individuels
   sitemapLanding,
 } from './sitemaps';
 

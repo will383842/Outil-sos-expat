@@ -8,6 +8,66 @@
     ],
     "rewrites": [
       {
+        "source": "/*/avocat-*/**",
+        "function": "renderForBots",
+        "region": "europe-west1"
+      },
+      {
+        "source": "/*/lawyer-*/**",
+        "function": "renderForBots",
+        "region": "europe-west1"
+      },
+      {
+        "source": "/*/abogado-*/**",
+        "function": "renderForBots",
+        "region": "europe-west1"
+      },
+      {
+        "source": "/*/anwaelte-*/**",
+        "function": "renderForBots",
+        "region": "europe-west1"
+      },
+      {
+        "source": "/*/advogado-*/**",
+        "function": "renderForBots",
+        "region": "europe-west1"
+      },
+      {
+        "source": "/*/advokat-*/**",
+        "function": "renderForBots",
+        "region": "europe-west1"
+      },
+      {
+        "source": "/*/expatrie-*/**",
+        "function": "renderForBots",
+        "region": "europe-west1"
+      },
+      {
+        "source": "/*/expat-*/**",
+        "function": "renderForBots",
+        "region": "europe-west1"
+      },
+      {
+        "source": "/avocat/**",
+        "function": "renderForBots",
+        "region": "europe-west1"
+      },
+      {
+        "source": "/lawyers/**",
+        "function": "renderForBots",
+        "region": "europe-west1"
+      },
+      {
+        "source": "/expatrie/**",
+        "function": "renderForBots",
+        "region": "europe-west1"
+      },
+      {
+        "source": "/expats/**",
+        "function": "renderForBots",
+        "region": "europe-west1"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
@@ -27,10 +87,14 @@
       "runtime": "nodejs20",
       "predeploy": ["npm --prefix \"$RESOURCE_DIR\" run build"],
       "ignore": [
-        "node_modules/**",
-        ".git/**",
+        "node_modules",
+        ".git",
         "**/*.test.*",
-        "**/*.spec.*"
+        "**/*.spec.*",
+        "src",
+        "*.log",
+        "tmpclaude-*",
+        "backups"
       ]
     }
   ],

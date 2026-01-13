@@ -89,30 +89,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
     canMakeAiCall
   } = useAiQuota();
 
-  if (!user) {
-    return null;
-  }
-
-  const headerGradient = getHeaderClassForRole(user.role);
-  const softCard = UI.card;
-
-  // Helper to get user's full name
-  const getUserFullName = () => {
-    if (user.firstName || user.lastName) {
-      return `${user.firstName || ''} ${user.lastName || ''}`.trim();
-    }
-    if ((user as any).fullName) return (user as any).fullName;
-    if ((user as any).displayName) return (user as any).displayName;
-    return user.email || 'User';
-  };
-
-  const getUserFirstName = () => {
-    if (user.firstName) return user.firstName;
-    const fullName = (user as any).fullName || (user as any).displayName || '';
-    if (fullName) return fullName.split(' ')[0];
-    return user.email?.split('@')[0] || 'User';
-  };
-
   // P0 FIX: Get translated routes based on current language (defined early for use in handleLogout)
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
 
@@ -141,18 +117,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
     }
   }, [logout, navigate, loggingOut, loginRoute]);
 
-  // Déterminer la clé active basée sur l'URL si non fournie
-  const getCurrentActiveKey = () => {
-    if (activeKey) return activeKey;
-    const path = location.pathname;
-    if (path.includes('/ai-assistant')) return 'ai-assistant';
-    if (path.includes('/subscription')) return 'subscription';
-    if (path.includes('/dashboard')) return 'profile';
-    return '';
-  };
-
-  const currentKey = getCurrentActiveKey();
-
   // Get translated routes using langCode defined above
   const translatedRoutes = useMemo(() => {
     const dashboardSlug = getTranslatedRouteSlug('dashboard' as RouteKey, langCode);
@@ -174,6 +138,43 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
       login: `/${loginSlug}`,
     };
   }, [langCode]);
+
+  // Early return after all hooks
+  if (!user) {
+    return null;
+  }
+
+  const headerGradient = getHeaderClassForRole(user.role);
+  const softCard = UI.card;
+
+  // Helper to get user's full name
+  const getUserFullName = () => {
+    if (user.firstName || user.lastName) {
+      return `${user.firstName || ''} ${user.lastName || ''}`.trim();
+    }
+    if ((user as any).fullName) return (user as any).fullName;
+    if ((user as any).displayName) return (user as any).displayName;
+    return user.email || 'User';
+  };
+
+  const getUserFirstName = () => {
+    if (user.firstName) return user.firstName;
+    const fullName = (user as any).fullName || (user as any).displayName || '';
+    if (fullName) return fullName.split(' ')[0];
+    return user.email?.split('@')[0] || 'User';
+  };
+
+  // Déterminer la clé active basée sur l'URL si non fournie
+  const getCurrentActiveKey = () => {
+    if (activeKey) return activeKey;
+    const path = location.pathname;
+    if (path.includes('/ai-assistant')) return 'ai-assistant';
+    if (path.includes('/subscription')) return 'subscription';
+    if (path.includes('/dashboard')) return 'profile';
+    return '';
+  };
+
+  const currentKey = getCurrentActiveKey();
 
   // Menu items
   type MenuItem = {

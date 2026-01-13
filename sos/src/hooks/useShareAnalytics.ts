@@ -39,8 +39,6 @@ export const useShareAnalytics = () => {
           referrer: event.referrer,
         },
       });
-
-      console.log('[ShareAnalytics] Share tracked:', event.platform, event.providerId);
     } catch (error) {
       // Non-blocking - don't disrupt UX for analytics failures
       console.warn('[ShareAnalytics] Failed to track share:', error);

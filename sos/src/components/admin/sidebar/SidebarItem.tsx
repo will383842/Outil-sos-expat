@@ -2,16 +2,17 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { ChevronDown, ChevronRight, Dot } from "lucide-react";
+import { useIntl } from "react-intl";
 import type { LucideIcon } from "lucide-react";
 
 export interface MenuNode {
   id: string;
-  label: string;
+  labelKey: string;
   path?: string;
   children?: MenuNode[];
-  icon?: LucideIcon; // <-- CORRIGÉ : compatible avec adminMenuTree (LucideIcon)
+  icon?: LucideIcon;
   badge?: string;
-  description?: string;
+  descriptionKey?: string;
 }
 
 interface SidebarItemProps {
@@ -28,7 +29,14 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   onItemClick,
 }) => {
   const location = useLocation();
+  const intl = useIntl();
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Resolve translation keys
+  const label = intl.formatMessage({ id: node.labelKey, defaultMessage: node.labelKey });
+  const description = node.descriptionKey
+    ? intl.formatMessage({ id: node.descriptionKey, defaultMessage: node.descriptionKey })
+    : undefined;
 
   const hasChildren = !!(node.children && node.children.length > 0);
   const isRootLevel = level === 0;
@@ -208,9 +216,9 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   // Rendu du label avec gestion de la troncature
   const renderLabel = () => {
     if (isSidebarCollapsed && isRootLevel) {
-      return <span className="sr-only">{node.label}</span>;
+      return <span className="sr-only">{label}</span>;
     }
-    return <span className="truncate">{node.label}</span>;
+    return <span className="truncate">{label}</span>;
   };
 
   // Rendu du tooltip pour sidebar collapsed
@@ -218,9 +226,9 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
     if (!isSidebarCollapsed || !isRootLevel) return null;
     return (
       <div className="invisible group-hover:visible absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded shadow-lg whitespace-nowrap z-50">
-        {node.label}
-        {node.description && (
-          <div className="text-gray-300 text-xs mt-1">{node.description}</div>
+        {label}
+        {description && (
+          <div className="text-gray-300 text-xs mt-1">{description}</div>
         )}
       </div>
     );
@@ -234,9 +242,9 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
         <button
           onClick={handleToggleExpand}
           className={getButtonStyles()}
-          title={node.description}
+          title={description}
           aria-expanded={isExpanded}
-          aria-label={`${isExpanded ? "Réduire" : "Étendre"} ${node.label}`}
+          aria-label={`${isExpanded ? intl.formatMessage({ id: "admin.sidebar.collapse", defaultMessage: "Collapse" }) : intl.formatMessage({ id: "admin.sidebar.expand", defaultMessage: "Expand" })} ${label}`}
         >
           <div className="flex items-center min-w-0 flex-1">
             {renderIcon()}
@@ -251,7 +259,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
                   : ""
               }`}
             >
-              {node.label}
+              {label}
             </span>
             {renderBadge()}
           </div>
@@ -284,8 +292,8 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
         to={node.path || "#"}
         className={({ isActive }) => getLinkStyles(isActive)}
         onClick={handleItemClick}
-        title={node.description}
-        aria-label={node.label}
+        title={description}
+        aria-label={label}
       >
         <div className="flex items-center min-w-0 flex-1">
           {renderIcon()}

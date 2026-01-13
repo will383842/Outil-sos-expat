@@ -372,6 +372,12 @@ export interface Provider {
   isBanned: boolean;
   isOnline: boolean;
 
+  // Suspension fields
+  isSuspended?: boolean;
+  suspendedAt?: Date | Timestamp | null;
+  suspendedUntil?: Date | Timestamp | null;
+  suspendReason?: string;
+
   // Dates
   createdAt?: Date | Timestamp;
   updatedAt?: Date | Timestamp;

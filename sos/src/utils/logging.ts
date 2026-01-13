@@ -1,5 +1,6 @@
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../config/firebase';
+import { getCorrelationContext, getCurrentCorrelationId, getSessionCorrelationId } from './correlationId';
 
 // Types pour les logs
 interface CallLog extends Record<string, unknown> {
@@ -127,6 +128,7 @@ class LoggingService {
 
   /**
    * Créer un log d'appel avec retry et validation
+   * Inclut automatiquement le correlation ID pour le tracing
    */
   public async createCallLog(logData: CallLog): Promise<string | null> {
     // Validation des données obligatoires
@@ -137,10 +139,15 @@ class LoggingService {
 
     const sanitizedData = this.sanitizeData(logData as Record<string, unknown>);
 
+    // Ajouter le contexte de corrélation pour le tracing end-to-end
+    const correlationContext = getCorrelationContext();
+
     return this.retryWithBackoff(async () => {
       const callLogsRef = collection(db, 'call_logs');
       const docRef = await addDoc(callLogsRef, {
         ...sanitizedData,
+        correlationId: correlationContext.correlationId,
+        sessionId: correlationContext.sessionId,
         createdAt: serverTimestamp()
       });
       return docRef.id;
@@ -149,6 +156,7 @@ class LoggingService {
 
   /**
    * Créer un log d'erreur avec retry et validation
+   * Inclut automatiquement le correlation ID pour le tracing
    */
   public async logError(logData: ErrorLog): Promise<string | null> {
     // Validation des données obligatoires
@@ -159,10 +167,16 @@ class LoggingService {
 
     const sanitizedData = this.sanitizeData(logData as Record<string, unknown>);
 
+    // Ajouter le contexte de corrélation pour le tracing end-to-end
+    const correlationId = getCurrentCorrelationId();
+    const sessionId = getSessionCorrelationId();
+
     return this.retryWithBackoff(async () => {
       const errorLogsRef = collection(db, 'error_logs');
       const docRef = await addDoc(errorLogsRef, {
         ...sanitizedData,
+        correlationId,
+        sessionId,
         timestamp: serverTimestamp(),
         userAgent: typeof window !== 'undefined' ? navigator.userAgent : undefined,
         url: typeof window !== 'undefined' ? window.location.href : undefined
@@ -190,6 +204,7 @@ class LoggingService {
 
     // Erreurs JavaScript non gérées
     window.addEventListener('error', (event: ErrorEvent) => {
+      const correlationContext = getCorrelationContext();
       this.logError({
         origin: 'frontend',
         error: `Unhandled error: ${event.message}`,
@@ -198,23 +213,24 @@ class LoggingService {
           lineno: event.lineno || 0,
           colno: event.colno || 0,
           stack: event.error?.stack || 'No stack trace',
-          timestamp: new Date().toISOString()
+          ...correlationContext // includes timestamp
         }
       }).catch(err => console.error('Failed to log unhandled error:', err));
     }, { passive: true });
 
     // Promesses rejetées non gérées
     window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
-      const error = event.reason instanceof Error ? 
-        event.reason.message : 
+      const error = event.reason instanceof Error ?
+        event.reason.message :
         String(event.reason);
 
+      const correlationContext = getCorrelationContext();
       this.logError({
         origin: 'frontend',
         error: `Unhandled promise rejection: ${error}`,
         context: {
           stack: event.reason instanceof Error ? event.reason.stack : 'No stack trace',
-          timestamp: new Date().toISOString()
+          ...correlationContext // includes timestamp
         }
       }).catch(err => console.error('Failed to log unhandled rejection:', err));
     }, { passive: true });
@@ -222,15 +238,16 @@ class LoggingService {
     // Erreurs de ressources (images, scripts, etc.)
     window.addEventListener('error', (event: Event) => {
       const target = event.target as HTMLElementWithSrc | null;
-      
+
       if (target && target !== (window as unknown)) {
+        const correlationContext = getCorrelationContext();
         this.logError({
           origin: 'frontend',
           error: `Resource loading error: ${target.src || target.href || 'unknown resource'}`,
           context: {
             tagName: target.tagName || 'unknown',
             type: event.type,
-            timestamp: new Date().toISOString()
+            ...correlationContext // includes timestamp
           }
         }).catch(err => console.error('Failed to log resource error:', err));
       }
@@ -253,3 +270,18 @@ export const setupGlobalErrorLogging = (): void =>
 
 // Export des types
 export type { CallLog, ErrorLog };
+
+// Re-export correlation ID utilities for convenience
+export {
+  generateCorrelationId,
+  getCurrentCorrelationId,
+  setCurrentCorrelationId,
+  clearCurrentCorrelationId,
+  getSessionCorrelationId,
+  getCorrelationContext,
+  getCorrelationHeaders,
+  withCorrelationId,
+  withCorrelation,
+  createCorrelationScope,
+  CORRELATION_ID_HEADER
+} from './correlationId';

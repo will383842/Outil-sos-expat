@@ -75,6 +75,13 @@ export const TTL_CONFIG = {
   cache: {
     ttlDays: 1,
     field: 'expireAt'
+  },
+
+  // Connection logs - logins, logouts, API access, admin actions
+  // Supprimés après 90 jours (conformité RGPD)
+  connection_logs: {
+    ttlDays: 90,
+    field: 'expireAt'
   }
 } as const;
 
@@ -190,6 +197,12 @@ export const FIRESTORE_TTL_INDEXES = {
     },
     {
       collectionGroup: 'cache',
+      fieldPath: 'expireAt',
+      ttl: true,
+      indexes: []
+    },
+    {
+      collectionGroup: 'connection_logs',
       fieldPath: 'expireAt',
       ttl: true,
       indexes: []

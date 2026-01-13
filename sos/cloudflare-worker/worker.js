@@ -136,59 +136,276 @@ const BOT_USER_AGENTS = [
 // URL patterns that need SSR/Prerendering for bots
 // Includes: provider profiles, blog/help articles, landing pages, key static pages
 
-// Blog/Help Center patterns (all 9 languages)
+// ==========================================================================
+// BLOG/HELP CENTER PATTERNS (all 9 languages + 197 countries)
+// These patterns automatically catch ANY new article published
+// Supports: FR, EN, ES, DE, RU, PT, ZH (Chinese), HI (Hindi), AR (Arabic)
+// ==========================================================================
 const BLOG_PATTERNS = [
-  /^\/[a-z]{2}(-[a-z]{2})?\/centre-aide\/[^\/]+$/i,      // French
-  /^\/[a-z]{2}(-[a-z]{2})?\/help-center\/[^\/]+$/i,      // English
-  /^\/[a-z]{2}(-[a-z]{2})?\/hilfe-center\/[^\/]+$/i,     // German
-  /^\/[a-z]{2}(-[a-z]{2})?\/hilfezentrum\/[^\/]+$/i,     // German alt
-  /^\/[a-z]{2}(-[a-z]{2})?\/centro-ayuda\/[^\/]+$/i,     // Spanish
-  /^\/[a-z]{2}(-[a-z]{2})?\/centro-ajuda\/[^\/]+$/i,     // Portuguese
-  /^\/[a-z]{2}(-[a-z]{2})?\/centr-pomoshi\/[^\/]+$/i,    // Russian
-  /^\/[a-z]{2}(-[a-z]{2})?\/bangzhu-zhongxin\/[^\/]+$/i, // Chinese
-  /^\/[a-z]{2}(-[a-z]{2})?\/markaz-almusaeada\/[^\/]+$/i,// Arabic
-  /^\/[a-z]{2}(-[a-z]{2})?\/sahayata-kendra\/[^\/]+$/i,  // Hindi
-  /^\/[a-z]{2}(-[a-z]{2})?\/blog\/[^\/]+$/i,             // Generic blog
+  // Help Center articles - ALL 9 LANGUAGES with translated slugs
+  /^\/[a-z]{2}(-[a-z]{2})?\/centre-aide\/[^\/]+$/i,           // French
+  /^\/[a-z]{2}(-[a-z]{2})?\/help-center\/[^\/]+$/i,           // English
+  /^\/[a-z]{2}(-[a-z]{2})?\/hilfezentrum\/[^\/]+$/i,          // German
+  /^\/[a-z]{2}(-[a-z]{2})?\/centro-ayuda\/[^\/]+$/i,          // Spanish
+  /^\/[a-z]{2}(-[a-z]{2})?\/centro-ajuda\/[^\/]+$/i,          // Portuguese
+  /^\/[a-z]{2}(-[a-z]{2})?\/tsentr-pomoshchi\/[^\/]+$/i,      // Russian
+  /^\/[a-z]{2}(-[a-z]{2})?\/bangzhu-zhongxin\/[^\/]+$/i,      // Chinese (pinyin)
+  /^\/[a-z]{2}(-[a-z]{2})?\/sahayata-kendra\/[^\/]+$/i,       // Hindi (romanized)
+  /^\/[a-z]{2}(-[a-z]{2})?\/مركز-المساعدة\/[^\/]+$/i,         // Arabic (native)
+  /^\/[a-z]{2}(-[a-z]{2})?\/markaz-almusaeada\/[^\/]+$/i,     // Arabic (romanized)
+
+  // Blog articles - ALL LANGUAGES
+  /^\/[a-z]{2}(-[a-z]{2})?\/blog\/[^\/]+$/i,                  // Generic /blog/
+  /^\/[a-z]{2}(-[a-z]{2})?\/articles\/[^\/]+$/i,              // /articles/
+  /^\/[a-z]{2}(-[a-z]{2})?\/actualites\/[^\/]+$/i,            // French news
+  /^\/[a-z]{2}(-[a-z]{2})?\/news\/[^\/]+$/i,                  // English news
+  /^\/[a-z]{2}(-[a-z]{2})?\/noticias\/[^\/]+$/i,              // Spanish/Portuguese news
+  /^\/[a-z]{2}(-[a-z]{2})?\/nachrichten\/[^\/]+$/i,           // German news
+  /^\/[a-z]{2}(-[a-z]{2})?\/novosti\/[^\/]+$/i,               // Russian news
+  /^\/[a-z]{2}(-[a-z]{2})?\/xinwen\/[^\/]+$/i,                // Chinese news (pinyin)
+  /^\/[a-z]{2}(-[a-z]{2})?\/samachar\/[^\/]+$/i,              // Hindi news
+  /^\/[a-z]{2}(-[a-z]{2})?\/akhbar\/[^\/]+$/i,                // Arabic news (romanized)
+
+  // Guides and resources - ALL LANGUAGES
+  /^\/[a-z]{2}(-[a-z]{2})?\/guides\/[^\/]+$/i,                // Guides
+  /^\/[a-z]{2}(-[a-z]{2})?\/guide\/[^\/]+$/i,                 // Guide (singular)
+  /^\/[a-z]{2}(-[a-z]{2})?\/ressources\/[^\/]+$/i,            // Resources FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/resources\/[^\/]+$/i,             // Resources EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/recursos\/[^\/]+$/i,              // Resources ES/PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/ressourcen\/[^\/]+$/i,            // Resources DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/resursy\/[^\/]+$/i,               // Resources RU
+
+  // FAQ articles (deep links)
+  /^\/[a-z]{2}(-[a-z]{2})?\/faq\/[^\/]+$/i,                   // FAQ articles
+  /^\/[a-z]{2}(-[a-z]{2})?\/preguntas-frecuentes\/[^\/]+$/i,  // FAQ ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/perguntas-frequentes\/[^\/]+$/i,  // FAQ PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/voprosy-otvety\/[^\/]+$/i,        // FAQ RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/changjian-wenti\/[^\/]+$/i,       // FAQ ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/aksar-puche-jaane-wale-sawal\/[^\/]+$/i, // FAQ HI
+
+  // Nested blog categories (e.g., /blog/category/article)
+  /^\/[a-z]{2}(-[a-z]{2})?\/blog\/[^\/]+\/[^\/]+$/i,
+  /^\/[a-z]{2}(-[a-z]{2})?\/centre-aide\/[^\/]+\/[^\/]+$/i,
+  /^\/[a-z]{2}(-[a-z]{2})?\/help-center\/[^\/]+\/[^\/]+$/i,
+  /^\/[a-z]{2}(-[a-z]{2})?\/guides\/[^\/]+\/[^\/]+$/i,
+
+  // Catch-all for any /locale/category/slug pattern (flexible for future content)
+  // EXCLUDES: admin, api, dashboard, inscription, register, connexion, login, tableau-de-bord, panel, assets, static
+  /^\/[a-z]{2}(-[a-z]{2})?\/(?!(admin|api|dashboard|inscription|register|connexion|login|tableau-de-bord|panel|panel-upravleniya|kongzhi-mianban|assets|static|_next|favicon))[a-z-]+\/[a-zA-Z0-9\u0600-\u06FF\u0900-\u097F-]+$/i,
 ];
 
 // Landing pages and key static pages that need prerendering
+// These patterns automatically catch ANY new landing page or static page
+// ========================================================================
+// COMPLETE COVERAGE FOR ALL 9 LANGUAGES:
+// FR (French), EN (English), ES (Spanish), DE (German), RU (Russian),
+// PT (Portuguese), ZH/CH (Chinese), HI (Hindi), AR (Arabic)
+// ========================================================================
 const LANDING_PAGE_PATTERNS = [
-  /^\/[a-z]{2}(-[a-z]{2})?\/?$/i,                        // Homepage per locale
-  /^\/[a-z]{2}(-[a-z]{2})?\/tarifs\/?$/i,                // Pricing FR
-  /^\/[a-z]{2}(-[a-z]{2})?\/pricing\/?$/i,               // Pricing EN
-  /^\/[a-z]{2}(-[a-z]{2})?\/preise\/?$/i,                // Pricing DE
-  /^\/[a-z]{2}(-[a-z]{2})?\/precios\/?$/i,               // Pricing ES
-  /^\/[a-z]{2}(-[a-z]{2})?\/comment-ca-marche\/?$/i,     // How it works FR
-  /^\/[a-z]{2}(-[a-z]{2})?\/how-it-works\/?$/i,          // How it works EN
-  /^\/[a-z]{2}(-[a-z]{2})?\/wie-es-funktioniert\/?$/i,   // How it works DE
-  /^\/[a-z]{2}(-[a-z]{2})?\/como-funciona\/?$/i,         // How it works ES/PT
-  /^\/[a-z]{2}(-[a-z]{2})?\/faq\/?$/i,                   // FAQ
-  /^\/[a-z]{2}(-[a-z]{2})?\/temoignages\/?$/i,           // Testimonials FR
-  /^\/[a-z]{2}(-[a-z]{2})?\/testimonials\/?$/i,          // Testimonials EN
-  /^\/[a-z]{2}(-[a-z]{2})?\/contact\/?$/i,               // Contact
-  /^\/[a-z]{2}(-[a-z]{2})?\/kontakt\/?$/i,               // Contact DE
-  /^\/[a-z]{2}(-[a-z]{2})?\/contacto\/?$/i,              // Contact ES
-  /^\/[a-z]{2}(-[a-z]{2})?\/contato\/?$/i,               // Contact PT
-  /^\/[a-z]{2}(-[a-z]{2})?\/prestataires\/?$/i,          // Providers list FR
-  /^\/[a-z]{2}(-[a-z]{2})?\/providers\/?$/i,             // Providers list EN
-  /^\/[a-z]{2}(-[a-z]{2})?\/anbieter\/?$/i,              // Providers list DE
-  /^\/[a-z]{2}(-[a-z]{2})?\/proveedores\/?$/i,           // Providers list ES
-  /^\/[a-z]{2}(-[a-z]{2})?\/sos-appel\/?$/i,             // SOS Call FR
-  /^\/[a-z]{2}(-[a-z]{2})?\/emergency-call\/?$/i,        // SOS Call EN
-  /^\/[a-z]{2}(-[a-z]{2})?\/notruf\/?$/i,                // SOS Call DE
-  // Legal pages (important for SEO)
-  /^\/[a-z]{2}(-[a-z]{2})?\/cgu-clients\/?$/i,           // Terms clients FR
-  /^\/[a-z]{2}(-[a-z]{2})?\/cgu-avocats\/?$/i,           // Terms lawyers FR
-  /^\/[a-z]{2}(-[a-z]{2})?\/cgu-expatries\/?$/i,         // Terms expats FR
-  /^\/[a-z]{2}(-[a-z]{2})?\/terms-clients\/?$/i,         // Terms clients EN
-  /^\/[a-z]{2}(-[a-z]{2})?\/terms-lawyers\/?$/i,         // Terms lawyers EN
-  /^\/[a-z]{2}(-[a-z]{2})?\/terms-expats\/?$/i,          // Terms expats EN
-  /^\/[a-z]{2}(-[a-z]{2})?\/politique-confidentialite\/?$/i, // Privacy FR
-  /^\/[a-z]{2}(-[a-z]{2})?\/privacy-policy\/?$/i,        // Privacy EN
-  /^\/[a-z]{2}(-[a-z]{2})?\/datenschutzrichtlinie\/?$/i, // Privacy DE
-  /^\/[a-z]{2}(-[a-z]{2})?\/cookies\/?$/i,               // Cookies all langs
-  /^\/[a-z]{2}(-[a-z]{2})?\/consommateurs\/?$/i,         // Consumers FR
-  /^\/[a-z]{2}(-[a-z]{2})?\/consumers\/?$/i,             // Consumers EN
+  /^\/?$/i,                                              // Root homepage (/)
+  /^\/[a-z]{2}(-[a-z]{2})?\/?$/i,                        // Homepage per locale (/fr-fr/, /en-us/, /zh-cn/, etc.)
+
+  // ========== PRICING - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/tarifs\/?$/i,                // FR: tarifs
+  /^\/[a-z]{2}(-[a-z]{2})?\/pricing\/?$/i,               // EN: pricing
+  /^\/[a-z]{2}(-[a-z]{2})?\/precios\/?$/i,               // ES: precios
+  /^\/[a-z]{2}(-[a-z]{2})?\/preise\/?$/i,                // DE: preise
+  /^\/[a-z]{2}(-[a-z]{2})?\/tseny\/?$/i,                 // RU: tseny (цены)
+  /^\/[a-z]{2}(-[a-z]{2})?\/precos\/?$/i,                // PT: precos
+  /^\/[a-z]{2}(-[a-z]{2})?\/jiage\/?$/i,                 // ZH: jiage (价格)
+  /^\/[a-z]{2}(-[a-z]{2})?\/mulya\/?$/i,                 // HI: mulya (मूल्य)
+  /^\/[a-z]{2}(-[a-z]{2})?\/الأسعار\/?$/i,               // AR: الأسعار (native)
+
+  // ========== HOW IT WORKS - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/comment-ca-marche\/?$/i,     // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/how-it-works\/?$/i,          // EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/como-funciona\/?$/i,         // ES/PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/wie-es-funktioniert\/?$/i,   // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/kak-eto-rabotaet\/?$/i,      // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/ruhe-yunzuo\/?$/i,           // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/kaise-kaam-karta-hai\/?$/i,  // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/كيف-يعمل\/?$/i,              // AR (native)
+
+  // ========== FAQ - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/faq\/?$/i,                   // FR/EN/DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/preguntas-frecuentes\/?$/i,  // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/perguntas-frequentes\/?$/i,  // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/voprosy-otvety\/?$/i,        // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/changjian-wenti\/?$/i,       // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/aksar-puche-jaane-wale-sawal\/?$/i, // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/الأسئلة-الشائعة\/?$/i,       // AR (native)
+
+  // ========== TESTIMONIALS - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/temoignages\/?$/i,           // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/testimonials\/?$/i,          // EN/DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/testimonios\/?$/i,           // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/depoimentos\/?$/i,           // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/otzyvy\/?$/i,                // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/yonghu-pingjia\/?$/i,        // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/prashansapatra\/?$/i,        // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/الشهادات\/?$/i,              // AR (native)
+
+  // ========== CONTACT - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/contact\/?$/i,               // FR/EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/contacto\/?$/i,              // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/kontakt\/?$/i,               // DE/RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/contato\/?$/i,               // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/lianxi\/?$/i,                // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/sampark\/?$/i,               // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/اتصل-بنا\/?$/i,              // AR (native)
+
+  // ========== PROVIDERS LIST - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/prestataires\/?$/i,          // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/providers\/?$/i,             // EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/proveedores\/?$/i,           // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/anbieter\/?$/i,              // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/postavshchiki\/?$/i,         // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/prestadores\/?$/i,           // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/fuwu-tigongzhe\/?$/i,        // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/seva-pradaata\/?$/i,         // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/مقدمي-الخدمات\/?$/i,         // AR (native)
+
+  // ========== SOS CALL / EMERGENCY - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/sos-appel\/?$/i,             // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/emergency-call\/?$/i,        // EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/llamada-emergencia\/?$/i,    // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/notruf\/?$/i,                // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/ekstrenniy-zvonok\/?$/i,     // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/chamada-emergencia\/?$/i,    // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/jinji-dianhua\/?$/i,         // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/aapatkaalin-call\/?$/i,      // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/مكالمة-طوارئ\/?$/i,          // AR (native)
+
+  // ========== HELP CENTER - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/centre-aide\/?$/i,           // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/help-center\/?$/i,           // EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/centro-ayuda\/?$/i,          // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/hilfezentrum\/?$/i,          // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/tsentr-pomoshchi\/?$/i,      // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/centro-ajuda\/?$/i,          // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/bangzhu-zhongxin\/?$/i,      // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/sahayata-kendra\/?$/i,       // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/مركز-المساعدة\/?$/i,         // AR (native)
+
+  // ========== LEGAL PAGES - All 9 languages ==========
+  // Terms clients
+  /^\/[a-z]{2}(-[a-z]{2})?\/cgu-clients\/?$/i,           // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/terms-clients\/?$/i,         // EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/terminos-clientes\/?$/i,     // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/agb-kunden\/?$/i,            // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/usloviya-klienty\/?$/i,      // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/termos-clientes\/?$/i,       // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/tiaokuan-kehu\/?$/i,         // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/shartein-grahak\/?$/i,       // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/شروط-العملاء\/?$/i,          // AR (native)
+
+  // Terms lawyers
+  /^\/[a-z]{2}(-[a-z]{2})?\/cgu-avocats\/?$/i,           // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/terms-lawyers\/?$/i,         // EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/terminos-abogados\/?$/i,     // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/agb-anwaelte\/?$/i,          // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/usloviya-advokaty\/?$/i,     // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/termos-advogados\/?$/i,      // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/tiaokuan-lushi\/?$/i,        // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/shartein-vakil\/?$/i,        // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/شروط-المحامون\/?$/i,         // AR (native)
+
+  // Terms expats
+  /^\/[a-z]{2}(-[a-z]{2})?\/cgu-expatries\/?$/i,         // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/terms-expats\/?$/i,          // EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/terminos-expatriados\/?$/i,  // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/agb-expatriates\/?$/i,       // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/usloviya-expatrianty\/?$/i,  // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/termos-expatriados\/?$/i,    // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/tiaokuan-waipai\/?$/i,       // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/shartein-pravasi\/?$/i,      // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/شروط-المغتربين\/?$/i,        // AR (native)
+
+  // Privacy policy
+  /^\/[a-z]{2}(-[a-z]{2})?\/politique-confidentialite\/?$/i, // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/privacy-policy\/?$/i,        // EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/politica-privacidad\/?$/i,   // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/datenschutzrichtlinie\/?$/i, // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/politika-konfidentsialnosti\/?$/i, // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/politica-privacidade\/?$/i,  // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/yinsi-zhengce\/?$/i,         // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/gopaniyata-niti\/?$/i,       // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/سياسة-الخصوصية\/?$/i,        // AR (native)
+
+  // Cookies
+  /^\/[a-z]{2}(-[a-z]{2})?\/cookies\/?$/i,               // All latin langs
+  /^\/[a-z]{2}(-[a-z]{2})?\/ملفات-التعريف\/?$/i,         // AR (native)
+
+  // Consumers
+  /^\/[a-z]{2}(-[a-z]{2})?\/consommateurs\/?$/i,         // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/consumers\/?$/i,             // EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/consumidores\/?$/i,          // ES/PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/verbraucher\/?$/i,           // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/potrebiteli\/?$/i,           // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/xiaofeizhe\/?$/i,            // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/upbhokta\/?$/i,              // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/المستهلكين\/?$/i,            // AR (native)
+
+  // ==========================================================================
+  // DYNAMIC PATTERNS FOR NEW PAGES (automatically prerendered)
+  // Supports: Latin, Arabic (\u0600-\u06FF), Hindi/Devanagari (\u0900-\u097F),
+  //           Chinese (via pinyin romanization)
+  // ==========================================================================
+
+  // New landing pages - any single-segment path under locale (LATIN ONLY)
+  // Examples: /fr-fr/nouvelle-page, /en-us/new-campaign, /de-de/neue-seite
+  // Note: Uses negative lookahead to exclude system paths
+  /^\/[a-z]{2}(-[a-z]{2})?\/(?!(assets|api|admin|dashboard|inscription|register|connexion|login|tableau-de-bord|panel|panel-upravleniya|kongzhi-mianban|_next|static|favicon|profil|profile|perfil))[a-z][a-z0-9-]+\/?$/i,
+
+  // New landing pages - ARABIC characters (native) - MUST start with Arabic char
+  // Examples: /ar-sa/محامون, /ar-eg/الأسعار
+  /^\/[a-z]{2}(-[a-z]{2})?\/[\u0600-\u06FF][\u0600-\u06FF\u0020-\u007F\-]+\/?$/i,
+
+  // New landing pages - HINDI/DEVANAGARI characters (native) - MUST start with Devanagari char
+  // Examples: /hi-in/वकील, /hi-in/मूल्य
+  /^\/[a-z]{2}(-[a-z]{2})?\/[\u0900-\u097F][\u0900-\u097F\u0020-\u007F\-]+\/?$/i,
+
+  // About/Company pages
+  /^\/[a-z]{2}(-[a-z]{2})?\/a-propos\/?$/i,              // About FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/about\/?$/i,                 // About EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/uber-uns\/?$/i,              // About DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/sobre-nosotros\/?$/i,        // About ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/sobre-nos\/?$/i,             // About PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/equipe\/?$/i,                // Team FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/team\/?$/i,                  // Team EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/carrieres\/?$/i,             // Careers FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/careers\/?$/i,               // Careers EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/partenaires\/?$/i,           // Partners FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/partners\/?$/i,              // Partners EN
+
+  // Marketing/Campaign landing pages
+  /^\/[a-z]{2}(-[a-z]{2})?\/promo\/[^\/]+\/?$/i,         // Promo pages
+  /^\/[a-z]{2}(-[a-z]{2})?\/campagne\/[^\/]+\/?$/i,      // Campaign FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/campaign\/[^\/]+\/?$/i,      // Campaign EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/offre\/[^\/]+\/?$/i,         // Offer FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/offer\/[^\/]+\/?$/i,         // Offer EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/lp\/[^\/]+\/?$/i,            // Landing page shortcut
+
+  // Service-specific landing pages
+  /^\/[a-z]{2}(-[a-z]{2})?\/services\/[^\/]+\/?$/i,      // Services
+  /^\/[a-z]{2}(-[a-z]{2})?\/solutions\/[^\/]+\/?$/i,     // Solutions
+  /^\/[a-z]{2}(-[a-z]{2})?\/specialites\/[^\/]+\/?$/i,   // Specialties FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/specialties\/[^\/]+\/?$/i,   // Specialties EN
+
+  // Location-based landing pages
+  /^\/[a-z]{2}(-[a-z]{2})?\/pays\/[^\/]+\/?$/i,          // Country pages FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/country\/[^\/]+\/?$/i,       // Country pages EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/ville\/[^\/]+\/?$/i,         // City pages FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/city\/[^\/]+\/?$/i,          // City pages EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/region\/[^\/]+\/?$/i,        // Region pages
+
+  // Use-case landing pages
+  /^\/[a-z]{2}(-[a-z]{2})?\/pour-les-expatries\/?$/i,    // For expats FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/for-expats\/?$/i,            // For expats EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/pour-les-entreprises\/?$/i,  // For businesses FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/for-businesses\/?$/i,        // For businesses EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/pour-les-avocats\/?$/i,      // For lawyers FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/for-lawyers\/?$/i,           // For lawyers EN
 ];
 
 // URL patterns for provider profile pages
@@ -257,12 +474,40 @@ const PROVIDER_PROFILE_PATTERNS = [
   /^\/[a-z]{2}-[a-z]{2}\/lekhaakar-[a-z]+\/[^\/]+$/i,
   /^\/[a-z]{2}-[a-z]{2}\/chikitsak-[a-z]+\/[^\/]+$/i,
 
+  // ==========================================================================
+  // NATIVE SCRIPT PATTERNS (Arabic, Hindi characters in URLs)
+  // ==========================================================================
+
+  // Arabic patterns (native script)
+  // Examples: /ar-sa/محامي-السعودية/اسم-abc123
+  /^\/[a-z]{2}-[a-z]{2}\/محامي-[\u0600-\u06FFa-z]+\/[^\/]+$/i,     // محامي (lawyer)
+  /^\/[a-z]{2}-[a-z]{2}\/مغترب-[\u0600-\u06FFa-z]+\/[^\/]+$/i,     // مغترب (expat)
+  /^\/[a-z]{2}-[a-z]{2}\/محاسب-[\u0600-\u06FFa-z]+\/[^\/]+$/i,     // محاسب (accountant)
+  /^\/[a-z]{2}-[a-z]{2}\/طبيب-[\u0600-\u06FFa-z]+\/[^\/]+$/i,      // طبيب (doctor)
+
+  // Hindi patterns (native Devanagari script)
+  // Examples: /hi-in/वकील-भारत/नाम-abc123
+  /^\/[a-z]{2}-[a-z]{2}\/वकील-[\u0900-\u097Fa-z]+\/[^\/]+$/i,      // वकील (lawyer)
+  /^\/[a-z]{2}-[a-z]{2}\/प्रवासी-[\u0900-\u097Fa-z]+\/[^\/]+$/i,   // प्रवासी (expat)
+  /^\/[a-z]{2}-[a-z]{2}\/लेखाकार-[\u0900-\u097Fa-z]+\/[^\/]+$/i,   // लेखाकार (accountant)
+  /^\/[a-z]{2}-[a-z]{2}\/चिकित्सक-[\u0900-\u097Fa-z]+\/[^\/]+$/i,  // चिकित्सक (doctor)
+
+  // ==========================================================================
+  // GENERIC/FALLBACK PATTERNS
+  // ==========================================================================
+
   // Generic pattern for provider profiles with ID
   /^\/[a-z]{2}-[a-z]{2}\/provider\/[a-zA-Z0-9_-]+$/i,
   /^\/[a-z]{2}-[a-z]{2}\/prestataire\/[a-zA-Z0-9_-]+$/i,
 
   // Fallback: catch any profile URL with 3-segment structure (locale/role-country/name)
+  // Latin scripts
   /^\/[a-z]{2}-[a-z]{2}\/[a-z]+-[a-z]+\/[^\/]+$/i,
+
+  // Fallback: catch any profile URL with Unicode characters (Arabic, Hindi)
+  // Examples: /ar-sa/محامي-السعودية/name, /hi-in/वकील-भारत/name
+  /^\/[a-z]{2}-[a-z]{2}\/[\u0600-\u06FF]+-[\u0600-\u06FFa-z]+\/[^\/]+$/i,    // Arabic
+  /^\/[a-z]{2}-[a-z]{2}\/[\u0900-\u097F]+-[\u0900-\u097Fa-z]+\/[^\/]+$/i,    // Hindi
 ];
 
 /**

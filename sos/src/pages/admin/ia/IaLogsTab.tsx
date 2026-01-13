@@ -173,7 +173,7 @@ export const IaLogsTab: React.FC = () => {
         <div className="flex items-center gap-2">
           <Activity className="w-5 h-5 text-indigo-600" />
           <h2 className="text-lg font-semibold text-gray-900">
-            Logs d'utilisation IA
+            {iaT.aiUsageLogsTitle}
           </h2>
         </div>
         <div className="flex items-center gap-2">
@@ -283,8 +283,8 @@ export const IaLogsTab: React.FC = () => {
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">User</th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Provider</th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tokens</th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Temps</th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">{iaT.timeColumn}</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">{iaT.statusColumn}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -343,7 +343,7 @@ export const IaLogsTab: React.FC = () => {
         </table>
         {logs.length > 100 && (
           <div className="text-center py-2 text-sm text-gray-500">
-            Affichage limité aux 100 premiers résultats ({logs.length} au total)
+            {iaT.displayLimitedTo.replace('{limit}', '100').replace('{total}', String(logs.length))}
           </div>
         )}
       </div>

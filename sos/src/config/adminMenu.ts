@@ -26,11 +26,11 @@ import {
   UsersIcon,
   Archive,
   Cog,
-  Zap,
   HelpingHand,
   HelpCircle,
   Bot,
   Activity,
+  Cpu,
   // Finance icons
   LayoutDashboard,
   Repeat,
@@ -44,76 +44,81 @@ import {
   BookOpen,
   Scale,
   ArrowDownUp,
+  // New icons for added pages
+  ClipboardCheck,
+  LogIn,
+  PieChart,
+  Cloud,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export type AdminMenuItem = {
   id: string;
-  label: string;
+  labelKey: string;
   path?: string;
   children?: AdminMenuItem[];
   icon?: LucideIcon;
   badge?: string;
-  description?: string;
+  descriptionKey?: string;
 };
 
 export const adminMenuTree: AdminMenuItem[] = [
-  // ===== 📊 TABLEAU DE BORD (Priorité 1 - Usage quotidien) =====
+  // ===== TABLEAU DE BORD (Priorite 1 - Usage quotidien) =====
   {
     id: "dashboard",
-    label: "Tableau de bord",
+    labelKey: "admin.menu.dashboard",
     path: "/admin/dashboard",
     icon: BarChart3,
-    description: "Vue d'ensemble et KPIs en temps réel",
+    descriptionKey: "admin.menu.dashboard.description",
   },
 
-  // ===== 👥 UTILISATEURS & PRESTATAIRES (Priorité 2 - Usage quotidien) =====
+  // ===== UTILISATEURS & PRESTATAIRES (Priorite 2 - Usage quotidien) =====
   {
     id: "users",
-    label: "Users et prestataires",
+    labelKey: "admin.menu.users",
     icon: Users,
-    description: "Gestion complète des utilisateurs",
+    descriptionKey: "admin.menu.users.description",
     children: [
       // Sous-section : TOUS LES UTILISATEURS
       {
         id: "all-users",
-        label: "Tous les utilisateurs",
+        labelKey: "admin.menu.allUsers",
         icon: UsersIcon,
-        description: "Vue globale de tous les utilisateurs",
+        descriptionKey: "admin.menu.allUsers.description",
         children: [
           {
             id: "gestion-globale",
-            label: "Gestion globale",
+            labelKey: "admin.menu.globalManagement",
             path: "/admin/users/all",
             icon: UsersIcon,
-            description: "Vue et gestion de tous les utilisateurs",
+            descriptionKey: "admin.menu.globalManagement.description",
           },
           {
             id: "clients",
-            label: "Clients",
+            labelKey: "admin.menu.clients",
             path: "/admin/users/clients",
             icon: Users,
-            description: "Utilisateurs clients",
+            descriptionKey: "admin.menu.clients.description",
           },
           {
             id: "prestataires-section",
-            label: "Prestataires",
+            labelKey: "admin.menu.providers",
             icon: UserCheck,
-            description: "Tous les prestataires",
+            descriptionKey: "admin.menu.providers.description",
             children: [
               {
                 id: "avocats",
-                label: "Avocat",
+                labelKey: "admin.menu.lawyers",
                 path: "/admin/users/providers/lawyers",
                 icon: Shield,
-                description: "Avocats partenaires",
+                descriptionKey: "admin.menu.lawyers.description",
               },
               {
                 id: "expats",
-                label: "Expats",
+                labelKey: "admin.menu.expats",
                 path: "/admin/users/providers/expats",
                 icon: Globe,
-                description: "Expatriés conseillers",
+                descriptionKey: "admin.menu.expats.description",
               },
             ],
           },
@@ -122,359 +127,323 @@ export const adminMenuTree: AdminMenuItem[] = [
       // Sous-section : AAA PROFILES
       {
         id: "aaa-profiles",
-        label: "AAA Profiles",
+        labelKey: "admin.menu.aaaProfiles",
         path: "/admin/aaaprofiles",
         icon: TestTube,
-        description: "Profils de démonstration et test",
+        descriptionKey: "admin.menu.aaaProfiles.description",
       },
       // Sous-section : VALIDATION AVOCATS
       {
-        id: "validation-prestataires", // ✅ Nouveau ID (optionnel mais recommandé)
-        label: "Validation prestataires", // ✅ CHANGEMENT PRINCIPAL
+        id: "validation-prestataires",
+        labelKey: "admin.menu.providerValidation",
         path: "/admin/approvals/lawyers",
         icon: UserCheck,
         badge: "3",
-        description: "Validation et KYC des prestataires",
+        descriptionKey: "admin.menu.providerValidation.description",
       },
       // Sous-section : KYC PRESTATAIRES
       {
         id: "kyc-prestataires",
-        label: "KYC prestataires",
+        labelKey: "admin.menu.kycProviders",
         path: "/admin/kyc/providers",
         icon: Shield,
         badge: "2",
-        description: "Vérification d'identité des prestataires",
+        descriptionKey: "admin.menu.kycProviders.description",
       },
       // Sous-section : AVIS ET NOTATION
       {
         id: "avis-notation",
-        label: "Avis et notation",
+        labelKey: "admin.menu.reviews",
         path: "/admin/reviews",
         icon: Star,
-        description: "Modération des avis clients",
+        descriptionKey: "admin.menu.reviews.description",
+      },
+      // Sous-section : VALIDATION DES PROFILS
+      {
+        id: "profile-validation",
+        labelKey: "admin.menu.profileValidation",
+        path: "/admin/validation",
+        icon: ClipboardCheck,
+        badge: "pending",
+        descriptionKey: "admin.menu.profileValidation.description",
       },
     ],
   },
 
-  // ===== 📞 APPELS (Priorité 3 - Monitoring critique) =====
+  // ===== APPELS (Priorite 3 - Monitoring critique) =====
   {
     id: "calls",
-    label: "Appels & Sessions",
+    labelKey: "admin.menu.calls",
     icon: Phone,
-    description: "Monitoring et gestion des appels",
+    descriptionKey: "admin.menu.calls.description",
     children: [
       {
         id: "calls-monitor",
-        label: "Monitoring temps réel",
+        labelKey: "admin.menu.realtimeMonitoring",
         path: "/admin/calls",
         icon: PhoneCall,
         badge: "LIVE",
-        description: "Surveillance des appels en cours",
+        descriptionKey: "admin.menu.realtimeMonitoring.description",
       },
       {
         id: "calls-sessions",
-        label: "Historique des sessions",
+        labelKey: "admin.menu.sessionsHistory",
         path: "/admin/calls/sessions",
         icon: PlayCircle,
-        description: "Archive des sessions d'appels",
+        descriptionKey: "admin.menu.sessionsHistory.description",
       },
       {
         id: "calls-received",
-        label: "Appels reçus",
+        labelKey: "admin.menu.receivedCalls",
         path: "/admin/calls/received",
         icon: PhoneIncoming,
         badge: "NEW",
-        description: "Historique des appels avec détail financier",
+        descriptionKey: "admin.menu.receivedCalls.description",
       },
     ],
   },
 
-  // ===== 💰 FINANCES (Priorité 4 - Business critique) =====
+  // ===== FINANCES (Priorite 4 - Business critique) =====
   {
     id: "finance",
-    label: "Finances & Comptabilité",
+    labelKey: "admin.menu.finance",
     icon: DollarSign,
-    description: "Gestion financière complète",
+    descriptionKey: "admin.menu.finance.description",
     children: [
       // Dashboard Financier
       {
         id: "finance-dashboard",
-        label: "Dashboard Financier",
+        labelKey: "admin.menu.financeDashboard",
         path: "/admin/finance/dashboard",
         icon: LayoutDashboard,
-        description: "Vue d'ensemble financière avec KPIs",
+        descriptionKey: "admin.menu.financeDashboard.description",
       },
       // Sous-section : Transactions & Paiements
       {
         id: "finance-transactions",
-        label: "Transactions",
+        labelKey: "admin.menu.transactions",
         icon: CreditCard,
-        description: "Gestion des paiements et transactions",
+        descriptionKey: "admin.menu.transactions.description",
         children: [
           {
             id: "all-transactions",
-            label: "Toutes les transactions",
+            labelKey: "admin.menu.allTransactions",
             path: "/admin/finance/transactions",
             icon: CreditCard,
-            description: "Vue complète de toutes les transactions",
+            descriptionKey: "admin.menu.allTransactions.description",
           },
           {
             id: "payments",
-            label: "Paiements appels",
+            labelKey: "admin.menu.callPayments",
             path: "/admin/finance/payments",
             icon: CreditCard,
-            description: "Paiements des sessions d'appels",
+            descriptionKey: "admin.menu.callPayments.description",
           },
           {
             id: "subscriptions",
-            label: "Abonnements",
+            labelKey: "admin.menu.subscriptions",
             path: "/admin/finance/subscriptions",
             icon: Repeat,
-            description: "Gestion des abonnements clients",
+            descriptionKey: "admin.menu.subscriptions.description",
           },
         ],
       },
       // Sous-section : Remboursements & Litiges
       {
         id: "finance-disputes-refunds",
-        label: "Remboursements & Litiges",
+        labelKey: "admin.menu.refundsDisputes",
         icon: AlertTriangle,
-        description: "Gestion des remboursements et contestations",
+        descriptionKey: "admin.menu.refundsDisputes.description",
         children: [
           {
             id: "refunds",
-            label: "Remboursements",
+            labelKey: "admin.menu.refunds",
             path: "/admin/finance/refunds",
             icon: RotateCcw,
-            description: "Traitement des demandes de remboursement",
+            descriptionKey: "admin.menu.refunds.description",
           },
           {
             id: "disputes",
-            label: "Litiges & Contestations",
+            labelKey: "admin.menu.disputes",
             path: "/admin/finance/disputes",
             icon: AlertCircle,
             badge: "2",
-            description: "Gestion des litiges Stripe/PayPal",
+            descriptionKey: "admin.menu.disputes.description",
           },
         ],
       },
-      // Sous-section : Comptabilité & Fiscalité
+      // Sous-section : Comptabilite & Fiscalite
       {
         id: "finance-accounting",
-        label: "Comptabilité & Fiscalité",
+        labelKey: "admin.menu.accountingTax",
         icon: Calculator,
-        description: "Facturation et obligations fiscales",
+        descriptionKey: "admin.menu.accountingTax.description",
         children: [
           {
             id: "invoices",
-            label: "Facturation",
+            labelKey: "admin.menu.invoices",
             path: "/admin/finance/invoices",
             icon: Receipt,
-            description: "Génération et envoi des factures",
+            descriptionKey: "admin.menu.invoices.description",
           },
           {
             id: "payouts",
-            label: "Reversements prestataires",
+            labelKey: "admin.menu.payouts",
             path: "/admin/finance/payouts",
             icon: Banknote,
-            description: "Virements aux avocats/expatriés",
+            descriptionKey: "admin.menu.payouts.description",
           },
           {
             id: "escrow",
-            label: "Fonds en Transit",
+            labelKey: "admin.menu.escrow",
             path: "/admin/finance/escrow",
             icon: Shield,
             badge: "NEW",
-            description: "Paiements en attente KYC provider",
+            descriptionKey: "admin.menu.escrow.description",
           },
           {
             id: "taxes",
-            label: "TVA & Déclarations",
+            labelKey: "admin.menu.taxes",
             path: "/admin/finance/taxes",
             icon: Calculator,
-            description: "Gestion TVA et fiscalité par pays",
+            descriptionKey: "admin.menu.taxes.description",
           },
           {
             id: "tax-filings",
-            label: "Declarations fiscales",
+            labelKey: "admin.menu.taxFilings",
             path: "/admin/finance/filings",
             icon: FileText,
             badge: "NEW",
-            description: "TVA EE, OSS, DES - Generation automatique",
+            descriptionKey: "admin.menu.taxFilings.description",
           },
           {
             id: "thresholds",
-            label: "Seuils fiscaux",
+            labelKey: "admin.menu.thresholds",
             path: "/admin/finance/thresholds",
             icon: Globe,
             badge: "NEW",
-            description: "Surveillance des seuils internationaux",
+            descriptionKey: "admin.menu.thresholds.description",
           },
           {
             id: "reconciliation",
-            label: "Rapprochement bancaire",
+            labelKey: "admin.menu.reconciliation",
             path: "/admin/finance/reconciliation",
             icon: ArrowLeftRight,
-            description: "Rapprochement des comptes",
+            descriptionKey: "admin.menu.reconciliation.description",
           },
           {
             id: "ledger",
-            label: "Grand livre",
+            labelKey: "admin.menu.ledger",
             path: "/admin/finance/ledger",
             icon: BookOpen,
-            description: "Comptabilité générale",
+            descriptionKey: "admin.menu.ledger.description",
           },
           {
             id: "balance-sheet",
-            label: "Bilan",
+            labelKey: "admin.menu.balanceSheet",
             path: "/admin/finance/balance-sheet",
             icon: Scale,
             badge: "NEW",
-            description: "Actifs, Passifs, Capitaux propres",
+            descriptionKey: "admin.menu.balanceSheet.description",
           },
           {
             id: "profit-loss",
-            label: "Compte de résultat",
+            labelKey: "admin.menu.profitLoss",
             path: "/admin/finance/profit-loss",
             icon: TrendingUp,
             badge: "NEW",
-            description: "Produits et charges",
+            descriptionKey: "admin.menu.profitLoss.description",
           },
           {
             id: "cash-flow",
-            label: "Flux de trésorerie",
+            labelKey: "admin.menu.cashFlow",
             path: "/admin/finance/cash-flow",
             icon: ArrowDownUp,
             badge: "NEW",
-            description: "Tableau des flux de trésorerie",
+            descriptionKey: "admin.menu.cashFlow.description",
           },
         ],
       },
       // Rapports & Exports
       {
         id: "finance-reports",
-        label: "Rapports & Exports",
+        labelKey: "admin.menu.financeReports",
         path: "/admin/finance/exports",
         icon: FileSpreadsheet,
-        description: "Rapports financiers et exports CSV/Excel",
+        descriptionKey: "admin.menu.financeReports.description",
       },
-      // Suivi des Coûts Cloud
+      // Suivi des Couts Cloud
       {
         id: "cost-monitoring",
-        label: "Suivi des Coûts",
+        labelKey: "admin.menu.costMonitoring",
         path: "/admin/finance/costs",
         icon: TrendingDown,
-        description: "Monitoring des coûts cloud et alertes",
+        descriptionKey: "admin.menu.costMonitoring.description",
+      },
+      // Google Cloud Platform Costs
+      {
+        id: "gcp-costs",
+        labelKey: "admin.menu.gcpCosts",
+        path: "/admin/finance/gcp-costs",
+        icon: Cloud,
+        badge: "NEW",
+        descriptionKey: "admin.menu.gcpCosts.description",
       },
     ],
   },
 
-  // ===== 💌 MARKETING & COMMUNICATIONS (Priorité 5) =====
+  // ===== MARKETING & COMMUNICATIONS (Priorite 5) =====
   {
     id: "marketing",
-    label: "Marketing & Communication",
+    labelKey: "admin.menu.marketing",
     icon: Megaphone,
-    description: "Campagnes et communication client",
+    descriptionKey: "admin.menu.marketing.description",
     children: [
-      // NOTE: Campagnes - page placeholder
-      // {
-      //   id: "campaigns",
-      //   label: "Campagnes marketing",
-      //   path: "/admin/comms/campaigns",
-      //   icon: Megaphone,
-      //   description: "Campagnes email et newsletters",
-      // },
-      // NOTE: Automations - désactivé
-      // {
-      //   id: "automations",
-      //   label: "Automations",
-      //   path: "/admin/comms/automations",
-      //   icon: Zap,
-      //   description: "Workflows automatisés",
-      // },
-      // NOTE: Segments - page placeholder
-      // {
-      //   id: "segments",
-      //   label: "Segmentation",
-      //   path: "/admin/comms/segments",
-      //   icon: Target,
-      //   description: "Segmentation des utilisateurs",
-      // },
-      // NOTE: Templates emails - désactivé
-      // {
-      //   id: "templates",
-      //   label: "Templates emails",
-      //   path: "/admin/comms/templates",
-      //   icon: FileText,
-      //   description: "Modèles d'emails et SMS",
-      // },
       {
         id: "promo-codes",
-        label: "Codes promo",
+        labelKey: "admin.menu.promoCodes",
         path: "/admin/coupons",
         icon: Percent,
-        description: "Créer, activer, suivre les coupons",
+        descriptionKey: "admin.menu.promoCodes.description",
       },
       {
         id: "trustpilot",
-        label: "Trustpilot",
+        labelKey: "admin.menu.trustpilot",
         path: "/admin/marketing/trustpilot",
         icon: Star,
         badge: "NEW",
-        description: "Suivi des invitations et avis Trustpilot",
+        descriptionKey: "admin.menu.trustpilot.description",
       },
       {
         id: "ads-analytics",
-        label: "Ads Analytics",
+        labelKey: "admin.menu.adsAnalytics",
         path: "/admin/marketing/ads-analytics",
         icon: TrendingUp,
         badge: "NEW",
-        description: "Attribution des conversions Meta/Google Ads",
+        descriptionKey: "admin.menu.adsAnalytics.description",
       },
-      // NOTE: Messages temps réel - à vérifier si fonctionnel
-      // {
-      //   id: "messages-realtime",
-      //   label: "Messages temps réel",
-      //   path: "/admin/comms/messages",
-      //   icon: MessageSquare,
-      //   description: "Chat et messages instantanés",
-      // },
+      {
+        id: "meta-analytics",
+        labelKey: "admin.menu.metaAnalytics",
+        path: "/admin/marketing/meta-analytics",
+        icon: Activity,
+        badge: "NEW",
+        descriptionKey: "admin.menu.metaAnalytics.description",
+      },
       {
         id: "notifications",
-        label: "Notifications",
+        labelKey: "admin.menu.notifications",
         path: "/admin/comms/notifications",
         icon: Bell,
-        description: "Push, SMS et notifications",
+        descriptionKey: "admin.menu.notifications.description",
       },
       {
         id: "Contacts",
-        label: "Contact Requests",
+        labelKey: "admin.menu.contactRequests",
         path: "/admin/contact-messages",
         icon: MessageSquare,
-        description: "Gestion des contacts",
+        descriptionKey: "admin.menu.contactRequests.description",
       },
-      // NOTE: Pages placeholder - à activer quand implémentées
-      // {
-      //   id: "deliverability",
-      //   label: "Délivrabilité",
-      //   path: "/admin/comms/deliverability",
-      //   icon: Truck,
-      //   description: "Qualité d'envoi des emails",
-      // },
-      // {
-      //   id: "suppression",
-      //   label: "Listes de suppression",
-      //   path: "/admin/comms/suppression",
-      //   icon: Ban,
-      //   description: "Désinscriptions et blocages",
-      // },
-      // {
-      //   id: "ab-tests",
-      //   label: "Tests A/B",
-      //   path: "/admin/comms/ab",
-      //   icon: TestTube,
-      //   description: "Optimisation des campagnes",
-      // },
     ],
   },
 
@@ -537,169 +506,154 @@ export const adminMenuTree: AdminMenuItem[] = [
   //   ],
   // },
 
-  // ===== 📊 ANALYTICS & RAPPORTS (Priorité 7) =====
+  // ===== ANALYTICS & RAPPORTS (Priorite 7) =====
   {
     id: "analytics",
-    label: "Analytics & Rapports",
+    labelKey: "admin.menu.analytics",
     icon: TrendingUp,
-    description: "Business Intelligence et reporting",
+    descriptionKey: "admin.menu.analytics.description",
     children: [
+      // Analytics centralises - Prominent entry
+      {
+        id: "unified-analytics",
+        labelKey: "admin.menu.unifiedAnalytics",
+        path: "/admin/analytics/unified",
+        icon: PieChart,
+        badge: "NEW",
+        descriptionKey: "admin.menu.unifiedAnalytics.description",
+      },
       // Sous-section : STATISTIQUES
       {
         id: "statistics",
-        label: "Statistiques",
+        labelKey: "admin.menu.statistics",
         icon: BarChart3,
-        description: "Statistiques et métriques",
+        descriptionKey: "admin.menu.statistics.description",
         children: [
           {
             id: "country-stats",
-            label: "Statistiques par pays",
+            labelKey: "admin.menu.countryStats",
             path: "/admin/reports/country-stats",
             icon: Globe,
-            description: "Statistiques globales et par pays",
+            descriptionKey: "admin.menu.countryStats.description",
           },
-          // NOTE: Pages placeholder - à activer quand implémentées
-          // {
-          //   id: "financial-reports",
-          //   label: "Rapports financiers",
-          //   path: "/admin/reports/financial",
-          //   icon: PieChart,
-          //   description: "P&L, revenus, marges",
-          // },
-          // {
-          //   id: "user-analytics",
-          //   label: "Comportement utilisateurs",
-          //   path: "/admin/reports/users",
-          //   icon: Users,
-          //   description: "Funnel, rétention, engagement",
-          // },
-          // {
-          //   id: "platform-performance",
-          //   label: "Performance plateforme",
-          //   path: "/admin/reports/performance",
-          //   icon: BarChart3,
-          //   description: "Uptime, vitesse, erreurs",
-          // },
         ],
       },
       // Sous-section : ERREURS, HACKS, ALERTES
       {
         id: "errors-security",
-        label: "Erreurs, hacks, alertes",
+        labelKey: "admin.menu.errorsSecurity",
         icon: Shield,
-        description: "Surveillance sécurité et incidents",
+        descriptionKey: "admin.menu.errorsSecurity.description",
         children: [
           {
             id: "error-logs",
-            label: "Suivi des erreurs",
+            labelKey: "admin.menu.errorLogs",
             path: "/admin/reports/error-logs",
             icon: AlertCircle,
-            description: "Logs d'erreurs et suivi des incidents",
+            descriptionKey: "admin.menu.errorLogs.description",
           },
           {
             id: "security-alerts",
-            label: "Alertes securite",
+            labelKey: "admin.menu.securityAlerts",
             path: "/admin/security/alerts",
             icon: ShieldAlert,
             badge: "LIVE",
-            description: "Monitoring temps reel des menaces et incidents",
+            descriptionKey: "admin.menu.securityAlerts.description",
           },
-          // NOTE: Logs d'audit - à activer quand implémenté
-          // {
-          //   id: "audit-logs",
-          //   label: "Logs d'audit",
-          //   path: "/admin/reports/audit-logs",
-          //   icon: FileText,
-          //   description: "Journal des actions sensibles",
-          // },
         ],
       },
-      // NOTE: Exports - page placeholder
-      // {
-      //   id: "data-exports",
-      //   label: "Exports de données",
-      //   path: "/admin/reports/exports",
-      //   icon: Download,
-      //   description: "CSV, Excel, API exports",
-      // },
     ],
   },
 
-  // ===== ⚙️ ADMINISTRATION SYSTÈME (Priorité 8 - Usage occasionnel) =====
+  // ===== ADMINISTRATION SYSTEME (Priorite 8 - Usage occasionnel) =====
   {
     id: "admin-system",
-    label: "Administration Système",
+    labelKey: "admin.menu.adminSystem",
     icon: Settings,
-    description: "Configuration et maintenance",
+    descriptionKey: "admin.menu.adminSystem.description",
     children: [
       {
         id: "pricing-management",
-        label: "Gestion des tarifs",
+        labelKey: "admin.menu.pricingManagement",
         path: "/admin/pricing",
         icon: DollarSign,
-        description: "Prix et commissions SOS Expats",
+        descriptionKey: "admin.menu.pricingManagement.description",
       },
       {
         id: "countries-management",
-        label: "Pays & Régions",
+        labelKey: "admin.menu.countriesManagement",
         path: "/admin/countries",
         icon: Globe,
-        description: "Pays supportés par la plateforme",
+        descriptionKey: "admin.menu.countriesManagement.description",
       },
       {
         id: "legal-documents",
-        label: "Documents légaux",
+        labelKey: "admin.menu.legalDocuments",
         path: "/admin/documents",
         icon: FileText,
-        description: "CGU, confidentialité, mentions",
+        descriptionKey: "admin.menu.legalDocuments.description",
       },
       {
         id: "help-center",
-        label: "Centre d'aide",
+        labelKey: "admin.menu.helpCenter",
         path: "/admin/help/center",
         icon: HelpingHand,
-        description: "Gestion des articles du centre d'aide",
+        descriptionKey: "admin.menu.helpCenter.description",
       },
       {
-        id: 'faqs-management',
-        label: 'FAQs',
-        path: '/admin/cms/faqs',
+        id: "faqs-management",
+        labelKey: "admin.menu.faqs",
+        path: "/admin/cms/faqs",
         icon: HelpCircle,
-        description: 'Gestion des questions fréquentes'
+        descriptionKey: "admin.menu.faqs.description",
       },
       {
-        id: 'ia-management',
-        label: 'Outil IA',
-        path: '/admin/ia',
+        id: "ia-management",
+        labelKey: "admin.menu.iaManagement",
+        path: "/admin/ia",
         icon: Bot,
-        description: 'Gestion des accès IA, quotas, tarification et logs'
+        descriptionKey: "admin.menu.iaManagement.description",
       },
       {
-        id: 'system-maintenance',
-        label: 'Maintenance système',
+        id: "system-maintenance",
+        labelKey: "admin.menu.systemMaintenance",
         icon: Cog,
-        description: "Outils d'administration technique",
+        descriptionKey: "admin.menu.systemMaintenance.description",
         children: [
           {
             id: "system-settings",
-            label: "Paramètres système",
+            labelKey: "admin.menu.systemSettings",
             path: "/admin/settings",
             icon: Cog,
-            description: "Configuration générale",
+            descriptionKey: "admin.menu.systemSettings.description",
           },
           {
             id: "system-backups",
-            label: "Sauvegardes",
+            labelKey: "admin.menu.backups",
             path: "/admin/backups",
             icon: Archive,
-            description: "Backup et restauration",
+            descriptionKey: "admin.menu.backups.description",
           },
           {
             id: "system-health",
-            label: "Santé système",
+            labelKey: "admin.menu.systemHealth",
             path: "/admin/system-health",
             icon: Activity,
-            description: "Monitoring DR et alertes système",
+            descriptionKey: "admin.menu.systemHealth.description",
+          },
+          {
+            id: "agent-monitoring",
+            labelKey: "admin.menu.agentMonitoring",
+            path: "/admin/monitoring/agents",
+            icon: Cpu,
+            descriptionKey: "admin.menu.agentMonitoring.description",
+          },
+          {
+            id: "connection-logs",
+            labelKey: "admin.menu.connectionLogs",
+            path: "/admin/connection-logs",
+            icon: LogIn,
+            descriptionKey: "admin.menu.connectionLogs.description",
           },
         ],
       },

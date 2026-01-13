@@ -289,7 +289,7 @@ export const sendCustomPasswordResetEmail = onCall(
       if (userExists) {
         // Generate password reset link
         const actionCodeSettings = {
-          url: `https://sos-expat.com/${lang === "fr" ? "fr" : "en"}/login?mode=resetPassword`,
+          url: `https://sos-expat.com/${lang === "fr" ? "fr-fr" : "en-us"}/password-reset-confirm`,
           handleCodeInApp: false,
         };
 

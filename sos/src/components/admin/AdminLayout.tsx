@@ -236,7 +236,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   }, [logout, navigate, user?.id, loggingOut]);
 
   const handleUpdateProfiles = useCallback(async () => {
-    const ok = window.confirm('Êtes-vous sûr de vouloir mettre à jour tous les profils?');
+    const ok = window.confirm(t('admin.layout.confirmUpdateProfiles'));
     if (!ok) return;
 
     setIsUpdatingProfiles(true);
@@ -292,7 +292,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Chargement...</p>
+          <p className="text-gray-600">{t("admin.layout.loading")}</p>
         </div>
       </div>
     );
@@ -307,10 +307,10 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white p-8 rounded-lg shadow-md text-center">
           <Shield className="h-16 w-16 text-red-600 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Accès refusé</h1>
-          <p className="text-gray-600 mb-4">Vous devez être administrateur pour accéder à cette page.</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">{t("admin.layout.accessDenied")}</h1>
+          <p className="text-gray-600 mb-4">{t("admin.layout.accessDeniedMessage")}</p>
           <p className="text-sm text-gray-500 mb-4">
-            Email: {user?.email || 'Non défini'} | Rôle: {user?.role || 'Aucun'}
+            {t('admin.layout.email')}: {user?.email || t('admin.layout.notDefined')} | {t('admin.layout.role')}: {user?.role || t('admin.layout.none')}
           </p>
           <Button onClick={() => navigate('/')}>Retour à l&apos;accueil</Button>
         </div>
@@ -328,7 +328,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         <div className="bg-white p-8 rounded-lg shadow-md text-center">
           <AlertTriangle className="h-16 w-16 text-orange-600 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Compte {approvalStatus === 'rejected' ? 'suspendu' : 'en attente'}
+            {approvalStatus === 'rejected' ? t('admin.layout.accountSuspended') : t('admin.layout.accountPending')}
           </h1>
           <p className="text-gray-600 mb-4">
             {approvalStatus === 'rejected'
@@ -336,7 +336,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               : 'Votre compte est en cours de validation.'}
           </p>
           <Button onClick={handleLogout} variant="secondary" disabled={loggingOut} loading={loggingOut}>
-            {loggingOut ? 'Déconnexion...' : 'Se déconnecter'}
+            {loggingOut ? t('admin.layout.loggingOut') : t('admin.layout.logout')}
           </Button>
         </div>
       </div>
@@ -376,7 +376,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 <button
                   onClick={closeMobileSidebar}
                   className="text-gray-400 hover:text-white p-2 -m-2 rounded-md"
-                  aria-label="Fermer le menu"
+                  aria-label={t('admin.layout.closeMenu')}
                 >
                   <X className="h-6 w-6" />
                 </button>
@@ -396,7 +396,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                       className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                     >
                       <RefreshCw size={16} className={`mr-2 ${isUpdatingProfiles ? 'animate-spin' : ''}`} />
-                      Mettre à jour les profils
+                      {t('admin.layout.updateProfiles')}
                     </Button>
 
                     {updateSuccess !== null && (
@@ -406,7 +406,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                         }`}
                         role="alert"
                       >
-                        {updateSuccess ? 'Profils mis à jour avec succès' : 'Erreur lors de la mise à jour'}
+                        {updateSuccess ? t('admin.layout.profilesUpdated') : t('admin.layout.profilesUpdateError')}
                       </div>
                     )}
                   </div>
@@ -426,12 +426,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                   {loggingOut ? (
                     <>
                       <div className="h-5 w-5 mr-3 border-2 border-gray-500 border-t-transparent rounded-full animate-spin" />
-                      <span>Déconnexion...</span>
+                      <span>{t('admin.layout.loggingOut')}</span>
                     </>
                   ) : (
                     <>
                       <LogOut className="h-5 w-5 mr-3" />
-                      <span>Déconnexion</span>
+                      <span>{t('admin.layout.logout')}</span>
                     </>
                   )}
                 </button>
@@ -449,7 +449,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 className={`absolute top-4 z-10 bg-gray-800 hover:bg-gray-700 text-white p-2 rounded-full shadow-lg transition-all duration-300 ${
                   isSidebarOpen ? 'right-4' : 'right-2'
                 }`}
-                aria-label={isSidebarOpen ? 'Réduire la sidebar' : 'Étendre la sidebar'}
+                aria-label={isSidebarOpen ? t('admin.layout.collapseSidebar') : t('admin.layout.expandSidebar')}
               >
                 {isSidebarOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
               </button>
@@ -479,7 +479,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                           className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm"
                         >
                           <RefreshCw size={14} className={`mr-2 ${isUpdatingProfiles ? 'animate-spin' : ''}`} />
-                          Mettre à jour les profils
+                          {t('admin.layout.updateProfiles')}
                         </Button>
 
                         {updateSuccess !== null && (
@@ -489,7 +489,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                             }`}
                             role="alert"
                           >
-                            {updateSuccess ? 'Profils mis à jour' : 'Erreur mise à jour'}
+                            {updateSuccess ? t('admin.layout.profilesUpdated') : t('admin.layout.profilesUpdateError')}
                           </div>
                         )}
                       </div>
@@ -510,12 +510,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                     {loggingOut ? (
                       <>
                         <div className="h-5 w-5 flex-shrink-0 border-2 border-gray-500 border-t-transparent rounded-full animate-spin" />
-                        {isSidebarOpen && <span className="ml-3">Déconnexion...</span>}
+                        {isSidebarOpen && <span className="ml-3">{t('admin.layout.loggingOut')}</span>}
                       </>
                     ) : (
                       <>
                         <LogOut className="h-5 w-5 flex-shrink-0" />
-                        {isSidebarOpen && <span className="ml-3">Déconnexion</span>}
+                        {isSidebarOpen && <span className="ml-3">{t('admin.layout.logout')}</span>}
                       </>
                     )}
                   </button>

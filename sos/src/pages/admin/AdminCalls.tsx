@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useIntl } from "react-intl";
 import { useCallAdminTranslations } from "../../utils/adminTranslations";
 import { useApp } from "../../contexts/AppContext";
 import { getDateLocale } from "../../utils/formatters";
@@ -217,65 +218,67 @@ interface SystemHealth {
 
 // ============ COMPOSANTS UTILITAIRES ============
 const CallStatusBadge: React.FC<{ status: string; animated?: boolean }> = ({ status, animated = false }) => {
+  const intl = useIntl();
+
   const getConfig = () => {
     switch (status) {
       case 'active':
-        return { 
-          color: 'bg-green-100 text-green-800 border-green-200', 
-          icon: Phone, 
-          label: 'En cours', 
-          pulse: true 
+        return {
+          color: 'bg-green-100 text-green-800 border-green-200',
+          icon: Phone,
+          label: intl.formatMessage({ id: 'admin.calls.status.active' }),
+          pulse: true
         };
       case 'both_connecting':
-        return { 
-          color: 'bg-blue-100 text-blue-800 border-blue-200', 
-          icon: PhoneCall, 
-          label: 'Connexion', 
-          pulse: true 
+        return {
+          color: 'bg-blue-100 text-blue-800 border-blue-200',
+          icon: PhoneCall,
+          label: intl.formatMessage({ id: 'admin.calls.status.connecting' }),
+          pulse: true
         };
       case 'provider_connecting':
-        return { 
-          color: 'bg-yellow-100 text-yellow-800 border-yellow-200', 
-          icon: PhoneIncoming, 
-          label: 'Appel prestataire', 
-          pulse: true 
+        return {
+          color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+          icon: PhoneIncoming,
+          label: intl.formatMessage({ id: 'admin.calls.status.providerConnecting' }),
+          pulse: true
         };
       case 'client_connecting':
-        return { 
-          color: 'bg-orange-100 text-orange-800 border-orange-200', 
-          icon: PhoneOutgoing, 
-          label: 'Appel client', 
-          pulse: true 
+        return {
+          color: 'bg-orange-100 text-orange-800 border-orange-200',
+          icon: PhoneOutgoing,
+          label: intl.formatMessage({ id: 'admin.calls.status.clientConnecting' }),
+          pulse: true
         };
       case 'pending':
-        return { 
-          color: 'bg-gray-100 text-gray-800 border-gray-200', 
-          icon: Clock, 
-          label: 'En attente' 
+        return {
+          color: 'bg-gray-100 text-gray-800 border-gray-200',
+          icon: Clock,
+          label: intl.formatMessage({ id: 'admin.calls.status.pending' })
         };
       case 'completed':
-        return { 
-          color: 'bg-green-100 text-green-800 border-green-200', 
-          icon: CheckCircle, 
-          label: 'Terminé' 
+        return {
+          color: 'bg-green-100 text-green-800 border-green-200',
+          icon: CheckCircle,
+          label: intl.formatMessage({ id: 'admin.calls.status.completed' })
         };
       case 'failed':
-        return { 
-          color: 'bg-red-100 text-red-800 border-red-200', 
-          icon: XCircle, 
-          label: 'Échoué' 
+        return {
+          color: 'bg-red-100 text-red-800 border-red-200',
+          icon: XCircle,
+          label: intl.formatMessage({ id: 'admin.calls.status.failed' })
         };
       case 'cancelled':
-        return { 
-          color: 'bg-gray-100 text-gray-800 border-gray-200', 
-          icon: PhoneOff, 
-          label: 'Annulé' 
+        return {
+          color: 'bg-gray-100 text-gray-800 border-gray-200',
+          icon: PhoneOff,
+          label: intl.formatMessage({ id: 'admin.calls.status.cancelled' })
         };
       default:
-        return { 
-          color: 'bg-gray-100 text-gray-800 border-gray-200', 
-          icon: Minus, 
-          label: status 
+        return {
+          color: 'bg-gray-100 text-gray-800 border-gray-200',
+          icon: Minus,
+          label: status
         };
     }
   };
@@ -293,14 +296,16 @@ const CallStatusBadge: React.FC<{ status: string; animated?: boolean }> = ({ sta
   );
 };
 
-const ParticipantStatusIndicator: React.FC<{ 
-  status: string; 
-  audioQuality?: string; 
+const ParticipantStatusIndicator: React.FC<{
+  status: string;
+  audioQuality?: string;
   signalStrength?: number;
   name: string;
   phone: string;
   type: 'provider' | 'client';
 }> = ({ status, audioQuality, signalStrength, name, phone, type }) => {
+  const intl = useIntl();
+
   const getStatusColor = () => {
     switch (status) {
       case 'connected': return 'bg-green-500';
@@ -323,27 +328,38 @@ const ParticipantStatusIndicator: React.FC<{
     }
   };
 
+  const getStatusLabel = () => {
+    switch (status) {
+      case 'connected': return intl.formatMessage({ id: 'admin.calls.participant.connected' });
+      case 'ringing': return intl.formatMessage({ id: 'admin.calls.participant.ringing' });
+      case 'pending': return intl.formatMessage({ id: 'admin.calls.participant.pending' });
+      case 'disconnected': return intl.formatMessage({ id: 'admin.calls.participant.disconnected' });
+      case 'no_answer': return intl.formatMessage({ id: 'admin.calls.participant.noAnswer' });
+      default: return status;
+    }
+  };
+
   return (
     <div className="flex items-center space-x-3 p-3 bg-white rounded-lg border border-gray-200 shadow-sm">
       <div className="flex items-center space-x-2">
         <div className={`w-3 h-3 rounded-full ${getStatusColor()}`}></div>
         <div className="text-sm">
           <div className="font-medium text-gray-900">
-            {type === 'provider' ? '👨‍💼' : '👤'} {name || 'Anonyme'}
+            {type === 'provider' ? '👨‍💼' : '👤'} {name || intl.formatMessage({ id: 'admin.calls.participant.anonymous' })}
           </div>
           <div className="text-gray-500 font-mono text-xs">{phone}</div>
         </div>
       </div>
-      
+
       <div className="flex items-center space-x-2 ml-auto">
         {audioQuality && (
-          <div className="flex items-center space-x-1" title={`Qualité audio: ${audioQuality}`}>
+          <div className="flex items-center space-x-1" title={`${intl.formatMessage({ id: 'admin.calls.metrics.audioQuality' })}: ${audioQuality}`}>
             {getAudioQualityIcon()}
           </div>
         )}
-        
+
         {signalStrength !== undefined && (
-          <div className="flex items-center space-x-1" title={`Signal: ${signalStrength}%`}>
+          <div className="flex items-center space-x-1" title={`${intl.formatMessage({ id: 'admin.calls.modal.signal' })} ${signalStrength}%`}>
             <div className="flex space-x-0.5">
               {[1, 2, 3, 4].map((bar) => (
                 <div
@@ -363,11 +379,7 @@ const ParticipantStatusIndicator: React.FC<{
           status === 'disconnected' ? 'bg-red-100 text-red-800' :
           'bg-gray-100 text-gray-800'
         }`}>
-          {status === 'connected' ? 'Connecté' :
-           status === 'ringing' ? 'Sonnerie' :
-           status === 'pending' ? 'En attente' :
-           status === 'disconnected' ? 'Déconnecté' :
-           status === 'no_answer' ? 'Pas de réponse' : status}
+          {getStatusLabel()}
         </span>
       </div>
     </div>
@@ -415,17 +427,19 @@ const CallDurationTimer: React.FC<{ startTime?: Timestamp; isActive: boolean }> 
 };
 
 // Badge pour le type d'appel
-const getCallTypeBadge = (providerType: 'lawyer' | 'expat') => {
+const CallTypeBadge: React.FC<{ providerType: 'lawyer' | 'expat' }> = ({ providerType }) => {
+  const intl = useIntl();
+
   if (providerType === 'lawyer') {
     return (
       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-        ⚖️ Avocat
+        {intl.formatMessage({ id: 'admin.calls.callType.lawyer' })}
       </span>
     );
   }
   return (
     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-      🌍 Expatrié
+      {intl.formatMessage({ id: 'admin.calls.callType.expat' })}
     </span>
   );
 };
@@ -476,6 +490,7 @@ const MetricsCard: React.FC<{
 
 // ============ COMPOSANT PRINCIPAL ============
 const AdminCallsMonitoring: React.FC = () => {
+  const intl = useIntl();
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
   const callT = useCallAdminTranslations();
@@ -540,8 +555,6 @@ const AdminCallsMonitoring: React.FC = () => {
   useEffect(() => {
     if (!currentUser || !isRealTimeActive) return;
 
-    console.log('🔴 Démarrage du monitoring des appels en temps réel');
-
     // ✅ OPTIMISATION COÛTS GCP: Polling 30s au lieu de onSnapshot pour les appels
     let isMounted = true;
 
@@ -585,8 +598,6 @@ const AdminCallsMonitoring: React.FC = () => {
           } as LiveCallSession;
         });
 
-        console.log(`📞 ${sessions.length} appels actifs détectés`);
-
         // Jouer un son pour les nouveaux appels
         if (soundEnabled && sessions.length > previousCallsCountRef.current) {
           playNotificationSound('new_call');
@@ -611,7 +622,6 @@ const AdminCallsMonitoring: React.FC = () => {
 
     return () => {
       isMounted = false;
-      console.log('🔴 Arrêt du monitoring des appels');
       clearInterval(intervalId);
     };
   }, [currentUser, isRealTimeActive, soundEnabled, filters.showCompleted, filters.status]);
@@ -933,9 +943,8 @@ const AdminCallsMonitoring: React.FC = () => {
     try {
       const forceDisconnectFunction = httpsCallable(functions, 'adminForceDisconnectCall');
       await forceDisconnectFunction({ sessionId, reason: 'Admin force disconnect' });
-      
+
       playNotificationSound('call_ended');
-      console.log(`Appel ${sessionId} forcé à se déconnecter`);
     } catch (error) {
       console.error('Erreur lors de la déconnexion forcée:', error);
       alert(callT.disconnectError);
@@ -970,8 +979,6 @@ const AdminCallsMonitoring: React.FC = () => {
     try {
       const transferCallFunction = httpsCallable(functions, 'adminTransferCall');
       await transferCallFunction({ sessionId, newProviderId });
-      
-      console.log(`Appel ${sessionId} transféré vers ${newProviderId}`);
     } catch (error) {
       console.error('Erreur lors du transfert:', error);
       alert(callT.transferError);
@@ -982,8 +989,6 @@ const AdminCallsMonitoring: React.FC = () => {
     try {
       const muteCallFunction = httpsCallable(functions, 'adminMuteParticipant');
       await muteCallFunction({ sessionId, participantType });
-      
-      console.log(`${participantType} muté pour l'appel ${sessionId}`);
     } catch (error) {
       console.error('Erreur lors du mute:', error);
       alert('Erreur lors de la mise en sourdine');
@@ -1010,6 +1015,7 @@ const AdminCallsMonitoring: React.FC = () => {
     onJoinCall: (sessionId: string) => void;
     onMuteCall: (sessionId: string, participantType: 'provider' | 'client') => void;
   }> = ({ session, onForceDisconnect, onTransferCall, onJoinCall, onMuteCall }) => {
+    const intl = useIntl();
     const canJoin = session.status === 'active';
     const canDisconnect = ['active', 'both_connecting', 'provider_connecting', 'client_connecting'].includes(session.status);
     const canTransfer = session.status === 'active';
@@ -1020,7 +1026,7 @@ const AdminCallsMonitoring: React.FC = () => {
           <button
             onClick={() => onJoinCall(session.id)}
             className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            title="Rejoindre l'appel"
+            title={intl.formatMessage({ id: 'admin.calls.actions.joinCall' })}
           >
             <Headphones size={16} />
           </button>
@@ -1030,7 +1036,7 @@ const AdminCallsMonitoring: React.FC = () => {
           <button
             onClick={() => onForceDisconnect(session.id)}
             className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-            title="Forcer la déconnexion"
+            title={intl.formatMessage({ id: 'admin.calls.actions.forceDisconnect' })}
           >
             <PhoneOff size={16} />
           </button>
@@ -1040,7 +1046,7 @@ const AdminCallsMonitoring: React.FC = () => {
           <button
             onClick={() => onTransferCall(session.id)}
             className="p-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-            title="Transférer l'appel"
+            title={intl.formatMessage({ id: 'admin.calls.actions.transfer' })}
           >
             <RotateCcw size={16} />
           </button>
@@ -1049,7 +1055,7 @@ const AdminCallsMonitoring: React.FC = () => {
         <button
           onClick={() => onMuteCall(session.id, 'provider')}
           className="p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-          title="Mute prestataire"
+          title={intl.formatMessage({ id: 'admin.calls.actions.muteProvider' })}
         >
           <MicOff size={16} />
         </button>
@@ -1057,7 +1063,7 @@ const AdminCallsMonitoring: React.FC = () => {
         <button
           onClick={() => onMuteCall(session.id, 'client')}
           className="p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-          title="Mute client"
+          title={intl.formatMessage({ id: 'admin.calls.actions.muteClient' })}
         >
           <VolumeX size={16} />
         </button>
@@ -1071,7 +1077,7 @@ const AdminCallsMonitoring: React.FC = () => {
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Connexion au monitoring des appels...</p>
+            <p className="text-gray-600">{intl.formatMessage({ id: 'admin.calls.loading' })}</p>
           </div>
         </div>
       </AdminLayout>
@@ -1083,7 +1089,7 @@ const AdminCallsMonitoring: React.FC = () => {
       <ErrorBoundary
         fallback={
           <div className="p-8 text-center">
-            Une erreur est survenue lors du monitoring des appels.
+            {intl.formatMessage({ id: 'admin.calls.errorFallback' })}
           </div>
         }
       >
@@ -1098,16 +1104,16 @@ const AdminCallsMonitoring: React.FC = () => {
             <div>
               <h1 className="text-2xl font-bold text-gray-900 flex items-center">
                 <Phone className="mr-3 text-red-600" size={28} />
-                Monitoring des appels en temps réel
+                {intl.formatMessage({ id: 'admin.calls.title' })}
                 {isRealTimeActive && (
                   <div className="ml-3 flex items-center">
                     <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse mr-2"></div>
-                    <span className="text-sm text-green-600 font-medium">LIVE</span>
+                    <span className="text-sm text-green-600 font-medium">{intl.formatMessage({ id: 'admin.calls.liveIndicator' })}</span>
                   </div>
                 )}
               </h1>
               <p className="text-gray-600 mt-1">
-                Surveillance et gestion des appels téléphoniques actifs
+                {intl.formatMessage({ id: 'admin.calls.subtitle' })}
               </p>
             </div>
             
@@ -1119,7 +1125,7 @@ const AdminCallsMonitoring: React.FC = () => {
                     ? 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100' 
                     : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                 }`}
-                title="Alertes actives"
+                title={intl.formatMessage({ id: 'admin.calls.buttons.alerts' })}
               >
                 <Bell size={20} />
                 {unreadAlertsCount > 0 && (
@@ -1137,7 +1143,7 @@ const AdminCallsMonitoring: React.FC = () => {
                     ? 'border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100' 
                     : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                 }`}
-                title={soundEnabled ? 'Désactiver les sons' : 'Activer les sons'}
+                title={soundEnabled ? intl.formatMessage({ id: 'admin.calls.buttons.disableSound' }) : intl.formatMessage({ id: 'admin.calls.buttons.enableSound' })}
               >
                 {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
               </button>
@@ -1152,7 +1158,7 @@ const AdminCallsMonitoring: React.FC = () => {
                       ? 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100'
                       : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                   }`}
-                  title={isRealTimeActive ? 'Pause temps réel' : 'Activer temps réel'}
+                  title={isRealTimeActive ? intl.formatMessage({ id: 'admin.calls.buttons.pauseRealtime' }) : intl.formatMessage({ id: 'admin.calls.buttons.enableRealtime' })}
                 >
                   {isRealTimeActive ? <Pause size={20} /> : <Play size={20} />}
                 </button>
@@ -1162,7 +1168,7 @@ const AdminCallsMonitoring: React.FC = () => {
               <button
                 onClick={() => setShowStatsModal(true)}
                 className="p-2 border border-gray-300 rounded-lg bg-white text-gray-700 hover:bg-gray-50 transition-colors"
-                title="Statistiques système"
+                title={intl.formatMessage({ id: 'admin.calls.buttons.systemStats' })}
               >
                 <Activity size={20} />
               </button>
@@ -1171,7 +1177,7 @@ const AdminCallsMonitoring: React.FC = () => {
               <button
                 onClick={() => window.location.reload()}
                 className="p-2 border border-gray-300 rounded-lg bg-white text-gray-700 hover:bg-gray-50 transition-colors"
-                title="Actualiser"
+                title={intl.formatMessage({ id: 'admin.calls.buttons.refresh' })}
               >
                 <RefreshCw size={20} />
               </button>
@@ -1182,25 +1188,25 @@ const AdminCallsMonitoring: React.FC = () => {
           {callMetrics && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <MetricsCard
-                title="Appels actifs"
+                title={intl.formatMessage({ id: 'admin.calls.metrics.activeCalls' })}
                 value={callMetrics.totalActiveCalls}
                 icon={Phone}
                 color="bg-green-500"
               />
               <MetricsCard
-                title="En connexion"
+                title={intl.formatMessage({ id: 'admin.calls.metrics.connecting' })}
                 value={callMetrics.totalConnectingCalls}
                 icon={PhoneCall}
                 color="bg-blue-500"
               />
               <MetricsCard
-                title="En attente"
+                title={intl.formatMessage({ id: 'admin.calls.metrics.pending' })}
                 value={callMetrics.totalPendingCalls}
                 icon={Clock}
                 color="bg-yellow-500"
               />
               <MetricsCard
-                title="Revenus en cours"
+                title={intl.formatMessage({ id: 'admin.calls.metrics.revenueInProgress' })}
                 value={formatCurrency(callMetrics.revenueInProgress)}
                 icon={TrendingUp}
                 color="bg-purple-500"
@@ -1213,7 +1219,7 @@ const AdminCallsMonitoring: React.FC = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <AlertTriangle className="mr-2 text-red-500" size={20} />
-                Alertes actives ({unreadAlertsCount} non résolues)
+                {intl.formatMessage({ id: 'admin.calls.alerts.title' })} ({intl.formatMessage({ id: 'admin.calls.alerts.unresolved' }, { count: unreadAlertsCount })})
               </h3>
               <div className="space-y-3">
                 {callAlerts.slice(0, 3).map((alert) => (
@@ -1240,7 +1246,7 @@ const AdminCallsMonitoring: React.FC = () => {
                           <span className="text-sm font-medium">{alert.message}</span>
                         </div>
                         <div className="text-xs text-gray-500 mt-1">
-                          Session: {alert.callSessionId} • {alert.timestamp.toLocaleTimeString(getDateLocale(language))}
+                          {intl.formatMessage({ id: 'admin.calls.alerts.session' })}: {alert.callSessionId} • {alert.timestamp.toLocaleTimeString(getDateLocale(language))}
                         </div>
                         {alert.autoActions && (
                           <div className="flex space-x-2 mt-2">
@@ -1248,7 +1254,7 @@ const AdminCallsMonitoring: React.FC = () => {
                               <button
                                 key={index}
                                 className="text-xs bg-white px-2 py-1 rounded border hover:bg-gray-50"
-                                onClick={() => console.log(`Action: ${action} pour ${alert.callSessionId}`)}
+                                onClick={() => {/* TODO: Implement action handler */}}
                               >
                                 {action.replace('_', ' ').toUpperCase()}
                               </button>
@@ -1261,7 +1267,7 @@ const AdminCallsMonitoring: React.FC = () => {
                           <button
                             onClick={() => handleResolveAlert(alert.id)}
                             className="text-gray-400 hover:text-green-600"
-                            title="Marquer comme résolu"
+                            title={intl.formatMessage({ id: 'admin.calls.alerts.markResolved' })}
                           >
                             <CheckCircle size={16} />
                           </button>
@@ -1269,7 +1275,7 @@ const AdminCallsMonitoring: React.FC = () => {
                         <button
                           onClick={() => handleDismissAlert(alert.id)}
                           className="text-gray-400 hover:text-red-600"
-                          title="Supprimer"
+                          title={intl.formatMessage({ id: 'admin.calls.alerts.delete' })}
                         >
                           <XCircle size={16} />
                         </button>
@@ -1286,7 +1292,7 @@ const AdminCallsMonitoring: React.FC = () => {
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center space-x-2">
                 <Filter size={16} className="text-gray-400" />
-                <span className="text-sm font-medium text-gray-700">Filtres:</span>
+                <span className="text-sm font-medium text-gray-700">{intl.formatMessage({ id: 'admin.calls.filters.title' })}</span>
               </div>
 
               <select
@@ -1294,18 +1300,18 @@ const AdminCallsMonitoring: React.FC = () => {
                 onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
                 className="border border-gray-300 rounded-md px-3 py-1 text-sm"
               >
-                <option value="all">Tous les statuts</option>
-                <option value="active">Actifs</option>
-                <option value="both_connecting">En connexion</option>
-                <option value="provider_connecting">Appel prestataire</option>
-                <option value="client_connecting">Appel client</option>
-                <option value="pending">En attente</option>
+                <option value="all">{intl.formatMessage({ id: 'admin.calls.filters.allStatus' })}</option>
+                <option value="active">{intl.formatMessage({ id: 'admin.calls.filters.active' })}</option>
+                <option value="both_connecting">{intl.formatMessage({ id: 'admin.calls.filters.connecting' })}</option>
+                <option value="provider_connecting">{intl.formatMessage({ id: 'admin.calls.filters.providerConnecting' })}</option>
+                <option value="client_connecting">{intl.formatMessage({ id: 'admin.calls.filters.clientConnecting' })}</option>
+                <option value="pending">{intl.formatMessage({ id: 'admin.calls.filters.pending' })}</option>
                 {/* Statuts terminés - visibles uniquement si showCompleted activé */}
                 {filters.showCompleted && (
                   <>
-                    <option value="completed">✅ Terminés</option>
-                    <option value="failed">❌ Échoués</option>
-                    <option value="cancelled">🚫 Annulés</option>
+                    <option value="completed">{intl.formatMessage({ id: 'admin.calls.filters.completed' })}</option>
+                    <option value="failed">{intl.formatMessage({ id: 'admin.calls.filters.failed' })}</option>
+                    <option value="cancelled">{intl.formatMessage({ id: 'admin.calls.filters.cancelled' })}</option>
                   </>
                 )}
               </select>
@@ -1315,9 +1321,9 @@ const AdminCallsMonitoring: React.FC = () => {
                 onChange={(e) => setFilters(prev => ({ ...prev, serviceType: e.target.value }))}
                 className="border border-gray-300 rounded-md px-3 py-1 text-sm"
               >
-                <option value="all">Tous les services</option>
-                <option value="lawyer_call">Appels avocat</option>
-                <option value="expat_call">Appels expatrié</option>
+                <option value="all">{intl.formatMessage({ id: 'admin.calls.filters.allServices' })}</option>
+                <option value="lawyer_call">{intl.formatMessage({ id: 'admin.calls.filters.lawyerCalls' })}</option>
+                <option value="expat_call">{intl.formatMessage({ id: 'admin.calls.filters.expatCalls' })}</option>
               </select>
 
               <label className="flex items-center">
@@ -1339,11 +1345,11 @@ const AdminCallsMonitoring: React.FC = () => {
                   }}
                   className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded mr-2"
                 />
-                <span className="text-sm text-gray-700">Inclure terminés</span>
+                <span className="text-sm text-gray-700">{intl.formatMessage({ id: 'admin.calls.filters.includeCompleted' })}</span>
               </label>
 
               <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-700">Vue:</span>
+                <span className="text-sm text-gray-700">{intl.formatMessage({ id: 'admin.calls.filters.view' })}</span>
                 <button
                   onClick={() => setSelectedView('grid')}
                   className={`p-1 rounded ${selectedView === 'grid' ? 'bg-red-100 text-red-600' : 'text-gray-400'}`}
@@ -1369,7 +1375,7 @@ const AdminCallsMonitoring: React.FC = () => {
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="Rechercher appel, nom, téléphone..."
+                  placeholder={intl.formatMessage({ id: 'admin.calls.filters.searchPlaceholder' })}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-8 pr-4 py-1 border border-gray-300 rounded-md text-sm w-64"
@@ -1388,13 +1394,13 @@ const AdminCallsMonitoring: React.FC = () => {
                     <div>
                       <div className="flex items-center space-x-2 mb-2">
                         <CallStatusBadge status={call.status} animated={true} />
-                        {getCallTypeBadge(call.metadata.providerType)}
+                        <CallTypeBadge providerType={call.metadata.providerType} />
                       </div>
                       <div className="text-sm font-mono text-gray-500">
                         ID: {call.id.substring(0, 8)}...
                       </div>
                       <div className="text-xs text-gray-400">
-                        Créé: {formatDateTime(call.metadata.createdAt)}
+                        {intl.formatMessage({ id: 'admin.calls.modal.created' })} {formatDateTime(call.metadata.createdAt)}
                       </div>
                     </div>
                     
@@ -1409,7 +1415,7 @@ const AdminCallsMonitoring: React.FC = () => {
                       status={call.participants.provider.status}
                       audioQuality={call.participants.provider.audioQuality}
                       signalStrength={call.participants.provider.signalStrength}
-                      name={call.metadata.providerName || 'Prestataire'}
+                      name={call.metadata.providerName || intl.formatMessage({ id: 'admin.calls.participant.provider' })}
                       phone={call.participants.provider.phone}
                       type="provider"
                     />
@@ -1418,7 +1424,7 @@ const AdminCallsMonitoring: React.FC = () => {
                       status={call.participants.client.status}
                       audioQuality={call.participants.client.audioQuality}
                       signalStrength={call.participants.client.signalStrength}
-                      name={call.metadata.clientName || 'Client'}
+                      name={call.metadata.clientName || intl.formatMessage({ id: 'admin.calls.participant.client' })}
                       phone={call.participants.client.phone}
                       type="client"
                     />
@@ -1428,11 +1434,11 @@ const AdminCallsMonitoring: React.FC = () => {
                   {call.realTimeData && (
                     <div className="grid grid-cols-2 gap-3 mb-4 text-xs">
                       <div className="bg-gray-50 p-2 rounded">
-                        <div className="text-gray-600">Latence</div>
+                        <div className="text-gray-600">{intl.formatMessage({ id: 'admin.calls.modal.latency' })}</div>
                         <div className="font-medium">{call.realTimeData.latency?.toFixed(0)}ms</div>
                       </div>
                       <div className="bg-gray-50 p-2 rounded">
-                        <div className="text-gray-600">Qualité</div>
+                        <div className="text-gray-600">{intl.formatMessage({ id: 'admin.calls.modal.quality' })}</div>
                         <div className="font-medium">{call.realTimeData.connectionQuality?.toFixed(0)}%</div>
                       </div>
                     </div>
@@ -1440,7 +1446,7 @@ const AdminCallsMonitoring: React.FC = () => {
 
                   <div className="flex justify-between items-center">
                     <div className="text-sm">
-                      <span className="text-gray-600">Montant: </span>
+                      <span className="text-gray-600">{intl.formatMessage({ id: 'admin.calls.modal.amount' })} </span>
                       <span className="font-medium">{formatCurrency(call.payment.amount)}</span>
                     </div>
                     
@@ -1451,7 +1457,7 @@ const AdminCallsMonitoring: React.FC = () => {
                           setShowCallModal(true);
                         }}
                         className="p-1 text-blue-600 hover:text-blue-800"
-                        title="Voir détails"
+                        title={intl.formatMessage({ id: 'admin.calls.actions.viewDetails' })}
                       >
                         <Eye size={16} />
                       </button>
@@ -1477,25 +1483,25 @@ const AdminCallsMonitoring: React.FC = () => {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Appel
+                        {intl.formatMessage({ id: 'admin.calls.table.call' })}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Statut
+                        {intl.formatMessage({ id: 'admin.calls.table.status' })}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Participants
+                        {intl.formatMessage({ id: 'admin.calls.table.participants' })}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Durée
+                        {intl.formatMessage({ id: 'admin.calls.table.duration' })}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Qualité
+                        {intl.formatMessage({ id: 'admin.calls.table.quality' })}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Montant
+                        {intl.formatMessage({ id: 'admin.calls.table.amount' })}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
+                        {intl.formatMessage({ id: 'admin.calls.table.actions' })}
                       </th>
                     </tr>
                   </thead>
@@ -1511,13 +1517,13 @@ const AdminCallsMonitoring: React.FC = () => {
                               <span className={`w-2 h-2 rounded-full ${
                                 call.participants.provider.status === 'connected' ? 'bg-green-500' : 'bg-gray-300'
                               }`}></span>
-                              <span>👨‍💼 {call.metadata.providerName || 'Prestataire'}</span>
+                              <span>{call.metadata.providerName || intl.formatMessage({ id: 'admin.calls.participant.provider' })}</span>
                             </div>
                             <div className="flex items-center space-x-1">
                               <span className={`w-2 h-2 rounded-full ${
                                 call.participants.client.status === 'connected' ? 'bg-green-500' : 'bg-gray-300'
                               }`}></span>
-                              <span>👤 {call.metadata.clientName || 'Client'}</span>
+                              <span>{call.metadata.clientName || intl.formatMessage({ id: 'admin.calls.participant.client' })}</span>
                             </div>
                           </div>
                         </td>
@@ -1530,8 +1536,8 @@ const AdminCallsMonitoring: React.FC = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           {call.realTimeData && (
                             <div className="text-sm">
-                              <div>Latence: {call.realTimeData.latency?.toFixed(0)}ms</div>
-                              <div>Qualité: {call.realTimeData.connectionQuality?.toFixed(0)}%</div>
+                              <div>{intl.formatMessage({ id: 'admin.calls.table.latency' })} {call.realTimeData.latency?.toFixed(0)}ms</div>
+                              <div>{intl.formatMessage({ id: 'admin.calls.table.qualityPercent' })} {call.realTimeData.connectionQuality?.toFixed(0)}%</div>
                             </div>
                           )}
                         </td>
@@ -1566,10 +1572,10 @@ const AdminCallsMonitoring: React.FC = () => {
                       status.includes('connecting') ? 'bg-blue-500' :
                       'bg-gray-400'
                     }`}></div>
-                    {status === 'pending' ? 'En attente' :
-                     status === 'provider_connecting' ? 'Appel prestataire' :
-                     status === 'client_connecting' ? 'Appel client' :
-                     status === 'active' ? 'Actifs' : status}
+                    {status === 'pending' ? intl.formatMessage({ id: 'admin.calls.board.pending' }) :
+                     status === 'provider_connecting' ? intl.formatMessage({ id: 'admin.calls.board.providerConnecting' }) :
+                     status === 'client_connecting' ? intl.formatMessage({ id: 'admin.calls.board.clientConnecting' }) :
+                     status === 'active' ? intl.formatMessage({ id: 'admin.calls.board.active' }) : status}
                     <span className="ml-2 px-2 py-1 bg-white text-xs rounded-full">
                       {filteredCalls.filter(call => call.status === status).length}
                     </span>
@@ -1591,7 +1597,7 @@ const AdminCallsMonitoring: React.FC = () => {
                           </div>
                           
                           <div className="text-xs text-gray-500 mb-2">
-                            {call.metadata.providerType === 'lawyer' ? '⚖️ Appel Avocat' : '🌍 Appel Expatrié'} 
+                            {call.metadata.providerType === 'lawyer' ? intl.formatMessage({ id: 'admin.calls.callType.lawyerCall' }) : intl.formatMessage({ id: 'admin.calls.callType.expatCall' })} 
                             - {formatCurrency(call.payment.amount)}
                           </div>
                           
@@ -1627,11 +1633,11 @@ const AdminCallsMonitoring: React.FC = () => {
           {filteredCalls.length === 0 && (
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
               <Phone className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun appel en cours</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">{intl.formatMessage({ id: 'admin.calls.empty.title' })}</h3>
               <p className="text-gray-600">
-                {isRealTimeActive 
-                  ? 'Le monitoring est actif. Les nouveaux appels apparaîtront automatiquement.' 
-                  : 'Activez le monitoring temps réel pour voir les appels en cours.'}
+                {isRealTimeActive
+                  ? intl.formatMessage({ id: 'admin.calls.empty.monitoringActive' })
+                  : intl.formatMessage({ id: 'admin.calls.empty.monitoringPaused' })}
               </p>
             </div>
           )}
@@ -1641,7 +1647,7 @@ const AdminCallsMonitoring: React.FC = () => {
         <Modal
           isOpen={showCallModal}
           onClose={() => setShowCallModal(false)}
-          title="Détails de l'appel en temps réel"
+          title={intl.formatMessage({ id: 'admin.calls.modal.callDetails' })}
           size="large"
         >
           {selectedCall && (
@@ -1650,11 +1656,11 @@ const AdminCallsMonitoring: React.FC = () => {
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    Appel #{selectedCall.id.substring(0, 8)}
+                    {intl.formatMessage({ id: 'admin.calls.modal.callId' }, { id: selectedCall.id.substring(0, 8) })}
                   </h3>
                   <div className="flex items-center space-x-3">
                     <CallStatusBadge status={selectedCall.status} animated={true} />
-                    {getCallTypeBadge(selectedCall.metadata.providerType)}
+                    <CallTypeBadge providerType={selectedCall.metadata.providerType} />
                     {selectedCall.metadata.priority && (
                       <span className={`px-2 py-1 text-xs rounded-full ${
                         selectedCall.metadata.priority === 'urgent' ? 'bg-red-100 text-red-800' :
@@ -1683,13 +1689,13 @@ const AdminCallsMonitoring: React.FC = () => {
                 <div>
                   <h4 className="font-medium text-gray-700 mb-3 flex items-center">
                     <UserCheck className="mr-2" size={16} />
-                    Prestataire
+                    {intl.formatMessage({ id: 'admin.calls.modal.provider' })}
                   </h4>
                   <div className="bg-gray-50 rounded-lg p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <div className="text-sm font-medium text-gray-900">
-                          {selectedCall.metadata.providerName || 'Nom non disponible'}
+                          {selectedCall.metadata.providerName || intl.formatMessage({ id: 'admin.calls.modal.nameUnavailable' })}
                         </div>
                         <div className="text-sm text-gray-500 font-mono">
                           {selectedCall.participants.provider.phone}
@@ -1710,32 +1716,32 @@ const AdminCallsMonitoring: React.FC = () => {
                     
                     <div className="grid grid-cols-2 gap-3 text-xs">
                       <div>
-                        <span className="text-gray-600">Tentatives:</span>
+                        <span className="text-gray-600">{intl.formatMessage({ id: 'admin.calls.modal.attempts' })}</span>
                         <span className="font-medium ml-1">{selectedCall.participants.provider.attemptCount}</span>
                       </div>
                       {selectedCall.participants.provider.audioQuality && (
                         <div>
-                          <span className="text-gray-600">Audio:</span>
+                          <span className="text-gray-600">{intl.formatMessage({ id: 'admin.calls.modal.audio' })}</span>
                           <span className="font-medium ml-1">{selectedCall.participants.provider.audioQuality}</span>
                         </div>
                       )}
                       {selectedCall.participants.provider.signalStrength !== undefined && (
                         <div>
-                          <span className="text-gray-600">Signal:</span>
+                          <span className="text-gray-600">{intl.formatMessage({ id: 'admin.calls.modal.signal' })}</span>
                           <span className="font-medium ml-1">{selectedCall.participants.provider.signalStrength}%</span>
                         </div>
                       )}
                       {selectedCall.participants.provider.callSid && (
                         <div>
-                          <span className="text-gray-600">Call SID:</span>
+                          <span className="text-gray-600">{intl.formatMessage({ id: 'admin.calls.modal.callSid' })}</span>
                           <span className="font-mono ml-1 text-xs">{selectedCall.participants.provider.callSid.substring(0, 10)}...</span>
                         </div>
                       )}
                     </div>
-                    
+
                     {selectedCall.participants.provider.connectedAt && (
                       <div className="mt-2 text-xs text-gray-500">
-                        Connecté à {formatDateTime(selectedCall.participants.provider.connectedAt)}
+                        {intl.formatMessage({ id: 'admin.calls.modal.connectedAt' })} {formatDateTime(selectedCall.participants.provider.connectedAt)}
                       </div>
                     )}
                   </div>
@@ -1744,13 +1750,13 @@ const AdminCallsMonitoring: React.FC = () => {
                 <div>
                   <h4 className="font-medium text-gray-700 mb-3 flex items-center">
                     <Users className="mr-2" size={16} />
-                    Client
+                    {intl.formatMessage({ id: 'admin.calls.modal.client' })}
                   </h4>
                   <div className="bg-gray-50 rounded-lg p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <div className="text-sm font-medium text-gray-900">
-                          {selectedCall.metadata.clientName || 'Nom non disponible'}
+                          {selectedCall.metadata.clientName || intl.formatMessage({ id: 'admin.calls.modal.nameUnavailable' })}
                         </div>
                         <div className="text-sm text-gray-500 font-mono">
                           {selectedCall.participants.client.phone}
@@ -1771,24 +1777,24 @@ const AdminCallsMonitoring: React.FC = () => {
                     
                     <div className="grid grid-cols-2 gap-3 text-xs">
                       <div>
-                        <span className="text-gray-600">Tentatives:</span>
+                        <span className="text-gray-600">{intl.formatMessage({ id: 'admin.calls.modal.attempts' })}</span>
                         <span className="font-medium ml-1">{selectedCall.participants.client.attemptCount}</span>
                       </div>
                       {selectedCall.participants.client.audioQuality && (
                         <div>
-                          <span className="text-gray-600">Audio:</span>
+                          <span className="text-gray-600">{intl.formatMessage({ id: 'admin.calls.modal.audio' })}</span>
                           <span className="font-medium ml-1">{selectedCall.participants.client.audioQuality}</span>
                         </div>
                       )}
                       {selectedCall.participants.client.signalStrength !== undefined && (
                         <div>
-                          <span className="text-gray-600">Signal:</span>
+                          <span className="text-gray-600">{intl.formatMessage({ id: 'admin.calls.modal.signal' })}</span>
                           <span className="font-medium ml-1">{selectedCall.participants.client.signalStrength}%</span>
                         </div>
                       )}
                       {selectedCall.participants.client.callSid && (
                         <div>
-                          <span className="text-gray-600">Call SID:</span>
+                          <span className="text-gray-600">{intl.formatMessage({ id: 'admin.calls.modal.callSid' })}</span>
                           <span className="font-mono ml-1 text-xs">{selectedCall.participants.client.callSid.substring(0, 10)}...</span>
                         </div>
                       )}
@@ -1796,7 +1802,7 @@ const AdminCallsMonitoring: React.FC = () => {
                     
                     {selectedCall.participants.client.connectedAt && (
                       <div className="mt-2 text-xs text-gray-500">
-                        Connecté à {formatDateTime(selectedCall.participants.client.connectedAt)}
+                        {intl.formatMessage({ id: 'admin.calls.modal.connectedAt' })} {formatDateTime(selectedCall.participants.client.connectedAt)}
                       </div>
                     )}
                   </div>
@@ -1808,38 +1814,38 @@ const AdminCallsMonitoring: React.FC = () => {
                 <div>
                   <h4 className="font-medium text-gray-700 mb-3 flex items-center">
                     <Radio className="mr-2" size={16} />
-                    Conférence Twilio
+                    {intl.formatMessage({ id: 'admin.calls.modal.twilioConference' })}
                   </h4>
                   <div className="bg-gray-50 rounded-lg p-4">
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Nom:</span>
+                        <span className="text-gray-600">{intl.formatMessage({ id: 'admin.calls.modal.conferenceName' })}</span>
                         <span className="font-mono text-xs">{selectedCall.conference.name}</span>
                       </div>
                       {selectedCall.conference.sid && (
                         <div className="flex justify-between">
-                          <span className="text-gray-600">SID:</span>
+                          <span className="text-gray-600">{intl.formatMessage({ id: 'admin.calls.modal.conferenceSid' })}</span>
                           <span className="font-mono text-xs">{selectedCall.conference.sid}</span>
                         </div>
                       )}
                       {selectedCall.conference.participantCount && (
                         <div className="flex justify-between">
-                          <span className="text-gray-600">Participants:</span>
+                          <span className="text-gray-600">{intl.formatMessage({ id: 'admin.calls.modal.participants' })}</span>
                           <span className="font-medium">{selectedCall.conference.participantCount}</span>
                         </div>
                       )}
                       {selectedCall.conference.isRecording && (
                         <div className="flex justify-between">
-                          <span className="text-gray-600">Enregistrement:</span>
+                          <span className="text-gray-600">{intl.formatMessage({ id: 'admin.calls.actions.recording' })}</span>
                           <span className="text-red-600 flex items-center">
                             <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse mr-1"></div>
-                            ACTIF
+                            {intl.formatMessage({ id: 'admin.calls.modal.recordingActive' })}
                           </span>
                         </div>
                       )}
                       {selectedCall.conference.audioQuality && (
                         <div className="flex justify-between">
-                          <span className="text-gray-600">Qualité audio:</span>
+                          <span className="text-gray-600">{intl.formatMessage({ id: 'admin.calls.modal.audioQuality' })}</span>
                           <span className="font-medium">{selectedCall.conference.audioQuality}</span>
                         </div>
                       )}
@@ -1850,38 +1856,38 @@ const AdminCallsMonitoring: React.FC = () => {
                 <div>
                   <h4 className="font-medium text-gray-700 mb-3 flex items-center">
                     <Network className="mr-2" size={16} />
-                    Métriques temps réel
+                    {intl.formatMessage({ id: 'admin.calls.modal.realtimeMetrics' })}
                   </h4>
                   {selectedCall.realTimeData ? (
                     <div className="bg-gray-50 rounded-lg p-4">
                       <div className="grid grid-cols-2 gap-3 text-sm">
                         <div className="bg-white p-2 rounded">
-                          <div className="text-gray-600 text-xs">Latence</div>
+                          <div className="text-gray-600 text-xs">{intl.formatMessage({ id: 'admin.calls.modal.latency' })}</div>
                           <div className="font-medium">{selectedCall.realTimeData.latency?.toFixed(0)}ms</div>
                         </div>
                         <div className="bg-white p-2 rounded">
-                          <div className="text-gray-600 text-xs">Qualité</div>
+                          <div className="text-gray-600 text-xs">{intl.formatMessage({ id: 'admin.calls.modal.quality' })}</div>
                           <div className="font-medium">{selectedCall.realTimeData.connectionQuality?.toFixed(0)}%</div>
                         </div>
                         <div className="bg-white p-2 rounded">
-                          <div className="text-gray-600 text-xs">Jitter</div>
+                          <div className="text-gray-600 text-xs">{intl.formatMessage({ id: 'admin.calls.modal.jitter' })}</div>
                           <div className="font-medium">{selectedCall.realTimeData.jitter?.toFixed(1)}ms</div>
                         </div>
                         <div className="bg-white p-2 rounded">
-                          <div className="text-gray-600 text-xs">Perte paquets</div>
+                          <div className="text-gray-600 text-xs">{intl.formatMessage({ id: 'admin.calls.modal.packetLoss' })}</div>
                           <div className="font-medium">{selectedCall.realTimeData.packetLoss?.toFixed(1)}%</div>
                         </div>
                       </div>
-                      
+
                       {selectedCall.realTimeData.lastPing && (
                         <div className="mt-2 text-xs text-gray-500">
-                          Dernière mesure: {formatDateTime(selectedCall.realTimeData.lastPing)}
+                          {intl.formatMessage({ id: 'admin.calls.modal.lastMeasurement' })} {formatDateTime(selectedCall.realTimeData.lastPing)}
                         </div>
                       )}
                     </div>
                   ) : (
                     <div className="bg-gray-50 rounded-lg p-4 text-center text-gray-500">
-                      Aucune donnée temps réel disponible
+                      {intl.formatMessage({ id: 'admin.calls.modal.noRealtimeData' })}
                     </div>
                   )}
                 </div>
@@ -1891,16 +1897,16 @@ const AdminCallsMonitoring: React.FC = () => {
               <div>
                 <h4 className="font-medium text-gray-700 mb-3 flex items-center">
                   <TrendingUp className="mr-2" size={16} />
-                  Paiement
+                  {intl.formatMessage({ id: 'admin.calls.modal.payment' })}
                 </h4>
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Montant:</span>
+                      <span className="text-gray-600">{intl.formatMessage({ id: 'admin.calls.modal.amount' })}</span>
                       <span className="font-medium">{formatCurrency(selectedCall.payment.amount)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Statut:</span>
+                      <span className="text-gray-600">{intl.formatMessage({ id: 'admin.calls.modal.paymentStatus' })}</span>
                       <span className={`px-2 py-1 text-xs rounded-full ${
                         selectedCall.payment.status === 'captured' ? 'bg-green-100 text-green-800' :
                         selectedCall.payment.status === 'authorized' ? 'bg-blue-100 text-blue-800' :
@@ -1911,13 +1917,13 @@ const AdminCallsMonitoring: React.FC = () => {
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Intent ID:</span>
+                      <span className="text-gray-600">{intl.formatMessage({ id: 'admin.calls.modal.intentId' })}</span>
                       <span className="font-mono text-xs">{selectedCall.payment.intentId.substring(0, 12)}...</span>
                     </div>
                   </div>
                   {selectedCall.payment.failureReason && (
                     <div className="mt-3 p-2 bg-red-50 rounded text-sm">
-                      <span className="text-red-700 font-medium">Erreur: </span>
+                      <span className="text-red-700 font-medium">{intl.formatMessage({ id: 'admin.calls.modal.paymentError' })} </span>
                       <span className="text-red-600">{selectedCall.payment.failureReason}</span>
                     </div>
                   )}
@@ -1929,11 +1935,11 @@ const AdminCallsMonitoring: React.FC = () => {
                 <div>
                   <h4 className="font-medium text-gray-700 mb-3 flex items-center">
                     <Languages className="mr-2" size={16} />
-                    Langues
+                    {intl.formatMessage({ id: 'admin.calls.modal.languages' })}
                   </h4>
                   <div className="space-y-2">
                     <div>
-                      <span className="text-sm text-gray-600">Client: </span>
+                      <span className="text-sm text-gray-600">{intl.formatMessage({ id: 'admin.calls.modal.clientLanguages' })} </span>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {selectedCall.metadata.clientLanguages?.map((lang) => (
                           <span key={lang} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
@@ -1943,7 +1949,7 @@ const AdminCallsMonitoring: React.FC = () => {
                       </div>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Prestataire: </span>
+                      <span className="text-sm text-gray-600">{intl.formatMessage({ id: 'admin.calls.modal.providerLanguages' })} </span>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {selectedCall.metadata.providerLanguages?.map((lang) => (
                           <span key={lang} className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
@@ -1958,29 +1964,29 @@ const AdminCallsMonitoring: React.FC = () => {
                 <div>
                   <h4 className="font-medium text-gray-700 mb-3 flex items-center">
                     <Info className="mr-2" size={16} />
-                    Métadonnées
+                    {intl.formatMessage({ id: 'admin.calls.modal.metadata' })}
                   </h4>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Durée max:</span>
+                      <span className="text-gray-600">{intl.formatMessage({ id: 'admin.calls.modal.maxDuration' })}</span>
                       <span className="font-medium">{selectedCall.metadata.maxDuration / 60} min</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Source:</span>
+                      <span className="text-gray-600">{intl.formatMessage({ id: 'admin.calls.modal.source' })}</span>
                       <span className="font-medium">{selectedCall.metadata.source || 'web'}</span>
                     </div>
                     {selectedCall.metadata.requestId && (
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Request ID:</span>
+                        <span className="text-gray-600">{intl.formatMessage({ id: 'admin.calls.modal.requestId' })}</span>
                         <span className="font-mono text-xs">{selectedCall.metadata.requestId}</span>
                       </div>
                     )}
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Créé:</span>
+                      <span className="text-gray-600">{intl.formatMessage({ id: 'admin.calls.modal.created' })}</span>
                       <span className="font-medium">{formatDateTime(selectedCall.metadata.createdAt)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Mis à jour:</span>
+                      <span className="text-gray-600">{intl.formatMessage({ id: 'admin.calls.modal.updated' })}</span>
                       <span className="font-medium">{formatDateTime(selectedCall.metadata.updatedAt)}</span>
                     </div>
                   </div>
@@ -1990,7 +1996,7 @@ const AdminCallsMonitoring: React.FC = () => {
               {/* Actions d'administration */}
               <div className="flex justify-between items-center pt-4 border-t border-gray-200">
                 <div className="text-sm text-gray-500">
-                  Session surveillée en temps réel
+                  {intl.formatMessage({ id: 'admin.calls.modal.realtimeMonitoring' })}
                 </div>
                 
                 <div className="flex space-x-3">
@@ -1998,7 +2004,7 @@ const AdminCallsMonitoring: React.FC = () => {
                     onClick={() => setShowCallModal(false)}
                     className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
                   >
-                    Fermer
+                    {intl.formatMessage({ id: 'admin.calls.actions.close' })}
                   </button>
                   
                   <CallActionButtons
@@ -2015,7 +2021,7 @@ const AdminCallsMonitoring: React.FC = () => {
                       className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
                     >
                       <ExternalLink size={16} className="mr-2" />
-                      Enregistrement
+                      {intl.formatMessage({ id: 'admin.calls.actions.recording' })}
                     </button>
                   )}
                 </div>
@@ -2028,26 +2034,26 @@ const AdminCallsMonitoring: React.FC = () => {
         <Modal
           isOpen={showStatsModal}
           onClose={() => setShowStatsModal(false)}
-          title="Statistiques système en temps réel"
+          title={intl.formatMessage({ id: 'admin.calls.systemStats.title' })}
           size="large"
         >
           {systemHealth && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <MetricsCard
-                  title="Statut API"
+                  title={intl.formatMessage({ id: 'admin.calls.systemStats.apiStatus' })}
                   value={systemHealth.apiStatus.toUpperCase()}
                   icon={Wifi}
                   color={systemHealth.apiStatus === 'operational' ? 'bg-green-500' : 'bg-red-500'}
                 />
                 <MetricsCard
-                  title="Temps de réponse"
+                  title={intl.formatMessage({ id: 'admin.calls.systemStats.responseTime' })}
                   value={`${systemHealth.responseTime.toFixed(0)}ms`}
                   icon={Timer}
                   color="bg-blue-500"
                 />
                 <MetricsCard
-                  title="Charge actuelle"
+                  title={intl.formatMessage({ id: 'admin.calls.systemStats.currentLoad' })}
                   value={`${systemHealth.currentLoad}/${systemHealth.callCapacity}`}
                   icon={Server}
                   color="bg-purple-500"
@@ -2056,7 +2062,7 @@ const AdminCallsMonitoring: React.FC = () => {
 
               {Object.keys(systemHealth.regionHealth).length > 0 && (
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Santé des régions</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">{intl.formatMessage({ id: 'admin.calls.systemStats.regionHealth' })}</h3>
                   <div className="space-y-3">
                     {Object.entries(systemHealth.regionHealth).map(([region, health]) => (
                       <div key={region} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
@@ -2077,11 +2083,11 @@ const AdminCallsMonitoring: React.FC = () => {
                         </div>
                         <div className="flex space-x-4 text-sm">
                           <div>
-                            <span className="text-gray-600">Latence: </span>
+                            <span className="text-gray-600">{intl.formatMessage({ id: 'admin.calls.systemStats.latency' })}: </span>
                             <span className="font-medium">{health.latency.toFixed(0)}ms</span>
                           </div>
                           <div>
-                            <span className="text-gray-600">Disponibilité: </span>
+                            <span className="text-gray-600">{intl.formatMessage({ id: 'admin.calls.systemStats.availability' })}: </span>
                             <span className="font-medium">{health.availability}%</span>
                           </div>
                         </div>
@@ -2093,30 +2099,30 @@ const AdminCallsMonitoring: React.FC = () => {
 
               {callMetrics && (
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Métriques détaillées</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">{intl.formatMessage({ id: 'admin.calls.systemStats.detailedMetrics' })}</h3>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <div className="bg-gray-50 p-4 rounded-lg">
-                      <div className="text-sm text-gray-600">Taux de succès</div>
+                      <div className="text-sm text-gray-600">{intl.formatMessage({ id: 'admin.calls.metrics.successRate' })}</div>
                       <div className="text-xl font-bold text-gray-900">{callMetrics.successRate.toFixed(1)}%</div>
                     </div>
                     <div className="bg-gray-50 p-4 rounded-lg">
-                      <div className="text-sm text-gray-600">Durée moyenne</div>
+                      <div className="text-sm text-gray-600">{intl.formatMessage({ id: 'admin.calls.metrics.avgDuration' })}</div>
                       <div className="text-xl font-bold text-gray-900">{Math.round(callMetrics.averageCallDuration / 60)}min</div>
                     </div>
                     <div className="bg-gray-50 p-4 rounded-lg">
-                      <div className="text-sm text-gray-600">Temps connexion</div>
+                      <div className="text-sm text-gray-600">{intl.formatMessage({ id: 'admin.calls.metrics.connectionTime' })}</div>
                       <div className="text-xl font-bold text-gray-900">{Math.round(callMetrics.averageConnectionTime)}s</div>
                     </div>
                     <div className="bg-gray-50 p-4 rounded-lg">
-                      <div className="text-sm text-gray-600">Qualité audio</div>
+                      <div className="text-sm text-gray-600">{intl.formatMessage({ id: 'admin.calls.metrics.audioQuality' })}</div>
                       <div className="text-xl font-bold text-gray-900">{callMetrics.audioQualityAverage.toFixed(1)}/4</div>
                     </div>
                     <div className="bg-gray-50 p-4 rounded-lg">
-                      <div className="text-sm text-gray-600">Latence réseau</div>
+                      <div className="text-sm text-gray-600">{intl.formatMessage({ id: 'admin.calls.metrics.networkLatency' })}</div>
                       <div className="text-xl font-bold text-gray-900">{Math.round(callMetrics.networkLatencyAverage)}ms</div>
                     </div>
                     <div className="bg-gray-50 p-4 rounded-lg">
-                      <div className="text-sm text-gray-600">Appels aujourd'hui</div>
+                      <div className="text-sm text-gray-600">{intl.formatMessage({ id: 'admin.calls.metrics.callsToday' })}</div>
                       <div className="text-xl font-bold text-gray-900">{callMetrics.totalCallsToday}</div>
                     </div>
                   </div>

@@ -1,40 +1,140 @@
 // scripts/generate-env-files.cjs
+// ⚠️ ATTENTION: Ce script est DÉPRÉCIÉ - Ne pas exécuter en production !
+// Les fichiers .env sont maintenant gérés manuellement avec des configurations complètes.
+// Ce script ne doit être utilisé QUE pour initialiser un nouveau projet.
+
 const fs = require("fs");
 const path = require("path");
 
-// Config commune pour Dev & Prod
-const envConfig = `
-# 🔥 FIREBASE (pour le frontend Vite)
+// =============================================================================
+// CLÉS STRIPE UNIFIÉES (2026-01-13)
+// Compte Stripe: 51RFHjp (SOS Expat)
+// =============================================================================
+
+const STRIPE_KEYS = {
+  // Clé LIVE pour production
+  LIVE: 'pk_live_51RFHjpDF7L3utQbN09AgPttk7wz8NDyeD7pJZvYae2LJBHOYW4Eg9HWZpX6vKtZMXZltD2fjEf9EnZL4agxgOpHL00TBow1FdT',
+  // Clé TEST pour développement (même compte)
+  TEST: 'pk_test_51RFHjpDF7L3utQbN7DNWM0zdUWGuwmwTvRLP0GhXYVbpQIzDDEfb7RFjDs9egAN7BYhyvX3JCQMtK3CliZFAI3ew00jhRzLul2',
+};
+
+// Sélection de la clé via variable d'environnement ou mode
+const isProduction = process.env.NODE_ENV === 'production';
+const STRIPE_PUBLIC_KEY = process.env.STRIPE_PUBLIC_KEY_FOR_FRONTEND
+  || process.env.VITE_STRIPE_PUBLIC_KEY
+  || (isProduction ? STRIPE_KEYS.LIVE : STRIPE_KEYS.TEST);
+
+// Validation: s'assurer que c'est bien une clé publique (pk_*)
+if (!STRIPE_PUBLIC_KEY.startsWith('pk_')) {
+  console.error('❌ ERREUR: STRIPE_PUBLIC_KEY doit commencer par "pk_" (clé publique)');
+  console.error('   Fourni:', STRIPE_PUBLIC_KEY.substring(0, 10) + '...');
+  process.exit(1);
+}
+
+// =============================================================================
+// SÉCURITÉ: Vérifier si les fichiers .env existent déjà
+// =============================================================================
+
+const rootDir = process.cwd();
+const envFiles = ['.env', '.env.production', '.env.development', '.env.local'];
+const existingFiles = envFiles.filter(f => fs.existsSync(path.join(rootDir, f)));
+
+if (existingFiles.length > 0) {
+  console.log('');
+  console.log('⚠️  ATTENTION: Des fichiers .env existent déjà:');
+  existingFiles.forEach(f => console.log(`   - ${f}`));
+  console.log('');
+  console.log('Ce script va les ÉCRASER avec une configuration MINIMALE.');
+  console.log('Les fichiers actuels contiennent probablement plus de variables.');
+  console.log('');
+  console.log('Pour continuer, supprimez manuellement les fichiers ou utilisez:');
+  console.log('   FORCE=true node scripts/generate-env-files.cjs');
+  console.log('');
+
+  if (process.env.FORCE !== 'true') {
+    console.log('❌ Annulé pour éviter la perte de configuration.');
+    process.exit(1);
+  }
+
+  console.log('⚠️  Mode FORCE activé - Écrasement des fichiers...');
+}
+
+// =============================================================================
+// TEMPLATES DE CONFIGURATION
+// =============================================================================
+
+const envDevelopment = `# ═══════════════════════════════════════════════════════════════════════════════
+# CONFIGURATION DEVELOPMENT - SOS EXPAT PLATFORM
+# Généré par generate-env-files.cjs le ${new Date().toISOString()}
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# FIREBASE (pour le frontend Vite)
 VITE_FIREBASE_API_KEY=AIzaSyCLp02v_ywBw67d4VD7rQ2tCQUdKp83CT8
 VITE_FIREBASE_AUTH_DOMAIN=sos-urgently-ac307.firebaseapp.com
 VITE_FIREBASE_PROJECT_ID=sos-urgently-ac307
-VITE_FIREBASE_STORAGE_BUCKET=sos-urgently-ac307.appspot.com
+VITE_FIREBASE_STORAGE_BUCKET=sos-urgently-ac307.firebasestorage.app
 VITE_FIREBASE_MESSAGING_SENDER_ID=268195823113
 VITE_FIREBASE_APP_ID=1:268195823113:web:10bf2e5bacdc1816f182d8
 
-# 💳 STRIPE (clé publique pour Stripe Elements)
-VITE_STRIPE_PUBLIC_KEY=pk_test_51RFHjpDF7L3utQbN7DNWM0zdUWGuwmwTvRLP0GhXYVbpQIzDDEfb7RFjDs9egAN7BYhyvX3JCQMtK3CliZFAI3ew00jhRzLul2
+# EMULATEURS
+VITE_USE_EMULATORS=false
 
-# 📊 GA4 (Google Analytics 4)
-VITE_GA4_MEASUREMENT_ID=G-6855B6E2FB
-`.trim() + "\n";
+# STRIPE (clé publique TEST - compte 51RFHjp)
+VITE_STRIPE_PUBLIC_KEY=${STRIPE_KEYS.TEST}
 
-const rootDir = process.cwd();
+# FUNCTIONS
+VITE_FUNCTIONS_REGION=europe-west1
 
-// Sauvegarde de l'ancien .env
-const oldEnvPath = path.join(rootDir, ".env");
-if (fs.existsSync(oldEnvPath)) {
-  const backupPath = path.join(rootDir, `.env.backup-${Date.now()}`);
-  fs.renameSync(oldEnvPath, backupPath);
-  console.log(`💾 Ancien .env sauvegardé sous : ${backupPath}`);
-}
+# GOOGLE ANALYTICS 4 & TAG MANAGER
+VITE_GA4_MEASUREMENT_ID=G-XZTJK0L3RK
+VITE_GTM_ID=GTM-P53H3RLF
+`;
+
+const envProduction = `# ═══════════════════════════════════════════════════════════════════════════════
+# CONFIGURATION PRODUCTION - SOS EXPAT PLATFORM
+# Généré par generate-env-files.cjs le ${new Date().toISOString()}
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# FIREBASE (pour le frontend Vite)
+VITE_FIREBASE_API_KEY=AIzaSyCLp02v_ywBw67d4VD7rQ2tCQUdKp83CT8
+VITE_FIREBASE_AUTH_DOMAIN=sos-urgently-ac307.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=sos-urgently-ac307
+VITE_FIREBASE_STORAGE_BUCKET=sos-urgently-ac307.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=268195823113
+VITE_FIREBASE_APP_ID=1:268195823113:web:10bf2e5bacdc1816f182d8
+
+# EMULATEURS
+VITE_USE_EMULATORS=false
+
+# STRIPE (clé publique LIVE - compte 51RFHjp)
+VITE_STRIPE_PUBLIC_KEY=${STRIPE_KEYS.LIVE}
+
+# FUNCTIONS
+VITE_FUNCTIONS_REGION=europe-west1
+
+# GOOGLE ANALYTICS 4 & TAG MANAGER
+VITE_GA4_MEASUREMENT_ID=G-XZTJK0L3RK
+VITE_GTM_ID=GTM-P53H3RLF
+`;
+
+// =============================================================================
+// GÉNÉRATION DES FICHIERS
+// =============================================================================
 
 // Création .env.development
-fs.writeFileSync(path.join(rootDir, ".env.development"), envConfig);
-console.log("✅ Fichier .env.development créé");
+fs.writeFileSync(path.join(rootDir, ".env.development"), envDevelopment);
+console.log("✅ Fichier .env.development créé (clé TEST)");
 
 // Création .env.production
-fs.writeFileSync(path.join(rootDir, ".env.production"), envConfig);
-console.log("✅ Fichier .env.production créé");
+fs.writeFileSync(path.join(rootDir, ".env.production"), envProduction);
+console.log("✅ Fichier .env.production créé (clé LIVE)");
 
-console.log("\n🚀 Configuration prête !");
+console.log("");
+console.log("🚀 Configuration générée !");
+console.log("");
+console.log("📋 Clés Stripe utilisées:");
+console.log(`   TEST: pk_test_51RFHjp...${STRIPE_KEYS.TEST.slice(-8)}`);
+console.log(`   LIVE: pk_live_51RFHjp...${STRIPE_KEYS.LIVE.slice(-8)}`);
+console.log("");
+console.log("⚠️  N'oubliez pas de configurer Cloudflare Pages avec:");
+console.log(`   VITE_STRIPE_PUBLIC_KEY = ${STRIPE_KEYS.LIVE}`);

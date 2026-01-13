@@ -73,16 +73,220 @@ function slugify(str: string): string {
 }
 
 const ROLE_TRANSLATIONS: Record<string, Record<string, string>> = {
-  lawyer: { fr: 'avocat', en: 'lawyer', es: 'abogado', pt: 'advogado', de: 'anwalt', ru: 'advokat', zh: 'lawyer', ar: 'lawyer', hi: 'lawyer' },
-  expat: { fr: 'expatrie', en: 'expat', es: 'expatriado', pt: 'expatriado', de: 'expat', ru: 'expat', zh: 'expat', ar: 'expat', hi: 'expat' },
+  lawyer: {
+    fr: 'avocat', en: 'lawyer', es: 'abogado', pt: 'advogado', de: 'anwalt',
+    ru: 'advokat', zh: 'lushi', ar: 'muhami', hi: 'vakil'
+  },
+  expat: {
+    fr: 'expatrie', en: 'expat', es: 'expatriado', pt: 'expatriado', de: 'expat',
+    ru: 'expat', zh: 'haiwai', ar: 'wafid', hi: 'videshi'
+  },
 };
 
+// Traductions des pays pour les 9 langues supportées
+// Format: { 'NomPays': { lang: 'slug-romanise', ... } }
 const COUNTRY_TRANSLATIONS: Record<string, Record<string, string>> = {
-  'France': { fr: 'france', en: 'france', es: 'francia', de: 'frankreich' },
-  'Thaïlande': { fr: 'thailande', en: 'thailand', es: 'tailandia', de: 'thailand' },
-  'Thailand': { fr: 'thailande', en: 'thailand', es: 'tailandia', de: 'thailand' },
-  'Allemagne': { fr: 'allemagne', en: 'germany', es: 'alemania', de: 'deutschland' },
-  'Germany': { fr: 'allemagne', en: 'germany', es: 'alemania', de: 'deutschland' },
+  // France
+  'France': { fr: 'france', en: 'france', es: 'francia', pt: 'franca', de: 'frankreich', ru: 'frantsiya', zh: 'faguo', ar: 'faransa', hi: 'frans' },
+  // Thailand
+  'Thaïlande': { fr: 'thailande', en: 'thailand', es: 'tailandia', pt: 'tailandia', de: 'thailand', ru: 'tailand', zh: 'taiguo', ar: 'tailand', hi: 'thailand' },
+  'Thailand': { fr: 'thailande', en: 'thailand', es: 'tailandia', pt: 'tailandia', de: 'thailand', ru: 'tailand', zh: 'taiguo', ar: 'tailand', hi: 'thailand' },
+  // Germany
+  'Allemagne': { fr: 'allemagne', en: 'germany', es: 'alemania', pt: 'alemanha', de: 'deutschland', ru: 'germaniya', zh: 'deguo', ar: 'almania', hi: 'jarmani' },
+  'Germany': { fr: 'allemagne', en: 'germany', es: 'alemania', pt: 'alemanha', de: 'deutschland', ru: 'germaniya', zh: 'deguo', ar: 'almania', hi: 'jarmani' },
+  // Spain
+  'Espagne': { fr: 'espagne', en: 'spain', es: 'espana', pt: 'espanha', de: 'spanien', ru: 'ispaniya', zh: 'xibanya', ar: 'isbania', hi: 'spain' },
+  'Spain': { fr: 'espagne', en: 'spain', es: 'espana', pt: 'espanha', de: 'spanien', ru: 'ispaniya', zh: 'xibanya', ar: 'isbania', hi: 'spain' },
+  // USA
+  'États-Unis': { fr: 'etats-unis', en: 'united-states', es: 'estados-unidos', pt: 'estados-unidos', de: 'usa', ru: 'ssha', zh: 'meiguo', ar: 'amrika', hi: 'america' },
+  'United States': { fr: 'etats-unis', en: 'united-states', es: 'estados-unidos', pt: 'estados-unidos', de: 'usa', ru: 'ssha', zh: 'meiguo', ar: 'amrika', hi: 'america' },
+  'USA': { fr: 'etats-unis', en: 'united-states', es: 'estados-unidos', pt: 'estados-unidos', de: 'usa', ru: 'ssha', zh: 'meiguo', ar: 'amrika', hi: 'america' },
+  // UK
+  'Royaume-Uni': { fr: 'royaume-uni', en: 'united-kingdom', es: 'reino-unido', pt: 'reino-unido', de: 'grossbritannien', ru: 'velikobritaniya', zh: 'yingguo', ar: 'britania', hi: 'britain' },
+  'United Kingdom': { fr: 'royaume-uni', en: 'united-kingdom', es: 'reino-unido', pt: 'reino-unido', de: 'grossbritannien', ru: 'velikobritaniya', zh: 'yingguo', ar: 'britania', hi: 'britain' },
+  // Canada
+  'Canada': { fr: 'canada', en: 'canada', es: 'canada', pt: 'canada', de: 'kanada', ru: 'kanada', zh: 'jianada', ar: 'kanada', hi: 'canada' },
+  // Morocco
+  'Maroc': { fr: 'maroc', en: 'morocco', es: 'marruecos', pt: 'marrocos', de: 'marokko', ru: 'marokko', zh: 'moluoge', ar: 'maghrib', hi: 'morocco' },
+  'Morocco': { fr: 'maroc', en: 'morocco', es: 'marruecos', pt: 'marrocos', de: 'marokko', ru: 'marokko', zh: 'moluoge', ar: 'maghrib', hi: 'morocco' },
+  // Japan
+  'Japon': { fr: 'japon', en: 'japan', es: 'japon', pt: 'japao', de: 'japan', ru: 'yaponiya', zh: 'riben', ar: 'yaban', hi: 'japan' },
+  'Japan': { fr: 'japon', en: 'japan', es: 'japon', pt: 'japao', de: 'japan', ru: 'yaponiya', zh: 'riben', ar: 'yaban', hi: 'japan' },
+  // China
+  'Chine': { fr: 'chine', en: 'china', es: 'china', pt: 'china', de: 'china', ru: 'kitai', zh: 'zhongguo', ar: 'sin', hi: 'china' },
+  'China': { fr: 'chine', en: 'china', es: 'china', pt: 'china', de: 'china', ru: 'kitai', zh: 'zhongguo', ar: 'sin', hi: 'china' },
+  // India
+  'Inde': { fr: 'inde', en: 'india', es: 'india', pt: 'india', de: 'indien', ru: 'indiya', zh: 'yindu', ar: 'hind', hi: 'bharat' },
+  'India': { fr: 'inde', en: 'india', es: 'india', pt: 'india', de: 'indien', ru: 'indiya', zh: 'yindu', ar: 'hind', hi: 'bharat' },
+  // Saudi Arabia
+  'Arabie Saoudite': { fr: 'arabie-saoudite', en: 'saudi-arabia', es: 'arabia-saudita', pt: 'arabia-saudita', de: 'saudi-arabien', ru: 'saudovskaya-araviya', zh: 'shate', ar: 'saudia', hi: 'saudi' },
+  'Saudi Arabia': { fr: 'arabie-saoudite', en: 'saudi-arabia', es: 'arabia-saudita', pt: 'arabia-saudita', de: 'saudi-arabien', ru: 'saudovskaya-araviya', zh: 'shate', ar: 'saudia', hi: 'saudi' },
+  // UAE
+  'Émirats Arabes Unis': { fr: 'emirats-arabes-unis', en: 'uae', es: 'emiratos-arabes', pt: 'emirados-arabes', de: 'vae', ru: 'oae', zh: 'alianqiu', ar: 'emarat', hi: 'uae' },
+  'UAE': { fr: 'emirats-arabes-unis', en: 'uae', es: 'emiratos-arabes', pt: 'emirados-arabes', de: 'vae', ru: 'oae', zh: 'alianqiu', ar: 'emarat', hi: 'uae' },
+  // Brazil
+  'Brésil': { fr: 'bresil', en: 'brazil', es: 'brasil', pt: 'brasil', de: 'brasilien', ru: 'braziliya', zh: 'baxi', ar: 'brazil', hi: 'brazil' },
+  'Brazil': { fr: 'bresil', en: 'brazil', es: 'brasil', pt: 'brasil', de: 'brasilien', ru: 'braziliya', zh: 'baxi', ar: 'brazil', hi: 'brazil' },
+  // Australia
+  'Australie': { fr: 'australie', en: 'australia', es: 'australia', pt: 'australia', de: 'australien', ru: 'avstraliya', zh: 'aodaliya', ar: 'ustralia', hi: 'australia' },
+  'Australia': { fr: 'australie', en: 'australia', es: 'australia', pt: 'australia', de: 'australien', ru: 'avstraliya', zh: 'aodaliya', ar: 'ustralia', hi: 'australia' },
+  // Russia
+  'Russie': { fr: 'russie', en: 'russia', es: 'rusia', pt: 'russia', de: 'russland', ru: 'rossiya', zh: 'eluosi', ar: 'rusia', hi: 'russia' },
+  'Russia': { fr: 'russie', en: 'russia', es: 'rusia', pt: 'russia', de: 'russland', ru: 'rossiya', zh: 'eluosi', ar: 'rusia', hi: 'russia' },
+  // Italy
+  'Italie': { fr: 'italie', en: 'italy', es: 'italia', pt: 'italia', de: 'italien', ru: 'italiya', zh: 'yidali', ar: 'italia', hi: 'italy' },
+  'Italy': { fr: 'italie', en: 'italy', es: 'italia', pt: 'italia', de: 'italien', ru: 'italiya', zh: 'yidali', ar: 'italia', hi: 'italy' },
+  // Portugal
+  'Portugal': { fr: 'portugal', en: 'portugal', es: 'portugal', pt: 'portugal', de: 'portugal', ru: 'portugaliya', zh: 'putaoya', ar: 'burtugal', hi: 'portugal' },
+  // Netherlands
+  'Pays-Bas': { fr: 'pays-bas', en: 'netherlands', es: 'paises-bajos', pt: 'holanda', de: 'niederlande', ru: 'niderlandy', zh: 'helan', ar: 'hulanda', hi: 'netherlands' },
+  'Netherlands': { fr: 'pays-bas', en: 'netherlands', es: 'paises-bajos', pt: 'holanda', de: 'niederlande', ru: 'niderlandy', zh: 'helan', ar: 'hulanda', hi: 'netherlands' },
+  // Belgium
+  'Belgique': { fr: 'belgique', en: 'belgium', es: 'belgica', pt: 'belgica', de: 'belgien', ru: 'belgiya', zh: 'bilishi', ar: 'beljika', hi: 'belgium' },
+  'Belgium': { fr: 'belgique', en: 'belgium', es: 'belgica', pt: 'belgica', de: 'belgien', ru: 'belgiya', zh: 'bilishi', ar: 'beljika', hi: 'belgium' },
+  // Switzerland
+  'Suisse': { fr: 'suisse', en: 'switzerland', es: 'suiza', pt: 'suica', de: 'schweiz', ru: 'shveitsariya', zh: 'ruishi', ar: 'swisra', hi: 'switzerland' },
+  'Switzerland': { fr: 'suisse', en: 'switzerland', es: 'suiza', pt: 'suica', de: 'schweiz', ru: 'shveitsariya', zh: 'ruishi', ar: 'swisra', hi: 'switzerland' },
+  // Mexico
+  'Mexique': { fr: 'mexique', en: 'mexico', es: 'mexico', pt: 'mexico', de: 'mexiko', ru: 'meksika', zh: 'moxige', ar: 'maksik', hi: 'mexico' },
+  'Mexico': { fr: 'mexique', en: 'mexico', es: 'mexico', pt: 'mexico', de: 'mexiko', ru: 'meksika', zh: 'moxige', ar: 'maksik', hi: 'mexico' },
+  // Singapore
+  'Singapour': { fr: 'singapour', en: 'singapore', es: 'singapur', pt: 'singapura', de: 'singapur', ru: 'singapur', zh: 'xinjiapo', ar: 'singafura', hi: 'singapore' },
+  'Singapore': { fr: 'singapour', en: 'singapore', es: 'singapur', pt: 'singapura', de: 'singapur', ru: 'singapur', zh: 'xinjiapo', ar: 'singafura', hi: 'singapore' },
+  // Hong Kong
+  'Hong Kong': { fr: 'hong-kong', en: 'hong-kong', es: 'hong-kong', pt: 'hong-kong', de: 'hongkong', ru: 'gonkong', zh: 'xianggang', ar: 'hongkong', hi: 'hongkong' },
+  // Vietnam
+  'Vietnam': { fr: 'vietnam', en: 'vietnam', es: 'vietnam', pt: 'vietna', de: 'vietnam', ru: 'vetnam', zh: 'yuenan', ar: 'fitnam', hi: 'vietnam' },
+  // South Korea
+  'Corée du Sud': { fr: 'coree-du-sud', en: 'south-korea', es: 'corea-del-sur', pt: 'coreia-do-sul', de: 'suedkorea', ru: 'yuzhnaya-koreya', zh: 'hanguo', ar: 'kuria', hi: 'korea' },
+  'South Korea': { fr: 'coree-du-sud', en: 'south-korea', es: 'corea-del-sur', pt: 'coreia-do-sul', de: 'suedkorea', ru: 'yuzhnaya-koreya', zh: 'hanguo', ar: 'kuria', hi: 'korea' },
+  // Egypt
+  'Égypte': { fr: 'egypte', en: 'egypt', es: 'egipto', pt: 'egito', de: 'aegypten', ru: 'egipet', zh: 'aiji', ar: 'misr', hi: 'egypt' },
+  'Egypt': { fr: 'egypte', en: 'egypt', es: 'egipto', pt: 'egito', de: 'aegypten', ru: 'egipet', zh: 'aiji', ar: 'misr', hi: 'egypt' },
+  // Tunisia
+  'Tunisie': { fr: 'tunisie', en: 'tunisia', es: 'tunez', pt: 'tunisia', de: 'tunesien', ru: 'tunis', zh: 'tunisi', ar: 'tunis', hi: 'tunisia' },
+  'Tunisia': { fr: 'tunisie', en: 'tunisia', es: 'tunez', pt: 'tunisia', de: 'tunesien', ru: 'tunis', zh: 'tunisi', ar: 'tunis', hi: 'tunisia' },
+  // Algeria
+  'Algérie': { fr: 'algerie', en: 'algeria', es: 'argelia', pt: 'argelia', de: 'algerien', ru: 'alzhir', zh: 'aerjiliya', ar: 'jazair', hi: 'algeria' },
+  'Algeria': { fr: 'algerie', en: 'algeria', es: 'argelia', pt: 'argelia', de: 'algerien', ru: 'alzhir', zh: 'aerjiliya', ar: 'jazair', hi: 'algeria' },
+  // Indonesia
+  'Indonésie': { fr: 'indonesie', en: 'indonesia', es: 'indonesia', pt: 'indonesia', de: 'indonesien', ru: 'indoneziya', zh: 'yindunixiya', ar: 'indunisia', hi: 'indonesia' },
+  'Indonesia': { fr: 'indonesie', en: 'indonesia', es: 'indonesia', pt: 'indonesia', de: 'indonesien', ru: 'indoneziya', zh: 'yindunixiya', ar: 'indunisia', hi: 'indonesia' },
+  // Malaysia
+  'Malaisie': { fr: 'malaisie', en: 'malaysia', es: 'malasia', pt: 'malasia', de: 'malaysia', ru: 'malayziya', zh: 'malaixiya', ar: 'malizia', hi: 'malaysia' },
+  'Malaysia': { fr: 'malaisie', en: 'malaysia', es: 'malasia', pt: 'malasia', de: 'malaysia', ru: 'malayziya', zh: 'malaixiya', ar: 'malizia', hi: 'malaysia' },
+  // Philippines
+  'Philippines': { fr: 'philippines', en: 'philippines', es: 'filipinas', pt: 'filipinas', de: 'philippinen', ru: 'filipiny', zh: 'feilvbin', ar: 'filipin', hi: 'philippines' },
+  // Norway
+  'Norvège': { fr: 'norvege', en: 'norway', es: 'noruega', pt: 'noruega', de: 'norwegen', ru: 'norvegiya', zh: 'nuowei', ar: 'nurwij', hi: 'norway' },
+  'Norway': { fr: 'norvege', en: 'norway', es: 'noruega', pt: 'noruega', de: 'norwegen', ru: 'norvegiya', zh: 'nuowei', ar: 'nurwij', hi: 'norway' },
+  // Sweden
+  'Suède': { fr: 'suede', en: 'sweden', es: 'suecia', pt: 'suecia', de: 'schweden', ru: 'shvetsiya', zh: 'ruidian', ar: 'swid', hi: 'sweden' },
+  'Sweden': { fr: 'suede', en: 'sweden', es: 'suecia', pt: 'suecia', de: 'schweden', ru: 'shvetsiya', zh: 'ruidian', ar: 'swid', hi: 'sweden' },
+  // Denmark
+  'Danemark': { fr: 'danemark', en: 'denmark', es: 'dinamarca', pt: 'dinamarca', de: 'daenemark', ru: 'daniya', zh: 'danmai', ar: 'danmark', hi: 'denmark' },
+  'Denmark': { fr: 'danemark', en: 'denmark', es: 'dinamarca', pt: 'dinamarca', de: 'daenemark', ru: 'daniya', zh: 'danmai', ar: 'danmark', hi: 'denmark' },
+  // Poland
+  'Pologne': { fr: 'pologne', en: 'poland', es: 'polonia', pt: 'polonia', de: 'polen', ru: 'polsha', zh: 'bolan', ar: 'bulanda', hi: 'poland' },
+  'Poland': { fr: 'pologne', en: 'poland', es: 'polonia', pt: 'polonia', de: 'polen', ru: 'polsha', zh: 'bolan', ar: 'bulanda', hi: 'poland' },
+  // Greece
+  'Grèce': { fr: 'grece', en: 'greece', es: 'grecia', pt: 'grecia', de: 'griechenland', ru: 'gretsiya', zh: 'xila', ar: 'yunan', hi: 'greece' },
+  'Greece': { fr: 'grece', en: 'greece', es: 'grecia', pt: 'grecia', de: 'griechenland', ru: 'gretsiya', zh: 'xila', ar: 'yunan', hi: 'greece' },
+  // Turkey
+  'Turquie': { fr: 'turquie', en: 'turkey', es: 'turquia', pt: 'turquia', de: 'tuerkei', ru: 'turtsiya', zh: 'tuerqi', ar: 'turkia', hi: 'turkey' },
+  'Turkey': { fr: 'turquie', en: 'turkey', es: 'turquia', pt: 'turquia', de: 'tuerkei', ru: 'turtsiya', zh: 'tuerqi', ar: 'turkia', hi: 'turkey' },
+  // Israel
+  'Israël': { fr: 'israel', en: 'israel', es: 'israel', pt: 'israel', de: 'israel', ru: 'izrail', zh: 'yiselie', ar: 'israil', hi: 'israel' },
+  'Israel': { fr: 'israel', en: 'israel', es: 'israel', pt: 'israel', de: 'israel', ru: 'izrail', zh: 'yiselie', ar: 'israil', hi: 'israel' },
+  // South Africa
+  'Afrique du Sud': { fr: 'afrique-du-sud', en: 'south-africa', es: 'sudafrica', pt: 'africa-do-sul', de: 'suedafrika', ru: 'yuzhnaya-afrika', zh: 'nanfei', ar: 'janub-afriqia', hi: 'south-africa' },
+  'South Africa': { fr: 'afrique-du-sud', en: 'south-africa', es: 'sudafrica', pt: 'africa-do-sul', de: 'suedafrika', ru: 'yuzhnaya-afrika', zh: 'nanfei', ar: 'janub-afriqia', hi: 'south-africa' },
+  // Nigeria
+  'Nigéria': { fr: 'nigeria', en: 'nigeria', es: 'nigeria', pt: 'nigeria', de: 'nigeria', ru: 'nigeriya', zh: 'niriliya', ar: 'nijeria', hi: 'nigeria' },
+  'Nigeria': { fr: 'nigeria', en: 'nigeria', es: 'nigeria', pt: 'nigeria', de: 'nigeria', ru: 'nigeriya', zh: 'niriliya', ar: 'nijeria', hi: 'nigeria' },
+  // Argentina
+  'Argentine': { fr: 'argentine', en: 'argentina', es: 'argentina', pt: 'argentina', de: 'argentinien', ru: 'argentina', zh: 'agenting', ar: 'arjentin', hi: 'argentina' },
+  'Argentina': { fr: 'argentine', en: 'argentina', es: 'argentina', pt: 'argentina', de: 'argentinien', ru: 'argentina', zh: 'agenting', ar: 'arjentin', hi: 'argentina' },
+  // Chile
+  'Chili': { fr: 'chili', en: 'chile', es: 'chile', pt: 'chile', de: 'chile', ru: 'chili', zh: 'zhili', ar: 'tshili', hi: 'chile' },
+  'Chile': { fr: 'chili', en: 'chile', es: 'chile', pt: 'chile', de: 'chile', ru: 'chili', zh: 'zhili', ar: 'tshili', hi: 'chile' },
+  // Colombia
+  'Colombie': { fr: 'colombie', en: 'colombia', es: 'colombia', pt: 'colombia', de: 'kolumbien', ru: 'kolumbiya', zh: 'gelunbiya', ar: 'kulumbia', hi: 'colombia' },
+  'Colombia': { fr: 'colombie', en: 'colombia', es: 'colombia', pt: 'colombia', de: 'kolumbien', ru: 'kolumbiya', zh: 'gelunbiya', ar: 'kulumbia', hi: 'colombia' },
+  // Peru
+  'Pérou': { fr: 'perou', en: 'peru', es: 'peru', pt: 'peru', de: 'peru', ru: 'peru', zh: 'bilu', ar: 'biru', hi: 'peru' },
+  'Peru': { fr: 'perou', en: 'peru', es: 'peru', pt: 'peru', de: 'peru', ru: 'peru', zh: 'bilu', ar: 'biru', hi: 'peru' },
+  // New Zealand
+  'Nouvelle-Zélande': { fr: 'nouvelle-zelande', en: 'new-zealand', es: 'nueva-zelanda', pt: 'nova-zelandia', de: 'neuseeland', ru: 'novaya-zelandiya', zh: 'xinxilan', ar: 'niuzilandi', hi: 'new-zealand' },
+  'New Zealand': { fr: 'nouvelle-zelande', en: 'new-zealand', es: 'nueva-zelanda', pt: 'nova-zelandia', de: 'neuseeland', ru: 'novaya-zelandiya', zh: 'xinxilan', ar: 'niuzilandi', hi: 'new-zealand' },
+  // Ireland
+  'Irlande': { fr: 'irlande', en: 'ireland', es: 'irlanda', pt: 'irlanda', de: 'irland', ru: 'irlandiya', zh: 'aierlan', ar: 'irlandia', hi: 'ireland' },
+  'Ireland': { fr: 'irlande', en: 'ireland', es: 'irlanda', pt: 'irlanda', de: 'irland', ru: 'irlandiya', zh: 'aierlan', ar: 'irlandia', hi: 'ireland' },
+  // Austria
+  'Autriche': { fr: 'autriche', en: 'austria', es: 'austria', pt: 'austria', de: 'oesterreich', ru: 'avstriya', zh: 'aodili', ar: 'nimsa', hi: 'austria' },
+  'Austria': { fr: 'autriche', en: 'austria', es: 'austria', pt: 'austria', de: 'oesterreich', ru: 'avstriya', zh: 'aodili', ar: 'nimsa', hi: 'austria' },
+  // Czech Republic
+  'République tchèque': { fr: 'republique-tcheque', en: 'czech-republic', es: 'republica-checa', pt: 'republica-tcheca', de: 'tschechien', ru: 'chekhiya', zh: 'jieke', ar: 'tshik', hi: 'czech' },
+  'Czech Republic': { fr: 'republique-tcheque', en: 'czech-republic', es: 'republica-checa', pt: 'republica-tcheca', de: 'tschechien', ru: 'chekhiya', zh: 'jieke', ar: 'tshik', hi: 'czech' },
+  // Hungary
+  'Hongrie': { fr: 'hongrie', en: 'hungary', es: 'hungria', pt: 'hungria', de: 'ungarn', ru: 'vengriya', zh: 'xiongyali', ar: 'hungharia', hi: 'hungary' },
+  'Hungary': { fr: 'hongrie', en: 'hungary', es: 'hungria', pt: 'hungria', de: 'ungarn', ru: 'vengriya', zh: 'xiongyali', ar: 'hungharia', hi: 'hungary' },
+  // Romania
+  'Roumanie': { fr: 'roumanie', en: 'romania', es: 'rumania', pt: 'romenia', de: 'rumaenien', ru: 'ruminiya', zh: 'luomaniya', ar: 'rumania', hi: 'romania' },
+  'Romania': { fr: 'roumanie', en: 'romania', es: 'rumania', pt: 'romenia', de: 'rumaenien', ru: 'ruminiya', zh: 'luomaniya', ar: 'rumania', hi: 'romania' },
+  // Ukraine
+  'Ukraine': { fr: 'ukraine', en: 'ukraine', es: 'ucrania', pt: 'ucrania', de: 'ukraine', ru: 'ukraina', zh: 'wukelan', ar: 'ukrania', hi: 'ukraine' },
+  // Pakistan
+  'Pakistan': { fr: 'pakistan', en: 'pakistan', es: 'pakistan', pt: 'paquistao', de: 'pakistan', ru: 'pakistan', zh: 'bajisitan', ar: 'bakistan', hi: 'pakistan' },
+  // Bangladesh
+  'Bangladesh': { fr: 'bangladesh', en: 'bangladesh', es: 'bangladesh', pt: 'bangladesh', de: 'bangladesch', ru: 'bangladesh', zh: 'mengjiala', ar: 'bangladesh', hi: 'bangladesh' },
+  // Sri Lanka
+  'Sri Lanka': { fr: 'sri-lanka', en: 'sri-lanka', es: 'sri-lanka', pt: 'sri-lanka', de: 'sri-lanka', ru: 'shri-lanka', zh: 'silanka', ar: 'sirilanka', hi: 'srilanka' },
+  // Nepal
+  'Népal': { fr: 'nepal', en: 'nepal', es: 'nepal', pt: 'nepal', de: 'nepal', ru: 'nepal', zh: 'niboer', ar: 'nepal', hi: 'nepal' },
+  'Nepal': { fr: 'nepal', en: 'nepal', es: 'nepal', pt: 'nepal', de: 'nepal', ru: 'nepal', zh: 'niboer', ar: 'nepal', hi: 'nepal' },
+  // Cambodia
+  'Cambodge': { fr: 'cambodge', en: 'cambodia', es: 'camboya', pt: 'camboja', de: 'kambodscha', ru: 'kambodzha', zh: 'jianpuzhai', ar: 'kambodia', hi: 'cambodia' },
+  'Cambodia': { fr: 'cambodge', en: 'cambodia', es: 'camboya', pt: 'camboja', de: 'kambodscha', ru: 'kambodzha', zh: 'jianpuzhai', ar: 'kambodia', hi: 'cambodia' },
+  // Qatar
+  'Qatar': { fr: 'qatar', en: 'qatar', es: 'qatar', pt: 'catar', de: 'katar', ru: 'katar', zh: 'kataer', ar: 'qatar', hi: 'qatar' },
+  // Kuwait
+  'Koweït': { fr: 'koweit', en: 'kuwait', es: 'kuwait', pt: 'kuwait', de: 'kuwait', ru: 'kuveyt', zh: 'keweite', ar: 'kuwait', hi: 'kuwait' },
+  'Kuwait': { fr: 'koweit', en: 'kuwait', es: 'kuwait', pt: 'kuwait', de: 'kuwait', ru: 'kuveyt', zh: 'keweite', ar: 'kuwait', hi: 'kuwait' },
+  // Bahrain
+  'Bahreïn': { fr: 'bahrein', en: 'bahrain', es: 'bahrein', pt: 'bahrein', de: 'bahrain', ru: 'bakhreyn', zh: 'balin', ar: 'bahrain', hi: 'bahrain' },
+  'Bahrain': { fr: 'bahrein', en: 'bahrain', es: 'bahrein', pt: 'bahrein', de: 'bahrain', ru: 'bakhreyn', zh: 'balin', ar: 'bahrain', hi: 'bahrain' },
+  // Oman
+  'Oman': { fr: 'oman', en: 'oman', es: 'oman', pt: 'oma', de: 'oman', ru: 'oman', zh: 'aman', ar: 'oman', hi: 'oman' },
+  // Jordan
+  'Jordanie': { fr: 'jordanie', en: 'jordan', es: 'jordania', pt: 'jordania', de: 'jordanien', ru: 'iordaniya', zh: 'yuedan', ar: 'urdun', hi: 'jordan' },
+  'Jordan': { fr: 'jordanie', en: 'jordan', es: 'jordania', pt: 'jordania', de: 'jordanien', ru: 'iordaniya', zh: 'yuedan', ar: 'urdun', hi: 'jordan' },
+  // Lebanon
+  'Liban': { fr: 'liban', en: 'lebanon', es: 'libano', pt: 'libano', de: 'libanon', ru: 'livan', zh: 'libanen', ar: 'lubnan', hi: 'lebanon' },
+  'Lebanon': { fr: 'liban', en: 'lebanon', es: 'libano', pt: 'libano', de: 'libanon', ru: 'livan', zh: 'libanen', ar: 'lubnan', hi: 'lebanon' },
+  // Senegal
+  'Sénégal': { fr: 'senegal', en: 'senegal', es: 'senegal', pt: 'senegal', de: 'senegal', ru: 'senegal', zh: 'sainaijiaer', ar: 'sinighal', hi: 'senegal' },
+  'Senegal': { fr: 'senegal', en: 'senegal', es: 'senegal', pt: 'senegal', de: 'senegal', ru: 'senegal', zh: 'sainaijiaer', ar: 'sinighal', hi: 'senegal' },
+  // Ivory Coast
+  'Côte d\'Ivoire': { fr: 'cote-divoire', en: 'ivory-coast', es: 'costa-de-marfil', pt: 'costa-do-marfim', de: 'elfenbeinkueste', ru: 'kot-divuar', zh: 'ketediwa', ar: 'kotdifwar', hi: 'ivory-coast' },
+  'Ivory Coast': { fr: 'cote-divoire', en: 'ivory-coast', es: 'costa-de-marfil', pt: 'costa-do-marfim', de: 'elfenbeinkueste', ru: 'kot-divuar', zh: 'ketediwa', ar: 'kotdifwar', hi: 'ivory-coast' },
+  // Cameroon
+  'Cameroun': { fr: 'cameroun', en: 'cameroon', es: 'camerun', pt: 'camaroes', de: 'kamerun', ru: 'kamerun', zh: 'kaimelongREBR', ar: 'kamerun', hi: 'cameroon' },
+  'Cameroon': { fr: 'cameroun', en: 'cameroon', es: 'camerun', pt: 'camaroes', de: 'kamerun', ru: 'kamerun', zh: 'kaimelongREBR', ar: 'kamerun', hi: 'cameroon' },
+  // Kenya
+  'Kenya': { fr: 'kenya', en: 'kenya', es: 'kenia', pt: 'quenia', de: 'kenia', ru: 'keniya', zh: 'kenniya', ar: 'kinya', hi: 'kenya' },
+  // Ghana
+  'Ghana': { fr: 'ghana', en: 'ghana', es: 'ghana', pt: 'gana', de: 'ghana', ru: 'gana', zh: 'jiana', ar: 'ghana', hi: 'ghana' },
+  // Tanzania
+  'Tanzanie': { fr: 'tanzanie', en: 'tanzania', es: 'tanzania', pt: 'tanzania', de: 'tansania', ru: 'tanzaniya', zh: 'tansangniya', ar: 'tanzania', hi: 'tanzania' },
+  'Tanzania': { fr: 'tanzanie', en: 'tanzania', es: 'tanzania', pt: 'tanzania', de: 'tansania', ru: 'tanzaniya', zh: 'tansangniya', ar: 'tanzania', hi: 'tanzania' },
+  // Luxembourg
+  'Luxembourg': { fr: 'luxembourg', en: 'luxembourg', es: 'luxemburgo', pt: 'luxemburgo', de: 'luxemburg', ru: 'lyuksemburg', zh: 'lusenbao', ar: 'luksemburg', hi: 'luxembourg' },
+  // Monaco
+  'Monaco': { fr: 'monaco', en: 'monaco', es: 'monaco', pt: 'monaco', de: 'monaco', ru: 'monako', zh: 'monage', ar: 'munaku', hi: 'monaco' },
+  // Andorra
+  'Andorre': { fr: 'andorre', en: 'andorra', es: 'andorra', pt: 'andorra', de: 'andorra', ru: 'andorra', zh: 'andaoer', ar: 'andura', hi: 'andorra' },
+  'Andorra': { fr: 'andorre', en: 'andorra', es: 'andorra', pt: 'andorra', de: 'andorra', ru: 'andorra', zh: 'andaoer', ar: 'andura', hi: 'andorra' },
 };
 
 const DEFAULT_LOCALES: Record<string, string> = {
@@ -98,14 +302,17 @@ function getCountryTranslation(country: string, lang: string): string {
   return COUNTRY_TRANSLATIONS[country]?.[lang] || slugify(country);
 }
 
-function generateSlugForLang(firstName: string, role: string, country: string, specialty: string, shortId: string, lang: string): string {
-  const roleWord = getRoleTranslation(role, lang);
-  const countryWord = getCountryTranslation(country, lang);
+function generateSlugForLang(firstName: string, role: string, country: string, specialty: string, shortId: string, translationLang: string, outputLang?: string): string {
+  // translationLang: language code for looking up translations (e.g., 'zh' for Chinese)
+  // outputLang: language code for the URL prefix (e.g., 'ch' for Chinese) - defaults to translationLang
+  const urlLang = outputLang || translationLang;
+  const roleWord = getRoleTranslation(role, translationLang);
+  const countryWord = getCountryTranslation(country, translationLang);
   const categoryCountry = `${roleWord}-${countryWord}`;
   const firstNameSlug = slugify(firstName);
   const specialtySlug = slugify(specialty).substring(0, 15);
-  const localeRegion = DEFAULT_LOCALES[lang] || lang;
-  const langLocale = `${lang}-${localeRegion}`;
+  const localeRegion = DEFAULT_LOCALES[translationLang] || urlLang;
+  const langLocale = `${urlLang}-${localeRegion}`;
   let namePart = specialtySlug ? `${firstNameSlug}-${specialtySlug}` : firstNameSlug;
   const maxNameLength = 70 - langLocale.length - categoryCountry.length - shortId.length - 4;
   if (namePart.length > maxNameLength) namePart = firstNameSlug;
@@ -113,10 +320,14 @@ function generateSlugForLang(firstName: string, role: string, country: string, s
 }
 
 function generateMultilingualSlugs(firstName: string, role: string, country: string, specialty: string, shortId: string): Record<string, string> {
-  const langs = ['fr', 'en', 'es', 'de', 'pt', 'ru', 'zh', 'ar', 'hi'];
+  // IMPORTANT: Use 'ch' for Chinese (internal convention) - NOT 'zh'
+  // This must match the LANGUAGES array in sitemaps.ts
+  const langs = ['fr', 'en', 'es', 'de', 'pt', 'ru', 'ch', 'ar', 'hi'];
   const slugs: Record<string, string> = {};
   for (const lang of langs) {
-    slugs[lang] = generateSlugForLang(firstName, role, country, specialty, shortId, lang);
+    // Map 'ch' to 'zh' for translations lookup (ROLE_TRANSLATIONS and COUNTRY_TRANSLATIONS use 'zh')
+    const translationLang = lang === 'ch' ? 'zh' : lang;
+    slugs[lang] = generateSlugForLang(firstName, role, country, specialty, shortId, translationLang, lang);
   }
   return slugs;
 }

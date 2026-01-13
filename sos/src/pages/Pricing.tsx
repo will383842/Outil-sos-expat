@@ -19,6 +19,7 @@ import {
 import Layout from "../components/layout/Layout";
 import { useLocaleNavigate } from "../multilingual-system";
 import SEOHead from "../components/layout/SEOHead";
+import BreadcrumbSchema from "../components/seo/BreadcrumbSchema";
 import { useApp } from "../contexts/AppContext";
 import { useAuth } from "../contexts/AuthContext";
 import { validateCoupon } from "../utils/coupon";
@@ -372,6 +373,12 @@ const Pricing: React.FC = () => {
         structuredData={pricingStructuredData}
         contentType="PriceSpecification"
         aiSummary="Tarifs transparents pour les consultations avec avocats et expatriés aidants sur SOS Expat"
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: intl.formatMessage({ id: "nav.home" }), url: `/${language}` },
+          { name: intl.formatMessage({ id: "nav.pricing" }) }
+        ]}
       />
       <div className="min-h-screen bg-gray-950">
         {/* Banner */}

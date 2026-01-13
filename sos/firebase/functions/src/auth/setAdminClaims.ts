@@ -70,6 +70,86 @@ export const setAdminClaims = onCall(
 );
 
 /**
+ * BOOTSTRAP FIRST ADMIN - Initialise le premier admin quand aucun n'existe
+ * Sécurité: Vérifie que l'email est dans la whitelist ET que l'utilisateur
+ * est authentifié avec cet email. Ne crée PAS un nouvel utilisateur.
+ *
+ * Usage: Appeler cette fonction après s'être connecté avec un email whitelisté
+ * quand le document users/{uid} n'existe pas ou n'a pas role: 'admin'
+ */
+export const bootstrapFirstAdmin = onCall(
+  {
+    region: "europe-west1",
+    cors: true,
+  },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Vous devez être connecté");
+    }
+
+    const uid = request.auth.uid;
+    const email = request.auth.token.email?.toLowerCase();
+
+    console.log(`[bootstrapFirstAdmin] Attempt by ${email} (${uid})`);
+
+    // SECURITY: Vérifier que l'email est dans la whitelist admin
+    if (!email || !ADMIN_EMAILS.includes(email)) {
+      console.warn(`[bootstrapFirstAdmin] SECURITY: Rejected non-whitelisted email: ${email}`);
+      throw new HttpsError(
+        "permission-denied",
+        "Cet email n'est pas autorisé comme admin"
+      );
+    }
+
+    try {
+      // 1. Définir les custom claims Firebase Auth
+      await getAuth().setCustomUserClaims(uid, { role: "admin", admin: true });
+      console.log(`[bootstrapFirstAdmin] Custom claims set for ${uid}`);
+
+      // 2. Créer ou mettre à jour le document Firestore
+      const userRef = db.collection("users").doc(uid);
+      const userDoc = await userRef.get();
+
+      const userData = {
+        role: "admin",
+        isAdmin: true,
+        email: email,
+        updatedAt: new Date(),
+        ...(userDoc.exists ? {} : {
+          // Champs supplémentaires uniquement si le document n'existe pas
+          createdAt: new Date(),
+          isApproved: true,
+          approvalStatus: 'approved',
+          isActive: true,
+          displayName: email.split('@')[0],
+        })
+      };
+
+      await userRef.set(userData, { merge: true });
+      console.log(`[bootstrapFirstAdmin] Firestore document updated for ${uid}`);
+
+      // 3. Log pour audit
+      await db.collection("admin_audit_logs").add({
+        action: "bootstrap_first_admin",
+        email: email,
+        uid: uid,
+        timestamp: new Date(),
+        note: "Premier admin bootstrappé via whitelist"
+      });
+
+      return {
+        success: true,
+        message: `Admin bootstrappé avec succès pour ${email}. Reconnectez-vous pour appliquer les changements.`,
+        uid: uid
+      };
+    } catch (error: any) {
+      console.error("[bootstrapFirstAdmin] Error:", error);
+      throw new HttpsError("internal", `Erreur: ${error.message}`);
+    }
+  }
+);
+
+/**
  * P0 SECURITY FIX: Force la mise à jour des claims admin (pour les admins existants)
  * REQUIRES: Caller must be an existing admin to add new admins
  * This prevents unauthenticated privilege escalation

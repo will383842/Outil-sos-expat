@@ -28,9 +28,6 @@ export function useFCM() {
           });
 
           if (token) {
-            // P2 security fix: mask token in logs (only show first 20 chars)
-            console.log('✅ Token FCM reçu :', token.slice(0, 20) + '...');
-
             // Sauvegarde le token FCM dans Firestore
             await setDoc(doc(db, 'fcm_tokens', user.id), {
               uid: user.id,
@@ -52,7 +49,7 @@ export function useFCM() {
 
     // Gère les messages reçus quand app est ouverte
     onMessage(messaging, (payload) => {
-      console.log('📨 Notification reçue pendant l’utilisation : ', payload);
+      // Notification reçue pendant l'utilisation de l'app
     });
   }, [user]);
 }

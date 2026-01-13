@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import AdminLayout from "../../components/admin/AdminLayout";
 import DashboardCharts from "../../components/admin/DashboardCharts";
+import ExternalServicesWidget from "../../components/admin/ExternalServicesWidget";
 import Button from "../../components/common/Button";
 import { useAuth } from "../../contexts/AuthContext";
 import {
@@ -92,8 +93,6 @@ const AdminDashboard: React.FC = () => {
     setRoleRestorationResult(null);
 
     try {
-      console.log('🔧 Démarrage de la restauration des rôles...');
-
       const restoreUserRolesFn = httpsCallable<unknown, {
         totalProcessed: number;
         restored: number;
@@ -102,7 +101,6 @@ const AdminDashboard: React.FC = () => {
       }>(functions, 'restoreUserRoles');
 
       const restoreResult = await restoreUserRolesFn();
-      console.log('📊 Résultat restauration:', restoreResult.data);
 
       const syncAllCustomClaimsFn = httpsCallable<unknown, {
         synced: number;
@@ -110,7 +108,6 @@ const AdminDashboard: React.FC = () => {
       }>(functions, 'syncAllCustomClaims');
 
       const syncResult = await syncAllCustomClaimsFn();
-      console.log('📊 Résultat synchronisation:', syncResult.data);
 
       if (!mountedRef.current) return;
 
@@ -252,7 +249,7 @@ const AdminDashboard: React.FC = () => {
         <div className="min-h-screen flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
-            <p className="text-gray-500">Chargement du tableau de bord...</p>
+            <p className="text-gray-500">{intl.formatMessage({ id: 'admin.dashboard.loading' })}</p>
           </div>
         </div>
       </AdminLayout>
@@ -296,7 +293,7 @@ const AdminDashboard: React.FC = () => {
                     className="border-blue-300 text-blue-600 hover:bg-blue-50"
                   >
                     <Shield size={18} className="mr-2" />
-                    Intégrité
+                    {intl.formatMessage({ id: 'admin.dashboard.buttons.integrity' })}
                   </Button>
                   <Button
                     onClick={handleCleanupData}
@@ -305,7 +302,7 @@ const AdminDashboard: React.FC = () => {
                     className="border-orange-300 text-orange-600 hover:bg-orange-50"
                   >
                     <Trash size={18} className="mr-2" />
-                    Nettoyer
+                    {intl.formatMessage({ id: 'admin.dashboard.buttons.clean' })}
                   </Button>
                   <Button
                     onClick={handleRestoreRoles}
@@ -314,7 +311,7 @@ const AdminDashboard: React.FC = () => {
                     className="border-yellow-300 text-yellow-600 hover:bg-yellow-50"
                   >
                     <UserCheck size={18} className="mr-2" />
-                    Rôles
+                    {intl.formatMessage({ id: 'admin.dashboard.buttons.roles' })}
                   </Button>
                   <Button
                     onClick={() => navigate("/admin/settings")}
@@ -322,7 +319,7 @@ const AdminDashboard: React.FC = () => {
                     className="border-gray-300 text-gray-600 hover:bg-gray-50"
                   >
                     <Cog size={18} className="mr-2" />
-                    Paramètres
+                    {intl.formatMessage({ id: 'admin.dashboard.buttons.settings' })}
                   </Button>
                 </div>
               </div>
@@ -337,9 +334,9 @@ const AdminDashboard: React.FC = () => {
                 <div className="flex items-center">
                   <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
                   <div>
-                    <p className="font-medium text-green-800">Restauration terminée</p>
+                    <p className="font-medium text-green-800">{intl.formatMessage({ id: 'admin.dashboard.roleRestoration.completed' })}</p>
                     <p className="text-sm text-green-600">
-                      {roleRestorationResult.restored} rôles restaurés, {roleRestorationResult.synced} claims synchronisés
+                      {intl.formatMessage({ id: 'admin.dashboard.roleRestoration.result' }, { restored: roleRestorationResult.restored, synced: roleRestorationResult.synced })}
                     </p>
                   </div>
                   <button
@@ -355,44 +352,49 @@ const AdminDashboard: React.FC = () => {
             {/* Quick Navigation */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
               <div className="flex flex-wrap items-center gap-3">
-                <span className="text-sm font-medium text-gray-500">Accès rapide:</span>
+                <span className="text-sm font-medium text-gray-500">{intl.formatMessage({ id: 'admin.dashboard.quickAccess.label' })}</span>
                 <button
                   onClick={() => navigate("/admin/users/all")}
                   className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-md text-sm hover:bg-blue-100 transition-colors"
                 >
-                  Utilisateurs
+                  {intl.formatMessage({ id: 'admin.dashboard.quickAccess.users' })}
                 </button>
                 <button
                   onClick={() => navigate("/admin/calls")}
                   className="px-3 py-1.5 bg-green-50 text-green-700 rounded-md text-sm hover:bg-green-100 transition-colors"
                 >
-                  Appels
+                  {intl.formatMessage({ id: 'admin.dashboard.quickAccess.calls' })}
                 </button>
                 <button
                   onClick={() => navigate("/admin/finance/payments")}
                   className="px-3 py-1.5 bg-purple-50 text-purple-700 rounded-md text-sm hover:bg-purple-100 transition-colors"
                 >
-                  Paiements
+                  {intl.formatMessage({ id: 'admin.dashboard.quickAccess.payments' })}
                 </button>
                 <button
                   onClick={() => navigate("/admin/pricing")}
                   className="px-3 py-1.5 bg-amber-50 text-amber-700 rounded-md text-sm hover:bg-amber-100 transition-colors"
                 >
-                  Tarification
+                  {intl.formatMessage({ id: 'admin.dashboard.quickAccess.pricing' })}
                 </button>
                 <button
                   onClick={() => navigate("/admin/approvals/lawyers")}
                   className="px-3 py-1.5 bg-red-50 text-red-700 rounded-md text-sm hover:bg-red-100 transition-colors"
                 >
-                  Validations
+                  {intl.formatMessage({ id: 'admin.dashboard.quickAccess.validations' })}
                 </button>
                 <button
                   onClick={() => navigate("/admin/reports/country-stats")}
                   className="px-3 py-1.5 bg-cyan-50 text-cyan-700 rounded-md text-sm hover:bg-cyan-100 transition-colors"
                 >
-                  Statistiques pays
+                  {intl.formatMessage({ id: 'admin.dashboard.quickAccess.countryStats' })}
                 </button>
               </div>
+            </div>
+
+            {/* External Services Balances Widget */}
+            <div className="mb-6">
+              <ExternalServicesWidget />
             </div>
 
             {/* Dashboard Charts Component */}

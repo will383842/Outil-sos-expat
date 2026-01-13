@@ -163,7 +163,6 @@ const playRingtoneFile = async (): Promise<HTMLAudioElement | null> => {
     return audio;
   } catch (error) {
     // Fallback: utiliser Web Audio API avec sonnerie douce
-    console.log('Utilisation de la sonnerie douce générée');
     try {
       const ctx = getAudioContext();
       if (ctx.state === 'suspended') {
@@ -372,8 +371,6 @@ export const useIncomingCallSound = ({
 
           // Démarrer la sonnerie
           startRinging();
-
-          console.log('📞 Appel entrant détecté:', mostRecentCall.id);
         } else {
           setHasIncomingCall(false);
           setIncomingCall(null);

@@ -1741,29 +1741,21 @@ const TestimonialDetail: React.FC = () => {
     loadTestimonial().finally(() => setIsLoading(false));
   }, [testimonialId, language]);
 
-  // Loading state
-  if (isLoading || !testimonialData) {
-    return (
-      <Layout>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500"></div>
-        </div>
-      </Layout>
-    );
-  }
-
+  // ALL HOOKS MUST BE CALLED BEFORE ANY EARLY RETURNS
   // Memoization of date formatting / Mémoisation du formatage de date
   const formattedDate = useMemo(() => {
+    if (!testimonialData) return '';
     const date = new Date(testimonialData.createdAt);
     return date.toLocaleDateString(getDateLocale(language), {
       year: "numeric",
       month: "long",
       day: "numeric",
     });
-  }, [testimonialData.createdAt, language]);
+  }, [testimonialData, language]);
 
   // Memoization of stars / Mémoisation des étoiles
   const stars = useMemo(() => {
+    if (!testimonialData) return [];
     return Array.from({ length: 5 }, (_, i) => (
       <Star
         key={i}
@@ -1775,7 +1767,112 @@ const TestimonialDetail: React.FC = () => {
         }
       />
     ));
-  }, [testimonialData.rating]);
+  }, [testimonialData]);
+
+  // SEO Effect - must be called before early return
+  // Note: Uses language for translation lookup
+  const textsForSeo = {
+    fr: { testimonialPageTitle: "Témoignage de", testimonialPageDescription: "Découvrez l'expérience de nos utilisateurs avec nos avocats et expatriés experts. Conseils juridiques et pratiques pour les expatriés.", helpDescription: "Obtenez de l'aide d'un expert vérifié en moins de 5 minutes" },
+    en: { testimonialPageTitle: "Testimonial from", testimonialPageDescription: "Discover the experience of our users with our expert lawyers and expats. Legal and practical advice for expats.", helpDescription: "Get help from a verified expert in less than 5 minutes" },
+    es: { testimonialPageTitle: "Testimonio de", testimonialPageDescription: "Descubre la experiencia de nuestros usuarios con nuestros abogados y expatriados expertos.", helpDescription: "Obtén ayuda de un experto verificado en menos de 5 minutos" },
+    de: { testimonialPageTitle: "Erfahrungsbericht von", testimonialPageDescription: "Entdecken Sie die Erfahrungen unserer Nutzer mit unseren Experten-Anwälten und Expats.", helpDescription: "Erhalten Sie Hilfe von einem verifizierten Experten in weniger als 5 Minuten" },
+    ru: { testimonialPageTitle: "Отзыв от", testimonialPageDescription: "Откройте для себя опыт наших пользователей с нашими экспертами-юристами и экспатами.", helpDescription: "Получите помощь от проверенного эксперта менее чем за 5 минут" },
+    hi: { testimonialPageTitle: "प्रशंसापत्र से", testimonialPageDescription: "हमारे विशेषज्ञ वकीलों और प्रवासियों के साथ हमारे उपयोगकर्ताओं के अनुभव की खोज करें।", helpDescription: "5 मिनट से कम समय में सत्यापित विशेषज्ञ से सहायता प्राप्त करें" },
+    ch: { testimonialPageTitle: "来自的评价", testimonialPageDescription: "了解我们的用户与我们的专家律师和外籍人士的经验。", helpDescription: "在不到5分钟内从经验证的专家那里获得帮助" },
+    pt: { testimonialPageTitle: "Depoimento de", testimonialPageDescription: "Descubra a experiência de nossos usuários com nossos advogados e expatriados especialistas.", helpDescription: "Obtenha ajuda de um especialista verificado em menos de 5 minutos" },
+    ar: { testimonialPageTitle: "شهادة من", testimonialPageDescription: "اكتشف تجربة مستخدمينا مع خبرائنا المحامين والمغتربين.", helpDescription: "احصل على مساعدة من خبير معتمد في أقل من 5 دقائق" },
+  };
+  const tSeo = textsForSeo[language as keyof typeof textsForSeo] || textsForSeo.en;
+
+  React.useEffect(() => {
+    if (!testimonialData) return;
+
+    const currentTitle = testimonialData.title;
+    const currentContent = testimonialData.fullcontent;
+    const pageTitle = `${tSeo.testimonialPageTitle} ${testimonialData.clientName} - ${currentTitle}`;
+    const pageDescription = `${tSeo.testimonialPageDescription} ${currentContent.substring(0, 160)}...`;
+
+    document.title = pageTitle;
+
+    // Set meta description
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute("content", pageDescription);
+    } else {
+      const meta = document.createElement("meta");
+      meta.name = "description";
+      meta.content = pageDescription;
+      document.head.appendChild(meta);
+    }
+
+    // Set Open Graph meta tags
+    const setOrCreateMeta = (property: string, content: string) => {
+      let meta = document.querySelector(`meta[property="${property}"]`);
+      if (meta) {
+        meta.setAttribute("content", content);
+      } else {
+        meta = document.createElement("meta");
+        meta.setAttribute("property", property);
+        meta.setAttribute("content", content);
+        document.head.appendChild(meta);
+      }
+    };
+
+    setOrCreateMeta("og:title", pageTitle);
+    setOrCreateMeta("og:description", pageDescription);
+    setOrCreateMeta("og:type", "article");
+    setOrCreateMeta("og:url", window.location.href);
+    setOrCreateMeta("og:image", testimonialData.clientAvatar || '');
+
+    // Set structured data for better SEO
+    const structuredData = {
+      "@context": "https://schema.org",
+      "@type": "Review",
+      itemReviewed: {
+        "@type": "Service",
+        name: "SOS Expat & Travelers",
+        description: tSeo.helpDescription,
+      },
+      reviewRating: {
+        "@type": "Rating",
+        ratingValue: testimonialData.rating,
+        bestRating: 5,
+      },
+      author: {
+        "@type": "Person",
+        name: testimonialData.clientName,
+      },
+      reviewBody: currentContent,
+      datePublished: testimonialData.createdAt,
+      publisher: {
+        "@type": "Organization",
+        name: "SOS Expat & Travelers",
+      },
+    };
+
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.text = JSON.stringify(structuredData);
+    document.head.appendChild(script);
+
+    // Cleanup function
+    return () => {
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+    };
+  }, [testimonialData, tSeo, language]);
+
+  // Loading state - early return after all hooks
+  if (isLoading || !testimonialData) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500"></div>
+        </div>
+      </Layout>
+    );
+  }
 
   // Get country translation / Obtenir la traduction du pays
   const getCountryName = (countryKey: string): string => {
@@ -2163,96 +2260,12 @@ const TestimonialDetail: React.FC = () => {
 
   const t = texts[language as keyof typeof texts] || texts.en;
 
-  // SEO Meta data / Données méta SEO
-  // const currentTitle =
-  //   language === "fr" ? testimonialData.title.fr : testimonialData.title.en;
-  // const currentContent =
-  //   language === "fr"
-  //     ? testimonialData.fullContent.fr
-  //     : testimonialData.fullContent.en;
-
-  // const currentTitle = pickLang(testimonialData.title);
+  // SEO variables used in JSX - SEO effect is handled before early return
   const currentTitle = testimonialData.title;
-
-  // const currentContent = pickLang(testimonialData.fullContent);
   const currentContent = testimonialData.fullcontent;
-
   const pageTitle = `${t.testimonialPageTitle} ${testimonialData.clientName} - ${currentTitle}`;
   const pageDescription = `${t.testimonialPageDescription} ${currentContent.substring(0, 160)}...`;
   const countryName = getCountryName(testimonialData.clientCountry);
-
-  // Set page title for SEO / Définir le titre de la page pour le SEO
-  React.useEffect(() => {
-    document.title = pageTitle;
-
-    // Set meta description / Définir la méta description
-    const metaDescription = document.querySelector('meta[name="description"]');
-    if (metaDescription) {
-      metaDescription.setAttribute("content", pageDescription);
-    } else {
-      const meta = document.createElement("meta");
-      meta.name = "description";
-      meta.content = pageDescription;
-      document.head.appendChild(meta);
-    }
-
-    // Set Open Graph meta tags / Définir les méta tags Open Graph
-    const setOrCreateMeta = (property: string, content: string) => {
-      let meta = document.querySelector(`meta[property="${property}"]`);
-      if (meta) {
-        meta.setAttribute("content", content);
-      } else {
-        meta = document.createElement("meta");
-        meta.setAttribute("property", property);
-        meta.setAttribute("content", content);
-        document.head.appendChild(meta);
-      }
-    };
-
-    setOrCreateMeta("og:title", pageTitle);
-    setOrCreateMeta("og:description", pageDescription);
-    setOrCreateMeta("og:type", "article");
-    setOrCreateMeta("og:url", window.location.href);
-    setOrCreateMeta("og:image", testimonialData.clientAvatar || '');
-
-    // Set structured data for better SEO / Définir les données структурées pour un meilleur SEO
-    const structuredData = {
-      "@context": "https://schema.org",
-      "@type": "Review",
-      itemReviewed: {
-        "@type": "Service",
-        name: "SOS Expat & Travelers",
-        description: t.helpDescription,
-      },
-      reviewRating: {
-        "@type": "Rating",
-        ratingValue: testimonialData.rating,
-        bestRating: 5,
-      },
-      author: {
-        "@type": "Person",
-        name: testimonialData.clientName,
-      },
-      reviewBody: currentContent,
-      datePublished: testimonialData.createdAt,
-      publisher: {
-        "@type": "Organization",
-        name: "SOS Expat & Travelers",
-      },
-    };
-
-    const script = document.createElement("script");
-    script.type = "application/ld+json";
-    script.text = JSON.stringify(structuredData);
-    document.head.appendChild(script);
-
-    // Cleanup function / Fonction de nettoyage
-    return () => {
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
-      }
-    };
-  }, [pageTitle, pageDescription, testimonialData, currentContent, language]);
 
   return (
     <Layout>

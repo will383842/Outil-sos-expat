@@ -124,12 +124,12 @@ function formatDateOnly(d: Date): string {
 // -------------------------
 // Components
 // -------------------------
-const StatusBadge: React.FC<{ status: BackupStatus }> = ({ status }) => {
+const StatusBadge: React.FC<{ status: BackupStatus; intl: ReturnType<typeof useIntl> }> = ({ status, intl }) => {
   const configs = {
-    completed: { bg: "bg-green-100", text: "text-green-800", icon: CheckCircle, label: "Terminé" },
-    failed: { bg: "bg-red-100", text: "text-red-800", icon: AlertTriangle, label: "Échoué" },
-    pending: { bg: "bg-yellow-100", text: "text-yellow-800", icon: Clock, label: "En attente" },
-    in_progress: { bg: "bg-blue-100", text: "text-blue-800", icon: RefreshCw, label: "En cours" },
+    completed: { bg: "bg-green-100", text: "text-green-800", icon: CheckCircle, label: intl.formatMessage({ id: "admin.backups.status.completed" }) },
+    failed: { bg: "bg-red-100", text: "text-red-800", icon: AlertTriangle, label: intl.formatMessage({ id: "admin.backups.status.failed" }) },
+    pending: { bg: "bg-yellow-100", text: "text-yellow-800", icon: Clock, label: intl.formatMessage({ id: "admin.backups.status.pending" }) },
+    in_progress: { bg: "bg-blue-100", text: "text-blue-800", icon: RefreshCw, label: intl.formatMessage({ id: "admin.backups.status.inProgress" }) },
   };
   const config = configs[status] || configs.pending;
   const Icon = config.icon;
@@ -142,13 +142,13 @@ const StatusBadge: React.FC<{ status: BackupStatus }> = ({ status }) => {
   );
 };
 
-const TypeBadge: React.FC<{ type: string; backupType?: string }> = ({ type, backupType }) => {
-  const label = backupType === "morning" ? "Matin (3h)"
-    : backupType === "midday" ? "Midi (11h)"
-    : backupType === "evening" ? "Soir (19h)"
-    : backupType === "admin" ? "Admin"
-    : type === "automatic" ? "Automatique"
-    : type === "manual" ? "Manuel"
+const TypeBadge: React.FC<{ type: string; backupType?: string; intl: ReturnType<typeof useIntl> }> = ({ type, backupType, intl }) => {
+  const label = backupType === "morning" ? intl.formatMessage({ id: "admin.backups.type.morning" })
+    : backupType === "midday" ? intl.formatMessage({ id: "admin.backups.type.midday" })
+    : backupType === "evening" ? intl.formatMessage({ id: "admin.backups.type.evening" })
+    : backupType === "admin" ? intl.formatMessage({ id: "admin.backups.type.admin" })
+    : type === "automatic" ? intl.formatMessage({ id: "admin.backups.type.automatic" })
+    : type === "manual" ? intl.formatMessage({ id: "admin.backups.type.manual" })
     : type;
 
   const isAuto = type === "automatic";
@@ -168,7 +168,8 @@ const CollectionSelector: React.FC<{
   selected: string[];
   onChange: (selected: string[]) => void;
   counts?: Record<string, number>;
-}> = ({ collections, selected, onChange, counts }) => {
+  intl: ReturnType<typeof useIntl>;
+}> = ({ collections, selected, onChange, counts, intl }) => {
   const toggleCollection = (col: string) => {
     if (selected.includes(col)) {
       onChange(selected.filter(c => c !== col));
@@ -184,11 +185,11 @@ const CollectionSelector: React.FC<{
     <div className="space-y-2">
       <div className="flex gap-2 mb-2">
         <button onClick={selectAll} className="text-xs text-blue-600 hover:underline">
-          Tout sélectionner
+          {intl.formatMessage({ id: "admin.backups.restore.selectAll" })}
         </button>
         <span className="text-gray-300">|</span>
         <button onClick={selectNone} className="text-xs text-gray-600 hover:underline">
-          Tout désélectionner
+          {intl.formatMessage({ id: "admin.backups.restore.selectNone" })}
         </button>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
@@ -335,22 +336,21 @@ const AdminBackups: React.FC = () => {
   // ---- Actions ----
   const handleBackupNow = useCallback(async () => {
     if (!isAdmin) {
-      alert("Droits admin requis");
+      alert(intl.formatMessage({ id: "admin.backups.alerts.adminRequired" }));
       return;
     }
     setLoading(true);
     try {
       const backupFn = httpsCallable(functions, "adminCreateManualBackup");
       const result = await backupFn({ includeAuth: true, description: "Backup manuel admin" });
-      console.log("Backup result:", result.data);
-      alert("Sauvegarde lancée avec succès!");
+      alert(intl.formatMessage({ id: "admin.backups.alerts.backupStarted" }));
     } catch (error) {
       console.error("Error creating backup:", error);
-      alert("Erreur lors de la sauvegarde: " + (error instanceof Error ? error.message : "Erreur inconnue"));
+      alert(intl.formatMessage({ id: "admin.backups.alerts.backupError" }, { error: error instanceof Error ? error.message : intl.formatMessage({ id: "admin.backups.alerts.unknownError" }) }));
     } finally {
       setLoading(false);
     }
-  }, [isAdmin, functions]);
+  }, [isAdmin, functions, intl]);
 
   const handleSelectDate = useCallback((date: string) => {
     setSelectedDate(date);
@@ -381,11 +381,11 @@ const AdminBackups: React.FC = () => {
       setRestorePreview((result.data as { preview: RestorePreview }).preview);
     } catch (error) {
       console.error("Preview error:", error);
-      alert("Erreur lors de la prévisualisation");
+      alert(intl.formatMessage({ id: "admin.backups.alerts.previewError" }));
     } finally {
       setPreviewLoading(false);
     }
-  }, [selectedBackup, selectedCollections, functions]);
+  }, [selectedBackup, selectedCollections, functions, intl]);
 
   // Step 1: Show confirmation dialog and get code
   const handleInitiateRestore = useCallback(async () => {
@@ -406,9 +406,9 @@ const AdminBackups: React.FC = () => {
       }
     } catch (error) {
       console.error("Error getting confirmation code:", error);
-      alert("Erreur lors de la génération du code de confirmation");
+      alert(intl.formatMessage({ id: "admin.backups.alerts.codeGenerationError" }));
     }
-  }, [selectedBackup, restorePreview, functions]);
+  }, [selectedBackup, restorePreview, functions, intl]);
 
   // Step 2: Validate code and execute restore
   const handleConfirmRestore = useCallback(async () => {
@@ -416,7 +416,7 @@ const AdminBackups: React.FC = () => {
 
     // Validate code
     if (codeInputValue.toUpperCase() !== expectedCode) {
-      setCodeError("Code incorrect. Veuillez réessayer.");
+      setCodeError(intl.formatMessage({ id: "admin.backups.confirmation.codeError" }));
       return;
     }
 
@@ -444,38 +444,37 @@ const AdminBackups: React.FC = () => {
 
       if (data.success) {
         alert(
-          `✅ ${data.message}\n\n` +
-          `ID de suivi: ${data.trackingId}\n\n` +
-          (data.rollbackInfo ? `🔄 ${data.rollbackInfo}\n\n` : "") +
-          `L'opération peut prendre plusieurs minutes. Consultez l'onglet Historique pour suivre la progression.`
+          `${intl.formatMessage({ id: "admin.backups.alerts.restoreSuccess" })}\n\n` +
+          `${intl.formatMessage({ id: "admin.backups.alerts.trackingId" }, { id: data.trackingId })}\n\n` +
+          (data.rollbackInfo ? `${intl.formatMessage({ id: "admin.backups.alerts.rollbackInfo" }, { info: data.rollbackInfo })}\n\n` : "") +
+          intl.formatMessage({ id: "admin.backups.alerts.restoreProgress" })
         );
       }
-      console.log("Restore result:", data);
     } catch (error) {
       console.error("Restore error:", error);
-      alert("Erreur lors de la restauration: " + (error instanceof Error ? error.message : "Erreur inconnue"));
+      alert(intl.formatMessage({ id: "admin.backups.alerts.restoreError" }, { error: error instanceof Error ? error.message : intl.formatMessage({ id: "admin.backups.alerts.unknownError" }) }));
     } finally {
       setRestoring(false);
       setCodeInputValue("");
       setExpectedCode("");
     }
-  }, [selectedBackup, restorePreview, selectedCollections, functions, codeInputValue, expectedCode]);
+  }, [selectedBackup, restorePreview, selectedCollections, functions, codeInputValue, expectedCode, intl]);
 
   const handleDelete = useCallback(async (id: string) => {
     if (!isAdmin) {
-      alert("Droits admin requis");
+      alert(intl.formatMessage({ id: "admin.backups.alerts.adminRequired" }));
       return;
     }
-    if (!confirm("Supprimer cette sauvegarde? Cette action est irréversible.")) return;
+    if (!confirm(intl.formatMessage({ id: "admin.backups.alerts.deleteConfirm" }))) return;
 
     try {
       await deleteDoc(doc(db, "backups", id));
-      alert("Sauvegarde supprimée");
+      alert(intl.formatMessage({ id: "admin.backups.alerts.deleteSuccess" }));
     } catch (error) {
       console.error("Delete error:", error);
-      alert("Erreur lors de la suppression");
+      alert(intl.formatMessage({ id: "admin.backups.alerts.deleteError" }));
     }
-  }, [isAdmin]);
+  }, [isAdmin, intl]);
 
   const toggleDateExpanded = (date: string) => {
     const newExpanded = new Set(expandedDates);
@@ -496,9 +495,9 @@ const AdminBackups: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-semibold">Sauvegardes & Restauration</h1>
+            <h1 className="text-2xl font-semibold">{intl.formatMessage({ id: "admin.backups.title" })}</h1>
             <p className="text-sm text-gray-500 mt-1">
-              Gérez vos sauvegardes et restaurez vos données en cas de besoin
+              {intl.formatMessage({ id: "admin.backups.subtitle" })}
             </p>
           </div>
           <Button
@@ -507,7 +506,7 @@ const AdminBackups: React.FC = () => {
             className="bg-red-600 hover:bg-red-700"
           >
             <Save size={16} className="mr-2" />
-            Sauvegarder maintenant
+            {intl.formatMessage({ id: "admin.backups.backupNow" })}
           </Button>
         </div>
 
@@ -520,7 +519,7 @@ const AdminBackups: React.FC = () => {
               </div>
               <div>
                 <p className="text-2xl font-semibold">{stats.completed}</p>
-                <p className="text-xs text-gray-500">Sauvegardes réussies</p>
+                <p className="text-xs text-gray-500">{intl.formatMessage({ id: "admin.backups.successfulBackups" })}</p>
               </div>
             </div>
           </div>
@@ -532,7 +531,7 @@ const AdminBackups: React.FC = () => {
               </div>
               <div>
                 <p className="text-2xl font-semibold">{stats.totalDocs.toLocaleString()}</p>
-                <p className="text-xs text-gray-500">Documents sauvegardés</p>
+                <p className="text-xs text-gray-500">{intl.formatMessage({ id: "admin.backups.savedDocuments" })}</p>
               </div>
             </div>
           </div>
@@ -546,7 +545,7 @@ const AdminBackups: React.FC = () => {
                 <p className="text-2xl font-semibold">
                   {stats.hoursAgo !== null ? `${stats.hoursAgo}h` : "-"}
                 </p>
-                <p className="text-xs text-gray-500">Dernière sauvegarde</p>
+                <p className="text-xs text-gray-500">{intl.formatMessage({ id: "admin.backups.lastBackup" })}</p>
               </div>
             </div>
           </div>
@@ -558,7 +557,7 @@ const AdminBackups: React.FC = () => {
               </div>
               <div>
                 <p className="text-2xl font-semibold">{stats.failed}</p>
-                <p className="text-xs text-gray-500">Échecs récents</p>
+                <p className="text-xs text-gray-500">{intl.formatMessage({ id: "admin.backups.recentFailures" })}</p>
               </div>
             </div>
           </div>
@@ -569,11 +568,8 @@ const AdminBackups: React.FC = () => {
           <div className="flex items-start gap-3">
             <Info className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
             <div>
-              <h3 className="font-medium text-blue-900">Politique de conservation</h3>
-              <p className="text-sm text-blue-700 mt-1">
-                Les sauvegardes standards sont conservées <strong>30 jours</strong>.
-                Les données financières (paiements, factures, abonnements) sont conservées <strong>indéfiniment</strong> pour conformité légale (10 ans minimum).
-              </p>
+              <h3 className="font-medium text-blue-900">{intl.formatMessage({ id: "admin.backups.retentionPolicy.title" })}</h3>
+              <p className="text-sm text-blue-700 mt-1" dangerouslySetInnerHTML={{ __html: intl.formatMessage({ id: "admin.backups.retentionPolicy.description" }) }} />
             </div>
           </div>
         </div>
@@ -582,9 +578,9 @@ const AdminBackups: React.FC = () => {
         <div className="border-b mb-6">
           <nav className="flex gap-4">
             {[
-              { id: "overview", label: "Vue d'ensemble", icon: BarChart },
-              { id: "restore", label: "Restaurer", icon: RotateCcw },
-              { id: "history", label: "Historique", icon: Clock },
+              { id: "overview", label: intl.formatMessage({ id: "admin.backups.tabs.overview" }), icon: BarChart },
+              { id: "restore", label: intl.formatMessage({ id: "admin.backups.tabs.restore" }), icon: RotateCcw },
+              { id: "history", label: intl.formatMessage({ id: "admin.backups.tabs.history" }), icon: Clock },
             ].map(tab => (
               <button
                 key={tab.id}
@@ -609,35 +605,33 @@ const AdminBackups: React.FC = () => {
             <div className="bg-white border rounded-lg p-6">
               <h2 className="text-lg font-medium mb-4 flex items-center gap-2">
                 <RefreshCw className="h-5 w-5 text-gray-400" />
-                Planification des sauvegardes
+                {intl.formatMessage({ id: "admin.backups.schedule.title" })}
               </h2>
               <div className="grid md:grid-cols-3 gap-4">
                 <div className="p-4 bg-blue-50 rounded-lg">
-                  <div className="text-sm font-medium text-blue-900">Matin</div>
+                  <div className="text-sm font-medium text-blue-900">{intl.formatMessage({ id: "admin.backups.schedule.morning" })}</div>
                   <div className="text-2xl font-semibold text-blue-600">03:00</div>
-                  <div className="text-xs text-blue-700">Backup principal</div>
+                  <div className="text-xs text-blue-700">{intl.formatMessage({ id: "admin.backups.schedule.mainBackup" })}</div>
                 </div>
                 <div className="p-4 bg-gray-50 rounded-lg">
-                  <div className="text-sm font-medium text-gray-900">Midi</div>
+                  <div className="text-sm font-medium text-gray-900">{intl.formatMessage({ id: "admin.backups.schedule.midday" })}</div>
                   <div className="text-2xl font-semibold text-gray-600">11:00</div>
-                  <div className="text-xs text-gray-700">Backup intermédiaire</div>
+                  <div className="text-xs text-gray-700">{intl.formatMessage({ id: "admin.backups.schedule.intermediateBackup" })}</div>
                 </div>
                 <div className="p-4 bg-gray-50 rounded-lg">
-                  <div className="text-sm font-medium text-gray-900">Soir</div>
+                  <div className="text-sm font-medium text-gray-900">{intl.formatMessage({ id: "admin.backups.schedule.evening" })}</div>
                   <div className="text-2xl font-semibold text-gray-600">19:00</div>
-                  <div className="text-xs text-gray-700">Backup fin de journée</div>
+                  <div className="text-xs text-gray-700">{intl.formatMessage({ id: "admin.backups.schedule.endOfDayBackup" })}</div>
                 </div>
               </div>
-              <p className="text-sm text-gray-500 mt-4">
-                RPO (Recovery Point Objective): <strong>8 heures maximum</strong> de perte de données en cas d'incident.
-              </p>
+              <p className="text-sm text-gray-500 mt-4" dangerouslySetInnerHTML={{ __html: intl.formatMessage({ id: "admin.backups.schedule.rpo" }) }} />
             </div>
 
             {/* Recent Backups by Date */}
             <div className="bg-white border rounded-lg p-6">
               <h2 className="text-lg font-medium mb-4 flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-gray-400" />
-                Sauvegardes par date
+                {intl.formatMessage({ id: "admin.backups.byDate.title" })}
               </h2>
               <div className="space-y-2">
                 {availableDates.slice(0, 7).map(date => {
@@ -655,8 +649,8 @@ const AdminBackups: React.FC = () => {
                           {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                           <span className="font-medium">{date}</span>
                           <span className="text-sm text-gray-500">
-                            {completedCount} backup{completedCount > 1 ? "s" : ""} Firestore
-                            {dayData.auth.length > 0 && ` + ${dayData.auth.length} Auth`}
+                            {intl.formatMessage({ id: "admin.backups.byDate.backupCount" }, { count: completedCount })}
+                            {dayData.auth.length > 0 && ` ${intl.formatMessage({ id: "admin.backups.byDate.authCount" }, { count: dayData.auth.length })}`}
                           </span>
                         </div>
                         <CheckCircle className="h-4 w-4 text-green-500" />
@@ -669,12 +663,12 @@ const AdminBackups: React.FC = () => {
                               <div key={backup.id} className="flex items-center justify-between text-sm p-2 bg-white rounded">
                                 <div className="flex items-center gap-2">
                                   <Database size={14} className="text-gray-400" />
-                                  <span>{formatDate(backup.createdAt)}</span>
-                                  <TypeBadge type={backup.type} backupType={backup.backupType} />
-                                  <StatusBadge status={backup.status} />
+                                  <span>{formatDate(backup.createdAt, intl.locale)}</span>
+                                  <TypeBadge type={backup.type} backupType={backup.backupType} intl={intl} />
+                                  <StatusBadge status={backup.status} intl={intl} />
                                 </div>
                                 <span className="text-gray-500">
-                                  {backup.totalDocuments?.toLocaleString()} docs
+                                  {backup.totalDocuments?.toLocaleString()} {intl.formatMessage({ id: "admin.backups.byDate.docs" })}
                                 </span>
                               </div>
                             ))}
@@ -682,12 +676,12 @@ const AdminBackups: React.FC = () => {
                               <div key={backup.id} className="flex items-center justify-between text-sm p-2 bg-white rounded">
                                 <div className="flex items-center gap-2">
                                   <Users size={14} className="text-gray-400" />
-                                  <span>{formatDate(backup.createdAt)}</span>
+                                  <span>{formatDate(backup.createdAt, intl.locale)}</span>
                                   <span className="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">Auth</span>
-                                  <StatusBadge status={backup.status} />
+                                  <StatusBadge status={backup.status} intl={intl} />
                                 </div>
                                 <span className="text-gray-500">
-                                  {backup.totalDocuments?.toLocaleString()} utilisateurs
+                                  {backup.totalDocuments?.toLocaleString()} {intl.formatMessage({ id: "admin.backups.byDate.users" })}
                                 </span>
                               </div>
                             ))}
@@ -708,7 +702,7 @@ const AdminBackups: React.FC = () => {
             <div className="bg-white border rounded-lg p-6">
               <h2 className="text-lg font-medium mb-4 flex items-center gap-2">
                 <span className="flex items-center justify-center w-6 h-6 rounded-full bg-red-600 text-white text-sm">1</span>
-                Choisir une date de restauration
+                {intl.formatMessage({ id: "admin.backups.restore.step1.title" })}
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
                 {availableDates.slice(0, 30).map(date => {
@@ -730,7 +724,7 @@ const AdminBackups: React.FC = () => {
                     >
                       <div className="text-sm font-medium">{date.slice(5)}</div>
                       <div className="text-xs text-gray-500 mt-1">
-                        {dayData.firestore.filter(b => b.status === "completed").length} backup{dayData.firestore.length > 1 ? "s" : ""}
+                        {intl.formatMessage({ id: "admin.backups.restore.step1.backupCount" }, { count: dayData.firestore.filter(b => b.status === "completed").length })}
                       </div>
                     </button>
                   );
@@ -743,7 +737,7 @@ const AdminBackups: React.FC = () => {
               <div className="bg-white border rounded-lg p-6">
                 <h2 className="text-lg font-medium mb-4 flex items-center gap-2">
                   <span className="flex items-center justify-center w-6 h-6 rounded-full bg-red-600 text-white text-sm">2</span>
-                  Choisir un point de restauration
+                  {intl.formatMessage({ id: "admin.backups.restore.step2.title" })}
                 </h2>
                 <div className="space-y-2">
                   {backupsByDate[selectedDate].firestore
@@ -761,13 +755,13 @@ const AdminBackups: React.FC = () => {
                         <div className="flex items-center gap-4">
                           <Database className="h-8 w-8 text-gray-400" />
                           <div className="text-left">
-                            <div className="font-medium">{formatDate(backup.createdAt)}</div>
+                            <div className="font-medium">{formatDate(backup.createdAt, intl.locale)}</div>
                             <div className="text-sm text-gray-500">
-                              {backup.totalDocuments?.toLocaleString()} documents
-                              {backup.collectionCounts && ` • ${Object.keys(backup.collectionCounts).length} collections`}
+                              {intl.formatMessage({ id: "admin.backups.restore.step2.documents" }, { count: backup.totalDocuments?.toLocaleString() || 0 })}
+                              {backup.collectionCounts && ` - ${intl.formatMessage({ id: "admin.backups.restore.step2.collections" }, { count: Object.keys(backup.collectionCounts).length })}`}
                             </div>
                           </div>
-                          <TypeBadge type={backup.type} backupType={backup.backupType} />
+                          <TypeBadge type={backup.type} backupType={backup.backupType} intl={intl} />
                         </div>
                         {backup.checksum && (
                           <div className="text-xs text-gray-400 font-mono">
@@ -785,13 +779,14 @@ const AdminBackups: React.FC = () => {
               <div className="bg-white border rounded-lg p-6">
                 <h2 className="text-lg font-medium mb-4 flex items-center gap-2">
                   <span className="flex items-center justify-center w-6 h-6 rounded-full bg-red-600 text-white text-sm">3</span>
-                  Sélectionner les collections à restaurer
+                  {intl.formatMessage({ id: "admin.backups.restore.step3.title" })}
                 </h2>
                 <CollectionSelector
                   collections={availableCollections}
                   selected={selectedCollections}
                   onChange={setSelectedCollections}
                   counts={selectedBackup.collectionCounts}
+                  intl={intl}
                 />
 
                 <div className="mt-4 flex gap-3">
@@ -802,7 +797,7 @@ const AdminBackups: React.FC = () => {
                     disabled={selectedCollections.length === 0}
                   >
                     <Eye size={16} className="mr-2" />
-                    Prévisualiser
+                    {intl.formatMessage({ id: "admin.backups.restore.preview" })}
                   </Button>
                 </div>
               </div>
@@ -813,7 +808,7 @@ const AdminBackups: React.FC = () => {
               <div className="bg-white border rounded-lg p-6">
                 <h2 className="text-lg font-medium mb-4 flex items-center gap-2">
                   <span className="flex items-center justify-center w-6 h-6 rounded-full bg-red-600 text-white text-sm">4</span>
-                  Confirmer la restauration
+                  {intl.formatMessage({ id: "admin.backups.restore.step4.title" })}
                 </h2>
 
                 {restorePreview.warnings.length > 0 && (
@@ -821,7 +816,7 @@ const AdminBackups: React.FC = () => {
                     <div className="flex items-start gap-2">
                       <AlertTriangle className="h-5 w-5 text-orange-600 mt-0.5" />
                       <div>
-                        <h4 className="font-medium text-orange-900">Attention</h4>
+                        <h4 className="font-medium text-orange-900">{intl.formatMessage({ id: "admin.backups.restore.warnings.title" })}</h4>
                         <ul className="text-sm text-orange-700 mt-1 list-disc list-inside">
                           {restorePreview.warnings.map((w, i) => (
                             <li key={i}>{w}</li>
@@ -836,10 +831,10 @@ const AdminBackups: React.FC = () => {
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-4 py-2 text-left font-medium">Collection</th>
-                        <th className="px-4 py-2 text-right font-medium">Dans backup</th>
-                        <th className="px-4 py-2 text-right font-medium">Actuel</th>
-                        <th className="px-4 py-2 text-right font-medium">Différence</th>
+                        <th className="px-4 py-2 text-left font-medium">{intl.formatMessage({ id: "admin.backups.restore.comparison.collection" })}</th>
+                        <th className="px-4 py-2 text-right font-medium">{intl.formatMessage({ id: "admin.backups.restore.comparison.inBackup" })}</th>
+                        <th className="px-4 py-2 text-right font-medium">{intl.formatMessage({ id: "admin.backups.restore.comparison.current" })}</th>
+                        <th className="px-4 py-2 text-right font-medium">{intl.formatMessage({ id: "admin.backups.restore.comparison.difference" })}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
@@ -863,9 +858,9 @@ const AdminBackups: React.FC = () => {
                   <div className="flex items-start gap-2">
                     <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
                     <div>
-                      <h4 className="font-medium text-red-900">Action irréversible</h4>
+                      <h4 className="font-medium text-red-900">{intl.formatMessage({ id: "admin.backups.restore.irreversibleAction.title" })}</h4>
                       <p className="text-sm text-red-700 mt-1">
-                        La restauration peut écraser des données actuelles. Assurez-vous d'avoir un backup récent avant de continuer.
+                        {intl.formatMessage({ id: "admin.backups.restore.irreversibleAction.description" })}
                       </p>
                     </div>
                   </div>
@@ -877,7 +872,7 @@ const AdminBackups: React.FC = () => {
                   className="bg-red-600 hover:bg-red-700"
                 >
                   <RotateCcw size={16} className="mr-2" />
-                  Lancer la restauration
+                  {intl.formatMessage({ id: "admin.backups.restore.startRestore" })}
                 </Button>
               </div>
             )}
@@ -893,22 +888,20 @@ const AdminBackups: React.FC = () => {
                   <Shield className="h-6 w-6 text-red-600" />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900">
-                  Confirmation de sécurité
+                  {intl.formatMessage({ id: "admin.backups.confirmation.title" })}
                 </h3>
               </div>
 
               <div className="space-y-4">
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                   <p className="text-sm text-yellow-800">
-                    <strong>⚠️ Attention :</strong> Cette action va restaurer des données depuis un backup.
-                    Un backup de sécurité sera créé automatiquement avant la restauration pour vous permettre
-                    de revenir en arrière si nécessaire.
+                    {intl.formatMessage({ id: "admin.backups.confirmation.warning" })}
                   </p>
                 </div>
 
                 <div className="bg-gray-50 border rounded-lg p-4">
                   <p className="text-sm text-gray-700 mb-2">
-                    Pour confirmer, tapez le code suivant :
+                    {intl.formatMessage({ id: "admin.backups.confirmation.typeCode" })}
                   </p>
                   <div className="bg-white border-2 border-dashed border-gray-300 rounded p-3 text-center">
                     <span className="font-mono text-xl font-bold text-blue-600 tracking-wider">
@@ -919,7 +912,7 @@ const AdminBackups: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Entrez le code de confirmation :
+                    {intl.formatMessage({ id: "admin.backups.confirmation.enterCode" })}
                   </label>
                   <input
                     type="text"
@@ -928,7 +921,7 @@ const AdminBackups: React.FC = () => {
                       setCodeInputValue(e.target.value.toUpperCase());
                       setCodeError("");
                     }}
-                    placeholder="XXXXX-0000"
+                    placeholder={intl.formatMessage({ id: "admin.backups.confirmation.codePlaceholder" })}
                     className={`w-full px-4 py-2 border rounded-lg font-mono text-lg tracking-wider text-center ${
                       codeError ? "border-red-500" : "border-gray-300"
                     } focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
@@ -949,7 +942,7 @@ const AdminBackups: React.FC = () => {
                   }}
                   className="flex-1 bg-gray-100 text-gray-700 hover:bg-gray-200"
                 >
-                  Annuler
+                  {intl.formatMessage({ id: "admin.backups.confirmation.cancel" })}
                 </Button>
                 <Button
                   onClick={handleConfirmRestore}
@@ -957,7 +950,7 @@ const AdminBackups: React.FC = () => {
                   className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-300"
                 >
                   <Shield size={16} className="mr-2" />
-                  Confirmer la restauration
+                  {intl.formatMessage({ id: "admin.backups.confirmation.confirm" })}
                 </Button>
               </div>
             </div>
@@ -970,30 +963,30 @@ const AdminBackups: React.FC = () => {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Documents</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Checksum</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{intl.formatMessage({ id: "admin.backups.history.date" })}</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{intl.formatMessage({ id: "admin.backups.history.type" })}</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{intl.formatMessage({ id: "admin.backups.history.status" })}</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{intl.formatMessage({ id: "admin.backups.history.documents" })}</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{intl.formatMessage({ id: "admin.backups.history.checksum" })}</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{intl.formatMessage({ id: "admin.backups.history.actions" })}</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-100">
                   {rows.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
-                        Aucune sauvegarde trouvée
+                        {intl.formatMessage({ id: "admin.backups.history.noBackups" })}
                       </td>
                     </tr>
                   ) : (
                     rows.map((row) => (
                       <tr key={row.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-3 text-sm">{formatDate(row.createdAt)}</td>
+                        <td className="px-6 py-3 text-sm">{formatDate(row.createdAt, intl.locale)}</td>
                         <td className="px-6 py-3">
-                          <TypeBadge type={row.type} backupType={row.backupType} />
+                          <TypeBadge type={row.type} backupType={row.backupType} intl={intl} />
                         </td>
                         <td className="px-6 py-3">
-                          <StatusBadge status={row.status} />
+                          <StatusBadge status={row.status} intl={intl} />
                         </td>
                         <td className="px-6 py-3 text-sm">
                           {row.totalDocuments?.toLocaleString() || "-"}
@@ -1005,7 +998,7 @@ const AdminBackups: React.FC = () => {
                           <button
                             onClick={() => handleDelete(row.id)}
                             className="text-red-600 hover:text-red-800 p-1"
-                            title="Supprimer"
+                            title={intl.formatMessage({ id: "admin.backups.history.delete" })}
                           >
                             <Trash size={16} />
                           </button>

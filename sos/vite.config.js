@@ -86,13 +86,15 @@ export default defineConfig(({ mode }) => {
       },
     },
     build: {
-      target: 'esnext',
+      // ES2019 pour compatibilité avec react-snap (Puppeteer/Chromium ancien)
+      // Évite les erreurs "Unexpected token '.' " avec optional chaining (?.)
+      target: 'es2019',
       // Minification avec terser pour réduire la taille du bundle
       minify: 'terser',
       terserOptions: {
         compress: {
-          drop_console: false,  // DEBUG: Gardé pour debug - remettre true après
-          drop_debugger: true, // Supprime debugger
+          drop_console: true,   // Production: supprime les console.log
+          drop_debugger: true,  // Supprime debugger
           passes: 2,           // 2 passes pour meilleure compression
         },
         mangle: true,

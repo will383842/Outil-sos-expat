@@ -128,6 +128,7 @@ const AdminEscrow: React.FC = () => {
   const [selectedItem, setSelectedItem] = useState<PendingTransfer | FailedPayoutAlert | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [retrying, setRetrying] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Fetch data
   const fetchData = useCallback(async () => {
@@ -251,7 +252,7 @@ const AdminEscrow: React.FC = () => {
       await fetchData();
     } catch (error) {
       console.error('Error retrying payout:', error);
-      alert('Erreur lors du retry: ' + (error as Error).message);
+      setErrorMessage(t('admin.escrow.retryError', { error: (error as Error).message }));
     } finally {
       setRetrying(null);
     }
@@ -289,17 +290,17 @@ const AdminEscrow: React.FC = () => {
 
   const getProviderKycStatus = (providerId: string, type: 'stripe' | 'paypal') => {
     const provider = providersMap.get(providerId);
-    if (!provider) return { done: false, label: 'Inconnu' };
+    if (!provider) return { done: false, label: t('admin.escrow.kycUnknown') };
 
     if (type === 'stripe') {
       return {
         done: provider.stripeOnboardingComplete === true,
-        label: provider.stripeOnboardingComplete ? 'Stripe Connect OK' : 'Stripe non configuré',
+        label: provider.stripeOnboardingComplete ? t('admin.escrow.stripeConnectOk') : t('admin.escrow.stripeNotConfigured'),
       };
     } else {
       return {
         done: !!provider.paypalMerchantId,
-        label: provider.paypalMerchantId ? 'PayPal Merchant OK' : 'PayPal email seulement',
+        label: provider.paypalMerchantId ? t('admin.escrow.paypalMerchantOk') : t('admin.escrow.paypalEmailOnly'),
       };
     }
   };
@@ -376,10 +377,10 @@ const AdminEscrow: React.FC = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
-              Fonds en Transit (Escrow)
+              {t('admin.escrow.title')}
             </h1>
             <p className="text-gray-500 mt-1">
-              Suivi des paiements en attente de transfert aux prestataires
+              {t('admin.escrow.description')}
             </p>
           </div>
           <Button
@@ -388,7 +389,7 @@ const AdminEscrow: React.FC = () => {
             className="flex items-center gap-2"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            Actualiser
+            {t('admin.common.refresh')}
           </Button>
         </div>
 
@@ -401,7 +402,7 @@ const AdminEscrow: React.FC = () => {
                   <DollarSign className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Total en Escrow</p>
+                  <p className="text-sm text-gray-500">{t('admin.escrow.totalInEscrow')}</p>
                   <p className="text-xl font-bold text-gray-900">
                     {formatCurrency(stats.totalEur)}
                   </p>
@@ -415,11 +416,11 @@ const AdminEscrow: React.FC = () => {
                   <CreditCard className="w-5 h-5 text-purple-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Stripe (KYC pending)</p>
+                  <p className="text-sm text-gray-500">{t('admin.escrow.stripeKycPending')}</p>
                   <p className="text-xl font-bold text-gray-900">
                     {formatCurrency(stats.stripe.totalEur)}
                   </p>
-                  <p className="text-xs text-gray-400">{stats.stripe.count} transferts</p>
+                  <p className="text-xs text-gray-400">{t('admin.escrow.transfers', { count: stats.stripe.count })}</p>
                 </div>
               </div>
             </div>
@@ -430,11 +431,11 @@ const AdminEscrow: React.FC = () => {
                   <Wallet className="w-5 h-5 text-yellow-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">PayPal (Payout failed)</p>
+                  <p className="text-sm text-gray-500">{t('admin.escrow.paypalPayoutFailed')}</p>
                   <p className="text-xl font-bold text-gray-900">
                     {formatCurrency(stats.paypal.totalEur)}
                   </p>
-                  <p className="text-xs text-gray-400">{stats.paypal.count} payouts</p>
+                  <p className="text-xs text-gray-400">{t('admin.escrow.payouts', { count: stats.paypal.count })}</p>
                 </div>
               </div>
             </div>
@@ -445,9 +446,9 @@ const AdminEscrow: React.FC = () => {
                   <Clock className="w-5 h-5 text-orange-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Plus ancien</p>
+                  <p className="text-sm text-gray-500">{t('admin.escrow.oldest')}</p>
                   <p className="text-xl font-bold text-gray-900">
-                    {Math.max(stats.stripe.oldestDays, stats.paypal.oldestDays)} jours
+                    {t('admin.escrow.days', { count: Math.max(stats.stripe.oldestDays, stats.paypal.oldestDays) })}
                   </p>
                 </div>
               </div>
@@ -459,7 +460,7 @@ const AdminEscrow: React.FC = () => {
                   <AlertTriangle className="w-5 h-5 text-red-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Providers affectés</p>
+                  <p className="text-sm text-gray-500">{t('admin.escrow.providersAffected')}</p>
                   <p className="text-xl font-bold text-gray-900">
                     {stats.providersAffected}
                   </p>
@@ -474,10 +475,9 @@ const AdminEscrow: React.FC = () => {
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
             <div>
-              <h3 className="font-medium text-red-800">Attention: Escrow élevé</h3>
+              <h3 className="font-medium text-red-800">{t('admin.escrow.highEscrowAlert')}</h3>
               <p className="text-sm text-red-700 mt-1">
-                Le montant total en escrow dépasse 1000€. Vérifiez les providers concernés et
-                envoyez des rappels KYC si nécessaire.
+                {t('admin.escrow.highEscrowAlertDesc')}
               </p>
             </div>
           </div>
@@ -497,7 +497,7 @@ const AdminEscrow: React.FC = () => {
               >
                 <div className="flex items-center gap-2">
                   <CreditCard className="w-4 h-4" />
-                  Stripe - KYC Pending
+                  {t('admin.escrow.tabStripeKycPending')}
                   {stats && stats.stripe.count > 0 && (
                     <span className="bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full text-xs">
                       {stats.stripe.count}
@@ -515,7 +515,7 @@ const AdminEscrow: React.FC = () => {
               >
                 <div className="flex items-center gap-2">
                   <Wallet className="w-4 h-4" />
-                  PayPal - Payout Failed
+                  {t('admin.escrow.tabPaypalFailed')}
                   {stats && stats.paypal.count > 0 && (
                     <span className="bg-yellow-100 text-yellow-600 px-2 py-0.5 rounded-full text-xs">
                       {stats.paypal.count}
@@ -532,7 +532,7 @@ const AdminEscrow: React.FC = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Rechercher par provider..."
+                placeholder={t('admin.escrow.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -544,11 +544,11 @@ const AdminEscrow: React.FC = () => {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="all">Tous les statuts</option>
-                <option value="pending">Pending</option>
-                <option value="failed">Failed</option>
-                <option value="max_retries_reached">Max retries</option>
-                <option value="pending_retry_after_kyc">Retry after KYC</option>
+                <option value="all">{t('admin.escrow.allStatuses')}</option>
+                <option value="pending">{t('admin.escrow.statusPending')}</option>
+                <option value="failed">{t('admin.escrow.statusFailed')}</option>
+                <option value="max_retries_reached">{t('admin.escrow.statusMaxRetries')}</option>
+                <option value="pending_retry_after_kyc">{t('admin.escrow.statusRetryAfterKyc')}</option>
               </select>
             )}
           </div>
@@ -559,13 +559,13 @@ const AdminEscrow: React.FC = () => {
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Provider</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Montant</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Session</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jours</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">KYC Status</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.escrow.table.provider')}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.escrow.table.amount')}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.escrow.table.session')}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.escrow.table.date')}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.escrow.table.daysCol')}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.escrow.table.kycStatus')}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.escrow.table.actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -573,7 +573,7 @@ const AdminEscrow: React.FC = () => {
                     <tr>
                       <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
                         <CheckCircle className="w-12 h-12 mx-auto text-green-400 mb-2" />
-                        Aucun transfert Stripe en attente
+                        {t('admin.escrow.noStripeTransfers')}
                       </td>
                     </tr>
                   ) : (
@@ -624,14 +624,14 @@ const AdminEscrow: React.FC = () => {
                               <button
                                 onClick={() => { setSelectedItem(item); setShowDetailModal(true); }}
                                 className="p-1 text-gray-400 hover:text-gray-600"
-                                title="Voir détails"
+                                title={t('admin.escrow.viewDetails')}
                               >
                                 <Eye className="w-4 h-4" />
                               </button>
                               <a
-                                href={`mailto:${providersMap.get(item.providerId)?.email}?subject=Action requise: Configurez vos paiements SOS-Expat`}
+                                href={`mailto:${providersMap.get(item.providerId)?.email}?subject=${t('admin.escrow.emailSubjectStripe')}`}
                                 className="p-1 text-gray-400 hover:text-blue-600"
-                                title="Envoyer email"
+                                title={t('admin.escrow.sendEmail')}
                               >
                                 <Mail className="w-4 h-4" />
                               </a>
@@ -647,14 +647,14 @@ const AdminEscrow: React.FC = () => {
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Provider</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Montant</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">PayPal Email</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Retries</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Erreur</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.escrow.table.provider')}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.escrow.table.amount')}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.escrow.table.paypalEmail')}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.escrow.table.status')}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.escrow.table.retries')}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.escrow.table.date')}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.escrow.table.error')}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.escrow.table.actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -662,7 +662,7 @@ const AdminEscrow: React.FC = () => {
                     <tr>
                       <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
                         <CheckCircle className="w-12 h-12 mx-auto text-green-400 mb-2" />
-                        Aucun payout PayPal en échec
+                        {t('admin.escrow.noPaypalPayouts')}
                       </td>
                     </tr>
                   ) : (
@@ -709,7 +709,7 @@ const AdminEscrow: React.FC = () => {
                               <button
                                 onClick={() => { setSelectedItem(item); setShowDetailModal(true); }}
                                 className="p-1 text-gray-400 hover:text-gray-600"
-                                title="Voir détails"
+                                title={t('admin.escrow.viewDetails')}
                               >
                                 <Eye className="w-4 h-4" />
                               </button>
@@ -717,7 +717,7 @@ const AdminEscrow: React.FC = () => {
                                 onClick={() => handleRetryPayout(item)}
                                 disabled={retrying === item.id || item.retryScheduled}
                                 className="p-1 text-gray-400 hover:text-green-600 disabled:opacity-50"
-                                title="Retry payout"
+                                title={t('admin.escrow.retryPayout')}
                               >
                                 {retrying === item.id ? (
                                   <RefreshCw className="w-4 h-4 animate-spin" />
@@ -726,9 +726,9 @@ const AdminEscrow: React.FC = () => {
                                 )}
                               </button>
                               <a
-                                href={`mailto:${item.providerPayPalEmail}?subject=Action requise: Vérifiez votre compte PayPal`}
+                                href={`mailto:${item.providerPayPalEmail}?subject=${t('admin.escrow.emailSubjectPaypal')}`}
                                 className="p-1 text-gray-400 hover:text-blue-600"
-                                title="Envoyer email"
+                                title={t('admin.escrow.sendEmail')}
                               >
                                 <Mail className="w-4 h-4" />
                               </a>
@@ -749,11 +749,9 @@ const AdminEscrow: React.FC = () => {
           <div className="flex items-start gap-3">
             <Shield className="w-5 h-5 text-blue-600 mt-0.5" />
             <div>
-              <h3 className="font-medium text-blue-800">Règle métier importante</h3>
+              <h3 className="font-medium text-blue-800">{t('admin.escrow.businessRuleTitle')}</h3>
               <p className="text-sm text-blue-700 mt-1">
-                Une fois qu'un appel a eu lieu, le client n'est <strong>JAMAIS</strong> remboursé.
-                L'argent appartient au prestataire et reste en escrow jusqu'à ce qu'il complète son KYC.
-                Le système envoie des rappels automatiques à J+1, J+7, J+30 et J+90.
+                {t('admin.escrow.businessRuleDesc')}
               </p>
             </div>
           </div>
@@ -765,20 +763,20 @@ const AdminEscrow: React.FC = () => {
         <Modal
           isOpen={showDetailModal}
           onClose={() => { setShowDetailModal(false); setSelectedItem(null); }}
-          title="Détails du paiement en attente"
+          title={t('admin.escrow.modal.title')}
         >
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-gray-500">Provider ID</p>
+                <p className="text-sm text-gray-500">{t('admin.escrow.modal.providerId')}</p>
                 <p className="font-mono text-sm">{selectedItem.providerId}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Call Session</p>
+                <p className="text-sm text-gray-500">{t('admin.escrow.modal.callSession')}</p>
                 <p className="font-mono text-sm">{selectedItem.callSessionId}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Montant</p>
+                <p className="text-sm text-gray-500">{t('admin.escrow.modal.amount')}</p>
                 <p className="font-medium">
                   {'providerAmount' in selectedItem
                     ? formatCurrency((selectedItem as PendingTransfer).providerAmount / 100)
@@ -787,14 +785,14 @@ const AdminEscrow: React.FC = () => {
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Date de création</p>
+                <p className="text-sm text-gray-500">{t('admin.escrow.modal.createdAt')}</p>
                 <p>{formatDate(selectedItem.createdAt)}</p>
               </div>
             </div>
 
             {'error' in selectedItem && (
               <div>
-                <p className="text-sm text-gray-500">Erreur complète</p>
+                <p className="text-sm text-gray-500">{t('admin.escrow.modal.fullError')}</p>
                 <p className="text-sm text-red-600 bg-red-50 p-2 rounded mt-1">
                   {(selectedItem as FailedPayoutAlert).error}
                 </p>
@@ -803,7 +801,28 @@ const AdminEscrow: React.FC = () => {
 
             <div className="flex justify-end gap-2 pt-4 border-t">
               <Button variant="secondary" onClick={() => setShowDetailModal(false)}>
-                Fermer
+                {t('admin.common.close')}
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Error Modal */}
+      {errorMessage && (
+        <Modal
+          isOpen={!!errorMessage}
+          onClose={() => setErrorMessage(null)}
+          title={t('admin.common.error')}
+        >
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
+              <p className="text-sm text-gray-700">{errorMessage}</p>
+            </div>
+            <div className="flex justify-end pt-4 border-t">
+              <Button variant="secondary" onClick={() => setErrorMessage(null)}>
+                {t('admin.common.close')}
               </Button>
             </div>
           </div>

@@ -151,13 +151,14 @@ const AdminCountryStats: React.FC = () => {
       setIsLoading(true);
       setError(null);
 
-      // Fetch all data in parallel
-      const [callsSnapshot, paymentsSnapshot, usersSnapshot] = await Promise.all([
+      // Fetch all data in parallel - include sos_profiles for better country data
+      const [callsSnapshot, paymentsSnapshot, usersSnapshot, sosProfilesSnapshot] = await Promise.all([
         getDocs(collection(db, "calls")),
         getDocs(collection(db, "payments")),
-        getDocs(collection(db, "users"))
+        getDocs(collection(db, "users")),
+        getDocs(collection(db, "sos_profiles"))
       ]);
-      
+
       if (!mountedRef.current) return;
 
       // Initialize country stats map
@@ -167,10 +168,54 @@ const AdminCountryStats: React.FC = () => {
       // Avant: O(n*m) - find() appelé pour chaque call/payment
       // Après: O(n+m) - Map lookup O(1) pour chaque call/payment
       const userCountryMap = new Map<string, string>();
+
+      // Helper to extract best country from user data
+      const extractCountryFromUserData = (userData: Record<string, unknown>): string => {
+        // Priority order for country fields
+        const countryFields = [
+          'country',
+          'currentCountry',
+          'currentPresenceCountry',
+          'residenceCountry',
+          'interventionCountry'
+        ];
+
+        for (const field of countryFields) {
+          const value = userData[field] as string | undefined;
+          if (value && value.trim() !== '' && value.toLowerCase() !== 'unknown') {
+            return value;
+          }
+        }
+
+        // Try practiceCountries or interventionCountries arrays
+        const arrayFields = ['practiceCountries', 'interventionCountries', 'operatingCountries'];
+        for (const field of arrayFields) {
+          const arr = userData[field] as string[] | undefined;
+          if (Array.isArray(arr) && arr.length > 0 && arr[0] && arr[0].trim() !== '') {
+            return arr[0];
+          }
+        }
+
+        return 'Unknown';
+      };
+
+      // First pass: Build map from sos_profiles (providers have better country data)
+      sosProfilesSnapshot.docs.forEach(doc => {
+        const userData = doc.data() as Record<string, unknown>;
+        const rawCountry = extractCountryFromUserData(userData);
+        if (rawCountry !== 'Unknown') {
+          userCountryMap.set(doc.id, normalizeCountryName(rawCountry));
+        }
+      });
+
+      // Second pass: Add/update from users collection
       usersSnapshot.docs.forEach(doc => {
         const userData = doc.data() as Record<string, unknown>;
-        const rawCountry = (userData.country || userData.currentCountry || 'Unknown') as string;
-        userCountryMap.set(doc.id, normalizeCountryName(rawCountry));
+        const rawCountry = extractCountryFromUserData(userData);
+        // Only update if we found a valid country or if not already in map
+        if (rawCountry !== 'Unknown' || !userCountryMap.has(doc.id)) {
+          userCountryMap.set(doc.id, normalizeCountryName(rawCountry));
+        }
       });
 
       // Helper to get country from user (with normalization)
@@ -220,22 +265,23 @@ const AdminCountryStats: React.FC = () => {
       let totalRevenue = 0;
       let platformRevenue = 0;
       let providerRevenue = 0;
-      
+
       paymentsSnapshot.forEach((docSnapshot) => {
         const data = docSnapshot.data() as Record<string, unknown>;
         const clientId = data.clientId as string;
+        const providerId = data.providerId as string;
         const status = data.status as string | undefined;
-        
+
         // Only count successful/captured payments (exclude canceled, failed, refunded)
         const shouldCount = status === 'captured' || status === 'succeeded' || status === 'authorized';
-        
+
         if (!shouldCount) return; // Skip canceled, failed, or refunded payments
-        
+
         // Use Euros fields if available, otherwise convert cents to euros (divide by 100)
         const amount = (data.amountInEuros as number | undefined) !== undefined
           ? (data.amountInEuros as number)
           : ((data.amount as number | undefined) !== undefined ? (data.amount as number) / 100 : undefined);
-        
+
         const platformFee = (data.commissionAmountEuros as number | undefined) !== undefined
           ? (data.commissionAmountEuros as number)
           : (data.platformFee as number | undefined) !== undefined
@@ -243,20 +289,20 @@ const AdminCountryStats: React.FC = () => {
           : (data.connectionFeeAmount as number | undefined) !== undefined
           ? (data.connectionFeeAmount as number)
           : ((data.commissionAmount as number | undefined) !== undefined ? (data.commissionAmount as number) / 100 : undefined);
-        
+
         const providerAmount = (data.providerAmountEuros as number | undefined) !== undefined
           ? (data.providerAmountEuros as number)
           : ((data.providerAmount as number | undefined) !== undefined ? (data.providerAmount as number) / 100 : undefined);
-        
+
         // Only count payments that have a valid total amount
         // This ensures: Total Revenue = Commission SOS + Provider Income
         if (typeof amount !== "number" || amount <= 0) return;
-        
+
         // Determine platform fee and provider amount
         // Priority: Use provided breakdown, or calculate from amount
         let finalPlatformFee: number;
         let finalProviderAmount: number;
-        
+
         if (typeof platformFee === "number" && typeof providerAmount === "number") {
           // Both provided - use them, but validate they sum to amount
           const sum = platformFee + providerAmount;
@@ -281,21 +327,41 @@ const AdminCountryStats: React.FC = () => {
           // Neither provided - can't calculate breakdown, skip this payment
           return;
         }
-        
+
         // Ensure non-negative values
         if (finalPlatformFee < 0 || finalProviderAmount < 0) {
           return; // Skip invalid breakdowns
         }
-        
+
         // Accumulate totals (only for payments with valid amount and breakdown)
         totalRevenue += amount;
         platformRevenue += finalPlatformFee;
         providerRevenue += finalProviderAmount;
-        
-        // Get country from client
-        const country = getUserCountry(clientId);
+
+        // FIX: Get country with multi-source fallback
+        // Priority: 1) clientCountry from payment, 2) client's country, 3) provider's country
+        let country = 'Unknown';
+
+        // Check if payment has clientCountry stored directly
+        const paymentClientCountry = data.clientCountry as string | undefined;
+        if (paymentClientCountry && paymentClientCountry.trim() !== '' && paymentClientCountry.toLowerCase() !== 'unknown') {
+          country = normalizeCountryName(paymentClientCountry);
+        } else {
+          // Try client's country from user data
+          const clientCountry = getUserCountry(clientId);
+          if (clientCountry !== 'Unknown') {
+            country = clientCountry;
+          } else if (providerId) {
+            // Fallback to provider's country (service was rendered in provider's location)
+            const providerCountry = getUserCountry(providerId);
+            if (providerCountry !== 'Unknown') {
+              country = providerCountry;
+            }
+          }
+        }
+
         initCountryStats(country);
-        
+
         // Accumulate country-specific totals
         countryStatsMap[country].payments.totalRevenue += amount;
         countryStatsMap[country].payments.platformRevenue += finalPlatformFee;

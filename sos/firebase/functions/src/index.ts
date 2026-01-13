@@ -271,7 +271,7 @@ export {
 } from "./PayPalManager";
 
 // Payout Retry Tasks (P0-2 FIX)
-export { executePayoutRetryTask } from "./lib/payoutRetryTasks";
+export { executePayoutRetryTask, retryFailedPayout } from "./lib/payoutRetryTasks";
 
 // ============================================================================
 // TAX ENGINE - VAT/GST Calculation for B2B/B2C transactions
@@ -854,6 +854,9 @@ export { createContactMessage } from "./contact/createContactMessage";
 
 // Meta CAPI Event Tracking (Search, ViewContent, AddToCart)
 export { trackCAPIEvent } from "./tracking/capiEvents";
+
+// Meta CAPI Connection Test
+export { testCAPIConnection } from "./monitoring/testCAPIConnection";
 
 // Utilitaires complémentaires
 export { initializeMessageTemplates } from "./initializeMessageTemplates";
@@ -4301,7 +4304,7 @@ export * from './seo';
 export { generateSitemaps, onProviderChange, scheduledSitemapGeneration } from './sitemap';
 
 // ========== META DYNAMIC ADS - PROVIDER CATALOG FEED ==========
-// HTTP endpoint: https://us-central1-sos-expat.cloudfunctions.net/providerCatalogFeed
+// HTTP endpoint: https://europe-west1-sos-expat.cloudfunctions.net/providerCatalogFeed
 // Generates CSV feed of active providers for Facebook Product Catalog
 export { providerCatalogFeed, generateProviderFeed } from './providerCatalogFeed';
 
@@ -4678,7 +4681,7 @@ export { migrateProvidersToUid } from './migrations/migrateProvidersToUid';
 export { generateOutilToken } from './auth/generateOutilToken';
 
 // ========== ADMIN CLAIMS ==========
-export { setAdminClaims, initializeAdminClaims } from './auth/setAdminClaims';
+export { setAdminClaims, initializeAdminClaims, bootstrapFirstAdmin } from './auth/setAdminClaims';
 
 // ========== RESTORE USER ROLES (BUG FIX 30/12/2025) ==========
 // Scripts de restauration pour corriger les rôles perdus suite aux bugs
@@ -4711,6 +4714,9 @@ export { getCostMetrics } from "./monitoring/getCostMetrics";
 
 // Firebase/GCP usage monitoring
 export { getFirebaseUsage } from "./monitoring/getFirebaseUsage";
+
+// GCP Billing Costs (detailed breakdown by service, region, SKU)
+export { getGcpBillingCosts } from "./monitoring/getGcpBillingCosts";
 
 // Agent monitoring dashboard
 export { getAgentMetrics, saveAgentMetricsHistory } from "./monitoring/getAgentMetrics";
