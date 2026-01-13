@@ -97,10 +97,12 @@ export {
 export { backupStorageToDR } from "./scheduled/backupStorageToDR";
 
 // backup - Admin restore functions (callable from admin console)
+// NOTE: adminGetRestoreConfirmationCode temporarily disabled due to Gen1 load timeout
+// The function bundle is too large for Gen1's 10s load limit
 export {
   adminListBackups,
   adminPreviewRestore,
-  adminGetRestoreConfirmationCode,
+  // adminGetRestoreConfirmationCode, // DISABLED: Gen1 timeout - TODO: split codebase
   adminRestoreFirestore,
   adminRestoreAuth,
   adminCheckRestoreStatus,
