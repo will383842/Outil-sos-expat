@@ -336,6 +336,12 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin() || isDev();
     }
 
+    // ================= HELP CATEGORIES COLLECTION =================
+    match /help_categories/{categoryId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin() || isDev();
+    }
+
     // ================= HELP ARTICLES COLLECTION (for SEO sitemaps) =================
     match /help_articles/{articleId} {
       allow read: if true;

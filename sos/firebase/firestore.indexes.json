@@ -1,6 +1,15 @@
 {
   "indexes": [
     {
+      "__comment": "Index pour system_alerts - alertes non-acquittées triées par date",
+      "collectionGroup": "system_alerts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "acknowledged", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
       "__comment": "Index pour le debounce du trigger auto-sync prix Stripe",
       "collectionGroup": "stripe_sync_logs",
       "queryScope": "COLLECTION",

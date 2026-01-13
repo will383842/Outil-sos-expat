@@ -1208,7 +1208,7 @@ const Refunds: React.FC = () => {
               {intl.formatMessage({ id: 'admin.refunds.reasonAnalytics' })}
             </h3>
             <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <PieChart>
                   <Pie
                     data={reasonAnalytics}
