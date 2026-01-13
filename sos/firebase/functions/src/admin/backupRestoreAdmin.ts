@@ -396,6 +396,7 @@ function generateConfirmationCode(): string {
 /**
  * Génère un code de confirmation pour une restauration
  * L'admin doit retaper ce code pour confirmer la restauration
+ * @updated 2026-01-13 - Force redeploy
  */
 export const adminGetRestoreConfirmationCode = functions
   .region("europe-west1")
