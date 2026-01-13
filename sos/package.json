@@ -19,7 +19,7 @@
     "build:force": "vite build",
     "download-sitemaps": "node scripts/download-sitemaps.js",
     "build:with-sitemaps": "npm run download-sitemaps && npm run build",
-    "postbuild": "node scripts/copy-sitemaps-to-dist.js && react-snap",
+    "postbuild": "node scripts/postbuild.cjs",
     "dev:emulators": "firebase emulators:start --only firestore,functions,auth,storage",
     "dev:functions": "cd firebase/functions && npm run build:watch",
     "kill-emulators": "node scripts/kill-emulators.cjs",

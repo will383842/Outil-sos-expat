@@ -389,6 +389,10 @@
   "admin.adsAnalytics.help.lastTouchDesc": "A conversão é atribuída à última fonte antes da conversão (recomendado para campanhas publicitárias).",
   "admin.adsAnalytics.help.autoTracking": "Rastreamento automático:",
   "admin.adsAnalytics.help.autoTrackingDesc": "Os parâmetros UTM (utm_source, utm_campaign, etc.) e os Click IDs (fbclid, gclid, ttclid) são capturados automaticamente.",
+  "admin.adsAnalytics.help.firstTouchLabel": "Atribuição First-Touch:",
+  "admin.adsAnalytics.help.lastTouchLabel": "Atribuição Last-Touch:",
+  "admin.adsAnalytics.help.trackingLabel": "Rastreamento automático:",
+  "admin.adsAnalytics.help.trackingDesc": "Os parâmetros UTM (utm_source, utm_campaign, etc.) e os Click IDs (fbclid, gclid, ttclid) são capturados automaticamente.",
 
   "admin.adsAnalytics.contentType.title": "Desempenho por Tipo de Conteúdo",
   "admin.adsAnalytics.contentType.subtitle": "Analise o desempenho por formato de anúncio para otimizar seus criativos",
