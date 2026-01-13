@@ -12,6 +12,28 @@ import * as functions from "firebase-functions/v1";
 import * as admin from "firebase-admin";
 import { logger } from "firebase-functions";
 
+// CRITICAL: Lazy initialization to avoid deployment timeout
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
+}
+
+function getDb() {
+  ensureInitialized();
+  return admin.firestore();
+}
+
 // ============================================================================
 // CONFIGURATION - Rétention différenciée
 // ============================================================================
@@ -107,7 +129,7 @@ interface RestoreResult {
 // ============================================================================
 
 async function isAdmin(uid: string): Promise<boolean> {
-  const userDoc = await admin.firestore().collection("users").doc(uid).get();
+  const userDoc = await getDb().collection("users").doc(uid).get();
   const userData = userDoc.data();
   return userData?.role === "admin" || userData?.role === "dev";
 }
@@ -116,7 +138,7 @@ async function isAdmin(uid: string): Promise<boolean> {
  * Liste les backups Firestore disponibles
  */
 async function listFirestoreBackups(limit: number = 50): Promise<BackupInfo[]> {
-  const db = admin.firestore();
+  const db = getDb();
 
   const backups = await db
     .collection("backups")
@@ -144,7 +166,7 @@ async function listFirestoreBackups(limit: number = 50): Promise<BackupInfo[]> {
  * Liste les backups Auth disponibles
  */
 async function listAuthBackups(limit: number = 20): Promise<BackupInfo[]> {
-  const db = admin.firestore();
+  const db = getDb();
 
   const backups = await db
     .collection("auth_backups")
@@ -280,7 +302,7 @@ export const adminPreviewRestore = functions
     }
 
     try {
-      const db = admin.firestore();
+      const db = getDb();
 
       if (backupType === "firestore") {
         // Récupérer les infos du backup
@@ -390,7 +412,7 @@ export const adminGetRestoreConfirmationCode = functions
     const code = generateConfirmationCode();
 
     // Log la demande de code (pour audit)
-    const db = admin.firestore();
+    const db = getDb();
     await db.collection("admin_audit_logs").add({
       action: "RESTORE_CONFIRMATION_CODE_REQUESTED",
       adminId: context.auth.uid,
@@ -434,7 +456,7 @@ export const adminRestoreFirestore = functions
     }
 
     const { backupId, bucketPath, collections, confirmationCode, expectedCode, skipPreRestoreBackup } = data;
-    const db = admin.firestore();
+    const db = getDb();
 
     if (!backupId || !bucketPath) {
       throw new functions.https.HttpsError("invalid-argument", "backupId and bucketPath required");
@@ -614,7 +636,7 @@ export const adminCheckRestoreStatus = functions
     }
 
     try {
-      const db = admin.firestore();
+      const db = getDb();
 
       // Récupérer le document de tracking
       let trackingDoc;
@@ -696,7 +718,7 @@ export const adminRestoreAuth = functions
     }
 
     const { backupId, uids, dryRun = false } = data;
-    const db = admin.firestore();
+    const db = getDb();
     const storage = admin.storage().bucket();
     const startTime = Date.now();
 
@@ -825,7 +847,7 @@ export const adminCreateManualBackup = functions
     }
 
     const { includeAuth = false, description } = data;
-    const db = admin.firestore();
+    const db = getDb();
     const startTime = Date.now();
 
     try {
@@ -906,7 +928,7 @@ export const adminDeleteBackup = functions
     }
 
     const { backupId, backupType } = data;
-    const db = admin.firestore();
+    const db = getDb();
 
     try {
       const collection = backupType === "auth" ? "auth_backups" : "backups";
