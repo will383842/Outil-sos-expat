@@ -1,6 +1,6 @@
 import React from "react";
 import { Helmet } from "react-helmet-async";
-import { SUPPORTED_LANGUAGES, localeToPrefix } from "./HrefLangConstants";
+import { SUPPORTED_LANGUAGES, localeToPrefix, getHreflangCode } from "./HrefLangConstants";
 import { getRouteKeyFromSlug, getTranslatedRouteSlug } from "../../core/routing";
 
 interface Props {
@@ -67,22 +67,25 @@ const HreflangLinks: React.FC<Props> = ({ pathname }) => {
 
         const href = `${baseDomain}${newPath === "" ? "/" : newPath}`;
 
-        // hrefLang should be the language tag (if country present, include it)
-        const hrefLang = targetSeg.toLowerCase();
+        // hrefLang should be the ISO language tag (converts 'ch' to 'zh-Hans' for SEO)
+        const baseLang = getHreflangCode(prefix);
+        // Don't append country to script-based codes like 'zh-Hans' (would create invalid 'zh-Hans-fr')
+        // Valid formats: 'fr', 'fr-fr', 'zh-Hans' (not 'zh-Hans-fr')
+        const hasScript = baseLang.includes('-');
+        const hrefLang = (incomingCountry && !hasScript) ? `${baseLang}-${incomingCountry}` : baseLang;
 
         return <link key={loc} rel="alternate" hrefLang={hrefLang} href={href} />;
       })}
 
-      {/* x-default points to English */}
-      {/* x-default points to en-US */}
+      {/* x-default points to French (consistent with sitemaps) */}
       <link
         rel="alternate"
         hrefLang="x-default"
         href={(() => {
-          const defaultLang = "en";
-          const defaultSeg = `en-us`;
+          const defaultLang = "fr";
+          const defaultSeg = `fr-fr`;
 
-          // Build translated slug for english if we matched a route key
+          // Build translated slug for french if we matched a route key
           let translatedSlugSegments: string[] = [];
           if (matchedRouteKey) {
             const translated = getTranslatedRouteSlug(matchedRouteKey as any, defaultLang as any) || "";
