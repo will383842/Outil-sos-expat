@@ -16,6 +16,7 @@ const LANGUAGES = ['fr', 'en', 'de', 'es', 'pt', 'ru', 'ch', 'ar', 'hi'];
 
 // Convertit le code de langue interne vers le code hreflang standard
 function getHreflangCode(lang: string): string {
+  // 'ch' (convention interne) devient 'zh-Hans' pour le chinois simplifié
   return lang === 'ch' ? 'zh-Hans' : lang;
 }
 
@@ -67,28 +68,86 @@ export const sitemapProfiles = onRequest(
       snapshot.docs.forEach(doc => {
         const profile = doc.data();
 
-        if (!profile.slug) return;
+        // Utilise les slugs multilingues si disponibles
+        const slugs = profile.slugs as Record<string, string> | undefined;
+        const hasSlugs = slugs && typeof slugs === 'object' && Object.keys(slugs).length > 0;
 
-        const countryCode = profile.countryCode || profile.country || 'fr';
+        // Skip si pas de slugs multilingues ET pas de slug simple
+        if (!hasSlugs && !profile.slug) return;
 
-        LANGUAGES.forEach(lang => {
-          const url = `${SITE_URL}/${lang}-${countryCode}/${profile.slug}`;
+        // Pour les profils avec slugs multilingues (nouveau format)
+        if (hasSlugs) {
+          LANGUAGES.forEach(lang => {
+            const slug = slugs[lang];
+            if (!slug) return;
 
-          // Génère tous les hreflang en une seule opération
-          const hreflangs = LANGUAGES.map(hrefLang => {
-            const hrefUrl = `${SITE_URL}/${hrefLang}-${countryCode}/${profile.slug}`;
-            return `    <xhtml:link rel="alternate" hreflang="${getHreflangCode(hrefLang)}" href="${escapeXml(hrefUrl)}"/>`;
-          }).join('\n');
+            // Le slug contient déjà le chemin complet avec locale
+            // Ex: "fr-fr/avocat-thailand/julien-k7m2p9"
+            const url = `${SITE_URL}/${slug}`;
 
-          urlBlocks.push(`  <url>
+            // Génère tous les hreflang
+            const hreflangs = LANGUAGES.map(hrefLang => {
+              const hrefSlug = slugs[hrefLang];
+              if (!hrefSlug) return null;
+              return `    <xhtml:link rel="alternate" hreflang="${getHreflangCode(hrefLang)}" href="${escapeXml(`${SITE_URL}/${hrefSlug}`)}"/>`;
+            }).filter(Boolean).join('\n');
+
+            // x-default = français
+            const xDefaultSlug = slugs['fr'] || slug;
+            const xDefaultUrl = `${SITE_URL}/${xDefaultSlug}`;
+
+            urlBlocks.push(`  <url>
     <loc>${escapeXml(url)}</loc>
 ${hreflangs}
-    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(`${SITE_URL}/fr-${countryCode}/${profile.slug}`)}"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(xDefaultUrl)}"/>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <lastmod>${today}</lastmod>
   </url>`);
-        });
+          });
+        } else if (profile.slug) {
+          // Ancien format: slug unique (ex: "fr/expatrie-norvege/melissa-...")
+          // Le slug commence déjà par le code langue, utiliser tel quel
+          const legacySlug = profile.slug as string;
+
+          // Détecter la langue du slug (premier segment avant /)
+          const slugLang = legacySlug.split('/')[0];
+          const isValidLang = LANGUAGES.includes(slugLang);
+
+          if (isValidLang) {
+            // Le slug commence par une langue valide, utiliser tel quel
+            const url = `${SITE_URL}/${legacySlug}`;
+
+            // Pour les legacy slugs, on génère une seule URL avec hreflang pointant vers elle-même
+            urlBlocks.push(`  <url>
+    <loc>${escapeXml(url)}</loc>
+    <xhtml:link rel="alternate" hreflang="${getHreflangCode(slugLang)}" href="${escapeXml(url)}"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(url)}"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+    <lastmod>${today}</lastmod>
+  </url>`);
+          } else {
+            // Slug sans préfixe langue (très ancien format), ajouter le préfixe
+            const countryCode = (profile.countryCode || profile.country || 'fr') as string;
+            LANGUAGES.forEach(lang => {
+              const url = `${SITE_URL}/${lang}-${countryCode.toLowerCase()}/${legacySlug}`;
+
+              const hreflangs = LANGUAGES.map(hrefLang => {
+                return `    <xhtml:link rel="alternate" hreflang="${getHreflangCode(hrefLang)}" href="${escapeXml(`${SITE_URL}/${hrefLang}-${countryCode.toLowerCase()}/${legacySlug}`)}"/>`;
+              }).join('\n');
+
+              urlBlocks.push(`  <url>
+    <loc>${escapeXml(url)}</loc>
+${hreflangs}
+    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(`${SITE_URL}/fr-${countryCode.toLowerCase()}/${legacySlug}`)}"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+    <lastmod>${today}</lastmod>
+  </url>`);
+            });
+          }
+        }
       });
 
       urlBlocks.push(`</urlset>`);

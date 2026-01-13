@@ -8,10 +8,9 @@
  * @version 1.0.0
  */
 
-import * as functions from 'firebase-functions/v1';
+import { onRequest } from 'firebase-functions/v2/https';
+import * as logger from 'firebase-functions/logger';
 import type { Request, Response } from 'express';
-import type { Change } from 'firebase-functions';
-import type { DocumentSnapshot } from 'firebase-admin/firestore';
 
 // Lazy-loaded modules to avoid deployment timeout
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -121,12 +120,15 @@ function cacheHtml(path: string, html: string): void {
  */
 async function renderPage(url: string): Promise<string> {
   // Lazy load puppeteer and chromium to avoid deployment timeout
+  logger.info('Loading Puppeteer modules...');
   if (!puppeteer) {
     puppeteer = await import('puppeteer-core');
+    logger.info('Puppeteer loaded');
   }
   if (!chromium) {
     const chromiumModule = await import('@sparticuz/chromium');
     chromium = chromiumModule.default;
+    logger.info('Chromium loaded');
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -134,13 +136,18 @@ async function renderPage(url: string): Promise<string> {
 
   try {
     // Launch browser with chromium binary
+    logger.info('Getting Chromium executable path...');
     const execPath = await chromium.executablePath();
+    logger.info('Chromium path:', { execPath });
+
+    logger.info('Launching browser...');
     browser = await puppeteer.launch({
-      args: chromium.args,
+      args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox'],
       defaultViewport: { width: 1280, height: 800 },
       executablePath: execPath,
       headless: true,
     });
+    logger.info('Browser launched successfully');
 
     const page = await browser.newPage();
 
@@ -152,20 +159,26 @@ async function renderPage(url: string): Promise<string> {
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     );
 
-    // Navigate to the page
+    // Navigate to the page - use networkidle2 to wait for async data loading
     await page.goto(url, {
-      waitUntil: 'networkidle0',
+      waitUntil: 'networkidle2',
       timeout: RENDER_TIMEOUT_MS,
     });
 
-    // Wait for React to finish rendering
+    // Wait for React to finish rendering - try multiple selectors
     try {
-      await page.waitForSelector('[data-react-snap-ready="true"]', {
-        timeout: WAIT_FOR_READY_TIMEOUT_MS,
-      });
+      // Wait for either the profile content, not-found state, or a ready marker
+      await Promise.race([
+        page.waitForSelector('[data-react-snap-ready="true"]', { timeout: WAIT_FOR_READY_TIMEOUT_MS }),
+        page.waitForSelector('[data-provider-loaded="true"]', { timeout: WAIT_FOR_READY_TIMEOUT_MS }),
+        page.waitForSelector('[data-provider-not-found="true"]', { timeout: WAIT_FOR_READY_TIMEOUT_MS }),
+        page.waitForSelector('.provider-profile-name', { timeout: WAIT_FOR_READY_TIMEOUT_MS }),
+        page.waitForSelector('h1', { timeout: WAIT_FOR_READY_TIMEOUT_MS }),
+      ]);
     } catch {
-      // If the selector doesn't appear, wait a bit more
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // If no selector appears, wait longer for dynamic content
+      logger.info('No ready selector found, waiting for dynamic content...');
+      await new Promise(resolve => setTimeout(resolve, 8000));
     }
 
     // Get the rendered HTML
@@ -188,13 +201,15 @@ async function renderPage(url: string): Promise<string> {
  * 3. If a bot, renders the page with Puppeteer and returns the HTML
  * 4. Caches rendered HTML for 24 hours
  */
-export const renderForBots = functions
-  .region('europe-west1')
-  .runWith({
-    memory: '1GB',
-    timeoutSeconds: 60,
-  })
-  .https.onRequest(async (req: Request, res: Response) => {
+export const renderForBotsV2 = onRequest(
+  {
+    region: 'europe-west1',
+    memory: '2GiB',
+    timeoutSeconds: 120,
+    minInstances: 0,
+    maxInstances: 10,
+  },
+  async (req: Request, res: Response) => {
     // Helper to get first value from header (can be string or string[])
     const getHeader = (name: string): string => {
       const val = req.headers[name];
@@ -217,7 +232,7 @@ export const renderForBots = functions
     const isBotRequest = isBot(userAgent) || !!botName;
 
     // Log for debugging
-    functions.logger.info('Dynamic render request', {
+    logger.info('Dynamic render request', {
       path: requestPath,
       fullUrl,
       userAgent: userAgent.substring(0, 100),
@@ -234,7 +249,7 @@ export const renderForBots = functions
     // Check cache first
     const cachedHtml = getCachedHtml(requestPath);
     if (cachedHtml) {
-      functions.logger.info('Serving cached HTML', { path: requestPath });
+      logger.info('Serving cached HTML', { path: requestPath });
       res.set('Content-Type', 'text/html; charset=utf-8');
       res.set('X-Prerender-Cache', 'HIT');
       res.set('Cache-Control', 'public, max-age=86400'); // 24 hours
@@ -244,7 +259,7 @@ export const renderForBots = functions
 
     try {
       // Render the page
-      functions.logger.info('Rendering page with Puppeteer', { url: fullUrl });
+      logger.info('Rendering page with Puppeteer', { url: fullUrl });
       const html = await renderPage(fullUrl);
 
       // Cache the result
@@ -256,9 +271,15 @@ export const renderForBots = functions
       res.set('Cache-Control', 'public, max-age=86400'); // 24 hours
       res.send(html);
 
-      functions.logger.info('Page rendered successfully', { path: requestPath });
+      logger.info('Page rendered successfully', { path: requestPath });
     } catch (error) {
-      functions.logger.error('Error rendering page', { path: requestPath, error });
+      const err = error as Error;
+      logger.error('Error rendering page', {
+        path: requestPath,
+        errorMessage: err.message,
+        errorStack: err.stack,
+        errorName: err.name,
+      });
 
       // On error, redirect to the normal site
       // Bots will see the JS-rendered version which is better than nothing
@@ -267,100 +288,80 @@ export const renderForBots = functions
   });
 
 /**
- * Invalidate cache when a provider profile is updated
- *
- * This trigger clears the cache for all language versions of a provider's profile
- * when their data changes in Firestore.
+ * Invalidate cache for specific paths or patterns
+ * Used when content is updated (profile, blog, etc.)
  */
-export const invalidateProviderCache = functions
-  .region('europe-west1')
-  .firestore.document('providers/{providerId}')
-  .onUpdate(async (change: Change<DocumentSnapshot>) => {
-    const afterData = change.after.data();
-    const slug = afterData?.slug;
+export function invalidateCache(pathPattern?: string): number {
+  if (!pathPattern) {
+    // Clear all cache
+    const size = htmlCache.size;
+    htmlCache.clear();
+    logger.info('Cache cleared completely', { entriesRemoved: size });
+    return size;
+  }
 
-    if (!slug) {
+  // Clear entries matching pattern
+  let removed = 0;
+  for (const [path] of htmlCache) {
+    if (path.includes(pathPattern)) {
+      htmlCache.delete(path);
+      removed++;
+    }
+  }
+  logger.info('Cache invalidated for pattern', { pattern: pathPattern, entriesRemoved: removed });
+  return removed;
+}
+
+/**
+ * HTTP endpoint to invalidate cache
+ * Called by Firestore triggers when content is updated
+ */
+export const invalidateCacheEndpoint = onRequest(
+  {
+    region: 'europe-west1',
+    memory: '256MiB',
+    timeoutSeconds: 30,
+    minInstances: 0,
+    maxInstances: 5,
+  },
+  async (req: Request, res: Response) => {
+    // Only allow POST requests
+    if (req.method !== 'POST') {
+      res.status(405).json({ error: 'Method not allowed' });
       return;
     }
 
-    // List of all locale prefixes to invalidate
-    const locales = [
-      'fr-fr', 'fr-be', 'fr-ch', 'fr-ca', 'fr-ma',
-      'en-us', 'en-gb', 'en-au', 'en-ca',
-      'es-es', 'es-mx', 'es-ar',
-      'de-de', 'de-at', 'de-ch',
-      'pt-pt', 'pt-br',
-      'ru-ru',
-      'zh-cn', 'zh-tw',
-      'ar-sa', 'ar-ae',
-      'hi-in',
-    ];
+    // Simple auth check via header (should match a secret)
+    const authHeader = req.headers['x-cache-invalidation-key'];
+    const expectedKey = process.env.CACHE_INVALIDATION_KEY || 'sos-expat-cache-key-2024';
 
-    // Clear cache for all locale versions
-    let clearedCount = 0;
-    for (const locale of locales) {
-      // Try common patterns for provider URLs
-      const patterns = [
-        `/${locale}/avocat/${slug}`,
-        `/${locale}/lawyers/${slug}`,
-        `/${locale}/expat/${slug}`,
-        `/${locale}/expats/${slug}`,
-        `/${locale}/abogados/${slug}`,
-        `/${locale}/advogados/${slug}`,
-        `/${locale}/anwaelte/${slug}`,
-      ];
+    if (authHeader !== expectedKey) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
 
-      for (const pattern of patterns) {
-        if (htmlCache.has(pattern)) {
-          htmlCache.delete(pattern);
-          clearedCount++;
+    const { paths, pattern, clearAll } = req.body as {
+      paths?: string[];
+      pattern?: string;
+      clearAll?: boolean;
+    };
+
+    let totalRemoved = 0;
+
+    if (clearAll) {
+      totalRemoved = invalidateCache();
+    } else if (pattern) {
+      totalRemoved = invalidateCache(pattern);
+    } else if (paths && Array.isArray(paths)) {
+      for (const path of paths) {
+        if (htmlCache.has(path)) {
+          htmlCache.delete(path);
+          totalRemoved++;
         }
       }
     }
 
-    if (clearedCount > 0) {
-      functions.logger.info('Invalidated provider cache', {
-        providerId: change.after.id,
-        slug,
-        clearedEntries: clearedCount,
-      });
-    }
-  });
-
-/**
- * Manual cache invalidation endpoint
- *
- * Use this to clear specific paths from the cache.
- * Protected by Firebase Functions admin authentication.
- */
-export const invalidateCache = functions
-  .region('europe-west1')
-  .https.onCall(async (data: { path?: string; clearAll?: boolean }, context: functions.https.CallableContext) => {
-    // Require admin authentication
-    if (!context.auth || !context.auth.token.admin) {
-      throw new functions.https.HttpsError(
-        'permission-denied',
-        'Only admins can invalidate cache'
-      );
-    }
-
-    const { path, clearAll } = data;
-
-    if (clearAll) {
-      const size = htmlCache.size;
-      htmlCache.clear();
-      return { success: true, message: `Cleared all ${size} cache entries` };
-    }
-
-    if (path) {
-      const deleted = htmlCache.delete(path);
-      return {
-        success: true,
-        message: deleted
-          ? `Cleared cache for ${path}`
-          : `No cache entry found for ${path}`,
-      };
-    }
-
-    return { success: false, message: 'Provide either path or clearAll=true' };
-  });
+    logger.info('Cache invalidation completed', { totalRemoved, paths, pattern, clearAll });
+    res.json({ success: true, entriesRemoved: totalRemoved });
+  }
+);

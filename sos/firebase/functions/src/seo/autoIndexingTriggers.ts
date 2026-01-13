@@ -7,6 +7,8 @@ import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/fire
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { submitToIndexNow, generateBlogUrls, generateLandingUrls } from './indexNowService';
 import { pingSitemap, pingCustomSitemap } from './sitemapPingService';
+import { submitBatchToGoogleIndexing } from './googleIndexingService';
+import { invalidateCache } from './dynamicRender';
 import * as admin from 'firebase-admin';
 
 const REGION = 'europe-west1';
@@ -57,14 +59,21 @@ export const onProfileCreated = onDocumentCreated(
 
     // 1. Soumettre à IndexNow (Bing/Yandex) - instantané
     const indexNowResult = await submitToIndexNow(urls);
-    
-    // 2. Ping sitemap (Google) - rapide
+
+    // 2. Soumettre à Google Indexing API (max 10 URLs pour préserver quota)
+    const googleResult = await submitBatchToGoogleIndexing(urls.slice(0, 10), 10);
+
+    // 3. Ping sitemap (Google fallback) - rapide
     await pingSitemap();
 
-    // 3. Logger le résultat
-    await logIndexingEvent('profile', profileId, urls, indexNowResult);
+    // 4. Logger le résultat
+    await logIndexingEvent('profile', profileId, urls, {
+      ...indexNowResult,
+      googleSuccess: googleResult.successCount,
+      googleErrors: googleResult.errorCount,
+    });
 
-    console.log(`✅ Indexation lancée pour profil ${profileId}`);
+    console.log(`✅ Indexation lancée pour profil ${profileId} (IndexNow: ${indexNowResult.success}, Google: ${googleResult.successCount}/${urls.slice(0, 10).length})`);
   }
 );
 
@@ -85,6 +94,18 @@ export const onProfileUpdated = onDocumentUpdated(
 
     if (!before || !after) return;
 
+    // Invalider le cache SSR pour ce profil (toutes les langues)
+    const slugs = after.slugs as Record<string, string> | undefined;
+    if (slugs) {
+      Object.values(slugs).forEach(slug => {
+        if (slug) invalidateCache(slug);
+      });
+      console.log(`🗑️ Cache SSR invalidé pour profil ${profileId}`);
+    } else if (after.slug) {
+      invalidateCache(after.slug as string);
+      console.log(`🗑️ Cache SSR invalidé pour profil ${profileId} (legacy slug)`);
+    }
+
     // Vérifier si le profil vient d'être publié
     const wasHidden = !before.isVisible || !before.isApproved;
     const isNowPublic = after.isVisible && after.isApproved;
@@ -93,11 +114,19 @@ export const onProfileUpdated = onDocumentUpdated(
       console.log(`📤 Profil ${profileId} vient d'être publié, indexation...`);
 
       const urls = generateProfileUrlsFromData(after);
-      
+
       if (urls.length > 0) {
-        await submitToIndexNow(urls);
+        // Soumettre en parallèle à IndexNow et Google
+        const [indexNowResult, googleResult] = await Promise.all([
+          submitToIndexNow(urls),
+          submitBatchToGoogleIndexing(urls.slice(0, 10), 10),
+        ]);
         await pingSitemap();
-        await logIndexingEvent('profile_published', profileId, urls, { success: true, urls });
+        await logIndexingEvent('profile_published', profileId, urls, {
+          success: indexNowResult.success,
+          urls,
+          googleSuccess: googleResult.successCount,
+        });
       }
     }
   }
@@ -133,11 +162,19 @@ export const onBlogPostCreated = onDocumentCreated(
 
     console.log(`🔗 URLs blog à indexer: ${urls.length}`);
 
-    await submitToIndexNow(urls);
+    // Soumettre en parallèle à IndexNow et Google
+    const [indexNowResult, googleResult] = await Promise.all([
+      submitToIndexNow(urls),
+      submitBatchToGoogleIndexing(urls, 9), // 9 langues = 9 URLs max
+    ]);
     await pingSitemap();
-    await logIndexingEvent('blog', postId, urls, { success: true, urls });
+    await logIndexingEvent('blog', postId, urls, {
+      success: indexNowResult.success,
+      urls,
+      googleSuccess: googleResult.successCount,
+    });
 
-    console.log(`✅ Article de blog ${postId} indexé`);
+    console.log(`✅ Article de blog ${postId} indexé (Google: ${googleResult.successCount}/${urls.length})`);
   }
 );
 
@@ -170,6 +207,92 @@ export const onBlogPostUpdated = onDocumentUpdated(
       await submitToIndexNow(urls);
       await pingSitemap();
       await logIndexingEvent('blog_published', postId, urls, { success: true, urls });
+    }
+  }
+);
+
+// ============================================
+// 📚 TRIGGER: Nouvel article du Centre d'aide créé
+// ============================================
+export const onHelpArticleCreated = onDocumentCreated(
+  {
+    document: 'help_articles/{articleId}',
+    region: REGION,
+    memory: '256MiB',
+    timeoutSeconds: 60,
+  },
+  async (event) => {
+    const snapshot = event.data;
+    if (!snapshot) return;
+
+    const article = snapshot.data();
+    const articleId = event.params.articleId;
+
+    console.log(`📚 Nouvel article centre d'aide: ${articleId}`);
+
+    // Vérifier que l'article est publié
+    if (!article.isPublished && article.status !== 'published') {
+      console.log('⏭️ Article non publié, indexation différée');
+      return;
+    }
+
+    const slug = article.slug || articleId;
+    const urls = generateHelpCenterUrls(slug);
+
+    console.log(`🔗 URLs help center à indexer: ${urls.length}`);
+
+    // Soumettre en parallèle à IndexNow et Google
+    const [indexNowResult, googleResult] = await Promise.all([
+      submitToIndexNow(urls),
+      submitBatchToGoogleIndexing(urls, 9),
+    ]);
+    await pingSitemap();
+    await logIndexingEvent('help_article', articleId, urls, {
+      success: indexNowResult.success,
+      urls,
+      googleSuccess: googleResult.successCount,
+    });
+
+    console.log(`✅ Article centre d'aide ${articleId} indexé (Google: ${googleResult.successCount}/${urls.length})`);
+  }
+);
+
+// ============================================
+// 📚 TRIGGER: Article du Centre d'aide publié
+// ============================================
+export const onHelpArticleUpdated = onDocumentUpdated(
+  {
+    document: 'help_articles/{articleId}',
+    region: REGION,
+    memory: '256MiB',
+    timeoutSeconds: 60,
+  },
+  async (event) => {
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+    const articleId = event.params.articleId;
+
+    if (!before || !after) return;
+
+    const wasUnpublished = !before.isPublished && before.status !== 'published';
+    const isNowPublished = after.isPublished || after.status === 'published';
+
+    if (wasUnpublished && isNowPublished) {
+      console.log(`📚 Article centre d'aide ${articleId} vient d'être publié`);
+
+      const slug = after.slug || articleId;
+      const urls = generateHelpCenterUrls(slug);
+
+      const [indexNowResult, googleResult] = await Promise.all([
+        submitToIndexNow(urls),
+        submitBatchToGoogleIndexing(urls, 9),
+      ]);
+      await pingSitemap();
+      await logIndexingEvent('help_article_published', articleId, urls, {
+        success: indexNowResult.success,
+        urls,
+        googleSuccess: googleResult.successCount,
+      });
     }
   }
 );
@@ -250,23 +373,73 @@ export const scheduledSitemapPing = onSchedule(
 
 /**
  * Génère les URLs pour un profil à partir des données Firestore
+ * Supporte les slugs multilingues (nouveau format) et le slug simple (legacy)
  */
 function generateProfileUrlsFromData(profile: any): string[] {
   const urls: string[] = [];
-  
-  if (!profile.slug) {
+
+  // Préfère les slugs multilingues si disponibles
+  const slugs = profile.slugs as Record<string, string> | undefined;
+  const hasSlugs = slugs && typeof slugs === 'object' && Object.keys(slugs).length > 0;
+
+  // Skip si ni slugs multilingues ni slug simple
+  if (!hasSlugs && !profile.slug) {
     return urls;
   }
 
-  // Le slug contient déjà le chemin complet
-  // Format: avocat/ca/francais/mark-m-xxx
-  LANGUAGES.forEach(lang => {
-    const countryCode = profile.countryCode || profile.country || 'fr';
-    const url = `${SITE_URL}/${lang}-${countryCode}/${profile.slug}`;
-    urls.push(url);
-  });
+  // Nouveau format avec slugs multilingues
+  if (hasSlugs) {
+    LANGUAGES.forEach(lang => {
+      const slug = slugs[lang];
+      if (slug) {
+        // Le slug contient déjà le chemin complet avec locale
+        // Ex: "fr-fr/avocat-thailand/julien-k7m2p9"
+        urls.push(`${SITE_URL}/${slug}`);
+      }
+    });
+  } else if (profile.slug) {
+    // Ancien format: slug unique
+    const legacySlug = profile.slug as string;
+
+    // Détecter si le slug commence par un code langue valide
+    const slugLang = legacySlug.split('/')[0];
+    const isValidLang = LANGUAGES.includes(slugLang);
+
+    if (isValidLang) {
+      // Le slug commence par une langue, utiliser tel quel
+      urls.push(`${SITE_URL}/${legacySlug}`);
+    } else {
+      // Slug sans préfixe langue, ajouter le préfixe pour chaque langue
+      const countryCode = (profile.countryCode || profile.country || 'fr') as string;
+      LANGUAGES.forEach(lang => {
+        urls.push(`${SITE_URL}/${lang}-${countryCode.toLowerCase()}/${legacySlug}`);
+      });
+    }
+  }
 
   return urls;
+}
+
+/**
+ * Génère les URLs pour un article du Centre d'aide (9 langues)
+ * Utilise les slugs traduits des routes
+ */
+function generateHelpCenterUrls(slug: string): string[] {
+  const helpCenterSlugs: Record<string, string> = {
+    fr: 'centre-aide',
+    en: 'help-center',
+    de: 'hilfe-center',
+    es: 'centro-ayuda',
+    pt: 'centro-ajuda',
+    ru: 'centr-pomoshi',
+    ch: 'bangzhu-zhongxin',
+    ar: 'markaz-almusaeada',
+    hi: 'sahayata-kendra',
+  };
+
+  return LANGUAGES.map(lang =>
+    `${SITE_URL}/${lang}/${helpCenterSlugs[lang] || 'help-center'}/${slug}`
+  );
 }
 
 /**

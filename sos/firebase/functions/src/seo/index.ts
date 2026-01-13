@@ -9,6 +9,8 @@ export {
   onProfileUpdated,
   onBlogPostCreated,
   onBlogPostUpdated,
+  onHelpArticleCreated,
+  onHelpArticleUpdated,
   onLandingPageCreated,
   scheduledSitemapPing,
 } from './autoIndexingTriggers';
@@ -23,3 +25,13 @@ export {
 // Services (pour usage interne ou API)
 export { submitToIndexNow, submitSingleUrl } from './indexNowService';
 export { pingSitemap, pingCustomSitemap } from './sitemapPingService';
+export { submitToGoogleIndexing, submitBatchToGoogleIndexing, getUrlIndexingStatus } from './googleIndexingService';
+
+// Dynamic rendering for bots (SEO pre-rendering)
+export { renderForBotsV2, invalidateCacheEndpoint, invalidateCache } from './dynamicRender';
+
+// Migration tool for fixing profile slugs
+export { migrateProfileSlugs } from './migrateProfileSlugs';
+
+// Diagnostic tool
+export { diagnoseProfiles } from './diagnoseProfiles';
