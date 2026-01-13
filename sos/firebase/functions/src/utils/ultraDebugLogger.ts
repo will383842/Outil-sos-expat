@@ -15,11 +15,12 @@ const IS_LOCAL =
 
 // Désactiver les logs verbeux pendant le déploiement (quand Firebase analyse le code)
 // Firebase CLI lance le code pour analyser les exports mais sans K_REVISION ni K_SERVICE
-// CRITICAL: Cette detection doit etre la plus permissive possible pour eviter les timeouts
+// CRITICAL: Toutes les variables doivent être absentes pour confirmer l'analyse de déploiement
 const IS_DEPLOYMENT_ANALYSIS =
-  !process.env.K_REVISION ||  // Pas sur Cloud Run
-  !process.env.K_SERVICE ||   // Pas de service Cloud Run
-  !process.env.FUNCTION_TARGET; // Pas de fonction cible (analyse statique)
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
 
 interface DebugLogEntry {
   timestamp: string;
