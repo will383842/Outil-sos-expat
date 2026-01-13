@@ -241,6 +241,7 @@ class UltraDebugLogger {
   }
 
   info(source: string, message: string, data?: any) {
+    if (IS_DEPLOYMENT_ANALYSIS) return; // Skip during deployment
     const entry = this.createLogEntry('INFO', source, message, data);
     this.logs.push(entry);
     this.logToConsole(entry);
@@ -248,6 +249,7 @@ class UltraDebugLogger {
   }
 
   warn(source: string, message: string, data?: any) {
+    if (IS_DEPLOYMENT_ANALYSIS) return; // Skip during deployment
     const entry = this.createLogEntry('WARN', source, message, data);
     this.logs.push(entry);
     this.logToConsole(entry);
@@ -255,6 +257,7 @@ class UltraDebugLogger {
   }
 
   error(source: string, message: string, data?: any, error?: Error) {
+    if (IS_DEPLOYMENT_ANALYSIS) return; // Skip during deployment
     const stack = error?.stack || new Error().stack;
     const entry = this.createLogEntry('ERROR', source, message, data, stack);
     this.logs.push(entry);
@@ -263,6 +266,7 @@ class UltraDebugLogger {
   }
 
   debug(source: string, message: string, data?: any) {
+    if (IS_DEPLOYMENT_ANALYSIS) return; // Skip during deployment
     const entry = this.createLogEntry('DEBUG', source, message, data);
     this.logs.push(entry);
     this.logToConsole(entry);
@@ -270,6 +274,7 @@ class UltraDebugLogger {
   }
 
   trace(source: string, message: string, data?: any) {
+    if (IS_DEPLOYMENT_ANALYSIS) return; // Skip during deployment
     const stack = new Error().stack;
     const entry = this.createLogEntry('TRACE', source, message, data, stack);
     this.logs.push(entry);
@@ -319,6 +324,7 @@ class UltraDebugLogger {
 
   // Méthode pour tracer les imports de modules
   traceImport(moduleName: string, fromFile: string) {
+    if (IS_DEPLOYMENT_ANALYSIS) return; // Skip during deployment
     this.trace('MODULE_IMPORT', `Import de ${moduleName}`, {
       module: moduleName,
       from: fromFile,
@@ -328,6 +334,7 @@ class UltraDebugLogger {
 
   // Méthode pour tracer les initialisations
   traceInit(componentName: string, data?: any) {
+    if (IS_DEPLOYMENT_ANALYSIS) return; // Skip during deployment
     this.info('COMPONENT_INIT', `Initialisation de ${componentName}`, {
       component: componentName,
       data,
