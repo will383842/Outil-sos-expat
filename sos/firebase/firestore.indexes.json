@@ -1,6 +1,15 @@
 {
   "indexes": [
     {
+      "__comment": "Index pour ai_call_logs - monitoring usage par provider",
+      "collectionGroup": "ai_call_logs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "provider", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
+      ]
+    },
+    {
       "__comment": "Index pour system_alerts - alertes non-acquittées triées par date",
       "collectionGroup": "system_alerts",
       "queryScope": "COLLECTION",
