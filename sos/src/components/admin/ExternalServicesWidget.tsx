@@ -92,6 +92,9 @@ const DEFAULT_THRESHOLDS = {
   firebase: { warning: 200, critical: 500 }, // Cout estime
 };
 
+// Liste fixe des cles de services (en dehors du composant pour eviter la boucle infinie)
+const SERVICE_KEYS = ['twilio', 'openai', 'anthropic', 'perplexity', 'stripe', 'firebase'] as const;
+
 // Composant carte de service
 const ServiceCard: React.FC<{
   service: ServiceBalance;
@@ -542,7 +545,7 @@ const ExternalServicesWidget: React.FC<ExternalServicesWidgetProps> = ({
     setIsRefreshing(true);
 
     // Reset tous les services en loading
-    Object.keys(services).forEach((key) => {
+    SERVICE_KEYS.forEach((key) => {
       updateService(key, { status: 'loading' });
     });
 
@@ -561,7 +564,6 @@ const ExternalServicesWidget: React.FC<ExternalServicesWidgetProps> = ({
       setLastUpdated(new Date());
     }
   }, [
-    services,
     updateService,
     fetchTwilioBalance,
     fetchOpenAIUsage,
@@ -571,15 +573,27 @@ const ExternalServicesWidget: React.FC<ExternalServicesWidgetProps> = ({
     fetchFirebaseUsage,
   ]);
 
-  // Chargement initial et auto-refresh
+  // Ref pour stocker la derniere version de refreshAllServices
+  const refreshAllServicesRef = useRef(refreshAllServices);
+
+  // Mettre a jour la ref quand la fonction change
+  useEffect(() => {
+    refreshAllServicesRef.current = refreshAllServices;
+  }, [refreshAllServices]);
+
+  // Chargement initial et auto-refresh (sans dependance sur refreshAllServices)
   useEffect(() => {
     mountedRef.current = true;
 
-    refreshAllServices();
+    // Appel initial unique
+    refreshAllServicesRef.current();
 
     let intervalId: NodeJS.Timeout | undefined;
     if (autoRefresh) {
-      intervalId = setInterval(refreshAllServices, refreshInterval);
+      // Utiliser la ref pour l'interval
+      intervalId = setInterval(() => {
+        refreshAllServicesRef.current();
+      }, refreshInterval);
     }
 
     return () => {
@@ -588,7 +602,7 @@ const ExternalServicesWidget: React.FC<ExternalServicesWidgetProps> = ({
         clearInterval(intervalId);
       }
     };
-  }, [autoRefresh, refreshInterval, refreshAllServices]);
+  }, [autoRefresh, refreshInterval]); // Plus de dependance sur refreshAllServices!
 
   // Compter les alertes
   const alertCount = Object.values(services).filter(

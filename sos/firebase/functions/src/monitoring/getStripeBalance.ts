@@ -4,13 +4,13 @@
  * Fetches the platform Stripe balance for monitoring purposes.
  * Includes available, pending, and Connect reserved amounts.
  *
- * @version 1.0.0
+ * @version 1.1.0
  * @admin-only This function is reserved for administrators
  */
 
-import * as functions from 'firebase-functions/v1';
+import * as functions from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
-import { logger } from 'firebase-functions';
+import * as logger from 'firebase-functions/logger';
 import Stripe from 'stripe';
 import {
   STRIPE_SECRET_KEY_LIVE,
@@ -81,33 +81,33 @@ function formatBalanceAmounts(amounts: Stripe.Balance.Available[] | Stripe.Balan
  *
  * @returns StripeBalanceResponse - Object containing all balance information
  */
-export const getStripeBalance = functions
-  .region('europe-west1')
-  .runWith({
-    memory: '256MB',
+export const getStripeBalance = functions.onCall(
+  {
+    region: 'europe-west1',
+    memory: '256MiB',
     timeoutSeconds: 30,
     secrets: [STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST],
-  })
-  .https.onCall(async (_data, context): Promise<StripeBalanceResponse> => {
+  },
+  async (request): Promise<StripeBalanceResponse> => {
     // Authentication check
-    if (!context.auth) {
-      throw new functions.https.HttpsError(
+    if (!request.auth) {
+      throw new functions.HttpsError(
         'unauthenticated',
         'Authentication required'
       );
     }
 
     // Admin verification
-    const isAdmin = await verifyAdminAccess(context.auth.uid);
+    const isAdmin = await verifyAdminAccess(request.auth.uid);
     if (!isAdmin) {
-      throw new functions.https.HttpsError(
+      throw new functions.HttpsError(
         'permission-denied',
         'Admin access required'
       );
     }
 
     logger.info('[StripeBalance] Fetching Stripe balance', {
-      uid: context.auth.uid,
+      uid: request.auth.uid,
       mode: getStripeMode(),
     });
 
@@ -117,7 +117,7 @@ export const getStripeBalance = functions
 
       if (!stripeSecretKey) {
         logger.error('[StripeBalance] Stripe secret key not found');
-        throw new functions.https.HttpsError(
+        throw new functions.HttpsError(
           'failed-precondition',
           'Stripe configuration not found'
         );
@@ -151,19 +151,20 @@ export const getStripeBalance = functions
       logger.error('[StripeBalance] Error fetching balance:', error);
 
       if (error instanceof Stripe.errors.StripeError) {
-        throw new functions.https.HttpsError(
+        throw new functions.HttpsError(
           'internal',
           `Stripe API error: ${error.message}`
         );
       }
 
-      if (error instanceof functions.https.HttpsError) {
+      if (error instanceof functions.HttpsError) {
         throw error;
       }
 
-      throw new functions.https.HttpsError(
+      throw new functions.HttpsError(
         'internal',
         'Failed to fetch Stripe balance'
       );
     }
-  });
+  }
+);

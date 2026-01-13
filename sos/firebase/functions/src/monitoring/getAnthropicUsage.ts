@@ -9,13 +9,13 @@
  * - Input/Output token usage
  * - Estimated cost based on Claude 3.5 Sonnet pricing
  *
- * @version 1.0.0
+ * @version 1.1.0
  * @admin-only This function is reserved for administrators
  */
 
-import * as functions from 'firebase-functions/v1';
+import * as functions from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
-import { logger } from 'firebase-functions';
+import * as logger from 'firebase-functions/logger';
 
 // ============================================================================
 // TYPES
@@ -126,32 +126,34 @@ function calculateEstimatedCost(inputTokens: number, outputTokens: number): numb
  * @param data.periodDays - Number of days to analyze (default: 30 for current month)
  * @returns AnthropicUsageResponse - Usage metrics and estimated cost
  */
-export const getAnthropicUsage = functions
-  .region('europe-west1')
-  .runWith({
-    memory: '256MB',
+export const getAnthropicUsage = functions.onCall(
+  {
+    region: 'europe-west1',
+    memory: '256MiB',
     timeoutSeconds: 60,
-  })
-  .https.onCall(async (data: AnthropicUsageInput, context): Promise<AnthropicUsageResponse> => {
+  },
+  async (request): Promise<AnthropicUsageResponse> => {
     // Authentication check
-    if (!context.auth) {
-      throw new functions.https.HttpsError(
+    if (!request.auth) {
+      throw new functions.HttpsError(
         'unauthenticated',
         'Authentication required'
       );
     }
 
     // Admin verification
-    const isAdmin = await verifyAdminAccess(context.auth.uid);
+    const isAdmin = await verifyAdminAccess(request.auth.uid);
     if (!isAdmin) {
-      throw new functions.https.HttpsError(
+      throw new functions.HttpsError(
         'permission-denied',
         'Admin access required'
       );
     }
 
+    const data = request.data as AnthropicUsageInput | undefined;
+
     logger.info('[AnthropicUsage] Fetching Anthropic usage metrics', {
-      uid: context.auth.uid,
+      uid: request.auth.uid,
       periodDays: data?.periodDays || 30
     });
 
@@ -191,9 +193,10 @@ export const getAnthropicUsage = functions
       return response;
     } catch (error) {
       logger.error('[AnthropicUsage] Error fetching usage metrics:', error);
-      throw new functions.https.HttpsError(
+      throw new functions.HttpsError(
         'internal',
         'Failed to fetch Anthropic usage metrics'
       );
     }
-  });
+  }
+);

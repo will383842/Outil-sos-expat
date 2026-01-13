@@ -10,6 +10,33 @@
       ]
     },
     {
+      "__comment": "Index pour system_logs - type + createdAt (cleanup logs)",
+      "collectionGroup": "system_logs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "type", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "__comment": "Index pour system_logs - type + createdAt DESC (storage_stats, backup)",
+      "collectionGroup": "system_logs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "type", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "__comment": "Index pour system_logs - executionTimeMs + createdAt",
+      "collectionGroup": "system_logs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "createdAt", "order": "ASCENDING" },
+        { "fieldPath": "executionTimeMs", "order": "ASCENDING" }
+      ]
+    },
+    {
       "__comment": "Index pour system_alerts - alertes non-acquittées triées par date",
       "collectionGroup": "system_alerts",
       "queryScope": "COLLECTION",
