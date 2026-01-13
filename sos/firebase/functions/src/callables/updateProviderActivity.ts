@@ -1,6 +1,23 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 
+// Lazy initialization to avoid issues during deployment analysis
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
+}
+
 
 
 export const updateProviderActivity = onCall(async (request) => {
@@ -15,9 +32,7 @@ export const updateProviderActivity = onCall(async (request) => {
   const userId = request.auth.uid;
 
   // Ensure Firebase Admin is initialized
-  if (!admin.apps.length) {
-    admin.initializeApp();
-  }
+  ensureInitialized();
 
   // Initialize Firestore inside the function context to ensure app is ready
   const db = admin.firestore();

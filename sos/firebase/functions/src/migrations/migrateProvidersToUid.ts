@@ -19,14 +19,28 @@ import { onCall, HttpsError, CallableRequest } from "firebase-functions/v2/https
 import * as admin from "firebase-admin";
 import { logger } from "firebase-functions";
 
-// Initialize Firebase Admin if not already done
-if (!admin.apps.length) {
-  admin.initializeApp();
+// Lazy initialization pattern to avoid initialization during deployment analysis
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
 }
 
-// Firestore reference to Outil-sos-expat project
-// Note: This requires cross-project access or running in Outil project
-const db = admin.firestore();
+// Firestore reference getter (lazy)
+function getDb() {
+  ensureInitialized();
+  return admin.firestore();
+}
 
 interface MigrationResult {
   total: number;
@@ -78,7 +92,7 @@ export const migrateProvidersToUid = onCall(
 
     try {
       // Get all providers
-      const providersSnapshot = await db
+      const providersSnapshot = await getDb()
         .collection("providers")
         .limit(limit)
         .get();
@@ -109,7 +123,7 @@ export const migrateProvidersToUid = onCall(
 
           // If no sosProfileId, try to find user by email
           if (!newId && email) {
-            const usersSnapshot = await db
+            const usersSnapshot = await getDb()
               .collection("users")
               .where("emailLower", "==", email)
               .limit(1)
@@ -134,7 +148,7 @@ export const migrateProvidersToUid = onCall(
 
           // Check if document with newId already exists
           if (newId !== currentId) {
-            const existingDoc = await db.collection("providers").doc(newId).get();
+            const existingDoc = await getDb().collection("providers").doc(newId).get();
             if (existingDoc.exists) {
               result.skipped++;
               result.details.push({
@@ -151,7 +165,7 @@ export const migrateProvidersToUid = onCall(
           // Perform migration (unless preview mode)
           if (!preview) {
             // Create new document with UID as ID
-            await db.collection("providers").doc(newId).set({
+            await getDb().collection("providers").doc(newId).set({
               ...data,
               sosProfileId: newId,
               migratedFrom: currentId,
@@ -160,7 +174,7 @@ export const migrateProvidersToUid = onCall(
 
             // Delete old document (only if different ID)
             if (currentId !== newId) {
-              await db.collection("providers").doc(currentId).delete();
+              await getDb().collection("providers").doc(currentId).delete();
             }
           }
 

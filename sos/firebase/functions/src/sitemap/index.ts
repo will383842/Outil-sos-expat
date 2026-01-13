@@ -11,9 +11,21 @@ import { onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { generateAllSitemaps } from './generator';
 
-// Initialize Firebase Admin if not already initialized
-if (!admin.apps.length) {
-  admin.initializeApp();
+// Lazy initialization to avoid issues during deployment analysis
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
 }
 
 // Debounce mechanism to prevent excessive regenerations
@@ -55,6 +67,7 @@ export const generateSitemaps = onRequest(
     serviceAccount: 'firebase-adminsdk-fbsvc@sos-urgently-ac307.iam.gserviceaccount.com',
   },
   async (_req: Request, res: Response) => {
+    ensureInitialized();
     try {
       console.log('🚀 Manual sitemap generation triggered');
       const result = await generateAllSitemaps();
@@ -94,6 +107,7 @@ export const onProviderChange = onDocumentWritten(
     document: 'sos_profiles/{providerId}',
   },
   async (event) => {
+    ensureInitialized();
     const data = event.data?.after.data();
     const providerId = event.params.providerId;
     
@@ -138,6 +152,7 @@ export const scheduledSitemapGeneration = onSchedule(
     timeZone: 'UTC',
   },
   async () => {
+    ensureInitialized();
     console.log('⏰ Running scheduled sitemap generation...');
     try {
       const result = await generateAllSitemaps();

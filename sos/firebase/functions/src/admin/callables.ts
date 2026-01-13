@@ -3,7 +3,24 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore } from "firebase-admin/firestore";
 import { initializeApp, getApps } from "firebase-admin/app";
 
-if (!getApps().length) initializeApp();
+// CRITICAL: Lazy initialization to avoid deployment timeout
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+function ensureInitialized() {
+  if (!IS_DEPLOYMENT_ANALYSIS && !getApps().length) {
+    initializeApp();
+  }
+}
+
+// Helper that ensures initialization before getting Firestore
+function getDb() {
+  ensureInitialized();
+  return getFirestore();
+}
 
 /** Autorise UNIQUEMENT les comptes avec claim { admin: true } */
 function assertAdmin(ctx: any) {
@@ -26,7 +43,7 @@ export const admin_templates_list = onCall({
   if (!locale || !["fr-FR", "en"].includes(locale)) {
     throw new HttpsError("invalid-argument", "locale doit être 'fr-FR' ou 'en'.");
   }
-  const db = getFirestore();
+  const db = getDb();
   const snap = await db.collection(`message_templates/${locale}/items`).select().get();
   const eventIds = snap.docs.map((d) => d.id).sort();
   return { eventIds };
@@ -45,7 +62,7 @@ export const admin_templates_get = onCall({
   if (!locale || !eventId) {
     throw new HttpsError("invalid-argument", "locale et eventId sont requis.");
   }
-  const db = getFirestore();
+  const db = getDb();
   const ref = db.doc(`message_templates/${locale}/items/${eventId}`);
   const doc = await ref.get();
   if (!doc.exists) return { exists: false };
@@ -77,7 +94,7 @@ export const admin_templates_upsert = onCall({
       "email.subject et email.html sont requis quand email est fourni."
     );
   }
-  const db = getFirestore();
+  const db = getDb();
   const ref = db.doc(`message_templates/${locale}/items/${eventId}`);
   await ref.set(payload as TemplatePayload, { merge: true });
   return { ok: true };
@@ -92,7 +109,7 @@ export const admin_routing_get = onCall({
     timeoutSeconds: 60
   }, async (req) => {
   assertAdmin(req);
-  const db = getFirestore();
+  const db = getDb();
   const ref = db.doc("message_routing/config");
   const doc = await ref.get();
   if (!doc.exists) return { exists: false, data: { events: {} } };
@@ -123,7 +140,7 @@ export const admin_routing_upsert = onCall({
     channels,
     rate_limit_h: Number(rate_limit_h) || 0,
     delays: delays || {}};
-  const db = getFirestore();
+  const db = getDb();
   await db.doc("message_routing/config").set({ events: { [eventId]: entry } }, { merge: true });
   return { ok: true };
 });
@@ -149,7 +166,7 @@ export const admin_testSend = onCall({
       preferredLanguage: loc,
       ...context?.user}};
 
-  const db = getFirestore();
+  const db = getDb();
   await db.collection("message_events").add({
     eventId,
     uid: context?.uid || "ADMIN_TEST",
@@ -173,7 +190,7 @@ export const admin_templates_seed = onCall({
   }, async (req) => {
   assertAdmin(req); // réutilise la même fonction assertAdmin de ce fichier
 
-  const db = getFirestore();
+  const db = getDb();
 
   // charge les JSON depuis src/assets
   const assetsDir = path.join(__dirname, "..", "assets");
@@ -227,7 +244,7 @@ export const admin_unclaimed_funds_list = onCall({
   assertAdmin(req);
 
   const { status = "pending_kyc", limit: queryLimit = 50 } = req.data || {};
-  const db = getFirestore();
+  const db = getDb();
 
   const snapshot = await db
     .collection("pending_transfers")
@@ -256,7 +273,7 @@ export const admin_forfeited_funds_list = onCall({
   assertAdmin(req);
 
   const { limit: queryLimit = 50 } = req.data || {};
-  const db = getFirestore();
+  const db = getDb();
 
   const snapshot = await db
     .collection("forfeited_funds")
@@ -297,7 +314,7 @@ export const admin_process_exceptional_claim = onCall({
 
   if (approved !== true) {
     // Just reject the claim
-    const db = getFirestore();
+    const db = getDb();
     await db.collection("forfeited_funds").doc(forfeitedFundsId).update({
       exceptionalClaimStatus: "rejected",
       claimReason,

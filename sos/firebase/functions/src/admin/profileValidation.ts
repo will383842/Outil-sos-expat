@@ -44,12 +44,27 @@ import { onDocumentCreated, onDocumentUpdated } from "firebase-functions/v2/fire
 import * as admin from "firebase-admin";
 import { logError } from "../utils/logs/logError";
 
-// Initialize Firebase Admin if not already done
-if (admin.apps.length === 0) {
-  admin.initializeApp();
+// Lazy initialization to avoid issues during deployment analysis
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
 }
 
-const db = admin.firestore();
+function getDb() {
+  ensureInitialized();
+  return admin.firestore();
+}
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -139,6 +154,7 @@ async function createHistoryEntry(
   validationId: string,
   entry: Omit<ValidationHistoryEntry, 'performedAt'>
 ): Promise<void> {
+  const db = getDb();
   await db
     .collection("validation_queue")
     .doc(validationId)
@@ -157,6 +173,7 @@ async function sendNotification(
   eventId: string,
   context: Record<string, unknown>
 ): Promise<void> {
+  const db = getDb();
   try {
     // Fetch user data for locale
     const userDoc = await db.collection("users").doc(userId).get();
@@ -202,6 +219,7 @@ export const submitForValidation = onCall(
     timeoutSeconds: 60,
   },
   async (req) => {
+    const db = getDb();
     const uid = assertAuthenticated(req);
     const { providerId } = req.data || {};
 
@@ -315,6 +333,7 @@ export const assignValidation = onCall(
     timeoutSeconds: 60,
   },
   async (req) => {
+    const db = getDb();
     const adminUid = assertAdmin(req);
     const { validationId, assignToUid } = req.data || {};
 
@@ -389,6 +408,7 @@ export const approveProfile = onCall(
     timeoutSeconds: 120,
   },
   async (req) => {
+    const db = getDb();
     const adminUid = assertAdmin(req);
     const { validationId, reason } = req.data || {};
 
@@ -515,6 +535,7 @@ export const rejectProfile = onCall(
     timeoutSeconds: 120,
   },
   async (req) => {
+    const db = getDb();
     const adminUid = assertAdmin(req);
     const { validationId, reason } = req.data || {};
 
@@ -624,6 +645,7 @@ export const requestChanges = onCall(
     timeoutSeconds: 120,
   },
   async (req) => {
+    const db = getDb();
     const adminUid = assertAdmin(req);
     const { validationId, changes } = req.data || {};
 
@@ -753,6 +775,7 @@ export const getValidationQueue = onCall(
     timeoutSeconds: 120,
   },
   async (req) => {
+    const db = getDb();
     assertAdmin(req);
 
     // FIX: Accept both flat params and filters object from frontend
@@ -995,6 +1018,7 @@ export const getValidationHistory = onCall(
     timeoutSeconds: 60,
   },
   async (req) => {
+    const db = getDb();
     const uid = assertAuthenticated(req);
     const { providerId } = req.data || {};
 
@@ -1069,6 +1093,7 @@ export const onValidationCreated = onDocumentCreated(
     region: "europe-west1",
   },
   async (event) => {
+    const db = getDb();
     const validationId = event.params.validationId;
     const validationData = event.data?.data() as ValidationQueueDocument | undefined;
 
@@ -1134,6 +1159,7 @@ export const onValidationDecision = onDocumentUpdated(
     region: "europe-west1",
   },
   async (event) => {
+    const db = getDb();
     const validationId = event.params.validationId;
     const beforeData = event.data?.before.data() as ValidationQueueDocument | undefined;
     const afterData = event.data?.after.data() as ValidationQueueDocument | undefined;
@@ -1231,6 +1257,7 @@ export const resubmitForValidation = onCall(
     timeoutSeconds: 60,
   },
   async (req) => {
+    const db = getDb();
     const uid = assertAuthenticated(req);
     const { validationId } = req.data || {};
 

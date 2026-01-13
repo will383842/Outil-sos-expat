@@ -30,11 +30,28 @@ function normalizeEventId(id: string) {
   return id.replace(/^whatsapp_/, "").replace(/^sms_/, "");
 }
 
-// ----- Admin init (idempotent)
-if (!admin.apps.length) {
-  admin.initializeApp();
+// Lazy initialization pattern to avoid initialization during deployment analysis
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
 }
-const db = admin.firestore();
+
+// Firestore reference getter (lazy)
+function getDb() {
+  ensureInitialized();
+  return admin.firestore();
+}
 
 // ----- Types locaux (éviter les `any`)
 type UserCtx = {
@@ -218,7 +235,7 @@ async function logDelivery(params: {
     data.failedAt = admin.firestore.FieldValue.serverTimestamp();
   }
 
-  await db
+  await getDb()
     .collection("message_deliveries")
     .doc(docId)
     .set(data, { merge: true });

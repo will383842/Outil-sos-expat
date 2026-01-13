@@ -6,12 +6,13 @@ const DYNAMIC_CACHE = `dynamic-${CACHE_VERSION}`;
 const IMAGE_CACHE = `images-${CACHE_VERSION}`;
 const API_CACHE = `api-${CACHE_VERSION}`;
 
-// Configuration mobile-first avec timeouts agressifs
+// Configuration mobile-first avec timeouts adaptatifs
+// IMPORTANT: Timeouts augmentes pour eviter ERR_INSUFFICIENT_RESOURCES sur Firebase
 const NETWORK_TIMEOUTS = {
-  mobile: 2000,    // 2s pour mobile (connexion lente)
-  desktop: 4000,   // 4s pour desktop
-  images: 6000,    // 6s pour images (plus de tolérance)
-  api: 3000        // 3s pour API
+  mobile: 5000,    // 5s pour mobile (connexion lente)
+  desktop: 6000,   // 6s pour desktop
+  images: 10000,   // 10s pour images (plus de tolerance)
+  api: 8000        // 8s pour API Firebase (cold starts possibles)
 };
 
 // Ressources critiques (path-agnostique pour i18n futur)

@@ -11,6 +11,23 @@ import * as logger from 'firebase-functions/logger';
 import { createCheckoutSchema, validateInput } from './validation';
 import { META_CAPI_TOKEN, trackCAPIInitiateCheckout, UserData } from '../metaConversionsApi';
 
+// Lazy initialization pattern to prevent deployment timeout
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
+}
+
 // ============================================================================
 // SECRETS & PARAMS
 // ============================================================================
@@ -133,9 +150,7 @@ function createStripeClient(): Stripe {
  * Get Firestore instance
  */
 function getDb(): admin.firestore.Firestore {
-  if (!admin.apps.length) {
-    admin.initializeApp();
-  }
+  ensureInitialized();
   return admin.firestore();
 }
 

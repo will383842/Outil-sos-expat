@@ -24,12 +24,27 @@ import { logger } from "firebase-functions";
 import * as admin from "firebase-admin";
 import type { Request, Response } from "express";
 
-// Initialisation Firebase Admin (si pas déjà fait)
-if (!admin.apps.length) {
-  admin.initializeApp();
+// Lazy initialization to avoid issues during deployment analysis
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
 }
 
-const db = admin.firestore();
+function getDb() {
+  ensureInitialized();
+  return admin.firestore();
+}
 
 // Secret pour l'authentification depuis Outil-sos-expat
 const SOS_SYNC_API_KEY = defineSecret("SOS_SYNC_API_KEY");
@@ -83,6 +98,8 @@ export const syncFromOutil = onRequest(
     timeoutSeconds: 30,
   },
   async (req: Request, res: Response): Promise<void> => {
+    const db = getDb();
+
     // Vérifier la méthode
     if (req.method !== "POST") {
       res.status(405).json({ ok: false, error: "Method not allowed" });

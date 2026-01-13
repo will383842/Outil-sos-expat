@@ -17,6 +17,23 @@ import * as admin from "firebase-admin";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { logError } from "../utils/logs/logError";
 
+// CRITICAL: Lazy initialization to avoid deployment timeout
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
+}
+
 // Configuration
 const UNCLAIMED_FUNDS_CONFIG = {
   // Délais de rappel en jours depuis la création du pending_transfer
@@ -739,13 +756,10 @@ export const scheduledProcessUnclaimedFunds = onSchedule(
     timeoutSeconds: 540, // 9 minutes max
   },
   async () => {
+    ensureInitialized();
     console.log("🕐 [SCHEDULED] Starting daily unclaimed funds processing");
 
     try {
-      if (!admin.apps.length) {
-        admin.initializeApp();
-      }
-
       const processor = new UnclaimedFundsProcessor();
       const result = await processor.process();
 

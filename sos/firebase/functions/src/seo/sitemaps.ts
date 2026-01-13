@@ -6,9 +6,21 @@
 import { onRequest } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 
-// Initialisation Firebase Admin (si pas déjà fait)
-if (!admin.apps.length) {
-  admin.initializeApp();
+// Lazy initialization to avoid issues during deployment analysis
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
 }
 
 const SITE_URL = 'https://sos-expat.com';
@@ -45,9 +57,10 @@ export const sitemapProfiles = onRequest(
     serviceAccount: 'firebase-adminsdk-fbsvc@sos-urgently-ac307.iam.gserviceaccount.com',
   },
   async (_req, res) => {
+    ensureInitialized();
     try {
       const db = admin.firestore();
-      
+
       // ✅ Utilise sos_profiles (pas users)
       // Filtre les prestataires visibles, approuvés ET actifs
       const snapshot = await db.collection('sos_profiles')
@@ -184,6 +197,7 @@ export const sitemapHelp = onRequest(
     serviceAccount: 'firebase-adminsdk-fbsvc@sos-urgently-ac307.iam.gserviceaccount.com',
   },
   async (_req, res) => {
+    ensureInitialized();
     try {
       console.log('🔄 Début génération sitemap help articles...');
 
@@ -315,9 +329,10 @@ export const sitemapLanding = onRequest(
     serviceAccount: 'firebase-adminsdk-fbsvc@sos-urgently-ac307.iam.gserviceaccount.com',
   },
   async (_req, res) => {
+    ensureInitialized();
     try {
       const db = admin.firestore();
-      
+
       const snapshot = await db.collection('landing_pages')
         .where('isActive', '==', true)
         .get();
@@ -383,6 +398,7 @@ export const sitemapFaq = onRequest(
     serviceAccount: 'firebase-adminsdk-fbsvc@sos-urgently-ac307.iam.gserviceaccount.com',
   },
   async (_req, res) => {
+    ensureInitialized();
     try {
       console.log('🔄 Début génération sitemap FAQ...');
 

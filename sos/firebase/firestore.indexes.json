@@ -85,6 +85,15 @@
         { "fieldPath": "approvalStatus", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
+    },
+    {
+      "__comment": "Index pour pending_transfers - filtrage par statut et tri par date",
+      "collectionGroup": "pending_transfers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

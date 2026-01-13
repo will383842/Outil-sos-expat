@@ -9,62 +9,62 @@
     "rewrites": [
       {
         "source": "/*/avocat-*/**",
-        "function": "renderForBots",
+        "function": "renderForBotsV2",
         "region": "europe-west1"
       },
       {
         "source": "/*/lawyer-*/**",
-        "function": "renderForBots",
+        "function": "renderForBotsV2",
         "region": "europe-west1"
       },
       {
         "source": "/*/abogado-*/**",
-        "function": "renderForBots",
+        "function": "renderForBotsV2",
         "region": "europe-west1"
       },
       {
         "source": "/*/anwaelte-*/**",
-        "function": "renderForBots",
+        "function": "renderForBotsV2",
         "region": "europe-west1"
       },
       {
         "source": "/*/advogado-*/**",
-        "function": "renderForBots",
+        "function": "renderForBotsV2",
         "region": "europe-west1"
       },
       {
         "source": "/*/advokat-*/**",
-        "function": "renderForBots",
+        "function": "renderForBotsV2",
         "region": "europe-west1"
       },
       {
         "source": "/*/expatrie-*/**",
-        "function": "renderForBots",
+        "function": "renderForBotsV2",
         "region": "europe-west1"
       },
       {
         "source": "/*/expat-*/**",
-        "function": "renderForBots",
+        "function": "renderForBotsV2",
         "region": "europe-west1"
       },
       {
         "source": "/avocat/**",
-        "function": "renderForBots",
+        "function": "renderForBotsV2",
         "region": "europe-west1"
       },
       {
         "source": "/lawyers/**",
-        "function": "renderForBots",
+        "function": "renderForBotsV2",
         "region": "europe-west1"
       },
       {
         "source": "/expatrie/**",
-        "function": "renderForBots",
+        "function": "renderForBotsV2",
         "region": "europe-west1"
       },
       {
         "source": "/expats/**",
-        "function": "renderForBots",
+        "function": "renderForBotsV2",
         "region": "europe-west1"
       },
       {
@@ -85,7 +85,6 @@
       "source": "firebase/functions",
       "codebase": "default",
       "runtime": "nodejs20",
-      "predeploy": ["npm --prefix \"$RESOURCE_DIR\" run build"],
       "ignore": [
         "node_modules",
         ".git",

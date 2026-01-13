@@ -355,10 +355,25 @@ export async function seedCountryConfigs(db: FirebaseFirestore.Firestore): Promi
 // CALLABLE FUNCTION TO TRIGGER SEED
 // ============================================================================
 
-export async function runSeed(): Promise<void> {
-  if (!admin.apps.length) {
-    admin.initializeApp();
+// Lazy initialization pattern to avoid initialization during deployment analysis
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
   }
+}
+
+export async function runSeed(): Promise<void> {
+  ensureInitialized();
   const db = admin.firestore();
   await seedCountryConfigs(db);
 }

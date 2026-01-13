@@ -14,8 +14,12 @@ const IS_LOCAL =
   (!process.env.GOOGLE_CLOUD_PROJECT && !process.env.GCP_PROJECT);
 
 // Désactiver les logs verbeux pendant le déploiement (quand Firebase analyse le code)
-// Cela évite le timeout de 10 secondes lors du déploiement
-const IS_DEPLOYMENT_ANALYSIS = !process.env.K_REVISION && IS_LOCAL;
+// Firebase CLI lance le code pour analyser les exports mais sans K_REVISION ni K_SERVICE
+// CRITICAL: Cette detection doit etre la plus permissive possible pour eviter les timeouts
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION ||  // Pas sur Cloud Run
+  !process.env.K_SERVICE ||   // Pas de service Cloud Run
+  !process.env.FUNCTION_TARGET; // Pas de fonction cible (analyse statique)
 
 interface DebugLogEntry {
   timestamp: string;
@@ -51,12 +55,14 @@ class UltraDebugLogger {
   private sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
   private constructor() {
-    // Skip verbose logging during deployment analysis to avoid 10s timeout
-    if (!IS_DEPLOYMENT_ANALYSIS) {
-      console.log(`🚀 [ULTRA DEBUG] Logger initialisé avec session: ${this.sessionId}`);
-      if (IS_LOCAL) {
-        console.log(`🔧 [ULTRA DEBUG] Mode local détecté - Firestore logs désactivés`);
-      }
+    // Skip ALL initialization during deployment analysis to avoid 10s timeout
+    if (IS_DEPLOYMENT_ANALYSIS) {
+      return; // Ne rien faire pendant l'analyse de deploiement
+    }
+
+    console.log(`🚀 [ULTRA DEBUG] Logger initialisé avec session: ${this.sessionId}`);
+    if (IS_LOCAL) {
+      console.log(`🔧 [ULTRA DEBUG] Mode local détecté - Firestore logs désactivés`);
     }
     this.setupGlobalErrorHandlers();
   }

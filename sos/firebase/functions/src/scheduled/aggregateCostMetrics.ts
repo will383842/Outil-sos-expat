@@ -14,8 +14,21 @@ import { onSchedule } from "firebase-functions/v2/scheduler";
 import * as admin from "firebase-admin";
 import { logger } from "firebase-functions";
 
-if (!admin.apps.length) {
-  admin.initializeApp();
+// CRITICAL: Lazy initialization to avoid deployment timeout
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
 }
 
 // ============================================================================
@@ -516,6 +529,7 @@ export const aggregateCostMetrics = onSchedule(
     timeoutSeconds: 120,
   },
   async () => {
+    ensureInitialized();
     const startTime = Date.now();
     const db = admin.firestore();
 
@@ -607,6 +621,7 @@ export const triggerCostMetricsAggregation = async (): Promise<{
     totalProjectedCost: number;
   };
 }> => {
+  ensureInitialized();
   const db = admin.firestore();
 
   try {

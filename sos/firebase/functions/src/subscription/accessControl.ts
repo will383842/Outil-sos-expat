@@ -7,13 +7,28 @@
 import * as functions from 'firebase-functions/v1';
 import * as admin from 'firebase-admin';
 
-// Initialize admin if not already initialized
-if (!admin.apps.length) {
-  admin.initializeApp();
+// Lazy initialization pattern to prevent deployment timeout
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
 }
 
 // Lazy db initialization
-const getDb = () => admin.firestore();
+const getDb = () => {
+  ensureInitialized();
+  return admin.firestore();
+};
 
 // ============================================================================
 // TYPES

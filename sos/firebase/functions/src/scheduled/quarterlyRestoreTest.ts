@@ -15,8 +15,21 @@ import { onSchedule } from "firebase-functions/v2/scheduler";
 import * as functions from "firebase-functions/v1";
 import { logger } from "firebase-functions";
 
-if (!admin.apps.length) {
-  admin.initializeApp();
+// CRITICAL: Lazy initialization to avoid deployment timeout
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
 }
 
 // Configuration
@@ -83,6 +96,7 @@ async function getLatestBackup(): Promise<{
   bucketPath: string;
   collectionCounts: Record<string, number>;
 } | null> {
+  ensureInitialized();
   const db = admin.firestore();
 
   const backups = await db
@@ -114,6 +128,7 @@ async function testCollectionIntegrity(
   collectionName: string,
   expectedCount: number
 ): Promise<RestoreTestResult> {
+  ensureInitialized();
   const startTime = Date.now();
   const db = admin.firestore();
 
@@ -249,6 +264,7 @@ function getCurrentQuarter(): string {
  * Execute le test trimestriel complet
  */
 async function runQuarterlyTest(triggeredBy: "scheduled" | "manual", adminId?: string): Promise<QuarterlyTestReport> {
+  ensureInitialized();
   const startTime = Date.now();
   const db = admin.firestore();
   const reportId = `restore_test_${Date.now()}`;
@@ -380,6 +396,7 @@ export const runRestoreTestManual = functions
   .region("europe-west1")
   .runWith({ timeoutSeconds: 300, memory: "512MB" })
   .https.onCall(async (_data, context) => {
+    ensureInitialized();
     // Verifier l'authentification admin
     if (!context.auth) {
       throw new functions.https.HttpsError("unauthenticated", "Authentication required");
@@ -427,6 +444,7 @@ export const runRestoreTestManual = functions
 export const listRestoreTestReports = functions
   .region("europe-west1")
   .https.onCall(async (_data, context) => {
+    ensureInitialized();
     if (!context.auth) {
       throw new functions.https.HttpsError("unauthenticated", "Authentication required");
     }

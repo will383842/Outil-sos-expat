@@ -96,10 +96,10 @@ const DEFAULT_THRESHOLDS = {
 const SERVICE_KEYS = ['twilio', 'openai', 'anthropic', 'perplexity', 'stripe', 'firebase'] as const;
 
 // Composant carte de service
-const ServiceCard: React.FC<{
+const ServiceCard = React.memo<{
   service: ServiceBalance;
   compact?: boolean;
-}> = ({ service, compact = false }) => {
+}>(({ service, compact = false }) => {
   const getStatusColor = (status: ServiceBalance['status']) => {
     switch (status) {
       case 'ok':
@@ -242,7 +242,7 @@ const ServiceCard: React.FC<{
       </div>
     </div>
   );
-};
+});
 
 // Props du widget principal
 interface ExternalServicesWidgetProps {
@@ -724,4 +724,4 @@ const ExternalServicesWidget: React.FC<ExternalServicesWidgetProps> = ({
   );
 };
 
-export default ExternalServicesWidget;
+export default React.memo(ExternalServicesWidget);

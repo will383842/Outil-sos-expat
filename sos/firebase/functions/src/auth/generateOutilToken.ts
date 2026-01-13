@@ -23,6 +23,23 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
 
+// Lazy initialization to avoid issues during deployment analysis
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
+}
+
 // Secret contenant le JSON du service account de l'Outil project
 // IMPORTANT: Créer ce secret avec la clé JSON du service account outils-sos-expat
 const OUTIL_SERVICE_ACCOUNT = defineSecret("OUTIL_SERVICE_ACCOUNT_KEY");
@@ -77,9 +94,7 @@ export const generateOutilToken = onCall(
     console.log("[generateOutilToken] Function called");
 
     // Initialize Firebase Admin for SOS (Firestore access)
-    if (!admin.apps.length) {
-      admin.initializeApp();
-    }
+    ensureInitialized();
     const db = admin.firestore();
 
     // Get the Outil Auth instance for creating cross-project tokens

@@ -9,8 +9,12 @@
  */
 
 import { onRequest } from 'firebase-functions/v2/https';
+import { defineSecret } from 'firebase-functions/params';
 import * as logger from 'firebase-functions/logger';
 import type { Request, Response } from 'express';
+
+// Define secret for cache invalidation authentication
+const CACHE_INVALIDATION_KEY = defineSecret('CACHE_INVALIDATION_KEY');
 
 // Lazy-loaded modules to avoid deployment timeout
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -323,6 +327,7 @@ export const invalidateCacheEndpoint = onRequest(
     timeoutSeconds: 30,
     minInstances: 0,
     maxInstances: 5,
+    secrets: [CACHE_INVALIDATION_KEY],
   },
   async (req: Request, res: Response) => {
     // Only allow POST requests
@@ -333,7 +338,12 @@ export const invalidateCacheEndpoint = onRequest(
 
     // Simple auth check via header (should match a secret)
     const authHeader = req.headers['x-cache-invalidation-key'];
-    const expectedKey = process.env.CACHE_INVALIDATION_KEY || 'sos-expat-cache-key-2024';
+    const expectedKey = process.env.CACHE_INVALIDATION_KEY;
+    if (!expectedKey) {
+      logger.error('[CacheInvalidation] CACHE_INVALIDATION_KEY not configured');
+      res.status(500).json({ error: 'Cache invalidation not configured' });
+      return;
+    }
 
     if (authHeader !== expectedKey) {
       res.status(401).json({ error: 'Unauthorized' });

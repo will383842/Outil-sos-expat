@@ -16,6 +16,22 @@
 import * as admin from "firebase-admin";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
+}
+
 // Configuration des rappels
 const REMINDER_CONFIG = {
   // Délais en heures depuis la création du compte
@@ -381,9 +397,7 @@ export const scheduledKYCReminders = onSchedule(
 
     try {
       // Initialiser Firebase si nécessaire
-      if (!admin.apps.length) {
-        admin.initializeApp();
-      }
+      ensureInitialized();
 
       const manager = new KYCReminderManager();
       const result = await manager.processKYCReminders();
@@ -438,6 +452,7 @@ export const triggerKYCReminders = onCall(
     timeoutSeconds: 300,
   },
   async (request) => {
+    ensureInitialized();
     // Vérifier l'authentification
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "User must be authenticated");
@@ -471,6 +486,7 @@ export const getKYCReminderStatus = onCall(
     region: "europe-west1",
   },
   async (request) => {
+    ensureInitialized();
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }

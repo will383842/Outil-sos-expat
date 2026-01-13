@@ -193,6 +193,7 @@ export function useExternalServicesBalance(
   // Refs
   const isMounted = useRef(true);
   const refreshIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const initialFetchDone = useRef(false);
 
   // Cleanup
   useEffect(() => {
@@ -425,8 +426,11 @@ export function useExternalServicesBalance(
 
   // Initial fetch
   useEffect(() => {
-    refresh();
-  }, [refresh]);
+    if (!initialFetchDone.current) {
+      initialFetchDone.current = true;
+      refresh();
+    }
+  }, []);
 
   // Auto-refresh
   useEffect(() => {
@@ -444,7 +448,8 @@ export function useExternalServicesBalance(
         refreshIntervalRef.current = null;
       }
     };
-  }, [autoRefresh, refreshInterval, refresh]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRefresh, refreshInterval]);
 
   // Calculate total estimated monthly cost
   const totalEstimatedCost = useMemo(() => {

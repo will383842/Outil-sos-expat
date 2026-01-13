@@ -19,12 +19,27 @@ import {
   BudgetServiceType,
 } from "../notificationPipeline/budgetAlerts";
 
-// Initialize Firebase Admin if not already done
-if (!admin.apps.length) {
-  admin.initializeApp();
+// CRITICAL: Lazy initialization to avoid deployment timeout
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
 }
 
-const db = admin.firestore();
+function getDb() {
+  ensureInitialized();
+  return admin.firestore();
+}
 
 // ============================================================================
 // SCHEDULED FUNCTION - Check All Budgets
@@ -43,6 +58,7 @@ export const checkBudgetAlertsScheduled = onSchedule(
     timeoutSeconds: 120,
   },
   async () => {
+    ensureInitialized();
     const startTime = Date.now();
     logger.info("[BudgetAlertScheduled] Starting budget alert check...");
 
@@ -68,7 +84,7 @@ export const checkBudgetAlertsScheduled = onSchedule(
       }
 
       // Log execution to system_logs
-      await db.collection("system_logs").add({
+      await getDb().collection("system_logs").add({
         type: "budget_alert_check",
         success: true,
         totalAlertsQueued: totalAlerts,
@@ -94,7 +110,7 @@ export const checkBudgetAlertsScheduled = onSchedule(
       logger.error("[BudgetAlertScheduled] Budget check failed:", err);
 
       // Log error
-      await db.collection("system_logs").add({
+      await getDb().collection("system_logs").add({
         type: "budget_alert_check",
         success: false,
         error: err.message,
@@ -124,6 +140,7 @@ export const triggerBudgetAlertCheck = onCall(
     timeoutSeconds: 60,
   },
   async (request) => {
+    ensureInitialized();
     // Verify admin authentication
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Authentication required");
@@ -132,7 +149,7 @@ export const triggerBudgetAlertCheck = onCall(
     const adminId = request.auth.uid;
 
     // Check if user is admin
-    const userDoc = await db.collection("users").doc(adminId).get();
+    const userDoc = await getDb().collection("users").doc(adminId).get();
     const userData = userDoc.data();
 
     if (!userData || !["admin", "super_admin"].includes(userData.role)) {
@@ -162,7 +179,7 @@ export const triggerBudgetAlertCheck = onCall(
       }
 
       // Log the manual trigger
-      await db.collection("admin_actions_log").add({
+      await getDb().collection("admin_actions_log").add({
         action: "budget_alert_check",
         adminId,
         adminEmail: userData.email,
@@ -192,6 +209,7 @@ export const checkSingleServiceBudget = onCall(
     timeoutSeconds: 60,
   },
   async (request) => {
+    ensureInitialized();
     // Verify admin authentication
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Authentication required");
@@ -216,7 +234,7 @@ export const checkSingleServiceBudget = onCall(
     const adminId = request.auth.uid;
 
     // Check if user is admin
-    const userDoc = await db.collection("users").doc(adminId).get();
+    const userDoc = await getDb().collection("users").doc(adminId).get();
     const userData = userDoc.data();
 
     if (!userData || !["admin", "super_admin"].includes(userData.role)) {

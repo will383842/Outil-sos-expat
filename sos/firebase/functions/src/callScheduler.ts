@@ -346,15 +346,28 @@ async function getTwilioCallManager(): Promise<import('./TwilioCallManager').Twi
   return twilioCallManagerInstance;
 }
 
-// 🔧 FIX: Initialisation Firebase lazy
-let db: admin.firestore.Firestore | null = null;
+// 🔧 FIX: Initialisation Firebase lazy avec detection de deployment analysis
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
 
-function getDB(): admin.firestore.Firestore {
-  if (!db) {
-    // Assurer que Firebase Admin est initialisé
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
     if (!admin.apps.length) {
       admin.initializeApp();
     }
+    _initialized = true;
+  }
+}
+
+let db: admin.firestore.Firestore | null = null;
+
+function getDB(): admin.firestore.Firestore {
+  ensureInitialized();
+  if (!db) {
     db = admin.firestore();
   }
   return db;

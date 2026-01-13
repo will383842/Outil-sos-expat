@@ -9,8 +9,28 @@ const asDate = (d: Date | admin.firestore.Timestamp) =>
     ? (d as admin.firestore.Timestamp).toDate()
     : (d as Date);
 
-if (!admin.apps.length) admin.initializeApp();
-const db = admin.firestore();
+// CRITICAL: Lazy initialization to avoid deployment timeout
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _db: admin.firestore.Firestore;
+function getDb() {
+  if (!_db && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) admin.initializeApp();
+    _db = admin.firestore();
+  }
+  return _db;
+}
+
+// Proxy for backward compatibility
+const db = new Proxy({} as admin.firestore.Firestore, {
+  get(_target, prop) {
+    return (getDb() as any)[prop];
+  }
+});
 
 /**
  * P0 SECURITY FIX: Verify admin authentication via Firebase ID token

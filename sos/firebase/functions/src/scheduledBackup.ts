@@ -4,11 +4,32 @@ import { onSchedule } from "firebase-functions/v2/scheduler";
 import * as crypto from "crypto";
 import { logger } from "firebase-functions";
 
-if (!admin.apps.length) {
-  admin.initializeApp();
+// CRITICAL: Lazy initialization to avoid deployment timeout
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+let _client: InstanceType<typeof admin.firestore.v1.FirestoreAdminClient> | null = null;
+
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
 }
 
-const client = new admin.firestore.v1.FirestoreAdminClient();
+function getClient() {
+  ensureInitialized();
+  if (!_client) {
+    _client = new admin.firestore.v1.FirestoreAdminClient();
+  }
+  return _client;
+}
 
 // Configuration
 const CONFIG = {
@@ -39,6 +60,7 @@ function generateBackupChecksum(
  * Compte les documents dans les collections critiques pour validation
  */
 async function getCollectionCounts(): Promise<Record<string, number>> {
+  ensureInitialized();
   const counts: Record<string, number> = {};
 
   for (const collectionId of CONFIG.CRITICAL_COLLECTIONS) {
@@ -65,7 +87,9 @@ export const scheduledBackup = onSchedule(
     memory: "512MiB",
   },
   async () => {
+    ensureInitialized();
     const startTime = Date.now();
+    const client = getClient();
 
     try {
       logger.info("[ScheduledBackup] Starting daily backup at 3 AM...");

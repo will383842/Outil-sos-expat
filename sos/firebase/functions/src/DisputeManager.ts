@@ -527,14 +527,26 @@ export async function handleDisputeClosed(
 
 import * as functions from 'firebase-functions/v1';
 
-// Initialize admin if not already initialized
-if (!admin.apps.length) {
-  admin.initializeApp();
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
 }
 
 // Lazy Stripe initialization
 let stripeInstance: Stripe | null = null;
 function getStripe(): Stripe {
+  ensureInitialized();
   if (!stripeInstance) {
     const secretKey = process.env.STRIPE_SECRET_KEY_LIVE || process.env.STRIPE_SECRET_KEY_TEST || process.env.STRIPE_SECRET_KEY || '';
     if (!secretKey) {
@@ -548,7 +560,10 @@ function getStripe(): Stripe {
 }
 
 // Lazy db initialization
-const getDb = () => admin.firestore();
+const getDb = () => {
+  ensureInitialized();
+  return admin.firestore();
+};
 
 /**
  * Check if user is admin (via custom claims OR Firestore role)

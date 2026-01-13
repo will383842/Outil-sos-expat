@@ -4,12 +4,31 @@ import * as crypto from "crypto";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { logger } from "firebase-functions";
 
-// Initialize admin if not already done
-if (!admin.apps.length) {
-  admin.initializeApp();
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
 }
 
-const client = new admin.firestore.v1.FirestoreAdminClient();
+// Lazy client initialization
+let _client: InstanceType<typeof admin.firestore.v1.FirestoreAdminClient> | null = null;
+function getClient(): InstanceType<typeof admin.firestore.v1.FirestoreAdminClient> {
+  ensureInitialized();
+  if (!_client) {
+    _client = new admin.firestore.v1.FirestoreAdminClient();
+  }
+  return _client;
+}
 
 // ============================================================================
 // CONFIGURATION
@@ -136,6 +155,7 @@ export const createManualBackup = onCall(
     memory: "512MiB",
   },
   async (request) => {
+    ensureInitialized();
     const startTime = Date.now();
 
     // Verify admin authentication
@@ -178,6 +198,7 @@ export const createManualBackup = onCall(
 
       const projectId = process.env.GCLOUD_PROJECT as string;
       const bucket = `gs://${projectId}.firebasestorage.app`;
+      const client = getClient();
       const databaseName = client.databasePath(projectId, "(default)");
       const timestamp = Date.now();
 

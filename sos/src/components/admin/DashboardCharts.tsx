@@ -468,15 +468,17 @@ const DashboardCharts: React.FC = () => {
     }
   }, [filters]);
 
+  // Load countries once on mount
   useEffect(() => {
     mountedRef.current = true;
     loadCountries();
-    loadDashboardData();
+    return () => { mountedRef.current = false; };
+  }, []);
 
-    return () => {
-      mountedRef.current = false;
-    };
-  }, [loadCountries, loadDashboardData]);
+  // Load dashboard data when filters change
+  useEffect(() => {
+    loadDashboardData();
+  }, [filters]);
 
   const handleFilterChange = (key: keyof FilterState, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));

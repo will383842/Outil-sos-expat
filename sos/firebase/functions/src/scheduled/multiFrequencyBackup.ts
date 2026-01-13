@@ -14,11 +14,32 @@ import { onSchedule } from "firebase-functions/v2/scheduler";
 import * as crypto from "crypto";
 import { logger } from "firebase-functions";
 
-if (!admin.apps.length) {
-  admin.initializeApp();
+// CRITICAL: Lazy initialization to avoid deployment timeout
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+let _client: InstanceType<typeof admin.firestore.v1.FirestoreAdminClient> | null = null;
+
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
 }
 
-const client = new admin.firestore.v1.FirestoreAdminClient();
+function getClient() {
+  ensureInitialized();
+  if (!_client) {
+    _client = new admin.firestore.v1.FirestoreAdminClient();
+  }
+  return _client;
+}
 
 // Configuration - Rétention différenciée
 const CONFIG = {
@@ -64,6 +85,7 @@ function generateBackupChecksum(
  * Compte les documents dans les collections critiques
  */
 async function getCollectionCounts(): Promise<Record<string, number>> {
+  ensureInitialized();
   const counts: Record<string, number> = {};
 
   for (const collectionId of CONFIG.CRITICAL_COLLECTIONS) {
@@ -86,8 +108,10 @@ async function getCollectionCounts(): Promise<Record<string, number>> {
  * Fonction de backup generique reutilisable
  */
 async function performBackup(schedule: string, backupType: 'morning' | 'midday' | 'evening') {
+  ensureInitialized();
   const startTime = Date.now();
   const db = admin.firestore();
+  const client = getClient();
 
   try {
     logger.info(`[MultiFrequencyBackup] Starting ${backupType} backup...`);
@@ -249,6 +273,7 @@ export const cleanupOldBackups = onSchedule(
     timeoutSeconds: 300,
   },
   async () => {
+    ensureInitialized();
     const db = admin.firestore();
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - CONFIG.STANDARD_RETENTION_DAYS);

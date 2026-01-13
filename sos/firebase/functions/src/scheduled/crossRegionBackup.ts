@@ -16,8 +16,21 @@ import { onSchedule } from "firebase-functions/v2/scheduler";
 import { Storage } from "@google-cloud/storage";
 import { logger } from "firebase-functions";
 
-if (!admin.apps.length) {
-  admin.initializeApp();
+// CRITICAL: Lazy initialization to avoid deployment timeout
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
 }
 
 // Configuration
@@ -106,6 +119,7 @@ export const dailyCrossRegionBackup = onSchedule(
     timeoutSeconds: 540, // 9 minutes
   },
   async () => {
+    ensureInitialized();
     const startTime = Date.now();
     const db = admin.firestore();
     const storage = new Storage();
@@ -223,6 +237,7 @@ export const cleanupDRBackups = onSchedule(
     timeoutSeconds: 300,
   },
   async () => {
+    ensureInitialized();
     const storage = new Storage();
     const db = admin.firestore();
     const drBucket = storage.bucket(CONFIG.DR_BUCKET);

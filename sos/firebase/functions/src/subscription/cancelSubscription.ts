@@ -13,14 +13,27 @@ import Stripe from 'stripe';
 import { MailwizzAPI } from '../emailMarketing/utils/mailwizz';
 import { getLanguageCode, SUPPORTED_LANGUAGES, SupportedLanguage } from '../emailMarketing/config';
 
-// Initialize admin if not already initialized
-if (!admin.apps.length) {
-  admin.initializeApp();
+// Lazy initialization pattern to prevent deployment timeout
+const IS_DEPLOYMENT_ANALYSIS =
+  !process.env.K_REVISION &&
+  !process.env.K_SERVICE &&
+  !process.env.FUNCTION_TARGET &&
+  !process.env.FUNCTIONS_EMULATOR;
+
+let _initialized = false;
+function ensureInitialized() {
+  if (!_initialized && !IS_DEPLOYMENT_ANALYSIS) {
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    _initialized = true;
+  }
 }
 
 // Lazy Stripe initialization
 let stripe: Stripe | null = null;
 function getStripe(): Stripe {
+  ensureInitialized();
   if (!stripe) {
     const secretKey = process.env.STRIPE_SECRET_KEY || '';
     if (!secretKey) {
@@ -34,7 +47,10 @@ function getStripe(): Stripe {
 }
 
 // Lazy Firestore initialization
-const getDb = () => admin.firestore();
+const getDb = () => {
+  ensureInitialized();
+  return admin.firestore();
+};
 
 // ============================================================================
 // TYPES
