@@ -226,12 +226,12 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
     }, 30000);
 
     try {
-      // Save the booking redirect URL BEFORE Google redirect (overrides AuthContext default)
-      if (bookingRedirectUrl) {
-        sessionStorage.setItem('googleAuthRedirect', bookingRedirectUrl);
-        console.log('[QuickAuthWizard] Saved booking redirect URL:', bookingRedirectUrl);
-      }
-      console.log('🔵 [QuickAuthWizard] Calling loginWithGoogle...');
+      // FIX: Ne PAS sauvegarder dans sessionStorage pour le popup!
+      // AuthContext ferait window.location.href qui entre en conflit avec onSuccess()
+      // On sauvegarde seulement si popup échoue et fallback vers redirect (voir catch ci-dessous)
+      // Le callback onSuccess() gère la navigation pour le cas popup
+      console.log('🔵 [QuickAuthWizard] Calling loginWithGoogle (popup mode)...');
+      console.log('🔵 [QuickAuthWizard] bookingRedirectUrl (for fallback only):', bookingRedirectUrl);
       await loginWithGoogle(true);
       console.log('🟢 [QuickAuthWizard] loginWithGoogle SUCCESS');
       // Clear timeout on success
