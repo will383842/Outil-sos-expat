@@ -88,9 +88,9 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
     };
   }, [isOpen]);
 
-  // ✅ FIX FLASH P0: Attendre que user Firestore soit COMPLÈTEMENT chargé avant d'appeler onSuccess
-  // isFullyReady = authInitialized AND !isLoading (garantit que tout est prêt)
-  // Cela évite les race conditions où BookingRequest se monte avant que user soit disponible
+  // ✅ FIX: Fermer le popup dès que l'utilisateur est connecté (authInitialized)
+  // On n'attend plus isFullyReady car Firestore peut être lent
+  // BookingRequest peut gérer le chargement des données lui-même
   useEffect(() => {
     console.log('🔵 [QuickAuthWizard] Success useEffect check:', {
       pendingSuccess,
@@ -100,23 +100,23 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
       authInitialized,
     });
 
-    if (pendingSuccess && step === 'success' && user && isFullyReady) {
-      console.log('🟢 [QuickAuthWizard] All conditions met! Calling onSuccess in 300ms...');
-      // User Firestore est maintenant chargé, on peut naviguer
+    // FIX: On ferme le popup dès que authInitialized ET user existe
+    // Plus besoin d'attendre isFullyReady (qui attend le chargement Firestore complet)
+    if (pendingSuccess && step === 'success' && user && authInitialized) {
+      console.log('🟢 [QuickAuthWizard] User authenticated! Calling onSuccess in 300ms...');
       const timeout = setTimeout(() => {
         console.log('🟢 [QuickAuthWizard] Calling onSuccess NOW');
         setPendingSuccess(false);
         onSuccess();
-      }, 300); // Délai court juste pour l'animation
+      }, 300);
       return () => clearTimeout(timeout);
     } else if (pendingSuccess && step === 'success') {
-      console.log('🟡 [QuickAuthWizard] Waiting for user/isFullyReady...', {
+      console.log('🟡 [QuickAuthWizard] Waiting for user/authInitialized...', {
         user: !!user,
-        isFullyReady,
         authInitialized,
       });
     }
-  }, [pendingSuccess, step, user, isFullyReady, authInitialized, onSuccess]);
+  }, [pendingSuccess, step, user, authInitialized, onSuccess]);
 
   // Email validation
   const isValidEmail = (email: string): boolean => {
