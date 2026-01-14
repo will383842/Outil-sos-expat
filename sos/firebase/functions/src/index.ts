@@ -1241,6 +1241,44 @@ async function syncCallSessionToOutil(
       return;
     }
 
+    const providerId = cs?.metadata?.providerId || cs?.providerId || "";
+
+    // P0 FIX: Récupérer le statut d'accès IA du provider pour l'envoyer à Outil
+    // Cela permet à Outil de créer/mettre à jour le provider avec le bon statut
+    let providerAccessInfo: {
+      forcedAIAccess?: boolean;
+      freeTrialUntil?: string | null;
+      subscriptionStatus?: string;
+      hasActiveSubscription?: boolean;
+      providerEmail?: string;
+    } = {};
+
+    if (providerId) {
+      try {
+        // Récupérer depuis users/{providerId} car c'est là que forcedAIAccess est stocké
+        const userDoc = await admin.firestore().collection("users").doc(providerId).get();
+        if (userDoc.exists) {
+          const userData = userDoc.data();
+          providerAccessInfo = {
+            forcedAIAccess: userData?.forcedAIAccess === true,
+            freeTrialUntil: userData?.freeTrialUntil?.toDate?.()?.toISOString() || null,
+            subscriptionStatus: userData?.subscriptionStatus,
+            hasActiveSubscription: userData?.hasActiveSubscription === true,
+            providerEmail: userData?.email,
+          };
+          console.log(`🔑 [${debugId}] Provider access info retrieved:`, {
+            providerId,
+            forcedAIAccess: providerAccessInfo.forcedAIAccess,
+            subscriptionStatus: providerAccessInfo.subscriptionStatus,
+          });
+        } else {
+          console.warn(`⚠️ [${debugId}] Provider not found in users collection: ${providerId}`);
+        }
+      } catch (accessError) {
+        console.warn(`⚠️ [${debugId}] Failed to get provider access info:`, accessError);
+      }
+    }
+
     // Build payload from call_session data
     const payload = {
       // Client info
@@ -1261,10 +1299,16 @@ async function syncCallSessionToOutil(
       priority: "normal",
 
       // Provider info
-      providerId: cs?.metadata?.providerId || cs?.providerId || "",
+      providerId,
       providerType: cs?.metadata?.providerType || cs?.providerType,
       providerName: cs?.participants?.provider?.name || cs?.providerName,
       providerCountry: cs?.providerCountry,
+      // P0 FIX: Inclure les infos d'accès IA pour que Outil puisse créer/mettre à jour le provider
+      providerEmail: providerAccessInfo.providerEmail || cs?.participants?.provider?.email,
+      forcedAIAccess: providerAccessInfo.forcedAIAccess,
+      freeTrialUntil: providerAccessInfo.freeTrialUntil,
+      subscriptionStatus: providerAccessInfo.subscriptionStatus,
+      hasActiveSubscription: providerAccessInfo.hasActiveSubscription,
 
       // Source tracking
       source: "sos-expat-payment-validated",
@@ -1284,6 +1328,10 @@ async function syncCallSessionToOutil(
       providerId: payload.providerId,
       clientName: payload.clientName,
       source: payload.source,
+      // P0 FIX: Log des infos d'accès IA
+      forcedAIAccess: payload.forcedAIAccess,
+      subscriptionStatus: payload.subscriptionStatus,
+      hasActiveSubscription: payload.hasActiveSubscription,
     }));
 
     // P0 PRODUCTION FIX: Add timeout to prevent hanging if Outil is unresponsive

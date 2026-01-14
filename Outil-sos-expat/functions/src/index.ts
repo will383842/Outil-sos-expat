@@ -264,10 +264,12 @@ export const ingestBooking = onRequest(
       });
 
       // ============================================================
-      // DEBUG: Check if provider exists in Outil Firestore
+      // P0 FIX: Auto-create/update provider with AI access info
       // ============================================================
       if (payload.providerId) {
-        const providerCheck = await db.collection("providers").doc(payload.providerId).get();
+        const providerRef = db.collection("providers").doc(payload.providerId);
+        const providerCheck = await providerRef.get();
+
         logger.info(`🔍 [ingestBooking-${requestId}] PROVIDER CHECK IN OUTIL:`, {
           providerId: payload.providerId,
           existsInOutil: providerCheck.exists,
@@ -278,8 +280,60 @@ export const ingestBooking = onRequest(
             subscriptionStatus: providerCheck.data()?.subscriptionStatus,
             hasActiveSubscription: providerCheck.data()?.hasActiveSubscription,
           } : "PROVIDER_NOT_FOUND_IN_OUTIL",
-          FIX_IF_NOT_FOUND: `Si le provider n'existe pas, il faut le créer via syncProvider ou manuellement dans Firestore: providers/${payload.providerId}`,
         });
+
+        // P0 FIX: Si le payload contient des infos d'accès IA, créer/mettre à jour le provider
+        const hasAccessInfo = payload.forcedAIAccess !== undefined ||
+                              payload.subscriptionStatus !== undefined ||
+                              payload.hasActiveSubscription !== undefined;
+
+        if (!providerCheck.exists || hasAccessInfo) {
+          const providerData: Record<string, unknown> = {
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            source: "sos-expat-booking-sync",
+          };
+
+          // Infos de base
+          if (payload.providerName) providerData.name = payload.providerName;
+          if (payload.providerEmail) providerData.email = payload.providerEmail;
+          if (payload.providerType) providerData.type = payload.providerType;
+          if (payload.providerCountry) providerData.country = payload.providerCountry;
+
+          // P0 FIX: Infos d'accès IA - ces champs sont critiques pour aiOnBookingCreated
+          if (payload.forcedAIAccess !== undefined) {
+            providerData.forcedAIAccess = payload.forcedAIAccess === true;
+          }
+          if (payload.subscriptionStatus !== undefined) {
+            providerData.subscriptionStatus = payload.subscriptionStatus;
+          }
+          if (payload.hasActiveSubscription !== undefined) {
+            providerData.hasActiveSubscription = payload.hasActiveSubscription === true;
+          }
+          if (payload.freeTrialUntil) {
+            providerData.freeTrialUntil = admin.firestore.Timestamp.fromDate(
+              new Date(payload.freeTrialUntil)
+            );
+          }
+
+          // Si nouveau provider, ajouter createdAt et active
+          if (!providerCheck.exists) {
+            providerData.createdAt = admin.firestore.FieldValue.serverTimestamp();
+            providerData.active = true;
+            // Quota IA par défaut
+            providerData.aiCallsUsed = 0;
+            providerData.aiCallsLimit = payload.forcedAIAccess === true ? -1 : 100;
+          }
+
+          await providerRef.set(providerData, { merge: true });
+
+          logger.info(`✅ [ingestBooking-${requestId}] PROVIDER AUTO-CREATED/UPDATED:`, {
+            providerId: payload.providerId,
+            wasNew: !providerCheck.exists,
+            forcedAIAccess: providerData.forcedAIAccess,
+            subscriptionStatus: providerData.subscriptionStatus,
+            hasActiveSubscription: providerData.hasActiveSubscription,
+          });
+        }
       } else {
         logger.error(`❌ [ingestBooking-${requestId}] NO PROVIDER ID IN PAYLOAD!`, {
           FIX: "SOS n'envoie pas de providerId. Vérifiez que createAndScheduleCallFunction inclut providerId dans outilPayload.",

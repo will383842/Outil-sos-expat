@@ -97,6 +97,12 @@ export const IngestBookingSchema = z.object({
   providerType: ProviderTypeSchema.optional().nullable(),
   providerName: z.string().max(200).optional().nullable(),
   providerCountry: z.string().max(100).optional().nullable(),
+  providerEmail: z.string().email().optional().nullable(),
+
+  // P0 FIX: Champs d'accès IA du provider (envoyés par SOS pour auto-création du provider)
+  forcedAIAccess: z.boolean().optional(),
+  freeTrialUntil: z.string().datetime().optional().nullable(),
+  hasActiveSubscription: z.boolean().optional(),
 
   // Métadonnées
   source: z.string().max(100).optional().default("sos-expat"),

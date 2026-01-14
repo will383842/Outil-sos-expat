@@ -24,7 +24,7 @@ import { useAuth, useProvider, useSubscription } from "../contexts/UnifiedUserCo
 import { useLanguage } from "../hooks/useLanguage";
 import ProviderSidebar from "./components/ProviderSidebar";
 import DevTestTools from "./components/DevTestTools";
-import { Loader2, ShieldAlert, UserX, Menu } from "lucide-react";
+import { Loader2, ShieldAlert, UserX, Menu, ChevronDown, Scale, Globe, Check } from "lucide-react";
 
 // Mock provider for dev mode
 const MOCK_PROVIDER = {
@@ -46,7 +46,7 @@ const ConversationDetail = lazy(() => import("./pages/ConversationDetail"));
 // Note: ProviderProfile removed - not useful for SSO users, profile is managed on SOS Expat
 
 // =============================================================================
-// MOBILE HEADER COMPONENT - Hamburger menu for mobile navigation
+// MOBILE HEADER COMPONENT - Hamburger menu + Provider Switcher for mobile
 // =============================================================================
 
 interface MobileHeaderProps {
@@ -54,19 +54,117 @@ interface MobileHeaderProps {
 }
 
 const MobileHeader = memo(function MobileHeader({ onMenuClick }: MobileHeaderProps) {
+  const { linkedProviders, activeProvider, switchProvider } = useProvider();
+  const { t } = useLanguage({ mode: "provider" });
+  const [showProviderMenu, setShowProviderMenu] = useState(false);
+
+  const hasMultipleProviders = linkedProviders.length > 1;
+
   return (
-    <header className="lg:hidden sticky top-0 z-30 flex items-center h-14 px-4 bg-slate-900 border-b border-slate-700/50">
-      <button
-        onClick={onMenuClick}
-        className="p-2 -ml-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors min-h-[48px] min-w-[48px] flex items-center justify-center"
-        aria-label="Ouvrir le menu"
-      >
-        <Menu className="w-6 h-6" />
-      </button>
-      <div className="flex items-center gap-2 ml-3">
-        <span className="font-bold text-white">SOS-Expat</span>
-        <span className="text-xs text-slate-400">Pro</span>
+    <header className="lg:hidden sticky top-0 z-30 flex items-center justify-between h-14 px-4 bg-slate-900 border-b border-slate-700/50">
+      {/* Left: Menu button + Logo */}
+      <div className="flex items-center">
+        <button
+          onClick={onMenuClick}
+          className="p-2 -ml-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors min-h-[48px] min-w-[48px] flex items-center justify-center"
+          aria-label="Ouvrir le menu"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+        <div className="flex items-center gap-2 ml-2">
+          <span className="font-bold text-white">SOS-Expat</span>
+          <span className="text-xs text-slate-400">Pro</span>
+        </div>
       </div>
+
+      {/* Right: Provider Switcher (mobile) */}
+      {activeProvider && (
+        <div className="relative">
+          <button
+            onClick={() => hasMultipleProviders && setShowProviderMenu(!showProviderMenu)}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+              hasMultipleProviders
+                ? "hover:bg-slate-700/50 cursor-pointer"
+                : "cursor-default"
+            }`}
+            disabled={!hasMultipleProviders}
+          >
+            <div className="text-right">
+              <p className="text-sm font-medium text-white truncate max-w-[120px]">
+                {activeProvider.name}
+              </p>
+              {hasMultipleProviders && (
+                <p className="text-[10px] text-slate-400">
+                  {t("provider:sidebar.providersCount", { count: linkedProviders.length })}
+                </p>
+              )}
+            </div>
+            {hasMultipleProviders && (
+              <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showProviderMenu ? "rotate-180" : ""}`} />
+            )}
+          </button>
+
+          {/* Provider Dropdown Menu */}
+          {showProviderMenu && hasMultipleProviders && (
+            <>
+              {/* Backdrop */}
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setShowProviderMenu(false)}
+              />
+              {/* Menu */}
+              <div className="absolute right-0 top-full mt-2 w-64 bg-slate-800 rounded-xl shadow-2xl border border-slate-700 z-50 overflow-hidden">
+                <div className="p-2 border-b border-slate-700">
+                  <p className="text-xs font-medium text-slate-400 uppercase tracking-wide px-2">
+                    {t("provider:providerSwitcher.switchProvider")}
+                  </p>
+                </div>
+                <div className="py-1 max-h-[300px] overflow-y-auto">
+                  {linkedProviders.map((provider) => {
+                    const isActive = provider.id === activeProvider.id;
+                    return (
+                      <button
+                        key={provider.id}
+                        onClick={() => {
+                          switchProvider(provider.id);
+                          setShowProviderMenu(false);
+                        }}
+                        className={`w-full flex items-center gap-3 px-3 py-3 text-left transition-colors ${
+                          isActive ? "bg-red-500/20" : "hover:bg-slate-700/50"
+                        }`}
+                      >
+                        <div className={`p-2 rounded-lg ${
+                          provider.type === "lawyer" ? "bg-purple-500/20" : "bg-blue-500/20"
+                        }`}>
+                          {provider.type === "lawyer" ? (
+                            <Scale className="w-4 h-4 text-purple-400" />
+                          ) : (
+                            <Globe className="w-4 h-4 text-blue-400" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-white truncate">
+                            {provider.name}
+                          </p>
+                          <p className="text-xs text-slate-400">
+                            {provider.type === "lawyer"
+                              ? t("provider:sidebar.lawyer")
+                              : t("provider:sidebar.expert")}
+                            {provider.country && ` • ${provider.country}`}
+                          </p>
+                        </div>
+                        {isActive && (
+                          <Check className="w-5 h-5 text-red-400 flex-shrink-0" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </header>
   );
 });
