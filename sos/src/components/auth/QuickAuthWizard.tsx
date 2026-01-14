@@ -190,11 +190,13 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
 
   // Handle Google login with timeout protection
   const handleGoogleLogin = useCallback(async () => {
+    console.log('🔵 [QuickAuthWizard] handleGoogleLogin START');
     setIsGoogleLoading(true);
     setError(null);
 
     // Set a timeout to reset loading state after 30 seconds
     googleTimeoutRef.current = setTimeout(() => {
+      console.log('🔴 [QuickAuthWizard] Google login TIMEOUT after 30s');
       setIsGoogleLoading(false);
       setError(intl.formatMessage({ id: 'auth.wizard.error.timeout' }));
     }, 30000);
@@ -205,7 +207,9 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
         sessionStorage.setItem('googleAuthRedirect', bookingRedirectUrl);
         console.log('[QuickAuthWizard] Saved booking redirect URL:', bookingRedirectUrl);
       }
+      console.log('🔵 [QuickAuthWizard] Calling loginWithGoogle...');
       await loginWithGoogle(true);
+      console.log('🟢 [QuickAuthWizard] loginWithGoogle SUCCESS');
       // Clear timeout on success
       if (googleTimeoutRef.current) {
         clearTimeout(googleTimeoutRef.current);
@@ -215,7 +219,9 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
       // FIX: Attendre que user Firestore soit chargé avant de naviguer
       setPendingSuccess(true);
     } catch (err: any) {
-      console.error('Google login error:', err);
+      console.error('🔴 [QuickAuthWizard] Google login error:', err);
+      console.error('🔴 [QuickAuthWizard] Error code:', err?.code);
+      console.error('🔴 [QuickAuthWizard] Error message:', err?.message);
       // Clear timeout on error
       if (googleTimeoutRef.current) {
         clearTimeout(googleTimeoutRef.current);
@@ -223,17 +229,22 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
       setIsGoogleLoading(false);
 
       if (err.code === 'auth/popup-closed-by-user') {
+        console.log('🟡 [QuickAuthWizard] User closed popup');
         // User closed popup - no error needed
         return;
       }
       if (err.code === 'auth/popup-blocked') {
+        console.log('🟡 [QuickAuthWizard] Popup blocked');
         setError(intl.formatMessage({ id: 'auth.wizard.popupBlocked' }));
       } else if (err.code === 'auth/cancelled-popup-request') {
+        console.log('🟡 [QuickAuthWizard] Popup cancelled');
         // Another popup was opened - ignore
         return;
       } else if (err.code === 'auth/network-request-failed') {
+        console.log('🔴 [QuickAuthWizard] Network error');
         setError(intl.formatMessage({ id: 'auth.wizard.error.network' }));
       } else {
+        console.log('🔴 [QuickAuthWizard] Unknown error, showing generic message');
         setError(intl.formatMessage({ id: 'auth.wizard.error.google' }));
       }
     }
