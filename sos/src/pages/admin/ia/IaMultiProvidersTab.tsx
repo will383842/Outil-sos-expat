@@ -1862,47 +1862,66 @@ export const IaMultiProvidersTab: React.FC = () => {
                             key={provider.id}
                             onClick={() => setSelectedProvider(provider)}
                             className={cn(
-                              'w-full p-3 text-left border rounded-xl transition-all',
+                              'w-full p-4 text-left border-2 rounded-xl transition-all',
                               selectedProvider?.id === provider.id
-                                ? 'border-indigo-500 bg-indigo-50 shadow-sm'
+                                ? 'border-indigo-500 bg-indigo-50 shadow-md ring-2 ring-indigo-200'
                                 : 'border-gray-200 hover:border-indigo-300 hover:bg-gray-50'
                             )}
                           >
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-4">
+                              {/* Icône rôle mise en avant */}
                               <div className={cn(
-                                'p-2 rounded-lg',
+                                'p-3 rounded-xl flex-shrink-0',
                                 provider.type === 'lawyer' ? 'bg-blue-100' : 'bg-green-100'
                               )}>
                                 {provider.type === 'lawyer' ? (
-                                  <Scale className="w-4 h-4 text-blue-600" />
+                                  <Scale className="w-6 h-6 text-blue-600" />
                                 ) : (
-                                  <Globe className="w-4 h-4 text-green-600" />
+                                  <Globe className="w-6 h-6 text-green-600" />
                                 )}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <div className="font-semibold text-gray-900 flex items-center gap-2">
-                                  {provider.displayName}
+                                {/* Badge rôle en premier - très visible */}
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className={cn(
+                                    'px-2 py-1 text-xs rounded-lg font-bold uppercase tracking-wide',
+                                    provider.type === 'lawyer'
+                                      ? 'bg-blue-600 text-white'
+                                      : 'bg-green-600 text-white'
+                                  )}>
+                                    {provider.type === 'lawyer' ? 'Avocat' : 'Expert expatrié'}
+                                  </span>
                                   {provider.isAAA && (
-                                    <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-xs rounded font-medium">AAA</span>
+                                    <span className="px-2 py-1 bg-amber-500 text-white text-xs rounded-lg font-bold flex items-center gap-1">
+                                      <Star className="w-3 h-3" />
+                                      AAA
+                                    </span>
                                   )}
                                 </div>
+                                {/* Nom et email */}
+                                <div className="font-semibold text-gray-900 text-base">
+                                  {provider.displayName}
+                                </div>
                                 <div className="text-sm text-gray-500 truncate">{provider.email}</div>
-                                <div className="flex items-center gap-1.5 mt-1">
-                                  <span className={cn(
-                                    'px-1.5 py-0.5 text-xs rounded font-medium',
-                                    provider.type === 'lawyer' ? 'bg-blue-50 text-blue-600' : 'bg-green-50 text-green-600'
-                                  )}>
-                                    {provider.type === 'lawyer' ? 'Avocat' : 'Expert'}
-                                  </span>
+                                {/* Langues et pays */}
+                                <div className="flex items-center gap-2 mt-2">
                                   {provider.languages && provider.languages.length > 0 && (
-                                    <span className="text-xs text-gray-400">
-                                      {provider.languages.slice(0, 2).map(l => l.toUpperCase()).join(', ')}
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
+                                      <Languages className="w-3 h-3" />
+                                      {provider.languages.slice(0, 3).map(l => l.toUpperCase()).join(', ')}
+                                      {provider.languages.length > 3 && ` +${provider.languages.length - 3}`}
+                                    </span>
+                                  )}
+                                  {provider.country && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
+                                      <MapPin className="w-3 h-3" />
+                                      {provider.country}
                                     </span>
                                   )}
                                 </div>
                               </div>
                               {selectedProvider?.id === provider.id && (
-                                <CheckCircle2 className="w-5 h-5 text-indigo-600 flex-shrink-0" />
+                                <CheckCircle2 className="w-6 h-6 text-indigo-600 flex-shrink-0" />
                               )}
                             </div>
                           </button>
@@ -1925,6 +1944,11 @@ export const IaMultiProvidersTab: React.FC = () => {
                     setProviderSearchQuery('');
                     setLinkedProviderIdsForUser([]);
                     setAllAvailableProviders([]);
+                    // Reset les filtres également
+                    setAaaFilter('all');
+                    setRoleFilter('all');
+                    setLanguageFilter('');
+                    setCountryFilter('');
                   } else if (linkStep === 2 && createMode === 'link-to-provider') {
                     setLinkStep(1);
                     setSelectedUser(null);
