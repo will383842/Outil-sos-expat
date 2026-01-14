@@ -47,6 +47,51 @@ import ErrorBoundary from "../../components/common/ErrorBoundary";
 import { useAuth } from "../../contexts/AuthContext";
 import { logError } from "../../utils/logging";
 
+// ============ COST CALCULATION CONSTANTS ============
+// Based on actual pricing from getCostMetrics.ts
+// NOTE: Stripe/PayPal fees are NOT included because they are paid by the PROVIDER
+// (Direct Charges model = fees deducted from provider's Stripe Connect account)
+const COST_PRICING = {
+  // Twilio pricing (Europe)
+  TWILIO: {
+    VOICE_PER_MINUTE_EUR: 0.014,  // Prix par minute d'appel sortant
+    // Pour un appel conférence: 2 participants × 2 legs = ~4× le tarif de base
+    // + frais de conférence Twilio
+    CONFERENCE_MULTIPLIER: 4.2,
+  },
+  // GCP costs (estimated per call)
+  GCP: {
+    CLOUD_FUNCTIONS_PER_CALL_EUR: 0.002,  // ~2 invocations par appel
+    FIRESTORE_PER_CALL_EUR: 0.001,         // ~10-20 reads/writes par appel
+    CLOUD_TASKS_PER_CALL_EUR: 0.0005,      // Scheduling
+  },
+};
+
+/**
+ * Calculate costs for a single call based on duration
+ */
+const calculateCallCosts = (
+  durationSeconds: number
+): { twilio: number; gcp: number; total: number } => {
+  // Twilio cost: duration in minutes × rate × conference multiplier
+  const durationMinutes = Math.ceil(durationSeconds / 60); // Round up to next minute
+  const twilioCost = durationMinutes * COST_PRICING.TWILIO.VOICE_PER_MINUTE_EUR * COST_PRICING.TWILIO.CONFERENCE_MULTIPLIER;
+
+  // GCP cost: fixed overhead per call
+  const gcpCost =
+    COST_PRICING.GCP.CLOUD_FUNCTIONS_PER_CALL_EUR +
+    COST_PRICING.GCP.FIRESTORE_PER_CALL_EUR +
+    COST_PRICING.GCP.CLOUD_TASKS_PER_CALL_EUR;
+
+  const total = twilioCost + gcpCost;
+
+  return {
+    twilio: Math.round(twilioCost * 100) / 100,
+    gcp: Math.round(gcpCost * 100) / 100,
+    total: Math.round(total * 100) / 100
+  };
+};
+
 // ============ TYPES ============
 interface CallSession {
   id: string;
@@ -101,6 +146,13 @@ interface CallSession {
     requestId?: string;
     clientLanguages?: string[];
     providerLanguages?: string[];
+    isProviderAAA?: boolean;  // Whether provider is an AAA profile
+  };
+  // Calculated costs (not stored in Firestore)
+  costs?: {
+    twilio: number;
+    gcp: number;
+    total: number;
   };
 }
 
@@ -245,6 +297,42 @@ const DurationDisplay: React.FC<{
   );
 };
 
+// ============ COST DISPLAY COMPONENT ============
+const CostDisplay: React.FC<{
+  costs?: { twilio: number; gcp: number; total: number };
+  locale?: string;
+}> = ({ costs, locale = 'fr-FR' }) => {
+  if (!costs) {
+    return (
+      <div className="text-sm text-gray-400">
+        —
+      </div>
+    );
+  }
+
+  const formatCost = (value: number) => {
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: 'EUR',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 3,
+    }).format(value);
+  };
+
+  return (
+    <div className="text-sm">
+      <div className="font-medium text-red-600" title={`Twilio: ${formatCost(costs.twilio)} | GCP: ${formatCost(costs.gcp)}`}>
+        {formatCost(costs.total)}
+      </div>
+      <div className="text-xs text-gray-500">
+        <span title="Twilio voice costs">T: {formatCost(costs.twilio)}</span>
+        <span className="mx-1">|</span>
+        <span title="GCP infrastructure costs">G: {formatCost(costs.gcp)}</span>
+      </div>
+    </div>
+  );
+};
+
 interface ParticipantLabels {
   provider: string;
   client: string;
@@ -261,7 +349,8 @@ const ParticipantInfo: React.FC<{
   name?: string;
   type: 'provider' | 'client';
   labels: ParticipantLabels;
-}> = ({ participant, name, type, labels }) => {
+  isAAA?: boolean;  // Whether this provider is an AAA profile
+}> = ({ participant, name, type, labels, isAAA }) => {
   const getStatusColor = () => {
     switch (participant.status) {
       case 'connected': return 'text-green-600';
@@ -288,8 +377,15 @@ const ParticipantInfo: React.FC<{
         {type === 'provider' ? '👨‍💼' : '👤'}
       </div>
       <div className="min-w-0 flex-1">
-        <div className="text-sm font-medium text-gray-900 truncate">
-          {name || (type === 'provider' ? labels.provider : labels.client)}
+        <div className="flex items-center gap-1">
+          <span className="text-sm font-medium text-gray-900 truncate">
+            {name || (type === 'provider' ? labels.provider : labels.client)}
+          </span>
+          {type === 'provider' && isAAA && (
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold bg-purple-100 text-purple-800 border border-purple-300" title="Profil AAA (géré en interne)">
+              AAA
+            </span>
+          )}
         </div>
         <div className="text-xs text-gray-500 font-mono">
           {participant.phone}
@@ -488,7 +584,7 @@ const AdminCallsSessions: React.FC = () => {
   };
 
   // Cache pour les noms des utilisateurs (évite les requêtes répétées)
-  const [userNamesCache, setUserNamesCache] = useState<Record<string, { firstName?: string; lastName?: string; displayName?: string }>>({});
+  const [userNamesCache, setUserNamesCache] = useState<Record<string, { firstName?: string; lastName?: string; displayName?: string; isAAA?: boolean }>>({});
 
   // Fonction pour enrichir les sessions avec les vrais noms des utilisateurs
   const enrichSessionsWithNames = async (sessions: CallSession[]): Promise<CallSession[]> => {
@@ -507,20 +603,31 @@ const AdminCallsSessions: React.FC = () => {
       }
     });
 
-    // Si aucun nom manquant, retourner les sessions telles quelles
-    if (missingClientIds.size === 0 && missingProviderIds.size === 0) {
-      // Appliquer le cache existant
-      return sessions.map(session => ({
+    // Helper to enrich session with costs and AAA info
+    const enrichSession = (session: CallSession, cache: typeof userNamesCache): CallSession => {
+      const duration = session.conference.duration || 0;
+      const costs = calculateCallCosts(duration);
+      const providerInfo = cache[session.metadata.providerId];
+
+      return {
         ...session,
+        costs,
         metadata: {
           ...session.metadata,
-          clientName: session.metadata.clientName || formatUserName(userNamesCache[session.metadata.clientId]),
-          providerName: session.metadata.providerName || formatUserName(userNamesCache[session.metadata.providerId])
+          clientName: session.metadata.clientName || formatUserName(cache[session.metadata.clientId]),
+          providerName: session.metadata.providerName || formatUserName(providerInfo),
+          isProviderAAA: providerInfo?.isAAA || false
         }
-      }));
+      };
+    };
+
+    // Si aucun nom manquant, retourner les sessions telles quelles avec coûts
+    if (missingClientIds.size === 0 && missingProviderIds.size === 0) {
+      // Appliquer le cache existant
+      return sessions.map(session => enrichSession(session, userNamesCache));
     }
 
-    const newCache: Record<string, { firstName?: string; lastName?: string; displayName?: string }> = { ...userNamesCache };
+    const newCache: Record<string, { firstName?: string; lastName?: string; displayName?: string; isAAA?: boolean }> = { ...userNamesCache };
 
     // Charger les noms des clients depuis "users"
     const clientPromises = Array.from(missingClientIds).map(async (clientId) => {
@@ -531,7 +638,8 @@ const AdminCallsSessions: React.FC = () => {
           newCache[clientId] = {
             firstName: data.firstName,
             lastName: data.lastName,
-            displayName: data.displayName || data.name
+            displayName: data.displayName || data.name,
+            isAAA: false  // Clients are never AAA
           };
         }
       } catch (error) {
@@ -539,7 +647,7 @@ const AdminCallsSessions: React.FC = () => {
       }
     });
 
-    // Charger les noms des prestataires depuis "sos_profiles"
+    // Charger les noms des prestataires depuis "sos_profiles" avec statut AAA
     const providerPromises = Array.from(missingProviderIds).map(async (providerId) => {
       try {
         // D'abord essayer sos_profiles
@@ -549,7 +657,8 @@ const AdminCallsSessions: React.FC = () => {
           newCache[providerId] = {
             firstName: data.firstName,
             lastName: data.lastName,
-            displayName: data.displayName || data.name
+            displayName: data.displayName || data.name,
+            isAAA: data.isAAA === true  // Get AAA status from profile
           };
         } else {
           // Fallback vers users
@@ -559,7 +668,8 @@ const AdminCallsSessions: React.FC = () => {
             newCache[providerId] = {
               firstName: data.firstName,
               lastName: data.lastName,
-              displayName: data.displayName || data.name
+              displayName: data.displayName || data.name,
+              isAAA: data.isAAA === true  // Check users collection too
             };
           }
         }
@@ -574,15 +684,8 @@ const AdminCallsSessions: React.FC = () => {
     // Mettre à jour le cache
     setUserNamesCache(newCache);
 
-    // Enrichir les sessions avec les noms
-    return sessions.map(session => ({
-      ...session,
-      metadata: {
-        ...session.metadata,
-        clientName: session.metadata.clientName || formatUserName(newCache[session.metadata.clientId]),
-        providerName: session.metadata.providerName || formatUserName(newCache[session.metadata.providerId])
-      }
-    }));
+    // Enrichir les sessions avec les noms, coûts et statut AAA
+    return sessions.map(session => enrichSession(session, newCache));
   };
 
   // Formater le nom d'un utilisateur
@@ -742,12 +845,16 @@ const AdminCallsSessions: React.FC = () => {
       'Type Service': session.metadata.serviceType,
       'Type Prestataire': session.metadata.providerType,
       'Prestataire': session.metadata.providerName || 'N/A',
+      'Profil AAA': session.metadata.isProviderAAA ? 'Oui' : 'Non',
       'Client': session.metadata.clientName || 'N/A',
       'Téléphone Prestataire': session.participants.provider.phone,
       'Téléphone Client': session.participants.client.phone,
       'Durée (s)': session.conference.duration || 0,
       'Montant (€)': session.payment.amount,
       'Statut Paiement': session.payment.status,
+      'Coût Twilio (€)': session.costs?.twilio || 0,
+      'Coût GCP (€)': session.costs?.gcp || 0,
+      'Coût Total (€)': session.costs?.total || 0,
       'Date Création': session.metadata.createdAt.toDate().toLocaleString(getDateLocale(language)),
       'Date Début': session.conference.startedAt?.toDate().toLocaleString(getDateLocale(language)) || 'N/A',
       'Date Fin': session.conference.endedAt?.toDate().toLocaleString(getDateLocale(language)) || 'N/A',
@@ -1070,6 +1177,9 @@ const AdminCallsSessions: React.FC = () => {
                       {intl.formatMessage({ id: 'admin.callSessions.table.payment', defaultMessage: 'Paiement' })}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {intl.formatMessage({ id: 'admin.callSessions.table.costs', defaultMessage: 'Coûts' })}
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       {intl.formatMessage({ id: 'admin.callSessions.table.date', defaultMessage: 'Date' })}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -1104,6 +1214,7 @@ const AdminCallsSessions: React.FC = () => {
                             name={session.metadata.providerName}
                             type="provider"
                             labels={participantLabels}
+                            isAAA={session.metadata.isProviderAAA}
                           />
                           <ParticipantInfo
                             participant={session.participants.client}
@@ -1127,6 +1238,13 @@ const AdminCallsSessions: React.FC = () => {
                           status={session.payment.status}
                           amount={session.payment.amount}
                           labels={paymentLabels}
+                          locale={language}
+                        />
+                      </td>
+
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <CostDisplay
+                          costs={session.costs}
                           locale={language}
                         />
                       </td>
