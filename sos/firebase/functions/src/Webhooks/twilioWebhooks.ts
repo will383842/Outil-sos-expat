@@ -26,10 +26,14 @@ interface TwilioCallWebhookBody {
   To: string;
   AnsweredBy?: string;
   Timestamp: string;
-  
+
   // Informations supplémentaires
   Direction?: string;
   ForwardedFrom?: string;
+
+  // Pricing info (sent on "completed" status)
+  Price?: string;       // Cost of the call (e.g., "-0.0150")
+  PriceUnit?: string;   // Currency (e.g., "USD")
 }
 
 /**
@@ -447,12 +451,17 @@ async function handleCallCompleted(
   try {
     const duration = parseInt(body.CallDuration || '0');
 
+    // Extract Twilio cost from webhook (Price is negative, e.g., "-0.0150")
+    const twilioPrice = body.Price ? Math.abs(parseFloat(body.Price)) : null;
+    const priceUnit = body.PriceUnit || 'USD';
+
     console.log(`\n${'─'.repeat(60)}`);
     console.log(`🏁 [${completedId}] handleCallCompleted START`);
     console.log(`🏁 [${completedId}]   sessionId: ${sessionId}`);
     console.log(`🏁 [${completedId}]   participantType: ${participantType}`);
     console.log(`🏁 [${completedId}]   callSid: ${body.CallSid}`);
     console.log(`🏁 [${completedId}]   duration: ${duration}s`);
+    console.log(`🏁 [${completedId}]   twilioPrice: ${twilioPrice} ${priceUnit}`);
     console.log(`🏁 [${completedId}]   earlyDisconnection: ${duration < 120 ? 'YES' : 'NO'}`);
     console.log(`${'─'.repeat(60)}`);
 
@@ -460,9 +469,47 @@ async function handleCallCompleted(
       sessionId,
       participantType,
       duration,
+      twilioPrice,
+      priceUnit,
       callSid: body.CallSid?.slice(0, 20) + '...',
       earlyDisconnection: duration < 120
     });
+
+    // Store Twilio cost in call_session if available
+    if (twilioPrice !== null) {
+      try {
+        const db = admin.firestore();
+        const sessionRef = db.collection('call_sessions').doc(sessionId);
+        const sessionDoc = await sessionRef.get();
+
+        if (sessionDoc.exists) {
+          const existingCosts = sessionDoc.data()?.costs || {};
+          const existingTwilioCost = existingCosts.twilio || 0;
+
+          // Accumulate costs for both participants (client + provider legs)
+          const newTwilioCost = existingTwilioCost + twilioPrice;
+
+          // Fixed GCP cost per call (not per participant)
+          const gcpCost = 0.0035; // Cloud Functions + Firestore + Tasks
+
+          await sessionRef.update({
+            'costs.twilio': Math.round(newTwilioCost * 10000) / 10000,
+            'costs.twilioUnit': priceUnit,
+            'costs.gcp': gcpCost,
+            'costs.total': Math.round((newTwilioCost + gcpCost) * 10000) / 10000,
+            'costs.updatedAt': admin.firestore.FieldValue.serverTimestamp(),
+            'costs.isReal': true,  // Flag: this is real cost from Twilio, not estimated
+          });
+
+          console.log(`🏁 [${completedId}] 💰 Twilio cost stored: ${newTwilioCost} ${priceUnit} (accumulated from ${participantType})`);
+        }
+      } catch (costError) {
+        console.error(`🏁 [${completedId}] ⚠️ Failed to store Twilio cost (non-blocking):`, costError);
+        // Don't throw - cost storage failure shouldn't break the call flow
+      }
+    } else {
+      console.log(`🏁 [${completedId}] ⚠️ No Twilio price in webhook (will need manual refresh)`);
+    }
 
     console.log(`🏁 [${completedId}] STEP 1: Setting participant status to "disconnected"...`);
     await twilioCallManager.updateParticipantStatus(

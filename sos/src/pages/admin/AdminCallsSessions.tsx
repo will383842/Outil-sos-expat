@@ -148,11 +148,14 @@ interface CallSession {
     providerLanguages?: string[];
     isProviderAAA?: boolean;  // Whether provider is an AAA profile
   };
-  // Calculated costs (not stored in Firestore)
+  // Costs (stored in Firestore from Twilio webhook, or calculated as estimate)
   costs?: {
     twilio: number;
     gcp: number;
     total: number;
+    twilioUnit?: string;  // Currency (e.g., "USD")
+    isReal?: boolean;     // true = from Twilio API, false = estimated
+    updatedAt?: any;      // Timestamp when costs were last updated
   };
 }
 
@@ -299,7 +302,7 @@ const DurationDisplay: React.FC<{
 
 // ============ COST DISPLAY COMPONENT ============
 const CostDisplay: React.FC<{
-  costs?: { twilio: number; gcp: number; total: number };
+  costs?: { twilio: number; gcp: number; total: number; isReal?: boolean; twilioUnit?: string };
   locale?: string;
 }> = ({ costs, locale = 'fr-FR' }) => {
   if (!costs) {
@@ -310,19 +313,33 @@ const CostDisplay: React.FC<{
     );
   }
 
+  // Use USD if that's what Twilio returned, otherwise EUR
+  const currency = costs.twilioUnit === 'USD' ? 'USD' : 'EUR';
+
   const formatCost = (value: number) => {
     return new Intl.NumberFormat(locale, {
       style: 'currency',
-      currency: 'EUR',
+      currency: currency,
       minimumFractionDigits: 2,
-      maximumFractionDigits: 3,
+      maximumFractionDigits: 4,
     }).format(value);
   };
 
   return (
     <div className="text-sm">
-      <div className="font-medium text-red-600" title={`Twilio: ${formatCost(costs.twilio)} | GCP: ${formatCost(costs.gcp)}`}>
-        {formatCost(costs.total)}
+      <div className="flex items-center gap-1">
+        <span className="font-medium text-red-600" title={`Twilio: ${formatCost(costs.twilio)} | GCP: ${formatCost(costs.gcp)}`}>
+          {formatCost(costs.total)}
+        </span>
+        {costs.isReal ? (
+          <span className="inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700" title="Coût réel depuis Twilio">
+            ✓
+          </span>
+        ) : (
+          <span className="inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700" title="Coût estimé">
+            ~
+          </span>
+        )}
       </div>
       <div className="text-xs text-gray-500">
         <span title="Twilio voice costs">T: {formatCost(costs.twilio)}</span>
@@ -606,8 +623,24 @@ const AdminCallsSessions: React.FC = () => {
     // Helper to enrich session with costs and AAA info
     const enrichSession = (session: CallSession, cache: typeof userNamesCache): CallSession => {
       const duration = session.conference.duration || 0;
-      const costs = calculateCallCosts(duration);
       const providerInfo = cache[session.metadata.providerId];
+
+      // Use real costs from Firestore if available, otherwise calculate estimate
+      let costs: CallSession['costs'];
+      if (session.costs?.isReal) {
+        // Real costs from Twilio webhook - use as-is
+        costs = session.costs;
+      } else if (session.costs?.twilio !== undefined) {
+        // Partial costs in Firestore - keep them
+        costs = session.costs;
+      } else {
+        // No costs stored - calculate estimate
+        const estimatedCosts = calculateCallCosts(duration);
+        costs = {
+          ...estimatedCosts,
+          isReal: false,
+        };
+      }
 
       return {
         ...session,
