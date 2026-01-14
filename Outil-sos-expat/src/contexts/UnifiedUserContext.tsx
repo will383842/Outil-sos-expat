@@ -250,7 +250,7 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
           }
         }
         // 2. Vérifier SSO subscription claims (générés par generateOutilToken dans SOS)
-        else if (claims.subscriptionStatus || claims.subscriptionTier || claims.provider === true) {
+        else if (claims.subscriptionStatus || claims.subscriptionTier || claims.provider === true || claims.forcedAccess === true) {
           // Token SSO avec infos d'abonnement de SOS
           const ssoStatus = claims.subscriptionStatus as string | undefined;
           const ssoTier = claims.subscriptionTier as string | undefined;
@@ -263,15 +263,15 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
             (ssoStatus && activeStatuses.includes(ssoStatus)) ||
             (freeTrialUntil && new Date(freeTrialUntil) > new Date());
 
-          if (import.meta.env.DEV) {
-            console.debug("[UnifiedUser] SSO subscription from token:", {
-              ssoStatus,
-              ssoTier,
-              hasForcedAccess,
-              freeTrialUntil,
-              isActive
-            });
-          }
+          // Log toujours en production pour debug
+          console.log("[UnifiedUser] SSO subscription from token:", {
+            ssoStatus,
+            ssoTier,
+            hasForcedAccess,
+            freeTrialUntil,
+            isActive,
+            allClaims: claims
+          });
 
           setSubscription({
             hasActiveSubscription: isActive || false,

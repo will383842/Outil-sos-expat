@@ -279,10 +279,13 @@ export const generateOutilToken = onCall(
     console.log("[generateOutilToken] User:", { callerUid, callerEmail, targetUid: uid, targetEmail: email, isActingAsProvider });
 
     try {
-      // SYNC: Synchroniser les linkedProviderIds vers l'Outil IA
+      // SYNC: Synchroniser les linkedProviderIds vers l'Outil IA (non-bloquant)
       // Cela permet au provider switcher de fonctionner dans l'Outil IA
-      console.log("[generateOutilToken] Syncing linked providers to Outil IA...");
-      await syncLinkedProvidersToOutil(db, callerUid, callerEmail);
+      // Note: On ne await pas pour ne pas bloquer le SSO si la sync échoue
+      console.log("[generateOutilToken] Starting non-blocking sync to Outil IA...");
+      syncLinkedProvidersToOutil(db, callerUid, callerEmail).catch((err) => {
+        console.error("[generateOutilToken] Non-blocking sync failed:", err);
+      });
 
       // 2. Vérifier que l'utilisateur est un prestataire
       console.log("[generateOutilToken] Checking if user is provider...");
@@ -297,8 +300,22 @@ export const generateOutilToken = onCall(
       }
 
       // 3. Vérifier l'accès admin forcé (bypass complet si activé)
+      // Vérifier à la fois sur le callerUid ET le targetUid pour les cas multi-provider
       console.log("[generateOutilToken] Checking forced access...");
-      const { hasForcedAccess, freeTrialUntil } = await checkForcedAccess(db, uid);
+      let { hasForcedAccess, freeTrialUntil } = await checkForcedAccess(db, uid);
+
+      // Si pas d'accès forcé sur le target, vérifier aussi sur le caller (pour multi-provider)
+      if (!hasForcedAccess && !freeTrialUntil && callerUid !== uid) {
+        console.log("[generateOutilToken] Checking forced access on caller account...");
+        const callerAccess = await checkForcedAccess(db, callerUid);
+        if (callerAccess.hasForcedAccess) {
+          hasForcedAccess = true;
+          console.log("[generateOutilToken] Caller has forced access, granting to target provider");
+        } else if (callerAccess.freeTrialUntil) {
+          freeTrialUntil = callerAccess.freeTrialUntil;
+          console.log("[generateOutilToken] Caller has free trial, applying to target provider");
+        }
+      }
       console.log("[generateOutilToken] Forced access:", { hasForcedAccess, freeTrialUntil });
 
       // Si accès forcé par admin, générer directement le token (bypass tout)
