@@ -124,9 +124,32 @@
   <script>
     (function () {
       var PIXEL_ID = '2204016713738311';
+      var INIT_KEY = '__fbp_init_' + PIXEL_ID;
 
+      // ✅ Protection anti-doublon niveau 1: sessionStorage (persiste entre navigations SPA)
+      try {
+        if (sessionStorage.getItem(INIT_KEY)) {
+          window.__metaMarketingGranted = true;
+          return;
+        }
+      } catch (e) { /* sessionStorage non disponible */ }
+
+      // ✅ Protection anti-doublon niveau 2: vérifier si fbq a déjà ce pixel
+      if (window.fbq) {
+        try {
+          var state = window.fbq.getState && window.fbq.getState();
+          var pixels = state && state.pixels;
+          if (pixels && pixels.some(function(p) { return p.id === PIXEL_ID; })) {
+            try { sessionStorage.setItem(INIT_KEY, '1'); } catch (e) {}
+            window.__metaMarketingGranted = true;
+            return;
+          }
+        } catch (e) { /* getState non disponible */ }
+      }
+
+      // Charger le script Facebook si pas encore chargé
       !function (f, b, e, v, n, t, s) {
-        if (f.fbq) return;
+        if (f.fbq) return; // Script déjà chargé, ne pas recharger
         n = f.fbq = function () {
           n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments)
         };
@@ -142,15 +165,13 @@
         s.parentNode.insertBefore(t, s)
       }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
 
+      // Initialiser le pixel
       fbq('init', PIXEL_ID);
-
-      // ✅ Track immédiatement (aucun consentement / GDPR)
       fbq('track', 'PageView');
 
-      // Flag éventuel si tu veux conditionner des events côté app
+      // Marquer comme initialisé (sessionStorage + window)
+      try { sessionStorage.setItem(INIT_KEY, '1'); } catch (e) {}
       window.__metaMarketingGranted = true;
-
-      // On garde la fonction pour ne rien casser si ta bannière l'appelle
       window.metaPixelConsent = function () { };
     })();
   </script>
