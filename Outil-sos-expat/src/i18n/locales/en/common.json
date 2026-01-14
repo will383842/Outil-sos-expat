@@ -140,6 +140,8 @@
     "backToSosExpat": "Back to sos-expat.com",
     "subscriptionRequired": "Subscription required",
     "subscriptionRequiredMessage": "An active subscription is required.",
+    "subscriptionManagedOnSos": "Your subscription is managed on sos-expat.com. Please go there to activate or manage your AI Assistant subscription.",
+    "manageSubscriptionOnSos": "Manage my subscription on SOS-Expat",
     "viewOffers": "View offers",
     "needHelp": "Need help? Contact us at",
     "close": "Close"

@@ -18,7 +18,7 @@
 import { memo } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { useAuth, useSubscription } from "../contexts/UnifiedUserContext";
-import { BlockedScreen, SubscriptionScreen } from "./guards";
+import { BlockedScreen } from "./guards";
 import { useLanguage } from "../hooks/useLanguage";
 
 // =============================================================================
@@ -164,13 +164,27 @@ function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // ABONNEMENT INACTIF → Écran attractif avec offre d'inscription
+  // ABONNEMENT INACTIF → Rediriger vers SOS-Expat (abonnements gérés là-bas)
+  // Note: Si l'utilisateur arrive ici via SSO, le token devrait avoir les bons claims
+  // Si pas d'abonnement, c'est que le token SSO n'a pas été généré correctement
   // ─────────────────────────────────────────────────────────────────────────
   if (!hasActiveSubscription) {
+    // Rediriger vers SOS-Expat pour gérer l'abonnement
+    // L'abonnement est géré dans SOS, pas dans l'outil IA
     return (
-      <SubscriptionScreen
+      <BlockedScreen
+        icon="credit-card"
+        title={t("guards.subscriptionRequired")}
+        description={t("guards.subscriptionManagedOnSos")}
+        primaryAction={{
+          label: t("guards.manageSubscriptionOnSos"),
+          href: "https://sos-expat.com/dashboard/abonnement",
+        }}
+        secondaryAction={{
+          label: t("guards.backToSosExpat"),
+          href: "https://sos-expat.com",
+        }}
         userEmail={user.email}
-        providerType={role as "lawyer" | "expat" | null}
       />
     );
   }

@@ -140,6 +140,8 @@
     "backToSosExpat": "Retour à sos-expat.com",
     "subscriptionRequired": "Abonnement requis",
     "subscriptionRequiredMessage": "Un abonnement actif est requis.",
+    "subscriptionManagedOnSos": "Votre abonnement est géré sur sos-expat.com. Veuillez vous y rendre pour activer ou gérer votre abonnement à l'Assistant IA.",
+    "manageSubscriptionOnSos": "Gérer mon abonnement sur SOS-Expat",
     "viewOffers": "Voir les offres",
     "needHelp": "Besoin d'aide ? Contactez-nous à",
     "close": "Fermer"
