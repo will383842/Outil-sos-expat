@@ -116,7 +116,19 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
       user: !!user,
       isFullyReady,
       authInitialized,
+      isGoogleLoading,
     });
+
+    // ✅ FIX BUG: Détecter l'authentification PENDANT le login Google
+    // Le problème: loginWithGoogle fait des opérations Firestore après signInWithPopup
+    // Donc user devient truthy AVANT que await loginWithGoogle() ne retourne
+    // Solution: si on est en train de charger Google ET que user est authentifié, on ferme le popup
+    if (isGoogleLoading && user && authInitialized && isOpen) {
+      console.log('🟢 [QuickAuthWizard] User authenticated DURING Google loading! Calling onSuccess immediately...');
+      setIsGoogleLoading(false);
+      onSuccess();
+      return;
+    }
 
     // FIX: On ferme le popup dès que authInitialized ET user existe
     // Plus besoin d'attendre isFullyReady (qui attend le chargement Firestore complet)
@@ -138,7 +150,7 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
         authInitialized,
       });
     }
-  }, [pendingSuccess, step, user, authInitialized, onSuccess]);
+  }, [pendingSuccess, step, user, authInitialized, onSuccess, isGoogleLoading, isOpen]);
 
   // ✅ FIX BUG: Polling de secours pour détecter l'authentification
   // React peut parfois ne pas re-render quand les valeurs du contexte changent
