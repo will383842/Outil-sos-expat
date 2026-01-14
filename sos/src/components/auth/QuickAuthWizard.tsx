@@ -35,6 +35,15 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
   providerName,
   bookingRedirectUrl,
 }) => {
+  // DEBUG LOG: Component mount and props
+  console.log('🟣 [QuickAuthWizard] Component RENDERED with props:', {
+    isOpen,
+    providerName,
+    bookingRedirectUrl,
+    hasOnSuccess: !!onSuccess,
+    timestamp: new Date().toISOString(),
+  });
+
   const intl = useIntl();
   const { login, loginWithGoogle, register, user, authInitialized, isFullyReady } = useAuth();
 
@@ -113,10 +122,14 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
     // Plus besoin d'attendre isFullyReady (qui attend le chargement Firestore complet)
     if (pendingSuccess && step === 'success' && user && authInitialized) {
       console.log('🟢 [QuickAuthWizard] User authenticated! Calling onSuccess in 300ms...');
+      console.log('🟢 [QuickAuthWizard] onSuccess function reference:', onSuccess?.toString()?.substring(0, 100));
       const timeout = setTimeout(() => {
-        console.log('🟢 [QuickAuthWizard] Calling onSuccess NOW');
+        console.log('🟢 [QuickAuthWizard] Calling onSuccess NOW - BEFORE call');
+        console.log('🟢 [QuickAuthWizard] Current pathname:', window.location.pathname);
         setPendingSuccess(false);
         onSuccess();
+        console.log('🟢 [QuickAuthWizard] onSuccess() CALLED - AFTER call');
+        console.log('🟢 [QuickAuthWizard] Pathname AFTER onSuccess:', window.location.pathname);
       }, 300);
       return () => clearTimeout(timeout);
     } else if (pendingSuccess && step === 'success') {

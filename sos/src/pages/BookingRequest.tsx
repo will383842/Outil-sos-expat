@@ -1326,6 +1326,9 @@ const sanitizeInput = (input: string): string =>
 
 /** ===== Page (RHF) ===== */
 const BookingRequest: React.FC = () => {
+  // P0 DEBUG: Log component mount
+  console.log("🟠 [BookingRequest] Component MOUNTED/RENDERED at:", window.location.pathname);
+
   const intl = useIntl();
   const { providerId } = useParams<{ providerId: string }>();
   const navigate = useLocaleNavigate(); // ✅ P0 UX FIX: Use locale-aware navigation
@@ -1420,11 +1423,21 @@ const BookingRequest: React.FC = () => {
 
   // Rediriger vers login si non connecté
   useEffect(() => {
+    console.log("🟠 [BookingRequest] Auth check useEffect:", {
+      authLoading,
+      user: user ? user.uid : null,
+      providerId,
+      pathname: window.location.pathname,
+      timestamp: new Date().toISOString(),
+    });
     if (!authLoading && !user) {
       const currentUrl = `/booking-request/${providerId}`;
+      console.log("🟠 [BookingRequest] NOT authenticated - redirecting to login with redirect:", currentUrl);
       navigate(`/login?redirect=${encodeURIComponent(currentUrl)}`, {
         replace: true,
       });
+    } else if (!authLoading && user) {
+      console.log("🟢 [BookingRequest] User IS authenticated - staying on page");
     }
   }, [user, authLoading, providerId, navigate]);
 

@@ -1753,22 +1753,35 @@ const ProviderProfile: React.FC = () => {
 
   // Callback quand l'authentification réussit via le wizard
   const handleAuthSuccess = useCallback(() => {
-    if (!provider) return;
+    console.log("🟢 [handleAuthSuccess] CALLED - Auth success callback triggered");
+    console.log("🟢 [handleAuthSuccess] provider:", provider?.id);
+    console.log("🟢 [handleAuthSuccess] showAuthWizard before:", true);
 
-    // Validation: s'assurer que provider.id est défini
-    if (!provider.id) {
-      console.error("[handleAuthSuccess] provider.id is undefined, cannot navigate");
+    if (!provider) {
+      console.error("🔴 [handleAuthSuccess] ABORT - No provider");
       return;
     }
 
+    // Validation: s'assurer que provider.id est défini
+    if (!provider.id) {
+      console.error("🔴 [handleAuthSuccess] provider.id is undefined, cannot navigate");
+      return;
+    }
+
+    console.log("🟢 [handleAuthSuccess] Setting showAuthWizard to FALSE");
     setShowAuthWizard(false);
+
     const target = `/booking-request/${provider.id}`;
+    console.log("🟢 [handleAuthSuccess] Navigating to:", target);
+    console.log("🟢 [handleAuthSuccess] Current pathname:", window.location.pathname);
+
     navigate(target, {
       state: {
         selectedProvider: provider,
         navigationSource: "provider_profile",
       },
     });
+    console.log("🟢 [handleAuthSuccess] navigate() called - navigation should happen now");
     // Note: window.scrollTo supprimé car il causait un "saut" avant la navigation
   }, [provider, navigate]);
 

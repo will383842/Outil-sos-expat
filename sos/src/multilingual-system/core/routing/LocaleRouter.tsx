@@ -34,6 +34,14 @@ function computeRedirectPath(
   language: Language,
   localeParam?: string
 ): { redirectTo: string | null; newLang: Language | null } {
+  // P0 DEBUG: Log all inputs for debugging routing issues
+  console.log("🔷 [LocaleRouter] computeRedirectPath called:", {
+    pathname,
+    language,
+    localeParam,
+    timestamp: new Date().toISOString(),
+  });
+
   // Decode URL to handle Unicode characters
   let decodedPathname: string;
   try {
@@ -44,6 +52,7 @@ function computeRedirectPath(
 
   // Skip locale handling for admin routes
   if (pathname.startsWith("/admin") || pathname.startsWith("/marketing")) {
+    console.log("🔷 [LocaleRouter] Skipping admin/marketing route");
     return { redirectTo: null, newLang: null };
   }
 
@@ -139,6 +148,7 @@ function computeRedirectPath(
   }
 
   // Path is valid, no redirect needed
+  console.log("🔷 [LocaleRouter] Path is valid, no redirect needed:", decodedPathname);
   return { redirectTo: null, newLang: null };
 }
 
@@ -176,6 +186,7 @@ const LocaleRouter: React.FC<LocaleRouterProps> = ({ children }) => {
   // P0 FIX: If redirect is needed, render Navigate component INSTEAD of children
   // This is SYNCHRONOUS - no flash of 404
   if (redirectTo) {
+    console.log("🔷 [LocaleRouter] REDIRECTING to:", redirectTo, "from:", location.pathname);
     // Use Navigate component for synchronous redirect
     return <Navigate to={redirectTo} replace />;
   }

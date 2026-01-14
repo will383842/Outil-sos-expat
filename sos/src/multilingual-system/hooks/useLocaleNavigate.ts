@@ -40,37 +40,49 @@ export function useLocaleNavigate() {
   }, [location.pathname, language]);
 
   const localeNavigate = useCallback((path: string | number, options?: NavigateOptions) => {
+    // DEBUG LOG: Track all navigation calls
+    console.log('🟤 [useLocaleNavigate] CALLED with:', {
+      path,
+      options,
+      currentLocale,
+      currentPathname: location.pathname,
+      timestamp: new Date().toISOString(),
+    });
+
     // Handle numeric paths (go back/forward)
     if (typeof path === 'number') {
+      console.log('🟤 [useLocaleNavigate] Numeric path, navigating by delta:', path);
       navigate(path);
       return;
     }
 
     // Skip empty paths
     if (!path) {
-      if (isDev) {
-        console.warn('[useLocaleNavigate] Empty path provided, ignoring navigation');
-      }
+      console.warn('🟤 [useLocaleNavigate] Empty path provided, ignoring navigation');
       return;
     }
 
     // Sanitize the path
     const sanitizedPath = sanitizePath(path);
+    console.log('🟤 [useLocaleNavigate] Sanitized path:', sanitizedPath);
 
     // Skip locale for admin routes
     if (sanitizedPath.startsWith("/admin")) {
+      console.log('🟤 [useLocaleNavigate] Admin route, navigating without locale:', sanitizedPath);
       navigate(sanitizedPath, options);
       return;
     }
 
     // Skip locale for marketing routes
     if (sanitizedPath.startsWith("/marketing")) {
+      console.log('🟤 [useLocaleNavigate] Marketing route, navigating without locale:', sanitizedPath);
       navigate(sanitizedPath, options);
       return;
     }
 
     // Handle hash-only navigation (e.g., "#section")
     if (sanitizedPath.startsWith('#')) {
+      console.log('🟤 [useLocaleNavigate] Hash-only navigation:', sanitizedPath);
       navigate(sanitizedPath, options);
       return;
     }
@@ -108,7 +120,9 @@ export function useLocaleNavigate() {
 
     // If path already has locale prefix, use as-is
     if (hasLocalePrefix(basePath)) {
-      navigate(`${basePath}${query}${hash}`, options);
+      const finalPath = `${basePath}${query}${hash}`;
+      console.log('🟤 [useLocaleNavigate] Path already has locale, navigating as-is:', finalPath);
+      navigate(finalPath, options);
       return;
     }
 
@@ -119,8 +133,15 @@ export function useLocaleNavigate() {
 
     // Add locale prefix and preserve query params and hash
     const localePath = `/${currentLocale}${basePath.startsWith("/") ? basePath : `/${basePath}`}${query}${hash}`;
+    console.log('🟤 [useLocaleNavigate] FINAL NAVIGATION:', {
+      originalPath: path,
+      localePath,
+      locale: currentLocale,
+      timestamp: new Date().toISOString(),
+    });
     navigate(localePath, options);
-  }, [navigate, currentLocale]);
+    console.log('🟤 [useLocaleNavigate] navigate() called, new pathname should be:', localePath);
+  }, [navigate, currentLocale, location.pathname]);
 
   return localeNavigate;
 }
