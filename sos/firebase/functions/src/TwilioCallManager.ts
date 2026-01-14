@@ -1273,8 +1273,19 @@ export class TwilioCallManager {
           return false;
         }
 
+        // P0 FIX: Log AMD pending status for debugging
+        // This helps identify when AMD detection is taking too long
+        if (currentStatus === "amd_pending") {
+          const elapsedSeconds = Math.floor((check * checkInterval) / 1000);
+          if (check === 0) {
+            console.log(`⏳ [${waitId}] 🔍 AMD PENDING: Waiting for AMD callback to confirm human/machine...`);
+          } else if (elapsedSeconds % 15 === 0 && elapsedSeconds > 0) {
+            console.log(`⏳ [${waitId}] 🔍 AMD still pending after ${elapsedSeconds}s... (max AMD timeout: 30s)`);
+          }
+        }
+
         // Log other statuses for debugging
-        if (check === 0) {
+        if (check === 0 && currentStatus !== "amd_pending") {
           console.log(`⏳ [${waitId}]   Initial status: "${currentStatus}" - waiting for "connected"...`);
         }
 

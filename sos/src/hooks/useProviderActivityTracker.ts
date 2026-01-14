@@ -15,7 +15,9 @@ export const useProviderActivityTracker = ({
   isOnline,
   isProvider,
 }: UseProviderActivityTrackerProps) => {
-  const lastActivityRef = useRef<Date>(new Date());
+  // ✅ CRITICAL FIX: Use state instead of ref for lastActivity to trigger re-renders
+  const [lastActivity, setLastActivity] = useState<Date>(new Date());
+  const lastActivityRef = useRef<Date>(new Date()); // Keep ref for debounce callback
   const updateIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -46,7 +48,9 @@ export const useProviderActivityTracker = ({
       timestamp: new Date(),
     };
 
+    // ✅ CRITICAL FIX: Update both ref (for callbacks) AND state (for re-renders)
     lastActivityRef.current = activityEvent.timestamp;
+    setLastActivity(activityEvent.timestamp);
 
     // Debounce pour éviter trop de mises à jour
     if (debounceTimerRef.current) {
@@ -69,14 +73,15 @@ export const useProviderActivityTracker = ({
       setIsTabVisible(isVisible);
 
       if (isVisible) {
-        // L'onglet redevient visible → reset le timer d'inactivité
+        // L'onglet redevient visible → reprendre le tracking d'inactivité
         pauseInactivityCheck.current = false;
-        lastActivityRef.current = new Date();
-        // ✅ P0 FIX: Remove verbose logging
+        // ✅ CRITICAL FIX: Do NOT reset lastActivity here!
+        // The inactivity timer should CONTINUE even when tab is hidden.
+        // lastActivity will only be reset when user actually interacts (click, scroll, etc.)
+        // This ensures a provider who is AFK for 40min will still trigger the reminder modal.
       } else {
         // L'onglet passe en arrière-plan → pause le tracking d'inactivité
         pauseInactivityCheck.current = true;
-        // ✅ P0 FIX: Remove verbose logging
       }
     };
 
@@ -131,7 +136,8 @@ export const useProviderActivityTracker = ({
   }, [isOnline, isProvider, updateActivityInFirebase]);
 
   return {
-    lastActivity: lastActivityRef.current,
+    // ✅ CRITICAL FIX: Return state (reactive) instead of ref (non-reactive)
+    lastActivity,
     isTabVisible,
     isInactivityPaused: pauseInactivityCheck.current,
   };

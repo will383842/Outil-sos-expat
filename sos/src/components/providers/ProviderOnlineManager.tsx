@@ -28,6 +28,7 @@ const ProviderOnlineManager: React.FC<ProviderOnlineManagerProps> = ({ children 
   // Hook de gestion des rappels - toujours appelé mais désactivé si pas prestataire
   const {
     showModal,
+    reminderType,
     handleClose,
     handleGoOffline,
     handleDisableToday,
@@ -66,6 +67,7 @@ const ProviderOnlineManager: React.FC<ProviderOnlineManagerProps> = ({ children 
           onGoOffline={handleGoOffline}
           onDisableReminderToday={handleDisableToday}
           langCode={user?.preferredLanguage || 'en'}
+          reminderType={reminderType}
         />
       )}
 

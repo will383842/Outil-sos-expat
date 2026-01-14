@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
-import { Bell } from 'lucide-react';
+import { Bell, AlertTriangle } from 'lucide-react';
 import { useIntl } from 'react-intl';
 import { playAvailabilityReminder } from './playAvailabilityReminder';
 import voiceMessages from './voiceTranslateMessages';
 import Modal from '../components/common/Modal';
+import type { ReminderType } from '../hooks/useProviderReminderSystem';
 
 interface ReminderModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface ReminderModalProps {
   onGoOffline: () => void;
   onDisableReminderToday: () => void;
   langCode: string;
+  reminderType?: ReminderType;
 }
 
 const ReminderModal: React.FC<ReminderModalProps> = ({
@@ -18,9 +20,11 @@ const ReminderModal: React.FC<ReminderModalProps> = ({
   onClose,
   onGoOffline,
   onDisableReminderToday,
-  langCode
+  langCode,
+  reminderType = 'first',
 }) => {
   const intl = useIntl();
+  const isSecondReminder = reminderType === 'second';
 
   useEffect(() => {
     if (isOpen) {
@@ -33,25 +37,46 @@ const ReminderModal: React.FC<ReminderModalProps> = ({
     }
   }, [isOpen, langCode]);
 
-  const message = voiceMessages[langCode] || voiceMessages['en'];
+  // Message selon le type de rappel
+  const message = isSecondReminder
+    ? intl.formatMessage({ id: 'availability.reminder.warningMessage' })
+    : (voiceMessages[langCode] || voiceMessages['en']);
+
+  // Titre selon le type de rappel
+  const title = isSecondReminder
+    ? `⚠️ ${intl.formatMessage({ id: 'availability.reminder.warningTitle' })}`
+    : `🔔 ${intl.formatMessage({ id: 'availability.reminder.title' })}`;
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={`🔔 ${intl.formatMessage({ id: 'availability.reminder.title' })}`}
+      title={title}
       size="small"
     >
       <div className="p-4 sm:p-6 space-y-4">
         <div className="flex items-center justify-center mb-4">
-          <div className="bg-blue-100 rounded-full p-3">
-            <Bell className="h-6 w-6 text-blue-600" aria-hidden="true" />
+          <div className={`rounded-full p-3 ${isSecondReminder ? 'bg-orange-100' : 'bg-blue-100'}`}>
+            {isSecondReminder ? (
+              <AlertTriangle className="h-6 w-6 text-orange-600" aria-hidden="true" />
+            ) : (
+              <Bell className="h-6 w-6 text-blue-600" aria-hidden="true" />
+            )}
           </div>
         </div>
 
         <p className="text-center text-gray-700 text-sm sm:text-base leading-relaxed">
           {message}
         </p>
+
+        {/* Avertissement supplémentaire pour le deuxième rappel */}
+        {isSecondReminder && (
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-center">
+            <p className="text-orange-700 text-sm font-medium">
+              {intl.formatMessage({ id: 'availability.reminder.autoOfflineWarning' })}
+            </p>
+          </div>
+        )}
 
         <div className="flex flex-col space-y-3 pt-4">
           <button

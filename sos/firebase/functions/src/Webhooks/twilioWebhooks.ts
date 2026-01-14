@@ -923,9 +923,11 @@ export const twilioAmdTwiml = onRequest(
       } else {
         // answeredBy is undefined or unknown - AMD is still pending
         // DO NOT set status to "connected" yet - wait for AMD callback
-        console.log(`🎯 [${amdId}] ⏳ AMD PENDING - Returning CONFERENCE TwiML but NOT setting status to connected`);
+        // P0 FIX: Also do NOT play the welcome message yet - it would be recorded by voicemail!
+        console.log(`🎯 [${amdId}] ⏳ AMD PENDING - Returning SILENT CONFERENCE TwiML (no message!)`);
         console.log(`🎯 [${amdId}]   answeredBy: "${answeredBy || 'UNDEFINED'}"`);
         console.log(`🎯 [${amdId}]   Status remains "amd_pending" - waiting for asyncAmdStatusCallback`);
+        console.log(`🎯 [${amdId}]   NOT playing welcome message to avoid voicemail recording!`);
 
         // Set status to amd_pending if not already set
         if (sessionId) {
@@ -952,16 +954,46 @@ export const twilioAmdTwiml = onRequest(
             console.error(`🎯 [${amdId}]   ⚠️ Failed to update status:`, statusError);
           }
         }
+
+        // P0 FIX: Return SILENT conference TwiML - NO welcome message!
+        // This prevents voicemail from recording our message.
+        // The participant will just hear the hold music while AMD analyzes.
+        // Once AMD confirms human, the asyncAmdStatusCallback will be called
+        // and handleParticipantJoin will set status to "connected".
+        const startConference = participantType === 'client';
+        const { getTwilioConferenceWebhookUrl } = await import('../utils/urlBase');
+        const conferenceWebhookUrl = getTwilioConferenceWebhookUrl();
+
+        const silentConferenceTwiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Dial timeout="60" timeLimit="${timeLimit}">
+    <Conference
+      waitUrl="http://twimlets.com/holdmusic?Bucket=com.twilio.music.classical"
+      startConferenceOnEnter="${startConference}"
+      endConferenceOnExit="true"
+      statusCallback="${conferenceWebhookUrl}"
+      statusCallbackEvent="start end join leave"
+      statusCallbackMethod="POST"
+    >${conferenceName}</Conference>
+  </Dial>
+</Response>`;
+
+        res.type('text/xml');
+        res.send(silentConferenceTwiml);
+        console.log(`🎯 [${amdId}] END - Sent SILENT CONFERENCE TwiML (AMD pending)\n`);
+        return;
       }
 
-      // Get welcome message based on language
+      // HUMAN CONFIRMED - Get welcome message and play it
       const welcomeMessage = getIntroText(participantType, langKey);
       console.log(`🎯 [${amdId}]   welcomeMessage: "${welcomeMessage.substring(0, 50)}..."`)
 
-      // Generate conference TwiML
+      // Generate conference TwiML with welcome message (only for confirmed human)
       // Client starts conference (startConferenceOnEnter=true)
       // Provider joins existing conference (startConferenceOnEnter=false)
       const startConference = participantType === 'client';
+      const { getTwilioConferenceWebhookUrl } = await import('../utils/urlBase');
+      const conferenceWebhookUrl = getTwilioConferenceWebhookUrl();
 
       const conferenceTwiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
@@ -971,7 +1003,7 @@ export const twilioAmdTwiml = onRequest(
       waitUrl="http://twimlets.com/holdmusic?Bucket=com.twilio.music.classical"
       startConferenceOnEnter="${startConference}"
       endConferenceOnExit="true"
-      statusCallback="${process.env.TWILIO_CONFERENCE_WEBHOOK_URL || ''}"
+      statusCallback="${conferenceWebhookUrl}"
       statusCallbackEvent="start end join leave"
       statusCallbackMethod="POST"
     >${conferenceName}</Conference>
@@ -980,7 +1012,7 @@ export const twilioAmdTwiml = onRequest(
 
       res.type('text/xml');
       res.send(conferenceTwiml);
-      console.log(`🎯 [${amdId}] END - Sent CONFERENCE TwiML\n`);
+      console.log(`🎯 [${amdId}] END - Sent CONFERENCE TwiML with welcome message (human confirmed)\n`);
 
     } catch (error) {
       console.error(`🎯 [${amdId}] ❌ ERROR:`, error);

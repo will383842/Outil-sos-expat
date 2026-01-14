@@ -361,10 +361,34 @@ async function handleParticipantJoin(sessionId: string, body: TwilioConferenceWe
     const participantBefore = participantType === 'provider'
       ? sessionBefore?.participants.provider
       : sessionBefore?.participants.client;
-    console.log(`👋 [${joinId}]   ${participantType}.status BEFORE: "${participantBefore?.status}"`);
+    const currentStatus = participantBefore?.status;
+    console.log(`👋 [${joinId}]   ${participantType}.status BEFORE: "${currentStatus}"`);
     console.log(`👋 [${joinId}]   ${participantType}.callSid BEFORE: ${participantBefore?.callSid}`);
 
-    // Mettre à jour le statut du participant
+    // P0 FIX: Check if AMD is still pending - DO NOT override amd_pending with connected!
+    // If AMD is pending, the asyncAmdStatusCallback will determine if it's human or machine.
+    // Setting "connected" here would cause waitForConnection() to return true prematurely,
+    // even if the participant is actually a voicemail/answering machine.
+    if (currentStatus === 'amd_pending') {
+      console.log(`👋 [${joinId}] ⚠️ AMD DETECTION IN PROGRESS - NOT setting to "connected" yet`);
+      console.log(`👋 [${joinId}]   Waiting for asyncAmdStatusCallback to confirm human/machine`);
+      console.log(`👋 [${joinId}]   This prevents premature connection to voicemail`);
+      await logCallRecord({
+        callId: sessionId,
+        status: `${participantType}_joined_but_amd_pending`,
+        retryCount: 0,
+        additionalData: {
+          callSid,
+          conferenceSid: body.ConferenceSid,
+          reason: 'amd_detection_in_progress'
+        }
+      });
+      console.log(`👋 [${joinId}] END - Skipped status update (AMD pending)`);
+      console.log(`${'═'.repeat(70)}\n`);
+      return; // Don't update status - let AMD callback handle it
+    }
+
+    // Mettre à jour le statut du participant (only if NOT amd_pending)
     console.log(`👋 [${joinId}] STEP 2: Setting ${participantType}.status to "connected"...`);
     console.log(`👋 [${joinId}]   This is CRITICAL - waitForConnection() polls for this status!`);
     await twilioCallManager.updateParticipantStatus(

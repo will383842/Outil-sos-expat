@@ -1828,6 +1828,20 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
       await batch.commit();
 
+      // ✅ CRITICAL FIX: Update local state immediately after batch.commit()
+      // Without this, the UI waits for onSnapshot listener (100-500ms delay)
+      // which can cause race conditions and stale state issues
+      setUser((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          availability,
+          isOnline,
+          updatedAt: new Date(),
+          lastStatusChange: new Date(),
+        };
+      });
+
       await logAuthEvent('availability_changed', {
         userId: firebaseUser.uid,
         oldAvailability: (user as any).availability,

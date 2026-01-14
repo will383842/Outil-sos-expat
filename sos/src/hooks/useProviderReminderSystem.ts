@@ -5,8 +5,8 @@ import { PROVIDER_ACTIVITY_CONFIG, toMs } from '../config/providerActivityConfig
 import { playAvailabilityReminder } from '../notificationsonline/playAvailabilityReminder';
 import type { ReminderState, ProviderActivityPreferences } from '../types/providerActivity';
 
-// Timeout en millisecondes avant mise hors ligne automatique si pas de réponse au popup
-const POPUP_AUTO_OFFLINE_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+// Type de rappel : 'first' = T+30 (informatif), 'second' = T+60 (avertissement)
+export type ReminderType = 'first' | 'second';
 
 interface UseProviderReminderSystemProps {
   userId: string;
@@ -24,12 +24,16 @@ export const useProviderReminderSystem = ({
   preferredLanguage = 'en',
 }: UseProviderReminderSystemProps) => {
   const [showModal, setShowModal] = useState(false);
+  const [reminderType, setReminderType] = useState<ReminderType>('first');
   const [reminderState, setReminderState] = useState<ReminderState>({
     lastSoundPlayed: null,
     lastVoicePlayed: null,
     lastModalShown: null,
     reminderDisabledToday: false,
   });
+
+  // Track si le premier rappel (T+30) a été montré
+  const firstReminderShownRef = useRef(false);
 
   const checkIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const popupTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -66,11 +70,10 @@ export const useProviderReminderSystem = ({
 
     const inactivityMinutes = getInactivityMinutes();
     const preferences = getPreferences();
+    const now = new Date();
 
-    // Si inactif depuis plus de 15 minutes
-    if (inactivityMinutes >= PROVIDER_ACTIVITY_CONFIG.INACTIVITY_WARNING_MINUTES) {
-      const now = new Date();
-
+    // T+60 : Deuxième rappel avec avertissement (prioritaire)
+    if (inactivityMinutes >= PROVIDER_ACTIVITY_CONFIG.SECOND_REMINDER_MINUTES) {
       // Jouer le son si activé et pas joué récemment
       if (
         preferences.soundEnabled &&
@@ -105,8 +108,29 @@ export const useProviderReminderSystem = ({
         (!reminderState.lastModalShown ||
           now.getTime() - reminderState.lastModalShown.getTime() >= toMs(PROVIDER_ACTIVITY_CONFIG.REMINDER_MODAL_INTERVAL_MINUTES))
       ) {
+        setReminderType('second');
         setShowModal(true);
         setReminderState(prev => ({ ...prev, lastModalShown: now }));
+      }
+    }
+    // T+30 : Premier rappel informatif
+    else if (inactivityMinutes >= PROVIDER_ACTIVITY_CONFIG.FIRST_REMINDER_MINUTES && !firstReminderShownRef.current) {
+      // Jouer le son pour le premier rappel
+      if (preferences.soundEnabled) {
+        playAvailabilityReminder('sound', {
+          enableSound: preferences.soundEnabled,
+          enableVoice: preferences.voiceEnabled,
+          enableModal: preferences.modalEnabled,
+        }, preferredLanguage);
+        setReminderState(prev => ({ ...prev, lastSoundPlayed: now }));
+      }
+
+      // Afficher le modal informatif
+      if (preferences.modalEnabled) {
+        setReminderType('first');
+        setShowModal(true);
+        setReminderState(prev => ({ ...prev, lastModalShown: now }));
+        firstReminderShownRef.current = true;
       }
     }
   }, [isOnline, isProvider, getInactivityMinutes, getPreferences, reminderState, preferredLanguage, checkReminderDisabledToday]);
@@ -155,6 +179,15 @@ export const useProviderReminderSystem = ({
     }
   }, []);
 
+  // Reset le flag du premier rappel quand l'activité reprend
+  useEffect(() => {
+    // Si l'inactivité repasse sous 30 min, on reset le flag du premier rappel
+    const inactivityMinutes = getInactivityMinutes();
+    if (inactivityMinutes < PROVIDER_ACTIVITY_CONFIG.FIRST_REMINDER_MINUTES) {
+      firstReminderShownRef.current = false;
+    }
+  }, [lastActivity, getInactivityMinutes]);
+
   // Vérifier périodiquement l'inactivité
   useEffect(() => {
     if (!isOnline || !isProvider) {
@@ -178,12 +211,14 @@ export const useProviderReminderSystem = ({
     };
   }, [isOnline, isProvider, checkAndTriggerReminder]);
 
-  // 🔒 Timeout automatique: mise hors ligne si pas de réponse au popup après 5 minutes
+  // Timeout automatique: mise hors ligne si pas de réponse au popup
+  // Seulement pour le deuxième rappel (T+60) → mise hors ligne à T+70 (10 min après)
   useEffect(() => {
-    if (showModal && isOnline && isProvider) {
-      // Démarrer le timeout de 5 minutes
+    if (showModal && isOnline && isProvider && reminderType === 'second') {
+      // Démarrer le timeout de 10 minutes (T+70)
+      const timeoutMs = toMs(PROVIDER_ACTIVITY_CONFIG.POPUP_AUTO_OFFLINE_TIMEOUT_MINUTES);
       popupTimeoutRef.current = setTimeout(async () => {
-        console.warn('Popup timeout: mise hors ligne automatique après 5 minutes sans réponse');
+        console.warn(`Popup timeout: mise hors ligne automatique après ${PROVIDER_ACTIVITY_CONFIG.POPUP_AUTO_OFFLINE_TIMEOUT_MINUTES} minutes sans réponse`);
         setShowModal(false);
         try {
           const setProviderOffline = httpsCallable(functions, 'setProviderOffline');
@@ -191,7 +226,7 @@ export const useProviderReminderSystem = ({
         } catch (error) {
           console.error('Error auto-setting provider offline:', error);
         }
-      }, POPUP_AUTO_OFFLINE_TIMEOUT_MS);
+      }, timeoutMs);
 
       return () => {
         if (popupTimeoutRef.current) {
@@ -200,10 +235,11 @@ export const useProviderReminderSystem = ({
         }
       };
     }
-  }, [showModal, isOnline, isProvider, userId]);
+  }, [showModal, isOnline, isProvider, userId, reminderType]);
 
   return {
     showModal,
+    reminderType,
     handleClose,
     handleGoOffline,
     handleDisableToday,

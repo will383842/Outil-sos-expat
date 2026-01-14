@@ -49,8 +49,13 @@ let outilApp: admin.app.App | null = null;
 
 /**
  * Initialise ou récupère l'instance Firebase Admin pour l'Outil project
+ * Note: Cette fonction ne doit être appelée qu'au runtime, pas pendant l'analyse de déploiement
  */
-function getOutilAuth(): admin.auth.Auth {
+function getOutilApp(): admin.app.App {
+  if (IS_DEPLOYMENT_ANALYSIS) {
+    throw new Error("Cannot initialize Outil app during deployment analysis");
+  }
+
   if (!outilApp) {
     const serviceAccountJson = OUTIL_SERVICE_ACCOUNT.value();
     if (!serviceAccountJson) {
@@ -72,7 +77,115 @@ function getOutilAuth(): admin.auth.Auth {
       throw new Error("Invalid OUTIL_SERVICE_ACCOUNT_KEY configuration");
     }
   }
-  return admin.auth(outilApp);
+  return outilApp;
+}
+
+function getOutilAuth(): admin.auth.Auth {
+  return admin.auth(getOutilApp());
+}
+
+function getOutilFirestore(): FirebaseFirestore.Firestore {
+  return admin.firestore(getOutilApp());
+}
+
+/**
+ * Synchronise les linkedProviderIds et providers vers l'Outil IA Firestore
+ * C'est nécessaire pour que le provider switcher fonctionne dans l'Outil IA
+ */
+async function syncLinkedProvidersToOutil(
+  sosDb: FirebaseFirestore.Firestore,
+  callerUid: string,
+  callerEmail: string | undefined
+): Promise<void> {
+  try {
+    const outilDb = getOutilFirestore();
+
+    // 1. Récupérer les linkedProviderIds depuis SOS
+    const callerDoc = await sosDb.collection("users").doc(callerUid).get();
+    const callerData = callerDoc.data();
+    const linkedProviderIds: string[] = callerData?.linkedProviderIds || [];
+
+    // Ajouter l'UID de l'appelant s'il n'est pas déjà dans la liste
+    if (!linkedProviderIds.includes(callerUid)) {
+      linkedProviderIds.push(callerUid);
+    }
+
+    if (linkedProviderIds.length === 0) {
+      console.log("[syncLinkedProvidersToOutil] No linked providers to sync");
+      return;
+    }
+
+    console.log("[syncLinkedProvidersToOutil] Syncing providers:", linkedProviderIds);
+
+    // 2. Récupérer les données des providers depuis SOS (sos_profiles ou users)
+    const providersToSync: Array<{
+      id: string;
+      name: string;
+      email: string;
+      type: string;
+      country?: string;
+      active: boolean;
+    }> = [];
+
+    for (const providerId of linkedProviderIds) {
+      // Essayer sos_profiles d'abord
+      let providerDoc = await sosDb.collection("sos_profiles").doc(providerId).get();
+      let providerData = providerDoc.data();
+
+      if (!providerData) {
+        // Essayer users
+        providerDoc = await sosDb.collection("users").doc(providerId).get();
+        providerData = providerDoc.data();
+      }
+
+      if (providerData) {
+        providersToSync.push({
+          id: providerId,
+          name: providerData.fullName || providerData.displayName || providerData.name || "Sans nom",
+          email: providerData.email || "",
+          type: providerData.providerType || providerData.type || "lawyer",
+          country: providerData.country,
+          active: providerData.isActive !== false && providerData.active !== false,
+        });
+      }
+    }
+
+    console.log("[syncLinkedProvidersToOutil] Found providers to sync:", providersToSync.length);
+
+    // 3. Écrire dans Firestore de l'Outil IA
+    const batch = outilDb.batch();
+
+    // 3a. Créer/mettre à jour le document users dans l'Outil
+    const outilUserRef = outilDb.collection("users").doc(callerUid);
+    batch.set(outilUserRef, {
+      linkedProviderIds: linkedProviderIds,
+      activeProviderId: linkedProviderIds[0],
+      email: callerEmail?.toLowerCase() || "",
+      role: "provider",
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      source: "sso-sync",
+    }, { merge: true });
+
+    // 3b. Créer/mettre à jour les providers dans l'Outil
+    for (const provider of providersToSync) {
+      const outilProviderRef = outilDb.collection("providers").doc(provider.id);
+      batch.set(outilProviderRef, {
+        name: provider.name,
+        email: provider.email,
+        type: provider.type,
+        country: provider.country || null,
+        active: provider.active,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        source: "sso-sync",
+      }, { merge: true });
+    }
+
+    await batch.commit();
+    console.log("[syncLinkedProvidersToOutil] Successfully synced to Outil IA");
+  } catch (error) {
+    // Ne pas bloquer le SSO si la sync échoue
+    console.error("[syncLinkedProvidersToOutil] Error (non-blocking):", error);
+  }
 }
 
 /**
@@ -166,6 +279,11 @@ export const generateOutilToken = onCall(
     console.log("[generateOutilToken] User:", { callerUid, callerEmail, targetUid: uid, targetEmail: email, isActingAsProvider });
 
     try {
+      // SYNC: Synchroniser les linkedProviderIds vers l'Outil IA
+      // Cela permet au provider switcher de fonctionner dans l'Outil IA
+      console.log("[generateOutilToken] Syncing linked providers to Outil IA...");
+      await syncLinkedProvidersToOutil(db, callerUid, callerEmail);
+
       // 2. Vérifier que l'utilisateur est un prestataire
       console.log("[generateOutilToken] Checking if user is provider...");
       const isUserProvider = await isProvider(db, uid);
