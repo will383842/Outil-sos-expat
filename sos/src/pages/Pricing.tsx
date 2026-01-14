@@ -432,7 +432,12 @@ const Pricing: React.FC = () => {
               </h1>
 
               <h2 className="text-2xl md:text-3xl text-white font-semibold max-w-4xl mx-auto mb-12 leading-relaxed">
-                <FormattedMessage id="pricing.subtitle" />
+                <FormattedMessage
+                  id="pricing.subtitle"
+                  values={{
+                    strong: (chunks) => <strong className="text-red-400">{chunks}</strong>
+                  }}
+                />
               </h2>
 
               {/* Currency Selector */}

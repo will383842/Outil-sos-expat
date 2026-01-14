@@ -2449,6 +2449,7 @@
   "checkout.ui.thanks": "感谢使用我们的服务",
   "common.all": "全部",
   "common.back": "返回",
+  "common.cancel": "取消",
   "common.client": "客户",
   "common.close": "关闭",
   "common.connecting": "连接中...",

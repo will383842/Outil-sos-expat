@@ -4146,6 +4146,7 @@
   "checkout.ui.thanks": "Thank you for using our services",
   "common.all": "All",
   "common.back": "Back",
+  "common.cancel": "Cancel",
   "common.client": "Client",
   "common.close": "Close",
   "common.connecting": "Connecting...",

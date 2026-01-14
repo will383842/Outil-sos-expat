@@ -698,44 +698,55 @@ const findCountryByCodeOrName = (value: string): CountryData | undefined => {
   return byPartialMatch;
 };
 
-// Vérifie si un pays du provider correspond au filtre sélectionné
+// Vérifie si un pays d'intervention du provider correspond au filtre sélectionné
+// Utilise interventionCountries en priorité, sinon fallback sur country (pays d'origine)
 const matchCountry = (
-  providerCountry: string,
+  interventionCountries: string[] | undefined,
+  originCountry: string | undefined,
   selectedCountryCode: string,
   customCountry: string
 ): boolean => {
   if (selectedCountryCode === "all") return true;
-  if (!providerCountry) return false;
-  
-  const providerCountryLower = providerCountry.toLowerCase().trim();
+
+  // Utiliser interventionCountries en priorité, sinon fallback sur country
+  const countriesToCheck = interventionCountries && interventionCountries.length > 0
+    ? interventionCountries
+    : originCountry ? [originCountry] : [];
+
+  if (countriesToCheck.length === 0) return false;
+
   const selectedCodeLower = selectedCountryCode.toLowerCase().trim();
-  
+
   // Cas "Autre" avec recherche personnalisée
   if (selectedCountryCode === "Autre") {
     if (!customCountry) return true;
     const needle = customCountry.toLowerCase().trim();
-    return providerCountryLower.includes(needle) || needle.includes(providerCountryLower);
+    return countriesToCheck.some(country => {
+      const countryLower = country.toLowerCase().trim();
+      return countryLower.includes(needle) || needle.includes(countryLower);
+    });
   }
-  
-  // Comparaison directe (si le provider stocke le code ISO)
-  if (providerCountryLower === selectedCodeLower) {
-    return true;
-  }
-  
+
   // Générer tous les noms possibles du pays sélectionné dans toutes les langues
   // 'ch' est le code interne pour le chinois (converti en 'zh' pour les APIs)
   const allLanguages = ['fr', 'en', 'es', 'de', 'pt', 'ru', 'ch', 'ar', 'hi'];
   const allPossibleNames: string[] = [selectedCodeLower];
-  
+
   for (const lang of allLanguages) {
     const name = getCountryName(selectedCountryCode, lang);
     if (name && name.toLowerCase().trim() !== selectedCodeLower) {
       allPossibleNames.push(name.toLowerCase().trim());
     }
   }
-  
-  // Vérifier si le pays du provider correspond à l'un des noms
-  return allPossibleNames.includes(providerCountryLower);
+
+  // Vérifier si AU MOINS UN pays d'intervention correspond au filtre
+  return countriesToCheck.some(country => {
+    const countryLower = country.toLowerCase().trim();
+    // Comparaison directe (si le provider stocke le code ISO)
+    if (countryLower === selectedCodeLower) return true;
+    // Vérifier si le pays correspond à l'un des noms possibles
+    return allPossibleNames.includes(countryLower);
+  });
 };
 
 // Vérifie si les langues du provider correspondent au filtre (supporte multi-sélection)
@@ -2455,10 +2466,14 @@ const SOSCall: React.FC = () => {
       });
     }
     
-    // Add country suggestions from providers
+    // Add country suggestions from providers (intervention countries)
     const countrySuggestions = Array.from(
-      new Set(realProviders.map(p => p.country).filter(Boolean))
-    ).filter(country => 
+      new Set(realProviders.flatMap(p =>
+        p.interventionCountries && p.interventionCountries.length > 0
+          ? p.interventionCountries
+          : p.country ? [p.country] : []
+      ).filter(Boolean))
+    ).filter(country =>
       country.toLowerCase().includes(query)
     ).slice(0, 5);
     
@@ -2522,8 +2537,9 @@ const SOSCall: React.FC = () => {
       const matchesType =
         selectedType === "all" || provider.type === selectedType;
       
-      // Filtre pays avec la nouvelle fonction
+      // Filtre pays d'intervention (pas le pays d'origine)
       const matchesCountryFilter = matchCountry(
+        provider.interventionCountries,
         provider.country,
         selectedCountryCode,
         customCountry
@@ -2605,6 +2621,7 @@ const SOSCall: React.FC = () => {
           provider.firstName,
           provider.lastName,
           provider.country,
+          ...(provider.interventionCountries || []), // Include intervention countries for search
           provider.description || "", // Original description
           translatedDescription, // All translated descriptions (bio, description, summary from all languages)
           ...(provider.languages || []),
@@ -2664,6 +2681,7 @@ const SOSCall: React.FC = () => {
             // IMPORTANT: Include translated content here!
             const otherFieldsContent = [
               provider.country,
+              ...(provider.interventionCountries || []), // Include intervention countries
               provider.description, // Original
               translatedDescription, // ALL translations
               ...(provider.languages || []),
