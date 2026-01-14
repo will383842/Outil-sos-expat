@@ -14,6 +14,14 @@ import * as scheduler from 'firebase-functions/v2/scheduler';
 import * as admin from 'firebase-admin';
 import * as logger from 'firebase-functions/logger';
 
+// ============================================================================
+// LAZY INITIALIZATION
+// ============================================================================
+
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
+
 // Types pour les métriques
 interface AgentPerformanceMetrics {
   agentId: string;
