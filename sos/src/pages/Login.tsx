@@ -555,17 +555,33 @@ const Login: React.FC = () => {
   }, [location.state]);
 
   // ==================== EMAIL CHECK (NON-BLOQUANT) ====================
+  // ⚠️ IMPORTANT: Firebase a activé "Email Enumeration Protection" par défaut
+  // fetchSignInMethodsForEmail retourne TOUJOURS un tableau vide pour des raisons de sécurité
+  // On ne peut donc plus vérifier si un email existe ou non côté client
+  // Voir: https://cloud.google.com/identity-platform/docs/admin/email-enumeration-protection
   const checkEmailExists = useCallback(async (email: string): Promise<boolean> => {
     try {
       setEmailCheckStatus("checking");
       const signInMethods = await fetchSignInMethodsForEmail(auth, email);
-      
-      // 🐛 Debug - À retirer après test
+
       console.log('🔍 Email check:', email, 'Methods:', signInMethods);
-      
+
+      // ✅ FIX: Avec Email Enumeration Protection activée, signInMethods est toujours vide
+      // On ne peut pas savoir si l'email existe, donc on reste en état "idle"
+      // pour ne pas induire l'utilisateur en erreur avec "email non enregistré"
       const exists = signInMethods.length > 0;
-      setEmailCheckStatus(exists ? "exists" : "not-exists");
-      
+
+      // Si la protection est activée (tableau vide), on reste en "idle" au lieu de "not-exists"
+      // Cela évite d'afficher le message trompeur "email non enregistré"
+      if (signInMethods.length === 0) {
+        // Protection activée OU email vraiment inconnu - on ne peut pas savoir
+        // Donc on ne montre aucun indicateur pour ne pas induire en erreur
+        setEmailCheckStatus("idle");
+      } else {
+        // Si on a des méthodes, l'email existe vraiment (protection désactivée)
+        setEmailCheckStatus("exists");
+      }
+
       const gtag = getGtag();
       if (gtag) {
         const emailParts = email.split("@");
@@ -578,7 +594,7 @@ const Login: React.FC = () => {
       return exists;
     } catch (error) {
       console.error("Error checking email:", error);
-      setEmailCheckStatus("error");
+      setEmailCheckStatus("idle"); // "idle" au lieu de "error" pour UX plus propre
       return false;
     }
   }, []);

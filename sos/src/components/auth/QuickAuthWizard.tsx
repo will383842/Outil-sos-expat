@@ -56,6 +56,15 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
   const successTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // FIX: Track previous isOpen state to only reset on actual modal open (false→true transition)
   const wasOpenRef = useRef(false);
+  // FIX: Refs pour avoir les valeurs actuelles dans le polling (éviter stale closures)
+  const userRef = useRef(user);
+  const authInitializedRef = useRef(authInitialized);
+
+  // Mettre à jour les refs à chaque render
+  useEffect(() => {
+    userRef.current = user;
+    authInitializedRef.current = authInitialized;
+  }, [user, authInitialized]);
 
   // Reset ONLY when modal transitions from closed to open (not on re-renders while open)
   useEffect(() => {
@@ -117,6 +126,54 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
       });
     }
   }, [pendingSuccess, step, user, authInitialized, onSuccess]);
+
+  // ✅ FIX BUG: Polling de secours pour détecter l'authentification
+  // React peut parfois ne pas re-render quand les valeurs du contexte changent
+  // Ce polling vérifie toutes les 500ms si l'utilisateur est authentifié
+  // On utilise les refs pour avoir les valeurs actuelles (éviter stale closures)
+  useEffect(() => {
+    if (!pendingSuccess || step !== 'success') {
+      return;
+    }
+
+    // Déjà authentifié? L'effet principal s'en chargera
+    if (userRef.current && authInitializedRef.current) {
+      return;
+    }
+
+    console.log('🔵 [QuickAuthWizard] Starting auth polling fallback...');
+    let attempts = 0;
+    const maxAttempts = 20; // 10 secondes max
+
+    const pollInterval = setInterval(() => {
+      attempts++;
+      const currentUser = userRef.current;
+      const currentAuthInitialized = authInitializedRef.current;
+
+      console.log(`🔵 [QuickAuthWizard] Polling attempt ${attempts}/${maxAttempts}:`, {
+        user: !!currentUser,
+        authInitialized: currentAuthInitialized,
+      });
+
+      // Vérifier les valeurs actuelles via les refs
+      if (currentUser && currentAuthInitialized) {
+        console.log('🟢 [QuickAuthWizard] Polling detected auth! Calling onSuccess...');
+        clearInterval(pollInterval);
+        setPendingSuccess(false);
+        onSuccess();
+      } else if (attempts >= maxAttempts) {
+        console.error('🔴 [QuickAuthWizard] Auth polling timeout - closing popup anyway');
+        clearInterval(pollInterval);
+        setPendingSuccess(false);
+        // Fermer le popup même en cas de timeout pour éviter qu'il reste bloqué
+        onClose();
+      }
+    }, 500);
+
+    return () => {
+      clearInterval(pollInterval);
+    };
+  }, [pendingSuccess, step, onSuccess, onClose]);
 
   // Email validation
   const isValidEmail = (email: string): boolean => {
