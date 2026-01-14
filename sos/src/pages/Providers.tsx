@@ -324,14 +324,13 @@ const Providers: React.FC = () => {
     sessionStorage.setItem('selectedProvider', JSON.stringify(selectedProvider)); // ← AJOUT
     sessionStorage.setItem('serviceData', JSON.stringify(serviceData)); // ← AJOUT
     
-    navigate(seoUrl, { 
-      state: { 
+    navigate(seoUrl, {
+      state: {
         selectedProvider: selectedProvider, // ✅ Utilise "selectedProvider" au lieu de "providerData"
         serviceData: serviceData            // ✅ Utilise "serviceData" au lieu de "booking" ou autre
-      } 
+      }
     });
-    
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Note: window.scrollTo supprimé car il causait un "saut" avant la navigation
   }, [navigate, pricing]);
 
   // Reset filters

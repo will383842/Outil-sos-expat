@@ -1711,6 +1711,13 @@ const ProviderProfile: React.FC = () => {
       console.warn("Failed to save provider to sessionStorage:", error);
     }
     const target = `/booking-request/${provider.id}`;
+
+    // Validation: s'assurer que provider.id est défini
+    if (!provider.id) {
+      console.error("[handleBookCall] provider.id is undefined, cannot navigate");
+      return;
+    }
+
     if (user) {
       navigate(target, {
         state: {
@@ -1718,7 +1725,7 @@ const ProviderProfile: React.FC = () => {
           navigationSource: "provider_profile",
         },
       });
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      // Note: window.scrollTo supprimé car il causait un "saut" avant la navigation
     } else {
       // ✅ Afficher le wizard d'auth au lieu de rediriger vers /login
       setShowAuthWizard(true);
@@ -1728,6 +1735,13 @@ const ProviderProfile: React.FC = () => {
   // Callback quand l'authentification réussit via le wizard
   const handleAuthSuccess = useCallback(() => {
     if (!provider) return;
+
+    // Validation: s'assurer que provider.id est défini
+    if (!provider.id) {
+      console.error("[handleAuthSuccess] provider.id is undefined, cannot navigate");
+      return;
+    }
+
     setShowAuthWizard(false);
     const target = `/booking-request/${provider.id}`;
     navigate(target, {
@@ -1736,7 +1750,7 @@ const ProviderProfile: React.FC = () => {
         navigationSource: "provider_profile",
       },
     });
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // Note: window.scrollTo supprimé car il causait un "saut" avant la navigation
   }, [provider, navigate]);
 
   const handleHelpfulClick = useCallback(
