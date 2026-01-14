@@ -2274,9 +2274,6 @@ const BookingRequest: React.FC = () => {
                       render={({ field }) => (
                         <input
                           {...field}
-                          onChange={(e) =>
-                            field.onChange(sanitizeText(e.target.value))
-                          }
                           className={inputClass(inputHas("firstName"))}
                           placeholder={intl.formatMessage({
                             id: "bookingRequest.placeholders.firstName",
@@ -2318,9 +2315,6 @@ const BookingRequest: React.FC = () => {
                       render={({ field }) => (
                         <input
                           {...field}
-                          onChange={(e) =>
-                            field.onChange(sanitizeText(e.target.value))
-                          }
                           className={inputClass(inputHas("lastName"))}
                           placeholder={intl.formatMessage({
                             id: "bookingRequest.placeholders.lastName",
@@ -2363,9 +2357,6 @@ const BookingRequest: React.FC = () => {
                     render={({ field }) => (
                       <input
                         {...field}
-                        onChange={(e) =>
-                          field.onChange(sanitizeText(e.target.value))
-                        }
                         className={inputClass(inputHas("nationality"))}
                         // placeholder={t.placeholders.nationality}
                         placeholder={intl.formatMessage({
@@ -2445,9 +2436,6 @@ const BookingRequest: React.FC = () => {
                         render={({ field }) => (
                           <input
                             {...field}
-                            onChange={(e) =>
-                              field.onChange(sanitizeText(e.target.value))
-                            }
                             className={inputClass(Boolean(errors.autrePays))}
                             // placeholder={t.placeholders.otherCountry}
                             placeholder={intl.formatMessage({
@@ -2498,9 +2486,6 @@ const BookingRequest: React.FC = () => {
                     render={({ field }) => (
                       <input
                         {...field}
-                        onChange={(e) =>
-                          field.onChange(sanitizeText(e.target.value))
-                        }
                         className={inputClass(Boolean(errors.title))}
                         placeholder={intl.formatMessage({
                           id: "bookingRequest.placeholders.title",

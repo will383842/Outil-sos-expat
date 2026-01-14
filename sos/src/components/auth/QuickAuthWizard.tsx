@@ -68,6 +68,10 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
   // FIX: Refs pour avoir les valeurs actuelles dans le polling (éviter stale closures)
   const userRef = useRef(user);
   const authInitializedRef = useRef(authInitialized);
+  // FIX: Track previous user state to detect authentication transition
+  const prevUserRef = useRef<typeof user>(null);
+  // FIX: Flag to prevent multiple onSuccess calls
+  const successCalledRef = useRef(false);
 
   // Mettre à jour les refs à chaque render
   useEffect(() => {
@@ -92,6 +96,9 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
       setIsGoogleLoading(false);
       setIsNewUser(false);
       setPendingSuccess(false);
+      // Reset success flag when modal opens
+      successCalledRef.current = false;
+      prevUserRef.current = user; // Capture current user state at modal open
       // Focus email input after animation
       setTimeout(() => emailInputRef.current?.focus(), 300);
     }
@@ -104,59 +111,73 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
         clearTimeout(successTimeoutRef.current);
       }
     };
-  }, [isOpen]);
+  }, [isOpen, user]);
 
-  // ✅ FIX: Fermer le popup dès que l'utilisateur est connecté (authInitialized)
-  // On n'attend plus isFullyReady car Firestore peut être lent
-  // BookingRequest peut gérer le chargement des données lui-même
+  // ✅ FIX PRINCIPAL: Détecter quand user passe de null à truthy pendant que le modal est ouvert
+  // Cette approche est plus robuste car elle ne dépend pas de isGoogleLoading ou pendingSuccess
+  // qui peuvent être désynchronisés à cause du batching React
   useEffect(() => {
-    console.log('🔵 [QuickAuthWizard] Success useEffect check:', {
-      pendingSuccess,
-      step,
+    const prevUser = prevUserRef.current;
+
+    console.log('🔵 [QuickAuthWizard] Auth transition check:', {
+      isOpen,
+      prevUser: !!prevUser,
       user: !!user,
-      isFullyReady,
       authInitialized,
-      isGoogleLoading,
+      successCalled: successCalledRef.current,
     });
 
-    // ✅ FIX BUG: Détecter l'authentification PENDANT le login Google
-    // Le problème: loginWithGoogle fait des opérations Firestore après signInWithPopup
-    // Donc user devient truthy AVANT que await loginWithGoogle() ne retourne
-    // Solution: si on est en train de charger Google ET que user est authentifié, on ferme le popup
-    if (isGoogleLoading && user && authInitialized && isOpen) {
-      console.log('🟢 [QuickAuthWizard] User authenticated DURING Google loading! Calling onSuccess immediately...');
+    // Si le modal est ouvert ET user vient de passer de null/undefined à truthy
+    // ET on n'a pas encore appelé onSuccess => l'authentification vient de réussir
+    if (isOpen && !prevUser && user && authInitialized && !successCalledRef.current) {
+      console.log('🟢 [QuickAuthWizard] USER JUST AUTHENTICATED! Calling onSuccess immediately...');
+      successCalledRef.current = true; // Prevent multiple calls
+      // Clear any pending states
       setIsGoogleLoading(false);
-      onSuccess();
+      setPendingSuccess(false);
+      // Small delay to ensure UI shows success briefly
+      setTimeout(() => {
+        onSuccess();
+      }, 100);
       return;
     }
 
-    // FIX: On ferme le popup dès que authInitialized ET user existe
-    // Plus besoin d'attendre isFullyReady (qui attend le chargement Firestore complet)
-    if (pendingSuccess && step === 'success' && user && authInitialized) {
-      console.log('🟢 [QuickAuthWizard] User authenticated! Calling onSuccess in 300ms...');
-      console.log('🟢 [QuickAuthWizard] onSuccess function reference:', onSuccess?.toString()?.substring(0, 100));
-      const timeout = setTimeout(() => {
-        console.log('🟢 [QuickAuthWizard] Calling onSuccess NOW - BEFORE call');
-        console.log('🟢 [QuickAuthWizard] Current pathname:', window.location.pathname);
-        setPendingSuccess(false);
+    // Update prevUserRef for next render
+    prevUserRef.current = user;
+  }, [isOpen, user, authInitialized, onSuccess]);
+
+  // Fallback: gérer le cas où pendingSuccess est true (login email/password classique)
+  useEffect(() => {
+    console.log('🔵 [QuickAuthWizard] Fallback success check:', {
+      pendingSuccess,
+      step,
+      user: !!user,
+      authInitialized,
+      successCalled: successCalledRef.current,
+    });
+
+    // Si pendingSuccess est true, step est 'success', et user est authentifié
+    // ET on n'a pas encore appelé onSuccess
+    if (pendingSuccess && step === 'success' && user && authInitialized && !successCalledRef.current) {
+      console.log('🟢 [QuickAuthWizard] Fallback: User authenticated! Calling onSuccess...');
+      successCalledRef.current = true;
+      setPendingSuccess(false);
+      setTimeout(() => {
         onSuccess();
-        console.log('🟢 [QuickAuthWizard] onSuccess() CALLED - AFTER call');
-        console.log('🟢 [QuickAuthWizard] Pathname AFTER onSuccess:', window.location.pathname);
       }, 300);
-      return () => clearTimeout(timeout);
-    } else if (pendingSuccess && step === 'success') {
-      console.log('🟡 [QuickAuthWizard] Waiting for user/authInitialized...', {
-        user: !!user,
-        authInitialized,
-      });
     }
-  }, [pendingSuccess, step, user, authInitialized, onSuccess, isGoogleLoading, isOpen]);
+  }, [pendingSuccess, step, user, authInitialized, onSuccess]);
 
   // ✅ FIX BUG: Polling de secours pour détecter l'authentification
   // React peut parfois ne pas re-render quand les valeurs du contexte changent
   // Ce polling vérifie toutes les 500ms si l'utilisateur est authentifié
   // On utilise les refs pour avoir les valeurs actuelles (éviter stale closures)
   useEffect(() => {
+    // Ne pas démarrer le polling si success déjà appelé
+    if (successCalledRef.current) {
+      return;
+    }
+
     if (!pendingSuccess || step !== 'success') {
       return;
     }
@@ -171,6 +192,12 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
     const maxAttempts = 20; // 10 secondes max
 
     const pollInterval = setInterval(() => {
+      // Check if success was already called by another effect
+      if (successCalledRef.current) {
+        clearInterval(pollInterval);
+        return;
+      }
+
       attempts++;
       const currentUser = userRef.current;
       const currentAuthInitialized = authInitializedRef.current;
@@ -184,6 +211,7 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
       if (currentUser && currentAuthInitialized) {
         console.log('🟢 [QuickAuthWizard] Polling detected auth! Calling onSuccess...');
         clearInterval(pollInterval);
+        successCalledRef.current = true;
         setPendingSuccess(false);
         onSuccess();
       } else if (attempts >= maxAttempts) {
