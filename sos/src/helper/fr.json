@@ -3360,6 +3360,8 @@
   "admin.settings.twilio.timeout": "Timeout (secondes)",
   "admin.settings.twilio.timeoutHelp": "Temps d'attente avant de considerer l'appel comme sans reponse (10-120s)",
   "admin.settings.twilio.title": "Parametres Twilio",
+  "admin.sidebar.collapse": "Réduire",
+  "admin.sidebar.expand": "Développer",
   "admin.taxFilings.actions": "Actions",
   "admin.taxFilings.allStatuses": "Tous les statuts",
   "admin.taxFilings.allTypes": "Tous les types",

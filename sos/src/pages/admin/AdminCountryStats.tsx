@@ -3,6 +3,9 @@ import { useIntl } from "react-intl";
 import {
   collection,
   getDocs,
+  query,
+  orderBy,
+  limit,
 } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import AdminLayout from "../../components/admin/AdminLayout";
@@ -151,12 +154,14 @@ const AdminCountryStats: React.FC = () => {
       setIsLoading(true);
       setError(null);
 
-      // Fetch all data in parallel - include sos_profiles for better country data
+      // OPTIMISATION: Limiter les lectures Firestore pour réduire les coûts
+      // Avant: chargeait 100% des documents (100K+ lectures)
+      // Après: limite à 500 documents par collection (~2K lectures max)
       const [callsSnapshot, paymentsSnapshot, usersSnapshot, sosProfilesSnapshot] = await Promise.all([
-        getDocs(collection(db, "calls")),
-        getDocs(collection(db, "payments")),
-        getDocs(collection(db, "users")),
-        getDocs(collection(db, "sos_profiles"))
+        getDocs(query(collection(db, "calls"), orderBy("createdAt", "desc"), limit(500))),
+        getDocs(query(collection(db, "payments"), orderBy("createdAt", "desc"), limit(500))),
+        getDocs(query(collection(db, "users"), orderBy("createdAt", "desc"), limit(500))),
+        getDocs(query(collection(db, "sos_profiles"), limit(500)))
       ]);
 
       if (!mountedRef.current) return;

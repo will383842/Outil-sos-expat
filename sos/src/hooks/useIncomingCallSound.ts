@@ -196,8 +196,34 @@ const playSoftRingtone = async (): Promise<void> => {
   }
 };
 
-// Vibration douce (pour mobiles)
+// Tracker si l'utilisateur a interagi avec la page
+let userHasInteracted = false;
+
+// Initialiser le tracker d'interaction utilisateur
+if (typeof window !== 'undefined') {
+  const markUserInteraction = () => {
+    userHasInteracted = true;
+  };
+
+  // Ces événements indiquent une interaction utilisateur
+  ['click', 'touchstart', 'keydown'].forEach(event => {
+    window.addEventListener(event, markUserInteraction, { once: false, passive: true });
+  });
+}
+
+// Vibration douce (pour mobiles) - SEULEMENT après interaction utilisateur
 const triggerVibration = (): void => {
+  // Ne pas vibrer si l'utilisateur n'a pas encore interagi avec la page
+  // Cela évite l'erreur "[Intervention] Blocked call to navigator.vibrate"
+  if (!userHasInteracted) {
+    return;
+  }
+
+  // Ne pas vibrer si la page est en arrière-plan
+  if (typeof document !== 'undefined' && document.hidden) {
+    return;
+  }
+
   if ('vibrate' in navigator) {
     try {
       // Pattern de vibration DOUX: courtes impulsions légères avec longues pauses
@@ -275,13 +301,23 @@ export const useIncomingCallSound = ({
       }
     }
 
-    // Vibration si activée
-    if (isVibrationEnabled) {
+    // Vibration si activée et si l'utilisateur a interagi
+    if (isVibrationEnabled && userHasInteracted) {
       triggerVibration();
-      // Répéter la vibration
+
+      // Répéter la vibration avec une limite de 5 répétitions
+      let vibrationCount = 0;
+      const maxVibrations = 5;
+
       const vibrationInterval = setInterval(() => {
-        if (mountedRef.current) {
-          triggerVibration();
+        if (mountedRef.current && vibrationCount < maxVibrations && userHasInteracted) {
+          // Ne pas vibrer si la page est en arrière-plan
+          if (typeof document !== 'undefined' && !document.hidden) {
+            vibrationCount++;
+            triggerVibration();
+          }
+        } else {
+          clearInterval(vibrationInterval);
         }
       }, 2000);
 

@@ -3403,6 +3403,8 @@
   "admin.settings.twilio.timeout": "Timeout (seconds)",
   "admin.settings.twilio.timeoutHelp": "Wait time before considering the call as unanswered (10-120s)",
   "admin.settings.twilio.title": "Twilio Settings",
+  "admin.sidebar.collapse": "Collapse",
+  "admin.sidebar.expand": "Expand",
   "admin.taxFilings.actions": "Actions",
   "admin.taxFilings.allStatuses": "All statuses",
   "admin.taxFilings.allTypes": "All types",

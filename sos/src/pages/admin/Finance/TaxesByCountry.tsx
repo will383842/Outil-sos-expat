@@ -9,6 +9,8 @@ import {
   getDocs,
   query,
   where,
+  orderBy,
+  limit,
 } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
 import AdminLayout from '../../../components/admin/AdminLayout';
@@ -83,10 +85,12 @@ export default function TaxesByCountry() {
       setIsLoading(true);
       setError(null);
 
-      // Load payments and users
+      // OPTIMISATION: Limiter les lectures Firestore pour réduire les coûts
+      // Avant: chargeait 100% des documents (dizaines de milliers de lectures)
+      // Après: limite à 500 documents par collection (~1K lectures max)
       const [paymentsSnapshot, usersSnapshot] = await Promise.all([
-        getDocs(collection(db, 'payments')),
-        getDocs(collection(db, 'users')),
+        getDocs(query(collection(db, 'payments'), orderBy('createdAt', 'desc'), limit(500))),
+        getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(500))),
       ]);
 
       // Build user country map

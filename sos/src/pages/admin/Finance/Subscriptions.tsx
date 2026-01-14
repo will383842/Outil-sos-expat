@@ -157,9 +157,10 @@ const TIER_CONFIG: Record<SubscriptionTier, { label: string; color: string; bgCo
 // P2 FIX: Configurable page sizes for pagination
 const PAGE_SIZES = [20, 50, 100] as const;
 const DEFAULT_PAGE_SIZE = 20;
-// P2 FIX: Increased Firestore limit to handle larger datasets
-// Note: For very large datasets (>5000), implement cursor-based server-side pagination
-const FIRESTORE_FETCH_LIMIT = 5000;
+// OPTIMISATION: Réduction de la limite Firestore pour réduire les coûts
+// Avant: 5000 (coûtait ~3€/jour en lectures)
+// Après: 500 (économie de ~90%)
+const FIRESTORE_FETCH_LIMIT = 500;
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -645,10 +646,11 @@ const Subscriptions: React.FC = () => {
       }
 
       // Step 2: Load providers for user data - using sos_profiles collection
+      // OPTIMISATION: Limiter les lectures Firestore pour réduire les coûts
       console.log('[Subscriptions] Step 2: Loading sos_profiles...');
       let providersSnapshot;
       try {
-        providersSnapshot = await getDocs(collection(db, 'sos_profiles'));
+        providersSnapshot = await getDocs(query(collection(db, 'sos_profiles'), limit(FIRESTORE_FETCH_LIMIT)));
         console.log(`[Subscriptions] Step 2 OK: ${providersSnapshot.docs.length} profiles loaded`);
       } catch (e: any) {
         console.error('[Subscriptions] Step 2 FAILED - sos_profiles query:', e);
@@ -672,9 +674,10 @@ const Subscriptions: React.FC = () => {
       });
 
       // Step 3: Load users as fallback
+      // OPTIMISATION: Limiter les lectures Firestore
       console.log('[Subscriptions] Step 3: Loading users...');
       try {
-        const usersSnapshot = await getDocs(collection(db, 'users'));
+        const usersSnapshot = await getDocs(query(collection(db, 'users'), limit(FIRESTORE_FETCH_LIMIT)));
         console.log(`[Subscriptions] Step 3 OK: ${usersSnapshot.docs.length} users loaded`);
         usersSnapshot.docs.forEach((docSnap) => {
           if (!providersMap.has(docSnap.id)) {

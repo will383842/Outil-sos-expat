@@ -100,7 +100,6 @@ export { backupStorageToDR } from "./scheduled/backupStorageToDR";
 export {
   adminListBackups,
   adminPreviewRestore,
-  adminGetRestoreConfirmationCode, // Migrated to Gen2 to avoid 10s load timeout
   adminRestoreFirestore,
   adminRestoreAuth,
   adminCheckRestoreStatus,
@@ -108,6 +107,9 @@ export {
   adminDeleteBackup,
   adminListGcpBackups,
 } from "./admin/backupRestoreAdmin";
+
+// backup - Isolated Gen2 function for faster cold start
+export { adminGetRestoreConfirmationCode } from "./admin/restoreConfirmationCode";
 
 // P2-3 FIX: GDPR Recording Cleanup - SUPPRIME (recording desactive pour RGPD)
 // Les fonctions rgpdRecordingCleanup et triggerRgpdCleanup ont ete supprimees

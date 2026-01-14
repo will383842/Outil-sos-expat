@@ -732,7 +732,8 @@ self.addEventListener('push', event => {
     badge: '/icons/icon-72x72.png',
     tag: data.tag || 'sos-push',
     data: data.data || data,
-    vibrate: [100, 50, 100],
+    // Note: vibrate retiré car bloqué par les navigateurs sans interaction utilisateur
+    // La vibration sera gérée côté client après interaction
     requireInteraction: data.requireInteraction || false,
     actions: [
       { action: 'open', title: 'Ouvrir' },

@@ -9,7 +9,7 @@
  */
 
 import * as functions from "firebase-functions/v1";
-import { onCall as onCallV2, HttpsError as HttpsErrorV2 } from "firebase-functions/v2/https";
+// Gen2 imports removed - adminGetRestoreConfirmationCode moved to restoreConfirmationCode.ts
 import * as admin from "firebase-admin";
 import { logger } from "firebase-functions";
 
@@ -384,52 +384,7 @@ export const adminPreviewRestore = functions
     }
   });
 
-/**
- * Génère un code de confirmation unique pour une restauration
- */
-function generateConfirmationCode(): string {
-  const words = ["RESTORE", "CONFIRM", "BACKUP", "IMPORT", "DATA"];
-  const randomWord = words[Math.floor(Math.random() * words.length)];
-  const randomNum = Math.floor(Math.random() * 9000) + 1000;
-  return `${randomWord}-${randomNum}`;
-}
-
-/**
- * Génère un code de confirmation pour une restauration
- * L'admin doit retaper ce code pour confirmer la restauration
- * @updated 2026-01-13 - Migrated to Gen2 to avoid 10s load timeout
- */
-export const adminGetRestoreConfirmationCode = onCallV2(
-  { region: "europe-west1", timeoutSeconds: 30, memory: "128MiB" },
-  async (request) => {
-    if (!request.auth) {
-      throw new HttpsErrorV2("unauthenticated", "Authentication required");
-    }
-
-    if (!(await isAdmin(request.auth.uid))) {
-      throw new HttpsErrorV2("permission-denied", "Admin access required");
-    }
-
-    const data = request.data as { backupId: string };
-    const code = generateConfirmationCode();
-
-    // Log la demande de code (pour audit)
-    const db = getDb();
-    await db.collection("admin_audit_logs").add({
-      action: "RESTORE_CONFIRMATION_CODE_REQUESTED",
-      adminId: request.auth.uid,
-      metadata: { backupId: data.backupId, codeGenerated: code },
-      createdAt: admin.firestore.Timestamp.now(),
-    });
-
-    return {
-      success: true,
-      code,
-      message: "Tapez ce code exactement pour confirmer la restauration",
-      expiresIn: "5 minutes", // Le code n'a pas vraiment d'expiration mais ça ajoute de l'urgence
-    };
-  }
-);
+// adminGetRestoreConfirmationCode moved to ./restoreConfirmationCode.ts for faster cold start
 
 /**
  * Exécute une restauration Firestore via l'API importDocuments

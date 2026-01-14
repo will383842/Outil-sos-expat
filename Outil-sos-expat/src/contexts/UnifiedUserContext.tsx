@@ -220,6 +220,34 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
             planName: "Admin",
           });
           setRole("admin");
+
+          // AUTO-CREATE USER DOCUMENT for admin if it doesn't exist
+          // This prevents "Compte non trouvé" error for new admin accounts
+          try {
+            const adminUserRef = doc(db, "users", firebaseUser.uid);
+            const adminUserSnap = await getDoc(adminUserRef);
+
+            if (!adminUserSnap.exists()) {
+              console.log("[UnifiedUser] Creating missing users document for admin:", firebaseUser.email);
+              await setDoc(adminUserRef, {
+                uid: firebaseUser.uid,
+                email: firebaseUser.email?.toLowerCase() || "",
+                displayName: firebaseUser.displayName || firebaseUser.email?.split("@")[0] || "Admin",
+                photoURL: firebaseUser.photoURL || null,
+                role: "admin",
+                isAdmin: true,
+                status: "active",
+                subscriptionStatus: "admin",
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+                source: "auto-created-admin-login",
+              }, { merge: true });
+              console.log("[UnifiedUser] Admin users document created successfully");
+            }
+          } catch (adminDocErr) {
+            console.error("[UnifiedUser] Failed to create admin users document:", adminDocErr);
+            // Continue anyway - admin has access via claims
+          }
         }
         // 2. Vérifier SSO subscription claims (générés par generateOutilToken dans SOS)
         else if (claims.subscriptionStatus || claims.subscriptionTier || claims.provider === true) {

@@ -16,6 +16,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/useAuth';
+import AdminLayout from '@/components/admin/AdminLayout';
 import {
   Download,
   FileText,
@@ -1372,53 +1373,57 @@ export default function FinanceExports() {
   // ============================================================================
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-          <Download className="w-7 h-7 text-indigo-600" />
-          {intl.formatMessage({ id: 'admin.finance.exports.title', defaultMessage: 'Exports & Reports' })}
-        </h1>
-        <p className="text-gray-600 mt-1">
-          {intl.formatMessage({
-            id: 'admin.finance.exports.subtitle',
-            defaultMessage: 'Export financial data in various formats for analysis and compliance',
-          })}
-        </p>
-      </div>
+    <AdminLayout>
+      <div className="px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+              <Download className="w-7 h-7 text-indigo-600" />
+              {intl.formatMessage({ id: 'admin.finance.exports.title', defaultMessage: 'Exports & Reports' })}
+            </h1>
+            <p className="text-gray-600 mt-1">
+              {intl.formatMessage({
+                id: 'admin.finance.exports.subtitle',
+                defaultMessage: 'Export financial data in various formats for analysis and compliance',
+              })}
+            </p>
+          </div>
+        </div>
 
-      {/* Tabs */}
-      <div className="mb-6">
-        <div className="flex flex-wrap gap-1 border-b border-gray-200">
-          {[
-            { key: 'templates', label: 'Quick Exports', icon: <FileSpreadsheet className="w-4 h-4" /> },
-            { key: 'custom', label: 'Custom Export', icon: <Settings className="w-4 h-4" /> },
-            { key: 'scheduled', label: 'Scheduled', icon: <Calendar className="w-4 h-4" /> },
-            { key: 'history', label: 'History', icon: <Clock className="w-4 h-4" /> },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key as typeof activeTab)}
-              className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${
-                activeTab === tab.key
-                  ? 'border-indigo-600 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              {tab.icon}
-              {tab.label}
-            </button>
-          ))}
+        {/* Tabs */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+          <div className="flex flex-wrap gap-1 border-b border-gray-200 px-4">
+            {[
+              { key: 'templates', label: 'Quick Exports', icon: <FileSpreadsheet className="w-4 h-4" /> },
+              { key: 'custom', label: 'Custom Export', icon: <Settings className="w-4 h-4" /> },
+              { key: 'scheduled', label: 'Scheduled', icon: <Calendar className="w-4 h-4" /> },
+              { key: 'history', label: 'History', icon: <Clock className="w-4 h-4" /> },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key as typeof activeTab)}
+                className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${
+                  activeTab === tab.key
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Tab Content */}
+          <div className="p-6 min-h-[400px]">
+            {activeTab === 'templates' && renderTemplatesTab()}
+            {activeTab === 'custom' && renderCustomExportTab()}
+            {activeTab === 'scheduled' && renderScheduledTab()}
+            {activeTab === 'history' && renderHistoryTab()}
+          </div>
         </div>
       </div>
-
-      {/* Tab Content */}
-      <div className="min-h-[400px]">
-        {activeTab === 'templates' && renderTemplatesTab()}
-        {activeTab === 'custom' && renderCustomExportTab()}
-        {activeTab === 'scheduled' && renderScheduledTab()}
-        {activeTab === 'history' && renderHistoryTab()}
-      </div>
-    </div>
+    </AdminLayout>
   );
 }

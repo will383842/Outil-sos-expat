@@ -9,7 +9,8 @@
   "scripts": {
     "predev": "node scripts/gen-firebase-config.cjs",
     "dev": "vite",
-    "prebuild": "node scripts/gen-firebase-config.cjs && node scripts/download-sitemaps.js",
+    "prebuild": "node scripts/gen-firebase-config.cjs && node scripts/sync-all-translations.cjs && node scripts/download-sitemaps.js",
+    "sync-translations": "node scripts/sync-all-translations.cjs",
     "build": "tsc -b && vite build && node scripts/copy-sitemaps-to-dist.js",
     "preview": "vite preview --strictPort",
     "typecheck": "tsc --noEmit",

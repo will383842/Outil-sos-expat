@@ -20,7 +20,8 @@ messaging.onBackgroundMessage((payload) => {
     badge: '/icons/icon-72x72.png',
     tag: payload.data?.tag || 'sos-notification',
     data: payload.data || {},
-    vibrate: [100, 50, 100],
+    // Note: vibrate retiré car bloqué par les navigateurs sans interaction utilisateur
+    // La vibration sera gérée côté client après interaction
     actions: [
       { action: 'open', title: 'Ouvrir' },
       { action: 'close', title: 'Fermer' }
