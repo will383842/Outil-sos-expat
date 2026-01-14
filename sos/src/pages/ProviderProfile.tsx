@@ -622,7 +622,7 @@ const ProviderProfile: React.FC = () => {
   const langFromLocale = langLocale?.split('-')[0];
   const location = useLocation();
   const navigate = useLocaleNavigate();
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, authInitialized } = useAuth();
   const { language } = useApp();
 
   const detectedLang = useMemo(
@@ -1674,9 +1674,10 @@ const ProviderProfile: React.FC = () => {
       return;
     }
 
-    // Si l'auth est encore en cours de chargement, on attend
-    if (authLoading) {
-      console.warn("🟡 [handleBookCall] ABORT - Auth still loading");
+    // FIX: On attend seulement que authInitialized soit true (Firebase a vérifié l'état d'auth)
+    // Une fois initialisé, on peut continuer : soit naviguer (si user), soit montrer le wizard
+    if (!authInitialized) {
+      console.warn("🟡 [handleBookCall] ABORT - Auth not yet initialized");
       return;
     }
 
@@ -1748,7 +1749,7 @@ const ProviderProfile: React.FC = () => {
       setShowAuthWizard(true);
     }
     console.log("🔵 [handleBookCall] END");
-  }, [provider, user, authLoading, navigate, onlineStatus]);
+  }, [provider, user, authInitialized, navigate, onlineStatus]);
 
   // Callback quand l'authentification réussit via le wizard
   const handleAuthSuccess = useCallback(() => {
@@ -2637,14 +2638,14 @@ const ProviderProfile: React.FC = () => {
                     {/* CTA Button - Desktop only (mobile has fixed bottom) */}
                     <button
                       onClick={handleBookCall}
-                      disabled={!onlineStatus.isOnline || isOnCall || authLoading}
+                      disabled={!onlineStatus.isOnline || isOnCall || !authInitialized}
                       className={`hidden lg:flex w-full py-4 px-4 rounded-2xl font-bold text-lg transition-all duration-300 items-center justify-center gap-3 min-h-[56px] focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                        onlineStatus.isOnline && !isOnCall && !authLoading
+                        onlineStatus.isOnline && !isOnCall && authInitialized
                           ? "bg-gradient-to-r from-green-600 to-green-500 text-white hover:from-green-500 hover:to-green-400 hover:scale-[1.02] shadow-lg shadow-green-500/30 focus:ring-green-500"
                           : "bg-gray-200 text-gray-500 cursor-not-allowed"
                       }`}
                       aria-label={
-                        authLoading
+                        !authInitialized
                           ? intl.formatMessage({ id: "providerProfile.loading", defaultMessage: "Chargement..." })
                           : isOnCall
                             ? intl.formatMessage({ id: "providerProfile.alreadyOnCall" })
@@ -2653,7 +2654,7 @@ const ProviderProfile: React.FC = () => {
                               : intl.formatMessage({ id: "providerProfile.unavailable" })
                       }
                     >
-                      {authLoading ? (
+                      {!authInitialized ? (
                         <>
                           <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-400 border-t-transparent" />
                           <span><FormattedMessage id="providerProfile.loading" defaultMessage="Chargement..." /></span>
@@ -2670,7 +2671,7 @@ const ProviderProfile: React.FC = () => {
                           </span>
                         </>
                       )}
-                      {onlineStatus.isOnline && !isOnCall && !authLoading && (
+                      {onlineStatus.isOnline && !isOnCall && authInitialized && (
                         <div className="flex gap-1" aria-hidden="true">
                           <div className="w-2 h-2 rounded-full animate-pulse bg-white/80"></div>
                           <div className="w-2 h-2 rounded-full animate-pulse delay-75 bg-white/80"></div>
@@ -3276,14 +3277,14 @@ const ProviderProfile: React.FC = () => {
           {/* Bouton CTA */}
           <button
             onClick={handleBookCall}
-            disabled={!onlineStatus.isOnline || isOnCall || authLoading}
+            disabled={!onlineStatus.isOnline || isOnCall || !authInitialized}
             className={`w-full py-3.5 rounded-xl font-bold text-base transition-all flex items-center justify-center gap-2 ${
-              onlineStatus.isOnline && !isOnCall && !authLoading
+              onlineStatus.isOnline && !isOnCall && authInitialized
                 ? "bg-gradient-to-r from-green-600 to-green-500 text-white shadow-lg shadow-green-500/30 active:scale-[0.98]"
                 : "bg-gray-200 text-gray-500 cursor-not-allowed"
             }`}
             aria-label={
-              authLoading
+              !authInitialized
                 ? intl.formatMessage({ id: "providerProfile.loading", defaultMessage: "Chargement..." })
                 : onlineStatus.isOnline && !isOnCall
                   ? intl.formatMessage(
@@ -3295,7 +3296,7 @@ const ProviderProfile: React.FC = () => {
                     : intl.formatMessage({ id: "providerProfile.unavailable" })
             }
           >
-            {authLoading ? (
+            {!authInitialized ? (
               <>
                 <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-400 border-t-transparent" />
                 <span><FormattedMessage id="providerProfile.loading" defaultMessage="Chargement..." /></span>
