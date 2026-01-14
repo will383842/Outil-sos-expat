@@ -92,15 +92,31 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
   // isFullyReady = authInitialized AND !isLoading (garantit que tout est prêt)
   // Cela évite les race conditions où BookingRequest se monte avant que user soit disponible
   useEffect(() => {
+    console.log('🔵 [QuickAuthWizard] Success useEffect check:', {
+      pendingSuccess,
+      step,
+      user: !!user,
+      isFullyReady,
+      authInitialized,
+    });
+
     if (pendingSuccess && step === 'success' && user && isFullyReady) {
+      console.log('🟢 [QuickAuthWizard] All conditions met! Calling onSuccess in 300ms...');
       // User Firestore est maintenant chargé, on peut naviguer
       const timeout = setTimeout(() => {
+        console.log('🟢 [QuickAuthWizard] Calling onSuccess NOW');
         setPendingSuccess(false);
         onSuccess();
       }, 300); // Délai court juste pour l'animation
       return () => clearTimeout(timeout);
+    } else if (pendingSuccess && step === 'success') {
+      console.log('🟡 [QuickAuthWizard] Waiting for user/isFullyReady...', {
+        user: !!user,
+        isFullyReady,
+        authInitialized,
+      });
     }
-  }, [pendingSuccess, step, user, isFullyReady, onSuccess]);
+  }, [pendingSuccess, step, user, isFullyReady, authInitialized, onSuccess]);
 
   // Email validation
   const isValidEmail = (email: string): boolean => {
@@ -124,11 +140,17 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
 
   // Handle password submission - try login first, then register if needed
   const handlePasswordSubmit = useCallback(async () => {
+    console.log('🔵 [QuickAuthWizard] handlePasswordSubmit START');
+    console.log('🔵 [QuickAuthWizard] email:', email);
+    console.log('🔵 [QuickAuthWizard] password length:', password?.length);
+
     if (!password) {
+      console.log('🔴 [QuickAuthWizard] No password');
       setError(intl.formatMessage({ id: 'auth.wizard.passwordRequired' }));
       return;
     }
     if (password.length < 6) {
+      console.log('🔴 [QuickAuthWizard] Password too short');
       setError(intl.formatMessage({ id: 'auth.wizard.passwordTooShort' }));
       return;
     }
@@ -138,7 +160,9 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
 
     try {
       // Try to login first
+      console.log('🔵 [QuickAuthWizard] Calling login()...');
       await login(email, password);
+      console.log('🟢 [QuickAuthWizard] login() SUCCESS');
       setIsSubmitting(false);
       setStep('success');
       // FIX: Attendre que user Firestore soit chargé avant de naviguer
