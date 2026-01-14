@@ -848,27 +848,68 @@ export const twilioAmdTwiml = onRequest(
         return;
       }
 
-      // HUMAN ANSWERED → Return conference TwiML with welcome message
-      console.log(`🎯 [${amdId}] ✅ HUMAN DETECTED - Returning CONFERENCE TwiML`);
+      // P0 FIX: Check if answeredBy is provided (human confirmed) or undefined (AMD pending)
+      // With asyncAmd="true", the first callback via `url` does NOT have AnsweredBy yet
+      // We should ONLY set status to "connected" if we have CONFIRMED it's a human
+      // If answeredBy is undefined, keep status as "amd_pending" and wait for AMD callback
+
+      const isHumanConfirmed = answeredBy === 'human';
+
+      if (isHumanConfirmed) {
+        // HUMAN CONFIRMED → Return conference TwiML with welcome message
+        console.log(`🎯 [${amdId}] ✅ HUMAN CONFIRMED - Returning CONFERENCE TwiML`);
+
+        // Update participant status to connected ONLY when human is confirmed
+        if (sessionId) {
+          try {
+            await twilioCallManager.updateParticipantStatus(
+              sessionId,
+              participantType,
+              'connected',
+              admin.firestore.Timestamp.fromDate(new Date())
+            );
+            console.log(`🎯 [${amdId}]   ✅ Status set to connected (human confirmed)`);
+          } catch (statusError) {
+            console.error(`🎯 [${amdId}]   ⚠️ Failed to update status:`, statusError);
+          }
+        }
+      } else {
+        // answeredBy is undefined or unknown - AMD is still pending
+        // DO NOT set status to "connected" yet - wait for AMD callback
+        console.log(`🎯 [${amdId}] ⏳ AMD PENDING - Returning CONFERENCE TwiML but NOT setting status to connected`);
+        console.log(`🎯 [${amdId}]   answeredBy: "${answeredBy || 'UNDEFINED'}"`);
+        console.log(`🎯 [${amdId}]   Status remains "amd_pending" - waiting for asyncAmdStatusCallback`);
+
+        // Set status to amd_pending if not already set
+        if (sessionId) {
+          try {
+            const session = await twilioCallManager.getCallSession(sessionId);
+            const currentParticipant = participantType === 'provider'
+              ? session?.participants.provider
+              : session?.participants.client;
+
+            // Only update to amd_pending if not already in a terminal state
+            if (currentParticipant?.status !== 'connected' &&
+                currentParticipant?.status !== 'disconnected' &&
+                currentParticipant?.status !== 'no_answer') {
+              await twilioCallManager.updateParticipantStatus(
+                sessionId,
+                participantType,
+                'amd_pending'
+              );
+              console.log(`🎯 [${amdId}]   ✅ Status set to amd_pending`);
+            } else {
+              console.log(`🎯 [${amdId}]   Status already ${currentParticipant?.status}, not updating`);
+            }
+          } catch (statusError) {
+            console.error(`🎯 [${amdId}]   ⚠️ Failed to update status:`, statusError);
+          }
+        }
+      }
 
       // Get welcome message based on language
       const welcomeMessage = getIntroText(participantType, langKey);
-      console.log(`🎯 [${amdId}]   welcomeMessage: "${welcomeMessage.substring(0, 50)}..."`);
-
-      // Update participant status to connected
-      if (sessionId) {
-        try {
-          await twilioCallManager.updateParticipantStatus(
-            sessionId,
-            participantType,
-            'connected',
-            admin.firestore.Timestamp.fromDate(new Date())
-          );
-          console.log(`🎯 [${amdId}]   ✅ Status set to connected`);
-        } catch (statusError) {
-          console.error(`🎯 [${amdId}]   ⚠️ Failed to update status:`, statusError);
-        }
-      }
+      console.log(`🎯 [${amdId}]   welcomeMessage: "${welcomeMessage.substring(0, 50)}..."`)
 
       // Generate conference TwiML
       // Client starts conference (startConferenceOnEnter=true)
