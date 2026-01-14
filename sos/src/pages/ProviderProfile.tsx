@@ -1662,11 +1662,21 @@ const ProviderProfile: React.FC = () => {
   }, [provider, isLoading, updateSEOMetadata]);
 
   const handleBookCall = useCallback(() => {
-    if (!provider) return;
+    console.log("🔵 [handleBookCall] START - Button clicked");
+    console.log("🔵 [handleBookCall] provider:", provider);
+    console.log("🔵 [handleBookCall] provider?.id:", provider?.id);
+    console.log("🔵 [handleBookCall] user:", user);
+    console.log("🔵 [handleBookCall] authLoading:", authLoading);
+    console.log("🔵 [handleBookCall] onlineStatus:", onlineStatus);
+
+    if (!provider) {
+      console.error("🔴 [handleBookCall] ABORT - No provider");
+      return;
+    }
 
     // Si l'auth est encore en cours de chargement, on attend
     if (authLoading) {
-      console.log("Auth still loading, waiting...");
+      console.warn("🟡 [handleBookCall] ABORT - Auth still loading");
       return;
     }
 
@@ -1707,30 +1717,38 @@ const ProviderProfile: React.FC = () => {
         STORAGE_KEYS.SELECTED_PROVIDER,
         JSON.stringify(provider)
       );
+      console.log("🔵 [handleBookCall] Provider saved to sessionStorage");
     } catch (error) {
       console.warn("Failed to save provider to sessionStorage:", error);
     }
     const target = `/booking-request/${provider.id}`;
+    console.log("🔵 [handleBookCall] Navigation target:", target);
 
     // Validation: s'assurer que provider.id est défini
     if (!provider.id) {
-      console.error("[handleBookCall] provider.id is undefined, cannot navigate");
+      console.error("🔴 [handleBookCall] ABORT - provider.id is undefined");
       return;
     }
 
     if (user) {
-      navigate(target, {
-        state: {
-          selectedProvider: provider,
-          navigationSource: "provider_profile",
-        },
-      });
-      // Note: window.scrollTo supprimé car il causait un "saut" avant la navigation
+      console.log("🟢 [handleBookCall] User is logged in, navigating to:", target);
+      try {
+        navigate(target, {
+          state: {
+            selectedProvider: provider,
+            navigationSource: "provider_profile",
+          },
+        });
+        console.log("🟢 [handleBookCall] navigate() called successfully");
+      } catch (navError) {
+        console.error("🔴 [handleBookCall] Navigation error:", navError);
+      }
     } else {
-      // ✅ Afficher le wizard d'auth au lieu de rediriger vers /login
+      console.log("🟡 [handleBookCall] User not logged in, showing auth wizard");
       setShowAuthWizard(true);
     }
-  }, [provider, user, authLoading, navigate, onlineStatus.isOnline]);
+    console.log("🔵 [handleBookCall] END");
+  }, [provider, user, authLoading, navigate, onlineStatus]);
 
   // Callback quand l'authentification réussit via le wizard
   const handleAuthSuccess = useCallback(() => {
