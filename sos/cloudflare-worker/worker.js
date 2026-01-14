@@ -658,6 +658,11 @@ async function handleRequest(request, env, ctx) {
   newHeaders.set('X-Worker-SSR-Match', needsSSR ? 'true' : 'false');
   newHeaders.set('X-Worker-Path', pathname);
 
+  // COOP headers required for Firebase Auth popup (Google login)
+  // Without these, the popup cannot communicate with the parent window
+  newHeaders.set('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+  newHeaders.set('Cross-Origin-Embedder-Policy', 'unsafe-none');
+
   return new Response(originResponse.body, {
     status: originResponse.status,
     statusText: originResponse.statusText,
