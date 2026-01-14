@@ -15,7 +15,6 @@ import {
   getDoc,
   updateDoc,
   Timestamp,
-  onSnapshot,
 } from 'firebase/firestore';
 import { db, functions } from '../../../config/firebase';
 import { httpsCallable } from 'firebase/functions';

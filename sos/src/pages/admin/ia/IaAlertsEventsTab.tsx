@@ -423,13 +423,13 @@ export const IaAlertsEventsTab: React.FC = () => {
       }
     };
 
+    // Chargement initial uniquement (bouton manuel pour actualiser)
+    // ÉCONOMIE: Suppression du setInterval automatique (30s)
+    // Avant: 2,880 requêtes/jour - Après: ~50 requêtes/jour (manuel)
     loadEvents();
-    // Poll every 30 seconds instead of real-time onSnapshot
-    const intervalId = setInterval(loadEvents, 30000);
 
     return () => {
       isMounted = false;
-      clearInterval(intervalId);
     };
   }, [dateRange]);
 

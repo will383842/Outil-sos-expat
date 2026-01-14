@@ -271,13 +271,18 @@ class ProductionLogger {
     setImmediate(async () => {
       try {
         const processedData = this.config.maskSensitiveData ? maskSensitiveData(data) : data;
+        // ÉCONOMIE: Ajout de TTL pour supprimer automatiquement les logs après 7 jours
+        // Économie estimée: ~40€/mois sur le stockage Firestore
+        const now = Date.now();
         await this.db!.collection('production_logs').add({
           level,
           source,
           message,
           data: processedData ? safeStringify(processedData, 2000) : null,
           timestamp: new Date(),
-          environment: process.env.NODE_ENV || 'unknown'
+          environment: process.env.NODE_ENV || 'unknown',
+          // TTL: Firestore supprimera ce document après 7 jours
+          expireAt: new Date(now + 7 * 24 * 60 * 60 * 1000)
         });
       } catch {
         // Silently fail

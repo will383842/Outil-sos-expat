@@ -196,8 +196,30 @@ const playSoftRingtone = async (): Promise<void> => {
   }
 };
 
-// Tracker si l'utilisateur a interagi avec la page
+// Tracker si l'utilisateur a interagi avec la page (requis pour vibration)
 let userHasInteracted = false;
+
+// Fonction pour vérifier si la vibration est autorisée
+const canVibrate = (): boolean => {
+  // Pas de vibration sans interaction utilisateur
+  if (!userHasInteracted) return false;
+  // Pas de vibration si la page est en arrière-plan
+  if (typeof document !== 'undefined' && document.hidden) return false;
+  // Pas de vibration si l'API n'est pas disponible
+  if (!('vibrate' in navigator)) return false;
+  return true;
+};
+
+// Appel sécurisé à navigator.vibrate
+const safeVibrate = (pattern: number | number[]): boolean => {
+  if (!canVibrate()) return false;
+  try {
+    return navigator.vibrate(pattern);
+  } catch {
+    // Silencieux - vibration bloquée par le navigateur
+    return false;
+  }
+};
 
 // Initialiser le tracker d'interaction utilisateur
 if (typeof window !== 'undefined') {
@@ -213,26 +235,9 @@ if (typeof window !== 'undefined') {
 
 // Vibration douce (pour mobiles) - SEULEMENT après interaction utilisateur
 const triggerVibration = (): void => {
-  // Ne pas vibrer si l'utilisateur n'a pas encore interagi avec la page
-  // Cela évite l'erreur "[Intervention] Blocked call to navigator.vibrate"
-  if (!userHasInteracted) {
-    return;
-  }
-
-  // Ne pas vibrer si la page est en arrière-plan
-  if (typeof document !== 'undefined' && document.hidden) {
-    return;
-  }
-
-  if ('vibrate' in navigator) {
-    try {
-      // Pattern de vibration DOUX: courtes impulsions légères avec longues pauses
-      // 100ms vibration, 300ms pause, 100ms vibration, 500ms pause
-      navigator.vibrate([100, 300, 100, 500, 80]);
-    } catch {
-      // Ignore - vibration blocked by browser if no user interaction
-    }
-  }
+  // Pattern de vibration DOUX: courtes impulsions légères avec longues pauses
+  // 100ms vibration, 300ms pause, 100ms vibration, 500ms pause
+  safeVibrate([100, 300, 100, 500, 80]);
 };
 
 // Hook principal
@@ -266,14 +271,8 @@ export const useIncomingCallSound = ({
       clearInterval(ringIntervalRef.current);
       ringIntervalRef.current = null;
     }
-    // Arrêter la vibration
-    if ('vibrate' in navigator) {
-      try {
-        navigator.vibrate(0);
-      } catch {
-        // Ignore - vibration blocked by browser
-      }
-    }
+    // Arrêter la vibration (0 = stop)
+    safeVibrate(0);
   }, []);
 
   // Démarrer la sonnerie

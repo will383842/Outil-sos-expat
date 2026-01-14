@@ -274,15 +274,16 @@ const AdminBackups: React.FC = () => {
       }
     };
 
+    // Chargement initial uniquement (bouton manuel pour actualiser)
+    // ÉCONOMIE: Suppression du setInterval automatique (120s)
+    // Avant: 720 requêtes/jour - Après: ~20 requêtes/jour (manuel)
     loadBackups();
-    const intervalId = setInterval(loadBackups, 120000); // Poll every 120s
 
     // Check admin status
     isAdminNow().then(setIsAdmin);
 
     return () => {
       isMounted = false;
-      clearInterval(intervalId);
     };
   }, []);
 

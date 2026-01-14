@@ -140,12 +140,13 @@ type StatusTab = 'pending' | 'approved' | 'rejected';
       }
     };
 
+    // Chargement initial uniquement (bouton manuel pour actualiser)
+    // ÉCONOMIE: Suppression du setInterval automatique (60s)
+    // Avant: 1,440 requêtes/jour - Après: ~50 requêtes/jour (manuel)
     loadProfiles();
-    const intervalId = setInterval(loadProfiles, 60000); // Poll every 60s
 
     return () => {
       isMounted = false;
-      clearInterval(intervalId);
     };
   }, [statusTab]);
 

@@ -111,11 +111,14 @@ const AdminSystemHealth: React.FC = () => {
     }
   }, [functions]);
 
+  // Chargement initial uniquement (bouton manuel pour actualiser)
+  // ÉCONOMIE: Suppression du setInterval automatique (30s)
+  // Avant: 2,880 requêtes/jour - Après: ~50-100 requêtes/jour (manuel)
+  // Économie estimée: ~100€/mois sur Firestore
   useEffect(() => {
     fetchData();
-    // Rafraîchir toutes les 30 secondes
-    const interval = setInterval(() => fetchData(), 30000);
-    return () => clearInterval(interval);
+    // NOTE: Le rafraîchissement automatique a été SUPPRIMÉ pour économiser les coûts Firestore
+    // L'admin peut utiliser le bouton "Actualiser" manuellement quand nécessaire
   }, [fetchData]);
 
   // Acknowledge alert

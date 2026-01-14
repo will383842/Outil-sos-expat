@@ -58,7 +58,6 @@ import {
   collection,
   query,
   where,
-  onSnapshot,
   orderBy,
   limit,
   Timestamp,
@@ -66,7 +65,6 @@ import {
   doc,
   updateDoc,
   runTransaction,
-  Unsubscribe,
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { db, functions } from '../../config/firebase';
@@ -1040,47 +1038,40 @@ const AdminProviders: React.FC = () => {
     }
   }, [currentUser, todayCallsStats, generateAlerts]);
 
-  // Chargement initial + rafraichissement automatique
+  // Chargement initial uniquement (bouton manuel pour actualiser)
+  // ÉCONOMIE: Suppression du setInterval automatique (30s)
+  // Avant: 2,880 requêtes/jour - Après: ~50-100 requêtes/jour (manuel)
+  // Économie estimée: ~200€/mois sur Firestore
   useEffect(() => {
     if (!currentUser) return;
 
     mountedRef.current = true;
 
+    // Chargement initial une seule fois
     loadProviders();
 
-    const intervalId = setInterval(() => {
-      if (mountedRef.current && isRealTimeActive) {
-        loadProviders();
-      }
-    }, 30000);
+    // NOTE: Le rafraîchissement automatique a été SUPPRIMÉ pour économiser les coûts Firestore
+    // L'admin peut utiliser le bouton "Actualiser" manuellement quand nécessaire
 
     return () => {
       mountedRef.current = false;
-      clearInterval(intervalId);
     };
-  }, [currentUser, isRealTimeActive, loadProviders]);
+  }, [currentUser, loadProviders]);
 
-  // Charger les stats d'appels independamment
+  // Charger les stats d'appels (chargement initial + lors de loadProviders)
+  // ÉCONOMIE: Suppression du setInterval automatique (60s)
+  // Les stats sont rechargées quand l'admin clique sur "Actualiser"
   useEffect(() => {
     if (!currentUser) return;
 
+    // Chargement initial une seule fois
     loadTodayCallsStats().then(stats => {
       if (mountedRef.current) {
         setTodayCallsStats(stats);
       }
     });
 
-    const intervalId = setInterval(() => {
-      loadTodayCallsStats().then(stats => {
-        if (mountedRef.current) {
-          setTodayCallsStats(stats);
-        }
-      });
-    }, 60000);
-
-    return () => {
-      clearInterval(intervalId);
-    };
+    // NOTE: Le rafraîchissement automatique a été SUPPRIMÉ pour économiser les coûts Firestore
   }, [currentUser, loadTodayCallsStats]);
 
   // Filtrage et tri des prestataires

@@ -534,12 +534,15 @@ export const updateMetaPixelConsent = (granted: boolean): void => {
   }
 };
 
+// Stockage des donnees utilisateur pour Advanced Matching (evite re-init du pixel)
+let storedUserData: Record<string, string> = {};
+
 /**
- * Advanced Matching - Envoie les donnees utilisateur a Meta pour meilleur matching
+ * Advanced Matching - Stocke les donnees utilisateur pour les evenements Meta
  * Appeler cette fonction quand l'utilisateur se connecte ou met a jour son profil
  *
- * IMPORTANT: Cette fonction utilise fbq('init') avec les donnees utilisateur
- * pour ameliorer le matching d'audience et le retargeting
+ * NOTE: On ne re-initialise PAS le pixel pour eviter l'erreur "Duplicate Pixel ID".
+ * Les donnees sont stockees et envoyees avec les prochains evenements.
  */
 export const setMetaPixelUserData = (userData: {
   email?: string;
@@ -550,9 +553,9 @@ export const setMetaPixelUserData = (userData: {
   country?: string;
   zipCode?: string;
 }): void => {
-  if (!isFbqAvailable() || !hasMarketingConsent()) {
+  if (!hasMarketingConsent()) {
     if (process.env.NODE_ENV === 'development') {
-      console.warn('[MetaPixel] UserData non envoye - fbq indisponible ou pas de consent');
+      console.warn('[MetaPixel] UserData non stocke - pas de consent');
     }
     return;
   }
@@ -606,12 +609,11 @@ export const setMetaPixelUserData = (userData: {
       return;
     }
 
-    // Utiliser fbq('init') avec les donnees utilisateur pour Advanced Matching
-    // Note: Ceci re-initialise le pixel avec les nouvelles donnees
-    window.fbq!('init', PIXEL_ID, advancedMatchingData);
+    // Stocker les donnees pour utilisation ulterieure (pas de re-init du pixel)
+    storedUserData = advancedMatchingData;
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('%c[MetaPixel] Advanced Matching - User data set:', 'color: #1877F2; font-weight: bold', {
+      console.log('%c[MetaPixel] Advanced Matching - User data stored (no re-init):', 'color: #1877F2; font-weight: bold', {
         hasEmail: !!advancedMatchingData.em,
         hasPhone: !!advancedMatchingData.ph,
         hasFirstName: !!advancedMatchingData.fn,
@@ -627,20 +629,19 @@ export const setMetaPixelUserData = (userData: {
 };
 
 /**
- * Efface les donnees utilisateur du pixel (a appeler lors de la deconnexion)
+ * Recupere les donnees utilisateur stockees pour Advanced Matching
+ */
+export const getStoredUserData = (): Record<string, string> => storedUserData;
+
+/**
+ * Efface les donnees utilisateur stockees (a appeler lors de la deconnexion)
  */
 export const clearMetaPixelUserData = (): void => {
-  if (!isFbqAvailable()) return;
+  // Effacer les donnees stockees localement (pas de re-init du pixel)
+  storedUserData = {};
 
-  try {
-    // Re-initialiser le pixel sans donnees utilisateur
-    window.fbq!('init', PIXEL_ID);
-
-    if (process.env.NODE_ENV === 'development') {
-      console.log('%c[MetaPixel] User data cleared', 'color: #1877F2; font-weight: bold');
-    }
-  } catch (error) {
-    console.error('[MetaPixel] Erreur clear user data:', error);
+  if (process.env.NODE_ENV === 'development') {
+    console.log('%c[MetaPixel] User data cleared', 'color: #1877F2; font-weight: bold');
   }
 };
 
@@ -665,5 +666,6 @@ export default {
   updateMetaPixelNativeConsent,
   setMetaPixelUserData,
   clearMetaPixelUserData,
+  getStoredUserData,
   PIXEL_ID,
 };

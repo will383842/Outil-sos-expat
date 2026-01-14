@@ -195,8 +195,9 @@ export default function Taxes() {
       const [paymentsSnapshot, usersSnapshot, taxConfigsSnapshot, declarationsSnapshot] = await Promise.all([
         getDocs(query(collection(db, 'payments'), orderBy('createdAt', 'desc'), limit(500))),
         getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(500))),
-        getDocs(collection(db, 'tax_configs')), // Petite collection, pas besoin de limite
-        getDocs(collection(db, 'tax_declarations')), // Petite collection, pas besoin de limite
+        // ÉCONOMIE: Ajout de limit() pour sécuriser contre la croissance future
+        getDocs(query(collection(db, 'tax_configs'), limit(200))),
+        getDocs(query(collection(db, 'tax_declarations'), limit(500))),
       ]);
 
       // Build user country map

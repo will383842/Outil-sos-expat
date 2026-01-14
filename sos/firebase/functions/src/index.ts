@@ -4213,6 +4213,11 @@ export { cleanupOrphanedSessions } from './scheduled/cleanupOrphanedSessions';
 // - agent_states avec currentTasks orphelines
 export { cleanupOrphanedAgentTasks } from './scheduled/cleanupOrphanedAgentTasks';
 
+// ========== NETTOYAGE FICHIERS TEMPORAIRES STORAGE ==========
+// ÉCONOMIE: ~300€/mois - Supprime les fichiers temp (registration_temp/, temp_profiles/)
+// qui ne sont jamais nettoyés automatiquement après 24h
+export { cleanupTempStorageFiles } from './scheduled/cleanupTempStorageFiles';
+
 // Fonctions admin pour nettoyage manuel
 export {
   adminCleanupOrphanedSessions,

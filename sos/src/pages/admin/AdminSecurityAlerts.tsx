@@ -483,12 +483,13 @@ const AdminSecurityAlerts: React.FC = () => {
       }
     };
 
+    // Chargement initial uniquement (bouton manuel pour actualiser)
+    // ÉCONOMIE: Suppression du setInterval automatique (30s)
+    // Avant: 2,880 requêtes/jour - Après: ~50 requêtes/jour (manuel)
     loadAlerts();
-    const intervalId = setInterval(loadAlerts, 30000); // Poll every 30s
 
     return () => {
       isMounted = false;
-      clearInterval(intervalId);
     };
   }, [filters.status]);
 

@@ -699,7 +699,8 @@ const Subscriptions: React.FC = () => {
       console.log('[Subscriptions] Step 4: Loading subscription_plans...');
       const plansMap = new Map<string, string>();
       try {
-        const plansSnapshot = await getDocs(collection(db, 'subscription_plans'));
+        // ÉCONOMIE: Ajout de limit() pour éviter les lectures excessives
+        const plansSnapshot = await getDocs(query(collection(db, 'subscription_plans'), limit(100)));
         console.log(`[Subscriptions] Step 4 OK: ${plansSnapshot.docs.length} plans loaded`);
         plansSnapshot.docs.forEach((docSnap) => {
           const data = docSnap.data();

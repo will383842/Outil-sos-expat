@@ -82,6 +82,25 @@ export const TTL_CONFIG = {
   connection_logs: {
     ttlDays: 90,
     field: 'expireAt'
+  },
+
+  // Ultra debug logs - supprimés après 7 jours
+  // ÉCONOMIE: ~20€/mois sur le stockage Firestore
+  ultra_debug_logs: {
+    ttlDays: 7,
+    field: 'expireAt'
+  },
+
+  // Production logs - supprimés après 7 jours
+  production_logs: {
+    ttlDays: 7,
+    field: 'expireAt'
+  },
+
+  // Notification logs - supprimés après 14 jours
+  notification_logs: {
+    ttlDays: 14,
+    field: 'expireAt'
   }
 } as const;
 
@@ -203,6 +222,24 @@ export const FIRESTORE_TTL_INDEXES = {
     },
     {
       collectionGroup: 'connection_logs',
+      fieldPath: 'expireAt',
+      ttl: true,
+      indexes: []
+    },
+    {
+      collectionGroup: 'ultra_debug_logs',
+      fieldPath: 'expireAt',
+      ttl: true,
+      indexes: []
+    },
+    {
+      collectionGroup: 'production_logs',
+      fieldPath: 'expireAt',
+      ttl: true,
+      indexes: []
+    },
+    {
+      collectionGroup: 'notification_logs',
       fieldPath: 'expireAt',
       ttl: true,
       indexes: []

@@ -1,11 +1,29 @@
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
-import { getStripe } from "./index"; // Adjust import path as needed
+import Stripe from "stripe";
 
 // ✅ Declare secrets for Firebase v2 functions
 const STRIPE_SECRET_KEY_TEST = defineSecret("STRIPE_SECRET_KEY_TEST");
 const STRIPE_SECRET_KEY_LIVE = defineSecret("STRIPE_SECRET_KEY_LIVE");
+const STRIPE_MODE = defineSecret("STRIPE_MODE");
+
+// Helper to create Stripe instance with local secrets
+function createStripeInstance(): Stripe | null {
+  const isLive = (STRIPE_MODE.value() || "test").toLowerCase() === "live";
+  const secretKey = isLive
+    ? STRIPE_SECRET_KEY_LIVE.value()
+    : STRIPE_SECRET_KEY_TEST.value();
+
+  if (!secretKey) {
+    console.error("❌ Stripe secret key not configured");
+    return null;
+  }
+
+  return new Stripe(secretKey, {
+    apiVersion: "2023-10-16" as Stripe.LatestApiVersion,
+  });
+}
 
 export const checkStripeAccountStatus = onCall<{
   userType: "lawyer" | "expat";
@@ -13,7 +31,7 @@ export const checkStripeAccountStatus = onCall<{
   {
     region: "europe-west1",
     // ✅ Secrets must be declared in function config
-    secrets: [STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE]
+    secrets: [STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE, STRIPE_MODE]
   },
   async (request) => {
   if (!request.auth) {
@@ -22,7 +40,7 @@ export const checkStripeAccountStatus = onCall<{
 
   const userId = request.auth.uid;
   const { userType } = request.data;
-  const stripe = getStripe();
+  const stripe = createStripeInstance();
 
   if (!stripe) {
     throw new HttpsError("internal", "Stripe not configured");

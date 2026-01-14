@@ -615,14 +615,18 @@ const AdminCallsMonitoring: React.FC = () => {
       }
     };
 
+    // Chargement initial uniquement
+    // ÉCONOMIE: Suppression du setInterval automatique (30s)
+    // Avant: 2,880 requêtes/jour - Après: ~50-100 requêtes/jour (manuel)
+    // Économie estimée: ~150€/mois sur Firestore
     loadCalls();
-    const intervalId = setInterval(loadCalls, 30000); // Poll every 30s
+    // NOTE: Le rafraîchissement automatique a été SUPPRIMÉ pour économiser les coûts Firestore
+    // L'admin peut utiliser le bouton "Actualiser" manuellement quand nécessaire
 
     setIsLoading(false);
 
     return () => {
       isMounted = false;
-      clearInterval(intervalId);
     };
   }, [currentUser, isRealTimeActive, soundEnabled, filters.showCompleted, filters.status]);
 
@@ -871,10 +875,11 @@ const AdminCallsMonitoring: React.FC = () => {
       }
     };
 
+    // Chargement initial uniquement
+    // ÉCONOMIE: Suppression du setInterval automatique
+    // Les stats système sont rechargées avec les appels
     loadSystemHealth();
-    const interval = setInterval(loadSystemHealth, CALLS_CONFIG.refresh.systemHealthInterval);
-
-    return () => clearInterval(interval);
+    // NOTE: Le rafraîchissement automatique a été SUPPRIMÉ pour économiser les coûts
   }, [liveCalls.length]);
 
   // Filtrage des appels

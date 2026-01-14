@@ -3,9 +3,12 @@ import { getFirestore } from "firebase-admin/firestore";
 import { initializeApp, getApps } from "firebase-admin/app";
 import * as admin from 'firebase-admin';
 
+// ÉCONOMIE: Désactiver les logs Firestore en production pour économiser ~270€/mois
+// Les logs console restent actifs pour Cloud Logging mais pas d'écriture Firestore
 const DISABLE_FIRESTORE_LOG_LOCAL =
   process.env.DISABLE_FIRESTORE_LOG_LOCAL === '1' ||
-  process.env.NODE_ENV === 'development';
+  process.env.NODE_ENV === 'development' ||
+  process.env.NODE_ENV === 'production'; // ← AJOUTÉ: Désactive en prod aussi
 
 // Désactiver l'écriture Firestore en local
 const IS_LOCAL =
@@ -284,22 +287,27 @@ class UltraDebugLogger {
 
   private async saveToFirestore(entry: DebugLogEntry) {
     // Skip Firestore en local or during deployment analysis
-    if (IS_LOCAL || IS_DEPLOYMENT_ANALYSIS) {
+    // ÉCONOMIE: Les logs Firestore sont aussi désactivés en production (voir DISABLE_FIRESTORE_LOG_LOCAL)
+    if (IS_LOCAL || IS_DEPLOYMENT_ANALYSIS || DISABLE_FIRESTORE_LOG_LOCAL) {
       if (!IS_DEPLOYMENT_ANALYSIS) {
-        console.log("[ULTRA DEBUG] (local) skip Firestore log");
+        console.log("[ULTRA DEBUG] (local/prod) skip Firestore log");
       }
       return;
     }
 
     try {
       await this.initFirebaseIfNeeded();
-      
+
       if (this.db) {
         // Nettoyer l'entrée avant sauvegarde
+        // ÉCONOMIE: Ajout TTL de 7 jours pour suppression automatique (~20€/mois)
+        const now = Date.now();
         const payload = clean({
           ...entry,
           sessionId: this.sessionId,
-          savedAt: new Date() // Utiliser Date au lieu de FieldValue pour plus de simplicité
+          savedAt: new Date(),
+          // TTL: Firestore supprimera ce document après 7 jours
+          expireAt: new Date(now + 7 * 24 * 60 * 60 * 1000)
         });
 
         // Sauvegarder dans une collection spéciale pour le debug
