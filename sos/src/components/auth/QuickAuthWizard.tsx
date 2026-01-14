@@ -146,9 +146,14 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
     } catch (err: any) {
       console.error('Login attempt error:', err);
 
-      // Check if user doesn't exist - auto register
-      if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
-        // Try to register with the same password
+      // FIX: auth/invalid-credential peut signifier:
+      // 1. User n'existe pas (devrait être auth/user-not-found mais Firebase renvoie parfois invalid-credential)
+      // 2. Mauvais mot de passe
+      // On ne peut pas distinguer les deux, donc on affiche un message générique
+      // et on ne tente PAS l'auto-inscription (qui créerait un compte non voulu)
+
+      if (err.code === 'auth/user-not-found') {
+        // User n'existe clairement pas - auto register
         try {
           setIsNewUser(true);
           await register({
@@ -157,23 +162,20 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
           }, password);
           setIsSubmitting(false);
           setStep('success');
-          // FIX: Attendre que user Firestore soit chargé avant de naviguer
           setPendingSuccess(true);
         } catch (regErr: any) {
           console.error('Register error:', regErr);
           setIsSubmitting(false);
           setIsNewUser(false);
 
-          if (regErr.code === 'auth/email-already-in-use') {
-            // Email exists but wrong password
-            setError(intl.formatMessage({ id: 'auth.wizard.wrongPassword' }));
-          } else if (regErr.code === 'auth/weak-password') {
+          if (regErr.code === 'auth/weak-password') {
             setError(intl.formatMessage({ id: 'auth.wizard.weakPassword' }));
           } else {
             setError(intl.formatMessage({ id: 'auth.wizard.error.register' }));
           }
         }
-      } else if (err.code === 'auth/wrong-password') {
+      } else if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
+        // FIX: Traiter invalid-credential comme mauvais mot de passe (plus sûr)
         setIsSubmitting(false);
         setError(intl.formatMessage({ id: 'auth.wizard.wrongPassword' }));
       } else if (err.code === 'auth/too-many-requests') {

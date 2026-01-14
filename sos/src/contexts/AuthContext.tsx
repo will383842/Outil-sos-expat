@@ -762,6 +762,8 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         });
         setError('Impossible de charger votre profil. Vérifiez votre connexion et rafraîchissez.');
         setIsLoading(false);
+        setAuthInitialized(true); // FIX CRITIQUE: Permet à isFullyReady de devenir true même en cas de timeout
+        firstSnapArrived.current = true; // Éviter les doubles timeouts
       }
     }, authTimeout);
 
