@@ -130,6 +130,7 @@ export const IaMultiProvidersTab: React.FC = () => {
   const [languageFilter, setLanguageFilter] = useState<string>('');
   const [countryFilter, setCountryFilter] = useState<string>('');
   const [aaaFilter, setAaaFilter] = useState<'all' | 'aaa' | 'non-aaa'>('all');
+  const [roleFilter, setRoleFilter] = useState<'all' | 'lawyer' | 'expat'>('all');
   const [availableLanguages, setAvailableLanguages] = useState<string[]>([]);
   const [availableCountries, setAvailableCountries] = useState<string[]>([]);
   const [linkedProviderIdsForUser, setLinkedProviderIdsForUser] = useState<string[]>([]);
@@ -446,11 +447,18 @@ export const IaMultiProvidersTab: React.FC = () => {
     const term = providerSearchQuery.toLowerCase();
 
     const filtered = allAvailableProviders.filter(provider => {
-      // Filtre par texte de recherche
-      if (term.length >= 2) {
+      // Filtre par texte de recherche (optionnel maintenant, fonctionne même sans terme)
+      if (term.length > 0) {
         const displayName = provider.displayName.toLowerCase();
         const email = (provider.email || '').toLowerCase();
         if (!displayName.includes(term) && !email.includes(term)) {
+          return false;
+        }
+      }
+
+      // Filtre par rôle (lawyer/expat)
+      if (roleFilter !== 'all') {
+        if (provider.type !== roleFilter) {
           return false;
         }
       }
@@ -484,7 +492,7 @@ export const IaMultiProvidersTab: React.FC = () => {
     });
 
     setProviderSearchResults(filtered);
-  }, [allAvailableProviders, providerSearchQuery, languageFilter, countryFilter, aaaFilter]);
+  }, [allAvailableProviders, providerSearchQuery, languageFilter, countryFilter, aaaFilter, roleFilter]);
 
   // Debounce search pour users (step 1)
   useEffect(() => {
@@ -502,7 +510,7 @@ export const IaMultiProvidersTab: React.FC = () => {
       filterProviders();
     }, 200);
     return () => clearTimeout(timer);
-  }, [providerSearchQuery, languageFilter, countryFilter, aaaFilter, linkStep, filterProviders]);
+  }, [providerSearchQuery, languageFilter, countryFilter, aaaFilter, roleFilter, linkStep, filterProviders]);
 
   // Charger les prestataires disponibles quand on passe à l'étape 2 (mode link-to-account uniquement)
   useEffect(() => {
@@ -713,6 +721,7 @@ export const IaMultiProvidersTab: React.FC = () => {
     setLanguageFilter('');
     setCountryFilter('');
     setAaaFilter('all');
+    setRoleFilter('all');
     setLinkedProviderIdsForUser([]);
   };
 
@@ -1678,19 +1687,108 @@ export const IaMultiProvidersTab: React.FC = () => {
                   {/* Filtres et liste des prestataires (seulement en mode link-to-account) */}
                   {createMode === 'link-to-account' && (
                     <>
-                      {/* Filtres compacts */}
+                      {/* Sélecteur de type de profil - AAA vs Traditionnel */}
+                      <div className="mb-4">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                          <Star className="w-4 h-4 text-amber-500" />
+                          Type de profil
+                        </label>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setAaaFilter('all')}
+                            className={cn(
+                              'flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-all border-2',
+                              aaaFilter === 'all'
+                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
+                                : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300 hover:bg-indigo-50'
+                            )}
+                          >
+                            Tous les profils
+                          </button>
+                          <button
+                            onClick={() => setAaaFilter('aaa')}
+                            className={cn(
+                              'flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-all border-2 flex items-center justify-center gap-2',
+                              aaaFilter === 'aaa'
+                                ? 'bg-amber-500 text-white border-amber-500 shadow-md'
+                                : 'bg-white text-gray-600 border-gray-200 hover:border-amber-300 hover:bg-amber-50'
+                            )}
+                          >
+                            <Star className="w-4 h-4" />
+                            AAA Premium
+                          </button>
+                          <button
+                            onClick={() => setAaaFilter('non-aaa')}
+                            className={cn(
+                              'flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-all border-2',
+                              aaaFilter === 'non-aaa'
+                                ? 'bg-gray-600 text-white border-gray-600 shadow-md'
+                                : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400 hover:bg-gray-50'
+                            )}
+                          >
+                            Standard
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Sélecteur de rôle - Avocat vs Expert */}
+                      <div className="mb-4">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                          <Scale className="w-4 h-4 text-blue-500" />
+                          Rôle du prestataire
+                        </label>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setRoleFilter('all')}
+                            className={cn(
+                              'flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-all border-2',
+                              roleFilter === 'all'
+                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
+                                : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300 hover:bg-indigo-50'
+                            )}
+                          >
+                            Tous les rôles
+                          </button>
+                          <button
+                            onClick={() => setRoleFilter('lawyer')}
+                            className={cn(
+                              'flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-all border-2 flex items-center justify-center gap-2',
+                              roleFilter === 'lawyer'
+                                ? 'bg-blue-600 text-white border-blue-600 shadow-md'
+                                : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:bg-blue-50'
+                            )}
+                          >
+                            <Scale className="w-4 h-4" />
+                            Avocats
+                          </button>
+                          <button
+                            onClick={() => setRoleFilter('expat')}
+                            className={cn(
+                              'flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-all border-2 flex items-center justify-center gap-2',
+                              roleFilter === 'expat'
+                                ? 'bg-green-600 text-white border-green-600 shadow-md'
+                                : 'bg-white text-gray-600 border-gray-200 hover:border-green-300 hover:bg-green-50'
+                            )}
+                          >
+                            <Globe className="w-4 h-4" />
+                            Experts expatriés
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Filtres secondaires : Langue et Pays */}
                       <div className="mb-4 p-3 bg-gray-50 rounded-xl border border-gray-200">
                         <div className="flex items-center gap-2 mb-2">
                           <Filter className="w-4 h-4 text-gray-500" />
-                          <span className="text-sm font-semibold text-gray-700">Filtrer les prestataires</span>
+                          <span className="text-sm font-medium text-gray-600">Filtres avancés</span>
                         </div>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-2 gap-2">
                           <select
                             value={languageFilter}
                             onChange={(e) => setLanguageFilter(e.target.value)}
-                            className="px-2 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white"
+                            className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white"
                           >
-                            <option value="">Toutes langues</option>
+                            <option value="">🌍 Toutes langues</option>
                             {availableLanguages.map((lang) => (
                               <option key={lang} value={lang}>{lang.toUpperCase()}</option>
                             ))}
@@ -1698,32 +1796,23 @@ export const IaMultiProvidersTab: React.FC = () => {
                           <select
                             value={countryFilter}
                             onChange={(e) => setCountryFilter(e.target.value)}
-                            className="px-2 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white"
+                            className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white"
                           >
-                            <option value="">Tous pays</option>
+                            <option value="">📍 Tous pays</option>
                             {availableCountries.map((country) => (
                               <option key={country} value={country}>{country}</option>
                             ))}
                           </select>
-                          <select
-                            value={aaaFilter}
-                            onChange={(e) => setAaaFilter(e.target.value as 'all' | 'aaa' | 'non-aaa')}
-                            className="px-2 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white"
-                          >
-                            <option value="all">Tous types</option>
-                            <option value="aaa">AAA</option>
-                            <option value="non-aaa">Non-AAA</option>
-                          </select>
                         </div>
                       </div>
 
-                      {/* Recherche texte */}
+                      {/* Recherche texte (optionnel) */}
                       <div className="mb-3">
                         <div className="relative">
                           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                           <input
                             type="text"
-                            placeholder="Rechercher par nom, email..."
+                            placeholder="Affiner par nom ou email (optionnel)..."
                             value={providerSearchQuery}
                             onChange={(e) => setProviderSearchQuery(e.target.value)}
                             className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 bg-gray-50 focus:bg-white transition-colors"
@@ -1731,19 +1820,24 @@ export const IaMultiProvidersTab: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Compteur */}
+                      {/* Compteur et bouton reset */}
                       <div className="mb-3 flex items-center justify-between text-sm">
-                        <span className="text-gray-500">{providerSearchResults.length} prestataire(s) disponible(s)</span>
-                        {(languageFilter || countryFilter || aaaFilter !== 'all') && (
+                        <span className="text-gray-500 font-medium">
+                          {providerSearchResults.length} prestataire(s) disponible(s)
+                        </span>
+                        {(languageFilter || countryFilter || aaaFilter !== 'all' || roleFilter !== 'all' || providerSearchQuery) && (
                           <button
                             onClick={() => {
                               setLanguageFilter('');
                               setCountryFilter('');
                               setAaaFilter('all');
+                              setRoleFilter('all');
+                              setProviderSearchQuery('');
                             }}
-                            className="text-indigo-600 hover:text-indigo-700 font-medium"
+                            className="text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
                           >
-                            Effacer filtres
+                            <X className="w-3 h-3" />
+                            Effacer tous les filtres
                           </button>
                         )}
                       </div>
