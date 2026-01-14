@@ -198,41 +198,6 @@ const routeConfigs: RouteConfig[] = [
   { path: "/providers", component: SOSCall, alias: "/nos-experts", translated: "providers" },
   { path: "/provider/:id", component: ProviderProfile },
 
-  // ====================================
-  // NOUVEAU FORMAT SEO OPTIMISÉ (< 70 chars)
-  // Format: /{lang}-{locale}/{role-pays}/{prenom-specialite-shortid}
-  // Ex: /fr-fr/avocat-thailande/julien-visa-k7m2p9
-  // Ex: /en-us/lawyer-thailand/julien-visa-k7m2p9
-  // Ex: /fr-de/avocat-allemagne/pierre-fiscal-a2b3c4 (français en Allemagne)
-  // ====================================
-  // Routes avec lang-locale (format complet pour SEO)
-  // Note: NO translated property - these routes match 3-segment URLs directly
-  { path: "/fr-fr/:roleCountry/:nameSlug", component: ProviderProfile },
-  { path: "/fr-be/:roleCountry/:nameSlug", component: ProviderProfile },
-  { path: "/fr-ch/:roleCountry/:nameSlug", component: ProviderProfile },
-  { path: "/fr-ca/:roleCountry/:nameSlug", component: ProviderProfile },
-  { path: "/fr-ma/:roleCountry/:nameSlug", component: ProviderProfile },
-  { path: "/en-us/:roleCountry/:nameSlug", component: ProviderProfile },
-  { path: "/en-gb/:roleCountry/:nameSlug", component: ProviderProfile },
-  { path: "/en-au/:roleCountry/:nameSlug", component: ProviderProfile },
-  { path: "/en-ca/:roleCountry/:nameSlug", component: ProviderProfile },
-  { path: "/es-es/:roleCountry/:nameSlug", component: ProviderProfile },
-  { path: "/es-mx/:roleCountry/:nameSlug", component: ProviderProfile },
-  { path: "/es-ar/:roleCountry/:nameSlug", component: ProviderProfile },
-  { path: "/de-de/:roleCountry/:nameSlug", component: ProviderProfile },
-  { path: "/de-at/:roleCountry/:nameSlug", component: ProviderProfile },
-  { path: "/de-ch/:roleCountry/:nameSlug", component: ProviderProfile },
-  { path: "/pt-br/:roleCountry/:nameSlug", component: ProviderProfile },
-  { path: "/pt-pt/:roleCountry/:nameSlug", component: ProviderProfile },
-  { path: "/ru-ru/:roleCountry/:nameSlug", component: ProviderProfile },
-  { path: "/zh-cn/:roleCountry/:nameSlug", component: ProviderProfile },
-  { path: "/zh-tw/:roleCountry/:nameSlug", component: ProviderProfile },
-  { path: "/ar-sa/:roleCountry/:nameSlug", component: ProviderProfile },
-  { path: "/ar-ae/:roleCountry/:nameSlug", component: ProviderProfile },
-  { path: "/hi-in/:roleCountry/:nameSlug", component: ProviderProfile },
-  // Route générique pour toute combinaison lang-locale non listée
-  { path: "/:langLocale/:roleCountry/:nameSlug", component: ProviderProfile },
-
   // Simplified route patterns - just type and slug (rétrocompatibilité)
   { path: "/avocat/:slug", component: ProviderProfile, translated: "lawyer" },
   { path: "/lawyers/:slug", component: ProviderProfile, translated: "lawyer" },
@@ -285,6 +250,42 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/dashboard/subscription/success", component: SubscriptionSuccessPage, protected: true, role: ['lawyer', 'expat', 'admin'], translated: "dashboard-subscription-success" },
   // Conversations History (Provider Tool)
   { path: "/dashboard/conversations", component: ConversationHistory, protected: true, role: ['lawyer', 'expat', 'admin'], translated: "dashboard-conversations" },
+];
+
+// ====================================
+// CATCH-ALL PROVIDER ROUTES (must be rendered LAST)
+// These generic patterns match 3-segment URLs like /:langLocale/:roleCountry/:nameSlug
+// They MUST be after all specific routes (like booking-request) to avoid matching conflicts
+// ====================================
+const catchAllProviderRoutes: RouteConfig[] = [
+  // Routes avec lang-locale (format complet pour SEO)
+  // Format: /{lang}-{locale}/{role-pays}/{prenom-specialite-shortid}
+  // Ex: /fr-fr/avocat-thailande/julien-visa-k7m2p9
+  { path: "/fr-fr/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/fr-be/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/fr-ch/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/fr-ca/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/fr-ma/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/en-us/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/en-gb/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/en-au/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/en-ca/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/es-es/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/es-mx/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/es-ar/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/de-de/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/de-at/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/de-ch/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/pt-br/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/pt-pt/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/ru-ru/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/zh-cn/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/zh-tw/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/ar-sa/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/ar-ae/:roleCountry/:nameSlug", component: ProviderProfile },
+  { path: "/hi-in/:roleCountry/:nameSlug", component: ProviderProfile },
+  // Route générique pour toute combinaison lang-locale non listée
+  { path: "/:langLocale/:roleCountry/:nameSlug", component: ProviderProfile },
 ];
 
 // --------------------------------------------
@@ -696,6 +697,12 @@ const App: React.FC = () => {
                   })
                   .map((cfg, i) => renderRoute(cfg, i))}
                 {protectedUserRoutes.map((cfg, i) => renderRoute(cfg, i + 1000))}
+
+                {/* IMPORTANT: Catch-all provider routes MUST be rendered LAST (before 404)
+                    These match generic patterns like /:langLocale/:roleCountry/:nameSlug
+                    They must come after specific routes like booking-request/demande-reservation
+                    to avoid incorrectly matching translated slugs */}
+                {catchAllProviderRoutes.map((cfg, i) => renderRoute(cfg, i + 2000))}
 
                 {/* 404 - Catch all route (must be last) */}
                 <Route path="*" element={<NotFound />} />
