@@ -72,6 +72,9 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
   const prevUserRef = useRef<typeof user>(null);
   // FIX: Flag to prevent multiple onSuccess calls
   const successCalledRef = useRef(false);
+  // FIX: Flag to track if an auth attempt is in progress (Google or email/password)
+  // This is more reliable than prevUserRef because it survives component remounts during popup
+  const authAttemptedRef = useRef(false);
 
   // Mettre à jour les refs à chaque render
   useEffect(() => {
@@ -95,7 +98,9 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
 
     // Only reset if transitioning from closed (false) to open (true)
     // This prevents losing form data during re-renders while the modal is open
-    if (isOpen && !wasOpen) {
+    // IMPORTANT: Also check that we're not in the middle of an auth attempt
+    // (the component can remount during Google popup, which would falsely trigger a reset)
+    if (isOpen && !wasOpen && !authAttemptedRef.current) {
       console.log('🟢 [QuickAuthWizard] MODAL OPENING - Resetting state');
       console.log('🟢 [QuickAuthWizard] Setting prevUserRef to current user:', {
         user: !!user,
@@ -112,10 +117,13 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
       setPendingSuccess(false);
       // Reset success flag when modal opens
       successCalledRef.current = false;
+      authAttemptedRef.current = false;
       prevUserRef.current = user; // Capture current user state at modal open
       console.log('🟢 [QuickAuthWizard] prevUserRef.current set to:', !!user);
       // Focus email input after animation
       setTimeout(() => emailInputRef.current?.focus(), 300);
+    } else if (isOpen && !wasOpen && authAttemptedRef.current) {
+      console.log('🟡 [QuickAuthWizard] MODAL RE-OPENED during auth attempt - NOT resetting state');
     }
     // Cleanup timeouts on close
     return () => {
@@ -143,22 +151,32 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
       authInitialized,
       isFullyReady,
       successCalled: successCalledRef.current,
+      authAttempted: authAttemptedRef.current,
       step,
       isGoogleLoading,
       pendingSuccess,
       timestamp: new Date().toISOString(),
     });
 
+    // CONDITION 1: Transition null→truthy détectée via prevUserRef
     // Si le modal est ouvert ET user vient de passer de null/undefined à truthy
     // ET on n'a pas encore appelé onSuccess => l'authentification vient de réussir
-    if (isOpen && !prevUser && user && authInitialized && !successCalledRef.current) {
+    const isNullToTruthyTransition = isOpen && !prevUser && user && authInitialized && !successCalledRef.current;
+
+    // CONDITION 2: Auth attempt flag + user exists (backup pour les cas où prevUserRef est réinitialisé)
+    // Cela gère le cas où le composant est remonté pendant le popup Google
+    const isAuthAttemptCompleted = isOpen && authAttemptedRef.current && user && authInitialized && !successCalledRef.current;
+
+    if (isNullToTruthyTransition || isAuthAttemptCompleted) {
       console.log('🟢 [QuickAuthWizard] USER JUST AUTHENTICATED! Calling onSuccess immediately...');
+      console.log('🟢 [QuickAuthWizard] Triggered by:', isNullToTruthyTransition ? 'null->truthy transition' : 'authAttempted flag');
       console.log('🟢 [QuickAuthWizard] User details:', {
         uid: user?.uid || user?.id,
         email: user?.email,
         role: user?.role,
       });
       successCalledRef.current = true; // Prevent multiple calls
+      authAttemptedRef.current = false; // Reset auth attempt flag
       // Clear any pending states
       setIsGoogleLoading(false);
       setPendingSuccess(false);
@@ -175,9 +193,10 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
     if (isOpen && user && !successCalledRef.current) {
       console.log('🟡 [QuickAuthWizard] User exists but onSuccess NOT called. Reasons:', {
         prevUserWasNull: !prevUser,
+        authAttempted: authAttemptedRef.current,
         authInitializedOk: authInitialized,
         isFullyReadyOk: isFullyReady,
-        conditionFailed: prevUser ? 'prevUser was truthy (not a null->truthy transition)' : 'unknown',
+        conditionFailed: !authAttemptedRef.current && prevUser ? 'prevUser was truthy AND authAttempted is false' : 'unknown',
       });
     }
 
@@ -332,6 +351,9 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
       return;
     }
 
+    // FIX: Mark that an auth attempt is in progress
+    authAttemptedRef.current = true;
+    console.log('🔵 [QuickAuthWizard] authAttemptedRef set to TRUE (email/password)');
     setIsSubmitting(true);
     setError(null);
 
@@ -399,7 +421,12 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
       isFullyReady,
       prevUserRef: !!prevUserRef.current,
       successCalledRef: successCalledRef.current,
+      authAttemptedRef: authAttemptedRef.current,
     });
+    // FIX: Mark that an auth attempt is in progress
+    // This flag survives component remounts during Google popup
+    authAttemptedRef.current = true;
+    console.log('🔵 [QuickAuthWizard] authAttemptedRef set to TRUE');
     setIsGoogleLoading(true);
     setError(null);
 
