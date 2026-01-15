@@ -668,30 +668,37 @@ export function subscribeToAiUsage(
 
 /**
  * Vérifie si l'utilisateur a un accès admin forcé ou un essai gratuit manuel
+ * Vérifie dans users ET sos_profiles car l'admin peut définir forcedAIAccess sur l'un ou l'autre
  */
 async function checkForcedOrTrialAccess(providerId: string): Promise<{
   hasForcedAccess: boolean;
   freeTrialUntil: Date | null;
 }> {
+  // 1. Vérifier dans users
   const userRef = doc(db, "users", providerId);
   const userSnapshot = await getDoc(userRef);
+  const userData = userSnapshot.exists() ? userSnapshot.data() : null;
 
-  if (!userSnapshot.exists()) {
-    return { hasForcedAccess: false, freeTrialUntil: null };
-  }
-
-  const userData = userSnapshot.data();
-
-  // Vérifier l'accès admin forcé
+  // Vérifier l'accès admin forcé sur users
   if (userData?.forcedAIAccess === true) {
     return { hasForcedAccess: true, freeTrialUntil: null };
   }
 
-  // Vérifier l'essai gratuit manuel (freeTrialUntil)
-  if (userData?.freeTrialUntil) {
-    const trialDate = userData.freeTrialUntil.toDate
-      ? userData.freeTrialUntil.toDate()
-      : new Date(userData.freeTrialUntil);
+  // 2. Vérifier dans sos_profiles (où l'admin console définit souvent forcedAIAccess)
+  const profileRef = doc(db, "sos_profiles", providerId);
+  const profileSnapshot = await getDoc(profileRef);
+  const profileData = profileSnapshot.exists() ? profileSnapshot.data() : null;
+
+  if (profileData?.forcedAIAccess === true) {
+    return { hasForcedAccess: true, freeTrialUntil: null };
+  }
+
+  // 3. Vérifier l'essai gratuit manuel (freeTrialUntil) - sur users ou sos_profiles
+  const freeTrialUntilData = userData?.freeTrialUntil || profileData?.freeTrialUntil;
+  if (freeTrialUntilData) {
+    const trialDate = freeTrialUntilData.toDate
+      ? freeTrialUntilData.toDate()
+      : new Date(freeTrialUntilData);
 
     if (trialDate > new Date()) {
       return { hasForcedAccess: false, freeTrialUntil: trialDate };

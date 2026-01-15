@@ -634,28 +634,37 @@ async function isProvider(db: FirebaseFirestore.Firestore, uid: string): Promise
 
 /**
  * Vérifie si l'utilisateur a un accès admin forcé (gratuit sans abonnement)
+ * Vérifie dans users ET sos_profiles car l'admin peut définir forcedAIAccess sur l'un ou l'autre
  */
 async function checkForcedAccess(db: FirebaseFirestore.Firestore, uid: string): Promise<{ hasForcedAccess: boolean; freeTrialUntil: Date | null }> {
+  // 1. Vérifier dans users
   const userDoc = await db.collection("users").doc(uid).get();
+  const userData = userDoc.exists ? userDoc.data() : null;
 
-  if (!userDoc.exists) {
-    return { hasForcedAccess: false, freeTrialUntil: null };
-  }
-
-  const userData = userDoc.data();
-
-  // Vérifier l'accès admin forcé
+  // Vérifier l'accès admin forcé sur users
   if (userData?.forcedAIAccess === true) {
+    console.log("[checkForcedAccess] Found forcedAIAccess in users collection for:", uid);
     return { hasForcedAccess: true, freeTrialUntil: null };
   }
 
-  // Vérifier l'essai gratuit manuel (freeTrialUntil)
-  if (userData?.freeTrialUntil) {
-    const trialDate = userData.freeTrialUntil.toDate
-      ? userData.freeTrialUntil.toDate()
-      : new Date(userData.freeTrialUntil);
+  // 2. Vérifier dans sos_profiles (où l'admin console définit souvent forcedAIAccess)
+  const profileDoc = await db.collection("sos_profiles").doc(uid).get();
+  const profileData = profileDoc.exists ? profileDoc.data() : null;
+
+  if (profileData?.forcedAIAccess === true) {
+    console.log("[checkForcedAccess] Found forcedAIAccess in sos_profiles collection for:", uid);
+    return { hasForcedAccess: true, freeTrialUntil: null };
+  }
+
+  // 3. Vérifier l'essai gratuit manuel (freeTrialUntil) - sur users ou sos_profiles
+  const freeTrialUntilData = userData?.freeTrialUntil || profileData?.freeTrialUntil;
+  if (freeTrialUntilData) {
+    const trialDate = freeTrialUntilData.toDate
+      ? freeTrialUntilData.toDate()
+      : new Date(freeTrialUntilData);
 
     if (trialDate > new Date()) {
+      console.log("[checkForcedAccess] Found valid freeTrialUntil for:", uid);
       return { hasForcedAccess: false, freeTrialUntil: trialDate };
     }
   }
