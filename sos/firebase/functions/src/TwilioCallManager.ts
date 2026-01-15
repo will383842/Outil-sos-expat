@@ -981,31 +981,52 @@ export class TwilioCallManager {
             const existingCall = await twilioClient.calls(participant.callSid).fetch();
 
             // P0 CRITICAL FIX: If call is "in-progress", the participant is likely connected
-            // but status update may have failed (webhook issue). DON'T hangup - assume connected!
+            // but status update may have failed (webhook issue).
+            //
+            // ⚠️ P0 FIX 2025-01: EXCEPT when AMD is still pending!
+            // If AMD is pending, the call might be a voicemail that answered.
+            // Voicemails ARE "in-progress" in Twilio because they answered the call.
+            // We must wait for the AMD callback to confirm human vs machine.
+            // DO NOT force "connected" if AMD is pending - this would call the provider for voicemail!
             if (existingCall.status === "in-progress") {
-              console.log(`✅ [${retryId}] [RECOVERY] Call ${participant.callSid} is IN-PROGRESS!`);
-              console.log(`✅ [${retryId}]   Participant is likely in conference but status wasn't updated correctly`);
-              console.log(`✅ [${retryId}]   Forcing status to "connected" and returning success`);
+              // Check if AMD is still pending
+              // NOTE: participant.status can't be "connected" here because we already
+              // checked that at line 967 and returned early.
+              if (participant.status === "amd_pending") {
+                console.log(`⏳ [${retryId}] [AMD WAIT] Call ${participant.callSid} is IN-PROGRESS but AMD is PENDING`);
+                console.log(`⏳ [${retryId}]   This could be a voicemail that answered - waiting for AMD callback`);
+                console.log(`⏳ [${retryId}]   NOT forcing "connected" - let AMD callback determine human/machine`);
+                // DON'T return true - continue with the loop to wait for AMD callback
+                // The AMD callback will set status to "connected" (human) or "no_answer" (machine)
+              } else {
+                // Status is not "amd_pending" (and not "connected" - we checked that earlier)
+                // but call is in-progress. This is a genuine recovery case where the webhook failed.
+                console.log(`✅ [${retryId}] [RECOVERY] Call ${participant.callSid} is IN-PROGRESS!`);
+                console.log(`✅ [${retryId}]   Current status: "${participant.status}" (not amd_pending)`);
+                console.log(`✅ [${retryId}]   Participant is likely in conference but status wasn't updated correctly`);
+                console.log(`✅ [${retryId}]   Forcing status to "connected" and returning success`);
 
-              // Force update status to connected (recovery from missed webhook)
-              await this.updateParticipantStatus(
-                sessionId,
-                participantType,
-                'connected',
-                admin.firestore.Timestamp.fromDate(new Date())
-              );
+                // Force update status to connected (recovery from missed webhook)
+                await this.updateParticipantStatus(
+                  sessionId,
+                  participantType,
+                  'connected',
+                  admin.firestore.Timestamp.fromDate(new Date())
+                );
 
-              await logCallRecord({
-                callId: sessionId,
-                status: `${participantType}_recovered_from_in_progress`,
-                retryCount: attempt - 1,
-                additionalData: {
-                  callSid: participant.callSid,
-                  recoveryReason: 'call_was_in_progress_but_status_not_connected'
-                }
-              });
+                await logCallRecord({
+                  callId: sessionId,
+                  status: `${participantType}_recovered_from_in_progress`,
+                  retryCount: attempt - 1,
+                  additionalData: {
+                    callSid: participant.callSid,
+                    originalStatus: participant.status,
+                    recoveryReason: 'call_was_in_progress_but_status_not_connected_or_amd_pending'
+                  }
+                });
 
-              return true; // Participant is actually connected!
+                return true; // Participant is actually connected!
+              }
             }
 
             // Only hangup if call is ringing or queued (not yet answered)
