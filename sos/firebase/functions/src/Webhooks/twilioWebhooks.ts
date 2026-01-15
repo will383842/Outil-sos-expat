@@ -1053,10 +1053,25 @@ export const twilioAmdTwiml = onRequest(
       // With asyncAmd="true", the first callback via `url` does NOT have AnsweredBy yet
       // We should ONLY set status to "connected" if we have CONFIRMED it's a human
       // If answeredBy is undefined, keep status as "amd_pending" and wait for AMD callback
-
-      const isHumanConfirmed = answeredBy === 'human';
+      //
+      // P0 FIX 2026-01-15: Handle "unknown" as human when it's the ASYNC callback!
+      // When AMD returns "unknown", it means:
+      // 1. The call was answered (otherwise we'd get "no-answer" from Twilio status callback)
+      // 2. AMD analyzed for 30s but couldn't determine human vs machine
+      // 3. This usually happens with humans who speak briefly or have unusual voice patterns
+      // We should treat "unknown" as "human" to avoid leaving the caller in silent conference forever
+      //
+      // How to distinguish initial URL callback from async AMD callback:
+      // - Initial URL callback: answeredBy is undefined/missing (Twilio hasn't analyzed yet)
+      // - Async AMD callback: answeredBy is provided (human, machine_*, fax, or unknown)
+      const isAsyncAmdCallback = answeredBy !== undefined && answeredBy !== null && answeredBy !== '';
+      const isHumanConfirmed = answeredBy === 'human' || (isAsyncAmdCallback && answeredBy === 'unknown');
 
       if (isHumanConfirmed) {
+        if (answeredBy === 'unknown') {
+          console.log(`🎯 [${amdId}] ⚠️ AMD returned "unknown" - treating as HUMAN (call was answered)`);
+          console.log(`🎯 [${amdId}]   Reason: AMD couldn't determine after analysis, but call IS answered`);
+        }
         // HUMAN CONFIRMED → Return conference TwiML with welcome message
         console.log(`🎯 [${amdId}] ✅ HUMAN CONFIRMED - Returning CONFERENCE TwiML`);
 
