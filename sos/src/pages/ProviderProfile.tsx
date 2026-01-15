@@ -1753,9 +1753,11 @@ const ProviderProfile: React.FC = () => {
 
   // Callback quand l'authentification réussit via le wizard
   const handleAuthSuccess = useCallback(() => {
-    console.log("🟢 [handleAuthSuccess] CALLED - Auth success callback triggered");
+    console.log("🟢🟢🟢 [handleAuthSuccess] CALLED - Auth success callback triggered 🟢🟢🟢");
     console.log("🟢 [handleAuthSuccess] provider:", provider?.id);
-    console.log("🟢 [handleAuthSuccess] showAuthWizard before:", true);
+    console.log("🟢 [handleAuthSuccess] showAuthWizard before:", showAuthWizard);
+    console.log("🟢 [handleAuthSuccess] Current user state:", { user: !!user, authInitialized });
+    console.log("🟢 [handleAuthSuccess] Timestamp:", new Date().toISOString());
 
     if (!provider) {
       console.error("🔴 [handleAuthSuccess] ABORT - No provider");
@@ -1768,22 +1770,27 @@ const ProviderProfile: React.FC = () => {
       return;
     }
 
-    console.log("🟢 [handleAuthSuccess] Setting showAuthWizard to FALSE");
+    console.log("🟢 [handleAuthSuccess] Setting showAuthWizard to FALSE...");
     setShowAuthWizard(false);
+    console.log("🟢 [handleAuthSuccess] setShowAuthWizard(false) called");
 
     const target = `/booking-request/${provider.id}`;
     console.log("🟢 [handleAuthSuccess] Navigating to:", target);
     console.log("🟢 [handleAuthSuccess] Current pathname:", window.location.pathname);
 
-    navigate(target, {
-      state: {
-        selectedProvider: provider,
-        navigationSource: "provider_profile",
-      },
-    });
-    console.log("🟢 [handleAuthSuccess] navigate() called - navigation should happen now");
+    try {
+      navigate(target, {
+        state: {
+          selectedProvider: provider,
+          navigationSource: "provider_profile",
+        },
+      });
+      console.log("🟢 [handleAuthSuccess] navigate() called successfully - navigation should happen now");
+    } catch (navError) {
+      console.error("🔴 [handleAuthSuccess] Navigation error:", navError);
+    }
     // Note: window.scrollTo supprimé car il causait un "saut" avant la navigation
-  }, [provider, navigate]);
+  }, [provider, navigate, showAuthWizard, user, authInitialized]);
 
   const handleHelpfulClick = useCallback(
     async (reviewId: string) => {
