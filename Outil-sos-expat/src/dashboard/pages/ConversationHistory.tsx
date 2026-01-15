@@ -70,7 +70,7 @@ interface Conversation {
   duration?: number; // en minutes
 }
 
-type FilterStatus = "all" | "completed" | "archived" | "cancelled";
+type FilterStatus = "all" | "active" | "completed" | "archived" | "cancelled";
 
 // =============================================================================
 // COMPOSANTS
@@ -290,12 +290,12 @@ export default function ConversationHistory() {
       setError(null);
 
       try {
-        // Optimisé: utiliser "in" au lieu de "!=" pour réduire les coûts Firestore
-        // "!=" scanne toute la collection, "in" ne lit que les docs correspondants
+        // FIX: Afficher TOUTES les conversations du prestataire
+        // L'archivage automatique ne fonctionne pas correctement, donc on affiche tout
+        // et on laisse l'UI montrer le statut (active, completed, archived, etc.)
         let q = query(
           collection(db, "conversations"),
           where("providerId", "==", activeProvider.id),
-          where("status", "in", ["completed", "archived", "cancelled"]),
           orderBy("updatedAt", "desc"),
           limit(PAGE_SIZE)
         );
@@ -327,11 +327,10 @@ export default function ConversationHistory() {
     setLoadingMore(true);
 
     try {
-      // Optimisé: utiliser "in" au lieu de "!=" pour réduire les coûts Firestore
+      // FIX: Charger plus de conversations (toutes, sans filtre de statut)
       let q = query(
         collection(db, "conversations"),
         where("providerId", "==", activeProvider.id),
-        where("status", "in", ["completed", "archived", "cancelled"]),
         orderBy("updatedAt", "desc"),
         startAfter(lastDoc),
         limit(PAGE_SIZE)
@@ -359,7 +358,12 @@ export default function ConversationHistory() {
 
     // Filtre par statut
     if (statusFilter !== "all") {
-      filtered = filtered.filter((c) => c.status === statusFilter);
+      if (statusFilter === "active") {
+        // Inclure les conversations sans statut ou avec status "active"
+        filtered = filtered.filter((c) => c.status === "active" || !c.status);
+      } else {
+        filtered = filtered.filter((c) => c.status === statusFilter);
+      }
     }
 
     // Filtre par recherche
@@ -379,10 +383,11 @@ export default function ConversationHistory() {
 
   // Statistiques
   const stats = useMemo(() => {
+    const active = conversations.filter((c) => c.status === "active" || !c.status).length;
     const completed = conversations.filter((c) => c.status === "completed").length;
     const archived = conversations.filter((c) => c.status === "archived").length;
     const cancelled = conversations.filter((c) => c.status === "cancelled").length;
-    return { total: conversations.length, completed, archived, cancelled };
+    return { total: conversations.length, active, completed, archived, cancelled };
   }, [conversations]);
 
   return (
@@ -429,6 +434,7 @@ export default function ConversationHistory() {
               <span className="text-sm text-gray-500 mr-2">{t("provider:conversationHistory.statusFilter")}</span>
               {[
                 { value: "all", label: t("provider:conversationHistory.filterAll") },
+                { value: "active", label: t("provider:conversationHistory.filterActive") || "En cours" },
                 { value: "completed", label: t("provider:conversationHistory.filterCompleted") },
                 { value: "archived", label: t("provider:conversationHistory.filterArchived") },
                 { value: "cancelled", label: t("provider:conversationHistory.filterCancelled") },
