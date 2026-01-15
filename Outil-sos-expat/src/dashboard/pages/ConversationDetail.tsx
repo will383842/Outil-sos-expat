@@ -516,7 +516,7 @@ function ClientInfoPanel({
   };
 
   return (
-    <div className="space-y-4 overflow-y-auto">
+    <div className="space-y-4">
       {/* Status Card */}
       <Card className="border-0 shadow-sm">
         <CardContent className="p-5">
@@ -920,17 +920,15 @@ export default function ConversationDetail() {
 
       {/* Layout: Left (info) | Right (chat) */}
       <div className={`flex-1 grid gap-6 min-h-0 ${chatExpanded ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-3"}`}>
-        {/* Left Panel */}
+        {/* Left Panel - Scrollable client info */}
         {!chatExpanded && (
-          <div className="lg:col-span-1 overflow-hidden">
-            <div className="sticky top-0">
-              <ClientInfoPanel
-                booking={booking}
-                isExpired={isExpired}
-                remainingTime={formattedTime}
-                durationMinutes={durationMinutes}
-              />
-            </div>
+          <div className="lg:col-span-1 overflow-y-auto pr-2">
+            <ClientInfoPanel
+              booking={booking}
+              isExpired={isExpired}
+              remainingTime={formattedTime}
+              durationMinutes={durationMinutes}
+            />
           </div>
         )}
 
