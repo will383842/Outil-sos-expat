@@ -4897,3 +4897,223 @@ export {
   getProviderActionLogs,
   getAllProviderActionLogs,
 } from './admin/providerActions';
+
+// ========== USER DOCUMENT CREATION (GOOGLE AUTH FIX) ==========
+// Cloud Function to create user documents using Admin SDK (bypasses security rules)
+// This fixes the "Missing or insufficient permissions" error when creating user documents
+// after Google OAuth authentication where token propagation to Firestore may be delayed.
+interface CreateUserDocumentData {
+  uid: string;
+  email: string;
+  displayName?: string;
+  firstName?: string;
+  lastName?: string;
+  fullName?: string;
+  photoURL?: string;
+  role: 'client' | 'lawyer' | 'expat';
+  provider: string;
+  isVerified?: boolean;
+  preferredLanguage?: string;
+  phone?: string;
+  phoneCountryCode?: string;
+  country?: string;
+  currentCountry?: string;
+  practiceCountries?: string[];
+  interventionCountries?: string[];
+  bio?: string;
+  specialties?: string[];
+  languages?: string[];
+  barNumber?: string;
+  barAssociation?: string;
+  yearsOfExperience?: number;
+  hourlyRate?: number;
+  profilePhoto?: string;
+}
+
+export const createUserDocument = onCall(
+  {
+    ...emergencyConfig,
+    timeoutSeconds: 30,
+  },
+  wrapCallableFunction(
+    "createUserDocument",
+    async (request: CallableRequest<CreateUserDocumentData>) => {
+      const database = initializeFirebase();
+
+      // Verify authentication
+      if (!request.auth) {
+        ultraLogger.warn("CREATE_USER_DOC", "Unauthenticated request rejected");
+        throw new HttpsError("unauthenticated", "Authentication required");
+      }
+
+      const { uid, email, role, provider } = request.data;
+
+      // Verify the authenticated user is creating their OWN document (no impersonation)
+      if (request.auth.uid !== uid) {
+        ultraLogger.warn("CREATE_USER_DOC", "UID mismatch - possible impersonation attempt", {
+          authUid: request.auth.uid,
+          requestedUid: uid,
+        });
+        throw new HttpsError("permission-denied", "Cannot create document for another user");
+      }
+
+      // Validate required fields
+      if (!uid || !email || !role) {
+        throw new HttpsError("invalid-argument", "uid, email, and role are required");
+      }
+
+      // Validate role
+      if (!['client', 'lawyer', 'expat'].includes(role)) {
+        throw new HttpsError("invalid-argument", "Invalid role. Must be client, lawyer, or expat");
+      }
+
+      ultraLogger.info("CREATE_USER_DOC", "Creating user document via Cloud Function", {
+        uid,
+        email,
+        role,
+        provider,
+      });
+
+      try {
+        const now = admin.firestore.FieldValue.serverTimestamp();
+
+        // Determine names
+        const firstName = request.data.firstName || (request.data.displayName?.split(' ')[0]) || '';
+        const lastName = request.data.lastName || (request.data.displayName?.split(' ').slice(1).join(' ')) || '';
+        const fullName = request.data.fullName || `${firstName} ${lastName}`.trim() || request.data.displayName || '';
+
+        // Auto-approve Google client accounts
+        const isGoogleProvider = provider === 'google.com';
+        const isClientRole = role === 'client';
+        const shouldAutoApprove = isClientRole && isGoogleProvider;
+
+        const approvalFields = shouldAutoApprove
+          ? {
+              isApproved: true,
+              approvalStatus: 'approved',
+              isVisible: true,
+              verificationStatus: 'verified',
+            }
+          : {
+              isApproved: false,
+              approvalStatus: 'pending',
+              isVisible: false,
+              verificationStatus: 'pending',
+            };
+
+        // Base user data
+        const userData = {
+          uid,
+          email,
+          emailLower: email.toLowerCase(),
+          displayName: request.data.displayName || fullName || null,
+          firstName,
+          lastName,
+          fullName,
+          photoURL: request.data.photoURL || null,
+          profilePhoto: request.data.profilePhoto || request.data.photoURL || '/default-avatar.png',
+          avatar: request.data.photoURL || '/default-avatar.png',
+          role,
+          provider,
+          isVerified: request.data.isVerified ?? false,
+          isVerifiedEmail: request.data.isVerified ?? false,
+          isActive: true,
+          preferredLanguage: request.data.preferredLanguage || 'fr',
+          createdAt: now,
+          updatedAt: now,
+          lastLoginAt: now,
+          ...approvalFields,
+        };
+
+        // Create user document
+        const userRef = database.collection('users').doc(uid);
+        const existingUserDoc = await userRef.get();
+
+        if (existingUserDoc.exists) {
+          // User already exists - just update lastLoginAt
+          await userRef.update({
+            lastLoginAt: now,
+            updatedAt: now,
+            isActive: true,
+          });
+
+          ultraLogger.info("CREATE_USER_DOC", "User document already exists, updated lastLoginAt", { uid });
+
+          return {
+            success: true,
+            action: 'updated',
+            uid,
+          };
+        }
+
+        // Create new user document
+        await userRef.set(userData);
+
+        ultraLogger.info("CREATE_USER_DOC", "User document created successfully", { uid, role });
+
+        // For lawyers/expats, also create sos_profiles document
+        if (role === 'lawyer' || role === 'expat') {
+          const sosRef = database.collection('sos_profiles').doc(uid);
+          const existingSosDoc = await sosRef.get();
+
+          if (!existingSosDoc.exists) {
+            const sosData = {
+              id: uid,
+              uid,
+              type: role,
+              role,
+              email,
+              emailLower: email.toLowerCase(),
+              firstName,
+              lastName,
+              fullName,
+              name: fullName,
+              displayName: fullName,
+              profilePhoto: request.data.profilePhoto || request.data.photoURL || '/default-avatar.png',
+              photoURL: request.data.photoURL || '/default-avatar.png',
+              avatar: request.data.photoURL || '/default-avatar.png',
+              phone: request.data.phone || null,
+              phoneNumber: request.data.phone || null,
+              phoneCountryCode: request.data.phoneCountryCode || null,
+              country: request.data.country || request.data.currentCountry || '',
+              currentCountry: request.data.currentCountry || request.data.country || '',
+              currentPresenceCountry: request.data.currentCountry || request.data.country || '',
+              practiceCountries: request.data.practiceCountries || [],
+              interventionCountries: request.data.interventionCountries || [],
+              bio: request.data.bio || '',
+              specialties: request.data.specialties || [],
+              languages: request.data.languages || ['fr'],
+              barNumber: request.data.barNumber || '',
+              barAssociation: request.data.barAssociation || '',
+              yearsOfExperience: request.data.yearsOfExperience || 0,
+              hourlyRate: request.data.hourlyRate || 0,
+              isAvailable: false,
+              isOnline: false,
+              ...approvalFields,
+              createdAt: now,
+              updatedAt: now,
+            };
+
+            await sosRef.set(sosData);
+            ultraLogger.info("CREATE_USER_DOC", "sos_profiles document created for provider", { uid, role });
+          }
+        }
+
+        return {
+          success: true,
+          action: 'created',
+          uid,
+          role,
+        };
+
+      } catch (error: any) {
+        ultraLogger.error("CREATE_USER_DOC", "Failed to create user document", {
+          uid,
+          error: error.message,
+          code: error.code,
+        });
+        throw new HttpsError("internal", `Failed to create user document: ${error.message}`);
+      }
+    }
+  )
+);

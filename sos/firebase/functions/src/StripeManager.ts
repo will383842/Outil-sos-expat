@@ -822,7 +822,49 @@ export class StripeManager {
       this.validateConfiguration(secretKey);
       if (!this.stripe) throw new HttpsError('internal', 'Stripe non initialisé');
 
-      const paymentIntent = await this.stripe.paymentIntents.retrieve(paymentIntentId);
+      // ===== P0 FIX: Récupérer le providerStripeAccountId pour Direct Charges =====
+      // Les PaymentIntents créés en Direct Charges sont sur le compte du provider,
+      // pas sur le compte de la plateforme. Il faut donc utiliser stripeAccount
+      // pour retrieve ET capture.
+      let providerStripeAccountId: string | undefined;
+      let useDirectCharges = false;
+
+      try {
+        const paymentDoc = await this.db.collection('payments').doc(paymentIntentId).get();
+        if (paymentDoc.exists) {
+          const paymentData = paymentDoc.data();
+          providerStripeAccountId = paymentData?.providerStripeAccountId;
+          useDirectCharges = paymentData?.useDirectCharges === true;
+
+          console.log('[capturePayment] Payment document retrieved:', {
+            paymentIntentId,
+            useDirectCharges,
+            providerStripeAccountId: providerStripeAccountId || 'N/A (platform mode)',
+          });
+        } else {
+          console.warn('[capturePayment] Payment document not found in Firestore:', paymentIntentId);
+        }
+      } catch (firestoreError) {
+        console.error('[capturePayment] Error retrieving payment document:', firestoreError);
+        // Continue without stripeAccount - will work for platform mode payments
+      }
+
+      // Configurer les options Stripe pour Direct Charges
+      const stripeAccountOptions: Stripe.RequestOptions | undefined =
+        useDirectCharges && providerStripeAccountId
+          ? { stripeAccount: providerStripeAccountId }
+          : undefined;
+
+      if (useDirectCharges && providerStripeAccountId) {
+        console.log('[capturePayment] Direct Charges mode - using stripeAccount:', providerStripeAccountId);
+      }
+
+      // Retrieve avec stripeAccount si Direct Charges
+      const paymentIntent = await this.stripe.paymentIntents.retrieve(
+        paymentIntentId,
+        {},
+        stripeAccountOptions
+      );
 
       prodLogger.debug('STRIPE_CAPTURE_STATUS', `[${captureRequestId}] PaymentIntent status check`, {
         captureRequestId,
@@ -1008,10 +1050,24 @@ export class StripeManager {
       // ===== P0 FIX: Idempotency key pour la capture =====
       // IMPORTANT: NE PAS inclure Date.now() - une capture ne doit se faire qu'une seule fois
       const captureIdempotencyKey = `capture_${paymentIntentId}`;
+      // ===== P0 FIX: Capture avec stripeAccount pour Direct Charges =====
+      const captureOptions: Stripe.RequestOptions = {
+        idempotencyKey: captureIdempotencyKey.substring(0, 255),
+        // Ajouter stripeAccount si Direct Charges
+        ...(useDirectCharges && providerStripeAccountId ? { stripeAccount: providerStripeAccountId } : {}),
+      };
+
+      console.log('[capturePayment] Capturing with options:', {
+        paymentIntentId,
+        useDirectCharges,
+        stripeAccount: captureOptions.stripeAccount || 'platform (default)',
+        idempotencyKey: captureIdempotencyKey.substring(0, 30) + '...',
+      });
+
       const captured = await this.stripe.paymentIntents.capture(
         paymentIntentId,
         {},
-        { idempotencyKey: captureIdempotencyKey.substring(0, 255) }
+        captureOptions
       );
 
       // Recuperer l'ID du transfert auto-cree par Stripe (Destination Charges)
@@ -1038,9 +1094,12 @@ export class StripeManager {
             ? captured.latest_charge
             : captured.latest_charge.id;
 
-          const charge = await this.stripe.charges.retrieve(chargeId, {
-            expand: ['transfer'],
-          });
+          // P0 FIX: Utiliser stripeAccount pour Direct Charges
+          const charge = await this.stripe.charges.retrieve(
+            chargeId,
+            { expand: ['transfer'] },
+            stripeAccountOptions
+          );
 
           if (charge.transfer) {
             transferId = typeof charge.transfer === 'string'

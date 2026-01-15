@@ -344,8 +344,42 @@ async function handleParticipantJoin(sessionId: string, body: TwilioConferenceWe
   const joinId = `join_${Date.now().toString(36)}`;
 
   try {
-    const participantType = body.ParticipantLabel as 'provider' | 'client';
     const callSid = body.CallSid!;
+
+    // P0 FIX: Determine participantType from ParticipantLabel OR fallback to CallSid lookup
+    // ParticipantLabel may be undefined if TwiML didn't include participantLabel attribute
+    let participantType = body.ParticipantLabel as 'provider' | 'client' | undefined;
+
+    if (!participantType) {
+      // Fallback: identify participant by matching CallSid in session
+      console.log(`👋 [${joinId}] ⚠️ ParticipantLabel is missing, using CallSid fallback`);
+      const session = await twilioCallManager.getCallSession(sessionId);
+      if (session) {
+        if (session.participants.client.callSid === callSid) {
+          participantType = 'client';
+          console.log(`👋 [${joinId}]   ✅ Identified as CLIENT via CallSid match`);
+        } else if (session.participants.provider.callSid === callSid) {
+          participantType = 'provider';
+          console.log(`👋 [${joinId}]   ✅ Identified as PROVIDER via CallSid match`);
+        } else {
+          console.log(`👋 [${joinId}]   ❌ CallSid does not match any participant!`);
+          console.log(`👋 [${joinId}]   webhook callSid: ${callSid}`);
+          console.log(`👋 [${joinId}]   client.callSid: ${session.participants.client.callSid}`);
+          console.log(`👋 [${joinId}]   provider.callSid: ${session.participants.provider.callSid}`);
+          // Cannot identify participant - log error and return
+          await logError('handleParticipantJoin:unknown_participant', {
+            sessionId,
+            callSid,
+            clientCallSid: session.participants.client.callSid,
+            providerCallSid: session.participants.provider.callSid
+          });
+          return;
+        }
+      } else {
+        console.log(`👋 [${joinId}]   ❌ Session not found - cannot identify participant`);
+        return;
+      }
+    }
 
     console.log(`\n${'═'.repeat(70)}`);
     console.log(`👋 [${joinId}] handleParticipantJoin START - CRITICAL FOR waitForConnection()`);
@@ -353,6 +387,7 @@ async function handleParticipantJoin(sessionId: string, body: TwilioConferenceWe
     console.log(`👋 [${joinId}]   participantType: ${participantType}`);
     console.log(`👋 [${joinId}]   callSid: ${callSid}`);
     console.log(`👋 [${joinId}]   conferenceSid: ${body.ConferenceSid}`);
+    console.log(`👋 [${joinId}]   source: ${body.ParticipantLabel ? 'ParticipantLabel' : 'CallSid fallback'}`);
     console.log(`${'═'.repeat(70)}`);
 
     // Get status BEFORE update
@@ -464,8 +499,30 @@ async function handleParticipantLeave(sessionId: string, body: TwilioConferenceW
   const leaveId = `leave_${Date.now().toString(36)}`;
 
   try {
-    const participantType = body.ParticipantLabel as 'provider' | 'client';
     const callSid = body.CallSid!;
+
+    // P0 FIX: Determine participantType from ParticipantLabel OR fallback to CallSid lookup
+    let participantType = body.ParticipantLabel as 'provider' | 'client' | undefined;
+
+    if (!participantType) {
+      // Fallback: identify participant by matching CallSid in session
+      console.log(`👋 [${leaveId}] ⚠️ ParticipantLabel is missing, using CallSid fallback`);
+      const session = await twilioCallManager.getCallSession(sessionId);
+      if (session) {
+        if (session.participants.client.callSid === callSid) {
+          participantType = 'client';
+        } else if (session.participants.provider.callSid === callSid) {
+          participantType = 'provider';
+        } else {
+          console.log(`👋 [${leaveId}]   ❌ CallSid does not match any participant, skipping leave handling`);
+          return;
+        }
+        console.log(`👋 [${leaveId}]   ✅ Identified as ${participantType.toUpperCase()} via CallSid match`);
+      } else {
+        console.log(`👋 [${leaveId}]   ❌ Session not found - cannot identify participant`);
+        return;
+      }
+    }
 
     console.log(`\n${'─'.repeat(70)}`);
     console.log(`👋 [${leaveId}] handleParticipantLeave START`);
@@ -473,6 +530,7 @@ async function handleParticipantLeave(sessionId: string, body: TwilioConferenceW
     console.log(`👋 [${leaveId}]   participantType: ${participantType}`);
     console.log(`👋 [${leaveId}]   callSid: ${callSid}`);
     console.log(`👋 [${leaveId}]   conferenceSid: ${body.ConferenceSid}`);
+    console.log(`👋 [${leaveId}]   source: ${body.ParticipantLabel ? 'ParticipantLabel' : 'CallSid fallback'}`);
     console.log(`${'─'.repeat(70)}`);
 
     // Get status BEFORE update

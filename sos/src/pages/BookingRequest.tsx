@@ -955,203 +955,12 @@ const I18N = {
 //   "Zimbabwe",
 // ];
 
-const countries = [
-  "Afghanistan",
-  "South Africa",
-  "Albania",
-  "Algeria",
-  "Germany",
-  "Andorra",
-  "Angola",
-  "Antigua and Barbuda",
-  "Saudi Arabia",
-  "Argentina",
-  "Armenia",
-  "Australia",
-  "Austria",
-  "Azerbaijan",
-  "Bahamas",
-  "Bahrain",
-  "Bangladesh",
-  "Barbados",
-  "Belgium",
-  "Belize",
-  "Benin",
-  "Bhutan",
-  "Belarus",
-  "Myanmar",
-  "Bolivia",
-  "Bosnia and Herzegovina",
-  "Botswana",
-  "Brazil",
-  "Brunei",
-  "Bulgaria",
-  "Burkina Faso",
-  "Burundi",
-  "Cambodia",
-  "Cameroon",
-  "Canada",
-  "Cape Verde",
-  "Chile",
-  "China",
-  "Cyprus",
-  "Colombia",
-  "Comoros",
-  "Congo",
-  "Congo (DRC)",
-  "North Korea",
-  "South Korea",
-  "Costa Rica",
-  "Ivory Coast",
-  "Croatia",
-  "Cuba",
-  "Denmark",
-  "Djibouti",
-  "Dominica",
-  "Egypt",
-  "United Arab Emirates",
-  "Ecuador",
-  "Eritrea",
-  "Spain",
-  "Estonia",
-  "United States",
-  "Ethiopia",
-  "Fiji",
-  "Finland",
-  "France",
-  "Gabon",
-  "Gambia",
-  "Georgia",
-  "Ghana",
-  "Greece",
-  "Grenada",
-  "Guatemala",
-  "Guinea",
-  "Guinea-Bissau",
-  "Equatorial Guinea",
-  "Guyana",
-  "Haiti",
-  "Honduras",
-  "Hungary",
-  "Cook Islands",
-  "Marshall Islands",
-  "Solomon Islands",
-  "India",
-  "Indonesia",
-  "Iraq",
-  "Iran",
-  "Ireland",
-  "Iceland",
-  "Israel",
-  "Italy",
-  "Jamaica",
-  "Japan",
-  "Jordan",
-  "Kazakhstan",
-  "Kenya",
-  "Kyrgyzstan",
-  "Kiribati",
-  "Kuwait",
-  "Laos",
-  "Lesotho",
-  "Latvia",
-  "Lebanon",
-  "Liberia",
-  "Libya",
-  "Liechtenstein",
-  "Lithuania",
-  "Luxembourg",
-  "North Macedonia",
-  "Madagascar",
-  "Malaysia",
-  "Malawi",
-  "Maldives",
-  "Mali",
-  "Malta",
-  "Morocco",
-  "Mauritius",
-  "Mauritania",
-  "Mexico",
-  "Micronesia",
-  "Moldova",
-  "Monaco",
-  "Mongolia",
-  "Montenegro",
-  "Mozambique",
-  "Namibia",
-  "Nauru",
-  "Nepal",
-  "Nicaragua",
-  "Niger",
-  "Nigeria",
-  "Norway",
-  "New Zealand",
-  "Oman",
-  "Uganda",
-  "Uzbekistan",
-  "Pakistan",
-  "Palau",
-  "Palestine",
-  "Panama",
-  "Papua New Guinea",
-  "Paraguay",
-  "Netherlands",
-  "Peru",
-  "Philippines",
-  "Poland",
-  "Portugal",
-  "Qatar",
-  "Central African Republic",
-  "Dominican Republic",
-  "Czech Republic",
-  "Romania",
-  "United Kingdom",
-  "Russia",
-  "Rwanda",
-  "Saint Kitts and Nevis",
-  "San Marino",
-  "Saint Vincent and the Grenadines",
-  "Saint Lucia",
-  "El Salvador",
-  "Samoa",
-  "São Tomé and Príncipe",
-  "Senegal",
-  "Serbia",
-  "Seychelles",
-  "Sierra Leone",
-  "Singapore",
-  "Slovakia",
-  "Slovenia",
-  "Somalia",
-  "Sudan",
-  "South Sudan",
-  "Sri Lanka",
-  "Sweden",
-  "Switzerland",
-  "Suriname",
-  "Syria",
-  "Tajikistan",
-  "Tanzania",
-  "Chad",
-  "Thailand",
-  "East Timor",
-  "Togo",
-  "Tonga",
-  "Trinidad and Tobago",
-  "Tunisia",
-  "Turkmenistan",
-  "Turkey",
-  "Tuvalu",
-  "Ukraine",
-  "Uruguay",
-  "Vanuatu",
-  "Vatican",
-  "Venezuela",
-  "Vietnam",
-  "Yemen",
-  "Zambia",
-  "Zimbabwe",
-];
+// Generate countries list from countriesData to ensure synchronization
+// This avoids the previous bug where manual list had different names (e.g., "Ivory Coast" vs "Côte d'Ivoire")
+const countries = countriesData
+  .filter((c) => c.code !== "SEPARATOR")
+  .map((c) => c.nameEn)
+  .sort((a, b) => a.localeCompare(b));
 
 type MinimalUser = { uid?: string; firstName?: string } | null;
 const ALL_LANGS = languages as BookingLanguage[];
@@ -1539,32 +1348,45 @@ const BookingRequest: React.FC = () => {
   }, [providerId, readProviderFromSession]);
 
   // Pre-fill form with wizard data from sessionStorage
+  // Le pays d'intervention est UNIQUEMENT celui choisi par le client dans le wizard
   useEffect(() => {
     try {
       const wizardData = sessionStorage.getItem('wizardFilters');
-      if (!wizardData) return;
+      console.log('🔵 [BookingRequest] wizardData from sessionStorage:', wizardData);
+      if (!wizardData) {
+        console.log('🔵 [BookingRequest] No wizardData found, skipping prefill');
+        return;
+      }
 
       const { country, languages: wizardLanguages } = JSON.parse(wizardData) as {
         country: string;
         languages: string[];
         type: string;
       };
+      console.log('🔵 [BookingRequest] Parsed wizard data:', { country, wizardLanguages });
 
-      // Map country code to country name in English
+      // Préremplir le pays d'intervention choisi par le client dans le wizard
       if (country) {
         const countryData = countriesData.find(
           (c) => c.code.toLowerCase() === country.toLowerCase()
         );
+        console.log('🔵 [BookingRequest] countryData found:', countryData ? { code: countryData.code, nameEn: countryData.nameEn } : 'NOT FOUND');
         if (countryData) {
-          // Check if the country name exists in the countries array
           const countryName = countryData.nameEn;
-          if (countries.includes(countryName)) {
+          const isInList = countries.includes(countryName);
+          console.log('🔵 [BookingRequest] countryName:', countryName, '| isInList:', isInList);
+          if (isInList) {
+            console.log('🔵 [BookingRequest] Setting currentCountry to:', countryName);
             setValue('currentCountry', countryName);
+          } else {
+            console.warn('🔴 [BookingRequest] Country name NOT in countries list:', countryName);
           }
+        } else {
+          console.warn('🔴 [BookingRequest] Country code NOT found in countriesData:', country);
         }
       }
 
-      // Map language codes to BookingLanguage objects
+      // Préremplir les langues choisies par le client dans le wizard
       if (wizardLanguages && wizardLanguages.length > 0) {
         const selectedLangs: BookingLanguage[] = wizardLanguages
           .map((code) => {
@@ -1588,8 +1410,10 @@ const BookingRequest: React.FC = () => {
         }
       }
 
-      // Clear wizard data after use (optional - comment out to keep it)
-      // sessionStorage.removeItem('wizardFilters');
+      // Nettoyer les données du wizard après utilisation pour éviter
+      // que d'anciennes données ne polluent les futures visites
+      sessionStorage.removeItem('wizardFilters');
+
     } catch (e) {
       console.warn('Failed to read wizard filters from sessionStorage', e);
     }

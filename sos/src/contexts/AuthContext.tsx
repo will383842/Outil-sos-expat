@@ -42,7 +42,8 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL, deleteObject } from 'firebase/storage';
-import { auth, db, storage } from '../config/firebase';
+import { httpsCallable } from 'firebase/functions';
+import { auth, db, storage, functions } from '../config/firebase';
 import type { User } from './types';
 import type { AuthContextType } from './AuthContextBase';
 import { AuthContext as BaseAuthContext } from './AuthContextBase';
@@ -361,7 +362,94 @@ const processProfilePhoto = async (
    ========================================================= */
 
 /**
+ * Interface pour les données de création d'utilisateur via Cloud Function
+ */
+interface CreateUserDocumentData {
+  uid: string;
+  email: string;
+  displayName?: string;
+  firstName?: string;
+  lastName?: string;
+  fullName?: string;
+  photoURL?: string;
+  role: 'client' | 'lawyer' | 'expat';
+  provider: string;
+  isVerified?: boolean;
+  preferredLanguage?: string;
+  phone?: string;
+  phoneCountryCode?: string;
+  country?: string;
+  currentCountry?: string;
+  practiceCountries?: string[];
+  interventionCountries?: string[];
+  bio?: string;
+  specialties?: string[];
+  languages?: string[];
+  barNumber?: string;
+  barAssociation?: string;
+  yearsOfExperience?: number;
+  hourlyRate?: number;
+  profilePhoto?: string;
+}
+
+interface CreateUserDocumentResponse {
+  success: boolean;
+  action: 'created' | 'updated';
+  uid: string;
+  role?: string;
+}
+
+/**
+ * Crée un document utilisateur via Cloud Function (Admin SDK)
+ * Cette méthode contourne les règles de sécurité Firestore et est
+ * plus fiable pour les nouveaux utilisateurs Google OAuth.
+ */
+const createUserDocumentViaCloudFunction = async (
+  firebaseUser: FirebaseUser,
+  additionalData: Partial<User> = {}
+): Promise<CreateUserDocumentResponse> => {
+  const createUserDoc = httpsCallable<CreateUserDocumentData, CreateUserDocumentResponse>(
+    functions,
+    'createUserDocument'
+  );
+
+  const { firstName, lastName } = additionalData.firstName && additionalData.lastName
+    ? { firstName: additionalData.firstName, lastName: additionalData.lastName }
+    : splitDisplayName(firebaseUser.displayName);
+
+  const fullName = additionalData.fullName || `${firstName} ${lastName}`.trim() || firebaseUser.displayName || '';
+
+  const requestData: CreateUserDocumentData = {
+    uid: firebaseUser.uid,
+    email: firebaseUser.email || '',
+    displayName: firebaseUser.displayName || fullName || undefined,
+    firstName: firstName || undefined,
+    lastName: lastName || undefined,
+    fullName: fullName || undefined,
+    photoURL: firebaseUser.photoURL || undefined,
+    role: (additionalData.role as 'client' | 'lawyer' | 'expat') || 'client',
+    provider: additionalData.provider || 'google.com',
+    isVerified: firebaseUser.emailVerified,
+    preferredLanguage: additionalData.preferredLanguage || 'fr',
+    profilePhoto: additionalData.profilePhoto || firebaseUser.photoURL || undefined,
+    ...(additionalData.phone && { phone: additionalData.phone }),
+    ...(additionalData.phoneCountryCode && { phoneCountryCode: additionalData.phoneCountryCode }),
+    ...(additionalData.country && { country: additionalData.country }),
+    ...(additionalData.currentCountry && { currentCountry: additionalData.currentCountry }),
+    ...(additionalData.practiceCountries && { practiceCountries: additionalData.practiceCountries }),
+    ...(additionalData.interventionCountries && { interventionCountries: additionalData.interventionCountries }),
+    ...(additionalData.bio && { bio: additionalData.bio }),
+    ...(additionalData.specialties && { specialties: additionalData.specialties }),
+    ...(additionalData.languages && { languages: additionalData.languages }),
+  };
+
+  const result = await createUserDoc(requestData);
+  return result.data;
+};
+
+/**
  * Fonction pour créer un document utilisateur dans Firestore
+ * @deprecated Utilisez createUserDocumentViaCloudFunction pour les nouveaux utilisateurs Google OAuth
  */
 const createUserDocumentInFirestore = async (
   firebaseUser: FirebaseUser, 
@@ -1198,45 +1286,21 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
             isActive: true,
           });
         } else {
-          // Create new client user with retry logic
-          console.log("[DEBUG] " + "🔵 GOOGLE POPUP: Création du document utilisateur...");
-          const maxRetries = 3;
-          let lastError: Error | null = null;
-
-          for (let attempt = 1; attempt <= maxRetries; attempt++) {
-            try {
-              await createUserDocumentInFirestore(googleUser, {
-                role: 'client',
-                email: googleUser.email || '',
-                preferredLanguage: 'fr',
-                isApproved: true,
-                approvalStatus: 'approved',
-                isVisible: true,
-                isActive: true,
-                provider: 'google.com',
-                isVerified: googleUser.emailVerified,
-                ...(googleUser.photoURL && { profilePhoto: googleUser.photoURL, photoURL: googleUser.photoURL }),
-              });
-              console.log("[DEBUG] " + "✅ GOOGLE POPUP: Document créé (tentative " + attempt + ")");
-              lastError = null;
-              break;
-            } catch (createError) {
-              lastError = createError as Error;
-              console.warn("[DEBUG] " + "⚠️ GOOGLE POPUP: Échec création tentative " + attempt + "/" + maxRetries, createError);
-              if (attempt < maxRetries) {
-                // Wait before retry (exponential backoff)
-                const delay = attempt * 1000;
-                console.log("[DEBUG] " + "🔄 GOOGLE POPUP: Retry dans " + delay + "ms...");
-                await new Promise(resolve => setTimeout(resolve, delay));
-                // Refresh token again before retry
-                await googleUser.getIdToken(true);
-              }
-            }
-          }
-
-          if (lastError) {
-            console.error("[DEBUG] " + "❌ GOOGLE POPUP: Échec création après " + maxRetries + " tentatives");
-            throw lastError;
+          // Create new client user via Cloud Function (bypasses Firestore security rules)
+          console.log("[DEBUG] " + "🔵 GOOGLE POPUP: Création du document via Cloud Function...");
+          try {
+            const result = await createUserDocumentViaCloudFunction(googleUser, {
+              role: 'client',
+              email: googleUser.email || '',
+              preferredLanguage: 'fr',
+              provider: 'google.com',
+              ...(googleUser.photoURL && { profilePhoto: googleUser.photoURL, photoURL: googleUser.photoURL }),
+            });
+            console.log("[DEBUG] " + "✅ GOOGLE POPUP: Document " + result.action + " via Cloud Function");
+          } catch (createError: any) {
+            console.error("[DEBUG] " + "❌ GOOGLE POPUP: Échec Cloud Function:", createError);
+            // Don't throw - let the auth continue even if document creation fails
+            // The onAuthStateChanged listener will handle orphan users
           }
         }
 
@@ -1407,56 +1471,21 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
             ...photoUpdates,
           });
         } else {
-          // Create new user - only include photo fields if Google provides them
-          // Les clients Google sont auto-approuvés
-          const newUserData: any = {
-            role: 'client',
-            email: googleUser.email || '',
-            preferredLanguage: 'fr',
-            isApproved: true,
-            approvalStatus: 'approved',
-            isVisible: true,
-            isActive: true,
-            provider: 'google.com',
-            isVerified: googleUser.emailVerified,
-            isVerifiedEmail: googleUser.emailVerified,
-          };
-          
-          // Add photo fields if available from Google
-          if (googleUser.photoURL) {
-            newUserData.profilePhoto = googleUser.photoURL;
-            newUserData.photoURL = googleUser.photoURL;
-            newUserData.avatar = googleUser.photoURL;
-          }
-
-          // Create document with retry logic
-          console.log("[DEBUG] " + "🔵 GOOGLE REDIRECT: Création du document utilisateur...");
-          const maxRetries = 3;
-          let lastError: Error | null = null;
-
-          for (let attempt = 1; attempt <= maxRetries; attempt++) {
-            try {
-              await createUserDocumentInFirestore(googleUser, newUserData);
-              console.log("[DEBUG] " + "✅ GOOGLE REDIRECT: Document créé (tentative " + attempt + ")");
-              lastError = null;
-              break;
-            } catch (createError) {
-              lastError = createError as Error;
-              console.warn("[DEBUG] " + "⚠️ GOOGLE REDIRECT: Échec création tentative " + attempt + "/" + maxRetries, createError);
-              if (attempt < maxRetries) {
-                // Wait before retry (exponential backoff)
-                const delay = attempt * 1000;
-                console.log("[DEBUG] " + "🔄 GOOGLE REDIRECT: Retry dans " + delay + "ms...");
-                await new Promise(resolve => setTimeout(resolve, delay));
-                // Refresh token again before retry
-                await googleUser.getIdToken(true);
-              }
-            }
-          }
-
-          if (lastError) {
-            console.error("[DEBUG] " + "❌ GOOGLE REDIRECT: Échec création après " + maxRetries + " tentatives");
-            throw lastError;
+          // Create new user via Cloud Function (bypasses Firestore security rules)
+          console.log("[DEBUG] " + "🔵 GOOGLE REDIRECT: Création du document via Cloud Function...");
+          try {
+            const result = await createUserDocumentViaCloudFunction(googleUser, {
+              role: 'client',
+              email: googleUser.email || '',
+              preferredLanguage: 'fr',
+              provider: 'google.com',
+              ...(googleUser.photoURL && { profilePhoto: googleUser.photoURL, photoURL: googleUser.photoURL }),
+            });
+            console.log("[DEBUG] " + "✅ GOOGLE REDIRECT: Document " + result.action + " via Cloud Function");
+          } catch (createError: any) {
+            console.error("[DEBUG] " + "❌ GOOGLE REDIRECT: Échec Cloud Function:", createError);
+            // Don't throw - let the auth continue even if document creation fails
+            // The onAuthStateChanged listener will handle orphan users
           }
         }
 

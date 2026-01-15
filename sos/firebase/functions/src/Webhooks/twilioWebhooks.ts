@@ -1084,6 +1084,7 @@ export const twilioAmdTwiml = onRequest(
       statusCallback="${conferenceWebhookUrl}"
       statusCallbackEvent="start end join leave"
       statusCallbackMethod="POST"
+      participantLabel="${participantType}"
     >${conferenceName}</Conference>
   </Dial>
 </Response>`;
@@ -1116,6 +1117,7 @@ export const twilioAmdTwiml = onRequest(
       statusCallback="${conferenceWebhookUrl}"
       statusCallbackEvent="start end join leave"
       statusCallbackMethod="POST"
+      participantLabel="${participantType}"
     >${conferenceName}</Conference>
   </Dial>
 </Response>`;

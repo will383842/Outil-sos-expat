@@ -974,18 +974,48 @@ export class TwilioCallManager {
           return true; // Already connected!
         }
 
-        // P0 FIX: If there's an active call from previous attempt, hangup before creating new one
+        // P0 FIX: If there's an active call from previous attempt, check before creating new one
         if (attempt > 1 && participant?.callSid) {
           try {
             const twilioClient = getTwilioClient();
             const existingCall = await twilioClient.calls(participant.callSid).fetch();
-            if (existingCall.status === "in-progress" || existingCall.status === "ringing" || existingCall.status === "queued") {
+
+            // P0 CRITICAL FIX: If call is "in-progress", the participant is likely connected
+            // but status update may have failed (webhook issue). DON'T hangup - assume connected!
+            if (existingCall.status === "in-progress") {
+              console.log(`✅ [${retryId}] [RECOVERY] Call ${participant.callSid} is IN-PROGRESS!`);
+              console.log(`✅ [${retryId}]   Participant is likely in conference but status wasn't updated correctly`);
+              console.log(`✅ [${retryId}]   Forcing status to "connected" and returning success`);
+
+              // Force update status to connected (recovery from missed webhook)
+              await this.updateParticipantStatus(
+                sessionId,
+                participantType,
+                'connected',
+                admin.firestore.Timestamp.fromDate(new Date())
+              );
+
+              await logCallRecord({
+                callId: sessionId,
+                status: `${participantType}_recovered_from_in_progress`,
+                retryCount: attempt - 1,
+                additionalData: {
+                  callSid: participant.callSid,
+                  recoveryReason: 'call_was_in_progress_but_status_not_connected'
+                }
+              });
+
+              return true; // Participant is actually connected!
+            }
+
+            // Only hangup if call is ringing or queued (not yet answered)
+            if (existingCall.status === "ringing" || existingCall.status === "queued") {
               console.log(`📴 [${retryId}] [CLEANUP] Hanging up previous call ${participant.callSid} (status: ${existingCall.status})`);
               await twilioClient.calls(participant.callSid).update({ status: "completed" });
               await this.delay(1000); // Wait for Twilio to process
             }
           } catch (hangupError) {
-            console.warn(`⚠️ [${retryId}] [CLEANUP] Could not hangup previous call:`, hangupError);
+            console.warn(`⚠️ [${retryId}] [CLEANUP] Could not check/hangup previous call:`, hangupError);
           }
         }
         console.log(`\n${'▓'.repeat(70)}`);
@@ -1246,6 +1276,14 @@ export class TwilioCallManager {
           return false;
         }
 
+        // P0 FIX: Check if session was marked as failed/cancelled during wait
+        // This prevents continuing to wait if the session has already been terminated
+        if (session.status === "failed" || session.status === "cancelled") {
+          console.log(`⏳ [${waitId}] 🛑 Session is ${session.status} - stopping wait`);
+          console.log(`${'─'.repeat(60)}\n`);
+          return false;
+        }
+
         const participant =
           participantType === "provider"
             ? session.participants.provider
@@ -1282,14 +1320,27 @@ export class TwilioCallManager {
           }
         }
 
-        // P0 FIX: Log AMD pending status for debugging
-        // This helps identify when AMD detection is taking too long
+        // P0 FIX: AMD pending status handling with explicit timeout
+        // AMD detection has a 30s timeout in Twilio, so if it takes > 40s something is wrong
+        const AMD_MAX_WAIT_SECONDS = 40;
         if (currentStatus === "amd_pending") {
           const elapsedSeconds = Math.floor((check * checkInterval) / 1000);
           if (check === 0) {
             console.log(`⏳ [${waitId}] 🔍 AMD PENDING: Waiting for AMD callback to confirm human/machine...`);
           } else if (elapsedSeconds % 15 === 0 && elapsedSeconds > 0) {
             console.log(`⏳ [${waitId}] 🔍 AMD still pending after ${elapsedSeconds}s... (max AMD timeout: 30s)`);
+          }
+
+          // P0 FIX: If AMD is pending for too long, it likely means the callback failed
+          // Treat as no_answer to trigger retry instead of waiting full 90s
+          if (elapsedSeconds >= AMD_MAX_WAIT_SECONDS) {
+            console.log(`⏳ [${waitId}] ⚠️ AMD pending for ${elapsedSeconds}s > ${AMD_MAX_WAIT_SECONDS}s limit`);
+            console.log(`⏳ [${waitId}]   AMD callback likely failed - treating as timeout`);
+            console.log(`${'─'.repeat(60)}\n`);
+
+            // Don't update status here - let the retry mechanism handle it
+            // This allows the next attempt to check if the call is actually in-progress
+            return false;
           }
         }
 
@@ -1484,7 +1535,64 @@ export class TwilioCallManager {
           );
           // Continue with normal flow even if redirect fails
         }
-      }                                                                                                                                                                                                                                                                                                                              
+
+        // P0 FIX: Set provider OFFLINE when they don't answer (moved from webhook to avoid race condition)
+        // The webhook timing may cause the check to happen BEFORE session.status is set to "failed"
+        // By doing it here, we guarantee the provider is set offline regardless of webhook timing
+        try {
+          const providerId = callSession.metadata?.providerId;
+          if (providerId && !callSession.metadata?.providerSetOffline) {
+            console.log(`📴 [handleCallFailure] Setting provider ${providerId} OFFLINE (provider_no_answer)`);
+
+            const batch = this.db.batch();
+
+            // Update sos_profiles
+            batch.update(this.db.collection('sos_profiles').doc(providerId), {
+              isOnline: false,
+              availability: 'offline',
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+
+            // Update users collection
+            batch.update(this.db.collection('users').doc(providerId), {
+              isOnline: false,
+              availability: 'offline',
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+
+            // Mark as processed (idempotency)
+            batch.update(this.db.collection('call_sessions').doc(sessionId), {
+              'metadata.providerSetOffline': true,
+              'metadata.providerSetOfflineReason': 'provider_no_answer_handleCallFailure',
+              'metadata.updatedAt': admin.firestore.FieldValue.serverTimestamp(),
+            });
+
+            await batch.commit();
+            console.log(`📴 [handleCallFailure] Provider ${providerId} is now OFFLINE`);
+
+            // Create notification for provider
+            const providerLanguage = callSession.metadata?.providerLanguages?.[0] || "en";
+            const offlineNotification = {
+              eventId: 'provider.set.offline.no_answer',
+              locale: providerLanguage,
+              to: {
+                uid: providerId,
+              },
+              context: {
+                sessionId,
+                reason: 'provider_no_answer',
+              },
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              status: 'pending',
+            };
+            await this.db.collection('message_events').add(offlineNotification);
+            console.log(`📴 [handleCallFailure] Notification sent to provider about being set offline`);
+          }
+        } catch (offlineError) {
+          console.error(`⚠️ Failed to set provider offline (non-blocking):`, offlineError);
+          await logError('TwilioCallManager:handleCallFailure:setProviderOffline', offlineError as unknown);
+        }
+      }
 
       // 🆕 NEW: Notify provider when CLIENT doesn't answer (after 3 attempts)
       if (reason === "client_no_answer") {
@@ -2140,9 +2248,11 @@ export class TwilioCallManager {
     try {
       console.log(`📄 Creating invoices for session in createInvoices: ${sessionId}`);
 
-      // Check if payment is refunded - if so, mark invoices as refunded
-      const isRefunded = session.payment.status === "refunded";
-      const invoiceStatus = isRefunded ? "refunded" : "issued";
+      // Check if payment is refunded OR cancelled - if so, mark invoices as refunded
+      // P0 FIX: "cancelled" status happens when authorization is cancelled (not captured)
+      // Both "refunded" and "cancelled" mean the client got their money back
+      const isRefundedOrCancelled = session.payment.status === "refunded" || session.payment.status === "cancelled";
+      const invoiceStatus = isRefundedOrCancelled ? "refunded" : "issued";
 
       // Get payment currency from payments collection
       let paymentCurrency: 'eur' | 'usd' = 'eur'; // Default to EUR
@@ -2193,10 +2303,10 @@ export class TwilioCallManager {
         environment: process.env.NODE_ENV || "development",
       };
 
-      // Add refund info if refunded
-      if (isRefunded) {
+      // Add refund info if refunded or cancelled
+      if (isRefundedOrCancelled) {
         platformInvoice.refundedAt = admin.firestore.FieldValue.serverTimestamp();
-        platformInvoice.refundReason = session.payment.refundReason || "Payment refunded";
+        platformInvoice.refundReason = session.payment.refundReason || "Payment refunded/cancelled";
       }
 
       // Create provider invoice
@@ -2217,10 +2327,10 @@ export class TwilioCallManager {
         environment: process.env.NODE_ENV || "development",
       };
 
-      // Add refund info if refunded
-      if (isRefunded) {
+      // Add refund info if refunded or cancelled
+      if (isRefundedOrCancelled) {
         providerInvoice.refundedAt = admin.firestore.FieldValue.serverTimestamp();
-        providerInvoice.refundReason = session.payment.refundReason || "Payment refunded";
+        providerInvoice.refundReason = session.payment.refundReason || "Payment refunded/cancelled";
       }
 
       // Generate both invoices
