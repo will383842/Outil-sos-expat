@@ -1197,6 +1197,21 @@ const BookingRequest: React.FC = () => {
   });
 
   const watched = watch();
+
+  // DEBUG: Log whenever currentCountry changes to track any unexpected overrides
+  const watchedCountry = watch('currentCountry');
+  useEffect(() => {
+    console.log('🔴 [BookingRequest] currentCountry changed to:', watchedCountry);
+  }, [watchedCountry]);
+
+  // DEBUG: Log the countries list on mount to verify it's generated correctly
+  useEffect(() => {
+    console.log('🟠 [BookingRequest] Countries list sample (first 5):', countries.slice(0, 5));
+    console.log('🟠 [BookingRequest] Countries list includes France:', countries.includes('France'));
+    console.log('🟠 [BookingRequest] Countries list includes Côte d\'Ivoire:', countries.includes('Côte d\'Ivoire'));
+    console.log('🟠 [BookingRequest] Total countries count:', countries.length);
+  }, []);
+
   const [languagesSpoken, setLanguagesSpoken] = useState<BookingLanguage[]>([]);
   const [hasLanguageMatchRealTime, setHasLanguageMatchRealTime] =
     useState(true);
