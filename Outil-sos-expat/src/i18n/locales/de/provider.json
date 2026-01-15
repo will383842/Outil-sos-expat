@@ -162,18 +162,6 @@
     "cancel": "Abbrechen",
     "reopenConversation": "Konversation wieder öffnen"
   },
-  "quotaExhausted": {
-    "title": "Nutzungskontingent erschöpft",
-    "description": "Sie haben das KI-Anfragelimit für diesen Zeitraum erreicht. Upgraden Sie Ihr Abonnement, um den Assistenten weiter zu nutzen.",
-    "quotaUsage": "Kontingentnutzung",
-    "requestsUsed": "Anfragen genutzt",
-    "outOf": "von",
-    "nextRenewal": "Nächste Verlängerung",
-    "increaseQuota": "Kontingent erhöhen",
-    "contactSupport": "Support kontaktieren",
-    "signOut": "Abmelden",
-    "connectedAs": "Angemeldet als"
-  },
   "messages": {
     "title": "Nachrichten",
     "aiResponses": "KI-Antworten",
@@ -234,81 +222,5 @@
     "manageProviders": "Meine Anbieter verwalten",
     "lawyer": "Anwalt",
     "expatExpert": "Expat-Experte"
-  },
-  "subscriptionScreen": {
-    "header": {
-      "subtitle": "KI-Assistent für Anbieter",
-      "signOut": "Abmelden"
-    },
-    "hero": {
-      "badge": "Abonnement erforderlich",
-      "title": "Verbessern Sie Ihre Beratungen mit KI",
-      "descriptionLawyer": "Greifen Sie auf einen KI-Rechtsassistenten zu, der während Ihrer Beratungen in Echtzeit nach rechtlichen Informationen sucht.",
-      "descriptionExpat": "Erhalten Sie sofort praktische Informationen über Auswanderung, um Ihre Kunden besser zu unterstützen."
-    },
-    "benefits": {
-      "aiRealTime": {
-        "title": "Echtzeit-KI-Assistent",
-        "description": "Sofortige Rechtsrecherche während Ihrer Beratungen"
-      },
-      "updatedData": {
-        "title": "Aktuelle Daten",
-        "description": "Zugang zu rechtlichen Informationen aus über 190 Ländern"
-      },
-      "timeSaving": {
-        "title": "Zeitersparnis",
-        "description": "Präzise Antworten in Sekunden"
-      },
-      "reliableSources": {
-        "title": "Zuverlässige Quellen",
-        "description": "Verifizierte rechtliche Zitate und Referenzen"
-      }
-    },
-    "pricing": {
-      "monthly": "Monatlich",
-      "annual": "Jährlich",
-      "perMonth": "/Monat",
-      "billedAnnually": "{{amount}}€/Jahr abgerechnet",
-      "savings": "SPAREN SIE {{amount}}€",
-      "unlimited": "Unbegrenzter Zugang zum KI-Assistenten",
-      "noCommitment": "Keine Bindung",
-      "cancelAnytime": "Jederzeit kündbar",
-      "twoMonthsFree": "2 Monate gratis",
-      "prioritySupport": "Prioritäts-Support",
-      "chooseMonthly": "Monatlich wählen",
-      "subscribeNow": "Jetzt abonnieren"
-    },
-    "payment": {
-      "secure": "Sichere Zahlung per Kreditkarte",
-      "methods": "Visa, Mastercard, American Express - SSL-verschlüsselte Zahlung - PCI-DSS-konform"
-    },
-    "footer": {
-      "questions": "Fragen?",
-      "contactUs": "Kontaktieren Sie uns",
-      "connectedAs": "Angemeldet als {{email}}",
-      "copyright": "Alle Rechte vorbehalten."
-    }
-  },
-  "subscriptionExpired": {
-    "gracePeriod": "Kulanzfrist",
-    "expired": "Abonnement abgelaufen",
-    "titleGrace": "Ihr Abonnement ist abgelaufen",
-    "titleSuspended": "Zugang gesperrt",
-    "descriptionGrace": "Sie haben noch {{days}} Tage Zeit, Ihr Abonnement ohne Dienstunterbrechung zu verlängern.",
-    "descriptionExpired": "Ihr Abonnement ist abgelaufen. Verlängern Sie jetzt, um den Zugang zum KI-Assistenten wiederzuerlangen.",
-    "expirationDate": "Ablaufdatum",
-    "daysAgo": "vor {{count}} Tag",
-    "daysAgo_other": "vor {{count}} Tagen",
-    "gracePeriodActive": "Kulanzfrist aktiv",
-    "daysRemaining": "{{count}} Tage verbleibend zur Verlängerung",
-    "whatYouGet": "Was Sie zurückbekommen",
-    "benefitAI": "Echtzeit-KI-Assistent",
-    "benefitCountries": "Zugang zu Daten aus über 190 Ländern",
-    "benefitSources": "Verifizierte Rechtsquellen",
-    "renewButton": "Mein Abonnement verlängern",
-    "contactSupport": "Support kontaktieren",
-    "signOut": "Abmelden",
-    "connectedAs": "Angemeldet als {{email}}",
-    "copyright": "Alle Rechte vorbehalten."
   }
 }

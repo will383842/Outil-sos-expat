@@ -173,7 +173,7 @@ function ProtectedRoute({ children }: ProtectedRouteProps) {
     // L'abonnement est géré dans SOS, pas dans l'outil IA
     return (
       <BlockedScreen
-        icon="credit-card"
+        icon="lock"
         title={t("guards.subscriptionRequired")}
         description={t("guards.subscriptionManagedOnSos")}
         primaryAction={{

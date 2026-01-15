@@ -162,18 +162,6 @@
     "cancel": "取消",
     "reopenConversation": "重新开启对话"
   },
-  "quotaExhausted": {
-    "title": "使用配额已耗尽",
-    "description": "您已达到本期AI请求限制。请升级订阅以继续使用助手。",
-    "quotaUsage": "配额使用情况",
-    "requestsUsed": "请求已使用",
-    "outOf": "共",
-    "nextRenewal": "下次续期",
-    "increaseQuota": "增加配额",
-    "contactSupport": "联系客服",
-    "signOut": "退出登录",
-    "connectedAs": "已连接为"
-  },
   "messages": {
     "title": "消息",
     "aiResponses": "AI回复",
@@ -234,81 +222,5 @@
     "manageProviders": "管理我的服务商",
     "lawyer": "律师",
     "expatExpert": "外派专家"
-  },
-  "subscriptionScreen": {
-    "header": {
-      "subtitle": "服务商AI助手",
-      "signOut": "退出登录"
-    },
-    "hero": {
-      "badge": "需要订阅",
-      "title": "用AI提升您的咨询服务",
-      "descriptionLawyer": "获取AI法律助手，在咨询过程中实时搜索法律信息。",
-      "descriptionExpat": "即时获取有关移民的实用信息，更好地支持您的客户。"
-    },
-    "benefits": {
-      "aiRealTime": {
-        "title": "实时AI助手",
-        "description": "咨询期间即时法律研究"
-      },
-      "updatedData": {
-        "title": "更新数据",
-        "description": "访问190多个国家的法律信息"
-      },
-      "timeSaving": {
-        "title": "节省时间",
-        "description": "几秒钟内获得准确答案"
-      },
-      "reliableSources": {
-        "title": "可靠来源",
-        "description": "经过验证的法律引用和参考"
-      }
-    },
-    "pricing": {
-      "monthly": "月付",
-      "annual": "年付",
-      "perMonth": "/月",
-      "billedAnnually": "每年收费{{amount}}€",
-      "savings": "节省{{amount}}€",
-      "unlimited": "无限使用AI助手",
-      "noCommitment": "无需承诺",
-      "cancelAnytime": "随时取消",
-      "twoMonthsFree": "免费2个月",
-      "prioritySupport": "优先支持",
-      "chooseMonthly": "选择月付",
-      "subscribeNow": "立即订阅"
-    },
-    "payment": {
-      "secure": "信用卡安全支付",
-      "methods": "Visa, Mastercard, American Express - SSL加密支付 - PCI-DSS合规"
-    },
-    "footer": {
-      "questions": "有问题？",
-      "contactUs": "联系我们",
-      "connectedAs": "登录为 {{email}}",
-      "copyright": "保留所有权利。"
-    }
-  },
-  "subscriptionExpired": {
-    "gracePeriod": "宽限期",
-    "expired": "订阅已过期",
-    "titleGrace": "您的订阅已过期",
-    "titleSuspended": "访问已暂停",
-    "descriptionGrace": "您还有{{days}}天时间续订，不会中断服务。",
-    "descriptionExpired": "您的订阅已过期。立即续订以恢复AI助手访问权限。",
-    "expirationDate": "过期日期",
-    "daysAgo": "{{count}}天前",
-    "daysAgo_other": "{{count}}天前",
-    "gracePeriodActive": "宽限期有效",
-    "daysRemaining": "还有{{count}}天可以续订",
-    "whatYouGet": "您将恢复的功能",
-    "benefitAI": "实时AI助手",
-    "benefitCountries": "访问190多个国家的数据",
-    "benefitSources": "经过验证的法律来源",
-    "renewButton": "续订我的订阅",
-    "contactSupport": "联系支持",
-    "signOut": "退出登录",
-    "connectedAs": "登录为 {{email}}",
-    "copyright": "保留所有权利。"
   }
 }

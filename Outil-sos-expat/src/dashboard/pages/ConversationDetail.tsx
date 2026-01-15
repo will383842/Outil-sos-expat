@@ -1,9 +1,12 @@
 /**
  * =============================================================================
  * PAGE DÉTAIL CONVERSATION — Interface Prestataire
- * Layout optimisé : Infos client à GAUCHE | Chat IA à DROITE
+ * =============================================================================
  *
+ * Design 2026: Modern, clean, light theme
+ * Layout optimisé : Infos client à GAUCHE | Chat IA à DROITE
  * Le trigger Firestore aiOnProviderMessage gère les réponses IA automatiques
+ *
  * =============================================================================
  */
 
@@ -25,11 +28,12 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { db } from "../../lib/firebase";
-import { getMockData, type MockBooking, type MockMessage } from "../components/DevTestTools";
+import { getMockData } from "../components/DevTestTools";
+import { Card, CardContent } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
 import {
   ArrowLeft,
   User,
-  MapPin,
   Calendar,
   Clock,
   CheckCircle,
@@ -46,7 +50,6 @@ import {
   Sparkles,
   RefreshCw,
   PhoneCall,
-  PhoneOff,
   FileText,
   Maximize2,
   Minimize2,
@@ -62,8 +65,6 @@ interface Booking {
   description: string;
   status: "pending" | "in_progress" | "completed" | "cancelled";
   priority?: "low" | "medium" | "high" | "urgent";
-
-  // Client
   clientName?: string;
   clientFirstName?: string;
   clientLastName?: string;
@@ -73,8 +74,6 @@ interface Booking {
   clientCurrentCountry?: string;
   clientNationality?: string;
   clientLanguages?: string[];
-
-  // Prestataire
   providerId?: string;
   providerName?: string;
   providerType?: "lawyer" | "expat";
@@ -82,31 +81,16 @@ interface Booking {
   providerEmail?: string;
   providerPhone?: string;
   providerSpecialties?: string[];
-
-  // Service
   serviceType?: string;
   price?: number;
   duration?: number;
-
-  // IA
   aiProcessed?: boolean;
   aiProcessedAt?: Timestamp;
   aiError?: string;
-
-  // Timestamps
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
   completedAt?: Timestamp;
 }
-
-// =============================================================================
-// CONSTANTES DURÉES CONVERSATION
-// =============================================================================
-
-const CONVERSATION_DURATION_MINUTES = {
-  lawyer: 25,  // 25 minutes pour les avocats
-  expat: 35,   // 35 minutes pour les experts expatriés
-} as const;
 
 interface Message {
   id: string;
@@ -124,7 +108,16 @@ interface Conversation {
 }
 
 // =============================================================================
-// HOOK: CALCUL EXPIRATION CONVERSATION
+// CONSTANTS
+// =============================================================================
+
+const CONVERSATION_DURATION_MINUTES = {
+  lawyer: 25,
+  expat: 35,
+} as const;
+
+// =============================================================================
+// HOOK: CONVERSATION EXPIRATION
 // =============================================================================
 
 function useConversationExpiration(booking: Booking | null) {
@@ -159,7 +152,6 @@ function useConversationExpiration(booking: Booking | null) {
 
     calculateRemaining();
     const interval = setInterval(calculateRemaining, 1000);
-
     return () => clearInterval(interval);
   }, [booking?.aiProcessedAt, booking?.providerType]);
 
@@ -185,7 +177,7 @@ function useConversationExpiration(booking: Booking | null) {
 }
 
 // =============================================================================
-// COMPOSANT CHAT IA (Panneau droit)
+// AI CHAT COMPONENT
 // =============================================================================
 
 function AIChat({
@@ -229,7 +221,6 @@ function AIChat({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading || disabled) return;
-
     const message = input.trim();
     setInput("");
     await onSendMessage(message);
@@ -257,102 +248,89 @@ function AIChat({
     });
   };
 
+  const getTimerColor = () => {
+    if (!remainingTime) return "bg-gray-100 text-gray-600";
+    const minutes = parseInt(remainingTime.split(":")[0]);
+    if (minutes < 5) return "bg-red-100 text-red-700";
+    return "bg-emerald-100 text-emerald-700";
+  };
+
   return (
-    <div className="flex flex-col h-full bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+    <Card className="flex flex-col h-full border-0 shadow-lg overflow-hidden">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-indigo-50 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-white rounded-lg shadow-sm">
-            <Bot className="w-5 h-5 text-purple-600" />
+      <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-violet-50 to-purple-50 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-white rounded-xl shadow-sm">
+            <Bot className="w-6 h-6 text-violet-600" />
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900">{t("aiChat.title")}</h3>
-            <p className="text-xs text-gray-600">{t("aiChat.subtitle")}</p>
+            <h3 className="font-bold text-gray-900 text-lg">{t("aiChat.title")}</h3>
+            <p className="text-sm text-gray-500">{t("aiChat.subtitle")}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {remainingTime && !isExpired && (
-            <div
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium ${
-                remainingTime.startsWith("0") && parseInt(remainingTime.split(":")[0]) < 5
-                  ? "bg-red-100 text-red-700 animate-pulse"
-                  : "bg-green-100 text-green-700"
-              }`}
-            >
+            <div className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold ${getTimerColor()}`}>
               <Timer className="w-4 h-4" />
               <span>{remainingTime}</span>
             </div>
           )}
           {isExpired && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-600">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600">
               <Clock className="w-4 h-4" />
               <span>{t("aiChat.timeElapsed")}</span>
             </div>
           )}
           <button
             onClick={onToggleExpand}
-            className="p-2 hover:bg-white rounded-lg transition-colors"
+            className="p-2 hover:bg-white rounded-xl transition-colors"
             title={isExpanded ? t("common:actions.collapse") : t("common:actions.expand")}
           >
-            {isExpanded ? (
-              <Minimize2 className="w-4 h-4 text-gray-600" />
-            ) : (
-              <Maximize2 className="w-4 h-4 text-gray-600" />
-            )}
+            {isExpanded ? <Minimize2 className="w-5 h-5 text-gray-500" /> : <Maximize2 className="w-5 h-5 text-gray-500" />}
           </button>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+      <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50/50">
         {messages.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Sparkles className="w-8 h-8 text-purple-600" />
+          <div className="text-center py-16">
+            <div className="w-20 h-20 bg-violet-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
+              <Sparkles className="w-10 h-10 text-violet-600" />
             </div>
-            <h4 className="font-medium text-gray-900 mb-2">{t("aiChat.expertTitle")}</h4>
-            <p className="text-sm text-gray-600 max-w-xs mx-auto">{t("aiChat.expertDescription")}</p>
-            <div className="mt-4 flex flex-wrap justify-center gap-2">
-              <span className="px-3 py-1 bg-white border border-gray-200 rounded-full text-xs text-gray-600">
+            <h4 className="font-semibold text-gray-900 text-lg mb-2">{t("aiChat.expertTitle")}</h4>
+            <p className="text-gray-500 max-w-sm mx-auto mb-6">{t("aiChat.expertDescription")}</p>
+            <div className="flex flex-wrap justify-center gap-2">
+              <span className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm text-gray-600 shadow-sm">
                 {t("aiChat.tags.internationalLaw")}
               </span>
-              <span className="px-3 py-1 bg-white border border-gray-200 rounded-full text-xs text-gray-600">
+              <span className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm text-gray-600 shadow-sm">
                 {t("aiChat.tags.expatTax")}
               </span>
-              <span className="px-3 py-1 bg-white border border-gray-200 rounded-full text-xs text-gray-600">
+              <span className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm text-gray-600 shadow-sm">
                 {t("aiChat.tags.immigration")}
               </span>
             </div>
           </div>
         ) : (
           messages.map((message) => {
-            // FIX: Also detect Claude AI messages (source === "claude")
             const isAI = message.source === "gpt" || message.source === "claude" || message.role === "assistant";
             const isError = message.source === "gpt-error";
 
             return (
-              <div
-                key={message.id}
-                className={`flex ${isAI ? "justify-start" : "justify-end"}`}
-              >
+              <div key={message.id} className={`flex ${isAI ? "justify-start" : "justify-end"}`}>
                 <div
-                  className={`max-w-[90%] rounded-2xl px-4 py-3 shadow-sm ${
+                  className={`max-w-[85%] rounded-2xl px-5 py-4 shadow-sm ${
                     isError
                       ? "bg-red-50 border border-red-200"
                       : isAI
                       ? "bg-white border border-gray-200"
-                      : "bg-purple-600 text-white"
+                      : "bg-violet-600 text-white"
                   }`}
                 >
-                  <div className={`flex items-center gap-2 mb-2 ${isAI ? "text-gray-500" : "text-purple-200"}`}>
-                    {isAI ? (
-                      <Bot className="w-4 h-4 text-purple-600" />
-                    ) : (
-                      <User className="w-4 h-4" />
-                    )}
-                    <span className="text-xs font-medium">
-                      {isAI ? t("aiChat.legalAssistant") : t("aiChat.yourQuestion")}
-                    </span>
+                  <div className={`flex items-center gap-2 mb-2 ${isAI ? "text-gray-500" : "text-violet-200"}`}>
+                    {isAI ? <Bot className="w-4 h-4 text-violet-600" /> : <User className="w-4 h-4" />}
+                    <span className="text-xs font-medium">{isAI ? t("aiChat.legalAssistant") : t("aiChat.yourQuestion")}</span>
                     <span className="text-xs opacity-70">{formatTime(message.createdAt)}</span>
                   </div>
 
@@ -361,20 +339,20 @@ function AIChat({
                   </div>
 
                   {isAI && !isError && (
-                    <div className="mt-3 pt-2 border-t border-gray-100 flex justify-end">
+                    <div className="mt-3 pt-3 border-t border-gray-100 flex justify-end">
                       <button
                         onClick={() => copyToClipboard(message.content, message.id)}
-                        className="inline-flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-lg hover:bg-gray-100 transition-colors text-xs text-gray-600"
+                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors text-xs text-gray-500"
                         title={t("aiChat.copyResponse")}
                       >
                         {copiedId === message.id ? (
                           <>
-                            <Check className="w-3.5 h-3.5 text-green-600" />
-                            <span className="text-green-600">{t("common:actions.copied")}</span>
+                            <Check className="w-4 h-4 text-emerald-600" />
+                            <span className="text-emerald-600">{t("common:actions.copied")}</span>
                           </>
                         ) : (
                           <>
-                            <Copy className="w-3.5 h-3.5" />
+                            <Copy className="w-4 h-4" />
                             <span>{t("common:actions.copy")}</span>
                           </>
                         )}
@@ -389,12 +367,12 @@ function AIChat({
 
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3 shadow-sm">
+            <div className="bg-white border border-gray-200 rounded-2xl px-5 py-4 shadow-sm">
               <div className="flex items-center gap-3">
-                <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                <div className="flex space-x-1.5">
+                  <div className="w-2.5 h-2.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <div className="w-2.5 h-2.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <div className="w-2.5 h-2.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
                 </div>
                 <span className="text-sm text-gray-600">{t("aiChat.analyzing")}</span>
               </div>
@@ -406,13 +384,11 @@ function AIChat({
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t border-gray-200 bg-white">
+      <div className="p-5 border-t border-gray-100 bg-white">
         {disabled ? (
-          <div className="bg-gray-100 rounded-xl p-4 text-center">
-            <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
-            <p className="font-medium text-gray-700">
-              {disabledReason || t("dossierDetail.conversationClosed")}
-            </p>
+          <div className="bg-gray-50 rounded-2xl p-6 text-center">
+            <CheckCircle className="w-10 h-10 text-emerald-500 mx-auto mb-3" />
+            <p className="font-semibold text-gray-700">{disabledReason || t("dossierDetail.conversationClosed")}</p>
             <p className="text-sm text-gray-500 mt-1">{t("dossierDetail.historyAvailable")}</p>
           </div>
         ) : (
@@ -427,33 +403,33 @@ function AIChat({
                 disabled={isLoading}
                 rows={1}
                 enterKeyHint="send"
-                className="flex-1 px-4 py-3 border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 text-base"
+                className="flex-1 px-5 py-4 border border-gray-200 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent disabled:opacity-50 text-base bg-gray-50"
               />
-              <button
+              <Button
                 type="submit"
                 disabled={!input.trim() || isLoading}
-                className="px-5 py-3 min-h-[48px] min-w-[48px] bg-purple-600 text-white rounded-xl hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                className="px-6 py-4 h-auto min-h-[56px] bg-violet-600 hover:bg-violet-700 text-white rounded-2xl shadow-lg shadow-violet-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <>
                     <Send className="w-5 h-5" />
-                    <span className="hidden sm:inline">{t("common:actions.send")}</span>
+                    <span className="hidden sm:inline ml-2">{t("common:actions.send")}</span>
                   </>
                 )}
-              </button>
+              </Button>
             </form>
-            <p className="text-xs text-gray-500 mt-2 text-center">{t("aiChat.keyboardHint")}</p>
+            <p className="text-xs text-gray-400 mt-3 text-center">{t("aiChat.keyboardHint")}</p>
           </>
         )}
       </div>
-    </div>
+    </Card>
   );
 }
 
 // =============================================================================
-// PANNEAU INFOS CLIENT (Gauche)
+// CLIENT INFO PANEL
 // =============================================================================
 
 function ClientInfoPanel({
@@ -482,180 +458,188 @@ function ClientInfoPanel({
     });
   };
 
+  const getTimerBg = () => {
+    if (isExpired) return "bg-gray-50 border-gray-200";
+    if (remainingTime && parseInt(remainingTime.split(":")[0]) < 5) return "bg-red-50 border-red-200";
+    return "bg-emerald-50 border-emerald-200";
+  };
+
   return (
     <div className="space-y-4 overflow-y-auto">
-      {/* Statut de la conversation */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <div className="flex items-center justify-between mb-4">
-          {!booking.aiProcessedAt ? (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border bg-amber-100 text-amber-800 border-amber-200">
-              <Clock className="w-4 h-4" />
-              {t("clientInfo.waitingAI")}
-            </span>
-          ) : isExpired ? (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border bg-gray-100 text-gray-800 border-gray-200">
-              <CheckCircle className="w-4 h-4" />
-              {t("clientInfo.archived")}
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border bg-green-100 text-green-800 border-green-200">
-              <PhoneCall className="w-4 h-4" />
-              {t("clientInfo.activeConsultation")}
-            </span>
-          )}
-          <span
-            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-              isLawyer ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"
-            }`}
-          >
-            {isLawyer ? <Scale className="w-3 h-3" /> : <Globe className="w-3 h-3" />}
-            {isLawyer ? t("common:types.lawyer") : t("common:types.expert")}
-          </span>
-        </div>
-
-        {/* Timer */}
-        {booking.aiProcessedAt && (
-          <div className={`rounded-lg p-3 text-center ${
-            isExpired
-              ? "bg-gray-50 border border-gray-200"
-              : remainingTime && parseInt(remainingTime.split(":")[0]) < 5
-              ? "bg-red-50 border border-red-200"
-              : "bg-green-50 border border-green-200"
-          }`}>
-            {isExpired ? (
-              <>
-                <Timer className="w-5 h-5 text-gray-400 mx-auto mb-1" />
-                <p className="text-sm font-medium text-gray-600">{t("dossierDetail.consultationTimeElapsed")}</p>
-                <p className="text-xs text-gray-500 mt-1">{t("clientInfo.duration", { minutes: durationMinutes })}</p>
-              </>
+      {/* Status Card */}
+      <Card className="border-0 shadow-sm">
+        <CardContent className="p-5">
+          <div className="flex items-center justify-between mb-4">
+            {!booking.aiProcessedAt ? (
+              <span className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold bg-amber-100 text-amber-800">
+                <Clock className="w-4 h-4" />
+                {t("clientInfo.waitingAI")}
+              </span>
+            ) : isExpired ? (
+              <span className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold bg-gray-100 text-gray-700">
+                <CheckCircle className="w-4 h-4" />
+                {t("clientInfo.archived")}
+              </span>
             ) : (
-              <>
-                <Timer className={`w-5 h-5 mx-auto mb-1 ${
-                  remainingTime && parseInt(remainingTime.split(":")[0]) < 5 ? "text-red-500" : "text-green-600"
-                }`} />
-                <p className={`text-2xl font-bold ${
-                  remainingTime && parseInt(remainingTime.split(":")[0]) < 5 ? "text-red-600" : "text-green-700"
-                }`}>
-                  {remainingTime}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">{t("clientInfo.timeRemaining", { minutes: durationMinutes })}</p>
-              </>
+              <span className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold bg-emerald-100 text-emerald-800">
+                <PhoneCall className="w-4 h-4" />
+                {t("clientInfo.activeConsultation")}
+              </span>
             )}
-          </div>
-        )}
-
-        <p className="text-xs text-gray-500 mt-3 text-center">
-          {isExpired
-            ? t("clientInfo.historyAvailable")
-            : booking.aiProcessedAt
-            ? t("dossierDetail.autoLockWarning")
-            : t("dossierDetail.startAfterFirstResponse")
-          }
-        </p>
-      </div>
-
-      {/* Infos Client */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2 text-sm">
-          <User className="w-4 h-4 text-red-600" />
-          {t("clientInfo.client")}
-        </h3>
-
-        <div className="space-y-3 text-sm">
-          <div>
-            <span className="text-xs text-gray-500 uppercase tracking-wide">{t("clientInfo.name")}</span>
-            <p className="font-medium text-gray-900">
-              {booking.clientFirstName} {(booking.clientLastName || booking.clientName || "").charAt(0).toUpperCase()}.
-            </p>
+            <span
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${
+                isLawyer ? "bg-blue-100 text-blue-800" : "bg-emerald-100 text-emerald-800"
+              }`}
+            >
+              {isLawyer ? <Scale className="w-3.5 h-3.5" /> : <Globe className="w-3.5 h-3.5" />}
+              {isLawyer ? t("common:types.lawyer") : t("common:types.expert")}
+            </span>
           </div>
 
-          {booking.clientNationality && (
+          {/* Timer */}
+          {booking.aiProcessedAt && (
+            <div className={`rounded-2xl p-5 text-center border ${getTimerBg()}`}>
+              {isExpired ? (
+                <>
+                  <Timer className="w-6 h-6 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm font-medium text-gray-600">{t("dossierDetail.consultationTimeElapsed")}</p>
+                  <p className="text-xs text-gray-500 mt-1">{t("clientInfo.duration", { minutes: durationMinutes })}</p>
+                </>
+              ) : (
+                <>
+                  <Timer className={`w-6 h-6 mx-auto mb-2 ${
+                    remainingTime && parseInt(remainingTime.split(":")[0]) < 5 ? "text-red-500" : "text-emerald-600"
+                  }`} />
+                  <p className={`text-4xl font-bold tracking-tight ${
+                    remainingTime && parseInt(remainingTime.split(":")[0]) < 5 ? "text-red-600" : "text-emerald-700"
+                  }`}>
+                    {remainingTime}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-2">{t("clientInfo.timeRemaining", { minutes: durationMinutes })}</p>
+                </>
+              )}
+            </div>
+          )}
+
+          <p className="text-xs text-gray-400 mt-4 text-center">
+            {isExpired
+              ? t("clientInfo.historyAvailable")
+              : booking.aiProcessedAt
+              ? t("dossierDetail.autoLockWarning")
+              : t("dossierDetail.startAfterFirstResponse")}
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Client Info */}
+      <Card className="border-0 shadow-sm">
+        <CardContent className="p-5">
+          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="p-2 bg-red-100 rounded-lg">
+              <User className="w-4 h-4 text-red-600" />
+            </div>
+            {t("clientInfo.client")}
+          </h3>
+
+          <div className="space-y-4">
             <div>
-              <span className="text-xs text-gray-500 uppercase tracking-wide">{t("clientInfo.nationality")}</span>
-              <p className="font-medium text-gray-900 flex items-center gap-2">
-                <Flag className="w-4 h-4 text-gray-400" />
-                {booking.clientNationality}
+              <span className="text-xs text-gray-500 uppercase tracking-wide font-medium">{t("clientInfo.name")}</span>
+              <p className="font-semibold text-gray-900 text-lg mt-0.5">
+                {booking.clientFirstName} {(booking.clientLastName || booking.clientName || "").charAt(0).toUpperCase()}.
               </p>
             </div>
-          )}
 
-          {booking.clientCurrentCountry && (
-            <div className="bg-red-50 -mx-4 px-4 py-3 border-y border-red-100">
-              <span className="text-xs text-red-600 uppercase tracking-wide font-medium">
-                {t("clientInfo.interventionCountry")}
-              </span>
-              <p className="font-bold text-red-700 text-lg">{booking.clientCurrentCountry}</p>
+            {booking.clientNationality && (
+              <div>
+                <span className="text-xs text-gray-500 uppercase tracking-wide font-medium">{t("clientInfo.nationality")}</span>
+                <p className="font-medium text-gray-900 flex items-center gap-2 mt-0.5">
+                  <Flag className="w-4 h-4 text-gray-400" />
+                  {booking.clientNationality}
+                </p>
+              </div>
+            )}
+
+            {booking.clientCurrentCountry && (
+              <div className="bg-red-50 -mx-5 px-5 py-4 border-y border-red-100">
+                <span className="text-xs text-red-600 uppercase tracking-wide font-bold">
+                  {t("clientInfo.interventionCountry")}
+                </span>
+                <p className="font-bold text-red-700 text-xl mt-1">{booking.clientCurrentCountry}</p>
+              </div>
+            )}
+
+            {booking.clientLanguages && booking.clientLanguages.length > 0 && (
+              <div>
+                <span className="text-xs text-gray-500 uppercase tracking-wide font-medium">{t("clientInfo.languages")}</span>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {booking.clientLanguages.map((lang) => (
+                    <span key={lang} className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full font-medium">
+                      {lang.toUpperCase()}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Request Info */}
+      <Card className="border-0 shadow-sm">
+        <CardContent className="p-5">
+          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="p-2 bg-red-100 rounded-lg">
+              <FileText className="w-4 h-4 text-red-600" />
             </div>
-          )}
+            {t("clientInfo.request")}
+          </h3>
 
-          {booking.clientLanguages && booking.clientLanguages.length > 0 && (
+          <div className="space-y-4">
             <div>
-              <span className="text-xs text-gray-500 uppercase tracking-wide">{t("clientInfo.languages")}</span>
-              <div className="flex flex-wrap gap-1 mt-1">
-                {booking.clientLanguages.map((lang) => (
-                  <span
-                    key={lang}
-                    className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded-full font-medium"
-                  >
-                    {lang.toUpperCase()}
-                  </span>
-                ))}
+              <span className="text-xs text-gray-500 uppercase tracking-wide font-medium">{t("clientInfo.title")}</span>
+              <p className="font-semibold text-gray-900 mt-0.5">{booking.title || t("dossiers.noTitle")}</p>
+            </div>
+
+            <div>
+              <span className="text-xs text-gray-500 uppercase tracking-wide font-medium">{t("clientInfo.description")}</span>
+              <div className="mt-2 p-4 bg-gray-50 rounded-xl text-sm text-gray-700 whitespace-pre-wrap max-h-48 overflow-y-auto">
+                {booking.description || t("dossiers.noDescription")}
               </div>
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* Demande du client */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2 text-sm">
-          <FileText className="w-4 h-4 text-red-600" />
-          {t("clientInfo.request")}
-        </h3>
-
-        <div className="space-y-3">
-          <div>
-            <span className="text-xs text-gray-500 uppercase tracking-wide">{t("clientInfo.title")}</span>
-            <p className="font-medium text-gray-900">{booking.title || t("dossiers.noTitle")}</p>
           </div>
+        </CardContent>
+      </Card>
 
-          <div>
-            <span className="text-xs text-gray-500 uppercase tracking-wide">{t("clientInfo.description")}</span>
-            <div className="mt-1 p-3 bg-gray-50 rounded-lg text-sm text-gray-700 whitespace-pre-wrap max-h-48 overflow-y-auto">
-              {booking.description || t("dossiers.noDescription")}
+      {/* Service Info */}
+      <Card className="border-0 shadow-sm">
+        <CardContent className="p-5">
+          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="p-2 bg-red-100 rounded-lg">
+              <Timer className="w-4 h-4 text-red-600" />
             </div>
-          </div>
-        </div>
-      </div>
+            {t("clientInfo.service")}
+          </h3>
 
-      {/* Infos service */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2 text-sm">
-          <Timer className="w-4 h-4 text-red-600" />
-          {t("clientInfo.service")}
-        </h3>
+          {booking.duration && (
+            <div className="bg-gray-50 rounded-xl p-4 text-center mb-4">
+              <Clock className="w-6 h-6 text-gray-400 mx-auto mb-2" />
+              <span className="font-bold text-gray-900 text-2xl">{booking.duration} min</span>
+              <p className="text-xs text-gray-500 mt-1">{t("dossierDetail.consultationDuration")}</p>
+            </div>
+          )}
 
-        {booking.duration && (
-          <div className="bg-gray-50 rounded-lg p-3 text-center mb-3">
-            <Clock className="w-5 h-5 text-gray-400 mx-auto mb-1" />
-            <span className="font-bold text-gray-900 text-lg">{booking.duration} min</span>
-            <p className="text-xs text-gray-500">{t("dossierDetail.consultationDuration")}</p>
-          </div>
-        )}
-
-        <div className="text-xs text-gray-500">
-          <div className="flex items-center gap-1">
-            <Calendar className="w-3.5 h-3.5" />
+          <div className="text-sm text-gray-500 flex items-center gap-2">
+            <Calendar className="w-4 h-4" />
             {t("clientInfo.createdOn")} {formatDate(booking.createdAt)}
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
 
 // =============================================================================
-// PAGE PRINCIPALE
+// MAIN COMPONENT
 // =============================================================================
 
 export default function ConversationDetail() {
@@ -674,24 +658,18 @@ export default function ConversationDetail() {
   const [chatExpanded, setChatExpanded] = useState(false);
 
   const { isExpired, formattedTime, durationMinutes } = useConversationExpiration(booking);
-
-  // Mode mock activé UNIQUEMENT avec ?dev=true dans l'URL
   const isDevMock = new URLSearchParams(window.location.search).get("dev") === "true";
 
-  // Charger le booking
+  // Load booking
   useEffect(() => {
     if (!id) return;
 
     const loadBooking = async () => {
-      // En mode mock avec un bookingId mock, utiliser les données mock
       if (isDevMock && id.startsWith("booking-")) {
         const mockData = getMockData();
         const mockBooking = mockData.bookings.find((b) => b.id === id);
 
         if (mockBooking) {
-          // Trouver la conversation associée
-          const mockConv = mockData.conversations.find((c) => c.bookingId === id);
-
           setBooking({
             ...mockBooking,
             createdAt: { toDate: () => mockBooking.createdAt, toMillis: () => mockBooking.createdAt.getTime() } as unknown as Timestamp,
@@ -711,7 +689,6 @@ export default function ConversationDetail() {
         if (docSnap.exists()) {
           const bookingData = { id: docSnap.id, ...docSnap.data() } as Booking;
 
-          // Vérification accès
           if (!isAdmin && bookingData.providerId) {
             const hasAccess = linkedProviders.some(p => p.id === bookingData.providerId) ||
                               activeProvider?.id === bookingData.providerId;
@@ -738,14 +715,13 @@ export default function ConversationDetail() {
     loadBooking();
   }, [id, isAdmin, activeProvider?.id, linkedProviders, t, isDevMock]);
 
-  // Charger la conversation
+  // Load conversation
   useEffect(() => {
     if (!id || !booking) return;
 
     let unsubMessages: (() => void) | null = null;
 
     const loadConversation = async () => {
-      // En mode mock avec un bookingId mock, utiliser les données mock
       if (isDevMock && id.startsWith("booking-")) {
         const mockData = getMockData();
         const mockConv = mockData.conversations.find((c) => c.bookingId === id);
@@ -758,7 +734,6 @@ export default function ConversationDetail() {
             status: mockConv.status,
           });
 
-          // Charger les messages mock
           const mockMsgs = mockData.messages[mockConv.id] || [];
           setMessages(
             mockMsgs.map((m) => ({
@@ -767,23 +742,14 @@ export default function ConversationDetail() {
             })) as unknown as Message[]
           );
         } else {
-          // Créer une conversation mock vide
           const convId = `conv-${Date.now()}`;
-          setConversation({
-            id: convId,
-            bookingId: id,
-            providerId: booking.providerId,
-          });
+          setConversation({ id: convId, bookingId: id, providerId: booking.providerId });
           setMessages([]);
         }
         return;
       }
 
-      const convQuery = query(
-        collection(db, "conversations"),
-        where("bookingId", "==", id)
-      );
-
+      const convQuery = query(collection(db, "conversations"), where("bookingId", "==", id));
       const convSnapshot = await getDocs(convQuery);
 
       let convId: string;
@@ -802,44 +768,30 @@ export default function ConversationDetail() {
           updatedAt: serverTimestamp(),
         });
         convId = newConvRef.id;
-        setConversation({
-          id: convId,
-          bookingId: id,
-          providerId: booking.providerId,
-        });
+        setConversation({ id: convId, bookingId: id, providerId: booking.providerId });
       }
 
-      // Écouter les messages
       const messagesQuery = query(
         collection(db, "conversations", convId, "messages"),
         orderBy("createdAt", "asc")
       );
 
       unsubMessages = onSnapshot(messagesQuery, (msgSnapshot) => {
-        const msgs = msgSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as Message[];
+        const msgs = msgSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Message[];
         setMessages(msgs);
 
         const lastMsg = msgs[msgs.length - 1];
-        // FIX: Also detect Claude AI messages for loading state
         if (lastMsg?.source === "gpt" || lastMsg?.source === "gpt-error" || lastMsg?.source === "claude") {
           setAiLoading(false);
         }
       });
     };
 
-    loadConversation().catch((err) => {
-      console.error("Erreur chargement conversation:", err);
-    });
-
-    return () => {
-      if (unsubMessages) unsubMessages();
-    };
+    loadConversation().catch(console.error);
+    return () => { if (unsubMessages) unsubMessages(); };
   }, [id, booking, isDevMock]);
 
-  // Envoyer un message
+  // Send message
   const handleSendMessage = useCallback(async (message: string) => {
     if (!conversation?.id || !booking) return;
 
@@ -872,9 +824,9 @@ export default function ConversationDetail() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-200px)]">
-        <div className="flex items-center gap-3 text-gray-600">
-          <RefreshCw className="w-5 h-5 animate-spin" />
-          <span>{t("page.loadingDossier")}</span>
+        <div className="text-center">
+          <RefreshCw className="w-8 h-8 text-gray-400 animate-spin mx-auto mb-3" />
+          <span className="text-gray-600">{t("page.loadingDossier")}</span>
         </div>
       </div>
     );
@@ -882,50 +834,45 @@ export default function ConversationDetail() {
 
   if (error || !booking) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-        <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-3" />
-        <h3 className="text-lg font-medium text-red-800 mb-1">
-          {error || t("dossierDetail.notFound")}
-        </h3>
-        <button
-          onClick={() => navigate("/dashboard")}
-          className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-        >
-          {t("page.backToDossiers")}
-        </button>
-      </div>
+      <Card className="border-0 shadow-lg bg-red-50 max-w-md mx-auto mt-12">
+        <CardContent className="p-8 text-center">
+          <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-red-800 mb-2">{error || t("dossierDetail.notFound")}</h3>
+          <Button onClick={() => navigate("/dashboard")} className="mt-4 bg-red-600 hover:bg-red-700 text-white">
+            {t("page.backToDossiers")}
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="h-[calc(100vh-120px)] flex flex-col">
+    <div className="h-[calc(100vh-120px)] flex flex-col px-4 py-6">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-4">
+      <div className="flex items-center gap-4 mb-6">
         <button
           onClick={() => navigate("/dashboard")}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          className="p-3 hover:bg-gray-100 rounded-xl transition-colors"
         >
           <ArrowLeft className="w-5 h-5 text-gray-600" />
         </button>
         <div className="flex-1 min-w-0">
-          <h1 className="text-lg font-bold text-gray-900 truncate">
-            {booking.title || t("dossiers.noTitle")}
-          </h1>
+          <h1 className="text-xl font-bold text-gray-900 truncate">{booking.title || t("dossiers.noTitle")}</h1>
         </div>
         {booking.aiProcessed && (
-          <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">
-            <Sparkles className="w-3 h-3" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-violet-100 text-violet-700 rounded-full text-sm font-semibold">
+            <Sparkles className="w-4 h-4" />
             {t("page.aiActive")}
           </span>
         )}
       </div>
 
-      {/* Layout : Gauche (infos) | Droite (chat) */}
-      <div className={`flex-1 grid gap-4 min-h-0 ${chatExpanded ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-3"}`}>
-        {/* Panneau gauche */}
+      {/* Layout: Left (info) | Right (chat) */}
+      <div className={`flex-1 grid gap-6 min-h-0 ${chatExpanded ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-3"}`}>
+        {/* Left Panel */}
         {!chatExpanded && (
           <div className="lg:col-span-1 overflow-hidden">
-            <div className="sticky top-4">
+            <div className="sticky top-0">
               <ClientInfoPanel
                 booking={booking}
                 isExpired={isExpired}
@@ -936,7 +883,7 @@ export default function ConversationDetail() {
           </div>
         )}
 
-        {/* Panneau droit - Chat IA */}
+        {/* Right Panel - AI Chat */}
         <div className={chatExpanded ? "col-span-1" : "lg:col-span-2"}>
           {conversation ? (
             <AIChat
@@ -946,21 +893,17 @@ export default function ConversationDetail() {
               isExpanded={chatExpanded}
               onToggleExpand={() => setChatExpanded(!chatExpanded)}
               disabled={isExpired}
-              disabledReason={
-                isExpired
-                  ? t("page.consultationExpiredMessage", { minutes: durationMinutes })
-                  : undefined
-              }
+              disabledReason={isExpired ? t("page.consultationExpiredMessage", { minutes: durationMinutes }) : undefined}
               remainingTime={formattedTime}
               isExpired={isExpired}
             />
           ) : (
-            <div className="h-full flex items-center justify-center bg-gray-50 rounded-xl border border-gray-200">
+            <Card className="h-full flex items-center justify-center border-0 shadow-lg bg-gray-50">
               <div className="text-center">
-                <Loader2 className="w-8 h-8 text-gray-400 animate-spin mx-auto mb-2" />
+                <Loader2 className="w-10 h-10 text-gray-400 animate-spin mx-auto mb-3" />
                 <p className="text-gray-500">{t("page.initializingChat")}</p>
               </div>
-            </div>
+            </Card>
           )}
         </div>
       </div>

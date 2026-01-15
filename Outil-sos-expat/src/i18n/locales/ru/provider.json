@@ -162,18 +162,6 @@
     "cancel": "Отменить",
     "reopenConversation": "Возобновить разговор"
   },
-  "quotaExhausted": {
-    "title": "Квота исчерпана",
-    "description": "Вы достигли лимита запросов ИИ за этот период. Обновите подписку для продолжения использования ассистента.",
-    "quotaUsage": "Использование квоты",
-    "requestsUsed": "запросов использовано",
-    "outOf": "из",
-    "nextRenewal": "Следующее обновление",
-    "increaseQuota": "Увеличить квоту",
-    "contactSupport": "Связаться с поддержкой",
-    "signOut": "Выйти",
-    "connectedAs": "Подключён как"
-  },
   "messages": {
     "title": "Сообщения",
     "aiResponses": "ответов ИИ",
@@ -234,81 +222,5 @@
     "manageProviders": "Управление провайдерами",
     "lawyer": "Юрист",
     "expatExpert": "Эксперт по экспатриации"
-  },
-  "subscriptionScreen": {
-    "header": {
-      "subtitle": "ИИ-ассистент для провайдеров",
-      "signOut": "Выйти"
-    },
-    "hero": {
-      "badge": "Требуется подписка",
-      "title": "Улучшите консультации с помощью ИИ",
-      "descriptionLawyer": "Получите доступ к ИИ-юридическому ассистенту, который ищет правовую информацию в режиме реального времени во время консультаций.",
-      "descriptionExpat": "Мгновенно получайте практическую информацию об эмиграции для лучшей поддержки клиентов."
-    },
-    "benefits": {
-      "aiRealTime": {
-        "title": "ИИ-ассистент в реальном времени",
-        "description": "Мгновенный юридический поиск во время консультаций"
-      },
-      "updatedData": {
-        "title": "Актуальные данные",
-        "description": "Доступ к правовой информации из более чем 190 стран"
-      },
-      "timeSaving": {
-        "title": "Экономия времени",
-        "description": "Точные ответы за секунды"
-      },
-      "reliableSources": {
-        "title": "Надежные источники",
-        "description": "Проверенные юридические цитаты и ссылки"
-      }
-    },
-    "pricing": {
-      "monthly": "Ежемесячно",
-      "annual": "Ежегодно",
-      "perMonth": "/месяц",
-      "billedAnnually": "Оплата {{amount}}€/год",
-      "savings": "ЭКОНОМИЯ {{amount}}€",
-      "unlimited": "Неограниченный доступ к ИИ-ассистенту",
-      "noCommitment": "Без обязательств",
-      "cancelAnytime": "Отмена в любое время",
-      "twoMonthsFree": "2 месяца бесплатно",
-      "prioritySupport": "Приоритетная поддержка",
-      "chooseMonthly": "Выбрать ежемесячную",
-      "subscribeNow": "Подписаться сейчас"
-    },
-    "payment": {
-      "secure": "Безопасная оплата картой",
-      "methods": "Visa, Mastercard, American Express - SSL-шифрование - Соответствие PCI-DSS"
-    },
-    "footer": {
-      "questions": "Вопросы?",
-      "contactUs": "Свяжитесь с нами",
-      "connectedAs": "Подключен как {{email}}",
-      "copyright": "Все права защищены."
-    }
-  },
-  "subscriptionExpired": {
-    "gracePeriod": "Льготный период",
-    "expired": "Подписка истекла",
-    "titleGrace": "Ваша подписка истекла",
-    "titleSuspended": "Доступ приостановлен",
-    "descriptionGrace": "У вас есть еще {{days}} дней для продления подписки без прерывания сервиса.",
-    "descriptionExpired": "Ваша подписка истекла. Продлите сейчас, чтобы восстановить доступ к ИИ-ассистенту.",
-    "expirationDate": "Дата истечения",
-    "daysAgo": "{{count}} день назад",
-    "daysAgo_other": "{{count}} дней назад",
-    "gracePeriodActive": "Льготный период активен",
-    "daysRemaining": "{{count}} дней осталось для продления",
-    "whatYouGet": "Что вы получите обратно",
-    "benefitAI": "ИИ-ассистент в реальном времени",
-    "benefitCountries": "Доступ к данным из более чем 190 стран",
-    "benefitSources": "Проверенные юридические источники",
-    "renewButton": "Продлить подписку",
-    "contactSupport": "Связаться с поддержкой",
-    "signOut": "Выйти",
-    "connectedAs": "Подключен как {{email}}",
-    "copyright": "Все права защищены."
   }
 }

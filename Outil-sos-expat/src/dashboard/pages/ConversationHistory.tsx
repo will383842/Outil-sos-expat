@@ -290,11 +290,12 @@ export default function ConversationHistory() {
       setError(null);
 
       try {
+        // Optimisé: utiliser "in" au lieu de "!=" pour réduire les coûts Firestore
+        // "!=" scanne toute la collection, "in" ne lit que les docs correspondants
         let q = query(
           collection(db, "conversations"),
           where("providerId", "==", activeProvider.id),
-          where("status", "!=", "active"),
-          orderBy("status"),
+          where("status", "in", ["completed", "archived", "cancelled"]),
           orderBy("updatedAt", "desc"),
           limit(PAGE_SIZE)
         );
@@ -326,11 +327,11 @@ export default function ConversationHistory() {
     setLoadingMore(true);
 
     try {
+      // Optimisé: utiliser "in" au lieu de "!=" pour réduire les coûts Firestore
       let q = query(
         collection(db, "conversations"),
         where("providerId", "==", activeProvider.id),
-        where("status", "!=", "active"),
-        orderBy("status"),
+        where("status", "in", ["completed", "archived", "cancelled"]),
         orderBy("updatedAt", "desc"),
         startAfter(lastDoc),
         limit(PAGE_SIZE)

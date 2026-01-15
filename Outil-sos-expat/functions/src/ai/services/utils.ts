@@ -1101,9 +1101,10 @@ export async function buildConversationHistory(
   let history: LLMMessage[] = [];
 
   // Si peu de messages, tout récupérer
+  // FIX: Use 'createdAt' instead of 'timestamp' - messages are saved with createdAt field
   if (totalMessages <= maxMessages) {
     const allMsgsSnap = await messagesRef
-      .orderBy("timestamp", "asc")
+      .orderBy("createdAt", "asc")
       .get();
 
     history = allMsgsSnap.docs.map(doc => {
@@ -1117,8 +1118,9 @@ export async function buildConversationHistory(
     // Conversation longue: premiers messages + résumé + récents
 
     // 1. Récupérer les PREMIERS messages (contexte booking)
+    // FIX: Use 'createdAt' instead of 'timestamp'
     const firstMsgsSnap = await messagesRef
-      .orderBy("timestamp", "asc")
+      .orderBy("createdAt", "asc")
       .limit(keepFirstMessages)
       .get();
 
@@ -1131,9 +1133,10 @@ export async function buildConversationHistory(
     });
 
     // 2. Récupérer les messages RÉCENTS
+    // FIX: Use 'createdAt' instead of 'timestamp'
     const recentCount = maxMessages - keepFirstMessages - 1; // -1 pour le résumé
     const recentMsgsSnap = await messagesRef
-      .orderBy("timestamp", "desc")
+      .orderBy("createdAt", "desc")
       .limit(recentCount)
       .get();
 

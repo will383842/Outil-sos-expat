@@ -30,8 +30,7 @@ export {
   type Message,
 } from "./useFirestoreQuery";
 
-// Hooks d'abonnement
-export { useSubscription, useRequireSubscription, useExpirationAlert } from "./useSubscription";
+// Note: useSubscription est maintenant fourni par UnifiedUserContext
 
 // Hooks de configuration
 export { useCountryConfig } from "./useCountryConfig";

@@ -164,18 +164,6 @@
     "cancel": "Annuler",
     "reopenConversation": "Réouvrir la conversation"
   },
-  "quotaExhausted": {
-    "title": "Quota d'utilisation épuisé",
-    "description": "Vous avez atteint la limite de requêtes IA pour cette période. Mettez à niveau votre abonnement pour continuer à utiliser l'assistant.",
-    "quotaUsage": "Utilisation du quota",
-    "requestsUsed": "requêtes utilisées",
-    "outOf": "sur",
-    "nextRenewal": "Prochain renouvellement",
-    "increaseQuota": "Augmenter mon quota",
-    "contactSupport": "Contacter le support",
-    "signOut": "Se déconnecter",
-    "connectedAs": "Connecté en tant que"
-  },
   "messages": {
     "title": "Messages",
     "aiResponses": "réponses IA",
@@ -236,60 +224,6 @@
     "manageProviders": "Gérer mes prestataires",
     "lawyer": "Avocat",
     "expatExpert": "Expert expatrié"
-  },
-  "subscriptionScreen": {
-    "header": {
-      "subtitle": "Assistant IA pour prestataires",
-      "signOut": "Se déconnecter"
-    },
-    "hero": {
-      "badge": "Abonnement requis",
-      "title": "Boostez vos consultations avec l'IA",
-      "descriptionLawyer": "Accédez à un assistant juridique IA qui recherche en temps réel les informations légales dont vous avez besoin pendant vos consultations.",
-      "descriptionExpat": "Obtenez instantanément les informations pratiques sur l'expatriation pour mieux accompagner vos clients."
-    },
-    "benefits": {
-      "aiRealTime": {
-        "title": "Assistant IA en temps réel",
-        "description": "Recherche juridique instantanée pendant vos consultations"
-      },
-      "updatedData": {
-        "title": "Données actualisées",
-        "description": "Accès aux informations légales de 190+ pays"
-      },
-      "timeSaving": {
-        "title": "Gain de temps",
-        "description": "Réponses précises en quelques secondes"
-      },
-      "reliableSources": {
-        "title": "Sources fiables",
-        "description": "Citations et références juridiques vérifiées"
-      }
-    },
-    "pricing": {
-      "monthly": "Mensuel",
-      "annual": "Annuel",
-      "perMonth": "/mois",
-      "billedAnnually": "Facturé {{amount}}€/an",
-      "savings": "ÉCONOMISEZ {{amount}}€",
-      "unlimited": "Accès illimité à l'assistant IA",
-      "noCommitment": "Sans engagement",
-      "cancelAnytime": "Résiliable à tout moment",
-      "twoMonthsFree": "2 mois offerts",
-      "prioritySupport": "Support prioritaire",
-      "chooseMonthly": "Choisir mensuel",
-      "subscribeNow": "S'abonner maintenant"
-    },
-    "payment": {
-      "secure": "Paiement sécurisé par carte bancaire",
-      "methods": "Visa, Mastercard, American Express - Paiement crypté SSL - Conformité PCI-DSS"
-    },
-    "footer": {
-      "questions": "Des questions ?",
-      "contactUs": "Contactez-nous",
-      "connectedAs": "Connecté en tant que {{email}}",
-      "copyright": "Tous droits réservés."
-    }
   },
   "home": {
     "noActiveConversation": "Aucune conversation active",
@@ -398,27 +332,5 @@
     "inactiveAccount": "Compte inactif",
     "readyForClients": "Prêt à recevoir des clients",
     "notSet": "Non renseigné"
-  },
-  "subscriptionExpired": {
-    "gracePeriod": "Période de grâce",
-    "expired": "Abonnement expiré",
-    "titleGrace": "Votre abonnement a expiré",
-    "titleSuspended": "Accès suspendu",
-    "descriptionGrace": "Vous disposez encore de {{days}} jours pour renouveler votre abonnement sans interruption de service.",
-    "descriptionExpired": "Votre abonnement a expiré. Renouvelez maintenant pour retrouver l'accès à l'assistant IA.",
-    "expirationDate": "Date d'expiration",
-    "daysAgo": "il y a {{count}} jour",
-    "daysAgo_other": "il y a {{count}} jours",
-    "gracePeriodActive": "Période de grâce active",
-    "daysRemaining": "{{count}} jours restants pour renouveler",
-    "whatYouGet": "Ce que vous retrouverez",
-    "benefitAI": "Assistant IA en temps réel",
-    "benefitCountries": "Accès aux données de 190+ pays",
-    "benefitSources": "Sources juridiques vérifiées",
-    "renewButton": "Renouveler mon abonnement",
-    "contactSupport": "Contacter le support",
-    "signOut": "Se déconnecter",
-    "connectedAs": "Connecté en tant que {{email}}",
-    "copyright": "Tous droits réservés."
   }
 }

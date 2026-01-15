@@ -162,18 +162,6 @@
     "cancel": "Cancelar",
     "reopenConversation": "Reabrir conversa"
   },
-  "quotaExhausted": {
-    "title": "Quota de utilizacao esgotada",
-    "description": "Atingiu o limite de pedidos de IA para este periodo. Melhore a sua subscricao para continuar a usar o assistente.",
-    "quotaUsage": "Utilizacao da quota",
-    "requestsUsed": "pedidos utilizados",
-    "outOf": "de",
-    "nextRenewal": "Proxima renovacao",
-    "increaseQuota": "Aumentar a minha quota",
-    "contactSupport": "Contactar suporte",
-    "signOut": "Terminar sessao",
-    "connectedAs": "Conectado como"
-  },
   "messages": {
     "title": "Mensagens",
     "aiResponses": "respostas IA",
@@ -234,81 +222,5 @@
     "manageProviders": "Gerir os meus prestadores",
     "lawyer": "Advogado",
     "expatExpert": "Especialista em expatriacao"
-  },
-  "subscriptionScreen": {
-    "header": {
-      "subtitle": "Assistente IA para prestadores",
-      "signOut": "Terminar sessão"
-    },
-    "hero": {
-      "badge": "Subscrição necessária",
-      "title": "Melhore as suas consultas com IA",
-      "descriptionLawyer": "Aceda a um assistente jurídico IA que pesquisa informações legais em tempo real durante as suas consultas.",
-      "descriptionExpat": "Obtenha informações práticas instantâneas sobre expatriação para melhor apoiar os seus clientes."
-    },
-    "benefits": {
-      "aiRealTime": {
-        "title": "Assistente IA em tempo real",
-        "description": "Pesquisa jurídica instantânea durante as suas consultas"
-      },
-      "updatedData": {
-        "title": "Dados atualizados",
-        "description": "Acesso a informações legais de mais de 190 países"
-      },
-      "timeSaving": {
-        "title": "Poupança de tempo",
-        "description": "Respostas precisas em segundos"
-      },
-      "reliableSources": {
-        "title": "Fontes fiáveis",
-        "description": "Citações e referências jurídicas verificadas"
-      }
-    },
-    "pricing": {
-      "monthly": "Mensal",
-      "annual": "Anual",
-      "perMonth": "/mês",
-      "billedAnnually": "Faturado {{amount}}€/ano",
-      "savings": "POUPE {{amount}}€",
-      "unlimited": "Acesso ilimitado ao assistente IA",
-      "noCommitment": "Sem compromisso",
-      "cancelAnytime": "Cancele a qualquer momento",
-      "twoMonthsFree": "2 meses grátis",
-      "prioritySupport": "Suporte prioritário",
-      "chooseMonthly": "Escolher mensal",
-      "subscribeNow": "Subscrever agora"
-    },
-    "payment": {
-      "secure": "Pagamento seguro por cartão",
-      "methods": "Visa, Mastercard, American Express - Pagamento cifrado SSL - Conformidade PCI-DSS"
-    },
-    "footer": {
-      "questions": "Questões?",
-      "contactUs": "Contacte-nos",
-      "connectedAs": "Ligado como {{email}}",
-      "copyright": "Todos os direitos reservados."
-    }
-  },
-  "subscriptionExpired": {
-    "gracePeriod": "Período de graça",
-    "expired": "Subscrição expirada",
-    "titleGrace": "A sua subscrição expirou",
-    "titleSuspended": "Acesso suspenso",
-    "descriptionGrace": "Tem {{days}} dias para renovar a sua subscrição sem interrupção do serviço.",
-    "descriptionExpired": "A sua subscrição expirou. Renove agora para recuperar o acesso ao assistente IA.",
-    "expirationDate": "Data de expiração",
-    "daysAgo": "há {{count}} dia",
-    "daysAgo_other": "há {{count}} dias",
-    "gracePeriodActive": "Período de graça ativo",
-    "daysRemaining": "{{count}} dias restantes para renovar",
-    "whatYouGet": "O que vai recuperar",
-    "benefitAI": "Assistente IA em tempo real",
-    "benefitCountries": "Acesso a dados de mais de 190 países",
-    "benefitSources": "Fontes jurídicas verificadas",
-    "renewButton": "Renovar a minha subscrição",
-    "contactSupport": "Contactar suporte",
-    "signOut": "Terminar sessão",
-    "connectedAs": "Ligado como {{email}}",
-    "copyright": "Todos os direitos reservados."
   }
 }

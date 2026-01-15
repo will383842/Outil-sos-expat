@@ -165,18 +165,6 @@
     "cancel": "Cancel",
     "reopenConversation": "Reopen conversation"
   },
-  "quotaExhausted": {
-    "title": "Usage Quota Exhausted",
-    "description": "You have reached the AI request limit for this period. Upgrade your subscription to continue using the assistant.",
-    "quotaUsage": "Quota Usage",
-    "requestsUsed": "requests used",
-    "outOf": "out of",
-    "nextRenewal": "Next renewal",
-    "increaseQuota": "Increase my quota",
-    "contactSupport": "Contact support",
-    "signOut": "Sign out",
-    "connectedAs": "Connected as"
-  },
   "messages": {
     "title": "Messages",
     "aiResponses": "AI responses",
@@ -237,60 +225,6 @@
     "manageProviders": "Manage my providers",
     "lawyer": "Lawyer",
     "expatExpert": "Expat expert"
-  },
-  "subscriptionScreen": {
-    "header": {
-      "subtitle": "AI Assistant for providers",
-      "signOut": "Sign out"
-    },
-    "hero": {
-      "badge": "Subscription required",
-      "title": "Boost your consultations with AI",
-      "descriptionLawyer": "Access an AI legal assistant that searches for legal information in real-time during your consultations.",
-      "descriptionExpat": "Get instant practical information about expatriation to better support your clients."
-    },
-    "benefits": {
-      "aiRealTime": {
-        "title": "Real-time AI Assistant",
-        "description": "Instant legal research during your consultations"
-      },
-      "updatedData": {
-        "title": "Updated data",
-        "description": "Access to legal information from 190+ countries"
-      },
-      "timeSaving": {
-        "title": "Time saving",
-        "description": "Accurate answers in seconds"
-      },
-      "reliableSources": {
-        "title": "Reliable sources",
-        "description": "Verified legal citations and references"
-      }
-    },
-    "pricing": {
-      "monthly": "Monthly",
-      "annual": "Annual",
-      "perMonth": "/month",
-      "billedAnnually": "Billed {{amount}}€/year",
-      "savings": "SAVE {{amount}}€",
-      "unlimited": "Unlimited access to AI assistant",
-      "noCommitment": "No commitment",
-      "cancelAnytime": "Cancel anytime",
-      "twoMonthsFree": "2 months free",
-      "prioritySupport": "Priority support",
-      "chooseMonthly": "Choose monthly",
-      "subscribeNow": "Subscribe now"
-    },
-    "payment": {
-      "secure": "Secure payment by credit card",
-      "methods": "Visa, Mastercard, American Express - SSL encrypted payment - PCI-DSS compliant"
-    },
-    "footer": {
-      "questions": "Questions?",
-      "contactUs": "Contact us",
-      "connectedAs": "Connected as {{email}}",
-      "copyright": "All rights reserved."
-    }
   },
   "home": {
     "noActiveConversation": "No active conversation",
@@ -399,27 +333,5 @@
     "inactiveAccount": "Inactive account",
     "readyForClients": "Ready to receive clients",
     "notSet": "Not set"
-  },
-  "subscriptionExpired": {
-    "gracePeriod": "Grace period",
-    "expired": "Subscription expired",
-    "titleGrace": "Your subscription has expired",
-    "titleSuspended": "Access suspended",
-    "descriptionGrace": "You still have {{days}} days to renew your subscription without service interruption.",
-    "descriptionExpired": "Your subscription has expired. Renew now to regain access to the AI assistant.",
-    "expirationDate": "Expiration date",
-    "daysAgo": "{{count}} day ago",
-    "daysAgo_other": "{{count}} days ago",
-    "gracePeriodActive": "Grace period active",
-    "daysRemaining": "{{count}} days left to renew",
-    "whatYouGet": "What you'll get back",
-    "benefitAI": "Real-time AI Assistant",
-    "benefitCountries": "Access to data from 190+ countries",
-    "benefitSources": "Verified legal sources",
-    "renewButton": "Renew my subscription",
-    "contactSupport": "Contact support",
-    "signOut": "Sign out",
-    "connectedAs": "Connected as {{email}}",
-    "copyright": "All rights reserved."
   }
 }

@@ -162,18 +162,6 @@
     "cancel": "الغاء",
     "reopenConversation": "اعادة فتح المحادثة"
   },
-  "quotaExhausted": {
-    "title": "نفدت حصة الاستخدام",
-    "description": "لقد وصلت الى حد طلبات الذكاء الاصطناعي لهذه الفترة. قم بترقية اشتراكك لمواصلة استخدام المساعد.",
-    "quotaUsage": "استخدام الحصة",
-    "requestsUsed": "طلبات مستخدمة",
-    "outOf": "من",
-    "nextRenewal": "التجديد التالي",
-    "increaseQuota": "زيادة حصتي",
-    "contactSupport": "التواصل مع الدعم",
-    "signOut": "تسجيل الخروج",
-    "connectedAs": "متصل كـ"
-  },
   "messages": {
     "title": "الرسائل",
     "aiResponses": "ردود الذكاء الاصطناعي",
@@ -234,81 +222,5 @@
     "manageProviders": "ادارة مزوديي",
     "lawyer": "محامي",
     "expatExpert": "خبير شؤون المغتربين"
-  },
-  "subscriptionScreen": {
-    "header": {
-      "subtitle": "مساعد الذكاء الاصطناعي لمقدمي الخدمات",
-      "signOut": "تسجيل الخروج"
-    },
-    "hero": {
-      "badge": "الاشتراك مطلوب",
-      "title": "عزز استشاراتك بالذكاء الاصطناعي",
-      "descriptionLawyer": "احصل على مساعد قانوني بالذكاء الاصطناعي يبحث عن المعلومات القانونية في الوقت الفعلي أثناء استشاراتك.",
-      "descriptionExpat": "احصل على معلومات عملية فورية حول الاغتراب لدعم عملائك بشكل أفضل."
-    },
-    "benefits": {
-      "aiRealTime": {
-        "title": "مساعد ذكاء اصطناعي فوري",
-        "description": "بحث قانوني فوري أثناء استشاراتك"
-      },
-      "updatedData": {
-        "title": "بيانات محدثة",
-        "description": "الوصول إلى المعلومات القانونية من أكثر من 190 دولة"
-      },
-      "timeSaving": {
-        "title": "توفير الوقت",
-        "description": "إجابات دقيقة في ثوانٍ"
-      },
-      "reliableSources": {
-        "title": "مصادر موثوقة",
-        "description": "اقتباسات ومراجع قانونية موثقة"
-      }
-    },
-    "pricing": {
-      "monthly": "شهري",
-      "annual": "سنوي",
-      "perMonth": "/شهر",
-      "billedAnnually": "يُفوتر {{amount}}€/سنة",
-      "savings": "وفر {{amount}}€",
-      "unlimited": "وصول غير محدود لمساعد الذكاء الاصطناعي",
-      "noCommitment": "بدون التزام",
-      "cancelAnytime": "إلغاء في أي وقت",
-      "twoMonthsFree": "شهران مجاناً",
-      "prioritySupport": "دعم ذو أولوية",
-      "chooseMonthly": "اختر الشهري",
-      "subscribeNow": "اشترك الآن"
-    },
-    "payment": {
-      "secure": "دفع آمن ببطاقة الائتمان",
-      "methods": "فيزا، ماستركارد، أمريكان إكسبريس - دفع مشفر SSL - متوافق مع PCI-DSS"
-    },
-    "footer": {
-      "questions": "أسئلة؟",
-      "contactUs": "تواصل معنا",
-      "connectedAs": "متصل كـ {{email}}",
-      "copyright": "جميع الحقوق محفوظة."
-    }
-  },
-  "subscriptionExpired": {
-    "gracePeriod": "فترة السماح",
-    "expired": "انتهى الاشتراك",
-    "titleGrace": "انتهى اشتراكك",
-    "titleSuspended": "الوصول معلق",
-    "descriptionGrace": "لديك {{days}} يوم لتجديد اشتراكك دون انقطاع الخدمة.",
-    "descriptionExpired": "انتهى اشتراكك. جدد الآن لاستعادة الوصول إلى مساعد الذكاء الاصطناعي.",
-    "expirationDate": "تاريخ الانتهاء",
-    "daysAgo": "منذ {{count}} يوم",
-    "daysAgo_other": "منذ {{count}} أيام",
-    "gracePeriodActive": "فترة السماح نشطة",
-    "daysRemaining": "{{count}} يوم متبقي للتجديد",
-    "whatYouGet": "ما ستستعيده",
-    "benefitAI": "مساعد ذكاء اصطناعي فوري",
-    "benefitCountries": "الوصول إلى بيانات من أكثر من 190 دولة",
-    "benefitSources": "مصادر قانونية موثقة",
-    "renewButton": "تجديد اشتراكي",
-    "contactSupport": "تواصل مع الدعم",
-    "signOut": "تسجيل الخروج",
-    "connectedAs": "متصل كـ {{email}}",
-    "copyright": "جميع الحقوق محفوظة."
   }
 }
