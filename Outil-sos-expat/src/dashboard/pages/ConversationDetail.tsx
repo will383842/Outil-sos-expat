@@ -205,11 +205,30 @@ function AIChat({
   const [input, setInput] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [userScrolledUp, setUserScrolledUp] = useState(false);
+  const prevMessagesLengthRef = useRef(messages.length);
 
+  // Detect if user scrolled up manually
+  const handleScroll = () => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+    setUserScrolledUp(!isNearBottom);
+  };
+
+  // Auto-scroll only when: new message added AND user is near bottom
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    const isNewMessage = messages.length > prevMessagesLengthRef.current;
+    prevMessagesLengthRef.current = messages.length;
+
+    if (isNewMessage && !userScrolledUp) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, userScrolledUp]);
 
   useEffect(() => {
     if (inputRef.current) {
@@ -292,7 +311,11 @@ function AIChat({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50/50">
+      <div
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50/50 relative"
+      >
         {messages.length === 0 ? (
           <div className="text-center py-16">
             <div className="w-20 h-20 bg-violet-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
@@ -381,6 +404,20 @@ function AIChat({
         )}
 
         <div ref={messagesEndRef} />
+
+        {/* Scroll to bottom button */}
+        {userScrolledUp && messages.length > 0 && (
+          <button
+            onClick={() => {
+              messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+              setUserScrolledUp(false);
+            }}
+            className="sticky bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-full shadow-lg hover:bg-violet-700 transition-colors text-sm font-medium"
+          >
+            <ArrowLeft className="w-4 h-4 rotate-[-90deg]" />
+            {t("aiChat.scrollToBottom") || "Aller en bas"}
+          </button>
+        )}
       </div>
 
       {/* Input */}
