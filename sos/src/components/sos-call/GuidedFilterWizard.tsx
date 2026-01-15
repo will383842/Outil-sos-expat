@@ -454,11 +454,13 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
   }, [isOpen]);
 
   const handleComplete = useCallback(() => {
-    onComplete({
+    const data = {
       country: selectedCountry,
       languages: selectedLanguages,
       type: selectedType,
-    });
+    };
+    console.log('🟡 [GuidedFilterWizard] handleComplete - sending data:', data);
+    onComplete(data);
   }, [onComplete, selectedCountry, selectedLanguages, selectedType]);
 
   const canProceed = useMemo(() => {

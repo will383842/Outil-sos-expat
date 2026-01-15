@@ -2146,6 +2146,7 @@ const SOSCall: React.FC = () => {
     languages: string[];
     type: "all" | "lawyer" | "expat";
   }) => {
+    console.log('🟢 [SOSCall] handleWizardComplete called with filters:', filters);
     setSelectedCountryCode(filters.country);
     // Utiliser TOUTES les langues sélectionnées pour le filtrage
     setSelectedLanguageCodes(filters.languages.length > 0 ? filters.languages : []);
@@ -2155,11 +2156,16 @@ const SOSCall: React.FC = () => {
 
     // Store wizard data in sessionStorage for pre-filling booking form
     try {
-      sessionStorage.setItem('wizardFilters', JSON.stringify({
+      const wizardData = {
         country: filters.country,
         languages: filters.languages,
         type: filters.type
-      }));
+      };
+      console.log('🟢 [SOSCall] Storing wizardFilters in sessionStorage:', wizardData);
+      sessionStorage.setItem('wizardFilters', JSON.stringify(wizardData));
+      // Verify it was stored correctly
+      const stored = sessionStorage.getItem('wizardFilters');
+      console.log('🟢 [SOSCall] Verified stored wizardFilters:', stored);
     } catch (e) {
       console.warn('Failed to store wizard filters in sessionStorage', e);
     }

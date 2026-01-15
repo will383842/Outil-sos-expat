@@ -400,34 +400,45 @@ async function handleParticipantJoin(sessionId: string, body: TwilioConferenceWe
     console.log(`👋 [${joinId}]   ${participantType}.status BEFORE: "${currentStatus}"`);
     console.log(`👋 [${joinId}]   ${participantType}.callSid BEFORE: ${participantBefore?.callSid}`);
 
-    // P0 CRITICAL FIX: If participant JOINED the conference, they ARE connected (human)
-    // Previous logic was wrong: we were skipping status update when AMD was pending,
-    // but if someone JOINED the conference, it means:
-    // 1. They answered the call
-    // 2. They are in the conference (not voicemail - voicemails don't join conferences!)
-    // 3. AMD callback may be delayed but participant is definitely connected
+    // P0 CRITICAL FIX: Do NOT set status to "connected" when AMD is still pending!
     //
-    // The old logic caused waitForConnection() to timeout because status stayed "amd_pending"
-    // even though the participant was actually in the conference waiting.
+    // IMPORTANT: Voicemails CAN join conferences! When a voicemail answers:
+    // 1. The call connects to the conference TwiML
+    // 2. Voicemail "joins" the conference (just listening/recording hold music)
+    // 3. If we set status to "connected" here, waitForConnection() would return true
+    // 4. Provider would be called even though it's a voicemail!
+    //
+    // Correct behavior:
+    // - Keep status as "amd_pending" when participant joins with AMD pending
+    // - Let the asyncAmdStatusCallback (in twilioAmdTwiml) determine human vs machine
+    // - If human: asyncAmdStatusCallback sets status to "connected"
+    // - If machine: asyncAmdStatusCallback sets status to "no_answer" and hangs up
+    //
+    // AMD typically completes within 30 seconds, and waitForConnection has 90s timeout.
     if (currentStatus === 'amd_pending') {
-      console.log(`👋 [${joinId}] ⚠️ AMD was pending but participant JOINED conference`);
-      console.log(`👋 [${joinId}]   This means it's a HUMAN (voicemails don't join conferences!)`);
-      console.log(`👋 [${joinId}]   P0 FIX: Forcing status to "connected" to unblock waitForConnection()`);
+      console.log(`👋 [${joinId}] ⚠️ AMD is still pending - participant joined but might be voicemail`);
+      console.log(`👋 [${joinId}]   ⛔ NOT setting status to "connected" yet - waiting for AMD result`);
+      console.log(`👋 [${joinId}]   asyncAmdStatusCallback will set: "connected" if human, "no_answer" if machine`);
       await logCallRecord({
         callId: sessionId,
-        status: `${participantType}_joined_forcing_connected_from_amd_pending`,
+        status: `${participantType}_joined_but_amd_pending`,
         retryCount: 0,
         additionalData: {
           callSid,
           conferenceSid: body.ConferenceSid,
-          reason: 'participant_joined_overrides_amd_pending'
+          reason: 'waiting_for_amd_callback_before_setting_connected'
         }
       });
-      // DON'T return - continue to set status to "connected" below
+      // IMPORTANT: Return early - do NOT set status to "connected"
+      // Let asyncAmdStatusCallback handle it after AMD analysis completes
+      console.log(`👋 [${joinId}] END - Waiting for AMD callback to determine human/machine`);
+      console.log(`${'═'.repeat(70)}\n`);
+      return;
     }
 
-    // Mettre à jour le statut du participant (only if NOT amd_pending)
+    // AMD is not pending - safe to set status to "connected"
     console.log(`👋 [${joinId}] STEP 2: Setting ${participantType}.status to "connected"...`);
+    console.log(`👋 [${joinId}]   AMD is not pending, so this is safe`);
     console.log(`👋 [${joinId}]   This is CRITICAL - waitForConnection() polls for this status!`);
     await twilioCallManager.updateParticipantStatus(
       sessionId,

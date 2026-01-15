@@ -934,10 +934,25 @@ export const twilioAmdTwiml = onRequest(
       console.log(`🎯 [${amdId}]   callSid: ${callSid || 'NOT_PROVIDED'}`);
       console.log(`${'▓'.repeat(60)}`);
 
-      // P0 CRITICAL FIX: Validate that this callback is for the CURRENT call attempt
-      // Race condition: AMD callback from attempt 1 can arrive during attempt 2
-      // If we don't validate, we could update status for the wrong call!
-      if (sessionId && callSid) {
+      // P0 CRITICAL FIX: Stale callback check - but ONLY for asyncAmdStatusCallback (when answeredBy is defined)
+      //
+      // RACE CONDITION BUG FIXED:
+      // - The initial `url` callback fires IMMEDIATELY when the call is answered
+      // - At this point, updateParticipantCallSid() may NOT have run yet
+      // - The session still has the OLD callSid from the previous attempt
+      // - If we do the stale check here, it will ALWAYS fail on retry attempts!
+      // - This causes the call to be hung up immediately → "rings once and hangs up"
+      //
+      // Solution: Only do stale check for asyncAmdStatusCallback (answeredBy is defined)
+      // - Initial `url` callback: answeredBy is UNDEFINED → SKIP stale check
+      // - asyncAmdStatusCallback: answeredBy is DEFINED → DO stale check
+      //
+      // This is safe because:
+      // - For `url` callback: This is always for the CURRENT call (synchronous)
+      // - For asyncAmdStatusCallback: This can be delayed from an OLD call (needs check)
+
+      if (sessionId && callSid && answeredBy) {
+        // Only check for stale callbacks when answeredBy is provided (asyncAmdStatusCallback)
         const session = await twilioCallManager.getCallSession(sessionId);
         const currentParticipant = participantType === 'provider'
           ? session?.participants.provider
@@ -945,9 +960,10 @@ export const twilioAmdTwiml = onRequest(
         const currentCallSid = currentParticipant?.callSid;
 
         if (currentCallSid && currentCallSid !== callSid) {
-          console.log(`🎯 [${amdId}] ⚠️ STALE AMD CALLBACK DETECTED!`);
+          console.log(`🎯 [${amdId}] ⚠️ STALE AMD CALLBACK DETECTED! (asyncAmdStatusCallback)`);
           console.log(`🎯 [${amdId}]   Callback callSid: ${callSid}`);
           console.log(`🎯 [${amdId}]   Current callSid: ${currentCallSid}`);
+          console.log(`🎯 [${amdId}]   answeredBy: ${answeredBy}`);
           console.log(`🎯 [${amdId}]   This callback is from an OLD call attempt - IGNORING`);
           console.log(`🎯 [${amdId}]   Returning HANGUP to prevent interference with new call`);
           console.log(`${'▓'.repeat(60)}\n`);
@@ -962,6 +978,10 @@ export const twilioAmdTwiml = onRequest(
           return;
         }
         console.log(`🎯 [${amdId}] ✅ CallSid validated - matches current call attempt`);
+      } else if (sessionId && callSid && !answeredBy) {
+        // Initial `url` callback - SKIP stale check (updateParticipantCallSid may not have run yet)
+        console.log(`🎯 [${amdId}] ⏭️ Skipping stale check for initial url callback (answeredBy undefined)`);
+        console.log(`🎯 [${amdId}]   This is the initial TwiML request - session may not be updated yet`);
       }
 
       // Check if answered by machine
@@ -978,9 +998,10 @@ export const twilioAmdTwiml = onRequest(
 
       if (shouldHangup) {
         // MACHINE CONFIRMED → Hangup immediately with NO audio (prevents voicemail recording)
-        console.log(`🎯 [${amdId}] ⚠️ MACHINE CONFIRMED - Returning HANGUP TwiML (NO AUDIO!)`);
+        console.log(`🎯 [${amdId}] ⚠️ MACHINE CONFIRMED - HANGING UP CALL`);
         console.log(`🎯 [${amdId}]   answeredBy: ${answeredBy || 'UNDEFINED'}`);
         console.log(`🎯 [${amdId}]   participantType: ${participantType}`);
+        console.log(`🎯 [${amdId}]   callSid: ${callSid}`);
         console.log(`🎯 [${amdId}]   This prevents voicemail from recording our message!`);
 
         // Update participant status to no_answer for retry logic
@@ -993,7 +1014,23 @@ export const twilioAmdTwiml = onRequest(
           }
         }
 
-        // Return hangup TwiML - NO SAY, NO AUDIO, JUST HANGUP
+        // P0 CRITICAL FIX: For asyncAmdStatusCallback, the returned TwiML is IGNORED by Twilio!
+        // The call is already in the conference. We must use the REST API to hang up the call.
+        // This is different from the initial `url` callback where TwiML IS executed.
+        if (callSid) {
+          try {
+            const { getTwilioClient } = await import('../lib/twilio');
+            const twilioClient = getTwilioClient();
+            console.log(`🎯 [${amdId}]   📞 Using REST API to hang up call ${callSid}...`);
+            await twilioClient.calls(callSid).update({ status: 'completed' });
+            console.log(`🎯 [${amdId}]   ✅ Call hung up via REST API`);
+          } catch (hangupError) {
+            console.error(`🎯 [${amdId}]   ⚠️ Failed to hang up call via REST API:`, hangupError);
+            // Log but continue - the TwiML hangup might still work for initial url callback
+          }
+        }
+
+        // Return hangup TwiML - works for initial `url` callback, ignored for asyncAmdStatusCallback
         const hangupTwiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Hangup/>
@@ -1001,7 +1038,7 @@ export const twilioAmdTwiml = onRequest(
 
         res.type('text/xml');
         res.send(hangupTwiml);
-        console.log(`🎯 [${amdId}] END - Sent HANGUP TwiML\n`);
+        console.log(`🎯 [${amdId}] END - Machine detected, call terminated\n`);
         return;
       }
 
