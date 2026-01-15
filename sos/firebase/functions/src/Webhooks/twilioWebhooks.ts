@@ -55,7 +55,11 @@ export const twilioCallWebhook = onRequest(
     const requestId = `twilio-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
     try {
-      console.log("[twilioCallWebhook] === Twilio Webhook Execution Started ===");
+      console.log(`\n${'🔔'.repeat(40)}`);
+      console.log(`[twilioCallWebhook] === Twilio Webhook Execution Started ===`);
+      console.log(`[twilioCallWebhook] requestId: ${requestId}`);
+      console.log(`[twilioCallWebhook] timestamp: ${new Date().toISOString()}`);
+      console.log(`${'🔔'.repeat(40)}`);
       prodLogger.info('TWILIO_WEBHOOK_START', `[${requestId}] Twilio call webhook received`, {
         requestId,
         method: req.method,
@@ -622,6 +626,28 @@ async function handleCallCompleted(
       }
     });
 
+    // === LOGS POUR DEBUG RACCROCHAGE ===
+    console.log(`\n${'🏁'.repeat(30)}`);
+    console.log(`🏁 [${completedId}] === HANGUP SUMMARY ===`);
+    console.log(`🏁 [${completedId}]   sessionId: ${sessionId}`);
+    console.log(`🏁 [${completedId}]   participant who hung up: ${participantType}`);
+    console.log(`🏁 [${completedId}]   billingDuration: ${billingDuration}s`);
+    console.log(`🏁 [${completedId}]   threshold (MIN_CALL_DURATION): 120s`);
+    console.log(`🏁 [${completedId}]   action taken: ${billingDuration >= 120 ? 'handleCallCompletion (CAPTURE)' : 'handleEarlyDisconnection (MAY REFUND)'}`);
+
+    // Fetch final state for debug
+    const finalSession = await twilioCallManager.getCallSession(sessionId);
+    if (finalSession) {
+      console.log(`🏁 [${completedId}]   FINAL STATE:`);
+      console.log(`🏁 [${completedId}]     session.status: ${finalSession.status}`);
+      console.log(`🏁 [${completedId}]     payment.status: ${finalSession.payment?.status}`);
+      console.log(`🏁 [${completedId}]     client.status: ${finalSession.participants.client.status}`);
+      console.log(`🏁 [${completedId}]     provider.status: ${finalSession.participants.provider.status}`);
+      console.log(`🏁 [${completedId}]     client.callSid: ${finalSession.participants.client.callSid || 'none'}`);
+      console.log(`🏁 [${completedId}]     provider.callSid: ${finalSession.participants.provider.callSid || 'none'}`);
+    }
+    console.log(`${'🏁'.repeat(30)}\n`);
+
     console.log(`🏁 [${completedId}] END`);
     console.log(`${'─'.repeat(60)}\n`);
 
@@ -1069,22 +1095,40 @@ export const twilioAmdTwiml = onRequest(
 
       if (isHumanConfirmed) {
         if (answeredBy === 'unknown') {
-          console.log(`🎯 [${amdId}] ⚠️ AMD returned "unknown" - treating as HUMAN (call was answered)`);
+          console.log(`\n${'🟢'.repeat(35)}`);
+          console.log(`🎯 [${amdId}] ⚠️ AMD returned "unknown" - treating as HUMAN!`);
+          console.log(`🎯 [${amdId}]   isAsyncAmdCallback: ${isAsyncAmdCallback}`);
           console.log(`🎯 [${amdId}]   Reason: AMD couldn't determine after analysis, but call IS answered`);
+          console.log(`🎯 [${amdId}]   Action: Will set status to "connected" and let call proceed`);
+          console.log(`${'🟢'.repeat(35)}\n`);
         }
         // HUMAN CONFIRMED → Return conference TwiML with welcome message
-        console.log(`🎯 [${amdId}] ✅ HUMAN CONFIRMED - Returning CONFERENCE TwiML`);
+        console.log(`🎯 [${amdId}] ✅ HUMAN CONFIRMED - Setting status to "connected" and returning CONFERENCE TwiML`);
+        console.log(`🎯 [${amdId}]   answeredBy: ${answeredBy}`);
+        console.log(`🎯 [${amdId}]   isAsyncAmdCallback: ${isAsyncAmdCallback}`);
 
         // Update participant status to connected ONLY when human is confirmed
         if (sessionId) {
           try {
+            console.log(`🎯 [${amdId}]   📝 Calling updateParticipantStatus(${sessionId}, ${participantType}, "connected")...`);
             await twilioCallManager.updateParticipantStatus(
               sessionId,
               participantType,
               'connected',
               admin.firestore.Timestamp.fromDate(new Date())
             );
-            console.log(`🎯 [${amdId}]   ✅ Status set to connected (human confirmed)`);
+            console.log(`🎯 [${amdId}]   ✅ Status set to "connected" - waitForConnection() should now succeed!`);
+
+            // Verify status was actually updated
+            const verifySession = await twilioCallManager.getCallSession(sessionId);
+            const verifyParticipant = participantType === 'provider'
+              ? verifySession?.participants.provider
+              : verifySession?.participants.client;
+            console.log(`🎯 [${amdId}]   🔍 VERIFY: ${participantType}.status is now "${verifyParticipant?.status}"`);
+
+            if (verifyParticipant?.status !== 'connected') {
+              console.log(`🎯 [${amdId}]   ❌ WARNING: Status NOT "connected" after update! This is a bug!`);
+            }
           } catch (statusError) {
             console.error(`🎯 [${amdId}]   ⚠️ Failed to update status:`, statusError);
           }

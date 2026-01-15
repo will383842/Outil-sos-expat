@@ -1518,6 +1518,23 @@ export class TwilioCallManager {
         console.log(`📄 Handling call completion for session: ${sessionId}`);
         await this.handleCallCompletion(sessionId, duration);
       }
+
+      // === EARLY DISCONNECTION FINAL SUMMARY ===
+      const finalEarlySession = await this.getCallSession(sessionId);
+      console.log(`\n${'📄'.repeat(30)}`);
+      console.log(`📄 [handleEarlyDisconnection] === FINAL SUMMARY ===`);
+      console.log(`📄   sessionId: ${sessionId}`);
+      console.log(`📄   participantType: ${participantType}`);
+      console.log(`📄   duration: ${duration}s`);
+      if (finalEarlySession) {
+        console.log(`📄   FINAL STATE:`);
+        console.log(`📄     session.status: ${finalEarlySession.status}`);
+        console.log(`📄     payment.status: ${finalEarlySession.payment?.status}`);
+        console.log(`📄     client.status: ${finalEarlySession.participants.client.status}`);
+        console.log(`📄     provider.status: ${finalEarlySession.participants.provider.status}`);
+      }
+      console.log(`${'📄'.repeat(30)}\n`);
+
     } catch (error) {
       await logError(
         "TwilioCallManager:handleEarlyDisconnection",
@@ -1771,7 +1788,25 @@ export class TwilioCallManager {
           paymentIntentId: callSession.payment.intentId,
         },
       });
+
+      // === FAILURE FINAL SUMMARY ===
+      const finalFailureSession = await this.getCallSession(sessionId);
+      console.log(`\n${'🔥'.repeat(35)}`);
+      console.log(`🔥 [${failureId}] === CALL FAILURE SUMMARY ===`);
+      console.log(`🔥 [${failureId}]   sessionId: ${sessionId}`);
+      console.log(`🔥 [${failureId}]   reason: ${reason}`);
+      if (finalFailureSession) {
+        console.log(`🔥 [${failureId}]   FINAL STATE:`);
+        console.log(`🔥 [${failureId}]     session.status: ${finalFailureSession.status}`);
+        console.log(`🔥 [${failureId}]     payment.status: ${finalFailureSession.payment?.status}`);
+        console.log(`🔥 [${failureId}]     client.status: ${finalFailureSession.participants.client.status}`);
+        console.log(`🔥 [${failureId}]     provider.status: ${finalFailureSession.participants.provider.status}`);
+      }
+      console.log(`🔥 [${failureId}] === CALL FAILURE HANDLING COMPLETE ===`);
+      console.log(`${'🔥'.repeat(35)}\n`);
+
     } catch (error) {
+      console.error(`🔥 [${failureId}] ❌ ERROR in handleCallFailure:`, error);
       await logError("TwilioCallManager:handleCallFailure", error as unknown);
     }
   }
@@ -1896,11 +1931,33 @@ export class TwilioCallManager {
     sessionId: string,
     duration: number
   ): Promise<void> {
-    try {
-      const callSession = await this.getCallSession(sessionId);
-      if (!callSession) return;
+    const completionId = `completion_${Date.now().toString(36)}`;
 
+    try {
+      console.log(`\n${'✅'.repeat(35)}`);
+      console.log(`✅ [${completionId}] handleCallCompletion CALLED`);
+      console.log(`✅ [${completionId}]   sessionId: ${sessionId}`);
+      console.log(`✅ [${completionId}]   billingDuration: ${duration}s (${Math.floor(duration / 60)}m${duration % 60}s)`);
+      console.log(`✅ [${completionId}]   MIN_CALL_DURATION: ${CALL_CONFIG.MIN_CALL_DURATION}s`);
+      console.log(`✅ [${completionId}]   willCapture: ${duration >= CALL_CONFIG.MIN_CALL_DURATION ? 'YES' : 'NO - will refund'}`);
+      console.log(`${'✅'.repeat(35)}`);
+
+      const callSession = await this.getCallSession(sessionId);
+      if (!callSession) {
+        console.log(`✅ [${completionId}] ❌ Session not found - returning early`);
+        return;
+      }
+
+      console.log(`✅ [${completionId}] Session state BEFORE completion:`);
+      console.log(`✅ [${completionId}]   session.status: ${callSession.status}`);
+      console.log(`✅ [${completionId}]   payment.status: ${callSession.payment?.status}`);
+      console.log(`✅ [${completionId}]   payment.intentId: ${callSession.payment?.intentId?.slice(0, 20) || 'N/A'}...`);
+      console.log(`✅ [${completionId}]   client.status: ${callSession.participants.client.status}`);
+      console.log(`✅ [${completionId}]   provider.status: ${callSession.participants.provider.status}`);
+
+      console.log(`✅ [${completionId}] Setting session.status = "completed"...`);
       await this.updateCallSessionStatus(sessionId, "completed");
+      console.log(`✅ [${completionId}] ✅ Session marked as completed`);
 
       // SMS/WhatsApp notifications removed - call completion logged
       const minutes = Math.floor(duration / 60);
@@ -1963,7 +2020,25 @@ export class TwilioCallManager {
         }
       }, 5000); // 5 second delay to allow Twilio to calculate costs
 
+      // === FINAL STATE SUMMARY ===
+      const finalSession = await this.getCallSession(sessionId);
+      console.log(`\n${'✅'.repeat(35)}`);
+      console.log(`✅ [${completionId}] === CALL COMPLETION SUMMARY ===`);
+      console.log(`✅ [${completionId}]   sessionId: ${sessionId}`);
+      console.log(`✅ [${completionId}]   billingDuration: ${duration}s`);
+      if (finalSession) {
+        console.log(`✅ [${completionId}]   FINAL STATE:`);
+        console.log(`✅ [${completionId}]     session.status: ${finalSession.status}`);
+        console.log(`✅ [${completionId}]     payment.status: ${finalSession.payment?.status}`);
+        console.log(`✅ [${completionId}]     client.status: ${finalSession.participants.client.status}`);
+        console.log(`✅ [${completionId}]     provider.status: ${finalSession.participants.provider.status}`);
+        console.log(`✅ [${completionId}]     invoicesCreated: ${finalSession.metadata?.invoicesCreated || false}`);
+      }
+      console.log(`✅ [${completionId}] === CALL IS NOW FULLY TERMINATED ===`);
+      console.log(`${'✅'.repeat(35)}\n`);
+
     } catch (error) {
+      console.error(`✅ [${completionId}] ❌ ERROR in handleCallCompletion:`, error);
       await logError(
         "TwilioCallManager:handleCallCompletion",
         error as unknown

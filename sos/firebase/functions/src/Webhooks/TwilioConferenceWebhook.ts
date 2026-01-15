@@ -90,11 +90,13 @@ export const twilioConferenceWebhook = onRequest(
             return;
           }
 
+          // P0 FIX: Don't include undefined values - Firestore rejects them
+          // conference-end events don't have a CallSid
           transaction.set(webhookEventRef, {
             eventKey: webhookKey,
             conferenceSid: body.ConferenceSid,
             statusCallbackEvent: body.StatusCallbackEvent,
-            callSid: body.CallSid,
+            ...(body.CallSid && { callSid: body.CallSid }), // Only include if defined
             processedAt: admin.firestore.FieldValue.serverTimestamp(),
             source: "twilio_conference_webhook",
           });
@@ -326,6 +328,28 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
         conferenceSid: body.ConferenceSid
       }
     });
+
+    // === LOGS DÉTAILLÉS POUR DEBUG CONFERENCE-END ===
+    console.log(`\n${'🎤'.repeat(30)}`);
+    console.log(`🎤 [${endId}] === CONFERENCE END SUMMARY ===`);
+    console.log(`🎤 [${endId}]   sessionId: ${sessionId}`);
+    console.log(`🎤 [${endId}]   conferenceSid: ${body.ConferenceSid}`);
+    console.log(`🎤 [${endId}]   twilioDuration (total): ${twilioDuration}s`);
+    console.log(`🎤 [${endId}]   billingDuration (both connected): ${billingDuration}s`);
+    console.log(`🎤 [${endId}]   capture threshold: 120s`);
+    console.log(`🎤 [${endId}]   decision: ${billingDuration >= 120 ? 'CAPTURE PAYMENT' : 'REFUND/CANCEL'}`);
+
+    // Fetch and log final state
+    const finalSessionState = await twilioCallManager.getCallSession(sessionId);
+    if (finalSessionState) {
+      console.log(`🎤 [${endId}]   FINAL SESSION STATE:`);
+      console.log(`🎤 [${endId}]     session.status: ${finalSessionState.status}`);
+      console.log(`🎤 [${endId}]     payment.status: ${finalSessionState.payment?.status}`);
+      console.log(`🎤 [${endId}]     client.status: ${finalSessionState.participants.client.status}`);
+      console.log(`🎤 [${endId}]     provider.status: ${finalSessionState.participants.provider.status}`);
+      console.log(`🎤 [${endId}]     invoicesCreated: ${finalSessionState.metadata?.invoicesCreated || false}`);
+    }
+    console.log(`${'🎤'.repeat(30)}\n`);
 
     console.log(`🏁 [${endId}] END - Conference end handled successfully`);
     console.log(`${'█'.repeat(70)}\n`);
@@ -610,6 +634,26 @@ async function handleParticipantLeave(sessionId: string, body: TwilioConferenceW
         billingDuration
       }
     });
+
+    // === LOGS DÉTAILLÉS POUR DEBUG PARTICIPANT-LEAVE ===
+    console.log(`\n${'👋'.repeat(30)}`);
+    console.log(`👋 [${leaveId}] === PARTICIPANT LEAVE SUMMARY ===`);
+    console.log(`👋 [${leaveId}]   sessionId: ${sessionId}`);
+    console.log(`👋 [${leaveId}]   participantType: ${participantType}`);
+    console.log(`👋 [${leaveId}]   callSid: ${callSid}`);
+    console.log(`👋 [${leaveId}]   billingDuration: ${billingDuration}s`);
+    console.log(`👋 [${leaveId}]   isEarlyDisconnection: ${billingDuration < 120 ? 'YES' : 'NO'}`);
+
+    // Fetch and log final state after leave
+    const finalLeaveState = await twilioCallManager.getCallSession(sessionId);
+    if (finalLeaveState) {
+      console.log(`👋 [${leaveId}]   FINAL STATE AFTER LEAVE:`);
+      console.log(`👋 [${leaveId}]     session.status: ${finalLeaveState.status}`);
+      console.log(`👋 [${leaveId}]     client.status: ${finalLeaveState.participants.client.status}`);
+      console.log(`👋 [${leaveId}]     provider.status: ${finalLeaveState.participants.provider.status}`);
+      console.log(`👋 [${leaveId}]     payment.status: ${finalLeaveState.payment?.status}`);
+    }
+    console.log(`${'👋'.repeat(30)}\n`);
 
     console.log(`👋 [${leaveId}] END - Participant leave handled successfully`);
     console.log(`${'─'.repeat(70)}\n`);

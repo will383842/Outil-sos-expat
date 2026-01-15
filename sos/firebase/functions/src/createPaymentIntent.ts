@@ -39,7 +39,7 @@ const LIMITS = {
     ALLOWED_CURRENCIES: ['eur', 'usd'] as const,
     ALLOWED_SERVICE_TYPES: ['lawyer_call', 'expat_call'] as const,
   },
-  DUPLICATES: { WINDOW_MS: 15 * 60 * 1000 },
+  DUPLICATES: { WINDOW_MS: 3 * 60 * 1000 },  // Réduit de 15min à 3min pour permettre retry après échec
 } as const;
 
 /* (B) getLimits() — fallback si LIMITS était undefined (import circulaire, etc.) */
@@ -61,7 +61,7 @@ function getLimits() {
         ALLOWED_CURRENCIES: ['eur', 'usd'] as const,
         ALLOWED_SERVICE_TYPES: ['lawyer_call', 'expat_call'] as const,
       },
-      DUPLICATES: { WINDOW_MS: 15 * 60 * 1000 },
+      DUPLICATES: { WINDOW_MS: 3 * 60 * 1000 },
     }
   ) as typeof LIMITS;
 }
@@ -424,19 +424,64 @@ async function checkAndLockDuplicatePayments(
   const cutoffTime = new Date(Date.now() - windowMs);
 
   // P0 FIX: Statuts de call_session qui permettent de réessayer un paiement
-  const failedCallStatuses = ['failed', 'cancelled', 'refunded', 'no_answer'];
+  const failedCallStatuses = ['failed', 'cancelled', 'refunded', 'no_answer', 'payment_failed', 'error'];
+
+  // Statuts de paiement qui permettent de réessayer (paiement non complété)
+  const failedPaymentStatuses = [
+    'canceled', 'failed', 'requires_payment_method',  // Stripe statuses
+    'payment_failed', 'error', 'expired'  // Custom statuses
+  ];
 
   /**
    * Vérifie si un call_session est en échec (permet retry)
    */
-  async function isCallSessionFailed(callSessionId: string): Promise<boolean> {
-    const callSessionDoc = await db.collection('call_sessions').doc(callSessionId).get();
+  async function isCallSessionFailed(sessionId: string): Promise<boolean> {
+    const callSessionDoc = await db.collection('call_sessions').doc(sessionId).get();
     if (!callSessionDoc.exists) {
       // Call session n'existe plus → considérer comme échoué (orphelin)
       return true;
     }
     const callStatus = callSessionDoc.data()?.status;
     return failedCallStatuses.includes(callStatus);
+  }
+
+  /**
+   * Vérifie si un paiement a échoué ou n'a jamais été complété (permet retry)
+   */
+  async function isPaymentFailed(paymentIntentId: string | undefined): Promise<boolean> {
+    if (!paymentIntentId) {
+      // Pas de PaymentIntent créé → le paiement a échoué avant la création Stripe
+      return true;
+    }
+
+    // Vérifier dans notre collection payments
+    const paymentDoc = await db.collection('payments').doc(paymentIntentId).get();
+    if (!paymentDoc.exists) {
+      // Pas de doc payment → probablement échoué avant enregistrement
+      return true;
+    }
+
+    const paymentStatus = paymentDoc.data()?.status;
+
+    // Si le statut est "requires_payment_method", le client peut réessayer immédiatement
+    // C'est le statut initial où le paiement attend les infos de carte
+    if (paymentStatus === 'requires_payment_method') {
+      return true;
+    }
+
+    // Si le statut est un statut d'échec explicite, permettre retry
+    if (failedPaymentStatuses.includes(paymentStatus)) {
+      return true;
+    }
+
+    // Statuts qui indiquent un paiement en cours actif (bloquer)
+    const activeStatuses = ['requires_confirmation', 'requires_capture', 'processing', 'succeeded'];
+    if (activeStatuses.includes(paymentStatus)) {
+      return false;
+    }
+
+    // Status inconnu ou pending ancien → permettre retry
+    return true;
   }
 
   try {
@@ -459,28 +504,34 @@ async function checkAndLockDuplicatePayments(
       return { hasValidLock: false };
     });
 
-    // ÉTAPE 2: Si un lock valide existe, vérifier si l'appel a échoué
+    // ÉTAPE 2: Si un lock valide existe, vérifier si l'appel ou le paiement a échoué
     if (lockCheckResult.hasValidLock && lockCheckResult.lockData) {
-      const callSessionId = lockCheckResult.lockData.callSessionId;
+      const lockedCallSessionId = lockCheckResult.lockData.callSessionId;
+      const lockedPaymentIntentId = lockCheckResult.lockData.paymentIntentId;
 
-      // Si le lock a un callSessionId, vérifier le statut
-      if (callSessionId) {
-        const isFailed = await isCallSessionFailed(callSessionId);
-        if (isFailed) {
-          console.log(`🔍 Lock ${lockKey} existe mais appel en échec - autoriser retry`);
-          // L'appel a échoué → permettre de réessayer (ne pas retourner isDuplicate)
+      // Vérifier d'abord si le paiement a échoué (priorité sur call_session)
+      const paymentFailed = await isPaymentFailed(lockedPaymentIntentId);
+      if (paymentFailed) {
+        console.log(`🔍 Lock ${lockKey} existe mais paiement échoué/non complété - autoriser retry`);
+        // Le paiement a échoué → permettre de réessayer
+      } else if (lockedCallSessionId) {
+        // Si le paiement semble OK, vérifier le call_session
+        const callFailed = await isCallSessionFailed(lockedCallSessionId);
+        if (callFailed) {
+          console.log(`🔍 Lock ${lockKey} existe mais call_session en échec - autoriser retry`);
+          // L'appel a échoué → permettre de réessayer
         } else {
-          // L'appel est actif → bloquer
+          // L'appel et le paiement sont actifs → bloquer
           return {
             isDuplicate: true,
-            existingPaymentId: lockCheckResult.lockData.paymentIntentId
+            existingPaymentId: lockedPaymentIntentId
           };
         }
       } else {
-        // Pas de callSessionId sur le lock → bloquer par sécurité
+        // Pas de callSessionId sur le lock mais paiement non échoué → bloquer par sécurité
         return {
           isDuplicate: true,
-          existingPaymentId: lockCheckResult.lockData.paymentIntentId
+          existingPaymentId: lockedPaymentIntentId
         };
       }
     }
@@ -497,25 +548,37 @@ async function checkAndLockDuplicatePayments(
       .limit(5)
       .get();
 
-    // P0 FIX: Vérifier le statut de chaque call_session associée
+    // P0 FIX: Vérifier le statut de chaque paiement et call_session associée
     for (const paymentDoc of paymentsSnap.docs) {
       const paymentData = paymentDoc.data();
-      const callSessionId = paymentData.callSessionId;
+      const paymentCallSessionId = paymentData.callSessionId;
+      const paymentStatus = paymentData.status;
 
-      if (!callSessionId) {
-        // Paiement sans call_session → potentiellement actif, bloquer
-        console.log(`🔍 Paiement ${paymentDoc.id} sans callSessionId - BLOQUÉ`);
+      // Vérifier d'abord si le paiement est vraiment actif (pas abandonné)
+      const createdAt = paymentData.createdAt?.toDate?.();
+      if (createdAt) {
+        const threeMinutesAgo = new Date(Date.now() - 3 * 60 * 1000);
+        if (createdAt < threeMinutesAgo && paymentStatus === 'pending') {
+          // Paiement pending depuis plus de 3 min → considérer comme abandonné
+          console.log(`🔍 Paiement ${paymentDoc.id} pending depuis > 3min - OK pour retry`);
+          continue;
+        }
+      }
+
+      if (!paymentCallSessionId) {
+        // Paiement sans call_session mais récent → potentiellement actif, bloquer
+        console.log(`🔍 Paiement ${paymentDoc.id} sans callSessionId mais récent - BLOQUÉ`);
         return { isDuplicate: true, existingPaymentId: paymentDoc.id };
       }
 
-      const isFailed = await isCallSessionFailed(callSessionId);
-      if (isFailed) {
-        console.log(`🔍 Call session ${callSessionId} en échec - OK pour retry`);
+      const callFailed = await isCallSessionFailed(paymentCallSessionId);
+      if (callFailed) {
+        console.log(`🔍 Call session ${paymentCallSessionId} en échec - OK pour retry`);
         continue;
       }
 
       // Appel actif ou réussi → bloquer
-      const callSessionDoc = await db.collection('call_sessions').doc(callSessionId).get();
+      const callSessionDoc = await db.collection('call_sessions').doc(paymentCallSessionId).get();
       const callStatus = callSessionDoc.data()?.status || 'unknown';
       console.log(`🔍 Paiement ${paymentDoc.id} avec appel actif (${callStatus}) - BLOQUÉ`);
       return { isDuplicate: true, existingPaymentId: paymentDoc.id };
