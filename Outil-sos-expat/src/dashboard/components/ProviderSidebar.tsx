@@ -361,7 +361,7 @@ export default function ProviderSidebar({ isOpen = false, onClose }: ProviderSid
   const getQuotaColor = () => {
     if (aiQuotaPercent >= 90) return "bg-red-500";
     if (aiQuotaPercent >= 70) return "bg-amber-500";
-    return "bg-violet-500";
+    return "bg-orange-500";
   };
 
   return (
@@ -465,11 +465,11 @@ export default function ProviderSidebar({ isOpen = false, onClose }: ProviderSid
           {collapsed ? (
             <div className="flex justify-center py-2" title={`Quota IA: ${aiQuotaUsed}/${aiQuotaTotal}`}>
               <div className="relative">
-                <Sparkles className="w-5 h-5 text-violet-500" />
+                <Sparkles className="w-5 h-5 text-orange-500" />
                 <div
                   className={cn(
                     "absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full",
-                    aiQuotaPercent >= 90 ? "bg-red-500" : aiQuotaPercent >= 70 ? "bg-amber-500" : "bg-violet-500"
+                    aiQuotaPercent >= 90 ? "bg-red-500" : aiQuotaPercent >= 70 ? "bg-amber-500" : "bg-orange-500"
                   )}
                 />
               </div>
@@ -478,7 +478,7 @@ export default function ProviderSidebar({ isOpen = false, onClose }: ProviderSid
             <div className="px-3 py-2 bg-gray-50 rounded-xl">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Sparkles className="w-4 h-4 text-violet-500" />
+                  <Sparkles className="w-4 h-4 text-orange-500" />
                   <span>{t("provider:sidebar.aiQuota")}</span>
                 </div>
                 <span className="text-xs font-medium text-gray-500">

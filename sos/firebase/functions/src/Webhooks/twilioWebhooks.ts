@@ -479,19 +479,19 @@ async function handleCallCompleted(
     console.log(`🏁 [${completedId}]   sessionId: ${sessionId}`);
     console.log(`🏁 [${completedId}]   participantType: ${participantType}`);
     console.log(`🏁 [${completedId}]   callSid: ${body.CallSid}`);
-    console.log(`🏁 [${completedId}]   duration: ${duration}s`);
+    console.log(`🏁 [${completedId}]   twilioCallDuration: ${duration}s (individual participant duration)`);
     console.log(`🏁 [${completedId}]   twilioPrice: ${twilioPrice} ${priceUnit}`);
-    console.log(`🏁 [${completedId}]   earlyDisconnection: ${duration < 120 ? 'YES' : 'NO'}`);
+    console.log(`🏁 [${completedId}]   ⚠️ Note: billingDuration will be calculated below from timestamps`);
     console.log(`${'─'.repeat(60)}`);
 
     prodLogger.info('TWILIO_CALL_COMPLETED', `Call completed for ${participantType}`, {
       sessionId,
       participantType,
-      duration,
+      twilioCallDuration: duration,
       twilioPrice,
       priceUnit,
       callSid: body.CallSid?.slice(0, 20) + '...',
-      earlyDisconnection: duration < 120
+      note: 'billingDuration calculated from timestamps below'
     });
 
     // Store Twilio cost in call_session if available
@@ -552,13 +552,53 @@ async function handleCallCompleted(
     console.log(`🏁 [${completedId}]   client.status: ${session.participants.client.status}`);
     console.log(`🏁 [${completedId}]   provider.status: ${session.participants.provider.status}`);
 
-    // Si c'est une déconnexion normale (durée suffisante)
-    if (duration >= 120) {
-      console.log(`🏁 [${completedId}] STEP 3: Duration >= 120s → handleCallCompletion (capture payment)`);
-      await twilioCallManager.handleCallCompletion(sessionId, duration);
+    // ===== P0 FIX: Calculer billingDuration (durée depuis que les DEUX sont connectés) =====
+    // La durée de facturation commence quand le 2ème participant rejoint, pas quand le 1er décroche
+    let billingDuration = 0;
+    const clientConnectedAt = session.participants.client.connectedAt?.toDate()?.getTime();
+    const providerConnectedAt = session.participants.provider.connectedAt?.toDate()?.getTime();
+
+    if (clientConnectedAt && providerConnectedAt) {
+      // bothConnectedAt = quand le 2ème participant a rejoint (le max des deux timestamps)
+      const bothConnectedAt = Math.max(clientConnectedAt, providerConnectedAt);
+
+      // endTime = maintenant
+      const endTime = Date.now();
+
+      billingDuration = Math.floor((endTime - bothConnectedAt) / 1000);
+
+      console.log(`🏁 [${completedId}] 📊 BILLING DURATION CALCULATION:`);
+      console.log(`🏁 [${completedId}]   clientConnectedAt: ${new Date(clientConnectedAt).toISOString()}`);
+      console.log(`🏁 [${completedId}]   providerConnectedAt: ${new Date(providerConnectedAt).toISOString()}`);
+      console.log(`🏁 [${completedId}]   bothConnectedAt (2nd joined): ${new Date(bothConnectedAt).toISOString()}`);
+      console.log(`🏁 [${completedId}]   billingDuration: ${billingDuration}s`);
+      console.log(`🏁 [${completedId}]   (vs Twilio CallDuration: ${duration}s - durée individuelle du participant)`);
     } else {
-      console.log(`🏁 [${completedId}] STEP 3: Duration < 120s → handleEarlyDisconnection (may refund)`);
-      await twilioCallManager.handleEarlyDisconnection(sessionId, participantType, duration);
+      // Fallback: si on n'a pas les timestamps de connexion, utiliser CallDuration de Twilio
+      billingDuration = duration;
+      console.log(`🏁 [${completedId}] ⚠️ Missing connection timestamps, using Twilio CallDuration as fallback: ${duration}s`);
+      console.log(`🏁 [${completedId}]   clientConnectedAt: ${clientConnectedAt ? 'present' : 'MISSING'}`);
+      console.log(`🏁 [${completedId}]   providerConnectedAt: ${providerConnectedAt ? 'present' : 'MISSING'}`);
+    }
+
+    // Stocker billingDuration dans la session pour référence
+    try {
+      const db = admin.firestore();
+      await db.collection('call_sessions').doc(sessionId).update({
+        'conference.billingDuration': billingDuration,
+        'metadata.updatedAt': admin.firestore.FieldValue.serverTimestamp(),
+      });
+    } catch (updateError) {
+      console.error(`🏁 [${completedId}] ⚠️ Failed to store billingDuration (non-blocking):`, updateError);
+    }
+
+    // ===== Utiliser billingDuration (pas CallDuration) pour la décision de capture/remboursement =====
+    if (billingDuration >= 120) {
+      console.log(`🏁 [${completedId}] STEP 3: billingDuration >= 120s → handleCallCompletion (capture payment)`);
+      await twilioCallManager.handleCallCompletion(sessionId, billingDuration);
+    } else {
+      console.log(`🏁 [${completedId}] STEP 3: billingDuration < 120s → handleEarlyDisconnection (may refund)`);
+      await twilioCallManager.handleEarlyDisconnection(sessionId, participantType, billingDuration);
     }
     console.log(`🏁 [${completedId}]   ✅ Post-completion handling done`);
 
@@ -566,10 +606,12 @@ async function handleCallCompleted(
       callId: sessionId,
       status: `${participantType}_call_completed`,
       retryCount: 0,
-      duration: duration,
+      duration: billingDuration,
       additionalData: {
         callSid: body.CallSid,
-        duration: duration
+        twilioCallDuration: duration,
+        billingDuration: billingDuration,
+        note: 'billingDuration = time since BOTH participants connected'
       }
     });
 

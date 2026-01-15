@@ -290,10 +290,10 @@ function AIChat({
   return (
     <Card className="flex flex-col h-full border-0 shadow-lg overflow-hidden">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-violet-50 to-purple-50 flex items-center justify-between">
+      <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-amber-50 to-orange-50 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-white rounded-xl shadow-sm">
-            <Bot className="w-6 h-6 text-violet-600" />
+            <Bot className="w-6 h-6 text-amber-600" />
           </div>
           <div>
             <h3 className="font-bold text-gray-900 text-lg">{t("aiChat.title")}</h3>
@@ -331,8 +331,8 @@ function AIChat({
       >
         {messages.length === 0 ? (
           <div className="text-center py-16">
-            <div className="w-20 h-20 bg-violet-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
-              <Sparkles className="w-10 h-10 text-violet-600" />
+            <div className="w-20 h-20 bg-amber-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
+              <Sparkles className="w-10 h-10 text-amber-600" />
             </div>
             <h4 className="font-semibold text-gray-900 text-lg mb-2">{t("aiChat.expertTitle")}</h4>
             <p className="text-gray-500 max-w-sm mx-auto mb-6">{t("aiChat.expertDescription")}</p>
@@ -361,11 +361,11 @@ function AIChat({
                       ? "bg-red-50 border border-red-200"
                       : isAI
                       ? "bg-white border border-gray-200"
-                      : "bg-violet-600 text-white"
+                      : "bg-amber-600 text-white"
                   }`}
                 >
-                  <div className={`flex items-center gap-2 mb-2 ${isAI ? "text-gray-500" : "text-violet-200"}`}>
-                    {isAI ? <Bot className="w-4 h-4 text-violet-600" /> : <User className="w-4 h-4" />}
+                  <div className={`flex items-center gap-2 mb-2 ${isAI ? "text-gray-500" : "text-amber-200"}`}>
+                    {isAI ? <Bot className="w-4 h-4 text-amber-600" /> : <User className="w-4 h-4" />}
                     <span className="text-xs font-medium">{isAI ? t("aiChat.legalAssistant") : t("aiChat.yourQuestion")}</span>
                     <span className="text-xs opacity-70">{formatTime(message.createdAt)}</span>
                   </div>
@@ -406,9 +406,9 @@ function AIChat({
             <div className="bg-white border border-gray-200 rounded-2xl px-5 py-4 shadow-sm">
               <div className="flex items-center gap-3">
                 <div className="flex space-x-1.5">
-                  <div className="w-2.5 h-2.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <div className="w-2.5 h-2.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                  <div className="w-2.5 h-2.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                  <div className="w-2.5 h-2.5 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <div className="w-2.5 h-2.5 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <div className="w-2.5 h-2.5 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
                 </div>
                 <span className="text-sm text-gray-600">{t("aiChat.analyzing")}</span>
               </div>
@@ -426,7 +426,7 @@ function AIChat({
               userScrolledUpRef.current = false;
               setShowScrollButton(false);
             }}
-            className="sticky bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-full shadow-lg hover:bg-violet-700 transition-colors text-sm font-medium z-10"
+            className="sticky bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-full shadow-lg hover:bg-amber-700 transition-colors text-sm font-medium z-10"
           >
             <ArrowLeft className="w-4 h-4 rotate-[-90deg]" />
             {t("aiChat.scrollToBottom") || "Aller en bas"}
@@ -454,12 +454,12 @@ function AIChat({
                 disabled={isLoading}
                 rows={1}
                 enterKeyHint="send"
-                className="flex-1 px-5 py-4 border border-gray-200 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent disabled:opacity-50 text-base bg-gray-50"
+                className="flex-1 px-5 py-4 border border-gray-200 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:opacity-50 text-base bg-gray-50"
               />
               <Button
                 type="submit"
                 disabled={!input.trim() || isLoading}
-                className="px-6 py-4 h-auto min-h-[56px] bg-violet-600 hover:bg-violet-700 text-white rounded-2xl shadow-lg shadow-violet-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-4 h-auto min-h-[56px] bg-amber-600 hover:bg-amber-700 text-white rounded-2xl shadow-lg shadow-amber-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />

@@ -30,13 +30,13 @@ export function QuotaBar({
   const getBarColor = () => {
     if (percentage >= 90) return "bg-gradient-to-r from-red-500 to-red-600";
     if (percentage >= 70) return "bg-gradient-to-r from-amber-400 to-amber-500";
-    return "bg-gradient-to-r from-violet-500 to-purple-600";
+    return "bg-gradient-to-r from-orange-400 to-amber-500";
   };
 
   const getTextColor = () => {
     if (percentage >= 90) return "text-red-600";
     if (percentage >= 70) return "text-amber-600";
-    return "text-violet-600";
+    return "text-orange-600";
   };
 
   const sizeStyles = {

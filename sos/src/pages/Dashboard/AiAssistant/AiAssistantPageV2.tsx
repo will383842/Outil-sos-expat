@@ -52,6 +52,7 @@ interface LinkedProvider {
   unreadMessages: number;
   lastActivityAt?: Date;
   hasUrgentRequest?: boolean;
+  hasForcedAccess?: boolean;
 }
 
 interface RecentConversation {
@@ -161,6 +162,7 @@ export const AiAssistantPageV2: React.FC = () => {
               unreadMessages: notifs.unread,
               lastActivityAt: notifs.lastActivity,
               hasUrgentRequest: notifs.urgent,
+              hasForcedAccess: profileData.forcedAIAccess === true,
             }]);
             setSelectedProviderId(user.uid);
             setProvidersLoading(false);
@@ -186,6 +188,7 @@ export const AiAssistantPageV2: React.FC = () => {
                 unreadMessages: notifs.unread,
                 lastActivityAt: notifs.lastActivity,
                 hasUrgentRequest: notifs.urgent,
+                hasForcedAccess: data.forcedAIAccess === true,
               });
             }
           } catch {
@@ -375,7 +378,7 @@ export const AiAssistantPageV2: React.FC = () => {
               <AccessCTA
                 onAccess={() => handleAccessOutil()}
                 loading={isAccessingOutil || providersLoading}
-                canMakeCall={canMakeAiCall && !providersLoading && selectedProviderId !== null}
+                canMakeCall={(canMakeAiCall || selectedProvider?.hasForcedAccess) && !providersLoading && selectedProviderId !== null}
                 error={accessError}
                 selectedProviderName={selectedProvider?.name}
                 showMultiProvider={linkedProviders.length > 1}
@@ -413,7 +416,7 @@ export const AiAssistantPageV2: React.FC = () => {
                 conversations={recentConversations}
                 loading={conversationsLoading || providersLoading}
                 error={conversationsError}
-                canMakeCall={canMakeAiCall && !providersLoading && selectedProviderId !== null}
+                canMakeCall={(canMakeAiCall || selectedProvider?.hasForcedAccess) && !providersLoading && selectedProviderId !== null}
                 locale={locale}
                 onViewAll={() => handleAccessOutil()}
                 onOpenConversation={(id) => {
