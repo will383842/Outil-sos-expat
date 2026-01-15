@@ -70,6 +70,7 @@ export interface CallSessionState {
       phone: string;
       status:
         | "pending"
+        | "calling" // P0 FIX: New call attempt started (resets old status)
         | "ringing"
         | "connected"
         | "disconnected"
@@ -84,6 +85,7 @@ export interface CallSessionState {
       phone: string;
       status:
         | "pending"
+        | "calling" // P0 FIX: New call attempt started (resets old status)
         | "ringing"
         | "connected"
         | "disconnected"
@@ -1273,6 +1275,13 @@ export class TwilioCallManager {
           return false;
         }
 
+        // P0 FIX: Log "calling" status (new call attempt just started)
+        if (currentStatus === "calling") {
+          if (check === 0) {
+            console.log(`⏳ [${waitId}] 📞 CALLING: New call attempt started, waiting for ringing/answered webhook...`);
+          }
+        }
+
         // P0 FIX: Log AMD pending status for debugging
         // This helps identify when AMD detection is taking too long
         if (currentStatus === "amd_pending") {
@@ -1285,7 +1294,7 @@ export class TwilioCallManager {
         }
 
         // Log other statuses for debugging
-        if (check === 0 && currentStatus !== "amd_pending") {
+        if (check === 0 && currentStatus !== "amd_pending" && currentStatus !== "calling") {
           console.log(`⏳ [${waitId}]   Initial status: "${currentStatus}" - waiting for "connected"...`);
         }
 
@@ -2489,12 +2498,21 @@ export class TwilioCallManager {
     callSid: string
   ): Promise<void> {
     try {
+      // P0 CRITICAL FIX: Reset status to "calling" when assigning new callSid
+      // This fixes the bug where old status (no_answer/amd_pending) from previous attempt
+      // would cause waitForConnection() to return false immediately on retry attempts.
+      // The status MUST be reset before the new call starts, so webhooks from the new call
+      // can properly update it to ringing -> amd_pending -> connected
+      console.log(
+        `[TwilioCallManager] updateParticipantCallSid(${sessionId}, ${participantType}, ${callSid.slice(0, 15)}...) - RESETTING status to "calling"`
+      );
       await this.saveWithRetry(() =>
         this.db
           .collection("call_sessions")
           .doc(sessionId)
           .update({
             [`participants.${participantType}.callSid`]: callSid,
+            [`participants.${participantType}.status`]: "calling", // P0 FIX: Reset status for new call attempt
             "metadata.updatedAt": admin.firestore.Timestamp.now(),
           })
       );

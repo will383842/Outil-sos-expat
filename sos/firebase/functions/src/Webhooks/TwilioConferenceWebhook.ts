@@ -365,27 +365,30 @@ async function handleParticipantJoin(sessionId: string, body: TwilioConferenceWe
     console.log(`👋 [${joinId}]   ${participantType}.status BEFORE: "${currentStatus}"`);
     console.log(`👋 [${joinId}]   ${participantType}.callSid BEFORE: ${participantBefore?.callSid}`);
 
-    // P0 FIX: Check if AMD is still pending - DO NOT override amd_pending with connected!
-    // If AMD is pending, the asyncAmdStatusCallback will determine if it's human or machine.
-    // Setting "connected" here would cause waitForConnection() to return true prematurely,
-    // even if the participant is actually a voicemail/answering machine.
+    // P0 CRITICAL FIX: If participant JOINED the conference, they ARE connected (human)
+    // Previous logic was wrong: we were skipping status update when AMD was pending,
+    // but if someone JOINED the conference, it means:
+    // 1. They answered the call
+    // 2. They are in the conference (not voicemail - voicemails don't join conferences!)
+    // 3. AMD callback may be delayed but participant is definitely connected
+    //
+    // The old logic caused waitForConnection() to timeout because status stayed "amd_pending"
+    // even though the participant was actually in the conference waiting.
     if (currentStatus === 'amd_pending') {
-      console.log(`👋 [${joinId}] ⚠️ AMD DETECTION IN PROGRESS - NOT setting to "connected" yet`);
-      console.log(`👋 [${joinId}]   Waiting for asyncAmdStatusCallback to confirm human/machine`);
-      console.log(`👋 [${joinId}]   This prevents premature connection to voicemail`);
+      console.log(`👋 [${joinId}] ⚠️ AMD was pending but participant JOINED conference`);
+      console.log(`👋 [${joinId}]   This means it's a HUMAN (voicemails don't join conferences!)`);
+      console.log(`👋 [${joinId}]   P0 FIX: Forcing status to "connected" to unblock waitForConnection()`);
       await logCallRecord({
         callId: sessionId,
-        status: `${participantType}_joined_but_amd_pending`,
+        status: `${participantType}_joined_forcing_connected_from_amd_pending`,
         retryCount: 0,
         additionalData: {
           callSid,
           conferenceSid: body.ConferenceSid,
-          reason: 'amd_detection_in_progress'
+          reason: 'participant_joined_overrides_amd_pending'
         }
       });
-      console.log(`👋 [${joinId}] END - Skipped status update (AMD pending)`);
-      console.log(`${'═'.repeat(70)}\n`);
-      return; // Don't update status - let AMD callback handle it
+      // DON'T return - continue to set status to "connected" below
     }
 
     // Mettre à jour le statut du participant (only if NOT amd_pending)

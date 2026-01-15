@@ -260,6 +260,25 @@ async function handleCallAnswered(
     console.log(`📞 [${webhookId}]   answeredBy: ${body.AnsweredBy || 'not_provided'}`);
     console.log(`${'═'.repeat(70)}`);
 
+    // P0 CRITICAL FIX: Validate that this webhook is for the CURRENT call attempt
+    // Race condition: Webhook from attempt 1 can arrive during attempt 2
+    // If we don't validate, we could update status for the wrong call!
+    const sessionForValidation = await twilioCallManager.getCallSession(sessionId);
+    const participantForValidation = participantType === 'provider'
+      ? sessionForValidation?.participants.provider
+      : sessionForValidation?.participants.client;
+    const currentCallSid = participantForValidation?.callSid;
+
+    if (currentCallSid && body.CallSid && currentCallSid !== body.CallSid) {
+      console.log(`📞 [${webhookId}] ⚠️ STALE WEBHOOK DETECTED!`);
+      console.log(`📞 [${webhookId}]   Webhook callSid: ${body.CallSid}`);
+      console.log(`📞 [${webhookId}]   Current callSid: ${currentCallSid}`);
+      console.log(`📞 [${webhookId}]   This webhook is from an OLD call attempt - IGNORING`);
+      console.log(`${'═'.repeat(70)}\n`);
+      return; // Ignore stale webhook
+    }
+    console.log(`📞 [${webhookId}] ✅ CallSid validated - matches current call attempt`);
+
     // P0 FIX: Vérifier si c'est un répondeur qui a répondu (AMD - Answering Machine Detection)
     // Avec machineDetection: "DetectMessageEnd", AnsweredBy devrait TOUJOURS être défini
     // Valeurs possibles: human, machine_start, machine_end_beep, machine_end_silence, machine_end_other, fax
@@ -583,6 +602,25 @@ async function handleCallFailed(
     console.log(`❌ [${failedId}]   AnsweredBy: ${body.AnsweredBy || 'N/A'}`);
     console.log(`${'▓'.repeat(60)}`);
 
+    // P0 CRITICAL FIX: Validate that this webhook is for the CURRENT call attempt
+    // Race condition: Webhook from attempt 1 can arrive during attempt 2
+    // If we don't validate, we could update status for the wrong call!
+    const sessionForValidation = await twilioCallManager.getCallSession(sessionId);
+    const participantForValidation = participantType === 'provider'
+      ? sessionForValidation?.participants.provider
+      : sessionForValidation?.participants.client;
+    const currentCallSidForValidation = participantForValidation?.callSid;
+
+    if (currentCallSidForValidation && body.CallSid && currentCallSidForValidation !== body.CallSid) {
+      console.log(`❌ [${failedId}] ⚠️ STALE WEBHOOK DETECTED!`);
+      console.log(`❌ [${failedId}]   Webhook callSid: ${body.CallSid}`);
+      console.log(`❌ [${failedId}]   Current callSid: ${currentCallSidForValidation}`);
+      console.log(`❌ [${failedId}]   This webhook is from an OLD call attempt - IGNORING`);
+      console.log(`${'▓'.repeat(60)}\n`);
+      return; // Ignore stale webhook
+    }
+    console.log(`❌ [${failedId}] ✅ CallSid validated - matches current call attempt`);
+
     prodLogger.warn('TWILIO_CALL_FAILED', `Call failed for ${participantType}: ${body.CallStatus}`, {
       sessionId,
       participantType,
@@ -853,6 +891,36 @@ export const twilioAmdTwiml = onRequest(
       console.log(`🎯 [${amdId}]   answeredBy: ${answeredBy || 'NOT_PROVIDED'}`);
       console.log(`🎯 [${amdId}]   callSid: ${callSid || 'NOT_PROVIDED'}`);
       console.log(`${'▓'.repeat(60)}`);
+
+      // P0 CRITICAL FIX: Validate that this callback is for the CURRENT call attempt
+      // Race condition: AMD callback from attempt 1 can arrive during attempt 2
+      // If we don't validate, we could update status for the wrong call!
+      if (sessionId && callSid) {
+        const session = await twilioCallManager.getCallSession(sessionId);
+        const currentParticipant = participantType === 'provider'
+          ? session?.participants.provider
+          : session?.participants.client;
+        const currentCallSid = currentParticipant?.callSid;
+
+        if (currentCallSid && currentCallSid !== callSid) {
+          console.log(`🎯 [${amdId}] ⚠️ STALE AMD CALLBACK DETECTED!`);
+          console.log(`🎯 [${amdId}]   Callback callSid: ${callSid}`);
+          console.log(`🎯 [${amdId}]   Current callSid: ${currentCallSid}`);
+          console.log(`🎯 [${amdId}]   This callback is from an OLD call attempt - IGNORING`);
+          console.log(`🎯 [${amdId}]   Returning HANGUP to prevent interference with new call`);
+          console.log(`${'▓'.repeat(60)}\n`);
+
+          // Return hangup TwiML for the old call - don't update any status
+          const staleHangupTwiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Hangup/>
+</Response>`;
+          res.type('text/xml');
+          res.send(staleHangupTwiml);
+          return;
+        }
+        console.log(`🎯 [${amdId}] ✅ CallSid validated - matches current call attempt`);
+      }
 
       // Check if answered by machine
       const isMachine = answeredBy && (

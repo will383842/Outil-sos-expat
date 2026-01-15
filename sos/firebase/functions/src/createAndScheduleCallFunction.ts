@@ -267,11 +267,17 @@ export const createAndScheduleCallHTTPS = onCall(
 
       // ========================================
       // 3.5 P2-3 FIX: VALIDATION CLIENT/PROVIDER EXIST
+      // 🚀 PERF: Lectures parallèles (gain ~100-200ms)
       // ========================================
       const db = admin.firestore();
 
-      // Check provider exists in sos_profiles
-      const providerDoc = await db.collection('sos_profiles').doc(providerId).get();
+      // Paralléliser les lectures provider et client
+      const [providerDoc, clientDoc] = await Promise.all([
+        db.collection('sos_profiles').doc(providerId).get(),
+        db.collection('users').doc(clientId).get(),
+      ]);
+
+      // Valider provider
       if (!providerDoc.exists) {
         console.error(`❌ [${requestId}] Provider not found: ${providerId.substring(0, 8)}...`);
         throw new HttpsError(
@@ -289,8 +295,7 @@ export const createAndScheduleCallHTTPS = onCall(
       }
       console.log(`✅ [${requestId}] Provider exists and is active`);
 
-      // Check client exists in users
-      const clientDoc = await db.collection('users').doc(clientId).get();
+      // Valider client
       if (!clientDoc.exists) {
         console.error(`❌ [${requestId}] Client not found: ${clientId.substring(0, 8)}...`);
         throw new HttpsError(

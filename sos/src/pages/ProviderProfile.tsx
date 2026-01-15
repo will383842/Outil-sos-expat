@@ -1662,22 +1662,13 @@ const ProviderProfile: React.FC = () => {
   }, [provider, isLoading, updateSEOMetadata]);
 
   const handleBookCall = useCallback(() => {
-    console.log("🔵 [handleBookCall] START - Button clicked");
-    console.log("🔵 [handleBookCall] provider:", provider);
-    console.log("🔵 [handleBookCall] provider?.id:", provider?.id);
-    console.log("🔵 [handleBookCall] user:", user);
-    console.log("🔵 [handleBookCall] authLoading:", authLoading);
-    console.log("🔵 [handleBookCall] onlineStatus:", onlineStatus);
-
     if (!provider) {
-      console.error("🔴 [handleBookCall] ABORT - No provider");
       return;
     }
 
     // FIX: On attend seulement que authInitialized soit true (Firebase a vérifié l'état d'auth)
     // Une fois initialisé, on peut continuer : soit naviguer (si user), soit montrer le wizard
     if (!authInitialized) {
-      console.warn("🟡 [handleBookCall] ABORT - Auth not yet initialized");
       return;
     }
 
@@ -1718,79 +1709,44 @@ const ProviderProfile: React.FC = () => {
         STORAGE_KEYS.SELECTED_PROVIDER,
         JSON.stringify(provider)
       );
-      console.log("🔵 [handleBookCall] Provider saved to sessionStorage");
-    } catch (error) {
-      console.warn("Failed to save provider to sessionStorage:", error);
+    } catch {
+      // Ignore storage errors
     }
     const target = `/booking-request/${provider.id}`;
-    console.log("🔵 [handleBookCall] Navigation target:", target);
 
     // Validation: s'assurer que provider.id est défini
     if (!provider.id) {
-      console.error("🔴 [handleBookCall] ABORT - provider.id is undefined");
       return;
     }
 
     if (user) {
-      console.log("🟢 [handleBookCall] User is logged in, navigating to:", target);
-      try {
-        navigate(target, {
-          state: {
-            selectedProvider: provider,
-            navigationSource: "provider_profile",
-          },
-        });
-        console.log("🟢 [handleBookCall] navigate() called successfully");
-      } catch (navError) {
-        console.error("🔴 [handleBookCall] Navigation error:", navError);
-      }
-    } else {
-      console.log("🟡 [handleBookCall] User not logged in, showing auth wizard");
-      setShowAuthWizard(true);
-    }
-    console.log("🔵 [handleBookCall] END");
-  }, [provider, user, authInitialized, navigate, onlineStatus]);
-
-  // Callback quand l'authentification réussit via le wizard
-  const handleAuthSuccess = useCallback(() => {
-    console.log("🟢🟢🟢 [handleAuthSuccess] CALLED - Auth success callback triggered 🟢🟢🟢");
-    console.log("🟢 [handleAuthSuccess] provider:", provider?.id);
-    console.log("🟢 [handleAuthSuccess] showAuthWizard before:", showAuthWizard);
-    console.log("🟢 [handleAuthSuccess] Current user state:", { user: !!user, authInitialized });
-    console.log("🟢 [handleAuthSuccess] Timestamp:", new Date().toISOString());
-
-    if (!provider) {
-      console.error("🔴 [handleAuthSuccess] ABORT - No provider");
-      return;
-    }
-
-    // Validation: s'assurer que provider.id est défini
-    if (!provider.id) {
-      console.error("🔴 [handleAuthSuccess] provider.id is undefined, cannot navigate");
-      return;
-    }
-
-    console.log("🟢 [handleAuthSuccess] Setting showAuthWizard to FALSE...");
-    setShowAuthWizard(false);
-    console.log("🟢 [handleAuthSuccess] setShowAuthWizard(false) called");
-
-    const target = `/booking-request/${provider.id}`;
-    console.log("🟢 [handleAuthSuccess] Navigating to:", target);
-    console.log("🟢 [handleAuthSuccess] Current pathname:", window.location.pathname);
-
-    try {
       navigate(target, {
         state: {
           selectedProvider: provider,
           navigationSource: "provider_profile",
         },
       });
-      console.log("🟢 [handleAuthSuccess] navigate() called successfully - navigation should happen now");
-    } catch (navError) {
-      console.error("🔴 [handleAuthSuccess] Navigation error:", navError);
+    } else {
+      setShowAuthWizard(true);
     }
-    // Note: window.scrollTo supprimé car il causait un "saut" avant la navigation
-  }, [provider, navigate, showAuthWizard, user, authInitialized]);
+  }, [provider, user, authInitialized, navigate, onlineStatus]);
+
+  // Callback quand l'authentification réussit via le wizard
+  const handleAuthSuccess = useCallback(() => {
+    if (!provider || !provider.id) {
+      return;
+    }
+
+    setShowAuthWizard(false);
+
+    const target = `/booking-request/${provider.id}`;
+    navigate(target, {
+      state: {
+        selectedProvider: provider,
+        navigationSource: "provider_profile",
+      },
+    });
+  }, [provider, navigate]);
 
   const handleHelpfulClick = useCallback(
     async (reviewId: string) => {

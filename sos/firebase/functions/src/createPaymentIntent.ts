@@ -787,14 +787,24 @@ export const createPaymentIntent = onCall(
       // Note: db already initialized above for rate limiting (P1 FIX)
 
       // ═══════════════════════════════════════════════════════════════════════════
-      // 🔍 VALIDATION ÉTAPE 1: Limites montants + quota quotidien
+      // 🚀 PERF OPTIMIZATION: Validations parallèles (étapes 1-3 en parallèle)
+      // Gain estimé: ~500-800ms (de 1.2s séquentiel à ~400ms parallèle)
       // ═══════════════════════════════════════════════════════════════════════════
-      prodLogger.debug('PAYMENT_VALIDATION', `[${requestId}] Validation sécurité montant...`, {
-        amountInMainUnit,
-        currency,
-        userId,
-      });
-      const sec = await validateAmountSecurity(amountInMainUnit, currency, userId, db);
+      prodLogger.debug('PAYMENT_VALIDATION', `[${requestId}] Démarrage validations parallèles...`);
+      const serviceKind: 'lawyer' | 'expat' = serviceType === 'lawyer_call' ? 'lawyer' : 'expat';
+
+      const [sec, biz, cfg, pricingSnap] = await Promise.all([
+        // Validation 1: Limites montants + quota quotidien
+        validateAmountSecurity(amountInMainUnit, currency, userId, db),
+        // Validation 2: Règles métier (provider disponible, etc.)
+        validateBusinessLogic(request.data, currency, db),
+        // Validation 3: Récupérer pricing config (avec cache + overrides)
+        getPricingConfig(serviceKind, currency, db),
+        // Validation 4: Récupérer le doc pricing pour les overrides (coupons)
+        db.collection('admin_config').doc('pricing').get(),
+      ]);
+
+      // Vérifier les résultats des validations
       if (!sec.valid) {
         prodLogger.error('PAYMENT_VALIDATION_FAILED', `[${requestId}] Échec validation sécurité`, {
           error: sec.error,
@@ -806,11 +816,6 @@ export const createPaymentIntent = onCall(
       }
       prodLogger.debug('PAYMENT_VALIDATION', `[${requestId}] ✓ Validation sécurité OK`);
 
-      // ═══════════════════════════════════════════════════════════════════════════
-      // 🔍 VALIDATION ÉTAPE 2: Règles métier (provider disponible, etc.)
-      // ═══════════════════════════════════════════════════════════════════════════
-      prodLogger.debug('PAYMENT_VALIDATION', `[${requestId}] Validation règles métier...`);
-      const biz = await validateBusinessLogic(request.data, currency, db);
       if (!biz.valid) {
         prodLogger.error('PAYMENT_VALIDATION_FAILED', `[${requestId}] Échec règles métier`, {
           error: biz.error,
@@ -821,8 +826,11 @@ export const createPaymentIntent = onCall(
       }
       prodLogger.debug('PAYMENT_VALIDATION', `[${requestId}] ✓ Règles métier OK`);
 
+      let expected = cfg.totalAmount;
+      prodLogger.debug('PAYMENT_VALIDATION', `[${requestId}] ✓ Pricing chargé: ${expected}${currency}`);
+
       // ═══════════════════════════════════════════════════════════════════════════
-      // 🔍 VALIDATION ÉTAPE 3: Anti-doublons (transaction atomique)
+      // 🔍 VALIDATION ÉTAPE 4: Anti-doublons (après validations - évite lock inutile si échec)
       // ═══════════════════════════════════════════════════════════════════════════
       prodLogger.debug('PAYMENT_VALIDATION', `[${requestId}] Vérification doublons...`, {
         clientId: clientId?.substring(0, 10),
@@ -841,14 +849,9 @@ export const createPaymentIntent = onCall(
         throw new HttpsError('already-exists', 'Un paiement similaire est déjà en cours de traitement.');
       }
       const paymentLockId = duplicateCheck.lockId;
-      prodLogger.debug('PAYMENT_VALIDATION', `[${requestId}] ✓ Pas de doublon, lock créé: ${paymentLockId}`)
+      prodLogger.debug('PAYMENT_VALIDATION', `[${requestId}] ✓ Pas de doublon, lock créé: ${paymentLockId}`);
 
-      // Prix attendu (admin_config/pricing + override + coupons empilables)
-      const serviceKind: 'lawyer' | 'expat' = serviceType === 'lawyer_call' ? 'lawyer' : 'expat';
-      const cfg = await getPricingConfig(serviceKind, currency, db); // { totalAmount: number, ... }
-      let expected = cfg.totalAmount;
-
-      const pricingSnap = await db.collection('admin_config').doc('pricing').get();
+      // Utiliser le pricingSnap déjà chargé pour les overrides (évite double lecture)
       const pricingDoc: PricingDoc = pricingSnap.exists ? (pricingSnap.data() as PricingDoc) : {};
       const overrideMap: OverrideMap | undefined =
         serviceKind === 'lawyer' ? pricingDoc?.overrides?.lawyer : pricingDoc?.overrides?.expat;
