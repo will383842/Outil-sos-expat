@@ -326,16 +326,22 @@ export const generateOutilToken = onCall(
 
         console.log("[generateOutilToken] Checking forced access on linked providers:", linkedProviderIds);
 
-        for (const linkedId of linkedProviderIds) {
-          if (linkedId === callerUid || linkedId === uid) continue; // Déjà vérifié
-          const linkedAccess = await checkForcedAccess(db, linkedId);
-          if (linkedAccess.hasForcedAccess) {
-            hasForcedAccess = true;
-            console.log("[generateOutilToken] Linked provider has forced access:", linkedId);
-            break;
-          } else if (linkedAccess.freeTrialUntil && !freeTrialUntil) {
-            freeTrialUntil = linkedAccess.freeTrialUntil;
-            console.log("[generateOutilToken] Linked provider has free trial:", linkedId);
+        // NOUVEAU: Si le compte a des providers liés (multi-prestataire), accorder l'accès automatiquement
+        if (linkedProviderIds.length > 0) {
+          console.log("[generateOutilToken] Multi-provider account detected, granting automatic access");
+          hasForcedAccess = true;
+        } else {
+          for (const linkedId of linkedProviderIds) {
+            if (linkedId === callerUid || linkedId === uid) continue; // Déjà vérifié
+            const linkedAccess = await checkForcedAccess(db, linkedId);
+            if (linkedAccess.hasForcedAccess) {
+              hasForcedAccess = true;
+              console.log("[generateOutilToken] Linked provider has forced access:", linkedId);
+              break;
+            } else if (linkedAccess.freeTrialUntil && !freeTrialUntil) {
+              freeTrialUntil = linkedAccess.freeTrialUntil;
+              console.log("[generateOutilToken] Linked provider has free trial:", linkedId);
+            }
           }
         }
       }

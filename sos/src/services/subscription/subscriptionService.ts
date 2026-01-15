@@ -713,9 +713,24 @@ async function checkForcedOrTrialAccess(providerId: string): Promise<{
  */
 export async function checkAiQuota(providerId: string): Promise<QuotaCheckResult> {
   // Vérifier d'abord l'accès admin forcé ou essai gratuit manuel
-  const { hasForcedAccess, freeTrialUntil } = await checkForcedOrTrialAccess(providerId);
+  let { hasForcedAccess, freeTrialUntil } = await checkForcedOrTrialAccess(providerId);
 
-  // Accès admin forcé = accès illimité
+  // Vérifier si c'est un compte multi-prestataire (linkedProviderIds)
+  // Les comptes multi-prestataires ont automatiquement accès
+  if (!hasForcedAccess) {
+    const userRef = doc(db, "users", providerId);
+    const userSnapshot = await getDoc(userRef);
+    if (userSnapshot.exists()) {
+      const userData = userSnapshot.data();
+      const linkedProviderIds: string[] = userData?.linkedProviderIds || [];
+      if (linkedProviderIds.length > 0) {
+        console.log('[checkAiQuota] Multi-provider account detected, granting automatic access');
+        hasForcedAccess = true;
+      }
+    }
+  }
+
+  // Accès admin forcé ou multi-prestataire = accès illimité
   if (hasForcedAccess) {
     return {
       allowed: true,
