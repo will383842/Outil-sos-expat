@@ -311,7 +311,7 @@ export default function ProviderHome() {
   // Empty state
   if (!loading && recentConversations.length === 0 && !activeConversation) {
     return (
-      <div className="max-w-5xl mx-auto px-4 py-8">
+      <div className="space-y-6">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
@@ -354,7 +354,7 @@ export default function ProviderHome() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+    <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">

@@ -321,17 +321,17 @@ export default function DashboardApp() {
     const effectiveProviders = linkedProviders.length > 0 ? linkedProviders : [MOCK_PROVIDER];
 
     return (
-      <div className="flex h-screen bg-gray-100">
+      <div className="flex h-screen bg-gray-50 overflow-hidden">
         {/* Mobile Sidebar Drawer */}
         <ProviderSidebar isOpen={sidebarOpen} onClose={closeSidebar} />
 
         {/* Main content area */}
-        <div className="flex-1 flex flex-col min-w-0 lg:ml-0">
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {/* Mobile Header with hamburger */}
           <MobileHeader onMenuClick={openSidebar} />
 
-          <main className="flex-1 overflow-auto">
-            <div className="p-4 lg:p-8 max-w-5xl mx-auto">
+          <main className="flex-1 overflow-y-auto overflow-x-hidden">
+            <div className="p-4 lg:p-6">
               {/* Dev Mode Banner */}
               <div className="mb-4 p-3 bg-amber-100 border border-amber-300 rounded-lg text-amber-800 text-sm">
                 🔧 Mode développement actif - Utilisez le bouton "Dev Tools" en bas à droite pour créer des données de test
@@ -381,18 +381,18 @@ export default function DashboardApp() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Mobile Sidebar Drawer */}
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
+      {/* Sidebar - Fixed on mobile, part of flex on desktop */}
       <ProviderSidebar isOpen={sidebarOpen} onClose={closeSidebar} />
 
-      {/* Main content area */}
-      <div className="flex-1 flex flex-col min-w-0 lg:ml-0">
+      {/* Main content area - takes remaining space */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile Header with hamburger */}
         <MobileHeader onMenuClick={openSidebar} />
 
-        {/* Main Content */}
-        <main className="flex-1 overflow-auto">
-          <div className="p-4 lg:p-8 max-w-5xl mx-auto">
+        {/* Main Content - Scrollable */}
+        <main className="flex-1 overflow-y-auto overflow-x-hidden">
+          <div className="p-4 lg:p-6">
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 {/* Page d'accueil - Conversations */}
