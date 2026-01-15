@@ -204,31 +204,44 @@ function AIChat({
   const { t, currentLocale } = useLanguage({ mode: "provider" });
   const [input, setInput] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [showScrollButton, setShowScrollButton] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const [userScrolledUp, setUserScrolledUp] = useState(false);
+  const userScrolledUpRef = useRef(false);
   const prevMessagesLengthRef = useRef(messages.length);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Detect if user scrolled up manually
-  const handleScroll = () => {
+  // Detect if user scrolled up manually (debounced to avoid excessive re-renders)
+  const handleScroll = useCallback(() => {
     const container = messagesContainerRef.current;
     if (!container) return;
 
     const { scrollTop, scrollHeight, clientHeight } = container;
-    const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
-    setUserScrolledUp(!isNearBottom);
-  };
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 150;
+    userScrolledUpRef.current = !isNearBottom;
+
+    // Debounce the button visibility update
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    scrollTimeoutRef.current = setTimeout(() => {
+      setShowScrollButton(!isNearBottom && messages.length > 3);
+    }, 100);
+  }, [messages.length]);
 
   // Auto-scroll only when: new message added AND user is near bottom
   useEffect(() => {
     const isNewMessage = messages.length > prevMessagesLengthRef.current;
     prevMessagesLengthRef.current = messages.length;
 
-    if (isNewMessage && !userScrolledUp) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (isNewMessage && !userScrolledUpRef.current) {
+      // Use requestAnimationFrame for smoother scrolling
+      requestAnimationFrame(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      });
     }
-  }, [messages, userScrolledUp]);
+  }, [messages.length]);
 
   useEffect(() => {
     if (inputRef.current) {
@@ -406,13 +419,14 @@ function AIChat({
         <div ref={messagesEndRef} />
 
         {/* Scroll to bottom button */}
-        {userScrolledUp && messages.length > 0 && (
+        {showScrollButton && (
           <button
             onClick={() => {
               messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-              setUserScrolledUp(false);
+              userScrolledUpRef.current = false;
+              setShowScrollButton(false);
             }}
-            className="sticky bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-full shadow-lg hover:bg-violet-700 transition-colors text-sm font-medium"
+            className="sticky bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-full shadow-lg hover:bg-violet-700 transition-colors text-sm font-medium z-10"
           >
             <ArrowLeft className="w-4 h-4 rotate-[-90deg]" />
             {t("aiChat.scrollToBottom") || "Aller en bas"}
