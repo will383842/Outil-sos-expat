@@ -87,10 +87,60 @@
       ]
     },
     {
-      "__comment": "Index pour pending_transfers - filtrage par statut et tri par date",
+      "__comment": "Index pour pending_transfers - filtrage par statut et tri par date DESC",
       "collectionGroup": "pending_transfers",
       "queryScope": "COLLECTION",
       "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "__comment": "Index pour pending_transfers - filtrage par statut et tri par date ASC",
+      "collectionGroup": "pending_transfers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "__comment": "Index pour agent_tasks - filtrage par statut et tri par completedAt",
+      "collectionGroup": "agent_tasks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "completedAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "__comment": "Index pour agent_tasks - filtrage par statut et tri par startedAt",
+      "collectionGroup": "agent_tasks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "startedAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "__comment": "Index pour payments - requête complexe avec session, client, provider, status",
+      "collectionGroup": "payments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "callSessionId", "order": "ASCENDING" },
+        { "fieldPath": "clientId", "order": "ASCENDING" },
+        { "fieldPath": "providerId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "__comment": "Index pour call_sessions - pending calls (paiements provider non effectués)",
+      "collectionGroup": "call_sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "payment.providerPaid", "order": "ASCENDING" },
+        { "fieldPath": "payment.status", "order": "ASCENDING" },
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]

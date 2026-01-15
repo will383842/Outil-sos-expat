@@ -40,6 +40,7 @@ import {
   DEFAULT_AI_CALLS_LIMIT,
   UNLIMITED_FAIR_USE_LIMIT
 } from '../../types/subscription';
+import { fetchWithCache } from '../../utils/firestoreCache';
 
 // ============================================================================
 // COST OPTIMIZATION: LISTENER DEDUPLICATION & CACHING
@@ -145,25 +146,33 @@ const COLLECTIONS = {
 
 /**
  * Récupère tous les plans d'abonnement actifs pour un type de prestataire
+ * COST OPTIMIZATION: Uses localStorage cache (24h TTL) - plans rarely change
  */
 export async function getSubscriptionPlans(
   providerType: ProviderType
 ): Promise<SubscriptionPlan[]> {
-  const plansRef = collection(db, COLLECTIONS.SUBSCRIPTION_PLANS);
-  const q = query(
-    plansRef,
-    where('providerType', '==', providerType),
-    where('isActive', '==', true),
-    orderBy('sortOrder', 'asc')
-  );
+  return fetchWithCache(
+    'SUBSCRIPTION_PLANS',
+    providerType,
+    async () => {
+      const plansRef = collection(db, COLLECTIONS.SUBSCRIPTION_PLANS);
+      const q = query(
+        plansRef,
+        where('providerType', '==', providerType),
+        where('isActive', '==', true),
+        orderBy('sortOrder', 'asc')
+      );
 
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data(),
-    createdAt: doc.data().createdAt?.toDate(),
-    updatedAt: doc.data().updatedAt?.toDate()
-  })) as SubscriptionPlan[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        // Note: Dates are serialized to ISO strings in cache
+        createdAt: doc.data().createdAt?.toDate()?.toISOString(),
+        updatedAt: doc.data().updatedAt?.toDate()?.toISOString()
+      })) as SubscriptionPlan[];
+    }
+  );
 }
 
 /**
@@ -224,20 +233,28 @@ export function subscribeToPlans(
 
 /**
  * Récupère la configuration de l'essai gratuit
+ * COST OPTIMIZATION: Uses localStorage cache (1h TTL) - trial config rarely changes
  */
 export async function getTrialConfig(): Promise<TrialConfig> {
-  const settingsRef = doc(db, COLLECTIONS.SETTINGS, 'subscription');
-  const snapshot = await getDoc(settingsRef);
+  return fetchWithCache(
+    'TRIAL_CONFIG',
+    undefined,
+    async () => {
+      const settingsRef = doc(db, COLLECTIONS.SETTINGS, 'subscription');
+      const snapshot = await getDoc(settingsRef);
 
-  if (!snapshot.exists() || !snapshot.data().trial) {
-    return DEFAULT_TRIAL_CONFIG;
-  }
+      if (!snapshot.exists() || !snapshot.data().trial) {
+        return DEFAULT_TRIAL_CONFIG;
+      }
 
-  const trial = snapshot.data().trial;
-  return {
-    ...trial,
-    updatedAt: trial.updatedAt?.toDate()
-  };
+      const trial = snapshot.data().trial;
+      return {
+        ...trial,
+        // Note: Date serialized to ISO string for cache
+        updatedAt: trial.updatedAt?.toDate()?.toISOString()
+      };
+    }
+  );
 }
 
 /**

@@ -300,11 +300,11 @@ export const generateOutilToken = onCall(
       }
 
       // 3. Vérifier l'accès admin forcé (bypass complet si activé)
-      // Vérifier à la fois sur le callerUid ET le targetUid pour les cas multi-provider
+      // Vérifier sur: target, caller, ET tous les providers liés
       console.log("[generateOutilToken] Checking forced access...");
       let { hasForcedAccess, freeTrialUntil } = await checkForcedAccess(db, uid);
 
-      // Si pas d'accès forcé sur le target, vérifier aussi sur le caller (pour multi-provider)
+      // Si pas d'accès forcé sur le target, vérifier aussi sur le caller
       if (!hasForcedAccess && !freeTrialUntil && callerUid !== uid) {
         console.log("[generateOutilToken] Checking forced access on caller account...");
         const callerAccess = await checkForcedAccess(db, callerUid);
@@ -316,7 +316,31 @@ export const generateOutilToken = onCall(
           console.log("[generateOutilToken] Caller has free trial, applying to target provider");
         }
       }
-      console.log("[generateOutilToken] Forced access:", { hasForcedAccess, freeTrialUntil });
+
+      // Si toujours pas d'accès, vérifier sur les linkedProviderIds du caller
+      // Car l'admin peut avoir activé forcedAIAccess sur un provider lié, pas sur le compte principal
+      if (!hasForcedAccess && !freeTrialUntil) {
+        const callerDoc = await db.collection("users").doc(callerUid).get();
+        const callerData = callerDoc.data();
+        const linkedProviderIds: string[] = callerData?.linkedProviderIds || [];
+
+        console.log("[generateOutilToken] Checking forced access on linked providers:", linkedProviderIds);
+
+        for (const linkedId of linkedProviderIds) {
+          if (linkedId === callerUid || linkedId === uid) continue; // Déjà vérifié
+          const linkedAccess = await checkForcedAccess(db, linkedId);
+          if (linkedAccess.hasForcedAccess) {
+            hasForcedAccess = true;
+            console.log("[generateOutilToken] Linked provider has forced access:", linkedId);
+            break;
+          } else if (linkedAccess.freeTrialUntil && !freeTrialUntil) {
+            freeTrialUntil = linkedAccess.freeTrialUntil;
+            console.log("[generateOutilToken] Linked provider has free trial:", linkedId);
+          }
+        }
+      }
+
+      console.log("[generateOutilToken] Final forced access:", { hasForcedAccess, freeTrialUntil });
 
       // Si accès forcé par admin, générer directement le token (bypass tout)
       if (hasForcedAccess) {

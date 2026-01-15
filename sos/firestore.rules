@@ -464,9 +464,9 @@ service cloud.firestore {
     // ================= COUPONS COLLECTION =================
     // P1-7 SECURITY FIX: Bloquer lecture directe pour empêcher énumération/brute-force
     // Les coupons sont validés via Cloud Functions (validateCoupon) qui utilise Admin SDK
-    // Anciennement: allow read: if isAuthenticated(); → permettait brute-force des codes
+    // Note: Admin peut lire pour la console admin, mais les utilisateurs normaux ne peuvent pas
     match /coupons/{couponId} {
-      allow read: if false; // Validation via Cloud Functions uniquement
+      allow read: if isAdmin() || isDev(); // Admin peut lire pour la console
       allow write: if isAdmin() || isDev();
     }
 
@@ -606,6 +606,17 @@ service cloud.firestore {
     match /paypal_webhook_events/{eventId} {
       // Only admins can read webhook events
       allow read: if isAdmin() || isDev();
+      // Only Cloud Functions can write
+      allow write: if false;
+    }
+
+    // ================= PAYOUTS COLLECTION =================
+    // Versements aux prestataires (Stripe + PayPal unifiés)
+    match /payouts/{payoutId} {
+      // Providers can read their own payouts, admins can read all
+      allow read: if isAuthenticated() &&
+                  (resource.data.providerId == request.auth.uid ||
+                   isAdmin() || isDev());
       // Only Cloud Functions can write
       allow write: if false;
     }

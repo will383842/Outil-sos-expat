@@ -37,6 +37,7 @@ import {
   limit,
 } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
+import { useAdminReferenceData } from '../../../hooks/useAdminReferenceData';
 import { cn } from '../../../utils/cn';
 
 // ============================================================================
@@ -78,6 +79,9 @@ interface AvailableUser {
 // ============================================================================
 
 export const IaMultiProvidersTab: React.FC = () => {
+  // COST OPTIMIZATION: Use shared admin reference data cache
+  const { usersMap, profilesMap, isLoading: refDataLoading } = useAdminReferenceData();
+
   // Data
   const [accounts, setAccounts] = useState<MultiProviderAccount[]>([]);
   const [allProviders, setAllProviders] = useState<AvailableProvider[]>([]);
@@ -102,33 +106,31 @@ export const IaMultiProvidersTab: React.FC = () => {
   // ============================================================================
 
   const loadData = useCallback(async () => {
+    // Wait for reference data to be loaded
+    if (refDataLoading || profilesMap.size === 0) {
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      // Charger users et profiles
-      const [usersSnap, profilesSnap] = await Promise.all([
-        getDocs(query(collection(db, 'users'), limit(500))),
-        getDocs(query(collection(db, 'sos_profiles'), limit(500)))
-      ]);
-
-      // Map des profiles par ID
-      const profilesMap = new Map<string, any>();
-      profilesSnap.docs.forEach(d => profilesMap.set(d.id, { id: d.id, ...d.data() }));
+      // COST OPTIMIZATION: Only load users (needed for linkedProviderIds/activeProviderId)
+      // Profiles data comes from shared cache (useAdminReferenceData)
+      const usersSnap = await getDocs(query(collection(db, 'users'), limit(500)));
 
       // Construire la liste des comptes multi-prestataires
       const accountsList: MultiProviderAccount[] = [];
       const providersList: AvailableProvider[] = [];
       const usersList: AvailableUser[] = [];
 
-      // D'abord, collecter tous les prestataires disponibles
-      profilesSnap.docs.forEach(d => {
-        const data = d.data();
+      // D'abord, collecter tous les prestataires disponibles from cache
+      profilesMap.forEach((profile) => {
         providersList.push({
-          id: d.id,
-          name: data.name || data.displayName || data.fullName || 'N/A',
-          email: data.email || '',
-          type: data.providerType === 'expat' ? 'expat' : 'lawyer'
+          id: profile.id,
+          name: profile.displayName || 'N/A',
+          email: profile.email || '',
+          type: profile.type
         });
       });
 
@@ -150,25 +152,25 @@ export const IaMultiProvidersTab: React.FC = () => {
 
         const providers: Provider[] = [];
         for (const pid of linkedIds) {
-          const profile = profilesMap.get(pid);
-          if (profile) {
+          // Use cached profile data
+          const cachedProfile = profilesMap.get(pid);
+          if (cachedProfile) {
             providers.push({
               id: pid,
-              name: profile.name || profile.displayName || profile.fullName || 'N/A',
-              email: profile.email || '',
-              type: profile.providerType === 'expat' ? 'expat' : 'lawyer',
+              name: cachedProfile.displayName || 'N/A',
+              email: cachedProfile.email || '',
+              type: cachedProfile.type,
               isActive: data.activeProviderId === pid
             });
           } else {
-            // Fallback: chercher dans users
-            const userDoc = usersSnap.docs.find(u => u.id === pid);
-            if (userDoc) {
-              const userData = userDoc.data();
+            // Fallback: chercher dans usersMap (cache)
+            const cachedUser = usersMap.get(pid);
+            if (cachedUser) {
               providers.push({
                 id: pid,
-                name: userData.displayName || `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || 'N/A',
-                email: userData.email || '',
-                type: userData.role === 'expat_aidant' ? 'expat' : 'lawyer',
+                name: cachedUser.displayName || 'N/A',
+                email: cachedUser.email || '',
+                type: cachedUser.type === 'expat_aidant' ? 'expat' : 'lawyer',
                 isActive: data.activeProviderId === pid
               });
             }
@@ -198,7 +200,7 @@ export const IaMultiProvidersTab: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [refDataLoading, profilesMap, usersMap]);
 
   useEffect(() => {
     loadData();

@@ -44,6 +44,7 @@ import {
   limit
 } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
+import { useAdminReferenceData } from '../../../hooks/useAdminReferenceData';
 import { cn } from '../../../utils/cn';
 import {
   SubscriptionTier,
@@ -293,6 +294,9 @@ export const IaSubscriptionsTab: React.FC = () => {
   const iaT = useIaAdminTranslations();
   const { language } = useApp();
 
+  // COST OPTIMIZATION: Shared reference data cache (users, profiles, plans)
+  const { usersMap, profilesMap, plansMap, isLoading: refDataLoading } = useAdminReferenceData();
+
   // State
   const [subscriptions, setSubscriptions] = useState<SubscriptionWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
@@ -332,56 +336,35 @@ export const IaSubscriptionsTab: React.FC = () => {
       );
       const snapshot = await getDocs(subsQuery);
 
-      // Load providers for country/language data
-      const providersSnapshot = await getDocs(collection(db, 'providers'));
-      const providersMap = new Map<string, {
-        name: string;
-        email: string;
-        type: string;
-        country: string;
-        language: string;
-      }>();
-
-      providersSnapshot.docs.forEach(doc => {
-        const data = doc.data();
-        providersMap.set(doc.id, {
-          name: data.displayName || `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'N/A',
-          email: data.email || '',
-          type: data.type || data.role || 'expat',
-          country: data.country || data.currentCountry || 'Unknown',
-          language: data.preferredLanguage || (data.languages?.[0]) || 'fr'
-        });
-      });
-
-      // Also load users as fallback
-      const usersSnapshot = await getDocs(collection(db, 'users'));
-      usersSnapshot.docs.forEach(doc => {
-        if (!providersMap.has(doc.id)) {
-          const data = doc.data();
-          providersMap.set(doc.id, {
-            name: data.displayName || `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'N/A',
-            email: data.email || '',
-            type: data.providerType || data.role || 'expat',
-            country: data.country || 'Unknown',
-            language: data.preferredLanguage || 'fr'
-          });
-        }
-      });
-
-      // Load plans
-      const plansSnapshot = await getDocs(collection(db, 'subscription_plans'));
-      const plansMap = new Map<string, string>();
-      plansSnapshot.docs.forEach(doc => {
-        const data = doc.data();
-        plansMap.set(doc.id, data.name?.fr || data.name || doc.id);
-      });
+      // COST OPTIMIZATION: Use shared reference data from useAdminReferenceData hook
+      // This replaces 3 separate Firestore queries (providers, users, plans)
+      // Savings: ~2000 reads per page load → 0 reads (uses cached data)
 
       const subsList: SubscriptionWithDetails[] = [];
 
       snapshot.docs.forEach(doc => {
         const data = doc.data();
         const providerId = data.providerId || doc.id;
-        const providerInfo = providersMap.get(providerId);
+
+        // Get provider info from cached profiles or users
+        const profileInfo = profilesMap.get(providerId);
+        const userInfo = usersMap.get(providerId);
+        const providerInfo = profileInfo ? {
+          name: profileInfo.displayName,
+          email: profileInfo.email,
+          type: profileInfo.type,
+          country: profileInfo.country,
+          language: profileInfo.languages?.[0] || 'fr'
+        } : userInfo ? {
+          name: userInfo.displayName,
+          email: userInfo.email,
+          type: userInfo.type,
+          country: userInfo.country,
+          language: userInfo.preferredLanguage
+        } : null;
+
+        // Get plan name from cached plans
+        const planInfo = plansMap.get(data.planId);
 
         subsList.push({
           id: doc.id,
@@ -392,7 +375,7 @@ export const IaSubscriptionsTab: React.FC = () => {
           country: providerInfo?.country || 'Unknown',
           language: providerInfo?.language || 'fr',
           planId: data.planId || '',
-          planName: plansMap.get(data.planId) || TIER_LABELS[data.tier as SubscriptionTier] || data.tier,
+          planName: planInfo?.name || TIER_LABELS[data.tier as SubscriptionTier] || data.tier,
           tier: data.tier as SubscriptionTier,
           status: data.status as SubscriptionStatus,
           billingPeriod: (data.billingPeriod || 'monthly') as BillingPeriod,
@@ -413,11 +396,14 @@ export const IaSubscriptionsTab: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [profilesMap, usersMap, plansMap, iaT.errorLoading]);
 
+  // Load when reference data is ready
   useEffect(() => {
-    loadSubscriptions();
-  }, [loadSubscriptions]);
+    if (!refDataLoading) {
+      loadSubscriptions();
+    }
+  }, [loadSubscriptions, refDataLoading]);
 
   // ============================================================================
   // COMPUTED STATS

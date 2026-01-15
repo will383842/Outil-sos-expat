@@ -269,10 +269,9 @@ const AdminFinancePayouts: React.FC = () => {
       const providerId = item.providerId;
       const amount = "amount" in item ? item.amount : (item as PendingTransfer).providerAmount / 100;
 
-      await getDocs(collection(db, "users")).then(async () => {
-        const triggerKycReminder = httpsCallable(functions, "triggerKYCReminders");
-        await triggerKycReminder({ providerId });
-      });
+      // COST FIX: Removed unnecessary getDocs(users) that was loading all users without using the result
+      const triggerKycReminder = httpsCallable(functions, "triggerKYCReminders");
+      await triggerKycReminder({ providerId });
 
       setSuccess("Rappel envoyé avec succès");
     } catch (err: any) {

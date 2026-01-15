@@ -82,7 +82,8 @@ export const IaDashboardTab: React.FC = () => {
     setLoading(true);
     try {
       // Load subscriptions
-      const subsSnapshot = await getDocs(collection(db, 'subscriptions'));
+      // COST FIX: Added limit to prevent excessive reads
+      const subsSnapshot = await getDocs(query(collection(db, 'subscriptions'), limit(2000)));
 
       const newStats: SubscriptionStats = {
         totalProviders: subsSnapshot.size,
@@ -180,7 +181,8 @@ export const IaDashboardTab: React.FC = () => {
       const startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
 
       // Get subscription activity logs or generate mock data based on current state
-      const subsSnapshot = await getDocs(collection(db, 'subscriptions'));
+      // COST FIX: Added limit to prevent excessive reads
+      const subsSnapshot = await getDocs(query(collection(db, 'subscriptions'), limit(2000)));
 
       const dailyStats: DailySubscriberData[] = [];
 

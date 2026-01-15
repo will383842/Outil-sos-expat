@@ -56,6 +56,7 @@ import {
 } from 'firebase/firestore';
 import { db, functions } from '../../config/firebase';
 import { httpsCallable } from 'firebase/functions';
+import { fetchWithCache } from '../../utils/firestoreCache';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import AdminLayout from '../../components/admin/AdminLayout';
@@ -552,18 +553,24 @@ const AdminUnifiedAnalytics: React.FC = () => {
   }, [filters.period, filters.customStart, filters.customEnd]);
 
   // Load countries
+  // COST OPTIMIZATION: Uses localStorage cache (7 days TTL) - countries rarely change
   const loadCountries = useCallback(async () => {
     try {
-      const countriesSnapshot = await getDocs(collection(db, 'countries'));
+      const countriesList = await fetchWithCache(
+        'COUNTRIES',
+        undefined,
+        async () => {
+          const countriesSnapshot = await getDocs(collection(db, 'countries'));
+          return countriesSnapshot.docs
+            .map((doc) => ({
+              code: doc.id,
+              name: (doc.data().name as string) || doc.id,
+            }))
+            .sort((a, b) => a.name.localeCompare(b.name));
+        }
+      );
+
       if (!mountedRef.current) return;
-
-      const countriesList = countriesSnapshot.docs
-        .map((doc) => ({
-          code: doc.id,
-          name: (doc.data().name as string) || doc.id,
-        }))
-        .sort((a, b) => a.name.localeCompare(b.name));
-
       setCountries(countriesList);
     } catch (err) {
       console.error('Error loading countries:', err);

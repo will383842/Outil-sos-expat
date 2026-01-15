@@ -43,7 +43,7 @@ import {
   AreaChart,
   Area
 } from 'recharts';
-import { collection, getDocs, query, where, orderBy, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, query, where, orderBy, Timestamp, limit } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
 import { SubscriptionTier } from '../../../types/subscription';
 import { cn } from '../../../utils/cn';
@@ -588,7 +588,8 @@ export const IaAnalyticsTab: React.FC = () => {
 
   const loadCohortData = async () => {
     try {
-      const subsSnapshot = await getDocs(collection(db, 'subscriptions'));
+      // COST FIX: Added limit to prevent excessive reads on large datasets
+      const subsSnapshot = await getDocs(query(collection(db, 'subscriptions'), limit(2000)));
 
       // Group subscriptions by cohort month
       const cohortMap = new Map<string, {
@@ -687,7 +688,8 @@ export const IaAnalyticsTab: React.FC = () => {
 
   const loadLTVMetrics = async () => {
     try {
-      const subsSnapshot = await getDocs(collection(db, 'subscriptions'));
+      // COST FIX: Added limit to prevent excessive reads on large datasets
+      const subsSnapshot = await getDocs(query(collection(db, 'subscriptions'), limit(2000)));
 
       let totalLTV = 0;
       let userCount = 0;
@@ -770,12 +772,14 @@ export const IaAnalyticsTab: React.FC = () => {
   const loadChurnPredictions = async () => {
     try {
       // Get all active subscriptions
+      // COST FIX: Added limit to prevent excessive reads
       const subsSnapshot = await getDocs(
-        query(collection(db, 'subscriptions'), where('status', 'in', ['active', 'trialing']))
+        query(collection(db, 'subscriptions'), where('status', 'in', ['active', 'trialing']), limit(2000))
       );
 
       // Get user activity data
-      const usersSnapshot = await getDocs(collection(db, 'users'));
+      // COST FIX: Added limit to prevent excessive reads
+      const usersSnapshot = await getDocs(query(collection(db, 'users'), limit(2000)));
       const userActivity = new Map<string, { lastLogin?: Date; aiCallsUsed: number; aiCallsLimit: number }>();
 
       usersSnapshot.docs.forEach(doc => {
@@ -899,13 +903,16 @@ export const IaAnalyticsTab: React.FC = () => {
 
   const loadMRRMovements = async () => {
     try {
-      const subsSnapshot = await getDocs(collection(db, 'subscriptions'));
+      // COST FIX: Added limit to prevent excessive reads
+      const subsSnapshot = await getDocs(query(collection(db, 'subscriptions'), limit(2000)));
 
       // Load subscription logs for upgrade/downgrade tracking
+      // COST FIX: Added limit to prevent excessive reads
       const logsSnapshot = await getDocs(
         query(
           collection(db, 'subscription_logs'),
-          where('action', '==', 'subscription_updated')
+          where('action', '==', 'subscription_updated'),
+          limit(2000)
         )
       );
 

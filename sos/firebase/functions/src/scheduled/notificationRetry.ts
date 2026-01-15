@@ -28,11 +28,11 @@ const RETRY_CONFIG = {
 };
 
 /**
- * Scheduled retry function - runs every 15 minutes
+ * Scheduled retry function - runs every 30 minutes
  */
 export const notificationRetry = onSchedule(
   {
-    schedule: "*/15 * * * *", // Every 15 minutes
+    schedule: "*/30 * * * *", // Every 30 minutes
     region: "europe-west1",
     timeZone: "Europe/Paris",
     timeoutSeconds: 300,

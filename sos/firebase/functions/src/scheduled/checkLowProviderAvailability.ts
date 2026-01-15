@@ -259,7 +259,7 @@ export const checkLowProviderAvailability = functions
     timeoutSeconds: 60,
     memory: '256MB',
   })
-  .pubsub.schedule('every 15 minutes')
+  .pubsub.schedule('every 60 minutes')
   .timeZone('Europe/Paris')
   .onRun(async () => {
     console.log('🔍 Vérification de la disponibilité des prestataires...');

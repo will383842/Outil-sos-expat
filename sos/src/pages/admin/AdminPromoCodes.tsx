@@ -201,10 +201,12 @@ const AdminPromoCodes: React.FC = () => {
 
   const loadStats = useCallback(async (): Promise<void> => {
     try {
-      const couponsSnap = await getDocs(collection(db, "coupons"));
+      // COST FIX: Added limit to prevent excessive reads
+      const couponsSnap = await getDocs(query(collection(db, "coupons"), limit(500)));
       const allCoupons: Coupon[] = couponsSnap.docs.map((d) => mapCouponDoc(d.data(), d.id));
 
-      const usagesSnap = await getDocs(collection(db, "coupon_usages"));
+      // COST FIX: Added limit to prevent excessive reads on usage history
+      const usagesSnap = await getDocs(query(collection(db, "coupon_usages"), limit(2000)));
       const allUsages: CouponUsage[] = usagesSnap.docs.map((d) => {
         const raw = d.data() as Record<string, unknown>;
         return {

@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
 import { cn } from '../../../utils/cn';
+import { useAdminReferenceData } from '../../../hooks/useAdminReferenceData';
 import AdminLayout from '../../../components/admin/AdminLayout';
 import {
   Search,
@@ -581,6 +582,9 @@ const SubscriptionDetailPanel: React.FC<DetailPanelProps> = ({ subscription, isO
 const Subscriptions: React.FC = () => {
   const intl = useIntl();
 
+  // COST OPTIMIZATION: Use shared admin reference data cache
+  const { usersMap, profilesMap, plansMap, isLoading: refDataLoading } = useAdminReferenceData();
+
   // State
   const [subscriptions, setSubscriptions] = useState<SubscriptionRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -623,6 +627,11 @@ const Subscriptions: React.FC = () => {
   // ============================================================================
 
   const loadSubscriptions = useCallback(async () => {
+    // Wait for reference data to be loaded
+    if (refDataLoading || profilesMap.size === 0) {
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -645,77 +654,29 @@ const Subscriptions: React.FC = () => {
         throw new Error(`Failed to load subscriptions: ${e.message}`);
       }
 
-      // Step 2: Load providers for user data - using sos_profiles collection
-      // OPTIMISATION: Limiter les lectures Firestore pour réduire les coûts
-      console.log('[Subscriptions] Step 2: Loading sos_profiles...');
-      let providersSnapshot;
-      try {
-        providersSnapshot = await getDocs(query(collection(db, 'sos_profiles'), limit(FIRESTORE_FETCH_LIMIT)));
-        console.log(`[Subscriptions] Step 2 OK: ${providersSnapshot.docs.length} profiles loaded`);
-      } catch (e: any) {
-        console.error('[Subscriptions] Step 2 FAILED - sos_profiles query:', e);
-        throw new Error(`Failed to load profiles: ${e.message}`);
-      }
-      const providersMap = new Map<string, {
-        name: string;
-        email: string;
-        avatar?: string;
-        type: 'lawyer' | 'expat_aidant';
-      }>();
+      // COST OPTIMIZATION: Steps 2-4 now use shared admin reference data cache
+      // This eliminates 3 Firestore queries per page load (profiles, users, plans)
+      console.log('[Subscriptions] Using cached reference data from useAdminReferenceData');
 
-      providersSnapshot.docs.forEach((docSnap) => {
-        const data = docSnap.data();
-        providersMap.set(docSnap.id, {
-          name: data.displayName || `${data.firstName || ''} ${data.lastName || ''}`.trim() || data.name || 'Unknown',
-          email: data.email || '',
-          avatar: data.photoURL || data.profilePhoto,
-          type: (data.providerType === 'lawyer' || data.type === 'lawyer' ? 'lawyer' : 'expat_aidant') as 'lawyer' | 'expat_aidant',
-        });
-      });
-
-      // Step 3: Load users as fallback
-      // OPTIMISATION: Limiter les lectures Firestore
-      console.log('[Subscriptions] Step 3: Loading users...');
-      try {
-        const usersSnapshot = await getDocs(query(collection(db, 'users'), limit(FIRESTORE_FETCH_LIMIT)));
-        console.log(`[Subscriptions] Step 3 OK: ${usersSnapshot.docs.length} users loaded`);
-        usersSnapshot.docs.forEach((docSnap) => {
-          if (!providersMap.has(docSnap.id)) {
-            const data = docSnap.data();
-            providersMap.set(docSnap.id, {
-              name: data.displayName || `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'Unknown',
-              email: data.email || '',
-              avatar: data.photoURL,
-              type: (data.providerType === 'lawyer' ? 'lawyer' : 'expat_aidant') as 'lawyer' | 'expat_aidant',
-            });
-          }
-        });
-      } catch (e: any) {
-        // Non-blocking: continue without users fallback data
-        console.warn('[Subscriptions] Step 3 WARNING - users query failed (non-blocking):', e.message);
-      }
-
-      // Step 4: Load plans for plan names
-      console.log('[Subscriptions] Step 4: Loading subscription_plans...');
-      const plansMap = new Map<string, string>();
-      try {
-        // ÉCONOMIE: Ajout de limit() pour éviter les lectures excessives
-        const plansSnapshot = await getDocs(query(collection(db, 'subscription_plans'), limit(100)));
-        console.log(`[Subscriptions] Step 4 OK: ${plansSnapshot.docs.length} plans loaded`);
-        plansSnapshot.docs.forEach((docSnap) => {
-          const data = docSnap.data();
-          plansMap.set(docSnap.id, data.name?.fr || data.name || docSnap.id);
-        });
-      } catch (e: any) {
-        // Non-blocking: continue without plan names
-        console.warn('[Subscriptions] Step 4 WARNING - subscription_plans query failed (non-blocking):', e.message);
-      }
-
-      // Transform subscriptions
+      // Transform subscriptions using cached data
       const subsList: SubscriptionRecord[] = snapshot.docs.map((docSnap) => {
         const data = docSnap.data();
         const providerId = data.providerId || docSnap.id;
-        const providerInfo = providersMap.get(providerId);
+
+        // Use cached profile data, fallback to cached user data
+        const cachedProfile = profilesMap.get(providerId);
+        const cachedUser = usersMap.get(providerId);
+        const cachedPlan = plansMap.get(data.planId);
+
+        const providerInfo = cachedProfile ? {
+          name: cachedProfile.displayName || 'Unknown',
+          email: cachedProfile.email || '',
+          type: (cachedProfile.type === 'lawyer' ? 'lawyer' : 'expat_aidant') as 'lawyer' | 'expat_aidant',
+        } : cachedUser ? {
+          name: cachedUser.displayName || 'Unknown',
+          email: cachedUser.email || '',
+          type: (cachedUser.type === 'lawyer' ? 'lawyer' : 'expat_aidant') as 'lawyer' | 'expat_aidant',
+        } : null;
 
         const startDate = data.currentPeriodStart?.toDate?.() || data.createdAt?.toDate?.() || new Date();
         const endDate = data.currentPeriodEnd?.toDate?.() || new Date();
@@ -725,10 +686,10 @@ const Subscriptions: React.FC = () => {
           providerId,
           providerName: providerInfo?.name || 'Unknown',
           providerEmail: providerInfo?.email || '',
-          providerAvatar: providerInfo?.avatar,
+          providerAvatar: undefined, // Avatar not cached in shared reference data
           providerType: providerInfo?.type || 'expat_aidant',
           planId: data.planId || '',
-          planName: plansMap.get(data.planId) || data.tier || 'Unknown',
+          planName: cachedPlan?.name || data.tier || 'Unknown',
           tier: (data.tier || 'trial') as SubscriptionTier,
           status: (data.status || 'active') as SubscriptionStatus,
           billingPeriod: (data.billingPeriod || 'monthly') as BillingPeriod,
@@ -798,7 +759,7 @@ const Subscriptions: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [refDataLoading, profilesMap, usersMap, plansMap]);
 
   useEffect(() => {
     loadSubscriptions();

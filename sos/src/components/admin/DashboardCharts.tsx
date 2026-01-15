@@ -42,6 +42,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { db } from "../../config/firebase";
+import { fetchWithCache } from "../../utils/firestoreCache";
 
 // Types
 interface ChartDataPoint {
@@ -248,18 +249,24 @@ const DashboardCharts: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Load countries for filter
+  // COST OPTIMIZATION: Uses localStorage cache (7 days TTL) - countries rarely change
   const loadCountries = useCallback(async () => {
     try {
-      const countriesSnapshot = await getDocs(collection(db, "countries"));
+      const countriesList = await fetchWithCache(
+        'COUNTRIES',
+        undefined,
+        async () => {
+          const countriesSnapshot = await getDocs(collection(db, "countries"));
+          return countriesSnapshot.docs
+            .map((doc) => ({
+              code: doc.id,
+              name: (doc.data().name as string) || doc.id,
+            }))
+            .sort((a, b) => a.name.localeCompare(b.name));
+        }
+      );
+
       if (!mountedRef.current) return;
-
-      const countriesList = countriesSnapshot.docs
-        .map((doc) => ({
-          code: doc.id,
-          name: (doc.data().name as string) || doc.id,
-        }))
-        .sort((a, b) => a.name.localeCompare(b.name));
-
       setCountries(countriesList);
     } catch (err) {
       console.error("Error loading countries:", err);
