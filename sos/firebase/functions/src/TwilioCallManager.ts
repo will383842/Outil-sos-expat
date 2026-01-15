@@ -948,16 +948,35 @@ export class TwilioCallManager {
 
       try {
         // 🛑 STOP if session is already failed/cancelled (prevents unnecessary retries)
+        console.log(`📞 [${retryId}] RETRY CHECK: Verifying session status before attempt ${attempt}...`);
         const sessionCheck = await this.getCallSession(sessionId);
+        console.log(`📞 [${retryId}]   session.status: ${sessionCheck?.status || 'NOT_FOUND'}`);
+        console.log(`📞 [${retryId}]   client.status: ${sessionCheck?.participants.client.status || 'N/A'}`);
+        console.log(`📞 [${retryId}]   provider.status: ${sessionCheck?.participants.provider.status || 'N/A'}`);
+
         if (sessionCheck && (sessionCheck.status === "failed" || sessionCheck.status === "cancelled")) {
-          console.log(`🛑 [${retryId}] Stopping retries for ${participantType}: session is ${sessionCheck.status}`);
+          console.log(`\n${'❌'.repeat(35)}`);
+          console.log(`🛑 [${retryId}] RETRIES STOPPED!`);
+          console.log(`🛑 [${retryId}]   Reason: session.status is "${sessionCheck.status}"`);
+          console.log(`🛑 [${retryId}]   participantType: ${participantType}`);
+          console.log(`🛑 [${retryId}]   attemptNumber: ${attempt}`);
+          console.log(`🛑 [${retryId}]   ⚠️ This should NOT happen if the retry fix is working correctly!`);
+          console.log(`🛑 [${retryId}]   ⚠️ handleEarlyDisconnection should NOT call handleCallFailure during retries`);
+          console.log(`${'❌'.repeat(35)}\n`);
           await logCallRecord({
             callId: sessionId,
             status: `${participantType}_retries_stopped_session_${sessionCheck.status}`,
             retryCount: attempt - 1,
+            additionalData: {
+              stopReason: 'session_status_failed_or_cancelled',
+              sessionStatus: sessionCheck.status,
+              attemptWhenStopped: attempt,
+            }
           });
           return false;
         }
+        console.log(`📞 [${retryId}]   ✅ Session OK, proceeding with attempt ${attempt}`);
+
 
         // P0 FIX: 🛑 STOP if participant is already connected (prevents duplicate calls)
         const participant = participantType === "provider"
@@ -1433,19 +1452,66 @@ export class TwilioCallManager {
       });
 
       if (duration < CALL_CONFIG.MIN_CALL_DURATION) {
-        console.log(`📄 Early disconnect: ${sessionId}`);
-        await this.handleCallFailure(
-          sessionId,
-          `early_disconnect_${participantType}`
-        );
+        console.log(`\n${'═'.repeat(70)}`);
+        console.log(`📄 [handleEarlyDisconnection] EARLY DISCONNECT DETECTED`);
+        console.log(`📄   sessionId: ${sessionId}`);
+        console.log(`📄   participantType: ${participantType}`);
+        console.log(`📄   duration: ${duration}s (< MIN_CALL_DURATION: ${CALL_CONFIG.MIN_CALL_DURATION}s)`);
+        console.log(`${'═'.repeat(70)}`);
+
+        // P0 FIX 2026-01-15: Check if retries are still in progress
+        // DO NOT call handleCallFailure if the participant still has retry attempts remaining!
+        // The retry logic in callParticipantWithRetries will handle the failure after all attempts.
+        // If we mark the session as "failed" here, the retry loop will see it and stop prematurely.
+        const participant = participantType === 'provider'
+          ? session.participants.provider
+          : session.participants.client;
+        const attemptCount = participant?.attemptCount || 0;
+        const maxRetries = CALL_CONFIG.MAX_RETRIES;
+
+        // Only mark as failed if:
+        // 1. At least one participant was connected (actual call started, not just ringing)
+        // 2. OR all retry attempts have been exhausted
+        const anyParticipantConnected = session.participants.client.status === 'connected' ||
+                                         session.participants.provider.status === 'connected';
+        const retriesExhausted = attemptCount >= maxRetries;
+
+        console.log(`📄 [handleEarlyDisconnection] 🔍 RETRY DECISION ANALYSIS:`);
+        console.log(`📄   ┌─────────────────────────────────────────────────────────────┐`);
+        console.log(`📄   │ participantType: ${participantType.padEnd(43)}│`);
+        console.log(`📄   │ attemptCount: ${String(attemptCount).padEnd(47)}│`);
+        console.log(`📄   │ maxRetries: ${String(maxRetries).padEnd(49)}│`);
+        console.log(`📄   │ client.status: ${(session.participants.client.status || 'undefined').padEnd(45)}│`);
+        console.log(`📄   │ provider.status: ${(session.participants.provider.status || 'undefined').padEnd(43)}│`);
+        console.log(`📄   │ anyParticipantConnected: ${String(anyParticipantConnected).padEnd(35)}│`);
+        console.log(`📄   │ retriesExhausted: ${String(retriesExhausted).padEnd(42)}│`);
+        console.log(`📄   └─────────────────────────────────────────────────────────────┘`);
+
+        if (anyParticipantConnected || retriesExhausted) {
+          console.log(`📄   🔴 DECISION: CALL handleCallFailure`);
+          console.log(`📄      Reason: ${anyParticipantConnected ? 'At least one participant was connected' : `All ${maxRetries} attempts exhausted`}`);
+          await this.handleCallFailure(
+            sessionId,
+            `early_disconnect_${participantType}`
+          );
+        } else {
+          console.log(`📄   🟢 DECISION: SKIP handleCallFailure`);
+          console.log(`📄      Reason: No participant connected yet AND retries remain (${attemptCount}/${maxRetries})`);
+          console.log(`📄      The retry loop in callParticipantWithRetries will continue with attempt ${attemptCount + 1}`);
+        }
+        console.log(`${'═'.repeat(70)}\n`);
+
         await logCallRecord({
           callId: sessionId,
           status: `early_disconnect_${participantType}`,
-          retryCount: 0,
+          retryCount: attemptCount,
           additionalData: {
             participantType,
             duration,
             reason: "below_min_duration",
+            handledByRetryLoop: !anyParticipantConnected && !retriesExhausted,
+            anyParticipantConnected,
+            retriesExhausted,
           },
         });
       } else {
@@ -1512,11 +1578,32 @@ export class TwilioCallManager {
   // }
 
   async handleCallFailure(sessionId: string, reason: string): Promise<void> {
+    const failureId = `failure_${Date.now().toString(36)}`;
+    console.log(`\n${'🔥'.repeat(35)}`);
+    console.log(`🔥 [${failureId}] handleCallFailure CALLED`);
+    console.log(`🔥 [${failureId}]   sessionId: ${sessionId}`);
+    console.log(`🔥 [${failureId}]   reason: ${reason}`);
+    console.log(`🔥 [${failureId}]   ⚠️ This will set session.status = "failed"`);
+    console.log(`🔥 [${failureId}]   ⚠️ This will STOP any pending retries!`);
+    console.log(`${'🔥'.repeat(35)}`);
+
     try {
       const callSession = await this.getCallSession(sessionId);
-      if (!callSession) return;
+      if (!callSession) {
+        console.log(`🔥 [${failureId}] Session not found, returning early`);
+        return;
+      }
 
+      console.log(`🔥 [${failureId}] Current session state before marking failed:`);
+      console.log(`🔥 [${failureId}]   session.status: ${callSession.status}`);
+      console.log(`🔥 [${failureId}]   client.status: ${callSession.participants.client.status}`);
+      console.log(`🔥 [${failureId}]   client.attemptCount: ${callSession.participants.client.attemptCount || 0}`);
+      console.log(`🔥 [${failureId}]   provider.status: ${callSession.participants.provider.status}`);
+      console.log(`🔥 [${failureId}]   provider.attemptCount: ${callSession.participants.provider.attemptCount || 0}`);
+
+      console.log(`🔥 [${failureId}] Setting session.status = "failed"...`);
       await this.updateCallSessionStatus(sessionId, "failed");
+      console.log(`🔥 [${failureId}] ✅ Session marked as failed`);
 
       // 🛠️ FIX: Always fallback to 'en' if missing
       const clientLanguage = callSession.metadata?.clientLanguages?.[0] || "en";

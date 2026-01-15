@@ -598,6 +598,13 @@ async function handleCallCompleted(
       await twilioCallManager.handleCallCompletion(sessionId, billingDuration);
     } else {
       console.log(`🏁 [${completedId}] STEP 3: billingDuration < 120s → handleEarlyDisconnection (may refund)`);
+      // P0 FIX LOG 2026-01-15: Log participant retry state BEFORE calling handleEarlyDisconnection
+      const participant = participantType === 'provider' ? session.participants.provider : session.participants.client;
+      console.log(`🏁 [${completedId}] 📊 RETRY STATE before handleEarlyDisconnection:`);
+      console.log(`🏁 [${completedId}]   ${participantType}.attemptCount: ${participant?.attemptCount || 0}`);
+      console.log(`🏁 [${completedId}]   ${participantType}.status: ${participant?.status}`);
+      console.log(`🏁 [${completedId}]   session.status: ${session.status}`);
+      console.log(`🏁 [${completedId}]   MAX_RETRIES: 3 (if attemptCount < 3, retries should continue)`);
       await twilioCallManager.handleEarlyDisconnection(sessionId, participantType, billingDuration);
     }
     console.log(`🏁 [${completedId}]   ✅ Post-completion handling done`);
