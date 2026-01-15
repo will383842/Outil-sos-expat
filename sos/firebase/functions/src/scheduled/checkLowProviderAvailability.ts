@@ -159,7 +159,7 @@ async function sendAlertEmail(
                 </div>
 
                 <div style="text-align: center; margin-top: 20px;">
-                  <a href="https://outils-sos-expat.web.app/admin/providers"
+                  <a href="https://ia.sos-expat.com/admin/providers"
                      style="display: inline-block; background: #3b82f6; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">
                     Voir le Dashboard Prestataires
                   </a>

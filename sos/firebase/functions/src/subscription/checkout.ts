@@ -359,8 +359,8 @@ async function isProviderEligibleForTrial(
 const ALLOWED_DOMAINS = [
   'sos-expat.com',
   'www.sos-expat.com',
-  'outils-sos-expat.web.app',
-  'outils-sos-expat.firebaseapp.com',
+  'ia.sos-expat.com',
+  'outil-sos-expat.pages.dev',
   'localhost'
 ];
 

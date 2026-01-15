@@ -2648,7 +2648,7 @@ export const checkPayPalPayoutStatus = onCall(
 export const getRecommendedPaymentGateway = onCall(
   {
     region: "europe-west1",
-    cors: ["https://sos-expat.com", "https://www.sos-expat.com", "https://outils-sos-expat.web.app", "http://localhost:5173"]
+    cors: ["https://sos-expat.com", "https://www.sos-expat.com", "https://ia.sos-expat.com", "https://outil-sos-expat.pages.dev", "http://localhost:5173"]
   },
   async (request) => {
     const { countryCode } = request.data || {};

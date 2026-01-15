@@ -81,7 +81,7 @@ async function createUserDocument() {
   }
 
   console.log("\n🎉 DONE! User should now be able to see conversations on dashboard.");
-  console.log("   → Refresh https://outils-sos-expat.web.app/dashboard");
+  console.log("   → Refresh https://ia.sos-expat.com/dashboard");
 }
 
 // Run

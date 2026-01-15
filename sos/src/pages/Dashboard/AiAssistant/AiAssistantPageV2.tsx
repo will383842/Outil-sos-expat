@@ -36,7 +36,7 @@ import './styles/tokens.css';
 // CONFIGURATION
 // ============================================================================
 
-const OUTIL_BASE_URL = import.meta.env.VITE_OUTIL_BASE_URL || 'https://outils-sos-expat.web.app';
+const OUTIL_BASE_URL = import.meta.env.VITE_OUTIL_BASE_URL || 'https://ia.sos-expat.com';
 
 // ============================================================================
 // TYPES
