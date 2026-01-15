@@ -1,6 +1,18 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 
+// Configuration CORS pour autoriser les appels depuis les domaines de production
+const FUNCTION_OPTIONS = {
+  region: 'europe-west1' as const,
+  cors: [
+    'https://sos-expat.com',
+    'https://www.sos-expat.com',
+    'https://outils-sos-expat.web.app',
+    'http://localhost:5173',
+    'http://localhost:3000',
+  ],
+};
+
 const IS_DEPLOYMENT_ANALYSIS =
   !process.env.K_REVISION &&
   !process.env.K_SERVICE &&
@@ -22,7 +34,7 @@ function getDb() {
   return admin.firestore();
 }
 
-export const setProviderOffline = onCall(async (request) => {
+export const setProviderOffline = onCall(FUNCTION_OPTIONS, async (request) => {
   // Vérifier l'authentification
   if (!request.auth) {
     throw new HttpsError(
