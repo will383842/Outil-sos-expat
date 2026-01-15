@@ -17,6 +17,7 @@ import { signOut } from "firebase/auth";
 import { auth } from "../../lib/firebase";
 import { useAuth, useProvider, useSubscription } from "../../contexts/UnifiedUserContext";
 import { useLanguage } from "../../hooks/useLanguage";
+import { useProviderConversationCounts } from "../../hooks/useUnreadMessages";
 import { cn } from "@/lib/utils";
 import {
   Home,
@@ -31,8 +32,9 @@ import {
   MessagesSquare,
   X,
   Menu,
+  MessageCircle,
 } from "lucide-react";
-import { useState, memo, useEffect, useCallback } from "react";
+import { useState, memo, useEffect, useCallback, useMemo } from "react";
 
 // =============================================================================
 // TYPES
@@ -54,6 +56,7 @@ interface ProviderSelectorProps {
   activeProvider: any;
   onSwitch: (providerId: string) => void;
   collapsed?: boolean;
+  conversationCounts?: { [providerId: string]: number };
 }
 
 const ProviderSelector = memo(function ProviderSelector({
@@ -61,6 +64,7 @@ const ProviderSelector = memo(function ProviderSelector({
   activeProvider,
   onSwitch,
   collapsed = false,
+  conversationCounts = {},
 }: ProviderSelectorProps) {
   const { t } = useLanguage({ mode: "provider" });
   const [isOpen, setIsOpen] = useState(false);
@@ -100,7 +104,100 @@ const ProviderSelector = memo(function ProviderSelector({
           <>
             <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
             <div className="absolute left-full top-0 ml-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-hidden">
-              {providers.map((provider) => (
+              {providers.map((provider) => {
+                const count = conversationCounts[provider.id] || 0;
+                return (
+                  <button
+                    key={provider.id}
+                    onClick={() => {
+                      onSwitch(provider.id);
+                      setIsOpen(false);
+                    }}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors",
+                      provider.id === activeProvider?.id && "bg-red-50"
+                    )}
+                  >
+                    <div className="relative">
+                      <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600 text-sm font-semibold">
+                        {(provider.name || "P")[0].toUpperCase()}
+                      </div>
+                      {count > 0 && (
+                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                          {count > 9 ? "9+" : count}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {provider.name || provider.fullName}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {provider.type === "lawyer" ? t("provider:sidebar.lawyer") : t("provider:sidebar.expert")}
+                        {count > 0 && (
+                          <span className="ml-2 text-red-500 font-medium">
+                            {count} conversation{count > 1 ? "s" : ""} active{count > 1 ? "s" : ""}
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    {provider.id === activeProvider?.id && (
+                      <Check className="w-4 h-4 text-red-600" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  // Calculate total conversations for display
+  const totalConversations = Object.values(conversationCounts).reduce((sum, c) => sum + c, 0);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-gray-100 transition-colors"
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="relative">
+            <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 font-semibold shrink-0">
+              {(activeProvider?.name || "P")[0].toUpperCase()}
+            </div>
+            {totalConversations > 0 && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                {totalConversations > 9 ? "9+" : totalConversations}
+              </span>
+            )}
+          </div>
+          <div className="text-left min-w-0">
+            <p className="text-sm font-medium text-gray-900 truncate">
+              {activeProvider?.name || activeProvider?.fullName || t("provider:sidebar.select")}
+            </p>
+            <p className="text-xs text-gray-500">
+              {t("provider:sidebar.providersCount", { count: providers.length })}
+              {totalConversations > 0 && (
+                <span className="text-red-500 font-medium ml-1">
+                  ({totalConversations} active)
+                </span>
+              )}
+            </p>
+          </div>
+        </div>
+        <ChevronDown className={cn("w-5 h-5 text-gray-400 transition-transform", isOpen && "rotate-180")} />
+      </button>
+
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+          <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-hidden">
+            {providers.map((provider) => {
+              const count = conversationCounts[provider.id] || 0;
+              return (
                 <button
                   key={provider.id}
                   onClick={() => {
@@ -112,8 +209,15 @@ const ProviderSelector = memo(function ProviderSelector({
                     provider.id === activeProvider?.id && "bg-red-50"
                   )}
                 >
-                  <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600 text-sm font-semibold">
-                    {(provider.name || "P")[0].toUpperCase()}
+                  <div className="relative">
+                    <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600 text-sm font-semibold">
+                      {(provider.name || "P")[0].toUpperCase()}
+                    </div>
+                    {count > 0 && (
+                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                        {count > 9 ? "9+" : count}
+                      </span>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">
@@ -121,74 +225,19 @@ const ProviderSelector = memo(function ProviderSelector({
                     </p>
                     <p className="text-xs text-gray-500">
                       {provider.type === "lawyer" ? t("provider:sidebar.lawyer") : t("provider:sidebar.expert")}
+                      {count > 0 && (
+                        <span className="ml-2 text-red-500 font-medium">
+                          {count} conversation{count > 1 ? "s" : ""} active{count > 1 ? "s" : ""}
+                        </span>
+                      )}
                     </p>
                   </div>
                   {provider.id === activeProvider?.id && (
                     <Check className="w-4 h-4 text-red-600" />
                   )}
                 </button>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-gray-100 transition-colors"
-      >
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 font-semibold shrink-0">
-            {(activeProvider?.name || "P")[0].toUpperCase()}
-          </div>
-          <div className="text-left min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">
-              {activeProvider?.name || activeProvider?.fullName || t("provider:sidebar.select")}
-            </p>
-            <p className="text-xs text-gray-500">
-              {t("provider:sidebar.providersCount", { count: providers.length })}
-            </p>
-          </div>
-        </div>
-        <ChevronDown className={cn("w-5 h-5 text-gray-400 transition-transform", isOpen && "rotate-180")} />
-      </button>
-
-      {isOpen && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-hidden">
-            {providers.map((provider) => (
-              <button
-                key={provider.id}
-                onClick={() => {
-                  onSwitch(provider.id);
-                  setIsOpen(false);
-                }}
-                className={cn(
-                  "w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors",
-                  provider.id === activeProvider?.id && "bg-red-50"
-                )}
-              >
-                <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600 text-sm font-semibold">
-                  {(provider.name || "P")[0].toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    {provider.name || provider.fullName}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {provider.type === "lawyer" ? t("provider:sidebar.lawyer") : t("provider:sidebar.expert")}
-                  </p>
-                </div>
-                {provider.id === activeProvider?.id && (
-                  <Check className="w-4 h-4 text-red-600" />
-                )}
-              </button>
-            ))}
+              );
+            })}
           </div>
         </>
       )}
@@ -278,6 +327,15 @@ export default function ProviderSidebar({ isOpen = false, onClose }: ProviderSid
 
   // Collapsed state (desktop only)
   const [collapsed, setCollapsed] = useState(false);
+
+  // Get provider IDs for conversation counts
+  const providerIds = useMemo(
+    () => linkedProviders.map((p) => p.id),
+    [linkedProviders]
+  );
+
+  // Real-time conversation counts per provider
+  const { counts: conversationCounts } = useProviderConversationCounts(providerIds);
 
   // Close mobile drawer on route change
   useEffect(() => {
@@ -382,6 +440,7 @@ export default function ProviderSidebar({ isOpen = false, onClose }: ProviderSid
               activeProvider={activeProvider}
               onSwitch={switchProvider}
               collapsed={collapsed}
+              conversationCounts={conversationCounts}
             />
           </div>
         )}

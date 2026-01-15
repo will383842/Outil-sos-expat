@@ -178,6 +178,78 @@ export function useNewAIResponses(): UnreadMessagesResult {
 }
 
 // =============================================================================
+// HOOK MULTI-PROVIDER - Compte les conversations actives par prestataire
+// =============================================================================
+
+export interface ProviderConversationCounts {
+  [providerId: string]: number;
+}
+
+/**
+ * Hook pour compter les conversations actives de chaque prestataire lié
+ * Utile pour les comptes multi-prestataires
+ */
+export function useProviderConversationCounts(providerIds: string[]): {
+  counts: ProviderConversationCounts;
+  totalActive: number;
+  loading: boolean;
+} {
+  const [counts, setCounts] = useState<ProviderConversationCounts>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!providerIds || providerIds.length === 0) {
+      setCounts({});
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+
+    // Query pour les conversations actives de tous les prestataires
+    const conversationsRef = collection(db, 'conversations');
+    const activeQuery = query(
+      conversationsRef,
+      where('providerId', 'in', providerIds.slice(0, 10)), // Firestore limite à 10 valeurs
+      where('status', '==', 'active')
+    );
+
+    const unsubscribe = onSnapshot(
+      activeQuery,
+      (snapshot) => {
+        const newCounts: ProviderConversationCounts = {};
+
+        // Initialiser tous les providers à 0
+        providerIds.forEach(id => {
+          newCounts[id] = 0;
+        });
+
+        // Compter les conversations par provider
+        snapshot.docs.forEach((doc) => {
+          const data = doc.data();
+          if (data.providerId && newCounts[data.providerId] !== undefined) {
+            newCounts[data.providerId]++;
+          }
+        });
+
+        setCounts(newCounts);
+        setLoading(false);
+      },
+      (err) => {
+        console.error('[useProviderConversationCounts] Erreur:', err);
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [providerIds.join(',')]);
+
+  const totalActive = Object.values(counts).reduce((sum, count) => sum + count, 0);
+
+  return { counts, totalActive, loading };
+}
+
+// =============================================================================
 // EXPORT PAR DÉFAUT
 // =============================================================================
 
