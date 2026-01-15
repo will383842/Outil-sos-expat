@@ -139,6 +139,109 @@ const getAdaptiveTimeout = (): number => {
 };
 
 /* =========================================================
+   🔧 MOBILE AUTH HELPERS - Compatibilité maximale
+   ========================================================= */
+
+/**
+ * Détecte si on est dans un WebView in-app (Instagram, Facebook, TikTok, etc.)
+ * Ces WebViews ne supportent généralement pas Google Auth via popup/redirect
+ */
+const isInAppBrowser = (): boolean => {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || navigator.vendor || '';
+
+  // Liste des WebViews in-app connus
+  const inAppPatterns = [
+    /FBAN|FBAV/i,           // Facebook App
+    /Instagram/i,            // Instagram
+    /Twitter/i,              // Twitter/X
+    /Line\//i,               // Line
+    /KAKAOTALK/i,            // KakaoTalk
+    /Snapchat/i,             // Snapchat
+    /TikTok/i,               // TikTok
+    /BytedanceWebview/i,     // TikTok WebView
+    /Musical_ly/i,           // Musical.ly (old TikTok)
+    /LinkedIn/i,             // LinkedIn
+    /Pinterest/i,            // Pinterest
+    /Telegram/i,             // Telegram
+    /WhatsApp/i,             // WhatsApp (rare mais possible)
+    /WeChat|MicroMessenger/i, // WeChat
+  ];
+
+  return inAppPatterns.some(pattern => pattern.test(ua));
+};
+
+/**
+ * Détecte si on doit forcer le mode redirect au lieu de popup
+ * Sur iOS et dans les WebViews, les popups ne fonctionnent souvent pas
+ */
+const shouldForceRedirectAuth = (): boolean => {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent;
+
+  // iOS Safari a des problèmes fréquents avec les popups
+  const isIOS = /iPhone|iPad|iPod/i.test(ua);
+
+  // Les WebViews Android peuvent aussi avoir des problèmes
+  const isAndroidWebView = /wv/.test(ua) && /Android/i.test(ua);
+
+  // Samsung Internet a parfois des problèmes
+  const isSamsungBrowser = /SamsungBrowser/i.test(ua);
+
+  // UC Browser et autres navigateurs alternatifs
+  const isAlternativeBrowser = /UCBrowser|Opera Mini|OPR/i.test(ua);
+
+  return isIOS || isInAppBrowser() || isAndroidWebView || isSamsungBrowser || isAlternativeBrowser;
+};
+
+/**
+ * Storage sécurisé avec fallback
+ * Certains navigateurs (iOS Safari privé) bloquent sessionStorage/localStorage
+ */
+const safeStorage = {
+  _memoryStorage: {} as Record<string, string>,
+
+  setItem: (key: string, value: string): void => {
+    try {
+      // Essayer sessionStorage d'abord (préféré pour la sécurité)
+      sessionStorage.setItem(key, value);
+    } catch {
+      try {
+        // Fallback vers localStorage
+        localStorage.setItem(key, value);
+      } catch {
+        // Dernier recours: mémoire (perdu au refresh mais mieux que rien)
+        safeStorage._memoryStorage[key] = value;
+        console.warn('[Auth] Storage unavailable, using memory fallback for:', key);
+      }
+    }
+  },
+
+  getItem: (key: string): string | null => {
+    try {
+      // Essayer sessionStorage d'abord
+      const sessionValue = sessionStorage.getItem(key);
+      if (sessionValue) return sessionValue;
+    } catch { /* ignore */ }
+
+    try {
+      // Essayer localStorage
+      const localValue = localStorage.getItem(key);
+      if (localValue) return localValue;
+    } catch { /* ignore */ }
+
+    // Dernier recours: mémoire
+    return safeStorage._memoryStorage[key] || null;
+  },
+
+  removeItem: (key: string): void => {
+    try { sessionStorage.removeItem(key); } catch { /* ignore */ }
+    try { localStorage.removeItem(key); } catch { /* ignore */ }
+    delete safeStorage._memoryStorage[key];
+  }
+};
+
+/* =========================================================
    Helpers email (locaux)
    ========================================================= */
 const normalizeEmail = (s: string): string =>
@@ -1011,8 +1114,22 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   }, [deviceInfo]);
 
   const loginWithGoogle = useCallback(async (rememberMe: boolean = false): Promise<void> => {
-    // VERSION 9 - TRY POPUP FIRST, FALLBACK TO REDIRECT
-    console.log("[DEBUG] " + "🔵 GOOGLE LOGIN: Début (v9 - popup first)");
+    // VERSION 10 - PRODUCTION READY: Mobile + Desktop compatible
+    console.log("[DEBUG] " + "🔵 GOOGLE LOGIN: Début (v10 - production ready)");
+
+    // 🚫 BLOQUER les WebViews in-app (Instagram, Facebook, TikTok, etc.)
+    // Ces navigateurs ne supportent pas Google Auth correctement
+    if (isInAppBrowser()) {
+      console.log("[DEBUG] " + "❌ GOOGLE LOGIN: WebView in-app détecté - bloqué");
+      const browserName = /Instagram/i.test(navigator.userAgent) ? 'Instagram' :
+                          /FBAN|FBAV/i.test(navigator.userAgent) ? 'Facebook' :
+                          /TikTok/i.test(navigator.userAgent) ? 'TikTok' :
+                          /Twitter/i.test(navigator.userAgent) ? 'Twitter' :
+                          /LinkedIn/i.test(navigator.userAgent) ? 'LinkedIn' :
+                          'cette application';
+      setError(`La connexion Google n'est pas supportée depuis ${browserName}. Veuillez ouvrir le site dans Safari ou Chrome.`);
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
@@ -1022,6 +1139,11 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       googleAttempts: m.googleAttempts + 1,
       lastAttempt: new Date(),
     }));
+
+    // Détecter si on doit forcer redirect (iOS, Samsung, etc.)
+    const forceRedirect = shouldForceRedirectAuth();
+    console.log("[DEBUG] " + "🔵 GOOGLE LOGIN: forceRedirect=" + forceRedirect + " (iOS/WebView/Samsung)");
+
     try {
       console.log("[DEBUG] " + "🔵 GOOGLE LOGIN: setPersistence...");
       const persistenceType = rememberMe ? browserLocalPersistence : browserSessionPersistence;
@@ -1033,14 +1155,32 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       provider.addScope('profile');
       provider.setCustomParameters({ prompt: 'select_account' });
 
-      // Try popup first (works better with cross-origin)
-      console.log("[DEBUG] " + "🔵 GOOGLE LOGIN: Tentative POPUP...");
+      // 📱 Sur iOS et navigateurs problématiques: forcer redirect directement
+      if (forceRedirect) {
+        console.log("[DEBUG] " + "🔄 GOOGLE LOGIN: Mode REDIRECT forcé (mobile/iOS)...");
+        const currentPath = window.location.pathname + window.location.search;
+        safeStorage.setItem('googleAuthRedirect', currentPath);
+        await signInWithRedirect(auth, provider);
+        return;
+      }
+
+      // 💻 Sur Desktop: essayer popup d'abord
+      console.log("[DEBUG] " + "🔵 GOOGLE LOGIN: Tentative POPUP (desktop)...");
       try {
         const result = await signInWithPopup(auth, provider);
         console.log("[DEBUG] " + "✅ GOOGLE POPUP: Succès! UID: " + result.user.uid);
 
         // Process the user directly (same logic as redirect handler)
         const googleUser = result.user;
+
+        // 🔧 FIX: Force token refresh to ensure Firestore rules recognize the new user
+        // Without this, Firestore may reject writes because the auth token isn't propagated yet
+        console.log("[DEBUG] " + "🔄 GOOGLE POPUP: Rafraîchissement du token...");
+        await googleUser.getIdToken(true);
+        // Small delay to ensure token propagation to Firestore
+        await new Promise(resolve => setTimeout(resolve, 500));
+        console.log("[DEBUG] " + "✅ GOOGLE POPUP: Token rafraîchi");
+
         const userRef = doc(db, 'users', googleUser.uid);
         const userDoc = await getDoc(userRef);
 
@@ -1058,28 +1198,55 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
             isActive: true,
           });
         } else {
-          // Create new client user
-          await createUserDocumentInFirestore(googleUser, {
-            role: 'client',
-            email: googleUser.email || '',
-            preferredLanguage: 'fr',
-            isApproved: true,
-            approvalStatus: 'approved',
-            isVisible: true,
-            isActive: true,
-            provider: 'google.com',
-            isVerified: googleUser.emailVerified,
-            ...(googleUser.photoURL && { profilePhoto: googleUser.photoURL, photoURL: googleUser.photoURL }),
-          });
+          // Create new client user with retry logic
+          console.log("[DEBUG] " + "🔵 GOOGLE POPUP: Création du document utilisateur...");
+          const maxRetries = 3;
+          let lastError: Error | null = null;
+
+          for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+              await createUserDocumentInFirestore(googleUser, {
+                role: 'client',
+                email: googleUser.email || '',
+                preferredLanguage: 'fr',
+                isApproved: true,
+                approvalStatus: 'approved',
+                isVisible: true,
+                isActive: true,
+                provider: 'google.com',
+                isVerified: googleUser.emailVerified,
+                ...(googleUser.photoURL && { profilePhoto: googleUser.photoURL, photoURL: googleUser.photoURL }),
+              });
+              console.log("[DEBUG] " + "✅ GOOGLE POPUP: Document créé (tentative " + attempt + ")");
+              lastError = null;
+              break;
+            } catch (createError) {
+              lastError = createError as Error;
+              console.warn("[DEBUG] " + "⚠️ GOOGLE POPUP: Échec création tentative " + attempt + "/" + maxRetries, createError);
+              if (attempt < maxRetries) {
+                // Wait before retry (exponential backoff)
+                const delay = attempt * 1000;
+                console.log("[DEBUG] " + "🔄 GOOGLE POPUP: Retry dans " + delay + "ms...");
+                await new Promise(resolve => setTimeout(resolve, delay));
+                // Refresh token again before retry
+                await googleUser.getIdToken(true);
+              }
+            }
+          }
+
+          if (lastError) {
+            console.error("[DEBUG] " + "❌ GOOGLE POPUP: Échec création après " + maxRetries + " tentatives");
+            throw lastError;
+          }
         }
 
         console.log("[DEBUG] " + "✅ GOOGLE POPUP: Utilisateur traité avec succès");
         await logAuthEvent('successful_google_login', { userId: googleUser.uid, userEmail: googleUser.email, deviceInfo });
 
         // Check for saved redirect URL
-        const savedRedirect = sessionStorage.getItem('googleAuthRedirect');
+        const savedRedirect = safeStorage.getItem('googleAuthRedirect');
         if (savedRedirect) {
-          sessionStorage.removeItem('googleAuthRedirect');
+          safeStorage.removeItem('googleAuthRedirect');
           console.log('[Auth] Google popup: navigating to saved URL:', savedRedirect);
           window.location.href = savedRedirect;
         }
@@ -1099,7 +1266,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           console.log("[DEBUG] " + "🔄 Popup bloqué, fallback vers REDIRECT...");
           // Save current URL for redirect after Google login
           const currentPath = window.location.pathname + window.location.search;
-          sessionStorage.setItem('googleAuthRedirect', currentPath);
+          safeStorage.setItem('googleAuthRedirect', currentPath);
           await signInWithRedirect(auth, provider);
           return;
         }
@@ -1107,7 +1274,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         // For other errors, try redirect as fallback
         console.log("[DEBUG] " + "🔄 Erreur popup, fallback vers REDIRECT...");
         const currentPath = window.location.pathname + window.location.search;
-        sessionStorage.setItem('googleAuthRedirect', currentPath);
+        safeStorage.setItem('googleAuthRedirect', currentPath);
         await signInWithRedirect(auth, provider);
         return;
       }
@@ -1148,10 +1315,32 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       try {
         if (redirectHandledRef.current) return;
 
-        // VERSION 8 - DEBUG GOOGLE REDIRECT RESULT
+        // VERSION 10 - PRODUCTION READY: avec timeout
         console.log("[DEBUG] " + "🔵 GOOGLE REDIRECT: Vérification du retour...");
 
-        const result = await getRedirectResult(auth);
+        // ⏱️ Timeout pour éviter blocage infini sur certains navigateurs
+        const REDIRECT_TIMEOUT = 15000; // 15 secondes
+        let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+        const resultPromise = getRedirectResult(auth);
+        const timeoutPromise = new Promise<null>((_, reject) => {
+          timeoutId = setTimeout(() => {
+            reject(new Error('REDIRECT_TIMEOUT'));
+          }, REDIRECT_TIMEOUT);
+        });
+
+        let result;
+        try {
+          result = await Promise.race([resultPromise, timeoutPromise]);
+          if (timeoutId) clearTimeout(timeoutId);
+        } catch (raceError) {
+          if (timeoutId) clearTimeout(timeoutId);
+          if ((raceError as Error).message === 'REDIRECT_TIMEOUT') {
+            console.warn("[DEBUG] " + "⚠️ GOOGLE REDIRECT: Timeout après " + REDIRECT_TIMEOUT + "ms - abandon");
+            return;
+          }
+          throw raceError;
+        }
 
         if (!result?.user) {
           console.log("[DEBUG] " + "🔵 GOOGLE REDIRECT: Pas de résultat (normal si pas de redirect en cours)");
@@ -1162,6 +1351,13 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
         redirectHandledRef.current = true;
         const googleUser = result.user;
+
+        // 🔧 FIX: Force token refresh to ensure Firestore rules recognize the new user
+        console.log("[DEBUG] " + "🔄 GOOGLE REDIRECT: Rafraîchissement du token...");
+        await googleUser.getIdToken(true);
+        // Small delay to ensure token propagation to Firestore
+        await new Promise(resolve => setTimeout(resolve, 500));
+        console.log("[DEBUG] " + "✅ GOOGLE REDIRECT: Token rafraîchi");
 
         const userRef = doc(db, 'users', googleUser.uid);
         const userDoc = await getDoc(userRef);
@@ -1232,8 +1428,36 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
             newUserData.photoURL = googleUser.photoURL;
             newUserData.avatar = googleUser.photoURL;
           }
-          
-          await createUserDocumentInFirestore(googleUser, newUserData);
+
+          // Create document with retry logic
+          console.log("[DEBUG] " + "🔵 GOOGLE REDIRECT: Création du document utilisateur...");
+          const maxRetries = 3;
+          let lastError: Error | null = null;
+
+          for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+              await createUserDocumentInFirestore(googleUser, newUserData);
+              console.log("[DEBUG] " + "✅ GOOGLE REDIRECT: Document créé (tentative " + attempt + ")");
+              lastError = null;
+              break;
+            } catch (createError) {
+              lastError = createError as Error;
+              console.warn("[DEBUG] " + "⚠️ GOOGLE REDIRECT: Échec création tentative " + attempt + "/" + maxRetries, createError);
+              if (attempt < maxRetries) {
+                // Wait before retry (exponential backoff)
+                const delay = attempt * 1000;
+                console.log("[DEBUG] " + "🔄 GOOGLE REDIRECT: Retry dans " + delay + "ms...");
+                await new Promise(resolve => setTimeout(resolve, delay));
+                // Refresh token again before retry
+                await googleUser.getIdToken(true);
+              }
+            }
+          }
+
+          if (lastError) {
+            console.error("[DEBUG] " + "❌ GOOGLE REDIRECT: Échec création après " + maxRetries + " tentatives");
+            throw lastError;
+          }
         }
 
         await logAuthEvent('successful_google_login', {
@@ -1246,15 +1470,18 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         console.log('[Auth] Google redirect login successful. Photo URL:', googleUser.photoURL);
 
         // Check for saved redirect URL after Google login
-        const savedRedirect = sessionStorage.getItem('googleAuthRedirect');
+        const savedRedirect = safeStorage.getItem('googleAuthRedirect');
         if (savedRedirect) {
-          sessionStorage.removeItem('googleAuthRedirect');
+          safeStorage.removeItem('googleAuthRedirect');
           console.log('[Auth] Google redirect: navigating to saved URL:', savedRedirect);
           // Use window.location for navigation to ensure full page reload with auth state
           window.location.href = savedRedirect;
         }
       } catch (e) {
-        console.warn('[Auth] getRedirectResult error', e);
+        const errorMessage = e instanceof Error ? e.message : String(e);
+        console.warn('[Auth] getRedirectResult error:', errorMessage);
+        // Ne pas afficher d'erreur à l'utilisateur pour les erreurs de redirect
+        // Car getRedirectResult retourne souvent des erreurs sur page normale
       } finally {
         setIsLoading(false);
       }

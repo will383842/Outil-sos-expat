@@ -378,7 +378,7 @@ export const AiAssistantPageV2: React.FC = () => {
               <AccessCTA
                 onAccess={() => handleAccessOutil()}
                 loading={isAccessingOutil || providersLoading}
-                canMakeCall={(canMakeAiCall || selectedProvider?.hasForcedAccess) && !providersLoading && selectedProviderId !== null}
+                canMakeCall={!!(canMakeAiCall || selectedProvider?.hasForcedAccess) && !providersLoading && selectedProviderId !== null}
                 error={accessError}
                 selectedProviderName={selectedProvider?.name}
                 showMultiProvider={linkedProviders.length > 1}
@@ -416,7 +416,7 @@ export const AiAssistantPageV2: React.FC = () => {
                 conversations={recentConversations}
                 loading={conversationsLoading || providersLoading}
                 error={conversationsError}
-                canMakeCall={(canMakeAiCall || selectedProvider?.hasForcedAccess) && !providersLoading && selectedProviderId !== null}
+                canMakeCall={!!(canMakeAiCall || selectedProvider?.hasForcedAccess) && !providersLoading && selectedProviderId !== null}
                 locale={locale}
                 onViewAll={() => handleAccessOutil()}
                 onOpenConversation={(id) => {
