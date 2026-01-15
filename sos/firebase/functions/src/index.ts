@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+// ====== FORCE REDEPLOY 2026-01-15 - AMD pending fix ======
 // ====== ULTRA DEBUG INITIALIZATION ======
 import {
   ultraLogger,
