@@ -374,8 +374,8 @@ export const AiAssistantPageV2: React.FC = () => {
               {/* Main CTA */}
               <AccessCTA
                 onAccess={() => handleAccessOutil()}
-                loading={isAccessingOutil}
-                canMakeCall={canMakeAiCall}
+                loading={isAccessingOutil || providersLoading}
+                canMakeCall={canMakeAiCall && !providersLoading && selectedProviderId !== null}
                 error={accessError}
                 selectedProviderName={selectedProvider?.name}
                 showMultiProvider={linkedProviders.length > 1}
@@ -411,9 +411,9 @@ export const AiAssistantPageV2: React.FC = () => {
             <main className="lg:col-span-2">
               <ConversationsSection
                 conversations={recentConversations}
-                loading={conversationsLoading}
+                loading={conversationsLoading || providersLoading}
                 error={conversationsError}
-                canMakeCall={canMakeAiCall}
+                canMakeCall={canMakeAiCall && !providersLoading && selectedProviderId !== null}
                 locale={locale}
                 onViewAll={() => handleAccessOutil()}
                 onOpenConversation={(id) => {
