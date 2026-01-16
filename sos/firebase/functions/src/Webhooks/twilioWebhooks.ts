@@ -1260,34 +1260,59 @@ export const twilioAmdTwiml = onRequest(
           }
         }
 
-        // P0 FIX: Return SILENT conference TwiML - NO welcome message!
-        // This prevents voicemail from recording our message.
-        // The participant will just hear the hold music while AMD analyzes.
-        // Once AMD confirms human, the asyncAmdStatusCallback will be called
-        // and handleParticipantJoin will set status to "connected".
-        const startConference = participantType === 'client';
-        const { getTwilioConferenceWebhookUrl } = await import('../utils/urlBase');
-        const conferenceWebhookUrl = getTwilioConferenceWebhookUrl();
+        // P1 CRITICAL FIX: For AMD pending, DON'T join conference yet!
+        // If we join conference with endConferenceOnExit="true" and then AMD detects machine,
+        // hanging up the call will END THE ENTIRE CONFERENCE and kick out the client!
+        //
+        // Solution:
+        // - CLIENT (AMD pending): Join conference normally - client starts the conference
+        // - PROVIDER (AMD pending): Play hold music LOCALLY, don't join conference yet
+        //   When AMD confirms human, the asyncAmdStatusCallback will be triggered
+        //   and we can then join the conference via a different mechanism
 
-        const silentConferenceTwiml = `<?xml version="1.0" encoding="UTF-8"?>
+        if (participantType === 'client') {
+          // Client joins conference normally - they are the first participant and start the conference
+          const { getTwilioConferenceWebhookUrl } = await import('../utils/urlBase');
+          const conferenceWebhookUrl = getTwilioConferenceWebhookUrl();
+
+          const clientConferenceTwiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Dial timeout="60" timeLimit="${timeLimit}">
     <Conference
       waitUrl="http://twimlets.com/holdmusic?Bucket=com.twilio.music.classical"
-      startConferenceOnEnter="${startConference}"
+      startConferenceOnEnter="true"
       endConferenceOnExit="true"
       statusCallback="${conferenceWebhookUrl}"
       statusCallbackEvent="start end join leave"
       statusCallbackMethod="POST"
-      participantLabel="${participantType}"
+      participantLabel="client"
     >${conferenceName}</Conference>
   </Dial>
 </Response>`;
 
-        res.type('text/xml');
-        res.send(silentConferenceTwiml);
-        console.log(`🎯 [${amdId}] END - Sent SILENT CONFERENCE TwiML (AMD pending)\n`);
-        return;
+          res.type('text/xml');
+          res.send(clientConferenceTwiml);
+          console.log(`🎯 [${amdId}] END - Client sent to CONFERENCE (AMD pending but client always joins)\n`);
+          return;
+        } else {
+          // PROVIDER AMD PENDING: Play local hold music, DON'T join conference
+          // This way if we hang up due to machine detection, the client's conference continues
+          // The AMD callback will use REST API to update the call's TwiML when human is confirmed
+          console.log(`🎯 [${amdId}] ⚠️ PROVIDER AMD PENDING - Playing LOCAL hold music (NOT joining conference)`);
+          console.log(`🎯 [${amdId}]   This prevents ending the client's conference if machine detected!`);
+
+          // Play hold music for up to 30 seconds while AMD analyzes
+          // If AMD confirms human, the asyncAmdStatusCallback will redirect to conference
+          const holdMusicTwiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Play loop="10">http://twimlets.com/holdmusic?Bucket=com.twilio.music.classical</Play>
+</Response>`;
+
+          res.type('text/xml');
+          res.send(holdMusicTwiml);
+          console.log(`🎯 [${amdId}] END - Provider playing LOCAL hold music (waiting for AMD callback)\n`);
+          return;
+        }
       }
 
       // HUMAN CONFIRMED - Get welcome message and play it
@@ -1316,6 +1341,31 @@ export const twilioAmdTwiml = onRequest(
     >${conferenceName}</Conference>
   </Dial>
 </Response>`;
+
+      // P1 CRITICAL FIX: For async AMD callback, the returned TwiML is IGNORED by Twilio!
+      // The provider is currently playing local hold music and won't receive the conference TwiML.
+      // We MUST use Twilio REST API to update the call and redirect it to the conference.
+      if (isAsyncAmdCallback && participantType === 'provider' && callSid) {
+        console.log(`🎯 [${amdId}] 🔄 PROVIDER ASYNC AMD CALLBACK - Using REST API to redirect to conference`);
+        console.log(`🎯 [${amdId}]   callSid: ${callSid}`);
+        console.log(`🎯 [${amdId}]   Reason: Returned TwiML is IGNORED for async AMD callback`);
+
+        try {
+          const { getTwilioClient } = await import('../lib/twilio');
+          const twilioClient = getTwilioClient();
+          if (twilioClient) {
+            await twilioClient.calls(callSid).update({
+              twiml: conferenceTwiml
+            });
+            console.log(`🎯 [${amdId}]   ✅ Call updated via REST API - provider will now join conference`);
+          } else {
+            console.error(`🎯 [${amdId}]   ❌ Twilio client not available - cannot redirect call!`);
+          }
+        } catch (restError) {
+          console.error(`🎯 [${amdId}]   ❌ Failed to update call via REST API:`, restError);
+          // Log but continue - the TwiML response below is a fallback (though it won't work for async callback)
+        }
+      }
 
       res.type('text/xml');
       res.send(conferenceTwiml);
