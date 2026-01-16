@@ -1284,11 +1284,11 @@ export const twilioAmdTwiml = onRequest(
           const providerStatus = session?.participants.provider.status;
           const providerCallSid = session?.participants.provider.callSid;
 
-          // Check if provider is already connected (confirmed via GATHER)
+          // Check if provider is already connected (joined conference during AMD pending)
           if (providerStatus === 'connected') {
             console.log(`\n${'⚠️'.repeat(35)}`);
-            console.log(`🎯 [${amdId}] 🛡️ STALE AMD CALLBACK - Provider already CONNECTED!`);
-            console.log(`🎯 [${amdId}]   Provider confirmed via GATHER before AMD completed`);
+            console.log(`🎯 [${amdId}] 🛡️ AMD CALLBACK - Provider already CONNECTED (in conference)!`);
+            console.log(`🎯 [${amdId}]   Provider joined conference during AMD pending phase`);
             console.log(`🎯 [${amdId}]   providerStatus: ${providerStatus}`);
             console.log(`🎯 [${amdId}]   callSid from callback: ${callSid}`);
             console.log(`🎯 [${amdId}]   callSid in DB: ${providerCallSid}`);
@@ -1364,83 +1364,56 @@ export const twilioAmdTwiml = onRequest(
             }
           }
         } else {
-          // PROVIDER: Join conference DIRECTLY (P0 FIX - Removed GATHER confirmation)
+          // PROVIDER HUMAN CONFIRMED via async AMD callback
           //
-          // PREVIOUS BEHAVIOR (PROBLEMATIC):
-          // - Send GATHER via REST API asking provider to press 1 or say YES
-          // - If GATHER fails or provider doesn't confirm → hangup → retry
-          // - This caused the "provider hangs up immediately then retries 2x" bug
+          // P0 FIX 2026-01-16: This section is now a FALLBACK only.
           //
-          // NEW BEHAVIOR (FIXED):
-          // - Provider joins conference directly when AMD confirms human
-          // - No GATHER confirmation needed - AMD is sufficient
-          // - Eliminates REST API failure points and confusion
+          // NORMAL FLOW (with fix):
+          // 1. Initial callback (answeredBy=undefined) → provider joins conference immediately
+          // 2. Provider status set to "connected"
+          // 3. Async AMD callback → race condition check finds "connected" → returns early
           //
-          console.log(`🎯 [${amdId}] ✅ PROVIDER HUMAN CONFIRMED - Joining conference DIRECTLY`);
+          // This code is reached ONLY if:
+          // - Race condition check didn't find "connected" status (edge case)
+          // - Status update in AMD pending section failed
+          //
+          // Since provider should already be in conference, we just:
+          // 1. Log for debugging
+          // 2. Return empty response (don't disrupt existing call)
+          //
+          // REMOVED: REST API redirect - it was failing with "Call not in progress"
+          // because the provider was already in conference or call had ended.
+          //
+          console.log(`🎯 [${amdId}] ⚠️ PROVIDER HUMAN CONFIRMED (FALLBACK PATH)`);
           console.log(`🎯 [${amdId}]   answeredBy: ${answeredBy}`);
-          console.log(`🎯 [${amdId}]   P0 FIX: Removed GATHER confirmation - provider joins conference immediately`);
+          console.log(`🎯 [${amdId}]   This is unexpected - provider should already be in conference`);
+          console.log(`🎯 [${amdId}]   Provider joined conference on initial callback (AMD pending section)`);
+          console.log(`🎯 [${amdId}]   Returning empty response to avoid disrupting call`);
 
-          // Set status to "connected" and join conference
+          // Ensure status is "connected" (might have failed in AMD pending section)
           if (sessionId) {
             try {
-              await twilioCallManager.updateParticipantStatus(
-                sessionId,
-                participantType,
-                'connected',
-                admin.firestore.Timestamp.fromDate(new Date())
-              );
-              console.log(`🎯 [${amdId}]   ✅ Provider status set to "connected"`);
-            } catch (statusError) {
-              console.error(`🎯 [${amdId}]   ⚠️ Failed to update status:`, statusError);
-            }
-          }
-
-          // Get welcome message and build conference TwiML
-          const providerWelcomeMessage = getIntroText('provider', langKey);
-          console.log(`🎯 [${amdId}]   welcomeMessage: "${providerWelcomeMessage.substring(0, 50)}..."`);
-
-          const { getTwilioConferenceWebhookUrl } = await import('../utils/urlBase');
-          const conferenceWebhookUrl = getTwilioConferenceWebhookUrl();
-
-          // Provider joins existing conference (startConferenceOnEnter=false)
-          // Client should already be waiting in conference
-          const providerConferenceTwiml = `<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-  <Say voice="alice" language="${ttsLocale}">${providerWelcomeMessage}</Say>
-  <Dial timeout="60" timeLimit="${timeLimit}">
-    <Conference
-      waitUrl="http://twimlets.com/holdmusic?Bucket=com.twilio.music.classical"
-      startConferenceOnEnter="false"
-      endConferenceOnExit="true"
-      statusCallback="${conferenceWebhookUrl}"
-      statusCallbackEvent="start end join leave"
-      statusCallbackMethod="POST"
-      participantLabel="provider"
-    >${conferenceName}</Conference>
-  </Dial>
-</Response>`;
-
-          // For async AMD callback, use REST API to redirect to conference
-          if (isAsyncAmdCallback && callSid) {
-            console.log(`🎯 [${amdId}] 🔄 Using REST API to redirect provider to conference`);
-            try {
-              const { getTwilioClient } = await import('../lib/twilio');
-              const twilioClient = getTwilioClient();
-              if (twilioClient) {
-                await twilioClient.calls(callSid).update({
-                  twiml: providerConferenceTwiml
-                });
-                console.log(`🎯 [${amdId}]   ✅ Provider redirected to conference via REST API`);
+              const session = await twilioCallManager.getCallSession(sessionId);
+              if (session?.participants.provider.status !== 'connected') {
+                await twilioCallManager.updateParticipantStatus(
+                  sessionId,
+                  participantType,
+                  'connected',
+                  admin.firestore.Timestamp.fromDate(new Date())
+                );
+                console.log(`🎯 [${amdId}]   ✅ Provider status updated to "connected" (was ${session?.participants.provider.status})`);
+              } else {
+                console.log(`🎯 [${amdId}]   Provider already "connected" - no update needed`);
               }
-            } catch (restError) {
-              console.error(`🎯 [${amdId}]   ❌ Failed to redirect provider via REST API:`, restError);
-              // Don't return - still send TwiML response as fallback
+            } catch (statusError) {
+              console.error(`🎯 [${amdId}]   ⚠️ Failed to check/update status:`, statusError);
             }
           }
 
+          // Return empty response - provider should already be in conference
           res.type('text/xml');
-          res.send(providerConferenceTwiml);
-          console.log(`🎯 [${amdId}] END - Provider joining conference directly (no GATHER)\n`);
+          res.send(`<?xml version="1.0" encoding="UTF-8"?><Response></Response>`);
+          console.log(`🎯 [${amdId}] END - Provider fallback path (empty response)\n`);
           return;
         }
       } else {
@@ -1513,22 +1486,69 @@ export const twilioAmdTwiml = onRequest(
           console.log(`🎯 [${amdId}] END - Client sent to CONFERENCE (AMD pending but client always joins)\n`);
           return;
         } else {
-          // PROVIDER AMD PENDING: Play local hold music, DON'T join conference
-          // This way if we hang up due to machine detection, the client's conference continues
-          // The AMD callback will use REST API to update the call's TwiML when human is confirmed
-          console.log(`🎯 [${amdId}] ⚠️ PROVIDER AMD PENDING - Playing LOCAL hold music (NOT joining conference)`);
-          console.log(`🎯 [${amdId}]   This prevents ending the client's conference if machine detected!`);
+          // P0 FIX 2026-01-16: PROVIDER AMD PENDING - JOIN CONFERENCE IMMEDIATELY!
+          //
+          // PREVIOUS BEHAVIOR (BROKEN):
+          // - Provider sent to hold music while AMD analyzes
+          // - Provider hears only music, no message → thinks it's spam → HANGS UP
+          // - AMD callback arrives → tries REST API redirect → call already ended → error 21220
+          // - Result: Provider never connects, retries 3x, same failure
+          //
+          // NEW BEHAVIOR (FIXED):
+          // - Provider joins conference IMMEDIATELY with endConferenceOnExit="false"
+          // - Provider hears welcome message and is connected to client right away
+          // - If AMD later detects machine, we hang up via REST API (conference continues for client)
+          // - The welcome message prevents provider from hanging up thinking it's spam
+          //
+          // Key insight: Better to occasionally connect to voicemail than to have 100% failure rate!
+          //
+          console.log(`🎯 [${amdId}] ⚡ P0 FIX: PROVIDER AMD PENDING - JOINING CONFERENCE IMMEDIATELY!`);
+          console.log(`🎯 [${amdId}]   Previous: Hold music → REST API redirect (FAILED - call ended)`);
+          console.log(`🎯 [${amdId}]   Now: Join conference directly with endConferenceOnExit="false"`);
 
-          // Play hold music for up to 30 seconds while AMD analyzes
-          // If AMD confirms human, the asyncAmdStatusCallback will redirect to conference
-          const holdMusicTwiml = `<?xml version="1.0" encoding="UTF-8"?>
+          // Get welcome message for provider
+          const providerWelcomeMsg = getIntroText('provider', langKey);
+          console.log(`🎯 [${amdId}]   welcomeMessage: "${providerWelcomeMsg.substring(0, 50)}..."`);
+
+          const { getTwilioConferenceWebhookUrl } = await import('../utils/urlBase');
+          const conferenceWebhookUrl = getTwilioConferenceWebhookUrl();
+
+          // Provider joins conference with endConferenceOnExit="false"
+          // This allows us to hang up provider without ending client's conference if AMD detects machine
+          const providerAmdPendingTwiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Play loop="10">http://twimlets.com/holdmusic?Bucket=com.twilio.music.classical</Play>
+  <Say voice="alice" language="${ttsLocale}">${providerWelcomeMsg}</Say>
+  <Dial timeout="60" timeLimit="${timeLimit}">
+    <Conference
+      waitUrl="http://twimlets.com/holdmusic?Bucket=com.twilio.music.classical"
+      startConferenceOnEnter="false"
+      endConferenceOnExit="false"
+      statusCallback="${conferenceWebhookUrl}"
+      statusCallbackEvent="start end join leave"
+      statusCallbackMethod="POST"
+      participantLabel="provider"
+    >${conferenceName}</Conference>
+  </Dial>
 </Response>`;
 
+          // Also update status to connected since they're joining conference
+          if (sessionId) {
+            try {
+              await twilioCallManager.updateParticipantStatus(
+                sessionId,
+                participantType,
+                'connected',
+                admin.firestore.Timestamp.fromDate(new Date())
+              );
+              console.log(`🎯 [${amdId}]   ✅ Provider status set to "connected" (AMD pending but in conference)`);
+            } catch (statusError) {
+              console.error(`🎯 [${amdId}]   ⚠️ Failed to update status:`, statusError);
+            }
+          }
+
           res.type('text/xml');
-          res.send(holdMusicTwiml);
-          console.log(`🎯 [${amdId}] END - Provider playing LOCAL hold music (waiting for AMD callback)\n`);
+          res.send(providerAmdPendingTwiml);
+          console.log(`🎯 [${amdId}] END - Provider JOINING CONFERENCE (AMD pending - endConferenceOnExit=false)\n`);
           return;
         }
       }

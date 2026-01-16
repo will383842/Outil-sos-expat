@@ -427,9 +427,8 @@ export const onFaqUpdated = onDocumentUpdated(
 // ============================================
 export const scheduledSitemapPing = onSchedule(
   {
-    // OPTIMIZED: Changed from 1 hour to 2 hours to reduce invocations by 50%
-    // Previous: 24 invocations/day → Now: 12 invocations/day
-    schedule: 'every 2 hours',
+    // 2025-01-16: Réduit à 1×/jour à 8h pour économies maximales (low traffic)
+    schedule: '0 8 * * *', // 8h Paris tous les jours
     region: REGION,
     memory: '256MiB',
     timeoutSeconds: 60,

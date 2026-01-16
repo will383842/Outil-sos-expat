@@ -1088,11 +1088,11 @@ const Login: React.FC = () => {
                     </div>
                   </label>
                   <div className="relative">
-                    <input 
-                      id="email" 
-                      name="email" 
-                      type="email" 
-                      autoComplete="username email" 
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
                       required 
                       value={formData.email} 
                       onChange={(e) => handleFieldChange("email", e.target.value)} 

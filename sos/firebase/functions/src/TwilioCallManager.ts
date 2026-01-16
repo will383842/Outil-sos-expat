@@ -3011,6 +3011,63 @@ export class TwilioCallManager {
     }
   }
 
+  /**
+   * P0 CRITICAL FIX: Find session by conference NAME (FriendlyName from Twilio)
+   *
+   * This is needed because:
+   * 1. When a session is created, conference.name is set
+   * 2. When conference-start webhook arrives, conference.sid doesn't exist yet
+   * 3. We need to find the session by name to set the sid
+   *
+   * The FriendlyName in Twilio webhook matches conference.name in Firestore.
+   */
+  async findSessionByConferenceName(
+    conferenceName: string
+  ): Promise<CallSessionState | null> {
+    const debugId = `findByName_${Date.now().toString(36)}`;
+    console.log(`🔍 [${debugId}] findSessionByConferenceName: "${conferenceName}"`);
+
+    try {
+      const snapshot = await this.db
+        .collection("call_sessions")
+        .where("conference.name", "==", conferenceName)
+        .limit(1)
+        .get();
+
+      if (snapshot.empty) {
+        console.log(`🔍 [${debugId}]   ❌ No session found with conference.name: ${conferenceName}`);
+        return null;
+      }
+
+      const session = snapshot.docs[0].data() as CallSessionState;
+      console.log(`🔍 [${debugId}]   ✅ Found session: ${session.id}`);
+      return session;
+    } catch (error) {
+      await logError(
+        "TwilioCallManager:findSessionByConferenceName",
+        error as unknown
+      );
+      return null;
+    }
+  }
+
+  /**
+   * P0 CRITICAL FIX: Update conference.sid in session
+   *
+   * This is called when we find a session by conference.name but conference.sid is not set.
+   * This happens on the first conference event (conference-start or participant-join).
+   */
+  async updateConferenceSid(sessionId: string, conferenceSid: string): Promise<void> {
+    console.log(`📝 [updateConferenceSid] sessionId: ${sessionId}, conferenceSid: ${conferenceSid}`);
+
+    await this.db.collection("call_sessions").doc(sessionId).update({
+      "conference.sid": conferenceSid,
+      "metadata.updatedAt": admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    console.log(`📝 [updateConferenceSid]   ✅ Updated conference.sid in session`);
+  }
+
   async findSessionByCallSid(callSid: string): Promise<{
     session: CallSessionState;
     participantType: "provider" | "client";

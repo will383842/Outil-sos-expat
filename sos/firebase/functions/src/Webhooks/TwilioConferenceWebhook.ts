@@ -113,13 +113,45 @@ export const twilioConferenceWebhook = onRequest(
         return;
       }
 
-      // Trouver la session d'appel par le nom de la conférence
-      const session = await twilioCallManager.findSessionByConferenceSid(body.ConferenceSid);
+      // P0 CRITICAL FIX: Find session by ConferenceSid OR by FriendlyName (conference.name)
+      //
+      // PROBLEM: conference.sid is only set AFTER handleConferenceStart runs
+      // But handleConferenceStart can't run because findSessionByConferenceSid fails!
+      // This is a chicken-and-egg problem.
+      //
+      // SOLUTION:
+      // 1. First try to find by conference.sid (works for events AFTER conference-start)
+      // 2. If not found, try to find by conference.name (FriendlyName from Twilio)
+      //    This works because conference.name IS set when the session is created
+      //
+      let session = await twilioCallManager.findSessionByConferenceSid(body.ConferenceSid);
 
       if (!session) {
-        console.warn(`🎤 [${confWebhookId}] Session non trouvée pour conférence: ${body.ConferenceSid}`);
+        console.log(`🎤 [${confWebhookId}] Session not found by ConferenceSid, trying FriendlyName...`);
+        console.log(`🎤 [${confWebhookId}]   FriendlyName: ${body.FriendlyName}`);
+
+        // FriendlyName is the conference name we set when creating the call
+        session = await twilioCallManager.findSessionByConferenceName(body.FriendlyName);
+      }
+
+      if (!session) {
+        console.warn(`🎤 [${confWebhookId}] ❌ Session non trouvée pour conférence:`);
+        console.warn(`🎤 [${confWebhookId}]   ConferenceSid: ${body.ConferenceSid}`);
+        console.warn(`🎤 [${confWebhookId}]   FriendlyName: ${body.FriendlyName}`);
         res.status(200).send('Session not found');
         return;
+      }
+
+      // P0 FIX: If we found by name but conference.sid is not set, set it now!
+      if (!session.conference?.sid && body.ConferenceSid) {
+        console.log(`🎤 [${confWebhookId}] 🔧 Setting conference.sid for the first time: ${body.ConferenceSid}`);
+        try {
+          await twilioCallManager.updateConferenceSid(session.id, body.ConferenceSid);
+          console.log(`🎤 [${confWebhookId}]   ✅ conference.sid updated in Firestore`);
+        } catch (updateError) {
+          console.error(`🎤 [${confWebhookId}]   ⚠️ Failed to update conference.sid:`, updateError);
+          // Continue processing - non-fatal error
+        }
       }
 
       const sessionId = session.id;

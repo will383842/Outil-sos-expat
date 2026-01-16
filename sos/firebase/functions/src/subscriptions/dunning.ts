@@ -358,13 +358,12 @@ export async function markDunningRecovered(
  */
 export const processDunningQueue = onSchedule(
   {
-    // OPTIMIZED: Changed from 1 hour to 2 hours to reduce invocations by 50%
-    // Previous: 24 invocations/day → Now: 12 invocations/day
-    schedule: 'every 2 hours',
+    // 2025-01-16: Réduit à 4h (paiements impliqués, pas quotidien)
+    schedule: '0 */4 * * *', // Every 4 hours
     region: 'europe-west1',
     timeZone: 'Europe/Paris',
     secrets: [STRIPE_SECRET_KEY],
-    memory: '256MiB', // Reduced from 512MiB - only queries Firestore and calls Stripe
+    memory: '256MiB',
     timeoutSeconds: 300,
   },
   async () => {

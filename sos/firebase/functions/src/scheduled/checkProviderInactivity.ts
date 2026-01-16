@@ -3,9 +3,8 @@ import * as admin from 'firebase-admin';
 
 export const checkProviderInactivity = scheduler.onSchedule(
   {
-    // OPTIMIZED: Changed from 30 minutes to 2 hours to reduce invocations by 75%
-    // Previous: 48 invocations/day → Now: 12 invocations/day
-    schedule: 'every 2 hours',
+    // 2025-01-16: Réduit à 1×/jour à 8h pour économies maximales (low traffic)
+    schedule: '0 8 * * *', // 8h Paris tous les jours
     timeZone: 'Europe/Paris',
   },
   async () => {

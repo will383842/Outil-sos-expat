@@ -302,12 +302,13 @@ export async function addToRetryQueue(
 
 /**
  * Fonction planifiée pour réessayer les syncs échouées
- * S'exécute toutes les 30 minutes (2025-01-16: réduit de 10 à 30 min pour économies)
+ * 2025-01-16: Réduit à 1×/jour à 8h pour économies maximales (low traffic)
  */
 export const retryOutilSync = onSchedule(
   {
-    schedule: "every 30 minutes",
+    schedule: "0 8 * * *", // 8h Paris tous les jours
     region: "europe-west1",
+    timeZone: "Europe/Paris",
     secrets: [OUTIL_SYNC_API_KEY],
     timeoutSeconds: 120,
   },
