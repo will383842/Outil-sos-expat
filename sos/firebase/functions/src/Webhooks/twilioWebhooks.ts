@@ -18,8 +18,10 @@ function getIntroText(participant: "provider" | "client", langKey: string): stri
   return table[langKey] ?? table.en ?? "Please hold.";
 }
 
-// Helper function to get confirmation prompt for provider
-function getConfirmationText(langKey: string): string {
+// P0 FIX 2026-01-16: GATHER confirmation removed for NEW calls, but these functions
+// are still needed for twilioGatherResponse webhook (for backwards compatibility)
+// Helper function to get confirmation prompt for provider (used by twilioGatherResponse)
+export function getConfirmationText(langKey: string): string {
   const prompts = voicePromptsJson as Record<string, Record<string, string>>;
   const table = prompts.provider_confirmation;
   return table?.[langKey] ?? table?.en ?? "Press 1 or say YES to confirm your availability.";
@@ -1059,16 +1061,24 @@ export const twilioAmdTwiml = onRequest(
       const callSid = req.body?.CallSid || req.query.CallSid;
 
       console.log(`\n${'▓'.repeat(60)}`);
-      console.log(`🎯 [${amdId}] twilioAmdTwiml START`);
+      console.log(`🎯 [${amdId}] ████████ twilioAmdTwiml START ████████`);
       console.log(`🎯 [${amdId}]   sessionId: ${sessionId}`);
       console.log(`🎯 [${amdId}]   participantType: ${participantType}`);
       console.log(`🎯 [${amdId}]   conferenceName: ${conferenceName}`);
       console.log(`🎯 [${amdId}]   timeLimit: ${timeLimit}`);
       console.log(`🎯 [${amdId}]   ttsLocale: ${ttsLocale}`);
       console.log(`🎯 [${amdId}]   langKey: ${langKey}`);
-      console.log(`🎯 [${amdId}]   answeredBy: ${answeredBy || 'NOT_PROVIDED'}`);
+      console.log(`🎯 [${amdId}]   answeredBy: ${answeredBy || 'NOT_PROVIDED (AMD pending)'}`);
       console.log(`🎯 [${amdId}]   callSid: ${callSid || 'NOT_PROVIDED'}`);
+      console.log(`🎯 [${amdId}]   timestamp: ${new Date().toISOString()}`);
       console.log(`${'▓'.repeat(60)}`);
+
+      // P0 DIAGNOSTIC LOG: Dump all request data for debugging
+      console.log(`🎯 [${amdId}] 📋 FULL REQUEST DATA:`);
+      console.log(`🎯 [${amdId}]   req.method: ${req.method}`);
+      console.log(`🎯 [${amdId}]   req.query: ${JSON.stringify(req.query)}`);
+      console.log(`🎯 [${amdId}]   req.body: ${JSON.stringify(req.body || {})}`);
+      console.log(`🎯 [${amdId}]   All AnsweredBy values: body=${req.body?.AnsweredBy}, query=${req.query.AnsweredBy}`);
 
       // ===== PRODUCTION TEST LOG =====
       logWebhookTest.twilio.amd({ sessionId, participantType, answeredBy, callSid });
@@ -1129,15 +1139,64 @@ export const twilioAmdTwiml = onRequest(
         answeredBy === 'fax'
       );
 
-      // P0 FIX: With asyncAmd="true", the first callback via `url` does NOT have AnsweredBy yet
-      // AnsweredBy only arrives via asyncAmdStatusCallback AFTER AMD analysis completes
-      // So we should ONLY hangup if we have CONFIRMED it's a machine, not if AnsweredBy is undefined
-      // If AnsweredBy is undefined, proceed to conference - the AMD callback will correct if needed
-      const shouldHangup = isMachine;
+      // ██████████████████████████████████████████████████████████████████████
+      // P0 DIAGNOSTIC: AMD DECISION LOGIC - DETAILED TRACE
+      // ██████████████████████████████████████████████████████████████████████
+      console.log(`\n🎯 [${amdId}] ┌────────────────────────────────────────────────────────────┐`);
+      console.log(`🎯 [${amdId}] │ 🧠 AMD DECISION LOGIC TRACE (P0 FIX 2026-01-16)            │`);
+      console.log(`🎯 [${amdId}] ├────────────────────────────────────────────────────────────┤`);
+      console.log(`🎯 [${amdId}] │ INPUT:                                                     │`);
+      console.log(`🎯 [${amdId}] │   answeredBy: "${answeredBy || 'undefined'}"`);
+      console.log(`🎯 [${amdId}] │   participantType: "${participantType}"`);
+      console.log(`🎯 [${amdId}] │   isMachine: ${isMachine}`);
+      console.log(`🎯 [${amdId}] └────────────────────────────────────────────────────────────┘`);
+
+      // P0 CRITICAL FIX 2026-01-16: DO NOT HANG UP ON "MACHINE" FOR PROVIDER!
+      //
+      // PROBLEM: AMD has FALSE POSITIVES - it detects "machine" for real humans when:
+      // - Provider has background noise
+      // - Provider has a personal greeting message
+      // - Provider answers quickly with "Allô?" that sounds like a beep
+      //
+      // OLD BEHAVIOR: Hang up immediately on "machine" → causes false positives → retry loops
+      //
+      // NEW BEHAVIOR:
+      // - For CLIENT: Keep hanging up on "machine" (we don't want voicemail messages)
+      // - For PROVIDER: NEVER hang up on "machine" - treat as possible human and join conference
+      //   The provider is a professional who actively accepts calls - false positives are common
+      //
+      // This fix eliminates the "provider hangs up immediately then retries 2x" bug
+      //
+      const shouldHangup = isMachine && participantType === 'client'; // Only hang up for CLIENT, not provider
+
+      // ██████████████████████████████████████████████████████████████████████
+      // P0 DIAGNOSTIC: HANGUP DECISION
+      // ██████████████████████████████████████████████████████████████████████
+      console.log(`🎯 [${amdId}] ┌────────────────────────────────────────────────────────────┐`);
+      console.log(`🎯 [${amdId}] │ 🚦 HANGUP DECISION:                                        │`);
+      console.log(`🎯 [${amdId}] │   shouldHangup = isMachine && participantType === 'client' │`);
+      console.log(`🎯 [${amdId}] │   shouldHangup = ${isMachine} && ${participantType === 'client'} = ${shouldHangup}`);
+      console.log(`🎯 [${amdId}] │   → ${shouldHangup ? '❌ WILL HANG UP (client voicemail)' : '✅ WILL NOT HANG UP'}`);
+      console.log(`🎯 [${amdId}] └────────────────────────────────────────────────────────────┘`);
+
+      if (isMachine && participantType === 'provider') {
+        // PROVIDER with "machine" detection - DO NOT HANG UP (P0 FIX)
+        console.log(`\n🎯 [${amdId}] ╔════════════════════════════════════════════════════════════╗`);
+        console.log(`🎯 [${amdId}] ║ ⚡ P0 FIX ACTIVATED: PROVIDER "MACHINE" → TREATING AS HUMAN ║`);
+        console.log(`🎯 [${amdId}] ╠════════════════════════════════════════════════════════════╣`);
+        console.log(`🎯 [${amdId}] ║ answeredBy: "${answeredBy}"`);
+        console.log(`🎯 [${amdId}] ║ participantType: "${participantType}"`);
+        console.log(`🎯 [${amdId}] ║ ACTION: NOT hanging up - will treat as human`);
+        console.log(`🎯 [${amdId}] ║ REASON: AMD has false positives for providers with`);
+        console.log(`🎯 [${amdId}] ║         greetings or background noise`);
+        console.log(`🎯 [${amdId}] ║ NEXT: Will join conference directly (no GATHER)   ║`);
+        console.log(`🎯 [${amdId}] ╚════════════════════════════════════════════════════════════╝\n`);
+        // Continue to the "human confirmed" section below - don't return here
+      }
 
       if (shouldHangup) {
-        // MACHINE CONFIRMED → Hangup immediately with NO audio (prevents voicemail recording)
-        console.log(`🎯 [${amdId}] ⚠️ MACHINE CONFIRMED - HANGING UP CALL`);
+        // CLIENT MACHINE CONFIRMED → Hangup immediately with NO audio (prevents voicemail recording)
+        console.log(`🎯 [${amdId}] ⚠️ CLIENT MACHINE CONFIRMED - HANGING UP CALL`);
         console.log(`🎯 [${amdId}]   answeredBy: ${answeredBy || 'UNDEFINED'}`);
         console.log(`🎯 [${amdId}]   participantType: ${participantType}`);
         console.log(`🎯 [${amdId}]   callSid: ${callSid}`);
@@ -1177,7 +1236,7 @@ export const twilioAmdTwiml = onRequest(
 
         res.type('text/xml');
         res.send(hangupTwiml);
-        console.log(`🎯 [${amdId}] END - Machine detected, call terminated\n`);
+        console.log(`🎯 [${amdId}] END - Client machine detected, call terminated\n`);
         return;
       }
 
@@ -1197,7 +1256,24 @@ export const twilioAmdTwiml = onRequest(
       // - Initial URL callback: answeredBy is undefined/missing (Twilio hasn't analyzed yet)
       // - Async AMD callback: answeredBy is provided (human, machine_*, fax, or unknown)
       const isAsyncAmdCallback = answeredBy !== undefined && answeredBy !== null && answeredBy !== '';
-      const isHumanConfirmed = answeredBy === 'human' || (isAsyncAmdCallback && answeredBy === 'unknown');
+      // P0 FIX 2026-01-16: For PROVIDER, also treat "machine" as "human confirmed"
+      // This eliminates false positives where real humans are detected as machines
+      const isHumanConfirmed = answeredBy === 'human'
+        || (isAsyncAmdCallback && answeredBy === 'unknown')
+        || (isMachine && participantType === 'provider'); // P0 FIX: Provider "machine" = treat as human
+
+      // ██████████████████████████████████████████████████████████████████████
+      // P0 DIAGNOSTIC: HUMAN CONFIRMED DECISION
+      // ██████████████████████████████████████████████████████████████████████
+      console.log(`🎯 [${amdId}] ┌────────────────────────────────────────────────────────────┐`);
+      console.log(`🎯 [${amdId}] │ 🧑 HUMAN CONFIRMED DECISION:                               │`);
+      console.log(`🎯 [${amdId}] │   isAsyncAmdCallback: ${isAsyncAmdCallback}`);
+      console.log(`🎯 [${amdId}] │   answeredBy === 'human': ${answeredBy === 'human'}`);
+      console.log(`🎯 [${amdId}] │   isAsyncAmd && unknown: ${isAsyncAmdCallback && answeredBy === 'unknown'}`);
+      console.log(`🎯 [${amdId}] │   isMachine && provider: ${isMachine && participantType === 'provider'} (P0 FIX)`);
+      console.log(`🎯 [${amdId}] │   → isHumanConfirmed: ${isHumanConfirmed}`);
+      console.log(`🎯 [${amdId}] │   → ${isHumanConfirmed ? '✅ WILL JOIN CONFERENCE' : '⏳ AMD PENDING - HOLD MUSIC'}`);
+      console.log(`🎯 [${amdId}] └────────────────────────────────────────────────────────────┘`);
 
       // P0 CRITICAL FIX 2026-01-16: RACE CONDITION PROTECTION
       // If provider already confirmed via GATHER and is now "connected", ignore stale AMD callback!
@@ -1288,64 +1364,83 @@ export const twilioAmdTwiml = onRequest(
             }
           }
         } else {
-          // PROVIDER: Use Gather to confirm availability (press 1 or say YES)
-          // This adds a second layer of human verification beyond AMD
-          console.log(`🎯 [${amdId}] 🔔 PROVIDER HUMAN DETECTED - Sending GATHER for confirmation`);
+          // PROVIDER: Join conference DIRECTLY (P0 FIX - Removed GATHER confirmation)
+          //
+          // PREVIOUS BEHAVIOR (PROBLEMATIC):
+          // - Send GATHER via REST API asking provider to press 1 or say YES
+          // - If GATHER fails or provider doesn't confirm → hangup → retry
+          // - This caused the "provider hangs up immediately then retries 2x" bug
+          //
+          // NEW BEHAVIOR (FIXED):
+          // - Provider joins conference directly when AMD confirms human
+          // - No GATHER confirmation needed - AMD is sufficient
+          // - Eliminates REST API failure points and confusion
+          //
+          console.log(`🎯 [${amdId}] ✅ PROVIDER HUMAN CONFIRMED - Joining conference DIRECTLY`);
           console.log(`🎯 [${amdId}]   answeredBy: ${answeredBy}`);
-          console.log(`🎯 [${amdId}]   Will ask provider to press 1 or say YES`);
+          console.log(`🎯 [${amdId}]   P0 FIX: Removed GATHER confirmation - provider joins conference immediately`);
 
-          // Set status to "confirmation_pending" - not connected yet!
+          // Set status to "connected" and join conference
           if (sessionId) {
             try {
               await twilioCallManager.updateParticipantStatus(
                 sessionId,
                 participantType,
-                'amd_pending' // Keep as amd_pending until confirmed
+                'connected',
+                admin.firestore.Timestamp.fromDate(new Date())
               );
-              console.log(`🎯 [${amdId}]   ✅ Status kept as amd_pending until confirmation received`);
+              console.log(`🎯 [${amdId}]   ✅ Provider status set to "connected"`);
             } catch (statusError) {
               console.error(`🎯 [${amdId}]   ⚠️ Failed to update status:`, statusError);
             }
           }
 
-          // Get confirmation prompt in provider's language
-          const confirmationPrompt = getConfirmationText(langKey);
-          const noResponsePrompt = getNoResponseText(langKey);
+          // Get welcome message and build conference TwiML
+          const providerWelcomeMessage = getIntroText('provider', langKey);
+          console.log(`🎯 [${amdId}]   welcomeMessage: "${providerWelcomeMessage.substring(0, 50)}..."`);
 
-          // Build Gather TwiML with callback URL
-          const { getTwilioGatherResponseUrl } = await import('../utils/urlBase');
-          const gatherCallbackUrl = getTwilioGatherResponseUrl();
-          const gatherUrlWithParams = `${gatherCallbackUrl}?sessionId=${sessionId}&participantType=${participantType}&conferenceName=${conferenceName}&timeLimit=${timeLimit}&ttsLocale=${ttsLocale}&langKey=${langKey}`;
+          const { getTwilioConferenceWebhookUrl } = await import('../utils/urlBase');
+          const conferenceWebhookUrl = getTwilioConferenceWebhookUrl();
 
-          const gatherTwiml = `<?xml version="1.0" encoding="UTF-8"?>
+          // Provider joins existing conference (startConferenceOnEnter=false)
+          // Client should already be waiting in conference
+          const providerConferenceTwiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Gather input="dtmf speech" numDigits="1" timeout="10" speechTimeout="3" action="${gatherUrlWithParams}" method="POST">
-    <Say voice="alice" language="${ttsLocale}">${confirmationPrompt}</Say>
-  </Gather>
-  <Say voice="alice" language="${ttsLocale}">${noResponsePrompt}</Say>
-  <Hangup/>
+  <Say voice="alice" language="${ttsLocale}">${providerWelcomeMessage}</Say>
+  <Dial timeout="60" timeLimit="${timeLimit}">
+    <Conference
+      waitUrl="http://twimlets.com/holdmusic?Bucket=com.twilio.music.classical"
+      startConferenceOnEnter="false"
+      endConferenceOnExit="true"
+      statusCallback="${conferenceWebhookUrl}"
+      statusCallbackEvent="start end join leave"
+      statusCallbackMethod="POST"
+      participantLabel="provider"
+    >${conferenceName}</Conference>
+  </Dial>
 </Response>`;
 
-          // For async AMD callback, use REST API to update the call
+          // For async AMD callback, use REST API to redirect to conference
           if (isAsyncAmdCallback && callSid) {
-            console.log(`🎯 [${amdId}] 🔄 Using REST API to send GATHER TwiML`);
+            console.log(`🎯 [${amdId}] 🔄 Using REST API to redirect provider to conference`);
             try {
               const { getTwilioClient } = await import('../lib/twilio');
               const twilioClient = getTwilioClient();
               if (twilioClient) {
                 await twilioClient.calls(callSid).update({
-                  twiml: gatherTwiml
+                  twiml: providerConferenceTwiml
                 });
-                console.log(`🎯 [${amdId}]   ✅ Gather TwiML sent via REST API`);
+                console.log(`🎯 [${amdId}]   ✅ Provider redirected to conference via REST API`);
               }
             } catch (restError) {
-              console.error(`🎯 [${amdId}]   ❌ Failed to send Gather via REST API:`, restError);
+              console.error(`🎯 [${amdId}]   ❌ Failed to redirect provider via REST API:`, restError);
+              // Don't return - still send TwiML response as fallback
             }
           }
 
           res.type('text/xml');
-          res.send(gatherTwiml);
-          console.log(`🎯 [${amdId}] END - Provider sent GATHER for confirmation\n`);
+          res.send(providerConferenceTwiml);
+          console.log(`🎯 [${amdId}] END - Provider joining conference directly (no GATHER)\n`);
           return;
         }
       } else {
