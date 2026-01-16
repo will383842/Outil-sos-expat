@@ -17,7 +17,7 @@ export const productionConfigs = {
     memory: "1GiB",
     cpu: 2.0,
     maxInstances: 20,
-    minInstances: 1,  // RESTAURÉ: Cold starts causaient perte de rôles
+    minInstances: 0,  // 2025-01-16: Réduit à 0 pour économies (~€45/mois). Cold starts acceptables.
     concurrency: 10
   },
   webhook: {

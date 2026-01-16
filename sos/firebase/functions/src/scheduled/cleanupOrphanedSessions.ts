@@ -26,9 +26,9 @@ const THRESHOLDS = {
 
 export const cleanupOrphanedSessions = scheduler.onSchedule(
   {
-    // OPTIMIZED: Changed from 30 minutes to 1 hour to reduce invocations by 50%
-    // Previous: 48 invocations/day → Now: 24 invocations/day
-    schedule: 'every 1 hours',
+    // 2025-01-16: Réduit à 1×/jour à 8h pour économies maximales
+    // Low traffic = cleanup quotidien suffisant
+    schedule: '0 8 * * *', // 8h Paris tous les jours
     timeZone: 'Europe/Paris',
     region: 'europe-west1',
     memory: '256MiB',

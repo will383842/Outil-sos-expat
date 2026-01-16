@@ -228,35 +228,44 @@ export const morningBackup = onSchedule(
 
 /**
  * Backup mi-journee - 11h (Paris)
+ *
+ * DÉSACTIVÉ le 2025-01-16 pour réduction des coûts.
+ * Le backup du matin (3h) suffit pour la plupart des cas.
+ * RPO passe de 8h à 24h max - acceptable pour le volume actuel.
+ * Économie estimée: ~€240-360/mois
  */
-export const middayBackup = onSchedule(
-  {
-    schedule: "0 11 * * *",
-    timeZone: "Europe/Paris",
-    region: "europe-west1",
-    memory: "512MiB",
-    timeoutSeconds: 300,
-  },
-  async () => {
-    await performBackup("0 11 * * *", "midday");
-  }
-);
+// export const middayBackup = onSchedule(
+//   {
+//     schedule: "0 11 * * *",
+//     timeZone: "Europe/Paris",
+//     region: "europe-west1",
+//     memory: "512MiB",
+//     timeoutSeconds: 300,
+//   },
+//   async () => {
+//     await performBackup("0 11 * * *", "midday");
+//   }
+// );
 
 /**
  * Backup du soir - 19h (Paris)
+ *
+ * DÉSACTIVÉ le 2025-01-16 pour réduction des coûts.
+ * Le backup du matin (3h) suffit pour la plupart des cas.
+ * Économie estimée: ~€240-360/mois
  */
-export const eveningBackup = onSchedule(
-  {
-    schedule: "0 19 * * *",
-    timeZone: "Europe/Paris",
-    region: "europe-west1",
-    memory: "512MiB",
-    timeoutSeconds: 300,
-  },
-  async () => {
-    await performBackup("0 19 * * *", "evening");
-  }
-);
+// export const eveningBackup = onSchedule(
+//   {
+//     schedule: "0 19 * * *",
+//     timeZone: "Europe/Paris",
+//     region: "europe-west1",
+//     memory: "512MiB",
+//     timeoutSeconds: 300,
+//   },
+//   async () => {
+//     await performBackup("0 19 * * *", "evening");
+//   }
+// );
 
 /**
  * Nettoyage des anciens backups

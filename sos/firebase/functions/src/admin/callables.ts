@@ -183,34 +183,63 @@ import * as path from "node:path";
 
 export const admin_templates_seed = onCall({
     region: "europe-west1",
-    memory: "256MiB",
-    cpu: 0.1,
+    memory: "512MiB",
+    cpu: 0.5,
     minInstances: 0,
-    timeoutSeconds: 60
+    timeoutSeconds: 120
   }, async (req) => {
-  assertAdmin(req); // réutilise la même fonction assertAdmin de ce fichier
+  assertAdmin(req);
 
   const db = getDb();
 
-  // charge les JSON depuis src/assets
+  // All supported locales with their file names and Firestore collection names
+  const locales = [
+    { file: "sos-expat-message-templates-fr.json", collection: "fr-FR" },
+    { file: "sos-expat-message-templates-en.json", collection: "en" },
+    { file: "sos-expat-message-templates-de.json", collection: "de" },
+    { file: "sos-expat-message-templates-es.json", collection: "es" },
+    { file: "sos-expat-message-templates-ar.json", collection: "ar" },
+    { file: "sos-expat-message-templates-ch.json", collection: "zh" },
+    { file: "sos-expat-message-templates-hi.json", collection: "hi" },
+    { file: "sos-expat-message-templates-pt.json", collection: "pt" },
+    { file: "sos-expat-message-templates-ru.json", collection: "ru" },
+  ];
+
   const assetsDir = path.join(__dirname, "..", "assets");
-  const fr = JSON.parse(fs.readFileSync(path.join(assetsDir, "sos-expat-message-templates-fr.json"), "utf8"));
-  const en = JSON.parse(fs.readFileSync(path.join(assetsDir, "sos-expat-message-templates-en.json"), "utf8"));
+  const results: Record<string, number> = {};
+
+  // Load and upsert routing
   const routing = JSON.parse(fs.readFileSync(path.join(assetsDir, "sos-expat-message-routing.json"), "utf8"));
-
-  // upsert routing
   await db.doc("message_routing/config").set(routing, { merge: true });
+  console.log("[admin_templates_seed] Routing config updated");
 
-  // upsert templates FR
-  for (const [eventId, payload] of Object.entries<any>(fr.items || {})) {
-    await db.doc(`message_templates/fr-FR/items/${eventId}`).set(payload, { merge: true });
-  }
-  // upsert templates EN
-  for (const [eventId, payload] of Object.entries<any>(en.items || {})) {
-    await db.doc(`message_templates/en/items/${eventId}`).set(payload, { merge: true });
+  // Process each locale
+  for (const locale of locales) {
+    try {
+      const filePath = path.join(assetsDir, locale.file);
+      const data = JSON.parse(fs.readFileSync(filePath, "utf8"));
+
+      // JSON uses "templates" array, convert to items object by id
+      const templates = data.templates || [];
+      let count = 0;
+
+      for (const template of templates) {
+        if (!template.id) continue;
+
+        // Store template with its full content (channels, email, sms, inapp, etc.)
+        await db.doc(`message_templates/${locale.collection}/items/${template.id}`).set(template, { merge: true });
+        count++;
+      }
+
+      results[locale.collection] = count;
+      console.log(`[admin_templates_seed] ${locale.collection}: ${count} templates synced`);
+    } catch (err) {
+      console.error(`[admin_templates_seed] Error processing ${locale.file}:`, err);
+      results[locale.collection] = -1;
+    }
   }
 
-  return { ok: true, frCount: Object.keys(fr.items || {}).length, enCount: Object.keys(en.items || {}).length };
+  return { ok: true, counts: results, totalLocales: locales.length };
 });
 
 // ========== UNCLAIMED FUNDS MANAGEMENT ==========

@@ -518,11 +518,12 @@ async function checkThresholdsAndAlert(
 // ============================================================================
 
 /**
- * Agregation des metriques de cout - Execute toutes les heures
+ * Agregation des metriques de cout - Execute 1×/jour à 8h
+ * 2025-01-16: Réduit à quotidien pour économies maximales
  */
 export const aggregateCostMetrics = onSchedule(
   {
-    schedule: "0 * * * *", // Toutes les heures a la minute 0
+    schedule: "0 8 * * *", // 8h Paris tous les jours
     timeZone: "Europe/Paris",
     region: "europe-west1",
     memory: "256MiB",

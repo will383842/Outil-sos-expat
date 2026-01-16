@@ -106,12 +106,12 @@ async function copyFiles(
 }
 
 /**
- * Cross-Region Backup quotidien
- * Execute a 4h (apres le backup principal de 3h)
+ * Cross-Region Backup hebdomadaire (Dimanche)
+ * 2025-01-16: Réduit de quotidien à hebdomadaire pour économies (~€10/mois)
  */
 export const dailyCrossRegionBackup = onSchedule(
   {
-    schedule: "0 4 * * *",
+    schedule: "0 4 * * 0", // Dimanche à 4h (était: tous les jours)
     timeZone: "Europe/Paris",
     region: "europe-west1",
     memory: "1GiB",

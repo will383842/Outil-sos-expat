@@ -21,9 +21,10 @@ import { logAutoresponderEvent } from "../utils/analytics";
  */
 export const stopAutoresponders = onSchedule(
   {
-    schedule: "every 1 hours",
+    // 2025-01-16: Réduit à 1×/jour à 8h pour économies maximales
+    schedule: "0 8 * * *", // 8h Paris tous les jours
     region: "europe-west1",
-    timeZone: "UTC",
+    timeZone: "Europe/Paris",
   },
   async (event) => {
     console.log("🔄 Starting autoresponder stop check...",event);

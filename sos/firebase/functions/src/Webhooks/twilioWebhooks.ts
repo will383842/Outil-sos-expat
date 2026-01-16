@@ -246,7 +246,23 @@ async function handleCallRinging(
       participantType,
       callSid: body.CallSid?.slice(0, 20) + '...'
     });
-    
+
+    // P2 FIX: Validate that this webhook is for the CURRENT call attempt (consistency with other handlers)
+    // Race condition: Ringing webhook from attempt 1 can arrive during attempt 2
+    const sessionForValidation = await twilioCallManager.getCallSession(sessionId);
+    const participantForValidation = participantType === 'provider'
+      ? sessionForValidation?.participants.provider
+      : sessionForValidation?.participants.client;
+    const currentCallSid = participantForValidation?.callSid;
+
+    if (currentCallSid && body.CallSid && currentCallSid !== body.CallSid) {
+      console.log(`📞 [ringing] ⚠️ STALE WEBHOOK DETECTED!`);
+      console.log(`📞 [ringing]   Webhook callSid: ${body.CallSid}`);
+      console.log(`📞 [ringing]   Current callSid: ${currentCallSid}`);
+      console.log(`📞 [ringing]   This webhook is from an OLD call attempt - IGNORING`);
+      return; // Ignore stale webhook
+    }
+
     await twilioCallManager.updateParticipantStatus(
       sessionId,
       participantType,
@@ -522,6 +538,29 @@ async function handleCallCompleted(
       callSid: body.CallSid?.slice(0, 20) + '...',
       note: 'billingDuration calculated from timestamps below'
     });
+
+    // P0 CRITICAL FIX: Validate that this webhook is for the CURRENT call attempt
+    // Race condition: Webhook from attempt 1 can arrive AFTER attempt 2 has started/completed
+    // If we don't validate, we could:
+    // 1. Mark the current connected participant as "disconnected"
+    // 2. Trigger handleEarlyDisconnection with duration=0
+    // 3. Incorrectly call handleCallFailure and terminate the whole session!
+    // This is THE BUG causing calls to disconnect when the provider answers.
+    const sessionForValidation = await twilioCallManager.getCallSession(sessionId);
+    const participantForValidation = participantType === 'provider'
+      ? sessionForValidation?.participants.provider
+      : sessionForValidation?.participants.client;
+    const currentCallSid = participantForValidation?.callSid;
+
+    if (currentCallSid && body.CallSid && currentCallSid !== body.CallSid) {
+      console.log(`🏁 [${completedId}] ⚠️ STALE WEBHOOK DETECTED!`);
+      console.log(`🏁 [${completedId}]   Webhook callSid: ${body.CallSid}`);
+      console.log(`🏁 [${completedId}]   Current callSid: ${currentCallSid}`);
+      console.log(`🏁 [${completedId}]   This webhook is from an OLD call attempt - IGNORING`);
+      console.log(`${'─'.repeat(60)}\n`);
+      return; // Ignore stale webhook - DO NOT process this!
+    }
+    console.log(`🏁 [${completedId}] ✅ CallSid validated - matches current call attempt`);
 
     // Store Twilio cost in call_session if available
     if (twilioPrice !== null) {

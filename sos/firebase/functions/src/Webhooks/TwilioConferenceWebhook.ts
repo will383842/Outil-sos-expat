@@ -261,7 +261,8 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
     if (providerConnectedAt) {
       // Provider was connected - calculate billing duration from provider connection to now
       const providerConnectedTime = providerConnectedAt.toDate();
-      billingDuration = Math.floor((conferenceEndTime.getTime() - providerConnectedTime.getTime()) / 1000);
+      // P0 FIX: Ensure billingDuration is never negative (clock skew protection between servers)
+      billingDuration = Math.max(0, Math.floor((conferenceEndTime.getTime() - providerConnectedTime.getTime()) / 1000));
       console.log(`🏁 [${endId}]   providerConnectedAt: ${providerConnectedTime.toISOString()}`);
       console.log(`🏁 [${endId}]   conferenceEndTime: ${conferenceEndTime.toISOString()}`);
       console.log(`🏁 [${endId}]   billingDuration (from provider connect): ${billingDuration}s`);
@@ -597,7 +598,8 @@ async function handleParticipantLeave(sessionId: string, body: TwilioConferenceW
     const providerConnectedAt = session?.participants.provider.connectedAt;
     if (providerConnectedAt) {
       const providerConnectedTime = providerConnectedAt.toDate();
-      billingDuration = Math.floor((leaveTime.getTime() - providerConnectedTime.getTime()) / 1000);
+      // P0 FIX: Ensure billingDuration is never negative (clock skew protection between servers)
+      billingDuration = Math.max(0, Math.floor((leaveTime.getTime() - providerConnectedTime.getTime()) / 1000));
       console.log(`👋 [${leaveId}]   providerConnectedAt: ${providerConnectedTime.toISOString()}`);
       console.log(`👋 [${leaveId}]   leaveTime: ${leaveTime.toISOString()}`);
     } else {

@@ -33,7 +33,7 @@ function getClient() {
 
 // Configuration
 const CONFIG = {
-  RETENTION_DAYS: 90, // Augmente de 30 a 90 jours pour meilleure protection
+  RETENTION_DAYS: 30, // 2025-01-16: Réduit de 90 à 30 jours pour réduction des coûts storage
   CRITICAL_COLLECTIONS: [
     "users",
     "sos_profiles",

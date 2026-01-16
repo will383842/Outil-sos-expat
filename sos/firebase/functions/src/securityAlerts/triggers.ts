@@ -529,11 +529,12 @@ export const securityDailyCleanup = onSchedule(
 // ==========================================
 
 /**
- * Traitement des escalades en attente toutes les 5 minutes
+ * Traitement des escalades en attente 1×/jour à 8h
+ * 2025-01-16: Réduit à quotidien pour économies maximales (low traffic)
  */
 export const processSecurityEscalations = onSchedule(
   {
-    schedule: '*/5 * * * *', // Toutes les 5 minutes
+    schedule: '0 8 * * *', // 8h Paris tous les jours
     region: REGION,
     timeZone: 'Europe/Paris',
   },

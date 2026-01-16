@@ -480,11 +480,11 @@ export const getAgentMetrics = functions.onCall(
 
 /**
  * Scheduled function pour sauvegarder les métriques historiques
- * Exécutée toutes les heures pour garder un historique
+ * 2025-01-16: Réduit à 1×/jour à 8h pour économies maximales
  */
 export const saveAgentMetricsHistory = scheduler.onSchedule(
   {
-    schedule: 'every 1 hours',
+    schedule: '0 8 * * *', // 8h Paris tous les jours
     timeZone: 'Europe/Paris',
     region: 'europe-west1',
   },

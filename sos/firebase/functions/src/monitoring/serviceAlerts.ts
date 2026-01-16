@@ -769,12 +769,12 @@ async function checkServiceAndAlert(service: ServiceType): Promise<CheckResult> 
 // ============================================================================
 
 /**
- * Scheduled function that checks all service balances hourly
- * and triggers alerts when balances fall below thresholds.
+ * Scheduled function that checks all service balances 1×/jour à 8h
+ * 2025-01-16: Réduit à quotidien pour économies maximales (low traffic)
  */
 export const checkServiceBalances = onSchedule(
   {
-    schedule: '0 * * * *', // Every hour at minute 0
+    schedule: '0 8 * * *', // 8h Paris tous les jours
     timeZone: 'Europe/Paris',
     region: 'europe-west1',
     memory: '512MiB',

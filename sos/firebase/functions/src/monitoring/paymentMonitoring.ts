@@ -458,12 +458,14 @@ async function collectPaymentMetrics(): Promise<void> {
 // =====================
 
 /**
- * Vérification des paiements toutes les 30 minutes
+ * Vérification des paiements toutes les 4 heures
+ * 2025-01-16: Garder à 4h car paiements impliqués (pas quotidien)
  */
 export const runPaymentHealthCheck = onSchedule(
   {
-    schedule: 'every 30 minutes',
+    schedule: '0 */4 * * *', // Every 4 hours (paiements = garder réactif)
     region: 'europe-west1',
+    timeZone: 'Europe/Paris',
     memory: '256MiB',
     timeoutSeconds: 120
   },

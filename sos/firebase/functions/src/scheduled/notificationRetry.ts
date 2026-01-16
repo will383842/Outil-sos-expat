@@ -28,11 +28,12 @@ const RETRY_CONFIG = {
 };
 
 /**
- * Scheduled retry function - runs every 30 minutes
+ * Scheduled retry function - runs every 4 hours
+ * 2025-01-16: Garder à 4h pour notifications importantes (pas quotidien)
  */
 export const notificationRetry = onSchedule(
   {
-    schedule: "*/30 * * * *", // Every 30 minutes
+    schedule: "0 */4 * * *", // Every 4 hours (notifications = garder réactif)
     region: "europe-west1",
     timeZone: "Europe/Paris",
     timeoutSeconds: 300,

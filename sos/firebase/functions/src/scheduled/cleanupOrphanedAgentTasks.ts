@@ -32,7 +32,8 @@ const THRESHOLDS = {
 
 export const cleanupOrphanedAgentTasks = scheduler.onSchedule(
   {
-    schedule: 'every 1 hours',
+    // 2025-01-16: Réduit à 1×/jour à 8h pour économies maximales
+    schedule: '0 8 * * *', // 8h Paris tous les jours
     timeZone: 'Europe/Paris',
     region: 'europe-west1',
     memory: '512MiB',

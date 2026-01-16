@@ -44,11 +44,12 @@ const CONFIG = {
 // ============================================================================
 
 /**
- * Backup quotidien des fichiers Storage vers DR
+ * Backup hebdomadaire des fichiers Storage vers DR
+ * 2025-01-16: Réduit de quotidien à hebdomadaire (dimanche) pour économies (~€8/mois)
  */
 export const backupStorageToDR = onSchedule(
   {
-    schedule: "0 5 * * *", // 5h du matin, après les backups Firestore
+    schedule: "0 5 * * 0", // Dimanche 5h du matin (était: tous les jours)
     timeZone: "Europe/Paris",
     region: "europe-west1",
     memory: "1GiB",
