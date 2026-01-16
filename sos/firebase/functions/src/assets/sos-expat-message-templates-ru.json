@@ -101,6 +101,33 @@
           "deeplink": "/provider/dashboard"
         }
       }
+    },
+    {
+      "id": "provider.set.offline.no_answer",
+      "roles": ["provider"],
+      "channels": {
+        "email": true,
+        "sms": false,
+        "push": true,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "email": {
+        "subject": "SOS Expat: Вы были переведены в офлайн",
+        "html": "<h2>Вы были переведены в офлайн</h2><p>Вы пропустили звонок от клиента, которому нужна была ваша помощь.</p><p style=\"background:#fff3e0;padding:12px;border-radius:4px;\">⚠️ <strong>Ваш профиль сейчас офлайн.</strong> Вы не будете получать новые запросы на бронирование, пока не подключитесь снова.</p><p>Чтобы вернуться онлайн и получать новые бронирования:</p><ol><li>Откройте приложение или сайт SOS Expat</li><li>Перейдите в панель управления</li><li>Переключите доступность на \"Онлайн\"</li></ol><p><a href=\"https://sos-expat.com/ru-ru/panel-upravleniya\" style=\"background:#4CAF50;color:white;padding:12px 24px;text-decoration:none;border-radius:4px;display:inline-block;\">Вернуться онлайн</a></p>"
+      },
+      "push": {
+        "title": "Вы сейчас офлайн",
+        "body": "Вы пропустили звонок клиента. Нажмите, чтобы вернуться онлайн."
+      },
+      "inapp": {
+        "title": "Вы сейчас офлайн",
+        "body": "Вы пропустили звонок клиента. Перейдите в панель управления для переподключения.",
+        "action": {
+          "label": "Вернуться онлайн",
+          "deeplink": "/provider/dashboard"
+        }
+      }
     }
   ]
 }

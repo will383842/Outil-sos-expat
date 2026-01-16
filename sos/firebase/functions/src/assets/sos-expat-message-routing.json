@@ -90,7 +90,22 @@
     "call.scheduled.provider": {
       "channels": [
         "email",
-        "sms",
+        "push",
+        "inapp"
+      ],
+      "rate_limit_h": 0
+    },
+    "call.cancelled.client_no_answer": {
+      "channels": [
+        "email",
+        "push",
+        "inapp"
+      ],
+      "rate_limit_h": 0
+    },
+    "provider.set.offline.no_answer": {
+      "channels": [
+        "email",
         "push",
         "inapp"
       ],

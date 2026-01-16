@@ -1133,7 +1133,7 @@ export const twilioAmdTwiml = onRequest(
         console.log(`🎯 [${amdId}]   This is the initial TwiML request - session may not be updated yet`);
       }
 
-      // Check if answered by machine - NUANCED DETECTION (P0 FIX 2026-01-16 v2)
+      // Check if answered by machine - UNIFIED DETECTION (P0 FIX 2026-01-17 v3)
       //
       // AMD returns different values with different meanings:
       // - machine_start → AMD detected machine BEFORE beep/greeting ended
@@ -1160,70 +1160,78 @@ export const twilioAmdTwiml = onRequest(
       // P0 DIAGNOSTIC: AMD DECISION LOGIC - DETAILED TRACE
       // ██████████████████████████████████████████████████████████████████████
       console.log(`\n🎯 [${amdId}] ┌────────────────────────────────────────────────────────────┐`);
-      console.log(`🎯 [${amdId}] │ 🧠 AMD DECISION LOGIC TRACE (P0 FIX 2026-01-16 v2)         │`);
+      console.log(`🎯 [${amdId}] │ 🧠 AMD DECISION LOGIC TRACE (P0 FIX 2026-01-17 v3)         │`);
       console.log(`🎯 [${amdId}] ├────────────────────────────────────────────────────────────┤`);
       console.log(`🎯 [${amdId}] │ INPUT:                                                     │`);
       console.log(`🎯 [${amdId}] │   answeredBy: "${answeredBy || 'undefined'}"`);
       console.log(`🎯 [${amdId}] │   participantType: "${participantType}"`);
-      console.log(`🎯 [${amdId}] │   isMachineStart: ${isMachineStart} (FALSE POSITIVE likely)`);
-      console.log(`🎯 [${amdId}] │   isMachineEnd: ${isMachineEnd} (ACTUAL VOICEMAIL)`);
+      console.log(`🎯 [${amdId}] │   isMachineStart: ${isMachineStart} (v3: treated as MACHINE)`);
+      console.log(`🎯 [${amdId}] │   isMachineEnd: ${isMachineEnd} (v3: treated as MACHINE)`);
       console.log(`🎯 [${amdId}] └────────────────────────────────────────────────────────────┘`);
 
-      // P0 CRITICAL FIX 2026-01-16 v2: NUANCED MACHINE DETECTION
+      // ══════════════════════════════════════════════════════════════════════
+      // P0 CRITICAL FIX 2026-01-17 v3: UNIFIED MACHINE DETECTION
+      // ══════════════════════════════════════════════════════════════════════
       //
-      // PROBLEM: AMD has HIGH FALSE POSITIVE RATE with "machine_start":
-      // - Humans saying "Allô?" quickly get detected as "machine_start"
-      // - Background noise can trigger "machine_start"
+      // PREVIOUS PROBLEM (v2):
+      //   machine_start was treated as human due to high false positive rate.
+      //   But this caused CLIENT's voicemail to be treated as "connected",
+      //   then PROVIDER was incorrectly called while client wasn't actually there.
       //
-      // SOLUTION: Distinguish between machine_start and machine_end_*:
-      // - machine_start → FALSE POSITIVE likely → treat as HUMAN → join conference
-      // - machine_end_beep/silence/other → ACTUAL VOICEMAIL → hang up and retry
+      // NEW SOLUTION (v3):
+      //   Treat ALL machine detections uniformly → HANG UP + RETRY (up to 3x)
       //
-      // EVIDENCE FROM PRODUCTION LOGS:
-      // - Client answered on 3rd attempt, AMD returned "machine_start", call was hung up
-      // - This was a REAL HUMAN, not voicemail - false positive!
-      // - Provider voicemail with "machine_end_beep" was correctly identified as voicemail
+      // BEHAVIOR (v3 unified - same for CLIENT and PROVIDER):
+      //   ┌─────────────────┬───────────────────────────────────────────────┐
+      //   │ answeredBy      │ Action                                        │
+      //   ├─────────────────┼───────────────────────────────────────────────┤
+      //   │ machine_start   │ HANG UP + RETRY (early detection)             │
+      //   │ machine_end_*   │ HANG UP + RETRY (confirmed voicemail)         │
+      //   │ human           │ CONNECT to conference                         │
+      //   │ unknown         │ CONNECT to conference (AMD timeout, assume ok)│
+      //   │ undefined       │ AMD PENDING - wait for callback               │
+      //   └─────────────────┴───────────────────────────────────────────────┘
       //
-      // BEHAVIOR:
-      // - machine_start (BOTH client/provider): Treat as HUMAN → join conference
-      // - machine_end_* (BOTH client/provider): Hang up → retry (up to 3x)
+      // TRADE-OFF: If a human is wrongly detected as machine_start (false positive),
+      //            they will be called back (up to 3 retries). This is acceptable.
       //
-      const shouldHangup = isMachineEnd; // Only hang up on ACTUAL voicemail (machine_end_*)
+      const shouldHangup = isMachineEnd || isMachineStart; // v3: ALL machine detections = hang up
 
       // ██████████████████████████████████████████████████████████████████████
       // P0 DIAGNOSTIC: HANGUP DECISION
       // ██████████████████████████████████████████████████████████████████████
       console.log(`🎯 [${amdId}] ┌────────────────────────────────────────────────────────────┐`);
-      console.log(`🎯 [${amdId}] │ 🚦 HANGUP DECISION (v2 - nuanced):                         │`);
-      console.log(`🎯 [${amdId}] │   shouldHangup = isMachineEnd (actual voicemail)           │`);
+      console.log(`🎯 [${amdId}] │ 🚦 HANGUP DECISION (v3 - unified):                         │`);
+      console.log(`🎯 [${amdId}] │   shouldHangup = isMachineEnd || isMachineStart            │`);
+      console.log(`🎯 [${amdId}] │   isMachineStart: ${isMachineStart}`);
       console.log(`🎯 [${amdId}] │   isMachineEnd: ${isMachineEnd}`);
       console.log(`🎯 [${amdId}] │   shouldHangup: ${shouldHangup}`);
-      console.log(`🎯 [${amdId}] │   → ${shouldHangup ? '❌ WILL HANG UP (voicemail detected via machine_end_*)' : '✅ WILL NOT HANG UP'}`);
+      console.log(`🎯 [${amdId}] │   → ${shouldHangup ? '❌ WILL HANG UP (machine detected)' : '✅ WILL NOT HANG UP (human/unknown)'}`);
       console.log(`🎯 [${amdId}] └────────────────────────────────────────────────────────────┘`);
 
       if (isMachineStart) {
-        // machine_start detected - TREAT AS HUMAN (high false positive rate)
+        // P0 FIX v3: machine_start detected - TREAT AS MACHINE (hang up + retry)
         console.log(`\n🎯 [${amdId}] ╔════════════════════════════════════════════════════════════╗`);
-        console.log(`🎯 [${amdId}] ║ ⚡ P0 FIX v2: machine_start → TREATING AS HUMAN            ║`);
+        console.log(`🎯 [${amdId}] ║ ⚡ P0 FIX v3: machine_start → TREATING AS MACHINE          ║`);
         console.log(`🎯 [${amdId}] ╠════════════════════════════════════════════════════════════╣`);
         console.log(`🎯 [${amdId}] ║ answeredBy: "${answeredBy}"`);
         console.log(`🎯 [${amdId}] ║ participantType: "${participantType}"`);
-        console.log(`🎯 [${amdId}] ║ ACTION: NOT hanging up - treating as human`);
-        console.log(`🎯 [${amdId}] ║ REASON: machine_start has HIGH FALSE POSITIVE rate`);
-        console.log(`🎯 [${amdId}] ║         (humans saying "Allô?" detected as machine)`);
-        console.log(`🎯 [${amdId}] ║ NEXT: Will join conference                                 ║`);
+        console.log(`🎯 [${amdId}] ║ ACTION: HANGING UP - treating as voicemail`);
+        console.log(`🎯 [${amdId}] ║ REASON: Unified detection - all machine_* = voicemail`);
+        console.log(`🎯 [${amdId}] ║         (if false positive, participant will be called back)`);
+        console.log(`🎯 [${amdId}] ║ NEXT: Will hang up and trigger retry (up to 3x)           ║`);
         console.log(`🎯 [${amdId}] ╚════════════════════════════════════════════════════════════╝\n`);
-        // Continue to the "human confirmed" section below - don't return here
+        // Will be handled by shouldHangup block below
       }
 
       if (shouldHangup) {
-        // VOICEMAIL CONFIRMED (machine_end_*) → Hangup immediately and retry
-        console.log(`🎯 [${amdId}] ⚠️ VOICEMAIL CONFIRMED (machine_end_*) - HANGING UP CALL`);
+        // MACHINE DETECTED (machine_start OR machine_end_*) → Hangup immediately and retry
+        console.log(`🎯 [${amdId}] ⚠️ MACHINE DETECTED - HANGING UP CALL`);
         console.log(`🎯 [${amdId}]   answeredBy: ${answeredBy || 'UNDEFINED'}`);
         console.log(`🎯 [${amdId}]   participantType: ${participantType}`);
         console.log(`🎯 [${amdId}]   callSid: ${callSid}`);
-        console.log(`🎯 [${amdId}]   This is ACTUAL voicemail - will hang up and retry`);
-        console.log(`🎯 [${amdId}]   (machine_end_beep/silence/other detected - NOT a false positive)`);
+        console.log(`🎯 [${amdId}]   isMachineStart: ${isMachineStart}, isMachineEnd: ${isMachineEnd}`);
+        console.log(`🎯 [${amdId}]   Action: Hang up and retry (up to 3x)`);
 
         // Update participant status to no_answer for retry logic
         if (sessionId) {
@@ -1279,24 +1287,26 @@ export const twilioAmdTwiml = onRequest(
       // - Initial URL callback: answeredBy is undefined/missing (Twilio hasn't analyzed yet)
       // - Async AMD callback: answeredBy is provided (human, machine_*, fax, or unknown)
       const isAsyncAmdCallback = answeredBy !== undefined && answeredBy !== null && answeredBy !== '';
-      // P0 FIX 2026-01-16 v2: NUANCED machine detection
-      // - machine_start → FALSE POSITIVE likely → treat as human → join conference
-      // - machine_end_* → ACTUAL VOICEMAIL → already handled above (shouldHangup = true)
-      // Evidence: Client answered 3rd attempt, AMD returned "machine_start", was a real human.
+      // P0 FIX 2026-01-17 v3: UNIFIED machine detection
+      // - machine_start → MACHINE (hang up + retry) - already handled above
+      // - machine_end_* → MACHINE (hang up + retry) - already handled above
+      // - human → HUMAN CONFIRMED → join conference
+      // - unknown → HUMAN (AMD couldn't determine after 30s) → join conference
+      // Note: If we reach this point, shouldHangup was FALSE, so answeredBy is "human" or "unknown"
       const isHumanConfirmed = answeredBy === 'human'
-        || (isAsyncAmdCallback && answeredBy === 'unknown')
-        || isMachineStart; // P0 FIX v2: Only machine_start = treat as human (high false positive)
+        || (isAsyncAmdCallback && answeredBy === 'unknown');
+      // v3: Removed isMachineStart - now treated as machine (handled above)
 
       // ██████████████████████████████████████████████████████████████████████
       // P0 DIAGNOSTIC: HUMAN CONFIRMED DECISION
       // ██████████████████████████████████████████████████████████████████████
       console.log(`🎯 [${amdId}] ┌────────────────────────────────────────────────────────────┐`);
-      console.log(`🎯 [${amdId}] │ 🧑 HUMAN CONFIRMED DECISION (v2 nuanced):                  │`);
+      console.log(`🎯 [${amdId}] │ 🧑 HUMAN CONFIRMED DECISION (v3 unified):                  │`);
       console.log(`🎯 [${amdId}] │   isAsyncAmdCallback: ${isAsyncAmdCallback}`);
       console.log(`🎯 [${amdId}] │   answeredBy === 'human': ${answeredBy === 'human'}`);
       console.log(`🎯 [${amdId}] │   isAsyncAmd && unknown: ${isAsyncAmdCallback && answeredBy === 'unknown'}`);
-      console.log(`🎯 [${amdId}] │   isMachineStart (treated as human): ${isMachineStart}`);
-      console.log(`🎯 [${amdId}] │   isMachineEnd (VOICEMAIL - already hung up): ${isMachineEnd}`);
+      console.log(`🎯 [${amdId}] │   isMachineStart (now treated as MACHINE): ${isMachineStart}`);
+      console.log(`🎯 [${amdId}] │   isMachineEnd (MACHINE - already hung up): ${isMachineEnd}`);
       console.log(`🎯 [${amdId}] │   → isHumanConfirmed: ${isHumanConfirmed}`);
       console.log(`🎯 [${amdId}] │   → ${isHumanConfirmed ? '✅ WILL JOIN CONFERENCE' : '⏳ AMD PENDING - HOLD MUSIC'}`);
       console.log(`🎯 [${amdId}] └────────────────────────────────────────────────────────────┘`);

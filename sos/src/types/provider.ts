@@ -218,13 +218,15 @@ export function normalizeProvider(providerData: unknown): Provider {
   const name = publicName || existingName || rawFullName || (id ? `Expert ${id.slice(-4)}` : 'Expert');
   const fullName = rawFullName || existingName || `${firstName} ${lastName}`.trim() || name;
 
-  // country
+  // country - PAS de fallback vers France !
+  // Si le provider n'a pas de pays défini, on laisse vide pour éviter
+  // de polluer le formulaire BookingRequest avec une valeur incorrecte
   const country =
     toStr(o.country) ||
     toStr(o.currentCountry) ||
     toStr(o.currentPresenceCountry) ||
     toStr(o.providerCountry) ||
-    'France';
+    '';
 
   // languages
   const languages =

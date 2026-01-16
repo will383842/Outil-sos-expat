@@ -1231,6 +1231,9 @@ const BookingRequest: React.FC = () => {
   const refPhone = useRef<HTMLDivElement | null>(null);
   const refCGU = useRef<HTMLDivElement | null>(null);
 
+  // Flag pour éviter le traitement multiple des données wizard
+  const wizardDataProcessedRef = useRef(false);
+
   // Mobile-first 2026 input classes with 48px minimum touch target (Apple HIG + Google Material 3)
   const inputClass = (hasErr?: boolean) =>
     `w-full max-w-full box-border px-3 sm:px-4 py-3 sm:py-3.5 min-h-[48px] border-2 rounded-xl bg-white text-gray-900 placeholder-gray-400
@@ -1364,7 +1367,14 @@ const BookingRequest: React.FC = () => {
 
   // Pre-fill form with wizard data from sessionStorage
   // Le pays d'intervention est UNIQUEMENT celui choisi par le client dans le wizard
+  // ✅ FIX: Utilisation d'un ref pour éviter les exécutions multiples
   useEffect(() => {
+    // Skip si déjà traité (évite les re-exécutions dues aux changements de setValue)
+    if (wizardDataProcessedRef.current) {
+      console.log('🔵 [BookingRequest] Wizard data already processed, skipping');
+      return;
+    }
+
     try {
       const wizardData = sessionStorage.getItem('wizardFilters');
       console.log('🔵 [BookingRequest] wizardData from sessionStorage:', wizardData);
@@ -1372,6 +1382,9 @@ const BookingRequest: React.FC = () => {
         console.log('🔵 [BookingRequest] No wizardData found, skipping prefill');
         return;
       }
+
+      // Marquer comme traité AVANT le traitement pour éviter les race conditions
+      wizardDataProcessedRef.current = true;
 
       const { country, languages: wizardLanguages } = JSON.parse(wizardData) as {
         country: string;
@@ -1425,9 +1438,7 @@ const BookingRequest: React.FC = () => {
         }
       }
 
-      // Nettoyer les données du wizard après utilisation pour éviter
-      // que d'anciennes données ne polluent les futures visites
-      sessionStorage.removeItem('wizardFilters');
+      console.log('🔵 [BookingRequest] Wizard data processed successfully');
 
     } catch (e) {
       console.warn('Failed to read wizard filters from sessionStorage', e);
@@ -1859,6 +1870,10 @@ const BookingRequest: React.FC = () => {
         if (!savedProvider || !savedServiceData) {
           throw new Error("SESSION_STORAGE_WRITE_FAILED");
         }
+
+        // ✅ Nettoyer les données wizard après soumission réussie
+        sessionStorage.removeItem('wizardFilters');
+        console.log('🔵 [BookingRequest] wizardFilters cleaned after successful submit');
 
         // Navigate only after successful write and verification
         navigate(`/call-checkout/${providerId}`);

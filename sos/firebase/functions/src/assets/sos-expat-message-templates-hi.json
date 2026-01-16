@@ -101,6 +101,33 @@
           "deeplink": "/provider/dashboard"
         }
       }
+    },
+    {
+      "id": "provider.set.offline.no_answer",
+      "roles": ["provider"],
+      "channels": {
+        "email": true,
+        "sms": false,
+        "push": true,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "email": {
+        "subject": "SOS Expat: आपको ऑफ़लाइन सेट कर दिया गया है",
+        "html": "<h2>आपको ऑफ़लाइन सेट कर दिया गया है</h2><p>आपने एक ग्राहक की कॉल मिस कर दी जिसे आपकी मदद की जरूरत थी।</p><p style=\"background:#fff3e0;padding:12px;border-radius:4px;\">⚠️ <strong>आपकी प्रोफ़ाइल अब ऑफ़लाइन है।</strong> जब तक आप फिर से कनेक्ट नहीं होते, आपको नई बुकिंग अनुरोध नहीं मिलेंगे।</p><p>वापस ऑनलाइन आने और नई बुकिंग प्राप्त करने के लिए:</p><ol><li>SOS Expat ऐप या वेबसाइट खोलें</li><li>अपने डैशबोर्ड पर जाएं</li><li>अपनी उपलब्धता को \"ऑनलाइन\" पर टॉगल करें</li></ol><p><a href=\"https://sos-expat.com/hi-in/dashboard\" style=\"background:#4CAF50;color:white;padding:12px 24px;text-decoration:none;border-radius:4px;display:inline-block;\">अभी ऑनलाइन जाएं</a></p>"
+      },
+      "push": {
+        "title": "आप अब ऑफ़लाइन हैं",
+        "body": "आपने एक ग्राहक कॉल मिस कर दी। वापस ऑनलाइन आने के लिए टैप करें।"
+      },
+      "inapp": {
+        "title": "आप अब ऑफ़लाइन हैं",
+        "body": "आपने एक ग्राहक कॉल मिस कर दी। फिर से कनेक्ट करने के लिए अपने डैशबोर्ड पर जाएं।",
+        "action": {
+          "label": "ऑनलाइन जाएं",
+          "deeplink": "/provider/dashboard"
+        }
+      }
     }
   ]
 }

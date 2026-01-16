@@ -101,6 +101,33 @@
           "deeplink": "/provider/dashboard"
         }
       }
+    },
+    {
+      "id": "provider.set.offline.no_answer",
+      "roles": ["provider"],
+      "channels": {
+        "email": true,
+        "sms": false,
+        "push": true,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "email": {
+        "subject": "SOS Expat: Ha sido desconectado",
+        "html": "<h2>Ha sido desconectado</h2><p>Perdió una llamada de un cliente que necesitaba su ayuda.</p><p style=\"background:#fff3e0;padding:12px;border-radius:4px;\">⚠️ <strong>Su perfil ahora está fuera de línea.</strong> No recibirá nuevas solicitudes de reserva hasta que se vuelva a conectar.</p><p>Para volver a estar en línea y recibir nuevas reservas:</p><ol><li>Abra la aplicación o el sitio web de SOS Expat</li><li>Vaya a su panel de control</li><li>Cambie su disponibilidad a \"En línea\"</li></ol><p><a href=\"https://sos-expat.com/es-es/panel\" style=\"background:#4CAF50;color:white;padding:12px 24px;text-decoration:none;border-radius:4px;display:inline-block;\">Volver en línea</a></p>"
+      },
+      "push": {
+        "title": "Ahora está fuera de línea",
+        "body": "Perdió una llamada de cliente. Toque para volver a conectarse."
+      },
+      "inapp": {
+        "title": "Ahora está fuera de línea",
+        "body": "Perdió una llamada de cliente. Vaya a su panel para reconectarse.",
+        "action": {
+          "label": "Volver en línea",
+          "deeplink": "/provider/dashboard"
+        }
+      }
     }
   ]
 }

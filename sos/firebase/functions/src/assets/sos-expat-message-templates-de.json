@@ -101,6 +101,33 @@
           "deeplink": "/provider/dashboard"
         }
       }
+    },
+    {
+      "id": "provider.set.offline.no_answer",
+      "roles": ["provider"],
+      "channels": {
+        "email": true,
+        "sms": false,
+        "push": true,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "email": {
+        "subject": "SOS Expat: Sie wurden offline gesetzt",
+        "html": "<h2>Sie wurden offline gesetzt</h2><p>Sie haben einen Anruf eines Kunden verpasst, der Ihre Hilfe benötigte.</p><p style=\"background:#fff3e0;padding:12px;border-radius:4px;\">⚠️ <strong>Ihr Profil ist jetzt offline.</strong> Sie erhalten keine neuen Buchungsanfragen, bis Sie sich wieder verbinden.</p><p>Um wieder online zu gehen und neue Buchungen zu erhalten:</p><ol><li>Öffnen Sie die SOS Expat App oder Website</li><li>Gehen Sie zu Ihrem Dashboard</li><li>Schalten Sie Ihre Verfügbarkeit auf \"Online\"</li></ol><p><a href=\"https://sos-expat.com/de-de/dashboard\" style=\"background:#4CAF50;color:white;padding:12px 24px;text-decoration:none;border-radius:4px;display:inline-block;\">Jetzt online gehen</a></p>"
+      },
+      "push": {
+        "title": "Sie sind jetzt offline",
+        "body": "Sie haben einen Kundenanruf verpasst. Tippen Sie, um wieder online zu gehen."
+      },
+      "inapp": {
+        "title": "Sie sind jetzt offline",
+        "body": "Sie haben einen Kundenanruf verpasst. Gehen Sie zu Ihrem Dashboard, um sich wieder zu verbinden.",
+        "action": {
+          "label": "Online gehen",
+          "deeplink": "/provider/dashboard"
+        }
+      }
     }
   ]
 }

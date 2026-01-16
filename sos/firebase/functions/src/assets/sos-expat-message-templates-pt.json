@@ -101,6 +101,33 @@
           "deeplink": "/provider/dashboard"
         }
       }
+    },
+    {
+      "id": "provider.set.offline.no_answer",
+      "roles": ["provider"],
+      "channels": {
+        "email": true,
+        "sms": false,
+        "push": true,
+        "inapp": true,
+        "whatsapp": false
+      },
+      "email": {
+        "subject": "SOS Expat: Você foi desconectado",
+        "html": "<h2>Você foi desconectado</h2><p>Você perdeu uma chamada de um cliente que precisava de sua ajuda.</p><p style=\"background:#fff3e0;padding:12px;border-radius:4px;\">⚠️ <strong>Seu perfil agora está offline.</strong> Você não receberá novas solicitações de reserva até se reconectar.</p><p>Para voltar a ficar online e receber novas reservas:</p><ol><li>Abra o aplicativo ou site SOS Expat</li><li>Vá para seu painel</li><li>Altere sua disponibilidade para \"Online\"</li></ol><p><a href=\"https://sos-expat.com/pt-pt/painel\" style=\"background:#4CAF50;color:white;padding:12px 24px;text-decoration:none;border-radius:4px;display:inline-block;\">Voltar online</a></p>"
+      },
+      "push": {
+        "title": "Você está offline agora",
+        "body": "Você perdeu uma chamada de cliente. Toque para voltar a ficar online."
+      },
+      "inapp": {
+        "title": "Você está offline agora",
+        "body": "Você perdeu uma chamada de cliente. Vá para seu painel para se reconectar.",
+        "action": {
+          "label": "Voltar online",
+          "deeplink": "/provider/dashboard"
+        }
+      }
     }
   ]
 }

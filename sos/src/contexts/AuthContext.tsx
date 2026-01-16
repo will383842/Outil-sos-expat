@@ -174,14 +174,25 @@ const isInAppBrowser = (): boolean => {
 
 /**
  * Détecte si on doit forcer le mode redirect au lieu de popup
- * Sur iOS et dans les WebViews, les popups ne fonctionnent souvent pas
+ *
+ * IMPORTANT: iOS Safari standard supporte mieux les POPUPS que les redirects
+ * à cause d'ITP (Intelligent Tracking Prevention) qui bloque les cookies après redirect.
+ * On ne force donc le redirect QUE sur les WebViews iOS (Chrome, Firefox, Edge sur iOS)
+ * et les autres navigateurs problématiques.
  */
 const shouldForceRedirectAuth = (): boolean => {
   if (typeof navigator === 'undefined') return false;
   const ua = navigator.userAgent;
 
-  // iOS Safari a des problèmes fréquents avec les popups
   const isIOS = /iPhone|iPad|iPod/i.test(ua);
+
+  // Détecter si on est sur un navigateur iOS autre que Safari natif
+  // CriOS = Chrome iOS, FxiOS = Firefox iOS, EdgiOS = Edge iOS, OPiOS = Opera iOS
+  const isIOSWebView = isIOS && /CriOS|FxiOS|EdgiOS|OPiOS|GSA/i.test(ua);
+
+  // Safari iOS standard: NE PAS forcer redirect, le popup fonctionne mieux
+  // grâce à l'absence de problèmes ITP (même domaine)
+  const isIOSSafari = isIOS && /Safari/i.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|GSA/i.test(ua);
 
   // Les WebViews Android peuvent aussi avoir des problèmes
   const isAndroidWebView = /wv/.test(ua) && /Android/i.test(ua);
@@ -192,7 +203,14 @@ const shouldForceRedirectAuth = (): boolean => {
   // UC Browser et autres navigateurs alternatifs
   const isAlternativeBrowser = /UCBrowser|Opera Mini|OPR/i.test(ua);
 
-  return isIOS || isInAppBrowser() || isAndroidWebView || isSamsungBrowser || isAlternativeBrowser;
+  // iOS Safari standard → popup (retourne false)
+  // Tous les autres cas problématiques → redirect (retourne true)
+  if (isIOSSafari) {
+    console.log('[Auth] iOS Safari détecté - mode POPUP (meilleur pour ITP)');
+    return false;
+  }
+
+  return isInAppBrowser() || isIOSWebView || isAndroidWebView || isSamsungBrowser || isAlternativeBrowser;
 };
 
 /**

@@ -193,13 +193,15 @@ export const admin_templates_seed = onCall({
   const db = getDb();
 
   // All supported locales with their file names and Firestore collection names
+  // IMPORTANT: Collection names MUST match what resolveLang() returns in i18n.ts
+  // resolveLang() returns: fr, en, es, de, pt, ru, ar, hi, ch
   const locales = [
-    { file: "sos-expat-message-templates-fr.json", collection: "fr-FR" },
+    { file: "sos-expat-message-templates-fr.json", collection: "fr" },  // P0 FIX: was fr-FR, resolveLang returns "fr"
     { file: "sos-expat-message-templates-en.json", collection: "en" },
     { file: "sos-expat-message-templates-de.json", collection: "de" },
     { file: "sos-expat-message-templates-es.json", collection: "es" },
     { file: "sos-expat-message-templates-ar.json", collection: "ar" },
-    { file: "sos-expat-message-templates-ch.json", collection: "zh" },
+    { file: "sos-expat-message-templates-ch.json", collection: "ch" },  // P0 FIX: was zh, resolveLang returns "ch"
     { file: "sos-expat-message-templates-hi.json", collection: "hi" },
     { file: "sos-expat-message-templates-pt.json", collection: "pt" },
     { file: "sos-expat-message-templates-ru.json", collection: "ru" },
