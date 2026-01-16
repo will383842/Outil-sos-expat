@@ -3,6 +3,7 @@ import { twilioCallManager } from '../TwilioCallManager';
 import { logCallRecord } from '../utils/logs/logCallRecord';
 import { logError } from '../utils/logs/logError';
 import { logger as prodLogger } from '../utils/productionLogger';
+import { logWebhookTest } from '../utils/productionTestLogger';
 import { Response } from 'express';
 import * as admin from 'firebase-admin';
 import { Request } from 'firebase-functions/v2/https';
@@ -74,6 +75,9 @@ export const twilioCallWebhook = onRequest(
       }
 
       const body: TwilioCallWebhookBody = req.body;
+
+      // ===== PRODUCTION TEST LOG =====
+      logWebhookTest.twilio.incoming(body as any);
 
       // ✅ P1 SECURITY FIX: Sanitize phone numbers in logs (GDPR compliance)
       const sanitizePhone = (phone: string) => phone ? `${phone.slice(0, 4)}****${phone.slice(-2)}` : 'unknown';
@@ -191,6 +195,13 @@ export const twilioCallWebhook = onRequest(
         participantType
       });
 
+      // ===== PRODUCTION TEST LOG =====
+      logWebhookTest.twilio.success(body.CallStatus, body.CallSid, {
+        sessionId,
+        participantType,
+        duration: body.CallDuration,
+      });
+
       res.status(200).send('OK');
 
     } catch (error) {
@@ -210,6 +221,10 @@ export const twilioCallWebhook = onRequest(
       console.error(`${'❌'.repeat(40)}\n`);
 
       prodLogger.error('TWILIO_WEBHOOK_ERROR', `[${requestId}] Webhook processing failed`, errorDetails);
+
+      // ===== PRODUCTION TEST LOG =====
+      logWebhookTest.twilio.error(req.body?.CallStatus || 'unknown', error as Error, errorDetails);
+
       await logError('twilioCallWebhook:error', error);
       res.status(500).send('Webhook error');
     }
@@ -1001,6 +1016,9 @@ export const twilioAmdTwiml = onRequest(
       console.log(`🎯 [${amdId}]   answeredBy: ${answeredBy || 'NOT_PROVIDED'}`);
       console.log(`🎯 [${amdId}]   callSid: ${callSid || 'NOT_PROVIDED'}`);
       console.log(`${'▓'.repeat(60)}`);
+
+      // ===== PRODUCTION TEST LOG =====
+      logWebhookTest.twilio.amd({ sessionId, participantType, answeredBy, callSid });
 
       // P0 CRITICAL FIX: Stale callback check - but ONLY for asyncAmdStatusCallback (when answeredBy is defined)
       //

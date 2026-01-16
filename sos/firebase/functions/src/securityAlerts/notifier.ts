@@ -49,14 +49,14 @@ export const SEVERITY_CHANNELS: Record<AlertSeverity, Record<string, ChannelConf
   },
   critical: {
     email: { enabled: true },
-    sms: { enabled: true },
+    sms: { enabled: false },  // P0 FIX: SMS disabled to reduce costs - use email/slack instead
     push: { enabled: true },
     inapp: { enabled: true },
     slack: { enabled: true },
   },
   emergency: {
     email: { enabled: true },
-    sms: { enabled: true },
+    sms: { enabled: false },  // P0 FIX: SMS disabled to reduce costs - use email/slack instead
     push: { enabled: true },
     inapp: { enabled: true },
     slack: { enabled: true },
@@ -856,14 +856,23 @@ export async function sendSecurityAlertNotifications(
       );
     }
 
-    // SMS (seulement critical et emergency)
+    // SMS (DISABLED to reduce Twilio costs - was critical and emergency only)
     if (channelConfig.sms.enabled && recipient.phone) {
+      console.log(`📱 [SecurityAlert SMS] ⚠️ SMS would be sent but channel is DISABLED`);
+      console.log(`📱 [SecurityAlert SMS]   alertId: ${alert.id}`);
+      console.log(`📱 [SecurityAlert SMS]   severity: ${alert.severity}`);
+      console.log(`📱 [SecurityAlert SMS]   recipient: ${recipient.phone?.substring(0, 6)}***`);
       promises.push(
         sendSmsNotification(alert, recipient).then((success) => {
           if (success) result.sms.sent++;
           else result.sms.failed++;
         })
       );
+    } else if (recipient.phone) {
+      console.log(`📱 [SecurityAlert SMS] ❌ SMS BLOCKED (disabled in config)`);
+      console.log(`📱 [SecurityAlert SMS]   alertId: ${alert.id}`);
+      console.log(`📱 [SecurityAlert SMS]   severity: ${alert.severity}`);
+      console.log(`📱 [SecurityAlert SMS]   channelConfig.sms.enabled: ${channelConfig.sms.enabled}`);
     }
 
     // Push

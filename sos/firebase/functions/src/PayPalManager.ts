@@ -24,6 +24,8 @@ import { syncPaymentStatus } from "./utils/paymentSync";
 import { isPaymentCompleted } from "./utils/paymentStatusUtils";
 // Production logger
 import { logger as prodLogger } from "./utils/productionLogger";
+// Production test logger
+import { logWebhookTest } from "./utils/productionTestLogger";
 // Meta CAPI for server-side tracking
 import { META_CAPI_TOKEN, trackCAPIPurchase, UserData } from "./metaConversionsApi";
 
@@ -2210,6 +2212,9 @@ export const paypalWebhook = onRequest(
 
       console.log("📨 [PAYPAL] Event type:", eventType);
 
+      // ===== PRODUCTION TEST LOG =====
+      logWebhookTest.paypal.incoming(event);
+
       const db = admin.firestore();
 
       // ========== P0 FIX: IDEMPOTENCE - Prevent duplicate processing ==========
@@ -2544,9 +2549,22 @@ export const paypalWebhook = onRequest(
           console.log("📋 [PAYPAL] Unhandled event type:", eventType);
       }
 
+      // ===== PRODUCTION TEST LOG =====
+      logWebhookTest.paypal.success(eventType, event.id, {
+        resourceId: event.resource?.id,
+        resourceType: event.resource_type,
+      });
+
       res.status(200).json({ received: true });
     } catch (error) {
       console.error("❌ [PAYPAL] Webhook error:", error);
+
+      // ===== PRODUCTION TEST LOG =====
+      logWebhookTest.paypal.error(req.body?.event_type || 'unknown', error as Error, {
+        eventId: req.body?.id,
+        resourceId: req.body?.resource?.id,
+      });
+
       res.status(500).send("Webhook processing failed");
     }
   }

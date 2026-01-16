@@ -11,6 +11,7 @@ import * as admin from 'firebase-admin';
 import Stripe from 'stripe';
 import { MailwizzAPI } from '../emailMarketing/utils/mailwizz';
 import { getLanguageCode } from '../emailMarketing/config';
+import { logWebhookTest } from '../utils/productionTestLogger';
 import {
   handleSubscriptionCreated as handleSubCreated,
   handleSubscriptionUpdated as handleSubUpdated,
@@ -1521,6 +1522,9 @@ export const stripeWebhook = functions
       return;
     }
 
+    // ===== PRODUCTION TEST LOG =====
+    logWebhookTest.stripe.incoming(event);
+
     // IDEMPOTENCE CHECK: Skip if event already processed
     const alreadyProcessed = await isEventAlreadyProcessed(event.id);
     if (alreadyProcessed) {
@@ -1537,6 +1541,13 @@ export const stripeWebhook = functions
     };
 
     try {
+      // ===== PRODUCTION TEST LOG =====
+      logWebhookTest.stripe.processing(event.type, {
+        eventId: event.id,
+        objectId: (event.data.object as any)?.id,
+        customerId: (event.data.object as any)?.customer,
+      });
+
       switch (event.type) {
         case 'customer.subscription.created':
           // Use the new enhanced handler from webhooks.ts
@@ -1632,9 +1643,21 @@ export const stripeWebhook = functions
       await markEventAsProcessed(event.id, event.type);
       console.log(`[stripeWebhook] Event ${event.id} (${event.type}) processed successfully`);
 
+      // ===== PRODUCTION TEST LOG =====
+      logWebhookTest.stripe.success(event.type, event.id, {
+        objectId: (event.data.object as any)?.id,
+        status: (event.data.object as any)?.status,
+      });
+
       res.json({ received: true });
     } catch (error: any) {
       console.error('Error processing webhook:', error);
+
+      // ===== PRODUCTION TEST LOG =====
+      logWebhookTest.stripe.error(event.type, error, {
+        eventId: event.id,
+        objectId: (event.data.object as any)?.id,
+      });
 
       // Determine if this is a transient error (should retry) or permanent (should not retry)
       const isTransientError = error.code === 'UNAVAILABLE' ||

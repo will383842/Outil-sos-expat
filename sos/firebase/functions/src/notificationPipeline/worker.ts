@@ -3,10 +3,13 @@ import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
 // import { resolveLang } from "./i18n";
 
-// 🔐 SECRETS (SMS désactivé - uniquement email)
+// 🔐 SECRETS
 const EMAIL_USER = defineSecret("EMAIL_USER");
 const EMAIL_PASS = defineSecret("EMAIL_PASS");
-// TWILIO secrets removed - SMS notifications disabled (calls only)
+// SMS only for booking_paid_provider
+const TWILIO_ACCOUNT_SID = defineSecret("TWILIO_ACCOUNT_SID");
+const TWILIO_AUTH_TOKEN = defineSecret("TWILIO_AUTH_TOKEN");
+const TWILIO_PHONE_NUMBER = defineSecret("TWILIO_PHONE_NUMBER");
 
 // 📤 IMPORTS DES MODULES
 import { getTemplate } from "./templates";
@@ -14,9 +17,9 @@ import { getRouting, isRateLimited } from "./routing";
 import { render } from "./render";
 import { Channel, TemplatesByEvent, RoutingPerEvent } from "./types";
 
-// IMPORTS DES PROVIDERS (SMS désactivé)
+// IMPORTS DES PROVIDERS
 import { sendZoho } from "./providers/email/zohoSmtp";
-// import { sendSms } from "./providers/sms/twilioSms"; // SMS disabled
+import { sendSms } from "./providers/sms/twilioSms"; // SMS only for booking_paid_provider
 import { sendPush } from "./providers/push/fcm";
 import { writeInApp } from "./providers/inapp/firestore";
 import { resolveLang } from "./i18n";
@@ -107,8 +110,8 @@ function channelsToAttempt(
   tmpl: TemplatesByEvent,
   ctx: Context
 ): Channel[] {
-  // Liste des canaux actifs - SMS désactivé (email uniquement pour notifications)
-  const all: Channel[] = ["email", "push", "inapp"];
+  // Liste des canaux actifs - SMS activé uniquement pour booking_paid_provider (filtré dans sendOne)
+  const all: Channel[] = ["email", "sms", "push", "inapp"];
   const base = all.filter(
     (c) => routeChannels[c]?.enabled && tmpl[c]?.enabled && hasContact(c, ctx)
   );
@@ -150,9 +153,47 @@ async function sendOne(
   }
 
   if (channel === "sms") {
-    // SMS notifications disabled - only email notifications allowed
-    console.log(`📱 [SMS] DISABLED - SMS notifications are turned off`);
-    throw new Error("SMS notifications are disabled - use email instead");
+    // ============================================================
+    // SMS ALLOWLIST: Only booking_paid_provider can send SMS
+    // All other events are BLOCKED to reduce Twilio costs
+    // ============================================================
+    const SMS_ALLOWED_EVENTS = ["booking_paid_provider"];
+    const eventId = evt.eventId;
+
+    console.log(`📱 [SMS] ========================================`);
+    console.log(`📱 [SMS] SMS REQUEST RECEIVED`);
+    console.log(`📱 [SMS]   eventId: ${eventId}`);
+    console.log(`📱 [SMS]   to: ${evt.to?.phone || ctx?.user?.phoneNumber || "NO_PHONE"}`);
+    console.log(`📱 [SMS]   allowed events: ${SMS_ALLOWED_EVENTS.join(", ")}`);
+    console.log(`📱 [SMS]   is allowed: ${SMS_ALLOWED_EVENTS.includes(eventId)}`);
+
+    if (!SMS_ALLOWED_EVENTS.includes(eventId)) {
+      console.log(`📱 [SMS] ❌ BLOCKED - Event "${eventId}" is NOT in allowlist`);
+      console.log(`📱 [SMS] ❌ SMS will NOT be sent to save Twilio costs`);
+      console.log(`📱 [SMS] ========================================`);
+      throw new Error(`SMS blocked for event "${eventId}" - only ${SMS_ALLOWED_EVENTS.join(", ")} allowed`);
+    }
+
+    console.log(`📱 [SMS] ✅ ALLOWED - Event "${eventId}" is in allowlist`);
+
+    const phone = evt.to?.phone || ctx?.user?.phoneNumber;
+    if (!phone || !tmpl.sms?.enabled) {
+      console.log(`📱 [SMS] ❌ SKIPPED - Missing phone (${phone}) or template disabled (${tmpl.sms?.enabled})`);
+      console.log(`📱 [SMS] ========================================`);
+      throw new Error("Missing phone number or disabled SMS template");
+    }
+
+    const text = render(tmpl.sms.text || "", { ...ctx, ...evt.vars });
+    console.log(`📱 [SMS] ✅ SENDING SMS to ${phone.substring(0, 6)}***`);
+    console.log(`📱 [SMS]   text length: ${text.length} chars`);
+    console.log(`📱 [SMS]   text preview: ${text.substring(0, 80)}...`);
+
+    const messageId = await sendSms(phone, text);
+
+    console.log(`📱 [SMS] ✅ SMS SENT SUCCESSFULLY`);
+    console.log(`📱 [SMS]   messageId: ${messageId}`);
+    console.log(`📱 [SMS] ========================================`);
+    return { messageId };
   }
 
   if (channel === "push") {
@@ -251,7 +292,10 @@ export const onMessageEventCreate = onDocumentCreated(
     secrets: [
       EMAIL_USER,
       EMAIL_PASS,
-      // Twilio secrets removed - SMS notifications disabled
+      // Twilio secrets - SMS only for booking_paid_provider
+      TWILIO_ACCOUNT_SID,
+      TWILIO_AUTH_TOKEN,
+      TWILIO_PHONE_NUMBER,
     ],
   },
   async (event) => {

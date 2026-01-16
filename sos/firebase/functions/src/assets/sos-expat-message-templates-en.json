@@ -175,11 +175,15 @@
       "id": "booking_paid_provider",
       "roles": ["provider"],
       "channels": {
-        "email": false,
+        "email": true,
         "sms": true,
         "push": false,
         "inapp": true,
         "whatsapp": false
+      },
+      "email": {
+        "subject": "🆘 SOS Expat: New booking from {{client.firstName}}!",
+        "html": "<h2>New Booking Request!</h2><p>A client needs your help:</p><table style=\"border-collapse:collapse;margin:16px 0;\"><tr><td style=\"padding:8px;border:1px solid #ddd;\"><strong>Client</strong></td><td style=\"padding:8px;border:1px solid #ddd;\">{{client.firstName}}</td></tr><tr><td style=\"padding:8px;border:1px solid #ddd;\"><strong>Nationality</strong></td><td style=\"padding:8px;border:1px solid #ddd;\">{{client.nationality}}</td></tr><tr><td style=\"padding:8px;border:1px solid #ddd;\"><strong>Country</strong></td><td style=\"padding:8px;border:1px solid #ddd;\">{{request.country}}</td></tr><tr><td style=\"padding:8px;border:1px solid #ddd;\"><strong>Languages</strong></td><td style=\"padding:8px;border:1px solid #ddd;\">{{clientLanguagesFormatted}}</td></tr></table><h3>Request Details</h3><p><strong>Title:</strong> {{request.title}}</p><p><strong>Description:</strong> {{request.description}}</p><p style=\"background:#e8f5e9;padding:12px;border-radius:4px;\">💰 <strong>You will earn {{providerEarnings}}{{currencySymbol}}</strong> for this call (may vary slightly depending on your bank's exchange rates).</p><p>📱 <a href=\"https://sos-expat.com/en-us/dashboard/subscription\">Log in to your AI tool</a> for help with your responses.</p><p style=\"background:#fff3e0;padding:12px;border-radius:4px;\">⚠️ <strong>WARNING:</strong> If you miss the call, you will be automatically set offline and will need to reconnect manually. This will also impact your visibility score.</p>"
       },
       "sms": {
         "text": "SOS Expat: New booking!\n\nClient: {{client.firstName}}\nNationality: {{client.nationality}}\nIntervention country: {{request.country}}\nSpoken languages: {{clientLanguagesFormatted}}\n\nTitle: {{request.title}}\nDetails: {{request.description}}\n\nFor this call you will earn {{providerEarnings}}{{currencySymbol}} (may vary slightly depending on your bank's exchange rates).\n\nLog in to your AI tool for help with your responses:\n👉 https://sos-expat.com/en-us/dashboard/subscription\n\n⚠️ WARNING: If you miss the call, you will be automatically set offline and will need to reconnect manually. This will also impact your visibility score."
@@ -197,11 +201,15 @@
       "id": "call.cancelled.client_no_answer",
       "roles": ["provider"],
       "channels": {
-        "email": false,
-        "sms": true,
+        "email": true,
+        "sms": false,
         "push": false,
         "inapp": true,
         "whatsapp": false
+      },
+      "email": {
+        "subject": "SOS Expat: Call cancelled - Client {{clientName}} did not answer",
+        "html": "<h2>Call Cancelled</h2><p>We apologize, the client <strong>{{clientName}}</strong> did not answer the call after several attempts.</p><p>The call has been cancelled and the client has been refunded.</p><p style=\"background:#e3f2fd;padding:12px;border-radius:4px;\">✅ <strong>You did nothing wrong</strong> - this happens sometimes. You remain available for new bookings.</p><p>Thank you for your understanding.</p><p><a href=\"https://sos-expat.com/en-us/dashboard\">Go to your dashboard</a></p>"
       },
       "sms": {
         "text": "SOS Expat: We apologize, the client {{clientName}} did not answer the call after several attempts. The call has been cancelled and the client has been refunded.\n\nYou did nothing wrong - this happens sometimes. You remain available for new bookings.\n\nThank you for your understanding."

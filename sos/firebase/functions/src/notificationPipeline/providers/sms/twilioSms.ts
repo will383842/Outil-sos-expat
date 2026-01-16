@@ -107,10 +107,14 @@ async function checkRateLimit(to: string): Promise<{ allowed: boolean; reason?: 
 export async function sendSms(to: string, text: string): Promise<string> {
   // ============================================================================
   // DEBUG LOGGING: Trace complet de l'envoi SMS
+  // IMPORTANT: Cette fonction ne doit être appelée QUE pour booking_paid_provider
+  // Tous les autres events doivent être bloqués dans worker.ts AVANT d'arriver ici
   // ============================================================================
   const debugId = `sms_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
 
   console.log(`📱 [TwilioSMS][${debugId}] ========== SEND SMS START ==========`);
+  console.log(`📱 [TwilioSMS][${debugId}] ⚠️ NOTE: SMS should ONLY be for booking_paid_provider`);
+  console.log(`📱 [TwilioSMS][${debugId}] ⚠️ If you see this for other events, there's a bug!`);
   console.log(`📱 [TwilioSMS][${debugId}] Destination: ${to ? `${to.slice(0, 5)}***${to.slice(-2)}` : 'NULL/UNDEFINED'}`);
   console.log(`📱 [TwilioSMS][${debugId}] Text length: ${text?.length || 0} chars`);
   console.log(`📱 [TwilioSMS][${debugId}] Text preview: ${text?.slice(0, 50)}...`);

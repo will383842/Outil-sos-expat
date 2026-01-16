@@ -54,11 +54,15 @@
       "id": "booking_paid_provider",
       "roles": ["provider"],
       "channels": {
-        "email": false,
+        "email": true,
         "sms": true,
         "push": false,
         "inapp": true,
         "whatsapp": false
+      },
+      "email": {
+        "subject": "🆘 SOS Expat: حجز جديد من {{client.firstName}}!",
+        "html": "<h2>طلب حجز جديد!</h2><p>عميل يحتاج مساعدتك:</p><table style=\"border-collapse:collapse;margin:16px 0;\"><tr><td style=\"padding:8px;border:1px solid #ddd;\"><strong>العميل</strong></td><td style=\"padding:8px;border:1px solid #ddd;\">{{client.firstName}}</td></tr><tr><td style=\"padding:8px;border:1px solid #ddd;\"><strong>الجنسية</strong></td><td style=\"padding:8px;border:1px solid #ddd;\">{{client.nationality}}</td></tr><tr><td style=\"padding:8px;border:1px solid #ddd;\"><strong>البلد</strong></td><td style=\"padding:8px;border:1px solid #ddd;\">{{request.country}}</td></tr><tr><td style=\"padding:8px;border:1px solid #ddd;\"><strong>اللغات</strong></td><td style=\"padding:8px;border:1px solid #ddd;\">{{clientLanguagesFormatted}}</td></tr></table><h3>تفاصيل الطلب</h3><p><strong>العنوان:</strong> {{request.title}}</p><p><strong>الوصف:</strong> {{request.description}}</p><p style=\"background:#e8f5e9;padding:12px;border-radius:4px;\">💰 <strong>ستربح {{providerEarnings}}{{currencySymbol}}</strong> من هذه المكالمة (قد يختلف قليلاً حسب أسعار صرف البنك الخاص بك).</p><p>📱 <a href=\"https://sos-expat.com/ar-sa/لوحة-التحكم/الاشتراك\">سجّل الدخول إلى أداة الذكاء الاصطناعي</a> للمساعدة في ردودك.</p><p style=\"background:#fff3e0;padding:12px;border-radius:4px;\">⚠️ <strong>تحذير:</strong> إذا لم ترد على المكالمة، سيتم تحويلك تلقائياً إلى وضع عدم الاتصال وستحتاج إلى إعادة الاتصال يدوياً. سيؤثر هذا أيضاً على تقييم ظهورك.</p>"
       },
       "sms": {
         "text": "SOS Expat: حجز جديد!\n\nالعميل: {{client.firstName}}\nالجنسية: {{client.nationality}}\nبلد التدخل: {{request.country}}\nاللغات المتحدثة: {{clientLanguagesFormatted}}\n\nالعنوان: {{request.title}}\nالتفاصيل: {{request.description}}\n\nستربح من هذه المكالمة {{providerEarnings}}{{currencySymbol}} (قد يختلف قليلاً حسب أسعار صرف البنك الخاص بك).\n\nسجّل الدخول إلى أداة الذكاء الاصطناعي الخاصة بك للمساعدة في ردودك:\n👉 https://sos-expat.com/ar-sa/لوحة-التحكم/الاشتراك\n\n⚠️ تحذير: إذا لم ترد على المكالمة، سيتم تحويلك تلقائياً إلى وضع عدم الاتصال وستحتاج إلى إعادة الاتصال يدوياً. سيؤثر هذا أيضاً على تقييم ظهورك."
@@ -76,11 +80,15 @@
       "id": "call.cancelled.client_no_answer",
       "roles": ["provider"],
       "channels": {
-        "email": false,
-        "sms": true,
+        "email": true,
+        "sms": false,
         "push": false,
         "inapp": true,
         "whatsapp": false
+      },
+      "email": {
+        "subject": "SOS Expat: تم إلغاء المكالمة - العميل {{clientName}} لم يرد",
+        "html": "<h2>تم إلغاء المكالمة</h2><p>نعتذر، لم يرد العميل <strong>{{clientName}}</strong> على المكالمة بعد عدة محاولات.</p><p>تم إلغاء المكالمة واسترداد الأموال للعميل.</p><p style=\"background:#e3f2fd;padding:12px;border-radius:4px;\">✅ <strong>لم تفعل شيئاً خاطئاً</strong> - هذا يحدث أحياناً. تظل متاحاً للحجوزات الجديدة.</p><p>شكراً لتفهمك.</p><p><a href=\"https://sos-expat.com/ar-sa/لوحة-التحكم\">انتقل إلى لوحة التحكم</a></p>"
       },
       "sms": {
         "text": "SOS Expat: نعتذر، لم يرد العميل {{clientName}} على المكالمة بعد عدة محاولات. تم إلغاء المكالمة واسترداد الأموال للعميل.\n\nلم تفعل شيئاً خاطئاً - هذا يحدث أحياناً. تظل متاحاً للحجوزات الجديدة.\n\nشكراً لتفهمك."
