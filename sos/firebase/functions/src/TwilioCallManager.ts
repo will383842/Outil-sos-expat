@@ -772,7 +772,14 @@ export class TwilioCallManager {
     const clientPhone = decryptPhoneNumber(callSession.participants.client.phone);
     const providerPhone = decryptPhoneNumber(callSession.participants.provider.phone);
 
-    console.log(`📞 Étape 1: Appel client ${sessionId} (langue: ${getLanguageName(clientLangKey)})`);
+    console.log(`\n${'🔵'.repeat(40)}`);
+    console.log(`📞 [WORKFLOW] ÉTAPE 1: APPEL CLIENT`);
+    console.log(`📞   sessionId: ${sessionId}`);
+    console.log(`📞   langue: ${getLanguageName(clientLangKey)}`);
+    console.log(`📞   conferenceName: ${callSession.conference.name}`);
+    console.log(`📞   maxDuration: ${callSession.metadata.maxDuration}s`);
+    console.log(`${'🔵'.repeat(40)}`);
+
     const clientConnected = await this.callParticipantWithRetries(
       sessionId,
       "client",
@@ -782,16 +789,37 @@ export class TwilioCallManager {
       clientTtsLocale,
       clientLangKey
     );
-    console.log("client connected :", clientConnected);
+
+    console.log(`\n${'📱'.repeat(40)}`);
+    console.log(`📞 [WORKFLOW] CLIENT RESULT: ${clientConnected ? '✅ CONNECTÉ' : '❌ NON CONNECTÉ'}`);
+    console.log(`${'📱'.repeat(40)}`);
 
     if (!clientConnected) {
+      console.log(`📞 [WORKFLOW] ❌ CLIENT NON CONNECTÉ - Appel handleCallFailure("client_no_answer")`);
+      console.log(`📞 [WORKFLOW] ⚠️ LE PROVIDER NE SERA PAS APPELÉ`);
       await this.handleCallFailure(sessionId, "client_no_answer");
       return;
     }
 
+    // Vérifier l'état après la connexion du client
+    const sessionAfterClient = await this.getCallSession(sessionId);
+    console.log(`\n${'🟢'.repeat(40)}`);
+    console.log(`📞 [WORKFLOW] CLIENT CONNECTÉ - ÉTAT ACTUEL:`);
+    console.log(`📞   session.status: ${sessionAfterClient?.status}`);
+    console.log(`📞   client.status: ${sessionAfterClient?.participants.client.status}`);
+    console.log(`📞   client.connectedAt: ${sessionAfterClient?.participants.client.connectedAt ? 'OUI' : 'NON'}`);
+    console.log(`📞   provider.status: ${sessionAfterClient?.participants.provider.status}`);
+    console.log(`${'🟢'.repeat(40)}`);
+
     await this.updateCallSessionStatus(sessionId, "provider_connecting");
 
-    console.log(`📞 Étape 2: Appel prestataire ${sessionId} (langue: ${getLanguageName(providerLangKey)})`);
+    console.log(`\n${'🟠'.repeat(40)}`);
+    console.log(`📞 [WORKFLOW] ÉTAPE 2: APPEL PROVIDER`);
+    console.log(`📞   sessionId: ${sessionId}`);
+    console.log(`📞   langue: ${getLanguageName(providerLangKey)}`);
+    console.log(`📞   delayInitial: 15000ms (pour permettre au client d'entendre le message)`);
+    console.log(`${'🟠'.repeat(40)}`);
+
     const providerConnected = await this.callParticipantWithRetries(
       sessionId,
       "provider",
@@ -802,7 +830,10 @@ export class TwilioCallManager {
       providerLangKey,
       15_000
     );
-    console.log("provider connected : ", providerConnected);
+
+    console.log(`\n${'📱'.repeat(40)}`);
+    console.log(`📞 [WORKFLOW] PROVIDER RESULT: ${providerConnected ? '✅ CONNECTÉ' : '❌ NON CONNECTÉ'}`);
+    console.log(`${'📱'.repeat(40)}`);
 
     if (!providerConnected) {
       await this.handleCallFailure(sessionId, "provider_no_answer");
@@ -1015,8 +1046,19 @@ export class TwilioCallManager {
                 console.log(`⏳ [${retryId}] [AMD WAIT] Call ${participant.callSid} is IN-PROGRESS but AMD is PENDING`);
                 console.log(`⏳ [${retryId}]   This could be a voicemail that answered - waiting for AMD callback`);
                 console.log(`⏳ [${retryId}]   NOT forcing "connected" - let AMD callback determine human/machine`);
-                // DON'T return true - continue with the loop to wait for AMD callback
+                // P0 FIX 2026-01-16: DO NOT CREATE A NEW CALL! The call is already in-progress!
+                // Wait for the AMD callback by re-running waitForConnection
                 // The AMD callback will set status to "connected" (human) or "no_answer" (machine)
+                console.log(`⏳ [${retryId}]   🔄 Re-running waitForConnection to wait for AMD callback...`);
+                const amdResult = await this.waitForConnection(sessionId, participantType, attempt);
+                if (amdResult) {
+                  console.log(`⏳ [${retryId}]   ✅ AMD callback confirmed HUMAN - returning success`);
+                  return true;
+                } else {
+                  console.log(`⏳ [${retryId}]   ❌ AMD callback indicated MACHINE or timeout - will retry if attempts remain`);
+                  // Continue to next iteration which will check if call is completed and maybe retry
+                  continue;
+                }
               } else {
                 // Status is not "amd_pending" (and not "connected" - we checked that earlier)
                 // but call is in-progress. This is a genuine recovery case where the webhook failed.
@@ -1498,45 +1540,60 @@ export class TwilioCallManager {
         console.log(`📄   duration: ${duration}s (< MIN_CALL_DURATION: ${CALL_CONFIG.MIN_CALL_DURATION}s)`);
         console.log(`${'═'.repeat(70)}`);
 
-        // P0 FIX 2026-01-15: Check if retries are still in progress
-        // DO NOT call handleCallFailure if the participant still has retry attempts remaining!
-        // The retry logic in callParticipantWithRetries will handle the failure after all attempts.
-        // If we mark the session as "failed" here, the retry loop will see it and stop prematurely.
+        // P0 FIX 2026-01-16: CRITICAL BUG FIX - Use connectedAt timestamps instead of current status!
+        //
+        // PROBLEM: The old code checked `anyParticipantConnected = client.status === 'connected' || provider.status === 'connected'`
+        // BUT by the time handleEarlyDisconnection runs, the disconnecting participant is ALREADY set to "disconnected"!
+        // This means:
+        // - If client disconnects, client.status = 'disconnected' (not 'connected')
+        // - The check was always FALSE for the disconnecting participant
+        //
+        // SOLUTION: Check if BOTH participants WERE connected at some point (connectedAt timestamps exist)
+        // - connectedAt is set ONCE when participant becomes connected
+        // - connectedAt is NOT cleared when participant disconnects
+        // - If BOTH connectedAt exist, a real call happened and we should fail
+        // - If only ONE connectedAt exists, the call never fully connected - allow retries
+        //
         const participant = participantType === 'provider'
           ? session.participants.provider
           : session.participants.client;
         const attemptCount = participant?.attemptCount || 0;
         const maxRetries = CALL_CONFIG.MAX_RETRIES;
 
-        // Only mark as failed if:
-        // 1. At least one participant was connected (actual call started, not just ringing)
-        // 2. OR all retry attempts have been exhausted
-        const anyParticipantConnected = session.participants.client.status === 'connected' ||
-                                         session.participants.provider.status === 'connected';
+        // P0 FIX: Check if BOTH participants WERE connected (actual call happened)
+        // Use connectedAt timestamps which persist even after disconnect
+        const clientWasConnected = session.participants.client.connectedAt !== undefined;
+        const providerWasConnected = session.participants.provider.connectedAt !== undefined;
+        const bothWereConnected = clientWasConnected && providerWasConnected;
         const retriesExhausted = attemptCount >= maxRetries;
 
-        console.log(`📄 [handleEarlyDisconnection] 🔍 RETRY DECISION ANALYSIS:`);
+        console.log(`📄 [handleEarlyDisconnection] 🔍 RETRY DECISION ANALYSIS (P0 FIX 2026-01-16):`);
         console.log(`📄   ┌─────────────────────────────────────────────────────────────┐`);
         console.log(`📄   │ participantType: ${participantType.padEnd(43)}│`);
         console.log(`📄   │ attemptCount: ${String(attemptCount).padEnd(47)}│`);
         console.log(`📄   │ maxRetries: ${String(maxRetries).padEnd(49)}│`);
         console.log(`📄   │ client.status: ${(session.participants.client.status || 'undefined').padEnd(45)}│`);
         console.log(`📄   │ provider.status: ${(session.participants.provider.status || 'undefined').padEnd(43)}│`);
-        console.log(`📄   │ anyParticipantConnected: ${String(anyParticipantConnected).padEnd(35)}│`);
+        console.log(`📄   │ client.connectedAt: ${(clientWasConnected ? 'YES' : 'NO').padEnd(40)}│`);
+        console.log(`📄   │ provider.connectedAt: ${(providerWasConnected ? 'YES' : 'NO').padEnd(38)}│`);
+        console.log(`📄   │ bothWereConnected (ACTUAL CALL): ${String(bothWereConnected).padEnd(26)}│`);
         console.log(`📄   │ retriesExhausted: ${String(retriesExhausted).padEnd(42)}│`);
         console.log(`📄   └─────────────────────────────────────────────────────────────┘`);
 
-        if (anyParticipantConnected || retriesExhausted) {
+        // P0 FIX: Only mark as failed if:
+        // 1. BOTH participants were connected at some point (actual call happened, not just waiting)
+        // 2. OR all retry attempts have been exhausted for this participant
+        if (bothWereConnected || retriesExhausted) {
           console.log(`📄   🔴 DECISION: CALL handleCallFailure`);
-          console.log(`📄      Reason: ${anyParticipantConnected ? 'At least one participant was connected' : `All ${maxRetries} attempts exhausted`}`);
+          console.log(`📄      Reason: ${bothWereConnected ? 'BOTH participants were connected (actual call happened)' : `All ${maxRetries} attempts exhausted`}`);
           await this.handleCallFailure(
             sessionId,
             `early_disconnect_${participantType}`
           );
         } else {
           console.log(`📄   🟢 DECISION: SKIP handleCallFailure`);
-          console.log(`📄      Reason: No participant connected yet AND retries remain (${attemptCount}/${maxRetries})`);
-          console.log(`📄      The retry loop in callParticipantWithRetries will continue with attempt ${attemptCount + 1}`);
+          console.log(`📄      Reason: NOT both connected yet (client:${clientWasConnected}, provider:${providerWasConnected}) AND retries remain (${attemptCount}/${maxRetries})`);
+          console.log(`📄      The other participant's call attempt will continue or retry`);
         }
         console.log(`${'═'.repeat(70)}\n`);
 
@@ -1548,8 +1605,10 @@ export class TwilioCallManager {
             participantType,
             duration,
             reason: "below_min_duration",
-            handledByRetryLoop: !anyParticipantConnected && !retriesExhausted,
-            anyParticipantConnected,
+            handledByRetryLoop: !bothWereConnected && !retriesExhausted,
+            clientWasConnected,
+            providerWasConnected,
+            bothWereConnected,
             retriesExhausted,
           },
         });
