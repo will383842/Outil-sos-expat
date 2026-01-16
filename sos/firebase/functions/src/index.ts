@@ -448,6 +448,7 @@ import { createAndScheduleCallHTTPS } from "./createAndScheduleCallFunction";
 
 import { runExecuteCallTask } from "./runtime/executeCallTask";
 import { runSetProviderAvailableTask, TASKS_AUTH_SECRET as PROVIDER_TASK_AUTH_SECRET } from "./runtime/setProviderAvailableTask";
+export { forceEndCallTask } from "./runtime/forceEndCallTask";
 
 ultraLogger.debug("IMPORTS", "Imports principaux chargés avec succès");
 
@@ -844,7 +845,7 @@ export { api } from "./adminApi";
 // P0 SECURITY: testTwilioCall DISABLED - Public endpoint that could generate unlimited Twilio costs
 // export { testTwilioCall } from "./testTwilioCall";
 // TODO: If needed for testing, add admin authentication before re-enabling
-export { twilioCallWebhook, twilioAmdTwiml } from "./Webhooks/twilioWebhooks";
+export { twilioCallWebhook, twilioAmdTwiml, twilioGatherResponse } from "./Webhooks/twilioWebhooks";
 export { twilioConferenceWebhook } from "./Webhooks/TwilioConferenceWebhook";
 export { providerNoAnswerTwiML } from "./Webhooks/providerNoAnswerTwiML";
 export { enqueueMessageEvent } from "./messaging/enqueueMessageEvent";

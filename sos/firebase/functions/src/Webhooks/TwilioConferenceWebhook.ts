@@ -251,6 +251,20 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
       console.log(`🏁 [${endId}]   client.status: ${sessionBefore.participants.client.status}`);
       console.log(`🏁 [${endId}]   provider.status: ${sessionBefore.participants.provider.status}`);
       console.log(`🏁 [${endId}]   provider.connectedAt: ${sessionBefore.participants.provider.connectedAt?.toDate?.() || 'N/A'}`);
+
+      // Cancel forceEndCall safety net task (call ended normally)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const forceEndCallTaskId = (sessionBefore.metadata as any)?.forceEndCallTaskId;
+      if (forceEndCallTaskId && !forceEndCallTaskId.startsWith('skipped_')) {
+        try {
+          const { cancelForceEndCallTask } = await import('../lib/tasks');
+          await cancelForceEndCallTask(forceEndCallTaskId);
+          console.log(`🏁 [${endId}]   ✅ ForceEndCall task cancelled: ${forceEndCallTaskId}`);
+        } catch (cancelError) {
+          console.warn(`🏁 [${endId}]   ⚠️ Failed to cancel forceEndCall task:`, cancelError);
+          // Non-critical, continue
+        }
+      }
     }
 
     // P0 FIX: Calculate BILLING duration from when BOTH participants are connected
@@ -499,6 +513,25 @@ async function handleParticipantJoin(sessionId: string, body: TwilioConferenceWe
       console.log(`👋 [${joinId}]   ✅ BOTH CONNECTED! Setting session status to "active"...`);
       await twilioCallManager.updateCallSessionStatus(sessionId, 'active');
       console.log(`👋 [${joinId}]   ✅ Session status set to "active"`);
+
+      // Schedule forceEndCall task as safety net (will terminate call if stuck)
+      // Add 10 minutes buffer to the maxDuration for the safety timeout
+      try {
+        const { scheduleForceEndCallTask } = await import('../lib/tasks');
+        const maxDuration = sessionAfter.metadata?.maxDuration || 1200; // 20 min default
+        const safetyTimeout = maxDuration + 600; // Add 10 min safety buffer
+        const taskId = await scheduleForceEndCallTask(sessionId, safetyTimeout);
+        console.log(`👋 [${joinId}]   ⏱️ ForceEndCall safety net scheduled: ${taskId} (${safetyTimeout}s)`);
+
+        // Store the taskId in session metadata for potential cancellation
+        await admin.firestore().collection('call_sessions').doc(sessionId).update({
+          'metadata.forceEndCallTaskId': taskId,
+          'metadata.forceEndCallScheduledAt': admin.firestore.FieldValue.serverTimestamp()
+        });
+      } catch (taskError) {
+        console.warn(`👋 [${joinId}]   ⚠️ Failed to schedule forceEndCall task:`, taskError);
+        // Non-critical, continue
+      }
 
       await logCallRecord({
         callId: sessionId,

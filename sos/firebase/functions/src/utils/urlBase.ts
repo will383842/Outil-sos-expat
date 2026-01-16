@@ -10,6 +10,7 @@ const TWILIO_CALL_WEBHOOK_URL_PARAM = defineString("TWILIO_CALL_WEBHOOK_URL");
 const TWILIO_CONFERENCE_WEBHOOK_URL_PARAM = defineString("TWILIO_CONFERENCE_WEBHOOK_URL");
 const PROVIDER_NO_ANSWER_TWIML_URL_PARAM = defineString("PROVIDER_NO_ANSWER_TWIML_URL");
 const TWILIO_AMD_TWIML_URL_PARAM = defineString("TWILIO_AMD_TWIML_URL");
+const TWILIO_GATHER_RESPONSE_URL_PARAM = defineString("TWILIO_GATHER_RESPONSE_URL");
 
 function getProjectId(): string {
   return (
@@ -164,6 +165,40 @@ export function getTwilioAmdTwimlUrl(): string {
   const base = getFunctionsBaseUrl();
   const fallbackUrl = `${base}/twilioAmdTwiml`;
   console.warn(`⚠️ [urlBase] TWILIO_AMD_TWIML_URL not set! Using legacy fallback: ${fallbackUrl}`);
+  console.warn(`⚠️ [urlBase] This may NOT work with Firebase Functions v2 (Cloud Run)!`);
+  return fallbackUrl;
+}
+
+/**
+ * Get the correct Cloud Run URL for twilioGatherResponse
+ * This endpoint handles the response from the provider's confirmation (press 1 or say YES)
+ *
+ * Format: https://functionname-projectnumber.region.run.app
+ * Example: https://twiliogatherresponse-5tfnuxa2hq-ew.a.run.app
+ */
+export function getTwilioGatherResponseUrl(): string {
+  // 1. Try defineString param first (Firebase v2 recommended)
+  try {
+    const fromParam = (TWILIO_GATHER_RESPONSE_URL_PARAM.value() || "").trim();
+    if (fromParam) {
+      console.log(`🔗 [urlBase] TWILIO_GATHER_RESPONSE_URL from Firebase param: ${fromParam}`);
+      return fromParam;
+    }
+  } catch {
+    // defineString not available
+  }
+
+  // 2. Try process.env
+  const fromEnv = (process.env.TWILIO_GATHER_RESPONSE_URL || "").trim();
+  if (fromEnv) {
+    console.log(`🔗 [urlBase] TWILIO_GATHER_RESPONSE_URL from process.env: ${fromEnv}`);
+    return fromEnv;
+  }
+
+  // 3. Fallback to legacy format (WARNING: may not work with Firebase v2!)
+  const base = getFunctionsBaseUrl();
+  const fallbackUrl = `${base}/twilioGatherResponse`;
+  console.warn(`⚠️ [urlBase] TWILIO_GATHER_RESPONSE_URL not set! Using legacy fallback: ${fallbackUrl}`);
   console.warn(`⚠️ [urlBase] This may NOT work with Firebase Functions v2 (Cloud Run)!`);
   return fallbackUrl;
 }

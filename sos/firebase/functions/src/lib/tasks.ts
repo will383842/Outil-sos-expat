@@ -686,3 +686,140 @@ export async function scheduleProviderAvailableTask(
 export function getProviderCooldownSeconds(): number {
   return PROVIDER_COOLDOWN_SECONDS;
 }
+
+// ============================================================
+// FORCE END CALL - Safety net to terminate stuck calls
+// ============================================================
+
+// Force end call task URL - will terminate calls that exceed max duration
+const FORCE_END_CALL_TASK_URL = defineString("FORCE_END_CALL_TASK_URL", {
+  default: "" // Will be set after deployment
+});
+
+// Maximum call duration in seconds (30 minutes = safety buffer over 20 min max)
+const MAX_CALL_SAFETY_DURATION_SECONDS = 30 * 60;
+
+interface ForceEndCallPayload {
+  sessionId: string;
+  reason: string;
+  scheduledAt: string;
+  taskId: string;
+  maxDuration: number;
+}
+
+/**
+ * Schedule a Cloud Task to force-end a call if it exceeds the maximum duration.
+ * This is a safety net in case the normal call termination logic fails.
+ *
+ * The task will:
+ * 1. Check if the session is still active
+ * 2. If active and exceeded duration, force terminate the call
+ * 3. Refund the client if the call was cut short
+ *
+ * @param sessionId - ID of the call session
+ * @param maxDurationSeconds - Maximum duration before force termination (default: 30 minutes)
+ * @returns taskId of the created task
+ */
+export async function scheduleForceEndCallTask(
+  sessionId: string,
+  maxDurationSeconds: number = MAX_CALL_SAFETY_DURATION_SECONDS
+): Promise<string> {
+  const debugId = `force_end_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
+
+  console.log(`\n📋 [ForceEndCall][${debugId}] Scheduling force end call task`);
+  console.log(`📋 [ForceEndCall][${debugId}] SessionId: ${sessionId}`);
+  console.log(`📋 [ForceEndCall][${debugId}] Max duration: ${maxDurationSeconds} seconds`);
+
+  prodLogger.info('FORCE_END_CALL_SCHEDULE_START', `Scheduling force end call task`, {
+    sessionId,
+    maxDurationSeconds,
+    debugId
+  });
+
+  // Check if URL is configured
+  const taskUrl = FORCE_END_CALL_TASK_URL.value();
+  if (!taskUrl) {
+    // If URL not configured, skip scheduling (safety net disabled)
+    console.warn(`⚠️ [ForceEndCall][${debugId}] FORCE_END_CALL_TASK_URL not configured, skipping`);
+    prodLogger.warn('FORCE_END_CALL_NO_URL', `Task URL not configured, force end call disabled`, {
+      sessionId
+    });
+    return `skipped_${debugId}`;
+  }
+
+  try {
+    const client = getTasksClient();
+    const cfg = getTasksConfig();
+
+    const queuePath = client.queuePath(cfg.projectId, cfg.location, cfg.queueName);
+    const taskId = `force-end-call-${sessionId}-${Date.now()}`;
+
+    // Schedule the task to run after maxDurationSeconds
+    const scheduleTime = new Date();
+    scheduleTime.setSeconds(scheduleTime.getSeconds() + maxDurationSeconds);
+
+    const payload: ForceEndCallPayload = {
+      sessionId,
+      reason: 'max_duration_exceeded',
+      scheduledAt: new Date().toISOString(),
+      taskId,
+      maxDuration: maxDurationSeconds
+    };
+
+    const authSecret = TASKS_AUTH_SECRET.value();
+
+    const task = {
+      name: `${queuePath}/tasks/${taskId}`,
+      scheduleTime: {
+        seconds: Math.floor(scheduleTime.getTime() / 1000)
+      },
+      httpRequest: {
+        httpMethod: "POST" as const,
+        url: taskUrl,
+        headers: {
+          "Content-Type": "application/json",
+          "X-Task-Auth": authSecret
+        },
+        body: Buffer.from(JSON.stringify(payload))
+      }
+    };
+
+    console.log(`📋 [ForceEndCall][${debugId}] Creating task...`);
+    console.log(`📋 [ForceEndCall][${debugId}] URL: ${taskUrl}`);
+    console.log(`📋 [ForceEndCall][${debugId}] Scheduled for: ${scheduleTime.toISOString()}`);
+
+    const [response] = await client.createTask({ parent: queuePath, task });
+
+    console.log(`✅ [ForceEndCall][${debugId}] Task created: ${response.name}`);
+    console.log(`✅ [ForceEndCall][${debugId}] Session ${sessionId} will be force-ended at ${scheduleTime.toISOString()} if still active`);
+
+    prodLogger.info('FORCE_END_CALL_SCHEDULE_SUCCESS', `Task created successfully`, {
+      sessionId,
+      taskId,
+      scheduledAt: scheduleTime.toISOString(),
+      debugId
+    });
+
+    return taskId;
+  } catch (error) {
+    console.error(`❌ [ForceEndCall][${debugId}] Error creating task:`, error);
+    prodLogger.error('FORCE_END_CALL_SCHEDULE_ERROR', `Failed to create force end call task`, {
+      sessionId,
+      error: error instanceof Error ? error.message : String(error),
+      debugId
+    });
+
+    await logError("scheduleForceEndCallTask", error);
+    return `error_${debugId}`;
+  }
+}
+
+/**
+ * Cancel a force end call task (call completed normally before timeout).
+ *
+ * @param taskId - ID of the task to cancel
+ */
+export async function cancelForceEndCallTask(taskId: string): Promise<void> {
+  // Use the existing cancelCallTask function
+  return cancelCallTask(taskId);
+}

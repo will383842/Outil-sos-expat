@@ -18,6 +18,20 @@ function getIntroText(participant: "provider" | "client", langKey: string): stri
   return table[langKey] ?? table.en ?? "Please hold.";
 }
 
+// Helper function to get confirmation prompt for provider
+function getConfirmationText(langKey: string): string {
+  const prompts = voicePromptsJson as Record<string, Record<string, string>>;
+  const table = prompts.provider_confirmation;
+  return table?.[langKey] ?? table?.en ?? "Press 1 or say YES to confirm your availability.";
+}
+
+// Helper function to get no response message for provider
+function getNoResponseText(langKey: string): string {
+  const prompts = voicePromptsJson as Record<string, Record<string, string>>;
+  const table = prompts.provider_no_response;
+  return table?.[langKey] ?? table?.en ?? "We did not receive a confirmation. The call will be ended.";
+}
+
 
 interface TwilioCallWebhookBody {
   CallSid: string;
@@ -1185,45 +1199,154 @@ export const twilioAmdTwiml = onRequest(
       const isAsyncAmdCallback = answeredBy !== undefined && answeredBy !== null && answeredBy !== '';
       const isHumanConfirmed = answeredBy === 'human' || (isAsyncAmdCallback && answeredBy === 'unknown');
 
+      // P0 CRITICAL FIX 2026-01-16: RACE CONDITION PROTECTION
+      // If provider already confirmed via GATHER and is now "connected", ignore stale AMD callback!
+      // This prevents: Provider presses 1 → joins conference → AMD callback arrives late → disrupts call
+      if (isAsyncAmdCallback && participantType === 'provider' && sessionId) {
+        try {
+          const session = await twilioCallManager.getCallSession(sessionId);
+          const providerStatus = session?.participants.provider.status;
+          const providerCallSid = session?.participants.provider.callSid;
+
+          // Check if provider is already connected (confirmed via GATHER)
+          if (providerStatus === 'connected') {
+            console.log(`\n${'⚠️'.repeat(35)}`);
+            console.log(`🎯 [${amdId}] 🛡️ STALE AMD CALLBACK - Provider already CONNECTED!`);
+            console.log(`🎯 [${amdId}]   Provider confirmed via GATHER before AMD completed`);
+            console.log(`🎯 [${amdId}]   providerStatus: ${providerStatus}`);
+            console.log(`🎯 [${amdId}]   callSid from callback: ${callSid}`);
+            console.log(`🎯 [${amdId}]   callSid in DB: ${providerCallSid}`);
+            console.log(`🎯 [${amdId}]   ACTION: Ignoring stale AMD callback - provider is in conference`);
+            console.log(`${'⚠️'.repeat(35)}\n`);
+
+            // Return empty response - don't disrupt the active call!
+            res.type('text/xml');
+            res.send(`<?xml version="1.0" encoding="UTF-8"?><Response></Response>`);
+            return;
+          }
+
+          // Also check for callSid mismatch (different call attempt)
+          if (callSid && providerCallSid && callSid !== providerCallSid) {
+            console.log(`\n${'⚠️'.repeat(35)}`);
+            console.log(`🎯 [${amdId}] 🛡️ STALE AMD CALLBACK - CallSid mismatch!`);
+            console.log(`🎯 [${amdId}]   This is from an OLD call attempt`);
+            console.log(`🎯 [${amdId}]   callSid from callback: ${callSid}`);
+            console.log(`🎯 [${amdId}]   callSid in DB: ${providerCallSid}`);
+            console.log(`🎯 [${amdId}]   ACTION: Ignoring stale AMD callback`);
+            console.log(`${'⚠️'.repeat(35)}\n`);
+
+            // Hang up the old call if it's still active
+            try {
+              const { getTwilioClient } = await import('../lib/twilio');
+              const twilioClient = getTwilioClient();
+              if (twilioClient) {
+                await twilioClient.calls(callSid).update({ status: 'completed' });
+                console.log(`🎯 [${amdId}]   ✅ Old call hung up`);
+              }
+            } catch (hangupError) {
+              console.log(`🎯 [${amdId}]   ℹ️ Could not hang up old call (already ended?)`);
+            }
+
+            res.type('text/xml');
+            res.send(`<?xml version="1.0" encoding="UTF-8"?><Response><Hangup/></Response>`);
+            return;
+          }
+        } catch (sessionError) {
+          console.warn(`🎯 [${amdId}]   ⚠️ Could not check provider status:`, sessionError);
+          // Continue processing - let the normal flow handle it
+        }
+      }
+
       if (isHumanConfirmed) {
         if (answeredBy === 'unknown') {
           console.log(`\n${'🟢'.repeat(35)}`);
           console.log(`🎯 [${amdId}] ⚠️ AMD returned "unknown" - treating as HUMAN!`);
           console.log(`🎯 [${amdId}]   isAsyncAmdCallback: ${isAsyncAmdCallback}`);
           console.log(`🎯 [${amdId}]   Reason: AMD couldn't determine after analysis, but call IS answered`);
-          console.log(`🎯 [${amdId}]   Action: Will set status to "connected" and let call proceed`);
+          console.log(`🎯 [${amdId}]   Action: Will proceed to confirmation or conference`);
           console.log(`${'🟢'.repeat(35)}\n`);
         }
-        // HUMAN CONFIRMED → Return conference TwiML with welcome message
-        console.log(`🎯 [${amdId}] ✅ HUMAN CONFIRMED - Setting status to "connected" and returning CONFERENCE TwiML`);
-        console.log(`🎯 [${amdId}]   answeredBy: ${answeredBy}`);
-        console.log(`🎯 [${amdId}]   isAsyncAmdCallback: ${isAsyncAmdCallback}`);
 
-        // Update participant status to connected ONLY when human is confirmed
-        if (sessionId) {
-          try {
-            console.log(`🎯 [${amdId}]   📝 Calling updateParticipantStatus(${sessionId}, ${participantType}, "connected")...`);
-            await twilioCallManager.updateParticipantStatus(
-              sessionId,
-              participantType,
-              'connected',
-              admin.firestore.Timestamp.fromDate(new Date())
-            );
-            console.log(`🎯 [${amdId}]   ✅ Status set to "connected" - waitForConnection() should now succeed!`);
+        // HUMAN CONFIRMED - Different handling for client vs provider
+        // CLIENT: Join conference directly (they initiated the call)
+        // PROVIDER: Ask for confirmation first (press 1 or say YES)
+        if (participantType === 'client') {
+          // CLIENT: Set connected and join conference directly
+          console.log(`🎯 [${amdId}] ✅ CLIENT HUMAN CONFIRMED - Setting status to "connected" and joining conference`);
 
-            // Verify status was actually updated
-            const verifySession = await twilioCallManager.getCallSession(sessionId);
-            const verifyParticipant = participantType === 'provider'
-              ? verifySession?.participants.provider
-              : verifySession?.participants.client;
-            console.log(`🎯 [${amdId}]   🔍 VERIFY: ${participantType}.status is now "${verifyParticipant?.status}"`);
-
-            if (verifyParticipant?.status !== 'connected') {
-              console.log(`🎯 [${amdId}]   ❌ WARNING: Status NOT "connected" after update! This is a bug!`);
+          if (sessionId) {
+            try {
+              await twilioCallManager.updateParticipantStatus(
+                sessionId,
+                participantType,
+                'connected',
+                admin.firestore.Timestamp.fromDate(new Date())
+              );
+              console.log(`🎯 [${amdId}]   ✅ Client status set to "connected"`);
+            } catch (statusError) {
+              console.error(`🎯 [${amdId}]   ⚠️ Failed to update status:`, statusError);
             }
-          } catch (statusError) {
-            console.error(`🎯 [${amdId}]   ⚠️ Failed to update status:`, statusError);
           }
+        } else {
+          // PROVIDER: Use Gather to confirm availability (press 1 or say YES)
+          // This adds a second layer of human verification beyond AMD
+          console.log(`🎯 [${amdId}] 🔔 PROVIDER HUMAN DETECTED - Sending GATHER for confirmation`);
+          console.log(`🎯 [${amdId}]   answeredBy: ${answeredBy}`);
+          console.log(`🎯 [${amdId}]   Will ask provider to press 1 or say YES`);
+
+          // Set status to "confirmation_pending" - not connected yet!
+          if (sessionId) {
+            try {
+              await twilioCallManager.updateParticipantStatus(
+                sessionId,
+                participantType,
+                'amd_pending' // Keep as amd_pending until confirmed
+              );
+              console.log(`🎯 [${amdId}]   ✅ Status kept as amd_pending until confirmation received`);
+            } catch (statusError) {
+              console.error(`🎯 [${amdId}]   ⚠️ Failed to update status:`, statusError);
+            }
+          }
+
+          // Get confirmation prompt in provider's language
+          const confirmationPrompt = getConfirmationText(langKey);
+          const noResponsePrompt = getNoResponseText(langKey);
+
+          // Build Gather TwiML with callback URL
+          const { getTwilioGatherResponseUrl } = await import('../utils/urlBase');
+          const gatherCallbackUrl = getTwilioGatherResponseUrl();
+          const gatherUrlWithParams = `${gatherCallbackUrl}?sessionId=${sessionId}&participantType=${participantType}&conferenceName=${conferenceName}&timeLimit=${timeLimit}&ttsLocale=${ttsLocale}&langKey=${langKey}`;
+
+          const gatherTwiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Gather input="dtmf speech" numDigits="1" timeout="10" speechTimeout="3" action="${gatherUrlWithParams}" method="POST">
+    <Say voice="alice" language="${ttsLocale}">${confirmationPrompt}</Say>
+  </Gather>
+  <Say voice="alice" language="${ttsLocale}">${noResponsePrompt}</Say>
+  <Hangup/>
+</Response>`;
+
+          // For async AMD callback, use REST API to update the call
+          if (isAsyncAmdCallback && callSid) {
+            console.log(`🎯 [${amdId}] 🔄 Using REST API to send GATHER TwiML`);
+            try {
+              const { getTwilioClient } = await import('../lib/twilio');
+              const twilioClient = getTwilioClient();
+              if (twilioClient) {
+                await twilioClient.calls(callSid).update({
+                  twiml: gatherTwiml
+                });
+                console.log(`🎯 [${amdId}]   ✅ Gather TwiML sent via REST API`);
+              }
+            } catch (restError) {
+              console.error(`🎯 [${amdId}]   ❌ Failed to send Gather via REST API:`, restError);
+            }
+          }
+
+          res.type('text/xml');
+          res.send(gatherTwiml);
+          console.log(`🎯 [${amdId}] END - Provider sent GATHER for confirmation\n`);
+          return;
         }
       } else {
         // answeredBy is undefined or unknown - AMD is still pending
@@ -1342,13 +1465,12 @@ export const twilioAmdTwiml = onRequest(
   </Dial>
 </Response>`;
 
-      // P1 CRITICAL FIX: For async AMD callback, the returned TwiML is IGNORED by Twilio!
-      // The provider is currently playing local hold music and won't receive the conference TwiML.
-      // We MUST use Twilio REST API to update the call and redirect it to the conference.
-      if (isAsyncAmdCallback && participantType === 'provider' && callSid) {
-        console.log(`🎯 [${amdId}] 🔄 PROVIDER ASYNC AMD CALLBACK - Using REST API to redirect to conference`);
+      // Note: Provider human confirmed now goes through Gather confirmation (line ~1291)
+      // This code path is only reached for CLIENT human confirmed
+      // For async AMD callback on client, use REST API to redirect (though client usually has sync AMD)
+      if (isAsyncAmdCallback && callSid) {
+        console.log(`🎯 [${amdId}] 🔄 CLIENT ASYNC AMD CALLBACK - Using REST API to redirect to conference`);
         console.log(`🎯 [${amdId}]   callSid: ${callSid}`);
-        console.log(`🎯 [${amdId}]   Reason: Returned TwiML is IGNORED for async AMD callback`);
 
         try {
           const { getTwilioClient } = await import('../lib/twilio');
@@ -1357,19 +1479,18 @@ export const twilioAmdTwiml = onRequest(
             await twilioClient.calls(callSid).update({
               twiml: conferenceTwiml
             });
-            console.log(`🎯 [${amdId}]   ✅ Call updated via REST API - provider will now join conference`);
+            console.log(`🎯 [${amdId}]   ✅ Call updated via REST API - client will now join conference`);
           } else {
             console.error(`🎯 [${amdId}]   ❌ Twilio client not available - cannot redirect call!`);
           }
         } catch (restError) {
           console.error(`🎯 [${amdId}]   ❌ Failed to update call via REST API:`, restError);
-          // Log but continue - the TwiML response below is a fallback (though it won't work for async callback)
         }
       }
 
       res.type('text/xml');
       res.send(conferenceTwiml);
-      console.log(`🎯 [${amdId}] END - Sent CONFERENCE TwiML with welcome message (human confirmed)\n`);
+      console.log(`🎯 [${amdId}] END - Sent CONFERENCE TwiML with welcome message (client human confirmed)\n`);
 
     } catch (error) {
       const errorDetails = {
@@ -1391,6 +1512,179 @@ export const twilioAmdTwiml = onRequest(
       await logError('twilioAmdTwiml', error);
 
       // On error, return hangup to prevent any audio playing
+      const errorTwiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Hangup/>
+</Response>`;
+      res.type('text/xml');
+      res.send(errorTwiml);
+    }
+  }
+);
+
+/**
+ * Webhook pour gérer la réponse du Gather (confirmation vocale du provider)
+ *
+ * Ce webhook est appelé quand le provider:
+ * - Appuie sur 1 (DTMF)
+ * - Dit "oui", "yes", "sí", etc. (speech recognition)
+ *
+ * Si confirmation reçue → rejoint la conférence
+ * Si pas de confirmation → status = no_answer, permet retry
+ */
+export const twilioGatherResponse = onRequest(
+  {
+    region: 'europe-west1',
+    memory: '256MiB',
+    cpu: 0.25,
+    maxInstances: 10,
+    minInstances: 0,
+    concurrency: 1
+  },
+  async (req: Request, res: Response) => {
+    const gatherId = `gather_${Date.now().toString(36)}`;
+
+    try {
+      // Parse query parameters (from Gather action URL)
+      const sessionId = req.query.sessionId as string;
+      const participantType = req.query.participantType as 'client' | 'provider';
+      const conferenceName = req.query.conferenceName as string;
+      const timeLimit = parseInt(req.query.timeLimit as string) || 1200;
+      const ttsLocale = req.query.ttsLocale as string || 'fr-FR';
+      const langKey = req.query.langKey as string || 'fr';
+
+      // Get Gather response from Twilio
+      const digits = req.body?.Digits; // DTMF input (e.g., "1")
+      const speechResult = req.body?.SpeechResult; // Speech recognition result
+      const callSid = req.body?.CallSid;
+
+      console.log(`\n${'🎤'.repeat(40)}`);
+      console.log(`🎤 [${gatherId}] twilioGatherResponse START`);
+      console.log(`🎤 [${gatherId}]   sessionId: ${sessionId}`);
+      console.log(`🎤 [${gatherId}]   participantType: ${participantType}`);
+      console.log(`🎤 [${gatherId}]   conferenceName: ${conferenceName}`);
+      console.log(`🎤 [${gatherId}]   callSid: ${callSid}`);
+      console.log(`🎤 [${gatherId}]   digits: ${digits || 'none'}`);
+      console.log(`🎤 [${gatherId}]   speechResult: ${speechResult || 'none'}`);
+      console.log(`${'🎤'.repeat(40)}`);
+
+      // Determine if provider confirmed
+      let isConfirmed = false;
+
+      // Check DTMF input (pressed 1)
+      if (digits === '1') {
+        console.log(`🎤 [${gatherId}] ✅ DTMF CONFIRMATION: Provider pressed 1`);
+        isConfirmed = true;
+      }
+
+      // Check speech input (said yes/oui/sí/etc.)
+      if (!isConfirmed && speechResult) {
+        const normalizedSpeech = speechResult.toLowerCase().trim();
+        const confirmWords = [
+          'oui', 'yes', 'si', 'sí', 'ja', 'да', 'haan', 'hā', 'sim', 'tak',
+          'evet', 'sì', 'hai', 'ok', 'okay', 'd\'accord', 'dacord', 'bien',
+          '是', 'はい', 'ਹਾਂ', 'نعم', 'بله', '네', 'vâng', 'có'
+        ];
+
+        for (const word of confirmWords) {
+          if (normalizedSpeech.includes(word)) {
+            console.log(`🎤 [${gatherId}] ✅ SPEECH CONFIRMATION: Provider said "${speechResult}" (matched: ${word})`);
+            isConfirmed = true;
+            break;
+          }
+        }
+
+        if (!isConfirmed) {
+          console.log(`🎤 [${gatherId}] ❌ Speech not recognized as confirmation: "${speechResult}"`);
+        }
+      }
+
+      if (isConfirmed) {
+        // Provider confirmed! Set status to connected and join conference
+        console.log(`🎤 [${gatherId}] 🎉 PROVIDER CONFIRMED - Setting status to "connected" and joining conference`);
+
+        if (sessionId) {
+          try {
+            await twilioCallManager.updateParticipantStatus(
+              sessionId,
+              participantType,
+              'connected',
+              admin.firestore.Timestamp.fromDate(new Date())
+            );
+            console.log(`🎤 [${gatherId}]   ✅ Status set to "connected"`);
+          } catch (statusError) {
+            console.error(`🎤 [${gatherId}]   ⚠️ Failed to update status:`, statusError);
+          }
+        }
+
+        // Get welcome message in provider's language
+        const welcomeMessage = getIntroText('provider', langKey);
+
+        // Build conference TwiML
+        const { getTwilioConferenceWebhookUrl } = await import('../utils/urlBase');
+        const conferenceWebhookUrl = getTwilioConferenceWebhookUrl();
+
+        const conferenceTwiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say voice="alice" language="${ttsLocale}">${welcomeMessage}</Say>
+  <Dial timeout="60" timeLimit="${timeLimit}">
+    <Conference
+      waitUrl="http://twimlets.com/holdmusic?Bucket=com.twilio.music.classical"
+      startConferenceOnEnter="false"
+      endConferenceOnExit="true"
+      statusCallback="${conferenceWebhookUrl}"
+      statusCallbackEvent="start end join leave"
+      statusCallbackMethod="POST"
+      participantLabel="provider"
+    >${conferenceName}</Conference>
+  </Dial>
+</Response>`;
+
+        res.type('text/xml');
+        res.send(conferenceTwiml);
+        console.log(`🎤 [${gatherId}] END - Provider joining conference\n`);
+
+      } else {
+        // No confirmation received - treat as no_answer for retry
+        console.log(`🎤 [${gatherId}] ❌ NO CONFIRMATION - Setting status to "no_answer" for retry`);
+
+        if (sessionId) {
+          try {
+            await twilioCallManager.updateParticipantStatus(
+              sessionId,
+              participantType,
+              'no_answer'
+            );
+            console.log(`🎤 [${gatherId}]   ✅ Status set to "no_answer" - retry will be triggered`);
+          } catch (statusError) {
+            console.error(`🎤 [${gatherId}]   ⚠️ Failed to update status:`, statusError);
+          }
+        }
+
+        // Get no response message and hang up
+        const noResponseMessage = getNoResponseText(langKey);
+
+        const hangupTwiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say voice="alice" language="${ttsLocale}">${noResponseMessage}</Say>
+  <Hangup/>
+</Response>`;
+
+        res.type('text/xml');
+        res.send(hangupTwiml);
+        console.log(`🎤 [${gatherId}] END - Hanging up, will retry\n`);
+      }
+
+    } catch (error) {
+      console.error(`\n${'❌'.repeat(40)}`);
+      console.error(`🎤 [${gatherId}] ❌ TWILIOGATHERRESPONSE EXCEPTION:`, {
+        errorMessage: error instanceof Error ? error.message : String(error),
+        errorStack: error instanceof Error ? error.stack?.split('\n').slice(0, 5).join(' | ') : 'N/A',
+      });
+      console.error(`${'❌'.repeat(40)}\n`);
+      await logError('twilioGatherResponse', error);
+
+      // On error, hang up
       const errorTwiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Hangup/>
