@@ -98,7 +98,7 @@ async function retryFailedNotifications(
     const failedDeliveries = await db
       .collection("message_deliveries")
       .where("status", "==", "failed")
-      .where("createdAt", ">", admin.firestore.Timestamp.fromDate(maxAgeTime))
+      .where("updatedAt", ">", admin.firestore.Timestamp.fromDate(maxAgeTime))
       .limit(RETRY_CONFIG.BATCH_SIZE)
       .get();
 

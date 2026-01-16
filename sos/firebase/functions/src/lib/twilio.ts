@@ -3,6 +3,142 @@ import { Request, Response } from "express";
 import { defineSecret } from "firebase-functions/params";
 
 // ============================================================================
+// P2-14 FIX: Circuit Breaker for Twilio API
+// Prevents cascade failures when Twilio is down or slow
+// ============================================================================
+
+type CircuitState = "CLOSED" | "OPEN" | "HALF_OPEN";
+
+interface CircuitBreakerState {
+  state: CircuitState;
+  failures: number;
+  lastFailureTime: number;
+  lastSuccessTime: number;
+}
+
+const CIRCUIT_BREAKER_CONFIG = {
+  FAILURE_THRESHOLD: 5,        // Open circuit after 5 consecutive failures
+  RESET_TIMEOUT_MS: 30_000,    // Try again after 30 seconds
+  HALF_OPEN_MAX_CALLS: 1,      // Allow 1 test call in half-open state
+};
+
+// Circuit breaker state (in-memory, resets on cold start - acceptable for Cloud Functions)
+const circuitBreaker: CircuitBreakerState = {
+  state: "CLOSED",
+  failures: 0,
+  lastFailureTime: 0,
+  lastSuccessTime: Date.now(),
+};
+
+/**
+ * Check if circuit breaker allows the call
+ * @returns true if call is allowed, false if circuit is open
+ */
+export function isCircuitOpen(): boolean {
+  const now = Date.now();
+  const timeSinceLastFailure = now - circuitBreaker.lastFailureTime;
+  const timeSinceLastSuccess = now - circuitBreaker.lastSuccessTime;
+
+  console.log(`🔌 [CircuitBreaker] CHECK STATUS:`, {
+    state: circuitBreaker.state,
+    failures: circuitBreaker.failures,
+    timeSinceLastFailureMs: timeSinceLastFailure,
+    timeSinceLastSuccessMs: timeSinceLastSuccess,
+    thresholdFailures: CIRCUIT_BREAKER_CONFIG.FAILURE_THRESHOLD,
+    resetTimeoutMs: CIRCUIT_BREAKER_CONFIG.RESET_TIMEOUT_MS,
+  });
+
+  if (circuitBreaker.state === "CLOSED") {
+    console.log(`🔌 [CircuitBreaker] ✅ Circuit CLOSED - allowing call`);
+    return false; // Circuit closed, allow calls
+  }
+
+  if (circuitBreaker.state === "OPEN") {
+    // Check if we should transition to half-open
+    if (timeSinceLastFailure >= CIRCUIT_BREAKER_CONFIG.RESET_TIMEOUT_MS) {
+      circuitBreaker.state = "HALF_OPEN";
+      console.log(`🔌 [CircuitBreaker] ⚠️ Transitioning OPEN → HALF_OPEN (testing Twilio after ${timeSinceLastFailure}ms)`);
+      return false; // Allow test call
+    }
+    const remainingMs = CIRCUIT_BREAKER_CONFIG.RESET_TIMEOUT_MS - timeSinceLastFailure;
+    console.log(`🔌 [CircuitBreaker] ❌ Circuit OPEN - blocking call. Retry in ${Math.round(remainingMs/1000)}s`);
+    return true; // Circuit still open, reject
+  }
+
+  // HALF_OPEN state - allow test calls
+  console.log(`🔌 [CircuitBreaker] ⚠️ Circuit HALF_OPEN - allowing test call`);
+  return false;
+}
+
+/**
+ * Record a successful Twilio call
+ */
+export function recordTwilioSuccess(): void {
+  const previousState = circuitBreaker.state;
+  const previousFailures = circuitBreaker.failures;
+
+  circuitBreaker.failures = 0;
+  circuitBreaker.lastSuccessTime = Date.now();
+
+  console.log(`🔌 [CircuitBreaker] ✅ TWILIO SUCCESS RECORDED:`, {
+    previousState,
+    previousFailures,
+    newState: circuitBreaker.state,
+    timestamp: new Date().toISOString(),
+  });
+
+  if (previousState !== "CLOSED") {
+    circuitBreaker.state = "CLOSED";
+    console.log(`🔌 [CircuitBreaker] 🎉 Circuit RECOVERED: ${previousState} → CLOSED (Twilio is back online)`);
+  }
+}
+
+/**
+ * Record a failed Twilio call
+ */
+export function recordTwilioFailure(error?: Error): void {
+  const previousState = circuitBreaker.state;
+  const previousFailures = circuitBreaker.failures;
+
+  circuitBreaker.failures++;
+  circuitBreaker.lastFailureTime = Date.now();
+
+  console.error(`🔌 [CircuitBreaker] ❌ TWILIO FAILURE RECORDED:`, {
+    failureNumber: circuitBreaker.failures,
+    previousState,
+    previousFailures,
+    errorMessage: error?.message || "Unknown error",
+    errorName: error?.name || "Error",
+    errorStack: error?.stack?.split('\n').slice(0, 3).join(' | ') || "No stack",
+    threshold: CIRCUIT_BREAKER_CONFIG.FAILURE_THRESHOLD,
+    timestamp: new Date().toISOString(),
+  });
+
+  if (circuitBreaker.state === "HALF_OPEN") {
+    // Test call failed, reopen circuit
+    circuitBreaker.state = "OPEN";
+    console.error(`🔌 [CircuitBreaker] 🚨 TEST CALL FAILED - Reopening circuit: HALF_OPEN → OPEN`);
+    console.error(`🔌 [CircuitBreaker] 🚨 Twilio calls blocked for ${CIRCUIT_BREAKER_CONFIG.RESET_TIMEOUT_MS/1000}s`);
+  } else if (circuitBreaker.failures >= CIRCUIT_BREAKER_CONFIG.FAILURE_THRESHOLD) {
+    circuitBreaker.state = "OPEN";
+    console.error(`🔌 [CircuitBreaker] 🚨 THRESHOLD REACHED - Opening circuit: CLOSED → OPEN`);
+    console.error(`🔌 [CircuitBreaker] 🚨 ${circuitBreaker.failures}/${CIRCUIT_BREAKER_CONFIG.FAILURE_THRESHOLD} failures - Blocking Twilio calls for ${CIRCUIT_BREAKER_CONFIG.RESET_TIMEOUT_MS/1000}s`);
+  } else {
+    console.warn(`🔌 [CircuitBreaker] ⚠️ Failure ${circuitBreaker.failures}/${CIRCUIT_BREAKER_CONFIG.FAILURE_THRESHOLD} - Circuit still ${circuitBreaker.state}`);
+  }
+}
+
+/**
+ * Get current circuit breaker status (for monitoring)
+ */
+export function getCircuitBreakerStatus(): CircuitBreakerState & { config: typeof CIRCUIT_BREAKER_CONFIG } {
+  return {
+    ...circuitBreaker,
+    config: CIRCUIT_BREAKER_CONFIG,
+  };
+}
+
+// ============================================================================
 // P0 CRITICAL FIX: Use Firebase v2 defineSecret instead of process.env
 // process.env does NOT work for Firebase v2 secrets!
 // ============================================================================

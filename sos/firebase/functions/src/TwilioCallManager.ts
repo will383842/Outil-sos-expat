@@ -1,6 +1,6 @@
 import * as admin from "firebase-admin";
-// 🔧 Twilio client & num
-import { getTwilioClient, getTwilioPhoneNumber } from "./lib/twilio";
+// 🔧 Twilio client & num + Circuit breaker
+import { getTwilioClient, getTwilioPhoneNumber, isCircuitOpen, recordTwilioSuccess, recordTwilioFailure } from "./lib/twilio";
 import { getTwilioCallWebhookUrl, getTwilioAmdTwimlUrl } from "./utils/urlBase";
 import { logError } from "./utils/logs/logError";
 import { logCallRecord } from "./utils/logs/logCallRecord";
@@ -164,7 +164,7 @@ const CALL_CONFIG = {
   CALL_TIMEOUT: 60, // 60 s
   CONNECTION_WAIT_TIME: 90_000, // 90 s
   MIN_CALL_DURATION: 120, // 2 minutes (120 seconds)
-  MAX_CONCURRENT_CALLS: 50,
+  MAX_CONCURRENT_CALLS: 200, // P2-12 FIX: Increased from 50 to handle traffic spikes
   WEBHOOK_VALIDATION: true,
 } as const;
 
@@ -1093,6 +1093,13 @@ export class TwilioCallManager {
         console.log(`📞 [${retryId}]   statusCallback (Cloud Run): ${twilioCallWebhookUrl}`);
 
         console.log(`📞 [${retryId}] STEP C: Creating Twilio call via API...`);
+
+        // P2-14 FIX: Circuit breaker check before calling Twilio
+        if (isCircuitOpen()) {
+          console.error(`📞 [${retryId}] ❌ CIRCUIT BREAKER OPEN - Twilio calls blocked temporarily`);
+          throw new Error("Twilio service temporarily unavailable (circuit breaker open)");
+        }
+
         console.log(`📞 [${retryId}]   twilioClient.calls.create({`);
         console.log(`📞 [${retryId}]     to: ${phoneNumber.substring(0, 6)}****,`);
         console.log(`📞 [${retryId}]     from: ${fromNumber},`);
@@ -1102,7 +1109,9 @@ export class TwilioCallManager {
         console.log(`📞 [${retryId}]   })`);
 
         const twilioApiStartTime = Date.now();
-        const call = await twilioClient.calls.create({
+        let call;
+        try {
+          call = await twilioClient.calls.create({
           to: phoneNumber,
           from: fromNumber,
           // P0 CRITICAL FIX: Use URL instead of inline TwiML
@@ -1141,7 +1150,37 @@ export class TwilioCallManager {
           asyncAmd: "true",
           asyncAmdStatusCallback: amdTwimlUrl,
           asyncAmdStatusCallbackMethod: "POST",
-        });
+          });
+          // P2-14 FIX: Record success for circuit breaker
+          recordTwilioSuccess();
+        } catch (twilioError: unknown) {
+          // P2-14 FIX: Record failure for circuit breaker with detailed logging
+          const err = twilioError instanceof Error ? twilioError : new Error(String(twilioError));
+
+          // Extract Twilio-specific error details if available
+          const twilioDetails = {
+            code: (twilioError as any)?.code || 'N/A',
+            status: (twilioError as any)?.status || 'N/A',
+            moreInfo: (twilioError as any)?.moreInfo || 'N/A',
+            details: (twilioError as any)?.details || 'N/A',
+          };
+
+          console.error(`📞 [${retryId}] ❌ TWILIO API CALL FAILED:`, {
+            errorMessage: err.message,
+            errorName: err.name,
+            twilioCode: twilioDetails.code,
+            twilioStatus: twilioDetails.status,
+            twilioMoreInfo: twilioDetails.moreInfo,
+            twilioDetails: JSON.stringify(twilioDetails.details),
+            phoneNumber: phoneNumber?.substring(0, 6) + '****',
+            participantType,
+            attempt,
+            timestamp: new Date().toISOString(),
+          });
+
+          recordTwilioFailure(err);
+          throw twilioError; // Re-throw to let outer catch handle it
+        }
         const twilioApiDuration = Date.now() - twilioApiStartTime;
 
         console.log(`📞 [${retryId}] STEP D: Twilio API response received in ${twilioApiDuration}ms`);
@@ -2206,9 +2245,9 @@ export class TwilioCallManager {
           if (captureLock) {
             const lockTime = captureLock.toDate();
             const lockAge = Date.now() - lockTime.getTime();
-            // P0-2 FIX: Lock expires after 10 minutes (was 2 min - too short for PayPal/Stripe timeouts)
-            // Some payment captures can take up to 5-7 minutes with network retries
-            if (lockAge < 10 * 60 * 1000) {
+            // P2-11 FIX: Lock expires after 30 minutes (was 10 min - too short for long calls)
+            // Calls can exceed 10 minutes, causing duplicate task execution
+            if (lockAge < 30 * 60 * 1000) {
               console.log(`📄 Capture already in progress for session: ${sessionId} (lock age: ${lockAge}ms)`);
               return;
             }

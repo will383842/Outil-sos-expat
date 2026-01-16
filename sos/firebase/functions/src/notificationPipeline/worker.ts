@@ -3,12 +3,10 @@ import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
 // import { resolveLang } from "./i18n";
 
-// 🔐 SECRETS
+// 🔐 SECRETS (SMS désactivé - uniquement email)
 const EMAIL_USER = defineSecret("EMAIL_USER");
 const EMAIL_PASS = defineSecret("EMAIL_PASS");
-const TWILIO_ACCOUNT_SID = defineSecret("TWILIO_ACCOUNT_SID");
-const TWILIO_AUTH_TOKEN = defineSecret("TWILIO_AUTH_TOKEN");
-const TWILIO_PHONE_NUMBER = defineSecret("TWILIO_PHONE_NUMBER");
+// TWILIO secrets removed - SMS notifications disabled (calls only)
 
 // 📤 IMPORTS DES MODULES
 import { getTemplate } from "./templates";
@@ -16,9 +14,9 @@ import { getRouting, isRateLimited } from "./routing";
 import { render } from "./render";
 import { Channel, TemplatesByEvent, RoutingPerEvent } from "./types";
 
-// IMPORTS DES PROVIDERS
+// IMPORTS DES PROVIDERS (SMS désactivé)
 import { sendZoho } from "./providers/email/zohoSmtp";
-import { sendSms } from "./providers/sms/twilioSms";
+// import { sendSms } from "./providers/sms/twilioSms"; // SMS disabled
 import { sendPush } from "./providers/push/fcm";
 import { writeInApp } from "./providers/inapp/firestore";
 import { resolveLang } from "./i18n";
@@ -109,8 +107,8 @@ function channelsToAttempt(
   tmpl: TemplatesByEvent,
   ctx: Context
 ): Channel[] {
-  // Liste des canaux actifs (WhatsApp supprimé, SMS réactivé)
-  const all: Channel[] = ["email", "push", "sms", "inapp"];
+  // Liste des canaux actifs - SMS désactivé (email uniquement pour notifications)
+  const all: Channel[] = ["email", "push", "inapp"];
   const base = all.filter(
     (c) => routeChannels[c]?.enabled && tmpl[c]?.enabled && hasContact(c, ctx)
   );
@@ -152,14 +150,9 @@ async function sendOne(
   }
 
   if (channel === "sms") {
-    const to = ctx?.user?.phoneNumber || evt.to?.phone;
-    if (!to || !tmpl.sms?.enabled)
-      throw new Error("Missing SMS destination or disabled template");
-
-    const body = render(tmpl.sms.text || "", { ...ctx, ...evt.vars });
-    console.log(`📱 [SMS] Sending to ${to.slice(0, 5)}***: ${body.slice(0, 50)}...`);
-    const sid = await sendSms(to, body);
-    return { sid };
+    // SMS notifications disabled - only email notifications allowed
+    console.log(`📱 [SMS] DISABLED - SMS notifications are turned off`);
+    throw new Error("SMS notifications are disabled - use email instead");
   }
 
   if (channel === "push") {
@@ -258,9 +251,7 @@ export const onMessageEventCreate = onDocumentCreated(
     secrets: [
       EMAIL_USER,
       EMAIL_PASS,
-      TWILIO_ACCOUNT_SID,
-      TWILIO_AUTH_TOKEN,
-      TWILIO_PHONE_NUMBER,
+      // Twilio secrets removed - SMS notifications disabled
     ],
   },
   async (event) => {

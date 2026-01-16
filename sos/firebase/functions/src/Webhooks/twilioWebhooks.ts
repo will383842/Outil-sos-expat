@@ -45,9 +45,9 @@ export const twilioCallWebhook = onRequest(
     region: 'europe-west1',
     memory: '256MiB',
     cpu: 0.25,
-    maxInstances: 3,
+    maxInstances: 10,  // P1 FIX: Increased from 3 for better scalability
     minInstances: 0,
-    concurrency: 1,
+    concurrency: 1,    // Keep at 1 to avoid race conditions with Firestore updates
     // P0 CRITICAL FIX: Add Twilio secrets for signature validation + hangup calls to voicemail
     secrets: [TWILIO_AUTH_TOKEN_SECRET, TWILIO_ACCOUNT_SID_SECRET]
   },
@@ -194,12 +194,22 @@ export const twilioCallWebhook = onRequest(
       res.status(200).send('OK');
 
     } catch (error) {
-      console.error('❌ Erreur webhook appel:', error);
-      prodLogger.error('TWILIO_WEBHOOK_ERROR', `[${requestId}] Webhook processing failed`, {
+      const errorDetails = {
         requestId,
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack?.slice(0, 500) : undefined
-      });
+        errorMessage: error instanceof Error ? error.message : String(error),
+        errorName: error instanceof Error ? error.name : 'Unknown',
+        errorStack: error instanceof Error ? error.stack?.split('\n').slice(0, 5).join(' | ') : 'N/A',
+        twilioCode: (error as any)?.code || 'N/A',
+        twilioStatus: (error as any)?.status || 'N/A',
+        requestBody: JSON.stringify(req.body || {}).slice(0, 500),
+        timestamp: new Date().toISOString(),
+      };
+
+      console.error(`\n${'❌'.repeat(40)}`);
+      console.error(`❌ [twilioCallWebhook] WEBHOOK ERROR:`, errorDetails);
+      console.error(`${'❌'.repeat(40)}\n`);
+
+      prodLogger.error('TWILIO_WEBHOOK_ERROR', `[${requestId}] Webhook processing failed`, errorDetails);
       await logError('twilioCallWebhook:error', error);
       res.status(500).send('Webhook error');
     }
@@ -652,7 +662,20 @@ async function handleCallCompleted(
     console.log(`${'─'.repeat(60)}\n`);
 
   } catch (error) {
-    console.error(`🏁 [${completedId}] ❌ ERROR:`, error);
+    console.error(`\n${'❌'.repeat(40)}`);
+    console.error(`🏁 [${completedId}] ❌ HANDLECALLCOMPLETED EXCEPTION:`, {
+      sessionId,
+      participantType,
+      callSid: body.CallSid,
+      callStatus: body.CallStatus,
+      callDuration: body.CallDuration,
+      price: body.Price,
+      errorMessage: error instanceof Error ? error.message : String(error),
+      errorName: error instanceof Error ? error.name : 'Unknown',
+      errorStack: error instanceof Error ? error.stack?.split('\n').slice(0, 5).join(' | ') : 'N/A',
+      timestamp: new Date().toISOString(),
+    });
+    console.error(`${'❌'.repeat(40)}\n`);
     await logError('handleCallCompleted', error);
   }
 }
@@ -890,6 +913,18 @@ async function handleCallFailed(
     });
 
   } catch (error) {
+    console.error(`\n${'❌'.repeat(40)}`);
+    console.error(`❌ [handleCallFailed] EXCEPTION:`, {
+      sessionId,
+      participantType,
+      callSid: body.CallSid,
+      callStatus: body.CallStatus,
+      errorMessage: error instanceof Error ? error.message : String(error),
+      errorName: error instanceof Error ? error.name : 'Unknown',
+      errorStack: error instanceof Error ? error.stack?.split('\n').slice(0, 5).join(' | ') : 'N/A',
+      timestamp: new Date().toISOString(),
+    });
+    console.error(`${'❌'.repeat(40)}\n`);
     await logError('handleCallFailed', error);
   }
 }
@@ -1230,7 +1265,22 @@ export const twilioAmdTwiml = onRequest(
       console.log(`🎯 [${amdId}] END - Sent CONFERENCE TwiML with welcome message (human confirmed)\n`);
 
     } catch (error) {
-      console.error(`🎯 [${amdId}] ❌ ERROR:`, error);
+      const errorDetails = {
+        amdId,
+        sessionId: req.query.sessionId || req.body?.sessionId || 'unknown',
+        participantType: req.query.participantType || req.body?.participantType || 'unknown',
+        callSid: req.body?.CallSid || 'unknown',
+        answeredBy: req.body?.AnsweredBy || 'unknown',
+        errorMessage: error instanceof Error ? error.message : String(error),
+        errorName: error instanceof Error ? error.name : 'Unknown',
+        errorStack: error instanceof Error ? error.stack?.split('\n').slice(0, 5).join(' | ') : 'N/A',
+        requestBody: JSON.stringify(req.body || {}).slice(0, 500),
+        timestamp: new Date().toISOString(),
+      };
+
+      console.error(`\n${'❌'.repeat(40)}`);
+      console.error(`🎯 [${amdId}] ❌ TWILIOAMDTWIML EXCEPTION:`, errorDetails);
+      console.error(`${'❌'.repeat(40)}\n`);
       await logError('twilioAmdTwiml', error);
 
       // On error, return hangup to prevent any audio playing
