@@ -2,26 +2,18 @@
 
 // ====== FORCE REDEPLOY 2026-01-15 - AMD pending fix ======
 
-// ====== P1-4: SENTRY INITIALIZATION (must be first) ======
-import { initSentry } from "./config/sentry";
-initSentry();
-// Note: captureError is available via: import { captureError } from "./config/sentry"
+// ====== P1-4: SENTRY (lazy initialization - called in functions, not at module load) ======
+// Usage: import { initSentry, captureError } from "./config/sentry"; initSentry();
 
-// ====== ULTRA DEBUG INITIALIZATION ======
+// ====== ULTRA DEBUG (lazy - avoid deployment timeout) ======
 import {
   ultraLogger,
   traceFunction,
-  traceGlobalImport,
 } from "./utils/ultraDebugLogger";
 // P1-13: Sync atomique payments <-> call_sessions
 import { syncPaymentStatus, findCallSessionByPaymentId } from "./utils/paymentSync";
 // 🔒 Phone number decryption for notifications
 import { decryptPhoneNumber } from "./utils/encryption";
-
-// Tracer tous les imports principaux
-traceGlobalImport("firebase-functions/v2", "index.ts");
-traceGlobalImport("firebase-admin", "index.ts");
-traceGlobalImport("stripe", "index.ts");
 
 // === CPU/MEM CONFIGS to control vCPU usage ===
 const emergencyConfig = {
@@ -32,16 +24,6 @@ const emergencyConfig = {
   minInstances: 0,
   concurrency: 1,
 };
-
-ultraLogger.info(
-  "INDEX_INIT",
-  "Démarrage de l'initialisation du fichier index.ts",
-  {
-    timestamp: Date.now(),
-    nodeVersion: process.version,
-    environment: process.env.NODE_ENV || "development",
-  }
-);
 
 // ====== CONFIGURATION GLOBALE CENTRALISÉE ======
 import { setGlobalOptions } from "firebase-functions/v2";

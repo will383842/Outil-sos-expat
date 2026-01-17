@@ -10,10 +10,6 @@
  */
 
 import * as Sentry from "@sentry/node";
-import { defineSecret } from "firebase-functions/params";
-
-// Sentry DSN as Firebase Secret
-const SENTRY_DSN_BACKEND = defineSecret("SENTRY_DSN_BACKEND");
 
 // Environment detection
 const isProduction = process.env.NODE_ENV === "production" ||
@@ -26,30 +22,26 @@ let isInitialized = false;
 
 /**
  * Initialize Sentry for Firebase Functions
- * Call this once at the top of index.ts
+ * Call this lazily at runtime (not during module load)
  */
 export function initSentry(): void {
   if (isInitialized) {
-    console.log("[Sentry Backend] Already initialized, skipping");
     return;
   }
 
   // Skip in emulator unless explicitly enabled
   if (isEmulator && !process.env.SENTRY_ENABLE_EMULATOR) {
     console.log("[Sentry Backend] Emulator detected, skipping initialization");
+    isInitialized = true; // Mark as "handled"
     return;
   }
 
-  // Get DSN from Firebase Secret or environment
-  let dsn: string | undefined;
-  try {
-    dsn = SENTRY_DSN_BACKEND.value();
-  } catch {
-    dsn = process.env.SENTRY_DSN_BACKEND;
-  }
+  // Get DSN from environment variable (set in Firebase console or .env)
+  const dsn = process.env.SENTRY_DSN_BACKEND;
 
   if (!dsn) {
     console.info("[Sentry Backend] DSN not configured - monitoring disabled");
+    isInitialized = true; // Mark as "handled"
     return;
   }
 
