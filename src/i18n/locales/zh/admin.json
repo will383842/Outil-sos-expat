@@ -1,0 +1,345 @@
+{
+  "header": {
+    "title": "SOS Expats — 管理",
+    "providerTitle": "SOS Expats — 专业空间",
+    "previewMode": "服务商视图",
+    "exitPreview": "返回管理视图"
+  },
+  "dashboard": {
+    "title": "管理仪表板",
+    "subtitle": "平台活动概览",
+    "description": "平台活动概览和服务监控",
+    "stats": {
+      "totalDossiers": "案件总数",
+      "dossiersInProgress": "进行中的案件",
+      "activeProviders": "活跃服务商",
+      "aiRequests": "AI请求（月）",
+      "activeDossiers": "活跃案件",
+      "lawyerDossiers": "律师案件",
+      "expatDossiers": "外籍案件",
+      "aiProcessed": "AI已处理",
+      "totalRevenue": "总收入"
+    },
+    "activity": {
+      "title": "7天活动",
+      "days": {
+        "sun": "日",
+        "mon": "一",
+        "tue": "二",
+        "wed": "三",
+        "thu": "四",
+        "fri": "五",
+        "sat": "六"
+      }
+    },
+    "iaStatus": {
+      "title": "AI状态",
+      "operational": "运行正常",
+      "warning": "配额警告",
+      "critical": "配额紧急",
+      "usage": "本月使用量",
+      "percent": "已使用{{percent}}%月度配额"
+    },
+    "providers": {
+      "title": "服务商",
+      "none": "没有活跃的服务商",
+      "totalRegistered": "总注册数",
+      "withAccess": "有工具访问权限",
+      "withoutAccess": "无访问权限",
+      "accessEnabled": "已启用访问"
+    },
+    "recentDossiers": {
+      "title": "最近案件",
+      "none": "没有最近的案件"
+    },
+    "sync": {
+      "title": "Laravel同步",
+      "connected": "已连接",
+      "disconnected": "已断开",
+      "error": "错误",
+      "lastSync": "上次同步",
+      "pending": "待处理项目",
+      "syncNow": "立即同步"
+    }
+  },
+  "accessDenied": {
+    "title": "访问被拒绝",
+    "description": "此页面仅限管理员访问。",
+    "noRights": "您没有访问此部分的必要权限。",
+    "connectedAs": "已登录为",
+    "role": "角色"
+  },
+  "prestataires": {
+    "title": "服务商",
+    "description": "管理律师和外籍专家的工具访问权限",
+    "stats": {
+      "total": "总计",
+      "lawyers": "律师",
+      "expats": "外籍人士",
+      "withAccess": "有访问权限"
+    },
+    "search": "按姓名、邮箱、国家搜索...",
+    "filters": {
+      "type": "类型",
+      "access": "工具访问",
+      "all": "全部",
+      "withAccess": "有访问权限",
+      "withoutAccess": "无访问权限"
+    },
+    "addManually": "手动添加",
+    "addProvider": "添加服务商",
+    "form": {
+      "email": "Google邮箱",
+      "fullName": "全名",
+      "type": "类型",
+      "country": "国家"
+    },
+    "table": {
+      "name": "姓名",
+      "email": "邮箱",
+      "type": "类型",
+      "country": "国家",
+      "access": "访问"
+    },
+    "actions": {
+      "grantAccess": "授予访问权限",
+      "revokeAccess": "撤销访问权限",
+      "activeAccess": "访问权限已激活"
+    },
+    "empty": {
+      "title": "未找到服务商",
+      "description": "尝试修改您的筛选条件"
+    },
+    "loadMore": "加载更多服务商",
+    "emailMissing": "邮箱缺失"
+  },
+  "mesPrestataires": {
+    "title": "我的服务商",
+    "description": "管理与您的个人资料关联的服务商账户",
+    "linkedProviders": "已关联的服务商",
+    "noProviders": {
+      "title": "没有关联的服务商",
+      "description": "添加服务商以开始处理案件"
+    },
+    "addProvider": "添加服务商",
+    "switchProvider": "切换服务商",
+    "remove": "移除",
+    "setAsActive": "设为活跃",
+    "searchProvider": "搜索服务商...",
+    "noProviderFound": "未找到服务商",
+    "allProvidersLinked": "所有服务商已关联",
+    "confirmRemove": "您确定要从您的账户中移除此服务商吗？",
+    "success": {
+      "added": "服务商添加成功！",
+      "removed": "服务商移除成功！",
+      "defaultUpdated": "默认服务商已更新！"
+    },
+    "errors": {
+      "addFailed": "添加服务商时出错",
+      "removeFailed": "移除服务商时出错"
+    }
+  },
+  "gestionAcces": {
+    "title": "访问管理",
+    "description": "将服务商与用户关联，以便他们接收案件",
+    "addUser": "添加用户",
+    "howItWorks": {
+      "title": "如何运作？",
+      "line1": "每个用户使用其Google邮箱登录",
+      "line2": "您在下方为他们分配一个或多个服务商",
+      "line3": "当客户预订此服务商时，用户会在其仪表板中看到案件"
+    },
+    "stats": {
+      "users": "用户",
+      "activeProviders": "活跃服务商",
+      "links": "关联"
+    },
+    "search": "按邮箱或姓名搜索用户...",
+    "providerCount": "{{count}}个服务商",
+    "selectProviders": "为此用户选择服务商：",
+    "deleteUser": "删除用户",
+    "deleteConfirm": "删除此用户及其所有访问权限？",
+    "noUsers": {
+      "title": "未找到用户",
+      "description": "添加用户以授予他们服务商访问权限"
+    },
+    "toast": {
+      "providersSaved": "服务商保存成功",
+      "saveError": "保存时出错",
+      "userDeleted": "用户已删除",
+      "deleteError": "删除时出错",
+      "loadError": "加载用户时出错",
+      "addError": "添加时出错"
+    },
+    "modal": {
+      "title": "添加用户",
+      "firebaseId": "Firebase用户ID",
+      "firebaseIdRequired": "Firebase用户ID为必填项",
+      "firebaseIdPlaceholder": "5lTY3iPh16Z7gHlrzr7XzrY4pGE2",
+      "firebaseIdHint": "在Firebase控制台 → 身份验证 → 用户中找到此ID",
+      "email": "邮箱",
+      "emailPlaceholder": "user@gmail.com",
+      "displayName": "显示名称",
+      "displayNamePlaceholder": "张三",
+      "providersToLink": "要关联的服务商",
+      "noProviderAvailable": "没有可用的服务商"
+    }
+  },
+  "utilisateurs": {
+    "title": "用户",
+    "description": "管理团队管理",
+    "roles": {
+      "admin": "管理员",
+      "agent": "代理",
+      "provider": "服务商"
+    },
+    "roleDescriptions": {
+      "admin": "所有功能的完全访问权限",
+      "agent": "案件和消息管理",
+      "provider": "仅访问分配的案件"
+    },
+    "stats": {
+      "total": "总计",
+      "admins": "管理员",
+      "agents": "代理"
+    },
+    "noName": "无名称",
+    "availableRoles": "可用角色",
+    "search": "按姓名或邮箱搜索...",
+    "setAdmin": "设为管理员",
+    "setAgent": "设为代理",
+    "confirmDelete": "删除此用户？",
+    "createdOn": "创建于{{date}}",
+    "empty": {
+      "title": "未找到用户",
+      "modifySearch": "尝试修改您的搜索",
+      "usersWillAppear": "已连接的用户将显示在这里"
+    },
+    "note": "注意：用户在首次登录时自动创建。使用setRole功能分配角色。",
+    "loadMore": "加载更多用户",
+    "allLoaded": "所有用户已加载（共{{count}}个）",
+    "important": "重要",
+    "importantNote": "要创建新管理员，用户必须先登录应用程序。然后，您可以在这里更改他们的角色。或者，使用管理员API密钥调用<code>setRole</code> Cloud Function。"
+  },
+  "pays": {
+    "title": "国家",
+    "description": "已配置的国家列表",
+    "columns": {
+      "code": "代码",
+      "name": "名称",
+      "active": "活跃"
+    }
+  },
+  "auditLogs": {
+    "title": "审计日志",
+    "description": "平台操作历史",
+    "stats": {
+      "total": "总计",
+      "today": "今天"
+    },
+    "filters": {
+      "severity": "严重程度",
+      "actionType": "操作类型"
+    },
+    "counter": "显示{{total}}条中的{{shown}}条",
+    "actions": {
+      "login": "登录",
+      "logout": "登出",
+      "roleChange": "角色更改",
+      "providerCreate": "服务商已创建",
+      "providerUpdate": "服务商已更新",
+      "providerDelete": "服务商已删除",
+      "accessGranted": "访问已授予",
+      "accessRevoked": "访问已撤销",
+      "dossierCreate": "案件已创建",
+      "dossierUpdate": "案件已更新",
+      "dossierStatusChange": "状态已更改",
+      "dossierDelete": "案件已删除",
+      "aiResponseGenerated": "AI响应已生成",
+      "aiSettingsChanged": "AI设置已更改",
+      "settingsChanged": "设置已更改",
+      "dataExport": "数据导出",
+      "adminAction": "管理员操作"
+    },
+    "severity": {
+      "info": "信息",
+      "warning": "警告",
+      "critical": "严重"
+    }
+  },
+  "parametres": {
+    "title": "通用设置",
+    "description": "角色、主题、集成、日志..."
+  },
+  "testIA": {
+    "title": "AI测试 - 管理模式",
+    "description": "测试AI助手响应",
+    "infoBanner": {
+      "title": "管理员测试模式",
+      "description": "此页面允许您通过模拟不同上下文来测试AI。调用通过Cloud Function进行",
+      "cloudFunction": "aiChat",
+      "metadataInfo": "响应包括调试元数据（模型、服务商、引用、响应时间）。"
+    },
+    "context": {
+      "button": "上下文",
+      "title": "模拟上下文",
+      "providerType": {
+        "title": "服务商类型",
+        "lawyer": "律师",
+        "expert": "专家",
+        "lawyerDescription": "Claude 3.5 Sonnet - 法律推理",
+        "expertDescription": "GPT-4o - 实用建议"
+      },
+      "fields": {
+        "country": "国家",
+        "countryPlaceholder": "例如：泰国",
+        "nationality": "国籍",
+        "nationalityPlaceholder": "例如：中国",
+        "clientName": "客户姓名",
+        "clientNamePlaceholder": "例如：张测试",
+        "urgency": "紧急程度"
+      },
+      "urgencyLevels": {
+        "low": "低",
+        "medium": "中",
+        "high": "高",
+        "critical": "紧急"
+      }
+    },
+    "quickTests": {
+      "title": "快速测试",
+      "visa": "签证即将到期",
+      "urgence": "盗窃/丢失紧急情况",
+      "juridique": "雇主问题",
+      "pratique": "曼谷住房"
+    },
+    "chat": {
+      "emptyState": "发送消息开始测试",
+      "placeholder": "输入您的测试消息...",
+      "ariaLabelMessages": "对话消息",
+      "ariaLabelInput": "要发送的消息",
+      "ariaLabelSend": "发送消息",
+      "ariaLabelThinking": "AI正在思考",
+      "thinking": "AI正在思考...",
+      "noResponse": "无响应",
+      "lastResponse": "上次响应用时{{time}}毫秒"
+    },
+    "debug": {
+      "button": "调试",
+      "model": "模型",
+      "provider": "服务商",
+      "time": "时间",
+      "perplexitySearch": "Perplexity搜索",
+      "fallback": "回退",
+      "sources": "来源"
+    },
+    "errors": {
+      "title": "错误",
+      "unknown": "未知错误",
+      "prefix": "错误：",
+      "closeLabel": "关闭错误"
+    }
+  },
+  "verifyingRights": "正在验证权限...",
+  "loadingPage": "正在加载页面"
+}

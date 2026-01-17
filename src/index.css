@@ -1,0 +1,609 @@
+/* =============================================================================
+   FONTS MULTILINGUES - Import en premier pour éviter le FOUT
+   Note: La police Inter est préchargée dans index.html
+   Les polices secondaires utilisent display=optional pour éviter les layout shifts
+   ============================================================================= */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=optional');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&display=optional');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;600;700&display=optional');
+
+/* Import design tokens et animations AVANT Tailwind */
+@import './styles/design-tokens.css';
+@import './styles/animations.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =============================================================================
+   SHADCN/UI - CSS Variables (Theme SOS Expat)
+   ============================================================================= */
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    /* Primary = SOS Red (#DC2626) */
+    --primary: 0 84% 50%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    /* Destructive = SOS Error */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    /* Ring = SOS Red */
+    --ring: 0 84% 50%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    /* Primary = SOS Red */
+    --primary: 0 84% 50%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 84% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* =============================================================================
+   SOS EXPAT - Styles personnalisés
+   ============================================================================= */
+
+/* Safe area pour iOS (notch, barre de navigation) */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0);
+}
+
+/* Animation fade-in pour les messages du chat */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out forwards;
+}
+
+/* Scroll smooth pour tous les conteneurs */
+.scroll-smooth {
+  scroll-behavior: smooth;
+}
+
+/* Focus visible amélioré pour l'accessibilité */
+@layer utilities {
+  .focus-visible-ring {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-sos-red;
+  }
+}
+
+/* =============================================================================
+   TOUCH TARGETS - Accessibility (WCAG 2.5.5 / Apple HIG)
+   ============================================================================= */
+
+/* Base touch target - minimum 44x44px (Apple HIG) */
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* Touch target sizes */
+.touch-target-sm {
+  min-width: 36px;
+  min-height: 36px;
+}
+
+.touch-target-md {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.touch-target-lg {
+  min-width: 48px;
+  min-height: 48px;
+}
+
+.touch-target-xl {
+  min-width: 56px;
+  min-height: 56px;
+}
+
+/* Touch-friendly spacing for interactive elements */
+.touch-spacing {
+  padding: 12px;
+}
+
+/* Ensure clickable areas are properly sized on touch devices */
+@media (pointer: coarse) {
+  .touch-target-auto {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* Increase tap target on touch devices */
+  button:not(.touch-target-none),
+  [role="button"]:not(.touch-target-none),
+  a:not(.touch-target-none) {
+    position: relative;
+  }
+
+  /* Expand click area using pseudo-element */
+  .touch-expand::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    min-width: 44px;
+    min-height: 44px;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+/* =============================================================================
+   SAFE AREA INSETS - Support for notched devices (iOS)
+   ============================================================================= */
+
+/* Basic safe area padding */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.safe-area-left {
+  padding-left: env(safe-area-inset-left, 0);
+}
+
+.safe-area-right {
+  padding-right: env(safe-area-inset-right, 0);
+}
+
+/* Combined safe areas */
+.safe-area-x {
+  padding-left: env(safe-area-inset-left, 0);
+  padding-right: env(safe-area-inset-right, 0);
+}
+
+.safe-area-y {
+  padding-top: env(safe-area-inset-top, 0);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.safe-area-all {
+  padding-top: env(safe-area-inset-top, 0);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  padding-left: env(safe-area-inset-left, 0);
+  padding-right: env(safe-area-inset-right, 0);
+}
+
+/* Margin variants */
+.safe-margin-top {
+  margin-top: env(safe-area-inset-top, 0);
+}
+
+.safe-margin-bottom {
+  margin-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* Min-height accounting for safe areas */
+.min-h-screen-safe {
+  min-height: calc(100vh - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0));
+}
+
+/* PWA safe area for bottom navigation */
+.pb-safe-area {
+  padding-bottom: env(safe-area-inset-bottom, 1rem);
+}
+
+/* =============================================================================
+   MOBILE-FIRST RESPONSIVE HELPERS
+   ============================================================================= */
+
+/* Responsive container with automatic padding */
+.responsive-container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .responsive-container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .responsive-container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-container {
+    max-width: 1024px;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .responsive-container {
+    max-width: 1280px;
+  }
+}
+
+/* Container with safe areas */
+.responsive-container-safe {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: max(1rem, env(safe-area-inset-left, 0));
+  padding-right: max(1rem, env(safe-area-inset-right, 0));
+}
+
+@media (min-width: 640px) {
+  .responsive-container-safe {
+    padding-left: max(1.5rem, env(safe-area-inset-left, 0));
+    padding-right: max(1.5rem, env(safe-area-inset-right, 0));
+  }
+}
+
+@media (min-width: 768px) {
+  .responsive-container-safe {
+    padding-left: max(2rem, env(safe-area-inset-left, 0));
+    padding-right: max(2rem, env(safe-area-inset-right, 0));
+  }
+}
+
+/* Mobile-only and desktop-only utilities */
+.mobile-only {
+  display: block;
+}
+
+.desktop-only {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .mobile-only {
+    display: none;
+  }
+
+  .desktop-only {
+    display: block;
+  }
+}
+
+/* Responsive text sizing */
+.text-responsive {
+  font-size: 0.875rem; /* 14px base */
+}
+
+@media (min-width: 640px) {
+  .text-responsive {
+    font-size: 1rem; /* 16px on larger screens */
+  }
+}
+
+/* Responsive spacing utilities */
+.gap-responsive {
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .gap-responsive {
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .gap-responsive {
+    gap: 1.5rem;
+  }
+}
+
+.p-responsive {
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .p-responsive {
+    padding: 1.5rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .p-responsive {
+    padding: 2rem;
+  }
+}
+
+/* Mobile-friendly grid */
+.grid-responsive {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .grid-responsive {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-responsive {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Touch-friendly list items */
+.list-touch-friendly > * {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+/* =============================================================================
+   INTERACTION STATES FOR TOUCH
+   ============================================================================= */
+
+/* Active state feedback for touch */
+.touch-feedback:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+/* Smooth transition for touch feedback */
+.touch-transition {
+  transition: transform 0.1s ease-out, opacity 0.1s ease-out;
+}
+
+/* Remove hover effects on touch devices */
+@media (hover: none) {
+  .no-hover-touch:hover {
+    background-color: inherit;
+    color: inherit;
+  }
+}
+
+/* Tap highlight color for iOS */
+.tap-highlight-none {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tap-highlight-subtle {
+  -webkit-tap-highlight-color: rgba(220, 38, 38, 0.1); /* sos-red with transparency */
+}
+
+/* Réduction des animations pour les utilisateurs qui le préfèrent */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Scrollbar personnalisée (Webkit) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* =============================================================================
+   RTL (Right-to-Left) Support - Arabe
+   Note: Les imports Google Fonts sont maintenant au début du fichier
+   ============================================================================= */
+
+/* Direction de base pour RTL */
+[dir="rtl"] {
+  text-align: right;
+}
+
+/* Inverser la direction flex pour RTL */
+[dir="rtl"] .flex-row {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .flex-row-reverse {
+  flex-direction: row;
+}
+
+/* RTL-aware spacing avec Tailwind space-x */
+[dir="rtl"] .space-x-1 > :not([hidden]) ~ :not([hidden]),
+[dir="rtl"] .space-x-2 > :not([hidden]) ~ :not([hidden]),
+[dir="rtl"] .space-x-3 > :not([hidden]) ~ :not([hidden]),
+[dir="rtl"] .space-x-4 > :not([hidden]) ~ :not([hidden]),
+[dir="rtl"] .space-x-5 > :not([hidden]) ~ :not([hidden]),
+[dir="rtl"] .space-x-6 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 1;
+}
+
+/* RTL-aware margins */
+[dir="rtl"] .ml-auto {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+[dir="rtl"] .mr-auto {
+  margin-right: 0;
+  margin-left: auto;
+}
+
+[dir="rtl"] .ml-1 { margin-left: 0; margin-right: 0.25rem; }
+[dir="rtl"] .ml-2 { margin-left: 0; margin-right: 0.5rem; }
+[dir="rtl"] .ml-3 { margin-left: 0; margin-right: 0.75rem; }
+[dir="rtl"] .ml-4 { margin-left: 0; margin-right: 1rem; }
+[dir="rtl"] .mr-1 { margin-right: 0; margin-left: 0.25rem; }
+[dir="rtl"] .mr-2 { margin-right: 0; margin-left: 0.5rem; }
+[dir="rtl"] .mr-3 { margin-right: 0; margin-left: 0.75rem; }
+[dir="rtl"] .mr-4 { margin-right: 0; margin-left: 1rem; }
+
+/* RTL-aware paddings */
+[dir="rtl"] .pl-1 { padding-left: 0; padding-right: 0.25rem; }
+[dir="rtl"] .pl-2 { padding-left: 0; padding-right: 0.5rem; }
+[dir="rtl"] .pl-3 { padding-left: 0; padding-right: 0.75rem; }
+[dir="rtl"] .pl-4 { padding-left: 0; padding-right: 1rem; }
+[dir="rtl"] .pr-1 { padding-right: 0; padding-left: 0.25rem; }
+[dir="rtl"] .pr-2 { padding-right: 0; padding-left: 0.5rem; }
+[dir="rtl"] .pr-3 { padding-right: 0; padding-left: 0.75rem; }
+[dir="rtl"] .pr-4 { padding-right: 0; padding-left: 1rem; }
+
+/* RTL icons that should flip */
+[dir="rtl"] .rtl-flip {
+  transform: scaleX(-1);
+}
+
+/* RTL text alignment */
+[dir="rtl"] .text-left {
+  text-align: right;
+}
+
+[dir="rtl"] .text-right {
+  text-align: left;
+}
+
+/* RTL border radius */
+[dir="rtl"] .rounded-l { border-radius: 0 0.25rem 0.25rem 0; }
+[dir="rtl"] .rounded-r { border-radius: 0.25rem 0 0 0.25rem; }
+[dir="rtl"] .rounded-l-lg { border-radius: 0 0.5rem 0.5rem 0; }
+[dir="rtl"] .rounded-r-lg { border-radius: 0.5rem 0 0 0.5rem; }
+
+/* RTL positioned elements */
+[dir="rtl"] .left-0 { left: auto; right: 0; }
+[dir="rtl"] .right-0 { right: auto; left: 0; }
+[dir="rtl"] .left-4 { left: auto; right: 1rem; }
+[dir="rtl"] .right-4 { right: auto; left: 1rem; }
+
+/* =============================================================================
+   FONTS SPÉCIALES PAR LANGUE
+   ============================================================================= */
+
+/* Chinois Simplifié */
+[lang="zh"],
+html[lang="zh"] body {
+  font-family: 'Noto Sans SC', Inter, system-ui, -apple-system, sans-serif;
+}
+
+/* Hindi (Devanagari) */
+[lang="hi"],
+html[lang="hi"] body {
+  font-family: 'Noto Sans Devanagari', Inter, system-ui, -apple-system, sans-serif;
+  line-height: 1.8; /* Plus d'espace pour les caractères complexes */
+}
+
+/* Arabe */
+[lang="ar"],
+html[lang="ar"] body {
+  font-family: 'Noto Sans Arabic', Inter, system-ui, -apple-system, sans-serif;
+}
+
+/* Russe (Cyrillique) - Roboto supporte bien le cyrillique */
+[lang="ru"],
+html[lang="ru"] body {
+  font-family: Inter, Roboto, system-ui, -apple-system, sans-serif;
+}
+
+/* =============================================================================
+   LANGUAGE SELECTOR STYLES
+   ============================================================================= */
+
+.language-selector-dropdown {
+  z-index: 50;
+}
+
+.language-selector-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  width: 100%;
+  text-align: left;
+  transition: background-color 0.15s ease;
+}
+
+.language-selector-item:hover {
+  background-color: rgb(243 244 246); /* gray-100 */
+}
+
+.language-selector-item.active {
+  background-color: rgb(254 242 242); /* red-50 */
+  color: rgb(220 38 38); /* red-600 */
+}
+
+/* Dark mode support */
+.dark .language-selector-item:hover {
+  background-color: rgb(31 41 55); /* gray-800 */
+}
+
+.dark .language-selector-item.active {
+  background-color: rgb(127 29 29 / 0.3); /* red-900 with opacity */
+}

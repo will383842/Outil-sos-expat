@@ -1,0 +1,345 @@
+{
+  "header": {
+    "title": "SOS Expats — एडमिन",
+    "providerTitle": "SOS Expats — प्रो स्पेस",
+    "previewMode": "प्रदाता दृश्य",
+    "exitPreview": "एडमिन दृश्य पर वापस जाएं"
+  },
+  "dashboard": {
+    "title": "एडमिन डैशबोर्ड",
+    "subtitle": "प्लेटफॉर्म गतिविधि अवलोकन",
+    "description": "प्लेटफॉर्म गतिविधि अवलोकन और सेवा निगरानी",
+    "stats": {
+      "totalDossiers": "कुल केस",
+      "dossiersInProgress": "प्रगति में केस",
+      "activeProviders": "सक्रिय प्रदाता",
+      "aiRequests": "AI अनुरोध (महीना)",
+      "activeDossiers": "सक्रिय केस",
+      "lawyerDossiers": "वकील केस",
+      "expatDossiers": "प्रवासी केस",
+      "aiProcessed": "AI द्वारा संसाधित",
+      "totalRevenue": "कुल राजस्व"
+    },
+    "activity": {
+      "title": "7-दिन की गतिविधि",
+      "days": {
+        "sun": "रवि",
+        "mon": "सोम",
+        "tue": "मंगल",
+        "wed": "बुध",
+        "thu": "गुरु",
+        "fri": "शुक्र",
+        "sat": "शनि"
+      }
+    },
+    "iaStatus": {
+      "title": "AI स्थिति",
+      "operational": "चालू",
+      "warning": "कोटा चेतावनी",
+      "critical": "गंभीर कोटा",
+      "usage": "इस महीने का उपयोग",
+      "percent": "मासिक कोटा का {{percent}}% उपयोग किया गया"
+    },
+    "providers": {
+      "title": "प्रदाता",
+      "none": "कोई सक्रिय प्रदाता नहीं",
+      "totalRegistered": "कुल पंजीकृत",
+      "withAccess": "टूल एक्सेस के साथ",
+      "withoutAccess": "एक्सेस के बिना",
+      "accessEnabled": "एक्सेस सक्षम"
+    },
+    "recentDossiers": {
+      "title": "हाल के केस",
+      "none": "कोई हाल के केस नहीं"
+    },
+    "sync": {
+      "title": "Laravel सिंक",
+      "connected": "जुड़ा हुआ",
+      "disconnected": "डिस्कनेक्ट",
+      "error": "त्रुटि",
+      "lastSync": "अंतिम सिंक",
+      "pending": "लंबित आइटम",
+      "syncNow": "अभी सिंक करें"
+    }
+  },
+  "accessDenied": {
+    "title": "एक्सेस अस्वीकृत",
+    "description": "यह पृष्ठ प्रशासकों के लिए आरक्षित है।",
+    "noRights": "इस अनुभाग तक पहुंचने के लिए आपके पास आवश्यक अनुमतियाँ नहीं हैं।",
+    "connectedAs": "के रूप में जुड़े",
+    "role": "भूमिका"
+  },
+  "prestataires": {
+    "title": "प्रदाता",
+    "description": "वकीलों और प्रवासी विशेषज्ञों के लिए टूल एक्सेस प्रबंधित करें",
+    "stats": {
+      "total": "कुल",
+      "lawyers": "वकील",
+      "expats": "प्रवासी",
+      "withAccess": "एक्सेस के साथ"
+    },
+    "search": "नाम, ईमेल, देश से खोजें...",
+    "filters": {
+      "type": "प्रकार",
+      "access": "टूल एक्सेस",
+      "all": "सभी",
+      "withAccess": "एक्सेस के साथ",
+      "withoutAccess": "एक्सेस के बिना"
+    },
+    "addManually": "मैन्युअल रूप से जोड़ें",
+    "addProvider": "प्रदाता जोड़ें",
+    "form": {
+      "email": "Google ईमेल",
+      "fullName": "पूरा नाम",
+      "type": "प्रकार",
+      "country": "देश"
+    },
+    "table": {
+      "name": "नाम",
+      "email": "ईमेल",
+      "type": "प्रकार",
+      "country": "देश",
+      "access": "एक्सेस"
+    },
+    "actions": {
+      "grantAccess": "एक्सेस दें",
+      "revokeAccess": "एक्सेस वापस लें",
+      "activeAccess": "एक्सेस सक्रिय"
+    },
+    "empty": {
+      "title": "कोई प्रदाता नहीं मिला",
+      "description": "अपने फ़िल्टर संशोधित करने का प्रयास करें"
+    },
+    "loadMore": "और प्रदाता लोड करें",
+    "emailMissing": "ईमेल गायब है"
+  },
+  "mesPrestataires": {
+    "title": "मेरे प्रदाता",
+    "description": "अपनी प्रोफ़ाइल से जुड़े प्रदाता खातों का प्रबंधन करें",
+    "linkedProviders": "जुड़े प्रदाता",
+    "noProviders": {
+      "title": "कोई जुड़े प्रदाता नहीं",
+      "description": "केस प्रोसेसिंग शुरू करने के लिए प्रदाता जोड़ें"
+    },
+    "addProvider": "प्रदाता जोड़ें",
+    "switchProvider": "प्रदाता बदलें",
+    "remove": "हटाएं",
+    "setAsActive": "सक्रिय के रूप में सेट करें",
+    "searchProvider": "प्रदाता खोजें...",
+    "noProviderFound": "कोई प्रदाता नहीं मिला",
+    "allProvidersLinked": "सभी प्रदाता पहले से जुड़े हैं",
+    "confirmRemove": "क्या आप वाकई इस प्रदाता को अपने खाते से हटाना चाहते हैं?",
+    "success": {
+      "added": "प्रदाता सफलतापूर्वक जोड़ा गया!",
+      "removed": "प्रदाता सफलतापूर्वक हटाया गया!",
+      "defaultUpdated": "डिफ़ॉल्ट प्रदाता अपडेट किया गया!"
+    },
+    "errors": {
+      "addFailed": "प्रदाता जोड़ने में त्रुटि",
+      "removeFailed": "प्रदाता हटाने में त्रुटि"
+    }
+  },
+  "gestionAcces": {
+    "title": "एक्सेस प्रबंधन",
+    "description": "प्रदाताओं को उपयोगकर्ताओं से जोड़ें ताकि वे अपने केस प्राप्त कर सकें",
+    "addUser": "उपयोगकर्ता जोड़ें",
+    "howItWorks": {
+      "title": "यह कैसे काम करता है?",
+      "line1": "प्रत्येक उपयोगकर्ता अपने Google ईमेल से लॉगिन करता है",
+      "line2": "आप उन्हें नीचे एक या अधिक प्रदाता असाइन करते हैं",
+      "line3": "जब कोई ग्राहक इस प्रदाता को बुक करता है, उपयोगकर्ता अपने डैशबोर्ड में केस देखता है"
+    },
+    "stats": {
+      "users": "उपयोगकर्ता",
+      "activeProviders": "सक्रिय प्रदाता",
+      "links": "लिंक"
+    },
+    "search": "ईमेल या नाम से उपयोगकर्ता खोजें...",
+    "providerCount": "{{count}} प्रदाता",
+    "selectProviders": "इस उपयोगकर्ता के लिए प्रदाता चुनें:",
+    "deleteUser": "उपयोगकर्ता हटाएं",
+    "deleteConfirm": "इस उपयोगकर्ता और उनके सभी एक्सेस हटाएं?",
+    "noUsers": {
+      "title": "कोई उपयोगकर्ता नहीं मिला",
+      "description": "प्रदाताओं तक एक्सेस देने के लिए उपयोगकर्ता जोड़ें"
+    },
+    "toast": {
+      "providersSaved": "प्रदाता सफलतापूर्वक सहेजे गए",
+      "saveError": "सहेजने में त्रुटि",
+      "userDeleted": "उपयोगकर्ता हटाया गया",
+      "deleteError": "हटाने में त्रुटि",
+      "loadError": "उपयोगकर्ताओं को लोड करने में त्रुटि",
+      "addError": "जोड़ने में त्रुटि"
+    },
+    "modal": {
+      "title": "उपयोगकर्ता जोड़ें",
+      "firebaseId": "Firebase उपयोगकर्ता ID",
+      "firebaseIdRequired": "Firebase उपयोगकर्ता ID आवश्यक है",
+      "firebaseIdPlaceholder": "5lTY3iPh16Z7gHlrzr7XzrY4pGE2",
+      "firebaseIdHint": "Firebase Console → Authentication → Users में यह ID खोजें",
+      "email": "ईमेल",
+      "emailPlaceholder": "user@gmail.com",
+      "displayName": "प्रदर्शन नाम",
+      "displayNamePlaceholder": "राज शर्मा",
+      "providersToLink": "जोड़ने के लिए प्रदाता",
+      "noProviderAvailable": "कोई प्रदाता उपलब्ध नहीं"
+    }
+  },
+  "utilisateurs": {
+    "title": "उपयोगकर्ता",
+    "description": "एडमिन टीम प्रबंधन",
+    "roles": {
+      "admin": "प्रशासक",
+      "agent": "एजेंट",
+      "provider": "प्रदाता"
+    },
+    "roleDescriptions": {
+      "admin": "सभी सुविधाओं तक पूर्ण पहुंच",
+      "agent": "केस और संदेश प्रबंधन",
+      "provider": "केवल असाइन किए गए केस तक पहुंच"
+    },
+    "stats": {
+      "total": "कुल",
+      "admins": "एडमिन",
+      "agents": "एजेंट"
+    },
+    "noName": "नाम नहीं",
+    "availableRoles": "उपलब्ध भूमिकाएं",
+    "search": "नाम या ईमेल से खोजें...",
+    "setAdmin": "एडमिन सेट करें",
+    "setAgent": "एजेंट सेट करें",
+    "confirmDelete": "इस उपयोगकर्ता को हटाएं?",
+    "createdOn": "{{date}} को बनाया गया",
+    "empty": {
+      "title": "कोई उपयोगकर्ता नहीं मिला",
+      "modifySearch": "अपनी खोज संशोधित करने का प्रयास करें",
+      "usersWillAppear": "जुड़े उपयोगकर्ता यहां दिखाई देंगे"
+    },
+    "note": "नोट: उपयोगकर्ता अपने पहले लॉगिन पर स्वचालित रूप से बनाए जाते हैं। भूमिकाएं असाइन करने के लिए setRole फ़ंक्शन का उपयोग करें।",
+    "loadMore": "और उपयोगकर्ता लोड करें",
+    "allLoaded": "सभी उपयोगकर्ता लोड हो गए (कुल {{count}})",
+    "important": "महत्वपूर्ण",
+    "importantNote": "नया प्रशासक बनाने के लिए, उपयोगकर्ता को पहले एप्लिकेशन में लॉगिन करना होगा। फिर, आप यहां उनकी भूमिका बदल सकते हैं। वैकल्पिक रूप से, एडमिन API कुंजी के साथ <code>setRole</code> Cloud Function का उपयोग करें।"
+  },
+  "pays": {
+    "title": "देश",
+    "description": "कॉन्फ़िगर किए गए देशों की सूची",
+    "columns": {
+      "code": "कोड",
+      "name": "नाम",
+      "active": "सक्रिय"
+    }
+  },
+  "auditLogs": {
+    "title": "ऑडिट लॉग",
+    "description": "प्लेटफॉर्म एक्शन हिस्ट्री",
+    "stats": {
+      "total": "कुल",
+      "today": "आज"
+    },
+    "filters": {
+      "severity": "गंभीरता",
+      "actionType": "एक्शन प्रकार"
+    },
+    "counter": "{{total}} में से {{shown}} दिखा रहे हैं",
+    "actions": {
+      "login": "लॉगिन",
+      "logout": "लॉगआउट",
+      "roleChange": "भूमिका बदलाव",
+      "providerCreate": "प्रदाता बनाया गया",
+      "providerUpdate": "प्रदाता अपडेट किया गया",
+      "providerDelete": "प्रदाता हटाया गया",
+      "accessGranted": "एक्सेस दिया गया",
+      "accessRevoked": "एक्सेस वापस लिया गया",
+      "dossierCreate": "केस बनाया गया",
+      "dossierUpdate": "केस अपडेट किया गया",
+      "dossierStatusChange": "स्थिति बदली गई",
+      "dossierDelete": "केस हटाया गया",
+      "aiResponseGenerated": "AI प्रतिक्रिया उत्पन्न",
+      "aiSettingsChanged": "AI सेटिंग्स बदली गईं",
+      "settingsChanged": "सेटिंग्स बदली गईं",
+      "dataExport": "डेटा निर्यात",
+      "adminAction": "एडमिन एक्शन"
+    },
+    "severity": {
+      "info": "जानकारी",
+      "warning": "चेतावनी",
+      "critical": "गंभीर"
+    }
+  },
+  "parametres": {
+    "title": "सामान्य सेटिंग्स",
+    "description": "भूमिकाएं, थीम, एकीकरण, लॉग..."
+  },
+  "testIA": {
+    "title": "AI टेस्ट - एडमिन मोड",
+    "description": "AI सहायक प्रतिक्रियाओं का परीक्षण करें",
+    "infoBanner": {
+      "title": "एडमिन टेस्ट मोड",
+      "description": "यह पृष्ठ आपको विभिन्न संदर्भों का अनुकरण करके AI का परीक्षण करने की अनुमति देता है। कॉल Cloud Function के माध्यम से की जाती हैं",
+      "cloudFunction": "aiChat",
+      "metadataInfo": "प्रतिक्रियाओं में डीबग मेटाडेटा शामिल है (मॉडल, प्रदाता, उद्धरण, प्रतिक्रिया समय)।"
+    },
+    "context": {
+      "button": "संदर्भ",
+      "title": "अनुकरित संदर्भ",
+      "providerType": {
+        "title": "प्रदाता प्रकार",
+        "lawyer": "वकील",
+        "expert": "विशेषज्ञ",
+        "lawyerDescription": "Claude 3.5 Sonnet - कानूनी तर्क",
+        "expertDescription": "GPT-4o - व्यावहारिक सलाह"
+      },
+      "fields": {
+        "country": "देश",
+        "countryPlaceholder": "जैसे: थाईलैंड",
+        "nationality": "राष्ट्रीयता",
+        "nationalityPlaceholder": "जैसे: भारतीय",
+        "clientName": "ग्राहक का नाम",
+        "clientNamePlaceholder": "जैसे: राज टेस्ट",
+        "urgency": "तात्कालिकता"
+      },
+      "urgencyLevels": {
+        "low": "कम",
+        "medium": "मध्यम",
+        "high": "उच्च",
+        "critical": "गंभीर"
+      }
+    },
+    "quickTests": {
+      "title": "त्वरित परीक्षण",
+      "visa": "समाप्त होने वाला वीज़ा",
+      "urgence": "चोरी/खोने की आपातकाल",
+      "juridique": "नियोक्ता समस्या",
+      "pratique": "बैंकॉक आवास"
+    },
+    "chat": {
+      "emptyState": "परीक्षण शुरू करने के लिए संदेश भेजें",
+      "placeholder": "अपना परीक्षण संदेश टाइप करें...",
+      "ariaLabelMessages": "वार्तालाप संदेश",
+      "ariaLabelInput": "भेजने के लिए संदेश",
+      "ariaLabelSend": "संदेश भेजें",
+      "ariaLabelThinking": "AI सोच रहा है",
+      "thinking": "AI सोच रहा है...",
+      "noResponse": "कोई प्रतिक्रिया नहीं",
+      "lastResponse": "अंतिम प्रतिक्रिया {{time}}ms में"
+    },
+    "debug": {
+      "button": "डीबग",
+      "model": "मॉडल",
+      "provider": "प्रदाता",
+      "time": "समय",
+      "perplexitySearch": "Perplexity खोज",
+      "fallback": "फ़ॉलबैक",
+      "sources": "स्रोत"
+    },
+    "errors": {
+      "title": "त्रुटि",
+      "unknown": "अज्ञात त्रुटि",
+      "prefix": "त्रुटि:",
+      "closeLabel": "त्रुटि बंद करें"
+    }
+  },
+  "verifyingRights": "अनुमतियाँ सत्यापित हो रही हैं...",
+  "loadingPage": "पृष्ठ लोड हो रहा है"
+}

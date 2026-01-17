@@ -1,0 +1,154 @@
+{
+  "navigation": {
+    "dashboard": "Dashboard",
+    "dossiers": "Mes Dossiers",
+    "messages": "Messages",
+    "profile": "Mon Profil",
+    "settings": "Paramètres",
+    "signOut": "Se déconnecter",
+    "signingOut": "Déconnexion...",
+    "prestataires": "Prestataires",
+    "access": "Accès",
+    "team": "Équipe",
+    "countries": "Pays",
+    "audit": "Audit",
+    "testAI": "Test IA",
+    "administration": "Administration"
+  },
+  "actions": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "create": "Créer",
+    "add": "Ajouter",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "filters": "Filtres",
+    "reset": "Réinitialiser",
+    "export": "Exporter",
+    "refresh": "Actualiser",
+    "loadMore": "Charger plus",
+    "copy": "Copier",
+    "copied": "Copié",
+    "retry": "Réessayer",
+    "send": "Envoyer",
+    "sending": "Envoi en cours...",
+    "close": "Fermer",
+    "back": "Retour",
+    "backHome": "Retour à l'accueil",
+    "view": "Voir",
+    "viewAll": "Voir tout",
+    "confirm": "Confirmer",
+    "preview": "Prévisualiser",
+    "expand": "Agrandir",
+    "collapse": "Réduire",
+    "start": "Démarrer",
+    "stop": "Arrêter",
+    "finish": "Terminer",
+    "reopen": "Réouvrir"
+  },
+  "status": {
+    "pending": "En attente",
+    "inProgress": "En cours",
+    "completed": "Terminé",
+    "cancelled": "Annulé",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "expired": "Expiré",
+    "verified": "Vérifié",
+    "trial": "Période d'essai",
+    "paymentPending": "Paiement en attente"
+  },
+  "priority": {
+    "urgent": "Urgent",
+    "high": "Haute",
+    "medium": "Moyenne",
+    "low": "Basse"
+  },
+  "time": {
+    "today": "Aujourd'hui",
+    "yesterday": "Hier",
+    "minutesAgo": "Il y a {{count}} min",
+    "hoursAgo": "Il y a {{count}}h",
+    "daysAgo": "Il y a {{count}}j",
+    "daysRemaining": "{{count}} jours restants",
+    "expiresToday": "Expire aujourd'hui",
+    "expiresTomorrow": "Expire demain"
+  },
+  "errors": {
+    "generic": "Une erreur est survenue",
+    "loading": "Erreur de chargement",
+    "network": "Erreur réseau",
+    "unauthorized": "Accès non autorisé",
+    "notFound": "Non trouvé",
+    "copyFailed": "Erreur lors de la copie",
+    "sendFailed": "Erreur d'envoi",
+    "loadingProfile": "Erreur lors du chargement du profil",
+    "savingProfile": "Erreur lors de la sauvegarde du profil"
+  },
+  "success": {
+    "saved": "Enregistré avec succès",
+    "deleted": "Supprimé avec succès",
+    "copied": "Copié dans le presse-papiers",
+    "profileUpdated": "Profil mis à jour avec succès !"
+  },
+  "empty": {
+    "noData": "Aucune donnée",
+    "noResults": "Aucun résultat",
+    "modifyFilters": "Essayez de modifier vos filtres"
+  },
+  "loading": {
+    "default": "Chargement...",
+    "dashboard": "Chargement du dashboard",
+    "dashboardMessage": "Chargement du tableau de bord..."
+  },
+  "language": "Langue",
+  "all": "Tous",
+  "type": "Type",
+  "types": {
+    "lawyer": "Avocat",
+    "expat": "Expatrié",
+    "expert": "Expert"
+  },
+  "providerTypes": {
+    "lawyer": "Avocat",
+    "expatExpert": "Expert expatrié"
+  },
+  "roles": {
+    "admin": "Administrateur",
+    "agent": "Agent",
+    "provider": "Prestataire"
+  },
+  "offline": {
+    "message": "Mode hors ligne - Certaines fonctionnalités sont limitées"
+  },
+  "connectedAs": "Connecté en tant que",
+  "allRightsReserved": "Tous droits réservés.",
+  "guards": {
+    "loading": "Chargement...",
+    "verifyingAccess": "Vérification de votre accès...",
+    "accountNotFound": "Compte non trouvé",
+    "accountNotFoundDescription": "Votre compte n'existe pas dans notre système. Vous devez d'abord vous inscrire en tant que prestataire sur sos-expat.com.",
+    "registerOnSosExpat": "S'inscrire sur sos-expat.com",
+    "contactSupport": "Contacter le support",
+    "accessReservedProviders": "Accès réservé aux prestataires",
+    "accessReservedDescription": "Cet outil est réservé aux avocats et expatriés aidants partenaires de SOS Expat.",
+    "currentRoleNotAllowed": "Votre rôle actuel ({{role}}) ne permet pas d'accéder à cet espace.",
+    "becomeProvider": "Devenir prestataire",
+    "backToSosExpat": "Retour à sos-expat.com",
+    "subscriptionRequired": "Abonnement requis",
+    "subscriptionRequiredMessage": "Un abonnement actif est requis.",
+    "viewOffers": "Voir les offres",
+    "needHelp": "Besoin d'aide ? Contactez-nous à",
+    "close": "Fermer"
+  },
+  "subscription": {
+    "active": "Actif",
+    "trial": "Essai",
+    "pastDue": "Paiement en retard",
+    "canceled": "Annulé",
+    "expired": "Expiré",
+    "unpaid": "Impayé"
+  }
+}

@@ -1,0 +1,154 @@
+{
+  "navigation": {
+    "dashboard": "Dashboard",
+    "dossiers": "My Cases",
+    "messages": "Messages",
+    "profile": "My Profile",
+    "settings": "Settings",
+    "signOut": "Sign Out",
+    "signingOut": "Signing out...",
+    "prestataires": "Providers",
+    "access": "Access",
+    "team": "Team",
+    "countries": "Countries",
+    "audit": "Audit",
+    "testAI": "AI Test",
+    "administration": "Administration"
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "add": "Add",
+    "search": "Search",
+    "filter": "Filter",
+    "filters": "Filters",
+    "reset": "Reset",
+    "export": "Export",
+    "refresh": "Refresh",
+    "loadMore": "Load more",
+    "copy": "Copy",
+    "copied": "Copied",
+    "retry": "Retry",
+    "send": "Send",
+    "sending": "Sending...",
+    "close": "Close",
+    "back": "Back",
+    "backHome": "Back to home",
+    "view": "View",
+    "viewAll": "View all",
+    "confirm": "Confirm",
+    "preview": "Preview",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "start": "Start",
+    "stop": "Stop",
+    "finish": "Finish",
+    "reopen": "Reopen"
+  },
+  "status": {
+    "pending": "Pending",
+    "inProgress": "In Progress",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "active": "Active",
+    "inactive": "Inactive",
+    "expired": "Expired",
+    "verified": "Verified",
+    "trial": "Trial Period",
+    "paymentPending": "Payment Pending"
+  },
+  "priority": {
+    "urgent": "Urgent",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low"
+  },
+  "time": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "minutesAgo": "{{count}} min ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago",
+    "daysRemaining": "{{count}} days remaining",
+    "expiresToday": "Expires today",
+    "expiresTomorrow": "Expires tomorrow"
+  },
+  "errors": {
+    "generic": "An error occurred",
+    "loading": "Loading error",
+    "network": "Network error",
+    "unauthorized": "Unauthorized access",
+    "notFound": "Not found",
+    "copyFailed": "Copy failed",
+    "sendFailed": "Send failed",
+    "loadingProfile": "Error loading profile",
+    "savingProfile": "Error saving profile"
+  },
+  "success": {
+    "saved": "Successfully saved",
+    "deleted": "Successfully deleted",
+    "copied": "Copied to clipboard",
+    "profileUpdated": "Profile updated successfully!"
+  },
+  "empty": {
+    "noData": "No data",
+    "noResults": "No results",
+    "modifyFilters": "Try modifying your filters"
+  },
+  "loading": {
+    "default": "Loading...",
+    "dashboard": "Loading dashboard",
+    "dashboardMessage": "Loading dashboard..."
+  },
+  "language": "Language",
+  "all": "All",
+  "type": "Type",
+  "types": {
+    "lawyer": "Lawyer",
+    "expat": "Expat",
+    "expert": "Expert"
+  },
+  "providerTypes": {
+    "lawyer": "Lawyer",
+    "expatExpert": "Expat Expert"
+  },
+  "roles": {
+    "admin": "Administrator",
+    "agent": "Agent",
+    "provider": "Provider"
+  },
+  "offline": {
+    "message": "Offline mode - Some features are limited"
+  },
+  "connectedAs": "Connected as",
+  "allRightsReserved": "All rights reserved.",
+  "guards": {
+    "loading": "Loading...",
+    "verifyingAccess": "Verifying your access...",
+    "accountNotFound": "Account not found",
+    "accountNotFoundDescription": "Your account does not exist in our system. You must first register as a provider on sos-expat.com.",
+    "registerOnSosExpat": "Register on sos-expat.com",
+    "contactSupport": "Contact support",
+    "accessReservedProviders": "Access reserved for providers",
+    "accessReservedDescription": "This tool is reserved for lawyers and expat helpers who are SOS Expat partners.",
+    "currentRoleNotAllowed": "Your current role ({{role}}) does not allow access to this area.",
+    "becomeProvider": "Become a provider",
+    "backToSosExpat": "Back to sos-expat.com",
+    "subscriptionRequired": "Subscription required",
+    "subscriptionRequiredMessage": "An active subscription is required.",
+    "viewOffers": "View offers",
+    "needHelp": "Need help? Contact us at",
+    "close": "Close"
+  },
+  "subscription": {
+    "active": "Active",
+    "trial": "Trial",
+    "pastDue": "Payment overdue",
+    "canceled": "Canceled",
+    "expired": "Expired",
+    "unpaid": "Unpaid"
+  }
+}

@@ -1,0 +1,154 @@
+{
+  "navigation": {
+    "dashboard": "डैशबोर्ड",
+    "dossiers": "मेरे केस",
+    "messages": "संदेश",
+    "profile": "मेरी प्रोफ़ाइल",
+    "settings": "सेटिंग्स",
+    "signOut": "साइन आउट",
+    "signingOut": "साइन आउट हो रहा है...",
+    "prestataires": "प्रदाता",
+    "access": "पहुँच",
+    "team": "टीम",
+    "countries": "देश",
+    "audit": "ऑडिट",
+    "testAI": "AI टेस्ट",
+    "administration": "प्रशासन"
+  },
+  "actions": {
+    "save": "सहेजें",
+    "cancel": "रद्द करें",
+    "delete": "हटाएं",
+    "edit": "संपादित करें",
+    "create": "बनाएं",
+    "add": "जोड़ें",
+    "search": "खोजें",
+    "filter": "फ़िल्टर",
+    "filters": "फ़िल्टर्स",
+    "reset": "रीसेट करें",
+    "export": "निर्यात करें",
+    "refresh": "रीफ्रेश करें",
+    "loadMore": "और लोड करें",
+    "copy": "कॉपी करें",
+    "copied": "कॉपी हो गया",
+    "retry": "पुनः प्रयास करें",
+    "send": "भेजें",
+    "sending": "भेज रहा है...",
+    "close": "बंद करें",
+    "back": "वापस",
+    "backHome": "होम पर वापस जाएं",
+    "view": "देखें",
+    "viewAll": "सभी देखें",
+    "confirm": "पुष्टि करें",
+    "preview": "प्रीव्यू",
+    "expand": "विस्तार करें",
+    "collapse": "संक्षिप्त करें",
+    "start": "शुरू करें",
+    "stop": "रोकें",
+    "finish": "समाप्त करें",
+    "reopen": "फिर से खोलें"
+  },
+  "status": {
+    "pending": "लंबित",
+    "inProgress": "प्रगति में",
+    "completed": "पूर्ण",
+    "cancelled": "रद्द",
+    "active": "सक्रिय",
+    "inactive": "निष्क्रिय",
+    "expired": "समाप्त",
+    "verified": "सत्यापित",
+    "trial": "ट्रायल अवधि",
+    "paymentPending": "भुगतान लंबित"
+  },
+  "priority": {
+    "urgent": "अत्यावश्यक",
+    "high": "उच्च",
+    "medium": "मध्यम",
+    "low": "कम"
+  },
+  "time": {
+    "today": "आज",
+    "yesterday": "कल",
+    "minutesAgo": "{{count}} मिनट पहले",
+    "hoursAgo": "{{count}} घंटे पहले",
+    "daysAgo": "{{count}} दिन पहले",
+    "daysRemaining": "{{count}} दिन शेष",
+    "expiresToday": "आज समाप्त होगा",
+    "expiresTomorrow": "कल समाप्त होगा"
+  },
+  "errors": {
+    "generic": "एक त्रुटि हुई",
+    "loading": "लोडिंग त्रुटि",
+    "network": "नेटवर्क त्रुटि",
+    "unauthorized": "अनधिकृत पहुँच",
+    "notFound": "नहीं मिला",
+    "copyFailed": "कॉपी विफल",
+    "sendFailed": "भेजना विफल",
+    "loadingProfile": "प्रोफ़ाइल लोड करने में त्रुटि",
+    "savingProfile": "प्रोफ़ाइल सहेजने में त्रुटि"
+  },
+  "success": {
+    "saved": "सफलतापूर्वक सहेजा गया",
+    "deleted": "सफलतापूर्वक हटाया गया",
+    "copied": "क्लिपबोर्ड पर कॉपी हो गया",
+    "profileUpdated": "प्रोफ़ाइल सफलतापूर्वक अपडेट हो गई!"
+  },
+  "empty": {
+    "noData": "कोई डेटा नहीं",
+    "noResults": "कोई परिणाम नहीं",
+    "modifyFilters": "अपने फ़िल्टर बदलने का प्रयास करें"
+  },
+  "loading": {
+    "default": "लोड हो रहा है...",
+    "dashboard": "डैशबोर्ड लोड हो रहा है",
+    "dashboardMessage": "डैशबोर्ड लोड हो रहा है..."
+  },
+  "language": "भाषा",
+  "all": "सभी",
+  "type": "प्रकार",
+  "types": {
+    "lawyer": "वकील",
+    "expat": "प्रवासी",
+    "expert": "विशेषज्ञ"
+  },
+  "providerTypes": {
+    "lawyer": "वकील",
+    "expatExpert": "प्रवासी विशेषज्ञ"
+  },
+  "roles": {
+    "admin": "व्यवस्थापक",
+    "agent": "एजेंट",
+    "provider": "प्रदाता"
+  },
+  "offline": {
+    "message": "ऑफ़लाइन मोड - कुछ सुविधाएं सीमित हैं"
+  },
+  "connectedAs": "इस रूप में जुड़े",
+  "allRightsReserved": "सर्वाधिकार सुरक्षित।",
+  "guards": {
+    "loading": "लोड हो रहा है...",
+    "verifyingAccess": "आपकी पहुँच सत्यापित की जा रही है...",
+    "accountNotFound": "खाता नहीं मिला",
+    "accountNotFoundDescription": "आपका खाता हमारे सिस्टम में मौजूद नहीं है। आपको पहले sos-expat.com पर एक प्रदाता के रूप में पंजीकरण करना होगा।",
+    "registerOnSosExpat": "sos-expat.com पर पंजीकरण करें",
+    "contactSupport": "सहायता से संपर्क करें",
+    "accessReservedProviders": "केवल प्रदाताओं के लिए पहुँच",
+    "accessReservedDescription": "यह टूल SOS Expat के साथी वकीलों और प्रवासी विशेषज्ञों के लिए आरक्षित है।",
+    "currentRoleNotAllowed": "आपकी वर्तमान भूमिका ({{role}}) इस क्षेत्र तक पहुँचने की अनुमति नहीं देती।",
+    "becomeProvider": "प्रदाता बनें",
+    "backToSosExpat": "sos-expat.com पर वापस जाएं",
+    "subscriptionRequired": "सदस्यता आवश्यक",
+    "subscriptionRequiredMessage": "एक सक्रिय सदस्यता आवश्यक है।",
+    "viewOffers": "ऑफर देखें",
+    "needHelp": "मदद चाहिए? हमसे संपर्क करें",
+    "close": "बंद करें"
+  },
+  "subscription": {
+    "active": "सक्रिय",
+    "trial": "ट्रायल",
+    "pastDue": "भुगतान विलंबित",
+    "canceled": "रद्द",
+    "expired": "समाप्त",
+    "unpaid": "अवैतनिक"
+  }
+}

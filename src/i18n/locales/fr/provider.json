@@ -1,0 +1,240 @@
+{
+  "dashboard": {
+    "title": "Mon Tableau de Bord",
+    "welcome": "Bienvenue, {{name}}",
+    "selectProvider": "Sélectionnez un prestataire pour voir vos statistiques",
+    "activityOf": "Activité de {{name}}",
+    "noProvider": {
+      "title": "Aucun prestataire sélectionné",
+      "description": "Veuillez vous connecter ou sélectionner un compte prestataire"
+    },
+    "stats": {
+      "myDossiers": "Mes dossiers",
+      "activeDossiers": "Dossiers actifs",
+      "myActiveDossiers": "Mes dossiers actifs",
+      "pending": "En attente",
+      "inProgress": "En cours",
+      "completed": "Terminés",
+      "completedThisMonth": "Terminés ce mois",
+      "total": "total",
+      "typeLawyer": "Type Avocat",
+      "typeExpat": "Type Expatrié",
+      "myRevenue": "Mes revenus"
+    },
+    "quota": {
+      "title": "Quota IA",
+      "usages": "utilisations",
+      "remaining": "{{count}} utilisations restantes",
+      "almostReached": "Quota presque atteint ! Contactez le support pour augmenter."
+    },
+    "recentDossiers": "Mes Dossiers Récents",
+    "noDossiers": "Aucun dossier récent",
+    "recentBookings": "Dossiers récents",
+    "noRecentBookings": "Aucun dossier récent",
+    "quickActions": {
+      "title": "Actions Rapides",
+      "myDossiers": "Mes Dossiers",
+      "myProfile": "Mon Profil",
+      "messages": "Messages"
+    },
+    "charts": {
+      "distributionByType": "Répartition par type",
+      "dossiersByStatus": "Dossiers par statut"
+    },
+    "aiAssistant": {
+      "title": "Assistant IA Juridique",
+      "description": "L'IA génère automatiquement des réponses juridiques contextualisées pour chaque dossier. Les prestataires peuvent discuter avec l'IA en temps réel pendant leurs appels clients.",
+      "autoResponsesEnabled": "Réponses automatiques activées"
+    },
+    "subscription": {
+      "title": "Mon Abonnement",
+      "active": "Actif",
+      "trial": "Période d'essai",
+      "pending": "Paiement en attente",
+      "expired": "Expiré",
+      "expiresIn": "{{days}} jours restants",
+      "expiresToday": "Expire aujourd'hui",
+      "expiresTomorrow": "Expire demain",
+      "renewWarning": "Renouvelez votre abonnement pour continuer"
+    }
+  },
+  "multiDashboard": {
+    "title": "Tableau de Bord Multi-Prestataires",
+    "allProviders": "Tous les prestataires",
+    "selectProvider": "Sélectionner un prestataire",
+    "aggregatedView": "Vue agrégée de {{count}} prestataires",
+    "statsFor": "Statistiques de {{name}}",
+    "sharedQuota": "Quota Partagé",
+    "remaining": "{{count}} restants",
+    "quotaWarning": "Quota presque épuisé. Contactez l'administration.",
+    "linkedProviders": "Prestataires liés",
+    "activity7Days": "Activité sur 7 jours",
+    "distributionByType": "Répartition par type",
+    "dossiersByStatus": "Dossiers par statut",
+    "revenue": "Revenus"
+  },
+  "dossiers": {
+    "title": "Dossiers",
+    "count": "{{count}} dossier",
+    "count_other": "{{count}} dossiers",
+    "found": "trouvé(s)",
+    "search": "Rechercher par titre, client, pays...",
+    "filters": {
+      "status": "Statut",
+      "type": "Type",
+      "all": "Tous",
+      "lawyer": "Avocat",
+      "expat": "Expert"
+    },
+    "empty": {
+      "title": "Aucun dossier trouvé",
+      "modifyFilters": "Essayez de modifier vos filtres",
+      "newRequestsHere": "Les nouvelles demandes apparaîtront ici"
+    },
+    "loadMore": "Charger plus de dossiers",
+    "allLoaded": "Tous les dossiers ont été chargés ({{count}} au total)",
+    "noDescription": "Pas de description",
+    "noTitle": "Sans titre"
+  },
+  "dossierDetail": {
+    "accessDenied": "Accès refusé - Ce dossier ne vous appartient pas",
+    "notFound": "Dossier non trouvé",
+    "consultationDuration": "Durée de consultation",
+    "consultationTimeElapsed": "Temps de consultation écoulé",
+    "autoLockWarning": "La conversation se verrouillera automatiquement",
+    "startAfterFirstResponse": "La consultation démarrera après la première réponse IA",
+    "conversationClosed": "Conversation terminée",
+    "historyAvailable": "L'historique reste consultable ci-dessus"
+  },
+  "aiChat": {
+    "title": "Assistant Juridique IA",
+    "subtitle": "Posez les questions du client ici",
+    "timeElapsed": "Temps écoulé",
+    "expertTitle": "Assistant Juridique Expert",
+    "expertDescription": "Tapez les questions de votre client pour recevoir des réponses juridiques détaillées et sourcées.",
+    "tags": {
+      "internationalLaw": "Droit international",
+      "expatTax": "Fiscalité expatriés",
+      "immigration": "Immigration"
+    },
+    "legalAssistant": "Assistant Juridique",
+    "yourQuestion": "Votre question",
+    "copyResponse": "Copier la réponse",
+    "analyzing": "Analyse juridique en cours...",
+    "inputPlaceholder": "Tapez la question du client...",
+    "keyboardHint": "Entrée pour envoyer • Shift+Entrée pour retour à la ligne",
+    "generatingFirstResponse": "L'IA analyse votre dossier...",
+    "pleaseWait": "La première réponse arrive dans quelques secondes"
+  },
+  "clientInfo": {
+    "waitingAI": "En attente IA",
+    "archived": "Archivé",
+    "activeConsultation": "Consultation active",
+    "duration": "Durée : {{minutes}} minutes",
+    "timeRemaining": "Temps restant ({{minutes}} min total)",
+    "historyAvailable": "L'historique de la conversation reste consultable",
+    "client": "Client",
+    "name": "Nom",
+    "nationality": "Nationalité",
+    "interventionCountry": "Pays d'intervention",
+    "languages": "Langues",
+    "request": "Demande",
+    "title": "Titre",
+    "description": "Description",
+    "service": "Service",
+    "createdOn": "Créé le",
+    "provider": "Prestataire"
+  },
+  "page": {
+    "loadingDossier": "Chargement du dossier...",
+    "backToDossiers": "Retour aux dossiers",
+    "aiActive": "IA active",
+    "consultationExpiredMessage": "Temps de consultation écoulé ({{minutes}} min) — L'historique reste consultable",
+    "initializingChat": "Initialisation du chat IA..."
+  },
+  "bookingCard": {
+    "lawyer": "Avocat",
+    "expat": "Expatrié",
+    "aiProcessed": "IA",
+    "client": "Client"
+  },
+  "statusActions": {
+    "startCall": "Démarrer l'appel",
+    "finish": "Terminer",
+    "cancel": "Annuler",
+    "reopenConversation": "Réouvrir la conversation"
+  },
+  "quotaExhausted": {
+    "title": "Quota d'utilisation épuisé",
+    "description": "Vous avez atteint la limite de requêtes IA pour cette période. Mettez à niveau votre abonnement pour continuer à utiliser l'assistant.",
+    "quotaUsage": "Utilisation du quota",
+    "requestsUsed": "requêtes utilisées",
+    "outOf": "sur",
+    "nextRenewal": "Prochain renouvellement",
+    "increaseQuota": "Augmenter mon quota",
+    "contactSupport": "Contacter le support",
+    "signOut": "Se déconnecter",
+    "connectedAs": "Connecté en tant que"
+  },
+  "messages": {
+    "title": "Messages",
+    "aiResponses": "réponses IA",
+    "questions": "questions",
+    "lastAiResponse": "Dernière réponse IA",
+    "selectProvider": "Sélectionnez un prestataire pour voir vos conversations",
+    "modifySearch": "Essayez de modifier votre recherche",
+    "allConversations": "Toutes les Conversations",
+    "myConversations": "Mes Conversations",
+    "allConversationsHistory": "Historique de toutes les conversations et réponses IA",
+    "conversationsOf": "Conversations de {{name}}",
+    "conversations": "Conversations",
+    "activeLastHour": "Actives (1h)",
+    "searchPlaceholder": "Rechercher par client, ID dossier...",
+    "noConversationFound": "Aucune conversation trouvée",
+    "conversationsWillAppear": "Les conversations avec l'IA apparaîtront ici",
+    "conversation": "Conversation"
+  },
+  "profile": {
+    "title": "Mon Profil",
+    "description": "Gérez les informations de votre compte prestataire",
+    "loading": "Chargement du profil...",
+    "noProviderSelected": "Aucun prestataire sélectionné",
+    "selectProviderToView": "Sélectionnez un prestataire pour voir son profil",
+    "lawyer": "Avocat",
+    "expatExpert": "Expert expatrié",
+    "contactInfo": "Informations de contact",
+    "email": "Email",
+    "emailNotEditable": "L'email ne peut pas être modifié",
+    "phone": "Téléphone",
+    "website": "Site web",
+    "location": "Localisation",
+    "country": "Pays",
+    "contactAdminToModify": "Contactez l'admin pour modifier",
+    "city": "Ville",
+    "address": "Adresse",
+    "specialties": "Spécialités",
+    "addSpecialty": "Ajouter une spécialité...",
+    "noSpecialtyAdded": "Aucune spécialité ajoutée",
+    "noSpecialtySet": "Aucune spécialité renseignée",
+    "spokenLanguages": "Langues parlées",
+    "addLanguage": "Ajouter une langue...",
+    "noLanguageAdded": "Aucune langue ajoutée",
+    "noLanguageSet": "Aucune langue renseignée",
+    "descriptionSection": "Description",
+    "descriptionPlaceholder": "Décrivez votre activité, vos domaines d'expertise...",
+    "noDescriptionSet": "Aucune description renseignée",
+    "systemInfo": "Informations système",
+    "providerId": "ID Prestataire",
+    "accountType": "Type de compte",
+    "providerName": "Nom du prestataire",
+    "statusLabel": "Statut"
+  },
+  "providerSwitcher": {
+    "noProvider": "Aucun prestataire lié",
+    "select": "Sélectionner...",
+    "switchProvider": "Changer de prestataire",
+    "manageProviders": "Gérer mes prestataires",
+    "lawyer": "Avocat",
+    "expatExpert": "Expert expatrié"
+  }
+}

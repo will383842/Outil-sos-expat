@@ -1,0 +1,92 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ==========================================================================
+    // RÈGLES DE SÉCURITÉ STORAGE - Production Ready
+    // ==========================================================================
+
+    // Fonctions helper
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return request.auth.token.role == 'admin' || request.auth.token.role == 'superadmin';
+    }
+
+    // Validation de taille (10MB max)
+    function isValidSize() {
+      return request.resource.size < 10 * 1024 * 1024;
+    }
+
+    // Validation type image
+    function isValidImage() {
+      return request.resource.contentType.matches('image/(jpeg|jpg|png|gif|webp)');
+    }
+
+    // Validation type document
+    function isValidDocument() {
+      return request.resource.contentType.matches('application/pdf') ||
+             request.resource.contentType.matches('application/msword') ||
+             request.resource.contentType.matches('application/vnd.openxmlformats-officedocument.*') ||
+             request.resource.contentType.matches('text/plain');
+    }
+
+    // ==========================================================================
+    // UPLOADS UTILISATEURS - Seulement leurs propres fichiers
+    // ==========================================================================
+    match /uploads/{userId}/{fileName} {
+      // Lecture: propriétaire uniquement
+      allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
+      // Écriture: propriétaire avec validation taille/type
+      allow write: if isOwner(userId) && isValidSize() &&
+                      (isValidImage() || isValidDocument());
+    }
+
+    // ==========================================================================
+    // DOCUMENTS BOOKINGS - Accès basé sur le booking
+    // ==========================================================================
+    match /bookings/{bookingId}/{fileName} {
+      // Lecture: utilisateur authentifié (vérifié côté Firestore)
+      allow read: if isSignedIn();
+      // Écriture: utilisateur authentifié avec validation
+      allow write: if isSignedIn() && isValidSize() &&
+                      (isValidImage() || isValidDocument());
+    }
+
+    // ==========================================================================
+    // AVATARS - Public en lecture, propriétaire en écriture
+    // ==========================================================================
+    match /avatars/{userId}/{fileName} {
+      // Lecture: public (pour affichage profil)
+      allow read: if true;
+      // Écriture: propriétaire uniquement, images seulement, 5MB max
+      allow write: if isOwner(userId) &&
+                      request.resource.size < 5 * 1024 * 1024 &&
+                      isValidImage();
+    }
+
+    // ==========================================================================
+    // DOCUMENTS PRESTATAIRES - Accès restreint
+    // ==========================================================================
+    match /providers/{providerId}/{fileName} {
+      // Lecture: utilisateur authentifié
+      allow read: if isSignedIn();
+      // Écriture: admin uniquement
+      allow write: if isAdmin() && isValidSize() &&
+                      (isValidImage() || isValidDocument());
+    }
+
+    // ==========================================================================
+    // RÈGLE PAR DÉFAUT - REFUSER TOUT LE RESTE
+    // ==========================================================================
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

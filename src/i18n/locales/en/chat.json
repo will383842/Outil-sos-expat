@@ -1,0 +1,27 @@
+{
+  "title": "Expert Legal Assistant",
+  "description": "Type your client's questions to receive detailed and sourced legal responses.",
+  "placeholder": "Chat with GPT to refine the response...",
+  "placeholderClient": "Type the client's question...",
+  "typing": "GPT is thinking...",
+  "generating": "AI assistant is generating a response",
+  "analyzing": "Legal analysis in progress...",
+  "sendMessage": "Send message",
+  "sendMessageShort": "Send",
+  "sending": "Sending...",
+  "copyMessage": "Copy message",
+  "copyResponse": "Copy response",
+  "messageCopied": "Message copied",
+  "regenerate": "Regenerate response",
+  "chatHistory": "Conversation history with AI assistant",
+  "assistantLabel": "Legal Assistant",
+  "yourQuestion": "Your question",
+  "instructions": {
+    "desktop": "Press Enter to send, Shift+Enter for new line"
+  },
+  "tags": {
+    "internationalLaw": "International Law",
+    "expatTax": "Expat Taxation",
+    "immigration": "Immigration"
+  }
+}

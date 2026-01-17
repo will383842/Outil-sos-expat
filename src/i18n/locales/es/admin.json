@@ -1,0 +1,345 @@
+{
+  "header": {
+    "title": "SOS Expats — Admin",
+    "providerTitle": "SOS Expats — Espacio Pro",
+    "previewMode": "Vista de Proveedor",
+    "exitPreview": "Volver a la Vista de Admin"
+  },
+  "dashboard": {
+    "title": "Dashboard Admin",
+    "subtitle": "Resumen de actividad de la plataforma",
+    "description": "Resumen de actividad de la plataforma y monitoreo de servicios",
+    "stats": {
+      "totalDossiers": "Total de Casos",
+      "dossiersInProgress": "Casos en Progreso",
+      "activeProviders": "Proveedores Activos",
+      "aiRequests": "Solicitudes IA (mes)",
+      "activeDossiers": "Casos Activos",
+      "lawyerDossiers": "Casos de Abogados",
+      "expatDossiers": "Casos de Expats",
+      "aiProcessed": "Procesados por IA",
+      "totalRevenue": "Ingresos Totales"
+    },
+    "activity": {
+      "title": "Actividad de 7 días",
+      "days": {
+        "sun": "Dom",
+        "mon": "Lun",
+        "tue": "Mar",
+        "wed": "Mié",
+        "thu": "Jue",
+        "fri": "Vie",
+        "sat": "Sáb"
+      }
+    },
+    "iaStatus": {
+      "title": "Estado de IA",
+      "operational": "Operacional",
+      "warning": "Advertencia de cuota",
+      "critical": "Cuota crítica",
+      "usage": "Uso este mes",
+      "percent": "{{percent}}% de la cuota mensual utilizada"
+    },
+    "providers": {
+      "title": "Proveedores",
+      "none": "Sin proveedores activos",
+      "totalRegistered": "Total registrados",
+      "withAccess": "Con acceso a herramienta",
+      "withoutAccess": "Sin acceso",
+      "accessEnabled": "Acceso habilitado"
+    },
+    "recentDossiers": {
+      "title": "Casos Recientes",
+      "none": "Sin casos recientes"
+    },
+    "sync": {
+      "title": "Sync Laravel",
+      "connected": "Conectado",
+      "disconnected": "Desconectado",
+      "error": "Error",
+      "lastSync": "Última sincronización",
+      "pending": "Elementos pendientes",
+      "syncNow": "Sincronizar ahora"
+    }
+  },
+  "accessDenied": {
+    "title": "Acceso Denegado",
+    "description": "Esta página está reservada para administradores.",
+    "noRights": "No tienes los permisos necesarios para acceder a esta sección.",
+    "connectedAs": "Conectado como",
+    "role": "Rol"
+  },
+  "prestataires": {
+    "title": "Proveedores",
+    "description": "Gestiona el acceso a herramientas para abogados y expertos expatriados",
+    "stats": {
+      "total": "Total",
+      "lawyers": "Abogados",
+      "expats": "Expats",
+      "withAccess": "Con Acceso"
+    },
+    "search": "Buscar por nombre, correo, país...",
+    "filters": {
+      "type": "Tipo",
+      "access": "Acceso a Herramienta",
+      "all": "Todos",
+      "withAccess": "Con Acceso",
+      "withoutAccess": "Sin Acceso"
+    },
+    "addManually": "Agregar Manualmente",
+    "addProvider": "Agregar Proveedor",
+    "form": {
+      "email": "Correo de Google",
+      "fullName": "Nombre Completo",
+      "type": "Tipo",
+      "country": "País"
+    },
+    "table": {
+      "name": "Nombre",
+      "email": "Correo",
+      "type": "Tipo",
+      "country": "País",
+      "access": "Acceso"
+    },
+    "actions": {
+      "grantAccess": "Otorgar Acceso",
+      "revokeAccess": "Revocar Acceso",
+      "activeAccess": "Acceso Activo"
+    },
+    "empty": {
+      "title": "No se encontraron proveedores",
+      "description": "Intenta modificar tus filtros"
+    },
+    "loadMore": "Cargar más proveedores",
+    "emailMissing": "Correo faltante"
+  },
+  "mesPrestataires": {
+    "title": "Mis Proveedores",
+    "description": "Gestiona las cuentas de proveedores vinculadas a tu perfil",
+    "linkedProviders": "Proveedores Vinculados",
+    "noProviders": {
+      "title": "Sin proveedores vinculados",
+      "description": "Agrega proveedores para comenzar a procesar casos"
+    },
+    "addProvider": "Agregar Proveedor",
+    "switchProvider": "Cambiar Proveedor",
+    "remove": "Eliminar",
+    "setAsActive": "Establecer como activo",
+    "searchProvider": "Buscar un proveedor...",
+    "noProviderFound": "No se encontró proveedor",
+    "allProvidersLinked": "Todos los proveedores ya están vinculados",
+    "confirmRemove": "¿Estás seguro de que quieres eliminar este proveedor de tu cuenta?",
+    "success": {
+      "added": "¡Proveedor agregado exitosamente!",
+      "removed": "¡Proveedor eliminado exitosamente!",
+      "defaultUpdated": "¡Proveedor predeterminado actualizado!"
+    },
+    "errors": {
+      "addFailed": "Error al agregar proveedor",
+      "removeFailed": "Error al eliminar proveedor"
+    }
+  },
+  "gestionAcces": {
+    "title": "Gestión de Accesos",
+    "description": "Vincula proveedores a usuarios para que reciban sus casos",
+    "addUser": "Agregar un usuario",
+    "howItWorks": {
+      "title": "¿Cómo funciona?",
+      "line1": "Cada usuario inicia sesión con su correo de Google",
+      "line2": "Les asignas uno o más proveedores a continuación",
+      "line3": "Cuando un cliente reserva este proveedor, el usuario ve el caso en su dashboard"
+    },
+    "stats": {
+      "users": "Usuarios",
+      "activeProviders": "Proveedores activos",
+      "links": "Vínculos"
+    },
+    "search": "Buscar usuario por correo o nombre...",
+    "providerCount": "{{count}} proveedor(es)",
+    "selectProviders": "Selecciona proveedores para este usuario:",
+    "deleteUser": "Eliminar usuario",
+    "deleteConfirm": "¿Eliminar este usuario y todos sus accesos?",
+    "noUsers": {
+      "title": "No se encontraron usuarios",
+      "description": "Agrega un usuario para darle acceso a proveedores"
+    },
+    "toast": {
+      "providersSaved": "Proveedores guardados exitosamente",
+      "saveError": "Error al guardar",
+      "userDeleted": "Usuario eliminado",
+      "deleteError": "Error al eliminar",
+      "loadError": "Error al cargar usuarios",
+      "addError": "Error al agregar"
+    },
+    "modal": {
+      "title": "Agregar un usuario",
+      "firebaseId": "ID de usuario Firebase",
+      "firebaseIdRequired": "Se requiere ID de usuario Firebase",
+      "firebaseIdPlaceholder": "5lTY3iPh16Z7gHlrzr7XzrY4pGE2",
+      "firebaseIdHint": "Encuentra este ID en Firebase Console → Authentication → Users",
+      "email": "Correo",
+      "emailPlaceholder": "usuario@gmail.com",
+      "displayName": "Nombre para mostrar",
+      "displayNamePlaceholder": "Juan Pérez",
+      "providersToLink": "Proveedores a vincular",
+      "noProviderAvailable": "No hay proveedor disponible"
+    }
+  },
+  "utilisateurs": {
+    "title": "Usuarios",
+    "description": "Gestión del equipo de administración",
+    "roles": {
+      "admin": "Administrador",
+      "agent": "Agente",
+      "provider": "Proveedor"
+    },
+    "roleDescriptions": {
+      "admin": "Acceso completo a todas las funciones",
+      "agent": "Gestión de casos y mensajes",
+      "provider": "Acceso solo a casos asignados"
+    },
+    "stats": {
+      "total": "Total",
+      "admins": "Admins",
+      "agents": "Agentes"
+    },
+    "noName": "Sin nombre",
+    "availableRoles": "Roles disponibles",
+    "search": "Buscar por nombre o correo...",
+    "setAdmin": "Establecer Admin",
+    "setAgent": "Establecer Agente",
+    "confirmDelete": "¿Eliminar este usuario?",
+    "createdOn": "Creado el {{date}}",
+    "empty": {
+      "title": "No se encontraron usuarios",
+      "modifySearch": "Intenta modificar tu búsqueda",
+      "usersWillAppear": "Los usuarios conectados aparecerán aquí"
+    },
+    "note": "Nota: Los usuarios se crean automáticamente en su primer inicio de sesión. Usa la función setRole para asignar roles.",
+    "loadMore": "Cargar más usuarios",
+    "allLoaded": "Todos los usuarios han sido cargados ({{count}} en total)",
+    "important": "Importante",
+    "importantNote": "Para crear un nuevo administrador, el usuario debe primero iniciar sesión en la aplicación. Luego, puedes cambiar su rol aquí. Alternativamente, usa la Cloud Function <code>setRole</code> con la clave API de admin."
+  },
+  "pays": {
+    "title": "Países",
+    "description": "Lista de países configurados",
+    "columns": {
+      "code": "Código",
+      "name": "Nombre",
+      "active": "Activo"
+    }
+  },
+  "auditLogs": {
+    "title": "Registros de Auditoría",
+    "description": "Historial de acciones de la plataforma",
+    "stats": {
+      "total": "Total",
+      "today": "Hoy"
+    },
+    "filters": {
+      "severity": "Severidad",
+      "actionType": "Tipo de acción"
+    },
+    "counter": "Mostrando {{shown}} de {{total}} entradas",
+    "actions": {
+      "login": "Inicio de sesión",
+      "logout": "Cierre de sesión",
+      "roleChange": "Cambio de rol",
+      "providerCreate": "Proveedor creado",
+      "providerUpdate": "Proveedor actualizado",
+      "providerDelete": "Proveedor eliminado",
+      "accessGranted": "Acceso otorgado",
+      "accessRevoked": "Acceso revocado",
+      "dossierCreate": "Caso creado",
+      "dossierUpdate": "Caso actualizado",
+      "dossierStatusChange": "Estado cambiado",
+      "dossierDelete": "Caso eliminado",
+      "aiResponseGenerated": "Respuesta IA generada",
+      "aiSettingsChanged": "Configuración IA cambiada",
+      "settingsChanged": "Configuración cambiada",
+      "dataExport": "Exportación de datos",
+      "adminAction": "Acción de admin"
+    },
+    "severity": {
+      "info": "Info",
+      "warning": "Advertencia",
+      "critical": "Crítico"
+    }
+  },
+  "parametres": {
+    "title": "Configuración General",
+    "description": "Roles, temas, integraciones, registros..."
+  },
+  "testIA": {
+    "title": "Test IA - Modo Admin",
+    "description": "Prueba las respuestas del asistente IA",
+    "infoBanner": {
+      "title": "Modo de Prueba Admin",
+      "description": "Esta página te permite probar la IA simulando diferentes contextos. Las llamadas se realizan a través de la Cloud Function",
+      "cloudFunction": "aiChat",
+      "metadataInfo": "Las respuestas incluyen metadatos de depuración (modelo, proveedor, citas, tiempo de respuesta)."
+    },
+    "context": {
+      "button": "Contexto",
+      "title": "Contexto simulado",
+      "providerType": {
+        "title": "Tipo de proveedor",
+        "lawyer": "Abogado",
+        "expert": "Experto",
+        "lawyerDescription": "Claude 3.5 Sonnet - Razonamiento legal",
+        "expertDescription": "GPT-4o - Consejos prácticos"
+      },
+      "fields": {
+        "country": "País",
+        "countryPlaceholder": "ej.: Tailandia",
+        "nationality": "Nacionalidad",
+        "nationalityPlaceholder": "ej.: Española",
+        "clientName": "Nombre del cliente",
+        "clientNamePlaceholder": "ej.: Juan Test",
+        "urgency": "Urgencia"
+      },
+      "urgencyLevels": {
+        "low": "Baja",
+        "medium": "Media",
+        "high": "Alta",
+        "critical": "Crítica"
+      }
+    },
+    "quickTests": {
+      "title": "Pruebas rápidas",
+      "visa": "Visa por vencer",
+      "urgence": "Emergencia robo/pérdida",
+      "juridique": "Problema con empleador",
+      "pratique": "Vivienda Bangkok"
+    },
+    "chat": {
+      "emptyState": "Envía un mensaje para comenzar la prueba",
+      "placeholder": "Escribe tu mensaje de prueba...",
+      "ariaLabelMessages": "Mensajes de la conversación",
+      "ariaLabelInput": "Mensaje a enviar",
+      "ariaLabelSend": "Enviar mensaje",
+      "ariaLabelThinking": "La IA está pensando",
+      "thinking": "La IA está pensando...",
+      "noResponse": "Sin respuesta",
+      "lastResponse": "Última respuesta en {{time}}ms"
+    },
+    "debug": {
+      "button": "Debug",
+      "model": "Modelo",
+      "provider": "Proveedor",
+      "time": "Tiempo",
+      "perplexitySearch": "Búsqueda Perplexity",
+      "fallback": "Fallback",
+      "sources": "Fuentes"
+    },
+    "errors": {
+      "title": "Error",
+      "unknown": "Error desconocido",
+      "prefix": "Error:",
+      "closeLabel": "Cerrar error"
+    }
+  },
+  "verifyingRights": "Verificando permisos...",
+  "loadingPage": "Cargando página"
+}

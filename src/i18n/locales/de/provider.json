@@ -1,0 +1,220 @@
+{
+  "dashboard": {
+    "title": "Mein Dashboard",
+    "welcome": "Willkommen, {{name}}",
+    "noProvider": {
+      "title": "Kein Anbieter ausgewählt",
+      "description": "Bitte melden Sie sich an oder wählen Sie ein Anbieterkonto"
+    },
+    "stats": {
+      "myDossiers": "Meine Fälle",
+      "activeDossiers": "Aktive Fälle",
+      "myActiveDossiers": "Meine aktiven Fälle",
+      "pending": "Ausstehend",
+      "inProgress": "In Bearbeitung",
+      "completed": "Abgeschlossen",
+      "completedThisMonth": "Diesen Monat abgeschlossen",
+      "total": "gesamt"
+    },
+    "quota": {
+      "title": "KI-Kontingent",
+      "usages": "Nutzungen",
+      "remaining": "{{count}} Nutzungen verbleibend",
+      "almostReached": "Kontingent fast erreicht! Kontaktieren Sie den Support."
+    },
+    "recentDossiers": "Meine letzten Fälle",
+    "noDossiers": "Keine aktuellen Fälle",
+    "quickActions": {
+      "title": "Schnellaktionen",
+      "myDossiers": "Meine Fälle",
+      "myProfile": "Mein Profil",
+      "messages": "Nachrichten"
+    },
+    "subscription": {
+      "title": "Mein Abonnement",
+      "active": "Aktiv",
+      "trial": "Testphase",
+      "pending": "Zahlung ausstehend",
+      "expired": "Abgelaufen",
+      "expiresIn": "{{days}} Tage verbleibend",
+      "expiresToday": "Läuft heute ab",
+      "expiresTomorrow": "Läuft morgen ab",
+      "renewWarning": "Verlängern Sie Ihr Abonnement, um fortzufahren"
+    }
+  },
+  "multiDashboard": {
+    "title": "Multi-Anbieter-Dashboard",
+    "allProviders": "Alle Anbieter",
+    "selectProvider": "Anbieter auswählen",
+    "aggregatedView": "Aggregierte Ansicht von {{count}} Anbietern",
+    "statsFor": "Statistiken für {{name}}",
+    "sharedQuota": "Gemeinsames Kontingent",
+    "remaining": "{{count}} verbleibend",
+    "quotaWarning": "Kontingent fast erschöpft. Kontaktieren Sie die Administration.",
+    "linkedProviders": "Verknüpfte Anbieter",
+    "activity7Days": "Aktivität der letzten 7 Tage",
+    "distributionByType": "Verteilung nach Typ",
+    "dossiersByStatus": "Fälle nach Status"
+  },
+  "dossiers": {
+    "title": "Fälle",
+    "count": "{{count}} Fall",
+    "count_other": "{{count}} Fälle",
+    "found": "gefunden",
+    "search": "Nach Titel, Kunde, Land suchen...",
+    "filters": {
+      "status": "Status",
+      "type": "Typ",
+      "all": "Alle",
+      "lawyer": "Anwalt",
+      "expat": "Experte"
+    },
+    "empty": {
+      "title": "Keine Fälle gefunden",
+      "modifyFilters": "Versuchen Sie, Ihre Filter zu ändern",
+      "newRequestsHere": "Neue Anfragen erscheinen hier"
+    },
+    "loadMore": "Mehr Fälle laden",
+    "allLoaded": "Alle Fälle geladen ({{count}} insgesamt)",
+    "noDescription": "Keine Beschreibung",
+    "noTitle": "Ohne Titel"
+  },
+  "dossierDetail": {
+    "accessDenied": "Zugriff verweigert - Dieser Fall gehört nicht Ihnen",
+    "notFound": "Fall nicht gefunden",
+    "consultationDuration": "Beratungsdauer",
+    "consultationTimeElapsed": "Beratungszeit abgelaufen",
+    "autoLockWarning": "Die Konversation wird automatisch gesperrt",
+    "startAfterFirstResponse": "Die Beratung beginnt nach der ersten KI-Antwort",
+    "conversationClosed": "Konversation beendet",
+    "historyAvailable": "Der Verlauf bleibt oben verfügbar"
+  },
+  "aiChat": {
+    "title": "KI-Rechtsassistent",
+    "subtitle": "Stellen Sie hier die Fragen des Kunden",
+    "timeElapsed": "Verstrichene Zeit",
+    "expertTitle": "Experten-Rechtsassistent",
+    "expertDescription": "Geben Sie die Fragen Ihres Kunden ein, um detaillierte und quellenbasierte Rechtsantworten zu erhalten.",
+    "tags": {
+      "internationalLaw": "Internationales Recht",
+      "expatTax": "Expat-Steuerrecht",
+      "immigration": "Einwanderung"
+    },
+    "legalAssistant": "Rechtsassistent",
+    "yourQuestion": "Ihre Frage",
+    "copyResponse": "Antwort kopieren",
+    "analyzing": "Rechtliche Analyse läuft...",
+    "inputPlaceholder": "Geben Sie die Frage des Kunden ein...",
+    "keyboardHint": "Enter zum Senden - Shift+Enter für Zeilenumbruch",
+    "generatingFirstResponse": "KI analysiert Ihren Fall...",
+    "pleaseWait": "Die erste Antwort kommt in wenigen Sekunden"
+  },
+  "clientInfo": {
+    "waitingAI": "Warten auf KI",
+    "archived": "Archiviert",
+    "activeConsultation": "Aktive Beratung",
+    "duration": "Dauer: {{minutes}} Minuten",
+    "timeRemaining": "Verbleibende Zeit ({{minutes}} Min. gesamt)",
+    "historyAvailable": "Der Gesprächsverlauf bleibt einsehbar",
+    "client": "Kunde",
+    "name": "Name",
+    "nationality": "Nationalität",
+    "interventionCountry": "Einsatzland",
+    "languages": "Sprachen",
+    "request": "Anfrage",
+    "title": "Titel",
+    "description": "Beschreibung",
+    "service": "Service",
+    "createdOn": "Erstellt am",
+    "provider": "Anbieter"
+  },
+  "page": {
+    "loadingDossier": "Fall wird geladen...",
+    "backToDossiers": "Zurück zu den Fällen",
+    "aiActive": "KI aktiv",
+    "consultationExpiredMessage": "Beratungszeit abgelaufen ({{minutes}} Min.) — Der Verlauf bleibt einsehbar",
+    "initializingChat": "KI-Chat wird initialisiert..."
+  },
+  "bookingCard": {
+    "lawyer": "Anwalt",
+    "expat": "Expat",
+    "aiProcessed": "KI",
+    "client": "Kunde"
+  },
+  "statusActions": {
+    "startCall": "Anruf starten",
+    "finish": "Beenden",
+    "cancel": "Abbrechen",
+    "reopenConversation": "Konversation wieder öffnen"
+  },
+  "quotaExhausted": {
+    "title": "Nutzungskontingent erschöpft",
+    "description": "Sie haben das KI-Anfragelimit für diesen Zeitraum erreicht. Upgraden Sie Ihr Abonnement, um den Assistenten weiter zu nutzen.",
+    "quotaUsage": "Kontingentnutzung",
+    "requestsUsed": "{{used}} von {{total}} Anfragen genutzt",
+    "nextRenewal": "Nächste Verlängerung",
+    "increaseQuota": "Kontingent erhöhen",
+    "contactSupport": "Support kontaktieren"
+  },
+  "messages": {
+    "title": "Nachrichten",
+    "aiResponses": "KI-Antworten",
+    "questions": "Fragen",
+    "lastAiResponse": "Letzte KI-Antwort",
+    "selectProvider": "Wählen Sie einen Anbieter, um Ihre Konversationen anzuzeigen",
+    "modifySearch": "Versuchen Sie, Ihre Suche zu ändern",
+    "allConversations": "Alle Konversationen",
+    "myConversations": "Meine Konversationen",
+    "allConversationsHistory": "Verlauf aller Konversationen und KI-Antworten",
+    "conversationsOf": "Konversationen von {{name}}",
+    "conversations": "Konversationen",
+    "activeLastHour": "Aktiv (1 Std.)",
+    "searchPlaceholder": "Nach Kunde, Fall-ID suchen...",
+    "noConversationFound": "Keine Konversation gefunden",
+    "conversationsWillAppear": "KI-Konversationen werden hier angezeigt",
+    "conversation": "Konversation"
+  },
+  "profile": {
+    "title": "Mein Profil",
+    "description": "Verwalten Sie die Informationen Ihres Anbieterkontos",
+    "loading": "Profil wird geladen...",
+    "noProviderSelected": "Kein Anbieter ausgewählt",
+    "selectProviderToView": "Wählen Sie einen Anbieter, um sein Profil anzuzeigen",
+    "lawyer": "Anwalt",
+    "expatExpert": "Expat-Experte",
+    "contactInfo": "Kontaktinformationen",
+    "email": "E-Mail",
+    "emailNotEditable": "E-Mail kann nicht geändert werden",
+    "phone": "Telefon",
+    "website": "Webseite",
+    "location": "Standort",
+    "country": "Land",
+    "contactAdminToModify": "Kontaktieren Sie den Admin zur Änderung",
+    "city": "Stadt",
+    "address": "Adresse",
+    "specialties": "Fachgebiete",
+    "addSpecialty": "Fachgebiet hinzufügen...",
+    "noSpecialtyAdded": "Kein Fachgebiet hinzugefügt",
+    "noSpecialtySet": "Kein Fachgebiet angegeben",
+    "spokenLanguages": "Gesprochene Sprachen",
+    "addLanguage": "Sprache hinzufügen...",
+    "noLanguageAdded": "Keine Sprache hinzugefügt",
+    "noLanguageSet": "Keine Sprache angegeben",
+    "descriptionSection": "Beschreibung",
+    "descriptionPlaceholder": "Beschreiben Sie Ihre Tätigkeit, Ihre Fachgebiete...",
+    "noDescriptionSet": "Keine Beschreibung angegeben",
+    "systemInfo": "Systeminformationen",
+    "providerId": "Anbieter-ID",
+    "accountType": "Kontotyp",
+    "providerName": "Anbietername",
+    "statusLabel": "Status"
+  },
+  "providerSwitcher": {
+    "noProvider": "Kein verknüpfter Anbieter",
+    "select": "Auswählen...",
+    "switchProvider": "Anbieter wechseln",
+    "manageProviders": "Meine Anbieter verwalten",
+    "lawyer": "Anwalt",
+    "expatExpert": "Expat-Experte"
+  }
+}

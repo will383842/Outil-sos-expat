@@ -1,0 +1,27 @@
+{
+  "title": "विशेषज्ञ कानूनी सहायक",
+  "description": "विस्तृत और स्रोत-आधारित कानूनी उत्तर प्राप्त करने के लिए अपने ग्राहक के प्रश्न लिखें।",
+  "placeholder": "उत्तर को परिष्कृत करने के लिए GPT से बात करें...",
+  "placeholderClient": "ग्राहक का प्रश्न लिखें...",
+  "typing": "GPT सोच रहा है...",
+  "generating": "AI सहायक उत्तर तैयार कर रहा है",
+  "analyzing": "कानूनी विश्लेषण जारी...",
+  "sendMessage": "संदेश भेजें",
+  "sendMessageShort": "भेजें",
+  "sending": "भेज रहा है...",
+  "copyMessage": "संदेश कॉपी करें",
+  "copyResponse": "उत्तर कॉपी करें",
+  "messageCopied": "संदेश कॉपी हो गया",
+  "regenerate": "उत्तर फिर से बनाएं",
+  "chatHistory": "AI सहायक के साथ बातचीत का इतिहास",
+  "assistantLabel": "कानूनी सहायक",
+  "yourQuestion": "आपका प्रश्न",
+  "instructions": {
+    "desktop": "भेजने के लिए Enter दबाएं, नई पंक्ति के लिए Shift+Enter"
+  },
+  "tags": {
+    "internationalLaw": "अंतर्राष्ट्रीय कानून",
+    "expatTax": "प्रवासी कराधान",
+    "immigration": "आप्रवासन"
+  }
+}

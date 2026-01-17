@@ -1,0 +1,345 @@
+{
+  "header": {
+    "title": "SOS Expats — Admin",
+    "providerTitle": "SOS Expats — Pro-Bereich",
+    "previewMode": "Anbieteransicht",
+    "exitPreview": "Zurück zur Admin-Ansicht"
+  },
+  "dashboard": {
+    "title": "Admin Dashboard",
+    "subtitle": "Übersicht der Plattformaktivität",
+    "description": "Übersicht der Plattformaktivität und Service-Monitoring",
+    "stats": {
+      "totalDossiers": "Gesamte Fälle",
+      "dossiersInProgress": "Fälle in Bearbeitung",
+      "activeProviders": "Aktive Anbieter",
+      "aiRequests": "KI-Anfragen (Monat)",
+      "activeDossiers": "Aktive Fälle",
+      "lawyerDossiers": "Anwaltsfälle",
+      "expatDossiers": "Expat-Fälle",
+      "aiProcessed": "KI-verarbeitet",
+      "totalRevenue": "Gesamtumsatz"
+    },
+    "activity": {
+      "title": "7-Tage-Aktivität",
+      "days": {
+        "sun": "So",
+        "mon": "Mo",
+        "tue": "Di",
+        "wed": "Mi",
+        "thu": "Do",
+        "fri": "Fr",
+        "sat": "Sa"
+      }
+    },
+    "iaStatus": {
+      "title": "KI-Status",
+      "operational": "Betriebsbereit",
+      "warning": "Kontingent-Warnung",
+      "critical": "Kritisches Kontingent",
+      "usage": "Nutzung diesen Monat",
+      "percent": "{{percent}}% des monatlichen Kontingents verwendet"
+    },
+    "providers": {
+      "title": "Anbieter",
+      "none": "Keine aktiven Anbieter",
+      "totalRegistered": "Gesamt registriert",
+      "withAccess": "Mit Tool-Zugang",
+      "withoutAccess": "Ohne Zugang",
+      "accessEnabled": "Zugang aktiviert"
+    },
+    "recentDossiers": {
+      "title": "Aktuelle Fälle",
+      "none": "Keine aktuellen Fälle"
+    },
+    "sync": {
+      "title": "Laravel Sync",
+      "connected": "Verbunden",
+      "disconnected": "Getrennt",
+      "error": "Fehler",
+      "lastSync": "Letzte Synchronisation",
+      "pending": "Ausstehende Elemente",
+      "syncNow": "Jetzt synchronisieren"
+    }
+  },
+  "accessDenied": {
+    "title": "Zugang verweigert",
+    "description": "Diese Seite ist für Administratoren reserviert.",
+    "noRights": "Sie haben nicht die erforderlichen Berechtigungen für diesen Bereich.",
+    "connectedAs": "Angemeldet als",
+    "role": "Rolle"
+  },
+  "prestataires": {
+    "title": "Anbieter",
+    "description": "Verwalten Sie den Tool-Zugang für Anwälte und Expat-Experten",
+    "stats": {
+      "total": "Gesamt",
+      "lawyers": "Anwälte",
+      "expats": "Expats",
+      "withAccess": "Mit Zugang"
+    },
+    "search": "Suche nach Name, E-Mail, Land...",
+    "filters": {
+      "type": "Typ",
+      "access": "Tool-Zugang",
+      "all": "Alle",
+      "withAccess": "Mit Zugang",
+      "withoutAccess": "Ohne Zugang"
+    },
+    "addManually": "Manuell hinzufügen",
+    "addProvider": "Anbieter hinzufügen",
+    "form": {
+      "email": "Google E-Mail",
+      "fullName": "Vollständiger Name",
+      "type": "Typ",
+      "country": "Land"
+    },
+    "table": {
+      "name": "Name",
+      "email": "E-Mail",
+      "type": "Typ",
+      "country": "Land",
+      "access": "Zugang"
+    },
+    "actions": {
+      "grantAccess": "Zugang gewähren",
+      "revokeAccess": "Zugang entziehen",
+      "activeAccess": "Zugang aktiv"
+    },
+    "empty": {
+      "title": "Keine Anbieter gefunden",
+      "description": "Versuchen Sie, Ihre Filter zu ändern"
+    },
+    "loadMore": "Mehr Anbieter laden",
+    "emailMissing": "E-Mail fehlt"
+  },
+  "mesPrestataires": {
+    "title": "Meine Anbieter",
+    "description": "Verwalten Sie die mit Ihrem Profil verknüpften Anbieterkonten",
+    "linkedProviders": "Verknüpfte Anbieter",
+    "noProviders": {
+      "title": "Keine verknüpften Anbieter",
+      "description": "Fügen Sie Anbieter hinzu, um mit der Fallbearbeitung zu beginnen"
+    },
+    "addProvider": "Anbieter hinzufügen",
+    "switchProvider": "Anbieter wechseln",
+    "remove": "Entfernen",
+    "setAsActive": "Als aktiv festlegen",
+    "searchProvider": "Anbieter suchen...",
+    "noProviderFound": "Kein Anbieter gefunden",
+    "allProvidersLinked": "Alle Anbieter sind bereits verknüpft",
+    "confirmRemove": "Möchten Sie diesen Anbieter wirklich aus Ihrem Konto entfernen?",
+    "success": {
+      "added": "Anbieter erfolgreich hinzugefügt!",
+      "removed": "Anbieter erfolgreich entfernt!",
+      "defaultUpdated": "Standardanbieter aktualisiert!"
+    },
+    "errors": {
+      "addFailed": "Fehler beim Hinzufügen des Anbieters",
+      "removeFailed": "Fehler beim Entfernen des Anbieters"
+    }
+  },
+  "gestionAcces": {
+    "title": "Zugangsverwaltung",
+    "description": "Verknüpfen Sie Anbieter mit Benutzern, damit diese ihre Fälle erhalten",
+    "addUser": "Benutzer hinzufügen",
+    "howItWorks": {
+      "title": "Wie funktioniert es?",
+      "line1": "Jeder Benutzer meldet sich mit seiner Google-E-Mail an",
+      "line2": "Sie weisen ihm unten einen oder mehrere Anbieter zu",
+      "line3": "Wenn ein Kunde diesen Anbieter bucht, sieht der Benutzer den Fall in seinem Dashboard"
+    },
+    "stats": {
+      "users": "Benutzer",
+      "activeProviders": "Aktive Anbieter",
+      "links": "Verknüpfungen"
+    },
+    "search": "Benutzer nach E-Mail oder Name suchen...",
+    "providerCount": "{{count}} Anbieter",
+    "selectProviders": "Wählen Sie Anbieter für diesen Benutzer:",
+    "deleteUser": "Benutzer löschen",
+    "deleteConfirm": "Diesen Benutzer und alle seine Zugänge löschen?",
+    "noUsers": {
+      "title": "Keine Benutzer gefunden",
+      "description": "Fügen Sie einen Benutzer hinzu, um ihm Zugang zu Anbietern zu geben"
+    },
+    "toast": {
+      "providersSaved": "Anbieter erfolgreich gespeichert",
+      "saveError": "Fehler beim Speichern",
+      "userDeleted": "Benutzer gelöscht",
+      "deleteError": "Fehler beim Löschen",
+      "loadError": "Fehler beim Laden der Benutzer",
+      "addError": "Fehler beim Hinzufügen"
+    },
+    "modal": {
+      "title": "Benutzer hinzufügen",
+      "firebaseId": "Firebase-Benutzer-ID",
+      "firebaseIdRequired": "Firebase-Benutzer-ID ist erforderlich",
+      "firebaseIdPlaceholder": "5lTY3iPh16Z7gHlrzr7XzrY4pGE2",
+      "firebaseIdHint": "Diese ID finden Sie in der Firebase-Konsole → Authentifizierung → Benutzer",
+      "email": "E-Mail",
+      "emailPlaceholder": "benutzer@gmail.com",
+      "displayName": "Anzeigename",
+      "displayNamePlaceholder": "Max Mustermann",
+      "providersToLink": "Zu verknüpfende Anbieter",
+      "noProviderAvailable": "Kein Anbieter verfügbar"
+    }
+  },
+  "utilisateurs": {
+    "title": "Benutzer",
+    "description": "Admin-Team verwalten",
+    "roles": {
+      "admin": "Administrator",
+      "agent": "Agent",
+      "provider": "Anbieter"
+    },
+    "roleDescriptions": {
+      "admin": "Voller Zugang zu allen Funktionen",
+      "agent": "Fall- und Nachrichtenverwaltung",
+      "provider": "Zugang nur zu zugewiesenen Fällen"
+    },
+    "stats": {
+      "total": "Gesamt",
+      "admins": "Admins",
+      "agents": "Agenten"
+    },
+    "noName": "Ohne Namen",
+    "availableRoles": "Verfügbare Rollen",
+    "search": "Nach Name oder E-Mail suchen...",
+    "setAdmin": "Als Admin festlegen",
+    "setAgent": "Als Agent festlegen",
+    "confirmDelete": "Diesen Benutzer löschen?",
+    "createdOn": "Erstellt am {{date}}",
+    "empty": {
+      "title": "Keine Benutzer gefunden",
+      "modifySearch": "Versuchen Sie, Ihre Suche zu ändern",
+      "usersWillAppear": "Angemeldete Benutzer werden hier angezeigt"
+    },
+    "note": "Hinweis: Benutzer werden automatisch bei ihrer ersten Anmeldung erstellt. Verwenden Sie die setRole-Funktion, um Rollen zuzuweisen.",
+    "loadMore": "Mehr Benutzer laden",
+    "allLoaded": "Alle Benutzer wurden geladen ({{count}} insgesamt)",
+    "important": "Wichtig",
+    "importantNote": "Um einen neuen Administrator zu erstellen, muss sich der Benutzer zuerst bei der Anwendung anmelden. Dann können Sie hier seine Rolle ändern. Alternativ verwenden Sie die <code>setRole</code> Cloud-Funktion mit dem Admin-API-Schlüssel."
+  },
+  "pays": {
+    "title": "Länder",
+    "description": "Konfigurierte Länderliste",
+    "columns": {
+      "code": "Code",
+      "name": "Name",
+      "active": "Aktiv"
+    }
+  },
+  "auditLogs": {
+    "title": "Audit-Protokolle",
+    "description": "Plattform-Aktionsverlauf",
+    "stats": {
+      "total": "Gesamt",
+      "today": "Heute"
+    },
+    "filters": {
+      "severity": "Schweregrad",
+      "actionType": "Aktionstyp"
+    },
+    "counter": "Zeige {{shown}} von {{total}} Einträgen",
+    "actions": {
+      "login": "Anmeldung",
+      "logout": "Abmeldung",
+      "roleChange": "Rollenänderung",
+      "providerCreate": "Anbieter erstellt",
+      "providerUpdate": "Anbieter aktualisiert",
+      "providerDelete": "Anbieter gelöscht",
+      "accessGranted": "Zugang gewährt",
+      "accessRevoked": "Zugang entzogen",
+      "dossierCreate": "Fall erstellt",
+      "dossierUpdate": "Fall aktualisiert",
+      "dossierStatusChange": "Status geändert",
+      "dossierDelete": "Fall gelöscht",
+      "aiResponseGenerated": "KI-Antwort generiert",
+      "aiSettingsChanged": "KI-Einstellungen geändert",
+      "settingsChanged": "Einstellungen geändert",
+      "dataExport": "Datenexport",
+      "adminAction": "Admin-Aktion"
+    },
+    "severity": {
+      "info": "Info",
+      "warning": "Warnung",
+      "critical": "Kritisch"
+    }
+  },
+  "parametres": {
+    "title": "Allgemeine Einstellungen",
+    "description": "Rollen, Themen, Integrationen, Protokolle..."
+  },
+  "testIA": {
+    "title": "KI-Test - Admin-Modus",
+    "description": "Testen Sie die Antworten des KI-Assistenten",
+    "infoBanner": {
+      "title": "Admin-Testmodus",
+      "description": "Diese Seite ermöglicht es Ihnen, die KI zu testen, indem Sie verschiedene Kontexte simulieren. Aufrufe erfolgen über die Cloud-Funktion",
+      "cloudFunction": "aiChat",
+      "metadataInfo": "Antworten enthalten Debug-Metadaten (Modell, Anbieter, Zitate, Antwortzeit)."
+    },
+    "context": {
+      "button": "Kontext",
+      "title": "Simulierter Kontext",
+      "providerType": {
+        "title": "Anbietertyp",
+        "lawyer": "Anwalt",
+        "expert": "Experte",
+        "lawyerDescription": "Claude 3.5 Sonnet - Juristische Argumentation",
+        "expertDescription": "GPT-4o - Praktische Ratschläge"
+      },
+      "fields": {
+        "country": "Land",
+        "countryPlaceholder": "z.B.: Thailand",
+        "nationality": "Nationalität",
+        "nationalityPlaceholder": "z.B.: Deutsch",
+        "clientName": "Kundenname",
+        "clientNamePlaceholder": "z.B.: Max Test",
+        "urgency": "Dringlichkeit"
+      },
+      "urgencyLevels": {
+        "low": "Niedrig",
+        "medium": "Mittel",
+        "high": "Hoch",
+        "critical": "Kritisch"
+      }
+    },
+    "quickTests": {
+      "title": "Schnelltests",
+      "visa": "Ablaufendes Visum",
+      "urgence": "Diebstahl/Verlust-Notfall",
+      "juridique": "Arbeitgeberproblem",
+      "pratique": "Wohnung Bangkok"
+    },
+    "chat": {
+      "emptyState": "Senden Sie eine Nachricht, um den Test zu starten",
+      "placeholder": "Geben Sie Ihre Testnachricht ein...",
+      "ariaLabelMessages": "Gesprächsnachrichten",
+      "ariaLabelInput": "Zu sendende Nachricht",
+      "ariaLabelSend": "Nachricht senden",
+      "ariaLabelThinking": "KI denkt nach",
+      "thinking": "KI denkt nach...",
+      "noResponse": "Keine Antwort",
+      "lastResponse": "Letzte Antwort in {{time}}ms"
+    },
+    "debug": {
+      "button": "Debug",
+      "model": "Modell",
+      "provider": "Anbieter",
+      "time": "Zeit",
+      "perplexitySearch": "Perplexity-Suche",
+      "fallback": "Fallback",
+      "sources": "Quellen"
+    },
+    "errors": {
+      "title": "Fehler",
+      "unknown": "Unbekannter Fehler",
+      "prefix": "Fehler:",
+      "closeLabel": "Fehler schließen"
+    }
+  },
+  "verifyingRights": "Berechtigungen werden überprüft...",
+  "loadingPage": "Seite wird geladen"
+}

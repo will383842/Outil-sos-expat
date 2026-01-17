@@ -1,0 +1,27 @@
+{
+  "title": "مساعد قانوني خبير",
+  "description": "اكتب أسئلة عميلك للحصول على إجابات قانونية مفصلة وموثقة.",
+  "placeholder": "تحدث مع GPT لتحسين الإجابة...",
+  "placeholderClient": "اكتب سؤال العميل...",
+  "typing": "GPT يفكر...",
+  "generating": "مساعد الذكاء الاصطناعي يولد إجابة",
+  "analyzing": "التحليل القانوني جارٍ...",
+  "sendMessage": "إرسال الرسالة",
+  "sendMessageShort": "إرسال",
+  "sending": "جاري الإرسال...",
+  "copyMessage": "نسخ الرسالة",
+  "copyResponse": "نسخ الإجابة",
+  "messageCopied": "تم نسخ الرسالة",
+  "regenerate": "إعادة توليد الإجابة",
+  "chatHistory": "سجل المحادثة مع مساعد الذكاء الاصطناعي",
+  "assistantLabel": "المساعد القانوني",
+  "yourQuestion": "سؤالك",
+  "instructions": {
+    "desktop": "اضغط Enter للإرسال، Shift+Enter لسطر جديد"
+  },
+  "tags": {
+    "internationalLaw": "القانون الدولي",
+    "expatTax": "ضرائب المغتربين",
+    "immigration": "الهجرة"
+  }
+}

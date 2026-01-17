@@ -1,0 +1,369 @@
+{
+  "header": {
+    "title": "SOS Expats — Admin",
+    "providerTitle": "SOS Expats — Espace Pro",
+    "previewMode": "Vue Prestataire",
+    "exitPreview": "Revenir à la vue Admin"
+  },
+  "sidebar": {
+    "expand": "Agrandir le menu",
+    "collapse": "Réduire le menu",
+    "sections": {
+      "overview": "Vue d'ensemble",
+      "management": "Gestion",
+      "configuration": "Configuration",
+      "security": "Sécurité"
+    },
+    "nav": {
+      "dashboard": "Tableau de bord",
+      "analytics": "Analytiques",
+      "providers": "Prestataires",
+      "dossiers": "Tous les dossiers",
+      "team": "Équipe",
+      "countries": "Pays",
+      "aiSettings": "Configuration IA",
+      "settings": "Paramètres",
+      "auditLogs": "Journal d'audit"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard Admin",
+    "subtitle": "Vue d'ensemble de l'activité plateforme",
+    "description": "Vue d'ensemble de l'activité de la plateforme et monitoring des services",
+    "stats": {
+      "totalDossiers": "Total Dossiers",
+      "dossiersInProgress": "Dossiers en cours",
+      "activeProviders": "Prestataires actifs",
+      "aiRequests": "Requêtes IA (mois)",
+      "activeDossiers": "Dossiers actifs",
+      "lawyerDossiers": "Dossiers Avocats",
+      "expatDossiers": "Dossiers Expatriés",
+      "aiProcessed": "Traités par IA",
+      "totalRevenue": "Revenus totaux"
+    },
+    "activity": {
+      "title": "Activité sur 7 jours",
+      "days": {
+        "sun": "Dim",
+        "mon": "Lun",
+        "tue": "Mar",
+        "wed": "Mer",
+        "thu": "Jeu",
+        "fri": "Ven",
+        "sat": "Sam"
+      }
+    },
+    "iaStatus": {
+      "title": "Statut IA",
+      "operational": "Opérationnel",
+      "warning": "Attention au quota",
+      "critical": "Quota critique",
+      "usage": "Usage ce mois",
+      "percent": "{{percent}}% du quota mensuel utilisé"
+    },
+    "providers": {
+      "title": "Prestataires",
+      "none": "Aucun prestataire actif",
+      "totalRegistered": "Total inscrits",
+      "withAccess": "Avec accès outil",
+      "withoutAccess": "Sans accès",
+      "accessEnabled": "Accès activés"
+    },
+    "recentDossiers": {
+      "title": "Dossiers Récents",
+      "none": "Aucun dossier récent"
+    },
+    "sync": {
+      "title": "Sync Laravel",
+      "connected": "Connecté",
+      "disconnected": "Déconnecté",
+      "error": "Erreur",
+      "lastSync": "Dernière sync",
+      "pending": "Items en attente",
+      "syncNow": "Synchroniser maintenant"
+    }
+  },
+  "accessDenied": {
+    "title": "Accès refusé",
+    "description": "Cette page est réservée aux administrateurs.",
+    "noRights": "Vous n'avez pas les droits nécessaires pour accéder à cette section.",
+    "connectedAs": "Connecté en tant que",
+    "role": "Rôle"
+  },
+  "prestataires": {
+    "title": "Prestataires",
+    "description": "Gérez les accès à l'outil pour les avocats et experts expatriés",
+    "stats": {
+      "total": "Total",
+      "lawyers": "Avocats",
+      "expats": "Expatriés",
+      "withAccess": "Avec accès"
+    },
+    "search": "Rechercher par nom, email, pays...",
+    "filters": {
+      "type": "Type",
+      "access": "Accès outil",
+      "all": "Tous",
+      "withAccess": "Avec accès",
+      "withoutAccess": "Sans accès"
+    },
+    "addManually": "Ajouter manuellement",
+    "addProvider": "Ajouter un prestataire",
+    "form": {
+      "email": "Email Google",
+      "fullName": "Nom complet",
+      "type": "Type",
+      "country": "Pays"
+    },
+    "table": {
+      "name": "Nom",
+      "email": "Email",
+      "type": "Type",
+      "country": "Pays",
+      "access": "Accès"
+    },
+    "actions": {
+      "grantAccess": "Donner accès",
+      "revokeAccess": "Retirer accès",
+      "activeAccess": "Accès actif"
+    },
+    "empty": {
+      "title": "Aucun prestataire trouvé",
+      "description": "Essayez de modifier vos filtres"
+    },
+    "loadMore": "Charger plus de prestataires",
+    "emailMissing": "Email manquant"
+  },
+  "mesPrestataires": {
+    "title": "Mes Prestataires",
+    "description": "Gérez les comptes prestataires liés à votre profil",
+    "linkedProviders": "Prestataires liés",
+    "noProviders": {
+      "title": "Aucun prestataire lié",
+      "description": "Ajoutez des prestataires pour commencer à traiter des dossiers"
+    },
+    "addProvider": "Ajouter un prestataire",
+    "switchProvider": "Changer de prestataire",
+    "remove": "Retirer",
+    "setAsActive": "Définir comme actif",
+    "searchProvider": "Rechercher un prestataire...",
+    "noProviderFound": "Aucun prestataire trouvé",
+    "allProvidersLinked": "Tous les prestataires sont déjà liés",
+    "confirmRemove": "Êtes-vous sûr de vouloir retirer ce prestataire de votre compte ?",
+    "success": {
+      "added": "Prestataire ajouté avec succès !",
+      "removed": "Prestataire retiré avec succès !",
+      "defaultUpdated": "Prestataire par défaut mis à jour !"
+    },
+    "errors": {
+      "addFailed": "Erreur lors de l'ajout du prestataire",
+      "removeFailed": "Erreur lors du retrait du prestataire"
+    }
+  },
+  "gestionAcces": {
+    "title": "Gestion des accès",
+    "description": "Liez les providers aux utilisateurs pour qu'ils reçoivent leurs dossiers",
+    "addUser": "Ajouter un utilisateur",
+    "howItWorks": {
+      "title": "Comment ça marche ?",
+      "line1": "Chaque utilisateur se connecte avec son email Google",
+      "line2": "Tu lui assignes un ou plusieurs providers ci-dessous",
+      "line3": "Quand un client réserve ce provider, l'utilisateur voit le dossier dans son dashboard"
+    },
+    "stats": {
+      "users": "Utilisateurs",
+      "activeProviders": "Providers actifs",
+      "links": "Liaisons"
+    },
+    "search": "Rechercher un utilisateur par email ou nom...",
+    "providerCount": "{{count}} provider(s)",
+    "selectProviders": "Sélectionnez les providers pour cet utilisateur :",
+    "deleteUser": "Supprimer l'utilisateur",
+    "deleteConfirm": "Supprimer cet utilisateur et tous ses accès ?",
+    "noUsers": {
+      "title": "Aucun utilisateur trouvé",
+      "description": "Ajoutez un utilisateur pour lui donner accès aux providers"
+    },
+    "toast": {
+      "providersSaved": "Providers sauvegardés avec succès",
+      "saveError": "Erreur lors de la sauvegarde",
+      "userDeleted": "Utilisateur supprimé",
+      "deleteError": "Erreur lors de la suppression",
+      "loadError": "Erreur lors du chargement des utilisateurs",
+      "addError": "Erreur lors de l'ajout"
+    },
+    "modal": {
+      "title": "Ajouter un utilisateur",
+      "firebaseId": "ID utilisateur Firebase",
+      "firebaseIdRequired": "L'ID utilisateur Firebase est requis",
+      "firebaseIdPlaceholder": "5lTY3iPh16Z7gHlrzr7XzrY4pGE2",
+      "firebaseIdHint": "Trouve cet ID dans Firebase Console → Authentication → Users",
+      "email": "Email",
+      "emailPlaceholder": "utilisateur@gmail.com",
+      "displayName": "Nom affiché",
+      "displayNamePlaceholder": "Jean Dupont",
+      "providersToLink": "Providers à lier",
+      "noProviderAvailable": "Aucun provider disponible"
+    }
+  },
+  "utilisateurs": {
+    "title": "Utilisateurs",
+    "description": "Gérez l'équipe d'administration",
+    "roles": {
+      "admin": "Administrateur",
+      "agent": "Agent",
+      "provider": "Prestataire"
+    },
+    "roleDescriptions": {
+      "admin": "Accès complet à toutes les fonctionnalités",
+      "agent": "Gestion des dossiers et messages",
+      "provider": "Accès aux dossiers assignés uniquement"
+    },
+    "stats": {
+      "total": "Total",
+      "admins": "Admins",
+      "agents": "Agents"
+    },
+    "noName": "Sans nom",
+    "availableRoles": "Roles disponibles",
+    "search": "Rechercher par nom ou email...",
+    "setAdmin": "Definir Admin",
+    "setAgent": "Definir Agent",
+    "setProvider": "Definir Prestataire",
+    "multiProvider": "Multi-prestataires",
+    "multiProviderDescription": "Peut gerer plusieurs prestataires",
+    "confirmDelete": "Supprimer cet utilisateur ?",
+    "createdOn": "Créé le {{date}}",
+    "empty": {
+      "title": "Aucun utilisateur trouvé",
+      "modifySearch": "Essayez de modifier votre recherche",
+      "usersWillAppear": "Les utilisateurs connectés apparaîtront ici"
+    },
+    "note": "Note : Les utilisateurs sont créés automatiquement lors de leur première connexion. Utilisez la fonction setRole pour attribuer des rôles.",
+    "loadMore": "Charger plus d'utilisateurs",
+    "allLoaded": "Tous les utilisateurs ont été chargés ({{count}} au total)",
+    "important": "Important",
+    "importantNote": "Pour créer un nouvel administrateur, l'utilisateur doit d'abord se connecter à l'application. Ensuite, vous pourrez changer son rôle ici. Alternativement, utilisez la Cloud Function <code>setRole</code> avec l'API key admin."
+  },
+  "pays": {
+    "title": "Pays",
+    "description": "Liste des pays configurés",
+    "columns": {
+      "code": "Code",
+      "name": "Nom",
+      "active": "Actif"
+    }
+  },
+  "auditLogs": {
+    "title": "Logs d'audit",
+    "description": "Historique des actions sur la plateforme",
+    "stats": {
+      "total": "Total",
+      "today": "Aujourd'hui"
+    },
+    "filters": {
+      "severity": "Sévérité",
+      "actionType": "Type d'action"
+    },
+    "counter": "Affichage de {{shown}} sur {{total}} entrées",
+    "actions": {
+      "login": "Connexion",
+      "logout": "Déconnexion",
+      "roleChange": "Changement de rôle",
+      "providerCreate": "Création prestataire",
+      "providerUpdate": "Modification prestataire",
+      "providerDelete": "Suppression prestataire",
+      "accessGranted": "Accès accordé",
+      "accessRevoked": "Accès révoqué",
+      "dossierCreate": "Création dossier",
+      "dossierUpdate": "Modification dossier",
+      "dossierStatusChange": "Changement statut",
+      "dossierDelete": "Suppression dossier",
+      "aiResponseGenerated": "Réponse IA générée",
+      "aiSettingsChanged": "Paramètres IA modifiés",
+      "settingsChanged": "Paramètres modifiés",
+      "dataExport": "Export de données",
+      "adminAction": "Action admin"
+    },
+    "severity": {
+      "info": "Info",
+      "warning": "Avertissement",
+      "critical": "Critique"
+    }
+  },
+  "parametres": {
+    "title": "Paramètres généraux",
+    "description": "Rôles, thèmes, intégrations, journaux…"
+  },
+  "testIA": {
+    "title": "Test IA - Mode Admin",
+    "description": "Testez les réponses de l'assistant IA",
+    "infoBanner": {
+      "title": "Mode Test Admin",
+      "description": "Cette page permet de tester l'IA en simulant différents contextes. Les appels sont effectués via la Cloud Function",
+      "cloudFunction": "aiChat",
+      "metadataInfo": "Les réponses incluent les métadonnées de debug (modèle, provider, citations, temps de réponse)."
+    },
+    "context": {
+      "button": "Contexte",
+      "title": "Contexte simulé",
+      "providerType": {
+        "title": "Type de prestataire",
+        "lawyer": "Avocat",
+        "expert": "Expert",
+        "lawyerDescription": "Claude 3.5 Sonnet - Raisonnement juridique",
+        "expertDescription": "GPT-4o - Conseils pratiques"
+      },
+      "fields": {
+        "country": "Pays",
+        "countryPlaceholder": "ex: Thaïlande",
+        "nationality": "Nationalité",
+        "nationalityPlaceholder": "ex: Française",
+        "clientName": "Nom client",
+        "clientNamePlaceholder": "ex: Jean Test",
+        "urgency": "Urgence"
+      },
+      "urgencyLevels": {
+        "low": "Faible",
+        "medium": "Moyenne",
+        "high": "Haute",
+        "critical": "Critique"
+      }
+    },
+    "quickTests": {
+      "title": "Tests rapides",
+      "visa": "Visa qui expire",
+      "urgence": "Urgence vol/perte",
+      "juridique": "Problème employeur",
+      "pratique": "Logement Bangkok"
+    },
+    "chat": {
+      "emptyState": "Envoyez un message pour commencer le test",
+      "placeholder": "Tapez votre message de test...",
+      "ariaLabelMessages": "Messages de la conversation",
+      "ariaLabelInput": "Message à envoyer",
+      "ariaLabelSend": "Envoyer le message",
+      "ariaLabelThinking": "L'IA réfléchit",
+      "thinking": "L'IA réfléchit...",
+      "noResponse": "Pas de réponse",
+      "lastResponse": "Dernière réponse en {{time}}ms"
+    },
+    "debug": {
+      "button": "Debug",
+      "model": "Model",
+      "provider": "Provider",
+      "time": "Time",
+      "perplexitySearch": "Perplexity search",
+      "fallback": "Fallback",
+      "sources": "Sources"
+    },
+    "errors": {
+      "title": "Erreur",
+      "unknown": "Erreur inconnue",
+      "prefix": "Erreur:",
+      "closeLabel": "Fermer l'erreur"
+    }
+  },
+  "verifyingRights": "Vérification des droits...",
+  "loadingPage": "Chargement de la page"
+}

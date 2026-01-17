@@ -1,0 +1,220 @@
+{
+  "dashboard": {
+    "title": "Mi panel de control",
+    "welcome": "Bienvenido, {{name}}",
+    "noProvider": {
+      "title": "Ningún proveedor seleccionado",
+      "description": "Por favor inicie sesión o seleccione una cuenta de proveedor"
+    },
+    "stats": {
+      "myDossiers": "Mis casos",
+      "activeDossiers": "Casos activos",
+      "myActiveDossiers": "Mis casos activos",
+      "pending": "Pendientes",
+      "inProgress": "En curso",
+      "completed": "Completados",
+      "completedThisMonth": "Completados este mes",
+      "total": "total"
+    },
+    "quota": {
+      "title": "Cuota IA",
+      "usages": "usos",
+      "remaining": "{{count}} usos restantes",
+      "almostReached": "¡Cuota casi alcanzada! Contacte con soporte para aumentarla."
+    },
+    "recentDossiers": "Mis casos recientes",
+    "noDossiers": "Sin casos recientes",
+    "quickActions": {
+      "title": "Acciones rápidas",
+      "myDossiers": "Mis casos",
+      "myProfile": "Mi perfil",
+      "messages": "Mensajes"
+    },
+    "subscription": {
+      "title": "Mi suscripción",
+      "active": "Activa",
+      "trial": "Período de prueba",
+      "pending": "Pago pendiente",
+      "expired": "Expirada",
+      "expiresIn": "{{days}} días restantes",
+      "expiresToday": "Expira hoy",
+      "expiresTomorrow": "Expira mañana",
+      "renewWarning": "Renueve su suscripción para continuar"
+    }
+  },
+  "multiDashboard": {
+    "title": "Panel multi-proveedor",
+    "allProviders": "Todos los proveedores",
+    "selectProvider": "Seleccionar proveedor",
+    "aggregatedView": "Vista agregada de {{count}} proveedores",
+    "statsFor": "Estadísticas de {{name}}",
+    "sharedQuota": "Cuota compartida",
+    "remaining": "{{count}} restantes",
+    "quotaWarning": "Cuota casi agotada. Contacte con administración.",
+    "linkedProviders": "Proveedores vinculados",
+    "activity7Days": "Actividad de 7 días",
+    "distributionByType": "Distribución por tipo",
+    "dossiersByStatus": "Casos por estado"
+  },
+  "dossiers": {
+    "title": "Casos",
+    "count": "{{count}} caso",
+    "count_other": "{{count}} casos",
+    "found": "encontrado(s)",
+    "search": "Buscar por título, cliente, país...",
+    "filters": {
+      "status": "Estado",
+      "type": "Tipo",
+      "all": "Todos",
+      "lawyer": "Abogado",
+      "expat": "Experto"
+    },
+    "empty": {
+      "title": "No se encontraron casos",
+      "modifyFilters": "Intente modificar sus filtros",
+      "newRequestsHere": "Las nuevas solicitudes aparecerán aquí"
+    },
+    "loadMore": "Cargar más casos",
+    "allLoaded": "Todos los casos cargados ({{count}} en total)",
+    "noDescription": "Sin descripción",
+    "noTitle": "Sin título"
+  },
+  "dossierDetail": {
+    "accessDenied": "Acceso denegado - Este caso no le pertenece",
+    "notFound": "Caso no encontrado",
+    "consultationDuration": "Duración de la consulta",
+    "consultationTimeElapsed": "Tiempo de consulta agotado",
+    "autoLockWarning": "La conversación se bloqueará automáticamente",
+    "startAfterFirstResponse": "La consulta comenzará después de la primera respuesta de IA",
+    "conversationClosed": "Conversación cerrada",
+    "historyAvailable": "El historial permanece disponible arriba"
+  },
+  "aiChat": {
+    "title": "Asistente Jurídico IA",
+    "subtitle": "Haga las preguntas del cliente aquí",
+    "timeElapsed": "Tiempo transcurrido",
+    "expertTitle": "Asistente Jurídico Experto",
+    "expertDescription": "Escriba las preguntas de su cliente para recibir respuestas jurídicas detalladas y con fuentes.",
+    "tags": {
+      "internationalLaw": "Derecho internacional",
+      "expatTax": "Fiscalidad de expatriados",
+      "immigration": "Inmigración"
+    },
+    "legalAssistant": "Asistente Jurídico",
+    "yourQuestion": "Su pregunta",
+    "copyResponse": "Copiar respuesta",
+    "analyzing": "Análisis jurídico en curso...",
+    "inputPlaceholder": "Escriba la pregunta del cliente...",
+    "keyboardHint": "Enter para enviar - Shift+Enter para salto de línea",
+    "generatingFirstResponse": "La IA está analizando su caso...",
+    "pleaseWait": "La primera respuesta llegará en unos segundos"
+  },
+  "clientInfo": {
+    "waitingAI": "Esperando IA",
+    "archived": "Archivado",
+    "activeConsultation": "Consulta activa",
+    "duration": "Duración: {{minutes}} minutos",
+    "timeRemaining": "Tiempo restante ({{minutes}} min total)",
+    "historyAvailable": "El historial de la conversación permanece consultable",
+    "client": "Cliente",
+    "name": "Nombre",
+    "nationality": "Nacionalidad",
+    "interventionCountry": "País de intervención",
+    "languages": "Idiomas",
+    "request": "Solicitud",
+    "title": "Título",
+    "description": "Descripción",
+    "service": "Servicio",
+    "createdOn": "Creado el",
+    "provider": "Proveedor"
+  },
+  "page": {
+    "loadingDossier": "Cargando caso...",
+    "backToDossiers": "Volver a los casos",
+    "aiActive": "IA activa",
+    "consultationExpiredMessage": "Tiempo de consulta agotado ({{minutes}} min) — El historial permanece consultable",
+    "initializingChat": "Inicializando chat IA..."
+  },
+  "bookingCard": {
+    "lawyer": "Abogado",
+    "expat": "Expatriado",
+    "aiProcessed": "IA",
+    "client": "Cliente"
+  },
+  "statusActions": {
+    "startCall": "Iniciar llamada",
+    "finish": "Finalizar",
+    "cancel": "Cancelar",
+    "reopenConversation": "Reabrir conversación"
+  },
+  "quotaExhausted": {
+    "title": "Cuota de uso agotada",
+    "description": "Ha alcanzado el límite de solicitudes de IA para este período. Mejore su suscripción para continuar usando el asistente.",
+    "quotaUsage": "Uso de cuota",
+    "requestsUsed": "{{used}} solicitudes de {{total}} utilizadas",
+    "nextRenewal": "Próxima renovación",
+    "increaseQuota": "Aumentar mi cuota",
+    "contactSupport": "Contactar soporte"
+  },
+  "messages": {
+    "title": "Mensajes",
+    "aiResponses": "respuestas IA",
+    "questions": "preguntas",
+    "lastAiResponse": "Última respuesta IA",
+    "selectProvider": "Seleccione un proveedor para ver sus conversaciones",
+    "modifySearch": "Intente modificar su búsqueda",
+    "allConversations": "Todas las Conversaciones",
+    "myConversations": "Mis Conversaciones",
+    "allConversationsHistory": "Historial de todas las conversaciones y respuestas IA",
+    "conversationsOf": "Conversaciones de {{name}}",
+    "conversations": "Conversaciones",
+    "activeLastHour": "Activas (1h)",
+    "searchPlaceholder": "Buscar por cliente, ID de caso...",
+    "noConversationFound": "Ninguna conversación encontrada",
+    "conversationsWillAppear": "Las conversaciones con IA aparecerán aquí",
+    "conversation": "Conversación"
+  },
+  "profile": {
+    "title": "Mi perfil",
+    "description": "Gestione la información de su cuenta de proveedor",
+    "loading": "Cargando perfil...",
+    "noProviderSelected": "Ningún proveedor seleccionado",
+    "selectProviderToView": "Seleccione un proveedor para ver su perfil",
+    "lawyer": "Abogado",
+    "expatExpert": "Experto en expatriación",
+    "contactInfo": "Información de contacto",
+    "email": "Correo electrónico",
+    "emailNotEditable": "El correo electrónico no se puede modificar",
+    "phone": "Teléfono",
+    "website": "Sitio web",
+    "location": "Ubicación",
+    "country": "País",
+    "contactAdminToModify": "Contacte al administrador para modificar",
+    "city": "Ciudad",
+    "address": "Dirección",
+    "specialties": "Especialidades",
+    "addSpecialty": "Añadir especialidad...",
+    "noSpecialtyAdded": "Ninguna especialidad añadida",
+    "noSpecialtySet": "Ninguna especialidad indicada",
+    "spokenLanguages": "Idiomas hablados",
+    "addLanguage": "Añadir idioma...",
+    "noLanguageAdded": "Ningún idioma añadido",
+    "noLanguageSet": "Ningún idioma indicado",
+    "descriptionSection": "Descripción",
+    "descriptionPlaceholder": "Describa su actividad, sus áreas de especialización...",
+    "noDescriptionSet": "Ninguna descripción indicada",
+    "systemInfo": "Información del sistema",
+    "providerId": "ID del proveedor",
+    "accountType": "Tipo de cuenta",
+    "providerName": "Nombre del proveedor",
+    "statusLabel": "Estado"
+  },
+  "providerSwitcher": {
+    "noProvider": "Sin proveedor vinculado",
+    "select": "Seleccionar...",
+    "switchProvider": "Cambiar proveedor",
+    "manageProviders": "Gestionar mis proveedores",
+    "lawyer": "Abogado",
+    "expatExpert": "Experto en expatriación"
+  }
+}
