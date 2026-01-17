@@ -43,37 +43,43 @@ export default function AuthSSO() {
   const [errorMessage, setErrorMessage] = useState<string>("");
   const authCheckDone = useRef(false);
 
+  // Stocker le token et providerId au montage (avant nettoyage URL)
+  const tokenRef = useRef<string | null>(searchParams.get("token"));
+  const providerIdRef = useRef<string | null>(searchParams.get("providerId"));
+
   // ═══════════════════════════════════════════════════════════════════════════
   // ÉTAPE 1: Vérifier si l'utilisateur est déjà connecté
-  // Si oui et pas de token → rediriger directement vers le dashboard
+  // IMPORTANT: Même avec un token, si déjà connecté → rediriger directement
+  // Cela évite les erreurs de token invalide/expiré lors des retours
   // ═══════════════════════════════════════════════════════════════════════════
   useEffect(() => {
     if (authCheckDone.current) return;
 
-    const token = searchParams.get("token");
-    const providerIdParam = searchParams.get("providerId");
+    const token = tokenRef.current;
+    const providerIdParam = providerIdRef.current;
 
-    // Si on a un token, on ne vérifie pas l'auth existante, on procède directement
+    // Nettoyer l'URL immédiatement si token présent (sécurité)
     if (token) {
-      authCheckDone.current = true;
-      setStatus("loading");
-      return;
+      window.history.replaceState({}, document.title, "/auth");
     }
 
-    // Pas de token → vérifier si déjà connecté
+    // TOUJOURS vérifier d'abord si l'utilisateur est déjà connecté
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (authCheckDone.current) return;
       authCheckDone.current = true;
 
       if (user) {
-        // Utilisateur déjà connecté → rediriger vers le bon dashboard
-        console.debug("[AuthSSO] Utilisateur déjà connecté, redirection...");
+        // ─────────────────────────────────────────────────────────────────────
+        // UTILISATEUR DÉJÀ CONNECTÉ → Rediriger directement (ignorer le token)
+        // Le token SSO n'est utile que pour la première connexion
+        // ─────────────────────────────────────────────────────────────────────
+        console.debug("[AuthSSO] Utilisateur déjà connecté, redirection directe...");
 
         try {
           const tokenResult = await user.getIdTokenResult();
           const isAdmin = tokenResult.claims.admin === true || tokenResult.claims.role === "admin";
 
-          // Stocker le providerId si fourni en paramètre
+          // Stocker le providerId si fourni en paramètre (pour changer de provider)
           if (providerIdParam) {
             sessionStorage.setItem(SSO_PROVIDER_ID_KEY, providerIdParam);
           }
@@ -83,11 +89,18 @@ export default function AuthSSO() {
           navigate(destination, { replace: true });
         } catch (err) {
           console.error("[AuthSSO] Erreur lors de la vérification des claims:", err);
-          // En cas d'erreur, rediriger vers dashboard par défaut
           navigate("/dashboard", { replace: true });
         }
+      } else if (token) {
+        // ─────────────────────────────────────────────────────────────────────
+        // PAS CONNECTÉ + TOKEN → Authentifier avec le token
+        // ─────────────────────────────────────────────────────────────────────
+        console.debug("[AuthSSO] Pas connecté, authentification avec token...");
+        setStatus("loading");
       } else {
-        // Pas connecté et pas de token → afficher l'écran no_token
+        // ─────────────────────────────────────────────────────────────────────
+        // PAS CONNECTÉ + PAS DE TOKEN → Écran d'information
+        // ─────────────────────────────────────────────────────────────────────
         setStatus("no_token");
       }
 
@@ -95,7 +108,7 @@ export default function AuthSSO() {
     });
 
     return () => unsubscribe();
-  }, [searchParams, navigate]);
+  }, [navigate]);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // ÉTAPE 2: Authentification avec le Custom Token
@@ -103,13 +116,9 @@ export default function AuthSSO() {
   useEffect(() => {
     if (status !== "loading") return;
 
-    const token = searchParams.get("token");
-    const providerIdParam = searchParams.get("providerId");
-
-    // SÉCURITÉ: Nettoyer immédiatement l'URL pour éviter que le token reste dans l'historique
-    if (token) {
-      window.history.replaceState({}, document.title, "/auth");
-    }
+    // Utiliser les refs (le token a été stocké avant le nettoyage de l'URL)
+    const token = tokenRef.current;
+    const providerIdParam = providerIdRef.current;
 
     if (!token) {
       setStatus("no_token");
@@ -195,7 +204,7 @@ export default function AuthSSO() {
     }
 
     authenticateWithToken();
-  }, [status, searchParams, navigate]);
+  }, [status, navigate]);
 
   // Nettoyage: supprimer le token de la mémoire au démontage
   useEffect(() => {
