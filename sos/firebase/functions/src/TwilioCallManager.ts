@@ -534,7 +534,7 @@ export class TwilioCallManager {
 
   async initiateCallSequence(
     sessionId: string,
-    delayMinutes: number = 4
+    delayMinutes: number = 1
   ): Promise<void> {
     const callRequestId = `call_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
 
@@ -1694,12 +1694,18 @@ export class TwilioCallManager {
 
   async handleCallFailure(sessionId: string, reason: string): Promise<void> {
     const failureId = `failure_${Date.now().toString(36)}`;
+    // 🔍 DEBUG P0: Stack trace pour identifier l'origine de l'appel
+    const stackTrace = new Error().stack?.split('\n').slice(1, 10).join('\n') || 'No stack';
+
     console.log(`\n${'🔥'.repeat(35)}`);
-    console.log(`🔥 [${failureId}] handleCallFailure CALLED`);
+    console.log(`🔥 [${failureId}] ========== handleCallFailure CALLED ==========`);
     console.log(`🔥 [${failureId}]   sessionId: ${sessionId}`);
     console.log(`🔥 [${failureId}]   reason: ${reason}`);
+    console.log(`🔥 [${failureId}]   timestamp: ${new Date().toISOString()}`);
     console.log(`🔥 [${failureId}]   ⚠️ This will set session.status = "failed"`);
-    console.log(`🔥 [${failureId}]   ⚠️ This will STOP any pending retries!`);
+    console.log(`🔥 [${failureId}]   ⚠️ This will TRIGGER processRefund() and CANCEL payment!`);
+    console.log(`🔥 [${failureId}] STACK TRACE (qui a appelé handleCallFailure?):`);
+    console.log(stackTrace);
     console.log(`${'🔥'.repeat(35)}`);
 
     try {
@@ -1709,12 +1715,23 @@ export class TwilioCallManager {
         return;
       }
 
-      console.log(`🔥 [${failureId}] Current session state before marking failed:`);
+      // 🔍 DEBUG P0: Log complet de l'état de la session
+      console.log(`🔥 [${failureId}] === COMPLETE SESSION STATE ===`);
       console.log(`🔥 [${failureId}]   session.status: ${callSession.status}`);
+      console.log(`🔥 [${failureId}]   payment.status: ${callSession.payment?.status || 'N/A'}`);
+      console.log(`🔥 [${failureId}]   payment.intentId: ${callSession.payment?.intentId || 'N/A'}`);
       console.log(`🔥 [${failureId}]   client.status: ${callSession.participants.client.status}`);
       console.log(`🔥 [${failureId}]   client.attemptCount: ${callSession.participants.client.attemptCount || 0}`);
+      console.log(`🔥 [${failureId}]   client.connectedAt: ${callSession.participants.client.connectedAt?.toDate?.() || 'N/A'}`);
+      console.log(`🔥 [${failureId}]   client.disconnectedAt: ${callSession.participants.client.disconnectedAt?.toDate?.() || 'N/A'}`);
       console.log(`🔥 [${failureId}]   provider.status: ${callSession.participants.provider.status}`);
       console.log(`🔥 [${failureId}]   provider.attemptCount: ${callSession.participants.provider.attemptCount || 0}`);
+      console.log(`🔥 [${failureId}]   provider.connectedAt: ${callSession.participants.provider.connectedAt?.toDate?.() || 'N/A'}`);
+      console.log(`🔥 [${failureId}]   provider.disconnectedAt: ${callSession.participants.provider.disconnectedAt?.toDate?.() || 'N/A'}`);
+      console.log(`🔥 [${failureId}]   conference.duration: ${callSession.conference?.duration || 'N/A'}`);
+      console.log(`🔥 [${failureId}]   conference.startedAt: ${callSession.conference?.startedAt?.toDate?.() || 'N/A'}`);
+      console.log(`🔥 [${failureId}]   conference.endedAt: ${callSession.conference?.endedAt?.toDate?.() || 'N/A'}`);
+      console.log(`🔥 [${failureId}] === END SESSION STATE ===`);
 
       console.log(`🔥 [${failureId}] Setting session.status = "failed"...`);
       await this.updateCallSessionStatus(sessionId, "failed");
@@ -1913,15 +1930,50 @@ export class TwilioCallManager {
     sessionId: string,
     reason: string
   ): Promise<void> {
+    // 🔍 DEBUG P0: Log détaillé avec stack trace pour identifier l'origine du refund
+    const refundDebugId = `refund_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const stackTrace = new Error().stack?.split('\n').slice(1, 10).join('\n') || 'No stack';
+
+    console.log(`\n${'💸'.repeat(40)}`);
+    console.log(`💸 [${refundDebugId}] ========== PROCESS REFUND CALLED ==========`);
+    console.log(`💸 [${refundDebugId}] SessionId: ${sessionId}`);
+    console.log(`💸 [${refundDebugId}] Reason: ${reason}`);
+    console.log(`💸 [${refundDebugId}] Timestamp: ${new Date().toISOString()}`);
+    console.log(`💸 [${refundDebugId}] STACK TRACE (qui a appelé processRefund?):`);
+    console.log(stackTrace);
+    console.log(`${'💸'.repeat(40)}\n`);
+
     try {
       const callSession = await this.getCallSession(sessionId);
-      if (!callSession?.payment.intentId && !callSession?.payment.paypalOrderId) return;
+
+      // 🔍 DEBUG: Log complet de l'état de la session
+      console.log(`💸 [${refundDebugId}] SESSION STATE:`);
+      console.log(`💸 [${refundDebugId}]   session.status: ${callSession?.status || 'N/A'}`);
+      console.log(`💸 [${refundDebugId}]   payment.status: ${callSession?.payment?.status || 'N/A'}`);
+      console.log(`💸 [${refundDebugId}]   payment.intentId: ${callSession?.payment?.intentId || 'N/A'}`);
+      console.log(`💸 [${refundDebugId}]   client.status: ${callSession?.participants?.client?.status || 'N/A'}`);
+      console.log(`💸 [${refundDebugId}]   client.connectedAt: ${callSession?.participants?.client?.connectedAt?.toDate?.() || 'N/A'}`);
+      console.log(`💸 [${refundDebugId}]   client.disconnectedAt: ${callSession?.participants?.client?.disconnectedAt?.toDate?.() || 'N/A'}`);
+      console.log(`💸 [${refundDebugId}]   provider.status: ${callSession?.participants?.provider?.status || 'N/A'}`);
+      console.log(`💸 [${refundDebugId}]   provider.connectedAt: ${callSession?.participants?.provider?.connectedAt?.toDate?.() || 'N/A'}`);
+      console.log(`💸 [${refundDebugId}]   provider.disconnectedAt: ${callSession?.participants?.provider?.disconnectedAt?.toDate?.() || 'N/A'}`);
+      console.log(`💸 [${refundDebugId}]   conference.duration: ${callSession?.conference?.duration || 'N/A'}`);
+      console.log(`💸 [${refundDebugId}]   conference.startedAt: ${callSession?.conference?.startedAt?.toDate?.() || 'N/A'}`);
+      console.log(`💸 [${refundDebugId}]   conference.endedAt: ${callSession?.conference?.endedAt?.toDate?.() || 'N/A'}`);
+
+      if (!callSession?.payment.intentId && !callSession?.payment.paypalOrderId) {
+        console.log(`💸 [${refundDebugId}] ⚠️ No payment intent/order found - skipping`);
+        return;
+      }
 
       // CRITIQUE: Distinction entre cancel (non capturé) et refund (capturé)
       // - Si payment.status === "authorized" → PaymentIntent en état requires_capture → CANCEL
       // - Si payment.status === "captured" → PaymentIntent capturé → REFUND
       const paymentStatus = callSession.payment.status;
       let result: { success: boolean; error?: string };
+
+      console.log(`💸 [${refundDebugId}] Payment status: ${paymentStatus}`);
+      console.log(`💸 [${refundDebugId}] Action: ${paymentStatus === 'authorized' ? 'CANCEL (non capturé)' : 'REFUND (capturé)'}`);
 
       // Détection gateway: PayPal ou Stripe
       const isPayPal = callSession.payment.gateway === "paypal" || !!callSession.payment.paypalOrderId;

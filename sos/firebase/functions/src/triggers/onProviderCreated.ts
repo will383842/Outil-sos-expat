@@ -33,7 +33,8 @@ import Stripe from "stripe";
 import { defineSecret, defineString } from "firebase-functions/params";
 import { getStorage } from "firebase-admin/storage";
 import { META_CAPI_TOKEN, trackCAPILead, UserData } from "../metaConversionsApi";
-import { getRecommendedPaymentGateway } from "../lib/paymentCountries";
+// P0 FIX: Import validation function for country codes
+import { getRecommendedPaymentGateway, isValidCountryCode } from "../lib/paymentCountries";
 
 // Secrets Stripe
 const STRIPE_SECRET_KEY_TEST = defineSecret("STRIPE_SECRET_KEY_TEST");
@@ -359,6 +360,9 @@ interface ProviderProfileData {
   // Stripe fields (peuvent déjà exister si créé manuellement)
   stripeAccountId?: string;
   stripeAccountStatus?: string;
+  // PayPal fields (peuvent déjà exister si créé manuellement)
+  paypalMerchantId?: string;
+  paypalAccountStatus?: string;
   // AAA Profile fields (profils gérés en interne)
   isAAA?: boolean;
   isTestProfile?: boolean;
@@ -612,6 +616,26 @@ export const onProviderCreated = onDocumentCreated(
       return;
     }
 
+    // ========== P0 FIX: IDEMPOTENCY CHECK ==========
+    // Empêcher la double exécution du trigger en cas de retry Firebase
+    // Vérifie si les comptes de paiement existent déjà AVANT toute autre opération
+    const hasExistingStripeAccount = !!data.stripeAccountId;
+    const hasExistingPayPalAccount = !!data.paypalMerchantId;
+    const hasPaymentAccountSetup = hasExistingStripeAccount || hasExistingPayPalAccount ||
+      data.stripeAccountStatus === 'pending_verification' ||
+      data.paypalAccountStatus === 'not_connected';
+
+    if (hasPaymentAccountSetup) {
+      console.log(`[onProviderCreated] ⚠️ P0 IDEMPOTENCY: Provider ${uid} already has payment setup:`);
+      console.log(`  - stripeAccountId: ${data.stripeAccountId || 'none'}`);
+      console.log(`  - paypalMerchantId: ${data.paypalMerchantId || 'none'}`);
+      console.log(`  - stripeAccountStatus: ${data.stripeAccountStatus || 'none'}`);
+      console.log(`  - paypalAccountStatus: ${data.paypalAccountStatus || 'none'}`);
+      console.log(`[onProviderCreated] Skipping duplicate trigger execution for: ${uid}`);
+      return;
+    }
+    // ========== END P0 FIX ==========
+
     // ========== META CAPI TRACKING ==========
     // Track Lead event for provider signup (lawyer or expat registration)
     try {
@@ -765,8 +789,19 @@ export const onProviderCreated = onDocumentCreated(
     const countryCode = normalizeCountryCode(data.country || data.currentCountry);
     console.log(`[onProviderCreated] Pays normalisé: ${countryCode}`);
 
+    // ✅ P0 FIX: Valider le code pays contre la whitelist
+    if (!isValidCountryCode(countryCode)) {
+      console.error(`[onProviderCreated] ❌ P0 VALIDATION: Code pays invalide ou non supporté: ${countryCode} pour: ${uid}`);
+      await admin.firestore().collection("sos_profiles").doc(uid).update({
+        paymentAccountStatus: "error_invalid_country",
+        paymentError: `Country code "${countryCode}" is not supported`,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      return;
+    }
+
     // Déterminer le gateway de paiement approprié
-    // ✅ P0 FIX: Utiliser la fonction centralisée
+    // ✅ P0 FIX: Utiliser la fonction centralisée (country already validated)
     const paymentGateway = getRecommendedPaymentGateway(countryCode);
     console.log(`[onProviderCreated] Gateway de paiement: ${paymentGateway} pour ${providerType}: ${uid}`);
 

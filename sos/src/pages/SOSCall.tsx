@@ -1336,14 +1336,15 @@ const ModernProfileCard: React.FC<{
   );
 
   return (
-    <div className="flex-shrink-0 p-2 sm:p-3">
+    <div className="flex-shrink-0 p-2 sm:p-3 w-full lg:w-auto flex justify-center">
       <article
         className={`
           relative bg-white rounded-2xl overflow-hidden cursor-pointer
           transition-all duration-300 ease-out border-2 shadow-lg
-          w-[320px] h-[520px]
-          sm:w-[340px] sm:h-[540px]
-          md:w-[360px] md:h-[560px]
+          w-full max-w-[340px] h-auto min-h-[480px]
+          lg:w-[320px] lg:h-[520px] lg:max-w-none lg:min-h-0
+          xl:w-[340px] xl:h-[540px]
+          2xl:w-[360px] 2xl:h-[560px]
           ${statusColors.border} ${statusColors.shadow} ${statusColors.borderShadow}
           ${isHovered ? `scale-[1.02] ${statusColors.glow} shadow-xl` : ""}
           focus:outline-none focus:ring-4 focus:ring-blue-500/50
@@ -3141,9 +3142,50 @@ const SOSCall: React.FC = () => {
 
       <div className="min-h-screen bg-gray-950 overflow-x-hidden max-w-full">
         {/* ========================================
-            HERO SECTION
+            📱 HERO MOBILE COMPACT (sticky)
         ======================================== */}
-        <header className="relative pt-8 pb-8 sm:pt-16 sm:pb-20 overflow-hidden" role="banner">
+        <header className="lg:hidden sticky top-0 z-40 bg-gray-950/95 backdrop-blur-xl border-b border-white/10 safe-area-top" role="banner">
+          <div className="px-4 py-3 flex items-center justify-between">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-lg font-bold text-white truncate">
+                <FormattedMessage id="sosCall.hero.title.short" defaultMessage="SOS Expat" />
+              </h1>
+              <p className="text-xs text-gray-400 truncate">
+                <FormattedMessage
+                  id="sosCall.hero.expertCount.short"
+                  defaultMessage="{total} experts disponibles"
+                  values={{ total: filteredProviders.length }}
+                />
+              </p>
+            </div>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <span className="text-sm text-green-400 flex items-center gap-1.5 bg-green-400/10 px-2.5 py-1.5 rounded-full">
+                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" aria-hidden="true" />
+                <span className="font-medium">{onlineCount}</span>
+                <span className="hidden xs:inline">
+                  <FormattedMessage id="sosCall.status.online" />
+                </span>
+              </span>
+              <button
+                onClick={() => setIsFilterOpen(true)}
+                className="relative p-2.5 rounded-xl bg-white/10 text-white min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-white/20 transition-colors"
+                aria-label={intl.formatMessage({ id: "sosCall.filters.open", defaultMessage: "Ouvrir les filtres" })}
+              >
+                <SlidersHorizontal className="w-5 h-5" />
+                {activeFiltersCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+        </header>
+
+        {/* ========================================
+            🖥️ HERO DESKTOP (inchangé)
+        ======================================== */}
+        <header className="hidden lg:block relative pt-8 pb-8 sm:pt-16 sm:pb-20 overflow-hidden" role="banner">
           <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900" aria-hidden="true" />
           <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-transparent to-blue-500/10" aria-hidden="true" />
           <div className="absolute top-1/4 left-1/4 w-48 sm:w-64 lg:w-96 h-48 sm:h-64 lg:h-96 bg-gradient-to-r from-red-500/20 to-orange-500/20 rounded-full blur-3xl" aria-hidden="true" />
@@ -3210,18 +3252,85 @@ const SOSCall: React.FC = () => {
         {/* ========================================
             MAIN CONTENT
         ======================================== */}
-        <main 
-          className="py-6 sm:py-10 lg:py-14" 
-          id="experts" 
+        <main
+          className="lg:py-10"
+          id="experts"
           role="main"
           aria-labelledby="section-title"
-          itemScope 
+          itemScope
           itemType="https://schema.org/ItemList"
         >
           <meta itemProp="numberOfItems" content={filteredProviders.length.toString()} />
           <meta itemProp="itemListOrder" content="https://schema.org/ItemListOrderDescending" />
-          
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+
+          {/* ========================================
+              📱 FILTRES CHIPS MOBILE (sticky)
+          ======================================== */}
+          <div className="lg:hidden sticky top-[60px] z-30 bg-gray-900/95 backdrop-blur-md border-b border-white/10">
+            <div className="overflow-x-auto scrollbar-hide">
+              <div className="flex gap-2 px-4 py-2.5 min-w-max">
+                {/* Chip Type: All */}
+                <button
+                  onClick={() => setSelectedType("all")}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all min-h-[36px] ${
+                    selectedType === "all"
+                      ? "bg-red-500 text-white"
+                      : "bg-white/10 text-gray-300 hover:bg-white/20"
+                  }`}
+                >
+                  <FormattedMessage id="sosCall.filter.all" defaultMessage="Tous" />
+                </button>
+                {/* Chip Type: Lawyer */}
+                <button
+                  onClick={() => setSelectedType("lawyer")}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all min-h-[36px] flex items-center gap-1.5 ${
+                    selectedType === "lawyer"
+                      ? "bg-red-500 text-white"
+                      : "bg-white/10 text-gray-300 hover:bg-white/20"
+                  }`}
+                >
+                  <span>⚖️</span>
+                  <FormattedMessage id="sosCall.profession.lawyer" />
+                </button>
+                {/* Chip Type: Expat */}
+                <button
+                  onClick={() => setSelectedType("expat")}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all min-h-[36px] flex items-center gap-1.5 ${
+                    selectedType === "expat"
+                      ? "bg-red-500 text-white"
+                      : "bg-white/10 text-gray-300 hover:bg-white/20"
+                  }`}
+                >
+                  <span>🌍</span>
+                  <FormattedMessage id="sosCall.profession.expat" />
+                </button>
+                {/* Chip Status: Online */}
+                <button
+                  onClick={() => setStatusFilter(statusFilter === "online" ? "all" : "online")}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all min-h-[36px] flex items-center gap-1.5 ${
+                    statusFilter === "online"
+                      ? "bg-green-500 text-white"
+                      : "bg-white/10 text-gray-300 hover:bg-white/20"
+                  }`}
+                >
+                  <span className="w-2 h-2 bg-green-400 rounded-full" />
+                  <FormattedMessage id="sosCall.status.online" />
+                </button>
+                {/* Reset Filters (si des filtres sont actifs) */}
+                {activeFiltersCount > 0 && (
+                  <button
+                    onClick={resetFilters}
+                    className="px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all min-h-[36px] flex items-center gap-1.5 bg-white/10 text-gray-300 hover:bg-white/20"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <FormattedMessage id="sosCall.filters.reset" defaultMessage="Réinitialiser" />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:pt-0 pt-4">
             {/* ===== H2 - Titre de section (Desktop uniquement) ===== */}
             <div className="text-center mb-5 sm:mb-8">
               <h2
@@ -3669,24 +3778,25 @@ const SOSCall: React.FC = () => {
             {/* Skeletons */}
             {isLoadingProviders ? (
               <>
-                {/* Skeleton Mobile */}
-                <div 
-                  className="lg:hidden flex gap-3 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4"
+                {/* Skeleton Mobile - Grille verticale */}
+                <div
+                  className="lg:hidden space-y-4 pb-24"
                   aria-label={intl.formatMessage({ id: "sosCall.loading.ariaLabel", defaultMessage: "Chargement des experts" })}
                   aria-busy="true"
-                  style={{ WebkitOverflowScrolling: 'touch' }}
                 >
                   {Array.from({ length: 4 }).map((_, index) => (
-                    <div
-                      key={`sk-mobile-${index}`}
-                      className="flex-shrink-0 bg-white/5 rounded-2xl border border-white/10 overflow-hidden animate-pulse w-[280px]"
-                      role="article"
-                    >
-                      <div className="w-full h-48 bg-white/10" />
-                      <div className="p-4 space-y-3">
-                        <div className="h-4 bg-white/10 rounded w-3/4" />
-                        <div className="h-3 bg-white/10 rounded w-1/2" />
-                        <div className="h-10 bg-white/10 rounded-xl" />
+                    <div key={`sk-mobile-${index}`} className="flex justify-center">
+                      <div
+                        className="bg-white/5 rounded-2xl border border-white/10 overflow-hidden animate-pulse w-full max-w-[340px] min-h-[400px]"
+                        role="article"
+                      >
+                        <div className="w-full h-52 bg-white/10" />
+                        <div className="p-4 space-y-3">
+                          <div className="h-5 bg-white/10 rounded w-3/4" />
+                          <div className="h-4 bg-white/10 rounded w-1/2" />
+                          <div className="h-3 bg-white/10 rounded w-2/3" />
+                          <div className="h-10 bg-white/10 rounded-xl mt-4" />
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -3716,44 +3826,26 @@ const SOSCall: React.FC = () => {
               </>
             ) : filteredProviders.length > 0 ? (
               <>
-                {/* Version Mobile - Scroll horizontal centré */}
-                <div className="lg:hidden relative z-10">
-                  {/* Container de scroll centré */}
-                  <div
-                    className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide"
-                    role="list"
-                    aria-label={intl.formatMessage({ id: "sosCall.providerList.mobileAriaLabel" })}
-                    style={{
-                      WebkitOverflowScrolling: 'touch',
-                      paddingLeft: 'calc((100vw - 320px) / 2)',
-                      paddingRight: 'calc((100vw - 320px) / 2)',
-                    }}
-                  >
-                    {paginatedProviders.map((provider, index) => (
-                      <div
-                        key={provider.id}
-                        className="snap-center flex-shrink-0"
-                        role="listitem"
-                      >
-                        <ModernProfileCard
-                          provider={provider}
-                          onProfileClick={handleProviderClick}
-                          index={index}
-                          language={language}
-                          intl={intl}
-                        />
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Indicateur de scroll - En bas, sous les cards */}
-                  <div className="flex items-center justify-center gap-3 mt-4 py-3 px-4 mx-4 rounded-2xl bg-gradient-to-r from-red-500/20 via-orange-500/20 to-red-500/20 border border-white/10">
-                    <ChevronLeft className="w-5 h-5 text-white/80 animate-bounce-x" aria-hidden="true" />
-                    <span className="text-white font-medium text-sm">
-                      <FormattedMessage id="sosCall.scroll.hint" />
-                    </span>
-                    <ChevronRight className="w-5 h-5 text-white/80 animate-bounce-x-reverse" aria-hidden="true" />
-                  </div>
+                {/* ========================================
+                    📱 Version Mobile - Grille verticale 1 colonne
+                ======================================== */}
+                <div
+                  className="lg:hidden space-y-4 pb-24 relative z-10"
+                  role="list"
+                  aria-label={intl.formatMessage({ id: "sosCall.providerList.mobileAriaLabel" })}
+                >
+                  {/* Affiche tous les providers filtrés sur mobile (pas de pagination) */}
+                  {filteredProviders.map((provider, index) => (
+                    <div key={provider.id} className="flex justify-center" role="listitem">
+                      <ModernProfileCard
+                        provider={provider}
+                        onProfileClick={handleProviderClick}
+                        index={index}
+                        language={language}
+                        intl={intl}
+                      />
+                    </div>
+                  ))}
                 </div>
 
                 {/* Version Desktop - Grille */}
@@ -3775,8 +3867,8 @@ const SOSCall: React.FC = () => {
                   ))}
                 </div>
 
-                {/* Pagination (bas) */}
-                <div className="flex flex-col sm:flex-row items-center justify-between mt-6 sm:mt-8 gap-3 sm:gap-4">
+                {/* Pagination (bas) - Desktop uniquement */}
+                <div className="hidden lg:flex flex-col sm:flex-row items-center justify-between mt-6 sm:mt-8 gap-3 sm:gap-4">
                   <div className="text-xs sm:text-sm text-gray-300" role="status">
                     <FormattedMessage id="sosCall.pagination.page" />{" "}
                     <strong>{page}</strong> / {totalPages} —{" "}

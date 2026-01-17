@@ -1,6 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 // ====== FORCE REDEPLOY 2026-01-15 - AMD pending fix ======
+
+// ====== P1-4: SENTRY INITIALIZATION (must be first) ======
+import { initSentry } from "./config/sentry";
+initSentry();
+// Note: captureError is available via: import { captureError } from "./config/sentry"
+
 // ====== ULTRA DEBUG INITIALIZATION ======
 import {
   ultraLogger,
@@ -3269,11 +3275,20 @@ const handlePaymentIntentAmountCapturableUpdated = traceFunction(
     paymentIntent: Stripe.PaymentIntent,
     database: admin.firestore.Firestore
   ) => {
+    // 🔍 DEBUG P0: Log détaillé pour diagnostic
+    const webhookDebugId = `3ds_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+
     try {
-      console.log(`💳 [3DS_COMPLETE] === payment_intent.amount_capturable_updated ===`);
-      console.log(`💳 [3DS_COMPLETE] PaymentIntent ID: ${paymentIntent.id}`);
-      console.log(`💳 [3DS_COMPLETE] Status: ${paymentIntent.status}`);
-      console.log(`💳 [3DS_COMPLETE] Amount capturable: ${paymentIntent.amount_capturable}`);
+      console.log(`\n${'🔐'.repeat(40)}`);
+      console.log(`🔐 [${webhookDebugId}] === payment_intent.amount_capturable_updated ===`);
+      console.log(`🔐 [${webhookDebugId}] PaymentIntent ID: ${paymentIntent.id}`);
+      console.log(`🔐 [${webhookDebugId}] Status: ${paymentIntent.status}`);
+      console.log(`🔐 [${webhookDebugId}] Amount: ${paymentIntent.amount} ${paymentIntent.currency}`);
+      console.log(`🔐 [${webhookDebugId}] Amount capturable: ${paymentIntent.amount_capturable}`);
+      console.log(`🔐 [${webhookDebugId}] Capture method: ${paymentIntent.capture_method}`);
+      console.log(`🔐 [${webhookDebugId}] Created: ${new Date(paymentIntent.created * 1000).toISOString()}`);
+      console.log(`🔐 [${webhookDebugId}] Metadata: ${JSON.stringify(paymentIntent.metadata)}`);
+      console.log(`${'🔐'.repeat(40)}\n`);
 
       ultraLogger.info(
         "STRIPE_AMOUNT_CAPTURABLE_UPDATED",

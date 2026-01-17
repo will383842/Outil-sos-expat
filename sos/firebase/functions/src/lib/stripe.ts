@@ -48,9 +48,36 @@ export function getStripeSecretKey(mode?: 'live' | 'test'): string {
 }
 
 /**
+ * Check if running in Firebase emulator
+ */
+export function isEmulator(): boolean {
+  return process.env.FUNCTIONS_EMULATOR === 'true' ||
+         process.env.FIREBASE_EMULATOR === 'true' ||
+         process.env.FIRESTORE_EMULATOR_HOST !== undefined;
+}
+
+/**
+ * Check if running in production environment
+ */
+export function isProduction(): boolean {
+  return process.env.NODE_ENV === 'production' ||
+         process.env.GCLOUD_PROJECT === 'sos-expat' ||
+         (process.env.FIREBASE_CONFIG?.includes('"projectId":"sos-expat"') ?? false);
+}
+
+/**
  * Get Stripe mode (live or test)
+ *
+ * P0 CRITICAL FIX: In production (non-emulator), force 'live' mode
+ * to prevent accidental use of test keys in production
  */
 export function getStripeMode(): 'live' | 'test' {
+  // P0 FIX: Force live mode in production (non-emulator)
+  if (isProduction() && !isEmulator()) {
+    console.log('🔒 [Stripe] P0 FIX: Production detected, forcing LIVE mode');
+    return 'live';
+  }
+
   try {
     const modeValue = STRIPE_MODE.value();
     if (modeValue === 'live' || modeValue === 'test') {
@@ -65,8 +92,21 @@ export function getStripeMode(): 'live' | 'test' {
     return envMode;
   }
 
-  // Default to test
+  // Default to test (only in non-production)
   return 'test';
+}
+
+/**
+ * P0 FIX: Validate that Stripe mode is appropriate for the environment
+ * Throws an error if test mode is used in production
+ */
+export function validateStripeMode(mode: 'live' | 'test'): void {
+  if (isProduction() && !isEmulator() && mode !== 'live') {
+    throw new Error(
+      'P0 SECURITY ERROR: Stripe test mode is not allowed in production. ' +
+      'Set STRIPE_MODE=live or ensure STRIPE_SECRET_KEY_LIVE is configured.'
+    );
+  }
 }
 
 /**

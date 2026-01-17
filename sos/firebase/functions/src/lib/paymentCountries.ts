@@ -160,3 +160,79 @@ export function getStripeUnsupportedMessage(countryCode: string, locale: string 
 
   return messages[locale]?.message || messages.en.message;
 }
+
+// =============================================================================
+// P0 FIX: COUNTRY CODE VALIDATION
+// =============================================================================
+
+/**
+ * P0 FIX: Validate that a country code is in our supported whitelist
+ * Prevents injection of invalid country codes
+ *
+ * @param countryCode - ISO 3166-1 alpha-2 country code (e.g., "FR", "US")
+ * @returns true if the country code is valid and supported
+ */
+export function isValidCountryCode(countryCode: string): boolean {
+  if (!countryCode || typeof countryCode !== 'string') {
+    return false;
+  }
+
+  const normalized = countryCode.toUpperCase().trim();
+
+  // Must be exactly 2 characters
+  if (normalized.length !== 2) {
+    return false;
+  }
+
+  // Must only contain letters A-Z
+  if (!/^[A-Z]{2}$/.test(normalized)) {
+    return false;
+  }
+
+  // Must be in one of our supported country lists
+  return STRIPE_SUPPORTED_COUNTRIES.has(normalized) ||
+         PAYPAL_ONLY_COUNTRIES.has(normalized);
+}
+
+/**
+ * P0 FIX: Validate country code and throw error if invalid
+ * Use this at API boundaries to reject invalid input early
+ *
+ * @param countryCode - ISO 3166-1 alpha-2 country code
+ * @param context - Optional context for error message (e.g., "provider registration")
+ * @throws Error if country code is invalid
+ */
+export function validateCountryCode(countryCode: string, context?: string): void {
+  if (!isValidCountryCode(countryCode)) {
+    const contextMsg = context ? ` during ${context}` : '';
+    throw new Error(
+      `P0 VALIDATION ERROR: Invalid country code "${countryCode}"${contextMsg}. ` +
+      'Country code must be a valid ISO 3166-1 alpha-2 code (e.g., "FR", "US") ' +
+      'for a supported country.'
+    );
+  }
+}
+
+/**
+ * P0 FIX: Safely get payment gateway with validation
+ * Validates country code before returning gateway recommendation
+ *
+ * @param countryCode - ISO 3166-1 alpha-2 country code
+ * @returns Payment gateway recommendation
+ * @throws Error if country code is invalid
+ */
+export function getValidatedPaymentGateway(countryCode: string): PaymentGateway {
+  validateCountryCode(countryCode);
+  return getRecommendedPaymentGateway(countryCode);
+}
+
+/**
+ * Get all supported country codes (Stripe + PayPal)
+ * Useful for frontend validation dropdowns
+ */
+export function getAllSupportedCountries(): string[] {
+  return [
+    ...Array.from(STRIPE_SUPPORTED_COUNTRIES),
+    ...Array.from(PAYPAL_ONLY_COUNTRIES),
+  ].sort();
+}

@@ -466,7 +466,7 @@ export const createAndScheduleCallHTTPS = onCall(
       // ========================================
       // P0 FIX: Planifier l'appel ICI (pas via webhook) car avec capture_method=manual,
       // l'événement payment_intent.succeeded n'arrive qu'APRÈS capture (trop tard!)
-      const CALL_DELAY_SECONDS = 240; // 4 minutes
+      const CALL_DELAY_SECONDS = 60; // 1 minute
 
       console.log(`\n`);
       console.log(`=======================================================================`);

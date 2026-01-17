@@ -6,7 +6,7 @@ import { logError } from './utils/logs/logError';
 import { db } from './utils/firebase';
 import { logger as prodLogger } from './utils/productionLogger';
 // P0-3 FIX: Use centralized Stripe secrets helper
-import { getStripeSecretKey, getStripeSecretKeyLegacy, getStripeMode } from './lib/stripe';
+import { getStripeSecretKey, getStripeSecretKeyLegacy, getStripeMode, validateStripeMode } from './lib/stripe';
 // P0 FIX: Import PayPalManager for PayPal-only provider payouts
 import { PayPalManager } from './PayPalManager';
 
@@ -232,6 +232,7 @@ export class StripeManager {
    * 3) fallback STRIPE_SECRET_KEY (ancien schéma)
    *
    * P0-3 FIX: Use centralized helper with defineSecret().value() + process.env fallback
+   * P0-1 FIX: Validate that production uses live mode
    */
   private validateConfiguration(secretKey?: string): void {
     if (secretKey) {
@@ -241,6 +242,11 @@ export class StripeManager {
 
     // P0-3 FIX: Use helper that properly accesses Firebase v2 secrets
     const envMode = getStripeMode();
+
+    // P0-1 FIX: Validate Stripe mode is appropriate for environment
+    // Throws error if test mode is used in production
+    validateStripeMode(envMode);
+
     const keyFromSecrets = getStripeSecretKey(envMode);
 
     if (keyFromSecrets) {
@@ -1774,9 +1780,54 @@ async cancelPayment(
   sessionId?: string,
   secretKey?: string
 ): Promise<PaymentResult> {
+  // 🔍 DEBUG P0: Log avec stack trace pour identifier l'origine de l'annulation
+  const cancelDebugId = `cancel_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+  const stackTrace = new Error().stack?.split('\n').slice(1, 8).join('\n') || 'No stack';
+
+  console.log(`\n${'🚨'.repeat(40)}`);
+  console.log(`🚨 [${cancelDebugId}] ========== CANCEL PAYMENT CALLED ==========`);
+  console.log(`🚨 [${cancelDebugId}] PaymentIntentId: ${paymentIntentId}`);
+  console.log(`🚨 [${cancelDebugId}] Reason: ${reason}`);
+  console.log(`🚨 [${cancelDebugId}] SessionId: ${sessionId || 'N/A'}`);
+  console.log(`🚨 [${cancelDebugId}] Timestamp: ${new Date().toISOString()}`);
+  console.log(`🚨 [${cancelDebugId}] STACK TRACE (qui a appelé cancelPayment?):`);
+  console.log(stackTrace);
+  console.log(`${'🚨'.repeat(40)}\n`);
+
+  prodLogger.warn('STRIPE_CANCEL_PAYMENT_CALLED', `[${cancelDebugId}] cancelPayment invoked`, {
+    cancelDebugId,
+    paymentIntentId,
+    reason,
+    sessionId,
+    stackTrace,
+  });
+
   try {
     this.validateConfiguration(secretKey);
     if (!this.stripe) throw new HttpsError('internal', 'Stripe non initialisé');
+
+    // 🔍 DEBUG: Vérifier l'état actuel du PaymentIntent AVANT annulation
+    console.log(`🚨 [${cancelDebugId}] Checking current PaymentIntent status...`);
+    const currentIntent = await this.stripe.paymentIntents.retrieve(paymentIntentId);
+    console.log(`🚨 [${cancelDebugId}] Current status: ${currentIntent.status}`);
+    console.log(`🚨 [${cancelDebugId}] Amount: ${currentIntent.amount} ${currentIntent.currency}`);
+    console.log(`🚨 [${cancelDebugId}] Created: ${new Date(currentIntent.created * 1000).toISOString()}`);
+
+    // 🔍 DEBUG: Si le paiement est déjà capturé ou annulé, log et skip
+    if (currentIntent.status === 'succeeded') {
+      console.log(`🚨 [${cancelDebugId}] ⚠️ PAYMENT ALREADY SUCCEEDED - Cannot cancel!`);
+      prodLogger.error('STRIPE_CANCEL_ALREADY_SUCCEEDED', `[${cancelDebugId}] Tried to cancel already captured payment`, {
+        cancelDebugId,
+        paymentIntentId,
+        status: currentIntent.status,
+      });
+      return { success: false, error: 'Payment already captured - cannot cancel' };
+    }
+
+    if (currentIntent.status === 'canceled') {
+      console.log(`🚨 [${cancelDebugId}] ⚠️ PAYMENT ALREADY CANCELED - Skipping`);
+      return { success: true, paymentIntentId };
+    }
 
     type CancelReason = Stripe.PaymentIntentCancelParams.CancellationReason;
     // ✅ Liste valide pour PaymentIntents
@@ -1795,6 +1846,8 @@ async cancelPayment(
     // ===== P0 FIX: Idempotency key pour l'annulation =====
     // IMPORTANT: Une annulation ne doit se faire qu'une seule fois par PaymentIntent
     const cancelIdempotencyKey = `cancel_${paymentIntentId}`;
+
+    console.log(`🚨 [${cancelDebugId}] 🛑 PROCEEDING WITH CANCELLATION...`);
     const canceled = await this.stripe.paymentIntents.cancel(
       paymentIntentId,
       {
@@ -1809,17 +1862,23 @@ async cancelPayment(
       canceledAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       sessionId: sessionId || null,
+      cancelDebugId, // 🔍 DEBUG: Tracker l'ID de debug
     });
 
-    console.log('Paiement annulé:', {
-      id: paymentIntentId,
-      status: canceled.status,
+    console.log(`🚨 [${cancelDebugId}] ✅ PAYMENT CANCELED SUCCESSFULLY`);
+    console.log(`🚨 [${cancelDebugId}]   New status: ${canceled.status}`);
+    console.log(`${'🚨'.repeat(40)}\n`);
+
+    prodLogger.warn('STRIPE_CANCEL_PAYMENT_SUCCESS', `[${cancelDebugId}] Payment cancelled`, {
+      cancelDebugId,
+      paymentIntentId,
       reason,
-      mode: this.mode,
+      newStatus: canceled.status,
     });
 
     return { success: true, paymentIntentId: canceled.id };
   } catch (error) {
+    console.error(`🚨 [${cancelDebugId}] ❌ CANCEL PAYMENT ERROR:`, error);
     await logError('StripeManager:cancelPayment', error);
     const msg =
       error instanceof HttpsError

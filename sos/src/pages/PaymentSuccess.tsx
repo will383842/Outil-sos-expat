@@ -210,7 +210,7 @@ const SuccessPayment: React.FC = () => {
     callStatus === "failed" ? "failed" : "connecting"
   );
   const [timeRemaining, setTimeRemaining] = useState(0);
-  const [countdownToCall, setCountdownToCall] = useState(240); // 5 minutes
+  const [countdownToCall, setCountdownToCall] = useState(60); // 1 minute
   const [paymentTimestamp, setPaymentTimestamp] = useState<number | null>(null);
   // P0 FIX: Track failure reason to display the correct message (client vs provider no_answer)
   const [failureReason, setFailureReason] = useState<string | null>(null);

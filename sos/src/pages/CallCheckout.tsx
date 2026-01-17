@@ -783,6 +783,139 @@ const useTranslation = () => {
       pt: "Número de telefone inválido",
       ar: "رقم الهاتف غير صالح"
     },
+    // ✨ Friendly error messages - Fun & Non-aggressive
+    "err.duplicate.title": {
+      fr: "Oups, déjà en cours ! 🔄",
+      en: "Oops, already in progress! 🔄",
+      es: "¡Ups, ya está en curso! 🔄",
+      de: "Hoppla, bereits in Bearbeitung! 🔄",
+      ru: "Упс, уже в процессе! 🔄",
+      hi: "उफ़, पहले से प्रगति पर है! 🔄",
+      ch: "哎呀，已经在进行中了！🔄",
+      pt: "Ops, já está em andamento! 🔄",
+      ar: "عفوًا، قيد التنفيذ بالفعل! 🔄"
+    },
+    "err.duplicate.message": {
+      fr: "Un paiement similaire est déjà en cours. Patientez quelques instants ou vérifiez votre historique.",
+      en: "A similar payment is already being processed. Please wait a moment or check your history.",
+      es: "Ya se está procesando un pago similar. Espera un momento o revisa tu historial.",
+      de: "Eine ähnliche Zahlung wird bereits bearbeitet. Bitte warten Sie oder prüfen Sie Ihren Verlauf.",
+      ru: "Аналогичный платеж уже обрабатывается. Подождите или проверьте историю.",
+      hi: "एक समान भुगतान पहले से संसाधित हो रहा है। कृपया प्रतीक्षा करें।",
+      ch: "类似的付款已在处理中。请稍候或查看您的历史记录。",
+      pt: "Um pagamento similar já está sendo processado. Aguarde ou verifique seu histórico.",
+      ar: "يتم بالفعل معالجة دفعة مماثلة. يرجى الانتظار أو التحقق من السجل."
+    },
+    "err.rateLimit.title": {
+      fr: "Tout doux ! ☕",
+      en: "Easy there! ☕",
+      es: "¡Con calma! ☕",
+      de: "Immer mit der Ruhe! ☕",
+      ru: "Не торопитесь! ☕",
+      hi: "धीरे धीरे! ☕",
+      ch: "慢慢来！☕",
+      pt: "Calma aí! ☕",
+      ar: "بالتأني! ☕"
+    },
+    "err.rateLimit.message": {
+      fr: "Trop de tentatives. Prenez un café et réessayez dans quelques minutes.",
+      en: "Too many attempts. Take a coffee break and try again in a few minutes.",
+      es: "Demasiados intentos. Tómate un café y vuelve a intentarlo en unos minutos.",
+      de: "Zu viele Versuche. Machen Sie eine Kaffeepause und versuchen Sie es in ein paar Minuten erneut.",
+      ru: "Слишком много попыток. Выпейте кофе и попробуйте через несколько минут.",
+      hi: "बहुत सारे प्रयास। कॉफी ब्रेक लें और कुछ मिनटों में फिर से प्रयास करें।",
+      ch: "尝试次数太多。休息一下，几分钟后再试。",
+      pt: "Muitas tentativas. Tome um café e tente novamente em alguns minutos.",
+      ar: "محاولات كثيرة جدًا. خذ استراحة وحاول مرة أخرى بعد بضع دقائق."
+    },
+    "err.cardDeclined.title": {
+      fr: "Carte non acceptée 💳",
+      en: "Card not accepted 💳",
+      es: "Tarjeta no aceptada 💳",
+      de: "Karte nicht akzeptiert 💳",
+      ru: "Карта не принята 💳",
+      hi: "कार्ड स्वीकार नहीं किया गया 💳",
+      ch: "卡未被接受 💳",
+      pt: "Cartão não aceito 💳",
+      ar: "البطاقة غير مقبولة 💳"
+    },
+    "err.cardDeclined.message": {
+      fr: "Votre banque a refusé le paiement. Essayez une autre carte ou contactez votre banque.",
+      en: "Your bank declined the payment. Try another card or contact your bank.",
+      es: "Tu banco rechazó el pago. Prueba otra tarjeta o contacta a tu banco.",
+      de: "Ihre Bank hat die Zahlung abgelehnt. Versuchen Sie eine andere Karte oder kontaktieren Sie Ihre Bank.",
+      ru: "Ваш банк отклонил платеж. Попробуйте другую карту или свяжитесь с банком.",
+      hi: "आपके बैंक ने भुगतान अस्वीकार कर दिया। दूसरा कार्ड आज़माएं या अपने बैंक से संपर्क करें।",
+      ch: "您的银行拒绝了付款。尝试另一张卡或联系您的银行。",
+      pt: "Seu banco recusou o pagamento. Tente outro cartão ou entre em contato com seu banco.",
+      ar: "رفض البنك الدفع. جرب بطاقة أخرى أو اتصل بالبنك."
+    },
+    "err.insufficientFunds.title": {
+      fr: "Solde insuffisant 💰",
+      en: "Insufficient funds 💰",
+      es: "Fondos insuficientes 💰",
+      de: "Unzureichendes Guthaben 💰",
+      ru: "Недостаточно средств 💰",
+      hi: "अपर्याप्त शेष 💰",
+      ch: "余额不足 💰",
+      pt: "Saldo insuficiente 💰",
+      ar: "رصيد غير كافٍ 💰"
+    },
+    "err.insufficientFunds.message": {
+      fr: "Vérifiez votre solde ou essayez avec une autre carte.",
+      en: "Check your balance or try with another card.",
+      es: "Verifica tu saldo o intenta con otra tarjeta.",
+      de: "Überprüfen Sie Ihr Guthaben oder versuchen Sie es mit einer anderen Karte.",
+      ru: "Проверьте баланс или попробуйте другую карту.",
+      hi: "अपना बैलेंस जांचें या दूसरे कार्ड से प्रयास करें।",
+      ch: "检查您的余额或尝试使用另一张卡。",
+      pt: "Verifique seu saldo ou tente com outro cartão.",
+      ar: "تحقق من رصيدك أو جرب بطاقة أخرى."
+    },
+    "err.network.title": {
+      fr: "Connexion instable 📶",
+      en: "Unstable connection 📶",
+      es: "Conexión inestable 📶",
+      de: "Instabile Verbindung 📶",
+      ru: "Нестабильное соединение 📶",
+      hi: "अस्थिर कनेक्शन 📶",
+      ch: "连接不稳定 📶",
+      pt: "Conexão instável 📶",
+      ar: "اتصال غير مستقر 📶"
+    },
+    "err.network.message": {
+      fr: "Vérifiez votre connexion internet et réessayez.",
+      en: "Check your internet connection and try again.",
+      es: "Verifica tu conexión a internet e inténtalo de nuevo.",
+      de: "Überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.",
+      ru: "Проверьте подключение к интернету и попробуйте снова.",
+      hi: "अपना इंटरनेट कनेक्शन जांचें और पुनः प्रयास करें।",
+      ch: "检查您的网络连接并重试。",
+      pt: "Verifique sua conexão com a internet e tente novamente.",
+      ar: "تحقق من اتصالك بالإنترنت وحاول مرة أخرى."
+    },
+    "err.tryAgain": {
+      fr: "Réessayer",
+      en: "Try again",
+      es: "Reintentar",
+      de: "Erneut versuchen",
+      ru: "Попробовать снова",
+      hi: "पुनः प्रयास करें",
+      ch: "重试",
+      pt: "Tentar novamente",
+      ar: "حاول مرة أخرى"
+    },
+    "err.contactSupport": {
+      fr: "Contacter le support",
+      en: "Contact support",
+      es: "Contactar soporte",
+      de: "Support kontaktieren",
+      ru: "Связаться с поддержкой",
+      hi: "सहायता से संपर्क करें",
+      ch: "联系支持",
+      pt: "Contatar suporte",
+      ar: "اتصل بالدعم"
+    },
   };
 
 
@@ -925,6 +1058,227 @@ function useIsMobile(): boolean {
 
   return isMobile;
 }
+
+/* =====================================================================
+ * 🎨 PaymentFeedback - Friendly, fun & mobile-first error display
+ * ===================================================================== */
+type FeedbackType = 'error' | 'warning' | 'info' | 'success';
+
+interface PaymentFeedbackProps {
+  error: string;
+  onDismiss: () => void;
+  onRetry?: () => void;
+  t: (key: string, fallback?: string) => string;
+}
+
+// Detect error type from message
+const detectErrorType = (error: string): {
+  type: 'duplicate' | 'rateLimit' | 'cardDeclined' | 'insufficientFunds' | 'network' | 'generic';
+  feedbackType: FeedbackType;
+} => {
+  const lowerError = error.toLowerCase();
+
+  if (lowerError.includes('already') || lowerError.includes('doublon') || lowerError.includes('déjà') || lowerError.includes('similaire')) {
+    return { type: 'duplicate', feedbackType: 'warning' };
+  }
+  if (lowerError.includes('rate') || lowerError.includes('tentative') || lowerError.includes('trop')) {
+    return { type: 'rateLimit', feedbackType: 'info' };
+  }
+  if (lowerError.includes('declined') || lowerError.includes('refusé') || lowerError.includes('rejected')) {
+    return { type: 'cardDeclined', feedbackType: 'warning' };
+  }
+  if (lowerError.includes('insufficient') || lowerError.includes('insuffisant') || lowerError.includes('funds')) {
+    return { type: 'insufficientFunds', feedbackType: 'warning' };
+  }
+  if (lowerError.includes('network') || lowerError.includes('connexion') || lowerError.includes('internet') || lowerError.includes('timeout')) {
+    return { type: 'network', feedbackType: 'info' };
+  }
+
+  return { type: 'generic', feedbackType: 'error' };
+};
+
+// Color schemes for different feedback types (soft, non-aggressive)
+const feedbackStyles: Record<FeedbackType, { bg: string; border: string; icon: string; iconBg: string; text: string; button: string }> = {
+  error: {
+    bg: 'bg-rose-50',
+    border: 'border-rose-200',
+    icon: 'text-rose-500',
+    iconBg: 'bg-rose-100',
+    text: 'text-rose-800',
+    button: 'bg-rose-500 hover:bg-rose-600 text-white'
+  },
+  warning: {
+    bg: 'bg-amber-50',
+    border: 'border-amber-200',
+    icon: 'text-amber-500',
+    iconBg: 'bg-amber-100',
+    text: 'text-amber-800',
+    button: 'bg-amber-500 hover:bg-amber-600 text-white'
+  },
+  info: {
+    bg: 'bg-sky-50',
+    border: 'border-sky-200',
+    icon: 'text-sky-500',
+    iconBg: 'bg-sky-100',
+    text: 'text-sky-800',
+    button: 'bg-sky-500 hover:bg-sky-600 text-white'
+  },
+  success: {
+    bg: 'bg-emerald-50',
+    border: 'border-emerald-200',
+    icon: 'text-emerald-500',
+    iconBg: 'bg-emerald-100',
+    text: 'text-emerald-800',
+    button: 'bg-emerald-500 hover:bg-emerald-600 text-white'
+  }
+};
+
+const PaymentFeedback: React.FC<PaymentFeedbackProps> = ({ error, onDismiss, onRetry, t }) => {
+  const { type, feedbackType } = detectErrorType(error);
+  const styles = feedbackStyles[feedbackType];
+
+  // Get translated title and message based on error type
+  const getContent = () => {
+    switch (type) {
+      case 'duplicate':
+        return {
+          title: t('err.duplicate.title', 'Oups, déjà en cours ! 🔄'),
+          message: t('err.duplicate.message', error)
+        };
+      case 'rateLimit':
+        return {
+          title: t('err.rateLimit.title', 'Tout doux ! ☕'),
+          message: t('err.rateLimit.message', error)
+        };
+      case 'cardDeclined':
+        return {
+          title: t('err.cardDeclined.title', 'Carte non acceptée 💳'),
+          message: t('err.cardDeclined.message', error)
+        };
+      case 'insufficientFunds':
+        return {
+          title: t('err.insufficientFunds.title', 'Solde insuffisant 💰'),
+          message: t('err.insufficientFunds.message', error)
+        };
+      case 'network':
+        return {
+          title: t('err.network.title', 'Connexion instable 📶'),
+          message: t('err.network.message', error)
+        };
+      default:
+        return {
+          title: t('err.paymentFailed', 'Le paiement a échoué'),
+          message: error
+        };
+    }
+  };
+
+  const { title, message } = getContent();
+
+  return (
+    <div
+      className={`
+        mb-4 p-4 rounded-2xl border-2 ${styles.bg} ${styles.border}
+        animate-in slide-in-from-top-2 fade-in duration-300
+        shadow-sm
+      `}
+      role="alert"
+      aria-live="polite"
+    >
+      {/* Mobile-first: Stack layout */}
+      <div className="flex flex-col gap-3">
+        {/* Header with icon and title */}
+        <div className="flex items-start gap-3">
+          {/* Animated icon container */}
+          <div className={`
+            flex-shrink-0 w-10 h-10 rounded-xl ${styles.iconBg}
+            flex items-center justify-center
+            animate-in zoom-in duration-200
+          `}>
+            {type === 'duplicate' && (
+              <svg className={`w-5 h-5 ${styles.icon}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            )}
+            {type === 'rateLimit' && (
+              <svg className={`w-5 h-5 ${styles.icon}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            )}
+            {type === 'cardDeclined' && (
+              <svg className={`w-5 h-5 ${styles.icon}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              </svg>
+            )}
+            {type === 'insufficientFunds' && (
+              <svg className={`w-5 h-5 ${styles.icon}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            )}
+            {type === 'network' && (
+              <svg className={`w-5 h-5 ${styles.icon}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+              </svg>
+            )}
+            {type === 'generic' && (
+              <svg className={`w-5 h-5 ${styles.icon}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            )}
+          </div>
+
+          {/* Title and dismiss button */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-2">
+              <h4 className={`font-semibold text-base ${styles.text}`}>
+                {title}
+              </h4>
+              <button
+                onClick={onDismiss}
+                className={`
+                  flex-shrink-0 p-1.5 rounded-lg
+                  hover:bg-black/5 active:bg-black/10
+                  transition-colors duration-150
+                `}
+                aria-label="Fermer"
+              >
+                <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Message */}
+            <p className={`mt-1 text-sm ${styles.text} opacity-80 leading-relaxed`}>
+              {message}
+            </p>
+          </div>
+        </div>
+
+        {/* Action buttons - Mobile optimized */}
+        {onRetry && (
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={onRetry}
+              className={`
+                flex-1 py-2.5 px-4 rounded-xl font-medium text-sm
+                ${styles.button}
+                transition-all duration-150
+                active:scale-[0.98]
+                flex items-center justify-center gap-2
+              `}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              {t('err.tryAgain', 'Réessayer')}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 /* --------------------- Price tracing: hook & helpers --------------------- */
 interface PricingEntryTrace {
@@ -3184,19 +3538,12 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
               </div>
 
               {error && (
-                <div
-                  className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg"
-                  role="alert"
-                  aria-live="assertive"
-                >
-                  <div className="flex items-center">
-                    <AlertCircle
-                      className="w-4 h-4 text-red-500 mr-2 flex-shrink-0"
-                      aria-hidden={true}
-                    />
-                    <span className="text-sm text-red-700">{error}</span>
-                  </div>
-                </div>
+                <PaymentFeedback
+                  error={error}
+                  onDismiss={() => setError("")}
+                  onRetry={() => setError("")}
+                  t={t as (key: string, fallback?: string) => string}
+                />
               )}
 
               {/*
