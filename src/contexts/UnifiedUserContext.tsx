@@ -511,7 +511,15 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
   // ─────────────────────────────────────────────────────────────────────────
 
   const authenticated = !!user;
-  const hasAllowedRole = role ? ALLOWED_ROLES.includes(role) : false;
+
+  // ROBUSTE: Un utilisateur a un rôle autorisé si:
+  // 1. Son rôle est dans ALLOWED_ROLES, OU
+  // 2. Il est un provider (trouvé par email), OU
+  // 3. Il est admin
+  const hasAllowedRole =
+    (role ? ALLOWED_ROLES.includes(role) : false) ||
+    isProvider ||
+    isAdmin;
 
   // ─────────────────────────────────────────────────────────────────────────
   // CONTEXT VALUE (memoized)

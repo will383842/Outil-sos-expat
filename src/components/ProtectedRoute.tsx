@@ -1,48 +1,42 @@
 /**
  * =============================================================================
- * PROTECTED ROUTE - Protection d'accès SSO
+ * PROTECTED ROUTE - Protection d'accès SSO (VERSION CONSOLIDÉE)
  * =============================================================================
  *
- * Vérifie :
- * 1. L'utilisateur est connecté (via SSO depuis sos-expat.com)
- * 2. L'utilisateur a un rôle autorisé (avocat, expat, admin)
+ * LOGIQUE ROBUSTE:
+ * 1. Attendre que l'authentification soit chargée
+ * 2. Si pas connecté → Redirige vers /auth
+ * 3. Si admin OU provider → Accès immédiat (bypass tout le reste)
+ * 4. Sinon, vérifier le rôle
  *
- * NOTE: L'abonnement est géré côté SOS-Expat (Laravel), pas ici.
- * Si l'utilisateur est authentifié via SSO, il a accès.
- *
- * Si pas connecté → Redirige vers /auth (page SSO)
- * Si rôle non autorisé → Écran "Accès réservé aux prestataires"
+ * NOTE IMPORTANTE:
+ * L'abonnement est géré côté SOS-Expat (Laravel), PAS ici.
+ * Si l'utilisateur est un provider (trouvé par email), il a accès.
  *
  * =============================================================================
  */
 
 import { memo } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
-import { useAuth, useSubscription } from "../contexts/UnifiedUserContext";
+import { useAuth, useSubscription, useProvider } from "../contexts/UnifiedUserContext";
 import { BlockedScreen } from "./guards";
 import { useLanguage } from "../hooks/useLanguage";
 
 // =============================================================================
-// DEV MODE: Bypass d'authentification pour les tests
-// Activer via ?dev=true dans l'URL ou via VITE_DEV_BYPASS=true
+// TYPES
 // =============================================================================
-
-const DEV_BYPASS_ENABLED = import.meta.env.DEV && (
-  import.meta.env.VITE_DEV_BYPASS === "true" ||
-  typeof window !== "undefined" && window.location.search.includes("dev=true")
-);
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
-// =============================================================================
-// COMPOSANT: Loading Spinner réutilisable
-// =============================================================================
-
 interface LoadingSpinnerProps {
   messageKey: string;
 }
+
+// =============================================================================
+// COMPOSANT: Loading Spinner
+// =============================================================================
 
 const LoadingSpinner = memo(function LoadingSpinner({ messageKey }: LoadingSpinnerProps) {
   const { t } = useLanguage({ mode: "provider" });
@@ -63,62 +57,74 @@ const LoadingSpinner = memo(function LoadingSpinner({ messageKey }: LoadingSpinn
 function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { t } = useLanguage({ mode: "provider" });
   const { user, loading: authLoading, isAdmin } = useAuth();
-  const {
-    hasAllowedRole,
-    role,
-    loading: subLoading,
-    error,
-  } = useSubscription();
+  const { hasAllowedRole, role, loading: subLoading, error } = useSubscription();
+  const { isProvider, providerProfile } = useProvider();
   const [searchParams] = useSearchParams();
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // DEV MODE BYPASS: Accès direct pour tests (uniquement en développement)
-  // Usage: ajouter ?dev=true à l'URL (sera mémorisé dans sessionStorage)
-  // ─────────────────────────────────────────────────────────────────────────
-  const isDev = import.meta.env.DEV || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ÉTAPE 0: DEV MODE BYPASS (uniquement en développement)
+  // ═══════════════════════════════════════════════════════════════════════════
+  const isDev = import.meta.env.DEV ||
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1";
 
-  // Stocker le mode dev dans sessionStorage pour le conserver pendant la navigation
   if (isDev && searchParams.get("dev") === "true") {
     sessionStorage.setItem("devMode", "true");
   }
 
-  const devBypass = isDev && (searchParams.get("dev") === "true" || sessionStorage.getItem("devMode") === "true");
+  const devBypass = isDev && (
+    searchParams.get("dev") === "true" ||
+    sessionStorage.getItem("devMode") === "true"
+  );
+
   if (devBypass) {
-    console.warn("⚠️ [DEV MODE] Bypass d'authentification activé - NE PAS UTILISER EN PRODUCTION");
+    console.warn("⚠️ [DEV MODE] Bypass activé");
     return <>{children}</>;
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // ADMIN BYPASS: Les admins ont accès à tout
-  // ─────────────────────────────────────────────────────────────────────────
-  if (isAdmin && user) {
-    return <>{children}</>;
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // LOADING: Authentification
-  // ─────────────────────────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ÉTAPE 1: ATTENDRE L'AUTHENTIFICATION
+  // ═══════════════════════════════════════════════════════════════════════════
   if (authLoading) {
     return <LoadingSpinner messageKey="guards.loading" />;
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // NON CONNECTÉ → Redirige vers SSO
-  // ─────────────────────────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ÉTAPE 2: VÉRIFIER SI CONNECTÉ
+  // ═══════════════════════════════════════════════════════════════════════════
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // LOADING: Vérification abonnement/rôle
-  // ─────────────────────────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ÉTAPE 3: BYPASS ADMIN - Les admins ont toujours accès
+  // ═══════════════════════════════════════════════════════════════════════════
+  if (isAdmin) {
+    return <>{children}</>;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ÉTAPE 4: BYPASS PROVIDER - Les providers ont toujours accès
+  // C'est la règle clé: si trouvé dans la collection "providers" par email,
+  // l'utilisateur a accès. L'abonnement est géré par SOS-Expat.
+  // ═══════════════════════════════════════════════════════════════════════════
+  if (isProvider && providerProfile) {
+    return <>{children}</>;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ÉTAPE 5: ATTENDRE LE CHARGEMENT DES DONNÉES UTILISATEUR
+  // (Seulement si pas admin/provider - sinon on aurait déjà retourné)
+  // ═══════════════════════════════════════════════════════════════════════════
   if (subLoading) {
     return <LoadingSpinner messageKey="guards.verifyingAccess" />;
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // ERREUR: Compte non trouvé dans Firestore
-  // ─────────────────────────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ÉTAPE 6: VÉRIFIER LES ERREURS
+  // Note: Cette erreur ne devrait pas apparaître pour les providers car ils
+  // sont gérés à l'étape 4. Ceci est pour les autres utilisateurs.
+  // ═══════════════════════════════════════════════════════════════════════════
   if (error) {
     return (
       <BlockedScreen
@@ -138,13 +144,16 @@ function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // RÔLE NON AUTORISÉ
-  // ─────────────────────────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ÉTAPE 7: VÉRIFIER LE RÔLE
+  // Note: hasAllowedRole inclut déjà isProvider et isAdmin dans sa logique
+  // Donc ce check est une sécurité supplémentaire pour les cas edge
+  // ═══════════════════════════════════════════════════════════════════════════
   if (!hasAllowedRole) {
     const roleDescription = role
       ? `${t("guards.accessReservedDescription")} ${t("guards.currentRoleNotAllowed", { role })}`
       : t("guards.accessReservedDescription");
+
     return (
       <BlockedScreen
         icon="shield"
@@ -163,10 +172,9 @@ function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // TOUT OK → Afficher le contenu protégé
-  // NOTE: L'abonnement est géré côté SOS-Expat, pas de vérification ici
-  // ─────────────────────────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ÉTAPE 8: TOUT OK → AFFICHER LE CONTENU
+  // ═══════════════════════════════════════════════════════════════════════════
   return <>{children}</>;
 }
 
