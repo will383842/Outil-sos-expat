@@ -275,15 +275,34 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
     console.log(`🏁 [${endId}]   twilioDuration (total conference): ${twilioDuration}s`);
     console.log(`${'█'.repeat(70)}`);
 
-    // P0 CRITICAL FIX 2026-01-17: Check if this webhook is from the CURRENT conference
+    // P0 CRITICAL FIX 2026-01-17 v2: Check if this webhook is from the CURRENT conference
     // When a participant is transferred to a new conference, the old conference ends
     // and sends a conference-end event. We must ignore it if the session has moved to a new conference.
+    //
+    // BUG FIX: If the webhook has a ConferenceSID but the session doesn't have one yet,
+    // it means the conference-end webhook arrived BEFORE the conference-start webhook.
+    // This happens when an OLD conference ends while a NEW conference is starting.
+    // We must IGNORE these webhooks to prevent premature payment cancellation.
     console.log(`🏁 [${endId}] STEP 0: Checking if webhook is from CURRENT conference...`);
     const sessionForConferenceCheck = await twilioCallManager.getCallSession(sessionId);
-    if (sessionForConferenceCheck?.conference?.sid && webhookConferenceSid) {
-      const currentConferenceSid = sessionForConferenceCheck.conference.sid;
+    const currentConferenceSid = sessionForConferenceCheck?.conference?.sid;
+
+    if (webhookConferenceSid) {
+      if (!currentConferenceSid) {
+        // Webhook has a SID but session doesn't have one yet
+        // This means conference-start hasn't been processed yet
+        // This webhook is from an OLD conference - IGNORE IT
+        console.log(`🏁 [${endId}] ⚠️ STALE CONFERENCE WEBHOOK - IGNORING (session has no SID yet)`);
+        console.log(`🏁 [${endId}]   webhookConferenceSid: ${webhookConferenceSid}`);
+        console.log(`🏁 [${endId}]   currentConferenceSid: NOT SET YET`);
+        console.log(`🏁 [${endId}]   This webhook arrived BEFORE conference-start - it's from an OLD conference`);
+        console.log(`🏁 [${endId}]   ⛔ NOT processing this webhook to prevent premature payment cancellation`);
+        console.log(`${'█'.repeat(70)}\n`);
+        return;
+      }
+
       if (currentConferenceSid !== webhookConferenceSid) {
-        console.log(`🏁 [${endId}] ⚠️ STALE CONFERENCE WEBHOOK - IGNORING`);
+        console.log(`🏁 [${endId}] ⚠️ STALE CONFERENCE WEBHOOK - IGNORING (SID mismatch)`);
         console.log(`🏁 [${endId}]   webhookConferenceSid: ${webhookConferenceSid}`);
         console.log(`🏁 [${endId}]   currentConferenceSid: ${currentConferenceSid}`);
         console.log(`🏁 [${endId}]   This is an OLD conference ending - the call has moved to a new conference`);
@@ -291,9 +310,10 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
         console.log(`${'█'.repeat(70)}\n`);
         return;
       }
+
       console.log(`🏁 [${endId}]   ✅ ConferenceSID matches current session - processing webhook`);
     } else {
-      console.log(`🏁 [${endId}]   ⚠️ Cannot verify ConferenceSID (session or webhook missing SID) - proceeding with caution`);
+      console.log(`🏁 [${endId}]   ⚠️ Webhook has no ConferenceSID - proceeding with caution`);
     }
 
     console.log(`🏁 [${endId}] STEP 1: Fetching session state BEFORE update...`);
@@ -625,19 +645,39 @@ async function handleParticipantLeave(sessionId: string, body: TwilioConferenceW
     const callSid = body.CallSid!;
     const webhookConferenceSid = body.ConferenceSid;
 
-    // P0 CRITICAL FIX 2026-01-17: Check if this webhook is from the CURRENT conference
+    // P0 CRITICAL FIX 2026-01-17 v2: Check if this webhook is from the CURRENT conference
     // When a participant is transferred to a new conference, the old conference sends
     // a participant-leave event. We must ignore it if the session has moved to a new conference.
+    //
+    // BUG FIX v2: If the webhook has a ConferenceSID but the session doesn't have one yet,
+    // it means the participant-leave webhook arrived BEFORE the conference-start webhook.
+    // This happens when an OLD conference ends while a NEW conference is starting.
+    // We must IGNORE these webhooks to prevent incorrect state updates.
     const sessionForConferenceCheck = await twilioCallManager.getCallSession(sessionId);
-    if (sessionForConferenceCheck?.conference?.sid && webhookConferenceSid) {
-      const currentConferenceSid = sessionForConferenceCheck.conference.sid;
+    const currentConferenceSid = sessionForConferenceCheck?.conference?.sid;
+
+    if (webhookConferenceSid) {
+      if (!currentConferenceSid) {
+        // Webhook has a SID but session doesn't have one yet
+        // This means conference-start hasn't been processed yet
+        // This webhook is from an OLD conference - IGNORE IT
+        console.log(`👋 [${leaveId}] ⚠️ STALE CONFERENCE WEBHOOK - IGNORING (session has no SID yet)`);
+        console.log(`👋 [${leaveId}]   webhookConferenceSid: ${webhookConferenceSid}`);
+        console.log(`👋 [${leaveId}]   currentConferenceSid: NOT SET YET`);
+        console.log(`👋 [${leaveId}]   This webhook arrived BEFORE conference-start - it's from an OLD conference`);
+        console.log(`👋 [${leaveId}]   ⛔ NOT processing this webhook to prevent incorrect state updates`);
+        return;
+      }
+
       if (currentConferenceSid !== webhookConferenceSid) {
-        console.log(`👋 [${leaveId}] ⚠️ STALE CONFERENCE WEBHOOK - IGNORING`);
+        console.log(`👋 [${leaveId}] ⚠️ STALE CONFERENCE WEBHOOK - IGNORING (SID mismatch)`);
         console.log(`👋 [${leaveId}]   webhookConferenceSid: ${webhookConferenceSid}`);
         console.log(`👋 [${leaveId}]   currentConferenceSid: ${currentConferenceSid}`);
         console.log(`👋 [${leaveId}]   Participant likely transferred to new conference - skipping leave handling`);
         return;
       }
+
+      console.log(`👋 [${leaveId}]   ✅ ConferenceSID matches current session - processing webhook`);
     }
 
     // P0 FIX: Determine participantType from ParticipantLabel OR fallback to CallSid lookup
