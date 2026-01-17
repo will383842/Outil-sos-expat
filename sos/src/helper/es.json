@@ -5759,5 +5759,12 @@
   "wizard.step3.lawyer.desc": "Asesoramiento jurídico profesional",
   "wizard.step3.subtitle": "Seleccione el tipo de experto",
   "wizard.step3.title": "¿Con quién desea contactar?",
-  "worldwideLabel": "Mundial"
+  "worldwideLabel": "Mundial",
+
+  "socialShare.share": "Compartir",
+  "socialShare.shareThisProfile": "Compartir este perfil",
+  "socialShare.copyLink": "Copiar enlace",
+  "socialShare.linkCopied": "Enlace copiado ✓",
+  "socialShare.copied": "¡Copiado!",
+  "socialShare.more": "Más"
 }

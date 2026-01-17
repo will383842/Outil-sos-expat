@@ -5759,5 +5759,12 @@
   "wizard.step3.lawyer.desc": "Professionelle Rechtsberatung",
   "wizard.step3.subtitle": "Wählen Sie den Expertentyp",
   "wizard.step3.title": "Wen möchten Sie kontaktieren?",
-  "worldwideLabel": "Weltweit"
+  "worldwideLabel": "Weltweit",
+
+  "socialShare.share": "Teilen",
+  "socialShare.shareThisProfile": "Dieses Profil teilen",
+  "socialShare.copyLink": "Link kopieren",
+  "socialShare.linkCopied": "Link kopiert ✓",
+  "socialShare.copied": "Kopiert!",
+  "socialShare.more": "Mehr"
 }

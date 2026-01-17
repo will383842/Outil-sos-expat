@@ -5762,5 +5762,12 @@
   "wizard.step3.lawyer.desc": "استشارة قانونية مهنية",
   "wizard.step3.subtitle": "اختر نوع الخبير",
   "wizard.step3.title": "من تريد الاتصال به؟",
-  "worldwideLabel": "عالمي"
+  "worldwideLabel": "عالمي",
+
+  "socialShare.share": "مشاركة",
+  "socialShare.shareThisProfile": "مشاركة هذا الملف",
+  "socialShare.copyLink": "نسخ الرابط",
+  "socialShare.linkCopied": "تم نسخ الرابط ✓",
+  "socialShare.copied": "تم النسخ!",
+  "socialShare.more": "المزيد"
 }

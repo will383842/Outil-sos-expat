@@ -601,6 +601,22 @@ async function handleParticipantLeave(sessionId: string, body: TwilioConferenceW
 
   try {
     const callSid = body.CallSid!;
+    const webhookConferenceSid = body.ConferenceSid;
+
+    // P0 CRITICAL FIX 2026-01-17: Check if this webhook is from the CURRENT conference
+    // When a participant is transferred to a new conference, the old conference sends
+    // a participant-leave event. We must ignore it if the session has moved to a new conference.
+    const sessionForConferenceCheck = await twilioCallManager.getCallSession(sessionId);
+    if (sessionForConferenceCheck?.conference?.sid && webhookConferenceSid) {
+      const currentConferenceSid = sessionForConferenceCheck.conference.sid;
+      if (currentConferenceSid !== webhookConferenceSid) {
+        console.log(`👋 [${leaveId}] ⚠️ STALE CONFERENCE WEBHOOK - IGNORING`);
+        console.log(`👋 [${leaveId}]   webhookConferenceSid: ${webhookConferenceSid}`);
+        console.log(`👋 [${leaveId}]   currentConferenceSid: ${currentConferenceSid}`);
+        console.log(`👋 [${leaveId}]   Participant likely transferred to new conference - skipping leave handling`);
+        return;
+      }
+    }
 
     // P0 FIX: Determine participantType from ParticipantLabel OR fallback to CallSid lookup
     let participantType = body.ParticipantLabel as 'provider' | 'client' | undefined;
@@ -630,7 +646,7 @@ async function handleParticipantLeave(sessionId: string, body: TwilioConferenceW
     console.log(`👋 [${leaveId}]   sessionId: ${sessionId}`);
     console.log(`👋 [${leaveId}]   participantType: ${participantType}`);
     console.log(`👋 [${leaveId}]   callSid: ${callSid}`);
-    console.log(`👋 [${leaveId}]   conferenceSid: ${body.ConferenceSid}`);
+    console.log(`👋 [${leaveId}]   conferenceSid: ${webhookConferenceSid}`);
     console.log(`👋 [${leaveId}]   source: ${body.ParticipantLabel ? 'ParticipantLabel' : 'CallSid fallback'}`);
     console.log(`${'─'.repeat(70)}`);
 

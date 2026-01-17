@@ -5826,5 +5826,12 @@
   "wizard.step3.lawyer.desc": "Профессиональная юридическая консультация",
   "wizard.step3.subtitle": "Выберите тип эксперта",
   "wizard.step3.title": "С кем вы хотите связаться?",
-  "worldwideLabel": "По всему миру"
+  "worldwideLabel": "По всему миру",
+
+  "socialShare.share": "Поделиться",
+  "socialShare.shareThisProfile": "Поделиться профилем",
+  "socialShare.copyLink": "Копировать ссылку",
+  "socialShare.linkCopied": "Ссылка скопирована ✓",
+  "socialShare.copied": "Скопировано!",
+  "socialShare.more": "Ещё"
 }

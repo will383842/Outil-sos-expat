@@ -5762,5 +5762,12 @@
   "wizard.step3.lawyer.desc": "专业法律咨询",
   "wizard.step3.subtitle": "选择专家类型",
   "wizard.step3.title": "您想联系谁？",
-  "worldwideLabel": "全球"
+  "worldwideLabel": "全球",
+
+  "socialShare.share": "分享",
+  "socialShare.shareThisProfile": "分享此档案",
+  "socialShare.copyLink": "复制链接",
+  "socialShare.linkCopied": "链接已复制 ✓",
+  "socialShare.copied": "已复制！",
+  "socialShare.more": "更多"
 }

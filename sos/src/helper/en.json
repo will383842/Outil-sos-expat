@@ -7464,5 +7464,12 @@
   "wizard.step3.lawyer.desc": "Professional legal advice",
   "wizard.step3.subtitle": "Select the type of expert",
   "wizard.step3.title": "Who would you like to contact?",
-  "worldwideLabel": "Worldwide"
+  "worldwideLabel": "Worldwide",
+
+  "socialShare.share": "Share",
+  "socialShare.shareThisProfile": "Share this profile",
+  "socialShare.copyLink": "Copy link",
+  "socialShare.linkCopied": "Link copied ✓",
+  "socialShare.copied": "Copied!",
+  "socialShare.more": "More"
 }

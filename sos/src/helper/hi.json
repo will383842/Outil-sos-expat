@@ -5762,5 +5762,12 @@
   "wizard.step3.lawyer.desc": "पेशेवर कानूनी सलाह",
   "wizard.step3.subtitle": "विशेषज्ञ का प्रकार चुनें",
   "wizard.step3.title": "आप किससे संपर्क करना चाहते हैं?",
-  "worldwideLabel": "वैश्विक"
+  "worldwideLabel": "वैश्विक",
+
+  "socialShare.share": "साझा करें",
+  "socialShare.shareThisProfile": "यह प्रोफ़ाइल साझा करें",
+  "socialShare.copyLink": "लिंक कॉपी करें",
+  "socialShare.linkCopied": "लिंक कॉपी किया गया ✓",
+  "socialShare.copied": "कॉपी किया गया!",
+  "socialShare.more": "अधिक"
 }

@@ -7433,5 +7433,12 @@
   "wizard.step3.lawyer.desc": "Conseil juridique professionnel",
   "wizard.step3.subtitle": "Sélectionnez le type d'expert",
   "wizard.step3.title": "Qui souhaitez-vous contacter ?",
-  "worldwideLabel": "Mondial"
+  "worldwideLabel": "Mondial",
+
+  "socialShare.share": "Partager",
+  "socialShare.shareThisProfile": "Partager ce profil",
+  "socialShare.copyLink": "Copier le lien",
+  "socialShare.linkCopied": "Lien copié ✓",
+  "socialShare.copied": "Copié!",
+  "socialShare.more": "Plus"
 }

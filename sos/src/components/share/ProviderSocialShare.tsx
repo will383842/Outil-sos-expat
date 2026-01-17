@@ -2,7 +2,7 @@
 // 🚀 Ultra-simple, mobile-first share component (2025-2026)
 // Design: Web Share API first, all platforms in simple grid, fun messages
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useIntl, FormattedMessage } from 'react-intl';
 import { Check, Link2, Mail, X } from 'lucide-react';
 
@@ -338,8 +338,70 @@ export const ProviderSocialShare: React.FC<ProviderSocialShareProps> = ({
   ];
 
   // ============================================================================
-  // MOBILE: Single magic button + full sheet
+  // MOBILE: Single magic button + full sheet with native-like UX
   // ============================================================================
+
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const [isClosing, setIsClosing] = useState(false);
+  const [dragY, setDragY] = useState(0);
+  const dragStartY = useRef(0);
+  const isDragging = useRef(false);
+
+  // Body scroll lock when sheet is open
+  useEffect(() => {
+    if (showSheet && isMobile) {
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      document.body.style.overflow = 'hidden';
+
+      return () => {
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        document.body.style.overflow = '';
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [showSheet, isMobile]);
+
+  // Close with animation
+  const closeSheet = useCallback(() => {
+    setIsClosing(true);
+    setTimeout(() => {
+      setShowSheet(false);
+      setIsClosing(false);
+      setDragY(0);
+    }, 200);
+  }, []);
+
+  // Swipe-to-dismiss handlers
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    dragStartY.current = e.touches[0].clientY;
+    isDragging.current = true;
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isDragging.current) return;
+    const currentY = e.touches[0].clientY;
+    const diff = currentY - dragStartY.current;
+    // Only allow dragging down
+    if (diff > 0) {
+      setDragY(diff);
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    isDragging.current = false;
+    // If dragged more than 100px, close the sheet
+    if (dragY > 100) {
+      closeSheet();
+    } else {
+      // Snap back
+      setDragY(0);
+    }
+  }, [dragY, closeSheet]);
 
   if (isMobile) {
     return (
@@ -362,32 +424,51 @@ export const ProviderSocialShare: React.FC<ProviderSocialShareProps> = ({
         {/* Full Platform Sheet */}
         {showSheet && (
           <div
-            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowSheet(false)}
+            className={`
+              fixed inset-0 z-50
+              transition-opacity duration-200
+              ${isClosing ? 'bg-black/0' : 'bg-black/60 backdrop-blur-sm'}
+            `}
+            onClick={closeSheet}
           >
             <div
-              className="
+              ref={sheetRef}
+              className={`
                 fixed inset-x-0 bottom-0 z-50
                 bg-white dark:bg-gray-900
                 rounded-t-3xl p-6
                 pb-[max(2.5rem,env(safe-area-inset-bottom))]
-                animate-[slideUp_0.3s_ease-out]
-              "
+                transition-transform duration-200 ease-out
+                ${isClosing ? 'translate-y-full' : ''}
+                ${!isClosing && dragY === 0 ? 'animate-[slideUp_0.25s_ease-out]' : ''}
+              `}
+              style={{
+                transform: dragY > 0 && !isClosing ? `translateY(${dragY}px)` : undefined,
+                transition: isDragging.current ? 'none' : undefined
+              }}
               onClick={e => e.stopPropagation()}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
             >
-              {/* Handle + Close */}
-              <div className="flex justify-between items-center mb-4">
-                <div className="w-8" />
-                <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
-                <button onClick={() => setShowSheet(false)} className="p-1 text-gray-400">
-                  <X className="w-5 h-5" />
-                </button>
+              {/* Drag Handle - Interactive zone */}
+              <div className="flex justify-center py-2 -mt-2 mb-2 cursor-grab active:cursor-grabbing">
+                <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full" />
               </div>
 
-              {/* Header */}
-              <p className="text-center text-gray-500 dark:text-gray-400 mb-6 text-sm">
-                <FormattedMessage id="socialShare.shareThisProfile" defaultMessage="Partager ce profil" /> 💫
-              </p>
+              {/* Header with close button */}
+              <div className="flex justify-between items-center mb-4">
+                <div className="w-8" />
+                <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">
+                  <FormattedMessage id="socialShare.shareThisProfile" defaultMessage="Partager ce profil" /> 💫
+                </p>
+                <button
+                  onClick={closeSheet}
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 active:scale-90 transition-transform"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
 
               {/* Platform Grid - 4 columns */}
               <div className="grid grid-cols-4 gap-4 mb-6">
@@ -414,9 +495,9 @@ export const ProviderSocialShare: React.FC<ProviderSocialShareProps> = ({
               <button
                 onClick={copyLink}
                 className={`
-                  w-full py-3 rounded-xl font-medium text-sm
+                  w-full py-3.5 rounded-xl font-medium text-sm
                   flex items-center justify-center gap-2
-                  transition-all active:scale-98
+                  transition-all active:scale-[0.98]
                   ${copied
                     ? 'bg-green-500 text-white'
                     : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
@@ -447,9 +528,15 @@ export const ProviderSocialShare: React.FC<ProviderSocialShareProps> = ({
   // DESKTOP: Inline icons with tooltip
   // ============================================================================
 
+  const copyTooltip = intl.formatMessage({ id: 'socialShare.copyLink', defaultMessage: 'Copier le lien' });
+  const copiedTooltip = intl.formatMessage({ id: 'socialShare.copied', defaultMessage: 'Copié!' });
+  const moreTooltip = intl.formatMessage({ id: 'socialShare.more', defaultMessage: 'Plus' });
+
   return (
     <div className="flex items-center gap-2">
-      <span className="text-gray-400 text-sm mr-1">Partager</span>
+      <span className="text-gray-400 text-sm mr-1">
+        <FormattedMessage id="socialShare.share" defaultMessage="Partager" />
+      </span>
 
       {/* Main platforms inline */}
       {platforms.slice(0, 5).map(({ id, name, icon: Icon, color, onClick }) => (
@@ -480,7 +567,7 @@ export const ProviderSocialShare: React.FC<ProviderSocialShareProps> = ({
             : 'bg-white/10 text-white/80 hover:bg-white/20'
           }
         `}
-        title={copied ? 'Copié!' : 'Copier'}
+        title={copied ? copiedTooltip : copyTooltip}
       >
         {copied ? <Check className="w-4 h-4" /> : <Link2 className="w-4 h-4" />}
       </button>
@@ -494,7 +581,7 @@ export const ProviderSocialShare: React.FC<ProviderSocialShareProps> = ({
           flex items-center justify-center text-xs font-bold
           hover:scale-110 hover:bg-white/20 active:scale-95 transition-all
         "
-        title="Plus"
+        title={moreTooltip}
       >
         +{platforms.length - 5}
       </button>
@@ -510,7 +597,9 @@ export const ProviderSocialShare: React.FC<ProviderSocialShareProps> = ({
             onClick={e => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-4">
-              <h3 className="font-semibold text-gray-800 dark:text-white">Partager</h3>
+              <h3 className="font-semibold text-gray-800 dark:text-white">
+                <FormattedMessage id="socialShare.share" defaultMessage="Partager" />
+              </h3>
               <button onClick={() => setShowSheet(false)} className="text-gray-400 hover:text-gray-600">
                 <X className="w-5 h-5" />
               </button>
@@ -545,7 +634,10 @@ export const ProviderSocialShare: React.FC<ProviderSocialShareProps> = ({
               `}
             >
               {copied ? <Check className="w-4 h-4" /> : <Link2 className="w-4 h-4" />}
-              {copied ? 'Copié!' : 'Copier le lien'}
+              {copied
+                ? <FormattedMessage id="socialShare.linkCopied" defaultMessage="Copié!" />
+                : <FormattedMessage id="socialShare.copyLink" defaultMessage="Copier le lien" />
+              }
             </button>
           </div>
         </div>
