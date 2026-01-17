@@ -168,6 +168,17 @@ export const twilioConferenceWebhook = onRequest(
       const sessionId = session.id;
       console.log(`🎤 [${confWebhookId}] Session found: ${sessionId}`);
 
+      // P0 DEBUG: Log current session state for all webhooks
+      console.log(`🎤 [${confWebhookId}] 📊 CURRENT SESSION STATE:`);
+      console.log(`🎤 [${confWebhookId}]   session.status: ${session.status}`);
+      console.log(`🎤 [${confWebhookId}]   session.conference.sid: ${session.conference?.sid || 'NOT SET'}`);
+      console.log(`🎤 [${confWebhookId}]   session.conference.name: ${session.conference?.name || 'NOT SET'}`);
+      console.log(`🎤 [${confWebhookId}]   payment.status: ${session.payment?.status || 'NOT SET'}`);
+      console.log(`🎤 [${confWebhookId}]   client.status: ${session.participants?.client?.status || 'NOT SET'}`);
+      console.log(`🎤 [${confWebhookId}]   client.connectedAt: ${session.participants?.client?.connectedAt?.toDate?.() || 'NOT SET'}`);
+      console.log(`🎤 [${confWebhookId}]   provider.status: ${session.participants?.provider?.status || 'NOT SET'}`);
+      console.log(`🎤 [${confWebhookId}]   provider.connectedAt: ${session.participants?.provider?.connectedAt?.toDate?.() || 'NOT SET'}`);
+
       switch (body.StatusCallbackEvent) {
         case 'conference-start':
           await handleConferenceStart(sessionId, body);
@@ -323,8 +334,45 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
       }
 
       console.log(`🏁 [${endId}]   ✅ ConferenceSID matches current session - processing webhook`);
+      console.log(`🏁 [${endId}]   ✅ P0 FIX v3 CHECK PASSED - This is the CURRENT conference, proceeding...`);
     } else {
       console.log(`🏁 [${endId}]   ⚠️ Webhook has no ConferenceSID - proceeding with caution`);
+    }
+
+    // P0 DEBUG: Log provider.connectedAt status - this determines billing duration
+    const sessionForBillingCheck = await twilioCallManager.getCallSession(sessionId);
+    const providerConnectedForBilling = sessionForBillingCheck?.participants?.provider?.connectedAt;
+    console.log(`🏁 [${endId}] 📊 BILLING CHECK: provider.connectedAt = ${providerConnectedForBilling?.toDate?.() || 'NOT SET (billingDuration will be 0!)'}`);
+
+    // P0 CRITICAL FIX 2026-01-17 v4: Don't process payment if session is still connecting!
+    // If provider never connected (connectedAt is null) AND session is still in connecting phase,
+    // this conference-end is likely from a temporary conference that ended due to connection issues.
+    // We should NOT trigger a refund - let the retry loop handle it!
+    const sessionStatus = sessionForBillingCheck?.status;
+    const isStillConnecting = ['scheduled', 'calling', 'client_connecting', 'provider_connecting', 'both_connecting'].includes(sessionStatus || '');
+
+    if (!providerConnectedForBilling) {
+      console.log(`🏁 [${endId}] ⚠️ Provider never connected!`);
+      console.log(`🏁 [${endId}]   session.status: ${sessionStatus}`);
+      console.log(`🏁 [${endId}]   isStillConnecting: ${isStillConnecting}`);
+
+      if (isStillConnecting) {
+        console.log(`🏁 [${endId}] ⛔ P0 FIX v4: NOT processing this conference-end!`);
+        console.log(`🏁 [${endId}]   Reason: Session is still in connecting phase (${sessionStatus})`);
+        console.log(`🏁 [${endId}]   The retry loop will handle the provider connection`);
+        console.log(`🏁 [${endId}]   Only updating conference.endedAt for tracking, NOT triggering payment processing`);
+
+        // Just update the conference ended timestamp for tracking, but don't process payment
+        await twilioCallManager.updateConferenceInfo(sessionId, {
+          endedAt: admin.firestore.Timestamp.fromDate(new Date()),
+          duration: parseInt(body.Duration || '0'),
+        });
+
+        console.log(`${'█'.repeat(70)}\n`);
+        return; // EXIT - don't process payment, let retry loop continue
+      }
+
+      console.log(`🏁 [${endId}] ⚠️ WARNING: Session is NOT in connecting phase, will process refund`);
     }
 
     console.log(`🏁 [${endId}] STEP 1: Fetching session state BEFORE update...`);
@@ -764,6 +812,38 @@ async function handleParticipantLeave(sessionId: string, body: TwilioConferenceW
     console.log(`👋 [${leaveId}]   billingDuration (from both connected): ${billingDuration}s`);
     console.log(`👋 [${leaveId}]   minDuration: 120s`);
     console.log(`👋 [${leaveId}]   isEarlyDisconnection: ${billingDuration < 120}`);
+
+    // P0 CRITICAL FIX 2026-01-17 v4: Don't process if session is still connecting!
+    // If session is in connecting phase, the retry loop should continue handling provider retries.
+    // Calling handleEarlyDisconnection would set session.status to "failed" and STOP the retry loop.
+    const sessionStatus = session?.status;
+    const connectingStatuses = ['scheduled', 'calling', 'client_connecting', 'provider_connecting', 'both_connecting'];
+    const isStillConnecting = connectingStatuses.includes(sessionStatus || '');
+
+    if (!providerConnectedAt && isStillConnecting) {
+      console.log(`👋 [${leaveId}] ⛔ P0 FIX v4: NOT calling handleEarlyDisconnection!`);
+      console.log(`👋 [${leaveId}]   Reason: Provider never connected AND session is still in connecting phase`);
+      console.log(`👋 [${leaveId}]   session.status: ${sessionStatus}`);
+      console.log(`👋 [${leaveId}]   The retry loop will handle the provider connection`);
+      console.log(`👋 [${leaveId}]   Skipping handleEarlyDisconnection to allow retry loop to continue`);
+
+      // Just log the event and return - don't process payment or set session to failed
+      await logCallRecord({
+        callId: sessionId,
+        status: `${participantType}_left_during_connecting`,
+        retryCount: 0,
+        additionalData: {
+          callSid,
+          conferenceSid: body.ConferenceSid,
+          sessionStatus,
+          skippedReason: 'P0_FIX_V4_CONNECTING_PHASE'
+        }
+      });
+
+      console.log(`👋 [${leaveId}] END - Skipped handleEarlyDisconnection (P0 FIX v4)`);
+      console.log(`${'─'.repeat(70)}\n`);
+      return; // EXIT - don't call handleEarlyDisconnection
+    }
 
     // Gérer la déconnexion selon le participant et la durée
     // P0 FIX: Pass BILLING duration (from when both connected)

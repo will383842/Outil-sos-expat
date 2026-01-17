@@ -1458,6 +1458,25 @@ export const twilioAmdTwiml = onRequest(
               } else {
                 console.log(`🎯 [${amdId}]   Provider already "connected" - no update needed`);
               }
+
+              // ═══════════════════════════════════════════════════════════════════
+              // P0 FIX 2026-01-17: ENSURE PROVIDER IS BUSY (fallback path)
+              // ═══════════════════════════════════════════════════════════════════
+              const providerId = session?.metadata?.providerId;
+              if (providerId) {
+                const providerStatus = await import('../callables/providerStatusManager').then(m => m.getProviderStatus(providerId));
+                if (providerStatus?.availability !== 'busy') {
+                  console.log(`🎯 [${amdId}]   🔶 Provider ${providerId} not busy - setting BUSY now...`);
+                  try {
+                    await setProviderBusy(providerId, sessionId, 'in_call');
+                    console.log(`🎯 [${amdId}]   ✅ Provider ${providerId} marked as BUSY (fallback)`);
+                  } catch (busyError) {
+                    console.error(`🎯 [${amdId}]   ⚠️ Failed to set provider busy:`, busyError);
+                  }
+                } else {
+                  console.log(`🎯 [${amdId}]   Provider ${providerId} already BUSY - no update needed`);
+                }
+              }
             } catch (statusError) {
               console.error(`🎯 [${amdId}]   ⚠️ Failed to check/update status:`, statusError);
             }
@@ -1594,6 +1613,25 @@ export const twilioAmdTwiml = onRequest(
                 admin.firestore.Timestamp.fromDate(new Date())
               );
               console.log(`🎯 [${amdId}]   ✅ Provider status set to "connected" (AMD pending but in conference)`);
+
+              // ═══════════════════════════════════════════════════════════════════
+              // P0 FIX 2026-01-17: SET PROVIDER BUSY WHEN JOINING CONFERENCE
+              // ═══════════════════════════════════════════════════════════════════
+              // The provider is joining the conference - mark them as BUSY so they
+              // don't receive other calls while in this call!
+              const session = await twilioCallManager.getCallSession(sessionId);
+              const providerId = session?.metadata?.providerId;
+              if (providerId) {
+                console.log(`🎯 [${amdId}]   🔶 Setting provider ${providerId} to BUSY...`);
+                try {
+                  await setProviderBusy(providerId, sessionId, 'in_call');
+                  console.log(`🎯 [${amdId}]   ✅ Provider ${providerId} marked as BUSY`);
+                } catch (busyError) {
+                  console.error(`🎯 [${amdId}]   ⚠️ Failed to set provider busy (non-blocking):`, busyError);
+                }
+              } else {
+                console.log(`🎯 [${amdId}]   ⚠️ No providerId in session metadata - cannot set busy status`);
+              }
             } catch (statusError) {
               console.error(`🎯 [${amdId}]   ⚠️ Failed to update status:`, statusError);
             }
