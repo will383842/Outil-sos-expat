@@ -481,22 +481,29 @@ export async function handleSubscriptionCreated(
     logger.info(`[handleSubscriptionCreated] Initialized AI usage for ${providerId} with limit ${aiCallsLimit}`);
 
     // Réactiver le profil public du prestataire (si précédemment masqué suite à annulation)
+    // P1 FIX: Also update subscriptionStatus for sync to Outil IA
     const sosProfileRef = db.doc(`sos_profiles/${providerId}`);
     const sosProfileDoc = await sosProfileRef.get();
     if (sosProfileDoc.exists) {
       const profileData = sosProfileDoc.data();
+      // Base update with subscription status for Outil sync
+      // P0 FIX: Use mapStripeStatus() - 'status' was undefined
+      const mappedStatus = mapStripeStatus(subscription.status);
+      const profileUpdate: Record<string, unknown> = {
+        subscriptionStatus: mappedStatus,
+        hasActiveSubscription: true,
+        updatedAt: now
+      };
       // Réactiver seulement si le profil était masqué à cause d'une annulation d'abonnement
       if (profileData?.hiddenReason === 'subscription_canceled' || profileData?.isActive === false) {
-        await sosProfileRef.update({
-          isVisible: true,
-          isActive: true,
-          hiddenReason: admin.firestore.FieldValue.delete(),
-          hiddenAt: admin.firestore.FieldValue.delete(),
-          reactivatedAt: now,
-          updatedAt: now
-        });
-        logger.info(`[handleSubscriptionCreated] Reactivated sos_profile for ${providerId}`);
+        profileUpdate.isVisible = true;
+        profileUpdate.isActive = true;
+        profileUpdate.hiddenReason = admin.firestore.FieldValue.delete();
+        profileUpdate.hiddenAt = admin.firestore.FieldValue.delete();
+        profileUpdate.reactivatedAt = now;
       }
+      await sosProfileRef.update(profileUpdate);
+      logger.info(`[handleSubscriptionCreated] Updated sos_profile with subscription status for ${providerId}`);
     }
 
     // ========== META CAPI TRACKING ==========
@@ -771,6 +778,19 @@ export async function handleSubscriptionUpdated(
       updatedAt: now
     });
 
+    // P1 FIX: Update sos_profiles with subscription status for sync to Outil IA
+    const sosProfileRef = db.doc(`sos_profiles/${providerId}`);
+    const sosProfileDoc = await sosProfileRef.get();
+    if (sosProfileDoc.exists) {
+      const isActiveSubscription = newStatus === 'active' || newStatus === 'trialing' || newStatus === 'past_due';
+      await sosProfileRef.update({
+        subscriptionStatus: newStatus,
+        hasActiveSubscription: isActiveSubscription,
+        updatedAt: now
+      });
+      logger.info(`[handleSubscriptionUpdated] Updated sos_profile with status ${newStatus} for ${providerId}`);
+    }
+
     // Logger l'action
     await logSubscriptionAction({
       providerId,
@@ -920,6 +940,7 @@ export async function handleSubscriptionDeleted(
     logger.info(`[handleSubscriptionDeleted] Disabled AI access for ${providerId}`);
 
     // Masquer le profil public du prestataire (évite les pages 404 dans les listings/sitemaps)
+    // P1 FIX: Also update subscriptionStatus for sync to Outil IA
     const sosProfileRef = db.doc(`sos_profiles/${providerId}`);
     const sosProfileDoc = await sosProfileRef.get();
     if (sosProfileDoc.exists) {
@@ -928,9 +949,11 @@ export async function handleSubscriptionDeleted(
         isActive: false,
         hiddenReason: 'subscription_canceled',
         hiddenAt: now,
+        subscriptionStatus: 'canceled',
+        hasActiveSubscription: false,
         updatedAt: now
       });
-      logger.info(`[handleSubscriptionDeleted] Hidden sos_profile for ${providerId}`);
+      logger.info(`[handleSubscriptionDeleted] Hidden sos_profile and updated subscription status for ${providerId}`);
     }
 
     // Logger l'action
@@ -1117,6 +1140,13 @@ export async function handleInvoicePaid(
       .get();
 
     if (subsSnapshot.empty) {
+      // P1 FIX: Race condition - invoice.paid may arrive before subscription.created
+      // Queue for retry via DLQ if this looks like a new subscription
+      if (invoice.billing_reason === 'subscription_create' || invoice.billing_reason === 'subscription_cycle') {
+        logger.warn(`[handleInvoicePaid] No subscription found for ${subscriptionId}, queueing for retry (race condition)`);
+        // Throw to trigger DLQ in the caller
+        throw new Error(`RETRY_NEEDED: Subscription not found for ${subscriptionId}, likely race condition with subscription.created`);
+      }
       logger.warn(`[handleInvoicePaid] No subscription found for ${subscriptionId}`);
       return;
     }
@@ -1144,6 +1174,11 @@ export async function handleInvoicePaid(
       lastPaymentAt: now,
       lastPaymentAmount: (invoice.amount_paid || 0) / 100,
       lastPaymentCurrency: (invoice.currency || 'eur').toUpperCase(),
+      // P1 FIX: Reset payment failure tracking after successful payment
+      firstPaymentFailureAt: admin.firestore.FieldValue.delete(),
+      lastPaymentFailedAt: admin.firestore.FieldValue.delete(),
+      lastPaymentFailureReason: admin.firestore.FieldValue.delete(),
+      aiAccessEnabled: true, // Re-enable AI access if it was disabled
       updatedAt: now
     };
 

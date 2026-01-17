@@ -105,10 +105,10 @@ export interface ForcedAccessResult {
 }
 
 // ============================================================================
-// CONSTANTS
+// CONSTANTS (defaults - can be overridden by settings/subscription)
 // ============================================================================
 
-const GRACE_PERIOD_DAYS = 7; // Nombre de jours de grace pour past_due
+const DEFAULT_GRACE_PERIOD_DAYS = 7; // Nombre de jours de grace pour past_due
 const FAIR_USE_LIMIT = 500; // Limite fair use pour plan illimite
 const QUOTA_WARNING_THRESHOLD = 0.8; // 80% du quota = alerte
 
@@ -125,6 +125,18 @@ async function getTrialConfig(): Promise<{ durationDays: number; maxAiCalls: num
     return { durationDays: 30, maxAiCalls: 3, isEnabled: true };
   }
   return settingsDoc.data()!.trial;
+}
+
+/**
+ * P2 FIX: Recupere la periode de grace configurable depuis Firestore
+ * Permet de configurer la grace period depuis la console admin
+ */
+async function getGracePeriodDays(): Promise<number> {
+  const settingsDoc = await getDb().doc('settings/subscription').get();
+  if (!settingsDoc.exists) {
+    return DEFAULT_GRACE_PERIOD_DAYS;
+  }
+  return settingsDoc.data()?.gracePeriodDays ?? DEFAULT_GRACE_PERIOD_DAYS;
 }
 
 /**
@@ -247,10 +259,11 @@ export const checkAiAccess = functions
       }
 
       // 2. Recuperer les donnees en parallele
-      const [subDoc, usageDoc, trialConfig] = await Promise.all([
+      const [subDoc, usageDoc, trialConfig, gracePeriodDays] = await Promise.all([
         getDb().doc(`subscriptions/${providerId}`).get(),
         getDb().doc(`ai_usage/${providerId}`).get(),
-        getTrialConfig()
+        getTrialConfig(),
+        getGracePeriodDays()
       ]);
 
       const usage = usageDoc.exists
@@ -275,6 +288,20 @@ export const checkAiAccess = functions
       const subscription = subDoc.data()!;
       const status = subscription.status as SubscriptionStatus;
       const now = new Date();
+
+      // P2 FIX: Check if AI access has been explicitly disabled (payment failures, admin action)
+      if (subscription.aiAccessEnabled === false || subscription.aiAccessSuspended === true) {
+        return {
+          allowed: false,
+          reason: 'payment_failed' as AiAccessDeniedReason,
+          currentUsage: usage.currentPeriodCalls || 0,
+          limit: 0,
+          remaining: 0,
+          isInTrial: false,
+          subscriptionStatus: status,
+          canUpgrade: false // Must resolve payment issue first
+        } as AiAccessCheckResult;
+      }
 
       // 4. Verification du statut TRIALING
       if (status === 'trialing') {
@@ -383,8 +410,8 @@ export const checkAiAccess = functions
           : (subscription.updatedAt?.toDate ? subscription.updatedAt.toDate() : now);
         const daysPastDue = daysBetween(pastDueSince, now);
 
-        // Grace period de 7 jours
-        if (daysPastDue < GRACE_PERIOD_DAYS) {
+        // Grace period (configurable, defaut 7 jours)
+        if (daysPastDue < gracePeriodDays) {
           const plan = await getSubscriptionPlan(subscription.planId);
           const limit = plan?.aiCallsLimit ?? 0;
           const currentPeriodCalls = usage.currentPeriodCalls || 0;
@@ -806,10 +833,11 @@ export async function checkAiAccessInternal(providerId: string): Promise<AiAcces
   }
 
   // 2. Recuperer les donnees
-  const [subDoc, usageDoc, trialConfig] = await Promise.all([
+  const [subDoc, usageDoc, trialConfig, gracePeriodDays] = await Promise.all([
     getDb().doc(`subscriptions/${providerId}`).get(),
     getDb().doc(`ai_usage/${providerId}`).get(),
-    getTrialConfig()
+    getTrialConfig(),
+    getGracePeriodDays()
   ]);
 
   const usage = usageDoc.exists
@@ -833,6 +861,20 @@ export async function checkAiAccessInternal(providerId: string): Promise<AiAcces
   const subscription = subDoc.data()!;
   const status = subscription.status as SubscriptionStatus;
   const now = new Date();
+
+  // P2 FIX: Check if AI access has been explicitly disabled
+  if (subscription.aiAccessEnabled === false || subscription.aiAccessSuspended === true) {
+    return {
+      allowed: false,
+      reason: 'payment_failed',
+      currentUsage: usage.currentPeriodCalls || 0,
+      limit: 0,
+      remaining: 0,
+      isInTrial: false,
+      subscriptionStatus: status,
+      canUpgrade: false
+    };
+  }
 
   // 4. Trial
   if (status === 'trialing') {
@@ -904,7 +946,7 @@ export async function checkAiAccessInternal(providerId: string): Promise<AiAcces
       : (subscription.updatedAt?.toDate ? subscription.updatedAt.toDate() : now);
     const daysPastDue = daysBetween(pastDueSince, now);
 
-    if (daysPastDue < GRACE_PERIOD_DAYS) {
+    if (daysPastDue < gracePeriodDays) {
       const plan = await getSubscriptionPlan(subscription.planId);
       const limit = plan?.aiCallsLimit ?? 0;
       const currentPeriodCalls = usage.currentPeriodCalls || 0;

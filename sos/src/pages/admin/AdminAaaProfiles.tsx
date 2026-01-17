@@ -57,6 +57,74 @@ import { getSpecialtyLabel, mapLanguageToLocale } from '../../utils/specialtyMap
 // Import du script de génération massive d'avocats
 import { generateLawyersAllCountries } from '../../scripts/generateLawyersAllCountries';
 
+// ==========================================
+// 🔧 MIGRATION: Add forcedAIAccess to existing AAA profiles
+// ==========================================
+async function migrateAaaProfilesForAIAccess(dryRun = true) {
+  const { collection, query, where, getDocs, updateDoc, doc, writeBatch } = await import('firebase/firestore');
+  const { db } = await import('../../config/firebase');
+
+  console.log(`[AAA Migration] Starting ${dryRun ? 'DRY RUN' : 'REAL MIGRATION'}...`);
+
+  // Find all AAA profiles
+  const usersQuery = query(
+    collection(db, 'users'),
+    where('isAAA', '==', true)
+  );
+
+  const snapshot = await getDocs(usersQuery);
+  console.log(`[AAA Migration] Found ${snapshot.size} AAA profiles`);
+
+  const profilesToMigrate: string[] = [];
+
+  for (const userDoc of snapshot.docs) {
+    const data = userDoc.data();
+    if (data.forcedAIAccess !== true) {
+      profilesToMigrate.push(userDoc.id);
+      console.log(`[AAA Migration] Will migrate: ${userDoc.id} (${data.fullName || data.email})`);
+    }
+  }
+
+  console.log(`[AAA Migration] ${profilesToMigrate.length} profiles need migration`);
+
+  if (dryRun) {
+    console.log('[AAA Migration] DRY RUN complete. Run migrateAaaProfiles(false) to apply changes.');
+    return { total: snapshot.size, toMigrate: profilesToMigrate.length, migrated: 0 };
+  }
+
+  // Migrate in batches of 500
+  let migrated = 0;
+  const batchSize = 500;
+
+  for (let i = 0; i < profilesToMigrate.length; i += batchSize) {
+    const batch = writeBatch(db);
+    const chunk = profilesToMigrate.slice(i, i + batchSize);
+
+    for (const profileId of chunk) {
+      // Update users collection
+      batch.update(doc(db, 'users', profileId), {
+        forcedAIAccess: true,
+        hasActiveSubscription: true,
+        subscriptionStatus: 'active',
+      });
+
+      // Update sos_profiles collection
+      batch.update(doc(db, 'sos_profiles', profileId), {
+        forcedAIAccess: true,
+        hasActiveSubscription: true,
+        subscriptionStatus: 'active',
+      });
+    }
+
+    await batch.commit();
+    migrated += chunk.length;
+    console.log(`[AAA Migration] Migrated ${migrated}/${profilesToMigrate.length}`);
+  }
+
+  console.log(`[AAA Migration] ✅ Complete! Migrated ${migrated} profiles`);
+  return { total: snapshot.size, toMigrate: profilesToMigrate.length, migrated };
+}
+
 // Exposer les fonctions globalement pour la console
 if (typeof window !== 'undefined') {
   (window as any).generateLawyersAllCountries = generateLawyersAllCountries;
@@ -70,6 +138,8 @@ if (typeof window !== 'undefined') {
     fixBios: fixAllBiosCountryCodes,
     fixOneBio: fixOneBioCountryCodes,
   };
+  // P1 FIX: Migration for AAA profiles AI access
+  (window as any).migrateAaaProfiles = migrateAaaProfilesForAIAccess;
 }
 
 // ==========================================
@@ -2071,6 +2141,10 @@ const AdminAaaProfiles: React.FC = () => {
     cleanBaseUser.aaaPayoutMode = aaaPayoutConfig.defaultMode; // 'internal' par défaut
     cleanBaseUser.kycDelegated = true;
     cleanBaseUser.kycStatus = 'not_required';
+    // P1 FIX: AAA profiles get automatic AI access without subscription
+    cleanBaseUser.forcedAIAccess = true;
+    cleanBaseUser.hasActiveSubscription = true;
+    cleanBaseUser.subscriptionStatus = 'active';
 
     await setDoc(doc(db, 'users', uid), cleanBaseUser);
 
@@ -2080,6 +2154,10 @@ const AdminAaaProfiles: React.FC = () => {
       aaaPayoutMode: aaaPayoutConfig.defaultMode,
       kycDelegated: true,
       kycStatus: 'not_required',
+      // P1 FIX: AAA profiles get automatic AI access
+      forcedAIAccess: true,
+      hasActiveSubscription: true,
+      subscriptionStatus: 'active',
     };
     await setDoc(doc(db, 'sos_profiles', uid), providerProfile);
 

@@ -48,4 +48,34 @@ export interface InvoiceRecord extends BaseLogEntry {
   refundedAt?: admin.firestore.Timestamp | admin.firestore.FieldValue;
   refundReason?: string;
   refundId?: string;
+  // P0 FIX: Ajout des noms client/prestataire pour affichage dans les factures
+  clientName?: string;
+  clientEmail?: string;
+  providerName?: string;  // Format: "Prénom L." (première lettre du nom)
+  providerEmail?: string;
+}
+
+/**
+ * Formate le nom du prestataire en "Prénom L." (première lettre du nom de famille)
+ * @param firstName - Prénom du prestataire
+ * @param lastName - Nom de famille du prestataire
+ * @returns Nom formaté "Prénom L." ou prénom seul si pas de nom de famille
+ */
+export function formatProviderDisplayName(firstName?: string, lastName?: string): string {
+  const trimmedFirst = firstName?.trim() || '';
+  const trimmedLast = lastName?.trim() || '';
+
+  if (!trimmedFirst && !trimmedLast) {
+    return 'Prestataire';
+  }
+
+  if (!trimmedLast) {
+    return trimmedFirst;
+  }
+
+  if (!trimmedFirst) {
+    return `${trimmedLast.charAt(0).toUpperCase()}.`;
+  }
+
+  return `${trimmedFirst} ${trimmedLast.charAt(0).toUpperCase()}.`;
 }

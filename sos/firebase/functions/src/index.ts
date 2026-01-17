@@ -61,6 +61,22 @@ export const ENCRYPTION_KEY = defineSecret("ENCRYPTION_KEY");
 // Meta Conversions API (CAPI) - for Facebook Ads attribution
 import { trackStripePurchase, META_CAPI_TOKEN } from "./metaConversionsApi";
 
+// SUBSCRIPTION WEBHOOK HANDLERS - Option A: Single webhook endpoint for all Stripe events
+import {
+  handleSubscriptionCreated,
+  handleSubscriptionUpdated,
+  handleSubscriptionDeleted,
+  handleSubscriptionPaused,
+  handleSubscriptionResumed,
+  handleTrialWillEnd,
+  handleInvoicePaid,
+  handleInvoicePaymentFailed,
+  handleInvoicePaymentActionRequired,
+  handleInvoiceCreated,
+  handlePaymentMethodUpdated,
+} from "./subscription/webhooks";
+import { addToDeadLetterQueue } from "./subscription/deadLetterQueue";
+
 // MAILWIZZ_API_KEY and MAILWIZZ_WEBHOOK_SECRET are now static values from config.ts
 
 // kyc
@@ -2434,6 +2450,174 @@ export const stripeWebhook = onRequest(
               });
               break;
 
+            // ====== SUBSCRIPTION EVENTS (IA Tool Subscriptions) ======
+            // Option A: Single webhook - all subscription events handled here
+            case "customer.subscription.created":
+              console.log("📦 Processing customer.subscription.created (IA Subscription)");
+              try {
+                await handleSubscriptionCreated(
+                  event.data.object as Stripe.Subscription,
+                  { eventId: event.id, eventType: event.type }
+                );
+                console.log("✅ Handled customer.subscription.created");
+              } catch (subError) {
+                console.error("❌ Error in handleSubscriptionCreated:", subError);
+                await addToDeadLetterQueue(event, subError as Error, { handler: "handleSubscriptionCreated" });
+                throw subError;
+              }
+              break;
+
+            case "customer.subscription.updated":
+              console.log("🔄 Processing customer.subscription.updated (IA Subscription)");
+              try {
+                await handleSubscriptionUpdated(
+                  event.data.object as Stripe.Subscription,
+                  { eventId: event.id, eventType: event.type }
+                );
+                console.log("✅ Handled customer.subscription.updated");
+              } catch (subError) {
+                console.error("❌ Error in handleSubscriptionUpdated:", subError);
+                await addToDeadLetterQueue(event, subError as Error, { handler: "handleSubscriptionUpdated" });
+                throw subError;
+              }
+              break;
+
+            case "customer.subscription.deleted":
+              console.log("🗑️ Processing customer.subscription.deleted (IA Subscription)");
+              try {
+                await handleSubscriptionDeleted(
+                  event.data.object as Stripe.Subscription,
+                  { eventId: event.id, eventType: event.type }
+                );
+                console.log("✅ Handled customer.subscription.deleted");
+              } catch (subError) {
+                console.error("❌ Error in handleSubscriptionDeleted:", subError);
+                await addToDeadLetterQueue(event, subError as Error, { handler: "handleSubscriptionDeleted" });
+                throw subError;
+              }
+              break;
+
+            case "customer.subscription.trial_will_end":
+              console.log("⏰ Processing customer.subscription.trial_will_end");
+              try {
+                await handleTrialWillEnd(
+                  event.data.object as Stripe.Subscription,
+                  { eventId: event.id, eventType: event.type }
+                );
+                console.log("✅ Handled customer.subscription.trial_will_end");
+              } catch (subError) {
+                console.error("❌ Error in handleTrialWillEnd:", subError);
+                await addToDeadLetterQueue(event, subError as Error, { handler: "handleTrialWillEnd" });
+                throw subError;
+              }
+              break;
+
+            case "customer.subscription.paused":
+              console.log("⏸️ Processing customer.subscription.paused");
+              try {
+                await handleSubscriptionPaused(
+                  event.data.object as Stripe.Subscription,
+                  { eventId: event.id, eventType: event.type }
+                );
+                console.log("✅ Handled customer.subscription.paused");
+              } catch (subError) {
+                console.error("❌ Error in handleSubscriptionPaused:", subError);
+                await addToDeadLetterQueue(event, subError as Error, { handler: "handleSubscriptionPaused" });
+                throw subError;
+              }
+              break;
+
+            case "customer.subscription.resumed":
+              console.log("▶️ Processing customer.subscription.resumed");
+              try {
+                await handleSubscriptionResumed(
+                  event.data.object as Stripe.Subscription,
+                  { eventId: event.id, eventType: event.type }
+                );
+                console.log("✅ Handled customer.subscription.resumed");
+              } catch (subError) {
+                console.error("❌ Error in handleSubscriptionResumed:", subError);
+                await addToDeadLetterQueue(event, subError as Error, { handler: "handleSubscriptionResumed" });
+                throw subError;
+              }
+              break;
+
+            case "invoice.created":
+              console.log("📄 Processing invoice.created (Subscription)");
+              try {
+                await handleInvoiceCreated(
+                  event.data.object as Stripe.Invoice,
+                  { eventId: event.id, eventType: event.type }
+                );
+                console.log("✅ Handled invoice.created");
+              } catch (subError) {
+                console.error("❌ Error in handleInvoiceCreated:", subError);
+                await addToDeadLetterQueue(event, subError as Error, { handler: "handleInvoiceCreated" });
+                throw subError;
+              }
+              break;
+
+            case "invoice.paid":
+              console.log("💰 Processing invoice.paid (Subscription)");
+              try {
+                await handleInvoicePaid(
+                  event.data.object as Stripe.Invoice,
+                  { eventId: event.id, eventType: event.type }
+                );
+                console.log("✅ Handled invoice.paid");
+              } catch (subError) {
+                console.error("❌ Error in handleInvoicePaid:", subError);
+                await addToDeadLetterQueue(event, subError as Error, { handler: "handleInvoicePaid" });
+                throw subError;
+              }
+              break;
+
+            case "invoice.payment_failed":
+              console.log("❌ Processing invoice.payment_failed (Subscription)");
+              try {
+                await handleInvoicePaymentFailed(
+                  event.data.object as Stripe.Invoice,
+                  { eventId: event.id, eventType: event.type }
+                );
+                console.log("✅ Handled invoice.payment_failed");
+              } catch (subError) {
+                console.error("❌ Error in handleInvoicePaymentFailed:", subError);
+                await addToDeadLetterQueue(event, subError as Error, { handler: "handleInvoicePaymentFailed" });
+                throw subError;
+              }
+              break;
+
+            case "invoice.payment_action_required":
+              console.log("🔐 Processing invoice.payment_action_required (3D Secure)");
+              try {
+                await handleInvoicePaymentActionRequired(
+                  event.data.object as Stripe.Invoice,
+                  { eventId: event.id, eventType: event.type }
+                );
+                console.log("✅ Handled invoice.payment_action_required");
+              } catch (subError) {
+                console.error("❌ Error in handleInvoicePaymentActionRequired:", subError);
+                await addToDeadLetterQueue(event, subError as Error, { handler: "handleInvoicePaymentActionRequired" });
+                throw subError;
+              }
+              break;
+
+            case "payment_method.attached":
+            case "payment_method.updated":
+              console.log(`💳 Processing ${event.type}`);
+              try {
+                await handlePaymentMethodUpdated(
+                  event.data.object as Stripe.PaymentMethod,
+                  { eventId: event.id, eventType: event.type }
+                );
+                console.log(`✅ Handled ${event.type}`);
+              } catch (subError) {
+                console.error(`❌ Error in handlePaymentMethodUpdated:`, subError);
+                await addToDeadLetterQueue(event, subError as Error, { handler: "handlePaymentMethodUpdated" });
+                throw subError;
+              }
+              break;
+
             default:
               // ===== TRANSFER EVENTS (Destination Charges) =====
               // Handle transfer events in default case for type compatibility
@@ -4463,7 +4647,7 @@ export {
   updateTrialConfigV2 as subscriptionUpdateTrialConfigV2,
   updatePlanPricingV2 as subscriptionUpdatePlanPricingV2,
   initializeSubscriptionPlans as subscriptionInitializePlans,
-  resetMonthlyAiQuotas as subscriptionResetMonthlyQuotas,
+  // P1 FIX: resetMonthlyAiQuotas REMOVED - duplicate of resetMonthlyQuotas in scheduledTasks.ts
   setFreeAiAccess as subscriptionSetFreeAccess,
   createAnnualStripePrices,
   createMonthlyStripePrices,

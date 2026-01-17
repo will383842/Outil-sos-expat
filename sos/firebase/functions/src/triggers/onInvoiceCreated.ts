@@ -54,6 +54,20 @@ export const onInvoiceRecordCreated = onDocumentCreated(
         // Pricing breakdown
         platformFee: invoiceData.platformFee || invoiceData.connectionFee || 0,
         providerAmount: invoiceData.providerAmount || 0,
+        // P0 FIX: Synchroniser les noms client/prestataire pour affichage admin
+        clientName: invoiceData.clientName || null,
+        clientEmail: invoiceData.clientEmail || null,
+        providerName: invoiceData.providerName || null, // Format "Prénom L."
+        providerEmail: invoiceData.providerEmail || null,
+        // Structured data for AdminInvoices.tsx compatibility
+        clientData: {
+          name: invoiceData.clientName || null,
+          email: invoiceData.clientEmail || null,
+        },
+        providerData: {
+          name: invoiceData.providerName || null, // Format "Prénom L."
+          email: invoiceData.providerEmail || null,
+        },
         // Metadata
         sourceCollection: "invoice_records",
         sourceId: invoiceId,

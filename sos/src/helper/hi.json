@@ -5672,6 +5672,8 @@
   "userInvoices.table.id": "ID",
   "userInvoices.table.status": "स्थिति",
   "userInvoices.title": "मेरे बिल",
+  "userInvoices.client": "ग्राहक",
+  "userInvoices.provider": "सेवा प्रदाता",
   "validation.email_invalid": "कृपया एक वैध ईमेल पता दर्ज करें",
   "validation.email_required": "ईमेल पता आवश्यक है",
   "validation.password_min_length": "पासवर्ड में कम से कम 6 अक्षर होने चाहिए",

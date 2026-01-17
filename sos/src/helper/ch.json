@@ -5672,6 +5672,8 @@
   "userInvoices.table.id": "ID",
   "userInvoices.table.status": "状态",
   "userInvoices.title": "我的发票",
+  "userInvoices.client": "客户",
+  "userInvoices.provider": "服务商",
   "validation.email_invalid": "请输入有效的邮箱地址",
   "validation.email_required": "邮箱地址必填",
   "validation.password_min_length": "密码必须至少6个字符",

@@ -5672,6 +5672,8 @@
   "userInvoices.table.id": "المعرّف",
   "userInvoices.table.status": "الحالة",
   "userInvoices.title": "فواتيري",
+  "userInvoices.client": "العميل",
+  "userInvoices.provider": "مزود الخدمة",
   "validation.email_invalid": "يرجى إدخال عنوان بريد إلكتروني صالح",
   "validation.email_required": "عنوان البريد الإلكتروني مطلوب",
   "validation.password_min_length": "يجب أن تحتوي كلمة المرور على 6 أحرف على الأقل",

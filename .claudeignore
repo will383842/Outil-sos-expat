@@ -1,0 +1,11 @@
+﻿node_modules
+vendor
+.git
+storage
+public/build
+public/hot
+bootstrap/cache
+*.log
+*.sql
+*.zip
+*.sqlite

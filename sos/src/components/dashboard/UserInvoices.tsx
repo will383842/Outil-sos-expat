@@ -29,6 +29,12 @@ interface InvoiceRecord {
   downloadUrl: string;
   callId?: string;
   createdAt: { seconds: number; nanoseconds: number };
+  // P0 FIX: Noms pour affichage
+  clientName?: string;
+  clientEmail?: string;
+  providerName?: string; // Format "Prénom L."
+  providerEmail?: string;
+  type?: 'platform' | 'provider';
 }
 
 export default function UserInvoices() {
@@ -256,13 +262,26 @@ export default function UserInvoices() {
             <li key={invoice.id} className={`border p-4 rounded-md shadow-sm ${isRefunded ? 'bg-red-50 border-red-200' : isIssued ? 'bg-green-50 border-green-200' : ''}`}>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
+                  {/* P0 FIX: Afficher le nom du prestataire (pour clients) ou du client (pour providers) */}
+                  {user?.role === 'client' && invoice.providerName && (
+                    <p className="mb-1">
+                      <strong>{intl.formatMessage({ id: 'userInvoices.provider' })}:</strong>{' '}
+                      <span className="text-blue-600">{invoice.providerName}</span>
+                    </p>
+                  )}
+                  {(user?.role === 'lawyer' || user?.role === 'expat') && invoice.clientName && (
+                    <p className="mb-1">
+                      <strong>{intl.formatMessage({ id: 'userInvoices.client' })}:</strong>{' '}
+                      <span className="text-blue-600">{invoice.clientName}</span>
+                    </p>
+                  )}
                   <p>
                     <strong>{intl.formatMessage({ id: 'userInvoices.amount' })}:</strong> {formatCurrency(invoice.amount, invoice.currency || 'EUR')}
                   </p>
                   <p>
                     <strong>{intl.formatMessage({ id: 'userInvoices.status' })}:</strong>{' '}
                     <span className={isRefunded ? 'text-red-600 font-semibold' : isIssued ? 'text-green-600 font-semibold' : ''}>
-                      {isRefunded 
+                      {isRefunded
                         ? intl.formatMessage({ id: 'userInvoices.statusRefunded' })
                         : isIssued
                         ? intl.formatMessage({ id: 'userInvoices.statusIssued' })
@@ -285,7 +304,7 @@ export default function UserInvoices() {
                       { seconds: invoice.createdAt.seconds },
                       {
                         language,
-                        userCountry: (user as { currentCountry?: string; country?: string })?.currentCountry || 
+                        userCountry: (user as { currentCountry?: string; country?: string })?.currentCountry ||
                                      (user as { currentCountry?: string; country?: string })?.country,
                         format: 'medium',
                       }

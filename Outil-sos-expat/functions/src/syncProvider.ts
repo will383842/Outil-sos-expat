@@ -186,20 +186,56 @@ export const syncProvider = onRequest(
 
       // P0 FIX: Auto-create users document for Firestore rules
       // isAssignedProvider() requires users/{uid}.linkedProviderIds to include providerId
+      // P1 FIX: Also sync forcedAIAccess and freeTrialUntil to users/{uid}
+      // because UnifiedUserContext reads from users/{uid}, not providers/{uid}
       const userRef = db.collection("users").doc(providerId);
       const userDoc = await userRef.get();
+
+      // Build user update data including access fields
+      const userUpdateData: Record<string, unknown> = {
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      };
+
+      // P1 FIX: Sync access fields to users/{uid} for UnifiedUserContext compatibility
+      if (data.forcedAIAccess !== undefined) {
+        userUpdateData.forcedAIAccess = data.forcedAIAccess;
+        // Also set hasActiveSubscription if forcedAIAccess is true
+        if (data.forcedAIAccess === true) {
+          userUpdateData.hasActiveSubscription = true;
+          userUpdateData.subscriptionStatus = "active";
+        }
+      }
+      if (data.freeTrialUntil !== undefined) {
+        if (data.freeTrialUntil === null) {
+          userUpdateData.freeTrialUntil = null;
+        } else if (typeof data.freeTrialUntil === "string") {
+          userUpdateData.freeTrialUntil = admin.firestore.Timestamp.fromDate(new Date(data.freeTrialUntil));
+          // Also set hasActiveSubscription if trial is still valid
+          if (new Date(data.freeTrialUntil) > new Date()) {
+            userUpdateData.hasActiveSubscription = true;
+            userUpdateData.subscriptionStatus = "trialing";
+          }
+        }
+      }
+      if (data.subscriptionStatus) {
+        userUpdateData.subscriptionStatus = data.subscriptionStatus;
+      }
+      if (data.hasActiveSubscription !== undefined) {
+        userUpdateData.hasActiveSubscription = data.hasActiveSubscription;
+      }
 
       if (!userDoc.exists) {
         logger.info("[syncProvider] Creating users document for provider:", { providerId });
         await userRef.set({
           linkedProviderIds: [providerId],
           activeProviderId: providerId,
-          subscriptionStatus: data.hasActiveSubscription ? "active" : "inactive",
+          subscriptionStatus: data.hasActiveSubscription ? "active" : (data.forcedAIAccess ? "active" : "inactive"),
+          hasActiveSubscription: data.hasActiveSubscription || data.forcedAIAccess || false,
           role: "provider",
           email: data.email?.toLowerCase() || "",
           name: data.name || "Provider",
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          ...userUpdateData,
           source: "auto-created-by-sync",
         }, { merge: true });
       } else {
@@ -207,12 +243,11 @@ export const syncProvider = onRequest(
         const userData = userDoc.data();
         const linkedIds = userData?.linkedProviderIds || [];
         if (!linkedIds.includes(providerId)) {
-          await userRef.update({
-            linkedProviderIds: admin.firestore.FieldValue.arrayUnion(providerId),
-            activeProviderId: providerId,
-            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-          });
+          userUpdateData.linkedProviderIds = admin.firestore.FieldValue.arrayUnion(providerId);
+          userUpdateData.activeProviderId = providerId;
         }
+        // Always update with access fields if provided
+        await userRef.update(userUpdateData);
       }
 
       logger.info("[syncProvider] Provider synchronisé", { providerId });

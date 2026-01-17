@@ -2537,6 +2537,8 @@ export class TwilioCallManager {
 
       // Get payment currency from payments collection
       let paymentCurrency: 'eur' | 'usd' = 'eur'; // Default to EUR
+      let clientEmail = '';
+      let providerEmail = '';
       try {
         const paymentDoc = await this.db.collection('payments').doc(session.payment.intentId).get();
         if (paymentDoc.exists) {
@@ -2545,9 +2547,52 @@ export class TwilioCallManager {
             paymentCurrency = paymentData.currency.toLowerCase() as 'eur' | 'usd';
             console.log(`📄 Found payment currency: ${paymentCurrency.toUpperCase()}`);
           }
+          // Récupérer les emails depuis le paiement si disponibles
+          clientEmail = paymentData?.clientEmail || '';
+          providerEmail = paymentData?.providerEmail || '';
         }
       } catch (paymentError) {
         console.warn(`⚠️ Could not fetch payment currency, defaulting to EUR:`, paymentError);
+      }
+
+      // P0 FIX: Récupérer les noms du client et du prestataire depuis la collection users
+      const { formatProviderDisplayName } = await import("./utils/types");
+
+      let clientName = '';
+      let providerDisplayName = '';
+
+      try {
+        // Récupérer les données du client
+        const clientDoc = await this.db.collection('users').doc(session.metadata.clientId).get();
+        if (clientDoc.exists) {
+          const clientData = clientDoc.data();
+          clientName = clientData?.displayName ||
+                       `${clientData?.firstName || ''} ${clientData?.lastName || ''}`.trim() ||
+                       clientData?.name || '';
+          if (!clientEmail) {
+            clientEmail = clientData?.email || '';
+          }
+        }
+        console.log(`📄 Client name retrieved: ${clientName || '(not found)'}`);
+      } catch (clientError) {
+        console.warn(`⚠️ Could not fetch client data:`, clientError);
+      }
+
+      try {
+        // Récupérer les données du prestataire et formater en "Prénom L."
+        const providerDoc = await this.db.collection('users').doc(session.metadata.providerId).get();
+        if (providerDoc.exists) {
+          const providerData = providerDoc.data();
+          const firstName = providerData?.firstName || '';
+          const lastName = providerData?.lastName || '';
+          providerDisplayName = formatProviderDisplayName(firstName, lastName);
+          if (!providerEmail) {
+            providerEmail = providerData?.email || '';
+          }
+        }
+        console.log(`📄 Provider display name: ${providerDisplayName || '(not found)'}`);
+      } catch (providerError) {
+        console.warn(`⚠️ Could not fetch provider data:`, providerError);
       }
 
       // Import your invoice function - adjust path as needed
@@ -2556,13 +2601,13 @@ export class TwilioCallManager {
       // Get amounts from admin pricing config instead of hardcoded percentages
       const { getPricingConfig } = await import("./services/pricingService");
       const pricingConfig = await getPricingConfig();
-      
+
       const serviceType = session.metadata.providerType; // 'lawyer' or 'expat'
       const currency = paymentCurrency; // Use actual payment currency
-      
+
       const platformFee = pricingConfig[serviceType][currency].connectionFeeAmount;
       const providerAmount = pricingConfig[serviceType][currency].providerAmount;
-      
+
       console.log(`📄 Creating invoices with admin pricing - Platform: ${platformFee} ${currency.toUpperCase()}, Provider: ${providerAmount} ${currency.toUpperCase()}`);
       console.log(`📄 Invoice status: ${invoiceStatus} (payment status: ${session.payment.status})`);
 
@@ -2582,6 +2627,11 @@ export class TwilioCallManager {
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
         createdAt: new Date(),
         environment: process.env.NODE_ENV || "development",
+        // P0 FIX: Ajout des noms pour les factures
+        clientName: clientName || undefined,
+        clientEmail: clientEmail || undefined,
+        providerName: providerDisplayName || undefined,
+        providerEmail: providerEmail || undefined,
       };
 
       // Add refund info if refunded or cancelled
@@ -2606,6 +2656,11 @@ export class TwilioCallManager {
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
         createdAt: new Date(),
         environment: process.env.NODE_ENV || "development",
+        // P0 FIX: Ajout des noms pour les factures
+        clientName: clientName || undefined,
+        clientEmail: clientEmail || undefined,
+        providerName: providerDisplayName || undefined,
+        providerEmail: providerEmail || undefined,
       };
 
       // Add refund info if refunded or cancelled

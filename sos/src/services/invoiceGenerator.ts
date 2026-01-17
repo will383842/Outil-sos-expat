@@ -24,12 +24,46 @@ interface CallRecord {
   providerId: string;
   clientName?: string;
   providerName?: string;
+  // P0 FIX: Champs séparés pour formater le nom du prestataire en "Prénom L."
+  providerFirstName?: string;
+  providerLastName?: string;
   serviceType: 'lawyer_call' | 'expat_advice' | 'emergency_help';
   duration?: number;
   clientCountry?: string;
   providerCountry?: string;
   createdAt: Date;
 }
+
+/**
+ * P0 FIX: Formate le nom du prestataire en "Prénom L." pour protéger la vie privée
+ * Ne jamais afficher le nom de famille complet du prestataire
+ */
+const formatProviderDisplayName = (firstName?: string, lastName?: string, fullName?: string): string => {
+  // Si on a prénom et nom séparément, utiliser le format "Prénom L."
+  const trimmedFirst = firstName?.trim() || '';
+  const trimmedLast = lastName?.trim() || '';
+
+  if (trimmedFirst && trimmedLast) {
+    return `${trimmedFirst} ${trimmedLast.charAt(0).toUpperCase()}.`;
+  }
+
+  if (trimmedFirst) {
+    return trimmedFirst;
+  }
+
+  // Fallback: essayer de parser le nom complet
+  if (fullName) {
+    const parts = fullName.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      const firstName = parts[0];
+      const lastName = parts[parts.length - 1];
+      return `${firstName} ${lastName.charAt(0).toUpperCase()}.`;
+    }
+    return fullName; // Retourner tel quel si impossible à parser
+  }
+
+  return 'Prestataire';
+};
 
 interface Payment {
   amount: number;
@@ -501,7 +535,12 @@ export const generateInvoicePDF = async (invoiceData: InvoiceData): Promise<Blob
       if (COMPANY_INFO.vatNumber) pdf.text(`${t.vat} ${COMPANY_INFO.vatNumber}`, margin, yPos + 40);
     } else {
       // Facture prestataire
-      const providerName = invoiceData.callRecord.providerName || 'Provider';
+      // P0 FIX: Utiliser le format "Prénom L." pour le nom du prestataire
+      const providerName = formatProviderDisplayName(
+        invoiceData.callRecord.providerFirstName,
+        invoiceData.callRecord.providerLastName,
+        invoiceData.callRecord.providerName
+      );
       pdf.text(providerName, margin, yPos);
       if (invoiceData.payment.providerEmail) {
         pdf.text(`${t.email} ${invoiceData.payment.providerEmail}`, margin, yPos + 5);
@@ -573,8 +612,14 @@ export const generateInvoicePDF = async (invoiceData: InvoiceData): Promise<Blob
     let serviceDescription = '';
     if (invoiceData.type === 'platform') {
       serviceDescription = t.connectionFees;
-      if (invoiceData.callRecord.providerName) {
-        serviceDescription += ` - ${invoiceData.callRecord.providerName}`;
+      // P0 FIX: Utiliser le format "Prénom L." dans la description du service
+      if (invoiceData.callRecord.providerName || invoiceData.callRecord.providerFirstName) {
+        const formattedProviderName = formatProviderDisplayName(
+          invoiceData.callRecord.providerFirstName,
+          invoiceData.callRecord.providerLastName,
+          invoiceData.callRecord.providerName
+        );
+        serviceDescription += ` - ${formattedProviderName}`;
       }
     } else {
       const serviceTypes = {

@@ -5736,6 +5736,8 @@
   "userInvoices.table.id": "ID",
   "userInvoices.table.status": "Статус",
   "userInvoices.title": "Мои счета",
+  "userInvoices.client": "Клиент",
+  "userInvoices.provider": "Поставщик услуг",
   "validation.email_invalid": "Пожалуйста, введите корректный email",
   "validation.email_required": "Email обязателен",
   "validation.password_min_length": "Пароль должен содержать минимум 6 символов",

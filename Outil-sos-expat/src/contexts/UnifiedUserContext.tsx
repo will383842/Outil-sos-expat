@@ -410,6 +410,53 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
             }
             return;
           }
+
+          // P1 FIX: Fallback - Check providers/{uid} for forcedAIAccess
+          // This handles cases where syncProvider wrote to providers but not users
+          console.log("[UnifiedUser] User doc not found, checking providers fallback...");
+          try {
+            const providerRef = doc(db, "providers", user.uid);
+            const providerSnap = await getDoc(providerRef);
+
+            if (providerSnap.exists()) {
+              const providerData = providerSnap.data();
+              const hasForcedAccess = providerData.forcedAIAccess === true;
+              const hasSubActive = providerData.hasActiveSubscription === true;
+
+              // Check freeTrialUntil
+              let hasFreeTrialAccess = false;
+              let expiresAt: Date | null = null;
+              const freeTrialData = providerData.freeTrialUntil;
+              if (freeTrialData) {
+                const trialDate = freeTrialData.toDate?.() || new Date(freeTrialData);
+                if (trialDate > new Date()) {
+                  hasFreeTrialAccess = true;
+                  expiresAt = trialDate;
+                }
+              }
+
+              console.log("[UnifiedUser] Provider fallback check:", {
+                hasForcedAccess,
+                hasFreeTrialAccess,
+                hasSubActive,
+              });
+
+              if (hasForcedAccess || hasFreeTrialAccess || hasSubActive) {
+                setSubscription({
+                  hasActiveSubscription: true,
+                  status: hasForcedAccess ? "active" : (hasFreeTrialAccess ? "trialing" : "active"),
+                  expiresAt,
+                  planName: hasForcedAccess ? "Admin Access" : null,
+                });
+                setRole("provider");
+                setError(null);
+                return;
+              }
+            }
+          } catch (err) {
+            console.error("[UnifiedUser] Provider fallback error:", err);
+          }
+
           setError("Compte non trouvé. Veuillez vous inscrire sur sos-expat.com");
           return;
         }
@@ -423,26 +470,54 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
         if (!subscription.hasActiveSubscription) {
           const status =
             data.subscriptionStatus || data.subscription_status || null;
+
+          // P1 FIX: Check forcedAIAccess and freeTrialUntil from Firestore
+          // These are synced from SOS via syncProvider endpoint
+          const hasForcedAccess = data.forcedAIAccess === true;
+          let hasFreeTrialAccess = false;
+          let expiresAt: Date | null = null;
+
+          // Check freeTrialUntil
+          const freeTrialData = data.freeTrialUntil;
+          if (freeTrialData) {
+            const trialDate = freeTrialData.toDate?.() || new Date(freeTrialData);
+            if (trialDate > new Date()) {
+              hasFreeTrialAccess = true;
+              expiresAt = trialDate;
+            }
+          }
+
+          // Check subscription expiry
+          if (!expiresAt && data.subscriptionExpiresAt) {
+            expiresAt =
+              data.subscriptionExpiresAt.toDate?.() ||
+              new Date(data.subscriptionExpiresAt);
+          } else if (!expiresAt && data.subscription_expires_at) {
+            expiresAt = new Date(data.subscription_expires_at);
+          }
+
+          // Determine if access is active
           const isActive =
+            hasForcedAccess ||
+            hasFreeTrialAccess ||
             data.hasActiveSubscription === true ||
             status === "active" ||
             status === "trialing" ||
             status === "past_due";
 
-          let expiresAt: Date | null = null;
-          if (data.subscriptionExpiresAt) {
-            expiresAt =
-              data.subscriptionExpiresAt.toDate?.() ||
-              new Date(data.subscriptionExpiresAt);
-          } else if (data.subscription_expires_at) {
-            expiresAt = new Date(data.subscription_expires_at);
-          }
+          console.log("[UnifiedUser] Firestore subscription check:", {
+            hasForcedAccess,
+            hasFreeTrialAccess,
+            hasActiveSubscription: data.hasActiveSubscription,
+            status,
+            isActive,
+          });
 
           setSubscription({
             hasActiveSubscription: isActive,
-            status,
+            status: hasForcedAccess ? "active" : (hasFreeTrialAccess ? "trialing" : status),
             expiresAt,
-            planName: data.planName || data.plan_name || null,
+            planName: hasForcedAccess ? "Admin Access" : (data.planName || data.plan_name || null),
           });
         } else if (import.meta.env.DEV) {
           console.debug("[UnifiedUser] Subscription already set from SSO token, skipping Firestore override");

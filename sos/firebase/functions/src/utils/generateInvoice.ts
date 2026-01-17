@@ -10,11 +10,10 @@ import { logError } from '../utils/logs/logError';
  */
 
 // Extended invoice data with optional fields
+// NOTE: Ces champs sont maintenant inclus directement dans InvoiceRecord (types.ts)
+// Cette interface est conservée pour rétro-compatibilité
 interface ExtendedInvoiceData extends InvoiceRecord {
-  providerName?: string;
   providerAddress?: string;
-  clientName?: string;
-  clientEmail?: string;
   description?: string;
 }
 

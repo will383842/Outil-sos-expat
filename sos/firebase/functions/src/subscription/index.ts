@@ -2658,58 +2658,8 @@ function mapStripeStatus(stripeStatus: Stripe.Subscription.Status): Subscription
 // ============================================================================
 // SCHEDULED: Monthly Quota Reset
 // ============================================================================
-
-/**
- * Reset monthly AI quotas for all providers
- * Runs on the 1st of each month at 00:00 Paris time
- */
-export const resetMonthlyAiQuotas = functions
-  .region('europe-west1')
-  .pubsub.schedule('0 0 1 * *')
-  .timeZone('Europe/Paris')
-  .onRun(async () => {
-    const db = getDb();
-    const usageRef = db.collection('ai_usage');
-    const snapshot = await usageRef.get();
-
-    if (snapshot.empty) {
-      console.log('No ai_usage documents to reset');
-      return null;
-    }
-
-    const now = admin.firestore.Timestamp.now();
-
-    // Calculate next month's end date
-    const nextMonthEnd = new Date();
-    nextMonthEnd.setMonth(nextMonthEnd.getMonth() + 1);
-    nextMonthEnd.setDate(1);
-    nextMonthEnd.setHours(0, 0, 0, 0);
-
-    // Process in batches of 500 (Firestore limit)
-    const batchSize = 500;
-    const docs = snapshot.docs;
-    let processedCount = 0;
-
-    for (let i = 0; i < docs.length; i += batchSize) {
-      const batch = db.batch();
-      const chunk = docs.slice(i, i + batchSize);
-
-      chunk.forEach(doc => {
-        batch.update(doc.ref, {
-          currentPeriodCalls: 0,
-          currentPeriodStart: now,
-          currentPeriodEnd: admin.firestore.Timestamp.fromDate(nextMonthEnd),
-          updatedAt: now
-        });
-      });
-
-      await batch.commit();
-      processedCount += chunk.length;
-    }
-
-    console.log(`Monthly quota reset completed for ${processedCount} providers`);
-    return null;
-  });
+// P1 FIX: REMOVED - Duplicate function!
+// Use resetMonthlyQuotas from scheduledTasks.ts instead (v2 with better error handling)
 
 // ============================================================================
 // ADMIN FUNCTIONS (Subscription Management)
