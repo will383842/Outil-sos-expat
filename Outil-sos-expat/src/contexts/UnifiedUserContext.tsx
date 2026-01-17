@@ -25,6 +25,7 @@ import {
   useState,
   useCallback,
   useMemo,
+  useRef,
   ReactNode,
 } from "react";
 import { auth, db } from "../lib/firebase";
@@ -158,6 +159,20 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   // ─────────────────────────────────────────────────────────────────────────
+  // SSO CLAIMS TRACKING (to avoid race conditions)
+  // Ref is used because it's synchronous - state updates are async
+  // ─────────────────────────────────────────────────────────────────────────
+  const ssoClaimsRef = useRef<{
+    hasActiveSubscription: boolean;
+    role: string | null;
+    processed: boolean;
+  }>({
+    hasActiveSubscription: false,
+    role: null,
+    processed: false,
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
   // HELPERS
   // ─────────────────────────────────────────────────────────────────────────
 
@@ -176,6 +191,8 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
     setLinkedProviders([]);
     setActiveProvider(null);
     setError(null);
+    // Reset SSO ref
+    ssoClaimsRef.current = { hasActiveSubscription: false, role: null, processed: false };
   }, []);
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -273,6 +290,15 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
             allClaims: claims
           });
 
+          // IMPORTANT: Update ref SYNCHRONOUSLY before setState
+          // This prevents race condition with the user document listener
+          const ssoRole = claims.provider === true ? "provider" : null;
+          ssoClaimsRef.current = {
+            hasActiveSubscription: isActive || false,
+            role: ssoRole,
+            processed: true,
+          };
+
           setSubscription({
             hasActiveSubscription: isActive || false,
             status: hasForcedAccess ? "active" : (ssoStatus || null),
@@ -281,8 +307,8 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
           });
 
           // Si provider claim est présent, définir le rôle
-          if (claims.provider === true) {
-            setRole("provider");
+          if (ssoRole) {
+            setRole(ssoRole);
           }
         }
       } catch (err) {
@@ -404,7 +430,9 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
       async (snapshot) => {
         if (!snapshot.exists()) {
           // Si l'utilisateur a déjà une subscription valide via SSO token, pas d'erreur
-          if (subscription.hasActiveSubscription) {
+          // IMPORTANT: Use ref instead of state to avoid race condition
+          // The state might not be updated yet when this callback runs
+          if (subscription.hasActiveSubscription || ssoClaimsRef.current.hasActiveSubscription) {
             if (import.meta.env.DEV) {
               console.debug("[UnifiedUser] User doc not found but SSO subscription active - no error");
             }
@@ -467,7 +495,9 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
         // SUBSCRIPTION
         // ───────────────────────────────────────────────────────────────────
         // NE PAS écraser la subscription si elle vient déjà du token SSO
-        if (!subscription.hasActiveSubscription) {
+        // IMPORTANT: Check both state AND ref to handle race condition
+        const hasValidSsoSubscription = subscription.hasActiveSubscription || ssoClaimsRef.current.hasActiveSubscription;
+        if (!hasValidSsoSubscription) {
           const status =
             data.subscriptionStatus || data.subscription_status || null;
 
@@ -520,14 +550,26 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
             planName: hasForcedAccess ? "Admin Access" : (data.planName || data.plan_name || null),
           });
         } else if (import.meta.env.DEV) {
-          console.debug("[UnifiedUser] Subscription already set from SSO token, skipping Firestore override");
+          console.debug("[UnifiedUser] Subscription already set from SSO token, skipping Firestore override", {
+            stateHasActive: subscription.hasActiveSubscription,
+            refHasActive: ssoClaimsRef.current.hasActiveSubscription,
+          });
         }
 
         // ───────────────────────────────────────────────────────────────────
         // ROLE
         // ───────────────────────────────────────────────────────────────────
-        const userRole = data.role || data.userRole || null;
-        setRole(userRole);
+        // NE PAS écraser le rôle s'il vient déjà du token SSO
+        const ssoRole = ssoClaimsRef.current.role;
+        if (!ssoRole) {
+          const userRole = data.role || data.userRole || null;
+          setRole(userRole);
+        } else if (import.meta.env.DEV) {
+          console.debug("[UnifiedUser] Role already set from SSO token, skipping Firestore override", {
+            ssoRole,
+            firestoreRole: data.role || data.userRole,
+          });
+        }
 
         // Admin fallback
         if (
