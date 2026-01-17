@@ -481,7 +481,7 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
     const data = {
       country: selectedCountry,
       languages: selectedLanguages,
-      type: selectedType,
+      type: selectedType || "all", // Default to "all" if null
     };
     console.log('🟡 [GuidedFilterWizard] handleComplete - sending data:', data);
     onComplete(data);

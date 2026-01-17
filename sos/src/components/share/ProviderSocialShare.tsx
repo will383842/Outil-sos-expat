@@ -2,8 +2,8 @@
 // 🚀 Ultra-simple, mobile-first share component (2025-2026)
 // Design: Web Share API first, all platforms in simple grid, fun messages
 
-import React, { useState, useCallback, useMemo } from 'react';
-import { useIntl } from 'react-intl';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import { useIntl, FormattedMessage } from 'react-intl';
 import { Check, Link2, Mail, X } from 'lucide-react';
 
 // ============================================================================
@@ -183,6 +183,17 @@ export const ProviderSocialShare: React.FC<ProviderSocialShareProps> = ({
   const lang = intl.locale?.split('-')[0] || 'fr';
   const [copied, setCopied] = useState(false);
   const [showSheet, setShowSheet] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Responsive mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Check Web Share API support
   const canNativeShare = useMemo(() => {
@@ -330,8 +341,6 @@ export const ProviderSocialShare: React.FC<ProviderSocialShareProps> = ({
   // MOBILE: Single magic button + full sheet
   // ============================================================================
 
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-
   if (isMobile) {
     return (
       <>
@@ -346,7 +355,7 @@ export const ProviderSocialShare: React.FC<ProviderSocialShareProps> = ({
             active:scale-95 transition-transform duration-150
           "
         >
-          <span>Partager</span>
+          <span><FormattedMessage id="socialShare.share" defaultMessage="Partager" /></span>
           <span className="text-lg">✨</span>
         </button>
 
@@ -360,7 +369,8 @@ export const ProviderSocialShare: React.FC<ProviderSocialShareProps> = ({
               className="
                 fixed inset-x-0 bottom-0 z-50
                 bg-white dark:bg-gray-900
-                rounded-t-3xl p-6 pb-10
+                rounded-t-3xl p-6
+                pb-[max(2.5rem,env(safe-area-inset-bottom))]
                 animate-[slideUp_0.3s_ease-out]
               "
               onClick={e => e.stopPropagation()}
@@ -376,7 +386,7 @@ export const ProviderSocialShare: React.FC<ProviderSocialShareProps> = ({
 
               {/* Header */}
               <p className="text-center text-gray-500 dark:text-gray-400 mb-6 text-sm">
-                Partager ce profil 💫
+                <FormattedMessage id="socialShare.shareThisProfile" defaultMessage="Partager ce profil" /> 💫
               </p>
 
               {/* Platform Grid - 4 columns */}
@@ -414,7 +424,10 @@ export const ProviderSocialShare: React.FC<ProviderSocialShareProps> = ({
                 `}
               >
                 {copied ? <Check className="w-5 h-5" /> : <Link2 className="w-5 h-5" />}
-                {copied ? 'Lien copié ✓' : 'Copier le lien'}
+                {copied
+                  ? <FormattedMessage id="socialShare.linkCopied" defaultMessage="Lien copié ✓" />
+                  : <FormattedMessage id="socialShare.copyLink" defaultMessage="Copier le lien" />
+                }
               </button>
             </div>
           </div>
