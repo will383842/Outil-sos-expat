@@ -327,7 +327,7 @@ const LanguageStep: React.FC<{
 // Type Step Component
 // ========================================
 const TypeStep: React.FC<{
-  selectedType: "all" | "lawyer" | "expat";
+  selectedType: "all" | "lawyer" | "expat" | null;
   onSelect: (type: "all" | "lawyer" | "expat") => void;
 }> = ({ selectedType, onSelect }) => {
   const typeOptions = [
@@ -420,7 +420,7 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [selectedCountry, setSelectedCountry] = useState<string>("");
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
-  const [selectedType, setSelectedType] = useState<"all" | "lawyer" | "expat">("all");
+  const [selectedType, setSelectedType] = useState<"all" | "lawyer" | "expat" | null>(null);
 
   // Toggle language selection
   const toggleLanguage = useCallback((code: string) => {
@@ -473,7 +473,7 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
       setStep(1);
       setSelectedCountry("");
       setSelectedLanguages([]);
-      setSelectedType("all");
+      setSelectedType(null);
     }
   }, [isOpen]);
 

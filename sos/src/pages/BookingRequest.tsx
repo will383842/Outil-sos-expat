@@ -3587,6 +3587,26 @@ const BookingRequest: React.FC = () => {
                   )}
                 </div>
 
+                {/* Reassurance message about payment authorization */}
+                <div className="mt-6 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                      <Shield className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-green-800 text-sm mb-1">
+                        <FormattedMessage id="bookingRequest.paymentReassurance.title" defaultMessage="Paiement sécurisé" />
+                      </h4>
+                      <p className="text-sm text-green-700 leading-relaxed">
+                        <FormattedMessage
+                          id="bookingRequest.paymentReassurance"
+                          defaultMessage="Il s'agit uniquement d'une demande d'autorisation. Votre carte ne sera débitée qu'après la mise en relation avec votre expert."
+                        />
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
               </section>
               )}
 
