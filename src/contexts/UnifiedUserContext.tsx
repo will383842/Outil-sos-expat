@@ -109,6 +109,11 @@ const ALLOWED_ROLES = [
   "provider",
 ];
 
+// ═══════════════════════════════════════════════════════════════════════════
+// CONSTANTES SSO - Partagées avec AuthSSO.tsx
+// ═══════════════════════════════════════════════════════════════════════════
+const SSO_PROVIDER_ID_KEY = "sso_providerId";
+
 // =============================================================================
 // CONTEXT
 // =============================================================================
@@ -264,6 +269,26 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
       userRef,
       async (snapshot) => {
         if (!snapshot.exists()) {
+          // ─────────────────────────────────────────────────────────────────
+          // Document user non trouvé dans Firestore
+          // Si l'utilisateur a un provider (trouvé par email), c'est OK
+          // SOS-Expat gère les abonnements, donc accès accordé aux providers
+          // ─────────────────────────────────────────────────────────────────
+          if (providerProfile) {
+            console.debug("[UnifiedUser] Pas de document user mais provider trouvé - accès accordé");
+            // Définir un abonnement actif par défaut pour les providers SSO
+            setSubscription({
+              hasActiveSubscription: true,
+              status: "active",
+              expiresAt: null,
+              planName: "Provider SSO",
+            });
+            setRole("provider");
+            setLinkedProviders([providerProfile]);
+            setActiveProvider(providerProfile);
+            setError(null);
+            return;
+          }
           setError("Compte non trouvé. Veuillez vous inscrire sur sos-expat.com");
           return;
         }
@@ -272,14 +297,20 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
 
         // ───────────────────────────────────────────────────────────────────
         // SUBSCRIPTION
+        // NOTE: L'abonnement est géré côté SOS-Expat. Si l'utilisateur est
+        // un provider (trouvé par email), on lui accorde l'accès automatiquement.
         // ───────────────────────────────────────────────────────────────────
         const status =
           data.subscriptionStatus || data.subscription_status || null;
-        const isActive =
+        const isActiveFromFirestore =
           data.hasActiveSubscription === true ||
           status === "active" ||
           status === "trialing" ||
           status === "past_due";
+
+        // Si l'utilisateur est un provider (détecté par email), accès accordé
+        // même sans subscriptionStatus dans Firestore
+        const isActive = isActiveFromFirestore || !!providerProfile;
 
         let expiresAt: Date | null = null;
         if (data.subscriptionExpiresAt) {
@@ -292,15 +323,16 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
 
         setSubscription({
           hasActiveSubscription: isActive,
-          status,
+          status: isActive && !status ? "active" : status, // Défaut "active" pour les providers
           expiresAt,
-          planName: data.planName || data.plan_name || null,
+          planName: data.planName || data.plan_name || (providerProfile ? "Provider SSO" : null),
         });
 
         // ───────────────────────────────────────────────────────────────────
         // ROLE
+        // Si l'utilisateur est un provider (par email), rôle "provider" par défaut
         // ───────────────────────────────────────────────────────────────────
-        const userRole = data.role || data.userRole || null;
+        const userRole = data.role || data.userRole || (providerProfile ? "provider" : null);
         setRole(userRole);
 
         // Admin fallback
@@ -369,15 +401,38 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
 
             setLinkedProviders(providers);
 
-            // Définir provider actif
+            // ─────────────────────────────────────────────────────────────────
+            // DÉFINIR PROVIDER ACTIF - Priorité:
+            // 1. ProviderId SSO (depuis AuthSSO via sessionStorage) - NOUVEAU
+            // 2. Provider sauvegardé en localStorage
+            // 3. Premier provider de la liste
+            // ─────────────────────────────────────────────────────────────────
             if (providers.length > 0 && !activeProvider) {
-              const savedId = localStorage.getItem(
-                `activeProvider_${user.uid}`
-              );
-              const saved = savedId
-                ? providers.find((p) => p.id === savedId)
+              // Priorité 1: SSO providerId (auto-sélection depuis sos-expat.com)
+              const ssoProviderId = sessionStorage.getItem(SSO_PROVIDER_ID_KEY);
+              const ssoProvider = ssoProviderId
+                ? providers.find((p) => p.id === ssoProviderId)
                 : null;
-              setActiveProvider(saved || providers[0]);
+
+              if (ssoProvider) {
+                console.debug("[UnifiedUser] Auto-sélection du provider SSO:", ssoProviderId);
+                setActiveProvider(ssoProvider);
+                // Nettoyer après utilisation pour éviter de re-sélectionner à chaque reload
+                sessionStorage.removeItem(SSO_PROVIDER_ID_KEY);
+                // Sauvegarder en localStorage pour les prochaines sessions
+                localStorage.setItem(`activeProvider_${user.uid}`, ssoProviderId);
+              } else {
+                // Priorité 2: Provider sauvegardé
+                const savedId = localStorage.getItem(
+                  `activeProvider_${user.uid}`
+                );
+                const saved = savedId
+                  ? providers.find((p) => p.id === savedId)
+                  : null;
+
+                // Priorité 3: Premier provider
+                setActiveProvider(saved || providers[0]);
+              }
             }
           } catch (err) {
             console.error(
@@ -388,6 +443,12 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
         } else if (providerProfile && linkedProviders.length === 0) {
           // Un seul provider (détecté par email)
           setLinkedProviders([providerProfile]);
+
+          // Vérifier aussi le SSO providerId pour ce cas
+          const ssoProviderId = sessionStorage.getItem(SSO_PROVIDER_ID_KEY);
+          if (ssoProviderId === providerProfile.id) {
+            sessionStorage.removeItem(SSO_PROVIDER_ID_KEY);
+          }
           setActiveProvider(providerProfile);
         }
 

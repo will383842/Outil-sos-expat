@@ -7,32 +7,104 @@
  * et connecte automatiquement l'utilisateur.
  *
  * URL: /auth?token=xxx
+ * URL: /auth?token=xxx&providerId=yyy (optionnel pour auto-sélection)
  *
  * Flux:
- * 1. Récupère le token depuis l'URL
- * 2. Appelle signInWithCustomToken(token)
- * 3. Redirige vers /admin si succès
- * 4. Affiche erreur sinon
+ * 1. Vérifie si l'utilisateur est déjà connecté → redirige vers dashboard
+ * 2. Récupère le token depuis l'URL
+ * 3. Appelle signInWithCustomToken(token)
+ * 4. Extrait les claims (role, providerId) pour déterminer la destination
+ * 5. Redirige vers /dashboard (prestataires) ou /admin (admins)
+ *
+ * CONSOLIDATION: Cette page gère tous les cas d'authentification
+ * - Token valide → connexion + redirection intelligente
+ * - Déjà connecté sans token → redirection vers le bon dashboard
+ * - Pas de token et pas connecté → écran d'information
  *
  * =============================================================================
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { signInWithCustomToken } from "firebase/auth";
+import { signInWithCustomToken, onAuthStateChanged } from "firebase/auth";
 import { auth } from "../lib/firebase";
 import { Loader2, AlertCircle, ExternalLink } from "lucide-react";
 
-type AuthStatus = "loading" | "success" | "error" | "no_token";
+type AuthStatus = "loading" | "checking_auth" | "success" | "error" | "no_token";
+
+// Clé pour stocker le providerId dans sessionStorage (partagé avec UnifiedUserContext)
+const SSO_PROVIDER_ID_KEY = "sso_providerId";
+const SSO_REDIRECT_TARGET_KEY = "sso_redirect_target";
 
 export default function AuthSSO() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [status, setStatus] = useState<AuthStatus>("loading");
+  const [status, setStatus] = useState<AuthStatus>("checking_auth");
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const authCheckDone = useRef(false);
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ÉTAPE 1: Vérifier si l'utilisateur est déjà connecté
+  // Si oui et pas de token → rediriger directement vers le dashboard
+  // ═══════════════════════════════════════════════════════════════════════════
   useEffect(() => {
+    if (authCheckDone.current) return;
+
     const token = searchParams.get("token");
+    const providerIdParam = searchParams.get("providerId");
+
+    // Si on a un token, on ne vérifie pas l'auth existante, on procède directement
+    if (token) {
+      authCheckDone.current = true;
+      setStatus("loading");
+      return;
+    }
+
+    // Pas de token → vérifier si déjà connecté
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (authCheckDone.current) return;
+      authCheckDone.current = true;
+
+      if (user) {
+        // Utilisateur déjà connecté → rediriger vers le bon dashboard
+        console.debug("[AuthSSO] Utilisateur déjà connecté, redirection...");
+
+        try {
+          const tokenResult = await user.getIdTokenResult();
+          const isAdmin = tokenResult.claims.admin === true || tokenResult.claims.role === "admin";
+
+          // Stocker le providerId si fourni en paramètre
+          if (providerIdParam) {
+            sessionStorage.setItem(SSO_PROVIDER_ID_KEY, providerIdParam);
+          }
+
+          // Rediriger vers le bon dashboard
+          const destination = isAdmin ? "/admin" : "/dashboard";
+          navigate(destination, { replace: true });
+        } catch (err) {
+          console.error("[AuthSSO] Erreur lors de la vérification des claims:", err);
+          // En cas d'erreur, rediriger vers dashboard par défaut
+          navigate("/dashboard", { replace: true });
+        }
+      } else {
+        // Pas connecté et pas de token → afficher l'écran no_token
+        setStatus("no_token");
+      }
+
+      unsubscribe();
+    });
+
+    return () => unsubscribe();
+  }, [searchParams, navigate]);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ÉTAPE 2: Authentification avec le Custom Token
+  // ═══════════════════════════════════════════════════════════════════════════
+  useEffect(() => {
+    if (status !== "loading") return;
+
+    const token = searchParams.get("token");
+    const providerIdParam = searchParams.get("providerId");
 
     // SÉCURITÉ: Nettoyer immédiatement l'URL pour éviter que le token reste dans l'historique
     if (token) {
@@ -50,13 +122,57 @@ export default function AuthSSO() {
     // Authentification avec le Custom Token
     async function authenticateWithToken() {
       try {
-        await signInWithCustomToken(auth, validToken);
+        const userCredential = await signInWithCustomToken(auth, validToken);
+        const user = userCredential.user;
 
         setStatus("success");
 
-        // Rediriger vers l'application
+        // ─────────────────────────────────────────────────────────────────────
+        // EXTRACTION DES CLAIMS pour déterminer la destination
+        // ─────────────────────────────────────────────────────────────────────
+        let isAdmin = false;
+        let claimProviderId: string | null = null;
+
+        try {
+          const tokenResult = await user.getIdTokenResult();
+
+          // Vérifier si admin
+          isAdmin = tokenResult.claims.admin === true ||
+                    tokenResult.claims.role === "admin" ||
+                    tokenResult.claims.role === "superadmin";
+
+          // Récupérer le providerId depuis les claims ou le paramètre URL
+          claimProviderId = (tokenResult.claims.providerId as string) || providerIdParam || null;
+
+          console.debug("[AuthSSO] Claims extraits:", {
+            isAdmin,
+            role: tokenResult.claims.role,
+            providerId: claimProviderId,
+          });
+        } catch (claimError) {
+          console.warn("[AuthSSO] Impossible de lire les claims:", claimError);
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
+        // STOCKER LE PROVIDER ID pour auto-sélection dans UnifiedUserContext
+        // ─────────────────────────────────────────────────────────────────────
+        if (claimProviderId) {
+          sessionStorage.setItem(SSO_PROVIDER_ID_KEY, claimProviderId);
+          console.debug("[AuthSSO] ProviderId stocké pour auto-sélection:", claimProviderId);
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
+        // REDIRECTION INTELLIGENTE
+        // - Admin → /admin
+        // - Prestataire → /dashboard
+        // ─────────────────────────────────────────────────────────────────────
+        const destination = isAdmin ? "/admin" : "/dashboard";
+
+        // Stocker la destination pour fallback
+        sessionStorage.setItem(SSO_REDIRECT_TARGET_KEY, destination);
+
         setTimeout(() => {
-          navigate("/admin", { replace: true });
+          navigate(destination, { replace: true });
         }, 500);
 
       } catch (error: unknown) {
@@ -73,11 +189,13 @@ export default function AuthSSO() {
         } else {
           setErrorMessage("Une erreur est survenue. Veuillez réessayer.");
         }
+
+        console.error("[AuthSSO] Erreur d'authentification:", firebaseError);
       }
     }
 
     authenticateWithToken();
-  }, [searchParams, navigate]);
+  }, [status, searchParams, navigate]);
 
   // Nettoyage: supprimer le token de la mémoire au démontage
   useEffect(() => {
@@ -90,7 +208,28 @@ export default function AuthSSO() {
   }, []);
 
   // ─────────────────────────────────────────────────────────────────────────
-  // RENDER: Loading
+  // RENDER: Checking auth (vérification si déjà connecté)
+  // ─────────────────────────────────────────────────────────────────────────
+  if (status === "checking_auth") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-red-100 rounded-full mb-6">
+            <Loader2 className="w-10 h-10 text-red-600 animate-spin" />
+          </div>
+          <h1 className="text-xl font-semibold text-gray-900 mb-2">
+            Vérification de votre session...
+          </h1>
+          <p className="text-gray-600">
+            Un instant, nous vérifions votre accès.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // RENDER: Loading (connexion avec token)
   // ─────────────────────────────────────────────────────────────────────────
   if (status === "loading") {
     return (

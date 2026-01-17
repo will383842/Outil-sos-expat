@@ -6,11 +6,12 @@
  * Vérifie :
  * 1. L'utilisateur est connecté (via SSO depuis sos-expat.com)
  * 2. L'utilisateur a un rôle autorisé (avocat, expat, admin)
- * 3. L'utilisateur a un abonnement actif
+ *
+ * NOTE: L'abonnement est géré côté SOS-Expat (Laravel), pas ici.
+ * Si l'utilisateur est authentifié via SSO, il a accès.
  *
  * Si pas connecté → Redirige vers /auth (page SSO)
  * Si rôle non autorisé → Écran "Accès réservé aux prestataires"
- * Si pas d'abonnement → Écran "Abonnement requis" avec offre d'inscription
  *
  * =============================================================================
  */
@@ -18,7 +19,7 @@
 import { memo } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { useAuth, useSubscription } from "../contexts/UnifiedUserContext";
-import { BlockedScreen, SubscriptionScreen } from "./guards";
+import { BlockedScreen } from "./guards";
 import { useLanguage } from "../hooks/useLanguage";
 
 // =============================================================================
@@ -63,7 +64,6 @@ function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { t } = useLanguage({ mode: "provider" });
   const { user, loading: authLoading, isAdmin } = useAuth();
   const {
-    hasActiveSubscription,
     hasAllowedRole,
     role,
     loading: subLoading,
@@ -164,19 +164,8 @@ function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // ABONNEMENT INACTIF → Écran attractif avec offre d'inscription
-  // ─────────────────────────────────────────────────────────────────────────
-  if (!hasActiveSubscription) {
-    return (
-      <SubscriptionScreen
-        userEmail={user.email}
-        providerType={role as "lawyer" | "expat" | null}
-      />
-    );
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
   // TOUT OK → Afficher le contenu protégé
+  // NOTE: L'abonnement est géré côté SOS-Expat, pas de vérification ici
   // ─────────────────────────────────────────────────────────────────────────
   return <>{children}</>;
 }
