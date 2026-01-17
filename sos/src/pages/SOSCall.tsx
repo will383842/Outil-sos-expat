@@ -2208,6 +2208,29 @@ const SOSCall: React.FC = () => {
     }
   }, []);
 
+  // 🔄 Sync sessionStorage when filters change via DesktopFilterBar
+  // This ensures BookingRequest gets the latest filter values, not just wizard data
+  useEffect(() => {
+    // Only sync if wizard has been completed (to avoid overwriting with defaults on initial load)
+    if (!wizardCompleted) return;
+
+    try {
+      const currentFilters = {
+        country: selectedCountryCode === "all" ? "" : selectedCountryCode,
+        languages: selectedLanguageCodes,
+        type: selectedType
+      };
+      console.log('%c🔄 [SOSCall] DESKTOP FILTER SYNC', 'background: #ff6b00; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold;');
+      console.log('📍 Pays sélectionné:', selectedCountryCode);
+      console.log('🗣️ Langues sélectionnées:', selectedLanguageCodes);
+      console.log('👤 Type:', selectedType);
+      console.log('💾 Données sauvegardées dans sessionStorage:', currentFilters);
+      sessionStorage.setItem('wizardFilters', JSON.stringify(currentFilters));
+    } catch (e) {
+      console.warn('Failed to sync filters to sessionStorage', e);
+    }
+  }, [selectedCountryCode, selectedLanguageCodes, selectedType, wizardCompleted]);
+
   // Load FAQs from Firestore
   useEffect(() => {
     const loadFAQs = async () => {

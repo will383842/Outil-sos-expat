@@ -2200,7 +2200,9 @@ const BookingRequest: React.FC = () => {
         languages: string[];
         type: string;
       };
-      console.log('🔵 [BookingRequest] Parsed wizard data:', { country, wizardLanguages });
+      console.log('%c📥 [BookingRequest] DONNÉES RÉCUPÉRÉES DU WIZARD/FILTRES', 'background: #2196F3; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold;');
+      console.log('📍 Code pays reçu:', country || '(vide)');
+      console.log('🗣️ Codes langues reçus:', wizardLanguages?.length ? wizardLanguages : '(aucune)');
 
       // Préremplir le pays d'intervention choisi par le client dans le wizard
       if (country) {
@@ -2213,8 +2215,8 @@ const BookingRequest: React.FC = () => {
           const isInList = countries.includes(countryName);
           console.log('🔵 [BookingRequest] countryName:', countryName, '| isInList:', isInList);
           if (isInList) {
-            console.log('🔵 [BookingRequest] Setting currentCountry to:', countryName);
             setValue('currentCountry', countryName);
+            console.log('✅ Pays appliqué au formulaire:', countryName);
           } else {
             console.warn('🔴 [BookingRequest] Country name NOT in countries list:', countryName);
           }
@@ -2244,10 +2246,11 @@ const BookingRequest: React.FC = () => {
         if (selectedLangs.length > 0) {
           setLanguagesSpoken(selectedLangs);
           setValue('clientLanguages', selectedLangs.map((l) => l.code));
+          console.log('✅ Langues appliquées au formulaire:', selectedLangs.map(l => l.name).join(', '));
         }
       }
 
-      console.log('🔵 [BookingRequest] Wizard data processed successfully');
+      console.log('%c✅ [BookingRequest] PRÉ-REMPLISSAGE TERMINÉ', 'background: #4CAF50; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold;');
 
     } catch (e) {
       console.warn('Failed to read wizard filters from sessionStorage', e);
