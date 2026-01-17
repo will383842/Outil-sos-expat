@@ -142,9 +142,17 @@ export const twilioConferenceWebhook = onRequest(
         return;
       }
 
-      // P0 FIX: If we found by name but conference.sid is not set, set it now!
-      if (!session.conference?.sid && body.ConferenceSid) {
+      // P0 FIX v3: Only set conference.sid for events that indicate a NEW conference starting
+      // CRITICAL BUG FIX: Previously we set SID for ALL events including conference-end!
+      // This caused old conference-end webhooks to SET the OLD SID on the session,
+      // making the stale webhook check pass (session.sid === webhook.sid) and triggering refunds!
+      //
+      // NEW RULE: Only set SID for conference-start and participant-join events
+      // For conference-end: if session doesn't have SID, it's a stale webhook - don't update!
+      const eventsAllowedToSetSid = ['conference-start', 'participant-join'];
+      if (!session.conference?.sid && body.ConferenceSid && eventsAllowedToSetSid.includes(body.StatusCallbackEvent)) {
         console.log(`🎤 [${confWebhookId}] 🔧 Setting conference.sid for the first time: ${body.ConferenceSid}`);
+        console.log(`🎤 [${confWebhookId}]   Event type: ${body.StatusCallbackEvent} (allowed to set SID)`);
         try {
           await twilioCallManager.updateConferenceSid(session.id, body.ConferenceSid);
           console.log(`🎤 [${confWebhookId}]   ✅ conference.sid updated in Firestore`);
@@ -152,6 +160,9 @@ export const twilioConferenceWebhook = onRequest(
           console.error(`🎤 [${confWebhookId}]   ⚠️ Failed to update conference.sid:`, updateError);
           // Continue processing - non-fatal error
         }
+      } else if (!session.conference?.sid && body.ConferenceSid) {
+        console.log(`🎤 [${confWebhookId}] ⚠️ NOT setting conference.sid - event type "${body.StatusCallbackEvent}" not allowed to set SID`);
+        console.log(`🎤 [${confWebhookId}]   This might be a stale webhook from an old conference`);
       }
 
       const sessionId = session.id;
