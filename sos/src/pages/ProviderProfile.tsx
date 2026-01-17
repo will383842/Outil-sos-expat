@@ -2511,7 +2511,9 @@ const ProviderProfile: React.FC = () => {
                           fullName: formatPublicName(provider),
                           type: provider.type as 'lawyer' | 'expat',
                           country: provider.country || '',
-                          specialties: provider.specialties,
+                          specialties: provider.type === 'lawyer'
+                            ? (provider.specialties || [])
+                            : (provider.helpTypes || provider.specialties || []),
                           rating: providerStats.averageRating || provider.rating,
                         }}
                         shareUrl={window.location.href}

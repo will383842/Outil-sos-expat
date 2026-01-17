@@ -5,6 +5,7 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useIntl, FormattedMessage } from 'react-intl';
 import { Check, Link2, Mail, X } from 'lucide-react';
+import { getSpecialtyLabel, mapLanguageToLocale } from '../../utils/specialtyMapper';
 
 // ============================================================================
 // TYPES
@@ -100,9 +101,32 @@ const getShareMessages = (lang: string) => {
   return messages[lang] || messages.en;
 };
 
-const buildMessage = (template: string, provider: ShareableProvider): string => {
+const buildMessage = (template: string, provider: ShareableProvider, lang: string): string => {
   const name = provider.fullName || provider.firstName;
-  const specialty = provider.specialties?.[0] || (provider.type === 'lawyer' ? 'Avocat' : 'Expert expat');
+  const locale = mapLanguageToLocale(lang);
+
+  // Translate specialty code to proper label
+  let specialty: string;
+  if (provider.specialties && provider.specialties.length > 0) {
+    specialty = getSpecialtyLabel(provider.specialties[0], locale);
+  } else {
+    // Fallback labels by language
+    const fallbackLabels: Record<string, { lawyer: string; expat: string }> = {
+      fr: { lawyer: 'Avocat', expat: 'Expert expatriation' },
+      en: { lawyer: 'Lawyer', expat: 'Expat expert' },
+      es: { lawyer: 'Abogado', expat: 'Experto en expatriación' },
+      de: { lawyer: 'Anwalt', expat: 'Expat-Experte' },
+      pt: { lawyer: 'Advogado', expat: 'Especialista em expatriação' },
+      ru: { lawyer: 'Адвокат', expat: 'Эксперт по экспатриации' },
+      ar: { lawyer: 'محامٍ', expat: 'خبير المغتربين' },
+      zh: { lawyer: '律师', expat: '外籍专家' },
+      ch: { lawyer: '律师', expat: '外籍专家' },
+      hi: { lawyer: 'वकील', expat: 'प्रवासी विशेषज्ञ' },
+    };
+    const labels = fallbackLabels[lang] || fallbackLabels.en;
+    specialty = provider.type === 'lawyer' ? labels.lawyer : labels.expat;
+  }
+
   const rating = provider.rating?.toFixed(1) || '5.0';
   return template
     .replace(/{name}/g, name)
@@ -209,11 +233,11 @@ export const ProviderSocialShare: React.FC<ProviderSocialShareProps> = ({
 
   const shareToWhatsApp = useCallback(() => {
     haptic();
-    const text = buildMessage(messages.whatsapp, provider);
+    const text = buildMessage(messages.whatsapp, provider, lang);
     window.open(`https://wa.me/?text=${encodeURIComponent(text + '\n\n' + shareUrl)}`, '_blank');
     onShare?.('whatsapp', true);
     setShowSheet(false);
-  }, [messages, provider, shareUrl, onShare]);
+  }, [messages, provider, shareUrl, onShare, lang]);
 
   const shareToMessenger = useCallback(() => {
     haptic();
@@ -224,27 +248,27 @@ export const ProviderSocialShare: React.FC<ProviderSocialShareProps> = ({
 
   const shareToFacebook = useCallback(() => {
     haptic();
-    const text = buildMessage(messages.social, provider);
+    const text = buildMessage(messages.social, provider, lang);
     window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(text)}`, '_blank');
     onShare?.('facebook', true);
     setShowSheet(false);
-  }, [messages, provider, shareUrl, onShare]);
+  }, [messages, provider, shareUrl, onShare, lang]);
 
   const shareToTwitter = useCallback(() => {
     haptic();
-    const text = buildMessage(messages.social, provider);
+    const text = buildMessage(messages.social, provider, lang);
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`, '_blank');
     onShare?.('twitter', true);
     setShowSheet(false);
-  }, [messages, provider, shareUrl, onShare]);
+  }, [messages, provider, shareUrl, onShare, lang]);
 
   const shareToPinterest = useCallback(() => {
     haptic();
-    const text = buildMessage(messages.social, provider);
+    const text = buildMessage(messages.social, provider, lang);
     window.open(`https://pinterest.com/pin/create/button/?url=${encodeURIComponent(shareUrl)}&description=${encodeURIComponent(text)}`, '_blank');
     onShare?.('pinterest', true);
     setShowSheet(false);
-  }, [messages, provider, shareUrl, onShare]);
+  }, [messages, provider, shareUrl, onShare, lang]);
 
   const shareToInstagram = useCallback(() => {
     haptic();
@@ -295,11 +319,11 @@ export const ProviderSocialShare: React.FC<ProviderSocialShareProps> = ({
   const shareByEmail = useCallback(() => {
     haptic();
     const subject = `${provider.fullName || provider.firstName} - SOS Expat`;
-    const body = buildMessage(messages.email, provider) + '\n\n' + shareUrl;
+    const body = buildMessage(messages.email, provider, lang) + '\n\n' + shareUrl;
     window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     onShare?.('email', true);
     setShowSheet(false);
-  }, [messages, provider, shareUrl, onShare]);
+  }, [messages, provider, shareUrl, onShare, lang]);
 
   const nativeShare = useCallback(async () => {
     haptic();
@@ -310,7 +334,7 @@ export const ProviderSocialShare: React.FC<ProviderSocialShareProps> = ({
     try {
       await navigator.share({
         title: `${provider.fullName || provider.firstName} - SOS Expat`,
-        text: buildMessage(messages.social, provider),
+        text: buildMessage(messages.social, provider, lang),
         url: shareUrl,
       });
       haptic('success');
@@ -320,7 +344,7 @@ export const ProviderSocialShare: React.FC<ProviderSocialShareProps> = ({
         setShowSheet(true);
       }
     }
-  }, [canNativeShare, messages, provider, shareUrl, onShare]);
+  }, [canNativeShare, messages, provider, shareUrl, onShare, lang]);
 
   // ============================================================================
   // PLATFORM CONFIG - Simple grid

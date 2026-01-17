@@ -681,15 +681,32 @@ async function handleCallCompleted(
       console.log(`🏁 [${completedId}] STEP 3: billingDuration >= 120s → handleCallCompletion (capture payment)`);
       await twilioCallManager.handleCallCompletion(sessionId, billingDuration);
     } else {
-      console.log(`🏁 [${completedId}] STEP 3: billingDuration < 120s → handleEarlyDisconnection (may refund)`);
-      // P0 FIX LOG 2026-01-15: Log participant retry state BEFORE calling handleEarlyDisconnection
+      // P0 CRITICAL FIX 2026-01-17: Check if this participant was EVER connected
+      // If participant was NEVER connected (connectedAt is null), DON'T call handleEarlyDisconnection
+      // because the retry loop in callParticipantWithRetries is handling this case.
+      // Calling handleEarlyDisconnection would interfere with the retry loop and prematurely
+      // cancel the payment while the retry loop is still trying to reach the participant.
       const participant = participantType === 'provider' ? session.participants.provider : session.participants.client;
-      console.log(`🏁 [${completedId}] 📊 RETRY STATE before handleEarlyDisconnection:`);
-      console.log(`🏁 [${completedId}]   ${participantType}.attemptCount: ${participant?.attemptCount || 0}`);
-      console.log(`🏁 [${completedId}]   ${participantType}.status: ${participant?.status}`);
-      console.log(`🏁 [${completedId}]   session.status: ${session.status}`);
-      console.log(`🏁 [${completedId}]   MAX_RETRIES: 3 (if attemptCount < 3, retries should continue)`);
-      await twilioCallManager.handleEarlyDisconnection(sessionId, participantType, billingDuration);
+      const participantConnectedAt = participant?.connectedAt;
+
+      if (!participantConnectedAt) {
+        console.log(`🏁 [${completedId}] STEP 3: ${participantType} was NEVER connected (no_answer/rejected)`);
+        console.log(`🏁 [${completedId}]   ⚠️ SKIPPING handleEarlyDisconnection - retry loop handles this`);
+        console.log(`🏁 [${completedId}]   ${participantType}.attemptCount: ${participant?.attemptCount || 0}`);
+        console.log(`🏁 [${completedId}]   ${participantType}.status: ${participant?.status}`);
+        console.log(`🏁 [${completedId}]   session.status: ${session.status}`);
+        console.log(`🏁 [${completedId}]   Retry loop will call handleCallFailure after all attempts exhausted`);
+      } else {
+        console.log(`🏁 [${completedId}] STEP 3: billingDuration < 120s → handleEarlyDisconnection (may refund)`);
+        // P0 FIX LOG 2026-01-15: Log participant retry state BEFORE calling handleEarlyDisconnection
+        console.log(`🏁 [${completedId}] 📊 RETRY STATE before handleEarlyDisconnection:`);
+        console.log(`🏁 [${completedId}]   ${participantType}.attemptCount: ${participant?.attemptCount || 0}`);
+        console.log(`🏁 [${completedId}]   ${participantType}.status: ${participant?.status}`);
+        console.log(`🏁 [${completedId}]   ${participantType}.connectedAt: ${participantConnectedAt?.toDate?.() || 'N/A'}`);
+        console.log(`🏁 [${completedId}]   session.status: ${session.status}`);
+        console.log(`🏁 [${completedId}]   MAX_RETRIES: 3 (if attemptCount < 3, retries should continue)`);
+        await twilioCallManager.handleEarlyDisconnection(sessionId, participantType, billingDuration);
+      }
     }
     console.log(`🏁 [${completedId}]   ✅ Post-completion handling done`);
 
