@@ -262,6 +262,7 @@ async function handleConferenceStart(sessionId: string, body: TwilioConferenceWe
  */
 async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebhookBody) {
   const endId = `conf_end_${Date.now().toString(36)}`;
+  const webhookConferenceSid = body.ConferenceSid;
 
   try {
     const twilioDuration = parseInt(body.Duration || '0');
@@ -270,9 +271,30 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
     console.log(`\n${'█'.repeat(70)}`);
     console.log(`🏁 [${endId}] handleConferenceEnd START`);
     console.log(`🏁 [${endId}]   sessionId: ${sessionId}`);
-    console.log(`🏁 [${endId}]   conferenceSid: ${body.ConferenceSid}`);
+    console.log(`🏁 [${endId}]   conferenceSid: ${webhookConferenceSid}`);
     console.log(`🏁 [${endId}]   twilioDuration (total conference): ${twilioDuration}s`);
     console.log(`${'█'.repeat(70)}`);
+
+    // P0 CRITICAL FIX 2026-01-17: Check if this webhook is from the CURRENT conference
+    // When a participant is transferred to a new conference, the old conference ends
+    // and sends a conference-end event. We must ignore it if the session has moved to a new conference.
+    console.log(`🏁 [${endId}] STEP 0: Checking if webhook is from CURRENT conference...`);
+    const sessionForConferenceCheck = await twilioCallManager.getCallSession(sessionId);
+    if (sessionForConferenceCheck?.conference?.sid && webhookConferenceSid) {
+      const currentConferenceSid = sessionForConferenceCheck.conference.sid;
+      if (currentConferenceSid !== webhookConferenceSid) {
+        console.log(`🏁 [${endId}] ⚠️ STALE CONFERENCE WEBHOOK - IGNORING`);
+        console.log(`🏁 [${endId}]   webhookConferenceSid: ${webhookConferenceSid}`);
+        console.log(`🏁 [${endId}]   currentConferenceSid: ${currentConferenceSid}`);
+        console.log(`🏁 [${endId}]   This is an OLD conference ending - the call has moved to a new conference`);
+        console.log(`🏁 [${endId}]   ⛔ NOT processing this webhook to prevent premature payment cancellation`);
+        console.log(`${'█'.repeat(70)}\n`);
+        return;
+      }
+      console.log(`🏁 [${endId}]   ✅ ConferenceSID matches current session - processing webhook`);
+    } else {
+      console.log(`🏁 [${endId}]   ⚠️ Cannot verify ConferenceSID (session or webhook missing SID) - proceeding with caution`);
+    }
 
     console.log(`🏁 [${endId}] STEP 1: Fetching session state BEFORE update...`);
     const sessionBefore = await twilioCallManager.getCallSession(sessionId);
