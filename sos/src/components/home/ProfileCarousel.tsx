@@ -165,6 +165,8 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
             reviewCount: typeof data.reviewCount === 'number' && data.reviewCount >= 0 ? data.reviewCount : 0,
             yearsOfExperience: typeof data.yearsOfExperience === 'number' ? data.yearsOfExperience : (data.yearsAsExpat || 0),
             isOnline: data.isOnline === true,
+            availability: data.availability || (data.isOnline ? 'available' : 'offline'),
+            busyReason: data.busyReason || null,
             avatar,
             profilePhoto: avatar,
             description: data.description || data.bio || '',
@@ -310,10 +312,15 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
     newOnes.forEach(p => recentlyShown.current.add(p.id));
   }, [onlineProviders, visibleProviders]);
 
-  // Temps réel: statut online sur les visibles
-  const updateProviderOnlineStatus = useCallback((id: string, isOnline: boolean) => {
-    setOnlineProviders(prev => prev.map(p => p.id === id ? { ...p, isOnline } : p));
-    setVisibleProviders(prev => prev.map(p => p.id === id ? { ...p, isOnline } : p));
+  // Temps réel: statut online et availability sur les visibles
+  const updateProviderStatus = useCallback((
+    id: string,
+    isOnline: boolean,
+    availability: 'available' | 'busy' | 'offline',
+    busyReason?: 'in_call' | 'break' | 'offline' | 'manually_disabled' | null
+  ) => {
+    setOnlineProviders(prev => prev.map(p => p.id === id ? { ...p, isOnline, availability, busyReason } : p));
+    setVisibleProviders(prev => prev.map(p => p.id === id ? { ...p, isOnline, availability, busyReason } : p));
   }, []);
 
   // ✅ OPTIMISATION: Un seul listener au lieu de N listeners
@@ -336,9 +343,13 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
         if (chg.type === 'modified') {
           const data = chg.doc.data() as any;
           const online = data.isOnline === true;
+          const availability = data.availability || (online ? 'available' : 'offline');
+          const busyReason = data.busyReason || null;
           const provider = visibleProviders.find(p => p.id === chg.doc.id);
-          if (provider && online !== provider.isOnline) {
-            updateProviderOnlineStatus(chg.doc.id, online);
+
+          // Mettre à jour si isOnline OU availability a changé
+          if (provider && (online !== provider.isOnline || availability !== provider.availability)) {
+            updateProviderStatus(chg.doc.id, online, availability, busyReason);
           }
         }
       });
@@ -349,7 +360,7 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
     });
 
     return () => unsub();
-  }, [visibleProviders, updateProviderOnlineStatus]);
+  }, [visibleProviders, updateProviderStatus]);
 
   // Timers / Effects
   useEffect(() => {

@@ -26,6 +26,13 @@ import {
   Shield,
   Clock,
   Lock,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  Check,
+  User,
+  FileText,
 } from "lucide-react";
 
 import { useForm, Controller, SubmitHandler } from "react-hook-form";
@@ -1120,6 +1127,279 @@ const PreviewCard = ({
   </div>
 );
 
+/** ===== useMediaQuery Hook for Responsive Design ===== */
+const useMediaQuery = (query: string): boolean => {
+  const [matches, setMatches] = useState(
+    typeof window !== "undefined" ? window.matchMedia(query).matches : false
+  );
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia(query);
+    const handler = (e: MediaQueryListEvent) => setMatches(e.matches);
+    mq.addEventListener("change", handler);
+    setMatches(mq.matches);
+    return () => mq.removeEventListener("change", handler);
+  }, [query]);
+  return matches;
+};
+
+/** ===== Step Indicator Component (Mobile Wizard) - Aligned with GuidedFilterWizard ===== */
+const StepIndicator = ({
+  currentStep,
+  totalSteps,
+  stepLabels,
+}: {
+  currentStep: number;
+  totalSteps: number;
+  stepLabels: string[];
+}) => (
+  <div className="py-4">
+    <div className="flex items-center justify-center gap-3">
+      {Array.from({ length: totalSteps }).map((_, i) => {
+        const stepNum = i + 1;
+        const isCompleted = stepNum < currentStep;
+        const isCurrent = stepNum === currentStep;
+        const isPending = stepNum > currentStep;
+
+        return (
+          <React.Fragment key={stepNum}>
+            <div
+              className={`
+                w-11 h-11 rounded-full flex items-center justify-center font-bold text-lg
+                transition-all duration-300 shadow-lg
+                ${isCompleted ? "bg-green-500 text-white" : ""}
+                ${isCurrent ? "bg-red-500 text-white ring-4 ring-red-500/30" : ""}
+                ${isPending ? "bg-gray-200 text-gray-500" : ""}
+              `}
+              aria-label={`Step ${stepNum}: ${stepLabels[i] || ""}`}
+              aria-current={isCurrent ? "step" : undefined}
+            >
+              {isCompleted ? (
+                <Check className="w-5 h-5" />
+              ) : (
+                stepNum
+              )}
+            </div>
+            {i < totalSteps - 1 && (
+              <div
+                className={`w-10 h-1 rounded-full transition-all duration-300 ${
+                  stepNum < currentStep ? "bg-green-500" : "bg-gray-200"
+                }`}
+              />
+            )}
+          </React.Fragment>
+        );
+      })}
+    </div>
+    <p className="text-center text-sm text-gray-600 mt-3 font-medium">
+      {stepLabels[currentStep - 1] || `Étape ${currentStep}`}
+    </p>
+  </div>
+);
+
+/** ===== Provider Card Compact (Mobile) ===== */
+const ProviderCardCompact = ({
+  provider,
+  isExpanded,
+  onToggle,
+  isLawyer,
+  displayEUR,
+  displayDuration,
+  lang,
+  intl,
+}: {
+  provider: Provider;
+  isExpanded: boolean;
+  onToggle: () => void;
+  isLawyer: boolean;
+  displayEUR: number;
+  displayDuration: number;
+  lang: LangKey;
+  intl: ReturnType<typeof useIntl>;
+}) => (
+  <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden mb-4">
+    {/* Always visible header */}
+    <button
+      type="button"
+      onClick={onToggle}
+      className="w-full p-3 flex items-center gap-3 touch-manipulation"
+      aria-expanded={isExpanded}
+    >
+      <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-red-200 bg-white flex-shrink-0">
+        {provider.avatar ? (
+          <img
+            src={provider.avatar}
+            alt={`Photo de ${provider.name}`}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = "/default-avatar.png";
+            }}
+          />
+        ) : (
+          <img
+            src="/default-avatar.png"
+            alt="Avatar par défaut"
+            className="w-full h-full object-cover"
+          />
+        )}
+      </div>
+      <div className="flex-1 min-w-0 text-left">
+        <div className="flex items-center gap-2">
+          <h3 className="text-base font-bold text-gray-900 truncate">
+            {provider.name || "—"}
+          </h3>
+          <span
+            className={`px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+              isLawyer
+                ? "bg-blue-100 text-blue-800"
+                : "bg-green-100 text-green-800"
+            }`}
+          >
+            {isLawyer ? "Avocat" : "Expat"}
+          </span>
+        </div>
+        <div className="text-xs text-gray-500 truncate">📍 {provider.country}</div>
+      </div>
+      <div className="text-right flex-shrink-0">
+        <div className="text-lg font-extrabold text-red-600">
+          {displayEUR.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
+        </div>
+        <div className="text-xs text-gray-500">{displayDuration} min</div>
+      </div>
+      <div className="ml-1 text-gray-400">
+        {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+      </div>
+    </button>
+
+    {/* Expandable details */}
+    {isExpanded && (
+      <div className="px-3 pb-3 pt-0 border-t border-gray-100 card-expand">
+        <div className="pt-3 space-y-2">
+          {/* Languages */}
+          {!!provider.languages?.length && (
+            <div className="flex flex-wrap gap-1">
+              {(provider.languages || []).map((code, idx) => {
+                const l = ALL_LANGS.find((x) => x.code === code);
+                const label = l ? getLanguageLabel(l, lang) : code.toUpperCase();
+                return (
+                  <span
+                    key={`compact-${code}-${idx}`}
+                    className="px-2 py-0.5 bg-blue-50 text-blue-800 text-xs rounded-full border border-blue-200"
+                  >
+                    {label}
+                  </span>
+                );
+              })}
+            </div>
+          )}
+          {/* Trust badges */}
+          <div className="flex items-center gap-4 text-xs text-gray-500 pt-1">
+            <div className="flex items-center gap-1">
+              <Shield size={12} className="text-green-500" />
+              <span>{intl.formatMessage({ id: "bookingRequest.securePay" })}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Clock size={12} className="text-blue-500" />
+              <span>{displayDuration} min</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+);
+
+/** ===== Sticky CTA Component (Mobile) ===== */
+const StickyCTA = ({
+  currentStep,
+  totalSteps,
+  onNext,
+  onBack,
+  onSubmit,
+  canProceed,
+  isSubmitting,
+  price,
+  intl,
+}: {
+  currentStep: number;
+  totalSteps: number;
+  onNext: () => void;
+  onBack: () => void;
+  onSubmit: () => void;
+  canProceed: boolean;
+  isSubmitting: boolean;
+  price: number;
+  intl: ReturnType<typeof useIntl>;
+}) => {
+  const isLastStep = currentStep === totalSteps;
+
+  return (
+    <div className="fixed bottom-0 inset-x-0 z-50 sticky-cta-container pb-safe-area">
+      <div className="p-4 flex gap-3">
+        {/* Back button */}
+        {currentStep > 1 && (
+          <button
+            type="button"
+            onClick={onBack}
+            className="px-4 py-4 rounded-2xl border-2 border-gray-200 text-gray-700 font-semibold text-lg
+              flex items-center justify-center gap-1 touch-manipulation
+              hover:bg-gray-50 active:scale-[0.98] transition-all min-h-[60px]"
+            aria-label={intl.formatMessage({ id: "common.back", defaultMessage: "Retour" })}
+          >
+            <ChevronLeft size={24} />
+            <span className="sr-only sm:not-sr-only">
+              {intl.formatMessage({ id: "common.back", defaultMessage: "Retour" })}
+            </span>
+          </button>
+        )}
+
+        {/* Next/Submit button */}
+        <button
+          type="button"
+          onClick={isLastStep ? onSubmit : onNext}
+          disabled={!canProceed || isSubmitting}
+          className={`flex-1 py-4 px-4 rounded-2xl font-bold text-lg text-white
+            flex items-center justify-center gap-2 touch-manipulation
+            transition-all min-h-[60px]
+            ${
+              canProceed && !isSubmitting
+                ? "bg-gradient-to-r from-red-500 to-orange-500 shadow-lg shadow-red-500/30 active:scale-[0.98]"
+                : "bg-gray-400 cursor-not-allowed"
+            }
+          `}
+        >
+          {isSubmitting ? (
+            <>
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
+              <span>{intl.formatMessage({ id: "bookingRequest.processing", defaultMessage: "Traitement..." })}</span>
+            </>
+          ) : isLastStep ? (
+            <>
+              <Euro size={20} />
+              <span>{intl.formatMessage({ id: "bookingRequest.continuePay" })}</span>
+              <span className="font-extrabold">
+                {price.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
+              </span>
+            </>
+          ) : (
+            <>
+              <span>{intl.formatMessage({ id: "common.next", defaultMessage: "Suivant" })}</span>
+              <ChevronRight size={20} />
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+/** ===== Step Label Icons (3 étapes optimisées) ===== */
+const STEP_ICONS = [
+  <User key="user" className="w-5 h-5" />,        // Step 1: Personal info
+  <FileText key="filetext" className="w-5 h-5" />, // Step 2: Request details
+  <Phone key="phone" className="w-5 h-5" />,       // Step 3: Contact + Confirmation
+];
+
 /** 🔧 utils */
 const sanitizeText = (input: string, opts: { trim?: boolean } = {}): string => {
   const out = input
@@ -1220,10 +1500,24 @@ const BookingRequest: React.FC = () => {
   const [showLangMismatchWarning, setShowLangMismatchWarning] = useState(false);
   const [langMismatchAcknowledged, setLangMismatchAcknowledged] = useState(false);
 
+  // ===== MOBILE WIZARD STATE (2026) =====
+  // Optimisé: 3 étapes seulement (pays + langues déjà connus du wizard initial)
+  const isMobile = useMediaQuery("(max-width: 767px)");
+  const [currentStep, setCurrentStep] = useState(1);
+  const [animationDirection, setAnimationDirection] = useState<"forward" | "backward">("forward");
+  const [providerExpanded, setProviderExpanded] = useState(false);
+  const TOTAL_STEPS = 3;
+
+  // Step labels for accessibility and display (3 étapes optimisées)
+  const stepLabels = useMemo(() => [
+    intl.formatMessage({ id: "bookingRequest.personal", defaultMessage: "Informations" }),
+    intl.formatMessage({ id: "bookingRequest.request", defaultMessage: "Votre demande" }),
+    intl.formatMessage({ id: "bookingRequest.contact", defaultMessage: "Contact & Confirmation" }),
+  ], [intl]);
+
   // Refs pour scroll ciblé (en cas d'erreur globale)
   const refFirstName = useRef<HTMLDivElement | null>(null);
   const refLastName = useRef<HTMLDivElement | null>(null);
-  const refNationality = useRef<HTMLDivElement | null>(null);
   const refCountry = useRef<HTMLDivElement | null>(null);
   const refTitle = useRef<HTMLDivElement | null>(null);
   const refDesc = useRef<HTMLDivElement | null>(null);
@@ -1514,7 +1808,6 @@ const BookingRequest: React.FC = () => {
     const hasDesc = values.description.trim().length >= 50;
     const hasFirst = values.firstName.trim().length > 0;
     const hasLast = values.lastName.trim().length > 0;
-    const hasNat = values.nationality.trim().length > 0;
     const hasCountry = values.currentCountry.trim().length > 0;
     const otherOk =
       values.currentCountry !== "Autre" ? true : !!values.autrePays?.trim();
@@ -1538,7 +1831,6 @@ const BookingRequest: React.FC = () => {
       lastName: hasLast,
       title: hasTitle,
       description: hasDesc,
-      nationality: hasNat,
       currentCountry: hasCountry,
       autrePays: otherOk,
       langs: langsOk,
@@ -1553,6 +1845,45 @@ const BookingRequest: React.FC = () => {
     const done = flags.filter(Boolean).length;
     return Math.round((done / flags.length) * 100);
   }, [validFlags]);
+
+  // ===== WIZARD STEP VALIDATION (3 étapes optimisées) =====
+  // Pays + Langues déjà connus du wizard initial Facebook
+  const getStepValidationFlags = useCallback((step: number): boolean => {
+    const v = validFlags;
+    switch (step) {
+      case 1: // Personal Info: firstName, lastName (pays auto-rempli du wizard)
+        return v.firstName && v.lastName;
+      case 2: // Request Details: title, description
+        return v.title && v.description;
+      case 3: // Contact + Terms: phone, accept (langues auto-remplies du wizard)
+        return v.phone && v.accept;
+      default:
+        return false;
+    }
+  }, [validFlags]);
+
+  // Check if current step is valid to proceed
+  const canProceedToNext = useMemo(() => {
+    return getStepValidationFlags(currentStep);
+  }, [currentStep, getStepValidationFlags]);
+
+  // Navigation functions
+  const goNextStep = useCallback(() => {
+    if (canProceedToNext && currentStep < TOTAL_STEPS) {
+      setAnimationDirection("forward");
+      setCurrentStep((s) => s + 1);
+      // Scroll to top of form on mobile
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [canProceedToNext, currentStep]);
+
+  const goBackStep = useCallback(() => {
+    if (currentStep > 1) {
+      setAnimationDirection("backward");
+      setCurrentStep((s) => s - 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [currentStep]);
 
   // Redirection si provider introuvable
   useEffect(() => {
@@ -1648,7 +1979,6 @@ const BookingRequest: React.FC = () => {
     > = [
       [!v.firstName, refFirstName],
       [!v.lastName, refLastName],
-      [!v.nationality, refNationality],
       [!v.currentCountry || !v.autrePays, refCountry],
       [!v.title, refTitle],
       [!v.description, refDesc],
@@ -1939,168 +2269,174 @@ const BookingRequest: React.FC = () => {
         }}
       />
 
-      <div className="min-h-screen bg-[linear-gradient(180deg,#fff7f7_0%,#ffffff_35%,#fff5f8_100%)] py-3 sm:py-8 pb-safe overflow-x-hidden w-full max-w-[100vw] box-border">
+      <div className={`min-h-screen bg-[linear-gradient(180deg,#fff7f7_0%,#ffffff_35%,#fff5f8_100%)] py-3 md:py-8 overflow-x-hidden w-full max-w-[100vw] box-border ${isMobile ? 'pb-32' : 'pb-safe'}`}>
         {/* Hero / Title - Mobile optimized with glass-morphism 2026 */}
-        <header className="px-3 sm:px-4 max-w-3xl mx-auto mb-3 sm:mb-6">
+        <header className="px-3 md:px-4 max-w-5xl mx-auto mb-3 md:mb-6">
           {/* Mobile: Glass card header / Desktop: Standard */}
-          <div className="sm:bg-transparent bg-white/80 backdrop-blur-xl sm:backdrop-blur-none rounded-2xl sm:rounded-none p-3 sm:p-0 shadow-sm sm:shadow-none border border-white/50 sm:border-0 mb-3 sm:mb-0">
+          <div className="md:bg-transparent bg-white/80 backdrop-blur-xl md:backdrop-blur-none rounded-2xl md:rounded-none p-3 md:p-0 shadow-sm md:shadow-none border border-white/50 md:border-0 mb-3 md:mb-0">
             <div className="flex items-center gap-3 text-gray-700">
               <button
-                onClick={() => navigate(`/provider/${provider!.id}`)}
-                className="p-2.5 -ml-1 rounded-xl bg-gray-50 sm:bg-transparent hover:bg-gray-100 active:scale-95 transition-all duration-200 touch-manipulation shadow-sm sm:shadow-none"
+                onClick={() => isMobile && currentStep > 1 ? goBackStep() : navigate(`/provider/${provider!.id}`)}
+                className="p-2.5 -ml-1 rounded-xl bg-gray-50 md:bg-transparent hover:bg-gray-100 active:scale-95 transition-all duration-200 touch-manipulation shadow-sm md:shadow-none"
                 aria-label="Retour"
               >
                 <ArrowLeft size={22} className="text-gray-700" />
               </button>
               <div className="flex-1 min-w-0">
-                <h1 className="text-lg sm:text-3xl font-black tracking-tight text-gray-900 truncate">
+                <h1 className="text-lg md:text-3xl font-black tracking-tight text-gray-900 truncate">
                   <span
                     className={`bg-gradient-to-r ${THEME.gradFrom} ${THEME.gradVia} ${THEME.gradTo} bg-clip-text text-transparent`}
                   >
                     <FormattedMessage id="bookingRequest.heroTitle" />
                   </span>
                 </h1>
-                <p className="hidden sm:block text-sm text-gray-600 mt-1">
+                <p className="hidden md:block text-sm text-gray-600 mt-1">
                   <FormattedMessage id="bookingRequest.heroSubtitle" />
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Progress bar - Mobile optimized with enhanced visual */}
-          <div className="mb-2 sm:mb-3">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs sm:text-sm font-bold text-gray-700">
-                {intl.formatMessage({ id: "bookingRequest.progress" })}
-              </span>
-              <span className="text-xs sm:text-sm font-bold text-red-600 tabular-nums bg-red-50 px-2 py-0.5 rounded-full sm:bg-transparent sm:px-0 sm:py-0 sm:rounded-none">
-                {formProgress}%
-              </span>
+          {/* Mobile: Step Indicator / Desktop: Progress bar */}
+          {isMobile ? (
+            <StepIndicator
+              currentStep={currentStep}
+              totalSteps={TOTAL_STEPS}
+              stepLabels={stepLabels}
+            />
+          ) : (
+            <div className="mb-2 md:mb-3">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs md:text-sm font-bold text-gray-700">
+                  {intl.formatMessage({ id: "bookingRequest.progress" })}
+                </span>
+                <span className="text-xs md:text-sm font-bold text-red-600 tabular-nums bg-red-50 px-2 py-0.5 rounded-full md:bg-transparent md:px-0 md:py-0 md:rounded-none">
+                  {formProgress}%
+                </span>
+              </div>
+              <div className="w-full bg-gray-100 md:bg-gray-200 rounded-full h-2.5 overflow-hidden shadow-inner">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-red-500 via-orange-500 to-rose-500 transition-all duration-500 ease-out shadow-sm"
+                  style={{ width: `${formProgress}%` }}
+                />
+              </div>
             </div>
-            <div className="w-full bg-gray-100 sm:bg-gray-200 rounded-full h-2.5 overflow-hidden shadow-inner">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-red-500 via-orange-500 to-rose-500 transition-all duration-500 ease-out shadow-sm"
-                style={{ width: `${formProgress}%` }}
-              />
-            </div>
-          </div>
+          )}
         </header>
 
-        {/* Provider card - Mobile-first optimized */}
-        <div className="max-w-3xl mx-auto px-3 sm:px-4 mb-4">
-          <div className="p-3 sm:p-5 bg-white rounded-2xl shadow-lg border border-gray-100">
-            {/* Mobile: Stack layout / Desktop: Row layout */}
-            <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
-              {/* Provider info row */}
-              <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl overflow-hidden border-2 border-red-200 bg-white shadow-md flex-shrink-0 grid place-items-center">
-                  {provider?.avatar ? (
-                    <img
-                      src={provider.avatar}
-                      alt={`Photo de ${provider.name}`}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = "/default-avatar.png";
-                      }}
-                    />
-                  ) : (
-                    <img
-                      src="/default-avatar.png"
-                      alt="Avatar par défaut"
-                      className="w-full h-full object-cover"
-                    />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-base sm:text-xl font-extrabold text-gray-900 truncate max-w-[150px] sm:max-w-none">
-                      {provider?.name || "—"}
-                    </h3>
-                    <span
-                      className={`inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold whitespace-nowrap ${
-                        isLawyer
-                          ? "bg-blue-100 text-blue-800 border border-blue-200"
-                          : "bg-green-100 text-green-800 border border-green-200"
-                      }`}
-                    >
-                      {isLawyer ? "⚖️ Avocat" : "🌍 Expatrié"}
-                    </span>
-                  </div>
-                  <div className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-gray-700 flex items-center gap-1.5">
-                    <span className="font-medium">📍</span>
-                    <span className="truncate">{provider.country}</span>
-                  </div>
-                  {/* Languages - Hidden on mobile, shown on desktop */}
-                  {!!provider?.languages?.length && (
-                    <div className="hidden sm:flex mt-2 flex-wrap gap-1">
-                      {(provider.languages || []).slice(0, 3).map((code, idx) => {
-                        const l = ALL_LANGS.find((x) => x.code === code);
-                        const label = l ? getLanguageLabel(l, lang) : code.toUpperCase();
-                        return (
-                          <span
-                            key={`${code}-${idx}`}
-                            className="inline-block px-2 py-0.5 bg-blue-50 text-blue-800 text-xs rounded border border-blue-200"
-                          >
-                            {label}
-                          </span>
-                        );
-                      })}
-                      {(provider.languages || []).length > 3 && (
-                        <span className="text-xs text-gray-500">
-                          +{(provider.languages || []).length - 3}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
+        {/* ===== MOBILE: Provider Card Compact ===== */}
+        {isMobile && (
+          <div className="px-3 max-w-5xl mx-auto">
+            <ProviderCardCompact
+              provider={provider}
+              isExpanded={providerExpanded}
+              onToggle={() => setProviderExpanded(!providerExpanded)}
+              isLawyer={isLawyer}
+              displayEUR={displayEUR}
+              displayDuration={displayDuration}
+              lang={lang}
+              intl={intl}
+            />
+          </div>
+        )}
 
-              {/* Price card - Full width on mobile */}
-              <div className="flex items-center justify-between sm:justify-center sm:flex-col bg-gradient-to-r sm:bg-none from-red-50 to-orange-50 sm:bg-white rounded-xl p-3 sm:p-4 border border-red-100 sm:border-gray-200 sm:min-w-[130px]">
-                <div className="flex items-baseline gap-1 sm:block sm:text-center">
-                  <div className="text-xl sm:text-3xl font-extrabold text-red-600">{displayEUR.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</div>
-                  <div className="text-sm sm:text-base text-gray-500 sm:hidden">/ ${displayUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-                  <div className="hidden sm:block text-sm text-gray-500">/ ${displayUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+        {/* ===== DESKTOP: Provider card (shown in sidebar on desktop) ===== */}
+        {!isMobile && (
+          <div className="hidden md:block max-w-5xl mx-auto px-4 mb-4">
+            <div className="p-3 md:p-5 bg-white rounded-2xl shadow-lg border border-gray-100">
+              {/* Desktop: Row layout */}
+              <div className="flex md:flex-row md:items-start gap-3 md:gap-4">
+                {/* Provider info row */}
+                <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
+                  <div className="w-14 h-14 md:w-20 md:h-20 rounded-xl md:rounded-2xl overflow-hidden border-2 border-red-200 bg-white shadow-md flex-shrink-0 grid place-items-center">
+                    {provider?.avatar ? (
+                      <img
+                        src={provider.avatar}
+                        alt={`Photo de ${provider.name}`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "/default-avatar.png";
+                        }}
+                      />
+                    ) : (
+                      <img
+                        src="/default-avatar.png"
+                        alt="Avatar par défaut"
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-base md:text-xl font-extrabold text-gray-900 truncate max-w-[150px] md:max-w-none">
+                        {provider?.name || "—"}
+                      </h3>
+                      <span
+                        className={`inline-flex items-center px-1.5 md:px-2 py-0.5 rounded-full text-[10px] md:text-xs font-semibold whitespace-nowrap ${
+                          isLawyer
+                            ? "bg-blue-100 text-blue-800 border border-blue-200"
+                            : "bg-green-100 text-green-800 border border-green-200"
+                        }`}
+                      >
+                        {isLawyer ? "⚖️ Avocat" : "🌍 Expatrié"}
+                      </span>
+                    </div>
+                    <div className="mt-0.5 md:mt-1 text-xs md:text-sm text-gray-700 flex items-center gap-1.5">
+                      <span className="font-medium">📍</span>
+                      <span className="truncate">{provider.country}</span>
+                    </div>
+                    {/* Languages */}
+                    {!!provider?.languages?.length && (
+                      <div className="flex mt-2 flex-wrap gap-1">
+                        {(provider.languages || []).slice(0, 3).map((code, idx) => {
+                          const l = ALL_LANGS.find((x) => x.code === code);
+                          const label = l ? getLanguageLabel(l, lang) : code.toUpperCase();
+                          return (
+                            <span
+                              key={`${code}-${idx}`}
+                              className="inline-block px-2 py-0.5 bg-blue-50 text-blue-800 text-xs rounded border border-blue-200"
+                            >
+                              {label}
+                            </span>
+                          );
+                        })}
+                        {(provider.languages || []).length > 3 && (
+                          <span className="text-xs text-gray-500">
+                            +{(provider.languages || []).length - 3}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 sm:flex-col sm:gap-1 sm:mt-1">
-                  <div className="text-sm font-semibold text-gray-700 bg-white sm:bg-transparent px-2 py-0.5 rounded-full sm:rounded-none">
+
+              {/* Price card - Desktop version */}
+              <div className="flex items-center justify-center flex-col bg-white rounded-xl p-4 border border-gray-200 min-w-[130px]">
+                <div className="text-center">
+                  <div className="text-3xl font-extrabold text-red-600">{displayEUR.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</div>
+                  <div className="text-sm text-gray-500">/ ${displayUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                </div>
+                <div className="flex flex-col gap-1 mt-1">
+                  <div className="text-sm font-semibold text-gray-700">
                     ⏱️ {displayDuration} min
                   </div>
-                  <div className="text-xs text-gray-500 hidden sm:block">
+                  <div className="text-xs text-gray-500">
                     💳 {intl.formatMessage({ id: "bookingRequest.securePay" })}
                   </div>
                 </div>
               </div>
             </div>
-
-            {/* Languages on mobile - Compact horizontal scroll */}
-            {!!provider?.languages?.length && (
-              <div className="sm:hidden mt-3 -mx-1 px-1 overflow-x-auto scrollbar-hide">
-                <div className="flex gap-1.5 pb-1">
-                  {(provider.languages || []).map((code, idx) => {
-                    const l = ALL_LANGS.find((x) => x.code === code);
-                    const label = l ? getLanguageLabel(l, lang) : code.toUpperCase();
-                    return (
-                      <span
-                        key={`mobile-${code}-${idx}`}
-                        className="inline-block px-2 py-1 bg-blue-50 text-blue-800 text-xs rounded-full border border-blue-200 whitespace-nowrap"
-                      >
-                        {label}
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
           </div>
         </div>
+        )}
 
-        {/* Form - Mobile optimized with overflow-visible for phone dropdown */}
-        <div className="max-w-3xl mx-auto px-3 sm:px-4 w-full box-border">
+        {/* Form - Responsive: Mobile Wizard / Desktop Scroll */}
+        <div className="max-w-5xl mx-auto px-3 md:px-4 w-full box-border">
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-visible w-full max-w-full">
             <form onSubmit={handleSubmit(onSubmit)} noValidate className="touch-manipulation w-full max-w-full overflow-visible">
-              {/* Section Perso */}
-              <section className="p-4 sm:p-6">
+              {/* ===== STEP 1: Personal Info (Mobile: Step 1 / Desktop: Always visible) ===== */}
+              {(!isMobile || currentStep === 1) && (
+              <section className={`p-4 md:p-6 ${isMobile ? 'step-enter' : ''}`}>
                 <SectionHeader
                   icon={<MapPin className="w-5 h-5" />}
                   // title={t.personal}
@@ -2190,46 +2526,12 @@ const BookingRequest: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Nationalité */}
-                <div className="mt-4" ref={refNationality}>
-                  <label className="block text-sm font-semibold text-gray-800 mb-1">
-                    {/* {t.fields.nationality}{" "} */}
-                    {intl.formatMessage({
-                      id: "bookingRequest.fields.nationality",
-                    })}
-                    <span className="text-red-500">*</span>
-                  </label>
-                  <Controller
-                    control={control}
-                    name="nationality"
-                    // rules={{ required: t.validators.nationality }}
-                    rules={{
-                      required: intl.formatMessage({
-                        id: "bookingRequest.validators.nationality ",
-                      }),
-                    }}
-                    render={({ field }) => (
-                      <input
-                        {...field}
-                        className={inputClass(inputHas("nationality"))}
-                        // placeholder={t.placeholders.nationality}
-                        placeholder={intl.formatMessage({
-                          id: "bookingRequest.placeholders.nationality",
-                        })}
-                      />
-                    )}
-                  />
-                  {errors.nationality && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {String(errors.nationality.message)}
-                    </p>
-                  )}
-                </div>
+                {/* Nationalité - Supprimée pour simplifier le parcours mobile */}
+                {/* Le champ reste dans le formulaire mais n'est plus affiché ni requis */}
 
-                {/* Pays d'intervention */}
-                <div className="mt-4" ref={refCountry}>
+                {/* Pays d'intervention - Caché sur mobile (auto-rempli du wizard Facebook) */}
+                <div className={`mt-4 ${isMobile ? 'hidden' : ''}`} ref={refCountry}>
                   <label className="block text-sm font-semibold text-gray-800 mb-1">
-                    {/* {t.fields.currentCountry}{" "} */}
                     {intl.formatMessage({
                       id: "bookingRequest.fields.currentCountry",
                     })}
@@ -2307,12 +2609,13 @@ const BookingRequest: React.FC = () => {
                   )}
                 </div>
               </section>
+              )}
 
-              {/* Section Demande */}
-              <section className="p-4 sm:p-6 border-t border-gray-100">
+              {/* ===== STEP 2: Request Details (Mobile: Step 2 / Desktop: Always visible) ===== */}
+              {(!isMobile || currentStep === 2) && (
+              <section className={`p-4 md:p-6 border-t border-gray-100 ${isMobile ? 'step-enter' : ''}`}>
                 <SectionHeader
                   icon={<Globe className="w-5 h-5" />}
-                  // title={t.request}
                   title={intl.formatMessage({ id: "bookingRequest.request" })}
                 />
 
@@ -2419,15 +2722,17 @@ const BookingRequest: React.FC = () => {
                   )}
                 </div>
               </section>
+              )}
 
-              {/* Section Langues */}
+              {/* ===== Languages Section - HIDDEN on mobile (auto-filled from wizard Facebook) ===== */}
+              {/* Desktop: Always visible / Mobile: Hidden (data comes from wizard) */}
+              {!isMobile && (
               <section
-                className="p-4 sm:p-6 border-t border-gray-100"
+                className="p-4 md:p-6 border-t border-gray-100"
                 ref={refLangs}
               >
                 <SectionHeader
                   icon={<LanguagesIcon className="w-5 h-5" />}
-                  // title={t.languages}
                   title={intl.formatMessage({ id: "bookingRequest.languages" })}
                 />
 
@@ -2578,16 +2883,17 @@ const BookingRequest: React.FC = () => {
                   </div>
                 )}
               </section>
+              )}
 
-              {/* Section Contact (RHF + PhoneField) */}
+              {/* ===== STEP 3: Contact + Confirmation (Mobile: Step 3 / Desktop: Always visible) ===== */}
+              {(!isMobile || currentStep === 3) && (
               <section
-                className="p-4 sm:p-6 border-t border-gray-100 overflow-visible relative"
+                className={`p-4 md:p-6 border-t border-gray-100 overflow-visible relative ${isMobile ? 'step-enter' : ''}`}
                 ref={refPhone}
                 style={{ zIndex: 50 }}
               >
                 <SectionHeader
                   icon={<Phone className="w-5 h-5" />}
-                  // title={t.contact}
                   title={intl.formatMessage({ id: "bookingRequest.contact" })}
                 />
 
@@ -2706,13 +3012,15 @@ const BookingRequest: React.FC = () => {
                 </div>
 
               </section>
+              )}
 
-              {/* CGU */}
+              {/* ===== Terms (Mobile: Part of Step 3 / Desktop: Always visible) ===== */}
+              {(!isMobile || currentStep === 3) && (
               <section
-                className="p-4 sm:p-6 border-t border-gray-100"
+                className={`p-4 md:p-6 border-t border-gray-100`}
                 ref={refCGU}
               >
-                <div className="bg-gray-50 rounded-xl p-3 sm:p-5 border border-gray-200">
+                <div className="bg-gray-50 rounded-xl p-3 md:p-5 border border-gray-200">
                   <div className="flex items-start gap-2 sm:gap-3">
                     <Controller
                       control={control}
@@ -2765,16 +3073,16 @@ const BookingRequest: React.FC = () => {
                   )}
                 </div>
               </section>
+              )}
 
-              {/* Erreurs globales */}
+              {/* Erreurs globales - Shown on both mobile and desktop */}
               {formError && (
-                <div className="px-4 sm:px-6 pb-0">
-                  <div className="bg-red-50 border-l-4 border-red-500 rounded-xl p-3 sm:p-4">
+                <div className="px-4 md:px-6 pb-0">
+                  <div className="bg-red-50 border-l-4 border-red-500 rounded-xl p-3 md:p-4">
                     <div className="flex">
                       <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
                       <div className="ml-3">
                         <p className="font-semibold text-red-800">
-                          {/* {t.errorsTitle} */}
                           {intl.formatMessage({
                             id: "bookingRequest.errorsTitle",
                           })}
@@ -2786,21 +3094,22 @@ const BookingRequest: React.FC = () => {
                 </div>
               )}
 
-              {/* CTA - Mobile optimized 2026 with trust badges */}
-              <div className="p-4 sm:p-6 pb-6 sm:pb-6">
-                {/* Trust badges - Mobile only */}
-                <div className="flex sm:hidden items-center justify-center gap-4 mb-4 text-xs text-gray-500">
+              {/* ===== DESKTOP CTA (hidden on mobile) ===== */}
+              {!isMobile && (
+              <div className="p-4 md:p-6 pb-6">
+                {/* Trust badges */}
+                <div className="flex items-center justify-center gap-4 mb-4 text-xs text-gray-500">
                   <div className="flex items-center gap-1.5">
                     <Shield size={14} className="text-green-500" />
-                    <span>Sécurisé</span>
+                    <span>{intl.formatMessage({ id: "common.secure", defaultMessage: "Sécurisé" })}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Clock size={14} className="text-blue-500" />
-                    <span>Immédiat</span>
+                    <span>{intl.formatMessage({ id: "common.immediate", defaultMessage: "Immédiat" })}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Lock size={14} className="text-purple-500" />
-                    <span>Confidentiel</span>
+                    <span>{intl.formatMessage({ id: "common.confidential", defaultMessage: "Confidentiel" })}</span>
                   </div>
                 </div>
 
@@ -2859,9 +3168,6 @@ const BookingRequest: React.FC = () => {
                         <div>• {t.validators.description}</div>
                       )}
                       {!validFlags.phone && <div>• {t.validators.phone}</div>}
-                      {!validFlags.nationality && (
-                        <div>• {t.validators.nationality}</div>
-                      )}
                       {!validFlags.currentCountry && (
                         <div>• {t.validators.currentCountry}</div>
                       )}
@@ -2901,12 +3207,6 @@ const BookingRequest: React.FC = () => {
                       {!validFlags.phone && (
                         <div>
                           • {intl.formatMessage({ id: "validators.phone" })}
-                        </div>
-                      )}
-                      {!validFlags.nationality && (
-                        <div>
-                          •{" "}
-                          {intl.formatMessage({ id: "validators.nationality" })}
                         </div>
                       )}
                       {!validFlags.currentCountry && (
@@ -2964,16 +3264,32 @@ const BookingRequest: React.FC = () => {
 
                 <div className="text-center pt-4">
                   <p className="text-xs text-gray-500">
-                    {/* 🔒 {t.securePay} • {t.callTiming} */}
                     🔒
-                    {intl.formatMessage({ id: "bookingRequest.securePay" })}•
+                    {intl.formatMessage({ id: "bookingRequest.securePay" })}
+                    {" • "}
                     {intl.formatMessage({ id: "bookingRequest.callTiming" })}
                   </p>
                 </div>
               </div>
+              )}
             </form>
           </div>
         </div>
+
+        {/* ===== MOBILE: Sticky CTA at bottom ===== */}
+        {isMobile && (
+          <StickyCTA
+            currentStep={currentStep}
+            totalSteps={TOTAL_STEPS}
+            onNext={goNextStep}
+            onBack={goBackStep}
+            onSubmit={handleSubmit(onSubmit)}
+            canProceed={canProceedToNext}
+            isSubmitting={isSubmitting}
+            price={displayEUR}
+            intl={intl}
+          />
+        )}
       </div>
 
       {/* P1-3 FIX: Modal de warning pour langue non partagée */}

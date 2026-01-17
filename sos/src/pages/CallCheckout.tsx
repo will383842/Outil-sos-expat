@@ -1952,7 +1952,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
 
             {isMobile ? (
               <div className="space-y-2" aria-live="polite">
-                <label className="block text-xs font-medium text-gray-600 uppercase tracking-wide">
+                <label className="block text-sm font-medium text-gray-700 uppercase tracking-wide">
                   {t("card.number")}
                 </label>
                 <div className="relative">
@@ -1962,7 +1962,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
                       aria-hidden="true"
                     />
                   </div>
-                  <div className="pl-10 pr-3 py-3.5 border-2 border-gray-200 rounded-lg bg-white focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all duration-200 hover:border-gray-300">
+                  <div className="pl-10 pr-3 py-3.5 border-2 border-gray-200 rounded-lg bg-white focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500/20 transition-all duration-200 hover:border-gray-300">
                     <CardElement options={singleCardElementOptions} />
                   </div>
                   <p className="mt-2 text-xs text-gray-500">
@@ -1973,7 +1973,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
             ) : (
               <>
                 <div className="space-y-2">
-                  <label className="block text-xs font-medium text-gray-600 uppercase tracking-wide">
+                  <label className="block text-sm font-medium text-gray-700 uppercase tracking-wide">
                     {t("card.number")}
                   </label>
                   <div className="relative">
@@ -1983,7 +1983,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
                         aria-hidden="true"
                       />
                     </div>
-                    <div className="pl-10 pr-3 py-3.5 border-2 border-gray-200 rounded-lg bg-white focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all duration-200 hover:border-gray-300">
+                    <div className="pl-10 pr-3 py-3.5 border-2 border-gray-200 rounded-lg bg-white focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500/20 transition-all duration-200 hover:border-gray-300">
                       <CardNumberElement options={cardElementOptions} />
                     </div>
                   </div>
@@ -1991,7 +1991,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <label className="block text-xs font-medium text-gray-600 uppercase tracking-wide">
+                    <label className="block text-sm font-medium text-gray-700 uppercase tracking-wide">
                       {t("card.expiry")}
                     </label>
                     <div className="relative">
@@ -2001,13 +2001,13 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
                           aria-hidden="true"
                         />
                       </div>
-                      <div className="pl-10 pr-3 py-3.5 border-2 border-gray-200 rounded-lg bg-white focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all duration-200 hover:border-gray-300">
+                      <div className="pl-10 pr-3 py-3.5 border-2 border-gray-200 rounded-lg bg-white focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500/20 transition-all duration-200 hover:border-gray-300">
                         <CardExpiryElement options={cardElementOptions} />
                       </div>
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="block text-xs font-medium text-gray-600 uppercase tracking-wide">
+                    <label className="block text-sm font-medium text-gray-700 uppercase tracking-wide">
                       {t("card.cvc")}
                     </label>
                     <div className="relative">
@@ -2017,7 +2017,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
                           aria-hidden="true"
                         />
                       </div>
-                      <div className="pl-10 pr-3 py-3.5 border-2 border-gray-200 rounded-lg bg-white focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all duration-200 hover:border-gray-300">
+                      <div className="pl-10 pr-3 py-3.5 border-2 border-gray-200 rounded-lg bg-white focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500/20 transition-all duration-200 hover:border-gray-300">
                         <CardCvcElement options={cardElementOptions} />
                       </div>
                     </div>
@@ -2221,12 +2221,12 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
               }
             }}
             className={
-              "w-full py-4 rounded-xl font-bold text-white transition-all duration-300 " +
+              "w-full py-4 rounded-2xl font-bold text-lg text-white transition-all " +
               "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 " +
-              "active:scale-[0.98] touch-manipulation relative overflow-hidden " +
+              "active:scale-[0.98] touch-manipulation relative overflow-hidden min-h-[60px] " +
               (!stripe || !elements || isProcessing
                 ? "bg-gray-400 cursor-not-allowed opacity-60"
-                : "bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 shadow-lg hover:shadow-xl")
+                : "bg-gradient-to-r from-red-500 to-orange-500 shadow-lg shadow-red-500/30")
             }
             aria-label={`${intl.formatMessage({ id: "checkout.btn.pay" })} ${formatCurrency(adminPricing.totalAmount, serviceCurrency.toUpperCase(), {
               language,
@@ -2998,8 +2998,8 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
 
   return (
     <Layout showFooter={false}>
-      <main className="bg-gradient-to-br from-red-50 to-red-100 min-h-screen overflow-x-hidden">
-        <div className="max-w-lg mx-auto px-4 py-4">
+      <main className="bg-gradient-to-br from-red-50 to-red-100 min-h-screen overflow-x-hidden pb-safe-area">
+        <div className="max-w-lg mx-auto px-4 py-4 md:py-6">
           {!!pricingError && (
             <div className="mb-3 rounded-lg border border-yellow-300 bg-yellow-50 px-3 py-2 text-xs text-yellow-800">
               {intl.formatMessage({ id: "checkout.pricingFallback" })}
@@ -3009,10 +3009,10 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
           <div className="mb-4">
             <button
               onClick={goBack}
-              className="flex items-center gap-2 text-red-600 hover:text-red-700 mb-3 transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500 rounded p-1 touch-manipulation"
+              className="flex items-center gap-2 text-red-600 hover:text-red-700 mb-3 transition-colors text-base font-medium focus:outline-none focus:ring-2 focus:ring-red-500 rounded-xl p-3 -ml-3 touch-manipulation active:scale-[0.98] min-h-[48px]"
               aria-label={t("ui.back")}
             >
-              <ArrowLeft size={16} aria-hidden={true} />
+              <ArrowLeft size={20} aria-hidden={true} />
               <span>{t("ui.back")}</span>
             </button>
 

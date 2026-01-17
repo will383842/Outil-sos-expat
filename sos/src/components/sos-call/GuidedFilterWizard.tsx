@@ -282,7 +282,7 @@ const LanguageStep: React.FC<{
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder={intl.formatMessage({ id: "wizard.search.language" })}
-          className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500/50 text-base"
+          className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 text-base"
         />
       </div>
 
@@ -431,6 +431,30 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
     );
   }, []);
 
+  // Auto-advance: Country selection → Step 2
+  const handleCountrySelect = useCallback((code: string) => {
+    setSelectedCountry(code);
+    // Auto-advance après un court délai pour feedback visuel
+    setTimeout(() => {
+      setStep(2);
+    }, 250);
+  }, []);
+
+  // Auto-advance: Type selection → Complete wizard
+  const handleTypeSelect = useCallback((type: "all" | "lawyer" | "expat") => {
+    setSelectedType(type);
+    // Auto-complete après un court délai pour feedback visuel
+    setTimeout(() => {
+      const data = {
+        country: selectedCountry,
+        languages: selectedLanguages,
+        type: type,
+      };
+      console.log('🟡 [GuidedFilterWizard] handleTypeSelect - auto-complete with data:', data);
+      onComplete(data);
+    }, 250);
+  }, [onComplete, selectedCountry, selectedLanguages]);
+
   // Prevent body scroll when wizard is open
   useEffect(() => {
     if (isOpen) {
@@ -484,7 +508,7 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
         {step === 1 && (
           <CountryStep
             selectedCountry={selectedCountry}
-            onSelect={setSelectedCountry}
+            onSelect={handleCountrySelect}
             countryOptions={countryOptions}
           />
         )}
@@ -498,7 +522,7 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
         {step === 3 && (
           <TypeStep
             selectedType={selectedType}
-            onSelect={setSelectedType}
+            onSelect={handleTypeSelect}
           />
         )}
       </div>
@@ -508,60 +532,50 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
         className="flex-shrink-0 px-5 py-4 bg-gray-900/95 backdrop-blur-md border-t border-white/10 max-w-md mx-auto w-full"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 16px) + 16px)' }}
       >
-        {step === 1 ? (
-          // Step 1: Only Next button
-          <button
-            onClick={() => setStep(2)}
-            disabled={!canProceed}
-            className={`
-              w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2
-              transition-all touch-manipulation min-h-[60px]
-              ${canProceed
-                ? "bg-gradient-to-r from-red-500 to-orange-500 text-white active:scale-[0.98] shadow-lg shadow-red-500/30"
-                : "bg-white/10 text-gray-500 cursor-not-allowed"
-              }
-            `}
-          >
-            <FormattedMessage id="action.next" />
-            <ChevronRight className="w-6 h-6" />
-          </button>
-        ) : (
-          // Steps 2 & 3: Back + Next/Complete buttons
+        {step === 1 && (
+          // Step 1: Hint text - selection auto-advances
+          <p className="text-center text-gray-400 text-base py-4">
+            <FormattedMessage id="wizard.hint.selectCountry" defaultMessage="Sélectionnez votre pays" />
+          </p>
+        )}
+
+        {step === 2 && (
+          // Step 2 (Languages multi-select): Back + Next buttons
           <div className="flex gap-3">
             <button
-              onClick={() => setStep((step - 1) as 1 | 2)}
+              onClick={() => setStep(1)}
               className="flex-1 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 bg-white/10 text-white active:scale-[0.98] touch-manipulation min-h-[60px]"
             >
               <ChevronLeft className="w-6 h-6" />
               <FormattedMessage id="action.back" />
             </button>
-
-            {step === 2 ? (
-              <button
-                onClick={() => setStep(3)}
-                disabled={!canProceed}
-                className={`
-                  flex-1 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2
-                  transition-all touch-manipulation min-h-[60px]
-                  ${canProceed
-                    ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white active:scale-[0.98] shadow-lg shadow-blue-500/30"
-                    : "bg-white/10 text-gray-500 cursor-not-allowed"
-                  }
-                `}
-              >
-                <FormattedMessage id="action.next" />
-                <ChevronRight className="w-6 h-6" />
-              </button>
-            ) : (
-              <button
-                onClick={handleComplete}
-                className="flex-1 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white active:scale-[0.98] touch-manipulation min-h-[60px] shadow-lg shadow-green-500/30"
-              >
-                <FormattedMessage id="wizard.seeResults" />
-                <ChevronRight className="w-6 h-6" />
-              </button>
-            )}
+            <button
+              onClick={() => setStep(3)}
+              disabled={!canProceed}
+              className={`
+                flex-1 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2
+                transition-all touch-manipulation min-h-[60px]
+                ${canProceed
+                  ? "bg-gradient-to-r from-red-500 to-orange-500 text-white active:scale-[0.98] shadow-lg shadow-red-500/30"
+                  : "bg-white/10 text-gray-500 cursor-not-allowed"
+                }
+              `}
+            >
+              <FormattedMessage id="action.next" />
+              <ChevronRight className="w-6 h-6" />
+            </button>
           </div>
+        )}
+
+        {step === 3 && (
+          // Step 3 (Type selection): Back button only - selection auto-completes
+          <button
+            onClick={() => setStep(2)}
+            className="w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 bg-white/10 text-white active:scale-[0.98] touch-manipulation min-h-[60px]"
+          >
+            <ChevronLeft className="w-6 h-6" />
+            <FormattedMessage id="action.back" />
+          </button>
         )}
       </div>
     </div>

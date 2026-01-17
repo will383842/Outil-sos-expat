@@ -39,6 +39,19 @@
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
   }
+
+  /* iOS: Prevent long-press menu on images and links */
+  img, a, button, [role="button"] {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Allow text selection on text content */
+  p, span, h1, h2, h3, h4, h5, h6, li, td, th, label {
+    -webkit-user-select: text;
+    user-select: text;
+  }
 }
 
 /* Custom components */
@@ -373,13 +386,159 @@
   .no-print {
     display: none !important;
   }
-  
+
   .print-only {
     display: block !important;
   }
-  
+
   * {
     color: black !important;
     background: white !important;
   }
+}
+
+/* ============================================
+   WIZARD ANIMATIONS - Mobile-First 2026
+   ============================================ */
+
+/* Step slide-in animation (entering from right) */
+@keyframes stepSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Step slide-out animation (exiting to left) */
+@keyframes stepSlideOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+}
+
+/* Step slide-in from left (when going back) */
+@keyframes stepSlideInReverse {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Animation classes */
+.step-enter {
+  animation: stepSlideIn 0.25s ease-out forwards;
+}
+
+.step-enter-reverse {
+  animation: stepSlideInReverse 0.25s ease-out forwards;
+}
+
+.step-exit {
+  animation: stepSlideOut 0.2s ease-in forwards;
+}
+
+/* Step indicator pulse animation */
+@keyframes stepPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
+}
+
+.step-active-pulse {
+  animation: stepPulse 2s ease-in-out infinite;
+}
+
+/* Safe area padding utility */
+.pb-safe-area {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+/* Sticky CTA container with blur effect */
+.sticky-cta-container {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Provider card compact expand/collapse animation */
+@keyframes expandCard {
+  from {
+    max-height: 0;
+    opacity: 0;
+  }
+  to {
+    max-height: 500px;
+    opacity: 1;
+  }
+}
+
+@keyframes collapseCard {
+  from {
+    max-height: 500px;
+    opacity: 1;
+  }
+  to {
+    max-height: 0;
+    opacity: 0;
+  }
+}
+
+.card-expand {
+  animation: expandCard 0.3s ease-out forwards;
+  overflow: hidden;
+}
+
+.card-collapse {
+  animation: collapseCard 0.2s ease-in forwards;
+  overflow: hidden;
+}
+
+/* Smooth scroll behavior for wizard */
+.wizard-scroll-smooth {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Step content fade transition */
+.step-content {
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+}
+
+/* Button press effect for mobile */
+.btn-press-effect:active {
+  transform: scale(0.97);
+  transition: transform 0.1s ease;
+}
+
+/* Checkmark animation for completed steps */
+@keyframes checkmarkDraw {
+  0% {
+    stroke-dashoffset: 24;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.checkmark-animate {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: checkmarkDraw 0.3s ease-out forwards;
 }

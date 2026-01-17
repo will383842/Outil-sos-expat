@@ -10,6 +10,7 @@ import {
   ChevronDown,
   Wifi,
   WifiOff,
+  Clock,
   ChevronLeft,
   ChevronRight,
   Eye,
@@ -87,6 +88,8 @@ interface Provider {
   rating: number;
   price: number;
   isOnline: boolean;
+  availability?: 'available' | 'busy' | 'offline';
+  busyReason?: 'in_call' | 'break' | 'offline' | 'manually_disabled' | null;
   avatar: string;
   specialties: string[];
   interventionCountries?: string[];
@@ -125,6 +128,8 @@ interface RawProfile extends DocumentData {
   yearsOfExperience?: number;
   yearsAsExpat?: number;
   isOnline?: boolean;
+  availability?: 'available' | 'busy' | 'offline';
+  busyReason?: 'in_call' | 'break' | 'offline' | 'manually_disabled' | null;
   isActive?: boolean;
   isVisible?: boolean;
   isApproved?: boolean;
@@ -335,31 +340,49 @@ const getProfessionInfo = (type: string) => {
   return PROFESSION_ICONS[type] || PROFESSION_ICONS["expat"];
 };
 
-const useStatusColors = (isOnline: boolean) => {
+type AvailabilityStatus = 'available' | 'busy' | 'offline';
+
+const useStatusColors = (availability: AvailabilityStatus) => {
   return useMemo(
-    () =>
-      isOnline
-        ? {
-          border: "border-green-300",
-          shadow: "shadow-green-100",
-          glow: "shadow-green-200/50",
-          borderShadow: "drop-shadow-[0_0_8px_rgba(34,197,94,0.3)]",
-          badge: "bg-green-100 text-green-800 border-green-300",
-          button:
-            "bg-green-700 hover:bg-green-800 active:bg-green-900 border-green-700",
-          accent: "text-green-700",
-        }
-        : {
-          border: "border-red-300",
-          shadow: "shadow-red-100",
-          glow: "shadow-red-200/50",
-          borderShadow: "drop-shadow-[0_0_8px_rgba(239,68,68,0.4)]",
-          badge: "bg-red-100 text-red-800 border-red-300",
-          button:
-            "bg-red-700 hover:bg-red-800 active:bg-red-900 border-red-700",
-          accent: "text-red-700",
-        },
-    [isOnline]
+    () => {
+      switch (availability) {
+        case 'available':
+          return {
+            border: "border-green-300",
+            shadow: "shadow-green-100",
+            glow: "shadow-green-200/50",
+            borderShadow: "drop-shadow-[0_0_8px_rgba(34,197,94,0.3)]",
+            badge: "bg-green-100 text-green-800 border-green-300",
+            button:
+              "bg-green-700 hover:bg-green-800 active:bg-green-900 border-green-700",
+            accent: "text-green-700",
+          };
+        case 'busy':
+          return {
+            border: "border-orange-300",
+            shadow: "shadow-orange-100",
+            glow: "shadow-orange-200/50",
+            borderShadow: "drop-shadow-[0_0_8px_rgba(249,115,22,0.3)]",
+            badge: "bg-orange-100 text-orange-800 border-orange-300",
+            button:
+              "bg-orange-600 hover:bg-orange-700 active:bg-orange-800 border-orange-600",
+            accent: "text-orange-600",
+          };
+        case 'offline':
+        default:
+          return {
+            border: "border-red-300",
+            shadow: "shadow-red-100",
+            glow: "shadow-red-200/50",
+            borderShadow: "drop-shadow-[0_0_8px_rgba(239,68,68,0.4)]",
+            badge: "bg-red-100 text-red-800 border-red-300",
+            button:
+              "bg-red-700 hover:bg-red-800 active:bg-red-900 border-red-700",
+            accent: "text-red-700",
+          };
+      }
+    },
+    [availability]
   );
 };
 
@@ -1201,7 +1224,14 @@ const ModernProfileCard: React.FC<{
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 
-  const statusColors = useStatusColors(provider.isOnline);
+  // Calculer le statut de disponibilité
+  const availability: AvailabilityStatus = useMemo(() => {
+    if (provider.availability === 'busy') return 'busy';
+    if (provider.isOnline && provider.availability !== 'offline') return 'available';
+    return 'offline';
+  }, [provider.availability, provider.isOnline]);
+
+  const statusColors = useStatusColors(availability);
   const professionInfo = useMemo(
     () => getProfessionInfo(provider.type),
     [provider.type]
@@ -1286,9 +1316,11 @@ const ModernProfileCard: React.FC<{
       status: intl.formatMessage(
         { id: "sosCall.card.ariaOnlineStatus" },
         {
-          status: provider.isOnline
+          status: availability === 'available'
             ? intl.formatMessage({ id: "sosCall.status.online" })
-            : intl.formatMessage({ id: "sosCall.status.offline" }),
+            : availability === 'busy'
+              ? intl.formatMessage({ id: "sosCall.status.busy", defaultMessage: "En appel" })
+              : intl.formatMessage({ id: "sosCall.status.offline" }),
         }
       ),
       rating: intl.formatMessage(
@@ -1300,7 +1332,7 @@ const ModernProfileCard: React.FC<{
         { name: provider.name }
       ),
     }),
-    [intl, provider.name, provider.isOnline, provider.rating]
+    [intl, provider.name, availability, provider.rating]
   );
 
   return (
@@ -1375,15 +1407,19 @@ const ModernProfileCard: React.FC<{
               aria-live="polite"
               aria-label={ariaLabels.status}
             >
-              {provider.isOnline ? (
+              {availability === 'available' ? (
                 <Wifi className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
+              ) : availability === 'busy' ? (
+                <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
               ) : (
                 <WifiOff className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
               )}
               <span>
-                {provider.isOnline
+                {availability === 'available'
                   ? intl.formatMessage({ id: "sosCall.status.online" })
-                  : intl.formatMessage({ id: "sosCall.status.offline" })}
+                  : availability === 'busy'
+                    ? intl.formatMessage({ id: "sosCall.status.busy", defaultMessage: "En appel" })
+                    : intl.formatMessage({ id: "sosCall.status.offline" })}
               </span>
             </div>
           </div>
@@ -2001,14 +2037,14 @@ const FilterBottomSheet: React.FC<{
         <div className="px-5 py-4 border-t border-white/10 flex gap-3">
           <button
             onClick={resetFilters}
-            className="flex-1 py-3.5 px-4 rounded-2xl font-semibold text-gray-300 bg-white/5 border-2 border-white/10 flex items-center justify-center gap-2 active:bg-white/10 min-h-[52px]"
+            className="flex-1 py-4 px-4 rounded-2xl font-semibold text-gray-300 bg-white/5 border-2 border-white/10 flex items-center justify-center gap-2 active:scale-[0.98] touch-manipulation min-h-[60px]"
           >
-            <RotateCcw className="w-4 h-4" />
+            <RotateCcw className="w-5 h-5" />
             <span>{intl.formatMessage({ id: "sosCall.filters.reset" }, { defaultMessage: "Réinitialiser" })}</span>
           </button>
           <button
             onClick={onClose}
-            className="flex-[2] py-3.5 px-4 rounded-2xl font-bold text-white bg-gradient-to-r from-red-600 to-orange-600 flex items-center justify-center gap-2 active:opacity-90 shadow-lg shadow-red-500/20 min-h-[52px]"
+            className="flex-[2] py-4 px-4 rounded-2xl font-bold text-lg text-white bg-gradient-to-r from-red-500 to-orange-500 flex items-center justify-center gap-2 active:scale-[0.98] touch-manipulation shadow-lg shadow-red-500/30 min-h-[60px]"
           >
             <Sparkles className="w-4 h-4" />
             <span>{intl.formatMessage({ id: "sosCall.filters.showResults" }, { defaultMessage: "Voir les résultats" })}</span>
@@ -2048,8 +2084,8 @@ const SOSCall: React.FC = () => {
   const [showCustomCountry, setShowCustomCountry] = useState<boolean>(false);
   const [showCustomLanguage, setShowCustomLanguage] = useState<boolean>(false);
 
-  // Statut
-  const [statusFilter, setStatusFilter] = useState<"all" | "online" | "offline">("all");
+  // Statut - Par défaut "online" pour ne montrer que les prestataires disponibles
+  const [statusFilter, setStatusFilter] = useState<"all" | "online" | "offline">("online");
 
   // Mobile filter bottom sheet
   const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
@@ -2295,6 +2331,8 @@ const SOSCall: React.FC = () => {
             : undefined) ??
           (typeof data.yearsAsExpat === "number" ? data.yearsAsExpat : 0),
         isOnline: data.isOnline === true,
+        availability: data.availability || (data.isOnline ? 'available' : 'offline'),
+        busyReason: data.busyReason || null,
         isActive: data.isActive !== false,
         isVisible: data.isVisible !== false,
         isApproved: data.isApproved !== false,
