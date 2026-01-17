@@ -2390,18 +2390,88 @@ export async function handleDisputeClosed(
     const isLost = dispute.status === 'lost';
     const resultText = isWon ? 'gagné' : isLost ? 'perdu' : dispute.status;
 
-    // Mettre à jour le paiement lié
+    // Mettre à jour le paiement lié et récupérer le providerId
     const paymentQuery = await db.collection('payments')
       .where('stripeChargeId', '==', chargeId)
       .limit(1)
       .get();
 
+    let providerId: string | null = null;
+    let providerAmountCents: number = 0;
+    let callSessionId: string | null = null;
+
     if (!paymentQuery.empty) {
+      const paymentData = paymentQuery.docs[0].data();
+      providerId = paymentData.providerId || paymentData.metadata?.providerId || null;
+      providerAmountCents = paymentData.providerAmountCents ||
+                           (paymentData.providerAmount ? Math.round(paymentData.providerAmount * 100) : 0) ||
+                           dispute.amount; // Fallback au montant disputé
+      callSessionId = paymentData.callSessionId || paymentData.metadata?.callSessionId || null;
+
       await paymentQuery.docs[0].ref.update({
         disputeStatus: dispute.status,
         disputeClosedAt: now,
+        disputeOutcome: isWon ? 'won' : isLost ? 'lost' : dispute.status,
         updatedAt: now
       });
+    }
+
+    // =========================================================================
+    // P0 FIX: Créer un ajustement de solde négatif si la dispute est perdue
+    // Cela garantit que le solde du provider reflète la perte d'argent
+    // =========================================================================
+    if (isLost && providerId) {
+      const adjustmentAmount = -(providerAmountCents / 100); // Montant négatif en euros
+
+      await db.collection('provider_balance_adjustments').add({
+        providerId,
+        type: 'dispute_lost',
+        amount: adjustmentAmount, // Montant négatif
+        chargeId,
+        disputeId: dispute.id,
+        callSessionId,
+        status: 'applied',
+        reason: `Litige perdu: ${dispute.reason || 'Raison non spécifiée'}`,
+        currency: dispute.currency?.toUpperCase() || 'EUR',
+        createdAt: now,
+        appliedAt: now,
+      });
+
+      logger.warn(`[handleDisputeClosed] P0 FIX: Created balance adjustment of ${adjustmentAmount} EUR for provider ${providerId} (dispute lost)`);
+
+      // Également libérer la réserve si elle existait
+      const reserveQuery = await db.collection('provider_balance_adjustments')
+        .where('disputeId', '==', dispute.id)
+        .where('type', '==', 'dispute_reserve')
+        .where('status', '==', 'active')
+        .limit(1)
+        .get();
+
+      if (!reserveQuery.empty) {
+        await reserveQuery.docs[0].ref.update({
+          status: 'applied', // La réserve devient l'ajustement réel
+          appliedAt: now,
+          closedReason: 'dispute_lost'
+        });
+        logger.info(`[handleDisputeClosed] Released dispute reserve for dispute ${dispute.id}`);
+      }
+    } else if (isWon && providerId) {
+      // Si la dispute est gagnée, libérer la réserve sans ajustement négatif
+      const reserveQuery = await db.collection('provider_balance_adjustments')
+        .where('disputeId', '==', dispute.id)
+        .where('type', '==', 'dispute_reserve')
+        .where('status', '==', 'active')
+        .limit(1)
+        .get();
+
+      if (!reserveQuery.empty) {
+        await reserveQuery.docs[0].ref.update({
+          status: 'released',
+          releasedAt: now,
+          closedReason: 'dispute_won'
+        });
+        logger.info(`[handleDisputeClosed] Released dispute reserve for provider ${providerId} (dispute won)`);
+      }
     }
 
     // Notifier les admins

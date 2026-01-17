@@ -139,9 +139,20 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
     };
   }, [langCode]);
 
-  // Early return after all hooks
-  if (!user) {
-    return null;
+  // Early return after all hooks - P0 FIX: Show loading spinner instead of null
+  if (!user || !authInitialized) {
+    return (
+      <Layout showFooter={false}>
+        <div className="min-h-screen bg-gradient-to-b from-gray-50 via-rose-50/40 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-10 h-10 border-4 border-red-500 border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {intl.formatMessage({ id: 'common.loading', defaultMessage: 'Chargement...' })}
+            </p>
+          </div>
+        </div>
+      </Layout>
+    );
   }
 
   const headerGradient = getHeaderClassForRole(user.role);
@@ -397,9 +408,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
                   </ul>
                 </nav>
 
-                {/* AI Quota Widget - Only for lawyers and expats */}
+                {/* AI Quota Widget - Only for lawyers and expats
+                    P1 FIX: Add min-height to prevent layout shift */}
                 {user && (user.role === "lawyer" || user.role === "expat") && (
-                  <div className="p-4 border-t border-gray-200 dark:border-white/10">
+                  <div className="p-4 border-t border-gray-200 dark:border-white/10 min-h-[180px]">
                     <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl p-4">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
@@ -464,8 +476,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
                   </div>
                 )}
 
-                {/* Availability Toggle */}
-                <div className="p-6 border-t border-gray-200 dark:border-white/10">
+                {/* Availability Toggle - P1 FIX: Add min-height for layout stability */}
+                <div className="p-6 border-t border-gray-200 dark:border-white/10 min-h-[100px]">
                   <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">
                     {intl.formatMessage({ id: "dashboard.availabilityStatus" })}
                   </h3>

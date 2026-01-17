@@ -151,9 +151,9 @@ export default function ProviderEarnings({ className = "", compact = false }: Pr
         <button
           onClick={loadEarnings}
           className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-          title="Actualiser"
+          aria-label="Actualiser les revenus"
         >
-          <RefreshCw className="w-4 h-4 text-gray-500" />
+          <RefreshCw className="w-4 h-4 text-gray-500" aria-hidden="true" />
         </button>
       </div>
 

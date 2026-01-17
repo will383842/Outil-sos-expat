@@ -156,17 +156,18 @@ export async function requestTranslation(
     try {
       result = await translateProvider(requestPayload);
       console.log('[requestTranslation] ✓ Function call completed');
-    } catch (callError: any) {
+    } catch (callError) {
+      const err = callError as Error & { code?: string; details?: unknown };
       console.error('[requestTranslation] ✗ Error during function call:', callError);
       console.error('[requestTranslation] Call error details:', {
-        name: callError?.name,
-        message: callError?.message,
-        code: callError?.code,
-        details: callError?.details,
-        stack: callError?.stack,
+        name: err?.name,
+        message: err?.message,
+        code: err?.code,
+        details: err?.details,
+        stack: err?.stack,
         toString: String(callError),
         type: typeof callError,
-        constructor: callError?.constructor?.name,
+        constructor: err?.constructor?.name,
         keys: callError && typeof callError === 'object' ? Object.keys(callError) : [],
       });
       throw callError;
@@ -215,13 +216,14 @@ export async function requestTranslation(
           });
         }
       }
-    } catch (dataAccessError: any) {
+    } catch (dataAccessError) {
+      const daErr = dataAccessError as Error & { code?: string };
       console.error('[requestTranslation] ✗ Error accessing result.data:', dataAccessError);
       console.error('[requestTranslation] Data access error details:', {
-        name: dataAccessError?.name,
-        message: dataAccessError?.message,
-        code: dataAccessError?.code,
-        stack: dataAccessError?.stack,
+        name: daErr?.name,
+        message: daErr?.message,
+        code: daErr?.code,
+        stack: daErr?.stack,
         toString: String(dataAccessError),
         type: typeof dataAccessError,
       });
@@ -288,7 +290,8 @@ export async function requestTranslation(
 
     console.log('[requestTranslation] ===== RETURNING TRANSLATION =====');
     return data.translation;
-  } catch (error: any) {
+  } catch (err) {
+    const error = err as Error & { code?: string; details?: unknown };
     console.error('[requestTranslation] ===== ERROR CAUGHT =====');
     console.error('[requestTranslation] Error object:', error);
     console.error('[requestTranslation] Error details:', {
@@ -347,7 +350,7 @@ export async function requestTranslation(
     }
 
     // Fallback for unknown errors
-    throw new Error(error?.message || 'Translation failed. Please try again.');
+    throw new Error('Translation failed. Please try again.');
   }
 }
 

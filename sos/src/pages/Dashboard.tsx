@@ -3378,22 +3378,26 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                                   {/* {getStatusBadge(review.status)} */}
 
                                         {review.status === "pending" && review.isPublic == false &&  (
-                                  <div className="inline-flex items-center gap-1 font-bold" onClick={() => handleShowReview(review.id)}>
-                                  
-                                      <span className="bg-green-500 px-2 py-1 cursor-pointer rounded text-white">
-                                   Show on profile
-                                    </span>
-                                  </div>
+                                  <button
+                                    type="button"
+                                    className="inline-flex items-center gap-1 font-bold bg-green-500 px-2 py-1 rounded text-white hover:bg-green-600 transition-colors"
+                                    onClick={() => handleShowReview(review.id)}
+                                    aria-label="Show review on profile"
+                                  >
+                                    Show on profile
+                                  </button>
                                 )}
 
 
                                  {review.status === "published" && review.isPublic === true &&  (
-                                  <div className="inline-flex items-center gap-1 font-bold" onClick={() => handleHideReview(review.id)}>
-                                  
-                                      <span className="bg-red-500 px-2 py-1 cursor-pointer rounded text-white">
-                                   Hide from profile
-                                    </span>
-                                  </div>
+                                  <button
+                                    type="button"
+                                    className="inline-flex items-center gap-1 font-bold bg-red-500 px-2 py-1 rounded text-white hover:bg-red-600 transition-colors"
+                                    onClick={() => handleHideReview(review.id)}
+                                    aria-label="Hide review from profile"
+                                  >
+                                    Hide from profile
+                                  </button>
                                 )}
                                   {/* <button
                                     type="button"

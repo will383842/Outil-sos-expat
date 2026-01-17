@@ -59,9 +59,9 @@ export default function StripeKYC({ onComplete, userType }: Props) {
         // Trigger re-initialization
         window.location.reload();
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("[StripeKYC] Failed to create new account:", err);
-      setError(err.message || "Impossible de créer un nouveau compte");
+      setError((err as Error).message || "Impossible de créer un nouveau compte");
       setIsCreatingNewAccount(false);
     }
   };
@@ -140,8 +140,8 @@ export default function StripeKYC({ onComplete, userType }: Props) {
 
             return;
           }
-        } catch (err: any) {
-          const errorMsg = err.message || "";
+        } catch (err) {
+          const errorMsg = (err as Error).message || "";
 
           // ✅ P0 FIX: Detect invalid/revoked Stripe account
           if (errorMsg.includes("does not have access to account") ||
@@ -156,7 +156,7 @@ export default function StripeKYC({ onComplete, userType }: Props) {
             return;
           }
 
-          if (err.code !== "failed-precondition") {
+          if ((err as { code?: string }).code !== "failed-precondition") {
             console.error("[StripeKYC] Status check error:", errorMsg);
           }
           // No account yet - will create one below
@@ -189,8 +189,8 @@ export default function StripeKYC({ onComplete, userType }: Props) {
         setStripeConnectInstance(instance);
         setLoading(false);
         sessionStorage.removeItem(checkKey);
-      } catch (err: any) {
-        const errorMsg = err.message || "";
+      } catch (err) {
+        const errorMsg = (err as Error).message || "";
         let errorMessage: string;
 
         // ✅ P0 FIX: Detect invalid/revoked Stripe account in session creation too

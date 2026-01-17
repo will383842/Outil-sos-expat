@@ -252,9 +252,9 @@ const AdminFinancePayouts: React.FC = () => {
 
       setSuccess("Retry lancé avec succès");
       await loadData();
-    } catch (err: any) {
+    } catch (err) {
       console.error("Erreur retry:", err);
-      setError(err.message || "Erreur lors du retry");
+      setError((err as Error).message || "Erreur lors du retry");
     } finally {
       setIsProcessing(false);
     }
@@ -274,9 +274,9 @@ const AdminFinancePayouts: React.FC = () => {
       await triggerKycReminder({ providerId });
 
       setSuccess("Rappel envoyé avec succès");
-    } catch (err: any) {
+    } catch (err) {
       console.error("Erreur envoi rappel:", err);
-      setError(err.message || "Erreur lors de l'envoi du rappel");
+      setError((err as Error).message || "Erreur lors de l'envoi du rappel");
     } finally {
       setIsProcessing(false);
     }
@@ -296,9 +296,9 @@ const AdminFinancePayouts: React.FC = () => {
       setSuccess("Marqué comme résolu");
       await loadData();
       setSelectedItem(null);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Erreur résolution:", err);
-      setError(err.message || "Erreur lors de la résolution");
+      setError((err as Error).message || "Erreur lors de la résolution");
     } finally {
       setIsProcessing(false);
     }
@@ -590,9 +590,9 @@ const AdminFinancePayouts: React.FC = () => {
                           <button
                             onClick={() => setSelectedItem(item)}
                             className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
-                            title="Voir détails"
+                            aria-label="View details"
                           >
-                            <Eye className="w-4 h-4" />
+                            <Eye className="w-4 h-4" aria-hidden="true" />
                           </button>
                           {item.status !== "resolved" && (
                             <>
@@ -600,17 +600,17 @@ const AdminFinancePayouts: React.FC = () => {
                                 onClick={() => handleRetryPayout(item)}
                                 disabled={isProcessing || item.retryCount >= 3}
                                 className="p-2 text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded disabled:opacity-50"
-                                title="Retry payout"
+                                aria-label="Retry payout"
                               >
-                                <RefreshCw className="w-4 h-4" />
+                                <RefreshCw className="w-4 h-4" aria-hidden="true" />
                               </button>
                               <button
                                 onClick={() => handleSendReminder(item)}
                                 disabled={isProcessing}
                                 className="p-2 text-green-400 hover:text-green-600 hover:bg-green-50 rounded disabled:opacity-50"
-                                title="Envoyer rappel KYC"
+                                aria-label="Send KYC reminder"
                               >
-                                <Mail className="w-4 h-4" />
+                                <Mail className="w-4 h-4" aria-hidden="true" />
                               </button>
                             </>
                           )}
@@ -675,18 +675,18 @@ const AdminFinancePayouts: React.FC = () => {
                           <button
                             onClick={() => setSelectedItem(item)}
                             className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
-                            title="Voir détails"
+                            aria-label="View details"
                           >
-                            <Eye className="w-4 h-4" />
+                            <Eye className="w-4 h-4" aria-hidden="true" />
                           </button>
                           {item.status === "pending_kyc" && (
                             <button
                               onClick={() => handleSendReminder(item)}
                               disabled={isProcessing}
                               className="p-2 text-green-400 hover:text-green-600 hover:bg-green-50 rounded disabled:opacity-50"
-                              title="Envoyer rappel KYC"
+                              aria-label="Send KYC reminder"
                             >
-                              <Mail className="w-4 h-4" />
+                              <Mail className="w-4 h-4" aria-hidden="true" />
                             </button>
                           )}
                         </div>

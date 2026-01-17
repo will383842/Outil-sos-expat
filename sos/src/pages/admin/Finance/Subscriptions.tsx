@@ -649,9 +649,9 @@ const Subscriptions: React.FC = () => {
         snapshot = await getDocs(subsQuery);
         setTotalFetched(snapshot.docs.length);
         console.log(`[Subscriptions] Step 1 OK: ${snapshot.docs.length} subscriptions loaded (limit: ${FIRESTORE_FETCH_LIMIT})`);
-      } catch (e: any) {
+      } catch (e) {
         console.error('[Subscriptions] Step 1 FAILED - subscriptions query:', e);
-        throw new Error(`Failed to load subscriptions: ${e.message}`);
+        throw new Error(`Failed to load subscriptions: ${(e as Error).message}`);
       }
 
       // COST OPTIMIZATION: Steps 2-4 now use shared admin reference data cache
@@ -753,9 +753,9 @@ const Subscriptions: React.FC = () => {
         pastDueCount,
         canceledCount,
       });
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error loading subscriptions:', err);
-      setError(err.message || 'Failed to load subscriptions');
+      setError((err as Error).message || 'Failed to load subscriptions');
     } finally {
       setLoading(false);
     }

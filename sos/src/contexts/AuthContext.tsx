@@ -660,10 +660,10 @@ const getUserDocument = async (firebaseUser: FirebaseUser): Promise<User | null>
   let snap: any;
   try {
     snap = await getDoc(refUser);
-  } catch (e: any) {
+  } catch (error) {
     // ⚠️ CORRECTION: Ne pas créer de document en cas d'erreur de permission
     // Retourner null pour signaler que l'utilisateur n'a pas de profil
-    console.error('[Auth] getUserDocument permission error:', e);
+    console.error('[Auth] getUserDocument permission error:', error);
     return null;
   }
 
@@ -1315,7 +1315,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
               ...(googleUser.photoURL && { profilePhoto: googleUser.photoURL, photoURL: googleUser.photoURL }),
             });
             console.log("[DEBUG] " + "✅ GOOGLE POPUP: Document " + result.action + " via Cloud Function");
-          } catch (createError: any) {
+          } catch (createError) {
             console.error("[DEBUG] " + "❌ GOOGLE POPUP: Échec Cloud Function:", createError);
             // Don't throw - let the auth continue even if document creation fails
             // The onAuthStateChanged listener will handle orphan users
@@ -1333,9 +1333,9 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           window.location.href = savedRedirect;
         }
         return;
-      } catch (popupError: any) {
+      } catch (popupError) {
         // If popup was blocked or closed, try redirect as fallback
-        const popupErrorCode = popupError?.code || '';
+        const popupErrorCode = (popupError as { code?: string })?.code || '';
         console.log("[DEBUG] " + "⚠️ GOOGLE POPUP échoué: " + popupErrorCode);
 
         if (popupErrorCode === 'auth/popup-closed-by-user' ||
@@ -1500,7 +1500,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
               ...(googleUser.photoURL && { profilePhoto: googleUser.photoURL, photoURL: googleUser.photoURL }),
             });
             console.log("[DEBUG] " + "✅ GOOGLE REDIRECT: Document " + result.action + " via Cloud Function");
-          } catch (createError: any) {
+          } catch (createError) {
             console.error("[DEBUG] " + "❌ GOOGLE REDIRECT: Échec Cloud Function:", createError);
             // Don't throw - let the auth continue even if document creation fails
             // The onAuthStateChanged listener will handle orphan users

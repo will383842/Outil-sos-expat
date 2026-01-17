@@ -8,6 +8,10 @@ import { AppProvider } from './contexts/AppContext';
 import { BrowserRouter } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 
+// Sentry - initialiser EN PREMIER pour capturer toutes les erreurs
+import { initSentry } from './config/sentry';
+initSentry();
+
 // Initialize GTM/GA4 if user has already consented
 import { hasAnalyticsConsent } from './utils/ga4';
 import { initializeGTM } from './utils/gtm';

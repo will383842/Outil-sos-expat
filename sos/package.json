@@ -7,6 +7,9 @@
     "node": "20.x"
   },
   "scripts": {
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "predev": "node scripts/gen-firebase-config.cjs",
     "dev": "vite",
     "prebuild": "node scripts/gen-firebase-config.cjs && node scripts/sync-all-translations.cjs && node scripts/download-sitemaps.js",
@@ -35,6 +38,7 @@
     "@mui/material": "^7.2.0",
     "@paypal/react-paypal-js": "^8.9.2",
     "@radix-ui/react-slot": "^1.2.3",
+    "@sentry/react": "^10.34.0",
     "@stripe/react-connect-js": "^3.3.30",
     "@stripe/react-stripe-js": "^3.10.0",
     "@stripe/stripe-js": "^7.9.0",
@@ -73,6 +77,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.1",
+    "@testing-library/user-event": "^14.6.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/leaflet.markercluster": "^1.5.5",
@@ -83,6 +90,7 @@
     "@typescript-eslint/eslint-plugin": "^8.42.0",
     "@typescript-eslint/parser": "^8.42.0",
     "@vitejs/plugin-react": "^4.7.0",
+    "@vitest/coverage-v8": "^4.0.17",
     "autoprefixer": "^10.4.18",
     "baseline-browser-mapping": "^2.9.2",
     "concurrently": "^9.1.2",
@@ -93,6 +101,7 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^15.15.0",
     "jiti": "^2.5.1",
+    "jsdom": "^27.4.0",
     "postcss": "^8.4.35",
     "prettier": "^3.6.2",
     "puppeteer": "^24.35.0",
@@ -109,7 +118,8 @@
     "vite-plugin-checker": "^0.10.3",
     "vite-plugin-mkcert": "^1.17.8",
     "vite-plugin-top-level-await": "^1.6.0",
-    "vite-plugin-wasm": "^3.5.0"
+    "vite-plugin-wasm": "^3.5.0",
+    "vitest": "^4.0.17"
   },
   "description": "Plateforme web destinée à mettre en relation des **expatriés**, **avocats** et **clients**, pour une aide juridique, administrative ou humaine à distance, par appel.",
   "main": "build-nationalities.js",

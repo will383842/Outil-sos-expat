@@ -236,9 +236,17 @@ const ReconciliationRow: React.FC<ReconciliationRowProps> = ({
 
   return (
     <div className="border-b border-gray-200 hover:bg-gray-50">
-      <div className="px-4 py-3 flex items-center justify-between cursor-pointer" onClick={() => setExpanded(!expanded)}>
+      <div
+        role="button"
+        tabIndex={0}
+        className="px-4 py-3 flex items-center justify-between cursor-pointer"
+        onClick={() => setExpanded(!expanded)}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpanded(!expanded); } }}
+        aria-expanded={expanded}
+        aria-label={`${expanded ? 'Collapse' : 'Expand'} payment details for ${primaryPayment.id}`}
+      >
         <div className="flex items-center gap-4">
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0" aria-hidden="true">
             {expanded ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
           </div>
           <div>
@@ -266,26 +274,26 @@ const ReconciliationRow: React.FC<ReconciliationRowProps> = ({
             <button
               onClick={(e) => { e.stopPropagation(); onViewDetails(record); }}
               className="p-1.5 text-gray-400 hover:text-gray-600 rounded"
-              title="Voir détails"
+              aria-label="View details"
             >
-              <Eye className="w-4 h-4" />
+              <Eye className="w-4 h-4" aria-hidden="true" />
             </button>
             {record.status === 'unmatched' && (
               <button
                 onClick={(e) => { e.stopPropagation(); onReconcile(record.id); }}
                 className="p-1.5 text-green-500 hover:text-green-700 rounded"
-                title="Rapprocher manuellement"
+                aria-label="Reconcile manually"
               >
-                <Link2 className="w-4 h-4" />
+                <Link2 className="w-4 h-4" aria-hidden="true" />
               </button>
             )}
             {record.status === 'matched' && (
               <button
                 onClick={(e) => { e.stopPropagation(); onUnlink(record.id); }}
                 className="p-1.5 text-red-400 hover:text-red-600 rounded"
-                title="Annuler rapprochement"
+                aria-label="Cancel reconciliation"
               >
-                <Unlink className="w-4 h-4" />
+                <Unlink className="w-4 h-4" aria-hidden="true" />
               </button>
             )}
           </div>

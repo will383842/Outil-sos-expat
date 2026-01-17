@@ -1785,6 +1785,8 @@ export const stripeWebhook = onRequest(
       STRIPE_SECRET_KEY_LIVE,
       STRIPE_WEBHOOK_SECRET_TEST,
       STRIPE_WEBHOOK_SECRET_LIVE,
+      STRIPE_CONNECT_WEBHOOK_SECRET_TEST, // Connect webhook for provider KYC events
+      STRIPE_CONNECT_WEBHOOK_SECRET_LIVE, // Connect webhook for provider KYC events
       ENCRYPTION_KEY, // P0 FIX: Required for decryptPhoneNumber in sendPaymentNotifications
       OUTIL_SYNC_API_KEY, // P0 FIX: Required for syncCallSessionToOutil after payment
       META_CAPI_TOKEN, // Meta Conversions API for Facebook Ads attribution
@@ -1871,57 +1873,62 @@ export const stripeWebhook = onRequest(
           return;
         }
 
-        // ✅ STEP 4: Construct Stripe event
+        // ✅ STEP 4: Construct Stripe event (try both secrets: regular + Connect)
         console.log("🏗️ Constructing Stripe event...");
-        let event: Stripe.Event;
 
+        const bodyString = rawBodyBuffer.toString("utf8");
+        console.log("🔄 Body string length:", bodyString.length);
+        console.log("🔄 Verifying webhook signature...");
+
+        // Try regular webhook secret first, then Connect secret as fallback
+        let event: Stripe.Event | null = null;
+        let lastError: Error | null = null;
+
+        // Attempt 1: Regular webhook secret
         try {
-          const bodyString = rawBodyBuffer.toString("utf8");
-          console.log("🔄 Body string length:", bodyString.length);
-          console.log("🔄 Body string preview:", bodyString.slice(0, 200));
-          console.log("🔄 Verifying webhook signature...");
-
           event = stripeInstance.webhooks.constructEvent(
             bodyString,
             signature,
             webhookSecret
           );
+          console.log("✅ SUCCESS with regular webhook secret");
+        } catch (error1) {
+          console.log("⚠️ Regular webhook secret failed, trying Connect secret...");
+          lastError = error1 as Error;
 
-          console.log("✅ SUCCESS! Event constructed:", event.type);
-          console.log("✅ Event ID:", event.id);
-        } catch (constructError) {
-          console.log("💥 CONSTRUCT ERROR:", constructError);
+          // Attempt 2: Connect webhook secret (for events from connected accounts)
+          const connectWebhookSecret = getStripeConnectWebhookSecret();
+          if (connectWebhookSecret && connectWebhookSecret.startsWith("whsec_")) {
+            try {
+              event = stripeInstance.webhooks.constructEvent(
+                bodyString,
+                signature,
+                connectWebhookSecret
+              );
+              console.log("✅ SUCCESS with Connect webhook secret");
+            } catch (error2) {
+              console.log("❌ Connect webhook secret also failed");
+              lastError = error2 as Error;
+            }
+          }
+        }
 
-          // ✅ SAFE ERROR TYPE LOGGING
-          console.log(
-            "💥 Error type:",
-            constructError &&
-              typeof constructError === "object" &&
-              constructError.constructor
-              ? constructError.constructor.name
-              : "unknown"
-          );
-
-          // ✅ OR EVEN SAFER - Use this instead:
-          console.log(
-            "💥 Error name:",
-            (constructError as Error)?.name || "UnknownError"
-          );
+        if (!event) {
+          console.log("💥 CONSTRUCT ERROR: Both secrets failed");
           console.log(
             "💥 Error message:",
-            (constructError as Error)?.message || String(constructError)
+            lastError?.message || "Unknown error"
           );
-
-          console.log("💥 Body length:", rawBodyBuffer.length);
-          // P0-3 SECURITY FIX: Ne jamais logger les secrets ou signatures
-
           res
             .status(400)
             .send(
-              `Webhook Error: ${(constructError as Error)?.message || constructError}`
+              `Webhook Error: ${lastError?.message || "Signature verification failed"}`
             );
           return;
         }
+
+        console.log("✅ Event constructed:", event.type);
+        console.log("✅ Event ID:", event.id);
 
         // ✅ STEP 5: Process the event
         const objectId = (() => {

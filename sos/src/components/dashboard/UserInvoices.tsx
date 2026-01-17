@@ -103,10 +103,10 @@ export default function UserInvoices() {
         setInvoices(fetchedInvoices);
         setLastDoc(snapshot.docs[snapshot.docs.length - 1] || null);
         setHasMore(snapshot.size === PAGE_SIZE);
-      } catch (err: any) {
+      } catch (err) {
         console.error('Erreur chargement factures:', err);
-        console.error('Error code:', err.code);
-        console.error('Error message:', err.message);
+        console.error('Error code:', (err as { code?: string }).code);
+        console.error('Error message:', (err as Error).message);
         console.error('User role:', user?.role);
         console.error('User UID:', user?.uid);
         setError(intl.formatMessage({ id: 'userInvoices.loadError' }));

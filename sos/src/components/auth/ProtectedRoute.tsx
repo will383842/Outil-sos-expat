@@ -49,10 +49,11 @@ interface ProtectedRouteProps {
 type AuthState = 'loading' | 'checking' | 'authorized' | 'unauthorized' | 'error' | 'banned';
 
 /**
- * P0 FIX: Délai minimum avant de rediriger vers login
- * Cela évite les flash de 404/login quand l'auth est en cours de chargement
+ * P1 FIX: Délai minimum avant de rediriger vers login
+ * Réduit de 500ms à 150ms pour éviter les pages blanches prolongées
+ * tout en prévenant les flash de 404/login quand l'auth est en cours
  */
-const MIN_AUTH_WAIT_MS = 500;
+const MIN_AUTH_WAIT_MS = 150;
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,

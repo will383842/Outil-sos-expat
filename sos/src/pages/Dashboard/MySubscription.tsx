@@ -126,8 +126,9 @@ const CancelModal: React.FC<CancelModalProps> = ({
           <button
             onClick={onClose}
             className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+            aria-label={intl.formatMessage({ id: 'common.close', defaultMessage: 'Close' })}
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-gray-500" aria-hidden="true" />
           </button>
         </div>
 

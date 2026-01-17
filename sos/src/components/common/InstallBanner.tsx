@@ -200,8 +200,9 @@ const InstallBanner: React.FC<InstallBannerProps> = ({ forceShow = false }) => {
                 type="button"
                 onClick={() => setShowIOSInstructions(false)}
                 className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-full active:bg-gray-100 dark:active:bg-gray-700 touch-manipulation"
+                aria-label={intl.formatMessage({ id: 'pwa.ios.close', defaultMessage: 'Close instructions' })}
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
 

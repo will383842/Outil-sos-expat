@@ -798,9 +798,9 @@ export async function generate197Lawyers(): Promise<void> {
       // Pause pour \u00e9viter de surcharger Firestore
       await new Promise(resolve => setTimeout(resolve, 50));
 
-    } catch (error: any) {
+    } catch (err) {
       errorCount++;
-      console.error(`\u2717 [${i + 1}/${allCountries.length}] ERREUR ${country.name}:`, error.message);
+      console.error(`\u2717 [${i + 1}/${allCountries.length}] ERREUR ${country.name}:`, (err as Error).message);
     }
   }
 

@@ -271,9 +271,9 @@ const JournalEntryRow: React.FC<JournalEntryRowProps> = ({ entry, onViewDetails 
               onViewDetails(entry);
             }}
             className="p-1.5 text-gray-400 hover:text-gray-600 rounded"
-            title="Voir détails"
+            aria-label="View details"
           >
-            <Eye className="w-4 h-4" />
+            <Eye className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
       </div>

@@ -206,9 +206,9 @@ export const IaQuotasTab: React.FC = () => {
       // Sort by usage descending
       providersList.sort((a, b) => b.quotaPercent - a.quotaPercent);
       setProviders(providersList);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error loading providers:', err);
-      setError(err.message || iaT.errorLoading);
+      setError((err as Error).message || iaT.errorLoading);
     } finally {
       setLoading(false);
     }
@@ -285,9 +285,9 @@ export const IaQuotasTab: React.FC = () => {
       setEditingId(null);
       setSuccess(iaT.quotaUpdated);
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error updating quota:', err);
-      setError(err.message || iaT.errorModification);
+      setError((err as Error).message || iaT.errorModification);
     } finally {
       setSaving(null);
     }
@@ -319,12 +319,12 @@ export const IaQuotasTab: React.FC = () => {
 
       setSuccess(`${iaT.quotaReset} - ${provider.displayName}`);
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error resetting quota:', err);
       // Handle Firebase callable errors
-      const message = err.code === 'functions/permission-denied'
+      const message = (err as { code?: string }).code === 'functions/permission-denied'
         ? 'Permission refusée - Accès admin requis'
-        : err.message || iaT.errorReset;
+        : (err as Error).message || iaT.errorReset;
       setError(message);
     } finally {
       setSaving(null);

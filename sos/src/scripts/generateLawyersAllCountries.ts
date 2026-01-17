@@ -406,9 +406,9 @@ export async function generateLawyersAllCountries(): Promise<void> {
 
       await new Promise(r => setTimeout(r, 30));
 
-    } catch (err: any) {
+    } catch (err) {
       errors++;
-      console.error(`\u2717 ERREUR ${mainCountry.name}:`, err.message);
+      console.error(`\u2717 ERREUR ${mainCountry.name}:`, (err as Error).message);
     }
   }
 

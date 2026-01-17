@@ -390,9 +390,9 @@ export const IaSubscriptionsTab: React.FC = () => {
       });
 
       setSubscriptions(subsList);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error loading subscriptions:', err);
-      setError(err.message || iaT.errorLoading);
+      setError((err as Error).message || iaT.errorLoading);
     } finally {
       setLoading(false);
     }

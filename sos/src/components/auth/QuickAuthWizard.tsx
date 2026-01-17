@@ -289,14 +289,14 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
       setStep('success');
       // FIX: Attendre que user Firestore soit chargé avant de naviguer
       setPendingSuccess(true);
-    } catch (err: any) {
+    } catch (err) {
       // FIX: auth/invalid-credential peut signifier:
       // 1. User n'existe pas (devrait être auth/user-not-found mais Firebase renvoie parfois invalid-credential)
       // 2. Mauvais mot de passe
       // On ne peut pas distinguer les deux, donc on affiche un message générique
       // et on ne tente PAS l'auto-inscription (qui créerait un compte non voulu)
 
-      if (err.code === 'auth/user-not-found') {
+      if ((err as { code?: string }).code === 'auth/user-not-found') {
         // User n'existe clairement pas - auto register
         try {
           setIsNewUser(true);
@@ -307,21 +307,21 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
           setIsSubmitting(false);
           setStep('success');
           setPendingSuccess(true);
-        } catch (regErr: any) {
+        } catch (regErr) {
           setIsSubmitting(false);
           setIsNewUser(false);
 
-          if (regErr.code === 'auth/weak-password') {
+          if ((regErr as { code?: string }).code === 'auth/weak-password') {
             setError(intl.formatMessage({ id: 'auth.wizard.weakPassword' }));
           } else {
             setError(intl.formatMessage({ id: 'auth.wizard.error.register' }));
           }
         }
-      } else if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
+      } else if ((err as { code?: string }).code === 'auth/invalid-credential' || (err as { code?: string }).code === 'auth/wrong-password') {
         // FIX: Traiter invalid-credential comme mauvais mot de passe (plus sûr)
         setIsSubmitting(false);
         setError(intl.formatMessage({ id: 'auth.wizard.wrongPassword' }));
-      } else if (err.code === 'auth/too-many-requests') {
+      } else if ((err as { code?: string }).code === 'auth/too-many-requests') {
         setIsSubmitting(false);
         setError(intl.formatMessage({ id: 'auth.wizard.tooManyAttempts' }));
       } else {
@@ -359,23 +359,23 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
       setStep('success');
       // FIX: Attendre que user Firestore soit chargé avant de naviguer
       setPendingSuccess(true);
-    } catch (err: any) {
+    } catch (err) {
       // Clear timeout on error
       if (googleTimeoutRef.current) {
         clearTimeout(googleTimeoutRef.current);
       }
       setIsGoogleLoading(false);
 
-      if (err.code === 'auth/popup-closed-by-user') {
+      if ((err as { code?: string }).code === 'auth/popup-closed-by-user') {
         // User closed popup - no error needed
         return;
       }
-      if (err.code === 'auth/popup-blocked') {
+      if ((err as { code?: string }).code === 'auth/popup-blocked') {
         setError(intl.formatMessage({ id: 'auth.wizard.popupBlocked' }));
-      } else if (err.code === 'auth/cancelled-popup-request') {
+      } else if ((err as { code?: string }).code === 'auth/cancelled-popup-request') {
         // Another popup was opened - ignore
         return;
-      } else if (err.code === 'auth/network-request-failed') {
+      } else if ((err as { code?: string }).code === 'auth/network-request-failed') {
         setError(intl.formatMessage({ id: 'auth.wizard.error.network' }));
       } else {
         setError(intl.formatMessage({ id: 'auth.wizard.error.google' }));

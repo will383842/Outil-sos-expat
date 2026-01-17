@@ -246,7 +246,7 @@ const MobileSideDrawer: React.FC<MobileSideDrawerProps> = ({
             {user?.profilePhoto ? (
               <img
                 src={user.profilePhoto}
-                alt=""
+                alt={`${user?.firstName || 'User'} profile photo`}
                 className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200 dark:ring-white/20"
               />
             ) : (

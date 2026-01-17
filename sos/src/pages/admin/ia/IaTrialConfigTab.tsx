@@ -267,9 +267,9 @@ export const IaTrialConfigTab: React.FC = () => {
           setEditedAnnualDiscount(data.annualDiscountPercent);
         }
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error loading data:', err);
-      setError(err.message || iaT.errorLoading);
+      setError((err as Error).message || iaT.errorLoading);
     } finally {
       setLoading(false);
     }
@@ -399,7 +399,7 @@ export const IaTrialConfigTab: React.FC = () => {
       setTrialHasChanges(false);
       setTimeout(() => setSaveSuccess(false), 3000);
       await loadData();
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error saving trial config:', err);
       // If Cloud Function not available, try direct update
       try {
@@ -417,8 +417,8 @@ export const IaTrialConfigTab: React.FC = () => {
         setTrialHasChanges(false);
         setTimeout(() => setSaveSuccess(false), 3000);
         await loadData();
-      } catch (directErr: any) {
-        setError(directErr.message || iaT.errorSaving);
+      } catch (directErr) {
+        setError((directErr as Error).message || iaT.errorSaving);
       }
     } finally {
       setSaving(false);
@@ -439,9 +439,9 @@ export const IaTrialConfigTab: React.FC = () => {
       setSaveSuccess(true);
       setAnnualDiscountHasChanges(false);
       setTimeout(() => setSaveSuccess(false), 3000);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error saving annual discount:', err);
-      setError(err.message || iaT.errorSaving);
+      setError((err as Error).message || iaT.errorSaving);
     } finally {
       setSaving(false);
     }

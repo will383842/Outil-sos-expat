@@ -667,16 +667,16 @@ const AdminFAQs: React.FC = () => {
                     <button
                       onClick={() => handleEdit(faq)}
                       className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      title="Edit FAQ"
+                      aria-label="Edit FAQ"
                     >
-                      <Edit className="w-5 h-5" />
+                      <Edit className="w-5 h-5" aria-hidden="true" />
                     </button>
                     <button
                       onClick={() => handleDeleteClick(faq.id!)}
                       className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Delete FAQ"
+                      aria-label="Delete FAQ"
                     >
-                      <Trash2 className="w-5 h-5" />
+                      <Trash2 className="w-5 h-5" aria-hidden="true" />
                     </button>
                   </div>
                 </div>

@@ -229,8 +229,8 @@ export function useAiQuota(): UseAiQuotaReturn {
 
       setUsage(aiUsage);
       setQuotaCheck(quota);
-    } catch (err: any) {
-      setError(err.message || 'Failed to refresh quota');
+    } catch (err) {
+      setError((err as Error).message || 'Failed to refresh quota');
     } finally {
       setLoading(false);
     }
@@ -252,8 +252,8 @@ export function useAiQuota(): UseAiQuotaReturn {
       const result = await checkAiQuota(user.uid);
       setQuotaCheck(result);
       return result;
-    } catch (err: any) {
-      setError(err.message || 'Failed to check quota');
+    } catch (err) {
+      setError((err as Error).message || 'Failed to check quota');
       throw err;
     }
   }, [user?.uid]);

@@ -2025,8 +2025,10 @@
   "advantage.speed.caption": "متاح على مدار الساعة",
   "advantage.speed.tagline": "خبير يتصل بك في أقل من 5 دقائق، أينما كنت.",
   "advantage.speed.title": "سرعة عالمية",
+  "aiAssistant.accessAs": "الوصول كـ",
   "aiAssistant.accessButton": "الوصول إلى أداة الذكاء الاصطناعي",
   "aiAssistant.askQuestion": "اطرح سؤالاً عن عملائك المغتربين، الإجراءات الإدارية، أو اطلب نصيحة.",
+  "aiAssistant.callsLabel": "مكالمات",
   "aiAssistant.callsRemaining": "{count} مكالمات متبقية هذا الشهر",
   "aiAssistant.clearConversation": "مسح المحادثة",
   "aiAssistant.conversationDuration": "مدة المحادثات",
@@ -2051,6 +2053,7 @@
   "aiAssistant.howCanIHelp": "كيف يمكنني مساعدتك؟",
   "aiAssistant.messages": "رسائل",
   "aiAssistant.messagesCount": "رسائل",
+  "aiAssistant.myProfile": "ملفي الشخصي",
   "aiAssistant.mySubscription": "اشتراكي",
   "aiAssistant.noConversations": "لا توجد محادثات",
   "aiAssistant.noConversationsDescription": "ستظهر محادثاتك مع الذكاء الاصطناعي هنا بمجرد إرسال عميل طلبًا إليك.",
@@ -5092,6 +5095,7 @@
   "subscription.billing.invoices": "الفواتير",
   "subscription.billing.monthly": "شهري",
   "subscription.billing.nextBilling": "الفاتورة التالية",
+  "subscription.billing.nextBillingLabel": "الفاتورة القادمة",
   "subscription.billing.noInvoices": "لا توجد فواتير",
   "subscription.billing.open": "معلق",
   "subscription.billing.paid": "مدفوع",
@@ -5135,6 +5139,7 @@
   "subscription.errors.clientNotAllowed": "الوصول مرفوض",
   "subscription.errors.clientNotAllowedMessage": "الاشتراكات مخصصة للمزودين (المحامين ومساعدي المغتربين).",
   "subscription.errors.generic": "حدث خطأ",
+  "subscription.errors.noAccess": "لا يوجد وصول",
   "subscription.errors.noSubscription": "ليس لديك اشتراك نشط",
   "subscription.errors.notFound": "الخطة أو الملف الشخصي غير موجود. يرجى تحديث الصفحة.",
   "subscription.errors.paymentFailed": "فشل الدفع",
@@ -5249,6 +5254,8 @@
   "subscription.trial.period": "فترة التجربة",
   "subscription.trial.startTrial": "ابدأ التجربة المجانية",
   "subscription.trial.title": "تجربة مجانية",
+  "subscription.trial.upgrade": "الترقية إلى المميز",
+  "subscription.trial.upgradeDescription": "افتح جميع الميزات والمزيد من مكالمات الذكاء الاصطناعي.",
   "subscription.viewPlans": "عرض الخطط",
   "success.allGood": "كل شيء على ما يرام! ✨",
   "success.almostThere": "نحن على وشك الانتهاء! 🎯",

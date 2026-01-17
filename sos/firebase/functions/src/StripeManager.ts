@@ -7,6 +7,8 @@ import { db } from './utils/firebase';
 import { logger as prodLogger } from './utils/productionLogger';
 // P0-3 FIX: Use centralized Stripe secrets helper
 import { getStripeSecretKey, getStripeSecretKeyLegacy, getStripeMode } from './lib/stripe';
+// P0 FIX: Import PayPalManager for PayPal-only provider payouts
+import { PayPalManager } from './PayPalManager';
 
 /* ===================================================================
  * Utils
@@ -1168,6 +1170,32 @@ export class StripeManager {
         mode: this.mode,
       });
 
+      // =========================================================================
+      // P0 FIX: Payout vers provider PayPal-only si pas de transfert Stripe
+      // Si le provider est dans un pays PayPal-only, créer un payout PayPal
+      // =========================================================================
+      if (!transferId && !useDirectCharges) {
+        const providerId = captured.metadata?.providerId;
+        if (providerId) {
+          try {
+            await this.handlePayPalProviderPayout(
+              providerId,
+              captured.amount_received || captured.amount,
+              captured.currency.toUpperCase() as 'EUR' | 'USD',
+              sessionId || captured.metadata?.callSessionId || paymentIntentId
+            );
+          } catch (payoutError) {
+            // Log mais ne pas bloquer - le payout peut être retraité plus tard
+            console.error('[capturePayment] PayPal payout error (non-blocking):', payoutError);
+            prodLogger.warn('PAYPAL_PAYOUT_DEFERRED', `PayPal payout deferred for provider ${providerId}`, {
+              providerId,
+              paymentIntentId,
+              error: payoutError instanceof Error ? payoutError.message : 'Unknown error',
+            });
+          }
+        }
+      }
+
       return {
         success: true,
         paymentIntentId: captured.id,
@@ -1187,6 +1215,222 @@ export class StripeManager {
           ? error.message
           : 'Erreur lors de la capture';
       return { success: false, error: msg };
+    }
+  }
+
+  /**
+   * P0 FIX: Gère le payout vers un provider PayPal-only après capture Stripe
+   *
+   * Cette méthode est appelée après une capture Stripe réussie si:
+   * - Aucun transfert Stripe n'a été créé (pas de Direct Charges)
+   * - Le provider est dans un pays PayPal-only
+   *
+   * Le montant du provider (après commission SOS-Expat) est envoyé via PayPal Payout
+   *
+   * GESTION AAA PROFILES:
+   * - Si provider.isAAA && aaaPayoutMode === 'internal' → Skip payout (argent reste sur plateforme)
+   * - Si provider.isAAA && aaaPayoutMode === 'external' → Payout vers compte consolidé AAA
+   * - Sinon → Payout normal vers email PayPal du provider
+   */
+  private async handlePayPalProviderPayout(
+    providerId: string,
+    capturedAmountCents: number,
+    currency: 'EUR' | 'USD',
+    sessionId: string
+  ): Promise<void> {
+    console.log(`[handlePayPalProviderPayout] Checking provider ${providerId} for PayPal payout...`);
+
+    // 1. Récupérer le profil du provider
+    const providerDoc = await this.db.collection('sos_profiles').doc(providerId).get();
+    if (!providerDoc.exists) {
+      console.log(`[handlePayPalProviderPayout] Provider ${providerId} not found - skipping`);
+      return;
+    }
+
+    const provider = providerDoc.data();
+
+    // =========================================================================
+    // P0 FIX: Récupérer le montant EXACT du provider IMMÉDIATEMENT
+    // NE JAMAIS utiliser capturedAmountCents (montant total) pour les payouts!
+    // =========================================================================
+    const paymentDoc = await this.db.collection('payments')
+      .where('callSessionId', '==', sessionId)
+      .limit(1)
+      .get();
+
+    let providerAmountCents: number;
+
+    if (!paymentDoc.empty) {
+      const paymentData = paymentDoc.docs[0].data();
+      // Priorité: providerAmountCents > providerAmount (converted) > metadata
+      if (paymentData.providerAmountCents) {
+        providerAmountCents = Number(paymentData.providerAmountCents);
+      } else if (paymentData.providerAmount) {
+        providerAmountCents = Math.round(Number(paymentData.providerAmount) * 100);
+      } else if (paymentData.metadata?.providerAmountCents) {
+        providerAmountCents = Number(paymentData.metadata.providerAmountCents);
+      } else if (paymentData.metadata?.providerAmount) {
+        providerAmountCents = Math.round(Number(paymentData.metadata.providerAmount) * 100);
+      } else {
+        // Fallback basé sur le pricing standard (30€ pour avocat, 10€ pour expat)
+        const providerType = provider?.type || provider?.role || 'expat';
+        providerAmountCents = providerType === 'lawyer' ? 3000 : 1000;
+        console.warn(`[handlePayPalProviderPayout] ⚠️ P0 FIX: No provider amount in payment, using fallback: ${providerAmountCents} cents`);
+      }
+    } else {
+      // Fallback si payment non trouvé - utiliser le montant capturé moins 20% de commission
+      const providerType = provider?.type || provider?.role || 'expat';
+      providerAmountCents = providerType === 'lawyer' ? 3000 : 1000;
+      console.warn(`[handlePayPalProviderPayout] ⚠️ P0 FIX: Payment not found for session ${sessionId}, using fallback: ${providerAmountCents} cents`);
+    }
+
+    console.log(`[handlePayPalProviderPayout] P0 FIX: Using correct provider amount: ${providerAmountCents} cents (NOT total: ${capturedAmountCents} cents)`);
+
+    // 2. Vérifier si le provider utilise PayPal
+    if (provider?.paymentGateway !== 'paypal') {
+      console.log(`[handlePayPalProviderPayout] Provider ${providerId} uses ${provider?.paymentGateway || 'stripe'} - skipping PayPal payout`);
+      return;
+    }
+
+    // 3. GESTION PROFILS AAA
+    const isAAA = provider?.isAAA === true || provider?.isTestProfile === true || provider?.isSOS === true;
+    if (isAAA) {
+      const aaaPayoutMode = provider?.aaaPayoutMode || 'internal';
+
+      if (aaaPayoutMode === 'internal') {
+        // Mode internal: l'argent reste sur la plateforme SOS-Expat
+        console.log(`[handlePayPalProviderPayout] 💼 AAA Profile INTERNAL mode - skipping payout, money stays on platform`);
+
+        // Logger pour audit - P0 FIX: utiliser providerAmountCents, pas capturedAmountCents
+        await this.db.collection('aaa_internal_payouts').add({
+          providerId,
+          sessionId,
+          amountCents: providerAmountCents, // P0 FIX: montant provider, pas total
+          currency,
+          mode: 'internal',
+          reason: 'AAA profile with internal payout mode - money retained on platform',
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        prodLogger.info('AAA_INTERNAL_PAYOUT', `AAA internal payout logged for ${providerId}`, {
+          providerId,
+          sessionId,
+          amountCents: providerAmountCents, // P0 FIX: montant provider, pas total
+          currency,
+        });
+
+        return;
+      }
+
+      // Mode external: récupérer la config du compte consolidé AAA
+      console.log(`[handlePayPalProviderPayout] 💼 AAA Profile EXTERNAL mode - checking consolidated account`);
+      const aaaConfigDoc = await this.db.collection('admin_config').doc('aaa_payout').get();
+      const aaaConfig = aaaConfigDoc.data();
+
+      if (aaaConfig && aaaConfig.externalAccounts && aaaConfig.externalAccounts.length > 0) {
+        // Trouver le premier compte PayPal externe
+        const paypalAccount = aaaConfig.externalAccounts.find(
+          (acc: { type: string }) => acc.type === 'paypal'
+        );
+
+        if (paypalAccount?.email) {
+          console.log(`[handlePayPalProviderPayout] 💼 Using AAA consolidated PayPal account: ${paypalAccount.name}`);
+          // Utiliser l'email du compte consolidé AAA
+          provider.paypalEmail = paypalAccount.email;
+        }
+      }
+    }
+
+    // 4. Vérifier que le provider a un email PayPal
+    const paypalEmail = provider?.paypalEmail || provider?.email;
+    if (!paypalEmail) {
+      console.error(`[handlePayPalProviderPayout] Provider ${providerId} has no PayPal email - creating pending payout`);
+
+      // Créer une entrée dans pending_paypal_payouts pour traitement ultérieur
+      // P0 FIX: utiliser providerAmountCents, pas capturedAmountCents (montant total)
+      await this.db.collection('pending_paypal_payouts').add({
+        providerId,
+        sessionId,
+        amountCents: providerAmountCents, // P0 FIX: montant provider, pas total
+        currency,
+        status: 'pending_email',
+        reason: 'Provider has no PayPal email configured',
+        isAAA,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      return;
+    }
+
+    // 5. Convertir en unité principale pour PayPal (providerAmountCents déjà calculé au début)
+    const providerAmount = providerAmountCents / 100;
+
+    console.log(`[handlePayPalProviderPayout] Creating PayPal payout for provider ${providerId}:`, {
+      paypalEmail,
+      providerAmount,
+      currency,
+      sessionId,
+      isAAA,
+    });
+
+    // 6. Créer le payout PayPal
+    const paypalManager = new PayPalManager();
+    const payoutResult = await paypalManager.createPayout({
+      providerId,
+      providerPayPalEmail: paypalEmail,
+      amount: providerAmount,
+      currency,
+      sessionId,
+      note: isAAA
+        ? `Paiement AAA consolidé SOS-Expat - Session ${sessionId}`
+        : `Paiement pour consultation SOS-Expat - Session ${sessionId}`,
+    });
+
+    if (payoutResult.success) {
+      console.log(`[handlePayPalProviderPayout] ✅ PayPal payout created successfully:`, {
+        payoutBatchId: payoutResult.payoutBatchId,
+        status: payoutResult.status,
+      });
+
+      // Logger le succès
+      prodLogger.info('PAYPAL_PAYOUT_SUCCESS', `PayPal payout created for provider ${providerId}`, {
+        providerId,
+        sessionId,
+        amount: providerAmount,
+        currency,
+        payoutBatchId: payoutResult.payoutBatchId,
+        isAAA,
+      });
+
+      // Si AAA external, logger aussi dans aaa_external_payouts
+      if (isAAA) {
+        await this.db.collection('aaa_external_payouts').add({
+          providerId,
+          sessionId,
+          amount: providerAmount,
+          currency,
+          payoutBatchId: payoutResult.payoutBatchId,
+          paypalEmail,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      }
+    } else {
+      console.error(`[handlePayPalProviderPayout] ❌ PayPal payout failed:`, payoutResult.error);
+
+      // Créer une entrée pour retry via Cloud Tasks
+      await this.db.collection('pending_paypal_payouts').add({
+        providerId,
+        sessionId,
+        amountCents: providerAmountCents,
+        currency,
+        paypalEmail,
+        status: 'failed',
+        error: payoutResult.error,
+        retryCount: 0,
+        isAAA,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      throw new Error(`PayPal payout failed: ${payoutResult.error}`);
     }
   }
 

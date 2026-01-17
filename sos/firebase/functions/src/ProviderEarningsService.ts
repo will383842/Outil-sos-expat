@@ -159,7 +159,7 @@ export class ProviderEarningsService {
 
       paypalPayoutsSnapshot.docs.forEach((doc) => {
         const payout = doc.data();
-        totalPayouts += payout.amountValue || 0;
+        totalPayouts += payout.amount || 0;
       });
 
       // Récupérer les montants réservés (disputes en cours)

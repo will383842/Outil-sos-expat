@@ -605,11 +605,11 @@ const AdminCallsMonitoring: React.FC = () => {
 
         previousCallsCountRef.current = sessions.length;
         setLiveCalls(sessions);
-      } catch (error: any) {
+      } catch (error) {
         console.error('Erreur lors du chargement des appels:', error);
         logError({
           origin: 'frontend',
-          error: `Erreur monitoring appels: ${error.message}`,
+          error: `Erreur monitoring appels: ${(error as Error).message}`,
           context: { component: 'AdminCallsMonitoring' },
         });
       }

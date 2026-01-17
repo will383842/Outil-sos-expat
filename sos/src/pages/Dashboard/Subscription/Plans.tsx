@@ -93,9 +93,9 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
         // No payment confirmation needed (e.g., free trial with payment method)
         onSuccess();
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Payment error:', err);
-      setError(err.message || intl.formatMessage({ id: 'subscription.errors.paymentFailed' }));
+      setError((err as Error).message || intl.formatMessage({ id: 'subscription.errors.paymentFailed' }));
     } finally {
       setIsProcessing(false);
     }

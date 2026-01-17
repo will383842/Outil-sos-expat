@@ -2,6 +2,7 @@ import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { getStripe } from "./index";
+import { STRIPE_SUPPORTED_COUNTRIES, PAYPAL_ONLY_COUNTRIES } from "./lib/paymentCountries";
 
 // ✅ P0 FIX: Declare secrets for Firebase v2 functions
 const STRIPE_SECRET_KEY_TEST = defineSecret("STRIPE_SECRET_KEY_TEST");
@@ -13,6 +14,20 @@ interface CreateAccountData {
   firstName?: string;
   lastName?: string;
   userType: "lawyer" | "expat";
+}
+
+/**
+ * Vérifie si un pays supporte Stripe Connect
+ */
+function isStripeSupported(countryCode: string): boolean {
+  return STRIPE_SUPPORTED_COUNTRIES.has(countryCode.toUpperCase());
+}
+
+/**
+ * Vérifie si un pays est PayPal-only
+ */
+function isPayPalOnly(countryCode: string): boolean {
+  return PAYPAL_ONLY_COUNTRIES.has(countryCode.toUpperCase());
 }
 
 export const createStripeAccount = onCall<CreateAccountData>(
@@ -39,8 +54,18 @@ export const createStripeAccount = onCall<CreateAccountData>(
       throw new HttpsError("invalid-argument", "userType must be 'lawyer' or 'expat'");
     }
 
+    // ✅ P0 FIX: Block Stripe account creation for PayPal-only countries
+    const countryCode = (currentCountry || "FR").toUpperCase();
+    if (isPayPalOnly(countryCode) && !isStripeSupported(countryCode)) {
+      console.warn(`⚠️ [createStripeAccount] Blocked: ${countryCode} is PayPal-only for user ${userId}`);
+      throw new HttpsError(
+        "failed-precondition",
+        `Stripe is not available in ${countryCode}. Please use PayPal instead.`
+      );
+    }
+
     try {
-      console.log(`🚀 Creating Stripe account for ${userType}:`, userId);
+      console.log(`🚀 Creating Stripe account for ${userType}:`, userId, `(country: ${countryCode})`);
 
       // Create Stripe Express Account
       const account = await stripe.accounts.create({
@@ -61,6 +86,8 @@ export const createStripeAccount = onCall<CreateAccountData>(
         stripeOnboardingComplete: false,
         chargesEnabled: false,
         payoutsEnabled: false,
+        // ✅ P0 FIX: Set paymentGateway to stripe
+        paymentGateway: "stripe" as const,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       };
 

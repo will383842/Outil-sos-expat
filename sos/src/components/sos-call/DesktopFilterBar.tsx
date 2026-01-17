@@ -338,7 +338,7 @@ const DesktopFilterBar: React.FC<DesktopFilterBarProps> = ({
                 >
                   <img
                     src={`https://flagcdn.com/w20/${country.code.toLowerCase()}.png`}
-                    alt=""
+                    alt={`${country.label} flag`}
                     className="w-5 h-3.5 object-cover rounded-sm"
                   />
                   <span className="flex-1 text-left truncate">{country.label}</span>

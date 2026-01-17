@@ -444,9 +444,9 @@ export const IaPricingTab: React.FC = () => {
 
       setLawyerPlans(lawyers);
       setExpatPlans(expats);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error loading data:', err);
-      setError(err.message || iaT.errorLoading);
+      setError((err as Error).message || iaT.errorLoading);
     } finally {
       setLoading(false);
     }
@@ -470,9 +470,9 @@ export const IaPricingTab: React.FC = () => {
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
       await loadData();
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error saving plan:', err);
-      setError(err.message || iaT.errorSaving);
+      setError((err as Error).message || iaT.errorSaving);
     } finally {
       setSaving(false);
     }
@@ -488,9 +488,9 @@ export const IaPricingTab: React.FC = () => {
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
       await loadData();
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error initializing plans:', err);
-      setError(err.message || iaT.errorModification);
+      setError((err as Error).message || iaT.errorModification);
     } finally {
       setSaving(false);
     }
@@ -506,9 +506,9 @@ export const IaPricingTab: React.FC = () => {
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
       await loadData();
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error creating monthly prices:', err);
-      setError(err.message || iaT.errorSaving);
+      setError((err as Error).message || iaT.errorSaving);
     } finally {
       setSaving(false);
     }
@@ -524,9 +524,9 @@ export const IaPricingTab: React.FC = () => {
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
       await loadData();
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error creating annual prices:', err);
-      setError(err.message || iaT.errorSaving);
+      setError((err as Error).message || iaT.errorSaving);
     } finally {
       setSaving(false);
     }
@@ -542,9 +542,9 @@ export const IaPricingTab: React.FC = () => {
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
       await loadData();
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error migrating to 9 languages:', err);
-      setError(err.message || iaT.errorModification);
+      setError((err as Error).message || iaT.errorModification);
     } finally {
       setSaving(false);
     }

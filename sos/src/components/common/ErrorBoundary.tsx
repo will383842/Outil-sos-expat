@@ -2,6 +2,7 @@ import { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { injectIntl, WrappedComponentProps } from 'react-intl';
 import { logError } from '../../utils/logging';
+import { captureError } from '../../config/sentry';
 
 interface OwnProps {
   children: ReactNode;
@@ -87,6 +88,13 @@ class ErrorBoundary extends Component<Props, State> {
 
   private logErrorSafely = async (error: Error, errorInfo: ErrorInfo) => {
     try {
+      // Envoyer à Sentry
+      captureError(error, {
+        componentStack: errorInfo.componentStack,
+        eventId: this.state.eventId,
+        url: window.location.href,
+      });
+
       const sanitizedError = {
         origin: 'frontend' as const,
         error: error.message,
@@ -98,8 +106,8 @@ class ErrorBoundary extends Component<Props, State> {
         context: {
           componentStack: errorInfo.componentStack,
           // Only include stack in development
-          ...(process.env.NODE_ENV === 'development' && { 
-            stack: error.stack 
+          ...(process.env.NODE_ENV === 'development' && {
+            stack: error.stack
           })
         }
       };

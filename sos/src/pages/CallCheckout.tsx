@@ -1027,7 +1027,7 @@ const ConfirmModal: React.FC<{
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/30" onClick={onCancel} />
+      <div className="absolute inset-0 bg-black/30" onClick={onCancel} role="presentation" aria-hidden="true" />
       <div className="relative z-10 w-full max-w-sm rounded-xl bg-white p-4 shadow-xl border">
         <div className="flex items-start gap-2">
           <div className="p-2 rounded-md bg-blue-100 text-blue-700">
@@ -1037,8 +1037,8 @@ const ConfirmModal: React.FC<{
             <h3 className="font-semibold text-gray-900 mb-1">{title}</h3>
             <p className="text-sm text-gray-700">{message}</p>
           </div>
-          <button onClick={onCancel} className="p-1 rounded hover:bg-gray-100">
-            <X className="w-4 h-4" />
+          <button onClick={onCancel} className="p-1 rounded hover:bg-gray-100" aria-label="Close dialog">
+            <X className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
         <div className="mt-4 grid grid-cols-2 gap-2">
@@ -3199,74 +3199,33 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
                 </div>
               )}
 
-              {/* Indicateur du gateway de paiement */}
+              {/*
+                P0 FIX: Le client paie TOUJOURS via Stripe (CB/Apple Pay/Google Pay)
+                Le provider reçoit via Stripe OU PayPal selon son pays (géré en backend)
+                Cela offre une UX uniforme et évite la friction PayPal pour le client
+              */}
               <div className="mb-4">
-                <GatewayIndicator gateway={paymentGateway} />
-                {isPayPalOnly && (
-                  <p className="text-xs text-amber-600 mt-2">
-                    <FormattedMessage
-                      id="payment.paypalOnly.notice"
-                      defaultMessage="Ce prestataire accepte uniquement les paiements PayPal"
-                    />
-                  </p>
-                )}
+                <GatewayIndicator gateway="stripe" />
               </div>
 
-              {/* Formulaire de paiement - Stripe ou PayPal selon le gateway */}
-              {gatewayLoading ? (
-                <div className="flex items-center justify-center p-6">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                </div>
-              ) : paymentGateway === "paypal" ? (
-                <PayPalScriptProvider
-                  options={{
-                    clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID as string || "test",
-                    currency: selectedCurrency.toUpperCase(),
-                    intent: "capture",
+              {/* Formulaire de paiement - TOUJOURS Stripe pour le client */}
+              <Elements stripe={stripePromise}>
+                <PaymentForm
+                  user={user}
+                  provider={provider}
+                  service={service}
+                  adminPricing={adminPricing}
+                  onSuccess={handlePaymentSuccess}
+                  onError={handlePaymentError}
+                  isProcessing={isProcessing}
+                  setIsProcessing={(p) => {
+                    setError("");
+                    setIsProcessing(p);
                   }}
-                >
-                  <PayPalPaymentForm
-                    amount={adminPricing?.totalAmount || 0}
-                    currency={selectedCurrency.toUpperCase()}
-                    providerId={provider?.id || ""}
-                    providerPayPalMerchantId={provider?.paypalMerchantId}
-                    callSessionId={paypalCallSessionId}
-                    clientId={user?.uid || ""}
-                    serviceType={providerRole === "lawyer" ? "lawyer" : "expat"}
-                    description={`Appel ${providerRole === "lawyer" ? "avocat" : "expat"} - ${provider?.name || "Expert"}`}
-                    onSuccess={(details) => {
-                      // P0 FIX: Utiliser le handler dédié qui crée l'orderId interne
-                      handlePayPalPaymentSuccess(details);
-                    }}
-                    onError={(error) => {
-                      console.error("PayPal payment error:", error);
-                      handlePaymentError(error.message);
-                    }}
-                    onCancel={() => {
-                      setError("Paiement annulé");
-                    }}
-                    disabled={isProcessing}
-                  />
-                </PayPalScriptProvider>
-              ) : (
-                <Elements stripe={stripePromise}>
-                  <PaymentForm
-                    user={user}
-                    provider={provider}
-                    service={service}
-                    adminPricing={adminPricing}
-                    onSuccess={handlePaymentSuccess}
-                    onError={handlePaymentError}
-                    isProcessing={isProcessing}
-                    setIsProcessing={(p) => {
-                      setError("");
-                      setIsProcessing(p);
-                    }}
-                    isMobile={isMobile}
-                    activePromo={activePromo}
-                  />
-                </Elements>
-              )}
+                  isMobile={isMobile}
+                  activePromo={activePromo}
+                />
+              </Elements>
             </div>
           </section>
 

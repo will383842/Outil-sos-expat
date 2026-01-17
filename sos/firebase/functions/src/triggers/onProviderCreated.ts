@@ -33,6 +33,7 @@ import Stripe from "stripe";
 import { defineSecret, defineString } from "firebase-functions/params";
 import { getStorage } from "firebase-admin/storage";
 import { META_CAPI_TOKEN, trackCAPILead, UserData } from "../metaConversionsApi";
+import { getRecommendedPaymentGateway } from "../lib/paymentCountries";
 
 // Secrets Stripe
 const STRIPE_SECRET_KEY_TEST = defineSecret("STRIPE_SECRET_KEY_TEST");
@@ -409,48 +410,8 @@ const COUNTRY_CODE_MAP: Record<string, string> = {
   "mexico": "MX",
 };
 
-// Pays supportés par Stripe Connect Express (46 pays)
-// Ces pays peuvent avoir un compte Stripe Express créé automatiquement
-const STRIPE_SUPPORTED_COUNTRIES = new Set([
-  "AU", "AT", "BE", "BG", "BR", "CA", "HR", "CY", "CZ", "DK",
-  "EE", "FI", "FR", "DE", "GI", "GR", "HK", "HU", "IE", "IT",
-  "JP", "LV", "LI", "LT", "LU", "MY", "MT", "MX", "NL", "NZ",
-  "NO", "PL", "PT", "RO", "SG", "SK", "SI", "ES", "SE", "CH",
-  "TH", "AE", "GB", "US",
-]);
-
-// Pays où SEUL PayPal est disponible (Stripe non supporté)
-// Ces pays nécessitent une connexion PayPal AVANT d'être visibles
-// Liste synchronisée avec PayPalManager.ts
-const PAYPAL_ONLY_COUNTRIES = new Set([
-  // ===== AFRIQUE (54 pays) =====
-  "DZ", "AO", "BJ", "BW", "BF", "BI", "CM", "CV", "CF", "TD", "KM", "CG", "CD",
-  "CI", "DJ", "EG", "GQ", "ER", "SZ", "ET", "GA", "GM", "GH", "GN", "GW", "KE",
-  "LS", "LR", "LY", "MG", "MW", "ML", "MR", "MU", "MA", "MZ", "NA", "NE", "NG",
-  "RW", "ST", "SN", "SC", "SL", "SO", "ZA", "SS", "SD", "TZ", "TG", "TN", "UG",
-  "ZM", "ZW",
-
-  // ===== ASIE (35 pays - non couverts par Stripe) =====
-  "AF", "BD", "BT", "IN", "KH", "LA", "MM", "NP", "PK", "LK", "TJ", "TM", "UZ", "VN",
-  "MN", "KP", "KG", "PS", "YE", "OM", "QA", "KW", "BH", "JO", "LB", "AM", "AZ", "GE",
-  "MV", "BN", "TL", "PH", "ID", "TW", "KR",
-
-  // ===== AMERIQUE LATINE & CARAIBES (25 pays) =====
-  "BO", "CU", "EC", "SV", "GT", "HN", "NI", "PY", "SR", "VE",
-  "HT", "DO", "JM", "TT", "BB", "BS", "BZ", "GY", "PA", "CR",
-  "AG", "DM", "GD", "KN", "LC", "VC",
-
-  // ===== EUROPE DE L'EST & BALKANS (15 pays non Stripe) =====
-  "BY", "MD", "UA", "RS", "BA", "MK", "ME", "AL", "XK", "RU",
-  "GI", "AD", "MC", "SM", "VA",
-
-  // ===== OCEANIE & PACIFIQUE (15 pays) =====
-  "FJ", "PG", "SB", "VU", "WS", "TO", "KI", "FM", "MH", "PW",
-  "NR", "TV", "NC", "PF", "GU",
-
-  // ===== MOYEN-ORIENT (7 pays restants) =====
-  "IQ", "IR", "SY", "SA", "LY", "TM", "AF",
-]);
+// ✅ P0 FIX: Les listes de pays sont maintenant centralisées dans lib/paymentCountries.ts
+// Cela évite la duplication et assure la cohérence entre tous les fichiers
 
 /**
  * Migre l'image de profil de registration_temp vers profilePhotos/{userId}
@@ -569,32 +530,8 @@ async function migrateProfileImage(
   }
 }
 
-/**
- * Type de gateway de paiement recommandé
- */
-type PaymentGateway = "stripe" | "paypal";
-
-/**
- * Détermine le gateway de paiement approprié pour un pays
- */
-function getPaymentGateway(countryCode: string): PaymentGateway {
-  const normalized = countryCode.toUpperCase();
-
-  // Si le pays supporte Stripe Connect, utiliser Stripe
-  if (STRIPE_SUPPORTED_COUNTRIES.has(normalized)) {
-    return "stripe";
-  }
-
-  // Log si c'est un pays PayPal-only connu vs inconnu
-  if (PAYPAL_ONLY_COUNTRIES.has(normalized)) {
-    console.log(`[getPaymentGateway] ${normalized} est un pays PayPal-only connu`);
-  } else {
-    console.log(`[getPaymentGateway] ${normalized} n'est pas dans la liste Stripe, utilisation de PayPal par défaut`);
-  }
-
-  // Sinon, utiliser PayPal
-  return "paypal";
-}
+// ✅ P0 FIX: La fonction getPaymentGateway est maintenant importée de lib/paymentCountries.ts
+// Voir getRecommendedPaymentGateway() importé en haut du fichier
 
 /**
  * Normalise le code pays pour Stripe
@@ -829,7 +766,8 @@ export const onProviderCreated = onDocumentCreated(
     console.log(`[onProviderCreated] Pays normalisé: ${countryCode}`);
 
     // Déterminer le gateway de paiement approprié
-    const paymentGateway = getPaymentGateway(countryCode);
+    // ✅ P0 FIX: Utiliser la fonction centralisée
+    const paymentGateway = getRecommendedPaymentGateway(countryCode);
     console.log(`[onProviderCreated] Gateway de paiement: ${paymentGateway} pour ${providerType}: ${uid}`);
 
     // Déterminer la collection spécifique

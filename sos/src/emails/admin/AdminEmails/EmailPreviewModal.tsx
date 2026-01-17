@@ -1,6 +1,7 @@
 // EmailPreviewModal.tsx
 import React, { useState } from 'react';
 import { Dialog } from '@headlessui/react';
+import DOMPurify from 'dompurify';
 
 const EmailPreviewModal: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,7 +16,7 @@ const EmailPreviewModal: React.FC = () => {
             <Dialog.Title className="text-xl font-bold mb-4">Aperçu Email</Dialog.Title>
             <div
               className="prose max-w-none"
-              dangerouslySetInnerHTML={{ __html: previewHTML }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(previewHTML) }}
             />
             <div className="mt-4 text-right">
               <button className="btn btn-secondary" onClick={() => setIsOpen(false)}>Fermer</button>

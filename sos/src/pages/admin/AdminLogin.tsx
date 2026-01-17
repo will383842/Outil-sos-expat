@@ -65,12 +65,13 @@ const AdminLogin: React.FC = () => {
         // Force token refresh to get new custom claims
         await user.getIdToken(true);
         console.log('[AdminLogin] Token refreshed');
-      } catch (bootstrapError: any) {
+      } catch (bootstrapError) {
+        const bsErr = bootstrapError as Error & { code?: string };
         console.error('[AdminLogin] bootstrapFirstAdmin error:', bootstrapError);
 
         // Si permission-denied, l'email n'est pas whitelisté
-        if (bootstrapError?.code === 'functions/permission-denied' ||
-            bootstrapError?.message?.includes('permission-denied')) {
+        if (bsErr?.code === 'functions/permission-denied' ||
+            bsErr?.message?.includes('permission-denied')) {
           setError(intl.formatMessage({ id: 'admin.login.error.unauthorized' }));
           setIsLoading(false);
           try {
@@ -128,9 +129,9 @@ const AdminLogin: React.FC = () => {
         }
       }, 5000);
 
-    } catch (error: any) {
+    } catch (error) {
       console.error('Login error:', error);
-      setError(getErrorMessage(error.code));
+      setError(getErrorMessage((error as { code?: string }).code || ''));
       setIsLoading(false);
     }
     // Note: isLoading reste true pendant pendingNavigation pour montrer le spinner

@@ -459,8 +459,9 @@ export const WorldMapSubscriptions: React.FC<WorldMapSubscriptionsProps> = ({
               <button
                 onClick={() => setSelectedCountry(null)}
                 className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Close country details"
               >
-                <X className="w-5 h-5 text-gray-500" />
+                <X className="w-5 h-5 text-gray-500" aria-hidden="true" />
               </button>
             </div>
 

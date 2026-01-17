@@ -1630,9 +1630,9 @@ const AdminAaaProfiles: React.FC = () => {
       setAaaPayoutConfig(config);
       setSuccess('Configuration payout AAA sauvegardée');
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
+    } catch (err) {
       console.error('[AAA Payout] Error saving config:', err);
-      setError(`Erreur sauvegarde config: ${err.message}`);
+      setError(`Erreur sauvegarde config: ${(err as Error).message}`);
     } finally {
       setSavingPayoutConfig(false);
     }
@@ -1715,9 +1715,9 @@ const AdminAaaProfiles: React.FC = () => {
       ));
       setSuccess(`Mode payout mis à jour: ${mode === 'internal' ? 'Interne (SOS-Expat)' : aaaPayoutConfig.externalAccounts.find(a => a.id === mode)?.name || mode}`);
       setTimeout(() => setSuccess(null), 2000);
-    } catch (err: any) {
+    } catch (err) {
       console.error('[AAA Payout] Error updating profile mode:', err);
-      setError(`Erreur mise à jour: ${err.message}`);
+      setError(`Erreur mise à jour: ${(err as Error).message}`);
     }
   };
 
@@ -1966,9 +1966,9 @@ const AdminAaaProfiles: React.FC = () => {
 
       setSuccess(`${count} profils générés avec succès`);
       if (activeTab === 'manage') loadExistingProfiles();
-    } catch (e: any) {
+    } catch (e) {
       console.error(e);
-      setError(`Erreur: ${e.message || 'unknown'}`);
+      setError(`Erreur: ${(e as Error).message || 'unknown'}`);
     } finally {
       setIsGenerating(false);
     }
@@ -2419,8 +2419,8 @@ const AdminAaaProfiles: React.FC = () => {
       const sosProfileRef = doc(db, 'sos_profiles', selectedProfile.id);
       try {
         await updateDoc(sosProfileRef, cleanData);
-      } catch (sosError: any) {
-        if (sosError.code === 'not-found') {
+      } catch (sosError) {
+        if ((sosError as { code?: string }).code === 'not-found') {
           await setDoc(sosProfileRef, {
             ...cleanData,
             uid: selectedProfile.id,
@@ -2447,8 +2447,8 @@ const AdminAaaProfiles: React.FC = () => {
       
       try {
         await updateDoc(doc(db, 'ui_profile_cards', selectedProfile.id), cardUpdate);
-      } catch (cardError: any) {
-        if (cardError.code === 'not-found') {
+      } catch (cardError) {
+        if ((cardError as { code?: string }).code === 'not-found') {
           await setDoc(doc(db, 'ui_profile_cards', selectedProfile.id), {
             id: selectedProfile.id,
             uid: selectedProfile.id,
@@ -2470,8 +2470,8 @@ const AdminAaaProfiles: React.FC = () => {
       
       try {
         await updateDoc(doc(db, 'ui_profile_carousel', selectedProfile.id), cardUpdate);
-      } catch (carouselError: any) {
-        if (carouselError.code === 'not-found') {
+      } catch (carouselError) {
+        if ((carouselError as { code?: string }).code === 'not-found') {
           await setDoc(doc(db, 'ui_profile_carousel', selectedProfile.id), {
             id: selectedProfile.id,
             uid: selectedProfile.id,
@@ -2495,9 +2495,9 @@ const AdminAaaProfiles: React.FC = () => {
       setSelectedProfile(null);
       await loadExistingProfiles();
       alert('✅ Profil mis à jour avec succès');
-    } catch (e: any) {
+    } catch (e) {
       console.error('❌ Erreur mise à jour:', e);
-      alert(`❌ Erreur: ${e.message || e}`);
+      alert(`❌ Erreur: ${(e as Error).message || e}`);
     } finally {
       setIsLoading(false);
     }
@@ -2539,8 +2539,8 @@ const AdminAaaProfiles: React.FC = () => {
           isVisibleOnMap: newVisibility, 
           updatedAt: serverTimestamp(),
         });
-      } catch (sosErr: any) {
-        if (sosErr.code !== 'not-found') {
+      } catch (sosErr) {
+        if ((sosErr as { code?: string }).code !== 'not-found') {
           console.warn('Erreur sos_profiles:', sosErr);
         }
       }
@@ -2576,8 +2576,8 @@ const AdminAaaProfiles: React.FC = () => {
           availability: newOnline ? 'available' : 'offline', 
           updatedAt: serverTimestamp(),
         });
-      } catch (sosErr: any) {
-        if (sosErr.code !== 'not-found') {
+      } catch (sosErr) {
+        if ((sosErr as { code?: string }).code !== 'not-found') {
           console.warn('Erreur sos_profiles:', sosErr);
         }
       }

@@ -194,7 +194,7 @@ export const IaMultiProvidersTab: React.FC = () => {
       setAccounts(accountsList);
       setAllProviders(providersList);
       setAllUsers(usersList);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error loading data:', err);
       setError('Erreur lors du chargement des données');
     } finally {
@@ -229,7 +229,7 @@ export const IaMultiProvidersTab: React.FC = () => {
 
       setSuccess('Prestataire actif mis à jour');
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
+    } catch (err) {
       setError('Erreur lors de la mise à jour');
     } finally {
       setSaving(null);
@@ -270,7 +270,7 @@ export const IaMultiProvidersTab: React.FC = () => {
 
       setSuccess('Prestataire délié');
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
+    } catch (err) {
       setError('Erreur lors de la suppression du lien');
     } finally {
       setSaving(null);
@@ -302,7 +302,7 @@ export const IaMultiProvidersTab: React.FC = () => {
       setTimeout(() => setSuccess(null), 3000);
       closeModal();
       loadData();
-    } catch (err: any) {
+    } catch (err) {
       setError('Erreur lors de la liaison');
     } finally {
       setSaving(null);

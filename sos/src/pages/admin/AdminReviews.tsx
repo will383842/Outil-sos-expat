@@ -2012,12 +2012,12 @@ rows[m][bucketKey] += 1;
         {/* ========= Advanced Filters Drawer ========= */}
         {isAdvancedOpen && (
           <div className="fixed inset-0 z-40">
-            <div className="absolute inset-0 bg-black/30" onClick={() => setIsAdvancedOpen(false)} />
+            <div className="absolute inset-0 bg-black/30" onClick={() => setIsAdvancedOpen(false)} role="presentation" aria-hidden="true" />
             <div className="absolute right-0 top-0 h-full w-full sm:w-[420px] bg-white shadow-xl p-6 overflow-y-auto">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">{t('drawerTitle')}</h3>
-                <button onClick={() => setIsAdvancedOpen(false)} className="p-2 text-gray-500 hover:text-gray-700">
-                  <X size={18} />
+                <button onClick={() => setIsAdvancedOpen(false)} className="p-2 text-gray-500 hover:text-gray-700" aria-label="Close filters">
+                  <X size={18} aria-hidden="true" />
                 </button>
               </div>
 
@@ -2128,12 +2128,12 @@ rows[m][bucketKey] += 1;
         {/* ========= Layout Manager Drawer (show/hide cards) ========= */}
         {showLayoutDrawer && (
           <div className="fixed inset-0 z-40">
-            <div className="absolute inset-0 bg-black/30" onClick={() => setShowLayoutDrawer(false)} />
+            <div className="absolute inset-0 bg-black/30" onClick={() => setShowLayoutDrawer(false)} role="presentation" aria-hidden="true" />
             <div className="absolute right-0 top-0 h-full w-full sm:w-[380px] bg-white shadow-xl p-6 overflow-y-auto">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-lg font-semibold text-gray-900">{t('layout')}</h3>
-                <button onClick={() => setShowLayoutDrawer(false)} className="p-2 text-gray-500 hover:text-gray-700">
-                  <X size={18} />
+                <button onClick={() => setShowLayoutDrawer(false)} className="p-2 text-gray-500 hover:text-gray-700" aria-label="Close layout settings">
+                  <X size={18} aria-hidden="true" />
                 </button>
               </div>
               <p className="text-xs text-gray-500 mb-4">{t('layoutTip')}</p>

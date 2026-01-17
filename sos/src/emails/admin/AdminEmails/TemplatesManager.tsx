@@ -1,5 +1,6 @@
 // TemplatesManager.tsx
 import React from 'react';
+import DOMPurify from 'dompurify';
 // import {
 //   bookingConfirmation,
 //   contactReply,
@@ -14,7 +15,8 @@ import { newsletter } from '@/emails/templates/newsletter';
 import { promoCode } from '@/emails/templates/promoCode';
 import { reminderOnline } from '@/emails/templates/reminderOnline';
 
-const templates = [
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const templates: Array<{ name: string; render: (data: any) => string; exampleData: Record<string, string> }> = [
   {
     name: '📅 Confirmation de RDV',
     render: bookingConfirmation,
@@ -79,7 +81,7 @@ const TemplatesManager: React.FC = () => {
             <h3 className="text-lg font-bold mb-2">{tpl.name}</h3>
             <div
               className="prose max-w-none"
-              dangerouslySetInnerHTML={{ __html: tpl.render(tpl.exampleData as any) }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(tpl.render(tpl.exampleData)) }}
             />
           </div>
         ))}

@@ -291,9 +291,9 @@ export const IaAccessTab: React.FC = () => {
 
       providersList.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
       setProviders(providersList);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error loading providers:', err);
-      setError(err.message || iaT.errorLoading);
+      setError((err as Error).message || iaT.errorLoading);
     } finally {
       setLoading(false);
     }
@@ -336,9 +336,9 @@ export const IaAccessTab: React.FC = () => {
 
       setSuccess(`${newValue ? iaT.accessGranted : iaT.accessRemoved} - ${provider.displayName}`);
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error toggling access:', err);
-      setError(err.message || iaT.errorModification);
+      setError((err as Error).message || iaT.errorModification);
     } finally {
       setSaving(null);
     }
@@ -370,9 +370,9 @@ export const IaAccessTab: React.FC = () => {
 
       setSuccess(`${iaT.trialGranted} - ${days} ${iaT.days} - ${provider.displayName}`);
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error setting trial:', err);
-      setError(err.message || iaT.errorModification);
+      setError((err as Error).message || iaT.errorModification);
     } finally {
       setSaving(null);
     }
@@ -395,9 +395,9 @@ export const IaAccessTab: React.FC = () => {
 
       setSuccess(`${iaT.quotaReset} - ${provider.displayName}`);
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error resetting quota:', err);
-      setError(err.message || iaT.errorReset);
+      setError((err as Error).message || iaT.errorReset);
     } finally {
       setSaving(null);
     }
@@ -428,9 +428,9 @@ export const IaAccessTab: React.FC = () => {
       setSuccess(`Quota reinitialise pour ${selectedIds.size} prestataire(s)`);
       setSelectedIds(new Set());
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error bulk resetting quotas:', err);
-      setError(err.message || 'Erreur lors du reset en masse');
+      setError((err as Error).message || 'Erreur lors du reset en masse');
     } finally {
       setBulkSaving(false);
     }

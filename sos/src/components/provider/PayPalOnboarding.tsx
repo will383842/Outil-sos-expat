@@ -132,9 +132,9 @@ export const PayPalOnboarding: React.FC<PayPalOnboardingProps> = ({
       // Focus sur le premier input
       setTimeout(() => inputRefs.current[0]?.focus(), 100);
 
-    } catch (err: any) {
+    } catch (err) {
       console.error("Erreur envoi code:", err);
-      const errorMessage = err.message || err.code;
+      const errorMessage = (err as Error).message || (err as { code?: string }).code;
 
       if (errorMessage?.includes("resource-exhausted")) {
         setError(intl.formatMessage({
@@ -226,9 +226,9 @@ export const PayPalOnboarding: React.FC<PayPalOnboardingProps> = ({
         window.location.reload();
       }, 2000);
 
-    } catch (err: any) {
+    } catch (err) {
       console.error("Erreur vérification code:", err);
-      const errorMessage = err.message || "";
+      const errorMessage = (err as Error).message || "";
 
       // Extraire le nombre de tentatives restantes du message d'erreur
       const attemptsMatch = errorMessage.match(/(\d+) attempt/);
@@ -291,7 +291,7 @@ export const PayPalOnboarding: React.FC<PayPalOnboardingProps> = ({
 
       inputRefs.current[0]?.focus();
 
-    } catch (err: any) {
+    } catch (err) {
       console.error("Erreur renvoi code:", err);
       setError(intl.formatMessage({
         id: "provider.paypal.error.resendCode",

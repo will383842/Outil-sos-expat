@@ -558,7 +558,8 @@ export const ChoosePlan: React.FC = () => {
       } else {
         throw new Error('Failed to create checkout session - no URL returned');
       }
-    } catch (err: any) {
+    } catch (e) {
+      const err = e as Error & { code?: string; details?: { code?: string; message?: string } };
       console.error('Error creating checkout session:', err);
 
       // Parse Firebase Functions error with proper user-friendly messages
