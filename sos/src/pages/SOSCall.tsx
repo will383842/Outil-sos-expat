@@ -723,6 +723,11 @@ const findCountryByCodeOrName = (value: string): CountryData | undefined => {
 
 // Vérifie si un pays d'intervention du provider correspond au filtre sélectionné
 // Utilise interventionCountries en priorité, sinon fallback sur country (pays d'origine)
+// Fonction utilitaire pour normaliser les accents (ex: "Sénégal" -> "senegal")
+const normalizeAccents = (str: string): string => {
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+};
+
 const matchCountry = (
   interventionCountries: string[] | undefined,
   originCountry: string | undefined,
@@ -743,10 +748,10 @@ const matchCountry = (
   // Cas "Autre" avec recherche personnalisée
   if (selectedCountryCode === "Autre") {
     if (!customCountry) return true;
-    const needle = customCountry.toLowerCase().trim();
+    const needle = normalizeAccents(customCountry);
     return countriesToCheck.some(country => {
-      const countryLower = country.toLowerCase().trim();
-      return countryLower.includes(needle) || needle.includes(countryLower);
+      const countryNormalized = normalizeAccents(country);
+      return countryNormalized.includes(needle) || needle.includes(countryNormalized);
     });
   }
 
@@ -754,22 +759,38 @@ const matchCountry = (
   // 'ch' est le code interne pour le chinois (converti en 'zh' pour les APIs)
   const allLanguages = ['fr', 'en', 'es', 'de', 'pt', 'ru', 'ch', 'ar', 'hi'];
   const allPossibleNames: string[] = [selectedCodeLower];
+  const allPossibleNamesNormalized: string[] = [normalizeAccents(selectedCodeLower)];
 
   for (const lang of allLanguages) {
     const name = getCountryName(selectedCountryCode, lang);
-    if (name && name.toLowerCase().trim() !== selectedCodeLower) {
-      allPossibleNames.push(name.toLowerCase().trim());
+    if (name) {
+      const nameLower = name.toLowerCase().trim();
+      const nameNormalized = normalizeAccents(name);
+      if (nameLower !== selectedCodeLower) {
+        allPossibleNames.push(nameLower);
+      }
+      if (!allPossibleNamesNormalized.includes(nameNormalized)) {
+        allPossibleNamesNormalized.push(nameNormalized);
+      }
     }
   }
 
   // Vérifier si AU MOINS UN pays d'intervention correspond au filtre
-  return countriesToCheck.some(country => {
+  const result = countriesToCheck.some(country => {
     const countryLower = country.toLowerCase().trim();
+    const countryNormalized = normalizeAccents(country);
+
     // Comparaison directe (si le provider stocke le code ISO)
     if (countryLower === selectedCodeLower) return true;
-    // Vérifier si le pays correspond à l'un des noms possibles
-    return allPossibleNames.includes(countryLower);
+    // Vérifier si le pays correspond à l'un des noms possibles (exact)
+    if (allPossibleNames.includes(countryLower)) return true;
+    // Vérifier avec normalisation des accents (ex: "Sénégal" == "Senegal")
+    if (allPossibleNamesNormalized.includes(countryNormalized)) return true;
+
+    return false;
   });
+
+  return result;
 };
 
 // Vérifie si les langues du provider correspondent au filtre (supporte multi-sélection)
@@ -2601,10 +2622,29 @@ const SOSCall: React.FC = () => {
       return;
     }
 
+    // DEBUG: Log filter parameters
+    console.log('%c🔍 [SOSCall] FILTER DEBUG', 'background: #4CAF50; color: white; padding: 4px 8px; border-radius: 4px;', {
+      selectedType,
+      selectedCountryCode,
+      selectedLanguageCodes,
+      totalProviders: realProviders.length,
+      lawyersCount: realProviders.filter(p => p.type === 'lawyer').length,
+      expatsCount: realProviders.filter(p => p.type === 'expat').length
+    });
+
+    // DEBUG: Log all lawyers with their intervention countries (pour diagnostiquer le problème Sénégal)
+    if (selectedType === 'lawyer' && selectedCountryCode !== 'all') {
+      const lawyers = realProviders.filter(p => p.type === 'lawyer');
+      console.log('%c👨‍⚖️ [SOSCall] ALL LAWYERS and their countries:', 'background: #3F51B5; color: white; padding: 4px 8px; border-radius: 4px;');
+      lawyers.forEach(l => {
+        console.log(`  - ${l.name}: interventionCountries=${JSON.stringify(l.interventionCountries)}, country="${l.country}"`);
+      });
+    }
+
     const next = realProviders.filter((provider) => {
       const matchesType =
         selectedType === "all" || provider.type === selectedType;
-      
+
       // Filtre pays d'intervention (pas le pays d'origine)
       const matchesCountryFilter = matchCountry(
         provider.interventionCountries,
@@ -2612,13 +2652,38 @@ const SOSCall: React.FC = () => {
         selectedCountryCode,
         customCountry
       );
-      
+
       // Filtre langue avec la nouvelle fonction (multi-langues)
       const matchesLanguageFilter = matchLanguage(
         provider.languages,
         selectedLanguageCodes,
         customLanguage
       );
+
+      // DEBUG: Log providers that match country but not type (pour diagnostiquer le problème Sénégal)
+      if (matchesCountryFilter && !matchesType && selectedCountryCode !== "all") {
+        console.log('%c⚠️ [SOSCall] Provider matches country but NOT type', 'background: #FF9800; color: white; padding: 2px 6px; border-radius: 4px;', {
+          providerName: provider.name,
+          providerId: provider.id,
+          providerType: provider.type,
+          selectedType,
+          interventionCountries: provider.interventionCountries,
+          country: provider.country,
+          selectedCountryCode
+        });
+      }
+
+      // DEBUG: Log providers that match type but not country
+      if (!matchesCountryFilter && matchesType && selectedType !== "all" && selectedCountryCode !== "all") {
+        console.log('%c🌍 [SOSCall] Provider matches type but NOT country', 'background: #9C27B0; color: white; padding: 2px 6px; border-radius: 4px;', {
+          providerName: provider.name,
+          providerId: provider.id,
+          providerType: provider.type,
+          interventionCountries: provider.interventionCountries,
+          country: provider.country,
+          selectedCountryCode
+        });
+      }
 
       const matchesStatus =
         statusFilter === "all"
@@ -2800,6 +2865,17 @@ const SOSCall: React.FC = () => {
       })();
 
       return matchesType && matchesCountryFilter && matchesLanguageFilter && matchesStatus && matchesSearch;
+    });
+
+    // DEBUG: Log filter results summary
+    console.log('%c📊 [SOSCall] FILTER RESULTS', 'background: #2196F3; color: white; padding: 4px 8px; border-radius: 4px;', {
+      filteredCount: next.length,
+      byType: {
+        lawyers: next.filter(p => p.type === 'lawyer').length,
+        expats: next.filter(p => p.type === 'expat').length
+      },
+      selectedType,
+      selectedCountryCode
     });
 
     // Séparer les profils online et offline
