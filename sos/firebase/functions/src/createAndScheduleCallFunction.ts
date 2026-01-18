@@ -13,6 +13,8 @@ import { logger as prodLogger } from './utils/productionLogger';
 import { decryptPhoneNumber } from './utils/encryption';
 // Import pricing service to calculate provider earnings
 import { getServiceAmounts } from './services/pricingService';
+// P0 FIX: Import setProviderBusy to reserve provider immediately after payment
+import { setProviderBusy } from './callables/providerStatusManager';
 
 // Secret for phone number encryption
 const ENCRYPTION_KEY = defineSecret('ENCRYPTION_KEY');
@@ -432,6 +434,26 @@ export const createAndScheduleCallHTTPS = onCall(
       });
 
       console.log(`✅ [${requestId}] Session d'appel créée avec succès - ID: ${callSession.id}`);
+
+      // ========================================
+      // 8.1 P0 FIX: RÉSERVER LE PROVIDER IMMÉDIATEMENT
+      // ========================================
+      // Mettre le provider en busy dès maintenant pour éviter le double-booking
+      // pendant les 1-4 minutes avant qu'il réponde au téléphone
+      try {
+        console.log(`🔶 [${requestId}] Setting provider ${providerId} to BUSY (pending_call)...`);
+        const busyResult = await setProviderBusy(providerId, callSession.id, 'pending_call');
+
+        if (busyResult.success) {
+          console.log(`✅ [${requestId}] Provider ${providerId} marked as BUSY (pending_call)`);
+        } else {
+          console.warn(`⚠️ [${requestId}] Failed to set provider busy: ${busyResult.error}`);
+        }
+      } catch (busyError) {
+        console.error(`⚠️ [${requestId}] Error setting provider busy (non-blocking):`, busyError);
+        // Non-blocking: on continue même si le provider n'est pas marqué busy
+        // Le double-booking est rare et sera géré par les vérifications côté provider
+      }
 
       // ========================================
       // 9. ÉCRITURE VERS LA COLLECTION PAYMENTS

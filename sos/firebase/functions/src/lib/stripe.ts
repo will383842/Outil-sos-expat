@@ -58,11 +58,22 @@ export function isEmulator(): boolean {
 
 /**
  * Check if running in production environment
+ * P0 FIX 2026-01-18: Updated project IDs to match actual production project
  */
 export function isProduction(): boolean {
+  // Check for known production project IDs
+  const productionProjectIds = ['sos-expat', 'sos-urgently-ac307'];
+
+  const gcpProject = process.env.GCLOUD_PROJECT || '';
+  const isGcpProduction = productionProjectIds.some(id => gcpProject.includes(id));
+
+  // Check Firebase config for production project IDs
+  const firebaseConfig = process.env.FIREBASE_CONFIG || '';
+  const isFirebaseProduction = productionProjectIds.some(id => firebaseConfig.includes(id));
+
   return process.env.NODE_ENV === 'production' ||
-         process.env.GCLOUD_PROJECT === 'sos-expat' ||
-         (process.env.FIREBASE_CONFIG?.includes('"projectId":"sos-expat"') ?? false);
+         isGcpProduction ||
+         isFirebaseProduction;
 }
 
 /**

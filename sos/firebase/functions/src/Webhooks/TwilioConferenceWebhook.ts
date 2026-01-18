@@ -1,4 +1,5 @@
 import { onRequest } from 'firebase-functions/v2/https';
+import { defineSecret } from 'firebase-functions/params';
 import { twilioCallManager } from '../TwilioCallManager';
 import { logCallRecord } from '../utils/logs/logCallRecord';
 import { logError } from '../utils/logs/logError';
@@ -7,11 +8,17 @@ import * as admin from 'firebase-admin';
 import { validateTwilioWebhookSignature, TWILIO_AUTH_TOKEN_SECRET, TWILIO_ACCOUNT_SID_SECRET } from '../lib/twilio';
 import { STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST } from '../lib/stripe';
 
+// P0 FIX 2026-01-18: TASKS_AUTH_SECRET needed for scheduleProviderAvailableTask
+// Without this, the Cloud Task is created WITHOUT the X-Task-Auth header
+// and the provider will never return to "available" status after a call
+const TASKS_AUTH_SECRET = defineSecret('TASKS_AUTH_SECRET');
+
 // Ensure TypeScript recognizes the secrets are used in the secrets array
 void TWILIO_AUTH_TOKEN_SECRET;
 void TWILIO_ACCOUNT_SID_SECRET;
 void STRIPE_SECRET_KEY_LIVE;
 void STRIPE_SECRET_KEY_TEST;
+void TASKS_AUTH_SECRET;
 
 interface TwilioConferenceWebhookBody {
   ConferenceSid: string;
@@ -49,7 +56,8 @@ export const twilioConferenceWebhook = onRequest(
     minInstances: 0,
     concurrency: 1,
     // P0 CRITICAL FIX: Add Twilio secrets for signature validation + Stripe secrets for payment capture
-    secrets: [TWILIO_AUTH_TOKEN_SECRET, TWILIO_ACCOUNT_SID_SECRET, STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST]
+    // P0 FIX 2026-01-18: Added TASKS_AUTH_SECRET for scheduleProviderAvailableTask (provider cooldown)
+    secrets: [TWILIO_AUTH_TOKEN_SECRET, TWILIO_ACCOUNT_SID_SECRET, STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST, TASKS_AUTH_SECRET]
   },
   async (req: Request, res: Response) => {
     const confWebhookId = `conf_${Date.now().toString(36)}`;
@@ -400,19 +408,57 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
       }
     }
 
-    // P0 FIX: Calculate BILLING duration from when BOTH participants are connected
-    // This is fairer to the client - they shouldn't pay for time waiting for the provider
+    // P0 FIX 2026-01-18: Calculate BILLING duration as time when BOTH participants are connected
+    // This is fairer to the client - they shouldn't pay for time when they were alone in conference
+    //
+    // BUG FIXED: Previously, billingDuration was calculated as:
+    //   conferenceEndTime - providerConnectedAt
+    // This was WRONG because if the provider hangs up early, the client remains alone
+    // in the conference, and all that time was incorrectly billed.
+    //
+    // CORRECT CALCULATION:
+    //   billingDuration = min(clientDisconnectedAt, providerDisconnectedAt) - max(clientConnectedAt, providerConnectedAt)
+    //   This measures ONLY the time when BOTH participants were connected simultaneously.
+    //
     let billingDuration = 0;
+    const clientConnectedAt = sessionBefore?.participants.client.connectedAt;
     const providerConnectedAt = sessionBefore?.participants.provider.connectedAt;
+    const clientDisconnectedAt = sessionBefore?.participants.client.disconnectedAt;
+    const providerDisconnectedAt = sessionBefore?.participants.provider.disconnectedAt;
 
-    if (providerConnectedAt) {
-      // Provider was connected - calculate billing duration from provider connection to now
-      const providerConnectedTime = providerConnectedAt.toDate();
-      // P0 FIX: Ensure billingDuration is never negative (clock skew protection between servers)
-      billingDuration = Math.max(0, Math.floor((conferenceEndTime.getTime() - providerConnectedTime.getTime()) / 1000));
-      console.log(`🏁 [${endId}]   providerConnectedAt: ${providerConnectedTime.toISOString()}`);
-      console.log(`🏁 [${endId}]   conferenceEndTime: ${conferenceEndTime.toISOString()}`);
-      console.log(`🏁 [${endId}]   billingDuration (from provider connect): ${billingDuration}s`);
+    if (providerConnectedAt && clientConnectedAt) {
+      // BOTH participants were connected at some point - calculate overlap duration
+      const clientConnectedTime = clientConnectedAt.toDate().getTime();
+      const providerConnectedTime = providerConnectedAt.toDate().getTime();
+
+      // bothConnectedAt = when the SECOND participant joined (the later of the two)
+      const bothConnectedAt = Math.max(clientConnectedTime, providerConnectedTime);
+
+      // firstDisconnectedAt = when the FIRST participant left (the earlier of the two)
+      // If disconnectedAt is not set, use conferenceEndTime as fallback
+      const clientDisconnectTime = clientDisconnectedAt?.toDate?.()?.getTime() || conferenceEndTime.getTime();
+      const providerDisconnectTime = providerDisconnectedAt?.toDate?.()?.getTime() || conferenceEndTime.getTime();
+      const firstDisconnectedAt = Math.min(clientDisconnectTime, providerDisconnectTime);
+
+      // billingDuration = time when BOTH were connected simultaneously
+      billingDuration = Math.max(0, Math.floor((firstDisconnectedAt - bothConnectedAt) / 1000));
+
+      console.log(`🏁 [${endId}]   📊 BILLING DURATION CALCULATION (P0 FIX 2026-01-18):`);
+      console.log(`🏁 [${endId}]     clientConnectedAt: ${new Date(clientConnectedTime).toISOString()}`);
+      console.log(`🏁 [${endId}]     providerConnectedAt: ${new Date(providerConnectedTime).toISOString()}`);
+      console.log(`🏁 [${endId}]     bothConnectedAt (2nd joined): ${new Date(bothConnectedAt).toISOString()}`);
+      console.log(`🏁 [${endId}]     clientDisconnectedAt: ${clientDisconnectedAt ? new Date(clientDisconnectTime).toISOString() : 'still connected'}`);
+      console.log(`🏁 [${endId}]     providerDisconnectedAt: ${providerDisconnectedAt ? new Date(providerDisconnectTime).toISOString() : 'still connected'}`);
+      console.log(`🏁 [${endId}]     firstDisconnectedAt (1st left): ${new Date(firstDisconnectedAt).toISOString()}`);
+      console.log(`🏁 [${endId}]     billingDuration (BOTH connected): ${billingDuration}s (${(billingDuration / 60).toFixed(1)} min)`);
+
+      // Log who disconnected first (for debugging)
+      const whoLeftFirst = clientDisconnectTime <= providerDisconnectTime ? 'CLIENT' : 'PROVIDER';
+      console.log(`🏁 [${endId}]     whoLeftFirst: ${whoLeftFirst}`);
+    } else if (providerConnectedAt) {
+      // Provider connected but client never connected - no billing
+      console.log(`🏁 [${endId}]   ⚠️ Client never connected - billingDuration = 0`);
+      billingDuration = 0;
     } else {
       // Provider never connected - no billing
       console.log(`🏁 [${endId}]   ⚠️ Provider never connected - billingDuration = 0`);
@@ -572,7 +618,11 @@ async function handleParticipantJoin(sessionId: string, body: TwilioConferenceWe
     console.log(`👋 [${joinId}]   ${participantType}.status BEFORE: "${currentStatus}"`);
     console.log(`👋 [${joinId}]   ${participantType}.callSid BEFORE: ${participantBefore?.callSid}`);
 
-    // P0 CRITICAL FIX: Do NOT set status to "connected" when AMD is still pending!
+    // P0 CRITICAL FIX v2 (2026-01-18): Race condition between webhooks!
+    //
+    // BUG: participant-join can arrive BEFORE the "answered" webhook that sets amd_pending
+    // When this happens, currentStatus is still "calling" or "ringing", and we incorrectly
+    // set status to "connected", causing waitForConnection() to return true prematurely.
     //
     // IMPORTANT: Voicemails CAN join conferences! When a voicemail answers:
     // 1. The call connects to the conference TwiML
@@ -581,24 +631,41 @@ async function handleParticipantJoin(sessionId: string, body: TwilioConferenceWe
     // 4. Provider would be called even though it's a voicemail!
     //
     // Correct behavior:
-    // - Keep status as "amd_pending" when participant joins with AMD pending
+    // - Keep status unchanged when participant joins with AMD pending OR pre-AMD states
     // - Let the asyncAmdStatusCallback (in twilioAmdTwiml) determine human vs machine
     // - If human: asyncAmdStatusCallback sets status to "connected"
     // - If machine: asyncAmdStatusCallback sets status to "no_answer" and hangs up
     //
     // AMD typically completes within 30 seconds, and waitForConnection has 90s timeout.
-    if (currentStatus === 'amd_pending') {
-      console.log(`👋 [${joinId}] ⚠️ AMD is still pending - participant joined but might be voicemail`);
+    //
+    // Statuses that should wait for AMD callback:
+    // - "amd_pending": AMD is already in progress
+    // - "calling": participant-join arrived before "answered" webhook (race condition)
+    // - "ringing": participant-join arrived before "answered" webhook (race condition)
+    const statusesThatShouldWaitForAmd = ['amd_pending', 'calling', 'ringing'];
+
+    if (statusesThatShouldWaitForAmd.includes(currentStatus || '')) {
+      console.log(`👋 [${joinId}] ⚠️ Status "${currentStatus}" - participant joined but AMD not confirmed yet`);
       console.log(`👋 [${joinId}]   ⛔ NOT setting status to "connected" yet - waiting for AMD result`);
       console.log(`👋 [${joinId}]   asyncAmdStatusCallback will set: "connected" if human, "no_answer" if machine`);
+
+      // P0 FIX v2: Log the race condition detection for debugging
+      if (currentStatus === 'calling' || currentStatus === 'ringing') {
+        console.log(`👋 [${joinId}]   🔄 RACE CONDITION DETECTED: participant-join arrived before "answered" webhook`);
+        console.log(`👋 [${joinId}]   🔄 This is normal - "answered" webhook will set amd_pending soon`);
+      }
+
       await logCallRecord({
         callId: sessionId,
-        status: `${participantType}_joined_but_amd_pending`,
+        status: `${participantType}_joined_but_waiting_for_amd`,
         retryCount: 0,
         additionalData: {
           callSid,
           conferenceSid: body.ConferenceSid,
-          reason: 'waiting_for_amd_callback_before_setting_connected'
+          currentStatus,
+          reason: currentStatus === 'amd_pending'
+            ? 'amd_pending_waiting_for_callback'
+            : 'race_condition_waiting_for_answered_webhook'
         }
       });
       // IMPORTANT: Return early - do NOT set status to "connected"
@@ -791,19 +858,39 @@ async function handleParticipantLeave(sessionId: string, body: TwilioConferenceW
     );
     console.log(`👋 [${leaveId}]   ✅ Status updated to "disconnected"`);
 
-    // P0 FIX: Calculate BILLING duration from when BOTH participants are connected
-    // This is fairer to the client - they shouldn't pay for time waiting for the provider
+    // P0 FIX 2026-01-18: Calculate BILLING duration as time when BOTH participants are connected
+    // This is fairer to the client - they shouldn't pay for time when they were alone
+    //
+    // Same fix as handleConferenceEnd - use overlap duration between both participants
     const session = await twilioCallManager.getCallSession(sessionId);
     const leaveTime = new Date();
     let billingDuration = 0;
 
+    const clientConnectedAt = session?.participants.client.connectedAt;
     const providerConnectedAt = session?.participants.provider.connectedAt;
-    if (providerConnectedAt) {
-      const providerConnectedTime = providerConnectedAt.toDate();
-      // P0 FIX: Ensure billingDuration is never negative (clock skew protection between servers)
-      billingDuration = Math.max(0, Math.floor((leaveTime.getTime() - providerConnectedTime.getTime()) / 1000));
-      console.log(`👋 [${leaveId}]   providerConnectedAt: ${providerConnectedTime.toISOString()}`);
-      console.log(`👋 [${leaveId}]   leaveTime: ${leaveTime.toISOString()}`);
+
+    if (providerConnectedAt && clientConnectedAt) {
+      // BOTH participants were connected - calculate overlap duration
+      const clientConnectedTime = clientConnectedAt.toDate().getTime();
+      const providerConnectedTime = providerConnectedAt.toDate().getTime();
+
+      // bothConnectedAt = when the SECOND participant joined
+      const bothConnectedAt = Math.max(clientConnectedTime, providerConnectedTime);
+
+      // endTime = when THIS participant is leaving
+      const endTime = leaveTime.getTime();
+
+      // billingDuration = time from when both connected until now
+      billingDuration = Math.max(0, Math.floor((endTime - bothConnectedAt) / 1000));
+
+      console.log(`👋 [${leaveId}]   📊 BILLING DURATION (P0 FIX 2026-01-18):`);
+      console.log(`👋 [${leaveId}]     clientConnectedAt: ${new Date(clientConnectedTime).toISOString()}`);
+      console.log(`👋 [${leaveId}]     providerConnectedAt: ${new Date(providerConnectedTime).toISOString()}`);
+      console.log(`👋 [${leaveId}]     bothConnectedAt: ${new Date(bothConnectedAt).toISOString()}`);
+      console.log(`👋 [${leaveId}]     leaveTime: ${leaveTime.toISOString()}`);
+      console.log(`👋 [${leaveId}]     billingDuration: ${billingDuration}s`);
+    } else if (providerConnectedAt) {
+      console.log(`👋 [${leaveId}]   ⚠️ Client never connected - billingDuration = 0`);
     } else {
       console.log(`👋 [${leaveId}]   ⚠️ Provider never connected - billingDuration = 0`);
     }

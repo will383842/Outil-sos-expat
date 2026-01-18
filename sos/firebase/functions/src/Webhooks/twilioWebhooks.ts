@@ -1,4 +1,5 @@
 import { onRequest } from 'firebase-functions/v2/https';
+import { defineSecret } from 'firebase-functions/params';
 import { twilioCallManager } from '../TwilioCallManager';
 import { logCallRecord } from '../utils/logs/logCallRecord';
 import { logError } from '../utils/logs/logError';
@@ -9,6 +10,10 @@ import * as admin from 'firebase-admin';
 import { Request } from 'firebase-functions/v2/https';
 import { validateTwilioWebhookSignature, TWILIO_AUTH_TOKEN_SECRET, TWILIO_ACCOUNT_SID_SECRET } from '../lib/twilio';
 import { setProviderBusy } from '../callables/providerStatusManager';
+
+// P0 FIX 2026-01-18: TASKS_AUTH_SECRET needed for scheduleProviderAvailableTask
+// Without this, the Cloud Task is created WITHOUT the X-Task-Auth header
+const TASKS_AUTH_SECRET = defineSecret('TASKS_AUTH_SECRET');
 import voicePromptsJson from '../content/voicePrompts.json';
 
 // Helper function to get intro text based on participant type and language
@@ -18,20 +23,31 @@ function getIntroText(participant: "provider" | "client", langKey: string): stri
   return table[langKey] ?? table.en ?? "Please hold.";
 }
 
-// P0 FIX 2026-01-16: GATHER confirmation removed for NEW calls, but these functions
-// are still needed for twilioGatherResponse webhook (for backwards compatibility)
-// Helper function to get confirmation prompt for provider (used by twilioGatherResponse)
-export function getConfirmationText(langKey: string): string {
+// P0 FIX 2026-01-18: GATHER confirmation RE-ENABLED for both client and provider
+// This is the ONLY reliable way to detect human vs voicemail
+// Helper function to get confirmation prompt for client or provider
+export function getConfirmationText(participantType: "provider" | "client", langKey: string): string {
   const prompts = voicePromptsJson as Record<string, Record<string, string>>;
-  const table = prompts.provider_confirmation;
-  return table?.[langKey] ?? table?.en ?? "Press 1 or say YES to confirm your availability.";
+  const table = participantType === 'client' ? prompts.client_confirmation : prompts.provider_confirmation;
+  return table?.[langKey] ?? table?.en ?? "Press 1 on your phone to be connected.";
 }
 
-// Helper function to get no response message for provider
+// Helper function to get no response message (same for client and provider)
 function getNoResponseText(langKey: string): string {
   const prompts = voicePromptsJson as Record<string, Record<string, string>>;
   const table = prompts.provider_no_response;
   return table?.[langKey] ?? table?.en ?? "We did not receive a confirmation. The call will be ended.";
+}
+
+// P0 FIX 2026-01-18: Escape special XML characters to prevent TwiML parse errors (Error 12100)
+// In XML, & must be &amp;, < must be &lt;, > must be &gt;, " must be &quot;, ' must be &apos;
+function escapeXml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
 }
 
 
@@ -66,7 +82,8 @@ export const twilioCallWebhook = onRequest(
     minInstances: 0,
     concurrency: 1,    // Keep at 1 to avoid race conditions with Firestore updates
     // P0 CRITICAL FIX: Add Twilio secrets for signature validation + hangup calls to voicemail
-    secrets: [TWILIO_AUTH_TOKEN_SECRET, TWILIO_ACCOUNT_SID_SECRET]
+    // P0 FIX 2026-01-18: Added TASKS_AUTH_SECRET for scheduleProviderAvailableTask (provider cooldown)
+    secrets: [TWILIO_AUTH_TOKEN_SECRET, TWILIO_ACCOUNT_SID_SECRET, TASKS_AUTH_SECRET]
   },
   async (req: Request, res: Response) => {
     const requestId = `twilio-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -1363,29 +1380,23 @@ export const twilioAmdTwiml = onRequest(
           }
 
           // Also check for callSid mismatch (different call attempt)
+          // P0 FIX 2026-01-18: DO NOT hang up the call! Just ignore the callback.
+          // Race condition: The DB might have a newer callSid because a retry started,
+          // but this callback is for the CURRENT call that's still valid.
+          // Hanging up would kill the active call incorrectly.
           if (callSid && providerCallSid && callSid !== providerCallSid) {
             console.log(`\n${'⚠️'.repeat(35)}`);
-            console.log(`🎯 [${amdId}] 🛡️ STALE AMD CALLBACK - CallSid mismatch!`);
-            console.log(`🎯 [${amdId}]   This is from an OLD call attempt`);
+            console.log(`🎯 [${amdId}] 🛡️ AMD CALLBACK - CallSid mismatch detected`);
             console.log(`🎯 [${amdId}]   callSid from callback: ${callSid}`);
             console.log(`🎯 [${amdId}]   callSid in DB: ${providerCallSid}`);
-            console.log(`🎯 [${amdId}]   ACTION: Ignoring stale AMD callback`);
+            console.log(`🎯 [${amdId}]   ⚠️ NOT hanging up - could be race condition with retry loop`);
+            console.log(`🎯 [${amdId}]   ACTION: Return empty response, let call continue naturally`);
             console.log(`${'⚠️'.repeat(35)}\n`);
 
-            // Hang up the old call if it's still active
-            try {
-              const { getTwilioClient } = await import('../lib/twilio');
-              const twilioClient = getTwilioClient();
-              if (twilioClient) {
-                await twilioClient.calls(callSid).update({ status: 'completed' });
-                console.log(`🎯 [${amdId}]   ✅ Old call hung up`);
-              }
-            } catch (hangupError) {
-              console.log(`🎯 [${amdId}]   ℹ️ Could not hang up old call (already ended?)`);
-            }
-
+            // Just return empty response - don't hang up!
+            // The call will continue with whatever TwiML is already executing
             res.type('text/xml');
-            res.send(`<?xml version="1.0" encoding="UTF-8"?><Response><Hangup/></Response>`);
+            res.send(`<?xml version="1.0" encoding="UTF-8"?><Response></Response>`);
             return;
           }
         } catch (sessionError) {
@@ -1404,96 +1415,116 @@ export const twilioAmdTwiml = onRequest(
           console.log(`${'🟢'.repeat(35)}\n`);
         }
 
-        // HUMAN CONFIRMED - Different handling for client vs provider
-        // CLIENT: Join conference directly (they initiated the call)
-        // PROVIDER: Ask for confirmation first (press 1 or say YES)
-        if (participantType === 'client') {
-          // CLIENT: Set connected and join conference directly
-          console.log(`🎯 [${amdId}] ✅ CLIENT HUMAN CONFIRMED - Setting status to "connected" and joining conference`);
+        // HUMAN CONFIRMED - Both client and provider should use DTMF confirmation
+        // P0 FIX 2026-01-18: AMD can be fooled by voicemail greetings!
+        // A voicemail saying "Hello, you've reached..." is detected as "human"
+        // SOLUTION: ALWAYS require DTMF confirmation, even when AMD says "human"
+        //
+        // For ASYNC AMD callbacks, the initial Gather TwiML is already executing.
+        // We should NOT override it - just let the Gather flow complete.
 
-          if (sessionId) {
+        if (participantType === 'client') {
+          // P0 FIX 2026-01-18: Check if client already received Gather TwiML
+          // If so, ignore AMD callback and let Gather flow complete
+          if (isAsyncAmdCallback && sessionId) {
             try {
-              await twilioCallManager.updateParticipantStatus(
-                sessionId,
-                participantType,
-                'connected',
-                admin.firestore.Timestamp.fromDate(new Date())
-              );
-              console.log(`🎯 [${amdId}]   ✅ Client status set to "connected"`);
-            } catch (statusError) {
-              console.error(`🎯 [${amdId}]   ⚠️ Failed to update status:`, statusError);
+              const session = await twilioCallManager.getCallSession(sessionId);
+              const clientStatus = session?.participants.client.status;
+
+              // If client is waiting for DTMF (amd_pending), don't override!
+              if (clientStatus === 'amd_pending') {
+                console.log(`\n${'⚠️'.repeat(35)}`);
+                console.log(`🎯 [${amdId}] 🛡️ AMD CALLBACK - Client waiting for DTMF confirmation!`);
+                console.log(`🎯 [${amdId}]   clientStatus: ${clientStatus}`);
+                console.log(`🎯 [${amdId}]   AMD said "human" but this could be voicemail greeting!`);
+                console.log(`🎯 [${amdId}]   ACTION: Ignoring AMD - let DTMF confirmation complete`);
+                console.log(`${'⚠️'.repeat(35)}\n`);
+
+                // Return empty response - don't disrupt the Gather flow!
+                res.type('text/xml');
+                res.send(`<?xml version="1.0" encoding="UTF-8"?><Response></Response>`);
+                return;
+              }
+
+              // If client already connected via DTMF, nothing to do
+              if (clientStatus === 'connected') {
+                console.log(`🎯 [${amdId}] 🛡️ AMD CALLBACK - Client already CONNECTED via DTMF`);
+                res.type('text/xml');
+                res.send(`<?xml version="1.0" encoding="UTF-8"?><Response></Response>`);
+                return;
+              }
+            } catch (sessionError) {
+              console.warn(`🎯 [${amdId}]   ⚠️ Could not check client status:`, sessionError);
             }
           }
+
+          // FALLBACK: If we somehow get here, log it but don't set connected directly
+          // This path should NOT be reached with proper DTMF flow
+          console.log(`🎯 [${amdId}] ⚠️ CLIENT HUMAN CONFIRMED (FALLBACK PATH)`);
+          console.log(`🎯 [${amdId}]   This is unexpected - client should use DTMF confirmation`);
+          console.log(`🎯 [${amdId}]   Returning empty response`);
+
+          res.type('text/xml');
+          res.send(`<?xml version="1.0" encoding="UTF-8"?><Response></Response>`);
+          return;
         } else {
           // PROVIDER HUMAN CONFIRMED via async AMD callback
           //
-          // P0 FIX 2026-01-16: This section is now a FALLBACK only.
+          // P0 FIX 2026-01-18: With DTMF confirmation, provider should NOT be marked as "connected"
+          // until they press 1. The Gather TwiML is already executing when this callback arrives.
           //
-          // NORMAL FLOW (with fix):
-          // 1. Initial callback (answeredBy=undefined) → provider joins conference immediately
-          // 2. Provider status set to "connected"
-          // 3. Async AMD callback → race condition check finds "connected" → returns early
+          // If provider status is "amd_pending", it means Gather is waiting for DTMF input.
+          // We should NOT set status to "connected" - let the Gather flow complete.
           //
-          // This code is reached ONLY if:
-          // - Race condition check didn't find "connected" status (edge case)
-          // - Status update in AMD pending section failed
-          //
-          // Since provider should already be in conference, we just:
-          // 1. Log for debugging
-          // 2. Return empty response (don't disrupt existing call)
-          //
-          // REMOVED: REST API redirect - it was failing with "Call not in progress"
-          // because the provider was already in conference or call had ended.
-          //
-          console.log(`🎯 [${amdId}] ⚠️ PROVIDER HUMAN CONFIRMED (FALLBACK PATH)`);
+          console.log(`🎯 [${amdId}] 📞 PROVIDER AMD CALLBACK - Checking if DTMF confirmation in progress...`);
           console.log(`🎯 [${amdId}]   answeredBy: ${answeredBy}`);
-          console.log(`🎯 [${amdId}]   This is unexpected - provider should already be in conference`);
-          console.log(`🎯 [${amdId}]   Provider joined conference on initial callback (AMD pending section)`);
-          console.log(`🎯 [${amdId}]   Returning empty response to avoid disrupting call`);
+          console.log(`🎯 [${amdId}]   isAsyncAmdCallback: ${isAsyncAmdCallback}`);
 
-          // Ensure status is "connected" (might have failed in AMD pending section)
           if (sessionId) {
             try {
               const session = await twilioCallManager.getCallSession(sessionId);
-              if (session?.participants.provider.status !== 'connected') {
-                await twilioCallManager.updateParticipantStatus(
-                  sessionId,
-                  participantType,
-                  'connected',
-                  admin.firestore.Timestamp.fromDate(new Date())
-                );
-                console.log(`🎯 [${amdId}]   ✅ Provider status updated to "connected" (was ${session?.participants.provider.status})`);
-              } else {
-                console.log(`🎯 [${amdId}]   Provider already "connected" - no update needed`);
+              const providerStatus = session?.participants.provider.status;
+              console.log(`🎯 [${amdId}]   Provider current status: ${providerStatus}`);
+
+              // P0 FIX 2026-01-18: If provider is waiting for DTMF (amd_pending), do NOT set connected!
+              // Let the Gather flow complete - twilioGatherResponse will set the correct status
+              if (providerStatus === 'amd_pending') {
+                console.log(`\n${'⚠️'.repeat(35)}`);
+                console.log(`🎯 [${amdId}] 🛡️ PROVIDER WAITING FOR DTMF CONFIRMATION!`);
+                console.log(`🎯 [${amdId}]   Status is "amd_pending" - Gather TwiML is executing`);
+                console.log(`🎯 [${amdId}]   AMD said "${answeredBy}" but we need DTMF confirmation (press 1)`);
+                console.log(`🎯 [${amdId}]   ACTION: NOT setting to "connected" - let Gather flow complete`);
+                console.log(`${'⚠️'.repeat(35)}\n`);
+
+                // Return empty response - don't disrupt the Gather flow!
+                res.type('text/xml');
+                res.send(`<?xml version="1.0" encoding="UTF-8"?><Response></Response>`);
+                console.log(`🎯 [${amdId}] END - AMD callback ignored (waiting for DTMF)\n`);
+                return;
               }
 
-              // ═══════════════════════════════════════════════════════════════════
-              // P0 FIX 2026-01-17: ENSURE PROVIDER IS BUSY (fallback path)
-              // ═══════════════════════════════════════════════════════════════════
-              const providerId = session?.metadata?.providerId;
-              if (providerId) {
-                const providerStatus = await import('../callables/providerStatusManager').then(m => m.getProviderStatus(providerId));
-                if (providerStatus?.availability !== 'busy') {
-                  console.log(`🎯 [${amdId}]   🔶 Provider ${providerId} not busy - setting BUSY now...`);
-                  try {
-                    await setProviderBusy(providerId, sessionId, 'in_call');
-                    console.log(`🎯 [${amdId}]   ✅ Provider ${providerId} marked as BUSY (fallback)`);
-                  } catch (busyError) {
-                    console.error(`🎯 [${amdId}]   ⚠️ Failed to set provider busy:`, busyError);
-                  }
-                } else {
-                  console.log(`🎯 [${amdId}]   Provider ${providerId} already BUSY - no update needed`);
-                }
+              // If already connected, nothing to do
+              if (providerStatus === 'connected') {
+                console.log(`🎯 [${amdId}]   Provider already "connected" - no update needed`);
+                res.type('text/xml');
+                res.send(`<?xml version="1.0" encoding="UTF-8"?><Response></Response>`);
+                console.log(`🎯 [${amdId}] END - Provider already connected\n`);
+                return;
               }
+
+              // Provider is in some other status (not amd_pending, not connected)
+              // This is unexpected - log and return empty response
+              console.log(`🎯 [${amdId}]   Provider in unexpected status: ${providerStatus}`);
+              console.log(`🎯 [${amdId}]   Returning empty response to avoid disruption`);
             } catch (statusError) {
-              console.error(`🎯 [${amdId}]   ⚠️ Failed to check/update status:`, statusError);
+              console.error(`🎯 [${amdId}]   ⚠️ Failed to check provider status:`, statusError);
             }
           }
 
-          // Return empty response - provider should already be in conference
+          // Return empty response - don't disrupt the Gather flow
           res.type('text/xml');
           res.send(`<?xml version="1.0" encoding="UTF-8"?><Response></Response>`);
-          console.log(`🎯 [${amdId}] END - Provider fallback path (empty response)\n`);
+          console.log(`🎯 [${amdId}] END - Provider AMD callback handled\n`);
           return;
         }
       } else {
@@ -1542,112 +1573,99 @@ export const twilioAmdTwiml = onRequest(
         //   and we can then join the conference via a different mechanism
 
         if (participantType === 'client') {
-          // Client joins conference normally - they are the first participant and start the conference
-          const { getTwilioConferenceWebhookUrl } = await import('../utils/urlBase');
-          const conferenceWebhookUrl = getTwilioConferenceWebhookUrl();
+          // P0 FIX 2026-01-18: CLIENT must confirm with DTMF before joining conference
+          // This prevents voicemail from being treated as "connected"
+          const { getTwilioGatherResponseUrl } = await import('../utils/urlBase');
+          const gatherResponseUrl = getTwilioGatherResponseUrl();
 
-          const clientConferenceTwiml = `<?xml version="1.0" encoding="UTF-8"?>
+          // Build Gather action URL with all necessary parameters
+          const gatherActionUrl = `${gatherResponseUrl}?sessionId=${encodeURIComponent(sessionId)}&participantType=client&conferenceName=${encodeURIComponent(conferenceName)}&timeLimit=${timeLimit}&ttsLocale=${encodeURIComponent(ttsLocale)}&langKey=${encodeURIComponent(langKey)}`;
+
+          // Get intro message + confirmation prompt
+          const introMessage = getIntroText('client', langKey);
+          const confirmationPrompt = getConfirmationText('client', langKey);
+          const noResponseMessage = getNoResponseText(langKey);
+
+          console.log(`🎯 [${amdId}] CLIENT: Using DTMF confirmation (Gather)`);
+          console.log(`🎯 [${amdId}]   introMessage: "${introMessage.substring(0, 40)}..."`);
+          console.log(`🎯 [${amdId}]   confirmationPrompt: "${confirmationPrompt}"`);
+          console.log(`🎯 [${amdId}]   gatherActionUrl: ${gatherActionUrl.substring(0, 80)}...`);
+
+          // TwiML: Play intro, then Gather for DTMF confirmation
+          // P0 FIX 2026-01-18: Use <Redirect> instead of <Hangup/> to trigger retry on timeout
+          // When Gather times out (no DTMF), Twilio skips to next verb.
+          // <Redirect> calls twilioGatherResponse which sets status to "no_answer" → triggers retry
+          // P0 FIX 2026-01-18: Escape XML special characters to prevent Error 12100 (Document parse failure)
+          const timeoutRedirectUrl = `${gatherResponseUrl}?sessionId=${encodeURIComponent(sessionId)}&participantType=client&conferenceName=${encodeURIComponent(conferenceName)}&timeLimit=${timeLimit}&ttsLocale=${encodeURIComponent(ttsLocale)}&langKey=${encodeURIComponent(langKey)}&timeout=1`;
+
+          const clientGatherTwiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Dial timeout="60" timeLimit="${timeLimit}">
-    <Conference
-      waitUrl="http://twimlets.com/holdmusic?Bucket=com.twilio.music.classical"
-      startConferenceOnEnter="true"
-      endConferenceOnExit="true"
-      statusCallback="${conferenceWebhookUrl}"
-      statusCallbackEvent="start end join leave"
-      statusCallbackMethod="POST"
-      participantLabel="client"
-    >${conferenceName}</Conference>
-  </Dial>
+  <Say voice="alice" language="${ttsLocale}">${escapeXml(introMessage)}</Say>
+  <Gather input="dtmf" numDigits="1" timeout="10" action="${escapeXml(gatherActionUrl)}" method="POST">
+    <Say voice="alice" language="${ttsLocale}">${escapeXml(confirmationPrompt)}</Say>
+  </Gather>
+  <Say voice="alice" language="${ttsLocale}">${escapeXml(noResponseMessage)}</Say>
+  <Redirect method="POST">${escapeXml(timeoutRedirectUrl)}</Redirect>
 </Response>`;
 
           res.type('text/xml');
-          res.send(clientConferenceTwiml);
-          console.log(`🎯 [${amdId}] END - Client sent to CONFERENCE (AMD pending but client always joins)\n`);
+          res.send(clientGatherTwiml);
+          console.log(`🎯 [${amdId}] END - Client sent GATHER TwiML (waiting for DTMF confirmation)\n`);
           return;
         } else {
-          // P0 FIX 2026-01-16: PROVIDER AMD PENDING - JOIN CONFERENCE IMMEDIATELY!
+          // P0 FIX 2026-01-18: PROVIDER must confirm with DTMF before joining conference
+          // This prevents voicemail from being treated as "connected"
           //
-          // PREVIOUS BEHAVIOR (BROKEN):
-          // - Provider sent to hold music while AMD analyzes
-          // - Provider hears only music, no message → thinks it's spam → HANGS UP
-          // - AMD callback arrives → tries REST API redirect → call already ended → error 21220
-          // - Result: Provider never connects, retries 3x, same failure
+          // PREVIOUS BEHAVIOR (2026-01-16, BROKEN):
+          // - Provider joined conference IMMEDIATELY without confirmation
+          // - Voicemail answered → marked as "connected" → no retry
+          // - Client left waiting while voicemail recorded the hold music
           //
-          // NEW BEHAVIOR (FIXED):
-          // - Provider joins conference IMMEDIATELY with endConferenceOnExit="false"
-          // - Provider hears welcome message and is connected to client right away
-          // - If AMD later detects machine, we hang up via REST API (conference continues for client)
-          // - The welcome message prevents provider from hanging up thinking it's spam
+          // NEW BEHAVIOR (2026-01-18, FIXED):
+          // - Provider must press 1 to confirm they are human
+          // - Only then do they join the conference
+          // - If no confirmation (voicemail), hang up and retry
           //
-          // Key insight: Better to occasionally connect to voicemail than to have 100% failure rate!
-          //
-          console.log(`🎯 [${amdId}] ⚡ P0 FIX: PROVIDER AMD PENDING - JOINING CONFERENCE IMMEDIATELY!`);
-          console.log(`🎯 [${amdId}]   Previous: Hold music → REST API redirect (FAILED - call ended)`);
-          console.log(`🎯 [${amdId}]   Now: Join conference directly with endConferenceOnExit="false"`);
+          const { getTwilioGatherResponseUrl } = await import('../utils/urlBase');
+          const gatherResponseUrl = getTwilioGatherResponseUrl();
 
-          // Get welcome message for provider
-          const providerWelcomeMsg = getIntroText('provider', langKey);
-          console.log(`🎯 [${amdId}]   welcomeMessage: "${providerWelcomeMsg.substring(0, 50)}..."`);
+          // Build Gather action URL with all necessary parameters
+          const gatherActionUrl = `${gatherResponseUrl}?sessionId=${encodeURIComponent(sessionId)}&participantType=provider&conferenceName=${encodeURIComponent(conferenceName)}&timeLimit=${timeLimit}&ttsLocale=${encodeURIComponent(ttsLocale)}&langKey=${encodeURIComponent(langKey)}`;
 
-          const { getTwilioConferenceWebhookUrl } = await import('../utils/urlBase');
-          const conferenceWebhookUrl = getTwilioConferenceWebhookUrl();
+          // Get intro message + confirmation prompt
+          const introMessage = getIntroText('provider', langKey);
+          const confirmationPrompt = getConfirmationText('provider', langKey);
+          const noResponseMessage = getNoResponseText(langKey);
 
-          // Provider joins conference with endConferenceOnExit="false"
-          // This allows us to hang up provider without ending client's conference if AMD detects machine
-          const providerAmdPendingTwiml = `<?xml version="1.0" encoding="UTF-8"?>
+          console.log(`🎯 [${amdId}] PROVIDER: Using DTMF confirmation (Gather)`);
+          console.log(`🎯 [${amdId}]   introMessage: "${introMessage.substring(0, 40)}..."`);
+          console.log(`🎯 [${amdId}]   confirmationPrompt: "${confirmationPrompt}"`);
+          console.log(`🎯 [${amdId}]   gatherActionUrl: ${gatherActionUrl.substring(0, 80)}...`);
+
+          // TwiML: Play intro, then Gather for DTMF confirmation
+          // P0 FIX 2026-01-18: Use <Redirect> instead of <Hangup/> to trigger retry on timeout
+          // When Gather times out (no DTMF), Twilio skips to next verb.
+          // <Redirect> calls twilioGatherResponse which sets status to "no_answer" → triggers retry
+          // P0 FIX 2026-01-18: Escape XML special characters to prevent Error 12100 (Document parse failure)
+          const timeoutRedirectUrl = `${gatherResponseUrl}?sessionId=${encodeURIComponent(sessionId)}&participantType=provider&conferenceName=${encodeURIComponent(conferenceName)}&timeLimit=${timeLimit}&ttsLocale=${encodeURIComponent(ttsLocale)}&langKey=${encodeURIComponent(langKey)}&timeout=1`;
+
+          const providerGatherTwiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="alice" language="${ttsLocale}">${providerWelcomeMsg}</Say>
-  <Dial timeout="60" timeLimit="${timeLimit}">
-    <Conference
-      waitUrl="http://twimlets.com/holdmusic?Bucket=com.twilio.music.classical"
-      startConferenceOnEnter="false"
-      endConferenceOnExit="false"
-      statusCallback="${conferenceWebhookUrl}"
-      statusCallbackEvent="start end join leave"
-      statusCallbackMethod="POST"
-      participantLabel="provider"
-    >${conferenceName}</Conference>
-  </Dial>
+  <Say voice="alice" language="${ttsLocale}">${escapeXml(introMessage)}</Say>
+  <Gather input="dtmf" numDigits="1" timeout="10" action="${escapeXml(gatherActionUrl)}" method="POST">
+    <Say voice="alice" language="${ttsLocale}">${escapeXml(confirmationPrompt)}</Say>
+  </Gather>
+  <Say voice="alice" language="${ttsLocale}">${escapeXml(noResponseMessage)}</Say>
+  <Redirect method="POST">${escapeXml(timeoutRedirectUrl)}</Redirect>
 </Response>`;
 
-          // Also update status to connected since they're joining conference
-          if (sessionId) {
-            try {
-              await twilioCallManager.updateParticipantStatus(
-                sessionId,
-                participantType,
-                'connected',
-                admin.firestore.Timestamp.fromDate(new Date())
-              );
-              console.log(`🎯 [${amdId}]   ✅ Provider status set to "connected" (AMD pending but in conference)`);
-
-              // ═══════════════════════════════════════════════════════════════════
-              // P0 FIX 2026-01-17: SET PROVIDER BUSY WHEN JOINING CONFERENCE
-              // ═══════════════════════════════════════════════════════════════════
-              // The provider is joining the conference - mark them as BUSY so they
-              // don't receive other calls while in this call!
-              const session = await twilioCallManager.getCallSession(sessionId);
-              const providerId = session?.metadata?.providerId;
-              if (providerId) {
-                console.log(`🎯 [${amdId}]   🔶 Setting provider ${providerId} to BUSY...`);
-                try {
-                  await setProviderBusy(providerId, sessionId, 'in_call');
-                  console.log(`🎯 [${amdId}]   ✅ Provider ${providerId} marked as BUSY`);
-                } catch (busyError) {
-                  console.error(`🎯 [${amdId}]   ⚠️ Failed to set provider busy (non-blocking):`, busyError);
-                }
-              } else {
-                console.log(`🎯 [${amdId}]   ⚠️ No providerId in session metadata - cannot set busy status`);
-              }
-            } catch (statusError) {
-              console.error(`🎯 [${amdId}]   ⚠️ Failed to update status:`, statusError);
-            }
-          }
+          // NOTE: Do NOT set status to "connected" here!
+          // The status will be set by twilioGatherResponse ONLY if the provider presses 1
+          // This ensures voicemails are not marked as "connected"
 
           res.type('text/xml');
-          res.send(providerAmdPendingTwiml);
-          console.log(`🎯 [${amdId}] END - Provider JOINING CONFERENCE (AMD pending - endConferenceOnExit=false)\n`);
+          res.send(providerGatherTwiml);
+          console.log(`🎯 [${amdId}] END - Provider sent GATHER TwiML (waiting for DTMF confirmation)\n`);
           return;
         }
       }
@@ -1663,19 +1681,20 @@ export const twilioAmdTwiml = onRequest(
       const { getTwilioConferenceWebhookUrl } = await import('../utils/urlBase');
       const conferenceWebhookUrl = getTwilioConferenceWebhookUrl();
 
+      // P0 FIX 2026-01-18: Escape XML special characters to prevent Error 12100
       const conferenceTwiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="alice" language="${ttsLocale}">${welcomeMessage}</Say>
+  <Say voice="alice" language="${ttsLocale}">${escapeXml(welcomeMessage)}</Say>
   <Dial timeout="60" timeLimit="${timeLimit}">
     <Conference
       waitUrl="http://twimlets.com/holdmusic?Bucket=com.twilio.music.classical"
       startConferenceOnEnter="${startConference}"
       endConferenceOnExit="true"
-      statusCallback="${conferenceWebhookUrl}"
+      statusCallback="${escapeXml(conferenceWebhookUrl)}"
       statusCallbackEvent="start end join leave"
       statusCallbackMethod="POST"
       participantLabel="${participantType}"
-    >${conferenceName}</Conference>
+    >${escapeXml(conferenceName)}</Conference>
   </Dial>
 </Response>`;
 
@@ -1766,6 +1785,8 @@ export const twilioGatherResponse = onRequest(
       const timeLimit = parseInt(req.query.timeLimit as string) || 1200;
       const ttsLocale = req.query.ttsLocale as string || 'fr-FR';
       const langKey = req.query.langKey as string || 'fr';
+      // P0 FIX 2026-01-18: timeout=1 indicates Gather timed out (no DTMF input)
+      const isGatherTimeout = req.query.timeout === '1';
 
       // Get Gather response from Twilio
       const digits = req.body?.Digits; // DTMF input (e.g., "1")
@@ -1780,6 +1801,7 @@ export const twilioGatherResponse = onRequest(
       console.log(`🎤 [${gatherId}]   callSid: ${callSid}`);
       console.log(`🎤 [${gatherId}]   digits: ${digits || 'none'}`);
       console.log(`🎤 [${gatherId}]   speechResult: ${speechResult || 'none'}`);
+      console.log(`🎤 [${gatherId}]   isGatherTimeout: ${isGatherTimeout}`);
       console.log(`${'🎤'.repeat(40)}`);
 
       // Determine if provider confirmed
@@ -1814,8 +1836,8 @@ export const twilioGatherResponse = onRequest(
       }
 
       if (isConfirmed) {
-        // Provider confirmed! Set status to connected and join conference
-        console.log(`🎤 [${gatherId}] 🎉 PROVIDER CONFIRMED - Setting status to "connected" and joining conference`);
+        // Participant confirmed! Set status to connected and join conference
+        console.log(`🎤 [${gatherId}] 🎉 ${participantType.toUpperCase()} CONFIRMED - Setting status to "connected" and joining conference`);
 
         if (sessionId) {
           try {
@@ -1825,38 +1847,59 @@ export const twilioGatherResponse = onRequest(
               'connected',
               admin.firestore.Timestamp.fromDate(new Date())
             );
-            console.log(`🎤 [${gatherId}]   ✅ Status set to "connected"`);
+            console.log(`🎤 [${gatherId}]   ✅ ${participantType} status set to "connected"`);
+
+            // If provider confirmed, mark them as BUSY
+            if (participantType === 'provider') {
+              try {
+                const session = await twilioCallManager.getCallSession(sessionId);
+                const providerId = session?.metadata?.providerId;
+                if (providerId) {
+                  console.log(`🎤 [${gatherId}]   🔶 Setting provider ${providerId} to BUSY...`);
+                  await setProviderBusy(providerId, sessionId, 'in_call');
+                  console.log(`🎤 [${gatherId}]   ✅ Provider ${providerId} marked as BUSY`);
+                }
+              } catch (busyError) {
+                console.error(`🎤 [${gatherId}]   ⚠️ Failed to set provider busy (non-blocking):`, busyError);
+              }
+            }
           } catch (statusError) {
             console.error(`🎤 [${gatherId}]   ⚠️ Failed to update status:`, statusError);
           }
         }
 
-        // Get welcome message in provider's language
-        const welcomeMessage = getIntroText('provider', langKey);
-
-        // Build conference TwiML
+        // Get welcome message (already heard intro, so just a brief message)
+        // Build conference TwiML with correct settings based on participant type
         const { getTwilioConferenceWebhookUrl } = await import('../utils/urlBase');
         const conferenceWebhookUrl = getTwilioConferenceWebhookUrl();
 
+        // Client starts conference, provider joins existing conference
+        const startConferenceOnEnter = participantType === 'client' ? 'true' : 'false';
+        // Client ending ends conference, provider ending does NOT end conference (allows client to stay)
+        const endConferenceOnExit = participantType === 'client' ? 'true' : 'false';
+
+        console.log(`🎤 [${gatherId}]   startConferenceOnEnter: ${startConferenceOnEnter}`);
+        console.log(`🎤 [${gatherId}]   endConferenceOnExit: ${endConferenceOnExit}`);
+
+        // P0 FIX 2026-01-18: Escape XML special characters to prevent Error 12100
         const conferenceTwiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="alice" language="${ttsLocale}">${welcomeMessage}</Say>
   <Dial timeout="60" timeLimit="${timeLimit}">
     <Conference
       waitUrl="http://twimlets.com/holdmusic?Bucket=com.twilio.music.classical"
-      startConferenceOnEnter="false"
-      endConferenceOnExit="true"
-      statusCallback="${conferenceWebhookUrl}"
+      startConferenceOnEnter="${startConferenceOnEnter}"
+      endConferenceOnExit="${endConferenceOnExit}"
+      statusCallback="${escapeXml(conferenceWebhookUrl)}"
       statusCallbackEvent="start end join leave"
       statusCallbackMethod="POST"
-      participantLabel="provider"
-    >${conferenceName}</Conference>
+      participantLabel="${participantType}"
+    >${escapeXml(conferenceName)}</Conference>
   </Dial>
 </Response>`;
 
         res.type('text/xml');
         res.send(conferenceTwiml);
-        console.log(`🎤 [${gatherId}] END - Provider joining conference\n`);
+        console.log(`🎤 [${gatherId}] END - ${participantType} joining conference\n`);
 
       } else {
         // No confirmation received - treat as no_answer for retry
@@ -1878,9 +1921,10 @@ export const twilioGatherResponse = onRequest(
         // Get no response message and hang up
         const noResponseMessage = getNoResponseText(langKey);
 
+        // P0 FIX 2026-01-18: Escape XML special characters to prevent Error 12100
         const hangupTwiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="alice" language="${ttsLocale}">${noResponseMessage}</Say>
+  <Say voice="alice" language="${ttsLocale}">${escapeXml(noResponseMessage)}</Say>
   <Hangup/>
 </Response>`;
 

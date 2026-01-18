@@ -40,7 +40,7 @@ function getDb() {
 
 export type AvailabilityStatus = 'available' | 'busy' | 'offline';
 
-export type BusyReason = 'in_call' | 'break' | 'offline' | 'manually_disabled';
+export type BusyReason = 'in_call' | 'pending_call' | 'break' | 'offline' | 'manually_disabled';
 
 export interface ProviderStatusResponse {
   success: boolean;
@@ -116,6 +116,10 @@ export async function setProviderBusy(
       if (userData?.busyBySibling === true) {
         console.log(`🔶 [${logId}] Provider was busyBySibling, now in own call - will update`);
         // Continue pour mettre à jour avec son propre appel
+      } else if (userData?.busyReason === 'pending_call' && reason === 'in_call') {
+        // P0 FIX: Permettre upgrade de pending_call vers in_call
+        console.log(`🔶 [${logId}] Provider upgrading from pending_call to in_call - will update`);
+        // Continue pour mettre à jour avec in_call
       } else {
         console.log(`🔶 [${logId}] Provider already busy (own call) - skipping update`);
         return {

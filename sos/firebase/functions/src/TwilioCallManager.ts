@@ -8,6 +8,8 @@ import { stripeManager } from "./StripeManager";
 // P1-1 FIX: setProviderBusy removed - now only called from twilioWebhooks.ts
 // 🕐 COOLDOWN: Use Cloud Task for delayed provider availability (5 min after call ends)
 import { scheduleProviderAvailableTask } from "./lib/tasks";
+// P0 FIX: Import setProviderAvailable to reset provider when client_no_answer
+import { setProviderAvailable } from "./callables/providerStatusManager";
 // 🔒 Phone number encryption
 import { encryptPhoneNumber, decryptPhoneNumber } from "./utils/encryption";
 // P1-13: Sync atomique payments <-> call_sessions
@@ -225,14 +227,97 @@ function getLanguageName(langKey: string): string {
 // Helpers langue & prompts
 // =============================
 
+// P0 FIX: Language code normalization mapping
+// Converts full language names and alternative codes to ISO-639-1 codes
+// This handles cases where languages are stored as "French" instead of "fr"
+const LANG_CODE_ALIASES: Record<string, string> = {
+  // Chinese variants
+  'ch': 'zh',
+  'cn': 'zh',
+  'chinese': 'zh',
+  'mandarin': 'zh',
+  // French variants
+  'french': 'fr',
+  'français': 'fr',
+  'francais': 'fr',
+  // English variants
+  'english': 'en',
+  'anglais': 'en',
+  // Portuguese variants
+  'portuguese': 'pt',
+  'portugais': 'pt',
+  'português': 'pt',
+  'portugues': 'pt',
+  // Spanish variants
+  'spanish': 'es',
+  'espagnol': 'es',
+  'español': 'es',
+  'espanol': 'es',
+  // German variants
+  'german': 'de',
+  'allemand': 'de',
+  'deutsch': 'de',
+  // Russian variants
+  'russian': 'ru',
+  'russe': 'ru',
+  'русский': 'ru',
+  // Arabic variants
+  'arabic': 'ar',
+  'arabe': 'ar',
+  'العربية': 'ar',
+  // Hindi variants
+  'hindi': 'hi',
+  // Bengali variants
+  'bengali': 'bn',
+  // Urdu variants
+  'urdu': 'ur',
+  // Indonesian variants
+  'indonesian': 'id',
+  'indonésien': 'id',
+  // Japanese variants
+  'japanese': 'ja',
+  'japonais': 'ja',
+  // Turkish variants
+  'turkish': 'tr',
+  'turc': 'tr',
+  // Italian variants
+  'italian': 'it',
+  'italien': 'it',
+  'italiano': 'it',
+  // Korean variants
+  'korean': 'ko',
+  'coréen': 'ko',
+  'coreen': 'ko',
+  // Vietnamese variants
+  'vietnamese': 'vi',
+  'vietnamien': 'vi',
+  // Persian variants
+  'persian': 'fa',
+  'farsi': 'fa',
+  'persan': 'fa',
+  // Polish variants
+  'polish': 'pl',
+  'polonais': 'pl',
+};
+
 function normalizeLangList(langs?: string[]): string[] {
-  if (!langs || !Array.isArray(langs)) return [];
+  if (!langs || !Array.isArray(langs)) {
+    console.log(`🌍 [normalizeLangList] Input is empty/invalid: ${JSON.stringify(langs)}`);
+    return [];
+  }
+  console.log(`🌍 [normalizeLangList] Input languages: ${JSON.stringify(langs)}`);
   const out: string[] = [];
   for (const raw of langs) {
     if (!raw) continue;
-    const short = String(raw).toLowerCase().split(/[-_]/)[0];
+    let short = String(raw).toLowerCase().split(/[-_]/)[0];
+    const alias = LANG_CODE_ALIASES[short];
+    if (alias) {
+      console.log(`🌍 [normalizeLangList] Alias found: "${raw}" -> "${short}" -> "${alias}"`);
+      short = alias;
+    }
     if (!out.includes(short)) out.push(short);
   }
+  console.log(`🌍 [normalizeLangList] Output languages: ${JSON.stringify(out)}`);
   return out;
 }
 
@@ -744,6 +829,9 @@ export class TwilioCallManager {
     const supportedLangs = new Set(availablePromptLangs());
 
     // Get client's preferred language (first one that's supported, or "en")
+    console.log(`🌍 [LANG] Raw metadata.clientLanguages: ${JSON.stringify(callSession.metadata.clientLanguages)}`);
+    console.log(`🌍 [LANG] Raw metadata.providerLanguages: ${JSON.stringify(callSession.metadata.providerLanguages)}`);
+
     const clientLangs = normalizeLangList(callSession.metadata.clientLanguages || ["en"]);
     const clientLangKey = clientLangs.find(l => supportedLangs.has(l as LangCode)) || "en";
     const clientTtsLocale = localeFor(clientLangKey);
@@ -753,6 +841,7 @@ export class TwilioCallManager {
     const providerLangKey = providerLangs.find(l => supportedLangs.has(l as LangCode)) || "en";
     const providerTtsLocale = localeFor(providerLangKey);
 
+    console.log(`🌍 [LANG] Supported languages: ${JSON.stringify(Array.from(supportedLangs))}`);
     console.log(`🌍 [LANG] Client language: ${getLanguageName(clientLangKey)} (${clientLangKey})`);
     console.log(`🌍 [LANG] Provider language: ${getLanguageName(providerLangKey)} (${providerLangKey})`);
 
@@ -1165,14 +1254,14 @@ export class TwilioCallManager {
           // P0 CRITICAL FIX: Use Cloud Run URL directly (not base + function name)
           statusCallback: twilioCallWebhookUrl,
           statusCallbackMethod: "POST",
+          // P0 FIX 2026-01-18: Only valid statusCallbackEvent values
+          // "failed", "busy", "no-answer" are NOT events - they are STATUSES sent in "completed" callback
+          // Valid events: initiated, ringing, answered, completed
           statusCallbackEvent: [
+            "initiated",
             "ringing",
             "answered",
             "completed",
-            "failed",
-            "busy",
-            "no-answer",
-            "initiated",
           ],
           timeout: CALL_CONFIG.CALL_TIMEOUT,
           // ENREGISTREMENT DÉSACTIVÉ - Illégal sans consentement explicite (RGPD)
@@ -1554,10 +1643,12 @@ export class TwilioCallManager {
         // - If BOTH connectedAt exist, a real call happened and we should fail
         // - If only ONE connectedAt exists, the call never fully connected - allow retries
         //
-        const participant = participantType === 'provider'
+        const disconnectedParticipant = participantType === 'provider'
           ? session.participants.provider
           : session.participants.client;
-        const attemptCount = participant?.attemptCount || 0;
+        const otherParticipant = participantType === 'provider'
+          ? session.participants.client
+          : session.participants.provider;
         const maxRetries = CALL_CONFIG.MAX_RETRIES;
 
         // P0 FIX: Check if BOTH participants WERE connected (actual call happened)
@@ -1565,50 +1656,80 @@ export class TwilioCallManager {
         const clientWasConnected = session.participants.client.connectedAt !== undefined;
         const providerWasConnected = session.participants.provider.connectedAt !== undefined;
         const bothWereConnected = clientWasConnected && providerWasConnected;
-        const retriesExhausted = attemptCount >= maxRetries;
 
-        console.log(`📄 [handleEarlyDisconnection] 🔍 RETRY DECISION ANALYSIS (P0 FIX 2026-01-16):`);
+        // P0 FIX v2 2026-01-18: Check BOTH participants' retry status!
+        // BUG FIXED: When client disconnects while provider is still retrying,
+        // we were checking client.attemptCount (3) which marked retriesExhausted=true
+        // even though provider only had 1 attempt. This stopped provider retries!
+        //
+        // CORRECT LOGIC: Only mark retriesExhausted if BOTH participants have exhausted retries
+        // OR if the OTHER participant (the one still trying) has exhausted retries.
+        const disconnectedAttempts = disconnectedParticipant?.attemptCount || 0;
+        const otherAttempts = otherParticipant?.attemptCount || 0;
+        const otherParticipantType = participantType === 'provider' ? 'client' : 'provider';
+
+        // Retries are only truly exhausted if:
+        // 1. The disconnected participant exhausted their retries AND
+        // 2. The other participant is either connected OR has also exhausted retries
+        const otherIsConnected = otherParticipant?.connectedAt !== undefined;
+        const otherRetriesExhausted = otherAttempts >= maxRetries;
+        const retriesExhausted = disconnectedAttempts >= maxRetries && (otherIsConnected || otherRetriesExhausted);
+
+        console.log(`📄 [handleEarlyDisconnection] 🔍 RETRY DECISION ANALYSIS (P0 FIX v2 2026-01-18):`);
         console.log(`📄   ┌─────────────────────────────────────────────────────────────┐`);
-        console.log(`📄   │ participantType: ${participantType.padEnd(43)}│`);
-        console.log(`📄   │ attemptCount: ${String(attemptCount).padEnd(47)}│`);
+        console.log(`📄   │ participantType (disconnected): ${participantType.padEnd(26)}│`);
+        console.log(`📄   │ otherParticipantType (still trying): ${otherParticipantType.padEnd(21)}│`);
+        console.log(`📄   │ ${participantType}.attemptCount: ${String(disconnectedAttempts).padEnd(36)}│`);
+        console.log(`📄   │ ${otherParticipantType}.attemptCount: ${String(otherAttempts).padEnd(33)}│`);
         console.log(`📄   │ maxRetries: ${String(maxRetries).padEnd(49)}│`);
         console.log(`📄   │ client.status: ${(session.participants.client.status || 'undefined').padEnd(45)}│`);
         console.log(`📄   │ provider.status: ${(session.participants.provider.status || 'undefined').padEnd(43)}│`);
         console.log(`📄   │ client.connectedAt: ${(clientWasConnected ? 'YES' : 'NO').padEnd(40)}│`);
         console.log(`📄   │ provider.connectedAt: ${(providerWasConnected ? 'YES' : 'NO').padEnd(38)}│`);
         console.log(`📄   │ bothWereConnected (ACTUAL CALL): ${String(bothWereConnected).padEnd(26)}│`);
-        console.log(`📄   │ retriesExhausted: ${String(retriesExhausted).padEnd(42)}│`);
+        console.log(`📄   │ otherIsConnected: ${String(otherIsConnected).padEnd(42)}│`);
+        console.log(`📄   │ otherRetriesExhausted: ${String(otherRetriesExhausted).padEnd(37)}│`);
+        console.log(`📄   │ retriesExhausted (FINAL): ${String(retriesExhausted).padEnd(34)}│`);
         console.log(`📄   └─────────────────────────────────────────────────────────────┘`);
 
-        // P0 FIX: Only mark as failed if:
+        // P0 FIX v2: Only mark as failed if:
         // 1. BOTH participants were connected at some point (actual call happened, not just waiting)
-        // 2. OR all retry attempts have been exhausted for this participant
+        // 2. OR all retry attempts have been exhausted for BOTH participants
         if (bothWereConnected || retriesExhausted) {
           console.log(`📄   🔴 DECISION: CALL handleCallFailure`);
-          console.log(`📄      Reason: ${bothWereConnected ? 'BOTH participants were connected (actual call happened)' : `All ${maxRetries} attempts exhausted`}`);
+          if (bothWereConnected) {
+            console.log(`📄      Reason: BOTH participants were connected (actual call happened)`);
+          } else {
+            console.log(`📄      Reason: ${participantType} exhausted (${disconnectedAttempts}/${maxRetries}) AND ${otherParticipantType} ${otherIsConnected ? 'is connected' : `also exhausted (${otherAttempts}/${maxRetries})`}`);
+          }
           await this.handleCallFailure(
             sessionId,
             `early_disconnect_${participantType}`
           );
         } else {
-          console.log(`📄   🟢 DECISION: SKIP handleCallFailure`);
-          console.log(`📄      Reason: NOT both connected yet (client:${clientWasConnected}, provider:${providerWasConnected}) AND retries remain (${attemptCount}/${maxRetries})`);
-          console.log(`📄      The other participant's call attempt will continue or retry`);
+          console.log(`📄   🟢 DECISION: SKIP handleCallFailure - LET OTHER PARTICIPANT RETRY`);
+          console.log(`📄      Reason: ${otherParticipantType} has retries remaining (${otherAttempts}/${maxRetries})`);
+          console.log(`📄      The ${otherParticipantType}'s call attempts will continue`);
         }
         console.log(`${'═'.repeat(70)}\n`);
 
         await logCallRecord({
           callId: sessionId,
           status: `early_disconnect_${participantType}`,
-          retryCount: attemptCount,
+          retryCount: disconnectedAttempts,
           additionalData: {
             participantType,
+            otherParticipantType,
             duration,
             reason: "below_min_duration",
             handledByRetryLoop: !bothWereConnected && !retriesExhausted,
             clientWasConnected,
             providerWasConnected,
             bothWereConnected,
+            disconnectedAttempts,
+            otherAttempts,
+            otherIsConnected,
+            otherRetriesExhausted,
             retriesExhausted,
           },
         });
@@ -1867,6 +1988,23 @@ export class TwilioCallManager {
           console.error(`⚠️ Failed to send provider notification (non-blocking):`, notifError);
           await logError('TwilioCallManager:handleCallFailure:providerNotification', notifError as unknown);
         }
+
+        // P0 FIX: Remettre le provider AVAILABLE immédiatement (pas sa faute si client ne répond pas)
+        try {
+          const providerId = callSession.metadata?.providerId;
+          if (providerId) {
+            console.log(`🟢 [handleCallFailure] Setting provider ${providerId} back to AVAILABLE (client_no_answer)`);
+            const availableResult = await setProviderAvailable(providerId, 'client_no_answer');
+            if (availableResult.success) {
+              console.log(`✅ [handleCallFailure] Provider ${providerId} is now AVAILABLE`);
+            } else {
+              console.warn(`⚠️ [handleCallFailure] Failed to set provider available: ${availableResult.error}`);
+            }
+          }
+        } catch (availableError) {
+          console.error(`⚠️ [handleCallFailure] Error setting provider available:`, availableError);
+          await logError('TwilioCallManager:handleCallFailure:setProviderAvailable', availableError as unknown);
+        }
       }
 
       await this.processRefund(sessionId, `failed_${reason}`);
@@ -1883,15 +2021,20 @@ export class TwilioCallManager {
       }
 
       // ===== COOLDOWN: Schedule provider to become available in 5 minutes =====
-      try {
-        const taskId = await scheduleProviderAvailableTask(
-          callSession.metadata.providerId,
-          `call_failed_${reason}`
-        );
-        console.log(`🕐 Provider ${callSession.metadata.providerId} will be AVAILABLE in 5 min (task: ${taskId})`);
-      } catch (availableError) {
-        console.error(`⚠️ Failed to schedule provider available task after failure (non-blocking):`, availableError);
-        await logError('TwilioCallManager:handleCallFailure:scheduleAvailable', availableError as unknown);
+      // P0 FIX: Skip cooldown pour client_no_answer (provider déjà remis available ci-dessus)
+      if (reason !== "client_no_answer") {
+        try {
+          const taskId = await scheduleProviderAvailableTask(
+            callSession.metadata.providerId,
+            `call_failed_${reason}`
+          );
+          console.log(`🕐 Provider ${callSession.metadata.providerId} will be AVAILABLE in 5 min (task: ${taskId})`);
+        } catch (availableError) {
+          console.error(`⚠️ Failed to schedule provider available task after failure (non-blocking):`, availableError);
+          await logError('TwilioCallManager:handleCallFailure:scheduleAvailable', availableError as unknown);
+        }
+      } else {
+        console.log(`🟢 [handleCallFailure] Skipping 5-min cooldown for client_no_answer (provider already available)`);
       }
 
       await logCallRecord({
