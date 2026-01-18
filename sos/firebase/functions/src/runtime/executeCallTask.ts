@@ -1,6 +1,5 @@
 // firebase/functions/src/runtime/executeCallTask.ts - VERSION CORRIGÉE
 import { Request, Response } from "express";
-import { defineSecret } from "firebase-functions/params";
 // import { onRequest } from "firebase-functions/v2/https";
 import { getFirestore } from "firebase-admin/firestore";
 import { getTwilioClient, getTwilioPhoneNumber } from "../lib/twilio";
@@ -8,13 +7,20 @@ import { beginOutboundCallForSession } from "../services/twilioCallManagerAdapte
 import { logError } from "../utils/logs/logError";
 import { logCallRecord } from "../utils/logs/logCallRecord";
 
-const db = getFirestore();
+// P0 FIX: Import from centralized secrets - NEVER call defineSecret() here!
+import {
+  TASKS_AUTH_SECRET,
+  TWILIO_ACCOUNT_SID,
+  TWILIO_AUTH_TOKEN,
+  TWILIO_PHONE_NUMBER,
+  TWILIO_SECRETS,
+  getTasksAuthSecret,
+} from "../lib/secrets";
 
-// --- Secrets (v2) ---
-export const TASKS_AUTH_SECRET = defineSecret("TASKS_AUTH_SECRET");
-export const TWILIO_ACCOUNT_SID = defineSecret("TWILIO_ACCOUNT_SID");
-export const TWILIO_AUTH_TOKEN = defineSecret("TWILIO_AUTH_TOKEN");
-export const TWILIO_PHONE_NUMBER = defineSecret("TWILIO_PHONE_NUMBER");
+// Re-export for backwards compatibility
+export { TASKS_AUTH_SECRET, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER, TWILIO_SECRETS };
+
+const db = getFirestore();
 
 // --- Handler principal ---
 export async function runExecuteCallTask(req: Request, res: Response): Promise<void> {
@@ -29,7 +35,7 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
 
     // ✅ ÉTAPE 1: Authentification Cloud Tasks
     const authHeader = req.get("X-Task-Auth") || "";
-    const expectedAuth = TASKS_AUTH_SECRET.value() || "";
+    const expectedAuth = getTasksAuthSecret() || "";
     
     console.log('🔐 [executeCallTask] Auth check:', {
       hasAuthHeader: !!authHeader,

@@ -27,24 +27,34 @@ const emergencyConfig = {
 
 // ====== CONFIGURATION GLOBALE CENTRALISÉE ======
 import { setGlobalOptions } from "firebase-functions/v2";
-import { defineSecret, defineString } from "firebase-functions/params";
 
-// 🔐 Déclarations **UNIQUEMENT** des secrets que tu utilises réellement
-export const EMAIL_USER = defineSecret("EMAIL_USER");
-export const EMAIL_PASS = defineSecret("EMAIL_PASS");
-// export const EMAIL_FROM = defineSecret("EMAIL_FROM"); // optionnel
+// P0 FIX: Import ALL secrets from centralized secrets.ts
+// NEVER call defineSecret() in this file - it causes credential conflicts!
+import {
+  EMAIL_USER,
+  EMAIL_PASS,
+  TWILIO_ACCOUNT_SID,
+  TWILIO_AUTH_TOKEN,
+  TWILIO_PHONE_NUMBER,
+  STRIPE_SECRET_KEY_TEST,
+  STRIPE_SECRET_KEY_LIVE,
+  ENCRYPTION_KEY,
+  TASKS_AUTH_SECRET,
+  OUTIL_API_KEY,
+  OUTIL_SYNC_API_KEY,
+} from "./lib/secrets";
 
-// Twilio (si utilisés)
-export const TWILIO_ACCOUNT_SID = defineSecret("TWILIO_ACCOUNT_SID");
-export const TWILIO_AUTH_TOKEN = defineSecret("TWILIO_AUTH_TOKEN");
-export const TWILIO_PHONE_NUMBER = defineSecret("TWILIO_PHONE_NUMBER");
-
-// Stripe
-export const STRIPE_SECRET_KEY_TEST = defineSecret("STRIPE_SECRET_KEY_TEST");
-export const STRIPE_SECRET_KEY_LIVE = defineSecret("STRIPE_SECRET_KEY_LIVE");
-
-// Encryption (GDPR - phone numbers)
-export const ENCRYPTION_KEY = defineSecret("ENCRYPTION_KEY");
+// Re-export for backwards compatibility
+export {
+  EMAIL_USER,
+  EMAIL_PASS,
+  TWILIO_ACCOUNT_SID,
+  TWILIO_AUTH_TOKEN,
+  TWILIO_PHONE_NUMBER,
+  STRIPE_SECRET_KEY_TEST,
+  STRIPE_SECRET_KEY_LIVE,
+  ENCRYPTION_KEY,
+};
 
 // Meta Conversions API (CAPI) - for Facebook Ads attribution
 import { trackStripePurchase, META_CAPI_TOKEN } from "./metaConversionsApi";
@@ -376,13 +386,11 @@ const PAYPAL_CLIENT_SECRET = _PAYPAL_CLIENT_SECRET;
 const PAYPAL_WEBHOOK_ID = _PAYPAL_WEBHOOK_ID;
 const PAYPAL_PARTNER_ID = _PAYPAL_PARTNER_ID;
 
-// Cloud Tasks auth
-export const TASKS_AUTH_SECRET = defineSecret("TASKS_AUTH_SECRET");
+// Cloud Tasks auth - imported from ./lib/secrets
+export { TASKS_AUTH_SECRET };
 
-// Outil-sos-expat API Key (for AI proxy)
-export const OUTIL_API_KEY = defineSecret("OUTIL_API_KEY");
-// Outil-sos-expat Sync API Key (for booking sync after payment)
-export const OUTIL_SYNC_API_KEY = defineSecret("OUTIL_SYNC_API_KEY");
+// Outil-sos-expat API Keys - imported from ./lib/secrets
+export { OUTIL_API_KEY, OUTIL_SYNC_API_KEY };
 
 // MailWizz Email Marketing
 // import { MAILWIZZ_API_KEY, MAILWIZZ_WEBHOOK_SECRET } from "./emailMarketing/config";
@@ -457,21 +465,22 @@ export { forceEndCallTask } from "./runtime/forceEndCallTask";
 ultraLogger.debug("IMPORTS", "Imports principaux chargés avec succès");
 
 // ====== PARAMS & SECRETS ADDITIONNELS ======
-export const STRIPE_MODE = defineString("STRIPE_MODE"); // 'test' | 'live'
-export const STRIPE_WEBHOOK_SECRET_TEST = defineSecret(
-  "STRIPE_WEBHOOK_SECRET_TEST"
-);
-export const STRIPE_WEBHOOK_SECRET_LIVE = defineSecret(
-  "STRIPE_WEBHOOK_SECRET_LIVE"
-);
+// P0 FIX: Import from centralized secrets.ts
+import {
+  STRIPE_MODE,
+  STRIPE_WEBHOOK_SECRET_TEST,
+  STRIPE_WEBHOOK_SECRET_LIVE,
+  STRIPE_CONNECT_WEBHOOK_SECRET_TEST,
+  STRIPE_CONNECT_WEBHOOK_SECRET_LIVE,
+} from "./lib/secrets";
 
-// Secrets pour le webhook Connect (Direct Charges - evenements des comptes connectes)
-export const STRIPE_CONNECT_WEBHOOK_SECRET_TEST = defineSecret(
-  "STRIPE_CONNECT_WEBHOOK_SECRET_TEST"
-);
-export const STRIPE_CONNECT_WEBHOOK_SECRET_LIVE = defineSecret(
-  "STRIPE_CONNECT_WEBHOOK_SECRET_LIVE"
-);
+export {
+  STRIPE_MODE,
+  STRIPE_WEBHOOK_SECRET_TEST,
+  STRIPE_WEBHOOK_SECRET_LIVE,
+  STRIPE_CONNECT_WEBHOOK_SECRET_TEST,
+  STRIPE_CONNECT_WEBHOOK_SECRET_LIVE,
+};
 
 // Helpers de sélection de secrets selon le mode
 function isLive(): boolean {

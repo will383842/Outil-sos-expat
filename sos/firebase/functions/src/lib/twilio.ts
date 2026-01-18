@@ -1,6 +1,33 @@
 import twilio from "twilio";
+import { Twilio } from "twilio";
 import { Request, Response } from "express";
-import { defineSecret } from "firebase-functions/params";
+
+// P0 FIX: Import from centralized secrets - NEVER call defineSecret() here!
+import {
+  TWILIO_ACCOUNT_SID,
+  TWILIO_AUTH_TOKEN,
+  TWILIO_PHONE_NUMBER,
+  TWILIO_SECRETS,
+  getTwilioAccountSid as getAccountSidFromSecrets,
+  getTwilioAuthToken as getAuthTokenFromSecrets,
+  getTwilioPhoneNumberValue as getPhoneNumberFromSecrets,
+} from "./secrets";
+
+// Re-export for backwards compatibility
+export {
+  TWILIO_ACCOUNT_SID,
+  TWILIO_AUTH_TOKEN,
+  TWILIO_PHONE_NUMBER,
+  TWILIO_SECRETS,
+};
+
+// ============================================================================
+// P0 FIX: Twilio Client Cache
+// Creating a new client on every call causes memory/latency issues
+// ============================================================================
+
+let cachedTwilioClient: Twilio | null = null;
+let cachedCredentialHash: string | null = null;
 
 // ============================================================================
 // P2-14 FIX: Circuit Breaker for Twilio API
@@ -17,12 +44,16 @@ interface CircuitBreakerState {
 }
 
 const CIRCUIT_BREAKER_CONFIG = {
-  FAILURE_THRESHOLD: 5,        // Open circuit after 5 consecutive failures
-  RESET_TIMEOUT_MS: 30_000,    // Try again after 30 seconds
+  FAILURE_THRESHOLD: 3,        // P0 FIX: Open circuit after 3 consecutive failures (was 5)
+  RESET_TIMEOUT_MS: 15_000,    // P0 FIX: Try again after 15 seconds (was 30)
   HALF_OPEN_MAX_CALLS: 1,      // Allow 1 test call in half-open state
 };
 
-// Circuit breaker state (in-memory, resets on cold start - acceptable for Cloud Functions)
+// Circuit breaker state (in-memory per instance)
+// P0 NOTE: Each Cloud Run instance has its own state. This is acceptable because:
+// 1. Twilio errors are typically transient (network issues, rate limits)
+// 2. Having each instance track its own failures provides isolation
+// 3. Full Firestore persistence would add latency to every call
 const circuitBreaker: CircuitBreakerState = {
   state: "CLOSED",
   failures: 0,
@@ -138,127 +169,74 @@ export function getCircuitBreakerStatus(): CircuitBreakerState & { config: typeo
   };
 }
 
+/**
+ * Reset circuit breaker to closed state (useful for testing/debugging)
+ */
+export function resetCircuitBreaker(): void {
+  const previousState = circuitBreaker.state;
+  circuitBreaker.state = "CLOSED";
+  circuitBreaker.failures = 0;
+  circuitBreaker.lastFailureTime = 0;
+  circuitBreaker.lastSuccessTime = Date.now();
+  console.log(`[CircuitBreaker] MANUAL RESET: ${previousState} → CLOSED`);
+}
+
 // ============================================================================
-// P0 CRITICAL FIX: Use Firebase v2 defineSecret instead of process.env
-// process.env does NOT work for Firebase v2 secrets!
+// P0 FIX: Use centralized secrets from ./secrets.ts
+// NEVER call defineSecret() in this file - it causes credential conflicts!
 // ============================================================================
 
-// Define secrets using Firebase v2 params
-const TWILIO_ACCOUNT_SID_SECRET = defineSecret("TWILIO_ACCOUNT_SID");
-const TWILIO_AUTH_TOKEN_SECRET = defineSecret("TWILIO_AUTH_TOKEN");
-const TWILIO_PHONE_NUMBER_SECRET = defineSecret("TWILIO_PHONE_NUMBER");
+// Use centralized getters from secrets.ts
+const getAccountSid = getAccountSidFromSecrets;
+const getAuthToken = getAuthTokenFromSecrets;
+const getPhoneNumber = getPhoneNumberFromSecrets;
 
-// Fallback to process.env for backwards compatibility (emulator, local dev)
-function getAccountSid(): string {
-  // Try Firebase v2 secret first
-  try {
-    const secretValue = TWILIO_ACCOUNT_SID_SECRET.value()?.trim();
-    if (secretValue && secretValue.length > 0) {
-      console.log(`🔐 [Twilio] ACCOUNT_SID loaded from Firebase Secret (length: ${secretValue.length})`);
-      return secretValue;
-    }
-  } catch (e) {
-    console.log(`⚠️ [Twilio] Firebase Secret not available, trying process.env`);
-  }
-
-  // Fallback to process.env
-  const envValue = process.env.TWILIO_ACCOUNT_SID?.trim();
-  if (envValue && envValue.length > 0) {
-    console.log(`🔐 [Twilio] ACCOUNT_SID loaded from process.env (length: ${envValue.length})`);
-    return envValue;
-  }
-
-  console.error(`❌ [Twilio] ACCOUNT_SID NOT FOUND in Secret OR process.env`);
-  return "";
-}
-
-function getAuthToken(): string {
-  // Try Firebase v2 secret first
-  try {
-    const secretValue = TWILIO_AUTH_TOKEN_SECRET.value()?.trim();
-    if (secretValue && secretValue.length > 0) {
-      console.log(`🔐 [Twilio] AUTH_TOKEN loaded from Firebase Secret (length: ${secretValue.length})`);
-      return secretValue;
-    }
-  } catch (e) {
-    console.log(`⚠️ [Twilio] Firebase Secret not available, trying process.env`);
-  }
-
-  // Fallback to process.env
-  const envValue = process.env.TWILIO_AUTH_TOKEN?.trim();
-  if (envValue && envValue.length > 0) {
-    console.log(`🔐 [Twilio] AUTH_TOKEN loaded from process.env (length: ${envValue.length})`);
-    return envValue;
-  }
-
-  console.error(`❌ [Twilio] AUTH_TOKEN NOT FOUND in Secret OR process.env`);
-  return "";
-}
-
-function getPhoneNumber(): string {
-  // Try Firebase v2 secret first
-  try {
-    const secretValue = TWILIO_PHONE_NUMBER_SECRET.value()?.trim();
-    if (secretValue && secretValue.length > 0) {
-      console.log(`🔐 [Twilio] PHONE_NUMBER loaded from Firebase Secret: ${secretValue.substring(0, 5)}...`);
-      return secretValue;
-    }
-  } catch (e) {
-    console.log(`⚠️ [Twilio] Firebase Secret not available, trying process.env`);
-  }
-
-  // Fallback to process.env
-  const envValue = process.env.TWILIO_PHONE_NUMBER?.trim();
-  if (envValue && envValue.length > 0) {
-    console.log(`🔐 [Twilio] PHONE_NUMBER loaded from process.env: ${envValue.substring(0, 5)}...`);
-    return envValue;
-  }
-
-  console.error(`❌ [Twilio] PHONE_NUMBER NOT FOUND in Secret OR process.env`);
-  return "";
-}
-
-export function getTwilioClient() {
-  console.log(`📞 [Twilio] === getTwilioClient() CALLED ===`);
+export function getTwilioClient(): Twilio {
+  console.log(`[Twilio] getTwilioClient() called`);
 
   const accountSid = getAccountSid();
   const authToken = getAuthToken();
 
-  console.log(`📞 [Twilio] Credential check:`, {
-    hasAccountSid: !!accountSid,
-    accountSidLength: accountSid?.length || 0,
-    accountSidPrefix: accountSid ? accountSid.substring(0, 6) : 'MISSING',
-    hasAuthToken: !!authToken,
-    authTokenLength: authToken?.length || 0,
-  });
-
   if (!accountSid || !authToken) {
-    console.error(`❌ [Twilio] CRITICAL: Twilio credentials missing!`);
-    console.error(`❌ [Twilio] ACCOUNT_SID: ${accountSid ? 'OK' : 'MISSING'}`);
-    console.error(`❌ [Twilio] AUTH_TOKEN: ${authToken ? 'OK' : 'MISSING'}`);
+    console.error(`[Twilio] CRITICAL: Twilio credentials missing!`);
+    console.error(`[Twilio] ACCOUNT_SID: ${accountSid ? 'OK' : 'MISSING'}`);
+    console.error(`[Twilio] AUTH_TOKEN: ${authToken ? 'OK' : 'MISSING'}`);
     throw new Error("Twilio credentials missing (TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN). Check Firebase Secrets.");
   }
 
-  console.log(`✅ [Twilio] Creating Twilio client with SID: ${accountSid.substring(0, 6)}...`);
-  return twilio(accountSid, authToken);
+  // P0 FIX: Use cached client if credentials haven't changed
+  const credentialHash = `${accountSid.substring(0, 10)}:${authToken.length}`;
+
+  if (cachedTwilioClient && cachedCredentialHash === credentialHash) {
+    console.log(`[Twilio] Using cached client`);
+    return cachedTwilioClient;
+  }
+
+  console.log(`[Twilio] Creating new Twilio client (SID: ${accountSid.substring(0, 6)}...)`);
+  cachedTwilioClient = twilio(accountSid, authToken) as Twilio;
+  cachedCredentialHash = credentialHash;
+
+  return cachedTwilioClient;
 }
 
-export function getTwilioPhoneNumber() {
-  console.log(`📞 [Twilio] === getTwilioPhoneNumber() CALLED ===`);
+export function getTwilioPhoneNumber(): string {
+  console.log(`[Twilio] getTwilioPhoneNumber() called`);
 
   const phoneNumber = getPhoneNumber();
 
   if (!phoneNumber) {
-    console.error(`❌ [Twilio] CRITICAL: TWILIO_PHONE_NUMBER missing!`);
+    console.error(`[Twilio] CRITICAL: TWILIO_PHONE_NUMBER missing!`);
     throw new Error("TWILIO_PHONE_NUMBER missing. Check Firebase Secrets.");
   }
 
-  console.log(`✅ [Twilio] Phone number: ${phoneNumber.substring(0, 5)}...`);
+  console.log(`[Twilio] Phone number: ${phoneNumber.substring(0, 5)}...`);
   return phoneNumber;
 }
 
-// Export secrets for functions that need to declare them
-export { TWILIO_ACCOUNT_SID_SECRET, TWILIO_AUTH_TOKEN_SECRET, TWILIO_PHONE_NUMBER_SECRET };
+// Legacy exports for backwards compatibility - use TWILIO_SECRETS from ./secrets.ts instead
+export const TWILIO_ACCOUNT_SID_SECRET = TWILIO_ACCOUNT_SID;
+export const TWILIO_AUTH_TOKEN_SECRET = TWILIO_AUTH_TOKEN;
+export const TWILIO_PHONE_NUMBER_SECRET = TWILIO_PHONE_NUMBER;
 
 /**
  * Valide la signature d'un webhook Twilio
@@ -339,7 +317,9 @@ export function twilioValidationMiddleware(
 }
 
 /** Compat: certains fichiers importent encore ces constantes */
-// Note: Ces exports sont des getters dynamiques pour compatibilité
-export const getTwilioAccountSid = getAccountSid;
-export const getTwilioAuthToken = getAuthToken;
-export const getTwilioPhoneNumberExport = getPhoneNumber;
+// Note: These re-export the centralized getters for backwards compatibility
+export {
+  getAccountSidFromSecrets as getTwilioAccountSid,
+  getAuthTokenFromSecrets as getTwilioAuthToken,
+  getPhoneNumberFromSecrets as getTwilioPhoneNumberExport,
+};
