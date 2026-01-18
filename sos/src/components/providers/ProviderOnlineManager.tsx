@@ -18,6 +18,9 @@ const ProviderOnlineManager: React.FC<ProviderOnlineManagerProps> = ({ children 
   const isOnline = user?.isOnline === true;
   const shouldTrack = Boolean(user && isProvider && isOnline);
 
+  // 🔍 DEBUG: Log état du tracking
+  console.log(`[ProviderOnlineManager] 🔍 user=${user?.uid}, type=${user?.type}, role=${user?.role}, isOnline=${user?.isOnline}, isProvider=${isProvider}, shouldTrack=${shouldTrack}`);
+
   // Hook de tracking d'activité - toujours appelé mais désactivé si pas prestataire
   const { lastActivity } = useProviderActivityTracker({
     userId: user?.uid || '',

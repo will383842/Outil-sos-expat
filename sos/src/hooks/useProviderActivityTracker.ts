@@ -4,6 +4,37 @@ import { functions } from '../config/firebase';
 import { PROVIDER_ACTIVITY_CONFIG, toMs } from '../config/providerActivityConfig';
 import type { ActivityEvent } from '../types/providerActivity';
 
+// Clé localStorage pour persister lastActivity
+const LAST_ACTIVITY_KEY = 'provider_last_activity';
+
+// Charger lastActivity depuis localStorage (survit aux navigations/refresh)
+const loadLastActivity = (): Date => {
+  try {
+    const stored = localStorage.getItem(LAST_ACTIVITY_KEY);
+    if (stored) {
+      const date = new Date(parseInt(stored, 10));
+      // Vérifier que la date est valide et pas trop vieille (max 24h)
+      if (!isNaN(date.getTime()) && Date.now() - date.getTime() < 24 * 60 * 60 * 1000) {
+        console.log('[ActivityTracker] ✅ Loaded lastActivity from localStorage:', date.toISOString());
+        return date;
+      }
+    }
+  } catch (e) {
+    console.error('[ActivityTracker] Error loading lastActivity:', e);
+  }
+  console.log('[ActivityTracker] 🆕 No stored lastActivity, using current time');
+  return new Date();
+};
+
+// Sauvegarder lastActivity dans localStorage
+const saveLastActivity = (date: Date) => {
+  try {
+    localStorage.setItem(LAST_ACTIVITY_KEY, date.getTime().toString());
+  } catch (e) {
+    console.error('[ActivityTracker] Error saving lastActivity:', e);
+  }
+};
+
 interface UseProviderActivityTrackerProps {
   userId: string;
   isOnline: boolean;
@@ -15,9 +46,9 @@ export const useProviderActivityTracker = ({
   isOnline,
   isProvider,
 }: UseProviderActivityTrackerProps) => {
-  // ✅ CRITICAL FIX: Use state instead of ref for lastActivity to trigger re-renders
-  const [lastActivity, setLastActivity] = useState<Date>(new Date());
-  const lastActivityRef = useRef<Date>(new Date()); // Keep ref for debounce callback
+  // ✅ CRITICAL FIX: Load lastActivity from localStorage to survive page navigation
+  const [lastActivity, setLastActivity] = useState<Date>(() => loadLastActivity());
+  const lastActivityRef = useRef<Date>(lastActivity); // Keep ref for debounce callback
   const updateIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -51,6 +82,9 @@ export const useProviderActivityTracker = ({
     // ✅ CRITICAL FIX: Update both ref (for callbacks) AND state (for re-renders)
     lastActivityRef.current = activityEvent.timestamp;
     setLastActivity(activityEvent.timestamp);
+
+    // ✅ CRITICAL FIX: Persist to localStorage to survive page navigation
+    saveLastActivity(activityEvent.timestamp);
 
     // Debounce pour éviter trop de mises à jour
     if (debounceTimerRef.current) {

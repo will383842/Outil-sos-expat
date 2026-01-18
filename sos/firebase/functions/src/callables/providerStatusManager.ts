@@ -77,6 +77,14 @@ export async function setProviderBusy(
   reason: BusyReason = 'in_call'
 ): Promise<ProviderStatusResponse> {
   const now = admin.firestore.Timestamp.now();
+  const logId = `busy_${Date.now().toString(36)}`;
+
+  console.log(`\n${'🔶'.repeat(35)}`);
+  console.log(`🔶 [${logId}] setProviderBusy CALLED`);
+  console.log(`🔶 [${logId}]   providerId: ${providerId}`);
+  console.log(`🔶 [${logId}]   callSessionId: ${callSessionId}`);
+  console.log(`🔶 [${logId}]   reason: ${reason}`);
+  console.log(`${'🔶'.repeat(35)}`);
 
   try {
     // 1. Récupérer le statut actuel
@@ -84,7 +92,7 @@ export async function setProviderBusy(
     const userDoc = await userRef.get();
 
     if (!userDoc.exists) {
-      console.warn(`[ProviderStatusManager] Provider not found: ${providerId}`);
+      console.warn(`🔶 [${logId}] ❌ Provider not found: ${providerId}`);
       return {
         success: false,
         providerId,
@@ -94,19 +102,22 @@ export async function setProviderBusy(
         error: 'Provider not found',
       };
     }
+    console.log(`🔶 [${logId}] ✅ Provider found in users collection`);
 
     const userData = userDoc.data();
     const previousStatus: AvailabilityStatus =
       (userData?.availability as AvailabilityStatus) || 'available';
 
+    console.log(`🔶 [${logId}] Current status: ${previousStatus}, isOnline: ${userData?.isOnline}`);
+
     // 2. Vérifier si déjà busy
     if (previousStatus === 'busy') {
       // Si le provider est busy par un sibling, on peut l'écraser avec son propre appel
       if (userData?.busyBySibling === true) {
-        console.log(`[ProviderStatusManager] Provider ${providerId} was busyBySibling, now in own call`);
+        console.log(`🔶 [${logId}] Provider was busyBySibling, now in own call - will update`);
         // Continue pour mettre à jour avec son propre appel
       } else {
-        console.log(`[ProviderStatusManager] Provider ${providerId} already busy (own call)`);
+        console.log(`🔶 [${logId}] Provider already busy (own call) - skipping update`);
         return {
           success: true,
           providerId,
@@ -154,9 +165,16 @@ export async function setProviderBusy(
       timestamp: now,
     });
 
+    console.log(`🔶 [${logId}] Committing batch update...`);
     await batch.commit();
 
-    console.log(`✅ [ProviderStatusManager] Provider ${providerId} set to BUSY (session: ${callSessionId})`);
+    console.log(`🔶 [${logId}] ═══════════════════════════════════════════════════════════`);
+    console.log(`🔶 [${logId}] ✅ SUCCESS: Provider ${providerId} set to BUSY`);
+    console.log(`🔶 [${logId}]   previousStatus: ${previousStatus}`);
+    console.log(`🔶 [${logId}]   newStatus: busy`);
+    console.log(`🔶 [${logId}]   callSessionId: ${callSessionId}`);
+    console.log(`🔶 [${logId}]   reason: ${reason}`);
+    console.log(`🔶 [${logId}] ═══════════════════════════════════════════════════════════`);
 
     // 4. Propager aux prestataires liés si shareBusyStatus est activé
     const linkedProviderIds: string[] = userData?.linkedProviderIds || [];
@@ -177,7 +195,10 @@ export async function setProviderBusy(
     };
 
   } catch (error) {
-    console.error(`❌ [ProviderStatusManager] Error setting provider busy:`, error);
+    console.error(`🔶 [${logId}] ❌ ERROR setting provider busy:`, error);
+    console.error(`🔶 [${logId}]   providerId: ${providerId}`);
+    console.error(`🔶 [${logId}]   callSessionId: ${callSessionId}`);
+    console.error(`🔶 [${logId}]   error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     await logError('providerStatusManager:setProviderBusy', error as unknown);
 
     return {
