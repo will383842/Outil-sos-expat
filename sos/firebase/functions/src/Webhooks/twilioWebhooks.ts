@@ -357,26 +357,27 @@ async function handleCallAnswered(
     }
     console.log(`📞 [${webhookId}] ✅ CallSid validated - matches current call attempt`);
 
-    // P0 FIX: Vérifier si c'est un répondeur qui a répondu (AMD - Answering Machine Detection)
-    // Avec machineDetection: "DetectMessageEnd", AnsweredBy devrait TOUJOURS être défini
-    // Valeurs possibles: human, machine_start, machine_end_beep, machine_end_silence, machine_end_other, fax
+    // P0 FIX 2026-01-18: IGNORE AnsweredBy in status callback!
+    // With asyncAmd="true", AMD detection is handled EXCLUSIVELY by twilioAmdTwiml callback.
+    // Even if Twilio sends AnsweredBy here, we MUST ignore it because:
+    // 1. The initial AMD detection (machine_start) has HIGH FALSE POSITIVE rate
+    // 2. We now use DTMF confirmation to verify human presence
+    // 3. Acting on AnsweredBy here causes race conditions and premature hangups
+    //
+    // ALL AMD decisions are made in twilioAmdTwiml which:
+    // - Returns Gather TwiML for DTMF confirmation
+    // - Only hangs up on confirmed machine_end_* (voicemail beep heard)
     const answeredBy = body.AnsweredBy;
 
     console.log(`📞 [${webhookId}] STEP 1: AMD Detection`);
     console.log(`📞 [${webhookId}]   answeredBy value: "${answeredBy || 'UNDEFINED'}"`);
     console.log(`📞 [${webhookId}]   participantType: ${participantType}`);
+    console.log(`📞 [${webhookId}]   ⚠️ P0 FIX: IGNORING AnsweredBy in status callback - twilioAmdTwiml handles AMD!`);
 
-    // P0 FIX: RACE CONDITION FIX
-    // With asyncAmd="true", the AMD result comes via twilioAmdTwiml callback, NOT here!
-    // If answeredBy is undefined, we MUST NOT set status to "connected" yet.
-    // The twilioAmdTwiml callback will determine human vs machine and set the correct status.
-    // Setting "connected" here would cause waitForConnection() to return true BEFORE
-    // we know if it's a human or voicemail, causing the provider to be called incorrectly.
-
-    if (!answeredBy) {
-      // asyncAmd="true" means AMD result comes via twilioAmdTwiml, not here
-      // DO NOT set status to "connected" - wait for twilioAmdTwiml to decide
-      console.log(`📞 [${webhookId}] ⚠️ AnsweredBy is UNDEFINED - asyncAmd mode active`);
+    // P0 FIX 2026-01-18: ALWAYS set amd_pending, regardless of AnsweredBy value
+    // The twilioAmdTwiml callback handles ALL AMD decisions with DTMF confirmation
+    {
+      console.log(`📞 [${webhookId}] ⚠️ Setting status to "amd_pending" - twilioAmdTwiml will handle AMD`);
       console.log(`📞 [${webhookId}]   AMD detection is handled by twilioAmdTwiml callback`);
       console.log(`📞 [${webhookId}]   ⛔ NOT setting status to "connected" - waiting for AMD callback`);
       console.log(`📞 [${webhookId}]   twilioAmdTwiml will set: "connected" if human, "no_answer" if machine`);
@@ -405,130 +406,9 @@ async function handleCallAnswered(
       return; // Return early - let twilioAmdTwiml handle the status update
     }
 
-    // If answeredBy IS provided (rare case without asyncAmd), process it here
-    const effectiveAnsweredBy = answeredBy;
-    const isMachine = effectiveAnsweredBy.startsWith('machine') || effectiveAnsweredBy === 'fax';
-    console.log(`📞 [${webhookId}]   isMachine: ${isMachine}`);
-
-    if (isMachine) {
-      console.log(`📞 [${webhookId}] ⚠️ MACHINE DETECTED - Setting status to "no_answer" and hanging up`);
-      prodLogger.info('TWILIO_CALL_ANSWERED_MACHINE', `Answering machine detected for ${participantType}`, {
-        sessionId,
-        participantType,
-        answeredBy,
-        callSid: body.CallSid?.slice(0, 20) + '...'
-      });
-
-      // Raccrocher l'appel immédiatement pour éviter de laisser un message
-      try {
-        const { getTwilioClient } = await import('../lib/twilio');
-        const twilioClient = getTwilioClient();
-        await twilioClient.calls(body.CallSid).update({ status: 'completed' });
-        console.log(`📞 [${webhookId}] ✅ Call ${body.CallSid} hung up (voicemail)`);
-      } catch (hangupError) {
-        console.error(`📞 [${webhookId}] ⚠️ Hangup error:`, hangupError);
-      }
-
-      // Mettre à jour le statut comme "no_answer" pour permettre les retries
-      console.log(`📞 [${webhookId}] Setting participant status to "no_answer"...`);
-      await twilioCallManager.updateParticipantStatus(
-        sessionId,
-        participantType,
-        'no_answer'
-      );
-      console.log(`📞 [${webhookId}] ✅ Status set to "no_answer"`);
-
-      await logCallRecord({
-        callId: sessionId,
-        status: `${participantType}_answered_by_machine`,
-        retryCount: 0,
-        additionalData: {
-          callSid: body.CallSid,
-          answeredBy,
-          action: 'hangup_and_retry'
-        }
-      });
-
-      console.log(`📞 [${webhookId}] END - Machine detected, returning early`);
-      console.log(`${'═'.repeat(70)}\n`);
-      return; // Ne pas continuer avec le traitement normal
-    }
-
-    // HUMAN ANSWERED (only reaches here if answeredBy was explicitly provided)
-    console.log(`📞 [${webhookId}] STEP 2: HUMAN ANSWERED - Setting status to "connected"`);
-    console.log(`📞 [${webhookId}]   This is the CRITICAL step that allows waitForConnection() to succeed!`);
-
-    prodLogger.info('TWILIO_CALL_ANSWERED', `Call answered by ${participantType}`, {
-      sessionId,
-      participantType,
-      answeredBy,
-      callSid: body.CallSid?.slice(0, 20) + '...'
-    });
-
-    // Get current status before update for debugging
-    const sessionBefore = await twilioCallManager.getCallSession(sessionId);
-    const participantBefore = participantType === 'provider'
-      ? sessionBefore?.participants.provider
-      : sessionBefore?.participants.client;
-    console.log(`📞 [${webhookId}]   Status BEFORE update: "${participantBefore?.status}"`);
-
-    await twilioCallManager.updateParticipantStatus(
-      sessionId,
-      participantType,
-      'connected',
-      admin.firestore.Timestamp.fromDate(new Date())
-    );
-
-    // Verify status was updated
-    const sessionAfter = await twilioCallManager.getCallSession(sessionId);
-    const participantAfter = participantType === 'provider'
-      ? sessionAfter?.participants.provider
-      : sessionAfter?.participants.client;
-    console.log(`📞 [${webhookId}]   Status AFTER update: "${participantAfter?.status}"`);
-    console.log(`📞 [${webhookId}] ✅ Status update complete - waitForConnection() should now see "connected"`);
-    console.log(`${'═'.repeat(70)}\n`);
-
-    // ===== NOUVEAU: Mettre le prestataire en statut "busy" quand il répond =====
-    if (participantType === 'provider') {
-      const currentSession = await twilioCallManager.getCallSession(sessionId);
-      if (currentSession?.metadata?.providerId) {
-        try {
-          await setProviderBusy(
-            currentSession.metadata.providerId,
-            sessionId,
-            'in_call'
-          );
-          console.log(`📞 [Webhook] Provider ${currentSession.metadata.providerId} marked as BUSY`);
-        } catch (busyError) {
-          console.error(`⚠️ [Webhook] Failed to set provider busy (non-blocking):`, busyError);
-        }
-      }
-    }
-
-    // Vérifier si les deux participants sont connectés
-    const session = await twilioCallManager.getCallSession(sessionId);
-    if (session && 
-        session.participants.provider.status === 'connected' && 
-        session.participants.client.status === 'connected') {
-      
-      await twilioCallManager.updateCallSessionStatus(sessionId, 'active');
-      
-      await logCallRecord({
-        callId: sessionId,
-        status: 'both_participants_connected',
-        retryCount: 0
-      });
-    }
-
-    await logCallRecord({
-      callId: sessionId,
-      status: `${participantType}_answered`,
-      retryCount: 0,
-      additionalData: {
-        callSid: body.CallSid,
-        answeredBy: body.AnsweredBy
-      }
-    });
+    // P0 FIX 2026-01-18: ALL AMD handling moved to twilioAmdTwiml
+    // With asyncAmd mode, we ALWAYS enter the block above and return
+    // This point should NEVER be reached
 
   } catch (error) {
     await logError('handleCallAnswered', error);
