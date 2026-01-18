@@ -350,7 +350,9 @@ export default function ProviderHome() {
     );
 
     return () => unsubscribe();
-  }, [activeProvider?.id, isDevMock, loadMockConversations, t]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeProvider?.id, isDevMock, loadMockConversations]);
+  // NOTE: `t` removed from deps - it's stable and causes infinite loop if included
 
   // Provider data for KPIs
   const providerData = activeProvider as Record<string, unknown> | null;
