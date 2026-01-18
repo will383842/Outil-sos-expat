@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useApp } from "../../contexts/AppContext";
+import { useAiToolAccess } from "../../hooks/useAiToolAccess";
 import {
   doc,
   updateDoc,
@@ -1108,6 +1109,14 @@ const UserMenu = memo<UserMenuProps>(function UserMenu({
   const [loggingOut, setLoggingOut] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
+  // Hook pour l'accès intelligent à l'outil IA
+  const {
+    hasAccess: hasAiAccess,
+    isAccessing: isAccessingAi,
+    handleAiToolClick,
+    isLoading: aiAccessLoading,
+  } = useAiToolAccess();
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       // Ne pas fermer le menu si logout en cours
@@ -1278,15 +1287,32 @@ const UserMenu = memo<UserMenuProps>(function UserMenu({
         {/* AI Subscription links for providers - Mobile */}
         {(typedUser.role === "lawyer" || typedUser.role === "expat") && (
           <div className="grid grid-cols-2 gap-2">
-            <Link
-              to="/dashboard/ai-assistant"
-              className="flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-medium
-                bg-gradient-to-r from-indigo-500/30 to-purple-500/30 backdrop-blur-sm text-white hover:from-indigo-500/40 hover:to-purple-500/40 min-h-[44px]"
+            <button
+              onClick={async () => {
+                await handleAiToolClick();
+              }}
+              disabled={isAccessingAi}
+              className={`flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-medium
+                bg-gradient-to-r from-indigo-500/30 to-purple-500/30 backdrop-blur-sm text-white hover:from-indigo-500/40 hover:to-purple-500/40 min-h-[44px]
+                ${isAccessingAi ? "opacity-70 cursor-wait" : ""}`}
             >
-              <Bot className="w-4 h-4 mr-2" aria-hidden="true" />
-              <span>IA</span>
-              <span className="ml-1 text-[8px] px-1 py-0.5 rounded-full bg-pink-500 font-bold">NEW</span>
-            </Link>
+              {isAccessingAi ? (
+                <div className="w-4 h-4 mr-2 border-2 border-white/50 border-t-white rounded-full animate-spin" />
+              ) : (
+                <Bot className="w-4 h-4 mr-2" aria-hidden="true" />
+              )}
+              <span>{intl.formatMessage({ id: "dashboard.aiTool", defaultMessage: "Outil IA" })}</span>
+              {hasAiAccess && !aiAccessLoading && (
+                <span className="ml-1 text-[8px] px-1 py-0.5 rounded-full bg-green-500 font-bold">
+                  {intl.formatMessage({ id: "common.active", defaultMessage: "OK" })}
+                </span>
+              )}
+              {!hasAiAccess && !aiAccessLoading && (
+                <span className="ml-1 text-[8px] px-1 py-0.5 rounded-full bg-pink-500 font-bold">
+                  {intl.formatMessage({ id: "common.upgrade", defaultMessage: "PRO" })}
+                </span>
+              )}
+            </button>
             <Link
               to="/dashboard/subscription"
               className="flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-medium
@@ -1403,20 +1429,40 @@ const UserMenu = memo<UserMenuProps>(function UserMenu({
             {/* AI Subscription links for providers */}
             {(typedUser.role === "lawyer" || typedUser.role === "expat") && (
               <>
-                <Link
-                  to="/dashboard/ai-assistant"
-                  className="group flex items-center px-4 py-3 text-sm text-gray-700
+                <button
+                  onClick={async () => {
+                    setOpen(false);
+                    await handleAiToolClick();
+                  }}
+                  disabled={isAccessingAi}
+                  className={`group flex items-center w-full px-4 py-3 text-sm text-gray-700
                     hover:bg-indigo-50 hover:text-indigo-600 rounded-xl mx-1
-                    focus:outline-none focus-visible:bg-indigo-50"
-                  onClick={() => setOpen(false)}
+                    focus:outline-none focus-visible:bg-indigo-50 text-left
+                    ${isAccessingAi ? "opacity-70 cursor-wait" : ""}`}
                   role="menuitem"
                 >
-                  <Bot className="w-4 h-4 mr-3 text-indigo-500" aria-hidden="true" />
-                  {intl.formatMessage({ id: "dashboard.aiAssistant", defaultMessage: "AI Assistant" })}
-                  <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold">
-                    NEW
-                  </span>
-                </Link>
+                  {isAccessingAi ? (
+                    <div className="w-4 h-4 mr-3 border-2 border-indigo-300 border-t-indigo-600 rounded-full animate-spin" />
+                  ) : (
+                    <Bot className="w-4 h-4 mr-3 text-indigo-500" aria-hidden="true" />
+                  )}
+                  {intl.formatMessage({ id: "dashboard.aiTool", defaultMessage: "Outil IA" })}
+                  {hasAiAccess && !aiAccessLoading && (
+                    <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold">
+                      {intl.formatMessage({ id: "common.active", defaultMessage: "ACTIF" })}
+                    </span>
+                  )}
+                  {!hasAiAccess && !aiAccessLoading && (
+                    <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold">
+                      {intl.formatMessage({ id: "common.subscribe", defaultMessage: "S'ABONNER" })}
+                    </span>
+                  )}
+                  {aiAccessLoading && (
+                    <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-gray-300 text-gray-600 font-bold">
+                      ...
+                    </span>
+                  )}
+                </button>
                 <Link
                   to="/dashboard/subscription"
                   className="group flex items-center px-4 py-3 text-sm text-gray-700
@@ -1426,7 +1472,7 @@ const UserMenu = memo<UserMenuProps>(function UserMenu({
                   role="menuitem"
                 >
                   <CreditCard className="w-4 h-4 mr-3 text-indigo-500" aria-hidden="true" />
-                  {intl.formatMessage({ id: "dashboard.subscription", defaultMessage: "My Subscription" })}
+                  {intl.formatMessage({ id: "dashboard.subscription", defaultMessage: "Mon abonnement" })}
                 </Link>
               </>
             )}
