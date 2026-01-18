@@ -1,0 +1,358 @@
+/**
+ * CENTRALIZED SECRETS DEFINITIONS
+ *
+ * P0 CRITICAL FIX: This file is the SINGLE SOURCE OF TRUTH for all Firebase secrets.
+ *
+ * NEVER call defineSecret() in any other file!
+ * Always import from this file instead.
+ *
+ * Why this matters:
+ * - Firebase v2 defineSecret() creates a parameter binding
+ * - Calling defineSecret() multiple times for the same secret in different files
+ *   can cause inconsistent binding and credential loading failures
+ * - This is the ROOT CAUSE of intermittent Twilio Error 20003 (401 Unauthorized)
+ *
+ * Usage:
+ * 1. Import the secrets you need: import { TWILIO_SECRETS, STRIPE_SECRETS } from './lib/secrets';
+ * 2. Add to function config: secrets: [...TWILIO_SECRETS]
+ * 3. Use getters to access values: getTwilioAccountSid()
+ */
+
+import { defineSecret, defineString } from "firebase-functions/params";
+
+// ============================================================================
+// TWILIO SECRETS
+// ============================================================================
+
+export const TWILIO_ACCOUNT_SID = defineSecret("TWILIO_ACCOUNT_SID");
+export const TWILIO_AUTH_TOKEN = defineSecret("TWILIO_AUTH_TOKEN");
+export const TWILIO_PHONE_NUMBER = defineSecret("TWILIO_PHONE_NUMBER");
+
+/** All Twilio secrets for function config */
+export const TWILIO_SECRETS = [
+  TWILIO_ACCOUNT_SID,
+  TWILIO_AUTH_TOKEN,
+  TWILIO_PHONE_NUMBER,
+];
+
+// ============================================================================
+// STRIPE SECRETS
+// ============================================================================
+
+export const STRIPE_SECRET_KEY_LIVE = defineSecret("STRIPE_SECRET_KEY_LIVE");
+export const STRIPE_SECRET_KEY_TEST = defineSecret("STRIPE_SECRET_KEY_TEST");
+export const STRIPE_SECRET_KEY = defineSecret("STRIPE_SECRET_KEY"); // Legacy fallback
+
+export const STRIPE_WEBHOOK_SECRET_LIVE = defineSecret("STRIPE_WEBHOOK_SECRET_LIVE");
+export const STRIPE_WEBHOOK_SECRET_TEST = defineSecret("STRIPE_WEBHOOK_SECRET_TEST");
+export const STRIPE_CONNECT_WEBHOOK_SECRET_LIVE = defineSecret("STRIPE_CONNECT_WEBHOOK_SECRET_LIVE");
+export const STRIPE_CONNECT_WEBHOOK_SECRET_TEST = defineSecret("STRIPE_CONNECT_WEBHOOK_SECRET_TEST");
+
+export const STRIPE_MODE = defineString("STRIPE_MODE", { default: "test" });
+
+/** All Stripe secrets for function config */
+export const STRIPE_SECRETS = [
+  STRIPE_SECRET_KEY_LIVE,
+  STRIPE_SECRET_KEY_TEST,
+  STRIPE_SECRET_KEY,
+  STRIPE_WEBHOOK_SECRET_LIVE,
+  STRIPE_WEBHOOK_SECRET_TEST,
+  STRIPE_CONNECT_WEBHOOK_SECRET_LIVE,
+  STRIPE_CONNECT_WEBHOOK_SECRET_TEST,
+];
+
+/** Only API keys (no webhooks) */
+export const STRIPE_API_SECRETS = [
+  STRIPE_SECRET_KEY_LIVE,
+  STRIPE_SECRET_KEY_TEST,
+];
+
+// ============================================================================
+// EMAIL SECRETS
+// ============================================================================
+
+export const EMAIL_USER = defineSecret("EMAIL_USER");
+export const EMAIL_PASS = defineSecret("EMAIL_PASS");
+
+export const EMAIL_SECRETS = [EMAIL_USER, EMAIL_PASS];
+
+// ============================================================================
+// ENCRYPTION SECRETS (GDPR)
+// ============================================================================
+
+export const ENCRYPTION_KEY = defineSecret("ENCRYPTION_KEY");
+
+// ============================================================================
+// CLOUD TASKS AUTH
+// ============================================================================
+
+export const TASKS_AUTH_SECRET = defineSecret("TASKS_AUTH_SECRET");
+
+// ============================================================================
+// EXTERNAL API KEYS
+// ============================================================================
+
+export const OUTIL_API_KEY = defineSecret("OUTIL_API_KEY");
+export const OUTIL_SYNC_API_KEY = defineSecret("OUTIL_SYNC_API_KEY");
+
+// ============================================================================
+// GETTERS WITH FALLBACK TO process.env (for emulator/local dev)
+// ============================================================================
+
+/**
+ * Check if running in Firebase emulator
+ */
+export function isEmulator(): boolean {
+  return process.env.FUNCTIONS_EMULATOR === 'true' ||
+         process.env.FIREBASE_EMULATOR === 'true' ||
+         process.env.FIRESTORE_EMULATOR_HOST !== undefined;
+}
+
+/**
+ * Check if running in production environment
+ */
+export function isProduction(): boolean {
+  const productionProjectIds = ['sos-expat', 'sos-urgently-ac307'];
+  const gcpProject = process.env.GCLOUD_PROJECT || '';
+  const isGcpProduction = productionProjectIds.some(id => gcpProject.includes(id));
+  const firebaseConfig = process.env.FIREBASE_CONFIG || '';
+  const isFirebaseProduction = productionProjectIds.some(id => firebaseConfig.includes(id));
+
+  return process.env.NODE_ENV === 'production' ||
+         isGcpProduction ||
+         isFirebaseProduction;
+}
+
+// --- TWILIO GETTERS ---
+
+export function getTwilioAccountSid(): string {
+  try {
+    const secretValue = TWILIO_ACCOUNT_SID.value()?.trim();
+    if (secretValue && secretValue.length > 0) {
+      console.log(`[Secrets] TWILIO_ACCOUNT_SID loaded from Firebase Secret`);
+      return secretValue;
+    }
+  } catch {
+    // Secret not available, try process.env
+  }
+
+  const envValue = process.env.TWILIO_ACCOUNT_SID?.trim();
+  if (envValue && envValue.length > 0) {
+    console.log(`[Secrets] TWILIO_ACCOUNT_SID loaded from process.env`);
+    return envValue;
+  }
+
+  console.error(`[Secrets] TWILIO_ACCOUNT_SID NOT FOUND`);
+  return "";
+}
+
+export function getTwilioAuthToken(): string {
+  try {
+    const secretValue = TWILIO_AUTH_TOKEN.value()?.trim();
+    if (secretValue && secretValue.length > 0) {
+      console.log(`[Secrets] TWILIO_AUTH_TOKEN loaded from Firebase Secret`);
+      return secretValue;
+    }
+  } catch {
+    // Secret not available, try process.env
+  }
+
+  const envValue = process.env.TWILIO_AUTH_TOKEN?.trim();
+  if (envValue && envValue.length > 0) {
+    console.log(`[Secrets] TWILIO_AUTH_TOKEN loaded from process.env`);
+    return envValue;
+  }
+
+  console.error(`[Secrets] TWILIO_AUTH_TOKEN NOT FOUND`);
+  return "";
+}
+
+export function getTwilioPhoneNumberValue(): string {
+  try {
+    const secretValue = TWILIO_PHONE_NUMBER.value()?.trim();
+    if (secretValue && secretValue.length > 0) {
+      console.log(`[Secrets] TWILIO_PHONE_NUMBER loaded from Firebase Secret`);
+      return secretValue;
+    }
+  } catch {
+    // Secret not available, try process.env
+  }
+
+  const envValue = process.env.TWILIO_PHONE_NUMBER?.trim();
+  if (envValue && envValue.length > 0) {
+    console.log(`[Secrets] TWILIO_PHONE_NUMBER loaded from process.env`);
+    return envValue;
+  }
+
+  console.error(`[Secrets] TWILIO_PHONE_NUMBER NOT FOUND`);
+  return "";
+}
+
+// --- STRIPE GETTERS ---
+
+export function getStripeMode(): 'live' | 'test' {
+  // Force live mode in production
+  if (isProduction() && !isEmulator()) {
+    console.log('[Secrets] Production detected, forcing Stripe LIVE mode');
+    return 'live';
+  }
+
+  try {
+    const modeValue = STRIPE_MODE.value();
+    if (modeValue === 'live' || modeValue === 'test') {
+      return modeValue;
+    }
+  } catch {
+    // Fallback to process.env
+  }
+
+  const envMode = process.env.STRIPE_MODE;
+  if (envMode === 'live' || envMode === 'test') {
+    return envMode;
+  }
+
+  return 'test';
+}
+
+export function getStripeSecretKey(mode?: 'live' | 'test'): string {
+  const effectiveMode = mode || getStripeMode();
+  return effectiveMode === 'live' ? getStripeSecretKeyLive() : getStripeSecretKeyTest();
+}
+
+export function getStripeSecretKeyLive(): string {
+  try {
+    const secretValue = STRIPE_SECRET_KEY_LIVE.value();
+    if (secretValue && secretValue.length > 0 && secretValue.startsWith('sk_live_')) {
+      console.log(`[Secrets] STRIPE_SECRET_KEY_LIVE loaded from Firebase Secret`);
+      return secretValue;
+    }
+  } catch {
+    // Secret not available
+  }
+
+  const envValue = process.env.STRIPE_SECRET_KEY_LIVE;
+  if (envValue && envValue.length > 0) {
+    console.log(`[Secrets] STRIPE_SECRET_KEY_LIVE loaded from process.env`);
+    return envValue;
+  }
+
+  console.error(`[Secrets] STRIPE_SECRET_KEY_LIVE NOT FOUND`);
+  return "";
+}
+
+export function getStripeSecretKeyTest(): string {
+  try {
+    const secretValue = STRIPE_SECRET_KEY_TEST.value();
+    if (secretValue && secretValue.length > 0 && secretValue.startsWith('sk_test_')) {
+      console.log(`[Secrets] STRIPE_SECRET_KEY_TEST loaded from Firebase Secret`);
+      return secretValue;
+    }
+  } catch {
+    // Secret not available
+  }
+
+  const envValue = process.env.STRIPE_SECRET_KEY_TEST;
+  if (envValue && envValue.length > 0) {
+    console.log(`[Secrets] STRIPE_SECRET_KEY_TEST loaded from process.env`);
+    return envValue;
+  }
+
+  console.error(`[Secrets] STRIPE_SECRET_KEY_TEST NOT FOUND`);
+  return "";
+}
+
+export function getStripeWebhookSecret(mode?: 'live' | 'test'): string {
+  const effectiveMode = mode || getStripeMode();
+
+  const secretDef = effectiveMode === 'live' ? STRIPE_WEBHOOK_SECRET_LIVE : STRIPE_WEBHOOK_SECRET_TEST;
+  const envKey = effectiveMode === 'live' ? 'STRIPE_WEBHOOK_SECRET_LIVE' : 'STRIPE_WEBHOOK_SECRET_TEST';
+
+  try {
+    const secretValue = secretDef.value();
+    if (secretValue && secretValue.length > 0 && secretValue.startsWith('whsec_')) {
+      return secretValue;
+    }
+  } catch {
+    // Secret not available
+  }
+
+  const envValue = process.env[envKey];
+  if (envValue && envValue.length > 0) {
+    return envValue;
+  }
+
+  console.error(`[Secrets] ${envKey} NOT FOUND`);
+  return "";
+}
+
+export function getStripeConnectWebhookSecret(mode?: 'live' | 'test'): string {
+  const effectiveMode = mode || getStripeMode();
+
+  const secretDef = effectiveMode === 'live' ? STRIPE_CONNECT_WEBHOOK_SECRET_LIVE : STRIPE_CONNECT_WEBHOOK_SECRET_TEST;
+  const envKey = effectiveMode === 'live' ? 'STRIPE_CONNECT_WEBHOOK_SECRET_LIVE' : 'STRIPE_CONNECT_WEBHOOK_SECRET_TEST';
+
+  try {
+    const secretValue = secretDef.value();
+    if (secretValue && secretValue.length > 0 && secretValue.startsWith('whsec_')) {
+      return secretValue;
+    }
+  } catch {
+    // Secret not available
+  }
+
+  const envValue = process.env[envKey];
+  if (envValue && envValue.length > 0) {
+    return envValue;
+  }
+
+  console.error(`[Secrets] ${envKey} NOT FOUND`);
+  return "";
+}
+
+// --- TASKS AUTH GETTER ---
+
+export function getTasksAuthSecret(): string {
+  try {
+    const secretValue = TASKS_AUTH_SECRET.value();
+    if (secretValue && secretValue.length > 0) {
+      return secretValue;
+    }
+  } catch {
+    // Secret not available
+  }
+
+  const envValue = process.env.TASKS_AUTH_SECRET;
+  if (envValue && envValue.length > 0) {
+    return envValue;
+  }
+
+  console.error(`[Secrets] TASKS_AUTH_SECRET NOT FOUND`);
+  return "";
+}
+
+// ============================================================================
+// COMBINED ARRAYS FOR FUNCTION CONFIG
+// ============================================================================
+
+/** All secrets commonly needed for Twilio call functions */
+export const CALL_FUNCTION_SECRETS = [
+  ...TWILIO_SECRETS,
+  TASKS_AUTH_SECRET,
+  ENCRYPTION_KEY,
+];
+
+/** All secrets for payment/Stripe functions */
+export const PAYMENT_FUNCTION_SECRETS = [
+  ...STRIPE_SECRETS,
+];
+
+/** All secrets - use sparingly, prefer specific arrays */
+export const ALL_SECRETS = [
+  ...TWILIO_SECRETS,
+  ...STRIPE_SECRETS,
+  ...EMAIL_SECRETS,
+  ENCRYPTION_KEY,
+  TASKS_AUTH_SECRET,
+  OUTIL_API_KEY,
+  OUTIL_SYNC_API_KEY,
+];
