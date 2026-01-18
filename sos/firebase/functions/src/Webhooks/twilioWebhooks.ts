@@ -658,11 +658,19 @@ async function handleCallCompleted(
       console.log(`🏁 [${completedId}]   billingDuration: ${billingDuration}s`);
       console.log(`🏁 [${completedId}]   (vs Twilio CallDuration: ${duration}s - durée individuelle du participant)`);
     } else {
-      // Fallback: si on n'a pas les timestamps de connexion, utiliser CallDuration de Twilio
-      billingDuration = duration;
-      console.log(`🏁 [${completedId}] ⚠️ Missing connection timestamps, using Twilio CallDuration as fallback: ${duration}s`);
+      // P0 CRITICAL FIX 2026-01-18: DO NOT use Twilio CallDuration as fallback!
+      // If one participant never connected, billingDuration MUST be 0
+      // Using Twilio CallDuration here causes wrong behavior:
+      //   - Client waits 3 min for provider, provider never answers
+      //   - Client hangs up → Twilio CallDuration = 180s
+      //   - Old code: billingDuration = 180 → handleCallCompletion → shouldCapturePayment fails → REFUND
+      //   - This triggers refund while retry loop should still be running!
+      // Fix: If either participant never connected, billingDuration = 0
+      billingDuration = 0;
+      console.log(`🏁 [${completedId}] ⚠️ P0 FIX: Missing connection timestamps - billingDuration FORCED to 0`);
       console.log(`🏁 [${completedId}]   clientConnectedAt: ${clientConnectedAt ? 'present' : 'MISSING'}`);
       console.log(`🏁 [${completedId}]   providerConnectedAt: ${providerConnectedAt ? 'present' : 'MISSING'}`);
+      console.log(`🏁 [${completedId}]   ⚠️ NOT using Twilio CallDuration (${duration}s) as fallback - that's individual call duration, not billing!`);
     }
 
     // Stocker billingDuration dans la session pour référence
