@@ -15,7 +15,7 @@
  */
 
 // =============================================================================
-// STRIPE SUPPORTED COUNTRIES (46 pays)
+// STRIPE SUPPORTED COUNTRIES (44 pays)
 // =============================================================================
 // Ces pays peuvent avoir un compte Stripe Express créé automatiquement
 // Source: https://stripe.com/global
@@ -68,7 +68,7 @@ export const STRIPE_SUPPORTED_COUNTRIES = new Set([
 ]);
 
 // =============================================================================
-// PAYPAL-ONLY COUNTRIES (151+ pays)
+// PAYPAL-ONLY COUNTRIES (150+ pays)
 // =============================================================================
 // Ces pays NE supportent PAS Stripe Connect et doivent utiliser PayPal
 // Les providers dans ces pays ne sont PAS visibles jusqu'à connexion PayPal
@@ -91,10 +91,11 @@ export const PAYPAL_ONLY_COUNTRIES = new Set([
   "HT", "DO", "JM", "TT", "BB", "BS", "BZ", "GY", "PA", "CR",
   "AG", "DM", "GD", "KN", "LC", "VC",
 
-  // ===== EUROPE DE L'EST & BALKANS (15 pays non Stripe) =====
+  // ===== EUROPE DE L'EST & BALKANS (14 pays non Stripe) =====
   // Note: BY et RU sont inclus mais pourraient être sanctionnés
+  // Note: GI (Gibraltar) est supporté par Stripe, donc pas ici
   "BY", "MD", "UA", "RS", "BA", "MK", "ME", "AL", "XK", "RU",
-  "GI", "AD", "MC", "SM", "VA",
+  "AD", "MC", "SM", "VA",
 
   // ===== OCEANIE & PACIFIQUE (15 pays) =====
   "FJ", "PG", "SB", "VU", "WS", "TO", "KI", "FM", "MH", "PW",

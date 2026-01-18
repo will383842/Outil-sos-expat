@@ -1762,8 +1762,11 @@ export const twilioGatherResponse = onRequest(
 
         // Client starts conference, provider joins existing conference
         const startConferenceOnEnter = participantType === 'client' ? 'true' : 'false';
-        // Client ending ends conference, provider ending does NOT end conference (allows client to stay)
-        const endConferenceOnExit = participantType === 'client' ? 'true' : 'false';
+        // P0 FIX 2026-01-18: BOTH participants ending should end conference!
+        // BUG FIXED: Previously provider had endConferenceOnExit=false, so when provider hung up,
+        // the client stayed connected on hold music and CONTINUED TO PAY!
+        // Now BOTH participants end the conference when they exit.
+        const endConferenceOnExit = 'true'; // Always true for both client and provider
 
         console.log(`🎤 [${gatherId}]   startConferenceOnEnter: ${startConferenceOnEnter}`);
         console.log(`🎤 [${gatherId}]   endConferenceOnExit: ${endConferenceOnExit}`);

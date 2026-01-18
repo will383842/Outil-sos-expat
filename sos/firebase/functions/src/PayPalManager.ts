@@ -106,9 +106,10 @@ const PAYPAL_CONFIG = {
     "HT", "DO", "JM", "TT", "BB", "BS", "BZ", "GY", "PA", "CR",
     "AG", "DM", "GD", "KN", "LC", "VC",
 
-    // ===== EUROPE DE L'EST & BALKANS (15 pays non Stripe) =====
+    // ===== EUROPE DE L'EST & BALKANS (14 pays non Stripe) =====
+    // Note: GI (Gibraltar) est supporté par Stripe
     "BY", "MD", "UA", "RS", "BA", "MK", "ME", "AL", "XK", "RU",
-    "GI", "AD", "MC", "SM", "VA",
+    "AD", "MC", "SM", "VA",
 
     // ===== OCEANIE & PACIFIQUE (15 pays) =====
     "FJ", "PG", "SB", "VU", "WS", "TO", "KI", "FM", "MH", "PW",
@@ -1027,7 +1028,42 @@ export class PayPalManager {
       }
       // Normal flow: Payout to provider's own PayPal account
       else if (orderData.providerPayPalEmail) {
-        console.log(`💰 [PAYPAL] Triggering automatic payout to ${orderData.providerPayPalEmail}`);
+        // P0 SECURITY FIX: Vérifier que l'email PayPal a été vérifié avant payout
+        const providerProfile = await this.db.collection("sos_profiles").doc(orderData.providerId).get();
+        const profileData = providerProfile.data();
+
+        if (!profileData?.paypalEmailVerified) {
+          console.warn(`⚠️ [PAYPAL] Provider ${orderData.providerId} email NOT VERIFIED - skipping payout`);
+          console.warn(`⚠️ [PAYPAL] Email in order: ${orderData.providerPayPalEmail}, verified: ${profileData?.paypalEmailVerified}`);
+
+          // Créer une alerte pour que l'admin sache que le payout est en attente de vérification
+          await this.db.collection("admin_alerts").add({
+            type: "paypal_payout_pending_verification",
+            priority: "high",
+            title: "Payout en attente - Email non vérifié",
+            message: `Le payout de ${providerAmount} ${captureCurrency} vers ${orderData.providerPayPalEmail} ` +
+              `est en attente. Le provider ${orderData.providerId} n'a pas vérifié son email PayPal.`,
+            orderId,
+            callSessionId: orderData.callSessionId,
+            providerId: orderData.providerId,
+            providerEmail: orderData.providerPayPalEmail,
+            amount: providerAmount,
+            currency: captureCurrency,
+            read: false,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+
+          // Marquer dans paypal_orders que le payout attend la vérification
+          await this.db.collection("paypal_orders").doc(orderId).update({
+            payoutPendingVerification: true,
+            payoutPendingReason: "Email PayPal non vérifié",
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+
+          // Ne PAS déclencher le payout - l'argent reste sur SOS-Expat jusqu'à vérification
+          // Le webhook MERCHANT.ONBOARDING.COMPLETED ou la vérification email relancera
+        } else {
+          console.log(`💰 [PAYPAL] Triggering automatic payout to ${orderData.providerPayPalEmail} (verified: ✅)`);
 
         try {
           const payoutResult = await this.createPayout({
@@ -1128,8 +1164,9 @@ export class PayPalManager {
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
           });
         }
-      }
-    }
+        } // Fin du try/catch payout
+        } // Fin du else (email vérifié)
+      } // Fin du else if (orderData.providerPayPalEmail)
     } // Fin du bloc if (isSimpleFlow && providerAmount > 0)
 
     // Mettre à jour l'ordre avec les détails de capture

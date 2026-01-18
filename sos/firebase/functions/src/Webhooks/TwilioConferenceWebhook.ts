@@ -642,9 +642,39 @@ async function handleParticipantJoin(sessionId: string, body: TwilioConferenceWe
     // - "amd_pending": AMD is already in progress
     // - "calling": participant-join arrived before "answered" webhook (race condition)
     // - "ringing": participant-join arrived before "answered" webhook (race condition)
-    const statusesThatShouldWaitForAmd = ['amd_pending', 'calling', 'ringing'];
+    // - "connected": ALREADY connected via DTMF (twilioGatherResponse) - DO NOT OVERWRITE connectedAt!
+    //
+    // P0 FIX v3 2026-01-18: BUG FIXED - connectedAt was being OVERWRITTEN!
+    // When twilioGatherResponse sets connectedAt=T1 and then handleParticipantJoin runs,
+    // it was calling updateParticipantStatus again with connectedAt=T2 (LATER timestamp),
+    // making billingDuration SHORTER than actual! Now we skip if already connected.
+    const statusesThatShouldSkipUpdate = ['amd_pending', 'calling', 'ringing', 'connected'];
 
-    if (statusesThatShouldWaitForAmd.includes(currentStatus || '')) {
+    if (statusesThatShouldSkipUpdate.includes(currentStatus || '')) {
+      // P0 FIX v3: Handle 'connected' status differently - already confirmed via DTMF!
+      if (currentStatus === 'connected') {
+        console.log(`👋 [${joinId}] ✅ Status is already "connected" (set by twilioGatherResponse via DTMF)`);
+        console.log(`👋 [${joinId}]   ⛔ NOT calling updateParticipantStatus to preserve original connectedAt!`);
+        console.log(`👋 [${joinId}]   P0 FIX v3: This prevents billingDuration from being incorrectly shortened`);
+
+        await logCallRecord({
+          callId: sessionId,
+          status: `${participantType}_joined_already_connected`,
+          retryCount: 0,
+          additionalData: {
+            callSid,
+            conferenceSid: body.ConferenceSid,
+            currentStatus,
+            reason: 'already_connected_via_dtmf_preserving_connectedAt'
+          }
+        });
+
+        console.log(`👋 [${joinId}] END - Participant already connected, connectedAt preserved`);
+        console.log(`${'═'.repeat(70)}\n`);
+        return;
+      }
+
+      // AMD pending states - wait for AMD callback
       console.log(`👋 [${joinId}] ⚠️ Status "${currentStatus}" - participant joined but AMD not confirmed yet`);
       console.log(`👋 [${joinId}]   ⛔ NOT setting status to "connected" yet - waiting for AMD result`);
       console.log(`👋 [${joinId}]   asyncAmdStatusCallback will set: "connected" if human, "no_answer" if machine`);

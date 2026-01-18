@@ -35,8 +35,8 @@ const PAYPAL_ONLY_COUNTRIES = new Set([
   // AMERIQUE LATINE & CARAIBES (25 pays)
   "BO", "CU", "EC", "SV", "GT", "HN", "NI", "PY", "SR", "VE", "HT", "DO", "JM",
   "TT", "BB", "BS", "BZ", "GY", "PA", "CR", "AG", "DM", "GD", "KN", "LC", "VC",
-  // EUROPE DE L'EST & BALKANS (15 pays)
-  "BY", "MD", "UA", "RS", "BA", "MK", "ME", "AL", "XK", "RU", "GI", "AD", "MC",
+  // EUROPE DE L'EST & BALKANS (14 pays) - GI est dans Stripe
+  "BY", "MD", "UA", "RS", "BA", "MK", "ME", "AL", "XK", "RU", "AD", "MC",
   "SM", "VA",
   // OCEANIE & PACIFIQUE (15 pays)
   "FJ", "PG", "SB", "VU", "WS", "TO", "KI", "FM", "MH", "PW", "NR", "TV", "NC",

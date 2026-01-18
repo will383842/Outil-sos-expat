@@ -263,15 +263,16 @@ const sanitizeName = (name: string): string => {
     .replace(/[^a-zA-ZÀ-ÿ\u00C0-\u017F '\-]/g, "");
 };
 
-// 🌍 Liste des pays supportés par Stripe Connect (mise à jour 2024)
+// 🌍 Liste des pays supportés par Stripe Connect (44 pays)
 // Source officielle: https://stripe.com/global
-// Note: 46 pays fully supported + quelques pays en preview
+// IMPORTANT: Synchronisé avec sos/firebase/functions/src/lib/paymentCountries.ts
+// Les autres pays utilisent PayPal automatiquement
 const STRIPE_SUPPORTED_COUNTRIES = new Set([
   // Amérique du Nord
   'US', // États-Unis
   'CA', // Canada
-  
-  // Europe
+
+  // Europe (32 pays)
   'AT', // Autriche
   'BE', // Belgique
   'BG', // Bulgarie
@@ -286,7 +287,6 @@ const STRIPE_SUPPORTED_COUNTRIES = new Set([
   'GI', // Gibraltar
   'GR', // Grèce
   'HU', // Hongrie
-  'IS', // Islande (ajouté)
   'IE', // Irlande
   'IT', // Italie
   'LV', // Lettonie
@@ -305,27 +305,22 @@ const STRIPE_SUPPORTED_COUNTRIES = new Set([
   'SE', // Suède
   'CH', // Suisse
   'GB', // Royaume-Uni
-  
-  // Asie-Pacifique
+
+  // Asie-Pacifique (7 pays)
   'AU', // Australie
   'HK', // Hong Kong
   'JP', // Japon
   'MY', // Malaisie
   'NZ', // Nouvelle-Zélande
   'SG', // Singapour
-  'TH', // Thaïlande (limité)
-  
-  // Moyen-Orient
+  'TH', // Thaïlande
+
+  // Moyen-Orient (1 pays)
   'AE', // Émirats Arabes Unis
-  
-  // Amérique Latine
+
+  // Amérique Latine (2 pays)
   'BR', // Brésil
   'MX', // Mexique
-  
-  // Preview/Limité (inscription possible mais fonctionnalités limitées)
-  'IN', // Inde (preview)
-  'ID', // Indonésie (preview)
-  'PH', // Philippines
 ]);
 
 // Country code mapping pour Stripe - Recherche améliorée

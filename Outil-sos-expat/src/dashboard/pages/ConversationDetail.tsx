@@ -107,6 +107,15 @@ interface Conversation {
   status?: string;
 }
 
+// 🆕 Type pour les logs de réflexion temps réel
+interface ThinkingLogUI {
+  id: string;
+  step: string;
+  message: string;
+  details?: string;
+  order: number;
+}
+
 // =============================================================================
 // CONSTANTS
 // =============================================================================
@@ -190,6 +199,7 @@ function AIChat({
   disabledReason = "",
   remainingTime,
   isExpired,
+  thinkingLogs = [],  // 🆕 Logs temps réel
 }: {
   messages: Message[];
   onSendMessage: (message: string) => Promise<void>;
@@ -200,6 +210,7 @@ function AIChat({
   disabledReason?: string;
   remainingTime?: string | null;
   isExpired?: boolean;
+  thinkingLogs?: ThinkingLogUI[];  // 🆕 Logs temps réel
 }) {
   const { t, currentLocale } = useLanguage({ mode: "provider" });
   const [input, setInput] = useState("");
@@ -401,17 +412,87 @@ function AIChat({
           })
         )}
 
+        {/* 🆕 ENHANCED LOADING INDICATOR with thinking logs */}
         {isLoading && (
-          <div className="flex justify-start">
-            <div className="bg-white border border-gray-200 rounded-2xl px-5 py-4 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="flex space-x-1.5">
-                  <div className="w-2.5 h-2.5 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <div className="w-2.5 h-2.5 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                  <div className="w-2.5 h-2.5 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+          <div className="flex justify-start px-2 sm:px-0">
+            <div
+              className="bg-white border border-gray-200 rounded-2xl px-4 py-4 sm:px-5 sm:py-5 shadow-lg w-full max-w-[calc(100vw-2rem)] sm:max-w-md"
+              role="status"
+              aria-live="polite"
+              aria-label={thinkingLogs.length > 0 ? thinkingLogs[thinkingLogs.length - 1].message : t("aiChat.analyzing")}
+            >
+              {/* En-tête avec animation */}
+              <div className="flex items-center gap-3 mb-3">
+                {/* Dots animation */}
+                <div className="flex space-x-1.5 motion-reduce:hidden">
+                  <div className="w-2.5 h-2.5 sm:w-2 sm:h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <div className="w-2.5 h-2.5 sm:w-2 sm:h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <div className="w-2.5 h-2.5 sm:w-2 sm:h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
                 </div>
-                <span className="text-sm text-gray-600">{t("aiChat.analyzing")}</span>
+                {/* Fallback pour reduced motion */}
+                <div className="hidden motion-reduce:block">
+                  <Loader2 className="w-5 h-5 text-purple-500 animate-spin" />
+                </div>
+                {/* Titre principal */}
+                <span className="text-base sm:text-sm font-semibold text-gray-800">
+                  {t("aiChat.analyzing")}
+                </span>
               </div>
+
+              {/* ═══════════════════════════════════════════════════════════════
+                  🆕 LOGS TEMPS RÉEL: Les recherches s'affichent une par une
+                  Le prestataire voit exactement ce que l'IA recherche
+                  ═══════════════════════════════════════════════════════════════ */}
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {thinkingLogs.length > 0 ? (
+                  thinkingLogs.map((log, index) => (
+                    <div
+                      key={log.id}
+                      className={`flex items-start gap-2 text-sm transition-all duration-300 ${
+                        index === thinkingLogs.length - 1
+                          ? "text-purple-700 font-medium"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      {/* Icône selon le type d'étape */}
+                      <span className="flex-shrink-0 mt-0.5">
+                        {log.step === "analyzing_question" && "📋"}
+                        {log.step === "searching_web" && "🔍"}
+                        {log.step === "search_query" && "🔎"}
+                        {log.step === "search_results" && "📄"}
+                        {log.step === "analyzing_sources" && "📊"}
+                        {log.step === "generating_response" && "✍️"}
+                        {log.step === "finalizing" && "✓"}
+                        {!["analyzing_question", "searching_web", "search_query", "search_results", "analyzing_sources", "generating_response", "finalizing"].includes(log.step) && "•"}
+                      </span>
+                      {/* Message */}
+                      <span className="break-words">{log.message}</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-sm text-gray-500">
+                    {t("aiChat.preparingResponse") || "Préparation de la réponse..."}
+                  </div>
+                )}
+              </div>
+
+              {/* Indicateur de progression visuel */}
+              {thinkingLogs.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <div className="flex justify-between gap-1">
+                    {[1, 2, 3, 4, 5].map((step) => (
+                      <div
+                        key={step}
+                        className={`flex-1 h-1.5 rounded-full transition-all duration-500 ${
+                          step <= Math.min(thinkingLogs.length, 5)
+                            ? "bg-purple-500"
+                            : "bg-gray-200"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -707,6 +788,8 @@ export default function ConversationDetail() {
   const [error, setError] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [chatExpanded, setChatExpanded] = useState(false);
+  // 🆕 State pour les logs de réflexion IA temps réel
+  const [thinkingLogs, setThinkingLogs] = useState<ThinkingLogUI[]>([]);
 
   const { isExpired, formattedTime, durationMinutes } = useConversationExpiration(booking);
   const isDevMock = new URLSearchParams(window.location.search).get("dev") === "true";
@@ -831,16 +914,71 @@ export default function ConversationDetail() {
         const msgs = msgSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Message[];
         setMessages(msgs);
 
+        // 🆕 AUTO-DETECT AI LOADING STATE
+        // L'IA est en train de travailler si:
+        // - Le dernier message vient du provider (user) et on attend la réponse IA
+        // - Ou si on vient d'envoyer un message (aiLoading déjà true)
         const lastMsg = msgs[msgs.length - 1];
-        if (lastMsg?.source === "gpt" || lastMsg?.source === "gpt-error" || lastMsg?.source === "claude") {
+        const lastMsgIsFromAI = lastMsg?.source === "gpt" || lastMsg?.source === "gpt-error" || lastMsg?.source === "claude" || lastMsg?.source === "system";
+        const lastMsgIsFromUser = lastMsg?.source === "provider" || lastMsg?.role === "user";
+
+        if (lastMsgIsFromAI) {
+          // L'IA a répondu, on arrête le loading
           setAiLoading(false);
+        } else if (lastMsgIsFromUser && !lastMsgIsFromAI) {
+          // Le dernier message est du user, on attend la réponse IA
+          setAiLoading(true);
         }
+
+        console.log("[ConversationDetail] 📩 Messages updated:", {
+          count: msgs.length,
+          lastMsgSource: lastMsg?.source,
+          lastMsgRole: lastMsg?.role,
+          isAiLoading: lastMsgIsFromUser && !lastMsgIsFromAI,
+        });
       });
     };
 
     loadConversation().catch(console.error);
     return () => { if (unsubMessages) unsubMessages(); };
   }, [id, booking, isDevMock]);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 🆕 LISTENER TEMPS RÉEL: thinking_logs subcollection
+  // Affiche les recherches IA en direct (comme GPT/Claude)
+  // ═══════════════════════════════════════════════════════════════════════════
+  useEffect(() => {
+    // Ne pas écouter si pas de conversation ou pas en loading
+    if (!conversation?.id || !aiLoading) {
+      setThinkingLogs([]);
+      return;
+    }
+
+    // Écouter la sous-collection thinking_logs en temps réel
+    const logsQuery = query(
+      collection(db, "conversations", conversation.id, "thinking_logs"),
+      orderBy("order", "asc")
+    );
+
+    const unsubscribe = onSnapshot(logsQuery, (snapshot) => {
+      const logs = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        step: doc.data().step || "",
+        message: doc.data().message || "",
+        details: doc.data().details,
+        order: doc.data().order || 0,
+      })) as ThinkingLogUI[];
+
+      setThinkingLogs(logs);
+    }, (error) => {
+      console.error("[ConversationDetail] Erreur listener thinking_logs:", error);
+    });
+
+    return () => {
+      unsubscribe();
+      setThinkingLogs([]);
+    };
+  }, [conversation?.id, aiLoading]);
 
   // Send message
   const handleSendMessage = useCallback(async (message: string) => {
@@ -939,6 +1077,7 @@ export default function ConversationDetail() {
               messages={messages}
               onSendMessage={handleSendMessage}
               isLoading={aiLoading}
+              thinkingLogs={thinkingLogs}  // 🆕 Logs temps réel
               isExpanded={chatExpanded}
               onToggleExpand={() => setChatExpanded(!chatExpanded)}
               disabled={isExpired}

@@ -46,7 +46,7 @@ import { formatCurrency } from "../utils/localeFormatters";
 import { getDateLocale } from "../utils/formatters";
 import { usePaymentGateway } from "../hooks/usePaymentGateway";
 import { PayPalPaymentForm, GatewayIndicator } from "../components/payment";
-import { PayPalScriptProvider } from "@paypal/react-paypal-js";
+// PayPalScriptProvider est fourni par PayPalContext au niveau App.tsx
 import { paymentLogger, navigationLogger, callLogger } from "../utils/debugLogger";
 import { getLocaleString, getTranslatedRouteSlug } from "../multilingual-system/core/routing/localeRoutes";
 import { getStoredMetaIdentifiers } from "../utils/fbpCookie";
