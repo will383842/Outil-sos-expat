@@ -11,7 +11,7 @@
  * =============================================================================
  */
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import {
   collection,
   query,
@@ -262,6 +262,11 @@ export default function ProviderHome() {
     "home.noActiveConversation": t("provider:home.noActiveConversation"),
   });
 
+  // P0 FIX: Use refs to prevent infinite loop from re-renders
+  const lastProviderIdRef = useRef<string | null>(null);
+  const unsubscribeRef = useRef<(() => void) | null>(null);
+  const isSubscribedRef = useRef(false);
+
   // Load mock data
   const loadMockConversations = useCallback(() => {
     const mockData = getMockData();
@@ -280,36 +285,59 @@ export default function ProviderHome() {
     setLoading(false);
   }, []);
 
-  // Load conversations
+  // Load conversations - P0 FIX: Use refs to prevent re-subscription on every render
   useEffect(() => {
+    const providerId = activeProvider?.id || null;
+
+    // P0 FIX: Skip if already subscribed to the same provider
+    if (providerId === lastProviderIdRef.current && isSubscribedRef.current) {
+      console.log("[ProviderHome] ⏭️ Skipping - already subscribed to:", providerId);
+      return;
+    }
+
+    // Cleanup previous subscription
+    if (unsubscribeRef.current) {
+      console.log("[ProviderHome] 🧹 Cleaning up previous subscription");
+      unsubscribeRef.current();
+      unsubscribeRef.current = null;
+      isSubscribedRef.current = false;
+    }
+
     // P0 DEBUG: Log conversation loading trigger
     console.log("[ProviderHome] 📥 useEffect triggered:", {
       isDevMock,
-      activeProviderId: activeProvider?.id,
-      willLoadMock: isDevMock && (!activeProvider?.id || activeProvider.id.startsWith("dev-")),
-      willSkip: !activeProvider?.id,
+      activeProviderId: providerId,
+      lastProviderId: lastProviderIdRef.current,
+      willLoadMock: isDevMock && (!providerId || providerId.startsWith("dev-")),
+      willSkip: !providerId,
     });
 
-    if (isDevMock && (!activeProvider?.id || activeProvider.id.startsWith("dev-"))) {
+    lastProviderIdRef.current = providerId;
+
+    if (isDevMock && (!providerId || providerId.startsWith("dev-"))) {
       loadMockConversations();
       const handleMockDataUpdate = () => loadMockConversations();
       window.addEventListener("mock-data-updated", handleMockDataUpdate);
-      return () => window.removeEventListener("mock-data-updated", handleMockDataUpdate);
+      isSubscribedRef.current = true;
+      return () => {
+        window.removeEventListener("mock-data-updated", handleMockDataUpdate);
+        isSubscribedRef.current = false;
+      };
     }
 
-    if (!activeProvider?.id) {
+    if (!providerId) {
       console.log("[ProviderHome] ⏸️ No activeProvider, setting loading=false");
       setLoading(false);
       return;
     }
 
-    console.log("[ProviderHome] 🔄 Loading conversations for provider:", activeProvider.id);
+    console.log("[ProviderHome] 🔄 Loading conversations for provider:", providerId);
     setLoading(true);
     setError(null);
 
     const conversationsQuery = query(
       collection(db, "conversations"),
-      where("providerId", "==", activeProvider.id),
+      where("providerId", "==", providerId),
       orderBy("updatedAt", "desc"),
       limit(20)
     );
@@ -342,17 +370,27 @@ export default function ProviderHome() {
         console.error("[ProviderHome] ❌ Error loading conversations:", {
           code: err.code,
           message: err.message,
-          providerId: activeProvider?.id,
+          providerId: providerId,
         });
-        setError(t("provider:home.loadError"));
+        // Use a hardcoded message to avoid t() in error handler
+        setError("Erreur lors du chargement des conversations");
         setLoading(false);
       }
     );
 
-    return () => unsubscribe();
+    unsubscribeRef.current = unsubscribe;
+    isSubscribedRef.current = true;
+
+    return () => {
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+        unsubscribeRef.current = null;
+        isSubscribedRef.current = false;
+      }
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeProvider?.id, isDevMock, loadMockConversations]);
-  // NOTE: `t` removed from deps - it's stable and causes infinite loop if included
+  }, [activeProvider?.id, isDevMock]);
+  // NOTE: loadMockConversations and t removed from deps - they're stable and cause infinite loop if included
 
   // Provider data for KPIs
   const providerData = activeProvider as Record<string, unknown> | null;
