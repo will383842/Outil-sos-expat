@@ -421,6 +421,8 @@ interface CreateUserDocumentResponse {
  * Crée un document utilisateur via Cloud Function (Admin SDK)
  * Cette méthode contourne les règles de sécurité Firestore et est
  * plus fiable pour les nouveaux utilisateurs Google OAuth.
+ *
+ * ✅ Inclut retry avec backoff exponentiel pour réseau lent
  */
 const createUserDocumentViaCloudFunction = async (
   firebaseUser: FirebaseUser,
@@ -461,8 +463,41 @@ const createUserDocumentViaCloudFunction = async (
     ...(additionalData.languages && { languages: additionalData.languages }),
   };
 
-  const result = await createUserDoc(requestData);
-  return result.data;
+  // ✅ Retry avec backoff exponentiel (3 tentatives max)
+  const MAX_RETRIES = 3;
+  const BASE_DELAY = 1000; // 1s, 2s, 4s
+
+  let lastError: Error | null = null;
+
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      console.log(`🔄 [CloudFunction] Tentative ${attempt}/${MAX_RETRIES} de création du document...`);
+      const result = await createUserDoc(requestData);
+      console.log(`✅ [CloudFunction] Document créé avec succès (tentative ${attempt})`);
+      return result.data;
+    } catch (error) {
+      lastError = error as Error;
+      const errorCode = (error as any)?.code || 'unknown';
+      console.warn(`⚠️ [CloudFunction] Échec tentative ${attempt}/${MAX_RETRIES}:`, errorCode, (error as Error).message);
+
+      // Ne pas retry si c'est une erreur de permission ou d'authentification
+      if (errorCode === 'permission-denied' || errorCode === 'unauthenticated') {
+        console.error(`❌ [CloudFunction] Erreur fatale (${errorCode}), pas de retry`);
+        throw error;
+      }
+
+      // Attendre avant le prochain retry (sauf si c'est la dernière tentative)
+      if (attempt < MAX_RETRIES) {
+        const delay = BASE_DELAY * Math.pow(2, attempt - 1); // 1s, 2s, 4s
+        console.log(`⏳ [CloudFunction] Attente ${delay}ms avant retry...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  // Si toutes les tentatives ont échoué
+  console.error(`❌ [CloudFunction] Échec après ${MAX_RETRIES} tentatives`);
+  throw lastError || new Error('Cloud Function failed after all retries');
 };
 
 /**
@@ -997,29 +1032,88 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           clearTimeout(restFallbackTimeoutId);
         }
 
-        // Document n'existe pas → c'est une ANOMALIE car le document devrait exister après inscription
+        // Document n'existe pas → peut être une race condition avec la Cloud Function
         // ⚠️ CORRECTION: Ne PAS créer un document avec role='client' par défaut
         // Cela corromprait le rôle des prestataires (lawyers/expats) si leur document
         // n'a pas encore été répliqué ou s'il y a une erreur de timing
         if (!docSnap.exists()) {
-          console.warn("🔐 [AuthContext] Document users/" + uid + " n'existe pas - ANOMALIE");
-          console.warn("🔐 [AuthContext] L'utilisateur s'est connecté mais son document Firestore est absent.");
-          console.warn("🔐 [AuthContext] Cela peut arriver si l'inscription n'a pas terminé correctement.");
+          console.warn("🔐 [AuthContext] Document users/" + uid + " n'existe pas - possible race condition");
+          console.warn("🔐 [AuthContext] Cloud Function peut encore être en cours d'exécution...");
 
-          // ✅ CORRECTION: Garder l'état loading et afficher une erreur
-          // plutôt que de créer un faux document avec role='client'
+          // ✅ FIX RACE CONDITION: Retry polling avec backoff progressif
+          // La Cloud Function peut prendre jusqu'à 10-15s sur réseau lent
           if (!firstSnapArrived.current) {
-            setError('Votre profil est en cours de création. Veuillez patienter quelques secondes et rafraîchir la page.');
-            // NE PAS définir setUser avec role='client' !
-            // Le document sera créé par le processus d'inscription qui définit le bon rôle
+            const MAX_RETRIES = 20; // 20 retries
+            const BASE_DELAY = 300; // Commence à 300ms
+            const MAX_DELAY = 1500; // Max 1.5s entre retries
+            // Total max: ~15-20 secondes
+
+            console.log("🔄 [AuthContext] Démarrage du polling avec backoff progressif...");
+
+            let totalWaitTime = 0;
+            for (let retry = 1; retry <= MAX_RETRIES; retry++) {
+              // Backoff progressif: 300ms, 450ms, 675ms, 1000ms, 1500ms, 1500ms...
+              const delay = Math.min(BASE_DELAY * Math.pow(1.5, retry - 1), MAX_DELAY);
+              await new Promise(resolve => setTimeout(resolve, delay));
+              totalWaitTime += delay;
+
+              if (cancelled) {
+                console.log("🔄 [AuthContext] Polling annulé (cancelled=true)");
+                return;
+              }
+
+              console.log(`🔄 [AuthContext] Retry ${retry}/${MAX_RETRIES} (${Math.round(totalWaitTime/1000)}s écoulées)...`);
+
+              try {
+                const retrySnap = await getDoc(refUser);
+
+                if (retrySnap.exists()) {
+                  console.log(`✅ [AuthContext] Document trouvé après ${retry} retry(s) (${Math.round(totalWaitTime/1000)}s)!`);
+                  // Document trouvé! Traiter les données
+                  const data = retrySnap.data() as Partial<User>;
+
+                  setUser((prev) => {
+                    const merged: User = {
+                      ...(prev ?? ({} as User)),
+                      ...(data as Partial<User>),
+                      id: uid,
+                      uid,
+                      email: data.email || authUser.email || prev?.email || null,
+                      createdAt:
+                        data.createdAt instanceof Timestamp
+                          ? data.createdAt.toDate()
+                          : prev?.createdAt || new Date(),
+                      updatedAt:
+                        data.updatedAt instanceof Timestamp
+                          ? data.updatedAt.toDate()
+                          : new Date(),
+                      lastLoginAt:
+                        (data as any).lastLoginAt instanceof Timestamp
+                          ? (data as any).lastLoginAt.toDate()
+                          : new Date(),
+                      isVerifiedEmail: authUser.emailVerified,
+                    } as User;
+                    return merged;
+                  });
+
+                  firstSnapArrived.current = true;
+                  setIsLoading(false);
+                  setAuthInitialized(true);
+                  return;
+                }
+              } catch (pollError) {
+                console.warn(`⚠️ [AuthContext] Erreur polling retry ${retry}:`, pollError);
+                // Continuer le polling malgré l'erreur
+              }
+            }
+
+            // Après tous les retries (~15-20s), le document n'existe toujours pas
+            console.error("❌ [AuthContext] Document toujours absent après " + MAX_RETRIES + " retries (~" + Math.round(totalWaitTime/1000) + "s)");
+            setError('La création de votre profil prend plus de temps que prévu. Veuillez rafraîchir la page dans quelques secondes.');
             firstSnapArrived.current = true;
             setIsLoading(false);
             setAuthInitialized(true);
           }
-
-          // ⚠️ NE PAS créer le document ici avec role='client'
-          // Le document doit être créé par le flow d'inscription (register) avec le BON rôle
-          // Si on arrive ici, c'est une erreur de synchronisation - l'utilisateur doit rafraîchir
 
           return;
         }
@@ -1283,8 +1377,11 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         // Without this, Firestore may reject writes because the auth token isn't propagated yet
         console.log("[DEBUG] " + "🔄 GOOGLE POPUP: Rafraîchissement du token...");
         await googleUser.getIdToken(true);
-        // Small delay to ensure token propagation to Firestore
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // ✅ Délai adaptatif selon la connexion (500ms rapide, 1500ms lent, 1000ms par défaut)
+        const tokenPropagationDelay = deviceInfo.connectionSpeed === 'slow' ? 1500 :
+                                       deviceInfo.connectionSpeed === 'fast' ? 500 : 1000;
+        console.log("[DEBUG] " + "⏳ GOOGLE POPUP: Attente propagation token (" + tokenPropagationDelay + "ms)...");
+        await new Promise(resolve => setTimeout(resolve, tokenPropagationDelay));
         console.log("[DEBUG] " + "✅ GOOGLE POPUP: Token rafraîchi");
 
         const userRef = doc(db, 'users', googleUser.uid);
@@ -1372,6 +1469,15 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         msg = 'Connexion Google non activée. Contactez le support.';
       } else if (errorCode === 'auth/network-request-failed') {
         msg = 'Erreur réseau. Vérifiez votre connexion.';
+      } else if (errorCode === 'auth/account-exists-with-different-credential') {
+        // ✅ FIX: Gérer le cas où l'email existe déjà avec une autre méthode de connexion
+        msg = 'Cet email est déjà associé à un compte. Connectez-vous avec votre mot de passe, puis liez votre compte Google depuis les paramètres.';
+      } else if (errorCode === 'auth/credential-already-in-use') {
+        msg = 'Ce compte Google est déjà utilisé par un autre utilisateur.';
+      } else if (errorCode === 'auth/user-disabled') {
+        msg = 'Votre compte a été désactivé. Contactez le support.';
+      } else if (errorCode === 'auth/timeout' || errorCode === 'auth/web-storage-unsupported') {
+        msg = 'Problème de connexion. Essayez de rafraîchir la page ou utilisez un autre navigateur.';
       }
 
       setError(msg);
@@ -1401,7 +1507,8 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         console.log("[DEBUG] " + "🔵 GOOGLE REDIRECT: Vérification du retour...");
 
         // ⏱️ Timeout pour éviter blocage infini sur certains navigateurs
-        const REDIRECT_TIMEOUT = 15000; // 15 secondes
+        // ✅ Augmenté à 30s pour les réseaux lents (3G, pays émergents)
+        const REDIRECT_TIMEOUT = 30000; // 30 secondes
         let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
         const resultPromise = getRedirectResult(auth);
@@ -1437,8 +1544,11 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         // 🔧 FIX: Force token refresh to ensure Firestore rules recognize the new user
         console.log("[DEBUG] " + "🔄 GOOGLE REDIRECT: Rafraîchissement du token...");
         await googleUser.getIdToken(true);
-        // Small delay to ensure token propagation to Firestore
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // ✅ Délai adaptatif selon la connexion (500ms rapide, 1500ms lent, 1000ms par défaut)
+        const tokenPropagationDelayRedirect = deviceInfo.connectionSpeed === 'slow' ? 1500 :
+                                               deviceInfo.connectionSpeed === 'fast' ? 500 : 1000;
+        console.log("[DEBUG] " + "⏳ GOOGLE REDIRECT: Attente propagation token (" + tokenPropagationDelayRedirect + "ms)...");
+        await new Promise(resolve => setTimeout(resolve, tokenPropagationDelayRedirect));
         console.log("[DEBUG] " + "✅ GOOGLE REDIRECT: Token rafraîchi");
 
         const userRef = doc(db, 'users', googleUser.uid);
@@ -1748,6 +1858,20 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       setTimeout(() => localStorage.removeItem('sos_logout_event'), 100);
     } catch {
       // Ignorer si localStorage n'est pas disponible
+    }
+
+    // ✅ FIX: Nettoyer l'état OAuth pour éviter les problèmes de reconnexion
+    try {
+      // Supprimer les données de redirect Google
+      safeStorage.removeItem('googleAuthRedirect');
+      // Supprimer "Remember Me" pour des raisons de sécurité (nouvel utilisateur sur même appareil)
+      localStorage.removeItem('savedEmail');
+      localStorage.removeItem('rememberMe');
+      // Reset le flag de redirect pour permettre une nouvelle connexion
+      redirectHandledRef.current = false;
+      console.log('✅ [Auth] État OAuth nettoyé');
+    } catch {
+      // Ignorer si storage n'est pas disponible
     }
 
     signingOutRef.current = false;

@@ -658,6 +658,12 @@ async function handleRequest(request, env, ctx) {
   newHeaders.set('X-Worker-SSR-Match', needsSSR ? 'true' : 'false');
   newHeaders.set('X-Worker-Path', pathname);
 
+  // Ajouter des headers de cache agressifs pour les assets statiques (icônes, fonts, images)
+  const isStaticAsset = /\.(png|jpg|jpeg|webp|svg|ico|woff2?|ttf|eot|css|js)$/i.test(pathname);
+  if (isStaticAsset && originResponse.status === 200) {
+    newHeaders.set('Cache-Control', 'public, max-age=31536000, immutable');
+  }
+
   // COOP headers required for Firebase Auth popup (Google login)
   // Without these, the popup cannot communicate with the parent window
   newHeaders.set('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
