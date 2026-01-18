@@ -11,22 +11,25 @@
  */
 
 import { CloudTasksClient } from "@google-cloud/tasks";
-import { defineSecret, defineString } from "firebase-functions/params";
+import { defineString } from "firebase-functions/params";
 import { onRequest, onCall, HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import { logError } from "../utils/logs/logError";
 // P1-13: Sync atomique payments <-> call_sessions
 import { syncPaymentStatus } from "../utils/paymentSync";
 
+// P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
+import {
+  PAYPAL_CLIENT_ID,
+  PAYPAL_CLIENT_SECRET,
+  TASKS_AUTH_SECRET,
+  getTasksAuthSecret,
+} from "./secrets";
+
 // Configuration Cloud Tasks
 const CLOUD_TASKS_LOCATION = defineString("CLOUD_TASKS_LOCATION", { default: "europe-west1" });
 const CLOUD_TASKS_PAYOUT_QUEUE = defineString("CLOUD_TASKS_PAYOUT_QUEUE", { default: "payout-retry-queue" });
 const FUNCTIONS_BASE_URL_PARAM = defineString("FUNCTIONS_BASE_URL");
-const TASKS_AUTH_SECRET = defineSecret("TASKS_AUTH_SECRET");
-
-// Secrets PayPal (pour le retry)
-const PAYPAL_CLIENT_ID = defineSecret("PAYPAL_CLIENT_ID");
-const PAYPAL_CLIENT_SECRET = defineSecret("PAYPAL_CLIENT_SECRET");
 
 // Configuration des retries
 const PAYOUT_RETRY_CONFIG = {
@@ -136,7 +139,7 @@ export async function schedulePayoutRetryTask(
         url: callbackUrl,
         headers: {
           "Content-Type": "application/json",
-          "X-Task-Auth": TASKS_AUTH_SECRET.value(),
+          "X-Task-Auth": getTasksAuthSecret(),
         },
         body: Buffer.from(JSON.stringify(taskPayload)),
       },
@@ -179,7 +182,7 @@ export const executePayoutRetryTask = onRequest(
 
     // Vérifier l'authentification
     const authHeader = req.headers["x-task-auth"];
-    const expectedAuth = TASKS_AUTH_SECRET.value();
+    const expectedAuth = getTasksAuthSecret();
 
     if (!authHeader || authHeader !== expectedAuth) {
       console.error("❌ [PayoutRetry] Invalid or missing X-Task-Auth header");

@@ -18,6 +18,7 @@ import './App.css';
 import PWAProvider from './components/pwa/PWAProvider';
 import { WizardProvider } from './contexts/WizardContext';
 import ProviderOnlineManager from './components/providers/ProviderOnlineManager';
+import { PayPalProvider } from './contexts/PayPalContext';
 // Marketing routes moved to AdminRoutesV2 (accessible via /admin/marketing/*)
 import enMessages from "./helper/en.json";
 import esMessages from "./helper/es.json";
@@ -630,6 +631,7 @@ const App: React.FC = () => {
 
   return (
     <IntlProvider locale={locale} messages={messages[locale] as unknown as Record<string, string>} defaultLocale="fr" >
+      <PayPalProvider>
       <WizardProvider>
       <PWAProvider
         enableOfflineStorage={true}
@@ -717,6 +719,7 @@ const App: React.FC = () => {
       )}
       </PWAProvider>
       </WizardProvider>
+      </PayPalProvider>
     </IntlProvider>
   );
 };

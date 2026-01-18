@@ -17,7 +17,6 @@
 
 import * as admin from "firebase-admin";
 import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
-import { defineSecret, defineString } from "firebase-functions/params";
 // P1-13: Sync atomique payments <-> call_sessions
 import { syncPaymentStatus } from "./utils/paymentSync";
 // P2-2: Unified payment status checks
@@ -29,16 +28,34 @@ import { logWebhookTest } from "./utils/productionTestLogger";
 // Meta CAPI for server-side tracking
 import { META_CAPI_TOKEN, trackCAPIPurchase, UserData } from "./metaConversionsApi";
 
-// Secrets PayPal
-export const PAYPAL_CLIENT_ID = defineSecret("PAYPAL_CLIENT_ID");
-export const PAYPAL_CLIENT_SECRET = defineSecret("PAYPAL_CLIENT_SECRET");
-export const PAYPAL_WEBHOOK_ID = defineSecret("PAYPAL_WEBHOOK_ID");
-export const PAYPAL_PARTNER_ID = defineSecret("PAYPAL_PARTNER_ID");
-// Merchant ID de la plateforme SOS-Expat pour recevoir les frais de plateforme
-export const PAYPAL_PLATFORM_MERCHANT_ID = defineSecret("PAYPAL_PLATFORM_MERCHANT_ID");
+// P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
+import {
+  PAYPAL_CLIENT_ID,
+  PAYPAL_CLIENT_SECRET,
+  PAYPAL_WEBHOOK_ID,
+  PAYPAL_PARTNER_ID,
+  PAYPAL_PLATFORM_MERCHANT_ID,
+  PAYPAL_MODE,
+  PAYPAL_SECRETS,
+  getPayPalMode,
+  getPayPalClientId,
+  getPayPalClientSecret,
+  getPayPalWebhookId,
+  getPayPalPartnerId,
+  getPayPalPlatformMerchantId,
+  getPayPalBaseUrl,
+} from "./lib/secrets";
 
-// Mode PayPal: "sandbox" pour les tests, "live" pour la production
-export const PAYPAL_MODE = defineString("PAYPAL_MODE", { default: "sandbox" });
+// Re-export secrets for backwards compatibility with index.ts
+export {
+  PAYPAL_CLIENT_ID,
+  PAYPAL_CLIENT_SECRET,
+  PAYPAL_WEBHOOK_ID,
+  PAYPAL_PARTNER_ID,
+  PAYPAL_PLATFORM_MERCHANT_ID,
+  PAYPAL_MODE,
+  PAYPAL_SECRETS,
+};
 
 // Configuration
 const PAYPAL_CONFIG = {
@@ -46,14 +63,14 @@ const PAYPAL_CONFIG = {
   SANDBOX_URL: "https://api-m.sandbox.paypal.com",
   LIVE_URL: "https://api-m.paypal.com",
 
-  // Mode (sandbox ou live)
+  // Mode (sandbox ou live) - use centralized getter
   get MODE(): "sandbox" | "live" {
-    const mode = PAYPAL_MODE.value();
-    return mode === "live" ? "live" : "sandbox";
+    return getPayPalMode();
   },
 
+  // Base URL - use centralized getter
   get BASE_URL(): string {
-    return this.MODE === "live" ? this.LIVE_URL : this.SANDBOX_URL;
+    return getPayPalBaseUrl();
   },
 
   // URLs de retour
@@ -311,8 +328,9 @@ export class PayPalManager {
 
     console.log("🔑 [PAYPAL] Getting new access token");
 
-    const clientId = PAYPAL_CLIENT_ID.value();
-    const clientSecret = PAYPAL_CLIENT_SECRET.value();
+    // P0 FIX: Use centralized getters for secrets
+    const clientId = getPayPalClientId();
+    const clientSecret = getPayPalClientSecret();
 
     const auth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
 
@@ -368,7 +386,7 @@ export class PayPalManager {
             headers: {
               "Authorization": `Bearer ${token}`,
               "Content-Type": "application/json",
-              "PayPal-Partner-Attribution-Id": PAYPAL_PARTNER_ID.value() || "SOS-Expat_SP",
+              "PayPal-Partner-Attribution-Id": getPayPalPartnerId(),
             },
             body: body ? JSON.stringify(body) : undefined,
           });
@@ -505,7 +523,7 @@ export class PayPalManager {
 
     return {
       actionUrl,
-      partnerId: PAYPAL_PARTNER_ID.value() || "",
+      partnerId: getPayPalPartnerId(),
       referralId: response.links?.find((l: any) => l.rel === "self")?.href?.split("/").pop() || "",
     };
   }
@@ -536,7 +554,7 @@ export class PayPalManager {
     }
 
     try {
-      const partnerId = PAYPAL_PARTNER_ID.value();
+      const partnerId = getPayPalPartnerId();
       const response = await this.apiRequest<any>(
         "GET",
         `/v1/customer/partners/${partnerId}/merchant-integrations/${merchantId}`
@@ -733,7 +751,7 @@ export class PayPalManager {
     const platformFee = data.platformFee.toFixed(2);
 
     // Recuperer le Merchant ID de la plateforme SOS-Expat pour recevoir les fees
-    const platformMerchantId = PAYPAL_PLATFORM_MERCHANT_ID.value();
+    const platformMerchantId = getPayPalPlatformMerchantId();
     if (!platformMerchantId) {
       console.error("❌ [PAYPAL] PAYPAL_PLATFORM_MERCHANT_ID secret is not configured");
       throw new Error("PAYPAL_PLATFORM_MERCHANT_ID secret is not configured. Please set this secret in Firebase.");
@@ -2103,9 +2121,9 @@ async function verifyPayPalWebhookSignature(
     return false;
   }
 
-  // Obtenir un token d'accès
-  const clientId = PAYPAL_CLIENT_ID.value();
-  const clientSecret = PAYPAL_CLIENT_SECRET.value();
+  // Obtenir un token d'accès - P0 FIX: Use centralized getters
+  const clientId = getPayPalClientId();
+  const clientSecret = getPayPalClientSecret();
   const auth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
 
   const tokenResponse = await fetch(`${PAYPAL_CONFIG.BASE_URL}/v1/oauth2/token`, {
@@ -2175,7 +2193,8 @@ export const paypalWebhook = onRequest(
     }
 
     // ===== VALIDATION SIGNATURE WEBHOOK (P0 SECURITY FIX) =====
-    const webhookId = PAYPAL_WEBHOOK_ID.value();
+    // P0 FIX: Use centralized getter
+    const webhookId = getPayPalWebhookId();
     if (!webhookId) {
       console.error("❌ [PAYPAL] PAYPAL_WEBHOOK_ID secret not configured");
       res.status(500).send("Webhook ID not configured");

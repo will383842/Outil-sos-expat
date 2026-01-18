@@ -3547,32 +3547,58 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
               )}
 
               {/*
-                P0 FIX: Le client paie TOUJOURS via Stripe (CB/Apple Pay/Google Pay)
-                Le provider reçoit via Stripe OU PayPal selon son pays (géré en backend)
-                Cela offre une UX uniforme et évite la friction PayPal pour le client
+                P0 FIX: Le système de paiement s'adapte au pays du provider
+                - Pays Stripe (46): Le client paie via Stripe (CB/Apple Pay/Google Pay)
+                - Pays PayPal (151): Le client paie via PayPal (Guest Checkout = CB aussi)
+                Le provider reçoit automatiquement sur son compte (Stripe ou PayPal)
               */}
               <div className="mb-4">
-                <GatewayIndicator gateway="stripe" />
+                <GatewayIndicator gateway={isPayPalOnly ? "paypal" : "stripe"} />
               </div>
 
-              {/* Formulaire de paiement - TOUJOURS Stripe pour le client */}
-              <Elements stripe={stripePromise}>
-                <PaymentForm
-                  user={user}
-                  provider={provider}
-                  service={service}
-                  adminPricing={adminPricing}
-                  onSuccess={handlePaymentSuccess}
-                  onError={handlePaymentError}
-                  isProcessing={isProcessing}
-                  setIsProcessing={(p) => {
-                    setError("");
-                    setIsProcessing(p);
-                  }}
-                  isMobile={isMobile}
-                  activePromo={activePromo}
+              {/* Affichage du formulaire de paiement selon le gateway */}
+              {gatewayLoading ? (
+                <div className="flex items-center justify-center p-6 bg-gray-50 rounded-lg">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-3"></div>
+                  <span className="text-gray-600">
+                    <FormattedMessage id="payment.loading" defaultMessage="Chargement..." />
+                  </span>
+                </div>
+              ) : isPayPalOnly ? (
+                /* Formulaire PayPal pour les 151 pays non-Stripe */
+                <PayPalPaymentForm
+                  amount={adminPricing?.totalAmount || 0}
+                  currency={selectedCurrency.toUpperCase()}
+                  providerId={provider?.id || ""}
+                  callSessionId={paypalCallSessionId}
+                  clientId={user?.uid || ""}
+                  description={`Appel SOS-Expat - ${provider?.fullName || provider?.name || "Expert"}`}
+                  serviceType={providerRole === "lawyer" ? "lawyer" : "expat"}
+                  onSuccess={handlePayPalPaymentSuccess}
+                  onError={(err) => handlePaymentError(err.message)}
+                  onCancel={() => console.log("PayPal cancelled")}
+                  disabled={isProcessing}
                 />
-              </Elements>
+              ) : (
+                /* Formulaire Stripe pour les 46 pays Stripe */
+                <Elements stripe={stripePromise}>
+                  <PaymentForm
+                    user={user}
+                    provider={provider}
+                    service={service}
+                    adminPricing={adminPricing}
+                    onSuccess={handlePaymentSuccess}
+                    onError={handlePaymentError}
+                    isProcessing={isProcessing}
+                    setIsProcessing={(p) => {
+                      setError("");
+                      setIsProcessing(p);
+                    }}
+                    isMobile={isMobile}
+                    activePromo={activePromo}
+                  />
+                </Elements>
+              )}
             </div>
           </section>
 

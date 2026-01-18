@@ -89,6 +89,33 @@ export const ENCRYPTION_KEY = defineSecret("ENCRYPTION_KEY");
 export const TASKS_AUTH_SECRET = defineSecret("TASKS_AUTH_SECRET");
 
 // ============================================================================
+// PAYPAL SECRETS
+// ============================================================================
+
+export const PAYPAL_CLIENT_ID = defineSecret("PAYPAL_CLIENT_ID");
+export const PAYPAL_CLIENT_SECRET = defineSecret("PAYPAL_CLIENT_SECRET");
+export const PAYPAL_WEBHOOK_ID = defineSecret("PAYPAL_WEBHOOK_ID");
+export const PAYPAL_PARTNER_ID = defineSecret("PAYPAL_PARTNER_ID");
+export const PAYPAL_PLATFORM_MERCHANT_ID = defineSecret("PAYPAL_PLATFORM_MERCHANT_ID");
+
+export const PAYPAL_MODE = defineString("PAYPAL_MODE", { default: "sandbox" });
+
+/** All PayPal secrets for function config */
+export const PAYPAL_SECRETS = [
+  PAYPAL_CLIENT_ID,
+  PAYPAL_CLIENT_SECRET,
+  PAYPAL_WEBHOOK_ID,
+  PAYPAL_PARTNER_ID,
+  PAYPAL_PLATFORM_MERCHANT_ID,
+];
+
+/** Only API keys (no webhooks) */
+export const PAYPAL_API_SECRETS = [
+  PAYPAL_CLIENT_ID,
+  PAYPAL_CLIENT_SECRET,
+];
+
+// ============================================================================
 // EXTERNAL API KEYS
 // ============================================================================
 
@@ -330,6 +357,138 @@ export function getTasksAuthSecret(): string {
   return "";
 }
 
+// --- PAYPAL GETTERS ---
+
+export function getPayPalMode(): 'sandbox' | 'live' {
+  // Force live mode in production
+  if (isProduction() && !isEmulator()) {
+    console.log('[Secrets] Production detected, forcing PayPal LIVE mode');
+    return 'live';
+  }
+
+  try {
+    const modeValue = PAYPAL_MODE.value();
+    if (modeValue === 'live' || modeValue === 'sandbox') {
+      return modeValue;
+    }
+  } catch {
+    // Fallback to process.env
+  }
+
+  const envMode = process.env.PAYPAL_MODE;
+  if (envMode === 'live' || envMode === 'sandbox') {
+    return envMode;
+  }
+
+  return 'sandbox';
+}
+
+export function getPayPalClientId(): string {
+  try {
+    const secretValue = PAYPAL_CLIENT_ID.value();
+    if (secretValue && secretValue.length > 0) {
+      console.log(`[Secrets] PAYPAL_CLIENT_ID loaded from Firebase Secret`);
+      return secretValue;
+    }
+  } catch {
+    // Secret not available
+  }
+
+  const envValue = process.env.PAYPAL_CLIENT_ID;
+  if (envValue && envValue.length > 0) {
+    console.log(`[Secrets] PAYPAL_CLIENT_ID loaded from process.env`);
+    return envValue;
+  }
+
+  console.error(`[Secrets] PAYPAL_CLIENT_ID NOT FOUND`);
+  return "";
+}
+
+export function getPayPalClientSecret(): string {
+  try {
+    const secretValue = PAYPAL_CLIENT_SECRET.value();
+    if (secretValue && secretValue.length > 0) {
+      console.log(`[Secrets] PAYPAL_CLIENT_SECRET loaded from Firebase Secret`);
+      return secretValue;
+    }
+  } catch {
+    // Secret not available
+  }
+
+  const envValue = process.env.PAYPAL_CLIENT_SECRET;
+  if (envValue && envValue.length > 0) {
+    console.log(`[Secrets] PAYPAL_CLIENT_SECRET loaded from process.env`);
+    return envValue;
+  }
+
+  console.error(`[Secrets] PAYPAL_CLIENT_SECRET NOT FOUND`);
+  return "";
+}
+
+export function getPayPalWebhookId(): string {
+  try {
+    const secretValue = PAYPAL_WEBHOOK_ID.value();
+    if (secretValue && secretValue.length > 0) {
+      return secretValue;
+    }
+  } catch {
+    // Secret not available
+  }
+
+  const envValue = process.env.PAYPAL_WEBHOOK_ID;
+  if (envValue && envValue.length > 0) {
+    return envValue;
+  }
+
+  console.error(`[Secrets] PAYPAL_WEBHOOK_ID NOT FOUND`);
+  return "";
+}
+
+export function getPayPalPartnerId(): string {
+  try {
+    const secretValue = PAYPAL_PARTNER_ID.value();
+    if (secretValue && secretValue.length > 0) {
+      return secretValue;
+    }
+  } catch {
+    // Secret not available
+  }
+
+  const envValue = process.env.PAYPAL_PARTNER_ID;
+  if (envValue && envValue.length > 0) {
+    return envValue;
+  }
+
+  // Fallback to default partner ID
+  return "SOS-Expat_SP";
+}
+
+export function getPayPalPlatformMerchantId(): string {
+  try {
+    const secretValue = PAYPAL_PLATFORM_MERCHANT_ID.value();
+    if (secretValue && secretValue.length > 0) {
+      return secretValue;
+    }
+  } catch {
+    // Secret not available
+  }
+
+  const envValue = process.env.PAYPAL_PLATFORM_MERCHANT_ID;
+  if (envValue && envValue.length > 0) {
+    return envValue;
+  }
+
+  console.error(`[Secrets] PAYPAL_PLATFORM_MERCHANT_ID NOT FOUND`);
+  return "";
+}
+
+export function getPayPalBaseUrl(): string {
+  const mode = getPayPalMode();
+  return mode === 'live'
+    ? 'https://api-m.paypal.com'
+    : 'https://api-m.sandbox.paypal.com';
+}
+
 // ============================================================================
 // COMBINED ARRAYS FOR FUNCTION CONFIG
 // ============================================================================
@@ -346,10 +505,16 @@ export const PAYMENT_FUNCTION_SECRETS = [
   ...STRIPE_SECRETS,
 ];
 
+/** All secrets for PayPal payment functions */
+export const PAYPAL_PAYMENT_SECRETS = [
+  ...PAYPAL_SECRETS,
+];
+
 /** All secrets - use sparingly, prefer specific arrays */
 export const ALL_SECRETS = [
   ...TWILIO_SECRETS,
   ...STRIPE_SECRETS,
+  ...PAYPAL_SECRETS,
   ...EMAIL_SECRETS,
   ENCRYPTION_KEY,
   TASKS_AUTH_SECRET,
