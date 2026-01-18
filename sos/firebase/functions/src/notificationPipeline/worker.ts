@@ -157,7 +157,7 @@ async function sendOne(
     // SMS ALLOWLIST: Only booking_paid_provider can send SMS
     // All other events are BLOCKED to reduce Twilio costs
     // ============================================================
-    const SMS_ALLOWED_EVENTS = ["booking_paid_provider"];
+    const SMS_ALLOWED_EVENTS = ["booking_paid_provider", "call.cancelled.client_no_answer"];
     const eventId = evt.eventId;
 
     console.log(`📱 [SMS] ========================================`);

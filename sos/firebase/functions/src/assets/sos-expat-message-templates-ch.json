@@ -65,7 +65,7 @@
         "html": "<h2>新预订请求！</h2><p>一位客户需要您的帮助：</p><table style=\"border-collapse:collapse;margin:16px 0;\"><tr><td style=\"padding:8px;border:1px solid #ddd;\"><strong>客户</strong></td><td style=\"padding:8px;border:1px solid #ddd;\">{{client.firstName}}</td></tr><tr><td style=\"padding:8px;border:1px solid #ddd;\"><strong>国籍</strong></td><td style=\"padding:8px;border:1px solid #ddd;\">{{client.nationality}}</td></tr><tr><td style=\"padding:8px;border:1px solid #ddd;\"><strong>国家</strong></td><td style=\"padding:8px;border:1px solid #ddd;\">{{request.country}}</td></tr><tr><td style=\"padding:8px;border:1px solid #ddd;\"><strong>语言</strong></td><td style=\"padding:8px;border:1px solid #ddd;\">{{clientLanguagesFormatted}}</td></tr></table><h3>请求详情</h3><p><strong>标题：</strong> {{request.title}}</p><p><strong>描述：</strong> {{request.description}}</p><p style=\"background:#e8f5e9;padding:12px;border-radius:4px;\">💰 <strong>此次通话您将赚取 {{providerEarnings}}{{currencySymbol}}</strong>（根据您银行的汇率可能略有不同）。</p><p>📱 <a href=\"https://sos-expat.com/zh-cn/kongzhi-mianban/dingyue\">登录您的AI工具</a>以获取回复帮助。</p><p style=\"background:#fff3e0;padding:12px;border-radius:4px;\">⚠️ <strong>警告：</strong>如果您未接听电话，您将自动设为离线状态，需要手动重新连接。这也会影响您的曝光度评分。</p>"
       },
       "sms": {
-        "text": "SOS Expat: 新预订！\n\n客户: {{client.firstName}}\n国籍: {{client.nationality}}\n服务国家: {{request.country}}\n使用语言: {{clientLanguagesFormatted}}\n\n标题: {{request.title}}\n详情: {{request.description}}\n\n此次通话您将赚取 {{providerEarnings}}{{currencySymbol}}（根据您银行的汇率可能略有不同）。\n\n登录您的AI工具以获取回复帮助:\n👉 https://sos-expat.com/zh-cn/kongzhi-mianban/dingyue\n\n⚠️ 警告：如果您未接听电话，您将自动设为离线状态，需要手动重新连接。这也会影响您的曝光度评分。"
+        "text": "SOS Expat: {{client.firstName}}\n{{request.title}}\n{{request.description}}"
       },
       "inapp": {
         "title": "新的付费预订",
@@ -81,7 +81,7 @@
       "roles": ["provider"],
       "channels": {
         "email": true,
-        "sms": false,
+        "sms": true,
         "push": false,
         "inapp": true,
         "whatsapp": false
@@ -91,7 +91,7 @@
         "html": "<h2>通话已取消</h2><p>非常抱歉，客户 <strong>{{clientName}}</strong> 在多次尝试后未接听电话。</p><p>通话已取消，客户已获得退款。</p><p style=\"background:#e3f2fd;padding:12px;border-radius:4px;\">✅ <strong>您没有做错任何事</strong> - 这种情况时有发生。您仍可接受新的预订。</p><p>感谢您的理解。</p><p><a href=\"https://sos-expat.com/zh-cn/kongzhi-mianban\">前往控制面板</a></p>"
       },
       "sms": {
-        "text": "SOS Expat: 非常抱歉，客户 {{clientName}} 在多次尝试后未接听电话。通话已取消，客户已获得退款。\n\n您没有做错任何事 - 这种情况时有发生。您仍可接受新的预订。\n\n感谢您的理解。"
+        "text": "SOS Expat: {{clientName}} wei jieting. Tonghua yiquxiao, kehu yi tuikuan."
       },
       "inapp": {
         "title": "通话已取消",
@@ -114,7 +114,7 @@
       },
       "email": {
         "subject": "SOS Expat: 您已被设置为离线",
-        "html": "<h2>您已被设置为离线</h2><p>您错过了一位需要您帮助的客户的来电。</p><p style=\"background:#fff3e0;padding:12px;border-radius:4px;\">⚠️ <strong>您的个人资料现在处于离线状态。</strong>在您重新连接之前，您将不会收到新的预订请求。</p><p>要重新上线并接收新预订：</p><ol><li>打开 SOS Expat 应用或网站</li><li>转到您的控制面板</li><li>将您的可用性切换为"在线"</li></ol><p><a href=\"https://sos-expat.com/zh-cn/kongzhi-mianban\" style=\"background:#4CAF50;color:white;padding:12px 24px;text-decoration:none;border-radius:4px;display:inline-block;\">立即上线</a></p>"
+        "html": "<h2>您已被设置为离线</h2><p>您错过了一位需要您帮助的客户的来电。</p><p style=\"background:#fff3e0;padding:12px;border-radius:4px;\">⚠️ <strong>您的个人资料现在处于离线状态。</strong>在您重新连接之前，您将不会收到新的预订请求。</p><p>要重新上线并接收新预订：</p><ol><li>打开 SOS Expat 应用或网站</li><li>转到您的控制面板</li><li>将您的可用性切换为「在线」</li></ol><p><a href=\"https://sos-expat.com/zh-cn/kongzhi-mianban\" style=\"background:#4CAF50;color:white;padding:12px 24px;text-decoration:none;border-radius:4px;display:inline-block;\">立即上线</a></p>"
       },
       "push": {
         "title": "您现在处于离线状态",

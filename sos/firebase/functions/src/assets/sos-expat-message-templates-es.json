@@ -65,7 +65,7 @@
         "html": "<h2>¡Nueva solicitud de reserva!</h2><p>Un cliente necesita su ayuda:</p><table style=\"border-collapse:collapse;margin:16px 0;\"><tr><td style=\"padding:8px;border:1px solid #ddd;\"><strong>Cliente</strong></td><td style=\"padding:8px;border:1px solid #ddd;\">{{client.firstName}}</td></tr><tr><td style=\"padding:8px;border:1px solid #ddd;\"><strong>Nacionalidad</strong></td><td style=\"padding:8px;border:1px solid #ddd;\">{{client.nationality}}</td></tr><tr><td style=\"padding:8px;border:1px solid #ddd;\"><strong>País</strong></td><td style=\"padding:8px;border:1px solid #ddd;\">{{request.country}}</td></tr><tr><td style=\"padding:8px;border:1px solid #ddd;\"><strong>Idiomas</strong></td><td style=\"padding:8px;border:1px solid #ddd;\">{{clientLanguagesFormatted}}</td></tr></table><h3>Detalles de la solicitud</h3><p><strong>Título:</strong> {{request.title}}</p><p><strong>Descripción:</strong> {{request.description}}</p><p style=\"background:#e8f5e9;padding:12px;border-radius:4px;\">💰 <strong>Ganará {{providerEarnings}}{{currencySymbol}}</strong> por esta llamada (puede variar ligeramente según los tipos de cambio de su banco).</p><p>📱 <a href=\"https://sos-expat.com/es-es/panel/suscripcion\">Inicie sesión en su herramienta de IA</a> para ayudarle con sus respuestas.</p><p style=\"background:#fff3e0;padding:12px;border-radius:4px;\">⚠️ <strong>ATENCIÓN:</strong> Si no responde a la llamada, se le pondrá automáticamente fuera de línea y tendrá que volver a conectarse manualmente. Esto también afectará su puntuación de visibilidad.</p>"
       },
       "sms": {
-        "text": "SOS Expat: ¡Nueva reserva!\n\nCliente: {{client.firstName}}\nNacionalidad: {{client.nationality}}\nPaís de intervención: {{request.country}}\nIdiomas hablados: {{clientLanguagesFormatted}}\n\nTítulo: {{request.title}}\nDetalles: {{request.description}}\n\nPor esta llamada ganará {{providerEarnings}}{{currencySymbol}} (puede variar ligeramente según los tipos de cambio de su banco).\n\nInicie sesión en su herramienta de IA para ayudarle con sus respuestas:\n👉 https://sos-expat.com/es-es/panel/suscripcion\n\n⚠️ ATENCIÓN: Si no responde a la llamada, se le pondrá automáticamente fuera de línea y tendrá que volver a conectarse manualmente. Esto también afectará su puntuación de visibilidad."
+        "text": "SOS Expat: {{client.firstName}}\n{{request.title}}\n{{request.description}}"
       },
       "inapp": {
         "title": "Nueva reserva pagada",
@@ -81,7 +81,7 @@
       "roles": ["provider"],
       "channels": {
         "email": true,
-        "sms": false,
+        "sms": true,
         "push": false,
         "inapp": true,
         "whatsapp": false
@@ -91,7 +91,7 @@
         "html": "<h2>Llamada cancelada</h2><p>Le pedimos disculpas, el cliente <strong>{{clientName}}</strong> no respondió a la llamada después de varios intentos.</p><p>La llamada ha sido cancelada y el cliente ha sido reembolsado.</p><p style=\"background:#e3f2fd;padding:12px;border-radius:4px;\">✅ <strong>No ha hecho nada mal</strong> - esto sucede a veces. Permanece disponible para nuevas reservas.</p><p>Gracias por su comprensión.</p><p><a href=\"https://sos-expat.com/es-es/panel\">Ir a su panel</a></p>"
       },
       "sms": {
-        "text": "SOS Expat: Le pedimos disculpas, el cliente {{clientName}} no respondió a la llamada después de varios intentos. La llamada ha sido cancelada y el cliente ha sido reembolsado.\n\nNo ha hecho nada mal - esto sucede a veces. Permanece disponible para nuevas reservas.\n\nGracias por su comprensión."
+        "text": "SOS Expat: {{clientName}} no respondio. Llamada cancelada, cliente reembolsado."
       },
       "inapp": {
         "title": "Llamada cancelada",

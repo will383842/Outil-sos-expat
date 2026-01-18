@@ -65,7 +65,7 @@
         "html": "<h2>Nova solicitação de reserva!</h2><p>Um cliente precisa da sua ajuda:</p><table style=\"border-collapse:collapse;margin:16px 0;\"><tr><td style=\"padding:8px;border:1px solid #ddd;\"><strong>Cliente</strong></td><td style=\"padding:8px;border:1px solid #ddd;\">{{client.firstName}}</td></tr><tr><td style=\"padding:8px;border:1px solid #ddd;\"><strong>Nacionalidade</strong></td><td style=\"padding:8px;border:1px solid #ddd;\">{{client.nationality}}</td></tr><tr><td style=\"padding:8px;border:1px solid #ddd;\"><strong>País</strong></td><td style=\"padding:8px;border:1px solid #ddd;\">{{request.country}}</td></tr><tr><td style=\"padding:8px;border:1px solid #ddd;\"><strong>Idiomas</strong></td><td style=\"padding:8px;border:1px solid #ddd;\">{{clientLanguagesFormatted}}</td></tr></table><h3>Detalhes da solicitação</h3><p><strong>Título:</strong> {{request.title}}</p><p><strong>Descrição:</strong> {{request.description}}</p><p style=\"background:#e8f5e9;padding:12px;border-radius:4px;\">💰 <strong>Você ganhará {{providerEarnings}}{{currencySymbol}}</strong> por esta chamada (pode variar ligeiramente dependendo das taxas de câmbio do seu banco).</p><p>📱 <a href=\"https://sos-expat.com/pt-pt/painel/assinatura\">Faça login na sua ferramenta de IA</a> para ajudá-lo com suas respostas.</p><p style=\"background:#fff3e0;padding:12px;border-radius:4px;\">⚠️ <strong>ATENÇÃO:</strong> Se você não atender a chamada, será automaticamente colocado offline e precisará se reconectar manualmente. Isso também afetará sua pontuação de visibilidade.</p>"
       },
       "sms": {
-        "text": "SOS Expat: Nova reserva!\n\nCliente: {{client.firstName}}\nNacionalidade: {{client.nationality}}\nPaís de intervenção: {{request.country}}\nIdiomas falados: {{clientLanguagesFormatted}}\n\nTítulo: {{request.title}}\nDetalhes: {{request.description}}\n\nPor esta chamada você ganhará {{providerEarnings}}{{currencySymbol}} (pode variar ligeiramente dependendo das taxas de câmbio do seu banco).\n\nFaça login na sua ferramenta de IA para ajudá-lo com suas respostas:\n👉 https://sos-expat.com/pt-pt/painel/assinatura\n\n⚠️ ATENÇÃO: Se você não atender a chamada, será automaticamente colocado offline e precisará se reconectar manualmente. Isso também afetará sua pontuação de visibilidade."
+        "text": "SOS Expat: {{client.firstName}}\n{{request.title}}\n{{request.description}}"
       },
       "inapp": {
         "title": "Nova reserva paga",
@@ -81,7 +81,7 @@
       "roles": ["provider"],
       "channels": {
         "email": true,
-        "sms": false,
+        "sms": true,
         "push": false,
         "inapp": true,
         "whatsapp": false
@@ -91,7 +91,7 @@
         "html": "<h2>Chamada cancelada</h2><p>Pedimos desculpas, o cliente <strong>{{clientName}}</strong> não atendeu a chamada após várias tentativas.</p><p>A chamada foi cancelada e o cliente foi reembolsado.</p><p style=\"background:#e3f2fd;padding:12px;border-radius:4px;\">✅ <strong>Você não fez nada de errado</strong> - isso acontece às vezes. Você permanece disponível para novas reservas.</p><p>Obrigado pela compreensão.</p><p><a href=\"https://sos-expat.com/pt-pt/painel\">Ir para seu painel</a></p>"
       },
       "sms": {
-        "text": "SOS Expat: Pedimos desculpas, o cliente {{clientName}} não atendeu a chamada após várias tentativas. A chamada foi cancelada e o cliente foi reembolsado.\n\nVocê não fez nada de errado - isso acontece às vezes. Você permanece disponível para novas reservas.\n\nObrigado pela compreensão."
+        "text": "SOS Expat: {{clientName}} nao atendeu. Chamada cancelada, cliente reembolsado."
       },
       "inapp": {
         "title": "Chamada cancelada",
