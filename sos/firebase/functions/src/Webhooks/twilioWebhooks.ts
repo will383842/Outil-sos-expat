@@ -1082,68 +1082,75 @@ export const twilioAmdTwiml = onRequest(
       // P0 DIAGNOSTIC: AMD DECISION LOGIC - DETAILED TRACE
       // ██████████████████████████████████████████████████████████████████████
       console.log(`\n🎯 [${amdId}] ┌────────────────────────────────────────────────────────────┐`);
-      console.log(`🎯 [${amdId}] │ 🧠 AMD DECISION LOGIC TRACE (P0 FIX 2026-01-17 v3)         │`);
+      console.log(`🎯 [${amdId}] │ 🧠 AMD DECISION LOGIC TRACE (P0 FIX 2026-01-18 v4)         │`);
       console.log(`🎯 [${amdId}] ├────────────────────────────────────────────────────────────┤`);
       console.log(`🎯 [${amdId}] │ INPUT:                                                     │`);
       console.log(`🎯 [${amdId}] │   answeredBy: "${answeredBy || 'undefined'}"`);
       console.log(`🎯 [${amdId}] │   participantType: "${participantType}"`);
-      console.log(`🎯 [${amdId}] │   isMachineStart: ${isMachineStart} (v3: treated as MACHINE)`);
-      console.log(`🎯 [${amdId}] │   isMachineEnd: ${isMachineEnd} (v3: treated as MACHINE)`);
+      console.log(`🎯 [${amdId}] │   isMachineStart: ${isMachineStart} (v4: IGNORED - DTMF confirms)`);
+      console.log(`🎯 [${amdId}] │   isMachineEnd: ${isMachineEnd} (v4: MACHINE - hang up)`);
       console.log(`🎯 [${amdId}] └────────────────────────────────────────────────────────────┘`);
 
       // ══════════════════════════════════════════════════════════════════════
-      // P0 CRITICAL FIX 2026-01-17 v3: UNIFIED MACHINE DETECTION
+      // P0 CRITICAL FIX 2026-01-18 v4: DTMF-BASED MACHINE DETECTION
       // ══════════════════════════════════════════════════════════════════════
       //
-      // PREVIOUS PROBLEM (v2):
-      //   machine_start was treated as human due to high false positive rate.
-      //   But this caused CLIENT's voicemail to be treated as "connected",
-      //   then PROVIDER was incorrectly called while client wasn't actually there.
+      // PREVIOUS PROBLEM (v3):
+      //   machine_start was treated as machine → immediate hangup
+      //   But machine_start has HIGH FALSE POSITIVE RATE (humans saying "Allô?")
+      //   This caused real humans to be hung up on immediately!
       //
-      // NEW SOLUTION (v3):
-      //   Treat ALL machine detections uniformly → HANG UP + RETRY (up to 3x)
+      // NEW SOLUTION (v4):
+      //   - machine_start → DO NOT HANG UP, let DTMF confirm (press 1)
+      //   - machine_end_* → CONFIRMED voicemail (beep heard) → hang up
+      //   - fax → hang up
       //
-      // BEHAVIOR (v3 unified - same for CLIENT and PROVIDER):
+      // BEHAVIOR (v4 - DTMF-based):
       //   ┌─────────────────┬───────────────────────────────────────────────┐
       //   │ answeredBy      │ Action                                        │
       //   ├─────────────────┼───────────────────────────────────────────────┤
-      //   │ machine_start   │ HANG UP + RETRY (early detection)             │
-      //   │ machine_end_*   │ HANG UP + RETRY (confirmed voicemail)         │
+      //   │ machine_start   │ IGNORE - let DTMF confirm (high false +rate)  │
+      //   │ machine_end_*   │ HANG UP + RETRY (confirmed voicemail w/ beep) │
+      //   │ fax             │ HANG UP (fax machine)                         │
       //   │ human           │ CONNECT to conference                         │
       //   │ unknown         │ CONNECT to conference (AMD timeout, assume ok)│
       //   │ undefined       │ AMD PENDING - wait for callback               │
       //   └─────────────────┴───────────────────────────────────────────────┘
       //
-      // TRADE-OFF: If a human is wrongly detected as machine_start (false positive),
-      //            they will be called back (up to 3 retries). This is acceptable.
+      // WHY THIS WORKS:
+      //   - DTMF prompt asks user to "press 1 to connect"
+      //   - Real humans will press 1 → connected
+      //   - Real voicemails can't press 1 → timeout → retry
+      //   - machine_start false positives (humans) can still press 1
       //
-      const shouldHangup = isMachineEnd || isMachineStart; // v3: ALL machine detections = hang up
+      // P0 FIX v4: Only hang up on CONFIRMED voicemail (machine_end_*) or fax
+      const shouldHangup = isMachineEnd; // v4: Only machine_end_* = hang up (beep heard = confirmed voicemail)
 
       // ██████████████████████████████████████████████████████████████████████
       // P0 DIAGNOSTIC: HANGUP DECISION
       // ██████████████████████████████████████████████████████████████████████
       console.log(`🎯 [${amdId}] ┌────────────────────────────────────────────────────────────┐`);
-      console.log(`🎯 [${amdId}] │ 🚦 HANGUP DECISION (v3 - unified):                         │`);
-      console.log(`🎯 [${amdId}] │   shouldHangup = isMachineEnd || isMachineStart            │`);
-      console.log(`🎯 [${amdId}] │   isMachineStart: ${isMachineStart}`);
+      console.log(`🎯 [${amdId}] │ 🚦 HANGUP DECISION (v4 - DTMF-based):                      │`);
+      console.log(`🎯 [${amdId}] │   shouldHangup = isMachineEnd (only confirmed voicemail)   │`);
+      console.log(`🎯 [${amdId}] │   isMachineStart: ${isMachineStart} (v4: IGNORED - let DTMF confirm)`);
       console.log(`🎯 [${amdId}] │   isMachineEnd: ${isMachineEnd}`);
       console.log(`🎯 [${amdId}] │   shouldHangup: ${shouldHangup}`);
-      console.log(`🎯 [${amdId}] │   → ${shouldHangup ? '❌ WILL HANG UP (machine detected)' : '✅ WILL NOT HANG UP (human/unknown)'}`);
+      console.log(`🎯 [${amdId}] │   → ${shouldHangup ? '❌ WILL HANG UP (confirmed voicemail)' : '✅ WILL NOT HANG UP - DTMF will confirm'}`);
       console.log(`🎯 [${amdId}] └────────────────────────────────────────────────────────────┘`);
 
       if (isMachineStart) {
-        // P0 FIX v3: machine_start detected - TREAT AS MACHINE (hang up + retry)
+        // P0 FIX v4: machine_start detected - IGNORE and let DTMF confirm
         console.log(`\n🎯 [${amdId}] ╔════════════════════════════════════════════════════════════╗`);
-        console.log(`🎯 [${amdId}] ║ ⚡ P0 FIX v3: machine_start → TREATING AS MACHINE          ║`);
+        console.log(`🎯 [${amdId}] ║ ⚡ P0 FIX v4: machine_start → IGNORING (DTMF will confirm) ║`);
         console.log(`🎯 [${amdId}] ╠════════════════════════════════════════════════════════════╣`);
         console.log(`🎯 [${amdId}] ║ answeredBy: "${answeredBy}"`);
         console.log(`🎯 [${amdId}] ║ participantType: "${participantType}"`);
-        console.log(`🎯 [${amdId}] ║ ACTION: HANGING UP - treating as voicemail`);
-        console.log(`🎯 [${amdId}] ║ REASON: Unified detection - all machine_* = voicemail`);
-        console.log(`🎯 [${amdId}] ║         (if false positive, participant will be called back)`);
-        console.log(`🎯 [${amdId}] ║ NEXT: Will hang up and trigger retry (up to 3x)           ║`);
+        console.log(`🎯 [${amdId}] ║ ACTION: NOT hanging up - letting DTMF flow confirm         ║`);
+        console.log(`🎯 [${amdId}] ║ REASON: machine_start has HIGH false positive rate         ║`);
+        console.log(`🎯 [${amdId}] ║         (humans saying "Allô?" detected as machine)        ║`);
+        console.log(`🎯 [${amdId}] ║ NEXT: User must press 1 to connect, timeout = retry        ║`);
         console.log(`🎯 [${amdId}] ╚════════════════════════════════════════════════════════════╝\n`);
-        // Will be handled by shouldHangup block below
+        // v4: Do NOT hang up - let DTMF confirm
       }
 
       if (shouldHangup) {
@@ -1209,28 +1216,28 @@ export const twilioAmdTwiml = onRequest(
       // - Initial URL callback: answeredBy is undefined/missing (Twilio hasn't analyzed yet)
       // - Async AMD callback: answeredBy is provided (human, machine_*, fax, or unknown)
       const isAsyncAmdCallback = answeredBy !== undefined && answeredBy !== null && answeredBy !== '';
-      // P0 FIX 2026-01-17 v3: UNIFIED machine detection
-      // - machine_start → MACHINE (hang up + retry) - already handled above
+      // P0 FIX 2026-01-18 v4: DTMF-based detection
+      // - machine_start → TREAT AS POTENTIAL HUMAN (let DTMF confirm)
       // - machine_end_* → MACHINE (hang up + retry) - already handled above
       // - human → HUMAN CONFIRMED → join conference
       // - unknown → HUMAN (AMD couldn't determine after 30s) → join conference
-      // Note: If we reach this point, shouldHangup was FALSE, so answeredBy is "human" or "unknown"
+      // Note: If we reach this point, shouldHangup was FALSE
       const isHumanConfirmed = answeredBy === 'human'
-        || (isAsyncAmdCallback && answeredBy === 'unknown');
-      // v3: Removed isMachineStart - now treated as machine (handled above)
+        || (isAsyncAmdCallback && answeredBy === 'unknown')
+        || (isAsyncAmdCallback && isMachineStart); // v4: machine_start = let DTMF confirm
 
       // ██████████████████████████████████████████████████████████████████████
       // P0 DIAGNOSTIC: HUMAN CONFIRMED DECISION
       // ██████████████████████████████████████████████████████████████████████
       console.log(`🎯 [${amdId}] ┌────────────────────────────────────────────────────────────┐`);
-      console.log(`🎯 [${amdId}] │ 🧑 HUMAN CONFIRMED DECISION (v3 unified):                  │`);
+      console.log(`🎯 [${amdId}] │ 🧑 HUMAN CONFIRMED DECISION (v4 DTMF-based):               │`);
       console.log(`🎯 [${amdId}] │   isAsyncAmdCallback: ${isAsyncAmdCallback}`);
       console.log(`🎯 [${amdId}] │   answeredBy === 'human': ${answeredBy === 'human'}`);
       console.log(`🎯 [${amdId}] │   isAsyncAmd && unknown: ${isAsyncAmdCallback && answeredBy === 'unknown'}`);
-      console.log(`🎯 [${amdId}] │   isMachineStart (now treated as MACHINE): ${isMachineStart}`);
-      console.log(`🎯 [${amdId}] │   isMachineEnd (MACHINE - already hung up): ${isMachineEnd}`);
+      console.log(`🎯 [${amdId}] │   isMachineStart (v4: treated as POTENTIAL HUMAN): ${isMachineStart}`);
+      console.log(`🎯 [${amdId}] │   isMachineEnd (MACHINE - will hang up): ${isMachineEnd}`);
       console.log(`🎯 [${amdId}] │   → isHumanConfirmed: ${isHumanConfirmed}`);
-      console.log(`🎯 [${amdId}] │   → ${isHumanConfirmed ? '✅ WILL JOIN CONFERENCE' : '⏳ AMD PENDING - HOLD MUSIC'}`);
+      console.log(`🎯 [${amdId}] │   → ${isHumanConfirmed ? '✅ WILL PLAY DTMF PROMPT' : '⏳ AMD PENDING - HOLD MUSIC'}`);
       console.log(`🎯 [${amdId}] └────────────────────────────────────────────────────────────┘`);
 
       // P0 CRITICAL FIX 2026-01-16: RACE CONDITION PROTECTION
