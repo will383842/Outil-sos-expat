@@ -59,6 +59,16 @@ export function KPICard({
 }: KPICardProps) {
   const styles = variantStyles[variant];
 
+  // P0 DEBUG: Log KPI values to detect undefined/NaN issues
+  console.log("[KPICard] 📊", {
+    title,
+    value,
+    valueType: typeof value,
+    isValueValid: value !== undefined && value !== null && value !== "" && !Number.isNaN(value),
+    subtitle,
+    variant,
+  });
+
   const getTrendIcon = () => {
     if (!trend) return null;
     if (trend.value > 0) return <TrendingUp className="w-3.5 h-3.5" />;

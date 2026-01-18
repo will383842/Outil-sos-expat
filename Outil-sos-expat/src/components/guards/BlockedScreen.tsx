@@ -101,21 +101,21 @@ export default function BlockedScreen({
               onClick={handleSignOut}
               className="block w-full text-gray-500 py-2 text-sm hover:text-gray-700 transition-colors"
             >
-              Se deconnecter
+              Se déconnecter
             </button>
           </div>
 
           {/* Info utilisateur */}
           {userEmail && (
             <p className="mt-6 text-xs text-gray-400">
-              Connecte en tant que {userEmail}
+              Connecté en tant que {userEmail}
             </p>
           )}
         </div>
 
         {/* Copyright */}
         <p className="mt-8 text-center text-xs text-gray-400">
-          {new Date().getFullYear()} SOS Expats. Tous droits reserves.
+          © {new Date().getFullYear()} SOS Expats. Tous droits réservés.
         </p>
       </div>
     </div>

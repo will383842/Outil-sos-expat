@@ -71,6 +71,18 @@ function ProtectedRoute({ children }: ProtectedRouteProps) {
   } = useSubscription();
   const [searchParams] = useSearchParams();
 
+  // P0 DEBUG: Log protection checks on every render
+  console.log("[ProtectedRoute] 🛡️ Access check:", {
+    user: user?.email,
+    authLoading,
+    subLoading,
+    isAdmin,
+    hasActiveSubscription,
+    hasAllowedRole,
+    role,
+    error,
+  });
+
   // ─────────────────────────────────────────────────────────────────────────
   // DEV MODE BYPASS: Accès direct pour tests (uniquement en développement)
   // Usage: ajouter ?dev=true à l'URL (sera mémorisé dans sessionStorage)

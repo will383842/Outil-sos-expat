@@ -83,9 +83,21 @@ function ActiveConversationHero({
 }) {
   const { t } = useLanguage({ mode: "provider" });
 
+  // P0 DEBUG: Log hero state to detect layout shifts
+  console.log("[ActiveConversationHero] 🎯 Render:", {
+    loading,
+    hasConversation: !!conversation,
+    conversationId: conversation?.id,
+    clientName: conversation?.clientName || conversation?.clientFirstName,
+    renderingState: loading ? "SKELETON" : (conversation ? "ACTIVE" : "EMPTY"),
+  });
+
+  // P0 FIX: Use consistent min-height to prevent layout shifts
+  const cardMinHeight = "min-h-[200px]";
+
   if (loading) {
     return (
-      <Card className="border-0 bg-gradient-to-br from-red-50 to-rose-50 shadow-lg">
+      <Card className={`border-0 bg-gradient-to-br from-red-50 to-rose-50 shadow-lg ${cardMinHeight}`}>
         <CardContent className="p-8">
           <div className="flex items-start gap-6">
             <Skeleton className="w-16 h-16 rounded-2xl" />
@@ -103,7 +115,7 @@ function ActiveConversationHero({
 
   if (!conversation) {
     return (
-      <Card className="border border-dashed border-gray-200 bg-gray-50/50">
+      <Card className={`border border-dashed border-gray-200 bg-gray-50/50 ${cardMinHeight}`}>
         <CardContent className="p-10 text-center">
           <div className="w-20 h-20 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
             <CheckCircle className="w-10 h-10 text-emerald-600" />
@@ -131,7 +143,7 @@ function ActiveConversationHero({
     : `${Math.floor(elapsed / 60)}h ${elapsed % 60}min`;
 
   return (
-    <Card className="border-0 bg-gradient-to-br from-red-50 via-rose-50 to-orange-50 shadow-lg overflow-hidden">
+    <Card className={`border-0 bg-gradient-to-br from-red-50 via-rose-50 to-orange-50 shadow-lg overflow-hidden ${cardMinHeight}`}>
       <CardContent className="p-8 relative">
         {/* Subtle decorative element */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-red-100/50 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
@@ -227,6 +239,29 @@ export default function ProviderHome() {
   // Dev mode
   const isDevMock = new URLSearchParams(window.location.search).get("dev") === "true";
 
+  // P0 DEBUG: Log component state on every render to diagnose layout issues
+  console.log("[ProviderHome] 🏠 Render state:", {
+    loading,
+    activeProviderId: activeProvider?.id,
+    activeProviderName: activeProvider?.name,
+    activeProviderType: activeProvider?.type,
+    aiCallsUsed: activeProvider?.aiCallsUsed,
+    aiCallsLimit: activeProvider?.aiCallsLimit,
+    aiQuota: activeProvider?.aiQuota,
+    hasActiveConversation: !!activeConversation,
+    recentConversationsCount: recentConversations.length,
+    error,
+    isDevMock,
+  });
+
+  // P0 DEBUG: Log translation keys to check if they resolve correctly
+  console.log("[ProviderHome] 🌐 Translation check:", {
+    "dashboard.stats.myDossiers": t("provider:dashboard.stats.myDossiers"),
+    "dashboard.quota.title": t("provider:dashboard.quota.title"),
+    "home.welcome": t("provider:home.welcome", { name: "" }),
+    "home.noActiveConversation": t("provider:home.noActiveConversation"),
+  });
+
   // Load mock data
   const loadMockConversations = useCallback(() => {
     const mockData = getMockData();
@@ -247,6 +282,14 @@ export default function ProviderHome() {
 
   // Load conversations
   useEffect(() => {
+    // P0 DEBUG: Log conversation loading trigger
+    console.log("[ProviderHome] 📥 useEffect triggered:", {
+      isDevMock,
+      activeProviderId: activeProvider?.id,
+      willLoadMock: isDevMock && (!activeProvider?.id || activeProvider.id.startsWith("dev-")),
+      willSkip: !activeProvider?.id,
+    });
+
     if (isDevMock && (!activeProvider?.id || activeProvider.id.startsWith("dev-"))) {
       loadMockConversations();
       const handleMockDataUpdate = () => loadMockConversations();
@@ -255,10 +298,12 @@ export default function ProviderHome() {
     }
 
     if (!activeProvider?.id) {
+      console.log("[ProviderHome] ⏸️ No activeProvider, setting loading=false");
       setLoading(false);
       return;
     }
 
+    console.log("[ProviderHome] 🔄 Loading conversations for provider:", activeProvider.id);
     setLoading(true);
     setError(null);
 
@@ -280,12 +325,25 @@ export default function ProviderHome() {
         const active = conversations.find((c) => c.status === "active");
         const recent = conversations.filter((c) => c.status !== "active");
 
+        // P0 DEBUG: Log loaded conversations
+        console.log("[ProviderHome] ✅ Conversations loaded:", {
+          total: conversations.length,
+          hasActive: !!active,
+          recentCount: recent.length,
+          activeId: active?.id,
+        });
+
         setActiveConversation(active || null);
         setRecentConversations(recent);
         setLoading(false);
       },
       (err) => {
-        console.error("[ProviderHome] Error loading conversations:", err);
+        // P0 DEBUG: Log error details
+        console.error("[ProviderHome] ❌ Error loading conversations:", {
+          code: err.code,
+          message: err.message,
+          providerId: activeProvider?.id,
+        });
         setError(t("provider:home.loadError"));
         setLoading(false);
       }
@@ -308,60 +366,33 @@ export default function ProviderHome() {
 
   const firstName = activeProvider?.name ? activeProvider.name.split(" ")[0] : "";
 
-  // Empty state
-  if (!loading && recentConversations.length === 0 && !activeConversation) {
-    return (
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
-            {t("provider:home.welcome", { name: firstName ? `, ${firstName}` : "" })}
-          </h1>
-          <p className="text-gray-500 mt-2 text-lg">{t("provider:home.subtitle")}</p>
-        </div>
+  // P0 FIX: Check if this is empty state (no conversations at all)
+  // We now use a SINGLE layout structure to prevent layout shifts
+  const isEmptyState = !loading && recentConversations.length === 0 && !activeConversation;
 
-        {/* Empty State Card */}
-        <Card className="text-center py-16 border-0 shadow-lg bg-gradient-to-br from-gray-50 to-white">
-          <CardContent>
-            <div className="w-24 h-24 bg-emerald-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="w-12 h-12 text-emerald-600" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-3">
-              {t("provider:home.welcomeTitle")}
-            </h2>
-            <p className="text-gray-500 max-w-lg mx-auto text-lg mb-4">
-              {t("provider:home.welcomeDescription")}
-            </p>
-            <p className="text-sm text-gray-400">
-              {t("provider:home.readyToReceive")}
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Quota Card */}
-        <Card className="mt-6 border-0 shadow-sm">
-          <CardContent className="p-6">
-            <QuotaBar
-              used={aiQuotaUsed}
-              total={aiQuotaTotal}
-              label="Quota IA"
-              size="md"
-            />
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // P0 DEBUG: Log state transitions
+  console.log("[ProviderHome] 📐 Layout state:", {
+    loading,
+    isEmptyState,
+    hasRecentConversations: recentConversations.length > 0,
+    hasActiveConversation: !!activeConversation,
+  });
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header - STABLE: Always rendered with same structure */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">
-          {t("provider:home.hello", { name: firstName ? `, ${firstName}` : "" })}
+          {isEmptyState
+            ? t("provider:home.welcome", { name: firstName ? `, ${firstName}` : "" })
+            : t("provider:home.hello", { name: firstName ? `, ${firstName}` : "" })}
         </h1>
         <p className="text-gray-500 mt-2 text-lg">
-          {activeConversation ? t("provider:home.hasActive") : t("provider:home.allUpdated")}
+          {isEmptyState
+            ? t("provider:home.subtitle")
+            : activeConversation
+              ? t("provider:home.hasActive")
+              : t("provider:home.allUpdated")}
         </p>
       </div>
 
@@ -373,38 +404,58 @@ export default function ProviderHome() {
         </div>
       )}
 
-      {/* Active Conversation Hero */}
+      {/* Hero Section - STABLE: Always rendered, content changes */}
       <section>
-        <ActiveConversationHero conversation={activeConversation} loading={loading} />
+        {isEmptyState ? (
+          /* Empty State Hero - Same min-height as ActiveConversationHero */
+          <Card className="text-center py-12 border-0 shadow-lg bg-gradient-to-br from-gray-50 to-white min-h-[200px]">
+            <CardContent className="flex flex-col items-center justify-center">
+              <div className="w-20 h-20 bg-emerald-100 rounded-2xl flex items-center justify-center mb-5">
+                <CheckCircle className="w-10 h-10 text-emerald-600" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">
+                {t("provider:home.welcomeTitle")}
+              </h2>
+              <p className="text-gray-500 max-w-md mx-auto">
+                {t("provider:home.welcomeDescription")}
+              </p>
+              <p className="text-sm text-gray-400 mt-2">
+                {t("provider:home.readyToReceive")}
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <ActiveConversationHero conversation={activeConversation} loading={loading} />
+        )}
       </section>
 
       {/* KPIs Grid */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
-          title="Conversations"
+          title={t("provider:dashboard.stats.myDossiers")}
           value={totalConversations}
-          subtitle="au total"
+          subtitle={t("provider:dashboard.stats.total")}
           icon={<MessageSquare className="w-6 h-6" />}
           variant="default"
         />
         <KPICard
-          title="Ce mois"
+          title={t("provider:dashboard.stats.completedThisMonth")}
           value={completedThisMonth}
-          subtitle="terminées"
+          subtitle={t("provider:dashboard.stats.completed")}
           icon={<Calendar className="w-6 h-6" />}
           variant="success"
         />
         <KPICard
-          title="Quota IA"
+          title={t("provider:dashboard.quota.title")}
           value={`${aiQuotaUsed}/${aiQuotaTotal}`}
-          subtitle="utilisations"
+          subtitle={t("provider:dashboard.quota.usages")}
           icon={<Sparkles className="w-6 h-6" />}
           variant="primary"
         />
         <KPICard
-          title="Statut"
-          value={activeConversation ? "En appel" : "Disponible"}
-          subtitle={activeConversation ? "conversation active" : "prêt à recevoir"}
+          title={t("provider:sidebar.subscription")}
+          value={activeConversation ? t("provider:dashboard.stats.inProgress") : t("provider:sidebar.active")}
+          subtitle={activeConversation ? t("provider:home.hasActive") : t("provider:home.readyToReceive")}
           icon={<Users className="w-6 h-6" />}
           variant={activeConversation ? "warning" : "success"}
         />
@@ -416,7 +467,7 @@ export default function ProviderHome() {
           <QuotaBar
             used={aiQuotaUsed}
             total={aiQuotaTotal}
-            label="Utilisation du quota IA"
+            label={t("provider:dashboard.quota.title")}
             size="md"
           />
         </CardContent>

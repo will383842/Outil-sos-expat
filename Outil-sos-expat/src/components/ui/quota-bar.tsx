@@ -7,6 +7,7 @@
 
 import { cn } from "@/lib/utils";
 import { Sparkles } from "lucide-react";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export interface QuotaBarProps {
   used: number;
@@ -15,6 +16,8 @@ export interface QuotaBarProps {
   showIcon?: boolean;
   size?: "sm" | "md" | "lg";
   className?: string;
+  /** Warning message when quota is almost exhausted */
+  warningMessage?: string;
 }
 
 export function QuotaBar({
@@ -24,8 +27,23 @@ export function QuotaBar({
   showIcon = true,
   size = "md",
   className,
+  warningMessage,
 }: QuotaBarProps) {
+  const { t } = useLanguage({ mode: "provider" });
   const percentage = total > 0 ? Math.min((used / total) * 100, 100) : 0;
+
+  // P0 DEBUG: Log quota values to detect NaN/undefined issues
+  console.log("[QuotaBar] 📈", {
+    used,
+    total,
+    percentage,
+    isUsedValid: typeof used === "number" && !Number.isNaN(used),
+    isTotalValid: typeof total === "number" && !Number.isNaN(total) && total > 0,
+    calculatedWidth: `${percentage}%`,
+  });
+
+  // Use translated warning message or provided one
+  const quotaWarning = warningMessage || t("provider:dashboard.quota.almostReached");
 
   const getBarColor = () => {
     if (percentage >= 90) return "bg-gradient-to-r from-red-500 to-red-600";
@@ -72,7 +90,7 @@ export function QuotaBar({
       </div>
       {percentage >= 90 && (
         <p className="text-xs text-red-600">
-          Quota presque épuisé. Contactez le support.
+          {quotaWarning}
         </p>
       )}
     </div>
