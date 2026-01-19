@@ -542,9 +542,11 @@ const calculateProviderStats = async (providerId: string): Promise<ProviderStats
         }
       });
 
+      // FIX: Ajouter filtre status == 'published' pour cohérence avec getProviderReviews
       const reviewsQuery = query(
         collection(db, "reviews"),
         where("providerId", "==", providerId),
+        where("status", "==", "published"),
         where("isPublic", "==", true)
       );
       const reviewsSnapshot = await getDocs(reviewsQuery);

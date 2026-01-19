@@ -52,6 +52,10 @@ import { getExpatHelpTypeLabel } from '../../data/expat-help-types';
 
 // Import du script de migration
 import { previewMigration, migrateAllSpecialtyCodes, migrateOneProfile, checkAllProfiles, previewBioCountryFix, fixAllBiosCountryCodes, fixOneBioCountryCodes } from '../../scripts/migrateSpecialtyCodes';
+
+// Import des scripts de synchronisation/génération des avis
+import { previewMissingReviews, generateMissingReviews, generateMissingReviewsForOne } from '../../scripts/generateMissingReviews';
+import { previewReviewCountSync, syncAllReviewCounts, syncOneProfileReviewCount } from '../../scripts/syncReviewCounts';
 import { getSpecialtyLabel, mapLanguageToLocale } from '../../utils/specialtyMapper';
 
 // Import du script de génération massive d'avocats
@@ -140,6 +144,18 @@ if (typeof window !== 'undefined') {
   };
   // P1 FIX: Migration for AAA profiles AI access
   (window as any).migrateAaaProfiles = migrateAaaProfilesForAIAccess;
+
+  // Scripts de gestion des avis (reviews)
+  (window as any).reviewsTools = {
+    // Générer les avis manquants pour correspondre au reviewCount
+    previewMissing: previewMissingReviews,
+    generateMissing: generateMissingReviews,
+    generateMissingForOne: generateMissingReviewsForOne,
+    // Synchroniser les compteurs (ajuster reviewCount aux avis réels)
+    previewSync: previewReviewCountSync,
+    syncAll: syncAllReviewCounts,
+    syncOne: syncOneProfileReviewCount,
+  };
 }
 
 // ==========================================

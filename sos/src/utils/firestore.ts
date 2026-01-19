@@ -1099,8 +1099,9 @@ export const getProviderReviews = async (
             } as Review;
           })
           .filter((review) => {
-            // Filtrage côté client : ne garder que les avis publics
-            return review.isPublic === true || review.status === "published";
+            // FIX: Utiliser AND (pas OR) pour cohérence avec les requêtes principales
+            // Ne garder que les avis publiés ET publics
+            return review.isPublic === true && review.status === "published";
           })
           .sort((a, b) => {
             const aTime =
