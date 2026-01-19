@@ -3,7 +3,7 @@ export const PROVIDER_ACTIVITY_CONFIG = {
   // Délais d'inactivité (en minutes)
   FIRST_REMINDER_MINUTES: 30,            // T+30: Premier rappel informatif
   SECOND_REMINDER_MINUTES: 60,           // T+60: Deuxième rappel avec avertissement
-  INACTIVITY_AUTO_OFFLINE_MINUTES: 120,  // T+120: Mise hors ligne forcée par le backend (fallback)
+  INACTIVITY_AUTO_OFFLINE_MINUTES: 90,   // T+90: Mise hors ligne forcée par le backend (fallback, toutes les 15min)
 
   // Timeout du popup avant mise hors ligne automatique (en minutes)
   POPUP_AUTO_OFFLINE_TIMEOUT_MINUTES: 10, // T+70: 10 min après le popup T+60

@@ -2116,10 +2116,16 @@ const SOSCall: React.FC = () => {
 
   // Guided filter wizard (mobile-first)
   // Skip wizard if accessing via /providers route (direct profile display)
-  const isProvidersRoute = location.pathname.includes('/providers') ||
-                           location.pathname.includes('/prestataires') ||
-                           location.pathname.includes('/expertos') ||
-                           location.pathname.includes('/anbieter');
+  // Supports all language translations of the "providers" route
+  const isProvidersRoute = location.pathname.includes('/providers') ||      // en
+                           location.pathname.includes('/prestataires') ||   // fr
+                           location.pathname.includes('/proveedores') ||    // es
+                           location.pathname.includes('/anbieter') ||       // de
+                           location.pathname.includes('/postavshchiki') ||  // ru
+                           location.pathname.includes('/prestadores') ||    // pt
+                           location.pathname.includes('/fuwu-tigongzhe') || // ch
+                           location.pathname.includes('/seva-pradaata') ||  // hi
+                           location.pathname.includes('/مقدمي-الخدمات');    // ar
   const [showWizard, setShowWizard] = useState<boolean>(false);
   const [wizardCompleted, setWizardCompleted] = useState<boolean>(isProvidersRoute);
 

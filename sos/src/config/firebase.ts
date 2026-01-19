@@ -31,6 +31,17 @@ import {
  *  Configuration Firebase (variables .env)
  * ---------------------------------------- */
 const CACHE_DISABLED_KEY = 'firestore_cache_disabled';
+const CACHE_CORRUPTION_DETECTED_KEY = 'firestore_cache_corruption_detected';
+
+// 🔧 Vérifier si le cache doit être désactivé (flag set par resetFirestoreCache ou détection auto)
+const isCacheDisabled = typeof window !== 'undefined' && (
+  localStorage.getItem(CACHE_DISABLED_KEY) === 'true' ||
+  localStorage.getItem(CACHE_CORRUPTION_DETECTED_KEY) === 'true'
+);
+
+if (isCacheDisabled && typeof window !== 'undefined') {
+  console.warn("⚠️ [Firebase] Cache IndexedDB DÉSACTIVÉ (corruption détectée ou reset manuel)");
+}
 
 const firebaseConfig: FirebaseOptions = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY as string,
@@ -77,6 +88,9 @@ export const storage: FirebaseStorage = getStorage(app);
 // - Le cache persiste entre les sessions (offline-first)
 // - Les listeners onSnapshot reçoivent toujours les mises à jour temps réel
 // - Réduit les lectures initiales de ~30-50%
+//
+// 🔧 FIX: Si le cache est corrompu, on initialise SANS cache persistant
+// Voir GitHub issues: firebase/firebase-js-sdk#8593, #9056
 export const db: Firestore = initializeFirestore(app, {
   experimentalForceLongPolling: true, // Force HTTP au lieu de WebSocket
   experimentalAutoDetectLongPolling: false, // Désactiver l'auto-détection
@@ -84,12 +98,18 @@ export const db: Firestore = initializeFirestore(app, {
   // @ts-expect-error - Option non documentée mais critique pour la stabilité
   useFetchStreams: false,
   // ✅ Cache persistant IndexedDB - économie ~15-20% de lectures
-  localCache: persistentLocalCache({
-    tabManager: persistentMultipleTabManager(), // Support multi-onglets
-    cacheSizeBytes: 50 * 1024 * 1024, // 50 MB max
+  // ⚠️ DÉSACTIVÉ si corruption détectée (fallback mode)
+  ...(isCacheDisabled ? {} : {
+    localCache: persistentLocalCache({
+      tabManager: persistentMultipleTabManager(), // Support multi-onglets
+      cacheSizeBytes: 50 * 1024 * 1024, // 50 MB max
+    }),
   }),
 });
-console.log("🔧 [Firebase] Firestore initialisé avec LONG POLLING + CACHE PERSISTANT IndexedDB (50MB)");
+console.log(isCacheDisabled
+  ? "🔧 [Firebase] Firestore initialisé SANS CACHE (mode fallback après corruption)"
+  : "🔧 [Firebase] Firestore initialisé avec LONG POLLING + CACHE PERSISTANT IndexedDB (50MB)"
+);
 
 // 🔧 Fonction pour reset le cache Firestore (appeler depuis la console: window.resetFirestoreCache())
 if (typeof window !== 'undefined') {
@@ -128,14 +148,118 @@ if (typeof window !== 'undefined') {
   // Fonction pour réactiver le cache
   (window as any).enableFirestoreCache = () => {
     localStorage.removeItem(CACHE_DISABLED_KEY);
+    localStorage.removeItem(CACHE_CORRUPTION_DETECTED_KEY);
     console.log("✅ [Firebase] Cache réactivé pour le prochain chargement. Rechargez la page.");
     setTimeout(() => location.reload(), 500);
   };
 
   console.log("💡 [Firebase] Si Firestore est bloqué, exécutez: window.resetFirestoreCache()");
+
+  // 🔧 AUTO-DETECTION: Détecter les erreurs de corruption IndexedDB et reset automatique
+  // Patterns d'erreurs connus: "INTERNAL ASSERTION FAILED", "Cannot read properties of null"
+  // Voir: github.com/firebase/firebase-js-sdk/issues/8593, #9056, #8250
+  const firestoreCorruptionPatterns = [
+    'INTERNAL ASSERTION FAILED',
+    'Cannot read properties of null',
+    'Unexpected state',
+    'refusing to open IndexedDB',
+    'IndexedDB transaction',
+  ];
+
+  const handleFirestoreCorruption = (errorMessage: string) => {
+    // Éviter les boucles infinies - ne pas réagir si déjà en mode fallback
+    if (localStorage.getItem(CACHE_CORRUPTION_DETECTED_KEY) === 'true') {
+      return;
+    }
+
+    const isCorruptionError = firestoreCorruptionPatterns.some(pattern =>
+      errorMessage.includes(pattern)
+    );
+
+    if (isCorruptionError && errorMessage.toLowerCase().includes('firestore')) {
+      console.error("🚨 [Firebase] CORRUPTION INDEXEDDB DÉTECTÉE - Reset automatique...");
+      console.error("🚨 [Firebase] Message d'erreur:", errorMessage);
+
+      // Marquer la corruption pour le prochain reload
+      localStorage.setItem(CACHE_CORRUPTION_DETECTED_KEY, 'true');
+
+      // Supprimer les bases IndexedDB de manière synchrone si possible
+      if ('databases' in indexedDB) {
+        indexedDB.databases().then(databases => {
+          databases.forEach(dbInfo => {
+            if (dbInfo.name && (
+              dbInfo.name.includes('firestore') ||
+              dbInfo.name.includes('firebase')
+            )) {
+              indexedDB.deleteDatabase(dbInfo.name);
+              console.log(`🗑️ [Firebase] Auto-suppression: ${dbInfo.name}`);
+            }
+          });
+        }).catch(() => { /* ignore */ });
+      }
+
+      // Afficher un message à l'utilisateur et recharger
+      console.warn("⚠️ [Firebase] La page va se recharger automatiquement pour corriger le problème...");
+      setTimeout(() => {
+        location.reload();
+      }, 1500);
+    }
+  };
+
+  // Intercepter les erreurs globales (uncaught exceptions)
+  const originalOnError = window.onerror;
+  window.onerror = function(message, source, lineno, colno, error) {
+    const errorMsg = String(message) + (error?.stack || '');
+    handleFirestoreCorruption(errorMsg);
+
+    // Appeler le handler original s'il existe
+    if (originalOnError) {
+      return originalOnError.call(this, message, source, lineno, colno, error);
+    }
+    return false;
+  };
+
+  // Intercepter les rejections de promesses non gérées
+  const originalOnUnhandledRejection = window.onunhandledrejection;
+  window.onunhandledrejection = function(event: PromiseRejectionEvent) {
+    const errorMsg = String(event.reason) + (event.reason?.stack || '') + (event.reason?.message || '');
+    handleFirestoreCorruption(errorMsg);
+
+    // Appeler le handler original s'il existe
+    if (originalOnUnhandledRejection) {
+      return originalOnUnhandledRejection.call(window, event);
+    }
+  };
 }
 console.log("🔧 [Firebase] Firestore type:", db.type);
 console.log("🔧 [Firebase] App name:", db.app.name);
+
+// 🔧 AUTO-RÉACTIVATION: Après 24h sans erreur, tenter de réactiver le cache
+if (typeof window !== 'undefined' && isCacheDisabled) {
+  const CACHE_DISABLED_TIMESTAMP_KEY = 'firestore_cache_disabled_at';
+  const CACHE_RECOVERY_DELAY_MS = 24 * 60 * 60 * 1000; // 24 heures
+
+  const disabledAt = localStorage.getItem(CACHE_DISABLED_TIMESTAMP_KEY);
+  const now = Date.now();
+
+  if (!disabledAt) {
+    // Première fois qu'on détecte que le cache est désactivé - enregistrer le timestamp
+    localStorage.setItem(CACHE_DISABLED_TIMESTAMP_KEY, String(now));
+  } else {
+    const disabledTimestamp = parseInt(disabledAt, 10);
+    if (now - disabledTimestamp > CACHE_RECOVERY_DELAY_MS) {
+      // 24h écoulées - tenter de réactiver le cache au prochain reload
+      console.log("🔄 [Firebase] 24h écoulées - Tentative de réactivation du cache au prochain reload");
+      localStorage.removeItem(CACHE_DISABLED_KEY);
+      localStorage.removeItem(CACHE_CORRUPTION_DETECTED_KEY);
+      localStorage.removeItem(CACHE_DISABLED_TIMESTAMP_KEY);
+      // Note: Le cache sera réactivé au prochain reload, pas maintenant
+    } else {
+      const remainingHours = Math.ceil((CACHE_RECOVERY_DELAY_MS - (now - disabledTimestamp)) / (60 * 60 * 1000));
+      console.log(`⏳ [Firebase] Cache désactivé - réactivation auto dans ~${remainingHours}h`);
+    }
+  }
+}
 
 // 🔍 DIAGNOSTIC: Test immédiat de Firestore au boot
 if (typeof window !== 'undefined') {
@@ -145,12 +269,12 @@ if (typeof window !== 'undefined') {
     connection: (navigator as any).connection?.effectiveType || 'unknown',
   });
 
-  import('firebase/firestore').then(({ doc, getDoc, collection, getDocs, query, limit: firestoreLimit, enableNetwork, disableNetwork }) => {
+  import('firebase/firestore').then(({ doc, getDoc, collection, getDocs, query, limit: firestoreLimit, where, enableNetwork, disableNetwork }) => {
     console.log("🧪 [Firebase] Test de connectivité Firestore...");
     console.log("🧪 [Firebase] Timestamp début test:", new Date().toISOString());
 
-    // Test 1: Lecture d'une collection publique (sos_profiles a allow read: if true)
-    const testQuery = query(collection(db, 'sos_profiles'), firestoreLimit(1));
+    // Test 1: Lecture d'une collection publique (sos_profiles nécessite isVisible == true pour les requêtes list)
+    const testQuery = query(collection(db, 'sos_profiles'), where('isVisible', '==', true), firestoreLimit(1));
     const start = Date.now();
 
     // Timeout de 10s

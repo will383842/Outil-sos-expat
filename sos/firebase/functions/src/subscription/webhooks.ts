@@ -2764,7 +2764,7 @@ export async function handleTransferUpdated(
           const providerEmail = providerData.email;
 
           if (providerEmail) {
-            const { MailwizzAPI } = await import('../emailMarketing/MailwizzAPI');
+            const { MailwizzAPI } = await import('../emailMarketing/utils/mailwizz');
             const mailwizz = new MailwizzAPI();
 
             const lang = providerData?.language || providerData?.preferredLanguage || 'fr';
@@ -2953,7 +2953,7 @@ export async function handleTransferFailed(
     // P1-3 FIX: Notifier le provider de l'échec (email)
     if (providerId && providerEmail) {
       try {
-        const { MailwizzAPI } = await import('../emailMarketing/MailwizzAPI');
+        const { MailwizzAPI } = await import('../emailMarketing/utils/mailwizz');
         const mailwizz = new MailwizzAPI();
 
         // Récupérer la langue du provider

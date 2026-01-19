@@ -331,7 +331,9 @@ export async function setProviderAvailable(
     const previousStatus: AvailabilityStatus =
       (userData?.availability as AvailabilityStatus) || 'offline';
 
-    // 2. Vérifier si déjà available
+    // 2. Vérifier si déjà available OU si offline
+    // 2026-01-19 FIX: Ne PAS remettre en ligne un prestataire qui était offline
+    // setProviderAvailable ne doit s'appliquer qu'aux prestataires qui étaient busy
     if (previousStatus === 'available') {
       console.log(`[ProviderStatusManager] Provider ${providerId} already available`);
       return {
@@ -341,6 +343,18 @@ export async function setProviderAvailable(
         newStatus: 'available',
         timestamp: now.toMillis(),
         message: 'Provider already available',
+      };
+    }
+
+    if (previousStatus === 'offline') {
+      console.log(`[ProviderStatusManager] Provider ${providerId} is offline - NOT setting to available`);
+      return {
+        success: true,
+        providerId,
+        previousStatus: 'offline',
+        newStatus: 'offline',
+        timestamp: now.toMillis(),
+        message: 'Provider is offline, not changing status',
       };
     }
 

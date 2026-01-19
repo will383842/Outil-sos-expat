@@ -3,8 +3,9 @@ import * as admin from 'firebase-admin';
 
 export const checkProviderInactivity = scheduler.onSchedule(
   {
-    // 2025-01-16: Réduit à 1×/jour à 8h pour économies maximales (low traffic)
-    schedule: '0 8 * * *', // 8h Paris tous les jours
+    // 2026-01-19: Augmenté à toutes les 15 minutes pour mettre hors ligne les prestataires inactifs
+    // Le frontend ne peut pas gérer les cas où l'onglet est fermé/arrière-plan
+    schedule: 'every 15 minutes',
     timeZone: 'Europe/Paris',
   },
   async () => {
@@ -13,7 +14,8 @@ export const checkProviderInactivity = scheduler.onSchedule(
     try {
       const db = admin.firestore();
       const now = admin.firestore.Timestamp.now();
-      const twoHoursAgo = Date.now() - 120 * 60 * 1000; // 2h = 120 minutes
+      // 2026-01-19: Réduit de 2h à 90min pour être cohérent avec le frontend (T+70 + marge)
+      const inactivityThreshold = Date.now() - 90 * 60 * 1000; // 90 minutes = 1h30
 
       // ✅ FIX: Récupérer tous les profils en ligne, puis filtrer en mémoire (plus sûr, pas de dépendance index)
       const onlineProvidersSnapshot = await db
@@ -35,8 +37,17 @@ export const checkProviderInactivity = scheduler.onSchedule(
       for (const doc of providerDocs) {
         const data = doc.data();
         const lastActivity = data.lastActivity?.toMillis?.() || 0;
+        const lastStatusChange = data.lastStatusChange?.toMillis?.() || 0;
 
-        if (lastActivity < twoHoursAgo) {
+        // Protection: ne pas mettre hors ligne si le prestataire vient de se mettre en ligne (< 15 min)
+        // Cela évite de mettre hors ligne quelqu'un dont lastActivity n'a pas encore été mis à jour
+        const recentlyOnline = lastStatusChange > (Date.now() - 15 * 60 * 1000);
+        if (recentlyOnline) {
+          console.log(`⏭️ Skip ${doc.id}: mis en ligne récemment (${Math.round((Date.now() - lastStatusChange) / 60000)} min)`);
+          continue;
+        }
+
+        if (lastActivity < inactivityThreshold) {
           const inactiveMinutes = Math.round((Date.now() - lastActivity) / 60000);
           console.log(`⏰ Mise hors ligne : ${doc.id} (inactif depuis ${inactiveMinutes} minutes)`);
 
@@ -64,9 +75,9 @@ export const checkProviderInactivity = scheduler.onSchedule(
 
       if (count > 0) {
         await batch.commit();
-        console.log(`✅ ${count} prestataires mis hors ligne pour inactivité >2h`);
+        console.log(`✅ ${count} prestataires mis hors ligne pour inactivité >90min`);
       } else {
-        console.log('✅ Aucun prestataire inactif depuis 2h');
+        console.log('✅ Aucun prestataire inactif depuis 90min');
       }
     } catch (error) {
       console.error('❌ Erreur checkProviderInactivity:', error);

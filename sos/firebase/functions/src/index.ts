@@ -290,6 +290,9 @@ export {
 // Payout Retry Tasks (P0-2 FIX)
 export { executePayoutRetryTask, retryFailedPayout } from "./lib/payoutRetryTasks";
 
+// Stripe Transfer Retry Tasks (P1-2 FIX)
+export { executeStripeTransferRetry } from "./lib/stripeTransferRetryTasks";
+
 // ============================================================================
 // TAX ENGINE - VAT/GST Calculation for B2B/B2C transactions
 // Seller: SOS-Expat OU (Estonia, EE) - OSS registered
