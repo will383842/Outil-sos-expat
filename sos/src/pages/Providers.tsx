@@ -262,14 +262,22 @@ const Providers: React.FC = () => {
     const searchLower = searchTerm.toLowerCase();
     
     const filtered = providers.filter(provider => {
-      const matchesSearch = !searchTerm || 
+      // Utiliser practiceCountries/interventionCountries en priorité, sinon fallback sur country
+      const providerCountries = (provider.practiceCountries?.length || provider.interventionCountries?.length)
+        ? [...(provider.practiceCountries || []), ...(provider.interventionCountries || [])]
+        : provider.country ? [provider.country] : [];
+
+      const matchesSearch = !searchTerm ||
         provider.name.toLowerCase().includes(searchLower) ||
         provider.specialties.some(s => s.toLowerCase().includes(searchLower)) ||
-        provider.country.toLowerCase().includes(searchLower) ||
+        providerCountries.some(c => c.toLowerCase().includes(searchLower)) ||
         provider.languages.some(lang => lang.toLowerCase().includes(searchLower));
-      
+
       const matchesType = selectedType === 'all' || provider.type === selectedType;
-      const matchesCountry = selectedCountry === 'all' || provider.country === selectedCountry;
+      // Matching sur pays d'intervention (pas le pays de résidence)
+      const matchesCountry = selectedCountry === 'all' || providerCountries.some(c =>
+        c.toLowerCase() === selectedCountry.toLowerCase()
+      );
       const matchesStatus = !onlineOnly || provider.isOnline;
       
       return matchesSearch && matchesType && matchesCountry && matchesStatus;

@@ -618,13 +618,22 @@ filtered = filtered.filter(p => {
       });
     }
     
-    // Geographic and language filters
+    // Helper: obtenir les pays d'intervention (priorité sur pays de résidence)
+    const getInterventionCountries = (p: Provider): string[] => {
+      if (p.practiceCountries?.length || p.interventionCountries?.length) {
+        return [...(p.practiceCountries || []), ...(p.interventionCountries || [])];
+      }
+      return p.country ? [p.country] : [];
+    };
+
+    // Geographic and language filters (utilise pays d'intervention, pas résidence)
     if (selectedCountry !== 'all') {
       filtered = filtered.filter(provider => {
+        const providerCountries = getInterventionCountries(provider);
         if (selectedCountry === 'Autre' && customCountry) {
-          return provider.country.toLowerCase().includes(customCountry.toLowerCase());
+          return providerCountries.some(c => c.toLowerCase().includes(customCountry.toLowerCase()));
         }
-        return provider.country === selectedCountry;
+        return providerCountries.some(c => c.toLowerCase() === selectedCountry.toLowerCase());
       });
     }
     
@@ -662,10 +671,16 @@ filtered = filtered.filter(p => {
         return aHasPhoto ? -1 : 1;
       }
 
-      // Country match priority
+      // Country match priority (utilise pays d'intervention, pas résidence)
       if (selectedCountry !== 'all') {
-        const aCountryMatch = a.country === selectedCountry;
-        const bCountryMatch = b.country === selectedCountry;
+        const getCountries = (p: Provider): string[] => {
+          if (p.practiceCountries?.length || p.interventionCountries?.length) {
+            return [...(p.practiceCountries || []), ...(p.interventionCountries || [])];
+          }
+          return p.country ? [p.country] : [];
+        };
+        const aCountryMatch = getCountries(a).some(c => c.toLowerCase() === selectedCountry.toLowerCase());
+        const bCountryMatch = getCountries(b).some(c => c.toLowerCase() === selectedCountry.toLowerCase());
         if (aCountryMatch !== bCountryMatch) {
           return aCountryMatch ? -1 : 1;
         }
