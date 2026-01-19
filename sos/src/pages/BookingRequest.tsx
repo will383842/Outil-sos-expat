@@ -3631,7 +3631,7 @@ const BookingRequest: React.FC = () => {
                         onChange={field.onChange}
                         defaultCountry="fr"
                         placeholder="+33 6 12 34 56 78"
-                        className={inputClass(Boolean(errors.clientPhone))}
+                        className={errors.clientPhone ? "error" : ""}
                         name="clientPhone"
                       />
                     )}

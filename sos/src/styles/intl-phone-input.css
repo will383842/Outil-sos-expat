@@ -225,23 +225,69 @@ div[class*="country-list"] {
   isolation: isolate !important; /* Create new stacking context */
 }
 
+/* État d'erreur - bordure rouge */
+.intl-phone-input.error .react-tel-input .form-control {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2 !important;
+}
+
+.intl-phone-input.error .react-tel-input .form-control:focus {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+}
+
+.intl-phone-input.error .react-tel-input .flag-dropdown {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2 !important;
+}
+
 .intl-phone-input .react-tel-input {
   width: 100% !important;
 }
 
+/* Style de base du champ input - cohérent avec les autres inputs du formulaire */
 .intl-phone-input .react-tel-input .form-control {
   width: 100% !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
   min-height: 48px !important;
   font-size: 16px !important; /* Prevents iOS zoom on focus */
+  border: 2px solid #d1d5db !important; /* Bordure gris clair */
   border-radius: 12px !important;
   padding-left: 52px !important;
+  padding-right: 16px !important;
+  padding-top: 12px !important;
+  padding-bottom: 12px !important;
+  background-color: #ffffff !important;
+  color: #111827 !important;
+  transition: all 0.2s ease !important;
 }
 
+/* Hover state */
+.intl-phone-input .react-tel-input .form-control:hover {
+  border-color: #9ca3af !important;
+}
+
+/* Focus state - bleu comme les autres inputs */
+.intl-phone-input .react-tel-input .form-control:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+  outline: none !important;
+}
+
+/* Bouton du drapeau - cohérent avec le champ */
 .intl-phone-input .react-tel-input .flag-dropdown {
+  border: 2px solid #d1d5db !important;
+  border-right: none !important;
   border-radius: 12px 0 0 12px !important;
   min-height: 48px !important;
+  background-color: #f9fafb !important;
+  transition: all 0.2s ease !important;
+}
+
+.intl-phone-input .react-tel-input .flag-dropdown:hover {
+  border-color: #9ca3af !important;
+  background-color: #f3f4f6 !important;
 }
 
 /* Ultra-small screens */
