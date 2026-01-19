@@ -888,16 +888,54 @@ export default function ConversationDetail() {
         return;
       }
 
-      const convQuery = query(collection(db, "conversations"), where("bookingId", "==", id));
-      const convSnapshot = await getDocs(convQuery);
+      // FIX: Use conversationId from booking if available (set by aiOnBookingCreated trigger)
+      // This prevents creating a duplicate empty conversation before the trigger finishes
+      const bookingAny = booking as Record<string, unknown>;
 
-      let convId: string;
+      let convId: string | null = null;
 
-      if (!convSnapshot.empty) {
-        const existingConv = convSnapshot.docs[0];
-        convId = existingConv.id;
-        setConversation({ id: convId, ...existingConv.data() } as Conversation);
-      } else {
+      // Priority 1: Use conversationId from booking (most reliable)
+      if (bookingAny.conversationId && typeof bookingAny.conversationId === "string") {
+        convId = bookingAny.conversationId;
+        const convDoc = await getDoc(doc(db, "conversations", convId));
+        if (convDoc.exists()) {
+          setConversation({ id: convId, ...convDoc.data() } as Conversation);
+        }
+      }
+
+      // Priority 2: Search by bookingId (fallback)
+      if (!convId) {
+        const convQuery = query(collection(db, "conversations"), where("bookingId", "==", id));
+        const convSnapshot = await getDocs(convQuery);
+
+        if (!convSnapshot.empty) {
+          const existingConv = convSnapshot.docs[0];
+          convId = existingConv.id;
+          setConversation({ id: convId, ...existingConv.data() } as Conversation);
+        }
+      }
+
+      // Priority 3: If still no conversation and AI hasn't processed yet, wait for trigger
+      // Don't create empty conversation - let aiOnBookingCreated create it with the AI response
+      if (!convId) {
+        if (!booking.aiProcessed) {
+          // AI trigger hasn't run yet - set up listener on booking to detect when it does
+          console.log("[ConversationDetail] Waiting for AI trigger to create conversation...");
+          const bookingRef = doc(db, "bookings", id);
+          const unsubBooking = onSnapshot(bookingRef, (bookingSnap) => {
+            const updatedBooking = bookingSnap.data();
+            if (updatedBooking?.conversationId) {
+              console.log("[ConversationDetail] AI trigger completed, conversation created:", updatedBooking.conversationId);
+              // Reload the conversation
+              loadConversation();
+              unsubBooking(); // Stop listening
+            }
+          });
+          // Store unsubscribe function to clean up
+          return;
+        }
+
+        // AI processed but no conversation found - create one as fallback
         const newConvRef = await addDoc(collection(db, "conversations"), {
           bookingId: id,
           providerId: booking.providerId,
