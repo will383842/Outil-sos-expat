@@ -32,7 +32,7 @@ import {
 } from 'lucide-react';
 import {
   collection, addDoc, setDoc, doc, serverTimestamp, getDocs, query,
-  where, updateDoc, deleteDoc, runTransaction, Timestamp, orderBy, limit, getDoc
+  where, updateDoc, deleteDoc, runTransaction, Timestamp, orderBy, limit, getDoc, deleteField
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../../config/firebase';
@@ -2623,12 +2623,23 @@ const AdminAaaProfiles: React.FC = () => {
     }
     try {
       for (const id of selectedProfiles) {
-        await updateDoc(doc(db, 'users', id), {
-          isOnline: online, availability: online ? 'available' : 'offline', updatedAt: serverTimestamp(),
-        });
-        await updateDoc(doc(db, 'sos_profiles', id), {
-          isOnline: online, availability: online ? 'available' : 'offline', updatedAt: serverTimestamp(),
-        });
+        // P0 FIX: Nettoyer TOUS les champs de statut d'appel pour éviter les incohérences
+        const statusUpdate = {
+          isOnline: online,
+          availability: online ? 'available' : 'offline',
+          updatedAt: serverTimestamp(),
+          // Supprimer les champs busy pour éviter les incohérences
+          ...(online && {
+            busyReason: deleteField(),
+            currentCallSessionId: deleteField(),
+            busySince: deleteField(),
+            busyBySibling: deleteField(),
+            busySiblingProviderId: deleteField(),
+            busySiblingCallSessionId: deleteField(),
+          }),
+        };
+        await updateDoc(doc(db, 'users', id), statusUpdate);
+        await updateDoc(doc(db, 'sos_profiles', id), statusUpdate);
       }
       await loadExistingProfiles();
       setSelectedProfiles([]);

@@ -40,6 +40,7 @@ import {
   orderBy,
   getDocs,
   writeBatch,
+  deleteField,
 } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL, deleteObject } from 'firebase/storage';
 import { httpsCallable } from 'firebase/functions';
@@ -2206,12 +2207,26 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       const sosRef = doc(db, 'sos_profiles', firebaseUser.uid);
 
       const batch = writeBatch(db);
-      batch.update(usersRef, {
+
+      // P0 FIX: Si on passe à "available", nettoyer TOUS les champs de statut d'appel
+      // pour éviter les incohérences si Cloud Tasks a échoué
+      const baseUpdate = {
         availability,
         isOnline,
         updatedAt: now,
         lastStatusChange: now,
-      });
+      };
+
+      const cleanupFields = availability === 'available' ? {
+        busyReason: deleteField(),
+        currentCallSessionId: deleteField(),
+        busySince: deleteField(),
+        busyBySibling: deleteField(),
+        busySiblingProviderId: deleteField(),
+        busySiblingCallSessionId: deleteField(),
+      } : {};
+
+      batch.update(usersRef, { ...baseUpdate, ...cleanupFields });
       batch.set(
         sosRef,
         {
@@ -2219,6 +2234,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           availability: isOnline ? 'available' : 'unavailable',
           updatedAt: now,
           lastStatusChange: now,
+          ...cleanupFields,
           // isVisible reste inchangé - géré par l'approbation
         },
         { merge: true }
