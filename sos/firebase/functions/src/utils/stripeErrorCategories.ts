@@ -34,6 +34,9 @@ export interface CategorizedStripeError {
   severity: StripeErrorSeverity;
   code: string;
   message: string;
+  /** Clé i18n pour traduction frontend (9 langues supportées) */
+  i18nKey: string;
+  /** @deprecated Utiliser i18nKey pour traduction multi-langues */
   userMessage: {
     fr: string;
     en: string;
@@ -50,7 +53,46 @@ export interface CategorizedStripeError {
 // ============================================================================
 
 /**
- * Stripe decline codes mapped to user-friendly messages
+ * Stripe error codes mapped to i18n keys (9 languages supported)
+ * Frontend uses these keys to display translated messages
+ * @see https://stripe.com/docs/declines/codes
+ */
+const STRIPE_ERROR_I18N_KEYS: Record<string, string> = {
+  // Card issues
+  'card_declined': 'checkout.err.stripe.card_declined',
+  'insufficient_funds': 'checkout.err.stripe.insufficient_funds',
+  'lost_card': 'checkout.err.stripe.lost_card',
+  'stolen_card': 'checkout.err.stripe.stolen_card',
+  'expired_card': 'checkout.err.stripe.expired_card',
+  'incorrect_cvc': 'checkout.err.stripe.incorrect_cvc',
+  'incorrect_number': 'checkout.err.stripe.incorrect_number',
+  'incorrect_zip': 'checkout.err.stripe.incorrect_zip',
+  'invalid_expiry_month': 'checkout.err.stripe.invalid_expiry_month',
+  'invalid_expiry_year': 'checkout.err.stripe.invalid_expiry_year',
+  'processing_error': 'checkout.err.stripe.processing_error',
+  'do_not_honor': 'checkout.err.stripe.do_not_honor',
+  'transaction_not_allowed': 'checkout.err.stripe.transaction_not_allowed',
+  'generic_decline': 'checkout.err.stripe.generic_decline',
+  'fraudulent': 'checkout.err.stripe.fraudulent',
+  'try_again_later': 'checkout.err.stripe.try_again_later',
+  // Authentication
+  'authentication_required': 'checkout.err.stripe.authentication_required',
+  // Limits
+  'card_velocity_exceeded': 'checkout.err.stripe.card_velocity_exceeded',
+  'withdrawal_count_limit_exceeded': 'checkout.err.stripe.withdrawal_count_limit_exceeded',
+  // Category-based keys
+  '3ds_required': 'checkout.err.stripe.3ds_required',
+  'rate_limit': 'checkout.err.stripe.rate_limit',
+  'validation_error': 'checkout.err.stripe.validation_error',
+  'api_error': 'checkout.err.stripe.api_error',
+  'idempotency_error': 'checkout.err.stripe.idempotency_error',
+  'network_error': 'checkout.err.stripe.network_error',
+  'unknown': 'checkout.err.stripe.unknown',
+};
+
+/**
+ * @deprecated Utiliser STRIPE_ERROR_I18N_KEYS pour traduction multi-langues
+ * Stripe decline codes mapped to user-friendly messages (fallback FR/EN)
  * @see https://stripe.com/docs/declines/codes
  */
 const DECLINE_CODE_MESSAGES: Record<string, { fr: string; en: string }> = {
@@ -167,6 +209,7 @@ export function categorizeStripeError(error: unknown): CategorizedStripeError {
     severity: 'high',
     code: 'unknown',
     message: 'An unexpected error occurred',
+    i18nKey: STRIPE_ERROR_I18N_KEYS['unknown'],
     userMessage: {
       fr: 'Une erreur inattendue s\'est produite. Veuillez réessayer.',
       en: 'An unexpected error occurred. Please try again.',
@@ -189,6 +232,7 @@ export function categorizeStripeError(error: unknown): CategorizedStripeError {
           category: 'connection_error',
           code: 'network_error',
           message: error.message,
+          i18nKey: STRIPE_ERROR_I18N_KEYS['network_error'],
           userMessage: {
             fr: 'Problème de connexion. Veuillez vérifier votre connexion internet et réessayer.',
             en: 'Connection problem. Please check your internet connection and try again.',
@@ -216,7 +260,12 @@ export function categorizeStripeError(error: unknown): CategorizedStripeError {
   const category: StripeErrorCategory =
     ERROR_TYPE_CATEGORIES[errorType] || 'unknown_error';
 
-  // Get user message
+  // Get i18n key (prioritize decline code, then error code, then default)
+  let i18nKey = STRIPE_ERROR_I18N_KEYS[declineCode || ''] ||
+                STRIPE_ERROR_I18N_KEYS[errorCode] ||
+                STRIPE_ERROR_I18N_KEYS['unknown'];
+
+  // Get user message (fallback for backwards compatibility)
   let userMessage = DECLINE_CODE_MESSAGES[declineCode || ''] ||
                     DECLINE_CODE_MESSAGES[errorCode] ||
                     defaultError.userMessage;
@@ -241,6 +290,7 @@ export function categorizeStripeError(error: unknown): CategorizedStripeError {
       retryable = true;
       requiresUserAction = true;
       logLevel = 'info';
+      i18nKey = STRIPE_ERROR_I18N_KEYS['3ds_required'];
       userMessage = {
         fr: 'Authentification 3D Secure requise. Veuillez confirmer le paiement.',
         en: '3D Secure authentication required. Please confirm the payment.',
@@ -252,6 +302,7 @@ export function categorizeStripeError(error: unknown): CategorizedStripeError {
       retryable = true;
       retryAfterMs = 60000; // Wait 1 minute
       logLevel = 'warn';
+      i18nKey = STRIPE_ERROR_I18N_KEYS['rate_limit'];
       userMessage = {
         fr: 'Trop de requêtes. Veuillez patienter un moment et réessayer.',
         en: 'Too many requests. Please wait a moment and try again.',
@@ -263,6 +314,7 @@ export function categorizeStripeError(error: unknown): CategorizedStripeError {
       severity = 'medium';
       retryable = false; // Bad request won't succeed on retry
       logLevel = 'error';
+      i18nKey = STRIPE_ERROR_I18N_KEYS['validation_error'];
       userMessage = {
         fr: 'Données de paiement invalides. Veuillez vérifier vos informations.',
         en: 'Invalid payment data. Please check your information.',
@@ -274,6 +326,7 @@ export function categorizeStripeError(error: unknown): CategorizedStripeError {
       retryable = true;
       retryAfterMs = 10000;
       logLevel = 'error';
+      i18nKey = STRIPE_ERROR_I18N_KEYS['api_error'];
       userMessage = {
         fr: 'Erreur du service de paiement. Veuillez réessayer dans quelques instants.',
         en: 'Payment service error. Please try again in a moment.',
@@ -284,6 +337,7 @@ export function categorizeStripeError(error: unknown): CategorizedStripeError {
       severity = 'low';
       retryable = false; // Duplicate request
       logLevel = 'info';
+      i18nKey = STRIPE_ERROR_I18N_KEYS['idempotency_error'];
       userMessage = {
         fr: 'Cette transaction a déjà été traitée.',
         en: 'This transaction has already been processed.',
@@ -300,6 +354,7 @@ export function categorizeStripeError(error: unknown): CategorizedStripeError {
     severity,
     code: errorCode,
     message: stripeError.message,
+    i18nKey,
     userMessage,
     retryable,
     retryAfterMs: retryable ? retryAfterMs : undefined,

@@ -4,7 +4,7 @@ import { PayPalButtons, usePayPalScriptReducer } from "@paypal/react-paypal-js";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../../config/firebase";
 import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import { usePricingConfig } from "../../services/pricingService";
 
 interface PayPalPaymentFormProps {
@@ -40,67 +40,34 @@ interface CaptureOrderResponse {
   status: string;
 }
 
-// P1-3 FIX: Mapping des codes d'erreur PayPal vers des messages user-friendly
-const PAYPAL_ERROR_MESSAGES: Record<string, { fr: string; en: string }> = {
-  INSTRUMENT_DECLINED: {
-    fr: "Votre moyen de paiement a été refusé. Veuillez utiliser une autre carte ou un autre compte PayPal.",
-    en: "Your payment method was declined. Please use a different card or PayPal account.",
-  },
-  PAYER_ACTION_REQUIRED: {
-    fr: "Une action est requise sur votre compte PayPal. Veuillez vérifier votre compte et réessayer.",
-    en: "Action required on your PayPal account. Please check your account and try again.",
-  },
-  PAYER_CANNOT_PAY: {
-    fr: "Votre compte PayPal ne peut pas effectuer ce paiement. Veuillez contacter PayPal.",
-    en: "Your PayPal account cannot make this payment. Please contact PayPal.",
-  },
-  INVALID_CURRENCY: {
-    fr: "La devise de paiement n'est pas supportée. Veuillez utiliser EUR ou USD.",
-    en: "Payment currency not supported. Please use EUR or USD.",
-  },
-  DUPLICATE_INVOICE_ID: {
-    fr: "Cette transaction a déjà été traitée. Veuillez rafraîchir la page.",
-    en: "This transaction has already been processed. Please refresh the page.",
-  },
-  ORDER_NOT_APPROVED: {
-    fr: "La commande n'a pas été approuvée. Veuillez réessayer le paiement.",
-    en: "Order was not approved. Please try the payment again.",
-  },
-  AUTHORIZATION_VOIDED: {
-    fr: "L'autorisation de paiement a été annulée. Veuillez réessayer.",
-    en: "Payment authorization was voided. Please try again.",
-  },
-  INTERNAL_SERVER_ERROR: {
-    fr: "Erreur serveur PayPal. Veuillez réessayer dans quelques minutes.",
-    en: "PayPal server error. Please try again in a few minutes.",
-  },
+// P1-3 FIX: Mapping des codes d'erreur PayPal vers des clés i18n (9 langues supportées)
+const PAYPAL_ERROR_I18N_KEYS: Record<string, string> = {
+  INSTRUMENT_DECLINED: "payment.paypal.err.instrumentDeclined",
+  PAYER_ACTION_REQUIRED: "payment.paypal.err.payerActionRequired",
+  PAYER_CANNOT_PAY: "payment.paypal.err.payerCannotPay",
+  INVALID_CURRENCY: "payment.paypal.err.invalidCurrency",
+  DUPLICATE_INVOICE_ID: "payment.paypal.err.duplicateInvoice",
+  ORDER_NOT_APPROVED: "payment.paypal.err.orderNotApproved",
+  AUTHORIZATION_VOIDED: "payment.paypal.err.authorizationVoided",
+  INTERNAL_SERVER_ERROR: "payment.paypal.err.serverError",
 };
 
-function getPayPalErrorMessage(error: unknown, locale: string = "fr"): string {
-  const lang = locale.startsWith("en") ? "en" : "fr";
-
-  // Extraire le code d'erreur depuis l'objet d'erreur
-  let errorCode = "";
+/**
+ * Extrait le code d'erreur PayPal depuis l'objet d'erreur
+ */
+function extractPayPalErrorCode(error: unknown): string {
   if (error && typeof error === "object") {
     const err = error as Record<string, unknown>;
-    errorCode = (err.code as string) || (err.name as string) || "";
+    let errorCode = (err.code as string) || (err.name as string) || "";
 
     // Parfois l'erreur est dans err.details[0].issue
     if (!errorCode && Array.isArray(err.details)) {
       const detail = err.details[0] as Record<string, unknown>;
       errorCode = (detail?.issue as string) || "";
     }
+    return errorCode;
   }
-
-  const mapping = PAYPAL_ERROR_MESSAGES[errorCode];
-  if (mapping) {
-    return mapping[lang];
-  }
-
-  // Message par défaut
-  return lang === "fr"
-    ? "Une erreur est survenue lors du paiement. Veuillez réessayer."
-    : "An error occurred during payment. Please try again.";
+  return "";
 }
 
 export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
@@ -119,8 +86,23 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   const [{ isPending, isRejected }] = usePayPalScriptReducer();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<"idle" | "processing" | "success" | "error">("idle");
-  // P1-3 FIX: State pour le message d'erreur user-friendly
-  const [errorMessage, setErrorMessage] = useState<string>("");
+  // P1-3 FIX: State pour le code d'erreur (traduit dynamiquement via i18n)
+  const [errorCode, setErrorCode] = useState<string>("");
+
+  // Hook i18n pour traduction dans les 9 langues
+  const intl = useIntl();
+
+  /**
+   * Traduit un code d'erreur PayPal via le système i18n (9 langues)
+   */
+  const getTranslatedErrorMessage = (code: string): string => {
+    const i18nKey = PAYPAL_ERROR_I18N_KEYS[code];
+    if (i18nKey) {
+      return intl.formatMessage({ id: i18nKey });
+    }
+    // Message par défaut si le code n'est pas mappé
+    return intl.formatMessage({ id: "payment.paypal.err.generic" });
+  };
 
   // Get commission amounts from centralized admin_config/pricing (Firestore)
   const { pricing } = usePricingConfig();
@@ -168,8 +150,8 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
     } catch (error) {
       console.error("Erreur création ordre PayPal:", error);
       setPaymentStatus("error");
-      // P1-3 FIX: Message d'erreur user-friendly
-      setErrorMessage(getPayPalErrorMessage(error));
+      // P1-3 FIX: Stocker le code d'erreur (traduit via i18n dans 9 langues)
+      setErrorCode(extractPayPalErrorCode(error));
       // P1-8 FIX: Reset isProcessing en cas d'erreur
       setIsProcessing(false);
       throw error;
@@ -204,9 +186,10 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
     } catch (error) {
       console.error("Erreur capture PayPal:", error);
       setPaymentStatus("error");
-      // P1-3 FIX: Message d'erreur user-friendly
-      setErrorMessage(getPayPalErrorMessage(error));
-      onError(error instanceof Error ? error : new Error("Erreur de paiement PayPal"));
+      // P1-3 FIX: Stocker le code d'erreur (traduit via i18n dans 9 langues)
+      const code = extractPayPalErrorCode(error);
+      setErrorCode(code);
+      onError(error instanceof Error ? error : new Error(getTranslatedErrorMessage(code)));
     } finally {
       setIsProcessing(false);
     }
@@ -215,10 +198,11 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   const handleError = (err: Record<string, unknown>) => {
     console.error("Erreur PayPal:", err);
     setPaymentStatus("error");
-    // P1-3 FIX: Message d'erreur user-friendly
-    setErrorMessage(getPayPalErrorMessage(err));
+    // P1-3 FIX: Stocker le code d'erreur (traduit via i18n dans 9 langues)
+    const code = extractPayPalErrorCode(err);
+    setErrorCode(code);
     setIsProcessing(false);
-    onError(new Error(getPayPalErrorMessage(err)));
+    onError(new Error(getTranslatedErrorMessage(code)));
   };
 
   const handleCancel = () => {
@@ -270,7 +254,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   }
 
   // P0-2 FIX: Error state - afficher l'erreur à l'utilisateur
-  // P1-3 FIX: Utiliser le message d'erreur user-friendly
+  // P1-3 FIX: Message d'erreur traduit via i18n (9 langues supportées)
   if (paymentStatus === "error") {
     return (
       <div className="space-y-4">
@@ -283,9 +267,9 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
                 defaultMessage="Erreur de paiement"
               />
             </span>
-            {/* P1-3 FIX: Afficher le message d'erreur user-friendly */}
+            {/* P1-3 FIX: Message d'erreur traduit via i18n (9 langues) */}
             <span className="text-red-600 text-sm block mt-1">
-              {errorMessage || (
+              {errorCode ? getTranslatedErrorMessage(errorCode) : (
                 <FormattedMessage
                   id="payment.paypal.errorRetry"
                   defaultMessage="Veuillez réessayer ou utiliser un autre moyen de paiement."
@@ -298,7 +282,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
           type="button"
           onClick={() => {
             setPaymentStatus("idle");
-            setErrorMessage(""); // Reset le message d'erreur
+            setErrorCode(""); // Reset le code d'erreur
           }}
           className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
         >

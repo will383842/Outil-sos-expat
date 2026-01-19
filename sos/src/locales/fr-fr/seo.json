@@ -1,60 +1,60 @@
 {
   "meta": {
     "home": {
-      "title": "SOS Expat - Avocat ou Expatrie Aidant par Telephone en 5 min | 197 Pays",
-      "description": "Mise en relation par telephone en moins de 5 min avec un avocat ou un expatrie aidant. Tout type d'aide dans le monde entier. 197 pays, toutes langues, toutes nationalites. 24/7."
+      "title": "SOS Expat - Avocat ou Expatrié Aidant par Téléphone en 5 min | 197 Pays",
+      "description": "Mise en relation par téléphone en moins de 5 min avec un avocat ou un expatrié aidant. Tout type d'aide dans le monde entier. 197 pays, toutes langues, toutes nationalités. 24/7."
     },
     "pricing": {
-      "title": "Tarifs - SOS Expat | Appels a partir de 19EUR (25$)",
-      "description": "Appel avocat 49EUR (55$)/20min, appel expatrie aidant 19EUR (25$)/30min. Tout type d'aide par telephone. Paiement securise, 24/7."
+      "title": "Tarifs - SOS Expat | Appels à partir de 19€ (25$)",
+      "description": "Appel avocat 49€ (55$)/20min, appel expatrié aidant 19€ (25$)/30min. Tout type d'aide par téléphone. Paiement sécurisé, 24/7."
     },
     "faq": {
-      "title": "FAQ - Questions Frequentes | SOS Expat",
-      "description": "Reponses aux questions sur l'expatriation, visas, fiscalite internationale, droit du travail a l'etranger."
+      "title": "FAQ - Questions Fréquentes | SOS Expat",
+      "description": "Réponses aux questions sur l'expatriation, visas, fiscalité internationale, droit du travail à l'étranger."
     },
     "contact": {
       "title": "Contact - SOS Expat | Nous Contacter",
-      "description": "Contactez notre equipe disponible 24/7 pour toute question sur nos services d'assistance juridique internationale."
+      "description": "Contactez notre équipe disponible 24/7 pour toute question sur nos services d'assistance juridique internationale."
     },
     "helpCenter": {
       "title": "Centre d'Aide - SOS Expat | Guides Expatriation",
-      "description": "Guides et articles pratiques pour votre expatriation : visas, fiscalite, droit du travail, demarches administratives."
+      "description": "Guides et articles pratiques pour votre expatriation : visas, fiscalité, droit du travail, démarches administratives."
     },
     "howItWorks": {
-      "title": "Comment ca Marche - SOS Expat | Consultation en 5 min",
-      "description": "Decouvrez comment obtenir une consultation juridique en moins de 5 minutes. Simple, rapide et securise."
+      "title": "Comment ça Marche - SOS Expat | Consultation en 5 min",
+      "description": "Découvrez comment obtenir une consultation juridique en moins de 5 minutes. Simple, rapide et sécurisé."
     },
     "testimonials": {
-      "title": "Temoignages - Avis Clients | SOS Expat",
-      "description": "Avis et temoignages de nos clients expatries et voyageurs. Decouvrez leurs experiences avec SOS Expat."
+      "title": "Témoignages - Avis Clients | SOS Expat",
+      "description": "Avis et témoignages de nos clients expatriés et voyageurs. Découvrez leurs expériences avec SOS Expat."
     },
     "privacyPolicy": {
-      "title": "Politique de Confidentialite - SOS Expat | RGPD",
-      "description": "Comment SOS Expat protege vos donnees personnelles conformement au RGPD et aux reglementations internationales."
+      "title": "Politique de Confidentialité - SOS Expat | RGPD",
+      "description": "Comment SOS Expat protège vos données personnelles conformément au RGPD et aux réglementations internationales."
     },
     "termsClients": {
       "title": "CGU Clients - SOS Expat | Conditions d'Utilisation",
-      "description": "Conditions generales d'utilisation pour les clients de SOS Expat. Droits et obligations des utilisateurs."
+      "description": "Conditions générales d'utilisation pour les clients de SOS Expat. Droits et obligations des utilisateurs."
     },
     "termsLawyers": {
       "title": "CGU Avocats - SOS Expat | Conditions Partenaires",
-      "description": "Conditions generales pour les avocats partenaires de SOS Expat. Inscription, commissions, obligations."
+      "description": "Conditions générales pour les avocats partenaires de SOS Expat. Inscription, commissions, obligations."
     },
     "termsExpats": {
-      "title": "CGU Experts Expatries - SOS Expat | Conditions",
-      "description": "Conditions generales pour les experts expatries partenaires de SOS Expat."
+      "title": "CGU Experts Expatriés - SOS Expat | Conditions",
+      "description": "Conditions générales pour les experts expatriés partenaires de SOS Expat."
     },
     "cookies": {
       "title": "Politique des Cookies - SOS Expat",
-      "description": "Utilisation des cookies sur SOS Expat. Gestion de vos preferences et consentement RGPD."
+      "description": "Utilisation des cookies sur SOS Expat. Gestion de vos préférences et consentement RGPD."
     },
     "login": {
       "title": "Connexion - SOS Expat",
-      "description": "Connectez-vous a votre compte SOS Expat pour acceder a vos consultations et messages."
+      "description": "Connectez-vous à votre compte SOS Expat pour accéder à vos consultations et messages."
     },
     "register": {
-      "title": "Inscription - SOS Expat | Creer un Compte",
-      "description": "Creez votre compte SOS Expat gratuit pour acceder a l'assistance juridique 24/7."
+      "title": "Inscription - SOS Expat | Créer un Compte",
+      "description": "Créez votre compte SOS Expat gratuit pour accéder à l'assistance juridique 24/7."
     }
   }
 }
