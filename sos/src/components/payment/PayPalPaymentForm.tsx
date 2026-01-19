@@ -12,7 +12,7 @@ import {
 } from "@paypal/react-paypal-js";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../../config/firebase";
-import { Loader2, AlertCircle, CheckCircle, CreditCard } from "lucide-react";
+import { Loader2, AlertCircle, CheckCircle, CreditCard, Lock, ShieldCheck } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { usePricingConfig } from "../../services/pricingService";
 
@@ -108,10 +108,12 @@ const CardFieldsSubmitButton: React.FC<{
       type="button"
       onClick={handleClick}
       disabled={disabled || isProcessing}
-      className={`w-full py-3 px-4 rounded-lg font-medium transition-colors flex items-center justify-center gap-2
+      className={`w-full py-4 sm:py-3.5 px-4 rounded-xl font-semibold text-base sm:text-sm
+        transition-all duration-200 flex items-center justify-center gap-2.5
+        shadow-sm active:scale-[0.98] touch-manipulation
         ${disabled || isProcessing
-          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-          : "bg-blue-600 hover:bg-blue-700 text-white"
+          ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
+          : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white shadow-blue-200 hover:shadow-md"
         }`}
     >
       {isProcessing ? (
@@ -121,7 +123,7 @@ const CardFieldsSubmitButton: React.FC<{
         </>
       ) : (
         <>
-          <CreditCard className="w-5 h-5" />
+          <Lock className="w-4 h-4" />
           <FormattedMessage id="payment.payByCard" defaultMessage="Payer par carte" />
         </>
       )}
@@ -353,93 +355,103 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   }
 
   return (
-    <div className="space-y-4">
-      {/* Récapitulatif du paiement */}
-      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-gray-600">
-            <FormattedMessage id="payment.total" defaultMessage="Total" />
+    <div className="space-y-4 sm:space-y-5">
+      {/* Récapitulatif du paiement - Design moderne */}
+      <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm">
+        <div className="flex justify-between items-center">
+          <span className="text-sm sm:text-base text-gray-600 font-medium">
+            <FormattedMessage id="payment.total" defaultMessage="Total à payer" />
           </span>
-          <span className="text-xl font-bold text-gray-900">
+          <span className="text-xl sm:text-2xl font-bold text-gray-900">
             {amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency.toUpperCase()}
           </span>
         </div>
-        <p className="text-xs text-gray-500">
-          <FormattedMessage
-            id="payment.securePayment"
-            defaultMessage="Paiement sécurisé"
-          />
-        </p>
       </div>
 
-      {/* Processing state */}
+      {/* Processing state - Plus visible */}
       {isProcessing && (
-        <div className="flex items-center justify-center p-4 bg-blue-50 rounded-lg">
-          <Loader2 className="w-5 h-5 animate-spin text-blue-600 mr-3" />
-          <span className="text-blue-700">
+        <div className="flex flex-col items-center justify-center p-5 sm:p-6 bg-blue-50 rounded-xl border border-blue-100">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600 mb-3" />
+          <span className="text-blue-700 font-medium text-center">
             <FormattedMessage
               id="payment.paypal.processing"
-              defaultMessage="Traitement du paiement en cours..."
+              defaultMessage="Traitement sécurisé en cours..."
+            />
+          </span>
+          <span className="text-blue-500 text-sm mt-1">
+            <FormattedMessage
+              id="payment.doNotClose"
+              defaultMessage="Ne fermez pas cette page"
             />
           </span>
         </div>
       )}
 
       {/* Section Carte Bancaire */}
-      <div className={`${disabled || isProcessing ? "opacity-50 pointer-events-none" : ""}`}>
+      <div className={`transition-opacity duration-200 ${disabled || isProcessing ? "opacity-50 pointer-events-none" : ""}`}>
         <PayPalCardFieldsProvider
           createOrder={createOrder}
           onApprove={onCardApprove}
           onError={handleError}
         >
-          <div className="space-y-3">
-            {/* Titre section carte */}
-            <div className="flex items-center gap-2 text-gray-700 font-medium">
-              <CreditCard className="w-5 h-5" />
-              <FormattedMessage id="payment.creditCard" defaultMessage="Carte bancaire" />
+          <div className="space-y-4">
+            {/* Header avec icônes de cartes */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-gray-800 font-semibold">
+                <CreditCard className="w-5 h-5 text-blue-600" />
+                <span className="text-sm sm:text-base">
+                  <FormattedMessage id="payment.creditCard" defaultMessage="Carte bancaire" />
+                </span>
+              </div>
+              {/* Icônes des cartes acceptées */}
+              <div className="flex items-center gap-1.5">
+                <img src="https://cdn.jsdelivr.net/gh/nicepay-dev/nicepay-checkout-js@main/visa.svg" alt="Visa" className="h-6 sm:h-7 opacity-70" loading="lazy" />
+                <img src="https://cdn.jsdelivr.net/gh/nicepay-dev/nicepay-checkout-js@main/mastercard.svg" alt="Mastercard" className="h-6 sm:h-7 opacity-70" loading="lazy" />
+                <img src="https://www.svgrepo.com/show/508402/amex.svg" alt="Amex" className="h-6 sm:h-7 opacity-60" loading="lazy" />
+              </div>
             </div>
 
             {/* Nom du titulaire */}
             <div>
-              <label className="block text-sm text-gray-600 mb-1">
-                <FormattedMessage id="payment.cardholderName" defaultMessage="Nom du titulaire" />
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <FormattedMessage id="payment.cardholderName" defaultMessage="Nom sur la carte" />
               </label>
               <PayPalNameField
-                className="w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full h-12 sm:h-11 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow"
               />
             </div>
 
             {/* Numéro de carte */}
             <div>
-              <label className="block text-sm text-gray-600 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 <FormattedMessage id="payment.cardNumber" defaultMessage="Numéro de carte" />
               </label>
               <PayPalNumberField
-                className="w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full h-12 sm:h-11 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow"
               />
             </div>
 
-            {/* Expiration et CVV */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* Expiration et CVV - Responsive */}
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <label className="block text-sm text-gray-600 mb-1">
-                  <FormattedMessage id="payment.expiry" defaultMessage="Date d'expiration" />
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <FormattedMessage id="payment.expiry" defaultMessage="Expiration" />
                 </label>
                 <PayPalExpiryField
-                  className="w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full h-12 sm:h-11 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   <FormattedMessage id="payment.cvv" defaultMessage="CVV" />
                 </label>
                 <PayPalCVVField
-                  className="w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full h-12 sm:h-11 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow"
                 />
               </div>
             </div>
 
-            {/* Bouton Payer par carte */}
+            {/* Bouton Payer par carte - Plus grand sur mobile */}
             <CardFieldsSubmitButton
               isProcessing={isProcessing && paymentMethod === "card"}
               disabled={disabled}
@@ -449,27 +461,27 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
         </PayPalCardFieldsProvider>
       </div>
 
-      {/* Séparateur "ou" */}
-      <div className="relative py-2">
+      {/* Séparateur "ou" - Plus visible */}
+      <div className="relative py-3">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-gray-200"></div>
         </div>
-        <div className="relative flex justify-center text-sm">
-          <span className="px-4 bg-white text-gray-500">
+        <div className="relative flex justify-center">
+          <span className="px-4 bg-white text-gray-400 text-sm font-medium uppercase tracking-wide">
             <FormattedMessage id="payment.or" defaultMessage="ou" />
           </span>
         </div>
       </div>
 
       {/* Bouton PayPal */}
-      <div className={`${disabled || isProcessing ? "opacity-50 pointer-events-none" : ""}`}>
+      <div className={`transition-opacity duration-200 ${disabled || isProcessing ? "opacity-50 pointer-events-none" : ""}`}>
         <PayPalButtons
           style={{
             layout: "horizontal",
             color: "gold",
             shape: "rect",
             label: "paypal",
-            height: 48,
+            height: 50,
             tagline: false,
           }}
           disabled={disabled || isProcessing}
@@ -480,15 +492,20 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
         />
       </div>
 
-      {/* Message de sécurité */}
-      <div className="flex items-center justify-center gap-2 text-xs text-gray-500 mt-2">
-        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-        </svg>
-        <FormattedMessage
-          id="payment.secureSSL"
-          defaultMessage="Données protégées par SSL"
-        />
+      {/* Badges de sécurité */}
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 pt-2 pb-1">
+        <div className="flex items-center gap-1.5 text-xs text-gray-500">
+          <Lock className="w-3.5 h-3.5" />
+          <span>
+            <FormattedMessage id="payment.ssl256" defaultMessage="Chiffrement SSL 256-bit" />
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5 text-xs text-gray-500">
+          <ShieldCheck className="w-3.5 h-3.5" />
+          <span>
+            <FormattedMessage id="payment.pciCompliant" defaultMessage="Conforme PCI DSS" />
+          </span>
+        </div>
       </div>
     </div>
   );
