@@ -158,7 +158,7 @@ const registerUser = async (
         email: userData.email ?? "",
         phone: userData.phone || "",
         phoneCountryCode: userData.phoneCountryCode || "+33",
-        languages: userData.languages || ["Français"],
+        languages: userData.languages || ["fr"],
         country: userData.currentCountry || userData.country || "",
         city,
         description: userData.bio || "",

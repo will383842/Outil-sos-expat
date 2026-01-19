@@ -5,6 +5,7 @@
 
 import { countriesData, type CountryData } from '../data/countries';
 import { languagesData, getLanguageLabel as getLanguageLabelFromData, type SupportedLocale, type Language } from '../data/languages-spoken';
+import { LanguageUtils } from '../locales/languageMap';
 
 // ========================================
 // TYPE DEFINITIONS
@@ -184,8 +185,8 @@ export const getLanguageName = (
     return '';
   }
 
-  // Nettoyer et normaliser le code de langue
-  let cleanCode = languageCode.trim().toLowerCase().split('-')[0];
+  // Normaliser vers un code ISO (gère "Français" -> "fr", "fr" -> "fr")
+  let cleanCode = LanguageUtils.normalizeToCode(languageCode.trim()).toLowerCase().split('-')[0];
 
   // Convertir 'ch' en 'zh' car languagesData utilise 'zh' pour le chinois
   if (cleanCode === 'ch') {

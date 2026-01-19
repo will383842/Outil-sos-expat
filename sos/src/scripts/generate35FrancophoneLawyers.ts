@@ -476,7 +476,7 @@ export async function generate35FrancophoneLawyers(): Promise<GeneratedProfile[]
       currentCountry: country.code,
       preferredLanguage: 'fr',
       languages: ['fr'], // Fran\u00e7ais UNIQUEMENT
-      languagesSpoken: ['Fran\u00e7ais'],
+      languagesSpoken: ['fr'], // Code ISO - doit être identique à languages
       profilePhoto: '',
       avatar: '',
       isTestProfile: true,
@@ -539,7 +539,7 @@ export async function generate35FrancophoneLawyers(): Promise<GeneratedProfile[]
         photo: '',
         rating,
         reviewCount,
-        languages: ['Fran\u00e7ais'],
+        languages: ['fr'], // Code ISO
         specialties,
         href: `/profile/${uid}`,
         createdAt: serverTimestamp(),

@@ -159,7 +159,7 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
             type,
             country,
             practiceCountries, // Pays d'intervention pour l'affichage
-            languages: Array.isArray(data.languages) ? data.languages : ['Français'],
+            languages: Array.isArray(data.languages) ? data.languages : ['fr'],
             specialties: Array.isArray(data.specialties) ? data.specialties : [],
             rating: typeof data.rating === 'number' && data.rating >= 0 && data.rating <= 5 ? data.rating : 4.5,
             reviewCount: typeof data.reviewCount === 'number' && data.reviewCount >= 0 ? data.reviewCount : 0,

@@ -508,7 +508,7 @@ export async function generateMissingReviewsForOne(providerId: string): Promise<
   }
 
   const type = data.type === 'lawyer' || data.role === 'lawyer' ? 'lawyer' : 'expat';
-  const languages = data.languages || data.languagesSpoken || ['Français'];
+  const languages = data.languages || data.languagesSpoken || ['fr'];
   const country = data.country || data.residenceCountry || 'France';
 
   console.log(`\nGénération de ${missingReviews} avis...`);

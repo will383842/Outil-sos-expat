@@ -828,7 +828,7 @@ export function generateSlug(options: GenerateSlugOptions): string {
   } = options;
 
   // Déterminer la langue (simple, sans pays)
-  const userLanguage = languages[0] || 'Français';
+  const userLanguage = languages[0] || 'fr';
   const userLangCode = getLanguageCode(userLanguage);
 
   // On utilise une locale complète (fr-fr, en-us, etc.) pour SEO

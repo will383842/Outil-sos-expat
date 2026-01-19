@@ -338,8 +338,8 @@ export async function generateLawyersAllCountries(): Promise<void> {
         phone: '+33743331201', phoneCountryCode: '+33',
         country: mainCountry.code, currentCountry: mainCountry.code,
         preferredLanguage: 'fr',
-        languages: ['fr'], // FRAN\u00c7AIS UNIQUEMENT
-        languagesSpoken: ['Fran\u00e7ais'],
+        languages: ['fr'], // Code ISO - FRANÇAIS UNIQUEMENT
+        languagesSpoken: ['fr'], // Code ISO - doit être identique à languages
         profilePhoto: '', avatar: '',
         isTestProfile: true, isActive: true, isApproved: true, isVerified: true,
         approvalStatus: 'approved', verificationStatus: 'approved',
@@ -368,7 +368,7 @@ export async function generateLawyersAllCountries(): Promise<void> {
       await setDoc(doc(db, 'ui_profile_cards', uid), {
         id: uid, uid, title: fullName, subtitle: 'Avocat',
         country: mainCountry.name, photo: '', rating, reviewCount,
-        languages: ['Fran\u00e7ais'], specialties,
+        languages: ['fr'], specialties, // Code ISO
         href: `/profile/${uid}`, createdAt: serverTimestamp(),
       });
 

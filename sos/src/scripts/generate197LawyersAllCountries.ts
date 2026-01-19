@@ -1,4 +1,4 @@
-/**
+﻿/**
  * =============================================================================
  * SCRIPT: G\u00e9n\u00e9ration de 197 Avocats Hommes - TOUS LES PAYS
  * =============================================================================
@@ -699,7 +699,7 @@ export async function generate197Lawyers(): Promise<void> {
         currentCountry: country.code,
         preferredLanguage: 'fr',
         languages: ['fr'], // FRAN\u00c7AIS UNIQUEMENT
-        languagesSpoken: ['Fran\u00e7ais'], // FRAN\u00c7AIS UNIQUEMENT
+        languagesSpoken: ['fr'], // FRANÇAIS UNIQUEMENT (code ISO)
         profilePhoto: '',
         avatar: '',
         isTestProfile: true,
@@ -751,7 +751,7 @@ export async function generate197Lawyers(): Promise<void> {
       await setDoc(doc(db, 'ui_profile_cards', uid), {
         id: uid, uid, title: fullName, subtitle: 'Avocat',
         country: country.name, photo: '', rating, reviewCount,
-        languages: ['Fran\u00e7ais'], specialties,
+        languages: ['fr'], specialties,
         href: `/profile/${uid}`, createdAt: serverTimestamp(),
       });
 
@@ -820,3 +820,4 @@ if (typeof window !== 'undefined') {
 }
 
 export default generate197Lawyers;
+

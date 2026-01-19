@@ -8,6 +8,7 @@ import { useApp } from '../../contexts/AppContext';
 import { getCountryCoordinates } from '../../utils/countryCoordinates';
 import { getCountryName } from '../../utils/formatters';
 import { languagesData, type SupportedLocale } from '../../data/languages-spoken';
+import { LanguageUtils } from '../../locales/languageMap';
 import { getAllProviderTypeKeywords } from '../../utils/multilingualSearch';
 
 // Enhanced types for 2025 standards with AI-friendly structure
@@ -239,37 +240,38 @@ const LANGUAGE_CODE_TO_NAME: Record<string, { fr: string; en: string }> = {
 };
 
 // Fonction utilitaire pour convertir code langue -> nom lisible
-const getLanguageLabel = (langCode: string, locale: SupportedLocale = 'fr'): string => {
-  if (!langCode) return '';
-  
-  let normalized = langCode.trim().toLowerCase();
+const getLanguageLabel = (langCodeOrName: string, locale: SupportedLocale = 'fr'): string => {
+  if (!langCodeOrName) return '';
 
-  // Si c'est déjà un nom complet (plus de 3 caractères), le retourner
-  if (normalized.length > 3) {
-    return langCode.charAt(0).toUpperCase() + langCode.slice(1);
-  }
-
-  // Chercher dans le mapping des codes ISO
-  const langMapping = LANGUAGE_CODE_TO_NAME[normalized];
-  if (langMapping) {
-    // Support FR/EN only in this mapping, fallback to EN for other locales
-    return langMapping[locale as keyof typeof langMapping] || langMapping['en'];
-  }
+  // Normaliser vers un code ISO (gère "Français" -> "fr", "fr" -> "fr")
+  let normalizedCode = LanguageUtils.normalizeToCode(langCodeOrName).toLowerCase();
 
   // Convertir 'ch' en 'zh' car languagesData utilise 'zh' pour le chinois
-  if (normalized === 'ch') {
-    normalized = 'zh';
+  if (normalizedCode === 'ch') {
+    normalizedCode = 'zh';
   }
 
-  // Chercher dans languagesData en fallback
-  const langData = languagesData.find(lang => lang.code?.toLowerCase() === normalized);
+  // Chercher dans languagesData (supporte les 9 langues d'interface)
+  const langData = languagesData.find(lang => lang.code?.toLowerCase() === normalizedCode);
   if (langData) {
-    const data = langData as unknown as Record<string, string>;
-    return data[locale] || data['fr'] || data['en'] || '';
+    // Utiliser labels[locale] qui contient les traductions pour fr, en, es, de, ru, hi, pt, ch, ar
+    const label = langData.labels?.[locale];
+    if (label) return label;
+    // Fallbacks: nom natif > nom français > code
+    return langData.nativeName || langData.name || normalizedCode.toUpperCase();
   }
-  
-  // Dernier fallback : retourner le code en majuscule
-  return langCode.toUpperCase();
+
+  // Fallback sur le mapping statique FR/EN pour les codes non trouvés
+  const langMapping = LANGUAGE_CODE_TO_NAME[normalizedCode];
+  if (langMapping) {
+    return langMapping[locale as keyof typeof langMapping] || langMapping['en'] || langMapping['fr'];
+  }
+
+  // Dernier fallback : si c'était un nom long, le capitaliser, sinon retourner le code
+  if (langCodeOrName.length > 3) {
+    return langCodeOrName.charAt(0).toUpperCase() + langCodeOrName.slice(1).toLowerCase();
+  }
+  return langCodeOrName.toUpperCase();
 };
 
 

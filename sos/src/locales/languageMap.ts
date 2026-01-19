@@ -224,11 +224,223 @@ export const LanguageUtils = {
     const normalizedQuery = query.toLowerCase().trim();
     if (!normalizedQuery) return [];
 
-    return Object.values(LANGUAGE_METADATA).filter(lang => 
+    return Object.values(LANGUAGE_METADATA).filter(lang =>
       lang.name.toLowerCase().includes(normalizedQuery) ||
       lang.nativeName.toLowerCase().includes(normalizedQuery) ||
       lang.code.toLowerCase().includes(normalizedQuery)
     );
+  },
+
+  /**
+   * Normalise une langue (nom complet ou code) vers son code ISO 639-1
+   * Gère les deux formats : "Français" -> "fr" et "fr" -> "fr"
+   * @param langOrCode - Nom de langue ou code ISO
+   * @returns Code ISO 639-1 normalisé
+   */
+  normalizeToCode: (langOrCode: string): string => {
+    if (!langOrCode) return langOrCode;
+
+    const normalized = langOrCode.toLowerCase().trim();
+
+    // Si c'est déjà un code ISO court (2-3 caractères), le retourner tel quel
+    if (normalized.length <= 3) {
+      // Gérer le cas spécial zh/ch pour le chinois
+      if (normalized === 'zh') return 'ch';
+      return normalized;
+    }
+
+    // Mapping étendu nom → code (inclut les variantes avec/sans accents et en anglais)
+    const NAME_TO_CODE: Record<string, string> = {
+      // Français
+      'français': 'fr', 'francais': 'fr', 'french': 'fr',
+      // Anglais
+      'anglais': 'en', 'english': 'en',
+      // Espagnol
+      'espagnol': 'es', 'spanish': 'es', 'español': 'es',
+      // Allemand
+      'allemand': 'de', 'german': 'de', 'deutsch': 'de',
+      // Portugais
+      'portugais': 'pt', 'portuguese': 'pt', 'português': 'pt',
+      // Italien
+      'italien': 'it', 'italian': 'it', 'italiano': 'it',
+      // Russe
+      'russe': 'ru', 'russian': 'ru', 'русский': 'ru',
+      // Chinois
+      'chinois': 'ch', 'chinese': 'ch', '中文': 'ch',
+      // Arabe
+      'arabe': 'ar', 'arabic': 'ar', 'العربية': 'ar',
+      // Hindi
+      'hindi': 'hi', 'हिन्दी': 'hi',
+      // Japonais
+      'japonais': 'ja', 'japanese': 'ja', '日本語': 'ja',
+      // Coréen
+      'coréen': 'ko', 'coreen': 'ko', 'korean': 'ko', '한국어': 'ko',
+      // Néerlandais
+      'néerlandais': 'nl', 'neerlandais': 'nl', 'dutch': 'nl', 'nederlands': 'nl',
+      // Polonais
+      'polonais': 'pl', 'polish': 'pl', 'polski': 'pl',
+      // Turc
+      'turc': 'tr', 'turkish': 'tr', 'türkçe': 'tr',
+      // Vietnamien
+      'vietnamien': 'vi', 'vietnamese': 'vi',
+      // Thaï
+      'thaï': 'th', 'thai': 'th', 'ไทย': 'th',
+      // Indonésien
+      'indonésien': 'id', 'indonesien': 'id', 'indonesian': 'id',
+      // Malais
+      'malais': 'ms', 'malay': 'ms',
+      // Suédois
+      'suédois': 'sv', 'suedois': 'sv', 'swedish': 'sv', 'svenska': 'sv',
+      // Norvégien
+      'norvégien': 'no', 'norvegien': 'no', 'norwegian': 'no', 'norsk': 'no',
+      // Danois
+      'danois': 'da', 'danish': 'da', 'dansk': 'da',
+      // Finnois
+      'finnois': 'fi', 'finnish': 'fi', 'suomi': 'fi',
+      // Grec
+      'grec': 'el', 'greek': 'el', 'ελληνικά': 'el',
+      // Tchèque
+      'tchèque': 'cs', 'tcheque': 'cs', 'czech': 'cs', 'čeština': 'cs',
+      // Hongrois
+      'hongrois': 'hu', 'hungarian': 'hu', 'magyar': 'hu',
+      // Roumain
+      'roumain': 'ro', 'romanian': 'ro', 'română': 'ro',
+      // Ukrainien
+      'ukrainien': 'uk', 'ukrainian': 'uk', 'українська': 'uk',
+      // Bulgare
+      'bulgare': 'bg', 'bulgarian': 'bg', 'български': 'bg',
+      // Croate
+      'croate': 'hr', 'croatian': 'hr', 'hrvatski': 'hr',
+      // Serbe
+      'serbe': 'sr', 'serbian': 'sr', 'српски': 'sr',
+      // Slovaque
+      'slovaque': 'sk', 'slovak': 'sk', 'slovenčina': 'sk',
+      // Slovène
+      'slovène': 'sl', 'slovene': 'sl', 'slovenščina': 'sl',
+      // Hébreu
+      'hébreu': 'he', 'hebreu': 'he', 'hebrew': 'he', 'עברית': 'he',
+      // Persan
+      'persan': 'fa', 'persian': 'fa', 'farsi': 'fa', 'فارسی': 'fa',
+      // Bengali
+      'bengali': 'bn', 'বাংলা': 'bn',
+      // Ourdou
+      'ourdou': 'ur', 'urdu': 'ur', 'اردو': 'ur',
+      // Pendjabi
+      'pendjabi': 'pa', 'punjabi': 'pa', 'ਪੰਜਾਬੀ': 'pa',
+      // Tamoul
+      'tamoul': 'ta', 'tamil': 'ta', 'தமிழ்': 'ta',
+      // Télougou
+      'télougou': 'te', 'telougou': 'te', 'telugu': 'te', 'తెలుగు': 'te',
+      // Marathi
+      'marathi': 'mr', 'मराठी': 'mr',
+      // Gujarati
+      'gujarati': 'gu', 'ગુજરાતી': 'gu',
+      // Kannada
+      'kannada': 'kn', 'ಕನ್ನಡ': 'kn',
+      // Malayalam
+      'malayalam': 'ml', 'മലയാളം': 'ml',
+      // Swahili
+      'swahili': 'sw', 'kiswahili': 'sw',
+      // Amharique
+      'amharique': 'am', 'amharic': 'am', 'አማርኛ': 'am',
+      // Somali
+      'somali': 'so', 'soomaali': 'so',
+      // Azéri
+      'azéri': 'az', 'azeri': 'az', 'azerbaijani': 'az',
+      // Letton
+      'letton': 'lv', 'latvian': 'lv', 'latviešu': 'lv',
+      // Lituanien
+      'lituanien': 'lt', 'lithuanian': 'lt', 'lietuvių': 'lt',
+      // Estonien
+      'estonien': 'et', 'estonian': 'et', 'eesti': 'et',
+      // Irlandais
+      'irlandais': 'ga', 'irish': 'ga', 'gaeilge': 'ga',
+      // Gallois
+      'gallois': 'cy', 'welsh': 'cy', 'cymraeg': 'cy',
+      // Islandais
+      'islandais': 'is', 'icelandic': 'is', 'íslenska': 'is',
+      // Javanais
+      'javanais': 'jv', 'javanese': 'jv', 'basa jawa': 'jv',
+      // Catalan
+      'catalan': 'ca', 'català': 'ca',
+      // Basque
+      'basque': 'eu', 'euskara': 'eu', 'vasco': 'eu',
+      // Albanais
+      'albanais': 'sq', 'albanian': 'sq', 'shqip': 'sq',
+      // Macédonien
+      'macédonien': 'mk', 'macedonien': 'mk', 'macedonian': 'mk', 'македонски': 'mk',
+      // Maltais
+      'maltais': 'mt', 'maltese': 'mt', 'malti': 'mt',
+      // Cinghalais
+      'cinghalais': 'si', 'sinhala': 'si', 'sinhalese': 'si', 'සිංහල': 'si',
+      // Népalais
+      'népalais': 'ne', 'nepalais': 'ne', 'nepali': 'ne', 'नेपाली': 'ne',
+      // Tagalog
+      'tagalog': 'tl', 'filipino': 'tl',
+      // Birman
+      'birman': 'my', 'burmese': 'my', 'မြန်မာ': 'my',
+      // Khmer
+      'khmer': 'km', 'cambodgien': 'km', 'cambodian': 'km', 'ខ្មែរ': 'km',
+      // Laotien
+      'laotien': 'lo', 'lao': 'lo', 'ລາວ': 'lo',
+      // Mongol
+      'mongol': 'mn', 'mongolian': 'mn', 'монгол': 'mn',
+      // Géorgien
+      'géorgien': 'ka', 'georgien': 'ka', 'georgian': 'ka', 'ქართული': 'ka',
+      // Arménien
+      'arménien': 'hy', 'armenien': 'hy', 'armenian': 'hy', 'հdelays': 'hy',
+      // Kazakh
+      'kazakh': 'kk', 'қазақ': 'kk',
+      // Ouzbek
+      'ouzbek': 'uz', 'uzbek': 'uz', 'oʻzbek': 'uz',
+      // Tadjik
+      'tadjik': 'tg', 'tajik': 'tg', 'тоҷикӣ': 'tg',
+      // Kirghize
+      'kirghize': 'ky', 'kyrgyz': 'ky', 'кыргызча': 'ky',
+      // Turkmène
+      'turkmène': 'tk', 'turkmene': 'tk', 'turkmen': 'tk', 'türkmen': 'tk',
+      // Pachto
+      'pachto': 'ps', 'pashto': 'ps', 'پښتو': 'ps',
+      // Haoussa
+      'haoussa': 'ha', 'hausa': 'ha',
+      // Yoruba
+      'yoruba': 'yo', 'yorùbá': 'yo',
+      // Igbo
+      'igbo': 'ig',
+      // Zoulou
+      'zoulou': 'zu', 'zulu': 'zu', 'isizulu': 'zu',
+      // Xhosa
+      'xhosa': 'xh', 'isixhosa': 'xh',
+      // Afrikaans
+      'afrikaans': 'af',
+      // Kinyarwanda
+      'kinyarwanda': 'rw', 'ikinyarwanda': 'rw',
+      // Espéranto
+      'espéranto': 'eo', 'esperanto': 'eo',
+    };
+
+    // Chercher dans le mapping étendu
+    if (NAME_TO_CODE[normalized]) {
+      return NAME_TO_CODE[normalized];
+    }
+
+    // Fallback sur le mapping principal
+    if (LANGUAGE_MAP[normalized]) {
+      return LANGUAGE_MAP[normalized];
+    }
+
+    // Si rien trouvé, retourner tel quel (peut-être déjà un code inconnu)
+    return langOrCode;
+  },
+
+  /**
+   * Normalise un tableau de langues vers des codes ISO
+   * @param languages - Tableau de noms ou codes de langues
+   * @returns Tableau de codes ISO normalisés
+   */
+  normalizeLanguagesArray: (languages: string[]): string[] => {
+    if (!languages || !Array.isArray(languages)) return [];
+    return languages.map(lang => LanguageUtils.normalizeToCode(lang));
   }
 } as const;
 

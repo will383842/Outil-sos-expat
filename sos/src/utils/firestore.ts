@@ -619,7 +619,7 @@ export const updateUserOnlineStatus = async (
           email: getStr(u.email),
           phone: getStr(u.phone),
           phoneCountryCode: getStr(u.phoneCountryCode, "+33"),
-          languages: getArr<string>(u.languages, ["Français"]),
+          languages: getArr<string>(u.languages, ["fr"]),
           country: getStr(u.currentCountry) || getStr(u.country),
           description: getStr(u.bio),
           profilePhoto:

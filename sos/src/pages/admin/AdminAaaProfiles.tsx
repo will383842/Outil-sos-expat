@@ -1595,7 +1595,7 @@ const AdminAaaProfiles: React.FC = () => {
 
   const [planner] = useState({
     enabled: false, dailyCount: 20, regionCountries: ['Thaïlande', 'Vietnam', 'Cambodge'],
-    role: 'expat' as Role, genderBias: { male: 50, female: 50 }, languages: ['Français', 'Anglais'],
+    role: 'expat' as Role, genderBias: { male: 50, female: 50 }, languages: ['fr', 'en'],
   });
 
   // ========== AAA PAYOUT CONFIG ==========
@@ -2180,7 +2180,7 @@ const AdminAaaProfiles: React.FC = () => {
     const card = {
       id: uid, uid, title: fullName,
       subtitle: role === 'lawyer' ? 'Avocat' : 'Expatrié aidant',
-      country, photo: profilePhoto, rating, reviewCount, languages: selectedLanguages,
+      country, photo: profilePhoto, rating, reviewCount, languages: languageCodes,
       specialties: (providerProfile.specialties as string[]) || [],
       href: `/profile/${uid}`,
       createdAt: serverTimestamp(),

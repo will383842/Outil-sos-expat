@@ -48,6 +48,7 @@ import { useApp } from "../contexts/AppContext";
 
 import { logLanguageMismatch } from "../services/analytics";
 import languages, { getLanguageLabel, languagesData, type Language as AppLanguage } from "../data/languages-spoken";
+import { LanguageUtils } from "../locales/languageMap";
 import { countriesData } from "../data/countries";
 
 import { db, auth } from "../config/firebase";
@@ -1284,8 +1285,10 @@ const ProviderCardCompact = ({
           {!!provider.languages?.length && (
             <div className="flex flex-wrap gap-1">
               {(provider.languages || []).map((code, idx) => {
-                const l = ALL_LANGS.find((x) => x.code === code);
-                const label = l ? getLanguageLabel(l, lang) : code.toUpperCase();
+                // Normaliser le code pour gérer les anciennes données ("Français" -> "fr")
+                const normalizedCode = LanguageUtils.normalizeToCode(code);
+                const l = ALL_LANGS.find((x) => x.code === normalizedCode);
+                const label = l ? getLanguageLabel(l, lang) : code;
                 return (
                   <span
                     key={`compact-${code}-${idx}`}
@@ -2257,7 +2260,8 @@ const BookingRequest: React.FC = () => {
     }
   }, [setValue]);
 
-  // Matching live des langues (normalisé en minuscules pour éviter les problèmes de casse)
+  // Matching live des langues (normalisé vers codes ISO pour comparaison fiable)
+  // Gère les deux formats : noms complets ("Français") et codes ISO ("fr")
   useEffect(() => {
     if (!provider || (!provider.languages && !provider.languagesSpoken)) {
       setHasLanguageMatchRealTime(true);
@@ -2265,11 +2269,17 @@ const BookingRequest: React.FC = () => {
     }
     const providerLanguages =
       provider.languages || provider.languagesSpoken || [];
-    // Normaliser TOUT en minuscules pour comparaison fiable
-    const providerCodesNormalized = providerLanguages.map((pl) => pl.toLowerCase().trim());
-    const clientCodesNormalized = languagesSpoken.map((l) => l.code.toLowerCase().trim());
+    // Normaliser les langues du provider vers des codes ISO (gère "Français" -> "fr" et "fr" -> "fr")
+    const providerCodesNormalized = providerLanguages.map((pl) =>
+      LanguageUtils.normalizeToCode(pl).toLowerCase().trim()
+    );
+    // Normaliser les langues du client (déjà en codes ISO normalement)
+    const clientCodesNormalized = languagesSpoken.map((l) =>
+      LanguageUtils.normalizeToCode(l.code).toLowerCase().trim()
+    );
     const hasMatch = providerCodesNormalized.some((pl) => clientCodesNormalized.includes(pl));
     console.log('[BookingRequest] Language matching:', {
+      providerLanguagesRaw: providerLanguages,
       providerCodes: providerCodesNormalized,
       clientCodes: clientCodesNormalized,
       hasMatch
@@ -2974,8 +2984,10 @@ const BookingRequest: React.FC = () => {
                     {!!provider?.languages?.length && (
                       <div className="flex mt-2 flex-wrap gap-1">
                         {(provider.languages || []).slice(0, 3).map((code, idx) => {
-                          const l = ALL_LANGS.find((x) => x.code === code);
-                          const label = l ? getLanguageLabel(l, lang) : code.toUpperCase();
+                          // Normaliser pour gérer les anciennes données
+                          const normalizedCode = LanguageUtils.normalizeToCode(code);
+                          const l = ALL_LANGS.find((x) => x.code === normalizedCode);
+                          const label = l ? getLanguageLabel(l, lang) : code;
                           return (
                             <span
                               key={`${code}-${idx}`}
@@ -3373,19 +3385,25 @@ const BookingRequest: React.FC = () => {
                   </p>
                 )}
 
-                {/* Compatibilité (normalisé en minuscules pour matching fiable) */}
+                {/* Compatibilité (normalisé vers codes ISO pour matching fiable) */}
                 {languagesSpoken.length > 0 && (
                   <div className="mt-4 space-y-3">
                     {(() => {
                       const providerLanguages =
                         provider?.languages || provider?.languagesSpoken || [];
-                      // Normaliser en minuscules pour comparaison fiable
-                      const providerCodesNormalized = providerLanguages.map((pl) => pl.toLowerCase().trim());
+                      // Normaliser vers codes ISO pour comparaison fiable (gère "Français" -> "fr")
+                      const providerCodesNormalized = providerLanguages.map((pl) =>
+                        LanguageUtils.normalizeToCode(pl).toLowerCase().trim()
+                      );
                       const compatible = languagesSpoken.filter((l) =>
-                        providerCodesNormalized.includes(l.code.toLowerCase().trim())
+                        providerCodesNormalized.includes(
+                          LanguageUtils.normalizeToCode(l.code).toLowerCase().trim()
+                        )
                       );
                       const incompatible = languagesSpoken.filter(
-                        (l) => !providerCodesNormalized.includes(l.code.toLowerCase().trim())
+                        (l) => !providerCodesNormalized.includes(
+                          LanguageUtils.normalizeToCode(l.code).toLowerCase().trim()
+                        )
                       );
                       return (
                         <>

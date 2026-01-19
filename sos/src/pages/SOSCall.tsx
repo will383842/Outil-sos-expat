@@ -66,6 +66,7 @@ import {
   getLanguageLabel,
   type SupportedLocale,
 } from '../data/languages-spoken';
+import { LanguageUtils } from '../locales/languageMap';
 
 import { formatSpecialties, mapLanguageToLocale } from '../utils/specialtyMapper';
 import { trackMetaLead, trackMetaViewContent, trackMetaSearch } from '../utils/metaPixel';
@@ -1293,8 +1294,9 @@ const ModernProfileCard: React.FC<{
     const translatedLanguages = provider.languages
       .slice(0, 3)
       .map(langCode => {
-        // Convertir 'ch' en 'zh' car languagesData utilise 'zh' pour le chinois
-        const normalizedCode = langCode.toLowerCase() === 'ch' ? 'zh' : langCode.toLowerCase();
+        // Normaliser vers code ISO (gère "Français" -> "fr", "ch" -> "zh")
+        let normalizedCode = LanguageUtils.normalizeToCode(langCode).toLowerCase();
+        if (normalizedCode === 'ch') normalizedCode = 'zh';
         const lang = languagesData.find(l => l.code.toLowerCase() === normalizedCode);
         return lang ? getLanguageLabel(lang, language as SupportedLocale) : langCode;
       })
