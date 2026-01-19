@@ -120,8 +120,9 @@ export type ProviderLanguage = (typeof PROVIDER_LANGUAGES)[number];
 
 /**
  * Langues RTL (Right-to-Left)
+ * Inclut: Arabe, Hébreu, Persan, Ourdou
  */
-export const RTL_LANGUAGES = ["ar"] as const;
+export const RTL_LANGUAGES = ["ar", "he", "fa", "ur"] as const;
 export type RTLLanguage = (typeof RTL_LANGUAGES)[number];
 
 /**

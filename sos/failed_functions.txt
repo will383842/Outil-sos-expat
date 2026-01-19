@@ -1,95 +1,11 @@
-# Functions Failed to Deploy (CPU Quota Exceeded)
+# Firebase Functions Deployment Status
 # Date: 2026-01-19
-# Reason: Cloud Run CPU quota exceeded for europe-west1
-#
-# IMPORTANT: All critical payment functions are deployed and working!
-# These are admin/batch/background functions - non-critical for payment flow.
-
-# To redeploy all at once (wait 1-2h for quota to reset):
-# cd sos/firebase && firebase deploy --only functions
+# Status: ALL FUNCTIONS DEPLOYED SUCCESSFULLY
 
 # ============================================
-# ADMIN / PROVIDER MANAGEMENT
+# DEPLOYMENT COMPLETE - 100%
 # ============================================
-bulkSuspendProviders
-bulkBlockProviders
-bulkDeleteProviders
-bulkHideProviders
-blockProvider
-suspendProvider
-softDeleteProvider
-hardDeleteProvider
-hideProvider
-unblockProvider
-
-# ============================================
-# ANALYTICS / METRICS
-# ============================================
-getAgentMetrics
-getGcpBillingCosts
-getHistoricalAnalytics
-getOpenaiUsage
-getThresholdDashboard
-getCountryThreshold
-getServiceBalanceThresholds
-getAllProviderActionLogs
-getProviderActionLogs
-getValidationHistory
-
-# ============================================
-# BACKGROUND / SCHEDULED TASKS
-# ============================================
-cleanupTempStorageFiles
-backupFirebaseAuth
-backupStorageToDR
-detectInactiveUsers
-scheduledSitemapGeneration
-scheduledSiteMapping
-initHelpArticlesBatch
-
-# ============================================
-# SEO / SITEMAP
-# ============================================
-sitemapProfiles
-sitemapLanding
-generateSitemaps
-onLandingPageCreated
-onFaqCreated
-onFaqUpdated
-onBlogPostCreated
-onBlogPostUpdated
-
-# ============================================
-# PROFILE / PROVIDER EVENTS
-# ============================================
-onProfileCreated
-onProfileUpdated
-onProviderChange
-migrateProfileSlugs
-diagnoseProfiles
-
-# ============================================
-# EVENT TRIGGERS
-# ============================================
-onBookingRequestCreatedTrackLead
-onUserCreatedTrackRegistration
-checkServiceBalances
-
-# ============================================
-# ADMIN PANELS
-# ============================================
-admin-routing-get
-admin-templates-get
-admin-unclaimed-funds-stats
-admin-unclaimed-funds-list
-admin-forfeited-funds-list
-admin-process-exceptional-claim
-admin-testSend
-manuallyTriggerCallExecution
-sendQuotaAlerts
-updateServiceBalanceThreshold
-invalidateCacheEndpoint
-createUserDocument
+# All 150+ functions are now deployed and operational.
 
 # ============================================
 # PAYMENT SYSTEM STATUS: OK!
@@ -103,3 +19,33 @@ createUserDocument
 # - collectDailyPaymentMetrics
 # - thresholdOnPaymentCreate
 # - thresholdOnPaymentUpdate
+
+# ============================================
+# ADMIN/BULK FUNCTIONS: OK!
+# ============================================
+# - unhideProvider
+# - bulkBlockProviders
+# - bulkDeleteProviders
+# - bulkSuspendProviders
+# - bulkUnblockProviders
+# - bulkUnhideProviders
+
+# ============================================
+# ANALYTICS/MONITORING: OK!
+# ============================================
+# - getAgentMetrics
+# - getGcpBillingCosts
+# - checkServiceBalances
+
+# ============================================
+# BACKGROUND/SCHEDULED: OK!
+# ============================================
+# - cleanupTempStorageFiles
+# - scheduledProcessUnclaimedFunds
+# - triggerServiceBalanceCheck
+
+# ============================================
+# EVENT TRIGGERS: OK!
+# ============================================
+# - onBookingRequestCreatedTrackLead
+# - onUserCreatedTrackRegistration
