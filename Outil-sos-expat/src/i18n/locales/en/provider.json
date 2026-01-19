@@ -120,6 +120,7 @@
     },
     "legalAssistant": "Legal Assistant",
     "yourQuestion": "Your question",
+    "clientRequest": "Client request",
     "copyResponse": "Copy response",
     "analyzing": "Analysis in progress...",
     "preparingResponse": "Preparing response...",

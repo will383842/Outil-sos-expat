@@ -98,6 +98,7 @@ interface Message {
   source?: string;
   content: string;
   createdAt?: Timestamp;
+  order?: number; // FIX: Used for ordering messages with same timestamp
 }
 
 interface Conversation {
@@ -363,21 +364,25 @@ function AIChat({
           messages.map((message) => {
             const isAI = message.source === "gpt" || message.source === "claude" || message.role === "assistant";
             const isError = message.source === "gpt-error";
+            // FIX: Detect system-generated context message (initial booking summary)
+            const isSystemContext = message.source === "system" && message.role === "user";
 
             return (
-              <div key={message.id} className={`flex ${isAI ? "justify-start" : "justify-end"}`}>
+              <div key={message.id} className={`flex ${isAI || isSystemContext ? "justify-start" : "justify-end"}`}>
                 <div
                   className={`max-w-[85%] rounded-2xl px-5 py-4 shadow-sm ${
                     isError
                       ? "bg-red-50 border border-red-200"
                       : isAI
                       ? "bg-white border border-gray-200"
+                      : isSystemContext
+                      ? "bg-blue-50 border border-blue-200" // FIX: Different style for system context
                       : "bg-amber-600 text-white"
                   }`}
                 >
-                  <div className={`flex items-center gap-2 mb-2 ${isAI ? "text-gray-500" : "text-amber-200"}`}>
-                    {isAI ? <Bot className="w-4 h-4 text-amber-600" /> : <User className="w-4 h-4" />}
-                    <span className="text-xs font-medium">{isAI ? t("aiChat.legalAssistant") : t("aiChat.yourQuestion")}</span>
+                  <div className={`flex items-center gap-2 mb-2 ${isAI ? "text-gray-500" : isSystemContext ? "text-blue-600" : "text-amber-200"}`}>
+                    {isAI ? <Bot className="w-4 h-4 text-amber-600" /> : isSystemContext ? <FileText className="w-4 h-4 text-blue-500" /> : <User className="w-4 h-4" />}
+                    <span className="text-xs font-medium">{isAI ? t("aiChat.legalAssistant") : isSystemContext ? t("aiChat.clientRequest") : t("aiChat.yourQuestion")}</span>
                     <span className="text-xs opacity-70">{formatTime(message.createdAt)}</span>
                   </div>
 
@@ -905,28 +910,43 @@ export default function ConversationDetail() {
         setConversation({ id: convId, bookingId: id, providerId: booking.providerId });
       }
 
+      // Order by createdAt - messages will be sorted client-side by 'order' field
+      // when timestamps are equal (fallback for messages without 'order' field)
       const messagesQuery = query(
         collection(db, "conversations", convId, "messages"),
         orderBy("createdAt", "asc")
       );
 
       unsubMessages = onSnapshot(messagesQuery, (msgSnapshot) => {
-        const msgs = msgSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Message[];
+        let msgs = msgSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Message[];
+
+        // FIX: Sort by 'order' field when timestamps are equal (for initial context + AI response)
+        // This ensures correct ordering even when both messages have the same serverTimestamp
+        msgs = msgs.sort((a, b) => {
+          const timeA = a.createdAt?.toMillis() || 0;
+          const timeB = b.createdAt?.toMillis() || 0;
+          if (timeA !== timeB) return timeA - timeB;
+          // If timestamps are equal, sort by 'order' field (if present)
+          return (a.order || 0) - (b.order || 0);
+        });
+
         setMessages(msgs);
 
         // 🆕 AUTO-DETECT AI LOADING STATE
         // L'IA est en train de travailler si:
-        // - Le dernier message vient du provider (user) et on attend la réponse IA
-        // - Ou si on vient d'envoyer un message (aiLoading déjà true)
+        // - Le dernier message vient du provider et on attend la réponse IA
         const lastMsg = msgs[msgs.length - 1];
-        const lastMsgIsFromAI = lastMsg?.source === "gpt" || lastMsg?.source === "gpt-error" || lastMsg?.source === "claude" || lastMsg?.source === "system";
-        const lastMsgIsFromUser = lastMsg?.source === "provider" || lastMsg?.role === "user";
+        // FIX: Only gpt/claude sources are actual AI responses
+        // source="system" is the initial booking context (not an AI response)
+        const lastMsgIsFromAI = lastMsg?.source === "gpt" || lastMsg?.source === "gpt-error" || lastMsg?.source === "claude";
+        // FIX: Only provider messages should trigger AI loading (not system context messages)
+        const lastMsgIsFromProvider = lastMsg?.source === "provider";
 
         if (lastMsgIsFromAI) {
           // L'IA a répondu, on arrête le loading
           setAiLoading(false);
-        } else if (lastMsgIsFromUser && !lastMsgIsFromAI) {
-          // Le dernier message est du user, on attend la réponse IA
+        } else if (lastMsgIsFromProvider) {
+          // Le dernier message est du provider, on attend la réponse IA
           setAiLoading(true);
         }
 
@@ -934,7 +954,7 @@ export default function ConversationDetail() {
           count: msgs.length,
           lastMsgSource: lastMsg?.source,
           lastMsgRole: lastMsg?.role,
-          isAiLoading: lastMsgIsFromUser && !lastMsgIsFromAI,
+          isAiLoading: lastMsgIsFromProvider && !lastMsgIsFromAI,
         });
       });
     };

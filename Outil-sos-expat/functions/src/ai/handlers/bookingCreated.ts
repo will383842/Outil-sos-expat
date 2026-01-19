@@ -330,16 +330,19 @@ export const aiOnBookingCreated = onDocumentCreated(
 
       // 2. Save initial user message (booking context)
       // FIX: Use 'createdAt' instead of 'timestamp' - frontend queries by createdAt
+      // FIX: Add 'order' field to guarantee message ordering when timestamps are equal
       const userMsgRef = convoRef.collection("messages").doc();
       batch.set(userMsgRef, {
         role: "user",
         source: "system",
         content: userMessage,
         createdAt: now,
+        order: 1, // FIX: Explicit ordering - context message comes first
       });
 
       // 3. Save AI response
       // FIX: Use 'createdAt' instead of 'timestamp', and 'source: gpt' for proper icon rendering
+      // FIX: Add 'order' field to guarantee message ordering when timestamps are equal
       const aiMsgRef = convoRef.collection("messages").doc();
       batch.set(aiMsgRef, {
         role: "assistant",
@@ -352,6 +355,7 @@ export const aiOnBookingCreated = onDocumentCreated(
         citations: response.citations || null,
         fallbackUsed: response.fallbackUsed || false,
         createdAt: now,
+        order: 2, // FIX: Explicit ordering - AI response comes second
       });
 
       // 4. Mark booking as processed
