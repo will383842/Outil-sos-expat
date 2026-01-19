@@ -2749,6 +2749,46 @@ export async function handleTransferUpdated(
       }
     }
 
+    // P1-3 FIX: Notifier le provider du succès du transfert (email)
+    // Seulement pour les transferts complétés (pas reversed)
+    if (providerId && !transfer.reversed) {
+      try {
+        // Récupérer l'email et la langue du provider
+        const providerQuery = await db.collection('sos_profiles')
+          .where('stripeAccountId', '==', destinationAccount)
+          .limit(1)
+          .get();
+
+        if (!providerQuery.empty) {
+          const providerData = providerQuery.docs[0].data();
+          const providerEmail = providerData.email;
+
+          if (providerEmail) {
+            const { MailwizzAPI } = await import('../emailMarketing/MailwizzAPI');
+            const mailwizz = new MailwizzAPI();
+
+            const lang = providerData?.language || providerData?.preferredLanguage || 'fr';
+            const langCode = lang === 'fr' ? 'fr' : 'en';
+
+            await mailwizz.sendTransactional({
+              to: providerEmail,
+              template: `TR_PRO_transfer-success_${langCode}`,
+              customFields: {
+                FNAME: providerData?.firstName || providerData?.displayName || '',
+                AMOUNT: amount.toString(),
+                CURRENCY: currency,
+              },
+            });
+
+            logger.info(`[handleTransferUpdated] P1-3 FIX: Success notification sent to ${providerEmail}`);
+          }
+        }
+      } catch (emailError) {
+        // Ne pas bloquer si l'email échoue
+        logger.warn(`[handleTransferUpdated] P1-3 FIX: Could not send success notification:`, emailError);
+      }
+    }
+
     // Marquer l'événement comme traité
     if (context?.eventId) {
       await markEventAsProcessed(context.eventId, context.eventType);
@@ -2826,22 +2866,68 @@ export async function handleTransferFailed(
       createdAt: now
     });
 
-    // Créer une entrée pending_transfers pour retry manuel
+    // Créer une entrée pending_transfers pour retry automatique
+    // P1-2 FIX: Ajout du retry automatique via Cloud Tasks (comme PayPal)
+    let pendingTransferId: string | null = null;
     if (providerId) {
-      await db.collection('pending_transfers').add({
+      const pendingTransferRef = await db.collection('pending_transfers').add({
         providerId,
         stripeAccountId: destinationAccount,
         amount,
         currency,
         originalTransferId: transfer.id,
         sourceTransaction: transfer.source_transaction,
-        status: 'failed',
+        status: 'pending_retry',
         retryCount: 0,
-        maxRetries: 3,
+        maxRetries: 5,  // P1-2 FIX: 5 retries comme PayPal
         failureReason: 'Original transfer failed',
+        nextRetryAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes
         createdAt: now,
         updatedAt: now
       });
+      pendingTransferId = pendingTransferRef.id;
+
+      // P1-2 FIX: Programmer le retry automatique via Cloud Tasks
+      try {
+        const { CloudTasksClient } = await import('@google-cloud/tasks');
+        const tasksClient = new CloudTasksClient();
+
+        const projectId = process.env.GCLOUD_PROJECT || process.env.GOOGLE_CLOUD_PROJECT || 'sos-urgently-ac307';
+        const location = 'europe-west1';
+        const queueName = 'stripe-transfer-retry-queue';
+        const queuePath = tasksClient.queuePath(projectId, location, queueName);
+
+        const callbackUrl = `https://${location}-${projectId}.cloudfunctions.net/executeStripeTransferRetry`;
+
+        const taskPayload = {
+          pendingTransferId: pendingTransferRef.id,
+          providerId,
+          stripeAccountId: destinationAccount,
+          amount,
+          currency,
+          sourceTransaction: transfer.source_transaction,
+          retryCount: 0,
+        };
+
+        const scheduleTime = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+        const task = {
+          scheduleTime: { seconds: Math.floor(scheduleTime.getTime() / 1000) },
+          httpRequest: {
+            httpMethod: 'POST' as const,
+            url: callbackUrl,
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: Buffer.from(JSON.stringify(taskPayload)).toString('base64'),
+          },
+        };
+
+        await tasksClient.createTask({ parent: queuePath, task });
+        logger.info(`[handleTransferFailed] P1-2 FIX: Scheduled retry task for transfer ${transfer.id}`);
+      } catch (taskError) {
+        // Ne pas bloquer si Cloud Tasks échoue - le pending_transfer existe pour retry manuel
+        logger.warn(`[handleTransferFailed] P1-2 FIX: Could not schedule retry task:`, taskError);
+      }
     }
 
     // Alerte admin CRITIQUE
@@ -2856,11 +2942,42 @@ export async function handleTransferFailed(
         destinationAccount,
         amount,
         currency,
-        sourceTransaction: transfer.source_transaction
+        sourceTransaction: transfer.source_transaction,
+        pendingTransferId,  // P1-2 FIX: Référence au pending_transfer pour suivi
+        retryScheduled: !!pendingTransferId,  // P1-2 FIX: Indique si un retry est programmé
       },
       read: false,
       createdAt: now
     });
+
+    // P1-3 FIX: Notifier le provider de l'échec (email)
+    if (providerId && providerEmail) {
+      try {
+        const { MailwizzAPI } = await import('../emailMarketing/MailwizzAPI');
+        const mailwizz = new MailwizzAPI();
+
+        // Récupérer la langue du provider
+        const providerDoc = await db.collection('users').doc(providerId).get();
+        const providerData = providerDoc.data();
+        const lang = providerData?.language || providerData?.preferredLanguage || 'fr';
+        const langCode = lang === 'fr' ? 'fr' : 'en';
+
+        await mailwizz.sendTransactional({
+          to: providerEmail,
+          template: `TR_PRO_transfer-failed_${langCode}`,
+          customFields: {
+            FNAME: providerData?.firstName || '',
+            AMOUNT: amount.toString(),
+            CURRENCY: currency,
+          },
+        });
+
+        logger.info(`[handleTransferFailed] P1-3 FIX: Notification sent to ${providerEmail}`);
+      } catch (emailError) {
+        // Ne pas bloquer si l'email échoue
+        logger.warn(`[handleTransferFailed] P1-3 FIX: Could not send notification email:`, emailError);
+      }
+    }
 
     // Marquer l'événement comme traité
     if (context?.eventId) {

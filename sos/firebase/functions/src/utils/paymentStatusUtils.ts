@@ -5,6 +5,38 @@
  *
  * Problème: Le code utilise parfois "succeeded" (Stripe) et parfois "captured" (escrow).
  * Solution: Fonctions utilitaires pour vérifier les statuts de manière cohérente.
+ *
+ * P2-1 FIX: Documentation complète de tous les statuts utilisés dans le système.
+ *
+ * =============================================================================
+ * DOCUMENTATION DES STATUTS DE PAIEMENT
+ * =============================================================================
+ *
+ * STATUTS STRIPE → FIRESTORE:
+ * - payment_intent.succeeded → "captured" (normalisé) ou "succeeded"
+ * - payment_intent.requires_capture → "requires_capture"
+ * - payment_intent.canceled → "cancelled"
+ * - charge.failed → "failed"
+ * - charge.refunded → "refunded"
+ *
+ * STATUTS PAYPAL → FIRESTORE:
+ * - CHECKOUT.ORDER.APPROVED → "APPROVED" (paypal_orders collection)
+ * - PAYMENT.CAPTURE.COMPLETED → "captured"
+ * - PAYMENT.CAPTURE.REFUNDED → "refunded"
+ *
+ * STATUTS INTERNES (call_sessions):
+ * - "pending" → Paiement en attente de confirmation
+ * - "processing" → Paiement en cours de traitement
+ * - "payment_captured" → Paiement capturé avec succès
+ * - "no_answer" → Appel non répondu (remboursement possible)
+ *
+ * STATUTS PAYOUT:
+ * - "pending" → Payout en attente
+ * - "awaiting_payout" → En attente de versement
+ * - "sent" → Payout envoyé
+ * - "completed" → Payout confirmé
+ * - "failed" → Payout échoué
+ * =============================================================================
  */
 
 /**
@@ -30,6 +62,36 @@ export type PaymentFailedStatus = typeof PAYMENT_FAILED_STATUSES[number];
  */
 export const PAYMENT_REFUNDED_STATUSES = ["refunded", "partially_refunded"] as const;
 export type PaymentRefundedStatus = typeof PAYMENT_REFUNDED_STATUSES[number];
+
+/**
+ * P2-1 FIX: Statuts de traitement intermédiaire
+ */
+export const PAYMENT_PROCESSING_STATUSES = ["pending", "processing"] as const;
+export type PaymentProcessingStatus = typeof PAYMENT_PROCESSING_STATUSES[number];
+
+/**
+ * P2-1 FIX: Statuts spécifiques aux sessions d'appel
+ */
+export const CALL_SESSION_PAYMENT_STATUSES = [
+  "payment_pending",
+  "payment_captured",
+  "payment_failed",
+  "no_answer",
+] as const;
+export type CallSessionPaymentStatus = typeof CALL_SESSION_PAYMENT_STATUSES[number];
+
+/**
+ * P2-1 FIX: Statuts de payout
+ */
+export const PAYOUT_STATUSES = [
+  "pending",
+  "awaiting_payout",
+  "sent",
+  "completed",
+  "failed",
+  "not_applicable",
+] as const;
+export type PayoutStatus = typeof PAYOUT_STATUSES[number];
 
 /**
  * Vérifie si un paiement est finalisé (succeeded OU captured)

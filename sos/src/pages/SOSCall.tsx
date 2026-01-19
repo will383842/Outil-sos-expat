@@ -36,7 +36,7 @@ import {
   getDocs,
 } from "firebase/firestore";
 import { db } from "../config/firebase";
-import { getCollectionRest } from "../utils/firestoreRestApi";
+import { getCollectionRest, runQueryRest } from "../utils/firestoreRestApi";
 import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
 import { useApp } from "../contexts/AppContext";
@@ -140,6 +140,8 @@ interface RawProfile extends DocumentData {
   price?: number;
   duration?: number;
   profilePhoto?: string;
+  photoURL?: string;    // ✅ FIX: champ alternatif pour la photo
+  avatar?: string;      // ✅ FIX: champ alternatif pour la photo
   education?: any;
   certifications?: any;
   lawSchool?: string;
@@ -2395,11 +2397,13 @@ const SOSCall: React.FC = () => {
               ? 49
               : 19,
         duration: data.duration,
-        avatar:
-          typeof data.profilePhoto === "string" &&
-            data.profilePhoto.trim() !== ""
-            ? data.profilePhoto
-            : "/default-avatar.png",
+        // ✅ FIX: Récupérer l'avatar depuis profilePhoto, photoURL OU avatar
+        avatar: (() => {
+          const photo = data.profilePhoto || data.photoURL || data.avatar;
+          return typeof photo === "string" && photo.trim() !== ""
+            ? photo
+            : "/default-avatar.png";
+        })(),
         education: data.education || data.lawSchool || undefined,
         certifications: data.certifications || undefined,
         lawSchool: typeof data.lawSchool === "string" ? data.lawSchool : undefined,
@@ -2415,6 +2419,7 @@ const SOSCall: React.FC = () => {
     };
 
     // Fonction pour filtrer les providers valides
+    // ✅ FIX: Ajout du filtre isApproved === true (comme Home et Providers.tsx)
     const filterValidProviders = (providers: Provider[]): Provider[] => {
       return providers.filter(provider => {
         const notAdmin =
@@ -2422,27 +2427,33 @@ const SOSCall: React.FC = () => {
         const notBanned = provider.isBanned !== true;
         const hasBasicInfo = provider.name.trim() !== "";
         const hasCountry = provider.country.trim() !== "";
-        const visible = provider.isVisible !== false;
+        const visible = provider.isVisible === true;      // ✅ STRICT: doit être true
+        const approved = provider.isApproved === true;    // ✅ FIX: filtre par approbation
         const validType = provider.type === "lawyer" || provider.type === "expat";
 
-        return notAdmin && notBanned && hasBasicInfo && hasCountry && visible && validType;
+        return notAdmin && notBanned && hasBasicInfo && hasCountry && visible && approved && validType;
       });
     };
 
     // STRATÉGIE: Essayer REST API d'abord, puis SDK, puis fallback
+    // ✅ FIX: Ajout des filtres isApproved et isVisible côté serveur (comme Home et Providers.tsx)
     const loadProviders = async () => {
-      console.log("🚀 [SOSCall] Tentative 1: API REST Firestore...");
+      console.log("🚀 [SOSCall] Tentative 1: API REST Firestore avec filtres...");
 
       try {
-        // Tentative 1: REST API (plus fiable)
-        const docs = await getCollectionRest<RawProfile>("sos_profiles", {
-          pageSize: 100,
+        // Tentative 1: REST API avec filtres (plus fiable et optimisé)
+        // ✅ FIX: Filtrer par isApproved et isVisible côté serveur
+        const docs = await runQueryRest<RawProfile>("sos_profiles", [
+          { field: 'isApproved', op: 'EQUAL', value: true },
+          { field: 'isVisible', op: 'EQUAL', value: true }
+        ], {
+          limit: 200,
           timeoutMs: FIRESTORE_TIMEOUT_MS,
         });
 
         if (isCancelled) return;
 
-        console.log(`✅ [SOSCall] REST API: ${docs.length} documents reçus`);
+        console.log(`✅ [SOSCall] REST API: ${docs.length} documents reçus (filtrés côté serveur)`);
 
         const allProviders = docs
           .filter(doc => doc.data.type === "lawyer" || doc.data.type === "expat")
@@ -2470,13 +2481,16 @@ const SOSCall: React.FC = () => {
         if (isCancelled) return;
 
         // Tentative 2: SDK Firestore avec timeout court
-        console.log("🚀 [SOSCall] Tentative 2: SDK Firestore...");
+        console.log("🚀 [SOSCall] Tentative 2: SDK Firestore avec filtres...");
 
         try {
+          // ✅ FIX: Ajout des filtres isApproved et isVisible côté Firestore
           const sosProfilesQuery = query(
             collection(db, "sos_profiles"),
+            where("isApproved", "==", true),
+            where("isVisible", "==", true),
             where("type", "in", ["lawyer", "expat"]),
-            limit(100)
+            limit(200)
           );
 
           const timeoutPromise = new Promise<never>((_, reject) => {

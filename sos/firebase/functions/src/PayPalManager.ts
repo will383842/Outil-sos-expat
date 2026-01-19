@@ -2490,8 +2490,105 @@ export const paypalWebhook = onRequest(
           break;
 
         case "PAYMENT.CAPTURE.REFUNDED":
-          // Remboursement effectué
-          console.log("💸 [PAYPAL] Refund processed:", event.resource?.id);
+          // ========== P0-1 FIX: Débiter le provider lors d'un remboursement PayPal ==========
+          // Alignement avec Stripe qui débite le provider via deductProviderBalance()
+          const refundResource = event.resource;
+          const refundCaptureId = refundResource?.id;
+          const refundAmount = parseFloat(refundResource?.amount?.value || "0");
+          const refundCurrency = refundResource?.amount?.currency_code || "EUR";
+
+          console.log("💸 [PAYPAL] Refund processed:", refundCaptureId, `${refundAmount} ${refundCurrency}`);
+
+          if (refundCaptureId && refundAmount > 0) {
+            try {
+              // Chercher le paiement original pour trouver le providerId
+              const refundPaymentQuery = await db.collection("payments")
+                .where("paypalCaptureId", "==", refundCaptureId)
+                .limit(1)
+                .get();
+
+              // Si pas trouvé par captureId, chercher par orderId dans les custom_id
+              let paymentDoc = refundPaymentQuery.docs[0];
+              if (!paymentDoc) {
+                const orderId = refundResource?.supplementary_data?.related_ids?.order_id;
+                if (orderId) {
+                  const orderPaymentQuery = await db.collection("payments")
+                    .where("paypalOrderId", "==", orderId)
+                    .limit(1)
+                    .get();
+                  paymentDoc = orderPaymentQuery.docs[0];
+                }
+              }
+
+              if (paymentDoc) {
+                const paymentData = paymentDoc.data();
+                const providerId = paymentData.providerId;
+                const callSessionId = paymentData.callSessionId;
+
+                if (providerId) {
+                  // Importer le service de déduction
+                  const { ProviderEarningsService } = await import("./ProviderEarningsService");
+                  const earningsService = new ProviderEarningsService(db);
+
+                  // Calculer le montant provider (61% comme Stripe)
+                  const providerRefundAmount = refundAmount * 0.61;
+
+                  await earningsService.deductProviderBalance({
+                    providerId,
+                    amount: providerRefundAmount,
+                    currency: refundCurrency,
+                    reason: `Remboursement PayPal - Capture ${refundCaptureId}`,
+                    callSessionId: callSessionId || undefined,
+                    metadata: {
+                      paypalCaptureId: refundCaptureId,
+                      totalRefundAmount: refundAmount,
+                      source: "paypal_webhook",
+                    },
+                  });
+
+                  console.log(`✅ [PAYPAL] P0-1 FIX: Provider ${providerId} debited ${providerRefundAmount} ${refundCurrency}`);
+
+                  // Mettre à jour le statut du paiement
+                  await paymentDoc.ref.update({
+                    status: "refunded",
+                    refundedAt: admin.firestore.FieldValue.serverTimestamp(),
+                    refundAmount: refundAmount,
+                    providerRefundAmount: providerRefundAmount,
+                  });
+                } else {
+                  console.warn("⚠️ [PAYPAL] Refund: No providerId found in payment document");
+                }
+              } else {
+                console.warn(`⚠️ [PAYPAL] Refund: Could not find payment for capture ${refundCaptureId}`);
+                // Logger pour investigation manuelle
+                await db.collection("paypal_refund_orphans").add({
+                  captureId: refundCaptureId,
+                  amount: refundAmount,
+                  currency: refundCurrency,
+                  rawResource: refundResource,
+                  createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+              }
+            } catch (refundError) {
+              // Ne pas faire échouer le webhook, mais alerter l'admin
+              console.error("❌ [PAYPAL] P0-1 FIX: Error deducting provider balance:", refundError);
+              await db.collection("admin_alerts").add({
+                type: "paypal_provider_deduction_failed",
+                severity: "critical",
+                title: "Échec déduction provider - Remboursement PayPal",
+                message: `Impossible de débiter le provider pour le remboursement PayPal ${refundCaptureId}`,
+                data: {
+                  captureId: refundCaptureId,
+                  amount: refundAmount,
+                  currency: refundCurrency,
+                  error: refundError instanceof Error ? refundError.message : "Unknown",
+                },
+                read: false,
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              });
+            }
+          }
+          // ========== FIN P0-1 FIX ==========
           break;
 
         case "MERCHANT.ONBOARDING.COMPLETED":

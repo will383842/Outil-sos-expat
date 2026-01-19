@@ -20,7 +20,9 @@ interface UsePaymentGatewayReturn {
 }
 
 // Liste des pays PayPal-only (cache local pour éviter les appels inutiles)
-// Synchronisée avec PayPalManager.ts du backend
+// P0-2 FIX: Synchronisée avec paymentCountries.ts du backend (2024-01-19)
+// IMPORTANT: Si vous modifiez cette liste, mettez également à jour:
+// - sos/firebase/functions/src/lib/paymentCountries.ts (backend)
 const PAYPAL_ONLY_COUNTRIES = new Set([
   // AFRIQUE (54 pays)
   "DZ", "AO", "BJ", "BW", "BF", "BI", "CM", "CV", "CF", "TD", "KM", "CG", "CD",
@@ -28,12 +30,12 @@ const PAYPAL_ONLY_COUNTRIES = new Set([
   "LS", "LR", "LY", "MG", "MW", "ML", "MR", "MU", "MA", "MZ", "NA", "NE", "NG",
   "RW", "ST", "SN", "SC", "SL", "SO", "ZA", "SS", "SD", "TZ", "TG", "TN", "UG",
   "ZM", "ZW",
-  // ASIE (35 pays)
-  "AF", "BD", "BT", "IN", "KH", "LA", "MM", "NP", "PK", "LK", "TJ", "TM", "UZ",
-  "VN", "MN", "KP", "KG", "PS", "YE", "OM", "QA", "KW", "BH", "JO", "LB", "AM",
+  // ASIE (38 pays) - P0-2 FIX: Ajout CN, KZ, TR qui manquaient
+  "AF", "BD", "BT", "CN", "IN", "KH", "KZ", "LA", "MM", "NP", "PK", "LK", "TJ", "TM", "TR", "UZ", "VN",
+  "MN", "KP", "KG", "PS", "YE", "OM", "QA", "KW", "BH", "JO", "LB", "AM",
   "AZ", "GE", "MV", "BN", "TL", "PH", "ID", "TW", "KR",
-  // AMERIQUE LATINE & CARAIBES (25 pays)
-  "BO", "CU", "EC", "SV", "GT", "HN", "NI", "PY", "SR", "VE", "HT", "DO", "JM",
+  // AMERIQUE LATINE & CARAIBES (27 pays) - P0-2 FIX: Ajout AR, CO qui manquaient
+  "AR", "BO", "CO", "CU", "EC", "SV", "GT", "HN", "NI", "PY", "SR", "VE", "HT", "DO", "JM",
   "TT", "BB", "BS", "BZ", "GY", "PA", "CR", "AG", "DM", "GD", "KN", "LC", "VC",
   // EUROPE DE L'EST & BALKANS (14 pays) - GI est dans Stripe
   "BY", "MD", "UA", "RS", "BA", "MK", "ME", "AL", "XK", "RU", "AD", "MC",
