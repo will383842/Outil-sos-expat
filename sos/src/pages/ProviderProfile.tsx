@@ -1513,17 +1513,20 @@ const ProviderProfile: React.FC = () => {
     };
   }, [realProviderId]);
 
-  // P0 FIX: Utiliser busyReason du provider au lieu de requêter call_sessions
-  // Cela évite les erreurs de permissions pour les visiteurs non-participants
+  // P0 FIX: Vérifier availability ET busyReason pour cohérence avec ProfileCards
+  // Cela évite les faux positifs si busyReason reste coincé après un appel terminé
   useEffect(() => {
     if (!provider) {
       setIsOnCall(false);
       return;
     }
-    // Le champ busyReason est mis à jour par Cloud Functions (TwilioCallManager)
-    // quand un appel commence/finit via setProviderBusy/setProviderAvailable
-    setIsOnCall(provider.busyReason === 'in_call');
-  }, [provider?.busyReason]);
+    // Le prestataire est considéré en appel SEULEMENT si:
+    // 1. availability === 'busy' (vérifié par ProfileCards)
+    // 2. ET busyReason === 'in_call' (raison spécifique)
+    // Cela assure la cohérence entre ProfileCards et ProviderProfile
+    const isTrulyOnCall = provider.availability === 'busy' && provider.busyReason === 'in_call';
+    setIsOnCall(isTrulyOnCall);
+  }, [provider?.availability, provider?.busyReason]);
 
   useEffect(() => {
     if (realProviderId && provider) {
