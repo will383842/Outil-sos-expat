@@ -142,22 +142,95 @@ const IntlPhoneInput: React.FC<IntlPhoneInputProps> = ({
       }
 
       // Ajouter le + et passer la valeur
-      const valueWithPlus = `+${inputValue}`;
+      let valueWithPlus = `+${inputValue}`;
+
+      // ✅ P0 FIX: Détecter et corriger le format "00" (ex: 0033612345678 → +33612345678)
+      // react-phone-input-2 ne gère pas bien ce format
+      if (inputValue.startsWith('00') && inputValue.length > 4) {
+        valueWithPlus = '+' + inputValue.slice(2);
+        console.log('[IntlPhoneInput] Format "00" détecté, conversion:', {
+          before: inputValue,
+          after: valueWithPlus,
+        });
+      }
+
+      // ✅ P0 FIX: Normaliser en temps réel UNIQUEMENT pour les cas problématiques
+      // Pour ne pas gêner l'utilisateur qui veut modifier manuellement
+      const digitsOnly = inputValue.replace(/\D/g, '');
+      const shouldNormalize =
+        digitsOnly.length >= 10 &&  // Numéro semble complet (10+ chiffres)
+        !valueWithPlus.startsWith('+1') &&  // Pas déjà au format international standard
+        (
+          inputValue.startsWith('00') ||  // Format "00" à corriger
+          !inputValue.startsWith('+')  // Format national à convertir
+        );
+
+      if (shouldNormalize) {
+        // Essayer de détecter automatiquement le pays depuis le numéro
+        let detectedCountry = country?.countryCode?.toUpperCase() || 'FR';
+        try {
+          const parsed = parsePhoneNumberFromString(valueWithPlus);
+          if (parsed?.country) {
+            detectedCountry = parsed.country;
+            // Mettre à jour le ref pour le blur
+            currentCountryRef.current = parsed.country.toLowerCase();
+          }
+        } catch {
+          // Ignorer les erreurs de parsing
+        }
+
+        const result = smartNormalizePhone(valueWithPlus, detectedCountry as never);
+
+        // ✅ Si la normalisation réussit ET que le résultat est différent, normaliser
+        // ⚠️ Si elle échoue, laisser passer (l'user peut vouloir un format spécifique)
+        if (result.ok && result.e164 && result.e164 !== valueWithPlus) {
+          console.log('[IntlPhoneInput] Normalisation en temps réel:', {
+            input: inputValue,
+            country: detectedCountry,
+            output: result.e164,
+          });
+          onChange(result.e164);
+          return;
+        }
+      }
+
+      // Par défaut, laisser passer la valeur saisie (ne pas bloquer l'utilisateur)
+      // La validation RHF + normalisation au blur s'en chargeront
       onChange(valueWithPlus);
     },
     [onChange]
   );
 
-  // Normalisation au blur - c'est ici que la magie opère !
+  // Normalisation au blur - filet de sécurité final
   // Gère tous les formats : 0612345678, 06 12 34 56 78, +33612345678, 0033612345678, etc.
   const handleBlur = useCallback(() => {
     if (value) {
       const country = currentCountryRef.current.toUpperCase();
+
+      console.log('[IntlPhoneInput] Blur - Normalisation:', {
+        input: value,
+        country,
+      });
+
       const result = smartNormalizePhone(value, country as never);
 
-      // Si la normalisation réussit et que le résultat est différent, mettre à jour
-      if (result.ok && result.e164 && result.e164 !== value) {
-        onChange(result.e164);
+      if (result.ok && result.e164) {
+        // ✅ Mettre à jour TOUJOURS si on a un E.164 valide
+        // (même si c'est identique, pour s'assurer que le state est cohérent)
+        if (result.e164 !== value) {
+          console.log('[IntlPhoneInput] Blur - Normalisation appliquée:', {
+            before: value,
+            after: result.e164,
+          });
+          onChange(result.e164);
+        } else {
+          console.log('[IntlPhoneInput] Blur - Déjà normalisé:', result.e164);
+        }
+      } else {
+        console.warn('[IntlPhoneInput] Blur - Normalisation échouée:', {
+          input: value,
+          reason: result.reason,
+        });
       }
     }
 

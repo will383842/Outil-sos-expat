@@ -70,6 +70,7 @@ import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { createBookingRequest } from "../services/booking";
 // ✅ composant RHF pour le téléphone
 import PhoneField from "@/components/PhoneField";
+import { smartNormalizePhone } from "@/utils/phone";
 import { FormattedMessage, useIntl } from "react-intl";
 import IntlPhoneInput from "@/components/forms-data/IntlPhoneInput";
 import { trackMetaLead, trackMetaInitiateCheckout } from "@/utils/metaPixel";
@@ -2469,8 +2470,45 @@ const BookingRequest: React.FC = () => {
         ? state.autrePays
         : state.currentCountry) ?? "N/A";
 
+    // ✅ P0 FIX: Normaliser le téléphone en E.164 avant soumission
+    // Gère tous les formats: 070000000, +33700000000, 0033700000000, etc.
+    // Détecte automatiquement le pays depuis le numéro ou utilise FR par défaut
+    let defaultCountry = 'FR';
+    try {
+      // Si le numéro a déjà un indicatif, extraire le pays pour la normalisation
+      const parsed = parsePhoneNumberFromString(state.clientPhone);
+      if (parsed?.country) {
+        defaultCountry = parsed.country;
+      }
+    } catch {
+      // Ignorer les erreurs, utiliser FR par défaut
+    }
+
+    const phoneResult = smartNormalizePhone(state.clientPhone, defaultCountry as any);
+
+    // ⚠️ Si la normalisation échoue, utiliser le numéro tel quel (fallback)
+    // L'utilisateur peut avoir un cas edge case ou vouloir forcer un format spécifique
+    let finalPhone = state.clientPhone;
+
+    if (phoneResult.ok && phoneResult.e164) {
+      // ✅ Normalisation réussie, utiliser le E.164
+      finalPhone = phoneResult.e164;
+      console.log('[BookingRequest] ✅ Téléphone normalisé:', {
+        input: state.clientPhone,
+        output: phoneResult.e164,
+      });
+    } else {
+      // ⚠️ Normalisation échouée, utiliser le numéro tel quel
+      console.warn('[BookingRequest] ⚠️ Normalisation échouée, utilisation du numéro brut:', {
+        input: state.clientPhone,
+        reason: phoneResult.reason,
+      });
+      // Note: Le numéro sera quand même validé par RHF avant d'arriver ici
+      // donc il devrait être au moins parseable
+    }
+
     const bookingRequest: BookingRequestData = {
-      clientPhone: state.clientPhone,
+      clientPhone: finalPhone,
       clientId: currentUser?.uid || "",
       clientName:
         `${sanitizeInput(state.firstName)} ${sanitizeInput(state.lastName)}`.trim(),
