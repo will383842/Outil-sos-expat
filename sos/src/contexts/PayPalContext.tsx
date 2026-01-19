@@ -29,8 +29,8 @@ export const PayPalProvider: React.FC<PayPalProviderProps> = ({ children }) => {
     clientId: clientId || "test",
     currency: "EUR",
     intent: "capture",
-    components: "buttons",
-    "disable-funding": "credit,card", // On veut le bouton PayPal principal
+    components: "buttons,card-fields", // Boutons PayPal + champs carte directement sur la page
+    "disable-funding": "credit", // Désactive seulement le crédit PayPal, pas les cartes
   }), [clientId]);
 
   const contextValue = useMemo(() => ({
