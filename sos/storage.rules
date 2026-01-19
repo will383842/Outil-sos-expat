@@ -1,45 +1,6 @@
 rules_version = '2';
 
 // ==========================================
-// FIRESTORE DATABASE RULES
-// ==========================================
-service cloud.firestore {
-  match /databases/{database}/documents {
-    
-    // Helper function : vérifier si l'utilisateur est admin
-    function isAdmin() {
-      return request.auth != null && 
-             request.auth.token.role == 'admin';
-    }
-    
-    // Collection de tracking du contenu utilisé (bios, reviews)
-    match /aaa_used_content/{documentId} {
-      // Lecture : Admins seulement
-      allow get, list: if isAdmin();
-      
-      // Écriture : Admins seulement avec validation de structure
-      allow create: if isAdmin() && 
-                       request.resource.data.keys().hasAll(['type', 'langCode', 'usedAt']) &&
-                       request.resource.data.type in ['bio', 'review'];
-      
-      // Pas de mise à jour ni suppression (données append-only)
-      allow update, delete: if false;
-    }
-    
-    // ================= FAQ COLLECTION =================
-    match /faqs/{faqId} {
-      // Read: Everyone can read active FAQs
-      allow read: if resource.data.isActive == true;
-      
-      // Write: Only admins
-      allow create, update, delete: if isAdmin();
-    }
-    
-    // ... ajoutez vos autres règles Firestore existantes ici ...
-  }
-}
-
-// ==========================================
 // FIREBASE STORAGE RULES
 // ==========================================
 service firebase.storage {
@@ -47,24 +8,24 @@ service firebase.storage {
     function isAuthenticated() {
       return request.auth != null;
     }
-    
+
     function isAdmin() {
       return request.auth != null && request.auth.token.role == 'admin';
     }
-    
+
     function isDevMode() {
-      return exists(/databases/(default)/documents/settings/env) && 
+      return exists(/databases/(default)/documents/settings/env) &&
              get(/databases/(default)/documents/settings/env).data.mode == 'dev';
     }
-    
+
     function isValidFileSize() {
       return request.resource != null && request.resource.size < 15 * 1024 * 1024;
     }
-    
+
     function isImage() {
       return request.resource != null && request.resource.contentType.matches('image/.*');
     }
-    
+
     function isValidDocumentType() {
       return request.resource != null && request.resource.contentType in [
         'application/pdf', 'image/jpeg', 'image/png', 'image/webp',
