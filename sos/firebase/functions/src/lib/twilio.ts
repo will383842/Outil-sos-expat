@@ -254,6 +254,80 @@ export const TWILIO_PHONE_NUMBER_SECRET = TWILIO_PHONE_NUMBER;
  * @param res - La reponse Express (pour renvoyer 403 si invalide)
  * @returns true si la signature est valide, false sinon
  */
+// P0 FIX: Twilio IP ranges for webhook validation
+// Source: https://www.twilio.com/docs/usage/security#validating-requests
+// These are Twilio's signaling IP ranges that send webhooks
+// Last updated: 2026-01-18
+const TWILIO_IP_RANGES = [
+  // US cluster (us1)
+  '54.172.60.0/23',
+  '54.244.51.0/24',
+  '54.171.127.192/26',
+  '52.215.127.0/24',
+  '54.65.63.192/26',
+  '54.169.127.128/26',
+  '54.252.254.64/26',
+  '177.71.206.192/26',
+  // EU/Ireland cluster
+  '34.203.250.0/23',
+  '168.86.128.0/18',
+  // Ashburn cluster
+  '34.226.36.32/27',
+  '54.152.60.64/27',
+];
+
+/**
+ * P0 FIX: Check if an IP address is within Twilio's known IP ranges
+ * Uses CIDR notation matching
+ */
+function isIpInCidrRange(ip: string, cidr: string): boolean {
+  try {
+    const [range, bits] = cidr.split('/');
+    const mask = -1 << (32 - parseInt(bits, 10));
+
+    const ipParts = ip.split('.').map(Number);
+    const rangeParts = range.split('.').map(Number);
+
+    const ipNum = (ipParts[0] << 24) + (ipParts[1] << 16) + (ipParts[2] << 8) + ipParts[3];
+    const rangeNum = (rangeParts[0] << 24) + (rangeParts[1] << 16) + (rangeParts[2] << 8) + rangeParts[3];
+
+    return (ipNum & mask) === (rangeNum & mask);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * P0 FIX: Check if request is from a known Twilio IP
+ */
+function isFromTwilioIp(req: Request): boolean {
+  // Get the client IP from various headers (Cloud Run/Firebase sets these)
+  const forwardedFor = req.headers['x-forwarded-for'] as string;
+  const clientIp = forwardedFor?.split(',')[0]?.trim() ||
+    req.headers['x-real-ip'] as string ||
+    req.socket?.remoteAddress ||
+    req.ip;
+
+  if (!clientIp) {
+    console.warn('[TWILIO_VALIDATION] Could not determine client IP');
+    return false;
+  }
+
+  // Remove IPv6 prefix if present (::ffff:192.168.1.1 -> 192.168.1.1)
+  const normalizedIp = clientIp.replace(/^::ffff:/, '');
+
+  // Check if IP is in any of Twilio's ranges
+  const isInTwilioRange = TWILIO_IP_RANGES.some(range => isIpInCidrRange(normalizedIp, range));
+
+  if (isInTwilioRange) {
+    console.log(`[TWILIO_VALIDATION] IP ${normalizedIp} is in Twilio IP range ✓`);
+  } else {
+    console.warn(`[TWILIO_VALIDATION] IP ${normalizedIp} is NOT in known Twilio IP ranges`);
+  }
+
+  return isInTwilioRange;
+}
+
 export function validateTwilioWebhookSignature(
   req: Request,
   res?: Response
@@ -264,17 +338,16 @@ export function validateTwilioWebhookSignature(
     return true;
   }
 
-  // P0 CRITICAL FIX: Temporarily disable cryptographic signature validation
-  // because Firebase Functions v2 uses Cloud Run URLs that don't match
-  // the URLs Twilio uses to calculate signatures.
+  // P0 CRITICAL FIX: Multi-layer validation since cryptographic signature
+  // validation doesn't work with Cloud Run URLs
   //
-  // URL mismatch:
-  // - Twilio sends to: https://twiliocallwebhook-xxx-ew.a.run.app
-  // - Headers show: https://europe-west1-project.cloudfunctions.net/
-  //
-  // Basic security checks instead:
-  // 1. Check for Twilio signature header (proves it's from Twilio infrastructure)
+  // Security layers:
+  // 1. Check for Twilio signature header (proves intent to send as Twilio)
   // 2. Check for AccountSid in body (proves it's our account)
+  // 3. Check IP is from Twilio's known ranges (proves infrastructure)
+  //
+  // Note: Cryptographic validation is still disabled due to URL mismatch.
+  // To enable, configure Cloud Run with custom domain matching Twilio's config.
 
   const twilioSignature = req.headers["x-twilio-signature"] as string;
   if (!twilioSignature) {
@@ -296,7 +369,28 @@ export function validateTwilioWebhookSignature(
     return false;
   }
 
-  console.log("[TWILIO_VALIDATION] Basic validation passed (signature header present, AccountSid matches)");
+  // P0 FIX: Additional IP-based validation (monitoring mode - log but don't block)
+  // Blocking mode was too strict and could reject legitimate webhooks if:
+  // - Twilio adds new IP ranges not in our list
+  // - Cloud Run proxy masks the source IP
+  // - X-Forwarded-For headers are not properly transmitted
+  const ipValid = isFromTwilioIp(req);
+  if (!ipValid) {
+    // MONITORING MODE: Log warning but allow through since other checks passed
+    // (X-Twilio-Signature header present + AccountSid matches)
+    console.warn("[TWILIO_VALIDATION] ⚠️ Request NOT from known Twilio IP range");
+    console.warn("[TWILIO_VALIDATION] Allowing through because signature header + AccountSid are valid");
+    console.warn("[TWILIO_VALIDATION] If this happens frequently, consider updating TWILIO_IP_RANGES");
+    // To enable strict blocking, uncomment below:
+    // if (res) res.status(403).send("Forbidden: Invalid source IP");
+    // return false;
+  }
+
+  console.log("[TWILIO_VALIDATION] Validation passed:", {
+    hasSignatureHeader: true,
+    accountSidMatches: true,
+    fromTwilioIp: ipValid,
+  });
   console.log("[TWILIO_VALIDATION] NOTE: Full cryptographic validation disabled due to Cloud Run URL mismatch");
   return true;
 }

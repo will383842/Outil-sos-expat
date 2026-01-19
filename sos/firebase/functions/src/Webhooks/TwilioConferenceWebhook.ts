@@ -110,8 +110,12 @@ export const twilioConferenceWebhook = onRequest(
           });
         });
       } catch (txError) {
+        // P1-3 FIX: Don't treat transaction errors as duplicates!
+        // Transaction errors (contention, timeout, network) are NOT the same as legitimate duplicates.
+        // Return 500 so Twilio retries the webhook instead of losing the event.
         console.error(`🎤 [${confWebhookId}] ❌ Transaction error for webhook idempotency: ${txError}`);
-        res.status(200).send('OK - transaction error, treated as duplicate');
+        console.error(`🎤 [${confWebhookId}] ⚠️ Returning 500 to trigger Twilio retry (was incorrectly returning 200 before)`);
+        res.status(500).send('Transaction error - please retry');
         return;
       }
 
@@ -403,6 +407,8 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
           console.log(`🏁 [${endId}]   ✅ ForceEndCall task cancelled: ${forceEndCallTaskId}`);
         } catch (cancelError) {
           console.warn(`🏁 [${endId}]   ⚠️ Failed to cancel forceEndCall task:`, cancelError);
+          // P2-1: Log non-critical errors for monitoring
+          await logError('TwilioConferenceWebhook:cancelForceEndCallTask', { sessionId, forceEndCallTaskId, error: cancelError });
           // Non-critical, continue
         }
       }
@@ -441,7 +447,9 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
       const firstDisconnectedAt = Math.min(clientDisconnectTime, providerDisconnectTime);
 
       // billingDuration = time when BOTH were connected simultaneously
-      billingDuration = Math.max(0, Math.floor((firstDisconnectedAt - bothConnectedAt) / 1000));
+      // P0 FIX: Use Math.round instead of Math.floor to prevent edge case
+      // where 119.9s rounds down to 119s and triggers refund instead of capture
+      billingDuration = Math.max(0, Math.round((firstDisconnectedAt - bothConnectedAt) / 1000));
 
       console.log(`🏁 [${endId}]   📊 BILLING DURATION CALCULATION (P0 FIX 2026-01-18):`);
       console.log(`🏁 [${endId}]     clientConnectedAt: ${new Date(clientConnectedTime).toISOString()}`);
@@ -760,6 +768,8 @@ async function handleParticipantJoin(sessionId: string, body: TwilioConferenceWe
         });
       } catch (taskError) {
         console.warn(`👋 [${joinId}]   ⚠️ Failed to schedule forceEndCall task:`, taskError);
+        // P2-1: Log non-critical errors for monitoring
+        await logError('TwilioConferenceWebhook:scheduleForceEndCallTask', { sessionId, error: taskError });
         // Non-critical, continue
       }
 
@@ -911,7 +921,8 @@ async function handleParticipantLeave(sessionId: string, body: TwilioConferenceW
       const endTime = leaveTime.getTime();
 
       // billingDuration = time from when both connected until now
-      billingDuration = Math.max(0, Math.floor((endTime - bothConnectedAt) / 1000));
+      // P0 FIX: Use Math.round instead of Math.floor to prevent edge case
+      billingDuration = Math.max(0, Math.round((endTime - bothConnectedAt) / 1000));
 
       console.log(`👋 [${leaveId}]   📊 BILLING DURATION (P0 FIX 2026-01-18):`);
       console.log(`👋 [${leaveId}]     clientConnectedAt: ${new Date(clientConnectedTime).toISOString()}`);

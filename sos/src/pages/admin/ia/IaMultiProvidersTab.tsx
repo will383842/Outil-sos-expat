@@ -23,7 +23,15 @@ import {
   Star,
   Loader2,
   Scale,
-  Globe
+  Globe,
+  Phone,
+  PhoneOff,
+  ToggleLeft,
+  ToggleRight,
+  AlertTriangle,
+  Clock,
+  Activity,
+  Trash2
 } from 'lucide-react';
 import {
   collection,
@@ -36,7 +44,8 @@ import {
   query,
   limit,
 } from 'firebase/firestore';
-import { db } from '../../../config/firebase';
+import { db, functions } from '../../../config/firebase';
+import { httpsCallable } from 'firebase/functions';
 import { useAdminReferenceData } from '../../../hooks/useAdminReferenceData';
 import { cn } from '../../../utils/cn';
 
@@ -50,6 +59,13 @@ interface Provider {
   email: string;
   type: 'lawyer' | 'expat';
   isActive: boolean;
+  // 🆕 Status fields
+  availability: 'available' | 'busy' | 'offline';
+  isOnline: boolean;
+  busyReason?: string;
+  busyBySibling?: boolean;
+  busySiblingProviderId?: string;
+  currentCallSessionId?: string;
 }
 
 interface MultiProviderAccount {
@@ -58,6 +74,10 @@ interface MultiProviderAccount {
   displayName: string;
   providers: Provider[];
   activeProviderId?: string;
+  // 🆕 Busy status sharing
+  shareBusyStatus: boolean;
+  // 🆕 Conflict detection
+  conflictWarning?: string;
 }
 
 interface AvailableProvider {
@@ -72,6 +92,12 @@ interface AvailableUser {
   name: string;
   email: string;
   linkedProviderIds: string[];
+  shareBusyStatus: boolean;
+}
+
+// 🆕 Track which providers are linked to multiple accounts (conflict detection)
+interface ProviderLinkageMap {
+  [providerId: string]: string[]; // providerId -> array of userIds
 }
 
 // ============================================================================
@@ -101,6 +127,13 @@ export const IaMultiProvidersTab: React.FC = () => {
   const [selectedProviderId, setSelectedProviderId] = useState('');
   const [modalSearch, setModalSearch] = useState('');
 
+  // Cleanup state
+  const [cleanupRunning, setCleanupRunning] = useState(false);
+  const [cleanupStats, setCleanupStats] = useState<{
+    orphanedLinks: number;
+    staleBusy: number;
+  } | null>(null);
+
   // ============================================================================
   // DATA LOADING
   // ============================================================================
@@ -124,6 +157,9 @@ export const IaMultiProvidersTab: React.FC = () => {
       const providersList: AvailableProvider[] = [];
       const usersList: AvailableUser[] = [];
 
+      // 🆕 Build conflict detection map: which providers are linked to which users
+      const providerLinkageMap: ProviderLinkageMap = {};
+
       // D'abord, collecter tous les prestataires disponibles from cache
       profilesMap.forEach((profile) => {
         providersList.push({
@@ -133,6 +169,19 @@ export const IaMultiProvidersTab: React.FC = () => {
           type: profile.type
         });
       });
+
+      // 🆕 First pass: build the linkage map for conflict detection
+      for (const docSnap of usersSnap.docs) {
+        const data = docSnap.data();
+        const linkedIds: string[] = data.linkedProviderIds || [];
+
+        for (const pid of linkedIds) {
+          if (!providerLinkageMap[pid]) {
+            providerLinkageMap[pid] = [];
+          }
+          providerLinkageMap[pid].push(docSnap.id);
+        }
+      }
 
       // Ensuite, construire les comptes
       for (const docSnap of usersSnap.docs) {
@@ -144,7 +193,8 @@ export const IaMultiProvidersTab: React.FC = () => {
           id: docSnap.id,
           name: data.displayName || `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'N/A',
           email: data.email || '',
-          linkedProviderIds: linkedIds
+          linkedProviderIds: linkedIds,
+          shareBusyStatus: data.shareBusyStatus === true // 🆕
         });
 
         // Ne garder dans "accounts" que les comptes avec au moins 1 prestataire lié
@@ -160,7 +210,14 @@ export const IaMultiProvidersTab: React.FC = () => {
               name: cachedProfile.displayName || 'N/A',
               email: cachedProfile.email || '',
               type: cachedProfile.type,
-              isActive: data.activeProviderId === pid
+              isActive: data.activeProviderId === pid,
+              // 🆕 Status fields from profile
+              availability: cachedProfile.availability || 'offline',
+              isOnline: cachedProfile.isOnline === true,
+              busyReason: cachedProfile.busyReason,
+              busyBySibling: cachedProfile.busyBySibling === true,
+              busySiblingProviderId: cachedProfile.busySiblingProviderId,
+              currentCallSessionId: cachedProfile.currentCallSessionId
             });
           } else {
             // Fallback: chercher dans usersMap (cache)
@@ -171,9 +228,28 @@ export const IaMultiProvidersTab: React.FC = () => {
                 name: cachedUser.displayName || 'N/A',
                 email: cachedUser.email || '',
                 type: cachedUser.type === 'expat_aidant' ? 'expat' : 'lawyer',
-                isActive: data.activeProviderId === pid
+                isActive: data.activeProviderId === pid,
+                // 🆕 Status fields from user
+                availability: cachedUser.availability || 'offline',
+                isOnline: cachedUser.isOnline === true,
+                busyReason: cachedUser.busyReason,
+                busyBySibling: cachedUser.busyBySibling === true,
+                busySiblingProviderId: cachedUser.busySiblingProviderId,
+                currentCallSessionId: cachedUser.currentCallSessionId
               });
             }
+          }
+        }
+
+        // 🆕 Check for conflict: any provider linked to multiple accounts?
+        let conflictWarning: string | undefined;
+        for (const pid of linkedIds) {
+          const linkedTo = providerLinkageMap[pid] || [];
+          if (linkedTo.length > 1) {
+            const otherAccounts = linkedTo.filter(uid => uid !== docSnap.id);
+            const providerName = providers.find(p => p.id === pid)?.name || pid;
+            conflictWarning = `⚠️ "${providerName}" est aussi lié à ${otherAccounts.length} autre(s) compte(s)`;
+            break; // Show first conflict only
           }
         }
 
@@ -182,7 +258,9 @@ export const IaMultiProvidersTab: React.FC = () => {
           email: data.email || '',
           displayName: data.displayName || `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'N/A',
           providers,
-          activeProviderId: data.activeProviderId
+          activeProviderId: data.activeProviderId,
+          shareBusyStatus: data.shareBusyStatus === true, // 🆕
+          conflictWarning // 🆕
         });
       }
 
@@ -309,6 +387,102 @@ export const IaMultiProvidersTab: React.FC = () => {
     }
   };
 
+  // 🆕 Toggle shareBusyStatus for an account
+  const toggleShareBusyStatus = async (account: MultiProviderAccount) => {
+    setSaving(account.userId);
+    const newValue = !account.shareBusyStatus;
+
+    try {
+      await updateDoc(doc(db, 'users', account.userId), {
+        shareBusyStatus: newValue,
+        updatedAt: serverTimestamp()
+      });
+
+      setAccounts(prev => prev.map(a => {
+        if (a.userId !== account.userId) return a;
+        return { ...a, shareBusyStatus: newValue };
+      }));
+
+      setSuccess(newValue
+        ? '✅ Synchronisation du statut activée - tous les prestataires liés seront marqués occupés ensemble'
+        : '⚠️ Synchronisation désactivée - chaque prestataire garde son propre statut'
+      );
+      setTimeout(() => setSuccess(null), 4000);
+    } catch (err) {
+      console.error('Error toggling shareBusyStatus:', err);
+      setError('Erreur lors de la modification');
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  // 🆕 Force a provider to busy or available status
+  const forceProviderStatus = async (
+    providerId: string,
+    newStatus: 'available' | 'busy',
+    reason?: string
+  ) => {
+    setSaving(providerId);
+    const now = serverTimestamp();
+
+    try {
+      const updateData = newStatus === 'busy'
+        ? {
+            availability: 'busy',
+            isOnline: true,
+            busyReason: reason || 'manually_disabled',
+            busySince: now,
+            lastStatusChange: now,
+            updatedAt: now
+          }
+        : {
+            availability: 'available',
+            isOnline: true,
+            busyReason: null,
+            busySince: null,
+            busyBySibling: null,
+            busySiblingProviderId: null,
+            busySiblingCallSessionId: null,
+            currentCallSessionId: null,
+            lastStatusChange: now,
+            updatedAt: now
+          };
+
+      // Update both users and sos_profiles collections
+      await Promise.all([
+        updateDoc(doc(db, 'users', providerId), updateData),
+        updateDoc(doc(db, 'sos_profiles', providerId), updateData).catch(() => {
+          // Profile might not exist, ignore
+        })
+      ]);
+
+      // Update local state
+      setAccounts(prev => prev.map(a => ({
+        ...a,
+        providers: a.providers.map(p => {
+          if (p.id !== providerId) return p;
+          return {
+            ...p,
+            availability: newStatus,
+            isOnline: true,
+            busyReason: newStatus === 'busy' ? (reason || 'manually_disabled') : undefined,
+            busyBySibling: false,
+            busySiblingProviderId: undefined,
+            currentCallSessionId: undefined
+          };
+        })
+      })));
+
+      setSuccess(`Statut forcé: ${newStatus === 'busy' ? 'Occupé' : 'Disponible'}`);
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      console.error('Error forcing provider status:', err);
+      setError('Erreur lors du changement de statut');
+    } finally {
+      setSaving(null);
+    }
+  };
+
   // ============================================================================
   // MODAL
   // ============================================================================
@@ -327,6 +501,85 @@ export const IaMultiProvidersTab: React.FC = () => {
     setSelectedProviderId('');
     setModalStep(1);
     setModalSearch('');
+  };
+
+  // ============================================================================
+  // ORPHAN CLEANUP
+  // ============================================================================
+
+  // 🆕 Check for orphaned providers (dry run)
+  const checkOrphans = async () => {
+    setCleanupRunning(true);
+    setError(null);
+
+    try {
+      const getStats = httpsCallable<void, {
+        totalUsers: number;
+        usersWithOrphans: number;
+        totalOrphanedLinks: number;
+        orphanedActiveProviders: number;
+        staleBusySiblings: number;
+        orphanedProviderIds: string[];
+      }>(functions, 'adminGetOrphanedProvidersStats');
+
+      const result = await getStats();
+      const data = result.data;
+
+      setCleanupStats({
+        orphanedLinks: data.totalOrphanedLinks,
+        staleBusy: data.staleBusySiblings,
+      });
+
+      if (data.totalOrphanedLinks > 0 || data.staleBusySiblings > 0) {
+        setSuccess(`Trouvé: ${data.totalOrphanedLinks} liens orphelins, ${data.staleBusySiblings} statuts busy obsolètes`);
+      } else {
+        setSuccess('Aucun orphelin trouvé - Tout est propre!');
+      }
+    } catch (err) {
+      console.error('Error checking orphans:', err);
+      setError(err instanceof Error ? err.message : 'Erreur lors de la vérification');
+    } finally {
+      setCleanupRunning(false);
+    }
+  };
+
+  // 🆕 Run cleanup (actually remove orphans)
+  const runCleanup = async () => {
+    if (!confirm('Êtes-vous sûr de vouloir nettoyer les prestataires orphelins? Cette action est irréversible.')) {
+      return;
+    }
+
+    setCleanupRunning(true);
+    setError(null);
+
+    try {
+      const cleanup = httpsCallable<{ dryRun?: boolean }, {
+        success: boolean;
+        usersScanned: number;
+        usersFixed: number;
+        orphanedLinksRemoved: number;
+        staleBusyStatusCleared: number;
+        activeProviderReset: number;
+        errors: number;
+      }>(functions, 'adminCleanupOrphanedProviders');
+
+      const result = await cleanup({ dryRun: false });
+      const data = result.data;
+
+      if (data.success) {
+        setSuccess(`Nettoyage terminé: ${data.orphanedLinksRemoved} liens orphelins supprimés, ${data.staleBusyStatusCleared} statuts busy réinitialisés`);
+        setCleanupStats(null);
+        // Reload data to reflect changes
+        await loadData();
+      } else {
+        setError(`Nettoyage partiel: ${data.errors} erreur(s) rencontrée(s)`);
+      }
+    } catch (err) {
+      console.error('Error running cleanup:', err);
+      setError(err instanceof Error ? err.message : 'Erreur lors du nettoyage');
+    } finally {
+      setCleanupRunning(false);
+    }
   };
 
   // ============================================================================
@@ -385,9 +638,36 @@ export const IaMultiProvidersTab: React.FC = () => {
             onClick={() => loadData()}
             disabled={loading}
             className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+            title="Rafraîchir"
           >
             <RefreshCw className={cn("w-5 h-5", loading && "animate-spin")} />
           </button>
+
+          {/* Cleanup button */}
+          <div className="relative group">
+            <button
+              onClick={cleanupStats ? runCleanup : checkOrphans}
+              disabled={cleanupRunning}
+              className={cn(
+                "flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm",
+                cleanupStats
+                  ? "bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400"
+              )}
+              title={cleanupStats ? "Nettoyer les orphelins" : "Vérifier les orphelins"}
+            >
+              {cleanupRunning ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Trash2 className="w-4 h-4" />
+              )}
+              {cleanupStats ? (
+                <span>{cleanupStats.orphanedLinks + cleanupStats.staleBusy} orphelins</span>
+              ) : (
+                <span className="hidden sm:inline">Orphelins</span>
+              )}
+            </button>
+          </div>
 
           <button
             onClick={() => openModal()}
@@ -482,6 +762,51 @@ export const IaMultiProvidersTab: React.FC = () => {
                     </button>
                   </div>
                 </div>
+
+                {/* 🆕 shareBusyStatus Toggle & Conflict Warning */}
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  {/* Share Busy Status Toggle */}
+                  <button
+                    onClick={() => toggleShareBusyStatus(account)}
+                    disabled={saving === account.userId}
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
+                      account.shareBusyStatus
+                        ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
+                        : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-600"
+                    )}
+                    title={account.shareBusyStatus
+                      ? "Synchronisation activée: tous les prestataires liés sont marqués occupés ensemble"
+                      : "Synchronisation désactivée: chaque prestataire a son propre statut"
+                    }
+                  >
+                    {account.shareBusyStatus ? (
+                      <ToggleRight className="w-4 h-4" />
+                    ) : (
+                      <ToggleLeft className="w-4 h-4" />
+                    )}
+                    <span>Sync statut busy</span>
+                    {account.shareBusyStatus && <Check className="w-3 h-3" />}
+                  </button>
+
+                  {/* Conflict Warning */}
+                  {account.conflictWarning && (
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 rounded-lg text-xs">
+                      <AlertTriangle className="w-3.5 h-3.5" />
+                      <span>{account.conflictWarning}</span>
+                    </div>
+                  )}
+
+                  {/* Status Summary */}
+                  {account.providers.some(p => p.availability === 'busy') && (
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-lg text-xs">
+                      <Phone className="w-3.5 h-3.5" />
+                      <span>
+                        {account.providers.filter(p => p.availability === 'busy').length} occupé(s)
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Providers List */}
@@ -490,59 +815,133 @@ export const IaMultiProvidersTab: React.FC = () => {
                   <div
                     key={provider.id}
                     className={cn(
-                      "p-4 flex items-center justify-between",
-                      provider.isActive && "bg-green-50 dark:bg-green-900/10"
+                      "p-4",
+                      provider.isActive && "bg-green-50 dark:bg-green-900/10",
+                      provider.availability === 'busy' && !provider.isActive && "bg-red-50/50 dark:bg-red-900/5"
                     )}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={cn(
-                        "w-8 h-8 rounded-full flex items-center justify-center",
-                        provider.type === 'lawyer'
-                          ? "bg-purple-100 dark:bg-purple-900/30"
-                          : "bg-blue-100 dark:bg-blue-900/30"
-                      )}>
-                        {provider.type === 'lawyer' ? (
-                          <Scale className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                        ) : (
-                          <Globe className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                        )}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-gray-900 dark:text-white">
-                            {provider.name}
-                          </span>
-                          {provider.isActive && (
-                            <span className="flex items-center gap-1 px-1.5 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded">
-                              <Star className="w-3 h-3" />
-                              Actif
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {/* Provider Type Icon with Status Indicator */}
+                        <div className="relative">
+                          <div className={cn(
+                            "w-8 h-8 rounded-full flex items-center justify-center",
+                            provider.type === 'lawyer'
+                              ? "bg-purple-100 dark:bg-purple-900/30"
+                              : "bg-blue-100 dark:bg-blue-900/30"
+                          )}>
+                            {provider.type === 'lawyer' ? (
+                              <Scale className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                            ) : (
+                              <Globe className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                            )}
+                          </div>
+                          {/* Online/Offline indicator dot */}
+                          <div className={cn(
+                            "absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-gray-800",
+                            provider.availability === 'busy' ? "bg-red-500" :
+                            provider.isOnline ? "bg-green-500" : "bg-gray-400"
+                          )} />
+                        </div>
+
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-gray-900 dark:text-white">
+                              {provider.name}
                             </span>
+                            {provider.isActive && (
+                              <span className="flex items-center gap-1 px-1.5 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded">
+                                <Star className="w-3 h-3" />
+                                Actif
+                              </span>
+                            )}
+                            {/* 🆕 Status Badge */}
+                            {provider.availability === 'busy' && (
+                              <span className={cn(
+                                "flex items-center gap-1 px-1.5 py-0.5 text-xs rounded",
+                                provider.busyBySibling
+                                  ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"
+                                  : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+                              )}>
+                                <Phone className="w-3 h-3" />
+                                {provider.busyBySibling ? 'Occupé (sibling)' : 'Occupé'}
+                              </span>
+                            )}
+                            {provider.availability === 'available' && provider.isOnline && (
+                              <span className="flex items-center gap-1 px-1.5 py-0.5 text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded">
+                                <Activity className="w-3 h-3" />
+                                Disponible
+                              </span>
+                            )}
+                            {!provider.isOnline && provider.availability !== 'busy' && (
+                              <span className="flex items-center gap-1 px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded">
+                                Hors ligne
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {provider.email || provider.id}
+                          </p>
+                          {/* 🆕 Busy reason details */}
+                          {provider.availability === 'busy' && provider.busyReason && (
+                            <p className="text-xs text-red-500 dark:text-red-400 mt-0.5 flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              Raison: {provider.busyReason === 'in_call' ? 'En appel' :
+                                       provider.busyReason === 'sibling_in_call' ? 'Collègue en appel' :
+                                       provider.busyReason === 'manually_disabled' ? 'Désactivé manuellement' :
+                                       provider.busyReason}
+                              {provider.busySiblingProviderId && (
+                                <span className="text-gray-400">
+                                  (par {account.providers.find(p => p.id === provider.busySiblingProviderId)?.name || provider.busySiblingProviderId})
+                                </span>
+                              )}
+                            </p>
                           )}
                         </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {provider.email || provider.id}
-                        </p>
                       </div>
-                    </div>
 
-                    <div className="flex items-center gap-2">
-                      {!provider.isActive && (
+                      <div className="flex items-center gap-2">
+                        {/* 🆕 Force Status Buttons */}
+                        {provider.availability === 'busy' ? (
+                          <button
+                            onClick={() => forceProviderStatus(provider.id, 'available')}
+                            disabled={saving === provider.id}
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg hover:bg-emerald-200 dark:hover:bg-emerald-900/50 disabled:opacity-50"
+                            title="Forcer le statut disponible"
+                          >
+                            <PhoneOff className="w-3.5 h-3.5" />
+                            Libérer
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => forceProviderStatus(provider.id, 'busy', 'manually_disabled')}
+                            disabled={saving === provider.id}
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900/30 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 disabled:opacity-50"
+                            title="Forcer le statut occupé"
+                          >
+                            <Phone className="w-3.5 h-3.5" />
+                            Bloquer
+                          </button>
+                        )}
+
+                        {!provider.isActive && (
+                          <button
+                            onClick={() => setActiveProvider(account, provider.id)}
+                            disabled={saving === account.userId}
+                            className="px-3 py-1.5 text-xs font-medium text-blue-700 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 disabled:opacity-50"
+                          >
+                            Activer
+                          </button>
+                        )}
                         <button
-                          onClick={() => setActiveProvider(account, provider.id)}
+                          onClick={() => unlinkProvider(account, provider.id)}
                           disabled={saving === account.userId}
-                          className="px-3 py-1.5 text-xs font-medium text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-900/30 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 disabled:opacity-50"
+                          className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
+                          title="Délier ce prestataire"
                         >
-                          Activer
+                          <Unlink className="w-4 h-4" />
                         </button>
-                      )}
-                      <button
-                        onClick={() => unlinkProvider(account, provider.id)}
-                        disabled={saving === account.userId}
-                        className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
-                        title="Délier ce prestataire"
-                      >
-                        <Unlink className="w-4 h-4" />
-                      </button>
+                      </div>
                     </div>
                   </div>
                 ))}

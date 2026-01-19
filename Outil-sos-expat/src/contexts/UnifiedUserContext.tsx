@@ -67,6 +67,12 @@ export interface ProviderProfile {
   aiCallsLimit?: number;
   aiCallsUsed?: number;
   aiQuota?: number; // Legacy field
+  // 🆕 Busy status fields for multi-provider sync
+  availability?: "available" | "busy" | "offline";
+  isOnline?: boolean;
+  busyReason?: string;
+  busyBySibling?: boolean;
+  busySiblingProviderId?: string;
 }
 
 export interface SubscriptionInfo {

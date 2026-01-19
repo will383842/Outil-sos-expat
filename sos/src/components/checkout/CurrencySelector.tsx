@@ -24,13 +24,19 @@ export const CurrencySelector: React.FC<CurrencySelectorProps> = ({
   } | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // P0-9 FIX: Ajout du check isMounted pour éviter le memory leak
   useEffect(() => {
+    let isMounted = true;
+
     const loadPrices = async () => {
       try {
         const [eurConfig, usdConfig] = await Promise.all([
           getServicePricing(serviceType, 'eur'),
           getServicePricing(serviceType, 'usd')
         ]);
+
+        // P0-9 FIX: Ne pas faire setState si le composant est démonté
+        if (!isMounted) return;
 
         setPrices({
           eur: { total: eurConfig.totalAmount, fee: eurConfig.connectionFeeAmount },
@@ -39,11 +45,16 @@ export const CurrencySelector: React.FC<CurrencySelectorProps> = ({
       } catch (error) {
         console.error('Erreur chargement prix:', error);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     loadPrices();
+
+    // P0-9 FIX: Cleanup function pour marquer le composant comme démonté
+    return () => {
+      isMounted = false;
+    };
   }, [serviceType]);
 
   if (loading || !prices) {

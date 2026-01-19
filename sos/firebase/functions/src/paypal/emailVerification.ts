@@ -18,12 +18,14 @@
 
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { defineSecret } from "firebase-functions/params";
 import nodemailer from "nodemailer";
 
-// Secrets pour l'envoi d'email
-const EMAIL_USER = defineSecret("EMAIL_USER");
-const EMAIL_PASS = defineSecret("EMAIL_PASS");
+// P0-10 FIX: Import depuis lib/secrets.ts centralisé au lieu de defineSecret() local
+// Cela évite les conflits de binding Firebase v2
+import { EMAIL_USER, EMAIL_PASS, EMAIL_SECRETS } from "../lib/secrets";
+
+// P0-8 FIX: Import pour masquer les données sensibles dans les logs
+import { maskEmail } from "../utils/logs/maskSensitiveData";
 
 // Configuration
 const VERIFICATION_CONFIG = {
@@ -196,7 +198,8 @@ async function sendVerificationEmail(
     html: template.html,
   });
 
-  console.log(`[PAYPAL_VERIFY] Email sent to ${email}`);
+  // P0-8 FIX: Masquer l'email dans les logs
+  console.log(`[PAYPAL_VERIFY] Email sent to ${maskEmail(email)}`);
 }
 
 /**
@@ -206,7 +209,7 @@ export const sendPayPalVerificationCode = onCall(
   {
     region: "europe-west1",
     memory: "256MiB",
-    secrets: [EMAIL_USER, EMAIL_PASS],
+    secrets: EMAIL_SECRETS, // P0-10 FIX: Utiliser l'array centralisé
   },
   async (request) => {
     const auth = request.auth;
@@ -228,7 +231,8 @@ export const sendPayPalVerificationCode = onCall(
       now.toMillis() - 60 * 60 * 1000
     );
 
-    console.log(`[PAYPAL_VERIFY] Request from ${userId} for email ${normalizedEmail}`);
+    // P0-8 FIX: Masquer l'email dans les logs
+    console.log(`[PAYPAL_VERIFY] Request from ${userId} for email ${maskEmail(normalizedEmail)}`);
 
     // Rate limiting: vérifier le nombre de codes envoyés dans l'heure
     const recentCodes = await db
@@ -319,7 +323,8 @@ export const sendPayPalVerificationCode = onCall(
       timestamp: now,
     });
 
-    console.log(`[PAYPAL_VERIFY] Code sent successfully to ${normalizedEmail}`);
+    // P0-8 FIX: Masquer l'email dans les logs
+    console.log(`[PAYPAL_VERIFY] Code sent successfully to ${maskEmail(normalizedEmail)}`);
 
     return {
       success: true,
@@ -499,7 +504,8 @@ export const verifyPayPalCode = onCall(
       createdAt: now,
     });
 
-    console.log(`[PAYPAL_VERIFY] Email ${normalizedEmail} verified for ${userId}`);
+    // P0-8 FIX: Masquer l'email dans les logs
+    console.log(`[PAYPAL_VERIFY] Email ${maskEmail(normalizedEmail)} verified for ${userId}`);
 
     return {
       success: true,
@@ -516,7 +522,7 @@ export const resendPayPalVerificationCode = onCall(
   {
     region: "europe-west1",
     memory: "256MiB",
-    secrets: [EMAIL_USER, EMAIL_PASS],
+    secrets: EMAIL_SECRETS, // P0-10 FIX: Utiliser l'array centralisé
   },
   async (request) => {
     // Même logique que sendPayPalVerificationCode
@@ -631,7 +637,8 @@ export const resendPayPalVerificationCode = onCall(
       timestamp: now,
     });
 
-    console.log(`[PAYPAL_VERIFY] Code resent to ${normalizedEmail}`);
+    // P0-8 FIX: Masquer l'email dans les logs
+    console.log(`[PAYPAL_VERIFY] Code resent to ${maskEmail(normalizedEmail)}`);
 
     return {
       success: true,

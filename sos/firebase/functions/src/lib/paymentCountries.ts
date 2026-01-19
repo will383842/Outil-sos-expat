@@ -81,13 +81,15 @@ export const PAYPAL_ONLY_COUNTRIES = new Set([
   "RW", "ST", "SN", "SC", "SL", "SO", "ZA", "SS", "SD", "TZ", "TG", "TN", "UG",
   "ZM", "ZW",
 
-  // ===== ASIE (35 pays - non couverts par Stripe) =====
-  "AF", "BD", "BT", "IN", "KH", "LA", "MM", "NP", "PK", "LK", "TJ", "TM", "UZ", "VN",
+  // ===== ASIE (38 pays - non couverts par Stripe) =====
+  // P1-1 FIX: Ajout CN (Chine), TR (Turquie), KZ (Kazakhstan) qui manquaient
+  "AF", "BD", "BT", "CN", "IN", "KH", "KZ", "LA", "MM", "NP", "PK", "LK", "TJ", "TM", "TR", "UZ", "VN",
   "MN", "KP", "KG", "PS", "YE", "OM", "QA", "KW", "BH", "JO", "LB", "AM", "AZ", "GE",
   "MV", "BN", "TL", "PH", "ID", "TW", "KR",
 
-  // ===== AMERIQUE LATINE & CARAIBES (25 pays) =====
-  "BO", "CU", "EC", "SV", "GT", "HN", "NI", "PY", "SR", "VE",
+  // ===== AMERIQUE LATINE & CARAIBES (27 pays) =====
+  // P1-1 FIX: Ajout AR (Argentine) et CO (Colombie) qui manquaient
+  "AR", "BO", "CO", "CU", "EC", "SV", "GT", "HN", "NI", "PY", "SR", "VE",
   "HT", "DO", "JM", "TT", "BB", "BS", "BZ", "GY", "PA", "CR",
   "AG", "DM", "GD", "KN", "LC", "VC",
 

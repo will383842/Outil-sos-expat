@@ -32,10 +32,12 @@ const CLOUD_TASKS_PAYOUT_QUEUE = defineString("CLOUD_TASKS_PAYOUT_QUEUE", { defa
 const FUNCTIONS_BASE_URL_PARAM = defineString("FUNCTIONS_BASE_URL");
 
 // Configuration des retries
+// P0-5 FIX: Augmenté MAX_RETRIES de 3 à 8 pour plus de robustesse
+// Timeline: 5min → 7.5min → 11min → 17min → 25min → 38min → 57min → 85min (~3h total)
 const PAYOUT_RETRY_CONFIG = {
-  MAX_RETRIES: 3,
-  INITIAL_DELAY_SECONDS: 5 * 60, // 5 minutes
-  BACKOFF_MULTIPLIER: 2, // Délai doublé à chaque retry (5min, 10min, 20min)
+  MAX_RETRIES: 8,                     // P0-5 FIX: Augmenté de 3 à 8
+  INITIAL_DELAY_SECONDS: 5 * 60,      // 5 minutes
+  BACKOFF_MULTIPLIER: 1.5,            // P0-5 FIX: Réduit de 2 à 1.5 pour étaler les retries
 };
 
 // Types
@@ -90,6 +92,36 @@ function getPayoutTasksConfig() {
 }
 
 /**
+ * CPU OPTIMIZATION: Check if a retry task is already scheduled for this payout
+ * Prevents cascade of duplicate retry tasks during payment failures
+ */
+async function isRetryAlreadyScheduled(orderId: string, currentRetryCount: number): Promise<boolean> {
+  try {
+    const db = admin.firestore();
+    const alertsSnapshot = await db
+      .collection("failed_payouts_alerts")
+      .where("orderId", "==", orderId)
+      .where("retryScheduled", "==", true)
+      .limit(1)
+      .get();
+
+    if (!alertsSnapshot.empty) {
+      const alert = alertsSnapshot.docs[0].data();
+      // If there's already a scheduled retry with same or higher count, skip
+      if (alert.retryCount >= currentRetryCount) {
+        console.log(`⚠️ [PayoutRetry] Dedup: Retry already scheduled for order ${orderId} (count: ${alert.retryCount})`);
+        return true;
+      }
+    }
+    return false;
+  } catch (error) {
+    // On error, allow scheduling (fail-open for payment retries)
+    console.warn(`⚠️ [PayoutRetry] Dedup check failed, allowing schedule: ${error}`);
+    return false;
+  }
+}
+
+/**
  * Programme une tâche de retry pour un payout échoué.
  * Utilise un backoff exponentiel pour les retries successifs.
  */
@@ -101,6 +133,12 @@ export async function schedulePayoutRetryTask(
     if (payload.retryCount >= PAYOUT_RETRY_CONFIG.MAX_RETRIES) {
       console.warn(`⚠️ [PayoutRetry] Max retries (${PAYOUT_RETRY_CONFIG.MAX_RETRIES}) reached for ${payload.failedPayoutAlertId}`);
       return { scheduled: false, error: "Max retries reached" };
+    }
+
+    // CPU OPTIMIZATION: Deduplication check to prevent cascade of retry tasks
+    const alreadyScheduled = await isRetryAlreadyScheduled(payload.orderId, payload.retryCount);
+    if (alreadyScheduled) {
+      return { scheduled: false, error: "Retry already scheduled (dedup)" };
     }
 
     const client = getTasksClient();

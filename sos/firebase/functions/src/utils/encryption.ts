@@ -157,8 +157,15 @@ export function isEncrypted(value: string): boolean {
 export function maskPhoneNumber(phoneNumber: string): string {
   if (!phoneNumber) return '';
 
-  // If encrypted, decrypt first
-  const decrypted = isEncrypted(phoneNumber) ? decrypt(phoneNumber) : phoneNumber;
+  // If encrypted, decrypt first with try-catch protection
+  let decrypted: string;
+  try {
+    decrypted = isEncrypted(phoneNumber) ? decrypt(phoneNumber) : phoneNumber;
+  } catch (error) {
+    // P1 FIX: Don't crash if decryption fails - return masked placeholder
+    logger.warn('[Encryption] maskPhoneNumber: decryption failed, using fallback mask', { error });
+    return '***-***-****';
+  }
 
   if (decrypted.length <= 4) return '****';
 
@@ -204,7 +211,13 @@ export function decryptFields<T extends Record<string, unknown>>(
   for (const field of fieldsToDecrypt) {
     const value = result[field];
     if (typeof value === 'string' && isEncrypted(value)) {
-      (result[field] as unknown) = decrypt(value);
+      try {
+        (result[field] as unknown) = decrypt(value);
+      } catch (error) {
+        // P1 FIX: Don't crash batch decryption - log and keep encrypted value
+        logger.warn(`[Encryption] decryptFields: failed to decrypt field '${String(field)}'`, { error });
+        // Keep original encrypted value to avoid data loss
+      }
     }
   }
 
@@ -220,8 +233,15 @@ export function decryptFields<T extends Record<string, unknown>>(
  * Used during key rotation
  */
 export function reEncrypt(encryptedValue: string, newKeyBase64: string): string {
-  // Decrypt with current key
-  const plaintext = decrypt(encryptedValue);
+  // P1 FIX: Wrap entire function in try-catch to handle decryption failures
+  let plaintext: string;
+  try {
+    // Decrypt with current key
+    plaintext = decrypt(encryptedValue);
+  } catch (error) {
+    logger.error('[Encryption] reEncrypt: failed to decrypt with current key', { error });
+    throw new Error('Failed to decrypt value for re-encryption');
+  }
 
   // Temporarily use new key
   const originalKey = encryptionKey;
@@ -231,6 +251,9 @@ export function reEncrypt(encryptedValue: string, newKeyBase64: string): string 
     // Encrypt with new key
     const newEncrypted = encrypt(plaintext);
     return newEncrypted;
+  } catch (error) {
+    logger.error('[Encryption] reEncrypt: failed to encrypt with new key', { error });
+    throw new Error('Failed to encrypt value with new key');
   } finally {
     // Restore original key
     encryptionKey = originalKey;

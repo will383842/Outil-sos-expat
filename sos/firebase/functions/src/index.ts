@@ -1294,6 +1294,17 @@ async function syncCallSessionToOutil(
       }
     }
 
+    // P1-1 FIX: Decrypt client phone before payload with try-catch
+    let decryptedClientPhone = cs?.clientPhone;
+    if (cs?.participants?.client?.phone) {
+      try {
+        decryptedClientPhone = decryptPhoneNumber(cs.participants.client.phone);
+      } catch (decryptError) {
+        console.error(`🔐❌ [${debugId}] Failed to decrypt client phone for Outil sync:`, decryptError);
+        // Fall back to raw clientPhone value
+      }
+    }
+
     // Build payload from call_session data
     const payload = {
       // Client info
@@ -1301,7 +1312,7 @@ async function syncCallSessionToOutil(
       clientLastName: cs?.participants?.client?.lastName || cs?.clientLastName,
       clientName: cs?.participants?.client?.name || cs?.clientName,
       clientEmail: cs?.participants?.client?.email || cs?.clientEmail,
-      clientPhone: cs?.participants?.client?.phone ? decryptPhoneNumber(cs.participants.client.phone) : cs?.clientPhone,
+      clientPhone: decryptedClientPhone,
       clientWhatsapp: cs?.clientWhatsapp,
       clientCurrentCountry: cs?.clientCurrentCountry,
       clientNationality: cs?.clientNationality,
@@ -1457,8 +1468,21 @@ const sendPaymentNotifications = traceFunction(
         cs?.participants?.client?.phone ?? cs?.clientPhone ?? "";
 
       // Decrypt phone numbers (they are stored encrypted for GDPR compliance)
-      const providerPhone = providerPhoneRaw ? decryptPhoneNumber(providerPhoneRaw) : "";
-      const clientPhone = clientPhoneRaw ? decryptPhoneNumber(clientPhoneRaw) : "";
+      // P1-1 FIX: Wrap decryption in try-catch to handle corrupted/invalid encrypted data
+      let providerPhone = "";
+      let clientPhone = "";
+      try {
+        providerPhone = providerPhoneRaw ? decryptPhoneNumber(providerPhoneRaw) : "";
+      } catch (decryptError) {
+        console.error(`🔐❌ [${debugId}] Failed to decrypt provider phone:`, decryptError);
+        // Continue without provider phone - notifications can still be sent via email/push
+      }
+      try {
+        clientPhone = clientPhoneRaw ? decryptPhoneNumber(clientPhoneRaw) : "";
+      } catch (decryptError) {
+        console.error(`🔐❌ [${debugId}] Failed to decrypt client phone:`, decryptError);
+        // Continue without client phone - notifications can still be sent via email/push
+      }
 
       const language = cs?.metadata?.clientLanguages?.[0] ?? "fr";
       const title = cs?.metadata?.title ?? cs?.title ?? "Consultation";
@@ -4471,6 +4495,12 @@ export {
   adminGetOrphanedSessionsStats,
 } from './callables/adminCleanupOrphanedSessions';
 
+// Fonctions admin pour nettoyage des prestataires orphelins (multi-provider system)
+export {
+  adminCleanupOrphanedProviders,
+  adminGetOrphanedProvidersStats,
+} from './callables/adminCleanupOrphanedProviders';
+
 // ========== ALERTES DISPONIBILITE PRESTATAIRES ==========
 export {
   checkLowProviderAvailability,
@@ -5316,3 +5346,11 @@ export const createUserDocument = onCall(
     }
   )
 );
+
+// ========== P1-4 & P1-5: PAYPAL MAINTENANCE ==========
+// - cleanupUncapturedPayPalOrders: Nettoie les orders > 24h non capturés (toutes les 6h)
+// - sendPayoutSuccessEmail: Trigger email quand payout passe à SUCCESS
+export {
+  cleanupUncapturedPayPalOrders,
+  sendPayoutSuccessEmail,
+} from './scheduled/paypalMaintenance';

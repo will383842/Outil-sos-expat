@@ -2214,6 +2214,97 @@ async function verifyPayPalWebhookSignature(
 }
 
 /**
+ * P0-4 FIX: Helper pour gérer les échecs de payout
+ * Utilisé par les handlers PAYOUT.ITEM.* du webhook
+ */
+async function handlePayoutFailure(
+  db: admin.firestore.Firestore,
+  payoutItem: any,
+  status: string,
+  errorMessage: string
+): Promise<void> {
+  const payoutBatchId = payoutItem?.payout_batch_id;
+  if (!payoutBatchId) return;
+
+  // Mettre à jour le payout dans Firestore
+  const payoutQuery = await db.collection("paypal_payouts")
+    .where("payoutBatchId", "==", payoutBatchId)
+    .limit(1)
+    .get();
+
+  let providerId: string | null = null;
+  let amount: number | null = null;
+  let currency: string = "EUR";
+
+  if (!payoutQuery.empty) {
+    const payoutDoc = payoutQuery.docs[0];
+    const payoutData = payoutDoc.data();
+    providerId = payoutData?.providerId || null;
+    amount = payoutData?.amount || null;
+    currency = payoutData?.currency || "EUR";
+
+    await payoutDoc.ref.update({
+      status,
+      errorMessage,
+      failedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  }
+
+  // Créer une alerte pour intervention
+  await db.collection("admin_alerts").add({
+    type: `paypal_payout_${status.toLowerCase()}`,
+    priority: "critical",
+    title: `Payout PayPal ${status}`,
+    message: `Un payout de ${amount || 'N/A'} ${currency} a échoué: ${errorMessage}`,
+    payoutBatchId,
+    payoutItemId: payoutItem?.payout_item_id,
+    providerId,
+    errorMessage,
+    read: false,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  // Programmer un retry automatique si applicable
+  if (["FAILED", "BLOCKED", "RETURNED"].includes(status) && providerId) {
+    try {
+      const { schedulePayoutRetryTask } = await import("./lib/payoutRetryTasks");
+
+      // Créer une entrée dans failed_payouts_alerts
+      const alertRef = await db.collection("failed_payouts_alerts").add({
+        providerId,
+        payoutBatchId,
+        amount,
+        currency,
+        status: "pending",
+        error: errorMessage,
+        retryCount: 0,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      // Récupérer les infos nécessaires pour le retry
+      const payoutData = payoutQuery.docs[0]?.data();
+      if (payoutData?.callSessionId && payoutData?.providerPayPalEmail) {
+        await schedulePayoutRetryTask({
+          failedPayoutAlertId: alertRef.id,
+          orderId: payoutData.orderId || "",
+          callSessionId: payoutData.callSessionId,
+          providerId,
+          providerPayPalEmail: payoutData.providerPayPalEmail,
+          amount: amount || 0,
+          currency,
+          retryCount: 0,
+        });
+
+        console.log(`📋 [PAYPAL] P0-4 FIX: Retry scheduled for failed payout ${payoutBatchId}`);
+      }
+    } catch (retryError) {
+      console.error(`❌ [PAYPAL] P0-4 FIX: Error scheduling retry:`, retryError);
+    }
+  }
+}
+
+/**
  * Webhook PayPal
  */
 export const paypalWebhook = onRequest(
@@ -2600,6 +2691,215 @@ export const paypalWebhook = onRequest(
             });
           }
           break;
+
+        // ========== P0-4 FIX: HANDLERS PAYOUT.ITEM.* ==========
+        // Ces événements sont critiques pour le suivi des payouts vers les providers
+
+        case "PAYOUT.ITEM.SUCCEEDED":
+        case "PAYOUTS.ITEM.SUCCESS":
+          // Payout réussi
+          const successItem = event.resource;
+          console.log("✅ [PAYPAL] Payout succeeded:", successItem?.payout_item_id);
+
+          if (successItem?.payout_batch_id) {
+            // Mettre à jour le payout dans Firestore
+            const successQuery = await db.collection("paypal_payouts")
+              .where("payoutBatchId", "==", successItem.payout_batch_id)
+              .limit(1)
+              .get();
+
+            if (!successQuery.empty) {
+              const payoutDoc = successQuery.docs[0];
+              await payoutDoc.ref.update({
+                status: "SUCCESS",
+                transactionStatus: successItem.transaction_status || "SUCCESS",
+                transactionId: successItem.transaction_id,
+                completedAt: admin.firestore.FieldValue.serverTimestamp(),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              });
+
+              // Récupérer les infos du provider pour notification
+              const payoutData = payoutDoc.data();
+              if (payoutData?.providerId) {
+                // Notification au provider
+                await db.collection("notifications").add({
+                  userId: payoutData.providerId,
+                  type: "payout_success",
+                  title: "Paiement reçu",
+                  message: `Vous avez reçu ${payoutData.amount} ${payoutData.currency} sur votre compte PayPal.`,
+                  read: false,
+                  createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+              }
+            }
+          }
+          break;
+
+        case "PAYOUT.ITEM.BLOCKED":
+          // Payout bloqué - nécessite une vérification
+          const blockedItem = event.resource;
+          console.log("🚫 [PAYPAL] Payout BLOCKED:", blockedItem?.payout_item_id);
+
+          if (blockedItem?.payout_batch_id) {
+            await handlePayoutFailure(db, blockedItem, "BLOCKED", "Payout blocked by PayPal for review");
+          }
+          break;
+
+        case "PAYOUT.ITEM.CANCELED":
+          // Payout annulé
+          const canceledItem = event.resource;
+          console.log("❌ [PAYPAL] Payout CANCELED:", canceledItem?.payout_item_id);
+
+          if (canceledItem?.payout_batch_id) {
+            await handlePayoutFailure(db, canceledItem, "CANCELED", "Payout was canceled");
+          }
+          break;
+
+        case "PAYOUT.ITEM.DENIED":
+          // Payout refusé
+          const deniedItem = event.resource;
+          console.log("🚨 [PAYPAL] Payout DENIED:", deniedItem?.payout_item_id);
+
+          if (deniedItem?.payout_batch_id) {
+            await handlePayoutFailure(db, deniedItem, "DENIED", deniedItem?.errors?.[0]?.message || "Payout denied by PayPal");
+          }
+          break;
+
+        case "PAYOUT.ITEM.FAILED":
+          // Payout échoué
+          const failedItem = event.resource;
+          console.log("💥 [PAYPAL] Payout FAILED:", failedItem?.payout_item_id);
+
+          if (failedItem?.payout_batch_id) {
+            await handlePayoutFailure(db, failedItem, "FAILED", failedItem?.errors?.[0]?.message || "Payout failed");
+          }
+          break;
+
+        case "PAYOUT.ITEM.HELD":
+          // Payout en attente de vérification
+          const heldItem = event.resource;
+          console.log("⏸️ [PAYPAL] Payout HELD:", heldItem?.payout_item_id);
+
+          if (heldItem?.payout_batch_id) {
+            const heldQuery = await db.collection("paypal_payouts")
+              .where("payoutBatchId", "==", heldItem.payout_batch_id)
+              .limit(1)
+              .get();
+
+            if (!heldQuery.empty) {
+              await heldQuery.docs[0].ref.update({
+                status: "HELD",
+                heldReason: heldItem.errors?.[0]?.message || "Under review",
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              });
+            }
+
+            // Alerte admin
+            await db.collection("admin_alerts").add({
+              type: "paypal_payout_held",
+              priority: "high",
+              title: "Payout PayPal en attente",
+              message: `Un payout de ${heldItem.payout_item?.amount?.value || 'N/A'} est en attente de vérification PayPal.`,
+              payoutBatchId: heldItem.payout_batch_id,
+              payoutItemId: heldItem.payout_item_id,
+              read: false,
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+          }
+          break;
+
+        case "PAYOUT.ITEM.REFUNDED":
+          // Payout remboursé (rare)
+          const refundedItem = event.resource;
+          console.log("💸 [PAYPAL] Payout REFUNDED:", refundedItem?.payout_item_id);
+
+          if (refundedItem?.payout_batch_id) {
+            const refundQuery = await db.collection("paypal_payouts")
+              .where("payoutBatchId", "==", refundedItem.payout_batch_id)
+              .limit(1)
+              .get();
+
+            if (!refundQuery.empty) {
+              await refundQuery.docs[0].ref.update({
+                status: "REFUNDED",
+                refundedAt: admin.firestore.FieldValue.serverTimestamp(),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              });
+            }
+
+            // Alerte critique - rare mais important
+            await db.collection("admin_alerts").add({
+              type: "paypal_payout_refunded",
+              priority: "critical",
+              title: "🚨 Payout PayPal remboursé",
+              message: `Un payout a été remboursé. Vérification requise.`,
+              payoutBatchId: refundedItem.payout_batch_id,
+              read: false,
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+          }
+          break;
+
+        case "PAYOUT.ITEM.RETURNED":
+          // Payout retourné (email invalide, compte fermé, etc.)
+          const returnedItem = event.resource;
+          console.log("🔄 [PAYPAL] Payout RETURNED:", returnedItem?.payout_item_id);
+
+          if (returnedItem?.payout_batch_id) {
+            await handlePayoutFailure(db, returnedItem, "RETURNED", "Payout returned - recipient may have rejected or email is invalid");
+          }
+          break;
+
+        case "PAYOUT.ITEM.UNCLAIMED":
+          // Payout non réclamé (email non associé à un compte PayPal)
+          const unclaimedItem = event.resource;
+          console.log("📬 [PAYPAL] Payout UNCLAIMED:", unclaimedItem?.payout_item_id);
+
+          if (unclaimedItem?.payout_batch_id) {
+            const unclaimedQuery = await db.collection("paypal_payouts")
+              .where("payoutBatchId", "==", unclaimedItem.payout_batch_id)
+              .limit(1)
+              .get();
+
+            if (!unclaimedQuery.empty) {
+              const payoutDoc = unclaimedQuery.docs[0];
+              const payoutData = payoutDoc.data();
+
+              await payoutDoc.ref.update({
+                status: "UNCLAIMED",
+                unclaimedAt: admin.firestore.FieldValue.serverTimestamp(),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              });
+
+              // Notifier le provider qu'il doit créer/vérifier son compte PayPal
+              if (payoutData?.providerId) {
+                await db.collection("notifications").add({
+                  userId: payoutData.providerId,
+                  type: "payout_unclaimed",
+                  title: "Paiement en attente",
+                  message: `Un paiement de ${payoutData.amount} ${payoutData.currency} attend d'être réclamé. Vérifiez que votre email PayPal est correct et que votre compte est actif.`,
+                  read: false,
+                  createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+              }
+
+              // Alerte admin
+              await db.collection("admin_alerts").add({
+                type: "paypal_payout_unclaimed",
+                priority: "medium",
+                title: "Payout PayPal non réclamé",
+                message: `Un payout de ${payoutData?.amount || 'N/A'} ${payoutData?.currency || 'EUR'} n'a pas été réclamé. L'email PayPal est peut-être invalide.`,
+                payoutBatchId: unclaimedItem.payout_batch_id,
+                providerId: payoutData?.providerId,
+                providerEmail: payoutData?.providerPayPalEmail,
+                read: false,
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              });
+            }
+          }
+          break;
+
+        // ========== FIN P0-4 FIX ==========
 
         default:
           console.log("📋 [PAYPAL] Unhandled event type:", eventType);

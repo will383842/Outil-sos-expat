@@ -36,6 +36,13 @@ export interface UserReference {
   country: string;
   preferredLanguage: string;
   createdAt?: Date;
+  // Multi-provider status fields
+  availability?: 'available' | 'busy' | 'offline';
+  isOnline?: boolean;
+  busyReason?: string;
+  busyBySibling?: boolean;
+  busySiblingProviderId?: string;
+  currentCallSessionId?: string;
 }
 
 export interface ProfileReference {
@@ -48,6 +55,13 @@ export interface ProfileReference {
   isApproved: boolean;
   isVisible: boolean;
   createdAt?: Date;
+  // Multi-provider status fields
+  availability?: 'available' | 'busy' | 'offline';
+  isOnline?: boolean;
+  busyReason?: string;
+  busyBySibling?: boolean;
+  busySiblingProviderId?: string;
+  currentCallSessionId?: string;
 }
 
 export interface SubscriptionPlanReference {

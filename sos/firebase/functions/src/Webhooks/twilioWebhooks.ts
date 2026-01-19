@@ -156,9 +156,12 @@ export const twilioCallWebhook = onRequest(
           });
         });
       } catch (txError) {
+        // P1-3 FIX: Don't treat transaction errors as duplicates!
+        // Transaction errors (contention, timeout, network) are NOT the same as legitimate duplicates.
+        // Return 500 so Twilio retries the webhook instead of losing the event.
         console.error(`❌ Transaction error for webhook idempotency: ${txError}`);
-        // On transaction failure, treat as potentially duplicate to be safe
-        res.status(200).send('OK - transaction error, treated as duplicate');
+        console.error(`⚠️ Returning 500 to trigger Twilio retry (was incorrectly returning 200 before)`);
+        res.status(500).send('Transaction error - please retry');
         return;
       }
 
@@ -546,7 +549,9 @@ async function handleCallCompleted(
       // endTime = maintenant
       const endTime = Date.now();
 
-      billingDuration = Math.floor((endTime - bothConnectedAt) / 1000);
+      // P0 FIX: Use Math.round instead of Math.floor to prevent edge case
+      // where 119.9s rounds down to 119s and triggers refund instead of capture
+      billingDuration = Math.round((endTime - bothConnectedAt) / 1000);
 
       console.log(`🏁 [${completedId}] 📊 BILLING DURATION CALCULATION:`);
       console.log(`🏁 [${completedId}]   clientConnectedAt: ${new Date(clientConnectedAt).toISOString()}`);
@@ -752,13 +757,7 @@ async function handleCallFailed(
             return;
           }
 
-          // P2-2 FIX: Idempotency check - prevent double offline processing
-          if (session.metadata?.providerSetOffline) {
-            console.log(`[BONUS] Provider already set offline for session: ${sessionId}`);
-            return;
-          }
-
-          console.log(`[BONUS] Session définitivement échouée (status: ${session.status}), on peut mettre offline`);
+          console.log(`[BONUS] Session définitivement échouée (status: ${session.status}), checking if provider should be set offline`);
 
           const providerId = session.metadata?.providerId;
 
@@ -767,46 +766,71 @@ async function handleCallFailed(
             return;
           }
 
-          // Vérifier que le prestataire est bien en ligne avant de le déconnecter
-          const providerDoc = await db.collection('sos_profiles').doc(providerId).get();
-          const providerData = providerDoc.data();
+          console.log(`[BONUS] Attempting to set provider ${providerId} offline`);
+          prodLogger.info('PROVIDER_OFFLINE_PROCESSING', `Setting provider offline after no-answer`, { sessionId, providerId });
 
-          if (!providerData?.isOnline) {
-            console.log(`[BONUS] Prestataire ${providerId} déjà hors ligne, rien à faire`);
+          // P2-2 FIX: Use transaction for atomic read-then-write to prevent race condition
+          // This prevents double updates when both webhook and handleCallFailure try to set offline simultaneously
+          const sessionRef = db.collection('call_sessions').doc(sessionId);
+          const transactionResult = await db.runTransaction(async (transaction) => {
+            const sessionDoc = await transaction.get(sessionRef);
+            const sessionData = sessionDoc.data();
+
+            // Check if already processed (atomic read within transaction)
+            if (sessionData?.metadata?.providerSetOffline) {
+              console.log(`[BONUS] Provider already set offline by another process, skipping`);
+              return { wasSetOffline: false, preferredLanguage: 'fr' };
+            }
+
+            // Check if provider is still online
+            const providerRef = db.collection('sos_profiles').doc(providerId);
+            const providerDoc = await transaction.get(providerRef);
+            const providerData = providerDoc.data();
+
+            if (!providerData?.isOnline) {
+              console.log(`[BONUS] Prestataire ${providerId} déjà hors ligne, marking session only`);
+              // Still mark session as processed to prevent future attempts
+              transaction.update(sessionRef, {
+                'metadata.providerSetOffline': true,
+                'metadata.providerSetOfflineReason': 'provider_already_offline_webhook',
+                'metadata.providerSetOfflineAt': admin.firestore.FieldValue.serverTimestamp(),
+              });
+              return { wasSetOffline: false, preferredLanguage: providerData?.preferredLanguage || 'fr' };
+            }
+
+            // Update sos_profiles
+            transaction.update(providerRef, {
+              isOnline: false,
+              availability: 'offline',
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+
+            // Update users
+            transaction.update(db.collection('users').doc(providerId), {
+              isOnline: false,
+              availability: 'offline',
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+
+            // Mark session as processed (idempotency)
+            transaction.update(sessionRef, {
+              'metadata.providerSetOffline': true,
+              'metadata.providerSetOfflineReason': 'provider_no_answer_webhook',
+              'metadata.providerSetOfflineAt': admin.firestore.FieldValue.serverTimestamp(),
+            });
+
+            return { wasSetOffline: true, preferredLanguage: providerData?.preferredLanguage || 'fr' };
+          });
+
+          if (!transactionResult.wasSetOffline) {
+            console.log(`[BONUS] Provider ${providerId} was not set offline (already processed or already offline)`);
             return;
           }
 
-          console.log(`[BONUS] Mise hors ligne du prestataire: ${providerId}`);
-          prodLogger.info('PROVIDER_OFFLINE_PROCESSING', `Setting provider offline after no-answer`, { sessionId, providerId });
+          console.log(`[BONUS] Provider ${providerId} successfully set offline via transaction`);
 
-          // P2-2 FIX: Use batch for atomic updates across collections
-          const batch = db.batch();
-
-          // Update sos_profiles
-          batch.update(db.collection('sos_profiles').doc(providerId), {
-            isOnline: false,
-            availability: 'offline',
-            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-          });
-
-          // Update users
-          batch.update(db.collection('users').doc(providerId), {
-            isOnline: false,
-            availability: 'offline',
-            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-          });
-
-          // Mark session as processed (idempotency)
-          batch.update(db.collection('call_sessions').doc(sessionId), {
-            'metadata.providerSetOffline': true,
-            'metadata.providerSetOfflineAt': admin.firestore.FieldValue.serverTimestamp(),
-          });
-
-          // Commit all updates atomically
-          await batch.commit();
-          
-          // Récupérer la langue préférée pour la notification
-          const preferredLanguage = providerData?.preferredLanguage || 'fr';
+          // Récupérer la langue préférée pour la notification (from transaction result)
+          const preferredLanguage = transactionResult.preferredLanguage;
           
           // Messages multilingues
           const notificationMessages: Record<string, { title: string; message: string }> = {
@@ -1288,6 +1312,8 @@ export const twilioAmdTwiml = onRequest(
           }
         } catch (sessionError) {
           console.warn(`🎯 [${amdId}]   ⚠️ Could not check provider status:`, sessionError);
+          // P2-1: Log non-critical errors for monitoring
+          await logError('twilioWebhooks:amdCallback:checkProviderStatus', { sessionId, callSid, error: sessionError });
           // Continue processing - let the normal flow handle it
         }
       }
@@ -1342,6 +1368,8 @@ export const twilioAmdTwiml = onRequest(
               }
             } catch (sessionError) {
               console.warn(`🎯 [${amdId}]   ⚠️ Could not check client status:`, sessionError);
+              // P2-1: Log non-critical errors for monitoring
+              await logError('twilioWebhooks:amdCallback:checkClientStatus', { sessionId, callSid, error: sessionError });
             }
           }
 

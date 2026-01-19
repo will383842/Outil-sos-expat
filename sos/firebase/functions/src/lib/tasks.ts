@@ -46,6 +46,58 @@ const SET_PROVIDER_AVAILABLE_TASK_URL = defineString("SET_PROVIDER_AVAILABLE_TAS
 // Cooldown duration in seconds (5 minutes)
 const PROVIDER_COOLDOWN_SECONDS = 5 * 60;
 
+// P0 FIX: Retry configuration for Cloud Tasks creation
+const CLOUD_TASK_RETRY_CONFIG = {
+  maxRetries: 3,
+  initialDelayMs: 1000, // 1 second
+  maxDelayMs: 10000, // 10 seconds
+  backoffMultiplier: 2,
+};
+
+/**
+ * P0 FIX: Retry helper with exponential backoff
+ * Prevents silent failures when Cloud Tasks API is temporarily unavailable
+ */
+async function retryWithBackoff<T>(
+  operation: () => Promise<T>,
+  operationName: string,
+  debugId: string
+): Promise<T> {
+  let lastError: Error | null = null;
+  let delay = CLOUD_TASK_RETRY_CONFIG.initialDelayMs;
+
+  for (let attempt = 1; attempt <= CLOUD_TASK_RETRY_CONFIG.maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+
+      // Don't retry on certain errors (e.g., validation errors, not found)
+      const errorMessage = lastError.message.toLowerCase();
+      if (
+        errorMessage.includes('invalid') ||
+        errorMessage.includes('permission') ||
+        errorMessage.includes('not found') ||
+        errorMessage.includes('already exists')
+      ) {
+        console.error(`❌ [${debugId}] ${operationName} failed with non-retryable error: ${lastError.message}`);
+        throw lastError;
+      }
+
+      if (attempt < CLOUD_TASK_RETRY_CONFIG.maxRetries) {
+        console.warn(`⚠️ [${debugId}] ${operationName} attempt ${attempt}/${CLOUD_TASK_RETRY_CONFIG.maxRetries} failed: ${lastError.message}`);
+        console.warn(`⚠️ [${debugId}] Retrying in ${delay}ms...`);
+
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay = Math.min(delay * CLOUD_TASK_RETRY_CONFIG.backoffMultiplier, CLOUD_TASK_RETRY_CONFIG.maxDelayMs);
+      }
+    }
+  }
+
+  console.error(`❌ [${debugId}] ${operationName} failed after ${CLOUD_TASK_RETRY_CONFIG.maxRetries} attempts`);
+  throw lastError || new Error(`${operationName} failed after retries`);
+}
+
 // Récupère le projectId depuis l'environnement Functions (standard)
 function getProjectId(): string {
   return (
@@ -212,10 +264,15 @@ export async function scheduleCallTask(
       bodyLength: task.httpRequest.body.length
     });
 
-    // STEP 7: Create task in Cloud Tasks
-    console.log(`\n📋 [CloudTasks][${debugId}] STEP 7: Calling client.createTask()...`);
+    // STEP 7: Create task in Cloud Tasks (with retry)
+    console.log(`\n📋 [CloudTasks][${debugId}] STEP 7: Calling client.createTask() with retry...`);
     const createStart = Date.now();
-    const [response] = await client.createTask({ parent: queuePath, task });
+    // P0 FIX: Add retry with exponential backoff to prevent silent failures
+    const [response] = await retryWithBackoff(
+      () => client.createTask({ parent: queuePath, task }),
+      'createTask',
+      debugId
+    );
     const createDuration = Date.now() - createStart;
 
     console.log(`\n=======================================================================`);
@@ -493,22 +550,61 @@ export async function scheduleCallTaskWithIdempotence(
       }
     }
 
-    // Créer la tâche AVANT la mise à jour transactionnelle
-    const taskId = await scheduleCallTask(callSessionId, delaySeconds);
+    // Créer la tâche avec fallback en cas d'échec
+    let taskId: string;
+    let usedFallback = false;
+
+    try {
+      taskId = await scheduleCallTask(callSessionId, delaySeconds);
+    } catch (taskError) {
+      // P0 FIX: Fallback - appeler directement la fonction d'exécution si Cloud Task échoue
+      console.error(`❌ [CloudTasks] Cloud Task creation failed, using fallback: ${taskError}`);
+      prodLogger.error('CLOUD_TASKS_FALLBACK_TRIGGERED', `Cloud Task failed, executing call directly`, {
+        callSessionId,
+        delaySeconds,
+        error: taskError instanceof Error ? taskError.message : String(taskError)
+      });
+
+      // Appeler directement la fonction d'exécution d'appel (sans délai)
+      try {
+        const { beginOutboundCallForSession } = await import('../services/twilioCallManagerAdapter');
+        // Note: On appelle sans attendre pour ne pas bloquer la transaction
+        // L'appel sera exécuté immédiatement au lieu d'être retardé
+        setImmediate(async () => {
+          try {
+            console.log(`⚠️ [CloudTasks][FALLBACK] Executing call directly for ${callSessionId}`);
+            await beginOutboundCallForSession(callSessionId);
+            console.log(`✅ [CloudTasks][FALLBACK] Call executed successfully for ${callSessionId}`);
+          } catch (fallbackError) {
+            console.error(`❌ [CloudTasks][FALLBACK] Failed to execute call for ${callSessionId}:`, fallbackError);
+            await logError('scheduleCallTask:fallbackExecution', { callSessionId, error: fallbackError });
+          }
+        });
+
+        taskId = `fallback_${Date.now()}_${callSessionId.substring(0, 8)}`;
+        usedFallback = true;
+      } catch (importError) {
+        console.error(`❌ [CloudTasks] Fallback import failed:`, importError);
+        await logError('scheduleCallTask:fallbackImport', { callSessionId, error: importError });
+        throw new Error(`Cloud Task AND fallback failed for ${callSessionId}`);
+      }
+    }
 
     // Mise à jour atomique dans la transaction
     transaction.update(sessionRef, {
-      status: "scheduled",
+      status: usedFallback ? "fallback_executing" : "scheduled",
       taskId: taskId,
       scheduledTaskId: taskId,
       scheduledAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
+      ...(usedFallback ? { usedFallback: true, fallbackTriggeredAt: new Date() } : {})
     });
 
     prodLogger.info('CLOUD_TASKS_IDEMPOTENT_SUCCESS', `Task scheduled successfully via idempotent call`, {
       callSessionId,
       taskId,
-      delaySeconds
+      delaySeconds,
+      usedFallback
     });
 
     return { taskId, skipped: false };
@@ -546,7 +642,12 @@ export async function createTestTask(
           "X-Task-Auth": TASKS_AUTH_SECRET.value()},
         body: Buffer.from(JSON.stringify({ ...payload, taskId }))}};
 
-    const [response] = await client.createTask({ parent: queuePath, task });
+    // P0 FIX: Add retry with exponential backoff
+    const [response] = await retryWithBackoff(
+      () => client.createTask({ parent: queuePath, task }),
+      'createTestTask',
+      `test_${taskId}`
+    );
     console.log(`✅ [CloudTasks] Tâche de test créée: ${response.name}`);
     return taskId;
   } catch (error) {
@@ -647,7 +748,12 @@ export async function scheduleProviderAvailableTask(
     console.log(`📋 [ProviderCooldown][${debugId}] URL: ${taskUrl}`);
     console.log(`📋 [ProviderCooldown][${debugId}] Scheduled for: ${scheduleTime.toISOString()}`);
 
-    const [response] = await client.createTask({ parent: queuePath, task });
+    // P0 FIX: Add retry with exponential backoff
+    const [response] = await retryWithBackoff(
+      () => client.createTask({ parent: queuePath, task }),
+      'createProviderCooldownTask',
+      debugId
+    );
 
     console.log(`✅ [ProviderCooldown][${debugId}] Task created: ${response.name}`);
     console.log(`✅ [ProviderCooldown][${debugId}] Provider ${providerId} will be available at ${scheduleTime.toISOString()}`);
@@ -788,7 +894,12 @@ export async function scheduleForceEndCallTask(
     console.log(`📋 [ForceEndCall][${debugId}] URL: ${taskUrl}`);
     console.log(`📋 [ForceEndCall][${debugId}] Scheduled for: ${scheduleTime.toISOString()}`);
 
-    const [response] = await client.createTask({ parent: queuePath, task });
+    // P0 FIX: Add retry with exponential backoff
+    const [response] = await retryWithBackoff(
+      () => client.createTask({ parent: queuePath, task }),
+      'createForceEndCallTask',
+      debugId
+    );
 
     console.log(`✅ [ForceEndCall][${debugId}] Task created: ${response.name}`);
     console.log(`✅ [ForceEndCall][${debugId}] Session ${sessionId} will be force-ended at ${scheduleTime.toISOString()} if still active`);

@@ -81,8 +81,9 @@ const webhookHandlers: Record<string, WebhookHandler> = {
  */
 export const processWebhookDLQ = onSchedule(
   {
-    // 2025-01-16: Réduit à 1×/jour à 8h pour économies maximales (low traffic)
-    schedule: '0 8 * * *', // 8h Paris tous les jours
+    // P0-6 FIX: Augmenté à 1×/heure pour traiter les paiements échoués plus rapidement
+    // (était 1×/jour à 8h, inacceptable pour les paiements critiques)
+    schedule: '0 * * * *', // Toutes les heures
     region: 'europe-west1',
     timeZone: 'Europe/Paris',
     memory: '256MiB',
@@ -92,6 +93,25 @@ export const processWebhookDLQ = onSchedule(
     logger.info('[DLQ Processor] Starting DLQ processing...');
 
     try {
+      // CPU OPTIMIZATION: Quick count check before expensive query
+      // count() is much cheaper than fetching full documents
+      const now = admin.firestore.Timestamp.now();
+      const countSnapshot = await admin.firestore()
+        .collection('webhook_dlq')
+        .where('status', '==', 'pending')
+        .where('nextRetryAt', '<=', now)
+        .count()
+        .get();
+
+      const pendingCount = countSnapshot.data().count;
+
+      if (pendingCount === 0) {
+        logger.info('[DLQ Processor] No events to retry (quick count check) - skipping expensive operations');
+        return;
+      }
+
+      logger.info(`[DLQ Processor] Found ${pendingCount} pending events, fetching details...`);
+
       // Récupérer les événements à retenter
       const eventsToRetry = await getEventsToRetry(BATCH_SIZE);
 

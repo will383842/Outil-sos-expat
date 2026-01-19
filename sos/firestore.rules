@@ -100,10 +100,13 @@ service cloud.firestore {
       allow create: if (isAuthenticated() && isOwner(profileId) &&
                     !request.resource.data.keys().hasAny(['stripeAccountId', 'paypalMerchantId', 'stripeCustomerId']))
                     || isAdmin() || isDev();
+      // P0-1 SECURITY FIX: paypalEmailVerified et paypalEmailVerifiedAt sont protégés
+      // pour empêcher un provider de se marquer comme vérifié sans validation email
       allow update: if (isOwner(profileId) &&
                         !request.resource.data.diff(resource.data).affectedKeys()
                           .hasAny(['stripeAccountId', 'paypalMerchantId', 'stripeCustomerId',
-                                   'totalEarnings', 'totalPayPalEarnings', 'pendingBalance', 'reservedBalance']))
+                                   'totalEarnings', 'totalPayPalEarnings', 'pendingBalance', 'reservedBalance',
+                                   'paypalEmailVerified', 'paypalEmailVerifiedAt']))
                        || isAdmin() || isDev();
       allow delete: if isAdmin() || isDev();
 

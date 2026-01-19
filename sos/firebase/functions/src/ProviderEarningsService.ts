@@ -80,16 +80,24 @@ export class ProviderEarningsService {
 
   /**
    * Récupère le résumé des gains pour un provider
+   * CPU OPTIMIZATION: Added .limit() to prevent full collection scans
+   * For providers with very high call volumes, consider using pre-aggregated stats instead
    */
   async getEarningsSummary(providerId: string): Promise<EarningsSummary> {
     console.log("📊 [EARNINGS] Getting summary for provider:", providerId);
 
+    // CPU OPTIMIZATION: Limit queries to prevent excessive CPU usage
+    // 2000 sessions should cover ~3-4 years for most providers at 2 calls/day
+    const QUERY_LIMIT = 2000;
+
     try {
-      // Récupérer toutes les sessions avec paiement capturé
+      // Récupérer les sessions avec paiement capturé (with limit)
       const sessionsSnapshot = await this.db
         .collection("call_sessions")
         .where("providerId", "==", providerId)
         .where("payment.status", "in", ["captured", "succeeded"])
+        .orderBy("completedAt", "desc")
+        .limit(QUERY_LIMIT)
         .get();
 
       let totalEarnings = 0;
@@ -107,10 +115,11 @@ export class ProviderEarningsService {
         }
       });
 
-      // Récupérer les ajustements (disputes perdues, etc.)
+      // Récupérer les ajustements (disputes perdues, etc.) - CPU OPTIMIZED with limit
       const adjustmentsSnapshot = await this.db
         .collection("provider_balance_adjustments")
         .where("providerId", "==", providerId)
+        .limit(500) // Most providers have <100 adjustments
         .get();
 
       let adjustmentsTotal = 0;
@@ -120,10 +129,12 @@ export class ProviderEarningsService {
       });
 
       // Récupérer les transferts en attente (paiements autorisés mais pas encore capturés)
+      // CPU OPTIMIZED: Pending transfers should be few (< 50 at any time)
       const pendingTransfersSnapshot = await this.db
         .collection("call_sessions")
         .where("providerId", "==", providerId)
         .where("payment.status", "==", "authorized")
+        .limit(100)
         .get();
 
       let pendingEarnings = 0;
@@ -136,10 +147,12 @@ export class ProviderEarningsService {
 
       // ===== P1 FIX: Calculer les payouts déjà effectués =====
       // Récupérer les transferts/payouts déjà envoyés au provider
+      // CPU OPTIMIZED with limit
       const payoutsSnapshot = await this.db
         .collection("transfers")
         .where("providerId", "==", providerId)
         .where("status", "in", ["succeeded", "paid", "completed"])
+        .limit(QUERY_LIMIT)
         .get();
 
       let totalPayouts = 0;
@@ -150,11 +163,12 @@ export class ProviderEarningsService {
         totalPayouts += amountInEuros;
       });
 
-      // Récupérer également les PayPal payouts
+      // Récupérer également les PayPal payouts - CPU OPTIMIZED
       const paypalPayoutsSnapshot = await this.db
         .collection("paypal_payouts")
         .where("providerId", "==", providerId)
         .where("status", "in", ["SUCCESS", "PENDING", "UNCLAIMED"])
+        .limit(QUERY_LIMIT)
         .get();
 
       paypalPayoutsSnapshot.docs.forEach((doc) => {
@@ -162,12 +176,14 @@ export class ProviderEarningsService {
         totalPayouts += payout.amount || 0;
       });
 
-      // Récupérer les montants réservés (disputes en cours)
+      // Récupérer les montants réservés (disputes en cours) - CPU OPTIMIZED
+      // Active disputes should be very few at any time
       const reservedSnapshot = await this.db
         .collection("provider_balance_adjustments")
         .where("providerId", "==", providerId)
         .where("type", "==", "dispute_reserve")
         .where("status", "==", "active")
+        .limit(50)
         .get();
 
       let reservedAmount = 0;
@@ -418,6 +434,66 @@ export class ProviderEarningsService {
       return payouts;
     } catch (error) {
       console.error("❌ [EARNINGS] Error getting payout history:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * P0-3 FIX: Débite le solde du provider lors d'un remboursement
+   * Crée un enregistrement dans provider_balance_adjustments avec un montant négatif
+   */
+  async deductProviderBalance(params: {
+    providerId: string;
+    amount: number;
+    currency: string;
+    reason: string;
+    chargeId?: string;
+    callSessionId?: string;
+    refundId?: string;
+    metadata?: Record<string, any>;
+  }): Promise<string> {
+    const { providerId, amount, currency, reason, chargeId, callSessionId, refundId, metadata } = params;
+
+    console.log(`💸 [EARNINGS] P0-3 FIX: Deducting ${amount} ${currency} from provider ${providerId}`);
+
+    try {
+      const now = admin.firestore.Timestamp.now();
+
+      // Créer un ajustement négatif (débit)
+      const adjustmentRef = await this.db.collection("provider_balance_adjustments").add({
+        providerId,
+        type: "refund", // P0-3: Type spécifique pour les remboursements
+        amount: -Math.abs(amount), // Toujours négatif pour un débit
+        currency: currency.toUpperCase(),
+        status: "applied", // Appliqué immédiatement
+        reason,
+        description: `Remboursement: ${reason}`,
+        chargeId: chargeId || null,
+        callSessionId: callSessionId || null,
+        refundId: refundId || null,
+        metadata: metadata || {},
+        createdAt: now,
+        appliedAt: now,
+      });
+
+      console.log(`✅ [EARNINGS] P0-3 FIX: Balance adjustment created: ${adjustmentRef.id}`);
+
+      // Logger pour audit
+      await this.db.collection("provider_balance_audit").add({
+        providerId,
+        action: "refund_deduction",
+        adjustmentId: adjustmentRef.id,
+        amount: -Math.abs(amount),
+        currency: currency.toUpperCase(),
+        chargeId,
+        callSessionId,
+        refundId,
+        createdAt: now,
+      });
+
+      return adjustmentRef.id;
+    } catch (error) {
+      console.error(`❌ [EARNINGS] P0-3 FIX: Error deducting balance:`, error);
       throw error;
     }
   }

@@ -86,3 +86,6 @@ export {
   useNewAIResponses,
   type UnreadMessagesResult,
 } from "./useUnreadMessages";
+
+// Multi-provider notifications
+export { useSiblingStatusNotifications } from "./useSiblingStatusNotifications";

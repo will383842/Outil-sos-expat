@@ -40,6 +40,69 @@ interface CaptureOrderResponse {
   status: string;
 }
 
+// P1-3 FIX: Mapping des codes d'erreur PayPal vers des messages user-friendly
+const PAYPAL_ERROR_MESSAGES: Record<string, { fr: string; en: string }> = {
+  INSTRUMENT_DECLINED: {
+    fr: "Votre moyen de paiement a été refusé. Veuillez utiliser une autre carte ou un autre compte PayPal.",
+    en: "Your payment method was declined. Please use a different card or PayPal account.",
+  },
+  PAYER_ACTION_REQUIRED: {
+    fr: "Une action est requise sur votre compte PayPal. Veuillez vérifier votre compte et réessayer.",
+    en: "Action required on your PayPal account. Please check your account and try again.",
+  },
+  PAYER_CANNOT_PAY: {
+    fr: "Votre compte PayPal ne peut pas effectuer ce paiement. Veuillez contacter PayPal.",
+    en: "Your PayPal account cannot make this payment. Please contact PayPal.",
+  },
+  INVALID_CURRENCY: {
+    fr: "La devise de paiement n'est pas supportée. Veuillez utiliser EUR ou USD.",
+    en: "Payment currency not supported. Please use EUR or USD.",
+  },
+  DUPLICATE_INVOICE_ID: {
+    fr: "Cette transaction a déjà été traitée. Veuillez rafraîchir la page.",
+    en: "This transaction has already been processed. Please refresh the page.",
+  },
+  ORDER_NOT_APPROVED: {
+    fr: "La commande n'a pas été approuvée. Veuillez réessayer le paiement.",
+    en: "Order was not approved. Please try the payment again.",
+  },
+  AUTHORIZATION_VOIDED: {
+    fr: "L'autorisation de paiement a été annulée. Veuillez réessayer.",
+    en: "Payment authorization was voided. Please try again.",
+  },
+  INTERNAL_SERVER_ERROR: {
+    fr: "Erreur serveur PayPal. Veuillez réessayer dans quelques minutes.",
+    en: "PayPal server error. Please try again in a few minutes.",
+  },
+};
+
+function getPayPalErrorMessage(error: unknown, locale: string = "fr"): string {
+  const lang = locale.startsWith("en") ? "en" : "fr";
+
+  // Extraire le code d'erreur depuis l'objet d'erreur
+  let errorCode = "";
+  if (error && typeof error === "object") {
+    const err = error as Record<string, unknown>;
+    errorCode = (err.code as string) || (err.name as string) || "";
+
+    // Parfois l'erreur est dans err.details[0].issue
+    if (!errorCode && Array.isArray(err.details)) {
+      const detail = err.details[0] as Record<string, unknown>;
+      errorCode = (detail?.issue as string) || "";
+    }
+  }
+
+  const mapping = PAYPAL_ERROR_MESSAGES[errorCode];
+  if (mapping) {
+    return mapping[lang];
+  }
+
+  // Message par défaut
+  return lang === "fr"
+    ? "Une erreur est survenue lors du paiement. Veuillez réessayer."
+    : "An error occurred during payment. Please try again.";
+}
+
 export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   amount,
   currency,
@@ -56,6 +119,8 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   const [{ isPending, isRejected }] = usePayPalScriptReducer();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<"idle" | "processing" | "success" | "error">("idle");
+  // P1-3 FIX: State pour le message d'erreur user-friendly
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   // Get commission amounts from centralized admin_config/pricing (Firestore)
   const { pricing } = usePricingConfig();
@@ -103,6 +168,10 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
     } catch (error) {
       console.error("Erreur création ordre PayPal:", error);
       setPaymentStatus("error");
+      // P1-3 FIX: Message d'erreur user-friendly
+      setErrorMessage(getPayPalErrorMessage(error));
+      // P1-8 FIX: Reset isProcessing en cas d'erreur
+      setIsProcessing(false);
       throw error;
     }
   };
@@ -135,6 +204,8 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
     } catch (error) {
       console.error("Erreur capture PayPal:", error);
       setPaymentStatus("error");
+      // P1-3 FIX: Message d'erreur user-friendly
+      setErrorMessage(getPayPalErrorMessage(error));
       onError(error instanceof Error ? error : new Error("Erreur de paiement PayPal"));
     } finally {
       setIsProcessing(false);
@@ -144,8 +215,10 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   const handleError = (err: Record<string, unknown>) => {
     console.error("Erreur PayPal:", err);
     setPaymentStatus("error");
+    // P1-3 FIX: Message d'erreur user-friendly
+    setErrorMessage(getPayPalErrorMessage(err));
     setIsProcessing(false);
-    onError(new Error("Erreur lors du paiement PayPal"));
+    onError(new Error(getPayPalErrorMessage(err)));
   };
 
   const handleCancel = () => {
@@ -192,6 +265,48 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
             defaultMessage="Paiement effectué avec succès !"
           />
         </span>
+      </div>
+    );
+  }
+
+  // P0-2 FIX: Error state - afficher l'erreur à l'utilisateur
+  // P1-3 FIX: Utiliser le message d'erreur user-friendly
+  if (paymentStatus === "error") {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center p-4 bg-red-50 border border-red-200 rounded-lg">
+          <AlertCircle className="w-5 h-5 text-red-500 mr-3 flex-shrink-0" />
+          <div className="flex-1">
+            <span className="text-red-700 block font-medium">
+              <FormattedMessage
+                id="payment.paypal.error"
+                defaultMessage="Erreur de paiement"
+              />
+            </span>
+            {/* P1-3 FIX: Afficher le message d'erreur user-friendly */}
+            <span className="text-red-600 text-sm block mt-1">
+              {errorMessage || (
+                <FormattedMessage
+                  id="payment.paypal.errorRetry"
+                  defaultMessage="Veuillez réessayer ou utiliser un autre moyen de paiement."
+                />
+              )}
+            </span>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            setPaymentStatus("idle");
+            setErrorMessage(""); // Reset le message d'erreur
+          }}
+          className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+        >
+          <FormattedMessage
+            id="payment.paypal.retry"
+            defaultMessage="Réessayer"
+          />
+        </button>
       </div>
     );
   }

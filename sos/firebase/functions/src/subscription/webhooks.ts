@@ -2613,6 +2613,53 @@ export async function handleChargeRefunded(
       });
     }
 
+    // ========== P0-3 FIX: Débiter le solde du provider lors d'un remboursement ==========
+    // Le provider ne doit pas garder l'argent d'une consultation remboursée
+    if (providerId && refundedAmount > 0) {
+      try {
+        const { ProviderEarningsService } = await import('../ProviderEarningsService');
+        const earningsService = new ProviderEarningsService(db);
+
+        // Calculer le montant provider (généralement ~61% du total après frais plateforme)
+        // On utilise le même ratio que lors du paiement initial
+        const providerRefundAmount = refundedAmount * 0.61; // 39% frais plateforme
+
+        await earningsService.deductProviderBalance({
+          providerId,
+          amount: providerRefundAmount,
+          currency,
+          reason: `Remboursement ${isFullRefund ? 'total' : 'partiel'} - Charge ${charge.id}`,
+          chargeId: charge.id,
+          callSessionId: paymentId || undefined,
+          refundId: charge.refunds?.data?.[0]?.id,
+          metadata: {
+            totalRefundAmount: refundedAmount,
+            isFullRefund,
+            refundReason: charge.refunds?.data?.[0]?.reason || 'unknown',
+          },
+        });
+
+        logger.info(`[handleChargeRefunded] P0-3 FIX: Provider ${providerId} debited ${providerRefundAmount} ${currency}`);
+      } catch (deductError) {
+        // Ne pas faire échouer le webhook, mais logger et alerter
+        logger.error(`[handleChargeRefunded] P0-3 FIX: Error deducting provider balance:`, deductError);
+        await db.collection('admin_alerts').add({
+          type: 'provider_deduction_failed',
+          severity: 'critical',
+          message: `Échec du débit provider lors du remboursement: ${charge.id}`,
+          data: {
+            chargeId: charge.id,
+            providerId,
+            refundedAmount,
+            error: deductError instanceof Error ? deductError.message : 'Unknown',
+          },
+          read: false,
+          createdAt: now
+        });
+      }
+    }
+    // ========== FIN P0-3 FIX ==========
+
     // Marquer l'événement comme traité
     if (context?.eventId) {
       await markEventAsProcessed(context.eventId, context.eventType);

@@ -105,28 +105,13 @@ export const validateAndCalculateAmounts = async (
 };
 
 /**
- * Convertit les montants d'une devise à l'autre
- * Utilise un taux de change fixe ou une API externe
+ * NOTE: Les prix EUR et USD sont fixés DIRECTEMENT dans la console d'administration.
+ * Il n'y a PAS de conversion automatique entre devises.
+ * Chaque devise a son propre prix défini manuellement dans admin_config/pricing.
+ *
+ * Pour les seuils fiscaux TVA (threshold tracking), voir thresholds/types.ts
+ * qui utilise des taux de change pour le suivi de conformité fiscale uniquement.
  */
-export const convertCurrency = async (
-  amount: number,
-  fromCurrency: 'eur' | 'usd',
-  toCurrency: 'eur' | 'usd'
-): Promise<number> => {
-  if (fromCurrency === toCurrency) return amount;
-  
-  // Taux de change fixe (à remplacer par une API externe si besoin)
-  const EUR_TO_USD_RATE = 1.1;
-  const USD_TO_EUR_RATE = 0.91;
-  
-  if (fromCurrency === 'eur' && toCurrency === 'usd') {
-    return Math.round(amount * EUR_TO_USD_RATE * 100) / 100;
-  } else if (fromCurrency === 'usd' && toCurrency === 'eur') {
-    return Math.round(amount * USD_TO_EUR_RATE * 100) / 100;
-  }
-  
-  return amount;
-};
 
 /**
  * Récupère la configuration avec cache

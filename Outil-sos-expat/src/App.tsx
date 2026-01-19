@@ -27,6 +27,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { queryClient } from "./lib/queryClient";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { UnifiedUserProvider } from "./contexts/UnifiedUserContext";
+import { useSiblingStatusNotifications } from "./hooks";
 import { Toaster } from "react-hot-toast";
 import { Loader2, AlertTriangle, RefreshCw } from "lucide-react";
 
@@ -162,6 +163,12 @@ function RouteLogger() {
   return null;
 }
 
+// Sibling status notifications for multi-provider system
+function SiblingStatusNotifier() {
+  useSiblingStatusNotifications();
+  return null;
+}
+
 export default function App() {
   // ═══════════════════════════════════════════════════════════════════════════
   // PERFORMANCE: Initialisation différée des services non-critiques
@@ -194,6 +201,8 @@ export default function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <UnifiedUserProvider>
+          {/* Multi-provider sibling status notifications */}
+          <SiblingStatusNotifier />
           <BrowserRouter>
               <RouteLogger />
               <Suspense fallback={<GlobalLoader />}>
