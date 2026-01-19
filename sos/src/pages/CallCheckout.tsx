@@ -44,6 +44,7 @@ import { useApp } from "@/contexts/AppContext";
 import { FormattedMessage, useIntl } from "react-intl";
 import { formatCurrency } from "../utils/localeFormatters";
 import { getDateLocale } from "../utils/formatters";
+import { normalizeCountryToCode } from "../utils/countryUtils";
 import { usePaymentGateway } from "../hooks/usePaymentGateway";
 import { PayPalPaymentForm, GatewayIndicator } from "../components/payment";
 // PayPalScriptProvider est fourni par PayPalContext au niveau App.tsx
@@ -2792,8 +2793,14 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
   // Déterminer le gateway de paiement (Stripe ou PayPal) selon le pays du provider
   const providerCountryCode = useMemo(() => {
     if (!provider) return undefined;
-    // Extraire le code pays du provider (peut être "FR", "DZ", etc.)
-    return provider.countryCode || provider.country?.toUpperCase()?.substring(0, 2);
+    // Convertir le nom ou code pays en code ISO-2 normalisé
+    // Ex: "Algeria" → "DZ", "France" → "FR", "FR" → "FR"
+    const code = normalizeCountryToCode(provider.country);
+    console.log('[CallCheckout] Provider country normalization:', {
+      original: provider.country,
+      normalized: code,
+    });
+    return code;
   }, [provider]);
 
   const {

@@ -10,7 +10,7 @@ import React, {
   lazy,
 } from "react";
 import { useParams, Link } from "react-router-dom";
-import { useLocaleNavigate } from "../multilingual-system";
+import { useLocaleNavigate, getTranslatedRouteSlug } from "../multilingual-system";
 import {
   ArrowLeft,
   Euro,
@@ -2257,7 +2257,7 @@ const BookingRequest: React.FC = () => {
     }
   }, [setValue]);
 
-  // Matching live des langues
+  // Matching live des langues (normalisé en minuscules pour éviter les problèmes de casse)
   useEffect(() => {
     if (!provider || (!provider.languages && !provider.languagesSpoken)) {
       setHasLanguageMatchRealTime(true);
@@ -2265,8 +2265,15 @@ const BookingRequest: React.FC = () => {
     }
     const providerLanguages =
       provider.languages || provider.languagesSpoken || [];
-    const clientCodes = languagesSpoken.map((l) => l.code);
-    const hasMatch = providerLanguages.some((pl) => clientCodes.includes(pl));
+    // Normaliser TOUT en minuscules pour comparaison fiable
+    const providerCodesNormalized = providerLanguages.map((pl) => pl.toLowerCase().trim());
+    const clientCodesNormalized = languagesSpoken.map((l) => l.code.toLowerCase().trim());
+    const hasMatch = providerCodesNormalized.some((pl) => clientCodesNormalized.includes(pl));
+    console.log('[BookingRequest] Language matching:', {
+      providerCodes: providerCodesNormalized,
+      clientCodes: clientCodesNormalized,
+      hasMatch
+    });
     setHasLanguageMatchRealTime(hasMatch);
   }, [languagesSpoken, provider]);
 
@@ -2511,11 +2518,10 @@ const BookingRequest: React.FC = () => {
   const onSubmit: SubmitHandler<BookingFormData> = async (data) => {
     setFormError("");
     console.log(data, "data === in onSubmit");
-    // return;
 
-    // P1-3 FIX: Warning au lieu de blocage si pas de langue partagée
-    // On log dans tous les cas, mais on laisse l'utilisateur continuer s'il confirme
-    if (!hasLanguageMatchRealTime && !langMismatchAcknowledged) {
+    // BLOCAGE COMPLET: Pas de langue partagée = impossible de continuer
+    // Le client doit modifier ses langues ou changer de prestataire
+    if (!hasLanguageMatchRealTime) {
       try {
         await logLanguageMismatch({
           clientLanguages: data.clientLanguages,
@@ -2537,7 +2543,7 @@ const BookingRequest: React.FC = () => {
       } catch (error) {
         console.warn("logLanguageMismatch failed", error);
       }
-      // Afficher le warning au lieu de bloquer
+      // Afficher le modal de blocage avec options
       setShowLangMismatchWarning(true);
       return;
     }
@@ -3303,9 +3309,9 @@ const BookingRequest: React.FC = () => {
               </section>
               )}
 
-              {/* ===== Languages Section - HIDDEN on mobile (auto-filled from wizard Facebook) ===== */}
-              {/* Desktop: Always visible / Mobile: Hidden (data comes from wizard) */}
-              {!isMobile && (
+              {/* ===== Languages Section ===== */}
+              {/* Desktop: Always visible / Mobile: Visible si pas de match de langues (pour permettre modification) */}
+              {(!isMobile || !hasLanguageMatchRealTime) && (
               <section
                 className="p-4 md:p-6 border-t border-gray-100"
                 ref={refLangs}
@@ -3367,17 +3373,19 @@ const BookingRequest: React.FC = () => {
                   </p>
                 )}
 
-                {/* Compatibilité */}
+                {/* Compatibilité (normalisé en minuscules pour matching fiable) */}
                 {languagesSpoken.length > 0 && (
                   <div className="mt-4 space-y-3">
                     {(() => {
                       const providerLanguages =
                         provider?.languages || provider?.languagesSpoken || [];
+                      // Normaliser en minuscules pour comparaison fiable
+                      const providerCodesNormalized = providerLanguages.map((pl) => pl.toLowerCase().trim());
                       const compatible = languagesSpoken.filter((l) =>
-                        providerLanguages.includes(l.code)
+                        providerCodesNormalized.includes(l.code.toLowerCase().trim())
                       );
                       const incompatible = languagesSpoken.filter(
-                        (l) => !providerLanguages.includes(l.code)
+                        (l) => !providerCodesNormalized.includes(l.code.toLowerCase().trim())
                       );
                       return (
                         <>
@@ -3891,45 +3899,67 @@ const BookingRequest: React.FC = () => {
         )}
       </div>
 
-      {/* P1-3 FIX: Modal de warning pour langue non partagée */}
+      {/* BLOCAGE - Modal pour langue non partagée (impossible de continuer) */}
       {showLangMismatchWarning && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
-                <svg className="w-6 h-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                 </svg>
               </div>
               <h3 className="text-lg font-semibold text-gray-900">
-                {intl.formatMessage({ id: "bookingRequest.langWarning.title", defaultMessage: "Attention - Langues différentes" })}
+                {intl.formatMessage({ id: "bookingRequest.langWarning.title", defaultMessage: "Communication impossible" })}
               </h3>
             </div>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 mb-4">
               {intl.formatMessage({
-                id: "bookingRequest.langWarning.message",
-                defaultMessage: "Vous n'avez pas de langue en commun avec ce prestataire. La communication pourrait être difficile. Voulez-vous continuer ?"
+                id: "bookingRequest.langWarning.blocked",
+                defaultMessage: "Vous n'avez aucune langue en commun avec ce prestataire. Pour garantir une bonne communication, veuillez :"
               })}
             </p>
-            <div className="flex gap-3">
+            <ul className="text-gray-600 mb-6 space-y-2 text-sm">
+              <li className="flex items-start gap-2">
+                <span className="text-blue-500">1.</span>
+                {intl.formatMessage({
+                  id: "bookingRequest.langWarning.option1",
+                  defaultMessage: "Modifier vos langues parlées pour inclure une langue du prestataire"
+                })}
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-500">2.</span>
+                {intl.formatMessage({
+                  id: "bookingRequest.langWarning.option2",
+                  defaultMessage: "Choisir un autre prestataire qui parle votre langue"
+                })}
+              </li>
+            </ul>
+            <div className="flex flex-col gap-3">
               <button
                 type="button"
-                onClick={() => setShowLangMismatchWarning(false)}
-                className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                onClick={() => {
+                  setShowLangMismatchWarning(false);
+                  // Scroll vers la section langues et forcer affichage mobile
+                  if (refLangs.current) {
+                    refLangs.current.scrollIntoView({ behavior: "smooth", block: "center" });
+                  }
+                }}
+                className="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-medium hover:from-blue-600 hover:to-indigo-600 transition-colors flex items-center justify-center gap-2"
               >
-                {intl.formatMessage({ id: "common.cancel", defaultMessage: "Annuler" })}
+                <LanguagesIcon className="w-5 h-5" />
+                {intl.formatMessage({ id: "bookingRequest.langWarning.modifyLanguages", defaultMessage: "Modifier mes langues" })}
               </button>
               <button
                 type="button"
                 onClick={() => {
-                  setLangMismatchAcknowledged(true);
-                  setShowLangMismatchWarning(false);
-                  // Re-soumettre le formulaire
-                  handleSubmit(onSubmit)();
+                  // Retour vers la page SOSCall pour changer de prestataire
+                  navigate(getTranslatedRouteSlug("sos-call", lang));
                 }}
-                className="flex-1 px-4 py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl font-medium hover:from-red-600 hover:to-orange-600 transition-colors"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
               >
-                {intl.formatMessage({ id: "bookingRequest.langWarning.continue", defaultMessage: "Continuer quand même" })}
+                <ArrowLeft className="w-5 h-5" />
+                {intl.formatMessage({ id: "bookingRequest.langWarning.changeProvider", defaultMessage: "Changer de prestataire" })}
               </button>
             </div>
           </div>
