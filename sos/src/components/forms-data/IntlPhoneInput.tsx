@@ -141,8 +141,41 @@ const IntlPhoneInput: React.FC<IntlPhoneInputProps> = ({
         return;
       }
 
+      // ✅ FIX: Supprimer automatiquement le trunk prefix (0) pour les pays qui l'utilisent
+      // Quand l'utilisateur tape "0700000000" avec FR sélectionné, react-phone-input-2 envoie "330700000000"
+      // On doit supprimer le 0 pour avoir "33700000000" → "+33700000000"
+      // Cela permet à l'utilisateur de taper son numéro naturellement avec le 0
+      let cleanedInput = inputValue;
+      const dialCode = country?.dialCode || '';
+
+      if (dialCode && inputValue.startsWith(dialCode)) {
+        const nationalPart = inputValue.slice(dialCode.length);
+
+        // Liste des pays avec trunk prefix "0" (la plupart des pays européens, etc.)
+        // Ces pays utilisent un 0 devant le numéro national qui doit être supprimé en format international
+        const countriesWithTrunkPrefix0 = [
+          'fr', 'gb', 'de', 'it', 'be', 'ch', 'at', 'nl', 'pt', 'pl', 'cz', 'hu', 'ro', 'bg',
+          'gr', 'se', 'no', 'dk', 'fi', 'ie', 'lu', 'sk', 'si', 'hr', 'lt', 'lv', 'ee',
+          'ma', 'dz', 'tn', 'eg', 'za', 'ng', 'ke', 'au', 'nz', 'jp', 'kr', 'in', 'id',
+          'my', 'th', 'vn', 'ph', 'tr', 'il', 'ae', 'sa', 'qa', 'kw', 'bh', 'om'
+        ];
+
+        const countryCode = (country?.countryCode || '').toLowerCase();
+
+        // Si le pays utilise un trunk prefix 0 ET que le numéro national commence par 0
+        if (countriesWithTrunkPrefix0.includes(countryCode) && nationalPart.startsWith('0')) {
+          // Supprimer le 0 initial
+          cleanedInput = dialCode + nationalPart.slice(1);
+          console.log('[IntlPhoneInput] Trunk prefix "0" supprimé:', {
+            before: inputValue,
+            after: cleanedInput,
+            country: countryCode,
+          });
+        }
+      }
+
       // Ajouter le + et passer la valeur
-      let valueWithPlus = `+${inputValue}`;
+      let valueWithPlus = `+${cleanedInput}`;
 
       // ✅ P0 FIX: Détecter et corriger le format "00" (ex: 0033612345678 → +33612345678)
       // react-phone-input-2 ne gère pas bien ce format
@@ -250,6 +283,9 @@ const IntlPhoneInput: React.FC<IntlPhoneInputProps> = ({
         specialLabel=""
         placeholder={placeholder}
         disabled={disabled}
+        // ✅ Permet de taper des numéros plus longs (pour gérer le trunk prefix 0)
+        // Sans cette option, react-phone-input-2 bloque la saisie à la longueur standard du pays
+        enableLongNumbers
         // ✅ Utilise les données de phone-codes.ts pour les noms de pays localisés
         localization={localization}
         // ✅ Pays prioritaires en haut de la liste

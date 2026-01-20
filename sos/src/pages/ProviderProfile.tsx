@@ -2400,7 +2400,12 @@ const ProviderProfile: React.FC = () => {
                       className={`absolute -bottom-1 -right-1 w-7 h-7 rounded-full border-4 border-gray-900 transition-all duration-500 ${
                         onlineStatus.isOnline ? "bg-green-500" : "bg-red-500"
                       }`}
-                      title={onlineStatus.isOnline 
+                      role="status"
+                      aria-label={onlineStatus.isOnline
+                        ? intl.formatMessage({ id: "providerProfile.online" })
+                        : intl.formatMessage({ id: "providerProfile.offline" })
+                      }
+                      title={onlineStatus.isOnline
                         ? intl.formatMessage({ id: "providerProfile.online" })
                         : intl.formatMessage({ id: "providerProfile.offline" })
                       }
@@ -2441,7 +2446,7 @@ const ProviderProfile: React.FC = () => {
                       {/* Badge vérifié */}
                       {provider.isVerified && (
                         <span className="inline-flex items-center gap-1 bg-white text-gray-900 text-xs px-2.5 py-1 rounded-full border border-gray-200 font-medium">
-                          <Shield size={14} className="text-green-600" />
+                          <Shield size={14} className="text-green-600" aria-hidden="true" />
                           <FormattedMessage id="providerProfile.verified" />
                         </span>
                       )}
@@ -2449,7 +2454,7 @@ const ProviderProfile: React.FC = () => {
                       {/* Badge nouveau */}
                       {isNewProvider && (
                         <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-yellow-400/20 to-orange-400/20 border border-yellow-400/30 rounded-full text-xs font-bold text-yellow-300">
-                          <Sparkles size={12} />
+                          <Sparkles size={12} aria-hidden="true" />
                           <FormattedMessage id="providerProfile.new" />
                         </span>
                       )}
@@ -2461,24 +2466,31 @@ const ProviderProfile: React.FC = () => {
                             ? "bg-green-500/20 text-green-300 border-green-400/30 shadow-lg shadow-green-500/20"
                             : "bg-red-500/20 text-red-300 border-red-400/30"
                         }`}
+                        role="status"
+                        aria-label={onlineStatus.isOnline
+                          ? intl.formatMessage({ id: "providerProfile.online" })
+                          : intl.formatMessage({ id: "providerProfile.offline" })}
                       >
+                        <span aria-hidden="true">
+                          {onlineStatus.isOnline ? "🟢 " : "🔴 "}
+                        </span>
                         {onlineStatus.isOnline
-                          ? `🟢 ${intl.formatMessage({ id: "providerProfile.online" })}`
-                          : `🔴 ${intl.formatMessage({ id: "providerProfile.offline" })}`}
+                          ? intl.formatMessage({ id: "providerProfile.online" })
+                          : intl.formatMessage({ id: "providerProfile.offline" })}
                       </span>
                     </div>
 
                     {/* Localisation et expérience */}
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-gray-300 mb-4 text-sm">
                       <div className="inline-flex items-center gap-1.5">
-                        <MapPin size={16} className="text-red-400 flex-shrink-0" />
+                        <MapPin size={16} className="text-red-400 flex-shrink-0" aria-hidden="true" />
                         <span>{getCountryName(provider.country, preferredLangKey)}</span>
                       </div>
                       <div className="inline-flex items-center gap-1.5">
                         {isLawyer ? (
-                          <Briefcase size={16} className="text-blue-400 flex-shrink-0" />
+                          <Briefcase size={16} className="text-blue-400 flex-shrink-0" aria-hidden="true" />
                         ) : (
-                          <Users size={16} className="text-green-400 flex-shrink-0" />
+                          <Users size={16} className="text-green-400 flex-shrink-0" aria-hidden="true" />
                         )}
                         <span>
                           {isLawyer
@@ -2553,7 +2565,7 @@ const ProviderProfile: React.FC = () => {
                     {/* Badge délai d'appel */}
                     <div className="text-center mb-5">
                       <div className="inline-flex items-center gap-2 bg-gray-900 text-white rounded-full px-3 py-1.5 text-xs font-semibold">
-                        <Phone size={14} />
+                        <Phone size={14} aria-hidden="true" />
                         <span><FormattedMessage id="callIn5Min" /></span>
                       </div>
 
@@ -2582,7 +2594,7 @@ const ProviderProfile: React.FC = () => {
                       </div>
 
                       <div className="text-gray-600 text-sm mt-1 flex items-center justify-center gap-1">
-                        <Clock size={14} />
+                        <Clock size={14} aria-hidden="true" />
                         {bookingPrice?.duration
                           ? `${bookingPrice.duration} ${intl.formatMessage({ id: "providerProfile.minutes" })}`
                           : "—"}
@@ -2808,9 +2820,9 @@ const ProviderProfile: React.FC = () => {
                 )}
                 
                 {/* Section Description complète */}
-                <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200" aria-labelledby="about-heading">
-                  <h3 id="about-heading" className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <User size={20} className="text-red-500" />
+                <section className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-200" aria-labelledby="about-heading">
+                  <h3 id="about-heading" className="text-base sm:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <User size={20} className="text-red-500" aria-hidden="true" />
                     <FormattedMessage id="providerProfile.about" />
                   </h3>
                   <p className="text-gray-700 leading-relaxed whitespace-pre-line">
@@ -2847,9 +2859,9 @@ const ProviderProfile: React.FC = () => {
                 </section>
 
                 {/* Section Spécialités */}
-                <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200" aria-labelledby="specialties-heading">
-                  <h3 id="specialties-heading" className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <Briefcase size={20} className={isLawyer ? "text-blue-500" : "text-green-500"} />
+                <section className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-200" aria-labelledby="specialties-heading">
+                  <h3 id="specialties-heading" className="text-base sm:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <Briefcase size={20} className={isLawyer ? "text-blue-500" : "text-green-500"} aria-hidden="true" />
                     <FormattedMessage id="providerProfile.specialties" />
                   </h3>
                   {derivedSpecialties.length > 0 ? (
@@ -2876,9 +2888,9 @@ const ProviderProfile: React.FC = () => {
 
                 {/* Section Pays d'intervention */}
                 {provider.operatingCountries && provider.operatingCountries.length > 0 && (
-                  <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200" aria-labelledby="countries-heading">
-                    <h3 id="countries-heading" className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                      <MapPin size={20} className="text-red-500" />
+                  <section className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-200" aria-labelledby="countries-heading">
+                    <h3 id="countries-heading" className="text-base sm:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <MapPin size={20} className="text-red-500" aria-hidden="true" />
                       <FormattedMessage id="providerProfile.operatingCountries" />
                     </h3>
                     <div className="flex flex-wrap gap-2">
@@ -2895,18 +2907,19 @@ const ProviderProfile: React.FC = () => {
                 )}
 
                 {/* Section Langues */}
-                <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200" aria-labelledby="languages-heading">
-                  <h3 id="languages-heading" className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <Globe size={20} className="text-purple-500" />
+                <section className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-200" aria-labelledby="languages-heading">
+                  <h3 id="languages-heading" className="text-base sm:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <Globe size={20} className="text-purple-500" aria-hidden="true" />
                     <FormattedMessage id="providerProfile.languages" />
                   </h3>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2" role="list" aria-label="Languages spoken">
                     {languageCodes.map((code, i) => (
                       <span
                         key={`${code}-${i}`}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 rounded-full text-sm font-medium"
+                        role="listitem"
                       >
-                        <LanguagesIcon size={14} />
+                        <LanguagesIcon size={14} aria-hidden="true" />
                         {formatLanguages([code], preferredLangKey)}
                       </span>
                     ))}
@@ -2915,21 +2928,21 @@ const ProviderProfile: React.FC = () => {
 
                 {/* Section Formation (avocats uniquement) */}
                 {isLawyer && (educationText || certificationsArray.length > 0) && (
-                  <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200" aria-labelledby="education-heading">
-                    <h3 id="education-heading" className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                      <GraduationCap size={20} className="text-indigo-500" />
+                  <section className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-200" aria-labelledby="education-heading">
+                    <h3 id="education-heading" className="text-base sm:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <GraduationCap size={20} className="text-indigo-500" aria-hidden="true" />
                       <FormattedMessage id="providerProfile.educationCertifications" />
                     </h3>
                     <div className="space-y-3">
                       {educationText && (
                         <div className="flex items-start gap-3">
                           <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                            <GraduationCap size={16} className="text-indigo-600" />
+                            <GraduationCap size={16} className="text-indigo-600" aria-hidden="true" />
                           </div>
                           <div>
                             <p className="text-gray-800 font-medium">{educationText}</p>
                             {provider.graduationYear && (
-                              <p className="text-gray-500 text-sm mt-0.5">
+                              <p className="text-gray-600 text-sm mt-0.5">
                                 <FormattedMessage id="providerProfile.graduated" /> {provider.graduationYear}
                               </p>
                             )}
@@ -2939,7 +2952,7 @@ const ProviderProfile: React.FC = () => {
                       {certificationsArray.map((cert, i) => (
                         <div key={i} className="flex items-start gap-3">
                           <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
-                            <Award size={16} className="text-amber-600" />
+                            <Award size={16} className="text-amber-600" aria-hidden="true" />
                           </div>
                           <p className="text-gray-700">{cert}</p>
                         </div>
@@ -2950,15 +2963,15 @@ const ProviderProfile: React.FC = () => {
 
                 {/* Section Expérience expatrié */}
                 {isExpat && (
-                  <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200" aria-labelledby="experience-heading">
-                    <h3 id="experience-heading" className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                      <Users size={20} className="text-green-500" />
+                  <section className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-200" aria-labelledby="experience-heading">
+                    <h3 id="experience-heading" className="text-base sm:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <Users size={20} className="text-green-500" aria-hidden="true" />
                       <FormattedMessage id="providerProfile.expatExperience" />
                     </h3>
                     <div className="space-y-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                          <MapPin size={18} className="text-green-600" />
+                          <MapPin size={18} className="text-green-600" aria-hidden="true" />
                         </div>
                         <p className="text-gray-700">
                           {provider.yearsAsExpat || provider.yearsOfExperience || 0}{" "}
@@ -3003,32 +3016,32 @@ const ProviderProfile: React.FC = () => {
                 )}
 
                 {/* Section Avis clients */}
-                <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200" id="reviews-section" aria-labelledby="reviews-heading">
+                <section className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-200" id="reviews-section" aria-labelledby="reviews-heading">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 id="reviews-heading" className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                      <Star size={20} className="text-yellow-500" />
+                    <h3 id="reviews-heading" className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
+                      <Star size={20} className="text-yellow-500" aria-hidden="true" />
                       <FormattedMessage id="providerProfile.customerReviews" />
-                      <span className="text-gray-500 font-normal">({providerStats.realReviewsCount})</span>
+                      <span className="text-gray-600 font-normal">({providerStats.realReviewsCount})</span>
                     </h3>
-                    
+
                     {!isNewProvider && (
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 px-3 py-1.5 text-sm font-bold text-white shadow-sm">
-                        <Star className="w-4 h-4 fill-white" />
+                        <Star className="w-4 h-4 fill-white" aria-hidden="true" />
                         {providerStats.averageRating ? providerStats.averageRating.toFixed(1) : "—"}/5
                       </span>
                     )}
                   </div>
 
                   {isLoadingReviews ? (
-                    <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto" />
-                      <p className="mt-2 text-gray-500 text-sm">
+                    <div className="text-center py-8" role="status" aria-live="polite">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto" aria-hidden="true" />
+                      <p className="mt-2 text-gray-600 text-sm">
                         <FormattedMessage id="providerProfile.loadingReviews" />
                       </p>
                     </div>
                   ) : isNewProvider ? (
                     <div className="text-center py-8">
-                      <Sparkles className="w-12 h-12 mx-auto mb-3 text-yellow-500" />
+                      <Sparkles className="w-12 h-12 mx-auto mb-3 text-yellow-500" aria-hidden="true" />
                       <p className="font-semibold text-gray-800 mb-1">
                         <FormattedMessage id="providerProfile.newProviderNoReviews" />
                       </p>
@@ -3063,14 +3076,14 @@ const ProviderProfile: React.FC = () => {
 
                 {/* Section FAQ */}
                 {snippetData?.snippets?.faqContent && snippetData.snippets.faqContent.length > 0 && (
-                  <section className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-200" aria-labelledby="faq-heading">
-                    <h3 id="faq-heading" className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                      <HelpCircle size={20} className="text-cyan-500" />
+                  <section className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-200" aria-labelledby="faq-heading">
+                    <h3 id="faq-heading" className="text-base sm:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <HelpCircle size={20} className="text-cyan-500" aria-hidden="true" />
                       <FormattedMessage id="providerProfile.frequentlyAskedQuestions" />
                     </h3>
                     <div className="space-y-2">
                       {snippetData.snippets.faqContent.map((faq, index) => (
-                        <details 
+                        <details
                           key={`faq-${index}`}
                           className="group border border-gray-200 rounded-xl overflow-hidden"
                         >
@@ -3079,16 +3092,17 @@ const ProviderProfile: React.FC = () => {
                               {faq.question}
                             </span>
                             <svg
-                              className="w-5 h-5 text-gray-500 transition-transform group-open:rotate-180 flex-shrink-0"
+                              className="w-5 h-5 text-gray-600 transition-transform group-open:rotate-180 flex-shrink-0"
                               fill="none"
                               viewBox="0 0 24 24"
                               stroke="currentColor"
                               strokeWidth={2}
+                              aria-hidden="true"
                             >
                               <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                             </svg>
                           </summary>
-                          <div className="px-4 py-3 text-sm text-gray-600 leading-relaxed bg-white border-t border-gray-100">
+                          <div className="px-4 py-3 text-sm text-gray-700 leading-relaxed bg-white border-t border-gray-100">
                             {faq.answer}
                           </div>
                         </details>
@@ -3103,9 +3117,9 @@ const ProviderProfile: React.FC = () => {
                 <div className="sticky top-6 space-y-6">
                   
                   {/* Statistiques */}
-                  <div className="bg-white rounded-2xl shadow-sm p-5 border border-gray-200">
-                    <h4 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
-                      <TrendingUp size={18} className="text-emerald-500" />
+                  <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-5 border border-gray-200" role="region" aria-labelledby="stats-heading">
+                    <h4 id="stats-heading" className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <TrendingUp size={18} className="text-emerald-500" aria-hidden="true" />
                       <FormattedMessage id="providerProfile.stats" />
                     </h4>
                     <div className="space-y-3">
@@ -3155,29 +3169,29 @@ const ProviderProfile: React.FC = () => {
                   </div>
 
                   {/* Informations */}
-                  <div className="bg-white rounded-2xl shadow-sm p-5 border border-gray-200">
-                    <h4 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
-                      <User size={18} className="text-gray-500" />
+                  <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-5 border border-gray-200" role="region" aria-labelledby="info-heading">
+                    <h4 id="info-heading" className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <User size={18} className="text-gray-600" aria-hidden="true" />
                       <FormattedMessage id="providerProfile.information" />
                     </h4>
                     <div className="space-y-3 text-sm">
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <MapPin size={16} className="text-gray-400 flex-shrink-0" />
+                      <div className="flex items-center gap-2 text-gray-700">
+                        <MapPin size={16} className="text-gray-500 flex-shrink-0" aria-hidden="true" />
                         <span>
                           <FormattedMessage id="providerProfile.basedIn" />{" "}
                           {getCountryName(provider.country, preferredLangKey)}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <LanguagesIcon size={16} className="text-gray-400 flex-shrink-0" />
+                      <div className="flex items-center gap-2 text-gray-700">
+                        <LanguagesIcon size={16} className="text-gray-500 flex-shrink-0" aria-hidden="true" />
                         <span>
                           <FormattedMessage id="providerProfile.speaks" />{" "}
                           {formatLanguages(languageCodes, preferredLangKey)}
                         </span>
                       </div>
                       {joinDateText && (
-                        <div className="flex items-center gap-2 text-gray-500 text-xs">
-                          <Clock size={14} className="text-gray-400 flex-shrink-0" />
+                        <div className="flex items-center gap-2 text-gray-600 text-xs">
+                          <Clock size={14} className="text-gray-500 flex-shrink-0" aria-hidden="true" />
                           <span>{joinDateText}</span>
                         </div>
                       )}
@@ -3185,15 +3199,21 @@ const ProviderProfile: React.FC = () => {
                       {/* Statut en ligne avec animation */}
                       <div
                         className={`flex items-center gap-2 p-3 rounded-xl mt-2 transition-all ${
-                          onlineStatus.isOnline 
-                            ? "bg-green-50 border border-green-200" 
+                          onlineStatus.isOnline
+                            ? "bg-green-50 border border-green-200"
                             : "bg-gray-50 border border-gray-200"
                         }`}
+                        role="status"
+                        aria-label={onlineStatus.isOnline
+                          ? intl.formatMessage({ id: "providerProfile.onlineNow" })
+                          : intl.formatMessage({ id: "providerProfile.offline" })
+                        }
                       >
                         <div
                           className={`relative w-5 h-5 rounded-full flex items-center justify-center ${
                             onlineStatus.isOnline ? "bg-green-500" : "bg-gray-400"
                           }`}
+                          aria-hidden="true"
                         >
                           {onlineStatus.isOnline && (
                             <div className="absolute w-5 h-5 rounded-full bg-green-500 animate-ping opacity-75" />
@@ -3213,8 +3233,8 @@ const ProviderProfile: React.FC = () => {
 
                       {/* Badge vérifié */}
                       {provider.isVerified && (
-                        <div className="flex items-center gap-2 text-gray-600 pt-2">
-                          <Shield size={16} className="text-green-500 flex-shrink-0" />
+                        <div className="flex items-center gap-2 text-gray-700 pt-2">
+                          <Shield size={16} className="text-green-500 flex-shrink-0" aria-hidden="true" />
                           <span className="font-medium">
                             <FormattedMessage id="providerProfile.verifiedExpert" />
                           </span>

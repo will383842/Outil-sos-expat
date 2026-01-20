@@ -69,7 +69,7 @@ export function useProviderTranslation(
         error: errorMessage,
       });
     }
-  }, [providerId, targetLanguage, state.translation]);
+  }, [providerId, targetLanguage]); // Removed state.translation to prevent infinite loops
 
   const translate = useCallback(async (lang?: SupportedLanguage): Promise<TranslatedContent | null> => {
     if (!providerId) {
