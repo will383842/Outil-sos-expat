@@ -34,6 +34,7 @@ import { Loader2, ShieldAlert } from "lucide-react";
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const Prestataires = lazy(() => import("./pages/Prestataires"));
+const MultiPrestataires = lazy(() => import("./pages/MultiPrestataires"));
 const Dossiers = lazy(() => import("./pages/Dossiers"));
 const DossierDetail = lazy(() => import("./pages/DossierDetail"));
 const Utilisateurs = lazy(() => import("./pages/Utilisateurs"));
@@ -162,6 +163,7 @@ export default function AdminApp() {
                 <Route index element={<AdminDashboard />} />
                 <Route path="analytics" element={<Analytics />} />
                 <Route path="prestataires" element={<Prestataires />} />
+                <Route path="multi-prestataires" element={<MultiPrestataires />} />
                 <Route path="dossiers" element={<Dossiers />} />
                 <Route path="dossier/:id" element={<DossierDetail />} />
                 <Route path="utilisateurs" element={<Utilisateurs />} />
@@ -206,6 +208,7 @@ export default function AdminApp() {
 
               {/* Gestion */}
               <Route path="prestataires" element={<Prestataires />} />
+              <Route path="multi-prestataires" element={<MultiPrestataires />} />
               <Route path="dossiers" element={<Dossiers />} />
               <Route path="dossier/:id" element={<DossierDetail />} />
               <Route path="utilisateurs" element={<Utilisateurs />} />

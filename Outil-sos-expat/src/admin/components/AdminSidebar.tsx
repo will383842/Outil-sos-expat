@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   Users,
+  UsersRound,
   FolderKanban,
   BarChart3,
   Settings,
@@ -76,6 +77,11 @@ const getNavSections = (t: (key: string) => string): NavSection[] => [
         to: "/admin/prestataires",
         label: t("admin:sidebar.nav.providers"),
         icon: Users,
+      },
+      {
+        to: "/admin/multi-prestataires",
+        label: t("admin:sidebar.nav.multiProviders"),
+        icon: UsersRound,
       },
       {
         to: "/admin/dossiers",
