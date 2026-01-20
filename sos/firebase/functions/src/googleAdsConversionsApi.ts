@@ -19,6 +19,7 @@ import { createHash } from "crypto";
 import { defineSecret } from "firebase-functions/params";
 import { logger } from "firebase-functions/v2";
 import Stripe from "stripe";
+import { getFirestore, Timestamp } from "firebase-admin/firestore";
 
 // ============================================================================
 // Configuration
@@ -147,6 +148,134 @@ export interface GoogleAdsEventResult {
   orderId?: string;
   partialFailures?: string[];
   error?: string;
+}
+
+// ============================================================================
+// Google Ads Event Types for Analytics
+// ============================================================================
+
+/**
+ * Google Ads event types for analytics tracking
+ */
+export type GoogleAdsEventType =
+  | "Purchase"
+  | "Lead"
+  | "SignUp"
+  | "BeginCheckout"
+  | "Contact";
+
+/**
+ * Source of the Google Ads event
+ */
+export type GoogleAdsEventSource =
+  | "http_endpoint"
+  | "trigger_booking"
+  | "trigger_user"
+  | "trigger_call"
+  | "trigger_payment";
+
+/**
+ * Quality score weights for Google Ads Enhanced Conversions
+ */
+const GOOGLE_ADS_QUALITY_WEIGHTS = {
+  email: 25,
+  phone: 20,
+  gclid: 20,
+  firstName: 10,
+  lastName: 10,
+  address: 10,
+  country: 5,
+};
+
+/**
+ * Calculate quality score for Google Ads user data
+ */
+function calculateGoogleAdsQualityScore(
+  userData: GoogleAdsUserData | undefined,
+  gclid?: string
+): number {
+  if (!userData) {
+    return gclid ? GOOGLE_ADS_QUALITY_WEIGHTS.gclid : 0;
+  }
+
+  let score = 0;
+  if (userData.email) score += GOOGLE_ADS_QUALITY_WEIGHTS.email;
+  if (userData.phone) score += GOOGLE_ADS_QUALITY_WEIGHTS.phone;
+  if (gclid) score += GOOGLE_ADS_QUALITY_WEIGHTS.gclid;
+  if (userData.firstName) score += GOOGLE_ADS_QUALITY_WEIGHTS.firstName;
+  if (userData.lastName) score += GOOGLE_ADS_QUALITY_WEIGHTS.lastName;
+  if (userData.streetAddress) score += GOOGLE_ADS_QUALITY_WEIGHTS.address;
+  if (userData.country) score += GOOGLE_ADS_QUALITY_WEIGHTS.country;
+
+  return score;
+}
+
+/**
+ * Log Google Ads event to Firestore for analytics dashboard
+ */
+export async function logGoogleAdsEventToFirestore(params: {
+  eventType: GoogleAdsEventType;
+  source: GoogleAdsEventSource;
+  userId?: string;
+  orderId?: string;
+  value?: number;
+  currency?: string;
+  gclid?: string;
+  userData?: GoogleAdsUserData;
+  success: boolean;
+  error?: string;
+  contentName?: string;
+  contentCategory?: string;
+}): Promise<void> {
+  const logPrefix = "[Google Ads Analytics]";
+
+  try {
+    const db = getFirestore();
+    const qualityScore = calculateGoogleAdsQualityScore(params.userData, params.gclid);
+
+    const eventData = {
+      eventType: params.eventType,
+      eventId: params.orderId || generateOrderId("gads"),
+      source: params.source,
+      userId: params.userId || null,
+      isAnonymous: !params.userId,
+      value: params.value || null,
+      currency: params.currency || "EUR",
+      gclid: params.gclid || null,
+      success: params.success,
+      error: params.error || null,
+      contentName: params.contentName || null,
+      contentCategory: params.contentCategory || null,
+      // Quality metrics
+      qualityScore,
+      hasEmail: !!params.userData?.email,
+      hasPhone: !!params.userData?.phone,
+      hasGclid: !!params.gclid,
+      hasFirstName: !!params.userData?.firstName,
+      hasLastName: !!params.userData?.lastName,
+      hasAddress: !!params.userData?.streetAddress,
+      hasCountry: !!params.userData?.country,
+      // Timestamps
+      trackedAt: Timestamp.now(),
+      createdAt: Timestamp.now(),
+    };
+
+    await db.collection("google_ads_events").add(eventData);
+
+    logger.info(`${logPrefix} Event logged to Firestore`, {
+      eventType: params.eventType,
+      source: params.source,
+      orderId: params.orderId,
+      qualityScore,
+      success: params.success,
+    });
+  } catch (error) {
+    // Don't throw - logging failure shouldn't break the main flow
+    logger.error(`${logPrefix} Failed to log event to Firestore`, {
+      error: error instanceof Error ? error.message : "Unknown error",
+      eventType: params.eventType,
+    });
+  }
 }
 
 // ============================================================================
@@ -693,4 +822,7 @@ export default {
   // Stripe
   extractUserDataFromStripe,
   trackStripePurchase,
+
+  // Analytics
+  logGoogleAdsEventToFirestore,
 };

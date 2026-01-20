@@ -190,15 +190,15 @@ function generateFAQFromContent(
             ch: '如何联系SOS-Expat支持？'
           },
           answer: {
-            fr: 'Vous pouvez nous contacter via le formulaire de contact sur notre site, par email à support@sos-expat.com, ou directement via votre espace personnel. Notre équipe vous répond dans les plus brefs délais.',
-            en: 'You can contact us via the contact form on our website, by email at support@sos-expat.com, or directly through your personal dashboard. Our team will respond as soon as possible.',
-            es: 'Puede contactarnos a través del formulario de contacto en nuestro sitio web, por correo electrónico a support@sos-expat.com, o directamente a través de su panel personal. Nuestro equipo le responderá lo antes posible.',
-            de: 'Sie können uns über das Kontaktformular auf unserer Website, per E-Mail an support@sos-expat.com oder direkt über Ihr persönliches Dashboard kontaktieren. Unser Team wird so schnell wie möglich antworten.',
-            pt: 'Pode contactar-nos através do formulário de contacto no nosso site, por email para support@sos-expat.com, ou diretamente através do seu painel pessoal. A nossa equipa responderá o mais brevemente possível.',
-            ru: 'Вы можете связаться с нами через контактную форму на нашем сайте, по электронной почте support@sos-expat.com или напрямую через личный кабинет. Наша команда ответит как можно скорее.',
-            hi: 'आप हमारी वेबसाइट पर संपर्क फॉर्म के माध्यम से, support@sos-expat.com पर ईमेल द्वारा, या सीधे अपने व्यक्तिगत डैशबोर्ड के माध्यम से हमसे संपर्क कर सकते हैं। हमारी टीम जल्द से जल्द जवाब देगी।',
-            ar: 'يمكنك الاتصال بنا عبر نموذج الاتصال على موقعنا، عبر البريد الإلكتروني على support@sos-expat.com، أو مباشرة من خلال لوحة التحكم الشخصية. سيرد فريقنا في أقرب وقت ممكن.',
-            ch: '您可以通过我们网站上的联系表格、发送电子邮件至support@sos-expat.com或直接通过您的个人控制面板与我们联系。我们的团队将尽快回复。'
+            fr: 'Vous pouvez nous contacter via le formulaire de contact sur notre site, par email à contact@sos-expat.com, ou directement via votre espace personnel. Notre équipe vous répond dans les plus brefs délais.',
+            en: 'You can contact us via the contact form on our website, by email at contact@sos-expat.com, or directly through your personal dashboard. Our team will respond as soon as possible.',
+            es: 'Puede contactarnos a través del formulario de contacto en nuestro sitio web, por correo electrónico a contact@sos-expat.com, o directamente a través de su panel personal. Nuestro equipo le responderá lo antes posible.',
+            de: 'Sie können uns über das Kontaktformular auf unserer Website, per E-Mail an contact@sos-expat.com oder direkt über Ihr persönliches Dashboard kontaktieren. Unser Team wird so schnell wie möglich antworten.',
+            pt: 'Pode contactar-nos através do formulário de contacto no nosso site, por email para contact@sos-expat.com, ou diretamente através do seu painel pessoal. A nossa equipa responderá o mais brevemente possível.',
+            ru: 'Вы можете связаться с нами через контактную форму на нашем сайте, по электронной почте contact@sos-expat.com или напрямую через личный кабинет. Наша команда ответит как можно скорее.',
+            hi: 'आप हमारी वेबसाइट पर संपर्क फॉर्म के माध्यम से, contact@sos-expat.com पर ईमेल द्वारा, या सीधे अपने व्यक्तिगत डैशबोर्ड के माध्यम से हमसे संपर्क कर सकते हैं। हमारी टीम जल्द से जल्द जवाब देगी।',
+            ar: 'يمكنك الاتصال بنا عبر نموذج الاتصال على موقعنا، عبر البريد الإلكتروني على contact@sos-expat.com، أو مباشرة من خلال لوحة التحكم الشخصية. سيرد فريقنا في أقرب وقت ممكن.',
+            ch: '您可以通过我们网站上的联系表格、发送电子邮件至contact@sos-expat.com或直接通过您的个人控制面板与我们联系。我们的团队将尽快回复。'
           }
         },
         {

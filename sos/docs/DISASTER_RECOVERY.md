@@ -324,8 +324,8 @@ firebase functions:call syncStripeData --region=europe-west1
 
 | Rôle | Contact |
 |------|---------|
-| CTO | cto@sos-expat.com |
-| DevOps Lead | devops@sos-expat.com |
+| CTO | contact@sos-expat.com |
+| DevOps Lead | contact@sos-expat.com |
 | On-call | +33 X XX XX XX XX |
 
 ### Support externe

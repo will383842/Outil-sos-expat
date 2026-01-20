@@ -4,7 +4,6 @@
 # Last updated: 2025-12-29
 
 # Contact information for security researchers
-Contact: mailto:security@sos-expat.com
 Contact: mailto:contact@sos-expat.com
 Contact: https://sos-expat.com/contact
 

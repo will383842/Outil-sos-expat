@@ -4967,6 +4967,15 @@ export {
   onContactSubmittedTrackLead,
 } from './triggers/capiTracking';
 
+// ========== GOOGLE ADS CONVERSION TRACKING ==========
+// These triggers send server-side conversion events to Google Ads API
+// for accurate attribution with Enhanced Conversions
+export {
+  onBookingRequestCreatedTrackGoogleAdsLead,
+  onUserCreatedTrackGoogleAdsSignUp,
+  onCallSessionPaymentAuthorizedTrackGoogleAdsCheckout,
+} from './triggers/googleAdsTracking';
+
 // ========== SYNC BOOKINGS TO OUTIL-SOS-EXPAT (AI TRIGGER) ==========
 export { onBookingRequestCreated, retryOutilSync } from './triggers/syncBookingsToOutil';
 
@@ -5007,6 +5016,18 @@ export {
   resolvePaymentAlert,
   getPaymentMetrics
 } from './monitoring/paymentMonitoring';
+
+// ========== FUNCTIONAL MONITORING (Synthetics) ==========
+// Monitoring des parcours critiques: inscription, réservation, paiement, tracking
+export {
+  runFunctionalHealthCheck,
+  runCriticalFunctionalCheck,
+  cleanupFunctionalData,
+  getFunctionalAlerts,
+  resolveFunctionalAlert,
+  getFunctionalHealthSummary,
+  triggerFunctionalCheck
+} from './monitoring/functionalMonitoring';
 
 // Cost monitoring
 export { getCostMetrics } from "./monitoring/getCostMetrics";

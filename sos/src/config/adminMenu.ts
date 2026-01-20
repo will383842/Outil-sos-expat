@@ -431,6 +431,14 @@ export const adminMenuTree: AdminMenuItem[] = [
         descriptionKey: "admin.menu.metaAnalytics.description",
       },
       {
+        id: "google-ads-analytics",
+        labelKey: "admin.menu.googleAdsAnalytics",
+        path: "/admin/marketing/google-ads-analytics",
+        icon: BarChart3,
+        badge: "NEW",
+        descriptionKey: "admin.menu.googleAdsAnalytics.description",
+      },
+      {
         id: "notifications",
         labelKey: "admin.menu.notifications",
         path: "/admin/comms/notifications",
@@ -655,6 +663,14 @@ export const adminMenuTree: AdminMenuItem[] = [
             path: "/admin/monitoring/agents",
             icon: Cpu,
             descriptionKey: "admin.menu.agentMonitoring.description",
+          },
+          {
+            id: "functional-monitoring",
+            labelKey: "admin.menu.functionalMonitoring",
+            path: "/admin/monitoring/functional",
+            icon: Activity,
+            badge: "NEW",
+            descriptionKey: "admin.menu.functionalMonitoring.description",
           },
           {
             id: "connection-logs",

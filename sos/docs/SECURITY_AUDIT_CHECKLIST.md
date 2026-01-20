@@ -298,13 +298,13 @@ Le rapport de pentest devra inclure :
 
 | Rôle | Contact |
 |------|---------|
-| Security Lead | security@sos-expat.com |
-| CTO | cto@sos-expat.com |
-| DevOps | devops@sos-expat.com |
+| Security Lead | contact@sos-expat.com |
+| CTO | contact@sos-expat.com |
+| DevOps | contact@sos-expat.com |
 
 ### Reporting Vulnérabilités
 
-- Email: security@sos-expat.com
+- Email: contact@sos-expat.com
 - Programme Bug Bounty: À définir
 
 ---

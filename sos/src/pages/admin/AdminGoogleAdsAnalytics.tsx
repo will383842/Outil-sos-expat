@@ -1,5 +1,5 @@
-// src/pages/admin/AdminMetaAnalytics.tsx
-// Dashboard Analytics Meta Pixel + CAPI - Version Complete
+// src/pages/admin/AdminGoogleAdsAnalytics.tsx
+// Dashboard Analytics Google Ads - Enhanced Conversions
 
 import React, { useState, useCallback } from 'react';
 import { useIntl } from 'react-intl';
@@ -30,11 +30,8 @@ import {
   Zap,
   Target,
   ShoppingCart,
-  Eye,
-  Search,
   UserPlus,
   CreditCard,
-  Play,
   ExternalLink,
   AlertTriangle,
   AlertCircle,
@@ -44,24 +41,26 @@ import {
   User,
   Globe,
   Server,
-  Smartphone,
   Shield,
   Star,
+  Link2,
+  MapPin,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import AdminLayout from '../../components/admin/AdminLayout';
-import { useMetaAnalytics, CAPIEventType, EventSource, MetaAlert } from '../../hooks/useMetaAnalytics';
+import { useGoogleAdsAnalytics, GoogleAdsEventType, GoogleAdsEventSource, GoogleAdsAlert } from '../../hooks/useGoogleAdsAnalytics';
 
 // ============================================================================
 // Constants
 // ============================================================================
 
 const COLORS = {
-  primary: '#DC2626',
-  secondary: '#2563EB',
-  success: '#16A34A',
-  warning: '#D97706',
+  primary: '#4285F4', // Google Blue
+  secondary: '#34A853', // Google Green
+  success: '#34A853',
+  warning: '#FBBC05', // Google Yellow
+  error: '#EA4335', // Google Red
   purple: '#9333EA',
   pink: '#DB2777',
   cyan: '#0891B2',
@@ -71,28 +70,21 @@ const COLORS = {
 const PIE_COLORS = [
   COLORS.primary,
   COLORS.secondary,
-  COLORS.success,
   COLORS.warning,
+  COLORS.error,
   COLORS.purple,
   COLORS.pink,
   COLORS.cyan,
   COLORS.orange,
 ];
 
-const EVENT_TYPE_ICONS: Record<CAPIEventType, React.ReactNode> = {
+const EVENT_TYPE_ICONS: Record<GoogleAdsEventType, React.ReactNode> = {
   Purchase: <DollarSign size={16} />,
   Lead: <Target size={16} />,
-  InitiateCheckout: <CreditCard size={16} />,
-  CompleteRegistration: <UserPlus size={16} />,
-  Search: <Search size={16} />,
-  ViewContent: <Eye size={16} />,
-  AddToCart: <ShoppingCart size={16} />,
-  StartTrial: <Play size={16} />,
-  AddPaymentInfo: <CreditCard size={16} />,
+  SignUp: <UserPlus size={16} />,
+  BeginCheckout: <CreditCard size={16} />,
   Contact: <Users size={16} />,
 };
-
-// Source labels will be retrieved from intl in the component
 
 // ============================================================================
 // Components
@@ -105,7 +97,6 @@ interface KPICardProps {
   iconBgColor: string;
   loading?: boolean;
   subtitle?: string;
-  trend?: 'up' | 'down' | 'neutral';
 }
 
 const KPICard: React.FC<KPICardProps> = ({
@@ -176,7 +167,7 @@ const QualityScoreCard: React.FC<QualityScoreCardProps & { translations: Quality
             <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full ${getScoreBg(score)} transition-all`}
-                style={{ width: `${Math.min(score, 100)}%`, backgroundColor: score >= 70 ? COLORS.success : score >= 40 ? COLORS.warning : COLORS.primary }}
+                style={{ width: `${Math.min(score, 100)}%`, backgroundColor: score >= 70 ? COLORS.success : score >= 40 ? COLORS.warning : COLORS.error }}
               />
             </div>
             <p className="text-xs text-gray-500 mt-1">
@@ -190,7 +181,7 @@ const QualityScoreCard: React.FC<QualityScoreCardProps & { translations: Quality
 };
 
 interface AlertCardProps {
-  alert: MetaAlert;
+  alert: GoogleAdsAlert;
 }
 
 const AlertCard: React.FC<AlertCardProps> = ({ alert }) => {
@@ -220,27 +211,24 @@ const AlertCard: React.FC<AlertCardProps> = ({ alert }) => {
   );
 };
 
-interface TestCAPIResultProps {
+interface TestAPIResultProps {
   isLoading: boolean;
   result: {
     success: boolean;
     message: string;
     details?: {
-      eventId?: string;
-      eventsReceived?: number;
-      fbtraceId?: string;
+      orderId?: string;
       error?: string;
     };
   } | null;
 }
 
-interface TestCAPIResultTranslations {
+interface TestAPIResultTranslations {
   testInProgress: string;
-  eventsReceived: string;
   error: string;
 }
 
-const TestCAPIResult: React.FC<TestCAPIResultProps & { translations: TestCAPIResultTranslations }> = ({ isLoading, result, translations }) => {
+const TestAPIResult: React.FC<TestAPIResultProps & { translations: TestAPIResultTranslations }> = ({ isLoading, result, translations }) => {
   if (isLoading) {
     return (
       <div className="flex items-center gap-2 text-gray-600">
@@ -270,14 +258,8 @@ const TestCAPIResult: React.FC<TestCAPIResultProps & { translations: TestCAPIRes
           </p>
           {result.details && (
             <div className="mt-2 text-sm text-gray-600 space-y-1">
-              {result.details.eventId && (
-                <p>Event ID: <code className="bg-gray-100 px-1 rounded">{result.details.eventId}</code></p>
-              )}
-              {result.details.eventsReceived !== undefined && (
-                <p>{translations.eventsReceived}: {result.details.eventsReceived}</p>
-              )}
-              {result.details.fbtraceId && (
-                <p>Trace ID: <code className="bg-gray-100 px-1 rounded">{result.details.fbtraceId}</code></p>
+              {result.details.orderId && (
+                <p>Order ID: <code className="bg-gray-100 px-1 rounded">{result.details.orderId}</code></p>
               )}
               {result.details.error && (
                 <p className="text-red-600">{translations.error}: {result.details.error}</p>
@@ -294,56 +276,49 @@ const TestCAPIResult: React.FC<TestCAPIResultProps & { translations: TestCAPIRes
 // Main Component
 // ============================================================================
 
-const AdminMetaAnalytics: React.FC = () => {
+const AdminGoogleAdsAnalytics: React.FC = () => {
   const intl = useIntl();
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
   const [days, setDays] = useState(7);
-  const { data, isLoading, error, refresh } = useMetaAnalytics(days);
+  const { data, isLoading, error, refresh } = useGoogleAdsAnalytics(days);
 
   // i18n helper
   const t = (id: string, values?: Record<string, string | number>) =>
     intl.formatMessage({ id }, values);
 
   // Get source label with i18n
-  const getSourceLabel = (source: EventSource | 'unknown'): string => {
-    const labelKeys: Record<EventSource | 'unknown', string> = {
-      http_endpoint: 'admin.metaAnalytics.source.httpEndpoint',
-      trigger_booking: 'admin.metaAnalytics.source.triggerBooking',
-      trigger_user: 'admin.metaAnalytics.source.triggerUser',
-      trigger_call: 'admin.metaAnalytics.source.triggerCall',
-      trigger_contact: 'admin.metaAnalytics.source.triggerContact',
-      unknown: 'admin.metaAnalytics.source.unknown',
+  const getSourceLabel = (source: GoogleAdsEventSource | 'unknown'): string => {
+    const labelKeys: Record<GoogleAdsEventSource | 'unknown', string> = {
+      http_endpoint: 'admin.googleAdsAnalytics.source.httpEndpoint',
+      trigger_booking: 'admin.googleAdsAnalytics.source.triggerBooking',
+      trigger_user: 'admin.googleAdsAnalytics.source.triggerUser',
+      trigger_call: 'admin.googleAdsAnalytics.source.triggerCall',
+      trigger_payment: 'admin.googleAdsAnalytics.source.triggerPayment',
+      unknown: 'admin.googleAdsAnalytics.source.unknown',
     };
     return t(labelKeys[source] || labelKeys.unknown);
   };
 
-  // Get event type label (keep simple names, mostly same in FR/EN)
-  const getEventTypeLabel = (type: CAPIEventType): string => {
-    const labels: Record<CAPIEventType, string> = {
-      Purchase: t('admin.metaAnalytics.chart.purchases'),
+  // Get event type label
+  const getEventTypeLabel = (type: GoogleAdsEventType): string => {
+    const labels: Record<GoogleAdsEventType, string> = {
+      Purchase: t('admin.googleAdsAnalytics.chart.purchases'),
       Lead: 'Lead',
-      InitiateCheckout: 'Checkout',
-      CompleteRegistration: t('admin.metaAnalytics.users.authenticated').split(' ')[0] || 'Registration',
-      Search: t('admin.metaAnalytics.quality.email').includes('Email') ? 'Search' : 'Recherche',
-      ViewContent: t('admin.metaAnalytics.chart.total').includes('Total') ? 'View Content' : 'Vue contenu',
-      AddToCart: t('admin.metaAnalytics.chart.total').includes('Total') ? 'Add to Cart' : 'Ajout panier',
-      StartTrial: t('admin.metaAnalytics.chart.total').includes('Total') ? 'Trial' : 'Essai',
-      AddPaymentInfo: t('admin.metaAnalytics.chart.total').includes('Total') ? 'Payment' : 'Paiement',
+      SignUp: t('admin.googleAdsAnalytics.eventType.signUp'),
+      BeginCheckout: 'Checkout',
       Contact: 'Contact',
     };
     return labels[type] || type;
   };
 
-  // Test CAPI state
+  // Test API state
   const [testLoading, setTestLoading] = useState(false);
   const [testResult, setTestResult] = useState<{
     success: boolean;
     message: string;
     details?: {
-      eventId?: string;
-      eventsReceived?: number;
-      fbtraceId?: string;
+      orderId?: string;
       error?: string;
     };
   } | null>(null);
@@ -355,21 +330,21 @@ const AdminMetaAnalytics: React.FC = () => {
     }
   }, [currentUser, navigate]);
 
-  // Test CAPI connection
-  const handleTestCAPI = useCallback(async () => {
+  // Test API connection
+  const handleTestAPI = useCallback(async () => {
     setTestLoading(true);
     setTestResult(null);
 
     try {
       const response = await fetch(
-        'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/testCAPIConnection'
+        'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/testGoogleAdsConnection'
       );
       const result = await response.json();
       setTestResult(result);
     } catch (err) {
       setTestResult({
         success: false,
-        message: t('admin.metaAnalytics.testCapi.connectionError'),
+        message: t('admin.googleAdsAnalytics.testApi.connectionError'),
         details: {
           error: err instanceof Error ? err.message : 'Unknown error',
         },
@@ -405,7 +380,7 @@ const AdminMetaAnalytics: React.FC = () => {
               onClick={refresh}
               className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
             >
-              {t('admin.metaAnalytics.error.retry')}
+              {t('admin.googleAdsAnalytics.error.retry')}
             </button>
           </div>
         </div>
@@ -434,13 +409,13 @@ const AdminMetaAnalytics: React.FC = () => {
   })) || [];
 
   const qualityData = data?.qualityMetrics ? [
-    { name: t('admin.metaAnalytics.quality.email'), value: data.qualityMetrics.withEmail, total: data.qualityMetrics.totalEvents, icon: <Mail size={14} /> },
-    { name: t('admin.metaAnalytics.quality.phone'), value: data.qualityMetrics.withPhone, total: data.qualityMetrics.totalEvents, icon: <Phone size={14} /> },
-    { name: t('admin.metaAnalytics.quality.firstName'), value: data.qualityMetrics.withFirstName, total: data.qualityMetrics.totalEvents, icon: <User size={14} /> },
-    { name: t('admin.metaAnalytics.quality.lastName'), value: data.qualityMetrics.withLastName, total: data.qualityMetrics.totalEvents, icon: <User size={14} /> },
-    { name: t('admin.metaAnalytics.quality.country'), value: data.qualityMetrics.withCountry, total: data.qualityMetrics.totalEvents, icon: <Globe size={14} /> },
-    { name: t('admin.metaAnalytics.quality.fbpCookie'), value: data.qualityMetrics.withFbp, total: data.qualityMetrics.totalEvents, icon: <Smartphone size={14} /> },
-    { name: t('admin.metaAnalytics.quality.fbcCookie'), value: data.qualityMetrics.withFbc, total: data.qualityMetrics.totalEvents, icon: <Smartphone size={14} /> },
+    { name: t('admin.googleAdsAnalytics.quality.email'), value: data.qualityMetrics.withEmail, total: data.qualityMetrics.totalEvents, icon: <Mail size={14} /> },
+    { name: t('admin.googleAdsAnalytics.quality.phone'), value: data.qualityMetrics.withPhone, total: data.qualityMetrics.totalEvents, icon: <Phone size={14} /> },
+    { name: t('admin.googleAdsAnalytics.quality.gclid'), value: data.qualityMetrics.withGclid, total: data.qualityMetrics.totalEvents, icon: <Link2 size={14} /> },
+    { name: t('admin.googleAdsAnalytics.quality.firstName'), value: data.qualityMetrics.withFirstName, total: data.qualityMetrics.totalEvents, icon: <User size={14} /> },
+    { name: t('admin.googleAdsAnalytics.quality.lastName'), value: data.qualityMetrics.withLastName, total: data.qualityMetrics.totalEvents, icon: <User size={14} /> },
+    { name: t('admin.googleAdsAnalytics.quality.address'), value: data.qualityMetrics.withAddress, total: data.qualityMetrics.totalEvents, icon: <MapPin size={14} /> },
+    { name: t('admin.googleAdsAnalytics.quality.country'), value: data.qualityMetrics.withCountry, total: data.qualityMetrics.totalEvents, icon: <Globe size={14} /> },
   ] : [];
 
   return (
@@ -451,11 +426,11 @@ const AdminMetaAnalytics: React.FC = () => {
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                <Activity className="w-7 h-7 text-blue-600" />
-                {t('admin.metaAnalytics.title')}
+                <Activity className="w-7 h-7" style={{ color: COLORS.primary }} />
+                {t('admin.googleAdsAnalytics.title')}
               </h1>
               <p className="text-gray-500 text-sm mt-1">
-                {t('admin.metaAnalytics.subtitle')}
+                {t('admin.googleAdsAnalytics.subtitle')}
               </p>
             </div>
 
@@ -473,9 +448,10 @@ const AdminMetaAnalytics: React.FC = () => {
                     onClick={() => setDays(period.value)}
                     className={`px-4 py-2 text-sm font-medium transition-colors ${
                       days === period.value
-                        ? 'bg-blue-600 text-white'
+                        ? 'text-white'
                         : 'text-gray-600 hover:bg-gray-200'
                     }`}
+                    style={days === period.value ? { backgroundColor: COLORS.primary } : {}}
                   >
                     {period.label}
                   </button>
@@ -489,18 +465,19 @@ const AdminMetaAnalytics: React.FC = () => {
                 className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
               >
                 <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
-                {t('admin.metaAnalytics.refresh')}
+                {t('admin.googleAdsAnalytics.refresh')}
               </button>
 
-              {/* Link to Events Manager */}
+              {/* Link to Google Ads */}
               <a
-                href="https://business.facebook.com/events_manager2/pixel/2204016713738311/overview"
+                href="https://ads.google.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-white rounded-lg text-sm font-medium hover:opacity-90 transition-colors"
+                style={{ backgroundColor: COLORS.primary }}
               >
                 <ExternalLink size={16} />
-                {t('admin.metaAnalytics.eventsManager')}
+                {t('admin.googleAdsAnalytics.googleAdsConsole')}
               </a>
             </div>
           </div>
@@ -511,7 +488,7 @@ const AdminMetaAnalytics: React.FC = () => {
           <div className="space-y-3">
             <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
               <AlertCircle className="w-5 h-5 text-yellow-600" />
-              {t('admin.metaAnalytics.alerts.title')} ({data.alerts.length})
+              {t('admin.googleAdsAnalytics.alerts.title')} ({data.alerts.length})
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {data.alerts.map((alert) => (
@@ -524,31 +501,31 @@ const AdminMetaAnalytics: React.FC = () => {
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <KPICard
-            title={t('admin.metaAnalytics.kpi.totalEvents')}
+            title={t('admin.googleAdsAnalytics.kpi.totalEvents')}
             value={formatNumber(data?.totalEvents || 0)}
-            icon={<Zap size={24} className="text-blue-600" />}
+            icon={<Zap size={24} style={{ color: COLORS.primary }} />}
             iconBgColor="bg-blue-100"
             loading={isLoading}
-            subtitle={t('admin.metaAnalytics.kpi.lastDays', { days: String(days) })}
+            subtitle={t('admin.googleAdsAnalytics.kpi.lastDays', { days: String(days) })}
           />
           <KPICard
-            title={t('admin.metaAnalytics.kpi.uniqueUsers')}
+            title={t('admin.googleAdsAnalytics.kpi.uniqueUsers')}
             value={formatNumber(data?.uniqueUsers || 0)}
             icon={<Users size={24} className="text-green-600" />}
             iconBgColor="bg-green-100"
             loading={isLoading}
-            subtitle={t('admin.metaAnalytics.kpi.withUserId')}
+            subtitle={t('admin.googleAdsAnalytics.kpi.withUserId')}
           />
           <KPICard
-            title={t('admin.metaAnalytics.kpi.totalValue')}
+            title={t('admin.googleAdsAnalytics.kpi.totalValue')}
             value={formatCurrency(data?.totalValue || 0)}
             icon={<DollarSign size={24} className="text-red-600" />}
             iconBgColor="bg-red-100"
             loading={isLoading}
-            subtitle={t('admin.metaAnalytics.kpi.purchasesLeads')}
+            subtitle={t('admin.googleAdsAnalytics.kpi.purchasesLeads')}
           />
           <KPICard
-            title={t('admin.metaAnalytics.kpi.conversionRate')}
+            title={t('admin.googleAdsAnalytics.kpi.conversionRate')}
             value={
               data?.funnel && data.funnel.length >= 2
                 ? `${data.funnel[data.funnel.length - 1].conversionRate.toFixed(1)}%`
@@ -557,27 +534,27 @@ const AdminMetaAnalytics: React.FC = () => {
             icon={<TrendingUp size={24} className="text-purple-600" />}
             iconBgColor="bg-purple-100"
             loading={isLoading}
-            subtitle={t('admin.metaAnalytics.kpi.checkoutPurchase')}
+            subtitle={t('admin.googleAdsAnalytics.kpi.checkoutPurchase')}
           />
           <QualityScoreCard
             score={data?.qualityMetrics?.averageScore || 0}
             loading={isLoading}
             translations={{
-              title: t('admin.metaAnalytics.quality.score'),
-              excellent: t('admin.metaAnalytics.quality.excellent'),
-              average: t('admin.metaAnalytics.quality.average'),
-              needsImprovement: t('admin.metaAnalytics.quality.needsImprovement'),
+              title: t('admin.googleAdsAnalytics.quality.score'),
+              excellent: t('admin.googleAdsAnalytics.quality.excellent'),
+              average: t('admin.googleAdsAnalytics.quality.average'),
+              needsImprovement: t('admin.googleAdsAnalytics.quality.needsImprovement'),
             }}
           />
         </div>
 
-        {/* User Breakdown & Test CAPI */}
+        {/* User Breakdown & Test API */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* User Breakdown */}
           <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Shield size={20} className="text-purple-600" />
-              {t('admin.metaAnalytics.users.title')}
+              {t('admin.googleAdsAnalytics.users.title')}
             </h3>
             {isLoading ? (
               <div className="h-32 bg-gray-100 animate-pulse rounded" />
@@ -586,7 +563,7 @@ const AdminMetaAnalytics: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-green-500" />
-                    <span className="text-sm text-gray-600">{t('admin.metaAnalytics.users.authenticated')}</span>
+                    <span className="text-sm text-gray-600">{t('admin.googleAdsAnalytics.users.authenticated')}</span>
                   </div>
                   <span className="font-semibold">
                     {formatNumber(data?.userBreakdown?.authenticated || 0)}
@@ -598,7 +575,7 @@ const AdminMetaAnalytics: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-gray-400" />
-                    <span className="text-sm text-gray-600">{t('admin.metaAnalytics.users.anonymous')}</span>
+                    <span className="text-sm text-gray-600">{t('admin.googleAdsAnalytics.users.anonymous')}</span>
                   </div>
                   <span className="font-semibold">
                     {formatNumber(data?.userBreakdown?.anonymous || 0)}
@@ -617,20 +594,20 @@ const AdminMetaAnalytics: React.FC = () => {
             )}
           </div>
 
-          {/* Test CAPI Connection */}
+          {/* Test API Connection */}
           <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                   <Server size={20} className="text-green-600" />
-                  {t('admin.metaAnalytics.testCapi.title')}
+                  {t('admin.googleAdsAnalytics.testApi.title')}
                 </h3>
                 <p className="text-sm text-gray-500">
-                  {t('admin.metaAnalytics.testCapi.subtitle')}
+                  {t('admin.googleAdsAnalytics.testApi.subtitle')}
                 </p>
               </div>
               <button
-                onClick={handleTestCAPI}
+                onClick={handleTestAPI}
                 disabled={testLoading}
                 className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50"
               >
@@ -639,24 +616,23 @@ const AdminMetaAnalytics: React.FC = () => {
                 ) : (
                   <CheckCircle size={16} />
                 )}
-                {t('admin.metaAnalytics.testCapi.button')}
+                {t('admin.googleAdsAnalytics.testApi.button')}
               </button>
             </div>
 
-            <TestCAPIResult
+            <TestAPIResult
               isLoading={testLoading}
               result={testResult}
               translations={{
-                testInProgress: t('admin.metaAnalytics.testCapi.testing'),
-                eventsReceived: t('admin.metaAnalytics.testCapi.eventsReceived'),
-                error: t('admin.metaAnalytics.testCapi.errorLabel'),
+                testInProgress: t('admin.googleAdsAnalytics.testApi.testing'),
+                error: t('admin.googleAdsAnalytics.testApi.errorLabel'),
               }}
             />
 
             {!testResult && !testLoading && (
               <div className="p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
                 <p>
-                  {t('admin.metaAnalytics.testCapi.help')}
+                  {t('admin.googleAdsAnalytics.testApi.help')}
                 </p>
               </div>
             )}
@@ -667,7 +643,7 @@ const AdminMetaAnalytics: React.FC = () => {
         <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <Star size={20} className="text-yellow-500" />
-            {t('admin.metaAnalytics.quality.title')}
+            {t('admin.googleAdsAnalytics.quality.title')}
           </h3>
           {isLoading ? (
             <div className="h-48 bg-gray-100 animate-pulse rounded" />
@@ -691,7 +667,7 @@ const AdminMetaAnalytics: React.FC = () => {
                           cx="32"
                           cy="32"
                           r="28"
-                          stroke={percentage >= 50 ? COLORS.success : percentage >= 25 ? COLORS.warning : COLORS.primary}
+                          stroke={percentage >= 50 ? COLORS.success : percentage >= 25 ? COLORS.warning : COLORS.error}
                           strokeWidth="6"
                           fill="none"
                           strokeDasharray={`${(percentage / 100) * 176} 176`}
@@ -721,7 +697,7 @@ const AdminMetaAnalytics: React.FC = () => {
           {/* Events Over Time */}
           <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              {t('admin.metaAnalytics.chart.eventsOverTime')}
+              {t('admin.googleAdsAnalytics.chart.eventsOverTime')}
             </h3>
             {isLoading ? (
               <div className="h-80 flex items-center justify-center">
@@ -740,7 +716,7 @@ const AdminMetaAnalytics: React.FC = () => {
                   <Line
                     type="monotone"
                     dataKey="total"
-                    name={t('admin.metaAnalytics.chart.total')}
+                    name={t('admin.googleAdsAnalytics.chart.total')}
                     stroke={COLORS.primary}
                     strokeWidth={2}
                     dot={{ fill: COLORS.primary }}
@@ -748,7 +724,7 @@ const AdminMetaAnalytics: React.FC = () => {
                   <Line
                     type="monotone"
                     dataKey="purchases"
-                    name={t('admin.metaAnalytics.chart.purchases')}
+                    name={t('admin.googleAdsAnalytics.chart.purchases')}
                     stroke={COLORS.success}
                     strokeWidth={2}
                     dot={{ fill: COLORS.success }}
@@ -756,10 +732,10 @@ const AdminMetaAnalytics: React.FC = () => {
                   <Line
                     type="monotone"
                     dataKey="leads"
-                    name={t('admin.metaAnalytics.chart.leads')}
-                    stroke={COLORS.secondary}
+                    name={t('admin.googleAdsAnalytics.chart.leads')}
+                    stroke={COLORS.warning}
                     strokeWidth={2}
-                    dot={{ fill: COLORS.secondary }}
+                    dot={{ fill: COLORS.warning }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -769,7 +745,7 @@ const AdminMetaAnalytics: React.FC = () => {
           {/* Events by Type (Pie) */}
           <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              {t('admin.metaAnalytics.chart.distributionByType')}
+              {t('admin.googleAdsAnalytics.chart.distributionByType')}
             </h3>
             {isLoading ? (
               <div className="h-80 flex items-center justify-center">
@@ -794,12 +770,12 @@ const AdminMetaAnalytics: React.FC = () => {
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => [value, t('admin.metaAnalytics.chart.events')]} />
+                  <Tooltip formatter={(value) => [value, t('admin.googleAdsAnalytics.chart.events')]} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
               <div className="h-80 flex items-center justify-center text-gray-500">
-                {t('admin.metaAnalytics.chart.noData')}
+                {t('admin.googleAdsAnalytics.chart.noData')}
               </div>
             )}
           </div>
@@ -811,7 +787,7 @@ const AdminMetaAnalytics: React.FC = () => {
           <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Server size={20} className="text-cyan-600" />
-              {t('admin.metaAnalytics.source.title')}
+              {t('admin.googleAdsAnalytics.source.title')}
             </h3>
             {isLoading ? (
               <div className="h-64 flex items-center justify-center">
@@ -823,7 +799,7 @@ const AdminMetaAnalytics: React.FC = () => {
                   <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                   <XAxis type="number" tick={{ fontSize: 12 }} stroke="#9CA3AF" />
                   <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={120} stroke="#9CA3AF" />
-                  <Tooltip formatter={(value) => [value, t('admin.metaAnalytics.chart.events')]} />
+                  <Tooltip formatter={(value) => [value, t('admin.googleAdsAnalytics.chart.events')]} />
                   <Bar dataKey="value" radius={[0, 4, 4, 0]}>
                     {sourceData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
@@ -833,7 +809,7 @@ const AdminMetaAnalytics: React.FC = () => {
               </ResponsiveContainer>
             ) : (
               <div className="h-64 flex items-center justify-center text-gray-500">
-                {t('admin.metaAnalytics.chart.noData')}
+                {t('admin.googleAdsAnalytics.chart.noData')}
               </div>
             )}
           </div>
@@ -841,7 +817,7 @@ const AdminMetaAnalytics: React.FC = () => {
           {/* Conversion Funnel */}
           <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              {t('admin.metaAnalytics.funnel.title')}
+              {t('admin.googleAdsAnalytics.funnel.title')}
             </h3>
             {isLoading ? (
               <div className="h-64 flex items-center justify-center">
@@ -861,7 +837,7 @@ const AdminMetaAnalytics: React.FC = () => {
                           <span className="text-sm font-medium text-gray-900">{step.name}</span>
                           {index > 0 && (
                             <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
-                              {step.conversionRate.toFixed(1)}% {t('admin.metaAnalytics.funnel.fromPrevious')}
+                              {step.conversionRate.toFixed(1)}% {t('admin.googleAdsAnalytics.funnel.fromPrevious')}
                             </span>
                           )}
                         </div>
@@ -895,7 +871,7 @@ const AdminMetaAnalytics: React.FC = () => {
         {/* Recent Events Table */}
         <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            {t('admin.metaAnalytics.recent.title')}
+            {t('admin.googleAdsAnalytics.recent.title')}
           </h3>
           {isLoading ? (
             <div className="space-y-3">
@@ -908,13 +884,14 @@ const AdminMetaAnalytics: React.FC = () => {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 font-medium text-gray-500">{t('admin.metaAnalytics.recent.type')}</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-500">{t('admin.metaAnalytics.recent.source')}</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-500">{t('admin.metaAnalytics.recent.user')}</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-500">{t('admin.metaAnalytics.recent.content')}</th>
-                    <th className="text-center py-3 px-4 font-medium text-gray-500">{t('admin.metaAnalytics.recent.quality')}</th>
-                    <th className="text-right py-3 px-4 font-medium text-gray-500">{t('admin.metaAnalytics.recent.value')}</th>
-                    <th className="text-right py-3 px-4 font-medium text-gray-500">{t('admin.metaAnalytics.recent.date')}</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-500">{t('admin.googleAdsAnalytics.recent.type')}</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-500">{t('admin.googleAdsAnalytics.recent.source')}</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-500">{t('admin.googleAdsAnalytics.recent.user')}</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-500">GCLID</th>
+                    <th className="text-center py-3 px-4 font-medium text-gray-500">{t('admin.googleAdsAnalytics.recent.quality')}</th>
+                    <th className="text-center py-3 px-4 font-medium text-gray-500">{t('admin.googleAdsAnalytics.recent.status')}</th>
+                    <th className="text-right py-3 px-4 font-medium text-gray-500">{t('admin.googleAdsAnalytics.recent.value')}</th>
+                    <th className="text-right py-3 px-4 font-medium text-gray-500">{t('admin.googleAdsAnalytics.recent.date')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -939,11 +916,17 @@ const AdminMetaAnalytics: React.FC = () => {
                             {event.userId.slice(0, 8)}...
                           </code>
                         ) : (
-                          <span className="text-gray-400 text-xs">{t('admin.metaAnalytics.users.anonymous')}</span>
+                          <span className="text-gray-400 text-xs">{t('admin.googleAdsAnalytics.users.anonymous')}</span>
                         )}
                       </td>
-                      <td className="py-3 px-4 text-gray-600 text-xs">
-                        {event.contentName || event.contentCategory || '-'}
+                      <td className="py-3 px-4 text-gray-600">
+                        {event.gclid ? (
+                          <code className="text-xs bg-green-100 text-green-700 px-1 rounded">
+                            {event.gclid.slice(0, 12)}...
+                          </code>
+                        ) : (
+                          <span className="text-gray-400 text-xs">-</span>
+                        )}
                       </td>
                       <td className="py-3 px-4 text-center">
                         {event.qualityScore !== undefined ? (
@@ -955,6 +938,13 @@ const AdminMetaAnalytics: React.FC = () => {
                             {event.qualityScore}%
                           </span>
                         ) : '-'}
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        {event.success !== false ? (
+                          <CheckCircle size={16} className="text-green-600 inline" />
+                        ) : (
+                          <XCircle size={16} className="text-red-600 inline" />
+                        )}
                       </td>
                       <td className="py-3 px-4 text-right">
                         {event.value ? formatCurrency(event.value) : '-'}
@@ -974,28 +964,25 @@ const AdminMetaAnalytics: React.FC = () => {
             </div>
           ) : (
             <div className="text-center py-8 text-gray-500">
-              {t('admin.metaAnalytics.recent.noEvents')}
+              {t('admin.googleAdsAnalytics.recent.noEvents')}
             </div>
           )}
         </div>
 
         {/* Info Card */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-800 mb-2">
-            {t('admin.metaAnalytics.info.title')}
+        <div className="border rounded-lg p-6" style={{ backgroundColor: '#E8F0FE', borderColor: '#C2D9FC' }}>
+          <h3 className="text-lg font-semibold mb-2" style={{ color: '#1A73E8' }}>
+            {t('admin.googleAdsAnalytics.info.title')}
           </h3>
-          <div className="text-sm text-blue-700 space-y-2">
+          <div className="text-sm space-y-2" style={{ color: '#1967D2' }}>
             <p>
-              <strong>{t('admin.metaAnalytics.info.pixel')}</strong> : {t('admin.metaAnalytics.info.pixelDesc')}
+              <strong>{t('admin.googleAdsAnalytics.info.enhancedConversions')}</strong> : {t('admin.googleAdsAnalytics.info.enhancedConversionsDesc')}
             </p>
             <p>
-              <strong>{t('admin.metaAnalytics.info.capi')}</strong> : {t('admin.metaAnalytics.info.capiDesc')}
+              <strong>{t('admin.googleAdsAnalytics.info.gclid')}</strong> : {t('admin.googleAdsAnalytics.info.gclidDesc')}
             </p>
             <p>
-              <strong>{t('admin.metaAnalytics.info.deduplication')}</strong> : {t('admin.metaAnalytics.info.deduplicationDesc')}
-            </p>
-            <p>
-              <strong>{t('admin.metaAnalytics.info.qualityScore')}</strong> : {t('admin.metaAnalytics.info.qualityScoreDesc')}
+              <strong>{t('admin.googleAdsAnalytics.info.qualityScore')}</strong> : {t('admin.googleAdsAnalytics.info.qualityScoreDesc')}
             </p>
           </div>
         </div>
@@ -1004,4 +991,4 @@ const AdminMetaAnalytics: React.FC = () => {
   );
 };
 
-export default AdminMetaAnalytics;
+export default AdminGoogleAdsAnalytics;

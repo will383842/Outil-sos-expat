@@ -384,5 +384,5 @@ laravel-integration/
 ## Support
 
 Pour toute question sur l'intégration :
-- Email : tech@sos-expat.com
+- Email : contact@sos-expat.com
 - Documentation Firebase : https://firebase.google.com/docs/auth/admin/create-custom-tokens

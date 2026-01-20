@@ -78,7 +78,7 @@ interface PlatformSettings {
 
 const DEFAULT_SETTINGS: PlatformSettings = {
   platformName: "SOS-Expat",
-  supportEmail: "support@sos-expat.com",
+  supportEmail: "contact@sos-expat.com",
   supportPhone: "+33 1 00 00 00 00",
   mainWebsite: "https://sos-expat.com",
   maintenanceMode: false,
@@ -348,7 +348,7 @@ export default function Parametres() {
               value={settings.supportEmail}
               onChange={(v) => updateSetting("supportEmail", v)}
               type="email"
-              placeholder="support@sos-expat.com"
+              placeholder="contact@sos-expat.com"
             />
             <InputSetting
               label={t("parametres.platform.phone")}

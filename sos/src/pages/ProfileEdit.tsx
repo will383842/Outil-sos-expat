@@ -404,9 +404,23 @@ const ProfileEdit: React.FC = () => {
 
         // Synchroniser vers sos_profiles pour les providers (lawyer/expat)
         if ((userData?.role ?? "client") !== "client") {
+          // P0 FIX: Liste des champs protégés par les règles Firestore
+          // Ces champs ne peuvent PAS être modifiés par l'utilisateur
+          const PROTECTED_SOS_FIELDS = [
+            'stripeAccountId', 'paypalMerchantId', 'stripeCustomerId',
+            'totalEarnings', 'totalPayPalEarnings', 'pendingBalance',
+            'reservedBalance', 'paypalEmailVerified', 'paypalEmailVerifiedAt',
+            'isApproved', 'approvalStatus', 'verificationStatus'
+          ];
+
           const sosProfileUpdate: Record<string, unknown> = {
             photoURL,
             updatedAt: serverTimestamp() as Timestamp,
+            // P0 FIX: Synchroniser l'email vers sos_profiles
+            ...(formData.email && {
+              email: formData.email,
+              emailLower: formData.email.toLowerCase()
+            }),
           };
 
           // Champs communs pour tous les providers
@@ -508,8 +522,27 @@ const ProfileEdit: React.FC = () => {
           sosProfileUpdate.slugs = slugs;
           sosProfileUpdate.slugsUpdatedAt = serverTimestamp();
 
-          await updateDoc(doc(db, "sos_profiles", ctxUser.uid), sosProfileUpdate)
-            .catch((err) => console.warn("Erreur mise à jour sos_profiles :", err));
+          // P0 FIX: Filtrer les champs protégés avant d'envoyer à Firestore
+          // Cela évite que toute la mise à jour soit rejetée si un champ interdit est présent
+          const safeSosProfileUpdate = Object.fromEntries(
+            Object.entries(sosProfileUpdate).filter(
+              ([key]) => !PROTECTED_SOS_FIELDS.includes(key)
+            )
+          );
+
+          // P0 FIX: Ne plus ignorer silencieusement les erreurs
+          // Si la mise à jour échoue, l'utilisateur doit en être informé
+          try {
+            await updateDoc(doc(db, "sos_profiles", ctxUser.uid), safeSosProfileUpdate);
+          } catch (sosErr) {
+            console.error("Erreur mise à jour sos_profiles:", sosErr);
+            // Afficher une erreur mais ne pas bloquer car users/ a été mis à jour
+            setMessages((p) => ({
+              ...p,
+              error: "Profil utilisateur mis à jour, mais le profil prestataire n'a pas pu être synchronisé. Veuillez réessayer.",
+            }));
+            return; // Sortir sans afficher le message de succès
+          }
         }
 
         setMessages((p) => ({ ...p, success: "Profil mis à jour avec succès !" }));
@@ -535,6 +568,18 @@ const ProfileEdit: React.FC = () => {
               break;
             case "auth/requires-recent-login":
               errorMessage = "Veuillez vous reconnecter pour effectuer cette opération";
+              break;
+            case "auth/invalid-email":
+              errorMessage = "Format d'adresse email invalide";
+              break;
+            case "auth/operation-not-allowed":
+              errorMessage = "Cette opération n'est pas autorisée. Contactez le support.";
+              break;
+            case "auth/too-many-requests":
+              errorMessage = "Trop de tentatives. Veuillez réessayer dans quelques minutes.";
+              break;
+            case "auth/network-request-failed":
+              errorMessage = "Erreur de connexion réseau. Vérifiez votre connexion internet.";
               break;
             default:
               if ("message" in err && typeof (err as { message?: string }).message === "string") {

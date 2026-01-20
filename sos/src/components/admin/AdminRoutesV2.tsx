@@ -324,6 +324,7 @@ const AdminB2BReports = lazy(() => import("../../pages/admin/AdminB2BReports"));
 
 // ===== LAZY IMPORTS - MONITORING =====
 const AdminAgentMonitoring = lazy(() => import("../../pages/admin/AdminAgentMonitoring"));
+const AdminFunctionalMonitoring = lazy(() => import("../../pages/admin/AdminFunctionalMonitoring"));
 const AdminConnectionLogs = lazy(() => import("../../pages/admin/AdminConnectionLogs"));
 
 // ===== LAZY IMPORTS - SETTINGS & TOOLS =====
@@ -388,6 +389,7 @@ const MessagesTempsReel = lazy(() => import("../../pages/admin/marketing/Message
 const AdminAdsAnalytics = lazy(() => import("../../pages/admin/AdminAdsAnalytics"));
 const AdminTrustpilot = lazy(() => import("../../pages/admin/AdminTrustpilot"));
 const AdminMetaAnalytics = lazy(() => import("../../pages/admin/AdminMetaAnalytics"));
+const AdminGoogleAdsAnalytics = lazy(() => import("../../pages/admin/AdminGoogleAdsAnalytics"));
 
 // ===== COMPOSANT PRINCIPAL =====
 const AdminRoutesV2: React.FC = () => {
@@ -959,6 +961,14 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
       <Route
+        path="monitoring/functional"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminFunctionalMonitoring />
+          </Suspense>
+        }
+      />
+      <Route
         path="connection-logs"
         element={
           <Suspense fallback={<LoadingSpinner />}>
@@ -1167,6 +1177,14 @@ const AdminRoutesV2: React.FC = () => {
           </Suspense>
         }
       />
+      <Route
+        path="marketing/google-ads-analytics"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminGoogleAdsAnalytics />
+          </Suspense>
+        }
+      />
       <Route path="marketing" element={<Navigate to="marketing/templates-emails" replace />} />
 
       {/* 404 admin */}
@@ -1238,6 +1256,7 @@ export const useAdminRouteValidation = () => {
       "/admin/backups",
       "/admin/system-health",
       "/admin/monitoring/agents",
+      "/admin/monitoring/functional",
       "/admin/connection-logs",
       "/admin/settings",
       "/admin/reports/country-stats",
@@ -1251,6 +1270,8 @@ export const useAdminRouteValidation = () => {
       "/admin/ia",
       "/admin/marketing/ads-analytics",
       "/admin/marketing/trustpilot",
+      "/admin/marketing/meta-analytics",
+      "/admin/marketing/google-ads-analytics",
       "/admin/analytics/unified",
       "/admin/feedback",
     ];

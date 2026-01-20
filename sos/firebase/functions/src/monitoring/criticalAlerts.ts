@@ -39,7 +39,7 @@ const CONFIG = {
     DISPUTE_AMOUNT_EUR: 100        // Alerter si dispute > 100€
   },
   // Destinataires des alertes
-  ALERT_EMAILS: ['admin@sos-expat.com'],
+  ALERT_EMAILS: ['contact@sos-expat.com'],
   // Collection pour stocker les alertes
   ALERTS_COLLECTION: 'system_alerts'
 };

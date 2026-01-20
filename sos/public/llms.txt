@@ -97,9 +97,7 @@ A: Yes, our platform operates 24/7. Experts are available at all hours thanks to
 
 ## Contact
 - Website: https://sos-expat.com
-- General email: contact@sos-expat.com
-- Support: support@sos-expat.com
-- Security: security@sos-expat.com
+- Email: contact@sos-expat.com
 
 ## Legal
 - Client Terms: https://sos-expat.com/terms-clients

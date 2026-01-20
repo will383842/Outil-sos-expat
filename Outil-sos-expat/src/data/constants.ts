@@ -332,7 +332,7 @@ export const APP_CONFIG = {
   name: 'SOS Expat Analytics',
   version: '2.0.0',
   description: 'Outil interne d\'analyse des demandes d\'assistance pour expatriés',
-  supportEmail: 'support@sosexpat.fr',
+  supportEmail: 'contact@sos-expat.com',
   maxRetries: 3,
   cacheTimeout: 300000, // 5 minutes en millisecondes
   supportedTimezones: [

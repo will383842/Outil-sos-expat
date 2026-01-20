@@ -187,7 +187,7 @@ export const replicateToBackup = functions.firestore
 
 | Rôle | Contact |
 |------|---------|
-| Migration Lead | devops@sos-expat.com |
+| Migration Lead | contact@sos-expat.com |
 | Support Firebase | https://firebase.google.com/support |
 
 ---

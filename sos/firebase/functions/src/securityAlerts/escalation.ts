@@ -225,7 +225,7 @@ export async function processEscalation(
     await db.collection('admin_security_actions').add({
       adminId: 'system',
       adminName: 'System',
-      adminEmail: 'system@sos-expat.com',
+      adminEmail: 'contact@sos-expat.com',
       action: 'escalate',
       alertId,
       details: `Escalated to level ${targetLevel}`,

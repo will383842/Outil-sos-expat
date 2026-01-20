@@ -17,8 +17,7 @@ const db = getFirestore();
 
 const REMINDER_CONFIG = {
   notifyEmails: [
-    'comptabilite@sos-expat.com',
-    'admin@sos-expat.com',
+    'contact@sos-expat.com',
   ],
   reminderDays: [30, 7, 1, 0, -1], // Days before/after due date
 };

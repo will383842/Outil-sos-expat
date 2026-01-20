@@ -37,7 +37,7 @@ const CONFIG = {
   CRITICAL_THRESHOLD: 0,
   // Emails des administrateurs à notifier
   ADMIN_EMAILS: [
-    'admin@sos-expats.com',
+    'contact@sos-expat.com',
     // Ajouter d'autres emails si nécessaire
   ],
   // Heures de service (UTC) - ne pas alerter en dehors

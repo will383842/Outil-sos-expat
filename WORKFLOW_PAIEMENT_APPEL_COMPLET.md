@@ -1047,7 +1047,7 @@ export async function generateBothInvoices(
 │  Conditions: Paiement à réception                   │
 │  Mode: Carte bancaire                               │
 ├─────────────────────────────────────────────────────┤
-│  Contact: support@sos-expat.com | +33 1 23 45 67 89│
+│  Contact: contact@sos-expat.com | +33 1 23 45 67 89│
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -1271,4 +1271,4 @@ T+1576s   : WORKFLOW TERMINÉ ✅
 
 - **Développeur** : Claude Code
 - **Repository** : github.com/will383842/sos-expat-project
-- **Email support** : support@sos-expat.com
+- **Email support** : contact@sos-expat.com
