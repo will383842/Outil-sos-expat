@@ -430,6 +430,9 @@ export const IaMultiProvidersTab: React.FC = () => {
         ? {
             availability: 'busy',
             isOnline: true,
+            // ✅ BUG FIX: Toujours définir lastActivity lors de isOnline=true
+            // pour que checkProviderInactivity puisse calculer l'inactivité correctement
+            lastActivity: now,
             busyReason: reason || 'manually_disabled',
             busySince: now,
             lastStatusChange: now,
@@ -438,6 +441,8 @@ export const IaMultiProvidersTab: React.FC = () => {
         : {
             availability: 'available',
             isOnline: true,
+            // ✅ BUG FIX: Toujours définir lastActivity lors de isOnline=true
+            lastActivity: now,
             busyReason: null,
             busySince: null,
             busyBySibling: null,

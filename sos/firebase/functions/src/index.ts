@@ -4945,6 +4945,11 @@ export {
   onSosProfileUpdated,
 } from './triggers/syncSosProfilesToOutil';
 
+// ========== P0 FIX: SYNC USER EMAIL TO SOS_PROFILES ==========
+// Synchronise automatiquement les changements d'email de users vers sos_profiles
+// Résout le problème où l'email modifié dans ProfileEdit n'était pas synchronisé
+export { onUserEmailUpdated } from './triggers/syncUserEmailToSosProfiles';
+
 // ========== P0 FIX: SYNC ACCESS TO OUTIL-SOS-EXPAT ==========
 // Synchronise forcedAIAccess et freeTrialUntil vers Outil pour l'acces IA
 export { onUserAccessUpdated } from './triggers/syncAccessToOutil';

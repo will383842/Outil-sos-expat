@@ -7,6 +7,10 @@ export const checkProviderInactivity = scheduler.onSchedule(
     // Le frontend ne peut pas gérer les cas où l'onglet est fermé/arrière-plan
     schedule: 'every 15 minutes',
     timeZone: 'Europe/Paris',
+    // ✅ BUG FIX: Ajouter configuration pour éviter les échecs silencieux
+    region: 'europe-west1',
+    memory: '256MiB',
+    timeoutSeconds: 180, // 3 minutes max pour traiter tous les prestataires
   },
   async () => {
     console.log('🔍 Vérification inactivité prestataires...');
@@ -39,11 +43,24 @@ export const checkProviderInactivity = scheduler.onSchedule(
         const lastActivity = data.lastActivity?.toMillis?.() || 0;
         const lastStatusChange = data.lastStatusChange?.toMillis?.() || 0;
 
-        // Protection: ne pas mettre hors ligne si le prestataire vient de se mettre en ligne (< 15 min)
+        // ✅ BUG FIX: Protection améliorée basée sur DEUX critères
+        const nowMs = Date.now();
+        const recentThreshold = 15 * 60 * 1000; // 15 minutes
+
+        // Protection 1: ne pas mettre hors ligne si le prestataire vient de se mettre en ligne (< 15 min)
         // Cela évite de mettre hors ligne quelqu'un dont lastActivity n'a pas encore été mis à jour
-        const recentlyOnline = lastStatusChange > (Date.now() - 15 * 60 * 1000);
+        const recentlyOnline = lastStatusChange > (nowMs - recentThreshold);
         if (recentlyOnline) {
-          console.log(`⏭️ Skip ${doc.id}: mis en ligne récemment (${Math.round((Date.now() - lastStatusChange) / 60000)} min)`);
+          console.log(`⏭️ Skip ${doc.id}: mis en ligne récemment (${Math.round((nowMs - lastStatusChange) / 60000)} min)`);
+          continue;
+        }
+
+        // Protection 2: ne pas mettre hors ligne si lastActivity est récent (< 15 min)
+        // Même si le calcul principal dit qu'il est inactif, cette protection supplémentaire
+        // évite les faux positifs dus à des problèmes de synchronisation de timestamps
+        const recentlyActive = lastActivity > (nowMs - recentThreshold);
+        if (recentlyActive) {
+          console.log(`⏭️ Skip ${doc.id}: activité récente (${Math.round((nowMs - lastActivity) / 60000)} min)`);
           continue;
         }
 

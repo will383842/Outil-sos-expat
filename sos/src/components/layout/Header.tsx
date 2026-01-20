@@ -376,6 +376,9 @@ const useAvailabilityToggle = () => {
         isOnline: newStatus,
         availability: newStatus ? "available" : "unavailable",
         lastStatusChange: serverTimestamp(),
+        // ✅ BUG FIX: Initialiser lastActivity à la mise en ligne pour que
+        // checkProviderInactivity puisse calculer correctement l'inactivité
+        ...(newStatus && { lastActivity: serverTimestamp() }),
         updatedAt: serverTimestamp(),
         isVisible: true,
         isVisibleOnMap: true,
@@ -460,6 +463,8 @@ const useAvailabilityToggle = () => {
         isOnline: newStatus,
         availability: newStatus ? "available" : "unavailable",
         lastStatusChange: serverTimestamp(),
+        // ✅ BUG FIX: Initialiser lastActivity à la mise en ligne
+        ...(newStatus && { lastActivity: serverTimestamp() }),
         updatedAt: serverTimestamp(),
       };
 

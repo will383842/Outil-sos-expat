@@ -489,6 +489,9 @@ export const createUserProfile = async (userData: Partial<User>) => {
           avatar: finalProfilePhoto,
           isActive: true,
           isOnline: true,
+          // ✅ BUG FIX: Initialiser lastActivity à la création du profil
+          // pour que checkProviderInactivity puisse calculer l'inactivité
+          lastActivity: serverTimestamp(),
           availability: "available",
           motivation: getStr(extra.motivation, ""),
           isApproved: !!userData.isApproved,

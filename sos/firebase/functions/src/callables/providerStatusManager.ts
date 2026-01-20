@@ -66,6 +66,9 @@ export interface ProviderStatusOptions {
  * Met un prestataire en statut "busy" (en appel)
  * Si shareBusyStatus est activé, propage aux autres prestataires liés
  *
+ * ✅ BUG FIX: Utilise runTransaction pour garantir l'atomicité read-modify-write
+ * et éviter les race conditions entre lecture du statut et mise à jour
+ *
  * @param providerId - ID du prestataire
  * @param callSessionId - ID de la session d'appel
  * @param reason - Raison de l'indisponibilité (default: 'in_call')
@@ -87,115 +90,147 @@ export async function setProviderBusy(
   console.log(`${'🔶'.repeat(35)}`);
 
   try {
-    // 1. Récupérer le statut actuel
-    const userRef = getDb().collection('users').doc(providerId);
-    const userDoc = await userRef.get();
+    const db = getDb();
+    const userRef = db.collection('users').doc(providerId);
+    const profileRef = db.collection('sos_profiles').doc(providerId);
 
-    if (!userDoc.exists) {
-      console.warn(`🔶 [${logId}] ❌ Provider not found: ${providerId}`);
-      return {
-        success: false,
-        providerId,
-        previousStatus: 'offline',
-        newStatus: 'busy',
-        timestamp: now.toMillis(),
-        error: 'Provider not found',
-      };
-    }
-    console.log(`🔶 [${logId}] ✅ Provider found in users collection`);
+    // ✅ BUG FIX: Utiliser une transaction pour garantir l'atomicité read-modify-write
+    // Cela évite les race conditions où le statut change entre lecture et écriture
+    const transactionResult = await db.runTransaction(async (transaction) => {
+      // 1. Lire les documents dans la transaction
+      const userDoc = await transaction.get(userRef);
+      const profileDoc = await transaction.get(profileRef);
 
-    const userData = userDoc.data();
-    const previousStatus: AvailabilityStatus =
-      (userData?.availability as AvailabilityStatus) || 'available';
-
-    console.log(`🔶 [${logId}] Current status: ${previousStatus}, isOnline: ${userData?.isOnline}`);
-
-    // 2. Vérifier si déjà busy
-    if (previousStatus === 'busy') {
-      // Si le provider est busy par un sibling, on peut l'écraser avec son propre appel
-      if (userData?.busyBySibling === true) {
-        console.log(`🔶 [${logId}] Provider was busyBySibling, now in own call - will update`);
-        // Continue pour mettre à jour avec son propre appel
-      } else if (userData?.busyReason === 'pending_call' && reason === 'in_call') {
-        // P0 FIX: Permettre upgrade de pending_call vers in_call
-        console.log(`🔶 [${logId}] Provider upgrading from pending_call to in_call - will update`);
-        // Continue pour mettre à jour avec in_call
-      } else {
-        console.log(`🔶 [${logId}] Provider already busy (own call) - skipping update`);
+      if (!userDoc.exists) {
+        console.warn(`🔶 [${logId}] ❌ Provider not found: ${providerId}`);
         return {
-          success: true,
+          success: false,
           providerId,
-          previousStatus: 'busy',
-          newStatus: 'busy',
+          previousStatus: 'offline' as AvailabilityStatus,
+          newStatus: 'busy' as AvailabilityStatus,
           timestamp: now.toMillis(),
-          message: 'Provider already busy',
+          error: 'Provider not found',
+          skipPropagation: true,
         };
       }
-    }
+      console.log(`🔶 [${logId}] ✅ Provider found in users collection`);
 
-    // 3. Mise à jour atomique avec batch
-    const batch = getDb().batch();
+      const userData = userDoc.data();
+      const previousStatus: AvailabilityStatus =
+        (userData?.availability as AvailabilityStatus) || 'available';
 
-    const updateData = {
-      availability: 'busy',
-      isOnline: true,
-      currentCallSessionId: callSessionId,
-      busySince: now,
-      busyReason: reason,
-      busyBySibling: false, // Ce prestataire est directement en appel
-      lastStatusChange: now,
-      lastActivityCheck: now,
-      updatedAt: now,
-    };
+      console.log(`🔶 [${logId}] Current status: ${previousStatus}, isOnline: ${userData?.isOnline}`);
 
-    // Mettre à jour users
-    batch.update(userRef, updateData);
+      // 2. Vérifier si déjà busy
+      if (previousStatus === 'busy') {
+        // Si le provider est busy par un sibling, on peut l'écraser avec son propre appel
+        if (userData?.busyBySibling === true) {
+          console.log(`🔶 [${logId}] Provider was busyBySibling, now in own call - will update`);
+          // Continue pour mettre à jour avec son propre appel
+        } else if (userData?.busyReason === 'pending_call' && reason === 'in_call') {
+          // P0 FIX: Permettre upgrade de pending_call vers in_call
+          console.log(`🔶 [${logId}] Provider upgrading from pending_call to in_call - will update`);
+          // Continue pour mettre à jour avec in_call
+        } else {
+          console.log(`🔶 [${logId}] Provider already busy (own call) - skipping update`);
+          return {
+            success: true,
+            providerId,
+            previousStatus: 'busy' as AvailabilityStatus,
+            newStatus: 'busy' as AvailabilityStatus,
+            timestamp: now.toMillis(),
+            message: 'Provider already busy',
+            skipPropagation: true,
+          };
+        }
+      }
 
-    // Mettre à jour sos_profiles
-    const profileRef = getDb().collection('sos_profiles').doc(providerId);
-    const profileDoc = await profileRef.get();
-    if (profileDoc.exists) {
-      batch.update(profileRef, updateData);
-    }
+      // 3. Préparer les données de mise à jour
+      // ✅ BUG FIX: Sauvegarder si le prestataire était offline AVANT l'appel
+      // pour pouvoir le remettre offline après l'appel (respecter son intention)
+      const wasOfflineBeforeCall = previousStatus === 'offline' || userData?.isOnline === false;
 
-    // Log d'audit
-    batch.set(getDb().collection('provider_status_logs').doc(), {
-      providerId,
-      action: 'SET_BUSY',
-      previousStatus,
-      newStatus: 'busy',
-      callSessionId,
-      reason,
-      timestamp: now,
+      const updateData = {
+        availability: 'busy',
+        // ✅ BUG FIX: Ne PAS forcer isOnline: true si le prestataire était offline
+        // Un prestataire offline ne devrait pas recevoir d'appel, mais si ça arrive
+        // (race condition), on sauvegarde son intention pour la restaurer après
+        isOnline: wasOfflineBeforeCall ? false : true,
+        currentCallSessionId: callSessionId,
+        busySince: now,
+        busyReason: reason,
+        busyBySibling: false, // Ce prestataire est directement en appel
+        // ✅ BUG FIX: Sauvegarder l'intention pour setProviderAvailable
+        wasOfflineBeforeCall: wasOfflineBeforeCall,
+        lastStatusChange: now,
+        lastActivityCheck: now,
+        // ✅ BUG FIX: Toujours définir lastActivity pour que checkProviderInactivity fonctionne
+        lastActivity: now,
+        updatedAt: now,
+      };
+
+      // 4. Mettre à jour dans la transaction
+      transaction.update(userRef, updateData);
+
+      if (profileDoc.exists) {
+        transaction.update(profileRef, updateData);
+      }
+
+      // Log d'audit (créer un nouveau document)
+      const auditLogRef = db.collection('provider_status_logs').doc();
+      transaction.set(auditLogRef, {
+        providerId,
+        action: 'SET_BUSY',
+        previousStatus,
+        newStatus: 'busy',
+        callSessionId,
+        reason,
+        timestamp: now,
+      });
+
+      console.log(`🔶 [${logId}] Transaction prepared, committing...`);
+
+      return {
+        success: true,
+        providerId,
+        previousStatus,
+        newStatus: 'busy' as AvailabilityStatus,
+        timestamp: now.toMillis(),
+        message: `Provider status changed from ${previousStatus} to busy`,
+        linkedProviderIds: userData?.linkedProviderIds || [],
+        shareBusyStatus: userData?.shareBusyStatus === true,
+        skipPropagation: false,
+      };
     });
-
-    console.log(`🔶 [${logId}] Committing batch update...`);
-    await batch.commit();
 
     console.log(`🔶 [${logId}] ═══════════════════════════════════════════════════════════`);
     console.log(`🔶 [${logId}] ✅ SUCCESS: Provider ${providerId} set to BUSY`);
-    console.log(`🔶 [${logId}]   previousStatus: ${previousStatus}`);
+    console.log(`🔶 [${logId}]   previousStatus: ${transactionResult.previousStatus}`);
     console.log(`🔶 [${logId}]   newStatus: busy`);
     console.log(`🔶 [${logId}]   callSessionId: ${callSessionId}`);
     console.log(`🔶 [${logId}]   reason: ${reason}`);
     console.log(`🔶 [${logId}] ═══════════════════════════════════════════════════════════`);
 
-    // 4. Propager aux prestataires liés si shareBusyStatus est activé
-    const linkedProviderIds: string[] = userData?.linkedProviderIds || [];
-    const shareBusyStatus: boolean = userData?.shareBusyStatus === true;
-
-    if (shareBusyStatus && linkedProviderIds.length > 0) {
-      console.log(`[ProviderStatusManager] shareBusyStatus=true, propagating to ${linkedProviderIds.length} linked providers`);
-      await propagateBusyToSiblings(providerId, linkedProviderIds, callSessionId, now);
+    // 5. Propager aux prestataires liés si shareBusyStatus est activé
+    // (fait en dehors de la transaction pour éviter les deadlocks)
+    if (
+      !transactionResult.skipPropagation &&
+      transactionResult.shareBusyStatus &&
+      transactionResult.linkedProviderIds &&
+      transactionResult.linkedProviderIds.length > 0
+    ) {
+      console.log(`[ProviderStatusManager] shareBusyStatus=true, propagating to ${transactionResult.linkedProviderIds.length} linked providers`);
+      await propagateBusyToSiblings(providerId, transactionResult.linkedProviderIds, callSessionId, now);
     }
 
     return {
-      success: true,
-      providerId,
-      previousStatus,
-      newStatus: 'busy',
-      timestamp: now.toMillis(),
-      message: `Provider status changed from ${previousStatus} to busy`,
+      success: transactionResult.success,
+      providerId: transactionResult.providerId,
+      previousStatus: transactionResult.previousStatus,
+      newStatus: transactionResult.newStatus,
+      timestamp: transactionResult.timestamp,
+      message: transactionResult.message,
+      error: transactionResult.error,
     };
 
   } catch (error) {
@@ -254,6 +289,9 @@ async function propagateBusyToSiblings(
       const siblingUpdateData = {
         availability: 'busy',
         isOnline: true,
+        // ✅ BUG FIX: Toujours définir lastActivity lors de isOnline=true
+        // pour que checkProviderInactivity puisse calculer l'inactivité correctement
+        lastActivity: now,
         busySince: now,
         busyReason: 'sibling_in_call',
         busyBySibling: true,
@@ -311,111 +349,145 @@ export async function setProviderAvailable(
   const now = admin.firestore.Timestamp.now();
 
   try {
-    // 1. Récupérer le statut actuel
-    const userRef = getDb().collection('users').doc(providerId);
-    const userDoc = await userRef.get();
+    const db = getDb();
+    const userRef = db.collection('users').doc(providerId);
+    const profileRef = db.collection('sos_profiles').doc(providerId);
 
-    if (!userDoc.exists) {
-      console.warn(`[ProviderStatusManager] Provider not found: ${providerId}`);
-      return {
-        success: false,
-        providerId,
-        previousStatus: 'offline',
-        newStatus: 'available',
-        timestamp: now.toMillis(),
-        error: 'Provider not found',
+    // ✅ BUG FIX: Utiliser une transaction pour garantir l'atomicité read-modify-write
+    // Cela évite les race conditions où le statut change entre lecture et écriture
+    const transactionResult = await db.runTransaction(async (transaction) => {
+      // 1. Lire les documents dans la transaction
+      const userDoc = await transaction.get(userRef);
+      const profileDoc = await transaction.get(profileRef);
+
+      if (!userDoc.exists) {
+        console.warn(`[ProviderStatusManager] Provider not found: ${providerId}`);
+        return {
+          success: false,
+          providerId,
+          previousStatus: 'offline' as AvailabilityStatus,
+          newStatus: 'available' as AvailabilityStatus,
+          timestamp: now.toMillis(),
+          error: 'Provider not found',
+          skipSiblingRelease: true,
+        };
+      }
+
+      const userData = userDoc.data();
+      const previousStatus: AvailabilityStatus =
+        (userData?.availability as AvailabilityStatus) || 'offline';
+
+      // 2. Vérifier si déjà available OU si offline
+      // 2026-01-19 FIX: Ne PAS remettre en ligne un prestataire qui était offline
+      // setProviderAvailable ne doit s'appliquer qu'aux prestataires qui étaient busy
+      if (previousStatus === 'available') {
+        console.log(`[ProviderStatusManager] Provider ${providerId} already available`);
+        return {
+          success: true,
+          providerId,
+          previousStatus: 'available' as AvailabilityStatus,
+          newStatus: 'available' as AvailabilityStatus,
+          timestamp: now.toMillis(),
+          message: 'Provider already available',
+          skipSiblingRelease: true,
+        };
+      }
+
+      if (previousStatus === 'offline') {
+        console.log(`[ProviderStatusManager] Provider ${providerId} is offline - NOT setting to available`);
+        return {
+          success: true,
+          providerId,
+          previousStatus: 'offline' as AvailabilityStatus,
+          newStatus: 'offline' as AvailabilityStatus,
+          timestamp: now.toMillis(),
+          message: 'Provider is offline, not changing status',
+          skipSiblingRelease: true,
+        };
+      }
+
+      // ✅ BUG FIX: Vérifier si le prestataire voulait être offline AVANT l'appel
+      // Si oui, le remettre offline au lieu de available
+      const wasOfflineBeforeCall = userData?.wasOfflineBeforeCall === true;
+      const targetStatus = wasOfflineBeforeCall ? 'offline' : 'available';
+      const targetIsOnline = !wasOfflineBeforeCall;
+
+      if (wasOfflineBeforeCall) {
+        console.log(`[ProviderStatusManager] Provider ${providerId} was offline before call - restoring offline status`);
+      }
+
+      // 3. Préparer les données de mise à jour
+      const updateData = {
+        availability: targetStatus,
+        isOnline: targetIsOnline,
+        currentCallSessionId: admin.firestore.FieldValue.delete(),
+        busySince: admin.firestore.FieldValue.delete(),
+        busyReason: admin.firestore.FieldValue.delete(),
+        busyBySibling: admin.firestore.FieldValue.delete(),
+        busySiblingProviderId: admin.firestore.FieldValue.delete(),
+        busySiblingCallSessionId: admin.firestore.FieldValue.delete(),
+        // ✅ BUG FIX: Nettoyer le flag après utilisation
+        wasOfflineBeforeCall: admin.firestore.FieldValue.delete(),
+        lastStatusChange: now,
+        lastActivityCheck: now,
+        lastActivity: now,
+        updatedAt: now,
       };
-    }
 
-    const userData = userDoc.data();
-    const previousStatus: AvailabilityStatus =
-      (userData?.availability as AvailabilityStatus) || 'offline';
+      // 4. Mettre à jour dans la transaction
+      transaction.update(userRef, updateData);
 
-    // 2. Vérifier si déjà available OU si offline
-    // 2026-01-19 FIX: Ne PAS remettre en ligne un prestataire qui était offline
-    // setProviderAvailable ne doit s'appliquer qu'aux prestataires qui étaient busy
-    if (previousStatus === 'available') {
-      console.log(`[ProviderStatusManager] Provider ${providerId} already available`);
+      if (profileDoc.exists) {
+        transaction.update(profileRef, updateData);
+      }
+
+      // Log d'audit
+      const auditLogRef = db.collection('provider_status_logs').doc();
+      transaction.set(auditLogRef, {
+        providerId,
+        action: wasOfflineBeforeCall ? 'RESTORE_OFFLINE' : 'SET_AVAILABLE',
+        previousStatus,
+        newStatus: targetStatus,
+        reason,
+        wasOfflineBeforeCall,
+        timestamp: now,
+      });
+
       return {
         success: true,
         providerId,
-        previousStatus: 'available',
-        newStatus: 'available',
+        previousStatus,
+        newStatus: targetStatus as AvailabilityStatus,
         timestamp: now.toMillis(),
-        message: 'Provider already available',
+        message: `Provider status changed from ${previousStatus} to ${targetStatus}`,
+        linkedProviderIds: userData?.linkedProviderIds || [],
+        shareBusyStatus: userData?.shareBusyStatus === true,
+        skipSiblingRelease: false,
       };
-    }
-
-    if (previousStatus === 'offline') {
-      console.log(`[ProviderStatusManager] Provider ${providerId} is offline - NOT setting to available`);
-      return {
-        success: true,
-        providerId,
-        previousStatus: 'offline',
-        newStatus: 'offline',
-        timestamp: now.toMillis(),
-        message: 'Provider is offline, not changing status',
-      };
-    }
-
-    // 3. Mise à jour atomique avec batch
-    const batch = getDb().batch();
-
-    const updateData = {
-      availability: 'available',
-      isOnline: true,
-      currentCallSessionId: admin.firestore.FieldValue.delete(),
-      busySince: admin.firestore.FieldValue.delete(),
-      busyReason: admin.firestore.FieldValue.delete(),
-      busyBySibling: admin.firestore.FieldValue.delete(),
-      busySiblingProviderId: admin.firestore.FieldValue.delete(),
-      busySiblingCallSessionId: admin.firestore.FieldValue.delete(),
-      lastStatusChange: now,
-      lastActivityCheck: now,
-      lastActivity: now,
-      updatedAt: now,
-    };
-
-    // Mettre à jour users
-    batch.update(userRef, updateData);
-
-    // Mettre à jour sos_profiles
-    const profileRef = getDb().collection('sos_profiles').doc(providerId);
-    const profileDoc = await profileRef.get();
-    if (profileDoc.exists) {
-      batch.update(profileRef, updateData);
-    }
-
-    // Log d'audit
-    batch.set(getDb().collection('provider_status_logs').doc(), {
-      providerId,
-      action: 'SET_AVAILABLE',
-      previousStatus,
-      newStatus: 'available',
-      reason,
-      timestamp: now,
     });
 
-    await batch.commit();
+    console.log(`✅ [ProviderStatusManager] Provider ${providerId} set to ${transactionResult.newStatus.toUpperCase()} (reason: ${reason})`);
 
-    console.log(`✅ [ProviderStatusManager] Provider ${providerId} set to AVAILABLE (reason: ${reason})`);
-
-    // 4. Libérer les siblings si shareBusyStatus est activé
-    const linkedProviderIds: string[] = userData?.linkedProviderIds || [];
-    const shareBusyStatus: boolean = userData?.shareBusyStatus === true;
-
-    if (shareBusyStatus && linkedProviderIds.length > 0) {
-      console.log(`[ProviderStatusManager] shareBusyStatus=true, releasing ${linkedProviderIds.length} linked providers`);
-      await releaseSiblingsFromBusy(providerId, linkedProviderIds, now);
+    // 5. Libérer les siblings si shareBusyStatus est activé
+    // (fait en dehors de la transaction pour éviter les deadlocks)
+    if (
+      !transactionResult.skipSiblingRelease &&
+      transactionResult.shareBusyStatus &&
+      transactionResult.linkedProviderIds &&
+      transactionResult.linkedProviderIds.length > 0
+    ) {
+      console.log(`[ProviderStatusManager] shareBusyStatus=true, releasing ${transactionResult.linkedProviderIds.length} linked providers`);
+      await releaseSiblingsFromBusy(providerId, transactionResult.linkedProviderIds, now);
     }
 
     return {
-      success: true,
-      providerId,
-      previousStatus,
-      newStatus: 'available',
-      timestamp: now.toMillis(),
-      message: `Provider status changed from ${previousStatus} to available`,
+      success: transactionResult.success,
+      providerId: transactionResult.providerId,
+      previousStatus: transactionResult.previousStatus,
+      newStatus: transactionResult.newStatus,
+      timestamp: transactionResult.timestamp,
+      message: transactionResult.message,
+      error: transactionResult.error,
     };
 
   } catch (error) {
@@ -473,6 +545,9 @@ async function releaseSiblingsFromBusy(
       const releaseData = {
         availability: 'available',
         isOnline: true,
+        // ✅ BUG FIX: Toujours définir lastActivity lors de isOnline=true
+        // pour que checkProviderInactivity puisse calculer l'inactivité correctement
+        lastActivity: now,
         busySince: admin.firestore.FieldValue.delete(),
         busyReason: admin.firestore.FieldValue.delete(),
         busyBySibling: admin.firestore.FieldValue.delete(),

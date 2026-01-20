@@ -7,6 +7,52 @@ import type { ActivityEvent } from '../types/providerActivity';
 // Clé localStorage pour persister lastActivity
 const LAST_ACTIVITY_KEY = 'provider_last_activity';
 
+// ✅ BUG FIX: Configuration pour retry logic avec exponential backoff
+const MAX_RETRIES = 3;
+const BASE_RETRY_DELAY_MS = 1000; // 1 seconde initial
+
+// Helper pour retry avec exponential backoff
+const retryWithBackoff = async <T>(
+  fn: () => Promise<T>,
+  maxRetries: number = MAX_RETRIES,
+  baseDelay: number = BASE_RETRY_DELAY_MS
+): Promise<T> => {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+
+      // Ne pas retry si c'est une erreur d'authentification ou de permission
+      if (error instanceof Error) {
+        const message = error.message.toLowerCase();
+        if (
+          message.includes('unauthenticated') ||
+          message.includes('permission') ||
+          message.includes('not-found')
+        ) {
+          throw error;
+        }
+      }
+
+      // Si c'est le dernier essai, throw l'erreur
+      if (attempt === maxRetries) {
+        throw error;
+      }
+
+      // Calculer le délai avec exponential backoff (1s, 2s, 4s)
+      const delay = baseDelay * Math.pow(2, attempt);
+      console.log(`[ActivityTracker] ⚠️ Retry ${attempt + 1}/${maxRetries} after ${delay}ms`);
+
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+
+  throw lastError;
+};
+
 // Charger lastActivity depuis localStorage (survit aux navigations/refresh)
 const loadLastActivity = (): Date => {
   try {
@@ -57,16 +103,19 @@ export const useProviderActivityTracker = ({
   const pauseInactivityCheck = useRef(false);
 
   // Fonction pour mettre à jour l'activité dans Firebase
+  // ✅ BUG FIX: Ajout de retry logic avec exponential backoff pour plus de fiabilité
   const updateActivityInFirebase = useCallback(async () => {
     if (!isOnline || !isProvider) return;
 
     try {
-      const updateProviderActivity = httpsCallable(functions, 'updateProviderActivity');
-      await updateProviderActivity({ userId });
+      await retryWithBackoff(async () => {
+        const updateProviderActivity = httpsCallable(functions, 'updateProviderActivity');
+        await updateProviderActivity({ userId });
+      });
       // ✅ P0 FIX: Remove verbose logging to reduce console spam
     } catch (error) {
-      // Only log errors, not routine updates
-      console.error('[ActivityTracker] Error updating activity:', error);
+      // Only log errors after all retries have failed
+      console.error('[ActivityTracker] ❌ Error updating activity (all retries failed):', error);
     }
   }, [userId, isOnline, isProvider]);
 
@@ -157,8 +206,16 @@ export const useProviderActivityTracker = ({
     updateActivityInFirebase();
 
     // Puis mise à jour toutes les X minutes
+    // ✅ BUG FIX: Vérifier pauseInactivityCheck pour ne PAS mettre à jour
+    // l'activité quand l'onglet est en arrière-plan. Sinon, un prestataire
+    // qui minimise son navigateur continuerait à être marqué "actif" et
+    // ne serait JAMAIS mis hors ligne automatiquement.
     updateIntervalRef.current = setInterval(
-      updateActivityInFirebase,
+      () => {
+        if (!pauseInactivityCheck.current) {
+          updateActivityInFirebase();
+        }
+      },
       toMs(PROVIDER_ACTIVITY_CONFIG.ACTIVITY_UPDATE_INTERVAL_MINUTES)
     );
 
