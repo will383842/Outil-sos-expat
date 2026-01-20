@@ -5,6 +5,32 @@
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { trackMetaPageView, isFbqAvailable } from '@/utils/metaPixel';
+import { generateEventIdForType } from '@/utils/sharedEventId';
+
+/**
+ * Pages critiques pour la conversion qui necessitent un tracking optimise
+ * Ces pages sont importantes pour l'optimisation des campagnes Meta
+ */
+const CRITICAL_PAGES = [
+  '/sos-call',        // Page de selection des providers
+  '/checkout',        // Page de paiement
+  '/pricing',         // Page de tarifs
+  '/avocat',          // Pages avocats (SEO)
+  '/lawyer',          // Pages avocats (EN)
+  '/profile/',        // Profils providers
+  '/provider/',       // Profils providers
+  '/contact',         // Page contact
+  '/register',        // Inscription
+];
+
+/**
+ * Verifie si la page courante est une page critique pour les conversions
+ */
+const isCriticalPage = (pathname: string): boolean => {
+  return CRITICAL_PAGES.some(page =>
+    pathname.startsWith(page) || pathname.includes(page)
+  );
+};
 
 /**
  * MetaPageViewTracker
@@ -12,6 +38,10 @@ import { trackMetaPageView, isFbqAvailable } from '@/utils/metaPixel';
  * Ce composant doit etre place dans App.tsx, a cote de PageViewTracker (GA4).
  * Il ecoute les changements de route React Router et envoie un PageView Meta
  * a chaque navigation interne dans le SPA.
+ *
+ * Optimisations:
+ * - Genere un eventID unique pour la deduplication Pixel/CAPI
+ * - Identifie les pages critiques pour l'optimisation des campagnes
  *
  * Le premier PageView est deja envoye par index.html, donc on skip le premier render.
  */
@@ -39,9 +69,26 @@ const MetaPageViewTracker: React.FC = () => {
     // Mettre a jour le dernier chemin tracke
     lastTrackedPath.current = currentPath;
 
+    // Verifier si c'est une page critique
+    const isCritical = isCriticalPage(location.pathname);
+
     // Petit delai pour s'assurer que le DOM est mis a jour (titre de page, etc.)
     const timeoutId = setTimeout(() => {
-      trackMetaPageView();
+      // Generer un eventID unique pour la deduplication
+      const eventId = generateEventIdForType('pageview');
+
+      // Track avec eventID pour permettre la deduplication CAPI si necessaire
+      trackMetaPageView({
+        eventID: eventId,
+      });
+
+      // Log les pages critiques en dev pour debug
+      if (process.env.NODE_ENV === 'development' && isCritical) {
+        console.log('%c[MetaPixel] Critical PageView tracked:', 'color: #E4405F; font-weight: bold', {
+          path: currentPath,
+          eventId,
+        });
+      }
     }, 100);
 
     return () => clearTimeout(timeoutId);

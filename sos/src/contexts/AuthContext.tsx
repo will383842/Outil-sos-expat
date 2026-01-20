@@ -1688,9 +1688,9 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         err.code = 'sos/missing-credentials';
         throw err;
       }
-      if (password.length < 6) {
-        console.log("[DEBUG] " + "❌ REGISTER: Password trop court (<6 chars)");
-        const err = new Error('Le mot de passe doit contenir au moins 6 caractères') as AppError;
+      if (password.length < 8) {
+        console.log("[DEBUG] " + "❌ REGISTER: Password trop court (<8 chars)");
+        const err = new Error('Le mot de passe doit contenir au moins 8 caractères') as AppError;
         err.code = 'auth/weak-password';
         throw err;
       }

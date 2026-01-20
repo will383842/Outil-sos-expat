@@ -309,7 +309,7 @@ const ProviderAvatar: React.FC<ProviderAvatarProps> = ({ provider, size = 'md', 
       {provider?.profilePhoto ? (
         <img
           src={provider.profilePhoto}
-          alt=""
+          alt={`Photo de ${provider.name || 'professionnel'}`}
           className={cn(
             sizeClasses[size],
             'rounded-full object-cover border-2',

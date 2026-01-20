@@ -53,6 +53,7 @@ import { getLocaleString, getTranslatedRouteSlug } from "../multilingual-system/
 import { getStoredMetaIdentifiers } from "../utils/fbpCookie";
 import { trackMetaAddPaymentInfo, trackMetaInitiateCheckout } from "../utils/metaPixel";
 import { getOrCreateEventId } from "../utils/sharedEventId";
+import { getCurrentTrafficSource } from "../utils/trafficSource";
 
 /* -------------------------- Stripe singleton (HMR-safe) ------------------ */
 // Conserve la même Promise Stripe à travers les rechargements HMR.
@@ -1922,11 +1923,22 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
               const metaIds = getStoredMetaIdentifiers();
               // Generate/retrieve the same eventId used for Pixel tracking
               const pixelEventId = getOrCreateEventId(`purchase_${callSessionId}`, 'purchase');
+              // Get UTM params for attribution
+              const trafficSource = getCurrentTrafficSource();
               return {
                 ...(metaIds.fbp && { fbp: metaIds.fbp }),
                 ...(metaIds.fbc && { fbc: metaIds.fbc }),
                 // IMPORTANT: Pass eventId to backend for CAPI deduplication
                 pixelEventId: pixelEventId,
+                // UTM params for campaign attribution
+                ...(trafficSource?.utm_source && { utm_source: trafficSource.utm_source }),
+                ...(trafficSource?.utm_medium && { utm_medium: trafficSource.utm_medium }),
+                ...(trafficSource?.utm_campaign && { utm_campaign: trafficSource.utm_campaign }),
+                ...(trafficSource?.utm_content && { utm_content: trafficSource.utm_content }),
+                ...(trafficSource?.utm_term && { utm_term: trafficSource.utm_term }),
+                // Additional click IDs for multi-platform attribution
+                ...(trafficSource?.gclid && { gclid: trafficSource.gclid }),
+                ...(trafficSource?.ttclid && { ttclid: trafficSource.ttclid }),
               };
             })(),
           },

@@ -20,6 +20,10 @@ import {
   aggregateByContentType,
   getTopCreatives,
 } from '../utils/utmContentParser';
+import {
+  generateEventIdForType,
+  EventType,
+} from '../utils/sharedEventId';
 
 /* --------------------------------- Types ----------------------------------- */
 
@@ -124,12 +128,20 @@ class AdAttributionService {
 
   /**
    * Génère un event_id unique pour la déduplication CAPI
-   * Format: timestamp-random pour unicité garantie
+   * Utilise le module centralise sharedEventId pour coherence Pixel/CAPI
    */
-  private generateEventId(): string {
-    const timestamp = Date.now().toString(36);
-    const randomPart = Math.random().toString(36).substring(2, 11);
-    return `evt_${timestamp}_${randomPart}`;
+  private generateEventId(conversionType?: AdConversion['conversionType']): string {
+    // Mapper le type de conversion vers le type d'evenement
+    const eventTypeMap: Record<string, EventType> = {
+      'lead': 'lead',
+      'registration': 'registration',
+      'purchase': 'purchase',
+      'contact': 'contact',
+      'view_content': 'viewContent',
+      'initiate_checkout': 'checkout',
+    };
+    const eventType = conversionType ? eventTypeMap[conversionType] || 'custom' : 'custom';
+    return generateEventIdForType(eventType as EventType);
   }
 
   /**

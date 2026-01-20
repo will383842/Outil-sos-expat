@@ -727,6 +727,7 @@ const Footer: React.FC = () => {
 
   return (
     <footer
+      id="footer"
       className="relative bg-gradient-to-br from-slate-950 via-slate-900 to-black text-white overflow-hidden print:bg-white print:text-black"
       role="contentinfo"
       aria-label={intl.formatMessage({ id: "footer.ariaLabel" })}

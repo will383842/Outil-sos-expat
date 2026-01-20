@@ -2161,7 +2161,7 @@ const AdminProviders: React.FC = () => {
                     {selectedProvider.profilePhoto ? (
                       <img
                         src={selectedProvider.profilePhoto}
-                        alt=""
+                        alt={intl.formatMessage({ id: 'admin.common.profilePhotoOf' }, { name: selectedProvider.displayName || `${selectedProvider.firstName || ''} ${selectedProvider.lastName || ''}`.trim() || intl.formatMessage({ id: 'admin.common.professional' }) })}
                         className="h-full w-full object-cover"
                       />
                     ) : (

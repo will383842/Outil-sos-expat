@@ -1077,7 +1077,7 @@ const Payouts: React.FC = () => {
                             <img
                               className="h-10 w-10 rounded-full object-cover"
                               src={payout.providerInfo.profilePhoto}
-                              alt=""
+                              alt={intl.formatMessage({ id: 'admin.common.profilePhotoOf' }, { name: payout.providerInfo?.displayName || `${payout.providerInfo?.firstName || ''} ${payout.providerInfo?.lastName || ''}`.trim() || intl.formatMessage({ id: 'admin.common.professional' }) })}
                             />
                           ) : (
                             <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
@@ -1233,7 +1233,7 @@ const Payouts: React.FC = () => {
                     {selectedPayout.providerInfo?.profilePhoto ? (
                       <img
                         src={selectedPayout.providerInfo.profilePhoto}
-                        alt=""
+                        alt={intl.formatMessage({ id: 'admin.common.profilePhotoOf' }, { name: selectedPayout.providerInfo?.displayName || `${selectedPayout.providerInfo?.firstName || ''} ${selectedPayout.providerInfo?.lastName || ''}`.trim() || intl.formatMessage({ id: 'admin.common.professional' }) })}
                         className="h-full w-full object-cover"
                       />
                     ) : (

@@ -1027,7 +1027,7 @@ const RegisterLawyer: React.FC = () => {
     }
     
     // Validation password
-    if (!form.password || form.password.length < 6) {
+    if (!form.password || form.password.length < 8) {
       e.password = intl.formatMessage({ id: "registerLawyer.errors.passwordTooShort" });
     } else if (form.password.length > 128) {
       e.password = intl.formatMessage({ id: "registerLawyer.errors.passwordTooLong" });

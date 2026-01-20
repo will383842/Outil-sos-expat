@@ -778,7 +778,7 @@ const RegisterExpat: React.FC = () => {
       e.email = intl.formatMessage({ id: "registerExpat.errors.emailInvalid" });
     }
     
-    if (!form.password || form.password.length < 6) {
+    if (!form.password || form.password.length < 8) {
       e.password = intl.formatMessage({ id: "registerExpat.errors.passwordTooShort" });
     } else if (form.password.length > 128) {
       e.password = intl.formatMessage({ id: "registerExpat.errors.passwordTooLong" });

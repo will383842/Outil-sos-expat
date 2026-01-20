@@ -4,8 +4,40 @@
 // - Meta Pixel (frontend)
 // - Meta CAPI (backend/Firebase Functions)
 // - Ad Attribution Service (Firestore)
+//
+// IMPORTANT: Toutes les generations d'event_id DOIVENT passer par ce fichier
+// pour garantir la deduplication correcte entre Pixel et CAPI.
+// Meta utilise event_id pour detecter les doublons et eviter le double-counting.
 
 const STORAGE_KEY = 'sos_last_event_ids';
+
+/**
+ * Prefixes standardises pour chaque type d'evenement
+ * Permet d'identifier rapidement l'origine et le type dans les logs Meta
+ */
+export const EVENT_PREFIXES = {
+  // Evenements standards Meta
+  pageview: 'pgv',
+  lead: 'led',
+  purchase: 'pur',
+  checkout: 'chk',
+  registration: 'reg',
+  startRegistration: 'srg',
+  contact: 'cnt',
+  search: 'src',
+  viewContent: 'viw',
+  addToCart: 'atc',
+  addPaymentInfo: 'api',
+  // Custom events
+  startTrial: 'trl',
+  custom: 'cst',
+  // Sources
+  pixel: 'pxl',
+  capi: 'cap',
+  attribution: 'atr',
+} as const;
+
+export type EventPrefix = typeof EVENT_PREFIXES[keyof typeof EVENT_PREFIXES];
 
 /**
  * Genere un EventID unique au format unifie
@@ -31,22 +63,29 @@ export const generateSharedEventId = (prefix: string = 'evt'): string => {
 };
 
 /**
- * Genere un EventID pour un type d'evenement specifique
- * Permet de tracer l'origine de l'evenement dans les logs
+ * Types d'evenements supportes pour la generation d'IDs
  */
-export const generateEventIdForType = (
-  eventType: 'purchase' | 'lead' | 'registration' | 'checkout' | 'contact' | 'view' | 'custom'
-): string => {
-  const prefixMap: Record<string, string> = {
-    purchase: 'pur',
-    lead: 'led',
-    registration: 'reg',
-    checkout: 'chk',
-    contact: 'cnt',
-    view: 'viw',
-    custom: 'cst',
-  };
-  const prefix = prefixMap[eventType] || 'evt';
+export type EventType =
+  | 'pageview'
+  | 'lead'
+  | 'purchase'
+  | 'checkout'
+  | 'registration'
+  | 'startRegistration'
+  | 'contact'
+  | 'search'
+  | 'viewContent'
+  | 'addToCart'
+  | 'addPaymentInfo'
+  | 'startTrial'
+  | 'custom';
+
+/**
+ * Genere un EventID pour un type d'evenement specifique
+ * Utilise les prefixes standardises pour tracer l'origine dans les logs Meta
+ */
+export const generateEventIdForType = (eventType: EventType): string => {
+  const prefix = EVENT_PREFIXES[eventType] || EVENT_PREFIXES.custom;
   return generateSharedEventId(prefix);
 };
 
@@ -133,13 +172,17 @@ export const getStoredEventId = (key: string): string | null => {
  * Si un EventID existe deja pour cette cle, le retourne
  * Sinon, en genere un nouveau et le stocke
  *
- * @param key Cle unique (ex: orderId, callId)
+ * IMPORTANT: Cette fonction est la methode recommandee pour les evenements
+ * de conversion critiques (Purchase, Lead, Checkout) car elle garantit
+ * que le meme ID sera utilise pour Pixel ET CAPI.
+ *
+ * @param key Cle unique (ex: orderId, callId, sessionId)
  * @param eventType Type d'evenement pour le prefixe
  * @returns L'EventID (existant ou nouveau)
  */
 export const getOrCreateEventId = (
   key: string,
-  eventType: 'purchase' | 'lead' | 'registration' | 'checkout' | 'contact' | 'view' | 'custom' = 'custom'
+  eventType: EventType = 'custom'
 ): string => {
   // Essayer de recuperer un ID existant
   const existingId = getStoredEventId(key);
@@ -194,6 +237,29 @@ export const clearAllStoredEventIds = (): void => {
   }
 };
 
+/**
+ * Utilitaire pour recuperer l'event_id depuis les metadonnees (pour le backend)
+ * Permet de passer l'ID du frontend au backend via les metadonnees Stripe/Firestore
+ */
+export const extractEventIdFromMetadata = (
+  metadata: Record<string, string | undefined> | null | undefined
+): string | undefined => {
+  if (!metadata) return undefined;
+  return metadata.pixelEventId || metadata.eventId || metadata.event_id;
+};
+
+/**
+ * Prepare les metadonnees avec l'event_id pour Stripe/Firestore
+ * A utiliser lors de la creation d'un PaymentIntent ou document
+ */
+export const createEventIdMetadata = (
+  key: string,
+  eventType: EventType
+): { pixelEventId: string } => {
+  const eventId = getOrCreateEventId(key, eventType);
+  return { pixelEventId: eventId };
+};
+
 export default {
   generateSharedEventId,
   generateEventIdForType,
@@ -202,4 +268,7 @@ export default {
   getOrCreateEventId,
   clearStoredEventId,
   clearAllStoredEventIds,
+  extractEventIdFromMetadata,
+  createEventIdMetadata,
+  EVENT_PREFIXES,
 };

@@ -58,7 +58,8 @@ const Reviews = lazy(() => import("../components/review/Reviews"));
 
 // 👉 Pricing admin
 import { usePricingConfig } from "../services/pricingService";
-import { trackMetaViewContent, trackMetaLead } from "../utils/metaPixel";
+import { trackMetaViewContent } from "../utils/metaPixel";
+import { useMetaTracking } from "../hooks/useMetaTracking";
 
 // Imports des traductions AAA
 import aaaTranslationsFr from '../helper/aaaprofiles/admin_aaa_fr.json';
@@ -626,6 +627,7 @@ const ProviderProfile: React.FC = () => {
   const navigate = useLocaleNavigate();
   const { user, isLoading: authLoading, authInitialized } = useAuth();
   const { language } = useApp();
+  const { trackLead } = useMetaTracking();
 
   const detectedLang = useMemo(
     () =>
@@ -1689,10 +1691,12 @@ const ProviderProfile: React.FC = () => {
       });
     }
 
-    // Track Meta Pixel Lead event for ad attribution
-    trackMetaLead({
-      content_name: `${provider.type}_consultation`,
-      content_category: provider.type || "provider",
+    // Track Meta Pixel + CAPI Lead event for ad attribution
+    trackLead({
+      contentName: `${provider.type}_consultation`,
+      contentCategory: provider.type || "provider",
+      providerType: provider.type as 'lawyer' | 'expat',
+      providerId: provider.id,
     });
 
     const authUserId = getAuthUserId(user);

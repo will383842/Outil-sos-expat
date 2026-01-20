@@ -15,6 +15,9 @@ import { functions } from "../../config/firebase";
 import { Loader2, AlertCircle, CheckCircle, CreditCard, Lock, ShieldCheck } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { usePricingConfig } from "../../services/pricingService";
+import { getCurrentTrafficSource } from "../../utils/trafficSource";
+import { getStoredMetaIdentifiers } from "../../utils/fbpCookie";
+import { getOrCreateEventId } from "../../utils/sharedEventId";
 
 interface PayPalPaymentFormProps {
   amount: number;
@@ -173,6 +176,11 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
       setIsProcessing(true);
       setPaymentStatus("processing");
 
+      // Collect tracking data for Meta CAPI attribution
+      const metaIds = getStoredMetaIdentifiers();
+      const trafficSource = getCurrentTrafficSource();
+      const pixelEventId = getOrCreateEventId(`purchase_${callSessionId}`, 'purchase');
+
       const createPayPalOrder = httpsCallable<
         {
           callSessionId: string;
@@ -184,6 +192,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
           clientId: string;
           description?: string;
           serviceType?: string;
+          metadata?: Record<string, string>;
         },
         CreateOrderResponse
       >(functions, "createPayPalOrder");
@@ -198,6 +207,22 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
         clientId,
         description: description || `Appel SOS-Expat - Session ${callSessionId}`,
         serviceType,
+        // Pass Meta and UTM tracking data
+        metadata: {
+          // Meta CAPI identifiers for purchase attribution
+          ...(metaIds.fbp && { fbp: metaIds.fbp }),
+          ...(metaIds.fbc && { fbc: metaIds.fbc }),
+          pixelEventId,
+          // UTM params for campaign attribution
+          ...(trafficSource?.utm_source && { utm_source: trafficSource.utm_source }),
+          ...(trafficSource?.utm_medium && { utm_medium: trafficSource.utm_medium }),
+          ...(trafficSource?.utm_campaign && { utm_campaign: trafficSource.utm_campaign }),
+          ...(trafficSource?.utm_content && { utm_content: trafficSource.utm_content }),
+          ...(trafficSource?.utm_term && { utm_term: trafficSource.utm_term }),
+          // Additional click IDs
+          ...(trafficSource?.gclid && { gclid: trafficSource.gclid }),
+          ...(trafficSource?.ttclid && { ttclid: trafficSource.ttclid }),
+        },
       });
 
       currentOrderIdRef.current = result.data.orderId;

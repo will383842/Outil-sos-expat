@@ -42,10 +42,48 @@ const isValidEmail = (email: string): boolean => {
 
 /**
  * Valide un numero de telephone (minimum 10 chiffres)
+ * Accepte les formats internationaux E.164 (+33612345678) ou locaux (0612345678)
  */
 const isValidPhone = (phone: string): boolean => {
   const digits = phone.replace(/\D/g, '');
+  // Minimum 10 chiffres (format local) ou 11+ avec indicatif
+  // Maximum 15 chiffres (limite E.164)
   return digits.length >= 10 && digits.length <= 15;
+};
+
+/**
+ * Normalise un numero de telephone au format E.164 pour Meta
+ * @param phone Le numero de telephone brut
+ * @param defaultCountryCode Code pays par defaut (sans +), ex: '33' pour France
+ * @returns Le numero normalise sans le + (format Meta) ou null si invalide
+ */
+const normalizePhoneForMeta = (phone: string, defaultCountryCode: string = '33'): string | null => {
+  if (!phone) return null;
+
+  // Nettoyer: garder seulement chiffres et +
+  let cleanPhone = phone.replace(/[^0-9+]/g, '');
+
+  // Si vide apres nettoyage
+  if (!cleanPhone) return null;
+
+  // Gerer les formats courants
+  if (cleanPhone.startsWith('+')) {
+    // Format international +33612345678 -> 33612345678
+    cleanPhone = cleanPhone.substring(1);
+  } else if (cleanPhone.startsWith('00')) {
+    // Format 0033612345678 -> 33612345678
+    cleanPhone = cleanPhone.substring(2);
+  } else if (cleanPhone.startsWith('0')) {
+    // Format local 0612345678 -> 33612345678
+    cleanPhone = defaultCountryCode + cleanPhone.substring(1);
+  }
+
+  // Valider la longueur finale (10-15 chiffres)
+  if (cleanPhone.length < 10 || cleanPhone.length > 15) {
+    return null;
+  }
+
+  return cleanPhone;
 };
 
 /**
@@ -616,14 +654,23 @@ export const setMetaPixelUserData = (userData: {
 
     // Telephone avec validation et normalisation E.164
     if (userData.phone && isValidPhone(userData.phone)) {
-      let cleanPhone = userData.phone.replace(/[^0-9+]/g, '');
-      // Si le numero commence par 0 et n'a pas d'indicatif, ajouter +33 (France)
-      if (cleanPhone.startsWith('0') && !cleanPhone.startsWith('+')) {
-        cleanPhone = '33' + cleanPhone.substring(1);
+      // Utiliser le code pays de l'utilisateur si disponible, sinon France par defaut
+      const countryCode = userData.country?.toUpperCase() === 'US' ? '1' :
+                          userData.country?.toUpperCase() === 'GB' ? '44' :
+                          userData.country?.toUpperCase() === 'DE' ? '49' :
+                          userData.country?.toUpperCase() === 'ES' ? '34' :
+                          userData.country?.toUpperCase() === 'IT' ? '39' :
+                          userData.country?.toUpperCase() === 'BE' ? '32' :
+                          userData.country?.toUpperCase() === 'CH' ? '41' :
+                          userData.country?.toUpperCase() === 'CA' ? '1' :
+                          userData.country?.toUpperCase() === 'MA' ? '212' :
+                          userData.country?.toUpperCase() === 'PT' ? '351' :
+                          '33'; // France par defaut
+
+      const normalizedPhone = normalizePhoneForMeta(userData.phone, countryCode);
+      if (normalizedPhone) {
+        advancedMatchingData.ph = normalizedPhone;
       }
-      // Retirer le + pour le format Meta
-      cleanPhone = cleanPhone.replace(/^\+/, '');
-      advancedMatchingData.ph = cleanPhone;
     }
 
     // Prenom normalise (sans accents)
@@ -744,6 +791,81 @@ export const applyMetaPixelUserData = (): void => {
 export const getStoredUserData = (): Record<string, string> => storedUserData;
 
 /**
+ * Genere un rapport de validation des donnees Advanced Matching
+ * Utile pour le diagnostic et le monitoring de la qualite des donnees
+ *
+ * @returns Rapport avec le nombre de champs valides et le match rate estime
+ */
+export const getAdvancedMatchingReport = (): {
+  fieldsProvided: number;
+  fieldsValid: number;
+  matchRateEstimate: 'excellent' | 'good' | 'fair' | 'poor';
+  details: Record<string, boolean>;
+  recommendations: string[];
+} => {
+  const data = storedUserData;
+  const details: Record<string, boolean> = {
+    email: !!data.em,
+    phone: !!data.ph,
+    firstName: !!data.fn,
+    lastName: !!data.ln,
+    city: !!data.ct,
+    country: !!data.country,
+    externalId: !!data.external_id,
+    fbp: !!data.fbp,
+    fbc: !!data.fbc,
+  };
+
+  const fieldsValid = Object.values(details).filter(Boolean).length;
+  const recommendations: string[] = [];
+
+  // Calculer le match rate estime basé sur les champs les plus importants
+  let matchScore = 0;
+  if (data.em) matchScore += 40; // Email est le plus important
+  if (data.ph) matchScore += 30; // Phone est tres important
+  if (data.fn && data.ln) matchScore += 15; // Nom complet aide
+  if (data.external_id) matchScore += 10; // External ID pour cross-device
+  if (data.fbp || data.fbc) matchScore += 5; // Identifiants Meta
+
+  // Determiner le match rate
+  let matchRateEstimate: 'excellent' | 'good' | 'fair' | 'poor';
+  if (matchScore >= 80) {
+    matchRateEstimate = 'excellent';
+  } else if (matchScore >= 55) {
+    matchRateEstimate = 'good';
+  } else if (matchScore >= 30) {
+    matchRateEstimate = 'fair';
+  } else {
+    matchRateEstimate = 'poor';
+  }
+
+  // Recommandations
+  if (!data.em) {
+    recommendations.push('Email manquant - champ le plus important pour le matching');
+  }
+  if (!data.ph) {
+    recommendations.push('Telephone manquant - ameliore significativement le match rate');
+  }
+  if (!data.fn || !data.ln) {
+    recommendations.push('Nom/Prenom manquant - aide au matching cross-platform');
+  }
+  if (!data.external_id) {
+    recommendations.push('External ID manquant - necessaire pour le cross-device tracking');
+  }
+  if (!data.fbp && !data.fbc) {
+    recommendations.push('Identifiants Meta manquants - verifier que le Pixel est charge');
+  }
+
+  return {
+    fieldsProvided: Object.keys(data).length,
+    fieldsValid,
+    matchRateEstimate,
+    details,
+    recommendations,
+  };
+};
+
+/**
  * Efface les donnees utilisateur stockees (a appeler lors de la deconnexion)
  * Envoie egalement un objet vide a Meta pour reinitialiser les donnees
  */
@@ -792,5 +914,6 @@ export default {
   clearMetaPixelUserData,
   getStoredUserData,
   getMetaIdentifiers,
+  getAdvancedMatchingReport,
   PIXEL_ID,
 };

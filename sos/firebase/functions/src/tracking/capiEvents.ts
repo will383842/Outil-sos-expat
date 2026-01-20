@@ -18,6 +18,8 @@ import {
   trackCAPISearch,
   trackCAPIViewContent,
   trackCAPIAddToCart,
+  trackCAPIAddPaymentInfo,
+  trackCAPILead,
   UserData,
 } from '../metaConversionsApi';
 
@@ -43,7 +45,7 @@ function validateEventData(data: unknown): { valid: boolean; error?: string } {
     return { valid: false, error: 'eventType is required' };
   }
 
-  const validEventTypes = ['Search', 'ViewContent', 'AddToCart'];
+  const validEventTypes = ['Search', 'ViewContent', 'AddToCart', 'AddPaymentInfo', 'Contact', 'Lead'];
   if (!validEventTypes.includes(body.eventType)) {
     return { valid: false, error: `Invalid eventType. Must be one of: ${validEventTypes.join(', ')}` };
   }
@@ -203,6 +205,43 @@ export const trackCAPIEvent = onRequest(
             currency: body.currency ? String(body.currency) : undefined,
             numItems: typeof body.numItems === 'number' ? body.numItems : 1,
             eventSourceUrl: eventSourceUrl || 'https://sos-expat.com/pricing',
+          });
+          break;
+
+        case 'AddPaymentInfo':
+          result = await trackCAPIAddPaymentInfo({
+            userData,
+            contentName: body.contentName ? String(body.contentName) : undefined,
+            contentCategory: body.contentCategory ? String(body.contentCategory) : 'payment',
+            contentIds: Array.isArray(body.contentIds) ? body.contentIds.map(String) : undefined,
+            value: typeof body.value === 'number' ? body.value : undefined,
+            currency: body.currency ? String(body.currency) : undefined,
+            eventSourceUrl: eventSourceUrl || 'https://sos-expat.com/checkout',
+            eventId: body.eventId ? String(body.eventId) : undefined,
+          });
+          break;
+
+        case 'Contact':
+          result = await trackCAPILead({
+            userData,
+            contentName: body.contentName ? String(body.contentName) : 'contact_form',
+            contentCategory: body.contentCategory ? String(body.contentCategory) : 'support',
+            serviceType: 'contact',
+            eventSourceUrl: eventSourceUrl || 'https://sos-expat.com/contact',
+            eventId: body.eventId ? String(body.eventId) : undefined,
+          });
+          break;
+
+        case 'Lead':
+          result = await trackCAPILead({
+            userData,
+            contentName: body.contentName ? String(body.contentName) : 'lead',
+            contentCategory: body.contentCategory ? String(body.contentCategory) : 'service',
+            serviceType: body.serviceType ? String(body.serviceType) : 'consultation',
+            value: typeof body.value === 'number' ? body.value : undefined,
+            currency: body.currency ? String(body.currency) : undefined,
+            eventSourceUrl: eventSourceUrl || 'https://sos-expat.com',
+            eventId: body.eventId ? String(body.eventId) : undefined,
           });
           break;
 

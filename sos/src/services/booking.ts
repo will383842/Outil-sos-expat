@@ -41,6 +41,11 @@ export type BookingRequestOptional = {
   userAgent?: string;
   providerEmail?: string;
   providerPhone?: string;
+  // Meta tracking identifiers for CAPI deduplication
+  metaEventId?: string;
+  fbp?: string;
+  fbc?: string;
+  clientEmail?: string;
 };
 
 export type BookingRequestCreate = BookingRequestMinimal & BookingRequestOptional;
@@ -98,6 +103,11 @@ export async function createBookingRequest(data: BookingRequestCreate) {
     userAgent: data.userAgent ?? null,
     providerEmail: data.providerEmail ?? null,
     providerPhone: data.providerPhone ?? null,
+    // Meta tracking identifiers for CAPI deduplication
+    metaEventId: data.metaEventId ?? null,
+    fbp: data.fbp ?? null,
+    fbc: data.fbc ?? null,
+    clientEmail: data.clientEmail ?? null,
 
     createdAt: serverTimestamp(),
   };

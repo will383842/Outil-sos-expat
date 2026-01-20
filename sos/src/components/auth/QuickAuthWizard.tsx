@@ -271,7 +271,7 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
       setError(intl.formatMessage({ id: 'auth.wizard.passwordRequired' }));
       return;
     }
-    if (password.length < 6) {
+    if (password.length < 8) {
       setError(intl.formatMessage({ id: 'auth.wizard.passwordTooShort' }));
       return;
     }

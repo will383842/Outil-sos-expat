@@ -208,6 +208,8 @@ interface CreateOrderData {
   providerPayPalMerchantId: string;
   clientId: string;
   description: string;
+  // Tracking metadata for Meta CAPI and UTM attribution
+  trackingMetadata?: Record<string, string>;
 }
 
 // Données pour le flux simplifié (sans Partner status)
@@ -221,6 +223,8 @@ interface CreateSimpleOrderData {
   providerPayPalEmail: string; // Email au lieu de Merchant ID
   clientId: string;
   description: string;
+  // Tracking metadata for Meta CAPI and UTM attribution
+  trackingMetadata?: Record<string, string>;
 }
 
 /**
@@ -702,6 +706,8 @@ export class PayPalManager {
       metadata: {
         providerId: data.providerId,
         clientId: data.clientId,
+        // Include tracking metadata for attribution (UTM, Meta identifiers)
+        ...(data.trackingMetadata || {}),
       },
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -870,6 +876,8 @@ export class PayPalManager {
       metadata: {
         providerId: data.providerId,
         clientId: data.clientId,
+        // Include tracking metadata for attribution (UTM, Meta identifiers)
+        ...(data.trackingMetadata || {}),
       },
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -1914,6 +1922,7 @@ export const createPayPalOrder = onCall(
       providerId,
       serviceType, // 'lawyer' ou 'expat'
       description,
+      metadata: trackingMetadata, // Meta CAPI and UTM params from frontend
     } = request.data;
 
     prodLogger.info('PAYPAL_ORDER_START', `[${requestId}] Creating PayPal order`, {
@@ -1998,6 +2007,8 @@ export const createPayPalOrder = onCall(
           providerPayPalMerchantId: providerData.paypalMerchantId,
           clientId: request.auth.uid,
           description: description || "SOS Expat - Consultation",
+          // Pass tracking metadata for attribution (UTM, Meta identifiers)
+          trackingMetadata: trackingMetadata as Record<string, string> | undefined,
         });
 
       } else {
@@ -2014,6 +2025,8 @@ export const createPayPalOrder = onCall(
           providerPayPalEmail: providerData.paypalEmail,
           clientId: request.auth.uid,
           description: description || "SOS Expat - Consultation",
+          // Pass tracking metadata for attribution (UTM, Meta identifiers)
+          trackingMetadata: trackingMetadata as Record<string, string> | undefined,
         });
       }
 

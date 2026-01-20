@@ -21,6 +21,7 @@ import {
   trackCAPIInitiateCheckout,
   UserData,
   META_CAPI_TOKEN,
+  CAPIEventResult,
 } from "../metaConversionsApi";
 
 // ============================================================================
@@ -37,6 +38,7 @@ interface BookingRequest {
   providerType?: "lawyer" | "expat";
   serviceType?: string;
   amount?: number;
+  price?: number; // Alternative field name for amount
   currency?: string;
   country?: string;
   fbclid?: string;
@@ -44,6 +46,8 @@ interface BookingRequest {
   fbc?: string;
   client_ip_address?: string;
   client_user_agent?: string;
+  // Meta tracking identifiers for Pixel/CAPI deduplication
+  metaEventId?: string;
 }
 
 interface UserDocument {
@@ -80,6 +84,69 @@ interface CallSession {
   client_ip_address?: string;
   client_user_agent?: string;
 }
+
+interface ContactSubmission {
+  email?: string;
+  phone?: string;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  subject?: string;
+  message?: string;
+  country?: string;
+  fbp?: string;
+  fbc?: string;
+  client_ip_address?: string;
+  client_user_agent?: string;
+}
+
+// ============================================================================
+// Rate Limiting for Triggers (prevents spam/abuse)
+// ============================================================================
+
+const rateLimitCache = new Map<string, { count: number; resetTime: number }>();
+const TRIGGER_RATE_LIMIT = {
+  MAX_EVENTS_PER_DOC: 1, // Max 1 CAPI call per document
+  WINDOW_MS: 60 * 1000, // 1 minute window
+};
+
+/**
+ * Check if a document has already been processed recently
+ * Prevents duplicate CAPI calls for the same document
+ */
+function checkTriggerRateLimit(docId: string, eventType: string): boolean {
+  const key = `${eventType}_${docId}`;
+  const now = Date.now();
+  const entry = rateLimitCache.get(key);
+
+  if (!entry || now > entry.resetTime) {
+    rateLimitCache.set(key, { count: 1, resetTime: now + TRIGGER_RATE_LIMIT.WINDOW_MS });
+    return true;
+  }
+
+  if (entry.count >= TRIGGER_RATE_LIMIT.MAX_EVENTS_PER_DOC) {
+    console.warn(`[CAPI Rate Limit] Document ${docId} already processed for ${eventType}`);
+    return false;
+  }
+
+  entry.count++;
+  return true;
+}
+
+/**
+ * Clean old rate limit entries (called periodically)
+ */
+function cleanTriggerRateLimitCache(): void {
+  const now = Date.now();
+  for (const [key, entry] of rateLimitCache.entries()) {
+    if (now > entry.resetTime) {
+      rateLimitCache.delete(key);
+    }
+  }
+}
+
+// Clean cache every 5 minutes
+setInterval(cleanTriggerRateLimitCache, 5 * 60 * 1000);
 
 // ============================================================================
 // Helpers
@@ -157,17 +224,25 @@ export const onBookingRequestCreatedTrackLead = onDocumentCreated(
       return;
     }
 
+    // Rate limit check
+    if (!checkTriggerRateLimit(requestId, "lead")) {
+      console.log("[CAPI Lead] Rate limited, skipping:", requestId);
+      return;
+    }
+
     try {
       const userData = extractUserData(data);
 
+      // Use metaEventId from frontend if provided for deduplication
       const result = await trackCAPILead({
         userData,
-        value: data.amount,
+        value: data.amount || data.price,
         currency: data.currency || "EUR",
         contentName: `booking_request_${data.providerType || "service"}`,
         contentCategory: data.providerType || "service",
         serviceType: data.serviceType,
         eventSourceUrl: "https://sos-expat.com",
+        eventId: data.metaEventId, // Use frontend-generated eventId for deduplication
       });
 
       if (result.success) {
@@ -217,6 +292,12 @@ export const onUserCreatedTrackRegistration = onDocumentCreated(
     // Only track non-admin users
     if (data.role === "admin") {
       console.log("[CAPI Registration] Skipping admin user:", uid);
+      return;
+    }
+
+    // Rate limit check
+    if (!checkTriggerRateLimit(uid, "registration")) {
+      console.log("[CAPI Registration] Rate limited, skipping:", uid);
       return;
     }
 
@@ -283,6 +364,12 @@ export const onCallSessionPaymentAuthorized = onDocumentUpdated(
       return; // Only track when status changes TO "authorized"
     }
 
+    // Rate limit check
+    if (!checkTriggerRateLimit(sessionId, "checkout")) {
+      console.log("[CAPI Checkout] Rate limited, skipping:", sessionId);
+      return;
+    }
+
     console.log(`[CAPI Checkout] Payment authorized for session ${sessionId}`);
 
     try {
@@ -323,6 +410,100 @@ export const onCallSessionPaymentAuthorized = onDocumentUpdated(
       }
     } catch (error) {
       console.error(`[CAPI Checkout] ❌ Error for session ${sessionId}:`, error);
+    }
+  }
+);
+
+// ============================================================================
+// TRIGGER: Contact - Contact Form Submitted
+// ============================================================================
+
+/**
+ * Track Lead event when a contact form is submitted
+ * Uses Lead event type as Meta recommends for contact form submissions
+ */
+export const onContactSubmittedTrackLead = onDocumentCreated(
+  {
+    document: "contact_submissions/{submissionId}",
+    region: "europe-west1",
+    secrets: [META_CAPI_TOKEN],
+  },
+  async (event) => {
+    const submissionId = event.params.submissionId;
+    const data = event.data?.data() as ContactSubmission | undefined;
+
+    if (!data) {
+      console.warn("[CAPI Contact] No data for submission:", submissionId);
+      return;
+    }
+
+    // Rate limit check
+    if (!checkTriggerRateLimit(submissionId, "contact")) {
+      console.log("[CAPI Contact] Rate limited, skipping:", submissionId);
+      return;
+    }
+
+    try {
+      const userData: UserData = {};
+
+      // Extract user data
+      if (data.email) {
+        userData.em = data.email.toLowerCase().trim();
+      }
+      if (data.phone) {
+        userData.ph = data.phone.replace(/[^0-9+]/g, "");
+      }
+      if (data.firstName) {
+        userData.fn = data.firstName.toLowerCase().trim();
+      }
+      if (data.lastName) {
+        userData.ln = data.lastName.toLowerCase().trim();
+      }
+      if (!userData.fn && !userData.ln && data.name) {
+        const nameParts = data.name.split(" ");
+        if (nameParts.length > 0) {
+          userData.fn = nameParts[0]?.toLowerCase().trim();
+        }
+        if (nameParts.length > 1) {
+          userData.ln = nameParts.slice(1).join(" ").toLowerCase().trim();
+        }
+      }
+      if (data.country) {
+        userData.country = data.country.toLowerCase().trim();
+      }
+
+      // Facebook identifiers
+      if (data.fbp) userData.fbp = data.fbp;
+      if (data.fbc) userData.fbc = data.fbc;
+      if (data.client_ip_address) userData.client_ip_address = data.client_ip_address;
+      if (data.client_user_agent) userData.client_user_agent = data.client_user_agent;
+
+      const result: CAPIEventResult = await trackCAPILead({
+        userData,
+        contentName: "contact_form",
+        contentCategory: data.subject || "support",
+        serviceType: "contact",
+        eventSourceUrl: "https://sos-expat.com/contact",
+      });
+
+      if (result.success) {
+        console.log(`[CAPI Contact] ✅ Tracked for submission ${submissionId}`, {
+          eventId: result.eventId,
+          eventsReceived: result.eventsReceived,
+        });
+
+        // Store tracking info in the document
+        await admin.firestore().collection("contact_submissions").doc(submissionId).update({
+          capiTracking: {
+            contactEventId: result.eventId,
+            trackedAt: admin.firestore.FieldValue.serverTimestamp(),
+          },
+        });
+      } else {
+        console.warn(`[CAPI Contact] ⚠️ Failed for submission ${submissionId}:`, result.error);
+      }
+    } catch (error) {
+      console.error(`[CAPI Contact] ❌ Error for submission ${submissionId}:`, error);
     }
   }
 );

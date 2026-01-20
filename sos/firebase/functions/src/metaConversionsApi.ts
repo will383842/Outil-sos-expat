@@ -342,6 +342,164 @@ export function hashUserData(userData: UserData): HashedUserData {
 }
 
 // ============================================================================
+// Diagnostic Functions
+// ============================================================================
+
+/**
+ * Diagnostic report for user data quality
+ * Used for monitoring match rate and data completeness
+ */
+export interface UserDataDiagnostic {
+  fieldsProvided: number;
+  fieldsWithValue: string[];
+  matchRateEstimate: 'excellent' | 'good' | 'fair' | 'poor';
+  score: number;
+  recommendations: string[];
+}
+
+/**
+ * Generate a diagnostic report for user data quality
+ * Helps monitor the expected match rate for CAPI events
+ *
+ * @param userData The user data to analyze
+ * @returns Diagnostic report with quality metrics
+ */
+export function analyzeUserDataQuality(userData: UserData): UserDataDiagnostic {
+  const fieldsWithValue: string[] = [];
+  let score = 0;
+
+  // Score each field based on importance for matching
+  // Email is most important (40 points)
+  if (userData.em && userData.em.length > 0) {
+    fieldsWithValue.push('email');
+    score += 40;
+  }
+
+  // Phone is very important (30 points)
+  if (userData.ph && userData.ph.length > 0) {
+    fieldsWithValue.push('phone');
+    score += 30;
+  }
+
+  // Names help with matching (10 points each)
+  if (userData.fn && userData.fn.length > 0) {
+    fieldsWithValue.push('firstName');
+    score += 10;
+  }
+  if (userData.ln && userData.ln.length > 0) {
+    fieldsWithValue.push('lastName');
+    score += 10;
+  }
+
+  // External ID helps with cross-device (5 points)
+  if (userData.external_id && userData.external_id.length > 0) {
+    fieldsWithValue.push('externalId');
+    score += 5;
+  }
+
+  // Facebook identifiers are important (5 points total)
+  if (userData.fbp || userData.fbc) {
+    if (userData.fbp) fieldsWithValue.push('fbp');
+    if (userData.fbc) fieldsWithValue.push('fbc');
+    score += 5;
+  }
+
+  // Location helps with matching (5 points total)
+  if (userData.country) {
+    fieldsWithValue.push('country');
+    score += 2;
+  }
+  if (userData.ct) {
+    fieldsWithValue.push('city');
+    score += 2;
+  }
+  if (userData.zp) {
+    fieldsWithValue.push('zipCode');
+    score += 1;
+  }
+
+  // IP and User Agent help with matching
+  if (userData.client_ip_address) {
+    fieldsWithValue.push('ipAddress');
+  }
+  if (userData.client_user_agent) {
+    fieldsWithValue.push('userAgent');
+  }
+
+  // Determine match rate estimate
+  let matchRateEstimate: 'excellent' | 'good' | 'fair' | 'poor';
+  if (score >= 75) {
+    matchRateEstimate = 'excellent';
+  } else if (score >= 50) {
+    matchRateEstimate = 'good';
+  } else if (score >= 25) {
+    matchRateEstimate = 'fair';
+  } else {
+    matchRateEstimate = 'poor';
+  }
+
+  // Generate recommendations
+  const recommendations: string[] = [];
+  if (!userData.em) {
+    recommendations.push('Add email - most important field for matching');
+  }
+  if (!userData.ph) {
+    recommendations.push('Add phone number - significantly improves match rate');
+  }
+  if (!userData.fn || !userData.ln) {
+    recommendations.push('Add full name - helps cross-platform matching');
+  }
+  if (!userData.fbp && !userData.fbc) {
+    recommendations.push('Missing Meta identifiers (fbp/fbc) - check Pixel is loaded');
+  }
+  if (!userData.external_id) {
+    recommendations.push('Add external_id for cross-device tracking');
+  }
+
+  return {
+    fieldsProvided: fieldsWithValue.length,
+    fieldsWithValue,
+    matchRateEstimate,
+    score,
+    recommendations,
+  };
+}
+
+/**
+ * Log detailed diagnostics for a CAPI event
+ * Use this for debugging and monitoring data quality
+ */
+export function logCAPIEventDiagnostics(
+  eventName: string,
+  eventId: string,
+  userData: UserData,
+  customData?: CustomData
+): void {
+  const diagnostic = analyzeUserDataQuality(userData);
+
+  logger.info(`[Meta CAPI Diagnostic] ${eventName}`, {
+    eventId,
+    eventName,
+    dataQuality: {
+      matchRateEstimate: diagnostic.matchRateEstimate,
+      score: diagnostic.score,
+      fieldsProvided: diagnostic.fieldsProvided,
+      fields: diagnostic.fieldsWithValue,
+    },
+    hasMetaIdentifiers: !!(userData.fbp || userData.fbc),
+    hasPII: !!(userData.em || userData.ph),
+    hasIpAndUA: !!(userData.client_ip_address && userData.client_user_agent),
+    customData: customData ? {
+      hasValue: !!customData.value,
+      hasCurrency: !!customData.currency,
+      hasContentIds: !!customData.content_ids?.length,
+      hasOrderId: !!customData.order_id,
+    } : null,
+    recommendations: diagnostic.recommendations.length > 0 ? diagnostic.recommendations : undefined,
+  });
+}
+
+// ============================================================================
 // Core CAPI Function with Retry
 // ============================================================================
 
@@ -463,6 +621,25 @@ export async function sendCAPIEvent(
   let lastError: string | undefined;
   let lastFbtraceId: string | undefined;
   let delay = retryConfig.initialDelayMs;
+
+  // Log diagnostic info on first attempt only (to avoid duplicate logs on retries)
+  // This helps monitor data quality and match rate in Cloud Logging
+  const rawUserData: UserData = {};
+  // Reverse the hashing to get field presence (we only check if fields exist)
+  if (event.user_data.em?.length) rawUserData.em = 'present';
+  if (event.user_data.ph?.length) rawUserData.ph = 'present';
+  if (event.user_data.fn) rawUserData.fn = 'present';
+  if (event.user_data.ln) rawUserData.ln = 'present';
+  if (event.user_data.external_id?.length) rawUserData.external_id = 'present';
+  if (event.user_data.fbp) rawUserData.fbp = event.user_data.fbp;
+  if (event.user_data.fbc) rawUserData.fbc = event.user_data.fbc;
+  if (event.user_data.client_ip_address) rawUserData.client_ip_address = event.user_data.client_ip_address;
+  if (event.user_data.client_user_agent) rawUserData.client_user_agent = 'present';
+  if (event.user_data.country) rawUserData.country = 'present';
+  if (event.user_data.ct) rawUserData.ct = 'present';
+  if (event.user_data.zp) rawUserData.zp = 'present';
+
+  logCAPIEventDiagnostics(event.event_name, event.event_id, rawUserData, event.custom_data);
 
   for (let attempt = 1; attempt <= retryConfig.maxAttempts; attempt++) {
     logger.info(`${logPrefix} Sending event (attempt ${attempt}/${retryConfig.maxAttempts})`, {

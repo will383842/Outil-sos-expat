@@ -177,13 +177,41 @@ const Layout: React.FC<LayoutProps> = ({
       </Helmet>
 
       <div className="min-h-screen flex flex-col bg-gray-50 antialiased overflow-x-hidden max-w-full">
-        {/* Skip link pour accessibilité - RTL aware */}
-        <a
-          href="#main-content"
-          className={`sr-only focus:not-sr-only focus:absolute focus:top-4 ${isRTL ? 'focus:right-4' : 'focus:left-4'} bg-blue-600 text-white px-4 py-2 rounded-md z-50 focus:outline-none focus:ring-2 focus:ring-blue-500`}
-        >
-          {isRTL ? 'الانتقال إلى المحتوى الرئيسي' : 'Aller au contenu principal'}
-        </a>
+        {/* Skip links pour accessibilité - Support 9 langues */}
+        <nav aria-label="Skip links" className="sr-only focus-within:not-sr-only">
+          <a
+            href="#main-content"
+            className={`focus:not-sr-only focus:absolute focus:top-4 ${isRTL ? 'focus:right-4' : 'focus:left-4'} bg-blue-600 text-white px-4 py-2 rounded-md z-50 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+          >
+            {{
+              fr: 'Aller au contenu principal',
+              en: 'Skip to main content',
+              es: 'Ir al contenido principal',
+              de: 'Zum Hauptinhalt springen',
+              pt: 'Ir para o conteúdo principal',
+              ru: 'Перейти к основному содержанию',
+              ch: '跳转到主要内容',
+              hi: 'मुख्य सामग्री पर जाएं',
+              ar: 'الانتقال إلى المحتوى الرئيسي'
+            }[language] || 'Skip to main content'}
+          </a>
+          <a
+            href="#footer"
+            className={`focus:not-sr-only focus:absolute focus:top-16 ${isRTL ? 'focus:right-4' : 'focus:left-4'} bg-blue-600 text-white px-4 py-2 rounded-md z-50 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+          >
+            {{
+              fr: 'Aller au pied de page',
+              en: 'Skip to footer',
+              es: 'Ir al pie de página',
+              de: 'Zur Fußzeile springen',
+              pt: 'Ir para o rodapé',
+              ru: 'Перейти к нижнему колонтитулу',
+              ch: '跳转到页脚',
+              hi: 'फ़ुटर पर जाएं',
+              ar: 'الانتقال إلى التذييل'
+            }[language] || 'Skip to footer'}
+          </a>
+        </nav>
 
         <Header />
 

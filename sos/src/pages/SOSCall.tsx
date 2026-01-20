@@ -69,8 +69,9 @@ import {
 import { LanguageUtils } from '../locales/languageMap';
 
 import { formatSpecialties, mapLanguageToLocale } from '../utils/specialtyMapper';
-import { trackMetaLead, trackMetaViewContent, trackMetaSearch } from '../utils/metaPixel';
+import { trackMetaViewContent, trackMetaSearch } from '../utils/metaPixel';
 import { trackAdLead } from '../services/adAttributionService';
+import { useMetaTracking } from '../hooks/useMetaTracking';
 
 
 /* =========================
@@ -2091,6 +2092,7 @@ const SOSCall: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useLocaleNavigate();
   const location = useLocation();
+  const { trackLead } = useMetaTracking();
 
   // Protection contre le double-clic sur navigation
   const isNavigatingRef = useRef(false);
@@ -2996,10 +2998,11 @@ const SOSCall: React.FC = () => {
     // Protection contre le double-clic
     if (isNavigatingRef.current) return;
 
-    // Track Meta Pixel Lead - utilisateur a selectionne un provider
-    trackMetaLead({
-      content_name: 'provider_selected',
-      content_category: provider.type,
+    // Track Meta Pixel + CAPI Lead - utilisateur a selectionne un provider
+    trackLead({
+      contentName: 'provider_selected',
+      contentCategory: provider.type,
+      providerType: provider.type as 'lawyer' | 'expat',
     });
 
     // Track Ad Attribution Lead (Firestore - pour dashboard admin)

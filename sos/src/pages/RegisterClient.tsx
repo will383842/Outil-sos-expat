@@ -72,7 +72,7 @@ const IntlPhoneInput = lazy(
 // CONSTANTS
 // =============================================================================
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MIN_PASSWORD_LENGTH = 6;
+const MIN_PASSWORD_LENGTH = 8;
 const MAX_PASSWORD_LENGTH = 128;
 const GOOGLE_TIMEOUT = 5000; // 5 secondes
 

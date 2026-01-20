@@ -73,8 +73,9 @@ import PhoneField from "@/components/PhoneField";
 import { smartNormalizePhone } from "@/utils/phone";
 import { FormattedMessage, useIntl } from "react-intl";
 import IntlPhoneInput from "@/components/forms-data/IntlPhoneInput";
-import { trackMetaLead, trackMetaInitiateCheckout } from "@/utils/metaPixel";
+import { trackMetaLead, trackMetaInitiateCheckout, getMetaIdentifiers } from "@/utils/metaPixel";
 import { trackAdLead, trackAdInitiateCheckout } from "@/services/adAttributionService";
+import { generateEventIdForType } from "@/utils/sharedEventId";
 
 /** ===== Types complémentaires ===== */
 type LangKey = keyof typeof I18N;
@@ -2625,12 +2626,18 @@ const BookingRequest: React.FC = () => {
       // 👇 littéral 20 | 30 garanti (pas un number)
       const svcDuration: 20 | 30 = isLawyer ? 20 : 30;
 
+      // Generate shared event_id for Pixel/CAPI deduplication
+      const leadEventId = generateEventIdForType('lead');
+      const metaIds = getMetaIdentifiers();
+
       // Track Meta Pixel Lead - demande de reservation soumise
+      // Uses same eventID as will be stored in booking_request for CAPI deduplication
       trackMetaLead({
         content_name: 'booking_request_submitted',
         content_category: isLawyer ? 'lawyer' : 'expat',
         value: eurTotalForDisplay,
         currency: 'EUR',
+        eventID: leadEventId,
       });
 
       // Track InitiateCheckout - debut du processus de paiement
@@ -2661,6 +2668,7 @@ const BookingRequest: React.FC = () => {
       });
 
       // Création du booking centralisée (sans clientId, avec svcDuration)
+      // Include Meta identifiers for CAPI deduplication
       await createBookingRequest({
         // clientId retiré : dérivé côté service
         providerId: selectedProvider.id,
@@ -2692,6 +2700,11 @@ const BookingRequest: React.FC = () => {
         userAgent: bookingRequest.userAgent,
         providerEmail: bookingRequest.providerEmail,
         providerPhone: bookingRequest.providerPhone,
+        // Meta tracking identifiers for CAPI deduplication
+        metaEventId: leadEventId,
+        fbp: metaIds.fbp,
+        fbc: metaIds.fbc,
+        clientEmail: user?.email || undefined,
       });
 
       // Calcul serviceData pour checkout
