@@ -181,9 +181,17 @@ export interface CAPIEventResult {
 /**
  * Generate a unique event ID for deduplication
  * Format: {prefix}_{timestamp}_{random}
+ *
+ * IMPORTANT: Ce format est unifie entre frontend (Pixel) et backend (CAPI)
+ * pour permettre la deduplication correcte des evenements.
+ * Meta utilise event_id pour detecter les doublons Pixel/CAPI.
+ *
+ * Quand possible, utilisez l'eventId genere cote frontend et passez-le
+ * au backend pour garantir la deduplication.
  */
 export function generateEventId(prefix: string = "capi"): string {
   const timestamp = Date.now();
+  // 13 caracteres aleatoires (meme format que frontend sharedEventId.ts)
   const random = Math.random().toString(36).substring(2, 15);
   return `${prefix}_${timestamp}_${random}`;
 }
@@ -197,16 +205,28 @@ function sha256Hash(value: string): string {
 }
 
 /**
+ * Normalize text by removing accents
+ * Important for consistent hashing (e.g., "François" and "Francois" should hash the same)
+ */
+function removeAccents(text: string): string {
+  return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+/**
  * Normalize and hash a user data value
  * - Trims whitespace
  * - Converts to lowercase
+ * - Removes accents for consistent hashing
  * - Hashes with SHA256
  */
-function normalizeAndHash(value: string | undefined | null): string | undefined {
+function normalizeAndHash(value: string | undefined | null, removeAccentsFlag: boolean = true): string | undefined {
   if (!value || typeof value !== "string") {
     return undefined;
   }
-  const normalized = value.trim().toLowerCase();
+  let normalized = value.trim().toLowerCase();
+  if (removeAccentsFlag) {
+    normalized = removeAccents(normalized);
+  }
   if (normalized.length === 0) {
     return undefined;
   }
@@ -322,68 +342,75 @@ export function hashUserData(userData: UserData): HashedUserData {
 }
 
 // ============================================================================
-// Core CAPI Function
+// Core CAPI Function with Retry
 // ============================================================================
 
 /**
- * Send an event to Meta Conversions API
- *
- * @param event - The event to send
- * @param testEventCode - Optional test event code for debugging (removes in production)
- * @returns Result of the API call
+ * Configuration for retry mechanism
  */
-export async function sendCAPIEvent(
+interface RetryConfig {
+  maxAttempts: number;
+  initialDelayMs: number;
+  maxDelayMs: number;
+  backoffMultiplier: number;
+}
+
+const DEFAULT_RETRY_CONFIG: RetryConfig = {
+  maxAttempts: 3,
+  initialDelayMs: 500,
+  maxDelayMs: 10000,
+  backoffMultiplier: 2,
+};
+
+/**
+ * Sleep for a given number of milliseconds
+ */
+const sleep = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * Check if an error is retryable (network issues, rate limits, server errors)
+ */
+const isRetryableError = (status: number, errorMessage?: string): boolean => {
+  // Retryable HTTP status codes
+  if (status >= 500 && status < 600) return true; // Server errors
+  if (status === 429) return true; // Rate limited
+  if (status === 408) return true; // Request timeout
+
+  // Non-retryable errors
+  if (status === 400) return false; // Bad request (our fault)
+  if (status === 401 || status === 403) return false; // Auth errors
+
+  // Check error message for network issues
+  if (errorMessage?.includes("ECONNRESET")) return true;
+  if (errorMessage?.includes("ETIMEDOUT")) return true;
+  if (errorMessage?.includes("ENOTFOUND")) return true;
+  if (errorMessage?.includes("fetch failed")) return true;
+
+  return false;
+};
+
+/**
+ * Send an event to Meta Conversions API (internal, single attempt)
+ */
+async function sendCAPIEventInternal(
   event: MetaCAPIEvent,
+  accessToken: string,
   testEventCode?: string
-): Promise<CAPIEventResult> {
-  const logPrefix = `[Meta CAPI] [${event.event_name}]`;
+): Promise<{ response?: Response; responseData?: MetaCAPIResponse; error?: string }> {
+  const requestBody: {
+    data: MetaCAPIEvent[];
+    access_token: string;
+    test_event_code?: string;
+  } = {
+    data: [event],
+    access_token: accessToken,
+  };
+
+  if (testEventCode) {
+    requestBody.test_event_code = testEventCode;
+  }
 
   try {
-    // Get access token from Firebase secret
-    let accessToken: string;
-    try {
-      accessToken = META_CAPI_TOKEN.value();
-      if (!accessToken || accessToken.length === 0) {
-        throw new Error("META_CAPI_TOKEN is empty");
-      }
-    } catch (secretError) {
-      // Fallback to process.env for local development
-      accessToken = process.env.META_CAPI_TOKEN || "";
-      if (!accessToken) {
-        logger.error(`${logPrefix} META_CAPI_TOKEN not configured`);
-        return {
-          success: false,
-          eventId: event.event_id,
-          error: "META_CAPI_TOKEN not configured",
-        };
-      }
-    }
-
-    // Build request body
-    const requestBody: {
-      data: MetaCAPIEvent[];
-      access_token: string;
-      test_event_code?: string;
-    } = {
-      data: [event],
-      access_token: accessToken,
-    };
-
-    // Add test event code if provided (for debugging in Events Manager)
-    if (testEventCode) {
-      requestBody.test_event_code = testEventCode;
-    }
-
-    logger.info(`${logPrefix} Sending event`, {
-      eventId: event.event_id,
-      eventName: event.event_name,
-      actionSource: event.action_source,
-      hasUserData: Object.keys(event.user_data).length > 0,
-      hasCustomData: !!event.custom_data,
-      testMode: !!testEventCode,
-    });
-
-    // Send request to Meta CAPI
     const response = await fetch(META_CAPI_ENDPOINT, {
       method: "POST",
       headers: {
@@ -393,50 +420,145 @@ export async function sendCAPIEvent(
     });
 
     const responseData = await response.json() as MetaCAPIResponse;
+    return { response, responseData };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
 
-    // Check for errors
-    if (!response.ok || responseData.error) {
-      const errorMessage = responseData.error?.message || `HTTP ${response.status}`;
-      logger.error(`${logPrefix} API Error`, {
-        eventId: event.event_id,
-        status: response.status,
-        error: responseData.error,
-        fbtraceId: responseData.fbtrace_id || responseData.error?.fbtrace_id,
-      });
+/**
+ * Send an event to Meta Conversions API with automatic retry
+ *
+ * @param event - The event to send
+ * @param testEventCode - Optional test event code for debugging (removes in production)
+ * @param retryConfig - Optional retry configuration
+ * @returns Result of the API call
+ */
+export async function sendCAPIEvent(
+  event: MetaCAPIEvent,
+  testEventCode?: string,
+  retryConfig: RetryConfig = DEFAULT_RETRY_CONFIG
+): Promise<CAPIEventResult> {
+  const logPrefix = `[Meta CAPI] [${event.event_name}]`;
 
+  // Get access token
+  let accessToken: string;
+  try {
+    accessToken = META_CAPI_TOKEN.value();
+    if (!accessToken || accessToken.length === 0) {
+      throw new Error("META_CAPI_TOKEN is empty");
+    }
+  } catch (secretError) {
+    accessToken = process.env.META_CAPI_TOKEN || "";
+    if (!accessToken) {
+      logger.error(`${logPrefix} META_CAPI_TOKEN not configured`);
       return {
         success: false,
         eventId: event.event_id,
-        fbtraceId: responseData.fbtrace_id || responseData.error?.fbtrace_id,
-        error: errorMessage,
+        error: "META_CAPI_TOKEN not configured",
       };
     }
+  }
 
+  let lastError: string | undefined;
+  let lastFbtraceId: string | undefined;
+  let delay = retryConfig.initialDelayMs;
+
+  for (let attempt = 1; attempt <= retryConfig.maxAttempts; attempt++) {
+    logger.info(`${logPrefix} Sending event (attempt ${attempt}/${retryConfig.maxAttempts})`, {
+      eventId: event.event_id,
+      eventName: event.event_name,
+      actionSource: event.action_source,
+      hasUserData: Object.keys(event.user_data).length > 0,
+      hasCustomData: !!event.custom_data,
+      testMode: !!testEventCode,
+    });
+
+    const { response, responseData, error } = await sendCAPIEventInternal(
+      event,
+      accessToken,
+      testEventCode
+    );
+
+    // Network error
+    if (error) {
+      lastError = error;
+      if (attempt < retryConfig.maxAttempts && isRetryableError(0, error)) {
+        logger.warn(`${logPrefix} Network error, retrying in ${delay}ms`, {
+          eventId: event.event_id,
+          error,
+          attempt,
+        });
+        await sleep(delay);
+        delay = Math.min(delay * retryConfig.backoffMultiplier, retryConfig.maxDelayMs);
+        continue;
+      }
+      break;
+    }
+
+    // HTTP error
+    if (!response || !response.ok || responseData?.error) {
+      const errorMessage = responseData?.error?.message || `HTTP ${response?.status}`;
+      lastError = errorMessage;
+      lastFbtraceId = responseData?.fbtrace_id || responseData?.error?.fbtrace_id;
+
+      // Check if retryable
+      if (
+        attempt < retryConfig.maxAttempts &&
+        response &&
+        isRetryableError(response.status, errorMessage)
+      ) {
+        logger.warn(`${logPrefix} API error (retryable), retrying in ${delay}ms`, {
+          eventId: event.event_id,
+          status: response.status,
+          error: errorMessage,
+          attempt,
+        });
+        await sleep(delay);
+        delay = Math.min(delay * retryConfig.backoffMultiplier, retryConfig.maxDelayMs);
+        continue;
+      }
+
+      // Non-retryable error
+      logger.error(`${logPrefix} API Error (non-retryable)`, {
+        eventId: event.event_id,
+        status: response?.status,
+        error: responseData?.error,
+        fbtraceId: lastFbtraceId,
+        attempt,
+      });
+      break;
+    }
+
+    // Success!
     logger.info(`${logPrefix} Event sent successfully`, {
       eventId: event.event_id,
-      eventsReceived: responseData.events_received,
-      fbtraceId: responseData.fbtrace_id,
+      eventsReceived: responseData?.events_received,
+      fbtraceId: responseData?.fbtrace_id,
+      attempt,
     });
 
     return {
       success: true,
       eventId: event.event_id,
-      eventsReceived: responseData.events_received,
-      fbtraceId: responseData.fbtrace_id,
-    };
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    logger.error(`${logPrefix} Exception`, {
-      eventId: event.event_id,
-      error: errorMessage,
-    });
-
-    return {
-      success: false,
-      eventId: event.event_id,
-      error: errorMessage,
+      eventsReceived: responseData?.events_received,
+      fbtraceId: responseData?.fbtrace_id,
     };
   }
+
+  // All retries exhausted
+  logger.error(`${logPrefix} All retry attempts exhausted`, {
+    eventId: event.event_id,
+    error: lastError,
+    fbtraceId: lastFbtraceId,
+  });
+
+  return {
+    success: false,
+    eventId: event.event_id,
+    fbtraceId: lastFbtraceId,
+    error: lastError || "Max retries exceeded",
+  };
 }
 
 // ============================================================================

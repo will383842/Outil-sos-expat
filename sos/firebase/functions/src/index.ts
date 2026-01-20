@@ -895,6 +895,14 @@ export * from "./admin/providerActions";
 // Triggers de nettoyage automatique (suppression cascade users -> sos_profiles)
 export { onUserDeleted, cleanupOrphanedProfiles } from "./triggers/userCleanupTrigger";
 
+// User Feedback Module - Collecte des retours utilisateurs (clients & prestataires)
+export {
+  onFeedbackCreated,
+  updateFeedbackStatus,
+  getFeedbackStats,
+  deleteFeedback,
+} from "./feedback";
+
 // Tax Filings Module - Declaration fiscales automatiques
 // TODO: Fix TypeScript v2 migration errors in taxFilings module
 /*
@@ -2083,12 +2091,15 @@ export const stripeWebhook = onRequest(
                 const paymentIntentData = event.data.object as Stripe.PaymentIntent;
 
                 // Track via Meta Conversions API (CAPI) for Facebook Ads attribution
+                // Use pixelEventId from metadata for deduplication with frontend Pixel
                 try {
                   const capiResult = await trackStripePurchase(paymentIntentData, {
                     serviceType: paymentIntentData.metadata?.serviceType,
                     providerType: paymentIntentData.metadata?.providerType,
                     contentName: `SOS-Expat ${paymentIntentData.metadata?.serviceType || "Service"}`,
                     eventSourceUrl: "https://sos-expat.com",
+                    // IMPORTANT: Use same eventId as frontend Pixel for deduplication
+                    eventId: paymentIntentData.metadata?.pixelEventId,
                   });
 
                   if (capiResult.success) {

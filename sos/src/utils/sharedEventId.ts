@@ -16,12 +16,17 @@ const STORAGE_KEY = 'sos_last_event_ids';
  * - Meta CAPI (event_id field)
  * - Firestore (event_id field)
  *
+ * IMPORTANT: Ce format est unifie entre frontend (Pixel) et backend (CAPI)
+ * pour permettre la deduplication correcte des evenements.
+ * Meta utilise event_id pour detecter les doublons Pixel/CAPI.
+ *
  * @param prefix Prefixe optionnel pour identifier le type d'evenement
  * @returns EventID unique
  */
 export const generateSharedEventId = (prefix: string = 'evt'): string => {
   const timestamp = Date.now();
-  const random = Math.random().toString(36).substring(2, 11); // 9 caracteres aleatoires
+  // 13 caracteres aleatoires (compatible avec CAPI backend qui utilise substring(2,15))
+  const random = Math.random().toString(36).substring(2, 15);
   return `${prefix}_${timestamp}_${random}`;
 };
 

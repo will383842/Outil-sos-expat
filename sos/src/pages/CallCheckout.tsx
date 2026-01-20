@@ -51,6 +51,8 @@ import { PayPalPaymentForm, GatewayIndicator } from "../components/payment";
 import { paymentLogger, navigationLogger, callLogger } from "../utils/debugLogger";
 import { getLocaleString, getTranslatedRouteSlug } from "../multilingual-system/core/routing/localeRoutes";
 import { getStoredMetaIdentifiers } from "../utils/fbpCookie";
+import { trackMetaAddPaymentInfo, trackMetaInitiateCheckout } from "../utils/metaPixel";
+import { getOrCreateEventId } from "../utils/sharedEventId";
 
 /* -------------------------- Stripe singleton (HMR-safe) ------------------ */
 // Conserve la même Promise Stripe à travers les rechargements HMR.
@@ -1915,12 +1917,16 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
             requestTitle: bookingMeta?.title || "",
             timestamp: new Date().toISOString(),
             callSessionId: callSessionId,
-            // Meta CAPI identifiers for purchase attribution
+            // Meta CAPI identifiers for purchase attribution and deduplication
             ...(() => {
               const metaIds = getStoredMetaIdentifiers();
+              // Generate/retrieve the same eventId used for Pixel tracking
+              const pixelEventId = getOrCreateEventId(`purchase_${callSessionId}`, 'purchase');
               return {
                 ...(metaIds.fbp && { fbp: metaIds.fbp }),
                 ...(metaIds.fbc && { fbc: metaIds.fbc }),
+                // IMPORTANT: Pass eventId to backend for CAPI deduplication
+                pixelEventId: pixelEventId,
               };
             })(),
           },
@@ -1955,6 +1961,25 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           console.log("[DEBUG] " + "❌ CardElement non trouvé! isMobile=" + isMobile);
           throw new Error(t("err.noCardElement"));
         }
+
+        // ========== META PIXEL TRACKING: AddPaymentInfo ==========
+        // Track quand l'utilisateur soumet ses informations de paiement
+        // Cet événement est envoyé AVANT la confirmation du paiement
+        try {
+          const eventId = getOrCreateEventId(`checkout_${callSessionId}`, 'checkout');
+          trackMetaAddPaymentInfo({
+            value: adminPricing.totalAmount,
+            currency: serviceCurrency.toUpperCase(),
+            content_category: provider.role || provider.type || 'service',
+            content_ids: [provider.id],
+            eventID: eventId,
+          });
+          console.log("[MetaPixel] AddPaymentInfo tracked", { amount: adminPricing.totalAmount, eventId });
+        } catch (trackingError) {
+          // Ne pas bloquer le paiement si le tracking échoue
+          console.warn("[MetaPixel] AddPaymentInfo tracking failed:", trackingError);
+        }
+        // ========== END META PIXEL TRACKING ==========
 
         console.log("[DEBUG] " + "🔵 actuallySubmitPayment: Appel confirmCardPayment...");
 
@@ -2885,6 +2910,37 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
       ),
     [getTraceAttributes, providerRole, selectedCurrency]
   );
+
+  // ========== META PIXEL TRACKING: InitiateCheckout ==========
+  // Track quand l'utilisateur arrive sur la page de checkout avec un provider
+  useEffect(() => {
+    if (!provider?.id || !adminPricing?.totalAmount) return;
+
+    // Ne tracker qu'une seule fois par session de checkout
+    const checkoutKey = `meta_checkout_${provider.id}_tracked`;
+    if (sessionStorage.getItem(checkoutKey)) return;
+
+    try {
+      const eventId = getOrCreateEventId(`checkout_${provider.id}`, 'checkout');
+      trackMetaInitiateCheckout({
+        value: adminPricing.totalAmount,
+        currency: selectedCurrency.toUpperCase(),
+        content_name: providerRole === 'lawyer' ? 'lawyer_call' : 'expat_call',
+        content_category: providerRole || 'service',
+        num_items: 1,
+        eventID: eventId,
+      });
+      sessionStorage.setItem(checkoutKey, 'true');
+      console.log("[MetaPixel] InitiateCheckout tracked", {
+        amount: adminPricing.totalAmount,
+        providerId: provider.id,
+        eventId
+      });
+    } catch (trackingError) {
+      console.warn("[MetaPixel] InitiateCheckout tracking failed:", trackingError);
+    }
+  }, [provider?.id, adminPricing?.totalAmount, selectedCurrency, providerRole]);
+  // ========== END META PIXEL TRACKING ==========
 
   // Expose debug helpers (DEV only)
   if (import.meta.env.DEV && typeof window !== "undefined") {

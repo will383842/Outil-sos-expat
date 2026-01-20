@@ -1,6 +1,7 @@
 // src/utils/metaPixel.ts
 // Utilitaire Meta Pixel complet pour SPA React
 // Pixel ID: 2204016713738311
+// TRACKING SANS CONSENTEMENT - Pour maximiser les donnees de conversion
 
 import { generateSharedEventId } from './sharedEventId';
 import { detectUserCountry } from './trafficSource';
@@ -19,13 +20,77 @@ const getCountryForTracking = (providedCountry?: string): string | undefined => 
 
 declare global {
   interface Window {
-    fbq: ((event: string, action: string, params?: Record<string, unknown>, options?: { eventID?: string }) => void) | undefined;
+    fbq: ((...args: unknown[]) => void) | undefined;
     _fbq: unknown;
     __metaMarketingGranted?: boolean;
   }
 }
 
 export const PIXEL_ID = '2204016713738311';
+
+// ============================================================================
+// Utilitaires de validation et normalisation
+// ============================================================================
+
+/**
+ * Valide un email avec regex
+ */
+const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email) && email.length <= 254;
+};
+
+/**
+ * Valide un numero de telephone (minimum 10 chiffres)
+ */
+const isValidPhone = (phone: string): boolean => {
+  const digits = phone.replace(/\D/g, '');
+  return digits.length >= 10 && digits.length <= 15;
+};
+
+/**
+ * Normalise le texte: lowercase, trim, supprime les accents
+ */
+const normalizeText = (text: string): string => {
+  return text
+    .toLowerCase()
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+};
+
+/**
+ * Recupere les identifiants Facebook (fbp, fbc) depuis les cookies
+ */
+export const getMetaIdentifiers = (): { fbp?: string; fbc?: string } => {
+  const result: { fbp?: string; fbc?: string } = {};
+
+  try {
+    // fbp cookie (_fbp)
+    const fbpMatch = document.cookie.match(/_fbp=([^;]+)/);
+    if (fbpMatch) {
+      result.fbp = fbpMatch[1];
+    }
+
+    // fbc cookie (_fbc) ou parametre URL fbclid
+    const fbcMatch = document.cookie.match(/_fbc=([^;]+)/);
+    if (fbcMatch) {
+      result.fbc = fbcMatch[1];
+    } else {
+      // Fallback: fbclid dans l'URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const fbclid = urlParams.get('fbclid');
+      if (fbclid) {
+        // Format fbc: fb.1.{timestamp}.{fbclid}
+        result.fbc = `fb.1.${Date.now()}.${fbclid}`;
+      }
+    }
+  } catch (e) {
+    // Ignore errors
+  }
+
+  return result;
+};
 
 /**
  * Genere un ID d'evenement unique pour la deduplication Pixel/CAPI
@@ -44,32 +109,17 @@ export const isFbqAvailable = (): boolean => {
 };
 
 /**
- * Verifie si le marketing est autorise
- * Mode GDPR strict: consent requis par defaut
+ * Fonction legacy - TOUJOURS retourne true (tracking sans consentement)
+ * Conservee pour compatibilite avec le code existant
  */
 export const hasMarketingConsent = (): boolean => {
-  // Check explicit window flag (set by consent manager)
-  if (typeof window.__metaMarketingGranted === 'boolean') {
-    return window.__metaMarketingGranted;
-  }
-
-  // Fallback: verifier localStorage pour GDPR
-  try {
-    const saved = localStorage.getItem('cookie_preferences');
-    if (saved) {
-      const prefs = JSON.parse(saved);
-      return prefs.marketing === true;
-    }
-  } catch (e) {
-    // Ignore errors
-  }
-
-  // GDPR strict: par defaut PAS de tracking sans consentement explicite
-  return false;
+  // TRACKING SANS CONSENTEMENT - Toujours autoriser
+  return true;
 };
 
 /**
  * Met a jour le consentement Meta Pixel via l'API native fbq
+ * Note: Le tracking se fait meme sans consentement
  */
 export const updateMetaPixelNativeConsent = (granted: boolean): void => {
   window.__metaMarketingGranted = granted;
@@ -79,13 +129,14 @@ export const updateMetaPixelNativeConsent = (granted: boolean): void => {
   try {
     if (granted) {
       window.fbq!('consent', 'grant');
-      // Track PageView apres consentement
-      trackMetaPageView();
     } else {
       window.fbq!('consent', 'revoke');
     }
+    // Toujours tracker le PageView
+    trackMetaPageView();
+
     if (process.env.NODE_ENV === 'development') {
-      console.log(`%c[MetaPixel] Consent ${granted ? 'GRANTED' : 'REVOKED'}`, 'color: #1877F2; font-weight: bold');
+      console.log(`%c[MetaPixel] Consent ${granted ? 'GRANTED' : 'REVOKED'} - tracking continues`, 'color: #1877F2; font-weight: bold');
     }
   } catch (error) {
     console.error('[MetaPixel] Erreur consent:', error);
@@ -102,13 +153,6 @@ export const trackMetaPageView = (params?: { eventID?: string }): string | undef
   if (!isFbqAvailable()) {
     if (process.env.NODE_ENV === 'development') {
       console.warn('[MetaPixel] fbq non disponible (adblocker ou script non charge)');
-    }
-    return eventID;
-  }
-
-  if (!hasMarketingConsent()) {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[MetaPixel] Marketing consent non accorde');
     }
     return eventID;
   }
@@ -141,9 +185,9 @@ export const trackMetaLead = (params?: {
   const eventID = params?.eventID || generateEventID();
   const country = getCountryForTracking(params?.country);
 
-  if (!isFbqAvailable() || !hasMarketingConsent()) {
+  if (!isFbqAvailable()) {
     if (process.env.NODE_ENV === 'development') {
-      console.warn('[MetaPixel] Lead non tracke - fbq indisponible ou pas de consent');
+      console.warn('[MetaPixel] Lead non tracke - fbq indisponible');
     }
     return eventID;
   }
@@ -182,9 +226,9 @@ export const trackMetaPurchase = (params: {
 }): string | undefined => {
   const eventID = params.eventID || generateEventID();
 
-  if (!isFbqAvailable() || !hasMarketingConsent()) {
+  if (!isFbqAvailable()) {
     if (process.env.NODE_ENV === 'development') {
-      console.warn('[MetaPixel] Purchase non tracke - fbq indisponible ou pas de consent');
+      console.warn('[MetaPixel] Purchase non tracke - fbq indisponible');
     }
     return eventID;
   }
@@ -238,7 +282,7 @@ export const trackMetaInitiateCheckout = (params?: {
   const eventID = params?.eventID || generateEventID();
   const country = getCountryForTracking(params?.country);
 
-  if (!isFbqAvailable() || !hasMarketingConsent()) {
+  if (!isFbqAvailable()) {
     return eventID;
   }
 
@@ -269,7 +313,7 @@ export const trackMetaContact = (params?: {
   content_name?: string;
   content_category?: string;
 }): void => {
-  if (!isFbqAvailable() || !hasMarketingConsent()) return;
+  if (!isFbqAvailable()) return;
 
   try {
     window.fbq!('track', 'Contact', {
@@ -300,7 +344,7 @@ export const trackMetaCompleteRegistration = (params?: {
   const eventID = params?.eventID || generateEventID();
   const country = getCountryForTracking(params?.country);
 
-  if (!isFbqAvailable() || !hasMarketingConsent()) {
+  if (!isFbqAvailable()) {
     return eventID;
   }
 
@@ -337,7 +381,7 @@ export const trackMetaStartRegistration = (params?: {
   const eventID = params?.eventID || generateEventID();
   const country = getCountryForTracking(params?.country);
 
-  if (!isFbqAvailable() || !hasMarketingConsent()) {
+  if (!isFbqAvailable()) {
     return eventID;
   }
 
@@ -371,7 +415,7 @@ export const trackMetaSearch = (params?: {
 }): string | undefined => {
   const eventID = params?.eventID || generateEventID();
 
-  if (!isFbqAvailable() || !hasMarketingConsent()) {
+  if (!isFbqAvailable()) {
     return eventID;
   }
 
@@ -404,7 +448,7 @@ export const trackMetaViewContent = (params?: {
 }): string | undefined => {
   const eventID = params?.eventID || generateEventID();
 
-  if (!isFbqAvailable() || !hasMarketingConsent()) {
+  if (!isFbqAvailable()) {
     return eventID;
   }
 
@@ -442,7 +486,7 @@ export const trackMetaAddToCart = (params?: {
 }): string | undefined => {
   const eventID = params?.eventID || generateEventID();
 
-  if (!isFbqAvailable() || !hasMarketingConsent()) {
+  if (!isFbqAvailable()) {
     return eventID;
   }
 
@@ -478,7 +522,7 @@ export const trackMetaAddPaymentInfo = (params?: {
 }): string | undefined => {
   const eventID = params?.eventID || generateEventID();
 
-  if (!isFbqAvailable() || !hasMarketingConsent()) {
+  if (!isFbqAvailable()) {
     return eventID;
   }
 
@@ -506,7 +550,7 @@ export const trackMetaCustomEvent = (
   eventName: string,
   params?: Record<string, unknown>
 ): void => {
-  if (!isFbqAvailable() || !hasMarketingConsent()) return;
+  if (!isFbqAvailable()) return;
 
   try {
     window.fbq!('trackCustom', eventName, params);
@@ -520,17 +564,18 @@ export const trackMetaCustomEvent = (
 
 /**
  * Met a jour le consentement Meta Pixel (appele depuis CookieBanner)
+ * Note: Le tracking se fait meme sans consentement
  */
 export const updateMetaPixelConsent = (granted: boolean): void => {
   window.__metaMarketingGranted = granted;
 
-  if (granted && isFbqAvailable()) {
-    // Si consentement accorde, envoyer un PageView
+  // Toujours tracker le PageView
+  if (isFbqAvailable()) {
     trackMetaPageView();
   }
 
   if (process.env.NODE_ENV === 'development') {
-    console.log('%c[MetaPixel] Consent updated:', 'color: #1877F2; font-weight: bold', granted);
+    console.log('%c[MetaPixel] Consent updated (tracking continues):', 'color: #1877F2; font-weight: bold', granted);
   }
 };
 
@@ -543,6 +588,11 @@ let storedUserData: Record<string, string> = {};
  *
  * NOTE: On ne re-initialise PAS le pixel pour eviter l'erreur "Duplicate Pixel ID".
  * Les donnees sont stockees et envoyees avec les prochains evenements.
+ *
+ * IMPORTANT: Apres avoir appele cette fonction, appelez applyMetaPixelUserData()
+ * pour envoyer les donnees a Meta via fbq('setUserData', ...).
+ *
+ * TRACKING SANS CONSENTEMENT - Les donnees sont toujours collectees
  */
 export const setMetaPixelUserData = (userData: {
   email?: string;
@@ -550,58 +600,74 @@ export const setMetaPixelUserData = (userData: {
   firstName?: string;
   lastName?: string;
   city?: string;
+  state?: string;
   country?: string;
   zipCode?: string;
+  userId?: string; // external_id pour Meta - votre ID utilisateur unique
 }): void => {
-  if (!hasMarketingConsent()) {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('[MetaPixel] UserData non stocke - pas de consent');
-    }
-    return;
-  }
-
   try {
     // Preparer les donnees en format Meta (tous en minuscules, sans espaces)
     const advancedMatchingData: Record<string, string> = {};
 
-    if (userData.email) {
-      // Email en minuscules, sans espaces
+    // Email avec validation
+    if (userData.email && isValidEmail(userData.email)) {
       advancedMatchingData.em = userData.email.toLowerCase().trim();
     }
 
-    if (userData.phone) {
-      // Telephone: que des chiffres, avec indicatif pays
-      const cleanPhone = userData.phone.replace(/[^0-9+]/g, '');
+    // Telephone avec validation et normalisation E.164
+    if (userData.phone && isValidPhone(userData.phone)) {
+      let cleanPhone = userData.phone.replace(/[^0-9+]/g, '');
+      // Si le numero commence par 0 et n'a pas d'indicatif, ajouter +33 (France)
+      if (cleanPhone.startsWith('0') && !cleanPhone.startsWith('+')) {
+        cleanPhone = '33' + cleanPhone.substring(1);
+      }
+      // Retirer le + pour le format Meta
+      cleanPhone = cleanPhone.replace(/^\+/, '');
       advancedMatchingData.ph = cleanPhone;
     }
 
+    // Prenom normalise (sans accents)
     if (userData.firstName) {
-      // Prenom en minuscules, sans espaces au debut/fin
-      advancedMatchingData.fn = userData.firstName.toLowerCase().trim();
+      advancedMatchingData.fn = normalizeText(userData.firstName);
     }
 
+    // Nom normalise (sans accents)
     if (userData.lastName) {
-      // Nom en minuscules, sans espaces au debut/fin
-      advancedMatchingData.ln = userData.lastName.toLowerCase().trim();
+      advancedMatchingData.ln = normalizeText(userData.lastName);
     }
 
+    // Ville normalisee (sans accents)
     if (userData.city) {
-      // Ville en minuscules, sans espaces au debut/fin, sans accents
-      advancedMatchingData.ct = userData.city
-        .toLowerCase()
-        .trim()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '');
+      advancedMatchingData.ct = normalizeText(userData.city);
     }
 
+    // Etat/Province normalise (sans accents)
+    if (userData.state) {
+      advancedMatchingData.st = normalizeText(userData.state);
+    }
+
+    // Code pays ISO 2 lettres en minuscules
     if (userData.country) {
-      // Code pays ISO 2 lettres en minuscules
       advancedMatchingData.country = userData.country.toLowerCase().substring(0, 2);
     }
 
+    // Code postal sans espaces
     if (userData.zipCode) {
-      // Code postal sans espaces
       advancedMatchingData.zp = userData.zipCode.replace(/\s/g, '');
+    }
+
+    // external_id - votre ID utilisateur unique (Firebase UID)
+    if (userData.userId) {
+      advancedMatchingData.external_id = userData.userId;
+    }
+
+    // Ajouter fbp et fbc pour ameliorer l'attribution
+    const metaIds = getMetaIdentifiers();
+    if (metaIds.fbp) {
+      advancedMatchingData.fbp = metaIds.fbp;
+    }
+    if (metaIds.fbc) {
+      advancedMatchingData.fbc = metaIds.fbc;
     }
 
     // Ne rien faire si pas de donnees
@@ -613,18 +679,62 @@ export const setMetaPixelUserData = (userData: {
     storedUserData = advancedMatchingData;
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('%c[MetaPixel] Advanced Matching - User data stored (no re-init):', 'color: #1877F2; font-weight: bold', {
+      console.log('%c[MetaPixel] Advanced Matching - User data stored:', 'color: #1877F2; font-weight: bold', {
         hasEmail: !!advancedMatchingData.em,
         hasPhone: !!advancedMatchingData.ph,
         hasFirstName: !!advancedMatchingData.fn,
         hasLastName: !!advancedMatchingData.ln,
         hasCity: !!advancedMatchingData.ct,
+        hasState: !!advancedMatchingData.st,
         hasCountry: !!advancedMatchingData.country,
         hasZipCode: !!advancedMatchingData.zp,
+        hasExternalId: !!advancedMatchingData.external_id,
+        hasFbp: !!advancedMatchingData.fbp,
+        hasFbc: !!advancedMatchingData.fbc,
       });
     }
   } catch (error) {
     console.error('[MetaPixel] Erreur Advanced Matching:', error);
+  }
+};
+
+/**
+ * Envoie les donnees utilisateur stockees a Meta via fbq('setUserData', ...)
+ * IMPORTANT: Appelez cette fonction APRES setMetaPixelUserData() pour activer l'Advanced Matching
+ *
+ * Cette fonction envoie les donnees a Meta pour ameliorer le match rate des conversions.
+ * Meta va hasher ces donnees cote serveur.
+ *
+ * TRACKING SANS CONSENTEMENT - Les donnees sont toujours envoyees
+ */
+export const applyMetaPixelUserData = (): void => {
+  if (!isFbqAvailable()) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('[MetaPixel] fbq non disponible - Advanced Matching non applique');
+    }
+    return;
+  }
+
+  if (Object.keys(storedUserData).length === 0) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[MetaPixel] Pas de donnees utilisateur a envoyer');
+    }
+    return;
+  }
+
+  try {
+    // Envoyer les donnees a Meta via fbq('setUserData', ...)
+    // Meta va hasher ces donnees automatiquement
+    window.fbq!('setUserData', storedUserData);
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('%c[MetaPixel] Advanced Matching APPLIED to Meta:', 'color: #1877F2; font-weight: bold; background: #e7f3ff; padding: 2px 6px;', {
+        fieldsCount: Object.keys(storedUserData).length,
+        fields: Object.keys(storedUserData),
+      });
+    }
+  } catch (error) {
+    console.error('[MetaPixel] Erreur envoi Advanced Matching:', error);
   }
 };
 
@@ -635,13 +745,26 @@ export const getStoredUserData = (): Record<string, string> => storedUserData;
 
 /**
  * Efface les donnees utilisateur stockees (a appeler lors de la deconnexion)
+ * Envoie egalement un objet vide a Meta pour reinitialiser les donnees
  */
 export const clearMetaPixelUserData = (): void => {
-  // Effacer les donnees stockees localement (pas de re-init du pixel)
+  // Effacer les donnees stockees localement
   storedUserData = {};
 
+  // Envoyer un objet vide a Meta pour reinitialiser les donnees
+  if (isFbqAvailable()) {
+    try {
+      window.fbq!('setUserData', {});
+      if (process.env.NODE_ENV === 'development') {
+        console.log('%c[MetaPixel] User data cleared in Meta', 'color: #1877F2; font-weight: bold');
+      }
+    } catch (error) {
+      console.error('[MetaPixel] Error clearing user data in Meta:', error);
+    }
+  }
+
   if (process.env.NODE_ENV === 'development') {
-    console.log('%c[MetaPixel] User data cleared', 'color: #1877F2; font-weight: bold');
+    console.log('%c[MetaPixel] User data cleared locally', 'color: #1877F2; font-weight: bold');
   }
 };
 
@@ -665,7 +788,9 @@ export default {
   updateMetaPixelConsent,
   updateMetaPixelNativeConsent,
   setMetaPixelUserData,
+  applyMetaPixelUserData,
   clearMetaPixelUserData,
   getStoredUserData,
+  getMetaIdentifiers,
   PIXEL_ID,
 };

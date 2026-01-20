@@ -444,6 +444,14 @@ export const adminMenuTree: AdminMenuItem[] = [
         icon: MessageSquare,
         descriptionKey: "admin.menu.contactRequests.description",
       },
+      {
+        id: "user-feedback",
+        labelKey: "admin.menu.userFeedback",
+        path: "/admin/feedback",
+        icon: MessageSquare,
+        badge: "NEW",
+        descriptionKey: "admin.menu.userFeedback.description",
+      },
     ],
   },
 

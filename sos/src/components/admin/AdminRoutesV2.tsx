@@ -372,6 +372,9 @@ const AdminPromoCodes = lazy(() => import("../../pages/admin/AdminPromoCodes"));
 const AdminContactMessages = lazy(
   () => import("../../pages/admin/AdminContactMessages")
 );
+const AdminFeedback = lazy(
+  () => import("../../pages/admin/AdminFeedback")
+);
 // const AdminEmails = lazy(() => import("../../pages/admin/AdminEmails"));
 
 // ===== LAZY IMPORTS - AI SUBSCRIPTION =====
@@ -781,6 +784,16 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminContactMessages />
+          </Suspense>
+        }
+      />
+
+      {/* 📝 FEEDBACKS UTILISATEURS */}
+      <Route
+        path="feedback"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminFeedback />
           </Suspense>
         }
       />
@@ -1239,6 +1252,7 @@ export const useAdminRouteValidation = () => {
       "/admin/marketing/ads-analytics",
       "/admin/marketing/trustpilot",
       "/admin/analytics/unified",
+      "/admin/feedback",
     ];
     return validPaths.includes(path);
   };

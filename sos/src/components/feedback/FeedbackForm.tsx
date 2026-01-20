@@ -1,0 +1,453 @@
+// src/components/feedback/FeedbackForm.tsx
+// Formulaire de feedback complet avec validation
+import React, { useState, useRef } from 'react';
+import {
+  Bug,
+  Frown,
+  Lightbulb,
+  HelpCircle,
+  Upload,
+  X,
+  CheckCircle2,
+  AlertTriangle,
+  Loader2,
+  Image as ImageIcon
+} from 'lucide-react';
+import { useIntl } from 'react-intl';
+import { useAuth } from '../../contexts/AuthContext';
+import { useDeviceDetection } from '../../hooks/useDeviceDetection';
+import { useFeedback } from '../../hooks/useFeedback';
+import type { UserRole as FeedbackUserRole } from '../../services/feedback';
+
+interface FeedbackFormProps {
+  onClose: () => void;
+  pageContext?: string;
+}
+
+type FeedbackType = 'bug' | 'ux_friction' | 'suggestion' | 'other';
+type PriorityLevel = 'blocking' | 'annoying' | 'minor';
+
+const FEEDBACK_TYPES: { value: FeedbackType; icon: React.ElementType; labelKey: string }[] = [
+  { value: 'bug', icon: Bug, labelKey: 'feedback.type.bug' },
+  { value: 'ux_friction', icon: Frown, labelKey: 'feedback.type.uxFriction' },
+  { value: 'suggestion', icon: Lightbulb, labelKey: 'feedback.type.suggestion' },
+  { value: 'other', icon: HelpCircle, labelKey: 'feedback.type.other' },
+];
+
+const PRIORITY_LEVELS: { value: PriorityLevel; labelKey: string; descKey: string }[] = [
+  { value: 'blocking', labelKey: 'feedback.priority.blocking', descKey: 'feedback.priority.blocking.desc' },
+  { value: 'annoying', labelKey: 'feedback.priority.annoying', descKey: 'feedback.priority.annoying.desc' },
+  { value: 'minor', labelKey: 'feedback.priority.minor', descKey: 'feedback.priority.minor.desc' },
+];
+
+const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose, pageContext }) => {
+  const intl = useIntl();
+  const { user } = useAuth();
+  const { submitFeedback, isSubmitting } = useFeedback();
+  const {
+    isMobile,
+    isTablet,
+    isIOS,
+    isAndroid,
+    isSafari,
+    isChrome,
+    screenWidth,
+    screenHeight,
+    breakpoint
+  } = useDeviceDetection();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // États du formulaire
+  const [email, setEmail] = useState(user?.email || '');
+  const [feedbackType, setFeedbackType] = useState<FeedbackType | ''>('');
+  const [description, setDescription] = useState('');
+  const [priority, setPriority] = useState<PriorityLevel | ''>('');
+  const [screenshot, setScreenshot] = useState<File | null>(null);
+  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
+
+  // États UI
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Validation
+  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isDescriptionValid = description.trim().length >= 10;
+  const isFormValid = email && isEmailValid && feedbackType && isDescriptionValid;
+
+  // Gestion du screenshot
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Vérifier la taille (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setError(intl.formatMessage({
+          id: 'feedback.error.fileTooLarge',
+          defaultMessage: 'Le fichier est trop volumineux (max 5MB)'
+        }));
+        return;
+      }
+
+      // Vérifier le type
+      if (!file.type.startsWith('image/')) {
+        setError(intl.formatMessage({
+          id: 'feedback.error.invalidFileType',
+          defaultMessage: 'Seules les images sont acceptées'
+        }));
+        return;
+      }
+
+      setScreenshot(file);
+      setError(null);
+
+      // Créer la preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setScreenshotPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeScreenshot = () => {
+    setScreenshot(null);
+    setScreenshotPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // Soumission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!isFormValid) return;
+
+    setError(null);
+
+    // Construire les données de contexte
+    const deviceType: 'mobile' | 'tablet' | 'desktop' = isMobile ? 'mobile' : isTablet ? 'tablet' : 'desktop';
+    const deviceInfo = {
+      type: deviceType,
+      os: isIOS ? 'iOS' : isAndroid ? 'Android' : 'Desktop',
+      browser: isSafari ? 'Safari' : isChrome ? 'Chrome' : 'Other',
+      screenResolution: `${screenWidth}x${screenHeight}`,
+      connectionType: (navigator as Navigator & { connection?: { effectiveType?: string } }).connection?.effectiveType || 'unknown',
+    };
+
+    // Mapper le rôle utilisateur vers le type FeedbackUserRole
+    const mapUserRole = (role?: string): FeedbackUserRole => {
+      if (role === 'client' || role === 'lawyer' || role === 'expat' || role === 'admin') {
+        return role;
+      }
+      return 'visitor';
+    };
+
+    const feedbackData = {
+      email,
+      type: feedbackType as FeedbackType,
+      description: description.trim(),
+      priority: priority || undefined,
+      pageUrl: window.location.href,
+      pageName: pageContext || document.title,
+      device: deviceInfo,
+      locale: intl.locale,
+      userId: user?.id || user?.uid,
+      userRole: mapUserRole(user?.role),
+      userName: user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : undefined,
+    };
+
+    try {
+      await submitFeedback(feedbackData, screenshot || undefined);
+      setIsSuccess(true);
+
+      // Fermer après 2 secondes
+      setTimeout(() => {
+        onClose();
+      }, 2000);
+    } catch (err) {
+      setError(intl.formatMessage({
+        id: 'feedback.error.submitFailed',
+        defaultMessage: 'Une erreur est survenue. Veuillez réessayer.'
+      }));
+    }
+  };
+
+  // Écran de succès
+  if (isSuccess) {
+    return (
+      <div className="flex flex-col items-center justify-center py-8 text-center">
+        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+          <CheckCircle2 size={32} className="text-green-600" />
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          {intl.formatMessage({ id: 'feedback.success.title', defaultMessage: 'Merci pour votre retour !' })}
+        </h3>
+        <p className="text-gray-500 text-sm max-w-xs">
+          {intl.formatMessage({
+            id: 'feedback.success.message',
+            defaultMessage: 'Nous avons bien reçu votre feedback et nous allons l\'examiner rapidement.'
+          })}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Email */}
+      <div>
+        <label
+          htmlFor="feedback-email"
+          className="block text-sm font-medium text-gray-700 mb-1.5"
+        >
+          {intl.formatMessage({ id: 'feedback.field.email', defaultMessage: 'Email' })}
+          {!user && <span className="text-gray-400 font-normal ml-1">(optionnel)</span>}
+        </label>
+        <input
+          id="feedback-email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder={intl.formatMessage({
+            id: 'feedback.field.email.placeholder',
+            defaultMessage: 'votre@email.com'
+          })}
+          className={`
+            w-full px-4 py-3 rounded-xl border
+            text-base sm:text-sm
+            transition-colors duration-200
+            focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent
+            ${email && !isEmailValid
+              ? 'border-red-300 bg-red-50'
+              : 'border-gray-200 bg-gray-50 hover:bg-white hover:border-gray-300'
+            }
+          `}
+          disabled={!!user?.email}
+        />
+        {email && !isEmailValid && (
+          <p className="mt-1 text-xs text-red-500">
+            {intl.formatMessage({ id: 'feedback.error.invalidEmail', defaultMessage: 'Email invalide' })}
+          </p>
+        )}
+      </div>
+
+      {/* Type de problème */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          {intl.formatMessage({ id: 'feedback.field.type', defaultMessage: 'Type de problème' })}
+        </label>
+        <div className="grid grid-cols-2 gap-2">
+          {FEEDBACK_TYPES.map(({ value, icon: Icon, labelKey }) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setFeedbackType(value)}
+              className={`
+                flex items-center gap-2 p-3 rounded-xl border-2
+                transition-all duration-200
+                text-left text-sm
+                ${feedbackType === value
+                  ? 'border-red-500 bg-red-50 text-red-700'
+                  : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50 text-gray-700'
+                }
+              `}
+            >
+              <Icon size={18} className={feedbackType === value ? 'text-red-500' : 'text-gray-400'} />
+              <span className="font-medium">
+                {intl.formatMessage({ id: labelKey, defaultMessage: value })}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Description */}
+      <div>
+        <label
+          htmlFor="feedback-description"
+          className="block text-sm font-medium text-gray-700 mb-1.5"
+        >
+          {intl.formatMessage({ id: 'feedback.field.description', defaultMessage: 'Description' })}
+        </label>
+        <textarea
+          id="feedback-description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder={intl.formatMessage({
+            id: 'feedback.field.description.placeholder',
+            defaultMessage: 'Décrivez le problème rencontré...'
+          })}
+          rows={4}
+          maxLength={2000}
+          className={`
+            w-full px-4 py-3 rounded-xl border
+            text-base sm:text-sm
+            resize-none
+            transition-colors duration-200
+            focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent
+            ${description && !isDescriptionValid
+              ? 'border-amber-300 bg-amber-50'
+              : 'border-gray-200 bg-gray-50 hover:bg-white hover:border-gray-300'
+            }
+          `}
+        />
+        <div className="flex justify-between mt-1">
+          {description && !isDescriptionValid ? (
+            <p className="text-xs text-amber-600">
+              {intl.formatMessage({
+                id: 'feedback.error.descriptionTooShort',
+                defaultMessage: 'Minimum 10 caractères'
+              })}
+            </p>
+          ) : (
+            <span />
+          )}
+          <span className="text-xs text-gray-400">
+            {description.length}/2000
+          </span>
+        </div>
+      </div>
+
+      {/* Options avancées (collapsible) */}
+      <div>
+        <button
+          type="button"
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
+        >
+          <span>{showAdvanced ? '−' : '+'}</span>
+          {intl.formatMessage({
+            id: 'feedback.advanced.toggle',
+            defaultMessage: 'Options supplémentaires'
+          })}
+        </button>
+
+        {showAdvanced && (
+          <div className="mt-4 space-y-4 p-4 bg-gray-50 rounded-xl">
+            {/* Capture d'écran */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {intl.formatMessage({ id: 'feedback.field.screenshot', defaultMessage: 'Capture d\'écran' })}
+                <span className="text-gray-400 font-normal ml-1">(optionnel)</span>
+              </label>
+
+              {screenshotPreview ? (
+                <div className="relative inline-block">
+                  <img
+                    src={screenshotPreview}
+                    alt="Preview"
+                    className="max-w-full h-32 object-cover rounded-lg border border-gray-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeScreenshot}
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="
+                    flex items-center gap-2 px-4 py-3
+                    border-2 border-dashed border-gray-300 rounded-xl
+                    text-sm text-gray-500 hover:text-gray-700 hover:border-gray-400
+                    transition-colors duration-200
+                    w-full justify-center
+                  "
+                >
+                  <ImageIcon size={18} />
+                  {intl.formatMessage({ id: 'feedback.field.screenshot.add', defaultMessage: 'Ajouter une image' })}
+                </button>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+            </div>
+
+            {/* Priorité */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {intl.formatMessage({ id: 'feedback.field.priority', defaultMessage: 'Urgence' })}
+                <span className="text-gray-400 font-normal ml-1">(optionnel)</span>
+              </label>
+              <div className="space-y-2">
+                {PRIORITY_LEVELS.map(({ value, labelKey, descKey }) => (
+                  <label
+                    key={value}
+                    className={`
+                      flex items-start gap-3 p-3 rounded-lg border cursor-pointer
+                      transition-all duration-200
+                      ${priority === value
+                        ? 'border-red-500 bg-red-50'
+                        : 'border-gray-200 bg-white hover:border-gray-300'
+                      }
+                    `}
+                  >
+                    <input
+                      type="radio"
+                      name="priority"
+                      value={value}
+                      checked={priority === value}
+                      onChange={(e) => setPriority(e.target.value as PriorityLevel)}
+                      className="mt-0.5 text-red-600 focus:ring-red-500"
+                    />
+                    <div>
+                      <span className="text-sm font-medium text-gray-700">
+                        {intl.formatMessage({ id: labelKey, defaultMessage: value })}
+                      </span>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {intl.formatMessage({ id: descKey, defaultMessage: '' })}
+                      </p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Erreur */}
+      {error && (
+        <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+          <AlertTriangle size={18} />
+          {error}
+        </div>
+      )}
+
+      {/* Bouton de soumission */}
+      <button
+        type="submit"
+        disabled={!isFormValid || isSubmitting}
+        className={`
+          w-full py-4 px-6 rounded-xl font-medium text-base
+          transition-all duration-200
+          focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2
+          ${isFormValid && !isSubmitting
+            ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-lg hover:shadow-xl'
+            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+          }
+        `}
+      >
+        {isSubmitting ? (
+          <span className="flex items-center justify-center gap-2">
+            <Loader2 size={20} className="animate-spin" />
+            {intl.formatMessage({ id: 'feedback.submit.sending', defaultMessage: 'Envoi en cours...' })}
+          </span>
+        ) : (
+          intl.formatMessage({ id: 'feedback.submit.button', defaultMessage: 'Envoyer le feedback' })
+        )}
+      </button>
+    </form>
+  );
+};
+
+export default FeedbackForm;

@@ -1262,19 +1262,9 @@ export class TwilioCallManager {
           // record: true,
           // recordingStatusCallback: `${base}/twilioRecordingWebhook`,
           // recordingStatusCallbackMethod: "POST",
-          // P0 FIX: AMD (Answering Machine Detection) - use "Enable" with URL callback
-          // With URL callback, Twilio will:
-          // 1. Make the call
-          // 2. When answered, call our URL with AnsweredBy parameter
-          // 3. Our URL returns appropriate TwiML based on human/machine
-          // This is different from "DetectMessageEnd" which executes TwiML after AMD
-          machineDetection: "Enable",
-          machineDetectionTimeout: 30, // Max 30s pour l'analyse AMD
-          machineDetectionSilenceTimeout: 5000, // 5s de silence = humain
-          // P0 FIX: asyncAmd sends AMD result to our URL callback
-          asyncAmd: "true",
-          asyncAmdStatusCallback: amdTwimlUrl,
-          asyncAmdStatusCallbackMethod: "POST",
+          // AMD DÉSACTIVÉ - La confirmation DTMF (appuyer sur 1) est suffisante et plus fiable
+          // L'AMD causait un délai de 3-8 secondes de silence au début de chaque appel
+          // Le DTMF détecte les répondeurs de façon fiable (un répondeur ne peut pas appuyer sur 1)
           });
           // P2-14 FIX: Record success for circuit breaker
           recordTwilioSuccess();

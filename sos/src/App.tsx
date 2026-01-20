@@ -12,11 +12,12 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import AdminRoutesV2 from '@/components/admin/AdminRoutesV2';
 import { trackEvent, hasAnalyticsConsent } from './utils/ga4';
 import MetaPageViewTracker from './components/common/MetaPageViewTracker';
-import { setMetaPixelUserData, clearMetaPixelUserData } from './utils/metaPixel';
+import { setMetaPixelUserData, applyMetaPixelUserData, clearMetaPixelUserData } from './utils/metaPixel';
 import { captureTrafficSource } from './utils/trafficSource';
 import './App.css';
 import PWAProvider from './components/pwa/PWAProvider';
 import { WizardProvider } from './contexts/WizardContext';
+import { FeedbackButton } from './components/feedback';
 import ProviderOnlineManager from './components/providers/ProviderOnlineManager';
 import { PayPalProvider } from './contexts/PayPalContext';
 // Marketing routes moved to AdminRoutesV2 (accessible via /admin/marketing/*)
@@ -400,13 +401,17 @@ const MetaPixelUserTracker: React.FC = () => {
 
     if (user) {
       // Utilisateur connecte - envoyer les donnees a Meta pour Advanced Matching
+      // Note: city, state, zipCode ne sont pas disponibles dans notre User type actuel
       setMetaPixelUserData({
         email: user.email || undefined,
         phone: user.phone || user.phoneNumber || undefined,
         firstName: user.firstName || user.displayName?.split(' ')[0] || undefined,
         lastName: user.lastName || user.displayName?.split(' ').slice(1).join(' ') || undefined,
         country: user.country || user.currentCountry || undefined,
+        userId: user.uid, // external_id pour Meta - ameliore le match rate de 20-30%
       });
+      // IMPORTANT: Appliquer les donnees a Meta pour activer l'Advanced Matching
+      applyMetaPixelUserData();
     } else {
       // Utilisateur deconnecte - effacer les donnees
       clearMetaPixelUserData();
@@ -714,6 +719,9 @@ const App: React.FC = () => {
             </Suspense>
             </ProviderOnlineManager>
             </ErrorBoundary>
+
+            {/* Bouton de feedback flottant - visible sur toutes les pages (sauf admin) */}
+            <FeedbackButton />
           </div>
         </LocaleRouter>
       )}

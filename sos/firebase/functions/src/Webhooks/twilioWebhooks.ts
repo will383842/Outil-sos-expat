@@ -972,14 +972,17 @@ export const twilioRecordingWebhook = onRequest(
 );
 
 /**
- * P0 FIX: TwiML endpoint that checks AMD BEFORE returning TwiML
+ * TwiML endpoint appelé quand un appel est décroché.
  *
- * This is called by Twilio AFTER the call is answered (and AMD analysis is complete).
- * By using this URL instead of inline TwiML, we can:
- * - Check if AnsweredBy indicates a machine → return hangup TwiML (no message played!)
- * - Check if AnsweredBy indicates a human → return conference TwiML with welcome message
+ * AMD DÉSACTIVÉ (2026-01-20): La détection de répondeur (AMD) a été désactivée car elle
+ * causait un délai de 3-8 secondes de silence au début de chaque appel.
  *
- * This prevents voicemail systems from recording our "vous allez être mis en relation" message.
+ * La confirmation DTMF (appuyer sur 1) est utilisée à la place :
+ * - Plus fiable (un répondeur ne peut pas appuyer sur une touche)
+ * - Pas de délai au décrochage
+ * - Timeout de 10 secondes si pas de réponse → retry
+ *
+ * Note: Le code AMD est conservé pour rétrocompatibilité si on réactive l'AMD.
  */
 export const twilioAmdTwiml = onRequest(
   {
@@ -1007,14 +1010,14 @@ export const twilioAmdTwiml = onRequest(
       const callSid = req.body?.CallSid || req.query.CallSid;
 
       console.log(`\n${'▓'.repeat(60)}`);
-      console.log(`🎯 [${amdId}] ████████ twilioAmdTwiml START ████████`);
+      console.log(`🎯 [${amdId}] ████████ twilioAmdTwiml START (AMD DÉSACTIVÉ - DTMF uniquement) ████████`);
       console.log(`🎯 [${amdId}]   sessionId: ${sessionId}`);
       console.log(`🎯 [${amdId}]   participantType: ${participantType}`);
       console.log(`🎯 [${amdId}]   conferenceName: ${conferenceName}`);
       console.log(`🎯 [${amdId}]   timeLimit: ${timeLimit}`);
       console.log(`🎯 [${amdId}]   ttsLocale: ${ttsLocale}`);
       console.log(`🎯 [${amdId}]   langKey: ${langKey}`);
-      console.log(`🎯 [${amdId}]   answeredBy: ${answeredBy || 'NOT_PROVIDED (AMD pending)'}`);
+      console.log(`🎯 [${amdId}]   answeredBy: ${answeredBy || 'undefined (AMD désactivé - normal)'}`);
       console.log(`🎯 [${amdId}]   callSid: ${callSid || 'NOT_PROVIDED'}`);
       console.log(`🎯 [${amdId}]   timestamp: ${new Date().toISOString()}`);
       console.log(`${'▓'.repeat(60)}`);
@@ -1443,15 +1446,14 @@ export const twilioAmdTwiml = onRequest(
           return;
         }
       } else {
-        // answeredBy is undefined or unknown - AMD is still pending
-        // DO NOT set status to "connected" yet - wait for AMD callback
-        // P0 FIX: Also do NOT play the welcome message yet - it would be recorded by voicemail!
-        console.log(`🎯 [${amdId}] ⏳ AMD PENDING - Returning SILENT CONFERENCE TwiML (no message!)`);
-        console.log(`🎯 [${amdId}]   answeredBy: "${answeredBy || 'UNDEFINED'}"`);
-        console.log(`🎯 [${amdId}]   Status remains "amd_pending" - waiting for asyncAmdStatusCallback`);
-        console.log(`🎯 [${amdId}]   NOT playing welcome message to avoid voicemail recording!`);
+        // AMD DÉSACTIVÉ: answeredBy sera toujours undefined - c'est normal
+        // On utilise le flux DTMF (appuyer sur 1) pour confirmer que c'est un humain
+        console.log(`🎯 [${amdId}] 📞 FLUX NORMAL (AMD désactivé) - Envoi du TwiML DTMF`);
+        console.log(`🎯 [${amdId}]   answeredBy: "${answeredBy || 'undefined'}" (normal sans AMD)`);
+        console.log(`🎯 [${amdId}]   → L'utilisateur devra appuyer sur 1 pour confirmer`);
 
-        // Set status to amd_pending if not already set
+        // Set status to "amd_pending" (= en attente de confirmation DTMF)
+        // Note: Le nom "amd_pending" est historique, signifie maintenant "en attente de DTMF"
         if (sessionId) {
           try {
             const session = await twilioCallManager.getCallSession(sessionId);
@@ -1468,7 +1470,7 @@ export const twilioAmdTwiml = onRequest(
                 participantType,
                 'amd_pending'
               );
-              console.log(`🎯 [${amdId}]   ✅ Status set to amd_pending`);
+              console.log(`🎯 [${amdId}]   ✅ Status: amd_pending (en attente confirmation DTMF)`);
             } else {
               console.log(`🎯 [${amdId}]   Status already ${currentParticipant?.status}, not updating`);
             }
