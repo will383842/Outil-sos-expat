@@ -33,8 +33,6 @@ import {
   onAuthStateChanged,
   signOut as fbSignOut,
   signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
   GoogleAuthProvider,
   type User,
 } from "firebase/auth";
@@ -201,27 +199,6 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
     setError(null);
     // Reset SSO ref
     ssoClaimsRef.current = { hasActiveSubscription: false, role: null, processed: false };
-  }, []);
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // ✅ FIX: HANDLE GOOGLE REDIRECT RESULT
-  // ─────────────────────────────────────────────────────────────────────────
-
-  useEffect(() => {
-    // Gérer le résultat du redirect Google au chargement de la page
-    getRedirectResult(auth)
-      .then((result) => {
-        if (result?.user) {
-          console.log('[UnifiedUser] Google redirect successful:', result.user.email);
-        }
-      })
-      .catch((error) => {
-        const errorCode = (error as { code?: string })?.code || '';
-        // Ignorer les erreurs normales (pas de redirect en cours, etc.)
-        if (errorCode !== 'auth/popup-blocked' && errorCode !== 'auth/cancelled-popup-request') {
-          console.warn('[UnifiedUser] getRedirectResult error:', errorCode);
-        }
-      });
   }, []);
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -735,34 +712,10 @@ export function UnifiedUserProvider({ children }: { children: ReactNode }) {
     resetState();
   }, [resetState]);
 
-  // ✅ FIX: signInWithGoogle avec fallback redirect pour les navigateurs restrictifs
   const signInWithGoogle = useCallback(async () => {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: "select_account" });
-
-    try {
-      // Essayer d'abord avec popup (plus rapide et meilleure UX)
-      await signInWithPopup(auth, provider);
-    } catch (popupError) {
-      const errorCode = (popupError as { code?: string })?.code || '';
-      console.warn('[UnifiedUser] Google popup failed:', errorCode);
-
-      // Si l'utilisateur a fermé le popup, ne pas faire de fallback
-      if (errorCode === 'auth/popup-closed-by-user' || errorCode === 'auth/cancelled-popup-request') {
-        throw popupError;
-      }
-
-      // Fallback vers redirect si popup bloqué ou autre erreur
-      if (errorCode === 'auth/popup-blocked' || errorCode === 'auth/operation-not-supported-in-this-environment') {
-        console.log('[UnifiedUser] Fallback vers signInWithRedirect...');
-        await signInWithRedirect(auth, provider);
-        return; // La page va se recharger
-      }
-
-      // Pour les autres erreurs, réessayer avec redirect
-      console.log('[UnifiedUser] Erreur popup, fallback vers redirect...');
-      await signInWithRedirect(auth, provider);
-    }
+    await signInWithPopup(auth, provider);
   }, []);
 
   const switchProvider = useCallback(
