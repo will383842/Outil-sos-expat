@@ -359,15 +359,6 @@ export const TranslationBanner: React.FC<TranslationBannerProps> = ({
         </div>
       )}
 
-      {/* Info coût de traduction (subtil) */}
-      {missingLanguages.length > 0 && (
-        <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
-          <FormattedMessage
-            id="providerTranslation.oneTimeCost"
-            defaultMessage="Translation is a one-time cost (~€0.15). Future visits are free."
-          />
-        </p>
-      )}
     </div>
   );
 };
