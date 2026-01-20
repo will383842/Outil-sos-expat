@@ -31,7 +31,10 @@ import {
   AlertTriangle,
   Clock,
   Activity,
-  Trash2
+  Trash2,
+  Wallet,
+  Power,
+  PowerOff,
 } from 'lucide-react';
 import {
   collection,
@@ -66,7 +69,55 @@ interface Provider {
   busyBySibling?: boolean;
   busySiblingProviderId?: string;
   currentCallSessionId?: string;
+  // 🆕 Payout fields
+  payoutMode?: 'internal' | string; // 'internal' or external account ID
+  isAAA?: boolean;
+  // 🆕 Gateway fields (basé sur le pays)
+  country?: string;
+  paymentGateway?: 'stripe' | 'paypal';
 }
+
+// External payout account
+interface PayoutExternalAccount {
+  id: string;
+  name: string;
+  gateway: 'stripe' | 'paypal';
+  isActive: boolean;
+}
+
+interface PayoutConfig {
+  externalAccounts: PayoutExternalAccount[];
+  defaultMode: 'internal' | string;
+}
+
+// Liste des pays PayPal-only (synchronisée avec usePaymentGateway.ts)
+const PAYPAL_ONLY_COUNTRIES = new Set([
+  // AFRIQUE
+  "DZ", "AO", "BJ", "BW", "BF", "BI", "CM", "CV", "CF", "TD", "KM", "CG", "CD",
+  "CI", "DJ", "EG", "GQ", "ER", "SZ", "ET", "GA", "GM", "GH", "GN", "GW", "KE",
+  "LS", "LR", "LY", "MG", "MW", "ML", "MR", "MU", "MA", "MZ", "NA", "NE", "NG",
+  "RW", "ST", "SN", "SC", "SL", "SO", "ZA", "SS", "SD", "TZ", "TG", "TN", "UG",
+  "ZM", "ZW",
+  // ASIE
+  "AF", "BD", "BT", "CN", "IN", "KH", "KZ", "LA", "MM", "NP", "PK", "LK", "TJ", "TM", "TR", "UZ", "VN",
+  "MN", "KP", "KG", "PS", "YE", "OM", "QA", "KW", "BH", "JO", "LB", "AM",
+  "AZ", "GE", "MV", "BN", "TL", "PH", "ID", "TW", "KR",
+  // AMERIQUE LATINE & CARAIBES
+  "AR", "BO", "CO", "CU", "EC", "SV", "GT", "HN", "NI", "PY", "SR", "VE", "HT", "DO", "JM",
+  "TT", "BB", "BS", "BZ", "GY", "PA", "CR", "AG", "DM", "GD", "KN", "LC", "VC",
+  // EUROPE DE L'EST & BALKANS
+  "BY", "MD", "UA", "RS", "BA", "MK", "ME", "AL", "XK", "RU", "AD", "MC", "SM", "VA",
+  // OCEANIE & PACIFIQUE
+  "FJ", "PG", "SB", "VU", "WS", "TO", "KI", "FM", "MH", "PW", "NR", "TV", "NC", "PF", "GU",
+  // MOYEN-ORIENT
+  "IQ", "IR", "SY", "SA",
+]);
+
+// Détermine la gateway selon le pays
+const getPaymentGateway = (countryCode: string | undefined): 'stripe' | 'paypal' => {
+  if (!countryCode) return 'stripe';
+  return PAYPAL_ONLY_COUNTRIES.has(countryCode.toUpperCase()) ? 'paypal' : 'stripe';
+};
 
 interface MultiProviderAccount {
   userId: string;
@@ -134,6 +185,12 @@ export const IaMultiProvidersTab: React.FC = () => {
     staleBusy: number;
   } | null>(null);
 
+  // 🆕 Payout config
+  const [payoutConfig, setPayoutConfig] = useState<PayoutConfig>({
+    externalAccounts: [],
+    defaultMode: 'internal',
+  });
+
   // ============================================================================
   // DATA LOADING
   // ============================================================================
@@ -148,6 +205,22 @@ export const IaMultiProvidersTab: React.FC = () => {
     setError(null);
 
     try {
+      // 🆕 Load payout config
+      const payoutConfigDoc = await getDoc(doc(db, 'admin_config', 'aaa_payout'));
+      if (payoutConfigDoc.exists()) {
+        const data = payoutConfigDoc.data();
+        setPayoutConfig({
+          externalAccounts: (data.externalAccounts || [])
+            .filter((a: any) => a.isActive)
+            .map((a: any) => ({
+              id: a.id,
+              name: a.name,
+              gateway: a.gateway as 'stripe' | 'paypal',
+              isActive: a.isActive,
+            })),
+          defaultMode: data.defaultMode || 'internal',
+        });
+      }
       // COST OPTIMIZATION: Only load users (needed for linkedProviderIds/activeProviderId)
       // Profiles data comes from shared cache (useAdminReferenceData)
       const usersSnap = await getDocs(query(collection(db, 'users'), limit(500)));
@@ -205,6 +278,7 @@ export const IaMultiProvidersTab: React.FC = () => {
           // Use cached profile data
           const cachedProfile = profilesMap.get(pid);
           if (cachedProfile) {
+            const country = cachedProfile.country || '';
             providers.push({
               id: pid,
               name: cachedProfile.displayName || 'N/A',
@@ -217,12 +291,19 @@ export const IaMultiProvidersTab: React.FC = () => {
               busyReason: cachedProfile.busyReason,
               busyBySibling: cachedProfile.busyBySibling === true,
               busySiblingProviderId: cachedProfile.busySiblingProviderId,
-              currentCallSessionId: cachedProfile.currentCallSessionId
+              currentCallSessionId: cachedProfile.currentCallSessionId,
+              // 🆕 Payout fields
+              payoutMode: cachedProfile.aaaPayoutMode || cachedProfile.payoutMode || 'internal',
+              isAAA: cachedProfile.isAAA === true,
+              // 🆕 Gateway fields
+              country,
+              paymentGateway: getPaymentGateway(country),
             });
           } else {
             // Fallback: chercher dans usersMap (cache)
             const cachedUser = usersMap.get(pid);
             if (cachedUser) {
+              const country = cachedUser.country || '';
               providers.push({
                 id: pid,
                 name: cachedUser.displayName || 'N/A',
@@ -235,7 +316,13 @@ export const IaMultiProvidersTab: React.FC = () => {
                 busyReason: cachedUser.busyReason,
                 busyBySibling: cachedUser.busyBySibling === true,
                 busySiblingProviderId: cachedUser.busySiblingProviderId,
-                currentCallSessionId: cachedUser.currentCallSessionId
+                currentCallSessionId: cachedUser.currentCallSessionId,
+                // 🆕 Payout fields
+                payoutMode: cachedUser.aaaPayoutMode || cachedUser.payoutMode || 'internal',
+                isAAA: cachedUser.isAAA === true,
+                // 🆕 Gateway fields
+                country,
+                paymentGateway: getPaymentGateway(country),
               });
             }
           }
@@ -482,6 +569,106 @@ export const IaMultiProvidersTab: React.FC = () => {
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error('Error forcing provider status:', err);
+      setError('Erreur lors du changement de statut');
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  // 🆕 Update provider payout mode
+  const updateProviderPayoutMode = async (providerId: string, mode: 'internal' | string) => {
+    setSaving(providerId);
+    try {
+      const updateData = {
+        payoutMode: mode,
+        aaaPayoutMode: mode, // For backward compatibility with AAA profiles
+        updatedAt: serverTimestamp(),
+      };
+
+      // Update both users and sos_profiles collections
+      await Promise.all([
+        updateDoc(doc(db, 'users', providerId), updateData),
+        updateDoc(doc(db, 'sos_profiles', providerId), updateData).catch(() => {
+          // Profile might not exist, ignore
+        })
+      ]);
+
+      // Update local state
+      setAccounts(prev => prev.map(a => ({
+        ...a,
+        providers: a.providers.map(p =>
+          p.id === providerId ? { ...p, payoutMode: mode } : p
+        )
+      })));
+
+      const modeName = mode === 'internal'
+        ? 'Interne (SOS-Expat)'
+        : payoutConfig.externalAccounts.find(acc => acc.id === mode)?.name || mode;
+      setSuccess(`Mode paiement mis à jour: ${modeName}`);
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      console.error('Error updating payout mode:', err);
+      setError('Erreur lors de la mise à jour du mode de paiement');
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  // 🆕 Set all providers in an account online or offline
+  const setAllProvidersStatus = async (account: MultiProviderAccount, online: boolean) => {
+    setSaving(account.userId);
+    const now = serverTimestamp();
+
+    try {
+      const updatePromises = account.providers.map(async (provider) => {
+        const updateData = online
+          ? {
+              availability: 'available',
+              isOnline: true,
+              lastActivity: now,
+              busyReason: null,
+              busySince: null,
+              busyBySibling: null,
+              busySiblingProviderId: null,
+              lastStatusChange: now,
+              updatedAt: now,
+            }
+          : {
+              availability: 'offline',
+              isOnline: false,
+              busyReason: 'offline',
+              lastStatusChange: now,
+              updatedAt: now,
+            };
+
+        await Promise.all([
+          updateDoc(doc(db, 'users', provider.id), updateData),
+          updateDoc(doc(db, 'sos_profiles', provider.id), updateData).catch(() => {
+            // Profile might not exist, ignore
+          })
+        ]);
+      });
+
+      await Promise.all(updatePromises);
+
+      // Update local state
+      setAccounts(prev => prev.map(a => {
+        if (a.userId !== account.userId) return a;
+        return {
+          ...a,
+          providers: a.providers.map(p => ({
+            ...p,
+            availability: online ? 'available' : 'offline',
+            isOnline: online,
+            busyReason: online ? undefined : 'offline',
+          }))
+        };
+      }));
+
+      setSuccess(`Tous les prestataires sont maintenant ${online ? 'en ligne' : 'hors ligne'}`);
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      console.error('Error setting all providers status:', err);
       setError('Erreur lors du changement de statut');
     } finally {
       setSaving(null);
@@ -794,6 +981,28 @@ export const IaMultiProvidersTab: React.FC = () => {
                     {account.shareBusyStatus && <Check className="w-3 h-3" />}
                   </button>
 
+                  {/* 🆕 All Online / All Offline buttons */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setAllProvidersStatus(account, true)}
+                      disabled={saving === account.userId}
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors disabled:opacity-50"
+                      title="Mettre tous les prestataires en ligne"
+                    >
+                      <Power className="w-3.5 h-3.5" />
+                      <span>Tout en ligne</span>
+                    </button>
+                    <button
+                      onClick={() => setAllProvidersStatus(account, false)}
+                      disabled={saving === account.userId}
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
+                      title="Mettre tous les prestataires hors ligne"
+                    >
+                      <PowerOff className="w-3.5 h-3.5" />
+                      <span>Tout hors ligne</span>
+                    </button>
+                  </div>
+
                   {/* Conflict Warning */}
                   {account.conflictWarning && (
                     <div className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 rounded-lg text-xs">
@@ -906,6 +1115,46 @@ export const IaMultiProvidersTab: React.FC = () => {
                       </div>
 
                       <div className="flex items-center gap-2">
+                        {/* 🆕 Gateway indicator */}
+                        <span
+                          className={cn(
+                            "text-[10px] px-1.5 py-0.5 rounded font-medium",
+                            provider.paymentGateway === 'paypal'
+                              ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                              : "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300"
+                          )}
+                          title={`Ce prestataire reçoit les paiements via ${provider.paymentGateway?.toUpperCase() || 'STRIPE'} (basé sur son pays: ${provider.country || 'N/A'})`}
+                        >
+                          {provider.paymentGateway === 'paypal' ? 'PayPal' : 'Stripe'}
+                        </span>
+
+                        {/* 🆕 Payout Mode Selector - filtered by gateway */}
+                        <div className="flex items-center gap-1.5">
+                          <Wallet className="w-3.5 h-3.5 text-gray-400" />
+                          <select
+                            value={provider.payoutMode || 'internal'}
+                            onChange={(e) => updateProviderPayoutMode(provider.id, e.target.value)}
+                            disabled={saving === provider.id}
+                            className={cn(
+                              "text-xs px-2 py-1 rounded-md border focus:ring-2 focus:ring-purple-500 disabled:opacity-50",
+                              provider.payoutMode === 'internal' || !provider.payoutMode
+                                ? "bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300"
+                                : "bg-purple-50 dark:bg-purple-900/30 border-purple-300 dark:border-purple-600 text-purple-700 dark:text-purple-300"
+                            )}
+                            title={`Mode de paiement (comptes ${provider.paymentGateway?.toUpperCase() || 'STRIPE'} uniquement)`}
+                          >
+                            <option value="internal">Interne</option>
+                            {/* Only show accounts matching provider's gateway */}
+                            {payoutConfig.externalAccounts
+                              .filter(acc => acc.gateway === provider.paymentGateway)
+                              .map(acc => (
+                                <option key={acc.id} value={acc.id}>
+                                  {acc.name}
+                                </option>
+                              ))}
+                          </select>
+                        </div>
+
                         {/* 🆕 Force Status Buttons */}
                         {provider.availability === 'busy' ? (
                           <button

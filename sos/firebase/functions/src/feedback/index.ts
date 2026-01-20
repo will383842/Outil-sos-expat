@@ -131,6 +131,119 @@ export const onFeedbackCreated = onDocumentCreated(
 );
 
 // ==========================================
+// CALLABLE FUNCTIONS (Public)
+// ==========================================
+
+/**
+ * Soumet un nouveau feedback utilisateur
+ * Cette fonction est accessible à tous (authentifiés ou non)
+ */
+export const submitFeedback = onCall(
+  {
+    ...functionConfig,
+    enforceAppCheck: false,
+  },
+  async (request) => {
+    const db = getFirestore();
+
+    // Valider les données d'entrée
+    const data = request.data as FeedbackData;
+
+    if (!data.email || !data.type || !data.description) {
+      throw new HttpsError("invalid-argument", "email, type, and description are required");
+    }
+
+    // Valider l'email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(data.email)) {
+      throw new HttpsError("invalid-argument", "Invalid email format");
+    }
+
+    // Valider le type
+    const validTypes: FeedbackType[] = ['bug', 'ux_friction', 'suggestion', 'other'];
+    if (!validTypes.includes(data.type)) {
+      throw new HttpsError("invalid-argument", "Invalid feedback type");
+    }
+
+    // Valider la description (min 10 caractères)
+    if (data.description.trim().length < 10) {
+      throw new HttpsError("invalid-argument", "Description must be at least 10 characters");
+    }
+
+    // Rate limiting simple basé sur l'email
+    const email = data.email.toLowerCase().trim();
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+
+    try {
+      const recentFeedbacks = await db.collection(FEEDBACK_COLLECTION)
+        .where('email', '==', email)
+        .where('createdAt', '>=', Timestamp.fromDate(oneHourAgo))
+        .limit(5)
+        .get();
+
+      if (recentFeedbacks.size >= 5) {
+        throw new HttpsError(
+          "resource-exhausted",
+          "Too many feedbacks submitted. Please try again later."
+        );
+      }
+    } catch (error) {
+      // Si c'est déjà une HttpsError, la relancer
+      if (error instanceof HttpsError) throw error;
+      // Sinon, logger et continuer (index peut être manquant)
+      logger.warn("[Feedback] Rate limit check failed, continuing anyway", { error });
+    }
+
+    // Nettoyer et préparer les données
+    const feedbackDoc = {
+      // Données utilisateur
+      email,
+      userId: data.userId || request.auth?.uid || null,
+      userRole: data.userRole || 'visitor',
+      userName: data.userName?.trim().substring(0, 100) || null,
+
+      // Détails du feedback
+      type: data.type,
+      priority: data.priority || null,
+      description: data.description.trim().substring(0, 2000),
+      pageUrl: data.pageUrl?.substring(0, 500) || '',
+      pageName: data.pageName?.substring(0, 200) || '',
+
+      // Contexte technique
+      device: data.device || null,
+      locale: data.locale || 'fr',
+      screenshotUrl: data.screenshotUrl || null,
+
+      // Champs admin
+      status: 'new' as FeedbackStatus,
+      assignedTo: null,
+      adminNotes: null,
+      resolution: null,
+
+      // Timestamps
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+      resolvedAt: null,
+    };
+
+    try {
+      const docRef = await db.collection(FEEDBACK_COLLECTION).add(feedbackDoc);
+
+      logger.info(`[Feedback] New feedback submitted: ${docRef.id}`, {
+        type: data.type,
+        priority: data.priority,
+        email: email.substring(0, 3) + '***',
+      });
+
+      return { success: true, feedbackId: docRef.id };
+    } catch (error) {
+      logger.error("[Feedback] Failed to submit feedback", { error });
+      throw new HttpsError("internal", "Failed to submit feedback");
+    }
+  }
+);
+
+// ==========================================
 // CALLABLE FUNCTIONS (Admin)
 // ==========================================
 

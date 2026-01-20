@@ -72,36 +72,10 @@ export interface UserFeedback extends FeedbackData {
 
 const FEEDBACK_COLLECTION = 'user_feedback';
 const FEEDBACK_STORAGE_PATH = 'feedback_screenshots';
-const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 heure
-const MAX_FEEDBACKS_PER_HOUR = 5;
 
 // ==========================================
 // FONCTIONS UTILITAIRES
 // ==========================================
-
-/**
- * Vérifie le rate limiting pour éviter le spam
- */
-async function checkRateLimit(email: string): Promise<boolean> {
-  const oneHourAgo = new Date(Date.now() - RATE_LIMIT_WINDOW_MS);
-
-  try {
-    const q = query(
-      collection(db, FEEDBACK_COLLECTION),
-      where('email', '==', email.toLowerCase()),
-      where('createdAt', '>=', Timestamp.fromDate(oneHourAgo)),
-      orderBy('createdAt', 'desc'),
-      limit(MAX_FEEDBACKS_PER_HOUR)
-    );
-
-    const snapshot = await getDocs(q);
-    return snapshot.size < MAX_FEEDBACKS_PER_HOUR;
-  } catch (error) {
-    // En cas d'erreur (ex: index manquant), permettre la soumission
-    console.warn('Rate limit check failed:', error);
-    return true;
-  }
-}
 
 /**
  * Génère un nom de fichier unique pour le screenshot
@@ -163,22 +137,16 @@ export async function uploadFeedbackScreenshot(file: File): Promise<string> {
 }
 
 /**
- * Soumet un feedback utilisateur
+ * Soumet un feedback utilisateur directement dans Firestore
  */
 export async function submitUserFeedback(data: FeedbackData): Promise<string> {
-  // Vérifier le rate limiting
-  const canSubmit = await checkRateLimit(data.email);
-  if (!canSubmit) {
-    throw new Error('Too many feedbacks submitted. Please try again later.');
-  }
-
   // Nettoyer les données
   const sanitizedData = sanitizeFeedbackData(data);
 
-  // Créer le document
+  // Créer le document de feedback
   const feedbackDoc = {
     ...sanitizedData,
-    // Champs admin
+    // Champs admin (initialisés)
     status: 'new' as FeedbackStatus,
     assignedTo: null,
     adminNotes: null,
@@ -189,12 +157,15 @@ export async function submitUserFeedback(data: FeedbackData): Promise<string> {
     resolvedAt: null,
   };
 
-  // Sauvegarder dans Firestore
-  const docRef = await addDoc(collection(db, FEEDBACK_COLLECTION), feedbackDoc);
-
-  console.log(`[Feedback] New feedback submitted: ${docRef.id}`);
-
-  return docRef.id;
+  try {
+    // Sauvegarder directement dans Firestore
+    const docRef = await addDoc(collection(db, FEEDBACK_COLLECTION), feedbackDoc);
+    console.log(`[Feedback] New feedback submitted: ${docRef.id}`);
+    return docRef.id;
+  } catch (error: unknown) {
+    console.error('[Feedback] Failed to submit:', error);
+    throw new Error('Failed to submit feedback. Please try again.');
+  }
 }
 
 /**

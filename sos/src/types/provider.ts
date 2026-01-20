@@ -119,6 +119,12 @@ export interface Provider {
   /** Statut KYC délégué au compte consolidé */
   kycDelegated?: boolean;
 
+  // ========== PAYOUT MODE (POUR TOUS LES PROFILS) ==========
+  /** Mode de paiement: 'internal' (SOS-Expat) ou ID de compte externe */
+  payoutMode?: 'internal' | string;
+  /** Alias pour compatibilité AAA - même valeur que payoutMode */
+  aaaPayoutMode?: 'internal' | string;
+
   // ========== SUSPENSION FIELDS ==========
   /** Indique si le prestataire est suspendu */
   isSuspended?: boolean;

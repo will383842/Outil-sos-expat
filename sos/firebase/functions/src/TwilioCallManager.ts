@@ -2115,6 +2115,15 @@ export class TwilioCallManager {
         return;
       }
 
+      // P0 FIX 2026-01-20: IDEMPOTENCY CHECK - Prevent race condition where multiple webhooks
+      // all try to cancel the payment simultaneously (causing 3x cancel attempts like we saw in Stripe logs)
+      const finalPaymentStatuses = ['cancelled', 'refunded'];
+      if (finalPaymentStatuses.includes(callSession.payment.status)) {
+        console.log(`💸 [${refundDebugId}] ⚠️ IDEMPOTENCY: Payment already in final state: ${callSession.payment.status}`);
+        console.log(`💸 [${refundDebugId}]   Skipping processRefund to prevent duplicate Stripe API calls`);
+        return;
+      }
+
       // CRITIQUE: Distinction entre cancel (non capturé) et refund (capturé)
       // - Si payment.status === "authorized" → PaymentIntent en état requires_capture → CANCEL
       // - Si payment.status === "captured" → PaymentIntent capturé → REFUND
@@ -2253,6 +2262,24 @@ export class TwilioCallManager {
       console.log(`✅ [${completionId}]   payment.intentId: ${callSession.payment?.intentId?.slice(0, 20) || 'N/A'}...`);
       console.log(`✅ [${completionId}]   client.status: ${callSession.participants.client.status}`);
       console.log(`✅ [${completionId}]   provider.status: ${callSession.participants.provider.status}`);
+
+      // P0 FIX 2026-01-20: IDEMPOTENCY CHECK - Prevent race condition where multiple webhooks
+      // all try to process the payment simultaneously (causing 3x cancel attempts like we saw in logs)
+      const finalPaymentStatuses = ['captured', 'cancelled', 'refunded'];
+      if (finalPaymentStatuses.includes(callSession.payment?.status)) {
+        console.log(`✅ [${completionId}] ⚠️ IDEMPOTENCY: Payment already in final state: ${callSession.payment?.status}`);
+        console.log(`✅ [${completionId}]   Skipping handleCallCompletion to prevent duplicate processing`);
+        return;
+      }
+
+      // P0 FIX 2026-01-20: Also check if session is already completed
+      const finalSessionStatuses = ['completed', 'failed', 'cancelled'];
+      if (finalSessionStatuses.includes(callSession.status)) {
+        console.log(`✅ [${completionId}] ⚠️ IDEMPOTENCY: Session already in final state: ${callSession.status}`);
+        console.log(`✅ [${completionId}]   Skipping handleCallCompletion to prevent duplicate processing`);
+        // Don't return early here - we still might need to capture/refund the payment
+        // But log for visibility
+      }
 
       console.log(`✅ [${completionId}] Setting session.status = "completed"...`);
       await this.updateCallSessionStatus(sessionId, "completed");

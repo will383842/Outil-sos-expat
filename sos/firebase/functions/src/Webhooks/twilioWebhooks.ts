@@ -560,19 +560,43 @@ async function handleCallCompleted(
       console.log(`🏁 [${completedId}]   billingDuration: ${billingDuration}s`);
       console.log(`🏁 [${completedId}]   (vs Twilio CallDuration: ${duration}s - durée individuelle du participant)`);
     } else {
-      // P0 CRITICAL FIX 2026-01-18: DO NOT use Twilio CallDuration as fallback!
-      // If one participant never connected, billingDuration MUST be 0
-      // Using Twilio CallDuration here causes wrong behavior:
-      //   - Client waits 3 min for provider, provider never answers
-      //   - Client hangs up → Twilio CallDuration = 180s
-      //   - Old code: billingDuration = 180 → handleCallCompletion → shouldCapturePayment fails → REFUND
-      //   - This triggers refund while retry loop should still be running!
-      // Fix: If either participant never connected, billingDuration = 0
-      billingDuration = 0;
-      console.log(`🏁 [${completedId}] ⚠️ P0 FIX: Missing connection timestamps - billingDuration FORCED to 0`);
-      console.log(`🏁 [${completedId}]   clientConnectedAt: ${clientConnectedAt ? 'present' : 'MISSING'}`);
-      console.log(`🏁 [${completedId}]   providerConnectedAt: ${providerConnectedAt ? 'present' : 'MISSING'}`);
-      console.log(`🏁 [${completedId}]   ⚠️ NOT using Twilio CallDuration (${duration}s) as fallback - that's individual call duration, not billing!`);
+      // P0 CRITICAL FIX 2026-01-20: RACE CONDITION BUG FIX
+      // The original code forced billingDuration=0 if connectedAt was missing.
+      // BUT due to webhook race conditions, connectedAt might not be read correctly
+      // even if the call was successful (session.status === 'active' proves both were connected).
+      //
+      // FALLBACK 1: Check if handleConferenceEnd already calculated billingDuration
+      // FALLBACK 2: Check if session was 'active' (proves both participants connected)
+      // FALLBACK 3: Only force 0 if session was NEVER active
+
+      const existingBillingDuration = session.conference?.billingDuration;
+      const sessionWasActive = session.status === 'active' || session.status === 'completed';
+
+      if (existingBillingDuration && existingBillingDuration > 0) {
+        // FALLBACK 1: Use billingDuration already calculated by handleConferenceEnd
+        billingDuration = existingBillingDuration;
+        console.log(`🏁 [${completedId}] 📊 FALLBACK 1: Using existing conference.billingDuration: ${billingDuration}s`);
+        console.log(`🏁 [${completedId}]   (handleConferenceEnd already calculated this - more reliable)`);
+      } else if (sessionWasActive && session.conference?.startedAt) {
+        // FALLBACK 2: Session was active, calculate from conference timestamps
+        const conferenceStartTime = session.conference.startedAt.toDate().getTime();
+        const conferenceEndTime = session.conference?.endedAt?.toDate().getTime() || Date.now();
+        billingDuration = Math.round((conferenceEndTime - conferenceStartTime) / 1000);
+        console.log(`🏁 [${completedId}] 📊 FALLBACK 2: Session was ACTIVE - calculating from conference timestamps`);
+        console.log(`🏁 [${completedId}]   conferenceStartedAt: ${new Date(conferenceStartTime).toISOString()}`);
+        console.log(`🏁 [${completedId}]   conferenceEndTime: ${new Date(conferenceEndTime).toISOString()}`);
+        console.log(`🏁 [${completedId}]   billingDuration (from conference): ${billingDuration}s`);
+        console.log(`🏁 [${completedId}]   ⚠️ Note: connectedAt timestamps missing due to race condition, but session WAS active`);
+      } else {
+        // FALLBACK 3: Session was never active - truly no billing duration
+        // This is the correct case for: provider never answered, client hung up during connecting, etc.
+        billingDuration = 0;
+        console.log(`🏁 [${completedId}] ⚠️ Missing connection timestamps AND session was not active`);
+        console.log(`🏁 [${completedId}]   clientConnectedAt: ${clientConnectedAt ? 'present' : 'MISSING'}`);
+        console.log(`🏁 [${completedId}]   providerConnectedAt: ${providerConnectedAt ? 'present' : 'MISSING'}`);
+        console.log(`🏁 [${completedId}]   session.status: ${session.status}`);
+        console.log(`🏁 [${completedId}]   billingDuration FORCED to 0 (no active call occurred)`);
+      }
     }
 
     // Stocker billingDuration dans la session pour référence

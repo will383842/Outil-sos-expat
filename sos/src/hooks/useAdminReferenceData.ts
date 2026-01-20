@@ -43,6 +43,10 @@ export interface UserReference {
   busyBySibling?: boolean;
   busySiblingProviderId?: string;
   currentCallSessionId?: string;
+  // Payout fields
+  aaaPayoutMode?: 'internal' | string;
+  payoutMode?: 'internal' | string;
+  isAAA?: boolean;
 }
 
 export interface ProfileReference {
@@ -62,6 +66,10 @@ export interface ProfileReference {
   busyBySibling?: boolean;
   busySiblingProviderId?: string;
   currentCallSessionId?: string;
+  // Payout fields
+  aaaPayoutMode?: 'internal' | string;
+  payoutMode?: 'internal' | string;
+  isAAA?: boolean;
 }
 
 export interface SubscriptionPlanReference {

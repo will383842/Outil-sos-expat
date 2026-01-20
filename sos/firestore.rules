@@ -69,12 +69,14 @@ service cloud.firestore {
       // - isBanned, bannedAt, bannedReason: empêche la désactivation du ban
       // - forcedAiAccess, freeTrialUntil: empêche l'accès gratuit non autorisé
       // - stripeCustomerId: protège l'intégrité financière
+      // - payoutMode, aaaPayoutMode, isAAA: protège le routage des paiements (admin-only)
       allow update: if (isOwner(userId) &&
                         !request.resource.data.diff(resource.data).affectedKeys()
                           .hasAny(['role', 'isApproved', 'approvalStatus', 'isBanned',
                                    'bannedAt', 'bannedReason', 'forcedAiAccess',
                                    'forceAiAccess', 'forcedAIAccess', 'freeTrialUntil',
-                                   'freeTrialGrantedBy', 'stripeCustomerId']))
+                                   'freeTrialGrantedBy', 'stripeCustomerId',
+                                   'payoutMode', 'aaaPayoutMode', 'isAAA']))
                        || isAdmin() || isDev();
       allow delete: if isAdmin() || isDev();
     }
@@ -102,11 +104,14 @@ service cloud.firestore {
                     || isAdmin() || isDev();
       // P0-1 SECURITY FIX: paypalEmailVerified et paypalEmailVerifiedAt sont protégés
       // pour empêcher un provider de se marquer comme vérifié sans validation email
+      // P0 SECURITY: payoutMode, aaaPayoutMode et isAAA sont protégés (admin-only)
+      // pour empêcher un provider de rediriger ses paiements
       allow update: if (isOwner(profileId) &&
                         !request.resource.data.diff(resource.data).affectedKeys()
                           .hasAny(['stripeAccountId', 'paypalMerchantId', 'stripeCustomerId',
                                    'totalEarnings', 'totalPayPalEarnings', 'pendingBalance', 'reservedBalance',
-                                   'paypalEmailVerified', 'paypalEmailVerifiedAt']))
+                                   'paypalEmailVerified', 'paypalEmailVerifiedAt',
+                                   'payoutMode', 'aaaPayoutMode', 'isAAA']))
                        || isAdmin() || isDev();
       allow delete: if isAdmin() || isDev();
 
@@ -1681,6 +1686,27 @@ service cloud.firestore {
       allow update: if isAdmin() || isDev();
       // Creation/Suppression: Cloud Functions uniquement
       allow create, delete: if false;
+    }
+
+    // ================= USER FEEDBACK =================
+    // Feedbacks utilisateurs (bugs, suggestions, problèmes UX)
+    // Usage: Formulaire de signalement accessible à tous
+    match /user_feedback/{feedbackId} {
+      // Lecture: Admin uniquement (console admin)
+      allow read: if isAdmin() || isDev();
+      // Création: Tous (même non authentifiés) avec validation
+      // - email requis et format valide
+      // - type requis (bug, ux_friction, suggestion, other)
+      // - description requise (min 10 caractères)
+      allow create: if request.resource.data.keys().hasAll(['email', 'type', 'description'])
+                    && request.resource.data.email is string
+                    && request.resource.data.email.matches('^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$')
+                    && request.resource.data.type in ['bug', 'ux_friction', 'suggestion', 'other']
+                    && request.resource.data.description is string
+                    && request.resource.data.description.size() >= 10
+                    && request.resource.data.description.size() <= 2000;
+      // Mise à jour/Suppression: Admin uniquement
+      allow update, delete: if isAdmin() || isDev();
     }
 
     // ================= CATCH-ALL (deny by default) =================

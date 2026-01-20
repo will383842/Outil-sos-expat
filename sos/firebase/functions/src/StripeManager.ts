@@ -319,9 +319,16 @@ export class StripeManager {
    * ------------------------------------------------------------------- */
 
   /**
-   * Détermine comment gérer le payout pour un profil AAA
+   * Détermine comment gérer le payout pour un profil AAA ou multiprestataire
    * @param providerId - ID du provider
    * @returns Décision de payout AAA
+   *
+   * GESTION DES MODES DE PAIEMENT:
+   * - Profils AAA: Utilise aaaPayoutMode ou payoutMode
+   * - Profils normaux multiprestataires: Utilise payoutMode
+   * - Si payoutMode === 'internal' → L'argent reste sur SOS-Expat
+   * - Si payoutMode === <external_account_id> → Route vers le compte externe
+   * - Si pas de payoutMode configuré → Payout normal vers le provider
    */
   async getAaaPayoutDecision(providerId: string): Promise<AaaPayoutDecision> {
     try {
@@ -329,64 +336,81 @@ export class StripeManager {
       const providerDoc = await this.db.collection('sos_profiles').doc(providerId).get();
       const provider = providerDoc.data();
 
-      if (!provider || !provider.isAAA) {
+      if (!provider) {
         return {
           isAAA: false,
           mode: 'external',
           skipPayout: false,
-          reason: 'Not an AAA profile - normal payout flow',
+          reason: 'Provider not found - normal payout flow',
         };
       }
 
-      // Provider est AAA - vérifier le mode de payout
-      const aaaPayoutMode = provider.aaaPayoutMode || 'internal';
+      // Vérifier le mode de payout (AAA ou multiprestataire)
+      // Priorité: aaaPayoutMode > payoutMode > 'internal' pour AAA / null pour normal
+      const payoutMode = provider.aaaPayoutMode || provider.payoutMode;
+      const isAAA = provider.isAAA === true;
 
-      if (aaaPayoutMode === 'internal') {
-        console.log(`💼 [AAA-STRIPE] Provider ${providerId} is AAA with INTERNAL mode - skipping transfer`);
+      // Si pas de payoutMode configuré et pas AAA → payout normal
+      if (!payoutMode && !isAAA) {
         return {
-          isAAA: true,
+          isAAA: false,
+          mode: 'external',
+          skipPayout: false,
+          reason: 'No special payout mode configured - normal payout flow',
+        };
+      }
+
+      // Déterminer le mode effectif
+      const effectivePayoutMode = payoutMode || 'internal';
+
+      if (effectivePayoutMode === 'internal') {
+        console.log(`💼 [PAYOUT] Provider ${providerId} has INTERNAL mode - skipping transfer (isAAA=${isAAA})`);
+        return {
+          isAAA,
           mode: 'internal',
           skipPayout: true,
-          reason: 'AAA profile with internal mode - money stays on SOS-Expat',
+          reason: isAAA
+            ? 'AAA profile with internal mode - money stays on SOS-Expat'
+            : 'Multiprestataire profile with internal mode - money stays on SOS-Expat',
         };
       }
 
-      // Mode externe - récupérer le compte consolidé AAA
+      // Mode externe - récupérer la configuration des comptes externes
       const configDoc = await this.db.collection('admin_config').doc('aaa_payout').get();
       const config = configDoc.data() as AaaPayoutConfig | undefined;
 
       if (!config || !config.externalAccounts || config.externalAccounts.length === 0) {
-        console.warn(`⚠️ [AAA-STRIPE] No external accounts configured - falling back to internal`);
+        console.warn(`⚠️ [PAYOUT] No external accounts configured - falling back to internal`);
         return {
-          isAAA: true,
+          isAAA,
           mode: 'internal',
           skipPayout: true,
-          reason: 'AAA profile but no external accounts configured - fallback to internal',
+          reason: 'No external accounts configured - fallback to internal',
         };
       }
 
       // Trouver le compte externe
       const externalAccount = config.externalAccounts.find(
-        (acc) => acc.id === aaaPayoutMode && acc.isActive
+        (acc) => acc.id === effectivePayoutMode && acc.isActive
       );
 
       if (!externalAccount) {
-        console.warn(`⚠️ [AAA-STRIPE] External account ${aaaPayoutMode} not found or inactive - falling back to internal`);
+        console.warn(`⚠️ [PAYOUT] External account ${effectivePayoutMode} not found or inactive - falling back to internal`);
         return {
-          isAAA: true,
+          isAAA,
           mode: 'internal',
           skipPayout: true,
-          reason: `External account ${aaaPayoutMode} not found - fallback to internal`,
+          reason: `External account ${effectivePayoutMode} not found - fallback to internal`,
         };
       }
 
-      console.log(`💼 [AAA-STRIPE] Provider ${providerId} is AAA with EXTERNAL mode → ${externalAccount.name}`);
+      console.log(`💼 [PAYOUT] Provider ${providerId} routing to EXTERNAL account → ${externalAccount.name} (isAAA=${isAAA})`);
       return {
-        isAAA: true,
+        isAAA,
         mode: 'external',
         skipPayout: false,
         externalAccount,
-        reason: `AAA profile routing to ${externalAccount.name} (${externalAccount.gateway})`,
+        reason: `Routing to ${externalAccount.name} (${externalAccount.gateway})`,
       };
     } catch (error) {
       console.error(`❌ [AAA-STRIPE] Error checking AAA status for ${providerId}:`, error);
@@ -424,21 +448,11 @@ export class StripeManager {
       this.validateConfiguration(secretKey);
       if (!this.stripe) throw new HttpsError('internal', 'Stripe non initialisé');
 
-      // Anti-doublons (seulement si un paiement a déjà été accepté)
-      const existingPayment = await this.findExistingPayment(
-        data.clientId,
-        data.providerId,
-        data.callSessionId
-      );
-      if (existingPayment) {
-        throw new HttpsError(
-          'failed-precondition',
-          'Un paiement a déjà été accepté pour cette demande de consultation.'
-        );
-      }
+      // 🚀 PERF: Anti-doublons et validateUsers SUPPRIMÉS - déjà fait dans createPaymentIntent.ts
+      // - checkAndLockDuplicatePayments() remplace findExistingPayment() (gain ~200-400ms)
+      // - validateBusinessLogic() vérifie déjà les utilisateurs (gain ~100-200ms)
 
       this.validatePaymentData(data);
-      await this.validateUsers(data.clientId, data.providerId);
 
       const currency = normalizeCurrency(data.currency);
       const commissionEuros = data.connectionFeeAmount ?? data.commissionAmount ?? 0;
@@ -1298,59 +1312,52 @@ export class StripeManager {
       return;
     }
 
-    // 3. GESTION PROFILS AAA
-    const isAAA = provider?.isAAA === true || provider?.isTestProfile === true || provider?.isSOS === true;
-    if (isAAA) {
-      const aaaPayoutMode = provider?.aaaPayoutMode || 'internal';
+    // 3. GESTION PROFILS AAA et MULTIPRESTATAIRES - Utiliser la logique centralisée
+    const payoutDecision = await this.getAaaPayoutDecision(providerId);
+    const hasSpecialPayoutMode = payoutDecision.mode === 'internal' || payoutDecision.externalAccount;
 
-      if (aaaPayoutMode === 'internal') {
-        // Mode internal: l'argent reste sur la plateforme SOS-Expat
-        console.log(`[handlePayPalProviderPayout] 💼 AAA Profile INTERNAL mode - skipping payout, money stays on platform`);
+    if (hasSpecialPayoutMode && payoutDecision.skipPayout) {
+      // Mode internal: l'argent reste sur la plateforme SOS-Expat
+      console.log(`[handlePayPalProviderPayout] 💼 INTERNAL mode - skipping payout (${payoutDecision.reason})`);
 
-        // Logger pour audit - P0 FIX: utiliser providerAmountCents, pas capturedAmountCents
-        await this.db.collection('aaa_internal_payouts').add({
-          providerId,
-          sessionId,
-          amountCents: providerAmountCents, // P0 FIX: montant provider, pas total
-          currency,
-          mode: 'internal',
-          reason: 'AAA profile with internal payout mode - money retained on platform',
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
+      // Logger pour audit - P0 FIX: utiliser providerAmountCents, pas capturedAmountCents
+      await this.db.collection('aaa_internal_payouts').add({
+        providerId,
+        sessionId,
+        amountCents: providerAmountCents, // P0 FIX: montant provider, pas total
+        currency,
+        mode: 'internal',
+        isAAA: payoutDecision.isAAA,
+        reason: payoutDecision.reason,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
 
-        prodLogger.info('AAA_INTERNAL_PAYOUT', `AAA internal payout logged for ${providerId}`, {
-          providerId,
-          sessionId,
-          amountCents: providerAmountCents, // P0 FIX: montant provider, pas total
-          currency,
+      prodLogger.info('INTERNAL_PAYOUT', `Internal payout logged for ${providerId}`, {
+        providerId,
+        sessionId,
+        amountCents: providerAmountCents, // P0 FIX: montant provider, pas total
+        currency,
+        isAAA: payoutDecision.isAAA,
         });
 
         return;
-      }
-
-      // Mode external: récupérer la config du compte consolidé AAA
-      console.log(`[handlePayPalProviderPayout] 💼 AAA Profile EXTERNAL mode - checking consolidated account`);
-      const aaaConfigDoc = await this.db.collection('admin_config').doc('aaa_payout').get();
-      const aaaConfig = aaaConfigDoc.data();
-
-      if (aaaConfig && aaaConfig.externalAccounts && aaaConfig.externalAccounts.length > 0) {
-        // Trouver le premier compte PayPal externe
-        const paypalAccount = aaaConfig.externalAccounts.find(
-          (acc: { type: string }) => acc.type === 'paypal'
-        );
-
-        if (paypalAccount?.email) {
-          console.log(`[handlePayPalProviderPayout] 💼 Using AAA consolidated PayPal account: ${paypalAccount.name}`);
-          // Utiliser l'email du compte consolidé AAA
-          provider.paypalEmail = paypalAccount.email;
-        }
-      }
     }
 
-    // 4. Vérifier que le provider a un email PayPal
-    const paypalEmail = provider?.paypalEmail || provider?.email;
-    if (!paypalEmail) {
-      console.error(`[handlePayPalProviderPayout] Provider ${providerId} has no PayPal email - creating pending payout`);
+    // Mode external: utiliser le compte externe configuré dans payoutDecision
+    let effectivePaypalEmail: string | undefined;
+
+    if (payoutDecision.externalAccount && payoutDecision.externalAccount.gateway === 'paypal') {
+      console.log(`[handlePayPalProviderPayout] 💼 EXTERNAL mode - using account: ${payoutDecision.externalAccount.name}`);
+      // Utiliser l'email/accountId du compte externe configuré
+      effectivePaypalEmail = payoutDecision.externalAccount.accountId;
+    } else {
+      // Payout normal vers le provider
+      effectivePaypalEmail = provider?.paypalEmail || provider?.email;
+    }
+
+    // 4. Vérifier que nous avons un email PayPal
+    if (!effectivePaypalEmail) {
+      console.error(`[handlePayPalProviderPayout] No PayPal email available for ${providerId} - creating pending payout`);
 
       // Créer une entrée dans pending_paypal_payouts pour traitement ultérieur
       // P0 FIX: utiliser providerAmountCents, pas capturedAmountCents (montant total)
@@ -1360,12 +1367,16 @@ export class StripeManager {
         amountCents: providerAmountCents, // P0 FIX: montant provider, pas total
         currency,
         status: 'pending_email',
-        reason: 'Provider has no PayPal email configured',
-        isAAA,
+        reason: 'No PayPal email configured',
+        isAAA: payoutDecision.isAAA,
+        hasExternalAccount: !!payoutDecision.externalAccount,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
       });
       return;
     }
+
+    // Use the effective email for the payout
+    const paypalEmail = effectivePaypalEmail;
 
     // 5. Convertir en unité principale pour PayPal (providerAmountCents déjà calculé au début)
     const providerAmount = providerAmountCents / 100;
@@ -1375,7 +1386,8 @@ export class StripeManager {
       providerAmount,
       currency,
       sessionId,
-      isAAA,
+      isAAA: payoutDecision.isAAA,
+      hasExternalAccount: !!payoutDecision.externalAccount,
     });
 
     // 6. Créer le payout PayPal
@@ -1386,8 +1398,8 @@ export class StripeManager {
       amount: providerAmount,
       currency,
       sessionId,
-      note: isAAA
-        ? `Paiement AAA consolidé SOS-Expat - Session ${sessionId}`
+      note: payoutDecision.externalAccount
+        ? `Paiement consolidé SOS-Expat vers ${payoutDecision.externalAccount.name} - Session ${sessionId}`
         : `Paiement pour consultation SOS-Expat - Session ${sessionId}`,
     });
 
@@ -1404,11 +1416,12 @@ export class StripeManager {
         amount: providerAmount,
         currency,
         payoutBatchId: payoutResult.payoutBatchId,
-        isAAA,
+        isAAA: payoutDecision.isAAA,
+        hasExternalAccount: !!payoutDecision.externalAccount,
       });
 
-      // Si AAA external, logger aussi dans aaa_external_payouts
-      if (isAAA) {
+      // Si payout externe (AAA ou multiprestataire), logger dans aaa_external_payouts
+      if (payoutDecision.externalAccount) {
         await this.db.collection('aaa_external_payouts').add({
           providerId,
           sessionId,
@@ -1416,6 +1429,9 @@ export class StripeManager {
           currency,
           payoutBatchId: payoutResult.payoutBatchId,
           paypalEmail,
+          externalAccountId: payoutDecision.externalAccount.id,
+          externalAccountName: payoutDecision.externalAccount.name,
+          isAAA: payoutDecision.isAAA,
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
       }
@@ -1432,7 +1448,8 @@ export class StripeManager {
         status: 'failed',
         error: payoutResult.error,
         retryCount: 0,
-        isAAA,
+        isAAA: payoutDecision.isAAA,
+        hasExternalAccount: !!payoutDecision.externalAccount,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
       });
 
@@ -1980,117 +1997,10 @@ async cancelPayment(
    * Privées
    * ------------------------------------------------------------------- */
 
-  private async findExistingPayment(
-    clientId: string,
-    providerId: string,
-    sessionId?: string
-  ): Promise<boolean> {
-    try {
-      console.log('🔍 Vérification anti-doublons:', {
-        clientId: clientId.substring(0, 8) + '...',
-        providerId: providerId.substring(0, 8) + '...',
-        sessionId: sessionId ? sessionId.substring(0, 8) + '...' : '—',
-      });
-
-      // P0 FIX: Anti-doublons - vérifier TOUS les statuts de paiement valides
-      // MAIS autoriser un nouveau paiement si l'appel précédent a échoué
-      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-
-      let query: admin.firestore.Query<admin.firestore.DocumentData> = this.db
-        .collection('payments')
-        .where('clientId', '==', clientId)
-        .where('providerId', '==', providerId)
-        .where('status', 'in', ['succeeded', 'captured', 'requires_capture', 'authorized', 'processing'])
-        .where('createdAt', '>=', twentyFourHoursAgo);
-
-      if (sessionId && sessionId.trim() !== '') {
-        query = query.where('callSessionId', '==', sessionId);
-      }
-
-      const snapshot = await query.limit(5).get();
-
-      if (snapshot.empty) {
-        console.log('🔍 Aucun paiement existant trouvé - OK pour créer');
-        return false;
-      }
-
-      // P0 FIX: Si des paiements sont trouvés, vérifier le statut de leurs call_sessions
-      // Si TOUTES les call_sessions associées sont en échec, autoriser un nouveau paiement
-      console.log(`🔍 ${snapshot.size} paiement(s) existant(s) trouvé(s) - vérification des call_sessions...`);
-
-      for (const paymentDoc of snapshot.docs) {
-        const paymentData = paymentDoc.data();
-        const callSessionId = paymentData.callSessionId;
-
-        if (!callSessionId) {
-          // Paiement sans call_session → potentiellement encore en cours, bloquer
-          console.log(`🔍 Paiement ${paymentDoc.id} sans callSessionId - BLOQUÉ`);
-          return true;
-        }
-
-        // Récupérer la call_session associée
-        const callSessionDoc = await this.db.collection('call_sessions').doc(callSessionId).get();
-
-        if (!callSessionDoc.exists) {
-          // Call session n'existe plus, paiement orphelin - autoriser nouveau paiement
-          console.log(`🔍 Call session ${callSessionId} n'existe plus - OK pour continuer`);
-          continue;
-        }
-
-        const callSessionData = callSessionDoc.data();
-        const callStatus = callSessionData?.status;
-
-        // Statuts terminaux d'échec → autoriser nouveau paiement
-        const failedStatuses = ['failed', 'cancelled', 'refunded', 'no_answer'];
-
-        if (failedStatuses.includes(callStatus)) {
-          console.log(`🔍 Call session ${callSessionId} en statut "${callStatus}" - OK pour réessayer`);
-          continue;
-        }
-
-        // Statut completed avec paiement capturé → bloquer (appel réussi)
-        if (callStatus === 'completed' && ['succeeded', 'captured'].includes(paymentData.status)) {
-          console.log(`🔍 Paiement ${paymentDoc.id} pour appel réussi (${callStatus}/${paymentData.status}) - BLOQUÉ`);
-          return true;
-        }
-
-        // Paiement en cours pour appel actif → bloquer
-        const activeStatuses = ['pending', 'scheduled', 'client_connecting', 'provider_connecting', 'both_connecting', 'in_progress'];
-        if (activeStatuses.includes(callStatus)) {
-          console.log(`🔍 Paiement ${paymentDoc.id} pour appel actif (${callStatus}) - BLOQUÉ`);
-          return true;
-        }
-
-        console.log(`🔍 Call session ${callSessionId} en statut "${callStatus}" - statut non-bloquant`);
-      }
-
-      // Tous les paiements trouvés sont pour des appels échoués → autoriser
-      console.log('🔍 Tous les paiements existants sont pour des appels échoués - OK pour nouveau paiement');
-      return false;
-    } catch (error) {
-      await logError('StripeManager:findExistingPayment', error);
-      // En cas d'erreur, on préfère **ne pas** bloquer
-      return false;
-    }
-  }
-
-  private async validateUsers(clientId: string, providerId: string): Promise<void> {
-    const [clientDoc, providerDoc] = await Promise.all([
-      this.db.collection('users').doc(clientId).get(),
-      this.db.collection('users').doc(providerId).get(),
-    ]);
-
-    if (!clientDoc.exists) throw new HttpsError('failed-precondition', 'Client non trouvé');
-    if (!providerDoc.exists) throw new HttpsError('failed-precondition', 'Prestataire non trouvé');
-
-    const clientData = clientDoc.data() as UserDoc | undefined;
-    const providerData = providerDoc.data() as UserDoc | undefined;
-
-    if (clientData?.status === 'suspended')
-      throw new HttpsError('failed-precondition', 'Compte client suspendu');
-    if (providerData?.status === 'suspended')
-      throw new HttpsError('failed-precondition', 'Compte prestataire suspendu');
-  }
+  // 🚀 PERF OPTIMIZATION: Les fonctions suivantes ont été supprimées car redondantes:
+  // - findExistingPayment() → remplacée par checkAndLockDuplicatePayments() dans createPaymentIntent.ts
+  // - validateUsers() → validation déjà faite dans validateBusinessLogic() de createPaymentIntent.ts
+  // Gain estimé: ~300-500ms par paiement
 
   private async getClientEmail(clientId: string): Promise<string | undefined> {
     try {

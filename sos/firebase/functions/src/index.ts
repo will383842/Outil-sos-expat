@@ -897,6 +897,7 @@ export { onUserDeleted, cleanupOrphanedProfiles } from "./triggers/userCleanupTr
 
 // User Feedback Module - Collecte des retours utilisateurs (clients & prestataires)
 export {
+  submitFeedback,
   onFeedbackCreated,
   updateFeedbackStatus,
   getFeedbackStats,

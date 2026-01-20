@@ -21,6 +21,11 @@ import {
   Bell,
   MessageSquare,
   Save,
+  Wallet,
+  Plus,
+  Edit,
+  Trash,
+  Building,
 } from "lucide-react";
 import {
   collection,
@@ -32,6 +37,7 @@ import {
   serverTimestamp,
   getDoc,
   setDoc,
+  Timestamp,
 } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import AdminLayout from "../../components/admin/AdminLayout";
@@ -52,6 +58,24 @@ interface AdminSystemSettings {
     enableWhatsApp: boolean;
     enablePush: boolean;
   };
+}
+
+// Interface pour les comptes de paiement externes
+interface PayoutExternalAccount {
+  id: string;
+  name: string;
+  gateway: 'stripe' | 'paypal';
+  accountId: string; // Stripe Connected Account ID or PayPal email
+  holderName: string;
+  email?: string;
+  isActive: boolean;
+  createdAt: Date;
+}
+
+interface PayoutConfig {
+  externalAccounts: PayoutExternalAccount[];
+  defaultMode: 'internal' | string;
+  lastUpdated?: Date;
 }
 
 const defaultSystemSettings: AdminSystemSettings = {
@@ -88,6 +112,20 @@ const AdminSettings: React.FC = () => {
     showMapOnHomePage: true,
   });
   const [systemSettings, setSystemSettings] = useState<AdminSystemSettings>(defaultSystemSettings);
+
+  // Payout external accounts
+  const [showPayoutModal, setShowPayoutModal] = useState(false);
+  const [showAddPayoutAccountModal, setShowAddPayoutAccountModal] = useState(false);
+  const [payoutConfig, setPayoutConfig] = useState<PayoutConfig>({
+    externalAccounts: [],
+    defaultMode: 'internal',
+  });
+  const [editingPayoutAccount, setEditingPayoutAccount] = useState<PayoutExternalAccount | null>(null);
+  const [newPayoutAccountForm, setNewPayoutAccountForm] = useState<Partial<PayoutExternalAccount>>({
+    gateway: 'paypal',
+    isActive: true,
+  });
+  const [savingPayoutConfig, setSavingPayoutConfig] = useState(false);
 
   // PWA Status - vérifie réellement le statut
   const [pwaStatus, setPwaStatus] = useState({
@@ -185,8 +223,103 @@ const AdminSettings: React.FC = () => {
     loadPendingRefunds();
     loadMapSettings();
     loadSystemSettings();
+    loadPayoutConfig();
     checkPWAStatus();
   }, [currentUser, navigate]);
+
+  // Load payout external accounts config
+  const loadPayoutConfig = async () => {
+    try {
+      const configDoc = await getDoc(doc(db, 'admin_config', 'aaa_payout'));
+      if (configDoc.exists()) {
+        const data = configDoc.data();
+        setPayoutConfig({
+          externalAccounts: (data.externalAccounts || []).map((acc: any) => ({
+            ...acc,
+            createdAt: acc.createdAt?.toDate?.() || new Date(),
+          })),
+          defaultMode: data.defaultMode || 'internal',
+          lastUpdated: data.lastUpdated?.toDate?.() || undefined,
+        });
+      }
+    } catch (error) {
+      console.error('Error loading payout config:', error);
+    }
+  };
+
+  // Save payout config
+  const savePayoutConfig = async (config: PayoutConfig) => {
+    setSavingPayoutConfig(true);
+    try {
+      await setDoc(doc(db, 'admin_config', 'aaa_payout'), {
+        externalAccounts: config.externalAccounts.map(acc => ({
+          ...acc,
+          createdAt: Timestamp.fromDate(acc.createdAt),
+        })),
+        defaultMode: config.defaultMode,
+        lastUpdated: serverTimestamp(),
+      });
+      setPayoutConfig(config);
+    } catch (error) {
+      console.error('Error saving payout config:', error);
+      alert(intl.formatMessage({ id: 'admin.settings.common.saveError' }));
+    } finally {
+      setSavingPayoutConfig(false);
+    }
+  };
+
+  // Add new external account
+  const handleAddPayoutAccount = () => {
+    if (!newPayoutAccountForm.name || !newPayoutAccountForm.accountId || !newPayoutAccountForm.holderName) {
+      alert('Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+
+    const newAccount: PayoutExternalAccount = {
+      id: editingPayoutAccount?.id || `ext_${Date.now()}`,
+      name: newPayoutAccountForm.name || '',
+      gateway: newPayoutAccountForm.gateway || 'paypal',
+      accountId: newPayoutAccountForm.accountId || '',
+      holderName: newPayoutAccountForm.holderName || '',
+      email: newPayoutAccountForm.email,
+      isActive: newPayoutAccountForm.isActive !== false,
+      createdAt: editingPayoutAccount?.createdAt || new Date(),
+    };
+
+    let updatedAccounts: PayoutExternalAccount[];
+    if (editingPayoutAccount) {
+      updatedAccounts = payoutConfig.externalAccounts.map(acc =>
+        acc.id === editingPayoutAccount.id ? newAccount : acc
+      );
+    } else {
+      updatedAccounts = [...payoutConfig.externalAccounts, newAccount];
+    }
+
+    savePayoutConfig({ ...payoutConfig, externalAccounts: updatedAccounts });
+    setNewPayoutAccountForm({ gateway: 'paypal', isActive: true });
+    setEditingPayoutAccount(null);
+    setShowAddPayoutAccountModal(false);
+  };
+
+  // Delete external account
+  const handleDeletePayoutAccount = (accountId: string) => {
+    if (!confirm('Supprimer ce compte de paiement ?')) return;
+    const updatedAccounts = payoutConfig.externalAccounts.filter(acc => acc.id !== accountId);
+    const updatedConfig = {
+      ...payoutConfig,
+      externalAccounts: updatedAccounts,
+      defaultMode: payoutConfig.defaultMode === accountId ? 'internal' : payoutConfig.defaultMode,
+    };
+    savePayoutConfig(updatedConfig);
+  };
+
+  // Toggle account active status
+  const togglePayoutAccountActive = (accountId: string) => {
+    const updatedAccounts = payoutConfig.externalAccounts.map(acc =>
+      acc.id === accountId ? { ...acc, isActive: !acc.isActive } : acc
+    );
+    savePayoutConfig({ ...payoutConfig, externalAccounts: updatedAccounts });
+  };
 
   // Load system settings (Twilio + Notifications)
   const loadSystemSettings = async () => {
@@ -678,6 +811,34 @@ const AdminSettings: React.FC = () => {
             >
               <Bell className="w-4 h-4 mr-2" />
               {intl.formatMessage({ id: 'admin.settings.notifications.button' })}
+            </Button>
+          </div>
+
+          {/* Payout External Accounts */}
+          <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <Wallet className="w-6 h-6 text-emerald-600 mr-3" />
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Comptes de paiement
+                </h3>
+              </div>
+              {payoutConfig.externalAccounts.length > 0 && (
+                <span className="bg-emerald-100 text-emerald-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                  {payoutConfig.externalAccounts.length}
+                </span>
+              )}
+            </div>
+            <p className="text-gray-600 mb-4">
+              Gérer les comptes externes (Stripe/PayPal) pour les paiements prestataires
+            </p>
+            <Button
+              onClick={() => setShowPayoutModal(true)}
+              variant="outline"
+              className="w-full"
+            >
+              <Wallet className="w-4 h-4 mr-2" />
+              Configurer
             </Button>
           </div>
         </div>
@@ -1205,6 +1366,240 @@ const AdminSettings: React.FC = () => {
             >
               <Save className="w-4 h-4 mr-2" />
               {intl.formatMessage({ id: 'admin.settings.common.save' })}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Payout External Accounts Modal */}
+      <Modal
+        isOpen={showPayoutModal}
+        onClose={() => setShowPayoutModal(false)}
+        title="Comptes de paiement externes"
+        size="large"
+      >
+        <div className="space-y-6">
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+            <p className="text-sm text-blue-800">
+              Configurez les comptes externes (Stripe Connect ou PayPal) pour recevoir les paiements des prestataires.
+              Le mode "Interne" signifie que l'argent reste sur le compte SOS-Expat.
+            </p>
+          </div>
+
+          {/* Default Mode */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Mode par défaut pour nouveaux prestataires
+            </label>
+            <select
+              value={payoutConfig.defaultMode}
+              onChange={(e) => savePayoutConfig({ ...payoutConfig, defaultMode: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500"
+            >
+              <option value="internal">Interne (SOS-Expat)</option>
+              {payoutConfig.externalAccounts.filter(a => a.isActive).map(acc => (
+                <option key={acc.id} value={acc.id}>{acc.name} ({acc.gateway.toUpperCase()})</option>
+              ))}
+            </select>
+          </div>
+
+          {/* External Accounts List */}
+          <div>
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-sm font-medium text-gray-700">
+                Comptes externes ({payoutConfig.externalAccounts.length})
+              </h3>
+              <Button
+                onClick={() => {
+                  setEditingPayoutAccount(null);
+                  setNewPayoutAccountForm({ gateway: 'paypal', isActive: true });
+                  setShowAddPayoutAccountModal(true);
+                }}
+                size="small"
+                className="bg-emerald-600 hover:bg-emerald-700"
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Ajouter
+              </Button>
+            </div>
+
+            {payoutConfig.externalAccounts.length === 0 ? (
+              <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                <Wallet className="mx-auto h-12 w-12 text-gray-400" />
+                <p className="mt-2 text-sm text-gray-500">Aucun compte externe configuré</p>
+                <p className="text-xs text-gray-400">Tous les paiements resteront sur SOS-Expat</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {payoutConfig.externalAccounts.map(acc => (
+                  <div
+                    key={acc.id}
+                    className={`p-4 rounded-lg border ${acc.isActive ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-300 opacity-60'}`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                          acc.gateway === 'paypal' ? 'bg-blue-100' : 'bg-purple-100'
+                        }`}>
+                          {acc.gateway === 'paypal' ? (
+                            <CreditCard className="text-blue-600 w-5 h-5" />
+                          ) : (
+                            <Building className="text-purple-600 w-5 h-5" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">{acc.name}</p>
+                          <p className="text-sm text-gray-500">
+                            {acc.gateway.toUpperCase()} • {acc.holderName}
+                          </p>
+                          <p className="text-xs text-gray-400">{acc.accountId}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => togglePayoutAccountActive(acc.id)}
+                          className={`px-2 py-1 text-xs rounded ${
+                            acc.isActive
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-gray-200 text-gray-600'
+                          }`}
+                        >
+                          {acc.isActive ? 'Actif' : 'Inactif'}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingPayoutAccount(acc);
+                            setNewPayoutAccountForm(acc);
+                            setShowAddPayoutAccountModal(true);
+                          }}
+                          className="p-1 text-gray-400 hover:text-blue-600"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeletePayoutAccount(acc.id)}
+                          className="p-1 text-gray-400 hover:text-red-600"
+                        >
+                          <Trash className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Stats */}
+          <div className="pt-4 border-t border-gray-200">
+            <p className="text-xs text-gray-500">
+              Dernière mise à jour: {payoutConfig.lastUpdated
+                ? payoutConfig.lastUpdated.toLocaleString('fr-FR')
+                : 'Jamais'}
+            </p>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Add/Edit Payout Account Modal */}
+      <Modal
+        isOpen={showAddPayoutAccountModal}
+        onClose={() => {
+          setShowAddPayoutAccountModal(false);
+          setEditingPayoutAccount(null);
+          setNewPayoutAccountForm({ gateway: 'paypal', isActive: true });
+        }}
+        title={editingPayoutAccount ? 'Modifier le compte' : 'Ajouter un compte externe'}
+        size="medium"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nom du compte *
+            </label>
+            <input
+              type="text"
+              value={newPayoutAccountForm.name || ''}
+              onChange={(e) => setNewPayoutAccountForm(prev => ({ ...prev, name: e.target.value }))}
+              placeholder="Ex: Compte principal, Société XYZ..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Gateway *
+            </label>
+            <select
+              value={newPayoutAccountForm.gateway || 'paypal'}
+              onChange={(e) => setNewPayoutAccountForm(prev => ({
+                ...prev,
+                gateway: e.target.value as 'stripe' | 'paypal'
+              }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500"
+            >
+              <option value="paypal">PayPal</option>
+              <option value="stripe">Stripe Connect</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {newPayoutAccountForm.gateway === 'paypal' ? 'Email PayPal *' : 'Stripe Connected Account ID *'}
+            </label>
+            <input
+              type="text"
+              value={newPayoutAccountForm.accountId || ''}
+              onChange={(e) => setNewPayoutAccountForm(prev => ({ ...prev, accountId: e.target.value }))}
+              placeholder={newPayoutAccountForm.gateway === 'paypal' ? 'email@example.com' : 'acct_xxxxx'}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nom du titulaire *
+            </label>
+            <input
+              type="text"
+              value={newPayoutAccountForm.holderName || ''}
+              onChange={(e) => setNewPayoutAccountForm(prev => ({ ...prev, holderName: e.target.value }))}
+              placeholder="Nom complet ou raison sociale"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="payoutAccountActive"
+              checked={newPayoutAccountForm.isActive !== false}
+              onChange={(e) => setNewPayoutAccountForm(prev => ({ ...prev, isActive: e.target.checked }))}
+              className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"
+            />
+            <label htmlFor="payoutAccountActive" className="text-sm text-gray-700">
+              Compte actif (disponible pour les prestataires)
+            </label>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button
+              onClick={() => {
+                setShowAddPayoutAccountModal(false);
+                setEditingPayoutAccount(null);
+                setNewPayoutAccountForm({ gateway: 'paypal', isActive: true });
+              }}
+              variant="outline"
+            >
+              Annuler
+            </Button>
+            <Button
+              onClick={handleAddPayoutAccount}
+              className="bg-emerald-600 hover:bg-emerald-700"
+              loading={savingPayoutConfig}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {editingPayoutAccount ? 'Modifier' : 'Ajouter'}
             </Button>
           </div>
         </div>

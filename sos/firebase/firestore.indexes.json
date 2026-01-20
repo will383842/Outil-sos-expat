@@ -184,6 +184,14 @@
         { "fieldPath": "sourceDocument.type", "order": "ASCENDING" },
         { "fieldPath": "sourceDocument.id", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "user_feedback",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "email", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

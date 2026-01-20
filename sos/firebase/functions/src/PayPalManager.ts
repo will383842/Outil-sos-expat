@@ -240,10 +240,14 @@ export class PayPalManager {
   }
 
   /**
-   * Check if a provider is AAA and determine payout behavior
-   * - AAA + internal mode → Skip payout (money stays on platform)
-   * - AAA + external mode → Use consolidated AAA account
-   * - Non-AAA → Normal payout flow
+   * Check if a provider has special payout mode (AAA or multiprestataire)
+   *
+   * GESTION DES MODES DE PAIEMENT:
+   * - Profils AAA: Utilise aaaPayoutMode ou payoutMode
+   * - Profils normaux multiprestataires: Utilise payoutMode
+   * - Si payoutMode === 'internal' → L'argent reste sur SOS-Expat
+   * - Si payoutMode === <external_account_id> → Route vers le compte externe
+   * - Si pas de payoutMode configuré → Payout normal vers le provider
    */
   async getAaaPayoutDecision(providerId: string): Promise<AaaPayoutDecision> {
     try {
@@ -251,64 +255,81 @@ export class PayPalManager {
       const providerDoc = await this.db.collection("sos_profiles").doc(providerId).get();
       const provider = providerDoc.data();
 
-      if (!provider || !provider.isAAA) {
+      if (!provider) {
         return {
           isAAA: false,
           mode: "external",
           skipPayout: false,
-          reason: "Not an AAA profile - normal payout flow",
+          reason: "Provider not found - normal payout flow",
         };
       }
 
-      // Provider is AAA - check payout mode
-      const aaaPayoutMode = provider.aaaPayoutMode || "internal";
+      // Check payout mode (AAA or multiprestataire)
+      // Priority: aaaPayoutMode > payoutMode > 'internal' for AAA / null for normal
+      const payoutMode = provider.aaaPayoutMode || provider.payoutMode;
+      const isAAA = provider.isAAA === true;
 
-      if (aaaPayoutMode === "internal") {
-        console.log(`💼 [AAA] Provider ${providerId} is AAA with INTERNAL mode - skipping payout`);
+      // If no payoutMode configured and not AAA → normal payout
+      if (!payoutMode && !isAAA) {
         return {
-          isAAA: true,
+          isAAA: false,
+          mode: "external",
+          skipPayout: false,
+          reason: "No special payout mode configured - normal payout flow",
+        };
+      }
+
+      // Determine effective mode
+      const effectivePayoutMode = payoutMode || "internal";
+
+      if (effectivePayoutMode === "internal") {
+        console.log(`💼 [PAYOUT] Provider ${providerId} has INTERNAL mode - skipping payout (isAAA=${isAAA})`);
+        return {
+          isAAA,
           mode: "internal",
           skipPayout: true,
-          reason: "AAA profile with internal mode - money stays on SOS-Expat",
+          reason: isAAA
+            ? "AAA profile with internal mode - money stays on SOS-Expat"
+            : "Multiprestataire profile with internal mode - money stays on SOS-Expat",
         };
       }
 
-      // External mode - get the consolidated AAA account
+      // External mode - get the external accounts configuration
       const configDoc = await this.db.collection("admin_config").doc("aaa_payout").get();
       const config = configDoc.data() as AaaPayoutConfig | undefined;
 
       if (!config || !config.externalAccounts || config.externalAccounts.length === 0) {
-        console.warn(`⚠️ [AAA] No external accounts configured - falling back to internal`);
+        console.warn(`⚠️ [PAYOUT] No external accounts configured - falling back to internal`);
         return {
-          isAAA: true,
+          isAAA,
           mode: "internal",
           skipPayout: true,
-          reason: "AAA profile but no external accounts configured - fallback to internal",
+          reason: "No external accounts configured - fallback to internal",
         };
       }
 
       // Find the external account
       const externalAccount = config.externalAccounts.find(
-        (acc) => acc.id === aaaPayoutMode && acc.isActive
+        (acc) => acc.id === effectivePayoutMode && acc.isActive
       );
 
       if (!externalAccount) {
-        console.warn(`⚠️ [AAA] External account ${aaaPayoutMode} not found or inactive - falling back to internal`);
+        console.warn(`⚠️ [PAYOUT] External account ${effectivePayoutMode} not found or inactive - falling back to internal`);
         return {
-          isAAA: true,
+          isAAA,
           mode: "internal",
           skipPayout: true,
-          reason: `External account ${aaaPayoutMode} not found - fallback to internal`,
+          reason: `External account ${effectivePayoutMode} not found - fallback to internal`,
         };
       }
 
-      console.log(`💼 [AAA] Provider ${providerId} is AAA with EXTERNAL mode → ${externalAccount.name}`);
+      console.log(`💼 [PAYOUT] Provider ${providerId} routing to EXTERNAL account → ${externalAccount.name} (isAAA=${isAAA})`);
       return {
-        isAAA: true,
+        isAAA,
         mode: "external",
         skipPayout: false,
         externalAccount,
-        reason: `AAA profile routing to ${externalAccount.name} (${externalAccount.gateway})`,
+        reason: `Routing to ${externalAccount.name} (${externalAccount.gateway})`,
       };
     } catch (error) {
       console.error(`❌ [AAA] Error checking AAA status for ${providerId}:`, error);

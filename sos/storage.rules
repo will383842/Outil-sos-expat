@@ -131,6 +131,20 @@ service firebase.storage {
       allow delete: if isAdmin();
     }
 
+    // FEEDBACK SCREENSHOTS: User feedback attachments
+    // Security: Anonymous uploads allowed (visitors can report issues)
+    // - Images only (jpeg, png, webp, gif)
+    // - Max 5MB
+    // Read: Admin only (for reviewing feedback)
+    match /feedback_screenshots/{fileName} {
+      allow read: if isAdmin();
+      // Allow anonymous uploads with strict validation
+      allow write: if isImage() &&
+                   request.resource != null &&
+                   request.resource.size < 5 * 1024 * 1024;
+      allow delete: if isAdmin();
+    }
+
     match /{allPaths=**} {
       allow read, write: if false;
     }

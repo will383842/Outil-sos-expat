@@ -986,6 +986,9 @@ const ProviderProfile: React.FC = () => {
               })(),
               residenceCountry: navData.residenceCountry || navData.country,
               isOnline: navIsOnline, // ✅ Statut en ligne depuis navigation state
+              // ✅ P0 FIX: Ajouter availability et busyReason pour cohérence avec le listener
+              availability: (navData as any).availability || (navIsOnline ? 'available' : 'offline'),
+              busyReason: (navData as any).busyReason || null,
             } as SosProfile;
             foundProviderId = navData.id || "";
 
@@ -1131,6 +1134,9 @@ const ProviderProfile: React.FC = () => {
                 totalCalls: data?.totalCalls || 0,
                 createdAt: data?.createdAt,
                 isOnline: !!data?.isOnline,
+                // ✅ P0 FIX: Ajouter availability et busyReason pour cohérence
+                availability: data?.availability || (data?.isOnline ? 'available' : 'offline'),
+                busyReason: data?.busyReason || null,
               } as SosProfile;
               foundProviderId = docSnap.id;
               console.log(`✅ [ProviderProfile] Found via ShortId: ${foundProviderId}`);
@@ -1178,6 +1184,9 @@ const ProviderProfile: React.FC = () => {
                 totalCalls: data?.totalCalls || 0,
                 createdAt: data?.createdAt,
                 isOnline: !!data?.isOnline, // ✅ Statut en ligne depuis REST API
+                // ✅ P0 FIX: Ajouter availability et busyReason pour cohérence
+                availability: data?.availability || (data?.isOnline ? 'available' : 'offline'),
+                busyReason: data?.busyReason || null,
               } as SosProfile;
               foundProviderId = restResult.id;
               console.log(`✅ [ProviderProfile] Found via REST API: ${foundProviderId}`);
@@ -1232,6 +1241,9 @@ const ProviderProfile: React.FC = () => {
               totalCalls: data?.totalCalls || 0,
               createdAt: data?.createdAt,
               isOnline: !!data?.isOnline, // ✅ Statut en ligne depuis SDK
+              // ✅ P0 FIX: Ajouter availability et busyReason pour cohérence
+              availability: data?.availability || (data?.isOnline ? 'available' : 'offline'),
+              busyReason: data?.busyReason || null,
             } as SosProfile;
             foundProviderId = snap.id;
             console.log(`✅ [ProviderProfile] Found via SDK: ${foundProviderId}`);
@@ -1283,6 +1295,9 @@ const ProviderProfile: React.FC = () => {
               totalCalls: data?.totalCalls || 0,
               createdAt: data?.createdAt,
               isOnline: !!data?.isOnline, // ✅ Statut en ligne depuis slug search
+              // ✅ P0 FIX: Ajouter availability et busyReason pour cohérence
+              availability: data?.availability || (data?.isOnline ? 'available' : 'offline'),
+              busyReason: data?.busyReason || null,
             } as SosProfile;
             foundProviderId = m.id;
             }
