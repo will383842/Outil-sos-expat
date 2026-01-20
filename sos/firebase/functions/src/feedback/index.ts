@@ -51,7 +51,8 @@ interface FeedbackStats {
 // ==========================================
 
 const FEEDBACK_COLLECTION = 'user_feedback';
-const ADMIN_NOTIFICATION_EMAIL = 'support@sos-expat.com'; // À configurer
+// Config pour notifications email (à implémenter)
+// const ADMIN_NOTIFICATION_EMAIL = 'contact@sos-expat.com';
 
 const functionConfig = {
   region: "europe-west1",
