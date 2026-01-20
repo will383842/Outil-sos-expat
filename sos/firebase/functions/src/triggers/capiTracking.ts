@@ -133,20 +133,8 @@ function checkTriggerRateLimit(docId: string, eventType: string): boolean {
   return true;
 }
 
-/**
- * Clean old rate limit entries (called periodically)
- */
-function cleanTriggerRateLimitCache(): void {
-  const now = Date.now();
-  for (const [key, entry] of rateLimitCache.entries()) {
-    if (now > entry.resetTime) {
-      rateLimitCache.delete(key);
-    }
-  }
-}
-
-// Clean cache every 5 minutes
-setInterval(cleanTriggerRateLimitCache, 5 * 60 * 1000);
+// Note: Cache cleanup happens automatically in checkTriggerRateLimit when entries expire
+// No setInterval needed - Cloud Functions cold start resets the cache anyway
 
 // ============================================================================
 // Helpers

@@ -1486,8 +1486,8 @@ const EmailFirstAuth: React.FC<EmailFirstAuthProps> = ({
   };
 
   const handleLogin = async () => {
-    if (!password || password.length < 6) {
-      setError(intl.formatMessage({ id: "auth.passwordTooShort", defaultMessage: "Le mot de passe doit contenir au moins 6 caractères" }));
+    if (!password || password.length < 8) {
+      setError(intl.formatMessage({ id: "auth.passwordTooShort" }));
       return;
     }
 
@@ -1506,12 +1506,12 @@ const EmailFirstAuth: React.FC<EmailFirstAuthProps> = ({
   };
 
   const handleRegister = async () => {
-    if (!password || password.length < 6) {
-      setError(intl.formatMessage({ id: "auth.passwordTooShort", defaultMessage: "Le mot de passe doit contenir au moins 6 caractères" }));
+    if (!password || password.length < 8) {
+      setError(intl.formatMessage({ id: "auth.passwordTooShort" }));
       return;
     }
     if (password !== confirmPassword) {
-      setError(intl.formatMessage({ id: "auth.passwordMismatch", defaultMessage: "Les mots de passe ne correspondent pas" }));
+      setError(intl.formatMessage({ id: "auth.passwordMismatch" }));
       return;
     }
 

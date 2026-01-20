@@ -177,7 +177,7 @@ const PasswordResetConfirm: React.FC = React.memo(() => {
   const validateForm = useCallback((): boolean => {
     const errors: FormErrors = {};
 
-    if (!formData.password || formData.password.length < 6) {
+    if (!formData.password || formData.password.length < 8) {
       errors.password = t('error.weak_password');
     }
 

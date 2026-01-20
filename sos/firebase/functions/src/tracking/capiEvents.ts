@@ -75,20 +75,8 @@ function checkRateLimit(ip: string): boolean {
   return true;
 }
 
-/**
- * Clean old rate limit entries periodically
- */
-function cleanRateLimitCache(): void {
-  const now = Date.now();
-  for (const [ip, entry] of rateLimitCache.entries()) {
-    if (now > entry.resetTime) {
-      rateLimitCache.delete(ip);
-    }
-  }
-}
-
-// Clean cache every 5 minutes
-setInterval(cleanRateLimitCache, 5 * 60 * 1000);
+// Note: Cache cleanup happens automatically in checkRateLimit when entries expire
+// No setInterval needed - Cloud Functions cold start resets the cache anyway
 
 /**
  * HTTP endpoint to track CAPI events from frontend
