@@ -36,6 +36,7 @@ import { generateBothInvoices } from "../services/invoiceGenerator";
 import { usePricingConfig } from "../services/pricingService";
 import { navigationLogger, firestoreLogger, callLogger } from "../utils/debugLogger";
 import { trackMetaPurchase } from "../utils/metaPixel";
+import { trackGoogleAdsPurchase } from "../utils/googleAds";
 import { trackAdPurchase } from "../services/adAttributionService";
 
 /* =========================
@@ -975,6 +976,15 @@ const SuccessPayment: React.FC = () => {
         order_id: orderId || undefined,
       });
 
+      // Google Ads tracking
+      trackGoogleAdsPurchase({
+        value: amount,
+        currency: currency.toUpperCase(),
+        content_name: isLawyer ? 'lawyer_call' : 'expat_call',
+        content_type: 'service',
+        transaction_id: orderId || callId || undefined,
+      });
+
       // Ad Attribution tracking (Firestore - pour dashboard admin)
       trackAdPurchase({
         value: amount,
@@ -990,7 +1000,7 @@ const SuccessPayment: React.FC = () => {
       sessionStorage.setItem(purchaseKey, 'true');
       setPurchaseTracked(true);
 
-      console.log('✅ [META_PIXEL] Purchase tracked:', {
+      console.log('✅ [TRACKING] Purchase tracked (Meta + Google Ads):', {
         value: amount,
         currency: currency.toUpperCase(),
         content_name: isLawyer ? 'lawyer_call' : 'expat_call',

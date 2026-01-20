@@ -175,9 +175,17 @@ const CookieBanner: React.FC<CookieBannerProps> = ({
     // Update Meta Pixel consent via native fbq API (GDPR compliant)
     updateMetaPixelNativeConsent(prefs.marketing);
 
+    // Update Google Ads consent via Consent Mode v2
+    updateGoogleAdsConsent(prefs.marketing);
+
     // Initialize GTM/GA4 if analytics is granted
     if (prefs.analytics) {
       initializeGTM().catch(console.error);
+    }
+
+    // Initialize Google Ads if marketing is granted
+    if (prefs.marketing) {
+      initializeGoogleAds();
     }
 
     if (onPreferencesSaved) {

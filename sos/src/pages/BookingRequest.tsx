@@ -74,6 +74,7 @@ import { smartNormalizePhone } from "@/utils/phone";
 import { FormattedMessage, useIntl } from "react-intl";
 import IntlPhoneInput from "@/components/forms-data/IntlPhoneInput";
 import { trackMetaLead, trackMetaInitiateCheckout, getMetaIdentifiers } from "@/utils/metaPixel";
+import { trackGoogleAdsLead, trackGoogleAdsBeginCheckout } from "@/utils/googleAds";
 import { trackAdLead, trackAdInitiateCheckout } from "@/services/adAttributionService";
 import { generateEventIdForType } from "@/utils/sharedEventId";
 
@@ -2647,6 +2648,22 @@ const BookingRequest: React.FC = () => {
         content_name: isLawyer ? 'lawyer_call' : 'expat_call',
         content_category: isLawyer ? 'lawyer' : 'expat',
         num_items: 1,
+      });
+
+      // Track Google Ads Lead
+      trackGoogleAdsLead({
+        value: eurTotalForDisplay,
+        currency: 'EUR',
+        content_name: 'booking_request_submitted',
+        content_category: isLawyer ? 'lawyer' : 'expat',
+      });
+
+      // Track Google Ads BeginCheckout
+      trackGoogleAdsBeginCheckout({
+        value: eurTotalForDisplay,
+        currency: 'EUR',
+        content_name: isLawyer ? 'lawyer_call' : 'expat_call',
+        content_category: isLawyer ? 'lawyer' : 'expat',
       });
 
       // Track Ad Attribution Lead (Firestore - pour dashboard admin)
