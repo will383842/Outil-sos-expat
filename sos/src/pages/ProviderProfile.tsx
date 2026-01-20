@@ -722,6 +722,22 @@ const ProviderProfile: React.FC = () => {
     }
   }, [translation, viewingLanguage, showOriginal]);
 
+  // HARMONIZATION: Sync viewingLanguage with header language when translation is available
+  // This ensures the profile content matches the UI language when possible
+  useEffect(() => {
+    const headerLang = language?.toLowerCase() as SupportedLanguage;
+    // Only auto-sync if:
+    // 1. Header language is set
+    // 2. Translation for that language exists
+    // 3. User hasn't manually selected a different language
+    if (headerLang && availableLanguages.includes(headerLang) && !viewingLanguageRef.current) {
+      console.log('[ProviderProfile] Auto-syncing viewingLanguage with header:', headerLang);
+      setViewingLanguage(headerLang);
+      viewingLanguageRef.current = headerLang;
+      setShowOriginal(false);
+    }
+  }, [language, availableLanguages]);
+
   const [providerStats, setProviderStats] = useState<ProviderStats>({
     totalCallsReceived: 0,
     successfulCalls: 0,
@@ -1885,6 +1901,9 @@ const ProviderProfile: React.FC = () => {
     return providerStats.completedCalls === 0 && providerStats.realReviewsCount === 0;
   }, [providerStats]);
 
+  // Use viewingLanguage for FAQ if user selected a translation, otherwise use header language
+  const snippetLanguage = viewingLanguage || language;
+
   const snippetData = useSnippetGenerator(
     provider ? {
       firstName: provider.firstName,
@@ -1903,7 +1922,7 @@ const ProviderProfile: React.FC = () => {
       totalCalls: providerStats.completedCalls || provider.totalCalls,
       description: descriptionText
     } : null,
-    language
+    snippetLanguage
   );
   
   const educationText = useMemo(() => {

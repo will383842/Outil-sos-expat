@@ -1,6 +1,6 @@
 // src/components/provider/TranslationBanner.tsx
 // Design moderne 2026 - UX Premium avec micro-interactions
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { Globe, Loader2, Check, Eye, Sparkles } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
 import {
@@ -21,18 +21,109 @@ interface TranslationBannerProps {
   viewingLanguage?: SupportedLanguage | null;
 }
 
-// Drapeaux emoji pour chaque langue
-const LANGUAGE_FLAGS: Record<SupportedLanguage, string> = {
-  fr: '🇫🇷',
-  en: '🇬🇧',
-  es: '🇪🇸',
-  de: '🇩🇪',
-  pt: '🇵🇹',
-  ru: '🇷🇺',
-  zh: '🇨🇳',
-  ch: '🇨🇳', // Chinese (alternate code)
-  ar: '🇸🇦',
-  hi: '🇮🇳',
+// ============================================================================
+// CSS FLAG COMPONENTS - Render consistently on all platforms
+// ============================================================================
+
+const FrenchFlag = memo(() => (
+  <div className="w-5 h-3.5 rounded-sm overflow-hidden shadow-sm flex" role="img" aria-hidden="true">
+    <div className="w-1/3 h-full bg-blue-600" />
+    <div className="w-1/3 h-full bg-white" />
+    <div className="w-1/3 h-full bg-red-600" />
+  </div>
+));
+FrenchFlag.displayName = 'FrenchFlag';
+
+const BritishFlag = memo(() => (
+  <div className="w-5 h-3.5 rounded-sm overflow-hidden shadow-sm relative bg-blue-800" role="img" aria-hidden="true">
+    <div className="absolute inset-0">
+      <div className="absolute w-full h-0.5 bg-white rotate-[26deg] top-1/2 left-0 -translate-y-1/2 origin-center" />
+      <div className="absolute w-full h-0.5 bg-white -rotate-[26deg] top-1/2 left-0 -translate-y-1/2 origin-center" />
+    </div>
+    <div className="absolute top-0 left-1/2 w-1 h-full bg-white -translate-x-1/2" />
+    <div className="absolute left-0 top-1/2 w-full h-1 bg-white -translate-y-1/2" />
+    <div className="absolute top-0 left-1/2 w-0.5 h-full bg-red-600 -translate-x-1/2" />
+    <div className="absolute left-0 top-1/2 w-full h-0.5 bg-red-600 -translate-y-1/2" />
+  </div>
+));
+BritishFlag.displayName = 'BritishFlag';
+
+const SpanishFlag = memo(() => (
+  <div className="w-5 h-3.5 rounded-sm overflow-hidden shadow-sm flex flex-col" role="img" aria-hidden="true">
+    <div className="w-full h-1/4 bg-red-600" />
+    <div className="w-full h-2/4 bg-yellow-400" />
+    <div className="w-full h-1/4 bg-red-600" />
+  </div>
+));
+SpanishFlag.displayName = 'SpanishFlag';
+
+const GermanFlag = memo(() => (
+  <div className="w-5 h-3.5 rounded-sm overflow-hidden shadow-sm flex flex-col" role="img" aria-hidden="true">
+    <div className="w-full h-1/3 bg-black" />
+    <div className="w-full h-1/3 bg-red-600" />
+    <div className="w-full h-1/3 bg-yellow-400" />
+  </div>
+));
+GermanFlag.displayName = 'GermanFlag';
+
+const PortugueseFlag = memo(() => (
+  <div className="w-5 h-3.5 rounded-sm overflow-hidden shadow-sm flex" role="img" aria-hidden="true">
+    <div className="w-2/5 h-full bg-green-600" />
+    <div className="w-3/5 h-full bg-red-600 flex items-center justify-start pl-0.5">
+      <div className="w-1.5 h-1.5 bg-yellow-300 rounded-full" />
+    </div>
+  </div>
+));
+PortugueseFlag.displayName = 'PortugueseFlag';
+
+const RussianFlag = memo(() => (
+  <div className="w-5 h-3.5 rounded-sm overflow-hidden shadow-sm flex flex-col" role="img" aria-hidden="true">
+    <div className="w-full h-1/3 bg-white" />
+    <div className="w-full h-1/3 bg-blue-600" />
+    <div className="w-full h-1/3 bg-red-600" />
+  </div>
+));
+RussianFlag.displayName = 'RussianFlag';
+
+const ChineseFlag = memo(() => (
+  <div className="w-5 h-3.5 rounded-sm overflow-hidden shadow-sm bg-red-600 flex items-start justify-start p-0.5" role="img" aria-hidden="true">
+    <span className="text-yellow-400 text-[6px] leading-none">★</span>
+  </div>
+));
+ChineseFlag.displayName = 'ChineseFlag';
+
+const ArabicFlag = memo(() => (
+  <div className="w-5 h-3.5 rounded-sm overflow-hidden shadow-sm flex flex-col" role="img" aria-hidden="true">
+    <div className="w-full h-1/3 bg-green-600" />
+    <div className="w-full h-1/3 bg-white" />
+    <div className="w-full h-1/3 bg-black" />
+  </div>
+));
+ArabicFlag.displayName = 'ArabicFlag';
+
+const HindiFlag = memo(() => (
+  <div className="w-5 h-3.5 rounded-sm overflow-hidden shadow-sm flex flex-col" role="img" aria-hidden="true">
+    <div className="w-full h-1/3 bg-orange-500" />
+    <div className="w-full h-1/3 bg-white flex items-center justify-center">
+      <div className="w-1 h-1 rounded-full border border-blue-800" />
+    </div>
+    <div className="w-full h-1/3 bg-green-600" />
+  </div>
+));
+HindiFlag.displayName = 'HindiFlag';
+
+// Map language codes to flag components
+const LANGUAGE_FLAGS: Record<SupportedLanguage, React.FC> = {
+  fr: FrenchFlag,
+  en: BritishFlag,
+  es: SpanishFlag,
+  de: GermanFlag,
+  pt: PortugueseFlag,
+  ru: RussianFlag,
+  zh: ChineseFlag,
+  ch: ChineseFlag, // Chinese (alternate code)
+  ar: ArabicFlag,
+  hi: HindiFlag,
 };
 
 export const TranslationBanner: React.FC<TranslationBannerProps> = ({
@@ -159,7 +250,7 @@ export const TranslationBanner: React.FC<TranslationBannerProps> = ({
                 ${wasJustTranslated ? 'animate-pulse ring-2 ring-emerald-400' : ''}
               `}
             >
-              <span className="text-base" aria-hidden="true">{LANGUAGE_FLAGS[lang]}</span>
+              {React.createElement(LANGUAGE_FLAGS[lang])}
               <span>{LANGUAGE_NAMES[lang]}</span>
               {!isViewing && (
                 <Check className="w-4 h-4 text-emerald-500 dark:text-emerald-400" aria-hidden="true" />
@@ -211,8 +302,8 @@ export const TranslationBanner: React.FC<TranslationBannerProps> = ({
                 </>
               ) : (
                 <>
-                  <span className="text-base opacity-60 group-hover:opacity-100 transition-opacity" aria-hidden="true">
-                    {LANGUAGE_FLAGS[lang]}
+                  <span className="opacity-60 group-hover:opacity-100 transition-opacity">
+                    {React.createElement(LANGUAGE_FLAGS[lang])}
                   </span>
                   <span>{LANGUAGE_NAMES[lang]}</span>
                   <Sparkles className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-blue-500 transition-opacity" aria-hidden="true" />
