@@ -4964,6 +4964,7 @@ export {
   onBookingRequestCreatedTrackLead,
   onUserCreatedTrackRegistration,
   onCallSessionPaymentAuthorized,
+  onContactSubmittedTrackLead,
 } from './triggers/capiTracking';
 
 // ========== SYNC BOOKINGS TO OUTIL-SOS-EXPAT (AI TRIGGER) ==========

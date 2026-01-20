@@ -190,6 +190,75 @@ function extractUserData(data: Partial<BookingRequest & UserDocument & CallSessi
   return userData;
 }
 
+/**
+ * Log CAPI event to Firestore for analytics dashboard
+ */
+interface LogCAPIEventParams {
+  eventType: string;
+  eventId: string;
+  source: 'trigger_booking' | 'trigger_user' | 'trigger_call' | 'trigger_contact';
+  documentId: string;
+  userId?: string;
+  userData: UserData;
+  value?: number;
+  currency?: string;
+  contentName?: string;
+  contentCategory?: string;
+  metaEventsReceived?: number;
+}
+
+async function logCAPIEventToFirestore(params: LogCAPIEventParams): Promise<void> {
+  try {
+    // Calculate user data quality score
+    let qualityScore = 0;
+    if (params.userData.em) qualityScore += 30;
+    if (params.userData.ph) qualityScore += 25;
+    if (params.userData.fn) qualityScore += 15;
+    if (params.userData.ln) qualityScore += 10;
+    if (params.userData.country) qualityScore += 10;
+    if (params.userData.fbp) qualityScore += 5;
+    if (params.userData.fbc) qualityScore += 5;
+
+    await admin.firestore().collection('capi_events').add({
+      // Event identification
+      eventType: params.eventType,
+      eventId: params.eventId,
+      source: params.source,
+      documentId: params.documentId,
+
+      // User identification
+      userId: params.userId || params.userData.external_id || null,
+      isAnonymous: !params.userId && !params.userData.external_id,
+
+      // User data quality
+      hasEmail: !!params.userData.em,
+      hasPhone: !!params.userData.ph,
+      hasFirstName: !!params.userData.fn,
+      hasLastName: !!params.userData.ln,
+      hasCountry: !!params.userData.country,
+      hasFbp: !!params.userData.fbp,
+      hasFbc: !!params.userData.fbc,
+      qualityScore,
+
+      // Event content
+      contentName: params.contentName || null,
+      contentCategory: params.contentCategory || null,
+
+      // Value tracking
+      value: params.value || null,
+      currency: params.currency || 'EUR',
+
+      // Meta response
+      metaEventsReceived: params.metaEventsReceived || 1,
+
+      // Timestamps
+      trackedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  } catch (error) {
+    console.warn('[logCAPIEventToFirestore] Failed to log event:', error);
+  }
+}
+
 // ============================================================================
 // TRIGGER: Lead - Booking Request Created
 // ============================================================================
@@ -245,6 +314,20 @@ export const onBookingRequestCreatedTrackLead = onDocumentCreated(
             leadEventId: result.eventId,
             trackedAt: admin.firestore.FieldValue.serverTimestamp(),
           },
+        });
+
+        // Log to capi_events for analytics dashboard
+        await logCAPIEventToFirestore({
+          eventType: 'Lead',
+          eventId: result.eventId,
+          source: 'trigger_booking',
+          documentId: requestId,
+          userData,
+          value: data.amount || data.price,
+          currency: data.currency || 'EUR',
+          contentName: `booking_request_${data.providerType || 'service'}`,
+          contentCategory: data.providerType || 'service',
+          metaEventsReceived: result.eventsReceived,
         });
       } else {
         console.warn(`[CAPI Lead] ⚠️ Failed for booking ${requestId}:`, result.error);
@@ -312,6 +395,19 @@ export const onUserCreatedTrackRegistration = onDocumentCreated(
             registrationEventId: result.eventId,
             trackedAt: admin.firestore.FieldValue.serverTimestamp(),
           },
+        });
+
+        // Log to capi_events for analytics dashboard
+        await logCAPIEventToFirestore({
+          eventType: 'CompleteRegistration',
+          eventId: result.eventId,
+          source: 'trigger_user',
+          documentId: uid,
+          userId: uid,
+          userData,
+          contentName: `${data.role || 'user'}_registration`,
+          contentCategory: data.role || 'user',
+          metaEventsReceived: result.eventsReceived,
         });
       } else {
         console.warn(`[CAPI Registration] ⚠️ Failed for user ${uid}:`, result.error);
@@ -392,6 +488,20 @@ export const onCallSessionPaymentAuthorized = onDocumentUpdated(
             initiateCheckoutEventId: result.eventId,
             trackedAt: admin.firestore.FieldValue.serverTimestamp(),
           },
+        });
+
+        // Log to capi_events for analytics dashboard
+        await logCAPIEventToFirestore({
+          eventType: 'InitiateCheckout',
+          eventId: result.eventId,
+          source: 'trigger_call',
+          documentId: sessionId,
+          userData,
+          value: amount,
+          currency: currency.toUpperCase(),
+          contentName: `${afterData.providerType || 'service'}_call`,
+          contentCategory: afterData.providerType || 'service',
+          metaEventsReceived: result.eventsReceived,
         });
       } else {
         console.warn(`[CAPI Checkout] ⚠️ Failed for session ${sessionId}:`, result.error);
@@ -486,6 +596,18 @@ export const onContactSubmittedTrackLead = onDocumentCreated(
             contactEventId: result.eventId,
             trackedAt: admin.firestore.FieldValue.serverTimestamp(),
           },
+        });
+
+        // Log to capi_events for analytics dashboard
+        await logCAPIEventToFirestore({
+          eventType: 'Contact',
+          eventId: result.eventId,
+          source: 'trigger_contact',
+          documentId: submissionId,
+          userData,
+          contentName: 'contact_form',
+          contentCategory: data.subject || 'support',
+          metaEventsReceived: result.eventsReceived,
         });
       } else {
         console.warn(`[CAPI Contact] ⚠️ Failed for submission ${submissionId}:`, result.error);

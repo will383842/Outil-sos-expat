@@ -1487,7 +1487,7 @@ const EmailFirstAuth: React.FC<EmailFirstAuthProps> = ({
 
   const handleLogin = async () => {
     if (!password || password.length < 8) {
-      setError(intl.formatMessage({ id: "auth.passwordTooShort" }));
+      setError(intl.formatMessage({ id: "auth.wizard.passwordTooShort" }));
       return;
     }
 
@@ -1507,7 +1507,7 @@ const EmailFirstAuth: React.FC<EmailFirstAuthProps> = ({
 
   const handleRegister = async () => {
     if (!password || password.length < 8) {
-      setError(intl.formatMessage({ id: "auth.passwordTooShort" }));
+      setError(intl.formatMessage({ id: "auth.wizard.passwordTooShort" }));
       return;
     }
     if (password !== confirmPassword) {

@@ -245,22 +245,65 @@ export const trackCAPIEvent = onRequest(
           userId: body.userId || 'anonymous',
         });
 
-        // Optionally log to Firestore for analytics
-        if (body.userId) {
-          try {
-            const db = admin.firestore();
-            await db.collection('capi_events').add({
-              eventType,
-              eventId: result.eventId,
-              userId: body.userId,
-              contentName: body.contentName,
-              contentCategory: body.contentCategory,
-              trackedAt: admin.firestore.FieldValue.serverTimestamp(),
-            });
-          } catch (dbError) {
-            // Non-critical, just log
-            logger.warn('[trackCAPIEvent] Failed to log event to Firestore:', dbError);
-          }
+        // Log ALL events to Firestore for analytics dashboard
+        try {
+          const db = admin.firestore();
+
+          // Calculate user data quality score (0-100)
+          let qualityScore = 0;
+          if (body.email) qualityScore += 30;
+          if (body.phone) qualityScore += 25;
+          if (body.firstName) qualityScore += 15;
+          if (body.lastName) qualityScore += 10;
+          if (body.country) qualityScore += 10;
+          if (body.fbp) qualityScore += 5;
+          if (body.fbc) qualityScore += 5;
+
+          await db.collection('capi_events').add({
+            // Event identification
+            eventType,
+            eventId: result.eventId,
+            source: 'http_endpoint',
+
+            // User identification
+            userId: body.userId || null,
+            isAnonymous: !body.userId,
+
+            // User data quality
+            hasEmail: !!body.email,
+            hasPhone: !!body.phone,
+            hasFirstName: !!body.firstName,
+            hasLastName: !!body.lastName,
+            hasCountry: !!body.country,
+            hasFbp: !!body.fbp,
+            hasFbc: !!body.fbc,
+            qualityScore,
+
+            // Event content
+            contentName: body.contentName || null,
+            contentCategory: body.contentCategory || null,
+            contentIds: Array.isArray(body.contentIds) ? body.contentIds : null,
+            searchString: body.searchString || null,
+
+            // Value tracking
+            value: typeof body.value === 'number' ? body.value : null,
+            currency: body.currency || 'EUR',
+
+            // Source tracking
+            eventSourceUrl: eventSourceUrl || null,
+            utmSource: body.utm_source || null,
+            utmMedium: body.utm_medium || null,
+            utmCampaign: body.utm_campaign || null,
+
+            // Meta response
+            metaEventsReceived: result.eventsReceived || 1,
+
+            // Timestamps
+            trackedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+        } catch (dbError) {
+          // Non-critical, just log
+          logger.warn('[trackCAPIEvent] Failed to log event to Firestore:', dbError);
         }
 
         res.status(200).json({

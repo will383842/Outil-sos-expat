@@ -7,6 +7,7 @@ import { useApp } from '../../contexts/AppContext';
 import { updateGA4Consent } from '../../utils/ga4';
 import { initializeGTM, updateConsentFromPreferences } from '../../utils/gtm';
 import { updateMetaPixelNativeConsent } from '../../utils/metaPixel';
+import { updateGoogleAdsConsent, initializeGoogleAds } from '../../utils/googleAds';
 
 /**
  * Cookie Consent Banner Component
