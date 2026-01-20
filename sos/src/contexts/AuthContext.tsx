@@ -896,98 +896,130 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
     const listenerStartTime = Date.now();
 
-    // 🚀 FALLBACK: Si onSnapshot ne répond pas en 5s, essayer getDoc directement
+    // 🚀 FIX RACE CONDITION: Fallbacks séquentiels avec annulation centralisée
+    // Au lieu de lancer tous les timeouts en parallèle, on utilise une chaîne séquentielle
+    // Chaque fallback vérifie d'abord si les données sont déjà arrivées avant d'agir
+
+    const cancelAllFallbacks = () => {
+      if (fallbackTimeoutId) { clearTimeout(fallbackTimeoutId); fallbackTimeoutId = null; }
+      if (restFallbackTimeoutId) { clearTimeout(restFallbackTimeoutId); restFallbackTimeoutId = null; }
+      if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
+    };
+
+    // Fallback 1: getDoc après 5s si onSnapshot n'a pas répondu
     fallbackTimeoutId = setTimeout(async () => {
+      // Double-check avant d'agir (protection contre race condition)
+      if (firstSnapArrived.current || cancelled) {
+        console.log("🔐 [AuthContext] Fallback getDoc annulé - données déjà reçues");
+        return;
+      }
+
       const elapsed = Date.now() - listenerStartTime;
       console.warn(`🔐 [AuthContext] ⚠️ [${elapsed}ms] onSnapshot n'a pas répondu en 5s, tentative getDoc directe...`);
-      if (!firstSnapArrived.current && !cancelled) {
-        try {
-          console.log("🔐 [AuthContext] 📥 Exécution getDoc(users/" + uid + ")...");
-          const directSnap = await getDoc(refUser);
-          const getDocElapsed = Date.now() - listenerStartTime;
-          console.log(`🔐 [AuthContext] 📥 getDoc terminé en ${getDocElapsed}ms, exists=${directSnap.exists()}`);
-          if (directSnap.exists() && !firstSnapArrived.current && !cancelled) {
-            console.log("✅ [AuthContext] getDoc réussi, données:", directSnap.data());
-            const data = directSnap.data() as Partial<User>;
-            setUser({
-              ...(data as User),
-              id: uid,
-              uid,
-              email: data.email || authUser.email || null,
-              isVerifiedEmail: authUser.emailVerified,
-            } as User);
-            firstSnapArrived.current = true;
-            setIsLoading(false);
-            setAuthInitialized(true);
-            console.log("✅ [AuthContext] 🏁 User chargé via fallback getDoc - isLoading=false");
-          } else if (!directSnap.exists()) {
-            console.warn("⚠️ [AuthContext] getDoc: document users/" + uid + " n'existe pas!");
-          }
-        } catch (e) {
-          const errorElapsed = Date.now() - listenerStartTime;
-          console.error(`❌ [AuthContext] [${errorElapsed}ms] getDoc fallback échoué:`, e);
+
+      try {
+        console.log("🔐 [AuthContext] 📥 Exécution getDoc(users/" + uid + ")...");
+        const directSnap = await getDoc(refUser);
+        const getDocElapsed = Date.now() - listenerStartTime;
+        console.log(`🔐 [AuthContext] 📥 getDoc terminé en ${getDocElapsed}ms, exists=${directSnap.exists()}`);
+
+        // Re-vérifier après l'await (onSnapshot peut avoir répondu entre temps)
+        if (firstSnapArrived.current || cancelled) {
+          console.log("🔐 [AuthContext] getDoc ignoré - données déjà reçues via onSnapshot");
+          return;
         }
+
+        if (directSnap.exists()) {
+          console.log("✅ [AuthContext] getDoc réussi, données:", directSnap.data());
+          const data = directSnap.data() as Partial<User>;
+          cancelAllFallbacks(); // Annuler les autres fallbacks
+          firstSnapArrived.current = true; // Marquer AVANT setUser pour éviter les doublons
+          setUser({
+            ...(data as User),
+            id: uid,
+            uid,
+            email: data.email || authUser.email || null,
+            isVerifiedEmail: authUser.emailVerified,
+          } as User);
+          setIsLoading(false);
+          setAuthInitialized(true);
+          console.log("✅ [AuthContext] 🏁 User chargé via fallback getDoc - isLoading=false");
+        } else {
+          console.warn("⚠️ [AuthContext] getDoc: document users/" + uid + " n'existe pas!");
+          // Ne pas annuler les autres fallbacks - laisser le REST API essayer
+        }
+      } catch (e) {
+        const errorElapsed = Date.now() - listenerStartTime;
+        console.error(`❌ [AuthContext] [${errorElapsed}ms] getDoc fallback échoué:`, e);
+        // Ne pas annuler les autres fallbacks - laisser le REST API essayer
       }
     }, 5000);
 
-    // 🚀 FALLBACK REST API: Si le SDK est complètement bloqué après 10s, utiliser l'API REST directement
+    // Fallback 2: REST API après 10s si tout le SDK Firestore est bloqué
     restFallbackTimeoutId = setTimeout(async () => {
+      // Double-check avant d'agir
+      if (firstSnapArrived.current || cancelled) {
+        console.log("🔐 [AuthContext] Fallback REST API annulé - données déjà reçues");
+        return;
+      }
+
       const elapsed = Date.now() - listenerStartTime;
-      if (!firstSnapArrived.current && !cancelled) {
-        console.warn(`🔐 [AuthContext] ⚠️ [${elapsed}ms] SDK Firestore bloqué, tentative REST API...`);
-        try {
-          // Obtenir le token d'authentification
-          const token = await authUser.getIdToken();
-          const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
-          const restUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${uid}`;
+      console.warn(`🔐 [AuthContext] ⚠️ [${elapsed}ms] SDK Firestore bloqué, tentative REST API...`);
 
-          console.log("🔐 [AuthContext] 🌐 Appel REST API:", restUrl);
-          const response = await fetch(restUrl, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          });
+      try {
+        const token = await authUser.getIdToken();
+        const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
+        const restUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${uid}`;
 
-          if (response.ok) {
-            const restData = await response.json();
-            console.log("✅ [AuthContext] REST API réponse:", restData);
+        console.log("🔐 [AuthContext] 🌐 Appel REST API:", restUrl);
+        const response = await fetch(restUrl, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
 
-            // Convertir le format REST API vers notre format User
-            const fields = restData.fields || {};
-            const userData: Partial<User> = {};
-
-            // Mapper les champs Firestore REST vers notre type User
-            for (const [key, value] of Object.entries(fields)) {
-              const fieldValue = value as { stringValue?: string; integerValue?: string; booleanValue?: boolean; timestampValue?: string };
-              if (fieldValue.stringValue !== undefined) userData[key as keyof User] = fieldValue.stringValue as any;
-              else if (fieldValue.integerValue !== undefined) userData[key as keyof User] = parseInt(fieldValue.integerValue) as any;
-              else if (fieldValue.booleanValue !== undefined) userData[key as keyof User] = fieldValue.booleanValue as any;
-              else if (fieldValue.timestampValue !== undefined) userData[key as keyof User] = new Date(fieldValue.timestampValue) as any;
-            }
-
-            if (!firstSnapArrived.current && !cancelled) {
-              setUser({
-                ...(userData as User),
-                id: uid,
-                uid,
-                email: userData.email || authUser.email || null,
-                isVerifiedEmail: authUser.emailVerified,
-              } as User);
-              firstSnapArrived.current = true;
-              setIsLoading(false);
-              setAuthInitialized(true);
-              console.log("✅ [AuthContext] 🏁 User chargé via REST API fallback - isLoading=false");
-              console.log("💡 [AuthContext] Le SDK Firestore est bloqué mais l'app fonctionne via REST API");
-            }
-          } else if (response.status === 404) {
-            console.warn("⚠️ [AuthContext] REST API: document users/" + uid + " n'existe pas");
-          } else {
-            console.error("❌ [AuthContext] REST API erreur:", response.status, await response.text());
-          }
-        } catch (e) {
-          console.error("❌ [AuthContext] REST API fallback échoué:", e);
+        // Re-vérifier après l'await
+        if (firstSnapArrived.current || cancelled) {
+          console.log("🔐 [AuthContext] REST API ignoré - données déjà reçues");
+          return;
         }
+
+        if (response.ok) {
+          const restData = await response.json();
+          console.log("✅ [AuthContext] REST API réponse:", restData);
+
+          const fields = restData.fields || {};
+          const userData: Partial<User> = {};
+
+          for (const [key, value] of Object.entries(fields)) {
+            const fieldValue = value as { stringValue?: string; integerValue?: string; booleanValue?: boolean; timestampValue?: string };
+            if (fieldValue.stringValue !== undefined) userData[key as keyof User] = fieldValue.stringValue as any;
+            else if (fieldValue.integerValue !== undefined) userData[key as keyof User] = parseInt(fieldValue.integerValue) as any;
+            else if (fieldValue.booleanValue !== undefined) userData[key as keyof User] = fieldValue.booleanValue as any;
+            else if (fieldValue.timestampValue !== undefined) userData[key as keyof User] = new Date(fieldValue.timestampValue) as any;
+          }
+
+          cancelAllFallbacks(); // Annuler les autres fallbacks
+          firstSnapArrived.current = true; // Marquer AVANT setUser
+          setUser({
+            ...(userData as User),
+            id: uid,
+            uid,
+            email: userData.email || authUser.email || null,
+            isVerifiedEmail: authUser.emailVerified,
+          } as User);
+          setIsLoading(false);
+          setAuthInitialized(true);
+          console.log("✅ [AuthContext] 🏁 User chargé via REST API fallback - isLoading=false");
+          console.log("💡 [AuthContext] Le SDK Firestore est bloqué mais l'app fonctionne via REST API");
+        } else if (response.status === 404) {
+          console.warn("⚠️ [AuthContext] REST API: document users/" + uid + " n'existe pas");
+        } else {
+          console.error("❌ [AuthContext] REST API erreur:", response.status, await response.text());
+        }
+      } catch (e) {
+        console.error("❌ [AuthContext] REST API fallback échoué:", e);
       }
     }, 10000);
 
@@ -1020,18 +1052,8 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           return;
         }
 
-        // Annuler le timeout et fallback car on a reçu une réponse
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-          timeoutId = null;
-        }
-        if (fallbackTimeoutId) {
-          clearTimeout(fallbackTimeoutId);
-          fallbackTimeoutId = null;
-        }
-        if (restFallbackTimeoutId) {
-          clearTimeout(restFallbackTimeoutId);
-        }
+        // ✅ FIX: Annuler TOUS les fallbacks car onSnapshot a répondu
+        cancelAllFallbacks();
 
         // Document n'existe pas → peut être une race condition avec la Cloud Function
         // ⚠️ CORRECTION: Ne PAS créer un document avec role='client' par défaut
@@ -1097,6 +1119,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
                     return merged;
                   });
 
+                  cancelAllFallbacks(); // ✅ FIX: Annuler tous les timeouts
                   firstSnapArrived.current = true;
                   setIsLoading(false);
                   setAuthInitialized(true);
@@ -1110,6 +1133,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
             // Après tous les retries (~15-20s), le document n'existe toujours pas
             console.error("❌ [AuthContext] Document toujours absent après " + MAX_RETRIES + " retries (~" + Math.round(totalWaitTime/1000) + "s)");
+            cancelAllFallbacks(); // ✅ FIX: Annuler tous les timeouts même en cas d'échec
             setError('La création de votre profil prend plus de temps que prévu. Veuillez rafraîchir la page dans quelques secondes.');
             firstSnapArrived.current = true;
             setIsLoading(false);
@@ -1158,15 +1182,8 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       },
       (err) => {
         const errorElapsed = Date.now() - listenerStartTime;
-        // Annuler le timeout en cas d'erreur
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-          timeoutId = null;
-        }
-        if (fallbackTimeoutId) {
-          clearTimeout(fallbackTimeoutId);
-          fallbackTimeoutId = null;
-        }
+        // ✅ FIX: Annuler TOUS les fallbacks en cas d'erreur
+        cancelAllFallbacks();
 
         console.error(`❌ [AuthContext] [${errorElapsed}ms] [users/${uid}] Erreur listener:`, err);
         console.error(`❌ [AuthContext] Error details:`, {
@@ -1280,6 +1297,12 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         rememberMe,
         deviceInfo
       }).catch(() => {});
+
+      // ✅ FIX: Signaler le login aux autres onglets via localStorage
+      try {
+        localStorage.setItem('sos_login_event', Date.now().toString());
+        setTimeout(() => localStorage.removeItem('sos_login_event'), 100);
+      } catch { /* Ignorer si localStorage n'est pas disponible */ }
     } catch (e) {
       const errorCode = (e as any)?.code || (e instanceof Error ? e.message : '');
       console.log("[DEBUG] " + "❌ LOGIN ERREUR!\n\nCode: " + errorCode + "\nMessage: " + (e instanceof Error ? e.message : String(e)));
@@ -1404,24 +1427,53 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         } else {
           // Create new client user via Cloud Function (bypasses Firestore security rules)
           console.log("[DEBUG] " + "🔵 GOOGLE POPUP: Création du document via Cloud Function...");
-          try {
-            const result = await createUserDocumentViaCloudFunction(googleUser, {
-              role: 'client',
-              email: googleUser.email || '',
-              preferredLanguage: 'fr',
-              provider: 'google.com',
-              ...(googleUser.photoURL && { profilePhoto: googleUser.photoURL, photoURL: googleUser.photoURL }),
-            });
-            console.log("[DEBUG] " + "✅ GOOGLE POPUP: Document " + result.action + " via Cloud Function");
-          } catch (createError) {
-            console.error("[DEBUG] " + "❌ GOOGLE POPUP: Échec Cloud Function:", createError);
-            // Don't throw - let the auth continue even if document creation fails
-            // The onAuthStateChanged listener will handle orphan users
+
+          // ✅ FIX ORPHAN USERS: Retry avec backoff exponentiel
+          const MAX_RETRIES = 3;
+          let lastError: Error | null = null;
+
+          for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+            try {
+              const result = await createUserDocumentViaCloudFunction(googleUser, {
+                role: 'client',
+                email: googleUser.email || '',
+                preferredLanguage: 'fr',
+                provider: 'google.com',
+                ...(googleUser.photoURL && { profilePhoto: googleUser.photoURL, photoURL: googleUser.photoURL }),
+              });
+              console.log("[DEBUG] " + "✅ GOOGLE POPUP: Document " + result.action + " via Cloud Function (tentative " + attempt + ")");
+              lastError = null; // Succès, pas d'erreur
+              break; // Sortir de la boucle de retry
+            } catch (createError) {
+              lastError = createError instanceof Error ? createError : new Error(String(createError));
+              console.error("[DEBUG] " + "❌ GOOGLE POPUP: Échec Cloud Function (tentative " + attempt + "/" + MAX_RETRIES + "):", createError);
+
+              if (attempt < MAX_RETRIES) {
+                // Attendre avant le prochain retry (backoff exponentiel: 1s, 2s, 4s)
+                const delay = Math.pow(2, attempt - 1) * 1000;
+                console.log("[DEBUG] " + "🔄 GOOGLE POPUP: Retry dans " + delay + "ms...");
+                await new Promise(resolve => setTimeout(resolve, delay));
+              }
+            }
+          }
+
+          // Si tous les retries ont échoué, afficher un avertissement mais continuer
+          // Le onAuthStateChanged listener va réessayer de charger le document
+          if (lastError) {
+            console.error("[DEBUG] " + "❌ GOOGLE POPUP: Échec définitif après " + MAX_RETRIES + " tentatives");
+            // On ne lance pas l'erreur - on laisse l'auth continuer
+            // Le polling dans onSnapshot va réessayer de trouver le document
           }
         }
 
         console.log("[DEBUG] " + "✅ GOOGLE POPUP: Utilisateur traité avec succès");
         await logAuthEvent('successful_google_login', { userId: googleUser.uid, userEmail: googleUser.email, deviceInfo });
+
+        // ✅ FIX: Signaler le login aux autres onglets via localStorage
+        try {
+          localStorage.setItem('sos_login_event', Date.now().toString());
+          setTimeout(() => localStorage.removeItem('sos_login_event'), 100);
+        } catch { /* Ignorer si localStorage n'est pas disponible */ }
 
         // Check for saved redirect URL
         const savedRedirect = safeStorage.getItem('googleAuthRedirect');
@@ -1602,19 +1654,37 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         } else {
           // Create new user via Cloud Function (bypasses Firestore security rules)
           console.log("[DEBUG] " + "🔵 GOOGLE REDIRECT: Création du document via Cloud Function...");
-          try {
-            const result = await createUserDocumentViaCloudFunction(googleUser, {
-              role: 'client',
-              email: googleUser.email || '',
-              preferredLanguage: 'fr',
-              provider: 'google.com',
-              ...(googleUser.photoURL && { profilePhoto: googleUser.photoURL, photoURL: googleUser.photoURL }),
-            });
-            console.log("[DEBUG] " + "✅ GOOGLE REDIRECT: Document " + result.action + " via Cloud Function");
-          } catch (createError) {
-            console.error("[DEBUG] " + "❌ GOOGLE REDIRECT: Échec Cloud Function:", createError);
-            // Don't throw - let the auth continue even if document creation fails
-            // The onAuthStateChanged listener will handle orphan users
+
+          // ✅ FIX ORPHAN USERS: Retry avec backoff exponentiel
+          const MAX_RETRIES = 3;
+          let lastError: Error | null = null;
+
+          for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+            try {
+              const result = await createUserDocumentViaCloudFunction(googleUser, {
+                role: 'client',
+                email: googleUser.email || '',
+                preferredLanguage: 'fr',
+                provider: 'google.com',
+                ...(googleUser.photoURL && { profilePhoto: googleUser.photoURL, photoURL: googleUser.photoURL }),
+              });
+              console.log("[DEBUG] " + "✅ GOOGLE REDIRECT: Document " + result.action + " via Cloud Function (tentative " + attempt + ")");
+              lastError = null;
+              break;
+            } catch (createError) {
+              lastError = createError instanceof Error ? createError : new Error(String(createError));
+              console.error("[DEBUG] " + "❌ GOOGLE REDIRECT: Échec Cloud Function (tentative " + attempt + "/" + MAX_RETRIES + "):", createError);
+
+              if (attempt < MAX_RETRIES) {
+                const delay = Math.pow(2, attempt - 1) * 1000;
+                console.log("[DEBUG] " + "🔄 GOOGLE REDIRECT: Retry dans " + delay + "ms...");
+                await new Promise(resolve => setTimeout(resolve, delay));
+              }
+            }
+          }
+
+          if (lastError) {
+            console.error("[DEBUG] " + "❌ GOOGLE REDIRECT: Échec définitif après " + MAX_RETRIES + " tentatives");
           }
         }
 
@@ -1623,6 +1693,12 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           userEmail: googleUser.email,
           deviceInfo
         });
+
+        // ✅ FIX: Signaler le login aux autres onglets via localStorage
+        try {
+          localStorage.setItem('sos_login_event', Date.now().toString());
+          setTimeout(() => localStorage.removeItem('sos_login_event'), 100);
+        } catch { /* Ignorer si localStorage n'est pas disponible */ }
 
         // Log photo URL for debugging
         console.log('[Auth] Google redirect login successful. Photo URL:', googleUser.photoURL);
@@ -1646,7 +1722,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     })();
   }, [deviceInfo]);
 
-  // P1-2 FIX: Écouter les événements de logout des autres onglets
+  // ✅ FIX P1-2: Écouter les événements de login/logout des autres onglets
   useEffect(() => {
     const handleStorageChange = (event: StorageEvent) => {
       // Détecter le logout depuis un autre onglet
@@ -1658,9 +1734,24 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         setFirebaseUser(null);
         setAuthUser(null);
         setError(null);
+        setAuthInitialized(true);
+        setIsLoading(false);
         // Firebase signOut en arrière-plan
         firebaseSignOut(auth).catch(() => { /* ignoré */ });
         signingOutRef.current = false;
+      }
+
+      // ✅ FIX: Détecter le login depuis un autre onglet
+      if (event.key === 'sos_login_event' && event.newValue) {
+        console.log('🔐 [Auth] Login détecté depuis un autre onglet, rechargement de l\'état...');
+        // Recharger la page pour synchroniser l'état d'authentification
+        // C'est la méthode la plus fiable car Firebase Auth gère la session
+        const currentUser = auth.currentUser;
+        if (!currentUser && !signingOutRef.current) {
+          // L'autre onglet s'est connecté, mais ce n'est pas reflété ici
+          // Forcer un rechargement pour obtenir le bon état
+          window.location.reload();
+        }
       }
     };
 
