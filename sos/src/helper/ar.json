@@ -2725,6 +2725,7 @@
   "dashboard.emptyMessages": "لا رسائل حاليًا",
   "dashboard.errorPhotoUpdate": "خطأ في تحديث الصورة",
   "dashboard.errorSettingsUpdate": "خطأ في حفظ الإعدادات",
+  "dashboard.sosProfileSyncWarning": "تم تحديث ملفك الشخصي، لكن المزامنة مع ملف مقدم الخدمة فشلت. يرجى المحاولة مرة أخرى أو الاتصال بالدعم.",
   "dashboard.expat": "مغترب",
   "dashboard.failed": "فشل",
   "dashboard.freeze": "تجميد",

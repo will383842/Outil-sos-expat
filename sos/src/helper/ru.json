@@ -2810,6 +2810,7 @@
   "dashboard.emptyMessages": "Пока нет сообщений",
   "dashboard.errorPhotoUpdate": "Ошибка при обновлении фото",
   "dashboard.errorSettingsUpdate": "Ошибка при сохранении настроек",
+  "dashboard.sosProfileSyncWarning": "Ваш профиль пользователя был обновлен, но синхронизация с вашим профилем поставщика не удалась. Пожалуйста, попробуйте снова или свяжитесь со службой поддержки.",
   "dashboard.expat": "Экспат",
   "dashboard.failed": "Ошибка",
   "dashboard.freeze": "Заблокировать",

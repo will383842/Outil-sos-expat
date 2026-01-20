@@ -2743,6 +2743,7 @@
   "dashboard.emptyMessages": "Noch keine Nachrichten",
   "dashboard.errorPhotoUpdate": "Fehler beim Aktualisieren des Fotos",
   "dashboard.errorSettingsUpdate": "Fehler beim Speichern der Einstellungen",
+  "dashboard.sosProfileSyncWarning": "Ihr Benutzerprofil wurde aktualisiert, aber die Synchronisierung mit Ihrem Anbieterprofil ist fehlgeschlagen. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support.",
   "dashboard.expat": "Expatriate",
   "dashboard.failed": "Fehlgeschlagen",
   "dashboard.freeze": "Einfrieren",

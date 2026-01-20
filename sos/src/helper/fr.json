@@ -4404,6 +4404,7 @@
   "dashboard.emptyMessages": "Aucun message pour le moment",
   "dashboard.errorPhotoUpdate": "Erreur lors de la mise à jour de la photo",
   "dashboard.errorSettingsUpdate": "Erreur lors de la sauvegarde des paramètres",
+  "dashboard.sosProfileSyncWarning": "Votre profil utilisateur a été mis à jour, mais la synchronisation avec votre profil prestataire a échoué. Veuillez réessayer ou contacter le support.",
   "dashboard.expat": "Expatrié",
   "dashboard.failed": "Échoué",
   "dashboard.freeze": "Geler",

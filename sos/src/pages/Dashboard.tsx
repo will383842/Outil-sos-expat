@@ -130,6 +130,29 @@ const getHeaderClassForRole = (role?: string): string => {
 };
 
 // ===============================
+// P0 FIX: Champs protégés par les règles Firestore
+// Ces champs ne peuvent pas être modifiés par le client
+// ===============================
+const PROTECTED_SOS_FIELDS = [
+  'stripeAccountId',
+  'paypalMerchantId',
+  'stripeCustomerId',
+  'totalEarnings',
+  'totalPayPalEarnings',
+  'pendingBalance',
+  'reservedBalance',
+  'paypalEmailVerified',
+  'paypalEmailVerifiedAt',
+  'isApproved',
+  'approvalStatus',
+  'verificationStatus',
+  'totalCalls',
+  'rating',
+  'reviewCount',
+  'createdAt',
+];
+
+// ===============================
 // Types
 // ===============================
 interface Call {
@@ -659,7 +682,15 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
       graduationYear:
         (user as { graduationYear?: number })?.graduationYear ||
         new Date().getFullYear() - 5,
-      educations: (user as { educations?: string[] })?.educations || [],
+      // ✅ P0 FIX: Support both 'education' (string from registration) and 'educations' (array)
+      educations: (() => {
+        const educations = (user as { educations?: string[] })?.educations;
+        const education = (user as { education?: string | string[] })?.education;
+        if (Array.isArray(educations) && educations.length > 0) return educations;
+        if (Array.isArray(education)) return education;
+        if (typeof education === 'string' && education.trim()) return education.split(',').map(e => e.trim()).filter(Boolean);
+        return [];
+      })(),
       barNumber: (user as { barNumber?: string })?.barNumber || "",
       helpTypes: (user as { helpTypes?: string[] })?.helpTypes || [],
       yearsAsExpat: (user as { yearsAsExpat?: number })?.yearsAsExpat ?? 0,
@@ -1083,6 +1114,7 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
       };
 
       if (user.role === "lawyer") {
+        const educationsArray = profileData.educations || [];
         Object.assign(payload, {
           practiceCountries: profileData.practiceCountries || [],
           yearsOfExperience:
@@ -1094,7 +1126,9 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
             typeof profileData.graduationYear === "number"
               ? profileData.graduationYear
               : new Date().getFullYear() - 5,
-          educations: profileData.educations || [],
+          educations: educationsArray,
+          // ✅ P0 FIX: Also save 'education' (string) for backwards compatibility with registration format
+          education: educationsArray.join(', '),
           barNumber: profileData.barNumber || "",
         });
       } else if (user.role === "expat") {
@@ -1130,11 +1164,13 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
 
       // sync SOS profile
       if (user.role === "lawyer" || user.role === "expat") {
-        await updateDoc(doc(db, "sos_profiles", user.id), {
+        // P0 FIX: Construire l'objet de mise à jour
+        const sosProfileUpdate: Record<string, unknown> = {
           profilePhoto: payload.profilePhoto,
           photoURL: payload.photoURL,
           avatar: payload.avatar,
           email: payload.email,
+          emailLower: (payload.email as string)?.toLowerCase(),
           phone: payload.phone,
           phoneCountryCode: payload.phoneCountryCode,
           languages: payload.languages,
@@ -1162,7 +1198,26 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
               : (payload as { interventionCountries?: string[] })
                 .interventionCountries || [],
           updatedAt: serverTimestamp(),
-        }).catch(() => { });
+        };
+
+        // P0 FIX: Filtrer les champs protégés avant d'envoyer à Firestore
+        const safeSosProfileUpdate = Object.fromEntries(
+          Object.entries(sosProfileUpdate).filter(
+            ([key]) => !PROTECTED_SOS_FIELDS.includes(key)
+          )
+        );
+
+        // P0 FIX: Gestion d'erreur appropriée (ne plus ignorer silencieusement)
+        try {
+          await updateDoc(doc(db, "sos_profiles", user.id), safeSosProfileUpdate);
+        } catch (sosErr) {
+          console.error("[Dashboard] Erreur mise à jour sos_profiles:", sosErr);
+          // Afficher un avertissement mais ne pas bloquer (le profil users est déjà mis à jour)
+          setErrorMessage(
+            intl.formatMessage({ id: "dashboard.sosProfileSyncWarning" })
+          );
+          // Continuer malgré l'erreur de sync sos_profiles
+        }
       }
 
       // ✅ Translation update (NEW)

@@ -2725,6 +2725,7 @@
   "dashboard.emptyMessages": "暂无消息",
   "dashboard.errorPhotoUpdate": "更新照片时出错",
   "dashboard.errorSettingsUpdate": "保存设置时出错",
+  "dashboard.sosProfileSyncWarning": "您的用户资料已更新，但与服务提供商资料的同步失败。请重试或联系支持。",
   "dashboard.expat": "外派人士",
   "dashboard.failed": "失败",
   "dashboard.freeze": "冻结",

@@ -2725,6 +2725,7 @@
   "dashboard.emptyMessages": "अभी तक कोई संदेश नहीं",
   "dashboard.errorPhotoUpdate": "फोटो अपडेट करने में त्रुटि",
   "dashboard.errorSettingsUpdate": "सेटिंग्स सहेजने में त्रुटि",
+  "dashboard.sosProfileSyncWarning": "आपकी उपयोगकर्ता प्रोफ़ाइल अपडेट हो गई है, लेकिन आपके प्रदाता प्रोफ़ाइल के साथ सिंक विफल हो गया। कृपया पुनः प्रयास करें या सहायता से संपर्क करें।",
   "dashboard.expat": "प्रवासी",
   "dashboard.failed": "विफल",
   "dashboard.freeze": "फ्रीज़ करें",

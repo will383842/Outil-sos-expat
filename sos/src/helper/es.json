@@ -2743,6 +2743,7 @@
   "dashboard.emptyMessages": "Ningún mensaje por el momento",
   "dashboard.errorPhotoUpdate": "Error al actualizar la foto",
   "dashboard.errorSettingsUpdate": "Error al guardar la configuración",
+  "dashboard.sosProfileSyncWarning": "Tu perfil de usuario ha sido actualizado, pero la sincronización con tu perfil de proveedor falló. Por favor, inténtalo de nuevo o contacta con soporte.",
   "dashboard.expat": "Expatriado",
   "dashboard.failed": "Fallido",
   "dashboard.freeze": "Congelar",

@@ -4431,6 +4431,7 @@
   "dashboard.emptyMessages": "No messages yet",
   "dashboard.errorPhotoUpdate": "Error updating photo",
   "dashboard.errorSettingsUpdate": "Error saving settings",
+  "dashboard.sosProfileSyncWarning": "Your user profile has been updated, but the sync with your provider profile failed. Please try again or contact support.",
   "dashboard.expat": "Expat",
   "dashboard.failed": "Failed",
   "dashboard.freeze": "Freeze",

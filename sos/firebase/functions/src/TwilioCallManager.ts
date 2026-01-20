@@ -1898,19 +1898,29 @@ export class TwilioCallManager {
                 return false;
               }
 
-              // Update sos_profiles
-              transaction.update(this.db.collection('sos_profiles').doc(providerId), {
+              // ✅ BUG FIX: Nettoyer TOUS les champs busy-related en plus de mettre offline
+              // Sans ce nettoyage, les champs restent orphelins et peuvent causer des problèmes
+              // quand le prestataire se remet en ligne
+              const offlineUpdateData = {
                 isOnline: false,
                 availability: 'offline',
+                // Nettoyer les champs busy-related
+                currentCallSessionId: admin.firestore.FieldValue.delete(),
+                busySince: admin.firestore.FieldValue.delete(),
+                busyReason: admin.firestore.FieldValue.delete(),
+                busyBySibling: admin.firestore.FieldValue.delete(),
+                busySiblingProviderId: admin.firestore.FieldValue.delete(),
+                busySiblingCallSessionId: admin.firestore.FieldValue.delete(),
+                wasOfflineBeforeCall: admin.firestore.FieldValue.delete(),
+                lastStatusChange: admin.firestore.FieldValue.serverTimestamp(),
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-              });
+              };
+
+              // Update sos_profiles
+              transaction.update(this.db.collection('sos_profiles').doc(providerId), offlineUpdateData);
 
               // Update users collection
-              transaction.update(this.db.collection('users').doc(providerId), {
-                isOnline: false,
-                availability: 'offline',
-                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-              });
+              transaction.update(this.db.collection('users').doc(providerId), offlineUpdateData);
 
               // Mark as processed (idempotency) - within same transaction
               transaction.update(sessionRef, {

@@ -2810,6 +2810,7 @@
   "dashboard.emptyMessages": "Nenhuma mensagem por enquanto",
   "dashboard.errorPhotoUpdate": "Erro ao atualizar a foto",
   "dashboard.errorSettingsUpdate": "Erro ao salvar as configurações",
+  "dashboard.sosProfileSyncWarning": "Seu perfil de usuário foi atualizado, mas a sincronização com seu perfil de provedor falhou. Por favor, tente novamente ou contate o suporte.",
   "dashboard.expat": "Expatriado",
   "dashboard.failed": "Falhou",
   "dashboard.freeze": "Congelar",
