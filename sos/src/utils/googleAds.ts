@@ -11,6 +11,7 @@ declare global {
     dataLayer: unknown[];
     gtag: (...args: unknown[]) => void;
     __googleAdsMarketingGranted?: boolean;
+    googleAdsDiagnostic?: () => void;
   }
 }
 
@@ -811,7 +812,7 @@ export const googleAdsDiagnostic = (): void => {
 
 // Exposer la fonction de diagnostic globalement
 if (typeof window !== 'undefined') {
-  (window as any).googleAdsDiagnostic = googleAdsDiagnostic;
+  window.googleAdsDiagnostic = googleAdsDiagnostic;
 }
 
 // Export default
