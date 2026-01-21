@@ -90,11 +90,55 @@ export const getStripeAccountSession = onCall<{ userType: "lawyer" | "expat" }>(
         accountId: accountId,
         clientSecret: accountSession.client_secret,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("❌ Failed to create account session:", error);
+
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+
+      // ✅ P0 FIX: Detect invalid/revoked Stripe accounts
+      if (
+        errorMessage.includes("does not have access to account") ||
+        errorMessage.includes("No such account") ||
+        errorMessage.includes("account has been deleted") ||
+        errorMessage.includes("account_invalid") ||
+        (error as { code?: string })?.code === "account_invalid"
+      ) {
+        console.warn(`⚠️ Stripe account invalid/revoked for user ${userId}. Cleaning up stale data.`);
+
+        // Clean up the stale stripeAccountId from Firestore
+        const collectionName = userType === "lawyer" ? "lawyers" : "expats";
+        try {
+          await admin.firestore().collection(collectionName).doc(userId).update({
+            stripeAccountId: admin.firestore.FieldValue.delete(),
+            kycStatus: "not_started",
+            stripeOnboardingComplete: false,
+            chargesEnabled: false,
+            payoutsEnabled: false,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+          await admin.firestore().collection("users").doc(userId).update({
+            stripeAccountId: admin.firestore.FieldValue.delete(),
+            kycStatus: "not_started",
+            stripeOnboardingComplete: false,
+            chargesEnabled: false,
+            payoutsEnabled: false,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+          console.log(`✅ Cleaned up stale Stripe account data for ${userId}`);
+        } catch (cleanupError) {
+          console.error("Failed to cleanup stale data:", cleanupError);
+        }
+
+        throw new HttpsError(
+          "failed-precondition",
+          "Stripe account invalid or revoked. Please create a new account."
+        );
+      }
+
       throw new HttpsError(
         "internal",
-        error.message || "Failed to get session"
+        errorMessage || "Failed to get session"
       );
     }
   }

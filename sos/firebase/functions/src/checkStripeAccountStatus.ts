@@ -188,6 +188,49 @@ export const checkStripeAccountStatus = onCall<{
 
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
+
+    // ✅ P0 FIX: Detect invalid/revoked Stripe accounts and return specific error
+    // This allows the frontend to show the "Create new account" button
+    if (
+      errorMessage.includes("does not have access to account") ||
+      errorMessage.includes("No such account") ||
+      errorMessage.includes("account has been deleted") ||
+      errorMessage.includes("account_invalid") ||
+      (error as { code?: string })?.code === "account_invalid"
+    ) {
+      console.warn(`⚠️ Stripe account invalid/revoked for user ${userId}. Cleaning up stale data.`);
+
+      // Clean up the stale stripeAccountId from Firestore
+      const collectionName = userType === "lawyer" ? "lawyers" : "expats";
+      try {
+        await admin.firestore().collection(collectionName).doc(userId).update({
+          stripeAccountId: admin.firestore.FieldValue.delete(),
+          kycStatus: "not_started",
+          stripeOnboardingComplete: false,
+          chargesEnabled: false,
+          payoutsEnabled: false,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        await admin.firestore().collection("users").doc(userId).update({
+          stripeAccountId: admin.firestore.FieldValue.delete(),
+          kycStatus: "not_started",
+          stripeOnboardingComplete: false,
+          chargesEnabled: false,
+          payoutsEnabled: false,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        console.log(`✅ Cleaned up stale Stripe account data for ${userId}`);
+      } catch (cleanupError) {
+        console.error("Failed to cleanup stale data:", cleanupError);
+      }
+
+      // Return specific error that frontend can detect
+      throw new HttpsError(
+        "failed-precondition",
+        "Stripe account invalid or revoked. Please create a new account."
+      );
+    }
+
     throw new HttpsError("internal", `Failed to check status: ${errorMessage}`);
   }
 });
