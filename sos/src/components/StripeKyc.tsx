@@ -8,6 +8,7 @@ import { getFunctions, httpsCallable } from "firebase/functions";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIntl } from "react-intl";
 import { AlertTriangle, RefreshCw } from "lucide-react";
+import dashboardLog from "../utils/dashboardLogger";
 
 interface Props {
   onComplete?: () => void;
@@ -26,7 +27,11 @@ export default function StripeKYC({ onComplete, userType }: Props) {
 
   // ✅ P0 FIX: Function to create new Stripe account
   const createNewAccount = async () => {
-    if (!user?.uid || !user?.email) return;
+    dashboardLog.stripe('createNewAccount clicked', { userId: user?.uid, userType });
+    if (!user?.uid || !user?.email) {
+      dashboardLog.stripe('createNewAccount aborted - no user', { userId: user?.uid });
+      return;
+    }
 
     setIsCreatingNewAccount(true);
     setError(null);

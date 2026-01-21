@@ -78,6 +78,7 @@ import StripeKYC from "@/components/StripeKyc";
 import PayPalOnboarding from "@/components/provider/PayPalOnboarding";
 import IntlPhoneInput from "@/components/forms-data/IntlPhoneInput";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
+import dashboardLog from "../utils/dashboardLogger";
 import { useForm, Controller } from "react-hook-form";
 // ✅ FIX: ProviderOnlineManager est maintenant monté au niveau App.tsx pour tracking global
 // import ProviderOnlineManager from '../components/providers/ProviderOnlineManager';
@@ -790,9 +791,11 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
   // Always set activeTab from URL - this ensures the UI reflects the URL state
   useEffect(() => {
     const urlTab = getTabFromUrl();
+    dashboardLog.tab(`URL tab sync: urlTab=${urlTab}, searchParams=${searchParams.toString()}`);
     // Only update if actually different to avoid unnecessary re-renders
     setActiveTab(prev => {
       if (prev !== urlTab) {
+        dashboardLog.tab(`Tab state changed: ${prev} -> ${urlTab}`);
         return urlTab;
       }
       return prev;
@@ -2043,11 +2046,15 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                       <li key={item.key}>
                         <button
                           onClick={() => {
+                            dashboardLog.click(`Sidebar menu clicked: ${item.key}`, { item });
+
                             // If item has a route (external page), navigate to it
                             if ('route' in item && item.route) {
+                              dashboardLog.nav(`Navigating to external route: ${item.route}`);
                               navigate(item.route);
                             } else {
                               // ✅ FIX: Use setSearchParams to update tab - more reliable than navigate
+                              dashboardLog.tab(`Switching to tab: ${item.key}`, { from: activeTab, to: item.key });
                               if (item.key === 'profile') {
                                 // For profile tab, remove the tab param entirely
                                 setSearchParams({});
@@ -2096,7 +2103,10 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                     {user.role === "admin" && (
                       <li>
                         <button
-                          onClick={() => navigate("/admin/dashboard")}
+                          onClick={() => {
+                            dashboardLog.nav('Navigating to Admin Dashboard');
+                            navigate("/admin/dashboard");
+                          }}
                           className="w-full flex items-center px-4 py-2 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5"
                         >
                           <Shield className="mr-3 h-5 w-5" />

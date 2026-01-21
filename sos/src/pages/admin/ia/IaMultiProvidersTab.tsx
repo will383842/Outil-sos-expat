@@ -1,11 +1,13 @@
 /**
- * IaMultiProvidersTab - Gestion simplifiée des comptes multi-prestataires
+ * IaMultiProvidersTab - Gestion des comptes multi-prestataires + Couverture Pays
  *
  * Permet à l'admin de :
  * - Voir les comptes avec plusieurs prestataires liés
  * - Lier un nouveau prestataire à un compte
  * - Délier un prestataire
  * - Définir le prestataire actif
+ * - Voir la couverture des pays par avocats francophones
+ * - Créer des avocats francophones pour les pays non couverts
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -35,7 +37,9 @@ import {
   Wallet,
   Power,
   PowerOff,
+  MapPin,
 } from 'lucide-react';
+import { CountryCoverageTab } from './CountryCoverageTab';
 import {
   collection,
   getDocs,
@@ -190,6 +194,9 @@ export const IaMultiProvidersTab: React.FC = () => {
     externalAccounts: [],
     defaultMode: 'internal',
   });
+
+  // 🆕 Tab state
+  const [activeTab, setActiveTab] = useState<'accounts' | 'coverage'>('accounts');
 
   // ============================================================================
   // DATA LOADING
@@ -818,10 +825,10 @@ export const IaMultiProvidersTab: React.FC = () => {
         <div>
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
             <Users className="w-5 h-5 text-sos-red" />
-            Comptes Multi-Prestataires
+            Multi-Prestataires
           </h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {accounts.length} compte{accounts.length > 1 ? 's' : ''} avec prestataires liés
+            Gestion des comptes multi-prestataires et couverture pays
           </p>
         </div>
 
@@ -835,40 +842,77 @@ export const IaMultiProvidersTab: React.FC = () => {
             <RefreshCw className={cn("w-5 h-5", loading && "animate-spin")} />
           </button>
 
-          {/* Cleanup button */}
-          <div className="relative group">
-            <button
-              onClick={cleanupStats ? runCleanup : checkOrphans}
-              disabled={cleanupRunning}
-              className={cn(
-                "flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm",
-                cleanupStats
-                  ? "bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400"
-              )}
-              title={cleanupStats ? "Nettoyer les orphelins" : "Vérifier les orphelins"}
-            >
-              {cleanupRunning ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Trash2 className="w-4 h-4" />
-              )}
-              {cleanupStats ? (
-                <span>{cleanupStats.orphanedLinks + cleanupStats.staleBusy} orphelins</span>
-              ) : (
-                <span className="hidden sm:inline">Orphelins</span>
-              )}
-            </button>
-          </div>
+          {activeTab === 'accounts' && (
+            <>
+              {/* Cleanup button */}
+              <div className="relative group">
+                <button
+                  onClick={cleanupStats ? runCleanup : checkOrphans}
+                  disabled={cleanupRunning}
+                  className={cn(
+                    "flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm",
+                    cleanupStats
+                      ? "bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400"
+                  )}
+                  title={cleanupStats ? "Nettoyer les orphelins" : "Vérifier les orphelins"}
+                >
+                  {cleanupRunning ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
+                  {cleanupStats ? (
+                    <span>{cleanupStats.orphanedLinks + cleanupStats.staleBusy} orphelins</span>
+                  ) : (
+                    <span className="hidden sm:inline">Orphelins</span>
+                  )}
+                </button>
+              </div>
 
-          <button
-            onClick={() => openModal()}
-            className="flex items-center gap-2 px-4 py-2 bg-sos-red text-white rounded-lg hover:bg-red-700 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Lier un prestataire
-          </button>
+              <button
+                onClick={() => openModal()}
+                className="flex items-center gap-2 px-4 py-2 bg-sos-red text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Lier un prestataire
+              </button>
+            </>
+          )}
         </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="border-b border-gray-200 dark:border-gray-700">
+        <nav className="flex gap-4">
+          <button
+            onClick={() => setActiveTab('accounts')}
+            className={cn(
+              "py-3 px-1 border-b-2 font-medium text-sm transition-colors",
+              activeTab === 'accounts'
+                ? "border-sos-red text-sos-red"
+                : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+            )}
+          >
+            <Users className="w-4 h-4 inline mr-2" />
+            Comptes Multi-Prestataires
+            <span className="ml-2 px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-xs">
+              {accounts.length}
+            </span>
+          </button>
+          <button
+            onClick={() => setActiveTab('coverage')}
+            className={cn(
+              "py-3 px-1 border-b-2 font-medium text-sm transition-colors",
+              activeTab === 'coverage'
+                ? "border-sos-red text-sos-red"
+                : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+            )}
+          >
+            <MapPin className="w-4 h-4 inline mr-2" />
+            Couverture Pays
+          </button>
+        </nav>
       </div>
 
       {/* Messages */}
@@ -889,19 +933,22 @@ export const IaMultiProvidersTab: React.FC = () => {
         </div>
       )}
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Rechercher un compte ou prestataire..."
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-sos-red focus:border-transparent"
-        />
-      </div>
+      {/* Tab Content */}
+      {activeTab === 'accounts' && (
+        <>
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Rechercher un compte ou prestataire..."
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-sos-red focus:border-transparent"
+            />
+          </div>
 
-      {/* Accounts List */}
+          {/* Accounts List */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-8 h-8 text-sos-red animate-spin" />
@@ -1203,6 +1250,22 @@ export const IaMultiProvidersTab: React.FC = () => {
             </div>
           ))}
         </div>
+      )}
+        </>
+      )}
+
+      {/* Coverage Tab */}
+      {activeTab === 'coverage' && (
+        <CountryCoverageTab
+          onSuccess={(message) => {
+            setSuccess(message);
+            setTimeout(() => setSuccess(null), 3000);
+          }}
+          onError={(message) => {
+            setError(message);
+            setTimeout(() => setError(null), 5000);
+          }}
+        />
       )}
 
       {/* Modal */}
