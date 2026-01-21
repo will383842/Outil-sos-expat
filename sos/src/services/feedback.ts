@@ -163,8 +163,15 @@ export async function submitUserFeedback(data: FeedbackData): Promise<string> {
     console.log(`[Feedback] New feedback submitted: ${docRef.id}`);
     return docRef.id;
   } catch (error: unknown) {
-    console.error('[Feedback] Failed to submit:', error);
-    throw new Error('Failed to submit feedback. Please try again.');
+    console.error('[Feedback] Failed to submit feedback:', error);
+    // Log more details for debugging
+    if (error instanceof Error) {
+      console.error('[Feedback] Error message:', error.message);
+      console.error('[Feedback] Error stack:', error.stack);
+    }
+    // Throw with the original error message if available
+    const errorMessage = error instanceof Error ? error.message : 'Failed to submit feedback. Please try again.';
+    throw new Error(errorMessage);
   }
 }
 

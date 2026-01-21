@@ -143,22 +143,31 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose, pageContext }) => 
       return 'visitor';
     };
 
-    const feedbackData = {
+    // Construire l'objet feedback en évitant les valeurs undefined
+    const feedbackData: Record<string, unknown> = {
       email,
       type: feedbackType as FeedbackType,
       description: description.trim(),
-      priority: priority || undefined,
       pageUrl: window.location.href,
       pageName: pageContext || document.title,
       device: deviceInfo,
       locale: intl.locale,
-      userId: user?.id || user?.uid,
       userRole: mapUserRole(user?.role),
-      userName: user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : undefined,
     };
 
+    // Ajouter les champs optionnels seulement s'ils ont une valeur
+    if (priority) {
+      feedbackData.priority = priority;
+    }
+    if (user?.id || user?.uid) {
+      feedbackData.userId = user.id || user.uid;
+    }
+    if (user?.firstName) {
+      feedbackData.userName = `${user.firstName} ${user.lastName || ''}`.trim();
+    }
+
     try {
-      await submitFeedback(feedbackData, screenshot || undefined);
+      await submitFeedback(feedbackData as FeedbackData, screenshot || undefined);
       setIsSuccess(true);
 
       // Fermer après 2 secondes
