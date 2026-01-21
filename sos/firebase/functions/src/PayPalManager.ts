@@ -1928,6 +1928,7 @@ export const createPayPalOrder = onCall(
   {
     region: "europe-west1",
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_PARTNER_ID, PAYPAL_PLATFORM_MERCHANT_ID],
+    cors: ["https://sos-expat.com", "https://www.sos-expat.com", "https://ia.sos-expat.com", "https://outil-sos-expat.pages.dev", "http://localhost:5173"],
   },
   async (request) => {
     const requestId = `pp_order_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
@@ -2089,6 +2090,7 @@ export const capturePayPalOrder = onCall(
   {
     region: "europe-west1",
     secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
+    cors: ["https://sos-expat.com", "https://www.sos-expat.com", "https://ia.sos-expat.com", "https://outil-sos-expat.pages.dev", "http://localhost:5173"],
   },
   async (request) => {
     const captureRequestId = `pp_cap_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
