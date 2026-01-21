@@ -26,6 +26,7 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import { getStripe } from "../index";
+import { APP_URLS } from "./constants";
 
 // ============================================================================
 // TYPES
@@ -250,7 +251,7 @@ export const getBillingPortalUrl = onCall<BillingPortalRequest>(
       const session = await stripe.billingPortal.sessions.create({
         customer: stripeCustomerId,
         return_url:
-          returnUrl || "https://sos-expat.com/dashboard/subscription",
+          returnUrl || APP_URLS.SUBSCRIPTION_DASHBOARD,
         locale: detectStripeLocale(preferredLanguage) as any,
       });
 

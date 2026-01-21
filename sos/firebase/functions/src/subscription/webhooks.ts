@@ -20,7 +20,8 @@ import { trackCAPIPurchase, trackCAPIStartTrial, UserData } from '../metaConvers
 import {
   SubscriptionStatus,
   SubscriptionTier,
-  DEFAULT_TRIAL_CONFIG
+  DEFAULT_TRIAL_CONFIG,
+  APP_URLS
 } from './constants';
 
 // Re-export pour compatibilité
@@ -219,7 +220,24 @@ function mapStripeStatus(stripeStatus: Stripe.Subscription.Status): Subscription
 }
 
 /**
- * Récupère les informations du provider
+ * Récupère les informations du provider depuis Firestore
+ *
+ * Tente de trouver le provider dans plusieurs collections (dans l'ordre):
+ * 1. providers/{providerId}
+ * 2. users/{providerId}
+ *
+ * P2 NOTE: Cette fonction est la version canonique. Des copies similaires
+ * existent dans emailNotifications.ts et scheduledTasks.ts - à refactorer
+ * dans un fichier utilitaire partagé lors d'une future amélioration.
+ *
+ * @param providerId - L'ID unique du provider (Firebase UID)
+ * @returns Les informations du provider ou null si non trouvé
+ *
+ * @example
+ * const info = await getProviderInfo('abc123');
+ * if (info) {
+ *   console.log(info.email, info.displayName);
+ * }
  */
 async function getProviderInfo(providerId: string): Promise<{
   email: string;
@@ -336,18 +354,33 @@ export const sendDirectEmail = _sendDirectEmail;
 
 /**
  * Récupère la configuration de trial
+ * P2 FIX: Utilise DEFAULT_TRIAL_CONFIG centralisé comme fallback
  */
 async function getTrialConfig(): Promise<{ durationDays: number; maxAiCalls: number; isEnabled: boolean }> {
   const settingsDoc = await getDb().doc('settings/subscription').get();
   if (!settingsDoc.exists || !settingsDoc.data()?.trial) {
-    return { durationDays: 30, maxAiCalls: 3, isEnabled: true };
+    return { ...DEFAULT_TRIAL_CONFIG };
   }
   return settingsDoc.data()!.trial;
 }
 
 /**
- * Compare deux tiers pour déterminer upgrade/downgrade
- * Retourne: 1 = upgrade, -1 = downgrade, 0 = same
+ * Compare deux tiers d'abonnement pour déterminer upgrade/downgrade
+ *
+ * Ordre des tiers (du plus bas au plus haut):
+ * trial (0) < basic (1) < standard (2) < pro (3) < unlimited (4)
+ *
+ * @param oldTier - Tier actuel de l'abonnement (avant changement)
+ * @param newTier - Tier cible de l'abonnement (après changement)
+ * @returns Résultat de la comparaison:
+ *   - 1: upgrade (nouveau tier > ancien tier)
+ *   - -1: downgrade (nouveau tier < ancien tier)
+ *   - 0: pas de changement (même tier)
+ *
+ * @example
+ * compareTiers('basic', 'pro')     // => 1 (upgrade)
+ * compareTiers('pro', 'basic')     // => -1 (downgrade)
+ * compareTiers('standard', 'standard') // => 0 (no change)
  */
 function compareTiers(oldTier: SubscriptionTier, newTier: SubscriptionTier): number {
   const tierOrder: Record<SubscriptionTier, number> = {
@@ -427,6 +460,22 @@ export async function handleSubscriptionCreated(
   const now = admin.firestore.Timestamp.now();
   const db = getDb();
 
+  // P1 FIX: Validate that provider exists in Firestore before creating subscription
+  const providerDoc = await db.doc(`sos_profiles/${providerId}`).get();
+  if (!providerDoc.exists) {
+    // Fallback: check users collection
+    const userDoc = await db.doc(`users/${providerId}`).get();
+    if (!userDoc.exists) {
+      logger.error('[handleSubscriptionCreated] Provider not found in Firestore', {
+        providerId,
+        subscriptionId: subscription.id,
+        customerId: subscription.customer
+      });
+      throw new Error(`Provider ${providerId} not found in Firestore - cannot create subscription`);
+    }
+    logger.info(`[handleSubscriptionCreated] Provider ${providerId} found in users collection (not sos_profiles)`);
+  }
+
   try {
     // Récupérer le plan depuis le priceId
     const priceId = subscription.items.data[0]?.price.id;
@@ -486,21 +535,22 @@ export async function handleSubscriptionCreated(
     await db.doc(`ai_usage/${providerId}`).set(aiUsageData, { merge: true });
     logger.info(`[handleSubscriptionCreated] Initialized AI usage for ${providerId} with limit ${aiCallsLimit}`);
 
-    // Réactiver le profil public du prestataire (si précédemment masqué suite à annulation)
-    // P1 FIX: Also update subscriptionStatus for sync to Outil IA
+    // P1 FIX: Sync sos_profiles.subscriptionStatus for Outil IA
+    // Use set with merge to create profile if missing (prevents data inconsistency)
     const sosProfileRef = db.doc(`sos_profiles/${providerId}`);
     const sosProfileDoc = await sosProfileRef.get();
+    const mappedStatus = mapStripeStatus(subscription.status);
+
+    // Base update with subscription status - always sync this
+    const profileUpdate: Record<string, unknown> = {
+      subscriptionStatus: mappedStatus,
+      hasActiveSubscription: true,
+      updatedAt: now
+    };
+
+    // Réactiver seulement si le profil existait et était masqué
     if (sosProfileDoc.exists) {
       const profileData = sosProfileDoc.data();
-      // Base update with subscription status for Outil sync
-      // P0 FIX: Use mapStripeStatus() - 'status' was undefined
-      const mappedStatus = mapStripeStatus(subscription.status);
-      const profileUpdate: Record<string, unknown> = {
-        subscriptionStatus: mappedStatus,
-        hasActiveSubscription: true,
-        updatedAt: now
-      };
-      // Réactiver seulement si le profil était masqué à cause d'une annulation d'abonnement
       if (profileData?.hiddenReason === 'subscription_canceled' || profileData?.isActive === false) {
         profileUpdate.isVisible = true;
         profileUpdate.isActive = true;
@@ -508,9 +558,11 @@ export async function handleSubscriptionCreated(
         profileUpdate.hiddenAt = admin.firestore.FieldValue.delete();
         profileUpdate.reactivatedAt = now;
       }
-      await sosProfileRef.update(profileUpdate);
-      logger.info(`[handleSubscriptionCreated] Updated sos_profile with subscription status for ${providerId}`);
     }
+
+    // P1 FIX: Use set with merge to ensure sync even if profile doesn't exist
+    await sosProfileRef.set(profileUpdate, { merge: true });
+    logger.info(`[handleSubscriptionCreated] Synced sos_profile subscriptionStatus=${mappedStatus} for ${providerId}`)
 
     // ========== META CAPI TRACKING ==========
     // Track Purchase event for subscription creation (provider subscribing to a plan)
@@ -555,7 +607,7 @@ export async function handleSubscriptionCreated(
         contentIds: [planId],
         serviceType: 'provider_subscription',
         providerType: providerData?.type || 'provider',
-        eventSourceUrl: 'https://sos-expat.com/dashboard/subscription',
+        eventSourceUrl: APP_URLS.SUBSCRIPTION_DASHBOARD,
       });
 
       if (capiResult.success) {
@@ -587,7 +639,7 @@ export async function handleSubscriptionCreated(
           currency: subscriptionCurrency,
           subscriptionId: subscription.id,
           trialDays: trialDays,
-          eventSourceUrl: 'https://sos-expat.com/dashboard/subscription',
+          eventSourceUrl: APP_URLS.SUBSCRIPTION_DASHBOARD,
         });
 
         if (trialResult.success) {
@@ -640,7 +692,7 @@ export async function handleSubscriptionCreated(
           PLAN_NAME: tier,
           AI_CALLS_LIMIT: aiCallsLimit === -1 ? 'Illimite' : aiCallsLimit.toString(),
           BILLING_PERIOD: billingPeriod === 'yearly' ? 'Annuel' : 'Mensuel',
-          DASHBOARD_URL: 'https://sos-expat.com/dashboard/subscription'
+          DASHBOARD_URL: APP_URLS.SUBSCRIPTION_DASHBOARD
         }
       });
       logger.info(`[handleSubscriptionCreated] Welcome email queued for ${providerId}`);
@@ -784,18 +836,16 @@ export async function handleSubscriptionUpdated(
       updatedAt: now
     });
 
-    // P1 FIX: Update sos_profiles with subscription status for sync to Outil IA
+    // P1 FIX: Sync sos_profiles.subscriptionStatus for Outil IA consistency
+    // Use set with merge to ensure sync even if profile was somehow deleted
     const sosProfileRef = db.doc(`sos_profiles/${providerId}`);
-    const sosProfileDoc = await sosProfileRef.get();
-    if (sosProfileDoc.exists) {
-      const isActiveSubscription = newStatus === 'active' || newStatus === 'trialing' || newStatus === 'past_due';
-      await sosProfileRef.update({
-        subscriptionStatus: newStatus,
-        hasActiveSubscription: isActiveSubscription,
-        updatedAt: now
-      });
-      logger.info(`[handleSubscriptionUpdated] Updated sos_profile with status ${newStatus} for ${providerId}`);
-    }
+    const isActiveSubscription = newStatus === 'active' || newStatus === 'trialing' || newStatus === 'past_due';
+    await sosProfileRef.set({
+      subscriptionStatus: newStatus,
+      hasActiveSubscription: isActiveSubscription,
+      updatedAt: now
+    }, { merge: true });
+    logger.info(`[handleSubscriptionUpdated] Synced sos_profile subscriptionStatus=${newStatus} for ${providerId}`)
 
     // Logger l'action
     await logSubscriptionAction({
@@ -854,7 +904,7 @@ export async function handleSubscriptionUpdated(
             FNAME: providerInfo.firstName,
             PLAN_NAME: newTier,
             END_DATE: new Date(subscription.current_period_end * 1000).toLocaleDateString(providerInfo.language || 'fr-FR'),
-            REACTIVATE_URL: 'https://sos-expat.com/dashboard/subscription'
+            REACTIVATE_URL: APP_URLS.SUBSCRIPTION_DASHBOARD
           }
         });
       }
@@ -945,22 +995,19 @@ export async function handleSubscriptionDeleted(
     });
     logger.info(`[handleSubscriptionDeleted] Disabled AI access for ${providerId}`);
 
-    // Masquer le profil public du prestataire (évite les pages 404 dans les listings/sitemaps)
-    // P1 FIX: Also update subscriptionStatus for sync to Outil IA
+    // P1 FIX: Masquer le profil et sync subscriptionStatus pour Outil IA
+    // Use set with merge to ensure status sync even if profile doesn't exist
     const sosProfileRef = db.doc(`sos_profiles/${providerId}`);
-    const sosProfileDoc = await sosProfileRef.get();
-    if (sosProfileDoc.exists) {
-      await sosProfileRef.update({
-        isVisible: false,
-        isActive: false,
-        hiddenReason: 'subscription_canceled',
-        hiddenAt: now,
-        subscriptionStatus: 'canceled',
-        hasActiveSubscription: false,
-        updatedAt: now
-      });
-      logger.info(`[handleSubscriptionDeleted] Hidden sos_profile and updated subscription status for ${providerId}`);
-    }
+    await sosProfileRef.set({
+      isVisible: false,
+      isActive: false,
+      hiddenReason: 'subscription_canceled',
+      hiddenAt: now,
+      subscriptionStatus: 'canceled',
+      hasActiveSubscription: false,
+      updatedAt: now
+    }, { merge: true });
+    logger.info(`[handleSubscriptionDeleted] Synced sos_profile subscriptionStatus=canceled for ${providerId}`)
 
     // Logger l'action
     await logSubscriptionAction({
@@ -987,8 +1034,8 @@ export async function handleSubscriptionDeleted(
         vars: {
           FNAME: providerInfo.firstName,
           PLAN_NAME: previousState?.tier || 'unknown',
-          RESUBSCRIBE_URL: 'https://sos-expat.com/dashboard/subscription/plans',
-          FEEDBACK_URL: 'https://sos-expat.com/feedback'
+          RESUBSCRIBE_URL: APP_URLS.PLANS,
+          FEEDBACK_URL: APP_URLS.FEEDBACK
         }
       });
       logger.info(`[handleSubscriptionDeleted] End of subscription email queued for ${providerId}`);
@@ -1085,7 +1132,7 @@ export async function handleTrialWillEnd(
           PLAN_NAME: planId,
           AI_CALLS_USED: trialCallsUsed.toString(),
           AI_CALLS_LIMIT: trialConfig.maxAiCalls.toString(),
-          UPGRADE_URL: 'https://sos-expat.com/dashboard/subscription/plans'
+          UPGRADE_URL: APP_URLS.PLANS
         }
       });
 
@@ -1146,14 +1193,25 @@ export async function handleInvoicePaid(
       .get();
 
     if (subsSnapshot.empty) {
-      // P1 FIX: Race condition - invoice.paid may arrive before subscription.created
-      // Queue for retry via DLQ if this looks like a new subscription
+      // P1+P2 FIX: Race condition - invoice.paid may arrive before subscription.created
       if (invoice.billing_reason === 'subscription_create' || invoice.billing_reason === 'subscription_cycle') {
-        logger.warn(`[handleInvoicePaid] No subscription found for ${subscriptionId}, queueing for retry (race condition)`);
-        // Throw to trigger DLQ in the caller
+        // P2 FIX: Enhanced logging with recovery guidance
+        logger.warn('[handleInvoicePaid] Race condition detected - subscription not found', {
+          invoiceId: invoice.id,
+          stripeSubscriptionId: subscriptionId,
+          billingReason: invoice.billing_reason,
+          customerId: invoice.customer,
+          recovery: 'Event will be automatically retried by Stripe webhook',
+          troubleshooting: 'If persists, check subscription.created webhook processing'
+        });
+        // Throw to trigger retry via transient error handling
         throw new Error(`RETRY_NEEDED: Subscription not found for ${subscriptionId}, likely race condition with subscription.created`);
       }
-      logger.warn(`[handleInvoicePaid] No subscription found for ${subscriptionId}`);
+      logger.warn('[handleInvoicePaid] Subscription not found (non-subscription invoice)', {
+        invoiceId: invoice.id,
+        stripeSubscriptionId: subscriptionId,
+        billingReason: invoice.billing_reason
+      });
       return;
     }
 
@@ -1161,12 +1219,30 @@ export async function handleInvoicePaid(
     const providerId = subDoc.id;
     const subData = subDoc.data();
 
-    // FIX: Valider que la devise de la facture correspond à celle de l'abonnement
-    const invoiceCurrency = (invoice.currency || 'eur').toUpperCase();
-    const subscriptionCurrency = subData.currency || 'EUR';
-    if (invoiceCurrency !== subscriptionCurrency) {
-      logger.warn(`[handleInvoicePaid] Currency mismatch for ${providerId}: invoice=${invoiceCurrency}, subscription=${subscriptionCurrency}`);
-      // On continue malgré le mismatch mais on log pour investigation
+    // P1 FIX: Validation stricte des devises
+    const VALID_CURRENCIES = ['EUR', 'USD'] as const;
+    const invoiceCurrency = (invoice.currency || '').toUpperCase();
+    const subscriptionCurrency = (subData.currency || '').toUpperCase();
+
+    // Validate invoice currency
+    if (!invoiceCurrency || !VALID_CURRENCIES.includes(invoiceCurrency as 'EUR' | 'USD')) {
+      logger.error(`[handleInvoicePaid] Invalid invoice currency for ${providerId}`, {
+        invoiceId: invoice.id,
+        invoiceCurrency,
+        subscriptionCurrency
+      });
+      throw new Error(`Invalid invoice currency: ${invoiceCurrency}`);
+    }
+
+    // Validate subscription currency (may need migration)
+    if (!subscriptionCurrency || !VALID_CURRENCIES.includes(subscriptionCurrency as 'EUR' | 'USD')) {
+      logger.warn(`[handleInvoicePaid] Subscription has invalid/missing currency for ${providerId}, will update to ${invoiceCurrency}`);
+      // Will be corrected in the updates below
+    }
+
+    // Log mismatch but don't block - Stripe is the source of truth for payment currency
+    if (invoiceCurrency !== subscriptionCurrency && subscriptionCurrency) {
+      logger.warn(`[handleInvoicePaid] Currency mismatch for ${providerId}: invoice=${invoiceCurrency}, subscription=${subscriptionCurrency}. Updating subscription to match invoice.`);
     }
 
     // Déterminer si c'est un renouvellement (pas la première facture)
@@ -1179,7 +1255,9 @@ export async function handleInvoicePaid(
       currentPeriodEnd: admin.firestore.Timestamp.fromMillis(invoice.period_end * 1000),
       lastPaymentAt: now,
       lastPaymentAmount: (invoice.amount_paid || 0) / 100,
-      lastPaymentCurrency: (invoice.currency || 'eur').toUpperCase(),
+      lastPaymentCurrency: invoiceCurrency,
+      // P1 FIX: Sync currency from Stripe (source of truth) if missing or mismatched
+      currency: invoiceCurrency,
       // P1 FIX: Reset payment failure tracking after successful payment
       firstPaymentFailureAt: admin.firestore.FieldValue.delete(),
       lastPaymentFailedAt: admin.firestore.FieldValue.delete(),
@@ -1233,13 +1311,29 @@ export async function handleInvoicePaid(
     });
     logger.info(`[handleInvoicePaid] Stored invoice ${invoice.id}`);
 
-    // Marquer dunning comme récupéré si existant
+    // P1 FIX: Marquer dunning comme récupéré avec error handling spécifique
     try {
       const { markDunningRecovered } = await import('../subscriptions/dunning');
       await markDunningRecovered(invoice.id);
       logger.info(`[handleInvoicePaid] Dunning recovered for invoice ${invoice.id}`);
-    } catch {
-      // Pas de dunning record, c'est normal
+    } catch (dunningError: unknown) {
+      const errorMessage = dunningError instanceof Error ? dunningError.message : String(dunningError);
+      const errorCode = (dunningError as { code?: string })?.code;
+
+      // MODULE_NOT_FOUND or "Cannot find module" is expected if dunning module not deployed
+      if (errorCode === 'MODULE_NOT_FOUND' || errorMessage.includes('Cannot find module')) {
+        logger.debug('[handleInvoicePaid] Dunning module not available (expected)');
+      } else if (errorMessage.includes('not found') || errorMessage.includes('No dunning record')) {
+        // No dunning record for this invoice - this is normal
+        logger.debug(`[handleInvoicePaid] No dunning record for invoice ${invoice.id}`);
+      } else {
+        // Actual error - log for investigation but don't block payment processing
+        logger.error('[handleInvoicePaid] Failed to recover dunning:', {
+          invoiceId: invoice.id,
+          error: errorMessage,
+          code: errorCode
+        });
+      }
     }
 
     // ========== META CAPI TRACKING ==========
@@ -1284,7 +1378,7 @@ export async function handleInvoicePaid(
         contentIds: [subData.planId || 'subscription'],
         serviceType: 'provider_subscription',
         providerType: providerData?.type || 'provider',
-        eventSourceUrl: 'https://sos-expat.com/dashboard/subscription',
+        eventSourceUrl: APP_URLS.SUBSCRIPTION_DASHBOARD,
       });
 
       if (capiResult.success) {
@@ -1324,42 +1418,48 @@ export async function handleInvoicePaid(
       }
     });
 
-    // Envoyer email de confirmation
-    const providerInfo = await getProviderInfo(providerId);
-    if (providerInfo?.email) {
-      if (isRenewal) {
-        await enqueueNotification({
-          eventId: 'subscription.renewed',
-          providerId,
-          email: providerInfo.email,
-          locale: providerInfo.language,
-          vars: {
-            FNAME: providerInfo.firstName,
-            PLAN_NAME: subData.tier,
-            AMOUNT: ((invoice.amount_paid || 0) / 100).toFixed(2),
-            CURRENCY: (invoice.currency || 'eur').toUpperCase(),
-            NEXT_BILLING_DATE: new Date(invoice.period_end * 1000).toLocaleDateString(providerInfo.language || 'fr-FR'),
-            INVOICE_URL: invoice.hosted_invoice_url || '',
-            AI_CALLS_LIMIT: aiCallsLimit === -1 ? 'Illimite' : aiCallsLimit.toString()
-          }
-        });
-        logger.info(`[handleInvoicePaid] Renewal confirmation email queued for ${providerId}`);
-      } else {
-        await enqueueNotification({
-          eventId: 'subscription.payment_confirmed',
-          providerId,
-          email: providerInfo.email,
-          locale: providerInfo.language,
-          vars: {
-            FNAME: providerInfo.firstName,
-            PLAN_NAME: subData.tier,
-            AMOUNT: ((invoice.amount_paid || 0) / 100).toFixed(2),
-            CURRENCY: (invoice.currency || 'eur').toUpperCase(),
-            INVOICE_URL: invoice.hosted_invoice_url || ''
-          }
-        });
-        logger.info(`[handleInvoicePaid] Payment confirmation email queued for ${providerId}`);
+    // P1 FIX: Envoyer email de confirmation avec error handling
+    // Les emails ne doivent pas bloquer le traitement du webhook si ils échouent
+    try {
+      const providerInfo = await getProviderInfo(providerId);
+      if (providerInfo?.email) {
+        if (isRenewal) {
+          await enqueueNotification({
+            eventId: 'subscription.renewed',
+            providerId,
+            email: providerInfo.email,
+            locale: providerInfo.language,
+            vars: {
+              FNAME: providerInfo.firstName,
+              PLAN_NAME: subData.tier,
+              AMOUNT: ((invoice.amount_paid || 0) / 100).toFixed(2),
+              CURRENCY: invoiceCurrency,
+              NEXT_BILLING_DATE: new Date(invoice.period_end * 1000).toLocaleDateString(providerInfo.language || 'fr-FR'),
+              INVOICE_URL: invoice.hosted_invoice_url || '',
+              AI_CALLS_LIMIT: aiCallsLimit === -1 ? 'Illimite' : aiCallsLimit.toString()
+            }
+          });
+          logger.info(`[handleInvoicePaid] Renewal confirmation email queued for ${providerId}`);
+        } else {
+          await enqueueNotification({
+            eventId: 'subscription.payment_confirmed',
+            providerId,
+            email: providerInfo.email,
+            locale: providerInfo.language,
+            vars: {
+              FNAME: providerInfo.firstName,
+              PLAN_NAME: subData.tier,
+              AMOUNT: ((invoice.amount_paid || 0) / 100).toFixed(2),
+              CURRENCY: invoiceCurrency,
+              INVOICE_URL: invoice.hosted_invoice_url || ''
+            }
+          });
+          logger.info(`[handleInvoicePaid] Payment confirmation email queued for ${providerId}`);
+        }
       }
+    } catch (emailError) {
+      // Don't block webhook processing for email failures
+      logger.error(`[handleInvoicePaid] Failed to queue email notification for ${providerId}:`, emailError);
     }
 
     // Marquer l'événement comme traité après succès
@@ -1504,7 +1604,7 @@ export async function handleInvoicePaymentFailed(
           PLAN_NAME: subData.tier,
           AMOUNT: ((invoice.amount_due || 0) / 100).toFixed(2),
           CURRENCY: (invoice.currency || 'eur').toUpperCase(),
-          UPDATE_CARD_URL: 'https://sos-expat.com/dashboard/subscription/payment',
+          UPDATE_CARD_URL: APP_URLS.UPDATE_CARD,
           INVOICE_URL: invoice.hosted_invoice_url || '',
           DAYS_UNTIL_SUSPENSION: shouldDisableAccess ? '0' : String(7 - daysSinceFirstFailure),
           ATTEMPT_NUMBER: (invoice.attempt_count || 1).toString()
@@ -1602,7 +1702,7 @@ export async function handleSubscriptionPaused(
         vars: {
           FNAME: providerInfo.firstName,
           PLAN_NAME: previousState?.tier || 'unknown',
-          RESUME_URL: 'https://sos-expat.com/dashboard/subscription'
+          RESUME_URL: APP_URLS.SUBSCRIPTION_DASHBOARD
         }
       });
       logger.info(`[handleSubscriptionPaused] Pause notification email queued for ${providerId}`);
@@ -1688,7 +1788,7 @@ export async function handleSubscriptionResumed(
           FNAME: providerInfo.firstName,
           PLAN_NAME: previousState?.tier || 'unknown',
           AI_CALLS_LIMIT: previousState?.aiCallsLimit === -1 ? 'Illimite' : (previousState?.aiCallsLimit || 5).toString(),
-          DASHBOARD_URL: 'https://sos-expat.com/dashboard'
+          DASHBOARD_URL: `${APP_URLS.BASE}/dashboard`
         }
       });
       logger.info(`[handleSubscriptionResumed] Resume notification email queued for ${providerId}`);
@@ -2120,7 +2220,7 @@ export async function handlePaymentIntentFailed(
             AMOUNT: (paymentIntent.amount / 100).toFixed(2),
             CURRENCY: paymentIntent.currency?.toUpperCase() || 'EUR',
             ERROR_MESSAGE: lastError?.message || 'Payment failed',
-            RETRY_URL: 'https://sos-expat.com/dashboard/payments'
+            RETRY_URL: `${APP_URLS.BASE}/dashboard/payments`
           }
         });
       }
@@ -2224,7 +2324,7 @@ export async function handleInvoicePaymentActionRequired(
           PLAN_NAME: subData.tier,
           AMOUNT: ((invoice.amount_due || 0) / 100).toFixed(2),
           CURRENCY: (invoice.currency || 'eur').toUpperCase(),
-          CONFIRM_PAYMENT_URL: invoice.hosted_invoice_url || 'https://sos-expat.com/dashboard/subscription/payment',
+          CONFIRM_PAYMENT_URL: invoice.hosted_invoice_url || APP_URLS.PAYMENT,
           DEADLINE_HOURS: '24'
         }
       });
@@ -2928,11 +3028,42 @@ export async function handleTransferFailed(
           },
         };
 
-        await tasksClient.createTask({ parent: queuePath, task });
+        const [createdTask] = await tasksClient.createTask({ parent: queuePath, task });
         logger.info(`[handleTransferFailed] P1-2 FIX: Scheduled retry task for transfer ${transfer.id}`);
-      } catch (taskError) {
-        // Ne pas bloquer si Cloud Tasks échoue - le pending_transfer existe pour retry manuel
-        logger.warn(`[handleTransferFailed] P1-2 FIX: Could not schedule retry task:`, taskError);
+
+        // P1 FIX: Update pending_transfer with task info for tracking
+        await db.collection('pending_transfers').doc(pendingTransferRef.id).update({
+          cloudTaskName: createdTask.name,
+          taskScheduledAt: now,
+          status: 'task_scheduled'
+        });
+      } catch (taskError: unknown) {
+        // P1 FIX: Mark pending_transfer as needing manual retry if Cloud Tasks fails
+        const errorMessage = taskError instanceof Error ? taskError.message : String(taskError);
+        logger.error(`[handleTransferFailed] CRITICAL: Cloud Tasks scheduling failed for transfer ${transfer.id}:`, taskError);
+
+        // Update pending_transfer to indicate task creation failed
+        await db.collection('pending_transfers').doc(pendingTransferRef.id).update({
+          status: 'task_creation_failed',
+          taskCreationError: errorMessage,
+          requiresManualRetry: true,
+          updatedAt: now
+        });
+
+        // Create additional admin alert for Cloud Tasks failure
+        await db.collection('admin_alerts').add({
+          type: 'cloud_task_failure',
+          severity: 'high',
+          message: `Cloud Tasks scheduling failed - transfer retry needs manual intervention`,
+          data: {
+            pendingTransferId: pendingTransferRef.id,
+            transferId: transfer.id,
+            providerId,
+            error: errorMessage
+          },
+          read: false,
+          createdAt: now
+        });
       }
     }
 

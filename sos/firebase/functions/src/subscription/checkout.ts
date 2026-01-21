@@ -10,6 +10,7 @@ import Stripe from 'stripe';
 import * as logger from 'firebase-functions/logger';
 import { createCheckoutSchema, validateInput } from './validation';
 import { META_CAPI_TOKEN, trackCAPIInitiateCheckout, UserData } from '../metaConversionsApi';
+import { APP_URLS } from './constants';
 
 // Lazy initialization pattern to prevent deployment timeout
 const IS_DEPLOYMENT_ANALYSIS =
@@ -520,16 +521,34 @@ export const createSubscriptionCheckout = onCall<CheckoutInput, Promise<Checkout
         throw new HttpsError('not-found', 'Provider profile not found');
       }
 
-      // Determine provider type from data
+      // P1 FIX: Strict validation of provider type
+      const VALID_PROVIDER_ROLES = ['lawyer', 'expat_aidant', 'provider', 'expatAidant'] as const;
+      const BLOCKED_ROLES = ['client', 'user', 'anonymous', ''] as const;
+
       const userRole = providerData.type || providerData.role || '';
 
-      // SECURITY: Block clients from accessing subscriptions
-      if (userRole === 'client' || userRole === 'user') {
-        logger.error('Client attempted to access subscription', { providerId, userRole });
+      // SECURITY: Block clients and users with no role from accessing subscriptions
+      if (BLOCKED_ROLES.includes(userRole as typeof BLOCKED_ROLES[number])) {
+        logger.error('Invalid user role attempted subscription access', {
+          providerId,
+          userRole: userRole || '(empty)',
+          type: providerData.type,
+          role: providerData.role
+        });
         throw new HttpsError(
           'permission-denied',
           'Seuls les prestataires (avocats et expatriés aidants) peuvent souscrire à un abonnement'
         );
+      }
+
+      // P1 FIX: Validate role is a known provider type
+      if (!VALID_PROVIDER_ROLES.includes(userRole as typeof VALID_PROVIDER_ROLES[number])) {
+        logger.warn('Unknown provider role, subscription may not be appropriate', {
+          providerId,
+          userRole,
+          knownRoles: VALID_PROVIDER_ROLES
+        });
+        // Don't block - but log for investigation
       }
 
       const providerType: ProviderType =
@@ -760,7 +779,7 @@ export const createSubscriptionCheckout = onCall<CheckoutInput, Promise<Checkout
           numItems: 1,
           serviceType: 'subscription',
           providerType: providerType,
-          eventSourceUrl: `https://sos-expat.com/dashboard/subscription/plans`,
+          eventSourceUrl: APP_URLS.PLANS,
         });
 
         if (capiResult.success) {

@@ -108,6 +108,55 @@ export const TRIAL_CONFIG_CACHE_TTL_MS = 60 * 60 * 1000;
 export const DEFAULT_ANNUAL_DISCOUNT_PERCENT = 20;
 
 // ============================================================================
+// APP URLS (P2 FIX: Centralized URLs instead of hardcoding)
+// ============================================================================
+
+/**
+ * URL de base de l'application
+ * Utilise APP_URL en production, fallback sur sos-expat.com
+ */
+export const getAppBaseUrl = (): string => {
+  const appUrl = process.env.APP_URL || 'https://sos-expat.com';
+  try {
+    // Validate URL format
+    new URL(appUrl);
+    return appUrl.replace(/\/$/, ''); // Remove trailing slash
+  } catch {
+    return 'https://sos-expat.com';
+  }
+};
+
+/**
+ * URLs centralisées de l'application
+ * P2 FIX: Évite la duplication de strings dans le codebase
+ */
+export const APP_URLS = {
+  /** URL de base */
+  get BASE() { return getAppBaseUrl(); },
+
+  /** Dashboard subscription */
+  get SUBSCRIPTION_DASHBOARD() { return `${getAppBaseUrl()}/dashboard/subscription`; },
+
+  /** Page des plans */
+  get PLANS() { return `${getAppBaseUrl()}/dashboard/subscription/plans`; },
+
+  /** Page de paiement */
+  get PAYMENT() { return `${getAppBaseUrl()}/dashboard/subscription/payment`; },
+
+  /** Page feedback */
+  get FEEDBACK() { return `${getAppBaseUrl()}/feedback`; },
+
+  /** Page de mise à jour carte */
+  get UPDATE_CARD() { return `${getAppBaseUrl()}/dashboard/subscription/payment-method`; },
+
+  /** Portail client Stripe */
+  get BILLING_PORTAL() { return `${getAppBaseUrl()}/dashboard/subscription/billing`; },
+
+  /** Page de support */
+  get SUPPORT() { return `${getAppBaseUrl()}/support`; }
+} as const;
+
+// ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 
@@ -145,3 +194,74 @@ export function isStatusAllowingAccess(status: SubscriptionStatus): boolean {
 export function isStatusRequiringAction(status: SubscriptionStatus): boolean {
   return ['past_due', 'canceled', 'expired', 'suspended'].includes(status);
 }
+
+// ============================================================================
+// P2 FIX: FIRESTORE INDEXES DOCUMENTATION
+// These indexes are required for optimal query performance
+// Deploy with: firebase deploy --only firestore:indexes
+// ============================================================================
+
+/**
+ * Required Firestore composite indexes for the subscription system.
+ *
+ * Add these to firestore.indexes.json:
+ *
+ * ```json
+ * {
+ *   "indexes": [
+ *     {
+ *       "collectionGroup": "subscriptions",
+ *       "queryScope": "COLLECTION",
+ *       "fields": [
+ *         { "fieldPath": "status", "order": "ASCENDING" },
+ *         { "fieldPath": "pastDueSince", "order": "ASCENDING" }
+ *       ]
+ *     },
+ *     {
+ *       "collectionGroup": "subscriptions",
+ *       "queryScope": "COLLECTION",
+ *       "fields": [
+ *         { "fieldPath": "stripeSubscriptionId", "order": "ASCENDING" }
+ *       ]
+ *     },
+ *     {
+ *       "collectionGroup": "ai_usage",
+ *       "queryScope": "COLLECTION",
+ *       "fields": [
+ *         { "fieldPath": "currentPeriodEnd", "order": "ASCENDING" },
+ *         { "fieldPath": "providerId", "order": "ASCENDING" }
+ *       ]
+ *     },
+ *     {
+ *       "collectionGroup": "processed_webhook_events",
+ *       "queryScope": "COLLECTION",
+ *       "fields": [
+ *         { "fieldPath": "expiresAt", "order": "ASCENDING" }
+ *       ]
+ *     }
+ *   ]
+ * }
+ * ```
+ */
+export const REQUIRED_FIRESTORE_INDEXES = [
+  {
+    collection: 'subscriptions',
+    fields: ['status', 'pastDueSince'],
+    description: 'Query past_due subscriptions for grace period enforcement'
+  },
+  {
+    collection: 'subscriptions',
+    fields: ['stripeSubscriptionId'],
+    description: 'Lookup subscription by Stripe subscription ID'
+  },
+  {
+    collection: 'ai_usage',
+    fields: ['currentPeriodEnd', 'providerId'],
+    description: 'Query AI usage records for quota alerts and reset'
+  },
+  {
+    collection: 'processed_webhook_events',
+    fields: ['expiresAt'],
+    description: 'TTL cleanup of processed webhook events'
+  }
+] as const;

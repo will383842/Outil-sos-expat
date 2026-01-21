@@ -12,6 +12,7 @@ import * as admin from 'firebase-admin';
 import Stripe from 'stripe';
 import { MailwizzAPI } from '../emailMarketing/utils/mailwizz';
 import { getLanguageCode, SUPPORTED_LANGUAGES, SupportedLanguage } from '../emailMarketing/config';
+import { APP_URLS } from './constants';
 
 // Lazy initialization pattern to prevent deployment timeout
 const IS_DEPLOYMENT_ANALYSIS =
@@ -395,7 +396,7 @@ async function sendCancellationEmail(
         END_DATE: formattedDate,
         CANCEL_REASON: reason || '',
         ACCESS_UNTIL_MSG: template.accessUntilMessage.replace('{date}', formattedDate),
-        RESUBSCRIBE_URL: 'https://sos-expat.com/dashboard/subscription/plans',
+        RESUBSCRIBE_URL: APP_URLS.PLANS,
       },
     });
 
@@ -426,7 +427,7 @@ async function sendReactivationEmail(
       customFields: {
         FNAME: name,
         NEXT_BILLING_DATE: formattedDate,
-        DASHBOARD_URL: 'https://sos-expat.com/dashboard',
+        DASHBOARD_URL: `${APP_URLS.BASE}/dashboard`,
       },
     });
 

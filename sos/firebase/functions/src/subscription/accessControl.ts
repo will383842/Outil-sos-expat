@@ -14,8 +14,7 @@ import {
   DEFAULT_TRIAL_CONFIG,
   DEFAULT_GRACE_PERIOD_DAYS,
   FAIR_USE_LIMIT,
-  QUOTA_WARNING_THRESHOLD,
-  isStatusAllowingAccess
+  QUOTA_WARNING_THRESHOLD
 } from './constants';
 
 // Lazy initialization pattern to prevent deployment timeout

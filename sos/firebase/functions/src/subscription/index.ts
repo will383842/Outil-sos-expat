@@ -34,6 +34,7 @@ import {
   handleTransferFailed
 } from './webhooks';
 import { addToDeadLetterQueue } from './deadLetterQueue';
+import { APP_URLS } from './constants';
 
 // Lazy initialization pattern to prevent deployment timeout
 const IS_DEPLOYMENT_ANALYSIS =
@@ -1008,7 +1009,7 @@ export const createStripePortalSession = functions
 
       const session = await getStripe().billingPortal.sessions.create({
         customer: subDoc.data()!.stripeCustomerId,
-        return_url: `${process.env.APP_URL || 'https://sos-expat.com'}/dashboard/subscription`
+        return_url: APP_URLS.SUBSCRIPTION_DASHBOARD
       });
 
       return { url: session.url };
@@ -1749,10 +1750,12 @@ export const stripeWebhook = functions
       });
 
       // Determine if this is a transient error (should retry) or permanent (should not retry)
+      // P1 FIX: Include RETRY_NEEDED for race conditions (e.g., invoice.paid before subscription.created)
       const isTransientError = error.code === 'UNAVAILABLE' ||
         error.code === 'DEADLINE_EXCEEDED' ||
         error.message?.includes('timeout') ||
-        error.message?.includes('ECONNRESET');
+        error.message?.includes('ECONNRESET') ||
+        error.message?.includes('RETRY_NEEDED');
 
       if (isTransientError) {
         // P0 FIX: Unclaim event to allow Stripe retry on transient errors

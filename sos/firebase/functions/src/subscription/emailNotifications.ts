@@ -14,6 +14,7 @@
 
 import * as admin from 'firebase-admin';
 import { logger } from 'firebase-functions';
+import { getAppBaseUrl } from './constants';
 
 // ============================================================================
 // TYPES
@@ -201,9 +202,10 @@ async function getSubscriptionPlan(planId: string): Promise<SubscriptionPlanData
 
 /**
  * Genere l'URL de base de l'application
+ * P2 FIX: Utilise la fonction centralisée de constants.ts
  */
 function getAppUrl(): string {
-  return process.env.APP_URL || 'https://sos-expat.com';
+  return getAppBaseUrl();
 }
 
 // ============================================================================

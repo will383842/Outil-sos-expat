@@ -15,6 +15,7 @@ import { logger } from 'firebase-functions';
 import { defineSecret } from 'firebase-functions/params';
 import { MailwizzAPI } from '../emailMarketing/utils/mailwizz';
 import { getLanguageCode, MAILWIZZ_API_KEY_SECRET } from '../emailMarketing/config';
+import { APP_URLS } from './constants';
 
 // Secrets
 const STRIPE_SECRET_KEY = defineSecret('STRIPE_SECRET_KEY');
@@ -344,7 +345,7 @@ export const checkPastDueSubscriptions = onSchedule(
           if (email) {
             await sendEmail(email, `TR_PRV_subscription-suspended_${lang}`, {
               FNAME: firstName,
-              REACTIVATE_URL: 'https://sos-expat.com/dashboard/subscription',
+              REACTIVATE_URL: APP_URLS.SUBSCRIPTION_DASHBOARD,
             });
           }
 
@@ -361,7 +362,7 @@ export const checkPastDueSubscriptions = onSchedule(
             await sendEmail(email, `TR_PRV_subscription-payment-reminder_${lang}`, {
               FNAME: firstName,
               DAYS_REMAINING: '4',
-              UPDATE_PAYMENT_URL: 'https://sos-expat.com/dashboard/subscription',
+              UPDATE_PAYMENT_URL: APP_URLS.SUBSCRIPTION_DASHBOARD,
             });
 
             // Mark reminder as sent
@@ -462,7 +463,7 @@ export const sendQuotaAlerts = onSchedule(
               FNAME: firstName,
               CURRENT_USAGE: currentUsage.toString(),
               QUOTA_LIMIT: aiLimit.toString(),
-              UPGRADE_URL: 'https://sos-expat.com/dashboard/subscription/plans',
+              UPGRADE_URL: APP_URLS.PLANS,
             });
           }
 
@@ -485,7 +486,7 @@ export const sendQuotaAlerts = onSchedule(
               QUOTA_LIMIT: aiLimit.toString(),
               REMAINING: (aiLimit - currentUsage).toString(),
               USAGE_PERCENT: Math.round(usagePercent).toString(),
-              UPGRADE_URL: 'https://sos-expat.com/dashboard/subscription/plans',
+              UPGRADE_URL: APP_URLS.PLANS,
             });
           }
 
@@ -603,7 +604,7 @@ export const cleanupExpiredTrials = onSchedule(
           if (email) {
             await sendEmail(email, `TR_PRV_trial-ended_${lang}`, {
               FNAME: firstName,
-              SUBSCRIBE_URL: 'https://sos-expat.com/dashboard/subscription/plans',
+              SUBSCRIBE_URL: APP_URLS.PLANS,
               TRIAL_CALLS_USED: (subscription.trialCallsUsed || 0).toString(),
             });
           }
