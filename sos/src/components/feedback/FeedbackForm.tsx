@@ -127,7 +127,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose, pageContext }) => 
     console.log('[FEEDBACK] Submit clicked', {
       isFormValid,
       email,
-      isEmailOk,
+      isEmailValid,
       feedbackType,
       descriptionLength: description.length,
       isDescriptionValid,
@@ -147,7 +147,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose, pageContext }) => 
 
     if (!isFormValid) {
       console.warn('[FEEDBACK] Form validation failed', {
-        isEmailOk,
+        isEmailValid,
         feedbackType: !!feedbackType,
         isDescriptionValid,
       });

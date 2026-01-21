@@ -570,6 +570,24 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
         </div>
       )}
 
+      {/* CSS pour les champs PayPal - une seule bordure */}
+      <style>{`
+        .paypal-card-field {
+          width: 100%;
+          height: 48px;
+        }
+        @media (min-width: 640px) {
+          .paypal-card-field {
+            height: 44px;
+          }
+        }
+        .paypal-card-field > div,
+        .paypal-card-field iframe {
+          border: none !important;
+          outline: none !important;
+        }
+      `}</style>
+
       {/* Section Carte Bancaire */}
       <div className={`transition-opacity duration-200 ${disabled || isProcessing ? "opacity-50 pointer-events-none" : ""}`}>
         <PayPalCardFieldsProvider
@@ -583,10 +601,21 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
               "font-size": "16px",
               "font-family": "system-ui, -apple-system, sans-serif",
               "color": "#374151",
-              "padding": "0 12px",
+              "padding": "12px",
+              "border": "1px solid #d1d5db",
+              "border-radius": "8px",
+              "height": "100%",
+              "box-sizing": "border-box",
+              "background-color": "#ffffff",
+            },
+            "input:focus": {
+              "border-color": "#3b82f6",
+              "box-shadow": "0 0 0 2px rgba(59, 130, 246, 0.2)",
+              "outline": "none",
             },
             ".invalid": {
               "color": "#dc2626",
+              "border-color": "#dc2626",
             },
           } as any}
         >
@@ -599,11 +628,25 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
                   <FormattedMessage id="payment.creditCard" defaultMessage="Carte bancaire" />
                 </span>
               </div>
-              {/* Icônes des cartes acceptées */}
-              <div className="flex items-center gap-1.5">
-                <img src="https://cdn.jsdelivr.net/gh/nicepay-dev/nicepay-checkout-js@main/visa.svg" alt="Visa" className="h-6 sm:h-7 opacity-70" loading="lazy" />
-                <img src="https://cdn.jsdelivr.net/gh/nicepay-dev/nicepay-checkout-js@main/mastercard.svg" alt="Mastercard" className="h-6 sm:h-7 opacity-70" loading="lazy" />
-                <img src="https://www.svgrepo.com/show/508402/amex.svg" alt="Amex" className="h-6 sm:h-7 opacity-60" loading="lazy" />
+              {/* Icônes des cartes acceptées - SVG inline pour fiabilité */}
+              <div className="flex items-center gap-2">
+                {/* Visa */}
+                <svg className="h-5 sm:h-6" viewBox="0 0 750 471" xmlns="http://www.w3.org/2000/svg">
+                  <rect fill="#0E4595" width="750" height="471" rx="20"/>
+                  <path d="M278.198 334.228l33.36-195.763h53.358l-33.385 195.763H278.198zm246.11-191.54c-10.569-3.966-27.135-8.222-47.822-8.222-52.726 0-89.863 26.55-90.18 64.604-.297 28.129 26.514 43.822 46.754 53.185 20.77 9.598 27.752 15.716 27.652 24.283-.133 13.123-16.586 19.116-31.924 19.116-21.355 0-32.701-2.967-50.225-10.274l-6.878-3.112-7.487 43.823c12.463 5.466 35.508 10.199 59.438 10.445 56.09 0 92.502-26.248 92.916-66.884.199-22.27-14.016-39.216-44.801-53.188-18.65-9.056-30.072-15.099-29.951-24.269 0-8.137 9.668-16.838 30.559-16.838 17.447-.271 30.088 3.534 39.936 7.5l4.781 2.259 7.232-42.428m137.31-4.223h-41.23c-12.772 0-22.332 3.486-27.94 16.234l-79.245 179.404h56.031s9.159-24.121 11.232-29.418c6.123 0 60.555.084 68.336.084 1.596 6.854 6.492 29.334 6.492 29.334h49.512l-43.188-195.638zm-65.417 126.408c4.414-11.279 21.26-54.724 21.26-54.724-.316.521 4.379-11.334 7.074-18.684l3.606 16.878s10.217 46.729 12.353 56.53h-44.293zM232.903 138.465L180.664 271.96l-5.565-27.129c-9.726-31.274-40.025-65.157-73.898-82.12l47.767 171.204 56.455-.063 84.004-195.386-56.524-.001" fill="#fff"/>
+                </svg>
+                {/* Mastercard */}
+                <svg className="h-5 sm:h-6" viewBox="0 0 750 471" xmlns="http://www.w3.org/2000/svg">
+                  <rect fill="#fff" width="750" height="471" rx="20"/>
+                  <circle fill="#EB001B" cx="250" cy="235" r="150"/>
+                  <circle fill="#F79E1B" cx="500" cy="235" r="150"/>
+                  <path fill="#FF5F00" d="M325 118a149.8 149.8 0 000 234 149.8 149.8 0 000-234"/>
+                </svg>
+                {/* Amex */}
+                <svg className="h-5 sm:h-6" viewBox="0 0 750 471" xmlns="http://www.w3.org/2000/svg">
+                  <rect fill="#006FCF" width="750" height="471" rx="20"/>
+                  <path d="M0 221h51l11-26 12 26h161v-20l14 20h83l14-21v21h333v-61l-6-3 6-3v-54H354l-13 19-12-19H156v19l-16-19H67l-34 78v23H0v61zm67-74l-16 38h-7l-16-38v52H0v-74h38l14 33 14-33h38v74H67v-52zm88 52h-29v-12h29v-12h-29v-12h32v-12h-51v74h51l-3-26zm54 0h-36v-74h36v12h-17v12h17v12h-17v12h17v26zm35 0l-38-53v53h-19v-74h21l37 52v-52h19v74h-20zm59-62h-20v62h-19v-62h-20v-12h59v12zm47 62l-24-34 24-40h-22l-24 40 24 34h22zm166 0l-25-40 25-34h-22l-24 34 24 40h22zm-119 0h-36v-74h36v12h-17v12h17v12h-17v12h17v26zm71-62h-20v62h-19v-62h-20v-12h59v12z" fill="#fff"/>
+                </svg>
               </div>
             </div>
 
@@ -612,9 +655,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 <FormattedMessage id="payment.cardholderName" defaultMessage="Nom sur la carte" />
               </label>
-              <div className="w-full h-12 sm:h-11 border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-shadow [&_iframe]:!border-0 [&_iframe]:!border-none [&_iframe]:!outline-none [&>div]:!border-0 [&>div]:!border-none">
-                <PayPalNameField className="w-full h-full"  />
-              </div>
+              <PayPalNameField className="paypal-card-field" />
             </div>
 
             {/* Numéro de carte */}
@@ -622,9 +663,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 <FormattedMessage id="payment.cardNumber" defaultMessage="Numéro de carte" />
               </label>
-              <div className="w-full h-12 sm:h-11 border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-shadow [&_iframe]:!border-0 [&_iframe]:!border-none [&_iframe]:!outline-none [&>div]:!border-0 [&>div]:!border-none">
-                <PayPalNumberField className="w-full h-full"  />
-              </div>
+              <PayPalNumberField className="paypal-card-field" />
             </div>
 
             {/* Expiration et CVV - Responsive */}
@@ -633,17 +672,13 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   <FormattedMessage id="payment.expiry" defaultMessage="Expiration" />
                 </label>
-                <div className="w-full h-12 sm:h-11 border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-shadow [&_iframe]:!border-0 [&_iframe]:!border-none [&_iframe]:!outline-none [&>div]:!border-0 [&>div]:!border-none">
-                  <PayPalExpiryField className="w-full h-full"  />
-                </div>
+                <PayPalExpiryField className="paypal-card-field" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   <FormattedMessage id="payment.cvv" defaultMessage="CVV" />
                 </label>
-                <div className="w-full h-12 sm:h-11 border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-shadow [&_iframe]:!border-0 [&_iframe]:!border-none [&_iframe]:!outline-none [&>div]:!border-0 [&>div]:!border-none">
-                  <PayPalCVVField className="w-full h-full"  />
-                </div>
+                <PayPalCVVField className="paypal-card-field" />
               </div>
             </div>
 
