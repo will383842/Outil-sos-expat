@@ -1,5 +1,5 @@
 // src/components/payment/PayPalPaymentForm.tsx
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   PayPalButtons,
   PayPalCardFieldsProvider,
