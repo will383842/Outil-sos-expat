@@ -155,6 +155,11 @@ if (typeof window !== 'undefined') {
 
   console.log("💡 [Firebase] Si Firestore est bloqué, exécutez: window.resetFirestoreCache()");
 
+  // 🔍 Charger les diagnostics d'authentification
+  import('../utils/authDiagnostics').then(() => {
+    console.log("💡 [Firebase] Pour diagnostiquer l'authentification Google: window.diagnoseFirebaseAuth()");
+  }).catch(() => { /* ignore */ });
+
   // 🔧 AUTO-DETECTION: Détecter les erreurs de corruption IndexedDB et reset automatique
   // Patterns d'erreurs connus: "INTERNAL ASSERTION FAILED", "Cannot read properties of null"
   // Voir: github.com/firebase/firebase-js-sdk/issues/8593, #9056, #8250
