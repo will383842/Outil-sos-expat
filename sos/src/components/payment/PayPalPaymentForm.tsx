@@ -476,11 +476,8 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 <FormattedMessage id="payment.cardholderName" defaultMessage="Nom sur la carte" />
               </label>
-              <div className="w-full h-12 sm:h-11 border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-shadow">
-                <PayPalNameField
-                  className="w-full h-full"
-                  style={{ border: 'none', outline: 'none' }}
-                />
+              <div className="w-full h-12 sm:h-11 border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-shadow [&_iframe]:border-0">
+                <PayPalNameField className="w-full h-full" />
               </div>
             </div>
 
@@ -489,11 +486,8 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 <FormattedMessage id="payment.cardNumber" defaultMessage="Numéro de carte" />
               </label>
-              <div className="w-full h-12 sm:h-11 border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-shadow">
-                <PayPalNumberField
-                  className="w-full h-full"
-                  style={{ border: 'none', outline: 'none' }}
-                />
+              <div className="w-full h-12 sm:h-11 border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-shadow [&_iframe]:border-0">
+                <PayPalNumberField className="w-full h-full" />
               </div>
             </div>
 
@@ -503,22 +497,16 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   <FormattedMessage id="payment.expiry" defaultMessage="Expiration" />
                 </label>
-                <div className="w-full h-12 sm:h-11 border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-shadow">
-                  <PayPalExpiryField
-                    className="w-full h-full"
-                    style={{ border: 'none', outline: 'none' }}
-                  />
+                <div className="w-full h-12 sm:h-11 border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-shadow [&_iframe]:border-0">
+                  <PayPalExpiryField className="w-full h-full" />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   <FormattedMessage id="payment.cvv" defaultMessage="CVV" />
                 </label>
-                <div className="w-full h-12 sm:h-11 border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-shadow">
-                  <PayPalCVVField
-                    className="w-full h-full"
-                    style={{ border: 'none', outline: 'none' }}
-                  />
+                <div className="w-full h-12 sm:h-11 border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-shadow [&_iframe]:border-0">
+                  <PayPalCVVField className="w-full h-full" />
                 </div>
               </div>
             </div>
