@@ -83,29 +83,7 @@
       "purpose": "maskable"
     }
   ],
-  "screenshots": [
-    {
-      "src": "/screenshots/mobile-home.svg",
-      "sizes": "390x844",
-      "type": "image/svg+xml",
-      "form_factor": "narrow",
-      "label": "Page d'accueil SOS Expats"
-    },
-    {
-      "src": "/screenshots/mobile-services.svg",
-      "sizes": "390x844",
-      "type": "image/svg+xml",
-      "form_factor": "narrow",
-      "label": "Services d'assistance juridique"
-    },
-    {
-      "src": "/screenshots/desktop-dashboard.svg",
-      "sizes": "1280x720",
-      "type": "image/svg+xml",
-      "form_factor": "wide",
-      "label": "Tableau de bord desktop"
-    }
-  ],
+  "screenshots": [],
   "shortcuts": [
     {
       "name": "Urgence Juridique",
