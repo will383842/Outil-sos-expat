@@ -254,15 +254,20 @@ const AdminSettings: React.FC = () => {
       await setDoc(doc(db, 'admin_config', 'aaa_payout'), {
         externalAccounts: config.externalAccounts.map(acc => ({
           ...acc,
-          createdAt: Timestamp.fromDate(acc.createdAt),
+          createdAt: acc.createdAt instanceof Date
+            ? Timestamp.fromDate(acc.createdAt)
+            : acc.createdAt,
         })),
         defaultMode: config.defaultMode,
         lastUpdated: serverTimestamp(),
       });
       setPayoutConfig(config);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving payout config:', error);
-      alert(intl.formatMessage({ id: 'admin.settings.common.saveError' }));
+      const errorMessage = error?.code === 'permission-denied'
+        ? 'Erreur de permission: Vous n\'avez pas les droits admin pour modifier cette configuration.'
+        : error?.message || 'Erreur inconnue lors de la sauvegarde';
+      alert(`Erreur: ${errorMessage}`);
     } finally {
       setSavingPayoutConfig(false);
     }
