@@ -126,6 +126,12 @@ export const AiAssistantPageV2: React.FC = () => {
   const navigate = useLocaleNavigate();
   const { user } = useAuth();
 
+  // DEBUG LOGS - Page Jump Investigation
+  console.log('[AiAssistantPage DEBUG] 📦 Render', {
+    userId: user?.uid,
+    timestamp: new Date().toISOString()
+  });
+
   // Route translations
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
   const translatedRoutes = useMemo(() => ({
@@ -418,11 +424,36 @@ export const AiAssistantPageV2: React.FC = () => {
   const isQuotaReady = !quotaLoading;
   const isProvidersReady = !providersLoading;
 
+  // DEBUG LOGS - State tracking
+  console.log('[AiAssistantPage DEBUG] 📊 State', {
+    subLoading,
+    quotaLoading,
+    providersLoading,
+    isInitialLoading,
+    isQuotaReady,
+    isProvidersReady,
+    isMultiProvider,
+    hadMultiProviders,
+    linkedProvidersCount: linkedProviders.length,
+    selectedProviderId,
+    currentUsage,
+    limit,
+    isInTrial,
+    canMakeAiCall,
+    timestamp: new Date().toISOString()
+  });
+
   // ============================================================================
   // LOADING STATE - Only show full skeleton on initial load
   // ============================================================================
 
   if (isInitialLoading) {
+    console.log('[AiAssistantPage DEBUG] 🔄 Rendering LOADING state', {
+      subLoading,
+      quotaLoading,
+      providersLoading,
+      timestamp: new Date().toISOString()
+    });
     return (
       <DashboardLayout activeKey="ai-assistant">
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-indigo-50/30">
@@ -468,6 +499,15 @@ export const AiAssistantPageV2: React.FC = () => {
   // ============================================================================
   // MAIN RENDER
   // ============================================================================
+
+  console.log('[AiAssistantPage DEBUG] ✅ Rendering MAIN state', {
+    hasAccess,
+    currentUsage,
+    limit,
+    remaining,
+    isInTrial,
+    timestamp: new Date().toISOString()
+  });
 
   return (
     <DashboardLayout activeKey="ai-assistant">

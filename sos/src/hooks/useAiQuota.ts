@@ -59,6 +59,19 @@ export function useAiQuota(): UseAiQuotaReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // DEBUG LOGS - Page Jump Investigation
+  console.log('[useAiQuota DEBUG] 📦 Hook state', {
+    userId: user?.uid,
+    loading,
+    hasUsage: !!usage,
+    hasQuotaCheck: !!quotaCheck,
+    isAllowed: quotaCheck?.allowed,
+    currentUsage: quotaCheck?.currentUsage,
+    limit: quotaCheck?.limit,
+    isInTrial: quotaCheck?.isInTrial,
+    timestamp: new Date().toISOString()
+  });
+
   // Subscribe to usage changes
   useEffect(() => {
     if (!user?.uid) {

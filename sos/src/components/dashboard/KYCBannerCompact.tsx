@@ -32,6 +32,15 @@ const KYCBannerCompact: React.FC<KYCBannerCompactProps> = ({
   const intl = useIntl();
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // DEBUG LOGS - Page Jump Investigation
+  console.log('[KYCBannerCompact DEBUG] 📦 Render', {
+    kycType,
+    isExpanded,
+    userId: user?.id,
+    hasChildren: !!children,
+    timestamp: new Date().toISOString()
+  });
+
   // Determine status and styling based on type
   const getConfig = () => {
     switch (kycType) {
@@ -98,7 +107,15 @@ const KYCBannerCompact: React.FC<KYCBannerCompactProps> = ({
     `}>
       {/* Compact header - always visible */}
       <button
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={() => {
+          console.log('[KYCBannerCompact DEBUG] 🔄 Toggle expand', {
+            kycType,
+            wasExpanded: isExpanded,
+            willBeExpanded: !isExpanded,
+            timestamp: new Date().toISOString()
+          });
+          setIsExpanded(!isExpanded);
+        }}
         className="w-full flex items-center gap-3 p-3 md:p-4 text-left"
       >
         {/* Icon */}

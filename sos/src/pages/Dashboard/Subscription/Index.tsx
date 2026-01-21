@@ -216,6 +216,12 @@ export const SubscriptionPage: React.FC = () => {
   const navigate = useLocaleNavigate();
   const { user } = useAuth();
 
+  // DEBUG LOGS - Page Jump Investigation
+  console.log('[SubscriptionPage DEBUG] 📦 Render', {
+    userId: user?.uid,
+    timestamp: new Date().toISOString()
+  });
+
   // Route translations
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
   const translatedRoutes = useMemo(() => ({
@@ -245,6 +251,19 @@ export const SubscriptionPage: React.FC = () => {
     usage,
     loading: quotaLoading
   } = useAiQuota();
+
+  // DEBUG LOGS - State tracking
+  console.log('[SubscriptionPage DEBUG] 📊 State', {
+    subLoading,
+    quotaLoading,
+    hasSubscription: !!subscription,
+    subscriptionStatus: subscription?.status,
+    subscriptionTier: subscription?.tier,
+    currentUsage,
+    limit,
+    isInTrial,
+    timestamp: new Date().toISOString()
+  });
 
   // Local state
   const [actionLoading, setActionLoading] = React.useState(false);
@@ -332,6 +351,7 @@ export const SubscriptionPage: React.FC = () => {
   // ============================================================================
 
   if (isLoading) {
+    console.log('[SubscriptionPage DEBUG] 🔄 Rendering LOADING state', { subLoading, quotaLoading, timestamp: new Date().toISOString() });
     return (
       <DashboardLayout activeKey="subscription">
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-indigo-50/30">
@@ -375,6 +395,7 @@ export const SubscriptionPage: React.FC = () => {
   // ============================================================================
 
   if (!subscription) {
+    console.log('[SubscriptionPage DEBUG] ⚠️ Rendering NO SUBSCRIPTION state', { timestamp: new Date().toISOString() });
     return (
       <DashboardLayout activeKey="subscription">
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-indigo-50/30">
@@ -440,6 +461,14 @@ export const SubscriptionPage: React.FC = () => {
   // ============================================================================
   // MAIN RENDER
   // ============================================================================
+
+  console.log('[SubscriptionPage DEBUG] ✅ Rendering MAIN state', {
+    tier: subscription?.tier,
+    status: subscription?.status,
+    currentUsage,
+    limit,
+    timestamp: new Date().toISOString()
+  });
 
   return (
     <DashboardLayout activeKey="subscription">

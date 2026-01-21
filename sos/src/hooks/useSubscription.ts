@@ -162,6 +162,18 @@ export function useSubscription(): UseSubscriptionReturn {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
+  // DEBUG LOGS - Page Jump Investigation
+  console.log('[useSubscription DEBUG] 📦 Hook state', {
+    userId: user?.uid,
+    isLoading,
+    hasSubscription: !!subscription,
+    subscriptionStatus: subscription?.status,
+    subscriptionTier: subscription?.tier,
+    hasPlan: !!plan,
+    plansCount: plans.length,
+    timestamp: new Date().toISOString()
+  });
+
   // Refs pour éviter les race conditions
   const isMounted = useRef(true);
   const lastPlanId = useRef<string | null>(null);

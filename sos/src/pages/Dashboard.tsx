@@ -48,7 +48,7 @@ import MobileSideDrawer from "../components/dashboard/MobileSideDrawer";
 import KYCBannerCompact from "../components/dashboard/KYCBannerCompact";
 import DashboardStats from "../components/dashboard/DashboardStats";
 import QuickActions from "../components/dashboard/QuickActions";
-import RecentActivity from "../components/dashboard/RecentActivity";
+// RecentActivity removed - was causing layout issues
 
 import { useAuth } from "../contexts/AuthContext";
 import { useApp } from "../contexts/AppContext";
@@ -743,6 +743,11 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
   // ✅ Set userDataReady to true once user is loaded
   useEffect(() => {
     if (user && (user.role === "lawyer" || user.role === "expat")) {
+      console.log('[Dashboard DEBUG] 🔄 userDataReady changing from', userDataReady, 'to true', {
+        userId: user.id,
+        role: user.role,
+        timestamp: new Date().toISOString()
+      });
       setUserDataReady(true);
     }
   }, [user]);
@@ -751,6 +756,13 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
   // This effect runs only when userDataReady becomes true and sets the initial state
   // Subsequent Firestore updates will NOT change this state - only explicit user action will
   useEffect(() => {
+    console.log('[Dashboard DEBUG] 🎯 KYC useEffect triggered', {
+      userDataReady,
+      userId: user?.id,
+      stripeKycInitializedRef: stripeKycInitializedRef.current,
+      timestamp: new Date().toISOString()
+    });
+
     if (userDataReady && user && !stripeKycInitializedRef.current) {
       const isProvider = user.role === "lawyer" || user.role === "expat";
       const isStripeGateway = user?.paymentGateway === "stripe" || !user?.paymentGateway;
@@ -763,17 +775,18 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
 
       // Only initialize once
       stripeKycInitializedRef.current = true;
-      setShowStripeKycStable(shouldShowKyc);
 
-      if (import.meta.env.DEV) {
-        console.log("[Dashboard] KYC stable state initialized:", shouldShowKyc, {
-          isProvider,
-          isStripeGateway,
-          needsKyc,
-          kycStatus: user?.kycStatus,
-          stripeOnboardingComplete: user?.stripeOnboardingComplete
-        });
-      }
+      console.log('[Dashboard DEBUG] 🚀 showStripeKycStable changing from', showStripeKycStable, 'to', shouldShowKyc, {
+        isProvider,
+        isStripeGateway,
+        needsKyc,
+        kycStatus: user?.kycStatus,
+        stripeOnboardingComplete: user?.stripeOnboardingComplete,
+        paymentGateway: user?.paymentGateway,
+        timestamp: new Date().toISOString()
+      });
+
+      setShowStripeKycStable(shouldShowKyc);
     }
   }, [userDataReady, user]);
 
@@ -826,10 +839,17 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
   // Always set activeTab from URL - this ensures the UI reflects the URL state
   useEffect(() => {
     const urlTab = getTabFromUrl();
+    console.log('[Dashboard DEBUG] 🔄 Tab sync effect', {
+      urlTab,
+      currentActiveTab: activeTab,
+      searchParams: searchParams.toString(),
+      timestamp: new Date().toISOString()
+    });
     dashboardLog.tab(`URL tab sync: urlTab=${urlTab}, searchParams=${searchParams.toString()}`);
     // Only update if actually different to avoid unnecessary re-renders
     setActiveTab(prev => {
       if (prev !== urlTab) {
+        console.log('[Dashboard DEBUG] 📑 Tab changing', { from: prev, to: urlTab, timestamp: new Date().toISOString() });
         dashboardLog.tab(`Tab state changed: ${prev} -> ${urlTab}`);
         return urlTab;
       }
@@ -1634,6 +1654,17 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
       {/* KYC STATUS & VERIFICATION SECTION (STRIPE OR PAYPAL) */}
       {/* P0 FIX: Stable container with CSS transitions to prevent layout jumping */}
       {/* ========================================== */}
+      {/* DEBUG LOG */}
+      {console.log('[Dashboard DEBUG] 🎫 Banner Zone State', {
+        showStripeKycStable,
+        userDataReady,
+        userRole: user?.role,
+        paymentGateway: user?.paymentGateway,
+        paypalStatus: user?.paypalAccountStatus,
+        paypalOnboardingComplete: user?.paypalOnboardingComplete,
+        shouldShowBanner: showStripeKycStable === true || (userDataReady && user && (user.role === "lawyer" || user.role === "expat") && user?.paymentGateway === "paypal" && (user?.paypalAccountStatus === "not_connected" || !user?.paypalOnboardingComplete)),
+        timestamp: new Date().toISOString()
+      })}
       <div
         className={`
           dashboard-banner-zone overflow-hidden
