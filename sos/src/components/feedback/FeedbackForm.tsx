@@ -18,6 +18,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useDeviceDetection } from '../../hooks/useDeviceDetection';
 import { useFeedback } from '../../hooks/useFeedback';
 import type { UserRole as FeedbackUserRole, FeedbackData } from '../../services/feedback';
+import dashboardLog from '../../utils/dashboardLogger';
 
 interface FeedbackFormProps {
   onClose: () => void;
@@ -120,10 +121,31 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose, pageContext }) => 
   // Soumission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    dashboardLog.click('FeedbackForm: Submit button clicked');
+    dashboardLog.group('Feedback Form Submission');
 
-    if (!isFormValid) return;
+    dashboardLog.state('Form validation state', {
+      isFormValid,
+      email,
+      isEmailValid,
+      feedbackType,
+      descriptionLength: description.length,
+      isDescriptionValid,
+    });
+
+    if (!isFormValid) {
+      dashboardLog.warn('Form validation failed - submission aborted', {
+        email: !!email,
+        isEmailValid,
+        feedbackType: !!feedbackType,
+        isDescriptionValid,
+      });
+      dashboardLog.groupEnd();
+      return;
+    }
 
     setError(null);
+    dashboardLog.state('Form is valid - proceeding with submission');
 
     // Construire les données de contexte
     const deviceType: 'mobile' | 'tablet' | 'desktop' = isMobile ? 'mobile' : isTablet ? 'tablet' : 'desktop';
@@ -166,15 +188,24 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose, pageContext }) => 
       feedbackData.userName = `${user.firstName} ${user.lastName || ''}`.trim();
     }
 
+    dashboardLog.api('Preparing to submit feedback', { feedbackData, hasScreenshot: !!screenshot });
+
     try {
-      await submitFeedback(feedbackData as unknown as FeedbackData, screenshot || undefined);
+      dashboardLog.time('Feedback submission');
+      const result = await submitFeedback(feedbackData as unknown as FeedbackData, screenshot || undefined);
+      dashboardLog.timeEnd('Feedback submission');
+      dashboardLog.api('Feedback submitted successfully', { result });
       setIsSuccess(true);
 
       // Fermer après 2 secondes
       setTimeout(() => {
+        dashboardLog.nav('Closing feedback form after success');
+        dashboardLog.groupEnd();
         onClose();
       }, 2000);
     } catch (err) {
+      dashboardLog.error('Feedback submission FAILED', err);
+      dashboardLog.groupEnd();
       setError(intl.formatMessage({
         id: 'feedback.error.submitFailed',
         defaultMessage: 'Une erreur est survenue. Veuillez réessayer.'

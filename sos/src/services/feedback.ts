@@ -13,6 +13,7 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../config/firebase';
+import dashboardLog from '../utils/dashboardLogger';
 
 // ==========================================
 // TYPES
@@ -109,39 +110,74 @@ function sanitizeFeedbackData(data: FeedbackData): FeedbackData {
  * Upload une capture d'écran vers Firebase Storage
  */
 export async function uploadFeedbackScreenshot(file: File): Promise<string> {
+  dashboardLog.api('uploadFeedbackScreenshot called', {
+    fileName: file.name,
+    fileSize: file.size,
+    fileType: file.type,
+  });
+
   // Valider le fichier
   if (!file.type.startsWith('image/')) {
+    dashboardLog.error('Invalid file type', { type: file.type });
     throw new Error('Invalid file type. Only images are allowed.');
   }
 
   if (file.size > 5 * 1024 * 1024) {
+    dashboardLog.error('File too large', { size: file.size, maxSize: 5 * 1024 * 1024 });
     throw new Error('File too large. Maximum size is 5MB.');
   }
 
   // Générer un nom unique
   const fileName = generateScreenshotFileName(file.name);
   const filePath = `${FEEDBACK_STORAGE_PATH}/${fileName}`;
+  dashboardLog.api('Uploading to Firebase Storage', { filePath });
 
   // Upload
   const storageRef = ref(storage, filePath);
-  await uploadBytes(storageRef, file, {
-    contentType: file.type,
-    customMetadata: {
-      uploadedAt: new Date().toISOString(),
-    },
-  });
+  try {
+    await uploadBytes(storageRef, file, {
+      contentType: file.type,
+      customMetadata: {
+        uploadedAt: new Date().toISOString(),
+      },
+    });
+    dashboardLog.api('File uploaded to Storage successfully');
+  } catch (uploadError) {
+    dashboardLog.error('Firebase Storage upload failed', uploadError);
+    throw uploadError;
+  }
 
   // Retourner l'URL de téléchargement
-  const downloadUrl = await getDownloadURL(storageRef);
-  return downloadUrl;
+  try {
+    const downloadUrl = await getDownloadURL(storageRef);
+    dashboardLog.api('Download URL obtained', { url: downloadUrl.substring(0, 80) + '...' });
+    return downloadUrl;
+  } catch (urlError) {
+    dashboardLog.error('Failed to get download URL', urlError);
+    throw urlError;
+  }
 }
 
 /**
  * Soumet un feedback utilisateur directement dans Firestore
  */
 export async function submitUserFeedback(data: FeedbackData): Promise<string> {
+  dashboardLog.group('submitUserFeedback');
+  dashboardLog.api('submitUserFeedback called', {
+    email: data.email,
+    type: data.type,
+    userRole: data.userRole,
+    hasScreenshotUrl: !!data.screenshotUrl,
+    pageUrl: data.pageUrl,
+  });
+
   // Nettoyer les données
+  dashboardLog.state('Sanitizing feedback data...');
   const sanitizedData = sanitizeFeedbackData(data);
+  dashboardLog.state('Data sanitized', {
+    email: sanitizedData.email,
+    descriptionLength: sanitizedData.description.length,
+  });
 
   // Créer le document de feedback
   const feedbackDoc = {
@@ -157,18 +193,46 @@ export async function submitUserFeedback(data: FeedbackData): Promise<string> {
     resolvedAt: null,
   };
 
+  dashboardLog.api('Feedback document prepared', {
+    status: feedbackDoc.status,
+    collection: FEEDBACK_COLLECTION,
+  });
+
   try {
     // Sauvegarder directement dans Firestore
+    dashboardLog.api(`Writing to Firestore collection: ${FEEDBACK_COLLECTION}`);
+    dashboardLog.time('Firestore addDoc');
+
     const docRef = await addDoc(collection(db, FEEDBACK_COLLECTION), feedbackDoc);
-    console.log(`[Feedback] New feedback submitted: ${docRef.id}`);
+
+    dashboardLog.timeEnd('Firestore addDoc');
+    dashboardLog.api('Feedback saved to Firestore successfully!', {
+      docId: docRef.id,
+      path: docRef.path,
+    });
+    dashboardLog.groupEnd();
     return docRef.id;
   } catch (error: unknown) {
-    console.error('[Feedback] Failed to submit feedback:', error);
+    dashboardLog.error('FIRESTORE WRITE FAILED', error);
+
     // Log more details for debugging
     if (error instanceof Error) {
-      console.error('[Feedback] Error message:', error.message);
-      console.error('[Feedback] Error stack:', error.stack);
+      dashboardLog.error('Error details', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack?.substring(0, 500),
+      });
+
+      // Check for common Firestore errors
+      if (error.message.includes('permission-denied')) {
+        dashboardLog.error('PERMISSION DENIED - Check Firestore security rules for collection:', FEEDBACK_COLLECTION);
+      }
+      if (error.message.includes('unavailable')) {
+        dashboardLog.error('FIRESTORE UNAVAILABLE - Network issue or service down');
+      }
     }
+
+    dashboardLog.groupEnd();
     // Throw with the original error message if available
     const errorMessage = error instanceof Error ? error.message : 'Failed to submit feedback. Please try again.';
     throw new Error(errorMessage);

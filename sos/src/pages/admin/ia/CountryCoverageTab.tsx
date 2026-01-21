@@ -205,11 +205,11 @@ export const CountryCoverageTab: React.FC<CountryCoverageTabProps> = ({ onSucces
         const speaksFrench = languages.some((l: string) =>
           l.toLowerCase() === 'fr' || l.toLowerCase() === 'français' || l.toLowerCase() === 'french'
         );
-        // Ne compter que les avocats approuvés et actifs (visibles sur la plateforme)
+        // Ne compter que les avocats approuvés et visibles sur la plateforme
         const isApproved = profile.isApproved === true;
-        const isActive = profile.isActive !== false; // Par défaut actif si non défini
+        const isVisible = profile.isVisible === true;
 
-        if (isLawyer && isInCountry && speaksFrench && isApproved && isActive) {
+        if (isLawyer && isInCountry && speaksFrench && isApproved && isVisible) {
           frenchLawyers.push({
             id: profile.id,
             name: profile.displayName || 'N/A',
@@ -257,8 +257,8 @@ export const CountryCoverageTab: React.FC<CountryCoverageTabProps> = ({ onSucces
     profilesMap.forEach((profile) => {
       const languages = profile.languages || [];
       const isApproved = profile.isApproved === true;
-      const isActive = profile.isActive !== false;
-      if (profile.type === 'lawyer' && isApproved && isActive && languages.some((l: string) =>
+      const isVisible = profile.isVisible === true;
+      if (profile.type === 'lawyer' && isApproved && isVisible && languages.some((l: string) =>
         l.toLowerCase() === 'fr' || l.toLowerCase() === 'français' || l.toLowerCase() === 'french'
       )) {
         totalFrenchLawyers++;
