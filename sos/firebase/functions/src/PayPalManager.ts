@@ -2184,7 +2184,7 @@ export const capturePayPalOrder = onCall(
       console.error("🔴 [PAYPAL CAPTURE ERROR] Context:", {
         orderId,
         requesterId: request.auth.uid,
-        paymentDocExists: !paymentQuery.empty,
+        orderDocExists: orderDoc.exists,
       });
       throw new HttpsError("internal", "Failed to capture order");
     }
