@@ -2860,12 +2860,19 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
     const basePricing = pricing[providerRole]?.[selectedCurrency];
     if (!basePricing) return null;
 
+    console.log("💰 [Pricing] Base pricing from config:", {
+      providerRole,
+      currency: selectedCurrency,
+      basePricing,
+    });
+
     // Check if promo applies to this service
     const serviceKey = providerRole === "lawyer" ? "lawyer_call" : "expat_call";
     const promoApplies =
       activePromo && activePromo.services.includes(serviceKey);
 
     if (!promoApplies) {
+      console.log("💰 [Pricing] No promo applied, using base pricing");
       return basePricing;
     }
 
@@ -2884,12 +2891,22 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
     );
     const discountAmount = basePricing.totalAmount - discountedTotal;
 
-    return {
+    const finalPricing = {
       ...basePricing,
       totalAmount: discountedTotal,
       // Adjust provider amount proportionally
       providerAmount: Math.max(0, basePricing.providerAmount - discountAmount),
     };
+
+    console.log("🎉 [Pricing] Promo applied:", {
+      activePromo,
+      baseAmount: basePricing.totalAmount,
+      discount,
+      discountedTotal,
+      finalPricing,
+    });
+
+    return finalPricing;
   }, [pricing, providerRole, selectedCurrency, activePromo]);
 
   const service: ServiceData | null = useMemo(() => {

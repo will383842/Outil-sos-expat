@@ -156,6 +156,16 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   const intl = useIntl();
   const currentOrderIdRef = useRef<string>("");
 
+  // Stabiliser le montant pour éviter les re-renders du SDK PayPal
+  const stableAmount = useRef(amount);
+  useEffect(() => {
+    // Mettre à jour seulement si le montant change significativement (> 1 centime)
+    if (Math.abs(stableAmount.current - amount) > 0.01) {
+      console.log("💸 [PayPal] Amount changed:", { from: stableAmount.current, to: amount });
+      stableAmount.current = amount;
+    }
+  }, [amount]);
+
   const getTranslatedErrorMessage = (code: string): string => {
     const i18nKey = PAYPAL_ERROR_I18N_KEYS[code];
     if (i18nKey) {
@@ -170,8 +180,20 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   const platformFee = pricingConfig?.connectionFeeAmount ?? Math.round(amount * 0.39 * 100) / 100;
   const providerAmount = pricingConfig?.providerAmount ?? Math.round((amount - platformFee) * 100) / 100;
 
+  // Debug logs pour le montant PayPal
+  console.log("🔍 [PayPal] Pricing details:", {
+    amount,
+    currency,
+    serviceType,
+    platformFee,
+    providerAmount,
+    pricingConfig,
+    calculatedTotal: amount,
+  });
+
   // Création de l'ordre PayPal (utilisé par les deux méthodes)
-  const createOrder = async (): Promise<string> => {
+  // Utiliser useCallback pour éviter de recréer la fonction à chaque render
+  const createOrder = useCallback(async (): Promise<string> => {
     try {
       setIsProcessing(true);
       setPaymentStatus("processing");
@@ -196,6 +218,18 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
         },
         CreateOrderResponse
       >(functions, "createPayPalOrder");
+
+      console.log("💳 [PayPal] Creating order with:", {
+        callSessionId,
+        amount,
+        providerAmount,
+        platformFee,
+        currency: currency.toUpperCase(),
+        providerId,
+        clientId,
+        description: description || `Appel SOS-Expat - Session ${callSessionId}`,
+        serviceType,
+      });
 
       const result = await createPayPalOrder({
         callSessionId,
@@ -234,10 +268,11 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
       setIsProcessing(false);
       throw error;
     }
-  };
+  }, [amount, currency, providerId, callSessionId, clientId, description, serviceType, platformFee, providerAmount]);
 
   // Capture après approbation (utilisé par les deux méthodes)
-  const captureOrder = async (orderId: string, payerId?: string): Promise<void> => {
+  // Utiliser useCallback pour stabiliser la fonction
+  const captureOrder = useCallback(async (orderId: string, payerId?: string): Promise<void> => {
     try {
       const capturePayPalOrder = httpsCallable<
         { orderId: string; callSessionId: string },
@@ -269,35 +304,35 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, [callSessionId, onSuccess, onError, intl]);
 
   // Handler pour PayPal Buttons (paiement via compte PayPal)
-  const onApprove = async (data: { orderID: string; payerID?: string | null }): Promise<void> => {
+  const onApprove = useCallback(async (data: { orderID: string; payerID?: string | null }): Promise<void> => {
     setPaymentMethod("paypal");
     await captureOrder(data.orderID, data.payerID || undefined);
-  };
+  }, [captureOrder]);
 
   // Handler pour Card Fields (paiement par carte)
-  const onCardApprove = async (data: { orderID: string }): Promise<void> => {
+  const onCardApprove = useCallback(async (data: { orderID: string }): Promise<void> => {
     setPaymentMethod("card");
     await captureOrder(data.orderID);
-  };
+  }, [captureOrder]);
 
-  const handleError = (err: Record<string, unknown>) => {
+  const handleError = useCallback((err: Record<string, unknown>) => {
     console.error("Erreur PayPal:", err);
     setPaymentStatus("error");
     const code = extractPayPalErrorCode(err);
     setErrorCode(code);
     setIsProcessing(false);
     onError(new Error(getTranslatedErrorMessage(code)));
-  };
+  }, [onError, getTranslatedErrorMessage]);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     setPaymentStatus("idle");
     setIsProcessing(false);
     setPaymentMethod(null);
     onCancel?.();
-  };
+  }, [onCancel]);
 
   const resetForm = () => {
     setPaymentStatus("idle");
