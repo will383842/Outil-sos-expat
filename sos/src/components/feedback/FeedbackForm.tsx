@@ -17,7 +17,7 @@ import { useIntl } from 'react-intl';
 import { useAuth } from '../../contexts/AuthContext';
 import { useDeviceDetection } from '../../hooks/useDeviceDetection';
 import { useFeedback } from '../../hooks/useFeedback';
-import type { UserRole as FeedbackUserRole } from '../../services/feedback';
+import type { UserRole as FeedbackUserRole, FeedbackData } from '../../services/feedback';
 
 interface FeedbackFormProps {
   onClose: () => void;
