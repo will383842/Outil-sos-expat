@@ -3,8 +3,8 @@
  *
  * Permet à l'admin de :
  * - Voir la couverture des pays (non couverts, faible, bien couverts)
- * - Créer des avocats francophones pour les pays non couverts
- * - Créer des profils AAA internes
+ * - Créer des avocats francophones COMPLETS pour les pays non couverts
+ * - Créer des profils AAA internes avec avis, appels, cartes UI, etc.
  */
 
 import React, { useState, useMemo, useCallback } from 'react';
@@ -22,15 +22,19 @@ import {
   XCircle,
   Mail,
   Languages,
+  User,
+  Star,
+  Calendar,
+  Award,
 } from 'lucide-react';
-import {
-  doc,
-  setDoc,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db } from '../../../config/firebase';
 import { useAdminReferenceData } from '../../../hooks/useAdminReferenceData';
 import { cn } from '../../../utils/cn';
+import {
+  generateCompleteAaaProfile,
+  getRandomSpecialties,
+  getLawyerSpecialtyCodes,
+  type Gender,
+} from '../../../utils/aaaProfileGenerator';
 
 // =============================================================================
 // TYPES
@@ -294,77 +298,82 @@ export const CountryCoverageTab: React.FC<CountryCoverageTabProps> = ({ onSucces
 
   const handleCreateLawyer = async (
     country: CountryCoverage,
-    data: { email: string; name: string; phone?: string; languages: string[]; isAAA?: boolean }
+    data: {
+      email: string;
+      name: string;
+      phone?: string;
+      languages: string[];
+      gender: Gender;
+      yearsOfExperience: number;
+      specialties: string[];
+      isEarly: boolean;
+      allowRealCalls: boolean;
+    }
   ) => {
     setIsCreating(true);
     try {
-      const providerId = `manual_${Date.now()}`;
-      const baseData = {
-        email: data.email.toLowerCase(),
-        displayName: data.name,
-        type: 'lawyer',
-        country: country.countryCode,
+      // ✅ Utiliser le générateur complet AAA
+      const result = await generateCompleteAaaProfile({
+        role: 'lawyer',
+        gender: data.gender,
+        country: country.countryName,
+        countryCode: country.countryCode,
         languages: data.languages,
-        phone: data.phone || null,
-        isActive: true,
-        isOnline: false,
-        availability: 'offline',
-        manual: true,
-        isAAA: data.isAAA || false,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
+        specialties: data.specialties,
+        email: data.email,
+        displayName: data.name,
+        phone: data.phone,
+        yearsOfExperience: data.yearsOfExperience,
+        isEarly: data.isEarly,
+        allowRealCalls: data.allowRealCalls,
+      });
 
-      await setDoc(doc(db, 'sos_profiles', providerId), baseData);
-
-      if (data.isAAA) {
-        await setDoc(doc(db, 'users', providerId), {
-          ...baseData,
-          role: 'provider',
-          aaaPayoutMode: 'internal',
-        });
-      }
-
-      onSuccess(`Avocat ${data.isAAA ? 'AAA ' : ''}créé pour ${country.countryName}`);
+      onSuccess(`Avocat AAA complet créé pour ${country.countryName}: ${result.fullName} (avec avis, appels, cartes UI)`);
       setCreateModalCountry(null);
     } catch (err) {
       console.error('Erreur création avocat:', err);
-      onError('Erreur lors de la création');
+      onError(`Erreur lors de la création: ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
     } finally {
       setIsCreating(false);
     }
   };
 
-  const handleBatchCreate = async (data: { baseEmail: string; baseName: string }) => {
+  const handleBatchCreate = async (data: { baseEmail: string; baseName: string; gender: Gender }) => {
     setIsCreating(true);
     try {
       const selectedCoverages = countryCoverage.filter((c) => selectedCountries.has(c.countryCode));
+      let created = 0;
+
       for (const country of selectedCoverages) {
-        const providerId = `manual_${Date.now()}_${country.countryCode}`;
         const email = data.baseEmail.replace(/{pays}/gi, country.countryCode.toLowerCase());
         const name = data.baseName.replace(/{pays}/gi, country.countryName);
-        await setDoc(doc(db, 'sos_profiles', providerId), {
-          email: email.toLowerCase(),
-          displayName: name,
-          type: 'lawyer',
-          country: country.countryCode,
+
+        // ✅ Utiliser le générateur complet AAA
+        await generateCompleteAaaProfile({
+          role: 'lawyer',
+          gender: data.gender,
+          country: country.countryName,
+          countryCode: country.countryCode,
           languages: ['fr'],
-          isActive: true,
-          isOnline: false,
-          availability: 'offline',
-          manual: true,
-          batch: true,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
+          specialties: getRandomSpecialties('lawyer', 3),
+          email,
+          displayName: name,
+          yearsOfExperience: Math.floor(Math.random() * 12) + 3, // 3-15 ans
+          isEarly: false,
+          allowRealCalls: true,
         });
-        await new Promise((r) => setTimeout(r, 50));
+
+        created++;
+        // Petite pause pour éviter les rate limits
+        await new Promise((r) => setTimeout(r, 200));
       }
-      onSuccess(`${selectedCoverages.length} avocats créés`);
+
+      onSuccess(`${created} avocats AAA complets créés (avec avis, appels, cartes UI)`);
       setSelectedCountries(new Set());
       setShowBatchModal(false);
     } catch (err) {
       console.error('Erreur création par lot:', err);
-      onError('Erreur lors de la création par lot');
+      onError(`Erreur lors de la création par lot: ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
     } finally {
       setIsCreating(false);
     }
@@ -578,27 +587,51 @@ const CountryCard: React.FC<{
 const CreateLawyerModal: React.FC<{
   country: CountryCoverage;
   onClose: () => void;
-  onSubmit: (data: { email: string; name: string; phone?: string; languages: string[]; isAAA?: boolean }) => Promise<void>;
+  onSubmit: (data: {
+    email: string;
+    name: string;
+    phone?: string;
+    languages: string[];
+    gender: Gender;
+    yearsOfExperience: number;
+    specialties: string[];
+    isEarly: boolean;
+    allowRealCalls: boolean;
+  }) => Promise<void>;
   isLoading: boolean;
 }> = ({ country, onClose, onSubmit, isLoading }) => {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [languages, setLanguages] = useState<string[]>(['fr']);
-  const [isAAA, setIsAAA] = useState(false);
+  const [gender, setGender] = useState<Gender>('male');
+  const [yearsOfExperience, setYearsOfExperience] = useState(8);
+  const [specialties, setSpecialties] = useState<string[]>(() => getRandomSpecialties('lawyer', 3));
+  const [isEarly, setIsEarly] = useState(false);
+  const [allowRealCalls, setAllowRealCalls] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const allSpecialties = useMemo(() => getLawyerSpecialtyCodes(), []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !name) { setError('Email et nom obligatoires'); return; }
+    if (specialties.length === 0) { setError('Sélectionnez au moins une spécialité'); return; }
     setError(null);
-    try { await onSubmit({ email, name, phone, languages, isAAA }); }
-    catch (err) { setError(err instanceof Error ? err.message : 'Erreur'); }
+    try {
+      await onSubmit({ email, name, phone, languages, gender, yearsOfExperience, specialties, isEarly, allowRealCalls });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur');
+    }
   };
 
   const toggleLang = (l: string) => {
     if (l === 'fr') return;
     setLanguages((p) => p.includes(l) ? p.filter((x) => x !== l) : [...p, l]);
+  };
+
+  const toggleSpecialty = (code: string) => {
+    setSpecialties((p) => p.includes(code) ? p.filter((x) => x !== code) : [...p, code].slice(0, 5));
   };
 
   const langs = [
@@ -611,14 +644,14 @@ const CreateLawyerModal: React.FC<{
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-lg w-full p-6">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-2xl w-full p-6 my-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <span className="text-3xl">{country.flag}</span>
             <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Créer avocat francophone</h2>
-              <p className="text-sm text-gray-500">{country.countryName} ({country.countryCode})</p>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Créer avocat AAA complet</h2>
+              <p className="text-sm text-gray-500">{country.countryName} ({country.countryCode}) - Profil avec avis, appels, cartes UI</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
@@ -627,52 +660,137 @@ const CreateLawyerModal: React.FC<{
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email *</label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="avocat@cabinet.com" className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white" required />
+          {/* Email et Nom */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <Mail className="inline w-4 h-4 mr-1" />Email *
+              </label>
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="avocat@cabinet.com" className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white" required />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <User className="inline w-4 h-4 mr-1" />Nom complet *
+              </label>
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Maître Jean Dupont" className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white" required />
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nom *</label>
-            <div className="relative">
-              <Scale className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Cabinet Maître Dupont" className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white" required />
+
+          {/* Téléphone et Genre */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <Phone className="inline w-4 h-4 mr-1" />Téléphone
+              </label>
+              <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+33 6 12 34 56 78" className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <User className="inline w-4 h-4 mr-1" />Genre *
+              </label>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setGender('male')}
+                  className={cn("flex-1 px-4 py-2 rounded-lg font-medium transition-colors",
+                    gender === 'male' ? "bg-blue-600 text-white" : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                  )}>Homme</button>
+                <button type="button" onClick={() => setGender('female')}
+                  className={cn("flex-1 px-4 py-2 rounded-lg font-medium transition-colors",
+                    gender === 'female' ? "bg-pink-600 text-white" : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                  )}>Femme</button>
+              </div>
             </div>
           </div>
+
+          {/* Expérience */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Téléphone</label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+33 1 42 00 00 00" className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white" />
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <Calendar className="inline w-4 h-4 mr-1" />Années d'expérience: {yearsOfExperience} ans
+            </label>
+            <input type="range" min="1" max="30" value={yearsOfExperience} onChange={(e) => setYearsOfExperience(parseInt(e.target.value))} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700" />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>1 an</span>
+              <span>15 ans</span>
+              <span>30 ans</span>
             </div>
           </div>
+
+          {/* Langues */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"><Languages className="inline w-4 h-4 mr-1" />Langues</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <Languages className="inline w-4 h-4 mr-1" />Langues parlées
+            </label>
             <div className="flex flex-wrap gap-2">
               {langs.map((l) => (
                 <button key={l.code} type="button" onClick={() => toggleLang(l.code)} disabled={l.req}
                   className={cn("px-3 py-1.5 rounded-full text-sm font-medium transition-colors",
-                    languages.includes(l.code) ? (l.req ? "bg-red-100 text-red-700 cursor-not-allowed" : "bg-sos-red text-white") : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    languages.includes(l.code) ? (l.req ? "bg-red-100 text-red-700 cursor-not-allowed" : "bg-sos-red text-white") : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300"
                   )}>{l.label}{l.req && ' *'}</button>
               ))}
             </div>
           </div>
-          <div className="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-            <div>
-              <div className="font-medium text-purple-700 dark:text-purple-400">Profil AAA interne</div>
-              <div className="text-xs text-purple-600 dark:text-purple-500">Créer comme avocat AAA</div>
+
+          {/* Spécialités */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <Scale className="inline w-4 h-4 mr-1" />Spécialités juridiques ({specialties.length}/5)
+            </label>
+            <div className="max-h-32 overflow-y-auto p-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900">
+              <div className="flex flex-wrap gap-1">
+                {allSpecialties.slice(0, 20).map((code) => (
+                  <button key={code} type="button" onClick={() => toggleSpecialty(code)}
+                    className={cn("px-2 py-1 rounded text-xs font-medium transition-colors",
+                      specialties.includes(code) ? "bg-blue-600 text-white" : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 hover:bg-gray-100"
+                    )}>{code}</button>
+                ))}
+              </div>
             </div>
-            <button type="button" onClick={() => setIsAAA(!isAAA)} className={cn("w-12 h-6 rounded-full transition-colors flex items-center", isAAA ? "bg-purple-600 justify-end" : "bg-gray-300 dark:bg-gray-600 justify-start")}>
-              <div className="w-5 h-5 rounded-full bg-white shadow mx-0.5" />
-            </button>
           </div>
+
+          {/* Options AAA */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+              <div>
+                <div className="font-medium text-amber-700 dark:text-amber-400 text-sm flex items-center gap-1">
+                  <Award className="w-4 h-4" />Early Badge
+                </div>
+                <div className="text-xs text-amber-600 dark:text-amber-500">Badge pionnier</div>
+              </div>
+              <button type="button" onClick={() => setIsEarly(!isEarly)} className={cn("w-10 h-5 rounded-full transition-colors flex items-center", isEarly ? "bg-amber-600 justify-end" : "bg-gray-300 dark:bg-gray-600 justify-start")}>
+                <div className="w-4 h-4 rounded-full bg-white shadow mx-0.5" />
+              </button>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+              <div>
+                <div className="font-medium text-green-700 dark:text-green-400 text-sm flex items-center gap-1">
+                  <Phone className="w-4 h-4" />Appels réels
+                </div>
+                <div className="text-xs text-green-600 dark:text-green-500">Peut recevoir des appels</div>
+              </div>
+              <button type="button" onClick={() => setAllowRealCalls(!allowRealCalls)} className={cn("w-10 h-5 rounded-full transition-colors flex items-center", allowRealCalls ? "bg-green-600 justify-end" : "bg-gray-300 dark:bg-gray-600 justify-start")}>
+                <div className="w-4 h-4 rounded-full bg-white shadow mx-0.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Info AAA */}
+          <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+            <div className="flex items-start gap-2">
+              <Star className="w-5 h-5 text-purple-600 mt-0.5" />
+              <div>
+                <div className="font-medium text-purple-700 dark:text-purple-400">Profil AAA complet</div>
+                <div className="text-xs text-purple-600 dark:text-purple-500 mt-1">
+                  Ce profil sera créé avec: avis générés, sessions d'appels, cartes UI, KYC délégué, accès IA forcé, abonnement actif
+                </div>
+              </div>
+            </div>
+          </div>
+
           {error && <div className="p-3 bg-red-50 text-red-700 rounded-lg text-sm">{error}</div>}
+
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50">Annuler</button>
+            <button type="button" onClick={onClose} className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">Annuler</button>
             <button type="submit" disabled={isLoading} className="flex-1 px-4 py-2 bg-sos-red text-white rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center justify-center gap-2">
-              {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Plus className="w-4 h-4" />Créer</>}
+              {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Plus className="w-4 h-4" />Créer AAA complet</>}
             </button>
           </div>
         </form>
@@ -684,18 +802,19 @@ const CreateLawyerModal: React.FC<{
 const BatchCreateModal: React.FC<{
   selectedCountries: CountryCoverage[];
   onClose: () => void;
-  onSubmit: (data: { baseEmail: string; baseName: string }) => Promise<void>;
+  onSubmit: (data: { baseEmail: string; baseName: string; gender: Gender }) => Promise<void>;
   isLoading: boolean;
 }> = ({ selectedCountries, onClose, onSubmit, isLoading }) => {
   const [baseEmail, setBaseEmail] = useState('');
   const [baseName, setBaseName] = useState('');
+  const [gender, setGender] = useState<Gender>('male');
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!baseEmail || !baseName) { setError('Email et nom obligatoires'); return; }
     setError(null);
-    try { await onSubmit({ baseEmail, baseName }); }
+    try { await onSubmit({ baseEmail, baseName, gender }); }
     catch (err) { setError(err instanceof Error ? err.message : 'Erreur'); }
   };
 
@@ -704,8 +823,8 @@ const BatchCreateModal: React.FC<{
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-lg w-full p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Création par lot</h2>
-            <p className="text-sm text-gray-500">{selectedCountries.length} pays sélectionnés</p>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Création AAA par lot</h2>
+            <p className="text-sm text-gray-500">{selectedCountries.length} pays - Profils complets avec avis, appels, cartes UI</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg"><X className="w-5 h-5 text-gray-500" /></button>
         </div>
@@ -719,19 +838,46 @@ const BatchCreateModal: React.FC<{
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email de base *</label>
-            <input type="text" value={baseEmail} onChange={(e) => setBaseEmail(e.target.value)} placeholder="avocat-{pays}@cabinet.com" className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg" required />
+            <input type="text" value={baseEmail} onChange={(e) => setBaseEmail(e.target.value)} placeholder="avocat-{pays}@cabinet.com" className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white" required />
             <p className="text-xs text-gray-500 mt-1">Utilisez {'{pays}'} pour le code pays</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nom de base *</label>
-            <input type="text" value={baseName} onChange={(e) => setBaseName(e.target.value)} placeholder="Cabinet SOS-Expat {pays}" className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg" required />
+            <input type="text" value={baseName} onChange={(e) => setBaseName(e.target.value)} placeholder="Cabinet SOS-Expat {pays}" className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white" required />
             <p className="text-xs text-gray-500 mt-1">Utilisez {'{pays}'} pour le nom du pays</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <User className="inline w-4 h-4 mr-1" />Genre par défaut
+            </label>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setGender('male')}
+                className={cn("flex-1 px-4 py-2 rounded-lg font-medium transition-colors",
+                  gender === 'male' ? "bg-blue-600 text-white" : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                )}>Homme</button>
+              <button type="button" onClick={() => setGender('female')}
+                className={cn("flex-1 px-4 py-2 rounded-lg font-medium transition-colors",
+                  gender === 'female' ? "bg-pink-600 text-white" : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                )}>Femme</button>
+            </div>
+          </div>
+          {/* Info AAA */}
+          <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+            <div className="flex items-start gap-2">
+              <Star className="w-5 h-5 text-purple-600 mt-0.5" />
+              <div>
+                <div className="font-medium text-purple-700 dark:text-purple-400 text-sm">Profils AAA complets</div>
+                <div className="text-xs text-purple-600 dark:text-purple-500 mt-1">
+                  Chaque profil sera créé avec: avis, appels, cartes UI, spécialités aléatoires, KYC délégué, accès IA
+                </div>
+              </div>
+            </div>
           </div>
           {error && <div className="p-3 bg-red-50 text-red-700 rounded-lg text-sm">{error}</div>}
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50">Annuler</button>
+            <button type="button" onClick={onClose} className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">Annuler</button>
             <button type="submit" disabled={isLoading} className="flex-1 px-4 py-2 bg-sos-red text-white rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center justify-center gap-2">
-              {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Plus className="w-4 h-4" />Créer {selectedCountries.length} avocats</>}
+              {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Plus className="w-4 h-4" />Créer {selectedCountries.length} AAA</>}
             </button>
           </div>
         </form>
