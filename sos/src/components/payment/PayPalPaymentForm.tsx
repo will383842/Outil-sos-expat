@@ -181,6 +181,24 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   const intl = useIntl();
   const currentOrderIdRef = useRef<string>("");
 
+  // DEBUG LOGS - PayPal Payment Investigation
+  console.log('[PayPalPaymentForm DEBUG] 📦 Render', {
+    amount,
+    currency,
+    providerId,
+    callSessionId,
+    clientId,
+    serviceType,
+    disabled,
+    isPending,
+    isRejected,
+    isProcessing,
+    paymentStatus,
+    paymentMethod,
+    errorCode,
+    timestamp: new Date().toISOString()
+  });
+
   // Stabiliser le montant pour éviter les re-renders du SDK PayPal
   const stableAmount = useRef(amount);
   useEffect(() => {
@@ -224,9 +242,17 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   // Création de l'ordre PayPal (utilisé par les deux méthodes)
   // Utiliser useCallback pour éviter de recréer la fonction à chaque render
   const createOrder = useCallback(async (): Promise<string> => {
+    console.log('[PayPalPaymentForm DEBUG] 🚀 createOrder STARTED', {
+      amount,
+      currency,
+      providerId,
+      callSessionId,
+      timestamp: new Date().toISOString()
+    });
     try {
       setIsProcessing(true);
       setPaymentStatus("processing");
+      console.log('[PayPalPaymentForm DEBUG] 📝 State set to processing');
 
       // Collect tracking data for Meta CAPI attribution
       const metaIds = getStoredMetaIdentifiers();
@@ -289,10 +315,20 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
         },
       });
 
+      console.log('[PayPalPaymentForm DEBUG] ✅ createOrder SUCCESS', {
+        orderId: result.data.orderId,
+        approvalUrl: result.data.approvalUrl,
+        timestamp: new Date().toISOString()
+      });
       currentOrderIdRef.current = result.data.orderId;
       return result.data.orderId;
     } catch (error) {
       console.error("Erreur création ordre PayPal:", error);
+      console.log('[PayPalPaymentForm DEBUG] ❌ createOrder FAILED', {
+        error,
+        errorMessage: (error as Error)?.message,
+        timestamp: new Date().toISOString()
+      });
       // DEBUG: Afficher tous les détails de l'erreur pour diagnostic
       console.error("🔴 [PayPal DEBUG] Error details:", {
         code: (error as any)?.code,
@@ -325,6 +361,12 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   // Capture après approbation (utilisé par les deux méthodes)
   // Utiliser useCallback pour stabiliser la fonction
   const captureOrder = useCallback(async (orderId: string, payerId?: string): Promise<void> => {
+    console.log('[PayPalPaymentForm DEBUG] 🎯 captureOrder STARTED', {
+      orderId,
+      payerId,
+      callSessionId,
+      timestamp: new Date().toISOString()
+    });
     try {
       const capturePayPalOrder = httpsCallable<
         { orderId: string; callSessionId: string },
@@ -336,7 +378,14 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
         callSessionId,
       });
 
+      console.log('[PayPalPaymentForm DEBUG] 📥 captureOrder RESPONSE', {
+        success: result.data.success,
+        status: result.data.status,
+        captureId: result.data.captureId,
+        timestamp: new Date().toISOString()
+      });
       if (result.data.success) {
+        console.log('[PayPalPaymentForm DEBUG] ✅ captureOrder SUCCESS - calling onSuccess');
         setPaymentStatus("success");
         onSuccess({
           orderId,
@@ -345,6 +394,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
           captureId: result.data.captureId,
         });
       } else {
+        console.log('[PayPalPaymentForm DEBUG] ❌ captureOrder returned success=false');
         throw new Error("Capture PayPal échouée");
       }
     } catch (error) {
@@ -370,17 +420,31 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
 
   // Handler pour PayPal Buttons (paiement via compte PayPal)
   const onApprove = useCallback(async (data: { orderID: string; payerID?: string | null }): Promise<void> => {
+    console.log('[PayPalPaymentForm DEBUG] 🎉 onApprove (PayPal Button) CALLED', {
+      orderID: data.orderID,
+      payerID: data.payerID,
+      timestamp: new Date().toISOString()
+    });
     setPaymentMethod("paypal");
     await captureOrder(data.orderID, data.payerID || undefined);
   }, [captureOrder]);
 
   // Handler pour Card Fields (paiement par carte)
   const onCardApprove = useCallback(async (data: { orderID: string }): Promise<void> => {
+    console.log('[PayPalPaymentForm DEBUG] 🎉 onCardApprove (Card Fields) CALLED', {
+      orderID: data.orderID,
+      timestamp: new Date().toISOString()
+    });
     setPaymentMethod("card");
     await captureOrder(data.orderID);
   }, [captureOrder]);
 
   const handleError = useCallback((err: Record<string, unknown>) => {
+    console.log('[PayPalPaymentForm DEBUG] ❌ handleError CALLED', {
+      err,
+      errKeys: Object.keys(err || {}),
+      timestamp: new Date().toISOString()
+    });
     console.error("Erreur PayPal:", err);
     // DEBUG: Afficher tous les détails pour diagnostic
     console.error("🔴 [PayPal SDK ERROR]:", {
@@ -390,12 +454,16 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
     });
     setPaymentStatus("error");
     const code = extractPayPalErrorCode(err);
+    console.log('[PayPalPaymentForm DEBUG] ❌ Error code extracted:', code);
     setErrorCode(code);
     setIsProcessing(false);
     onError(new Error(getTranslatedErrorMessage(code)));
   }, [onError, getTranslatedErrorMessage]);
 
   const handleCancel = useCallback(() => {
+    console.log('[PayPalPaymentForm DEBUG] 🚫 handleCancel CALLED', {
+      timestamp: new Date().toISOString()
+    });
     setPaymentStatus("idle");
     setIsProcessing(false);
     setPaymentMethod(null);
@@ -411,6 +479,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
 
   // Loading state
   if (isPending) {
+    console.log('[PayPalPaymentForm DEBUG] 🔄 Rendering PENDING (SDK loading) state');
     return (
       <div className="flex items-center justify-center p-6 bg-gray-50 rounded-lg">
         <Loader2 className="w-6 h-6 animate-spin text-blue-600 mr-3" />
@@ -423,6 +492,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
 
   // Error state du script PayPal
   if (isRejected) {
+    console.log('[PayPalPaymentForm DEBUG] ❌ Rendering REJECTED (SDK failed) state');
     return (
       <div className="flex items-center p-4 bg-red-50 border border-red-200 rounded-lg">
         <AlertCircle className="w-5 h-5 text-red-500 mr-3" />
@@ -438,6 +508,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
 
   // Success state
   if (paymentStatus === "success") {
+    console.log('[PayPalPaymentForm DEBUG] ✅ Rendering SUCCESS state');
     return (
       <div className="flex items-center p-4 bg-green-50 border border-green-200 rounded-lg">
         <CheckCircle className="w-5 h-5 text-green-500 mr-3" />

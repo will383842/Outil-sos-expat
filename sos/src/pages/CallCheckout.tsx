@@ -2846,6 +2846,16 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
     isPayPalOnly,
   } = usePaymentGateway(providerCountryCode);
 
+  // DEBUG LOGS - Payment Gateway Selection
+  console.log('[CallCheckout DEBUG] 💳 Payment Gateway State', {
+    paymentGateway,
+    gatewayLoading,
+    isPayPalOnly,
+    providerCountryCode,
+    providerCountry: provider?.country,
+    timestamp: new Date().toISOString()
+  });
+
   const storedClientPhone = useMemo(() => {
     try {
       return sessionStorage.getItem("clientPhone") || "";
@@ -3282,6 +3292,15 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
   // ========================================
   const handlePayPalPaymentSuccess = useCallback(
     async (details: { orderId: string; payerId: string; status: string; captureId?: string }) => {
+      console.log('[CallCheckout DEBUG] 🎉 handlePayPalPaymentSuccess CALLED', {
+        orderId: details.orderId,
+        payerId: details.payerId,
+        status: details.status,
+        captureId: details.captureId,
+        paypalCallSessionId,
+        timestamp: new Date().toISOString()
+      });
+
       // DEBUG: Log détaillé pour PayPal
       paymentLogger.paypalSuccess({
         orderId: details.orderId,

@@ -40,6 +40,25 @@ export const PayPalOnboarding: React.FC<PayPalOnboardingProps> = ({
   const intl = useIntl();
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
+  // DEBUG LOGS - PayPal Onboarding Investigation
+  console.log('[PayPalOnboarding DEBUG] 📦 Render', {
+    providerId,
+    providerEmail,
+    providerType,
+    status,
+    step,
+    paypalEmail,
+    savedEmail,
+    isLoading,
+    isSending,
+    isVerifying,
+    error,
+    success,
+    cooldownSeconds,
+    attemptsRemaining,
+    timestamp: new Date().toISOString()
+  });
+
   // Charger le statut PayPal actuel
   useEffect(() => {
     loadPayPalStatus();
@@ -54,6 +73,7 @@ export const PayPalOnboarding: React.FC<PayPalOnboardingProps> = ({
   }, [cooldownSeconds]);
 
   const loadPayPalStatus = async () => {
+    console.log('[PayPalOnboarding DEBUG] 🔍 loadPayPalStatus STARTED', { providerId });
     try {
       setIsLoading(true);
       setError(null);
@@ -65,20 +85,32 @@ export const PayPalOnboarding: React.FC<PayPalOnboardingProps> = ({
         const email = data.paypalEmail;
         const emailVerified = data.paypalEmailVerified;
 
+        console.log('[PayPalOnboarding DEBUG] 📝 Profile data', {
+          hasEmail: !!email,
+          emailVerified,
+          paypalAccountStatus: data.paypalAccountStatus,
+          paypalOnboardingComplete: data.paypalOnboardingComplete,
+        });
+
         if (email && emailVerified) {
+          console.log('[PayPalOnboarding DEBUG] ✅ PayPal already verified');
           setSavedEmail(email);
           setPaypalEmail(email);
           setStatus("active");
           setStep("success");
           onStatusChange?.("active");
         } else {
+          console.log('[PayPalOnboarding DEBUG] ⚠️ PayPal not yet verified');
           setStatus("not_connected");
           setStep("email");
           onStatusChange?.("not_connected");
         }
+      } else {
+        console.log('[PayPalOnboarding DEBUG] ❌ Profile doc does not exist');
       }
     } catch (err) {
       console.error("Erreur chargement statut PayPal:", err);
+      console.log('[PayPalOnboarding DEBUG] ❌ loadPayPalStatus ERROR', { err });
       setError(intl.formatMessage({
         id: "provider.paypal.error.load",
         defaultMessage: "Erreur lors du chargement du statut PayPal",
@@ -94,7 +126,9 @@ export const PayPalOnboarding: React.FC<PayPalOnboardingProps> = ({
   };
 
   const sendVerificationCode = async () => {
+    console.log('[PayPalOnboarding DEBUG] 📧 sendVerificationCode STARTED', { paypalEmail });
     if (!paypalEmail.trim()) {
+      console.log('[PayPalOnboarding DEBUG] ⚠️ Email is empty');
       setError(intl.formatMessage({
         id: "provider.paypal.error.emailRequired",
         defaultMessage: "Veuillez entrer votre adresse email PayPal",
@@ -103,6 +137,7 @@ export const PayPalOnboarding: React.FC<PayPalOnboardingProps> = ({
     }
 
     if (!validateEmail(paypalEmail)) {
+      console.log('[PayPalOnboarding DEBUG] ⚠️ Email is invalid');
       setError(intl.formatMessage({
         id: "provider.paypal.error.invalidEmail",
         defaultMessage: "Veuillez entrer une adresse email valide",
@@ -114,12 +149,14 @@ export const PayPalOnboarding: React.FC<PayPalOnboardingProps> = ({
       setIsSending(true);
       setError(null);
 
+      console.log('[PayPalOnboarding DEBUG] 📤 Calling sendPayPalVerificationCode function');
       const sendCode = httpsCallable(functions, "sendPayPalVerificationCode");
       await sendCode({
         email: paypalEmail.trim().toLowerCase(),
         locale: intl.locale,
       });
 
+      console.log('[PayPalOnboarding DEBUG] ✅ Code sent successfully');
       setStep("verification");
       setVerificationCode(["", "", "", "", "", ""]);
       setAttemptsRemaining(3);
@@ -134,6 +171,11 @@ export const PayPalOnboarding: React.FC<PayPalOnboardingProps> = ({
 
     } catch (err) {
       console.error("Erreur envoi code:", err);
+      console.log('[PayPalOnboarding DEBUG] ❌ sendVerificationCode ERROR', {
+        err,
+        errorMessage: (err as Error)?.message,
+        errorCode: (err as { code?: string })?.code,
+      });
       const errorMessage = (err as Error).message || (err as { code?: string }).code;
 
       if (errorMessage?.includes("resource-exhausted")) {
@@ -191,8 +233,14 @@ export const PayPalOnboarding: React.FC<PayPalOnboardingProps> = ({
 
   const verifyCode = async (code?: string) => {
     const codeToVerify = code || verificationCode.join("");
+    console.log('[PayPalOnboarding DEBUG] 🔐 verifyCode STARTED', {
+      codeLength: codeToVerify.length,
+      paypalEmail,
+      providerType,
+    });
 
     if (codeToVerify.length !== 6) {
+      console.log('[PayPalOnboarding DEBUG] ⚠️ Code incomplete');
       setError(intl.formatMessage({
         id: "provider.paypal.error.incompleteCode",
         defaultMessage: "Veuillez entrer le code complet à 6 chiffres",
@@ -204,13 +252,15 @@ export const PayPalOnboarding: React.FC<PayPalOnboardingProps> = ({
       setIsVerifying(true);
       setError(null);
 
+      console.log('[PayPalOnboarding DEBUG] 📤 Calling verifyPayPalCode function');
       const verify = httpsCallable(functions, "verifyPayPalCode");
-      await verify({
+      const result = await verify({
         code: codeToVerify,
         email: paypalEmail.trim().toLowerCase(),
         providerType,
       });
 
+      console.log('[PayPalOnboarding DEBUG] ✅ verifyPayPalCode SUCCESS', { result: result.data });
       setSavedEmail(paypalEmail);
       setStatus("active");
       setStep("success");
@@ -222,12 +272,18 @@ export const PayPalOnboarding: React.FC<PayPalOnboardingProps> = ({
       }));
 
       // Rafraîchir la page après 2 secondes
+      console.log('[PayPalOnboarding DEBUG] 🔄 Will reload page in 2 seconds');
       setTimeout(() => {
         window.location.reload();
       }, 2000);
 
     } catch (err) {
       console.error("Erreur vérification code:", err);
+      console.log('[PayPalOnboarding DEBUG] ❌ verifyCode ERROR', {
+        err,
+        errorMessage: (err as Error)?.message,
+        errorCode: (err as { code?: string })?.code,
+      });
       const errorMessage = (err as Error).message || "";
 
       // Extraire le nombre de tentatives restantes du message d'erreur
