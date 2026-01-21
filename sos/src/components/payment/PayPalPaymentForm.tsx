@@ -477,7 +477,10 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
                 <FormattedMessage id="payment.cardholderName" defaultMessage="Nom sur la carte" />
               </label>
               <div className="w-full h-12 sm:h-11 border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-shadow">
-                <PayPalNameField className="w-full h-full" />
+                <PayPalNameField
+                  className="w-full h-full"
+                  style={{ border: 'none', outline: 'none' }}
+                />
               </div>
             </div>
 
@@ -487,7 +490,10 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
                 <FormattedMessage id="payment.cardNumber" defaultMessage="Numéro de carte" />
               </label>
               <div className="w-full h-12 sm:h-11 border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-shadow">
-                <PayPalNumberField className="w-full h-full" />
+                <PayPalNumberField
+                  className="w-full h-full"
+                  style={{ border: 'none', outline: 'none' }}
+                />
               </div>
             </div>
 
@@ -498,7 +504,10 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
                   <FormattedMessage id="payment.expiry" defaultMessage="Expiration" />
                 </label>
                 <div className="w-full h-12 sm:h-11 border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-shadow">
-                  <PayPalExpiryField className="w-full h-full" />
+                  <PayPalExpiryField
+                    className="w-full h-full"
+                    style={{ border: 'none', outline: 'none' }}
+                  />
                 </div>
               </div>
               <div>
@@ -506,7 +515,10 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
                   <FormattedMessage id="payment.cvv" defaultMessage="CVV" />
                 </label>
                 <div className="w-full h-12 sm:h-11 border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-shadow">
-                  <PayPalCVVField className="w-full h-full" />
+                  <PayPalCVVField
+                    className="w-full h-full"
+                    style={{ border: 'none', outline: 'none' }}
+                  />
                 </div>
               </div>
             </div>
