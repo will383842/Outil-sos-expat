@@ -292,8 +292,11 @@ const SuccessPayment: React.FC = () => {
       const parsedAmount = parseFloat(urlAmount);
       setPaidAmount(Number.isNaN(parsedAmount) ? 0 : parsedAmount);
       setPaidServiceType(urlServiceType);
-      const parsedDuration = urlDuration ? parseInt(urlDuration, 10) : 0;
-      const d = Number.isNaN(parsedDuration) ? 0 : parsedDuration;
+      // P0 FIX 2026-01-21: Toujours utiliser la durée standard basée sur le type de service
+      // Ignorer urlDuration car il peut contenir une valeur incorrecte
+      // Durées fixes: lawyer_call = 20 min, expat_call = 30 min
+      const isLawyerService = urlServiceType === "lawyer_call" || urlProviderRole === "lawyer";
+      const d = isLawyerService ? 20 : 30;
       setPaidDuration(d);
       setProviderRole(urlProviderRole || "");
       setTimeRemaining(d * 60);
@@ -304,8 +307,10 @@ const SuccessPayment: React.FC = () => {
     if (providerInfo) {
       const price =
         providerInfo.price || (providerInfo.type === "lawyer" ? 49 : 19);
-      const duration =
-        providerInfo.duration || (providerInfo.type === "lawyer" ? 20 : 30);
+      // P0 FIX 2026-01-21: Toujours utiliser la durée standard basée sur le type de provider
+      // Ignorer providerInfo.duration car il peut contenir une valeur incorrecte (ex: 44 au lieu de 20/30)
+      // Durées fixes: Avocat = 20 min, Expat = 30 min
+      const duration = providerInfo.type === "lawyer" ? 20 : 30;
 
       setPaidAmount(price);
       setPaidServiceType(

@@ -1901,9 +1901,16 @@ export class TwilioCallManager {
               // ✅ BUG FIX: Nettoyer TOUS les champs busy-related en plus de mettre offline
               // Sans ce nettoyage, les champs restent orphelins et peuvent causer des problèmes
               // quand le prestataire se remet en ligne
+              //
+              // P0 FIX 2026-01-21: Ajouter offlineReason pour identifier les offline "forcés"
+              // (punition pour no_answer) vs les offline volontaires.
+              // setProviderAvailable vérifie ce champ pour savoir s'il doit débloquer le provider.
               const offlineUpdateData = {
                 isOnline: false,
                 availability: 'offline',
+                // P0 FIX: Marquer comme offline forcé pour que setProviderAvailable puisse le débloquer
+                offlineReason: 'provider_no_answer',
+                offlineSince: admin.firestore.FieldValue.serverTimestamp(),
                 // Nettoyer les champs busy-related
                 currentCallSessionId: admin.firestore.FieldValue.delete(),
                 busySince: admin.firestore.FieldValue.delete(),

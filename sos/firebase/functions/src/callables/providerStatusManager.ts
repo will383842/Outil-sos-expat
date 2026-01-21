@@ -377,9 +377,7 @@ export async function setProviderAvailable(
       const previousStatus: AvailabilityStatus =
         (userData?.availability as AvailabilityStatus) || 'offline';
 
-      // 2. Vérifier si déjà available OU si offline
-      // 2026-01-19 FIX: Ne PAS remettre en ligne un prestataire qui était offline
-      // setProviderAvailable ne doit s'appliquer qu'aux prestataires qui étaient busy
+      // 2. Vérifier si déjà available
       if (previousStatus === 'available') {
         console.log(`[ProviderStatusManager] Provider ${providerId} already available`);
         return {
@@ -393,17 +391,32 @@ export async function setProviderAvailable(
         };
       }
 
+      // P0 FIX 2026-01-21: Si le provider est OFFLINE mais a été mis OFFLINE par le système
+      // (punition pour no_answer), on doit quand même le remettre disponible après le cooldown.
+      // On vérifie le champ offlineReason qui est set par TwilioCallManager lors d'un provider_no_answer.
+      //
+      // Scénario bug: Provider no_answer → setProviderOffline (avec offlineReason) → 5min cooldown → setProviderAvailable
+      // Avant: setProviderAvailable ignorait les OFFLINE → provider bloqué pour toujours
+      // Après: Si offlineReason existe, c'est un offline forcé → on débloque
       if (previousStatus === 'offline') {
-        console.log(`[ProviderStatusManager] Provider ${providerId} is offline - NOT setting to available`);
-        return {
-          success: true,
-          providerId,
-          previousStatus: 'offline' as AvailabilityStatus,
-          newStatus: 'offline' as AvailabilityStatus,
-          timestamp: now.toMillis(),
-          message: 'Provider is offline, not changing status',
-          skipSiblingRelease: true,
-        };
+        const offlineReason = userData?.offlineReason;
+
+        if (!offlineReason) {
+          // Offline volontaire (le provider a choisi d'être offline) - ne pas changer
+          console.log(`[ProviderStatusManager] Provider ${providerId} is voluntarily offline - NOT setting to available`);
+          return {
+            success: true,
+            providerId,
+            previousStatus: 'offline' as AvailabilityStatus,
+            newStatus: 'offline' as AvailabilityStatus,
+            timestamp: now.toMillis(),
+            message: 'Provider is voluntarily offline, not changing status',
+            skipSiblingRelease: true,
+          };
+        }
+
+        // Offline forcé (punition no_answer) - continuer pour le remettre disponible
+        console.log(`[ProviderStatusManager] Provider ${providerId} is FORCE offline (offlineReason: ${offlineReason}) - will set to available`);
       }
 
       // ✅ BUG FIX: Vérifier si le prestataire voulait être offline AVANT l'appel
@@ -428,6 +441,9 @@ export async function setProviderAvailable(
         busySiblingCallSessionId: admin.firestore.FieldValue.delete(),
         // ✅ BUG FIX: Nettoyer le flag après utilisation
         wasOfflineBeforeCall: admin.firestore.FieldValue.delete(),
+        // P0 FIX 2026-01-21: Nettoyer les champs offline forcé
+        offlineReason: admin.firestore.FieldValue.delete(),
+        offlineSince: admin.firestore.FieldValue.delete(),
         lastStatusChange: now,
         lastActivityCheck: now,
         lastActivity: now,

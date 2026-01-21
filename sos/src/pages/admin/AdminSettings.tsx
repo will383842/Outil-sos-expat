@@ -251,8 +251,15 @@ const AdminSettings: React.FC = () => {
   const savePayoutConfig = async (config: PayoutConfig) => {
     setSavingPayoutConfig(true);
     try {
+      // Helper to remove undefined values (Firestore doesn't accept undefined)
+      const cleanUndefined = (obj: Record<string, unknown>) => {
+        return Object.fromEntries(
+          Object.entries(obj).filter(([, v]) => v !== undefined)
+        );
+      };
+
       await setDoc(doc(db, 'admin_config', 'aaa_payout'), {
-        externalAccounts: config.externalAccounts.map(acc => ({
+        externalAccounts: config.externalAccounts.map(acc => cleanUndefined({
           ...acc,
           createdAt: acc.createdAt instanceof Date
             ? Timestamp.fromDate(acc.createdAt)

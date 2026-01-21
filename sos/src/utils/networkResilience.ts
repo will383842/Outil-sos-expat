@@ -11,6 +11,7 @@ const FIREBASE_PATTERNS = [
   'identitytoolkit.googleapis.com',
   'securetoken.googleapis.com',
   'firestore.googleapis.com',
+  'cloudfunctions.net', // Cloud Functions v2 - nécessaire pour PayPal et autres callables
 ];
 
 /**

@@ -74,10 +74,8 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose, pageContext }) => 
   // Validation
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const isDescriptionValid = description.trim().length >= 10;
-  // Email obligatoire seulement si l'utilisateur est connecté, sinon optionnel
-  const isEmailRequired = !!user?.email;
-  const isEmailOk = isEmailRequired ? (email && isEmailValid) : (!email || isEmailValid);
-  const isFormValid = isEmailOk && feedbackType && isDescriptionValid;
+  // Email TOUJOURS obligatoire (requis par Firestore rules)
+  const isFormValid = email && isEmailValid && feedbackType && isDescriptionValid;
 
   // Gestion du screenshot
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -269,7 +267,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose, pageContext }) => 
           className="block text-sm font-medium text-gray-700 mb-1.5"
         >
           {intl.formatMessage({ id: 'feedback.field.email', defaultMessage: 'Email' })}
-          {!user && <span className="text-gray-400 font-normal ml-1">(optionnel)</span>}
+          <span className="text-red-500 ml-0.5">*</span>
         </label>
         <input
           id="feedback-email"

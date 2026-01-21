@@ -62,9 +62,34 @@ const PAYPAL_ERROR_I18N_KEYS: Record<string, string> = {
   ORDER_NOT_APPROVED: "payment.paypal.err.orderNotApproved",
   AUTHORIZATION_VOIDED: "payment.paypal.err.authorizationVoided",
   INTERNAL_SERVER_ERROR: "payment.paypal.err.serverError",
+  NETWORK_ERROR: "payment.paypal.err.networkError",
 };
 
+// Détecte si l'erreur est une erreur réseau (souvent causée par des extensions de navigateur)
+function isNetworkError(error: unknown): boolean {
+  if (!error) return false;
+  const errorStr = String(error).toLowerCase();
+  const message = (error as Error)?.message?.toLowerCase() || "";
+
+  return (
+    errorStr.includes("failed to fetch") ||
+    errorStr.includes("network error") ||
+    errorStr.includes("networkerror") ||
+    errorStr.includes("net::err_failed") ||
+    errorStr.includes("aborted") ||
+    message.includes("failed to fetch") ||
+    message.includes("network") ||
+    (error as Error)?.name === "AbortError" ||
+    (error as Error)?.name === "TypeError"
+  );
+}
+
 function extractPayPalErrorCode(error: unknown): string {
+  // Vérifier d'abord si c'est une erreur réseau
+  if (isNetworkError(error)) {
+    return "NETWORK_ERROR";
+  }
+
   if (error && typeof error === "object") {
     const err = error as Record<string, unknown>;
     let errorCode = (err.code as string) || (err.name as string) || "";
@@ -428,6 +453,61 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
 
   // Error state
   if (paymentStatus === "error") {
+    // Erreur réseau - message spécial avec instructions
+    if (errorCode === "NETWORK_ERROR") {
+      return (
+        <div className="space-y-4">
+          <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <span className="text-orange-800 block font-medium">
+                  <FormattedMessage
+                    id="payment.paypal.networkError.title"
+                    defaultMessage="Problème de connexion détecté"
+                  />
+                </span>
+                <span className="text-orange-700 text-sm block mt-1">
+                  <FormattedMessage
+                    id="payment.paypal.networkError.description"
+                    defaultMessage="Une extension de navigateur (antivirus, bloqueur de pub) semble bloquer le paiement."
+                  />
+                </span>
+                <ul className="text-orange-700 text-sm mt-3 space-y-1.5 list-disc list-inside">
+                  <li>
+                    <FormattedMessage
+                      id="payment.paypal.networkError.tip1"
+                      defaultMessage="Essayez en navigation privée (Ctrl+Maj+N)"
+                    />
+                  </li>
+                  <li>
+                    <FormattedMessage
+                      id="payment.paypal.networkError.tip2"
+                      defaultMessage="Désactivez temporairement votre antivirus web"
+                    />
+                  </li>
+                  <li>
+                    <FormattedMessage
+                      id="payment.paypal.networkError.tip3"
+                      defaultMessage="Désactivez les bloqueurs de publicités"
+                    />
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={resetForm}
+            className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+          >
+            <FormattedMessage id="payment.paypal.retry" defaultMessage="Réessayer" />
+          </button>
+        </div>
+      );
+    }
+
+    // Erreur standard
     return (
       <div className="space-y-4">
         <div className="flex items-center p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -496,26 +576,19 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
           createOrder={createOrder}
           onApprove={onCardApprove}
           onError={handleError}
+          // Note: PayPal SDK style types are incomplete, using type assertion
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           style={{
             input: {
               "font-size": "16px",
               "font-family": "system-ui, -apple-system, sans-serif",
               "color": "#374151",
               "padding": "0 12px",
-              "border": "none",
-              "outline": "none",
-              "background": "transparent",
-            },
-            // Supprimer les bordures des conteneurs internes PayPal
-            ".card-field": {
-              "border": "none",
-              "border-radius": "0",
-              "box-shadow": "none",
             },
             ".invalid": {
               "color": "#dc2626",
             },
-          }}
+          } as any}
         >
           <div className="space-y-4">
             {/* Header avec icônes de cartes */}

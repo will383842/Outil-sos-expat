@@ -28,6 +28,7 @@ const COLORS = {
   api: '#F59E0B',      // Amber - API calls
   stripe: '#6366F1',   // Indigo - Stripe
   paypal: '#0070BA',   // PayPal blue
+  kyc: '#059669',      // Emerald - KYC/Onboarding
   auth: '#EF4444',     // Red - Auth
   render: '#6B7280',   // Gray - Render cycles
   error: '#DC2626',    // Red - Errors
@@ -92,6 +93,9 @@ export const dashboardLog = {
 
   // PayPal operations
   paypal: (message: string, data?: unknown) => log('paypal', message, data),
+
+  // KYC/Onboarding operations
+  kyc: (message: string, data?: unknown) => log('kyc', message, data),
 
   // Auth operations
   auth: (message: string, data?: unknown) => log('auth', message, data),

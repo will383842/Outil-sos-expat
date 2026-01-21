@@ -746,42 +746,29 @@ export const setMetaPixelUserData = (userData: {
 };
 
 /**
- * Envoie les donnees utilisateur stockees a Meta via fbq('setUserData', ...)
- * IMPORTANT: Appelez cette fonction APRES setMetaPixelUserData() pour activer l'Advanced Matching
+ * Envoie les donnees utilisateur stockees a Meta
  *
- * Cette fonction envoie les donnees a Meta pour ameliorer le match rate des conversions.
- * Meta va hasher ces donnees cote serveur.
+ * NOTE: La commande fbq('setUserData', ...) n'est plus supportee par le Meta Pixel SDK 2.0.
+ * L'Advanced Matching est gere via CAPI (Conversions API) cote serveur.
+ * Cette fonction est conservee pour compatibilite mais ne fait plus d'appel fbq.
  *
- * TRACKING SANS CONSENTEMENT - Les donnees sont toujours envoyees
+ * TRACKING SANS CONSENTEMENT - Les donnees sont stockees localement pour CAPI
  */
 export const applyMetaPixelUserData = (): void => {
-  if (!isFbqAvailable()) {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('[MetaPixel] fbq non disponible - Advanced Matching non applique');
-    }
-    return;
-  }
-
   if (Object.keys(storedUserData).length === 0) {
     if (process.env.NODE_ENV === 'development') {
-      console.log('[MetaPixel] Pas de donnees utilisateur a envoyer');
+      console.log('[MetaPixel] Pas de donnees utilisateur stockees');
     }
     return;
   }
 
-  try {
-    // Envoyer les donnees a Meta via fbq('setUserData', ...)
-    // Meta va hasher ces donnees automatiquement
-    window.fbq!('setUserData', storedUserData);
-
-    if (process.env.NODE_ENV === 'development') {
-      console.log('%c[MetaPixel] Advanced Matching APPLIED to Meta:', 'color: #1877F2; font-weight: bold; background: #e7f3ff; padding: 2px 6px;', {
-        fieldsCount: Object.keys(storedUserData).length,
-        fields: Object.keys(storedUserData),
-      });
-    }
-  } catch (error) {
-    console.error('[MetaPixel] Erreur envoi Advanced Matching:', error);
+  // Note: fbq('setUserData', ...) n'est pas une commande valide du SDK 2.0
+  // L'Advanced Matching est gere via CAPI (metaConversionsApi.ts)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('%c[MetaPixel] User data stored for CAPI:', 'color: #1877F2; font-weight: bold;', {
+      fieldsCount: Object.keys(storedUserData).length,
+      fields: Object.keys(storedUserData),
+    });
   }
 };
 
@@ -867,26 +854,16 @@ export const getAdvancedMatchingReport = (): {
 
 /**
  * Efface les donnees utilisateur stockees (a appeler lors de la deconnexion)
- * Envoie egalement un objet vide a Meta pour reinitialiser les donnees
+ *
+ * NOTE: La commande fbq('setUserData', ...) n'est plus supportee par le Meta Pixel SDK 2.0.
+ * On efface uniquement les donnees stockees localement.
  */
 export const clearMetaPixelUserData = (): void => {
   // Effacer les donnees stockees localement
   storedUserData = {};
 
-  // Envoyer un objet vide a Meta pour reinitialiser les donnees
-  if (isFbqAvailable()) {
-    try {
-      window.fbq!('setUserData', {});
-      if (process.env.NODE_ENV === 'development') {
-        console.log('%c[MetaPixel] User data cleared in Meta', 'color: #1877F2; font-weight: bold');
-      }
-    } catch (error) {
-      console.error('[MetaPixel] Error clearing user data in Meta:', error);
-    }
-  }
-
   if (process.env.NODE_ENV === 'development') {
-    console.log('%c[MetaPixel] User data cleared locally', 'color: #1877F2; font-weight: bold');
+    console.log('%c[MetaPixel] User data cleared', 'color: #1877F2; font-weight: bold');
   }
 };
 
