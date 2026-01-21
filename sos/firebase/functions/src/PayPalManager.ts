@@ -1242,7 +1242,7 @@ export class PayPalManager {
       // Importer et utiliser scheduleCallTaskWithIdempotence pour éviter les doublons
       try {
         const { scheduleCallTaskWithIdempotence } = await import("./lib/tasks");
-        const CALL_DELAY_SECONDS = 60; // 1 minute de délai
+        const CALL_DELAY_SECONDS = 240; // 4 minutes de délai
 
         console.log(`📞 [PAYPAL] Scheduling call for session: ${orderData.callSessionId}`);
 
