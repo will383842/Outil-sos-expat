@@ -22,7 +22,7 @@ import {
   Sparkles,
   ArrowRight,
 } from 'lucide-react';
-import type { User } from '../../types/user';
+import type { User } from '../../contexts/types';
 
 interface QuickActionsProps {
   user: User;

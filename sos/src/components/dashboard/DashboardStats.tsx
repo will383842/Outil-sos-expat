@@ -17,7 +17,7 @@ import {
   Wallet,
   Award,
 } from 'lucide-react';
-import type { User } from '../../types/user';
+import type { User } from '../../contexts/types';
 
 interface DashboardStatsProps {
   user: User;
@@ -189,7 +189,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
           icon={<Wallet className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600 dark:text-emerald-400" />}
           label={intl.formatMessage({ id: 'dashboard.stats.earnings', defaultMessage: 'Earnings' })}
           value={formatCurrency(user.totalEarnings || stats.totalEarnings)}
-          subValue={formatCurrency((user.pendingBalance || 0))}
+          subValue={formatCurrency(((user as any).pendingBalance || 0))}
           gradient="from-emerald-600 to-teal-600"
           iconBg="bg-emerald-100 dark:bg-emerald-900/30"
           loading={loading}

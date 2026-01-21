@@ -2229,7 +2229,7 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                   price: c.price,
                   createdAt: c.createdAt,
                 }))}
-                reviews={providerReviews.map(r => ({
+                reviews={reviews.map((r: ProviderReview) => ({
                   rating: r.rating,
                   status: r.status,
                 }))}
@@ -2258,7 +2258,7 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                     price: c.price,
                     clientRating: c.clientRating,
                   }))}
-                  reviews={providerReviews.map(r => ({
+                  reviews={reviews.map((r: ProviderReview) => ({
                     id: r.id,
                     rating: r.rating,
                     createdAt: r.createdAt,
