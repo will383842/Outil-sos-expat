@@ -2301,11 +2301,14 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
       // P0 FIX: Si on passe à "available", nettoyer TOUS les champs de statut d'appel
       // pour éviter les incohérences si Cloud Tasks a échoué
+      // ✅ BUG FIX: Ajouter lastActivity quand on passe à "available" pour éviter
+      // que checkProviderInactivity ne mette le prestataire hors ligne immédiatement
       const baseUpdate = {
         availability,
         isOnline,
         updatedAt: now,
         lastStatusChange: now,
+        ...(availability === 'available' ? { lastActivity: now } : {}),
       };
 
       const cleanupFields = availability === 'available' ? {
@@ -2325,6 +2328,8 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           availability: isOnline ? 'available' : 'unavailable',
           updatedAt: now,
           lastStatusChange: now,
+          // ✅ BUG FIX: Initialiser lastActivity à la mise en ligne
+          ...(isOnline ? { lastActivity: now } : {}),
           ...cleanupFields,
           // isVisible reste inchangé - géré par l'approbation
         },

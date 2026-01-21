@@ -179,7 +179,10 @@ export const useProviderActivityTracker = ({
   useEffect(() => {
     if (!isOnline || !isProvider) return;
 
-    const events = ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'];
+    // ✅ BUG FIX: Retirer 'mousemove' car il reset constamment le timer d'inactivité
+    // Un simple mouvement de souris empêchait les prestataires d'être considérés inactifs
+    // Garder uniquement les interactions intentionnelles
+    const events = ['click', 'keydown', 'scroll', 'touchstart'];
 
     events.forEach(event => {
       window.addEventListener(event, handleActivity, { passive: true });

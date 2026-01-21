@@ -43,6 +43,14 @@ export const checkProviderInactivity = scheduler.onSchedule(
         const lastActivity = data.lastActivity?.toMillis?.() || 0;
         const lastStatusChange = data.lastStatusChange?.toMillis?.() || 0;
 
+        // ✅ BUG FIX: Protection si lastActivity n'est pas défini (= 0)
+        // Évite de mettre hors ligne des prestataires qui viennent de se connecter
+        // et dont le champ lastActivity n'a pas encore été initialisé
+        if (lastActivity === 0) {
+          console.log(`⏭️ Skip ${doc.id}: lastActivity non défini (nouveau prestataire?)`);
+          continue;
+        }
+
         // ✅ BUG FIX: Protection améliorée basée sur DEUX critères
         const nowMs = Date.now();
         const recentThreshold = 15 * 60 * 1000; // 15 minutes

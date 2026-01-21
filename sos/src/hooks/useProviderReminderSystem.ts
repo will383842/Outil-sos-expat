@@ -167,18 +167,31 @@ export const useProviderReminderSystem = ({
   }, []);
 
   // Handler pour passer hors ligne
+  // ✅ BUG FIX: Attendre que l'action async termine AVANT de fermer le modal
+  // + Ajouter feedback d'erreur à l'utilisateur
   const handleGoOffline = useCallback(async () => {
-    setShowModal(false);
-    // Annuler le timeout de mise hors ligne automatique
+    // Annuler le timeout de mise hors ligne automatique EN PREMIER
     if (popupTimeoutRef.current) {
       clearTimeout(popupTimeoutRef.current);
       popupTimeoutRef.current = null;
     }
+
     try {
+      console.log('[ReminderSystem] 🔴 Calling setProviderOffline...');
       const setProviderOffline = httpsCallable(functions, 'setProviderOffline');
       await setProviderOffline({ userId });
+      console.log('[ReminderSystem] ✅ Provider set offline successfully');
+      // Fermer le modal APRÈS succès
+      setShowModal(false);
     } catch (error) {
-      console.error('Error setting provider offline:', error);
+      console.error('[ReminderSystem] ❌ Error setting provider offline:', error);
+      // ✅ BUG FIX: Afficher feedback d'erreur à l'utilisateur
+      // On ferme quand même le modal mais on alerte l'utilisateur
+      setShowModal(false);
+      // Utiliser alert temporairement - idéalement utiliser un toast/snackbar
+      setTimeout(() => {
+        alert('Erreur lors de la mise hors ligne. Le système réessaiera automatiquement.');
+      }, 100);
     }
   }, [userId]);
 
@@ -238,13 +251,16 @@ export const useProviderReminderSystem = ({
 
       popupTimeoutRef.current = setTimeout(async () => {
         console.warn(`[ReminderSystem] 🔴 TIMEOUT EXPIRED! Auto-setting provider OFFLINE after ${PROVIDER_ACTIVITY_CONFIG.POPUP_AUTO_OFFLINE_TIMEOUT_MINUTES} minutes without response`);
-        setShowModal(false);
         try {
           const setProviderOffline = httpsCallable(functions, 'setProviderOffline');
           await setProviderOffline({ userId });
-          console.log('[ReminderSystem] ✅ Provider set offline successfully');
+          console.log('[ReminderSystem] ✅ Provider set offline successfully (auto-timeout)');
+          // ✅ BUG FIX: Fermer le modal APRÈS succès
+          setShowModal(false);
         } catch (error) {
           console.error('[ReminderSystem] ❌ Error auto-setting provider offline:', error);
+          // En cas d'erreur, fermer quand même le modal (le backend schedulé prendra le relais)
+          setShowModal(false);
         }
       }, timeoutMs);
 
