@@ -1,5 +1,5 @@
 // src/pages/Dashboard.tsx
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useLocaleNavigate } from "../multilingual-system/hooks/useLocaleNavigate";
 import { getTranslatedRouteSlug, type RouteKey } from "../multilingual-system/core/routing/localeRoutes";
@@ -623,6 +623,11 @@ const Dashboard: React.FC = () => {
 const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
 
+  // ✅ P0 FIX: Stable state for KYC display - prevents flickering from Firestore updates
+  // This is set ONCE on initial load and only changes when user explicitly completes KYC
+  const [showStripeKycStable, setShowStripeKycStable] = useState<boolean | null>(null);
+  const stripeKycInitializedRef = useRef(false);
+
   // data
   const [currentStatus, setCurrentStatus] = useState<boolean>(
     user?.isOnline ?? false
@@ -741,6 +746,36 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
       setUserDataReady(true);
     }
   }, [user]);
+
+  // ✅ P0 FIX: Initialize stable KYC display state ONCE to prevent flickering
+  // This effect runs only when userDataReady becomes true and sets the initial state
+  // Subsequent Firestore updates will NOT change this state - only explicit user action will
+  useEffect(() => {
+    if (userDataReady && user && !stripeKycInitializedRef.current) {
+      const isProvider = user.role === "lawyer" || user.role === "expat";
+      const isStripeGateway = user?.paymentGateway === "stripe" || !user?.paymentGateway;
+      const needsKyc =
+        user?.kycStatus === "not_started" ||
+        user?.kycStatus === "in_progress" ||
+        !user?.stripeOnboardingComplete;
+
+      const shouldShowKyc = isProvider && isStripeGateway && needsKyc;
+
+      // Only initialize once
+      stripeKycInitializedRef.current = true;
+      setShowStripeKycStable(shouldShowKyc);
+
+      if (import.meta.env.DEV) {
+        console.log("[Dashboard] KYC stable state initialized:", shouldShowKyc, {
+          isProvider,
+          isStripeGateway,
+          needsKyc,
+          kycStatus: user?.kycStatus,
+          stripeOnboardingComplete: user?.stripeOnboardingComplete
+        });
+      }
+    }
+  }, [userDataReady, user]);
 
 // ✅ Force refresh user data on mount for lawyer/expat (fixes KYC loading issue after signup)
 // ⚠️ Limited to ONE attempt to prevent infinite loops
@@ -1601,18 +1636,17 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
       {/* ========================================== */}
       <div className="dashboard-banner-zone transition-all duration-300 ease-out">
         {/* STRIPE KYC: Show verification form if Stripe provider and not complete */}
-        {userDataReady &&
-          user &&
-          (user.role === "lawyer" || user.role === "expat") &&
-          (user?.paymentGateway === "stripe" || !user?.paymentGateway) &&
-          (user?.kycStatus === "not_started" ||
-            user?.kycStatus === "in_progress" ||
-            !user?.stripeOnboardingComplete) && (
+        {/* ✅ P0 FIX: Use stable state to prevent flickering from Firestore updates */}
+        {showStripeKycStable === true && user && (
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 lg:py-8 animate-fade-in">
               <KYCBannerCompact user={user} kycType="stripe">
                 <StripeKYC
                   userType={user.role as "lawyer" | "expat"}
-                  onComplete={() => window.location.reload()}
+                  onComplete={() => {
+                    // ✅ P0 FIX: Update stable state before reload to prevent re-showing
+                    setShowStripeKycStable(false);
+                    window.location.reload();
+                  }}
                 />
               </KYCBannerCompact>
             </div>
@@ -2301,7 +2335,7 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
 
               {/* PROFIL — Vue et Édition unifiées */}
               {activeTab === "profile" && (
-                <div className={`${softCard} overflow-hidden`}>
+                <div className={`${softCard} overflow-hidden tab-content-animate`}>
                   <div
                     className={`px-6 py-4 ${headerGradient} flex justify-between items-center`}
                   >
@@ -2864,7 +2898,7 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
 
               {/* PARAMÈTRES — (maintenant intégré dans profile, garder pour compatibilité) */}
               {activeTab === "settings" && (
-                <div className={`${softCard} overflow-hidden`}>
+                <div className={`${softCard} overflow-hidden tab-content-animate`}>
                   <div className={`px-6 py-4 ${headerGradient}`}>
                     <h2 className="text-xl font-semibold">
                       {intl.formatMessage({ id: "dashboard.settings" })}
@@ -3374,7 +3408,7 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
 
               {/* APPELS */}
               {activeTab === "calls" && (
-                <div className={`${softCard} overflow-hidden`}>
+                <div className={`${softCard} overflow-hidden tab-content-animate`}>
                   <div className={`px-6 py-4 ${headerGradient}`}>
                     <h2 className="text-xl font-semibold">
                       {/* {language === "fr" ? "Mes appels" : "My calls"} */}
@@ -3465,7 +3499,7 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
 
               {/* MESSAGES */}
               {activeTab === "messages" && (
-                <div className={`${softCard} overflow-hidden`}>
+                <div className={`${softCard} overflow-hidden tab-content-animate`}>
                   <div className={`px-6 py-4 ${headerGradient}`}>
                     <h2 className="text-xl font-semibold">
                       {intl.formatMessage({ id: "dashboard.myMessages" })}
@@ -3482,7 +3516,7 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
 
               {/* AVIS */}
               {activeTab === "reviews" && (
-                <div className={`${softCard} overflow-hidden`}>
+                <div className={`${softCard} overflow-hidden tab-content-animate`}>
                   <div className={`px-6 py-4 ${headerGradient}`}>
                     <h2 className="text-xl font-semibold">
                       {intl.formatMessage({ id: "dashboard.myReviews" })}
@@ -3594,7 +3628,7 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
 
               {/* FAVORIS */}
               {activeTab === "favorites" && (
-                <div className={`${softCard} overflow-hidden`}>
+                <div className={`${softCard} overflow-hidden tab-content-animate`}>
                   <div className={`px-6 py-4 ${headerGradient}`}>
                     <h2 className="text-xl font-semibold">
                       {/* {language === "fr" ? "Mes favoris" : "My favorites"} */}
@@ -3656,7 +3690,7 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
               )}
 
               {activeTab === "translations" && (user.role === "lawyer" || user.role === "expat") && (
-                <div className={`${softCard} overflow-hidden`}>
+                <div className={`${softCard} overflow-hidden tab-content-animate`}>
                   <div className={`px-6 py-4 ${headerGradient}`}>
                     <h2 className="text-xl font-semibold">
                       {intl.formatMessage({ id: "dashboard.translations" }) || "Translations"}

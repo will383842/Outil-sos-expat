@@ -112,11 +112,14 @@ export default function StripeKYC({ onComplete, userType }: Props) {
     sessionStorage.setItem(checkKey, "true");
 
     const initializeStripe = async () => {
+      dashboardLog.stripe('initializeStripe started', { userId: user?.uid, userType });
+      dashboardLog.time('Stripe initialization');
       try {
         const functions = getFunctions(undefined, "europe-west1");
 
         // ✅ Check existing account status
         try {
+          dashboardLog.api('Calling checkStripeAccountStatus...');
           const checkStatus = httpsCallable(
             functions,
             "checkStripeAccountStatus"

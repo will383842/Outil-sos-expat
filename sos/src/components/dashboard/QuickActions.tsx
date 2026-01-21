@@ -23,6 +23,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import type { User } from '../../contexts/types';
+import dashboardLog from '../../utils/dashboardLogger';
 
 interface QuickActionsProps {
   user: User;
@@ -62,7 +63,11 @@ const QuickActions: React.FC<QuickActionsProps> = ({ user, onTabChange }) => {
       label: intl.formatMessage({ id: 'quickActions.aiAssistant', defaultMessage: 'AI Assistant' }),
       description: intl.formatMessage({ id: 'quickActions.aiAssistant.desc', defaultMessage: 'Get AI-powered help' }),
       gradient: 'from-purple-500 to-pink-500',
-      onClick: () => navigate(`/${aiAssistantSlug}`),
+      onClick: () => {
+        dashboardLog.click('QuickAction: AI Assistant clicked');
+        dashboardLog.nav(`Navigating to AI Assistant: /${aiAssistantSlug}`);
+        navigate(`/${aiAssistantSlug}`);
+      },
       badge: 'NEW',
     },
     {
@@ -71,7 +76,11 @@ const QuickActions: React.FC<QuickActionsProps> = ({ user, onTabChange }) => {
       label: intl.formatMessage({ id: 'quickActions.messages', defaultMessage: 'Messages' }),
       description: intl.formatMessage({ id: 'quickActions.messages.desc', defaultMessage: 'Check your inbox' }),
       gradient: 'from-blue-500 to-cyan-500',
-      onClick: () => onTabChange?.('messages'),
+      onClick: () => {
+        dashboardLog.click('QuickAction: Messages clicked');
+        dashboardLog.tab('Switching to messages tab');
+        onTabChange?.('messages');
+      },
     },
     {
       key: 'calls',
@@ -79,7 +88,11 @@ const QuickActions: React.FC<QuickActionsProps> = ({ user, onTabChange }) => {
       label: intl.formatMessage({ id: 'quickActions.calls', defaultMessage: 'My Calls' }),
       description: intl.formatMessage({ id: 'quickActions.calls.desc', defaultMessage: 'View call history' }),
       gradient: 'from-emerald-500 to-teal-500',
-      onClick: () => onTabChange?.('calls'),
+      onClick: () => {
+        dashboardLog.click('QuickAction: Calls clicked');
+        dashboardLog.tab('Switching to calls tab');
+        onTabChange?.('calls');
+      },
     },
     {
       key: 'subscription',
@@ -87,7 +100,11 @@ const QuickActions: React.FC<QuickActionsProps> = ({ user, onTabChange }) => {
       label: intl.formatMessage({ id: 'quickActions.subscription', defaultMessage: 'Subscription' }),
       description: intl.formatMessage({ id: 'quickActions.subscription.desc', defaultMessage: 'Manage your plan' }),
       gradient: 'from-amber-500 to-orange-500',
-      onClick: () => navigate(`/${subscriptionSlug}`),
+      onClick: () => {
+        dashboardLog.click('QuickAction: Subscription clicked');
+        dashboardLog.nav(`Navigating to Subscription: /${subscriptionSlug}`);
+        navigate(`/${subscriptionSlug}`);
+      },
     },
   ];
 
@@ -99,7 +116,11 @@ const QuickActions: React.FC<QuickActionsProps> = ({ user, onTabChange }) => {
       label: intl.formatMessage({ id: 'quickActions.findLawyer', defaultMessage: 'Find a Lawyer' }),
       description: intl.formatMessage({ id: 'quickActions.findLawyer.desc', defaultMessage: 'Legal consultation' }),
       gradient: 'from-red-500 to-orange-500',
-      onClick: () => navigate(`/${findLawyerSlug}`),
+      onClick: () => {
+        dashboardLog.click('QuickAction: Find Lawyer clicked');
+        dashboardLog.nav(`Navigating to Find Lawyer: /${findLawyerSlug}`);
+        navigate(`/${findLawyerSlug}`);
+      },
     },
     {
       key: 'find-expat',
@@ -107,7 +128,11 @@ const QuickActions: React.FC<QuickActionsProps> = ({ user, onTabChange }) => {
       label: intl.formatMessage({ id: 'quickActions.findExpat', defaultMessage: 'Find an Expat' }),
       description: intl.formatMessage({ id: 'quickActions.findExpat.desc', defaultMessage: 'Expat assistance' }),
       gradient: 'from-blue-500 to-indigo-500',
-      onClick: () => navigate(`/${findExpatSlug}`),
+      onClick: () => {
+        dashboardLog.click('QuickAction: Find Expat clicked');
+        dashboardLog.nav(`Navigating to Find Expat: /${findExpatSlug}`);
+        navigate(`/${findExpatSlug}`);
+      },
     },
     {
       key: 'messages',
@@ -115,7 +140,11 @@ const QuickActions: React.FC<QuickActionsProps> = ({ user, onTabChange }) => {
       label: intl.formatMessage({ id: 'quickActions.messages', defaultMessage: 'Messages' }),
       description: intl.formatMessage({ id: 'quickActions.messages.desc', defaultMessage: 'Check your inbox' }),
       gradient: 'from-purple-500 to-pink-500',
-      onClick: () => onTabChange?.('messages'),
+      onClick: () => {
+        dashboardLog.click('QuickAction: Messages clicked');
+        dashboardLog.tab('Switching to messages tab');
+        onTabChange?.('messages');
+      },
     },
     {
       key: 'favorites',
@@ -123,7 +152,11 @@ const QuickActions: React.FC<QuickActionsProps> = ({ user, onTabChange }) => {
       label: intl.formatMessage({ id: 'quickActions.favorites', defaultMessage: 'My Favorites' }),
       description: intl.formatMessage({ id: 'quickActions.favorites.desc', defaultMessage: 'Saved providers' }),
       gradient: 'from-emerald-500 to-teal-500',
-      onClick: () => onTabChange?.('favorites'),
+      onClick: () => {
+        dashboardLog.click('QuickAction: Favorites clicked');
+        dashboardLog.tab('Switching to favorites tab');
+        onTabChange?.('favorites');
+      },
     },
   ];
 

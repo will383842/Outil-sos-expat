@@ -614,6 +614,34 @@ iframe[src*="paypal"] {
   transition: opacity 0.15s ease-out;
 }
 
+/* Smooth tab content fade animation */
+@keyframes tabFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tab-content-animate {
+  animation: tabFadeIn 0.2s ease-out forwards;
+}
+
+/* Prevent layout shift by maintaining scroll position */
+.dashboard-main-content {
+  scroll-behavior: smooth;
+  overflow-anchor: auto;
+}
+
+/* Dashboard card with stable height */
+.dashboard-card-stable {
+  min-height: 200px;
+  transition: min-height 0.3s ease-out;
+}
+
 /* Stable grid layout */
 .dashboard-grid-stable {
   contain: layout style;
