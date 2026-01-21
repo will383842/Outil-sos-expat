@@ -142,7 +142,7 @@ export function clearPlanCache(): void {
 
 type ProviderType = 'lawyer' | 'expat_aidant';
 type SubscriptionTier = 'trial' | 'basic' | 'standard' | 'pro' | 'unlimited';
-type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'canceled' | 'expired' | 'paused';
+type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'canceled' | 'expired' | 'paused' | 'suspended';
 type Currency = 'EUR' | 'USD';
 type BillingPeriod = 'monthly' | 'yearly';
 
@@ -216,6 +216,7 @@ async function getTrialConfig(): Promise<TrialConfig> {
 /**
  * Check if a webhook event has already been processed
  * Prevents duplicate processing from Stripe retries
+ * @deprecated Use tryClaimEventProcessing for atomic check+mark
  */
 async function isEventAlreadyProcessed(eventId: string): Promise<boolean> {
   const doc = await getDb().doc(`processed_webhook_events/${eventId}`).get();
@@ -225,6 +226,7 @@ async function isEventAlreadyProcessed(eventId: string): Promise<boolean> {
 /**
  * Mark a webhook event as processed
  * TTL: 30 days (Stripe doesn't retry after that)
+ * @deprecated Use tryClaimEventProcessing for atomic check+mark
  */
 async function markEventAsProcessed(eventId: string, eventType: string): Promise<void> {
   await getDb().doc(`processed_webhook_events/${eventId}`).set({
@@ -234,6 +236,91 @@ async function markEventAsProcessed(eventId: string, eventType: string): Promise
     // TTL for cleanup (30 days from now)
     expiresAt: admin.firestore.Timestamp.fromMillis(Date.now() + 30 * 24 * 60 * 60 * 1000)
   });
+}
+
+/**
+ * P0 FIX: Atomic idempotency check for webhook events
+ *
+ * Cette fonction utilise une transaction Firestore pour garantir que:
+ * 1. Le check et le mark sont atomiques
+ * 2. Deux instances ne peuvent pas traiter le même événement
+ *
+ * IMPORTANT: Si le traitement échoue avec une erreur transitoire, appelez
+ * unclaimEventProcessing() pour permettre un retry par Stripe.
+ *
+ * @param eventId - Stripe event ID
+ * @param eventType - Type d'événement (pour logging)
+ * @returns { canProcess: true } si l'événement peut être traité, { canProcess: false } si déjà traité
+ */
+async function tryClaimEventProcessing(eventId: string, eventType: string): Promise<{ canProcess: boolean; alreadyProcessedAt?: Date }> {
+  const db = getDb();
+
+  try {
+    return await db.runTransaction(async (transaction) => {
+      const ref = db.doc(`processed_webhook_events/${eventId}`);
+      const doc = await transaction.get(ref);
+
+      if (doc.exists) {
+        // Événement déjà traité ou en cours de traitement
+        const data = doc.data();
+        return {
+          canProcess: false,
+          alreadyProcessedAt: data?.processedAt?.toDate?.() || undefined
+        };
+      }
+
+      // Marquer comme "processing" DANS LA TRANSACTION
+      // Si une autre instance a déjà marqué, la transaction échouera et retryera
+      transaction.set(ref, {
+        eventId,
+        eventType,
+        status: 'processing', // Indique que le traitement est en cours
+        claimedAt: admin.firestore.Timestamp.now(),
+        processedAt: null, // Sera mis à jour après succès
+        // TTL for cleanup (30 days from now)
+        expiresAt: admin.firestore.Timestamp.fromMillis(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      });
+
+      return { canProcess: true };
+    });
+  } catch (error: any) {
+    // Si la transaction échoue (conflit), l'événement a probablement été traité par une autre instance
+    console.error(`[tryClaimEventProcessing] Transaction failed for ${eventId}:`, error.message);
+
+    // Vérifier si c'est parce qu'un autre processus a déjà traité
+    const doc = await db.doc(`processed_webhook_events/${eventId}`).get();
+    if (doc.exists) {
+      return { canProcess: false, alreadyProcessedAt: doc.data()?.processedAt?.toDate?.() };
+    }
+
+    // Erreur inattendue, laisser Stripe retenter
+    throw error;
+  }
+}
+
+/**
+ * P0 FIX: Mark event as successfully processed
+ * Appelée après traitement réussi pour mettre à jour le statut
+ */
+async function markEventProcessingComplete(eventId: string): Promise<void> {
+  await getDb().doc(`processed_webhook_events/${eventId}`).update({
+    status: 'completed',
+    processedAt: admin.firestore.Timestamp.now()
+  });
+}
+
+/**
+ * P0 FIX: Unclaim event to allow Stripe retry
+ * Appelée si le traitement échoue avec une erreur transitoire
+ */
+async function unclaimEventProcessing(eventId: string): Promise<void> {
+  try {
+    await getDb().doc(`processed_webhook_events/${eventId}`).delete();
+    console.log(`[unclaimEventProcessing] Event ${eventId} unclaimed for retry`);
+  } catch (error) {
+    console.error(`[unclaimEventProcessing] Failed to unclaim ${eventId}:`, error);
+    // Ne pas propager l'erreur - le pire cas est que l'événement ne sera pas retraité
+  }
 }
 
 // ============================================================================
@@ -1525,13 +1612,15 @@ export const stripeWebhook = functions
     // ===== PRODUCTION TEST LOG =====
     logWebhookTest.stripe.incoming(event);
 
-    // IDEMPOTENCE CHECK: Skip if event already processed
-    const alreadyProcessed = await isEventAlreadyProcessed(event.id);
-    if (alreadyProcessed) {
-      console.log(`[stripeWebhook] Event ${event.id} already processed, skipping`);
+    // P0 FIX: ATOMIC IDEMPOTENCE CHECK + CLAIM
+    // Utilise une transaction pour garantir qu'un seul processus traite cet événement
+    const claimResult = await tryClaimEventProcessing(event.id, event.type);
+    if (!claimResult.canProcess) {
+      console.log(`[stripeWebhook] Event ${event.id} already processed${claimResult.alreadyProcessedAt ? ` at ${claimResult.alreadyProcessedAt.toISOString()}` : ''}, skipping`);
       res.json({ received: true, skipped: true, reason: 'already_processed' });
       return;
     }
+    // Note: L'événement est maintenant "claimé" atomiquement - aucun autre processus ne le traitera
 
     // Context for logging and retries
     const webhookContext = {
@@ -1639,8 +1728,8 @@ export const stripeWebhook = functions
           console.log(`Unhandled event type: ${event.type}`);
       }
 
-      // Mark event as processed AFTER successful handling
-      await markEventAsProcessed(event.id, event.type);
+      // P0 FIX: Mark event as fully processed AFTER successful handling (atomic completion)
+      await markEventProcessingComplete(event.id);
       console.log(`[stripeWebhook] Event ${event.id} (${event.type}) processed successfully`);
 
       // ===== PRODUCTION TEST LOG =====
@@ -1666,6 +1755,8 @@ export const stripeWebhook = functions
         error.message?.includes('ECONNRESET');
 
       if (isTransientError) {
+        // P0 FIX: Unclaim event to allow Stripe retry on transient errors
+        await unclaimEventProcessing(event.id);
         // Return 500 so Stripe will retry
         res.status(500).json({ error: 'Webhook processing failed - transient error' });
       } else {
@@ -1681,8 +1772,8 @@ export const stripeWebhook = functions
         }
 
         // Return 200 with error details to prevent Stripe retries for permanent errors
-        // Mark as processed to prevent infinite retries on business logic errors
-        await markEventAsProcessed(event.id, event.type);
+        // P0 FIX: Mark as fully processed to prevent infinite retries on business logic errors
+        await markEventProcessingComplete(event.id);
         console.log(`[stripeWebhook] Event ${event.id} marked as processed despite error (permanent failure)`);
         res.json({ received: true, error: 'Processing failed but added to DLQ for retry' });
       }

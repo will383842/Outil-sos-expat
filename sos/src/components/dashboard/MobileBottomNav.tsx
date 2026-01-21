@@ -153,8 +153,8 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userRole, onMoreClick
               onClick={() => handleNavClick(item)}
               className={`
                 relative flex flex-col items-center justify-center min-w-[56px] h-full py-1
-                transition-all duration-200
-                ${isActive ? 'scale-105' : 'opacity-70 hover:opacity-100'}
+                transition-opacity duration-200
+                ${isActive ? '' : 'opacity-70 hover:opacity-100'}
               `}
               aria-label={item.label}
               aria-current={isActive ? 'page' : undefined}

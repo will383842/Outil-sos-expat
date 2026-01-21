@@ -2,10 +2,21 @@
 /**
  * SOS-Expat AI Access Control Functions
  * Fonctions de vérification d'accès IA pour prestataires
+ *
+ * P0 FIX: Utilisation des constantes centralisées
  */
 
 import * as functions from 'firebase-functions/v1';
 import * as admin from 'firebase-admin';
+import {
+  SubscriptionStatus,
+  SubscriptionTier,
+  DEFAULT_TRIAL_CONFIG,
+  DEFAULT_GRACE_PERIOD_DAYS,
+  FAIR_USE_LIMIT,
+  QUOTA_WARNING_THRESHOLD,
+  isStatusAllowingAccess
+} from './constants';
 
 // Lazy initialization pattern to prevent deployment timeout
 const IS_DEPLOYMENT_ANALYSIS =
@@ -30,12 +41,8 @@ const getDb = () => {
   return admin.firestore();
 };
 
-// ============================================================================
-// TYPES
-// ============================================================================
-
-type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'canceled' | 'expired' | 'paused';
-type SubscriptionTier = 'trial' | 'basic' | 'standard' | 'pro' | 'unlimited';
+// Re-export types from constants for backward compatibility
+export type { SubscriptionStatus, SubscriptionTier };
 
 /**
  * Reason why AI access was denied
@@ -105,12 +112,10 @@ export interface ForcedAccessResult {
 }
 
 // ============================================================================
-// CONSTANTS (defaults - can be overridden by settings/subscription)
+// CONSTANTS (importées depuis constants.ts - P0 FIX)
+// Les constantes DEFAULT_GRACE_PERIOD_DAYS, FAIR_USE_LIMIT, QUOTA_WARNING_THRESHOLD
+// sont maintenant importées depuis ./constants.ts
 // ============================================================================
-
-const DEFAULT_GRACE_PERIOD_DAYS = 7; // Nombre de jours de grace pour past_due
-const FAIR_USE_LIMIT = 500; // Limite fair use pour plan illimite
-const QUOTA_WARNING_THRESHOLD = 0.8; // 80% du quota = alerte
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -118,11 +123,12 @@ const QUOTA_WARNING_THRESHOLD = 0.8; // 80% du quota = alerte
 
 /**
  * Recupere la configuration du trial depuis Firestore
+ * P0 FIX: Utilise DEFAULT_TRIAL_CONFIG importé au lieu de valeurs hardcodées
  */
 async function getTrialConfig(): Promise<{ durationDays: number; maxAiCalls: number; isEnabled: boolean }> {
   const settingsDoc = await getDb().doc('settings/subscription').get();
   if (!settingsDoc.exists || !settingsDoc.data()?.trial) {
-    return { durationDays: 30, maxAiCalls: 3, isEnabled: true };
+    return { ...DEFAULT_TRIAL_CONFIG };
   }
   return settingsDoc.data()!.trial;
 }
@@ -477,16 +483,17 @@ export const checkAiAccess = functions
         } as AiAccessCheckResult;
       }
 
-      if (status === 'expired' || status === 'paused') {
+      // P0 FIX: Ajout de 'suspended' aux statuts bloquants
+      if (status === 'expired' || status === 'paused' || status === 'suspended') {
         return {
           allowed: false,
-          reason: 'subscription_expired',
+          reason: status === 'suspended' ? 'payment_failed' : 'subscription_expired',
           currentUsage: usage.currentPeriodCalls || 0,
           limit: 0,
           remaining: 0,
           isInTrial: false,
           subscriptionStatus: status,
-          canUpgrade: true,
+          canUpgrade: status !== 'suspended', // Doit d'abord régulariser le paiement si suspendu
           suggestedPlan: getSuggestedUpgradePlan('trial', subscription.providerType || 'lawyer')
         } as AiAccessCheckResult;
       }
@@ -1085,3 +1092,430 @@ export async function incrementAiUsageInternal(providerId: string): Promise<AiUs
     quotaWarningMessage
   };
 }
+
+// ============================================================================
+// P0 FIX: ATOMIC CHECK AND INCREMENT AI USAGE
+// Résout la race condition entre checkAiAccess et incrementAiUsage
+// ============================================================================
+
+/**
+ * Result of atomic check and increment operation
+ */
+export interface AtomicAiUsageResult {
+  allowed: boolean;
+  recorded: boolean;
+  newUsage: number;
+  limit: number;
+  remaining: number;
+  reason?: AiAccessDeniedReason;
+  quotaWarning?: 'approaching_limit' | 'limit_reached';
+  quotaWarningMessage?: string;
+  isInTrial: boolean;
+  subscriptionStatus: string;
+}
+
+/**
+ * P0 FIX: Vérifie ET incrémente le quota IA de manière ATOMIQUE
+ *
+ * Cette fonction utilise une transaction Firestore pour garantir que:
+ * 1. Le check du quota et l'incrément sont atomiques
+ * 2. Deux appels concurrents ne peuvent pas dépasser le quota
+ * 3. Le quota est vérifié AVANT l'incrément dans la même transaction
+ *
+ * IMPORTANT: Utilisez cette fonction au lieu de checkAiAccess + incrementAiUsage séparés
+ *
+ * @param providerId - ID du prestataire
+ * @returns Promise<AtomicAiUsageResult> - Résultat atomique (allowed + recorded ou denied)
+ */
+export async function checkAndIncrementAiUsageAtomic(providerId: string): Promise<AtomicAiUsageResult> {
+  const db = getDb();
+
+  // 1. Vérifier d'abord l'accès forcé (pas besoin de transaction)
+  const forcedAccess = await checkForcedAccess(providerId);
+
+  if (forcedAccess.hasForcedAccess) {
+    // Accès forcé: incrémenter sans vérification de quota
+    const usageRef = db.doc(`ai_usage/${providerId}`);
+    const now = admin.firestore.Timestamp.now();
+
+    await usageRef.set({
+      currentPeriodCalls: admin.firestore.FieldValue.increment(1),
+      totalCallsAllTime: admin.firestore.FieldValue.increment(1),
+      lastCallAt: now,
+      updatedAt: now
+    }, { merge: true });
+
+    const usageDoc = await usageRef.get();
+    const usage = usageDoc.data() || { currentPeriodCalls: 1 };
+
+    return {
+      allowed: true,
+      recorded: true,
+      newUsage: usage.currentPeriodCalls || 1,
+      limit: -1,
+      remaining: -1,
+      isInTrial: false,
+      subscriptionStatus: 'forced_access'
+    };
+  }
+
+  // 2. Récupérer la config trial (peut être mis en cache)
+  const trialConfig = await getTrialConfig();
+  const gracePeriodDays = await getGracePeriodDays();
+
+  // 3. Transaction atomique: check + increment
+  return db.runTransaction(async (transaction) => {
+    const subRef = db.doc(`subscriptions/${providerId}`);
+    const usageRef = db.doc(`ai_usage/${providerId}`);
+
+    // Lire les documents dans la transaction
+    const [subDoc, usageDoc] = await Promise.all([
+      transaction.get(subRef),
+      transaction.get(usageRef)
+    ]);
+
+    const now = new Date();
+    const firestoreNow = admin.firestore.Timestamp.now();
+
+    // Pas d'abonnement
+    if (!subDoc.exists) {
+      return {
+        allowed: false,
+        recorded: false,
+        newUsage: 0,
+        limit: 0,
+        remaining: 0,
+        reason: 'no_subscription' as AiAccessDeniedReason,
+        isInTrial: false,
+        subscriptionStatus: 'none'
+      };
+    }
+
+    const subscription = subDoc.data()!;
+    const status = subscription.status as SubscriptionStatus;
+
+    // Vérifier si l'accès est explicitement désactivé
+    if (subscription.aiAccessEnabled === false || subscription.aiAccessSuspended === true) {
+      return {
+        allowed: false,
+        recorded: false,
+        newUsage: 0,
+        limit: 0,
+        remaining: 0,
+        reason: 'payment_failed' as AiAccessDeniedReason,
+        isInTrial: false,
+        subscriptionStatus: status
+      };
+    }
+
+    // Préparer les données d'usage
+    const usage = usageDoc.exists
+      ? usageDoc.data()!
+      : { currentPeriodCalls: 0, trialCallsUsed: 0, totalCallsAllTime: 0 };
+
+    // ========== TRIALING ==========
+    if (status === 'trialing') {
+      const trialEndsAt = subscription.trialEndsAt?.toDate ? subscription.trialEndsAt.toDate() : null;
+      const trialExpired = trialEndsAt && now >= trialEndsAt;
+      const trialCallsUsed = usage.trialCallsUsed || 0;
+
+      if (trialExpired) {
+        return {
+          allowed: false,
+          recorded: false,
+          newUsage: trialCallsUsed,
+          limit: trialConfig.maxAiCalls,
+          remaining: 0,
+          reason: 'trial_expired' as AiAccessDeniedReason,
+          isInTrial: true,
+          subscriptionStatus: status
+        };
+      }
+
+      // P0 FIX: Vérifier AVANT l'incrément
+      if (trialCallsUsed >= trialConfig.maxAiCalls) {
+        return {
+          allowed: false,
+          recorded: false,
+          newUsage: trialCallsUsed,
+          limit: trialConfig.maxAiCalls,
+          remaining: 0,
+          reason: 'trial_calls_exhausted' as AiAccessDeniedReason,
+          isInTrial: true,
+          subscriptionStatus: status
+        };
+      }
+
+      // OK: Incrémenter atomiquement
+      const newTrialUsage = trialCallsUsed + 1;
+      const updateData = {
+        providerId,
+        subscriptionId: providerId,
+        trialCallsUsed: newTrialUsage,
+        totalCallsAllTime: (usage.totalCallsAllTime || 0) + 1,
+        lastCallAt: firestoreNow,
+        updatedAt: firestoreNow
+      };
+
+      if (usageDoc.exists) {
+        transaction.update(usageRef, updateData);
+      } else {
+        transaction.set(usageRef, {
+          ...updateData,
+          currentPeriodCalls: 0,
+          currentPeriodStart: firestoreNow,
+          currentPeriodEnd: firestoreNow
+        });
+      }
+
+      const remaining = Math.max(0, trialConfig.maxAiCalls - newTrialUsage);
+      return {
+        allowed: true,
+        recorded: true,
+        newUsage: newTrialUsage,
+        limit: trialConfig.maxAiCalls,
+        remaining,
+        isInTrial: true,
+        subscriptionStatus: status,
+        quotaWarning: newTrialUsage >= trialConfig.maxAiCalls ? 'limit_reached' : undefined,
+        quotaWarningMessage: newTrialUsage >= trialConfig.maxAiCalls
+          ? `Vous avez utilisé vos ${trialConfig.maxAiCalls} appels d'essai.`
+          : undefined
+      };
+    }
+
+    // ========== ACTIVE ==========
+    if (status === 'active') {
+      // Récupérer la limite du plan (hors transaction car read-only)
+      const plan = subscription.planId
+        ? await getSubscriptionPlan(subscription.planId)
+        : null;
+      const limit = plan?.aiCallsLimit ?? 0;
+      const currentPeriodCalls = usage.currentPeriodCalls || 0;
+
+      // Plan illimité (fair use)
+      if (limit === -1) {
+        if (currentPeriodCalls >= FAIR_USE_LIMIT) {
+          return {
+            allowed: false,
+            recorded: false,
+            newUsage: currentPeriodCalls,
+            limit: -1,
+            remaining: 0,
+            reason: 'quota_exhausted' as AiAccessDeniedReason,
+            isInTrial: false,
+            subscriptionStatus: status
+          };
+        }
+
+        // OK: Incrémenter
+        const newUsage = currentPeriodCalls + 1;
+        const updateData = {
+          currentPeriodCalls: newUsage,
+          totalCallsAllTime: (usage.totalCallsAllTime || 0) + 1,
+          lastCallAt: firestoreNow,
+          updatedAt: firestoreNow
+        };
+
+        if (usageDoc.exists) {
+          transaction.update(usageRef, updateData);
+        } else {
+          transaction.set(usageRef, {
+            providerId,
+            subscriptionId: providerId,
+            ...updateData,
+            trialCallsUsed: 0,
+            currentPeriodStart: firestoreNow,
+            currentPeriodEnd: firestoreNow
+          });
+        }
+
+        return {
+          allowed: true,
+          recorded: true,
+          newUsage,
+          limit: -1,
+          remaining: Math.max(0, FAIR_USE_LIMIT - newUsage),
+          isInTrial: false,
+          subscriptionStatus: status
+        };
+      }
+
+      // Plan avec limite fixe
+      // P0 FIX: Vérifier AVANT l'incrément
+      if (currentPeriodCalls >= limit) {
+        return {
+          allowed: false,
+          recorded: false,
+          newUsage: currentPeriodCalls,
+          limit,
+          remaining: 0,
+          reason: 'quota_exhausted' as AiAccessDeniedReason,
+          isInTrial: false,
+          subscriptionStatus: status
+        };
+      }
+
+      // OK: Incrémenter atomiquement
+      const newUsage = currentPeriodCalls + 1;
+      const updateData = {
+        currentPeriodCalls: newUsage,
+        totalCallsAllTime: (usage.totalCallsAllTime || 0) + 1,
+        lastCallAt: firestoreNow,
+        updatedAt: firestoreNow
+      };
+
+      if (usageDoc.exists) {
+        transaction.update(usageRef, updateData);
+      } else {
+        transaction.set(usageRef, {
+          providerId,
+          subscriptionId: providerId,
+          ...updateData,
+          trialCallsUsed: 0,
+          currentPeriodStart: firestoreNow,
+          currentPeriodEnd: firestoreNow
+        });
+      }
+
+      const remaining = Math.max(0, limit - newUsage);
+      const usagePercent = newUsage / limit;
+
+      let quotaWarning: 'approaching_limit' | 'limit_reached' | undefined;
+      let quotaWarningMessage: string | undefined;
+
+      if (newUsage >= limit) {
+        quotaWarning = 'limit_reached';
+        quotaWarningMessage = `Vous avez atteint votre limite de ${limit} appels IA ce mois-ci.`;
+        // Envoyer alerte async (hors transaction)
+        sendQuotaAlert(providerId, 'limit_reached', newUsage, limit).catch(console.error);
+      } else if (usagePercent >= QUOTA_WARNING_THRESHOLD) {
+        quotaWarning = 'approaching_limit';
+        quotaWarningMessage = `Vous avez utilisé ${newUsage}/${limit} appels IA (${Math.round(usagePercent * 100)}%).`;
+      }
+
+      return {
+        allowed: true,
+        recorded: true,
+        newUsage,
+        limit,
+        remaining,
+        isInTrial: false,
+        subscriptionStatus: status,
+        quotaWarning,
+        quotaWarningMessage
+      };
+    }
+
+    // ========== PAST_DUE (grace period) ==========
+    if (status === 'past_due') {
+      const pastDueSince = subscription.pastDueSince?.toDate
+        ? subscription.pastDueSince.toDate()
+        : (subscription.updatedAt?.toDate ? subscription.updatedAt.toDate() : now);
+      const daysPastDue = daysBetween(pastDueSince, now);
+
+      if (daysPastDue >= gracePeriodDays) {
+        return {
+          allowed: false,
+          recorded: false,
+          newUsage: usage.currentPeriodCalls || 0,
+          limit: 0,
+          remaining: 0,
+          reason: 'payment_failed' as AiAccessDeniedReason,
+          isInTrial: false,
+          subscriptionStatus: status
+        };
+      }
+
+      // Grace period: autoriser mais avec les limites du plan
+      const plan = subscription.planId
+        ? await getSubscriptionPlan(subscription.planId)
+        : null;
+      const limit = plan?.aiCallsLimit ?? 0;
+      const currentPeriodCalls = usage.currentPeriodCalls || 0;
+
+      if (limit !== -1 && currentPeriodCalls >= limit) {
+        return {
+          allowed: false,
+          recorded: false,
+          newUsage: currentPeriodCalls,
+          limit,
+          remaining: 0,
+          reason: 'quota_exhausted' as AiAccessDeniedReason,
+          isInTrial: false,
+          subscriptionStatus: status
+        };
+      }
+
+      // OK: Incrémenter
+      const newUsage = currentPeriodCalls + 1;
+      const updateData = {
+        currentPeriodCalls: newUsage,
+        totalCallsAllTime: (usage.totalCallsAllTime || 0) + 1,
+        lastCallAt: firestoreNow,
+        updatedAt: firestoreNow
+      };
+
+      if (usageDoc.exists) {
+        transaction.update(usageRef, updateData);
+      } else {
+        transaction.set(usageRef, {
+          providerId,
+          subscriptionId: providerId,
+          ...updateData,
+          trialCallsUsed: 0,
+          currentPeriodStart: firestoreNow,
+          currentPeriodEnd: firestoreNow
+        });
+      }
+
+      return {
+        allowed: true,
+        recorded: true,
+        newUsage,
+        limit,
+        remaining: limit === -1 ? -1 : Math.max(0, limit - newUsage),
+        isInTrial: false,
+        subscriptionStatus: status
+      };
+    }
+
+    // ========== Autres statuts (canceled, expired, paused, suspended) ==========
+    const reason: AiAccessDeniedReason =
+      status === 'canceled' ? 'subscription_canceled' :
+      status === 'suspended' ? 'payment_failed' :
+      'subscription_expired';
+
+    return {
+      allowed: false,
+      recorded: false,
+      newUsage: usage.currentPeriodCalls || 0,
+      limit: 0,
+      remaining: 0,
+      reason,
+      isInTrial: false,
+      subscriptionStatus: status
+    };
+  });
+}
+
+/**
+ * Cloud Function exposant checkAndIncrementAiUsageAtomic
+ * P0 FIX: Nouvelle fonction atomique pour remplacer check + increment séparés
+ */
+export const checkAndIncrementAiUsage = functions
+  .region('europe-west1')
+  .https.onCall(async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+    }
+
+    const providerId = data?.providerId || context.auth.uid;
+
+    try {
+      return await checkAndIncrementAiUsageAtomic(providerId);
+    } catch (error: any) {
+      console.error('Error in checkAndIncrementAiUsage:', error);
+      throw new functions.https.HttpsError('internal', error.message || 'Failed to check and increment AI usage');
+    }
+  });

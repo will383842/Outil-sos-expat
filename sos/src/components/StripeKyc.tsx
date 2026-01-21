@@ -236,9 +236,10 @@ export default function StripeKYC({ onComplete, userType }: Props) {
   }, [user?.uid, userType, reinitKey]); // P0 FIX: Added reinitKey to trigger re-initialization after account creation
 
   // ✅ Show loading state while checking
+  // P0 FIX: Added min-h-[200px] to prevent layout jumps during state transitions
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
+      <div className="flex items-center justify-center p-8 min-h-[200px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
           <p className="text-gray-600">{intl.formatMessage({ id: 'stripe.kyc.loading' })}</p>
@@ -253,9 +254,10 @@ export default function StripeKYC({ onComplete, userType }: Props) {
   }
 
   // ✅ P0 FIX: Show error state with option to create new account
+  // P0 FIX: Added min-h-[200px] to prevent layout jumps during state transitions
   if (error) {
     return (
-      <div className="flex items-center justify-center p-8">
+      <div className="flex items-center justify-center p-8 min-h-[200px]">
         <div className="text-center max-w-md">
           <div className="mx-auto w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mb-4">
             <AlertTriangle className="w-8 h-8 text-amber-600" />
@@ -292,9 +294,10 @@ export default function StripeKYC({ onComplete, userType }: Props) {
   }
 
   // ✅ If no Stripe instance and not complete, show loading state
+  // P0 FIX: Added min-h-[200px] to prevent layout jumps during state transitions
   if (!stripeConnectInstance) {
     return (
-      <div className="flex items-center justify-center p-8">
+      <div className="flex items-center justify-center p-8 min-h-[200px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
           <h2 className="text-lg font-medium text-gray-800 mb-2">

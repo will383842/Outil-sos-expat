@@ -1632,13 +1632,22 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
 
       {/* ========================================== */}
       {/* KYC STATUS & VERIFICATION SECTION (STRIPE OR PAYPAL) */}
-      {/* P1 FIX: Wrapped in stable container to prevent layout jumping */}
+      {/* P0 FIX: Stable container with CSS transitions to prevent layout jumping */}
       {/* ========================================== */}
-      <div className="dashboard-banner-zone transition-all duration-300 ease-out">
+      <div
+        className={`
+          dashboard-banner-zone overflow-hidden
+          transition-[max-height,opacity] duration-500 ease-out
+          ${showStripeKycStable === true || (userDataReady && user && (user.role === "lawyer" || user.role === "expat") && user?.paymentGateway === "paypal" && (user?.paypalAccountStatus === "not_connected" || !user?.paypalOnboardingComplete))
+            ? 'max-h-[800px] opacity-100'
+            : 'max-h-0 opacity-0'
+          }
+        `}
+      >
         {/* STRIPE KYC: Show verification form if Stripe provider and not complete */}
         {/* ✅ P0 FIX: Use stable state to prevent flickering from Firestore updates */}
         {showStripeKycStable === true && user && (
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 lg:py-8 animate-fade-in kyc-form-expanded">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 lg:py-8 kyc-form-expanded">
               <KYCBannerCompact user={user} kycType="stripe">
                 <StripeKYC
                   userType={user.role as "lawyer" | "expat"}
@@ -1659,7 +1668,7 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
           (user.role === "lawyer" || user.role === "expat") &&
           user?.paymentGateway === "paypal" &&
           (user?.paypalAccountStatus === "not_connected" || !user?.paypalOnboardingComplete) && (
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 lg:py-8 animate-fade-in kyc-form-expanded">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 lg:py-8 kyc-form-expanded">
               <KYCBannerCompact user={user} kycType="paypal">
                 <PayPalOnboarding
                   providerId={user.id}
@@ -2287,51 +2296,6 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                 <QuickActions
                   user={user}
                   onTabChange={(tab) => setSearchParams({ tab })}
-                />
-              )}
-
-              {/* RECENT ACTIVITY - Visible on profile tab for providers */}
-              {activeTab === "profile" && (user.role === "lawyer" || user.role === "expat") && (
-                <RecentActivity
-                  calls={calls.map(c => ({
-                    id: c.id,
-                    status: c.status,
-                    createdAt: c.createdAt,
-                    startedAt: c.startedAt,
-                    endedAt: c.endedAt,
-                    providerName: c.providerName,
-                    clientName: c.clientName,
-                    price: c.price,
-                    clientRating: c.clientRating,
-                  }))}
-                  reviews={reviews.map((r: ProviderReview) => ({
-                    id: r.id,
-                    rating: r.rating,
-                    createdAt: r.createdAt,
-                    clientName: r.clientName,
-                  }))}
-                  isProvider={true}
-                  maxItems={5}
-                />
-              )}
-
-              {/* RECENT ACTIVITY - Visible on profile tab for clients */}
-              {activeTab === "profile" && user.role === "client" && (
-                <RecentActivity
-                  calls={calls.map(c => ({
-                    id: c.id,
-                    status: c.status,
-                    createdAt: c.createdAt,
-                    startedAt: c.startedAt,
-                    endedAt: c.endedAt,
-                    providerName: c.providerName,
-                    clientName: c.clientName,
-                    price: c.price,
-                    clientRating: c.clientRating,
-                  }))}
-                  reviews={[]}
-                  isProvider={false}
-                  maxItems={5}
                 />
               )}
 

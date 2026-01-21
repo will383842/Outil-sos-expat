@@ -4647,11 +4647,25 @@ export { cancelSubscription, reactivateSubscription } from './subscription/cance
 export { getBillingPortalUrl } from './subscription/billingPortal';
 
 // Acces et usage IA
+// P0 FIX: checkAndIncrementAiUsage est la nouvelle fonction atomique recommandée
 export {
   checkAiAccess,
   incrementAiUsage,
+  checkAndIncrementAiUsage,  // P0 FIX: Fonction atomique pour éviter race conditions
   getSubscriptionDetails
 } from './subscription/accessControl';
+
+// Subscription constants (P0 FIX: Constantes centralisées)
+export {
+  SUBSCRIPTION_STATUSES,
+  SUBSCRIPTION_TIERS,
+  DEFAULT_TRIAL_CONFIG,
+  DEFAULT_GRACE_PERIOD_DAYS,
+  FAIR_USE_LIMIT,
+  isValidSubscriptionStatus,
+  isValidSubscriptionTier
+} from './subscription/constants';
+export type { SubscriptionStatus, SubscriptionTier } from './subscription/constants';
 
 // Admin functions
 export {

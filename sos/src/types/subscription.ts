@@ -22,10 +22,11 @@ export type SubscriptionTier = 'trial' | 'basic' | 'standard' | 'pro' | 'unlimit
 export type SubscriptionStatus =
   | 'trialing'      // En période d'essai
   | 'active'        // Abonnement actif et payé
-  | 'past_due'      // Paiement en retard
+  | 'past_due'      // Paiement en retard (grace period 7j)
   | 'canceled'      // Annulé (accès jusqu'à fin période)
   | 'expired'       // Expiré (plus d'accès)
-  | 'paused';       // Mis en pause
+  | 'paused'        // Mis en pause
+  | 'suspended';    // P0 FIX: Suspendu (après 7j past_due, accès coupé)
 
 export type Currency = 'EUR' | 'USD';
 

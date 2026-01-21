@@ -14,11 +14,17 @@ import { logger } from 'firebase-functions';
 import { trackCAPIPurchase, trackCAPIStartTrial, UserData } from '../metaConversionsApi';
 
 // ============================================================================
-// TYPES
+// TYPES (P0 FIX: Ajout de 'suspended', import depuis constants)
 // ============================================================================
 
-export type SubscriptionTier = 'trial' | 'basic' | 'standard' | 'pro' | 'unlimited';
-export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'canceled' | 'expired' | 'paused';
+import {
+  SubscriptionStatus,
+  SubscriptionTier,
+  DEFAULT_TRIAL_CONFIG
+} from './constants';
+
+// Re-export pour compatibilité
+export type { SubscriptionStatus, SubscriptionTier };
 
 interface SubscriptionPlan {
   id: string;
