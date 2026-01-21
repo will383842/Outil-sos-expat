@@ -476,9 +476,9 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 <FormattedMessage id="payment.cardholderName" defaultMessage="Nom sur la carte" />
               </label>
-              <PayPalNameField
-                className="w-full h-12 sm:h-11 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow"
-              />
+              <div className="w-full h-12 sm:h-11 border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-shadow">
+                <PayPalNameField className="w-full h-full" />
+              </div>
             </div>
 
             {/* Numéro de carte */}
@@ -486,9 +486,9 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 <FormattedMessage id="payment.cardNumber" defaultMessage="Numéro de carte" />
               </label>
-              <PayPalNumberField
-                className="w-full h-12 sm:h-11 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow"
-              />
+              <div className="w-full h-12 sm:h-11 border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-shadow">
+                <PayPalNumberField className="w-full h-full" />
+              </div>
             </div>
 
             {/* Expiration et CVV - Responsive */}
@@ -497,17 +497,17 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   <FormattedMessage id="payment.expiry" defaultMessage="Expiration" />
                 </label>
-                <PayPalExpiryField
-                  className="w-full h-12 sm:h-11 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow"
-                />
+                <div className="w-full h-12 sm:h-11 border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-shadow">
+                  <PayPalExpiryField className="w-full h-full" />
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   <FormattedMessage id="payment.cvv" defaultMessage="CVV" />
                 </label>
-                <PayPalCVVField
-                  className="w-full h-12 sm:h-11 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow"
-                />
+                <div className="w-full h-12 sm:h-11 border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-shadow">
+                  <PayPalCVVField className="w-full h-full" />
+                </div>
               </div>
             </div>
 
