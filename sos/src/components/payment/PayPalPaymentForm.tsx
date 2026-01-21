@@ -174,7 +174,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
     return intl.formatMessage({ id: "payment.paypal.err.generic" });
   };
 
-  const { pricing } = usePricingConfig();
+  const { pricing, loading: pricingLoading } = usePricingConfig();
   const currencyKey = (currency?.toLowerCase() || 'eur') as 'eur' | 'usd';
   const pricingConfig = pricing?.[serviceType]?.[currencyKey];
   const platformFee = pricingConfig?.connectionFeeAmount ?? Math.round(amount * 0.39 * 100) / 100;
@@ -189,6 +189,11 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
     providerAmount,
     pricingConfig,
     calculatedTotal: amount,
+    pricingLoading,
+    // IMPORTANT: Vérifier si on utilise le fallback ou les vraies valeurs
+    usingFallback: !pricingConfig,
+    expectedServerAmount: pricingConfig?.totalAmount,
+    amountMismatch: pricingConfig ? Math.abs(amount - pricingConfig.totalAmount) > 0.01 : 'unknown',
   });
 
   // Création de l'ordre PayPal (utilisé par les deux méthodes)
@@ -263,6 +268,28 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
       return result.data.orderId;
     } catch (error) {
       console.error("Erreur création ordre PayPal:", error);
+      // DEBUG: Afficher tous les détails de l'erreur pour diagnostic
+      console.error("🔴 [PayPal DEBUG] Error details:", {
+        code: (error as any)?.code,
+        message: (error as any)?.message,
+        details: (error as any)?.details,
+        customData: (error as any)?.customData,
+        name: (error as any)?.name,
+        // Firebase functions error structure
+        cause: (error as any)?.cause,
+        httpErrorCode: (error as any)?.httpErrorCode,
+      });
+      // Log les valeurs envoyées pour vérifier la cohérence
+      console.error("🔴 [PayPal DEBUG] Request data:", {
+        amount,
+        currency,
+        providerId,
+        callSessionId,
+        serviceType,
+        platformFee,
+        providerAmount,
+        pricingConfigLoaded: !!pricingConfig,
+      });
       setPaymentStatus("error");
       setErrorCode(extractPayPalErrorCode(error));
       setIsProcessing(false);
@@ -297,6 +324,16 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
       }
     } catch (error) {
       console.error("Erreur capture PayPal:", error);
+      // DEBUG: Afficher tous les détails de l'erreur de capture
+      console.error("🔴 [PayPal CAPTURE DEBUG] Error details:", {
+        code: (error as any)?.code,
+        message: (error as any)?.message,
+        details: (error as any)?.details,
+        customData: (error as any)?.customData,
+        name: (error as any)?.name,
+        orderId,
+        payerId,
+      });
       setPaymentStatus("error");
       const code = extractPayPalErrorCode(error);
       setErrorCode(code);
@@ -320,6 +357,12 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
 
   const handleError = useCallback((err: Record<string, unknown>) => {
     console.error("Erreur PayPal:", err);
+    // DEBUG: Afficher tous les détails pour diagnostic
+    console.error("🔴 [PayPal SDK ERROR]:", {
+      err,
+      errKeys: Object.keys(err || {}),
+      errStringified: JSON.stringify(err, null, 2),
+    });
     setPaymentStatus("error");
     const code = extractPayPalErrorCode(err);
     setErrorCode(code);
@@ -459,6 +502,15 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
               "font-family": "system-ui, -apple-system, sans-serif",
               "color": "#374151",
               "padding": "0 12px",
+              "border": "none",
+              "outline": "none",
+              "background": "transparent",
+            },
+            // Supprimer les bordures des conteneurs internes PayPal
+            ".card-field": {
+              "border": "none",
+              "border-radius": "0",
+              "box-shadow": "none",
             },
             ".invalid": {
               "color": "#dc2626",

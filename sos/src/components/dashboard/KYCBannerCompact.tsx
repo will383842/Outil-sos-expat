@@ -90,9 +90,10 @@ const KYCBannerCompact: React.FC<KYCBannerCompactProps> = ({
   const config = getConfig();
   const Icon = config.icon;
 
+  // P1 FIX: Added min-height to prevent layout jumps when banner expands/collapses
   return (
     <div className={`
-      rounded-xl border overflow-hidden transition-all duration-300
+      rounded-xl border overflow-hidden transition-all duration-300 min-h-[64px]
       ${config.bgLight} ${config.borderColor}
     `}>
       {/* Compact header - always visible */}
@@ -144,13 +145,13 @@ const KYCBannerCompact: React.FC<KYCBannerCompactProps> = ({
             </div>
           ) : (
             <div className="text-center py-4">
+              {/* P1 FIX: Removed scale animations to prevent micro-jumps */}
               <button
                 onClick={onAction}
                 className={`
                   inline-flex items-center gap-2 px-6 py-3 rounded-xl
                   bg-gradient-to-r ${config.bgGradient} text-white font-medium
-                  shadow-lg hover:shadow-xl transition-all duration-200
-                  hover:scale-[1.02] active:scale-[0.98]
+                  shadow-lg hover:shadow-xl transition-shadow duration-200
                 `}
               >
                 {intl.formatMessage({ id: 'common.continue', defaultMessage: 'Continue' })}

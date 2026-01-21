@@ -110,7 +110,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
         // Si collection vide, initialiser avec les pays par defaut
         if (snapshot.empty) {
-          console.log("[AppContext] Initializing default countries...");
           const defaultCountries = ["FR", "GB", "DE", "ES", "IT", "BE", "CH", "PT", "NL", "PL"];
 
           for (const code of defaultCountries) {
@@ -123,7 +122,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
           }
 
           setSupportedCountries(defaultCountries);
-          console.log(`[AppContext] Initialized ${defaultCountries.length} default countries`);
         } else {
           const enabledCountries: string[] = [];
           snapshot.docs.forEach((docSnap) => {
@@ -135,14 +133,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
           });
 
           setSupportedCountries(enabledCountries);
-          console.log(`[AppContext] Loaded ${enabledCountries.length} enabled countries from Firestore`);
         }
       } catch (error) {
-        console.error("[AppContext] Error loading country settings:", error);
+        if (import.meta.env.DEV) console.error("[AppContext] Error loading country settings:", error);
         // Fallback to default countries if Firestore fails
         const fallbackCountries = ["FR", "GB", "DE", "ES", "IT", "PT", "NL", "PL"];
         setSupportedCountries(fallbackCountries);
-        console.log("[AppContext] Using fallback countries due to error");
       } finally {
         setCountriesLoading(false);
       }
@@ -301,11 +297,14 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       audit: partial.audit ? { ...prev.audit, ...partial.audit } : prev.audit,
     }));
 
-    console.log("Settings updated:", {
-      action: "settings_updated",
-      timestamp: new Date(),
-      details: { settings: JSON.stringify(partial) },
-    });
+    // P2 FIX: Only log in development
+    if (import.meta.env.DEV) {
+      console.log("Settings updated:", {
+        action: "settings_updated",
+        timestamp: new Date(),
+        details: { settings: JSON.stringify(partial) },
+      });
+    }
   };
 
   return (

@@ -67,8 +67,15 @@ export const useFeedback = (): UseFeedbackReturn => {
       dashboardLog.groupEnd();
       return feedbackId;
     } catch (err) {
+      // ALWAYS log to console for production debugging
+      console.error('[FEEDBACK] SUBMISSION FAILED:', err);
       dashboardLog.error('FEEDBACK SUBMISSION FAILED', err);
       const errorMessage = err instanceof Error ? err.message : 'Une erreur est survenue';
+      console.error('[FEEDBACK] Error details:', {
+        message: errorMessage,
+        name: err instanceof Error ? err.name : 'Unknown',
+        code: (err as { code?: string }).code,
+      });
       dashboardLog.error('Error details', {
         message: errorMessage,
         name: err instanceof Error ? err.name : 'Unknown',

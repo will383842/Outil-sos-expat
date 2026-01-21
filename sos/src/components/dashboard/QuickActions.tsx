@@ -169,12 +169,13 @@ const QuickActions: React.FC<QuickActionsProps> = ({ user, onTabChange }) => {
         {intl.formatMessage({ id: 'dashboard.quickActions', defaultMessage: 'Quick Actions' })}
       </h3>
 
+      {/* P1 FIX: Removed translate and scale animations to prevent layout jumps */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {actions.map((action) => (
           <button
             key={action.key}
             onClick={action.onClick}
-            className="group relative bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-xl p-3 sm:p-4 text-left hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 overflow-hidden"
+            className="group relative bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-xl p-3 sm:p-4 text-left hover:shadow-lg transition-shadow duration-300 overflow-hidden"
           >
             {/* Gradient overlay on hover */}
             <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
@@ -186,8 +187,8 @@ const QuickActions: React.FC<QuickActionsProps> = ({ user, onTabChange }) => {
               </span>
             )}
 
-            {/* Icon */}
-            <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br ${action.gradient} flex items-center justify-center text-white mb-2 sm:mb-3 group-hover:scale-110 transition-transform duration-300`}>
+            {/* Icon - P1 FIX: Removed scale animation */}
+            <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br ${action.gradient} flex items-center justify-center text-white mb-2 sm:mb-3`}>
               {action.icon}
             </div>
 
@@ -199,8 +200,8 @@ const QuickActions: React.FC<QuickActionsProps> = ({ user, onTabChange }) => {
               {action.description}
             </p>
 
-            {/* Arrow indicator */}
-            <ArrowRight className="absolute bottom-3 right-3 w-3.5 h-3.5 text-gray-300 dark:text-gray-600 group-hover:text-gray-500 dark:group-hover:text-gray-400 group-hover:translate-x-0.5 transition-all duration-300" />
+            {/* Arrow indicator - P1 FIX: Removed translate animation */}
+            <ArrowRight className="absolute bottom-3 right-3 w-3.5 h-3.5 text-gray-300 dark:text-gray-600 group-hover:text-gray-500 dark:group-hover:text-gray-400 transition-colors duration-300" />
           </button>
         ))}
       </div>

@@ -213,10 +213,18 @@ export async function submitUserFeedback(data: FeedbackData): Promise<string> {
     dashboardLog.groupEnd();
     return docRef.id;
   } catch (error: unknown) {
+    // ALWAYS log to console.error for production debugging (dashboardLog may be disabled)
+    console.error('[FEEDBACK] FIRESTORE WRITE FAILED:', error);
     dashboardLog.error('FIRESTORE WRITE FAILED', error);
 
     // Log more details for debugging
     if (error instanceof Error) {
+      console.error('[FEEDBACK] Error details:', {
+        name: error.name,
+        message: error.message,
+        code: (error as { code?: string }).code,
+        stack: error.stack?.substring(0, 500),
+      });
       dashboardLog.error('Error details', {
         name: error.name,
         message: error.message,
@@ -225,9 +233,15 @@ export async function submitUserFeedback(data: FeedbackData): Promise<string> {
 
       // Check for common Firestore errors
       if (error.message.includes('permission-denied')) {
+        console.error('[FEEDBACK] PERMISSION DENIED - Check Firestore security rules for collection:', FEEDBACK_COLLECTION);
+        console.error('[FEEDBACK] Possible causes:');
+        console.error('  1. Firestore rules not deployed (run: firebase deploy --only firestore:rules)');
+        console.error('  2. Email format validation failed in rules');
+        console.error('  3. Description too long (>6000 bytes UTF-8)');
         dashboardLog.error('PERMISSION DENIED - Check Firestore security rules for collection:', FEEDBACK_COLLECTION);
       }
       if (error.message.includes('unavailable')) {
+        console.error('[FEEDBACK] FIRESTORE UNAVAILABLE - Network issue or service down');
         dashboardLog.error('FIRESTORE UNAVAILABLE - Network issue or service down');
       }
     }

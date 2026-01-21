@@ -57,9 +57,10 @@ const StatCard: React.FC<StatCardProps> = ({
   iconBg,
   loading,
 }) => {
+  // P1 FIX: Use consistent min-height to prevent layout jumps between loading and loaded states
   if (loading) {
     return (
-      <div className="stats-card-animate bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl p-4 sm:p-5 shadow-lg">
+      <div className="stats-card-animate bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl p-4 sm:p-5 shadow-lg min-h-[120px]">
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="stats-skeleton h-4 w-20 mb-3" />
@@ -72,8 +73,9 @@ const StatCard: React.FC<StatCardProps> = ({
     );
   }
 
+  // P1 FIX: Removed hover:-translate-y-0.5 to prevent micro-jumps on hover
   return (
-    <div className={`stats-card-animate bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl p-4 sm:p-5 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5`}>
+    <div className={`stats-card-animate bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl p-4 sm:p-5 shadow-lg hover:shadow-xl transition-shadow duration-300 min-h-[120px]`}>
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
           <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 truncate">

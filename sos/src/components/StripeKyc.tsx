@@ -21,8 +21,9 @@ export default function StripeKYC({ onComplete, userType }: Props) {
   const [stripeConnectInstance, setStripeConnectInstance] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isKycComplete, setIsKycComplete] = useState(false);
-  const [error, setError] = useState<string | null>(null); // ✅ P0 FIX: Track errors
-  const [isCreatingNewAccount, setIsCreatingNewAccount] = useState(false); // ✅ P0 FIX: Creating new account state
+  const [error, setError] = useState<string | null>(null);
+  const [isCreatingNewAccount, setIsCreatingNewAccount] = useState(false);
+  const [reinitKey, setReinitKey] = useState(0); // P0 FIX: Trigger to force re-initialization without page reload
   const initStartedRef = useRef(false);
 
   // ✅ P0 FIX: Function to create new Stripe account
@@ -54,15 +55,28 @@ export default function StripeKYC({ onComplete, userType }: Props) {
       const data = result.data as { success: boolean; accountId: string };
 
       if (data.success) {
-        // Reset state and restart initialization
-        initStartedRef.current = false;
+        // P0 FIX: Reset ALL state and restart initialization WITHOUT page reload
         const checkKey = `stripe_kyc_${user.uid}_${userType}_check_in_progress`;
+        const completedKey = `stripe_kyc_${user.uid}_${userType}_completed`;
+        const errorKey = `stripe_kyc_${user.uid}_${userType}_error`;
+
+        // Clear all sessionStorage keys for this user/type
         sessionStorage.removeItem(checkKey);
+        sessionStorage.removeItem(completedKey);
+        sessionStorage.removeItem(errorKey);
+
+        // Reset all state
+        initStartedRef.current = false;
+        setStripeConnectInstance(null);
+        setError(null);
+        setIsKycComplete(false);
         setIsCreatingNewAccount(false);
         setLoading(true);
 
-        // Trigger re-initialization
-        window.location.reload();
+        // Trigger useEffect re-run by changing reinitKey
+        setReinitKey(prev => prev + 1);
+
+        dashboardLog.stripe('Account created, triggering re-initialization', { accountId: data.accountId });
       }
     } catch (err) {
       console.error("[StripeKYC] Failed to create new account:", err);
@@ -219,7 +233,7 @@ export default function StripeKYC({ onComplete, userType }: Props) {
     };
 
     initializeStripe();
-  }, [user?.uid, userType]); // ✅ Remove onComplete from deps to prevent re-runs
+  }, [user?.uid, userType, reinitKey]); // P0 FIX: Added reinitKey to trigger re-initialization after account creation
 
   // ✅ Show loading state while checking
   if (loading) {

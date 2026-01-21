@@ -1638,14 +1638,15 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
         {/* STRIPE KYC: Show verification form if Stripe provider and not complete */}
         {/* ✅ P0 FIX: Use stable state to prevent flickering from Firestore updates */}
         {showStripeKycStable === true && user && (
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 lg:py-8 animate-fade-in">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 lg:py-8 animate-fade-in kyc-form-expanded">
               <KYCBannerCompact user={user} kycType="stripe">
                 <StripeKYC
                   userType={user.role as "lawyer" | "expat"}
                   onComplete={() => {
-                    // ✅ P0 FIX: Update stable state before reload to prevent re-showing
+                    // P1 FIX: Update state without page reload - let React handle the UI update
                     setShowStripeKycStable(false);
-                    window.location.reload();
+                    // Refresh user data from Firestore to get updated KYC status
+                    // The AuthContext onSnapshot listener will automatically update the user
                   }}
                 />
               </KYCBannerCompact>
@@ -1658,15 +1659,16 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
           (user.role === "lawyer" || user.role === "expat") &&
           user?.paymentGateway === "paypal" &&
           (user?.paypalAccountStatus === "not_connected" || !user?.paypalOnboardingComplete) && (
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 lg:py-8 animate-fade-in">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 lg:py-8 animate-fade-in kyc-form-expanded">
               <KYCBannerCompact user={user} kycType="paypal">
                 <PayPalOnboarding
                   providerId={user.id}
                   providerEmail={user.email}
                   providerType={user.role as "lawyer" | "expat"}
                   onStatusChange={(status) => {
+                    // P1 FIX: No page reload - AuthContext listener will update user state
                     if (status === "active") {
-                      window.location.reload();
+                      dashboardLog.kyc("PayPal onboarding complete", { status });
                     }
                   }}
                 />

@@ -74,7 +74,10 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose, pageContext }) => 
   // Validation
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const isDescriptionValid = description.trim().length >= 10;
-  const isFormValid = email && isEmailValid && feedbackType && isDescriptionValid;
+  // Email obligatoire seulement si l'utilisateur est connecté, sinon optionnel
+  const isEmailRequired = !!user?.email;
+  const isEmailOk = isEmailRequired ? (email && isEmailValid) : (!email || isEmailValid);
+  const isFormValid = isEmailOk && feedbackType && isDescriptionValid;
 
   // Gestion du screenshot
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -121,6 +124,17 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose, pageContext }) => 
   // Soumission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // DEBUG LOGS - toujours visibles
+    console.log('[FEEDBACK] Submit clicked', {
+      isFormValid,
+      email,
+      isEmailOk,
+      feedbackType,
+      descriptionLength: description.length,
+      isDescriptionValid,
+    });
+
     dashboardLog.click('FeedbackForm: Submit button clicked');
     dashboardLog.group('Feedback Form Submission');
 
@@ -134,6 +148,11 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose, pageContext }) => 
     });
 
     if (!isFormValid) {
+      console.warn('[FEEDBACK] Form validation failed', {
+        isEmailOk,
+        feedbackType: !!feedbackType,
+        isDescriptionValid,
+      });
       dashboardLog.warn('Form validation failed - submission aborted', {
         email: !!email,
         isEmailValid,
@@ -204,6 +223,14 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose, pageContext }) => 
         onClose();
       }, 2000);
     } catch (err) {
+      // ALWAYS log to console for production debugging
+      console.error('[FEEDBACK] Form submission FAILED:', err);
+      console.error('[FEEDBACK] Full error object:', {
+        message: err instanceof Error ? err.message : String(err),
+        name: err instanceof Error ? err.name : 'Unknown',
+        code: (err as { code?: string }).code,
+        feedbackData,
+      });
       dashboardLog.error('Feedback submission FAILED', err);
       dashboardLog.groupEnd();
       setError(intl.formatMessage({

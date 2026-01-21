@@ -83,7 +83,25 @@ export const getStripeAccountSession = onCall<{ userType: "lawyer" | "expat" }>(
         },
       });
 
-      console.log("✅ Account Session created");
+      // P0 FIX: Validate that client_secret exists before returning
+      if (!accountSession || !accountSession.client_secret) {
+        console.error("❌ Stripe session created but no client_secret returned");
+        throw new HttpsError(
+          "internal",
+          "Failed to create Stripe session: no client secret returned"
+        );
+      }
+
+      // P0 FIX: Also validate accountId format
+      if (typeof accountId !== 'string' || !accountId.startsWith('acct_')) {
+        console.error("❌ Invalid Stripe account ID format:", accountId);
+        throw new HttpsError(
+          "internal",
+          "Invalid Stripe account ID format"
+        );
+      }
+
+      console.log("✅ Account Session created with valid client_secret");
 
       return {
         success: true,

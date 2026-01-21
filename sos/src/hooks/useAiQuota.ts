@@ -108,10 +108,12 @@ export function useAiQuota(): UseAiQuotaReturn {
         setQuotaCheck(result);
         setError(null); // Clear error on success
       } catch (err: unknown) {
-        // Log error but don't crash - set safe fallback
-        console.warn('[useAiQuota] Error checking quota (user may not have subscription):',
-          err instanceof Error ? err.message : err
-        );
+        // P2 FIX: Only log in development
+        if (import.meta.env.DEV) {
+          console.warn('[useAiQuota] Error checking quota (user may not have subscription):',
+            err instanceof Error ? err.message : err
+          );
+        }
         // Set a safe fallback - allow access but with error state
         setQuotaCheck({
           allowed: false,

@@ -1698,13 +1698,16 @@ service cloud.firestore {
       // - email requis et format valide
       // - type requis (bug, ux_friction, suggestion, other)
       // - description requise (min 10 caractères)
+      // NOTE: .size() compte les BYTES UTF-8, pas les caractères!
+      // Les caractères français (é, è, à) = 2 bytes chacun
+      // On utilise 6000 bytes pour permettre ~2000 caractères UTF-8
       allow create: if request.resource.data.keys().hasAll(['email', 'type', 'description'])
                     && request.resource.data.email is string
                     && request.resource.data.email.matches('^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$')
                     && request.resource.data.type in ['bug', 'ux_friction', 'suggestion', 'other']
                     && request.resource.data.description is string
                     && request.resource.data.description.size() >= 10
-                    && request.resource.data.description.size() <= 2000;
+                    && request.resource.data.description.size() <= 6000;
       // Mise à jour/Suppression: Admin uniquement
       allow update, delete: if isAdmin() || isDev();
     }

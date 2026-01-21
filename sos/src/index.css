@@ -550,6 +550,7 @@
 
 /* ============================================
    PAYPAL CARD FIELDS - Remove nested borders
+   Force removal of ALL PayPal-injected styles
    ============================================ */
 
 /* Target PayPal iframe containers to remove internal borders */
@@ -589,6 +590,32 @@ iframe[src*="paypal"] {
   box-shadow: none !important;
 }
 
+/* Force removal of ALL PayPal internal borders - deeper nesting */
+[class*="paypal"] > div,
+[class*="PayPal"] > div,
+div[id*="card-field"] > div,
+div[id*="card-field"] > div > div {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* Target the specific PayPal card field container class */
+.card-field-container,
+[class*="card-field-container"],
+[class*="CardField"] > div {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Override any inline styles on PayPal generated elements */
+div[data-pp-id] > div,
+div[data-pp-id] > div > div {
+  border: none !important;
+  box-shadow: none !important;
+}
+
 /* ============================================
    DASHBOARD LAYOUT STABILITY - Prevent jumping
    ============================================ */
@@ -598,14 +625,23 @@ iframe[src*="paypal"] {
   transition: min-height 0.3s ease-out;
 }
 
-/* Banner container with reserved space */
+/* P1 FIX: Banner container with stable height to prevent layout jumps */
 .dashboard-banner-zone {
+  /* Reserve minimum space to prevent content jumping when banner appears/disappears */
   min-height: 0;
   transition: min-height 0.3s ease-out, opacity 0.2s ease-out;
+  /* Use contain to isolate layout calculations */
+  contain: layout style;
 }
 
+/* P1 FIX: When banner has content, smoothly expand */
 .dashboard-banner-zone:has(> *) {
-  min-height: auto;
+  min-height: 80px; /* Reserve minimum space for collapsed state */
+}
+
+/* P1 FIX: When banner has expanded KYC form */
+.dashboard-banner-zone:has(.kyc-form-expanded) {
+  min-height: 400px; /* Reserve space for full KYC form */
 }
 
 /* Tab content container - prevent height jumps */

@@ -47,8 +47,8 @@ const DashboardMessages: React.FC = () => {
 
     let isMounted = true;
 
-    // Alerte utile si jamais ton contexte n'a pas le même identifiant
-    if (user?.id && user.id !== uid) {
+    // P2 FIX: Only log in development
+    if (import.meta.env.DEV && user?.id && user.id !== uid) {
       console.warn("[Messages] user.id != auth.uid → j'utilise auth.uid pour la requête", { userId: user.id, authUid: uid });
     }
 

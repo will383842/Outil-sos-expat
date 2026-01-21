@@ -117,27 +117,39 @@ export const checkStripeAccountStatus = onCall<{
       .doc(userId)
       .update(updateData);
 
-    // ✅ Update sos_profiles collection when KYC is complete
+    // P0 FIX: ALWAYS update users collection (for Dashboard) - not just when complete
+    // This ensures the Dashboard always has the latest KYC status
+    const kycStatus = isComplete ? "completed" :
+                      account.details_submitted ? "in_progress" : "not_started";
+
+    await admin
+      .firestore()
+      .collection("users")
+      .doc(userId)
+      .update({
+        kycCompleted: isComplete,
+        kycStatus: kycStatus,
+        stripeOnboardingComplete: isComplete,
+        chargesEnabled: account.charges_enabled || false,
+        payoutsEnabled: account.payouts_enabled || false,
+        // P0 FIX: Also store intermediate status for Dashboard visibility
+        stripeAccountStatus: {
+          detailsSubmitted: account.details_submitted || false,
+          chargesEnabled: account.charges_enabled || false,
+          payoutsEnabled: account.payouts_enabled || false,
+          requirementsCurrentlyDue: currentlyDue,
+          lastChecked: admin.firestore.FieldValue.serverTimestamp(),
+        },
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+    // Update sos_profiles collection when KYC is complete
     if (isComplete) {
       const sosProfileRef = admin
         .firestore()
         .collection("sos_profiles")
         .doc(userId);
       const sosProfileDoc = await sosProfileRef.get();
-
-      // 2. ✅ Update users collection (for Dashboard) - P0 FIX: Added missing await
-      await admin
-        .firestore()
-        .collection("users")
-        .doc(userId)
-        .update({
-          kycCompleted: isComplete,
-          kycStatus: isComplete ? "completed" : "in_progress",
-          stripeOnboardingComplete: isComplete,
-          chargesEnabled: isComplete,
-          payoutsEnabled: isComplete ? account.payouts_enabled || false : false,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
 
       if (sosProfileDoc.exists) {
         await sosProfileRef.update({

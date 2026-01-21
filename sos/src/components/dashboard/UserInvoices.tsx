@@ -69,7 +69,7 @@ export default function UserInvoices() {
   };
 
   const exportSinglePDF = (invoice: any) => {
-    console.log('Export PDF:', invoice);
+    // P2 FIX: Remove debug log in production
     alert(intl.formatMessage({ id: 'userInvoices.exportPdfNotImplemented' }));
   };
 
@@ -221,8 +221,8 @@ export default function UserInvoices() {
                 break; // Found refund, no need to check other queries
               }
             } catch (queryError) {
-              // Continue to next query if this one fails
-              console.warn('Error checking payment query:', queryError);
+              // P2 FIX: Only log in development
+              if (import.meta.env.DEV) console.warn('Error checking payment query:', queryError);
             }
           }
         } catch (err) {

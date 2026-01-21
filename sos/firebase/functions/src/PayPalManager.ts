@@ -2075,8 +2075,20 @@ export const createPayPalOrder = onCall(
         callSessionId,
         providerId,
         error: error instanceof Error ? error.message : String(error),
+        errorStack: error instanceof Error ? error.stack : undefined,
       });
-      console.error("Error creating PayPal order:", error);
+      // DEBUG: Log complet de l'erreur pour diagnostic
+      console.error("🔴 [PAYPAL ORDER ERROR] Full error:", JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+      console.error("🔴 [PAYPAL ORDER ERROR] Request context:", {
+        callSessionId,
+        amount: serverPricing.totalAmount,
+        currency: normalizedCurrency,
+        providerId,
+        serviceType: normalizedServiceType,
+        hasMerchantId,
+        hasPayPalEmail,
+        flow: hasMerchantId ? "direct" : "simple",
+      });
       throw new HttpsError("internal", "Failed to create order");
     }
   }
@@ -2169,8 +2181,15 @@ export const capturePayPalOrder = onCall(
         captureRequestId,
         orderId,
         error: error instanceof Error ? error.message : String(error),
+        errorStack: error instanceof Error ? error.stack : undefined,
       });
-      console.error("Error capturing PayPal order:", error);
+      // DEBUG: Log complet de l'erreur pour diagnostic
+      console.error("🔴 [PAYPAL CAPTURE ERROR] Full error:", JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+      console.error("🔴 [PAYPAL CAPTURE ERROR] Context:", {
+        orderId,
+        requesterId: request.auth.uid,
+        paymentDocExists: !paymentQuery.empty,
+      });
       throw new HttpsError("internal", "Failed to capture order");
     }
   }

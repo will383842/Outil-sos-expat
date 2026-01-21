@@ -163,10 +163,11 @@ const RecentActivity: React.FC<RecentActivityProps> = ({
     }
   };
 
+  // P1 FIX: Use consistent min-height to prevent layout jumps when activities load
   // Si pas d'activités
   if (activities.length === 0) {
     return (
-      <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl p-6">
+      <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl p-6 min-h-[280px]">
         <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
           <Clock className="w-4 h-4 text-gray-400" />
           {intl.formatMessage({ id: 'dashboard.recentActivity', defaultMessage: 'Recent Activity' })}
@@ -184,7 +185,7 @@ const RecentActivity: React.FC<RecentActivityProps> = ({
   }
 
   return (
-    <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl p-4 sm:p-6">
+    <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl p-4 sm:p-6 min-h-[280px]">
       <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
         <Clock className="w-4 h-4 text-gray-400" />
         {intl.formatMessage({ id: 'dashboard.recentActivity', defaultMessage: 'Recent Activity' })}
