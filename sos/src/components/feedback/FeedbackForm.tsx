@@ -167,7 +167,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose, pageContext }) => 
     }
 
     try {
-      await submitFeedback(feedbackData as FeedbackData, screenshot || undefined);
+      await submitFeedback(feedbackData as unknown as FeedbackData, screenshot || undefined);
       setIsSuccess(true);
 
       // Fermer après 2 secondes
