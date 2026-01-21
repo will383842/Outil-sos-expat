@@ -1,12 +1,12 @@
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { defineSecret } from "firebase-functions/params";
-import { getStripe } from "./index";
+import Stripe from "stripe";
 import { STRIPE_SUPPORTED_COUNTRIES, PAYPAL_ONLY_COUNTRIES } from "./lib/paymentCountries";
-
-// ✅ P0 FIX: Declare secrets for Firebase v2 functions
-const STRIPE_SECRET_KEY_TEST = defineSecret("STRIPE_SECRET_KEY_TEST");
-const STRIPE_SECRET_KEY_LIVE = defineSecret("STRIPE_SECRET_KEY_LIVE");
+import {
+  STRIPE_SECRET_KEY_TEST,
+  STRIPE_SECRET_KEY_LIVE,
+  getStripeSecretKey,
+} from "./lib/secrets";
 
 interface CreateAccountData {
   email: string;
@@ -30,10 +30,24 @@ function isPayPalOnly(countryCode: string): boolean {
   return PAYPAL_ONLY_COUNTRIES.has(countryCode.toUpperCase());
 }
 
+// Helper to create Stripe instance using centralized secrets
+function createStripeInstance(): Stripe | null {
+  const secretKey = getStripeSecretKey();
+
+  if (!secretKey || !secretKey.startsWith("sk_")) {
+    console.error("❌ Stripe secret key not configured or invalid");
+    return null;
+  }
+
+  return new Stripe(secretKey, {
+    apiVersion: "2023-10-16" as Stripe.LatestApiVersion,
+  });
+}
+
 export const createStripeAccount = onCall<CreateAccountData>(
   {
     region: "europe-west1",
-    // ✅ P0 FIX: Secrets must be declared in function config
+    // ✅ P0 FIX: Use centralized secrets from lib/secrets.ts
     secrets: [STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE],
   },
   async (request) => {
@@ -43,10 +57,10 @@ export const createStripeAccount = onCall<CreateAccountData>(
 
     const userId = request.auth.uid;
     const { email, currentCountry, userType } = request.data;
-    const stripe = getStripe();
+    const stripe = createStripeInstance();
 
     if (!stripe) {
-      throw new HttpsError("internal", "Stripe is not configured");
+      throw new HttpsError("internal", "Stripe is not configured - secret key missing or invalid");
     }
 
     // ✅ Validate userType

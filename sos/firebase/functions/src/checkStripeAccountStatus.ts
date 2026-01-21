@@ -1,23 +1,18 @@
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { defineSecret, defineString } from "firebase-functions/params";
 import Stripe from "stripe";
+import {
+  STRIPE_SECRET_KEY_TEST,
+  STRIPE_SECRET_KEY_LIVE,
+  getStripeSecretKey,
+} from "./lib/secrets";
 
-// ✅ Declare secrets for Firebase v2 functions
-const STRIPE_SECRET_KEY_TEST = defineSecret("STRIPE_SECRET_KEY_TEST");
-const STRIPE_SECRET_KEY_LIVE = defineSecret("STRIPE_SECRET_KEY_LIVE");
-// STRIPE_MODE is a string param, not a secret (just "test" or "live")
-const STRIPE_MODE = defineString("STRIPE_MODE");
-
-// Helper to create Stripe instance with local secrets
+// Helper to create Stripe instance using centralized secrets
 function createStripeInstance(): Stripe | null {
-  const isLive = (STRIPE_MODE.value() || "test").toLowerCase() === "live";
-  const secretKey = isLive
-    ? STRIPE_SECRET_KEY_LIVE.value()
-    : STRIPE_SECRET_KEY_TEST.value();
+  const secretKey = getStripeSecretKey();
 
-  if (!secretKey) {
-    console.error("❌ Stripe secret key not configured");
+  if (!secretKey || !secretKey.startsWith("sk_")) {
+    console.error("❌ Stripe secret key not configured or invalid");
     return null;
   }
 
@@ -31,8 +26,8 @@ export const checkStripeAccountStatus = onCall<{
 }>(
   {
     region: "europe-west1",
-    // ✅ Secrets must be declared in function config
-    secrets: [STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE]
+    // ✅ P0 FIX: Use centralized secrets from lib/secrets.ts
+    secrets: [STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE],
   },
   async (request) => {
   if (!request.auth) {
@@ -130,8 +125,8 @@ export const checkStripeAccountStatus = onCall<{
         .doc(userId);
       const sosProfileDoc = await sosProfileRef.get();
 
-      // 2. ✅ Update users collection (for Dashboard)
-      admin
+      // 2. ✅ Update users collection (for Dashboard) - P0 FIX: Added missing await
+      await admin
         .firestore()
         .collection("users")
         .doc(userId)

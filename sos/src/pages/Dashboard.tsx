@@ -46,6 +46,9 @@ import { useAiQuota } from "../hooks/useAiQuota";
 import MobileBottomNav from "../components/dashboard/MobileBottomNav";
 import MobileSideDrawer from "../components/dashboard/MobileSideDrawer";
 import KYCBannerCompact from "../components/dashboard/KYCBannerCompact";
+import DashboardStats from "../components/dashboard/DashboardStats";
+import QuickActions from "../components/dashboard/QuickActions";
+import RecentActivity from "../components/dashboard/RecentActivity";
 
 import { useAuth } from "../contexts/AuthContext";
 import { useApp } from "../contexts/AppContext";
@@ -1591,49 +1594,50 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
 
       {/* ========================================== */}
       {/* KYC STATUS & VERIFICATION SECTION (STRIPE OR PAYPAL) */}
+      {/* P1 FIX: Wrapped in stable container to prevent layout jumping */}
       {/* ========================================== */}
+      <div className="dashboard-banner-zone transition-all duration-300 ease-out">
+        {/* STRIPE KYC: Show verification form if Stripe provider and not complete */}
+        {userDataReady &&
+          user &&
+          (user.role === "lawyer" || user.role === "expat") &&
+          (user?.paymentGateway === "stripe" || !user?.paymentGateway) &&
+          (user?.kycStatus === "not_started" ||
+            user?.kycStatus === "in_progress" ||
+            !user?.stripeOnboardingComplete) && (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 lg:py-8 animate-fade-in">
+              <KYCBannerCompact user={user} kycType="stripe">
+                <StripeKYC
+                  userType={user.role as "lawyer" | "expat"}
+                  onComplete={() => window.location.reload()}
+                />
+              </KYCBannerCompact>
+            </div>
+          )}
 
-      {/* STRIPE KYC: Show verification form if Stripe provider and not complete */}
-      {userDataReady &&
-        user &&
-        (user.role === "lawyer" || user.role === "expat") &&
-        (user?.paymentGateway === "stripe" || !user?.paymentGateway) &&
-        (user?.kycStatus === "not_started" ||
-          user?.kycStatus === "in_progress" ||
-          !user?.stripeOnboardingComplete) && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 lg:py-8">
-            <KYCBannerCompact user={user} kycType="stripe">
-              <StripeKYC
-                userType={user.role as "lawyer" | "expat"}
-                onComplete={() => window.location.reload()}
-              />
-            </KYCBannerCompact>
-          </div>
-        )}
+        {/* PAYPAL KYC: Show PayPal onboarding if PayPal provider and not connected */}
+        {userDataReady &&
+          user &&
+          (user.role === "lawyer" || user.role === "expat") &&
+          user?.paymentGateway === "paypal" &&
+          (user?.paypalAccountStatus === "not_connected" || !user?.paypalOnboardingComplete) && (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 lg:py-8 animate-fade-in">
+              <KYCBannerCompact user={user} kycType="paypal">
+                <PayPalOnboarding
+                  providerId={user.id}
+                  providerEmail={user.email}
+                  providerType={user.role as "lawyer" | "expat"}
+                  onStatusChange={(status) => {
+                    if (status === "active") {
+                      window.location.reload();
+                    }
+                  }}
+                />
+              </KYCBannerCompact>
+            </div>
+          )}
 
-      {/* PAYPAL KYC: Show PayPal onboarding if PayPal provider and not connected */}
-      {userDataReady &&
-        user &&
-        (user.role === "lawyer" || user.role === "expat") &&
-        user?.paymentGateway === "paypal" &&
-        (user?.paypalAccountStatus === "not_connected" || !user?.paypalOnboardingComplete) && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 lg:py-8">
-            <KYCBannerCompact user={user} kycType="paypal">
-              <PayPalOnboarding
-                providerId={user.id}
-                providerEmail={user.email}
-                providerType={user.role as "lawyer" | "expat"}
-                onStatusChange={(status) => {
-                  if (status === "active") {
-                    window.location.reload();
-                  }
-                }}
-              />
-            </KYCBannerCompact>
-          </div>
-        )}
-
-      {/* Show success banner if KYC is verified and charges enabled */}
+        {/* Show success banner if KYC is verified and charges enabled */}
       {/* {user?.stripeOnboardingComplete && user?.chargesEnabled && (
         <div className="mb-6 bg-green-50 border-l-4 border-green-500 rounded-lg p-4 shadow-sm">
           <div className="flex items-center">
@@ -1851,6 +1855,7 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
       {/* ========================================== */}
       {/* END OF KYC STATUS SECTION */}
       {/* ========================================== */}
+      </div>
 
       <div className="min-h-screen bg-gradient-to-b from-gray-50 via-rose-50/40 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black">
         {/* Mobile Bottom Navigation */}
@@ -2214,7 +2219,76 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
             </div>
 
             {/* CONTENU PRINCIPAL - ID for auto-scroll */}
-            <div id="dashboard-content" className="lg:col-span-3 space-y-6 lg:space-y-8">
+            <div id="dashboard-content" className="lg:col-span-3 space-y-6 lg:space-y-8 dashboard-content-wrapper">
+              {/* STATS CARDS - Visible on all tabs */}
+              <DashboardStats
+                user={user}
+                calls={calls.map(c => ({
+                  status: c.status,
+                  duration: c.duration,
+                  price: c.price,
+                  createdAt: c.createdAt,
+                }))}
+                reviews={providerReviews.map(r => ({
+                  rating: r.rating,
+                  status: r.status,
+                }))}
+                loading={!userDataReady}
+              />
+
+              {/* QUICK ACTIONS - Visible on profile tab */}
+              {activeTab === "profile" && (
+                <QuickActions
+                  user={user}
+                  onTabChange={(tab) => setSearchParams({ tab })}
+                />
+              )}
+
+              {/* RECENT ACTIVITY - Visible on profile tab for providers */}
+              {activeTab === "profile" && (user.role === "lawyer" || user.role === "expat") && (
+                <RecentActivity
+                  calls={calls.map(c => ({
+                    id: c.id,
+                    status: c.status,
+                    createdAt: c.createdAt,
+                    startedAt: c.startedAt,
+                    endedAt: c.endedAt,
+                    providerName: c.providerName,
+                    clientName: c.clientName,
+                    price: c.price,
+                    clientRating: c.clientRating,
+                  }))}
+                  reviews={providerReviews.map(r => ({
+                    id: r.id,
+                    rating: r.rating,
+                    createdAt: r.createdAt,
+                    clientName: r.clientName,
+                  }))}
+                  isProvider={true}
+                  maxItems={5}
+                />
+              )}
+
+              {/* RECENT ACTIVITY - Visible on profile tab for clients */}
+              {activeTab === "profile" && user.role === "client" && (
+                <RecentActivity
+                  calls={calls.map(c => ({
+                    id: c.id,
+                    status: c.status,
+                    createdAt: c.createdAt,
+                    startedAt: c.startedAt,
+                    endedAt: c.endedAt,
+                    providerName: c.providerName,
+                    clientName: c.clientName,
+                    price: c.price,
+                    clientRating: c.clientRating,
+                  }))}
+                  reviews={[]}
+                  isProvider={false}
+                  maxItems={5}
+                />
+              )}
+
               {/* PROFIL — Vue et Édition unifiées */}
               {activeTab === "profile" && (
                 <div className={`${softCard} overflow-hidden`}>

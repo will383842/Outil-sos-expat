@@ -547,3 +547,130 @@
   stroke-dashoffset: 24;
   animation: checkmarkDraw 0.3s ease-out forwards;
 }
+
+/* ============================================
+   PAYPAL CARD FIELDS - Remove nested borders
+   ============================================ */
+
+/* Target PayPal iframe containers to remove internal borders */
+.paypal-card-field,
+[class*="paypal-card"],
+[data-uid^="paypal"],
+div[id^="card-"] {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: transparent !important;
+}
+
+/* Remove borders from PayPal iframes */
+iframe[name^="__paypal"],
+iframe[title*="PayPal"],
+iframe[src*="paypal"] {
+  border: 0 !important;
+  border-width: 0 !important;
+  outline: none !important;
+}
+
+/* Target PayPal field wrappers */
+[class*="PayPalNameField"],
+[class*="PayPalNumberField"],
+[class*="PayPalExpiryField"],
+[class*="PayPalCVVField"] {
+  border: none !important;
+}
+
+/* Ensure the wrapper div doesn't add borders */
+[class*="PayPalNameField"] > div,
+[class*="PayPalNumberField"] > div,
+[class*="PayPalExpiryField"] > div,
+[class*="PayPalCVVField"] > div {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* ============================================
+   DASHBOARD LAYOUT STABILITY - Prevent jumping
+   ============================================ */
+
+/* Smooth content transitions to prevent layout jumping */
+.dashboard-content-wrapper {
+  transition: min-height 0.3s ease-out;
+}
+
+/* Banner container with reserved space */
+.dashboard-banner-zone {
+  min-height: 0;
+  transition: min-height 0.3s ease-out, opacity 0.2s ease-out;
+}
+
+.dashboard-banner-zone:has(> *) {
+  min-height: auto;
+}
+
+/* Tab content container - prevent height jumps */
+.dashboard-tab-content {
+  min-height: 400px;
+  transition: opacity 0.15s ease-out;
+}
+
+/* Stable grid layout */
+.dashboard-grid-stable {
+  contain: layout style;
+}
+
+/* Stats card entrance animation */
+@keyframes statsCardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stats-card-animate {
+  animation: statsCardFadeIn 0.3s ease-out forwards;
+}
+
+.stats-card-animate:nth-child(1) { animation-delay: 0ms; }
+.stats-card-animate:nth-child(2) { animation-delay: 50ms; }
+.stats-card-animate:nth-child(3) { animation-delay: 100ms; }
+.stats-card-animate:nth-child(4) { animation-delay: 150ms; }
+
+/* Counter animation */
+@keyframes countUp {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.counter-animate {
+  animation: countUp 0.5s ease-out forwards;
+}
+
+/* Skeleton loading for stats */
+.stats-skeleton {
+  background: linear-gradient(90deg,
+    rgba(0,0,0,0.06) 25%,
+    rgba(0,0,0,0.1) 50%,
+    rgba(0,0,0,0.06) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+.dark .stats-skeleton {
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0.06) 25%,
+    rgba(255,255,255,0.1) 50%,
+    rgba(255,255,255,0.06) 75%
+  );
+  background-size: 200% 100%;
+}
