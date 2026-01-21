@@ -2128,25 +2128,21 @@ export const capturePayPalOrder = onCall(
     // ===== P0 SECURITY FIX: Vérifier que l'utilisateur est le propriétaire de l'ordre =====
     const db = admin.firestore();
 
-    // Chercher le paiement associé à cet orderId
-    const paymentQuery = await db
-      .collection("payments")
-      .where("paypalOrderId", "==", orderId)
-      .limit(1)
-      .get();
+    // P0 FIX: Chercher dans paypal_orders (créé par createPayPalOrder) au lieu de payments
+    // Le document payments est créé APRÈS la capture sur le frontend, donc il n'existe pas encore
+    const orderDoc = await db.collection("paypal_orders").doc(orderId).get();
 
-    if (paymentQuery.empty) {
-      console.error(`[PAYPAL] No payment found for order ${orderId}`);
-      throw new HttpsError("not-found", "Payment not found for this order");
+    if (!orderDoc.exists) {
+      console.error(`[PAYPAL] No order found in paypal_orders for ${orderId}`);
+      throw new HttpsError("not-found", "PayPal order not found");
     }
 
-    const paymentDoc = paymentQuery.docs[0];
-    const paymentData = paymentDoc.data();
+    const orderData = orderDoc.data()!;
 
     // Vérifier que l'utilisateur actuel est le client qui a créé le paiement
-    if (paymentData.clientId !== request.auth.uid) {
+    if (orderData.clientId !== request.auth.uid) {
       console.error(`[PAYPAL] Ownership check failed: order=${orderId}, ` +
-        `owner=${paymentData.clientId}, requester=${request.auth.uid}`);
+        `owner=${orderData.clientId}, requester=${request.auth.uid}`);
       throw new HttpsError(
         "permission-denied",
         "You are not authorized to capture this order"
@@ -2154,7 +2150,7 @@ export const capturePayPalOrder = onCall(
     }
 
     // P2-2 FIX: Vérifier que le paiement n'a pas déjà été capturé
-    if (isPaymentCompleted(paymentData.status)) {
+    if (isPaymentCompleted(orderData.status)) {
       console.warn(`[PAYPAL] Order ${orderId} already captured`);
       return {
         success: true,
