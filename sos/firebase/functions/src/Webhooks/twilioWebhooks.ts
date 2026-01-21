@@ -79,7 +79,7 @@ export const twilioCallWebhook = onRequest(
     memory: '256MiB',
     cpu: 0.25,
     maxInstances: 10,  // P1 FIX: Increased from 3 for better scalability
-    minInstances: 0,
+    minInstances: 1,   // P0 FIX: Keep warm to avoid cold start delays on call status updates
     concurrency: 1,    // Keep at 1 to avoid race conditions with Firestore updates
     // P0 CRITICAL FIX: Add Twilio secrets for signature validation + hangup calls to voicemail
     // P0 FIX 2026-01-18: Added TASKS_AUTH_SECRET for scheduleProviderAvailableTask (provider cooldown)
@@ -1024,7 +1024,7 @@ export const twilioAmdTwiml = onRequest(
     memory: '256MiB',  // P0 FIX: 128MiB was too low (firebase-admin requires ~150MB)
     cpu: 0.25,
     maxInstances: 10,
-    minInstances: 0,
+    minInstances: 1,  // P0 FIX: Keep 1 instance warm to avoid 5-8s cold start delay
     concurrency: 1
   },
   async (req: Request, res: Response) => {
@@ -1722,7 +1722,7 @@ export const twilioGatherResponse = onRequest(
     memory: '256MiB',
     cpu: 0.25,
     maxInstances: 10,
-    minInstances: 0,
+    minInstances: 1,  // P0 FIX: Keep warm for instant DTMF response handling
     concurrency: 1
   },
   async (req: Request, res: Response) => {

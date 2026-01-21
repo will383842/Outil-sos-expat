@@ -52,8 +52,8 @@ export const twilioConferenceWebhook = onRequest(
     region: 'europe-west1',
     memory: '256MiB',
     cpu: 0.25,
-    maxInstances: 3,
-    minInstances: 0,
+    maxInstances: 10,  // P0 FIX: Increased for better scalability during peak
+    minInstances: 1,   // P0 FIX: Keep warm to avoid cold start delays on conference events
     concurrency: 1,
     // P0 CRITICAL FIX: Add Twilio secrets for signature validation + Stripe secrets for payment capture
     // P0 FIX 2026-01-18: Added TASKS_AUTH_SECRET for scheduleProviderAvailableTask (provider cooldown)

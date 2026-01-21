@@ -23,6 +23,7 @@ import { useAiQuota } from '../../../hooks/useAiQuota';
 import { useSubscription } from '../../../hooks/useSubscription';
 import { useAuth } from '../../../contexts/AuthContext';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
+import { usePWA } from '../../../components/pwa/PWAProvider';
 import {
   Bot,
   Zap,
@@ -40,6 +41,8 @@ import {
   Calendar,
   ArrowUpRight,
   Users,
+  Download,
+  Smartphone,
 } from 'lucide-react';
 import { cn } from '../../../utils/cn';
 
@@ -147,6 +150,19 @@ export const AiAssistantPageV2: React.FC = () => {
   } = useAiQuota();
 
   const { subscription, loading: subLoading } = useSubscription();
+
+  // PWA Install
+  const { canInstall, triggerInstall, isInstalled } = usePWA();
+  const [isInstallingPWA, setIsInstallingPWA] = useState(false);
+
+  const handleInstallPWA = useCallback(async () => {
+    setIsInstallingPWA(true);
+    try {
+      await triggerInstall();
+    } finally {
+      setIsInstallingPWA(false);
+    }
+  }, [triggerInstall]);
 
   // State
   const [isAccessingOutil, setIsAccessingOutil] = useState(false);
@@ -483,6 +499,21 @@ export const AiAssistantPageV2: React.FC = () => {
 
               {/* Status Badges */}
               <div className="flex items-center gap-3 flex-wrap">
+                {/* PWA Install Button */}
+                {canInstall && !isInstalled && (
+                  <button
+                    onClick={handleInstallPWA}
+                    disabled={isInstallingPWA}
+                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-medium shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-70"
+                  >
+                    {isInstallingPWA ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Download className="w-4 h-4" />
+                    )}
+                    <span>{intl.formatMessage({ id: 'pwa.install.button', defaultMessage: 'Installer l\'app' })}</span>
+                  </button>
+                )}
                 {isInTrial && (
                   <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-medium shadow-lg">
                     <Sparkles className="w-4 h-4" />
@@ -831,6 +862,29 @@ export const AiAssistantPageV2: React.FC = () => {
                     </span>
                     <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-purple-600 transition-colors" />
                   </button>
+
+                  {/* PWA Install Button in Quick Actions */}
+                  {canInstall && !isInstalled && (
+                    <button
+                      onClick={handleInstallPWA}
+                      disabled={isInstallingPWA}
+                      className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-emerald-50 transition-colors group border border-transparent hover:border-emerald-100 disabled:opacity-50"
+                    >
+                      <span className="flex items-center gap-3">
+                        <div className="p-2 bg-emerald-100 rounded-lg group-hover:bg-emerald-200 transition-colors">
+                          {isInstallingPWA ? (
+                            <Loader2 className="w-4 h-4 text-emerald-600 animate-spin" />
+                          ) : (
+                            <Smartphone className="w-4 h-4 text-emerald-600" />
+                          )}
+                        </div>
+                        <span className="text-sm font-medium text-gray-700">
+                          {intl.formatMessage({ id: 'pwa.install.action', defaultMessage: 'Installer l\'application' })}
+                        </span>
+                      </span>
+                      <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-emerald-600 transition-colors" />
+                    </button>
+                  )}
                 </div>
               </div>
 

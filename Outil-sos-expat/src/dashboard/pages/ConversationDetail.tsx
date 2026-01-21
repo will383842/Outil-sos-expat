@@ -799,35 +799,38 @@ export default function ConversationDetail() {
   const { isExpired, formattedTime, durationMinutes } = useConversationExpiration(booking);
   const isDevMock = new URLSearchParams(window.location.search).get("dev") === "true";
 
-  // Load booking
+  // Load booking - FIX: Use onSnapshot for real-time updates (detect when AI trigger completes)
   useEffect(() => {
     if (!id) return;
 
-    const loadBooking = async () => {
-      if (isDevMock && id.startsWith("booking-")) {
-        const mockData = getMockData();
-        const mockBooking = mockData.bookings.find((b) => b.id === id);
+    // Mock data for dev mode
+    if (isDevMock && id.startsWith("booking-")) {
+      const mockData = getMockData();
+      const mockBooking = mockData.bookings.find((b) => b.id === id);
 
-        if (mockBooking) {
-          setBooking({
-            ...mockBooking,
-            createdAt: { toDate: () => mockBooking.createdAt, toMillis: () => mockBooking.createdAt.getTime() } as unknown as Timestamp,
-            aiProcessedAt: mockBooking.aiProcessedAt
-              ? { toDate: () => mockBooking.aiProcessedAt!, toMillis: () => mockBooking.aiProcessedAt!.getTime() } as unknown as Timestamp
-              : undefined,
-          } as unknown as Booking);
-          setLoading(false);
-          return;
-        }
+      if (mockBooking) {
+        setBooking({
+          ...mockBooking,
+          createdAt: { toDate: () => mockBooking.createdAt, toMillis: () => mockBooking.createdAt.getTime() } as unknown as Timestamp,
+          aiProcessedAt: mockBooking.aiProcessedAt
+            ? { toDate: () => mockBooking.aiProcessedAt!, toMillis: () => mockBooking.aiProcessedAt!.getTime() } as unknown as Timestamp
+            : undefined,
+        } as unknown as Booking);
+        setLoading(false);
+        return;
       }
+    }
 
-      try {
-        const docRef = doc(db, "bookings", id);
-        const docSnap = await getDoc(docRef);
-
+    // FIX: Use onSnapshot instead of getDoc for real-time updates
+    // This ensures we detect when aiOnBookingCreated trigger completes
+    const docRef = doc(db, "bookings", id);
+    const unsubscribe = onSnapshot(
+      docRef,
+      (docSnap) => {
         if (docSnap.exists()) {
           const bookingData = { id: docSnap.id, ...docSnap.data() } as Booking;
 
+          // Access control check
           if (!isAdmin && bookingData.providerId) {
             const hasAccess = linkedProviders.some(p => p.id === bookingData.providerId) ||
                               activeProvider?.id === bookingData.providerId;
@@ -840,70 +843,80 @@ export default function ConversationDetail() {
           }
 
           setBooking(bookingData);
+          setLoading(false);
+
+          console.log("[ConversationDetail] 📦 Booking updated (real-time):", {
+            id: bookingData.id,
+            aiProcessed: bookingData.aiProcessed,
+            conversationId: (bookingData as unknown as Record<string, unknown>).conversationId,
+          });
         } else {
           setError(t("dossierDetail.notFound"));
+          setLoading(false);
         }
-      } catch (err) {
+      },
+      (err) => {
         console.error("Erreur chargement booking:", err);
-        setError((err as Error).message);
-      } finally {
+        setError(err.message);
         setLoading(false);
       }
-    };
+    );
 
-    loadBooking();
+    return () => unsubscribe();
   }, [id, isAdmin, activeProvider?.id, linkedProviders, t, isDevMock]);
 
-  // Load conversation
+  // Load conversation - FIX: Simplified logic since booking is now real-time
   useEffect(() => {
     if (!id || !booking) return;
 
     let unsubMessages: (() => void) | null = null;
 
-    const loadConversation = async () => {
-      if (isDevMock && id.startsWith("booking-")) {
-        const mockData = getMockData();
-        const mockConv = mockData.conversations.find((c) => c.bookingId === id);
+    // Mock data for dev mode
+    if (isDevMock && id.startsWith("booking-")) {
+      const mockData = getMockData();
+      const mockConv = mockData.conversations.find((c) => c.bookingId === id);
 
-        if (mockConv) {
-          setConversation({
-            id: mockConv.id,
-            bookingId: mockConv.bookingId,
-            providerId: mockConv.providerId,
-            status: mockConv.status,
-          });
+      if (mockConv) {
+        setConversation({
+          id: mockConv.id,
+          bookingId: mockConv.bookingId,
+          providerId: mockConv.providerId,
+          status: mockConv.status,
+        });
 
-          const mockMsgs = mockData.messages[mockConv.id] || [];
-          setMessages(
-            mockMsgs.map((m) => ({
-              ...m,
-              createdAt: { toDate: () => m.createdAt } as unknown as Timestamp,
-            })) as unknown as Message[]
-          );
-        } else {
-          const convId = `conv-${Date.now()}`;
-          setConversation({ id: convId, bookingId: id, providerId: booking.providerId });
-          setMessages([]);
-        }
-        return;
+        const mockMsgs = mockData.messages[mockConv.id] || [];
+        setMessages(
+          mockMsgs.map((m) => ({
+            ...m,
+            createdAt: { toDate: () => m.createdAt } as unknown as Timestamp,
+          })) as unknown as Message[]
+        );
+      } else {
+        const convId = `conv-${Date.now()}`;
+        setConversation({ id: convId, bookingId: id, providerId: booking.providerId });
+        setMessages([]);
       }
+      return;
+    }
 
-      // FIX: Use conversationId from booking if available (set by aiOnBookingCreated trigger)
-      // This prevents creating a duplicate empty conversation before the trigger finishes
-      const bookingAny = booking as Record<string, unknown>;
+    // FIX: Since booking is now real-time (onSnapshot), we can use conversationId directly
+    // when it becomes available after aiOnBookingCreated trigger completes
+    const bookingAny = booking as unknown as Record<string, unknown>;
 
+    const setupConversation = async () => {
       let convId: string | null = null;
 
-      // Priority 1: Use conversationId from booking (most reliable)
+      // Priority 1: Use conversationId from booking (set by aiOnBookingCreated trigger)
       if (bookingAny.conversationId && typeof bookingAny.conversationId === "string") {
         convId = bookingAny.conversationId;
+        console.log("[ConversationDetail] ✅ Using conversationId from booking:", convId);
         const convDoc = await getDoc(doc(db, "conversations", convId));
         if (convDoc.exists()) {
           setConversation({ id: convId, ...convDoc.data() } as Conversation);
         }
       }
 
-      // Priority 2: Search by bookingId (fallback)
+      // Priority 2: Search by bookingId (fallback for older bookings)
       if (!convId) {
         const convQuery = query(collection(db, "conversations"), where("bookingId", "==", id));
         const convSnapshot = await getDocs(convQuery);
@@ -911,31 +924,28 @@ export default function ConversationDetail() {
         if (!convSnapshot.empty) {
           const existingConv = convSnapshot.docs[0];
           convId = existingConv.id;
+          console.log("[ConversationDetail] ✅ Found conversation by bookingId:", convId);
           setConversation({ id: convId, ...existingConv.data() } as Conversation);
         }
       }
 
-      // Priority 3: If still no conversation and AI hasn't processed yet, wait for trigger
-      // Don't create empty conversation - let aiOnBookingCreated create it with the AI response
+      // Priority 3: If no conversation yet, AI trigger hasn't completed
+      // FIX: Don't return early - just wait for booking to update (it's real-time now)
+      // The useEffect will re-run when booking.conversationId becomes available
       if (!convId) {
         if (!booking.aiProcessed) {
-          // AI trigger hasn't run yet - set up listener on booking to detect when it does
-          console.log("[ConversationDetail] Waiting for AI trigger to create conversation...");
-          const bookingRef = doc(db, "bookings", id);
-          const unsubBooking = onSnapshot(bookingRef, (bookingSnap) => {
-            const updatedBooking = bookingSnap.data();
-            if (updatedBooking?.conversationId) {
-              console.log("[ConversationDetail] AI trigger completed, conversation created:", updatedBooking.conversationId);
-              // Reload the conversation
-              loadConversation();
-              unsubBooking(); // Stop listening
-            }
+          console.log("[ConversationDetail] ⏳ Waiting for AI trigger to create conversation...", {
+            bookingId: id,
+            aiProcessed: booking.aiProcessed,
           });
-          // Store unsubscribe function to clean up
+          // Don't create empty conversation - wait for AI trigger
+          // The booking useEffect (onSnapshot) will update booking when AI completes
+          // This useEffect will then re-run with the new conversationId
           return;
         }
 
         // AI processed but no conversation found - create one as fallback
+        console.log("[ConversationDetail] ⚠️ AI processed but no conversation - creating fallback");
         const newConvRef = await addDoc(collection(db, "conversations"), {
           bookingId: id,
           providerId: booking.providerId,
@@ -948,8 +958,10 @@ export default function ConversationDetail() {
         setConversation({ id: convId, bookingId: id, providerId: booking.providerId });
       }
 
-      // Order by createdAt - messages will be sorted client-side by 'order' field
-      // when timestamps are equal (fallback for messages without 'order' field)
+      // FIX: Only setup messages listener if we have a convId
+      if (!convId) return;
+
+      // Setup real-time listener for messages
       const messagesQuery = query(
         collection(db, "conversations", convId, "messages"),
         orderBy("createdAt", "asc")
@@ -958,33 +970,24 @@ export default function ConversationDetail() {
       unsubMessages = onSnapshot(messagesQuery, (msgSnapshot) => {
         let msgs = msgSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Message[];
 
-        // FIX: Sort by 'order' field when timestamps are equal (for initial context + AI response)
-        // This ensures correct ordering even when both messages have the same serverTimestamp
+        // Sort by 'order' field when timestamps are equal (for initial context + AI response)
         msgs = msgs.sort((a, b) => {
           const timeA = a.createdAt?.toMillis() || 0;
           const timeB = b.createdAt?.toMillis() || 0;
           if (timeA !== timeB) return timeA - timeB;
-          // If timestamps are equal, sort by 'order' field (if present)
           return (a.order || 0) - (b.order || 0);
         });
 
         setMessages(msgs);
 
-        // 🆕 AUTO-DETECT AI LOADING STATE
-        // L'IA est en train de travailler si:
-        // - Le dernier message vient du provider et on attend la réponse IA
+        // Auto-detect AI loading state
         const lastMsg = msgs[msgs.length - 1];
-        // FIX: Only gpt/claude sources are actual AI responses
-        // source="system" is the initial booking context (not an AI response)
         const lastMsgIsFromAI = lastMsg?.source === "gpt" || lastMsg?.source === "gpt-error" || lastMsg?.source === "claude";
-        // FIX: Only provider messages should trigger AI loading (not system context messages)
         const lastMsgIsFromProvider = lastMsg?.source === "provider";
 
         if (lastMsgIsFromAI) {
-          // L'IA a répondu, on arrête le loading
           setAiLoading(false);
         } else if (lastMsgIsFromProvider) {
-          // Le dernier message est du provider, on attend la réponse IA
           setAiLoading(true);
         }
 
@@ -997,8 +1000,11 @@ export default function ConversationDetail() {
       });
     };
 
-    loadConversation().catch(console.error);
-    return () => { if (unsubMessages) unsubMessages(); };
+    setupConversation().catch(console.error);
+
+    return () => {
+      if (unsubMessages) unsubMessages();
+    };
   }, [id, booking, isDevMock]);
 
   // ═══════════════════════════════════════════════════════════════════════════
