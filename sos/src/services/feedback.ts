@@ -121,6 +121,11 @@ function sanitizeFeedbackData(data: FeedbackData): Record<string, unknown> {
  * Upload une capture d'écran vers Firebase Storage
  */
 export async function uploadFeedbackScreenshot(file: File): Promise<string> {
+  console.log('%c📸 [feedback.ts] uploadFeedbackScreenshot() CALLED', 'background: #00BCD4; color: white; padding: 2px 6px; border-radius: 3px;', {
+    fileName: file.name,
+    fileSize: file.size,
+    fileType: file.type,
+  });
   dashboardLog.api('uploadFeedbackScreenshot called', {
     fileName: file.name,
     fileSize: file.size,
@@ -129,11 +134,13 @@ export async function uploadFeedbackScreenshot(file: File): Promise<string> {
 
   // Valider le fichier
   if (!file.type.startsWith('image/')) {
+    console.error('❌ [feedback.ts] Invalid file type:', file.type);
     dashboardLog.error('Invalid file type', { type: file.type });
     throw new Error('Invalid file type. Only images are allowed.');
   }
 
   if (file.size > 5 * 1024 * 1024) {
+    console.error('❌ [feedback.ts] File too large:', file.size);
     dashboardLog.error('File too large', { size: file.size, maxSize: 5 * 1024 * 1024 });
     throw new Error('File too large. Maximum size is 5MB.');
   }
@@ -141,29 +148,36 @@ export async function uploadFeedbackScreenshot(file: File): Promise<string> {
   // Générer un nom unique
   const fileName = generateScreenshotFileName(file.name);
   const filePath = `${FEEDBACK_STORAGE_PATH}/${fileName}`;
+  console.log('📸 [feedback.ts] Upload path:', filePath);
   dashboardLog.api('Uploading to Firebase Storage', { filePath });
 
   // Upload
   const storageRef = ref(storage, filePath);
   try {
+    console.log('📸 [feedback.ts] Starting Firebase Storage upload...');
     await uploadBytes(storageRef, file, {
       contentType: file.type,
       customMetadata: {
         uploadedAt: new Date().toISOString(),
       },
     });
+    console.log('%c✅ [feedback.ts] Storage upload SUCCESS', 'background: #4CAF50; color: white; padding: 2px 6px; border-radius: 3px;');
     dashboardLog.api('File uploaded to Storage successfully');
   } catch (uploadError) {
+    console.error('%c❌ [feedback.ts] Storage upload FAILED', 'background: #f44336; color: white; padding: 2px 6px; border-radius: 3px;', uploadError);
     dashboardLog.error('Firebase Storage upload failed', uploadError);
     throw uploadError;
   }
 
   // Retourner l'URL de téléchargement
   try {
+    console.log('📸 [feedback.ts] Getting download URL...');
     const downloadUrl = await getDownloadURL(storageRef);
+    console.log('%c✅ [feedback.ts] Download URL obtained', 'background: #4CAF50; color: white; padding: 2px 6px; border-radius: 3px;');
     dashboardLog.api('Download URL obtained', { url: downloadUrl.substring(0, 80) + '...' });
     return downloadUrl;
   } catch (urlError) {
+    console.error('%c❌ [feedback.ts] Failed to get download URL', 'background: #f44336; color: white; padding: 2px 6px; border-radius: 3px;', urlError);
     dashboardLog.error('Failed to get download URL', urlError);
     throw urlError;
   }
@@ -173,6 +187,17 @@ export async function uploadFeedbackScreenshot(file: File): Promise<string> {
  * Soumet un feedback utilisateur directement dans Firestore
  */
 export async function submitUserFeedback(data: FeedbackData): Promise<string> {
+  // ============= DEBUG LOGS - Firestore Service =============
+  console.log('%c🔥 [feedback.ts] submitUserFeedback() CALLED', 'background: #FF5722; color: white; padding: 4px 8px; border-radius: 3px; font-weight: bold;');
+  console.log('%c🔥 [feedback.ts] Input data', 'background: #E64A19; color: white; padding: 2px 6px; border-radius: 3px;', {
+    email: data.email,
+    type: data.type,
+    userRole: data.userRole,
+    hasScreenshotUrl: !!data.screenshotUrl,
+    pageUrl: data.pageUrl,
+    descriptionLength: data.description?.length,
+  });
+
   dashboardLog.group('submitUserFeedback');
   dashboardLog.api('submitUserFeedback called', {
     email: data.email,
@@ -183,8 +208,16 @@ export async function submitUserFeedback(data: FeedbackData): Promise<string> {
   });
 
   // Nettoyer les données (retourne un objet sans valeurs undefined)
+  console.log('🔥 [feedback.ts] Sanitizing data...');
   dashboardLog.state('Sanitizing feedback data...');
   const sanitizedData = sanitizeFeedbackData(data);
+  console.log('%c🔥 [feedback.ts] Data sanitized', 'background: #795548; color: white; padding: 2px 6px; border-radius: 3px;', {
+    email: sanitizedData.email,
+    type: sanitizedData.type,
+    descriptionLength: (sanitizedData.description as string).length,
+    hasUserId: !!sanitizedData.userId,
+    hasPriority: !!sanitizedData.priority,
+  });
   dashboardLog.state('Data sanitized', {
     email: sanitizedData.email as string,
     descriptionLength: (sanitizedData.description as string).length,
@@ -204,6 +237,12 @@ export async function submitUserFeedback(data: FeedbackData): Promise<string> {
     resolvedAt: null,
   };
 
+  console.log('%c🔥 [feedback.ts] Document prepared for Firestore', 'background: #607D8B; color: white; padding: 2px 6px; border-radius: 3px;', {
+    collection: FEEDBACK_COLLECTION,
+    status: feedbackDoc.status,
+    fieldsCount: Object.keys(feedbackDoc).length,
+    fields: Object.keys(feedbackDoc),
+  });
   dashboardLog.api('Feedback document prepared', {
     status: feedbackDoc.status,
     collection: FEEDBACK_COLLECTION,
@@ -211,12 +250,21 @@ export async function submitUserFeedback(data: FeedbackData): Promise<string> {
 
   try {
     // Sauvegarder directement dans Firestore
+    console.log('%c🔥 [feedback.ts] Writing to Firestore...', 'background: #FF9800; color: black; padding: 2px 6px; border-radius: 3px;', {
+      collection: FEEDBACK_COLLECTION,
+      timestamp: new Date().toISOString(),
+    });
     dashboardLog.api(`Writing to Firestore collection: ${FEEDBACK_COLLECTION}`);
     dashboardLog.time('Firestore addDoc');
 
     const docRef = await addDoc(collection(db, FEEDBACK_COLLECTION), feedbackDoc);
 
     dashboardLog.timeEnd('Firestore addDoc');
+    console.log('%c✅ [feedback.ts] FIRESTORE WRITE SUCCESS', 'background: #4CAF50; color: white; padding: 4px 8px; border-radius: 3px; font-weight: bold;', {
+      docId: docRef.id,
+      path: docRef.path,
+      collection: FEEDBACK_COLLECTION,
+    });
     dashboardLog.api('Feedback saved to Firestore successfully!', {
       docId: docRef.id,
       path: docRef.path,
@@ -224,17 +272,20 @@ export async function submitUserFeedback(data: FeedbackData): Promise<string> {
     dashboardLog.groupEnd();
     return docRef.id;
   } catch (error: unknown) {
-    // ALWAYS log to console.error for production debugging (dashboardLog may be disabled)
-    console.error('[FEEDBACK] FIRESTORE WRITE FAILED:', error);
+    // ============= DETAILED ERROR LOGGING FOR FIRESTORE =============
+    console.error('%c❌ [feedback.ts] FIRESTORE WRITE FAILED', 'background: #f44336; color: white; padding: 4px 8px; border-radius: 3px; font-weight: bold; font-size: 14px;');
+    console.error('❌ [feedback.ts] Raw error object:', error);
     dashboardLog.error('FIRESTORE WRITE FAILED', error);
 
     // Log more details for debugging
     if (error instanceof Error) {
-      console.error('[FEEDBACK] Error details:', {
+      const errorCode = (error as { code?: string }).code;
+
+      console.error('%c❌ [feedback.ts] Error details', 'background: #D32F2F; color: white; padding: 2px 6px; border-radius: 3px;', {
         name: error.name,
         message: error.message,
-        code: (error as { code?: string }).code,
-        stack: error.stack?.substring(0, 500),
+        code: errorCode,
+        stack: error.stack?.substring(0, 300),
       });
       dashboardLog.error('Error details', {
         name: error.name,
@@ -243,19 +294,38 @@ export async function submitUserFeedback(data: FeedbackData): Promise<string> {
       });
 
       // Check for common Firestore errors
-      if (error.message.includes('permission-denied')) {
-        console.error('[FEEDBACK] PERMISSION DENIED - Check Firestore security rules for collection:', FEEDBACK_COLLECTION);
-        console.error('[FEEDBACK] Possible causes:');
-        console.error('  1. Firestore rules not deployed (run: firebase deploy --only firestore:rules)');
-        console.error('  2. Email format validation failed in rules');
-        console.error('  3. Description too long (>6000 bytes UTF-8)');
+      if (errorCode === 'permission-denied' || error.message.includes('permission-denied') || error.message.includes('PERMISSION_DENIED')) {
+        console.error('%c🔒 [feedback.ts] PERMISSION DENIED - Firestore security rules blocking write', 'background: #f44336; color: white; padding: 4px 8px; border-radius: 3px; font-weight: bold;');
+        console.error('🔒 [feedback.ts] ============ DEBUGGING CHECKLIST ============');
+        console.error('🔒 1. Are Firestore rules deployed? Run: firebase deploy --only firestore:rules');
+        console.error('🔒 2. Does the collection "user_feedback" allow writes in firestore.rules?');
+        console.error('🔒 3. Is email format valid? Email:', sanitizedData.email);
+        console.error('🔒 4. Is description size OK? Size:', (sanitizedData.description as string).length, 'bytes');
+        console.error('🔒 5. Check Firebase Console > Firestore > Rules for the exact rule blocking');
+        console.error('🔒 =============================================');
         dashboardLog.error('PERMISSION DENIED - Check Firestore security rules for collection:', FEEDBACK_COLLECTION);
       }
-      if (error.message.includes('unavailable')) {
-        console.error('[FEEDBACK] FIRESTORE UNAVAILABLE - Network issue or service down');
+
+      if (errorCode === 'unavailable' || error.message.includes('unavailable')) {
+        console.error('%c🌐 [feedback.ts] FIRESTORE UNAVAILABLE', 'background: #FF9800; color: black; padding: 2px 6px; border-radius: 3px;');
+        console.error('🌐 Network issue or Firestore service down');
         dashboardLog.error('FIRESTORE UNAVAILABLE - Network issue or service down');
       }
+
+      if (errorCode === 'invalid-argument' || error.message.includes('invalid')) {
+        console.error('%c⚠️ [feedback.ts] INVALID ARGUMENT', 'background: #FF9800; color: black; padding: 2px 6px; border-radius: 3px;');
+        console.error('⚠️ Document contains invalid data. Check for undefined/NaN values.');
+        console.error('⚠️ Document being written:', JSON.stringify(feedbackDoc, null, 2));
+      }
     }
+
+    // Log the data that failed to save
+    console.error('❌ [feedback.ts] Data that FAILED to save:', {
+      email: sanitizedData.email,
+      type: sanitizedData.type,
+      descriptionPreview: (sanitizedData.description as string).substring(0, 50) + '...',
+      pageUrl: sanitizedData.pageUrl,
+    });
 
     dashboardLog.groupEnd();
     // Throw with the original error message if available

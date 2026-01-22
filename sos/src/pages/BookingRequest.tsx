@@ -1938,8 +1938,14 @@ const sanitizeInput = (input: string): string =>
   sanitizeText(input, { trim: true });
 
 /** ===== Page (RHF) ===== */
+// ============= DEBUG RENDER COUNTER =============
+let renderCount = 0;
+
 const BookingRequest: React.FC = () => {
   // P0 DEBUG: Log component mount
+  renderCount++;
+  const renderTimestamp = Date.now();
+  console.log(`%c🔄 [BookingRequest] RENDER #${renderCount} at ${new Date().toISOString()}`, 'background: #ff9800; color: black; padding: 2px 6px; border-radius: 3px; font-weight: bold;');
   console.log("🟠 [BookingRequest] Component MOUNTED/RENDERED at:", window.location.pathname);
 
   const intl = useIntl();
@@ -1953,6 +1959,16 @@ const BookingRequest: React.FC = () => {
   const [provider, setProvider] = useState<Provider | null>(null);
   const [providerLoading, setProviderLoading] = useState<boolean>(true);
 
+  // ============= DEBUG: Log state on every render =============
+  console.log(`%c📊 [BookingRequest] STATE SNAPSHOT (render #${renderCount})`, 'background: #2196F3; color: white; padding: 2px 6px; border-radius: 3px;', {
+    providerId,
+    hasProvider: !!provider,
+    providerLoading,
+    authLoading,
+    hasUser: !!user,
+    language: lang,
+  });
+
   const { pricing } = usePricingConfig();
 
   // Load active promo from sessionStorage
@@ -1964,11 +1980,14 @@ const BookingRequest: React.FC = () => {
   } | null>(null);
 
   useEffect(() => {
+    console.log('%c⚡ [BookingRequest] useEffect: PROMO LOAD (mount only)', 'background: #FF5722; color: white; padding: 2px 6px; border-radius: 3px;');
     try {
       const saved = sessionStorage.getItem("activePromoCode");
+      console.log('🎫 [BookingRequest] Promo from sessionStorage:', saved ? 'found' : 'not found');
       if (saved) {
         const promoData = JSON.parse(saved);
         setActivePromo(promoData);
+        console.log('🎫 [BookingRequest] Promo applied:', promoData);
       }
     } catch (error) {
       console.error("Error loading active promo:", error);
@@ -2002,10 +2021,30 @@ const BookingRequest: React.FC = () => {
 
   const watched = watch();
 
+  // ============= DEBUG: Log form values and RHF state =============
+  console.log(`%c📝 [BookingRequest] FORM STATE (render #${renderCount})`, 'background: #9C27B0; color: white; padding: 2px 6px; border-radius: 3px;', {
+    formValues: {
+      firstName: watched.firstName,
+      lastName: watched.lastName,
+      currentCountry: watched.currentCountry,
+      title: watched.title?.substring(0, 20) + '...',
+      description: watched.description?.substring(0, 20) + '...',
+      clientPhone: watched.clientPhone,
+      acceptTerms: watched.acceptTerms,
+      clientLanguages: watched.clientLanguages,
+    },
+    errors: Object.keys(errors),
+    isSubmitting,
+  });
+
   // DEBUG: Log whenever currentCountry changes to track any unexpected overrides
   const watchedCountry = watch('currentCountry');
   useEffect(() => {
-    console.log('🔴 [BookingRequest] currentCountry changed to:', watchedCountry);
+    console.log('%c🔴 [BookingRequest] currentCountry CHANGED', 'background: #f44336; color: white; padding: 2px 6px; border-radius: 3px;', {
+      newValue: watchedCountry,
+      timestamp: new Date().toISOString(),
+      stack: new Error().stack?.split('\n').slice(1, 5).join('\n'),
+    });
   }, [watchedCountry]);
 
   // DEBUG: Log the countries list on mount to verify it's generated correctly
@@ -2032,6 +2071,15 @@ const BookingRequest: React.FC = () => {
   const [providerExpanded, setProviderExpanded] = useState(false);
   const TOTAL_STEPS = 3;
 
+  // ============= DEBUG: Log wizard state =============
+  console.log(`%c🧙 [BookingRequest] WIZARD STATE (render #${renderCount})`, 'background: #4CAF50; color: white; padding: 2px 6px; border-radius: 3px;', {
+    isMobile,
+    currentStep,
+    animationDirection,
+    providerExpanded,
+    TOTAL_STEPS,
+  });
+
   // Step labels for accessibility and display (3 étapes optimisées)
   const stepLabels = useMemo(() => [
     intl.formatMessage({ id: "bookingRequest.personal", defaultMessage: "Informations" }),
@@ -2048,6 +2096,61 @@ const BookingRequest: React.FC = () => {
   const refLangs = useRef<HTMLDivElement | null>(null);
   const refPhone = useRef<HTMLDivElement | null>(null);
   const refCGU = useRef<HTMLDivElement | null>(null);
+
+  // ============= DEBUG: Focus and Scroll Tracking =============
+  useEffect(() => {
+    const handleFocusIn = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      console.log('%c🎯 [BookingRequest] FOCUS IN', 'background: #00BCD4; color: white; padding: 2px 6px; border-radius: 3px;', {
+        tagName: target.tagName,
+        id: target.id,
+        name: (target as HTMLInputElement).name || 'N/A',
+        className: target.className?.substring(0, 50),
+      });
+    };
+
+    const handleFocusOut = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      console.log('%c🎯 [BookingRequest] FOCUS OUT', 'background: #607D8B; color: white; padding: 2px 6px; border-radius: 3px;', {
+        tagName: target.tagName,
+        id: target.id,
+        name: (target as HTMLInputElement).name || 'N/A',
+      });
+    };
+
+    const handleScroll = () => {
+      console.log('%c📜 [BookingRequest] SCROLL', 'background: #795548; color: white; padding: 2px 6px; border-radius: 3px;', {
+        scrollY: window.scrollY,
+        scrollX: window.scrollX,
+        timestamp: Date.now(),
+      });
+    };
+
+    // Throttled scroll logging
+    let scrollTimeout: NodeJS.Timeout | null = null;
+    const throttledScroll = () => {
+      if (!scrollTimeout) {
+        scrollTimeout = setTimeout(() => {
+          handleScroll();
+          scrollTimeout = null;
+        }, 200);
+      }
+    };
+
+    document.addEventListener('focusin', handleFocusIn);
+    document.addEventListener('focusout', handleFocusOut);
+    window.addEventListener('scroll', throttledScroll);
+
+    console.log('%c👁️ [BookingRequest] Focus/Scroll listeners ATTACHED', 'background: #009688; color: white; padding: 2px 6px; border-radius: 3px;');
+
+    return () => {
+      document.removeEventListener('focusin', handleFocusIn);
+      document.removeEventListener('focusout', handleFocusOut);
+      window.removeEventListener('scroll', throttledScroll);
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+      console.log('%c👁️ [BookingRequest] Focus/Scroll listeners DETACHED', 'background: #f44336; color: white; padding: 2px 6px; border-radius: 3px;');
+    };
+  }, []);
 
   // Flag pour éviter le traitement multiple des données wizard
   const wizardDataProcessedRef = useRef(false);
@@ -2068,7 +2171,7 @@ const BookingRequest: React.FC = () => {
 
   // Rediriger vers login si non connecté
   useEffect(() => {
-    console.log("🟠 [BookingRequest] Auth check useEffect:", {
+    console.log('%c⚡ [BookingRequest] useEffect: AUTH CHECK', 'background: #FF5722; color: white; padding: 2px 6px; border-radius: 3px;', {
       authLoading,
       user: user ? user.uid : null,
       providerId,
@@ -2100,13 +2203,17 @@ const BookingRequest: React.FC = () => {
 
   // Chargement live du provider
   useEffect(() => {
+    console.log('%c⚡ [BookingRequest] useEffect: PROVIDER LOAD START', 'background: #FF5722; color: white; padding: 2px 6px; border-radius: 3px;', { providerId });
     let unsub: (() => void) | undefined;
     const boot = async () => {
+      console.log('🔄 [BookingRequest] Provider boot() called');
       setProviderLoading(true);
       const fromSession = readProviderFromSession();
+      console.log('📦 [BookingRequest] Provider from session:', fromSession ? { id: fromSession.id, name: fromSession.name } : 'null');
       if (fromSession) {
         setProvider(fromSession);
         setProviderLoading(false);
+        console.log('✅ [BookingRequest] Provider set from session');
       }
       try {
         if (!providerId) {
@@ -2184,6 +2291,11 @@ const BookingRequest: React.FC = () => {
   // Le pays d'intervention est UNIQUEMENT celui choisi par le client dans le wizard
   // ✅ FIX: Utilisation d'un ref pour éviter les exécutions multiples
   useEffect(() => {
+    console.log('%c⚡ [BookingRequest] useEffect: WIZARD DATA PREFILL', 'background: #FF5722; color: white; padding: 2px 6px; border-radius: 3px;', {
+      alreadyProcessed: wizardDataProcessedRef.current,
+      timestamp: new Date().toISOString(),
+    });
+
     // Skip si déjà traité (évite les re-exécutions dues aux changements de setValue)
     if (wizardDataProcessedRef.current) {
       console.log('🔵 [BookingRequest] Wizard data already processed, skipping');
@@ -2266,7 +2378,13 @@ const BookingRequest: React.FC = () => {
   // Matching live des langues (normalisé vers codes ISO pour comparaison fiable)
   // Gère les deux formats : noms complets ("Français") et codes ISO ("fr")
   useEffect(() => {
+    console.log('%c⚡ [BookingRequest] useEffect: LANGUAGE MATCHING', 'background: #FF5722; color: white; padding: 2px 6px; border-radius: 3px;', {
+      hasProvider: !!provider,
+      languagesSpokenCount: languagesSpoken.length,
+    });
+
     if (!provider || (!provider.languages && !provider.languagesSpoken)) {
+      console.log('🗣️ [BookingRequest] No provider languages, setting match = true');
       setHasLanguageMatchRealTime(true);
       return;
     }
@@ -2281,11 +2399,12 @@ const BookingRequest: React.FC = () => {
       LanguageUtils.normalizeToCode(l.code).toLowerCase().trim()
     );
     const hasMatch = providerCodesNormalized.some((pl) => clientCodesNormalized.includes(pl));
-    console.log('[BookingRequest] Language matching:', {
+    console.log('%c🗣️ [BookingRequest] Language matching result', 'background: #673AB7; color: white; padding: 2px 6px; border-radius: 3px;', {
       providerLanguagesRaw: providerLanguages,
       providerCodes: providerCodesNormalized,
       clientCodes: clientCodesNormalized,
-      hasMatch
+      hasMatch,
+      willSetState: hasMatch !== hasLanguageMatchRealTime,
     });
     setHasLanguageMatchRealTime(hasMatch);
   }, [languagesSpoken, provider]);
@@ -2341,6 +2460,7 @@ const BookingRequest: React.FC = () => {
 
   // Progression (RHF)
   const validFlags: Record<string, boolean> = useMemo(() => {
+    console.log('%c🔍 [BookingRequest] useMemo: VALID_FLAGS recalculating', 'background: #E91E63; color: white; padding: 2px 6px; border-radius: 3px;');
     const values = getValues();
     const hasTitle = values.title.trim().length >= 10;
     const hasDesc = values.description.trim().length >= 50;
@@ -2364,7 +2484,7 @@ const BookingRequest: React.FC = () => {
 
     const sharedLang = hasLanguageMatchRealTime;
 
-    return {
+    const flags = {
       firstName: hasFirst,
       lastName: hasLast,
       title: hasTitle,
@@ -2376,6 +2496,9 @@ const BookingRequest: React.FC = () => {
       accept: accept,
       sharedLang,
     };
+
+    console.log('%c✅ [BookingRequest] VALID_FLAGS computed', 'background: #E91E63; color: white; padding: 2px 6px; border-radius: 3px;', flags);
+    return flags;
   }, [watched, hasLanguageMatchRealTime]);
 
   const formProgress = useMemo(() => {
@@ -2402,30 +2525,61 @@ const BookingRequest: React.FC = () => {
 
   // Check if current step is valid to proceed
   const canProceedToNext = useMemo(() => {
-    return getStepValidationFlags(currentStep);
+    const canProceed = getStepValidationFlags(currentStep);
+    console.log('%c🚦 [BookingRequest] useMemo: CAN_PROCEED recalculated', 'background: #00BCD4; color: white; padding: 2px 6px; border-radius: 3px;', {
+      currentStep,
+      canProceed,
+      validFlags,
+    });
+    return canProceed;
   }, [currentStep, getStepValidationFlags]);
 
   // Navigation functions
   const goNextStep = useCallback(() => {
+    console.log('%c▶️ [BookingRequest] goNextStep() CALLED', 'background: #4CAF50; color: white; padding: 2px 6px; border-radius: 3px; font-weight: bold;', {
+      canProceedToNext,
+      currentStep,
+      TOTAL_STEPS,
+      willProceed: canProceedToNext && currentStep < TOTAL_STEPS,
+    });
     if (canProceedToNext && currentStep < TOTAL_STEPS) {
+      console.log(`🚀 [BookingRequest] Moving from step ${currentStep} to step ${currentStep + 1}`);
       setAnimationDirection("forward");
       setCurrentStep((s) => s + 1);
       // Scroll to top of form on mobile
+      console.log('📜 [BookingRequest] Scrolling to top');
       window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      console.log('🚫 [BookingRequest] goNextStep blocked:', { canProceedToNext, currentStep, TOTAL_STEPS });
     }
   }, [canProceedToNext, currentStep]);
 
   const goBackStep = useCallback(() => {
+    console.log('%c◀️ [BookingRequest] goBackStep() CALLED', 'background: #FF9800; color: black; padding: 2px 6px; border-radius: 3px; font-weight: bold;', {
+      currentStep,
+      willProceed: currentStep > 1,
+    });
     if (currentStep > 1) {
+      console.log(`🔙 [BookingRequest] Moving from step ${currentStep} to step ${currentStep - 1}`);
       setAnimationDirection("backward");
       setCurrentStep((s) => s - 1);
+      console.log('📜 [BookingRequest] Scrolling to top');
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, [currentStep]);
 
   // Redirection si provider introuvable
   useEffect(() => {
-    if (!authLoading && !providerLoading && !provider) navigate("/");
+    console.log('%c⚡ [BookingRequest] useEffect: REDIRECT CHECK', 'background: #FF5722; color: white; padding: 2px 6px; border-radius: 3px;', {
+      authLoading,
+      providerLoading,
+      hasProvider: !!provider,
+      willRedirect: !authLoading && !providerLoading && !provider,
+    });
+    if (!authLoading && !providerLoading && !provider) {
+      console.log('🔀 [BookingRequest] REDIRECTING TO / (no provider found)');
+      navigate("/");
+    }
   }, [provider, providerLoading, authLoading, navigate]);
 
   const prepareStandardizedData = (
@@ -2548,26 +2702,39 @@ const BookingRequest: React.FC = () => {
   };
 
   const scrollToFirstIncomplete = () => {
+    console.log('%c📜 [BookingRequest] scrollToFirstIncomplete() CALLED', 'background: #FF5722; color: white; padding: 2px 6px; border-radius: 3px; font-weight: bold;');
     const v = validFlags;
     const pairs: Array<
-      [boolean, React.MutableRefObject<HTMLDivElement | null>]
+      [boolean, React.MutableRefObject<HTMLDivElement | null>, string]
     > = [
-      [!v.firstName, refFirstName],
-      [!v.lastName, refLastName],
-      [!v.currentCountry || !v.autrePays, refCountry],
-      [!v.title, refTitle],
-      [!v.description, refDesc],
-      [!v.langs || !v.sharedLang, refLangs],
-      [!v.phone, refPhone],
-      [!v.accept, refCGU],
+      [!v.firstName, refFirstName, 'firstName'],
+      [!v.lastName, refLastName, 'lastName'],
+      [!v.currentCountry || !v.autrePays, refCountry, 'country'],
+      [!v.title, refTitle, 'title'],
+      [!v.description, refDesc, 'description'],
+      [!v.langs || !v.sharedLang, refLangs, 'langs'],
+      [!v.phone, refPhone, 'phone'],
+      [!v.accept, refCGU, 'accept'],
     ];
-    const target = pairs.find(([need]) => need)?.[1]?.current;
-    if (target) target.scrollIntoView({ behavior: "smooth", block: "center" });
+    const found = pairs.find(([need]) => need);
+    const target = found?.[1]?.current;
+    console.log('📜 [BookingRequest] Scroll target:', {
+      fieldName: found?.[2] || 'none',
+      targetElement: target ? 'found' : 'null',
+      validFlags: v,
+    });
+    if (target) {
+      console.log('📜 [BookingRequest] SCROLLING TO:', found?.[2]);
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
   };
 
   const onSubmit: SubmitHandler<BookingFormData> = async (data) => {
+    console.log('%c🚀 [BookingRequest] FORM SUBMIT CALLED', 'background: #4CAF50; color: white; padding: 4px 8px; border-radius: 3px; font-weight: bold; font-size: 14px;');
+    console.log('📋 [BookingRequest] Submit data:', data);
+    console.log('📋 [BookingRequest] validFlags at submit:', validFlags);
+    console.log('📋 [BookingRequest] hasLanguageMatchRealTime:', hasLanguageMatchRealTime);
     setFormError("");
-    console.log(data, "data === in onSubmit");
 
     // BLOCAGE COMPLET: Pas de langue partagée = impossible de continuer
     // Le client doit modifier ses langues ou changer de prestataire
@@ -2839,7 +3006,18 @@ const BookingRequest: React.FC = () => {
   };
 
   // ===== RENDER =====
+  console.log('%c🎨 [BookingRequest] RENDER DECISION POINT', 'background: #9C27B0; color: white; padding: 2px 6px; border-radius: 3px; font-weight: bold;', {
+    providerLoading,
+    hasProvider: !!provider,
+    authLoading,
+    hasUser: !!user,
+    isMobile,
+    currentStep,
+    renderPath: providerLoading ? 'LOADING' : !provider ? 'NO_PROVIDER' : (!authLoading && !user) ? 'AUTH_FORM' : 'MAIN_FORM',
+  });
+
   if (providerLoading) {
+    console.log('🔄 [BookingRequest] Rendering: LOADING STATE');
     return (
       <Layout showFooter={false}>
         <div className="min-h-screen flex items-center justify-center bg-white">
@@ -2851,10 +3029,14 @@ const BookingRequest: React.FC = () => {
       </Layout>
     );
   }
-  if (!provider) return null;
+  if (!provider) {
+    console.log('🔄 [BookingRequest] Rendering: NO PROVIDER (null)');
+    return null;
+  }
 
   // ===== EMAIL-FIRST AUTH: Show auth form if not logged in =====
   if (!authLoading && !user) {
+    console.log('🔄 [BookingRequest] Rendering: AUTH FORM');
     return (
       <Layout showFooter={false}>
         <div className={`min-h-screen bg-[linear-gradient(180deg,#fff7f7_0%,#ffffff_35%,#fff5f8_100%)] py-6 md:py-12 overflow-x-hidden w-full max-w-[100vw] box-border`}>
@@ -2916,6 +3098,16 @@ const BookingRequest: React.FC = () => {
 
   const inputHas = <K extends keyof BookingFormData>(name: K) =>
     Boolean(errors[name]);
+
+  console.log('%c🎨 [BookingRequest] Rendering: MAIN FORM', 'background: #4CAF50; color: white; padding: 2px 6px; border-radius: 3px; font-weight: bold;', {
+    isMobile,
+    currentStep,
+    canProceedToNext,
+    formProgress,
+    displayEUR,
+    displayDuration,
+    providerExpanded,
+  });
 
   return (
     <Layout showFooter={false}>
@@ -3215,6 +3407,11 @@ const BookingRequest: React.FC = () => {
                         {...field}
                         className={inputClass(inputHas("currentCountry"))}
                         onChange={(e) => {
+                          console.log('%c📝 [BookingRequest] COUNTRY SELECT CHANGED', 'background: #FF9800; color: black; padding: 2px 6px; border-radius: 3px;', {
+                            previousValue: field.value,
+                            newValue: e.target.value,
+                            eventType: 'user-select',
+                          });
                           field.onChange(e.target.value);
                           if (e.target.value !== "Autre")
                             setValue("autrePays", "");
@@ -3359,7 +3556,12 @@ const BookingRequest: React.FC = () => {
                       <textarea
                         {...field}
                         rows={5}
-                        onChange={(e) => field.onChange(e.target.value)}
+                        onChange={(e) => {
+                          console.log('%c📝 [BookingRequest] DESCRIPTION CHANGED', 'background: #9E9E9E; color: white; padding: 2px 6px; border-radius: 3px;', {
+                            length: e.target.value.length,
+                          });
+                          field.onChange(e.target.value);
+                        }}
                         className={`resize-none ${inputClass(Boolean(errors.description))}`}
                         placeholder={intl.formatMessage({
                           id: "bookingRequest.placeholders.description",
@@ -3419,6 +3621,10 @@ const BookingRequest: React.FC = () => {
                       label: getLanguageLabel(l, lang),
                     }))}
                     onChange={(selected: MultiLanguageOption[]) => {
+                      console.log('%c🗣️ [BookingRequest] LANGUAGES CHANGED', 'background: #FF9800; color: black; padding: 2px 6px; border-radius: 3px;', {
+                        previousCount: languagesSpoken.length,
+                        newSelection: selected,
+                      });
                       const options = selected || [];
                       const selectedLangs = options
                         .map((opt) =>
@@ -3427,6 +3633,7 @@ const BookingRequest: React.FC = () => {
                           )
                         )
                         .filter((v): v is BookingLanguage => Boolean(v));
+                      console.log('🗣️ [BookingRequest] Setting languages:', selectedLangs.map(l => l.code));
                       setLanguagesSpoken(selectedLangs);
                       setValue(
                         "clientLanguages",
@@ -3658,7 +3865,13 @@ const BookingRequest: React.FC = () => {
                     render={({ field }) => (
                       <IntlPhoneInput
                         value={field.value || ""}
-                        onChange={field.onChange}
+                        onChange={(val: string) => {
+                          console.log('%c📞 [BookingRequest] PHONE CHANGED', 'background: #FF9800; color: black; padding: 2px 6px; border-radius: 3px;', {
+                            previousValue: field.value,
+                            newValue: val,
+                          });
+                          field.onChange(val);
+                        }}
                         defaultCountry="fr"
                         placeholder="+33 6 12 34 56 78"
                         className={errors.clientPhone ? "error" : ""}
@@ -4025,9 +4238,11 @@ const BookingRequest: React.FC = () => {
               <button
                 type="button"
                 onClick={() => {
+                  console.log('%c🔴 [BookingRequest] MODIFY LANGUAGES CLICKED (from mismatch modal)', 'background: #f44336; color: white; padding: 2px 6px; border-radius: 3px;');
                   setShowLangMismatchWarning(false);
                   // Scroll vers la section langues et forcer affichage mobile
                   if (refLangs.current) {
+                    console.log('📜 [BookingRequest] Scrolling to languages section');
                     refLangs.current.scrollIntoView({ behavior: "smooth", block: "center" });
                   }
                 }}

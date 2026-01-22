@@ -111,24 +111,49 @@ const CardFieldsSubmitButton: React.FC<{
   const { cardFieldsForm } = usePayPalCardFields();
 
   const handleClick = async () => {
+    console.log('%c💳 [CardFieldsSubmitButton] handleClick() CALLED', 'background: #2196F3; color: white; padding: 2px 6px; border-radius: 3px;', {
+      hasCardFieldsForm: !!cardFieldsForm,
+      isProcessing,
+      disabled,
+    });
+
     if (!cardFieldsForm) {
-      console.error("Card fields form not available");
+      console.error("❌ [CardFieldsSubmitButton] Card fields form NOT available - cannot submit");
       return;
     }
 
     // Vérifier si le formulaire est valide
+    console.log('💳 [CardFieldsSubmitButton] Getting form state...');
     const formState = await cardFieldsForm.getState();
+    console.log('💳 [CardFieldsSubmitButton] Form state:', {
+      isFormValid: formState.isFormValid,
+      fields: formState.fields,
+      errors: formState.errors,
+    });
+
     if (!formState.isFormValid) {
-      console.warn("Card form is not valid");
+      console.warn("⚠️ [CardFieldsSubmitButton] Card form is NOT valid - blocking submit");
+      console.warn("⚠️ [CardFieldsSubmitButton] Invalid fields:", formState.errors);
       return;
     }
 
+    console.log('✅ [CardFieldsSubmitButton] Form is valid - calling onSubmit()');
     onSubmit();
 
     // Soumettre le formulaire de carte
-    cardFieldsForm.submit().catch((err) => {
-      console.error("Card submit error:", err);
-    });
+    console.log('💳 [CardFieldsSubmitButton] Calling cardFieldsForm.submit()...');
+    cardFieldsForm.submit()
+      .then(() => {
+        console.log('✅ [CardFieldsSubmitButton] cardFieldsForm.submit() completed');
+      })
+      .catch((err) => {
+        console.error("❌ [CardFieldsSubmitButton] Card submit error:", err);
+        console.error("❌ [CardFieldsSubmitButton] Error details:", {
+          name: err?.name,
+          message: err?.message,
+          stack: err?.stack,
+        });
+      });
   };
 
   return (
@@ -182,20 +207,16 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   const currentOrderIdRef = useRef<string>("");
 
   // DEBUG LOGS - PayPal Payment Investigation
-  console.log('[PayPalPaymentForm DEBUG] 📦 Render', {
+  console.log('%c💳 [PayPalPaymentForm] RENDER', 'background: #003087; color: white; padding: 2px 6px; border-radius: 3px; font-weight: bold;', {
     amount,
     currency,
-    providerId,
-    callSessionId,
-    clientId,
+    providerId: providerId?.substring(0, 10) + '...',
+    callSessionId: callSessionId?.substring(0, 10) + '...',
+    clientId: clientId?.substring(0, 10) + '...',
     serviceType,
     disabled,
-    isPending,
-    isRejected,
-    isProcessing,
-    paymentStatus,
-    paymentMethod,
-    errorCode,
+    sdkState: { isPending, isRejected },
+    componentState: { isProcessing, paymentStatus, paymentMethod, errorCode },
     timestamp: new Date().toISOString()
   });
 
@@ -440,24 +461,38 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   }, [captureOrder]);
 
   const handleError = useCallback((err: Record<string, unknown>) => {
-    console.log('[PayPalPaymentForm DEBUG] ❌ handleError CALLED', {
-      err,
-      errKeys: Object.keys(err || {}),
-      timestamp: new Date().toISOString()
-    });
-    console.error("Erreur PayPal:", err);
-    // DEBUG: Afficher tous les détails pour diagnostic
-    console.error("🔴 [PayPal SDK ERROR]:", {
-      err,
-      errKeys: Object.keys(err || {}),
-      errStringified: JSON.stringify(err, null, 2),
-    });
+    console.log('%c❌ [PayPalPaymentForm] handleError CALLED', 'background: #f44336; color: white; padding: 4px 8px; border-radius: 3px; font-weight: bold; font-size: 14px;');
+    console.log('❌ [PayPalPaymentForm] Error object:', err);
+    console.log('❌ [PayPalPaymentForm] Error keys:', Object.keys(err || {}));
+
+    // Log détaillé pour chaque propriété de l'erreur
+    if (err) {
+      Object.entries(err).forEach(([key, value]) => {
+        console.log(`❌ [PayPalPaymentForm] Error.${key}:`, value);
+      });
+    }
+
+    // Tentative de stringify pour voir la structure complète
+    try {
+      console.log('❌ [PayPalPaymentForm] Error stringified:', JSON.stringify(err, null, 2));
+    } catch (e) {
+      console.log('❌ [PayPalPaymentForm] Could not stringify error');
+    }
+
+    // Vérifier si c'est une erreur réseau
+    const isNetwork = isNetworkError(err);
+    console.log('❌ [PayPalPaymentForm] Is network error:', isNetwork);
+
     setPaymentStatus("error");
     const code = extractPayPalErrorCode(err);
-    console.log('[PayPalPaymentForm DEBUG] ❌ Error code extracted:', code);
+    console.log('%c❌ [PayPalPaymentForm] Error code extracted:', 'background: #f44336; color: white; padding: 2px 6px; border-radius: 3px;', code);
     setErrorCode(code);
     setIsProcessing(false);
-    onError(new Error(getTranslatedErrorMessage(code)));
+
+    const translatedMessage = getTranslatedErrorMessage(code);
+    console.log('❌ [PayPalPaymentForm] Translated error message:', translatedMessage);
+
+    onError(new Error(translatedMessage));
   }, [onError, getTranslatedErrorMessage]);
 
   const handleCancel = useCallback(() => {

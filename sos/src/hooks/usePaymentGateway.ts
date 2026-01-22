@@ -63,8 +63,22 @@ export function usePaymentGateway(providerCountryCode: string | undefined): UseP
   const [error, setError] = useState<string | null>(null);
   const [isPayPalOnly, setIsPayPalOnly] = useState(false);
 
+  // ============= DEBUG LOGS =============
+  console.log('%c🏦 [usePaymentGateway] Hook called', 'background: #9C27B0; color: white; padding: 2px 6px; border-radius: 3px;', {
+    providerCountryCode,
+    currentGateway: gateway,
+    isLoading,
+    isPayPalOnly,
+  });
+
   const determineGateway = useCallback(async () => {
+    console.log('%c🏦 [usePaymentGateway] determineGateway() STARTED', 'background: #673AB7; color: white; padding: 2px 6px; border-radius: 3px;', {
+      providerCountryCode,
+      timestamp: new Date().toISOString(),
+    });
+
     if (!providerCountryCode) {
+      console.log('🏦 [usePaymentGateway] No country code, defaulting to Stripe');
       setGateway("stripe");
       setIsLoading(false);
       setIsPayPalOnly(false);
@@ -72,10 +86,12 @@ export function usePaymentGateway(providerCountryCode: string | undefined): UseP
     }
 
     const countryCode = providerCountryCode.toUpperCase();
+    console.log('🏦 [usePaymentGateway] Country code normalized:', countryCode);
 
     // Vérifier le cache d'abord
     if (gatewayCache.has(countryCode)) {
       const cachedGateway = gatewayCache.get(countryCode)!;
+      console.log('🏦 [usePaymentGateway] CACHE HIT:', { countryCode, cachedGateway });
       setGateway(cachedGateway);
       setIsPayPalOnly(cachedGateway === "paypal");
       setIsLoading(false);
@@ -84,6 +100,7 @@ export function usePaymentGateway(providerCountryCode: string | undefined): UseP
 
     // Vérification locale rapide
     if (PAYPAL_ONLY_COUNTRIES.has(countryCode)) {
+      console.log('%c🏦 [usePaymentGateway] PayPal-only country detected', 'background: #FF9800; color: black; padding: 2px 6px; border-radius: 3px;', countryCode);
       setGateway("paypal");
       setIsPayPalOnly(true);
       setIsLoading(false);
@@ -93,6 +110,7 @@ export function usePaymentGateway(providerCountryCode: string | undefined): UseP
 
     // Pour les pays non-PayPal, on utilise Stripe par défaut sans appel backend
     // Cela évite le blocage du formulaire en cas de timeout de Cloud Function
+    console.log('🏦 [usePaymentGateway] Using Stripe (default for non-PayPal country)');
     setGateway("stripe");
     setIsPayPalOnly(false);
     setIsLoading(false);
@@ -100,6 +118,7 @@ export function usePaymentGateway(providerCountryCode: string | undefined): UseP
 
     // Appel backend en arrière-plan pour mise à jour (non-bloquant)
     try {
+      console.log('🏦 [usePaymentGateway] Calling backend for gateway recommendation...');
       const timeoutPromise = new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("Gateway detection timeout")), GATEWAY_TIMEOUT_MS)
       );
@@ -115,15 +134,18 @@ export function usePaymentGateway(providerCountryCode: string | undefined): UseP
       ]);
 
       const { gateway: recommendedGateway, isPayPalOnly: paypalOnly } = result.data;
+      console.log('🏦 [usePaymentGateway] Backend response:', { recommendedGateway, paypalOnly });
 
       // Mettre à jour seulement si différent (rare)
       if (recommendedGateway !== "stripe") {
+        console.log('🏦 [usePaymentGateway] Updating gateway from backend:', recommendedGateway);
         setGateway(recommendedGateway);
         setIsPayPalOnly(paypalOnly);
         gatewayCache.set(countryCode, recommendedGateway);
       }
     } catch (err) {
       // Ignorer les erreurs - on a déjà un fallback Stripe actif
+      console.warn('🏦 [usePaymentGateway] Backend call failed (using fallback):', err);
     }
   }, [providerCountryCode]);
 

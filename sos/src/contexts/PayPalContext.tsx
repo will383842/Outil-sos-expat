@@ -25,13 +25,26 @@ export const PayPalProvider: React.FC<PayPalProviderProps> = ({ children }) => {
   const mode: "sandbox" | "live" = (import.meta.env.VITE_PAYPAL_MODE as string) === "live" ? "live" : "sandbox";
   const isConfigured = Boolean(clientId);
 
-  const initialOptions: ReactPayPalScriptOptions = useMemo(() => ({
-    clientId: clientId || "test",
-    currency: "EUR",
-    intent: "capture",
-    components: "buttons,card-fields", // Boutons PayPal + champs carte directement sur la page
-    "disable-funding": "credit", // Désactive seulement le crédit PayPal, pas les cartes
-  }), [clientId]);
+  // ============= DEBUG LOGS =============
+  console.log('%c💳 [PayPalContext] Provider initializing', 'background: #003087; color: white; padding: 2px 6px; border-radius: 3px; font-weight: bold;', {
+    isConfigured,
+    mode,
+    clientIdPresent: !!clientId,
+    clientIdPrefix: clientId ? clientId.substring(0, 15) + '...' : 'N/A',
+    timestamp: new Date().toISOString(),
+  });
+
+  const initialOptions: ReactPayPalScriptOptions = useMemo(() => {
+    const options = {
+      clientId: clientId || "test",
+      currency: "EUR",
+      intent: "capture",
+      components: "buttons,card-fields", // Boutons PayPal + champs carte directement sur la page
+      "disable-funding": "credit", // Désactive seulement le crédit PayPal, pas les cartes
+    };
+    console.log('💳 [PayPalContext] PayPal SDK options:', options);
+    return options;
+  }, [clientId]);
 
   const contextValue = useMemo(() => ({
     clientId,
@@ -41,13 +54,15 @@ export const PayPalProvider: React.FC<PayPalProviderProps> = ({ children }) => {
 
   // Si PayPal n'est pas configuré, on rend les enfants sans le provider
   if (!isConfigured) {
-    console.warn("⚠️ PayPal non configuré: VITE_PAYPAL_CLIENT_ID manquant");
+    console.warn("%c⚠️ [PayPalContext] PayPal NON CONFIGURÉ: VITE_PAYPAL_CLIENT_ID manquant", 'background: #f44336; color: white; padding: 2px 6px; border-radius: 3px;');
     return (
       <PayPalContext.Provider value={contextValue}>
         {children}
       </PayPalContext.Provider>
     );
   }
+
+  console.log('%c✅ [PayPalContext] PayPal configured - rendering PayPalScriptProvider', 'background: #4CAF50; color: white; padding: 2px 6px; border-radius: 3px;');
 
   return (
     <PayPalContext.Provider value={contextValue}>

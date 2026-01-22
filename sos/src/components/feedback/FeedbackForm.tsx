@@ -123,14 +123,21 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose, pageContext }) => 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // DEBUG LOGS - toujours visibles
-    console.log('[FEEDBACK] Submit clicked', {
+    // ============= DEBUG LOGS - FEEDBACK FORM =============
+    console.log('%c📝 [FeedbackForm] SUBMIT CLICKED', 'background: #9C27B0; color: white; padding: 4px 8px; border-radius: 3px; font-weight: bold; font-size: 14px;');
+    console.log('%c📝 [FeedbackForm] Form State at Submit', 'background: #673AB7; color: white; padding: 2px 6px; border-radius: 3px;', {
       isFormValid,
-      email,
+      email: email ? email.substring(0, 15) + '...' : 'EMPTY',
       isEmailValid,
-      feedbackType,
+      feedbackType: feedbackType || 'NOT_SELECTED',
       descriptionLength: description.length,
       isDescriptionValid,
+      priority: priority || 'NOT_SET',
+      hasScreenshot: !!screenshot,
+      pageContext,
+      userLoggedIn: !!user,
+      userId: user?.uid || user?.id || 'anonymous',
+      timestamp: new Date().toISOString(),
     });
 
     dashboardLog.click('FeedbackForm: Submit button clicked');
@@ -146,10 +153,12 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose, pageContext }) => 
     });
 
     if (!isFormValid) {
-      console.warn('[FEEDBACK] Form validation failed', {
-        isEmailValid,
-        feedbackType: !!feedbackType,
-        isDescriptionValid,
+      console.warn('%c⚠️ [FeedbackForm] VALIDATION FAILED', 'background: #FF9800; color: black; padding: 2px 6px; border-radius: 3px;', {
+        emailMissing: !email,
+        emailInvalid: email && !isEmailValid,
+        feedbackTypeMissing: !feedbackType,
+        descriptionTooShort: !isDescriptionValid,
+        descriptionLength: description.length,
       });
       dashboardLog.warn('Form validation failed - submission aborted', {
         email: !!email,
@@ -160,6 +169,8 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose, pageContext }) => 
       dashboardLog.groupEnd();
       return;
     }
+
+    console.log('%c✅ [FeedbackForm] Validation PASSED - proceeding with submission', 'background: #4CAF50; color: white; padding: 2px 6px; border-radius: 3px;');
 
     setError(null);
     dashboardLog.state('Form is valid - proceeding with submission');
@@ -205,12 +216,18 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose, pageContext }) => 
       feedbackData.userName = `${user.firstName} ${user.lastName || ''}`.trim();
     }
 
+    console.log('%c📤 [FeedbackForm] Prepared feedbackData object', 'background: #2196F3; color: white; padding: 2px 6px; border-radius: 3px;', feedbackData);
     dashboardLog.api('Preparing to submit feedback', { feedbackData, hasScreenshot: !!screenshot });
 
     try {
+      console.log('%c🚀 [FeedbackForm] Calling submitFeedback()...', 'background: #FF5722; color: white; padding: 2px 6px; border-radius: 3px;');
       dashboardLog.time('Feedback submission');
       const result = await submitFeedback(feedbackData as unknown as FeedbackData, screenshot || undefined);
       dashboardLog.timeEnd('Feedback submission');
+      console.log('%c✅ [FeedbackForm] SUBMISSION SUCCESS', 'background: #4CAF50; color: white; padding: 4px 8px; border-radius: 3px; font-weight: bold;', {
+        feedbackId: result,
+        timestamp: new Date().toISOString(),
+      });
       dashboardLog.api('Feedback submitted successfully', { result });
       setIsSuccess(true);
 
@@ -221,14 +238,44 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose, pageContext }) => 
         onClose();
       }, 2000);
     } catch (err) {
-      // ALWAYS log to console for production debugging
-      console.error('[FEEDBACK] Form submission FAILED:', err);
-      console.error('[FEEDBACK] Full error object:', {
-        message: err instanceof Error ? err.message : String(err),
-        name: err instanceof Error ? err.name : 'Unknown',
-        code: (err as { code?: string }).code,
-        feedbackData,
+      // ============= DETAILED ERROR LOGGING =============
+      console.error('%c❌ [FeedbackForm] SUBMISSION FAILED', 'background: #f44336; color: white; padding: 4px 8px; border-radius: 3px; font-weight: bold; font-size: 14px;');
+      console.error('❌ [FeedbackForm] Error object:', err);
+
+      // Log all error properties
+      if (err && typeof err === 'object') {
+        console.error('❌ [FeedbackForm] Error details:', {
+          message: (err as Error).message,
+          name: (err as Error).name,
+          code: (err as { code?: string }).code,
+          stack: (err as Error).stack?.substring(0, 500),
+        });
+
+        // Check for specific Firestore error codes
+        const errorCode = (err as { code?: string }).code;
+        const errorMessage = (err as Error).message?.toLowerCase() || '';
+
+        if (errorCode === 'permission-denied' || errorMessage.includes('permission')) {
+          console.error('%c🔒 [FeedbackForm] PERMISSION DENIED - Firestore rules issue', 'background: #f44336; color: white; padding: 2px 6px; border-radius: 3px;');
+          console.error('🔒 Check these common causes:');
+          console.error('   1. Firestore rules not deployed');
+          console.error('   2. Email validation failing in rules');
+          console.error('   3. Collection "user_feedback" does not allow writes');
+        }
+
+        if (errorMessage.includes('network') || errorMessage.includes('unavailable')) {
+          console.error('%c🌐 [FeedbackForm] NETWORK ERROR', 'background: #FF9800; color: black; padding: 2px 6px; border-radius: 3px;');
+        }
+      }
+
+      console.error('❌ [FeedbackForm] Data that failed to submit:', {
+        email: feedbackData.email,
+        type: feedbackData.type,
+        descriptionLength: (feedbackData.description as string)?.length,
+        pageUrl: feedbackData.pageUrl,
+        userRole: feedbackData.userRole,
       });
+
       dashboardLog.error('Feedback submission FAILED', err);
       dashboardLog.groupEnd();
       setError(intl.formatMessage({
