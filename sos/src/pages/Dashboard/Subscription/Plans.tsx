@@ -19,8 +19,21 @@ import { createSubscription } from '../../../services/subscription/subscriptionS
 import { SubscriptionPlan, Currency, ProviderType, BillingPeriod, SupportedLanguage } from '../../../types/subscription';
 import { cn } from '../../../utils/cn';
 
-// Initialize Stripe
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || '');
+// HMR-safe Stripe singleton pattern to prevent "Unsupported prop change on Elements" error
+// Store the promise in globalThis to preserve it across hot module reloads
+declare global {
+  // eslint-disable-next-line no-var
+  var __STRIPE_PLANS_PROMISE__: ReturnType<typeof loadStripe> | undefined;
+}
+
+function getStripePromise() {
+  if (typeof globalThis.__STRIPE_PLANS_PROMISE__ === 'undefined') {
+    globalThis.__STRIPE_PLANS_PROMISE__ = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || '');
+  }
+  return globalThis.__STRIPE_PLANS_PROMISE__;
+}
+
+const stripePromise = getStripePromise();
 
 // ============================================================================
 // CHECKOUT FORM COMPONENT

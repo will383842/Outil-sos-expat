@@ -3,15 +3,13 @@
  * Optimisé pour mobile avec expansion animée
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback, memo } from 'react';
 import { useIntl } from 'react-intl';
 import {
   AlertTriangle,
   ChevronDown,
-  ChevronUp,
   CreditCard,
   Shield,
-  CheckCircle2,
   Clock,
 } from 'lucide-react';
 import { User } from '../../contexts/types';
@@ -23,7 +21,7 @@ interface KYCBannerCompactProps {
   children?: React.ReactNode;
 }
 
-const KYCBannerCompact: React.FC<KYCBannerCompactProps> = ({
+const KYCBannerCompactInner: React.FC<KYCBannerCompactProps> = ({
   user,
   kycType,
   onAction,
@@ -32,17 +30,8 @@ const KYCBannerCompact: React.FC<KYCBannerCompactProps> = ({
   const intl = useIntl();
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // DEBUG LOGS - Page Jump Investigation
-  console.log('[KYCBannerCompact DEBUG] 📦 Render', {
-    kycType,
-    isExpanded,
-    userId: user?.id,
-    hasChildren: !!children,
-    timestamp: new Date().toISOString()
-  });
-
-  // Determine status and styling based on type
-  const getConfig = () => {
+  // Memoize config to prevent recalculation on every render
+  const config = useMemo(() => {
     switch (kycType) {
       case 'stripe':
         return {
@@ -94,10 +83,14 @@ const KYCBannerCompact: React.FC<KYCBannerCompactProps> = ({
           iconColor: 'text-red-600 dark:text-red-400',
         };
     }
-  };
+  }, [kycType, user.approvalStatus, intl]);
 
-  const config = getConfig();
   const Icon = config.icon;
+
+  // Memoize toggle handler
+  const handleToggle = useCallback(() => {
+    setIsExpanded(prev => !prev);
+  }, []);
 
   // P1 FIX: Added min-height to prevent layout jumps when banner expands/collapses
   return (
@@ -107,15 +100,7 @@ const KYCBannerCompact: React.FC<KYCBannerCompactProps> = ({
     `}>
       {/* Compact header - always visible */}
       <button
-        onClick={() => {
-          console.log('[KYCBannerCompact DEBUG] 🔄 Toggle expand', {
-            kycType,
-            wasExpanded: isExpanded,
-            willBeExpanded: !isExpanded,
-            timestamp: new Date().toISOString()
-          });
-          setIsExpanded(!isExpanded);
-        }}
+        onClick={handleToggle}
         className="w-full flex items-center gap-3 p-3 md:p-4 text-left"
       >
         {/* Icon */}
@@ -180,5 +165,8 @@ const KYCBannerCompact: React.FC<KYCBannerCompactProps> = ({
     </div>
   );
 };
+
+// Wrap with React.memo to prevent unnecessary re-renders when parent re-renders
+const KYCBannerCompact = memo(KYCBannerCompactInner);
 
 export default KYCBannerCompact;

@@ -63,33 +63,32 @@ export const useProviderReminderSystem = ({
     return Math.floor(diffMs / 60000);
   }, [lastActivity]);
 
+  // Use ref to track reminder state without causing re-renders in useCallback
+  const reminderStateRef = useRef(reminderState);
+  reminderStateRef.current = reminderState;
+
   // Vérifier si on doit afficher un rappel
   const checkAndTriggerReminder = useCallback(() => {
-    // 🔍 DEBUG LOGS
     const inactivityMinutes = getInactivityMinutes();
-    console.log(`[ReminderSystem] 🔍 Check: isOnline=${isOnline}, isProvider=${isProvider}, inactivity=${inactivityMinutes}min`);
 
     if (!isOnline || !isProvider) {
-      console.log('[ReminderSystem] ⏸️ Skipped: not online or not provider');
       return;
     }
     if (checkReminderDisabledToday()) {
-      console.log('[ReminderSystem] ⏸️ Skipped: reminders disabled for today');
       return;
     }
 
     const preferences = getPreferences();
     const now = new Date();
-
-    console.log(`[ReminderSystem] 📊 Config: T+30=${PROVIDER_ACTIVITY_CONFIG.FIRST_REMINDER_MINUTES}, T+60=${PROVIDER_ACTIVITY_CONFIG.SECOND_REMINDER_MINUTES}`);
+    const currentState = reminderStateRef.current;
 
     // T+60 : Deuxième rappel avec avertissement (prioritaire)
     if (inactivityMinutes >= PROVIDER_ACTIVITY_CONFIG.SECOND_REMINDER_MINUTES) {
       // Jouer le son si activé et pas joué récemment
       if (
         preferences.soundEnabled &&
-        (!reminderState.lastSoundPlayed ||
-          now.getTime() - reminderState.lastSoundPlayed.getTime() >= toMs(PROVIDER_ACTIVITY_CONFIG.SOUND_INTERVAL_MINUTES))
+        (!currentState.lastSoundPlayed ||
+          now.getTime() - currentState.lastSoundPlayed.getTime() >= toMs(PROVIDER_ACTIVITY_CONFIG.SOUND_INTERVAL_MINUTES))
       ) {
         playAvailabilityReminder('sound', {
           enableSound: preferences.soundEnabled,
@@ -102,8 +101,8 @@ export const useProviderReminderSystem = ({
       // Jouer la voix si activé et pas joué récemment
       if (
         preferences.voiceEnabled &&
-        (!reminderState.lastVoicePlayed ||
-          now.getTime() - reminderState.lastVoicePlayed.getTime() >= toMs(PROVIDER_ACTIVITY_CONFIG.VOICE_INTERVAL_MINUTES))
+        (!currentState.lastVoicePlayed ||
+          now.getTime() - currentState.lastVoicePlayed.getTime() >= toMs(PROVIDER_ACTIVITY_CONFIG.VOICE_INTERVAL_MINUTES))
       ) {
         playAvailabilityReminder('voice', {
           enableSound: preferences.soundEnabled,
@@ -116,20 +115,16 @@ export const useProviderReminderSystem = ({
       // Afficher le modal si activé et pas affiché récemment
       if (
         preferences.modalEnabled &&
-        (!reminderState.lastModalShown ||
-          now.getTime() - reminderState.lastModalShown.getTime() >= toMs(PROVIDER_ACTIVITY_CONFIG.REMINDER_MODAL_INTERVAL_MINUTES))
+        (!currentState.lastModalShown ||
+          now.getTime() - currentState.lastModalShown.getTime() >= toMs(PROVIDER_ACTIVITY_CONFIG.REMINDER_MODAL_INTERVAL_MINUTES))
       ) {
-        console.log(`[ReminderSystem] 🚨 T+60 TRIGGERED! Showing SECOND reminder modal (inactivity: ${inactivityMinutes}min)`);
         setReminderType('second');
         setShowModal(true);
         setReminderState(prev => ({ ...prev, lastModalShown: now }));
-      } else {
-        console.log(`[ReminderSystem] ⏸️ T+60 conditions met but modal skipped (modalEnabled=${preferences.modalEnabled}, lastModalShown=${reminderState.lastModalShown})`);
       }
     }
     // T+30 : Premier rappel informatif
     else if (inactivityMinutes >= PROVIDER_ACTIVITY_CONFIG.FIRST_REMINDER_MINUTES && !firstReminderShownRef.current) {
-      console.log(`[ReminderSystem] ⚠️ T+30 TRIGGERED! Showing FIRST reminder modal (inactivity: ${inactivityMinutes}min)`);
       // Jouer le son pour le premier rappel
       if (preferences.soundEnabled) {
         playAvailabilityReminder('sound', {
@@ -148,7 +143,8 @@ export const useProviderReminderSystem = ({
         firstReminderShownRef.current = true;
       }
     }
-  }, [isOnline, isProvider, getInactivityMinutes, getPreferences, reminderState, preferredLanguage, checkReminderDisabledToday]);
+    // Note: reminderState removed from deps - using ref to read current state without causing recreation
+  }, [isOnline, isProvider, getInactivityMinutes, getPreferences, preferredLanguage, checkReminderDisabledToday]);
 
   // Handler pour fermer le modal (rester en ligne)
   const handleClose = useCallback(() => {
@@ -177,14 +173,12 @@ export const useProviderReminderSystem = ({
     }
 
     try {
-      console.log('[ReminderSystem] 🔴 Calling setProviderOffline...');
       const setProviderOffline = httpsCallable(functions, 'setProviderOffline');
       await setProviderOffline({ userId });
-      console.log('[ReminderSystem] ✅ Provider set offline successfully');
       // Fermer le modal APRÈS succès
       setShowModal(false);
     } catch (error) {
-      console.error('[ReminderSystem] ❌ Error setting provider offline:', error);
+      console.error('[ReminderSystem] Error setting provider offline:', error);
       // ✅ BUG FIX: Afficher feedback d'erreur à l'utilisateur
       // On ferme quand même le modal mais on alerte l'utilisateur
       setShowModal(false);
@@ -242,23 +236,18 @@ export const useProviderReminderSystem = ({
   // Timeout automatique: mise hors ligne si pas de réponse au popup
   // Seulement pour le deuxième rappel (T+60) → mise hors ligne à T+70 (10 min après)
   useEffect(() => {
-    console.log(`[ReminderSystem] 🔄 Auto-offline effect: showModal=${showModal}, isOnline=${isOnline}, isProvider=${isProvider}, reminderType=${reminderType}`);
-
     if (showModal && isOnline && isProvider && reminderType === 'second') {
       // Démarrer le timeout de 10 minutes (T+70)
       const timeoutMs = toMs(PROVIDER_ACTIVITY_CONFIG.POPUP_AUTO_OFFLINE_TIMEOUT_MINUTES);
-      console.log(`[ReminderSystem] ⏰ Starting auto-offline timeout: ${PROVIDER_ACTIVITY_CONFIG.POPUP_AUTO_OFFLINE_TIMEOUT_MINUTES} minutes (${timeoutMs}ms)`);
 
       popupTimeoutRef.current = setTimeout(async () => {
-        console.warn(`[ReminderSystem] 🔴 TIMEOUT EXPIRED! Auto-setting provider OFFLINE after ${PROVIDER_ACTIVITY_CONFIG.POPUP_AUTO_OFFLINE_TIMEOUT_MINUTES} minutes without response`);
         try {
           const setProviderOffline = httpsCallable(functions, 'setProviderOffline');
           await setProviderOffline({ userId });
-          console.log('[ReminderSystem] ✅ Provider set offline successfully (auto-timeout)');
           // ✅ BUG FIX: Fermer le modal APRÈS succès
           setShowModal(false);
         } catch (error) {
-          console.error('[ReminderSystem] ❌ Error auto-setting provider offline:', error);
+          console.error('[ReminderSystem] Error auto-setting provider offline:', error);
           // En cas d'erreur, fermer quand même le modal (le backend schedulé prendra le relais)
           setShowModal(false);
         }

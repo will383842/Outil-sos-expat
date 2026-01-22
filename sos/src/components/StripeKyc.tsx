@@ -26,19 +26,6 @@ export default function StripeKYC({ onComplete, userType }: Props) {
   const [reinitKey, setReinitKey] = useState(0); // P0 FIX: Trigger to force re-initialization without page reload
   const initStartedRef = useRef(false);
 
-  // DEBUG LOGS - Page Jump Investigation
-  console.log('[StripeKYC DEBUG] 📦 Render', {
-    userType,
-    loading,
-    isKycComplete,
-    hasError: !!error,
-    hasStripeInstance: !!stripeConnectInstance,
-    isCreatingNewAccount,
-    reinitKey,
-    userId: user?.uid,
-    timestamp: new Date().toISOString()
-  });
-
   // ✅ P0 FIX: Function to create new Stripe account
   const createNewAccount = async () => {
     dashboardLog.stripe('createNewAccount clicked', { userId: user?.uid, userType });
@@ -99,15 +86,7 @@ export default function StripeKYC({ onComplete, userType }: Props) {
   };
 
   useEffect(() => {
-    console.log('[StripeKYC DEBUG] 🎯 useEffect triggered', {
-      userId: user?.uid,
-      userType,
-      reinitKey,
-      timestamp: new Date().toISOString()
-    });
-
     if (!user?.uid) {
-      console.log('[StripeKYC DEBUG] ⚠️ No user uid, setting loading false');
       setLoading(false);
       return;
     }
@@ -120,7 +99,6 @@ export default function StripeKYC({ onComplete, userType }: Props) {
     // ✅ Guard 1: Check if error already detected (prevents repeated API calls)
     const savedError = sessionStorage.getItem(errorKey);
     if (savedError) {
-      console.log('[StripeKYC DEBUG] ⚠️ Guard 1: Saved error found', { savedError });
       setError(savedError);
       setLoading(false);
       return;
@@ -128,14 +106,12 @@ export default function StripeKYC({ onComplete, userType }: Props) {
 
     // ✅ Guard 2: Check if check in progress
     if (sessionStorage.getItem(checkKey) === "true") {
-      console.log('[StripeKYC DEBUG] ⚠️ Guard 2: Check in progress');
       setLoading(false);
       return;
     }
 
     // ✅ Guard 3: Check if already completed
     if (sessionStorage.getItem(completedKey) === "true") {
-      console.log('[StripeKYC DEBUG] ✅ Guard 3: Already completed');
       setIsKycComplete(true);
       setLoading(false);
       return;
@@ -143,11 +119,9 @@ export default function StripeKYC({ onComplete, userType }: Props) {
 
     // ✅ Guard 4: Check ref (for same-mount re-renders)
     if (initStartedRef.current) {
-      console.log('[StripeKYC DEBUG] ⚠️ Guard 4: Init already started');
       return;
     }
 
-    console.log('[StripeKYC DEBUG] 🚀 Starting initialization');
     initStartedRef.current = true;
     sessionStorage.setItem(checkKey, "true");
 
@@ -177,7 +151,6 @@ export default function StripeKYC({ onComplete, userType }: Props) {
           }
 
           if (statusData.kycCompleted) {
-            console.log('[StripeKYC DEBUG] ✅ Status check: KYC COMPLETE - updating state');
             sessionStorage.setItem(completedKey, "true");
             sessionStorage.removeItem(checkKey);
             setIsKycComplete(true);
@@ -224,7 +197,6 @@ export default function StripeKYC({ onComplete, userType }: Props) {
           clientSecret: string;
         };
 
-        console.log('[StripeKYC DEBUG] 🔧 Creating Stripe instance');
         const instance = loadConnectAndInitialize({
           publishableKey: import.meta.env.VITE_STRIPE_PUBLIC_KEY,
           fetchClientSecret: async () => data.clientSecret,
@@ -236,7 +208,6 @@ export default function StripeKYC({ onComplete, userType }: Props) {
           },
         });
 
-        console.log('[StripeKYC DEBUG] ✅ Stripe instance created - updating state');
         setStripeConnectInstance(instance);
         setLoading(false);
         sessionStorage.removeItem(checkKey);
@@ -267,7 +238,6 @@ export default function StripeKYC({ onComplete, userType }: Props) {
   // ✅ Show loading state while checking
   // P0 FIX: Added min-h-[200px] to prevent layout jumps during state transitions
   if (loading) {
-    console.log('[StripeKYC DEBUG] 🔄 Rendering LOADING state', { userType, timestamp: new Date().toISOString() });
     return (
       <div className="flex items-center justify-center p-8 min-h-[200px]">
         <div className="text-center">
@@ -280,14 +250,12 @@ export default function StripeKYC({ onComplete, userType }: Props) {
 
   // ✅ If KYC is complete, render nothing (component will unmount/hide)
   if (isKycComplete) {
-    console.log('[StripeKYC DEBUG] ✅ Rendering NULL (KYC complete)', { userType, timestamp: new Date().toISOString() });
     return null;
   }
 
   // ✅ P0 FIX: Show error state with option to create new account
   // P0 FIX: Added min-h-[200px] to prevent layout jumps during state transitions
   if (error) {
-    console.log('[StripeKYC DEBUG] ❌ Rendering ERROR state', { error, userType, timestamp: new Date().toISOString() });
     return (
       <div className="flex items-center justify-center p-8 min-h-[200px]">
         <div className="text-center max-w-md">
@@ -328,7 +296,6 @@ export default function StripeKYC({ onComplete, userType }: Props) {
   // ✅ If no Stripe instance and not complete, show loading state
   // P0 FIX: Added min-h-[200px] to prevent layout jumps during state transitions
   if (!stripeConnectInstance) {
-    console.log('[StripeKYC DEBUG] ⏳ Rendering NO INSTANCE state', { userType, timestamp: new Date().toISOString() });
     return (
       <div className="flex items-center justify-center p-8 min-h-[200px]">
         <div className="text-center">
@@ -345,7 +312,6 @@ export default function StripeKYC({ onComplete, userType }: Props) {
   }
 
   // ✅ Show KYC form
-  console.log('[StripeKYC DEBUG] 📝 Rendering KYC FORM', { userType, timestamp: new Date().toISOString() });
   return (
     <div className="max-w-4xl mx-auto p-4">
       <ConnectComponentsProvider connectInstance={stripeConnectInstance}>

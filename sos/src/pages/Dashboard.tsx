@@ -741,28 +741,18 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
   }, [user, navigate]);
 
   // ✅ Set userDataReady to true once user is loaded
+  // Note: Only depend on user.role to prevent re-runs on every user property change
   useEffect(() => {
     if (user && (user.role === "lawyer" || user.role === "expat")) {
-      console.log('[Dashboard DEBUG] 🔄 userDataReady changing from', userDataReady, 'to true', {
-        userId: user.id,
-        role: user.role,
-        timestamp: new Date().toISOString()
-      });
       setUserDataReady(true);
     }
-  }, [user]);
+  }, [user?.role]);
 
   // ✅ P0 FIX: Initialize stable KYC display state ONCE to prevent flickering
   // This effect runs only when userDataReady becomes true and sets the initial state
   // Subsequent Firestore updates will NOT change this state - only explicit user action will
+  // Note: Dependencies narrowed to prevent excessive re-runs from Firestore updates
   useEffect(() => {
-    console.log('[Dashboard DEBUG] 🎯 KYC useEffect triggered', {
-      userDataReady,
-      userId: user?.id,
-      stripeKycInitializedRef: stripeKycInitializedRef.current,
-      timestamp: new Date().toISOString()
-    });
-
     if (userDataReady && user && !stripeKycInitializedRef.current) {
       const isProvider = user.role === "lawyer" || user.role === "expat";
       const isStripeGateway = user?.paymentGateway === "stripe" || !user?.paymentGateway;
@@ -775,20 +765,9 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
 
       // Only initialize once
       stripeKycInitializedRef.current = true;
-
-      console.log('[Dashboard DEBUG] 🚀 showStripeKycStable changing from', showStripeKycStable, 'to', shouldShowKyc, {
-        isProvider,
-        isStripeGateway,
-        needsKyc,
-        kycStatus: user?.kycStatus,
-        stripeOnboardingComplete: user?.stripeOnboardingComplete,
-        paymentGateway: user?.paymentGateway,
-        timestamp: new Date().toISOString()
-      });
-
       setShowStripeKycStable(shouldShowKyc);
     }
-  }, [userDataReady, user]);
+  }, [userDataReady, user?.role, user?.paymentGateway, user?.kycStatus, user?.stripeOnboardingComplete]);
 
 // ✅ Force refresh user data on mount for lawyer/expat (fixes KYC loading issue after signup)
 // ⚠️ Limited to ONE attempt to prevent infinite loops

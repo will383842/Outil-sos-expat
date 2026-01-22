@@ -90,16 +90,27 @@ function generateScreenshotFileName(email: string): string {
 
 /**
  * Nettoie et valide les données de feedback
+ * Note: Firestore n'accepte pas les valeurs undefined, donc on les filtre
  */
-function sanitizeFeedbackData(data: FeedbackData): FeedbackData {
-  return {
-    ...data,
+function sanitizeFeedbackData(data: FeedbackData): Record<string, unknown> {
+  const sanitized: Record<string, unknown> = {
     email: data.email.toLowerCase().trim(),
+    type: data.type,
     description: data.description.trim().substring(0, 2000),
     pageUrl: data.pageUrl.substring(0, 500),
     pageName: data.pageName.substring(0, 200),
-    userName: data.userName?.trim().substring(0, 100),
+    device: data.device,
+    locale: data.locale,
+    userRole: data.userRole,
   };
+
+  // Only add optional fields if they have a value (avoid undefined in Firestore)
+  if (data.userId) sanitized.userId = data.userId;
+  if (data.userName) sanitized.userName = data.userName.trim().substring(0, 100);
+  if (data.priority) sanitized.priority = data.priority;
+  if (data.screenshotUrl) sanitized.screenshotUrl = data.screenshotUrl;
+
+  return sanitized;
 }
 
 // ==========================================
@@ -171,18 +182,18 @@ export async function submitUserFeedback(data: FeedbackData): Promise<string> {
     pageUrl: data.pageUrl,
   });
 
-  // Nettoyer les données
+  // Nettoyer les données (retourne un objet sans valeurs undefined)
   dashboardLog.state('Sanitizing feedback data...');
   const sanitizedData = sanitizeFeedbackData(data);
   dashboardLog.state('Data sanitized', {
-    email: sanitizedData.email,
-    descriptionLength: sanitizedData.description.length,
+    email: sanitizedData.email as string,
+    descriptionLength: (sanitizedData.description as string).length,
   });
 
-  // Créer le document de feedback
-  const feedbackDoc = {
+  // Créer le document de feedback (sanitizedData n'a pas de valeurs undefined)
+  const feedbackDoc: Record<string, unknown> = {
     ...sanitizedData,
-    // Champs admin (initialisés)
+    // Champs admin (initialisés) - use null not undefined for Firestore
     status: 'new' as FeedbackStatus,
     assignedTo: null,
     adminNotes: null,

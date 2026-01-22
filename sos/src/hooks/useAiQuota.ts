@@ -59,19 +59,6 @@ export function useAiQuota(): UseAiQuotaReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // DEBUG LOGS - Page Jump Investigation
-  console.log('[useAiQuota DEBUG] 📦 Hook state', {
-    userId: user?.uid,
-    loading,
-    hasUsage: !!usage,
-    hasQuotaCheck: !!quotaCheck,
-    isAllowed: quotaCheck?.allowed,
-    currentUsage: quotaCheck?.currentUsage,
-    limit: quotaCheck?.limit,
-    isInTrial: quotaCheck?.isInTrial,
-    timestamp: new Date().toISOString()
-  });
-
   // Subscribe to usage changes
   useEffect(() => {
     if (!user?.uid) {
@@ -106,7 +93,9 @@ export function useAiQuota(): UseAiQuotaReturn {
     return () => unsubscribe();
   }, [user?.uid]);
 
-  // Check quota when usage changes
+  // Check quota on mount and when user changes
+  // Note: Removed 'usage' from dependencies to prevent excessive re-checks
+  // The quota is checked once on mount and can be manually refreshed via refreshQuota()
   useEffect(() => {
     const uid = user?.uid;
     if (!uid) {
@@ -144,7 +133,7 @@ export function useAiQuota(): UseAiQuotaReturn {
     };
 
     checkQuotaAsync();
-  }, [user?.uid, usage]);
+  }, [user?.uid]);
 
   // Computed values
   const currentUsage = useMemo(() => {
