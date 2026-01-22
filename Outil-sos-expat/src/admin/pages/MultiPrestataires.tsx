@@ -30,6 +30,7 @@ import {
   Timestamp,
   where,
   getDocs,
+  writeBatch,
 } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { showSuccess, showError } from "../../lib/toast";
@@ -54,6 +55,10 @@ import {
   X,
   Check,
   Loader2,
+  Pencil,
+  User,
+  Image,
+  Save,
 } from "lucide-react";
 import { Switch } from "../../components/ui/switch";
 
@@ -72,13 +77,32 @@ interface CountryConfig {
 interface Provider {
   id: string;
   name?: string;
+  firstName?: string;
+  lastName?: string;
   email?: string;
   type?: "lawyer" | "expat";
   country?: string;
   languages?: string[];
   phone?: string;
+  photoURL?: string;
   active?: boolean;
+  isActive?: boolean;
+  isOnline?: boolean;
+  interventionCountries?: string[];
   createdAt?: Timestamp;
+}
+
+interface LinkedProvider {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  photoURL?: string;
+  country?: string;
+  interventionCountries?: string[];
+  isActive?: boolean;
+  isOnline?: boolean;
 }
 
 interface UserAccount {
@@ -87,6 +111,8 @@ interface UserAccount {
   displayName?: string;
   role?: "admin" | "agent" | "provider";
   isMultiProvider?: boolean;
+  isAccountActive?: boolean;
+  aiAccessForced?: boolean;
   linkedProviderIds?: string[];
   createdAt?: Timestamp;
 }
@@ -710,19 +736,31 @@ const BatchCreateModal = memo(function BatchCreateModal({
 // Carte compte multi-prestataire (onglet 2)
 const MultiProviderAccountCard = memo(function MultiProviderAccountCard({
   user,
-  onToggleMultiProvider,
+  linkedProviders,
+  onToggleAccountActive,
+  onEditProvider,
   isUpdating,
 }: {
   user: UserAccount;
-  onToggleMultiProvider: (userId: string, isMulti: boolean) => void;
+  linkedProviders: LinkedProvider[];
+  onToggleAccountActive: (userId: string, linkedProviderIds: string[], isActive: boolean) => void;
+  onEditProvider: (provider: LinkedProvider) => void;
   isUpdating: boolean;
 }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const isActive = user.isAccountActive ?? true;
+  const linkedCount = user.linkedProviderIds?.length || 0;
+
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5 hover:border-gray-300 transition-colors">
+    <div className={`bg-white rounded-xl border p-5 transition-colors ${
+      isActive ? "border-green-200 hover:border-green-300" : "border-gray-200 hover:border-gray-300"
+    }`}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-            <Users className="w-5 h-5 text-gray-400" />
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+            isActive ? "bg-green-100" : "bg-gray-100"
+          }`}>
+            <Users className={`w-5 h-5 ${isActive ? "text-green-600" : "text-gray-400"}`} />
           </div>
           <div>
             <h3 className="font-semibold text-gray-900">{user.displayName || user.email}</h3>
@@ -730,31 +768,312 @@ const MultiProviderAccountCard = memo(function MultiProviderAccountCard({
           </div>
         </div>
 
-        {user.isMultiProvider && (
-          <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-medium flex items-center gap-1">
-            <UsersRound className="w-3 h-3" />
-            Multi
-          </span>
-        )}
+        {/* Badge statut */}
+        <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${
+          isActive
+            ? "bg-green-100 text-green-700"
+            : "bg-gray-100 text-gray-600"
+        }`}>
+          {isActive ? (
+            <>
+              <CheckCircle className="w-3 h-3" />
+              En ligne
+            </>
+          ) : (
+            <>
+              <XCircle className="w-3 h-3" />
+              Hors ligne
+            </>
+          )}
+        </span>
       </div>
 
+      {/* Toggle activation compte */}
       <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <UsersRound className="w-4 h-4 text-amber-600" />
-          <span className="text-sm text-gray-700">Multi-prestataires</span>
+        <div className="flex flex-col">
+          <span className="text-sm font-medium text-gray-700">Activer le compte</span>
+          <span className="text-xs text-gray-500">
+            {isActive
+              ? `${linkedCount} prestataire(s) en ligne`
+              : `${linkedCount} prestataire(s) hors ligne`
+            }
+          </span>
         </div>
         <Switch
-          checked={user.isMultiProvider || false}
-          onCheckedChange={(checked) => onToggleMultiProvider(user.id, checked)}
+          checked={isActive}
+          onCheckedChange={(checked) => onToggleAccountActive(user.id, user.linkedProviderIds || [], checked)}
           disabled={isUpdating}
         />
       </div>
 
-      {user.linkedProviderIds && user.linkedProviderIds.length > 0 && (
-        <div className="mt-3 text-xs text-gray-500">
-          {user.linkedProviderIds.length} prestataire(s) lié(s)
+      {/* Info prestataires liés - avec toggle expand */}
+      {linkedCount > 0 && (
+        <div className="mt-4">
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            <div className="flex items-center gap-2 text-sm text-gray-700">
+              <UsersRound className="w-4 h-4 text-amber-600" />
+              <span className="font-medium">{linkedCount} prestataire(s)</span>
+              {user.aiAccessForced && (
+                <span className="text-xs text-blue-600 flex items-center gap-1">
+                  <CheckCircle className="w-3 h-3" />
+                  IA illimité
+                </span>
+              )}
+            </div>
+            {isExpanded ? (
+              <ChevronUp className="w-4 h-4 text-gray-400" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-gray-400" />
+            )}
+          </button>
+
+          {/* Liste des prestataires avec photos */}
+          {isExpanded && (
+            <div className="mt-2 space-y-2 max-h-80 overflow-y-auto">
+              {linkedProviders.map((provider) => (
+                <div
+                  key={provider.id}
+                  className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-lg hover:border-gray-200 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    {/* Photo de profil */}
+                    {provider.photoURL ? (
+                      <img
+                        src={provider.photoURL}
+                        alt={`${provider.firstName} ${provider.lastName}`}
+                        className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                        <User className="w-5 h-5 text-gray-400" />
+                      </div>
+                    )}
+                    <div>
+                      <div className="font-medium text-gray-900 text-sm">
+                        {provider.firstName} {provider.lastName}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {provider.country} • {(provider.interventionCountries || []).length} pays
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => onEditProvider(provider)}
+                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Modifier"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
+    </div>
+  );
+});
+
+// Modal d'édition de prestataire
+const EditProviderModal = memo(function EditProviderModal({
+  isOpen,
+  provider,
+  onClose,
+  onSave,
+  isLoading,
+}: {
+  isOpen: boolean;
+  provider: LinkedProvider | null;
+  onClose: () => void;
+  onSave: (providerId: string, data: Partial<LinkedProvider>) => Promise<void>;
+  isLoading: boolean;
+}) {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [photoURL, setPhotoURL] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  // Reset form when provider changes
+  useEffect(() => {
+    if (provider) {
+      setFirstName(provider.firstName || "");
+      setLastName(provider.lastName || "");
+      setEmail(provider.email || "");
+      setPhone(provider.phone || "");
+      setPhotoURL(provider.photoURL || "");
+      setError(null);
+    }
+  }, [provider]);
+
+  if (!isOpen || !provider) return null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!firstName || !lastName) {
+      setError("Prénom et nom sont obligatoires");
+      return;
+    }
+    setError(null);
+    try {
+      await onSave(provider.id, {
+        firstName,
+        lastName,
+        email,
+        phone,
+        photoURL,
+      });
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur lors de la sauvegarde");
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            {provider.photoURL ? (
+              <img
+                src={provider.photoURL}
+                alt=""
+                className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
+              />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+                <User className="w-6 h-6 text-gray-400" />
+              </div>
+            )}
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">Modifier le prestataire</h2>
+              <p className="text-sm text-gray-500">{provider.id}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
+            <X className="w-5 h-5 text-gray-500" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Photo URL */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              <Image className="inline w-4 h-4 mr-1" />
+              URL de la photo
+            </label>
+            <input
+              type="url"
+              value={photoURL}
+              onChange={(e) => setPhotoURL(e.target.value)}
+              placeholder="https://example.com/photo.jpg"
+              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+            />
+            {photoURL && (
+              <div className="mt-2 flex justify-center">
+                <img
+                  src={photoURL}
+                  alt="Aperçu"
+                  className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Prénom */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Prénom *
+            </label>
+            <input
+              type="text"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+              required
+            />
+          </div>
+
+          {/* Nom */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nom *
+            </label>
+            <input
+              type="text"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+              required
+            />
+          </div>
+
+          {/* Email */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              <Mail className="inline w-4 h-4 mr-1" />
+              Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+            />
+          </div>
+
+          {/* Téléphone */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              <Phone className="inline w-4 h-4 mr-1" />
+              Téléphone
+            </label>
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+            />
+          </div>
+
+          {error && (
+            <div className="p-3 bg-red-50 text-red-700 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {isLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  Enregistrer
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 });
@@ -785,6 +1104,11 @@ export default function MultiPrestataires() {
   const [showBatchModal, setShowBatchModal] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+
+  // États pour les prestataires liés et édition
+  const [linkedProvidersMap, setLinkedProvidersMap] = useState<Record<string, LinkedProvider[]>>({});
+  const [editingProvider, setEditingProvider] = useState<LinkedProvider | null>(null);
+  const [isSavingProvider, setIsSavingProvider] = useState(false);
 
   // Charger les providers (avocats) en temps réel
   useEffect(() => {
@@ -854,6 +1178,83 @@ export default function MultiPrestataires() {
 
     return () => unsubscribe();
   }, []);
+
+  // Charger les prestataires liés pour chaque compte multi-prestataire
+  useEffect(() => {
+    const loadLinkedProviders = async () => {
+      const newMap: Record<string, LinkedProvider[]> = {};
+
+      for (const account of users) {
+        if (account.linkedProviderIds && account.linkedProviderIds.length > 0) {
+          const linkedProviders: LinkedProvider[] = [];
+
+          for (const providerId of account.linkedProviderIds) {
+            try {
+              const providerDoc = await getDocs(
+                query(collection(db, "sos_profiles"), where("__name__", "==", providerId))
+              );
+
+              if (!providerDoc.empty) {
+                const data = providerDoc.docs[0].data();
+                linkedProviders.push({
+                  id: providerId,
+                  firstName: data.firstName,
+                  lastName: data.lastName,
+                  email: data.email,
+                  phone: data.phone,
+                  photoURL: data.photoURL,
+                  country: data.country || data.residenceCountry,
+                  interventionCountries: data.interventionCountries || data.operatingCountries || [],
+                  isActive: data.isActive,
+                  isOnline: data.isOnline,
+                });
+              }
+            } catch (err) {
+              console.error(`Erreur chargement provider ${providerId}:`, err);
+            }
+          }
+
+          newMap[account.id] = linkedProviders;
+        }
+      }
+
+      setLinkedProvidersMap(newMap);
+    };
+
+    if (users.length > 0) {
+      loadLinkedProviders();
+    }
+  }, [users]);
+
+  // Sauvegarder les modifications d'un prestataire
+  const handleSaveProvider = async (providerId: string, data: Partial<LinkedProvider>) => {
+    setIsSavingProvider(true);
+    try {
+      await updateDoc(doc(db, "sos_profiles", providerId), {
+        ...data,
+        updatedAt: serverTimestamp(),
+      });
+
+      // Mettre à jour le state local
+      setLinkedProvidersMap((prev) => {
+        const newMap = { ...prev };
+        for (const accountId of Object.keys(newMap)) {
+          newMap[accountId] = newMap[accountId].map((p) =>
+            p.id === providerId ? { ...p, ...data } : p
+          );
+        }
+        return newMap;
+      });
+
+      showSuccess("Prestataire mis à jour");
+    } catch (err) {
+      console.error("Erreur sauvegarde prestataire:", err);
+      showError("Erreur lors de la sauvegarde");
+      throw err;
+    } finally {
+      setIsSavingProvider(false);
+    }
+  };
 
   // Calculer la couverture par pays
   const countryCoverage = useMemo(() => {
@@ -1060,18 +1461,62 @@ export default function MultiPrestataires() {
     }
   };
 
-  // Toggle multi-provider pour un utilisateur
-  const handleToggleMultiProvider = async (userId: string, isMulti: boolean) => {
+  // Toggle activation compte - active/désactive TOUS les prestataires liés
+  // + accès IA forcé automatique pour tous les prestataires d'un compte multi
+  const handleToggleAccountActive = async (userId: string, linkedProviderIds: string[], isActive: boolean) => {
     setUpdatingUserId(userId);
     try {
-      await updateDoc(doc(db, "users", userId), {
-        isMultiProvider: isMulti,
+      const batch = writeBatch(db);
+
+      // 1. Mettre à jour le compte utilisateur
+      batch.update(doc(db, "users", userId), {
+        isAccountActive: isActive,
+        isMultiProvider: true,
+        aiAccessForced: true, // Compte multi = accès IA forcé
         updatedAt: serverTimestamp(),
       });
-      showSuccess(isMulti ? "Mode multi-prestataires activé" : "Mode multi-prestataires désactivé");
+
+      // 2. Mettre à jour TOUS les prestataires liés dans sos_profiles
+      // Accès IA AUTOMATIQUE pour tous les prestataires d'un compte multi
+      for (const providerId of linkedProviderIds) {
+        const profileRef = doc(db, "sos_profiles", providerId);
+        batch.update(profileRef, {
+          // Statut online/offline
+          isActive: isActive,
+          active: isActive,
+          isOnline: isActive,
+          status: isActive ? 'active' : 'inactive',
+          // Accès IA forcé AUTOMATIQUE (illimité)
+          aiAccessForced: true,
+          aiQuota: 999999,
+          updatedAt: serverTimestamp(),
+        });
+      }
+
+      await batch.commit();
+
+      showSuccess(
+        isActive
+          ? `Compte activé - ${linkedProviderIds.length} prestataire(s) en ligne avec accès IA illimité`
+          : `Compte désactivé - ${linkedProviderIds.length} prestataire(s) hors ligne`
+      );
+
+      await logAuditEntry({
+        action: "provider.update",
+        targetType: "provider",
+        targetId: userId,
+        details: {
+          action: isActive ? "account_activated" : "account_deactivated",
+          linkedProviderIds,
+          affectedCount: linkedProviderIds.length,
+          aiAccessForced: true,
+          adminEmail: user?.email || "unknown",
+        },
+        severity: "info",
+      });
     } catch (err) {
-      console.error("Erreur toggle multi-provider:", err);
-      showError("Erreur lors de la mise à jour");
+      console.error("Erreur toggle compte:", err);
+      showError("Erreur lors de la mise à jour du compte");
     } finally {
       setUpdatingUserId(null);
     }
@@ -1301,7 +1746,9 @@ export default function MultiPrestataires() {
               <MultiProviderAccountCard
                 key={u.id}
                 user={u}
-                onToggleMultiProvider={handleToggleMultiProvider}
+                linkedProviders={linkedProvidersMap[u.id] || []}
+                onToggleAccountActive={handleToggleAccountActive}
+                onEditProvider={(provider) => setEditingProvider(provider)}
                 isUpdating={updatingUserId === u.id}
               />
             ))}
@@ -1333,6 +1780,15 @@ export default function MultiPrestataires() {
         onClose={() => setShowBatchModal(false)}
         onSubmit={handleBatchCreate}
         isLoading={isCreating}
+      />
+
+      {/* Modal édition prestataire */}
+      <EditProviderModal
+        isOpen={!!editingProvider}
+        provider={editingProvider}
+        onClose={() => setEditingProvider(null)}
+        onSave={handleSaveProvider}
+        isLoading={isSavingProvider}
       />
     </div>
   );
