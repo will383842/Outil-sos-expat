@@ -818,17 +818,9 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
   // Always set activeTab from URL - this ensures the UI reflects the URL state
   useEffect(() => {
     const urlTab = getTabFromUrl();
-    console.log('[Dashboard DEBUG] 🔄 Tab sync effect', {
-      urlTab,
-      currentActiveTab: activeTab,
-      searchParams: searchParams.toString(),
-      timestamp: new Date().toISOString()
-    });
-    dashboardLog.tab(`URL tab sync: urlTab=${urlTab}, searchParams=${searchParams.toString()}`);
     // Only update if actually different to avoid unnecessary re-renders
     setActiveTab(prev => {
       if (prev !== urlTab) {
-        console.log('[Dashboard DEBUG] 📑 Tab changing', { from: prev, to: urlTab, timestamp: new Date().toISOString() });
         dashboardLog.tab(`Tab state changed: ${prev} -> ${urlTab}`);
         return urlTab;
       }

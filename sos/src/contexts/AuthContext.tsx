@@ -2428,14 +2428,23 @@ export default AuthProvider;
    Compat : re-export d'un hook useAuth ici aussi
    RESTAURÉ: Vérification du contexte pour éviter les bugs silencieux
    ========================================================= */
+// Flag pour éviter de spammer la console avec le même warning
+let _hasWarnedUninitializedContext = false;
+
 export const useAuth = () => {
   const ctx = useContext(BaseAuthContext);
 
   // CRITIQUE: Vérifier que le contexte est initialisé
   // Si authInitialized est false ET user est null ET isLoading est true,
-  // c'est probablement le defaultContext - on avertit mais on ne crash pas
-  if (!ctx.authInitialized && ctx.user === null && ctx.isLoading) {
+  // c'est probablement le defaultContext - on avertit UNE SEULE FOIS
+  if (!ctx.authInitialized && ctx.user === null && ctx.isLoading && !_hasWarnedUninitializedContext) {
+    _hasWarnedUninitializedContext = true;
     console.warn('[useAuth] ⚠️ Contexte non initialisé - attendre authInitialized=true avant d\'utiliser les données');
+  }
+
+  // Reset le flag quand le contexte est initialisé (pour permettre de re-détecter après logout/login)
+  if (ctx.authInitialized) {
+    _hasWarnedUninitializedContext = false;
   }
 
   return ctx;

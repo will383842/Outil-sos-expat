@@ -1,5 +1,5 @@
 // src/contexts/PayPalContext.tsx
-import React, { createContext, useContext, useMemo } from "react";
+import React, { createContext, useContext, useMemo, useRef } from "react";
 import { PayPalScriptProvider, ReactPayPalScriptOptions } from "@paypal/react-paypal-js";
 
 interface PayPalContextValue {
@@ -20,31 +20,33 @@ interface PayPalProviderProps {
   children: React.ReactNode;
 }
 
+// Flag pour éviter les logs multiples
+let _hasLoggedPayPalInit = false;
+
 export const PayPalProvider: React.FC<PayPalProviderProps> = ({ children }) => {
   const clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID as string || "";
   const mode: "sandbox" | "live" = (import.meta.env.VITE_PAYPAL_MODE as string) === "live" ? "live" : "sandbox";
   const isConfigured = Boolean(clientId);
 
-  // ============= DEBUG LOGS =============
-  console.log('%c💳 [PayPalContext] Provider initializing', 'background: #003087; color: white; padding: 2px 6px; border-radius: 3px; font-weight: bold;', {
-    isConfigured,
-    mode,
-    clientIdPresent: !!clientId,
-    clientIdPrefix: clientId ? clientId.substring(0, 15) + '...' : 'N/A',
-    timestamp: new Date().toISOString(),
-  });
+  // Ref pour tracker si le provider PayPal a déjà été monté
+  const hasInitializedRef = useRef(false);
 
-  const initialOptions: ReactPayPalScriptOptions = useMemo(() => {
-    const options = {
-      clientId: clientId || "test",
-      currency: "EUR",
-      intent: "capture",
-      components: "buttons,card-fields", // Boutons PayPal + champs carte directement sur la page
-      "disable-funding": "credit", // Désactive seulement le crédit PayPal, pas les cartes
-    };
-    console.log('💳 [PayPalContext] PayPal SDK options:', options);
-    return options;
-  }, [clientId]);
+  // Log une seule fois au premier montage
+  if (!_hasLoggedPayPalInit && isConfigured) {
+    _hasLoggedPayPalInit = true;
+    console.log('💳 [PayPalContext] Provider initialized', {
+      mode,
+      clientIdPrefix: clientId.substring(0, 15) + '...',
+    });
+  }
+
+  const initialOptions: ReactPayPalScriptOptions = useMemo(() => ({
+    clientId: clientId || "test",
+    currency: "EUR",
+    intent: "capture",
+    components: "buttons,card-fields",
+    "disable-funding": "credit",
+  }), [clientId]);
 
   const contextValue = useMemo(() => ({
     clientId,
@@ -54,7 +56,10 @@ export const PayPalProvider: React.FC<PayPalProviderProps> = ({ children }) => {
 
   // Si PayPal n'est pas configuré, on rend les enfants sans le provider
   if (!isConfigured) {
-    console.warn("%c⚠️ [PayPalContext] PayPal NON CONFIGURÉ: VITE_PAYPAL_CLIENT_ID manquant", 'background: #f44336; color: white; padding: 2px 6px; border-radius: 3px;');
+    if (!hasInitializedRef.current) {
+      hasInitializedRef.current = true;
+      console.warn("⚠️ [PayPalContext] PayPal NON CONFIGURÉ: VITE_PAYPAL_CLIENT_ID manquant");
+    }
     return (
       <PayPalContext.Provider value={contextValue}>
         {children}
@@ -62,7 +67,10 @@ export const PayPalProvider: React.FC<PayPalProviderProps> = ({ children }) => {
     );
   }
 
-  console.log('%c✅ [PayPalContext] PayPal configured - rendering PayPalScriptProvider', 'background: #4CAF50; color: white; padding: 2px 6px; border-radius: 3px;');
+  // Marquer comme initialisé pour éviter les re-logs
+  if (!hasInitializedRef.current) {
+    hasInitializedRef.current = true;
+  }
 
   return (
     <PayPalContext.Provider value={contextValue}>
