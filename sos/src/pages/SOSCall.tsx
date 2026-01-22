@@ -2112,8 +2112,8 @@ const SOSCall: React.FC = () => {
   const [showCustomCountry, setShowCustomCountry] = useState<boolean>(false);
   const [showCustomLanguage, setShowCustomLanguage] = useState<boolean>(false);
 
-  // Statut - Par défaut "online" pour ne montrer que les prestataires disponibles
-  const [statusFilter, setStatusFilter] = useState<"all" | "online" | "offline">("online");
+  // Statut - Par défaut "all" pour montrer tous les prestataires (online d'abord, puis offline)
+  const [statusFilter, setStatusFilter] = useState<"all" | "online" | "offline">("all");
 
   // Mobile filter bottom sheet
   const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
@@ -2903,28 +2903,20 @@ const SOSCall: React.FC = () => {
     });
 
     // Séparer les profils online et offline
-    const onlineProviders = next.filter(p => p.isOnline);
-    const offlineProviders = next.filter(p => !p.isOnline);
+    const onlineProviders = next.filter(p => p.isOnline === true);
+    const offlineProviders = next.filter(p => p.isOnline !== true);
 
-    // Fonction pour vérifier si un profil a une vraie photo (pas un avatar par défaut)
-    const hasRealPhoto = (p: Provider) => {
-      return p.avatar && p.avatar !== "/default-avatar.png" && p.avatar.trim() !== "";
+    // Trier par rating uniquement (meilleure note d'abord)
+    const sortByRating = (a: Provider, b: Provider) => {
+      const ratingA = a.rating || 0;
+      const ratingB = b.rating || 0;
+      return ratingB - ratingA; // Meilleure note en premier
     };
 
-    // Trier: d'abord ceux avec photo, puis par rating
-    const sortByPhotoThenRating = (a: Provider, b: Provider) => {
-      const aHasPhoto = hasRealPhoto(a);
-      const bHasPhoto = hasRealPhoto(b);
-      if (aHasPhoto !== bHasPhoto) {
-        return aHasPhoto ? -1 : 1; // Avec photo en premier
-      }
-      return b.rating - a.rating; // Puis par rating
-    };
+    const sortedOnline = [...onlineProviders].sort(sortByRating);
+    const sortedOffline = [...offlineProviders].sort(sortByRating);
 
-    const sortedOnline = [...onlineProviders].sort(sortByPhotoThenRating);
-    const sortedOffline = [...offlineProviders].sort(sortByPhotoThenRating);
-
-    // Combiner: online d'abord, puis offline
+    // Combiner: TOUJOURS online d'abord, puis offline
     const sorted = [...sortedOnline, ...sortedOffline];
 
     setFilteredProviders(sorted);

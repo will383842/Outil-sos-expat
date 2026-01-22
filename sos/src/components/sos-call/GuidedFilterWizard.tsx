@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from "react";
+import React, { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import {
   ChevronRight,
@@ -177,18 +177,19 @@ const CountryStep: React.FC<{
       </div>
 
       {/* Countries Grid - Scrollable */}
-      <div className="flex-1 overflow-y-auto overscroll-contain">
+      <div className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div className="grid grid-cols-2 gap-2 pb-2">
           {filteredCountries.map((country) => (
             <button
               key={country.code}
+              type="button"
               onClick={() => onSelect(country.code)}
               className={`
-                flex items-center gap-2.5 p-3 rounded-xl border-2 transition-all
-                touch-manipulation text-left min-h-[52px]
+                flex items-center gap-2.5 p-3 rounded-xl border-2 transition-colors
+                touch-manipulation text-left min-h-[52px] select-none cursor-pointer
                 ${selectedCountry === country.code
                   ? "bg-red-500/20 border-red-500 text-white"
-                  : "bg-white/5 border-transparent text-gray-200 active:scale-[0.97] active:bg-white/10"
+                  : "bg-white/5 border-transparent text-gray-200 hover:bg-white/10 active:bg-white/15"
                 }
               `}
             >
@@ -432,13 +433,27 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
   }, []);
 
   // Auto-advance: Country selection → Step 2
+  // Using useRef to track pending transition and avoid race conditions
+  const pendingCountryRef = useRef<string | null>(null);
+
   const handleCountrySelect = useCallback((code: string) => {
+    // Prevent double-clicks by checking if we're already processing
+    if (pendingCountryRef.current === code) return;
+    pendingCountryRef.current = code;
+
     setSelectedCountry(code);
-    // Auto-advance après un court délai pour feedback visuel
-    setTimeout(() => {
-      setStep(2);
-    }, 250);
   }, []);
+
+  // Auto-advance effect when country is selected
+  useEffect(() => {
+    if (selectedCountry && step === 1) {
+      const timer = setTimeout(() => {
+        setStep(2);
+        pendingCountryRef.current = null;
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedCountry, step]);
 
   // Auto-advance: Type selection → Complete wizard
   const handleTypeSelect = useCallback((type: "all" | "lawyer" | "expat") => {
@@ -474,6 +489,7 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
       setSelectedCountry("");
       setSelectedLanguages([]);
       setSelectedType(null);
+      pendingCountryRef.current = null;
     }
   }, [isOpen]);
 

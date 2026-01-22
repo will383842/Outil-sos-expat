@@ -108,36 +108,30 @@ export const createStripeAccount = onCall<CreateAccountData>(
       // ✅ Save to correct collection based on userType
       const collectionName = userType === "lawyer" ? "lawyers" : "expats";
 
-      await Promise.all([
-        // Save to type-specific collection
-        admin
-          .firestore()
-          .collection(collectionName)
-          .doc(userId)
-          .set(
-            {
-              ...stripeData,
-              createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            },
-            { merge: true }
-          ),
+      // ✅ P0 FIX: Use atomic batch write instead of Promise.all
+      // This ensures all 3 collections are updated together (all or nothing)
+      // Prevents data inconsistency if one write fails
+      const batch = admin.firestore().batch();
 
-        // Also save to users collection
-        admin
-          .firestore()
-          .collection("users")
-          .doc(userId)
-          .set(stripeData, { merge: true }),
+      // Save to type-specific collection (lawyers/expats)
+      const typeSpecificRef = admin.firestore().collection(collectionName).doc(userId);
+      batch.set(typeSpecificRef, {
+        ...stripeData,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
 
-        // ✅ Also save to sos_profiles collection
-        admin
-          .firestore()
-          .collection("sos_profiles")
-          .doc(userId)
-          .set(stripeData, { merge: true }),
-      ]);
+      // Save to users collection
+      const usersRef = admin.firestore().collection("users").doc(userId);
+      batch.set(usersRef, stripeData, { merge: true });
 
-      console.log(`✅ Saved stripeAccountId to ${collectionName}, users, and sos_profiles collections`);
+      // Save to sos_profiles collection
+      const sosProfilesRef = admin.firestore().collection("sos_profiles").doc(userId);
+      batch.set(sosProfilesRef, stripeData, { merge: true });
+
+      // Commit all writes atomically
+      await batch.commit();
+
+      console.log(`✅ [ATOMIC] Saved stripeAccountId to ${collectionName}, users, and sos_profiles collections`);
 
       return {
         success: true,

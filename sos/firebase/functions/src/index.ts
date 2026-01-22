@@ -83,15 +83,13 @@ export { createStripeAccount } from "./createStripeAccount";
 export { getStripeAccountSession } from "./getAccountSession";
 export { checkStripeAccountStatus } from "./checkStripeAccountStatus";
 
-// backup - Single backup (legacy, kept for compatibility)
+// backup - Manual backup (admin-triggered)
 export { createManualBackup } from "./manualBackup";
-export { scheduledBackup } from "./scheduledBackup";
+// REMOVED: scheduledBackup - replaced by morningBackup (multi-frequency system)
 
-// backup - Multi-frequency (3x per day for better RPO)
+// backup - Multi-frequency (daily for better RPO)
 export {
   morningBackup,
-  // middayBackup, // TODO: Commented out in source file
-  // eveningBackup, // TODO: Commented out in source file
   cleanupOldBackups,
 } from "./scheduled/multiFrequencyBackup";
 
@@ -227,15 +225,13 @@ export { initUnclaimedFundsTemplates } from "./seeds/unclaimedFundsTemplates";
 // Commented out to avoid Cloud Run CPU quota issues on deployment
 // export { initCountryConfigs, seedCountryConfigsHttp } from "./seeds/initCountryConfigs";
 
-// Refund Management (simplifie pour Direct Charges)
-// Note: Les fonctions scheduledUnclaimedFundsCheck, getUnclaimedFundsStats, resolveUnclaimedFund
-// ont ete supprimees car avec Direct Charges, les fonds vont directement au provider.
-// Seul le RefundManager est conserve pour les remboursements d'appels non effectues.
+// Refund Management (simplified for Direct Charges)
+// Note: With Direct Charges, funds go directly to provider.
+// Only RefundManager is kept for refunds of calls not completed.
 export {
   RefundManager,
-  UnclaimedFundsManager, // deprecated alias
+  // REMOVED: UnclaimedFundsManager deprecated alias - use RefundManager directly
   REFUND_CONFIG,
-  // UNCLAIMED_FUNDS_CONFIG removed - already exported from ./scheduled/processUnclaimedFunds
 } from "./UnclaimedFundsManager";
 
 // Provider Earnings Dashboard
@@ -273,8 +269,10 @@ import {
 export {
   createPayPalOnboardingLink,
   checkPayPalMerchantStatus,
-  createPayPalOrder,
-  capturePayPalOrder,
+  // REMOVED: createPayPalOrder, capturePayPalOrder (onCall versions)
+  // Use HTTP versions below instead - they have CORS support
+  createPayPalOrderHttp,
+  capturePayPalOrderHttp,
   paypalWebhook,
   getRecommendedPaymentGateway,
   createPayPalPayout,
@@ -427,14 +425,12 @@ setGlobalOptions({
 
 // ✅ STRIPE CONNECT FUNCTIONS (Express Accounts)
 export {
-  // Nouvelles fonctions Express (recommandées)
+  // Express accounts (recommended)
   createExpressAccount,
   getOnboardingLink,
   checkKycStatus,
-  // Fonctions dépréciées (compatibilité)
-  createCustomAccount,
-  submitKycData,
-  addBankAccount,
+  // REMOVED: Deprecated legacy functions (createCustomAccount, submitKycData, addBankAccount)
+  // These were replaced by Express accounts in 2024 - no longer needed
 } from "./stripeAutomaticKyc";
 
 export { completeLawyerOnboarding } from "./lawyerOnboarding";
@@ -700,9 +696,11 @@ async function checkAdminAccess(request: { auth?: { uid: string; token: { email?
 }
 
 // ====== LAZY LOADING DES MANAGERS ======
-const stripeManagerInstance: unknown = null; // placeholder
+// Note: stripeManagerInstance and messageManagerInstance were used by debug functions
+// which have been disabled to reduce Cloud Run services. Commented out to fix TS6133.
+// const stripeManagerInstance: unknown = null; // placeholder - used by generateSystemDebugReport
 let twilioCallManagerInstance: TwilioCallManager | null = null; // réassigné après import
-const messageManagerInstance: unknown = null; // placeholder
+// const messageManagerInstance: unknown = null; // placeholder - used by generateSystemDebugReport
 
 const getTwilioCallManager = traceFunction(
   async (): Promise<TwilioCallManager> => {
@@ -876,7 +874,8 @@ export { createContactMessage } from "./contact/createContactMessage";
 export { trackCAPIEvent } from "./tracking/capiEvents";
 
 // Meta CAPI Connection Test
-export { testCAPIConnection } from "./monitoring/testCAPIConnection";
+// DISABLED: Dev/test function - not needed in production
+// export { testCAPIConnection } from "./monitoring/testCAPIConnection";
 
 // Utilitaires complémentaires
 export { initializeMessageTemplates } from "./initializeMessageTemplates";
@@ -1826,7 +1825,7 @@ export const stripeWebhook = onRequest(
     ],
     concurrency: 1,
     timeoutSeconds: 60, // P2-4 FIX: Augmenté de 30s à 60s pour éviter les timeouts
-    minInstances: 0,
+    minInstances: 1, // P0 FIX: Garder une instance chaude pour éviter cold starts et timeouts webhook
     maxInstances: 5,
   },
   // @ts-ignore - Type compatibility issue between firebase-functions and express types
@@ -3942,8 +3941,10 @@ export const scheduledCleanup = onSchedule(
 );
 
 // ========================================
-// FONCTION DE DEBUG SYSTÈME
+// FONCTION DE DEBUG SYSTÈME - DISABLED FOR PRODUCTION
 // ========================================
+// DISABLED: Dev/test function - not needed in production, reduces Cloud Run services
+/*
 export const generateSystemDebugReport = onCall(
   {
     ...emergencyConfig,
@@ -4056,10 +4057,13 @@ export const generateSystemDebugReport = onCall(
     }
   )
 );
+*/
 
 // ========================================
-// FONCTION DE MONITORING EN TEMPS RÉEL
+// FONCTION DE MONITORING EN TEMPS RÉEL - DISABLED FOR PRODUCTION
 // ========================================
+// DISABLED: Dev/test function - not needed in production, reduces Cloud Run services
+/*
 export const getSystemHealthStatus = onCall(
   {
     ...emergencyConfig,
@@ -4188,10 +4192,13 @@ export const getSystemHealthStatus = onCall(
     }
   )
 );
+*/
 
 // ========================================
-// LOGS DEBUG ULTRA
+// LOGS DEBUG ULTRA - DISABLED FOR PRODUCTION
 // ========================================
+// DISABLED: Dev/test function - excessive Cloud Run services
+/*
 export const getUltraDebugLogs = onCall(
   {
     ...emergencyConfig,
@@ -4245,10 +4252,13 @@ export const getUltraDebugLogs = onCall(
     }
   )
 );
+*/
 
 // ========================================
-// FONCTIONS DE TEST ET UTILITAIRES
+// FONCTIONS DE TEST ET UTILITAIRES - DISABLED FOR PRODUCTION
 // ========================================
+// DISABLED: Dev/test functions - not needed in production, reduces Cloud Run services
+/*
 export const testCloudTasksConnection = onCall(
   {
     ...emergencyConfig,
@@ -4463,7 +4473,7 @@ export const testWebhook = onRequest(
     timeoutSeconds: 60,
   },
   // @ts-ignore - Type compatibility issue between firebase-functions and express types
-   
+
   wrapHttpFunction(
     "testWebhook",
     async (_req: FirebaseRequest, res: Response) => {
@@ -4475,6 +4485,7 @@ export const testWebhook = onRequest(
     }
   )
 );
+*/
 
 // ========== SYSTEME EN LIGNE/HORS LIGNE ==========
 export { checkProviderInactivity } from './scheduled/checkProviderInactivity';
@@ -4704,6 +4715,8 @@ export {
 } from './subscription/webhooks';
 
 // AI Subscription System - Legacy aliases for backward compatibility
+// P0 FIX: Removed stripeWebhook as subscriptionStripeWebhook - causes conflict with main stripeWebhook in index.ts
+// The main stripeWebhook (line 1814) handles ALL Stripe events including subscriptions
 export {
   createSubscription as subscriptionCreate,
   updateSubscription as subscriptionUpdate,
@@ -4712,7 +4725,7 @@ export {
   createStripePortalSession as subscriptionPortal,
   checkAiQuota as subscriptionCheckQuota,
   recordAiCall as subscriptionRecordCall,
-  stripeWebhook as subscriptionStripeWebhook,
+  // stripeWebhook as subscriptionStripeWebhook, // P0 FIX: REMOVED - conflict with main webhook
   updateTrialConfig as subscriptionUpdateTrialConfig,
   updatePlanPricing as subscriptionUpdatePlanPricing,
   // V2 functions with proper CORS support (for admin IA tab)
@@ -5173,11 +5186,11 @@ export {
   softDeleteProvider,
   hardDeleteProvider,
   bulkHideProviders,
-  bulkUnhideProviders,
+  // DISABLED: bulkUnhideProviders - use unhideProvider for individual ops
   bulkBlockProviders,
-  bulkUnblockProviders,
+  // DISABLED: bulkUnblockProviders - use unblockProvider for individual ops
   bulkSuspendProviders,
-  bulkUnsuspendProviders,
+  // DISABLED: bulkUnsuspendProviders - use unsuspendProvider for individual ops
   bulkDeleteProviders,
   getProviderActionLogs,
   getAllProviderActionLogs,

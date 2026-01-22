@@ -1912,6 +1912,300 @@ export const checkPayPalMerchantStatus = onCall(
   }
 );
 
+// ============================================================================
+// FONCTIONS HTTP (onRequest) AVEC CORS MANUEL
+// Ces fonctions remplacent les versions onCall qui ont des problèmes CORS
+// ============================================================================
+
+/**
+ * Helper pour vérifier le token Firebase Auth dans les requêtes HTTP
+ * @returns L'UID de l'utilisateur ou null si non authentifié
+ */
+async function verifyAuthToken(req: { headers: { authorization?: string } }): Promise<{ uid: string } | null> {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return null;
+  }
+
+  const idToken = authHeader.substring(7);
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    return { uid: decodedToken.uid };
+  } catch (error) {
+    console.error("[PayPal] Token verification failed:", error);
+    return null;
+  }
+}
+
+/**
+ * VERSION HTTP de createPayPalOrder - avec CORS manuel
+ * Utilisée à la place de la version onCall qui a des problèmes CORS
+ */
+export const createPayPalOrderHttp = onRequest(
+  {
+    region: "europe-west1",
+    secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_PARTNER_ID, PAYPAL_PLATFORM_MERCHANT_ID],
+    cors: true, // Gère automatiquement les preflight OPTIONS
+  },
+  async (req, res) => {
+    // Seulement POST
+    if (req.method !== "POST") {
+      res.status(405).json({ error: "Method not allowed" });
+      return;
+    }
+
+    const requestId = `pp_order_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+
+    // Vérifier l'authentification
+    const auth = await verifyAuthToken(req);
+    if (!auth) {
+      res.status(401).json({ error: "User must be authenticated" });
+      return;
+    }
+
+    const {
+      callSessionId,
+      amount,
+      currency,
+      providerId,
+      serviceType,
+      description,
+      metadata: trackingMetadata,
+    } = req.body;
+
+    prodLogger.info('PAYPAL_ORDER_HTTP_START', `[${requestId}] Creating PayPal order (HTTP)`, {
+      requestId,
+      callSessionId,
+      amount,
+      currency,
+      providerId,
+      serviceType,
+      clientId: auth.uid,
+    });
+
+    if (!callSessionId || !amount || !providerId) {
+      res.status(400).json({ error: "Missing required fields" });
+      return;
+    }
+
+    try {
+      // Import du pricing service pour calculer les frais côté serveur
+      const { getServiceAmounts } = await import("./services/pricingService");
+
+      // Vérifier les données du provider
+      const db = admin.firestore();
+      const providerDoc = await db.collection("users").doc(providerId).get();
+      const providerData = providerDoc.data();
+
+      if (!providerData) {
+        res.status(404).json({ error: "Provider not found" });
+        return;
+      }
+
+      // Déterminer le flux à utiliser
+      const hasMerchantId = !!providerData.paypalMerchantId;
+      const hasPayPalEmail = !!providerData.paypalEmail;
+
+      if (!hasMerchantId && !hasPayPalEmail) {
+        res.status(400).json({
+          error: "Le prestataire n'a pas configuré son compte PayPal. Il doit d'abord entrer son email PayPal dans son profil."
+        });
+        return;
+      }
+
+      // ===== P0 SECURITY FIX: Calculer les frais côté serveur =====
+      const normalizedCurrency = (currency || "EUR").toLowerCase() as "eur" | "usd";
+      const normalizedServiceType = (serviceType || providerData.type || "expat") as "lawyer" | "expat";
+
+      // Récupérer la configuration de prix du serveur
+      const serverPricing = await getServiceAmounts(normalizedServiceType, normalizedCurrency);
+
+      // Valider que le montant correspond à la configuration serveur
+      const clientAmount = typeof amount === "number" ? amount : parseFloat(amount);
+
+      if (Math.abs(clientAmount - serverPricing.totalAmount) > 0.01) {
+        console.error(`[PAYPAL] Amount mismatch: client=${clientAmount}, server=${serverPricing.totalAmount}`);
+        res.status(400).json({
+          error: `Invalid amount. Expected ${serverPricing.totalAmount} ${normalizedCurrency.toUpperCase()}`
+        });
+        return;
+      }
+
+      // Utiliser les valeurs calculées par le serveur
+      const serverProviderAmount = serverPricing.providerAmount;
+      const serverConnectionFee = serverPricing.connectionFeeAmount;
+
+      console.log(`[PAYPAL HTTP] Server-calculated: total=${serverPricing.totalAmount}, ` +
+        `provider=${serverProviderAmount}, frais mise en relation=${serverConnectionFee}`);
+      console.log(`[PAYPAL HTTP] Flow: ${hasMerchantId ? "DIRECT (split)" : "SIMPLE (payout)"}`);
+
+      const manager = new PayPalManager();
+      let result;
+
+      if (hasMerchantId) {
+        // ===== FLUX DIRECT: Split automatique via PayPal Commerce Platform =====
+        console.log(`[PAYPAL HTTP] Using DIRECT flow with merchantId: ${providerData.paypalMerchantId}`);
+
+        result = await manager.createOrder({
+          callSessionId,
+          amount: serverPricing.totalAmount,
+          providerAmount: serverProviderAmount,
+          platformFee: serverConnectionFee,
+          currency: normalizedCurrency.toUpperCase(),
+          providerId,
+          providerPayPalMerchantId: providerData.paypalMerchantId,
+          clientId: auth.uid,
+          description: description || "SOS Expat - Consultation",
+          trackingMetadata: trackingMetadata as Record<string, string> | undefined,
+        });
+      } else {
+        // ===== FLUX SIMPLE: Payout après capture =====
+        console.log(`[PAYPAL HTTP] Using SIMPLE flow with email: ${providerData.paypalEmail}`);
+
+        result = await manager.createSimpleOrder({
+          callSessionId,
+          amount: serverPricing.totalAmount,
+          providerAmount: serverProviderAmount,
+          platformFee: serverConnectionFee,
+          currency: normalizedCurrency.toUpperCase(),
+          providerId,
+          providerPayPalEmail: providerData.paypalEmail,
+          clientId: auth.uid,
+          description: description || "SOS Expat - Consultation",
+          trackingMetadata: trackingMetadata as Record<string, string> | undefined,
+        });
+      }
+
+      prodLogger.info('PAYPAL_ORDER_HTTP_SUCCESS', `[${requestId}] PayPal order created successfully (HTTP)`, {
+        requestId,
+        orderId: result.orderId,
+        callSessionId,
+        flow: hasMerchantId ? "direct" : "simple",
+        amount: serverPricing.totalAmount,
+        currency: normalizedCurrency,
+      });
+
+      res.status(200).json({
+        success: true,
+        ...result,
+        flow: hasMerchantId ? "direct" : "simple",
+      });
+
+    } catch (error) {
+      prodLogger.error('PAYPAL_ORDER_HTTP_ERROR', `[${requestId}] PayPal order creation failed (HTTP)`, {
+        requestId,
+        callSessionId,
+        providerId,
+        error: error instanceof Error ? error.message : String(error),
+        errorStack: error instanceof Error ? error.stack : undefined,
+      });
+      console.error("🔴 [PAYPAL ORDER HTTP ERROR] Full error:", error);
+      res.status(500).json({ error: "Failed to create order" });
+    }
+  }
+);
+
+/**
+ * VERSION HTTP de capturePayPalOrder - avec CORS manuel
+ * Utilisée à la place de la version onCall qui a des problèmes CORS
+ */
+export const capturePayPalOrderHttp = onRequest(
+  {
+    region: "europe-west1",
+    secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
+    cors: true,
+  },
+  async (req, res) => {
+    // Seulement POST
+    if (req.method !== "POST") {
+      res.status(405).json({ error: "Method not allowed" });
+      return;
+    }
+
+    const captureRequestId = `pp_cap_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+
+    // Vérifier l'authentification
+    const auth = await verifyAuthToken(req);
+    if (!auth) {
+      res.status(401).json({ error: "User must be authenticated" });
+      return;
+    }
+
+    const { orderId } = req.body;
+
+    prodLogger.info('PAYPAL_CAPTURE_HTTP_START', `[${captureRequestId}] Starting PayPal order capture (HTTP)`, {
+      captureRequestId,
+      orderId,
+      clientId: auth.uid,
+    });
+
+    if (!orderId) {
+      res.status(400).json({ error: "orderId is required" });
+      return;
+    }
+
+    try {
+      // ===== P0 SECURITY FIX: Vérifier que l'utilisateur est le propriétaire de l'ordre =====
+      const db = admin.firestore();
+      const orderDoc = await db.collection("paypal_orders").doc(orderId).get();
+
+      if (!orderDoc.exists) {
+        console.error(`[PAYPAL HTTP] No order found in paypal_orders for ${orderId}`);
+        res.status(404).json({ error: "PayPal order not found" });
+        return;
+      }
+
+      const orderData = orderDoc.data()!;
+
+      // Vérifier que l'utilisateur actuel est le client qui a créé le paiement
+      if (orderData.clientId !== auth.uid) {
+        console.error(`[PAYPAL HTTP] Ownership check failed: order=${orderId}, ` +
+          `owner=${orderData.clientId}, requester=${auth.uid}`);
+        res.status(403).json({ error: "You are not authorized to capture this order" });
+        return;
+      }
+
+      // P2-2 FIX: Vérifier que le paiement n'a pas déjà été capturé
+      if (isPaymentCompleted(orderData.status)) {
+        console.warn(`[PAYPAL HTTP] Order ${orderId} already captured`);
+        res.status(200).json({
+          success: true,
+          alreadyCaptured: true,
+          message: "Order was already captured",
+        });
+        return;
+      }
+
+      const manager = new PayPalManager();
+      const result = await manager.captureOrder(orderId);
+
+      prodLogger.info('PAYPAL_CAPTURE_HTTP_SUCCESS', `[${captureRequestId}] PayPal order captured successfully (HTTP)`, {
+        captureRequestId,
+        orderId,
+        captureId: result.captureId,
+        status: result.status,
+      });
+
+      res.status(200).json(result);
+
+    } catch (error) {
+      prodLogger.error('PAYPAL_CAPTURE_HTTP_ERROR', `[${captureRequestId}] PayPal order capture failed (HTTP)`, {
+        captureRequestId,
+        orderId,
+        error: error instanceof Error ? error.message : String(error),
+        errorStack: error instanceof Error ? error.stack : undefined,
+      });
+      console.error("🔴 [PAYPAL CAPTURE HTTP ERROR] Full error:", error);
+      res.status(500).json({ error: "Failed to capture order" });
+    }
+  }
+);
+
+// ============================================================================
+// FONCTIONS CALLABLE (onCall) - GARDÉES POUR COMPATIBILITÉ
+// Note: Les versions HTTP ci-dessus sont préférées car elles n'ont pas de problèmes CORS
+// ============================================================================
+
 /**
  * Crée un ordre PayPal (appelé depuis le frontend)
  *

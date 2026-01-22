@@ -85,14 +85,20 @@ export const checkProviderInactivity = scheduler.onSchedule(
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
           });
 
+          // ✅ FIX: Vérifier si le document users existe avant de le mettre à jour
           const userRef = db.collection('users').doc(doc.id);
-          batch.update(userRef, {
-            isOnline: false,
-            availability: 'offline',
-            lastStatusChange: now,
-            lastActivityCheck: now,
-            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-          });
+          const userDoc = await userRef.get();
+          if (userDoc.exists) {
+            batch.update(userRef, {
+              isOnline: false,
+              availability: 'offline',
+              lastStatusChange: now,
+              lastActivityCheck: now,
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+          } else {
+            console.warn(`⚠️ Document users/${doc.id} not found, skipping user update`);
+          }
 
           count++;
         }

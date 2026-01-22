@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { loadConnectAndInitialize } from "@stripe/connect-js";
 import {
   ConnectAccountOnboarding,
@@ -9,6 +9,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useIntl } from "react-intl";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import dashboardLog from "../utils/dashboardLogger";
+
+// P0 FIX: Polling interval for KYC status check (fallback if webhook fails)
+const KYC_POLLING_INTERVAL_MS = 30000; // 30 seconds
 
 interface Props {
   onComplete?: () => void;
@@ -234,6 +237,53 @@ export default function StripeKYC({ onComplete, userType }: Props) {
 
     initializeStripe();
   }, [user?.uid, userType, reinitKey]); // P0 FIX: Added reinitKey to trigger re-initialization after account creation
+
+  // ✅ P0 FIX: Fallback polling for KYC status
+  // If webhook fails (currently 691 errors), this ensures we still detect KYC completion
+  const checkKycStatus = useCallback(async () => {
+    if (!user?.uid || isKycComplete || loading || error) return;
+
+    const completedKey = `stripe_kyc_${user.uid}_${userType}_completed`;
+    if (sessionStorage.getItem(completedKey) === "true") return;
+
+    try {
+      const functions = getFunctions(undefined, "europe-west1");
+      const checkStatus = httpsCallable(functions, "checkStripeAccountStatus");
+      const result = await checkStatus({ userType });
+      const data = result.data as {
+        kycCompleted: boolean;
+        detailsSubmitted: boolean;
+        chargesEnabled: boolean;
+      };
+
+      if (data.kycCompleted) {
+        dashboardLog.stripe('Polling detected KYC completion', { userId: user.uid });
+        sessionStorage.setItem(completedKey, "true");
+        setIsKycComplete(true);
+        setTimeout(() => onComplete?.(), 100);
+      }
+    } catch (err) {
+      // Silent fail for polling - don't spam errors
+      if (import.meta.env.DEV) {
+        console.log("[StripeKYC] Polling check failed (silent):", err);
+      }
+    }
+  }, [user?.uid, userType, isKycComplete, loading, error, onComplete]);
+
+  // ✅ P0 FIX: Start polling when Stripe form is shown
+  useEffect(() => {
+    // Only poll when we have the Stripe form visible (stripeConnectInstance exists)
+    if (!stripeConnectInstance || isKycComplete || error) return;
+
+    dashboardLog.stripe('Starting KYC polling fallback', { interval: KYC_POLLING_INTERVAL_MS });
+
+    const pollInterval = setInterval(checkKycStatus, KYC_POLLING_INTERVAL_MS);
+
+    return () => {
+      clearInterval(pollInterval);
+      dashboardLog.stripe('Stopped KYC polling');
+    };
+  }, [stripeConnectInstance, isKycComplete, error, checkKycStatus]);
 
   // ✅ Show loading state while checking
   // P0 FIX: Added min-h-[200px] to prevent layout jumps during state transitions

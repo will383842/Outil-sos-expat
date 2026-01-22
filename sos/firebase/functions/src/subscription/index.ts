@@ -1578,12 +1578,29 @@ export const processAiCall = functions
   });
 
 // ============================================================================
-// STRIPE WEBHOOKS
+// STRIPE WEBHOOKS - DEPRECATED
+// ============================================================================
+// P0 FIX: This webhook is DISABLED to avoid conflict with the main stripeWebhook in index.ts (line 1814)
+// The main webhook handles ALL Stripe events including subscriptions.
+// This duplicate webhook was causing:
+// - 684 "other errors"
+// - 6 HTTP 503 errors
+// - 1 timeout
+// Because it uses SDK v1 without proper secrets configuration (process.env vs Firebase Secrets)
+//
+// DO NOT RE-ENABLE THIS WEBHOOK. All subscription events are handled by the main webhook.
 // ============================================================================
 
-export const stripeWebhook = functions
+// DISABLED: export const stripeWebhook = functions
+export const _stripeWebhook_DISABLED = functions
   .region('europe-west1')
   .https.onRequest(async (req, res) => {
+    // P0 FIX: This function is disabled - returning 410 Gone
+    console.warn('[DEPRECATED] subscription/stripeWebhook called but is disabled. Use main stripeWebhook instead.');
+    res.status(410).send('This webhook endpoint is deprecated. Use the main stripeWebhook endpoint.');
+    return;
+
+    // ORIGINAL CODE BELOW (kept for reference, never executed)
     // SECURITY: Validate webhook secret is configured
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
     if (!webhookSecret) {

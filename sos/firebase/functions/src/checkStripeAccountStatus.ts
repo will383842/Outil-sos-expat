@@ -110,75 +110,57 @@ export const checkStripeAccountStatus = onCall<{
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     };
 
-    // Update type-specific collection
-    await admin
-      .firestore()
-      .collection(collectionName)
-      .doc(userId)
-      .update(updateData);
-
     // P0 FIX: ALWAYS update users collection (for Dashboard) - not just when complete
     // This ensures the Dashboard always has the latest KYC status
     const kycStatus = isComplete ? "completed" :
                       account.details_submitted ? "in_progress" : "not_started";
 
-    await admin
-      .firestore()
-      .collection("users")
-      .doc(userId)
-      .update({
-        kycCompleted: isComplete,
-        kycStatus: kycStatus,
-        stripeOnboardingComplete: isComplete,
+    // ✅ P0 FIX: Use atomic batch write for all updates
+    // This ensures data consistency across all 3 collections
+    const batch = admin.firestore().batch();
+
+    // Update type-specific collection (lawyers/expats)
+    const typeSpecificRef = admin.firestore().collection(collectionName).doc(userId);
+    batch.update(typeSpecificRef, updateData);
+
+    // Update users collection
+    const usersRef = admin.firestore().collection("users").doc(userId);
+    batch.update(usersRef, {
+      kycCompleted: isComplete,
+      kycStatus: kycStatus,
+      stripeOnboardingComplete: isComplete,
+      chargesEnabled: account.charges_enabled || false,
+      payoutsEnabled: account.payouts_enabled || false,
+      // P0 FIX: Also store intermediate status for Dashboard visibility
+      stripeAccountStatus: {
+        detailsSubmitted: account.details_submitted || false,
         chargesEnabled: account.charges_enabled || false,
         payoutsEnabled: account.payouts_enabled || false,
-        // P0 FIX: Also store intermediate status for Dashboard visibility
-        stripeAccountStatus: {
-          detailsSubmitted: account.details_submitted || false,
-          chargesEnabled: account.charges_enabled || false,
-          payoutsEnabled: account.payouts_enabled || false,
-          requirementsCurrentlyDue: currentlyDue,
-          lastChecked: admin.firestore.FieldValue.serverTimestamp(),
-        },
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
+        requirementsCurrentlyDue: currentlyDue,
+        lastChecked: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
 
     // Update sos_profiles collection when KYC is complete
     if (isComplete) {
-      const sosProfileRef = admin
-        .firestore()
-        .collection("sos_profiles")
-        .doc(userId);
-      const sosProfileDoc = await sosProfileRef.get();
-
-      if (sosProfileDoc.exists) {
-        await sosProfileRef.update({
-          stripeAccountId: accountId,
-          isApproved: true,
-          isVisible: true,
-          kycCompleted: true,
-          kycCompletedAt: admin.firestore.FieldValue.serverTimestamp(),
-          chargesEnabled: account.charges_enabled || false,
-          payoutsEnabled: account.payouts_enabled || false,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-        console.log(`✅ Updated sos_profiles with stripeAccountId - ${userType} now visible and ready for payments`);
-      } else {
-        // If sos_profiles doc doesn't exist yet, create it with minimal data
-        await sosProfileRef.set({
-          stripeAccountId: accountId,
-          kycCompleted: true,
-          kycCompletedAt: admin.firestore.FieldValue.serverTimestamp(),
-          isApproved: true,
-          isVisible: true,
-          chargesEnabled: account.charges_enabled || false,
-          payoutsEnabled: account.payouts_enabled || false,
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        }, { merge: true });
-        console.log(`✅ Created sos_profiles entry with stripeAccountId for ${userType}`);
-      }
+      const sosProfileRef = admin.firestore().collection("sos_profiles").doc(userId);
+      // Use set with merge to handle both existing and non-existing docs
+      batch.set(sosProfileRef, {
+        stripeAccountId: accountId,
+        isApproved: true,
+        isVisible: true,
+        kycCompleted: true,
+        kycCompletedAt: admin.firestore.FieldValue.serverTimestamp(),
+        chargesEnabled: account.charges_enabled || false,
+        payoutsEnabled: account.payouts_enabled || false,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
     }
+
+    // Commit all updates atomically
+    await batch.commit();
+    console.log(`✅ [ATOMIC] Updated KYC status for ${userType} (${isComplete ? "complete" : "incomplete"})`);
 
     console.log(isComplete ? "✅ KYC Complete" : "⏳ KYC Incomplete");
 
@@ -215,23 +197,25 @@ export const checkStripeAccountStatus = onCall<{
       // Clean up the stale stripeAccountId from Firestore
       const collectionName = userType === "lawyer" ? "lawyers" : "expats";
       try {
-        await admin.firestore().collection(collectionName).doc(userId).update({
+        // ✅ P0 FIX: Use atomic batch for cleanup to ensure consistency
+        const cleanupBatch = admin.firestore().batch();
+        const cleanupData = {
           stripeAccountId: admin.firestore.FieldValue.delete(),
           kycStatus: "not_started",
           stripeOnboardingComplete: false,
           chargesEnabled: false,
           payoutsEnabled: false,
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-        await admin.firestore().collection("users").doc(userId).update({
-          stripeAccountId: admin.firestore.FieldValue.delete(),
-          kycStatus: "not_started",
-          stripeOnboardingComplete: false,
-          chargesEnabled: false,
-          payoutsEnabled: false,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-        console.log(`✅ Cleaned up stale Stripe account data for ${userId}`);
+        };
+
+        const typeSpecificRef = admin.firestore().collection(collectionName).doc(userId);
+        cleanupBatch.update(typeSpecificRef, cleanupData);
+
+        const usersRef = admin.firestore().collection("users").doc(userId);
+        cleanupBatch.update(usersRef, cleanupData);
+
+        await cleanupBatch.commit();
+        console.log(`✅ [ATOMIC] Cleaned up stale Stripe account data for ${userId}`);
       } catch (cleanupError) {
         console.error("Failed to cleanup stale data:", cleanupError);
       }

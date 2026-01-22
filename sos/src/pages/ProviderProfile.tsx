@@ -1546,20 +1546,19 @@ const ProviderProfile: React.FC = () => {
     };
   }, [realProviderId]);
 
-  // P0 FIX: Vérifier availability ET busyReason pour cohérence avec ProfileCards
-  // Cela évite les faux positifs si busyReason reste coincé après un appel terminé
+  // FIX: Cohérence avec ProfileCards - utiliser SEULEMENT availability === 'busy'
+  // ProfileCards affiche orange quand availability === 'busy', sans vérifier busyReason
+  // ProviderProfile doit faire pareil pour éviter les incohérences d'affichage
   useEffect(() => {
     if (!provider) {
       setIsOnCall(false);
       return;
     }
-    // Le prestataire est considéré en appel SEULEMENT si:
-    // 1. availability === 'busy' (vérifié par ProfileCards)
-    // 2. ET busyReason === 'in_call' (raison spécifique)
-    // Cela assure la cohérence entre ProfileCards et ProviderProfile
-    const isTrulyOnCall = provider.availability === 'busy' && provider.busyReason === 'in_call';
-    setIsOnCall(isTrulyOnCall);
-  }, [provider?.availability, provider?.busyReason]);
+    // Le prestataire est considéré occupé si availability === 'busy'
+    // Cela correspond exactement à la logique de ProfileCards (ligne 445-446)
+    const isBusy = provider.availability === 'busy';
+    setIsOnCall(isBusy);
+  }, [provider?.availability]);
 
   useEffect(() => {
     if (realProviderId && provider) {
@@ -2429,22 +2428,26 @@ const ProviderProfile: React.FC = () => {
                         loading="eager"
                       />
                     </div>
-                    {/* Online status indicator */}
+                    {/* Online status indicator - cohérent avec ProfileCards */}
                     <div
                       className={`absolute -bottom-1 -right-1 w-7 h-7 rounded-full border-4 border-gray-900 transition-all duration-500 ${
-                        onlineStatus.isOnline ? "bg-green-500" : "bg-red-500"
+                        isOnCall ? "bg-orange-500" : onlineStatus.isOnline ? "bg-green-500" : "bg-red-500"
                       }`}
                       role="status"
-                      aria-label={onlineStatus.isOnline
-                        ? intl.formatMessage({ id: "providerProfile.online" })
-                        : intl.formatMessage({ id: "providerProfile.offline" })
+                      aria-label={isOnCall
+                        ? intl.formatMessage({ id: "providerProfile.alreadyOnCall" })
+                        : onlineStatus.isOnline
+                          ? intl.formatMessage({ id: "providerProfile.online" })
+                          : intl.formatMessage({ id: "providerProfile.offline" })
                       }
-                      title={onlineStatus.isOnline
-                        ? intl.formatMessage({ id: "providerProfile.online" })
-                        : intl.formatMessage({ id: "providerProfile.offline" })
+                      title={isOnCall
+                        ? intl.formatMessage({ id: "providerProfile.alreadyOnCall" })
+                        : onlineStatus.isOnline
+                          ? intl.formatMessage({ id: "providerProfile.online" })
+                          : intl.formatMessage({ id: "providerProfile.offline" })
                       }
                     >
-                      {onlineStatus.isOnline && (
+                      {onlineStatus.isOnline && !isOnCall && (
                         <span className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-75" aria-hidden="true"></span>
                       )}
                     </div>
@@ -2493,24 +2496,30 @@ const ProviderProfile: React.FC = () => {
                         </span>
                       )}
 
-                      {/* Badge statut en ligne */}
+                      {/* Badge statut en ligne - cohérent avec ProfileCards */}
                       <span
                         className={`px-3 py-1 rounded-full text-xs sm:text-sm font-bold transition-all duration-500 border ${
-                          onlineStatus.isOnline
-                            ? "bg-green-500/20 text-green-300 border-green-400/30 shadow-lg shadow-green-500/20"
-                            : "bg-red-500/20 text-red-300 border-red-400/30"
+                          isOnCall
+                            ? "bg-orange-500/20 text-orange-300 border-orange-400/30 shadow-lg shadow-orange-500/20"
+                            : onlineStatus.isOnline
+                              ? "bg-green-500/20 text-green-300 border-green-400/30 shadow-lg shadow-green-500/20"
+                              : "bg-red-500/20 text-red-300 border-red-400/30"
                         }`}
                         role="status"
-                        aria-label={onlineStatus.isOnline
-                          ? intl.formatMessage({ id: "providerProfile.online" })
-                          : intl.formatMessage({ id: "providerProfile.offline" })}
+                        aria-label={isOnCall
+                          ? intl.formatMessage({ id: "providerProfile.alreadyOnCall" })
+                          : onlineStatus.isOnline
+                            ? intl.formatMessage({ id: "providerProfile.online" })
+                            : intl.formatMessage({ id: "providerProfile.offline" })}
                       >
                         <span aria-hidden="true">
-                          {onlineStatus.isOnline ? "🟢 " : "🔴 "}
+                          {isOnCall ? "📞 " : onlineStatus.isOnline ? "🟢 " : "🔴 "}
                         </span>
-                        {onlineStatus.isOnline
-                          ? intl.formatMessage({ id: "providerProfile.online" })
-                          : intl.formatMessage({ id: "providerProfile.offline" })}
+                        {isOnCall
+                          ? intl.formatMessage({ id: "providerProfile.alreadyOnCall" })
+                          : onlineStatus.isOnline
+                            ? intl.formatMessage({ id: "providerProfile.online" })
+                            : intl.formatMessage({ id: "providerProfile.offline" })}
                       </span>
                     </div>
 
@@ -3230,34 +3239,40 @@ const ProviderProfile: React.FC = () => {
                         </div>
                       )}
                       
-                      {/* Statut en ligne avec animation */}
+                      {/* Statut en ligne avec animation - cohérent avec ProfileCards */}
                       <div
                         className={`flex items-center gap-2 p-3 rounded-xl mt-2 transition-all ${
-                          onlineStatus.isOnline
-                            ? "bg-green-50 border border-green-200"
-                            : "bg-gray-50 border border-gray-200"
+                          isOnCall
+                            ? "bg-orange-50 border border-orange-200"
+                            : onlineStatus.isOnline
+                              ? "bg-green-50 border border-green-200"
+                              : "bg-gray-50 border border-gray-200"
                         }`}
                         role="status"
-                        aria-label={onlineStatus.isOnline
-                          ? intl.formatMessage({ id: "providerProfile.onlineNow" })
-                          : intl.formatMessage({ id: "providerProfile.offline" })
+                        aria-label={isOnCall
+                          ? intl.formatMessage({ id: "providerProfile.alreadyOnCall" })
+                          : onlineStatus.isOnline
+                            ? intl.formatMessage({ id: "providerProfile.onlineNow" })
+                            : intl.formatMessage({ id: "providerProfile.offline" })
                         }
                       >
                         <div
                           className={`relative w-5 h-5 rounded-full flex items-center justify-center ${
-                            onlineStatus.isOnline ? "bg-green-500" : "bg-gray-400"
+                            isOnCall ? "bg-orange-500" : onlineStatus.isOnline ? "bg-green-500" : "bg-gray-400"
                           }`}
                           aria-hidden="true"
                         >
-                          {onlineStatus.isOnline && (
+                          {onlineStatus.isOnline && !isOnCall && (
                             <div className="absolute w-5 h-5 rounded-full bg-green-500 animate-ping opacity-75" />
                           )}
                           <div className="w-2 h-2 bg-white rounded-full relative z-10" />
                         </div>
                         <span className={`font-semibold text-sm ${
-                          onlineStatus.isOnline ? "text-green-700" : "text-gray-600"
+                          isOnCall ? "text-orange-700" : onlineStatus.isOnline ? "text-green-700" : "text-gray-600"
                         }`}>
-                          {onlineStatus.isOnline ? (
+                          {isOnCall ? (
+                            <FormattedMessage id="providerProfile.alreadyOnCall" />
+                          ) : onlineStatus.isOnline ? (
                             <FormattedMessage id="providerProfile.onlineNow" />
                           ) : (
                             <FormattedMessage id="providerProfile.offline" />

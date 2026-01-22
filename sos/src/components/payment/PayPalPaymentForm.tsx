@@ -10,8 +10,7 @@ import {
   usePayPalCardFields,
   usePayPalScriptReducer,
 } from "@paypal/react-paypal-js";
-import { httpsCallable } from "firebase/functions";
-import { functions } from "../../config/firebase";
+import { auth } from "../../config/firebase";
 import { Loader2, AlertCircle, CheckCircle, CreditCard, Lock, ShieldCheck } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { usePricingConfig } from "../../services/pricingService";
@@ -203,58 +202,67 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   const providerAmount = pricingConfig?.providerAmount ?? Math.round((amount - platformFee) * 100) / 100;
 
   // Création de l'ordre PayPal (utilisé par les deux méthodes)
+  // Utilise la version HTTP de la fonction pour éviter les problèmes CORS
   const createOrder = useCallback(async (): Promise<string> => {
     try {
       setIsProcessing(true);
       setPaymentStatus("processing");
+
+      // Obtenir le token d'authentification Firebase
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        throw new Error("User not authenticated");
+      }
+      const idToken = await currentUser.getIdToken();
 
       // Collect tracking data for Meta CAPI attribution
       const metaIds = getStoredMetaIdentifiers();
       const trafficSource = getCurrentTrafficSource();
       const pixelEventId = getOrCreateEventId(`purchase_${callSessionId}`, 'purchase');
 
-      const createPayPalOrder = httpsCallable<
+      // Appeler la fonction HTTP au lieu de la fonction callable
+      const response = await fetch(
+        "https://europe-west1-sos-urgently-ac307.cloudfunctions.net/createPayPalOrderHttp",
         {
-          callSessionId: string;
-          amount: number;
-          providerAmount: number;
-          platformFee: number;
-          currency: string;
-          providerId: string;
-          clientId: string;
-          description?: string;
-          serviceType?: string;
-          metadata?: Record<string, string>;
-        },
-        CreateOrderResponse
-      >(functions, "createPayPalOrder");
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${idToken}`,
+          },
+          body: JSON.stringify({
+            callSessionId,
+            amount,
+            providerAmount,
+            platformFee,
+            currency: currency.toUpperCase(),
+            providerId,
+            clientId,
+            description: description || `Appel SOS-Expat - Session ${callSessionId}`,
+            serviceType,
+            metadata: {
+              ...(metaIds.fbp && { fbp: metaIds.fbp }),
+              ...(metaIds.fbc && { fbc: metaIds.fbc }),
+              pixelEventId,
+              ...(trafficSource?.utm_source && { utm_source: trafficSource.utm_source }),
+              ...(trafficSource?.utm_medium && { utm_medium: trafficSource.utm_medium }),
+              ...(trafficSource?.utm_campaign && { utm_campaign: trafficSource.utm_campaign }),
+              ...(trafficSource?.utm_content && { utm_content: trafficSource.utm_content }),
+              ...(trafficSource?.utm_term && { utm_term: trafficSource.utm_term }),
+              ...(trafficSource?.gclid && { gclid: trafficSource.gclid }),
+              ...(trafficSource?.ttclid && { ttclid: trafficSource.ttclid }),
+            },
+          }),
+        }
+      );
 
-      const result = await createPayPalOrder({
-        callSessionId,
-        amount,
-        providerAmount,
-        platformFee,
-        currency: currency.toUpperCase(),
-        providerId,
-        clientId,
-        description: description || `Appel SOS-Expat - Session ${callSessionId}`,
-        serviceType,
-        metadata: {
-          ...(metaIds.fbp && { fbp: metaIds.fbp }),
-          ...(metaIds.fbc && { fbc: metaIds.fbc }),
-          pixelEventId,
-          ...(trafficSource?.utm_source && { utm_source: trafficSource.utm_source }),
-          ...(trafficSource?.utm_medium && { utm_medium: trafficSource.utm_medium }),
-          ...(trafficSource?.utm_campaign && { utm_campaign: trafficSource.utm_campaign }),
-          ...(trafficSource?.utm_content && { utm_content: trafficSource.utm_content }),
-          ...(trafficSource?.utm_term && { utm_term: trafficSource.utm_term }),
-          ...(trafficSource?.gclid && { gclid: trafficSource.gclid }),
-          ...(trafficSource?.ttclid && { ttclid: trafficSource.ttclid }),
-        },
-      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      }
 
-      currentOrderIdRef.current = result.data.orderId;
-      return result.data.orderId;
+      const result: CreateOrderResponse & { success: boolean } = await response.json();
+      currentOrderIdRef.current = result.orderId;
+      return result.orderId;
     } catch (error) {
       if (import.meta.env.DEV) {
         console.error("PayPal createOrder error:", error);
@@ -267,25 +275,46 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   }, [amount, currency, providerId, callSessionId, clientId, description, serviceType, platformFee, providerAmount]);
 
   // Capture après approbation
+  // Utilise la version HTTP de la fonction pour éviter les problèmes CORS
   const captureOrder = useCallback(async (orderId: string, payerId?: string): Promise<void> => {
     try {
-      const capturePayPalOrder = httpsCallable<
-        { orderId: string; callSessionId: string },
-        CaptureOrderResponse
-      >(functions, "capturePayPalOrder");
+      // Obtenir le token d'authentification Firebase
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        throw new Error("User not authenticated");
+      }
+      const idToken = await currentUser.getIdToken();
 
-      const result = await capturePayPalOrder({
-        orderId,
-        callSessionId,
-      });
+      // Appeler la fonction HTTP au lieu de la fonction callable
+      const response = await fetch(
+        "https://europe-west1-sos-urgently-ac307.cloudfunctions.net/capturePayPalOrderHttp",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${idToken}`,
+          },
+          body: JSON.stringify({
+            orderId,
+            callSessionId,
+          }),
+        }
+      );
 
-      if (result.data.success) {
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      }
+
+      const result: CaptureOrderResponse = await response.json();
+
+      if (result.success) {
         setPaymentStatus("success");
         onSuccess({
           orderId,
           payerId: payerId || "",
-          status: result.data.status,
-          captureId: result.data.captureId,
+          status: result.status,
+          captureId: result.captureId,
         });
       } else {
         throw new Error("Capture PayPal échouée");

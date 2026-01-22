@@ -69,9 +69,6 @@ export const setProviderOffline = onCall(FUNCTION_OPTIONS, async (request) => {
       );
     }
 
-    // Mettre à jour les deux collections en batch
-    const batch = getDb().batch();
-
     // ✅ P1 FIX: Nettoyer tous les champs de statut d'appel pour éviter les états incohérents
     const offlineUpdate = {
       isOnline: false,
@@ -85,13 +82,23 @@ export const setProviderOffline = onCall(FUNCTION_OPTIONS, async (request) => {
       busyWith: admin.firestore.FieldValue.delete(),
     };
 
-    // Mettre à jour sos_profiles
+    // ✅ FIX: Vérifier l'existence des documents avant de les mettre à jour
+    // batch.update() échoue si le document n'existe pas
     const profileRef = getDb().collection('sos_profiles').doc(userId);
-    batch.update(profileRef, offlineUpdate);
+    const profileDoc = await profileRef.get();
 
-    // Mettre à jour users
+    const batch = getDb().batch();
+
+    // Mettre à jour users (on sait qu'il existe car on vient de le lire)
     const userRef = getDb().collection('users').doc(userId);
     batch.update(userRef, offlineUpdate);
+
+    // Mettre à jour sos_profiles SEULEMENT s'il existe
+    if (profileDoc.exists) {
+      batch.update(profileRef, offlineUpdate);
+    } else {
+      console.warn(`[setProviderOffline] sos_profiles document not found for user ${userId}, skipping profile update`);
+    }
 
     await batch.commit();
 

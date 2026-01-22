@@ -1219,9 +1219,17 @@ export const bulkDeleteProviders = onCall(BULK_FUNCTION_CONFIG, async (req) => {
   } as BulkActionResult;
 });
 
+// ============================================================================
+// BULK REVERSE ACTIONS - DISABLED TO REDUCE CLOUD RUN SERVICES
+// ============================================================================
+// These can be re-enabled if needed. For now, admins can unhide/unblock/unsuspend
+// providers one by one using the individual functions above.
+
 /**
  * Bulk unhide multiple providers
+ * DISABLED: Use unhideProvider for individual operations
  */
+/*
 export const bulkUnhideProviders = onCall(BULK_FUNCTION_CONFIG, async (req) => {
   const adminUid = assertAdmin(req);
   const { providerIds } = req.data || {};
@@ -1287,9 +1295,7 @@ export const bulkUnhideProviders = onCall(BULK_FUNCTION_CONFIG, async (req) => {
   } as BulkActionResult;
 });
 
-/**
- * Bulk unblock multiple providers
- */
+// Bulk unblock multiple providers - DISABLED
 export const bulkUnblockProviders = onCall(BULK_FUNCTION_CONFIG, async (req) => {
   const adminUid = assertAdmin(req);
   const { providerIds } = req.data || {};
@@ -1356,9 +1362,7 @@ export const bulkUnblockProviders = onCall(BULK_FUNCTION_CONFIG, async (req) => 
   } as BulkActionResult;
 });
 
-/**
- * Bulk unsuspend multiple providers
- */
+// Bulk unsuspend multiple providers - DISABLED
 export const bulkUnsuspendProviders = onCall(BULK_FUNCTION_CONFIG, async (req) => {
   const adminUid = assertAdmin(req);
   const { providerIds } = req.data || {};
@@ -1425,6 +1429,7 @@ export const bulkUnsuspendProviders = onCall(BULK_FUNCTION_CONFIG, async (req) =
     results,
   } as BulkActionResult;
 });
+*/
 
 // ============================================================================
 // UTILITY FUNCTIONS

@@ -547,11 +547,11 @@ export const IaMultiProvidersTab: React.FC = () => {
             updatedAt: now
           };
 
-      // Update both users and sos_profiles collections
+      // Update sos_profiles (primary) and users (optional - may not exist for AAA profiles)
       await Promise.all([
-        updateDoc(doc(db, 'users', providerId), updateData),
-        updateDoc(doc(db, 'sos_profiles', providerId), updateData).catch(() => {
-          // Profile might not exist, ignore
+        updateDoc(doc(db, 'sos_profiles', providerId), updateData),
+        updateDoc(doc(db, 'users', providerId), updateData).catch(() => {
+          // User document might not exist for AAA profiles, ignore
         })
       ]);
 
@@ -592,11 +592,11 @@ export const IaMultiProvidersTab: React.FC = () => {
         updatedAt: serverTimestamp(),
       };
 
-      // Update both users and sos_profiles collections
+      // Update sos_profiles (primary) and users (optional - may not exist for AAA profiles)
       await Promise.all([
-        updateDoc(doc(db, 'users', providerId), updateData),
-        updateDoc(doc(db, 'sos_profiles', providerId), updateData).catch(() => {
-          // Profile might not exist, ignore
+        updateDoc(doc(db, 'sos_profiles', providerId), updateData),
+        updateDoc(doc(db, 'users', providerId), updateData).catch(() => {
+          // User document might not exist for AAA profiles, ignore
         })
       ]);
 
@@ -648,10 +648,11 @@ export const IaMultiProvidersTab: React.FC = () => {
               updatedAt: now,
             };
 
+        // Update sos_profiles (primary) and users (optional - may not exist for AAA profiles)
         await Promise.all([
-          updateDoc(doc(db, 'users', provider.id), updateData),
-          updateDoc(doc(db, 'sos_profiles', provider.id), updateData).catch(() => {
-            // Profile might not exist, ignore
+          updateDoc(doc(db, 'sos_profiles', provider.id), updateData),
+          updateDoc(doc(db, 'users', provider.id), updateData).catch(() => {
+            // User document might not exist for AAA profiles, ignore
           })
         ]);
       });
@@ -676,6 +677,67 @@ export const IaMultiProvidersTab: React.FC = () => {
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error('Error setting all providers status:', err);
+      setError('Erreur lors du changement de statut');
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  // 🆕 Toggle individual provider online/offline
+  const toggleProviderOnline = async (providerId: string, currentlyOnline: boolean) => {
+    setSaving(providerId);
+    const now = serverTimestamp();
+    const goOnline = !currentlyOnline;
+
+    try {
+      const updateData = goOnline
+        ? {
+            availability: 'available',
+            isOnline: true,
+            lastActivity: now,
+            busyReason: null,
+            busySince: null,
+            busyBySibling: null,
+            busySiblingProviderId: null,
+            lastStatusChange: now,
+            updatedAt: now,
+          }
+        : {
+            availability: 'offline',
+            isOnline: false,
+            busyReason: 'offline',
+            lastStatusChange: now,
+            updatedAt: now,
+          };
+
+      // Update sos_profiles (primary) and users (optional - may not exist for AAA profiles)
+      await Promise.all([
+        updateDoc(doc(db, 'sos_profiles', providerId), updateData),
+        updateDoc(doc(db, 'users', providerId), updateData).catch(() => {
+          // User document might not exist for AAA profiles, ignore
+        })
+      ]);
+
+      // Update local state
+      setAccounts(prev => prev.map(a => ({
+        ...a,
+        providers: a.providers.map(p => {
+          if (p.id !== providerId) return p;
+          return {
+            ...p,
+            availability: goOnline ? 'available' : 'offline',
+            isOnline: goOnline,
+            busyReason: goOnline ? undefined : 'offline',
+            busyBySibling: false,
+            busySiblingProviderId: undefined,
+          };
+        })
+      })));
+
+      setSuccess(`Prestataire ${goOnline ? 'mis en ligne' : 'mis hors ligne'}`);
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      console.error('Error toggling provider online status:', err);
       setError('Erreur lors du changement de statut');
     } finally {
       setSaving(null);
@@ -1202,27 +1264,60 @@ export const IaMultiProvidersTab: React.FC = () => {
                           </select>
                         </div>
 
-                        {/* 🆕 Force Status Buttons */}
-                        {provider.availability === 'busy' ? (
-                          <button
-                            onClick={() => forceProviderStatus(provider.id, 'available')}
-                            disabled={saving === provider.id}
-                            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg hover:bg-emerald-200 dark:hover:bg-emerald-900/50 disabled:opacity-50"
-                            title="Forcer le statut disponible"
-                          >
-                            <PhoneOff className="w-3.5 h-3.5" />
-                            Libérer
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => forceProviderStatus(provider.id, 'busy', 'manually_disabled')}
-                            disabled={saving === provider.id}
-                            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900/30 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 disabled:opacity-50"
-                            title="Forcer le statut occupé"
-                          >
-                            <Phone className="w-3.5 h-3.5" />
-                            Bloquer
-                          </button>
+                        {/* 🆕 Toggle Online/Offline - individual control */}
+                        <button
+                          onClick={() => toggleProviderOnline(provider.id, provider.isOnline && provider.availability !== 'offline')}
+                          disabled={saving === provider.id}
+                          className={cn(
+                            "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50",
+                            provider.isOnline && provider.availability !== 'offline'
+                              ? "bg-green-500 focus:ring-green-500"
+                              : "bg-gray-300 dark:bg-gray-600 focus:ring-gray-500"
+                          )}
+                          title={provider.isOnline && provider.availability !== 'offline' ? "Mettre hors ligne" : "Mettre en ligne"}
+                        >
+                          <span
+                            className={cn(
+                              "inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm",
+                              provider.isOnline && provider.availability !== 'offline' ? "translate-x-6" : "translate-x-1"
+                            )}
+                          />
+                        </button>
+                        <span className={cn(
+                          "text-xs font-medium min-w-[50px]",
+                          provider.isOnline && provider.availability !== 'offline'
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-gray-500 dark:text-gray-400"
+                        )}>
+                          {provider.isOnline && provider.availability !== 'offline' ? 'En ligne' : 'Hors ligne'}
+                        </span>
+
+                        {/* Separator */}
+                        <div className="h-6 w-px bg-gray-200 dark:bg-gray-700 mx-1" />
+
+                        {/* 🆕 Force Status Buttons (for busy/available when online) */}
+                        {provider.isOnline && provider.availability !== 'offline' && (
+                          provider.availability === 'busy' ? (
+                            <button
+                              onClick={() => forceProviderStatus(provider.id, 'available')}
+                              disabled={saving === provider.id}
+                              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg hover:bg-emerald-200 dark:hover:bg-emerald-900/50 disabled:opacity-50"
+                              title="Forcer le statut disponible"
+                            >
+                              <PhoneOff className="w-3.5 h-3.5" />
+                              Libérer
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => forceProviderStatus(provider.id, 'busy', 'manually_disabled')}
+                              disabled={saving === provider.id}
+                              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900/30 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 disabled:opacity-50"
+                              title="Forcer le statut occupé"
+                            >
+                              <Phone className="w-3.5 h-3.5" />
+                              Bloquer
+                            </button>
+                          )
                         )}
 
                         {!provider.isActive && (
