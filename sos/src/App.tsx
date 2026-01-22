@@ -254,7 +254,7 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/dashboard/subscription/plans", component: PlansPage, protected: true, role: ['lawyer', 'expat', 'admin'], translated: "dashboard-subscription-plans" },
   { path: "/dashboard/subscription/success", component: SubscriptionSuccessPage, protected: true, role: ['lawyer', 'expat', 'admin'], translated: "dashboard-subscription-success" },
   // KYC Return Handler - Stripe Connect onboarding callback
-  { path: "/dashboard/kyc", component: KycReturn, protected: true, role: ['lawyer', 'expat'], translated: "dashboard-kyc" },
+  { path: "/dashboard/kyc", component: KycReturn, protected: true, role: ['lawyer', 'expat'] },
   // Conversations History (Provider Tool)
   { path: "/dashboard/conversations", component: ConversationHistory, protected: true, role: ['lawyer', 'expat', 'admin'], translated: "dashboard-conversations" },
 ];

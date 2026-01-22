@@ -47,10 +47,20 @@ export default function KycReturn() {
 
     const checkKycStatus = async () => {
       try {
+        // Validate user role - must be a provider (lawyer or expat)
+        if (!user.role || !["lawyer", "expat"].includes(user.role)) {
+          setErrorMessage(intl.formatMessage({
+            id: "kyc.return.error.invalidRole",
+            defaultMessage: "Seuls les prestataires peuvent configurer un compte Stripe."
+          }));
+          setStatus("error");
+          return;
+        }
+
         const functions = getFunctions(undefined, "europe-west1");
         const checkStatus = httpsCallable(functions, "checkStripeAccountStatus");
 
-        const userType = user.role === "lawyer" ? "lawyer" : "expat";
+        const userType = user.role as "lawyer" | "expat";
         const result = await checkStatus({ userType });
 
         const data = result.data as {
@@ -135,7 +145,7 @@ export default function KycReturn() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <LoadingSpinner size="large" color="indigo" />
+          <LoadingSpinner size="large" color="blue" />
           <p className="mt-4 text-gray-600">
             <FormattedMessage
               id="kyc.return.checking"

@@ -310,8 +310,14 @@ export default function StripeKYC({ onComplete, userType }: Props) {
   };
 
   useEffect(() => {
+    // Handle unauthenticated users with explicit error
     if (!user?.uid) {
       setLoading(false);
+      setError({
+        message: intl.formatMessage({ id: 'stripe.kyc.error.notAuthenticated', defaultMessage: 'Vous devez être connecté pour configurer votre compte Stripe.' }),
+        canRetry: false,
+        actionHint: intl.formatMessage({ id: 'stripe.kyc.error.loginRequired', defaultMessage: 'Veuillez vous reconnecter.' })
+      });
       return;
     }
 
