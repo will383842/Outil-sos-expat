@@ -635,20 +635,7 @@ const CallCheckoutWrapper: React.FC = () => {
     );
   }
 
-  // ✅ CORRECTION: Debug final avant de passer à CallCheckout
-  if (import.meta.env.DEV && state.provider) {
-    console.log('🎯 Provider final avant CallCheckout:', {
-      id: state.provider.id,
-      name: state.provider.name,
-      phone: state.provider.phone,
-      phoneNumber: state.provider.phoneNumber,
-      telephone: state.provider.telephone,
-      role: state.provider.role,
-      type: state.provider.type
-    });
-  }
-
-  // Success — CallCheckout (✅ on ne passe plus de serviceData depuis le wrapper)
+  // Success — CallCheckout
   return (
     <CallCheckout
       selectedProvider={state.provider}

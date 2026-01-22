@@ -39,7 +39,7 @@ import {
   Loader2,
 } from "lucide-react";
 
-import { useForm, Controller, SubmitHandler } from "react-hook-form";
+import { useForm, Controller, SubmitHandler, useWatch } from "react-hook-form";
 
 import Layout from "../components/layout/Layout";
 import Button from "../components/common/Button";
@@ -1938,19 +1938,10 @@ const sanitizeInput = (input: string): string =>
   sanitizeText(input, { trim: true });
 
 /** ===== Page (RHF) ===== */
-// ============= DEBUG RENDER COUNTER =============
-let renderCount = 0;
-
 const BookingRequest: React.FC = () => {
-  // P0 DEBUG: Log component mount
-  renderCount++;
-  const renderTimestamp = Date.now();
-  console.log(`%c🔄 [BookingRequest] RENDER #${renderCount} at ${new Date().toISOString()}`, 'background: #ff9800; color: black; padding: 2px 6px; border-radius: 3px; font-weight: bold;');
-  console.log("🟠 [BookingRequest] Component MOUNTED/RENDERED at:", window.location.pathname);
-
   const intl = useIntl();
   const { providerId } = useParams<{ providerId: string }>();
-  const navigate = useLocaleNavigate(); // ✅ P0 UX FIX: Use locale-aware navigation
+  const navigate = useLocaleNavigate();
   const { user, isLoading: authLoading, login, loginWithGoogle, register } = useAuth();
   const { language } = useApp();
   const lang = (language as LangKey) || "fr";
@@ -1958,16 +1949,6 @@ const BookingRequest: React.FC = () => {
 
   const [provider, setProvider] = useState<Provider | null>(null);
   const [providerLoading, setProviderLoading] = useState<boolean>(true);
-
-  // ============= DEBUG: Log state on every render =============
-  console.log(`%c📊 [BookingRequest] STATE SNAPSHOT (render #${renderCount})`, 'background: #2196F3; color: white; padding: 2px 6px; border-radius: 3px;', {
-    providerId,
-    hasProvider: !!provider,
-    providerLoading,
-    authLoading,
-    hasUser: !!user,
-    language: lang,
-  });
 
   const { pricing } = usePricingConfig();
 
@@ -1980,17 +1961,14 @@ const BookingRequest: React.FC = () => {
   } | null>(null);
 
   useEffect(() => {
-    console.log('%c⚡ [BookingRequest] useEffect: PROMO LOAD (mount only)', 'background: #FF5722; color: white; padding: 2px 6px; border-radius: 3px;');
     try {
       const saved = sessionStorage.getItem("activePromoCode");
-      console.log('🎫 [BookingRequest] Promo from sessionStorage:', saved ? 'found' : 'not found');
       if (saved) {
         const promoData = JSON.parse(saved);
         setActivePromo(promoData);
-        console.log('🎫 [BookingRequest] Promo applied:', promoData);
       }
-    } catch (error) {
-      console.error("Error loading active promo:", error);
+    } catch {
+      // Ignore promo loading errors
     }
   }, []);
 
@@ -2019,66 +1997,23 @@ const BookingRequest: React.FC = () => {
     },
   });
 
-  const watched = watch();
-
-  // ============= DEBUG: Log form values and RHF state =============
-  console.log(`%c📝 [BookingRequest] FORM STATE (render #${renderCount})`, 'background: #9C27B0; color: white; padding: 2px 6px; border-radius: 3px;', {
-    formValues: {
-      firstName: watched.firstName,
-      lastName: watched.lastName,
-      currentCountry: watched.currentCountry,
-      title: watched.title?.substring(0, 20) + '...',
-      description: watched.description?.substring(0, 20) + '...',
-      clientPhone: watched.clientPhone,
-      acceptTerms: watched.acceptTerms,
-      clientLanguages: watched.clientLanguages,
-    },
-    errors: Object.keys(errors),
-    isSubmitting,
-  });
-
-  // DEBUG: Log whenever currentCountry changes to track any unexpected overrides
+  // P0 FIX: Use useWatch with specific fields to avoid re-renders from watch()
+  const watched = useWatch({ control });
   const watchedCountry = watch('currentCountry');
-  useEffect(() => {
-    console.log('%c🔴 [BookingRequest] currentCountry CHANGED', 'background: #f44336; color: white; padding: 2px 6px; border-radius: 3px;', {
-      newValue: watchedCountry,
-      timestamp: new Date().toISOString(),
-      stack: new Error().stack?.split('\n').slice(1, 5).join('\n'),
-    });
-  }, [watchedCountry]);
-
-  // DEBUG: Log the countries list on mount to verify it's generated correctly
-  useEffect(() => {
-    console.log('🟠 [BookingRequest] Countries list sample (first 5):', countries.slice(0, 5));
-    console.log('🟠 [BookingRequest] Countries list includes France:', countries.includes('France'));
-    console.log('🟠 [BookingRequest] Countries list includes Côte d\'Ivoire:', countries.includes('Côte d\'Ivoire'));
-    console.log('🟠 [BookingRequest] Total countries count:', countries.length);
-  }, []);
 
   const [languagesSpoken, setLanguagesSpoken] = useState<BookingLanguage[]>([]);
   const [hasLanguageMatchRealTime, setHasLanguageMatchRealTime] =
     useState(true);
   const [formError, setFormError] = useState("");
-  // P1-3 FIX: État pour le warning de langue au lieu du blocage
   const [showLangMismatchWarning, setShowLangMismatchWarning] = useState(false);
   const [langMismatchAcknowledged, setLangMismatchAcknowledged] = useState(false);
 
-  // ===== MOBILE WIZARD STATE (2026) =====
-  // Optimisé: 3 étapes seulement (pays + langues déjà connus du wizard initial)
+  // ===== MOBILE WIZARD STATE =====
   const isMobile = useMediaQuery("(max-width: 767px)");
   const [currentStep, setCurrentStep] = useState(1);
   const [animationDirection, setAnimationDirection] = useState<"forward" | "backward">("forward");
   const [providerExpanded, setProviderExpanded] = useState(false);
   const TOTAL_STEPS = 3;
-
-  // ============= DEBUG: Log wizard state =============
-  console.log(`%c🧙 [BookingRequest] WIZARD STATE (render #${renderCount})`, 'background: #4CAF50; color: white; padding: 2px 6px; border-radius: 3px;', {
-    isMobile,
-    currentStep,
-    animationDirection,
-    providerExpanded,
-    TOTAL_STEPS,
-  });
 
   // Step labels for accessibility and display (3 étapes optimisées)
   const stepLabels = useMemo(() => [
@@ -2097,60 +2032,7 @@ const BookingRequest: React.FC = () => {
   const refPhone = useRef<HTMLDivElement | null>(null);
   const refCGU = useRef<HTMLDivElement | null>(null);
 
-  // ============= DEBUG: Focus and Scroll Tracking =============
-  useEffect(() => {
-    const handleFocusIn = (e: FocusEvent) => {
-      const target = e.target as HTMLElement;
-      console.log('%c🎯 [BookingRequest] FOCUS IN', 'background: #00BCD4; color: white; padding: 2px 6px; border-radius: 3px;', {
-        tagName: target.tagName,
-        id: target.id,
-        name: (target as HTMLInputElement).name || 'N/A',
-        className: target.className?.substring(0, 50),
-      });
-    };
-
-    const handleFocusOut = (e: FocusEvent) => {
-      const target = e.target as HTMLElement;
-      console.log('%c🎯 [BookingRequest] FOCUS OUT', 'background: #607D8B; color: white; padding: 2px 6px; border-radius: 3px;', {
-        tagName: target.tagName,
-        id: target.id,
-        name: (target as HTMLInputElement).name || 'N/A',
-      });
-    };
-
-    const handleScroll = () => {
-      console.log('%c📜 [BookingRequest] SCROLL', 'background: #795548; color: white; padding: 2px 6px; border-radius: 3px;', {
-        scrollY: window.scrollY,
-        scrollX: window.scrollX,
-        timestamp: Date.now(),
-      });
-    };
-
-    // Throttled scroll logging
-    let scrollTimeout: NodeJS.Timeout | null = null;
-    const throttledScroll = () => {
-      if (!scrollTimeout) {
-        scrollTimeout = setTimeout(() => {
-          handleScroll();
-          scrollTimeout = null;
-        }, 200);
-      }
-    };
-
-    document.addEventListener('focusin', handleFocusIn);
-    document.addEventListener('focusout', handleFocusOut);
-    window.addEventListener('scroll', throttledScroll);
-
-    console.log('%c👁️ [BookingRequest] Focus/Scroll listeners ATTACHED', 'background: #009688; color: white; padding: 2px 6px; border-radius: 3px;');
-
-    return () => {
-      document.removeEventListener('focusin', handleFocusIn);
-      document.removeEventListener('focusout', handleFocusOut);
-      window.removeEventListener('scroll', throttledScroll);
-      if (scrollTimeout) clearTimeout(scrollTimeout);
-      console.log('%c👁️ [BookingRequest] Focus/Scroll listeners DETACHED', 'background: #f44336; color: white; padding: 2px 6px; border-radius: 3px;');
-    };
-  }, []);
+  // DEBUG: Focus and Scroll Tracking - removed for production (was causing unnecessary event listeners)
 
   // Flag pour éviter le traitement multiple des données wizard
   const wizardDataProcessedRef = useRef(false);
@@ -2171,19 +2053,14 @@ const BookingRequest: React.FC = () => {
 
   // Rediriger vers login si non connecté
   useEffect(() => {
-    console.log('%c⚡ [BookingRequest] useEffect: AUTH CHECK', 'background: #FF5722; color: white; padding: 2px 6px; border-radius: 3px;', {
-      authLoading,
-      user: user ? user.uid : null,
-      providerId,
-      pathname: window.location.pathname,
-      timestamp: new Date().toISOString(),
-    });
-    // Email-first auth: NO REDIRECT - show inline auth form instead
-    if (!authLoading && !user) {
-      console.log("🟠 [BookingRequest] NOT authenticated - showing email-first auth form");
-    } else if (!authLoading && user) {
-      console.log("🟢 [BookingRequest] User IS authenticated - showing booking form");
+    if (import.meta.env.DEV) {
+      console.log('⚡ [BookingRequest] useEffect: AUTH CHECK', {
+        authLoading,
+        user: user ? user.uid : null,
+        providerId,
+      });
     }
+    // Email-first auth: NO REDIRECT - show inline auth form instead
   }, [user, authLoading, providerId]);
 
   // Lecture provider depuis sessionStorage
@@ -2214,22 +2091,20 @@ const BookingRequest: React.FC = () => {
   useEffect(() => {
     // P0 FIX: Skip if already loaded (prevents re-mount issues)
     if (providerLoadedRef.current && provider) {
-      console.log('%c⚡ [BookingRequest] useEffect: PROVIDER ALREADY LOADED - skipping', 'background: #4CAF50; color: white; padding: 2px 6px; border-radius: 3px;');
       return;
     }
 
-    console.log('%c⚡ [BookingRequest] useEffect: PROVIDER LOAD START', 'background: #FF5722; color: white; padding: 2px 6px; border-radius: 3px;', { providerId });
+    if (import.meta.env.DEV) {
+      console.log('⚡ [BookingRequest] PROVIDER LOAD START', { providerId });
+    }
     let unsub: (() => void) | undefined;
     const boot = async () => {
-      console.log('🔄 [BookingRequest] Provider boot() called');
       setProviderLoading(true);
       const fromSession = readProviderFromSession();
-      console.log('📦 [BookingRequest] Provider from session:', fromSession ? { id: fromSession.id, name: fromSession.name } : 'null');
       if (fromSession) {
         setProvider(fromSession);
         setProviderLoading(false);
         providerLoadedRef.current = true; // P0 FIX: Mark as loaded
-        console.log('✅ [BookingRequest] Provider set from session');
       }
       try {
         if (!providerId) {
@@ -2477,9 +2352,8 @@ const BookingRequest: React.FC = () => {
     displayUSD = Math.max(0, Math.round(baseUSD - discountUSD));
   }
 
-  // Progression (RHF)
+  // Progression (RHF) - P0 FIX: validFlags now depends on watched from useWatch
   const validFlags: Record<string, boolean> = useMemo(() => {
-    console.log('%c🔍 [BookingRequest] useMemo: VALID_FLAGS recalculating', 'background: #E91E63; color: white; padding: 2px 6px; border-radius: 3px;');
     const values = getValues();
     const hasTitle = values.title.trim().length >= 10;
     const hasDesc = values.description.trim().length >= 50;
@@ -2503,7 +2377,7 @@ const BookingRequest: React.FC = () => {
 
     const sharedLang = hasLanguageMatchRealTime;
 
-    const flags = {
+    return {
       firstName: hasFirst,
       lastName: hasLast,
       title: hasTitle,
@@ -2515,9 +2389,6 @@ const BookingRequest: React.FC = () => {
       accept: accept,
       sharedLang,
     };
-
-    console.log('%c✅ [BookingRequest] VALID_FLAGS computed', 'background: #E91E63; color: white; padding: 2px 6px; border-radius: 3px;', flags);
-    return flags;
   }, [watched, hasLanguageMatchRealTime]);
 
   const formProgress = useMemo(() => {
@@ -2544,45 +2415,22 @@ const BookingRequest: React.FC = () => {
 
   // Check if current step is valid to proceed
   const canProceedToNext = useMemo(() => {
-    const canProceed = getStepValidationFlags(currentStep);
-    console.log('%c🚦 [BookingRequest] useMemo: CAN_PROCEED recalculated', 'background: #00BCD4; color: white; padding: 2px 6px; border-radius: 3px;', {
-      currentStep,
-      canProceed,
-      validFlags,
-    });
-    return canProceed;
+    return getStepValidationFlags(currentStep);
   }, [currentStep, getStepValidationFlags]);
 
   // Navigation functions
   const goNextStep = useCallback(() => {
-    console.log('%c▶️ [BookingRequest] goNextStep() CALLED', 'background: #4CAF50; color: white; padding: 2px 6px; border-radius: 3px; font-weight: bold;', {
-      canProceedToNext,
-      currentStep,
-      TOTAL_STEPS,
-      willProceed: canProceedToNext && currentStep < TOTAL_STEPS,
-    });
     if (canProceedToNext && currentStep < TOTAL_STEPS) {
-      console.log(`🚀 [BookingRequest] Moving from step ${currentStep} to step ${currentStep + 1}`);
       setAnimationDirection("forward");
       setCurrentStep((s) => s + 1);
-      // Scroll to top of form on mobile
-      console.log('📜 [BookingRequest] Scrolling to top');
       window.scrollTo({ top: 0, behavior: "smooth" });
-    } else {
-      console.log('🚫 [BookingRequest] goNextStep blocked:', { canProceedToNext, currentStep, TOTAL_STEPS });
     }
   }, [canProceedToNext, currentStep]);
 
   const goBackStep = useCallback(() => {
-    console.log('%c◀️ [BookingRequest] goBackStep() CALLED', 'background: #FF9800; color: black; padding: 2px 6px; border-radius: 3px; font-weight: bold;', {
-      currentStep,
-      willProceed: currentStep > 1,
-    });
     if (currentStep > 1) {
-      console.log(`🔙 [BookingRequest] Moving from step ${currentStep} to step ${currentStep - 1}`);
       setAnimationDirection("backward");
       setCurrentStep((s) => s - 1);
-      console.log('📜 [BookingRequest] Scrolling to top');
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, [currentStep]);
@@ -3025,18 +2873,7 @@ const BookingRequest: React.FC = () => {
   };
 
   // ===== RENDER =====
-  console.log('%c🎨 [BookingRequest] RENDER DECISION POINT', 'background: #9C27B0; color: white; padding: 2px 6px; border-radius: 3px; font-weight: bold;', {
-    providerLoading,
-    hasProvider: !!provider,
-    authLoading,
-    hasUser: !!user,
-    isMobile,
-    currentStep,
-    renderPath: providerLoading ? 'LOADING' : !provider ? 'NO_PROVIDER' : (!authLoading && !user) ? 'AUTH_FORM' : 'MAIN_FORM',
-  });
-
   if (providerLoading) {
-    console.log('🔄 [BookingRequest] Rendering: LOADING STATE');
     return (
       <Layout showFooter={false}>
         <div className="min-h-screen flex items-center justify-center bg-white">
@@ -3049,13 +2886,11 @@ const BookingRequest: React.FC = () => {
     );
   }
   if (!provider) {
-    console.log('🔄 [BookingRequest] Rendering: NO PROVIDER (null)');
     return null;
   }
 
   // ===== EMAIL-FIRST AUTH: Show auth form if not logged in =====
   if (!authLoading && !user) {
-    console.log('🔄 [BookingRequest] Rendering: AUTH FORM');
     return (
       <Layout showFooter={false}>
         <div className={`min-h-screen bg-[linear-gradient(180deg,#fff7f7_0%,#ffffff_35%,#fff5f8_100%)] py-6 md:py-12 overflow-x-hidden w-full max-w-[100vw] box-border`}>
@@ -3100,9 +2935,7 @@ const BookingRequest: React.FC = () => {
           {/* Auth form */}
           <div className="max-w-xl mx-auto">
             <EmailFirstAuth
-              onAuthSuccess={() => {
-                console.log("🟢 [BookingRequest] Auth success - user will be auto-detected by useAuth");
-              }}
+              onAuthSuccess={() => {/* Auth success - user will be auto-detected by useAuth */}}
               login={login}
               loginWithGoogle={loginWithGoogle}
               register={register}
@@ -3117,16 +2950,6 @@ const BookingRequest: React.FC = () => {
 
   const inputHas = <K extends keyof BookingFormData>(name: K) =>
     Boolean(errors[name]);
-
-  console.log('%c🎨 [BookingRequest] Rendering: MAIN FORM', 'background: #4CAF50; color: white; padding: 2px 6px; border-radius: 3px; font-weight: bold;', {
-    isMobile,
-    currentStep,
-    canProceedToNext,
-    formProgress,
-    displayEUR,
-    displayDuration,
-    providerExpanded,
-  });
 
   return (
     <Layout showFooter={false}>
