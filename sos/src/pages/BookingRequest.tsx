@@ -2187,22 +2187,37 @@ const BookingRequest: React.FC = () => {
   }, [user, authLoading, providerId]);
 
   // Lecture provider depuis sessionStorage
+  // P0 FIX: Use a ref-based approach to avoid useCallback dependency issues
+  // This ensures the function reference stays stable across renders
+  const providerIdRef = useRef(providerId);
+  providerIdRef.current = providerId;
+
   const readProviderFromSession = useCallback((): Provider | null => {
     try {
       const saved = sessionStorage.getItem("selectedProvider");
       if (!saved) return null;
       const parsed = JSON.parse(saved) as Partial<Provider> & { id?: string };
-      if (parsed && parsed.id && parsed.id === providerId) {
+      // Use ref to get current providerId without adding it as dependency
+      if (parsed && parsed.id && parsed.id === providerIdRef.current) {
         return normalizeProvider(parsed as Partial<Provider> & { id: string });
       }
     } catch (error) {
       console.warn("Failed to read provider from sessionStorage", error);
     }
     return null;
-  }, [providerId]);
+  }, []); // P0 FIX: Empty deps = stable function reference
+
+  // P0 FIX: Track if provider has been loaded to prevent re-loading
+  const providerLoadedRef = useRef(false);
 
   // Chargement live du provider
   useEffect(() => {
+    // P0 FIX: Skip if already loaded (prevents re-mount issues)
+    if (providerLoadedRef.current && provider) {
+      console.log('%c⚡ [BookingRequest] useEffect: PROVIDER ALREADY LOADED - skipping', 'background: #4CAF50; color: white; padding: 2px 6px; border-radius: 3px;');
+      return;
+    }
+
     console.log('%c⚡ [BookingRequest] useEffect: PROVIDER LOAD START', 'background: #FF5722; color: white; padding: 2px 6px; border-radius: 3px;', { providerId });
     let unsub: (() => void) | undefined;
     const boot = async () => {
@@ -2213,6 +2228,7 @@ const BookingRequest: React.FC = () => {
       if (fromSession) {
         setProvider(fromSession);
         setProviderLoading(false);
+        providerLoadedRef.current = true; // P0 FIX: Mark as loaded
         console.log('✅ [BookingRequest] Provider set from session');
       }
       try {
@@ -2232,6 +2248,7 @@ const BookingRequest: React.FC = () => {
                 ...(data as Partial<Provider>),
               } as FirestoreProviderDoc);
               setProvider(normalized);
+              providerLoadedRef.current = true; // P0 FIX: Mark as loaded
               try {
                 sessionStorage.setItem(
                   "selectedProvider",
@@ -2261,6 +2278,7 @@ const BookingRequest: React.FC = () => {
                 ...(data as Partial<Provider>),
               } as FirestoreProviderDoc);
               setProvider(normalized);
+              providerLoadedRef.current = true; // P0 FIX: Mark as loaded
               try {
                 sessionStorage.setItem(
                   "selectedProvider",
@@ -2285,6 +2303,7 @@ const BookingRequest: React.FC = () => {
     return () => {
       if (unsub) unsub();
     };
+    // P0 FIX: Only depend on providerId - readProviderFromSession is now stable
   }, [providerId, readProviderFromSession]);
 
   // Pre-fill form with wizard data from sessionStorage
