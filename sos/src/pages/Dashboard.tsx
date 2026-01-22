@@ -1623,9 +1623,9 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
     <Layout>
       {/* ✅ FIX: ProviderOnlineManager retiré - maintenant monté au niveau App.tsx */}
       {/* ✨ PROFILE COMPLETION ALERT */}
-      {user && (user.role === 'lawyer' || user.role === 'expat') && (
+      {user && (user.role === 'lawyer' || user.role === 'expat') ? (
         <ProfileStatusAlert user={user} />
-      )}
+      ) : null}
 
       {/* ========================================== */}
       {/* LOADING STATE (while fetching user data) */}
@@ -1654,17 +1654,6 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
       {/* KYC STATUS & VERIFICATION SECTION (STRIPE OR PAYPAL) */}
       {/* P0 FIX: Stable container with CSS transitions to prevent layout jumping */}
       {/* ========================================== */}
-      {/* DEBUG LOG */}
-      {console.log('[Dashboard DEBUG] 🎫 Banner Zone State', {
-        showStripeKycStable,
-        userDataReady,
-        userRole: user?.role,
-        paymentGateway: user?.paymentGateway,
-        paypalStatus: user?.paypalAccountStatus,
-        paypalOnboardingComplete: user?.paypalOnboardingComplete,
-        shouldShowBanner: showStripeKycStable === true || (userDataReady && user && (user.role === "lawyer" || user.role === "expat") && user?.paymentGateway === "paypal" && (user?.paypalAccountStatus === "not_connected" || !user?.paypalOnboardingComplete)),
-        timestamp: new Date().toISOString()
-      })}
       <div
         className={`
           dashboard-banner-zone overflow-hidden

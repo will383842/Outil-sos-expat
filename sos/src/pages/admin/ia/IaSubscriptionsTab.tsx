@@ -105,7 +105,8 @@ const STATUS_CONFIG: Record<SubscriptionStatus, { label: string; color: string; 
   past_due: { label: 'En retard', color: 'bg-amber-100 text-amber-700', icon: <Clock className="w-3 h-3" /> },
   canceled: { label: 'Annulé', color: 'bg-gray-100 text-gray-600', icon: <XCircle className="w-3 h-3" /> },
   expired: { label: 'Expiré', color: 'bg-red-100 text-red-700', icon: <X className="w-3 h-3" /> },
-  paused: { label: 'En pause', color: 'bg-purple-100 text-purple-700', icon: <Clock className="w-3 h-3" /> }
+  paused: { label: 'En pause', color: 'bg-purple-100 text-purple-700', icon: <Clock className="w-3 h-3" /> },
+  suspended: { label: 'Suspendu', color: 'bg-red-200 text-red-800', icon: <AlertCircle className="w-3 h-3" /> }
 };
 
 const TIER_LABELS: Record<SubscriptionTier, string> = {

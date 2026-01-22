@@ -145,6 +145,7 @@ const STATUS_CONFIG: Record<SubscriptionStatus, { label: string; color: string; 
   canceled: { label: 'Canceled', color: 'text-gray-600', bgColor: 'bg-gray-100', icon: <XCircle className="w-3 h-3" /> },
   expired: { label: 'Expired', color: 'text-red-700', bgColor: 'bg-red-100', icon: <X className="w-3 h-3" /> },
   paused: { label: 'Paused', color: 'text-purple-700', bgColor: 'bg-purple-100', icon: <Pause className="w-3 h-3" /> },
+  suspended: { label: 'Suspended', color: 'text-red-800', bgColor: 'bg-red-200', icon: <AlertCircle className="w-3 h-3" /> },
 };
 
 const TIER_CONFIG: Record<SubscriptionTier, { label: string; color: string; bgColor: string }> = {
