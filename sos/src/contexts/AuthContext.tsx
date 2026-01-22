@@ -842,13 +842,21 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       // Si l'utilisateur change (login après logout ou nouveau login),
       // reset les refs de subscription pour que le nouveau listener démarre proprement
       const isNewUser = u && u.uid !== previousAuthUserUidRef.current;
+      const isSameUser = u && u.uid === previousAuthUserUidRef.current;
+
       if (isNewUser) {
         subscribed.current = false;
         firstSnapArrived.current = false;
       }
       previousAuthUserUidRef.current = u?.uid ?? null;
 
-      setIsLoading(true);
+      // P0 FIX: Only set loading=true for actual user changes (login/logout)
+      // NOT for token refreshes or focus events with the same user
+      // This prevents unnecessary component unmounting via ProtectedRoute
+      if (!isSameUser) {
+        setIsLoading(true);
+      }
+
       setAuthUser(u);
       setFirebaseUser(u ?? null);
       if (!u) {

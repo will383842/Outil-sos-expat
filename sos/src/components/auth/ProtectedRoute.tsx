@@ -73,6 +73,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const mountTimeRef = useRef<number>(Date.now());
   const [hasWaitedMinTime, setHasWaitedMinTime] = useState(false);
 
+  // P0 FIX: Track if user was ever authorized to prevent unmounting during auth rechecks
+  // Once authorized, keep children mounted even if auth briefly goes to loading state
+  const wasAuthorizedRef = useRef(false);
+
   // P0 FIX: Wait minimum time before allowing redirects
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -142,9 +146,25 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       setAuthState('error');
       setError(intl.formatMessage({ id: 'auth.failed' }));
     } else {
-      setAuthState('loading');
+      // P0 FIX: Don't unmount children by going back to 'loading' if user was already authorized
+      // This prevents form data loss when auth briefly rechecks (token refresh, focus events)
+      if (!wasAuthorizedRef.current) {
+        setAuthState('loading');
+      }
+      // If wasAuthorizedRef.current is true, keep current authState ('authorized')
     }
   }, [shouldCheckAuth, checkAuthorization, authError, intl, hasWaitedMinTime]);
+
+  // P0 FIX: Track when user becomes authorized
+  useEffect(() => {
+    if (authState === 'authorized') {
+      wasAuthorizedRef.current = true;
+    }
+    // Reset if user explicitly logs out (unauthorized with no user)
+    if (authState === 'unauthorized' && !user) {
+      wasAuthorizedRef.current = false;
+    }
+  }, [authState, user]);
 
   const fullPath = useMemo(
     () => location.pathname + location.search + location.hash,
