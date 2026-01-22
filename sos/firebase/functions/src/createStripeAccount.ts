@@ -1,3 +1,22 @@
+/**
+ * createStripeAccount.ts
+ *
+ * Creates a Stripe Connect Express account for providers (lawyers/expats).
+ * This is the primary function used by StripeKyc.tsx on the frontend.
+ *
+ * Related files:
+ * - checkStripeAccountStatus.ts: Checks KYC completion status
+ * - stripeAutomaticKyc.ts: Additional KYC functions (onboarding links, etc.)
+ * - getAccountSession.ts: Gets client secret for Stripe Connect embedded component
+ *
+ * Flow:
+ * 1. Frontend calls createStripeAccount() to create the Stripe account
+ * 2. Frontend uses getStripeAccountSession() to get the client secret
+ * 3. Stripe Connect Onboarding component handles KYC collection
+ * 4. checkStripeAccountStatus() verifies completion status
+ *
+ * @module createStripeAccount
+ */
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import Stripe from "stripe";

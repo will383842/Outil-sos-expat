@@ -118,6 +118,9 @@ const SubscriptionPage = lazy(() => import('./pages/Dashboard/Subscription/Index
 const PlansPage = lazy(() => import('./pages/Dashboard/Subscription/Plans'));
 const SubscriptionSuccessPage = lazy(() => import('./pages/Dashboard/Subscription/Success'));
 
+// KYC Return Handler (Stripe Connect onboarding return)
+const KycReturn = lazy(() => import('./pages/Dashboard/KycReturn'));
+
 // Conversations (Provider Tool - integrated from Outil-sos-expat)
 const ConversationHistory = lazy(() => import('./pages/Dashboard/Conversations/History'));
 
@@ -250,6 +253,8 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/dashboard/subscription", component: SubscriptionPage, protected: true, role: ['lawyer', 'expat', 'admin'], translated: "dashboard-subscription" },
   { path: "/dashboard/subscription/plans", component: PlansPage, protected: true, role: ['lawyer', 'expat', 'admin'], translated: "dashboard-subscription-plans" },
   { path: "/dashboard/subscription/success", component: SubscriptionSuccessPage, protected: true, role: ['lawyer', 'expat', 'admin'], translated: "dashboard-subscription-success" },
+  // KYC Return Handler - Stripe Connect onboarding callback
+  { path: "/dashboard/kyc", component: KycReturn, protected: true, role: ['lawyer', 'expat'], translated: "dashboard-kyc" },
   // Conversations History (Provider Tool)
   { path: "/dashboard/conversations", component: ConversationHistory, protected: true, role: ['lawyer', 'expat', 'admin'], translated: "dashboard-conversations" },
 ];

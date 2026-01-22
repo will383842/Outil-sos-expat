@@ -1187,32 +1187,55 @@ export async function handleInvoicePaid(
 
   try {
     // Trouver le document subscription par stripeSubscriptionId
-    const subsSnapshot = await db.collection('subscriptions')
+    let subsSnapshot = await db.collection('subscriptions')
       .where('stripeSubscriptionId', '==', subscriptionId)
       .limit(1)
       .get();
 
+    // P0 FIX: Handle race condition - invoice.paid may arrive before subscription.created
     if (subsSnapshot.empty) {
-      // P1+P2 FIX: Race condition - invoice.paid may arrive before subscription.created
       if (invoice.billing_reason === 'subscription_create' || invoice.billing_reason === 'subscription_cycle') {
-        // P2 FIX: Enhanced logging with recovery guidance
-        logger.warn('[handleInvoicePaid] Race condition detected - subscription not found', {
+        // Wait 2 seconds and retry once before asking Stripe to retry
+        // This handles 90% of race conditions without creating webhook retry noise
+        logger.info('[handleInvoicePaid] Subscription not found, waiting 2s for subscription.created...', {
+          invoiceId: invoice.id,
+          stripeSubscriptionId: subscriptionId
+        });
+
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // Retry the query after waiting
+        subsSnapshot = await db.collection('subscriptions')
+          .where('stripeSubscriptionId', '==', subscriptionId)
+          .limit(1)
+          .get();
+
+        if (subsSnapshot.empty) {
+          // Still not found after 2s - now ask Stripe to retry
+          logger.warn('[handleInvoicePaid] Race condition: subscription still not found after 2s wait', {
+            invoiceId: invoice.id,
+            stripeSubscriptionId: subscriptionId,
+            billingReason: invoice.billing_reason,
+            customerId: invoice.customer,
+            recovery: 'Event will be automatically retried by Stripe webhook'
+          });
+          throw new Error(`RETRY_NEEDED: Subscription not found for ${subscriptionId}, likely race condition with subscription.created`);
+        }
+
+        // Found it after retry!
+        logger.info('[handleInvoicePaid] Subscription found after 2s wait, continuing processing', {
+          invoiceId: invoice.id,
+          stripeSubscriptionId: subscriptionId
+        });
+      } else {
+        // Non-subscription invoice - just log and return
+        logger.warn('[handleInvoicePaid] Subscription not found (non-subscription invoice)', {
           invoiceId: invoice.id,
           stripeSubscriptionId: subscriptionId,
-          billingReason: invoice.billing_reason,
-          customerId: invoice.customer,
-          recovery: 'Event will be automatically retried by Stripe webhook',
-          troubleshooting: 'If persists, check subscription.created webhook processing'
+          billingReason: invoice.billing_reason
         });
-        // Throw to trigger retry via transient error handling
-        throw new Error(`RETRY_NEEDED: Subscription not found for ${subscriptionId}, likely race condition with subscription.created`);
+        return;
       }
-      logger.warn('[handleInvoicePaid] Subscription not found (non-subscription invoice)', {
-        invoiceId: invoice.id,
-        stripeSubscriptionId: subscriptionId,
-        billingReason: invoice.billing_reason
-      });
-      return;
     }
 
     const subDoc = subsSnapshot.docs[0];

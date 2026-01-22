@@ -1,3 +1,22 @@
+/**
+ * checkStripeAccountStatus.ts
+ *
+ * Checks the KYC completion status of a provider's Stripe Connect account.
+ * Called by StripeKyc.tsx to verify if onboarding is complete.
+ *
+ * Related files:
+ * - createStripeAccount.ts: Creates the Stripe account
+ * - stripeAutomaticKyc.ts: Additional KYC functions (onboarding links, etc.)
+ * - getAccountSession.ts: Gets client secret for Stripe Connect embedded component
+ *
+ * Features:
+ * - Retrieves account status from Stripe API
+ * - Updates Firestore with KYC status (atomic batch writes)
+ * - Detects and cleans up invalid/revoked accounts
+ * - Returns requirements currently/eventually due
+ *
+ * @module checkStripeAccountStatus
+ */
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import Stripe from "stripe";
