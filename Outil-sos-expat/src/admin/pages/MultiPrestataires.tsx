@@ -814,7 +814,33 @@ const MultiProviderAccountCard = memo(function MultiProviderAccountCard({
             className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
           >
             <div className="flex items-center gap-2 text-sm text-gray-700">
-              <UsersRound className="w-4 h-4 text-amber-600" />
+              {/* Aperçu des photos (3 premières) */}
+              <div className="flex -space-x-2">
+                {linkedProviders.slice(0, 3).map((provider, idx) => (
+                  provider.photoURL ? (
+                    <img
+                      key={provider.id}
+                      src={provider.photoURL}
+                      alt=""
+                      className="w-7 h-7 rounded-full object-cover border-2 border-white"
+                      style={{ zIndex: 3 - idx }}
+                    />
+                  ) : (
+                    <div
+                      key={provider.id}
+                      className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center border-2 border-white"
+                      style={{ zIndex: 3 - idx }}
+                    >
+                      <User className="w-3 h-3 text-gray-400" />
+                    </div>
+                  )
+                ))}
+                {linkedCount > 3 && (
+                  <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center border-2 border-white text-xs font-medium text-gray-600">
+                    +{linkedCount - 3}
+                  </div>
+                )}
+              </div>
               <span className="font-medium">{linkedCount} prestataire(s)</span>
               {user.aiAccessForced && (
                 <span className="text-xs text-blue-600 flex items-center gap-1">
@@ -1485,6 +1511,9 @@ export default function MultiPrestataires() {
           isActive: isActive,
           active: isActive,
           isOnline: isActive,
+          // IMPORTANT: isVisible et isApproved doivent être true pour apparaître dans SOSCall
+          isVisible: true,
+          isApproved: true,
           status: isActive ? 'active' : 'inactive',
           // Accès IA forcé AUTOMATIQUE (illimité)
           aiAccessForced: true,

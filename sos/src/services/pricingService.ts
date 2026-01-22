@@ -62,9 +62,10 @@ export interface FirestorePricingDoc {
 
 const PRICING_REF = doc(db, "admin_config", "pricing");
 
-/** Cache mémoire (24 heures) - très économique car les prix changent ~1 fois/an */
-let _cache: { data: PricingConfig | null; ts: number } = { data: null, ts: 0 };
-const CACHE_MS = 24 * 60 * 60 * 1000; // 24 heures
+/** Cache mémoire (24 heures pour les vrais prix, 30s pour le fallback) */
+let _cache: { data: PricingConfig | null; ts: number; isFallback: boolean } = { data: null, ts: 0, isFallback: false };
+const CACHE_MS = 24 * 60 * 60 * 1000; // 24 heures pour les vrais prix
+const FALLBACK_CACHE_MS = 30 * 1000; // 30 secondes pour le fallback (retry rapide)
 
 /** Fallback - Doit correspondre aux prix backend et admin (lawyer: 20min, expat: 30min) */
 const DEFAULT_FALLBACK: PricingConfig = {
@@ -153,7 +154,9 @@ export async function getPricingConfig(): Promise<PricingConfig> {
   const now = Date.now();
 
   // Cache hit - retour silencieux pour éviter spam console
-  if (_cache.data && now - _cache.ts < CACHE_MS) {
+  // Utilise un cache court pour le fallback (30s) pour permettre retry rapide
+  const cacheExpiry = _cache.isFallback ? FALLBACK_CACHE_MS : CACHE_MS;
+  if (_cache.data && now - _cache.ts < cacheExpiry) {
     return _cache.data;
   }
 
@@ -163,20 +166,20 @@ export async function getPricingConfig(): Promise<PricingConfig> {
     console.log("📡 [pricingService] Lecture Firestore admin_config/pricing...");
     console.log("📡 [pricingService] PRICING_REF path:", PRICING_REF.path);
 
-    // Timeout de 5 secondes - si Firestore est bloqué, on utilise le fallback immédiatement
+    // Timeout de 15 secondes - Firestore peut prendre jusqu'à 10s pour la première connexion
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => {
         reject(new Error("TIMEOUT: Firestore bloqué - utilisation du fallback"));
-      }, 5000);
+      }, 15000);
     });
 
-    console.log("📡 [pricingService] Appel getDoc() avec timeout 10s...");
+    console.log("📡 [pricingService] Appel getDoc() avec timeout 15s...");
     const snap = await Promise.race([getDoc(PRICING_REF), timeoutPromise]) as any;
     console.log("📡 [pricingService] ✅ getDoc() a répondu! Snap exists?", snap.exists());
 
     if (!snap.exists()) {
       console.warn("⚠️ [pricingService] Document pricing n'existe pas! Utilisation fallback");
-      _cache = { data: DEFAULT_FALLBACK, ts: now };
+      _cache = { data: DEFAULT_FALLBACK, ts: now, isFallback: true };
       return DEFAULT_FALLBACK;
     }
 
@@ -196,12 +199,12 @@ export async function getPricingConfig(): Promise<PricingConfig> {
         expatEur: isValidServiceConfig(debugData?.expat?.eur),
         expatUsd: isValidServiceConfig(debugData?.expat?.usd),
       });
-      _cache = { data: DEFAULT_FALLBACK, ts: now };
+      _cache = { data: DEFAULT_FALLBACK, ts: now, isFallback: true };
       return DEFAULT_FALLBACK;
     }
 
     console.log("✅ [pricingService] Config valide, mise en cache");
-    _cache = { data: normalized, ts: now };
+    _cache = { data: normalized, ts: now, isFallback: false };
     return normalized;
   } catch (err) {
     console.error("❌ [pricingService] Firestore error:", err);
@@ -211,7 +214,7 @@ export async function getPricingConfig(): Promise<PricingConfig> {
       code: (err as any)?.code,
       stack: (err as Error)?.stack,
     });
-    _cache = { data: DEFAULT_FALLBACK, ts: now };
+    _cache = { data: DEFAULT_FALLBACK, ts: now, isFallback: true };
     return DEFAULT_FALLBACK;
   }
 }
@@ -279,7 +282,7 @@ function normalizeFirestoreDocument(raw: FirestorePricingDoc): PricingConfig {
 }
 
 export function clearPricingCache() {
-  _cache = { data: null, ts: 0 };
+  _cache = { data: null, ts: 0, isFallback: false };
 }
 
 /**
@@ -299,7 +302,7 @@ export function subscribeToPricing(
 
       if (!snap.exists()) {
         console.warn("⚠️ [pricingService] Document pricing n'existe pas! Utilisation fallback");
-        _cache = { data: DEFAULT_FALLBACK, ts: Date.now() };
+        _cache = { data: DEFAULT_FALLBACK, ts: Date.now(), isFallback: true };
         callback(DEFAULT_FALLBACK);
         return;
       }
@@ -309,7 +312,7 @@ export function subscribeToPricing(
 
       if (!isValidPricingConfig(normalized)) {
         console.warn("⚠️ [pricingService] Config invalide, utilisation fallback");
-        _cache = { data: DEFAULT_FALLBACK, ts: Date.now() };
+        _cache = { data: DEFAULT_FALLBACK, ts: Date.now(), isFallback: true };
         callback(DEFAULT_FALLBACK);
         return;
       }
@@ -321,8 +324,8 @@ export function subscribeToPricing(
         expatUsd: normalized.expat.usd.totalAmount,
       });
 
-      // Mise à jour du cache
-      _cache = { data: normalized, ts: Date.now() };
+      // Mise à jour du cache avec les vrais prix
+      _cache = { data: normalized, ts: Date.now(), isFallback: false };
       callback(normalized);
     },
     (error) => {
