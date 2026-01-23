@@ -1886,37 +1886,45 @@ const AdminAaaProfiles: React.FC = () => {
 
       // ✅ FIX: Charger les profils AAA depuis sos_profiles (source de vérité)
       // Les profils AAA sont identifiés par isAAA: true OU createdByAdmin: true OU isTestProfile: true
+      // Note: On évite orderBy pour ne pas nécessiter d'index composite Firestore
       const sosProfilesRef = collection(db, 'sos_profiles');
 
-      // Requête 1: Profils avec isAAA: true
+      // Requête 1: Profils avec isAAA: true (sans orderBy pour éviter les problèmes d'index)
       const aaaQuery = query(
         sosProfilesRef,
         where('isAAA', '==', true),
-        orderBy('createdAt', 'desc'),
-        limit(300)
+        limit(500)
       );
 
-      // Requête 2: Profils avec createdByAdmin: true (backup)
+      // Requête 2: Profils avec createdByAdmin: true
       const adminCreatedQuery = query(
         sosProfilesRef,
         where('createdByAdmin', '==', true),
-        orderBy('createdAt', 'desc'),
-        limit(300)
+        limit(500)
       );
 
       // Requête 3: Profils avec isTestProfile: true (legacy)
       const testProfileQuery = query(
         sosProfilesRef,
         where('isTestProfile', '==', true),
-        orderBy('createdAt', 'desc'),
-        limit(300)
+        limit(500)
       );
 
-      // Exécuter les 3 requêtes en parallèle
-      const [aaaSnapshot, adminSnapshot, testSnapshot] = await Promise.all([
+      // Requête 4: Profils dont l'UID commence par "aaa_" (pattern de aaaProfileGenerator)
+      // Firestore trick: >= 'aaa_' et < 'aaa~' capture tous les UIDs commençant par aaa_
+      const uidPatternQuery = query(
+        sosProfilesRef,
+        where('uid', '>=', 'aaa_'),
+        where('uid', '<', 'aab'),
+        limit(500)
+      );
+
+      // Exécuter les 4 requêtes en parallèle
+      const [aaaSnapshot, adminSnapshot, testSnapshot, uidPatternSnapshot] = await Promise.all([
         getDocs(aaaQuery),
         getDocs(adminCreatedQuery),
-        getDocs(testProfileQuery)
+        getDocs(testProfileQuery),
+        getDocs(uidPatternQuery).catch(() => ({ docs: [], size: 0 }))  // Fallback si pas d'index
       ]);
 
       // Fusionner et dédupliquer les résultats
@@ -1937,14 +1945,18 @@ const AdminAaaProfiles: React.FC = () => {
       processSnapshot(aaaSnapshot);
       processSnapshot(adminSnapshot);
       processSnapshot(testSnapshot);
+      if ('docs' in uidPatternSnapshot) {
+        processSnapshot(uidPatternSnapshot as typeof aaaSnapshot);
+      }
 
-      // Convertir en array et trier par date
+      // Convertir en array et trier par date côté client
       const profiles = Array.from(profilesMap.values()).sort(
         (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
       );
 
       setExistingProfiles(profiles);
-      console.log(`[AAA Profiles] Loaded ${profiles.length} profiles (AAA: ${aaaSnapshot.size}, AdminCreated: ${adminSnapshot.size}, Test: ${testSnapshot.size})`);
+      const uidCount = 'size' in uidPatternSnapshot ? uidPatternSnapshot.size : 0;
+      console.log(`[AAA Profiles] Loaded ${profiles.length} profiles (AAA: ${aaaSnapshot.size}, AdminCreated: ${adminSnapshot.size}, Test: ${testSnapshot.size}, UID pattern: ${uidCount})`);
     } catch (e) {
       console.error('[AAA Profiles] Error loading profiles:', e);
     } finally {
@@ -2064,10 +2076,13 @@ const AdminAaaProfiles: React.FC = () => {
     const reviewsPerWeek = randomInt(1, 2);
     const reviewCount = Math.max(1, Math.min(totalCalls, weeks * reviewsPerWeek));
 
-    const profilePhoto = '';
-    const rating = isEarly ? Math.min(5.0, randomRating() + 0.2) : randomRating();
-
     const uid = `aaa_${role}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+    // ✅ Générer une photo de profil avec DiceBear (avatar cohérent avec le genre)
+    const avatarStyle = gender === 'female' ? 'adventurer' : 'adventurer';
+    const profilePhoto = `https://api.dicebear.com/7.x/${avatarStyle}/svg?seed=${uid}&backgroundColor=b6e3f4`;
+
+    const rating = isEarly ? Math.min(5.0, randomRating() + 0.2) : randomRating();
     
     const specialties: string[] = [];
     if (role === 'lawyer') {
