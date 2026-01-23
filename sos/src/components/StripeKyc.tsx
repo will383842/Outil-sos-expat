@@ -256,6 +256,20 @@ export default function StripeKYC({ onComplete, userType }: Props) {
   const [requirements, setRequirements] = useState<string[]>([]);
   const initStartedRef = useRef(false);
 
+  // P0 FIX: Store callbacks in refs to prevent useEffect re-runs when parent re-renders
+  // These refs always hold the latest value but don't trigger re-renders
+  const onCompleteRef = useRef(onComplete);
+  const intlRef = useRef(intl);
+
+  // Keep refs updated with latest values
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+
+  useEffect(() => {
+    intlRef.current = intl;
+  }, [intl]);
+
   // Function to create new Stripe account
   const createNewAccount = async () => {
     dashboardLog.stripe('createNewAccount clicked', { userId: user?.uid, userType });
@@ -311,13 +325,16 @@ export default function StripeKYC({ onComplete, userType }: Props) {
   };
 
   useEffect(() => {
+    // P0 FIX: Use refs for intl and onComplete to prevent re-runs on parent re-renders
+    const currentIntl = intlRef.current;
+
     // Handle unauthenticated users with explicit error
     if (!user?.uid) {
       setLoading(false);
       setError({
-        message: intl.formatMessage({ id: 'stripe.kyc.error.notAuthenticated', defaultMessage: 'Vous devez être connecté pour configurer votre compte Stripe.' }),
+        message: currentIntl.formatMessage({ id: 'stripe.kyc.error.notAuthenticated', defaultMessage: 'Vous devez être connecté pour configurer votre compte Stripe.' }),
         canRetry: false,
-        actionHint: intl.formatMessage({ id: 'stripe.kyc.error.loginRequired', defaultMessage: 'Veuillez vous reconnecter.' })
+        actionHint: currentIntl.formatMessage({ id: 'stripe.kyc.error.loginRequired', defaultMessage: 'Veuillez vous reconnecter.' })
       });
       return;
     }
@@ -328,7 +345,7 @@ export default function StripeKYC({ onComplete, userType }: Props) {
 
     const savedError = sessionStorage.getItem(errorKey);
     if (savedError) {
-      setError(getSpecificErrorMessage(savedError, intl));
+      setError(getSpecificErrorMessage(savedError, currentIntl));
       setLoading(false);
       return;
     }
@@ -385,15 +402,17 @@ export default function StripeKYC({ onComplete, userType }: Props) {
             setIsKycComplete(true);
             setLoading(false);
 
+            // P0 FIX: Use ref to get latest callback
             setTimeout(() => {
-              onComplete?.();
+              onCompleteRef.current?.();
             }, 100);
 
             return;
           }
         } catch (err) {
           const errorMsg = (err as Error).message || "";
-          const errorInfo = getSpecificErrorMessage(errorMsg, intl);
+          // P0 FIX: Use ref for intl
+          const errorInfo = getSpecificErrorMessage(errorMsg, intlRef.current);
 
           if (errorMsg.includes("does not have access to account") ||
               errorMsg.includes("No such account") ||
@@ -436,7 +455,8 @@ export default function StripeKYC({ onComplete, userType }: Props) {
         sessionStorage.removeItem(checkKey);
       } catch (err) {
         const errorMsg = (err as Error).message || "";
-        const errorInfo = getSpecificErrorMessage(errorMsg, intl);
+        // P0 FIX: Use ref for intl
+        const errorInfo = getSpecificErrorMessage(errorMsg, intlRef.current);
 
         console.error("[StripeKYC] Initialization error:", err);
         sessionStorage.setItem(errorKey, errorMsg);
@@ -447,9 +467,12 @@ export default function StripeKYC({ onComplete, userType }: Props) {
     };
 
     initializeStripe();
-  }, [user?.uid, userType, reinitKey, intl, onComplete]);
+    // P0 FIX: Removed intl and onComplete from dependencies - they are now accessed via refs
+    // This prevents the useEffect from re-running when parent re-renders
+  }, [user?.uid, userType, reinitKey]);
 
   // Fallback polling for KYC status
+  // P0 FIX: Use ref for onComplete to prevent unnecessary re-creations
   const checkKycStatus = useCallback(async () => {
     if (!user?.uid || isKycComplete || loading || error) return;
 
@@ -476,14 +499,16 @@ export default function StripeKYC({ onComplete, userType }: Props) {
         dashboardLog.stripe('Polling detected KYC completion', { userId: user.uid });
         sessionStorage.setItem(completedKey, "true");
         setIsKycComplete(true);
-        setTimeout(() => onComplete?.(), 100);
+        // P0 FIX: Use ref to get latest callback
+        setTimeout(() => onCompleteRef.current?.(), 100);
       }
     } catch (err) {
       if (import.meta.env.DEV) {
         console.log("[StripeKYC] Polling check failed (silent):", err);
       }
     }
-  }, [user?.uid, userType, isKycComplete, loading, error, onComplete]);
+    // P0 FIX: Removed onComplete from dependencies - accessed via ref
+  }, [user?.uid, userType, isKycComplete, loading, error]);
 
   // Start polling when Stripe form is shown
   useEffect(() => {
@@ -635,8 +660,9 @@ export default function StripeKYC({ onComplete, userType }: Props) {
                 sessionStorage.setItem(completedKey, "true");
                 setIsKycComplete(true);
 
+                // P0 FIX: Use ref to get latest callback
                 setTimeout(() => {
-                  onComplete?.();
+                  onCompleteRef.current?.();
                 }, 100);
               }
             } catch (err) {

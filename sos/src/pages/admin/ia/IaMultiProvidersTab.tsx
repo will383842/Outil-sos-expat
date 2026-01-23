@@ -598,7 +598,9 @@ export const IaMultiProvidersTab: React.FC = () => {
 
       // Update sos_profiles (primary) and users (optional - may not exist for AAA profiles)
       await Promise.all([
-        updateDoc(doc(db, 'sos_profiles', providerId), updateData),
+        updateDoc(doc(db, 'sos_profiles', providerId), updateData).catch(() => {
+          // Profile document might not exist (orphaned link), ignore
+        }),
         updateDoc(doc(db, 'users', providerId), updateData).catch(() => {
           // User document might not exist for AAA profiles, ignore
         })
@@ -643,7 +645,9 @@ export const IaMultiProvidersTab: React.FC = () => {
 
       // Update sos_profiles (primary) and users (optional - may not exist for AAA profiles)
       await Promise.all([
-        updateDoc(doc(db, 'sos_profiles', providerId), updateData),
+        updateDoc(doc(db, 'sos_profiles', providerId), updateData).catch(() => {
+          // Profile document might not exist (orphaned link), ignore
+        }),
         updateDoc(doc(db, 'users', providerId), updateData).catch(() => {
           // User document might not exist for AAA profiles, ignore
         })
@@ -701,7 +705,9 @@ export const IaMultiProvidersTab: React.FC = () => {
 
         // Update sos_profiles (primary) and users (optional - may not exist for AAA profiles)
         await Promise.all([
-          updateDoc(doc(db, 'sos_profiles', provider.id), updateData),
+          updateDoc(doc(db, 'sos_profiles', provider.id), updateData).catch(() => {
+            // Profile document might not exist (orphaned link), ignore
+          }),
           updateDoc(doc(db, 'users', provider.id), updateData).catch(() => {
             // User document might not exist for AAA profiles, ignore
           })
@@ -765,7 +771,9 @@ export const IaMultiProvidersTab: React.FC = () => {
 
       // Update sos_profiles (primary) and users (optional - may not exist for AAA profiles)
       await Promise.all([
-        updateDoc(doc(db, 'sos_profiles', providerId), updateData),
+        updateDoc(doc(db, 'sos_profiles', providerId), updateData).catch(() => {
+          // Profile document might not exist (orphaned link), ignore
+        }),
         updateDoc(doc(db, 'users', providerId), updateData).catch(() => {
           // User document might not exist for AAA profiles, ignore
         })
@@ -810,7 +818,9 @@ export const IaMultiProvidersTab: React.FC = () => {
 
       // Update sos_profiles (primary) and users (optional)
       await Promise.all([
-        updateDoc(doc(db, 'sos_profiles', providerId), updateData),
+        updateDoc(doc(db, 'sos_profiles', providerId), updateData).catch(() => {
+          // Profile document might not exist (orphaned link), ignore
+        }),
         updateDoc(doc(db, 'users', providerId), updateData).catch(() => {
           // User document might not exist for AAA profiles, ignore
         })
@@ -849,8 +859,12 @@ export const IaMultiProvidersTab: React.FC = () => {
         };
 
         await Promise.all([
-          updateDoc(doc(db, 'sos_profiles', provider.id), updateData),
-          updateDoc(doc(db, 'users', provider.id), updateData).catch(() => {})
+          updateDoc(doc(db, 'sos_profiles', provider.id), updateData).catch(() => {
+            // Profile document might not exist (orphaned link), ignore
+          }),
+          updateDoc(doc(db, 'users', provider.id), updateData).catch(() => {
+            // User document might not exist for AAA profiles, ignore
+          })
         ]);
       });
 
@@ -1323,39 +1337,37 @@ export const IaMultiProvidersTab: React.FC = () => {
                     {account.shareBusyStatus && <Check className="w-3 h-3" />}
                   </button>
 
-                  {/* 🆕 Global toggle for individual provider coupling (only when shareBusyStatus is enabled) */}
-                  {account.shareBusyStatus && (
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => toggleAllProvidersCoupling(account, true)}
-                        disabled={saving === account.userId || account.providers.every(p => p.receiveBusyFromSiblings)}
-                        className={cn(
-                          "flex items-center gap-1.5 px-2.5 py-1.5 rounded-l-lg text-xs font-medium transition-colors border-y border-l",
-                          account.providers.every(p => p.receiveBusyFromSiblings)
-                            ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800"
-                            : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-600 hover:bg-gray-200"
-                        )}
-                        title="Coupler tous les prestataires"
-                      >
-                        <Link2 className="w-3.5 h-3.5" />
-                        Tous
-                      </button>
-                      <button
-                        onClick={() => toggleAllProvidersCoupling(account, false)}
-                        disabled={saving === account.userId || account.providers.every(p => !p.receiveBusyFromSiblings)}
-                        className={cn(
-                          "flex items-center gap-1.5 px-2.5 py-1.5 rounded-r-lg text-xs font-medium transition-colors border-y border-r",
-                          account.providers.every(p => !p.receiveBusyFromSiblings)
-                            ? "bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600"
-                            : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-600 hover:bg-gray-200"
-                        )}
-                        title="Découpler tous les prestataires"
-                      >
-                        <Unlink className="w-3.5 h-3.5" />
-                        Aucun
-                      </button>
-                    </div>
-                  )}
+                  {/* 🆕 Global toggle for individual provider coupling (visible for all multi-provider accounts) */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => toggleAllProvidersCoupling(account, true)}
+                      disabled={saving === account.userId || account.providers.every(p => p.receiveBusyFromSiblings)}
+                      className={cn(
+                        "flex items-center gap-1.5 px-2.5 py-1.5 rounded-l-lg text-xs font-medium transition-colors border-y border-l",
+                        account.providers.every(p => p.receiveBusyFromSiblings)
+                          ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800"
+                          : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-600 hover:bg-gray-200"
+                      )}
+                      title="Coupler tous les prestataires"
+                    >
+                      <Link2 className="w-3.5 h-3.5" />
+                      Tous
+                    </button>
+                    <button
+                      onClick={() => toggleAllProvidersCoupling(account, false)}
+                      disabled={saving === account.userId || account.providers.every(p => !p.receiveBusyFromSiblings)}
+                      className={cn(
+                        "flex items-center gap-1.5 px-2.5 py-1.5 rounded-r-lg text-xs font-medium transition-colors border-y border-r",
+                        account.providers.every(p => !p.receiveBusyFromSiblings)
+                          ? "bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600"
+                          : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-600 hover:bg-gray-200"
+                      )}
+                      title="Découpler tous les prestataires"
+                    >
+                      <Unlink className="w-3.5 h-3.5" />
+                      Aucun
+                    </button>
+                  </div>
 
                   {/* Account status toggle - changes color based on state */}
                   {(() => {
@@ -1580,30 +1592,28 @@ export const IaMultiProvidersTab: React.FC = () => {
                           </select>
                         </div>
 
-                        {/* 🆕 Toggle Coupling (individual) - only visible when shareBusyStatus is enabled */}
-                        {account.shareBusyStatus && (
-                          <button
-                            onClick={() => toggleProviderCoupling(provider.id, provider.receiveBusyFromSiblings !== false)}
-                            disabled={saving === provider.id}
-                            className={cn(
-                              "flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors",
-                              provider.receiveBusyFromSiblings !== false
-                                ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 hover:bg-blue-200"
-                                : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-200"
-                            )}
-                            title={provider.receiveBusyFromSiblings !== false
-                              ? "Couplé: passe en busy si un autre est en appel"
-                              : "Non couplé: reste disponible même si un autre est en appel"
-                            }
-                          >
-                            {provider.receiveBusyFromSiblings !== false ? (
-                              <Link2 className="w-3 h-3" />
-                            ) : (
-                              <Unlink className="w-3 h-3" />
-                            )}
-                            {provider.receiveBusyFromSiblings !== false ? 'Couplé' : 'Seul'}
-                          </button>
-                        )}
+                        {/* 🆕 Toggle Coupling (individual) - visible for all multi-provider accounts */}
+                        <button
+                          onClick={() => toggleProviderCoupling(provider.id, provider.receiveBusyFromSiblings !== false)}
+                          disabled={saving === provider.id}
+                          className={cn(
+                            "flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors",
+                            provider.receiveBusyFromSiblings !== false
+                              ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 hover:bg-blue-200"
+                              : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-200"
+                          )}
+                          title={provider.receiveBusyFromSiblings !== false
+                            ? "Couplé: passe en busy si un autre est en appel"
+                            : "Non couplé: reste disponible même si un autre est en appel"
+                          }
+                        >
+                          {provider.receiveBusyFromSiblings !== false ? (
+                            <Link2 className="w-3 h-3" />
+                          ) : (
+                            <Unlink className="w-3 h-3" />
+                          )}
+                          {provider.receiveBusyFromSiblings !== false ? 'Couplé' : 'Seul'}
+                        </button>
 
                         {/* 🆕 Toggle Online/Offline - individual control */}
                         <button

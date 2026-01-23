@@ -3247,6 +3247,7 @@ const BookingRequest: React.FC = () => {
                     render={({ field }) => (
                       <select
                         {...field}
+                        autoComplete="off"
                         className={inputClass(inputHas("currentCountry"))}
                         onChange={(e) => {
                           console.log('%c📝 [BookingRequest] COUNTRY SELECT CHANGED', 'background: #FF9800; color: black; padding: 2px 6px; border-radius: 3px;', {

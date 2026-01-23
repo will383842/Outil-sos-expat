@@ -1155,7 +1155,6 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         const data = docSnap.data() as Partial<User>;
 
         setUser((prev) => {
-
           const merged: User = {
             ...(prev ?? ({} as User)),
             ...(data as Partial<User>),
@@ -1177,6 +1176,28 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
                 : new Date(),
             isVerifiedEmail: authUser.emailVerified,
           } as User;
+
+          // P0 FIX: Avoid unnecessary re-renders by checking if important fields changed
+          // Only compare fields that actually affect UI to prevent infinite loops
+          if (prev) {
+            const importantFieldsUnchanged =
+              prev.role === merged.role &&
+              prev.kycStatus === merged.kycStatus &&
+              prev.stripeOnboardingComplete === merged.stripeOnboardingComplete &&
+              prev.chargesEnabled === merged.chargesEnabled &&
+              prev.paymentGateway === merged.paymentGateway &&
+              prev.paypalOnboardingComplete === merged.paypalOnboardingComplete &&
+              prev.paypalAccountStatus === merged.paypalAccountStatus &&
+              prev.isOnline === merged.isOnline &&
+              prev.approvalStatus === merged.approvalStatus &&
+              prev.email === merged.email &&
+              prev.profilePhoto === merged.profilePhoto;
+
+            if (importantFieldsUnchanged) {
+              // Return previous state to avoid re-render
+              return prev;
+            }
+          }
 
           return merged;
         });

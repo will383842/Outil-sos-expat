@@ -13,6 +13,11 @@ import { MailwizzAPI } from '../emailMarketing/utils/mailwizz';
 import { getLanguageCode } from '../emailMarketing/config';
 import { logWebhookTest } from '../utils/productionTestLogger';
 import {
+  getStripeSecretKey,
+  STRIPE_SECRET_KEY_LIVE,
+  STRIPE_SECRET_KEY_TEST,
+} from '../lib/secrets';
+import {
   handleSubscriptionCreated as handleSubCreated,
   handleSubscriptionUpdated as handleSubUpdated,
   handleSubscriptionDeleted as handleSubDeleted,
@@ -58,9 +63,9 @@ let stripe: Stripe | null = null;
 function getStripe(): Stripe {
   ensureInitialized();
   if (!stripe) {
-    // Migration: functions.config() deprecated - using env vars only (set via defineSecret)
-    const secretKey = process.env.STRIPE_SECRET_KEY || '';
-    if (!secretKey) {
+    // Use centralized secrets system
+    const secretKey = getStripeSecretKey();
+    if (!secretKey || !secretKey.startsWith('sk_')) {
       throw new Error('Stripe secret key not configured');
     }
     stripe = new Stripe(secretKey, {
@@ -2512,6 +2517,7 @@ export const createAnnualStripePrices = functions
  * Use this if monthly prices are missing
  */
 export const createMonthlyStripePrices = functions
+  .runWith({ secrets: [STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST] })
   .region('europe-west1')
   .https.onCall(async (_data, context) => {
     // Verify admin
