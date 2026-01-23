@@ -703,6 +703,7 @@ export async function generate197Lawyers(): Promise<void> {
         profilePhoto: '',
         avatar: '',
         isTestProfile: true,
+        isAAA: true,
         isActive: true,
         isApproved: true,
         isVerified: true,

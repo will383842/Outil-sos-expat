@@ -341,7 +341,7 @@ export async function generateLawyersAllCountries(): Promise<void> {
         languages: ['fr'], // Code ISO - FRANÇAIS UNIQUEMENT
         languagesSpoken: ['fr'], // Code ISO - doit être identique à languages
         profilePhoto: '', avatar: '',
-        isTestProfile: true, isActive: true, isApproved: true, isVerified: true,
+        isTestProfile: true, isAAA: true, isActive: true, isApproved: true, isVerified: true,
         approvalStatus: 'approved', verificationStatus: 'approved',
         isOnline: Math.random() > 0.7,
         isVisible: true, isVisibleOnMap: true, isCallable: true,

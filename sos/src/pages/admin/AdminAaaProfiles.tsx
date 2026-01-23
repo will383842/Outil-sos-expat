@@ -1911,7 +1911,7 @@ const AdminAaaProfiles: React.FC = () => {
       );
 
       // Requête 4: Profils dont l'UID commence par "aaa_" (pattern de aaaProfileGenerator)
-      // Firestore trick: >= 'aaa_' et < 'aaa~' capture tous les UIDs commençant par aaa_
+      // Firestore trick: >= 'aaa_' et < 'aab' capture tous les UIDs commençant par aaa_
       const uidPatternQuery = query(
         sosProfilesRef,
         where('uid', '>=', 'aaa_'),
@@ -1919,12 +1919,22 @@ const AdminAaaProfiles: React.FC = () => {
         limit(500)
       );
 
-      // Exécuter les 4 requêtes en parallèle
-      const [aaaSnapshot, adminSnapshot, testSnapshot, uidPatternSnapshot] = await Promise.all([
+      // Requête 5: Profils avec email @example.com (pattern de tous les scripts de génération)
+      // C'est le critère le plus fiable car TOUS les profils générés utilisent ce domaine
+      const exampleEmailQuery = query(
+        sosProfilesRef,
+        where('email', '>=', 'a'),  // Pour capturer tous les emails
+        where('email', '<=', 'z\uf8ff'),
+        limit(1000)
+      );
+
+      // Exécuter les 5 requêtes en parallèle
+      const [aaaSnapshot, adminSnapshot, testSnapshot, uidPatternSnapshot, allProfilesSnapshot] = await Promise.all([
         getDocs(aaaQuery),
         getDocs(adminCreatedQuery),
         getDocs(testProfileQuery),
-        getDocs(uidPatternQuery).catch(() => ({ docs: [], size: 0 }))  // Fallback si pas d'index
+        getDocs(uidPatternQuery).catch(() => ({ docs: [], size: 0 })),
+        getDocs(exampleEmailQuery).catch(() => ({ docs: [], size: 0 }))
       ]);
 
       // Fusionner et dédupliquer les résultats
@@ -1949,6 +1959,21 @@ const AdminAaaProfiles: React.FC = () => {
         processSnapshot(uidPatternSnapshot as typeof aaaSnapshot);
       }
 
+      // Traiter la 5ème requête: filtrer les emails @example.com (profils générés)
+      if ('docs' in allProfilesSnapshot) {
+        (allProfilesSnapshot as typeof aaaSnapshot).docs.forEach((d) => {
+          const data = d.data();
+          const email = (data.email as string) || '';
+          // Inclure seulement les profils avec email @example.com (pattern AAA/test)
+          if (email.endsWith('@example.com') && !profilesMap.has(d.id)) {
+            profilesMap.set(d.id, {
+              id: d.id, ...data,
+              createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(),
+            } as AaaProfile);
+          }
+        });
+      }
+
       // Convertir en array et trier par date côté client
       const profiles = Array.from(profilesMap.values()).sort(
         (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
@@ -1956,7 +1981,10 @@ const AdminAaaProfiles: React.FC = () => {
 
       setExistingProfiles(profiles);
       const uidCount = 'size' in uidPatternSnapshot ? uidPatternSnapshot.size : 0;
-      console.log(`[AAA Profiles] Loaded ${profiles.length} profiles (AAA: ${aaaSnapshot.size}, AdminCreated: ${adminSnapshot.size}, Test: ${testSnapshot.size}, UID pattern: ${uidCount})`);
+      const exampleEmailCount = 'docs' in allProfilesSnapshot
+        ? (allProfilesSnapshot as typeof aaaSnapshot).docs.filter(d => ((d.data().email as string) || '').endsWith('@example.com')).length
+        : 0;
+      console.log(`[AAA Profiles] Loaded ${profiles.length} profiles (AAA: ${aaaSnapshot.size}, AdminCreated: ${adminSnapshot.size}, Test: ${testSnapshot.size}, UID: ${uidCount}, @example.com: ${exampleEmailCount})`);
     } catch (e) {
       console.error('[AAA Profiles] Error loading profiles:', e);
     } finally {

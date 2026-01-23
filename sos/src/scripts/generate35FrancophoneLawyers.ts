@@ -480,6 +480,7 @@ export async function generate35FrancophoneLawyers(): Promise<GeneratedProfile[]
       profilePhoto: '',
       avatar: '',
       isTestProfile: true,
+      isAAA: true,
       isActive: true,
       isApproved: true,
       isVerified: true,
