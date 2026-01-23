@@ -539,8 +539,29 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
         </div>
       )}
 
-      {/* CSS pour les champs PayPal - une seule bordure */}
+      {/* CSS pour les champs PayPal - Style Stripe-like avec bordures visibles */}
       <style>{`
+        .paypal-card-field-wrapper {
+          position: relative;
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+          background-color: #ffffff;
+          transition: all 0.2s ease;
+          overflow: hidden;
+        }
+        .paypal-card-field-wrapper:hover {
+          border-color: #d1d5db;
+        }
+        .paypal-card-field-wrapper:focus-within {
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .paypal-card-field-wrapper.has-error {
+          border-color: #ef4444;
+        }
+        .paypal-card-field-wrapper.has-error:focus-within {
+          box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
         .paypal-card-field {
           width: 100%;
           height: 48px;
@@ -554,6 +575,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
         .paypal-card-field iframe {
           border: none !important;
           outline: none !important;
+          background: transparent !important;
         }
       `}</style>
 
@@ -568,23 +590,28 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
           style={{
             input: {
               "font-size": "16px",
-              "font-family": "system-ui, -apple-system, sans-serif",
-              "color": "#374151",
-              "padding": "12px",
-              "border": "1px solid #d1d5db",
-              "border-radius": "8px",
+              "font-family": "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+              "font-weight": "400",
+              "color": "#1f2937",
+              "padding": "0 14px",
+              "border": "none",
+              "border-radius": "0",
               "height": "100%",
               "box-sizing": "border-box",
-              "background-color": "#ffffff",
+              "background-color": "transparent",
+              "line-height": "48px",
+            },
+            "input::placeholder": {
+              "color": "#9ca3af",
+              "font-weight": "400",
             },
             "input:focus": {
-              "border-color": "#3b82f6",
-              "box-shadow": "0 0 0 2px rgba(59, 130, 246, 0.2)",
+              "border": "none",
+              "box-shadow": "none",
               "outline": "none",
             },
             ".invalid": {
-              "color": "#dc2626",
-              "border-color": "#dc2626",
+              "color": "#ef4444",
             },
           } as any}
         >
@@ -621,33 +648,41 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
 
             {/* Nom du titulaire */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 <FormattedMessage id="payment.cardholderName" defaultMessage="Nom sur la carte" />
               </label>
-              <PayPalNameField className="paypal-card-field" />
+              <div className="paypal-card-field-wrapper">
+                <PayPalNameField className="paypal-card-field" />
+              </div>
             </div>
 
             {/* Numéro de carte */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 <FormattedMessage id="payment.cardNumber" defaultMessage="Numéro de carte" />
               </label>
-              <PayPalNumberField className="paypal-card-field" />
+              <div className="paypal-card-field-wrapper">
+                <PayPalNumberField className="paypal-card-field" />
+              </div>
             </div>
 
             {/* Expiration et CVV - Responsive */}
             <div className="grid grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   <FormattedMessage id="payment.expiry" defaultMessage="Expiration" />
                 </label>
-                <PayPalExpiryField className="paypal-card-field" />
+                <div className="paypal-card-field-wrapper">
+                  <PayPalExpiryField className="paypal-card-field" />
+                </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   <FormattedMessage id="payment.cvv" defaultMessage="CVV" />
                 </label>
-                <PayPalCVVField className="paypal-card-field" />
+                <div className="paypal-card-field-wrapper">
+                  <PayPalCVVField className="paypal-card-field" />
+                </div>
               </div>
             </div>
 
