@@ -115,6 +115,7 @@ interface UseMultiProviderDashboardReturn {
 
   // Actions
   refresh: () => Promise<void>;
+  openAiTool: (providerId: string) => Promise<void>;
 }
 
 // ============================================================================
@@ -355,6 +356,41 @@ export function useMultiProviderDashboard(): UseMultiProviderDashboardReturn {
     await loadAccounts();
   }, [loadAccounts]);
 
+  /**
+   * Opens the AI tool (ia.sos-expat.com) for a specific provider
+   * Generates an SSO token via Cloud Function
+   */
+  const openAiTool = useCallback(async (providerId: string) => {
+    const session = getSession();
+    if (!session?.token) {
+      setError('Session invalide. Veuillez vous reconnecter.');
+      return;
+    }
+
+    try {
+      const generateToken = httpsCallable<
+        { sessionToken: string; providerId: string },
+        { success: boolean; ssoUrl?: string; error?: string }
+      >(outilsFunctions, 'generateMultiDashboardOutilToken');
+
+      const result = await generateToken({
+        sessionToken: session.token,
+        providerId,
+      });
+
+      if (!result.data.success || !result.data.ssoUrl) {
+        throw new Error(result.data.error || 'Erreur lors de la génération du token');
+      }
+
+      // Open AI tool in new tab
+      window.open(result.data.ssoUrl, '_blank', 'noopener,noreferrer');
+
+    } catch (err) {
+      console.error('[useMultiProviderDashboard] openAiTool error:', err);
+      setError('Erreur lors de l\'accès à l\'outil IA.');
+    }
+  }, []);
+
   // ============================================================================
   // RETURN
   // ============================================================================
@@ -368,6 +404,7 @@ export function useMultiProviderDashboard(): UseMultiProviderDashboardReturn {
     authenticate,
     logout,
     refresh,
+    openAiTool,
   };
 }
 

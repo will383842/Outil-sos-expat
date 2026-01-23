@@ -21,6 +21,8 @@ import {
   FileText,
   Languages,
   Loader2,
+  Bot,
+  ExternalLink,
 } from 'lucide-react';
 import type { BookingRequestWithAI } from '../../hooks/useMultiProviderDashboard';
 import AiResponseDisplay from './AiResponseDisplay';
@@ -29,13 +31,26 @@ import { cn } from '../../utils/cn';
 interface BookingRequestCardProps {
   booking: BookingRequestWithAI;
   providerName?: string;
+  onOpenAiTool?: (providerId: string) => void;
 }
 
 const BookingRequestCard: React.FC<BookingRequestCardProps> = ({
   booking,
   providerName,
+  onOpenAiTool,
 }) => {
   const [expanded, setExpanded] = useState(false);
+  const [isOpeningAiTool, setIsOpeningAiTool] = useState(false);
+
+  const handleOpenAiTool = async () => {
+    if (!onOpenAiTool || !booking.providerId) return;
+    setIsOpeningAiTool(true);
+    try {
+      await onOpenAiTool(booking.providerId);
+    } finally {
+      setIsOpeningAiTool(false);
+    }
+  };
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('fr-FR', {
@@ -229,6 +244,37 @@ const BookingRequestCard: React.FC<BookingRequestCardProps> = ({
           </div>
         </div>
       ) : null}
+
+      {/* Actions Bar */}
+      <div className="px-4 pb-3 flex items-center gap-2">
+        {/* Open AI Tool Button */}
+        {onOpenAiTool && booking.providerId && (
+          <button
+            onClick={handleOpenAiTool}
+            disabled={isOpeningAiTool}
+            className={cn(
+              "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all",
+              "bg-gradient-to-r from-blue-600 to-indigo-600 text-white",
+              "hover:from-blue-700 hover:to-indigo-700",
+              "disabled:opacity-50 disabled:cursor-not-allowed",
+              "shadow-sm hover:shadow-md"
+            )}
+          >
+            {isOpeningAiTool ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Ouverture...
+              </>
+            ) : (
+              <>
+                <Bot className="w-4 h-4" />
+                Ouvrir l'outil IA
+                <ExternalLink className="w-3 h-3 ml-1 opacity-70" />
+              </>
+            )}
+          </button>
+        )}
+      </div>
 
       {/* Expand/Collapse for Full Details */}
       <button

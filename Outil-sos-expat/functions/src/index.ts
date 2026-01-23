@@ -105,6 +105,7 @@ export {
   validateDashboardPassword,
   getMultiDashboardData,
   onBookingRequestCreatedGenerateAi,
+  generateMultiDashboardOutilToken,
 } from "./multiDashboard";
 
 // =============================================================================

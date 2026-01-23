@@ -35,6 +35,7 @@ const MultiProviderDashboard: React.FC = () => {
     authenticate,
     logout,
     refresh,
+    openAiTool,
   } = useMultiProviderDashboard();
 
   // Not authenticated - show password gate
@@ -157,7 +158,7 @@ const MultiProviderDashboard: React.FC = () => {
         ) : (
           <div className="space-y-6">
             {accounts.map((account) => (
-              <AccountCard key={account.userId} account={account} />
+              <AccountCard key={account.userId} account={account} onOpenAiTool={openAiTool} />
             ))}
           </div>
         )}
