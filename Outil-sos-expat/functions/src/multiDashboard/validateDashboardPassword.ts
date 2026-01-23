@@ -59,6 +59,12 @@ export const validateDashboardPassword = onCall<
     timeoutSeconds: 30,
     maxInstances: 10,
     secrets: [MULTI_DASHBOARD_PASSWORD], // Use secret from Secret Manager
+    cors: [
+      "https://sos-expat.com",
+      "https://www.sos-expat.com",
+      "http://localhost:3000",
+      "http://localhost:5173",
+    ],
   },
   async (request) => {
     const { password } = request.data;
