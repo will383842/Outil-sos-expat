@@ -5,7 +5,6 @@
  * - Voir les comptes avec plusieurs prestataires liés
  * - Lier un nouveau prestataire à un compte
  * - Délier un prestataire
- * - Définir le prestataire actif
  * - Voir la couverture des pays par avocats francophones
  * - Créer des avocats francophones pour les pays non couverts
  */
@@ -22,7 +21,6 @@ import {
   Unlink,
   Plus,
   X,
-  Star,
   Loader2,
   Scale,
   Globe,
@@ -65,20 +63,21 @@ interface Provider {
   name: string;
   email: string;
   type: 'lawyer' | 'expat';
-  isActive: boolean;
-  // 🆕 Status fields
+  // Status fields
   availability: 'available' | 'busy' | 'offline';
   isOnline: boolean;
   busyReason?: string;
   busyBySibling?: boolean;
   busySiblingProviderId?: string;
   currentCallSessionId?: string;
-  // 🆕 Payout fields
+  // Payout fields
   payoutMode?: 'internal' | string; // 'internal' or external account ID
   isAAA?: boolean;
-  // 🆕 Gateway fields (basé sur le pays)
+  // Gateway fields (basé sur le pays)
   country?: string;
   paymentGateway?: 'stripe' | 'paypal';
+  // Pays d'intervention
+  interventionCountries?: string[];
 }
 
 // External payout account
@@ -131,8 +130,12 @@ interface MultiProviderAccount {
   activeProviderId?: string;
   // 🆕 Busy status sharing
   shareBusyStatus: boolean;
-  // 🆕 Conflict detection
-  conflictWarning?: string;
+  // 🆕 Conflict detection - now shows ALL conflicts with details
+  conflictWarnings?: {
+    providerId: string;
+    providerName: string;
+    otherAccounts: { userId: string; displayName: string }[];
+  }[];
 }
 
 interface AvailableProvider {
@@ -188,6 +191,9 @@ export const IaMultiProvidersTab: React.FC = () => {
     orphanedLinks: number;
     staleBusy: number;
   } | null>(null);
+
+  // 🆕 Conflict summary state
+  const [showConflictSummary, setShowConflictSummary] = useState(false);
 
   // 🆕 Payout config
   const [payoutConfig, setPayoutConfig] = useState<PayoutConfig>({
@@ -251,9 +257,14 @@ export const IaMultiProvidersTab: React.FC = () => {
       });
 
       // 🆕 First pass: build the linkage map for conflict detection
+      // Also build a map of userId -> displayName for conflict details
+      const userDisplayNames: { [userId: string]: string } = {};
+
       for (const docSnap of usersSnap.docs) {
         const data = docSnap.data();
         const linkedIds: string[] = data.linkedProviderIds || [];
+        const displayName = data.displayName || `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'N/A';
+        userDisplayNames[docSnap.id] = displayName;
 
         for (const pid of linkedIds) {
           if (!providerLinkageMap[pid]) {
@@ -286,64 +297,89 @@ export const IaMultiProvidersTab: React.FC = () => {
           const cachedProfile = profilesMap.get(pid);
           if (cachedProfile) {
             const country = cachedProfile.country || '';
+            // Get intervention countries (fallback to country if empty)
+            const interventionCountries = cachedProfile.interventionCountries?.length > 0
+              ? cachedProfile.interventionCountries
+              : cachedProfile.practiceCountries?.length > 0
+                ? cachedProfile.practiceCountries
+                : country ? [country] : [];
             providers.push({
               id: pid,
               name: cachedProfile.displayName || 'N/A',
               email: cachedProfile.email || '',
               type: cachedProfile.type,
-              isActive: data.activeProviderId === pid,
-              // 🆕 Status fields from profile
+              // Status fields from profile
               availability: cachedProfile.availability || 'offline',
               isOnline: cachedProfile.isOnline === true,
               busyReason: cachedProfile.busyReason,
               busyBySibling: cachedProfile.busyBySibling === true,
               busySiblingProviderId: cachedProfile.busySiblingProviderId,
               currentCallSessionId: cachedProfile.currentCallSessionId,
-              // 🆕 Payout fields
+              // Payout fields
               payoutMode: cachedProfile.aaaPayoutMode || cachedProfile.payoutMode || 'internal',
               isAAA: cachedProfile.isAAA === true,
-              // 🆕 Gateway fields
+              // Gateway fields
               country,
               paymentGateway: getPaymentGateway(country),
+              // Intervention countries
+              interventionCountries,
             });
           } else {
             // Fallback: chercher dans usersMap (cache)
             const cachedUser = usersMap.get(pid);
             if (cachedUser) {
               const country = cachedUser.country || '';
+              // Get intervention countries (fallback to country if empty)
+              const interventionCountries = cachedUser.interventionCountries?.length > 0
+                ? cachedUser.interventionCountries
+                : cachedUser.practiceCountries?.length > 0
+                  ? cachedUser.practiceCountries
+                  : country ? [country] : [];
               providers.push({
                 id: pid,
                 name: cachedUser.displayName || 'N/A',
                 email: cachedUser.email || '',
                 type: cachedUser.type === 'expat_aidant' ? 'expat' : 'lawyer',
-                isActive: data.activeProviderId === pid,
-                // 🆕 Status fields from user
+                // Status fields from user
                 availability: cachedUser.availability || 'offline',
                 isOnline: cachedUser.isOnline === true,
                 busyReason: cachedUser.busyReason,
                 busyBySibling: cachedUser.busyBySibling === true,
                 busySiblingProviderId: cachedUser.busySiblingProviderId,
                 currentCallSessionId: cachedUser.currentCallSessionId,
-                // 🆕 Payout fields
+                // Payout fields
                 payoutMode: cachedUser.aaaPayoutMode || cachedUser.payoutMode || 'internal',
                 isAAA: cachedUser.isAAA === true,
-                // 🆕 Gateway fields
+                // Gateway fields
                 country,
                 paymentGateway: getPaymentGateway(country),
+                // Intervention countries
+                interventionCountries,
               });
             }
           }
         }
 
-        // 🆕 Check for conflict: any provider linked to multiple accounts?
-        let conflictWarning: string | undefined;
+        // 🆕 Check for ALL conflicts: any provider linked to multiple accounts?
+        const conflictWarnings: {
+          providerId: string;
+          providerName: string;
+          otherAccounts: { userId: string; displayName: string }[];
+        }[] = [];
+
         for (const pid of linkedIds) {
           const linkedTo = providerLinkageMap[pid] || [];
           if (linkedTo.length > 1) {
-            const otherAccounts = linkedTo.filter(uid => uid !== docSnap.id);
+            const otherAccountIds = linkedTo.filter(uid => uid !== docSnap.id);
             const providerName = providers.find(p => p.id === pid)?.name || pid;
-            conflictWarning = `⚠️ "${providerName}" est aussi lié à ${otherAccounts.length} autre(s) compte(s)`;
-            break; // Show first conflict only
+            conflictWarnings.push({
+              providerId: pid,
+              providerName,
+              otherAccounts: otherAccountIds.map(uid => ({
+                userId: uid,
+                displayName: userDisplayNames[uid] || uid
+              }))
+            });
           }
         }
 
@@ -354,7 +390,7 @@ export const IaMultiProvidersTab: React.FC = () => {
           providers,
           activeProviderId: data.activeProviderId,
           shareBusyStatus: data.shareBusyStatus === true, // 🆕
-          conflictWarning // 🆕
+          conflictWarnings: conflictWarnings.length > 0 ? conflictWarnings : undefined // 🆕
         });
       }
 
@@ -381,32 +417,6 @@ export const IaMultiProvidersTab: React.FC = () => {
   // ============================================================================
   // ACTIONS
   // ============================================================================
-
-  const setActiveProvider = async (account: MultiProviderAccount, providerId: string) => {
-    setSaving(account.userId);
-    try {
-      await updateDoc(doc(db, 'users', account.userId), {
-        activeProviderId: providerId,
-        updatedAt: serverTimestamp()
-      });
-
-      setAccounts(prev => prev.map(a => {
-        if (a.userId !== account.userId) return a;
-        return {
-          ...a,
-          activeProviderId: providerId,
-          providers: a.providers.map(p => ({ ...p, isActive: p.id === providerId }))
-        };
-      }));
-
-      setSuccess('Prestataire actif mis à jour');
-      setTimeout(() => setSuccess(null), 3000);
-    } catch (err) {
-      setError('Erreur lors de la mise à jour');
-    } finally {
-      setSaving(null);
-    }
-  };
 
   const unlinkProvider = async (account: MultiProviderAccount, providerId: string) => {
     if (account.providers.length <= 1) {
@@ -442,12 +452,45 @@ export const IaMultiProvidersTab: React.FC = () => {
 
       setSuccess('Prestataire délié');
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err) {
+    } catch {
       setError('Erreur lors de la suppression du lien');
     } finally {
       setSaving(null);
     }
   };
+
+  // 🆕 Delete entire account (unlink all providers)
+  const deleteAccount = async (account: MultiProviderAccount) => {
+    const providerNames = account.providers.map(p => p.name).join(', ');
+
+    if (!confirm(
+      `Voulez-vous vraiment supprimer le compte "${account.displayName}" ?\n\n` +
+      `Cela va délier ${account.providers.length} prestataire(s):\n${providerNames}\n\n` +
+      `Les prestataires ne seront pas supprimés, juste déliés de ce compte.`
+    )) return;
+
+    setSaving(account.userId);
+    try {
+      await updateDoc(doc(db, 'users', account.userId), {
+        linkedProviderIds: [],
+        activeProviderId: null,
+        isMultiProvider: false,
+        updatedAt: serverTimestamp()
+      });
+
+      // Remove from local state
+      setAccounts(prev => prev.filter(a => a.userId !== account.userId));
+
+      setSuccess(`Compte "${account.displayName}" supprimé - ${account.providers.length} prestataire(s) délié(s)`);
+      setTimeout(() => setSuccess(null), 4000);
+    } catch (err) {
+      console.error('Error deleting account:', err);
+      setError('Erreur lors de la suppression du compte');
+    } finally {
+      setSaving(null);
+    }
+  };
+
 
   const linkProvider = async () => {
     if (!selectedAccountId || !selectedProviderId) return;
@@ -474,7 +517,7 @@ export const IaMultiProvidersTab: React.FC = () => {
       setTimeout(() => setSuccess(null), 3000);
       closeModal();
       loadData();
-    } catch (err) {
+    } catch {
       setError('Erreur lors de la liaison');
     } finally {
       setSaving(null);
@@ -632,6 +675,8 @@ export const IaMultiProvidersTab: React.FC = () => {
           ? {
               availability: 'available',
               isOnline: true,
+              isVisible: true,
+              isVisibleOnMap: true,
               lastActivity: now,
               busyReason: null,
               busySince: null,
@@ -694,6 +739,8 @@ export const IaMultiProvidersTab: React.FC = () => {
         ? {
             availability: 'available',
             isOnline: true,
+            isVisible: true,
+            isVisibleOnMap: true,
             lastActivity: now,
             busyReason: null,
             busySince: null,
@@ -1010,6 +1057,93 @@ export const IaMultiProvidersTab: React.FC = () => {
             />
           </div>
 
+          {/* 🆕 Conflict Summary Section */}
+          {!loading && accounts.filter(a => a.conflictWarnings && a.conflictWarnings.length > 0).length > 0 && (
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-6">
+              <button
+                onClick={() => setShowConflictSummary(!showConflictSummary)}
+                className="w-full flex items-center justify-between text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-amber-100 dark:bg-amber-900/40 rounded-lg">
+                    <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-amber-800 dark:text-amber-200">
+                      Doublons détectés
+                    </h3>
+                    <p className="text-sm text-amber-600 dark:text-amber-400">
+                      {accounts.filter(a => a.conflictWarnings && a.conflictWarnings.length > 0).length} compte(s) avec prestataires en conflit
+                    </p>
+                  </div>
+                </div>
+                <span className="text-amber-600 dark:text-amber-400">
+                  {showConflictSummary ? '▲ Réduire' : '▼ Voir détails'}
+                </span>
+              </button>
+
+              {showConflictSummary && (
+                <div className="mt-4 space-y-3 border-t border-amber-200 dark:border-amber-700 pt-4">
+                  {(() => {
+                    // Build a unified view of all duplicated providers
+                    const duplicatedProviders = new Map<string, {
+                      providerName: string;
+                      accounts: { userId: string; displayName: string }[];
+                    }>();
+
+                    accounts.forEach(account => {
+                      account.conflictWarnings?.forEach(conflict => {
+                        if (!duplicatedProviders.has(conflict.providerId)) {
+                          duplicatedProviders.set(conflict.providerId, {
+                            providerName: conflict.providerName,
+                            accounts: [{ userId: account.userId, displayName: account.displayName }]
+                          });
+                        }
+                        // Add other accounts
+                        conflict.otherAccounts.forEach(other => {
+                          const existing = duplicatedProviders.get(conflict.providerId);
+                          if (existing && !existing.accounts.find(a => a.userId === other.userId)) {
+                            existing.accounts.push(other);
+                          }
+                        });
+                      });
+                    });
+
+                    return Array.from(duplicatedProviders.entries()).map(([providerId, info]) => (
+                      <div
+                        key={providerId}
+                        className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-amber-200 dark:border-amber-700"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="font-medium text-gray-900 dark:text-white">
+                              {info.providerName}
+                            </span>
+                            <span className="mx-2 text-amber-500">→</span>
+                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                              Lié à {info.accounts.length} comptes:
+                            </span>
+                          </div>
+                        </div>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {info.accounts.map(acc => (
+                            <span
+                              key={acc.userId}
+                              className="inline-flex items-center gap-1 px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded text-xs"
+                            >
+                              <User className="w-3 h-3" />
+                              {acc.displayName}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Accounts List */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
@@ -1061,6 +1195,15 @@ export const IaMultiProvidersTab: React.FC = () => {
                     >
                       <Plus className="w-4 h-4" />
                     </button>
+                    {/* 🆕 Delete Account button */}
+                    <button
+                      onClick={() => deleteAccount(account)}
+                      disabled={saving === account.userId}
+                      className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
+                      title="Supprimer ce compte (délier tous les prestataires)"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
 
@@ -1090,33 +1233,69 @@ export const IaMultiProvidersTab: React.FC = () => {
                     {account.shareBusyStatus && <Check className="w-3 h-3" />}
                   </button>
 
-                  {/* 🆕 All Online / All Offline buttons */}
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => setAllProvidersStatus(account, true)}
-                      disabled={saving === account.userId}
-                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors disabled:opacity-50"
-                      title="Mettre tous les prestataires en ligne"
-                    >
-                      <Power className="w-3.5 h-3.5" />
-                      <span>Tout en ligne</span>
-                    </button>
-                    <button
-                      onClick={() => setAllProvidersStatus(account, false)}
-                      disabled={saving === account.userId}
-                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
-                      title="Mettre tous les prestataires hors ligne"
-                    >
-                      <PowerOff className="w-3.5 h-3.5" />
-                      <span>Tout hors ligne</span>
-                    </button>
-                  </div>
+                  {/* Account status toggle - changes color based on state */}
+                  {(() => {
+                    const allOnline = account.providers.every(p => p.isOnline && p.availability !== 'offline');
+                    const allOffline = account.providers.every(p => !p.isOnline || p.availability === 'offline');
+                    const onlineCount = account.providers.filter(p => p.isOnline && p.availability !== 'offline').length;
 
-                  {/* Conflict Warning */}
-                  {account.conflictWarning && (
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 rounded-lg text-xs">
-                      <AlertTriangle className="w-3.5 h-3.5" />
-                      <span>{account.conflictWarning}</span>
+                    return (
+                      <div className="flex items-center gap-2">
+                        {/* Status indicator */}
+                        <span className={cn(
+                          "text-xs font-medium px-2 py-1 rounded-full",
+                          allOnline ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400" :
+                          allOffline ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400" :
+                          "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"
+                        )}>
+                          {allOnline ? 'Tous en ligne' :
+                           allOffline ? 'Tous hors ligne' :
+                           `${onlineCount}/${account.providers.length} en ligne`}
+                        </span>
+
+                        {/* Toggle button */}
+                        <button
+                          onClick={() => setAllProvidersStatus(account, !allOnline)}
+                          disabled={saving === account.userId}
+                          className={cn(
+                            "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50",
+                            allOnline
+                              ? "bg-green-500 text-white hover:bg-green-600"
+                              : allOffline
+                                ? "bg-red-500 text-white hover:bg-red-600"
+                                : "bg-amber-500 text-white hover:bg-amber-600"
+                          )}
+                          title={allOnline ? "Mettre tous hors ligne" : "Mettre tous en ligne"}
+                        >
+                          {saving === account.userId ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : allOnline ? (
+                            <Power className="w-3.5 h-3.5" />
+                          ) : (
+                            <PowerOff className="w-3.5 h-3.5" />
+                          )}
+                          <span>{allOnline ? 'Désactiver' : 'Activer'}</span>
+                        </button>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Conflict Warnings - Show ALL conflicts with details */}
+                  {account.conflictWarnings && account.conflictWarnings.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {account.conflictWarnings.map((conflict, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 rounded-lg text-xs"
+                          title={`Aussi lié à: ${conflict.otherAccounts.map(a => a.displayName).join(', ')}`}
+                        >
+                          <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+                          <span>
+                            "{conflict.providerName}" aussi dans:{' '}
+                            <strong>{conflict.otherAccounts.map(a => a.displayName).join(', ')}</strong>
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   )}
 
@@ -1139,8 +1318,7 @@ export const IaMultiProvidersTab: React.FC = () => {
                     key={provider.id}
                     className={cn(
                       "p-4",
-                      provider.isActive && "bg-green-50 dark:bg-green-900/10",
-                      provider.availability === 'busy' && !provider.isActive && "bg-red-50/50 dark:bg-red-900/5"
+                      provider.availability === 'busy' && "bg-red-50/50 dark:bg-red-900/5"
                     )}
                   >
                     <div className="flex items-center justify-between">
@@ -1172,13 +1350,7 @@ export const IaMultiProvidersTab: React.FC = () => {
                             <span className="font-medium text-gray-900 dark:text-white">
                               {provider.name}
                             </span>
-                            {provider.isActive && (
-                              <span className="flex items-center gap-1 px-1.5 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded">
-                                <Star className="w-3 h-3" />
-                                Actif
-                              </span>
-                            )}
-                            {/* 🆕 Status Badge */}
+                            {/* Status Badge */}
                             {provider.availability === 'busy' && (
                               <span className={cn(
                                 "flex items-center gap-1 px-1.5 py-0.5 text-xs rounded",
@@ -1205,7 +1377,18 @@ export const IaMultiProvidersTab: React.FC = () => {
                           <p className="text-xs text-gray-500 dark:text-gray-400">
                             {provider.email || provider.id}
                           </p>
-                          {/* 🆕 Busy reason details */}
+                          {/* Pays d'intervention */}
+                          {provider.interventionCountries && provider.interventionCountries.length > 0 && (
+                            <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5 flex items-center gap-1">
+                              <MapPin className="w-3 h-3 flex-shrink-0" />
+                              <span className="truncate max-w-xs" title={provider.interventionCountries.join(', ')}>
+                                {provider.interventionCountries.length <= 3
+                                  ? provider.interventionCountries.join(', ')
+                                  : `${provider.interventionCountries.slice(0, 3).join(', ')} +${provider.interventionCountries.length - 3}`}
+                              </span>
+                            </p>
+                          )}
+                          {/* Busy reason details */}
                           {provider.availability === 'busy' && provider.busyReason && (
                             <p className="text-xs text-red-500 dark:text-red-400 mt-0.5 flex items-center gap-1">
                               <Clock className="w-3 h-3" />
@@ -1320,15 +1503,6 @@ export const IaMultiProvidersTab: React.FC = () => {
                           )
                         )}
 
-                        {!provider.isActive && (
-                          <button
-                            onClick={() => setActiveProvider(account, provider.id)}
-                            disabled={saving === account.userId}
-                            className="px-3 py-1.5 text-xs font-medium text-blue-700 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 disabled:opacity-50"
-                          >
-                            Activer
-                          </button>
-                        )}
                         <button
                           onClick={() => unlinkProvider(account, provider.id)}
                           disabled={saving === account.userId}
