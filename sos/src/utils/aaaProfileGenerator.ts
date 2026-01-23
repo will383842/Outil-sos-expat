@@ -482,6 +482,7 @@ export async function generateCompleteAaaProfile(params: AaaProfileGenerationPar
     createdAt: Timestamp.fromDate(createdAt),
     updatedAt: serverTimestamp(),
     lastLoginAt: serverTimestamp(),
+    lastActivity: serverTimestamp(),  // ✅ Ajouté pour éviter les problèmes avec orderBy
     role,
     isSOS: true,
     points: 0,

@@ -972,11 +972,13 @@ const AdminProviders: React.FC = () => {
     }
 
     try {
+      // ✅ FIX: Utiliser createdAt au lieu de lastActivity car lastActivity
+      // n'existe pas toujours sur les nouveaux profils (exclut les profils sans ce champ)
       const providersQuery = query(
         collection(db, 'sos_profiles'),
         where('type', 'in', ['lawyer', 'expat']),
-        orderBy('lastActivity', 'desc'),
-        limit(200)
+        orderBy('createdAt', 'desc'),
+        limit(500)  // Augmenté pour afficher plus de profils
       );
 
       const snapshot = await getDocs(providersQuery);

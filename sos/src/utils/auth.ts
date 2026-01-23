@@ -189,6 +189,7 @@ const registerUser = async (
         documents: [],
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
+        lastActivity: serverTimestamp(),  // ✅ Ajouté pour éviter les problèmes avec orderBy
       };
 
       await setDoc(doc(db, "sos_profiles", firebaseUser.uid), sosProfileData);

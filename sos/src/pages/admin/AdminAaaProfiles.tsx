@@ -1883,25 +1883,70 @@ const AdminAaaProfiles: React.FC = () => {
   const loadExistingProfiles = async () => {
     try {
       setIsLoadingProfiles(true);
-      const usersRef = collection(db, 'users');
-      // Use server-side filtering to only load test profiles (prevents loading 100K+ users)
-      const testProfilesQuery = query(
-        usersRef,
+
+      // ✅ FIX: Charger les profils AAA depuis sos_profiles (source de vérité)
+      // Les profils AAA sont identifiés par isAAA: true OU createdByAdmin: true OU isTestProfile: true
+      const sosProfilesRef = collection(db, 'sos_profiles');
+
+      // Requête 1: Profils avec isAAA: true
+      const aaaQuery = query(
+        sosProfilesRef,
+        where('isAAA', '==', true),
+        orderBy('createdAt', 'desc'),
+        limit(300)
+      );
+
+      // Requête 2: Profils avec createdByAdmin: true (backup)
+      const adminCreatedQuery = query(
+        sosProfilesRef,
+        where('createdByAdmin', '==', true),
+        orderBy('createdAt', 'desc'),
+        limit(300)
+      );
+
+      // Requête 3: Profils avec isTestProfile: true (legacy)
+      const testProfileQuery = query(
+        sosProfilesRef,
         where('isTestProfile', '==', true),
         orderBy('createdAt', 'desc'),
-        limit(500) // Limit to 500 test profiles max for performance
+        limit(300)
       );
-      const snapshot = await getDocs(testProfilesQuery);
-      const profiles = snapshot.docs.map((d) => {
-        const data = d.data();
-        return {
-          id: d.id, ...data,
-          createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(),
-        } as AaaProfile;
-      });
+
+      // Exécuter les 3 requêtes en parallèle
+      const [aaaSnapshot, adminSnapshot, testSnapshot] = await Promise.all([
+        getDocs(aaaQuery),
+        getDocs(adminCreatedQuery),
+        getDocs(testProfileQuery)
+      ]);
+
+      // Fusionner et dédupliquer les résultats
+      const profilesMap = new Map<string, AaaProfile>();
+
+      const processSnapshot = (snapshot: typeof aaaSnapshot) => {
+        snapshot.docs.forEach((d) => {
+          if (!profilesMap.has(d.id)) {
+            const data = d.data();
+            profilesMap.set(d.id, {
+              id: d.id, ...data,
+              createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(),
+            } as AaaProfile);
+          }
+        });
+      };
+
+      processSnapshot(aaaSnapshot);
+      processSnapshot(adminSnapshot);
+      processSnapshot(testSnapshot);
+
+      // Convertir en array et trier par date
+      const profiles = Array.from(profilesMap.values()).sort(
+        (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+      );
+
       setExistingProfiles(profiles);
+      console.log(`[AAA Profiles] Loaded ${profiles.length} profiles (AAA: ${aaaSnapshot.size}, AdminCreated: ${adminSnapshot.size}, Test: ${testSnapshot.size})`);
     } catch (e) {
-      console.error(e);
+      console.error('[AAA Profiles] Error loading profiles:', e);
     } finally {
       setIsLoadingProfiles(false);
     }
