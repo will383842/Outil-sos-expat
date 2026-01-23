@@ -100,6 +100,12 @@ export {
   archiveExpiredConversations,
 } from "./scheduled";
 
+// Multi-Provider Dashboard
+export {
+  validateDashboardPassword,
+  onBookingRequestCreatedGenerateAi,
+} from "./multiDashboard";
+
 // =============================================================================
 // WEBHOOK: INGEST BOOKING (avec validation et rate limiting)
 // =============================================================================

@@ -1,6 +1,6 @@
 // src/hooks/useDisputes.ts
 // Custom hook for disputes collection queries and management
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   collection,
   doc,
@@ -775,7 +775,9 @@ export function useUrgentDisputesAlert(onNewUrgent?: (dispute: Dispute) => void)
   urgentDisputes: Dispute[];
 } {
   const [urgentDisputes, setUrgentDisputes] = useState<Dispute[]>([]);
-  const [seenIds, setSeenIds] = useState<Set<string>>(new Set());
+  // P0 FIX: Use ref instead of state to prevent infinite loop
+  // seenIds in useEffect dependencies caused: snapshot → setSeenIds → re-run effect → new snapshot
+  const seenIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const fortyEightHoursFromNow = new Date(Date.now() + 48 * 60 * 60 * 1000);
@@ -794,17 +796,18 @@ export function useUrgentDisputesAlert(onNewUrgent?: (dispute: Dispute) => void)
       // Check for new urgent disputes
       if (onNewUrgent) {
         disputes.forEach(d => {
-          if (!seenIds.has(d.id)) {
+          if (!seenIdsRef.current.has(d.id)) {
             onNewUrgent(d);
           }
         });
       }
 
-      setSeenIds(new Set(disputes.map(d => d.id)));
+      // Update ref (doesn't trigger re-render or effect re-run)
+      seenIdsRef.current = new Set(disputes.map(d => d.id));
     });
 
     return () => unsubscribe();
-  }, [onNewUrgent, seenIds]);
+  }, [onNewUrgent]);
 
   return {
     urgentCount: urgentDisputes.length,

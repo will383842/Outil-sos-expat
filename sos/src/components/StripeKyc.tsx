@@ -22,7 +22,8 @@ import {
 import dashboardLog from "../utils/dashboardLogger";
 
 // P0 FIX: Polling interval for KYC status check (fallback if webhook fails)
-const KYC_POLLING_INTERVAL_MS = 30000; // 30 seconds
+// P1 FIX: Increased from 30s to 60s to reduce re-renders and API calls
+const KYC_POLLING_INTERVAL_MS = 60000; // 60 seconds
 
 interface Props {
   onComplete?: () => void;

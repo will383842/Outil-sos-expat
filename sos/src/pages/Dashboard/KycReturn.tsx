@@ -12,7 +12,8 @@
  */
 
 import { useEffect, useState, useRef } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
+import { useLocaleNavigate } from "@/multilingual-system/hooks/useLocaleNavigate";
 import { useIntl, FormattedMessage } from "react-intl";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,7 +24,8 @@ type KycReturnStatus = "loading" | "success" | "incomplete" | "error" | "refresh
 
 export default function KycReturn() {
   const intl = useIntl();
-  const navigate = useNavigate();
+  // P0 FIX: Use useLocaleNavigate to prevent double redirects (LocaleRouter was re-redirecting)
+  const navigate = useLocaleNavigate();
   const [searchParams] = useSearchParams();
   const { user, refreshUser } = useAuth();
 

@@ -657,6 +657,10 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
   const [showReviewModal, setShowReviewModal] = useState<boolean>(false);
   const [selectedCallForReview, setSelectedCallForReview] = useState<Call | null>(null);
 
+  // P0 FIX: Stable photo version to prevent image flickering on re-renders
+  // Date.now() in image src caused re-downloads on every render
+  const [photoVersion, setPhotoVersion] = useState<number>(() => Date.now());
+
   // Profil (édition) pré-rempli
   const baseProfile: ProfileData = useMemo(
     () => ({
@@ -1043,6 +1047,8 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
 
         // MAJ UI immédiate
         setProfileData((prev) => ({ ...prev, profilePhoto: url }));
+        // P0 FIX: Update photo version to force image reload only when photo actually changes
+        setPhotoVersion(Date.now());
 
         await logAuditEvent(user.id, "profile_photo_updated", { newUrl: url });
         await refreshUser?.(); // propage vers sidebar / profil
@@ -2548,7 +2554,7 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                       <div className="flex items-center gap-6">
                         {profileData.profilePhoto ? (
                           <img
-                            src={`${profileData.profilePhoto}?v=${Date.now()}`}
+                            src={`${profileData.profilePhoto}?v=${photoVersion}`}
                             alt="preview"
                             className="w-24 h-24 rounded-full object-cover border border-white/30 dark:border-white/10"
                           />
@@ -2881,7 +2887,7 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                       <div className="flex items-center gap-6">
                         {profileData.profilePhoto ? (
                           <img
-                            src={`${profileData.profilePhoto}?v=${Date.now()}`}
+                            src={`${profileData.profilePhoto}?v=${photoVersion}`}
                             alt="preview"
                             className="w-24 h-24 rounded-full object-cover border border-white/30 dark:border-white/10"
                           />

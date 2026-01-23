@@ -97,6 +97,8 @@ export const useProviderActivityTracker = ({
   const lastActivityRef = useRef<Date>(lastActivity); // Keep ref for debounce callback
   const updateIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // P0 FIX: Separate debounce for React state updates to reduce re-renders
+  const stateDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
   // 🔒 Gestion de l'état de visibilité de l'onglet
   const [isTabVisible, setIsTabVisible] = useState(!document.hidden);
@@ -128,12 +130,20 @@ export const useProviderActivityTracker = ({
       timestamp: new Date(),
     };
 
-    // ✅ CRITICAL FIX: Update both ref (for callbacks) AND state (for re-renders)
+    // ✅ CRITICAL FIX: Update ref immediately (for callbacks that need current value)
     lastActivityRef.current = activityEvent.timestamp;
-    setLastActivity(activityEvent.timestamp);
 
     // ✅ CRITICAL FIX: Persist to localStorage to survive page navigation
     saveLastActivity(activityEvent.timestamp);
+
+    // P0 FIX: Debounce React state updates to reduce re-renders (1 second delay)
+    // This prevents 30+ re-renders per minute from user interactions
+    if (stateDebounceRef.current) {
+      clearTimeout(stateDebounceRef.current);
+    }
+    stateDebounceRef.current = setTimeout(() => {
+      setLastActivity(activityEvent.timestamp);
+    }, 1000);
 
     // Debounce pour éviter trop de mises à jour
     if (debounceTimerRef.current) {
@@ -192,6 +202,10 @@ export const useProviderActivityTracker = ({
       events.forEach(event => {
         window.removeEventListener(event, handleActivity);
       });
+      // P0 FIX: Clear state debounce timer on cleanup
+      if (stateDebounceRef.current) {
+        clearTimeout(stateDebounceRef.current);
+      }
     };
   }, [isOnline, isProvider, handleActivity]);
 

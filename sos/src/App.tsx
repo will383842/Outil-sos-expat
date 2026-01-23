@@ -124,6 +124,9 @@ const KycReturn = lazy(() => import('./pages/Dashboard/KycReturn'));
 // Conversations (Provider Tool - integrated from Outil-sos-expat)
 const ConversationHistory = lazy(() => import('./pages/Dashboard/Conversations/History'));
 
+// Multi-Provider Dashboard (standalone, password-protected)
+const MultiProviderDashboard = lazy(() => import('./pages/MultiProviderDashboard'));
+
 // -------------------------------------------
 // Laguage config
 // -------------------------------------------
@@ -636,7 +639,12 @@ const App: React.FC = () => {
   const isAdminPath = (p: string) =>
     /(^\/admin(\/|$))|(^\/[^/]+\/admin(\/|$))/i.test(p || "");
 
+  // helper to detect multi-dashboard path
+  const isMultiDashboardPath = (p: string) =>
+    /^\/multi-dashboard(\/|$)/i.test(p || "");
+
   const showAdminLayout = isAdminPath(location.pathname);
+  const showMultiDashboard = isMultiDashboardPath(location.pathname);
   
 
   return (
@@ -647,8 +655,16 @@ const App: React.FC = () => {
         enableOfflineStorage={true}
         enableBadging={true}
       >
-      {/* Render admin routes only when current path is admin (no site layout/navbar) */}
-      {showAdminLayout ? (
+      {/* Render multi-dashboard (standalone, no layout) */}
+      {showMultiDashboard ? (
+        <Suspense fallback={<LoadingSpinner size="large" color="red" />}>
+          <Routes>
+            <Route path="/multi-dashboard" element={<MultiProviderDashboard />} />
+            <Route path="*" element={<Navigate to="/multi-dashboard" replace />} />
+          </Routes>
+        </Suspense>
+      ) : showAdminLayout ? (
+        /* Render admin routes only when current path is admin (no site layout/navbar) */
         <Routes>
           {/* Catch locale-prefixed admin paths and strip locale (preserve subpath & query) */}
           <Route path="/:locale/admin" element={<AdminLocaleStrip />} />

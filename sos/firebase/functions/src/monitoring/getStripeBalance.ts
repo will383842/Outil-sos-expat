@@ -64,6 +64,41 @@ async function verifyAdminAccess(uid: string): Promise<boolean> {
 }
 
 /**
+ * Sleep helper for retry logic
+ */
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * Fetch Stripe balance with retry logic
+ */
+async function fetchBalanceWithRetry(
+  stripe: Stripe,
+  maxRetries: number = 3
+): Promise<Stripe.Balance> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await stripe.balance.retrieve();
+    } catch (error) {
+      lastError = error as Error;
+      logger.warn(`[StripeBalance] Attempt ${attempt}/${maxRetries} failed:`, {
+        error: (error as Error).message,
+      });
+
+      if (attempt < maxRetries) {
+        // Exponential backoff: 1s, 2s, 4s
+        const delay = Math.pow(2, attempt - 1) * 1000;
+        logger.info(`[StripeBalance] Retrying in ${delay}ms...`);
+        await sleep(delay);
+      }
+    }
+  }
+
+  throw lastError;
+}
+
+/**
  * Convert Stripe balance amounts to our format
  */
 function formatBalanceAmounts(amounts: Stripe.Balance.Available[] | Stripe.Balance.Pending[] | Stripe.Balance.ConnectReserved[] | undefined): BalanceAmount[] {
@@ -131,13 +166,15 @@ export const getStripeBalance = functions.onCall(
         );
       }
 
-      // Initialize Stripe client
+      // Initialize Stripe client with timeout and retry config
       const stripe = new Stripe(stripeSecretKey, {
         apiVersion: '2023-10-16' as Stripe.LatestApiVersion,
+        timeout: 10000, // 10 second timeout
+        maxNetworkRetries: 2, // SDK-level retries
       });
 
-      // Fetch balance from Stripe
-      const balance = await stripe.balance.retrieve();
+      // Fetch balance from Stripe with additional application-level retry
+      const balance = await fetchBalanceWithRetry(stripe, 3);
 
       // Format the response
       const response: StripeBalanceResponse = {
@@ -158,7 +195,21 @@ export const getStripeBalance = functions.onCall(
     } catch (error) {
       logger.error('[StripeBalance] Error fetching balance:', error);
 
+      const errorMessage = (error as Error).message || 'Unknown error';
+      const isConnectionError = errorMessage.includes('connection') ||
+                                 errorMessage.includes('network') ||
+                                 errorMessage.includes('ECONNREFUSED') ||
+                                 errorMessage.includes('ETIMEDOUT') ||
+                                 errorMessage.includes('retried');
+
       if (error instanceof Stripe.errors.StripeError) {
+        // For connection errors, return a more helpful message
+        if (isConnectionError) {
+          throw new functions.HttpsError(
+            'unavailable',
+            'Stripe service temporarily unavailable. Please try again in a few moments.'
+          );
+        }
         throw new functions.HttpsError(
           'internal',
           `Stripe API error: ${error.message}`
@@ -167,6 +218,14 @@ export const getStripeBalance = functions.onCall(
 
       if (error instanceof functions.HttpsError) {
         throw error;
+      }
+
+      // Generic connection error handling
+      if (isConnectionError) {
+        throw new functions.HttpsError(
+          'unavailable',
+          'Unable to connect to Stripe. Please try again later.'
+        );
       }
 
       throw new functions.HttpsError(

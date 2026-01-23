@@ -337,6 +337,112 @@ if (typeof navigator !== 'undefined' && 'storage' in navigator) {
 // 🔇 Réduire le bruit Firestore (logs seulement si erreur)
 setLogLevel("error");
 
+// 🔍 DIAGNOSTIC: Fonction pour tester l'accès au document users
+if (typeof window !== 'undefined') {
+  (window as any).diagnoseUserDocument = async () => {
+    const { doc, getDoc } = await import('firebase/firestore');
+
+    console.group('🔍 Diagnostic Document Users');
+
+    // 1. Vérifier l'état auth
+    const currentUser = auth.currentUser;
+    console.log('1️⃣ Auth State:');
+    console.log('  - currentUser:', currentUser ? currentUser.uid : 'null');
+    console.log('  - emailVerified:', currentUser?.emailVerified);
+
+    if (!currentUser) {
+      console.error('❌ Pas d\'utilisateur connecté');
+      console.groupEnd();
+      return;
+    }
+
+    // 2. Tester le token
+    console.log('\n2️⃣ Token ID:');
+    try {
+      const token = await currentUser.getIdToken(true); // Force refresh
+      console.log('  - Token obtenu:', token.substring(0, 50) + '...');
+
+      // Décoder le token pour voir les claims
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      console.log('  - Claims:', payload);
+      console.log('  - Expiration:', new Date(payload.exp * 1000).toISOString());
+      console.log('  - Role claim:', payload.role || '(non défini)');
+    } catch (e) {
+      console.error('  - Erreur token:', e);
+    }
+
+    // 3. Tester l'accès au document
+    console.log('\n3️⃣ Accès Document users/' + currentUser.uid + ':');
+    try {
+      const userRef = doc(db, 'users', currentUser.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        console.log('  ✅ Document existe');
+        console.log('  - Données:', userSnap.data());
+      } else {
+        console.error('  ❌ Document N\'EXISTE PAS');
+        console.log('  💡 Solution: Créer le document manuellement ou réinscrire l\'utilisateur');
+      }
+    } catch (e: any) {
+      console.error('  ❌ Erreur accès:', e.code, e.message);
+      if (e.code === 'permission-denied') {
+        console.log('  💡 Causes possibles:');
+        console.log('     1. Les règles Firestore ne permettent pas l\'accès');
+        console.log('     2. Le token n\'est pas correctement synchronisé');
+        console.log('     3. Le custom claim "role" n\'est pas défini');
+      }
+    }
+
+    console.groupEnd();
+    console.log('\n💡 Pour créer le document manuellement, exécutez: window.createUserDocument()');
+  };
+
+  // Fonction pour créer le document users si manquant
+  (window as any).createUserDocument = async () => {
+    const { doc, setDoc, serverTimestamp } = await import('firebase/firestore');
+
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      console.error('❌ Pas d\'utilisateur connecté');
+      return;
+    }
+
+    console.log('🔧 Création du document users/' + currentUser.uid + '...');
+
+    try {
+      const userData = {
+        uid: currentUser.uid,
+        id: currentUser.uid,
+        email: currentUser.email,
+        displayName: currentUser.displayName || '',
+        photoURL: currentUser.photoURL || null,
+        emailVerified: currentUser.emailVerified,
+        isVerifiedEmail: currentUser.emailVerified,
+        role: 'client',
+        isActive: true,
+        isApproved: true,
+        isBanned: false,
+        isOnline: false,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        lastLoginAt: serverTimestamp(),
+      };
+
+      await setDoc(doc(db, 'users', currentUser.uid), userData);
+      console.log('✅ Document créé avec succès!');
+      console.log('📝 Données:', userData);
+      console.log('🔄 Rechargez la page pour appliquer les changements');
+    } catch (e: any) {
+      console.error('❌ Erreur création:', e.code, e.message);
+    }
+  };
+
+  console.log('💡 [Firebase] Diagnostics disponibles:');
+  console.log('   window.diagnoseUserDocument() - Tester l\'accès au document users');
+  console.log('   window.createUserDocument() - Créer le document users si manquant');
+}
+
 /** ----------------------------------------------------
  *  Cloud Functions — Région unifiée
  * ---------------------------------------------------- */
