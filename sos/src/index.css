@@ -7,8 +7,8 @@
   html {
     scroll-behavior: smooth;
     overflow-x: hidden;
-    /* Mobile 2026: Eliminate 300ms tap delay globally */
-    touch-action: manipulation;
+    /* Mobile 2026: Allow scroll while eliminating zoom delay */
+    touch-action: pan-x pan-y;
     -webkit-tap-highlight-color: transparent;
   }
 
@@ -376,7 +376,7 @@
 
 /* Prevent rubber-banding on iOS when not needed */
 .no-overscroll {
-  overscroll-behavior: none;
+  overscroll-behavior: contain; /* Changed from 'none' - 'none' blocks wheel scroll on some browsers */
 }
 
 /* Hardware acceleration for smooth animations */
