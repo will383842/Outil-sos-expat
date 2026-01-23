@@ -597,14 +597,25 @@ export const IaMultiProvidersTab: React.FC = () => {
           };
 
       // Update sos_profiles (primary) and users (optional - may not exist for AAA profiles)
+      let profileUpdated = false;
+      let userUpdated = false;
+
       await Promise.all([
-        updateDoc(doc(db, 'sos_profiles', providerId), updateData).catch(() => {
-          // Profile document might not exist (orphaned link), ignore
-        }),
-        updateDoc(doc(db, 'users', providerId), updateData).catch(() => {
-          // User document might not exist for AAA profiles, ignore
-        })
+        updateDoc(doc(db, 'sos_profiles', providerId), updateData)
+          .then(() => { profileUpdated = true; })
+          .catch((err) => {
+            console.warn(`[forceProviderStatus] Failed to update sos_profiles/${providerId}:`, err.message);
+          }),
+        updateDoc(doc(db, 'users', providerId), updateData)
+          .then(() => { userUpdated = true; })
+          .catch((err) => {
+            console.warn(`[forceProviderStatus] Failed to update users/${providerId}:`, err.message);
+          })
       ]);
+
+      if (!profileUpdated && !userUpdated) {
+        throw new Error(`Impossible de forcer le statut: aucun document trouvé pour ce prestataire`);
+      }
 
       // Update local state
       setAccounts(prev => prev.map(a => ({
@@ -644,14 +655,25 @@ export const IaMultiProvidersTab: React.FC = () => {
       };
 
       // Update sos_profiles (primary) and users (optional - may not exist for AAA profiles)
+      let profileUpdated = false;
+      let userUpdated = false;
+
       await Promise.all([
-        updateDoc(doc(db, 'sos_profiles', providerId), updateData).catch(() => {
-          // Profile document might not exist (orphaned link), ignore
-        }),
-        updateDoc(doc(db, 'users', providerId), updateData).catch(() => {
-          // User document might not exist for AAA profiles, ignore
-        })
+        updateDoc(doc(db, 'sos_profiles', providerId), updateData)
+          .then(() => { profileUpdated = true; })
+          .catch((err) => {
+            console.warn(`[updateProviderPayoutMode] Failed to update sos_profiles/${providerId}:`, err.message);
+          }),
+        updateDoc(doc(db, 'users', providerId), updateData)
+          .then(() => { userUpdated = true; })
+          .catch((err) => {
+            console.warn(`[updateProviderPayoutMode] Failed to update users/${providerId}:`, err.message);
+          })
       ]);
+
+      if (!profileUpdated && !userUpdated) {
+        throw new Error(`Impossible de mettre à jour le mode de paiement: aucun document trouvé pour ce prestataire`);
+      }
 
       // Update local state
       setAccounts(prev => prev.map(a => ({
@@ -680,6 +702,9 @@ export const IaMultiProvidersTab: React.FC = () => {
     const now = serverTimestamp();
 
     try {
+      let successCount = 0;
+      let failCount = 0;
+
       const updatePromises = account.providers.map(async (provider) => {
         const updateData = online
           ? {
@@ -704,17 +729,36 @@ export const IaMultiProvidersTab: React.FC = () => {
             };
 
         // Update sos_profiles (primary) and users (optional - may not exist for AAA profiles)
+        let profileUpdated = false;
+        let userUpdated = false;
+
         await Promise.all([
-          updateDoc(doc(db, 'sos_profiles', provider.id), updateData).catch(() => {
-            // Profile document might not exist (orphaned link), ignore
-          }),
-          updateDoc(doc(db, 'users', provider.id), updateData).catch(() => {
-            // User document might not exist for AAA profiles, ignore
-          })
+          updateDoc(doc(db, 'sos_profiles', provider.id), updateData)
+            .then(() => { profileUpdated = true; })
+            .catch((err) => {
+              console.warn(`[setAllProvidersStatus] Failed to update sos_profiles/${provider.id}:`, err.message);
+            }),
+          updateDoc(doc(db, 'users', provider.id), updateData)
+            .then(() => { userUpdated = true; })
+            .catch((err) => {
+              console.warn(`[setAllProvidersStatus] Failed to update users/${provider.id}:`, err.message);
+            })
         ]);
+
+        if (profileUpdated || userUpdated) {
+          successCount++;
+        } else {
+          failCount++;
+          console.warn(`[setAllProvidersStatus] Provider ${provider.id} not found in any collection`);
+        }
       });
 
       await Promise.all(updatePromises);
+
+      // If ALL updates failed, throw an error
+      if (successCount === 0 && failCount > 0) {
+        throw new Error(`Aucun prestataire n'a pu être mis à jour`);
+      }
 
       // Update local state
       setAccounts(prev => prev.map(a => {
@@ -770,14 +814,27 @@ export const IaMultiProvidersTab: React.FC = () => {
           };
 
       // Update sos_profiles (primary) and users (optional - may not exist for AAA profiles)
+      // Track which updates succeeded to detect if provider doesn't exist
+      let profileUpdated = false;
+      let userUpdated = false;
+
       await Promise.all([
-        updateDoc(doc(db, 'sos_profiles', providerId), updateData).catch(() => {
-          // Profile document might not exist (orphaned link), ignore
-        }),
-        updateDoc(doc(db, 'users', providerId), updateData).catch(() => {
-          // User document might not exist for AAA profiles, ignore
-        })
+        updateDoc(doc(db, 'sos_profiles', providerId), updateData)
+          .then(() => { profileUpdated = true; })
+          .catch((err) => {
+            console.warn(`[toggleProviderOnline] Failed to update sos_profiles/${providerId}:`, err.message);
+          }),
+        updateDoc(doc(db, 'users', providerId), updateData)
+          .then(() => { userUpdated = true; })
+          .catch((err) => {
+            console.warn(`[toggleProviderOnline] Failed to update users/${providerId}:`, err.message);
+          })
       ]);
+
+      // If BOTH updates failed, the provider doesn't exist in either collection
+      if (!profileUpdated && !userUpdated) {
+        throw new Error(`Impossible de mettre à jour le statut: aucun document trouvé pour ce prestataire`);
+      }
 
       // Update local state
       setAccounts(prev => prev.map(a => ({
@@ -817,14 +874,25 @@ export const IaMultiProvidersTab: React.FC = () => {
       };
 
       // Update sos_profiles (primary) and users (optional)
+      let profileUpdated = false;
+      let userUpdated = false;
+
       await Promise.all([
-        updateDoc(doc(db, 'sos_profiles', providerId), updateData).catch(() => {
-          // Profile document might not exist (orphaned link), ignore
-        }),
-        updateDoc(doc(db, 'users', providerId), updateData).catch(() => {
-          // User document might not exist for AAA profiles, ignore
-        })
+        updateDoc(doc(db, 'sos_profiles', providerId), updateData)
+          .then(() => { profileUpdated = true; })
+          .catch((err) => {
+            console.warn(`[toggleProviderCoupling] Failed to update sos_profiles/${providerId}:`, err.message);
+          }),
+        updateDoc(doc(db, 'users', providerId), updateData)
+          .then(() => { userUpdated = true; })
+          .catch((err) => {
+            console.warn(`[toggleProviderCoupling] Failed to update users/${providerId}:`, err.message);
+          })
       ]);
+
+      if (!profileUpdated && !userUpdated) {
+        throw new Error(`Impossible de modifier le couplage: aucun document trouvé pour ce prestataire`);
+      }
 
       // Update local state
       setAccounts(prev => prev.map(a => ({
@@ -835,8 +903,8 @@ export const IaMultiProvidersTab: React.FC = () => {
       })));
 
       setSuccess(newValue
-        ? '✅ BusyOn - ce prestataire passera en busy si un autre est en appel'
-        : '⚠️ BusyOff - ce prestataire restera disponible même si un autre est en appel'
+        ? 'BusyOn - ce prestataire passera en busy si un autre est en appel'
+        : 'BusyOff - ce prestataire restera disponible même si un autre est en appel'
       );
       setTimeout(() => setSuccess(null), 4000);
     } catch (err) {

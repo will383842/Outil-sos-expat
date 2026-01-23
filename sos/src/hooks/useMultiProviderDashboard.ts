@@ -9,21 +9,8 @@
  */
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import {
-  collection,
-  query,
-  where,
-  orderBy,
-  limit,
-  onSnapshot,
-  getDocs,
-  doc,
-  getDoc,
-  Timestamp,
-} from 'firebase/firestore';
 import { httpsCallable, getFunctions } from 'firebase/functions';
 import { initializeApp, getApps } from 'firebase/app';
-import { db } from '../config/firebase';
 
 // ============================================================================
 // SECONDARY FIREBASE APP FOR OUTILS-SOS-EXPAT FUNCTIONS
@@ -289,145 +276,51 @@ export function useMultiProviderDashboard(): UseMultiProviderDashboardReturn {
   }, []);
 
   // ============================================================================
-  // DATA LOADING
+  // DATA LOADING (via Cloud Function to bypass Firestore rules)
   // ============================================================================
 
   const loadAccounts = useCallback(async () => {
     if (!isAuthenticated) return;
 
+    const session = getSession();
+    if (!session?.token) {
+      setError('Session invalide. Veuillez vous reconnecter.');
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
     try {
-      // 1. Load all users with linkedProviderIds
-      const usersSnap = await getDocs(collection(db, 'users'));
+      // Use Cloud Function to fetch data (bypasses Firestore rules)
+      const getMultiDashboardData = httpsCallable<
+        { sessionToken: string },
+        { success: boolean; accounts?: MultiProviderAccount[]; error?: string }
+      >(outilsFunctions, 'getMultiDashboardData');
 
-      const accountsWithProviders: MultiProviderAccount[] = [];
-      const providerIdsToWatch: string[] = [];
+      const result = await getMultiDashboardData({ sessionToken: session.token });
 
-      for (const userDoc of usersSnap.docs) {
-        const userData = userDoc.data();
-        const linkedIds: string[] = userData.linkedProviderIds || [];
-
-        // Only include users with at least one linked provider
-        if (linkedIds.length === 0) continue;
-
-        // Load provider details
-        const providers: Provider[] = [];
-        for (const pid of linkedIds) {
-          const profileDoc = await getDoc(doc(db, 'sos_profiles', pid));
-          if (profileDoc.exists()) {
-            const profile = profileDoc.data();
-            providers.push({
-              id: pid,
-              name: profile.displayName || profile.firstName || 'N/A',
-              email: profile.email || '',
-              type: profile.type || 'lawyer',
-              isActive: userData.activeProviderId === pid,
-              isOnline: profile.isOnline === true,
-              availability: profile.availability || 'offline',
-              country: profile.country,
-              avatar: profile.photoURL || profile.avatar,
-            });
-            providerIdsToWatch.push(pid);
-          }
-        }
-
-        accountsWithProviders.push({
-          userId: userDoc.id,
-          email: userData.email || '',
-          displayName: userData.displayName || `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || 'N/A',
-          shareBusyStatus: userData.shareBusyStatus === true,
-          providers,
-          bookingRequests: [],
-          activeProviderId: userData.activeProviderId,
-        });
+      if (!result.data.success || !result.data.accounts) {
+        throw new Error(result.data.error || 'Erreur lors du chargement');
       }
 
-      // Sort by number of providers (descending)
-      accountsWithProviders.sort((a, b) => b.providers.length - a.providers.length);
+      // Convert ISO date strings back to Date objects
+      const accountsWithDates: MultiProviderAccount[] = result.data.accounts.map(account => ({
+        ...account,
+        bookingRequests: account.bookingRequests.map(booking => ({
+          ...booking,
+          createdAt: new Date(booking.createdAt as unknown as string),
+          updatedAt: booking.updatedAt ? new Date(booking.updatedAt as unknown as string) : undefined,
+          aiResponse: booking.aiResponse ? {
+            ...booking.aiResponse,
+            generatedAt: new Date(booking.aiResponse.generatedAt as unknown as string),
+          } : undefined,
+          aiProcessedAt: booking.aiProcessedAt ? new Date(booking.aiProcessedAt as unknown as string) : undefined,
+        })),
+      }));
 
       if (!isMounted.current) return;
-      setAccounts(accountsWithProviders);
-
-      // 2. Setup real-time listeners for booking_requests
-      // Cleanup old subscriptions first
-      unsubscribersRef.current.forEach(unsub => unsub());
-      unsubscribersRef.current = [];
-
-      // Create a listener for each provider
-      for (const account of accountsWithProviders) {
-        for (const provider of account.providers) {
-          const bookingsQuery = query(
-            collection(db, 'booking_requests'),
-            where('providerId', '==', provider.id),
-            orderBy('createdAt', 'desc'),
-            limit(50)
-          );
-
-          const unsubscribe = onSnapshot(bookingsQuery, (snapshot) => {
-            if (!isMounted.current) return;
-
-            const bookings: BookingRequestWithAI[] = snapshot.docs.map(doc => {
-              const data = doc.data();
-              return {
-                id: doc.id,
-                providerId: data.providerId,
-                providerName: data.providerName,
-                providerType: data.providerType,
-                clientId: data.clientId,
-                clientName: data.clientName || `${data.clientFirstName || ''} ${data.clientLastName || ''}`.trim() || 'Client',
-                clientFirstName: data.clientFirstName,
-                clientLastName: data.clientLastName,
-                clientEmail: data.clientEmail,
-                clientPhone: data.clientPhone,
-                clientWhatsapp: data.clientWhatsapp,
-                clientCurrentCountry: data.clientCurrentCountry,
-                clientNationality: data.clientNationality,
-                clientLanguages: data.clientLanguages,
-                serviceType: data.serviceType,
-                title: data.title,
-                description: data.description,
-                status: data.status || 'pending',
-                createdAt: timestampToDate(data.createdAt),
-                updatedAt: data.updatedAt ? timestampToDate(data.updatedAt) : undefined,
-                aiResponse: data.aiResponse ? {
-                  content: data.aiResponse.content,
-                  generatedAt: timestampToDate(data.aiResponse.generatedAt),
-                  model: data.aiResponse.model,
-                  tokensUsed: data.aiResponse.tokensUsed,
-                  source: data.aiResponse.source || 'manual',
-                } : undefined,
-                aiProcessedAt: data.aiProcessedAt ? timestampToDate(data.aiProcessedAt) : undefined,
-              };
-            });
-
-            // Update the specific account with new bookings
-            setAccounts(prevAccounts =>
-              prevAccounts.map(acc => {
-                if (acc.userId !== account.userId) return acc;
-
-                // Merge bookings: replace those for this provider, keep others
-                const otherBookings = acc.bookingRequests.filter(b => b.providerId !== provider.id);
-                const allBookings = [...otherBookings, ...bookings];
-
-                // Sort by createdAt descending
-                allBookings.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-
-                return {
-                  ...acc,
-                  bookingRequests: allBookings,
-                };
-              })
-            );
-          }, (err) => {
-            console.error(`[useMultiProviderDashboard] Booking listener error for ${provider.id}:`, err);
-          });
-
-          unsubscribersRef.current.push(unsubscribe);
-        }
-      }
-
+      setAccounts(accountsWithDates);
       setIsLoading(false);
 
     } catch (err) {

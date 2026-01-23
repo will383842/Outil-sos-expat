@@ -7,4 +7,5 @@
  */
 
 export { validateDashboardPassword } from "./validateDashboardPassword";
+export { getMultiDashboardData } from "./getMultiDashboardData";
 export { onBookingRequestCreatedGenerateAi } from "./onBookingCreatedGenerateAi";

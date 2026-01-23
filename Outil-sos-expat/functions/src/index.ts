@@ -103,6 +103,7 @@ export {
 // Multi-Provider Dashboard
 export {
   validateDashboardPassword,
+  getMultiDashboardData,
   onBookingRequestCreatedGenerateAi,
 } from "./multiDashboard";
 
