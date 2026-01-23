@@ -166,12 +166,12 @@ function clearSession(): void {
 // HELPER FUNCTIONS
 // ============================================================================
 
-function timestampToDate(ts: Timestamp | Date | unknown): Date {
-  if (ts instanceof Timestamp) {
-    return ts.toDate();
-  }
+function timestampToDate(ts: Date | string | unknown): Date {
   if (ts instanceof Date) {
     return ts;
+  }
+  if (typeof ts === 'string') {
+    return new Date(ts);
   }
   if (typeof ts === 'object' && ts !== null && 'seconds' in ts) {
     return new Date((ts as { seconds: number }).seconds * 1000);
@@ -192,7 +192,6 @@ export function useMultiProviderDashboard(): UseMultiProviderDashboardReturn {
 
   // Refs
   const isMounted = useRef(true);
-  const unsubscribersRef = useRef<Array<() => void>>([]);
 
   // Check session on mount
   useEffect(() => {
@@ -209,9 +208,6 @@ export function useMultiProviderDashboard(): UseMultiProviderDashboardReturn {
     isMounted.current = true;
     return () => {
       isMounted.current = false;
-      // Cleanup all Firestore subscriptions
-      unsubscribersRef.current.forEach(unsub => unsub());
-      unsubscribersRef.current = [];
     };
   }, []);
 
@@ -269,10 +265,6 @@ export function useMultiProviderDashboard(): UseMultiProviderDashboardReturn {
     clearSession();
     setIsAuthenticated(false);
     setAccounts([]);
-
-    // Cleanup subscriptions
-    unsubscribersRef.current.forEach(unsub => unsub());
-    unsubscribersRef.current = [];
   }, []);
 
   // ============================================================================
