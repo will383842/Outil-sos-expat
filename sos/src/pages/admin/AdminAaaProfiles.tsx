@@ -2518,8 +2518,27 @@ const AdminAaaProfiles: React.FC = () => {
         return acc;
       }, {} as any);
       
-      await updateDoc(doc(db, 'users', selectedProfile.id), cleanData);
-      
+      // ✅ FIX: Ajouter try-catch pour gérer le cas où le document users n'existe pas
+      const usersRef = doc(db, 'users', selectedProfile.id);
+      try {
+        await updateDoc(usersRef, cleanData);
+      } catch (usersError) {
+        if ((usersError as { code?: string }).code === 'not-found') {
+          // Créer le document s'il n'existe pas
+          await setDoc(usersRef, {
+            ...cleanData,
+            uid: selectedProfile.id,
+            role: editFormData.type || editFormData.role,
+            createdAt: serverTimestamp(),
+            isAAA: true,
+            createdByAdmin: true
+          });
+          console.log(`[AAA] Created missing users document for ${selectedProfile.id}`);
+        } else {
+          throw usersError;
+        }
+      }
+
       const sosProfileRef = doc(db, 'sos_profiles', selectedProfile.id);
       try {
         await updateDoc(sosProfileRef, cleanData);
@@ -2629,13 +2648,19 @@ const AdminAaaProfiles: React.FC = () => {
     try {
       const newVisibility = !currentVisibility;
       
-      // Mise à jour users
-      await updateDoc(doc(db, 'users', profileId), {
-        isVisible: newVisibility, 
-        isVisibleOnMap: newVisibility, 
-        updatedAt: serverTimestamp(),
-      });
-      
+      // Mise à jour users (avec fallback si n'existe pas)
+      try {
+        await updateDoc(doc(db, 'users', profileId), {
+          isVisible: newVisibility,
+          isVisibleOnMap: newVisibility,
+          updatedAt: serverTimestamp(),
+        });
+      } catch (usersErr) {
+        if ((usersErr as { code?: string }).code !== 'not-found') {
+          console.warn('Erreur users:', usersErr);
+        }
+      }
+
       // Mise à jour sos_profiles (ignorer si n'existe pas)
       try {
         await updateDoc(doc(db, 'sos_profiles', profileId), {
@@ -2666,18 +2691,24 @@ const AdminAaaProfiles: React.FC = () => {
     try {
       const newOnline = !currentOnline;
       
-      // Mise à jour users
-      await updateDoc(doc(db, 'users', profileId), {
-        isOnline: newOnline, 
-        availability: newOnline ? 'available' : 'offline', 
-        updatedAt: serverTimestamp(),
-      });
-      
+      // Mise à jour users (avec fallback si n'existe pas)
+      try {
+        await updateDoc(doc(db, 'users', profileId), {
+          isOnline: newOnline,
+          availability: newOnline ? 'available' : 'offline',
+          updatedAt: serverTimestamp(),
+        });
+      } catch (usersErr) {
+        if ((usersErr as { code?: string }).code !== 'not-found') {
+          console.warn('Erreur users:', usersErr);
+        }
+      }
+
       // Mise à jour sos_profiles (ignorer si n'existe pas)
       try {
         await updateDoc(doc(db, 'sos_profiles', profileId), {
-          isOnline: newOnline, 
-          availability: newOnline ? 'available' : 'offline', 
+          isOnline: newOnline,
+          availability: newOnline ? 'available' : 'offline',
           updatedAt: serverTimestamp(),
         });
       } catch (sosErr) {
@@ -2726,8 +2757,17 @@ const AdminAaaProfiles: React.FC = () => {
             busySiblingCallSessionId: deleteField(),
           }),
         };
-        await updateDoc(doc(db, 'users', id), statusUpdate);
-        await updateDoc(doc(db, 'sos_profiles', id), statusUpdate);
+        // ✅ FIX: Ajouter try-catch pour gérer les documents manquants
+        try {
+          await updateDoc(doc(db, 'users', id), statusUpdate);
+        } catch (e) {
+          if ((e as { code?: string }).code !== 'not-found') console.warn('users:', e);
+        }
+        try {
+          await updateDoc(doc(db, 'sos_profiles', id), statusUpdate);
+        } catch (e) {
+          if ((e as { code?: string }).code !== 'not-found') console.warn('sos_profiles:', e);
+        }
       }
       await loadExistingProfiles();
       setSelectedProfiles([]);
@@ -2746,12 +2786,21 @@ const AdminAaaProfiles: React.FC = () => {
     }
     try {
       for (const id of selectedProfiles) {
-        await updateDoc(doc(db, 'users', id), {
-          isVisible: visible, isVisibleOnMap: visible, updatedAt: serverTimestamp(),
-        });
-        await updateDoc(doc(db, 'sos_profiles', id), {
-          isVisible: visible, isVisibleOnMap: visible, updatedAt: serverTimestamp(),
-        });
+        // ✅ FIX: Ajouter try-catch pour gérer les documents manquants
+        try {
+          await updateDoc(doc(db, 'users', id), {
+            isVisible: visible, isVisibleOnMap: visible, updatedAt: serverTimestamp(),
+          });
+        } catch (e) {
+          if ((e as { code?: string }).code !== 'not-found') console.warn('users:', e);
+        }
+        try {
+          await updateDoc(doc(db, 'sos_profiles', id), {
+            isVisible: visible, isVisibleOnMap: visible, updatedAt: serverTimestamp(),
+          });
+        } catch (e) {
+          if ((e as { code?: string }).code !== 'not-found') console.warn('sos_profiles:', e);
+        }
       }
       await loadExistingProfiles();
       setSelectedProfiles([]);
