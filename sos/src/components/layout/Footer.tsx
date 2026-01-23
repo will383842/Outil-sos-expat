@@ -745,12 +745,12 @@ const Footer: React.FC = () => {
         />
       </div>
 
-      {/* Scroll to top button */}
-      <ScrollToTopButton
+      {/* Scroll to top button - DISABLED: was causing scroll issues on some browsers */}
+      {/* <ScrollToTopButton
         visible={showScrollTop}
         onClick={scrollToTop}
         ariaLabel={intl.formatMessage({ id: "footer.scrollToTop" })}
-      />
+      /> */}
 
       {/* Main content */}
       <div className="relative backdrop-blur-sm bg-black/5">

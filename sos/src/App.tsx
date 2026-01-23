@@ -500,24 +500,6 @@ const App: React.FC = () => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  // Workaround: Force wheel scroll for browsers where native scroll doesn't work
-  // This fixes an issue where wheel events are received but don't trigger scroll
-  useEffect(() => {
-    const handleWheel = (e: WheelEvent) => {
-      // Only apply workaround if native scroll isn't working
-      // Check if we're at the same scroll position after a short delay
-      const scrollBefore = window.scrollY;
-      requestAnimationFrame(() => {
-        if (window.scrollY === scrollBefore && !e.defaultPrevented) {
-          window.scrollBy(0, e.deltaY);
-        }
-      });
-    };
-
-    window.addEventListener('wheel', handleWheel, { passive: true });
-    return () => window.removeEventListener('wheel', handleWheel);
-  }, []);
-
   // Préchargement light
   useEffect(() => {
     if (!isMobile) {
