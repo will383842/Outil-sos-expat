@@ -639,9 +639,9 @@ const App: React.FC = () => {
   const isAdminPath = (p: string) =>
     /(^\/admin(\/|$))|(^\/[^/]+\/admin(\/|$))/i.test(p || "");
 
-  // helper to detect multi-dashboard path
+  // helper to detect multi-dashboard path (with or without locale prefix)
   const isMultiDashboardPath = (p: string) =>
-    /^\/multi-dashboard(\/|$)/i.test(p || "");
+    /^(\/[a-z]{2}-[a-z]{2})?\/multi-dashboard(\/|$)/i.test(p || "");
 
   const showAdminLayout = isAdminPath(location.pathname);
   const showMultiDashboard = isMultiDashboardPath(location.pathname);
@@ -659,6 +659,8 @@ const App: React.FC = () => {
       {showMultiDashboard ? (
         <Suspense fallback={<LoadingSpinner size="large" color="red" />}>
           <Routes>
+            {/* Strip locale prefix if present */}
+            <Route path="/:locale/multi-dashboard" element={<Navigate to="/multi-dashboard" replace />} />
             <Route path="/multi-dashboard" element={<MultiProviderDashboard />} />
             <Route path="*" element={<Navigate to="/multi-dashboard" replace />} />
           </Routes>
