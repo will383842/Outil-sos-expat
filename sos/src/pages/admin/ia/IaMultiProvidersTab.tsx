@@ -298,9 +298,9 @@ export const IaMultiProvidersTab: React.FC = () => {
           if (cachedProfile) {
             const country = cachedProfile.country || '';
             // Get intervention countries (fallback to country if empty)
-            const interventionCountries = cachedProfile.interventionCountries?.length > 0
+            const interventionCountries = (cachedProfile.interventionCountries && cachedProfile.interventionCountries.length > 0)
               ? cachedProfile.interventionCountries
-              : cachedProfile.practiceCountries?.length > 0
+              : (cachedProfile.practiceCountries && cachedProfile.practiceCountries.length > 0)
                 ? cachedProfile.practiceCountries
                 : country ? [country] : [];
             providers.push({
@@ -330,9 +330,9 @@ export const IaMultiProvidersTab: React.FC = () => {
             if (cachedUser) {
               const country = cachedUser.country || '';
               // Get intervention countries (fallback to country if empty)
-              const interventionCountries = cachedUser.interventionCountries?.length > 0
+              const interventionCountries = (cachedUser.interventionCountries && cachedUser.interventionCountries.length > 0)
                 ? cachedUser.interventionCountries
-                : cachedUser.practiceCountries?.length > 0
+                : (cachedUser.practiceCountries && cachedUser.practiceCountries.length > 0)
                   ? cachedUser.practiceCountries
                   : country ? [country] : [];
               providers.push({

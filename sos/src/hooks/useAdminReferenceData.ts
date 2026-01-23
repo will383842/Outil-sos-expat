@@ -47,6 +47,9 @@ export interface UserReference {
   aaaPayoutMode?: 'internal' | string;
   payoutMode?: 'internal' | string;
   isAAA?: boolean;
+  // Country coverage fields
+  interventionCountries?: string[];
+  practiceCountries?: string[];
 }
 
 export interface ProfileReference {
@@ -70,6 +73,9 @@ export interface ProfileReference {
   aaaPayoutMode?: 'internal' | string;
   payoutMode?: 'internal' | string;
   isAAA?: boolean;
+  // Country coverage fields
+  interventionCountries?: string[];
+  practiceCountries?: string[];
 }
 
 export interface SubscriptionPlanReference {
