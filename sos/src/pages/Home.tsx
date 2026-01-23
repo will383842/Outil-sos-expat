@@ -1217,7 +1217,7 @@ const OptimizedHomePage: React.FC = () => {
         >
           <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pointer-events-none" aria-hidden="true" />
           <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-transparent to-blue-500/10 pointer-events-none" aria-hidden="true" />
-          <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
+          <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-red-500/20 to-orange-500/20 rounded-full blur-3xl animate-pulse" />
             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
           </div>
@@ -1703,7 +1703,7 @@ const OptimizedHomePage: React.FC = () => {
           className="py-32 bg-gradient-to-r from-red-600 via-red-500 to-orange-500 relative overflow-hidden"
           aria-labelledby="cta-heading"
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-transparent to-black/20" aria-hidden="true" />
+          <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-transparent to-black/20 pointer-events-none" aria-hidden="true" />
           <div className="relative z-10 max-w-5xl mx-auto text-center px-6">
             <h2 id="cta-heading" className="text-5xl md:text-6xl font-black text-white mb-6 md:mb-8">
               <FormattedMessage id="cta.title" />

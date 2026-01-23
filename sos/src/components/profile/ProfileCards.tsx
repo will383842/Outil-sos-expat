@@ -1025,7 +1025,7 @@ filtered = filtered.filter(p => {
               }}
             />
             
-            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/10 group-hover:from-black/20 transition-all duration-500"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/10 group-hover:from-black/20 transition-all duration-500 pointer-events-none"></div>
             
             <div className="absolute top-4 left-4">
               <div className={`px-4 py-2 rounded-2xl text-sm font-bold backdrop-blur-xl ${

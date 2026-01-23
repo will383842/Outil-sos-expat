@@ -427,7 +427,7 @@ const FAQ: React.FC = () => {
 
         {/* CTA SUPPORT */}
         <section className="relative py-20 bg-gradient-to-r from-red-600 via-red-500 to-orange-500 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-black/10 via-transparent to-black/10" />
+          <div className="absolute inset-0 bg-gradient-to-br from-black/10 via-transparent to-black/10 pointer-events-none" />
           <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
             <h2 className="text-3xl md:text-4xl font-black text-white mb-3">
               {intl.formatMessage({ id: "faq.supportTitle" })}

@@ -60,7 +60,7 @@ const HowItWorksPage: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 via-transparent to-blue-500/20 pointer-events-none" />
 
           {/* Effets visuels */}
-          <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-red-500/30 to-orange-500/30 rounded-full blur-3xl animate-pulse" />
             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-blue-500/30 to-purple-500/30 rounded-full blur-3xl animate-pulse delay-1000" />
             <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-gradient-to-r from-yellow-500/20 to-pink-500/20 rounded-full blur-3xl animate-pulse delay-500" />
@@ -251,10 +251,10 @@ const HowItWorksPage: React.FC = () => {
 
         {/* Call to Action final */}
         <section className="py-32 bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-transparent to-black/20" />
+          <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-transparent to-black/20 pointer-events-none" />
 
           {/* Effets visuels */}
-          <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse" />
             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse delay-1000" />
           </div>

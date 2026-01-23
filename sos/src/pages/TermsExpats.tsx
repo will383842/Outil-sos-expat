@@ -2535,7 +2535,7 @@ Para perguntas ou questões legais, entre em contato conosco:
         <section className="relative pt-20 pb-16 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pointer-events-none" />
           <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-transparent to-blue-500/10 pointer-events-none" />
-          <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-red-500/20 to-orange-500/20 rounded-full blur-3xl" />
             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-3xl" />
           </div>
@@ -2720,7 +2720,7 @@ Para perguntas ou questões legais, entre em contato conosco:
 
         {/* Bandeau final */}
         <section className="py-20 bg-gradient-to-r from-red-600 via-red-500 to-orange-500 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-transparent to-black/20" />
+          <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-transparent to-black/20 pointer-events-none" />
           <div className="relative z-10 max-w-5xl mx-auto text-center px-6">
             <h2 className="text-3xl sm:text-5xl font-black text-white mb-4">
               {t.readyToJoin}

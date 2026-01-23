@@ -406,7 +406,7 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
             />
 
             {/* Overlay gradient amélioré */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
 
             {/* Statut en ligne - Taille tactile optimisée */}
             <div className="absolute top-3 left-3">

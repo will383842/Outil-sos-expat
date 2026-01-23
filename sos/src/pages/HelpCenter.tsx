@@ -627,7 +627,7 @@ const HelpCenter: React.FC = () => {
 
         {/* Contact Support */}
         <section className="relative bg-gradient-to-r from-red-600 via-red-500 to-orange-500 py-16">
-          <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-transparent to-black/20" />
+          <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-transparent to-black/20 pointer-events-none" />
           <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-3xl md:text-4xl font-black text-white mb-4">
               {/* {language === "fr"

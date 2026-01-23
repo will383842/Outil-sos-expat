@@ -1419,7 +1419,7 @@ const ModernProfileCard: React.FC<{
           />
 
           {/* Overlay gradient */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" aria-hidden="true" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" aria-hidden="true" />
 
           {/* Statut en ligne */}
           <div className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3">

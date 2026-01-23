@@ -688,7 +688,7 @@ const Testimonials: React.FC = () => {
         {/* Hero Section */}
         <section className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white py-20 sm:py-28 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-transparent to-blue-500/10 pointer-events-none" />
-          <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-red-500/20 to-orange-500/20 rounded-full blur-3xl animate-pulse" />
             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
           </div>
@@ -1124,8 +1124,8 @@ const Testimonials: React.FC = () => {
 
         {/* CTA Section */}
         <section className="relative bg-gradient-to-r from-red-600 via-red-500 to-orange-500 py-16 sm:py-24 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-transparent to-black/20" />
-          <div className="absolute inset-0 overflow-hidden">                                                  
+          <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-transparent to-black/20 pointer-events-none" />
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="absolute -top-10 left-1/3 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
             <div className="absolute -bottom-10 right-1/3 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
           </div>                                                                                                            

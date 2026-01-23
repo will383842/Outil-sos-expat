@@ -34,13 +34,13 @@ const CTASection: React.FC = () => {
   return (
     <section className="py-20 sm:py-32 bg-gradient-to-br from-red-700 to-red-800 relative overflow-hidden">
       {/* ? Background effects du code home.tsx */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(239,68,68,0.3)_0%,transparent_70%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_60%,rgba(244,63,94,0.2)_0%,transparent_70%)]" />
       </div>
 
       {/* ? �l�ments flottants du code home.tsx */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 pointer-events-none">
         {[...Array(12)].map((_, i) => (
           <div
             key={i}
