@@ -1561,13 +1561,22 @@ export const IaMultiProvidersTab: React.FC = () => {
                           >
                             <option value="internal">Interne</option>
                             {/* Only show accounts matching provider's gateway */}
-                            {payoutConfig.externalAccounts
-                              .filter(acc => acc.gateway === provider.paymentGateway)
-                              .map(acc => (
+                            {(() => {
+                              const providerGateway = provider.paymentGateway || getPaymentGateway(provider.country);
+                              const matchingAccounts = payoutConfig.externalAccounts.filter(acc => acc.gateway === providerGateway);
+                              if (matchingAccounts.length === 0) {
+                                return (
+                                  <option value="" disabled>
+                                    Aucun compte {providerGateway.toUpperCase()} externe configuré
+                                  </option>
+                                );
+                              }
+                              return matchingAccounts.map(acc => (
                                 <option key={acc.id} value={acc.id}>
-                                  {acc.name}
+                                  {acc.name} ({acc.gateway.toUpperCase()})
                                 </option>
-                              ))}
+                              ));
+                            })()}
                           </select>
                         </div>
 

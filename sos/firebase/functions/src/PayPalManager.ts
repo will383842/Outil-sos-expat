@@ -1973,6 +1973,10 @@ export const createPayPalOrderHttp = onRequest(
       metadata: trackingMetadata,
     } = req.body;
 
+    // DEBUG: Log tous les paramètres reçus
+    console.log(`[PAYPAL DEBUG] Request body:`, JSON.stringify(req.body, null, 2));
+    console.log(`[PAYPAL DEBUG] Auth UID: ${auth.uid}`);
+
     prodLogger.info('PAYPAL_ORDER_HTTP_START', `[${requestId}] Creating PayPal order (HTTP)`, {
       requestId,
       callSessionId,
@@ -1984,7 +1988,8 @@ export const createPayPalOrderHttp = onRequest(
     });
 
     if (!callSessionId || !amount || !providerId) {
-      res.status(400).json({ error: "Missing required fields" });
+      console.error(`[PAYPAL DEBUG] Missing required fields: callSessionId=${callSessionId}, amount=${amount}, providerId=${providerId}`);
+      res.status(400).json({ error: `Missing required fields: callSessionId=${!!callSessionId}, amount=${!!amount}, providerId=${!!providerId}` });
       return;
     }
 
@@ -2006,11 +2011,11 @@ export const createPayPalOrderHttp = onRequest(
       const hasMerchantId = !!providerData.paypalMerchantId;
       const hasPayPalEmail = !!providerData.paypalEmail;
 
+      // Note: On permet le paiement même sans email PayPal du prestataire
+      // L'argent ira sur le compte SOS-Expat et le payout sera fait plus tard
+      // quand le prestataire aura configuré son email
       if (!hasMerchantId && !hasPayPalEmail) {
-        res.status(400).json({
-          error: "Le prestataire n'a pas configuré son compte PayPal. Il doit d'abord entrer son email PayPal dans son profil."
-        });
-        return;
+        console.log(`[PAYPAL] Provider ${providerId} has no PayPal config yet - payment will go to platform, payout pending`);
       }
 
       // ===== P0 SECURITY FIX: Calculer les frais côté serveur =====
@@ -2026,7 +2031,8 @@ export const createPayPalOrderHttp = onRequest(
       if (Math.abs(clientAmount - serverPricing.totalAmount) > 0.01) {
         console.error(`[PAYPAL] Amount mismatch: client=${clientAmount}, server=${serverPricing.totalAmount}`);
         res.status(400).json({
-          error: `Invalid amount. Expected ${serverPricing.totalAmount} ${normalizedCurrency.toUpperCase()}`
+          error: `Invalid amount. Expected ${serverPricing.totalAmount} ${normalizedCurrency.toUpperCase()}`,
+          code: "INVALID_AMOUNT"
         });
         return;
       }

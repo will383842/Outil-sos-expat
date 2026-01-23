@@ -53,15 +53,33 @@ interface CaptureOrderResponse {
 
 // Mapping des codes d'erreur PayPal vers des clés i18n
 const PAYPAL_ERROR_I18N_KEYS: Record<string, string> = {
+  // Erreurs de carte/instrument
   INSTRUMENT_DECLINED: "payment.paypal.err.instrumentDeclined",
+  CARD_DECLINED: "payment.paypal.err.instrumentDeclined",
+  INSUFFICIENT_FUNDS: "payment.paypal.err.insufficientFunds",
+  CARD_EXPIRED: "payment.paypal.err.cardExpired",
+  INVALID_CARD_NUMBER: "payment.paypal.err.invalidCardNumber",
+  INVALID_CVV: "payment.paypal.err.invalidCvv",
+
+  // Erreurs de paiement
   PAYER_ACTION_REQUIRED: "payment.paypal.err.payerActionRequired",
   PAYER_CANNOT_PAY: "payment.paypal.err.payerCannotPay",
+  TRANSACTION_REFUSED: "payment.paypal.err.transactionRefused",
+  PAYMENT_DENIED: "payment.paypal.err.paymentDenied",
+
+  // Erreurs de configuration
   INVALID_CURRENCY: "payment.paypal.err.invalidCurrency",
   DUPLICATE_INVOICE_ID: "payment.paypal.err.duplicateInvoice",
   ORDER_NOT_APPROVED: "payment.paypal.err.orderNotApproved",
   AUTHORIZATION_VOIDED: "payment.paypal.err.authorizationVoided",
+
+  // Erreurs serveur/réseau
   INTERNAL_SERVER_ERROR: "payment.paypal.err.serverError",
   NETWORK_ERROR: "payment.paypal.err.networkError",
+
+  // Erreurs de prestataire (nouveau)
+  PROVIDER_NOT_CONFIGURED: "payment.paypal.err.providerNotConfigured",
+  INVALID_AMOUNT: "payment.paypal.err.invalidAmount",
 };
 
 // Détecte si l'erreur est VRAIMENT causée par une extension de navigateur
@@ -267,7 +285,10 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
-        throw new Error(errorData.error || `HTTP ${response.status}`);
+        const err = new Error(errorData.error || `HTTP ${response.status}`);
+        // Attach error code for better UX messages
+        (err as any).code = errorData.code || "";
+        throw err;
       }
 
       const result: CreateOrderResponse & { success: boolean } = await response.json();
@@ -313,7 +334,10 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
-        throw new Error(errorData.error || `HTTP ${response.status}`);
+        const err = new Error(errorData.error || `HTTP ${response.status}`);
+        // Attach error code for better UX messages
+        (err as any).code = errorData.code || "";
+        throw err;
       }
 
       const result: CaptureOrderResponse = await response.json();
