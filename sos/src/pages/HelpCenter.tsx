@@ -338,7 +338,7 @@ const HelpCenter: React.FC = () => {
       <div className="min-h-screen bg-gray-50">
         {/* HERO */}
         <header className="relative bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white">
-          <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-transparent to-blue-500/10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-transparent to-blue-500/10 pointer-events-none" />
           <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
             <h1 className="text-4xl md:text-6xl text-white font-bold mb-4">
               {/* {language === 'fr' ? "Centre d'aide" : 'Help Center'} */}

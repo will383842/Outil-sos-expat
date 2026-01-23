@@ -3302,8 +3302,8 @@ const SOSCall: React.FC = () => {
             🖥️ HERO DESKTOP (inchangé)
         ======================================== */}
         <header className="hidden lg:block relative pt-8 pb-8 sm:pt-16 sm:pb-20 overflow-hidden" role="banner">
-          <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900" aria-hidden="true" />
-          <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-transparent to-blue-500/10" aria-hidden="true" />
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pointer-events-none" aria-hidden="true" />
+          <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-transparent to-blue-500/10 pointer-events-none" aria-hidden="true" />
           <div className="absolute top-1/4 left-1/4 w-48 sm:w-64 lg:w-96 h-48 sm:h-64 lg:h-96 bg-gradient-to-r from-red-500/20 to-orange-500/20 rounded-full blur-3xl" aria-hidden="true" />
           <div className="absolute bottom-1/4 right-1/4 w-48 sm:w-64 lg:w-96 h-48 sm:h-64 lg:h-96 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-3xl" aria-hidden="true" />
 

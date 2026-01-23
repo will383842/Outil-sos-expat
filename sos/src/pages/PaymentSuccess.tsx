@@ -1052,8 +1052,8 @@ const SuccessPayment: React.FC = () => {
       <div className="min-h-screen bg-gray-950">
         {/* Hero Section avec état dynamique */}
         <section className="relative pt-20 pb-16 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900" />
-          <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-transparent to-blue-500/10" />
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-transparent to-blue-500/10 pointer-events-none" />
 
           {/* Particules */}
           <div className="absolute inset-0 overflow-hidden">

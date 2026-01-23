@@ -262,7 +262,7 @@ const HelpArticle: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950">
         {/* Hero compact */}
         <div className="relative pt-16 pb-10">
-          <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-transparent to-blue-500/10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-transparent to-blue-500/10 pointer-events-none" />
           <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <Link
               to="/centre-aide"
