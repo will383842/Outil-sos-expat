@@ -340,7 +340,9 @@ export async function generateLawyersAllCountries(): Promise<void> {
         preferredLanguage: 'fr',
         languages: ['fr'], // Code ISO - FRANÇAIS UNIQUEMENT
         languagesSpoken: ['fr'], // Code ISO - doit être identique à languages
-        profilePhoto: '', avatar: '',
+        // ✅ Photo générée automatiquement avec DiceBear
+        profilePhoto: `https://api.dicebear.com/7.x/avataaars/svg?seed=${uid}&backgroundColor=b6e3f4`,
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${uid}&backgroundColor=b6e3f4`,
         isTestProfile: true, isAAA: true, isActive: true, isApproved: true, isVerified: true,
         approvalStatus: 'approved', verificationStatus: 'approved',
         isOnline: Math.random() > 0.7,

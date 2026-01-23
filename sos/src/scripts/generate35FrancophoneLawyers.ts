@@ -477,8 +477,9 @@ export async function generate35FrancophoneLawyers(): Promise<GeneratedProfile[]
       preferredLanguage: 'fr',
       languages: ['fr'], // Fran\u00e7ais UNIQUEMENT
       languagesSpoken: ['fr'], // Code ISO - doit être identique à languages
-      profilePhoto: '',
-      avatar: '',
+      // ✅ Photo générée automatiquement avec DiceBear
+      profilePhoto: `https://api.dicebear.com/7.x/avataaars/svg?seed=${uid}&backgroundColor=b6e3f4`,
+      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${uid}&backgroundColor=b6e3f4`,
       isTestProfile: true,
       isAAA: true,
       isActive: true,

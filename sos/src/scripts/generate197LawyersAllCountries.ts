@@ -700,8 +700,9 @@ export async function generate197Lawyers(): Promise<void> {
         preferredLanguage: 'fr',
         languages: ['fr'], // FRAN\u00c7AIS UNIQUEMENT
         languagesSpoken: ['fr'], // FRANÇAIS UNIQUEMENT (code ISO)
-        profilePhoto: '',
-        avatar: '',
+        // ✅ Photo générée automatiquement avec DiceBear
+        profilePhoto: `https://api.dicebear.com/7.x/avataaars/svg?seed=${uid}&backgroundColor=b6e3f4`,
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${uid}&backgroundColor=b6e3f4`,
         isTestProfile: true,
         isAAA: true,
         isActive: true,

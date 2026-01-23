@@ -3254,17 +3254,12 @@ const AdminAaaProfiles: React.FC = () => {
                           {/* Photo + Edit */}
                           <td className="px-3 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-2">
-                              {profile.profilePhoto ? (
-                                <img 
-                                  src={profile.profilePhoto} 
-                                  alt={profile.fullName} 
-                                  className="w-10 h-10 rounded-full object-cover border-2 border-gray-300 flex-shrink-0" 
-                                />
-                              ) : (
-                                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border-2 border-dashed border-gray-400 flex-shrink-0">
-                                  <span className="text-lg">📷</span>
-                                </div>
-                              )}
+                              {/* ✅ Fallback: générer photo DiceBear si pas de photo */}
+                              <img
+                                src={profile.profilePhoto || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.id}&backgroundColor=b6e3f4`}
+                                alt={profile.fullName}
+                                className="w-10 h-10 rounded-full object-cover border-2 border-gray-300 flex-shrink-0"
+                              />
                               
                               <button
                                 onClick={() => handleEditProfile(profile)}
