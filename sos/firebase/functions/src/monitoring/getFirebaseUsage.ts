@@ -394,6 +394,7 @@ export const getFirebaseUsage = functions.onCall(
     region: 'europe-west1',
     memory: '256MiB',
     timeoutSeconds: 60,
+    cors: [/sos-expat\.com$/, /localhost/],
   },
   async (request): Promise<FirebaseUsageResponse> => {
     // Authentication verification

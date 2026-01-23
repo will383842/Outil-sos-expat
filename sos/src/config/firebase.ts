@@ -337,6 +337,27 @@ if (typeof navigator !== 'undefined' && 'storage' in navigator) {
 // 🔇 Réduire le bruit Firestore (logs seulement si erreur)
 setLogLevel("error");
 
+// 🔇 Filtrer les erreurs bénignes de Firestore multi-onglets
+// Ces erreurs sont normales quand plusieurs onglets sont ouverts et n'affectent pas le fonctionnement
+if (typeof window !== 'undefined') {
+  const originalConsoleError = console.error;
+  console.error = (...args: unknown[]) => {
+    const message = args.map(a => String(a)).join(' ');
+
+    // Filtrer les erreurs bénignes de Firestore IndexedDB multi-onglets
+    if (
+      message.includes('Failed to obtain primary lease') ||
+      message.includes('Backfill Indexes') ||
+      message.includes('Collect garbage')
+    ) {
+      // Ignorer silencieusement ces erreurs bénignes
+      return;
+    }
+
+    originalConsoleError.apply(console, args);
+  };
+}
+
 // 🔍 DIAGNOSTIC: Fonction pour tester l'accès au document users
 if (typeof window !== 'undefined') {
   (window as any).diagnoseUserDocument = async () => {

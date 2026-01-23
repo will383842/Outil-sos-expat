@@ -110,6 +110,7 @@ export const getTwilioBalance = functions.onCall(
     memory: '256MiB',
     timeoutSeconds: 30,
     secrets: [TWILIO_ACCOUNT_SID_SECRET, TWILIO_AUTH_TOKEN_SECRET],
+    cors: [/sos-expat\.com$/, /localhost/],
   },
   async (request): Promise<TwilioBalanceResponse> => {
     // Verification d'authentification

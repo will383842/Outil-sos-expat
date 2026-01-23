@@ -178,6 +178,7 @@ export const getAgentMetrics = functions.onCall(
     region: 'europe-west1',
     memory: '512MiB',
     timeoutSeconds: 60,
+    cors: [/sos-expat\.com$/, /localhost/],
   },
   async (request): Promise<AgentMetricsSummary> => {
     const db = admin.firestore();

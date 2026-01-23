@@ -286,6 +286,13 @@ async function propagateBusyToSiblings(
         continue;
       }
 
+      // 🆕 Vérifier si ce prestataire a désactivé le couplage individuel
+      // receiveBusyFromSiblings: false = ne pas propager le busy à ce prestataire
+      if (siblingData?.receiveBusyFromSiblings === false) {
+        console.log(`[ProviderStatusManager] Sibling ${siblingId} has receiveBusyFromSiblings=false, skipping propagation`);
+        continue;
+      }
+
       const siblingUpdateData = {
         availability: 'busy',
         isOnline: true,

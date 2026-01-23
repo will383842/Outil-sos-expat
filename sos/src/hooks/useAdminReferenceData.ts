@@ -50,6 +50,8 @@ export interface UserReference {
   // Country coverage fields
   interventionCountries?: string[];
   practiceCountries?: string[];
+  // 🆕 Individual busy coupling
+  receiveBusyFromSiblings?: boolean;
 }
 
 export interface ProfileReference {
@@ -76,6 +78,8 @@ export interface ProfileReference {
   // Country coverage fields
   interventionCountries?: string[];
   practiceCountries?: string[];
+  // 🆕 Individual busy coupling
+  receiveBusyFromSiblings?: boolean;
 }
 
 export interface SubscriptionPlanReference {
@@ -203,6 +207,22 @@ export function useAdminReferenceData(): AdminReferenceDataReturn {
             country: data.country || data.currentCountry || 'Unknown',
             preferredLanguage: data.preferredLanguage || 'fr',
             createdAt: data.createdAt?.toDate?.(),
+            // Multi-provider status fields
+            availability: data.availability,
+            isOnline: data.isOnline,
+            busyReason: data.busyReason,
+            busyBySibling: data.busyBySibling,
+            busySiblingProviderId: data.busySiblingProviderId,
+            currentCallSessionId: data.currentCallSessionId,
+            // Payout fields
+            aaaPayoutMode: data.aaaPayoutMode,
+            payoutMode: data.payoutMode,
+            isAAA: data.isAAA,
+            // Country coverage fields
+            interventionCountries: data.interventionCountries,
+            practiceCountries: data.practiceCountries,
+            // 🆕 Individual busy coupling
+            receiveBusyFromSiblings: data.receiveBusyFromSiblings,
           });
         });
 
@@ -220,6 +240,22 @@ export function useAdminReferenceData(): AdminReferenceDataReturn {
             isApproved: data.isApproved || false,
             isVisible: data.isVisible || false,
             createdAt: data.createdAt?.toDate?.(),
+            // Multi-provider status fields
+            availability: data.availability,
+            isOnline: data.isOnline,
+            busyReason: data.busyReason,
+            busyBySibling: data.busyBySibling,
+            busySiblingProviderId: data.busySiblingProviderId,
+            currentCallSessionId: data.currentCallSessionId,
+            // Payout fields
+            aaaPayoutMode: data.aaaPayoutMode,
+            payoutMode: data.payoutMode,
+            isAAA: data.isAAA,
+            // Country coverage fields
+            interventionCountries: data.interventionCountries,
+            practiceCountries: data.practiceCountries,
+            // 🆕 Individual busy coupling
+            receiveBusyFromSiblings: data.receiveBusyFromSiblings,
           });
         });
 

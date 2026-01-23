@@ -131,6 +131,7 @@ export const getAnthropicUsage = functions.onCall(
     region: 'europe-west1',
     memory: '256MiB',
     timeoutSeconds: 60,
+    cors: [/sos-expat\.com$/, /localhost/],
   },
   async (request): Promise<AnthropicUsageResponse> => {
     // Authentication check

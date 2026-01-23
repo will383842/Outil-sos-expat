@@ -1189,15 +1189,35 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         }
       },
       (err) => {
+        // ✅ FIX: Ignorer les erreurs si déconnexion en cours ou listener annulé
+        // Cela évite les erreurs "permission-denied" qui apparaissent lors de la déconnexion
+        if (signingOutRef.current || cancelled) {
+          console.log(`🔐 [AuthContext] Erreur listener ignorée (déconnexion en cours ou annulé)`);
+          return;
+        }
+
         const errorElapsed = Date.now() - listenerStartTime;
         // ✅ FIX: Annuler TOUS les fallbacks en cas d'erreur
         cancelAllFallbacks();
+
+        const errorCode = (err as any)?.code || 'unknown';
+
+        // ✅ FIX: Ne pas logger comme erreur critique si c'est juste une permission expirée après longtemps
+        // (session expirée naturellement après > 60s d'inactivité)
+        if (errorCode === 'permission-denied' && errorElapsed > 60000) {
+          console.warn(`⚠️ [AuthContext] [${errorElapsed}ms] Session expirée pour users/${uid} - déconnexion silencieuse`);
+          // Déconnecter proprement l'utilisateur au lieu d'afficher une erreur
+          setUser(null);
+          setIsLoading(false);
+          setAuthInitialized(true);
+          return;
+        }
 
         console.error(`❌ [AuthContext] [${errorElapsed}ms] [users/${uid}] Erreur listener:`, err);
         console.error(`❌ [AuthContext] Error details:`, {
           name: (err as Error)?.name,
           message: (err as Error)?.message,
-          code: (err as any)?.code,
+          code: errorCode,
           stack: (err as Error)?.stack,
         });
 
@@ -1205,7 +1225,6 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         // Cela corromprait le rôle des prestataires si Firestore a une erreur temporaire
         if (!firstSnapArrived.current) {
           // ✅ Afficher une erreur au lieu d'écraser le rôle
-          const errorCode = (err as any)?.code || 'unknown';
           if (errorCode === 'permission-denied') {
             setError('Accès refusé à votre profil. Veuillez vous reconnecter.');
           } else {

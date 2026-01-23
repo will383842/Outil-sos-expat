@@ -130,6 +130,7 @@ export const getStripeBalance = functions.onCall(
     memory: '256MiB',
     timeoutSeconds: 30,
     secrets: [STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST],
+    cors: [/sos-expat\.com$/, /localhost/],
   },
   async (request): Promise<StripeBalanceResponse> => {
     // Authentication check

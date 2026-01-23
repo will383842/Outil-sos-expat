@@ -366,6 +366,7 @@ export const getOpenAIUsage = functions.onCall(
     memory: '256MiB',
     timeoutSeconds: 60,
     secrets: [OPENAI_API_KEY],
+    cors: [/sos-expat\.com$/, /localhost/],
   },
   async (request): Promise<OpenAIUsageResponse> => {
     // Authentication check
