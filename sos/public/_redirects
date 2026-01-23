@@ -4,8 +4,10 @@
 # Admin routes
 /admin/*  /index.html  200
 
-# Multi-provider dashboard
-/multi-dashboard  /index.html  200
+# Multi-provider dashboard (handle with and without trailing slash)
+/multi-dashboard   /index.html  200
+/multi-dashboard/  /index.html  200
+/multi-dashboard/* /index.html  200
 
 # All other routes - SPA fallback
 /*  /index.html  200
