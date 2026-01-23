@@ -579,6 +579,15 @@ function getBotName(userAgent) {
 }
 
 /**
+ * Check if path is the multi-dashboard (standalone app, needs SPA fallback)
+ * @param {string} pathname - The URL pathname
+ * @returns {boolean} - True if the path is multi-dashboard
+ */
+function isMultiDashboardPath(pathname) {
+  return /^(\/[a-z]{2}-[a-z]{2})?\/multi-dashboard(\/|$)/i.test(pathname);
+}
+
+/**
  * Main request handler
  * @param {Request} request - The incoming request
  * @param {Object} env - Environment variables
@@ -594,6 +603,44 @@ async function handleRequest(request, env, ctx) {
   const pathname = url.pathname;
 
   console.log(`[WORKER DEBUG] UA: ${userAgent.substring(0, 50)}, Path: ${pathname}`);
+
+  // Handle multi-dashboard specially - fetch index.html without following redirects
+  // This is needed because the origin server redirects /multi-dashboard to /
+  // but we want the SPA to handle routing client-side
+  if (isMultiDashboardPath(pathname)) {
+    console.log(`[WORKER] Multi-dashboard path detected: ${pathname}`);
+
+    try {
+      // Fetch the root index.html (SPA entry point)
+      const indexUrl = new URL('/', url.origin);
+      const indexResponse = await fetch(indexUrl.toString(), {
+        method: 'GET',
+        headers: request.headers,
+        redirect: 'follow', // Follow redirects to get the actual HTML
+      });
+
+      // If we got HTML, return it with the original URL preserved
+      if (indexResponse.ok) {
+        const html = await indexResponse.text();
+        const newHeaders = new Headers(indexResponse.headers);
+        newHeaders.set('X-Worker-Active', 'true');
+        newHeaders.set('X-Worker-Multi-Dashboard', 'true');
+        newHeaders.set('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+        newHeaders.set('Cross-Origin-Embedder-Policy', 'unsafe-none');
+        // Don't cache to ensure fresh content
+        newHeaders.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+
+        return new Response(html, {
+          status: 200,
+          statusText: 'OK',
+          headers: newHeaders,
+        });
+      }
+    } catch (error) {
+      console.error(`[WORKER] Multi-dashboard fetch error: ${error.message}`);
+    }
+    // Fall through to normal handling if fetch fails
+  }
 
   // Check if this is a bot AND visiting a page that needs prerendering
   const botDetected = isBot(userAgent);
