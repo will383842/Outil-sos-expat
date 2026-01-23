@@ -835,8 +835,8 @@ export const IaMultiProvidersTab: React.FC = () => {
       })));
 
       setSuccess(newValue
-        ? '✅ Couplage activé - ce prestataire passera en busy si un autre est en appel'
-        : '⚠️ Couplage désactivé - ce prestataire restera disponible même si un autre est en appel'
+        ? '✅ BusyOn - ce prestataire passera en busy si un autre est en appel'
+        : '⚠️ BusyOff - ce prestataire restera disponible même si un autre est en appel'
       );
       setTimeout(() => setSuccess(null), 4000);
     } catch (err) {
@@ -847,53 +847,6 @@ export const IaMultiProvidersTab: React.FC = () => {
     }
   };
 
-  // 🆕 Toggle coupling for ALL providers in an account
-  const toggleAllProvidersCoupling = async (account: MultiProviderAccount, enableCoupling: boolean) => {
-    setSaving(account.userId);
-
-    try {
-      const updatePromises = account.providers.map(async (provider) => {
-        const updateData = {
-          receiveBusyFromSiblings: enableCoupling,
-          updatedAt: serverTimestamp(),
-        };
-
-        await Promise.all([
-          updateDoc(doc(db, 'sos_profiles', provider.id), updateData).catch(() => {
-            // Profile document might not exist (orphaned link), ignore
-          }),
-          updateDoc(doc(db, 'users', provider.id), updateData).catch(() => {
-            // User document might not exist for AAA profiles, ignore
-          })
-        ]);
-      });
-
-      await Promise.all(updatePromises);
-
-      // Update local state
-      setAccounts(prev => prev.map(a => {
-        if (a.userId !== account.userId) return a;
-        return {
-          ...a,
-          providers: a.providers.map(p => ({
-            ...p,
-            receiveBusyFromSiblings: enableCoupling,
-          }))
-        };
-      }));
-
-      setSuccess(enableCoupling
-        ? '✅ Couplage activé pour tous les prestataires'
-        : '⚠️ Couplage désactivé pour tous les prestataires'
-      );
-      setTimeout(() => setSuccess(null), 4000);
-    } catch (err) {
-      console.error('Error toggling all providers coupling:', err);
-      setError('Erreur lors de la modification du couplage');
-    } finally {
-      setSaving(null);
-    }
-  };
 
   // ============================================================================
   // MODAL
@@ -1337,37 +1290,6 @@ export const IaMultiProvidersTab: React.FC = () => {
                     {account.shareBusyStatus && <Check className="w-3 h-3" />}
                   </button>
 
-                  {/* 🆕 Global toggle for individual provider coupling (visible for all multi-provider accounts) */}
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => toggleAllProvidersCoupling(account, true)}
-                      disabled={saving === account.userId || account.providers.every(p => p.receiveBusyFromSiblings)}
-                      className={cn(
-                        "flex items-center gap-1.5 px-2.5 py-1.5 rounded-l-lg text-xs font-medium transition-colors border-y border-l",
-                        account.providers.every(p => p.receiveBusyFromSiblings)
-                          ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800"
-                          : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-600 hover:bg-gray-200"
-                      )}
-                      title="Coupler tous les prestataires"
-                    >
-                      <Link2 className="w-3.5 h-3.5" />
-                      Tous
-                    </button>
-                    <button
-                      onClick={() => toggleAllProvidersCoupling(account, false)}
-                      disabled={saving === account.userId || account.providers.every(p => !p.receiveBusyFromSiblings)}
-                      className={cn(
-                        "flex items-center gap-1.5 px-2.5 py-1.5 rounded-r-lg text-xs font-medium transition-colors border-y border-r",
-                        account.providers.every(p => !p.receiveBusyFromSiblings)
-                          ? "bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600"
-                          : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-600 hover:bg-gray-200"
-                      )}
-                      title="Découpler tous les prestataires"
-                    >
-                      <Unlink className="w-3.5 h-3.5" />
-                      Aucun
-                    </button>
-                  </div>
 
                   {/* Account status toggle - changes color based on state */}
                   {(() => {
@@ -1592,27 +1514,27 @@ export const IaMultiProvidersTab: React.FC = () => {
                           </select>
                         </div>
 
-                        {/* 🆕 Toggle Coupling (individual) - visible for all multi-provider accounts */}
+                        {/* 🆕 Toggle Busy Sync (individual) - BusyOn/BusyOff */}
                         <button
                           onClick={() => toggleProviderCoupling(provider.id, provider.receiveBusyFromSiblings !== false)}
                           disabled={saving === provider.id}
                           className={cn(
                             "flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors",
                             provider.receiveBusyFromSiblings !== false
-                              ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 hover:bg-blue-200"
-                              : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-200"
+                              ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50"
+                              : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50"
                           )}
                           title={provider.receiveBusyFromSiblings !== false
-                            ? "Couplé: passe en busy si un autre est en appel"
-                            : "Non couplé: reste disponible même si un autre est en appel"
+                            ? "BusyOn: passe en busy si un autre prestataire est en appel"
+                            : "BusyOff: reste disponible même si un autre prestataire est en appel"
                           }
                         >
                           {provider.receiveBusyFromSiblings !== false ? (
-                            <Link2 className="w-3 h-3" />
+                            <ToggleRight className="w-3.5 h-3.5" />
                           ) : (
-                            <Unlink className="w-3 h-3" />
+                            <ToggleLeft className="w-3.5 h-3.5" />
                           )}
-                          {provider.receiveBusyFromSiblings !== false ? 'Couplé' : 'Seul'}
+                          {provider.receiveBusyFromSiblings !== false ? 'BusyOn' : 'BusyOff'}
                         </button>
 
                         {/* 🆕 Toggle Online/Offline - individual control */}
