@@ -2833,10 +2833,6 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
     // Convertir le nom ou code pays en code ISO-2 normalisé
     // Ex: "Algeria" → "DZ", "France" → "FR", "FR" → "FR"
     const code = normalizeCountryToCode(provider.country);
-    console.log('[CallCheckout] Provider country normalization:', {
-      original: provider.country,
-      normalized: code,
-    });
     return code;
   }, [provider]);
 
@@ -2845,16 +2841,6 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
     isLoading: gatewayLoading,
     isPayPalOnly,
   } = usePaymentGateway(providerCountryCode);
-
-  // DEBUG LOGS - Payment Gateway Selection
-  console.log('[CallCheckout DEBUG] 💳 Payment Gateway State', {
-    paymentGateway,
-    gatewayLoading,
-    isPayPalOnly,
-    providerCountryCode,
-    providerCountry: provider?.country,
-    timestamp: new Date().toISOString()
-  });
 
   const storedClientPhone = useMemo(() => {
     try {

@@ -34,18 +34,27 @@ export const isAbortError = (error: unknown): boolean => {
 };
 
 /**
- * Vérifie si l'erreur est probablement causée par une extension de navigateur
+ * Vérifie si l'erreur est VRAIMENT causée par une extension de navigateur
+ * On veut éviter les faux positifs qui dégradent l'expérience utilisateur
  */
 export const isExtensionBlockedError = (error: unknown): boolean => {
-  if (isAbortError(error)) return true;
-
   if (error instanceof Error) {
     const msg = error.message.toLowerCase();
-    return msg.includes('network error') ||
-           msg.includes('failed to fetch') ||
-           msg.includes('blocked') ||
-           msg.includes('cors');
+    const name = error.name;
+
+    // Seulement les vraies erreurs de blocage par extension
+    // AbortError avec "user aborted" = extension qui bloque
+    if (name === 'AbortError' && msg.includes('user aborted')) {
+      return true;
+    }
+
+    // ERR_BLOCKED_BY_CLIENT = extension bloquante confirmée
+    if (msg.includes('err_blocked_by_client') || msg.includes('net::err_blocked')) {
+      return true;
+    }
   }
+
+  // Ne PAS retourner true pour des erreurs génériques
   return false;
 };
 

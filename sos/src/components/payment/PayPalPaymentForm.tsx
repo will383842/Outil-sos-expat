@@ -64,23 +64,32 @@ const PAYPAL_ERROR_I18N_KEYS: Record<string, string> = {
   NETWORK_ERROR: "payment.paypal.err.networkError",
 };
 
-// Détecte si l'erreur est une erreur réseau (souvent causée par des extensions de navigateur)
+// Détecte si l'erreur est VRAIMENT causée par une extension de navigateur
+// On ne veut PAS afficher ce message pour des erreurs normales
 function isNetworkError(error: unknown): boolean {
   if (!error) return false;
-  const errorStr = String(error).toLowerCase();
-  const message = (error as Error)?.message?.toLowerCase() || "";
 
-  return (
-    errorStr.includes("failed to fetch") ||
-    errorStr.includes("network error") ||
-    errorStr.includes("networkerror") ||
-    errorStr.includes("net::err_failed") ||
-    errorStr.includes("aborted") ||
-    message.includes("failed to fetch") ||
-    message.includes("network") ||
-    (error as Error)?.name === "AbortError" ||
-    (error as Error)?.name === "TypeError"
-  );
+  const err = error as Error;
+  const message = err?.message?.toLowerCase() || "";
+  const name = err?.name || "";
+
+  // Seulement les vraies erreurs de blocage par extension
+  // AbortError avec "user aborted" = extension qui bloque
+  if (name === "AbortError" && message.includes("user aborted")) {
+    return true;
+  }
+
+  // ERR_BLOCKED_BY_CLIENT = extension bloquante confirmée
+  if (message.includes("err_blocked_by_client") || message.includes("net::err_blocked")) {
+    return true;
+  }
+
+  // Ne PAS considérer comme erreur réseau :
+  // - TypeError génériques (erreurs JS normales)
+  // - "failed to fetch" seul (peut être serveur down, CORS, etc.)
+  // - "network error" seul (trop générique)
+
+  return false;
 }
 
 function extractPayPalErrorCode(error: unknown): string {
