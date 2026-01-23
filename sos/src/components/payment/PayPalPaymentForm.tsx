@@ -231,7 +231,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
 
       // Appeler la fonction HTTP au lieu de la fonction callable
       const response = await fetch(
-        "https://europe-west1-sos-urgently-ac307.cloudfunctions.net/createPayPalOrderHttp",
+        "https://createpaypalorderhttp-5tfnuxa2hq-ew.a.run.app",
         {
           method: "POST",
           headers: {
@@ -296,7 +296,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
 
       // Appeler la fonction HTTP au lieu de la fonction callable
       const response = await fetch(
-        "https://europe-west1-sos-urgently-ac307.cloudfunctions.net/capturePayPalOrderHttp",
+        "https://capturepaypalorderhttp-5tfnuxa2hq-ew.a.run.app",
         {
           method: "POST",
           headers: {

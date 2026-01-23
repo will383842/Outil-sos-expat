@@ -362,7 +362,7 @@ const AdminMetaAnalytics: React.FC = () => {
 
     try {
       const response = await fetch(
-        'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/testCAPIConnection'
+        'https://testcapiconnection-5tfnuxa2hq-ew.a.run.app'
       );
       const result = await response.json();
       setTestResult(result);

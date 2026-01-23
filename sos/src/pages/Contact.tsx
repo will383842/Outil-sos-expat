@@ -707,7 +707,7 @@ const Contact: React.FC = () => {
 
       // Sauvegarder via Cloud Function
       const response = await fetch(
-        "https://europe-west1-sos-urgently-ac307.cloudfunctions.net/createContactMessage",
+        "https://createcontactmessage-5tfnuxa2hq-ew.a.run.app",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

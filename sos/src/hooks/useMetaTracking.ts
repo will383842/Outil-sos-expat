@@ -62,10 +62,8 @@ interface TrackingUserData {
  *   contentName: 'lawyer_call',
  * });
  */
-// URL de l'endpoint CAPI (Cloud Function)
-const CAPI_ENDPOINT = import.meta.env.PROD
-  ? 'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/trackCAPIEvent'
-  : 'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/trackCAPIEvent'; // Meme URL en dev pour tester
+// URL de l'endpoint CAPI (Cloud Function v2)
+const CAPI_ENDPOINT = 'https://trackcapievent-5tfnuxa2hq-ew.a.run.app';
 
 export const useMetaTracking = () => {
   const isDev = import.meta.env.DEV;
