@@ -77,6 +77,9 @@ import { addToDeadLetterQueue } from "./subscription/deadLetterQueue";
 
 // MAILWIZZ_API_KEY and MAILWIZZ_WEBHOOK_SECRET are now static values from config.ts
 
+// Multi-Dashboard authentication
+export { validateDashboardPassword } from "./multiDashboard/validateDashboardPassword";
+
 // kyc
 export { createLawyerStripeAccount } from "./createLawyerAccount";
 export { createStripeAccount } from "./createStripeAccount";

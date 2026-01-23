@@ -21,8 +21,29 @@ import {
   getDoc,
   Timestamp,
 } from 'firebase/firestore';
-import { httpsCallable } from 'firebase/functions';
-import { db, functions } from '../config/firebase';
+import { httpsCallable, getFunctions } from 'firebase/functions';
+import { initializeApp, getApps } from 'firebase/app';
+import { db } from '../config/firebase';
+
+// ============================================================================
+// SECONDARY FIREBASE APP FOR OUTILS-SOS-EXPAT FUNCTIONS
+// The validateDashboardPassword function is deployed on outils-sos-expat project
+// ============================================================================
+const OUTILS_FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDYNx6T8GquHFx-eQOz94wqZTkxYGzQQk0",
+  authDomain: "outils-sos-expat.firebaseapp.com",
+  projectId: "outils-sos-expat",
+  storageBucket: "outils-sos-expat.appspot.com",
+  messagingSenderId: "694506867593",
+  appId: "1:694506867593:web:8c4a3f5e7b2d1a9c"
+};
+
+// Initialize secondary app for outils functions (only if not already initialized)
+const outilsApp = getApps().find(app => app.name === 'outils-sos-expat')
+  || initializeApp(OUTILS_FIREBASE_CONFIG, 'outils-sos-expat');
+
+// Functions instance pointing to outils-sos-expat project
+const outilsFunctions = getFunctions(outilsApp, 'europe-west1');
 
 // ============================================================================
 // TYPES
@@ -220,7 +241,7 @@ export function useMultiProviderDashboard(): UseMultiProviderDashboardReturn {
       const validatePassword = httpsCallable<
         { password: string },
         { success: boolean; token?: string; expiresAt?: number; error?: string }
-      >(functions, 'validateDashboardPassword');
+      >(outilsFunctions, 'validateDashboardPassword');
 
       const result = await validatePassword({ password });
 
