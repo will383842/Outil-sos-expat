@@ -5,17 +5,19 @@
  * P0 FIX: Navigation via URL query params + indicateur actif clair
  */
 
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useState } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { useLocaleNavigate } from '../../multilingual-system';
 import { getTranslatedRouteSlug, type RouteKey } from '../../multilingual-system/core/routing/localeRoutes';
 import { useApp } from '../../contexts/AppContext';
+import { useAiToolAccess } from '../../hooks/useAiToolAccess';
 import {
   User,
   Phone,
   Bot,
   CreditCard,
   Menu,
+  Loader2,
 } from 'lucide-react';
 
 interface MobileBottomNavProps {
@@ -28,6 +30,14 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userRole, onMoreClick
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { language } = useApp();
+
+  // P1 FIX: Use AI tool access hook for smart navigation
+  const {
+    hasAccess: hasAiAccess,
+    isAccessing: isAccessingAi,
+    handleAiToolClick,
+    isLoading: aiAccessLoading,
+  } = useAiToolAccess();
 
   // P0 FIX: Get translated routes based on current language
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
@@ -84,14 +94,15 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userRole, onMoreClick
       tabKey: 'calls',
       label: 'Appels',
     },
-    // AI Assistant only for providers and admin
+    // AI Tool - direct access for providers and admin
+    // P1 FIX: Opens tool directly if has access, otherwise goes to subscription
     ...(userRole === 'lawyer' || userRole === 'expat' || userRole === 'admin' ? [{
       key: 'ai',
       icon: Bot,
       isInternalTab: false,
-      route: translatedRoutes.aiAssistant,
+      isAiToolDirect: true, // P1 FIX: Special flag for direct AI tool access
       label: 'IA',
-      badge: true,
+      badge: hasAiAccess && !aiAccessLoading,
     }] : []),
     // Subscription only for providers
     ...(userRole === 'lawyer' || userRole === 'expat' ? [{
@@ -111,9 +122,16 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userRole, onMoreClick
 
   // ✅ FIX: Handle both internal tabs (setSearchParams) and external routes (navigate)
   // P1 FIX: Prevent navigation to same route (double-click bug)
-  const handleNavClick = useCallback((item: typeof navItems[0]) => {
+  // P1 FIX: Handle direct AI tool access
+  const handleNavClick = useCallback(async (item: typeof navItems[0]) => {
     if (item.isMore) {
       onMoreClick();
+      return;
+    }
+
+    // P1 FIX: Handle direct AI tool access
+    if ('isAiToolDirect' in item && item.isAiToolDirect) {
+      await handleAiToolClick();
       return;
     }
 
@@ -137,7 +155,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userRole, onMoreClick
 
     // Scroll to top of content
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [navigate, onMoreClick, setSearchParams, activeTab]);
+  }, [navigate, onMoreClick, setSearchParams, activeTab, handleAiToolClick]);
 
   return (
     <nav

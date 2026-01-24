@@ -3,13 +3,14 @@
  * S'ouvre depuis la droite avec animation fluide
  */
 
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo, useState } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { useLocaleNavigate } from '../../multilingual-system';
 import { getTranslatedRouteSlug, type RouteKey } from '../../multilingual-system/core/routing/localeRoutes';
 import { useIntl } from 'react-intl';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useAiToolAccess } from '../../hooks/useAiToolAccess';
 import {
   X,
   User,
@@ -24,6 +25,7 @@ import {
   CreditCard,
   Mail,
   Sparkles,
+  Loader2,
 } from 'lucide-react';
 
 interface MobileSideDrawerProps {
@@ -51,6 +53,14 @@ const MobileSideDrawer: React.FC<MobileSideDrawerProps> = ({
   const { user, logout } = useAuth();
   const { language } = useApp();
   const drawerRef = useRef<HTMLDivElement>(null);
+
+  // P1 FIX: Use AI tool access hook for smart navigation
+  const {
+    hasAccess: hasAiAccess,
+    isAccessing: isAccessingAi,
+    handleAiToolClick,
+    isLoading: aiAccessLoading,
+  } = useAiToolAccess();
 
   // Close on escape key
   useEffect(() => {
@@ -159,15 +169,16 @@ const MobileSideDrawer: React.FC<MobileSideDrawerProps> = ({
   ];
 
   // AI items for providers (all 9 supported languages)
-  // These are external routes (separate pages), not internal tabs
+  // P1 FIX: "Outil IA" opens directly the AI tool (or subscription if no access)
+  // "Mon Abonnement" navigates to subscription page
   const aiItems = (user?.role === 'lawyer' || user?.role === 'expat' || user?.role === 'admin') ? [
     {
-      key: 'ai-assistant',
+      key: 'ai-tool',
       icon: Bot,
       isInternalTab: false,
-      route: translatedRoutes.aiAssistant,
-      labels: { fr: 'Assistant IA', en: 'AI Assistant', es: 'Asistente IA', de: 'KI-Assistent', ru: 'ИИ Ассистент', pt: 'Assistente IA', ch: 'AI助手', hi: 'एआई सहायक', ar: 'مساعد الذكاء' },
-      badge: 'NEW',
+      isAiToolDirect: true, // P1 FIX: Special flag for direct AI tool access
+      labels: { fr: 'Outil IA', en: 'AI Tool', es: 'Herramienta IA', de: 'KI-Tool', ru: 'ИИ Инструмент', pt: 'Ferramenta IA', ch: 'AI工具', hi: 'एआई टूल', ar: 'أداة الذكاء' },
+      badge: hasAiAccess && !aiAccessLoading ? 'ACTIF' : (!aiAccessLoading ? 'PRO' : undefined),
     },
     {
       key: 'subscription',
@@ -180,10 +191,18 @@ const MobileSideDrawer: React.FC<MobileSideDrawerProps> = ({
 
   // ✅ FIX: Handle both internal tabs (setSearchParams) and external routes (navigate)
   // P1 FIX: Prevent navigation to same route (double-click bug)
-  const handleNavClick = (item: { key?: string; isInternalTab?: boolean; tabKey?: string | null; route?: string }) => {
+  // P1 FIX: Handle direct AI tool access
+  const handleNavClick = async (item: { key?: string; isInternalTab?: boolean; tabKey?: string | null; route?: string; isAiToolDirect?: boolean }) => {
     // P1 FIX: Don't navigate if already on the same item (prevents double-click bug)
-    if (item.key && activeKey === item.key) {
+    if (item.key && activeKey === item.key && !item.isAiToolDirect) {
       onClose();
+      return;
+    }
+
+    // P1 FIX: Handle direct AI tool access
+    if (item.isAiToolDirect) {
+      onClose();
+      await handleAiToolClick();
       return;
     }
 
@@ -326,11 +345,14 @@ const MobileSideDrawer: React.FC<MobileSideDrawerProps> = ({
                   const Icon = item.icon;
                   const isActive = activeKey === item.key;
                   const label = item.labels[language as keyof typeof item.labels] || item.labels.en;
+                  const isAiToolItem = 'isAiToolDirect' in item && item.isAiToolDirect;
+                  const isLoadingThisItem = isAiToolItem && isAccessingAi;
 
                   return (
                     <button
                       key={item.key}
                       onClick={() => handleNavClick(item)}
+                      disabled={isLoadingThisItem}
                       className={`
                         w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-1
                         transition-all duration-200
@@ -338,12 +360,21 @@ const MobileSideDrawer: React.FC<MobileSideDrawerProps> = ({
                           ? 'bg-gradient-to-r from-purple-50 to-pink-50 text-purple-700 dark:from-purple-500/10 dark:to-pink-500/10 dark:text-purple-400'
                           : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 active:scale-[0.98]'
                         }
+                        ${isLoadingThisItem ? 'opacity-70 cursor-wait' : ''}
                       `}
                     >
-                      <Icon className={`w-5 h-5 ${isActive ? 'text-purple-600 dark:text-purple-400' : ''}`} />
+                      {isLoadingThisItem ? (
+                        <Loader2 className="w-5 h-5 animate-spin text-purple-600" />
+                      ) : (
+                        <Icon className={`w-5 h-5 ${isActive ? 'text-purple-600 dark:text-purple-400' : ''}`} />
+                      )}
                       <span className="font-medium text-sm">{label}</span>
                       {'badge' in item && item.badge && (
-                        <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold">
+                        <span className={`ml-auto text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                          item.badge === 'ACTIF'
+                            ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
+                            : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+                        }`}>
                           {item.badge}
                         </span>
                       )}
