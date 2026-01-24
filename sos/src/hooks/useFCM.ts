@@ -48,8 +48,14 @@ export function useFCM() {
     });
 
     // Gère les messages reçus quand app est ouverte
-    onMessage(messaging, (payload) => {
+    // SECURITY FIX: Store unsubscribe function to prevent memory leak
+    const unsubscribe = onMessage(messaging, (payload) => {
       // Notification reçue pendant l'utilisation de l'app
     });
+
+    // Cleanup: unsubscribe when component unmounts or user changes
+    return () => {
+      unsubscribe();
+    };
   }, [user]);
 }

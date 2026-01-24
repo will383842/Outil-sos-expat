@@ -69,6 +69,33 @@ const IntlPhoneInput = lazy(
 );
 
 // =============================================================================
+// SECURITY: REDIRECT WHITELIST
+// =============================================================================
+/**
+ * Validates that a redirect URL is safe (prevents Open Redirect attacks)
+ * Only allows:
+ * - Relative paths starting with / (but not //)
+ * - Same-origin absolute URLs
+ */
+const isAllowedRedirect = (url: string): boolean => {
+  // Empty or null → not allowed (will use default)
+  if (!url) return false;
+
+  // Relative paths starting with / are allowed, but not // (protocol-relative)
+  if (url.startsWith('/')) {
+    return !url.startsWith('//');
+  }
+
+  // For absolute URLs, verify same origin
+  try {
+    const parsed = new URL(url, window.location.origin);
+    return parsed.origin === window.location.origin;
+  } catch {
+    return false;
+  }
+};
+
+// =============================================================================
 // CONSTANTS
 // =============================================================================
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -360,7 +387,9 @@ const RegisterClient: React.FC = () => {
   const navigate = useLocaleNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/dashboard";
+  // SECURITY: Validate redirect URL to prevent Open Redirect attacks
+  const rawRedirect = searchParams.get("redirect") || "/dashboard";
+  const redirect = isAllowedRedirect(rawRedirect) ? rawRedirect : "/dashboard";
   const prefillEmail = searchParams.get("email") || "";
 
   const { register, loginWithGoogle, isLoading, error, user, authInitialized, isFullyReady } = useAuth();

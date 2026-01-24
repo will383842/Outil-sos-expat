@@ -58,6 +58,31 @@ import {
   getRouteKeyFromSlug,
 } from "../multilingual-system/core/routing/localeRoutes";
 
+// ==================== SECURITY: REDIRECT WHITELIST ====================
+/**
+ * Validates that a redirect URL is safe (prevents Open Redirect attacks)
+ * Only allows:
+ * - Relative paths starting with / (but not //)
+ * - Same-origin absolute URLs
+ */
+const isAllowedRedirect = (url: string): boolean => {
+  // Empty or null → not allowed (will use default)
+  if (!url) return false;
+
+  // Relative paths starting with / are allowed, but not // (protocol-relative)
+  if (url.startsWith('/')) {
+    return !url.startsWith('//');
+  }
+
+  // For absolute URLs, verify same origin
+  try {
+    const parsed = new URL(url, window.location.origin);
+    return parsed.origin === window.location.origin;
+  } catch {
+    return false;
+  }
+};
+
 // ==================== TYPES ====================
 interface LoginFormData {
   email: string;
@@ -300,10 +325,12 @@ const Login: React.FC = () => {
   // Otherwise, redirect to dashboard
   const redirectFromStorage = sessionStorage.getItem("loginRedirect");
   const redirectFromParams = searchParams.get("redirect");
-  
+
   // Priority: sessionStorage > query params > default dashboard
   // sessionStorage is set by TranslationBanner before navigation, so it's most reliable
-  const redirectUrl = redirectFromStorage || redirectFromParams || "/dashboard";
+  // SECURITY: Validate redirect URL to prevent Open Redirect attacks
+  const rawRedirect = redirectFromStorage || redirectFromParams || "/dashboard";
+  const redirectUrl = isAllowedRedirect(rawRedirect) ? rawRedirect : "/dashboard";
   
   // If we have redirect from params but not in storage, store it as backup
   useEffect(() => {
@@ -696,10 +723,13 @@ const Login: React.FC = () => {
       // sessionStorage is more reliable because it's set BEFORE navigation happens
       const redirectFromStorage = sessionStorage.getItem("loginRedirect");
       const redirectFromParams = searchParams.get("redirect");
-      const redirectToUse = redirectFromStorage || redirectFromParams || "/dashboard";
+      const rawRedirectToUse = redirectFromStorage || redirectFromParams || "/dashboard";
 
       // Decode the redirect URL (it was encoded when passed to login page)
-      let finalUrl = decodeURIComponent(redirectToUse);
+      const decodedRedirect = decodeURIComponent(rawRedirectToUse);
+
+      // SECURITY: Validate redirect URL to prevent Open Redirect attacks
+      let finalUrl = isAllowedRedirect(decodedRedirect) ? decodedRedirect : "/dashboard";
 
       // ✅ FIX MULTILINGUE: Construire l'URL correcte avec locale et slug traduit
       // pour éviter les redirections multiples par LocaleRouter
