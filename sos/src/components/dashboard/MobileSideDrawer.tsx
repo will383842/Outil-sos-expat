@@ -179,7 +179,14 @@ const MobileSideDrawer: React.FC<MobileSideDrawerProps> = ({
   ] : [];
 
   // ✅ FIX: Handle both internal tabs (setSearchParams) and external routes (navigate)
-  const handleNavClick = (item: { isInternalTab?: boolean; tabKey?: string | null; route?: string }) => {
+  // P1 FIX: Prevent navigation to same route (double-click bug)
+  const handleNavClick = (item: { key?: string; isInternalTab?: boolean; tabKey?: string | null; route?: string }) => {
+    // P1 FIX: Don't navigate if already on the same item (prevents double-click bug)
+    if (item.key && activeKey === item.key) {
+      onClose();
+      return;
+    }
+
     if (item.isInternalTab) {
       // Internal tab - use setSearchParams to change tab
       if (item.tabKey === null) {

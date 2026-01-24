@@ -332,7 +332,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
                     {allMenuItems.map((item) => (
                       <li key={item.key}>
                         <button
-                          onClick={() => navigate(item.route)}
+                          onClick={() => {
+                            // P1 FIX: Prevent navigation to same route (double-click bug)
+                            if (currentKey === item.key) return;
+                            navigate(item.route);
+                          }}
                           className={`group relative w-full flex items-center px-4 py-2 text-sm font-medium ${UI.radiusSm} transition-all
                             ${currentKey === item.key
                               ? "bg-gradient-to-r from-red-50 to-orange-50 text-red-700 dark:from-white/5 dark:to-white/10 dark:text-white"

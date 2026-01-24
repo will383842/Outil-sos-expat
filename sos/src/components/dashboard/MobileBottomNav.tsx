@@ -110,9 +110,15 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userRole, onMoreClick
   ];
 
   // ✅ FIX: Handle both internal tabs (setSearchParams) and external routes (navigate)
+  // P1 FIX: Prevent navigation to same route (double-click bug)
   const handleNavClick = useCallback((item: typeof navItems[0]) => {
     if (item.isMore) {
       onMoreClick();
+      return;
+    }
+
+    // P1 FIX: Don't navigate if already on the same item (prevents double-click bug)
+    if (activeTab === item.key) {
       return;
     }
 
@@ -131,7 +137,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userRole, onMoreClick
 
     // Scroll to top of content
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [navigate, onMoreClick, setSearchParams]);
+  }, [navigate, onMoreClick, setSearchParams, activeTab]);
 
   return (
     <nav
