@@ -6,9 +6,10 @@
  * - Affichage de tous les comptes multi-prestataires
  * - Booking requests en temps réel avec réponses IA auto-générées
  * - Statistiques globales
+ * - Chat inline pour chaque prestataire
  */
 
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   RefreshCw,
   Users,
@@ -23,7 +24,18 @@ import {
 import { useMultiProviderDashboard } from '../../hooks/useMultiProviderDashboard';
 import PasswordGate from './PasswordGate';
 import AccountCard from './AccountCard';
+import ChatPanel from './ChatPanel';
 import { cn } from '../../utils/cn';
+
+// Chat state type
+interface ChatState {
+  isOpen: boolean;
+  providerId: string;
+  providerName: string;
+  providerType?: 'lawyer' | 'expat';
+  bookingRequestId?: string;
+  initialMessage?: string;
+}
 
 const MultiProviderDashboard: React.FC = () => {
   const {
@@ -36,7 +48,61 @@ const MultiProviderDashboard: React.FC = () => {
     logout,
     refresh,
     openAiTool,
+    // Chat
+    conversations,
+    chatLoading,
+    loadConversations,
+    sendMessage,
+    clearConversations,
   } = useMultiProviderDashboard();
+
+  // Chat state
+  const [chatState, setChatState] = useState<ChatState>({
+    isOpen: false,
+    providerId: '',
+    providerName: '',
+    providerType: undefined,
+    bookingRequestId: undefined,
+    initialMessage: undefined,
+  });
+
+  // Handle opening chat
+  const handleOpenChat = useCallback((
+    providerId: string,
+    providerName: string,
+    providerType: 'lawyer' | 'expat' | undefined,
+    bookingRequestId: string,
+    initialMessage?: string
+  ) => {
+    setChatState({
+      isOpen: true,
+      providerId,
+      providerName,
+      providerType,
+      bookingRequestId,
+      initialMessage,
+    });
+  }, []);
+
+  // Handle closing chat
+  const handleCloseChat = useCallback(() => {
+    setChatState(prev => ({ ...prev, isOpen: false }));
+    clearConversations();
+  }, [clearConversations]);
+
+  // Handle loading conversations
+  const handleLoadConversations = useCallback(async () => {
+    if (chatState.providerId) {
+      await loadConversations(chatState.providerId);
+    }
+  }, [chatState.providerId, loadConversations]);
+
+  // Handle sending message
+  const handleSendMessage = useCallback(async (message: string, conversationId?: string) => {
+    if (chatState.providerId) {
+      await sendMessage(chatState.providerId, message, conversationId, chatState.bookingRequestId);
+    }
+  }, [chatState.providerId, chatState.bookingRequestId, sendMessage]);
 
   // Not authenticated - show password gate
   if (!isAuthenticated) {
@@ -158,7 +224,12 @@ const MultiProviderDashboard: React.FC = () => {
         ) : (
           <div className="space-y-6">
             {accounts.map((account) => (
-              <AccountCard key={account.userId} account={account} onOpenAiTool={openAiTool} />
+              <AccountCard
+                key={account.userId}
+                account={account}
+                onOpenAiTool={openAiTool}
+                onOpenChat={handleOpenChat}
+              />
             ))}
           </div>
         )}
@@ -168,6 +239,21 @@ const MultiProviderDashboard: React.FC = () => {
       <footer className="py-8 text-center text-sm text-gray-400 dark:text-gray-600">
         SOS-Expat Multi-Provider Dashboard &copy; {new Date().getFullYear()}
       </footer>
+
+      {/* Chat Panel */}
+      <ChatPanel
+        isOpen={chatState.isOpen}
+        onClose={handleCloseChat}
+        providerId={chatState.providerId}
+        providerName={chatState.providerName}
+        providerType={chatState.providerType}
+        bookingRequestId={chatState.bookingRequestId}
+        initialMessage={chatState.initialMessage}
+        conversations={conversations}
+        isLoading={chatLoading}
+        onSendMessage={handleSendMessage}
+        onLoadConversations={handleLoadConversations}
+      />
     </div>
   );
 };

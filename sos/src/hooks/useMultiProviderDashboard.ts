@@ -99,6 +99,33 @@ export interface DashboardStats {
   aiGeneratedResponses: number;
 }
 
+// Chat types
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  source?: string;
+  createdAt: string;
+  model?: string;
+}
+
+export interface ChatConversation {
+  id: string;
+  providerId: string;
+  providerType?: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  lastMessageAt?: string;
+  messagesCount: number;
+  messages: ChatMessage[];
+  bookingContext?: {
+    clientName?: string;
+    country?: string;
+    category?: string;
+  };
+}
+
 interface UseMultiProviderDashboardReturn {
   // Data
   accounts: MultiProviderAccount[];
@@ -116,6 +143,13 @@ interface UseMultiProviderDashboardReturn {
   // Actions
   refresh: () => Promise<void>;
   openAiTool: (providerId: string) => Promise<void>;
+
+  // Chat
+  conversations: ChatConversation[];
+  chatLoading: boolean;
+  loadConversations: (providerId: string) => Promise<void>;
+  sendMessage: (providerId: string, message: string, conversationId?: string, bookingRequestId?: string) => Promise<void>;
+  clearConversations: () => void;
 }
 
 // ============================================================================
@@ -190,6 +224,10 @@ export function useMultiProviderDashboard(): UseMultiProviderDashboardReturn {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Chat state
+  const [conversations, setConversations] = useState<ChatConversation[]>([]);
+  const [chatLoading, setChatLoading] = useState(false);
 
   // Refs
   const isMounted = useRef(true);
@@ -392,6 +430,97 @@ export function useMultiProviderDashboard(): UseMultiProviderDashboardReturn {
   }, []);
 
   // ============================================================================
+  // CHAT FUNCTIONS
+  // ============================================================================
+
+  /**
+   * Load conversations for a specific provider
+   */
+  const loadConversations = useCallback(async (providerId: string) => {
+    const session = getSession();
+    if (!session?.token) {
+      setError('Session invalide. Veuillez vous reconnecter.');
+      return;
+    }
+
+    setChatLoading(true);
+
+    try {
+      const getConversations = httpsCallable<
+        { sessionToken: string; providerId: string; limit?: number },
+        { success: boolean; conversations?: ChatConversation[]; error?: string }
+      >(outilsFunctions, 'getProviderConversations');
+
+      const result = await getConversations({
+        sessionToken: session.token,
+        providerId,
+        limit: 20,
+      });
+
+      if (!result.data.success || !result.data.conversations) {
+        throw new Error(result.data.error || 'Erreur lors du chargement');
+      }
+
+      if (!isMounted.current) return;
+      setConversations(result.data.conversations);
+
+    } catch (err) {
+      console.error('[useMultiProviderDashboard] loadConversations error:', err);
+      // Don't show error for chat loading failures
+    } finally {
+      if (isMounted.current) {
+        setChatLoading(false);
+      }
+    }
+  }, []);
+
+  /**
+   * Send a message in a conversation
+   */
+  const sendMessage = useCallback(async (
+    providerId: string,
+    message: string,
+    conversationId?: string,
+    bookingRequestId?: string
+  ) => {
+    const session = getSession();
+    if (!session?.token) {
+      setError('Session invalide. Veuillez vous reconnecter.');
+      return;
+    }
+
+    try {
+      const sendMsg = httpsCallable<
+        { sessionToken: string; providerId: string; message: string; conversationId?: string; bookingRequestId?: string },
+        { success: boolean; conversationId?: string; error?: string }
+      >(outilsFunctions, 'sendMultiDashboardMessage');
+
+      const result = await sendMsg({
+        sessionToken: session.token,
+        providerId,
+        message,
+        conversationId,
+        bookingRequestId,
+      });
+
+      if (!result.data.success) {
+        throw new Error(result.data.error || 'Erreur lors de l\'envoi');
+      }
+
+    } catch (err) {
+      console.error('[useMultiProviderDashboard] sendMessage error:', err);
+      setError('Erreur lors de l\'envoi du message.');
+    }
+  }, []);
+
+  /**
+   * Clear conversations (when closing chat panel)
+   */
+  const clearConversations = useCallback(() => {
+    setConversations([]);
+  }, []);
+
+  // ============================================================================
   // RETURN
   // ============================================================================
 
@@ -405,6 +534,12 @@ export function useMultiProviderDashboard(): UseMultiProviderDashboardReturn {
     logout,
     refresh,
     openAiTool,
+    // Chat
+    conversations,
+    chatLoading,
+    loadConversations,
+    sendMessage,
+    clearConversations,
   };
 }
 

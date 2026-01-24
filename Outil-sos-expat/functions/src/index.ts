@@ -106,6 +106,8 @@ export {
   getMultiDashboardData,
   onBookingRequestCreatedGenerateAi,
   generateMultiDashboardOutilToken,
+  getProviderConversations,
+  sendMultiDashboardMessage,
 } from "./multiDashboard";
 
 // =============================================================================

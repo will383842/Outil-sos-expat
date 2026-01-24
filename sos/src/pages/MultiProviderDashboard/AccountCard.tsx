@@ -22,9 +22,10 @@ import { cn } from '../../utils/cn';
 interface AccountCardProps {
   account: MultiProviderAccount;
   onOpenAiTool?: (providerId: string) => void;
+  onOpenChat?: (providerId: string, providerName: string, providerType: 'lawyer' | 'expat' | undefined, bookingId: string, initialMessage?: string) => void;
 }
 
-const AccountCard: React.FC<AccountCardProps> = ({ account, onOpenAiTool }) => {
+const AccountCard: React.FC<AccountCardProps> = ({ account, onOpenAiTool, onOpenChat }) => {
   const [expanded, setExpanded] = useState(true);
   const [showAllBookings, setShowAllBookings] = useState(false);
 
@@ -142,6 +143,7 @@ const AccountCard: React.FC<AccountCardProps> = ({ account, onOpenAiTool }) => {
                     booking={booking}
                     providerName={getProviderName(booking.providerId)}
                     onOpenAiTool={onOpenAiTool}
+                    onOpenChat={onOpenChat}
                   />
                 ))}
 

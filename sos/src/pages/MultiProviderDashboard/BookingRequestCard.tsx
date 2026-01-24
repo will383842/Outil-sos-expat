@@ -32,15 +32,28 @@ interface BookingRequestCardProps {
   booking: BookingRequestWithAI;
   providerName?: string;
   onOpenAiTool?: (providerId: string) => void;
+  onOpenChat?: (providerId: string, providerName: string, providerType: 'lawyer' | 'expat' | undefined, bookingId: string, initialMessage?: string) => void;
 }
 
 const BookingRequestCard: React.FC<BookingRequestCardProps> = ({
   booking,
   providerName,
   onOpenAiTool,
+  onOpenChat,
 }) => {
   const [expanded, setExpanded] = useState(false);
   const [isOpeningAiTool, setIsOpeningAiTool] = useState(false);
+
+  const handleOpenChat = () => {
+    if (!onOpenChat || !booking.providerId) return;
+    onOpenChat(
+      booking.providerId,
+      providerName || booking.providerName || 'Prestataire',
+      booking.providerType,
+      booking.id,
+      booking.aiResponse?.content
+    );
+  };
 
   const handleOpenAiTool = async () => {
     if (!onOpenAiTool || !booking.providerId) return;
@@ -247,29 +260,40 @@ const BookingRequestCard: React.FC<BookingRequestCardProps> = ({
 
       {/* Actions Bar */}
       <div className="px-4 pb-3 flex items-center gap-2">
-        {/* Open AI Tool Button */}
+        {/* Chat Button - Primary action */}
+        {onOpenChat && booking.providerId && (
+          <button
+            onClick={handleOpenChat}
+            className={cn(
+              "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all",
+              "bg-gradient-to-r from-green-500 to-emerald-600 text-white",
+              "hover:from-green-600 hover:to-emerald-700",
+              "shadow-sm hover:shadow-md"
+            )}
+          >
+            <MessageSquare className="w-4 h-4" />
+            Ouvrir le Chat
+          </button>
+        )}
+
+        {/* Open AI Tool Button - Secondary action */}
         {onOpenAiTool && booking.providerId && (
           <button
             onClick={handleOpenAiTool}
             disabled={isOpeningAiTool}
             className={cn(
-              "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all",
-              "bg-gradient-to-r from-blue-600 to-indigo-600 text-white",
-              "hover:from-blue-700 hover:to-indigo-700",
-              "disabled:opacity-50 disabled:cursor-not-allowed",
-              "shadow-sm hover:shadow-md"
+              "flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all",
+              "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300",
+              "hover:bg-gray-200 dark:hover:bg-gray-600",
+              "disabled:opacity-50 disabled:cursor-not-allowed"
             )}
           >
             {isOpeningAiTool ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Ouverture...
-              </>
+              <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <>
-                <Bot className="w-4 h-4" />
-                Ouvrir l'outil IA
-                <ExternalLink className="w-3 h-3 ml-1 opacity-70" />
+                <ExternalLink className="w-4 h-4" />
+                <span className="hidden sm:inline">Outil IA</span>
               </>
             )}
           </button>
