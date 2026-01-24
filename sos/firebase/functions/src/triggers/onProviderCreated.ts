@@ -364,6 +364,11 @@ interface ProviderProfileData {
   // PayPal fields (peuvent déjà exister si créé manuellement)
   paypalMerchantId?: string;
   paypalAccountStatus?: string;
+  // Business info
+  businessName?: string;
+  // Language preferences
+  preferredLanguage?: string;
+  lang?: string;
   // AAA Profile fields (profils gérés en interne)
   isAAA?: boolean;
   isTestProfile?: boolean;
@@ -951,9 +956,10 @@ async function handleStripeProvider(
 
 /**
  * Gère la configuration d'un provider PayPal
- * - Pas de création automatique de compte
+ * AMÉLIORATION: Génère automatiquement le lien d'onboarding PayPal
+ * - Lien envoyé par email immédiatement
  * - Provider NON visible jusqu'à connexion PayPal
- * - Premier rappel programmé
+ * - Premier rappel programmé avec le lien direct
  */
 async function handlePayPalProvider(
   uid: string,
@@ -963,6 +969,14 @@ async function handlePayPalProvider(
   collectionName: string
 ): Promise<void> {
   console.log(`[onProviderCreated] Configuration PayPal pour ${providerType}: ${uid} (pays: ${countryCode})`);
+
+  // ========== AMÉLIORATION: Lien PayPal vers le dashboard ==========
+  // Le lien PayPal Partner Referral sera généré à la demande dans le dashboard
+  // Cela évite les timeouts de déploiement dus aux imports lourds
+  const paypalOnboardingUrl = `https://sos-expat.com/dashboard/paypal-connect?uid=${uid}&auto=true`;
+  const paypalReferralId: string | null = null;
+
+  console.log(`[onProviderCreated] 🔗 Lien PayPal dashboard généré pour: ${uid}`);
 
   // Données PayPal à sauvegarder
   // IMPORTANT: isVisible = false car le provider doit d'abord connecter son compte PayPal
@@ -974,6 +988,8 @@ async function handlePayPalProvider(
     paypalPaymentsReceivable: false,
     paypalRemindersCount: 0,
     paypalLastReminderAt: null,
+    paypalOnboardingUrl: paypalOnboardingUrl, // 🆕 Lien direct
+    paypalReferralId: paypalReferralId, // 🆕 ID de référence
     isVisible: false, // ⚠️ Provider PayPal NON visible jusqu'à connexion
     isPaymentAccountRequired: true,
     paymentAccountRequiredReason: "PayPal connection required before receiving payments",
@@ -1008,40 +1024,81 @@ async function handlePayPalProvider(
 
   console.log(`[onProviderCreated] Données PayPal sauvegardées pour: ${uid}`);
 
-  // Créer une notification pour le provider
+  // ========== Notification in-app avec lien direct ==========
+  const locale = data.preferredLanguage || data.lang || "fr";
+  const notificationMessages = getPayPalNotificationMessages(locale);
+
   await admin.firestore().collection("notifications").add({
     userId: uid,
     type: "paypal_connection_required",
-    title: "Connexion PayPal requise",
-    message: "Pour recevoir des paiements et être visible sur la plateforme, " +
-      "veuillez connecter votre compte PayPal. " +
-      "Cela ne prend que quelques minutes.",
+    title: notificationMessages.title,
+    message: notificationMessages.message,
     data: {
       action: "connect_paypal",
       priority: "high",
+      paypalOnboardingUrl: paypalOnboardingUrl, // 🆕 Lien direct dans la notification
     },
     read: false,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 
+  // ========== 🆕 Email de bienvenue avec lien PayPal direct ==========
+  const firstName = data.firstName || data.name?.split(" ")[0] || "";
+  const displayName = data.fullName || data.name || data.email || "";
+
+  await admin.firestore().collection("message_events").add({
+    eventId: `paypal_welcome_${uid}_${Date.now()}`,
+    templateId: "paypal.welcome.onboarding",
+    locale: locale,
+    to: {
+      email: data.email,
+      userId: uid,
+    },
+    context: {
+      user: {
+        firstName: firstName,
+        lastName: data.lastName || "",
+        displayName: displayName,
+        email: data.email,
+      },
+    },
+    vars: {
+      FIRST_NAME: firstName,
+      LAST_NAME: data.lastName || "",
+      DISPLAY_NAME: displayName,
+      PROVIDER_TYPE: providerType,
+      COUNTRY: countryCode,
+      PAYPAL_ONBOARDING_URL: paypalOnboardingUrl || "",
+      DASHBOARD_URL: "https://sos-expat.com/dashboard",
+    },
+    priority: "high",
+    dedupeKey: `paypal_welcome_${uid}`,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  console.log(`[onProviderCreated] 📧 Email de bienvenue PayPal envoyé à: ${data.email}`);
+
   // Log d'audit
   await admin.firestore().collection("paypal_account_logs").add({
     userId: uid,
-    action: "paypal_required",
+    action: "paypal_onboarding_link_generated",
     providerType: providerType,
     country: countryCode,
     trigger: "onProviderCreated",
-    message: "Provider created in PayPal-only country, connection required",
+    paypalOnboardingUrl: paypalOnboardingUrl,
+    paypalReferralId: paypalReferralId,
+    message: "Provider created in PayPal-only country, onboarding link auto-generated",
     timestamp: admin.firestore.FieldValue.serverTimestamp(),
   });
 
-  // Programmer le premier rappel PayPal (sera géré par PayPalReminderManager)
+  // Programmer le premier rappel PayPal (avec le lien direct)
   await admin.firestore().collection("paypal_reminder_queue").add({
     userId: uid,
     email: data.email,
     providerType: providerType,
     country: countryCode,
     reminderNumber: 1,
+    paypalOnboardingUrl: paypalOnboardingUrl, // 🆕 Lien inclus dans les rappels
     scheduledFor: admin.firestore.Timestamp.fromDate(
       new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 heures
     ),
@@ -1049,5 +1106,53 @@ async function handlePayPalProvider(
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 
-  console.log(`[onProviderCreated] Provider PayPal configuré, rappel programmé pour: ${uid}`);
+  console.log(`[onProviderCreated] ✅ Provider PayPal configuré avec lien auto-généré: ${uid}`);
+}
+
+/**
+ * Messages de notification PayPal traduits en 9 langues
+ */
+function getPayPalNotificationMessages(locale: string): { title: string; message: string } {
+  const messages: Record<string, { title: string; message: string }> = {
+    fr: {
+      title: "Connectez votre compte PayPal",
+      message: "Pour recevoir des paiements et être visible sur la plateforme, cliquez sur le bouton ci-dessous pour connecter votre compte PayPal. Cela ne prend que 2 minutes !",
+    },
+    en: {
+      title: "Connect your PayPal account",
+      message: "To receive payments and be visible on the platform, click the button below to connect your PayPal account. It only takes 2 minutes!",
+    },
+    es: {
+      title: "Conecta tu cuenta de PayPal",
+      message: "Para recibir pagos y ser visible en la plataforma, haz clic en el botón de abajo para conectar tu cuenta de PayPal. ¡Solo toma 2 minutos!",
+    },
+    pt: {
+      title: "Conecte sua conta PayPal",
+      message: "Para receber pagamentos e ser visível na plataforma, clique no botão abaixo para conectar sua conta PayPal. Leva apenas 2 minutos!",
+    },
+    de: {
+      title: "Verbinden Sie Ihr PayPal-Konto",
+      message: "Um Zahlungen zu erhalten und auf der Plattform sichtbar zu sein, klicken Sie auf die Schaltfläche unten, um Ihr PayPal-Konto zu verbinden. Es dauert nur 2 Minuten!",
+    },
+    ru: {
+      title: "Подключите свой аккаунт PayPal",
+      message: "Чтобы получать платежи и быть видимым на платформе, нажмите кнопку ниже, чтобы подключить свой аккаунт PayPal. Это займет всего 2 минуты!",
+    },
+    zh: {
+      title: "连接您的PayPal账户",
+      message: "要接收付款并在平台上可见，请点击下面的按钮连接您的PayPal账户。只需2分钟！",
+    },
+    ar: {
+      title: "اربط حسابك على PayPal",
+      message: "لتلقي المدفوعات والظهور على المنصة، انقر على الزر أدناه لربط حسابك على PayPal. يستغرق الأمر دقيقتين فقط!",
+    },
+    hi: {
+      title: "अपना PayPal खाता कनेक्ट करें",
+      message: "भुगतान प्राप्त करने और प्लेटफ़ॉर्म पर दिखाई देने के लिए, अपने PayPal खाते को कनेक्ट करने के लिए नीचे दिए गए बटन पर क्लिक करें। इसमें केवल 2 मिनट लगते हैं!",
+    },
+  };
+
+  // Normaliser la locale (fr-FR -> fr)
+  const normalizedLocale = locale.split("-")[0].toLowerCase();
+  return messages[normalizedLocale] || messages.fr;
 }
