@@ -20,30 +20,18 @@ import * as admin from "firebase-admin";
 import Stripe from "stripe";
 // P1-13: Sync atomique payments <-> call_sessions
 import { syncPaymentStatus } from "./utils/paymentSync";
-
-// Detecter si on est en environnement live
-function isLive(): boolean {
-  return (
-    process.env.FUNCTIONS_EMULATOR !== "true" &&
-    process.env.USE_STRIPE_LIVE === "true"
-  );
-}
-
-// Helper pour obtenir la cle Stripe
-function getStripeSecretKey(): string {
-  return isLive()
-    ? process.env.STRIPE_SECRET_KEY_LIVE || ""
-    : process.env.STRIPE_SECRET_KEY_TEST_V1 || "";
-}
+// P0 FIX: Use centralized secrets instead of process.env
+import { getStripeSecretKey as getCentralizedStripeKey, getStripeMode } from "./lib/secrets";
 
 // Configuration Stripe - initialisee a la demande pour eviter les erreurs au chargement
 let stripeInstance: Stripe | null = null;
 function getStripe(): Stripe {
   if (!stripeInstance) {
-    const key = getStripeSecretKey();
+    const key = getCentralizedStripeKey();
     if (!key) {
       throw new Error("Stripe secret key not configured");
     }
+    console.log(`🔑 UnclaimedFundsManager: Stripe initialized in ${getStripeMode().toUpperCase()} mode`);
     stripeInstance = new Stripe(key, { apiVersion: "2023-10-16" as Stripe.LatestApiVersion });
   }
   return stripeInstance;

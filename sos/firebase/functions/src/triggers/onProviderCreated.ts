@@ -30,16 +30,17 @@
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import * as admin from "firebase-admin";
 import Stripe from "stripe";
-import { defineSecret, defineString } from "firebase-functions/params";
 import { getStorage } from "firebase-admin/storage";
 import { META_CAPI_TOKEN, trackCAPILead, UserData } from "../metaConversionsApi";
 // P0 FIX: Import validation function for country codes
 import { getRecommendedPaymentGateway, isValidCountryCode } from "../lib/paymentCountries";
-
-// Secrets Stripe
-const STRIPE_SECRET_KEY_TEST = defineSecret("STRIPE_SECRET_KEY_TEST");
-const STRIPE_SECRET_KEY_LIVE = defineSecret("STRIPE_SECRET_KEY_LIVE");
-const STRIPE_MODE = defineString("STRIPE_MODE");
+// P0 FIX: Use centralized secrets - NEVER call defineSecret() in multiple files
+import {
+  STRIPE_SECRET_KEY_TEST,
+  STRIPE_SECRET_KEY_LIVE,
+  getStripeSecretKey,
+  getStripeMode,
+} from "../lib/secrets";
 
 // =============================================================================
 // SLUG GENERATION UTILITIES (SEO URLs)
@@ -570,18 +571,18 @@ function getBusinessType(providerType?: string): Stripe.AccountCreateParams.Busi
 }
 
 /**
- * Initialise Stripe avec la bonne clé selon le mode
+ * Initialise Stripe avec la bonne clé selon le mode - P0 FIX: Use centralized secrets
  */
 function initStripe(): Stripe | null {
-  const mode = (STRIPE_MODE.value() || "test").toLowerCase();
-  const secretKey = mode === "live"
-    ? process.env.STRIPE_SECRET_KEY_LIVE
-    : process.env.STRIPE_SECRET_KEY_TEST;
+  const secretKey = getStripeSecretKey();
+  const mode = getStripeMode();
 
   if (!secretKey || !secretKey.startsWith("sk_")) {
     console.error("[onProviderCreated] Stripe secret key not configured or invalid");
     return null;
   }
+
+  console.log(`🔑 [onProviderCreated] Stripe initialized in ${mode.toUpperCase()} mode`);
 
   return new Stripe(secretKey, {
     apiVersion: "2023-10-16" as Stripe.LatestApiVersion,

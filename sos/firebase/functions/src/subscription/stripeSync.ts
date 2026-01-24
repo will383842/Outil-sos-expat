@@ -15,6 +15,8 @@ import * as functions from 'firebase-functions/v1';
 import * as admin from 'firebase-admin';
 import Stripe from 'stripe';
 import { logError } from '../utils/logs/logError';
+// P0 FIX: Use centralized secrets
+import { getStripeSecretKey, getStripeMode } from '../lib/secrets';
 
 // Lazy initialization pattern to prevent deployment timeout
 const IS_DEPLOYMENT_ANALYSIS =
@@ -33,19 +35,16 @@ function ensureInitialized() {
   }
 }
 
-// Lazy Stripe initialization
+// Lazy Stripe initialization - P0 FIX: Use centralized secrets
 let stripe: Stripe | null = null;
 function getStripe(): Stripe {
   ensureInitialized();
   if (!stripe) {
-    const secretKey =
-      process.env.STRIPE_SECRET_KEY_LIVE ||
-      process.env.STRIPE_SECRET_KEY_TEST ||
-      process.env.STRIPE_SECRET_KEY ||
-      '';
+    const secretKey = getStripeSecretKey();
     if (!secretKey) {
       throw new Error('Stripe secret key not configured');
     }
+    console.log(`🔑 stripeSync: Stripe initialized in ${getStripeMode().toUpperCase()} mode`);
     stripe = new Stripe(secretKey, {
       apiVersion: '2023-10-16',
     });

@@ -15,11 +15,13 @@
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import * as admin from "firebase-admin";
 import { logError } from "../utils/logs/logError";
-import { defineSecret } from "firebase-functions/params";
-
-// Secrets Stripe pour vérifier le solde
-const STRIPE_SECRET_KEY_LIVE = defineSecret("STRIPE_SECRET_KEY_LIVE");
-const STRIPE_SECRET_KEY_TEST = defineSecret("STRIPE_SECRET_KEY_TEST");
+// P0 FIX: Use centralized secrets - NEVER call defineSecret() in multiple files
+import {
+  STRIPE_SECRET_KEY_LIVE,
+  STRIPE_SECRET_KEY_TEST,
+  getStripeSecretKey,
+  getStripeMode,
+} from "../lib/secrets";
 
 // Configuration des seuils
 const ESCROW_CONFIG = {
@@ -410,17 +412,16 @@ async function checkStripeBalance(
   escrowStats: EscrowStats
 ): Promise<{ adequate: boolean; balance: number; required: number }> {
   try {
-    const stripeMode = process.env.STRIPE_MODE || "test";
-    const stripeKey =
-      stripeMode === "live"
-        ? process.env.STRIPE_SECRET_KEY_LIVE
-        : process.env.STRIPE_SECRET_KEY_TEST;
+    // P0 FIX: Use centralized secrets
+    const stripeKey = getStripeSecretKey();
+    const stripeMode = getStripeMode();
 
     if (!stripeKey) {
       console.warn("⚠️ [ESCROW] Stripe key not available for balance check");
       return { adequate: true, balance: 0, required: 0 };
     }
 
+    console.log(`🔑 [ESCROW] Checking balance in ${stripeMode.toUpperCase()} mode`);
     const Stripe = (await import("stripe")).default;
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 

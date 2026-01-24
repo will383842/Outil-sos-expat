@@ -4,13 +4,19 @@
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { defineSecret, defineString } from 'firebase-functions/params';
 import * as admin from 'firebase-admin';
 import Stripe from 'stripe';
 import * as logger from 'firebase-functions/logger';
 import { createCheckoutSchema, validateInput } from './validation';
 import { META_CAPI_TOKEN, trackCAPIInitiateCheckout, UserData } from '../metaConversionsApi';
 import { APP_URLS } from './constants';
+// P0 FIX: Use centralized secrets - NEVER call defineSecret() in multiple files
+import {
+  STRIPE_SECRET_KEY_TEST,
+  STRIPE_SECRET_KEY_LIVE,
+  getStripeSecretKey as getCentralizedStripeKey,
+  getStripeMode,
+} from '../lib/secrets';
 
 // Lazy initialization pattern to prevent deployment timeout
 const IS_DEPLOYMENT_ANALYSIS =
@@ -30,12 +36,8 @@ function ensureInitialized() {
 }
 
 // ============================================================================
-// SECRETS & PARAMS
+// SECRETS & PARAMS - P0 FIX: Now imported from centralized lib/secrets.ts
 // ============================================================================
-
-const STRIPE_SECRET_KEY_TEST = defineSecret('STRIPE_SECRET_KEY_TEST');
-const STRIPE_SECRET_KEY_LIVE = defineSecret('STRIPE_SECRET_KEY_LIVE');
-const STRIPE_MODE = defineString('STRIPE_MODE', { default: 'test' });
 
 // ============================================================================
 // TYPES
@@ -114,19 +116,17 @@ const EUROZONE_COUNTRIES = new Set([
 // ============================================================================
 
 /**
- * Determines if environment is in live mode
+ * Determines if environment is in live mode - P0 FIX: Use centralized function
  */
 function isLive(): boolean {
-  return (STRIPE_MODE.value() || 'test').toLowerCase() === 'live';
+  return getStripeMode() === 'live';
 }
 
 /**
- * Gets the appropriate Stripe secret key based on mode
+ * Gets the appropriate Stripe secret key based on mode - P0 FIX: Use centralized function
  */
 function getStripeSecretKey(): string {
-  return isLive()
-    ? process.env.STRIPE_SECRET_KEY_LIVE || ''
-    : process.env.STRIPE_SECRET_KEY_TEST || '';
+  return getCentralizedStripeKey();
 }
 
 /**

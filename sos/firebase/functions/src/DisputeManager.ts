@@ -13,6 +13,8 @@
 
 import * as admin from "firebase-admin";
 import Stripe from "stripe";
+// P0 FIX: Use centralized secrets
+import { getStripeSecretKey, getStripeMode } from "./lib/secrets";
 
 // Types simplifiés pour les disputes (tracking uniquement)
 export interface DisputeRecord {
@@ -543,15 +545,16 @@ function ensureInitialized() {
   }
 }
 
-// Lazy Stripe initialization
+// Lazy Stripe initialization - P0 FIX: Use centralized secrets
 let stripeInstance: Stripe | null = null;
 function getStripe(): Stripe {
   ensureInitialized();
   if (!stripeInstance) {
-    const secretKey = process.env.STRIPE_SECRET_KEY_LIVE || process.env.STRIPE_SECRET_KEY_TEST || process.env.STRIPE_SECRET_KEY || '';
+    const secretKey = getStripeSecretKey();
     if (!secretKey) {
       throw new Error('Stripe secret key not configured');
     }
+    console.log(`🔑 DisputeManager: Stripe initialized in ${getStripeMode().toUpperCase()} mode`);
     stripeInstance = new Stripe(secretKey, {
       apiVersion: '2023-10-16'
     });
