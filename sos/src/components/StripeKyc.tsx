@@ -40,15 +40,26 @@ interface KycProgress {
 }
 
 // Error code mapping for specific error messages
-const getSpecificErrorMessage = (errorMsg: string, intl: ReturnType<typeof useIntl>): { message: string; canRetry: boolean; actionHint?: string } => {
-  // Account issues
+const getSpecificErrorMessage = (errorMsg: string, intl: ReturnType<typeof useIntl>): { message: string; canRetry: boolean; actionHint?: string; shouldAutoCreate?: boolean } => {
+  // P0 FIX: No Stripe account exists - should auto-create
+  if (errorMsg.includes("No Stripe account found") || errorMsg.includes("failed-precondition")) {
+    return {
+      message: intl.formatMessage({ id: 'stripe.kyc.error.noAccount', defaultMessage: 'Aucun compte Stripe n\'est associé à votre profil.' }),
+      canRetry: true,
+      actionHint: intl.formatMessage({ id: 'stripe.kyc.error.willCreateAccount', defaultMessage: 'Un compte va être créé automatiquement.' }),
+      shouldAutoCreate: true
+    };
+  }
+
+  // Account issues (invalid/deleted)
   if (errorMsg.includes("does not have access to account") ||
       errorMsg.includes("No such account") ||
       errorMsg.includes("account has been deleted")) {
     return {
       message: intl.formatMessage({ id: 'stripe.kyc.error.invalidAccount', defaultMessage: 'Votre compte Stripe précédent n\'est plus valide.' }),
       canRetry: true,
-      actionHint: intl.formatMessage({ id: 'stripe.kyc.error.createNewHint', defaultMessage: 'Vous devez créer un nouveau compte pour continuer.' })
+      actionHint: intl.formatMessage({ id: 'stripe.kyc.error.createNewHint', defaultMessage: 'Vous devez créer un nouveau compte pour continuer.' }),
+      shouldAutoCreate: true
     };
   }
 
@@ -490,6 +501,34 @@ export default function StripeKYC({ onComplete, userType }: Props) {
         const errorInfo = getSpecificErrorMessage(errorMsg, intlRef.current);
 
         console.error("[StripeKYC] Initialization error:", err);
+
+        // P0 FIX: Auto-create account if none exists (instead of showing error)
+        if (errorInfo.shouldAutoCreate && user?.email) {
+          console.log("[StripeKYC] No account found - auto-creating...");
+          sessionStorage.removeItem(checkKey);
+
+          try {
+            const createStripeAccount = httpsCallable(functions, "createStripeAccount");
+            const createResult = await createStripeAccount({
+              email: user.email,
+              currentCountry: "FR",
+              userType: userType,
+            });
+            const createData = createResult.data as { success: boolean; accountId: string };
+
+            if (createData.success) {
+              console.log("[StripeKYC] Account auto-created:", createData.accountId);
+              // Reset and re-initialize with new account
+              initStartedRef.current = false;
+              setReinitKey(prev => prev + 1);
+              return; // Exit and let useEffect re-run
+            }
+          } catch (createErr) {
+            console.error("[StripeKYC] Auto-create failed:", createErr);
+            // Fall through to show error
+          }
+        }
+
         sessionStorage.setItem(errorKey, errorMsg);
         sessionStorage.removeItem(checkKey);
         setError(errorInfo);
