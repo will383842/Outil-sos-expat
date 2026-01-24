@@ -134,9 +134,11 @@ const KYCBannerCompactInner: React.FC<KYCBannerCompactProps> = ({
       </button>
 
       {/* Expanded content */}
+      {/* P0 FIX: Removed max-h-[600px] to allow Stripe form to display fully */}
+      {/* Added overflow-y-auto to enable scrolling if content is larger than viewport */}
       <div className={`
-        overflow-hidden transition-all duration-300 ease-out
-        ${isExpanded ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}
+        transition-all duration-300 ease-out
+        ${isExpanded ? 'max-h-[85vh] overflow-y-auto opacity-100' : 'max-h-0 overflow-hidden opacity-0'}
       `}>
         <div className="px-3 pb-3 md:px-4 md:pb-4">
           {/* Separator */}

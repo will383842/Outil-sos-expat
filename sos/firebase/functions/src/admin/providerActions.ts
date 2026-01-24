@@ -122,6 +122,7 @@ export interface ProviderSuspensionFields {
 
 /**
  * Verify admin permissions from auth context
+ * Checks both claims.admin (boolean) and claims.role === 'admin' for compatibility
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function assertAdmin(ctx: any): string {
@@ -132,7 +133,8 @@ function assertAdmin(ctx: any): string {
     throw new HttpsError("unauthenticated", "Authentication required");
   }
 
-  if (!claims?.admin) {
+  const isAdmin = claims?.admin === true || claims?.role === 'admin';
+  if (!isAdmin) {
     throw new HttpsError("permission-denied", "Admin access required");
   }
 

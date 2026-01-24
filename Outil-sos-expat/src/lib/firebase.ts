@@ -1,5 +1,11 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, connectAuthEmulator } from "firebase/auth";
+import {
+  getAuth,
+  connectAuthEmulator,
+  indexedDBLocalPersistence,
+  browserLocalPersistence,
+  setPersistence,
+} from "firebase/auth";
 import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
 import { getStorage, connectStorageEmulator } from "firebase/storage";
 
@@ -39,6 +45,21 @@ try {
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+
+// =============================================================================
+// PWA AUTH PERSISTENCE - Garantit que l'utilisateur reste connecté après
+// installation de la PWA (pas besoin de se reconnecter)
+// =============================================================================
+// indexedDBLocalPersistence est plus fiable pour les PWA que localStorage
+// car il persiste même quand le storage est sous pression
+setPersistence(auth, indexedDBLocalPersistence).catch((error) => {
+  // Fallback sur browserLocalPersistence si IndexedDB n'est pas disponible
+  console.warn(
+    "[Firebase Auth] IndexedDB non disponible, fallback sur localStorage:",
+    error.code
+  );
+  return setPersistence(auth, browserLocalPersistence);
+});
 
 // Connexion aux émulateurs en mode développement
 // Active avec: VITE_USE_EMULATORS=true dans .env.local

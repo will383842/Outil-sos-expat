@@ -3,38 +3,61 @@
  * SERVICE D'INITIALISATION - PWA
  * =============================================================================
  *
- * PERFORMANCE: Le Service Worker est enregistré de manière différée
- * pour ne pas bloquer le chargement initial.
+ * Ce service gère l'enregistrement du Service Worker généré par vite-plugin-pwa.
+ * Le SW est configuré dans vite.config.ts avec workbox pour le caching.
+ *
+ * IMPORTANT: L'authentification Firebase utilise indexedDBLocalPersistence
+ * pour garantir que l'utilisateur reste connecté après installation de la PWA.
  */
 
+import { registerSW } from "virtual:pwa-register";
+
 /**
- * Enregistre le Service Worker (production uniquement)
+ * Enregistre le Service Worker généré par vite-plugin-pwa
+ * Gère automatiquement les mises à jour
  */
 export function registerServiceWorker(): void {
-  if (!("serviceWorker" in navigator) || import.meta.env.DEV) {
+  if (!("serviceWorker" in navigator)) {
+    console.warn("[PWA] Service Worker non supporté");
     return;
   }
 
-  window.addEventListener("load", () => {
-    navigator.serviceWorker
-      .register("/sw.js")
-      .then((registration) => {
-        console.log("📱 Service Worker enregistré:", registration.scope);
+  // registerSW retourne une fonction pour forcer la mise à jour
+  const updateSW = registerSW({
+    // Callback appelé quand une mise à jour est disponible
+    onNeedRefresh() {
+      console.log("🔄 Nouvelle version disponible");
+      window.dispatchEvent(new CustomEvent("app:update-available"));
 
-        // Notification pour mise à jour disponible
-        registration.addEventListener("updatefound", () => {
-          console.log("🔄 Nouvelle version disponible");
-          window.dispatchEvent(new CustomEvent("app:update-available"));
-        });
-      })
-      .catch((error) => {
-        console.error("❌ Erreur Service Worker:", error);
-      });
+      // Auto-update après un délai (ou afficher un toast pour demander à l'utilisateur)
+      // Pour l'instant, on laisse l'utilisateur décider via un reload
+    },
+
+    // Callback appelé quand le SW est prêt pour le mode offline
+    onOfflineReady() {
+      console.log("📱 Application prête pour le mode hors-ligne");
+      window.dispatchEvent(new CustomEvent("app:offline-ready"));
+    },
+
+    // En cas d'erreur d'enregistrement
+    onRegisterError(error) {
+      console.error("❌ Erreur Service Worker:", error);
+    },
+
+    // Mise à jour immédiate sans demander à l'utilisateur
+    // (bon pour les apps internes comme le dashboard)
+    immediate: true,
   });
+
+  // Exposer la fonction de mise à jour pour usage ultérieur
+  (window as { updateSW?: () => void }).updateSW = () => {
+    updateSW(true);
+  };
 }
 
 /**
  * Gère le prompt d'installation PWA
+ * Note: Le hook usePWAInstall gère aussi cet événement de manière plus complète
  */
 export function initInstallPrompt(): void {
   window.addEventListener("beforeinstallprompt", (e) => {
@@ -42,6 +65,12 @@ export function initInstallPrompt(): void {
     // Stocker l'événement pour installation ultérieure
     (window as { deferredPrompt?: Event }).deferredPrompt = e;
     window.dispatchEvent(new CustomEvent("app:install-available"));
+  });
+
+  // Logger quand l'app est installée
+  window.addEventListener("appinstalled", () => {
+    console.log("✅ PWA installée avec succès");
+    window.dispatchEvent(new CustomEvent("app:installed"));
   });
 }
 

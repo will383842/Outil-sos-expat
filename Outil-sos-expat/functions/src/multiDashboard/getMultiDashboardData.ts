@@ -90,9 +90,31 @@ interface GetDataResponse {
 // HELPER FUNCTIONS
 // =============================================================================
 
-function timestampToISO(ts: admin.firestore.Timestamp | null | undefined): string | undefined {
+function timestampToISO(ts: admin.firestore.Timestamp | Date | string | null | undefined): string | undefined {
   if (!ts) return undefined;
-  return ts.toDate().toISOString();
+
+  // Handle Firestore Timestamp
+  if (typeof ts === 'object' && ts !== null && 'toDate' in ts && typeof ts.toDate === 'function') {
+    return ts.toDate().toISOString();
+  }
+
+  // Handle Date object
+  if (ts instanceof Date) {
+    return ts.toISOString();
+  }
+
+  // Handle string (already ISO or date string)
+  if (typeof ts === 'string') {
+    return ts;
+  }
+
+  // Handle Firestore timestamp-like object with seconds/nanoseconds
+  if (typeof ts === 'object' && ts !== null && '_seconds' in ts) {
+    const seconds = (ts as { _seconds: number })._seconds;
+    return new Date(seconds * 1000).toISOString();
+  }
+
+  return undefined;
 }
 
 // =============================================================================

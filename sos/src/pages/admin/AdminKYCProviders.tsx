@@ -111,7 +111,7 @@ const AdminKYCProviders: React.FC = () => {
   const [selectedProvider, setSelectedProvider] = useState<KYCProvider | null>(null);
 
   const [filters, setFilters] = useState<FilterOptions>({
-    kycStatus: 'pending',
+    kycStatus: 'all', // Changed from 'pending' to 'all' to show all providers needing KYC
     serviceType: 'all',
     country: 'all',
     dateRange: 'all',
@@ -189,20 +189,14 @@ const AdminKYCProviders: React.FC = () => {
     try {
       setLoading(true);
 
-      // Requête pour récupérer les profils avec état KYC
+      // Query all providers (those with serviceType set) instead of filtering by kycStatus
+      // This ensures we see ALL providers who may need KYC verification
+      // kycStatus field may not exist for providers who haven't submitted KYC yet
       const constraints: QueryConstraint[] = [
-        where('kycStatus', '!=', null),
-        orderBy('kycStatus'),
-        orderBy('submittedAt', 'desc'),
-        limit(100), // Limite augmentée à 100 pour une meilleure visibilité
+        where('serviceType', 'in', ['lawyer_call', 'expat_call']),
+        orderBy('createdAt', 'desc'),
+        limit(200), // Increased limit to capture more providers
       ];
-
-      // Si filtre précis sur kycStatus
-      if (filters.kycStatus !== 'all') {
-        // Quand on filtre par égalité, on ne peut pas garder un orderBy('kycStatus') redondant
-        constraints.length = 0;
-        constraints.push(where('kycStatus', '==', filters.kycStatus), orderBy('submittedAt', 'desc'), limit(100));
-      }
 
       const providersQuery = query(collection(db, 'sos_profiles'), ...constraints);
       const snapshot = await getDocs(providersQuery);
@@ -234,6 +228,11 @@ const AdminKYCProviders: React.FC = () => {
           };
         });
 
+        // Determine KYC status - if not set, treat as 'incomplete' (needs KYC submission)
+        const kycStatus: KYCStatus = data.kycStatus
+          ? (data.kycStatus as KYCStatus)
+          : (documents.length > 0 ? 'pending' : 'incomplete');
+
         const provider: KYCProvider = {
           id: snap.id,
           email: (data.email as string) || '',
@@ -243,10 +242,11 @@ const AdminKYCProviders: React.FC = () => {
           country: (data.country as string) || '',
           city: data.city as string | undefined,
           serviceType: (data.serviceType as ServiceType) ?? 'expat_call',
-          kycStatus: (data.kycStatus as KYCStatus) ?? 'pending',
+          kycStatus,
           submittedAt:
             data.kycSubmittedAt?.toDate?.() ??
             data.submittedAt?.toDate?.() ??
+            data.createdAt?.toDate?.() ??
             new Date(),
           reviewedAt: data.kycReviewedAt?.toDate?.(),
           reviewedBy: data.kycReviewedBy as string | undefined,
@@ -286,6 +286,11 @@ const AdminKYCProviders: React.FC = () => {
             (provider.professionalInfo.barNumber ?? '').toLowerCase(),
           ].some((v) => v.includes(searchLower)),
         );
+      }
+
+      // Filter by kycStatus (client-side since we query all providers)
+      if (filters.kycStatus !== 'all') {
+        providersData = providersData.filter((p) => p.kycStatus === filters.kycStatus);
       }
 
       if (filters.serviceType !== 'all') {

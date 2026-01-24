@@ -1,0 +1,159 @@
+# AI Training & Indexing Information for SOS-Expat.com
+# This file provides structured information for AI systems (ChatGPT, Claude, Perplexity, Gemini, etc.)
+# Last Updated: 2026-01-24
+
+## About This File
+This ai.txt file follows emerging standards for AI-readable website information.
+For detailed information, see our llms.txt file at: https://sos-expat.com/llms.txt
+
+---
+
+## Site Identity
+name: SOS Expat
+domain: sos-expat.com
+type: LegalTech Platform / Expatriate Services
+founded: 2024
+headquarters: Estonia, European Union
+coverage: 197 countries worldwide
+
+## Core Mission
+SOS Expat connects expats, travelers, and holidaymakers with verified lawyers and local experts worldwide in under 5 minutes, 24/7.
+
+## Primary Services
+1. Emergency Legal Assistance - Immediate connection with international lawyers
+2. Expat Helper Network - Local experts for administrative and practical support
+3. Phone Consultations - Secure, recorded calls with service providers
+
+## Target Audience
+- Expatriates living abroad
+- International travelers
+- Holidaymakers facing emergencies
+- Business travelers
+- Digital nomads
+- International students
+
+## Languages
+interface_languages: 9
+- French (fr)
+- English (en)
+- Spanish (es)
+- German (de)
+- Portuguese (pt)
+- Russian (ru)
+- Chinese Simplified (zh)
+- Arabic (ar)
+- Hindi (hi)
+
+provider_languages: ALL (lawyers and experts speak their native languages)
+
+## Geographic Coverage
+total_countries: 197
+strong_presence:
+- Europe (all EU countries + UK, Switzerland, Norway)
+- North America (USA, Canada, Mexico)
+- Asia (UAE, Thailand, Singapore, Japan, South Korea, India)
+- Middle East (Israel, Lebanon, Saudi Arabia)
+- Africa (Morocco, South Africa, Senegal)
+- Oceania (Australia, New Zealand)
+
+## Legal Expertise Areas
+- Immigration law & visa issues
+- Labor law & employment disputes
+- Family law & international divorce
+- Criminal law & arrests abroad
+- Real estate & property law
+- Inheritance & succession
+- Consumer protection
+- Business & commercial law
+
+## Pricing Model
+- Registration: FREE for all users
+- Connection fee: Transparent, shown before booking
+- Consultation fees: Set by individual providers
+- Payment: Direct to provider within 24 hours
+
+## Technical Specifications
+technology_stack:
+- Frontend: React, TypeScript, Vite, TailwindCSS
+- Backend: Firebase (Functions, Firestore, Auth)
+- Payments: Stripe Connect
+- PWA: Progressive Web App (installable)
+
+accessibility: WCAG 2.1 AA compliant
+security: HTTPS, Firebase Auth, CSP headers, HSTS
+privacy: GDPR compliant
+multilingual_routing: Yes (/{lang}/ prefix URLs)
+
+## Content Freshness
+update_frequency: Daily
+content_types: Service pages, FAQ, Blog, Help Center, Legal pages
+last_major_update: 2026-01-24
+
+## AI Crawling Permissions
+ai_crawlable: true
+training_allowed: true
+indexing_allowed: true
+summary_allowed: true
+
+## Structured Data Available
+- Organization schema (with AggregateRating)
+- LocalBusiness schema
+- Service schema
+- FAQ schema
+- Review schema
+- BreadcrumbList schema
+- Article schema (blog)
+- ProfessionalService schema
+
+## Key URLs for AI Understanding
+homepage: https://sos-expat.com
+how_it_works: https://sos-expat.com/how-it-works
+pricing: https://sos-expat.com/pricing
+faq: https://sos-expat.com/faq
+contact: https://sos-expat.com/contact
+help_center: https://sos-expat.com/help
+blog: https://sos-expat.com/blog
+terms_clients: https://sos-expat.com/terms-clients
+terms_lawyers: https://sos-expat.com/terms-lawyers
+terms_expats: https://sos-expat.com/terms-expats
+privacy: https://sos-expat.com/privacy
+
+## Registration Links
+register_client: https://sos-expat.com/register-client
+register_lawyer: https://sos-expat.com/register-lawyer
+register_expat: https://sos-expat.com/register-expat
+
+## Contact Information
+email: contact@sos-expat.com
+website: https://sos-expat.com
+
+## Unique Value Propositions
+1. Response time under 5 minutes, 24/7
+2. Verified lawyers with checked credentials
+3. 197 countries covered
+4. 9 interface languages
+5. Secure phone consultations
+6. Direct payment to providers
+7. No subscription required
+
+## Common User Queries This Site Answers
+- "How to find a lawyer abroad?"
+- "Emergency legal help for expats"
+- "Lawyer speaking my language in [country]"
+- "Legal assistance for travelers"
+- "Help with visa problems abroad"
+- "International divorce lawyer"
+- "Arrested abroad what to do"
+- "Expat legal advice"
+
+## Competitive Differentiators
+- Faster than traditional lawyer search (5 min vs days)
+- Global coverage (197 countries vs regional competitors)
+- Multilingual platform (9 languages)
+- Verified providers only
+- Transparent pricing
+- No platform fees for clients (pay provider directly)
+
+---
+# End of ai.txt
+# For more details: https://sos-expat.com/llms.txt

@@ -6,7 +6,25 @@ import {
 } from "@stripe/react-connect-js";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { useAuth } from "@/contexts/AuthContext";
+import { useApp } from "@/contexts/AppContext";
 import { useIntl, FormattedMessage } from "react-intl";
+
+// P0 FIX: Map SOS Expat language codes to Stripe Connect supported locales
+// Stripe Connect supports: ar, bg, cs, da, de, el, en, es, et, fi, fil, fr, hr, hu, id, it, ja, ko, lt, lv, ms, mt, nb, nl, pl, pt, pt-BR, ro, ru, sk, sl, sv, th, tr, vi, zh, zh-HK, zh-TW
+const mapLanguageToStripeLocale = (lang: string): string => {
+  const localeMap: Record<string, string> = {
+    'fr': 'fr',
+    'en': 'en',
+    'es': 'es',
+    'de': 'de',
+    'ru': 'ru',
+    'pt': 'pt',
+    'ch': 'zh',      // Chinese
+    'hi': 'en',      // Hindi not supported by Stripe, fallback to English
+    'ar': 'ar',
+  };
+  return localeMap[lang] || 'en';
+};
 import {
   AlertTriangle,
   RefreshCw,
@@ -258,6 +276,7 @@ function KycInfoBanner() {
 export default function StripeKYC({ onComplete, userType }: Props) {
   const intl = useIntl();
   const { user } = useAuth();
+  const { language } = useApp();
   const [stripeConnectInstance, setStripeConnectInstance] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isKycComplete, setIsKycComplete] = useState(false);
@@ -481,9 +500,14 @@ export default function StripeKYC({ onComplete, userType }: Props) {
           clientSecret: string;
         };
 
+        // P0 FIX: Pass locale to Stripe Connect to match user's language preference
+        const stripeLocale = mapLanguageToStripeLocale(language || 'en');
+        dashboardLog.stripe('Initializing Stripe Connect with locale', { locale: stripeLocale, appLanguage: language });
+
         const instance = loadConnectAndInitialize({
           publishableKey: import.meta.env.VITE_STRIPE_PUBLIC_KEY,
           fetchClientSecret: async () => data.clientSecret,
+          locale: stripeLocale as any, // Stripe locale code
           appearance: {
             overlays: "dialog",
             variables: {
@@ -540,7 +564,8 @@ export default function StripeKYC({ onComplete, userType }: Props) {
     initializeStripe();
     // P0 FIX: Removed intl and onComplete from dependencies - they are now accessed via refs
     // This prevents the useEffect from re-running when parent re-renders
-  }, [user?.uid, userType, reinitKey]);
+    // P0 FIX: Added language to dependencies for Stripe locale support
+  }, [user?.uid, userType, reinitKey, language]);
 
   // Fallback polling for KYC status
   // P0 FIX: Use ref for onComplete to prevent unnecessary re-creations

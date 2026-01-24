@@ -118,6 +118,7 @@ interface ValidationHistoryEntry {
 
 /**
  * Validates that the caller has admin privileges
+ * Checks both claims.admin (boolean) and claims.role === 'admin' for compatibility
  */
 function assertAdmin(ctx: any): string {
   const uid = ctx?.auth?.uid;
@@ -127,7 +128,9 @@ function assertAdmin(ctx: any): string {
     throw new HttpsError("unauthenticated", "Authentication required.");
   }
 
-  if (!claims?.admin) {
+  // Check both admin claim formats for compatibility
+  const isAdmin = claims?.admin === true || claims?.role === 'admin';
+  if (!isAdmin) {
     throw new HttpsError("permission-denied", "Admin privileges required.");
   }
 

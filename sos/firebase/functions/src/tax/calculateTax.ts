@@ -997,8 +997,10 @@ export const getTaxThresholdStatus = onCall(
     timeoutSeconds: 30,
   },
   async (request) => {
-    // Require admin authentication
-    if (!request.auth?.token?.admin) {
+    // Require admin authentication (check both claim formats for compatibility)
+    const claims = request.auth?.token;
+    const isAdmin = claims?.admin === true || claims?.role === 'admin';
+    if (!isAdmin) {
       throw new HttpsError('permission-denied', 'Admin access required');
     }
 

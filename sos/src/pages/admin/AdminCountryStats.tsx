@@ -77,41 +77,268 @@ const AdminCountryStats: React.FC = () => {
 
   // Helper function to normalize country names
   // Maps country codes to full names and handles various formats
+  // ENHANCED: Multi-strategy matching to minimize "Unknown" entries
   const normalizeCountryName = useCallback((countryInput: string): string => {
-    if (!countryInput || countryInput.trim() === '' || countryInput === 'Unknown') {
-      return 'Unknown';
+    // Return special marker for truly unknown/empty values
+    // This will be displayed as a separate category in the stats
+    if (!countryInput || countryInput.trim() === '' || countryInput.toLowerCase() === 'unknown') {
+      return 'Non renseigné';
     }
 
     const normalized = countryInput.trim();
     const normalizedLower = normalized.toLowerCase();
 
-    // Handle common abbreviations
+    // STRATEGY 1: Extended abbreviation/alias mapping
     const abbreviationMap: Record<string, string> = {
-      'd': 'DE', // Germany abbreviation
+      // Common abbreviations
+      'd': 'DE', // Germany
       'uk': 'GB', // United Kingdom
       'usa': 'US', // United States
       'uae': 'AE', // United Arab Emirates
+      'holland': 'NL', // Netherlands
+      'hollande': 'NL',
+      'pays-bas': 'NL',
+      'england': 'GB',
+      'angleterre': 'GB',
+      'great britain': 'GB',
+      'grande-bretagne': 'GB',
+      'scotland': 'GB',
+      'ecosse': 'GB',
+      'wales': 'GB',
+      'pays de galles': 'GB',
+      'northern ireland': 'GB',
+      'irlande du nord': 'GB',
+      'america': 'US',
+      'amérique': 'US',
+      'états-unis': 'US',
+      'etats-unis': 'US',
+      'united states of america': 'US',
+      'emirats arabes unis': 'AE',
+      'emirates': 'AE',
+      'dubai': 'AE',
+      'dubaï': 'AE',
+      'abu dhabi': 'AE',
+      'abou dabi': 'AE',
+      // French territories
+      'guyane': 'GF',
+      'martinique': 'MQ',
+      'guadeloupe': 'GP',
+      'réunion': 'RE',
+      'reunion': 'RE',
+      'la réunion': 'RE',
+      'la reunion': 'RE',
+      'mayotte': 'YT',
+      'nouvelle-calédonie': 'NC',
+      'nouvelle caledonie': 'NC',
+      'polynésie': 'PF',
+      'polynesie': 'PF',
+      'tahiti': 'PF',
+      'saint-martin': 'MF',
+      'st martin': 'MF',
+      'saint-barthélemy': 'BL',
+      'st barth': 'BL',
+      'wallis': 'WF',
+      'futuna': 'WF',
+      // Common typos/variations
+      'allemange': 'DE',
+      'allemeagne': 'DE',
+      'espange': 'ES',
+      'italie ': 'IT',
+      'belgique ': 'BE',
+      'suisse': 'CH',
+      'swiss': 'CH',
+      'switzerland': 'CH',
+      'schweiz': 'CH',
+      'svizzera': 'CH',
+      'svizra': 'CH',
+      'autriche': 'AT',
+      'osterreich': 'AT',
+      'österreich': 'AT',
+      'south africa': 'ZA',
+      'afrique du sud': 'ZA',
+      'ivory coast': 'CI',
+      "cote d'ivoire": 'CI',
+      'czech': 'CZ',
+      'czechia': 'CZ',
+      'tchéquie': 'CZ',
+      'tcheque': 'CZ',
+      'rdc': 'CD',
+      'drc': 'CD',
+      'congo kinshasa': 'CD',
+      'congo-kinshasa': 'CD',
+      'congo brazzaville': 'CG',
+      'congo-brazzaville': 'CG',
+      'south korea': 'KR',
+      'corée du sud': 'KR',
+      'coree du sud': 'KR',
+      'north korea': 'KP',
+      'corée du nord': 'KP',
+      'coree du nord': 'KP',
+      'taiwan': 'TW',
+      'taïwan': 'TW',
+      'republic of china': 'TW',
+      'hong-kong': 'HK',
+      'hongkong': 'HK',
+      'singapour': 'SG',
+      'singapore': 'SG',
+      'maroc': 'MA',
+      'morocco': 'MA',
+      'tunisie': 'TN',
+      'tunisia': 'TN',
+      'algérie': 'DZ',
+      'algerie': 'DZ',
+      'algeria': 'DZ',
+      'egypte': 'EG',
+      'egypt': 'EG',
+      'sénégal': 'SN',
+      'senegal': 'SN',
+      'cameroun': 'CM',
+      'cameroon': 'CM',
+      'gabon': 'GA',
+      'togo': 'TG',
+      'bénin': 'BJ',
+      'benin': 'BJ',
+      'mali': 'ML',
+      'niger': 'NE',
+      'burkina': 'BF',
+      'madagascar': 'MG',
+      'maurice': 'MU',
+      'mauritius': 'MU',
+      'ile maurice': 'MU',
+      'île maurice': 'MU',
+      'canada': 'CA',
+      'quebec': 'CA',
+      'québec': 'CA',
+      'montreal': 'CA',
+      'montréal': 'CA',
+      'toronto': 'CA',
+      'vancouver': 'CA',
+      'australie': 'AU',
+      'australia': 'AU',
+      'new zealand': 'NZ',
+      'nouvelle-zélande': 'NZ',
+      'nouvelle zelande': 'NZ',
+      'japon': 'JP',
+      'japan': 'JP',
+      'chine': 'CN',
+      'china': 'CN',
+      'inde': 'IN',
+      'india': 'IN',
+      'brésil': 'BR',
+      'bresil': 'BR',
+      'brazil': 'BR',
+      'mexique': 'MX',
+      'mexico': 'MX',
+      'argentine': 'AR',
+      'argentina': 'AR',
+      'chili': 'CL',
+      'chile': 'CL',
+      'colombie': 'CO',
+      'colombia': 'CO',
+      'pérou': 'PE',
+      'perou': 'PE',
+      'peru': 'PE',
+      'venezuela': 'VE',
+      'équateur': 'EC',
+      'equateur': 'EC',
+      'ecuador': 'EC',
+      'russie': 'RU',
+      'russia': 'RU',
+      'ukraine': 'UA',
+      'pologne': 'PL',
+      'poland': 'PL',
+      'roumanie': 'RO',
+      'romania': 'RO',
+      'grèce': 'GR',
+      'grece': 'GR',
+      'greece': 'GR',
+      'turquie': 'TR',
+      'turkey': 'TR',
+      'türkiye': 'TR',
+      'turkiye': 'TR',
+      'israel': 'IL',
+      'israël': 'IL',
+      'liban': 'LB',
+      'lebanon': 'LB',
+      'arabie saoudite': 'SA',
+      'saudi arabia': 'SA',
+      'saudi': 'SA',
+      'qatar': 'QA',
+      'oman': 'OM',
+      'bahreïn': 'BH',
+      'bahrein': 'BH',
+      'bahrain': 'BH',
+      'koweït': 'KW',
+      'koweit': 'KW',
+      'kuwait': 'KW',
+      'jordanie': 'JO',
+      'jordan': 'JO',
+      'irak': 'IQ',
+      'iraq': 'IQ',
+      'iran': 'IR',
+      'syrie': 'SY',
+      'syria': 'SY',
+      'yémen': 'YE',
+      'yemen': 'YE',
+      'afghanistan': 'AF',
+      'pakistan': 'PK',
+      'bangladesh': 'BD',
+      'sri lanka': 'LK',
+      'thaïlande': 'TH',
+      'thailande': 'TH',
+      'thailand': 'TH',
+      'vietnam': 'VN',
+      'viêt nam': 'VN',
+      'viet nam': 'VN',
+      'cambodge': 'KH',
+      'cambodia': 'KH',
+      'malaisie': 'MY',
+      'malaysia': 'MY',
+      'indonésie': 'ID',
+      'indonesie': 'ID',
+      'indonesia': 'ID',
+      'philippines': 'PH',
+      'birmanie': 'MM',
+      'myanmar': 'MM',
+      'burma': 'MM',
     };
 
-    // Check if it's a known abbreviation
+    // Check if it's a known abbreviation/alias
     if (abbreviationMap[normalizedLower]) {
       const country = getCountryByCode(abbreviationMap[normalizedLower]);
       if (country) {
-        return country.nameFr; // Return French name for display
+        return country.nameFr;
       }
     }
 
-    // First, try to find by ISO code (2 letters, case-insensitive)
+    // STRATEGY 2: ISO code matching (2-letter codes)
     if (normalized.length === 2) {
       const country = getCountryByCode(normalized.toUpperCase());
       if (country) {
-        return country.nameFr; // Return French name for display
+        return country.nameFr;
       }
     }
 
-    // Try to find by exact matching country name (case-insensitive)
-    // Check all language variants - prioritize exact matches
-    const exactMatch = countriesData.find(c => 
+    // STRATEGY 3: Phone code matching (e.g., "+33" → France)
+    if (normalized.startsWith('+')) {
+      const phoneMatch = countriesData.find(c =>
+        !c.disabled && c.phoneCode === normalized
+      );
+      if (phoneMatch) {
+        return phoneMatch.nameFr;
+      }
+      // Try without leading +
+      const phoneWithoutPlus = normalized.substring(1);
+      const phoneMatch2 = countriesData.find(c =>
+        !c.disabled && c.phoneCode === `+${phoneWithoutPlus}`
+      );
+      if (phoneMatch2) {
+        return phoneMatch2.nameFr;
+      }
+    }
+
+    // STRATEGY 4: Exact name matching (all languages)
+    const exactMatch = countriesData.find(c =>
       !c.disabled && (
         c.nameFr.toLowerCase() === normalizedLower ||
         c.nameEn.toLowerCase() === normalizedLower ||
@@ -128,11 +355,11 @@ const AdminCountryStats: React.FC = () => {
     );
 
     if (exactMatch) {
-      return exactMatch.nameFr; // Return French name for display
+      return exactMatch.nameFr;
     }
 
-    // Try partial matching (in case there are extra spaces or slight variations)
-    const partialMatch = countriesData.find(c => 
+    // STRATEGY 5: Partial matching with word boundaries
+    const partialMatch = countriesData.find(c =>
       !c.disabled && (
         c.nameFr.toLowerCase().includes(normalizedLower) ||
         c.nameEn.toLowerCase().includes(normalizedLower) ||
@@ -142,10 +369,40 @@ const AdminCountryStats: React.FC = () => {
     );
 
     if (partialMatch) {
-      return partialMatch.nameFr; // Return French name for display
+      return partialMatch.nameFr;
     }
 
-    // If no match found, return the original with proper capitalization
+    // STRATEGY 6: Word-based matching (first significant word)
+    const words = normalizedLower.split(/[\s\-_,]+/).filter(w => w.length > 2);
+    for (const word of words) {
+      const wordMatch = countriesData.find(c =>
+        !c.disabled && (
+          c.nameFr.toLowerCase().split(/[\s\-]+/).some(w => w === word) ||
+          c.nameEn.toLowerCase().split(/[\s\-]+/).some(w => w === word)
+        )
+      );
+      if (wordMatch) {
+        return wordMatch.nameFr;
+      }
+    }
+
+    // STRATEGY 7: Fuzzy matching - first 4+ chars
+    if (normalized.length >= 4) {
+      const prefix = normalizedLower.substring(0, 4);
+      const fuzzyMatch = countriesData.find(c =>
+        !c.disabled && (
+          c.nameFr.toLowerCase().startsWith(prefix) ||
+          c.nameEn.toLowerCase().startsWith(prefix)
+        )
+      );
+      if (fuzzyMatch) {
+        return fuzzyMatch.nameFr;
+      }
+    }
+
+    // FALLBACK: Return input with proper capitalization + flag indicating it's unmatched
+    // This allows admins to see what values need to be added to the mapping
+    console.warn(`[CountryStats] Unmatched country: "${countryInput}"`);
     return normalized.charAt(0).toUpperCase() + normalized.slice(1).toLowerCase();
   }, []);
 
@@ -175,7 +432,7 @@ const AdminCountryStats: React.FC = () => {
       const userCountryMap = new Map<string, string>();
 
       // Helper to extract best country from user data
-      const extractCountryFromUserData = (userData: Record<string, unknown>): string => {
+      const extractCountryFromUserData = (userData: Record<string, unknown>): string | null => {
         // Priority order for country fields
         const countryFields = [
           'country',
@@ -201,14 +458,14 @@ const AdminCountryStats: React.FC = () => {
           }
         }
 
-        return 'Unknown';
+        return null; // No country found
       };
 
       // First pass: Build map from sos_profiles (providers have better country data)
       sosProfilesSnapshot.docs.forEach(doc => {
         const userData = doc.data() as Record<string, unknown>;
         const rawCountry = extractCountryFromUserData(userData);
-        if (rawCountry !== 'Unknown') {
+        if (rawCountry) {
           userCountryMap.set(doc.id, normalizeCountryName(rawCountry));
         }
       });
@@ -217,8 +474,8 @@ const AdminCountryStats: React.FC = () => {
       usersSnapshot.docs.forEach(doc => {
         const userData = doc.data() as Record<string, unknown>;
         const rawCountry = extractCountryFromUserData(userData);
-        // Only update if we found a valid country or if not already in map
-        if (rawCountry !== 'Unknown' || !userCountryMap.has(doc.id)) {
+        // Only update if we found a valid country
+        if (rawCountry) {
           userCountryMap.set(doc.id, normalizeCountryName(rawCountry));
         }
       });
@@ -226,7 +483,7 @@ const AdminCountryStats: React.FC = () => {
       // Helper to get country from user (with normalization)
       // Utilise le Map pré-construit pour O(1) lookup
       const getUserCountry = (userId: string): string => {
-        return userCountryMap.get(userId) || 'Unknown';
+        return userCountryMap.get(userId) || 'Non renseigné';
       };
 
       // Helper to initialize country stats if not exists
@@ -255,9 +512,9 @@ const AdminCountryStats: React.FC = () => {
         const providerId = data.providerId as string;
         const clientCountry = getUserCountry(clientId);
         const providerCountry = getUserCountry(providerId);
-        
+
         // Use client country as primary, fallback to provider
-        const country = clientCountry !== 'Unknown' ? clientCountry : providerCountry;
+        const country = clientCountry !== 'Non renseigné' ? clientCountry : providerCountry;
         
         initCountryStats(country);
         countryStatsMap[country].calls.total++;
@@ -277,10 +534,12 @@ const AdminCountryStats: React.FC = () => {
         const providerId = data.providerId as string;
         const status = data.status as string | undefined;
 
-        // Only count successful/captured payments (exclude canceled, failed, refunded)
-        const shouldCount = status === 'captured' || status === 'succeeded' || status === 'authorized';
+        // Only count FINAL successful payments (exclude authorized, canceled, failed, refunded)
+        // NOTE: 'authorized' is excluded to prevent double-counting when same payment
+        // transitions from 'authorized' → 'captured'
+        const shouldCount = status === 'captured' || status === 'succeeded';
 
-        if (!shouldCount) return; // Skip canceled, failed, or refunded payments
+        if (!shouldCount) return; // Skip non-final payment states
 
         // Use Euros fields if available, otherwise convert cents to euros (divide by 100)
         const amount = (data.amountInEuros as number | undefined) !== undefined
@@ -345,7 +604,7 @@ const AdminCountryStats: React.FC = () => {
 
         // FIX: Get country with multi-source fallback
         // Priority: 1) clientCountry from payment, 2) client's country, 3) provider's country
-        let country = 'Unknown';
+        let country = 'Non renseigné';
 
         // Check if payment has clientCountry stored directly
         const paymentClientCountry = data.clientCountry as string | undefined;
@@ -354,12 +613,12 @@ const AdminCountryStats: React.FC = () => {
         } else {
           // Try client's country from user data
           const clientCountry = getUserCountry(clientId);
-          if (clientCountry !== 'Unknown') {
+          if (clientCountry !== 'Non renseigné') {
             country = clientCountry;
           } else if (providerId) {
             // Fallback to provider's country (service was rendered in provider's location)
             const providerCountry = getUserCountry(providerId);
-            if (providerCountry !== 'Unknown') {
+            if (providerCountry !== 'Non renseigné') {
               country = providerCountry;
             }
           }
@@ -377,12 +636,12 @@ const AdminCountryStats: React.FC = () => {
       let totalClients = 0;
       let totalLawyers = 0;
       let totalExpats = 0;
-      
+
       usersSnapshot.forEach((docSnapshot) => {
         const data = docSnapshot.data() as Record<string, unknown>;
         const role = data.role as string | undefined;
-        // Priority: country first, then currentCountry, then Unknown
-        const rawCountry = (data.country || data.currentCountry || 'Unknown') as string;
+        // Priority: country first, then currentCountry
+        const rawCountry = (data.country || data.currentCountry || '') as string;
         const country = normalizeCountryName(rawCountry);
         
         initCountryStats(country);

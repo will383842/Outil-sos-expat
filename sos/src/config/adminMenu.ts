@@ -158,15 +158,9 @@ export const adminMenuTree: AdminMenuItem[] = [
         icon: Star,
         descriptionKey: "admin.menu.reviews.description",
       },
-      // Sous-section : VALIDATION DES PROFILS
-      {
-        id: "profile-validation",
-        labelKey: "admin.menu.profileValidation",
-        path: "/admin/validation",
-        icon: ClipboardCheck,
-        badge: "pending",
-        descriptionKey: "admin.menu.profileValidation.description",
-      },
+      // NOTE: "Validation Profils" supprimé car redondant avec "Validation Prestataires"
+      // La page AdminProfileValidation utilisait des Cloud Functions non implémentées
+      // Toute la validation se fait maintenant via AdminApprovals (/admin/approvals/lawyers)
     ],
   },
 

@@ -157,21 +157,38 @@ export const getStripeBalance = functions.onCall(
 
     try {
       // Get the Stripe secret key
-      const stripeSecretKey = getStripeSecretKey();
-
-      if (!stripeSecretKey) {
-        logger.error('[StripeBalance] Stripe secret key not found');
+      let stripeSecretKey: string;
+      try {
+        stripeSecretKey = getStripeSecretKey();
+      } catch (secretError) {
+        logger.error('[StripeBalance] Error getting Stripe secret:', secretError);
         throw new functions.HttpsError(
           'failed-precondition',
-          'Stripe configuration not found'
+          'Stripe secrets not configured. Please check Firebase secrets.'
+        );
+      }
+
+      if (!stripeSecretKey || stripeSecretKey.length === 0) {
+        logger.error('[StripeBalance] Stripe secret key is empty or not found');
+        throw new functions.HttpsError(
+          'failed-precondition',
+          'Stripe API key not configured. Please set STRIPE_SECRET_KEY_LIVE or STRIPE_SECRET_KEY_TEST in Firebase secrets.'
+        );
+      }
+
+      if (!stripeSecretKey.startsWith('sk_')) {
+        logger.error('[StripeBalance] Invalid Stripe secret key format');
+        throw new functions.HttpsError(
+          'failed-precondition',
+          'Invalid Stripe API key format. Key should start with sk_live_ or sk_test_'
         );
       }
 
       // Initialize Stripe client with timeout and retry config
       const stripe = new Stripe(stripeSecretKey, {
         apiVersion: '2023-10-16' as Stripe.LatestApiVersion,
-        timeout: 10000, // 10 second timeout
-        maxNetworkRetries: 2, // SDK-level retries
+        timeout: 15000, // 15 second timeout (increased from 10s)
+        maxNetworkRetries: 3, // SDK-level retries (increased from 2)
       });
 
       // Fetch balance from Stripe with additional application-level retry
@@ -196,14 +213,34 @@ export const getStripeBalance = functions.onCall(
     } catch (error) {
       logger.error('[StripeBalance] Error fetching balance:', error);
 
+      // If it's already an HttpsError, just rethrow it
+      if (error instanceof functions.HttpsError) {
+        throw error;
+      }
+
       const errorMessage = (error as Error).message || 'Unknown error';
-      const isConnectionError = errorMessage.includes('connection') ||
-                                 errorMessage.includes('network') ||
+      const isConnectionError = errorMessage.toLowerCase().includes('connection') ||
+                                 errorMessage.toLowerCase().includes('network') ||
                                  errorMessage.includes('ECONNREFUSED') ||
                                  errorMessage.includes('ETIMEDOUT') ||
-                                 errorMessage.includes('retried');
+                                 errorMessage.includes('ENOTFOUND') ||
+                                 errorMessage.includes('retried') ||
+                                 errorMessage.includes('socket');
+
+      const isAuthError = errorMessage.includes('authentication') ||
+                          errorMessage.includes('Invalid API Key') ||
+                          errorMessage.includes('api_key_invalid');
 
       if (error instanceof Stripe.errors.StripeError) {
+        // For authentication errors
+        if (isAuthError || error.type === 'StripeAuthenticationError') {
+          logger.error('[StripeBalance] Stripe authentication error - check API key');
+          throw new functions.HttpsError(
+            'unauthenticated',
+            'Stripe authentication failed. Please verify the API key in Firebase secrets.'
+          );
+        }
+
         // For connection errors, return a more helpful message
         if (isConnectionError) {
           throw new functions.HttpsError(
@@ -211,14 +248,11 @@ export const getStripeBalance = functions.onCall(
             'Stripe service temporarily unavailable. Please try again in a few moments.'
           );
         }
+
         throw new functions.HttpsError(
           'internal',
           `Stripe API error: ${error.message}`
         );
-      }
-
-      if (error instanceof functions.HttpsError) {
-        throw error;
       }
 
       // Generic connection error handling
@@ -231,7 +265,7 @@ export const getStripeBalance = functions.onCall(
 
       throw new functions.HttpsError(
         'internal',
-        'Failed to fetch Stripe balance'
+        `Failed to fetch Stripe balance: ${errorMessage}`
       );
     }
   }

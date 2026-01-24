@@ -74,7 +74,7 @@ import {
   updateProfile as fbUpdateProfile,
 } from "firebase/auth";
 import { FormattedMessage, useIntl } from "react-intl";
-import StripeKYC from "@/components/StripeKyc";
+// StripeKYC removed - now uses dedicated /dashboard/kyc page for better scroll UX
 import PayPalOnboarding from "@/components/provider/PayPalOnboarding";
 import IntlPhoneInput from "@/components/forms-data/IntlPhoneInput";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
@@ -1641,21 +1641,43 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
           }
         `}
       >
-        {/* STRIPE KYC: Show verification form if Stripe provider and not complete */}
-        {/* ✅ P0 FIX: Use stable state to prevent flickering from Firestore updates */}
+        {/* STRIPE KYC: Show CTA button to complete verification */}
+        {/* P0 FIX: Redirect to dedicated KYC page instead of embedded form for better scroll UX */}
         {showStripeKycStable === true && user && (
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 lg:py-8 kyc-form-expanded">
-              <KYCBannerCompact user={user} kycType="stripe">
-                <StripeKYC
-                  userType={user.role as "lawyer" | "expat"}
-                  onComplete={() => {
-                    // P1 FIX: Update state without page reload - let React handle the UI update
-                    setShowStripeKycStable(false);
-                    // Refresh user data from Firestore to get updated KYC status
-                    // The AuthContext onSnapshot listener will automatically update the user
-                  }}
-                />
-              </KYCBannerCompact>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 lg:py-8">
+              <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-2xl p-6 shadow-lg">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-orange-100 rounded-xl">
+                      <CreditCard className="w-6 h-6 text-orange-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        <FormattedMessage
+                          id="dashboard.kyc.banner.title"
+                          defaultMessage="Complétez votre vérification"
+                        />
+                      </h3>
+                      <p className="text-gray-600 text-sm mt-1">
+                        <FormattedMessage
+                          id="dashboard.kyc.banner.description"
+                          defaultMessage="Pour recevoir des paiements, vous devez compléter la vérification d'identité Stripe."
+                        />
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => navigate("/dashboard/kyc")}
+                    className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-xl hover:from-orange-600 hover:to-red-600 transition-all shadow-lg hover:shadow-xl whitespace-nowrap"
+                  >
+                    <FormattedMessage
+                      id="dashboard.kyc.banner.button"
+                      defaultMessage="Compléter la vérification"
+                    />
+                    <AlertTriangle className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 

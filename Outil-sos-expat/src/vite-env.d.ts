@@ -275,5 +275,43 @@ declare const __BUILD_VERSION__: string;
 declare const __BUILD_DATE__: string;
 declare const __COMMIT_HASH__: string;
 
+// ========================================
+// DÉCLARATIONS POUR VITE-PLUGIN-PWA
+// ========================================
+
+// Module virtuel pour l'enregistrement du Service Worker
+declare module "virtual:pwa-register" {
+  export interface RegisterSWOptions {
+    immediate?: boolean;
+    onNeedRefresh?: () => void;
+    onOfflineReady?: () => void;
+    onRegistered?: (registration: ServiceWorkerRegistration | undefined) => void;
+    onRegisterError?: (error: Error) => void;
+  }
+
+  export function registerSW(
+    options?: RegisterSWOptions
+  ): (reloadPage?: boolean) => void;
+}
+
+// Module virtuel pour React (si utilisé avec le composant React)
+declare module "virtual:pwa-register/react" {
+  import type { Dispatch, SetStateAction } from "react";
+
+  export interface RegisterSWOptions {
+    immediate?: boolean;
+    onNeedRefresh?: () => void;
+    onOfflineReady?: () => void;
+    onRegistered?: (registration: ServiceWorkerRegistration | undefined) => void;
+    onRegisterError?: (error: Error) => void;
+  }
+
+  export function useRegisterSW(options?: RegisterSWOptions): {
+    needRefresh: [boolean, Dispatch<SetStateAction<boolean>>];
+    offlineReady: [boolean, Dispatch<SetStateAction<boolean>>];
+    updateServiceWorker: (reloadPage?: boolean) => void;
+  };
+}
+
 // Assure que ce fichier reste un module, tout en permettant `declare global`
 export {};

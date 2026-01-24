@@ -22,12 +22,13 @@ function getDb() {
   return getFirestore();
 }
 
-/** Autorise UNIQUEMENT les comptes avec claim { admin: true } */
+/** Autorise UNIQUEMENT les comptes admin (claim admin:true OU role:'admin') */
 function assertAdmin(ctx: any) {
   const uid = ctx?.auth?.uid;
   const claims = ctx?.auth?.token;
   if (!uid) throw new HttpsError("unauthenticated", "Auth requise.");
-  if (!claims?.admin) throw new HttpsError("permission-denied", "Réservé aux admins.");
+  const isAdmin = claims?.admin === true || claims?.role === 'admin';
+  if (!isAdmin) throw new HttpsError("permission-denied", "Réservé aux admins.");
 }
 
 /** 1) LISTE les IDs d'événements pour un locale donné */

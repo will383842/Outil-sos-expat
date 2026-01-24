@@ -110,10 +110,13 @@ export const createStripeAccount = onCall<CreateAccountData>(
       console.log(`🚀 Creating Stripe account for ${userType}:`, userId, `(country: ${countryCode})`);
 
       // Create Stripe Express Account
+      // P0 FIX: Set business_type to "individual" since SOS Expat providers are individual professionals
+      // This ensures the onboarding form shows the correct options and not enterprise/association only
       const account = await stripe.accounts.create({
         type: "express",
         country: currentCountry || "FR",
         email: email,
+        business_type: "individual", // Individual/Particulier for lawyers and expat helpers
         capabilities: {
           card_payments: { requested: true },
           transfers: { requested: true },

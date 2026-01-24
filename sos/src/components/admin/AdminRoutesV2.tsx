@@ -129,9 +129,8 @@ const AdminKYCProviders = lazy(
   () => import("../../pages/admin/AdminKYCProviders")
 );
 const AdminReviews = lazy(() => import("../../pages/admin/AdminReviews"));
-const AdminProfileValidation = lazy(
-  () => import("../../pages/admin/AdminProfileValidation")
-);
+// AdminProfileValidation redirigé vers AdminApprovals (Cloud Functions backend non implémentées)
+// Pour la validation des profils, utiliser AdminApprovals qui fonctionne avec Firestore direct
 
 // ===== LAZY IMPORTS - CALLS =====
 const AdminCalls = lazy(() => import("../../pages/admin/AdminCalls"));
@@ -484,13 +483,12 @@ const AdminRoutesV2: React.FC = () => {
           </Suspense>
         }
       />
+      {/* Redirection: /admin/validation -> /admin/approvals/lawyers
+          AdminProfileValidation était basé sur des Cloud Functions non implémentées.
+          Toute la validation des profils se fait maintenant via AdminApprovals */}
       <Route
         path="validation"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <AdminProfileValidation />
-          </Suspense>
-        }
+        element={<Navigate to="approvals/lawyers" replace />}
       />
 
       {/* Compat anciennes */}

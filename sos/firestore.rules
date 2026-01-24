@@ -378,12 +378,13 @@ service cloud.firestore {
     }
 
     // ================= AAA USED CONTENT COLLECTION =================
+    // Tracks which bio/review content has been used for AAA profile generation
     match /aaa_used_content/{documentId} {
-      allow get, list: if isAdmin() || isDev();
+      allow read: if isAdmin() || isDev();
       allow create: if isAdmin() &&
                    request.resource.data.keys().hasAll(['type', 'langCode', 'usedAt']) &&
                    request.resource.data.type in ['bio', 'review'];
-      allow update, delete: if false;
+      allow update, delete: if isAdmin() || isDev();
     }
 
     // ================= AAA_PROFILES COLLECTION =================
@@ -445,9 +446,9 @@ service cloud.firestore {
 
     // ================= ADMIN CONFIG COLLECTION =================
     // P0 FIX: Only pricing document is publicly readable (for public pricing pages)
-    // Other admin_config documents require authentication
+    // Other admin_config documents (aaa_payout, etc.) require admin access
     match /admin_config/{docId} {
-      allow read: if docId == 'pricing' || isAuthenticated();
+      allow read: if docId == 'pricing' || isAdmin() || isDev();
       allow write: if isAdmin() || isDev();
     }
 
@@ -1710,6 +1711,43 @@ service cloud.firestore {
                     && request.resource.data.description.size() <= 6000;
       // Mise à jour/Suppression: Admin uniquement
       allow update, delete: if isAdmin() || isDev();
+    }
+
+    // ================= CAPI EVENTS (Meta Conversion API) =================
+    // Événements Meta CAPI pour le tableau de bord analytics
+    // Utilisé par: AdminMetaAnalytics, useMetaAnalytics hook
+    match /capi_events/{eventId} {
+      // Lecture: Admin uniquement (données analytiques sensibles)
+      allow read: if isAdmin() || isDev();
+      // Écriture: Cloud Functions uniquement via Admin SDK
+      allow create, update, delete: if false;
+    }
+
+    // ================= GOOGLE ADS EVENTS =================
+    // Événements Google Ads Enhanced Conversions
+    // Utilisé par: AdminGoogleAdsAnalytics, useGoogleAdsAnalytics hook
+    match /google_ads_events/{eventId} {
+      // Lecture: Admin uniquement
+      allow read: if isAdmin() || isDev();
+      // Écriture: Cloud Functions uniquement via Admin SDK
+      allow create, update, delete: if false;
+    }
+
+    // ================= COUPON USAGES =================
+    // Historique d'utilisation des codes promo
+    // Utilisé par: AdminPromoCodes pour les statistiques
+    match /coupon_usages/{usageId} {
+      // Lecture: Admin uniquement
+      allow read: if isAdmin() || isDev();
+      // Écriture: Cloud Functions uniquement via Admin SDK
+      allow create, update, delete: if false;
+    }
+
+    // ================= SCHEDULED REPORTS =================
+    // Rapports planifiés pour Meta Analytics
+    match /scheduled_reports/{reportId} {
+      // Lecture/Écriture: Admin uniquement
+      allow read, write: if isAdmin() || isDev();
     }
 
     // ================= CATCH-ALL (deny by default) =================

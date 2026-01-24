@@ -82,6 +82,18 @@
   }
 }
 
+/* Slide Up avec fade (pour modals PWA) */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Scale In (zoom) */
 @keyframes scale-in {
   from {
@@ -187,6 +199,11 @@
 
 .animate-slide-in-bottom {
   animation: slide-in-bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Slide up avec fade (pour modals iOS) */
+.animate-slide-up {
+  animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Scale animation */

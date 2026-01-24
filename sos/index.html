@@ -120,62 +120,64 @@
     })();
   </script>
 
-  <!-- ✅✅✅ META PIXEL (Facebook) — SANS GDPR (TRACK DIRECT) -->
+  <!-- ✅✅✅ META PIXEL (Facebook) — DIFFÉRÉ POUR PERFORMANCE -->
   <script>
-    (function () {
-      var PIXEL_ID = '2204016713738311';
-      var INIT_KEY = '__fbp_init_' + PIXEL_ID;
+    // Meta Pixel chargé après le rendu initial pour ne pas bloquer FCP
+    (function() {
+      var initPixel = function () {
+        var PIXEL_ID = '2204016713738311';
+        var INIT_KEY = '__fbp_init_' + PIXEL_ID;
 
-      // ✅ Protection anti-doublon niveau 1: sessionStorage (persiste entre navigations SPA)
-      try {
-        if (sessionStorage.getItem(INIT_KEY)) {
-          window.__metaMarketingGranted = true;
-          return;
-        }
-      } catch (e) { /* sessionStorage non disponible */ }
-
-      // ✅ Protection anti-doublon niveau 2: vérifier si fbq a déjà ce pixel
-      if (window.fbq) {
+        // Protection anti-doublon niveau 1: sessionStorage
         try {
-          var state = window.fbq.getState && window.fbq.getState();
-          var pixels = state && state.pixels;
-          if (pixels && pixels.some(function(p) { return p.id === PIXEL_ID; })) {
-            try { sessionStorage.setItem(INIT_KEY, '1'); } catch (e) {}
+          if (sessionStorage.getItem(INIT_KEY)) {
             window.__metaMarketingGranted = true;
             return;
           }
-        } catch (e) { /* getState non disponible */ }
+        } catch (e) { }
+
+        // Protection anti-doublon niveau 2: vérifier si fbq a déjà ce pixel
+        if (window.fbq) {
+          try {
+            var state = window.fbq.getState && window.fbq.getState();
+            var pixels = state && state.pixels;
+            if (pixels && pixels.some(function(p) { return p.id === PIXEL_ID; })) {
+              try { sessionStorage.setItem(INIT_KEY, '1'); } catch (e) {}
+              window.__metaMarketingGranted = true;
+              return;
+            }
+          } catch (e) { }
+        }
+
+        // Charger le script Facebook (async)
+        !function (f, b, e, v, n, t, s) {
+          if (f.fbq) return;
+          n = f.fbq = function () {
+            n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+          };
+          if (!f._fbq) f._fbq = n;
+          n.push = n; n.loaded = !0; n.version = '2.0'; n.queue = [];
+          t = b.createElement(e); t.async = !0; t.src = v;
+          s = b.getElementsByTagName(e)[0];
+          s.parentNode.insertBefore(t, s)
+        }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+
+        fbq('init', PIXEL_ID);
+        fbq('track', 'PageView');
+        try { sessionStorage.setItem(INIT_KEY, '1'); } catch (e) {}
+        window.__metaMarketingGranted = true;
+        window.metaPixelConsent = function () { };
+      };
+
+      // Différer l'init après le rendu initial (requestIdleCallback ou fallback)
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(initPixel, { timeout: 2000 });
+      } else {
+        setTimeout(initPixel, 100);
       }
-
-      // Charger le script Facebook si pas encore chargé
-      !function (f, b, e, v, n, t, s) {
-        if (f.fbq) return; // Script déjà chargé, ne pas recharger
-        n = f.fbq = function () {
-          n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments)
-        };
-        if (!f._fbq) f._fbq = n;
-        n.push = n;
-        n.loaded = !0;
-        n.version = '2.0';
-        n.queue = [];
-        t = b.createElement(e);
-        t.async = !0;
-        t.src = v;
-        s = b.getElementsByTagName(e)[0];
-        s.parentNode.insertBefore(t, s)
-      }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
-
-      // Initialiser le pixel
-      fbq('init', PIXEL_ID);
-      fbq('track', 'PageView');
-
-      // Marquer comme initialisé (sessionStorage + window)
-      try { sessionStorage.setItem(INIT_KEY, '1'); } catch (e) {}
-      window.__metaMarketingGranted = true;
-      window.metaPixelConsent = function () { };
     })();
   </script>
-  <!-- ✅✅✅ FIN META PIXEL (noscript moved to body) -->
+  <!-- ✅✅✅ FIN META PIXEL -->
 
   <!-- 🚀 PERFORMANCE HINTS -->
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
@@ -191,6 +193,11 @@
   <!-- ⚡ PRELOADS -->
   <link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="prefetch" href="/icons/icon-512x512.png" />
+
+  <!-- 🚀 PREFETCH - Pages fréquemment visitées (améliore navigation) -->
+  <link rel="prefetch" href="/fr-fr/" />
+  <link rel="prefetch" href="/fr-fr/tarifs" />
+  <link rel="prefetch" href="/fr-fr/inscription/avocat" />
 
   <!-- 🎨 ICONS & FAVICONS -->
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" media="(prefers-color-scheme: light)" />

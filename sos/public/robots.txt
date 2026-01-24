@@ -1,6 +1,6 @@
 # Robots.txt pour SOS-Expat.com
 # https://sos-expat.com
-# Dernière mise à jour: 2026-01-13
+# Dernière mise à jour: 2026-01-24
 
 # ===========================================
 # RÈGLES PAR DÉFAUT (Tous les robots)
@@ -8,6 +8,7 @@
 User-agent: *
 Allow: /
 Allow: /llms.txt
+Allow: /ai.txt
 Allow: /.well-known/
 
 # Pages protégées à ne pas indexer
@@ -241,10 +242,13 @@ Sitemap: https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapFaq
 Sitemap: https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapLanding
 
 # ===========================================
-# FICHIERS SPÉCIAUX
+# FICHIERS SPÉCIAUX POUR IA
 # ===========================================
 # LLMs.txt pour les IA conversationnelles
 # https://sos-expat.com/llms.txt
+
+# AI.txt pour l'indexation IA (nouveau standard)
+# https://sos-expat.com/ai.txt
 
 # IndexNow pour indexation instantanée
 # Clé: sosexpat2025indexnowkey

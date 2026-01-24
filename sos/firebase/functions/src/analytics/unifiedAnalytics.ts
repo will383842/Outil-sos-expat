@@ -784,9 +784,10 @@ export const getUnifiedAnalytics = onCall(
       throw new HttpsError('unauthenticated', 'Authentication required');
     }
 
-    // Verify admin role
+    // Verify admin role (check both claim formats for compatibility)
     const claims = request.auth.token;
-    if (!claims?.admin) {
+    const isAdmin = claims?.admin === true || claims?.role === 'admin';
+    if (!isAdmin) {
       throw new HttpsError('permission-denied', 'Admin access required');
     }
 
@@ -1041,8 +1042,10 @@ export const getHistoricalAnalytics = onCall(
       throw new HttpsError('unauthenticated', 'Authentication required');
     }
 
+    // Verify admin role (check both claim formats for compatibility)
     const claims = request.auth.token;
-    if (!claims?.admin) {
+    const isAdmin = claims?.admin === true || claims?.role === 'admin';
+    if (!isAdmin) {
       throw new HttpsError('permission-denied', 'Admin access required');
     }
 
