@@ -324,6 +324,34 @@ export default function StripeKYC({ onComplete, userType }: Props) {
     }
   };
 
+  // P0 FIX: Add function to clear all session storage and retry initialization
+  // This allows users to recover from stuck states without refreshing the page
+  const clearAndRetry = useCallback(() => {
+    if (!user?.uid) return;
+
+    dashboardLog.stripe('clearAndRetry clicked', { userId: user.uid, userType });
+
+    const checkKey = `stripe_kyc_${user.uid}_${userType}_check_in_progress`;
+    const completedKey = `stripe_kyc_${user.uid}_${userType}_completed`;
+    const errorKey = `stripe_kyc_${user.uid}_${userType}_error`;
+
+    // Clear all session storage flags
+    sessionStorage.removeItem(checkKey);
+    sessionStorage.removeItem(completedKey);
+    sessionStorage.removeItem(errorKey);
+
+    // Reset component state
+    initStartedRef.current = false;
+    setStripeConnectInstance(null);
+    setError(null);
+    setIsKycComplete(false);
+    setLoading(true);
+    setRequirements([]);
+
+    // Trigger re-initialization
+    setReinitKey(prev => prev + 1);
+  }, [user?.uid, userType]);
+
   useEffect(() => {
     // P0 FIX: Use refs for intl and onComplete to prevent re-runs on parent re-renders
     const currentIntl = intlRef.current;
@@ -343,14 +371,17 @@ export default function StripeKYC({ onComplete, userType }: Props) {
     const completedKey = `stripe_kyc_${user.uid}_${userType}_completed`;
     const errorKey = `stripe_kyc_${user.uid}_${userType}_error`;
 
+    // P0 FIX: Clear stale "check_in_progress" flag on fresh mount
+    // This prevents the banner from being "skipped" after page refresh during initialization
+    // The flag is only valid during the same session/useEffect execution
+    if (sessionStorage.getItem(checkKey) === "true" && !initStartedRef.current) {
+      console.log("[StripeKYC] Clearing stale check_in_progress flag");
+      sessionStorage.removeItem(checkKey);
+    }
+
     const savedError = sessionStorage.getItem(errorKey);
     if (savedError) {
       setError(getSpecificErrorMessage(savedError, currentIntl));
-      setLoading(false);
-      return;
-    }
-
-    if (sessionStorage.getItem(checkKey) === "true") {
       setLoading(false);
       return;
     }
@@ -558,35 +589,51 @@ export default function StripeKYC({ onComplete, userType }: Props) {
             <p className="text-sm text-gray-500 mb-6">{error.actionHint}</p>
           )}
 
-          {error.canRetry && (
-            <button
-              onClick={createNewAccount}
-              disabled={isCreatingNewAccount}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {isCreatingNewAccount ? (
-                <>
-                  <RefreshCw className="w-5 h-5 animate-spin" />
-                  {intl.formatMessage({ id: 'stripe.kyc.creatingAccount', defaultMessage: 'Création en cours...' })}
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="w-5 h-5" />
-                  {intl.formatMessage({ id: 'stripe.kyc.createNewAccount', defaultMessage: 'Créer un nouveau compte Stripe' })}
-                </>
-              )}
-            </button>
-          )}
+          {/* P0 FIX: Add buttons for error recovery */}
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            {/* Retry button - always show for recoverable errors */}
+            {error.canRetry && (
+              <button
+                onClick={clearAndRetry}
+                disabled={isCreatingNewAccount}
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <RefreshCw className="w-5 h-5" />
+                {intl.formatMessage({ id: 'stripe.kyc.retry', defaultMessage: 'Réessayer' })}
+              </button>
+            )}
 
-          {!error.canRetry && (
-            <a
-              href="/contact"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-            >
-              <HelpCircle className="w-5 h-5" />
-              <FormattedMessage id="stripe.kyc.contactSupport" defaultMessage="Contacter le support" />
-            </a>
-          )}
+            {/* Create new account button */}
+            {error.canRetry && (
+              <button
+                onClick={createNewAccount}
+                disabled={isCreatingNewAccount}
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isCreatingNewAccount ? (
+                  <>
+                    <RefreshCw className="w-5 h-5 animate-spin" />
+                    {intl.formatMessage({ id: 'stripe.kyc.creatingAccount', defaultMessage: 'Création en cours...' })}
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-5 h-5" />
+                    {intl.formatMessage({ id: 'stripe.kyc.createNewAccount', defaultMessage: 'Créer un nouveau compte Stripe' })}
+                  </>
+                )}
+              </button>
+            )}
+
+            {!error.canRetry && (
+              <a
+                href="/contact"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                <HelpCircle className="w-5 h-5" />
+                <FormattedMessage id="stripe.kyc.contactSupport" defaultMessage="Contacter le support" />
+              </a>
+            )}
+          </div>
 
           <p className="mt-4 text-sm text-gray-500">
             {intl.formatMessage({ id: 'stripe.kyc.createNewAccountNote', defaultMessage: 'Un nouveau compte sera créé pour recevoir vos paiements.' })}

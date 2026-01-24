@@ -28,7 +28,9 @@ const KYCBannerCompactInner: React.FC<KYCBannerCompactProps> = ({
   children,
 }) => {
   const intl = useIntl();
-  const [isExpanded, setIsExpanded] = useState(false);
+  // P0 FIX: Start expanded by default so users can see and access the Stripe registration form
+  // This fixes the issue where users couldn't find/access Stripe registration
+  const [isExpanded, setIsExpanded] = useState(true);
 
   // Memoize config to prevent recalculation on every render
   const config = useMemo(() => {
