@@ -562,6 +562,73 @@ export const SubscriptionPage: React.FC = () => {
           </div>
 
           {/* ================================================================ */}
+          {/* PROMINENT UPGRADE CTA - For trial/basic users */}
+          {/* ================================================================ */}
+          {(subscription.status === 'trialing' || subscription.tier === 'basic' || subscription.tier === 'trial') && (
+            <div className="mb-8 relative overflow-hidden">
+              <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl p-6 md:p-8 shadow-xl">
+                {/* Animated background effect */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                  <div className="absolute inset-0 -translate-x-full animate-[shimmer_3s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                </div>
+
+                <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-3 bg-white/20 backdrop-blur rounded-xl">
+                        <Crown className="w-7 h-7 text-white" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl md:text-2xl font-bold text-white">
+                          {subscription.status === 'trialing'
+                            ? intl.formatMessage({ id: 'subscription.cta.trialTitle', defaultMessage: 'Passez au Premium !' })
+                            : intl.formatMessage({ id: 'subscription.cta.upgradeTitle', defaultMessage: 'Boostez votre activité !' })}
+                        </h2>
+                        <p className="text-indigo-100 text-sm md:text-base">
+                          {subscription.status === 'trialing'
+                            ? intl.formatMessage({ id: 'subscription.cta.trialDescription', defaultMessage: 'Débloquez toutes les fonctionnalités avant la fin de votre essai' })
+                            : intl.formatMessage({ id: 'subscription.cta.upgradeDescription', defaultMessage: 'Plus d\'appels IA, plus de clients, plus de revenus' })}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Features pills */}
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/20 backdrop-blur rounded-full text-white text-sm font-medium">
+                        <Check className="w-4 h-4" />
+                        {intl.formatMessage({ id: 'subscription.cta.feature1', defaultMessage: 'Jusqu\'à 30 appels/mois' })}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/20 backdrop-blur rounded-full text-white text-sm font-medium">
+                        <Check className="w-4 h-4" />
+                        {intl.formatMessage({ id: 'subscription.cta.feature2', defaultMessage: 'Support prioritaire' })}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/20 backdrop-blur rounded-full text-white text-sm font-medium">
+                        <Check className="w-4 h-4" />
+                        {intl.formatMessage({ id: 'subscription.cta.feature3', defaultMessage: 'Sans engagement' })}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* CTA Button */}
+                  <div className="flex flex-col items-stretch md:items-end gap-3">
+                    <button
+                      onClick={() => navigate(translatedRoutes.subscriptionPlans)}
+                      className="group flex items-center justify-center gap-3 px-8 py-4 bg-white text-indigo-600 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                    >
+                      <Sparkles className="w-5 h-5" />
+                      {intl.formatMessage({ id: 'subscription.cta.button', defaultMessage: 'Voir les offres' })}
+                      <ArrowUpRight className="w-5 h-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                    </button>
+                    <p className="text-indigo-200 text-xs text-center md:text-right">
+                      {intl.formatMessage({ id: 'subscription.cta.subtext', defaultMessage: 'À partir de 9,99€/mois' })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ================================================================ */}
           {/* STATS CARDS */}
           {/* ================================================================ */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
