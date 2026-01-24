@@ -223,6 +223,9 @@ export { initKYCReminderTemplates } from "./seeds/kycReminderTemplates";
 // Unclaimed Funds Templates Seed
 export { initUnclaimedFundsTemplates } from "./seeds/unclaimedFundsTemplates";
 
+// PayPal Welcome Templates Seed (9 langues)
+export { initPayPalWelcomeTemplates } from "./seeds/paypalWelcomeTemplates";
+
 // Country Fiscal Configs Seed (200 countries + 64 USA/Canada subdivisions)
 // NOTE: Data already seeded via local script (scripts/seedCountryData.js)
 // Commented out to avoid Cloud Run CPU quota issues on deployment
