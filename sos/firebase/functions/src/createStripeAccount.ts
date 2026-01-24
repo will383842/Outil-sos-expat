@@ -50,17 +50,24 @@ function isPayPalOnly(countryCode: string): boolean {
 }
 
 // Helper to create Stripe instance using centralized secrets
-function createStripeInstance(): Stripe | null {
+function createStripeInstance(): { stripe: Stripe; mode: 'live' | 'test' } | null {
   const secretKey = getStripeSecretKey();
+  const mode = secretKey?.startsWith('sk_live_') ? 'live' : 'test';
 
   if (!secretKey || !secretKey.startsWith("sk_")) {
     console.error("❌ Stripe secret key not configured or invalid");
     return null;
   }
 
-  return new Stripe(secretKey, {
-    apiVersion: "2023-10-16" as Stripe.LatestApiVersion,
-  });
+  // P0 FIX: Log which mode is being used for debugging
+  console.log(`🔑 Stripe initialized in ${mode.toUpperCase()} mode`);
+
+  return {
+    stripe: new Stripe(secretKey, {
+      apiVersion: "2023-10-16" as Stripe.LatestApiVersion,
+    }),
+    mode,
+  };
 }
 
 export const createStripeAccount = onCall<CreateAccountData>(
@@ -76,11 +83,13 @@ export const createStripeAccount = onCall<CreateAccountData>(
 
     const userId = request.auth.uid;
     const { email, currentCountry, userType } = request.data;
-    const stripe = createStripeInstance();
+    const stripeInstance = createStripeInstance();
 
-    if (!stripe) {
+    if (!stripeInstance) {
       throw new HttpsError("internal", "Stripe is not configured - secret key missing or invalid");
     }
+
+    const { stripe, mode: stripeMode } = stripeInstance;
 
     // ✅ Validate userType
     if (!userType || !["lawyer", "expat"].includes(userType)) {
@@ -111,10 +120,11 @@ export const createStripeAccount = onCall<CreateAccountData>(
         },
       });
 
-      console.log("✅ Stripe account created:", account.id);
+      console.log(`✅ Stripe account created in ${stripeMode.toUpperCase()} mode:`, account.id);
 
       const stripeData = {
         stripeAccountId: account.id,
+        stripeMode: stripeMode, // P0 FIX: Track if account is test or live
         kycStatus: "not_started",
         stripeOnboardingComplete: false,
         chargesEnabled: false,

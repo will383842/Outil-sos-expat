@@ -27,17 +27,24 @@ import {
 } from "./lib/secrets";
 
 // Helper to create Stripe instance using centralized secrets
-function createStripeInstance(): Stripe | null {
+function createStripeInstance(): { stripe: Stripe; mode: 'live' | 'test' } | null {
   const secretKey = getStripeSecretKey();
+  const mode = secretKey?.startsWith('sk_live_') ? 'live' : 'test';
 
   if (!secretKey || !secretKey.startsWith("sk_")) {
     console.error("❌ Stripe secret key not configured or invalid");
     return null;
   }
 
-  return new Stripe(secretKey, {
-    apiVersion: "2023-10-16" as Stripe.LatestApiVersion,
-  });
+  // P0 FIX: Log which mode is being used for debugging
+  console.log(`🔑 Stripe initialized in ${mode.toUpperCase()} mode`);
+
+  return {
+    stripe: new Stripe(secretKey, {
+      apiVersion: "2023-10-16" as Stripe.LatestApiVersion,
+    }),
+    mode,
+  };
 }
 
 export const checkStripeAccountStatus = onCall<{
@@ -55,11 +62,13 @@ export const checkStripeAccountStatus = onCall<{
 
   const userId = request.auth.uid;
   const { userType } = request.data;
-  const stripe = createStripeInstance();
+  const stripeInstance = createStripeInstance();
 
-  if (!stripe) {
+  if (!stripeInstance) {
     throw new HttpsError("internal", "Stripe not configured");
   }
+
+  const { stripe, mode: stripeMode } = stripeInstance;
 
   // ✅ Validate userType
   if (!userType || !["lawyer", "expat"].includes(userType)) {
@@ -89,7 +98,7 @@ export const checkStripeAccountStatus = onCall<{
       throw new HttpsError("failed-precondition", "No Stripe account found");
     }
 
-    console.log(`🔍 Checking Stripe account for ${userType}:`, accountId);
+    console.log(`🔍 Checking Stripe account for ${userType} (${stripeMode.toUpperCase()} mode):`, accountId);
 
     const account = await stripe.accounts.retrieve(accountId);
 
@@ -102,8 +111,16 @@ export const checkStripeAccountStatus = onCall<{
       account.charges_enabled === true &&
       currentlyDue.length === 0;
 
+    // P0 FIX: Detect if account mode doesn't match current Stripe mode
+    const accountIsTest = accountId.startsWith('acct_') && userData?.stripeMode === 'test';
+    if (accountIsTest && stripeMode === 'live') {
+      console.warn(`⚠️ Account ${accountId} was created in TEST mode but Stripe is in LIVE mode!`);
+    }
+
     console.log("📊 Account Status:", {
       userType,
+      stripeMode,
+      accountMode: userData?.stripeMode || 'unknown',
       detailsSubmitted: account.details_submitted,
       chargesEnabled: account.charges_enabled,
       payoutsEnabled: account.payouts_enabled,
