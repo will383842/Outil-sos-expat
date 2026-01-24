@@ -94,6 +94,33 @@ service cloud.firestore {
     }
 
     // ==========================================================================
+    // BOOKING_REQUESTS - Demandes multi-dashboard (SOS → Outil IA)
+    // ==========================================================================
+    match /booking_requests/{requestId} {
+      // Lecture: admin ou provider assigné
+      allow read: if isAdmin() || (
+        isProvider() &&
+        hasActiveSubscription() &&
+        isAssignedProvider(resource.data.providerId)
+      );
+
+      // Création: admin ou système (Cloud Functions)
+      allow create: if isAdmin();
+
+      // Mise à jour: admin ou provider assigné (champs limités)
+      allow update: if isAdmin() || (
+        isProvider() &&
+        hasActiveSubscription() &&
+        isAssignedProvider(resource.data.providerId) &&
+        !request.resource.data.diff(resource.data).affectedKeys()
+          .hasAny(['providerId', 'providerType', 'createdAt'])
+      );
+
+      // Suppression: admin uniquement
+      allow delete: if isAdmin();
+    }
+
+    // ==========================================================================
     // BOOKINGS - Dossiers clients
     // ==========================================================================
     match /bookings/{bookingId} {

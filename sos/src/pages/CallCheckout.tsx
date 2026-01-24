@@ -15,6 +15,7 @@ import {
   Lock,
   Calendar,
   X,
+  Info,
 } from "lucide-react";
 import { useLocaleNavigate } from "../multilingual-system";
 import { useAuth } from "../contexts/AuthContext";
@@ -467,6 +468,50 @@ const useTranslation = () => {
       ch: "全部的",
       pt: "Total",
       ar: "المجموع"
+    },
+    "summary.feeBreakdown": {
+      fr: "Détail des frais",
+      en: "Fee breakdown",
+      es: "Desglose de tarifas",
+      de: "Gebührenaufschlüsselung",
+      ru: "Разбивка сборов",
+      hi: "शुल्क विवरण",
+      ch: "费用明细",
+      pt: "Detalhamento das taxas",
+      ar: "تفاصيل الرسوم"
+    },
+    "summary.platformFees": {
+      fr: "Frais de plateforme",
+      en: "Platform fees",
+      es: "Tarifas de plataforma",
+      de: "Plattformgebühren",
+      ru: "Сборы платформы",
+      hi: "प्लेटफ़ॉर्म शुल्क",
+      ch: "平台费用",
+      pt: "Taxas de plataforma",
+      ar: "رسوم المنصة"
+    },
+    "summary.platformFeesDetail": {
+      fr: "(communication Twilio, plateforme SOS Expat, frais devise)",
+      en: "(Twilio communication, SOS Expat platform, currency fees)",
+      es: "(comunicación Twilio, plataforma SOS Expat, tarifas de divisa)",
+      de: "(Twilio-Kommunikation, SOS Expat-Plattform, Währungsgebühren)",
+      ru: "(связь Twilio, платформа SOS Expat, валютные сборы)",
+      hi: "(ट्विलियो संचार, SOS एक्सपैट प्लेटफ़ॉर्म, मुद्रा शुल्क)",
+      ch: "(Twilio通讯、SOS Expat平台、货币费用)",
+      pt: "(comunicação Twilio, plataforma SOS Expat, taxas de câmbio)",
+      ar: "(اتصالات Twilio، منصة SOS Expat، رسوم العملة)"
+    },
+    "summary.expertFee": {
+      fr: "Rémunération expert",
+      en: "Expert fee",
+      es: "Honorarios del experto",
+      de: "Expertenhonorar",
+      ru: "Гонорар эксперта",
+      hi: "विशेषज्ञ शुल्क",
+      ch: "专家费用",
+      pt: "Honorário do especialista",
+      ar: "أتعاب الخبير"
     },
     "btn.pay": {
       fr: "Payer",
@@ -1569,6 +1614,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
     const [pendingSubmit, setPendingSubmit] = useState<
       (() => Promise<void>) | null
     >(null);
+    const [showFeeBreakdown, setShowFeeBreakdown] = useState(false);
 
     // P0-1 FIX: callSessionId stable généré UNE SEULE FOIS pour garantir l'idempotence
     // NE PAS utiliser Date.now() dans actuallySubmitPayment car cela crée une nouvelle clé à chaque retry
@@ -2550,6 +2596,99 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
                   {adminPricing.duration} min
                 </span>
               </div>
+
+              {/* Bouton info pour détail des frais */}
+              <button
+                type="button"
+                onClick={() => setShowFeeBreakdown(!showFeeBreakdown)}
+                className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 transition-colors mt-1"
+                aria-expanded={showFeeBreakdown}
+                aria-label={t("summary.feeBreakdown")}
+              >
+                <Info className="w-3.5 h-3.5" />
+                <span className="underline underline-offset-2">
+                  {(() => {
+                    switch (language) {
+                      case "es": return "Desglose de tarifas";
+                      case "de": return "Gebührenaufschlüsselung";
+                      case "ru": return "Разбивка сборов";
+                      case "hi": return "शुल्क विवरण";
+                      case "en": return "Fee breakdown";
+                      case "ch": return "费用明细";
+                      case "pt": return "Detalhamento das taxas";
+                      case "ar": return "تفاصيل الرسوم";
+                      case "fr":
+                      default: return "Détail des frais";
+                    }
+                  })()}
+                </span>
+              </button>
+
+              {/* Bulle de détail des frais - visible si showFeeBreakdown */}
+              {showFeeBreakdown && (
+                <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className="text-gray-700 font-medium">
+                        {(() => {
+                          switch (language) {
+                            case "es": return "Tarifas de plataforma";
+                            case "de": return "Plattformgebühren";
+                            case "ru": return "Сборы платформы";
+                            case "hi": return "प्लेटफ़ॉर्म शुल्क";
+                            case "en": return "Platform fees";
+                            case "ch": return "平台费用";
+                            case "pt": return "Taxas de plataforma";
+                            case "ar": return "رسوم المنصة";
+                            case "fr":
+                            default: return "Frais de plateforme";
+                          }
+                        })()}
+                      </span>
+                      <p className="text-gray-500 text-[10px] mt-0.5">
+                        {(() => {
+                          switch (language) {
+                            case "es": return "(comunicación Twilio, plataforma SOS Expat, tarifas de divisa)";
+                            case "de": return "(Twilio-Kommunikation, SOS Expat-Plattform, Währungsgebühren)";
+                            case "ru": return "(связь Twilio, платформа SOS Expat, валютные сборы)";
+                            case "hi": return "(ट्विलियो संचार, SOS एक्सपैट प्लेटफ़ॉर्म, मुद्रा शुल्क)";
+                            case "en": return "(Twilio communication, SOS Expat platform, currency fees)";
+                            case "ch": return "(Twilio通讯、SOS Expat平台、货币费用)";
+                            case "pt": return "(comunicação Twilio, plataforma SOS Expat, taxas de câmbio)";
+                            case "ar": return "(اتصالات Twilio، منصة SOS Expat، رسوم العملة)";
+                            case "fr":
+                            default: return "(communication Twilio, plateforme SOS Expat, frais devise)";
+                          }
+                        })()}
+                      </p>
+                    </div>
+                    <span className="font-semibold text-gray-800">
+                      {adminPricing.connectionFeeAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currencySymbol}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-700 font-medium">
+                      {(() => {
+                        switch (language) {
+                          case "es": return "Honorarios del experto";
+                          case "de": return "Expertenhonorar";
+                          case "ru": return "Гонорар эксперта";
+                          case "hi": return "विशेषज्ञ शुल्क";
+                          case "en": return "Expert fee";
+                          case "ch": return "专家费用";
+                          case "pt": return "Honorário do especialista";
+                          case "ar": return "أتعاب الخبير";
+                          case "fr":
+                          default: return "Rémunération expert";
+                        }
+                      })()}
+                    </span>
+                    <span className="font-semibold text-gray-800">
+                      {adminPricing.providerAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currencySymbol}
+                    </span>
+                  </div>
+                </div>
+              )}
 
               <div className="border-t-2 border-gray-400 pt-2 mt-2">
                 <div className="flex justify-between items-center">

@@ -79,6 +79,7 @@ export interface BookingRequestWithAI {
   updatedAt?: Date;
   aiResponse?: AiResponse;
   aiProcessedAt?: Date;
+  aiError?: string;
 }
 
 export interface MultiProviderAccount {
@@ -142,7 +143,7 @@ interface UseMultiProviderDashboardReturn {
 
   // Actions
   refresh: () => Promise<void>;
-  openAiTool: (providerId: string) => Promise<void>;
+  openAiTool: (providerId: string, bookingId?: string) => Promise<void>;
 
   // Chat
   conversations: ChatConversation[];
@@ -347,6 +348,7 @@ export function useMultiProviderDashboard(): UseMultiProviderDashboardReturn {
             generatedAt: new Date(booking.aiResponse.generatedAt as unknown as string),
           } : undefined,
           aiProcessedAt: booking.aiProcessedAt ? new Date(booking.aiProcessedAt as unknown as string) : undefined,
+          aiError: booking.aiError || undefined,
         })),
       }));
 
@@ -397,8 +399,10 @@ export function useMultiProviderDashboard(): UseMultiProviderDashboardReturn {
   /**
    * Opens the AI tool (ia.sos-expat.com) for a specific provider
    * Generates an SSO token via Cloud Function
+   * @param providerId - The provider ID
+   * @param bookingId - Optional booking ID to open directly the conversation
    */
-  const openAiTool = useCallback(async (providerId: string) => {
+  const openAiTool = useCallback(async (providerId: string, bookingId?: string) => {
     const session = getSession();
     if (!session?.token) {
       setError('Session invalide. Veuillez vous reconnecter.');
@@ -407,20 +411,21 @@ export function useMultiProviderDashboard(): UseMultiProviderDashboardReturn {
 
     try {
       const generateToken = httpsCallable<
-        { sessionToken: string; providerId: string },
+        { sessionToken: string; providerId: string; bookingId?: string },
         { success: boolean; ssoUrl?: string; error?: string }
       >(outilsFunctions, 'generateMultiDashboardOutilToken');
 
       const result = await generateToken({
         sessionToken: session.token,
         providerId,
+        bookingId,
       });
 
       if (!result.data.success || !result.data.ssoUrl) {
         throw new Error(result.data.error || 'Erreur lors de la génération du token');
       }
 
-      // Open AI tool in new tab
+      // Open AI tool in new tab (directly to the conversation if bookingId was provided)
       window.open(result.data.ssoUrl, '_blank', 'noopener,noreferrer');
 
     } catch (err) {

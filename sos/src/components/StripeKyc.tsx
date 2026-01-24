@@ -508,7 +508,8 @@ export default function StripeKYC({ onComplete, userType }: Props) {
           sessionStorage.removeItem(checkKey);
 
           try {
-            const createStripeAccount = httpsCallable(functions, "createStripeAccount");
+            const functionsInstance = getFunctions(undefined, "europe-west1");
+            const createStripeAccount = httpsCallable(functionsInstance, "createStripeAccount");
             const createResult = await createStripeAccount({
               email: user.email,
               currentCountry: "FR",

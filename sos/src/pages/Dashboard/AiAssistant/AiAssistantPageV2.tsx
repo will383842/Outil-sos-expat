@@ -28,7 +28,6 @@ import {
   Bot,
   Zap,
   Clock,
-  TrendingUp,
   Phone,
   ExternalLink,
   Loader2,
@@ -126,11 +125,6 @@ export const AiAssistantPageV2: React.FC = () => {
   const navigate = useLocaleNavigate();
   const { user } = useAuth();
 
-  // DEBUG LOGS - Page Jump Investigation
-  console.log('[AiAssistantPage DEBUG] 📦 Render', {
-    userId: user?.uid,
-    timestamp: new Date().toISOString()
-  });
 
   // Route translations
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
@@ -441,36 +435,12 @@ export const AiAssistantPageV2: React.FC = () => {
   const isQuotaReady = !quotaLoading;
   const isProvidersReady = !providersLoading;
 
-  // DEBUG LOGS - State tracking
-  console.log('[AiAssistantPage DEBUG] 📊 State', {
-    subLoading,
-    quotaLoading,
-    providersLoading,
-    isInitialLoading,
-    isQuotaReady,
-    isProvidersReady,
-    isMultiProvider,
-    hadMultiProviders,
-    linkedProvidersCount: linkedProviders.length,
-    selectedProviderId,
-    currentUsage,
-    limit,
-    isInTrial,
-    canMakeAiCall,
-    timestamp: new Date().toISOString()
-  });
 
   // ============================================================================
   // LOADING STATE - Only show full skeleton on initial load
   // ============================================================================
 
   if (isInitialLoading) {
-    console.log('[AiAssistantPage DEBUG] 🔄 Rendering LOADING state', {
-      subLoading,
-      quotaLoading,
-      providersLoading,
-      timestamp: new Date().toISOString()
-    });
     return (
       <DashboardLayout activeKey="ai-assistant">
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-indigo-50/30">
@@ -486,9 +456,12 @@ export const AiAssistantPageV2: React.FC = () => {
               </div>
             </div>
 
-            {/* Skeleton Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              {[1, 2, 3, 4].map(i => (
+            {/* Skeleton Hero CTA */}
+            <div className="mb-8 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-2xl h-36 animate-pulse" />
+
+            {/* Skeleton Stats - 3 columns */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+              {[1, 2, 3].map(i => (
                 <div key={i} className="bg-white rounded-xl border border-gray-200 p-5 min-h-[120px] animate-pulse">
                   <div className="w-10 h-10 bg-gray-100 rounded-xl mb-4" />
                   <div className="h-3 w-20 bg-gray-100 rounded mb-2" />
@@ -500,10 +473,10 @@ export const AiAssistantPageV2: React.FC = () => {
             {/* Skeleton Content */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2">
-                <div className="bg-white rounded-xl border border-gray-200 h-80 animate-pulse" />
+                <div className="bg-white rounded-xl border border-gray-200 h-64 animate-pulse" />
               </div>
               <div>
-                <div className="bg-white rounded-xl border border-gray-200 h-48 animate-pulse mb-6" />
+                <div className="bg-white rounded-xl border border-gray-200 h-40 animate-pulse mb-6" />
                 <div className="bg-white rounded-xl border border-gray-200 h-32 animate-pulse" />
               </div>
             </div>
@@ -516,15 +489,6 @@ export const AiAssistantPageV2: React.FC = () => {
   // ============================================================================
   // MAIN RENDER
   // ============================================================================
-
-  console.log('[AiAssistantPage DEBUG] ✅ Rendering MAIN state', {
-    hasAccess,
-    currentUsage,
-    limit,
-    remaining,
-    isInTrial,
-    timestamp: new Date().toISOString()
-  });
 
   return (
     <DashboardLayout activeKey="ai-assistant">
@@ -594,9 +558,102 @@ export const AiAssistantPageV2: React.FC = () => {
           </header>
 
           {/* ================================================================ */}
-          {/* STATS CARDS */}
+          {/* HERO CTA - Primary Action */}
           {/* ================================================================ */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="mb-8">
+            <div
+              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-purple-700 shadow-2xl shadow-indigo-500/20"
+              style={{ contain: 'layout paint' }}
+            >
+              {/* Animated background */}
+              <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute -top-1/2 -right-1/2 w-full h-full bg-gradient-to-br from-white/10 to-transparent rounded-full blur-3xl" />
+                <div className="absolute -bottom-1/2 -left-1/2 w-full h-full bg-gradient-to-tr from-purple-500/20 to-transparent rounded-full blur-3xl" />
+              </div>
+
+              <div className="relative z-10 p-6 md:p-8">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                  {/* Left: Info */}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-3 bg-white/15 backdrop-blur-sm rounded-xl">
+                        <Sparkles className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl md:text-2xl font-bold text-white">
+                          {intl.formatMessage({ id: 'aiAssistant.toolTitle' })}
+                        </h2>
+                        <p className="text-indigo-100 text-sm">
+                          {intl.formatMessage({ id: 'aiAssistant.toolDescription' })}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Multi-provider info */}
+                    {isMultiProvider && selectedProvider && (
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-lg text-sm text-white/90">
+                        <Users className="w-4 h-4" />
+                        <span>{selectedProvider.name}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Right: CTA Button */}
+                  <div className="flex flex-col items-stretch lg:items-end gap-3">
+                    <button
+                      onClick={() => handleAccessOutil()}
+                      disabled={!hasAccess || isAccessingOutil}
+                      className={cn(
+                        'group relative px-8 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 transition-all duration-300',
+                        hasAccess && !isAccessingOutil
+                          ? 'bg-white text-indigo-600 shadow-xl hover:shadow-2xl hover:scale-[1.03] active:scale-[0.98]'
+                          : 'bg-white/20 text-white/70 cursor-not-allowed'
+                      )}
+                    >
+                      {isAccessingOutil ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          {intl.formatMessage({ id: 'common.connecting' })}
+                        </>
+                      ) : hasAccess ? (
+                        <>
+                          <ExternalLink className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                          {intl.formatMessage({ id: 'aiAssistant.accessButton' })}
+                          <ArrowUpRight className="w-4 h-4 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
+                        </>
+                      ) : (
+                        <>
+                          <Crown className="w-5 h-5" />
+                          {intl.formatMessage({ id: 'subscription.errors.noSubscription' })}
+                        </>
+                      )}
+                    </button>
+
+                    {!hasAccess && (
+                      <button
+                        onClick={() => navigate(translatedRoutes.subscriptionPlans)}
+                        className="text-sm text-white/80 hover:text-white underline underline-offset-2 transition-colors"
+                      >
+                        {intl.formatMessage({ id: 'subscription.viewPlans' })}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Error Display */}
+                {accessError && (
+                  <div className="mt-4 p-3 bg-red-500/20 border border-red-400/30 rounded-xl">
+                    <p className="text-sm text-white text-center">{accessError}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* ================================================================ */}
+          {/* STATS CARDS - Simplified to 3 */}
+          {/* ================================================================ */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8" style={{ contain: 'layout' }}>
             <StatCard
               icon={<Phone className="w-5 h-5 text-indigo-600" />}
               iconBg="bg-indigo-100"
@@ -626,28 +683,21 @@ export const AiAssistantPageV2: React.FC = () => {
               <StatCard
                 icon={<Calendar className="w-5 h-5 text-purple-600" />}
                 iconBg="bg-purple-100"
-                label={intl.formatMessage({ id: 'subscription.billing.nextBillingLabel', defaultMessage: 'Prochaine facture' })}
+                label={intl.formatMessage({ id: 'subscription.billing.nextRenewal', defaultMessage: 'Renouvellement' })}
                 value={subscription?.currentPeriodEnd
                   ? new Intl.DateTimeFormat(language, { day: 'numeric', month: 'short' }).format(subscription.currentPeriodEnd)
                   : '-'}
               />
             )}
-            <StatCard
-              icon={<TrendingUp className="w-5 h-5 text-blue-600" />}
-              iconBg="bg-blue-100"
-              label={intl.formatMessage({ id: 'subscription.stats.totalCalls' })}
-              value={usage?.totalCallsAllTime || 0}
-            />
           </div>
 
           {/* ================================================================ */}
-          {/* MAIN CONTENT */}
+          {/* MAIN CONTENT - Simplified 2-column layout */}
           {/* ================================================================ */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column - Main CTA & Quota */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" style={{ contain: 'layout' }}>
+            {/* Left Column - Quota & Provider Selector */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Provider Selector - ONLY for multi-provider accounts
-                  P1 FIX: Use isProvidersReady and reserve space to prevent layout shift */}
+              {/* Provider Selector - ONLY for multi-provider accounts */}
               {(isMultiProvider || hadMultiProviders || !isProvidersReady) && (
                 isProvidersReady && isMultiProvider ? (
                   <ProviderSelector
@@ -660,7 +710,6 @@ export const AiAssistantPageV2: React.FC = () => {
                     hasNewActivity={hasNewActivity}
                   />
                 ) : !isProvidersReady ? (
-                  // Skeleton placeholder to reserve space while loading
                   <div className="bg-white rounded-xl border border-gray-200 p-4 animate-pulse">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-gray-200 rounded-full" />
@@ -673,88 +722,7 @@ export const AiAssistantPageV2: React.FC = () => {
                 ) : null
               )}
 
-              {/* Main Access Card */}
-              <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-purple-700 rounded-2xl shadow-xl overflow-hidden relative">
-                {/* Animated shine effect */}
-                <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                  <div className="absolute inset-0 -translate-x-full animate-[shimmer_3s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-                </div>
-
-                <div className="p-8 relative z-10">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                      <Sparkles className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-bold text-white">
-                        {intl.formatMessage({ id: 'aiAssistant.toolTitle' })}
-                      </h2>
-                      <p className="text-indigo-100 text-sm">
-                        {intl.formatMessage({ id: 'aiAssistant.toolDescription' })}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Multi-provider info */}
-                  {isMultiProvider && selectedProvider && (
-                    <div className="mb-6 p-3 bg-white/10 rounded-xl backdrop-blur-sm flex items-center gap-3">
-                      <Users className="w-5 h-5 text-white/80" />
-                      <div>
-                        <p className="text-xs text-white/70">{intl.formatMessage({ id: 'aiAssistant.accessAs', defaultMessage: 'Accès en tant que' })}</p>
-                        <p className="font-medium text-white">{selectedProvider.name}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* CTA Button */}
-                  <button
-                    onClick={() => handleAccessOutil()}
-                    disabled={!hasAccess || isAccessingOutil}
-                    className={cn(
-                      'w-full py-4 px-6 rounded-xl font-semibold text-lg flex items-center justify-center gap-3 transition-all duration-200',
-                      hasAccess && !isAccessingOutil
-                        ? 'bg-white text-indigo-600 hover:bg-indigo-50 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]'
-                        : 'bg-white/30 text-white/70 cursor-not-allowed'
-                    )}
-                  >
-                    {isAccessingOutil ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        {intl.formatMessage({ id: 'common.connecting' })}
-                      </>
-                    ) : hasAccess ? (
-                      <>
-                        <ExternalLink className="w-5 h-5" />
-                        {intl.formatMessage({ id: 'aiAssistant.accessButton' })}
-                      </>
-                    ) : (
-                      <>
-                        <Crown className="w-5 h-5" />
-                        {intl.formatMessage({ id: 'subscription.errors.noSubscription' })}
-                      </>
-                    )}
-                  </button>
-
-                  {/* Error Display */}
-                  {accessError && (
-                    <div className="mt-4 p-3 bg-red-500/20 border border-red-400/30 rounded-xl">
-                      <p className="text-sm text-white text-center">{accessError}</p>
-                    </div>
-                  )}
-
-                  {/* Upgrade Link */}
-                  {!hasAccess && (
-                    <button
-                      onClick={() => navigate(translatedRoutes.subscriptionPlans)}
-                      className="w-full mt-4 py-2.5 text-sm text-white/80 hover:text-white underline underline-offset-2 transition-colors"
-                    >
-                      {intl.formatMessage({ id: 'subscription.viewPlans' })}
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Quota Card */}
+              {/* Quota Card - Clean & Modern */}
               <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -866,69 +834,53 @@ export const AiAssistantPageV2: React.FC = () => {
               </div>
             </div>
 
-            {/* Right Column - Quick Actions & Features */}
+            {/* Right Column - Navigation & Features */}
             <div className="space-y-6">
-              {/* Quick Actions */}
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                <h3 className="font-semibold text-gray-900 mb-4">
+              {/* Navigation Links - Simplified */}
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                <h3 className="font-semibold text-gray-900 mb-4 text-sm uppercase tracking-wide">
                   {intl.formatMessage({ id: 'subscription.quickActions.title' })}
                 </h3>
                 <div className="space-y-2">
                   <button
-                    onClick={() => handleAccessOutil()}
-                    disabled={!hasAccess || isAccessingOutil}
-                    className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-indigo-50 transition-colors group border border-transparent hover:border-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <span className="flex items-center gap-3">
-                      <div className="p-2 bg-indigo-100 rounded-lg group-hover:bg-indigo-200 transition-colors">
-                        <ExternalLink className="w-4 h-4 text-indigo-600" />
-                      </div>
-                      <span className="text-sm font-medium text-gray-700">
-                        {intl.formatMessage({ id: 'aiAssistant.accessButton' })}
-                      </span>
-                    </span>
-                    <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-indigo-600 transition-colors" />
-                  </button>
-
-                  <button
                     onClick={() => navigate(translatedRoutes.subscription)}
-                    className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-green-50 transition-colors group border border-transparent hover:border-green-100"
+                    className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors group"
                   >
                     <span className="flex items-center gap-3">
-                      <div className="p-2 bg-green-100 rounded-lg group-hover:bg-green-200 transition-colors">
+                      <div className="p-2 bg-green-100 rounded-lg">
                         <Zap className="w-4 h-4 text-green-600" />
                       </div>
                       <span className="text-sm font-medium text-gray-700">
                         {intl.formatMessage({ id: 'subscription.mySubscription' })}
                       </span>
                     </span>
-                    <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-green-600 transition-colors" />
+                    <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
                   </button>
 
                   <button
                     onClick={() => navigate(translatedRoutes.subscriptionPlans)}
-                    className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-purple-50 transition-colors group border border-transparent hover:border-purple-100"
+                    className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors group"
                   >
                     <span className="flex items-center gap-3">
-                      <div className="p-2 bg-purple-100 rounded-lg group-hover:bg-purple-200 transition-colors">
+                      <div className="p-2 bg-purple-100 rounded-lg">
                         <Crown className="w-4 h-4 text-purple-600" />
                       </div>
                       <span className="text-sm font-medium text-gray-700">
                         {intl.formatMessage({ id: 'subscription.viewPlans' })}
                       </span>
                     </span>
-                    <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-purple-600 transition-colors" />
+                    <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
                   </button>
 
-                  {/* PWA Install Button in Quick Actions */}
+                  {/* PWA Install */}
                   {canInstall && !isInstalled && (
                     <button
                       onClick={handleInstallPWA}
                       disabled={isInstallingPWA}
-                      className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-emerald-50 transition-colors group border border-transparent hover:border-emerald-100 disabled:opacity-50"
+                      className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors group disabled:opacity-50"
                     >
                       <span className="flex items-center gap-3">
-                        <div className="p-2 bg-emerald-100 rounded-lg group-hover:bg-emerald-200 transition-colors">
+                        <div className="p-2 bg-emerald-100 rounded-lg">
                           {isInstallingPWA ? (
                             <Loader2 className="w-4 h-4 text-emerald-600 animate-spin" />
                           ) : (
@@ -936,10 +888,10 @@ export const AiAssistantPageV2: React.FC = () => {
                           )}
                         </div>
                         <span className="text-sm font-medium text-gray-700">
-                          {intl.formatMessage({ id: 'pwa.install.action', defaultMessage: 'Installer l\'application' })}
+                          {intl.formatMessage({ id: 'pwa.install.action', defaultMessage: 'Installer l\'app' })}
                         </span>
                       </span>
-                      <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-emerald-600 transition-colors" />
+                      <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
                     </button>
                   )}
                 </div>
@@ -948,26 +900,27 @@ export const AiAssistantPageV2: React.FC = () => {
               {/* Features Card */}
               <FeaturesCard />
 
-              {/* Trial CTA */}
-              {isInTrial && (
-                <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl p-6 text-white">
+              {/* Upgrade CTA - Only for trial/limited users */}
+              {(isInTrial || isNearQuotaLimit || isQuotaExhausted) && !isUnlimited && (
+                <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl p-5 text-white">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="p-2 bg-white/20 rounded-lg">
                       <Sparkles className="w-5 h-5" />
                     </div>
-                    <h3 className="font-semibold">
-                      {intl.formatMessage({ id: 'subscription.trial.upgrade', defaultMessage: 'Passez au premium' })}
+                    <h3 className="font-semibold text-sm">
+                      {isInTrial
+                        ? intl.formatMessage({ id: 'subscription.trial.upgrade', defaultMessage: 'Passez au premium' })
+                        : intl.formatMessage({ id: 'subscription.quota.upgradePrompt' })}
                     </h3>
                   </div>
                   <p className="text-indigo-100 text-sm mb-4">
-                    {intl.formatMessage({
-                      id: 'subscription.trial.upgradeDescription',
-                      defaultMessage: 'Débloquez toutes les fonctionnalités et plus d\'appels IA.'
-                    })}
+                    {isInTrial
+                      ? intl.formatMessage({ id: 'subscription.trial.upgradeDescription', defaultMessage: 'Débloquez toutes les fonctionnalités.' })
+                      : intl.formatMessage({ id: 'subscription.cta.upgradeDescription', defaultMessage: 'Plus d\'appels IA, plus de clients.' })}
                   </p>
                   <button
                     onClick={() => navigate(translatedRoutes.subscriptionPlans)}
-                    className="w-full py-2.5 bg-white text-indigo-600 rounded-lg font-medium text-sm hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2"
+                    className="w-full py-2.5 bg-white text-indigo-600 rounded-lg font-semibold text-sm hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2"
                   >
                     <ArrowUpRight className="w-4 h-4" />
                     {intl.formatMessage({ id: 'subscription.viewPlans' })}

@@ -21,13 +21,33 @@ import { cn } from '../../utils/cn';
 
 interface AccountCardProps {
   account: MultiProviderAccount;
-  onOpenAiTool?: (providerId: string) => void;
+  onOpenAiTool?: (providerId: string, bookingId?: string) => void;
   onOpenChat?: (providerId: string, providerName: string, providerType: 'lawyer' | 'expat' | undefined, bookingId: string, initialMessage?: string) => void;
+  isCondensed?: boolean;
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
 }
 
-const AccountCard: React.FC<AccountCardProps> = ({ account, onOpenAiTool, onOpenChat }) => {
-  const [expanded, setExpanded] = useState(true);
+const AccountCard: React.FC<AccountCardProps> = ({
+  account,
+  onOpenAiTool,
+  onOpenChat,
+  isCondensed = false,
+  isExpanded: externalExpanded,
+  onToggleExpand,
+}) => {
+  // Use external expansion state if provided, otherwise use internal state
+  const [internalExpanded, setInternalExpanded] = useState(!isCondensed);
+  const expanded = externalExpanded !== undefined ? externalExpanded : internalExpanded;
   const [showAllBookings, setShowAllBookings] = useState(false);
+
+  const handleToggleExpand = () => {
+    if (onToggleExpand) {
+      onToggleExpand();
+    } else {
+      setInternalExpanded(!internalExpanded);
+    }
+  };
 
   const pendingBookings = account.bookingRequests.filter(b => b.status === 'pending');
   const displayedBookings = showAllBookings
@@ -39,10 +59,13 @@ const AccountCard: React.FC<AccountCardProps> = ({ account, onOpenAiTool, onOpen
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+    <div
+      id={`account-${account.userId}`}
+      className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden transition-all duration-300"
+    >
       {/* Header */}
       <button
-        onClick={() => setExpanded(!expanded)}
+        onClick={handleToggleExpand}
         className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
       >
         <div className="flex items-center gap-4">

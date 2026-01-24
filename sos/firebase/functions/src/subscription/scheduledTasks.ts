@@ -3,7 +3,7 @@
  * Tâches planifiées pour la gestion des abonnements IA
  *
  * SCHEDULE:
- * - resetMonthlyQuotas: 1er du mois à 00:01 UTC
+ * - resetBillingCycleQuotas: tous les jours à 01:00 UTC (billing-cycle based)
  * - checkPastDueSubscriptions: tous les jours à 09:00 UTC
  * - sendQuotaAlerts: tous les jours à 10:00 UTC
  * - cleanupExpiredTrials: tous les jours à 02:00 UTC
@@ -149,9 +149,13 @@ async function sendEmail(
 // Scheduled: 1st of each month at 00:01 UTC
 // ============================================================================
 
-export const resetMonthlyQuotas = onSchedule(
+/**
+ * Reset quotas based on individual billing cycles (not calendar month)
+ * Runs daily and resets quotas for subscriptions whose period has ended
+ */
+export const resetBillingCycleQuotas = onSchedule(
   {
-    schedule: '1 0 1 * *', // Minute 1, Hour 0, Day 1 of month
+    schedule: '0 1 * * *', // Daily at 01:00 UTC
     region: 'europe-west1',
     timeZone: 'UTC',
     secrets: [MAILWIZZ_API_KEY_SECRET],
@@ -159,32 +163,23 @@ export const resetMonthlyQuotas = onSchedule(
     timeoutSeconds: 540, // 9 minutes
   },
   async (_event: ScheduledEvent) => {
-    logger.info('[resetMonthlyQuotas] Starting monthly quota reset...');
+    logger.info('[resetBillingCycleQuotas] Starting billing-cycle based quota reset...');
 
     const db = getDb();
     const now = admin.firestore.Timestamp.now();
-    const nowDate = now.toDate();
 
-    // Calculate new period dates
-    const newPeriodStart = now;
-    const newPeriodEnd = new Date(nowDate);
-    newPeriodEnd.setMonth(newPeriodEnd.getMonth() + 1);
-    newPeriodEnd.setDate(1);
-    newPeriodEnd.setHours(0, 0, 0, 0);
-    const newPeriodEndTimestamp = admin.firestore.Timestamp.fromDate(newPeriodEnd);
-
-    // Query all ai_usage documents where currentPeriodEnd < now
+    // Query all ai_usage documents where currentPeriodEnd < now (period has ended)
     const usageSnapshot = await db
       .collection('ai_usage')
       .where('currentPeriodEnd', '<', now)
       .get();
 
     if (usageSnapshot.empty) {
-      logger.info('[resetMonthlyQuotas] No ai_usage documents to reset');
+      logger.info('[resetBillingCycleQuotas] No expired periods found');
       return;
     }
 
-    logger.info(`[resetMonthlyQuotas] Found ${usageSnapshot.size} documents to process`);
+    logger.info(`[resetBillingCycleQuotas] Found ${usageSnapshot.size} expired periods to process`);
 
     // Process in batches of 500 (Firestore limit)
     const batchSize = 500;
@@ -206,7 +201,7 @@ export const resetMonthlyQuotas = onSchedule(
           const subDoc = await db.doc(`subscriptions/${providerId}`).get();
 
           if (!subDoc.exists) {
-            logger.warn(`[resetMonthlyQuotas] No subscription found for provider: ${providerId}`);
+            logger.warn(`[resetBillingCycleQuotas] No subscription found for provider: ${providerId}`);
             skippedCount++;
             continue;
           }
@@ -215,18 +210,36 @@ export const resetMonthlyQuotas = onSchedule(
 
           // Only reset if subscription is active
           if (subscription.status !== 'active') {
-            logger.info(`[resetMonthlyQuotas] Skipping inactive subscription: ${providerId} (status: ${subscription.status})`);
+            logger.info(`[resetBillingCycleQuotas] Skipping inactive subscription: ${providerId} (status: ${subscription.status})`);
             skippedCount++;
             continue;
           }
+
+          // Calculate new period based on subscription's billing cycle (30 days)
+          // Use the subscription's currentPeriodEnd as the new period start
+          // This ensures continuity with the billing cycle
+          const newPeriodStart = subscription.currentPeriodEnd || now;
+          const newPeriodStartDate = newPeriodStart.toDate();
+
+          // New period is 30 days from the start (billing cycle based)
+          const newPeriodEndDate = new Date(newPeriodStartDate);
+          newPeriodEndDate.setDate(newPeriodEndDate.getDate() + 30);
+          const newPeriodEnd = admin.firestore.Timestamp.fromDate(newPeriodEndDate);
 
           // Reset quota
           batch.update(doc.ref, {
             currentPeriodCalls: 0,
             currentPeriodStart: newPeriodStart,
-            currentPeriodEnd: newPeriodEndTimestamp,
+            currentPeriodEnd: newPeriodEnd,
             quotaAlert80Sent: false,
             quotaAlert100Sent: false,
+            updatedAt: now,
+          });
+
+          // Also update the subscription's period dates
+          batch.update(db.doc(`subscriptions/${providerId}`), {
+            currentPeriodStart: newPeriodStart,
+            currentPeriodEnd: newPeriodEnd,
             updatedAt: now,
           });
 
@@ -239,13 +252,14 @@ export const resetMonthlyQuotas = onSchedule(
             previousPeriodStart: usageData.currentPeriodStart,
             previousPeriodEnd: usageData.currentPeriodEnd,
             newPeriodStart: newPeriodStart,
-            newPeriodEnd: newPeriodEndTimestamp,
+            newPeriodEnd: newPeriodEnd,
+            resetType: 'billing_cycle', // Track reset type
             resetAt: now,
           });
 
           resetCount++;
         } catch (error) {
-          logger.error(`[resetMonthlyQuotas] Error processing provider ${providerId}:`, error);
+          logger.error(`[resetBillingCycleQuotas] Error processing provider ${providerId}:`, error);
           skippedCount++;
         }
 
@@ -253,12 +267,15 @@ export const resetMonthlyQuotas = onSchedule(
       }
 
       await batch.commit();
-      logger.info(`[resetMonthlyQuotas] Batch committed: ${chunk.length} documents`);
+      logger.info(`[resetBillingCycleQuotas] Batch committed: ${chunk.length} documents`);
     }
 
-    logger.info(`[resetMonthlyQuotas] Completed: ${resetCount} reset, ${skippedCount} skipped out of ${processedCount} processed`);
+    logger.info(`[resetBillingCycleQuotas] Completed: ${resetCount} reset, ${skippedCount} skipped out of ${processedCount} processed`);
   }
 );
+
+// Keep old function name as alias for backward compatibility
+export const resetMonthlyQuotas = resetBillingCycleQuotas;
 
 // ============================================================================
 // 2. CHECK PAST DUE SUBSCRIPTIONS

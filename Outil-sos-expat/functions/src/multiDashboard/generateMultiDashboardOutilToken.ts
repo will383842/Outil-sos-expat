@@ -26,6 +26,7 @@ try {
 interface GenerateTokenRequest {
   sessionToken: string;
   providerId: string;
+  bookingId?: string; // Optional: redirect directly to a specific booking/conversation
 }
 
 interface GenerateTokenResponse {
@@ -62,10 +63,11 @@ export const generateMultiDashboardOutilToken = onCall<
     ],
   },
   async (request) => {
-    const { sessionToken, providerId } = request.data;
+    const { sessionToken, providerId, bookingId } = request.data;
 
     logger.info("[generateMultiDashboardOutilToken] Request received", {
       providerId,
+      bookingId: bookingId || "none",
       hasSessionToken: !!sessionToken,
     });
 
@@ -82,11 +84,17 @@ export const generateMultiDashboardOutilToken = onCall<
       const db = admin.firestore();
       const auth = admin.auth();
 
-      // 1. Verify the provider exists and is linked to a multi-provider account
-      const providerDoc = await db.collection("sos_profiles").doc(providerId).get();
+      // 1. Verify the provider exists (try sos_profiles first, then providers)
+      let providerDoc = await db.collection("sos_profiles").doc(providerId).get();
 
       if (!providerDoc.exists) {
-        throw new HttpsError("not-found", "Provider not found");
+        // Fallback: try providers collection
+        providerDoc = await db.collection("providers").doc(providerId).get();
+        if (!providerDoc.exists) {
+          logger.warn("[generateMultiDashboardOutilToken] Provider not found in any collection", { providerId });
+          throw new HttpsError("not-found", "Provider not found");
+        }
+        logger.info("[generateMultiDashboardOutilToken] Found provider in 'providers' collection", { providerId });
       }
 
       const providerData = providerDoc.data()!;
@@ -150,8 +158,18 @@ export const generateMultiDashboardOutilToken = onCall<
         providerId,
       });
 
-      // Build SSO URL
-      const ssoUrl = `${OUTIL_BASE_URL}/auth?token=${encodeURIComponent(customToken)}`;
+      // Build SSO URL with optional redirect to specific booking
+      let ssoUrl = `${OUTIL_BASE_URL}/auth?token=${encodeURIComponent(customToken)}`;
+
+      // If bookingId is provided, add redirect parameter to go directly to that conversation
+      if (bookingId) {
+        const redirectPath = `/dashboard/conversation/${bookingId}`;
+        ssoUrl += `&redirect=${encodeURIComponent(redirectPath)}`;
+        logger.info("[generateMultiDashboardOutilToken] Adding redirect to conversation", {
+          bookingId,
+          redirectPath,
+        });
+      }
 
       return {
         success: true,

@@ -9,7 +9,7 @@
  * - Chat inline pour chaque prestataire
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   RefreshCw,
   Users,
@@ -20,6 +20,11 @@ import {
   Loader2,
   AlertCircle,
   TrendingUp,
+  Filter,
+  LayoutGrid,
+  List,
+  ChevronDown,
+  Bell,
 } from 'lucide-react';
 import { useMultiProviderDashboard } from '../../hooks/useMultiProviderDashboard';
 import PasswordGate from './PasswordGate';
@@ -66,6 +71,70 @@ const MultiProviderDashboard: React.FC = () => {
     initialMessage: undefined,
   });
 
+  // View state - with persistence
+  const [viewMode, setViewMode] = useState<'expanded' | 'condensed'>(() => {
+    try {
+      return (localStorage.getItem('multi_dashboard_view_mode') as 'expanded' | 'condensed') || 'condensed';
+    } catch { return 'condensed'; }
+  });
+  const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'active'>(() => {
+    try {
+      return (localStorage.getItem('multi_dashboard_filter') as 'all' | 'pending' | 'active') || 'all';
+    } catch { return 'all'; }
+  });
+  const [expandedAccountId, setExpandedAccountId] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem('multi_dashboard_expanded_account') || null;
+    } catch { return null; }
+  });
+
+  // Persist view preferences
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('multi_dashboard_view_mode', viewMode);
+    } catch { /* ignore */ }
+  }, [viewMode]);
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('multi_dashboard_filter', filterStatus);
+    } catch { /* ignore */ }
+  }, [filterStatus]);
+
+  React.useEffect(() => {
+    try {
+      if (expandedAccountId) {
+        localStorage.setItem('multi_dashboard_expanded_account', expandedAccountId);
+      } else {
+        localStorage.removeItem('multi_dashboard_expanded_account');
+      }
+    } catch { /* ignore */ }
+  }, [expandedAccountId]);
+
+  // Filtered accounts based on status
+  const filteredAccounts = useMemo(() => {
+    if (filterStatus === 'all') return accounts;
+
+    return accounts.filter(account => {
+      if (filterStatus === 'pending') {
+        return account.bookingRequests.some(b => b.status === 'pending');
+      }
+      if (filterStatus === 'active') {
+        return account.bookingRequests.some(b => b.status === 'in_progress' || b.status === 'confirmed');
+      }
+      return true;
+    });
+  }, [accounts, filterStatus]);
+
+  // Accounts with pending requests (prioritized)
+  const accountsWithPending = useMemo(() => {
+    return filteredAccounts.filter(a => a.bookingRequests.some(b => b.status === 'pending'));
+  }, [filteredAccounts]);
+
+  const accountsWithoutPending = useMemo(() => {
+    return filteredAccounts.filter(a => !a.bookingRequests.some(b => b.status === 'pending'));
+  }, [filteredAccounts]);
+
   // Handle opening chat
   const handleOpenChat = useCallback((
     providerId: string,
@@ -96,6 +165,11 @@ const MultiProviderDashboard: React.FC = () => {
       await loadConversations(chatState.providerId);
     }
   }, [chatState.providerId, loadConversations]);
+
+  // Toggle account expansion
+  const toggleAccountExpansion = useCallback((userId: string) => {
+    setExpandedAccountId(prev => prev === userId ? null : userId);
+  }, []);
 
   // Handle sending message
   const handleSendMessage = useCallback(async (message: string, conversationId?: string) => {
@@ -138,6 +212,67 @@ const MultiProviderDashboard: React.FC = () => {
 
             {/* Actions */}
             <div className="flex items-center gap-3">
+              {/* Quick Account Selector */}
+              {accounts.length > 1 && (
+                <div className="relative group">
+                  <button
+                    className="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                    title="Aller au compte"
+                  >
+                    <Users className="w-4 h-4" />
+                    <span className="hidden sm:inline text-sm font-medium">Comptes</span>
+                    <ChevronDown className="w-3 h-3" />
+                  </button>
+                  {/* Dropdown */}
+                  <div className="absolute right-0 top-full mt-1 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 max-h-80 overflow-y-auto">
+                    <div className="p-2">
+                      <p className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                        Accès rapide
+                      </p>
+                      {accounts.map((account) => {
+                        const hasPending = account.bookingRequests.some(b => b.status === 'pending');
+                        return (
+                          <button
+                            key={account.userId}
+                            onClick={() => {
+                              setExpandedAccountId(account.userId);
+                              setFilterStatus('all');
+                              // Scroll to the account
+                              setTimeout(() => {
+                                document.getElementById(`account-${account.userId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                              }, 100);
+                            }}
+                            className={cn(
+                              "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors",
+                              expandedAccountId === account.userId
+                                ? "bg-blue-50 dark:bg-blue-900/20"
+                                : "hover:bg-gray-50 dark:hover:bg-gray-700"
+                            )}
+                          >
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center flex-shrink-0">
+                              <span className="text-white text-xs font-bold">
+                                {account.displayName.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                {account.displayName}
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                {account.providers.length} prestataire{account.providers.length > 1 ? 's' : ''}
+                              </p>
+                            </div>
+                            {hasPending && (
+                              <span className="flex-shrink-0 w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <button
                 onClick={refresh}
                 disabled={isLoading}
@@ -162,7 +297,7 @@ const MultiProviderDashboard: React.FC = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
           <StatCard
             icon={<Users className="w-5 h-5" />}
             label="Comptes"
@@ -196,6 +331,78 @@ const MultiProviderDashboard: React.FC = () => {
           />
         </div>
 
+        {/* Toolbar: Filters & View Mode */}
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6 bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+          {/* Filters */}
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-gray-500" />
+            <div className="flex rounded-lg bg-gray-100 dark:bg-gray-700 p-1">
+              <button
+                onClick={() => setFilterStatus('all')}
+                className={cn(
+                  "px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
+                  filterStatus === 'all'
+                    ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm"
+                    : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                )}
+              >
+                Tous ({accounts.length})
+              </button>
+              <button
+                onClick={() => setFilterStatus('pending')}
+                className={cn(
+                  "px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5",
+                  filterStatus === 'pending'
+                    ? "bg-amber-500 text-white shadow-sm"
+                    : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                )}
+              >
+                <Bell className="w-3.5 h-3.5" />
+                En attente ({accountsWithPending.length})
+              </button>
+              <button
+                onClick={() => setFilterStatus('active')}
+                className={cn(
+                  "px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
+                  filterStatus === 'active'
+                    ? "bg-green-500 text-white shadow-sm"
+                    : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                )}
+              >
+                Actifs
+              </button>
+            </div>
+          </div>
+
+          {/* View Mode Toggle */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setViewMode('condensed')}
+              className={cn(
+                "p-2 rounded-lg transition-colors",
+                viewMode === 'condensed'
+                  ? "bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-white"
+                  : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
+              )}
+              title="Vue condensée"
+            >
+              <List className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('expanded')}
+              className={cn(
+                "p-2 rounded-lg transition-colors",
+                viewMode === 'expanded'
+                  ? "bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-white"
+                  : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
+              )}
+              title="Vue détaillée"
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
         {/* Error Message */}
         {error && (
           <div className="mb-6 flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400">
@@ -210,27 +417,96 @@ const MultiProviderDashboard: React.FC = () => {
             <Loader2 className="w-12 h-12 text-red-500 animate-spin mb-4" />
             <p className="text-gray-500 dark:text-gray-400">Chargement des comptes...</p>
           </div>
-        ) : accounts.length === 0 ? (
+        ) : filteredAccounts.length === 0 ? (
           <div className="text-center py-20">
             <Users className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              Aucun compte multi-prestataire
+              {accounts.length === 0 ? 'Aucun compte multi-prestataire' : 'Aucun compte correspondant'}
             </h2>
             <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
-              Les comptes avec plusieurs prestataires liés apparaîtront ici.
-              Utilisez l'onglet Multi-Prestataires dans l'admin IA pour lier des prestataires.
+              {accounts.length === 0
+                ? 'Les comptes avec plusieurs prestataires liés apparaîtront ici. Utilisez l\'onglet Multi-Prestataires dans l\'admin IA pour lier des prestataires.'
+                : 'Aucun compte ne correspond aux filtres sélectionnés. Essayez de modifier vos filtres.'
+              }
             </p>
+            {filterStatus !== 'all' && (
+              <button
+                onClick={() => setFilterStatus('all')}
+                className="mt-4 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              >
+                Afficher tous les comptes
+              </button>
+            )}
           </div>
         ) : (
-          <div className="space-y-6">
-            {accounts.map((account) => (
-              <AccountCard
-                key={account.userId}
-                account={account}
-                onOpenAiTool={openAiTool}
-                onOpenChat={handleOpenChat}
-              />
-            ))}
+          <div className="space-y-4">
+            {/* Accounts with pending requests - Show section header only when viewing 'all' */}
+            {accountsWithPending.length > 0 && filterStatus === 'all' && (
+              <div className="mb-6">
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-amber-700 dark:text-amber-400 mb-3 px-1">
+                  <Bell className="w-4 h-4" />
+                  Demandes en attente ({accountsWithPending.length} compte{accountsWithPending.length > 1 ? 's' : ''})
+                </h3>
+                <div className="space-y-4">
+                  {accountsWithPending.map((account) => (
+                    <AccountCard
+                      key={account.userId}
+                      account={account}
+                      onOpenAiTool={openAiTool}
+                      onOpenChat={handleOpenChat}
+                      isCondensed={viewMode === 'condensed'}
+                      isExpanded={expandedAccountId === account.userId || viewMode === 'expanded'}
+                      onToggleExpand={() => toggleAccountExpansion(account.userId)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Other accounts (or all filtered accounts when filter is not 'all') */}
+            {filterStatus === 'all' ? (
+              // Show "Other accounts" section only when viewing all
+              accountsWithoutPending.length > 0 && (
+                <div>
+                  {accountsWithPending.length > 0 && (
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3 px-1">
+                      <Users className="w-4 h-4" />
+                      Autres comptes ({accountsWithoutPending.length})
+                    </h3>
+                  )}
+                  <div className="space-y-4">
+                    {accountsWithoutPending.map((account) => (
+                      <AccountCard
+                        key={account.userId}
+                        account={account}
+                        onOpenAiTool={openAiTool}
+                        onOpenChat={handleOpenChat}
+                        isCondensed={viewMode === 'condensed'}
+                        isExpanded={expandedAccountId === account.userId || viewMode === 'expanded'}
+                        onToggleExpand={() => toggleAccountExpansion(account.userId)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )
+            ) : (
+              // When filter is 'pending' or 'active', show filtered accounts directly
+              filteredAccounts.length > 0 && (
+                <div className="space-y-4">
+                  {filteredAccounts.map((account) => (
+                    <AccountCard
+                      key={account.userId}
+                      account={account}
+                      onOpenAiTool={openAiTool}
+                      onOpenChat={handleOpenChat}
+                      isCondensed={viewMode === 'condensed'}
+                      isExpanded={expandedAccountId === account.userId || viewMode === 'expanded'}
+                      onToggleExpand={() => toggleAccountExpansion(account.userId)}
+                    />
+                  ))}
+                </div>
+              )
+            )}
           </div>
         )}
       </main>

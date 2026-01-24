@@ -274,6 +274,15 @@ export const SubscriptionPage: React.FC = () => {
     return plans.find(p => p.id === subscription?.planId);
   }, [plans, subscription?.planId]);
 
+  // Lowest price for CTA (dynamic from plans)
+  const lowestPrice = useMemo(() => {
+    if (!plans || plans.length === 0) return null;
+    const activePlans = plans.filter(p => p.isActive && p.tier !== 'trial');
+    if (activePlans.length === 0) return null;
+    const prices = activePlans.map(p => p.pricing?.EUR || 0).filter(p => p > 0);
+    return prices.length > 0 ? Math.min(...prices) : null;
+  }, [plans]);
+
   // Helpers
   const formatDate = (date: Date | null) => {
     if (!date) return '-';
@@ -619,9 +628,14 @@ export const SubscriptionPage: React.FC = () => {
                       {intl.formatMessage({ id: 'subscription.cta.button', defaultMessage: 'Voir les offres' })}
                       <ArrowUpRight className="w-5 h-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                     </button>
-                    <p className="text-indigo-200 text-xs text-center md:text-right">
-                      {intl.formatMessage({ id: 'subscription.cta.subtext', defaultMessage: 'À partir de 9,99€/mois' })}
-                    </p>
+                    {lowestPrice && (
+                      <p className="text-indigo-200 text-xs text-center md:text-right">
+                        {intl.formatMessage(
+                          { id: 'subscription.cta.subtext', defaultMessage: 'À partir de {price}€/mois' },
+                          { price: lowestPrice.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) }
+                        )}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

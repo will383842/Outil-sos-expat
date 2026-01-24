@@ -33,6 +33,7 @@ export default function AuthSSO() {
 
   useEffect(() => {
     const token = searchParams.get("token");
+    const redirectPath = searchParams.get("redirect"); // New: custom redirect path (e.g., /dashboard/dossier/xxx)
 
     // SÉCURITÉ: Nettoyer immédiatement l'URL pour éviter que le token reste dans l'historique
     if (token) {
@@ -54,23 +55,33 @@ export default function AuthSSO() {
 
         setStatus("success");
 
-        // Déterminer la destination en fonction du rôle (depuis les claims du token)
+        // Déterminer la destination
         let destination = "/dashboard"; // Par défaut: dashboard prestataire
 
-        try {
-          const tokenResult = await userCredential.user.getIdTokenResult();
-          const claims = tokenResult.claims;
-
+        // 1. Priority: use redirect parameter if provided and safe
+        if (redirectPath && redirectPath.startsWith("/")) {
+          // Security: Only allow internal paths (starting with /)
+          destination = redirectPath;
           if (import.meta.env.DEV) {
-            console.debug("[AuthSSO] Token claims:", claims);
+            console.debug("[AuthSSO] Using custom redirect:", redirectPath);
           }
+        } else {
+          // 2. Fallback: determine based on user role
+          try {
+            const tokenResult = await userCredential.user.getIdTokenResult();
+            const claims = tokenResult.claims;
 
-          // Admin va vers /admin, prestataires vers /dashboard
-          if (claims.admin === true || claims.role === "admin" || claims.role === "superadmin") {
-            destination = "/admin";
+            if (import.meta.env.DEV) {
+              console.debug("[AuthSSO] Token claims:", claims);
+            }
+
+            // Admin va vers /admin, prestataires vers /dashboard
+            if (claims.admin === true || claims.role === "admin" || claims.role === "superadmin") {
+              destination = "/admin";
+            }
+          } catch (claimError) {
+            console.warn("[AuthSSO] Could not read claims, defaulting to /dashboard");
           }
-        } catch (claimError) {
-          console.warn("[AuthSSO] Could not read claims, defaulting to /dashboard");
         }
 
         // Rediriger vers la bonne destination

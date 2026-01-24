@@ -795,6 +795,8 @@ export default function ConversationDetail() {
   const [chatExpanded, setChatExpanded] = useState(false);
   // 🆕 State pour les logs de réflexion IA temps réel
   const [thinkingLogs, setThinkingLogs] = useState<ThinkingLogUI[]>([]);
+  // Track booking source collection (bookings vs booking_requests)
+  const [bookingSource, setBookingSource] = useState<"bookings" | "booking_requests" | null>(null);
 
   const { isExpired, formattedTime, durationMinutes } = useConversationExpiration(booking);
   const isDevMock = new URLSearchParams(window.location.search).get("dev") === "true";
@@ -821,48 +823,83 @@ export default function ConversationDetail() {
       }
     }
 
-    // FIX: Use onSnapshot instead of getDoc for real-time updates
-    // This ensures we detect when aiOnBookingCreated trigger completes
-    const docRef = doc(db, "bookings", id);
-    const unsubscribe = onSnapshot(
-      docRef,
-      (docSnap) => {
-        if (docSnap.exists()) {
-          const bookingData = { id: docSnap.id, ...docSnap.data() } as Booking;
+    // FIX: Try loading from both 'bookings' and 'booking_requests' collections
+    // This supports both Outil-native bookings and multi-dashboard booking requests
+    let unsubscribe: (() => void) | null = null;
+    let foundInCollection: string | null = null;
 
-          // Access control check
-          if (!isAdmin && bookingData.providerId) {
-            const hasAccess = linkedProviders.some(p => p.id === bookingData.providerId) ||
-                              activeProvider?.id === bookingData.providerId;
+    const setupBookingListener = async () => {
+      // First, try 'bookings' collection (Outil-native)
+      const bookingsDoc = await getDoc(doc(db, "bookings", id));
 
-            if (!hasAccess) {
-              setError(t("dossierDetail.accessDenied"));
-              setLoading(false);
-              return;
+      if (bookingsDoc.exists()) {
+        foundInCollection = "bookings";
+        console.log("[ConversationDetail] 📦 Found in 'bookings' collection");
+      } else {
+        // Try 'booking_requests' collection (multi-dashboard)
+        const bookingRequestsDoc = await getDoc(doc(db, "booking_requests", id));
+        if (bookingRequestsDoc.exists()) {
+          foundInCollection = "booking_requests";
+          console.log("[ConversationDetail] 📦 Found in 'booking_requests' collection");
+        }
+      }
+
+      if (!foundInCollection) {
+        setError(t("dossierDetail.notFound"));
+        setLoading(false);
+        return;
+      }
+
+      // Store the booking source for conversation creation logic
+      setBookingSource(foundInCollection as "bookings" | "booking_requests");
+
+      // Setup real-time listener on the found collection
+      const docRef = doc(db, foundInCollection, id);
+      unsubscribe = onSnapshot(
+        docRef,
+        (docSnap) => {
+          if (docSnap.exists()) {
+            const bookingData = { id: docSnap.id, ...docSnap.data() } as Booking;
+
+            // Access control check
+            if (!isAdmin && bookingData.providerId) {
+              const hasAccess = linkedProviders.some(p => p.id === bookingData.providerId) ||
+                                activeProvider?.id === bookingData.providerId;
+
+              if (!hasAccess) {
+                setError(t("dossierDetail.accessDenied"));
+                setLoading(false);
+                return;
+              }
             }
+
+            setBooking(bookingData);
+            setLoading(false);
+
+            console.log("[ConversationDetail] 📦 Booking updated (real-time):", {
+              id: bookingData.id,
+              collection: foundInCollection,
+              aiProcessed: bookingData.aiProcessed,
+              conversationId: (bookingData as unknown as Record<string, unknown>).conversationId,
+            });
+          } else {
+            setError(t("dossierDetail.notFound"));
+            setLoading(false);
           }
-
-          setBooking(bookingData);
-          setLoading(false);
-
-          console.log("[ConversationDetail] 📦 Booking updated (real-time):", {
-            id: bookingData.id,
-            aiProcessed: bookingData.aiProcessed,
-            conversationId: (bookingData as unknown as Record<string, unknown>).conversationId,
-          });
-        } else {
-          setError(t("dossierDetail.notFound"));
+        },
+        (err) => {
+          console.error("Erreur chargement booking:", err);
+          setError(err.message);
           setLoading(false);
         }
-      },
-      (err) => {
-        console.error("Erreur chargement booking:", err);
-        setError(err.message);
-        setLoading(false);
-      }
-    );
+      );
+    };
 
-    return () => unsubscribe();
+    setupBookingListener();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, [id, isAdmin, activeProvider?.id, linkedProviders, t, isDevMock]);
 
   // Load conversation - FIX: Simplified logic since booking is now real-time
@@ -929,11 +966,40 @@ export default function ConversationDetail() {
         }
       }
 
-      // Priority 3: If no conversation yet, AI trigger hasn't completed
-      // FIX: Don't return early - just wait for booking to update (it's real-time now)
-      // The useEffect will re-run when booking.conversationId becomes available
+      // Priority 2.5: Search by bookingRequestId (for multi-dashboard conversations)
       if (!convId) {
-        if (!booking.aiProcessed) {
+        const convQuery = query(collection(db, "conversations"), where("bookingRequestId", "==", id));
+        const convSnapshot = await getDocs(convQuery);
+
+        if (!convSnapshot.empty) {
+          const existingConv = convSnapshot.docs[0];
+          convId = existingConv.id;
+          console.log("[ConversationDetail] ✅ Found conversation by bookingRequestId:", convId);
+          setConversation({ id: convId, ...existingConv.data() } as Conversation);
+        }
+      }
+
+      // Priority 3: If no conversation yet, handle based on booking source
+      if (!convId) {
+        // For booking_requests (multi-dashboard), create conversation immediately
+        // Note: AI trigger (onBookingRequestCreatedGenerateAi) generates aiResponse but not conversation
+        // Conversation is created here or via chat interaction
+        if (bookingSource === "booking_requests") {
+          console.log("[ConversationDetail] 📝 Creating conversation for booking_request");
+          const newConvRef = await addDoc(collection(db, "conversations"), {
+            bookingRequestId: id,
+            providerId: booking.providerId,
+            clientName: booking.clientName || booking.clientFirstName,
+            status: "active",
+            source: "multi_dashboard",
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          });
+          convId = newConvRef.id;
+          setConversation({ id: convId, bookingRequestId: id, providerId: booking.providerId } as unknown as Conversation);
+        }
+        // For bookings (Outil-native), wait for AI trigger or create fallback
+        else if (!booking.aiProcessed) {
           console.log("[ConversationDetail] ⏳ Waiting for AI trigger to create conversation...", {
             bookingId: id,
             aiProcessed: booking.aiProcessed,
@@ -942,20 +1008,20 @@ export default function ConversationDetail() {
           // The booking useEffect (onSnapshot) will update booking when AI completes
           // This useEffect will then re-run with the new conversationId
           return;
+        } else {
+          // AI processed but no conversation found - create one as fallback
+          console.log("[ConversationDetail] ⚠️ AI processed but no conversation - creating fallback");
+          const newConvRef = await addDoc(collection(db, "conversations"), {
+            bookingId: id,
+            providerId: booking.providerId,
+            clientName: booking.clientName || booking.clientFirstName,
+            status: "active",
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          });
+          convId = newConvRef.id;
+          setConversation({ id: convId, bookingId: id, providerId: booking.providerId });
         }
-
-        // AI processed but no conversation found - create one as fallback
-        console.log("[ConversationDetail] ⚠️ AI processed but no conversation - creating fallback");
-        const newConvRef = await addDoc(collection(db, "conversations"), {
-          bookingId: id,
-          providerId: booking.providerId,
-          clientName: booking.clientName || booking.clientFirstName,
-          status: "active",
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
-        convId = newConvRef.id;
-        setConversation({ id: convId, bookingId: id, providerId: booking.providerId });
       }
 
       // FIX: Only setup messages listener if we have a convId
@@ -1005,7 +1071,7 @@ export default function ConversationDetail() {
     return () => {
       if (unsubMessages) unsubMessages();
     };
-  }, [id, booking, isDevMock]);
+  }, [id, booking, bookingSource, isDevMock]);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // 🆕 LISTENER TEMPS RÉEL: thinking_logs subcollection

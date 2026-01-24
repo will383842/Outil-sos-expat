@@ -67,6 +67,7 @@ interface BookingRequest {
     source: string;
   };
   aiProcessedAt?: string;
+  aiError?: string;
 }
 
 interface MultiProviderAccount {
@@ -126,8 +127,40 @@ export const getMultiDashboardData = onCall<
     try {
       const db = admin.firestore();
 
-      // 1. Load all users with linkedProviderIds
-      const usersSnap = await db.collection("users").get();
+      // ==========================================================================
+      // 1. Load ONLY users with linkedProviderIds (multi-provider accounts)
+      // ==========================================================================
+      // FIX: Use a more targeted query approach
+      // Since Firestore doesn't support "array not empty", we check isMultiProvider
+      // or fall back to loading users with known linkedProviderIds
+
+      let usersSnap;
+
+      // First, try to get users marked as multi-provider
+      const multiProviderQuery = await db.collection("users")
+        .where("isMultiProvider", "==", true)
+        .get();
+
+      if (!multiProviderQuery.empty) {
+        usersSnap = multiProviderQuery;
+        logger.info("[getMultiDashboardData] Using isMultiProvider filter", {
+          count: usersSnap.size,
+        });
+      } else {
+        // Fallback: Load all and filter, but limit to users with linkedProviderIds
+        const allUsersSnap = await db.collection("users").get();
+        const filteredDocs = allUsersSnap.docs.filter(doc => {
+          const data = doc.data();
+          const linkedIds = data.linkedProviderIds;
+          return Array.isArray(linkedIds) && linkedIds.length > 0;
+        });
+
+        usersSnap = { docs: filteredDocs, size: filteredDocs.length };
+        logger.info("[getMultiDashboardData] Fallback filter applied", {
+          totalUsers: allUsersSnap.size,
+          multiProviderUsers: filteredDocs.length,
+        });
+      }
 
       const accounts: MultiProviderAccount[] = [];
 
@@ -135,27 +168,56 @@ export const getMultiDashboardData = onCall<
         const userData = userDoc.data();
         const linkedIds: string[] = userData.linkedProviderIds || [];
 
-        // Only include users with at least one linked provider
-        if (linkedIds.length === 0) continue;
+        // Double-check: Only include users with at least one linked provider
+        if (!Array.isArray(linkedIds) || linkedIds.length === 0) continue;
 
-        // Load provider details
+        // ==========================================================================
+        // 2. Load provider details - try sos_profiles first, then providers collection
+        // ==========================================================================
         const providers: Provider[] = [];
+
         for (const pid of linkedIds) {
-          const profileDoc = await db.collection("sos_profiles").doc(pid).get();
+          // Try sos_profiles first
+          let profileDoc = await db.collection("sos_profiles").doc(pid).get();
+
+          // Fallback to providers collection if not found
+          if (!profileDoc.exists) {
+            profileDoc = await db.collection("providers").doc(pid).get();
+            if (profileDoc.exists) {
+              logger.info("[getMultiDashboardData] Provider found in 'providers' collection", { pid });
+            }
+          }
+
           if (profileDoc.exists) {
             const profile = profileDoc.data()!;
             providers.push({
               id: pid,
-              name: profile.displayName || profile.firstName || "N/A",
+              name: profile.displayName || profile.name || profile.firstName || "N/A",
               email: profile.email || "",
-              type: profile.type || "lawyer",
+              type: profile.type || profile.role || "lawyer",
               isActive: userData.activeProviderId === pid,
               isOnline: profile.isOnline === true,
               availability: profile.availability || "offline",
               country: profile.country,
               avatar: profile.photoURL || profile.avatar,
             });
+          } else {
+            logger.warn("[getMultiDashboardData] Provider not found in any collection", {
+              pid,
+              userId: userDoc.id
+            });
           }
+        }
+
+        // ==========================================================================
+        // 3. Only add account if it has at least one valid provider
+        // ==========================================================================
+        if (providers.length === 0) {
+          logger.warn("[getMultiDashboardData] Skipping user - no valid providers found", {
+            userId: userDoc.id,
+            linkedIds,
+          });
+          continue;
         }
 
         // Load booking requests for all providers of this account
@@ -199,6 +261,7 @@ export const getMultiDashboardData = onCall<
                 source: data.aiResponse.source || "manual",
               } : undefined,
               aiProcessedAt: timestampToISO(data.aiProcessedAt),
+              aiError: data.aiError || undefined,
             });
           }
         }

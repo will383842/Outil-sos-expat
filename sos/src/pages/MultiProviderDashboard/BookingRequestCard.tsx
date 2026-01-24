@@ -6,9 +6,7 @@
 
 import React, { useState } from 'react';
 import {
-  Calendar,
   User,
-  Globe,
   Phone,
   MessageSquare,
   ChevronDown,
@@ -22,7 +20,6 @@ import {
   Languages,
   Loader2,
   Bot,
-  ExternalLink,
 } from 'lucide-react';
 import type { BookingRequestWithAI } from '../../hooks/useMultiProviderDashboard';
 import AiResponseDisplay from './AiResponseDisplay';
@@ -31,7 +28,7 @@ import { cn } from '../../utils/cn';
 interface BookingRequestCardProps {
   booking: BookingRequestWithAI;
   providerName?: string;
-  onOpenAiTool?: (providerId: string) => void;
+  onOpenAiTool?: (providerId: string, bookingId?: string) => void;
   onOpenChat?: (providerId: string, providerName: string, providerType: 'lawyer' | 'expat' | undefined, bookingId: string, initialMessage?: string) => void;
 }
 
@@ -59,7 +56,8 @@ const BookingRequestCard: React.FC<BookingRequestCardProps> = ({
     if (!onOpenAiTool || !booking.providerId) return;
     setIsOpeningAiTool(true);
     try {
-      await onOpenAiTool(booking.providerId);
+      // Pass the bookingId to open directly the conversation in the AI tool
+      await onOpenAiTool(booking.providerId, booking.id);
     } finally {
       setIsOpeningAiTool(false);
     }
@@ -249,6 +247,15 @@ const BookingRequestCard: React.FC<BookingRequestCardProps> = ({
             bookingId={booking.id}
           />
         </div>
+      ) : booking.aiError ? (
+        <div className="px-4 pb-4">
+          <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-sm text-red-600 dark:text-red-400">
+            <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>Erreur lors de la génération IA. La conversation reste accessible.</span>
+          </div>
+        </div>
       ) : booking.status === 'pending' ? (
         <div className="px-4 pb-4">
           <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg text-sm text-gray-500 dark:text-gray-400">
@@ -260,31 +267,16 @@ const BookingRequestCard: React.FC<BookingRequestCardProps> = ({
 
       {/* Actions Bar */}
       <div className="px-4 pb-3 flex items-center gap-2">
-        {/* Chat Button - Primary action */}
-        {onOpenChat && booking.providerId && (
-          <button
-            onClick={handleOpenChat}
-            className={cn(
-              "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all",
-              "bg-gradient-to-r from-green-500 to-emerald-600 text-white",
-              "hover:from-green-600 hover:to-emerald-700",
-              "shadow-sm hover:shadow-md"
-            )}
-          >
-            <MessageSquare className="w-4 h-4" />
-            Ouvrir le Chat
-          </button>
-        )}
-
-        {/* Open AI Tool Button - Secondary action */}
+        {/* Open AI Tool Button - PRIMARY action (opens full conversation) */}
         {onOpenAiTool && booking.providerId && (
           <button
             onClick={handleOpenAiTool}
             disabled={isOpeningAiTool}
             className={cn(
-              "flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all",
-              "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300",
-              "hover:bg-gray-200 dark:hover:bg-gray-600",
+              "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all",
+              "bg-gradient-to-r from-amber-500 to-orange-600 text-white",
+              "hover:from-amber-600 hover:to-orange-700",
+              "shadow-sm hover:shadow-md",
               "disabled:opacity-50 disabled:cursor-not-allowed"
             )}
           >
@@ -292,10 +284,26 @@ const BookingRequestCard: React.FC<BookingRequestCardProps> = ({
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <>
-                <ExternalLink className="w-4 h-4" />
-                <span className="hidden sm:inline">Outil IA</span>
+                <Bot className="w-4 h-4" />
+                Ouvrir la Conversation
               </>
             )}
+          </button>
+        )}
+
+        {/* Chat Button - Secondary action (inline chat) */}
+        {onOpenChat && booking.providerId && (
+          <button
+            onClick={handleOpenChat}
+            className={cn(
+              "flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all",
+              "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300",
+              "hover:bg-gray-200 dark:hover:bg-gray-600"
+            )}
+            title="Chat rapide inline"
+          >
+            <MessageSquare className="w-4 h-4" />
+            <span className="hidden sm:inline">Chat</span>
           </button>
         )}
       </div>
