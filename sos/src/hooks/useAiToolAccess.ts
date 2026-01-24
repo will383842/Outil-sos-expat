@@ -121,6 +121,7 @@ export function useAiToolAccess(): UseAiToolAccessReturn {
   const isLoading = quotaLoading || forcedAccessLoading;
 
   // Action: Open AI tool directly via SSO
+  // P1 FIX: Open window synchronously to avoid popup blocker, then redirect
   const accessAiTool = useCallback(async () => {
     if (!user?.uid) {
       setError('User not authenticated');
@@ -129,6 +130,15 @@ export function useAiToolAccess(): UseAiToolAccessReturn {
 
     setIsAccessing(true);
     setError(null);
+
+    // P1 FIX: Open window IMMEDIATELY (synchronously) to avoid popup blocker
+    // The window is opened with a loading page, then redirected after token is generated
+    const newWindow = window.open('about:blank', '_blank', 'noopener');
+
+    if (!newWindow) {
+      // Popup was blocked - fallback to redirect in same tab
+      console.warn('[useAiToolAccess] Popup blocked, will redirect in same tab');
+    }
 
     try {
       const generateToken = httpsCallable<{ asProviderId?: string }, GenerateOutilTokenResponse>(
@@ -140,11 +150,23 @@ export function useAiToolAccess(): UseAiToolAccessReturn {
 
       if (result.data.success && result.data.token) {
         const ssoUrl = `${OUTIL_BASE_URL}/auth?token=${encodeURIComponent(result.data.token)}`;
-        window.open(ssoUrl, '_blank', 'noopener,noreferrer');
+
+        if (newWindow) {
+          // Redirect the already-opened window to SSO URL
+          newWindow.location.href = ssoUrl;
+        } else {
+          // Fallback: redirect current tab (popup was blocked)
+          window.location.href = ssoUrl;
+        }
       } else {
+        // Close the blank window if token failed
+        newWindow?.close();
         throw new Error('Token non reçu');
       }
     } catch (err) {
+      // Close the blank window on error
+      newWindow?.close();
+
       console.error('[useAiToolAccess] SSO Error:', err);
       const firebaseError = err as { code?: string; message?: string };
 

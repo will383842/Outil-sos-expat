@@ -352,6 +352,7 @@ export const AiAssistantPageV2: React.FC = () => {
   }, [selectedProviderId]);
 
   // Handle SSO access
+  // P1 FIX: Open window synchronously to avoid popup blocker
   const handleAccessOutil = useCallback(async (overrideProviderId?: string) => {
     if (!canMakeAiCall && !linkedProviders.find(p => p.id === (overrideProviderId || selectedProviderId))?.hasForcedAccess) {
       navigate(translatedRoutes.subscriptionPlans);
@@ -360,6 +361,13 @@ export const AiAssistantPageV2: React.FC = () => {
 
     setIsAccessingOutil(true);
     setAccessError(null);
+
+    // P1 FIX: Open window IMMEDIATELY (synchronously) to avoid popup blocker
+    const newWindow = window.open('about:blank', '_blank', 'noopener');
+
+    if (!newWindow) {
+      console.warn('[AiAssistant] Popup blocked, will redirect in same tab');
+    }
 
     try {
       const targetProviderId = overrideProviderId || selectedProviderId;
@@ -377,11 +385,20 @@ export const AiAssistantPageV2: React.FC = () => {
 
       if (result.data.success && result.data.token) {
         const ssoUrl = `${OUTIL_BASE_URL}/auth?token=${encodeURIComponent(result.data.token)}`;
-        window.open(ssoUrl, '_blank', 'noopener,noreferrer');
+
+        if (newWindow) {
+          // Redirect the already-opened window to SSO URL
+          newWindow.location.href = ssoUrl;
+        } else {
+          // Fallback: redirect current tab (popup was blocked)
+          window.location.href = ssoUrl;
+        }
       } else {
+        newWindow?.close();
         throw new Error('Token non reçu');
       }
     } catch (error: unknown) {
+      newWindow?.close();
       console.error('SSO Error:', error);
       const firebaseError = error as { code?: string; message?: string };
       let errorMessage = intl.formatMessage({ id: 'aiAssistant.errors.accessError' });
