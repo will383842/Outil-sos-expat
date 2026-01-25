@@ -27,6 +27,10 @@ import { logger as prodLogger } from "./utils/productionLogger";
 import { logWebhookTest } from "./utils/productionTestLogger";
 // Meta CAPI for server-side tracking
 import { META_CAPI_TOKEN, trackCAPIPurchase, UserData } from "./metaConversionsApi";
+// P0 FIX: Import sendPaymentNotifications for PayPal parity with Stripe
+import { sendPaymentNotifications, ENCRYPTION_KEY, OUTIL_SYNC_API_KEY } from "./notifications/paymentNotifications";
+// P0 FIX: Import encryptPhoneNumber for Twilio call compatibility (phones must be encrypted in call_sessions)
+import { encryptPhoneNumber } from "./utils/encryption";
 
 // P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
 import {
@@ -728,6 +732,14 @@ export class PayPalManager {
 
     // P0 FIX: Créer ou mettre à jour la session d'appel (utiliser set avec merge au lieu de update)
     console.log(`🔶 [PAYPAL_DEBUG] Saving call_sessions for ${data.callSessionId}...`);
+
+    // P0 FIX CRITICAL: Encrypt phone numbers for Twilio compatibility
+    // TwilioCallManager.startConference expects encrypted phones and calls decryptPhoneNumber()
+    // Without encryption, decryption fails and Twilio calls never trigger!
+    const encryptedClientPhone = data.clientPhone ? encryptPhoneNumber(data.clientPhone) : "";
+    const encryptedProviderPhone = data.providerPhone ? encryptPhoneNumber(data.providerPhone) : "";
+    console.log(`🔐 [PAYPAL_DEBUG] Phone encryption: client=${!!encryptedClientPhone}, provider=${!!encryptedProviderPhone}`);
+
     await this.db.collection("call_sessions").doc(data.callSessionId).set({
       id: data.callSessionId,
       status: "pending",
@@ -735,9 +747,6 @@ export class PayPalManager {
       paymentId: response.id,
       clientId: data.clientId,
       providerId: data.providerId,
-      // P0 FIX: Phone numbers required for Twilio call
-      clientPhone: data.clientPhone,
-      providerPhone: data.providerPhone,
       payment: {
         paypalOrderId: response.id,
         paymentMethod: "paypal",
@@ -750,12 +759,18 @@ export class PayPalManager {
         provider: {
           id: data.providerId,
           type: "provider",
-          phone: data.providerPhone,
+          // P0 FIX: Store ENCRYPTED phone for Twilio compatibility
+          phone: encryptedProviderPhone,
+          status: "pending",
+          attemptCount: 0,
         },
         client: {
           id: data.clientId,
           type: "client",
-          phone: data.clientPhone,
+          // P0 FIX: Store ENCRYPTED phone for Twilio compatibility
+          phone: encryptedClientPhone,
+          status: "pending",
+          attemptCount: 0,
         },
       },
       metadata: {
@@ -767,7 +782,7 @@ export class PayPalManager {
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     }, { merge: true });
-    console.log(`🔶 [PAYPAL_DEBUG] call_sessions document saved`);
+    console.log(`🔶 [PAYPAL_DEBUG] call_sessions document saved with encrypted phones`);
 
     console.log(`✅ [PAYPAL_DEBUG] createSimpleOrder COMPLETE - orderId: ${response.id}`);
 
@@ -907,6 +922,13 @@ export class PayPalManager {
     });
 
     // P0 FIX: Créer ou mettre à jour la session d'appel (utiliser set avec merge au lieu de update)
+    // P0 FIX CRITICAL: Encrypt phone numbers for Twilio compatibility
+    // TwilioCallManager.startConference expects encrypted phones and calls decryptPhoneNumber()
+    // Without encryption, decryption fails and Twilio calls never trigger!
+    const encryptedClientPhone = data.clientPhone ? encryptPhoneNumber(data.clientPhone) : "";
+    const encryptedProviderPhone = data.providerPhone ? encryptPhoneNumber(data.providerPhone) : "";
+    console.log(`🔐 [PAYPAL] Phone encryption (DIRECT): client=${!!encryptedClientPhone}, provider=${!!encryptedProviderPhone}`);
+
     await this.db.collection("call_sessions").doc(data.callSessionId).set({
       id: data.callSessionId,
       status: "pending",
@@ -914,9 +936,6 @@ export class PayPalManager {
       paymentId: response.id,
       clientId: data.clientId,
       providerId: data.providerId,
-      // P0 FIX: Phone numbers required for Twilio call
-      clientPhone: data.clientPhone,
-      providerPhone: data.providerPhone,
       payment: {
         paypalOrderId: response.id,
         paymentMethod: "paypal",
@@ -929,12 +948,18 @@ export class PayPalManager {
         provider: {
           id: data.providerId,
           type: "provider",
-          phone: data.providerPhone,
+          // P0 FIX: Store ENCRYPTED phone for Twilio compatibility
+          phone: encryptedProviderPhone,
+          status: "pending",
+          attemptCount: 0,
         },
         client: {
           id: data.clientId,
           type: "client",
-          phone: data.clientPhone,
+          // P0 FIX: Store ENCRYPTED phone for Twilio compatibility
+          phone: encryptedClientPhone,
+          status: "pending",
+          attemptCount: 0,
         },
       },
       metadata: {
@@ -947,7 +972,7 @@ export class PayPalManager {
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     }, { merge: true });
 
-    console.log("✅ [PAYPAL] Order created:", response.id);
+    console.log("✅ [PAYPAL] Order created with encrypted phones:", response.id);
 
     return {
       orderId: response.id,
@@ -2153,7 +2178,8 @@ async function verifyAuthToken(req: { headers: { authorization?: string } }): Pr
 export const createPayPalOrderHttp = onRequest(
   {
     region: "europe-west1",
-    secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_PARTNER_ID, PAYPAL_PLATFORM_MERCHANT_ID],
+    // P0 FIX: Added ENCRYPTION_KEY for phone number encryption (Twilio compatibility)
+    secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_PARTNER_ID, PAYPAL_PLATFORM_MERCHANT_ID, ENCRYPTION_KEY],
     cors: true, // Gère automatiquement les preflight OPTIONS
   },
   async (req, res) => {
@@ -2478,7 +2504,8 @@ export const capturePayPalOrderHttp = onRequest(
 export const authorizePayPalOrderHttp = onRequest(
   {
     region: "europe-west1",
-    secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, TASKS_AUTH_SECRET],
+    // P0 FIX: Added ENCRYPTION_KEY and OUTIL_SYNC_API_KEY for sendPaymentNotifications
+    secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, TASKS_AUTH_SECRET, ENCRYPTION_KEY, OUTIL_SYNC_API_KEY],
     cors: true,
   },
   async (req, res) => {
@@ -2577,6 +2604,31 @@ export const authorizePayPalOrderHttp = onRequest(
         authorizationId: result.authorizationId,
         status: result.status,
       });
+
+      // =====================================================================
+      // P0 FIX: Call sendPaymentNotifications for PayPal parity with Stripe
+      // This triggers:
+      // 1. SMS/email notifications to client and provider
+      // 2. Sync to Outil IA for AI response generation
+      // =====================================================================
+      const callSessionId = orderData.callSessionId;
+      if (callSessionId) {
+        console.log(`📨 [${authRequestId}] Sending payment notifications for PayPal order...`);
+        try {
+          await sendPaymentNotifications(callSessionId, db);
+          console.log(`✅ [${authRequestId}] Payment notifications sent successfully`);
+        } catch (notifError) {
+          // Non-blocking: log error but don't fail the authorization
+          console.error(`⚠️ [${authRequestId}] Failed to send payment notifications:`, notifError);
+          prodLogger.warn('PAYPAL_NOTIFICATIONS_ERROR', `[${authRequestId}] Failed to send notifications (non-blocking)`, {
+            authRequestId,
+            callSessionId,
+            error: notifError instanceof Error ? notifError.message : String(notifError),
+          });
+        }
+      } else {
+        console.warn(`⚠️ [${authRequestId}] No callSessionId found - skipping notifications`);
+      }
 
       res.status(200).json(result);
 

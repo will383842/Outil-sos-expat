@@ -1437,7 +1437,7 @@ async function syncCallSessionToOutil(
 
 // ====== HELPER POUR ENVOI AUTOMATIQUE DES MESSAGES ======
 // DEBUG VERSION: Exhaustive logging to trace booking request SMS flow
-const sendPaymentNotifications = traceFunction(
+export const sendPaymentNotifications = traceFunction(
   async (callSessionId: string, database: admin.firestore.Firestore) => {
     const debugId = `notif_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
 
