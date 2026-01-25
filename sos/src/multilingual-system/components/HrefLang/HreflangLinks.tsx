@@ -7,6 +7,29 @@ interface Props {
   pathname: string;
 }
 
+/**
+ * SEO 2026 Best Practice: hreflang links should point to DEFAULT country per language
+ * NOT preserve arbitrary country codes from the URL.
+ *
+ * Why? Because:
+ * 1. /fr-fr/tarifs and /fr-be/tarifs have IDENTICAL content
+ * 2. Creating hreflang links to /es-be/ when that URL doesn't exist in sitemap = broken links
+ * 3. Google penalizes hreflang inconsistencies
+ *
+ * Correct approach: 9 hreflang variants (one per language with default country)
+ */
+const LANGUAGE_TO_DEFAULT_COUNTRY: Record<string, string> = {
+  fr: "fr",  // French -> France
+  en: "us",  // English -> United States
+  es: "es",  // Spanish -> Spain
+  de: "de",  // German -> Germany
+  ru: "ru",  // Russian -> Russia
+  pt: "pt",  // Portuguese -> Portugal
+  ch: "cn",  // Chinese -> China
+  hi: "in",  // Hindi -> India
+  ar: "sa",  // Arabic -> Saudi Arabia
+};
+
 const HreflangLinks: React.FC<Props> = ({ pathname }) => {
   // Use the pathname as provided (do not strip locale). Ensure it starts with '/'
   const normalizedPath = pathname && pathname.startsWith("/") ? pathname : `/${pathname || ""}`;
@@ -20,7 +43,6 @@ const HreflangLinks: React.FC<Props> = ({ pathname }) => {
   const firstSeg = segments.length ? segments[0] : null;
   const localePattern = /^[a-z]{2}(?:-[a-z]{2})?$/i;
   const hasLocaleSegment = firstSeg ? localePattern.test(firstSeg) : false;
-  const incomingCountry = hasLocaleSegment && firstSeg!.includes("-") ? firstSeg!.split("-")[1].toLowerCase() : undefined;
 
   // Determine the slice of segments that represent the 'route slug' (e.g., 'sos-appel' or 'tableau-de-bord/messages')
   const restSegments = hasLocaleSegment ? segments.slice(1) : segments;
@@ -49,9 +71,10 @@ const HreflangLinks: React.FC<Props> = ({ pathname }) => {
       {SUPPORTED_LANGUAGES.map((loc) => {
         const prefix = localeToPrefix[loc];
 
-        // If the incoming path already has a locale segment, replace it with the target prefix.
-        // Preserve the incoming country subtag when present: e.g. incoming 'fr-fr' and target 'es' => 'es-fr'
-        const targetSeg = incomingCountry ? `${prefix}-${incomingCountry}` : prefix;
+        // SEO 2026: Always use the DEFAULT country for each language
+        // This ensures hreflang links match what's in the sitemap
+        const defaultCountry = LANGUAGE_TO_DEFAULT_COUNTRY[prefix] || prefix;
+        const targetSeg = `${prefix}-${defaultCountry}`;
 
         // If we matched a known route key, replace the matched slug with the translated slug for this language
         let translatedSlugSegments: string[] = [];
@@ -68,11 +91,9 @@ const HreflangLinks: React.FC<Props> = ({ pathname }) => {
         const href = `${baseDomain}${newPath === "" ? "/" : newPath}`;
 
         // hrefLang should be the ISO language tag (converts 'ch' to 'zh-Hans' for SEO)
-        const baseLang = getHreflangCode(prefix);
-        // Don't append country to script-based codes like 'zh-Hans' (would create invalid 'zh-Hans-fr')
-        // Valid formats: 'fr', 'fr-fr', 'zh-Hans' (not 'zh-Hans-fr')
-        const hasScript = baseLang.includes('-');
-        const hrefLang = (incomingCountry && !hasScript) ? `${baseLang}-${incomingCountry}` : baseLang;
+        // For SEO: use language code only (fr, en, es) - Google recommends this for language targeting
+        // Country-specific hreflang (fr-FR) is only needed if content differs by country
+        const hrefLang = getHreflangCode(prefix);
 
         return <link key={loc} rel="alternate" hrefLang={hrefLang} href={href} />;
       })}
@@ -83,7 +104,7 @@ const HreflangLinks: React.FC<Props> = ({ pathname }) => {
         hrefLang="x-default"
         href={(() => {
           const defaultLang = "fr";
-          const defaultSeg = `fr-fr`;
+          const defaultSeg = "fr-fr";
 
           // Build translated slug for french if we matched a route key
           let translatedSlugSegments: string[] = [];

@@ -232,6 +232,8 @@ export function getLocaleFromPath(pathname: string, defaultLang: Language): stri
 export type RouteKey =
   | "lawyer"           // /avocat -> /lawyers, /anwaelte, etc.
   | "expat"            // /expatrie -> /expats, /expatriates, etc.
+  | "find-lawyer"      // /trouver-avocat -> /find-lawyer, etc. (search/directory)
+  | "find-expat"       // /trouver-expatrie -> /find-expat, etc. (search/directory)
   | "register-lawyer"  // /register/lawyer -> /register/avocat, /register/anwalt, etc.
   | "register-expat"   // /register/expat -> /register/expatrie, etc.
   | "register-client"  // /register/client -> /register/client, /inscription/client, etc.
@@ -290,6 +292,28 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "waipai",
     hi: "pravasi",
     ar: "مغتربون",
+  },
+  "find-lawyer": {
+    fr: "trouver-avocat",
+    en: "find-lawyer",
+    es: "buscar-abogado",
+    de: "anwalt-finden",
+    ru: "nayti-advokata",
+    pt: "encontrar-advogado",
+    ch: "zhaodao-lushi",
+    hi: "vakil-khoje",
+    ar: "ابحث-عن-محامي",
+  },
+  "find-expat": {
+    fr: "trouver-expatrie",
+    en: "find-expat",
+    es: "buscar-expatriado",
+    de: "expatriate-finden",
+    ru: "nayti-expatrianta",
+    pt: "encontrar-expatriado",
+    ch: "zhaodao-waipai",
+    hi: "pravasi-khoje",
+    ar: "ابحث-عن-مغترب",
   },
   "register-lawyer": {
     fr: "inscription/avocat",
