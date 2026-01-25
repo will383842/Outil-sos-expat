@@ -3225,6 +3225,10 @@ const handlePaymentIntentRequiresAction = traceFunction(
 
         // P1-1 FIX: Si une session d'appel existe, mettre son statut en "awaiting_payment_confirmation"
         // Cela empêche le scheduling de l'appel tant que le 3D Secure n'est pas complété
+        //
+        // P0 FIX 2026-01-25: Même si l'appel a déjà commencé (Adaptive Acceptance peut déclencher
+        // le 3D Secure APRÈS le début de l'appel), on doit quand même marquer que le 3D Secure
+        // est requis pour que le webhook amount_capturable_updated puisse mettre à jour correctement.
         const callSessionId = paymentData?.callSessionId;
         if (callSessionId) {
           try {
@@ -3233,16 +3237,32 @@ const handlePaymentIntentRequiresAction = traceFunction(
 
             if (sessionDoc.exists) {
               const sessionData = sessionDoc.data();
-              // Ne mettre à jour que si le status est encore "pending" ou "scheduled"
-              if (sessionData?.status === "pending" || sessionData?.status === "scheduled") {
+              const currentStatus = sessionData?.status;
+
+              // Si le status est encore "pending" ou "scheduled", on peut bloquer l'appel
+              const canBlockCall = currentStatus === "pending" || currentStatus === "scheduled";
+
+              if (canBlockCall) {
+                // Cas normal: l'appel n'a pas encore commencé - on bloque
                 await sessionRef.update({
                   status: "awaiting_payment_confirmation",
                   "payment.requires3DSecure": true,
                   "payment.status": "requires_action",
                   updatedAt: admin.firestore.FieldValue.serverTimestamp(),
                 });
-
                 console.log(`🔐 [3D Secure] Call session ${callSessionId} set to awaiting_payment_confirmation`);
+              } else {
+                // P0 FIX: Cas Adaptive Acceptance - l'appel a déjà commencé mais Stripe demande 3D Secure
+                // On marque que le 3D Secure est requis SANS changer le status de session
+                // Cela permet au webhook amount_capturable_updated de savoir qu'on attend une confirmation
+                await sessionRef.update({
+                  "payment.requires3DSecure": true,
+                  "payment.status": "requires_action",
+                  "payment.adaptiveAcceptance3DS": true, // Marquer que c'est via Adaptive Acceptance
+                  updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+                console.log(`🔐 [3D Secure] Call session ${callSessionId} - Adaptive Acceptance 3DS required (call already ${currentStatus})`);
+                console.log(`🔐 [3D Secure]   Payment status set to requires_action without changing session status`);
               }
             }
           } catch (sessionError) {
@@ -3381,21 +3401,39 @@ const handlePaymentIntentAmountCapturableUpdated = traceFunction(
             console.log(`📋 [3DS_COMPLETE] Current session status: ${currentSessionStatus}`);
             console.log(`📋 [3DS_COMPLETE] Current payment.status: ${currentPaymentStatus}`);
 
-            // Mettre à jour seulement si le status est "requires_action" ou "awaiting_payment_confirmation"
-            if (
+            // P0 FIX 2026-01-25: Élargir la condition pour couvrir le cas Adaptive Acceptance
+            // Quand Stripe Radar bloque un paiement et réessaie avec 3D Secure via Adaptive Acceptance,
+            // le webhook payment_intent.requires_action peut arriver APRÈS que l'appel a commencé
+            // (session.status n'est plus "pending" ou "scheduled"), donc payment.status reste "authorized"
+            // et n'est jamais mis à "requires_action". Dans ce cas, quand amount_capturable_updated arrive,
+            // les conditions précédentes échouent et on ne met jamais à jour.
+            //
+            // SOLUTION: Si le PaymentIntent Stripe est en requires_capture (ce que signifie ce webhook),
+            // on doit TOUJOURS s'assurer que payment.status est "authorized" pour permettre la capture.
+            const shouldUpdate =
               currentPaymentStatus === "requires_action" ||
-              currentSessionStatus === "awaiting_payment_confirmation"
-            ) {
+              currentSessionStatus === "awaiting_payment_confirmation" ||
+              // P0 FIX: Même si payment.status est déjà "authorized", s'assurer que threeDSecureCompleted est true
+              // Cela permet de savoir que le 3D Secure a été utilisé (pour analytics et debug)
+              (currentPaymentStatus === "authorized" && !sessionData?.payment?.threeDSecureCompleted);
+
+            if (shouldUpdate) {
+              // Ne pas changer le status de session si l'appel est déjà en cours
+              const statusUpdateRequired = currentSessionStatus === "awaiting_payment_confirmation";
+
               await sessionRef.update({
-                status: "scheduled", // Remettre en scheduled pour que l'appel puisse être lancé
+                // Remettre en scheduled SEULEMENT si on était en awaiting_payment_confirmation
+                // Sinon, laisser le status actuel (peut être "active", "calling", etc.)
+                ...(statusUpdateRequired ? { status: "scheduled" } : {}),
                 "payment.status": "authorized", // CRITIQUE: permet shouldCapturePayment() de retourner true
                 "payment.threeDSecureCompleted": true,
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
               });
 
               console.log(`✅ [3DS_COMPLETE] call_session ${callSessionId} updated:`);
-              console.log(`   - status: scheduled`);
+              console.log(`   - status: ${statusUpdateRequired ? 'scheduled' : currentSessionStatus} (${statusUpdateRequired ? 'changed' : 'unchanged'})`);
               console.log(`   - payment.status: authorized`);
+              console.log(`   - payment.threeDSecureCompleted: true`);
 
               ultraLogger.info(
                 "STRIPE_AMOUNT_CAPTURABLE_UPDATED",
@@ -3404,12 +3442,14 @@ const handlePaymentIntentAmountCapturableUpdated = traceFunction(
                   callSessionId,
                   previousPaymentStatus: currentPaymentStatus,
                   newPaymentStatus: "authorized",
+                  statusChanged: statusUpdateRequired,
                 }
               );
             } else {
-              console.log(`⚠️ [3DS_COMPLETE] Session not updated (already in correct state)`);
+              console.log(`ℹ️ [3DS_COMPLETE] Session already in correct state - no update needed`);
               console.log(`   - currentPaymentStatus: ${currentPaymentStatus}`);
               console.log(`   - currentSessionStatus: ${currentSessionStatus}`);
+              console.log(`   - threeDSecureCompleted: ${sessionData?.payment?.threeDSecureCompleted || false}`);
             }
           } else {
             console.log(`⚠️ [3DS_COMPLETE] Call session ${callSessionId} not found`);

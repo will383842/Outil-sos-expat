@@ -138,6 +138,48 @@ export function useAiToolAccess(): UseAiToolAccessReturn {
     if (!newWindow) {
       // Popup was blocked - fallback to redirect in same tab
       console.warn('[useAiToolAccess] Popup blocked, will redirect in same tab');
+    } else {
+      // P2 FIX: Write a loading page instead of blank to improve UX
+      newWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Connexion à l'Outil IA...</title>
+            <style>
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+              }
+              .spinner {
+                width: 50px;
+                height: 50px;
+                border: 4px solid rgba(255,255,255,0.3);
+                border-top-color: white;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+              }
+              @keyframes spin {
+                to { transform: rotate(360deg); }
+              }
+              h2 { margin-top: 20px; font-weight: 500; }
+              p { opacity: 0.8; font-size: 14px; }
+            </style>
+          </head>
+          <body>
+            <div class="spinner"></div>
+            <h2>Connexion en cours...</h2>
+            <p>Vous allez être redirigé vers l'Outil IA SOS Expat</p>
+          </body>
+        </html>
+      `);
+      newWindow.document.close();
     }
 
     try {
@@ -164,18 +206,70 @@ export function useAiToolAccess(): UseAiToolAccessReturn {
         throw new Error('Token non reçu');
       }
     } catch (err) {
-      // Close the blank window on error
-      newWindow?.close();
-
       console.error('[useAiToolAccess] SSO Error:', err);
       const firebaseError = err as { code?: string; message?: string };
 
+      let errorMessage = 'Erreur de connexion à l\'outil IA';
+
       if (firebaseError.code === 'functions/permission-denied') {
-        setError(firebaseError.message || 'Accès refusé');
+        errorMessage = firebaseError.message || 'Accès refusé. Veuillez vérifier votre abonnement.';
       } else if (firebaseError.code === 'functions/resource-exhausted') {
-        setError('Quota épuisé');
-      } else {
-        setError('Erreur de connexion à l\'outil IA');
+        errorMessage = 'Quota IA épuisé. Veuillez mettre à niveau votre abonnement.';
+      } else if (firebaseError.code === 'functions/unauthenticated') {
+        errorMessage = 'Session expirée. Veuillez vous reconnecter.';
+      } else if (firebaseError.code === 'functions/internal') {
+        errorMessage = 'Erreur serveur. Veuillez réessayer dans quelques instants.';
+      }
+
+      setError(errorMessage);
+
+      // P2 FIX: Show error in popup window instead of just closing it
+      if (newWindow && !newWindow.closed) {
+        newWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>Erreur - Outil IA</title>
+              <style>
+                body {
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: center;
+                  align-items: center;
+                  height: 100vh;
+                  margin: 0;
+                  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                  color: white;
+                  text-align: center;
+                  padding: 20px;
+                }
+                .icon { font-size: 48px; margin-bottom: 20px; }
+                h2 { margin: 10px 0; font-weight: 500; }
+                p { opacity: 0.9; font-size: 14px; max-width: 400px; }
+                button {
+                  margin-top: 20px;
+                  padding: 12px 24px;
+                  background: white;
+                  color: #f5576c;
+                  border: none;
+                  border-radius: 8px;
+                  font-size: 14px;
+                  cursor: pointer;
+                  font-weight: 600;
+                }
+                button:hover { opacity: 0.9; }
+              </style>
+            </head>
+            <body>
+              <div class="icon">⚠️</div>
+              <h2>Impossible d'accéder à l'Outil IA</h2>
+              <p>${errorMessage}</p>
+              <button onclick="window.close()">Fermer</button>
+            </body>
+          </html>
+        `);
+        newWindow.document.close();
       }
     } finally {
       setIsAccessing(false);

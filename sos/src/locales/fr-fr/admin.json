@@ -1829,6 +1829,8 @@
   "admin.menu.realtimeMonitoring.description": "Surveillance des appels en cours",
   "admin.menu.receivedCalls": "Appels reçus",
   "admin.menu.receivedCalls.description": "Historique des appels avec détail financier",
+  "admin.menu.callErrors": "Erreurs d'appels",
+  "admin.menu.callErrors.description": "Diagnostic des appels échoués (Twilio)",
   "admin.menu.reconciliation": "Rapprochement bancaire",
   "admin.menu.reconciliation.description": "Rapprochement des comptes",
   "admin.menu.refunds": "Remboursements",

@@ -2138,6 +2138,38 @@ async cancelPayment(
       providerStripeAccountId: cents.providerStripeAccountId || null,
     });
   }
+
+  /**
+   * P0 FIX 2026-01-25: Get PaymentIntent status from Stripe
+   * Used to sync payment status when webhooks might have been missed
+   */
+  async getPaymentIntentStatus(
+    paymentIntentId: string,
+    stripeAccountId?: string
+  ): Promise<{ status: string; amountCapturable: number } | null> {
+    try {
+      this.validateConfiguration();
+      if (!this.stripe) throw new Error('Stripe non initialisé');
+
+      const stripeAccountOptions = stripeAccountId
+        ? { stripeAccount: stripeAccountId }
+        : undefined;
+
+      const paymentIntent = await this.stripe.paymentIntents.retrieve(
+        paymentIntentId,
+        {},
+        stripeAccountOptions
+      );
+
+      return {
+        status: paymentIntent.status,
+        amountCapturable: paymentIntent.amount_capturable || 0,
+      };
+    } catch (error) {
+      console.error('[StripeManager.getPaymentIntentStatus] Error:', error);
+      return null;
+    }
+  }
 }
 
 /** Instance réutilisable */

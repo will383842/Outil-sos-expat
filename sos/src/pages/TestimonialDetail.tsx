@@ -1722,7 +1722,12 @@ const TestimonialDetail: React.FC = () => {
             title: firestoreReview.title || "",
             fullcontent: firestoreReview.fullcontent || firestoreReview.comment || "",
             service_used: firestoreReview.service_used || "",
-            duration: firestoreReview.duration || "",
+            // Durée: utiliser celle du review ou calculer selon le type de service
+            // lawyer_call = 20 min, expat_call = 30 min
+            duration: firestoreReview.duration || (
+              firestoreReview.serviceType === "lawyer_call" ? "20 min" :
+              firestoreReview.serviceType === "expat_call" ? "30 min" : ""
+            ),
             help_type: firestoreReview.help_type || [],
           });
           return;

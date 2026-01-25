@@ -2543,6 +2543,8 @@
   "admin.menu.backups.description": "Backup et restauration",
   "admin.menu.balanceSheet": "Bilan",
   "admin.menu.balanceSheet.description": "Actifs, Passifs, Capitaux propres",
+  "admin.menu.callErrors": "Erreurs d'appels",
+  "admin.menu.callErrors.description": "Diagnostic des appels échoués (Twilio)",
   "admin.menu.callPayments": "Paiements appels",
   "admin.menu.callPayments.description": "Paiements des sessions d'appels",
   "admin.menu.calls": "Appels & Sessions",

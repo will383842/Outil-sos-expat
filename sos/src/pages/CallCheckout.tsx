@@ -5,6 +5,7 @@ import React, {
   useCallback,
   useMemo,
   useContext,
+  useRef,
 } from "react";
 import {
   ArrowLeft,
@@ -1122,24 +1123,41 @@ interface PaymentFeedbackProps {
 
 // Detect error type from message
 const detectErrorType = (error: string): {
-  type: 'duplicate' | 'rateLimit' | 'cardDeclined' | 'insufficientFunds' | 'network' | 'generic';
+  type: 'duplicate' | 'rateLimit' | 'cardDeclined' | 'insufficientFunds' | 'network' | 'expired' | 'cvc' | 'generic';
   feedbackType: FeedbackType;
 } => {
   const lowerError = error.toLowerCase();
 
+  // Duplicate payment detection
   if (lowerError.includes('already') || lowerError.includes('doublon') || lowerError.includes('déjà') || lowerError.includes('similaire')) {
     return { type: 'duplicate', feedbackType: 'warning' };
   }
-  if (lowerError.includes('rate') || lowerError.includes('tentative') || lowerError.includes('trop')) {
+  // Rate limit detection
+  if (lowerError.includes('rate') || lowerError.includes('tentative') || lowerError.includes('trop') || lowerError.includes('too many')) {
     return { type: 'rateLimit', feedbackType: 'info' };
   }
-  if (lowerError.includes('declined') || lowerError.includes('refusé') || lowerError.includes('rejected')) {
+  // CVC/Security code errors
+  if (lowerError.includes('cvc') || lowerError.includes('cvv') || lowerError.includes('security code') || lowerError.includes('code de sécurité')) {
+    return { type: 'cvc', feedbackType: 'warning' };
+  }
+  // Expired card detection
+  if (lowerError.includes('expired') || lowerError.includes('expiré') || lowerError.includes('expiration')) {
+    return { type: 'expired', feedbackType: 'warning' };
+  }
+  // Card declined detection (Stripe messages)
+  if (lowerError.includes('declined') || lowerError.includes('refusé') || lowerError.includes('rejected') ||
+      lowerError.includes('do not honor') || lowerError.includes('card_declined') ||
+      lowerError.includes('your card was declined') || lowerError.includes('payment failed') ||
+      lowerError.includes('transaction not allowed') || lowerError.includes('card not supported')) {
     return { type: 'cardDeclined', feedbackType: 'warning' };
   }
-  if (lowerError.includes('insufficient') || lowerError.includes('insuffisant') || lowerError.includes('funds')) {
+  // Insufficient funds detection
+  if (lowerError.includes('insufficient') || lowerError.includes('insuffisant') || lowerError.includes('funds') || lowerError.includes('balance')) {
     return { type: 'insufficientFunds', feedbackType: 'warning' };
   }
-  if (lowerError.includes('network') || lowerError.includes('connexion') || lowerError.includes('internet') || lowerError.includes('timeout')) {
+  // Network errors
+  if (lowerError.includes('network') || lowerError.includes('connexion') || lowerError.includes('internet') ||
+      lowerError.includes('timeout') || lowerError.includes('failed to fetch') || lowerError.includes('connection')) {
     return { type: 'network', feedbackType: 'info' };
   }
 
@@ -1192,32 +1210,42 @@ const PaymentFeedback: React.FC<PaymentFeedbackProps> = ({ error, onDismiss, onR
       case 'duplicate':
         return {
           title: t('err.duplicate.title', 'Oups, déjà en cours ! 🔄'),
-          message: t('err.duplicate.message', error)
+          message: t('err.duplicate.message', 'Un paiement similaire est déjà en cours. Patientez quelques secondes avant de réessayer.')
         };
       case 'rateLimit':
         return {
           title: t('err.rateLimit.title', 'Tout doux ! ☕'),
-          message: t('err.rateLimit.message', error)
+          message: t('err.rateLimit.message', 'Trop de tentatives. Patientez une minute avant de réessayer.')
+        };
+      case 'cvc':
+        return {
+          title: t('err.cvc.title', 'Code de sécurité incorrect 🔐'),
+          message: t('err.cvc.message', 'Le code CVC/CVV de votre carte est incorrect. Vérifiez les 3 chiffres au dos de votre carte.')
+        };
+      case 'expired':
+        return {
+          title: t('err.expired.title', 'Carte expirée 📅'),
+          message: t('err.expired.message', 'Votre carte a expiré. Veuillez utiliser une autre carte de paiement.')
         };
       case 'cardDeclined':
         return {
-          title: t('err.cardDeclined.title', 'Carte non acceptée 💳'),
-          message: t('err.cardDeclined.message', error)
+          title: t('err.cardDeclined.title', 'Carte refusée 💳'),
+          message: t('err.cardDeclined.message', 'Votre banque a refusé le paiement. Vérifiez vos informations ou utilisez une autre carte.')
         };
       case 'insufficientFunds':
         return {
           title: t('err.insufficientFunds.title', 'Solde insuffisant 💰'),
-          message: t('err.insufficientFunds.message', error)
+          message: t('err.insufficientFunds.message', 'Le solde de votre carte est insuffisant. Utilisez une autre carte ou approvisionnez votre compte.')
         };
       case 'network':
         return {
           title: t('err.network.title', 'Connexion instable 📶'),
-          message: t('err.network.message', error)
+          message: t('err.network.message', 'Problème de connexion internet. Vérifiez votre connexion et réessayez.')
         };
       default:
         return {
           title: t('err.paymentFailed', 'Le paiement a échoué'),
-          message: error
+          message: t('err.generic.message', 'Une erreur est survenue lors du paiement. Veuillez réessayer ou utiliser un autre moyen de paiement.')
         };
     }
   };
@@ -1257,6 +1285,16 @@ const PaymentFeedback: React.FC<PaymentFeedbackProps> = ({ error, onDismiss, onR
             {type === 'cardDeclined' && (
               <svg className={`w-5 h-5 ${styles.icon}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              </svg>
+            )}
+            {type === 'cvc' && (
+              <svg className={`w-5 h-5 ${styles.icon}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            )}
+            {type === 'expired' && (
+              <svg className={`w-5 h-5 ${styles.icon}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             )}
             {type === 'insufficientFunds' && (
@@ -3226,6 +3264,14 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
   const [callProgress, setCallProgress] = useState<number>(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string>("");
+  const errorRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to error message when it appears
+  useEffect(() => {
+    if (error && errorRef.current) {
+      errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [error]);
 
   // ========================================
   // P0 FIX: callSessionId stable pour PayPal (généré une seule fois)
@@ -3774,12 +3820,14 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
               </div>
 
               {error && (
-                <PaymentFeedback
-                  error={error}
-                  onDismiss={() => setError("")}
-                  onRetry={() => setError("")}
-                  t={t as (key: string, fallback?: string) => string}
-                />
+                <div ref={errorRef}>
+                  <PaymentFeedback
+                    error={error}
+                    onDismiss={() => setError("")}
+                    onRetry={() => setError("")}
+                    t={t as (key: string, fallback?: string) => string}
+                  />
+                </div>
               )}
 
               {/*

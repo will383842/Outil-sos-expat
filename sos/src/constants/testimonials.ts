@@ -364,7 +364,7 @@ export const createMockReviewsData = (language: string): ReviewType[] => {
       title: "Divorce international",
       fullcontent: "Service juridique excellent ! Divorce international complexe, l'avocat a su naviguer entre droit français et espagnol. Conseil clair, stratégie efficace. Je recommande vivement !",
       service_used: "Consultation Avocat",
-      duration: "60 min",
+      duration: "20 min",
       help_type: ["Divorce", "Droit international", "Famille"],
     },
     {
@@ -768,7 +768,7 @@ const reviews_en: ReviewType[] = [
       fullcontent:
         "Excellent legal service! Complex international divorce, the lawyer navigated between French and Spanish law. Clear advice, effective strategy. Highly recommend!",
       service_used: "Lawyer Consultation",
-      duration: "60 min",
+      duration: "20 min",
       help_type: ["Divorce", "International Law", "Family"],
     },
     {
@@ -1161,7 +1161,7 @@ const reviews_en: ReviewType[] = [
       title: "Internationale Scheidung",
       fullcontent: "Ausgezeichneter Rechtsdienst! Komplexe internationale Scheidung, der Anwalt navigierte zwischen französischem und spanischem Recht. Klarer Rat, effektive Strategie. Ich empfehle dringend!",
       service_used: "Rechtsberatung",
-      duration: "60 min",
+      duration: "20 min",
       help_type: ["Scheidung", "Internationales Recht", "Familie"],
     },
     {
@@ -1944,7 +1944,7 @@ const reviews_ru: ReviewType[] = [
       title: "Divorcio internacional",
       fullcontent: "¡Servicio jurídico excelente! Divorcio internacional complejo, el abogado navegó entre la ley francesa y española. Consejo claro, estrategia eficaz. ¡Lo recomiendo totalmente!",
       service_used: "Consulta Abogado",
-      duration: "60 min",
+      duration: "20 min",
       help_type: ["Divorcio", "Derecho internacional", "Familia"],
     },
     {
@@ -3115,7 +3115,7 @@ const reviews_ch: ReviewType[] = [
       title: "Divórcio Internacional",
       fullcontent: "Serviço jurídico excelente! Caso complexo de divórcio internacional, o advogado domina leis francesa e espanhola. Aconselhamento claro e estratégia eficaz. Altamente recomendado!",
       service_used: "Consulta Jurídica",
-      duration: "60 min",
+      duration: "20 min",
       help_type: ["Divórcio", "Direito Internacional", "Família"],
     },
     {

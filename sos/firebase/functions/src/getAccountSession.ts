@@ -58,14 +58,91 @@ export const getStripeAccountSession = onCall<{ userType: "lawyer" | "expat" }>(
     try {
       // ✅ Get from correct collection based on userType
       const collectionName = userType === "lawyer" ? "lawyers" : "expats";
-      const userDoc = await admin
+      let userDoc = await admin
         .firestore()
         .collection(collectionName)
         .doc(userId)
         .get();
 
+      // P0 FIX: Si le document n'existe pas dans lawyers/expats, vérifier dans sos_profiles/users
+      // et créer le document manquant si nécessaire
       if (!userDoc.exists) {
-        throw new HttpsError("not-found", `${userType} profile not found`);
+        console.log(`[getAccountSession] Document not found in ${collectionName}/${userId}, checking sos_profiles...`);
+
+        const sosProfileDoc = await admin
+          .firestore()
+          .collection("sos_profiles")
+          .doc(userId)
+          .get();
+
+        if (sosProfileDoc.exists) {
+          const sosData = sosProfileDoc.data();
+
+          // Créer le document manquant dans lawyers/expats
+          console.log(`[getAccountSession] Creating missing document in ${collectionName}/${userId} from sos_profiles`);
+
+          await admin.firestore().collection(collectionName).doc(userId).set({
+            id: userId,
+            uid: userId,
+            type: userType,
+            email: sosData?.email || null,
+            firstName: sosData?.firstName || '',
+            lastName: sosData?.lastName || '',
+            fullName: sosData?.fullName || sosData?.name || '',
+            country: sosData?.country || sosData?.currentCountry || '',
+            stripeAccountId: sosData?.stripeAccountId || null,
+            stripeAccountStatus: sosData?.stripeAccountStatus || null,
+            kycStatus: sosData?.kycStatus || 'pending',
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          }, { merge: true });
+
+          // Relire le document créé
+          userDoc = await admin
+            .firestore()
+            .collection(collectionName)
+            .doc(userId)
+            .get();
+        } else {
+          // Vérifier dans users
+          const usersDoc = await admin
+            .firestore()
+            .collection("users")
+            .doc(userId)
+            .get();
+
+          if (!usersDoc.exists) {
+            throw new HttpsError("not-found", `Profil prestataire introuvable. Veuillez vous reconnecter ou contacter le support.`);
+          }
+
+          const usersData = usersDoc.data();
+
+          // Créer le document manquant
+          console.log(`[getAccountSession] Creating missing document in ${collectionName}/${userId} from users`);
+
+          await admin.firestore().collection(collectionName).doc(userId).set({
+            id: userId,
+            uid: userId,
+            type: userType,
+            email: usersData?.email || null,
+            firstName: usersData?.firstName || '',
+            lastName: usersData?.lastName || '',
+            fullName: usersData?.fullName || `${usersData?.firstName || ''} ${usersData?.lastName || ''}`.trim(),
+            country: usersData?.country || usersData?.currentCountry || '',
+            stripeAccountId: usersData?.stripeAccountId || null,
+            stripeAccountStatus: usersData?.stripeAccountStatus || null,
+            kycStatus: usersData?.kycStatus || 'pending',
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          }, { merge: true });
+
+          // Relire le document créé
+          userDoc = await admin
+            .firestore()
+            .collection(collectionName)
+            .doc(userId)
+            .get();
+        }
       }
 
       const userData = userDoc.data();

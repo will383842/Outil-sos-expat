@@ -1961,6 +1961,8 @@
   "admin.menu.realtimeMonitoring.description": "Ongoing call monitoring",
   "admin.menu.receivedCalls": "Received Calls",
   "admin.menu.receivedCalls.description": "Call history with financial details",
+  "admin.menu.callErrors": "Call Errors",
+  "admin.menu.callErrors.description": "Failed calls diagnosis (Twilio)",
   "admin.menu.reconciliation": "Bank Reconciliation",
   "admin.menu.reconciliation.description": "Account reconciliation",
   "admin.menu.refunds": "Refunds",

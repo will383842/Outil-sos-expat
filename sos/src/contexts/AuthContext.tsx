@@ -692,6 +692,50 @@ const createUserDocumentInFirestore = async (
         languages: additionalData.languages?.length || 0,
         countries: additionalData.practiceCountries?.length || 0,
       });
+
+      // 3️⃣ CRÉER AUSSI dans lawyers/expats pour compatibilité avec getAccountSession
+      // Cette collection est attendue par la vérification Stripe KYC
+      const providerCollectionName = additionalData.role === 'lawyer' ? 'lawyers' : 'expats';
+      const providerRef = doc(db, providerCollectionName, firebaseUser.uid);
+
+      await setDoc(providerRef, {
+        id: firebaseUser.uid,
+        uid: firebaseUser.uid,
+        type: additionalData.role,
+        email: firebaseUser.email || null,
+        emailLower: (firebaseUser.email || '').toLowerCase(),
+        firstName: firstName || '',
+        lastName: lastName || '',
+        fullName: fullName,
+        name: fullName,
+        profilePhoto: additionalData.profilePhoto || firebaseUser.photoURL || '/default-avatar.png',
+        phone: additionalData.phone || null,
+        phoneCountryCode: additionalData.phoneCountryCode || null,
+        country: additionalData.country || additionalData.currentCountry || '',
+        currentCountry: additionalData.currentCountry || additionalData.country || '',
+        practiceCountries: ((): string[] => {
+          if (Array.isArray(additionalData.practiceCountries) && additionalData.practiceCountries.length > 0) return additionalData.practiceCountries;
+          if (Array.isArray(additionalData.operatingCountries) && additionalData.operatingCountries.length > 0) return additionalData.operatingCountries;
+          if (Array.isArray(additionalData.interventionCountries) && additionalData.interventionCountries.length > 0) return additionalData.interventionCountries;
+          if (additionalData.interventionCountry) return [additionalData.interventionCountry];
+          return [];
+        })(),
+        languages: additionalData.languages || additionalData.languagesSpoken || [],
+        specialties: additionalData.specialties || [],
+        yearsOfExperience: additionalData.yearsOfExperience || 0,
+        bio: additionalData.bio || additionalData.description || '',
+        isActive: true,
+        isApproved: false,
+        isVisible: false,
+        // Champs Stripe (seront remplis plus tard par createStripeAccount)
+        stripeAccountId: null,
+        stripeAccountStatus: null,
+        kycStatus: 'pending',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      console.log(`✅ [Auth] Profil créé dans ${providerCollectionName}/${firebaseUser.uid} pour KYC Stripe`);
     }
     
     console.log('✅ User document created with verificationStatus:', approvalFields.verificationStatus);

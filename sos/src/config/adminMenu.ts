@@ -194,6 +194,13 @@ export const adminMenuTree: AdminMenuItem[] = [
         badge: "NEW",
         descriptionKey: "admin.menu.receivedCalls.description",
       },
+      {
+        id: "calls-errors",
+        labelKey: "admin.menu.callErrors",
+        path: "/admin/calls/errors",
+        icon: AlertCircle,
+        descriptionKey: "admin.menu.callErrors.description",
+      },
     ],
   },
 

@@ -701,6 +701,151 @@ async function handleCallCompleted(
   }
 }
 
+// ===== MAPPING DES CODES SIP POUR DIAGNOSTIC =====
+const SIP_CODE_MEANINGS: Record<string, { category: string; meaning: string; userFriendly: string }> = {
+  '480': { category: 'recipient_unavailable', meaning: 'Temporarily Unavailable', userFriendly: 'Téléphone éteint ou hors réseau' },
+  '486': { category: 'recipient_busy', meaning: 'Busy Here', userFriendly: 'Ligne occupée' },
+  '487': { category: 'caller_cancelled', meaning: 'Request Terminated', userFriendly: 'Appel annulé' },
+  '503': { category: 'network_error', meaning: 'Service Unavailable', userFriendly: 'Service opérateur indisponible' },
+  '404': { category: 'invalid_number', meaning: 'Not Found', userFriendly: 'Numéro invalide ou inexistant' },
+  '408': { category: 'timeout', meaning: 'Request Timeout', userFriendly: 'Délai de connexion dépassé' },
+  '484': { category: 'invalid_number', meaning: 'Address Incomplete', userFriendly: 'Numéro incomplet' },
+  '488': { category: 'incompatible', meaning: 'Not Acceptable Here', userFriendly: 'Format d\'appel non supporté' },
+  '500': { category: 'server_error', meaning: 'Server Internal Error', userFriendly: 'Erreur serveur Twilio' },
+  '502': { category: 'network_error', meaning: 'Bad Gateway', userFriendly: 'Erreur réseau opérateur' },
+  '504': { category: 'timeout', meaning: 'Gateway Timeout', userFriendly: 'Délai opérateur dépassé' },
+  '603': { category: 'recipient_declined', meaning: 'Decline', userFriendly: 'Appel refusé par le destinataire' },
+  '403': { category: 'blocked', meaning: 'Forbidden', userFriendly: 'Appel bloqué (permissions/spam)' },
+  '21215': { category: 'geo_permission', meaning: 'Geographic Permission Error', userFriendly: 'Permission géographique non activée' },
+};
+
+const Q850_CODE_MEANINGS: Record<string, string> = {
+  '1': 'Numéro non attribué',
+  '16': 'Raccrochage normal',
+  '17': 'Ligne occupée',
+  '18': 'Pas de réponse utilisateur',
+  '19': 'Pas de réponse (sonnerie)',
+  '21': 'Appel refusé',
+  '27': 'Destination hors service',
+  '28': 'Format de numéro invalide',
+  '31': 'Appel rejeté par le réseau',
+  '34': 'Pas de circuit disponible',
+  '38': 'Réseau hors service',
+  '41': 'Échec temporaire',
+  '42': 'Congestion réseau',
+  '50': 'Fonction non disponible',
+  '63': 'Service non disponible',
+  '79': 'Service non implémenté',
+  '88': 'Destination incompatible',
+  '102': 'Délai de récupération expiré',
+  '127': 'Cause inconnue',
+};
+
+const STIR_SHAKEN_MEANINGS: Record<string, { level: string; description: string }> = {
+  'A': { level: 'full', description: 'Attestation complète - numéro vérifié' },
+  'B': { level: 'partial', description: 'Attestation partielle - client vérifié mais pas le numéro' },
+  'C': { level: 'gateway', description: 'Attestation minimale - opérateurs peuvent rejeter' },
+};
+
+interface TwilioErrorDetails {
+  sipCode: string | null;
+  sipMeaning: string | null;
+  sipCategory: string | null;
+  sipUserFriendly: string | null;
+  q850Code: string | null;
+  q850Meaning: string | null;
+  stirShakenStatus: string | null;
+  stirShakenLevel: string | null;
+  stirShakenDescription: string | null;
+  carrierName: string | null;
+  carrierCountry: string | null;
+  fromCountry: string | null;
+  toCountry: string | null;
+  errorSource: string;
+  errorSummary: string;
+}
+
+/**
+ * Extrait et catégorise les détails d'erreur Twilio pour diagnostic admin
+ */
+function extractTwilioErrorDetails(body: TwilioCallWebhookBody): TwilioErrorDetails {
+  // Cast to access optional Twilio properties not in our interface
+  const rawBody = body as unknown as Record<string, unknown>;
+
+  // Extraire le code SIP
+  const sipCode = rawBody.SipResponseCode as string | undefined;
+  const sipInfo = sipCode ? SIP_CODE_MEANINGS[sipCode] : null;
+
+  // Extraire le code Q850 (cause code téléphonie)
+  const q850Code = rawBody.Q850CauseCode as string | undefined ||
+                   rawBody.CauseCode as string | undefined;
+  const q850Meaning = q850Code ? Q850_CODE_MEANINGS[q850Code] || 'Code inconnu' : null;
+
+  // Extraire STIR/SHAKEN (si disponible)
+  const stirShaken = rawBody.StirVerstat as string | undefined ||
+                     rawBody.StirStatus as string | undefined;
+  const stirInfo = stirShaken ? STIR_SHAKEN_MEANINGS[stirShaken.toUpperCase()] : null;
+
+  // Extraire les infos opérateur/pays
+  const carrierName = rawBody.CalledCarrier as string | undefined ||
+                      rawBody.ToCarrier as string | undefined;
+  const carrierCountry = rawBody.CalledCarrierCountry as string | undefined;
+  const fromCountry = rawBody.FromCountry as string | undefined || rawBody.CallerCountry as string | undefined;
+  const toCountry = rawBody.ToCountry as string | undefined || rawBody.CalledCountry as string | undefined;
+
+  // Déterminer la source de l'erreur
+  let errorSource = 'unknown';
+  let errorSummary = 'Erreur inconnue';
+
+  if (body.CallStatus === 'no-answer') {
+    errorSource = 'recipient';
+    errorSummary = 'Le destinataire n\'a pas répondu';
+  } else if (body.CallStatus === 'busy') {
+    errorSource = 'recipient';
+    errorSummary = 'La ligne est occupée';
+  } else if (body.CallStatus === 'failed') {
+    if (sipInfo) {
+      errorSource = sipInfo.category;
+      errorSummary = sipInfo.userFriendly;
+    } else if (sipCode) {
+      errorSource = 'network';
+      errorSummary = `Erreur réseau (SIP ${sipCode})`;
+    } else if (q850Code) {
+      errorSource = 'telecom';
+      errorSummary = q850Meaning || `Erreur télécom (Q850: ${q850Code})`;
+    } else {
+      errorSource = 'unknown';
+      errorSummary = 'Échec de connexion';
+    }
+  } else if (body.CallStatus === 'canceled') {
+    errorSource = 'system';
+    errorSummary = 'Appel annulé par le système';
+  }
+
+  // Ajouter contexte STIR/SHAKEN si niveau C
+  if (stirShaken?.toUpperCase() === 'C' && errorSource !== 'recipient') {
+    errorSummary += ' (attestation faible - possible blocage opérateur)';
+  }
+
+  return {
+    sipCode: sipCode || null,
+    sipMeaning: sipInfo?.meaning || null,
+    sipCategory: sipInfo?.category || null,
+    sipUserFriendly: sipInfo?.userFriendly || null,
+    q850Code: q850Code || null,
+    q850Meaning,
+    stirShakenStatus: stirShaken || null,
+    stirShakenLevel: stirInfo?.level || null,
+    stirShakenDescription: stirInfo?.description || null,
+    carrierName: carrierName || null,
+    carrierCountry: carrierCountry || null,
+    fromCountry: fromCountry || null,
+    toCountry: toCountry || null,
+    errorSource,
+    errorSummary,
+  };
+}
+
 /**
  * Gère les échecs d'appel
  */
@@ -951,6 +1096,26 @@ async function handleCallFailed(
     console.log(`📞 [twilioWebhooks] Call failed for ${participantType}, reason: ${failureReason} - NOT calling handleCallFailure (handled by TwilioCallManager retry logic)`);
     // REMOVED: await twilioCallManager.handleCallFailure(sessionId, failureReason);
 
+    // ===== STOCKAGE DES DÉTAILS D'ERREUR TWILIO =====
+    // P0 FIX: Stocker les codes SIP et détails pour diagnostic admin
+    const twilioErrorDetails = extractTwilioErrorDetails(body);
+
+    // Stocker dans la collection call_errors pour suivi admin
+    try {
+      const db = admin.firestore();
+      await db.collection('call_errors').add({
+        sessionId,
+        participantType,
+        callSid: body.CallSid,
+        callStatus: body.CallStatus,
+        ...twilioErrorDetails,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      console.log(`📊 [${failedId}] Call error details saved to Firestore`);
+    } catch (saveError) {
+      console.error(`⚠️ [${failedId}] Failed to save call error details:`, saveError);
+    }
+
     await logCallRecord({
       callId: sessionId,
       status: `${participantType}_call_failed`,
@@ -958,7 +1123,8 @@ async function handleCallFailed(
       errorMessage: `Call failed: ${body.CallStatus}`,
       additionalData: {
         callSid: body.CallSid,
-        failureReason: body.CallStatus
+        failureReason: body.CallStatus,
+        ...twilioErrorDetails
       }
     });
 

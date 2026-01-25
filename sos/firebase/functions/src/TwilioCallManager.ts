@@ -2564,10 +2564,80 @@ export class TwilioCallManager {
       }
 
       // Re-fetch session after acquiring lock
-      const session = await this.getCallSession(sessionId);
+      let session = await this.getCallSession(sessionId);
       if (!session) return false;
 
       console.log(`📄 Session payment status: ${session.payment.status}`);
+
+      // ===== P0 FIX 2026-01-25: Sync payment status from Stripe before capture =====
+      // If payment.status is "requires_action" (3D Secure was required), verify with Stripe
+      // that the 3D Secure has been completed and the payment is ready to capture.
+      // This handles cases where the webhook payment_intent.amount_capturable_updated was missed.
+      if (session.payment.status === "requires_action" && session.payment.intentId) {
+        try {
+          console.log(`📄 [${captureId}] Payment status is requires_action - checking Stripe for actual status...`);
+
+          // Get payment doc to check if Direct Charges is used
+          const paymentDoc = await this.db.collection('payments').doc(session.payment.intentId).get();
+          const paymentData = paymentDoc.data();
+          const useDirectCharges = paymentData?.useDirectCharges === true;
+          const providerStripeAccountId = paymentData?.providerStripeAccountId;
+
+          const stripeStatus = await stripeManager.getPaymentIntentStatus(
+            session.payment.intentId,
+            useDirectCharges ? providerStripeAccountId : undefined
+          );
+
+          if (stripeStatus) {
+            console.log(`📄 [${captureId}] Stripe PaymentIntent status: ${stripeStatus.status}`);
+
+            if (stripeStatus.status === 'requires_capture') {
+              // 3D Secure was completed - update our payment status to authorized
+              console.log(`📄 [${captureId}] ✅ 3D Secure completed (webhook likely missed) - updating payment.status to authorized`);
+              await this.db.collection("call_sessions").doc(sessionId).update({
+                "payment.status": "authorized",
+                "payment.threeDSecureCompleted": true,
+                "payment.statusSyncedFromStripe": true,
+                "metadata.updatedAt": admin.firestore.Timestamp.now(),
+              });
+
+              // Re-fetch session with updated status
+              session = await this.getCallSession(sessionId);
+              if (!session) return false;
+
+              console.log(`📄 [${captureId}] Payment status updated to: ${session.payment.status}`);
+            } else if (stripeStatus.status === 'requires_action') {
+              // 3D Secure still pending - cannot capture yet
+              console.log(`📄 [${captureId}] ⚠️ 3D Secure still pending on Stripe - cannot capture yet`);
+              return false;
+            } else if (stripeStatus.status === 'succeeded') {
+              // Already captured (shouldn't happen but handle it)
+              console.log(`📄 [${captureId}] ⚠️ PaymentIntent already succeeded - updating local status`);
+              await this.db.collection("call_sessions").doc(sessionId).update({
+                "payment.status": "captured",
+                "metadata.updatedAt": admin.firestore.Timestamp.now(),
+              });
+              return true;
+            } else if (stripeStatus.status === 'canceled') {
+              console.log(`📄 [${captureId}] ⚠️ PaymentIntent was canceled - updating local status`);
+              await this.db.collection("call_sessions").doc(sessionId).update({
+                "payment.status": "cancelled",
+                "metadata.updatedAt": admin.firestore.Timestamp.now(),
+              });
+              return false;
+            }
+          }
+        } catch (stripeCheckError) {
+          console.error(`📄 [${captureId}] Error checking Stripe status (continuing with capture attempt):`, stripeCheckError);
+          // Continue with capture attempt - will fail gracefully if status is wrong
+        }
+      }
+
+      // Re-verify session is still valid after potential sync (TypeScript type guard)
+      if (!session) {
+        console.error(`📄 [${captureId}] Session became null after sync - aborting capture`);
+        return false;
+      }
 
       // Already captured (double-check after lock) - ensure invoices exist once
       if (session.payment.status === "captured") {

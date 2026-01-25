@@ -2584,6 +2584,8 @@
   "admin.menu.backups.description": "Backup and restoration",
   "admin.menu.balanceSheet": "Balance Sheet",
   "admin.menu.balanceSheet.description": "Assets, Liabilities, Equity",
+  "admin.menu.callErrors": "Call Errors",
+  "admin.menu.callErrors.description": "Failed calls diagnosis (Twilio)",
   "admin.menu.callPayments": "Call Payments",
   "admin.menu.callPayments.description": "Call session payments",
   "admin.menu.calls": "Calls & Sessions",

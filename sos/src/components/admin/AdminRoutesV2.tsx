@@ -140,6 +140,9 @@ const AdminCallsSessions = lazy(
 const AdminReceivedCalls = lazy(
   () => import("../../pages/admin/AdminReceivedCalls")
 );
+const AdminCallErrors = lazy(
+  () => import("../../pages/admin/AdminCallErrors")
+);
 
 // ===== LAZY IMPORTS - COMMUNICATIONS =====
 const AdminCommsCampaigns = lazy(
@@ -702,6 +705,14 @@ const AdminRoutesV2: React.FC = () => {
           </Suspense>
         }
       />
+      <Route
+        path="calls/errors"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminCallErrors />
+          </Suspense>
+        }
+      />
 
       {/* 💌 COMMUNICATIONS */}
       <Route
@@ -1228,6 +1239,8 @@ export const useAdminRouteValidation = () => {
       "/admin/finance/costs",
       "/admin/calls",
       "/admin/calls/sessions",
+      "/admin/calls/received",
+      "/admin/calls/errors",
       "/admin/comms/campaigns",
       "/admin/comms/automations",
       "/admin/comms/segments",

@@ -1750,6 +1750,46 @@ service cloud.firestore {
       allow read, write: if isAdmin() || isDev();
     }
 
+    // ================= CONVERSATIONS (IA TOOL) =================
+    // Historique des conversations IA entre clients et prestataires
+    match /conversations/{conversationId} {
+      // Lecture: client, provider concerné, ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.clientId == request.auth.uid ||
+                   resource.data.providerId == request.auth.uid ||
+                   isAdmin() || isDev());
+
+      // Création: utilisateur authentifié (client ou Cloud Functions)
+      allow create: if isAuthenticated();
+
+      // Mise à jour: participants ou admin
+      allow update: if isAuthenticated() &&
+                    (resource.data.clientId == request.auth.uid ||
+                     resource.data.providerId == request.auth.uid ||
+                     isAdmin() || isDev());
+
+      // Suppression: admin seulement
+      allow delete: if isAdmin() || isDev();
+
+      // Sous-collection messages
+      match /messages/{messageId} {
+        // Lecture: participants de la conversation parent
+        allow read: if isAuthenticated() &&
+                    (get(/databases/$(database)/documents/conversations/$(conversationId)).data.clientId == request.auth.uid ||
+                     get(/databases/$(database)/documents/conversations/$(conversationId)).data.providerId == request.auth.uid ||
+                     isAdmin() || isDev());
+
+        // Création: participants authentifiés
+        allow create: if isAuthenticated() &&
+                      (get(/databases/$(database)/documents/conversations/$(conversationId)).data.clientId == request.auth.uid ||
+                       get(/databases/$(database)/documents/conversations/$(conversationId)).data.providerId == request.auth.uid ||
+                       isAdmin() || isDev());
+
+        // Mise à jour/Suppression: admin seulement
+        allow update, delete: if isAdmin() || isDev();
+      }
+    }
+
     // ================= CATCH-ALL (deny by default) =================
     // SECURITE: Refuse TOUT acces non explicitement autorise
     // Le role 'dev' est desactive en production
