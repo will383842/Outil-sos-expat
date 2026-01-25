@@ -211,7 +211,7 @@ const SuccessPayment: React.FC = () => {
     callStatus === "failed" ? "failed" : "connecting"
   );
   const [timeRemaining, setTimeRemaining] = useState(0);
-  const [countdownToCall, setCountdownToCall] = useState(60); // 1 minute
+  const [countdownToCall, setCountdownToCall] = useState(300); // 5 minutes (affichage)
   const [paymentTimestamp, setPaymentTimestamp] = useState<number | null>(null);
   // P0 FIX: Track failure reason to display the correct message (client vs provider no_answer)
   const [failureReason, setFailureReason] = useState<string | null>(null);
@@ -408,15 +408,17 @@ const SuccessPayment: React.FC = () => {
     const updateCountdown = () => {
       const now = Date.now();
       const elapsedSeconds = Math.floor((now - paymentTimestamp) / 1000);
-      const totalCountdownSeconds = 240; // 5 min
+      const displayCountdownSeconds = 300; // 5 min (affichage du compte à rebours)
+      const callTriggerSeconds = 240; // 4 min (déclenchement de l'appel)
       const remainingSeconds = Math.max(
         0,
-        totalCountdownSeconds - elapsedSeconds
+        displayCountdownSeconds - elapsedSeconds
       );
 
       setCountdownToCall(remainingSeconds);
 
-      if (remainingSeconds === 0 && callState === "connecting") {
+      // Déclencher l'appel après 4 minutes (même si le compte à rebours affiche encore 1 min)
+      if (elapsedSeconds >= callTriggerSeconds && callState === "connecting") {
         setCallState("ready_to_ring");
       }
     };

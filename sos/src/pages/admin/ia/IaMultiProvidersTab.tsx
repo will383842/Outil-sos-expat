@@ -991,34 +991,81 @@ export const IaMultiProvidersTab: React.FC = () => {
   };
 
   // ============================================================================
-  // ORPHAN CLEANUP
+  // ORPHAN CLEANUP (Frontend-based - no Cloud Function needed)
   // ============================================================================
 
-  // 🆕 Check for orphaned providers (dry run)
+  // State for orphaned IDs details
+  const [orphanedDetails, setOrphanedDetails] = useState<{
+    accountName: string;
+    orphanedIds: string[];
+  }[]>([]);
+
+  // 🆕 Check for orphaned providers (directly from Firestore)
   const checkOrphans = async () => {
     setCleanupRunning(true);
     setError(null);
 
     try {
-      const getStats = httpsCallable<void, {
-        totalUsers: number;
-        usersWithOrphans: number;
-        totalOrphanedLinks: number;
-        orphanedActiveProviders: number;
-        staleBusySiblings: number;
-        orphanedProviderIds: string[];
-      }>(functions, 'adminGetOrphanedProvidersStats');
-
-      const result = await getStats();
-      const data = result.data;
-
-      setCleanupStats({
-        orphanedLinks: data.totalOrphanedLinks,
-        staleBusy: data.staleBusySiblings,
+      // Get all valid provider IDs from sos_profiles (cached in profilesMap)
+      const validProviderIds = new Set<string>();
+      profilesMap.forEach((profile, id) => {
+        if (profile.type === 'lawyer' || profile.type === 'expat') {
+          validProviderIds.add(id);
+        }
       });
 
-      if (data.totalOrphanedLinks > 0 || data.staleBusySiblings > 0) {
-        setSuccess(`Trouvé: ${data.totalOrphanedLinks} liens orphelins, ${data.staleBusySiblings} statuts busy obsolètes`);
+      console.log(`[checkOrphans] Found ${validProviderIds.size} valid providers in cache`);
+
+      // Check each multi-provider account
+      let totalOrphanedLinks = 0;
+      let staleBusySiblings = 0;
+      const details: { accountName: string; orphanedIds: string[] }[] = [];
+
+      for (const account of accounts) {
+        const orphanedIds: string[] = [];
+
+        // Check each linkedProviderId
+        for (const provider of account.providers) {
+          // If provider is in the list but doesn't have valid data, it might be orphaned
+          // Actually, providers in account.providers are already validated (they came from profilesMap)
+        }
+
+        // Check the raw linkedProviderIds from the user document
+        const userDoc = allUsers.find(u => u.id === account.userId);
+        if (userDoc) {
+          for (const pid of userDoc.linkedProviderIds) {
+            if (!validProviderIds.has(pid)) {
+              orphanedIds.push(pid);
+              totalOrphanedLinks++;
+            }
+          }
+        }
+
+        // Check for stale busy siblings
+        for (const provider of account.providers) {
+          if (provider.busySiblingProviderId && !validProviderIds.has(provider.busySiblingProviderId)) {
+            staleBusySiblings++;
+          }
+        }
+
+        if (orphanedIds.length > 0) {
+          details.push({
+            accountName: account.displayName,
+            orphanedIds
+          });
+        }
+      }
+
+      setCleanupStats({
+        orphanedLinks: totalOrphanedLinks,
+        staleBusy: staleBusySiblings,
+      });
+      setOrphanedDetails(details);
+
+      if (totalOrphanedLinks > 0 || staleBusySiblings > 0) {
+        setSuccess(`Trouvé: ${totalOrphanedLinks} liens orphelins, ${staleBusySiblings} statuts busy obsolètes`);
+        // Log details
+        console.log('[checkOrphans] Orphaned details:', details);
       } else {
         setSuccess('Aucun orphelin trouvé - Tout est propre!');
       }
@@ -1030,7 +1077,7 @@ export const IaMultiProvidersTab: React.FC = () => {
     }
   };
 
-  // 🆕 Run cleanup (actually remove orphans)
+  // 🆕 Run cleanup (directly update Firestore)
   const runCleanup = async () => {
     if (!confirm('Êtes-vous sûr de vouloir nettoyer les prestataires orphelins? Cette action est irréversible.')) {
       return;
@@ -1040,26 +1087,45 @@ export const IaMultiProvidersTab: React.FC = () => {
     setError(null);
 
     try {
-      const cleanup = httpsCallable<{ dryRun?: boolean }, {
-        success: boolean;
-        usersScanned: number;
-        usersFixed: number;
-        orphanedLinksRemoved: number;
-        staleBusyStatusCleared: number;
-        activeProviderReset: number;
-        errors: number;
-      }>(functions, 'adminCleanupOrphanedProviders');
+      // Get all valid provider IDs from sos_profiles
+      const validProviderIds = new Set<string>();
+      profilesMap.forEach((profile, id) => {
+        if (profile.type === 'lawyer' || profile.type === 'expat') {
+          validProviderIds.add(id);
+        }
+      });
 
-      const result = await cleanup({ dryRun: false });
-      const data = result.data;
+      let orphanedLinksRemoved = 0;
+      let usersFixed = 0;
 
-      if (data.success) {
-        setSuccess(`Nettoyage terminé: ${data.orphanedLinksRemoved} liens orphelins supprimés, ${data.staleBusyStatusCleared} statuts busy réinitialisés`);
+      // Process each account
+      for (const account of accounts) {
+        const userDoc = allUsers.find(u => u.id === account.userId);
+        if (!userDoc) continue;
+
+        const currentLinkedIds = userDoc.linkedProviderIds;
+        const validLinkedIds = currentLinkedIds.filter(id => validProviderIds.has(id));
+
+        if (validLinkedIds.length < currentLinkedIds.length) {
+          // Update the user document
+          await updateDoc(doc(db, 'users', account.userId), {
+            linkedProviderIds: validLinkedIds,
+            updatedAt: serverTimestamp()
+          });
+
+          orphanedLinksRemoved += (currentLinkedIds.length - validLinkedIds.length);
+          usersFixed++;
+        }
+      }
+
+      if (orphanedLinksRemoved > 0) {
+        setSuccess(`Nettoyage terminé: ${orphanedLinksRemoved} liens orphelins supprimés de ${usersFixed} compte(s)`);
         setCleanupStats(null);
+        setOrphanedDetails([]);
         // Reload data to reflect changes
         await loadData();
       } else {
-        setError(`Nettoyage partiel: ${data.errors} erreur(s) rencontrée(s)`);
+        setSuccess('Aucun orphelin à nettoyer');
       }
     } catch (err) {
       console.error('Error running cleanup:', err);
@@ -1233,6 +1299,38 @@ export const IaMultiProvidersTab: React.FC = () => {
         <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-lg">
           <Check className="w-4 h-4 flex-shrink-0" />
           <span className="text-sm">{success}</span>
+        </div>
+      )}
+
+      {/* Orphaned Details Display */}
+      {orphanedDetails.length > 0 && (
+        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
+          <h3 className="font-semibold text-amber-800 dark:text-amber-200 mb-3 flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5" />
+            IDs Orphelins Détectés
+          </h3>
+          <div className="space-y-3">
+            {orphanedDetails.map((detail, idx) => (
+              <div key={idx} className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-amber-200 dark:border-amber-700">
+                <p className="font-medium text-gray-900 dark:text-white mb-2">
+                  {detail.accountName}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {detail.orphanedIds.map((id, idIdx) => (
+                    <span
+                      key={idIdx}
+                      className="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded text-xs font-mono"
+                    >
+                      {id}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-sm text-amber-600 dark:text-amber-400">
+            Cliquez sur le bouton "Orphelins" pour nettoyer ces IDs invalides.
+          </p>
         </div>
       )}
 
