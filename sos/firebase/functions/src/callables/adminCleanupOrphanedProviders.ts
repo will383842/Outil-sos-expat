@@ -82,11 +82,22 @@ export const adminCleanupOrphanedProviders = onCall<{ dryRun?: boolean }, Promis
 
       result.usersScanned = usersSnapshot.size;
 
-      // Step 2: Get all existing provider IDs (for reference)
-      const providersSnapshot = await db.collection('providers').get();
-      const existingProviderIds = new Set(providersSnapshot.docs.map(doc => doc.id));
+      // Step 2: Get all existing provider IDs from sos_profiles (the actual provider collection)
+      // Note: We check sos_profiles because that's where provider data is stored and displayed
+      const sosProfilesSnapshot = await db.collection('sos_profiles').get();
+      const existingProviderIds = new Set(
+        sosProfilesSnapshot.docs
+          .filter(doc => {
+            const data = doc.data();
+            // Only count documents that are actual providers (lawyer or expat type)
+            return data.type === 'lawyer' || data.type === 'expat';
+          })
+          .map(doc => doc.id)
+      );
 
-      console.log(`📊 Found ${existingProviderIds.size} existing providers, scanning ${usersSnapshot.size} users`);
+      console.log(`📊 Found ${existingProviderIds.size} existing providers in sos_profiles`);
+
+      console.log(`📊 Scanning ${usersSnapshot.size} users for orphaned provider links`);
 
       // Step 3: Process each user
       for (const userDocSnap of usersSnapshot.docs) {
@@ -162,10 +173,10 @@ export const adminCleanupOrphanedProviders = onCall<{ dryRun?: boolean }, Promis
         }
       }
 
-      // Step 4: Also clean up providers collection for stale sibling references
-      console.log('🔍 Checking providers for stale sibling references...');
+      // Step 4: Also clean up sos_profiles for stale sibling references
+      console.log('🔍 Checking sos_profiles for stale sibling references...');
 
-      for (const providerDoc of providersSnapshot.docs) {
+      for (const providerDoc of sosProfilesSnapshot.docs) {
         const data = providerDoc.data();
         const busySiblingProviderId = data.busySiblingProviderId;
 
@@ -252,9 +263,19 @@ export const adminGetOrphanedProvidersStats = onCall<void, Promise<{
       throw new HttpsError('permission-denied', 'Admin access required');
     }
 
-    // Get all existing provider IDs
-    const providersSnapshot = await db.collection('providers').get();
-    const existingProviderIds = new Set(providersSnapshot.docs.map(doc => doc.id));
+    // Get all existing provider IDs from sos_profiles (the actual provider collection)
+    const sosProfilesSnapshot = await db.collection('sos_profiles').get();
+    const existingProviderIds = new Set(
+      sosProfilesSnapshot.docs
+        .filter(doc => {
+          const data = doc.data();
+          // Only count documents that are actual providers (lawyer or expat type)
+          return data.type === 'lawyer' || data.type === 'expat';
+        })
+        .map(doc => doc.id)
+    );
+
+    console.log(`📊 Found ${existingProviderIds.size} existing providers in sos_profiles`);
 
     // Scan users
     const usersSnapshot = await db

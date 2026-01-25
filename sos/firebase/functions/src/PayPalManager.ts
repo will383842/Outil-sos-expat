@@ -349,14 +349,22 @@ export class PayPalManager {
   private async getAccessToken(): Promise<string> {
     // Vérifier si le token est encore valide
     if (this.accessToken && Date.now() < this.tokenExpiry) {
+      console.log(`🔑 [PAYPAL_DEBUG] Using cached token (expires in ${Math.round((this.tokenExpiry - Date.now()) / 1000)}s)`);
       return this.accessToken;
     }
 
-    console.log("🔑 [PAYPAL] Getting new access token");
+    console.log(`🔑 [PAYPAL_DEBUG] Getting new access token from ${PAYPAL_CONFIG.BASE_URL}...`);
 
     // P0 FIX: Use centralized getters for secrets
     const clientId = getPayPalClientId();
     const clientSecret = getPayPalClientSecret();
+
+    console.log(`🔑 [PAYPAL_DEBUG] Client ID length: ${clientId?.length || 0}, Secret length: ${clientSecret?.length || 0}`);
+
+    if (!clientId || !clientSecret) {
+      console.error(`❌ [PAYPAL_DEBUG] CREDENTIALS MISSING! clientId=${!!clientId}, secret=${!!clientSecret}`);
+      throw new Error("PayPal credentials are not configured");
+    }
 
     const auth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
 
@@ -371,9 +379,10 @@ export class PayPalManager {
 
     if (!response.ok) {
       const error = await response.text();
-      console.error("❌ [PAYPAL] Token error:", error);
+      console.error(`❌ [PAYPAL_DEBUG] Token request failed! Status: ${response.status}, Error: ${error}`);
       throw new Error(`PayPal authentication failed: ${error}`);
     }
+    console.log(`✅ [PAYPAL_DEBUG] Token obtained successfully`);
 
     const data = await response.json() as PayPalToken;
     this.accessToken = data.access_token;
@@ -639,10 +648,13 @@ export class PayPalManager {
     approvalUrl: string;
     status: string;
   }> {
-    console.log("📦 [PAYPAL] Creating SIMPLE order (Payouts flow) for session:", data.callSessionId);
-    console.log(`📦 [PAYPAL] Total: ${data.amount} ${data.currency} | Platform keeps: ${data.platformFee} | Provider will receive via Payout: ${data.providerAmount}`);
+    console.log(`🔶 [PAYPAL_DEBUG] createSimpleOrder START`);
+    console.log(`🔶 [PAYPAL_DEBUG] Session: ${data.callSessionId}`);
+    console.log(`🔶 [PAYPAL_DEBUG] Amount: ${data.amount} ${data.currency}`);
+    console.log(`🔶 [PAYPAL_DEBUG] Provider: ${data.providerId}, Email: ${data.providerPayPalEmail || 'UNDEFINED'}`);
 
     const totalAmount = data.amount.toFixed(2);
+    console.log(`🔶 [PAYPAL_DEBUG] Formatted amount: ${totalAmount}`);
 
     // Ordre simple: l'argent va à SOS-Expat, pas de split automatique
     const orderData = {
@@ -668,19 +680,24 @@ export class PayPalManager {
       },
     };
 
+    console.log(`🔶 [PAYPAL_DEBUG] Calling PayPal API to create order...`);
     const response = await this.apiRequest<PayPalOrder>(
       "POST",
       "/v2/checkout/orders",
       orderData
     );
+    console.log(`🔶 [PAYPAL_DEBUG] PayPal API response - orderId: ${response.id}, status: ${response.status}`);
 
     const approvalUrl = response.links?.find((l: any) => l.rel === "approve")?.href;
+    console.log(`🔶 [PAYPAL_DEBUG] Approval URL: ${approvalUrl ? 'FOUND' : 'NOT FOUND'}`);
 
     if (!approvalUrl) {
+      console.error(`❌ [PAYPAL_DEBUG] No approval URL in response! Links: ${JSON.stringify(response.links)}`);
       throw new Error("No approval URL in PayPal response");
     }
 
     // Sauvegarder l'ordre avec le flag "simpleFlow" pour déclencher le payout après capture
+    console.log(`🔶 [PAYPAL_DEBUG] Saving order to Firestore...`);
     await this.db.collection("paypal_orders").doc(response.id).set({
       orderId: response.id,
       callSessionId: data.callSessionId,
@@ -697,8 +714,10 @@ export class PayPalManager {
       payoutStatus: "pending", // En attente du payout
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
+    console.log(`🔶 [PAYPAL_DEBUG] paypal_orders document saved for ${response.id}`);
 
     // P0 FIX: Créer ou mettre à jour la session d'appel (utiliser set avec merge au lieu de update)
+    console.log(`🔶 [PAYPAL_DEBUG] Saving call_sessions for ${data.callSessionId}...`);
     await this.db.collection("call_sessions").doc(data.callSessionId).set({
       id: data.callSessionId,
       status: "pending",
@@ -733,8 +752,9 @@ export class PayPalManager {
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     }, { merge: true });
+    console.log(`🔶 [PAYPAL_DEBUG] call_sessions document saved`);
 
-    console.log("✅ [PAYPAL] Simple order created:", response.id);
+    console.log(`✅ [PAYPAL_DEBUG] createSimpleOrder COMPLETE - orderId: ${response.id}`);
 
     return {
       orderId: response.id,
@@ -1994,63 +2014,69 @@ export const createPayPalOrderHttp = onRequest(
     }
 
     try {
-      // Import du pricing service pour calculer les frais côté serveur
+      // ========== STEP 1: Import pricing service ==========
+      console.log(`🔷 [PAYPAL_DEBUG] STEP 1: Importing pricing service...`);
       const { getServiceAmounts } = await import("./services/pricingService");
+      console.log(`✅ [PAYPAL_DEBUG] STEP 1: OK - Pricing service imported`);
 
-      // Vérifier les données du provider
+      // ========== STEP 2: Fetch provider data ==========
+      console.log(`🔷 [PAYPAL_DEBUG] STEP 2: Fetching provider ${providerId}...`);
       const db = admin.firestore();
       const providerDoc = await db.collection("users").doc(providerId).get();
       const providerData = providerDoc.data();
+      console.log(`✅ [PAYPAL_DEBUG] STEP 2: OK - Provider exists=${providerDoc.exists}, hasData=${!!providerData}`);
 
       if (!providerData) {
+        console.error(`❌ [PAYPAL_DEBUG] STEP 2 FAILED: Provider ${providerId} not found in Firestore`);
         res.status(404).json({ error: "Provider not found" });
         return;
       }
 
-      // Déterminer le flux à utiliser
+      // ========== STEP 3: Check PayPal config ==========
       const hasMerchantId = !!providerData.paypalMerchantId;
       const hasPayPalEmail = !!providerData.paypalEmail;
+      console.log(`🔷 [PAYPAL_DEBUG] STEP 3: Provider PayPal config - merchantId=${hasMerchantId}, email=${hasPayPalEmail ? providerData.paypalEmail : 'NONE'}`);
 
-      // Note: On permet le paiement même sans email PayPal du prestataire
-      // L'argent ira sur le compte SOS-Expat et le payout sera fait plus tard
-      // quand le prestataire aura configuré son email
       if (!hasMerchantId && !hasPayPalEmail) {
-        console.log(`[PAYPAL] Provider ${providerId} has no PayPal config yet - payment will go to platform, payout pending`);
+        console.log(`⚠️ [PAYPAL_DEBUG] Provider ${providerId} has no PayPal config - payment will go to platform`);
       }
 
-      // ===== P0 SECURITY FIX: Calculer les frais côté serveur =====
+      // ========== STEP 4: Get server pricing ==========
       const normalizedCurrency = (currency || "EUR").toLowerCase() as "eur" | "usd";
       const normalizedServiceType = (serviceType || providerData.type || "expat") as "lawyer" | "expat";
+      console.log(`🔷 [PAYPAL_DEBUG] STEP 4: Getting pricing for ${normalizedServiceType}/${normalizedCurrency}...`);
 
-      // Récupérer la configuration de prix du serveur
       const serverPricing = await getServiceAmounts(normalizedServiceType, normalizedCurrency);
+      console.log(`✅ [PAYPAL_DEBUG] STEP 4: OK - Server pricing: total=${serverPricing.totalAmount}, provider=${serverPricing.providerAmount}, fee=${serverPricing.connectionFeeAmount}`);
 
-      // Valider que le montant correspond à la configuration serveur
+      // ========== STEP 5: Validate amount ==========
       const clientAmount = typeof amount === "number" ? amount : parseFloat(amount);
+      console.log(`🔷 [PAYPAL_DEBUG] STEP 5: Validating amount - client=${clientAmount}, server=${serverPricing.totalAmount}`);
 
       if (Math.abs(clientAmount - serverPricing.totalAmount) > 0.01) {
-        console.error(`[PAYPAL] Amount mismatch: client=${clientAmount}, server=${serverPricing.totalAmount}`);
+        console.error(`❌ [PAYPAL_DEBUG] STEP 5 FAILED: Amount mismatch! client=${clientAmount}, server=${serverPricing.totalAmount}`);
         res.status(400).json({
           error: `Invalid amount. Expected ${serverPricing.totalAmount} ${normalizedCurrency.toUpperCase()}`,
           code: "INVALID_AMOUNT"
         });
         return;
       }
+      console.log(`✅ [PAYPAL_DEBUG] STEP 5: OK - Amount validated`);
 
       // Utiliser les valeurs calculées par le serveur
       const serverProviderAmount = serverPricing.providerAmount;
       const serverConnectionFee = serverPricing.connectionFeeAmount;
 
-      console.log(`[PAYPAL HTTP] Server-calculated: total=${serverPricing.totalAmount}, ` +
-        `provider=${serverProviderAmount}, frais mise en relation=${serverConnectionFee}`);
-      console.log(`[PAYPAL HTTP] Flow: ${hasMerchantId ? "DIRECT (split)" : "SIMPLE (payout)"}`);
+      // ========== STEP 6: Create PayPal order ==========
+      console.log(`🔷 [PAYPAL_DEBUG] STEP 6: Creating PayPal order - flow=${hasMerchantId ? "DIRECT" : "SIMPLE"}`);
+      console.log(`🔷 [PAYPAL_DEBUG] STEP 6: Order params - total=${serverPricing.totalAmount}, provider=${serverProviderAmount}, fee=${serverConnectionFee}`);
 
       const manager = new PayPalManager();
       let result;
 
       if (hasMerchantId) {
         // ===== FLUX DIRECT: Split automatique via PayPal Commerce Platform =====
-        console.log(`[PAYPAL HTTP] Using DIRECT flow with merchantId: ${providerData.paypalMerchantId}`);
+        console.log(`🔷 [PAYPAL_DEBUG] STEP 6a: Using DIRECT flow with merchantId: ${providerData.paypalMerchantId}`);
 
         result = await manager.createOrder({
           callSessionId,
@@ -2064,9 +2090,10 @@ export const createPayPalOrderHttp = onRequest(
           description: description || "SOS Expat - Consultation",
           trackingMetadata: trackingMetadata as Record<string, string> | undefined,
         });
+        console.log(`✅ [PAYPAL_DEBUG] STEP 6a: OK - DIRECT order created, orderId=${result?.orderId}`);
       } else {
         // ===== FLUX SIMPLE: Payout après capture =====
-        console.log(`[PAYPAL HTTP] Using SIMPLE flow with email: ${providerData.paypalEmail}`);
+        console.log(`🔷 [PAYPAL_DEBUG] STEP 6b: Using SIMPLE flow with email: ${providerData.paypalEmail || 'UNDEFINED'}`);
 
         result = await manager.createSimpleOrder({
           callSessionId,
@@ -2080,6 +2107,7 @@ export const createPayPalOrderHttp = onRequest(
           description: description || "SOS Expat - Consultation",
           trackingMetadata: trackingMetadata as Record<string, string> | undefined,
         });
+        console.log(`✅ [PAYPAL_DEBUG] STEP 6b: OK - SIMPLE order created, orderId=${result?.orderId}`);
       }
 
       prodLogger.info('PAYPAL_ORDER_HTTP_SUCCESS', `[${requestId}] PayPal order created successfully (HTTP)`, {
@@ -2100,6 +2128,17 @@ export const createPayPalOrderHttp = onRequest(
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       const errorStack = error instanceof Error ? error.stack : undefined;
+      const errorName = error instanceof Error ? error.name : 'Unknown';
+
+      // ========== ERROR LOGGING ==========
+      console.error(`❌ [PAYPAL_DEBUG] ============ ERROR ============`);
+      console.error(`❌ [PAYPAL_DEBUG] Request ID: ${requestId}`);
+      console.error(`❌ [PAYPAL_DEBUG] Call Session: ${callSessionId}`);
+      console.error(`❌ [PAYPAL_DEBUG] Provider ID: ${providerId}`);
+      console.error(`❌ [PAYPAL_DEBUG] Error Name: ${errorName}`);
+      console.error(`❌ [PAYPAL_DEBUG] Error Message: ${errorMessage}`);
+      console.error(`❌ [PAYPAL_DEBUG] Error Stack: ${errorStack}`);
+      console.error(`❌ [PAYPAL_DEBUG] ==============================`);
 
       prodLogger.error('PAYPAL_ORDER_HTTP_ERROR', `[${requestId}] PayPal order creation failed (HTTP)`, {
         requestId,
@@ -2107,14 +2146,6 @@ export const createPayPalOrderHttp = onRequest(
         providerId,
         error: errorMessage,
         errorStack,
-      });
-
-      console.error("🔴 [PAYPAL ORDER HTTP ERROR]", {
-        requestId,
-        callSessionId,
-        providerId,
-        errorMessage,
-        errorStack: errorStack?.substring(0, 500), // Tronquer pour les logs
       });
 
       res.status(500).json({ error: "Failed to create order" });
