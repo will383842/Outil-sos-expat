@@ -322,8 +322,9 @@ export default function StripeKYC({ onComplete, userType }: Props) {
         email: user.email,
         currentCountry: user.currentCountry || user.country || "FR",
         userType: userType,
-        firstName: user.firstName || "",
-        lastName: user.lastName || "",
+        firstName: user.firstName || undefined,
+        lastName: user.lastName || undefined,
+        phone: user.phone || user.phoneNumber || undefined,
       });
 
       const data = result.data as { success: boolean; accountId: string };
@@ -540,8 +541,9 @@ export default function StripeKYC({ onComplete, userType }: Props) {
               email: user.email,
               currentCountry: user.currentCountry || user.country || "FR",
               userType: userType,
-              firstName: user.firstName || "",
-              lastName: user.lastName || "",
+              firstName: user.firstName || undefined,
+              lastName: user.lastName || undefined,
+              phone: user.phone || user.phoneNumber || undefined,
             });
             const createData = createResult.data as { success: boolean; accountId: string };
 

@@ -32,6 +32,7 @@ interface CreateAccountData {
   currentCountry: string;
   firstName?: string;
   lastName?: string;
+  phone?: string;
   userType: "lawyer" | "expat";
 }
 
@@ -82,7 +83,7 @@ export const createStripeAccount = onCall<CreateAccountData>(
     }
 
     const userId = request.auth.uid;
-    const { email, currentCountry, userType, firstName, lastName } = request.data;
+    const { email, currentCountry, userType, firstName, lastName, phone } = request.data;
     const stripeInstance = createStripeInstance();
 
     if (!stripeInstance) {
@@ -132,6 +133,10 @@ export const createStripeAccount = onCall<CreateAccountData>(
           email: email,
           ...(firstName && { first_name: firstName }),
           ...(lastName && { last_name: lastName }),
+          ...(phone && { phone: phone }),
+          address: {
+            country: countryCode,
+          },
         },
       });
 

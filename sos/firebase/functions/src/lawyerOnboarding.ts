@@ -3,6 +3,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { getStripe } from "./index";
 import { trackCAPILead, UserData } from "./metaConversionsApi";
+import { STRIPE_API_SECRETS } from "./lib/secrets";
 
 // Secret for Meta CAPI - used in secrets array below
 const META_CAPI_TOKEN = defineSecret("META_CAPI_TOKEN");
@@ -31,7 +32,7 @@ interface LawyerOnboardingData {
 
 export const completeLawyerOnboarding = onCall<LawyerOnboardingData>(
   {
-    secrets: [META_CAPI_TOKEN],
+    secrets: [META_CAPI_TOKEN, ...STRIPE_API_SECRETS],
   },
   async (request) => {
     if (!request.auth) {
