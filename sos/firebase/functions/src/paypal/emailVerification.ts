@@ -186,10 +186,230 @@ async function sendVerificationEmail(
         </div>
       `,
     },
+    pt: {
+      subject: "Código de verificação SOS Expat - " + code,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <img src="https://sos-expat.com/logo.png" alt="SOS Expat" style="height: 50px;" />
+          </div>
+
+          <h2 style="color: #003087; text-align: center;">Verifique seu endereço PayPal</h2>
+
+          <p>Olá,</p>
+
+          <p>Você solicitou configurar sua conta PayPal no SOS Expat. Aqui está seu código de verificação:</p>
+
+          <div style="background: #f5f5f5; border-radius: 8px; padding: 20px; text-align: center; margin: 30px 0;">
+            <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #003087;">${code}</span>
+          </div>
+
+          <p style="color: #666; font-size: 14px;">
+            Este código é válido por <strong>10 minutos</strong>.
+          </p>
+
+          <p style="color: #666; font-size: 14px;">
+            Se você não solicitou isso, pode ignorar este email.
+          </p>
+
+          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
+
+          <p style="color: #999; font-size: 12px; text-align: center;">
+            © ${new Date().getFullYear()} SOS Expat - Todos os direitos reservados
+          </p>
+        </div>
+      `,
+    },
+    de: {
+      subject: "SOS Expat Verifizierungscode - " + code,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <img src="https://sos-expat.com/logo.png" alt="SOS Expat" style="height: 50px;" />
+          </div>
+
+          <h2 style="color: #003087; text-align: center;">PayPal-Adresse verifizieren</h2>
+
+          <p>Hallo,</p>
+
+          <p>Sie haben beantragt, Ihr PayPal-Konto bei SOS Expat zu konfigurieren. Hier ist Ihr Verifizierungscode:</p>
+
+          <div style="background: #f5f5f5; border-radius: 8px; padding: 20px; text-align: center; margin: 30px 0;">
+            <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #003087;">${code}</span>
+          </div>
+
+          <p style="color: #666; font-size: 14px;">
+            Dieser Code ist <strong>10 Minuten</strong> gültig.
+          </p>
+
+          <p style="color: #666; font-size: 14px;">
+            Wenn Sie dies nicht angefordert haben, können Sie diese E-Mail ignorieren.
+          </p>
+
+          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
+
+          <p style="color: #999; font-size: 12px; text-align: center;">
+            © ${new Date().getFullYear()} SOS Expat - Alle Rechte vorbehalten
+          </p>
+        </div>
+      `,
+    },
+    ru: {
+      subject: "Код подтверждения SOS Expat - " + code,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <img src="https://sos-expat.com/logo.png" alt="SOS Expat" style="height: 50px;" />
+          </div>
+
+          <h2 style="color: #003087; text-align: center;">Подтвердите ваш адрес PayPal</h2>
+
+          <p>Здравствуйте,</p>
+
+          <p>Вы запросили настройку учётной записи PayPal в SOS Expat. Вот ваш код подтверждения:</p>
+
+          <div style="background: #f5f5f5; border-radius: 8px; padding: 20px; text-align: center; margin: 30px 0;">
+            <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #003087;">${code}</span>
+          </div>
+
+          <p style="color: #666; font-size: 14px;">
+            Этот код действителен в течение <strong>10 минут</strong>.
+          </p>
+
+          <p style="color: #666; font-size: 14px;">
+            Если вы не делали этот запрос, просто проигнорируйте это письмо.
+          </p>
+
+          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
+
+          <p style="color: #999; font-size: 12px; text-align: center;">
+            © ${new Date().getFullYear()} SOS Expat - Все права защищены
+          </p>
+        </div>
+      `,
+    },
+    ar: {
+      subject: "رمز التحقق SOS Expat - " + code,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; direction: rtl;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <img src="https://sos-expat.com/logo.png" alt="SOS Expat" style="height: 50px;" />
+          </div>
+
+          <h2 style="color: #003087; text-align: center;">تحقق من عنوان PayPal الخاص بك</h2>
+
+          <p>مرحباً،</p>
+
+          <p>لقد طلبت تكوين حساب PayPal الخاص بك على SOS Expat. إليك رمز التحقق الخاص بك:</p>
+
+          <div style="background: #f5f5f5; border-radius: 8px; padding: 20px; text-align: center; margin: 30px 0;">
+            <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #003087;">${code}</span>
+          </div>
+
+          <p style="color: #666; font-size: 14px;">
+            هذا الرمز صالح لمدة <strong>10 دقائق</strong>.
+          </p>
+
+          <p style="color: #666; font-size: 14px;">
+            إذا لم تطلب هذا، يمكنك تجاهل هذا البريد الإلكتروني.
+          </p>
+
+          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
+
+          <p style="color: #999; font-size: 12px; text-align: center;">
+            © ${new Date().getFullYear()} SOS Expat - جميع الحقوق محفوظة
+          </p>
+        </div>
+      `,
+    },
+    hi: {
+      subject: "SOS Expat सत्यापन कोड - " + code,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <img src="https://sos-expat.com/logo.png" alt="SOS Expat" style="height: 50px;" />
+          </div>
+
+          <h2 style="color: #003087; text-align: center;">अपना PayPal पता सत्यापित करें</h2>
+
+          <p>नमस्ते,</p>
+
+          <p>आपने SOS Expat पर अपना PayPal खाता कॉन्फ़िगर करने का अनुरोध किया है। यहां आपका सत्यापन कोड है:</p>
+
+          <div style="background: #f5f5f5; border-radius: 8px; padding: 20px; text-align: center; margin: 30px 0;">
+            <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #003087;">${code}</span>
+          </div>
+
+          <p style="color: #666; font-size: 14px;">
+            यह कोड <strong>10 मिनट</strong> के लिए वैध है।
+          </p>
+
+          <p style="color: #666; font-size: 14px;">
+            अगर आपने यह अनुरोध नहीं किया है, तो आप इस ईमेल को अनदेखा कर सकते हैं।
+          </p>
+
+          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
+
+          <p style="color: #999; font-size: 12px; text-align: center;">
+            © ${new Date().getFullYear()} SOS Expat - सर्वाधिकार सुरक्षित
+          </p>
+        </div>
+      `,
+    },
+    ch: {
+      subject: "SOS Expat 验证码 - " + code,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <img src="https://sos-expat.com/logo.png" alt="SOS Expat" style="height: 50px;" />
+          </div>
+
+          <h2 style="color: #003087; text-align: center;">验证您的 PayPal 地址</h2>
+
+          <p>您好，</p>
+
+          <p>您请求在 SOS Expat 上配置您的 PayPal 账户。以下是您的验证码：</p>
+
+          <div style="background: #f5f5f5; border-radius: 8px; padding: 20px; text-align: center; margin: 30px 0;">
+            <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #003087;">${code}</span>
+          </div>
+
+          <p style="color: #666; font-size: 14px;">
+            此验证码有效期为 <strong>10 分钟</strong>。
+          </p>
+
+          <p style="color: #666; font-size: 14px;">
+            如果您没有发起此请求，可以忽略此邮件。
+          </p>
+
+          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
+
+          <p style="color: #999; font-size: 12px; text-align: center;">
+            © ${new Date().getFullYear()} SOS Expat - 版权所有
+          </p>
+        </div>
+      `,
+    },
   };
 
-  // Utiliser le template de la langue demandée, ou français par défaut
-  const template = templates[locale] || templates["fr"];
+  // Normalize locale to supported language
+  const normalizeLocale = (loc: string): string => {
+    const normalized = loc.toLowerCase();
+    if (normalized.startsWith("fr")) return "fr";
+    if (normalized.startsWith("es")) return "es";
+    if (normalized.startsWith("pt")) return "pt";
+    if (normalized.startsWith("de")) return "de";
+    if (normalized.startsWith("ru")) return "ru";
+    if (normalized.startsWith("ar")) return "ar";
+    if (normalized.startsWith("hi")) return "hi";
+    if (normalized.startsWith("zh") || normalized.startsWith("ch")) return "ch";
+    if (normalized.startsWith("en")) return "en";
+    return "en"; // Default to English
+  };
+
+  // Utiliser le template de la langue demandée, ou anglais par défaut
+  const normalizedLocale = normalizeLocale(locale);
+  const template = templates[normalizedLocale] || templates["en"];
 
   await transporter.sendMail({
     from: `"SOS Expat" <${EMAIL_USER.value().trim()}>`,

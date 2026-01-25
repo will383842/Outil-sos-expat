@@ -86,7 +86,8 @@ export interface EmailLogEntry {
   sentAt?: FirebaseFirestore.Timestamp;
 }
 
-type Lang = 'fr-FR' | 'en';
+// Supported languages (9 languages total)
+type Lang = 'fr' | 'en' | 'es' | 'pt' | 'de' | 'ru' | 'ar' | 'hi' | 'ch';
 
 // ============================================================================
 // LAZY INITIALIZATION
@@ -99,12 +100,34 @@ const getDb = () => admin.firestore();
 // ============================================================================
 
 /**
- * Resout la langue preferee du provider
+ * Resout la langue preferee du provider parmi les 9 langues supportees
+ * Fallback vers 'en' (anglais) si la langue n'est pas supportee
  */
 function resolveLang(input?: string): Lang {
   if (!input) return 'en';
-  const s = String(input).toLowerCase();
-  return s.startsWith('fr') ? 'fr-FR' : 'en';
+  const s = String(input).toLowerCase().trim();
+
+  // French
+  if (s.startsWith('fr')) return 'fr';
+  // Spanish
+  if (s.startsWith('es')) return 'es';
+  // Portuguese
+  if (s.startsWith('pt')) return 'pt';
+  // German
+  if (s.startsWith('de')) return 'de';
+  // Russian
+  if (s.startsWith('ru')) return 'ru';
+  // Arabic
+  if (s.startsWith('ar')) return 'ar';
+  // Hindi
+  if (s.startsWith('hi')) return 'hi';
+  // Chinese (ch or zh)
+  if (s.startsWith('zh') || s.startsWith('ch')) return 'ch';
+  // English (default)
+  if (s.startsWith('en')) return 'en';
+
+  // Default fallback
+  return 'en';
 }
 
 /**
