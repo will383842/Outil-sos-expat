@@ -443,12 +443,14 @@ const Dashboard: React.FC = () => {
     const aiAssistantSlug = getTranslatedRouteSlug('dashboard-ai-assistant' as RouteKey, langCode);
     const subscriptionSlug = getTranslatedRouteSlug('dashboard-subscription' as RouteKey, langCode);
     const subscriptionPlansSlug = getTranslatedRouteSlug('dashboard-subscription-plans' as RouteKey, langCode);
+    const kycSlug = getTranslatedRouteSlug('dashboard-kyc' as RouteKey, langCode);
 
     return {
       dashboard: `/${dashboardSlug}`,
       aiAssistant: `/${aiAssistantSlug}`,
       subscription: `/${subscriptionSlug}`,
       subscriptionPlans: `/${subscriptionPlansSlug}`,
+      kyc: `/${kycSlug}`,
     };
   }, [langCode]);
 
@@ -1667,7 +1669,7 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                     </div>
                   </div>
                   <button
-                    onClick={() => navigate("/dashboard/kyc")}
+                    onClick={() => navigate(translatedRoutes.kyc)}
                     className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-xl hover:from-orange-600 hover:to-red-600 transition-all shadow-lg hover:shadow-xl whitespace-nowrap"
                   >
                     <FormattedMessage

@@ -3,7 +3,7 @@
  * Composant d'affichage des revenus pour le dashboard provider
  */
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "@/config/firebase";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -22,6 +22,8 @@ import {
   ExternalLink
 } from "lucide-react";
 import { LocaleLink } from "@/multilingual-system/components/LocaleLink";
+import { getTranslatedRouteSlug, type RouteKey } from "@/multilingual-system/core/routing/localeRoutes";
+import { useApp } from "@/contexts/AppContext";
 
 interface EarningsSummary {
   totalEarnings: number;
@@ -62,10 +64,18 @@ interface ProviderEarningsProps {
 
 export default function ProviderEarnings({ className = "", compact = false }: ProviderEarningsProps) {
   const intl = useIntl();
+  const { language } = useApp();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [summary, setSummary] = useState<EarningsSummary | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+
+  // Get translated KYC route
+  const kycRoute = useMemo(() => {
+    const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
+    const kycSlug = getTranslatedRouteSlug('dashboard-kyc' as RouteKey, langCode);
+    return `/${kycSlug}`;
+  }, [language]);
 
   const loadEarnings = async () => {
     setLoading(true);
@@ -185,7 +195,7 @@ export default function ProviderEarnings({ className = "", compact = false }: Pr
                   />
                 </p>
                 <LocaleLink
-                  to="/dashboard/kyc"
+                  to={kycRoute}
                   className="inline-flex items-center gap-1.5 mt-3 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition-colors"
                 >
                   <FormattedMessage
