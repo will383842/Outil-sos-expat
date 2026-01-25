@@ -384,18 +384,25 @@ const Providers: React.FC = () => {
         "@type": "ListItem",
         "position": index + 1,
         "item": {
-          "@type": "Person",
+          // Use ProfessionalService instead of Person to support aggregateRating
+          // Google only allows aggregateRating on: Organization, LocalBusiness, Product, Service, etc.
+          "@type": provider.type === 'lawyer' ? "LegalService" : "ProfessionalService",
           "name": provider.name,
-          "jobTitle": provider.type === 'lawyer' ? t.lawyer : t.expat,
-          "address": {
-            "@type": "PostalAddress",
-            "addressCountry": provider.country
+          "description": provider.type === 'lawyer' ? t.lawyer : t.expat,
+          "areaServed": {
+            "@type": "Country",
+            "name": provider.country
           },
-          "aggregateRating": {
-            "@type": "AggregateRating",
-            "ratingValue": provider.rating,
-            "reviewCount": provider.reviewCount
-          }
+          // Only include aggregateRating if there are reviews
+          ...(provider.reviewCount > 0 && {
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": provider.rating,
+              "reviewCount": provider.reviewCount,
+              "bestRating": 5,
+              "worstRating": 1
+            }
+          })
         }
       }))
     }

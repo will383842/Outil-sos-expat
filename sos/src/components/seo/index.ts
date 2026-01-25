@@ -34,6 +34,18 @@ export type { ServiceSchemaProps, ServiceOffer } from './ServiceSchema';
 export { default as FAQPageSchema, generateFAQPageSchema } from './FAQPageSchema';
 export type { FAQPageSchemaProps, FAQItem } from './FAQPageSchema';
 
+// Provider schema utilities (centralized to avoid aggregateRating errors)
+export {
+  generateProviderItemSchema,
+  generateProviderListItemSchema,
+  generateProvidersListSchema,
+  getProviderSchemaType,
+  supportsAggregateRating,
+  AGGREGATE_RATING_VALID_TYPES,
+  AGGREGATE_RATING_INVALID_TYPES,
+} from './ProviderSchemaUtils';
+export type { ProviderForSchema, ProviderSchemaOptions } from './ProviderSchemaUtils';
+
 // Re-export SEOHead from layout for convenience
 export { default as SEOHead } from '../layout/SEOHead';
 

@@ -2020,9 +2020,12 @@ const ProviderProfile: React.FC = () => {
       ? intl.formatMessage({ id: "providerProfile.attorney" })
       : intl.formatMessage({ id: "providerProfile.consultant" });
     
+    // Use LegalService/ProfessionalService as primary type to support aggregateRating
+    // Google only allows aggregateRating on: Organization, LocalBusiness, Product, Service, etc.
+    // Person/Attorney types do NOT support aggregateRating
     const data: Record<string, unknown> = {
       "@context": "https://schema.org",
-      "@type": isLawyer ? "Attorney" : "Person",
+      "@type": isLawyer ? "LegalService" : "ProfessionalService",
       "@id": `${window.location.origin}${window.location.pathname}`,
       name: displayName,
       image: {
@@ -2037,17 +2040,32 @@ const ProviderProfile: React.FC = () => {
         addressCountry: getCountryName(provider.country, preferredLangKey),
         ...(provider.city && { addressLocality: provider.city })
       },
-      jobTitle: roleLabel,
-      worksFor: {
-        "@type": "Organization",
-        name: "SOS Expat & Travelers",
-        url: window.location.origin,
-        logo: `${window.location.origin}/logo.png`,
+      // Provider information as Person nested inside the Service
+      provider: {
+        "@type": "Person",
+        name: displayName,
+        jobTitle: roleLabel,
+        image: mainPhoto,
+        worksFor: {
+          "@type": "Organization",
+          name: "SOS Expat & Travelers",
+          url: window.location.origin,
+          logo: `${window.location.origin}/logo.png`,
+        },
+        knowsLanguage: languagesList.map((lang) => ({
+          "@type": "Language",
+          name: lang,
+        })),
+        ...(provider.yearsOfExperience && {
+          hasOccupation: {
+            "@type": "Occupation",
+            name: roleLabel,
+            experienceRequirements: `${provider.yearsOfExperience} ${yearsLabel}`,
+          }
+        }),
       },
-      knowsLanguage: languagesList.map((lang) => ({
-        "@type": "Language",
-        name: lang,
-      })),
+      availableLanguage: languagesList,
+      // aggregateRating is valid on LegalService/ProfessionalService
       ...(providerStats.realReviewsCount > 0 && {
         aggregateRating: {
           "@type": "AggregateRating",
@@ -2057,14 +2075,6 @@ const ProviderProfile: React.FC = () => {
           worstRating: 1,
         }
       }),
-      ...(provider.yearsOfExperience && {
-        hasOccupation: {
-          "@type": "Occupation",
-          name: roleLabel,
-          experienceRequirements: `${provider.yearsOfExperience} ${yearsLabel}`,
-        }
-      }),
-      // LegalService/ProfessionalService enrichment
       priceRange: "€€-€€€",
       areaServed: {
         "@type": "Country",

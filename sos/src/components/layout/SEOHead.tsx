@@ -1,5 +1,6 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
+import { parseLocaleFromPath, getLocaleString } from '../../multilingual-system';
 
 interface SEOHeadProps {
   title: string;
@@ -62,17 +63,32 @@ const SEOHead: React.FC<SEOHeadProps> = ({
   citations = []
 }) => {
   // Construction URL canonique sécurisée
+  // IMPORTANT: La canonical doit pointer vers la version "par défaut" de la page
+  // Ex: /fr-us/tarifs -> canonical: /fr-fr/tarifs (pays par défaut pour le français)
+  // Cela évite les problèmes de contenu dupliqué dans Google Search Console
   const buildCanonicalUrl = (): string => {
     if (canonicalUrl?.startsWith('http')) {
       return canonicalUrl;
     }
-    
+
     if (typeof window !== 'undefined') {
       const baseUrl = window.location.origin;
       const path = canonicalUrl || window.location.pathname;
-      return `${baseUrl}${path.startsWith('/') ? path : `/${path}`}`;
+      const cleanPath = path.startsWith('/') ? path : `/${path}`;
+
+      // Parse the locale from the current path
+      const { lang, pathWithoutLocale } = parseLocaleFromPath(cleanPath);
+
+      if (lang) {
+        // Get the default locale for this language (e.g., 'fr' -> 'fr-fr', 'en' -> 'en-us')
+        const defaultLocale = getLocaleString(lang as any);
+        // Build canonical URL with default locale
+        return `${baseUrl}/${defaultLocale}${pathWithoutLocale}`;
+      }
+
+      return `${baseUrl}${cleanPath}`;
     }
-    
+
     // Fallback pour SSR
     return canonicalUrl ? `https://sos-expat.com${canonicalUrl}` : '';
   };

@@ -1027,26 +1027,34 @@ const generateAllSchemas = (
       "@type": "ListItem",
       position: index + 1,
       item: {
-        "@type": "Person",
+        // Use ProfessionalService instead of Person to support aggregateRating
+        // Google only allows aggregateRating on: Organization, LocalBusiness, Product, Service, etc.
+        "@type": provider.type === "lawyer" ? "LegalService" : "ProfessionalService",
         "@id": `${BASE_URL}/prestataire/${provider.id}`,
         name: provider.name,
-        jobTitle: provider.type === "lawyer" 
+        description: provider.type === "lawyer"
           ? intl.formatMessage({ id: "sosCall.profession.lawyer" })
           : intl.formatMessage({ id: "sosCall.profession.expat" }),
         image: provider.avatar || `${BASE_URL}/default-avatar.png`,
-        worksFor: { "@id": `${BASE_URL}/#organization` },
-        knowsLanguage: provider.languages,
-        workLocation: {
+        provider: {
+          "@type": "Organization",
+          "@id": `${BASE_URL}/#organization`,
+        },
+        availableLanguage: provider.languages,
+        areaServed: {
           "@type": "Place",
           name: provider.country,
         },
-        aggregateRating: {
-          "@type": "AggregateRating",
-          ratingValue: provider.rating.toFixed(1),
-          reviewCount: provider.reviewCount,
-          bestRating: 5,
-          worstRating: 1,
-        },
+        // Only include aggregateRating if there are reviews
+        ...(provider.reviewCount > 0 && {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: provider.rating.toFixed(1),
+            reviewCount: provider.reviewCount,
+            bestRating: 5,
+            worstRating: 1,
+          },
+        }),
       },
     })),
   } : null;

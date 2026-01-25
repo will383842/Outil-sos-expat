@@ -26,6 +26,28 @@ function ensureInitialized() {
 const SITE_URL = 'https://sos-expat.com';
 const LANGUAGES = ['fr', 'en', 'de', 'es', 'pt', 'ru', 'ch', 'ar', 'hi'];
 
+// Map language to default country code (must match frontend localeRoutes.ts)
+const LANGUAGE_TO_COUNTRY: Record<string, string> = {
+  fr: 'fr',  // French -> France
+  en: 'us',  // English -> United States
+  es: 'es',  // Spanish -> Spain
+  de: 'de',  // German -> Germany
+  ru: 'ru',  // Russian -> Russia
+  pt: 'pt',  // Portuguese -> Portugal
+  ch: 'cn',  // Chinese -> China
+  hi: 'in',  // Hindi -> India
+  ar: 'sa',  // Arabic -> Saudi Arabia
+};
+
+/**
+ * Get locale string in format "lang-country" (e.g., "hi-in", "fr-fr")
+ * This must match the format expected by the frontend LocaleRouter
+ */
+function getLocaleString(lang: string): string {
+  const country = LANGUAGE_TO_COUNTRY[lang] || lang;
+  return `${lang}-${country}`;
+}
+
 // Convertit le code de langue interne vers le code hreflang standard
 function getHreflangCode(lang: string): string {
   // 'ch' (convention interne) devient 'zh-Hans' pour le chinois simplifié
@@ -275,19 +297,24 @@ export const sitemapHelp = onRequest(
         LANGUAGES.forEach(lang => {
           const slug = getSlug(lang);
           const routeSlug = helpCenterSlug[lang] || 'help-center';
-          const url = `${SITE_URL}/${lang}/${routeSlug}/${slug}`;
+          // Use locale format: lang-country (e.g., "hi-in", "fr-fr")
+          const locale = getLocaleString(lang);
+          const url = `${SITE_URL}/${locale}/${routeSlug}/${slug}`;
 
           // Génère tous les hreflang en une seule opération
           const hreflangs = LANGUAGES.map(hrefLang => {
             const hrefSlug = getSlug(hrefLang);
             const hrefRouteSlug = helpCenterSlug[hrefLang] || 'help-center';
-            return `    <xhtml:link rel="alternate" hreflang="${getHreflangCode(hrefLang)}" href="${escapeXml(`${SITE_URL}/${hrefLang}/${hrefRouteSlug}/${hrefSlug}`)}"/>`;
+            const hrefLocale = getLocaleString(hrefLang);
+            return `    <xhtml:link rel="alternate" hreflang="${getHreflangCode(hrefLang)}" href="${escapeXml(`${SITE_URL}/${hrefLocale}/${hrefRouteSlug}/${hrefSlug}`)}"/>`;
           }).join('\n');
 
+          // x-default uses French locale
+          const defaultLocale = getLocaleString('fr');
           urlBlocks.push(`  <url>
     <loc>${escapeXml(url)}</loc>
 ${hreflangs}
-    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(`${SITE_URL}/fr/${helpCenterSlug['fr']}/${getSlug('fr')}`)}"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(`${SITE_URL}/${defaultLocale}/${helpCenterSlug['fr']}/${getSlug('fr')}`)}"/>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
     <lastmod>${article.updatedAt?.toDate?.()?.toISOString?.()?.split('T')[0] || today}</lastmod>
@@ -351,17 +378,22 @@ export const sitemapLanding = onRequest(
         const slug = page.slug || doc.id;
 
         LANGUAGES.forEach(lang => {
-          const url = `${SITE_URL}/${lang}/${slug}`;
+          // Use locale format: lang-country (e.g., "hi-in", "fr-fr")
+          const locale = getLocaleString(lang);
+          const url = `${SITE_URL}/${locale}/${slug}`;
 
           // Génère tous les hreflang en une seule opération
-          const hreflangs = LANGUAGES.map(hrefLang =>
-            `    <xhtml:link rel="alternate" hreflang="${getHreflangCode(hrefLang)}" href="${escapeXml(`${SITE_URL}/${hrefLang}/${slug}`)}"/>`
-          ).join('\n');
+          const hreflangs = LANGUAGES.map(hrefLang => {
+            const hrefLocale = getLocaleString(hrefLang);
+            return `    <xhtml:link rel="alternate" hreflang="${getHreflangCode(hrefLang)}" href="${escapeXml(`${SITE_URL}/${hrefLocale}/${slug}`)}"/>`;
+          }).join('\n');
 
+          // x-default uses French locale
+          const defaultLocale = getLocaleString('fr');
           urlBlocks.push(`  <url>
     <loc>${escapeXml(url)}</loc>
 ${hreflangs}
-    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(`${SITE_URL}/fr/${slug}`)}"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(`${SITE_URL}/${defaultLocale}/${slug}`)}"/>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <lastmod>${today}</lastmod>
@@ -375,7 +407,7 @@ ${hreflangs}
       res.set('Content-Type', 'application/xml; charset=utf-8');
       res.set('Cache-Control', 'public, max-age=3600');
       res.status(200).send(xml);
-      
+
       console.log(`✅ Sitemap landing: ${snapshot.docs.length} pages`);
       
     } catch (error) {
@@ -449,18 +481,23 @@ export const sitemapFaq = onRequest(
 
         LANGUAGES.forEach(lang => {
           const slug = getSlug(lang);
-          const url = `${SITE_URL}/${lang}/faq/${slug}`;
+          // Use locale format: lang-country (e.g., "hi-in", "fr-fr")
+          const locale = getLocaleString(lang);
+          const url = `${SITE_URL}/${locale}/faq/${slug}`;
 
           // Génère tous les hreflang
           const hreflangs = LANGUAGES.map(hrefLang => {
             const hrefSlug = getSlug(hrefLang);
-            return `    <xhtml:link rel="alternate" hreflang="${getHreflangCode(hrefLang)}" href="${escapeXml(`${SITE_URL}/${hrefLang}/faq/${hrefSlug}`)}"/>`;
+            const hrefLocale = getLocaleString(hrefLang);
+            return `    <xhtml:link rel="alternate" hreflang="${getHreflangCode(hrefLang)}" href="${escapeXml(`${SITE_URL}/${hrefLocale}/faq/${hrefSlug}`)}"/>`;
           }).join('\n');
 
+          // x-default uses French locale
+          const defaultLocale = getLocaleString('fr');
           urlBlocks.push(`  <url>
     <loc>${escapeXml(url)}</loc>
 ${hreflangs}
-    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(`${SITE_URL}/fr/faq/${getSlug('fr')}`)}"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(`${SITE_URL}/${defaultLocale}/faq/${getSlug('fr')}`)}"/>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <lastmod>${faq.updatedAt?.toDate?.()?.toISOString?.()?.split('T')[0] || today}</lastmod>

@@ -148,10 +148,71 @@ export function isValidLocale(locale: string): boolean {
 }
 
 /**
- * Check if a path starts with a locale prefix
+ * Check if a path starts with a locale prefix (new format: /xx-xx/)
  */
 export function hasLocalePrefix(pathname: string): boolean {
   return /^\/[a-z]{2}-[a-z]{2}(\/|$)/.test(pathname);
+}
+
+/**
+ * Check if a path starts with a legacy locale prefix (old format: /xx/ without country)
+ * This handles old URLs like /es/cookies, /zh/appel-expatrie that Google may have indexed
+ */
+export function hasLegacyLocalePrefix(pathname: string): boolean {
+  return /^\/[a-z]{2}(\/|$)/.test(pathname) && !hasLocalePrefix(pathname);
+}
+
+/**
+ * Parse legacy locale from path and return redirect info
+ * Converts /es/cookies -> /es-es/cookies, /zh/page -> /ch-cn/page
+ */
+export function parseLegacyLocaleFromPath(pathname: string): {
+  shouldRedirect: boolean;
+  newPath: string | null;
+  detectedLang: Language | null;
+} {
+  // Match paths like /es/... or /zh/... (language code only, no country)
+  const legacyPattern = /^\/([a-z]{2})(\/.*)?$/;
+  const match = pathname.match(legacyPattern);
+
+  if (!match) {
+    return { shouldRedirect: false, newPath: null, detectedLang: null };
+  }
+
+  const urlLang = match[1];
+  const restOfPath = match[2] || '';
+
+  // Map URL language codes to internal codes
+  // 'zh' (ISO standard for Chinese) -> 'ch' (internal code)
+  const langMap: Record<string, Language> = {
+    fr: 'fr',
+    en: 'en',
+    es: 'es',
+    de: 'de',
+    ru: 'ru',
+    pt: 'pt',
+    ch: 'ch',
+    zh: 'ch', // Standard Chinese code -> internal 'ch'
+    hi: 'hi',
+    ar: 'ar',
+  };
+
+  const internalLang = langMap[urlLang];
+
+  if (!internalLang) {
+    // Unknown language code, don't redirect
+    return { shouldRedirect: false, newPath: null, detectedLang: null };
+  }
+
+  // Build the new path with proper locale format
+  const newLocale = getLocaleString(internalLang);
+  const newPath = `/${newLocale}${restOfPath}`;
+
+  return {
+    shouldRedirect: true,
+    newPath,
+    detectedLang: internalLang,
+  };
 }
 
 /**

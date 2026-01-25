@@ -12,6 +12,8 @@ import {
   parseLocaleFromPath,
   getLocaleString,
   hasLocalePrefix,
+  hasLegacyLocalePrefix,
+  parseLegacyLocaleFromPath,
   isValidLocale,
   getRouteKeyFromSlug,
   getTranslatedRouteSlug,
@@ -60,6 +62,20 @@ function computeRedirectPath(
   if (decodedPathname === "/") {
     const locale = getLocaleString(language);
     return { redirectTo: `/${locale}`, newLang: null };
+  }
+
+  // LEGACY URL SUPPORT: Handle old URLs like /es/cookies, /zh/appel-expatrie
+  // These were indexed by Google before the lang-country format was introduced
+  if (hasLegacyLocalePrefix(decodedPathname)) {
+    const legacyResult = parseLegacyLocaleFromPath(decodedPathname);
+    if (legacyResult.shouldRedirect && legacyResult.newPath) {
+      console.log("🔷 [LocaleRouter] Redirecting legacy URL:", {
+        from: decodedPathname,
+        to: legacyResult.newPath,
+        detectedLang: legacyResult.detectedLang,
+      });
+      return { redirectTo: legacyResult.newPath, newLang: legacyResult.detectedLang };
+    }
   }
 
   // Invalid locale parameter - redirect to valid one

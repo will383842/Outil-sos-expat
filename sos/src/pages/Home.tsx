@@ -476,14 +476,17 @@ const OptimizedHomePage: React.FC = () => {
       "International law",
     ],
     // CRITICAL: AggregateRating for Google Rich Snippets (Stars)
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": aggregateRating.ratingValue.toFixed(1),
-      "ratingCount": aggregateRating.ratingCount,
-      "reviewCount": aggregateRating.reviewCount,
-      "bestRating": "5",
-      "worstRating": "1"
-    },
+    // Only include if there are actual reviews (Google requirement)
+    ...(aggregateRating.ratingCount > 0 && {
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": aggregateRating.ratingValue.toFixed(1),
+        "ratingCount": aggregateRating.ratingCount,
+        "reviewCount": aggregateRating.reviewCount,
+        "bestRating": "5",
+        "worstRating": "1"
+      },
+    }),
   }), [intl, aggregateRating]);
 
   const jsonLdWebSite = useMemo(() => ({
@@ -538,32 +541,37 @@ const OptimizedHomePage: React.FC = () => {
       ],
     },
     // CRITICAL: AggregateRating for Google Rich Snippets (Stars) on Service
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": aggregateRating.ratingValue.toFixed(1),
-      "ratingCount": aggregateRating.ratingCount,
-      "reviewCount": aggregateRating.reviewCount,
-      "bestRating": "5",
-      "worstRating": "1"
-    },
-    // Include recent reviews for better SEO
-    "review": aggregateRating.recentReviews.slice(0, 5).map((review) => ({
-      "@type": "Review",
-      "author": {
-        "@type": "Person",
-        "name": review.clientName
-      },
-      "reviewRating": {
-        "@type": "Rating",
-        "ratingValue": review.rating,
+    // Only include if there are actual reviews (Google requirement)
+    ...(aggregateRating.ratingCount > 0 && {
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": aggregateRating.ratingValue.toFixed(1),
+        "ratingCount": aggregateRating.ratingCount,
+        "reviewCount": aggregateRating.reviewCount,
         "bestRating": "5",
         "worstRating": "1"
       },
-      "reviewBody": review.comment,
-      "datePublished": review.createdAt instanceof Date
-        ? review.createdAt.toISOString().split('T')[0]
-        : new Date().toISOString().split('T')[0]
-    }))
+    }),
+    // Include recent reviews for better SEO (only if reviews exist)
+    ...(aggregateRating.recentReviews.length > 0 && {
+      "review": aggregateRating.recentReviews.slice(0, 5).map((review) => ({
+        "@type": "Review",
+        "author": {
+          "@type": "Person",
+          "name": review.clientName
+        },
+        "reviewRating": {
+          "@type": "Rating",
+          "ratingValue": review.rating,
+          "bestRating": "5",
+          "worstRating": "1"
+        },
+        "reviewBody": review.comment,
+        "datePublished": review.createdAt instanceof Date
+          ? review.createdAt.toISOString().split('T')[0]
+          : new Date().toISOString().split('T')[0]
+      }))
+    }),
   }), [intl, aggregateRating]);
 
   const jsonLdFAQ = useMemo(() => ({
