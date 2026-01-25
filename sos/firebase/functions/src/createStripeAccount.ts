@@ -114,7 +114,7 @@ export const createStripeAccount = onCall<CreateAccountData>(
       // This ensures the onboarding form shows the correct options and not enterprise/association only
       const account = await stripe.accounts.create({
         type: "express",
-        country: currentCountry || "FR",
+        country: countryCode, // Use uppercase ISO country code
         email: email,
         business_type: "individual", // Individual/Particulier for lawyers and expat helpers
         capabilities: {

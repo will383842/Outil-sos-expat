@@ -63,9 +63,12 @@ export const completeLawyerOnboarding = onCall<LawyerOnboardingData>(
         }
       }
 
+      // Normalize country code to uppercase for Stripe API
+      const countryCode = (data.currentCountry || "FR").toUpperCase();
+
       const account = await stripe.accounts.create({
         type: "express",
-        country: data.currentCountry || "FR",
+        country: countryCode,
         email: data.email,
         business_type: "individual",
         capabilities: {
@@ -86,7 +89,7 @@ export const completeLawyerOnboarding = onCall<LawyerOnboardingData>(
           phone: data.phone,
           ...(dob && { dob }),
           address: {
-            country: data.currentCountry || "FR",
+            country: countryCode,
             line1: data.address || undefined,
           },
         },
