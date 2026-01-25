@@ -37,6 +37,7 @@ import {
   PAYPAL_PLATFORM_MERCHANT_ID,
   PAYPAL_MODE,
   PAYPAL_SECRETS,
+  TASKS_AUTH_SECRET,
   getPayPalMode,
   getPayPalClientId,
   getPayPalClientSecret,
@@ -2477,7 +2478,7 @@ export const capturePayPalOrderHttp = onRequest(
 export const authorizePayPalOrderHttp = onRequest(
   {
     region: "europe-west1",
-    secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
+    secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, TASKS_AUTH_SECRET],
     cors: true,
   },
   async (req, res) => {
