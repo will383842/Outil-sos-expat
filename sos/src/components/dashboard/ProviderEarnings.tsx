@@ -17,8 +17,11 @@ import {
   Phone,
   RefreshCw,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  ShieldAlert,
+  ExternalLink
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface EarningsSummary {
   totalEarnings: number;
@@ -31,11 +34,14 @@ interface EarningsSummary {
   totalPayoutsFormatted: string;
   reservedAmount: number;
   reservedAmountFormatted: string;
+  pendingKycAmount: number;
+  pendingKycAmountFormatted: string;
   totalCalls: number;
   successfulCalls: number;
   averageEarningPerCall: number;
   currency: string;
   lastUpdated: string;
+  kycComplete: boolean;
 }
 
 interface Transaction {
@@ -159,6 +165,40 @@ export default function ProviderEarnings({ className = "", compact = false }: Pr
 
       {/* Stats Grid */}
       <div className="p-6">
+        {/* Alert: Pending KYC Amount */}
+        {summary.pendingKycAmount > 0 && !summary.kycComplete && (
+          <div className="mb-6 p-4 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border border-orange-200 dark:border-orange-700 rounded-xl">
+            <div className="flex items-start gap-3">
+              <ShieldAlert className="w-6 h-6 text-orange-500 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h4 className="font-semibold text-orange-800 dark:text-orange-300">
+                  <FormattedMessage
+                    id="dashboard.earnings.pendingKycTitle"
+                    defaultMessage="{amount} en attente de vérification"
+                    values={{ amount: summary.pendingKycAmountFormatted }}
+                  />
+                </h4>
+                <p className="text-sm text-orange-700 dark:text-orange-400 mt-1">
+                  <FormattedMessage
+                    id="dashboard.earnings.pendingKycDescription"
+                    defaultMessage="Complétez votre vérification d'identité pour recevoir vos gains. Ce montant vous sera transféré automatiquement."
+                  />
+                </p>
+                <Link
+                  to="/dashboard/kyc"
+                  className="inline-flex items-center gap-1.5 mt-3 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  <FormattedMessage
+                    id="dashboard.earnings.completeKyc"
+                    defaultMessage="Compléter ma vérification"
+                  />
+                  <ExternalLink className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {/* Solde disponible */}
           <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-xl p-4">

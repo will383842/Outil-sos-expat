@@ -26,11 +26,16 @@ interface EarningsSummary {
   totalPayoutsFormatted: string;
   reservedAmount: number; // P1 FIX: Montant réservé (disputes)
   reservedAmountFormatted: string;
+  // Montant en attente de KYC (pending_transfers avec status pending_kyc)
+  pendingKycAmount: number;
+  pendingKycAmountFormatted: string;
   totalCalls: number;
   successfulCalls: number;
   averageEarningPerCall: number;
   currency: string;
   lastUpdated: string;
+  // Statut KYC du provider
+  kycComplete: boolean;
 }
 
 interface Transaction {
@@ -192,6 +197,57 @@ export class ProviderEarningsService {
         reservedAmount += Math.abs(reserve.amount || 0);
       });
 
+      // ===== PENDING KYC: Montant en attente de vérification d'identité =====
+      // Ces montants seront transférés automatiquement quand le provider complète son KYC
+      const pendingKycSnapshot = await this.db
+        .collection("pending_transfers")
+        .where("providerId", "==", providerId)
+        .where("status", "==", "pending_kyc")
+        .limit(100)
+        .get();
+
+      let pendingKycAmount = 0;
+      pendingKycSnapshot.docs.forEach((doc) => {
+        const transfer = doc.data();
+        // providerAmount est en centimes dans pending_transfers
+        pendingKycAmount += (transfer.providerAmount || 0) / 100;
+      });
+
+      // ===== PAYPAL PENDING: Montants PayPal en attente de vérification email =====
+      const paypalPendingSnapshot = await this.db
+        .collection("paypal_orders")
+        .where("providerId", "==", providerId)
+        .where("payoutPendingVerification", "==", true)
+        .limit(100)
+        .get();
+
+      paypalPendingSnapshot.docs.forEach((doc) => {
+        const order = doc.data();
+        // providerAmount est déjà en euros dans paypal_orders
+        pendingKycAmount += order.providerAmount || 0;
+      });
+
+      // Aussi ajouter les payouts PayPal échoués
+      const failedPayoutsSnapshot = await this.db
+        .collection("failed_payouts_alerts")
+        .where("providerId", "==", providerId)
+        .where("status", "==", "failed")
+        .limit(100)
+        .get();
+
+      failedPayoutsSnapshot.docs.forEach((doc) => {
+        const alert = doc.data();
+        // amount est en euros
+        pendingKycAmount += alert.amount || 0;
+      });
+
+      // Récupérer le statut KYC du provider (Stripe + PayPal)
+      const providerDoc = await this.db.collection("users").doc(providerId).get();
+      const providerData = providerDoc.data();
+      const stripeKycComplete = providerData?.chargesEnabled === true;
+      const paypalVerified = providerData?.paypalEmailVerified === true;
+      const kycComplete = stripeKycComplete || paypalVerified;
+
       // Calculer le solde disponible correctement:
       // totalEarnings - payouts déjà effectués + adjustments - montants réservés
       const availableBalance = totalEarnings - totalPayouts + adjustmentsTotal - reservedAmount;
@@ -208,11 +264,14 @@ export class ProviderEarningsService {
         totalPayoutsFormatted: this.formatCurrency(totalPayouts, "EUR"),
         reservedAmount,
         reservedAmountFormatted: this.formatCurrency(reservedAmount, "EUR"),
+        pendingKycAmount,
+        pendingKycAmountFormatted: this.formatCurrency(pendingKycAmount, "EUR"),
         totalCalls,
         successfulCalls,
         averageEarningPerCall: Math.round(averageEarningPerCall * 100) / 100,
         currency: "EUR",
         lastUpdated: new Date().toISOString(),
+        kycComplete,
       };
 
       console.log("✅ [EARNINGS] Summary calculated:", summary);
