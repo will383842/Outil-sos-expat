@@ -4,272 +4,416 @@
 
   <!-- Page d'accueil -->
   <url>
-    <loc>https://sos-expat.com/</loc>
-    <lastmod>2025-12-29</lastmod>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de"/>
-    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt"/>
-    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru"/>
-    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar"/>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr"/>
+    <loc>https://sos-expat.com/fr-fr</loc>
+    <lastmod>2026-01-25</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch-cn"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr"/>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
 
-  <!-- FAQ -->
+  <!-- Tarifs / Pricing -->
   <url>
-    <loc>https://sos-expat.com/faq</loc>
-    <lastmod>2025-12-29</lastmod>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr/faq"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en/faq"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es/faq"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de/faq"/>
-    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt/faq"/>
-    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru/faq"/>
-    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch/faq"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar/faq"/>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi/faq"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr/faq"/>
+    <loc>https://sos-expat.com/fr-fr/tarifs</loc>
+    <lastmod>2026-01-25</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/tarifs"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/pricing"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/precios"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/preise"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/precos"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/tseny"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch-cn/jiage"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/الأسعار"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/mulya"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/tarifs"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Comment ça marche / How it works -->
+  <url>
+    <loc>https://sos-expat.com/fr-fr/comment-ca-marche</loc>
+    <lastmod>2026-01-25</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/comment-ca-marche"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/how-it-works"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/como-funciona"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/wie-es-funktioniert"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/como-funciona"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/kak-eto-rabotaet"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch-cn/ruhe-yunzuo"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/كيف-يعمل"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/kaise-kaam-karta-hai"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/comment-ca-marche"/>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
+  <!-- FAQ -->
+  <url>
+    <loc>https://sos-expat.com/fr-fr/faq</loc>
+    <lastmod>2026-01-25</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/faq"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/faq"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/preguntas-frecuentes"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/faq"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/perguntas-frequentes"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/voprosy-otvety"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch-cn/changjian-wenti"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/الأسئلة-الشائعة"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/aksar-puche-jaane-wale-sawal"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/faq"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Centre d'aide / Help Center -->
+  <url>
+    <loc>https://sos-expat.com/fr-fr/centre-aide</loc>
+    <lastmod>2026-01-25</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/centre-aide"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/help-center"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/centro-ayuda"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/hilfezentrum"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/centro-ajuda"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/tsentr-pomoshchi"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch-cn/bangzhu-zhongxin"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/مركز-المساعدة"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/sahayata-kendra"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/centre-aide"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
   <!-- Contact -->
   <url>
-    <loc>https://sos-expat.com/contact</loc>
-    <lastmod>2025-12-29</lastmod>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr/contact"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en/contact"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es/contact"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de/contact"/>
-    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt/contact"/>
-    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru/contact"/>
-    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch/contact"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar/contact"/>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi/contact"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr/contact"/>
+    <loc>https://sos-expat.com/fr-fr/contact</loc>
+    <lastmod>2026-01-25</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/contact"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/contact"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/contacto"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/kontakt"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/contato"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/kontakt"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch-cn/lianxi"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/اتصل-بنا"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/sampark"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/contact"/>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
-  <!-- Inscription Avocat -->
+  <!-- Témoignages / Testimonials -->
   <url>
-    <loc>https://sos-expat.com/register-lawyer</loc>
-    <lastmod>2025-12-29</lastmod>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr/register-lawyer"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en/register-lawyer"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es/register-lawyer"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de/register-lawyer"/>
-    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt/register-lawyer"/>
-    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru/register-lawyer"/>
-    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch/register-lawyer"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar/register-lawyer"/>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi/register-lawyer"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr/register-lawyer"/>
+    <loc>https://sos-expat.com/fr-fr/temoignages</loc>
+    <lastmod>2026-01-25</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/temoignages"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/testimonials"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/testimonios"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/testimonials"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/depoimentos"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/otzyvy"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch-cn/yonghu-pingjia"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/الشهادات"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/prashansapatra"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/temoignages"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Prestataires / Providers -->
+  <url>
+    <loc>https://sos-expat.com/fr-fr/prestataires</loc>
+    <lastmod>2026-01-25</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/prestataires"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/providers"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/proveedores"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/anbieter"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/prestadores"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/postavshchiki"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch-cn/fuwu-tigongzhe"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/مقدمو-الخدمات"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/seva-pradaata"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/prestataires"/>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- SOS Appel / Emergency Call -->
+  <url>
+    <loc>https://sos-expat.com/fr-fr/sos-appel</loc>
+    <lastmod>2026-01-25</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/sos-appel"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/emergency-call"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/llamada-emergencia"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/notruf"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/chamada-emergencia"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/ekstrenniy-zvonok"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch-cn/jinji-dianhua"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/مكالمة-طوارئ"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/aapatkaleen-call"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/sos-appel"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
-  <!-- Inscription Expat Aidant -->
+  <!-- Appel Expatrié / Expat Call -->
   <url>
-    <loc>https://sos-expat.com/register-expat</loc>
-    <lastmod>2025-12-29</lastmod>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr/register-expat"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en/register-expat"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es/register-expat"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de/register-expat"/>
-    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt/register-expat"/>
-    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru/register-expat"/>
-    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch/register-expat"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar/register-expat"/>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi/register-expat"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr/register-expat"/>
+    <loc>https://sos-expat.com/fr-fr/appel-expatrie</loc>
+    <lastmod>2026-01-25</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/appel-expatrie"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/expat-call"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/llamada-expatriado"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/expatriate-anruf"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/chamada-expatriado"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/zvonok-expatriantu"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch-cn/waipai-dianhua"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/مكالمة-المغترب"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/pravasi-call"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/appel-expatrie"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
-  <!-- Inscription Client -->
+  <!-- Connexion / Login -->
   <url>
-    <loc>https://sos-expat.com/register-client</loc>
-    <lastmod>2025-12-29</lastmod>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr/register-client"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en/register-client"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es/register-client"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de/register-client"/>
-    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt/register-client"/>
-    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru/register-client"/>
-    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch/register-client"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar/register-client"/>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi/register-client"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr/register-client"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <!-- Connexion -->
-  <url>
-    <loc>https://sos-expat.com/login</loc>
-    <lastmod>2025-12-29</lastmod>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr/login"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en/login"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es/login"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de/login"/>
-    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt/login"/>
-    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru/login"/>
-    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch/login"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar/login"/>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi/login"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr/login"/>
+    <loc>https://sos-expat.com/fr-fr/connexion</loc>
+    <lastmod>2026-01-25</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/connexion"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/login"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/iniciar-sesion"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/anmeldung"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/entrar"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/vkhod"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch-cn/denglu"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/تسجيل-الدخول"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/login"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/connexion"/>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
 
-  <!-- CGU Avocats -->
+  <!-- Inscription / Register -->
   <url>
-    <loc>https://sos-expat.com/terms-lawyers</loc>
-    <lastmod>2025-12-29</lastmod>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr/terms-lawyers"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en/terms-lawyers"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es/terms-lawyers"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de/terms-lawyers"/>
-    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt/terms-lawyers"/>
-    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru/terms-lawyers"/>
-    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch/terms-lawyers"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar/terms-lawyers"/>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi/terms-lawyers"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr/terms-lawyers"/>
+    <loc>https://sos-expat.com/fr-fr/inscription</loc>
+    <lastmod>2026-01-25</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/inscription"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/register"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/registro"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/registrierung"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/cadastro"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/registratsiya"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch-cn/zhuce"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/التسجيل"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/panjikaran"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/inscription"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Inscription Avocat / Register Lawyer -->
+  <url>
+    <loc>https://sos-expat.com/fr-fr/inscription/avocat</loc>
+    <lastmod>2026-01-25</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/inscription/avocat"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/register/lawyer"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/registro/abogado"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/registrierung/anwalt"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/registro/advogado"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/registratsiya/advokat"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch-cn/zhuce/lushi"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/تسجيل/محام"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/panjikaran/vakil"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/inscription/avocat"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Inscription Expatrié / Register Expat -->
+  <url>
+    <loc>https://sos-expat.com/fr-fr/inscription/expatrie</loc>
+    <lastmod>2026-01-25</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/inscription/expatrie"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/register/expat"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/registro/expatriado"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/registrierung/expatriate"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/registro/expatriado"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/registratsiya/expatriant"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch-cn/zhuce/waipai"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/تسجيل/مغترب"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/panjikaran/pravasi"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/inscription/expatrie"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Inscription Client / Register Client -->
+  <url>
+    <loc>https://sos-expat.com/fr-fr/inscription/client</loc>
+    <lastmod>2026-01-25</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/inscription/client"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/register/client"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/registro/cliente"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/registrierung/kunde"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/registro/cliente"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/registratsiya/klient"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch-cn/zhuce/kehu"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/تسجيل/عميل"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/panjikaran/grahak"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/inscription/client"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- CGU Avocats / Terms Lawyers -->
+  <url>
+    <loc>https://sos-expat.com/fr-fr/cgu-avocats</loc>
+    <lastmod>2026-01-25</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/cgu-avocats"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/terms-lawyers"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/terminos-abogados"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/agb-anwaelte"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/termos-advogados"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/usloviya-advokaty"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch-cn/tiaokuan-lushi"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/شروط-المحامون"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/shartein-vakil"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/cgu-avocats"/>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
 
-  <!-- CGU Clients -->
+  <!-- CGU Expatriés / Terms Expats -->
   <url>
-    <loc>https://sos-expat.com/terms-clients</loc>
-    <lastmod>2025-12-29</lastmod>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr/terms-clients"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en/terms-clients"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es/terms-clients"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de/terms-clients"/>
-    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt/terms-clients"/>
-    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru/terms-clients"/>
-    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch/terms-clients"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar/terms-clients"/>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi/terms-clients"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr/terms-clients"/>
+    <loc>https://sos-expat.com/fr-fr/cgu-expatries</loc>
+    <lastmod>2026-01-25</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/cgu-expatries"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/terms-expats"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/terminos-expatriados"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/agb-expatriates"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/termos-expatriados"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/usloviya-expatrianty"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch-cn/tiaokuan-waipai"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/شروط-المغتربين"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/shartein-pravasi"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/cgu-expatries"/>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
 
-  <!-- CGU Expats -->
+  <!-- CGU Clients / Terms Clients -->
   <url>
-    <loc>https://sos-expat.com/terms-expats</loc>
-    <lastmod>2025-12-29</lastmod>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr/terms-expats"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en/terms-expats"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es/terms-expats"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de/terms-expats"/>
-    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt/terms-expats"/>
-    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru/terms-expats"/>
-    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch/terms-expats"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar/terms-expats"/>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi/terms-expats"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr/terms-expats"/>
+    <loc>https://sos-expat.com/fr-fr/cgu-clients</loc>
+    <lastmod>2026-01-25</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/cgu-clients"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/terms-clients"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/terminos-clientes"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/agb-kunden"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/termos-clientes"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/usloviya-klienty"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch-cn/tiaokuan-kehu"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/شروط-العملاء"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/shartein-grahak"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/cgu-clients"/>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
 
-  <!-- Politique de confidentialité -->
+  <!-- Politique de confidentialité / Privacy Policy -->
   <url>
-    <loc>https://sos-expat.com/privacy</loc>
-    <lastmod>2025-12-29</lastmod>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr/privacy"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en/privacy"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es/privacy"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de/privacy"/>
-    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt/privacy"/>
-    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru/privacy"/>
-    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch/privacy"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar/privacy"/>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi/privacy"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr/privacy"/>
+    <loc>https://sos-expat.com/fr-fr/politique-confidentialite</loc>
+    <lastmod>2026-01-25</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/politique-confidentialite"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/privacy-policy"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/politica-privacidad"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/datenschutzrichtlinie"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/politica-privacidade"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/politika-konfidentsialnosti"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch-cn/yinsi-zhengce"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/سياسة-الخصوصية"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/gopaniyata-niti"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/politique-confidentialite"/>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
 
   <!-- Cookies -->
   <url>
-    <loc>https://sos-expat.com/cookies</loc>
-    <lastmod>2025-12-29</lastmod>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr/cookies"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en/cookies"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es/cookies"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de/cookies"/>
-    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt/cookies"/>
-    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru/cookies"/>
-    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch/cookies"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar/cookies"/>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi/cookies"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr/cookies"/>
+    <loc>https://sos-expat.com/fr-fr/cookies</loc>
+    <lastmod>2026-01-25</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/cookies"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/cookies"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/cookies"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/cookies"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/cookies"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/cookies"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch-cn/cookies"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/ملفات-التعريف"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/cookies"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/cookies"/>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
 
-  <!-- Blog -->
+  <!-- Consommateurs / Consumers -->
   <url>
-    <loc>https://sos-expat.com/blog</loc>
-    <lastmod>2025-12-29</lastmod>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr/blog"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en/blog"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es/blog"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de/blog"/>
-    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt/blog"/>
-    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru/blog"/>
-    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch/blog"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar/blog"/>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi/blog"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr/blog"/>
+    <loc>https://sos-expat.com/fr-fr/consommateurs</loc>
+    <lastmod>2026-01-25</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/consommateurs"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/consumers"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/consumidores"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/verbraucher"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/consumidores"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/potrebiteli"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch-cn/xiaofeizhe"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/المستهلكين"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/upbhokta"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/consommateurs"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+
+  <!-- Statut Service / Service Status -->
+  <url>
+    <loc>https://sos-expat.com/fr-fr/statut-service</loc>
+    <lastmod>2026-01-25</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/statut-service"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/service-status"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/estado-servicio"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/dienststatus"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/status-servico"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/status-servisa"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch-cn/fuwu-zhuangtai"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/حالة-الخدمة"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/seva-sthiti"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/statut-service"/>
     <changefreq>daily</changefreq>
-    <priority>0.8</priority>
+    <priority>0.5</priority>
   </url>
 
-  <!-- Témoignages -->
+  <!-- Réinitialisation mot de passe / Password Reset -->
   <url>
-    <loc>https://sos-expat.com/testimonials</loc>
-    <lastmod>2025-12-29</lastmod>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr/testimonials"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en/testimonials"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es/testimonials"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de/testimonials"/>
-    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt/testimonials"/>
-    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru/testimonials"/>
-    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch/testimonials"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar/testimonials"/>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi/testimonials"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr/testimonials"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- Centre d'aide -->
-  <url>
-    <loc>https://sos-expat.com/help</loc>
-    <lastmod>2025-12-29</lastmod>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr/help"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en/help"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es/help"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de/help"/>
-    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt/help"/>
-    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru/help"/>
-    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch/help"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar/help"/>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi/help"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr/help"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <loc>https://sos-expat.com/fr-fr/reinitialisation-mot-de-passe</loc>
+    <lastmod>2026-01-25</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/reinitialisation-mot-de-passe"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/password-reset"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/restablecer-contrasena"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/passwort-zurucksetzen"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/redefinir-senha"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/sbros-parolya"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/ch-cn/chongzhi-mima"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/إعادة-تعيين-كلمة-المرور"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/password-reset"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/reinitialisation-mot-de-passe"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
   </url>
 
 </urlset>
