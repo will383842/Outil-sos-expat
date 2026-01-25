@@ -11,3 +11,4 @@ export { getMultiDashboardData } from "./getMultiDashboardData";
 export { onBookingRequestCreatedGenerateAi } from "./onBookingCreatedGenerateAi";
 export { generateMultiDashboardOutilToken } from "./generateMultiDashboardOutilToken";
 export { getProviderConversations, sendMultiDashboardMessage } from "./getProviderConversations";
+export { generateMultiDashboardAiResponse } from "./generateAiResponseCallable";

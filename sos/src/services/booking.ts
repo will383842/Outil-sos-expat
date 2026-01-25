@@ -1,6 +1,7 @@
 // src/services/booking.ts
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { addDoc, collection, serverTimestamp, doc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../config/firebase";
+import { generateAiResponseForBooking } from "../config/outilFirebase";
 
 /**
  * Champs MINIMAUX exigés par tes rules :
@@ -113,9 +114,63 @@ export async function createBookingRequest(data: BookingRequestCreate) {
   };
 
   // Timeout de 30 secondes pour éviter le blocage indéfini (augmenté pour connexions lentes)
-  await withTimeout(
+  const docRef = await withTimeout(
     addDoc(collection(db, "booking_requests"), payload),
     30000,
     "NETWORK_TIMEOUT"
   );
+
+  // For multi-provider accounts: Generate AI response asynchronously
+  // Check if providerId starts with "aaa_" (multi-provider naming convention)
+  const isMultiProvider = providerId.startsWith("aaa_");
+
+  if (isMultiProvider) {
+    // Call AI generation in background (don't block the booking creation)
+    generateAiResponseForBooking({
+      bookingId: docRef.id,
+      providerId,
+      clientName: data.clientName || `${data.clientFirstName || ""} ${data.clientLastName || ""}`.trim() || "Client",
+      clientCurrentCountry: data.clientCurrentCountry,
+      clientLanguages: data.clientLanguages,
+      serviceType,
+      providerType: data.providerType as "lawyer" | "expat" | undefined,
+      title: data.title,
+    })
+      .then(async (result) => {
+        if (result.success && result.aiResponse) {
+          // Update the booking_request with the AI response
+          try {
+            await updateDoc(doc(db, "booking_requests", docRef.id), {
+              aiResponse: {
+                content: result.aiResponse,
+                generatedAt: serverTimestamp(),
+                model: result.model || "claude-3-5-sonnet",
+                tokensUsed: result.tokensUsed || 0,
+                source: "multi_dashboard_callable",
+              },
+              aiProcessedAt: serverTimestamp(),
+            });
+            console.log("[Booking] AI response saved for multi-provider booking:", docRef.id);
+          } catch (updateError) {
+            console.error("[Booking] Failed to save AI response:", updateError);
+          }
+        } else if (result.error) {
+          console.error("[Booking] AI generation failed:", result.error);
+          // Optionally save the error
+          try {
+            await updateDoc(doc(db, "booking_requests", docRef.id), {
+              aiError: result.error,
+              aiErrorAt: serverTimestamp(),
+            });
+          } catch {
+            // Ignore update errors
+          }
+        }
+      })
+      .catch((error) => {
+        console.error("[Booking] AI generation call failed:", error);
+      });
+  }
+
+  return docRef.id;
 }
