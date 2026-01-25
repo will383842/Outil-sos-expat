@@ -181,27 +181,52 @@ export const getMultiDashboardData = onCall<
       const db = admin.firestore();
 
       // ==========================================================================
-      // 1. Load ONLY users marked as multi-provider (isMultiProvider=true)
+      // 1. Load ONLY TRUE multi-provider accounts
       // ==========================================================================
-      // This is the KEY FIX: only get accounts that explicitly have the multi-provider toggle ON
-      // Not just any user with linkedProviderIds
+      // A TRUE multi-provider account = 2 or more providers linked to the same user
+      // We check both:
+      // - isMultiProvider flag (explicitly set in admin)
+      // - OR linkedProviderIds.length >= 2 (fallback for accounts not yet flagged)
 
-      const usersSnap = await db.collection("users")
+      // First, try to get users marked as multi-provider
+      const flaggedUsersSnap = await db.collection("users")
         .where("isMultiProvider", "==", true)
         .get();
 
+      // If no flagged users, fall back to checking linkedProviderIds length
+      // This handles the case where the database hasn't been repaired yet
+      let usersToProcess: FirebaseFirestore.QueryDocumentSnapshot[] = [];
+
+      if (flaggedUsersSnap.empty) {
+        // Fallback: load users with 2+ linked providers
+        logger.info("[getMultiDashboardData] No isMultiProvider flag found, checking linkedProviderIds");
+        const allUsersSnap = await db.collection("users").get();
+        usersToProcess = allUsersSnap.docs.filter(doc => {
+          const data = doc.data();
+          const linkedIds = data.linkedProviderIds;
+          // TRUE multi-provider = 2 or more providers
+          return Array.isArray(linkedIds) && linkedIds.length >= 2;
+        });
+      } else {
+        usersToProcess = flaggedUsersSnap.docs;
+      }
+
       logger.info("[getMultiDashboardData] Found multi-provider users", {
-        count: usersSnap.size,
+        count: usersToProcess.length,
+        source: flaggedUsersSnap.empty ? "linkedProviderIds fallback" : "isMultiProvider flag",
         elapsed: Date.now() - startTime,
       });
 
-      if (usersSnap.empty) {
+      if (usersToProcess.length === 0) {
         logger.info("[getMultiDashboardData] No multi-provider accounts found");
         return {
           success: true,
           accounts: [],
         };
       }
+
+      // Use usersToProcess instead of usersSnap.docs below
+      const usersSnap = { docs: usersToProcess, size: usersToProcess.length };
 
       // ==========================================================================
       // 2. Collect ALL unique provider IDs for batch loading

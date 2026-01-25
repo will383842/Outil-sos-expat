@@ -942,37 +942,42 @@ export const IaMultiProvidersTab: React.FC = () => {
   // FIX MULTI-PROVIDER FLAGS
   // ============================================================================
 
-  // Fix accounts that have linkedProviderIds but are missing isMultiProvider=true
+  // Fix accounts that have 2+ linked providers but are missing isMultiProvider=true
+  // A TRUE multi-provider account = 2 or more providers linked to the same user account
   const fixMultiProviderFlags = async () => {
     setCleanupRunning(true);
     setError(null);
 
     try {
-      // Find accounts with linkedProviderIds but missing isMultiProvider flag
-      const accountsToFix = accounts.filter(a =>
-        a.providers.length > 0 && !allUsers.find(u => u.id === a.userId)?.shareBusyStatus
-      );
-
-      // Get all users with linkedProviderIds from Firestore
+      // Get all users from Firestore
       const usersSnap = await getDocs(query(collection(db, 'users'), limit(500)));
       let fixed = 0;
+      let singleProviderFixed = 0;
 
       for (const docSnap of usersSnap.docs) {
         const data = docSnap.data();
-        const linkedIds = data.linkedProviderIds || [];
+        const linkedIds: string[] = data.linkedProviderIds || [];
 
-        // If has linked providers but isMultiProvider is not explicitly true
-        if (linkedIds.length > 0 && data.isMultiProvider !== true) {
+        // TRUE multi-provider = 2 or more providers linked
+        if (linkedIds.length >= 2 && data.isMultiProvider !== true) {
+          // Should be marked as multi-provider but isn't
           await updateDoc(doc(db, 'users', docSnap.id), {
             isMultiProvider: true,
             updatedAt: serverTimestamp()
           });
           fixed++;
+        } else if (linkedIds.length < 2 && data.isMultiProvider === true) {
+          // Has flag but shouldn't (less than 2 providers)
+          await updateDoc(doc(db, 'users', docSnap.id), {
+            isMultiProvider: false,
+            updatedAt: serverTimestamp()
+          });
+          singleProviderFixed++;
         }
       }
 
-      if (fixed > 0) {
-        setSuccess(`✅ ${fixed} compte(s) réparé(s) avec isMultiProvider=true`);
+      if (fixed > 0 || singleProviderFixed > 0) {
+        setSuccess(`✅ ${fixed} compte(s) multi-prestataires marqué(s), ${singleProviderFixed} compte(s) mono-prestataire corrigé(s)`);
         await loadData();
       } else {
         setSuccess('Tous les comptes sont déjà correctement configurés');
