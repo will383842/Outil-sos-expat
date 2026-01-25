@@ -82,7 +82,7 @@ export const createStripeAccount = onCall<CreateAccountData>(
     }
 
     const userId = request.auth.uid;
-    const { email, currentCountry, userType } = request.data;
+    const { email, currentCountry, userType, firstName, lastName } = request.data;
     const stripeInstance = createStripeInstance();
 
     if (!stripeInstance) {
@@ -120,6 +120,18 @@ export const createStripeAccount = onCall<CreateAccountData>(
         capabilities: {
           card_payments: { requested: true },
           transfers: { requested: true },
+        },
+        // Pre-fill business profile to simplify onboarding
+        business_profile: {
+          url: "https://sos-expat.com",
+          mcc: "8999", // Professional Services - covers lawyers and expat consultants
+          product_description: "Services de conseil juridique et assistance aux expatriés via la plateforme SOS Expat",
+        },
+        // Pre-fill individual info from registration data (provider can still modify in Stripe form)
+        individual: {
+          email: email,
+          ...(firstName && { first_name: firstName }),
+          ...(lastName && { last_name: lastName }),
         },
       });
 

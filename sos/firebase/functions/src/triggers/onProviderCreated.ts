@@ -841,6 +841,9 @@ async function handleStripeProvider(
     console.log(`[onProviderCreated] Création compte Stripe Express pour ${providerType}: ${uid}`);
 
     // Créer le compte Stripe Express
+    // Pre-fill with registration data to simplify onboarding (provider can still modify)
+    const phoneNumber = data.phone || data.phoneNumber;
+
     const account = await stripe.accounts.create({
       type: "express",
       country: countryCode,
@@ -849,6 +852,24 @@ async function handleStripeProvider(
       capabilities: {
         card_payments: { requested: true },
         transfers: { requested: true },
+      },
+      // Pre-fill business profile to simplify onboarding
+      business_profile: {
+        url: "https://sos-expat.com",
+        mcc: "8999", // Professional Services - covers lawyers and expat consultants
+        product_description: "Services de conseil juridique et assistance aux expatriés via la plateforme SOS Expat",
+      },
+      // Pre-fill individual info from registration data (provider can still modify in Stripe form)
+      individual: {
+        email: data.email,
+        ...(data.firstName && { first_name: data.firstName }),
+        ...(data.lastName && { last_name: data.lastName }),
+        ...(phoneNumber && { phone: phoneNumber }),
+        // Pre-fill address with country (city if available)
+        address: {
+          country: countryCode,
+          ...(data.city && { city: data.city }),
+        },
       },
       metadata: {
         platform: "sos-expat",

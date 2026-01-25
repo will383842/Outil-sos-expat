@@ -54,13 +54,41 @@ export const completeLawyerOnboarding = onCall<LawyerOnboardingData>(
       // ==========================================
       console.log("📝 Creating Stripe Express Account...");
 
+      // Parse date of birth if available (format: YYYY-MM-DD)
+      let dob: { day: number; month: number; year: number } | undefined;
+      if (data.dateOfBirth) {
+        const [year, month, day] = data.dateOfBirth.split("-").map(Number);
+        if (year && month && day) {
+          dob = { day, month, year };
+        }
+      }
+
       const account = await stripe.accounts.create({
         type: "express",
         country: data.currentCountry || "FR",
         email: data.email,
+        business_type: "individual",
         capabilities: {
           card_payments: { requested: true },
           transfers: { requested: true },
+        },
+        // Pre-fill business profile to simplify onboarding
+        business_profile: {
+          url: "https://sos-expat.com",
+          mcc: "8999", // Professional Services - covers lawyers and expat consultants
+          product_description: "Services de conseil juridique et assistance aux expatriés via la plateforme SOS Expat",
+        },
+        // Pre-fill individual info from registration data (provider can still modify in Stripe form)
+        individual: {
+          email: data.email,
+          first_name: data.firstName,
+          last_name: data.lastName,
+          phone: data.phone,
+          ...(dob && { dob }),
+          address: {
+            country: data.currentCountry || "FR",
+            line1: data.address || undefined,
+          },
         },
       });
 
