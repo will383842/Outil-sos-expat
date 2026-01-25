@@ -1429,10 +1429,46 @@ const ProviderProfile: React.FC = () => {
           }
           
           if (!providerData.fullName?.trim()) {
-            providerData.fullName = `${providerData.firstName || ""} ${providerData.lastName || ""}`.trim() || 
+            providerData.fullName = `${providerData.firstName || ""} ${providerData.lastName || ""}`.trim() ||
               intl.formatMessage({ id: "providerProfile.defaultProfileName" });
           }
-          
+
+          // ✅ SEO 2026: Redirection 301 des anciennes URLs (Firebase UID 28 chars) vers nouvelles (ShortId 6 chars)
+          // Exemple: /fr-fr/avocat-thai/pierre-visa-DfDbWASBaeaVEZrqg6Wlcd3zpYX2 → /fr-fr/avocat-thai/pierre-visa-k7m2p9
+          const currentNameSlug = params.nameSlug || params.name || params.slug || '';
+          const urlContainsOldUID = currentNameSlug && /[a-zA-Z0-9]{20,}$/.test(currentNameSlug);
+          const providerShortId = (providerData as any).shortId;
+
+          if (urlContainsOldUID && providerShortId && providerShortId.length === 6) {
+            // Générer le nouveau slug avec le shortId
+            const newSlug = generateSlug({
+              firstName: providerData.firstName || '',
+              lastName: providerData.lastName || '',
+              role: providerData.type || 'expat',
+              country: providerData.country || providerData.residenceCountry || '',
+              specialties: providerData.specialties || [],
+              languages: providerData.languages || [],
+              uid: providerData.uid || foundProviderId,
+              locale: language,
+            });
+
+            // Construire la nouvelle URL
+            const currentPath = location.pathname;
+            const localeMatch = currentPath.match(/^\/([a-z]{2}-[a-z]{2})\//);
+            const currentLocale = localeMatch ? localeMatch[1] : getLocaleString(language as any);
+            const newUrl = `/${currentLocale}/${newSlug}`;
+
+            // Vérifier que la nouvelle URL est différente de l'actuelle
+            if (newUrl !== currentPath && !currentPath.endsWith(providerShortId)) {
+              console.log(`🔄 [SEO 301] Redirecting old UID URL to new ShortId URL`);
+              console.log(`   From: ${currentPath}`);
+              console.log(`   To: ${newUrl}`);
+              // Utiliser navigate avec replace pour une redirection côté client (équivalent 301 pour SPA)
+              navigate(newUrl, { replace: true });
+              return; // Sortir pour éviter de continuer le rendu
+            }
+          }
+
           setProvider(providerData);
           setRealProviderId(foundProviderId);
           providerLoadedRef.current = true;
