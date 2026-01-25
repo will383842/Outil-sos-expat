@@ -513,8 +513,10 @@ export const IaMultiProvidersTab: React.FC = () => {
         return;
       }
 
+      // IMPORTANT: Set isMultiProvider=true so the dashboard can find this account
       await updateDoc(doc(db, 'users', selectedAccountId), {
         linkedProviderIds: arrayUnion(selectedProviderId),
+        isMultiProvider: true, // ✅ Required for multi-dashboard to find this account
         ...(existingLinks.length === 0 && { activeProviderId: selectedProviderId }),
         updatedAt: serverTimestamp()
       });
@@ -937,6 +939,53 @@ export const IaMultiProvidersTab: React.FC = () => {
   };
 
   // ============================================================================
+  // FIX MULTI-PROVIDER FLAGS
+  // ============================================================================
+
+  // Fix accounts that have linkedProviderIds but are missing isMultiProvider=true
+  const fixMultiProviderFlags = async () => {
+    setCleanupRunning(true);
+    setError(null);
+
+    try {
+      // Find accounts with linkedProviderIds but missing isMultiProvider flag
+      const accountsToFix = accounts.filter(a =>
+        a.providers.length > 0 && !allUsers.find(u => u.id === a.userId)?.shareBusyStatus
+      );
+
+      // Get all users with linkedProviderIds from Firestore
+      const usersSnap = await getDocs(query(collection(db, 'users'), limit(500)));
+      let fixed = 0;
+
+      for (const docSnap of usersSnap.docs) {
+        const data = docSnap.data();
+        const linkedIds = data.linkedProviderIds || [];
+
+        // If has linked providers but isMultiProvider is not explicitly true
+        if (linkedIds.length > 0 && data.isMultiProvider !== true) {
+          await updateDoc(doc(db, 'users', docSnap.id), {
+            isMultiProvider: true,
+            updatedAt: serverTimestamp()
+          });
+          fixed++;
+        }
+      }
+
+      if (fixed > 0) {
+        setSuccess(`✅ ${fixed} compte(s) réparé(s) avec isMultiProvider=true`);
+        await loadData();
+      } else {
+        setSuccess('Tous les comptes sont déjà correctement configurés');
+      }
+    } catch (err) {
+      console.error('Error fixing multi-provider flags:', err);
+      setError('Erreur lors de la réparation des flags');
+    } finally {
+      setCleanupRunning(false);
+    }
+  };
+
+  // ============================================================================
   // ORPHAN CLEANUP
   // ============================================================================
 
@@ -1078,6 +1127,21 @@ export const IaMultiProvidersTab: React.FC = () => {
 
           {activeTab === 'accounts' && (
             <>
+              {/* Fix Multi-Provider Flags button */}
+              <button
+                onClick={fixMultiProviderFlags}
+                disabled={cleanupRunning}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400"
+                title="Réparer les comptes existants (ajouter isMultiProvider=true)"
+              >
+                {cleanupRunning ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Check className="w-4 h-4" />
+                )}
+                <span className="hidden sm:inline">Réparer flags</span>
+              </button>
+
               {/* Cleanup button */}
               <div className="relative group">
                 <button

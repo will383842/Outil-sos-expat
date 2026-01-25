@@ -373,6 +373,26 @@ export function useMultiProviderDashboard(): UseMultiProviderDashboardReturn {
   }, [isAuthenticated, loadAccounts]);
 
   // ============================================================================
+  // AUTO-REFRESH for new booking requests (every 30 seconds)
+  // ============================================================================
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const AUTO_REFRESH_INTERVAL = 30000; // 30 seconds
+    const intervalId = setInterval(() => {
+      // Only refresh if not currently loading
+      if (!isLoading && isMounted.current) {
+        console.log('[useMultiProviderDashboard] Auto-refreshing...');
+        loadAccounts();
+      }
+    }, AUTO_REFRESH_INTERVAL);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [isAuthenticated, isLoading, loadAccounts]);
+
+  // ============================================================================
   // COMPUTED VALUES
   // ============================================================================
 
