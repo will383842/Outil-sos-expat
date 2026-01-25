@@ -2098,14 +2098,25 @@ export const createPayPalOrderHttp = onRequest(
       });
 
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+
       prodLogger.error('PAYPAL_ORDER_HTTP_ERROR', `[${requestId}] PayPal order creation failed (HTTP)`, {
         requestId,
         callSessionId,
         providerId,
-        error: error instanceof Error ? error.message : String(error),
-        errorStack: error instanceof Error ? error.stack : undefined,
+        error: errorMessage,
+        errorStack,
       });
-      console.error("🔴 [PAYPAL ORDER HTTP ERROR] Full error:", error);
+
+      console.error("🔴 [PAYPAL ORDER HTTP ERROR]", {
+        requestId,
+        callSessionId,
+        providerId,
+        errorMessage,
+        errorStack: errorStack?.substring(0, 500), // Tronquer pour les logs
+      });
+
       res.status(500).json({ error: "Failed to create order" });
     }
   }
