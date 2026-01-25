@@ -320,8 +320,10 @@ export default function StripeKYC({ onComplete, userType }: Props) {
 
       const result = await createStripeAccount({
         email: user.email,
-        currentCountry: "FR",
+        currentCountry: user.currentCountry || user.country || "FR",
         userType: userType,
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
       });
 
       const data = result.data as { success: boolean; accountId: string };
@@ -536,8 +538,10 @@ export default function StripeKYC({ onComplete, userType }: Props) {
             const createStripeAccount = httpsCallable(functionsInstance, "createStripeAccount");
             const createResult = await createStripeAccount({
               email: user.email,
-              currentCountry: "FR",
+              currentCountry: user.currentCountry || user.country || "FR",
               userType: userType,
+              firstName: user.firstName || "",
+              lastName: user.lastName || "",
             });
             const createData = createResult.data as { success: boolean; accountId: string };
 
