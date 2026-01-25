@@ -2,7 +2,7 @@
  * paypalMaintenance.ts
  *
  * Fonctions de maintenance PayPal:
- * - P1-5: Nettoyage des orders PayPal non capturés (> 24h)
+ * - P1-5: Nettoyage des orders PayPal non capturés (> 24h) avec annulation active via API
  * - P1-4: Trigger pour envoyer un email après succès payout
  *
  * Ces fonctions assurent l'intégrité des données PayPal et la notification des providers.
@@ -13,8 +13,9 @@ import { onSchedule } from "firebase-functions/v2/scheduler";
 import { onDocumentUpdated } from "firebase-functions/v2/firestore";
 import * as nodemailer from "nodemailer";
 
-import { EMAIL_USER, EMAIL_PASS, EMAIL_SECRETS } from "../lib/secrets";
+import { EMAIL_USER, EMAIL_PASS, EMAIL_SECRETS, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET } from "../lib/secrets";
 import { maskEmail } from "../utils/logs/maskSensitiveData";
+import { PayPalManager } from "../PayPalManager";
 
 // ============================================================================
 // P1-5: CLEANUP DES ORDERS PAYPAL NON CAPTURÉS
@@ -28,13 +29,18 @@ import { maskEmail } from "../utils/logs/maskSensitiveData";
  * - status = "CREATED" ou "APPROVED" (pas COMPLETED)
  * - createdAt > 24 heures
  *
- * Ces orders sont marqués comme "EXPIRED" et archivés.
+ * Ces orders sont:
+ * 1. Annulés activement via l'API PayPal (void authorization)
+ * 2. Marqués comme "EXPIRED" et archivés
  */
 export const cleanupUncapturedPayPalOrders = onSchedule(
   {
     schedule: "0 */6 * * *", // Toutes les 6 heures
     region: "europe-west1",
     timeZone: "Europe/Paris",
+    timeoutSeconds: 300, // 5 minutes pour traiter les annulations API
+    memory: "512MiB",
+    secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
   },
   async () => {
     console.log("[PayPalCleanup] Starting cleanup of uncaptured orders...");
@@ -45,13 +51,20 @@ export const cleanupUncapturedPayPalOrders = onSchedule(
       now.toMillis() - 24 * 60 * 60 * 1000
     );
 
+    const results = {
+      voided: 0,
+      expired: 0,
+      alreadyVoided: 0,
+      errors: 0,
+    };
+
     try {
       // Récupérer les orders non capturés de plus de 24h
       const uncapturedOrders = await db
         .collection("paypal_orders")
         .where("status", "in", ["CREATED", "APPROVED", "PAYER_ACTION_REQUIRED"])
         .where("createdAt", "<", twentyFourHoursAgo)
-        .limit(100) // Limiter pour éviter les timeouts
+        .limit(50) // Limiter pour éviter les timeouts (API calls)
         .get();
 
       if (uncapturedOrders.empty) {
@@ -61,44 +74,81 @@ export const cleanupUncapturedPayPalOrders = onSchedule(
 
       console.log(`[PayPalCleanup] Found ${uncapturedOrders.size} uncaptured orders to process`);
 
-      const batch = db.batch();
-      const archivedOrders: string[] = [];
+      // Instancier PayPalManager pour annuler les autorisations
+      const paypalManager = new PayPalManager(db);
 
       for (const doc of uncapturedOrders.docs) {
         const orderData = doc.data();
+        const orderId = doc.id;
 
-        // Archiver l'order dans une collection séparée
-        const archiveRef = db.collection("paypal_orders_archived").doc(doc.id);
-        batch.set(archiveRef, {
-          ...orderData,
-          originalStatus: orderData.status,
-          archivedReason: "UNCAPTURED_EXPIRED",
-          archivedAt: now,
-        });
+        try {
+          // 1. Essayer d'annuler l'autorisation via l'API PayPal
+          console.log(`[PayPalCleanup] Voiding order ${orderId}...`);
+          const voidResult = await paypalManager.voidAuthorization(
+            orderId,
+            "Automatic cleanup - order expired after 24 hours without capture"
+          );
 
-        // Mettre à jour le status de l'order original
-        batch.update(doc.ref, {
-          status: "EXPIRED",
-          expiredAt: now,
-          updatedAt: now,
-        });
+          if (voidResult.success) {
+            if (voidResult.status === "ALREADY_VOIDED") {
+              results.alreadyVoided++;
+            } else {
+              results.voided++;
+            }
+            console.log(`[PayPalCleanup] Order ${orderId} voided: ${voidResult.status}`);
+          } else {
+            // L'annulation a échoué mais on continue le cleanup
+            console.warn(`[PayPalCleanup] Could not void ${orderId}: ${voidResult.message}`);
 
-        archivedOrders.push(doc.id);
+            // Marquer manuellement comme expiré si l'API échoue
+            await doc.ref.update({
+              status: "EXPIRED",
+              expiredAt: now,
+              expiredReason: `Cleanup failed to void via API: ${voidResult.message}`,
+              updatedAt: now,
+            });
+            results.expired++;
+          }
+
+          // 2. Archiver l'order
+          const archiveRef = db.collection("paypal_orders_archived").doc(orderId);
+          await archiveRef.set({
+            ...orderData,
+            originalStatus: orderData.status,
+            archivedReason: "UNCAPTURED_EXPIRED",
+            archivedAt: now,
+            voidResult: voidResult,
+          });
+
+        } catch (orderError) {
+          console.error(`[PayPalCleanup] Error processing order ${orderId}:`, orderError);
+          results.errors++;
+
+          // Marquer comme expiré même en cas d'erreur
+          try {
+            await doc.ref.update({
+              status: "EXPIRED",
+              expiredAt: now,
+              expiredReason: `Cleanup error: ${orderError instanceof Error ? orderError.message : "Unknown"}`,
+              updatedAt: now,
+            });
+          } catch {
+            // Ignorer les erreurs de mise à jour
+          }
+        }
       }
 
-      await batch.commit();
+      console.log(`[PayPalCleanup] Cleanup completed:`, results);
 
-      console.log(`[PayPalCleanup] Successfully cleaned up ${archivedOrders.length} orders`);
-
-      // Créer une alerte admin si beaucoup d'orders expirés
-      if (archivedOrders.length >= 10) {
+      // Créer une alerte admin avec les résultats
+      const totalProcessed = results.voided + results.expired + results.alreadyVoided + results.errors;
+      if (totalProcessed > 0) {
         await db.collection("admin_alerts").add({
           type: "paypal_orders_cleanup",
-          priority: "low",
+          priority: results.errors > 0 ? "medium" : "low",
           title: "Orders PayPal expirés nettoyés",
-          message: `${archivedOrders.length} orders PayPal non capturés ont été archivés après 24h d'inactivité.`,
-          orderIds: archivedOrders.slice(0, 10), // Limiter à 10 IDs
-          totalCleaned: archivedOrders.length,
+          message: `Traité: ${totalProcessed} orders. Annulés: ${results.voided}, Déjà annulés: ${results.alreadyVoided}, Expirés: ${results.expired}, Erreurs: ${results.errors}`,
+          results,
           read: false,
           createdAt: now,
         });
@@ -109,7 +159,7 @@ export const cleanupUncapturedPayPalOrders = onSchedule(
       // Alerter en cas d'erreur
       await db.collection("admin_alerts").add({
         type: "paypal_cleanup_error",
-        priority: "medium",
+        priority: "high",
         title: "Erreur nettoyage orders PayPal",
         message: `Erreur lors du nettoyage des orders: ${error instanceof Error ? error.message : "Unknown"}`,
         read: false,

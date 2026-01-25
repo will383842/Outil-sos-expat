@@ -202,6 +202,7 @@ export type RouteKey =
   | "dashboard-subscription-plans" // /dashboard/subscription/plans -> /tableau-de-bord/abonnement/plans, etc.
   | "dashboard-subscription-success" // /dashboard/subscription/success -> /tableau-de-bord/abonnement/succes, etc.
   | "dashboard-conversations" // /dashboard/conversations -> /tableau-de-bord/conversations, etc.
+  | "dashboard-kyc"      // /dashboard/kyc -> /tableau-de-bord/verification, etc.
   | "login"              // /login -> /connexion, /iniciar-sesion, etc.
   | "register"           // /register -> /inscription, /registro, etc.
   | "password-reset";     // /password-reset -> /reinitialisation-mot-de-passe, etc.
@@ -569,6 +570,17 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "kongzhi-mianban/duihua",
     hi: "dashboard/baatcheet",
     ar: "لوحة-التحكم/المحادثات",
+  },
+  "dashboard-kyc": {
+    fr: "tableau-de-bord/verification",
+    en: "dashboard/kyc",
+    es: "panel/verificacion",
+    de: "dashboard/verifizierung",
+    ru: "panel-upravleniya/verifikatsiya",
+    pt: "painel/verificacao",
+    ch: "kongzhi-mianban/yanzheng",
+    hi: "dashboard/satya",
+    ar: "لوحة-التحكم/التحقق",
   },
   "login": {
     fr: "connexion",
