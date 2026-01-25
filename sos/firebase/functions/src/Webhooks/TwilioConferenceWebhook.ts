@@ -50,8 +50,9 @@ interface TwilioConferenceWebhookBody {
 export const twilioConferenceWebhook = onRequest(
   {
     region: 'europe-west1',
-    memory: '256MiB',
-    cpu: 0.25,
+    memory: '512MiB',  // P0 FIX: Increased for payment capture operations
+    cpu: 0.5,          // P0 FIX: Increased for faster execution
+    timeoutSeconds: 300, // P0 FIX: 5 minutes timeout for payment capture
     maxInstances: 10,  // P0 FIX: Increased for better scalability during peak
     minInstances: 1,   // P0 FIX: Keep warm to avoid cold start delays on conference events
     concurrency: 1,

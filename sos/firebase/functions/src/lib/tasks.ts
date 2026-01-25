@@ -46,6 +46,16 @@ const SET_PROVIDER_AVAILABLE_TASK_URL = defineString("SET_PROVIDER_AVAILABLE_TAS
 // Cooldown duration in seconds (5 minutes)
 const PROVIDER_COOLDOWN_SECONDS = 5 * 60;
 
+// Busy safety timeout task URL - releases provider if stuck in busy state
+const BUSY_SAFETY_TIMEOUT_TASK_URL = defineString("BUSY_SAFETY_TIMEOUT_TASK_URL", {
+  default: "" // Will be set after deployment
+});
+
+// Busy safety timeout duration in seconds (10 minutes)
+// This is the maximum time a provider should remain "busy" with a pending call
+// If the session is not active after this time, the provider is released
+const BUSY_SAFETY_TIMEOUT_SECONDS = 10 * 60;
+
 // P0 FIX: Retry configuration for Cloud Tasks creation
 const CLOUD_TASK_RETRY_CONFIG = {
   maxRetries: 3,
@@ -791,6 +801,160 @@ export async function scheduleProviderAvailableTask(
  */
 export function getProviderCooldownSeconds(): number {
   return PROVIDER_COOLDOWN_SECONDS;
+}
+
+// ============================================================
+// BUSY SAFETY TIMEOUT - Releases provider if stuck in busy state
+// ============================================================
+
+interface BusySafetyTimeoutPayload {
+  providerId: string;
+  callSessionId: string;
+  scheduledAt: string;
+  taskId: string;
+  timeoutSeconds: number;
+}
+
+/**
+ * Schedule a Cloud Task to check and release a provider if stuck in busy state.
+ * This is a safety net in case the normal call flow fails to release the provider.
+ *
+ * The task will:
+ * 1. Check if the provider is still marked as busy for this specific callSessionId
+ * 2. Check if the call session is still active
+ * 3. If the session is completed/failed/cancelled/not-found AND provider is still busy → release provider
+ * 4. If the session is still active → do nothing (let normal flow handle it)
+ *
+ * This prevents providers from being stuck in "busy" state indefinitely due to:
+ * - Network errors preventing webhook delivery
+ * - Twilio API failures
+ * - System crashes during call flow
+ * - Any other unexpected failure scenario
+ *
+ * @param providerId - ID of the provider
+ * @param callSessionId - ID of the call session (used to verify the provider is busy for THIS call)
+ * @param timeoutSeconds - How long to wait before checking (default: 10 minutes)
+ * @returns taskId of the created task
+ */
+export async function scheduleBusySafetyTimeoutTask(
+  providerId: string,
+  callSessionId: string,
+  timeoutSeconds: number = BUSY_SAFETY_TIMEOUT_SECONDS
+): Promise<string> {
+  const debugId = `busy_safety_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
+
+  console.log(`\n📋 [BusySafetyTimeout][${debugId}] Scheduling busy safety timeout task`);
+  console.log(`📋 [BusySafetyTimeout][${debugId}] ProviderId: ${providerId}`);
+  console.log(`📋 [BusySafetyTimeout][${debugId}] CallSessionId: ${callSessionId}`);
+  console.log(`📋 [BusySafetyTimeout][${debugId}] Timeout: ${timeoutSeconds} seconds (${Math.round(timeoutSeconds / 60)} min)`);
+
+  prodLogger.info('BUSY_SAFETY_TIMEOUT_START', `Scheduling busy safety timeout task`, {
+    providerId,
+    callSessionId,
+    timeoutSeconds,
+    debugId
+  });
+
+  // Check if URL is configured
+  const taskUrl = BUSY_SAFETY_TIMEOUT_TASK_URL.value();
+  if (!taskUrl) {
+    // If URL not configured, skip scheduling (safety net disabled)
+    console.warn(`⚠️ [BusySafetyTimeout][${debugId}] BUSY_SAFETY_TIMEOUT_TASK_URL not configured, skipping`);
+    prodLogger.warn('BUSY_SAFETY_TIMEOUT_NO_URL', `Task URL not configured, busy safety timeout disabled`, {
+      providerId,
+      callSessionId
+    });
+    return `skipped_${debugId}`;
+  }
+
+  try {
+    const client = getTasksClient();
+    const cfg = getTasksConfig();
+
+    const queuePath = client.queuePath(cfg.projectId, cfg.location, cfg.queueName);
+    const taskId = `busy-safety-${providerId}-${callSessionId.substring(0, 8)}-${Date.now()}`;
+
+    const scheduleTime = new Date();
+    scheduleTime.setSeconds(scheduleTime.getSeconds() + timeoutSeconds);
+
+    const payload: BusySafetyTimeoutPayload = {
+      providerId,
+      callSessionId,
+      scheduledAt: new Date().toISOString(),
+      taskId,
+      timeoutSeconds
+    };
+
+    const authSecret = TASKS_AUTH_SECRET.value();
+
+    const task = {
+      name: `${queuePath}/tasks/${taskId}`,
+      scheduleTime: {
+        seconds: Math.floor(scheduleTime.getTime() / 1000)
+      },
+      httpRequest: {
+        httpMethod: "POST" as const,
+        url: taskUrl,
+        headers: {
+          "Content-Type": "application/json",
+          "X-Task-Auth": authSecret
+        },
+        body: Buffer.from(JSON.stringify(payload))
+      }
+    };
+
+    console.log(`📋 [BusySafetyTimeout][${debugId}] Creating task...`);
+    console.log(`📋 [BusySafetyTimeout][${debugId}] URL: ${taskUrl}`);
+    console.log(`📋 [BusySafetyTimeout][${debugId}] Scheduled for: ${scheduleTime.toISOString()}`);
+
+    const [response] = await retryWithBackoff(
+      () => client.createTask({ parent: queuePath, task }),
+      'createBusySafetyTimeoutTask',
+      debugId
+    );
+
+    console.log(`✅ [BusySafetyTimeout][${debugId}] Task created: ${response.name}`);
+    console.log(`✅ [BusySafetyTimeout][${debugId}] Provider ${providerId} will be checked at ${scheduleTime.toISOString()}`);
+
+    prodLogger.info('BUSY_SAFETY_TIMEOUT_SUCCESS', `Task created successfully`, {
+      providerId,
+      callSessionId,
+      taskId,
+      scheduledAt: scheduleTime.toISOString(),
+      debugId
+    });
+
+    return taskId;
+  } catch (error) {
+    console.error(`❌ [BusySafetyTimeout][${debugId}] Error creating task:`, error);
+    prodLogger.error('BUSY_SAFETY_TIMEOUT_ERROR', `Failed to create busy safety timeout task`, {
+      providerId,
+      callSessionId,
+      error: error instanceof Error ? error.message : String(error),
+      debugId
+    });
+
+    await logError("scheduleBusySafetyTimeoutTask", error);
+    return `error_${debugId}`;
+  }
+}
+
+/**
+ * Cancel a busy safety timeout task (call completed normally before timeout).
+ * This should be called when the call ends normally to prevent unnecessary checks.
+ *
+ * @param taskId - ID of the task to cancel
+ */
+export async function cancelBusySafetyTimeoutTask(taskId: string): Promise<void> {
+  // Use the existing cancelCallTask function
+  return cancelCallTask(taskId);
+}
+
+/**
+ * Get the busy safety timeout duration in seconds.
+ */
+export function getBusySafetyTimeoutSeconds(): number {
+  return BUSY_SAFETY_TIMEOUT_SECONDS;
 }
 
 // ============================================================

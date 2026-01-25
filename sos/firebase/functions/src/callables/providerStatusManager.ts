@@ -12,6 +12,7 @@
 
 import * as admin from 'firebase-admin';
 import { logError } from '../utils/logs/logError';
+import { scheduleBusySafetyTimeoutTask, cancelBusySafetyTimeoutTask } from '../lib/tasks';
 
 const IS_DEPLOYMENT_ANALYSIS =
   !process.env.K_REVISION &&
@@ -221,6 +222,31 @@ export async function setProviderBusy(
     ) {
       console.log(`[ProviderStatusManager] shareBusyStatus=true, propagating to ${transactionResult.linkedProviderIds.length} linked providers`);
       await propagateBusyToSiblings(providerId, transactionResult.linkedProviderIds, callSessionId, now);
+    }
+
+    // 6. Schedule busy safety timeout task (non-blocking)
+    // This is a safety net that will release the provider if stuck in busy state
+    // after 10 minutes (if the call session is not active anymore)
+    if (transactionResult.success && !transactionResult.skipPropagation) {
+      try {
+        console.log(`🛡️ [${logId}] Scheduling busy safety timeout task for provider ${providerId}...`);
+        const safetyTaskId = await scheduleBusySafetyTimeoutTask(providerId, callSessionId);
+        console.log(`🛡️ [${logId}] Busy safety timeout scheduled: ${safetyTaskId}`);
+
+        // Store the taskId in the provider document so we can cancel it later
+        if (safetyTaskId && !safetyTaskId.startsWith('skipped_') && !safetyTaskId.startsWith('error_')) {
+          const db = getDb();
+          const updateTaskId = { busySafetyTimeoutTaskId: safetyTaskId };
+          await Promise.all([
+            db.collection('users').doc(providerId).update(updateTaskId),
+            db.collection('sos_profiles').doc(providerId).update(updateTaskId).catch(() => {/* ignore if not exists */}),
+          ]);
+          console.log(`🛡️ [${logId}] Stored busySafetyTimeoutTaskId: ${safetyTaskId}`);
+        }
+      } catch (safetyError) {
+        // Non-blocking - log error but don't fail the main operation
+        console.warn(`⚠️ [${logId}] Failed to schedule busy safety timeout (non-blocking):`, safetyError);
+      }
     }
 
     return {
@@ -437,6 +463,9 @@ export async function setProviderAvailable(
       }
 
       // 3. Préparer les données de mise à jour
+      // Get the safety timeout task ID before clearing it (to cancel it later)
+      const busySafetyTimeoutTaskId = userData?.busySafetyTimeoutTaskId;
+
       const updateData = {
         availability: targetStatus,
         isOnline: targetIsOnline,
@@ -451,6 +480,8 @@ export async function setProviderAvailable(
         // P0 FIX 2026-01-21: Nettoyer les champs offline forcé
         offlineReason: admin.firestore.FieldValue.delete(),
         offlineSince: admin.firestore.FieldValue.delete(),
+        // Clean up safety timeout task ID
+        busySafetyTimeoutTaskId: admin.firestore.FieldValue.delete(),
         lastStatusChange: now,
         lastActivityCheck: now,
         lastActivity: now,
@@ -486,10 +517,23 @@ export async function setProviderAvailable(
         linkedProviderIds: userData?.linkedProviderIds || [],
         shareBusyStatus: userData?.shareBusyStatus === true,
         skipSiblingRelease: false,
+        busySafetyTimeoutTaskId: busySafetyTimeoutTaskId || null,
       };
     });
 
     console.log(`✅ [ProviderStatusManager] Provider ${providerId} set to ${transactionResult.newStatus.toUpperCase()} (reason: ${reason})`);
+
+    // 5.5 Cancel the busy safety timeout task if it exists (non-blocking)
+    if (transactionResult.busySafetyTimeoutTaskId) {
+      try {
+        console.log(`🛡️ [ProviderStatusManager] Cancelling busy safety timeout task: ${transactionResult.busySafetyTimeoutTaskId}`);
+        await cancelBusySafetyTimeoutTask(transactionResult.busySafetyTimeoutTaskId);
+        console.log(`✅ [ProviderStatusManager] Busy safety timeout task cancelled`);
+      } catch (cancelError) {
+        // Non-blocking - task might already be executed or deleted
+        console.warn(`⚠️ [ProviderStatusManager] Failed to cancel busy safety timeout task (non-blocking):`, cancelError);
+      }
+    }
 
     // 5. Libérer les siblings si shareBusyStatus est activé
     // (fait en dehors de la transaction pour éviter les deadlocks)

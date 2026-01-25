@@ -279,6 +279,7 @@ export {
   // REMOVED: createPayPalOrder, capturePayPalOrder (onCall versions)
   // Use HTTP versions below instead - they have CORS support
   createPayPalOrderHttp,
+  authorizePayPalOrderHttp, // AUTHORIZE flow: comme Stripe capture_method: 'manual'
   capturePayPalOrderHttp,
   paypalWebhook,
   getRecommendedPaymentGateway,

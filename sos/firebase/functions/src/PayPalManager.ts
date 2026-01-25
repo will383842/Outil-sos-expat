@@ -208,6 +208,9 @@ interface CreateOrderData {
   providerPayPalMerchantId: string;
   clientId: string;
   description: string;
+  // P0 FIX: Phone numbers required for Twilio call
+  clientPhone: string;
+  providerPhone: string;
   // Tracking metadata for Meta CAPI and UTM attribution
   trackingMetadata?: Record<string, string>;
 }
@@ -223,6 +226,9 @@ interface CreateSimpleOrderData {
   providerPayPalEmail: string; // Email au lieu de Merchant ID
   clientId: string;
   description: string;
+  // P0 FIX: Phone numbers required for Twilio call
+  clientPhone: string;
+  providerPhone: string;
   // Tracking metadata for Meta CAPI and UTM attribution
   trackingMetadata?: Record<string, string>;
 }
@@ -657,8 +663,10 @@ export class PayPalManager {
     console.log(`🔶 [PAYPAL_DEBUG] Formatted amount: ${totalAmount}`);
 
     // Ordre simple: l'argent va à SOS-Expat, pas de split automatique
+    // AUTHORIZE flow: comme Stripe, on prend seulement une autorisation
+    // La capture se fait après 2 minutes d'appel, sinon on void l'autorisation
     const orderData = {
-      intent: "CAPTURE",
+      intent: "AUTHORIZE",
       purchase_units: [
         {
           reference_id: data.callSessionId,
@@ -674,13 +682,13 @@ export class PayPalManager {
       application_context: {
         brand_name: "SOS Expat",
         landing_page: "LOGIN",
-        user_action: "PAY_NOW",
+        user_action: "CONTINUE", // AUTHORIZE flow: "CONTINUE" au lieu de "PAY_NOW"
         return_url: `${PAYPAL_CONFIG.RETURN_URL}?sessionId=${data.callSessionId}`,
         cancel_url: `${PAYPAL_CONFIG.CANCEL_URL}?sessionId=${data.callSessionId}`,
       },
     };
 
-    console.log(`🔶 [PAYPAL_DEBUG] Calling PayPal API to create order...`);
+    console.log(`🔶 [PAYPAL_DEBUG] Calling PayPal API to create order (AUTHORIZE intent)...`);
     const response = await this.apiRequest<PayPalOrder>(
       "POST",
       "/v2/checkout/orders",
@@ -703,7 +711,7 @@ export class PayPalManager {
       callSessionId: data.callSessionId,
       clientId: data.clientId,
       providerId: data.providerId,
-      providerPayPalEmail: data.providerPayPalEmail, // Email pour le payout
+      providerPayPalEmail: data.providerPayPalEmail || null, // Email pour le payout (null si non défini)
       amount: data.amount,
       providerAmount: data.providerAmount,
       platformFee: data.platformFee,
@@ -711,6 +719,7 @@ export class PayPalManager {
       status: response.status,
       approvalUrl,
       simpleFlow: true, // Flag pour déclencher le payout après capture
+      intent: "AUTHORIZE", // AUTHORIZE flow: comme Stripe, capture après 2 min
       payoutStatus: "pending", // En attente du payout
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
@@ -725,6 +734,9 @@ export class PayPalManager {
       paymentId: response.id,
       clientId: data.clientId,
       providerId: data.providerId,
+      // P0 FIX: Phone numbers required for Twilio call
+      clientPhone: data.clientPhone,
+      providerPhone: data.providerPhone,
       payment: {
         paypalOrderId: response.id,
         paymentMethod: "paypal",
@@ -737,10 +749,12 @@ export class PayPalManager {
         provider: {
           id: data.providerId,
           type: "provider",
+          phone: data.providerPhone,
         },
         client: {
           id: data.clientId,
           type: "client",
+          phone: data.clientPhone,
         },
       },
       metadata: {
@@ -808,8 +822,10 @@ export class PayPalManager {
     console.log(`📦 [PAYPAL] Provider Merchant ID: ${data.providerPayPalMerchantId}`);
     console.log(`📦 [PAYPAL] Platform Merchant ID: ${platformMerchantId}`);
 
+    // AUTHORIZE flow: comme Stripe, on prend seulement une autorisation
+    // La capture se fait après 2 minutes d'appel, sinon on void l'autorisation
     const orderData = {
-      intent: "CAPTURE",
+      intent: "AUTHORIZE",
       purchase_units: [
         {
           reference_id: data.callSessionId,
@@ -854,7 +870,7 @@ export class PayPalManager {
       application_context: {
         brand_name: "SOS Expat",
         landing_page: "LOGIN",
-        user_action: "PAY_NOW",
+        user_action: "CONTINUE", // AUTHORIZE flow: "CONTINUE" au lieu de "PAY_NOW"
         return_url: `${PAYPAL_CONFIG.RETURN_URL}?sessionId=${data.callSessionId}`,
         cancel_url: `${PAYPAL_CONFIG.CANCEL_URL}?sessionId=${data.callSessionId}`,
       },
@@ -885,6 +901,7 @@ export class PayPalManager {
       currency: data.currency,
       status: response.status,
       approvalUrl,
+      intent: "AUTHORIZE", // AUTHORIZE flow: comme Stripe, capture après 2 min
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
@@ -896,6 +913,9 @@ export class PayPalManager {
       paymentId: response.id,
       clientId: data.clientId,
       providerId: data.providerId,
+      // P0 FIX: Phone numbers required for Twilio call
+      clientPhone: data.clientPhone,
+      providerPhone: data.providerPhone,
       payment: {
         paypalOrderId: response.id,
         paymentMethod: "paypal",
@@ -908,10 +928,12 @@ export class PayPalManager {
         provider: {
           id: data.providerId,
           type: "provider",
+          phone: data.providerPhone,
         },
         client: {
           id: data.clientId,
           type: "client",
+          phone: data.clientPhone,
         },
       },
       metadata: {
@@ -930,6 +952,127 @@ export class PayPalManager {
       orderId: response.id,
       approvalUrl,
       status: response.status,
+    };
+  }
+
+  /**
+   * Autorise un ordre PayPal après approbation du client
+   *
+   * FLOW AUTHORIZE (comme Stripe):
+   * ==============================
+   * 1. Ordre créé avec intent="AUTHORIZE"
+   * 2. Client approuve sur PayPal
+   * 3. Cette méthode est appelée pour créer l'autorisation
+   * 4. L'autorisation peut être:
+   *    - Capturée (après 2 min d'appel) via captureOrder()
+   *    - Annulée (appel < 2 min) via voidAuthorization()
+   *
+   * L'autorisation est valide 29 jours.
+   *
+   * @param orderId - L'ID de l'ordre PayPal approuvé
+   * @returns L'ID de l'autorisation créée
+   */
+  async authorizeOrder(orderId: string): Promise<{
+    success: boolean;
+    authorizationId: string;
+    status: string;
+    amount?: number;
+    currency?: string;
+  }> {
+    console.log(`🔐 [PAYPAL] Authorizing order: ${orderId}`);
+
+    // Récupérer les données de l'ordre
+    const orderDoc = await this.db.collection("paypal_orders").doc(orderId).get();
+    const orderData = orderDoc.data();
+
+    if (!orderData) {
+      throw new Error(`Order ${orderId} not found`);
+    }
+
+    // Vérifier que l'ordre est bien en mode AUTHORIZE
+    if (orderData.intent !== "AUTHORIZE") {
+      console.warn(`⚠️ [PAYPAL] Order ${orderId} was not created with AUTHORIZE intent`);
+    }
+
+    // Appeler l'API PayPal pour autoriser l'ordre
+    const response = await this.apiRequest<any>(
+      "POST",
+      `/v2/checkout/orders/${orderId}/authorize`,
+      {}
+    );
+
+    console.log(`🔐 [PAYPAL] Authorization response status: ${response.status}`);
+
+    // Extraire l'autorisation créée
+    const authorization = response.purchase_units?.[0]?.payments?.authorizations?.[0];
+
+    if (!authorization) {
+      throw new Error("No authorization returned from PayPal");
+    }
+
+    const authorizationId = authorization.id;
+    const authorizationStatus = authorization.status;
+    const authAmount = authorization.amount?.value ? parseFloat(authorization.amount.value) : orderData.amount;
+    const authCurrency = authorization.amount?.currency_code || orderData.currency;
+
+    console.log(`🔐 [PAYPAL] Authorization created: ${authorizationId}, status: ${authorizationStatus}`);
+
+    // Mettre à jour l'ordre dans Firestore avec l'ID d'autorisation
+    await this.db.collection("paypal_orders").doc(orderId).update({
+      status: "AUTHORIZED",
+      authorizationId,
+      authorizationStatus,
+      authorizationCreatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    // Mettre à jour la call_session
+    if (orderData.callSessionId) {
+      await this.db.collection("call_sessions").doc(orderData.callSessionId).update({
+        "payment.status": "authorized",
+        "payment.authorizationId": authorizationId,
+        "payment.authorizedAt": admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    }
+
+    // ========================================
+    // P0 FIX: PLANIFIER L'APPEL TWILIO APRÈS AUTORISATION PAYPAL
+    // Comme Stripe avec capture_method: 'manual', l'appel démarre après autorisation
+    // La capture se fait après 2 minutes d'appel
+    // ========================================
+    if (orderData.callSessionId) {
+      try {
+        const { scheduleCallTaskWithIdempotence } = await import("./lib/tasks");
+        const CALL_DELAY_SECONDS = 240; // 4 minutes de délai comme pour Stripe
+
+        console.log(`📞 [PAYPAL] Scheduling call for session: ${orderData.callSessionId}`);
+
+        const schedulingResult = await scheduleCallTaskWithIdempotence(
+          orderData.callSessionId,
+          CALL_DELAY_SECONDS,
+          this.db
+        );
+
+        if (schedulingResult.skipped) {
+          console.log(`⚠️ [PAYPAL] Call scheduling skipped: ${schedulingResult.reason}`);
+        } else {
+          console.log(`✅ [PAYPAL] Call scheduled with taskId: ${schedulingResult.taskId}`);
+        }
+      } catch (scheduleError) {
+        // Ne pas faire échouer l'autorisation si le scheduling échoue
+        console.error(`❌ [PAYPAL] Call scheduling failed:`, scheduleError);
+      }
+    }
+
+    console.log(`✅ [PAYPAL] Order ${orderId} authorized successfully - authorizationId: ${authorizationId}`);
+
+    return {
+      success: true,
+      authorizationId,
+      status: authorizationStatus,
+      amount: authAmount,
+      currency: authCurrency,
     };
   }
 
@@ -968,16 +1111,55 @@ export class PayPalManager {
     }
 
     const isSimpleFlow = orderData.simpleFlow === true;
+    const isAuthorizeFlow = orderData.intent === "AUTHORIZE";
     console.log(`💳 [PAYPAL] Flow type: ${isSimpleFlow ? "SIMPLE (Payout)" : "DIRECT (Split)"}`);
+    console.log(`💳 [PAYPAL] Intent: ${isAuthorizeFlow ? "AUTHORIZE" : "CAPTURE"}`);
 
-    // Effectuer la capture
-    const response = await this.apiRequest<any>(
-      "POST",
-      `/v2/checkout/orders/${orderId}/capture`,
-      {}
-    );
+    let capture: any;
+    let response: any;
 
-    const capture = response.purchase_units?.[0]?.payments?.captures?.[0];
+    // ========== AUTHORIZE FLOW (comme Stripe) ==========
+    if (isAuthorizeFlow) {
+      // Vérifier si l'ordre a déjà été autorisé
+      let authorizationId = orderData.authorizationId;
+
+      if (!authorizationId) {
+        // L'ordre n'a pas encore été autorisé, le faire maintenant
+        console.log(`🔐 [PAYPAL] Order not yet authorized, authorizing now...`);
+        const authResult = await this.authorizeOrder(orderId);
+        authorizationId = authResult.authorizationId;
+      }
+
+      console.log(`💳 [PAYPAL] Capturing authorization: ${authorizationId}`);
+
+      // Capturer l'autorisation
+      response = await this.apiRequest<any>(
+        "POST",
+        `/v2/payments/authorizations/${authorizationId}/capture`,
+        {
+          final_capture: true, // Indique que c'est la capture finale
+        }
+      );
+
+      // La réponse de capture d'autorisation est directement l'objet capture
+      capture = response;
+      console.log(`💳 [PAYPAL] Authorization capture response:`, JSON.stringify(response, null, 2));
+    }
+    // ========== CAPTURE FLOW (legacy) ==========
+    else {
+      // Effectuer la capture directe de l'ordre
+      response = await this.apiRequest<any>(
+        "POST",
+        `/v2/checkout/orders/${orderId}/capture`,
+        {}
+      );
+
+      capture = response.purchase_units?.[0]?.payments?.captures?.[0];
+    }
+
+    if (!capture) {
+      throw new Error("No capture data in PayPal response");
+    }
     const captureAmount = capture?.amount?.value ? parseFloat(capture.amount.value) : 0;
     const captureCurrency = capture?.amount?.currency_code || "EUR";
 
@@ -1257,37 +1439,43 @@ export class PayPalManager {
       });
 
       // ========================================
-      // P0 FIX: PLANIFIER L'APPEL TWILIO APRÈS CAPTURE PAYPAL
+      // PLANIFICATION D'APPEL POUR LE FLUX LEGACY (intent=CAPTURE)
       // ========================================
-      // Importer et utiliser scheduleCallTaskWithIdempotence pour éviter les doublons
-      try {
-        const { scheduleCallTaskWithIdempotence } = await import("./lib/tasks");
-        const CALL_DELAY_SECONDS = 240; // 4 minutes de délai
+      // Pour le flux AUTHORIZE, l'appel est déjà planifié dans authorizeOrder()
+      // La fonction scheduleCallTaskWithIdempotence vérifie les doublons
+      if (!isAuthorizeFlow) {
+        // LEGACY: Ancien flux CAPTURE - planifier l'appel après capture
+        try {
+          const { scheduleCallTaskWithIdempotence } = await import("./lib/tasks");
+          const CALL_DELAY_SECONDS = 240; // 4 minutes de délai
 
-        console.log(`📞 [PAYPAL] Scheduling call for session: ${orderData.callSessionId}`);
+          console.log(`📞 [PAYPAL] LEGACY CAPTURE flow - Scheduling call for session: ${orderData.callSessionId}`);
 
-        const schedulingResult = await scheduleCallTaskWithIdempotence(
-          orderData.callSessionId,
-          CALL_DELAY_SECONDS,
-          this.db
-        );
+          const schedulingResult = await scheduleCallTaskWithIdempotence(
+            orderData.callSessionId,
+            CALL_DELAY_SECONDS,
+            this.db
+          );
 
-        if (schedulingResult.skipped) {
-          console.log(`⚠️ [PAYPAL] Call scheduling skipped: ${schedulingResult.reason}`);
-        } else {
-          console.log(`✅ [PAYPAL] Call scheduled with taskId: ${schedulingResult.taskId}`);
+          if (schedulingResult.skipped) {
+            console.log(`⚠️ [PAYPAL] Call scheduling skipped: ${schedulingResult.reason}`);
+          } else {
+            console.log(`✅ [PAYPAL] Call scheduled with taskId: ${schedulingResult.taskId}`);
+          }
+        } catch (schedulingError) {
+          // Log l'erreur mais ne pas échouer la capture - le paiement est déjà effectué
+          console.error(`❌ [PAYPAL] Error scheduling call (non-blocking):`, schedulingError);
+          // Logger dans Firestore pour suivi
+          await this.db.collection("scheduling_errors").add({
+            callSessionId: orderData.callSessionId,
+            orderId,
+            paymentMethod: "paypal",
+            error: schedulingError instanceof Error ? schedulingError.message : String(schedulingError),
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
         }
-      } catch (schedulingError) {
-        // Log l'erreur mais ne pas échouer la capture - le paiement est déjà effectué
-        console.error(`❌ [PAYPAL] Error scheduling call (non-blocking):`, schedulingError);
-        // Logger dans Firestore pour suivi
-        await this.db.collection("scheduling_errors").add({
-          callSessionId: orderData.callSessionId,
-          orderId,
-          paymentMethod: "paypal",
-          error: schedulingError instanceof Error ? schedulingError.message : String(schedulingError),
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
+      } else {
+        console.log(`📞 [PAYPAL] AUTHORIZE flow - Call already scheduled during authorization, skipping`);
       }
     }
 
@@ -1990,6 +2178,9 @@ export const createPayPalOrderHttp = onRequest(
       providerId,
       serviceType,
       description,
+      // P0 FIX: Phone numbers required for Twilio call
+      clientPhone,
+      providerPhone,
       metadata: trackingMetadata,
     } = req.body;
 
@@ -2088,6 +2279,9 @@ export const createPayPalOrderHttp = onRequest(
           providerPayPalMerchantId: providerData.paypalMerchantId,
           clientId: auth.uid,
           description: description || "SOS Expat - Consultation",
+          // P0 FIX: Phone numbers required for Twilio call
+          clientPhone: clientPhone || "",
+          providerPhone: providerPhone || providerData.phone || providerData.encryptedPhone || "",
           trackingMetadata: trackingMetadata as Record<string, string> | undefined,
         });
         console.log(`✅ [PAYPAL_DEBUG] STEP 6a: OK - DIRECT order created, orderId=${result?.orderId}`);
@@ -2105,6 +2299,9 @@ export const createPayPalOrderHttp = onRequest(
           providerPayPalEmail: providerData.paypalEmail,
           clientId: auth.uid,
           description: description || "SOS Expat - Consultation",
+          // P0 FIX: Phone numbers required for Twilio call
+          clientPhone: clientPhone || "",
+          providerPhone: providerPhone || providerData.phone || providerData.encryptedPhone || "",
           trackingMetadata: trackingMetadata as Record<string, string> | undefined,
         });
         console.log(`✅ [PAYPAL_DEBUG] STEP 6b: OK - SIMPLE order created, orderId=${result?.orderId}`);
@@ -2245,6 +2442,131 @@ export const capturePayPalOrderHttp = onRequest(
       });
       console.error("🔴 [PAYPAL CAPTURE HTTP ERROR] Full error:", error);
       res.status(500).json({ error: "Failed to capture order" });
+    }
+  }
+);
+
+/**
+ * VERSION HTTP de authorizePayPalOrder - AUTHORIZE FLOW
+ *
+ * FLOW AUTHORIZE (comme Stripe capture_method: 'manual'):
+ * =======================================================
+ * 1. Le client crée un ordre avec intent="AUTHORIZE"
+ * 2. Le client approuve sur PayPal
+ * 3. Le client appelle cette fonction pour créer l'autorisation (bloquer les fonds)
+ * 4. L'appel commence - les fonds sont réservés mais pas encore capturés
+ * 5. Après 2 minutes d'appel: le serveur capture les fonds
+ * 6. Si appel < 2 min: le serveur void l'autorisation (fonds libérés)
+ *
+ * C'est exactement le même comportement que Stripe avec capture_method: 'manual'
+ */
+export const authorizePayPalOrderHttp = onRequest(
+  {
+    region: "europe-west1",
+    secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
+    cors: true,
+  },
+  async (req, res) => {
+    // Seulement POST
+    if (req.method !== "POST") {
+      res.status(405).json({ error: "Method not allowed" });
+      return;
+    }
+
+    const authRequestId = `pp_auth_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+
+    // Vérifier l'authentification
+    const auth = await verifyAuthToken(req);
+    if (!auth) {
+      res.status(401).json({ error: "User must be authenticated" });
+      return;
+    }
+
+    const { orderId } = req.body;
+
+    prodLogger.info('PAYPAL_AUTHORIZE_HTTP_START', `[${authRequestId}] Starting PayPal order authorization (HTTP)`, {
+      authRequestId,
+      orderId,
+      clientId: auth.uid,
+    });
+
+    if (!orderId) {
+      res.status(400).json({ error: "orderId is required" });
+      return;
+    }
+
+    try {
+      // ===== P0 SECURITY FIX: Vérifier que l'utilisateur est le propriétaire de l'ordre =====
+      const db = admin.firestore();
+      const orderDoc = await db.collection("paypal_orders").doc(orderId).get();
+
+      if (!orderDoc.exists) {
+        console.error(`[PAYPAL HTTP] No order found in paypal_orders for ${orderId}`);
+        res.status(404).json({ error: "PayPal order not found" });
+        return;
+      }
+
+      const orderData = orderDoc.data()!;
+
+      // Vérifier que l'utilisateur actuel est le client qui a créé le paiement
+      if (orderData.clientId !== auth.uid) {
+        console.error(`[PAYPAL HTTP] Ownership check failed: order=${orderId}, ` +
+          `owner=${orderData.clientId}, requester=${auth.uid}`);
+        res.status(403).json({ error: "You are not authorized to authorize this order" });
+        return;
+      }
+
+      // Vérifier que l'ordre est bien en mode AUTHORIZE
+      if (orderData.intent !== "AUTHORIZE") {
+        console.error(`[PAYPAL HTTP] Order ${orderId} is not AUTHORIZE intent`);
+        res.status(400).json({ error: "Order was not created with AUTHORIZE intent" });
+        return;
+      }
+
+      // Vérifier que l'ordre n'a pas déjà été autorisé
+      if (orderData.authorizationId) {
+        console.warn(`[PAYPAL HTTP] Order ${orderId} already authorized`);
+        res.status(200).json({
+          success: true,
+          alreadyAuthorized: true,
+          authorizationId: orderData.authorizationId,
+          message: "Order was already authorized",
+        });
+        return;
+      }
+
+      // Vérifier que le paiement n'a pas déjà été capturé
+      if (isPaymentCompleted(orderData.status)) {
+        console.warn(`[PAYPAL HTTP] Order ${orderId} already captured`);
+        res.status(200).json({
+          success: true,
+          alreadyCaptured: true,
+          message: "Order was already captured",
+        });
+        return;
+      }
+
+      const manager = new PayPalManager();
+      const result = await manager.authorizeOrder(orderId);
+
+      prodLogger.info('PAYPAL_AUTHORIZE_HTTP_SUCCESS', `[${authRequestId}] PayPal order authorized successfully (HTTP)`, {
+        authRequestId,
+        orderId,
+        authorizationId: result.authorizationId,
+        status: result.status,
+      });
+
+      res.status(200).json(result);
+
+    } catch (error) {
+      prodLogger.error('PAYPAL_AUTHORIZE_HTTP_ERROR', `[${authRequestId}] PayPal order authorization failed (HTTP)`, {
+        authRequestId,
+        orderId,
+        error: error instanceof Error ? error.message : String(error),
+        errorStack: error instanceof Error ? error.stack : undefined,
+      });
+      console.error("🔴 [PAYPAL AUTHORIZE HTTP ERROR] Full error:", error);
+      res.status(500).json({ error: "Failed to authorize order" });
     }
   }
 );

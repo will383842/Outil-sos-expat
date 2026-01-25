@@ -27,6 +27,9 @@ interface PayPalPaymentFormProps {
   clientId: string;
   description?: string;
   serviceType?: 'lawyer' | 'expat';
+  // P0 FIX: Phone numbers required for Twilio call
+  clientPhone: string;
+  providerPhone: string;
   onSuccess: (details: PayPalSuccessDetails) => void;
   onError: (error: Error) => void;
   onCancel?: () => void;
@@ -38,6 +41,7 @@ interface PayPalSuccessDetails {
   payerId: string;
   status: string;
   captureId?: string;
+  authorizationId?: string; // AUTHORIZE flow: ID de l'autorisation (pas de capture immédiate)
 }
 
 interface CreateOrderResponse {
@@ -193,6 +197,8 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   clientId,
   description,
   serviceType = 'expat',
+  clientPhone,
+  providerPhone,
   onSuccess,
   onError,
   onCancel,
@@ -265,6 +271,9 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
             currency: currency.toUpperCase(),
             providerId,
             clientId,
+            // P0 FIX: Phone numbers required for Twilio call
+            clientPhone,
+            providerPhone,
             description: description || `Appel SOS-Expat - Session ${callSessionId}`,
             serviceType,
             metadata: {
@@ -303,11 +312,13 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
       setIsProcessing(false);
       throw error;
     }
-  }, [amount, currency, providerId, callSessionId, clientId, description, serviceType, platformFee, providerAmount]);
+  }, [amount, currency, providerId, callSessionId, clientId, description, serviceType, platformFee, providerAmount, clientPhone, providerPhone]);
 
-  // Capture après approbation
-  // Utilise la version HTTP de la fonction pour éviter les problèmes CORS
-  const captureOrder = useCallback(async (orderId: string, payerId?: string): Promise<void> => {
+  // Autorisation après approbation (AUTHORIZE flow comme Stripe)
+  // L'autorisation bloque les fonds mais ne les capture pas encore
+  // La capture se fait côté serveur après 2 minutes d'appel
+  // Si l'appel dure moins de 2 minutes, l'autorisation est annulée (void)
+  const authorizeOrder = useCallback(async (orderId: string, payerId?: string): Promise<void> => {
     try {
       // Obtenir le token d'authentification Firebase
       const currentUser = auth.currentUser;
@@ -316,9 +327,9 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
       }
       const idToken = await currentUser.getIdToken();
 
-      // Appeler la fonction HTTP au lieu de la fonction callable
+      // Appeler la fonction HTTP d'autorisation (pas de capture immédiate)
       const response = await fetch(
-        "https://capturepaypalorderhttp-5tfnuxa2hq-ew.a.run.app",
+        "https://authorizepaypalorderhttp-5tfnuxa2hq-ew.a.run.app",
         {
           method: "POST",
           headers: {
@@ -340,7 +351,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
         throw err;
       }
 
-      const result: CaptureOrderResponse = await response.json();
+      const result = await response.json();
 
       if (result.success) {
         setPaymentStatus("success");
@@ -348,14 +359,15 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
           orderId,
           payerId: payerId || "",
           status: result.status,
-          captureId: result.captureId,
+          // authorizationId au lieu de captureId - la capture se fera après 2 min d'appel
+          authorizationId: result.authorizationId,
         });
       } else {
-        throw new Error("Capture PayPal échouée");
+        throw new Error("Autorisation PayPal échouée");
       }
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error("PayPal captureOrder error:", error);
+        console.error("PayPal authorizeOrder error:", error);
       }
       setPaymentStatus("error");
       const code = extractPayPalErrorCode(error);
@@ -369,14 +381,14 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   // Handler pour PayPal Buttons
   const onApprove = useCallback(async (data: { orderID: string; payerID?: string | null }): Promise<void> => {
     setPaymentMethod("paypal");
-    await captureOrder(data.orderID, data.payerID || undefined);
-  }, [captureOrder]);
+    await authorizeOrder(data.orderID, data.payerID || undefined);
+  }, [authorizeOrder]);
 
   // Handler pour Card Fields
   const onCardApprove = useCallback(async (data: { orderID: string }): Promise<void> => {
     setPaymentMethod("card");
-    await captureOrder(data.orderID);
-  }, [captureOrder]);
+    await authorizeOrder(data.orderID);
+  }, [authorizeOrder]);
 
   const handleError = useCallback((err: Record<string, unknown>) => {
     if (import.meta.env.DEV) {

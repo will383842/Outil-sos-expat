@@ -253,8 +253,16 @@ export function getStripeSecretKeyLive(): string {
       console.log(`[Secrets] STRIPE_SECRET_KEY_LIVE loaded from Firebase Secret`);
       return secretValue;
     }
-  } catch {
-    // Secret not available
+    // P0 DEBUG: Log why secret was rejected
+    console.warn(`[Secrets] STRIPE_SECRET_KEY_LIVE value rejected:`, {
+      hasValue: !!secretValue,
+      length: secretValue?.length || 0,
+      startsWithSkLive: secretValue?.startsWith('sk_live_') || false,
+      prefix: secretValue?.substring(0, 10) || 'empty',
+    });
+  } catch (err) {
+    // P0 FIX: Log the error instead of silently ignoring
+    console.error(`[Secrets] STRIPE_SECRET_KEY_LIVE.value() threw error:`, err);
   }
 
   const envValue = process.env.STRIPE_SECRET_KEY_LIVE;
@@ -263,7 +271,7 @@ export function getStripeSecretKeyLive(): string {
     return envValue;
   }
 
-  console.error(`[Secrets] STRIPE_SECRET_KEY_LIVE NOT FOUND`);
+  console.error(`[Secrets] STRIPE_SECRET_KEY_LIVE NOT FOUND - neither Firebase Secret nor process.env available`);
   return "";
 }
 
@@ -274,8 +282,16 @@ export function getStripeSecretKeyTest(): string {
       console.log(`[Secrets] STRIPE_SECRET_KEY_TEST loaded from Firebase Secret`);
       return secretValue;
     }
-  } catch {
-    // Secret not available
+    // P0 DEBUG: Log why secret was rejected
+    console.warn(`[Secrets] STRIPE_SECRET_KEY_TEST value rejected:`, {
+      hasValue: !!secretValue,
+      length: secretValue?.length || 0,
+      startsWithSkTest: secretValue?.startsWith('sk_test_') || false,
+      prefix: secretValue?.substring(0, 10) || 'empty',
+    });
+  } catch (err) {
+    // P0 FIX: Log the error instead of silently ignoring
+    console.error(`[Secrets] STRIPE_SECRET_KEY_TEST.value() threw error:`, err);
   }
 
   const envValue = process.env.STRIPE_SECRET_KEY_TEST;
@@ -284,7 +300,7 @@ export function getStripeSecretKeyTest(): string {
     return envValue;
   }
 
-  console.error(`[Secrets] STRIPE_SECRET_KEY_TEST NOT FOUND`);
+  console.error(`[Secrets] STRIPE_SECRET_KEY_TEST NOT FOUND - neither Firebase Secret nor process.env available`);
   return "";
 }
 
@@ -385,7 +401,7 @@ export function getPayPalMode(): 'sandbox' | 'live' {
 
 export function getPayPalClientId(): string {
   try {
-    const secretValue = PAYPAL_CLIENT_ID.value();
+    const secretValue = PAYPAL_CLIENT_ID.value()?.trim();
     if (secretValue && secretValue.length > 0) {
       console.log(`[Secrets] PAYPAL_CLIENT_ID loaded from Firebase Secret`);
       return secretValue;
@@ -394,7 +410,7 @@ export function getPayPalClientId(): string {
     // Secret not available
   }
 
-  const envValue = process.env.PAYPAL_CLIENT_ID;
+  const envValue = process.env.PAYPAL_CLIENT_ID?.trim();
   if (envValue && envValue.length > 0) {
     console.log(`[Secrets] PAYPAL_CLIENT_ID loaded from process.env`);
     return envValue;
@@ -406,7 +422,7 @@ export function getPayPalClientId(): string {
 
 export function getPayPalClientSecret(): string {
   try {
-    const secretValue = PAYPAL_CLIENT_SECRET.value();
+    const secretValue = PAYPAL_CLIENT_SECRET.value()?.trim();
     if (secretValue && secretValue.length > 0) {
       console.log(`[Secrets] PAYPAL_CLIENT_SECRET loaded from Firebase Secret`);
       return secretValue;
@@ -415,7 +431,7 @@ export function getPayPalClientSecret(): string {
     // Secret not available
   }
 
-  const envValue = process.env.PAYPAL_CLIENT_SECRET;
+  const envValue = process.env.PAYPAL_CLIENT_SECRET?.trim();
   if (envValue && envValue.length > 0) {
     console.log(`[Secrets] PAYPAL_CLIENT_SECRET loaded from process.env`);
     return envValue;
@@ -427,7 +443,7 @@ export function getPayPalClientSecret(): string {
 
 export function getPayPalWebhookId(): string {
   try {
-    const secretValue = PAYPAL_WEBHOOK_ID.value();
+    const secretValue = PAYPAL_WEBHOOK_ID.value()?.trim();
     if (secretValue && secretValue.length > 0) {
       return secretValue;
     }
@@ -435,7 +451,7 @@ export function getPayPalWebhookId(): string {
     // Secret not available
   }
 
-  const envValue = process.env.PAYPAL_WEBHOOK_ID;
+  const envValue = process.env.PAYPAL_WEBHOOK_ID?.trim();
   if (envValue && envValue.length > 0) {
     return envValue;
   }
@@ -446,7 +462,7 @@ export function getPayPalWebhookId(): string {
 
 export function getPayPalPartnerId(): string {
   try {
-    const secretValue = PAYPAL_PARTNER_ID.value();
+    const secretValue = PAYPAL_PARTNER_ID.value()?.trim();
     if (secretValue && secretValue.length > 0) {
       return secretValue;
     }
@@ -454,7 +470,7 @@ export function getPayPalPartnerId(): string {
     // Secret not available
   }
 
-  const envValue = process.env.PAYPAL_PARTNER_ID;
+  const envValue = process.env.PAYPAL_PARTNER_ID?.trim();
   if (envValue && envValue.length > 0) {
     return envValue;
   }
@@ -465,7 +481,7 @@ export function getPayPalPartnerId(): string {
 
 export function getPayPalPlatformMerchantId(): string {
   try {
-    const secretValue = PAYPAL_PLATFORM_MERCHANT_ID.value();
+    const secretValue = PAYPAL_PLATFORM_MERCHANT_ID.value()?.trim();
     if (secretValue && secretValue.length > 0) {
       return secretValue;
     }
@@ -473,7 +489,7 @@ export function getPayPalPlatformMerchantId(): string {
     // Secret not available
   }
 
-  const envValue = process.env.PAYPAL_PLATFORM_MERCHANT_ID;
+  const envValue = process.env.PAYPAL_PLATFORM_MERCHANT_ID?.trim();
   if (envValue && envValue.length > 0) {
     return envValue;
   }

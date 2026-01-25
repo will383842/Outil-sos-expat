@@ -3858,6 +3858,8 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
                   clientId={user?.uid || ""}
                   description={`Appel SOS-Expat - ${provider?.fullName || provider?.name || "Expert"}`}
                   serviceType={providerRole === "lawyer" ? "lawyer" : "expat"}
+                  clientPhone={watch("clientPhone") || ""}
+                  providerPhone={provider?.phone || provider?.encryptedPhone || ""}
                   onSuccess={handlePayPalPaymentSuccess}
                   onError={(err) => handlePaymentError(err.message)}
                   onCancel={() => console.log("PayPal cancelled")}
