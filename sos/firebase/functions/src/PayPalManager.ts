@@ -2156,6 +2156,13 @@ export const createPayPalOrderHttp = onRequest(
     cors: true, // Gère automatiquement les preflight OPTIONS
   },
   async (req, res) => {
+    // CORS preflight: OPTIONS requests are handled automatically by cors: true
+    // but we need to allow them through before checking for POST
+    if (req.method === "OPTIONS") {
+      res.status(204).send("");
+      return;
+    }
+
     // Seulement POST
     if (req.method !== "POST") {
       res.status(405).json({ error: "Method not allowed" });
@@ -2361,6 +2368,13 @@ export const capturePayPalOrderHttp = onRequest(
     cors: true,
   },
   async (req, res) => {
+    // CORS preflight: OPTIONS requests are handled automatically by cors: true
+    // but we need to allow them through before checking for POST
+    if (req.method === "OPTIONS") {
+      res.status(204).send("");
+      return;
+    }
+
     // Seulement POST
     if (req.method !== "POST") {
       res.status(405).json({ error: "Method not allowed" });
@@ -2467,6 +2481,13 @@ export const authorizePayPalOrderHttp = onRequest(
     cors: true,
   },
   async (req, res) => {
+    // CORS preflight: OPTIONS requests are handled automatically by cors: true
+    // but we need to allow them through before checking for POST
+    if (req.method === "OPTIONS") {
+      res.status(204).send("");
+      return;
+    }
+
     // Seulement POST
     if (req.method !== "POST") {
       res.status(405).json({ error: "Method not allowed" });
