@@ -21,7 +21,7 @@ import {
   ShieldAlert,
   ExternalLink
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { LocaleLink } from "@/multilingual-system/components/LocaleLink";
 
 interface EarningsSummary {
   totalEarnings: number;
@@ -184,7 +184,7 @@ export default function ProviderEarnings({ className = "", compact = false }: Pr
                     defaultMessage="Complétez votre vérification d'identité pour recevoir vos gains. Ce montant vous sera transféré automatiquement."
                   />
                 </p>
-                <Link
+                <LocaleLink
                   to="/dashboard/kyc"
                   className="inline-flex items-center gap-1.5 mt-3 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition-colors"
                 >
@@ -193,7 +193,7 @@ export default function ProviderEarnings({ className = "", compact = false }: Pr
                     defaultMessage="Compléter ma vérification"
                   />
                   <ExternalLink className="w-4 h-4" />
-                </Link>
+                </LocaleLink>
               </div>
             </div>
           </div>
