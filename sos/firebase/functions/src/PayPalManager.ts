@@ -2694,6 +2694,9 @@ export const createPayPalOrder = onCall(
           providerPayPalMerchantId: providerData.paypalMerchantId,
           clientId: request.auth.uid,
           description: description || "SOS Expat - Consultation",
+          // Legacy onCall: phone numbers will be empty (use HTTP function instead)
+          clientPhone: "",
+          providerPhone: providerData.phone || providerData.encryptedPhone || "",
           // Pass tracking metadata for attribution (UTM, Meta identifiers)
           trackingMetadata: trackingMetadata as Record<string, string> | undefined,
         });
@@ -2712,6 +2715,9 @@ export const createPayPalOrder = onCall(
           providerPayPalEmail: providerData.paypalEmail,
           clientId: request.auth.uid,
           description: description || "SOS Expat - Consultation",
+          // Legacy onCall: phone numbers will be empty (use HTTP function instead)
+          clientPhone: "",
+          providerPhone: providerData.phone || providerData.encryptedPhone || "",
           // Pass tracking metadata for attribution (UTM, Meta identifiers)
           trackingMetadata: trackingMetadata as Record<string, string> | undefined,
         });
