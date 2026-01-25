@@ -90,6 +90,24 @@ interface AppError extends Error {
 }
 
 /* =========================================================
+   SECURITY: Redirect URL validation
+   ========================================================= */
+/**
+ * Validates that a redirect URL is safe (prevents Open Redirect attacks)
+ * Only allows relative paths starting with / (but not //) and same-origin URLs
+ */
+const isAllowedRedirect = (url: string): boolean => {
+  if (!url) return false;
+  if (url.startsWith('/')) return !url.startsWith('//');
+  try {
+    const parsed = new URL(url, window.location.origin);
+    return parsed.origin === window.location.origin;
+  } catch {
+    return false;
+  }
+};
+
+/* =========================================================
    Helpers d'environnement / device
    ========================================================= */
 const getDeviceInfo = (): DeviceInfo => {
@@ -1524,11 +1542,17 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         } catch { /* Ignorer si localStorage n'est pas disponible */ }
 
         // Check for saved redirect URL
+        // SECURITY: Defense-in-depth validation before redirect
         const savedRedirect = safeStorage.getItem('googleAuthRedirect');
         if (savedRedirect) {
           safeStorage.removeItem('googleAuthRedirect');
-          console.log('[Auth] Google popup: navigating to saved URL:', savedRedirect);
-          window.location.href = savedRedirect;
+          if (isAllowedRedirect(savedRedirect)) {
+            console.log('[Auth] Google popup: navigating to validated URL:', savedRedirect);
+            window.location.href = savedRedirect;
+          } else {
+            console.warn('[Auth] Google popup: blocked invalid redirect URL:', savedRedirect);
+            window.location.href = '/dashboard';
+          }
         }
         return;
       } catch (popupError) {
@@ -1752,12 +1776,18 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         console.log('[Auth] Google redirect login successful. Photo URL:', googleUser.photoURL);
 
         // Check for saved redirect URL after Google login
+        // SECURITY: Defense-in-depth validation before redirect
         const savedRedirect = safeStorage.getItem('googleAuthRedirect');
         if (savedRedirect) {
           safeStorage.removeItem('googleAuthRedirect');
-          console.log('[Auth] Google redirect: navigating to saved URL:', savedRedirect);
-          // Use window.location for navigation to ensure full page reload with auth state
-          window.location.href = savedRedirect;
+          if (isAllowedRedirect(savedRedirect)) {
+            console.log('[Auth] Google redirect: navigating to validated URL:', savedRedirect);
+            // Use window.location for navigation to ensure full page reload with auth state
+            window.location.href = savedRedirect;
+          } else {
+            console.warn('[Auth] Google redirect: blocked invalid redirect URL:', savedRedirect);
+            window.location.href = '/dashboard';
+          }
         }
       } catch (e) {
         const errorMessage = e instanceof Error ? e.message : String(e);

@@ -332,10 +332,14 @@ const Login: React.FC = () => {
   const rawRedirect = redirectFromStorage || redirectFromParams || "/dashboard";
   const redirectUrl = isAllowedRedirect(rawRedirect) ? rawRedirect : "/dashboard";
   
-  // If we have redirect from params but not in storage, store it as backup
+  // If we have redirect from params but not in storage, store the VALIDATED URL as backup
+  // SECURITY: Always store the validated redirect, never the raw params
   useEffect(() => {
     if (redirectFromParams && !redirectFromStorage) {
-      sessionStorage.setItem("loginRedirect", redirectFromParams);
+      // Only store if the redirect is valid, otherwise don't store anything
+      if (isAllowedRedirect(redirectFromParams)) {
+        sessionStorage.setItem("loginRedirect", redirectFromParams);
+      }
     }
   }, [redirectFromParams, redirectFromStorage]);
   
@@ -899,10 +903,11 @@ const Login: React.FC = () => {
 
       // Save the actual redirect URL (from params or storage) before Google redirect
       // This overrides AuthContext's default (which saves the login page URL)
-      const savedRedirect = sessionStorage.getItem("loginRedirect") || searchParams.get("redirect");
-      if (savedRedirect) {
-        sessionStorage.setItem('googleAuthRedirect', savedRedirect);
-        console.log('[Login] Saved redirect URL for Google login:', savedRedirect);
+      // SECURITY: Validate the redirect URL before storing
+      const rawSavedRedirect = sessionStorage.getItem("loginRedirect") || searchParams.get("redirect");
+      if (rawSavedRedirect && isAllowedRedirect(rawSavedRedirect)) {
+        sessionStorage.setItem('googleAuthRedirect', rawSavedRedirect);
+        console.log('[Login] Saved validated redirect URL for Google login:', rawSavedRedirect);
       }
 
       await loginWithGoogle();
