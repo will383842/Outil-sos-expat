@@ -474,15 +474,19 @@ const Dashboard: React.FC = () => {
   };
 
   // ✅ OPTIMISATION COÛTS GCP: Polling 60s au lieu de onSnapshot pour les reviews
+  // P0 FIX: Load reviews based on user role - providers see reviews they received, clients see reviews they wrote
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id || !user?.role) return;
     let isMounted = true;
 
     const loadReviews = async () => {
       try {
+        // P0 FIX: Filter by role - providers see reviews received, clients see reviews written
+        const filterField = user.role === 'client' ? 'clientId' : 'providerId';
         const qRef = query(
           collection(db, "reviews"),
-          where("providerId", "==", user.id),
+          where(filterField, "==", user.id),
+          orderBy("createdAt", "desc")
         );
         const snap = await getDocs(qRef);
         if (!isMounted) return;
@@ -522,7 +526,7 @@ const Dashboard: React.FC = () => {
       isMounted = false;
       clearInterval(intervalId);
     };
-  }, [user?.id]);
+  }, [user?.id, user?.role]);
 
   // Helper to get user's full name safely
   const getUserFullName = useCallback(() => {

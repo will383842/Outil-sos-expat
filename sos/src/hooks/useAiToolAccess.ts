@@ -133,53 +133,67 @@ export function useAiToolAccess(): UseAiToolAccessReturn {
 
     // P1 FIX: Open window IMMEDIATELY (synchronously) to avoid popup blocker
     // The window is opened with a loading page, then redirected after token is generated
-    const newWindow = window.open('about:blank', '_blank', 'noopener');
+    // NOTE: We don't use 'noopener' because we need to write content to the new window
+    // and redirect it after token generation. Security is maintained because we only
+    // redirect to our own domain (OUTIL_BASE_URL).
+    const newWindow = window.open('about:blank', '_blank');
+
+    // Track if window is usable (not blocked and we can write to it)
+    let windowUsable = false;
 
     if (!newWindow) {
       // Popup was blocked - fallback to redirect in same tab
       console.warn('[useAiToolAccess] Popup blocked, will redirect in same tab');
     } else {
       // P2 FIX: Write a loading page instead of blank to improve UX
-      newWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Connexion à l'Outil IA...</title>
-            <style>
-              body {
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                height: 100vh;
-                margin: 0;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-              }
-              .spinner {
-                width: 50px;
-                height: 50px;
-                border: 4px solid rgba(255,255,255,0.3);
-                border-top-color: white;
-                border-radius: 50%;
-                animation: spin 1s linear infinite;
-              }
-              @keyframes spin {
-                to { transform: rotate(360deg); }
-              }
-              h2 { margin-top: 20px; font-weight: 500; }
-              p { opacity: 0.8; font-size: 14px; }
-            </style>
-          </head>
-          <body>
-            <div class="spinner"></div>
-            <h2>Connexion en cours...</h2>
-            <p>Vous allez être redirigé vers l'Outil IA SOS Expat</p>
-          </body>
-        </html>
-      `);
-      newWindow.document.close();
+      // Check if we can actually write to the window (some browsers may block this)
+      try {
+        newWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>Connexion à l'Outil IA...</title>
+              <style>
+                body {
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: center;
+                  align-items: center;
+                  height: 100vh;
+                  margin: 0;
+                  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                  color: white;
+                }
+                .spinner {
+                  width: 50px;
+                  height: 50px;
+                  border: 4px solid rgba(255,255,255,0.3);
+                  border-top-color: white;
+                  border-radius: 50%;
+                  animation: spin 1s linear infinite;
+                }
+                @keyframes spin {
+                  to { transform: rotate(360deg); }
+                }
+                h2 { margin-top: 20px; font-weight: 500; }
+                p { opacity: 0.8; font-size: 14px; }
+              </style>
+            </head>
+            <body>
+              <div class="spinner"></div>
+              <h2>Connexion en cours...</h2>
+              <p>Vous allez être redirigé vers l'Outil IA SOS Expat</p>
+            </body>
+          </html>
+        `);
+        newWindow.document.close();
+        windowUsable = true;
+      } catch (writeError) {
+        console.warn('[useAiToolAccess] Cannot write to popup window:', writeError);
+        // Close the unusable window, will fall back to current tab redirect
+        try { newWindow.close(); } catch { /* ignore */ }
+      }
     }
 
     try {
@@ -193,16 +207,38 @@ export function useAiToolAccess(): UseAiToolAccessReturn {
       if (result.data.success && result.data.token) {
         const ssoUrl = `${OUTIL_BASE_URL}/auth?token=${encodeURIComponent(result.data.token)}`;
 
-        if (newWindow) {
+        if (newWindow && windowUsable && !newWindow.closed) {
           // Redirect the already-opened window to SSO URL
-          newWindow.location.href = ssoUrl;
+          try {
+            newWindow.location.href = ssoUrl;
+          } catch (redirectError) {
+            console.warn('[useAiToolAccess] Cannot redirect popup, falling back:', redirectError);
+            try { newWindow.close(); } catch { /* ignore */ }
+            // Fallback: open in new tab using a link click
+            const link = document.createElement('a');
+            link.href = ssoUrl;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          }
         } else {
-          // Fallback: redirect current tab (popup was blocked)
-          window.location.href = ssoUrl;
+          // Fallback: open in new tab using a link click (more reliable than location.href)
+          // This preserves the current tab and opens in a new one
+          const link = document.createElement('a');
+          link.href = ssoUrl;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
         }
       } else {
         // Close the blank window if token failed
-        newWindow?.close();
+        if (newWindow && !newWindow.closed) {
+          try { newWindow.close(); } catch { /* ignore */ }
+        }
         throw new Error('Token non reçu');
       }
     } catch (err) {
@@ -224,52 +260,59 @@ export function useAiToolAccess(): UseAiToolAccessReturn {
       setError(errorMessage);
 
       // P2 FIX: Show error in popup window instead of just closing it
-      if (newWindow && !newWindow.closed) {
-        newWindow.document.write(`
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <title>Erreur - Outil IA</title>
-              <style>
-                body {
-                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                  display: flex;
-                  flex-direction: column;
-                  justify-content: center;
-                  align-items: center;
-                  height: 100vh;
-                  margin: 0;
-                  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-                  color: white;
-                  text-align: center;
-                  padding: 20px;
-                }
-                .icon { font-size: 48px; margin-bottom: 20px; }
-                h2 { margin: 10px 0; font-weight: 500; }
-                p { opacity: 0.9; font-size: 14px; max-width: 400px; }
-                button {
-                  margin-top: 20px;
-                  padding: 12px 24px;
-                  background: white;
-                  color: #f5576c;
-                  border: none;
-                  border-radius: 8px;
-                  font-size: 14px;
-                  cursor: pointer;
-                  font-weight: 600;
-                }
-                button:hover { opacity: 0.9; }
-              </style>
-            </head>
-            <body>
-              <div class="icon">⚠️</div>
-              <h2>Impossible d'accéder à l'Outil IA</h2>
-              <p>${errorMessage}</p>
-              <button onclick="window.close()">Fermer</button>
-            </body>
-          </html>
-        `);
-        newWindow.document.close();
+      if (newWindow && windowUsable && !newWindow.closed) {
+        try {
+          // Clear existing content and write error page
+          newWindow.document.open();
+          newWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+              <head>
+                <title>Erreur - Outil IA</title>
+                <style>
+                  body {
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+                    height: 100vh;
+                    margin: 0;
+                    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                    color: white;
+                    text-align: center;
+                    padding: 20px;
+                  }
+                  .icon { font-size: 48px; margin-bottom: 20px; }
+                  h2 { margin: 10px 0; font-weight: 500; }
+                  p { opacity: 0.9; font-size: 14px; max-width: 400px; }
+                  button {
+                    margin-top: 20px;
+                    padding: 12px 24px;
+                    background: white;
+                    color: #f5576c;
+                    border: none;
+                    border-radius: 8px;
+                    font-size: 14px;
+                    cursor: pointer;
+                    font-weight: 600;
+                  }
+                  button:hover { opacity: 0.9; }
+                </style>
+              </head>
+              <body>
+                <div class="icon">⚠️</div>
+                <h2>Impossible d'accéder à l'Outil IA</h2>
+                <p>${errorMessage}</p>
+                <button onclick="window.close()">Fermer</button>
+              </body>
+            </html>
+          `);
+          newWindow.document.close();
+        } catch {
+          // If writing fails, just close the window
+          try { newWindow.close(); } catch { /* ignore */ }
+        }
       }
     } finally {
       setIsAccessing(false);

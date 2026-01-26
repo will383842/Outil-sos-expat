@@ -39,11 +39,15 @@ const DashboardMessages: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // P0 FIX: Determine if user is a provider or client
+  const isProvider = user?.role === 'lawyer' || user?.role === 'expat';
+
   // ✅ OPTIMISATION COÛTS GCP: Polling 60s au lieu de onSnapshot pour les messages
+  // P0 FIX: Load messages based on user role - providers see received messages, clients see sent messages
   useEffect(() => {
     // attendre que l'auth soit prête
     const uid = auth.currentUser?.uid;
-    if (!uid) return;
+    if (!uid || !user?.role) return;
 
     let isMounted = true;
 
@@ -55,9 +59,11 @@ const DashboardMessages: React.FC = () => {
     const loadMessages = async () => {
       try {
         const messagesRef = collection(db, "providerMessageOrderCustomers");
+        // P0 FIX: Filter based on role - providers see messages sent to them, clients see messages they sent
+        const filterField = isProvider ? "providerId" : "senderId";
         const q = query(
           messagesRef,
-          where("providerId", "==", uid),
+          where(filterField, "==", uid),
           orderBy("createdAt", "desc")
         );
 
@@ -83,7 +89,7 @@ const DashboardMessages: React.FC = () => {
       isMounted = false;
       clearInterval(intervalId);
     };
-  }, [user]); // le hook se relance si le contexte change
+  }, [user, isProvider]); // le hook se relance si le contexte change
 
   const markAsRead = async (messageId: string) => {
     // règles: seul le provider (auth.uid == providerId) peut passer isRead à true
@@ -94,7 +100,7 @@ const DashboardMessages: React.FC = () => {
   if (loading) return <Loader />;
 
   const formatDate = (createdAt: Message["createdAt"]): string => {
-    const userCountry = (user as { currentCountry?: string; country?: string })?.currentCountry || 
+    const userCountry = (user as { currentCountry?: string; country?: string })?.currentCountry ||
                         (user as { currentCountry?: string; country?: string })?.country;
     return formatDateTime(createdAt, {
       language,
@@ -116,24 +122,49 @@ const DashboardMessages: React.FC = () => {
             <CardContent>
               <div className="p-4 space-y-2">
                 <p className="font-semibold text-sm text-gray-500">
-                  {intl.formatMessage({ id: 'dashboard.messages.receivedOn' })} {formatDate(msg.createdAt)}
+                  {isProvider
+                    ? intl.formatMessage({ id: 'dashboard.messages.receivedOn' })
+                    : intl.formatMessage({ id: 'dashboard.messages.sentOn' }, { defaultMessage: 'Envoyé le' })
+                  } {formatDate(msg.createdAt)}
                 </p>
-                <p>
-                  <strong>{intl.formatMessage({ id: 'dashboard.messages.client' })}</strong>{" "}
-                  {msg.metadata?.clientFirstName ?? intl.formatMessage({ id: 'common.unknown' })}
-                </p>
-                <p>
-                  <strong>{intl.formatMessage({ id: 'dashboard.messages.country' })}</strong>{" "}
-                  {msg.metadata?.clientCountry ?? intl.formatMessage({ id: 'common.notSpecified' })}
-                </p>
+                {isProvider ? (
+                  // Provider view: show client info
+                  <>
+                    <p>
+                      <strong>{intl.formatMessage({ id: 'dashboard.messages.client' })}</strong>{" "}
+                      {msg.metadata?.clientFirstName ?? intl.formatMessage({ id: 'common.unknown' })}
+                    </p>
+                    <p>
+                      <strong>{intl.formatMessage({ id: 'dashboard.messages.country' })}</strong>{" "}
+                      {msg.metadata?.clientCountry ?? intl.formatMessage({ id: 'common.notSpecified' })}
+                    </p>
+                  </>
+                ) : (
+                  // Client view: show provider info
+                  <p>
+                    <strong>{intl.formatMessage({ id: 'dashboard.messages.sentTo', defaultMessage: 'Envoyé à' })}</strong>{" "}
+                    {intl.formatMessage({ id: 'dashboard.messages.provider', defaultMessage: 'Prestataire' })}
+                  </p>
+                )}
                 <p>
                   <strong>{intl.formatMessage({ id: 'dashboard.messages.message' })}</strong> {msg.message}
                 </p>
 
-                {!msg.isRead && (
+                {/* P0 FIX: Only providers can mark messages as read */}
+                {isProvider && !msg.isRead && (
                   <Button size="sm" variant="outline" onClick={() => markAsRead(msg.id)}>
                     {intl.formatMessage({ id: 'dashboard.messages.markAsRead' })}
                   </Button>
+                )}
+
+                {/* P0 FIX: Show read status for clients */}
+                {!isProvider && (
+                  <p className={`text-sm ${msg.isRead ? 'text-green-600' : 'text-orange-500'}`}>
+                    {msg.isRead
+                      ? intl.formatMessage({ id: 'dashboard.messages.read', defaultMessage: 'Lu' })
+                      : intl.formatMessage({ id: 'dashboard.messages.notRead', defaultMessage: 'Non lu' })
+                    }
+                  </p>
                 )}
               </div>
             </CardContent>
