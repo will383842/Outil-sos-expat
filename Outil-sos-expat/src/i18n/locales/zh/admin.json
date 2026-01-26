@@ -506,5 +506,36 @@
     }
   },
   "verifyingRights": "正在验证权限...",
-  "loadingPage": "正在加载页面"
+  "loadingPage": "正在加载页面",
+  "domainAuthority": {
+    "title": "域名权威度",
+    "currentScore": "当前DA分数",
+    "previousScore": "上次：{{score}}",
+    "pageAuthority": "页面权威度 (PA)",
+    "evolution": "12个月趋势",
+    "lastUpdated": "最后更新",
+    "cached": "已缓存",
+    "refresh": "刷新",
+    "addManual": "手动添加",
+    "checkOnline": "在线检查",
+    "fetchNow": "立即获取",
+    "noData": "无域名权威度数据",
+    "poweredBy": "技术支持",
+    "refreshNote": "每24小时自动刷新",
+    "da": "域名权威度",
+    "pa": "页面权威度",
+    "form": {
+      "score": "DA分数",
+      "pageAuthority": "PA（可选）",
+      "add": "添加",
+      "saving": "保存中...",
+      "cancel": "取消"
+    },
+    "error": {
+      "loadFailed": "加载域名权威度数据失败",
+      "addFailed": "添加手动分数失败",
+      "invalidScore": "分数必须在0到100之间",
+      "invalidPageAuthority": "页面权威度必须在0到100之间"
+    }
+  }
 }

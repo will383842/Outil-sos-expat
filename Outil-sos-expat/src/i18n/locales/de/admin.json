@@ -506,5 +506,36 @@
     }
   },
   "verifyingRights": "Berechtigungen werden überprüft...",
-  "loadingPage": "Seite wird geladen"
+  "loadingPage": "Seite wird geladen",
+  "domainAuthority": {
+    "title": "Domain-Autorität",
+    "currentScore": "Aktueller DA-Score",
+    "previousScore": "Vorheriger: {{score}}",
+    "pageAuthority": "Seiten-Autorität (PA)",
+    "evolution": "12-Monats-Entwicklung",
+    "lastUpdated": "Zuletzt aktualisiert",
+    "cached": "zwischengespeichert",
+    "refresh": "Aktualisieren",
+    "addManual": "Manuell hinzufügen",
+    "checkOnline": "Online prüfen",
+    "fetchNow": "Jetzt abrufen",
+    "noData": "Keine Domain-Autoritätsdaten verfügbar",
+    "poweredBy": "Bereitgestellt von",
+    "refreshNote": "Auto-Aktualisierung alle 24h",
+    "da": "Domain-Autorität",
+    "pa": "Seiten-Autorität",
+    "form": {
+      "score": "DA-Score",
+      "pageAuthority": "PA (optional)",
+      "add": "Hinzufügen",
+      "saving": "Speichern...",
+      "cancel": "Abbrechen"
+    },
+    "error": {
+      "loadFailed": "Fehler beim Laden der Domain-Autoritätsdaten",
+      "addFailed": "Fehler beim Hinzufügen des manuellen Scores",
+      "invalidScore": "Score muss zwischen 0 und 100 liegen",
+      "invalidPageAuthority": "Seiten-Autorität muss zwischen 0 und 100 liegen"
+    }
+  }
 }

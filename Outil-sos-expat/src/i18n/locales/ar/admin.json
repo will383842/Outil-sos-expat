@@ -506,5 +506,36 @@
     }
   },
   "verifyingRights": "جاري التحقق من الصلاحيات...",
-  "loadingPage": "جاري تحميل الصفحة"
+  "loadingPage": "جاري تحميل الصفحة",
+  "domainAuthority": {
+    "title": "سلطة النطاق",
+    "currentScore": "نتيجة DA الحالية",
+    "previousScore": "السابق: {{score}}",
+    "pageAuthority": "سلطة الصفحة (PA)",
+    "evolution": "التطور خلال 12 شهر",
+    "lastUpdated": "آخر تحديث",
+    "cached": "مخزن مؤقتاً",
+    "refresh": "تحديث",
+    "addManual": "إضافة يدوية",
+    "checkOnline": "التحقق عبر الإنترنت",
+    "fetchNow": "جلب الآن",
+    "noData": "لا تتوفر بيانات سلطة النطاق",
+    "poweredBy": "مدعوم من",
+    "refreshNote": "تحديث تلقائي كل 24 ساعة",
+    "da": "سلطة النطاق",
+    "pa": "سلطة الصفحة",
+    "form": {
+      "score": "نتيجة DA",
+      "pageAuthority": "PA (اختياري)",
+      "add": "إضافة",
+      "saving": "جاري الحفظ...",
+      "cancel": "إلغاء"
+    },
+    "error": {
+      "loadFailed": "فشل تحميل بيانات سلطة النطاق",
+      "addFailed": "فشل إضافة النتيجة اليدوية",
+      "invalidScore": "يجب أن تكون النتيجة بين 0 و 100",
+      "invalidPageAuthority": "يجب أن تكون سلطة الصفحة بين 0 و 100"
+    }
+  }
 }

@@ -22,6 +22,7 @@ import {
 import AdminLayout from "../../components/admin/AdminLayout";
 import DashboardCharts from "../../components/admin/DashboardCharts";
 import ExternalServicesWidget from "../../components/admin/ExternalServicesWidget";
+import DomainAuthorityWidget from "../../components/admin/DomainAuthorityWidget";
 import Button from "../../components/common/Button";
 import { useAuth } from "../../contexts/AuthContext";
 import {
@@ -395,6 +396,11 @@ const AdminDashboard: React.FC = () => {
             {/* External Services Balances Widget */}
             <div className="mb-6">
               <ExternalServicesWidget />
+            </div>
+
+            {/* Domain Authority Widget */}
+            <div className="mb-6">
+              <DomainAuthorityWidget />
             </div>
 
             {/* Dashboard Charts Component */}

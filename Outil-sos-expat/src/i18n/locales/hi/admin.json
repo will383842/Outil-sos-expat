@@ -506,5 +506,36 @@
     }
   },
   "verifyingRights": "अनुमतियाँ सत्यापित हो रही हैं...",
-  "loadingPage": "पृष्ठ लोड हो रहा है"
+  "loadingPage": "पृष्ठ लोड हो रहा है",
+  "domainAuthority": {
+    "title": "डोमेन अथॉरिटी",
+    "currentScore": "वर्तमान DA स्कोर",
+    "previousScore": "पिछला: {{score}}",
+    "pageAuthority": "पेज अथॉरिटी (PA)",
+    "evolution": "12 महीने का विकास",
+    "lastUpdated": "अंतिम अपडेट",
+    "cached": "कैश्ड",
+    "refresh": "रिफ्रेश करें",
+    "addManual": "मैन्युअल जोड़ें",
+    "checkOnline": "ऑनलाइन जांचें",
+    "fetchNow": "अभी प्राप्त करें",
+    "noData": "कोई डोमेन अथॉरिटी डेटा उपलब्ध नहीं",
+    "poweredBy": "द्वारा संचालित",
+    "refreshNote": "हर 24 घंटे में ऑटो-रिफ्रेश",
+    "da": "डोमेन अथॉरिटी",
+    "pa": "पेज अथॉरिटी",
+    "form": {
+      "score": "DA स्कोर",
+      "pageAuthority": "PA (वैकल्पिक)",
+      "add": "जोड़ें",
+      "saving": "सहेज रहे हैं...",
+      "cancel": "रद्द करें"
+    },
+    "error": {
+      "loadFailed": "डोमेन अथॉरिटी डेटा लोड करने में विफल",
+      "addFailed": "मैन्युअल स्कोर जोड़ने में विफल",
+      "invalidScore": "स्कोर 0 और 100 के बीच होना चाहिए",
+      "invalidPageAuthority": "पेज अथॉरिटी 0 और 100 के बीच होनी चाहिए"
+    }
+  }
 }

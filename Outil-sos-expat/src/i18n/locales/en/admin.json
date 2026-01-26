@@ -525,5 +525,36 @@
     }
   },
   "verifyingRights": "Verifying permissions...",
-  "loadingPage": "Loading page"
+  "loadingPage": "Loading page",
+  "domainAuthority": {
+    "title": "Domain Authority",
+    "currentScore": "Current DA Score",
+    "previousScore": "Previous: {{score}}",
+    "pageAuthority": "Page Authority (PA)",
+    "evolution": "12-Month Evolution",
+    "lastUpdated": "Last updated",
+    "cached": "cached",
+    "refresh": "Refresh",
+    "addManual": "Add manual entry",
+    "checkOnline": "Check online",
+    "fetchNow": "Fetch now",
+    "noData": "No domain authority data available",
+    "poweredBy": "Powered by",
+    "refreshNote": "Auto-refresh every 24h",
+    "da": "Domain Authority",
+    "pa": "Page Authority",
+    "form": {
+      "score": "DA Score",
+      "pageAuthority": "PA (optional)",
+      "add": "Add",
+      "saving": "Saving...",
+      "cancel": "Cancel"
+    },
+    "error": {
+      "loadFailed": "Failed to load domain authority data",
+      "addFailed": "Failed to add manual score",
+      "invalidScore": "Score must be between 0 and 100",
+      "invalidPageAuthority": "Page Authority must be between 0 and 100"
+    }
+  }
 }

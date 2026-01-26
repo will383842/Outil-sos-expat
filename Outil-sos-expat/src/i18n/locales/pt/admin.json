@@ -506,5 +506,36 @@
     }
   },
   "verifyingRights": "A verificar permissoes...",
-  "loadingPage": "A carregar pagina"
+  "loadingPage": "A carregar pagina",
+  "domainAuthority": {
+    "title": "Autoridade de Domínio",
+    "currentScore": "Pontuação DA atual",
+    "previousScore": "Anterior: {{score}}",
+    "pageAuthority": "Autoridade de Página (PA)",
+    "evolution": "Evolução de 12 meses",
+    "lastUpdated": "Última atualização",
+    "cached": "em cache",
+    "refresh": "Atualizar",
+    "addManual": "Adicionar manualmente",
+    "checkOnline": "Verificar online",
+    "fetchNow": "Obter agora",
+    "noData": "Nenhum dado de autoridade de domínio disponível",
+    "poweredBy": "Desenvolvido por",
+    "refreshNote": "Atualização automática a cada 24h",
+    "da": "Autoridade de Domínio",
+    "pa": "Autoridade de Página",
+    "form": {
+      "score": "Pontuação DA",
+      "pageAuthority": "PA (opcional)",
+      "add": "Adicionar",
+      "saving": "A guardar...",
+      "cancel": "Cancelar"
+    },
+    "error": {
+      "loadFailed": "Erro ao carregar dados de autoridade de domínio",
+      "addFailed": "Erro ao adicionar pontuação manual",
+      "invalidScore": "A pontuação deve estar entre 0 e 100",
+      "invalidPageAuthority": "A autoridade de página deve estar entre 0 e 100"
+    }
+  }
 }

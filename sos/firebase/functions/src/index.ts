@@ -195,6 +195,12 @@ export {
   getKYCReminderStatus,
 } from "./KYCReminderManager";
 
+// SEO Domain Authority (SEO Review Tools API)
+export {
+  getDomainAuthority,
+  addManualDomainAuthority,
+} from "./seo/domainAuthority";
+
 // Unclaimed Funds Processing (180 days forfeiture - CGV Article 8.6-8.9)
 export {
   scheduledProcessUnclaimedFunds,
