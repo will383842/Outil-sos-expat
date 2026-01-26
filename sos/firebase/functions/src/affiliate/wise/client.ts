@@ -25,15 +25,26 @@ export interface WiseConfig {
 
 /**
  * Get Wise configuration from secrets
+ * Returns safe defaults during deployment (when secrets are not available)
  */
 export function getWiseConfig(): WiseConfig {
-  const mode = getWiseMode();
-  return {
-    apiToken: getWiseApiToken(),
-    profileId: getWiseProfileId(),
-    baseUrl: getWiseBaseUrl(),
-    sandbox: mode === "sandbox",
-  };
+  try {
+    const mode = getWiseMode();
+    return {
+      apiToken: getWiseApiToken(),
+      profileId: getWiseProfileId(),
+      baseUrl: getWiseBaseUrl(),
+      sandbox: mode === "sandbox",
+    };
+  } catch {
+    // Return empty config during deployment - will be checked by isWiseConfigured
+    return {
+      apiToken: "",
+      profileId: "",
+      baseUrl: "https://api.sandbox.transferwise.tech",
+      sandbox: true,
+    };
+  }
 }
 
 /**
