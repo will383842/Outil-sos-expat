@@ -1,0 +1,357 @@
+/**
+ * ============================================================================
+ * STYLES - TEMPLATE LANDING PAGES
+ * ============================================================================
+ *
+ * Styles CSS spécifiques aux landing pages.
+ * Complète Tailwind avec des animations et utilities custom.
+ */
+
+/* ============================================================================
+   ANIMATIONS LANDING PAGES
+   ============================================================================ */
+
+/* Fade in up animation */
+@keyframes landing-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-landing-fade-in-up {
+  animation: landing-fade-in-up 0.6s ease-out forwards;
+}
+
+/* Pulse glow for CTAs */
+@keyframes landing-pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 15px rgba(239, 68, 68, 0);
+  }
+}
+
+.animate-landing-pulse-glow {
+  animation: landing-pulse-glow 2s ease-in-out infinite;
+}
+
+/* Float animation for decorative elements */
+@keyframes landing-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-landing-float {
+  animation: landing-float 3s ease-in-out infinite;
+}
+
+/* Gradient text shimmer */
+@keyframes landing-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-landing-shimmer {
+  background-size: 200% auto;
+  animation: landing-shimmer 3s linear infinite;
+}
+
+/* ============================================================================
+   LANDING PAGE UTILITIES
+   ============================================================================ */
+
+/* Hero gradient backgrounds */
+.landing-hero-gradient {
+  background: linear-gradient(135deg, #111827 0%, #1f2937 50%, #111827 100%);
+}
+
+.landing-hero-accent {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(239, 68, 68, 0.1) 0%,
+    transparent 70%
+  );
+}
+
+/* Section gradients */
+.landing-section-light {
+  background: linear-gradient(180deg, #ffffff 0%, #fef2f2 50%, #ffffff 100%);
+}
+
+.landing-section-dark {
+  background: linear-gradient(180deg, #030712 0%, #111827 100%);
+}
+
+/* CTA gradient */
+.landing-cta-gradient {
+  background: linear-gradient(135deg, #dc2626 0%, #ea580c 50%, #f59e0b 100%);
+}
+
+/* Glass effect */
+.landing-glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.landing-glass-dark {
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================================================
+   LANDING PAGE CARDS
+   ============================================================================ */
+
+.landing-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+}
+
+.landing-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.landing-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(249, 115, 22, 0.05) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.landing-card:hover::before {
+  opacity: 1;
+}
+
+/* ============================================================================
+   LANDING PAGE BUTTONS
+   ============================================================================ */
+
+.landing-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: white;
+  background: linear-gradient(135deg, #dc2626 0%, #ea580c 50%, #f59e0b 100%);
+  border-radius: 1.5rem;
+  transition: all 0.3s ease;
+  touch-action: manipulation;
+}
+
+.landing-btn-primary:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 30px rgba(239, 68, 68, 0.4);
+}
+
+.landing-btn-primary:active {
+  transform: scale(0.98);
+}
+
+.landing-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: white;
+  background: transparent;
+  border: 2px solid white;
+  border-radius: 1.5rem;
+  transition: all 0.3s ease;
+  touch-action: manipulation;
+}
+
+.landing-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.05);
+}
+
+/* ============================================================================
+   LANDING PAGE FAQ
+   ============================================================================ */
+
+.landing-faq-item {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.landing-faq-item:last-child {
+  border-bottom: none;
+}
+
+.landing-faq-question {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 0;
+  text-align: left;
+  font-weight: 600;
+  color: #111827;
+  transition: color 0.2s ease;
+}
+
+.landing-faq-question:hover {
+  color: #dc2626;
+}
+
+.landing-faq-answer {
+  padding-bottom: 1.5rem;
+  color: #4b5563;
+  line-height: 1.7;
+}
+
+/* ============================================================================
+   LANDING PAGE TESTIMONIALS
+   ============================================================================ */
+
+.landing-testimonial-card {
+  background: white;
+  border-radius: 1.75rem;
+  padding: 2rem;
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+}
+
+.landing-testimonial-card:hover {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.landing-testimonial-quote {
+  position: relative;
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: #374151;
+}
+
+.landing-testimonial-quote::before {
+  content: '"';
+  position: absolute;
+  top: -0.5rem;
+  left: -0.5rem;
+  font-size: 4rem;
+  color: rgba(239, 68, 68, 0.1);
+  font-family: Georgia, serif;
+  line-height: 1;
+}
+
+/* ============================================================================
+   LANDING PAGE MOBILE OPTIMIZATIONS
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  /* Larger touch targets */
+  .landing-btn-primary,
+  .landing-btn-secondary {
+    min-height: 56px;
+    padding: 1rem 1.5rem;
+  }
+
+  /* Full width buttons on mobile */
+  .landing-cta-mobile-full {
+    width: 100%;
+  }
+
+  /* Adjusted spacing */
+  .landing-section-mobile-spacing {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+
+  /* Smaller titles on mobile */
+  .landing-title-responsive {
+    font-size: clamp(1.75rem, 8vw, 3rem);
+  }
+}
+
+/* ============================================================================
+   STICKY CTA MOBILE
+   ============================================================================ */
+
+.landing-sticky-cta {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 0.75rem 1rem;
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+/* ============================================================================
+   READING PROGRESS BAR
+   ============================================================================ */
+
+.landing-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #dc2626 0%, #f59e0b 100%);
+  z-index: 100;
+  transition: width 0.1s ease-out;
+}
+
+/* ============================================================================
+   REDUCED MOTION
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-landing-fade-in-up,
+  .animate-landing-pulse-glow,
+  .animate-landing-float,
+  .animate-landing-shimmer {
+    animation: none;
+  }
+
+  .landing-card:hover,
+  .landing-btn-primary:hover,
+  .landing-btn-secondary:hover {
+    transform: none;
+  }
+}
+
+/* ============================================================================
+   PRINT STYLES
+   ============================================================================ */
+
+@media print {
+  .landing-sticky-cta,
+  .landing-progress-bar {
+    display: none !important;
+  }
+}
