@@ -63,8 +63,9 @@ const CountryFlag: React.FC<{ code: string; name?: string }> = ({ code, name }) 
     <img
       src={`https://flagcdn.com/w40/${code.toLowerCase()}.png`}
       alt={name ? `Drapeau ${name}` : `Flag of ${code.toUpperCase()}`}
-      className="w-6 h-4 object-cover rounded-sm flex-shrink-0"
+      className="w-6 h-4 object-cover rounded-sm flex-shrink-0 pointer-events-none"
       loading="lazy"
+      draggable={false}
     />
   );
 };
@@ -177,26 +178,30 @@ const CountryStep: React.FC<{
       </div>
 
       {/* Countries Grid - Scrollable */}
-      <div className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <div
+        className="flex-1 overflow-y-auto overscroll-contain touch-pan-y"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
         <div className="grid grid-cols-2 gap-2 pb-2">
           {filteredCountries.map((country) => (
             <button
               key={country.code}
               type="button"
               onClick={() => onSelect(country.code)}
+              style={{ WebkitTapHighlightColor: 'transparent', WebkitTouchCallout: 'none' } as React.CSSProperties}
               className={`
                 flex items-center gap-2.5 p-3 rounded-xl border-2 transition-colors
                 touch-manipulation text-left min-h-[52px] select-none cursor-pointer
                 ${selectedCountry === country.code
                   ? "bg-red-500/20 border-red-500 text-white"
-                  : "bg-white/5 border-transparent text-gray-200 hover:bg-white/10 active:bg-white/15"
+                  : "bg-white/5 border-transparent text-gray-200 active:bg-white/15"
                 }
               `}
             >
               <CountryFlag code={country.code} />
-              <span className="text-sm font-medium truncate flex-1">{country.label}</span>
+              <span className="text-sm font-medium truncate flex-1 pointer-events-none">{country.label}</span>
               {selectedCountry === country.code && (
-                <Check className="w-4 h-4 text-red-400 flex-shrink-0" />
+                <Check className="w-4 h-4 text-red-400 flex-shrink-0 pointer-events-none" />
               )}
             </button>
           ))}
@@ -288,17 +293,19 @@ const LanguageStep: React.FC<{
       </div>
 
       {/* Languages Grid - Scrollable */}
-      <div className="flex-1 overflow-y-auto overscroll-contain">
+      <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div className="grid grid-cols-2 gap-2 pb-2">
           {filteredLanguages.map((lang) => {
             const isSelected = selectedLanguages.includes(lang.code);
             return (
               <button
                 key={lang.code}
+                type="button"
                 onClick={() => onToggle(lang.code)}
+                style={{ WebkitTapHighlightColor: 'transparent', WebkitTouchCallout: 'none' } as React.CSSProperties}
                 className={`
                   flex items-center gap-2.5 p-3 rounded-xl border-2 transition-all
-                  touch-manipulation text-left min-h-[52px]
+                  touch-manipulation text-left min-h-[52px] select-none cursor-pointer
                   ${isSelected
                     ? "bg-blue-500/20 border-blue-500 text-white"
                     : "bg-white/5 border-transparent text-gray-200 active:scale-[0.97] active:bg-white/10"
@@ -306,9 +313,9 @@ const LanguageStep: React.FC<{
                 `}
               >
                 <CountryFlag code={getFlagForLanguage(lang.code)} />
-                <span className="text-sm font-medium truncate flex-1">{lang.label}</span>
+                <span className="text-sm font-medium truncate flex-1 pointer-events-none">{lang.label}</span>
                 {isSelected && (
-                  <Check className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                  <Check className="w-4 h-4 text-blue-400 flex-shrink-0 pointer-events-none" />
                 )}
               </button>
             );
@@ -432,24 +439,36 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
     );
   }, []);
 
-  // Auto-advance: Country selection → Step 2
-  // Using useRef to track pending transition and avoid race conditions
-  const pendingCountryRef = useRef<string | null>(null);
+  // Track if user just navigated back (to prevent auto-advance)
+  const justNavigatedBackRef = useRef<boolean>(false);
+
+  // Track the last selected country to detect new selections
+  const lastSelectedCountryRef = useRef<string>("");
 
   const handleCountrySelect = useCallback((code: string) => {
-    // Prevent double-clicks by checking if we're already processing
-    if (pendingCountryRef.current === code) return;
-    pendingCountryRef.current = code;
-
+    // Clear the "navigated back" flag since user is making a new selection
+    justNavigatedBackRef.current = false;
+    lastSelectedCountryRef.current = code;
     setSelectedCountry(code);
   }, []);
 
-  // Auto-advance effect when country is selected
+  // Handler for going back to step 1
+  const handleBackToStep1 = useCallback(() => {
+    justNavigatedBackRef.current = true;
+    setStep(1);
+  }, []);
+
+  // Auto-advance effect when country is selected (only for NEW selections)
   useEffect(() => {
-    if (selectedCountry && step === 1) {
+    // Don't auto-advance if user just navigated back
+    if (justNavigatedBackRef.current) {
+      return;
+    }
+
+    // Only auto-advance if this is a new selection (country changed)
+    if (selectedCountry && step === 1 && lastSelectedCountryRef.current === selectedCountry) {
       const timer = setTimeout(() => {
         setStep(2);
-        pendingCountryRef.current = null;
       }, 200);
       return () => clearTimeout(timer);
     }
@@ -489,7 +508,8 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
       setSelectedCountry("");
       setSelectedLanguages([]);
       setSelectedType(null);
-      pendingCountryRef.current = null;
+      justNavigatedBackRef.current = false;
+      lastSelectedCountryRef.current = "";
     }
   }, [isOpen]);
 
@@ -559,8 +579,9 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
           // Step 2 (Languages multi-select): Back + Next buttons
           <div className="flex gap-3">
             <button
-              onClick={() => setStep(1)}
-              className="flex-1 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 bg-white/10 text-white active:scale-[0.98] touch-manipulation min-h-[60px]"
+              type="button"
+              onClick={handleBackToStep1}
+              className="flex-1 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 bg-white/10 text-white active:scale-[0.98] touch-manipulation min-h-[60px] select-none cursor-pointer"
             >
               <ChevronLeft className="w-6 h-6" />
               <FormattedMessage id="action.back" />

@@ -1370,12 +1370,12 @@ const ModernProfileCard: React.FC<{
   );
 
   return (
-    <div className="flex-shrink-0 p-2 sm:p-3 w-full lg:w-auto flex justify-center">
+    <div className="flex-shrink-0 w-full lg:w-auto flex justify-center px-2 sm:px-0">
       <article
         className={`
           relative bg-white rounded-2xl overflow-hidden cursor-pointer
           transition-all duration-300 ease-out border-2 shadow-lg
-          w-full max-w-[340px] h-auto min-h-[480px]
+          w-full max-w-[calc(100vw-48px)] sm:max-w-[340px] h-auto min-h-[480px]
           lg:w-[320px] lg:h-[520px] lg:max-w-none lg:min-h-0
           xl:w-[340px] xl:h-[540px]
           2xl:w-[360px] 2xl:h-[560px]

@@ -2216,25 +2216,11 @@ const BookingRequest: React.FC = () => {
       console.log('📍 Code pays reçu:', country || '(vide)');
       console.log('🗣️ Codes langues reçus:', wizardLanguages?.length ? wizardLanguages : '(aucune)');
 
-      // Préremplir le pays d'intervention choisi par le client dans le wizard
+      // NOTE: Le pays d'intervention NE DOIT PAS être pré-rempli automatiquement
+      // L'utilisateur doit toujours le sélectionner manuellement dans le formulaire
+      // Le wizard utilise le pays uniquement pour filtrer les providers, pas pour pré-remplir le formulaire
       if (country) {
-        const countryData = countriesData.find(
-          (c) => c.code.toLowerCase() === country.toLowerCase()
-        );
-        console.log('🔵 [BookingRequest] countryData found:', countryData ? { code: countryData.code, nameEn: countryData.nameEn } : 'NOT FOUND');
-        if (countryData) {
-          const countryName = countryData.nameEn;
-          const isInList = countries.includes(countryName);
-          console.log('🔵 [BookingRequest] countryName:', countryName, '| isInList:', isInList);
-          if (isInList) {
-            setValue('currentCountry', countryName);
-            console.log('✅ Pays appliqué au formulaire:', countryName);
-          } else {
-            console.warn('🔴 [BookingRequest] Country name NOT in countries list:', countryName);
-          }
-        } else {
-          console.warn('🔴 [BookingRequest] Country code NOT found in countriesData:', country);
-        }
+        console.log('🔵 [BookingRequest] Pays du wizard ignoré (ne doit pas être pré-rempli):', country);
       }
 
       // Préremplir les langues choisies par le client dans le wizard

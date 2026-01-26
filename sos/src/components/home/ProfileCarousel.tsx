@@ -477,10 +477,14 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
         </div>
       )}
 
-      {/* Mobile */}
-      <div className="flex gap-6 overflow-x-auto pb-6 snap-x snap-mandatory scrollbar-hide md:hidden">
+      {/* Mobile & Tablet - Scroll horizontal avec snap */}
+      <div className="flex gap-4 overflow-x-auto pb-6 snap-x snap-mandatory scrollbar-hide lg:hidden -mx-6 px-6"
+           style={{ WebkitOverflowScrolling: 'touch' }}>
         {displayProviders.map((provider, index) => (
-          <div key={`${provider.id}-${rotationIndex}`} className="flex-shrink-0 snap-start">
+          <div
+            key={`${provider.id}-${rotationIndex}`}
+            className="flex-shrink-0 snap-center"
+          >
             <ModernProfileCard
               provider={provider}
               onProfileClick={handleProfileClick}
@@ -492,8 +496,8 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
         ))}
       </div>
 
-      {/* Desktop */}
-      <div className="hidden md:flex gap-8 animate-infinite-scroll">
+      {/* Desktop - Animation infinite scroll */}
+      <div className="hidden lg:flex gap-8 animate-infinite-scroll">
         {infiniteProviders.map((provider, index) => (
           <div key={`${provider.id}-${index}-${rotationIndex}`} className="flex-shrink-0">
             <ModernProfileCard

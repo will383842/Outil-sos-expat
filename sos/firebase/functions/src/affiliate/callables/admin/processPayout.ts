@@ -20,7 +20,6 @@ import {
   getOrCreateRecipient,
   calculatePayoutDetails,
   executeWisePayout,
-  isTransferSuccessful,
   WiseApiError,
 } from "../../wise";
 

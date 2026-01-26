@@ -357,12 +357,12 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
     );
 
     return (
-      <div className="flex-shrink-0 p-1 sm:p-2 md:p-4">
+      <div className="flex-shrink-0">
         <article
           className={`
             relative bg-white rounded-2xl overflow-hidden cursor-pointer
             transition-all duration-300 ease-out border-2 shadow-lg
-            w-72 sm:w-80 h-[480px] sm:h-[520px]
+            w-[280px] sm:w-[320px] h-[460px] sm:h-[520px]
             ${statusColors.border} ${statusColors.shadow} ${statusColors.borderShadow}
             ${isHovered ? `scale-[1.02] ${statusColors.glow} shadow-xl` : ""}
             focus:outline-none focus:ring-4 focus:ring-blue-500/50
@@ -386,8 +386,7 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
         >
           {/* Header avec photo et statut - Dimensions explicites pour éviter layout shift */}
           <div
-            className="relative overflow-hidden bg-slate-100"
-            style={{ height: `${CARD_DIMENSIONS.imageHeight}px` }}
+            className="relative overflow-hidden bg-slate-100 h-[240px] sm:h-[288px]"
           >
             <img
               src={provider.avatar || provider.profilePhoto || DEFAULT_AVATAR}
@@ -468,8 +467,7 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
 
           {/* Contenu principal - Hauteur fixe pour éviter layout shift */}
           <div
-            className="p-3 flex flex-col"
-            style={{ height: `${CARD_DIMENSIONS.contentHeight}px` }}
+            className="p-3 flex flex-col h-[220px] sm:h-[232px]"
           >
             {/* Nom et expérience */}
             <div className="space-y-2 mb-3">

@@ -1260,11 +1260,12 @@ const OptimizedHomePage: React.FC = () => {
                 {/* Bouton principal d'appel - "Appeler maintenant" avec icône téléphone */}
                 <Link
                   to="/sos-appel"
-                  className="group relative overflow-hidden bg-gradient-to-r from-red-600 via-red-500 to-orange-500 hover:from-red-700 hover:via-red-600 hover:to-orange-600 text-white px-10 sm:px-12 py-5 sm:py-6 rounded-3xl font-black text-lg sm:text-xl transition-all duration-300 hover:scale-110 hover:shadow-2xl hover:shadow-red-500/50 flex items-center justify-center space-x-3 sm:space-x-4 border-2 border-red-400/50 touch-manipulation"
+                  className="group relative overflow-hidden bg-gradient-to-r from-red-600 via-red-500 to-orange-500 active:from-red-700 active:via-red-600 active:to-orange-600 text-white px-10 sm:px-12 py-5 sm:py-6 rounded-3xl font-black text-lg sm:text-xl transition-all duration-300 hover:scale-110 hover:shadow-2xl hover:shadow-red-500/50 flex items-center justify-center space-x-3 sm:space-x-4 border-2 border-red-400/50 touch-manipulation select-none cursor-pointer [-webkit-tap-highlight-color:transparent]"
                   aria-label={intl.formatMessage({ id: "aria.urgentCall" })}
+                  style={{ WebkitTapHighlightColor: 'transparent', WebkitTouchCallout: 'none' } as React.CSSProperties}
                 >
-                  <Phone className="w-7 h-7 sm:w-8 sm:h-8 animate-pulse" aria-hidden="true" />
-                  <span>
+                  <Phone className="w-7 h-7 sm:w-8 sm:h-8 animate-pulse pointer-events-none" aria-hidden="true" />
+                  <span className="pointer-events-none">
                     <FormattedMessage id="cta.callNow" />
                   </span>
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-yellow-400/30 via-orange-500/30 to-red-600/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" aria-hidden="true" />

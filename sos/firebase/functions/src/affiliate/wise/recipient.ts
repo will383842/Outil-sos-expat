@@ -5,7 +5,7 @@
  */
 
 import { logger } from "firebase-functions/v2";
-import { wiseRequest, getProfileIdNumber, WiseApiError } from "./client";
+import { wiseRequest, getProfileIdNumber } from "./client";
 import { WiseRecipient, WiseRecipientRequest, WiseRecipientDetails } from "./types";
 import { BankDetails, BankAccountType } from "../types";
 
@@ -200,7 +200,8 @@ export async function getRecipientRequirements(
   targetCurrency: string,
   sourceAmount: number
 ): Promise<unknown> {
-  const profileId = getProfileIdNumber();
+  // Ensure profile is configured (validates credentials)
+  getProfileIdNumber();
 
   const requirements = await wiseRequest<unknown>(
     "GET",

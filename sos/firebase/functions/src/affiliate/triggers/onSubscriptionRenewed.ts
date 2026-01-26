@@ -15,7 +15,7 @@ import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
-import { isAffiliateSystemActive, getAffiliateConfigCached } from "../utils/configService";
+import { isAffiliateSystemActive } from "../utils/configService";
 import { createCommission } from "../services/commissionService";
 
 // Lazy initialization
