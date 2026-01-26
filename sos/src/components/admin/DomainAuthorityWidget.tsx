@@ -447,8 +447,8 @@ const DomainAuthorityWidget: React.FC<DomainAuthorityWidgetProps> = ({
                           borderRadius: '6px',
                           fontSize: '12px',
                         }}
-                        formatter={(value: number, name: string) => [
-                          value,
+                        formatter={(value, name) => [
+                          value ?? 0,
                           name === 'score'
                             ? intl.formatMessage({ id: 'admin.domainAuthority.da' })
                             : intl.formatMessage({ id: 'admin.domainAuthority.pa' }),
