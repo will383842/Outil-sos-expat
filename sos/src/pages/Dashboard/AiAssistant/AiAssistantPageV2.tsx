@@ -347,6 +347,7 @@ export const AiAssistantPageV2: React.FC = () => {
 
   // Handle SSO access
   // P1 FIX: Open window synchronously to avoid popup blocker
+  // P0 FIX: Remove 'noopener' to allow writing to the window, use link click fallback
   const handleAccessOutil = useCallback(async (overrideProviderId?: string) => {
     if (!canMakeAiCall && !linkedProviders.find(p => p.id === (overrideProviderId || selectedProviderId))?.hasForcedAccess) {
       navigate(translatedRoutes.subscriptionPlans);
@@ -357,10 +358,60 @@ export const AiAssistantPageV2: React.FC = () => {
     setAccessError(null);
 
     // P1 FIX: Open window IMMEDIATELY (synchronously) to avoid popup blocker
-    const newWindow = window.open('about:blank', '_blank', 'noopener');
+    // P0 FIX: Don't use 'noopener' so we can write to the window and redirect it
+    const newWindow = window.open('about:blank', '_blank');
+    let windowUsable = false;
 
     if (!newWindow) {
-      console.warn('[AiAssistant] Popup blocked, will redirect in same tab');
+      console.warn('[AiAssistant] Popup blocked, will use link click fallback');
+    } else {
+      // Write a loading page to the new window
+      try {
+        newWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>Connexion à l'Outil IA...</title>
+              <style>
+                body {
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: center;
+                  align-items: center;
+                  height: 100vh;
+                  margin: 0;
+                  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                  color: white;
+                }
+                .spinner {
+                  width: 50px;
+                  height: 50px;
+                  border: 4px solid rgba(255,255,255,0.3);
+                  border-top-color: white;
+                  border-radius: 50%;
+                  animation: spin 1s linear infinite;
+                }
+                @keyframes spin {
+                  to { transform: rotate(360deg); }
+                }
+                h2 { margin-top: 20px; font-weight: 500; }
+                p { opacity: 0.8; font-size: 14px; }
+              </style>
+            </head>
+            <body>
+              <div class="spinner"></div>
+              <h2>Connexion en cours...</h2>
+              <p>Vous allez être redirigé vers l'Outil IA SOS Expat</p>
+            </body>
+          </html>
+        `);
+        newWindow.document.close();
+        windowUsable = true;
+      } catch (writeError) {
+        console.warn('[AiAssistant] Cannot write to popup window:', writeError);
+        try { newWindow.close(); } catch { /* ignore */ }
+      }
     }
 
     try {
@@ -380,19 +431,42 @@ export const AiAssistantPageV2: React.FC = () => {
       if (result.data.success && result.data.token) {
         const ssoUrl = `${OUTIL_BASE_URL}/auth?token=${encodeURIComponent(result.data.token)}`;
 
-        if (newWindow) {
+        if (newWindow && windowUsable && !newWindow.closed) {
           // Redirect the already-opened window to SSO URL
-          newWindow.location.href = ssoUrl;
+          try {
+            newWindow.location.href = ssoUrl;
+          } catch (redirectError) {
+            console.warn('[AiAssistant] Cannot redirect popup, using link fallback:', redirectError);
+            try { newWindow.close(); } catch { /* ignore */ }
+            // Fallback: open in new tab using a link click
+            const link = document.createElement('a');
+            link.href = ssoUrl;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          }
         } else {
-          // Fallback: redirect current tab (popup was blocked)
-          window.location.href = ssoUrl;
+          // Fallback: open in new tab using a link click (preserves current tab)
+          const link = document.createElement('a');
+          link.href = ssoUrl;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
         }
       } else {
-        newWindow?.close();
+        if (newWindow && !newWindow.closed) {
+          try { newWindow.close(); } catch { /* ignore */ }
+        }
         throw new Error('Token non reçu');
       }
     } catch (error: unknown) {
-      newWindow?.close();
+      if (newWindow && !newWindow.closed) {
+        try { newWindow.close(); } catch { /* ignore */ }
+      }
       console.error('SSO Error:', error);
       const firebaseError = error as { code?: string; message?: string };
       let errorMessage = intl.formatMessage({ id: 'aiAssistant.errors.accessError' });
