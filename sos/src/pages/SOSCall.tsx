@@ -898,11 +898,12 @@ const generateAllSchemas = (
 
   const serviceSchema = {
     "@context": "https://schema.org",
-    "@type": "Service",
+    "@type": "ProfessionalService",
     "@id": `${BASE_URL}${PAGE_PATH}/#service`,
     name: intl.formatMessage({ id: "sosCall.seo.serviceName" }),
     description: intl.formatMessage({ id: "sosCall.seo.serviceDescription" }),
     provider: { "@id": `${BASE_URL}/#organization` },
+    priceRange: "€€",
     serviceType: intl.formatMessage({ id: "sosCall.seo.serviceType" }),
     areaServed: {
       "@type": "Place",
