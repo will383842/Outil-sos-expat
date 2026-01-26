@@ -6,25 +6,27 @@
  * Composants React pour les landing pages SOS Expat.
  * Design premium mobile-first en harmonie avec la home page.
  *
+ * 3 TEMPLATES DISPONIBLES :
+ * - minimal    : Design premium épuré (Hero + Trust + FAQ + CTA)
+ * - complete   : Toutes les sections
+ * - conversion : Optimisé conversion (urgence, popups, compteurs)
+ *
  * Structure :
- * - LandingPage : Composant principal
- * - LandingHero : Section hero
- * - LandingProblem : Section problèmes
- * - LandingSolution : Section solution
- * - LandingProcess : Section comment ça marche
- * - LandingBenefits : Section avantages
- * - LandingTestimonials : Section témoignages
- * - LandingFAQ : Section FAQ
- * - LandingCTA : Section CTA final
- * - LandingSchema : Données structurées Schema.org
- * - LandingMeta : Meta tags SEO
- * - StickyCTAMobile : CTA sticky mobile
- * - SocialProofPopup : Popup social proof
+ * - LandingPage : Factory qui sélectionne le bon template
+ * - templates/ : Les 3 variantes de design
+ * - Sections : Hero, Problem, Solution, Process, etc.
  * - ui/ : Composants UI réutilisables
  */
 
-// Main component
+// Main component (Factory)
 export { LandingPage } from './LandingPage';
+
+// Template variants
+export {
+  LandingPageMinimal,
+  LandingPageComplete,
+  LandingPageConversion,
+} from './templates';
 
 // Section components
 export { LandingHero } from './LandingHero';
