@@ -475,19 +475,9 @@ const OptimizedHomePage: React.FC = () => {
       "Relocation",
       "International law",
     ],
-    // CRITICAL: AggregateRating for Google Rich Snippets (Stars)
-    // Only include if there are actual reviews (Google requirement)
-    ...(aggregateRating.ratingCount > 0 && {
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": aggregateRating.ratingValue.toFixed(1),
-        "ratingCount": aggregateRating.ratingCount,
-        "reviewCount": aggregateRating.reviewCount,
-        "bestRating": "5",
-        "worstRating": "1"
-      },
-    }),
-  }), [intl, aggregateRating]);
+    // NOTE: aggregateRating removed - Google doesn't support it on Organization type
+    // Only LocalBusiness subtypes support aggregateRating for Rich Results
+  }), [intl]);
 
   const jsonLdWebSite = useMemo(() => ({
     "@context": "https://schema.org",
@@ -506,11 +496,13 @@ const OptimizedHomePage: React.FC = () => {
     },
   }), [language]);
 
+  // ProfessionalService (subtype of LocalBusiness) supports aggregateRating for Rich Results
   const jsonLdService = useMemo(() => ({
     "@context": "https://schema.org",
-    "@type": "Service",
+    "@type": "ProfessionalService",
     "@id": `${SEO_CONSTANTS.BASE_URL}/#service`,
     "name": intl.formatMessage({ id: "schema.serviceType" }),
+    "url": SEO_CONSTANTS.BASE_URL,
     "provider": {
       "@type": "Organization",
       "@id": `${SEO_CONSTANTS.BASE_URL}/#organization`,
@@ -519,7 +511,7 @@ const OptimizedHomePage: React.FC = () => {
       "@type": "Place",
       "name": "Worldwide",
     },
-    "serviceType": "Expatriate Assistance",
+    "priceRange": "€€",
     "hasOfferCatalog": {
       "@type": "OfferCatalog",
       "name": intl.formatMessage({ id: "schema.offerCatalogName" }),
@@ -540,9 +532,9 @@ const OptimizedHomePage: React.FC = () => {
         },
       ],
     },
-    // CRITICAL: AggregateRating for Google Rich Snippets (Stars) on Service
-    // Only include if there are actual reviews (Google requirement)
-    ...(aggregateRating.ratingCount > 0 && {
+    // AggregateRating is valid on ProfessionalService (LocalBusiness subtype)
+    // Both ratingCount AND reviewCount must be > 0 (Google requirement)
+    ...(aggregateRating.ratingCount > 0 && aggregateRating.reviewCount > 0 && {
       "aggregateRating": {
         "@type": "AggregateRating",
         "ratingValue": aggregateRating.ratingValue.toFixed(1),

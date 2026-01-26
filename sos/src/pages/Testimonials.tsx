@@ -362,39 +362,48 @@ const Testimonials: React.FC = () => {
   );
 
   // =================== SEO SCHEMA FOR GOOGLE RICH SNIPPETS ===================
+  // Using ProfessionalService (LocalBusiness subtype) which supports aggregateRating
+  // Organization type does NOT support aggregateRating for Google Rich Results
   const jsonLdReviewsPage = useMemo(() => ({
     "@context": "https://schema.org",
-    "@type": "Organization",
-    "@id": `${SEO_BASE_URL}/#organization`,
+    "@type": "ProfessionalService",
+    "@id": `${SEO_BASE_URL}/#professional-service`,
     "name": "SOS Expat & Travelers",
     "url": SEO_BASE_URL,
-    "logo": `${SEO_BASE_URL}/sos-logo.webp`,
+    "image": `${SEO_BASE_URL}/sos-logo.webp`,
     "description": intl.formatMessage({ id: "testy.hero.subtitle" }),
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": aggregateRating.ratingValue.toFixed(1),
-      "ratingCount": aggregateRating.ratingCount,
-      "reviewCount": aggregateRating.reviewCount,
-      "bestRating": "5",
-      "worstRating": "1"
-    },
-    "review": aggregateRating.recentReviews.slice(0, 10).map((review) => ({
-      "@type": "Review",
-      "author": {
-        "@type": "Person",
-        "name": review.clientName
-      },
-      "reviewRating": {
-        "@type": "Rating",
-        "ratingValue": review.rating,
+    "priceRange": "€€",
+    // Only include aggregateRating if both ratingCount AND reviewCount > 0 (Google requirement)
+    ...(aggregateRating.ratingCount > 0 && aggregateRating.reviewCount > 0 && {
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": aggregateRating.ratingValue.toFixed(1),
+        "ratingCount": aggregateRating.ratingCount,
+        "reviewCount": aggregateRating.reviewCount,
         "bestRating": "5",
         "worstRating": "1"
       },
-      "reviewBody": review.comment,
-      "datePublished": review.createdAt instanceof Date
-        ? review.createdAt.toISOString().split('T')[0]
-        : new Date().toISOString().split('T')[0]
-    }))
+    }),
+    // Only include reviews if there are any
+    ...(aggregateRating.recentReviews.length > 0 && {
+      "review": aggregateRating.recentReviews.slice(0, 10).map((review) => ({
+        "@type": "Review",
+        "author": {
+          "@type": "Person",
+          "name": review.clientName
+        },
+        "reviewRating": {
+          "@type": "Rating",
+          "ratingValue": review.rating,
+          "bestRating": "5",
+          "worstRating": "1"
+        },
+        "reviewBody": review.comment,
+        "datePublished": review.createdAt instanceof Date
+          ? review.createdAt.toISOString().split('T')[0]
+          : new Date().toISOString().split('T')[0]
+      }))
+    }),
   }), [intl, aggregateRating]);
 
   const jsonLdBreadcrumb = useMemo(() => ({

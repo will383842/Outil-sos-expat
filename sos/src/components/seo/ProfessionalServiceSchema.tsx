@@ -221,7 +221,8 @@ export const generateProviderSchema = (
         },
         areaServed: provider.country,
         priceRange: provider.priceRange || '€€-€€€',
-        ...(provider.rating && provider.reviewCount && {
+        // Only include aggregateRating if reviewCount > 0 (Google requirement)
+        ...(provider.rating && provider.reviewCount && provider.reviewCount > 0 && {
           aggregateRating: {
             '@type': 'AggregateRating',
             ratingValue: provider.rating,

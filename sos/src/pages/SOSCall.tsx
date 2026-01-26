@@ -952,13 +952,16 @@ const generateAllSchemas = (
         },
       ],
     },
-    aggregateRating: providers.length > 0 ? {
-      "@type": "AggregateRating",
-      ratingValue: (providers.reduce((sum, p) => sum + p.rating, 0) / providers.length).toFixed(1),
-      reviewCount: providers.reduce((sum, p) => sum + p.reviewCount, 0),
-      bestRating: 5,
-      worstRating: 1,
-    } : undefined,
+    // Only include aggregateRating if total reviewCount > 0 (Google requirement)
+    ...(providers.length > 0 && providers.reduce((sum, p) => sum + p.reviewCount, 0) > 0 && {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: (providers.reduce((sum, p) => sum + p.rating, 0) / providers.length).toFixed(1),
+        reviewCount: providers.reduce((sum, p) => sum + p.reviewCount, 0),
+        bestRating: 5,
+        worstRating: 1,
+      },
+    }),
   };
 
   const webPageSchema = {
@@ -1190,19 +1193,22 @@ const generateAllSchemas = (
       availability: "https://schema.org/InStock",
       offerCount: providers.length || 50,
     },
-    aggregateRating: providers.length > 0 ? {
-      "@type": "AggregateRating",
-      ratingValue: (providers.reduce((sum, p) => sum + p.rating, 0) / providers.length).toFixed(1),
-      reviewCount: providers.reduce((sum, p) => sum + p.reviewCount, 0),
-      bestRating: 5,
-      worstRating: 1,
-    } : {
-      "@type": "AggregateRating",
-      ratingValue: "4.8",
-      reviewCount: 1250,
-      bestRating: 5,
-      worstRating: 1,
-    },
+    // Only include aggregateRating if reviewCount > 0 (Google requirement)
+    ...((() => {
+      const totalReviews = providers.reduce((sum, p) => sum + p.reviewCount, 0);
+      if (providers.length > 0 && totalReviews > 0) {
+        return {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: (providers.reduce((sum, p) => sum + p.rating, 0) / providers.length).toFixed(1),
+            reviewCount: totalReviews,
+            bestRating: 5,
+            worstRating: 1,
+          },
+        };
+      }
+      return {};
+    })()),
     category: intl.formatMessage({ id: "sosCall.seo.product.category" }),
   };
 
@@ -1397,8 +1403,6 @@ const ModernProfileCard: React.FC<{
         tabIndex={0}
         role="article"
         aria-label={ariaLabels.card}
-        itemScope
-        itemType="https://schema.org/Person"
         style={{
           animationDelay: `${index * 80}ms`,
         }}
@@ -1423,7 +1427,6 @@ const ModernProfileCard: React.FC<{
             onError={handleImageError}
             loading="lazy"
             decoding="async"
-            itemProp="image"
           />
 
           {/* Overlay gradient */}
@@ -1469,7 +1472,7 @@ const ModernProfileCard: React.FC<{
               min-h-[36px] sm:min-h-[44px]
             `}
             >
-              <span className="text-xs sm:text-sm font-medium" itemProp="jobTitle">
+              <span className="text-xs sm:text-sm font-medium">
                 <span aria-hidden="true">{professionInfo.icon}</span>{" "}
                 <FormattedMessage
                   id={
@@ -1487,20 +1490,14 @@ const ModernProfileCard: React.FC<{
             <div
               className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-white/95 backdrop-blur-sm border border-slate-200 shadow-sm"
               aria-label={ariaLabels.rating}
-              itemProp="aggregateRating"
-              itemScope
-              itemType="https://schema.org/AggregateRating"
             >
               <Star
                 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 fill-current"
                 aria-hidden="true"
               />
-              <span className="text-slate-800 text-xs sm:text-sm font-medium" itemProp="ratingValue">
+              <span className="text-slate-800 text-xs sm:text-sm font-medium">
                 {provider.rating.toFixed(1)}
               </span>
-              <meta itemProp="bestRating" content="5" />
-              <meta itemProp="worstRating" content="1" />
-              <meta itemProp="reviewCount" content={String(provider.reviewCount)} />
             </div>
           </div>
         </div>
@@ -1513,7 +1510,7 @@ const ModernProfileCard: React.FC<{
           {/* Nom et expérience */}
           <div className="space-y-1.5 sm:space-y-2 mb-2 sm:mb-3">
             <div className="flex items-center justify-between gap-2">
-              <h3 className="text-lg sm:text-xl font-bold text-slate-800 truncate flex-1" itemProp="name">
+              <h3 className="text-lg sm:text-xl font-bold text-slate-800 truncate flex-1">
                 {provider.name}
               </h3>
               <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-teal-50 border border-teal-200 flex-shrink-0">
@@ -1532,7 +1529,7 @@ const ModernProfileCard: React.FC<{
             {formattedCountries && (
               <div className="flex items-start gap-1.5 sm:gap-2">
                 <MapPin className="w-3.5 h-3.5 text-blue-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
-                <span className="text-blue-600 text-xs sm:text-sm leading-tight line-clamp-2" itemProp="workLocation">
+                <span className="text-blue-600 text-xs sm:text-sm leading-tight line-clamp-2">
                   {formattedCountries}
                 </span>
               </div>
@@ -1542,7 +1539,7 @@ const ModernProfileCard: React.FC<{
             {formattedLanguages && (
               <div className="flex items-start gap-1.5 sm:gap-2">
                 <Globe className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
-                <span className="text-indigo-600 text-xs sm:text-sm leading-tight line-clamp-2" itemProp="knowsLanguage">
+                <span className="text-indigo-600 text-xs sm:text-sm leading-tight line-clamp-2">
                   {formattedLanguages}
                 </span>
               </div>
@@ -1552,7 +1549,7 @@ const ModernProfileCard: React.FC<{
             {formattedSpecialties && (
               <div className="flex items-start gap-1.5 sm:gap-2">
                 <Briefcase className="w-3.5 h-3.5 text-purple-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
-                <span className="text-purple-600 text-xs sm:text-sm leading-tight line-clamp-2" itemProp="hasOccupation">
+                <span className="text-purple-600 text-xs sm:text-sm leading-tight line-clamp-2">
                   {formattedSpecialties}
                 </span>
               </div>
@@ -1657,26 +1654,22 @@ const FAQSection: React.FC<{
   const [openIndex, setOpenIndex] = useState<string | null>(null);
 
   return (
-    <section 
+    <section
       className="py-10 sm:py-12 lg:py-16 bg-gray-900"
       aria-labelledby="faq-heading"
-      itemScope
-      itemType="https://schema.org/FAQPage"
       id="faq"
     >
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         {/* ===== H2 - Titre FAQ ===== */}
         <div className="text-center mb-6 sm:mb-10">
-          <h2 
+          <h2
             id="faq-heading"
             className="text-xl sm:text-2xl lg:text-3xl font-black text-white mb-3"
-            itemProp="headline"
           >
             <FormattedMessage id="sosCall.faq.title" />
           </h2>
-          <p 
+          <p
             className="text-gray-300 text-sm sm:text-base max-w-2xl mx-auto"
-            itemProp="description"
           >
             <FormattedMessage id="sosCall.faq.subtitle" />
           </p>
@@ -1711,9 +1704,6 @@ const FAQSection: React.FC<{
                 <article
                   key={faq.id}
                   className="rounded-xl sm:rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm overflow-hidden faq-item"
-                  itemScope
-                  itemProp="mainEntity"
-                  itemType="https://schema.org/Question"
                   role="listitem"
                   data-faq-index={index}
                 >
@@ -1725,9 +1715,8 @@ const FAQSection: React.FC<{
                     id={`faq-question-${faq.id}`}
                   >
                     {/* ===== H3 - Questions FAQ ===== */}
-                    <h3 
+                    <h3
                       className="font-semibold text-white text-sm sm:text-base pr-3 m-0"
-                      itemProp="name"
                     >
                       {faq.question}
                     </h3>
@@ -1739,17 +1728,13 @@ const FAQSection: React.FC<{
                   <div
                     id={`faq-answer-${faq.id}`}
                     className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-96' : 'max-h-0'}`}
-                    itemScope
-                    itemProp="acceptedAnswer"
-                    itemType="https://schema.org/Answer"
                     role="region"
                     aria-labelledby={`faq-question-${faq.id}`}
                     aria-hidden={!isOpen}
                   >
                     <div className="px-4 sm:px-5 pb-3.5 sm:pb-4">
-                      <p 
+                      <p
                         className="text-gray-300 text-sm sm:text-base leading-relaxed faq-answer whitespace-pre-line"
-                        itemProp="text"
                       >
                         {faq.answer}
                       </p>
@@ -1761,12 +1746,6 @@ const FAQSection: React.FC<{
           </div>
         )}
 
-        {/* ===== Structured Data Helper pour Speakable ===== */}
-        <div className="sr-only" aria-hidden="true">
-          <span itemProp="author" itemScope itemType="https://schema.org/Organization">
-            <meta itemProp="name" content="SOS Expat" />
-          </span>
-        </div>
       </div>
     </section>
   );
@@ -3336,7 +3315,6 @@ const SOSCall: React.FC = () => {
             <h1
               className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight mb-3 sm:mb-4 px-2"
               id="page-title"
-              itemProp="headline"
             >
               <FormattedMessage id="sosCall.hero.title.new" />
             </h1>
@@ -3344,7 +3322,6 @@ const SOSCall: React.FC = () => {
             {/* ===== FEATURED SNIPPET (Position 0 Google) ===== */}
             <p
               className="text-sm md:text-lg lg:text-xl text-gray-200 max-w-3xl mx-auto px-4 featured-snippet"
-              itemProp="description"
               data-featured-snippet="true"
             >
               <FormattedMessage id="sosCall.hero.subtitle.new" />
@@ -3359,7 +3336,7 @@ const SOSCall: React.FC = () => {
             >
               <span className="inline-flex items-center gap-2">
                 <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" aria-hidden="true" />
-                <span itemProp="numberOfItems">
+                <span>
                   <FormattedMessage 
                     id="sosCall.hero.expertCount" 
                     values={{ 
@@ -3381,11 +3358,7 @@ const SOSCall: React.FC = () => {
           id="experts"
           role="main"
           aria-labelledby="section-title"
-          itemScope
-          itemType="https://schema.org/ItemList"
         >
-          <meta itemProp="numberOfItems" content={filteredProviders.length.toString()} />
-          <meta itemProp="itemListOrder" content="https://schema.org/ItemListOrderDescending" />
 
           {/* ========================================
               📱 FILTRES CHIPS MOBILE (sticky)
@@ -3460,7 +3433,6 @@ const SOSCall: React.FC = () => {
               <h2
                 className="hidden lg:block text-lg sm:text-xl lg:text-2xl xl:text-3xl font-black text-white mb-4"
                 id="section-title"
-                itemProp="name"
               >
                 {selectedType === "lawyer" && (
                   <FormattedMessage id="sosCall.experts.title.lawyer" />

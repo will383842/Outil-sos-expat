@@ -163,17 +163,9 @@ const OrganizationSchema: React.FC<OrganizationSchemaProps> = ({
       }
     };
 
-    // CRITICAL: AggregateRating for Google Stars
-    if (aggregateRating && aggregateRating.ratingCount > 0) {
-      organizationSchema.aggregateRating = {
-        '@type': 'AggregateRating',
-        ratingValue: aggregateRating.ratingValue.toFixed(1),
-        ratingCount: aggregateRating.ratingCount,
-        reviewCount: aggregateRating.reviewCount,
-        bestRating: aggregateRating.bestRating || 5,
-        worstRating: aggregateRating.worstRating || 1
-      };
-    }
+    // NOTE: aggregateRating removed from Organization
+    // Google does NOT support aggregateRating on Organization type for Rich Results
+    // Only LocalBusiness subtypes (like ProfessionalService) support it
 
     // Build the @graph array
     const graph: Record<string, unknown>[] = [organizationSchema];
@@ -201,17 +193,18 @@ const OrganizationSchema: React.FC<OrganizationSchemaProps> = ({
       });
     }
 
-    // Service schema
+    // ProfessionalService schema (supports aggregateRating for Rich Results)
     if (includeService) {
       graph.push({
-        '@type': 'Service',
+        '@type': 'ProfessionalService',
         '@id': `${baseUrl}/#service`,
         name: 'Services d\'assistance expatriés',
         description: 'Services d\'assistance juridique et conseil pour expatriés et voyageurs - Consultations en ligne avec avocats et experts',
+        url: baseUrl,
+        priceRange: '€€',
         provider: {
           '@id': `${baseUrl}/#organization`
         },
-        serviceType: serviceTypes,
         areaServed: {
           '@type': 'GeoShape',
           name: 'Worldwide'
@@ -228,8 +221,9 @@ const OrganizationSchema: React.FC<OrganizationSchemaProps> = ({
           highPrice: '199',
           offerCount: serviceTypes.length
         },
-        // Include rating on service too
-        ...(aggregateRating && aggregateRating.ratingCount > 0 && {
+        // aggregateRating valid on ProfessionalService (LocalBusiness subtype)
+        // Both ratingCount AND reviewCount must be > 0 (Google requirement)
+        ...(aggregateRating && aggregateRating.ratingCount > 0 && aggregateRating.reviewCount > 0 && {
           aggregateRating: {
             '@type': 'AggregateRating',
             ratingValue: aggregateRating.ratingValue.toFixed(1),
@@ -289,15 +283,7 @@ export const generateOrganizationSchema = (
       width: 512,
       height: 512
     },
-    ...(aggregateRating && aggregateRating.ratingCount > 0 && {
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: aggregateRating.ratingValue.toFixed(1),
-        ratingCount: aggregateRating.ratingCount,
-        reviewCount: aggregateRating.reviewCount,
-        bestRating: 5,
-        worstRating: 1
-      }
-    })
+    // NOTE: aggregateRating not included on Organization
+    // Google does NOT support aggregateRating on Organization type for Rich Results
   };
 };

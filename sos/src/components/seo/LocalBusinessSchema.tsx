@@ -188,7 +188,8 @@ const LocalBusinessSchema: React.FC<LocalBusinessSchemaProps> = ({
     };
 
     // CRITICAL: Add AggregateRating for Google Stars
-    if (aggregateRating && aggregateRating.ratingCount > 0) {
+    // Both ratingCount AND reviewCount must be > 0 (Google requirement)
+    if (aggregateRating && aggregateRating.ratingCount > 0 && aggregateRating.reviewCount > 0) {
       localBusinessSchema.aggregateRating = {
         '@type': 'AggregateRating',
         ratingValue: aggregateRating.ratingValue.toFixed(1),
@@ -258,7 +259,8 @@ export const generateLocalBusinessSchema = (
     name,
     url: baseUrl,
     logo,
-    ...(aggregateRating && aggregateRating.ratingCount > 0 && {
+    // Both ratingCount AND reviewCount must be > 0 (Google requirement)
+    ...(aggregateRating && aggregateRating.ratingCount > 0 && aggregateRating.reviewCount > 0 && {
       aggregateRating: {
         '@type': 'AggregateRating',
         ratingValue: aggregateRating.ratingValue.toFixed(1),
