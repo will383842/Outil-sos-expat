@@ -958,6 +958,7 @@ const generateAllSchemas = (
       aggregateRating: {
         "@type": "AggregateRating",
         ratingValue: (providers.reduce((sum, p) => sum + p.rating, 0) / providers.length).toFixed(1),
+        ratingCount: providers.reduce((sum, p) => sum + p.reviewCount, 0),
         reviewCount: providers.reduce((sum, p) => sum + p.reviewCount, 0),
         bestRating: 5,
         worstRating: 1,
@@ -1054,6 +1055,7 @@ const generateAllSchemas = (
           aggregateRating: {
             "@type": "AggregateRating",
             ratingValue: provider.rating.toFixed(1),
+            ratingCount: provider.reviewCount,
             reviewCount: provider.reviewCount,
             bestRating: 5,
             worstRating: 1,
@@ -1202,6 +1204,7 @@ const generateAllSchemas = (
           aggregateRating: {
             "@type": "AggregateRating",
             ratingValue: (providers.reduce((sum, p) => sum + p.rating, 0) / providers.length).toFixed(1),
+            ratingCount: totalReviews,
             reviewCount: totalReviews,
             bestRating: 5,
             worstRating: 1,
