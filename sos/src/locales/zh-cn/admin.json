@@ -559,5 +559,17 @@
   "admin.providerActions.suspendReason": "暂停原因",
   "admin.providerActions.suspendedSuccess": "服务商已暂停",
   "admin.sidebar.collapse": "收起",
-  "admin.sidebar.expand": "展开"
+  "admin.sidebar.expand": "展开",
+  "admin.menu.affiliation": "联盟与合作伙伴",
+  "admin.menu.affiliation.description": "联盟计划和合作伙伴",
+  "admin.menu.affiliatePayouts": "联盟支付",
+  "admin.menu.affiliatePayouts.description": "管理联盟支付",
+  "admin.menu.affiliatesList": "联盟列表",
+  "admin.menu.affiliatesList.description": "所有计划联盟成员",
+  "admin.menu.affiliateConfig": "联盟配置",
+  "admin.menu.affiliateConfig.description": "联盟计划设置",
+  "admin.menu.commissionRules": "佣金规则",
+  "admin.menu.commissionRules.description": "配置佣金费率",
+  "admin.menu.ambassadors": "大使",
+  "admin.menu.ambassadors.description": "高级大使计划"
 }

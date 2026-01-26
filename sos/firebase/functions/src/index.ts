@@ -5471,3 +5471,33 @@ export {
   cleanupUncapturedPayPalOrders,
   sendPayoutSuccessEmail,
 } from './scheduled/paypalMaintenance';
+
+// ========== AFFILIATE SYSTEM ==========
+// Complete affiliate/referral program with commissions and payouts
+export {
+  // Triggers
+  affiliateOnUserCreated,
+  affiliateOnCallCompleted,
+  affiliateOnSubscriptionCreated,
+  affiliateOnSubscriptionRenewed,
+  // User callables
+  getMyAffiliateData,
+  updateBankDetails,
+  requestWithdrawal,
+  // Admin callables
+  adminUpdateAffiliateConfig,
+  getAffiliateGlobalStats,
+  // Admin payout processing
+  adminProcessPayoutWise,
+  adminProcessPayoutManual,
+  adminRejectPayout,
+  adminApprovePayout,
+  adminGetPendingPayouts,
+  // Scheduled
+  affiliateReleaseHeldCommissions,
+  // Webhooks
+  wiseWebhook,
+  // Initialization
+  initializeAffiliateConfig,
+  resetAffiliateConfigToDefaults,
+} from './affiliate';

@@ -124,6 +124,14 @@ const KycReturn = lazy(() => import('./pages/Dashboard/KycReturn'));
 // Conversations (Provider Tool - integrated from Outil-sos-expat)
 const ConversationHistory = lazy(() => import('./pages/Dashboard/Conversations/History'));
 
+// Affiliate Program
+const AffiliateDashboard = lazy(() => import('./pages/Affiliate/AffiliateDashboard'));
+const AffiliateEarnings = lazy(() => import('./pages/Affiliate/AffiliateEarnings'));
+const AffiliateReferrals = lazy(() => import('./pages/Affiliate/AffiliateReferrals'));
+const AffiliateWithdraw = lazy(() => import('./pages/Affiliate/AffiliateWithdraw'));
+const AffiliateBankDetails = lazy(() => import('./pages/Affiliate/AffiliateBankDetails'));
+const AffiliateTools = lazy(() => import('./pages/Affiliate/AffiliateTools'));
+
 // Multi-Provider Dashboard (standalone, password-protected)
 const MultiProviderDashboard = lazy(() => import('./pages/MultiProviderDashboard'));
 
@@ -204,7 +212,7 @@ const routeConfigs: RouteConfig[] = [
 
   // Fournisseurs publics (utilise SOSCall sans wizard)
   { path: "/providers", component: SOSCall, alias: "/nos-experts", translated: "providers" },
-  { path: "/provider/:id", component: ProviderProfile },
+  { path: "/provider/:id", component: ProviderProfile, translated: "provider" },
 
   // Simplified route patterns - just type and slug (rétrocompatibilité)
   { path: "/avocat/:slug", component: ProviderProfile, translated: "lawyer" },
@@ -260,6 +268,13 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/dashboard/kyc", component: KycReturn, protected: true, role: ['lawyer', 'expat'], translated: "dashboard-kyc" },
   // Conversations History (Provider Tool)
   { path: "/dashboard/conversations", component: ConversationHistory, protected: true, role: ['lawyer', 'expat', 'admin'], translated: "dashboard-conversations" },
+  // Affiliate Program Routes - Accessible to all authenticated users (clients, lawyers, expats)
+  { path: "/affiliate", component: AffiliateDashboard, protected: true, role: ['client', 'lawyer', 'expat'], translated: "affiliate-dashboard" },
+  { path: "/affiliate/earnings", component: AffiliateEarnings, protected: true, role: ['client', 'lawyer', 'expat'], translated: "affiliate-earnings" },
+  { path: "/affiliate/referrals", component: AffiliateReferrals, protected: true, role: ['client', 'lawyer', 'expat'], translated: "affiliate-referrals" },
+  { path: "/affiliate/withdraw", component: AffiliateWithdraw, protected: true, role: ['client', 'lawyer', 'expat'], translated: "affiliate-withdraw" },
+  { path: "/affiliate/bank-details", component: AffiliateBankDetails, protected: true, role: ['client', 'lawyer', 'expat'], translated: "affiliate-bank-details" },
+  { path: "/affiliate/tools", component: AffiliateTools, protected: true, role: ['client', 'lawyer', 'expat'], translated: "affiliate-tools" },
 ];
 
 // ====================================

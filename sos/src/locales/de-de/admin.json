@@ -742,5 +742,17 @@
   "admin.receivedCalls.table.totalAmount": "Gesamtbetrag",
   "admin.receivedCalls.title": "Empfangene Anrufe",
   "admin.sidebar.collapse": "Einklappen",
-  "admin.sidebar.expand": "Ausklappen"
+  "admin.sidebar.expand": "Ausklappen",
+  "admin.menu.affiliation": "Affiliate & Partner",
+  "admin.menu.affiliation.description": "Partnerprogramm und Affiliates",
+  "admin.menu.affiliatePayouts": "Affiliate-Auszahlungen",
+  "admin.menu.affiliatePayouts.description": "Verwaltung der Affiliate-Zahlungen",
+  "admin.menu.affiliatesList": "Affiliate-Liste",
+  "admin.menu.affiliatesList.description": "Alle Programmpartner",
+  "admin.menu.affiliateConfig": "Affiliate-Konfiguration",
+  "admin.menu.affiliateConfig.description": "Einstellungen des Partnerprogramms",
+  "admin.menu.commissionRules": "Provisionsregeln",
+  "admin.menu.commissionRules.description": "Konfiguration der Provisionssätze",
+  "admin.menu.ambassadors": "Botschafter",
+  "admin.menu.ambassadors.description": "Premium-Botschafterprogramm"
 }

@@ -559,5 +559,17 @@
   "admin.providerActions.suspendReason": "Причина приостановки",
   "admin.providerActions.suspendedSuccess": "Провайдер приостановлен",
   "admin.sidebar.collapse": "Свернуть",
-  "admin.sidebar.expand": "Развернуть"
+  "admin.sidebar.expand": "Развернуть",
+  "admin.menu.affiliation": "Партнёрство и аффилиаты",
+  "admin.menu.affiliation.description": "Партнёрская программа и аффилиаты",
+  "admin.menu.affiliatePayouts": "Выплаты партнёрам",
+  "admin.menu.affiliatePayouts.description": "Управление выплатами партнёрам",
+  "admin.menu.affiliatesList": "Список партнёров",
+  "admin.menu.affiliatesList.description": "Все партнёры программы",
+  "admin.menu.affiliateConfig": "Настройки партнёрства",
+  "admin.menu.affiliateConfig.description": "Параметры партнёрской программы",
+  "admin.menu.commissionRules": "Правила комиссий",
+  "admin.menu.commissionRules.description": "Настройка ставок комиссий",
+  "admin.menu.ambassadors": "Амбассадоры",
+  "admin.menu.ambassadors.description": "Премиум-программа амбассадоров"
 }

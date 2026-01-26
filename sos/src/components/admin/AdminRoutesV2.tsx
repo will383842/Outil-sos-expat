@@ -299,14 +299,32 @@ const DevPage: React.FC<{ pageKey: string }> = ({ pageKey }) => {
 };
 
 // ===== LAZY IMPORTS - AFFILIATION =====
-const AdminAffiliates = lazy(() =>
-  Promise.resolve({ default: () => <DevPage pageKey="affiliates" /> })
+const AdminAffiliatesList = lazy(
+  () => import("../../pages/admin/AdminAffiliatesList")
+);
+const AdminAffiliateDetail = lazy(
+  () => import("../../pages/admin/AdminAffiliateDetail")
+);
+const AdminAffiliateConfig = lazy(
+  () => import("../../pages/admin/AdminAffiliateConfig")
 );
 const AdminCommissionRules = lazy(
   () => import("../../pages/admin/AdminCommissionRules")
 );
-const AdminAffiliatePayouts = lazy(() =>
-  Promise.resolve({ default: () => <DevPage pageKey="affiliatePayouts" /> })
+const AdminAffiliatePayouts = lazy(
+  () => import("../../pages/admin/AdminAffiliatePayouts")
+);
+const AdminAffiliateDashboard = lazy(
+  () => import("../../pages/admin/AdminAffiliateDashboard")
+);
+const AdminAffiliateCommissions = lazy(
+  () => import("../../pages/admin/AdminAffiliateCommissions")
+);
+const AdminAffiliateReports = lazy(
+  () => import("../../pages/admin/AdminAffiliateReports")
+);
+const AdminAffiliateFraudAlerts = lazy(
+  () => import("../../pages/admin/AdminAffiliateFraudAlerts")
 );
 const AdminAmbassadors = lazy(() =>
   Promise.resolve({ default: () => <DevPage pageKey="ambassadors" /> })
@@ -810,27 +828,84 @@ const AdminRoutesV2: React.FC = () => {
       />
 
       {/* 🤝 AFFILIATION & AMBASSADEURS */}
+      {/* Dashboard Affiliés - Vue d'ensemble */}
+      <Route
+        path="affiliates/dashboard"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminAffiliateDashboard />
+          </Suspense>
+        }
+      />
+      {/* Liste des affiliés */}
       <Route
         path="affiliates"
         element={
           <Suspense fallback={<LoadingSpinner />}>
-            <AdminAffiliates />
+            <AdminAffiliatesList />
           </Suspense>
         }
       />
+      {/* Configuration globale */}
       <Route
-        path="affiliates/commissions"
+        path="affiliates/config"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminAffiliateConfig />
+          </Suspense>
+        }
+      />
+      {/* Règles de commission - accès direct au configurateur */}
+      <Route
+        path="affiliates/rules"
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminCommissionRules />
           </Suspense>
         }
       />
+      {/* Gestion des commissions individuelles */}
+      <Route
+        path="affiliates/commissions"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminAffiliateCommissions />
+          </Suspense>
+        }
+      />
+      {/* Payouts - versements */}
       <Route
         path="affiliates/payouts"
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminAffiliatePayouts />
+          </Suspense>
+        }
+      />
+      {/* Rapports & Analytics affiliés */}
+      <Route
+        path="affiliates/reports"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminAffiliateReports />
+          </Suspense>
+        }
+      />
+      {/* Alertes fraude */}
+      <Route
+        path="affiliates/fraud"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminAffiliateFraudAlerts />
+          </Suspense>
+        }
+      />
+      {/* Détail d'un affilié (DOIT être après les routes statiques) */}
+      <Route
+        path="affiliates/:affiliateId"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminAffiliateDetail />
           </Suspense>
         }
       />
@@ -1252,8 +1327,14 @@ export const useAdminRouteValidation = () => {
       "/admin/comms/notifications",
       "/admin/contact-messages",
       "/admin/affiliates",
+      "/admin/affiliates/dashboard",
+      "/admin/affiliates/:affiliateId",
+      "/admin/affiliates/config",
+      "/admin/affiliates/rules",
       "/admin/affiliates/commissions",
       "/admin/affiliates/payouts",
+      "/admin/affiliates/reports",
+      "/admin/affiliates/fraud",
       "/admin/ambassadors",
       "/admin/b2b/accounts",
       "/admin/b2b/members",

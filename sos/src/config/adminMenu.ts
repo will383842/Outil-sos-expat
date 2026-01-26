@@ -49,6 +49,11 @@ import {
   LogIn,
   PieChart,
   Cloud,
+  // Affiliate icons
+  Handshake,
+  UserPlus,
+  Award,
+  Wallet,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -464,64 +469,79 @@ export const adminMenuTree: AdminMenuItem[] = [
     ],
   },
 
-  // ===== 🏢 BUSINESS & PARTENARIATS (Priorité 6) =====
-  // NOTE: Section entièrement placeholder - à activer quand implémentée
-  // {
-  //   id: "business",
-  //   label: "Business & Partenariats",
-  //   icon: Building,
-  //   description: "Comptes entreprise et programmes partenaires",
-  //   children: [
-  //     // B2B Enterprise - pages placeholder
-  //     {
-  //       id: "b2b",
-  //       label: "Comptes Entreprise (B2B)",
-  //       icon: Briefcase,
-  //       description: "Gestion des clients entreprise",
-  //       children: [
-  //         {
-  //           id: "b2b-accounts",
-  //           label: "Comptes",
-  //           path: "/admin/b2b/accounts",
-  //           icon: Building,
-  //         },
-  //         {
-  //           id: "b2b-billing",
-  //           label: "Facturation B2B",
-  //           path: "/admin/b2b/billing",
-  //           icon: CreditCardIcon,
-  //         },
-  //         {
-  //           id: "b2b-invoices",
-  //           label: "Factures",
-  //           path: "/admin/b2b/invoices",
-  //           icon: Receipt,
-  //         },
-  //       ],
-  //     },
-  //     // Programme d'affiliation - pages placeholder
-  //     {
-  //       id: "affiliation",
-  //       label: "Programme Affiliation",
-  //       icon: Handshake,
-  //       description: "Affiliés et ambassadeurs",
-  //       children: [
-  //         {
-  //           id: "affiliates-list",
-  //           label: "Affiliés",
-  //           path: "/admin/affiliates",
-  //           icon: UserPlus,
-  //         },
-  //         {
-  //           id: "ambassadors",
-  //           label: "Ambassadeurs",
-  //           path: "/admin/ambassadors",
-  //           icon: Award,
-  //         },
-  //       ],
-  //     },
-  //   ],
-  // },
+  // ===== 🤝 AFFILIATION & PARTENARIATS (Priorité 6) =====
+  {
+    id: "affiliation",
+    labelKey: "admin.menu.affiliation",
+    icon: Handshake,
+    descriptionKey: "admin.menu.affiliation.description",
+    children: [
+      {
+        id: "affiliate-dashboard",
+        labelKey: "admin.menu.affiliateDashboard",
+        path: "/admin/affiliates/dashboard",
+        icon: LayoutDashboard,
+        descriptionKey: "admin.menu.affiliateDashboard.description",
+      },
+      {
+        id: "affiliates-list",
+        labelKey: "admin.menu.affiliatesList",
+        path: "/admin/affiliates",
+        icon: UserPlus,
+        descriptionKey: "admin.menu.affiliatesList.description",
+      },
+      {
+        id: "affiliate-commissions",
+        labelKey: "admin.menu.affiliateCommissions",
+        path: "/admin/affiliates/commissions",
+        icon: Percent,
+        descriptionKey: "admin.menu.affiliateCommissions.description",
+      },
+      {
+        id: "affiliate-payouts",
+        labelKey: "admin.menu.affiliatePayouts",
+        path: "/admin/affiliates/payouts",
+        icon: Wallet,
+        descriptionKey: "admin.menu.affiliatePayouts.description",
+      },
+      {
+        id: "affiliate-reports",
+        labelKey: "admin.menu.affiliateReports",
+        path: "/admin/affiliates/reports",
+        icon: BarChart3,
+        descriptionKey: "admin.menu.affiliateReports.description",
+      },
+      {
+        id: "affiliate-fraud",
+        labelKey: "admin.menu.affiliateFraud",
+        path: "/admin/affiliates/fraud",
+        icon: ShieldAlert,
+        badge: "NEW",
+        descriptionKey: "admin.menu.affiliateFraud.description",
+      },
+      {
+        id: "affiliate-config",
+        labelKey: "admin.menu.affiliateConfig",
+        path: "/admin/affiliates/config",
+        icon: Settings,
+        descriptionKey: "admin.menu.affiliateConfig.description",
+      },
+      {
+        id: "commission-rules",
+        labelKey: "admin.menu.commissionRules",
+        path: "/admin/affiliates/rules",
+        icon: Cog,
+        descriptionKey: "admin.menu.commissionRules.description",
+      },
+      {
+        id: "ambassadors",
+        labelKey: "admin.menu.ambassadors",
+        path: "/admin/ambassadors",
+        icon: Award,
+        descriptionKey: "admin.menu.ambassadors.description",
+      },
+    ],
+  },
 
   // ===== ANALYTICS & RAPPORTS (Priorite 7) =====
   {

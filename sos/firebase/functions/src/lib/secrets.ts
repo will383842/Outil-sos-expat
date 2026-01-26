@@ -116,6 +116,22 @@ export const PAYPAL_API_SECRETS = [
 ];
 
 // ============================================================================
+// WISE SECRETS (Affiliate Payouts)
+// ============================================================================
+
+export const WISE_API_TOKEN = defineSecret("WISE_API_TOKEN");
+export const WISE_PROFILE_ID = defineSecret("WISE_PROFILE_ID");
+export const WISE_WEBHOOK_SECRET = defineSecret("WISE_WEBHOOK_SECRET");
+export const WISE_MODE = defineString("WISE_MODE", { default: "sandbox" });
+
+/** All Wise secrets for function config */
+export const WISE_SECRETS = [
+  WISE_API_TOKEN,
+  WISE_PROFILE_ID,
+  WISE_WEBHOOK_SECRET,
+];
+
+// ============================================================================
 // EXTERNAL API KEYS
 // ============================================================================
 
@@ -505,6 +521,100 @@ export function getPayPalBaseUrl(): string {
     : 'https://api-m.sandbox.paypal.com';
 }
 
+// --- WISE GETTERS ---
+
+export function getWiseMode(): 'sandbox' | 'live' {
+  // Force live mode in production
+  if (isProduction() && !isEmulator()) {
+    console.log('[Secrets] Production detected, forcing Wise LIVE mode');
+    return 'live';
+  }
+
+  try {
+    const modeValue = WISE_MODE.value();
+    if (modeValue === 'live' || modeValue === 'sandbox') {
+      return modeValue;
+    }
+  } catch {
+    // Fallback to process.env
+  }
+
+  const envMode = process.env.WISE_MODE;
+  if (envMode === 'live' || envMode === 'sandbox') {
+    return envMode;
+  }
+
+  return 'sandbox';
+}
+
+export function getWiseApiToken(): string {
+  try {
+    const secretValue = WISE_API_TOKEN.value()?.trim();
+    if (secretValue && secretValue.length > 0) {
+      console.log(`[Secrets] WISE_API_TOKEN loaded from Firebase Secret`);
+      return secretValue;
+    }
+  } catch {
+    // Secret not available
+  }
+
+  const envValue = process.env.WISE_API_TOKEN?.trim();
+  if (envValue && envValue.length > 0) {
+    console.log(`[Secrets] WISE_API_TOKEN loaded from process.env`);
+    return envValue;
+  }
+
+  console.error(`[Secrets] WISE_API_TOKEN NOT FOUND`);
+  return "";
+}
+
+export function getWiseProfileId(): string {
+  try {
+    const secretValue = WISE_PROFILE_ID.value()?.trim();
+    if (secretValue && secretValue.length > 0) {
+      console.log(`[Secrets] WISE_PROFILE_ID loaded from Firebase Secret`);
+      return secretValue;
+    }
+  } catch {
+    // Secret not available
+  }
+
+  const envValue = process.env.WISE_PROFILE_ID?.trim();
+  if (envValue && envValue.length > 0) {
+    console.log(`[Secrets] WISE_PROFILE_ID loaded from process.env`);
+    return envValue;
+  }
+
+  console.error(`[Secrets] WISE_PROFILE_ID NOT FOUND`);
+  return "";
+}
+
+export function getWiseWebhookSecret(): string {
+  try {
+    const secretValue = WISE_WEBHOOK_SECRET.value()?.trim();
+    if (secretValue && secretValue.length > 0) {
+      return secretValue;
+    }
+  } catch {
+    // Secret not available
+  }
+
+  const envValue = process.env.WISE_WEBHOOK_SECRET?.trim();
+  if (envValue && envValue.length > 0) {
+    return envValue;
+  }
+
+  console.error(`[Secrets] WISE_WEBHOOK_SECRET NOT FOUND`);
+  return "";
+}
+
+export function getWiseBaseUrl(): string {
+  const mode = getWiseMode();
+  return mode === 'live'
+    ? 'https://api.wise.com'
+    : 'https://api.sandbox.transferwise.tech';
+}
+
 // ============================================================================
 // COMBINED ARRAYS FOR FUNCTION CONFIG
 // ============================================================================
@@ -526,11 +636,18 @@ export const PAYPAL_PAYMENT_SECRETS = [
   ...PAYPAL_SECRETS,
 ];
 
+/** All secrets for Wise affiliate payout functions */
+export const WISE_PAYOUT_SECRETS = [
+  ...WISE_SECRETS,
+  ENCRYPTION_KEY,
+];
+
 /** All secrets - use sparingly, prefer specific arrays */
 export const ALL_SECRETS = [
   ...TWILIO_SECRETS,
   ...STRIPE_SECRETS,
   ...PAYPAL_SECRETS,
+  ...WISE_SECRETS,
   ...EMAIL_SECRETS,
   ENCRYPTION_KEY,
   TASKS_AUTH_SECRET,

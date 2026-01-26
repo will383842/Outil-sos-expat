@@ -1,0 +1,317 @@
+/**
+ * Initialize Affiliate Config - Script d'initialisation
+ *
+ * Fonction callable admin pour initialiser le document affiliate_config
+ * avec les valeurs par défaut. Ne s'exécute qu'une seule fois (vérifie si existe déjà).
+ */
+
+import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getApps, initializeApp } from "firebase-admin/app";
+import { logger } from "firebase-functions/v2";
+import { AffiliateConfig } from "./types";
+
+// Lazy initialization
+function ensureInitialized() {
+  if (!getApps().length) {
+    initializeApp();
+  }
+}
+
+/**
+ * Configuration par défaut du système d'affiliation
+ *
+ * Taux configurables :
+ * - signupBonus: 2€ par inscription validée
+ * - callCommissionRate: 50% du premier appel, 20% des suivants
+ * - subscriptionRate: 15% du premier mois, 5% des renouvellements (max 12 mois)
+ * - providerValidationBonus: 20€ si prestataire parrainé complète son KYC
+ *
+ * Retrait :
+ * - Seuil minimum: 30€
+ * - Période de rétention: 24h (anti-fraude)
+ */
+const DEFAULT_AFFILIATE_CONFIG: Omit<AffiliateConfig, "updatedAt" | "updatedBy" | "rateHistory"> = {
+  id: "current",
+  isSystemActive: true,
+  withdrawalsEnabled: true,
+  newAffiliatesEnabled: true,
+
+  // Taux par défaut (gelés pour chaque affilié à son inscription)
+  defaultRates: {
+    signupBonus: 200, // 2€ en cents
+    callCommissionRate: 0.5, // 50% du premier appel
+    callFixedBonus: 0,
+    subscriptionRate: 0.15, // 15% du premier mois
+    subscriptionFixedBonus: 0,
+    providerValidationBonus: 2000, // 20€ en cents
+  },
+
+  // Règles de commission par type d'action
+  commissionRules: {
+    // Inscription d'un filleul
+    referral_signup: {
+      enabled: true,
+      type: "fixed",
+      fixedAmount: 200, // 2€
+      percentageRate: 0,
+      baseAmount: null,
+      conditions: {
+        requireEmailVerification: true,
+        minAccountAgeDays: 0,
+        onlyFirstTime: true,
+      },
+      description: "2€ par inscription validée",
+    },
+
+    // Premier appel du filleul
+    referral_first_call: {
+      enabled: true,
+      type: "percentage",
+      fixedAmount: 0,
+      percentageRate: 0.5, // 50%
+      baseAmount: null,
+      applyTo: "connection_fee",
+      conditions: {
+        minCallDuration: 120, // 2 minutes minimum
+        providerTypes: ["lawyer", "expat"],
+      },
+      description: "50% des frais de connexion du 1er appel",
+    },
+
+    // Appels récurrents du filleul
+    referral_recurring_call: {
+      enabled: true,
+      type: "percentage",
+      fixedAmount: 0,
+      percentageRate: 0.2, // 20%
+      baseAmount: null,
+      applyTo: "connection_fee",
+      conditions: {
+        minCallDuration: 120,
+        providerTypes: ["lawyer", "expat"],
+        maxCallsPerMonth: 0, // illimité
+        lifetimeLimit: 0, // illimité
+      },
+      description: "20% des frais de connexion des appels suivants",
+    },
+
+    // Premier abonnement du filleul
+    referral_subscription: {
+      enabled: true,
+      type: "percentage",
+      fixedAmount: 0,
+      percentageRate: 0.15, // 15%
+      baseAmount: null,
+      applyTo: "first_month",
+      conditions: {
+        planTypes: ["solo", "multi", "enterprise"],
+        onlyFirstSubscription: true,
+      },
+      description: "15% du premier mois d'abonnement",
+    },
+
+    // Renouvellement d'abonnement
+    referral_subscription_renewal: {
+      enabled: true,
+      type: "percentage",
+      fixedAmount: 0,
+      percentageRate: 0.05, // 5%
+      baseAmount: null,
+      applyTo: "total_amount",
+      conditions: {
+        maxMonths: 12, // Commission sur max 12 mois de renouvellement
+      },
+      description: "5% des renouvellements (max 12 mois)",
+    },
+
+    // Bonus si le filleul est un prestataire qui complète son KYC
+    referral_provider_validated: {
+      enabled: true,
+      type: "fixed",
+      fixedAmount: 2000, // 20€
+      percentageRate: 0,
+      baseAmount: null,
+      conditions: {
+        requireKYCComplete: true,
+        requireFirstCall: false,
+      },
+      description: "20€ si prestataire parrainé complète son KYC",
+    },
+  },
+
+  // Paramètres de retrait (tirelire)
+  withdrawal: {
+    minimumAmount: 3000, // 30€ minimum pour retirer
+    holdPeriodHours: 24, // Commissions bloquées 24h avant d'être disponibles
+    maxWithdrawalsPerMonth: 0, // illimité
+    maxAmountPerMonth: 0, // illimité
+  },
+
+  // Attribution des parrainages
+  attribution: {
+    windowDays: 30, // Cookie valide 30 jours
+    model: "first_click", // Premier affilié qui a partagé le lien
+  },
+
+  // Protection anti-fraude
+  antiFraud: {
+    requireEmailVerification: true,
+    minAccountAgeDays: 0,
+    maxReferralsPerDay: 50,
+    blockSameIPReferrals: true,
+    blockedEmailDomains: [
+      "tempmail.com",
+      "throwaway.email",
+      "guerrillamail.com",
+      "10minutemail.com",
+      "mailinator.com",
+      "yopmail.com",
+      "fakeinbox.com",
+      "trashmail.com",
+    ],
+    maxSignupsPerIPPerHour: 10,
+    autoFlagThreshold: 5,
+  },
+
+  version: 1,
+};
+
+/**
+ * Fonction callable pour initialiser la configuration d'affiliation
+ * Réservée aux administrateurs - ne s'exécute que si le document n'existe pas
+ */
+export const initializeAffiliateConfig = onCall(
+  {
+    region: "europe-west1",
+    memory: "256MiB",
+    timeoutSeconds: 30,
+  },
+  async (request) => {
+    ensureInitialized();
+
+    // Vérifier l'authentification
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Authentification requise");
+    }
+
+    // Vérifier le rôle admin
+    const isAdmin = request.auth.token.admin === true || request.auth.token.role === "admin";
+    if (!isAdmin) {
+      throw new HttpsError("permission-denied", "Réservé aux administrateurs");
+    }
+
+    const db = getFirestore();
+    const configRef = db.collection("affiliate_config").doc("current");
+
+    try {
+      // Vérifier si le document existe déjà
+      const existingDoc = await configRef.get();
+
+      if (existingDoc.exists) {
+        logger.info("[initializeAffiliateConfig] Config already exists, skipping initialization");
+        return {
+          success: true,
+          message: "La configuration existe déjà",
+          alreadyExists: true,
+          config: existingDoc.data(),
+        };
+      }
+
+      // Créer le document avec les valeurs par défaut
+      const configToSave = {
+        ...DEFAULT_AFFILIATE_CONFIG,
+        updatedAt: Timestamp.now(),
+        updatedBy: request.auth.uid,
+        rateHistory: [], // Empty history for new config
+      };
+
+      await configRef.set(configToSave);
+
+      logger.info("[initializeAffiliateConfig] Config initialized successfully", {
+        adminId: request.auth.uid,
+        adminEmail: request.auth.token.email,
+      });
+
+      return {
+        success: true,
+        message: "Configuration d'affiliation initialisée avec succès",
+        alreadyExists: false,
+        config: configToSave,
+      };
+    } catch (error) {
+      logger.error("[initializeAffiliateConfig] Error:", error);
+      throw new HttpsError("internal", "Erreur lors de l'initialisation de la configuration");
+    }
+  }
+);
+
+/**
+ * Fonction callable pour réinitialiser la configuration aux valeurs par défaut
+ * ATTENTION: Écrase la configuration existante !
+ */
+export const resetAffiliateConfigToDefaults = onCall(
+  {
+    region: "europe-west1",
+    memory: "256MiB",
+    timeoutSeconds: 30,
+  },
+  async (request) => {
+    ensureInitialized();
+
+    // Vérifier l'authentification
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Authentification requise");
+    }
+
+    // Vérifier le rôle admin
+    const isAdmin = request.auth.token.admin === true || request.auth.token.role === "admin";
+    if (!isAdmin) {
+      throw new HttpsError("permission-denied", "Réservé aux administrateurs");
+    }
+
+    const db = getFirestore();
+    const configRef = db.collection("affiliate_config").doc("current");
+
+    try {
+      // Sauvegarder l'ancienne config dans l'historique
+      const existingDoc = await configRef.get();
+      const existingConfig = existingDoc.exists ? existingDoc.data() : null;
+
+      // Créer le document avec les valeurs par défaut
+      const configToSave = {
+        ...DEFAULT_AFFILIATE_CONFIG,
+        updatedAt: Timestamp.now(),
+        updatedBy: request.auth.uid,
+        version: existingConfig ? (existingConfig.version || 0) + 1 : 1,
+        rateHistory: [
+          ...(existingConfig?.rateHistory || []),
+          {
+            changedAt: Timestamp.now(),
+            changedBy: request.auth.uid,
+            changedByEmail: request.auth.token.email || "unknown",
+            previousRates: existingConfig?.defaultRates || {},
+            newRates: DEFAULT_AFFILIATE_CONFIG.defaultRates,
+            reason: "Réinitialisation aux valeurs par défaut",
+          },
+        ],
+      };
+
+      await configRef.set(configToSave);
+
+      logger.info("[resetAffiliateConfigToDefaults] Config reset successfully", {
+        adminId: request.auth.uid,
+        adminEmail: request.auth.token.email,
+      });
+
+      return {
+        success: true,
+        message: "Configuration réinitialisée aux valeurs par défaut",
+        config: configToSave,
+      };
+    } catch (error) {
+      logger.error("[resetAffiliateConfigToDefaults] Error:", error);
+      throw new HttpsError("internal", "Erreur lors de la réinitialisation");
+    }
+  }
+);

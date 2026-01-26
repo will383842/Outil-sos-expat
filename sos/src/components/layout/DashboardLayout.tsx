@@ -24,6 +24,7 @@ import {
   Bookmark,
   Bot,
   Sparkles,
+  Gift,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useApp } from '../../contexts/AppContext';
@@ -123,6 +124,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
     const aiAssistantSlug = getTranslatedRouteSlug('dashboard-ai-assistant' as RouteKey, langCode);
     const subscriptionSlug = getTranslatedRouteSlug('dashboard-subscription' as RouteKey, langCode);
     const subscriptionPlansSlug = getTranslatedRouteSlug('dashboard-subscription-plans' as RouteKey, langCode);
+    const affiliateSlug = getTranslatedRouteSlug('affiliate-dashboard' as RouteKey, langCode);
     const loginSlug = getTranslatedRouteSlug('login' as RouteKey, langCode);
 
     return {
@@ -135,6 +137,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
       aiAssistant: `/${aiAssistantSlug}`,
       subscription: `/${subscriptionSlug}`,
       subscriptionPlans: `/${subscriptionPlansSlug}`,
+      affiliate: `/${affiliateSlug}`,
       login: `/${loginSlug}`,
     };
   }, [langCode]);
@@ -254,7 +257,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeKey }
       ]
     : [];
 
-  const allMenuItems: MenuItem[] = [...menuItems, ...aiMenuItems];
+  // Affiliate program - available for all users
+  const affiliateMenuItem: MenuItem = {
+    key: "affiliate",
+    icon: <Gift className="mr-3 h-5 w-5" />,
+    route: translatedRoutes.affiliate,
+    labels: { fr: "Parrainage", en: "Referral", es: "Referidos", de: "Empfehlung", ru: "Реферальная", hi: "रेफरल", ch: "推荐", pt: "Indicação", ar: "الإحالة" },
+  };
+
+  const allMenuItems: MenuItem[] = [...menuItems, ...aiMenuItems, affiliateMenuItem];
 
   // AI Quota object for mobile drawer
   const aiQuotaData = {

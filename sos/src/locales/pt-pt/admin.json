@@ -559,5 +559,17 @@
   "admin.providerActions.suspendReason": "Motivo da suspensão",
   "admin.providerActions.suspendedSuccess": "Prestador suspenso",
   "admin.sidebar.collapse": "Recolher",
-  "admin.sidebar.expand": "Expandir"
+  "admin.sidebar.expand": "Expandir",
+  "admin.menu.affiliation": "Afiliação e Parceiros",
+  "admin.menu.affiliation.description": "Programa de afiliados e parceiros",
+  "admin.menu.affiliatePayouts": "Pagamentos de Afiliados",
+  "admin.menu.affiliatePayouts.description": "Gestão de pagamentos aos afiliados",
+  "admin.menu.affiliatesList": "Lista de Afiliados",
+  "admin.menu.affiliatesList.description": "Todos os afiliados do programa",
+  "admin.menu.affiliateConfig": "Configuração de Afiliação",
+  "admin.menu.affiliateConfig.description": "Parâmetros do programa de afiliados",
+  "admin.menu.commissionRules": "Regras de Comissões",
+  "admin.menu.commissionRules.description": "Configuração das taxas de comissão",
+  "admin.menu.ambassadors": "Embaixadores",
+  "admin.menu.ambassadors.description": "Programa de embaixadores premium"
 }

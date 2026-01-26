@@ -357,12 +357,12 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
     );
 
     return (
-      <div className="flex-shrink-0 p-2 sm:p-4">
+      <div className="flex-shrink-0 p-1 sm:p-2 md:p-4">
         <article
           className={`
             relative bg-white rounded-2xl overflow-hidden cursor-pointer
             transition-all duration-300 ease-out border-2 shadow-lg
-            w-80 h-[520px] sm:w-80 md:w-80
+            w-72 sm:w-80 h-[480px] sm:h-[520px]
             ${statusColors.border} ${statusColors.shadow} ${statusColors.borderShadow}
             ${isHovered ? `scale-[1.02] ${statusColors.glow} shadow-xl` : ""}
             focus:outline-none focus:ring-4 focus:ring-blue-500/50

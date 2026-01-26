@@ -254,6 +254,7 @@ export type RouteKey =
   | "service-status"    // /statut-service -> /service-status, /estado-servicio, etc.
   | "seo"               // /seo -> /referencement, /seo, etc.
   | "providers"          // /providers -> /prestataires, /proveedores, etc.
+  | "provider"           // /provider/:id -> /prestataire/:id, /proveedor/:id, etc.
   | "dashboard"         // /dashboard -> /tableau-de-bord, /panel, etc.
   | "profile-edit"       // /profile/edit -> /profil/modifier, /perfil/editar, etc.
   | "call-checkout"      // /call-checkout -> /paiement-appel, /pago-llamada, etc.
@@ -268,7 +269,13 @@ export type RouteKey =
   | "dashboard-kyc"      // /dashboard/kyc -> /tableau-de-bord/verification, etc.
   | "login"              // /login -> /connexion, /iniciar-sesion, etc.
   | "register"           // /register -> /inscription, /registro, etc.
-  | "password-reset";     // /password-reset -> /reinitialisation-mot-de-passe, etc.
+  | "password-reset"     // /password-reset -> /reinitialisation-mot-de-passe, etc.
+  | "affiliate-dashboard"  // /affiliate -> /parrainage, /afiliado, etc.
+  | "affiliate-earnings"   // /affiliate/earnings -> /parrainage/gains, etc.
+  | "affiliate-referrals"  // /affiliate/referrals -> /parrainage/filleuls, etc.
+  | "affiliate-withdraw"   // /affiliate/withdraw -> /parrainage/retrait, etc.
+  | "affiliate-bank-details" // /affiliate/bank-details -> /parrainage/coordonnees-bancaires, etc.
+  | "affiliate-tools"; // /affiliate/tools -> /parrainage/outils, etc.
 
 const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
   "lawyer": {
@@ -535,6 +542,17 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     hi: "seva-pradaata",
     ar: "مقدمي-الخدمات",
   },
+  "provider": {
+    fr: "prestataire",
+    en: "provider",
+    es: "proveedor",
+    de: "anbieter",
+    ru: "postavshchik",
+    pt: "prestador",
+    ch: "fuwu-tigongzhe",
+    hi: "seva-pradaata",
+    ar: "مقدم-الخدمة",
+  },
   "dashboard": {
     fr: "tableau-de-bord",
     en: "dashboard",
@@ -699,6 +717,72 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "chongzhi-mima",
     hi: "password-reset",
     ar: "إعادة-تعيين-كلمة-المرور",
+  },
+  "affiliate-dashboard": {
+    fr: "parrainage",
+    en: "affiliate",
+    es: "afiliado",
+    de: "partnerprogramm",
+    ru: "partnerskaya-programma",
+    pt: "afiliado",
+    ch: "tuiguang",
+    hi: "sahbhagi",
+    ar: "برنامج-الإحالة",
+  },
+  "affiliate-earnings": {
+    fr: "parrainage/gains",
+    en: "affiliate/earnings",
+    es: "afiliado/ganancias",
+    de: "partnerprogramm/einnahmen",
+    ru: "partnerskaya-programma/zarabotok",
+    pt: "afiliado/ganhos",
+    ch: "tuiguang/shouyi",
+    hi: "sahbhagi/kamaai",
+    ar: "برنامج-الإحالة/الأرباح",
+  },
+  "affiliate-referrals": {
+    fr: "parrainage/filleuls",
+    en: "affiliate/referrals",
+    es: "afiliado/referidos",
+    de: "partnerprogramm/empfehlungen",
+    ru: "partnerskaya-programma/referal",
+    pt: "afiliado/indicacoes",
+    ch: "tuiguang/tuijianren",
+    hi: "sahbhagi/sandarbh",
+    ar: "برنامج-الإحالة/الإحالات",
+  },
+  "affiliate-withdraw": {
+    fr: "parrainage/retrait",
+    en: "affiliate/withdraw",
+    es: "afiliado/retiro",
+    de: "partnerprogramm/auszahlung",
+    ru: "partnerskaya-programma/vyvod",
+    pt: "afiliado/saque",
+    ch: "tuiguang/tixian",
+    hi: "sahbhagi/nikasi",
+    ar: "برنامج-الإحالة/السحب",
+  },
+  "affiliate-bank-details": {
+    fr: "parrainage/coordonnees-bancaires",
+    en: "affiliate/bank-details",
+    es: "afiliado/datos-bancarios",
+    de: "partnerprogramm/bankdaten",
+    ru: "partnerskaya-programma/bankovskie-rekvizity",
+    pt: "afiliado/dados-bancarios",
+    ch: "tuiguang/yinhang-xinxi",
+    hi: "sahbhagi/bank-vivaran",
+    ar: "برنامج-الإحالة/البيانات-المصرفية",
+  },
+  "affiliate-tools": {
+    fr: "parrainage/outils",
+    en: "affiliate/tools",
+    es: "afiliado/herramientas",
+    de: "partnerprogramm/werkzeuge",
+    ru: "partnerskaya-programma/instrumenty",
+    pt: "afiliado/ferramentas",
+    ch: "tuiguang/gongju",
+    hi: "sahbhagi/upkaran",
+    ar: "برنامج-الإحالة/أدوات",
   },
 };
 

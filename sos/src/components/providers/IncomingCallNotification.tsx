@@ -56,10 +56,10 @@ const IncomingCallNotification: React.FC<IncomingCallNotificationProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-bounce-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-2 sm:p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-auto overflow-hidden animate-bounce-in max-h-[95vh] overflow-y-auto">
         {/* Header animé */}
-        <div className="bg-gradient-to-r from-green-500 to-green-600 p-6 text-white relative overflow-hidden">
+        <div className="bg-gradient-to-r from-green-500 to-green-600 p-4 sm:p-6 text-white relative overflow-hidden">
           <div className="absolute inset-0 bg-white opacity-10 animate-pulse"></div>
           <div className="relative flex items-center justify-between">
             <div className="flex items-center">
@@ -83,8 +83,8 @@ const IncomingCallNotification: React.FC<IncomingCallNotificationProps> = ({
         </div>
 
         {/* Informations client */}
-        <div className="p-6">
-          <div className="flex items-center mb-6">
+        <div className="p-4 sm:p-6">
+          <div className="flex items-center mb-4 sm:mb-6">
             <div className="bg-gray-100 p-4 rounded-full">
               <User size={40} className="text-gray-500" />
             </div>
@@ -99,7 +99,7 @@ const IncomingCallNotification: React.FC<IncomingCallNotificationProps> = ({
           </div>
 
           {/* Contrôles son/vibration */}
-          <div className="flex justify-center space-x-4 mb-6">
+          <div className="flex justify-center space-x-3 sm:space-x-4 mb-4 sm:mb-6">
             <button
               onClick={onToggleSound}
               className={`p-3 rounded-full border-2 transition-all ${
@@ -125,17 +125,17 @@ const IncomingCallNotification: React.FC<IncomingCallNotificationProps> = ({
           </div>
 
           {/* Message */}
-          <p className="text-center text-gray-600 mb-6">
+          <p className="text-center text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">
             Veuillez répondre à l'appel pour être connecté avec le client.
             L'appel sera automatiquement transféré sur votre téléphone.
           </p>
 
-          {/* Boutons d'action */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Boutons d'action - Responsive grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             {onDecline && (
               <button
                 onClick={onDecline}
-                className="flex items-center justify-center py-4 px-6 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors"
+                className="flex items-center justify-center py-3 sm:py-4 px-4 sm:px-6 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors min-h-[48px]"
               >
                 <Phone size={20} className="mr-2 rotate-135" />
                 Refuser
@@ -144,7 +144,7 @@ const IncomingCallNotification: React.FC<IncomingCallNotificationProps> = ({
             {onAnswer && (
               <button
                 onClick={onAnswer}
-                className="flex items-center justify-center py-4 px-6 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors animate-pulse"
+                className="flex items-center justify-center py-3 sm:py-4 px-4 sm:px-6 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors animate-pulse min-h-[48px]"
               >
                 <Phone size={20} className="mr-2" />
                 Répondre
@@ -165,7 +165,7 @@ const IncomingCallNotification: React.FC<IncomingCallNotificationProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="bg-gray-50 px-6 py-3 text-center">
+        <div className="bg-gray-50 px-4 sm:px-6 py-2 sm:py-3 text-center">
           <p className="text-xs text-gray-500">
             Session ID: {call.id.substring(0, 12)}...
           </p>

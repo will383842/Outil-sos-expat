@@ -7,14 +7,20 @@ import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFunctions, httpsCallable } from "firebase/functions";
 
 // Configuration du projet outils-sos-expat
+// IMPORTANT: Toutes les clés doivent être définies dans .env
 const outilFirebaseConfig = {
-  apiKey: import.meta.env.VITE_OUTIL_FIREBASE_API_KEY || "AIzaSyAkZuQoE3zyYLKBKqPGgJaGYH7deCLMa7E",
-  authDomain: "outils-sos-expat.firebaseapp.com",
-  projectId: "outils-sos-expat",
-  storageBucket: "outils-sos-expat.firebasestorage.app",
-  messagingSenderId: "694506867593",
-  appId: "1:694506867593:web:abc123def456", // Placeholder - sera remplacé si nécessaire
+  apiKey: import.meta.env.VITE_OUTIL_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_OUTIL_FIREBASE_AUTH_DOMAIN || "outils-sos-expat.firebaseapp.com",
+  projectId: import.meta.env.VITE_OUTIL_FIREBASE_PROJECT_ID || "outils-sos-expat",
+  storageBucket: import.meta.env.VITE_OUTIL_FIREBASE_STORAGE_BUCKET || "outils-sos-expat.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_OUTIL_FIREBASE_MESSAGING_SENDER_ID || "694506867593",
+  appId: import.meta.env.VITE_OUTIL_FIREBASE_APP_ID,
 };
+
+// Vérification que l'API key est configurée
+if (!outilFirebaseConfig.apiKey) {
+  console.warn("[OutilFirebase] VITE_OUTIL_FIREBASE_API_KEY non configurée dans .env");
+}
 
 // Initialiser l'app secondaire pour outils-sos-expat
 let outilApp;

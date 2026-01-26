@@ -742,5 +742,17 @@
   "admin.receivedCalls.table.totalAmount": "Monto total",
   "admin.receivedCalls.title": "Llamadas recibidas",
   "admin.sidebar.collapse": "Contraer",
-  "admin.sidebar.expand": "Expandir"
+  "admin.sidebar.expand": "Expandir",
+  "admin.menu.affiliation": "Afiliación y Socios",
+  "admin.menu.affiliation.description": "Programa de afiliados y socios",
+  "admin.menu.affiliatePayouts": "Pagos de Afiliados",
+  "admin.menu.affiliatePayouts.description": "Gestión de pagos a afiliados",
+  "admin.menu.affiliatesList": "Lista de Afiliados",
+  "admin.menu.affiliatesList.description": "Todos los afiliados del programa",
+  "admin.menu.affiliateConfig": "Configuración de Afiliación",
+  "admin.menu.affiliateConfig.description": "Parámetros del programa de afiliados",
+  "admin.menu.commissionRules": "Reglas de Comisiones",
+  "admin.menu.commissionRules.description": "Configuración de tasas de comisión",
+  "admin.menu.ambassadors": "Embajadores",
+  "admin.menu.ambassadors.description": "Programa de embajadores premium"
 }

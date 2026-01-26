@@ -48,16 +48,17 @@ import Button from "../components/common/Button";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import { useAuth } from "../contexts/AuthContext";
 import { useApp } from "../contexts/AppContext";
-import { serverTimestamp, FieldValue } from "firebase/firestore";
+import { serverTimestamp, FieldValue, doc, updateDoc } from "firebase/firestore";
 import type { MultiValue } from "react-select";
 import type { Provider } from "../types/provider";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Controller, useForm } from "react-hook-form";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { setPersistence, browserLocalPersistence } from "firebase/auth";
-import { auth } from "../config/firebase";
+import { auth, db } from "../config/firebase";
 import { trackMetaCompleteRegistration, trackMetaStartRegistration } from "../utils/metaPixel";
 import { trackAdRegistration } from "../services/adAttributionService";
+import { getStoredReferralTracking } from "../hooks/useAffiliate";
 import "../styles/multi-language-select.css";
 
 // Lazy imports pour optimisation du bundle
@@ -119,6 +120,7 @@ interface CreateUserData {
   verificationStatus?: string;
   status?: string;
   createdAt: FieldValue;
+  pendingReferralCode?: string; // Code parrainage capturé depuis l'URL (?ref=CODE)
 }
 
 interface FormData {
@@ -391,6 +393,8 @@ const RegisterClient: React.FC = () => {
   const rawRedirect = searchParams.get("redirect") || "/dashboard";
   const redirect = isAllowedRedirect(rawRedirect) ? rawRedirect : "/dashboard";
   const prefillEmail = searchParams.get("email") || "";
+  // AFFILIATE: Capture referral code from URL (?ref=CODE)
+  const referralCode = searchParams.get("ref") || "";
 
   const { register, loginWithGoogle, isLoading, error, user, authInitialized, isFullyReady } = useAuth();
   const { language } = useApp();
@@ -849,6 +853,11 @@ const RegisterClient: React.FC = () => {
       setLocalLoading(true);
       await setPersistence(auth, browserLocalPersistence);
 
+      // AFFILIATE: Store referral code before Google auth (in case of redirect)
+      if (referralCode) {
+        sessionStorage.setItem("pendingReferralCode", referralCode.toUpperCase().trim());
+      }
+
       googleTimeoutRef.current = window.setTimeout(() => {
         setLocalLoading(false);
       }, GOOGLE_TIMEOUT);
@@ -860,6 +869,19 @@ const RegisterClient: React.FC = () => {
         googleTimeoutRef.current = null;
       }
       setLocalLoading(false);
+
+      // AFFILIATE: After successful Google signup, update user document with referral code
+      const storedReferralCode = sessionStorage.getItem("pendingReferralCode") || (referralCode ? referralCode.toUpperCase().trim() : "");
+      if (storedReferralCode && auth.currentUser) {
+        try {
+          const userRef = doc(db, "users", auth.currentUser.uid);
+          await updateDoc(userRef, { pendingReferralCode: storedReferralCode });
+          sessionStorage.removeItem("pendingReferralCode");
+          console.log("[RegisterClient] Referral code saved for Google user:", storedReferralCode);
+        } catch (refErr) {
+          console.warn("[RegisterClient] Could not save referral code:", refErr);
+        }
+      }
 
       // Track Meta Pixel CompleteRegistration - inscription Google reussie
       trackMetaCompleteRegistration({
@@ -893,7 +915,7 @@ const RegisterClient: React.FC = () => {
         });
       }
     }
-  }, [loginWithGoogle, intl]);
+  }, [loginWithGoogle, intl, referralCode]);
 
   // Form submit
   const handleSubmit = useCallback(
@@ -976,6 +998,13 @@ const RegisterClient: React.FC = () => {
           verificationStatus: 'approved',
           status: 'active',
           createdAt: serverTimestamp(),
+          // AFFILIATE: Include referral code and tracking data if present
+          ...(referralCode && { pendingReferralCode: referralCode.toUpperCase().trim() }),
+          // AFFILIATE: Include UTM tracking data for analytics
+          ...((() => {
+            const tracking = getStoredReferralTracking();
+            return tracking ? { referralTracking: tracking } : {};
+          })()),
         };
 
         await register(
@@ -1205,8 +1234,8 @@ const RegisterClient: React.FC = () => {
               className="space-y-3"
               aria-label={intl.formatMessage({ id: "registerClient.ui.formTitle" })}
             >
-              {/* FirstName & LastName - Side by side */}
-              <div className="grid grid-cols-2 gap-3">
+              {/* FirstName & LastName - Responsive grid (stacked on mobile, side by side on sm+) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                 {/* FirstName */}
                 <div>
                   <label htmlFor="firstName" className="block text-sm font-medium text-gray-300 mb-1.5">

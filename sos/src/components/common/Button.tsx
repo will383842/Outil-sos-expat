@@ -19,6 +19,7 @@ interface ButtonProps {
   value?: string;
   tabIndex?: number;
   autoFocus?: boolean;
+  title?: string;
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(({

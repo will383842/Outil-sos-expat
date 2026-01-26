@@ -562,5 +562,17 @@
   "admin.providerActions.suspendReason": "سبب التعليق",
   "admin.providerActions.suspendedSuccess": "تم تعليق مقدم الخدمة",
   "admin.sidebar.collapse": "طي",
-  "admin.sidebar.expand": "توسيع"
+  "admin.sidebar.expand": "توسيع",
+  "admin.menu.affiliation": "الشراكات والتسويق بالعمولة",
+  "admin.menu.affiliation.description": "برنامج الشركاء والتسويق بالعمولة",
+  "admin.menu.affiliatePayouts": "مدفوعات الشركاء",
+  "admin.menu.affiliatePayouts.description": "إدارة مدفوعات الشركاء",
+  "admin.menu.affiliatesList": "قائمة الشركاء",
+  "admin.menu.affiliatesList.description": "جميع شركاء البرنامج",
+  "admin.menu.affiliateConfig": "تكوين الشراكة",
+  "admin.menu.affiliateConfig.description": "إعدادات برنامج الشركاء",
+  "admin.menu.commissionRules": "قواعد العمولات",
+  "admin.menu.commissionRules.description": "تكوين معدلات العمولة",
+  "admin.menu.ambassadors": "السفراء",
+  "admin.menu.ambassadors.description": "برنامج السفراء المميز"
 }

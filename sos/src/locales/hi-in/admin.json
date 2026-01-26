@@ -562,5 +562,17 @@
   "admin.providerActions.suspendReason": "निलंबन का कारण",
   "admin.providerActions.suspendedSuccess": "प्रदाता निलंबित",
   "admin.sidebar.collapse": "संक्षिप्त करें",
-  "admin.sidebar.expand": "विस्तार करें"
+  "admin.sidebar.expand": "विस्तार करें",
+  "admin.menu.affiliation": "सहबद्धता और साझेदार",
+  "admin.menu.affiliation.description": "सहबद्ध कार्यक्रम और साझेदार",
+  "admin.menu.affiliatePayouts": "सहबद्ध भुगतान",
+  "admin.menu.affiliatePayouts.description": "सहबद्धों को भुगतान प्रबंधन",
+  "admin.menu.affiliatesList": "सहबद्धों की सूची",
+  "admin.menu.affiliatesList.description": "कार्यक्रम के सभी सहबद्ध",
+  "admin.menu.affiliateConfig": "सहबद्धता कॉन्फ़िगरेशन",
+  "admin.menu.affiliateConfig.description": "सहबद्ध कार्यक्रम सेटिंग्स",
+  "admin.menu.commissionRules": "कमीशन नियम",
+  "admin.menu.commissionRules.description": "कमीशन दरों का विन्यास",
+  "admin.menu.ambassadors": "राजदूत",
+  "admin.menu.ambassadors.description": "प्रीमियम राजदूत कार्यक्रम"
 }

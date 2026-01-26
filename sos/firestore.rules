@@ -70,13 +70,19 @@ service cloud.firestore {
       // - forcedAiAccess, freeTrialUntil: empêche l'accès gratuit non autorisé
       // - stripeCustomerId: protège l'intégrité financière
       // - payoutMode, aaaPayoutMode, isAAA: protège le routage des paiements (admin-only)
+      // - affiliateCode, referredBy, capturedRates: champs d'affiliation immutables
+      // - totalEarned, availableBalance, pendingBalance: balances gérées par CF
+      // - affiliateStatus, affiliateStats: statuts gérés par système
       allow update: if (isOwner(userId) &&
                         !request.resource.data.diff(resource.data).affectedKeys()
                           .hasAny(['role', 'isApproved', 'approvalStatus', 'isBanned',
                                    'bannedAt', 'bannedReason', 'forcedAiAccess',
                                    'forceAiAccess', 'forcedAIAccess', 'freeTrialUntil',
                                    'freeTrialGrantedBy', 'stripeCustomerId',
-                                   'payoutMode', 'aaaPayoutMode', 'isAAA']))
+                                   'payoutMode', 'aaaPayoutMode', 'isAAA',
+                                   'affiliateCode', 'referredBy', 'referredByUserId',
+                                   'capturedRates', 'totalEarned', 'availableBalance',
+                                   'pendingBalance', 'affiliateStatus', 'affiliateStats']))
                        || isAdmin() || isDev();
       allow delete: if isAdmin() || isDev();
     }
@@ -1788,6 +1794,68 @@ service cloud.firestore {
         // Mise à jour/Suppression: admin seulement
         allow update, delete: if isAdmin() || isDev();
       }
+    }
+
+    // ================= AFFILIATE SYSTEM =================
+    // Configuration globale du système d'affiliation
+    match /affiliate_config/{docId} {
+      // Lecture: tous les utilisateurs authentifiés (pour afficher les taux)
+      allow read: if isAuthenticated();
+      // Écriture: admin seulement (via console admin)
+      allow write: if isAdmin() || isDev();
+    }
+
+    // Commissions d'affiliation
+    match /affiliate_commissions/{commissionId} {
+      // Lecture: le propriétaire (referrerId) ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.referrerId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // Demandes de retrait d'affiliation
+    match /affiliate_payouts/{payoutId} {
+      // Lecture: le propriétaire ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.userId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // Alertes de fraude d'affiliation
+    match /affiliate_fraud_alerts/{alertId} {
+      // Lecture et écriture: admin uniquement
+      allow read: if isAdmin() || isDev();
+      allow write: if isAdmin() || isDev();
+    }
+
+    // Statistiques quotidiennes d'affiliation
+    match /affiliate_stats/{dateId} {
+      // Lecture: admin uniquement
+      allow read: if isAdmin() || isDev();
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // Codes d'affiliation réservés
+    match /affiliate_codes/{codeId} {
+      // Lecture: tous les utilisateurs authentifiés (pour vérifier disponibilité)
+      allow read: if isAuthenticated();
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // Historique des referrals (tracking)
+    match /referrals/{referralId} {
+      // Lecture: le referrer ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.referrerId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
     }
 
     // ================= CATCH-ALL (deny by default) =================

@@ -49,6 +49,7 @@ import { expatHelpTypesData, getExpatHelpTypeLabel } from "@/data/expat-help-typ
 import '../styles/multi-language-select.css';
 import { trackMetaCompleteRegistration, trackMetaStartRegistration } from "../utils/metaPixel";
 import { trackAdRegistration } from "../services/adAttributionService";
+import { getStoredReferralTracking } from "../hooks/useAffiliate";
 
 // Lazy imports pour optimisation du bundle
 const ImageUploader = lazy(() => import("../components/common/ImageUploader"));
@@ -405,6 +406,8 @@ const RegisterExpat: React.FC = () => {
   const redirect = searchParams.get("redirect") || "/dashboard";
   // ✅ FIX: Récupérer l'email depuis les searchParams (passé depuis Login.tsx)
   const prefillEmail = searchParams.get("email") || "";
+  // AFFILIATE: Capture referral code from URL (?ref=CODE)
+  const referralCode = searchParams.get("ref") || "";
   const { register, isLoading } = useAuth();
   const { language } = useApp();
   const lang = language as "fr" | "en" | "es" | "de" | "ru" | "hi" | "pt" | "ch" | "ar";
@@ -945,6 +948,13 @@ const RegisterExpat: React.FC = () => {
           userAgent: navigator.userAgent,
           timestamp: Date.now(),
         },
+        // AFFILIATE: Include referral code and tracking data if present
+        ...(referralCode && { pendingReferralCode: referralCode.toUpperCase().trim() }),
+        // AFFILIATE: Include UTM tracking data for analytics
+        ...((() => {
+          const tracking = getStoredReferralTracking();
+          return tracking ? { referralTracking: tracking } : {};
+        })()),
         createdAt: new Date(),
         updatedAt: new Date(),
       };
