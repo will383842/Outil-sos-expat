@@ -1314,38 +1314,40 @@ const OptimizedHomePage: React.FC = () => {
         </header>
 
         {/* ================= EXPERTS ================= */}
-        <section 
-          className="py-28 bg-gradient-to-b from-white via-rose-50 to-white relative overflow-hidden touch-manipulation"
+        <section
+          className="py-16 sm:py-28 bg-gradient-to-b from-white via-rose-50 to-white relative overflow-hidden touch-manipulation"
           aria-labelledby="experts-heading"
         >
           <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-            <div className="absolute top-1/4 right-1/4 w-80 h-80 bg-gradient-to-r from-red-400/10 to-orange-400/10 rounded-full blur-2xl" />
-            <div className="absolute bottom-1/4 left-1/4 w-80 h-80 bg-gradient-to-r from-blue-400/10 to-purple-400/10 rounded-full blur-2xl" />
+            <div className="absolute top-1/4 right-1/4 w-40 sm:w-80 h-40 sm:h-80 bg-gradient-to-r from-red-400/10 to-orange-400/10 rounded-full blur-2xl" />
+            <div className="absolute bottom-1/4 left-1/4 w-40 sm:w-80 h-40 sm:h-80 bg-gradient-to-r from-blue-400/10 to-purple-400/10 rounded-full blur-2xl" />
           </div>
 
-          <div className="relative z-10 max-w-7xl mx-auto px-6">
-            <div className="text-center mb-14">
-              <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-red-100 to-orange-100 backdrop-blur-sm rounded-full px-6 py-3 border border-red-200 mb-6">
-                <Shield className="w-5 h-5 text-red-600" aria-hidden="true" />
-                <span className="text-red-700 font-bold">
+          <div className="relative z-10 max-w-7xl mx-auto">
+            {/* Header avec padding - Texte centré */}
+            <div className="text-center mb-8 sm:mb-14 px-4 sm:px-6">
+              <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-red-100 to-orange-100 backdrop-blur-sm rounded-full px-4 sm:px-6 py-2.5 sm:py-3 border border-red-200 mb-4 sm:mb-6">
+                <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" aria-hidden="true" />
+                <span className="text-red-700 font-bold text-sm sm:text-base">
                   <FormattedMessage id="badge.transparency" />
                 </span>
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" aria-hidden="true" />
               </div>
 
-              <h2 id="experts-heading" className="text-5xl font-black text-gray-900 mb-4">
+              <h2 id="experts-heading" className="text-3xl sm:text-5xl font-black text-gray-900 mb-3 sm:mb-4 leading-tight">
                 <FormattedMessage id="experts.title.prefix" />
                 <span className="bg-gradient-to-r from-red-600 to-orange-500 bg-clip-text text-transparent">
                   {" "}<FormattedMessage id="experts.title.highlight" />{" "}
                 </span>
                 <FormattedMessage id="experts.title.suffix" />
               </h2>
-              
-              <p className="text-lg text-gray-700 max-w-3xl mx-auto">
+
+              <p className="text-base sm:text-lg text-gray-700 max-w-3xl mx-auto px-2">
                 <FormattedMessage id="experts.description" />
               </p>
             </div>
 
+            {/* Carousel - Sans padding pour permettre le scroll edge-to-edge sur mobile */}
             <ProfilesCarousel />
           </div>
         </section>

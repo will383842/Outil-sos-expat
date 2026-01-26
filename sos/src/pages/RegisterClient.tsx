@@ -1090,7 +1090,7 @@ const RegisterClient: React.FC = () => {
   const effectiveLoading = isLoading || localLoading || isSubmitting;
 
   const getInputClass = useCallback((name: string, hasError?: boolean) => {
-    const base = "w-full px-3.5 py-2.5 text-sm rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2";
+    const base = "w-full px-3.5 py-3 text-sm sm:text-base rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 min-h-[48px]";
     if (hasError || (fieldErrors[name as keyof FieldErrors] && touched[name])) {
       return `${base} border-red-500 bg-red-500/10 text-red-200 placeholder-red-400/50 focus:border-red-500 focus:ring-red-500/30`;
     }

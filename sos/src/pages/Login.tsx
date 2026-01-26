@@ -1131,7 +1131,7 @@ const Login: React.FC = () => {
                       required 
                       value={formData.email} 
                       onChange={(e) => handleFieldChange("email", e.target.value)} 
-                      className="appearance-none block w-full px-3.5 py-2.5 pr-11 text-sm sm:text-base bg-white/10 border border-white/20 rounded-xl placeholder-gray-500 text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all" 
+                      className="appearance-none block w-full px-3.5 py-3 pr-11 text-sm sm:text-base bg-white/10 border border-white/20 rounded-xl placeholder-gray-500 text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all min-h-[48px]"
                       placeholder={intl.formatMessage({ id: "login.email_placeholder" })} 
                       aria-invalid={!!formErrors.email}
                       aria-describedby={formErrors.email ? "email-error" : undefined}
@@ -1176,7 +1176,7 @@ const Login: React.FC = () => {
                       required 
                       value={formData.password} 
                       onChange={(e) => handleFieldChange("password", e.target.value)} 
-                      className="appearance-none block w-full px-3.5 py-2.5 pr-11 text-sm sm:text-base bg-white/10 border border-white/20 rounded-xl placeholder-gray-500 text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all" 
+                      className="appearance-none block w-full px-3.5 py-3 pr-11 text-sm sm:text-base bg-white/10 border border-white/20 rounded-xl placeholder-gray-500 text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all min-h-[48px]"
                       placeholder={intl.formatMessage({ id: "login.password_placeholder" })} 
                       aria-invalid={!!formErrors.password}
                       aria-describedby={formErrors.password ? "password-error" : undefined}

@@ -413,20 +413,21 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
   // UI states
   if (isLoading) {
     return (
-      <div className={`flex justify-center items-center py-8 ${className}`}>
-        <div className="w-8 h-8 border-2 border-gray-300 border-t-red-500 rounded-full animate-spin" />
-        <span className="ml-3 text-gray-600">{carouselTexts.loading}</span>
+      <div className={`flex flex-col sm:flex-row justify-center items-center py-12 px-4 ${className}`}>
+        <div className="w-10 h-10 sm:w-8 sm:h-8 border-3 sm:border-2 border-gray-300 border-t-red-500 rounded-full animate-spin" />
+        <span className="mt-3 sm:mt-0 sm:ml-3 text-gray-600 text-sm sm:text-base text-center">{carouselTexts.loading}</span>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className={`text-center py-8 ${className}`}>
-        <p className="text-red-600 mb-4">{error}</p>
+      <div className={`flex flex-col items-center justify-center text-center py-12 px-4 ${className}`}>
+        <p className="text-red-600 mb-4 text-sm sm:text-base px-4 max-w-sm">{error}</p>
         <button
           onClick={loadInitialProviders}
-          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+          className="px-6 py-3 sm:px-4 sm:py-2 bg-red-500 text-white rounded-xl sm:rounded hover:bg-red-600 transition-colors text-sm sm:text-base font-medium touch-manipulation"
+          style={{ minHeight: '48px', WebkitTapHighlightColor: 'transparent' }}
         >
           {carouselTexts.retry}
         </button>
@@ -438,11 +439,11 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
 
   if (displayProviders.length === 0) {
     return (
-      <div className={`text-center py-8 ${className}`}>
-        <div className="max-w-md mx-auto">
-          <div className="text-6xl mb-4">🔍</div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">Aucun expert disponible</h3>
-          <p className="text-gray-600 text-sm mb-4">Aucun profil n'a été trouvé dans la base de données Firebase.</p>
+      <div className={`flex items-center justify-center py-12 px-4 ${className}`}>
+        <div className="w-full max-w-sm mx-auto text-center">
+          <div className="text-5xl sm:text-6xl mb-4">🔍</div>
+          <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2">Aucun expert disponible</h3>
+          <p className="text-gray-600 text-sm px-4">Aucun profil n'a été trouvé dans la base de données Firebase.</p>
         </div>
       </div>
     );
@@ -453,47 +454,59 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
   return (
     <div className={className}>
       {showStats && (
-        <div className="mb-8 flex justify-center gap-6">
+        <div className="mb-6 sm:mb-8 flex justify-center gap-4 sm:gap-6 px-4">
           <div className="text-center">
-            <div className="text-2xl font-bold text-green-600">{stats.online}</div>
-            <div className="text-sm text-gray-600">En ligne</div>
+            <div className="text-xl sm:text-2xl font-bold text-green-600">{stats.online}</div>
+            <div className="text-xs sm:text-sm text-gray-600">En ligne</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600">{stats.lawyers}</div>
-            <div className="text-sm text-gray-600">Avocats</div>
+            <div className="text-xl sm:text-2xl font-bold text-blue-600">{stats.lawyers}</div>
+            <div className="text-xs sm:text-sm text-gray-600">Avocats</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-purple-600">{stats.experts}</div>
-            <div className="text-sm text-gray-600">Expats</div>
+            <div className="text-xl sm:text-2xl font-bold text-purple-600">{stats.experts}</div>
+            <div className="text-xs sm:text-sm text-gray-600">Expats</div>
           </div>
         </div>
       )}
 
       {onlineProviders.length > MAX_VISIBLE && (
-        <div className="flex justify-center mb-4">
-          <div className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-            Rotation automatique • {displayProviders.filter(p => p.isOnline).length}/{displayProviders.length} en ligne
+        <div className="flex justify-center mb-4 px-4">
+          <div className="text-[10px] sm:text-xs text-gray-500 bg-gray-100 px-2 sm:px-3 py-1 rounded-full text-center">
+            Rotation auto • {displayProviders.filter(p => p.isOnline).length}/{displayProviders.length} en ligne
           </div>
         </div>
       )}
 
-      {/* Mobile & Tablet - Scroll horizontal avec snap */}
-      <div className="flex gap-4 overflow-x-auto pb-6 snap-x snap-mandatory scrollbar-hide lg:hidden -mx-6 px-6"
-           style={{ WebkitOverflowScrolling: 'touch' }}>
-        {displayProviders.map((provider, index) => (
-          <div
-            key={`${provider.id}-${rotationIndex}`}
-            className="flex-shrink-0 snap-center"
-          >
-            <ModernProfileCard
-              provider={provider}
-              onProfileClick={handleProfileClick}
-              isUserConnected={isUserConnected}
-              index={index}
-              language={language as "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar"}
-            />
-          </div>
-        ))}
+      {/* Mobile & Tablet - Scroll horizontal avec snap - Mobile First */}
+      <div
+        className="lg:hidden w-full overflow-hidden"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
+        <div
+          className="flex gap-4 sm:gap-5 overflow-x-auto pb-6 snap-x snap-mandatory scrollbar-hide"
+          style={{
+            scrollPaddingLeft: 'max(16px, calc((100vw - 300px) / 2))',
+            scrollPaddingRight: 'max(16px, calc((100vw - 300px) / 2))',
+            paddingLeft: 'max(16px, calc((100vw - 300px) / 2))',
+            paddingRight: 'max(16px, calc((100vw - 300px) / 2))',
+          }}
+        >
+          {displayProviders.map((provider, index) => (
+            <div
+              key={`${provider.id}-${rotationIndex}`}
+              className="flex-shrink-0 snap-center first:ml-0 last:mr-0"
+            >
+              <ModernProfileCard
+                provider={provider}
+                onProfileClick={handleProfileClick}
+                isUserConnected={isUserConnected}
+                index={index}
+                language={language as "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar"}
+              />
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Desktop - Animation infinite scroll */}
@@ -518,8 +531,21 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
         }
         .animate-infinite-scroll { animation: infinite-scroll 60s linear infinite; }
         .animate-infinite-scroll:hover { animation-play-state: paused; }
-        .scrollbar-hide { scrollbar-width: none; -ms-overflow-style: none; }
+        .scrollbar-hide {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+          scroll-behavior: smooth;
+          -webkit-overflow-scrolling: touch;
+        }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+        /* Amélioration tactile mobile */
+        @media (max-width: 1023px) {
+          .scrollbar-hide {
+            scroll-snap-type: x mandatory;
+            overscroll-behavior-x: contain;
+          }
+        }
       `}</style>
     </div>
   );

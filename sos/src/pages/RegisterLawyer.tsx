@@ -1387,10 +1387,10 @@ const RegisterLawyer: React.FC = () => {
   }, [form, selectedLanguages, isLoading, isSubmitting]);
 
   const getInputClass = useCallback((name: string, hasError?: boolean) => {
-    const base = "w-full px-4 py-3.5 rounded-xl border-2 transition-all duration-200 text-[15px] font-medium focus:outline-none";
+    const base = "w-full px-4 py-3.5 rounded-xl border-2 transition-all duration-200 text-[15px] sm:text-base font-medium focus:outline-none min-h-[48px]";
     const fieldValue = form[name as keyof LawyerFormData];
     const hasValue = typeof fieldValue === 'string' ? fieldValue.trim() : fieldValue;
-    
+
     if (hasError || (fieldErrors[name] && touched[name])) {
       return `${base} border-red-400 bg-red-50 text-red-900 focus:border-red-500 focus:ring-4 focus:ring-red-500/20`;
     }
