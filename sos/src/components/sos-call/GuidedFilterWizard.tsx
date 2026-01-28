@@ -575,8 +575,8 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
 
   if (!isOpen) return null;
 
+  // z-30 keeps wizard below header (z-60) and mobile menu (z-55)
   return (
-    {/* z-30 keeps wizard below header (z-60) and mobile menu (z-55) */}
     <div className="fixed inset-x-0 top-[56px] lg:top-[80px] bottom-0 z-30 bg-gradient-to-b from-gray-900 to-gray-950 flex flex-col">
 
       {/* ===== HEADER FIXE : Progress Bar ===== */}
