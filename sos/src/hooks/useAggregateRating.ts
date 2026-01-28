@@ -73,7 +73,8 @@ const ratingCache: {
   timestamp: 0
 };
 
-const DEFAULT_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+// ✅ PERF: Cache augmenté de 5min à 30min pour réduire les requêtes Firestore
+const DEFAULT_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
 
 /**
  * Hook to fetch aggregate rating data from Firestore
@@ -96,8 +97,14 @@ export const useAggregateRating = (
     cacheTTL = DEFAULT_CACHE_TTL
   } = options;
 
-  const [data, setData] = useState<AggregateRatingData | null>(ratingCache.data);
-  const [loading, setLoading] = useState(!ratingCache.data);
+  // ✅ PERF: Stale-while-revalidate - afficher les données en cache ou par défaut immédiatement
+  const [data, setData] = useState<AggregateRatingData | null>(() => {
+    // Utiliser le cache même expiré pour un affichage immédiat
+    if (ratingCache.data) return ratingCache.data;
+    return DEFAULT_AGGREGATE_RATING;
+  });
+  // ✅ PERF: Pas de loading initial si on a des données
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   const fetchRatings = useCallback(async () => {
@@ -122,7 +129,8 @@ export const useAggregateRating = (
         where('rating', '>=', minRating),
         orderBy('rating', 'desc'),
         orderBy('createdAt', 'desc'),
-        fsLimit(500) // Limit for performance
+        // ✅ PERF: Réduit de 500 à 100 - suffisant pour stats + top reviews
+        fsLimit(100)
       ];
 
       // Add service type filter if specified

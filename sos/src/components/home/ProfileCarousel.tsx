@@ -12,7 +12,9 @@ import { runQueryRest } from '../../utils/firestoreRestApi';
 import ModernProfileCard from './ModernProfileCard';
 import type { Provider } from '@/types/provider';
 
-const FIRESTORE_TIMEOUT_MS = 8000;
+// ✅ PERF: Timeout réduit de 8s à 3s pour un affichage plus rapide
+// Le fallback (skeleton ou cache) s'affichera si Firestore est lent
+const FIRESTORE_TIMEOUT_MS = 3000;
 
 const DEFAULT_AVATAR = '/default-avatar.png';
 
@@ -22,7 +24,10 @@ interface ProfileCarouselProps {
   pageSize?: number;
 }
 
-const MAX_VISIBLE = 20;
+// ✅ PERF: Réduire le nombre de cartes visibles pour améliorer le rendu initial
+// Mobile: 8 cartes suffisent pour le carousel scroll
+// Desktop: 12 cartes pour l'animation infinite scroll (3x = 36 DOM nodes au lieu de 60)
+const MAX_VISIBLE = 12;
 const ROTATE_INTERVAL_MS = 30000;
 const ROTATE_COUNT = 8;
 

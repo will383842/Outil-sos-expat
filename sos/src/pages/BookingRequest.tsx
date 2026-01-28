@@ -2232,11 +2232,14 @@ const BookingRequest: React.FC = () => {
       console.log('📍 Code pays reçu:', country || '(vide)');
       console.log('🗣️ Codes langues reçus:', wizardLanguages?.length ? wizardLanguages : '(aucune)');
 
-      // NOTE: Le pays d'intervention NE DOIT PAS être pré-rempli automatiquement
-      // L'utilisateur doit toujours le sélectionner manuellement dans le formulaire
-      // Le wizard utilise le pays uniquement pour filtrer les providers, pas pour pré-remplir le formulaire
+      // Pré-remplir le pays d'intervention depuis le wizard
+      // FIX: Le pays est maintenant requis au step 1 mobile, donc on le pré-remplit
+      // Convertir le code pays (ex: "FR") en nom anglais (ex: "France") car le select utilise nameEn
       if (country) {
-        console.log('🔵 [BookingRequest] Pays du wizard ignoré (ne doit pas être pré-rempli):', country);
+        const countryData = countriesData.find((c) => c.code === country);
+        const countryName = countryData?.nameEn || country;
+        setValue('currentCountry', countryName);
+        console.log('✅ [BookingRequest] Pays pré-rempli depuis le wizard:', country, '->', countryName);
       }
 
       // Préremplir les langues choisies par le client dans le wizard
@@ -2400,16 +2403,16 @@ const BookingRequest: React.FC = () => {
   }, [validFlags]);
 
   // ===== WIZARD STEP VALIDATION (3 étapes optimisées) =====
-  // Pays + Langues déjà connus du wizard initial Facebook
+  // FIX: Validation alignée avec les champs requis au submit
   const getStepValidationFlags = useCallback((step: number): boolean => {
     const v = validFlags;
     switch (step) {
-      case 1: // Personal Info: firstName, lastName (pays auto-rempli du wizard)
-        return v.firstName && v.lastName;
+      case 1: // Personal Info: firstName, lastName, currentCountry (+ autrePays si "Autre")
+        return v.firstName && v.lastName && v.currentCountry && v.autrePays;
       case 2: // Request Details: title, description
         return v.title && v.description;
-      case 3: // Contact + Terms: phone, accept (langues auto-remplies du wizard)
-        return v.phone && v.accept;
+      case 3: // Contact + Terms: phone, accept, langs, sharedLang
+        return v.phone && v.accept && v.langs && v.sharedLang;
       default:
         return false;
     }

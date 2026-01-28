@@ -5,6 +5,8 @@ import React, {
   useCallback,
   useRef,
   useMemo,
+  Suspense,
+  lazy,
 } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -29,7 +31,8 @@ import {
   User,
 } from "lucide-react";
 import Layout from "../components/layout/Layout";
-import ProfilesCarousel from "../components/home/ProfileCarousel";
+// ✅ PERF: Lazy loading du carousel pour accélérer le First Contentful Paint
+const ProfilesCarousel = lazy(() => import("../components/home/ProfileCarousel"));
 import {
   usePricingConfig,
   detectUserCurrency,
@@ -108,8 +111,9 @@ interface Review {
   typeEchange: TypeEchange;
 }
 
+// ✅ PERF: Images réduites de 600x600 à 224x224 (affichées à 112px max, 2x pour retina)
 const faceParams =
-  "?auto=format&fit=crop&w=600&h=600&q=80&crop=faces&ixlib=rb-4.0.3";
+  "?auto=format&fit=crop&w=224&h=224&q=75&crop=faces&ixlib=rb-4.0.3";
 
 const REVIEWS: Review[] = [
   {
@@ -177,6 +181,29 @@ const REVIEWS: Review[] = [
     commentKey: "review.6.comment",
   },
 ];
+
+/* ================================
+   Skeleton pour le carousel (lazy loading)
+   ================================ */
+function CarouselSkeleton() {
+  return (
+    <div className="flex gap-4 sm:gap-5 overflow-hidden px-4 sm:px-6">
+      {[...Array(4)].map((_, i) => (
+        <div
+          key={i}
+          className="flex-shrink-0 w-[280px] sm:w-[300px] h-[280px] sm:h-[288px] bg-gray-800/50 rounded-2xl animate-pulse"
+        >
+          <div className="p-4">
+            <div className="w-20 h-20 bg-gray-700/50 rounded-full mx-auto mb-4" />
+            <div className="h-4 bg-gray-700/50 rounded w-3/4 mx-auto mb-2" />
+            <div className="h-3 bg-gray-700/50 rounded w-1/2 mx-auto mb-4" />
+            <div className="h-8 bg-gray-700/50 rounded w-full" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 /* ================================
    Slider d'avis
@@ -1178,11 +1205,14 @@ const OptimizedHomePage: React.FC = () => {
         <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
         <meta name="referrer" content="strict-origin-when-cross-origin" />
 
-        {/* Preconnect */}
+        {/* Preconnect - Ordonné par priorité pour les connexions critiques */}
+        <link rel="preconnect" href="https://firestore.googleapis.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://firebasestorage.googleapis.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://images.unsplash.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        <link rel="dns-prefetch" href="https://i.pravatar.cc" />
 
         {/* JSON-LD Schema.org */}
         <script type="application/ld+json">
@@ -1217,7 +1247,8 @@ const OptimizedHomePage: React.FC = () => {
         >
           <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pointer-events-none" aria-hidden="true" />
           <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-transparent to-blue-500/10 pointer-events-none" aria-hidden="true" />
-          <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+          {/* ✅ PERF: blur-3xl + animate-pulse masqués sur mobile (très coûteux en GPU) */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none hidden md:block" aria-hidden="true">
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-red-500/20 to-orange-500/20 rounded-full blur-3xl animate-pulse" />
             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
           </div>
@@ -1341,7 +1372,10 @@ const OptimizedHomePage: React.FC = () => {
             </div>
 
             {/* Carousel - Sans padding pour permettre le scroll edge-to-edge sur mobile */}
-            <ProfilesCarousel />
+            {/* ✅ PERF: Suspense pour afficher un skeleton pendant le chargement du carousel */}
+            <Suspense fallback={<CarouselSkeleton />}>
+              <ProfilesCarousel />
+            </Suspense>
           </div>
         </section>
 
@@ -1350,7 +1384,8 @@ const OptimizedHomePage: React.FC = () => {
           className="py-32 bg-gradient-to-b from-gray-950 to-gray-900 relative overflow-hidden"
           aria-labelledby="pricing-heading"
         >
-          <div className="absolute inset-0" aria-hidden="true">
+          {/* ✅ PERF: blur-3xl masqué sur mobile */}
+          <div className="absolute inset-0 hidden md:block" aria-hidden="true">
             <div className="absolute top-0 left-1/3 w-64 h-64 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-full blur-3xl" />
             <div className="absolute bottom-0 right-1/3 w-64 h-64 bg-gradient-to-r from-green-500/10 to-teal-500/10 rounded-full blur-3xl" />
           </div>
@@ -1669,7 +1704,8 @@ const OptimizedHomePage: React.FC = () => {
           className="py-28 sm:py-32 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden"
           aria-labelledby="reviews-heading"
         >
-          <div className="absolute inset-0" aria-hidden="true">
+          {/* ✅ PERF: blur-3xl masqué sur mobile */}
+          <div className="absolute inset-0 hidden md:block" aria-hidden="true">
             <div className="absolute -top-10 left-1/4 w-80 h-80 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-full blur-3xl" />
             <div className="absolute -bottom-10 right-1/4 w-96 h-96 bg-gradient-to-r from-red-500/10 to-orange-500/10 rounded-full blur-3xl" />
           </div>

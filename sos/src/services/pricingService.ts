@@ -166,14 +166,15 @@ export async function getPricingConfig(): Promise<PricingConfig> {
     console.log("📡 [pricingService] Lecture Firestore admin_config/pricing...");
     console.log("📡 [pricingService] PRICING_REF path:", PRICING_REF.path);
 
-    // Timeout de 15 secondes - Firestore peut prendre jusqu'à 10s pour la première connexion
+    // ✅ PERF: Timeout réduit de 15s à 5s - le fallback sera utilisé si Firestore est lent
+    // Les vrais prix seront chargés au prochain appel (cache de 24h)
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => {
         reject(new Error("TIMEOUT: Firestore bloqué - utilisation du fallback"));
-      }, 15000);
+      }, 5000);
     });
 
-    console.log("📡 [pricingService] Appel getDoc() avec timeout 15s...");
+    console.log("📡 [pricingService] Appel getDoc() avec timeout 5s...");
     const snap = await Promise.race([getDoc(PRICING_REF), timeoutPromise]) as any;
     console.log("📡 [pricingService] ✅ getDoc() a répondu! Snap exists?", snap.exists());
 
@@ -345,14 +346,21 @@ export function subscribeToPricing(
   return unsubscribe;
 }
 
-/** Hook React avec cache simple (économique) */
+/** Hook React avec pattern "stale-while-revalidate" (économique + rapide) */
 export function usePricingConfig() {
-  const [pricing, setPricing] = useState<PricingConfig | null>(null);
-  const [loading, setLoading] = useState(true);
+  // ✅ PERF: Initialiser avec le cache ou fallback pour affichage instantané
+  const [pricing, setPricing] = useState<PricingConfig | null>(() => {
+    // Utiliser le cache même expiré pour un affichage immédiat
+    if (_cache.data) return _cache.data;
+    return DEFAULT_FALLBACK;
+  });
+  // ✅ PERF: Si on a déjà des données (cache ou fallback), pas de loading initial
+  const [loading, setLoading] = useState(!_cache.data);
   const [error, setError] = useState<string | null>(null);
 
   const reload = async () => {
-    setLoading(true);
+    // Ne pas montrer le loading si on a déjà des données (stale-while-revalidate)
+    if (!pricing) setLoading(true);
     setError(null);
     try {
       const cfg = await getPricingConfig();
@@ -360,7 +368,8 @@ export function usePricingConfig() {
     } catch (e) {
       console.error("[usePricingConfig] load error:", e);
       setError(e instanceof Error ? e.message : "Erreur chargement pricing");
-      setPricing(null);
+      // ✅ PERF: Garder les anciennes données en cas d'erreur
+      if (!pricing) setPricing(DEFAULT_FALLBACK);
     } finally {
       setLoading(false);
     }
