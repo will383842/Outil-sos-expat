@@ -1068,20 +1068,29 @@ const PWAInstallArea = memo<PWAInstallAreaProps>(function PWAInstallArea({
 
 const PWAIconButton = memo(function PWAIconButton() {
   const intl = useIntl();
+  const navigate = useLocaleNavigate();
   const homeAriaLabel = intl.formatMessage({ id: "header.logo.homeAria" });
   const logoAlt = intl.formatMessage({ id: "header.logo.alt" });
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    navigate("/");
+  }, [navigate]);
 
   return (
     <Link
       to="/"
+      onTouchEnd={handleTouchEnd}
       className="w-16 h-16 rounded-2xl overflow-hidden bg-transparent
-        focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50"
+        focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50
+        touch-manipulation select-none"
+      style={{ WebkitTapHighlightColor: 'transparent' }}
       aria-label={homeAriaLabel}
     >
       <img
         src="/icons/icon-72x72.png"
         alt={logoAlt}
-        className="w-full h-full object-cover"
+        className="w-full h-full object-cover pointer-events-none"
         width={64}
         height={64}
         loading="eager"
@@ -1519,6 +1528,7 @@ const UserMenu = memo<UserMenuProps>(function UserMenu({
 const Header: React.FC = () => {
   const intl = useIntl();
   const location = useLocation();
+  const navigate = useLocaleNavigate();
   const { isLoading } = useAuth();
   const scrolled = useScrolled();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -1713,8 +1723,8 @@ const Header: React.FC = () => {
         {/* ============================================================ */}
         {/* MOBILE HEADER */}
         {/* ============================================================ */}
-        {/* z-[60] ensures header stays above all overlays (wizard z-40, modals z-50) */}
-        <div className="lg:hidden bg-gray-900 shadow-xl relative z-[60]">
+        {/* z-[70] ensures header stays above all overlays (wizard z-30, modals z-50, sidedrawer z-60) */}
+        <div className="lg:hidden bg-gray-900 shadow-xl relative z-[70]">
           <div className="px-4 py-3 flex items-center justify-between">
             <PWAIconButton />
 
@@ -1722,12 +1732,19 @@ const Header: React.FC = () => {
               <Link
                 to="/sos-appel"
                 onClick={() => trackLead({ contentName: 'mobile_header_sos_call', contentCategory: 'general' })}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  trackLead({ contentName: 'mobile_header_sos_call', contentCategory: 'general' });
+                  navigate("/sos-appel");
+                }}
                 className="bg-gradient-to-r from-red-600 to-red-700 text-white px-7 py-2.5
-                  rounded-2xl font-bold text-base flex items-center space-x-2 border border-white/20"
+                  rounded-2xl font-bold text-base flex items-center space-x-2 border border-white/20
+                  touch-manipulation select-none active:opacity-80"
+                style={{ WebkitTapHighlightColor: 'transparent' }}
                 aria-label={t.sosCall}
               >
-                <Phone className="w-4 h-4 text-white" aria-hidden="true" />
-                <span>SOS</span>
+                <Phone className="w-4 h-4 text-white pointer-events-none" aria-hidden="true" />
+                <span className="pointer-events-none">SOS</span>
               </Link>
 
               {isProvider && (
@@ -1763,8 +1780,14 @@ const Header: React.FC = () => {
 
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white
-                transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                setIsMenuOpen(prev => !prev);
+              }}
+              className="p-3 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 text-white
+                transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50
+                touch-manipulation select-none min-w-[48px] min-h-[48px] flex items-center justify-center"
+              style={{ WebkitTapHighlightColor: 'transparent' }}
               aria-expanded={isMenuOpen}
               aria-controls="mobile-menu"
               aria-label={t.menuToggle}
@@ -1778,11 +1801,11 @@ const Header: React.FC = () => {
           </div>
 
           {/* MOBILE MENU */}
-          {/* z-[55] keeps menu above wizard (z-40) but below header (z-60) */}
+          {/* z-[65] keeps menu above wizard (z-30) and sidedrawer (z-60) but below header (z-70) */}
           {isMenuOpen && (
             <div
               id="mobile-menu"
-              className="fixed inset-x-0 top-[76px] bottom-0 overflow-hidden bg-gray-900 z-[55]"
+              className="fixed inset-x-0 top-[76px] bottom-0 overflow-hidden bg-gray-900 z-[65]"
               role="dialog"
               aria-modal="true"
               aria-label={t.mobileNav}

@@ -599,8 +599,9 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
   if (!isOpen) return null;
 
   // z-30 keeps wizard below header (z-60) and mobile menu (z-55)
+  // top-[76px] matches the mobile header height (py-3 padding + 64px icon = ~76px)
   return (
-    <div className="fixed inset-x-0 top-[56px] lg:top-[80px] bottom-0 z-30 bg-gradient-to-b from-gray-900 to-gray-950 flex flex-col">
+    <div className="fixed inset-x-0 top-[76px] lg:top-[80px] bottom-0 z-30 bg-gradient-to-b from-gray-900 to-gray-950 flex flex-col">
 
       {/* ===== HEADER FIXE : Progress Bar ===== */}
       <div className="flex-shrink-0 px-5 pt-8 pb-5 bg-gray-900/90 backdrop-blur-sm border-b border-white/5">
