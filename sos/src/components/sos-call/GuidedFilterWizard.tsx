@@ -175,6 +175,10 @@ const CountryStep: React.FC<{
       <div
         className="relative mb-4 cursor-text"
         onClick={handleSearchWrapperClick}
+        onTouchEnd={(e) => {
+          // Don't prevent default - let the input receive focus naturally
+          searchInputRef.current?.focus();
+        }}
         role="search"
       >
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
@@ -190,11 +194,12 @@ const CountryStep: React.FC<{
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder={intl.formatMessage({ id: "wizard.search.country" })}
-          className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 text-base touch-manipulation"
+          className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 text-base"
           style={{
             WebkitTapHighlightColor: 'transparent',
             WebkitUserSelect: 'text',
-            userSelect: 'text'
+            userSelect: 'text',
+            touchAction: 'manipulation'
           } as React.CSSProperties}
         />
       </div>
@@ -320,6 +325,10 @@ const LanguageStep: React.FC<{
       <div
         className="relative mb-4 cursor-text"
         onClick={handleSearchWrapperClick}
+        onTouchEnd={(e) => {
+          // Don't prevent default - let the input receive focus naturally
+          searchInputRef.current?.focus();
+        }}
         role="search"
       >
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
@@ -335,11 +344,12 @@ const LanguageStep: React.FC<{
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder={intl.formatMessage({ id: "wizard.search.language" })}
-          className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 text-base touch-manipulation"
+          className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 text-base"
           style={{
             WebkitTapHighlightColor: 'transparent',
             WebkitUserSelect: 'text',
-            userSelect: 'text'
+            userSelect: 'text',
+            touchAction: 'manipulation'
           } as React.CSSProperties}
         />
       </div>
