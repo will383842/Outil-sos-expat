@@ -513,37 +513,44 @@ const calculateProviderStats = async (providerId: string): Promise<ProviderStats
     );
 
     const statsPromise = (async (): Promise<ProviderStats> => {
-      const callSessionsQuery = query(
-        collection(db, "call_sessions"),
-        where("metadata.providerId", "==", providerId)
-      );
-      const callSessionsSnapshot = await getDocs(callSessionsQuery);
-
       let totalCallsReceived = 0;
       let successfulCalls = 0;
       let completedCalls = 0;
 
-      callSessionsSnapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        totalCallsReceived++;
+      // FIX: Séparer les requêtes - call_sessions nécessite auth, reviews est public
+      // Si call_sessions échoue (visiteurs non auth), on continue quand même avec reviews
+      try {
+        const callSessionsQuery = query(
+          collection(db, "call_sessions"),
+          where("metadata.providerId", "==", providerId)
+        );
+        const callSessionsSnapshot = await getDocs(callSessionsQuery);
 
-        if (data.status === "completed" || data.endedAt) {
-          completedCalls++;
+        callSessionsSnapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          totalCallsReceived++;
 
-          const startedAt = data.startedAt?.toDate?.() || data.createdAt?.toDate?.();
-          const endedAt = data.endedAt?.toDate?.();
+          if (data.status === "completed" || data.endedAt) {
+            completedCalls++;
 
-          if (startedAt && endedAt) {
-            const durationSeconds = (endedAt.getTime() - startedAt.getTime()) / 1000;
+            const startedAt = data.startedAt?.toDate?.() || data.createdAt?.toDate?.();
+            const endedAt = data.endedAt?.toDate?.();
 
-            if (durationSeconds >= SUCCESSFUL_CALL_THRESHOLD_SECONDS) {
-              successfulCalls++;
+            if (startedAt && endedAt) {
+              const durationSeconds = (endedAt.getTime() - startedAt.getTime()) / 1000;
+
+              if (durationSeconds >= SUCCESSFUL_CALL_THRESHOLD_SECONDS) {
+                successfulCalls++;
+              }
             }
           }
-        }
-      });
+        });
+      } catch {
+        // Silencieux - call_sessions nécessite auth, les visiteurs non auth n'y ont pas accès
+        // On continue avec les reviews qui sont publiques
+      }
 
-      // FIX: Ajouter filtre status == 'published' pour cohérence avec getProviderReviews
+      // Reviews sont accessibles publiquement (status='published' && isPublic=true)
       const reviewsQuery = query(
         collection(db, "reviews"),
         where("providerId", "==", providerId),
