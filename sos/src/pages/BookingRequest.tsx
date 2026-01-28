@@ -78,6 +78,14 @@ import { trackGoogleAdsLead, trackGoogleAdsBeginCheckout } from "@/utils/googleA
 import { trackAdLead, trackAdInitiateCheckout } from "@/services/adAttributionService";
 import { generateEventIdForType } from "@/utils/sharedEventId";
 
+// Mobile Booking Wizard (2026 UX refonte)
+import {
+  MobileBookingProvider,
+  MobileBookingWizard,
+  useMobileBooking,
+  type BookingFormData as MobileBookingFormData,
+} from "@/components/booking-mobile";
+
 /** ===== Types complémentaires ===== */
 type LangKey = keyof typeof I18N;
 type BookingLanguage = AppLanguage;
@@ -1420,6 +1428,51 @@ const StickyCTA = ({
   );
 };
 
+/** ===== Mobile Wizard Inner Component (uses context) ===== */
+interface MobileWizardInnerProps {
+  provider: Provider;
+  isLawyer: boolean;
+  displayEUR: number;
+  displayDuration: number;
+  onSubmit: (data: MobileBookingFormData) => Promise<void>;
+  onBack: () => void;
+}
+
+const MobileWizardInner: React.FC<MobileWizardInnerProps> = ({
+  provider,
+  isLawyer,
+  displayEUR,
+  displayDuration,
+  onSubmit,
+  onBack,
+}) => {
+  const {
+    setProvider,
+    setDisplayEUR,
+    setDisplayDuration,
+  } = useMobileBooking();
+
+  // Sync props to context
+  useEffect(() => {
+    setProvider(provider);
+  }, [provider, setProvider]);
+
+  useEffect(() => {
+    setDisplayEUR(displayEUR);
+  }, [displayEUR, setDisplayEUR]);
+
+  useEffect(() => {
+    setDisplayDuration(displayDuration);
+  }, [displayDuration, setDisplayDuration]);
+
+  return (
+    <MobileBookingWizard
+      onSubmit={onSubmit}
+      onBack={onBack}
+    />
+  );
+};
+
 /** ===== Email-First Auth Component (Mobile-First 2026) ===== */
 type AuthFlowStep = "email" | "password-login" | "password-register" | "google-login";
 
@@ -2429,16 +2482,16 @@ const BookingRequest: React.FC = () => {
   }, [validFlags]);
 
   // ===== WIZARD STEP VALIDATION (3 étapes optimisées) =====
-  // FIX: Validation alignée avec les champs requis au submit
+  // Pays + Langues déjà connus du wizard initial Facebook
   const getStepValidationFlags = useCallback((step: number): boolean => {
     const v = validFlags;
     switch (step) {
-      case 1: // Personal Info: firstName, lastName, currentCountry (+ autrePays si "Autre")
-        return v.firstName && v.lastName && v.currentCountry && v.autrePays;
+      case 1: // Personal Info: firstName, lastName (pays auto-rempli du wizard)
+        return v.firstName && v.lastName;
       case 2: // Request Details: title, description
         return v.title && v.description;
-      case 3: // Contact + Terms: phone, accept, langs, sharedLang
-        return v.phone && v.accept && v.langs && v.sharedLang;
+      case 3: // Contact + Terms: phone, accept (langues auto-remplies du wizard)
+        return v.phone && v.accept;
       default:
         return false;
     }
@@ -2981,6 +3034,70 @@ const BookingRequest: React.FC = () => {
 
   const inputHas = <K extends keyof BookingFormData>(name: K) =>
     Boolean(errors[name]);
+
+  // ===== MOBILE: New 2026 Wizard UX (one-field-per-screen) =====
+  // Activated for mobile devices - desktop keeps existing multi-field layout
+  if (isMobile && provider) {
+    // Handler to submit from mobile wizard using existing onSubmit logic
+    const handleMobileSubmit = async (mobileData: MobileBookingFormData): Promise<void> => {
+      // Map mobile form data to existing BookingFormData format
+      const data: BookingFormData = {
+        firstName: mobileData.firstName,
+        lastName: mobileData.lastName,
+        nationality: mobileData.nationality || '',
+        currentCountry: mobileData.currentCountry,
+        autrePays: mobileData.autrePays,
+        title: mobileData.title,
+        description: mobileData.description,
+        clientPhone: mobileData.clientPhone,
+        acceptTerms: mobileData.acceptTerms,
+        clientLanguages: mobileData.clientLanguages || languagesSpoken.map(l => l.code),
+      };
+
+      // Re-use existing submit logic
+      await onSubmit(data);
+    };
+
+    return (
+      <Layout showFooter={false}>
+        {/* SEO */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": ["WebPage", "Action"],
+              name: intl.formatMessage({ id: "bookingRequest.metaTitle" }),
+              description: intl.formatMessage({ id: "bookingRequest.metaDesc" }),
+            }),
+          }}
+        />
+        <MobileBookingProvider
+          defaultValues={{
+            firstName: getValues('firstName'),
+            lastName: getValues('lastName'),
+            nationality: getValues('nationality'),
+            currentCountry: getValues('currentCountry'),
+            autrePays: getValues('autrePays'),
+            title: getValues('title'),
+            description: getValues('description'),
+            clientPhone: getValues('clientPhone'),
+            acceptTerms: getValues('acceptTerms'),
+            clientLanguages: languagesSpoken.map(l => l.code),
+          }}
+        >
+          <MobileWizardInner
+            provider={provider}
+            isLawyer={isLawyer}
+            displayEUR={displayEUR}
+            displayDuration={displayDuration}
+            onSubmit={handleMobileSubmit}
+            onBack={() => navigate(`/provider/${provider.id}`)}
+          />
+        </MobileBookingProvider>
+      </Layout>
+    );
+  }
 
   return (
     <Layout showFooter={false}>
