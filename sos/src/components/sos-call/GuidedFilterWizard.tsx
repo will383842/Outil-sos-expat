@@ -125,6 +125,12 @@ const CountryStep: React.FC<{
 }> = ({ selectedCountry, onSelect, countryOptions }) => {
   const intl = useIntl();
   const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Focus input when wrapper is clicked (mobile fix)
+  const handleSearchWrapperClick = useCallback(() => {
+    searchInputRef.current?.focus();
+  }, []);
 
   // Sort countries: priority first, then alphabetically
   const sortedCountries = useMemo(() => {
@@ -165,15 +171,31 @@ const CountryStep: React.FC<{
         <FormattedMessage id="wizard.step1.title" />
       </h2>
 
-      {/* Search */}
-      <div className="relative mb-4">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+      {/* Search - Mobile-optimized with explicit focus handling */}
+      <div
+        className="relative mb-4 cursor-text"
+        onClick={handleSearchWrapperClick}
+        role="search"
+      >
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
         <input
+          ref={searchInputRef}
           type="text"
+          inputMode="search"
+          enterKeyHint="search"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck={false}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder={intl.formatMessage({ id: "wizard.search.country" })}
-          className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 text-base"
+          className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 text-base touch-manipulation"
+          style={{
+            WebkitTapHighlightColor: 'transparent',
+            WebkitUserSelect: 'text',
+            userSelect: 'text'
+          } as React.CSSProperties}
         />
       </div>
 
@@ -226,6 +248,12 @@ const LanguageStep: React.FC<{
 }> = ({ selectedLanguages, onToggle, languageOptions }) => {
   const intl = useIntl();
   const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Focus input when wrapper is clicked (mobile fix)
+  const handleSearchWrapperClick = useCallback(() => {
+    searchInputRef.current?.focus();
+  }, []);
 
   // Sort languages: priority first, then alphabetically
   const sortedLanguages = useMemo(() => {
@@ -280,15 +308,31 @@ const LanguageStep: React.FC<{
         </p>
       )}
 
-      {/* Search */}
-      <div className="relative mb-4">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+      {/* Search - Mobile-optimized with explicit focus handling */}
+      <div
+        className="relative mb-4 cursor-text"
+        onClick={handleSearchWrapperClick}
+        role="search"
+      >
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
         <input
+          ref={searchInputRef}
           type="text"
+          inputMode="search"
+          enterKeyHint="search"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck={false}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder={intl.formatMessage({ id: "wizard.search.language" })}
-          className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 text-base"
+          className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 text-base touch-manipulation"
+          style={{
+            WebkitTapHighlightColor: 'transparent',
+            WebkitUserSelect: 'text',
+            userSelect: 'text'
+          } as React.CSSProperties}
         />
       </div>
 

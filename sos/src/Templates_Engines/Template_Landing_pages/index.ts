@@ -26,14 +26,82 @@ export * from './components';
 // ============================================================================
 // HOOKS
 // ============================================================================
-export * from './hooks';
+// Note: BREAKPOINTS is also exported from lib/constants, so we exclude it here
+export {
+  useLandingData,
+  usePrefetchLanding,
+  useIsMobile,
+  useBreakpoint,
+  useIsTouchDevice,
+  useScrollDirection,
+  useScrollY,
+  useScrolledPast,
+  useReducedMotion,
+  useAdaptiveAnimation,
+  useConditionalAnimation,
+  useHapticFeedback,
+  useScrollProgress,
+  useIntersectionObserver,
+} from './hooks';
+export type { BreakpointKey } from './hooks/useIsMobile';
 
 // ============================================================================
 // TYPES
 // ============================================================================
-export * from './types';
+// Note: CTAButton and TrustBadge are components, so we rename the types
+export type {
+  LandingData,
+  LandingTemplate,
+  LandingStatus,
+  LandingRouting,
+  HreflangEntry,
+  RouteParams,
+  LandingSEO,
+  EEATSignals,
+  LandingTargeting,
+  CTAData,
+  TrustBadge as TrustBadgeData,
+  SocialProofData,
+  SchemaOrg,
+  Breadcrumb,
+  Timestamps,
+  Metadata,
+} from './types/landing.types';
+
+export type {
+  LandingSections,
+  HeroSection,
+  ResponsiveImage,
+  ProblemSection,
+  ProblemItem,
+  SolutionSection,
+  SolutionFeature,
+  HowItWorksSection,
+  ProcessStep,
+  AdvantagesSection,
+  AdvantageItem,
+  TestimonialsSection,
+  Testimonial,
+  AggregateRating,
+  FAQSection,
+  FAQItem,
+  FAQAnswerFormat,
+  CTASection,
+  CTAButton as CTAButtonData,
+} from './types/sections.types';
+
+export type {
+  AnimationsConfig,
+  SpringTransition,
+  TimingTransition,
+  AnimationVariant,
+  MobileConfig,
+  AccessibilityConfig,
+  PerformanceHints,
+  ConversionConfig,
+} from './types/config.types';
 
 // ============================================================================
-// LIB (Animations, Firebase, Utils)
+// LIB (Animations, Constants, Utils)
 // ============================================================================
 export * from './lib';

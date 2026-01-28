@@ -1007,7 +1007,7 @@ const generateAllSchemas = (
     ],
   };
 
-  const faqSchema = {
+  const faqSchema = faqData.length > 0 ? {
     "@context": "https://schema.org",
     "@type": "FAQPage",
     "@id": `${BASE_URL}${PAGE_PATH}/#faq`,
@@ -1019,7 +1019,7 @@ const generateAllSchemas = (
         text: faq.answer,
       },
     })),
-  };
+  } : null;
 
   const itemListSchema = providers.length > 0 ? {
     "@context": "https://schema.org",

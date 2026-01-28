@@ -9,7 +9,7 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/firebase/firebase';
+import { db } from '@/config/firebase';
 import type { LandingData, RouteParams } from '../types';
 
 /**
@@ -99,7 +99,7 @@ export function useLandingData(
     gcTime: cacheTime,
     enabled: enabled && Boolean(documentId),
     retry: 2,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   return {

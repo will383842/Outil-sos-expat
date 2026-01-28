@@ -56,7 +56,7 @@ export const LandingPage = memo<LandingPageProps>(({
   forceTemplate,
 }) => {
   // Get route params
-  const params = useParams<RouteParams>();
+  const params = useParams() as RouteParams;
 
   // Fetch landing data
   const {

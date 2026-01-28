@@ -471,98 +471,100 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
             </div>
           </div>
 
-          {/* Contenu principal - Hauteur fixe pour éviter layout shift */}
+          {/* Contenu principal - Structure flex robuste pour mobile */}
           <div
             className="p-3 sm:p-4 flex flex-col h-[240px] sm:h-[232px]"
           >
-            {/* Nom et expérience */}
-            <div className="space-y-2 mb-3">
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-base sm:text-lg font-bold text-slate-800 truncate flex-1">
-                  {provider.name}
-                </h3>
-                <div className="flex items-center gap-1 px-2 py-1.5 sm:py-1 rounded-md bg-teal-50 border border-teal-200 flex-shrink-0">
-                  <Zap className="w-3.5 h-3.5 sm:w-3 sm:h-3 text-teal-600" aria-hidden="true" />
-                  <span className="text-teal-600 text-xs sm:text-xs font-medium">
-                    {provider.yearsOfExperience}{" "}
-                    {intl.formatMessage({ id: "card.years" })}
+            {/* Partie haute: infos (grow pour remplir l'espace) */}
+            <div className="flex-1 flex flex-col min-h-0">
+              {/* Nom et expérience */}
+              <div className="mb-2 sm:mb-3">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-base sm:text-lg font-bold text-slate-800 truncate flex-1">
+                    {provider.name}
+                  </h3>
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-teal-50 border border-teal-200 flex-shrink-0">
+                    <Zap className="w-3 h-3 text-teal-600" aria-hidden="true" />
+                    <span className="text-teal-600 text-xs font-medium">
+                      {provider.yearsOfExperience}{" "}
+                      {intl.formatMessage({ id: "card.years" })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Informations organisées - Flex-1 avec overflow */}
+              <div className="flex-1 space-y-2 overflow-hidden min-h-0">
+                {/* Pays d'intervention */}
+                {formattedCountries && (
+                  <div className="flex items-start gap-2">
+                    <MapPin
+                      className="w-3.5 h-3.5 text-blue-600 flex-shrink-0 mt-0.5"
+                      aria-hidden="true"
+                    />
+                    <span className="text-blue-600 text-xs leading-tight line-clamp-2">
+                      {formattedCountries}
+                    </span>
+                  </div>
+                )}
+
+                {/* Langues */}
+                {formattedLanguages && (
+                  <div className="flex items-start gap-2">
+                    <Globe
+                      className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0 mt-0.5"
+                      aria-hidden="true"
+                    />
+                    <span className="text-indigo-600 text-xs leading-tight line-clamp-2">
+                      {formattedLanguages}
+                    </span>
+                  </div>
+                )}
+
+                {/* Spécialités - SEULEMENT SI showSpecialties=true */}
+                {formattedSpecialties && (
+                  <div className="flex items-start gap-2">
+                    <Zap
+                      className="w-3.5 h-3.5 text-purple-600 flex-shrink-0 mt-0.5"
+                      aria-hidden="true"
+                    />
+                    <span className="text-purple-600 text-xs leading-tight line-clamp-2">
+                      {formattedSpecialties}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Stats - séparé du reste */}
+              <div className="flex items-center justify-between pt-2 mt-2 border-t border-slate-200">
+                <div className="flex items-center gap-1">
+                  <Users className="w-3.5 h-3.5 text-amber-600" aria-hidden="true" />
+                  <span className="text-amber-600 text-xs font-medium">
+                    {provider.reviewCount}{" "}
+                    {intl.formatMessage({ id: "card.reviews" })}
                   </span>
+                </div>
+                <div className="text-slate-500 text-xs">
+                  {intl.formatMessage({ id: `card.profession.${provider.type}` })}
                 </div>
               </div>
             </div>
 
-            {/* Informations organisées - Hauteur fixe avec overflow */}
-            <div className="space-y-2.5 sm:space-y-2 h-24 sm:h-28 overflow-hidden">
-              {/* Pays d'intervention - TOUJOURS AFFICHÉS */}
-              {formattedCountries && (
-                <div className="flex items-start gap-2">
-                  <MapPin
-                    className="w-4 h-4 sm:w-3 sm:h-3 text-blue-600 flex-shrink-0 mt-0.5"
-                    aria-hidden="true"
-                  />
-                  <span className="text-blue-600 text-sm sm:text-xs leading-tight">
-                    {formattedCountries}
-                  </span>
-                </div>
-              )}
-
-              {/* Langues - TOUJOURS AFFICHÉES */}
-              {formattedLanguages && (
-                <div className="flex items-start gap-2">
-                  <Globe
-                    className="w-4 h-4 sm:w-3 sm:h-3 text-indigo-600 flex-shrink-0 mt-0.5"
-                    aria-hidden="true"
-                  />
-                  <span className="text-indigo-600 text-sm sm:text-xs leading-tight">
-                    {formattedLanguages}
-                  </span>
-                </div>
-              )}
-
-              {/* Spécialités - SEULEMENT SI showSpecialties=true */}
-              {formattedSpecialties && (
-                <div className="flex items-start gap-2">
-                  <Zap
-                    className="w-4 h-4 sm:w-3 sm:h-3 text-purple-600 flex-shrink-0 mt-0.5"
-                    aria-hidden="true"
-                  />
-                  <span className="text-purple-600 text-sm sm:text-xs leading-tight">
-                    {formattedSpecialties}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Stats */}
-            <div className="flex items-center justify-between pt-2 border-t border-slate-200 mt-auto">
-              <div className="flex items-center gap-1.5 sm:gap-1">
-                <Users className="w-4 h-4 sm:w-3 sm:h-3 text-amber-600" aria-hidden="true" />
-                <span className="text-amber-600 text-sm sm:text-xs font-medium">
-                  {provider.reviewCount}{" "}
-                  {intl.formatMessage({ id: "card.reviews" })}
-                </span>
-              </div>
-              <div className="text-slate-500 text-sm sm:text-xs">
-                {intl.formatMessage({ id: `card.profession.${provider.type}` })}
-              </div>
-            </div>
-
-            {/* Bouton CTA - Taille tactile optimisée - TOUJOURS EN BAS */}
-            <div className="mt-3 w-full">
+            {/* Bouton CTA - TOUJOURS EN BAS, séparé et centré */}
+            <div className="flex-shrink-0 pt-3 mt-auto">
               <button
                 className={`
-                w-full rounded-xl sm:rounded-lg font-bold text-sm sm:text-sm text-white
-                transition-all duration-300 flex items-center justify-center gap-2
-                border-2 shadow-lg relative overflow-hidden
-                ${statusColors.button}
-                hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]
-                focus:outline-none focus:ring-4 focus:ring-blue-500/50
-                disabled:opacity-50 disabled:cursor-not-allowed
-                touch-manipulation
-              `}
+                  w-full rounded-xl font-bold text-white
+                  transition-all duration-200 flex items-center justify-center gap-2
+                  border-2 shadow-lg
+                  ${statusColors.button}
+                  active:scale-[0.98]
+                  focus:outline-none focus:ring-4 focus:ring-blue-500/50
+                  touch-manipulation
+                `}
                 style={{
-                  minHeight: `${TOUCH_TARGETS.button + 4}px`,
-                  padding: "14px 16px",
+                  minHeight: `${TOUCH_TARGETS.button}px`,
+                  padding: "12px 16px",
                   WebkitTapHighlightColor: 'transparent',
                 }}
                 onClick={(e) => {
@@ -572,11 +574,11 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
                 type="button"
                 aria-label={ariaLabels.viewProfile}
               >
-                <Eye className="w-5 h-5 sm:w-4 sm:h-4" aria-hidden="true" />
-                <span className="font-bold text-base sm:text-sm">
+                <Eye className="w-4 h-4" aria-hidden="true" />
+                <span className="font-bold text-sm">
                   {intl.formatMessage({ id: "card.viewProfile" })}
                 </span>
-                <ArrowRight className="w-5 h-5 sm:w-4 sm:h-4" aria-hidden="true" />
+                <ArrowRight className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
           </div>

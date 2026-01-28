@@ -36,9 +36,8 @@ export const DynamicIcon = memo<DynamicIconProps>(({
     .join('');
 
   // Chercher l'icône dans Lucide
-  const IconComponent = (LucideIcons as Record<string, React.ComponentType<LucideProps>>)[normalizedName]
-    || (LucideIcons as Record<string, React.ComponentType<LucideProps>>)[fallback]
-    || LucideIcons.HelpCircle;
+  const icons = LucideIcons as unknown as Record<string, React.ComponentType<LucideProps>>;
+  const IconComponent = icons[normalizedName] || icons[fallback] || LucideIcons.HelpCircle;
 
   return <IconComponent {...props} />;
 });

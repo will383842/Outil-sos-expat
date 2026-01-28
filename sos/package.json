@@ -32,6 +32,7 @@
     "clean:tmp:recursive": "node -e \"const fs = require('fs'); const path = require('path'); let count = 0; const walk = (dir) => { try { fs.readdirSync(dir).forEach(f => { const p = path.join(dir, f); const s = fs.statSync(p); if (s.isDirectory() && !f.includes('node_modules')) walk(p); if (f.startsWith('tmpclaude-')) { if (s.isDirectory()) fs.rmSync(p, {recursive:true}); else fs.unlinkSync(p); count++; } }); } catch {} }; walk(path.join(__dirname, '..')); console.log('Cleaned ' + count + ' temp files recursively');\""
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.60.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@headlessui/react": "^2.2.7",
@@ -48,6 +49,7 @@
     "dompurify": "^3.3.1",
     "dotenv": "^17.2.1",
     "firebase": "^12.3.0",
+    "framer-motion": "^11.12.0",
     "fuse.js": "^7.1.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.1",

@@ -66,6 +66,11 @@ export function generateFAQPageSchema(props: FAQPageSchemaProps): object {
  * ```
  */
 const FAQPageSchema: React.FC<FAQPageSchemaProps> = (props) => {
+  // Don't render FAQPage schema if there are no FAQs (mainEntity would be empty)
+  if (!props.faqs || props.faqs.length === 0) {
+    return null;
+  }
+
   const schema = generateFAQPageSchema(props);
 
   return (

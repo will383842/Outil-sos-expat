@@ -13,7 +13,7 @@ import { Shield, Users, Globe, Clock, Star, Award, Check } from 'lucide-react';
 import { DynamicIcon } from './ui';
 import { useReducedMotion } from '../hooks';
 import { staggerContainer, staggerItem } from '../lib/animations';
-import type { TrustBadge, SocialProofData, EEATSignals } from '../types';
+import type { TrustBadge, SocialProofData, EEATSignals } from '../types/landing.types';
 
 export interface LandingTrustProps {
   badges: TrustBadge[];
