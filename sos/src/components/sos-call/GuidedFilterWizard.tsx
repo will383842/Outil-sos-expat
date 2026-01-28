@@ -348,7 +348,7 @@ const LanguageStep: React.FC<{
                 onClick={() => onToggle(lang.code)}
                 style={{ WebkitTapHighlightColor: 'transparent', WebkitTouchCallout: 'none' } as React.CSSProperties}
                 className={`
-                  flex items-center gap-2.5 p-3 rounded-xl border-2 transition-all
+                  flex items-center gap-2.5 p-3 rounded-xl border-2 transition-colors duration-150
                   touch-manipulation text-left min-h-[52px] select-none cursor-pointer
                   ${isSelected
                     ? "bg-blue-500/20 border-blue-500 text-white"
@@ -424,7 +424,7 @@ const TypeStep: React.FC<{
               key={option.value}
               onClick={() => onSelect(option.value)}
               className={`
-                w-full p-4 rounded-2xl border-2 transition-all
+                w-full p-4 rounded-2xl border-2 transition-colors duration-150
                 touch-manipulation text-left flex items-center gap-4
                 ${isSelected
                   ? `${option.bgColor} ${option.borderColor}`
@@ -636,7 +636,7 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
               disabled={!canProceed}
               className={`
                 flex-1 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2
-                transition-all touch-manipulation min-h-[60px]
+                transition-colors duration-150 touch-manipulation min-h-[60px]
                 ${canProceed
                   ? "bg-gradient-to-r from-red-500 to-orange-500 text-white active:scale-[0.98] shadow-lg shadow-red-500/30"
                   : "bg-white/10 text-gray-500 cursor-not-allowed"
