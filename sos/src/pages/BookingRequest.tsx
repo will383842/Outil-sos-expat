@@ -3038,9 +3038,19 @@ const BookingRequest: React.FC = () => {
   // ===== MOBILE: New 2026 Wizard UX (one-field-per-screen) =====
   // Activated for mobile devices - desktop keeps existing multi-field layout
   if (isMobile && provider) {
-    // Handler to submit from mobile wizard using existing onSubmit logic
+    // Handler to submit from mobile wizard - bypasses desktop language validation
     const handleMobileSubmit = async (mobileData: MobileBookingFormData): Promise<void> => {
+      console.log('%c📱 [BookingRequest] MOBILE SUBMIT CALLED', 'background: #9C27B0; color: white; padding: 4px 8px; border-radius: 3px;');
+      console.log('📋 [BookingRequest] Mobile data:', mobileData);
+
       // Map mobile form data to existing BookingFormData format
+      // Use pre-filled languages from wizard or provider's languages as fallback
+      const clientLangs = mobileData.clientLanguages?.length > 0
+        ? mobileData.clientLanguages
+        : languagesSpoken.length > 0
+        ? languagesSpoken.map(l => l.code)
+        : provider?.languages || ['fr']; // Fallback to French if nothing else
+
       const data: BookingFormData = {
         firstName: mobileData.firstName,
         lastName: mobileData.lastName,
@@ -3051,11 +3061,184 @@ const BookingRequest: React.FC = () => {
         description: mobileData.description,
         clientPhone: mobileData.clientPhone,
         acceptTerms: mobileData.acceptTerms,
-        clientLanguages: mobileData.clientLanguages || languagesSpoken.map(l => l.code),
+        clientLanguages: clientLangs,
       };
 
-      // Re-use existing submit logic
-      await onSubmit(data);
+      // Prepare booking data (same as desktop)
+      const eurTotalForDisplay = displayEUR;
+      const durationForDisplay = displayDuration;
+
+      const { selectedProvider, bookingRequest } = prepareStandardizedData(
+        data,
+        provider,
+        (user as MinimalUser) ?? null,
+        eurTotalForDisplay,
+        durationForDisplay
+      );
+
+      const uid = (user as MinimalUser)?.uid;
+      if (!uid) {
+        setFormError("Session expirée. Reconnectez-vous.");
+        return;
+      }
+
+      const svcDuration: 20 | 30 = isLawyer ? 20 : 30;
+
+      try {
+        // Generate shared event_id for Pixel/CAPI deduplication
+        const leadEventId = generateEventIdForType('lead');
+        const metaIds = getMetaIdentifiers();
+
+        // Track Meta Pixel Lead
+        trackMetaLead({
+          content_name: 'booking_request_submitted',
+          content_category: isLawyer ? 'lawyer' : 'expat',
+          value: eurTotalForDisplay,
+          currency: 'EUR',
+          eventID: leadEventId,
+        });
+
+        // Track InitiateCheckout
+        trackMetaInitiateCheckout({
+          value: eurTotalForDisplay,
+          currency: 'EUR',
+          content_name: isLawyer ? 'lawyer_call' : 'expat_call',
+          content_category: isLawyer ? 'lawyer' : 'expat',
+          num_items: 1,
+        });
+
+        // Track Google Ads
+        trackGoogleAdsLead({
+          value: eurTotalForDisplay,
+          currency: 'EUR',
+          content_name: 'booking_request_submitted',
+          content_category: isLawyer ? 'lawyer' : 'expat',
+        });
+        trackGoogleAdsBeginCheckout({
+          value: eurTotalForDisplay,
+          currency: 'EUR',
+          content_name: isLawyer ? 'lawyer_call' : 'expat_call',
+          content_category: isLawyer ? 'lawyer' : 'expat',
+        });
+
+        // Track Ad Attribution
+        trackAdLead({
+          contentName: 'booking_request_submitted',
+          contentCategory: isLawyer ? 'lawyer' : 'expat',
+          value: eurTotalForDisplay,
+          providerId: selectedProvider.id,
+          providerType: isLawyer ? 'lawyer' : 'expat',
+        });
+        trackAdInitiateCheckout({
+          value: eurTotalForDisplay,
+          currency: 'EUR',
+          contentName: isLawyer ? 'lawyer_call' : 'expat_call',
+          providerId: selectedProvider.id,
+          providerType: isLawyer ? 'lawyer' : 'expat',
+        });
+
+        // Create booking in Firestore
+        await createBookingRequest({
+          providerId: selectedProvider.id,
+          serviceType: isLawyer ? "lawyer_call" : "expat_call",
+          status: "pending",
+          title: bookingRequest.title,
+          description: bookingRequest.description,
+          clientPhone: bookingRequest.clientPhone,
+          price: bookingRequest.price,
+          duration: svcDuration,
+          clientLanguages: bookingRequest.clientLanguages,
+          clientLanguagesDetails: bookingRequest.clientLanguagesDetails,
+          providerName: bookingRequest.providerName,
+          providerType: bookingRequest.providerType,
+          providerCountry: bookingRequest.providerCountry,
+          providerAvatar: bookingRequest.providerAvatar,
+          providerRating: bookingRequest.providerRating,
+          providerReviewCount: bookingRequest.providerReviewCount,
+          providerLanguages: bookingRequest.providerLanguages,
+          providerSpecialties: bookingRequest.providerSpecialties,
+          clientName: bookingRequest.clientName,
+          clientFirstName: bookingRequest.clientFirstName,
+          clientLastName: bookingRequest.clientLastName,
+          clientNationality: bookingRequest.clientNationality,
+          clientCurrentCountry: bookingRequest.clientCurrentCountry,
+          ip: bookingRequest.ip,
+          userAgent: bookingRequest.userAgent,
+          providerEmail: bookingRequest.providerEmail,
+          providerPhone: bookingRequest.providerPhone,
+          metaEventId: leadEventId,
+          fbp: metaIds.fbp,
+          fbc: metaIds.fbc,
+          clientEmail: user?.email || undefined,
+        });
+
+        // Calculate service data for checkout
+        const selectedCurrency: Currency = detectUserCurrency();
+        const roleForPricing: ServiceType = role;
+
+        let svcAmount = 0;
+        let svcDurationNumber: number = FALLBACK_TOTALS[roleForPricing].duration;
+        let svcCommission = 0;
+        let svcProviderAmount = 0;
+
+        try {
+          const p = await calculateServiceAmounts(roleForPricing, selectedCurrency);
+          svcAmount = p.totalAmount;
+          svcDurationNumber = p.duration;
+          svcCommission = p.connectionFeeAmount;
+          svcProviderAmount = p.providerAmount;
+        } catch {
+          const total = selectedCurrency === "usd" ? FALLBACK_TOTALS[roleForPricing].usd : FALLBACK_TOTALS[roleForPricing].eur;
+          const fee = selectedCurrency === "usd" ? DEFAULT_SERVICE_FEES[roleForPricing].usd : DEFAULT_SERVICE_FEES[roleForPricing].eur;
+          svcAmount = total;
+          svcCommission = fee;
+          svcProviderAmount = Math.max(0, Math.round((total - fee) * 100) / 100);
+        }
+
+        // Save to sessionStorage
+        sessionStorage.setItem("selectedProvider", JSON.stringify(selectedProvider));
+        sessionStorage.setItem("clientPhone", bookingRequest.clientPhone);
+        sessionStorage.setItem("bookingRequest", JSON.stringify(bookingRequest));
+
+        const serviceData = {
+          providerId: selectedProvider.id,
+          serviceType: roleForPricing === "lawyer" ? "lawyer_call" : "expat_call",
+          providerRole: roleForPricing,
+          amount: svcAmount,
+          duration: svcDurationNumber,
+          clientPhone: bookingRequest.clientPhone,
+          commissionAmount: svcCommission,
+          providerAmount: svcProviderAmount,
+          currency: selectedCurrency,
+        };
+        sessionStorage.setItem("serviceData", JSON.stringify(serviceData));
+
+        sessionStorage.setItem("bookingMeta", JSON.stringify({
+          title: (bookingRequest.title || "").toString().trim(),
+          description: (bookingRequest.description || "").toString().trim(),
+          country: bookingRequest.clientCurrentCountry || "",
+          clientFirstName: bookingRequest.clientFirstName,
+          clientNationality: bookingRequest.clientNationality || "",
+          clientLanguages: bookingRequest.clientLanguages || [],
+        }));
+
+        // Verify and clean up
+        const savedProvider = sessionStorage.getItem("selectedProvider");
+        const savedServiceData = sessionStorage.getItem("serviceData");
+        if (!savedProvider || !savedServiceData) {
+          throw new Error("SESSION_STORAGE_WRITE_FAILED");
+        }
+
+        sessionStorage.removeItem('wizardFilters');
+        console.log('✅ [BookingRequest] Mobile submit success, navigating to checkout');
+
+        // Navigate to checkout
+        navigate(`/call-checkout/${providerId}`);
+
+      } catch (err) {
+        console.error("Mobile submit error", err);
+        setFormError(intl.formatMessage({ id: "bookingRequest.errors.generic" }));
+      }
     };
 
     return (
