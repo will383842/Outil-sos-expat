@@ -2324,7 +2324,9 @@ const ProviderProfile: React.FC = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
                 onClick={() => navigate("/sos-appel")}
-                className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-red-600 to-red-500 text-white rounded-xl hover:from-red-500 hover:to-red-400 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-semibold focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-gray-950"
+                onTouchEnd={(e) => { e.preventDefault(); navigate("/sos-appel"); }}
+                className="inline-flex items-center justify-center px-6 py-3 min-h-[48px] bg-gradient-to-r from-red-600 to-red-500 text-white rounded-xl hover:from-red-500 hover:to-red-400 active:scale-[0.98] transition-colors shadow-lg font-semibold focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-gray-950 touch-manipulation"
+                style={{ WebkitTapHighlightColor: 'transparent' }}
                 aria-label={intl.formatMessage({ id: "providerProfile.backToExperts" })}
               >
                 <Users className="w-5 h-5 mr-2" aria-hidden="true" />
@@ -2332,7 +2334,9 @@ const ProviderProfile: React.FC = () => {
               </button>
               <button
                 onClick={() => navigate(-1)}
-                className="inline-flex items-center justify-center px-6 py-3 bg-gray-800 text-white rounded-xl hover:bg-gray-700 transition-all font-semibold focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-950"
+                onTouchEnd={(e) => { e.preventDefault(); navigate(-1); }}
+                className="inline-flex items-center justify-center px-6 py-3 min-h-[48px] bg-gray-800 text-white rounded-xl hover:bg-gray-700 active:scale-[0.98] transition-colors font-semibold focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-950 touch-manipulation"
+                style={{ WebkitTapHighlightColor: 'transparent' }}
               >
                 <ArrowLeft className="w-5 h-5 mr-2" aria-hidden="true" />
                 <FormattedMessage id="providerProfile.goBack" defaultMessage="Retour" />

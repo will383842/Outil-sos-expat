@@ -209,8 +209,8 @@ export const requestWithdrawal = onCall(
         userEmail: userData.email,
         userName: `${userData.firstName || ""} ${userData.lastName || ""}`.trim(),
         amount: actualAmount,
-        sourceCurrency: "EUR",
-        targetCurrency: userData.bankDetails.currency || "EUR",
+        sourceCurrency: "USD",
+        targetCurrency: userData.bankDetails.currency || "USD",
         status: "pending",
         bankDetailsSnapshot: {
           accountType: userData.bankDetails.accountType,

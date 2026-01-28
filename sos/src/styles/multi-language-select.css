@@ -46,7 +46,9 @@ html.dark {
 }
 
 .multi-language-select .mls__menu {
-  max-width: calc(100vw - 24px);
+  /* Use 100% of parent instead of 100vw to avoid scrollbar issues */
+  max-width: min(100%, calc(100vw - 32px));
+  width: 100%;
   overflow-x: hidden;
 }
 

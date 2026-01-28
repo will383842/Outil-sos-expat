@@ -21,14 +21,14 @@ function ensureInitialized() {
 /**
  * Configuration par défaut du système d'affiliation
  *
- * Taux configurables :
- * - signupBonus: 2€ par inscription validée
- * - callCommissionRate: 50% du premier appel, 20% des suivants
- * - subscriptionRate: 15% du premier mois, 5% des renouvellements (max 12 mois)
- * - providerValidationBonus: 20€ si prestataire parrainé complète son KYC
+ * CONFIGURATION SIMPLIFIÉE :
+ * - 10$ fixe par appel (premier et récurrents)
+ * - Pas de commission à l'inscription
+ * - Pas de commission sur les abonnements
+ * - Pas de bonus prestataire
  *
  * Retrait :
- * - Seuil minimum: 30€
+ * - Seuil minimum: 30$
  * - Période de rétention: 24h (anti-fraude)
  */
 const DEFAULT_AFFILIATE_CONFIG: Omit<AffiliateConfig, "updatedAt" | "updatedBy" | "rateHistory"> = {
@@ -39,21 +39,21 @@ const DEFAULT_AFFILIATE_CONFIG: Omit<AffiliateConfig, "updatedAt" | "updatedBy" 
 
   // Taux par défaut (gelés pour chaque affilié à son inscription)
   defaultRates: {
-    signupBonus: 200, // 2€ en cents
-    callCommissionRate: 0.5, // 50% du premier appel
-    callFixedBonus: 0,
-    subscriptionRate: 0.15, // 15% du premier mois
+    signupBonus: 0, // Pas de bonus inscription
+    callCommissionRate: 0, // Pas de pourcentage
+    callFixedBonus: 1000, // 10€ fixe par appel
+    subscriptionRate: 0, // Pas de commission abonnement
     subscriptionFixedBonus: 0,
-    providerValidationBonus: 2000, // 20€ en cents
+    providerValidationBonus: 0, // Pas de bonus prestataire
   },
 
   // Règles de commission par type d'action
   commissionRules: {
-    // Inscription d'un filleul
+    // Inscription d'un filleul - DÉSACTIVÉ
     referral_signup: {
-      enabled: true,
+      enabled: false,
       type: "fixed",
-      fixedAmount: 200, // 2€
+      fixedAmount: 0, // 0€
       percentageRate: 0,
       baseAmount: null,
       conditions: {
@@ -61,30 +61,30 @@ const DEFAULT_AFFILIATE_CONFIG: Omit<AffiliateConfig, "updatedAt" | "updatedBy" 
         minAccountAgeDays: 0,
         onlyFirstTime: true,
       },
-      description: "2€ par inscription validée",
+      description: "Pas de commission à l'inscription",
     },
 
-    // Premier appel du filleul
+    // Premier appel du filleul - 10$ FIXE
     referral_first_call: {
       enabled: true,
-      type: "percentage",
-      fixedAmount: 0,
-      percentageRate: 0.5, // 50%
+      type: "fixed",
+      fixedAmount: 1000, // 10$ (en cents)
+      percentageRate: 0,
       baseAmount: null,
       applyTo: "connection_fee",
       conditions: {
         minCallDuration: 120, // 2 minutes minimum
         providerTypes: ["lawyer", "expat"],
       },
-      description: "50% des frais de connexion du 1er appel",
+      description: "10$ par appel",
     },
 
-    // Appels récurrents du filleul
+    // Appels récurrents du filleul - 10$ FIXE
     referral_recurring_call: {
       enabled: true,
-      type: "percentage",
-      fixedAmount: 0,
-      percentageRate: 0.2, // 20%
+      type: "fixed",
+      fixedAmount: 1000, // 10$ (en cents)
+      percentageRate: 0,
       baseAmount: null,
       applyTo: "connection_fee",
       conditions: {
@@ -93,50 +93,50 @@ const DEFAULT_AFFILIATE_CONFIG: Omit<AffiliateConfig, "updatedAt" | "updatedBy" 
         maxCallsPerMonth: 0, // illimité
         lifetimeLimit: 0, // illimité
       },
-      description: "20% des frais de connexion des appels suivants",
+      description: "10$ par appel",
     },
 
-    // Premier abonnement du filleul
+    // Premier abonnement du filleul - DÉSACTIVÉ
     referral_subscription: {
-      enabled: true,
+      enabled: false,
       type: "percentage",
       fixedAmount: 0,
-      percentageRate: 0.15, // 15%
+      percentageRate: 0, // 0%
       baseAmount: null,
       applyTo: "first_month",
       conditions: {
         planTypes: ["solo", "multi", "enterprise"],
         onlyFirstSubscription: true,
       },
-      description: "15% du premier mois d'abonnement",
+      description: "Pas de commission sur les abonnements",
     },
 
-    // Renouvellement d'abonnement
+    // Renouvellement d'abonnement - DÉSACTIVÉ
     referral_subscription_renewal: {
-      enabled: true,
+      enabled: false,
       type: "percentage",
       fixedAmount: 0,
-      percentageRate: 0.05, // 5%
+      percentageRate: 0, // 0%
       baseAmount: null,
       applyTo: "total_amount",
       conditions: {
-        maxMonths: 12, // Commission sur max 12 mois de renouvellement
+        maxMonths: 12,
       },
-      description: "5% des renouvellements (max 12 mois)",
+      description: "Pas de commission sur les renouvellements",
     },
 
-    // Bonus si le filleul est un prestataire qui complète son KYC
+    // Bonus si le filleul est un prestataire - DÉSACTIVÉ
     referral_provider_validated: {
-      enabled: true,
+      enabled: false,
       type: "fixed",
-      fixedAmount: 2000, // 20€
+      fixedAmount: 0, // 0€
       percentageRate: 0,
       baseAmount: null,
       conditions: {
         requireKYCComplete: true,
         requireFirstCall: false,
       },
-      description: "20€ si prestataire parrainé complète son KYC",
+      description: "Pas de bonus prestataire",
     },
   },
 

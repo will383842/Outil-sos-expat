@@ -118,7 +118,7 @@ export interface AffiliateCommission {
   rateApplied: number | null;
   fixedAmount: number | null;
   amount: number;
-  currency: "EUR";
+  currency: "USD";
   calculationDetails: string;
   status: CommissionStatus;
   availableAt: string | null;
@@ -331,9 +331,9 @@ export interface AffiliateConfig {
 // ============================================================================
 
 /**
- * Format cents to currency string
+ * Format cents to currency string (USD by default for affiliate system)
  */
-export function formatCents(cents: number, locale = "fr-FR", currency = "EUR"): string {
+export function formatCents(cents: number, locale = "en-US", currency = "USD"): string {
   const amount = cents / 100;
   return new Intl.NumberFormat(locale, {
     style: "currency",

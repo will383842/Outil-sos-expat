@@ -20,6 +20,8 @@ import { WizardProvider } from './contexts/WizardContext';
 import { FeedbackButton } from './components/feedback';
 import ProviderOnlineManager from './components/providers/ProviderOnlineManager';
 import { PayPalProvider } from './contexts/PayPalContext';
+// AFFILIATE: Capture referral codes from URL
+import { useReferralCapture } from './hooks/useAffiliate';
 // Marketing routes moved to AdminRoutesV2 (accessible via /admin/marketing/*)
 import enMessages from "./helper/en.json";
 import esMessages from "./helper/es.json";
@@ -472,6 +474,31 @@ const TrafficSourceCapture: React.FC = () => {
 };
 
 // --------------------------------------------
+// ReferralCodeCapture - Capture referral codes from URL (?ref=CODE)
+// AFFILIATE SYSTEM: Persists to localStorage for later use during signup
+// --------------------------------------------
+const ReferralCodeCapture: React.FC = () => {
+  // Hook handles all capture logic: reads URL, persists to localStorage, cleans URL
+  const { referralCode, referralTracking } = useReferralCapture();
+
+  useEffect(() => {
+    if (referralCode) {
+      console.log('[Affiliate] Referral code captured:', referralCode);
+      if (referralTracking) {
+        console.log('[Affiliate] Tracking data:', {
+          utmSource: referralTracking.utmSource,
+          utmMedium: referralTracking.utmMedium,
+          utmCampaign: referralTracking.utmCampaign,
+          landingPage: referralTracking.landingPage,
+        });
+      }
+    }
+  }, [referralCode, referralTracking]);
+
+  return null;
+};
+
+// --------------------------------------------
 // App
 // --------------------------------------------
 const App: React.FC = () => {
@@ -714,6 +741,8 @@ const App: React.FC = () => {
           <MetaPixelUserTracker />
           {/* Traffic Source: Capture UTM parameters for ad attribution */}
           <TrafficSourceCapture />
+          {/* AFFILIATE: Capture referral codes (?ref=CODE) from URL */}
+          <ReferralCodeCapture />
           <div className={`App ${isMobile ? "mobile-layout" : "desktop-layout"}`}>
             <DefaultHelmet pathname={location.pathname} />
 

@@ -505,7 +505,7 @@ const Register: React.FC = () => {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] sm:w-[400px] sm:h-[400px] bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-full blur-3xl animate-pulse delay-500" />
         </div>
 
-        <div className="relative z-10 max-w-sm mx-auto sm:max-w-2xl lg:max-w-6xl">
+        <div className="relative z-10 max-w-sm mx-auto sm:max-w-2xl md:max-w-4xl lg:max-w-6xl">
           <header className="text-center mb-6 sm:mb-8">
             <div className="inline-flex items-center space-x-2 sm:space-x-3 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 backdrop-blur-sm rounded-full pl-4 pr-3 sm:pl-6 sm:pr-4 py-2 sm:py-3 border border-yellow-400/50 mb-4 sm:mb-6 shadow-lg shadow-yellow-500/25">
               <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 animate-pulse" />

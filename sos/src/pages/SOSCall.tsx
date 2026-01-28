@@ -1380,13 +1380,13 @@ const ModernProfileCard: React.FC<{
   );
 
   return (
-    <div className="flex-shrink-0 w-full lg:w-auto flex justify-center px-2 sm:px-0">
+    <div className="flex-shrink-0 w-full lg:w-auto flex justify-center">
       <article
         className={`
           relative bg-white rounded-2xl overflow-hidden cursor-pointer
           transition-all duration-300 ease-out border-2 shadow-lg
-          w-full max-w-[calc(100vw-48px)] sm:max-w-[340px] h-auto min-h-[480px]
-          lg:w-[320px] lg:h-[520px] lg:max-w-none lg:min-h-0
+          w-full max-w-[340px] h-auto min-h-[480px]
+          lg:w-[320px] lg:h-[520px] lg:min-h-0
           xl:w-[340px] xl:h-[540px]
           2xl:w-[360px] 2xl:h-[560px]
           ${statusColors.border} ${statusColors.shadow} ${statusColors.borderShadow}
@@ -3251,7 +3251,7 @@ const SOSCall: React.FC = () => {
         {/* ========================================
             📱 HERO MOBILE COMPACT (sticky)
         ======================================== */}
-        <header className="lg:hidden sticky top-0 z-40 bg-gray-950/95 backdrop-blur-xl border-b border-white/10 safe-area-top" role="banner">
+        <header className="lg:hidden sticky top-[80px] z-40 bg-gray-950/95 backdrop-blur-xl border-b border-white/10 safe-area-top" role="banner">
           <div className="px-4 py-3 flex items-center justify-between">
             <div className="flex-1 min-w-0">
               <h1 className="text-lg font-bold text-white truncate">
@@ -3367,9 +3367,9 @@ const SOSCall: React.FC = () => {
           {/* ========================================
               📱 FILTRES CHIPS MOBILE (sticky)
           ======================================== */}
-          <div className="lg:hidden sticky top-[60px] z-30 bg-gray-900/95 backdrop-blur-md border-b border-white/10">
-            <div className="overflow-x-auto scrollbar-hide">
-              <div className="flex gap-2 px-4 py-2.5 min-w-max">
+          <div className="lg:hidden sticky top-[140px] z-30 bg-gray-900/95 backdrop-blur-md border-b border-white/10 w-full overflow-hidden">
+            <div className="overflow-x-auto scrollbar-hide w-full">
+              <div className="flex gap-2 px-4 py-2.5 w-max min-w-full justify-center">
                 {/* Chip Type: All */}
                 <button
                   onClick={() => setSelectedType("all")}
@@ -3936,7 +3936,7 @@ const SOSCall: React.FC = () => {
                 >
                   {/* Affiche tous les providers filtrés sur mobile (pas de pagination) */}
                   {filteredProviders.map((provider, index) => (
-                    <div key={provider.id} className="flex justify-center" role="listitem">
+                    <div key={provider.id} className="flex justify-center w-full" role="listitem">
                       <ModernProfileCard
                         provider={provider}
                         onProfileClick={handleProviderClick}
@@ -3986,8 +3986,8 @@ const SOSCall: React.FC = () => {
                 </div>
               </>
             ) : (
-              <div className="text-center py-10 sm:py-14" role="status" aria-live="polite">
-                <div className="rounded-xl sm:rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-5 sm:p-10 max-w-md mx-auto">
+              <div className="w-full px-4 py-10 sm:py-14" role="status" aria-live="polite">
+                <div className="rounded-xl sm:rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-5 sm:p-10 max-w-sm sm:max-w-md mx-auto text-center">
                   <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
                     <Search className="w-6 h-6 sm:w-7 sm:h-7 text-gray-200" aria-hidden="true" />
                   </div>

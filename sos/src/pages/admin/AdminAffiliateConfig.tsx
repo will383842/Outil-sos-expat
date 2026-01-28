@@ -67,24 +67,25 @@ interface RateHistoryEntry {
 }
 
 // Default config matching backend DEFAULT_AFFILIATE_CONFIG
+// CONFIGURATION SIMPLIFIÉE : 10€ fixe par appel, tout le reste à 0
 const DEFAULT_CONFIG: AffiliateConfig = {
   id: "current",
   isSystemActive: true,
   withdrawalsEnabled: true,
   newAffiliatesEnabled: true,
   defaultRates: {
-    signupBonus: 200,
-    callCommissionRate: 0.75,
-    callFixedBonus: 0,
-    subscriptionRate: 0.15,
+    signupBonus: 0, // Pas de bonus inscription
+    callCommissionRate: 0, // Pas de pourcentage
+    callFixedBonus: 1000, // 10€ fixe par appel
+    subscriptionRate: 0, // Pas de commission abonnement
     subscriptionFixedBonus: 0,
-    providerValidationBonus: 2000,
+    providerValidationBonus: 0, // Pas de bonus prestataire
   },
   commissionRules: {
     referral_signup: {
-      enabled: true,
+      enabled: false,
       type: "fixed",
-      fixedAmount: 200,
+      fixedAmount: 0,
       percentageRate: 0,
       baseAmount: null,
       conditions: {
@@ -92,26 +93,26 @@ const DEFAULT_CONFIG: AffiliateConfig = {
         minAccountAgeDays: 0,
         onlyFirstTime: true,
       },
-      description: "2€ par inscription validée",
+      description: "Pas de commission à l'inscription",
     },
     referral_first_call: {
       enabled: true,
-      type: "percentage",
-      fixedAmount: 0,
-      percentageRate: 0.5,
+      type: "fixed",
+      fixedAmount: 1000, // 10$
+      percentageRate: 0,
       baseAmount: null,
       applyTo: "connection_fee",
       conditions: {
         minCallDuration: 120,
         providerTypes: ["lawyer", "expat"],
       },
-      description: "50% des frais de connexion du 1er appel",
+      description: "10$ par appel",
     },
     referral_recurring_call: {
       enabled: true,
-      type: "percentage",
-      fixedAmount: 0,
-      percentageRate: 0.2,
+      type: "fixed",
+      fixedAmount: 1000, // 10$
+      percentageRate: 0,
       baseAmount: null,
       applyTo: "connection_fee",
       conditions: {
@@ -120,43 +121,43 @@ const DEFAULT_CONFIG: AffiliateConfig = {
         maxCallsPerMonth: 0,
         lifetimeLimit: 0,
       },
-      description: "20% des frais de connexion des appels suivants",
+      description: "10$ par appel",
     },
     referral_subscription: {
-      enabled: true,
+      enabled: false,
       type: "percentage",
       fixedAmount: 0,
-      percentageRate: 0.15,
+      percentageRate: 0,
       baseAmount: null,
       applyTo: "first_month",
       conditions: {
         planTypes: ["solo", "multi", "enterprise"],
         onlyFirstSubscription: true,
       },
-      description: "15% du premier mois d'abonnement",
+      description: "Pas de commission sur les abonnements",
     },
     referral_subscription_renewal: {
-      enabled: true,
+      enabled: false,
       type: "percentage",
       fixedAmount: 0,
-      percentageRate: 0.05,
+      percentageRate: 0,
       baseAmount: null,
       conditions: {
         maxMonths: 12,
       },
-      description: "5% des renouvellements (max 12 mois)",
+      description: "Pas de commission sur les renouvellements",
     },
     referral_provider_validated: {
-      enabled: true,
+      enabled: false,
       type: "fixed",
-      fixedAmount: 2000,
+      fixedAmount: 0,
       percentageRate: 0,
       baseAmount: null,
       conditions: {
         requireKYCComplete: true,
         requireFirstCall: false,
       },
-      description: "20€ si prestataire parrainé complète son KYC",
+      description: "Pas de bonus prestataire",
     },
   },
   withdrawal: {
@@ -788,31 +789,27 @@ const AdminAffiliateConfig: React.FC = () => {
               <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                 <li className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-emerald-500" />
-                  <span><strong>Inscription :</strong> 2€ par filleul inscrit</span>
+                  <span><strong>Appels :</strong> 10$ par appel (premier et suivants)</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-gray-400" />
+                  <span className="text-gray-400"><strong>Inscription :</strong> Désactivé (0$)</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-gray-400" />
+                  <span className="text-gray-400"><strong>Abonnement :</strong> Désactivé (0%)</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-gray-400" />
+                  <span className="text-gray-400"><strong>Renouvellement :</strong> Désactivé (0%)</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-gray-400" />
+                  <span className="text-gray-400"><strong>Bonus prestataire :</strong> Désactivé (0$)</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-emerald-500" />
-                  <span><strong>1er appel :</strong> 50% des frais de connexion</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-emerald-500" />
-                  <span><strong>Appels suivants :</strong> 20% des frais de connexion</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-emerald-500" />
-                  <span><strong>Abonnement :</strong> 15% du premier mois</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-emerald-500" />
-                  <span><strong>Renouvellement :</strong> 5% (max 12 mois)</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-emerald-500" />
-                  <span><strong>Bonus prestataire :</strong> 20€ si KYC complété</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-emerald-500" />
-                  <span><strong>Seuil retrait :</strong> 30€ minimum</span>
+                  <span><strong>Seuil retrait :</strong> 30$ minimum</span>
                 </li>
               </ul>
             </div>

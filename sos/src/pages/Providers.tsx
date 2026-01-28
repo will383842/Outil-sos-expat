@@ -499,23 +499,23 @@ const Providers: React.FC = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
               {/* Search */}
-              <div className="relative flex-1 max-w-md">
+              <div className="relative flex-1 max-w-md w-full">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                 <input
                   type="text"
                   placeholder={t.searchPlaceholder}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 min-h-[48px] text-base border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent touch-manipulation"
                 />
               </div>
 
               {/* Filters */}
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-3 w-full sm:w-auto">
                 <select
                   value={selectedType}
                   onChange={(e) => setSelectedType(e.target.value as ProviderType)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="flex-1 sm:flex-none px-4 py-3 min-h-[48px] text-base border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 touch-manipulation appearance-none bg-white"
                 >
                   <option value="all">{t.allTypes}</option>
                   <option value="lawyer">{t.lawyers}</option>
@@ -525,7 +525,7 @@ const Providers: React.FC = () => {
                 <select
                   value={selectedCountry}
                   onChange={(e) => setSelectedCountry(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="flex-1 sm:flex-none px-4 py-3 min-h-[48px] text-base border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 touch-manipulation appearance-none bg-white"
                 >
                   <option value="all">{t.allCountries}</option>
                   {countries.map(country => (
@@ -536,7 +536,7 @@ const Providers: React.FC = () => {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as SortOption)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="flex-1 sm:flex-none px-4 py-3 min-h-[48px] text-base border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 touch-manipulation appearance-none bg-white"
                 >
                   <option value="rating">{t.bestRated}</option>
                   <option value="price">{t.priceAscending}</option>
@@ -544,18 +544,18 @@ const Providers: React.FC = () => {
                 </select>
               </div>
               
-              <div className="flex items-center">
+              <label htmlFor="online-filter" className="flex items-center gap-3 min-h-[48px] px-3 py-2 rounded-xl hover:bg-gray-50 cursor-pointer touch-manipulation select-none">
                 <input
                   id="online-filter"
                   type="checkbox"
                   checked={onlineOnly}
                   onChange={(e) => setOnlineOnly(e.target.checked)}
-                  className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                  className="h-5 w-5 text-red-600 focus:ring-red-500 border-gray-300 rounded touch-manipulation"
                 />
-                <label htmlFor="online-filter" className="ml-2 text-sm text-gray-700">
+                <span className="text-sm text-gray-700">
                   {t.onlineOnly}
-                </label>
-              </div>
+                </span>
+              </label>
             </div>
           </div>
         </div>

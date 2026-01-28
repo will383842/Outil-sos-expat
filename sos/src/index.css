@@ -19,7 +19,9 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
-    max-width: 100vw;
+    /* Use 100% instead of 100vw to avoid scrollbar width issues */
+    max-width: 100%;
+    width: 100%;
     /* Mobile 2026: Smooth touch scrolling */
     -webkit-overflow-scrolling: touch;
   }
@@ -224,10 +226,10 @@
 
 /* Ultra-strict overflow prevention */
 @media (max-width: 768px) {
-  /* Prevent all horizontal overflow on mobile */
+  /* Prevent all horizontal overflow on mobile - use 100% not 100vw to avoid scrollbar issues */
   html, body, #root {
     overflow-x: hidden !important;
-    max-width: 100vw !important;
+    max-width: 100% !important;
     width: 100% !important;
     position: relative !important;
   }
@@ -262,9 +264,9 @@
     min-width: 44px;
   }
 
-  /* Force cards and containers to respect viewport */
+  /* Force cards and containers to respect parent width - use 100% not 100vw */
   .card, article, section, div[class*="rounded"] {
-    max-width: 100vw;
+    max-width: 100%;
     overflow-x: hidden;
   }
 }

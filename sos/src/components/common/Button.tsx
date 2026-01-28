@@ -177,8 +177,20 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
       event.stopPropagation();
       return;
     }
-    
+
     onClick?.(event);
+  };
+
+  // Handle touch end for instant response on mobile
+  const handleTouchEnd = (event: React.TouchEvent<HTMLButtonElement>) => {
+    if (disabled || loading) {
+      event.preventDefault();
+      return;
+    }
+    // Prevent ghost click by stopping propagation
+    event.preventDefault();
+    // Trigger the onClick handler
+    onClick?.(event as unknown as React.MouseEvent<HTMLButtonElement>);
   };
 
   // Get appropriate spinner color based on variant
@@ -212,8 +224,10 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
       ref={ref}
       type={type}
       onClick={handleClick}
+      onTouchEnd={handleTouchEnd}
       disabled={disabled || loading}
       className={combinedClasses}
+      style={{ WebkitTapHighlightColor: 'transparent' }}
       aria-label={ariaLabel}
       aria-describedby={ariaDescribedby}
       aria-busy={loading}

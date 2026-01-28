@@ -217,11 +217,11 @@ function getEffectiveRate(
 }
 
 /**
- * Format cents to currency string
+ * Format cents to currency string (USD by default)
  */
-export function formatCents(cents: number, currency = "EUR"): string {
+export function formatCents(cents: number, currency = "USD"): string {
   const amount = cents / 100;
-  return new Intl.NumberFormat("fr-FR", {
+  return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency,
   }).format(amount);

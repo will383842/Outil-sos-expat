@@ -258,7 +258,7 @@ export async function createCommission(
       rateApplied,
       fixedAmount,
       amount,
-      currency: "EUR",
+      currency: "USD",
       calculationDetails,
       status,
       availableAt,

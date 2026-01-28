@@ -2879,7 +2879,7 @@ const BookingRequest: React.FC = () => {
   if (!authLoading && !user) {
     return (
       <Layout showFooter={false}>
-        <div className={`min-h-screen bg-[linear-gradient(180deg,#fff7f7_0%,#ffffff_35%,#fff5f8_100%)] py-6 md:py-12 overflow-x-hidden w-full max-w-[100vw] box-border`}>
+        <div className={`min-h-screen bg-[linear-gradient(180deg,#fff7f7_0%,#ffffff_35%,#fff5f8_100%)] py-6 md:py-12 overflow-x-hidden w-full max-w-full box-border`}>
           {/* Header */}
           <header className="px-3 md:px-4 max-w-xl mx-auto mb-6">
             <div className="flex items-center gap-3 text-gray-700 mb-4">
@@ -2952,7 +2952,7 @@ const BookingRequest: React.FC = () => {
         }}
       />
 
-      <div className={`min-h-screen bg-[linear-gradient(180deg,#fff7f7_0%,#ffffff_35%,#fff5f8_100%)] py-3 md:py-8 overflow-x-hidden w-full max-w-[100vw] box-border ${isMobile ? 'pb-32' : 'pb-safe'}`}>
+      <div className={`min-h-screen bg-[linear-gradient(180deg,#fff7f7_0%,#ffffff_35%,#fff5f8_100%)] py-3 md:py-8 overflow-x-hidden w-full max-w-full box-border ${isMobile ? 'pb-32' : 'pb-safe'}`}>
         {/* Hero / Title - Mobile optimized with glass-morphism 2026 */}
         <header className="px-3 md:px-4 max-w-5xl mx-auto mb-3 md:mb-6">
           {/* Mobile: Glass card header / Desktop: Standard */}

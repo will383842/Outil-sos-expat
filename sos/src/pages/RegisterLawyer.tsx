@@ -1833,7 +1833,7 @@ const RegisterLawyer: React.FC = () => {
                     /* Mobile */
                     @media (max-width: 640px) {
                       .react-tel-input .country-list {
-                        width: calc(100vw - 40px) !important;
+                        width: min(300px, calc(100vw - 40px)) !important;
                         max-width: 300px !important;
                       }
                     }

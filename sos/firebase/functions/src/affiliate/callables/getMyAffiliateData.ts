@@ -9,10 +9,13 @@
  * - Stats (referrals, commissions)
  * - Recent commissions
  * - Bank details status
+ *
+ * LAZY INITIALIZATION: If user doesn't have an affiliate code (legacy users),
+ * one will be generated automatically on first access.
  */
 
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { getFirestore } from "firebase-admin/firestore";
+import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
@@ -21,7 +24,10 @@ import {
   AffiliateCommission,
   CommissionActionType,
   CommissionStatus,
+  CapturedRates,
 } from "../types";
+import { generateAffiliateCode } from "../utils/codeGenerator";
+import { getAffiliateConfigCached } from "../utils/configService";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -55,11 +61,75 @@ export const getMyAffiliateData = onCall(
         throw new HttpsError("not-found", "User not found");
       }
 
-      const userData = userDoc.data()!;
+      let userData = userDoc.data()!;
 
-      // 3. Check if user has affiliate data
+      // 3. LAZY INITIALIZATION: Generate affiliate code for legacy users
       if (!userData.affiliateCode) {
-        throw new HttpsError("failed-precondition", "User is not an affiliate");
+        logger.info("[getMyAffiliateData] Initializing affiliate data for legacy user", { userId });
+
+        try {
+          // Generate unique affiliate code
+          const affiliateCode = await generateAffiliateCode(
+            userData.email,
+            userData.firstName,
+            userData.lastName
+          );
+
+          // Get current config for captured rates
+          const config = await getAffiliateConfigCached();
+
+          // Capture current rates (frozen for life)
+          const capturedRates: CapturedRates = {
+            capturedAt: Timestamp.now(),
+            configVersion: config.version.toString(),
+            signupBonus: config.defaultRates.signupBonus,
+            callCommissionRate: config.defaultRates.callCommissionRate,
+            callFixedBonus: config.defaultRates.callFixedBonus,
+            subscriptionRate: config.defaultRates.subscriptionRate,
+            subscriptionFixedBonus: config.defaultRates.subscriptionFixedBonus,
+            providerValidationBonus: config.defaultRates.providerValidationBonus,
+          };
+
+          // Initialize affiliate fields
+          const affiliateFields = {
+            affiliateCode,
+            capturedRates,
+            totalEarned: 0,
+            availableBalance: 0,
+            pendingBalance: 0,
+            affiliateStats: {
+              totalReferrals: 0,
+              activeReferrals: 0,
+              totalCommissions: 0,
+              byType: {
+                signup: { count: 0, amount: 0 },
+                firstCall: { count: 0, amount: 0 },
+                recurringCall: { count: 0, amount: 0 },
+                subscription: { count: 0, amount: 0 },
+                renewal: { count: 0, amount: 0 },
+                providerBonus: { count: 0, amount: 0 },
+              },
+            },
+            bankDetails: null,
+            pendingPayoutId: null,
+            affiliateStatus: "active",
+            updatedAt: Timestamp.now(),
+          };
+
+          // Update user document
+          await db.collection("users").doc(userId).update(affiliateFields);
+
+          // Merge with userData for response
+          userData = { ...userData, ...affiliateFields };
+
+          logger.info("[getMyAffiliateData] Successfully initialized affiliate for legacy user", {
+            userId,
+            affiliateCode,
+          });
+        } catch (initError) {
+          logger.error("[getMyAffiliateData] Failed to initialize affiliate", { userId, initError });
+          throw new HttpsError("internal", "Failed to initialize affiliate account");
+        }
       }
 
       // 4. Get recent commissions

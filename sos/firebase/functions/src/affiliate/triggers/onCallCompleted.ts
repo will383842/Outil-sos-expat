@@ -15,6 +15,7 @@ import { getApps, initializeApp } from "firebase-admin/app";
 
 import { isAffiliateSystemActive } from "../utils/configService";
 import { createCommission } from "../services/commissionService";
+import { isPaymentCompleted } from "../../utils/paymentStatusUtils";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -51,14 +52,26 @@ export const affiliateOnCallCompleted = onDocumentUpdated(
       return;
     }
 
+    // IMPORTANT: Only create commission if the call was PAID
+    // Check payment status (payment.status or paymentStatus field)
+    const paymentStatus = after.payment?.status || after.paymentStatus;
+    if (!isPaymentCompleted(paymentStatus)) {
+      logger.info("[affiliateOnCallCompleted] Skipping - call not paid", {
+        sessionId: event.params.sessionId,
+        paymentStatus,
+      });
+      return;
+    }
+
     const sessionId = event.params.sessionId;
     const clientId = after.metadata?.clientId || after.clientId;
     const providerId = after.metadata?.providerId || after.providerId;
 
-    logger.info("[affiliateOnCallCompleted] Processing completed call", {
+    logger.info("[affiliateOnCallCompleted] Processing PAID completed call", {
       sessionId,
       clientId,
       providerId,
+      paymentStatus,
     });
 
     const db = getFirestore();

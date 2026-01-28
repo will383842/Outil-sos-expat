@@ -321,7 +321,7 @@ async function createPayoutNotification(
       recipientName: userData.displayName || userData.firstName || "Affilié",
       data: {
         amount: amount / 100,
-        currency: "EUR",
+        currency: "USD",
         status,
       },
       channels: ["email", "push", "in_app"],

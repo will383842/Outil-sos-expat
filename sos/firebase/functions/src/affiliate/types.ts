@@ -315,8 +315,8 @@ export interface AffiliateCommission {
   /** Final commission amount (cents) */
   amount: number;
 
-  /** Currency (always EUR for now) */
-  currency: "EUR";
+  /** Currency (USD) */
+  currency: "USD";
 
   /** Human-readable calculation explanation */
   calculationDetails: string;
@@ -377,8 +377,8 @@ export interface AffiliatePayout {
   /** Amount requested (cents) */
   amount: number;
 
-  /** Original currency (EUR) */
-  sourceCurrency: "EUR";
+  /** Original currency (USD) */
+  sourceCurrency: "USD";
 
   /** Target currency for payout */
   targetCurrency: string;

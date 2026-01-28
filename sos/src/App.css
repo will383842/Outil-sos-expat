@@ -588,7 +588,9 @@ a:hover, a:focus {
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--border-light);
   z-index: var(--z-tooltip);
-  max-width: calc(100vw - var(--space-xl));
+  /* Use min() to prevent overflow - max 400px or viewport minus padding */
+  max-width: min(400px, calc(100vw - 2 * var(--space-xl)));
+  width: max-content;
   font-size: var(--font-sm);
 }
 
@@ -816,8 +818,10 @@ a:hover, a:focus {
   display: flex;
   gap: var(--space-md);
   overflow-x: auto;
-  padding: 0 var(--space-md) var(--space-md);
-  margin: 0 calc(var(--space-md) * -1);
+  /* Use padding-inline for horizontal scroll with proper edge spacing */
+  padding-inline: var(--space-md);
+  padding-bottom: var(--space-md);
+  /* Removed negative margin that caused overflow issues */
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
   -ms-overflow-style: none;
