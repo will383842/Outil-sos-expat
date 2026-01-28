@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useIntl } from "react-intl";
-import { getLocaleString, parseLocaleFromPath, getRouteKeyFromSlug, getTranslatedRouteSlug, useLocaleNavigate } from "../../multilingual-system";
+import { getLocaleString, parseLocaleFromPath, getRouteKeyFromSlug, getTranslatedRouteSlug, useLocaleNavigate, useLocalePath } from "../../multilingual-system";
 import {
   Menu,
   X,
@@ -1529,6 +1529,7 @@ const Header: React.FC = () => {
   const intl = useIntl();
   const location = useLocation();
   const navigate = useLocaleNavigate();
+  const getLocalePath = useLocalePath();
   const { isLoading } = useAuth();
   const scrolled = useScrolled();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -1538,8 +1539,8 @@ const Header: React.FC = () => {
   const isLockedPendingApproval = isProvider && !isApproved;
 
   const isActive = useCallback(
-    (path: string) => location.pathname === path,
-    [location.pathname]
+    (path: string) => location.pathname === getLocalePath(path),
+    [location.pathname, getLocalePath]
   );
 
   // Fermer le menu lors de la navigation
@@ -1610,7 +1611,7 @@ const Header: React.FC = () => {
                   {LEFT_NAVIGATION_ITEMS.slice(0, 2).map((item) => (
                     <Link
                       key={item.path}
-                      to={item.path}
+                      to={getLocalePath(item.path)}
                       className={`flex items-center gap-2.5 px-2 py-2 rounded-lg transition-colors
                         ${scrolled ? "hover:bg-white/10" : "hover:bg-gray-100"}
                         ${isActive(item.path)
@@ -1644,7 +1645,7 @@ const Header: React.FC = () => {
                   {/* SOS CALL CTA */}
                   <div className="mx-6">
                     <Link
-                      to="/sos-appel"
+                      to={getLocalePath("/sos-appel")}
                       onClick={() => trackLead({ contentName: 'header_sos_call', contentCategory: 'general' })}
                       className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800
                         text-white px-3 py-1 rounded-2xl font-bold flex items-center space-x-2
@@ -1666,7 +1667,7 @@ const Header: React.FC = () => {
                   ).map((item) => (
                     <Link
                       key={item.path}
-                      to={item.path}
+                      to={getLocalePath(item.path)}
                       className={`flex items-center gap-2.5 px-2 py-2 rounded-lg transition-colors
                         ${scrolled ? "hover:bg-white/10" : "hover:bg-gray-100"}
                         ${isActive(item.path)
@@ -1730,7 +1731,7 @@ const Header: React.FC = () => {
 
             <div className="flex items-center gap-3">
               <Link
-                to="/sos-appel"
+                to={getLocalePath("/sos-appel")}
                 onClick={() => trackLead({ contentName: 'mobile_header_sos_call', contentCategory: 'general' })}
                 onTouchEnd={(e) => {
                   e.preventDefault();
@@ -1816,13 +1817,13 @@ const Header: React.FC = () => {
                     {MOBILE_NAVIGATION_ITEMS.map((item) => (
                       <li key={item.path}>
                         <Link
-                          to={item.path}
+                          to={getLocalePath(item.path)}
                           className={`flex items-center space-x-3 p-3 rounded-xl text-gray-300
                             hover:bg-white/10 transition-colors
-                            ${location.pathname === item.path ? "bg-white/10" : ""}`}
+                            ${isActive(item.path) ? "bg-white/10" : ""}`}
                           onClick={() => setIsMenuOpen(false)}
                           aria-current={
-                            location.pathname === item.path ? "page" : undefined
+                            isActive(item.path) ? "page" : undefined
                           }
                         >
                           {item.mobileIcon && (
