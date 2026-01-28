@@ -1,15 +1,13 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, Euro, Loader2 } from 'lucide-react';
 import { useIntl } from 'react-intl';
 import { useMobileBooking } from '../context/MobileBookingContext';
 
 interface StickyCTAProps {
   onSubmit: () => void;
-  className?: string;
 }
 
-export const StickyCTA: React.FC<StickyCTAProps> = ({ onSubmit, className = '' }) => {
+export const StickyCTA: React.FC<StickyCTAProps> = ({ onSubmit }) => {
   const intl = useIntl();
   const {
     currentStep,
@@ -23,6 +21,24 @@ export const StickyCTA: React.FC<StickyCTAProps> = ({ onSubmit, className = '' }
   } = useMobileBooking();
 
   const isLastStep = currentStep === totalSteps;
+
+  // Detect if keyboard is open to hide CTA
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+
+  useEffect(() => {
+    // Use visualViewport API to detect keyboard
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+
+    const handleResize = () => {
+      // If viewport height is significantly less than window height, keyboard is open
+      const keyboardOpen = viewport.height < window.innerHeight * 0.75;
+      setIsKeyboardOpen(keyboardOpen);
+    };
+
+    viewport.addEventListener('resize', handleResize);
+    return () => viewport.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleNext = () => {
     if (!isCurrentStepValid || isSubmitting) return;
@@ -41,121 +57,60 @@ export const StickyCTA: React.FC<StickyCTAProps> = ({ onSubmit, className = '' }
     }
   };
 
+  // Hide CTA when keyboard is open
+  if (isKeyboardOpen) {
+    return null;
+  }
+
   return (
     <div
-      className={`
-        fixed bottom-0 inset-x-0 z-50
-        bg-white/95 backdrop-blur-xl
-        border-t border-gray-100
-        shadow-[0_-4px_20px_rgba(0,0,0,0.08)]
-        ${className}
-      `}
+      className="fixed bottom-0 inset-x-0 z-50 bg-white border-t border-gray-200"
       style={{
-        paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}
     >
-      <div className="p-4 flex gap-3 max-w-lg mx-auto">
+      <div className="p-3 flex gap-2">
         {/* Back button */}
-        <AnimatePresence>
-          {currentStep > 1 && (
-            <motion.button
-              type="button"
-              initial={{ opacity: 0, scale: 0.8, x: -20 }}
-              animate={{ opacity: 1, scale: 1, x: 0 }}
-              exit={{ opacity: 0, scale: 0.8, x: -20 }}
-              onClick={handleBack}
-              className="
-                px-4 py-4 rounded-2xl
-                border-2 border-gray-200
-                text-gray-700 font-semibold text-lg
-                flex items-center justify-center gap-1
-                touch-manipulation
-                hover:bg-gray-50 active:scale-[0.97]
-                transition-all duration-150
-                min-h-[60px] min-w-[60px]
-              "
-              aria-label={intl.formatMessage({ id: 'common.back', defaultMessage: 'Retour' })}
-            >
-              <ChevronLeft size={24} />
-            </motion.button>
-          )}
-        </AnimatePresence>
+        {currentStep > 1 && (
+          <button
+            type="button"
+            onClick={handleBack}
+            className="px-4 py-3 rounded-xl border border-gray-300 text-gray-700 font-medium flex items-center justify-center touch-manipulation active:bg-gray-100"
+          >
+            <ChevronLeft size={20} />
+          </button>
+        )}
 
         {/* Next/Submit button */}
-        <motion.button
+        <button
           type="button"
           onClick={handleNext}
           disabled={!isCurrentStepValid || isSubmitting}
-          whileTap={isCurrentStepValid && !isSubmitting ? { scale: 0.97 } : {}}
-          className={`
-            flex-1 py-4 px-4 rounded-2xl
-            font-bold text-lg text-white
-            flex items-center justify-center gap-2
-            touch-manipulation
-            transition-all duration-200
-            min-h-[60px]
-            ${
-              isCurrentStepValid && !isSubmitting
-                ? 'bg-gradient-to-r from-red-500 via-orange-500 to-rose-500 shadow-lg shadow-red-500/30'
-                : 'bg-gray-300 cursor-not-allowed'
-            }
-          `}
+          className={`flex-1 py-3 px-4 rounded-xl font-semibold text-white flex items-center justify-center gap-2 touch-manipulation ${
+            isCurrentStepValid && !isSubmitting
+              ? 'bg-red-500 active:bg-red-600'
+              : 'bg-gray-300'
+          }`}
         >
           {isSubmitting ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              <span>
-                {intl.formatMessage({
-                  id: 'bookingRequest.processing',
-                  defaultMessage: 'Traitement...',
-                })}
-              </span>
+              <span>{intl.formatMessage({ id: 'bookingRequest.processing' })}</span>
             </>
           ) : isLastStep ? (
             <>
-              <Euro size={20} />
-              <span>
-                {intl.formatMessage({
-                  id: 'bookingRequest.continuePay',
-                  defaultMessage: 'Continuer',
-                })}
-              </span>
-              <span className="font-extrabold">
-                {displayEUR.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}
-              </span>
+              <Euro size={18} />
+              <span>{intl.formatMessage({ id: 'bookingRequest.continuePay' })}</span>
+              <span className="font-bold">{displayEUR.toFixed(2)}€</span>
             </>
           ) : (
             <>
-              <span>
-                {intl.formatMessage({
-                  id: 'common.next',
-                  defaultMessage: 'Suivant',
-                })}
-              </span>
-              <ChevronRight size={20} />
+              <span>{intl.formatMessage({ id: 'common.next', defaultMessage: 'Suivant' })}</span>
+              <ChevronRight size={18} />
             </>
           )}
-        </motion.button>
+        </button>
       </div>
-
-      {/* Validation hint when not valid */}
-      <AnimatePresence>
-        {!isCurrentStepValid && !isSubmitting && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="px-4 pb-2 max-w-lg mx-auto"
-          >
-            <p className="text-center text-xs text-gray-500">
-              {intl.formatMessage({
-                id: 'bookingRequest.mobile.completeField',
-                defaultMessage: 'Completez ce champ pour continuer',
-              })}
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import { useForm, UseFormReturn } from 'react-hook-form';
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import type { Provider } from '@/types/provider';
 
 // Types
@@ -165,8 +166,12 @@ export const MobileBookingProvider: React.FC<MobileBookingProviderProps> = ({
 
       case 5: // Phone
         if (!values.clientPhone) return false;
-        // Basic E.164 validation
-        return /^\+[1-9]\d{6,14}$/.test(values.clientPhone);
+        try {
+          const parsed = parsePhoneNumberFromString(values.clientPhone);
+          return parsed?.isValid() ?? false;
+        } catch {
+          return false;
+        }
 
       case 6: // Terms
         return Boolean(values.acceptTerms);
