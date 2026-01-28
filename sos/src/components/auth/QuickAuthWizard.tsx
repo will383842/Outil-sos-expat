@@ -266,6 +266,8 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
   }, [email, intl]);
 
   // Handle password submission - try login first, then register if needed
+  // FIX: Firebase "Email Enumeration Protection" empêche de vérifier si un email existe
+  // Donc on essaie login → si échec → on essaie register → si email-already-in-use → mauvais mot de passe
   const handlePasswordSubmit = useCallback(async () => {
     if (!password) {
       setError(intl.formatMessage({ id: 'auth.wizard.passwordRequired' }));
@@ -290,38 +292,41 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
       // FIX: Attendre que user Firestore soit chargé avant de naviguer
       setPendingSuccess(true);
     } catch (err) {
-      // FIX: auth/invalid-credential peut signifier:
-      // 1. User n'existe pas (devrait être auth/user-not-found mais Firebase renvoie parfois invalid-credential)
-      // 2. Mauvais mot de passe
-      // On ne peut pas distinguer les deux, donc on affiche un message générique
-      // et on ne tente PAS l'auto-inscription (qui créerait un compte non voulu)
+      const errorCode = (err as { code?: string }).code;
 
-      if ((err as { code?: string }).code === 'auth/user-not-found') {
-        // User n'existe clairement pas - auto register
+      // FIX: Firebase "Email Enumeration Protection" fait que auth/invalid-credential
+      // peut signifier soit "user n'existe pas" soit "mauvais mot de passe"
+      // On ne peut pas distinguer les deux côté client.
+      // Solution: On essaie de s'inscrire. Si l'email existe déjà, Firebase retournera
+      // auth/email-already-in-use, ce qui confirme que c'était un mauvais mot de passe.
+
+      if (errorCode === 'auth/user-not-found' || errorCode === 'auth/invalid-credential' || errorCode === 'auth/wrong-password') {
+        // Essayer l'auto-inscription
         try {
           setIsNewUser(true);
           await register({
             email: email,
             role: 'client',
           }, password);
+          // Inscription réussie = nouvel utilisateur créé
           setIsSubmitting(false);
           setStep('success');
           setPendingSuccess(true);
         } catch (regErr) {
+          const regErrorCode = (regErr as { code?: string }).code;
           setIsSubmitting(false);
           setIsNewUser(false);
 
-          if ((regErr as { code?: string }).code === 'auth/weak-password') {
+          if (regErrorCode === 'auth/email-already-in-use') {
+            // L'email existe déjà = c'était bien un mauvais mot de passe lors du login
+            setError(intl.formatMessage({ id: 'auth.wizard.wrongPassword' }));
+          } else if (regErrorCode === 'auth/weak-password') {
             setError(intl.formatMessage({ id: 'auth.wizard.weakPassword' }));
           } else {
             setError(intl.formatMessage({ id: 'auth.wizard.error.register' }));
           }
         }
-      } else if ((err as { code?: string }).code === 'auth/invalid-credential' || (err as { code?: string }).code === 'auth/wrong-password') {
-        // FIX: Traiter invalid-credential comme mauvais mot de passe (plus sûr)
-        setIsSubmitting(false);
-        setError(intl.formatMessage({ id: 'auth.wizard.wrongPassword' }));
-      } else if ((err as { code?: string }).code === 'auth/too-many-requests') {
+      } else if (errorCode === 'auth/too-many-requests') {
         setIsSubmitting(false);
         setError(intl.formatMessage({ id: 'auth.wizard.tooManyAttempts' }));
       } else {

@@ -1352,6 +1352,10 @@ const StickyCTA = ({
           <button
             type="button"
             onClick={onBack}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              onBack();
+            }}
             className="px-4 py-4 rounded-2xl border-2 border-gray-200 text-gray-700 font-semibold text-lg
               flex items-center justify-center gap-1 touch-manipulation
               hover:bg-gray-50 active:scale-[0.98] transition-all min-h-[60px]"
@@ -1368,6 +1372,18 @@ const StickyCTA = ({
         <button
           type="button"
           onClick={isLastStep ? onSubmit : onNext}
+          onTouchEnd={(e) => {
+            if (!canProceed || isSubmitting) {
+              e.preventDefault();
+              return;
+            }
+            e.preventDefault();
+            if (isLastStep) {
+              onSubmit();
+            } else {
+              onNext();
+            }
+          }}
           disabled={!canProceed || isSubmitting}
           className={`flex-1 py-4 px-4 rounded-2xl font-bold text-lg text-white
             flex items-center justify-center gap-2 touch-manipulation
