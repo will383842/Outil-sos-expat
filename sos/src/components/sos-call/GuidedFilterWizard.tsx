@@ -201,7 +201,7 @@ const CountryStep: React.FC<{
 
       {/* Countries Grid - Scrollable */}
       <div
-        className="flex-1 overflow-y-auto overscroll-contain touch-pan-y"
+        className="flex-1 overflow-y-auto overscroll-contain"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <div className="grid grid-cols-2 gap-2 pb-2">
@@ -210,10 +210,18 @@ const CountryStep: React.FC<{
               key={country.code}
               type="button"
               onClick={() => onSelect(country.code)}
-              style={{ WebkitTapHighlightColor: 'transparent', WebkitTouchCallout: 'none' } as React.CSSProperties}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                onSelect(country.code);
+              }}
+              style={{
+                WebkitTapHighlightColor: 'transparent',
+                WebkitTouchCallout: 'none',
+                touchAction: 'manipulation'
+              } as React.CSSProperties}
               className={`
-                flex items-center gap-2.5 p-3 rounded-xl border-2 transition-colors
-                touch-manipulation text-left min-h-[52px] select-none cursor-pointer
+                flex items-center gap-2.5 p-3 rounded-xl border-2
+                text-left min-h-[52px] select-none cursor-pointer
                 ${selectedCountry === country.code
                   ? "bg-red-500/20 border-red-500 text-white"
                   : "bg-white/5 border-transparent text-gray-200 active:bg-white/15"
@@ -337,7 +345,7 @@ const LanguageStep: React.FC<{
       </div>
 
       {/* Languages Grid - Scrollable */}
-      <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <div className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div className="grid grid-cols-2 gap-2 pb-2">
           {filteredLanguages.map((lang) => {
             const isSelected = selectedLanguages.includes(lang.code);
@@ -346,13 +354,21 @@ const LanguageStep: React.FC<{
                 key={lang.code}
                 type="button"
                 onClick={() => onToggle(lang.code)}
-                style={{ WebkitTapHighlightColor: 'transparent', WebkitTouchCallout: 'none' } as React.CSSProperties}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  onToggle(lang.code);
+                }}
+                style={{
+                  WebkitTapHighlightColor: 'transparent',
+                  WebkitTouchCallout: 'none',
+                  touchAction: 'manipulation'
+                } as React.CSSProperties}
                 className={`
-                  flex items-center gap-2.5 p-3 rounded-xl border-2 transition-colors duration-150
-                  touch-manipulation text-left min-h-[52px] select-none cursor-pointer
+                  flex items-center gap-2.5 p-3 rounded-xl border-2
+                  text-left min-h-[52px] select-none cursor-pointer
                   ${isSelected
                     ? "bg-blue-500/20 border-blue-500 text-white"
-                    : "bg-white/5 border-transparent text-gray-200 active:scale-[0.97] active:bg-white/10"
+                    : "bg-white/5 border-transparent text-gray-200 active:bg-white/10"
                   }
                 `}
               >
@@ -423,14 +439,21 @@ const TypeStep: React.FC<{
             <button
               key={option.value}
               onClick={() => onSelect(option.value)}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                onSelect(option.value);
+              }}
+              style={{
+                WebkitTapHighlightColor: 'transparent',
+                touchAction: 'manipulation'
+              } as React.CSSProperties}
               className={`
-                w-full p-4 rounded-2xl border-2 transition-colors duration-150
-                touch-manipulation text-left flex items-center gap-4
+                w-full p-4 rounded-2xl border-2
+                text-left flex items-center gap-4
                 ${isSelected
                   ? `${option.bgColor} ${option.borderColor}`
-                  : "bg-white/5 border-transparent"
+                  : "bg-white/5 border-transparent active:bg-white/10"
                 }
-                active:scale-[0.98]
               `}
             >
               <div
@@ -626,19 +649,31 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
             <button
               type="button"
               onClick={handleBackToStep1}
-              className="flex-1 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 bg-white/10 text-white active:scale-[0.98] touch-manipulation min-h-[60px] select-none cursor-pointer"
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                handleBackToStep1();
+              }}
+              style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' } as React.CSSProperties}
+              className="flex-1 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 bg-white/10 text-white active:bg-white/20 min-h-[60px] select-none cursor-pointer"
             >
               <ChevronLeft className="w-6 h-6" />
               <FormattedMessage id="action.back" />
             </button>
             <button
               onClick={() => setStep(3)}
+              onTouchEnd={(e) => {
+                if (canProceed) {
+                  e.preventDefault();
+                  setStep(3);
+                }
+              }}
               disabled={!canProceed}
+              style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' } as React.CSSProperties}
               className={`
                 flex-1 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2
-                transition-colors duration-150 touch-manipulation min-h-[60px]
+                min-h-[60px]
                 ${canProceed
-                  ? "bg-gradient-to-r from-red-500 to-orange-500 text-white active:scale-[0.98] shadow-lg shadow-red-500/30"
+                  ? "bg-gradient-to-r from-red-500 to-orange-500 text-white active:opacity-80 shadow-lg shadow-red-500/30"
                   : "bg-white/10 text-gray-500 cursor-not-allowed"
                 }
               `}
@@ -653,7 +688,12 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
           // Step 3 (Type selection): Back button only - selection auto-completes
           <button
             onClick={() => setStep(2)}
-            className="w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 bg-white/10 text-white active:scale-[0.98] touch-manipulation min-h-[60px]"
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              setStep(2);
+            }}
+            style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' } as React.CSSProperties}
+            className="w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 bg-white/10 text-white active:bg-white/20 min-h-[60px]"
           >
             <ChevronLeft className="w-6 h-6" />
             <FormattedMessage id="action.back" />
