@@ -1713,7 +1713,8 @@ const Header: React.FC = () => {
         {/* ============================================================ */}
         {/* MOBILE HEADER */}
         {/* ============================================================ */}
-        <div className="lg:hidden bg-gray-900 shadow-xl">
+        {/* z-[60] ensures header stays above all overlays (wizard z-40, modals z-50) */}
+        <div className="lg:hidden bg-gray-900 shadow-xl relative z-[60]">
           <div className="px-4 py-3 flex items-center justify-between">
             <PWAIconButton />
 
@@ -1777,10 +1778,11 @@ const Header: React.FC = () => {
           </div>
 
           {/* MOBILE MENU */}
+          {/* z-[55] keeps menu above wizard (z-40) but below header (z-60) */}
           {isMenuOpen && (
             <div
               id="mobile-menu"
-              className="fixed inset-x-0 top-[76px] bottom-0 overflow-hidden bg-gray-900"
+              className="fixed inset-x-0 top-[76px] bottom-0 overflow-hidden bg-gray-900 z-[55]"
               role="dialog"
               aria-modal="true"
               aria-label={t.mobileNav}

@@ -1921,7 +1921,7 @@ const FilterBottomSheet: React.FC<{
       {/* Backdrop */}
       <div
         className={`
-          fixed inset-0 bg-black/60 backdrop-blur-sm z-50
+          fixed inset-0 bg-black/60 backdrop-blur-sm z-[45]
           transition-opacity duration-300
           ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
         `}
@@ -1931,7 +1931,7 @@ const FilterBottomSheet: React.FC<{
       {/* Sheet */}
       <div
         className={`
-          fixed bottom-0 left-0 right-0 z-50
+          fixed bottom-0 left-0 right-0 z-[45]
           bg-gray-900 rounded-t-[32px] border-t border-white/10
           transform transition-transform duration-300 ease-out
           ${isOpen ? 'translate-y-0' : 'translate-y-full'}
@@ -4104,7 +4104,7 @@ const SOSCall: React.FC = () => {
       {!showWizard && (
         <button
           onClick={() => setIsFilterOpen(true)}
-          className="lg:hidden fixed bottom-6 right-4 z-40 w-14 h-14 rounded-2xl bg-gradient-to-r from-red-600 to-orange-600 flex items-center justify-center shadow-lg shadow-red-500/30 active:scale-95 transition-transform"
+          className="lg:hidden fixed bottom-6 right-4 z-[35] w-14 h-14 rounded-2xl bg-gradient-to-r from-red-600 to-orange-600 flex items-center justify-center shadow-lg shadow-red-500/30 active:scale-95 transition-transform"
           style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
           aria-label={intl.formatMessage({ id: "sosCall.filters.open" }, { defaultMessage: "Ouvrir les filtres" })}
         >
