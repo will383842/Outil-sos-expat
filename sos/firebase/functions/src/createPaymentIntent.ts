@@ -1,5 +1,4 @@
 import { onCall, CallableRequest, HttpsError } from 'firebase-functions/v2/https';
-import { defineString, defineSecret } from 'firebase-functions/params';
 import * as logger from 'firebase-functions/logger';
 import * as admin from 'firebase-admin';
 import Stripe from 'stripe';
@@ -17,8 +16,15 @@ import {
 } from './utils/paymentValidators';
 // P2-10 FIX: Centralized currency utilities
 import { roundAmount, calculateTotal, formatAmount } from './utils/currencyUtils';
-// P0-3 FIX: Use centralized Stripe secrets helper
-import { getStripeSecretKey, getStripeMode as getStripeModeFromHelper } from './lib/stripe';
+// P0-3 FIX: Use ONLY centralized Stripe secrets - NEVER define secrets here!
+import {
+  getStripeSecretKey,
+  getStripeMode as getStripeModeFromHelper,
+  STRIPE_SECRET_KEY_LIVE,
+  STRIPE_SECRET_KEY_TEST,
+  STRIPE_MODE,
+  isProduction as isProductionEnv,
+} from './lib/stripe';
 
 /* ────────────────────────────────────────────────────────────────────────────
    (A) LIMITS — placé tout en haut, avant toute utilisation
@@ -86,19 +92,16 @@ const FUNCTION_OPTIONS = {
   ],
 };
 
-const STRIPE_SECRET_KEY_TEST = defineSecret('STRIPE_SECRET_KEY_TEST');
-const STRIPE_SECRET_KEY_LIVE = defineSecret('STRIPE_SECRET_KEY_LIVE');
-const STRIPE_MODE = defineString('STRIPE_MODE');
+// P0-4 FIX: Removed duplicate defineSecret/defineString - now using centralized imports from lib/stripe
+// This prevents credential loading failures due to multiple bindings
 
 const isDevelopment =
   process.env.NODE_ENV === 'development' ||
   process.env.NODE_ENV === 'dev' ||
   !process.env.NODE_ENV;
-const isProduction = process.env.NODE_ENV === 'production';
+// P0-5 FIX: Use centralized isProduction() which checks GCP project, not just NODE_ENV
+const isProduction = isProductionEnv();
 const BYPASS_MODE = process.env.BYPASS_SECURITY === 'true';
-
-// Log moved inside function to avoid STRIPE_MODE.value() call during deployment
-// Will be logged on first function invocation instead
 
 // P0-2 SECURITY FIX: Bloquer BYPASS_SECURITY en production
 // Cette variable ne doit JAMAIS être activée en production car elle bypasse:
