@@ -572,7 +572,7 @@ const Providers: React.FC = () => {
             {filteredProviders.map((provider) => (
               <div
                 key={provider.id}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"
+                className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow max-w-sm mx-auto md:max-w-none md:mx-0"
               >
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-4">

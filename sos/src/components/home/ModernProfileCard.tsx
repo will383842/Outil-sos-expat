@@ -34,16 +34,12 @@ interface ModernProfileCardProps {
   showSpecialties?: boolean;
 }
 
-// Constants - Centralisées pour éviter les recreations - Mobile First
+// Constants - Centralisées pour éviter les recreations - Taille unifiée
 const CARD_DIMENSIONS = {
-  mobileWidth: 300, // Mobile: plus grand et lisible
-  desktopWidth: 320,
-  mobileHeight: 500,
-  desktopHeight: 520,
-  mobileImageHeight: 260,
-  desktopImageHeight: 288,
-  mobileContentHeight: 240,
-  desktopContentHeight: 232,
+  width: 320,
+  height: 520,
+  imageHeight: 288,
+  contentHeight: 232,
 } as const;
 
 const TOUCH_TARGETS = {
@@ -366,7 +362,7 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
           className={`
             relative bg-white rounded-2xl overflow-hidden cursor-pointer
             transition-all duration-300 ease-out border-2 shadow-lg
-            w-[300px] sm:w-[320px] h-[500px] sm:h-[520px]
+            w-[320px] h-[520px]
             ${statusColors.border} ${statusColors.shadow} ${statusColors.borderShadow}
             ${isHovered ? `scale-[1.02] ${statusColors.glow} shadow-xl` : ""}
             focus:outline-none focus:ring-4 focus:ring-blue-500/50
@@ -392,7 +388,7 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
         >
           {/* Header avec photo et statut - Dimensions explicites pour éviter layout shift */}
           <div
-            className="relative overflow-hidden bg-slate-100 h-[260px] sm:h-[288px]"
+            className="relative overflow-hidden bg-slate-100 h-[288px]"
           >
             <img
               src={provider.avatar || provider.profilePhoto || DEFAULT_AVATAR}
@@ -406,8 +402,8 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
               onError={handleImageError}
               loading="lazy"
               decoding="async"
-              width={CARD_DIMENSIONS.desktopWidth}
-              height={CARD_DIMENSIONS.desktopImageHeight}
+              width={CARD_DIMENSIONS.width}
+              height={CARD_DIMENSIONS.imageHeight}
             />
 
             {/* Overlay gradient amélioré */}
@@ -473,7 +469,7 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
 
           {/* Contenu principal - Structure flex robuste pour mobile */}
           <div
-            className="p-3 sm:p-4 flex flex-col h-[240px] sm:h-[232px]"
+            className="p-4 flex flex-col h-[232px]"
           >
             {/* Partie haute: infos (grow pour remplir l'espace) */}
             <div className="flex-1 flex flex-col min-h-0">
