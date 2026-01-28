@@ -2070,6 +2070,14 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           throw new Error(t("err.noClientSecret"));
         }
 
+        // P0 FIX: Extract stripeAccountId for Direct Charges confirmation
+        // When PaymentIntent is created on provider's connected account,
+        // we MUST pass stripeAccount to confirmCardPayment, otherwise 404
+        const stripeAccountId = resData?.stripeAccountId;
+        if (stripeAccountId) {
+          console.log("[DEBUG] Direct Charges mode - stripeAccountId:", stripeAccountId);
+        }
+
         const chosenCardElement = isMobile
           ? elements!.getElement(CardElement)
           : elements!.getElement(CardNumberElement);
@@ -2100,15 +2108,23 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
 
         console.log("[DEBUG] " + "🔵 actuallySubmitPayment: Appel confirmCardPayment...");
 
-        const result = await stripe!.confirmCardPayment(clientSecret, {
-          payment_method: {
-            card: chosenCardElement,
-            billing_details: {
-              name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
-              email: user.email || "",
+        // P0 FIX: Pass stripeAccount for Direct Charges mode
+        // Without this, confirmCardPayment returns 404 because the PaymentIntent
+        // exists on the provider's account, not the platform account
+        const result = await stripe!.confirmCardPayment(
+          clientSecret,
+          {
+            payment_method: {
+              card: chosenCardElement,
+              billing_details: {
+                name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+                email: user.email || "",
+              },
             },
           },
-        });
+          // P0 FIX: stripeAccount required for Direct Charges
+          stripeAccountId ? { stripeAccount: stripeAccountId } : undefined
+        );
 
         if (result.error) {
           console.log("[DEBUG] " + "❌ Erreur Stripe: " + result.error.message);
