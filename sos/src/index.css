@@ -537,34 +537,35 @@
    ============================================ */
 
 /*
- * Fix sticky hover states on touch devices
- * This ensures hover effects only apply on devices with actual hover capability
+ * CRITICAL: On touch devices, disable ALL hover-triggered visual changes
+ * that use transform, as they cause the "double-tap" issue on iOS/Android.
+ *
+ * The problem: Mobile browsers fire mouseenter→mouseleave→click in sequence.
+ * If hover causes a transform, the element position changes mid-sequence,
+ * causing the click to miss or requiring a second tap.
  */
 @media (hover: none) and (pointer: coarse) {
-  /* On touch devices: disable hover transforms that cause double-tap */
-  a, button, [role="button"], .touch-manipulation {
-    /* Override any hover scale transforms */
+  /* Disable hover transforms on touch devices - they break single-tap */
+  a:hover, button:hover, [role="button"]:hover,
+  .touch-manipulation:hover,
+  [class*="hover:scale"]:hover {
     transform: none !important;
   }
 
-  /* Allow active state transforms (these work correctly on touch) */
-  a:active, button:active, [role="button"]:active {
+  /* Keep active transforms working for visual feedback */
+  a:active, button:active, [role="button"]:active,
+  .touch-manipulation:active {
     transform: scale(0.98) !important;
+  }
+
+  /* Force immediate response - no transition delays */
+  a, button, [role="button"], .touch-manipulation {
+    transition-duration: 0.1s !important;
+    transition-property: background-color, border-color, color, opacity !important;
   }
 }
 
-/* CTA buttons: instant response on mobile */
-.cta-mobile-safe {
-  /* Faster transitions for touch responsiveness */
-  transition: background-color 0.1s ease, opacity 0.1s ease !important;
-}
-
-.cta-mobile-safe:active {
-  opacity: 0.9;
-  transform: scale(0.98);
-}
-
-/* Ensure hover transforms only on devices that support hover */
+/* Ensure hover transforms only on devices that support true hover */
 @media (hover: hover) and (pointer: fine) {
   .hover-safe:hover {
     transform: scale(1.05);
