@@ -135,8 +135,10 @@ export const CTAButton = memo(forwardRef<HTMLAnchorElement, CTAButtonProps>(({
   );
 
   const buttonClasses = cn(
-    'group inline-flex items-center justify-center font-bold transition-all duration-300',
-    'hover:scale-105 active:scale-100',
+    'group inline-flex items-center justify-center font-bold',
+    // Mobile: fast color transition + active feedback. Desktop: full transitions + hover scale
+    'transition-colors duration-150 md:transition-all md:duration-200',
+    'active:scale-[0.98] md:hover:scale-105',
     'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500',
     'touch-manipulation select-none',
     variantStyles[variant],

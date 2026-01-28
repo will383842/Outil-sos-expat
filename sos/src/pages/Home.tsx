@@ -953,7 +953,7 @@ const OptimizedHomePage: React.FC = () => {
           <div className="mt-8 md:mt-auto">
             <Link
               to="/sos-appel"
-              className={`inline-flex items-center justify-center w-full px-6 py-4 rounded-2xl font-bold text-lg text-white transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white ${`bg-gradient-to-r ${accentGradient}`} hover:scale-105`}
+              className={`inline-flex items-center justify-center w-full px-6 py-4 rounded-2xl font-bold text-lg text-white transition-colors duration-150 md:transition-all md:duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white active:scale-[0.98] md:hover:scale-105 touch-manipulation ${`bg-gradient-to-r ${accentGradient}`}`}
               aria-label={intl.formatMessage({ id: "aria.bookConsultation" })}
             >
               <FormattedMessage id="cta.bookConsultation" />
@@ -1030,7 +1030,7 @@ const OptimizedHomePage: React.FC = () => {
           <div className="mt-8 md:mt-auto">
             <Link
               to={ctaHref}
-              className={`group/cta inline-flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 font-bold text-white transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white bg-gradient-to-r ${gradient} hover:scale-105 hover:text-white`}
+              className={`group/cta inline-flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 font-bold text-white transition-colors duration-150 md:transition-all md:duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white active:scale-[0.98] md:hover:scale-105 touch-manipulation bg-gradient-to-r ${gradient}`}
               aria-label={ctaLabel}
             >
               {ctaLabel}
@@ -1250,9 +1250,10 @@ const OptimizedHomePage: React.FC = () => {
                 aria-label={intl.formatMessage({ id: "aria.mainActions" })}
               >
                 {/* Bouton principal d'appel - "Appeler maintenant" avec icône téléphone */}
+                {/* Mobile fix: hover:scale only on desktop (md:), active states for touch feedback */}
                 <Link
                   to="/sos-appel"
-                  className="group relative overflow-hidden bg-gradient-to-r from-red-600 via-red-500 to-orange-500 active:from-red-700 active:via-red-600 active:to-orange-600 text-white px-10 sm:px-12 py-5 sm:py-6 rounded-3xl font-black text-lg sm:text-xl transition-all duration-300 hover:scale-110 hover:shadow-2xl hover:shadow-red-500/50 flex items-center justify-center space-x-3 sm:space-x-4 border-2 border-red-400/50 touch-manipulation select-none cursor-pointer [-webkit-tap-highlight-color:transparent]"
+                  className="group relative overflow-hidden bg-gradient-to-r from-red-600 via-red-500 to-orange-500 active:from-red-700 active:via-red-600 active:to-orange-600 active:scale-[0.98] text-white px-10 sm:px-12 py-5 sm:py-6 rounded-3xl font-black text-lg sm:text-xl transition-colors duration-150 md:transition-all md:duration-200 md:hover:scale-105 md:hover:shadow-2xl md:hover:shadow-red-500/50 flex items-center justify-center space-x-3 sm:space-x-4 border-2 border-red-400/50 touch-manipulation select-none cursor-pointer [-webkit-tap-highlight-color:transparent]"
                   aria-label={intl.formatMessage({ id: "aria.urgentCall" })}
                   style={{ WebkitTapHighlightColor: 'transparent', WebkitTouchCallout: 'none' } as React.CSSProperties}
                 >
@@ -1260,7 +1261,7 @@ const OptimizedHomePage: React.FC = () => {
                   <span className="pointer-events-none">
                     <FormattedMessage id="cta.callNow" />
                   </span>
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-yellow-400/30 via-orange-500/30 to-red-600/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" aria-hidden="true" />
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-yellow-400/30 via-orange-500/30 to-red-600/30 opacity-0 md:group-hover:opacity-100 transition-opacity duration-200" aria-hidden="true" />
                 </Link>
 
                 {/* Bouton "Voir les experts" - masqué sur mobile, visible sur desktop */}
@@ -1747,7 +1748,7 @@ const OptimizedHomePage: React.FC = () => {
             >
               <Link
                 to="/register"
-                className="group relative overflow-hidden bg-white text-red-600 hover:text-red-700 px-12 py-6 rounded-3xl font-black text-xl transition-all duration-300 hover:scale-110 hover:shadow-2xl flex items-center gap-4 touch-manipulation"
+                className="group relative overflow-hidden bg-white text-red-600 md:hover:text-red-700 px-12 py-6 rounded-3xl font-black text-xl transition-colors duration-150 md:transition-all md:duration-200 active:scale-[0.98] md:hover:scale-105 md:hover:shadow-2xl flex items-center gap-4 touch-manipulation"
                 aria-label={intl.formatMessage({ id: "aria.startFreeNow" })}
               >
                 <span>
@@ -1759,7 +1760,7 @@ const OptimizedHomePage: React.FC = () => {
 
               <Link
                 to="/sos-appel"
-                className="group relative overflow-hidden border-2 border-white bg-transparent text-white px-12 py-6 rounded-3xl font-bold text-xl transition-all duration-300 hover:scale-105 hover:bg-white/10 flex items-center gap-4 touch-manipulation"
+                className="group relative overflow-hidden border-2 border-white bg-transparent text-white px-12 py-6 rounded-3xl font-bold text-xl transition-colors duration-150 md:transition-all md:duration-200 active:scale-[0.98] md:hover:scale-105 md:hover:bg-white/10 flex items-center gap-4 touch-manipulation"
                 aria-label={intl.formatMessage({ id: "aria.urgentCallNow" })}
               >
                 <Phone className="w-6 h-6" aria-hidden="true" />

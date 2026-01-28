@@ -662,10 +662,10 @@ const Providers: React.FC = () => {
 
                   <button
                     onClick={() => handleCallProvider(provider)}
-                    className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center space-x-2 ${
+                    className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors duration-150 md:transition-all md:duration-200 flex items-center justify-center space-x-2 touch-manipulation active:scale-[0.98] ${
                       provider.isOnline
-                        ? 'bg-red-600 text-white hover:bg-red-700 transform hover:scale-105 shadow-md hover:shadow-lg'
-                        : 'bg-gray-300 text-gray-600 cursor-pointer hover:bg-gray-400'
+                        ? 'bg-red-600 text-white md:hover:bg-red-700 md:hover:scale-105 shadow-md md:hover:shadow-lg'
+                        : 'bg-gray-300 text-gray-600 cursor-pointer md:hover:bg-gray-400'
                     }`}
                   >
                     <Phone size={20} />

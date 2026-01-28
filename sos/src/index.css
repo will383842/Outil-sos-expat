@@ -532,6 +532,46 @@
   transition: transform 0.1s ease;
 }
 
+/* ============================================
+   MOBILE TOUCH FIX - Prevent double-tap issue
+   ============================================ */
+
+/*
+ * Fix sticky hover states on touch devices
+ * This ensures hover effects only apply on devices with actual hover capability
+ */
+@media (hover: none) and (pointer: coarse) {
+  /* On touch devices: disable hover transforms that cause double-tap */
+  a, button, [role="button"], .touch-manipulation {
+    /* Override any hover scale transforms */
+    transform: none !important;
+  }
+
+  /* Allow active state transforms (these work correctly on touch) */
+  a:active, button:active, [role="button"]:active {
+    transform: scale(0.98) !important;
+  }
+}
+
+/* CTA buttons: instant response on mobile */
+.cta-mobile-safe {
+  /* Faster transitions for touch responsiveness */
+  transition: background-color 0.1s ease, opacity 0.1s ease !important;
+}
+
+.cta-mobile-safe:active {
+  opacity: 0.9;
+  transform: scale(0.98);
+}
+
+/* Ensure hover transforms only on devices that support hover */
+@media (hover: hover) and (pointer: fine) {
+  .hover-safe:hover {
+    transform: scale(1.05);
+    transition: transform 0.2s ease;
+  }
+}
+
 /* Checkmark animation for completed steps */
 @keyframes checkmarkDraw {
   0% {
