@@ -3259,8 +3259,8 @@ const BookingRequest: React.FC = () => {
                 {/* Nationalité - Supprimée pour simplifier le parcours mobile */}
                 {/* Le champ reste dans le formulaire mais n'est plus affiché ni requis */}
 
-                {/* Pays d'intervention - Caché sur mobile (auto-rempli du wizard Facebook) */}
-                <div className={`mt-4 ${isMobile ? 'hidden' : ''}`} ref={refCountry}>
+                {/* Pays d'intervention */}
+                <div className="mt-4" ref={refCountry}>
                   <label className="block text-sm font-semibold text-gray-800 mb-1">
                     {intl.formatMessage({
                       id: "bookingRequest.fields.currentCountry",
