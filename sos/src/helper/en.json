@@ -4217,6 +4217,7 @@
   "auth.wizard.useGoogle": "This account uses Google. Use the \"Continue with Google\" button.",
   "auth.wizard.weakPassword": "Password too weak",
   "auth.wizard.wrongPassword": "Incorrect password",
+  "auth.emailAlreadyExists": "This account already exists. Enter your password to log in.",
   "availability.actions.goOffline": "Go Offline",
   "availability.actions.goOnline": "Go Online",
   "availability.errors.notApproved": "Your profile has not yet been approved by the administration.",

@@ -1451,6 +1451,10 @@ const EmailFirstAuth: React.FC<EmailFirstAuthProps> = ({
 
   const isValidEmail = (e: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
+  // FIX: Firebase "Email Enumeration Protection" fait que fetchSignInMethodsForEmail
+  // retourne TOUJOURS un tableau vide. On ne peut plus détecter si un email existe côté client.
+  // Solution: On envoie toujours vers "password-register". Si l'email existe déjà,
+  // handleRegister détectera auth/email-already-in-use et basculera vers "password-login".
   const handleEmailSubmit = async () => {
     if (!email || !isValidEmail(email)) {
       setError(intl.formatMessage({ id: "auth.invalidEmail", defaultMessage: "Adresse email invalide" }));
@@ -1465,22 +1469,21 @@ const EmailFirstAuth: React.FC<EmailFirstAuthProps> = ({
       console.log("[EmailFirstAuth] Sign-in methods for email:", methods);
       setSignInMethods(methods);
 
+      // Note: Avec Email Enumeration Protection activé, methods sera toujours []
+      // Le fallback vers password-register gère ce cas (voir handleRegister)
       if (methods.length === 0) {
-        // Nouvel utilisateur → inscription
+        // Email inconnu OU Email Enumeration Protection → proposer inscription
+        // Si l'utilisateur existe déjà, handleRegister basculera vers password-login
         setAuthStep("password-register");
       } else if (methods.includes("google.com") && !methods.includes("password")) {
-        // Compte Google uniquement → Google login
         setAuthStep("google-login");
       } else if (methods.includes("password")) {
-        // Compte avec mot de passe (peut aussi avoir Google lié)
         setAuthStep("password-login");
       } else {
-        // Autre provider (rare) → proposer Google si disponible
         setAuthStep(methods.includes("google.com") ? "google-login" : "password-register");
       }
     } catch (err) {
       console.error("[EmailFirstAuth] fetchSignInMethodsForEmail error:", err);
-      // En cas d'erreur, on suppose que l'email n'existe pas et on propose l'inscription
       setAuthStep("password-register");
     } finally {
       setIsLoading(false);
@@ -1516,7 +1519,14 @@ const EmailFirstAuth: React.FC<EmailFirstAuthProps> = ({
       onAuthSuccess();
     } catch (err: any) {
       console.error("[EmailFirstAuth] login error:", err);
-      setError(err.message || intl.formatMessage({ id: "auth.loginError", defaultMessage: "Erreur de connexion" }));
+      const errorCode = err?.code;
+      if (errorCode === 'auth/invalid-credential' || errorCode === 'auth/wrong-password') {
+        setError(intl.formatMessage({ id: "auth.wizard.wrongPassword", defaultMessage: "Mot de passe incorrect" }));
+      } else if (errorCode === 'auth/too-many-requests') {
+        setError(intl.formatMessage({ id: "auth.wizard.tooManyAttempts", defaultMessage: "Trop de tentatives. Réessayez plus tard." }));
+      } else {
+        setError(err.message || intl.formatMessage({ id: "auth.loginError", defaultMessage: "Erreur de connexion" }));
+      }
     } finally {
       setIsLoading(false);
     }
@@ -1546,7 +1556,23 @@ const EmailFirstAuth: React.FC<EmailFirstAuthProps> = ({
       onAuthSuccess();
     } catch (err: any) {
       console.error("[EmailFirstAuth] register error:", err);
-      setError(err.message || intl.formatMessage({ id: "auth.registerError", defaultMessage: "Erreur lors de l'inscription" }));
+      const errorCode = err?.code;
+      if (errorCode === 'auth/email-already-in-use') {
+        // FIX: L'email existe déjà (non détecté par fetchSignInMethodsForEmail
+        // à cause de l'Email Enumeration Protection). Basculer vers login.
+        console.log("[EmailFirstAuth] Email already exists, switching to login step");
+        setAuthStep("password-login");
+        setPassword(""); // Reset le mot de passe pour que l'utilisateur saisisse son vrai mot de passe
+        setConfirmPassword("");
+        setError(intl.formatMessage({
+          id: "auth.emailAlreadyExists",
+          defaultMessage: "Ce compte existe déjà. Entrez votre mot de passe pour vous connecter."
+        }));
+      } else if (errorCode === 'auth/weak-password') {
+        setError(intl.formatMessage({ id: "auth.wizard.weakPassword", defaultMessage: "Mot de passe trop faible" }));
+      } else {
+        setError(err.message || intl.formatMessage({ id: "auth.registerError", defaultMessage: "Erreur lors de l'inscription" }));
+      }
     } finally {
       setIsLoading(false);
     }

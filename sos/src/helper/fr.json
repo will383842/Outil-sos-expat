@@ -4260,6 +4260,7 @@
   "auth.wizard.useGoogle": "Ce compte utilise Google. Utilisez le bouton \"Continuer avec Google\".",
   "auth.wizard.weakPassword": "Mot de passe trop faible",
   "auth.wizard.wrongPassword": "Mot de passe incorrect",
+  "auth.emailAlreadyExists": "Ce compte existe déjà. Entrez votre mot de passe pour vous connecter.",
   "availability.actions.goOffline": "Se mettre hors ligne",
   "availability.actions.goOnline": "Se mettre en ligne",
   "availability.errors.notApproved": "Votre profil n'est pas encore validé par l'administration.",

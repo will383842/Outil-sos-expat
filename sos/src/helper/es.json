@@ -2222,6 +2222,7 @@
   "auth.wizard.useGoogle": "Esta cuenta usa Google. Usa el botón Continuar con Google.",
   "auth.wizard.weakPassword": "Contraseña demasiado débil",
   "auth.wizard.wrongPassword": "Contraseña incorrecta",
+  "auth.emailAlreadyExists": "Esta cuenta ya existe. Introduce tu contraseña para iniciar sesión.",
   "availability.actions.goOffline": "Pasar a desconectado",
   "availability.actions.goOnline": "Ponerse en línea",
   "availability.errors.notApproved": "Su perfil aún no ha sido aprobado por la administración.",

@@ -2289,6 +2289,7 @@
   "auth.wizard.useGoogle": "Esta conta usa Google. Use o botão Continuar com Google.",
   "auth.wizard.weakPassword": "Senha muito fraca",
   "auth.wizard.wrongPassword": "Senha incorreta",
+  "auth.emailAlreadyExists": "Esta conta já existe. Digite sua senha para fazer login.",
   "availability.actions.goOffline": "Ficar offline",
   "availability.actions.goOnline": "Ficar online",
   "availability.errors.notApproved": "Seu perfil ainda não foi aprovado pela administração.",

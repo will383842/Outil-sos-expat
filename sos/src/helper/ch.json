@@ -2204,6 +2204,7 @@
   "auth.wizard.useGoogle": "此账户使用 Google。请使用 Google 继续按钮。",
   "auth.wizard.weakPassword": "密码太弱",
   "auth.wizard.wrongPassword": "密码错误",
+  "auth.emailAlreadyExists": "该账户已存在。请输入密码登录。",
   "availability.actions.goOffline": "离线",
   "availability.actions.goOnline": "上线",
   "availability.errors.notApproved": "您的个人资料尚未获得管理部门的批准。",

@@ -2204,6 +2204,7 @@
   "auth.wizard.useGoogle": "यह खाता Google का उपयोग करता है। Google से जारी रखें बटन का उपयोग करें।",
   "auth.wizard.weakPassword": "पासवर्ड बहुत कमज़ोर है",
   "auth.wizard.wrongPassword": "गलत पासवर्ड",
+  "auth.emailAlreadyExists": "यह खाता पहले से मौजूद है। लॉगइन करने के लिए अपना पासवर्ड दर्ज करें।",
   "availability.actions.goOffline": "ऑफ़लाइन जाएं",
   "availability.actions.goOnline": "ऑनलाइन जाएं",
   "availability.errors.notApproved": "आपकी प्रोफ़ाइल अभी तक प्रशासन द्वारा अनुमोदित नहीं की गई है।",

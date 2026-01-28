@@ -2222,6 +2222,7 @@
   "auth.wizard.useGoogle": "Dieses Konto verwendet Google. Nutzen Sie Mit Google fortfahren.",
   "auth.wizard.weakPassword": "Passwort zu schwach",
   "auth.wizard.wrongPassword": "Falsches Passwort",
+  "auth.emailAlreadyExists": "Dieses Konto existiert bereits. Geben Sie Ihr Passwort ein, um sich anzumelden.",
   "availability.actions.goOffline": "Offline gehen",
   "availability.actions.goOnline": "Online gehen",
   "availability.errors.notApproved": "Ihr Profil wurde noch nicht von der Verwaltung genehmigt.",

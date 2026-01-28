@@ -31,6 +31,7 @@ import {
   User,
 } from "lucide-react";
 import Layout from "../components/layout/Layout";
+import ErrorBoundary from "../components/common/ErrorBoundary";
 // ✅ PERF: Lazy loading du carousel pour accélérer le First Contentful Paint
 const ProfilesCarousel = lazy(() => import("../components/home/ProfileCarousel"));
 import {
@@ -1372,10 +1373,12 @@ const OptimizedHomePage: React.FC = () => {
             </div>
 
             {/* Carousel - Sans padding pour permettre le scroll edge-to-edge sur mobile */}
-            {/* ✅ PERF: Suspense pour afficher un skeleton pendant le chargement du carousel */}
-            <Suspense fallback={<CarouselSkeleton />}>
-              <ProfilesCarousel />
-            </Suspense>
+            {/* ✅ PERF: Suspense + ErrorBoundary pour chargement et récupération d'erreur */}
+            <ErrorBoundary fallback={<CarouselSkeleton />}>
+              <Suspense fallback={<CarouselSkeleton />}>
+                <ProfilesCarousel />
+              </Suspense>
+            </ErrorBoundary>
           </div>
         </section>
 

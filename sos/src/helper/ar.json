@@ -2204,6 +2204,7 @@
   "auth.wizard.useGoogle": "هذا الحساب يستخدم Google. استخدم زر المتابعة مع Google.",
   "auth.wizard.weakPassword": "كلمة مرور ضعيفة جداً",
   "auth.wizard.wrongPassword": "كلمة مرور خاطئة",
+  "auth.emailAlreadyExists": "هذا الحساب موجود بالفعل. أدخل كلمة المرور لتسجيل الدخول.",
   "availability.actions.goOffline": "قطع الاتصال",
   "availability.actions.goOnline": "الاتصال",
   "availability.errors.notApproved": "لم تتم الموافقة على ملفك الشخصي بعد من قبل الإدارة.",

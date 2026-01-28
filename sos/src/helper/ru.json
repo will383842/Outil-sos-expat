@@ -2289,6 +2289,7 @@
   "auth.wizard.useGoogle": "Этот аккаунт использует Google. Используйте кнопку Продолжить с Google.",
   "auth.wizard.weakPassword": "Слишком слабый пароль",
   "auth.wizard.wrongPassword": "Неверный пароль",
+  "auth.emailAlreadyExists": "Этот аккаунт уже существует. Введите пароль для входа.",
   "availability.actions.goOffline": "Выйти из сети",
   "availability.actions.goOnline": "Войти в сеть",
   "availability.errors.notApproved": "Ваш профиль еще не одобрен администрацией.",
