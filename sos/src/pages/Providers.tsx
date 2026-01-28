@@ -468,25 +468,25 @@ const Providers: React.FC = () => {
         aiSummary={`Liste de ${stats.totalProviders} experts vérifiés (avocats et expatriés) disponibles pour des consultations`}
       />
       <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-red-600 to-red-700 text-white py-16">
+        {/* Header - FIX: Tailles responsives pour mobile */}
+        <div className="bg-gradient-to-r from-red-600 to-red-700 text-white py-10 sm:py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">{t.title}</h1>
-            <p className="text-xl text-red-100 max-w-2xl mx-auto mb-8">{t.subtitle}</p>
-            <div className="flex justify-center space-x-8 text-lg">
+            <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4">{t.title}</h1>
+            <p className="text-base sm:text-xl text-red-100 max-w-2xl mx-auto mb-6 sm:mb-8">{t.subtitle}</p>
+            <div className="flex justify-center space-x-4 sm:space-x-8 text-base sm:text-lg">
               <div className="text-center">
-                <div className="text-3xl font-bold">{stats.totalProviders}</div>
-                <div className="text-red-200">{t.experts}</div>
+                <div className="text-2xl sm:text-3xl font-bold">{stats.totalProviders}</div>
+                <div className="text-red-200 text-sm sm:text-base">{t.experts}</div>
               </div>
               {stats.totalProviders > 0 && (
                 <>
                   <div className="text-center">
-                    <div className="text-3xl font-bold">{stats.averageRating}</div>
-                    <div className="text-red-200">{t.averageRating}</div>
+                    <div className="text-2xl sm:text-3xl font-bold">{stats.averageRating}</div>
+                    <div className="text-red-200 text-sm sm:text-base">{t.averageRating}</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-3xl font-bold">{stats.countries}</div>
-                    <div className="text-red-200">{t.countries}</div>
+                    <div className="text-2xl sm:text-3xl font-bold">{stats.countries}</div>
+                    <div className="text-red-200 text-sm sm:text-base">{t.countries}</div>
                   </div>
                 </>
               )}
@@ -568,11 +568,12 @@ const Providers: React.FC = () => {
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {/* ⚠️ FIX: Réduire le gap sur mobile et ajouter max-w-full pour éviter débordement */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 max-w-full">
             {filteredProviders.map((provider) => (
               <div
                 key={provider.id}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow max-w-sm mx-auto md:max-w-none md:mx-0"
+                className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow w-full max-w-sm mx-auto md:max-w-none md:mx-0"
               >
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-4">
@@ -589,45 +590,45 @@ const Providers: React.FC = () => {
                       <div>
                         <h3 className="font-semibold text-gray-900">{provider.name}</h3>
                         <div className="flex items-center space-x-2">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            provider.type === 'lawyer' 
-                              ? 'bg-blue-100 text-blue-800' 
+                          <span className={`px-2 py-1 rounded-full text-sm font-medium ${
+                            provider.type === 'lawyer'
+                              ? 'bg-blue-100 text-blue-800'
                               : 'bg-green-100 text-green-800'
                           }`}>
                             {provider.type === 'lawyer' ? t.lawyer : t.expat}
                           </span>
-                          <div className={`w-2 h-2 rounded-full ${
+                          <div className={`w-2.5 h-2.5 rounded-full ${
                             provider.isOnline ? 'bg-green-500' : 'bg-gray-400'
                           }`} />
-                          <span className="text-xs text-gray-500">
+                          <span className="text-sm text-gray-500">
                             {provider.isOnline ? t.online : t.offline}
                           </span>
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-gray-900">{Number(provider.price).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xl sm:text-2xl font-bold text-gray-900">{Number(provider.price).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</div>
+                      <div className="text-sm text-gray-500">
                         {CONFIG.CONSULTATION_DURATION[provider.type]}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-4 text-sm text-gray-500 mb-4">
-                    <div className="flex items-center space-x-1">
-                      <MapPin size={14} />
+                  <div className="flex items-center space-x-4 text-sm sm:text-base text-gray-500 mb-4">
+                    <div className="flex items-center space-x-1.5">
+                      <MapPin size={16} />
                       <span>{provider.country}</span>
                     </div>
-                    <div className="flex items-center space-x-1">
-                      <Clock size={14} />
+                    <div className="flex items-center space-x-1.5">
+                      <Clock size={16} />
                       <span>{provider.yearsOfExperience} {t.years}</span>
                     </div>
                   </div>
 
                   <div className="flex items-center space-x-2 mb-4">
                     {renderStars(provider.rating)}
-                    <span className="text-sm font-medium text-gray-900">{provider.rating}</span>
-                    <span className="text-sm text-gray-500">({provider.reviewCount} {t.reviews})</span>
+                    <span className="text-base font-medium text-gray-900">{provider.rating}</span>
+                    <span className="text-sm sm:text-base text-gray-500">({provider.reviewCount} {t.reviews})</span>
                   </div>
 
                   {provider.description && (
@@ -637,11 +638,11 @@ const Providers: React.FC = () => {
                   )}
 
                   {provider.specialties.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-4">
+                    <div className="flex flex-wrap gap-1.5 mb-4">
                       {provider.specialties.slice(0, 3).map((specialty, index) => (
                         <span
                           key={index}
-                          className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
+                          className="px-2.5 py-1 bg-gray-100 text-gray-600 text-sm rounded-full"
                         >
                           {specialty}
                         </span>
@@ -649,11 +650,11 @@ const Providers: React.FC = () => {
                     </div>
                   )}
 
-                  <div className="flex flex-wrap gap-1 mb-6">
+                  <div className="flex flex-wrap gap-1.5 mb-6">
                     {provider.languages.map((lang, index) => (
                       <span
                         key={index}
-                        className="px-2 py-1 bg-red-100 text-red-600 text-xs rounded-full"
+                        className="px-2.5 py-1 bg-red-100 text-red-600 text-sm rounded-full"
                       >
                         {lang}
                       </span>
@@ -679,11 +680,12 @@ const Providers: React.FC = () => {
           </div>
 
           {filteredProviders.length === 0 && !isLoading && (
-            <div className="text-center py-12">
-              <div className="text-gray-500 text-lg mb-4">{t.noExperts}</div>
+            <div className="text-center py-12 px-4 max-w-md mx-auto">
+              <div className="text-5xl mb-4">🔍</div>
+              <div className="text-gray-700 text-lg sm:text-xl font-medium mb-4">{t.noExperts}</div>
               <button
                 onClick={resetFilters}
-                className="text-red-600 hover:text-red-700 font-medium"
+                className="text-red-600 hover:text-red-700 font-semibold text-base sm:text-lg underline underline-offset-2"
               >
                 {t.resetFilters}
               </button>

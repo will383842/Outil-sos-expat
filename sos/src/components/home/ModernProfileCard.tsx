@@ -34,12 +34,13 @@ interface ModernProfileCardProps {
   showSpecialties?: boolean;
 }
 
-// Constants - Centralisées pour éviter les recreations - Taille unifiée
+// Constants - Centralisées pour éviter les recreations - Taille responsive
+// ⚠️ FIX: Réduire légèrement pour mieux s'adapter aux petits écrans (iPhone SE: 375px)
 const CARD_DIMENSIONS = {
-  width: 320,
+  width: 300, // Réduit de 320 à 300 pour mieux s'adapter aux petits écrans
   height: 520,
-  imageHeight: 288,
-  contentHeight: 232,
+  imageHeight: 280,
+  contentHeight: 240,
 } as const;
 
 const TOUCH_TARGETS = {
@@ -357,12 +358,12 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
     );
 
     return (
-      <div className="flex-shrink-0 flex justify-center">
+      <div className="flex-shrink-0 flex justify-center max-w-full">
         <article
           className={`
             relative bg-white rounded-2xl overflow-hidden cursor-pointer
             transition-all duration-300 ease-out border-2 shadow-lg
-            w-[320px] h-[520px]
+            w-[280px] sm:w-[300px] h-[520px] max-w-[calc(100vw-32px)]
             ${statusColors.border} ${statusColors.shadow} ${statusColors.borderShadow}
             ${isHovered ? `scale-[1.02] ${statusColors.glow} shadow-xl` : ""}
             focus:outline-none focus:ring-4 focus:ring-blue-500/50
@@ -409,11 +410,11 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
             {/* Overlay gradient amélioré */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
 
-            {/* Statut en ligne - Taille tactile optimisée */}
+            {/* Statut en ligne - Taille tactile optimisée + texte plus lisible */}
             <div className="absolute top-3 left-3">
               <div
                 className={`
-                inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium
+                inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full text-sm font-medium
                 backdrop-blur-sm border shadow-sm transition-colors
                 ${statusColors.badge}
               `}
@@ -431,7 +432,7 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
               </div>
             </div>
 
-            {/* Badge métier avec contraste amélioré */}
+            {/* Badge métier avec contraste amélioré + texte plus lisible */}
             <div className="absolute top-3 right-3">
               <div
                 className={`
@@ -441,7 +442,7 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
             `}
                 style={{ minHeight: `${TOUCH_TARGETS.badge}px` }}
               >
-                <span className="text-xs sm:text-sm font-medium">
+                <span className="text-sm font-medium">
                   <span aria-hidden="true">{professionInfo.icon}</span>{" "}
                   {intl.formatMessage({
                     id: `card.profession.${provider.type}`,
@@ -480,8 +481,8 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
                     {provider.name}
                   </h3>
                   <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-teal-50 border border-teal-200 flex-shrink-0">
-                    <Zap className="w-3 h-3 text-teal-600" aria-hidden="true" />
-                    <span className="text-teal-600 text-xs font-medium">
+                    <Zap className="w-3.5 h-3.5 text-teal-600" aria-hidden="true" />
+                    <span className="text-teal-600 text-sm font-medium">
                       {provider.yearsOfExperience}{" "}
                       {intl.formatMessage({ id: "card.years" })}
                     </span>
@@ -489,16 +490,16 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
                 </div>
               </div>
 
-              {/* Informations organisées - Flex-1 avec overflow */}
-              <div className="flex-1 space-y-2 overflow-hidden min-h-0">
+              {/* Informations organisées - Flex-1 avec overflow - Textes agrandis pour mobile */}
+              <div className="flex-1 space-y-2.5 overflow-hidden min-h-0">
                 {/* Pays d'intervention */}
                 {formattedCountries && (
                   <div className="flex items-start gap-2">
                     <MapPin
-                      className="w-3.5 h-3.5 text-blue-600 flex-shrink-0 mt-0.5"
+                      className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5"
                       aria-hidden="true"
                     />
-                    <span className="text-blue-600 text-xs leading-tight line-clamp-2">
+                    <span className="text-blue-600 text-sm leading-snug line-clamp-2">
                       {formattedCountries}
                     </span>
                   </div>
@@ -508,10 +509,10 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
                 {formattedLanguages && (
                   <div className="flex items-start gap-2">
                     <Globe
-                      className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0 mt-0.5"
+                      className="w-4 h-4 text-indigo-600 flex-shrink-0 mt-0.5"
                       aria-hidden="true"
                     />
-                    <span className="text-indigo-600 text-xs leading-tight line-clamp-2">
+                    <span className="text-indigo-600 text-sm leading-snug line-clamp-2">
                       {formattedLanguages}
                     </span>
                   </div>
@@ -521,26 +522,26 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
                 {formattedSpecialties && (
                   <div className="flex items-start gap-2">
                     <Zap
-                      className="w-3.5 h-3.5 text-purple-600 flex-shrink-0 mt-0.5"
+                      className="w-4 h-4 text-purple-600 flex-shrink-0 mt-0.5"
                       aria-hidden="true"
                     />
-                    <span className="text-purple-600 text-xs leading-tight line-clamp-2">
+                    <span className="text-purple-600 text-sm leading-snug line-clamp-2">
                       {formattedSpecialties}
                     </span>
                   </div>
                 )}
               </div>
 
-              {/* Stats - séparé du reste */}
+              {/* Stats - séparé du reste - Textes agrandis */}
               <div className="flex items-center justify-between pt-2 mt-2 border-t border-slate-200">
-                <div className="flex items-center gap-1">
-                  <Users className="w-3.5 h-3.5 text-amber-600" aria-hidden="true" />
-                  <span className="text-amber-600 text-xs font-medium">
+                <div className="flex items-center gap-1.5">
+                  <Users className="w-4 h-4 text-amber-600" aria-hidden="true" />
+                  <span className="text-amber-600 text-sm font-medium">
                     {provider.reviewCount}{" "}
                     {intl.formatMessage({ id: "card.reviews" })}
                   </span>
                 </div>
-                <div className="text-slate-500 text-xs">
+                <div className="text-slate-500 text-sm">
                   {intl.formatMessage({ id: `card.profession.${provider.type}` })}
                 </div>
               </div>

@@ -479,18 +479,13 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
       )}
 
       {/* Mobile & Tablet - Scroll horizontal avec snap - Mobile First */}
+      {/* ⚠️ FIX: Utiliser 100% au lieu de 100vw pour éviter débordement horizontal */}
       <div
-        className="lg:hidden w-full overflow-hidden"
+        className="lg:hidden w-full overflow-hidden max-w-full"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <div
-          className="flex gap-4 sm:gap-5 overflow-x-auto pb-6 snap-x snap-mandatory scrollbar-hide"
-          style={{
-            scrollPaddingLeft: 'max(16px, calc((100vw - 300px) / 2))',
-            scrollPaddingRight: 'max(16px, calc((100vw - 300px) / 2))',
-            paddingLeft: 'max(16px, calc((100vw - 300px) / 2))',
-            paddingRight: 'max(16px, calc((100vw - 300px) / 2))',
-          }}
+          className="flex gap-4 sm:gap-5 overflow-x-auto pb-6 snap-x snap-mandatory scrollbar-hide px-4 sm:px-6"
         >
           {displayProviders.map((provider, index) => (
             <div

@@ -371,6 +371,131 @@ export async function syncOneProfileReviewCount(providerId: string): Promise<Syn
 }
 
 // =============================================
+// MIGRATION: FIX REVIEWS SANS isPublic
+// =============================================
+
+/**
+ * Migre tous les avis publiés pour ajouter isPublic: true
+ * Résout le problème des anciens avis qui ne s'affichent pas
+ */
+export async function migrateReviewsAddIsPublic(): Promise<{ fixed: number; alreadyOk: number; errors: number }> {
+  console.log('========================================');
+  console.log('MIGRATION: Ajout isPublic aux reviews publiées');
+  console.log('========================================\n');
+
+  const reviewsCol = collection(db, 'reviews');
+
+  // Récupérer tous les avis avec status="published"
+  const q = query(reviewsCol, where('status', '==', 'published'));
+  const snapshot = await getDocs(q);
+
+  console.log(`Total d'avis publiés trouvés: ${snapshot.size}\n`);
+
+  let fixed = 0;
+  let alreadyOk = 0;
+  let errors = 0;
+
+  const batchSize = 500;
+  let currentBatch = writeBatch(db);
+  let batchCount = 0;
+
+  for (const reviewDoc of snapshot.docs) {
+    try {
+      const data = reviewDoc.data();
+
+      // Vérifier si isPublic est manquant ou false
+      if (data.isPublic !== true) {
+        const reviewRef = doc(db, 'reviews', reviewDoc.id);
+        currentBatch.update(reviewRef, {
+          isPublic: true,
+          // Ajouter aussi publishedAt si manquant
+          ...(data.publishedAt ? {} : { publishedAt: data.createdAt || new Date() })
+        });
+        batchCount++;
+        fixed++;
+
+        const providerInfo = data.providerId || data.providerUid || 'unknown';
+        console.log(`✅ Fixed: ${reviewDoc.id} (provider: ${providerInfo})`);
+
+        // Commit si on atteint la limite
+        if (batchCount >= batchSize) {
+          await currentBatch.commit();
+          console.log(`\n💾 Batch committé (${batchCount} opérations)\n`);
+          currentBatch = writeBatch(db);
+          batchCount = 0;
+        }
+      } else {
+        alreadyOk++;
+      }
+    } catch (error) {
+      errors++;
+      console.error(`❌ Erreur pour ${reviewDoc.id}:`, error);
+    }
+  }
+
+  // Commit le dernier batch
+  if (batchCount > 0) {
+    await currentBatch.commit();
+    console.log(`\n💾 Dernier batch committé (${batchCount} opérations)\n`);
+  }
+
+  console.log('\n========================================');
+  console.log('RÉSUMÉ MIGRATION');
+  console.log('========================================');
+  console.log(`Total avis publiés: ${snapshot.size}`);
+  console.log(`Corrigés (isPublic ajouté): ${fixed}`);
+  console.log(`Déjà corrects: ${alreadyOk}`);
+  console.log(`Erreurs: ${errors}`);
+  console.log('========================================\n');
+
+  if (fixed > 0) {
+    console.log('⚠️  Exécutez maintenant syncAllReviewCounts() pour recalculer les stats des profils');
+  }
+
+  return { fixed, alreadyOk, errors };
+}
+
+/**
+ * Prévisualise la migration sans modifier
+ */
+export async function previewMigrateReviews(): Promise<{ toFix: number; alreadyOk: number }> {
+  console.log('========================================');
+  console.log('PREVIEW: Migration isPublic');
+  console.log('========================================\n');
+
+  const reviewsCol = collection(db, 'reviews');
+  const q = query(reviewsCol, where('status', '==', 'published'));
+  const snapshot = await getDocs(q);
+
+  let toFix = 0;
+  let alreadyOk = 0;
+
+  for (const reviewDoc of snapshot.docs) {
+    const data = reviewDoc.data();
+    if (data.isPublic !== true) {
+      toFix++;
+      const providerInfo = data.providerId || data.providerUid || 'unknown';
+      console.log(`🔧 À corriger: ${reviewDoc.id} (provider: ${providerInfo})`);
+    } else {
+      alreadyOk++;
+    }
+  }
+
+  console.log('\n========================================');
+  console.log(`À corriger: ${toFix}`);
+  console.log(`Déjà OK: ${alreadyOk}`);
+  console.log('========================================\n');
+
+  if (toFix > 0) {
+    console.log('⚠️  Exécutez migrateReviewsAddIsPublic() pour appliquer les corrections');
+  } else {
+    console.log('✅ Tous les avis publiés ont déjà isPublic: true');
+  }
+
+  return { toFix, alreadyOk };
+}
+
+// =============================================
 // EXPORT POUR UTILISATION DANS L'ADMIN
 // =============================================
 
@@ -379,4 +504,6 @@ if (typeof window !== 'undefined') {
   (window as any).previewReviewCountSync = previewReviewCountSync;
   (window as any).syncAllReviewCounts = syncAllReviewCounts;
   (window as any).syncOneProfileReviewCount = syncOneProfileReviewCount;
+  (window as any).previewMigrateReviews = previewMigrateReviews;
+  (window as any).migrateReviewsAddIsPublic = migrateReviewsAddIsPublic;
 }

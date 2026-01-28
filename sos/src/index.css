@@ -269,6 +269,28 @@
     max-width: 100%;
     overflow-x: hidden;
   }
+
+  /* ⚠️ FIX 2026: Force ALL grid and flex containers to stay within viewport */
+  .grid, [class*="grid-cols"] {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  /* ⚠️ FIX 2026: Amélioration lisibilité texte sur mobile */
+  /* Minimum font-size 14px pour les textes importants */
+  p, span, div, li {
+    font-size: max(0.875rem, 14px);
+  }
+
+  /* Titres plus lisibles */
+  h1 { font-size: clamp(1.5rem, 6vw, 2.5rem); }
+  h2 { font-size: clamp(1.25rem, 5vw, 2rem); }
+  h3 { font-size: clamp(1.125rem, 4vw, 1.5rem); }
+
+  /* Labels et textes d'info */
+  label, .label {
+    font-size: 0.9375rem !important; /* 15px */
+  }
 }
 
 /* Safe Area Support for notched devices (iPhone X+, etc.) */

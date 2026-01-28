@@ -991,7 +991,7 @@ filtered = filtered.filter(p => {
           role="button"
           tabIndex={0}
           aria-label={`${intl.formatMessage({ id: 'common.contact' })} ${provider.name}, ${provider.type === 'lawyer' ? intl.formatMessage({ id: 'role.lawyer' }).toLowerCase() : intl.formatMessage({ id: 'role.expat' }).toLowerCase()} - ${getCountryName(provider.country, language)}`}
-          className={`${isCarousel ? 'flex-shrink-0 w-80' : ''} group bg-white rounded-3xl shadow-lg overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-3 backdrop-blur-sm cursor-pointer border-[3px] ${
+          className={`${isCarousel ? 'flex-shrink-0 w-[280px] sm:w-[300px] max-w-[calc(100vw-32px)]' : 'w-full'} group bg-white rounded-3xl shadow-lg overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-3 backdrop-blur-sm cursor-pointer border-[3px] ${
             provider.availability === 'busy'
               ? 'border-orange-500 shadow-orange-500/20 hover:border-orange-600 hover:shadow-orange-600/30'
               : provider.isOnline
@@ -1077,12 +1077,12 @@ filtered = filtered.filter(p => {
             )}
           </div>
 
-          <div className="p-6 flex flex-col h-80">
+          <div className="p-5 sm:p-6 flex flex-col h-80">
             <div className="mb-4">
-              <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-red-600 transition-colors" itemProp="name">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-red-600 transition-colors" itemProp="name">
                 {provider.name}
               </h3>
-              <div className="flex items-center justify-between text-sm text-gray-600">
+              <div className="flex items-center justify-between text-sm sm:text-base text-gray-600">
                 <span>{provider.yearsOfExperience} ans d'expérience</span>
                 <div className="flex items-center gap-1">
                   <span className="text-yellow-500">★</span>
@@ -1092,31 +1092,31 @@ filtered = filtered.filter(p => {
             </div>
 
 <div className="space-y-4 flex-1">
-              {/* 🗣️ LANGUES PARLÉES */}
+              {/* 🗣️ LANGUES PARLÉES - Textes agrandis pour lisibilité mobile */}
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-sm">🗣️</span>
+                  <div className="w-7 h-7 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span className="text-base">🗣️</span>
                   </div>
-                  <span className="text-sm font-semibold text-gray-700">Langues parlées</span>
+                  <span className="text-sm sm:text-base font-semibold text-gray-700">Langues parlées</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {provider.languages && provider.languages.length > 0 ? (
                     provider.languages.slice(0, isCarousel ? 2 : 3).map((lang, index) => (
                       <span
                         key={index}
-                        className="px-3 py-1 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 text-sm font-medium rounded-full border border-blue-200/50"
+                        className="px-3 py-1.5 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 text-sm sm:text-base font-medium rounded-full border border-blue-200/50"
                       >
                         {getLanguageLabel(lang, language as SupportedLocale)}
                       </span>
                     ))
                   ) : (
-                    <span className="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-full">
+                    <span className="px-3 py-1.5 bg-gray-100 text-gray-600 text-sm sm:text-base rounded-full">
                       Non spécifié
                     </span>
                   )}
                   {provider.languages && provider.languages.length > (isCarousel ? 2 : 3) && (
-                    <span className="px-3 py-1 bg-gray-100 text-gray-600 text-sm font-medium rounded-full">
+                    <span className="px-3 py-1.5 bg-gray-100 text-gray-600 text-sm sm:text-base font-medium rounded-full">
                       +{provider.languages.length - (isCarousel ? 2 : 3)}
                     </span>
                   )}
@@ -1126,12 +1126,12 @@ filtered = filtered.filter(p => {
               {/* 🌍 PAYS D'INTERVENTION (UNE SEULE FOIS !) */}
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
-                    <MapPin className="w-3.5 h-3.5 text-green-600" />
+                  <div className="w-7 h-7 bg-green-100 rounded-full flex items-center justify-center">
+                    <MapPin className="w-4 h-4 text-green-600" />
                   </div>
-                  <span className="text-sm font-semibold text-gray-700">Pays d'intervention</span>
+                  <span className="text-sm sm:text-base font-semibold text-gray-700">Pays d'intervention</span>
                 </div>
-                <div className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-green-50 to-green-100 text-green-700 text-sm font-medium rounded-full border border-green-200/50">
+                <div className="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-green-50 to-green-100 text-green-700 text-sm sm:text-base font-medium rounded-full border border-green-200/50">
                   🌍 {getCountryName(provider.country, language)}
                 </div>
               </div>
@@ -1617,7 +1617,7 @@ filtered = filtered.filter(p => {
               <div className="overflow-x-auto pb-4 lg:hidden">
                 <div className="flex gap-4 sm:gap-6" style={{ width: 'max-content' }}>
                   {Array.from({ length: 6 }, (_, index) => (
-                    <div key={`loading-mobile-${index}`} className="flex-shrink-0 w-80 bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden animate-pulse">
+                    <div key={`loading-mobile-${index}`} className="flex-shrink-0 w-[280px] sm:w-[300px] max-w-[calc(100vw-32px)] bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden animate-pulse">
                       <div className="aspect-[3/4] bg-gray-200"></div>
                       <div className="p-4 space-y-3">
                         <div className="h-4 bg-gray-200 rounded w-3/4"></div>
@@ -1644,12 +1644,12 @@ filtered = filtered.filter(p => {
             </>
           ) : filteredProviders.length > 0 ? (
             <>
-              {/* Mobile SOS Cards */}
-              <div className="overflow-x-auto pb-4 lg:hidden">
+              {/* Mobile SOS Cards - FIX: Ajout padding horizontal pour éviter débordement */}
+              <div className="overflow-x-auto pb-4 lg:hidden max-w-full -mx-4 px-4">
                 <div className="flex gap-4 sm:gap-6" style={{ width: 'max-content' }}>
                   {filteredProviders.map((provider) => (
-                    <ProviderCard 
-                      key={provider.id} 
+                    <ProviderCard
+                      key={provider.id}
                       provider={provider}
                       isCarousel={true}
                     />
@@ -1658,7 +1658,7 @@ filtered = filtered.filter(p => {
               </div>
 
               {/* Desktop SOS Cards */}
-              <div className="hidden lg:grid lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="hidden lg:grid lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-full">
                 {filteredProviders.map((provider) => (
                   <ProviderCard 
                     key={provider.id} 
