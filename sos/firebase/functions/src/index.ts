@@ -5636,3 +5636,34 @@ export {
   resetChatterConfigToDefaults,
   initializeChatterSystem,
 } from './chatter';
+
+// ========== INFLUENCER SYSTEM ==========
+// Influencer program with client referrals (5% discount) and provider recruitment
+// NOTE: Unlike Chatters, Influencers have NO quiz, NO levels, fixed commissions
+export {
+  // Triggers
+  influencerOnInfluencerCreated,
+  influencerOnCallCompleted,
+  influencerOnProviderRegistered,
+  influencerOnProviderCallCompleted,
+  // User callables
+  registerInfluencer,
+  getInfluencerDashboard,
+  updateInfluencerProfile,
+  influencerRequestWithdrawal,
+  getInfluencerLeaderboard,
+  // Admin callables
+  adminGetInfluencersList,
+  adminGetInfluencerDetail,
+  adminProcessInfluencerWithdrawal,
+  adminUpdateInfluencerStatus,
+  adminGetPendingInfluencerWithdrawals,
+  adminGetInfluencerConfig,
+  adminUpdateInfluencerConfig,
+  adminGetInfluencerLeaderboard,
+  // Scheduled
+  influencerValidatePendingCommissions,
+  influencerReleaseValidatedCommissions,
+  // Initialization
+  initializeInfluencerConfig,
+} from './influencer';

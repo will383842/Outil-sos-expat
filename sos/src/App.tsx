@@ -151,6 +151,18 @@ const ChatterPosts = lazy(() => import('./pages/Chatter/ChatterPosts'));
 const ChatterZoom = lazy(() => import('./pages/Chatter/ChatterZoom'));
 const ChatterTraining = lazy(() => import('./pages/Chatter/ChatterTraining'));
 
+// Influencer System
+const InfluencerLanding = lazy(() => import('./pages/Influencer/InfluencerLanding'));
+const InfluencerRegister = lazy(() => import('./pages/Influencer/InfluencerRegister'));
+const InfluencerDashboard = lazy(() => import('./pages/Influencer/InfluencerDashboard'));
+const InfluencerEarnings = lazy(() => import('./pages/Influencer/InfluencerEarnings'));
+const InfluencerReferrals = lazy(() => import('./pages/Influencer/InfluencerReferrals'));
+const InfluencerLeaderboard = lazy(() => import('./pages/Influencer/InfluencerLeaderboard'));
+const InfluencerPayments = lazy(() => import('./pages/Influencer/InfluencerPayments'));
+const InfluencerProfile = lazy(() => import('./pages/Influencer/InfluencerProfile'));
+const InfluencerPromoTools = lazy(() => import('./pages/Influencer/InfluencerPromoTools'));
+const InfluencerSuspended = lazy(() => import('./pages/Influencer/InfluencerSuspended'));
+
 // -------------------------------------------
 // Laguage config
 // -------------------------------------------
@@ -251,6 +263,9 @@ const routeConfigs: RouteConfig[] = [
 
   // Chatter Landing Page (public)
   { path: "/devenir-chatter", component: ChatterLanding, translated: "chatter-landing" },
+
+  // Influencer Landing Page (public)
+  { path: "/devenir-influenceur", component: InfluencerLanding, translated: "influencer-landing" },
 ];
 
 // Protégées (utilisateur)
@@ -309,6 +324,20 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/chatter/posts", component: ChatterPosts, protected: true, role: 'chatter', translated: "chatter-posts" },
   { path: "/chatter/zoom", component: ChatterZoom, protected: true, role: 'chatter', translated: "chatter-zoom" },
   { path: "/chatter/formation", component: ChatterTraining, protected: true, role: 'chatter', translated: "chatter-training" },
+
+  // Influencer System Routes - Protected routes for registered influencers
+  // IMPORTANT: Les rôles sont mutuellement exclusifs. Un influenceur ne peut pas être client/lawyer/expat/chatter.
+  // L'inscription est accessible à tout utilisateur authentifié (le backend vérifie les restrictions de rôle)
+  { path: "/influencer/inscription", component: InfluencerRegister, protected: true, translated: "influencer-register" },
+  // Après inscription, l'utilisateur a role="influencer" - toutes les autres routes sont réservées aux influenceurs
+  { path: "/influencer/tableau-de-bord", component: InfluencerDashboard, protected: true, role: 'influencer', translated: "influencer-dashboard" },
+  { path: "/influencer/gains", component: InfluencerEarnings, protected: true, role: 'influencer', translated: "influencer-earnings" },
+  { path: "/influencer/filleuls", component: InfluencerReferrals, protected: true, role: 'influencer', translated: "influencer-referrals" },
+  { path: "/influencer/classement", component: InfluencerLeaderboard, protected: true, role: 'influencer', translated: "influencer-leaderboard" },
+  { path: "/influencer/paiements", component: InfluencerPayments, protected: true, role: 'influencer', translated: "influencer-payments" },
+  { path: "/influencer/outils", component: InfluencerPromoTools, protected: true, role: 'influencer', translated: "influencer-promo-tools" },
+  { path: "/influencer/profil", component: InfluencerProfile, protected: true, role: 'influencer', translated: "influencer-profile" },
+  { path: "/influencer/suspendu", component: InfluencerSuspended, protected: true, role: 'influencer', translated: "influencer-suspended" },
 ];
 
 // ====================================

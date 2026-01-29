@@ -347,6 +347,23 @@ const AdminChatterCountryRotation = lazy(
   () => import("../../pages/admin/Chatter/AdminChatterCountryRotation")
 );
 
+// ===== LAZY IMPORTS - INFLUENCER =====
+const AdminInfluencersList = lazy(
+  () => import("../../pages/admin/Influencers/AdminInfluencersList")
+);
+const AdminInfluencerDetail = lazy(
+  () => import("../../pages/admin/Influencers/AdminInfluencerDetail")
+);
+const AdminInfluencersPayments = lazy(
+  () => import("../../pages/admin/Influencers/AdminInfluencersPayments")
+);
+const AdminInfluencersConfig = lazy(
+  () => import("../../pages/admin/Influencers/AdminInfluencersConfig")
+);
+const AdminInfluencersLeaderboard = lazy(
+  () => import("../../pages/admin/Influencers/AdminInfluencersLeaderboard")
+);
+
 // ===== LAZY IMPORTS - B2B =====
 const AdminB2BAccounts = lazy(
   () => import("../../pages/admin/AdminB2BAccounts")
@@ -1023,6 +1040,48 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminChatterCountryRotation />
+          </Suspense>
+        }
+      />
+
+      {/* 📢 INFLUENCERS */}
+      <Route
+        path="influencers"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminInfluencersList />
+          </Suspense>
+        }
+      />
+      <Route
+        path="influencers/:influencerId"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminInfluencerDetail />
+          </Suspense>
+        }
+      />
+      <Route
+        path="influencers/payments"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminInfluencersPayments />
+          </Suspense>
+        }
+      />
+      <Route
+        path="influencers/leaderboard"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminInfluencersLeaderboard />
+          </Suspense>
+        }
+      />
+      <Route
+        path="influencers/config"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminInfluencersConfig />
           </Suspense>
         }
       />

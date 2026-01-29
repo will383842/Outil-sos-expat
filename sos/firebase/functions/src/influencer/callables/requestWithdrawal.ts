@@ -65,23 +65,24 @@ export const requestWithdrawal = onCall(
       );
     }
 
-    // Validate payment details based on method
-    switch (input.paymentMethod) {
+    // Validate payment details based on type (using discriminated union)
+    const details = input.paymentDetails;
+    switch (details.type) {
       case "wise":
-        if (!input.paymentDetails.email || !input.paymentDetails.accountHolderName) {
+        if (!details.email || !details.accountHolderName) {
           throw new HttpsError("invalid-argument", "Wise requires email and account holder name");
         }
         break;
       case "paypal":
-        if (!input.paymentDetails.email || !input.paymentDetails.accountHolderName) {
+        if (!details.email || !details.accountHolderName) {
           throw new HttpsError("invalid-argument", "PayPal requires email and account holder name");
         }
         break;
       case "bank_transfer":
         if (
-          !input.paymentDetails.bankName ||
-          !input.paymentDetails.accountHolderName ||
-          !input.paymentDetails.accountNumber
+          !details.bankName ||
+          !details.accountHolderName ||
+          !details.accountNumber
         ) {
           throw new HttpsError(
             "invalid-argument",

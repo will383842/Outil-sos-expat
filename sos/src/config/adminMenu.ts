@@ -585,6 +585,45 @@ export const adminMenuTree: AdminMenuItem[] = [
     ],
   },
 
+  // ===== 📣 INFLUENCEURS (Priorité 6.6 - Programme Influenceurs) =====
+  {
+    id: "influencers",
+    labelKey: "admin.menu.influencers",
+    icon: Megaphone,
+    descriptionKey: "admin.menu.influencers.description",
+    children: [
+      {
+        id: "influencers-list",
+        labelKey: "admin.menu.influencersList",
+        path: "/admin/influencers",
+        icon: Users,
+        descriptionKey: "admin.menu.influencersList.description",
+      },
+      {
+        id: "influencers-payments",
+        labelKey: "admin.menu.influencersPayments",
+        path: "/admin/influencers/payments",
+        icon: Wallet,
+        badge: "NEW",
+        descriptionKey: "admin.menu.influencersPayments.description",
+      },
+      {
+        id: "influencers-leaderboard",
+        labelKey: "admin.menu.influencersLeaderboard",
+        path: "/admin/influencers/leaderboard",
+        icon: Award,
+        descriptionKey: "admin.menu.influencersLeaderboard.description",
+      },
+      {
+        id: "influencers-config",
+        labelKey: "admin.menu.influencersConfig",
+        path: "/admin/influencers/config",
+        icon: Settings,
+        descriptionKey: "admin.menu.influencersConfig.description",
+      },
+    ],
+  },
+
   // ===== ANALYTICS & RAPPORTS (Priorite 7) =====
   {
     id: "analytics",

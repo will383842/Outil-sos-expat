@@ -288,7 +288,18 @@ export type RouteKey =
   | "chatter-country-selection" // /chatter/pays -> /chatter/country-selection, etc.
   | "chatter-posts"        // /chatter/posts -> /chatter/posts, etc.
   | "chatter-zoom"         // /chatter/zoom -> /chatter/zoom, etc.
-  | "chatter-training";    // /chatter/formation -> /chatter/training, etc.
+  | "chatter-training"     // /chatter/formation -> /chatter/training, etc.
+  // Influencer routes
+  | "influencer-landing"      // /devenir-influenceur -> /become-influencer, etc.
+  | "influencer-register"     // /influencer/inscription -> /influencer/register, etc.
+  | "influencer-dashboard"    // /influencer/tableau-de-bord -> /influencer/dashboard, etc.
+  | "influencer-earnings"     // /influencer/gains -> /influencer/earnings, etc.
+  | "influencer-referrals"    // /influencer/filleuls -> /influencer/referrals, etc.
+  | "influencer-leaderboard"  // /influencer/classement -> /influencer/leaderboard, etc.
+  | "influencer-payments"     // /influencer/paiements -> /influencer/payments, etc.
+  | "influencer-promo-tools"  // /influencer/outils -> /influencer/promo-tools, etc.
+  | "influencer-profile"      // /influencer/profil -> /influencer/profile, etc.
+  | "influencer-suspended";   // /influencer/suspendu -> /influencer/suspended, etc.
 
 const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
   "lawyer": {
@@ -929,6 +940,117 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "chatter/peixun",
     hi: "chatter/prashikshan",
     ar: "مسوق/التدريب",
+  },
+  // Influencer routes
+  "influencer-landing": {
+    fr: "devenir-influenceur",
+    en: "become-influencer",
+    es: "ser-influencer",
+    de: "influencer-werden",
+    ru: "stat-influentserom",
+    pt: "tornar-se-influenciador",
+    ch: "chengwei-yingxiangli",
+    hi: "influencer-bane",
+    ar: "كن-مؤثرا",
+  },
+  "influencer-register": {
+    fr: "influencer/inscription",
+    en: "influencer/register",
+    es: "influencer/registro",
+    de: "influencer/registrierung",
+    ru: "influencer/registratsiya",
+    pt: "influencer/cadastro",
+    ch: "influencer/zhuce",
+    hi: "influencer/panjikaran",
+    ar: "مؤثر/تسجيل",
+  },
+  "influencer-dashboard": {
+    fr: "influencer/tableau-de-bord",
+    en: "influencer/dashboard",
+    es: "influencer/panel",
+    de: "influencer/dashboard",
+    ru: "influencer/panel-upravleniya",
+    pt: "influencer/painel",
+    ch: "influencer/kongzhi-mianban",
+    hi: "influencer/dashboard",
+    ar: "مؤثر/لوحة-التحكم",
+  },
+  "influencer-earnings": {
+    fr: "influencer/gains",
+    en: "influencer/earnings",
+    es: "influencer/ganancias",
+    de: "influencer/einnahmen",
+    ru: "influencer/zarabotok",
+    pt: "influencer/ganhos",
+    ch: "influencer/shouyi",
+    hi: "influencer/kamaai",
+    ar: "مؤثر/الأرباح",
+  },
+  "influencer-referrals": {
+    fr: "influencer/filleuls",
+    en: "influencer/referrals",
+    es: "influencer/referidos",
+    de: "influencer/empfehlungen",
+    ru: "influencer/referal",
+    pt: "influencer/indicacoes",
+    ch: "influencer/tuijianren",
+    hi: "influencer/sandarbh",
+    ar: "مؤثر/الإحالات",
+  },
+  "influencer-leaderboard": {
+    fr: "influencer/classement",
+    en: "influencer/leaderboard",
+    es: "influencer/clasificacion",
+    de: "influencer/rangliste",
+    ru: "influencer/reiting",
+    pt: "influencer/classificacao",
+    ch: "influencer/paihangbang",
+    hi: "influencer/ranking",
+    ar: "مؤثر/الترتيب",
+  },
+  "influencer-payments": {
+    fr: "influencer/paiements",
+    en: "influencer/payments",
+    es: "influencer/pagos",
+    de: "influencer/zahlungen",
+    ru: "influencer/platezhi",
+    pt: "influencer/pagamentos",
+    ch: "influencer/fukuan",
+    hi: "influencer/bhugtaan",
+    ar: "مؤثر/المدفوعات",
+  },
+  "influencer-promo-tools": {
+    fr: "influencer/outils",
+    en: "influencer/promo-tools",
+    es: "influencer/herramientas",
+    de: "influencer/werkzeuge",
+    ru: "influencer/instrumenty",
+    pt: "influencer/ferramentas",
+    ch: "influencer/gongju",
+    hi: "influencer/upkaran",
+    ar: "مؤثر/أدوات",
+  },
+  "influencer-profile": {
+    fr: "influencer/profil",
+    en: "influencer/profile",
+    es: "influencer/perfil",
+    de: "influencer/profil",
+    ru: "influencer/profil",
+    pt: "influencer/perfil",
+    ch: "influencer/geren-ziliao",
+    hi: "influencer/profile",
+    ar: "مؤثر/الملف-الشخصي",
+  },
+  "influencer-suspended": {
+    fr: "influencer/suspendu",
+    en: "influencer/suspended",
+    es: "influencer/suspendido",
+    de: "influencer/gesperrt",
+    ru: "influencer/priostanovlen",
+    pt: "influencer/suspenso",
+    ch: "influencer/zanting",
+    hi: "influencer/nilambit",
+    ar: "مؤثر/معلق",
   },
 };
 

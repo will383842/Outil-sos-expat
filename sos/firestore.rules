@@ -2081,6 +2081,135 @@ service cloud.firestore {
       allow write: if isAdmin() || isDev();
     }
 
+    // ================= INFLUENCER SYSTEM =================
+    // Règles pour le programme influenceurs (parrainage clients + recrutement prestataires)
+    // NOTE: Différent des Chatters - pas de quiz, pas de niveaux, commissions fixes
+
+    // Helper: est un influenceur actif
+    function isInfluencer() {
+      return isAuthenticated() &&
+             exists(/databases/$(database)/documents/influencers/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/influencers/$(request.auth.uid)).data.status == 'active';
+    }
+
+    // Helper: est le propriétaire du profil influenceur
+    function isInfluencerOwner(influencerId) {
+      return isAuthenticated() && request.auth.uid == influencerId;
+    }
+
+    // Helper: a un profil influenceur (peu importe le status)
+    function hasInfluencerProfile() {
+      return isAuthenticated() &&
+             exists(/databases/$(database)/documents/influencers/$(request.auth.uid));
+    }
+
+    // Profils des influenceurs
+    match /influencers/{influencerId} {
+      // Lecture: propriétaire ou admin
+      allow read: if isInfluencerOwner(influencerId) || isAdmin() || isDev();
+      // Création: propriétaire uniquement (lors de l'inscription)
+      allow create: if isInfluencerOwner(influencerId);
+      // Mise à jour: propriétaire pour certains champs, admin pour tous
+      // Le propriétaire ne peut PAS modifier: status, codes, balances, stats, ranks
+      allow update: if (isInfluencerOwner(influencerId) &&
+                        !request.resource.data.diff(resource.data).affectedKeys()
+                          .hasAny(['status', 'affiliateCodeClient', 'affiliateCodeRecruitment',
+                                   'totalEarned', 'availableBalance', 'pendingBalance',
+                                   'validatedBalance', 'totalClients', 'totalRecruits',
+                                   'totalCommissions', 'currentMonthStats',
+                                   'currentMonthRank', 'bestRank', 'adminNotes']))
+                       || isAdmin() || isDev();
+      allow delete: if isAdmin() || isDev();
+    }
+
+    // Commissions influenceurs
+    match /influencer_commissions/{commissionId} {
+      // Lecture: propriétaire de la commission ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.influencerId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // Retraits influenceurs
+    match /influencer_withdrawals/{withdrawalId} {
+      // Lecture: propriétaire ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.influencerId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Création: influenceur actif pour lui-même
+      allow create: if isInfluencer() &&
+                    request.resource.data.influencerId == request.auth.uid;
+      // Mise à jour: admin uniquement (approbation/rejet)
+      allow update: if isAdmin() || isDev();
+      allow delete: if isAdmin() || isDev();
+    }
+
+    // Filleuls/recrutements influenceurs (prestataires recrutés)
+    match /influencer_referrals/{referralId} {
+      // Lecture: propriétaire ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.influencerId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // Configuration du système influenceur
+    match /influencer_config/{docId} {
+      // Lecture: influenceurs actifs ou admin (contient les paramètres de commission)
+      allow read: if isInfluencer() || isAdmin() || isDev();
+      // Écriture: admin uniquement
+      allow write: if isAdmin() || isDev();
+    }
+
+    // Classement mensuel influenceurs
+    match /influencer_monthly_rankings/{monthId} {
+      // Lecture: tous les influenceurs et admin
+      allow read: if isInfluencer() || isAdmin() || isDev();
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // Notifications influenceurs
+    match /influencer_notifications/{notificationId} {
+      // Lecture: le propriétaire ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.influencerId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Mise à jour: le propriétaire peut marquer comme lu
+      allow update: if isAuthenticated() &&
+                    resource.data.influencerId == request.auth.uid &&
+                    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead', 'readAt']);
+      // Création/suppression: Cloud Functions uniquement
+      allow create, delete: if false;
+    }
+
+    // Clics affiliés influenceurs (tracking)
+    match /influencer_affiliate_clicks/{clickId} {
+      // Lecture: admin uniquement
+      allow read: if isAdmin() || isDev();
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // Bannières widgets (outils promotionnels)
+    match /widget_banners/{bannerId} {
+      // Lecture: influenceurs actifs et admin
+      allow read: if isInfluencer() || isAdmin() || isDev();
+      // Écriture: admin uniquement
+      allow write: if isAdmin() || isDev();
+    }
+
+    // Textes promotionnels widgets
+    match /widget_texts/{textId} {
+      // Lecture: influenceurs actifs et admin
+      allow read: if isInfluencer() || isAdmin() || isDev();
+      // Écriture: admin uniquement
+      allow write: if isAdmin() || isDev();
+    }
+
     // ================= CATCH-ALL (deny by default) =================
     // SECURITE: Refuse TOUT acces non explicitement autorise
     // Le role 'dev' est desactive en production
