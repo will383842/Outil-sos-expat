@@ -1,0 +1,1090 @@
+/**
+ * Influencer System Types
+ *
+ * Complete type definitions for the SOS-Expat Influencer program.
+ * Supports:
+ * - Client referral commissions (fixed $10)
+ * - Provider recruitment commissions (fixed $5 for 6 months)
+ * - Top 10 monthly leaderboard (informational, no bonuses)
+ * - Promotional tools (banners, widgets, QR codes)
+ *
+ * NOTE: Unlike Chatters, Influencers have:
+ * - No quiz requirement (direct activation)
+ * - No levels/badges (simplified system)
+ * - Fixed commission amounts (no multipliers)
+ * - 5% client discount via referral links
+ */
+
+import { Timestamp } from "firebase-admin/firestore";
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+/**
+ * Influencer account status
+ */
+export type InfluencerStatus =
+  | "active"      // Active, can earn commissions
+  | "suspended"   // Temporarily suspended by admin
+  | "blocked";    // Permanently blocked
+
+/**
+ * Supported languages for influencers
+ */
+export type SupportedInfluencerLanguage =
+  | "fr"    // French
+  | "en"    // English
+  | "es"    // Spanish
+  | "pt"    // Portuguese
+  | "ar"    // Arabic
+  | "de"    // German
+  | "it"    // Italian
+  | "nl"    // Dutch
+  | "zh";   // Chinese
+
+/**
+ * Commission type for influencers
+ */
+export type InfluencerCommissionType =
+  | "client_referral"       // Client completed a paid call
+  | "recruitment"           // Recruited provider received a call (6 months window)
+  | "manual_adjustment";    // Admin manual adjustment
+
+/**
+ * Commission status lifecycle
+ */
+export type InfluencerCommissionStatus =
+  | "pending"       // In validation period (7-14 days)
+  | "validated"     // Validated, waiting to be released
+  | "available"     // Available for withdrawal
+  | "paid"          // Included in a withdrawal
+  | "cancelled";    // Cancelled by admin or system
+
+/**
+ * Withdrawal status lifecycle
+ */
+export type InfluencerWithdrawalStatus =
+  | "pending"       // Requested, waiting for admin
+  | "approved"      // Admin approved, processing
+  | "processing"    // Payment in progress
+  | "completed"     // Payment successful
+  | "failed"        // Payment failed
+  | "rejected";     // Admin rejected
+
+/**
+ * Payment method for withdrawals
+ */
+export type InfluencerPaymentMethod =
+  | "wise"          // Wise (TransferWise)
+  | "paypal"        // PayPal
+  | "bank_transfer"; // Bank transfer
+
+/**
+ * Platform where influencer promotes
+ */
+export type InfluencerPlatform =
+  | "facebook"
+  | "instagram"
+  | "twitter"
+  | "linkedin"
+  | "tiktok"
+  | "youtube"
+  | "whatsapp"
+  | "telegram"
+  | "snapchat"
+  | "reddit"
+  | "discord"
+  | "blog"
+  | "website"
+  | "forum"
+  | "podcast"
+  | "newsletter"
+  | "other";
+
+// ============================================================================
+// INFLUENCER PROFILE
+// ============================================================================
+
+/**
+ * Influencer profile document
+ * Collection: influencers/{uid}
+ */
+export interface Influencer {
+  /** Document ID (same as user UID) */
+  id: string;
+
+  // ---- User Info ----
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+
+  /** Profile photo URL */
+  photoUrl?: string;
+
+  /** Country of residence */
+  country: string;
+
+  /** Primary language */
+  language: SupportedInfluencerLanguage;
+
+  /** Additional languages spoken */
+  additionalLanguages?: SupportedInfluencerLanguage[];
+
+  /** Main platforms where influencer promotes */
+  platforms: InfluencerPlatform[];
+
+  /** Bio/description of their community */
+  bio?: string;
+
+  /** Community size estimate */
+  communitySize?: number;
+
+  /** Community niche/focus (e.g., "expatriés", "voyageurs", "digital nomads") */
+  communityNiche?: string;
+
+  /** Social links for verification */
+  socialLinks?: {
+    facebook?: string;
+    instagram?: string;
+    youtube?: string;
+    tiktok?: string;
+    twitter?: string;
+    linkedin?: string;
+    website?: string;
+    other?: string;
+  };
+
+  // ---- Status ----
+
+  /** Account status */
+  status: InfluencerStatus;
+
+  /** Admin notes (internal) */
+  adminNotes?: string;
+
+  /** Suspension reason if suspended */
+  suspensionReason?: string;
+
+  // ---- Affiliate Codes ----
+
+  /** Code for client referrals (e.g., "MARIE123") - provides 5% discount */
+  affiliateCodeClient: string;
+
+  /** Code for provider recruitment (e.g., "REC-MARIE123") */
+  affiliateCodeRecruitment: string;
+
+  // ---- Balances (in cents) ----
+
+  /** Total earned all time (never decreases) */
+  totalEarned: number;
+
+  /** Available for withdrawal */
+  availableBalance: number;
+
+  /** Pending (in validation period) */
+  pendingBalance: number;
+
+  /** Validated but not yet available */
+  validatedBalance: number;
+
+  // ---- Statistics ----
+
+  /** Total clients referred */
+  totalClients: number;
+
+  /** Total providers recruited */
+  totalRecruits: number;
+
+  /** Total commissions count */
+  totalCommissions: number;
+
+  /** Monthly statistics for current month */
+  currentMonthStats: {
+    clients: number;
+    recruits: number;
+    earnings: number;
+    month: string; // YYYY-MM format
+  };
+
+  /** Current month rank (1-indexed, null if not in top 10) */
+  currentMonthRank: number | null;
+
+  /** Best ever rank */
+  bestRank: number | null;
+
+  // ---- Payment Details ----
+
+  /** Preferred payment method */
+  preferredPaymentMethod: InfluencerPaymentMethod | null;
+
+  /** Payment details (varies by method) */
+  paymentDetails: InfluencerPaymentDetails | null;
+
+  /** Current pending withdrawal ID */
+  pendingWithdrawalId: string | null;
+
+  // ---- Timestamps ----
+
+  /** Registration date */
+  createdAt: Timestamp;
+
+  /** Last update */
+  updatedAt: Timestamp;
+
+  /** Last login */
+  lastLoginAt: Timestamp | null;
+
+  /** Last activity date (for ranking calculation) */
+  lastActivityDate: string | null; // YYYY-MM-DD
+}
+
+/**
+ * Payment details union type
+ */
+export type InfluencerPaymentDetails =
+  | InfluencerWiseDetails
+  | InfluencerPayPalDetails
+  | InfluencerBankDetails;
+
+/**
+ * Wise payment details
+ */
+export interface InfluencerWiseDetails {
+  type: "wise";
+  email: string;
+  currency: string;
+  accountHolderName: string;
+  iban?: string;
+  sortCode?: string;
+  accountNumber?: string;
+  routingNumber?: string;
+  bic?: string;
+}
+
+/**
+ * PayPal payment details
+ */
+export interface InfluencerPayPalDetails {
+  type: "paypal";
+  email: string;
+  currency: string;
+  accountHolderName: string;
+}
+
+/**
+ * Bank transfer details
+ */
+export interface InfluencerBankDetails {
+  type: "bank_transfer";
+  bankName: string;
+  accountHolderName: string;
+  accountNumber: string;
+  routingNumber?: string;
+  swiftCode?: string;
+  iban?: string;
+  country: string;
+  currency: string;
+}
+
+// ============================================================================
+// COMMISSION DOCUMENT
+// ============================================================================
+
+/**
+ * Individual commission record
+ * Collection: influencer_commissions/{commissionId}
+ */
+export interface InfluencerCommission {
+  /** Document ID */
+  id: string;
+
+  // ---- Influencer ----
+
+  /** Influencer who earns the commission */
+  influencerId: string;
+  influencerEmail: string;
+  influencerCode: string;
+
+  // ---- Commission Type ----
+
+  /** Type of commission */
+  type: InfluencerCommissionType;
+
+  // ---- Source Reference ----
+
+  /** ID of the source (call session, user, etc.) */
+  sourceId: string | null;
+
+  /** Type of source */
+  sourceType: "call_session" | "user" | "provider" | null;
+
+  /** Additional source details */
+  sourceDetails?: {
+    // For client referral
+    clientId?: string;
+    clientEmail?: string;
+    callSessionId?: string;
+    callDuration?: number;
+    connectionFee?: number;
+    discountApplied?: number; // 5% discount given to client
+
+    // For recruitment
+    providerId?: string;
+    providerEmail?: string;
+    providerType?: "lawyer" | "expat";
+    callId?: string; // The call that triggered the commission
+    recruitmentDate?: string; // When provider was recruited
+    monthsRemaining?: number; // Months left in 6-month window
+  };
+
+  // ---- Amount ----
+
+  /** Commission amount (cents) - FIXED, no bonuses */
+  amount: number;
+
+  /** Currency (always USD) */
+  currency: "USD";
+
+  /** Human-readable description */
+  description: string;
+
+  // ---- Status ----
+
+  /** Current status */
+  status: InfluencerCommissionStatus;
+
+  /** When the commission was validated */
+  validatedAt: Timestamp | null;
+
+  /** When the commission becomes available */
+  availableAt: Timestamp | null;
+
+  /** Cancellation details */
+  cancellationReason?: string;
+  cancelledBy?: string;
+  cancelledAt?: Timestamp;
+
+  // ---- Withdrawal ----
+
+  /** Withdrawal that included this commission */
+  withdrawalId: string | null;
+
+  /** When included in withdrawal */
+  paidAt: Timestamp | null;
+
+  // ---- Metadata ----
+
+  /** Admin notes */
+  adminNotes?: string;
+
+  /** Created timestamp */
+  createdAt: Timestamp;
+
+  /** Last update timestamp */
+  updatedAt: Timestamp;
+}
+
+// ============================================================================
+// WITHDRAWAL DOCUMENT
+// ============================================================================
+
+/**
+ * Withdrawal request record
+ * Collection: influencer_withdrawals/{withdrawalId}
+ */
+export interface InfluencerWithdrawal {
+  /** Document ID */
+  id: string;
+
+  /** Influencer who requested */
+  influencerId: string;
+  influencerEmail: string;
+  influencerName: string;
+
+  /** Amount requested (cents) */
+  amount: number;
+
+  /** Original currency (USD) */
+  sourceCurrency: "USD";
+
+  /** Target currency for payout */
+  targetCurrency: string;
+
+  /** Exchange rate at processing */
+  exchangeRate?: number;
+
+  /** Amount after conversion */
+  convertedAmount?: number;
+
+  /** Current status */
+  status: InfluencerWithdrawalStatus;
+
+  // ---- Payment Method ----
+
+  /** Payment method used */
+  paymentMethod: InfluencerPaymentMethod;
+
+  /** Payment details snapshot at request time */
+  paymentDetailsSnapshot: InfluencerPaymentDetails;
+
+  // ---- Commission References ----
+
+  /** Commission IDs included in this withdrawal */
+  commissionIds: string[];
+
+  /** Number of commissions */
+  commissionCount: number;
+
+  // ---- Processing Details ----
+
+  /** Payment reference/transaction ID */
+  paymentReference?: string;
+
+  /** Wise transfer ID (if using Wise) */
+  wiseTransferId?: string;
+
+  /** PayPal transaction ID (if using PayPal) */
+  paypalTransactionId?: string;
+
+  /** Estimated arrival date */
+  estimatedArrival?: Timestamp;
+
+  // ---- Timestamps ----
+
+  /** When requested */
+  requestedAt: Timestamp;
+
+  /** When processed by admin */
+  processedAt?: Timestamp;
+
+  /** Who processed it */
+  processedBy?: string;
+
+  /** Rejection reason */
+  rejectionReason?: string;
+
+  /** When payment completed */
+  completedAt?: Timestamp;
+
+  /** When failed */
+  failedAt?: Timestamp;
+
+  /** Failure reason */
+  failureReason?: string;
+
+  /** Admin notes */
+  adminNotes?: string;
+}
+
+// ============================================================================
+// REFERRAL TRACKING
+// ============================================================================
+
+/**
+ * Provider referral tracking
+ * Collection: influencer_referrals/{referralId}
+ *
+ * Tracks providers recruited by influencers for 6-month commission window
+ */
+export interface InfluencerReferral {
+  /** Document ID */
+  id: string;
+
+  /** Influencer who recruited the provider */
+  influencerId: string;
+  influencerCode: string;
+  influencerEmail: string;
+
+  /** Recruited provider info */
+  providerId: string;
+  providerEmail: string;
+  providerType: "lawyer" | "expat";
+  providerName: string;
+
+  /** Recruitment date */
+  recruitedAt: Timestamp;
+
+  /** Commission window end date (6 months from recruitment) */
+  commissionWindowEndsAt: Timestamp;
+
+  /** Whether commission window is still active */
+  isActive: boolean;
+
+  /** Number of calls that generated commissions */
+  callsWithCommission: number;
+
+  /** Total commissions earned from this referral (cents) */
+  totalCommissions: number;
+
+  /** Last commission date */
+  lastCommissionAt: Timestamp | null;
+
+  /** Created timestamp */
+  createdAt: Timestamp;
+
+  /** Updated timestamp */
+  updatedAt: Timestamp;
+}
+
+// ============================================================================
+// CONFIGURATION
+// ============================================================================
+
+/**
+ * System configuration for influencer module
+ * Collection: influencer_config/current
+ */
+export interface InfluencerConfig {
+  /** Document ID (always "current") */
+  id: "current";
+
+  // ---- System Status ----
+
+  /** Is the influencer system active */
+  isSystemActive: boolean;
+
+  /** Are new registrations accepted */
+  newRegistrationsEnabled: boolean;
+
+  /** Are withdrawals enabled */
+  withdrawalsEnabled: boolean;
+
+  // ---- Commission Amounts (cents) ----
+
+  /** Fixed commission per client referral ($10 = 1000 cents) */
+  commissionClientAmount: number;
+
+  /** Fixed commission per provider recruitment call ($5 = 500 cents) */
+  commissionRecruitmentAmount: number;
+
+  /** Client discount percentage for referral (5% = 5) */
+  clientDiscountPercent: number;
+
+  // ---- Recruitment Window ----
+
+  /** Months during which recruitment commissions are earned */
+  recruitmentWindowMonths: number;
+
+  // ---- Withdrawal Settings ----
+
+  /** Minimum withdrawal amount (cents) - $50 = 5000 */
+  minimumWithdrawalAmount: number;
+
+  /** Hold period before commission is validated (days) */
+  validationHoldPeriodDays: number;
+
+  /** Time before validated becomes available (hours) */
+  releaseDelayHours: number;
+
+  // ---- Attribution ----
+
+  /** Cookie duration in days */
+  attributionWindowDays: number;
+
+  // ---- Leaderboard ----
+
+  /** Number of influencers shown in leaderboard */
+  leaderboardSize: number;
+
+  // ---- Version & History ----
+
+  /** Config version */
+  version: number;
+
+  /** Last update */
+  updatedAt: Timestamp;
+
+  /** Who updated */
+  updatedBy: string;
+}
+
+/**
+ * Default influencer configuration
+ */
+export const DEFAULT_INFLUENCER_CONFIG: Omit<
+  InfluencerConfig,
+  "updatedAt" | "updatedBy"
+> = {
+  id: "current",
+  isSystemActive: true,
+  newRegistrationsEnabled: true,
+  withdrawalsEnabled: true,
+
+  commissionClientAmount: 1000,      // $10
+  commissionRecruitmentAmount: 500,  // $5
+  clientDiscountPercent: 5,          // 5% discount for referred clients
+
+  recruitmentWindowMonths: 6,
+
+  minimumWithdrawalAmount: 5000,     // $50
+  validationHoldPeriodDays: 7,       // 7 days minimum
+  releaseDelayHours: 24,             // 1 day after validation
+
+  attributionWindowDays: 30,
+
+  leaderboardSize: 10,
+
+  version: 1,
+};
+
+// ============================================================================
+// MONTHLY RANKINGS
+// ============================================================================
+
+/**
+ * Monthly ranking record
+ * Collection: influencer_monthly_rankings/{year-month}
+ *
+ * NOTE: Top 10 is INFORMATIONAL ONLY - no bonus payouts
+ */
+export interface InfluencerMonthlyRanking {
+  /** Document ID (YYYY-MM format) */
+  id: string;
+
+  /** Year-month string */
+  month: string;
+
+  /** Top performers (ordered by earnings this month) */
+  rankings: Array<{
+    rank: number;
+    influencerId: string;
+    influencerName: string;
+    influencerCode: string;
+    photoUrl?: string;
+    country: string;
+    monthlyEarnings: number;
+    monthlyClients: number;
+    monthlyRecruits: number;
+  }>;
+
+  /** When rankings were calculated */
+  calculatedAt: Timestamp;
+
+  /** Whether month is finalized */
+  isFinalized: boolean;
+}
+
+// ============================================================================
+// AFFILIATE CLICKS TRACKING
+// ============================================================================
+
+/**
+ * Affiliate click tracking
+ * Collection: influencer_affiliate_clicks/{clickId}
+ */
+export interface InfluencerAffiliateClick {
+  /** Document ID */
+  id: string;
+
+  /** Influencer code used */
+  influencerCode: string;
+
+  /** Influencer ID */
+  influencerId: string;
+
+  /** Type of link */
+  linkType: "client" | "recruitment";
+
+  /** Landing page URL */
+  landingPage: string;
+
+  /** Referrer URL */
+  referrer?: string;
+
+  /** UTM parameters */
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+
+  /** User agent */
+  userAgent?: string;
+
+  /** IP address (hashed for privacy) */
+  ipHash: string;
+
+  /** Country (from IP) */
+  country?: string;
+
+  /** Whether this click converted */
+  converted: boolean;
+
+  /** Conversion ID (user or provider ID) */
+  conversionId?: string;
+
+  /** Conversion type */
+  conversionType?: "client_signup" | "provider_signup" | "call_completed";
+
+  /** When clicked */
+  clickedAt: Timestamp;
+
+  /** When converted */
+  convertedAt?: Timestamp;
+}
+
+// ============================================================================
+// NOTIFICATIONS
+// ============================================================================
+
+/**
+ * Influencer notification
+ * Collection: influencer_notifications/{notificationId}
+ */
+export interface InfluencerNotification {
+  /** Document ID */
+  id: string;
+
+  /** Influencer recipient */
+  influencerId: string;
+
+  /** Notification type */
+  type:
+    | "commission_earned"
+    | "commission_validated"
+    | "commission_available"
+    | "withdrawal_approved"
+    | "withdrawal_completed"
+    | "withdrawal_rejected"
+    | "rank_achieved"
+    | "new_referral"
+    | "system";
+
+  /** Title */
+  title: string;
+  titleTranslations?: {
+    [key in SupportedInfluencerLanguage]?: string;
+  };
+
+  /** Message body */
+  message: string;
+  messageTranslations?: {
+    [key in SupportedInfluencerLanguage]?: string;
+  };
+
+  /** Link to navigate to */
+  actionUrl?: string;
+
+  /** Whether notification has been read */
+  isRead: boolean;
+
+  /** Whether email was sent */
+  emailSent: boolean;
+
+  /** Reference data */
+  data?: {
+    commissionId?: string;
+    withdrawalId?: string;
+    referralId?: string;
+    rank?: number;
+    month?: string;
+    amount?: number;
+  };
+
+  /** Created timestamp */
+  createdAt: Timestamp;
+
+  /** Read timestamp */
+  readAt?: Timestamp;
+}
+
+// ============================================================================
+// WIDGET SYSTEM
+// ============================================================================
+
+/**
+ * Widget banner
+ * Collection: widget_banners/{bannerId}
+ */
+export interface WidgetBanner {
+  /** Document ID */
+  id: string;
+
+  /** Banner name */
+  name: string;
+
+  /** Description */
+  description?: string;
+
+  /** Category */
+  category: "header" | "sidebar" | "social" | "email" | "square" | "vertical";
+
+  /** Dimensions */
+  width: number;
+  height: number;
+
+  /** Image URL */
+  imageUrl: string;
+
+  /** Thumbnail URL */
+  thumbnailUrl?: string;
+
+  /** Languages available */
+  languages: SupportedInfluencerLanguage[];
+
+  /** Whether banner is active */
+  isActive: boolean;
+
+  /** Display order */
+  order: number;
+
+  /** Usage count */
+  usageCount: number;
+
+  /** Created timestamp */
+  createdAt: Timestamp;
+
+  /** Updated timestamp */
+  updatedAt: Timestamp;
+}
+
+/**
+ * Widget promotional text
+ * Collection: widget_texts/{textId}
+ */
+export interface WidgetText {
+  /** Document ID */
+  id: string;
+
+  /** Text name/title */
+  name: string;
+
+  /** Category */
+  category: "social_post" | "email_signature" | "bio" | "short" | "long";
+
+  /** Platform targeting */
+  platforms?: InfluencerPlatform[];
+
+  /** Text content per language */
+  content: {
+    [key in SupportedInfluencerLanguage]?: string;
+  };
+
+  /** Placeholder instructions */
+  placeholderHint?: string;
+
+  /** Whether text is active */
+  isActive: boolean;
+
+  /** Display order */
+  order: number;
+
+  /** Usage count */
+  usageCount: number;
+
+  /** Created timestamp */
+  createdAt: Timestamp;
+
+  /** Updated timestamp */
+  updatedAt: Timestamp;
+}
+
+// ============================================================================
+// INPUT/OUTPUT TYPES FOR CALLABLES
+// ============================================================================
+
+export interface RegisterInfluencerInput {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  country: string;
+  language: SupportedInfluencerLanguage;
+  additionalLanguages?: SupportedInfluencerLanguage[];
+  platforms: InfluencerPlatform[];
+  bio?: string;
+  communitySize?: number;
+  communityNiche?: string;
+  socialLinks?: {
+    facebook?: string;
+    instagram?: string;
+    youtube?: string;
+    tiktok?: string;
+    twitter?: string;
+    linkedin?: string;
+    website?: string;
+    other?: string;
+  };
+}
+
+export interface RegisterInfluencerResponse {
+  success: boolean;
+  influencerId: string;
+  affiliateCodeClient: string;
+  affiliateCodeRecruitment: string;
+  message: string;
+}
+
+export interface GetInfluencerDashboardResponse {
+  influencer: Omit<Influencer, "paymentDetails" | "adminNotes">;
+  recentCommissions: Array<{
+    id: string;
+    type: InfluencerCommissionType;
+    amount: number;
+    status: InfluencerCommissionStatus;
+    description: string;
+    createdAt: string;
+  }>;
+  monthlyStats: {
+    earnings: number;
+    clients: number;
+    recruits: number;
+    rank: number | null;
+  };
+  unreadNotifications: number;
+  config: Pick<InfluencerConfig,
+    | "commissionClientAmount"
+    | "commissionRecruitmentAmount"
+    | "clientDiscountPercent"
+    | "minimumWithdrawalAmount"
+  >;
+}
+
+export interface RequestInfluencerWithdrawalInput {
+  amount?: number; // If not provided, withdraw all available
+  paymentMethod: InfluencerPaymentMethod;
+  paymentDetails: InfluencerPaymentDetails;
+}
+
+export interface RequestInfluencerWithdrawalResponse {
+  success: boolean;
+  withdrawalId: string;
+  amount: number;
+  status: InfluencerWithdrawalStatus;
+  message: string;
+}
+
+export interface UpdateInfluencerProfileInput {
+  phone?: string;
+  country?: string;
+  additionalLanguages?: SupportedInfluencerLanguage[];
+  platforms?: InfluencerPlatform[];
+  bio?: string;
+  photoUrl?: string;
+  communitySize?: number;
+  communityNiche?: string;
+  socialLinks?: {
+    facebook?: string;
+    instagram?: string;
+    youtube?: string;
+    tiktok?: string;
+    twitter?: string;
+    linkedin?: string;
+    website?: string;
+    other?: string;
+  };
+  preferredPaymentMethod?: InfluencerPaymentMethod;
+  paymentDetails?: InfluencerPaymentDetails;
+}
+
+export interface GetInfluencerLeaderboardResponse {
+  rankings: Array<{
+    rank: number;
+    influencerId: string;
+    influencerName: string;
+    photoUrl?: string;
+    country: string;
+    monthlyEarnings: number;
+    monthlyClients: number;
+    isCurrentUser: boolean;
+  }>;
+  currentUserRank: number | null;
+  currentUserStats: {
+    monthlyEarnings: number;
+    monthlyClients: number;
+    monthlyRecruits: number;
+  } | null;
+  month: string;
+}
+
+// ============================================================================
+// ADMIN INPUT/OUTPUT TYPES
+// ============================================================================
+
+export interface AdminGetInfluencersListInput {
+  status?: InfluencerStatus;
+  country?: string;
+  language?: SupportedInfluencerLanguage;
+  search?: string;
+  sortBy?: "createdAt" | "totalEarned" | "totalClients" | "currentMonthRank";
+  sortOrder?: "asc" | "desc";
+  limit?: number;
+  offset?: number;
+}
+
+export interface AdminGetInfluencersListResponse {
+  influencers: Array<{
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    country: string;
+    status: InfluencerStatus;
+    totalEarned: number;
+    totalClients: number;
+    totalRecruits: number;
+    currentMonthRank: number | null;
+    createdAt: string;
+  }>;
+  total: number;
+  hasMore: boolean;
+}
+
+export interface AdminGetInfluencerDetailResponse {
+  influencer: Influencer;
+  commissions: Array<Omit<InfluencerCommission, "createdAt"> & { createdAt: string }>;
+  withdrawals: Array<Omit<InfluencerWithdrawal, "requestedAt"> & { requestedAt: string }>;
+  referrals: Array<Omit<InfluencerReferral, "recruitedAt"> & { recruitedAt: string }>;
+}
+
+export interface AdminProcessInfluencerWithdrawalInput {
+  withdrawalId: string;
+  action: "approve" | "reject" | "complete" | "fail";
+  reason?: string;
+  paymentReference?: string;
+  notes?: string;
+}
+
+export interface AdminUpdateInfluencerStatusInput {
+  influencerId: string;
+  status: InfluencerStatus;
+  reason: string;
+}
+
+// ============================================================================
+// PLATFORM DEFINITIONS
+// ============================================================================
+
+/**
+ * Platform definition with display info
+ */
+export interface InfluencerPlatformDefinition {
+  id: InfluencerPlatform;
+  name: string;
+  iconUrl?: string;
+  isActive: boolean;
+  order: number;
+}
+
+/**
+ * All supported platforms with details
+ */
+export const INFLUENCER_PLATFORMS: InfluencerPlatformDefinition[] = [
+  { id: "youtube", name: "YouTube", isActive: true, order: 1 },
+  { id: "instagram", name: "Instagram", isActive: true, order: 2 },
+  { id: "facebook", name: "Facebook", isActive: true, order: 3 },
+  { id: "tiktok", name: "TikTok", isActive: true, order: 4 },
+  { id: "twitter", name: "Twitter/X", isActive: true, order: 5 },
+  { id: "linkedin", name: "LinkedIn", isActive: true, order: 6 },
+  { id: "blog", name: "Blog", isActive: true, order: 7 },
+  { id: "website", name: "Site Web", isActive: true, order: 8 },
+  { id: "podcast", name: "Podcast", isActive: true, order: 9 },
+  { id: "newsletter", name: "Newsletter", isActive: true, order: 10 },
+  { id: "whatsapp", name: "WhatsApp", isActive: true, order: 11 },
+  { id: "telegram", name: "Telegram", isActive: true, order: 12 },
+  { id: "discord", name: "Discord", isActive: true, order: 13 },
+  { id: "snapchat", name: "Snapchat", isActive: true, order: 14 },
+  { id: "reddit", name: "Reddit", isActive: true, order: 15 },
+  { id: "forum", name: "Forum", isActive: true, order: 16 },
+  { id: "other", name: "Autre", isActive: true, order: 99 },
+];

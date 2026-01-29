@@ -24,16 +24,17 @@ import {
   Video,
   Users,
 } from 'lucide-react';
+import AdminLayout from '../../../components/admin/AdminLayout';
 
 // Design tokens
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
   button: {
-    primary: "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all",
+    primary: "bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all",
     secondary: "bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-200 font-medium rounded-xl transition-all",
     danger: "bg-red-500 hover:bg-red-600 text-white font-medium rounded-xl transition-all",
   },
-  input: "w-full px-4 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500",
+  input: "w-full px-4 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500",
 } as const;
 
 interface ChatterConfig {
@@ -170,18 +171,19 @@ const AdminChatterConfig: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-10 h-10 text-amber-500 animate-spin" />
+        <Loader2 className="w-10 h-10 text-red-500 animate-spin" />
       </div>
     );
   }
 
   return (
+    <AdminLayout>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-            <Settings className="w-8 h-8 text-amber-500" />
+            <Settings className="w-8 h-8 text-red-500" />
             <FormattedMessage id="admin.chatterConfig.title" defaultMessage="Configuration Chatter" />
           </h1>
           <p className="mt-1 text-gray-500 dark:text-gray-400">
@@ -234,7 +236,7 @@ const AdminChatterConfig: React.FC = () => {
       {/* System Status */}
       <div className={`${UI.card} p-6`}>
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <Shield className="w-5 h-5 text-amber-500" />
+          <Shield className="w-5 h-5 text-red-500" />
           <FormattedMessage id="admin.chatterConfig.systemStatus" defaultMessage="Statut du système" />
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -243,7 +245,7 @@ const AdminChatterConfig: React.FC = () => {
               type="checkbox"
               checked={formData.isSystemActive ?? config?.isSystemActive ?? true}
               onChange={(e) => handleChange('isSystemActive', e.target.checked)}
-              className="w-5 h-5 rounded border-gray-300 text-amber-500 focus:ring-amber-500"
+              className="w-5 h-5 rounded border-gray-300 text-red-500 focus:ring-red-500"
             />
             <span className="text-gray-700 dark:text-gray-300">
               <FormattedMessage id="admin.chatterConfig.systemActive" defaultMessage="Système actif" />
@@ -255,7 +257,7 @@ const AdminChatterConfig: React.FC = () => {
               type="checkbox"
               checked={formData.newRegistrationsEnabled ?? config?.newRegistrationsEnabled ?? true}
               onChange={(e) => handleChange('newRegistrationsEnabled', e.target.checked)}
-              className="w-5 h-5 rounded border-gray-300 text-amber-500 focus:ring-amber-500"
+              className="w-5 h-5 rounded border-gray-300 text-red-500 focus:ring-red-500"
             />
             <span className="text-gray-700 dark:text-gray-300">
               <FormattedMessage id="admin.chatterConfig.registrationsEnabled" defaultMessage="Inscriptions ouvertes" />
@@ -267,7 +269,7 @@ const AdminChatterConfig: React.FC = () => {
               type="checkbox"
               checked={formData.withdrawalsEnabled ?? config?.withdrawalsEnabled ?? true}
               onChange={(e) => handleChange('withdrawalsEnabled', e.target.checked)}
-              className="w-5 h-5 rounded border-gray-300 text-amber-500 focus:ring-amber-500"
+              className="w-5 h-5 rounded border-gray-300 text-red-500 focus:ring-red-500"
             />
             <span className="text-gray-700 dark:text-gray-300">
               <FormattedMessage id="admin.chatterConfig.withdrawalsEnabled" defaultMessage="Retraits activés" />
@@ -329,14 +331,14 @@ const AdminChatterConfig: React.FC = () => {
         </div>
 
         {/* Recruiter Milestone Bonus */}
-        <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
+        <div className="mt-6 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl">
           <div className="flex items-start gap-3">
-            <Info className="w-5 h-5 text-amber-500 mt-0.5" />
+            <Info className="w-5 h-5 text-red-500 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+              <p className="text-sm font-medium text-red-800 dark:text-red-300">
                 <FormattedMessage id="admin.chatterConfig.recruiterBonus" defaultMessage="Bonus recruteur automatique" />
               </p>
-              <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+              <p className="text-xs text-red-700 dark:text-red-400 mt-1">
                 <FormattedMessage
                   id="admin.chatterConfig.recruiterBonus.desc"
                   defaultMessage="$50 automatiquement versés au recruteur quand son filleul atteint $500 de commissions."
@@ -473,7 +475,7 @@ const AdminChatterConfig: React.FC = () => {
       {/* Top 3 Bonuses */}
       <div className={`${UI.card} p-6`}>
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <Trophy className="w-5 h-5 text-amber-500" />
+          <Trophy className="w-5 h-5 text-red-500" />
           <FormattedMessage id="admin.chatterConfig.top3Bonuses" defaultMessage="Bonus Top 3 mensuel" />
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -681,6 +683,7 @@ const AdminChatterConfig: React.FC = () => {
         </div>
       )}
     </div>
+    </AdminLayout>
   );
 };
 

@@ -11,7 +11,7 @@ import { Copy, Share2, CheckCircle, Users, UserPlus, ExternalLink, QrCode } from
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
   button: {
-    primary: "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all",
+    primary: "bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all",
     secondary: "bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-200 font-medium rounded-xl transition-all",
   },
 } as const;
@@ -69,8 +69,8 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
       <div className={`${UI.card} p-6`}>
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 flex items-center justify-center">
-              <Users className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-100 to-orange-100 dark:from-red-900/30 dark:to-orange-900/30 flex items-center justify-center">
+              <Users className="w-5 h-5 text-red-600 dark:text-red-400" />
             </div>
             <div>
               <h3 className="font-semibold text-gray-900 dark:text-white">
@@ -82,7 +82,7 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
             </div>
           </div>
           <div className="text-right">
-            <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+            <p className="text-2xl font-bold text-red-600 dark:text-red-400">
               {totalClientConversions}
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -92,11 +92,11 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
         </div>
 
         {/* Code Display */}
-        <div className="mb-4 p-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl">
+        <div className="mb-4 p-3 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-xl">
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
             <FormattedMessage id="chatter.links.yourCode" defaultMessage="Votre code" />
           </p>
-          <p className="text-xl font-bold text-amber-600 dark:text-amber-400 tracking-wider">
+          <p className="text-xl font-bold text-red-600 dark:text-red-400 tracking-wider">
             {affiliateCodeClient}
           </p>
         </div>

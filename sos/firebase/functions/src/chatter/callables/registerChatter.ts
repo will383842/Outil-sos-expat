@@ -116,7 +116,79 @@ export const registerChatter = onCall(
         );
       }
 
-      // 5. Check for existing chatter
+      // 5. CRITICAL: Check if user already has another role (lawyer, expat, client, admin)
+      // Chatters must be NEW accounts - existing users cannot become chatters
+      const existingUser = await db.collection("users").doc(userId).get();
+
+      if (existingUser.exists) {
+        const userData = existingUser.data();
+        const existingRole = userData?.role as string | undefined;
+
+        // Block if user has any existing role
+        if (existingRole === "lawyer") {
+          throw new HttpsError(
+            "permission-denied",
+            "Les avocats ne peuvent pas s'inscrire comme chatter. Veuillez créer un nouveau compte."
+          );
+        }
+
+        if (existingRole === "expat") {
+          throw new HttpsError(
+            "permission-denied",
+            "Les expatriés aidants ne peuvent pas s'inscrire comme chatter. Veuillez créer un nouveau compte."
+          );
+        }
+
+        if (existingRole === "admin") {
+          throw new HttpsError(
+            "permission-denied",
+            "Les administrateurs ne peuvent pas s'inscrire comme chatter."
+          );
+        }
+
+        if (existingRole === "client") {
+          // Check if user has any bookings or calls
+          const bookingsQuery = await db
+            .collection("calls")
+            .where("clientId", "==", userId)
+            .limit(1)
+            .get();
+
+          if (!bookingsQuery.empty) {
+            throw new HttpsError(
+              "permission-denied",
+              "Les clients ayant déjà utilisé la plateforme ne peuvent pas devenir chatter. Veuillez créer un nouveau compte."
+            );
+          }
+
+          // Also check booking_requests
+          const requestsQuery = await db
+            .collection("booking_requests")
+            .where("clientId", "==", userId)
+            .limit(1)
+            .get();
+
+          if (!requestsQuery.empty) {
+            throw new HttpsError(
+              "permission-denied",
+              "Les clients ayant déjà effectué une réservation ne peuvent pas devenir chatter. Veuillez créer un nouveau compte."
+            );
+          }
+        }
+
+        // If user exists but has isChatter already, check that
+        if (userData?.isChatter === true) {
+          // Let it fall through to existing chatter check below
+        } else if (existingRole && existingRole !== "client") {
+          // Generic block for any other role
+          throw new HttpsError(
+            "permission-denied",
+            "Vous avez déjà un compte avec un autre rôle. Les chatters doivent avoir un compte dédié."
+          );
+        }
+      }
+
+      // 6. Check for existing chatter
       const existingChatter = await db.collection("chatters").doc(userId).get();
 
       if (existingChatter.exists) {
@@ -134,7 +206,7 @@ export const registerChatter = onCall(
         }
       }
 
-      // 6. Check for duplicate email
+      // 7. Check for duplicate email
       const emailQuery = await db
         .collection("chatters")
         .where("email", "==", input.email.toLowerCase())
@@ -145,7 +217,7 @@ export const registerChatter = onCall(
         throw new HttpsError("already-exists", "A chatter with this email already exists");
       }
 
-      // 7. Fraud check
+      // 8. Fraud check
       const ip = request.rawRequest?.ip || "unknown";
       const fraudResult = await checkChatterRegistrationFraud(
         input.email,
@@ -165,7 +237,7 @@ export const registerChatter = onCall(
         );
       }
 
-      // 8. Find recruiter if recruitment code provided
+      // 9. Find recruiter if recruitment code provided
       let recruitedBy: string | null = null;
       let recruitedByCode: string | null = null;
 
@@ -183,7 +255,7 @@ export const registerChatter = onCall(
         }
       }
 
-      // 9. Create chatter document
+      // 10. Create chatter document
       const now = Timestamp.now();
 
       const chatter: Chatter = {
@@ -249,29 +321,33 @@ export const registerChatter = onCall(
         lastLoginAt: now,
       };
 
-      // 10. Create/update user document and chatter document in transaction
+      // 11. Create user document and chatter document in transaction
+      // IMPORTANT: Chatters get a dedicated role, not shared with other roles
       await db.runTransaction(async (transaction) => {
         // Create chatter
         const chatterRef = db.collection("chatters").doc(userId);
         transaction.set(chatterRef, chatter);
 
-        // Update user document with chatter role
+        // Create user document with CHATTER role (not client)
         const userRef = db.collection("users").doc(userId);
         const userDoc = await transaction.get(userRef);
 
         if (userDoc.exists) {
+          // This should only happen if user passed all role checks above
+          // Update to chatter role
           transaction.update(userRef, {
+            role: "chatter", // Change role to chatter
             isChatter: true,
             chatterStatus: "pending_quiz",
             updatedAt: now,
           });
         } else {
-          // Create minimal user document
+          // Create NEW user document with chatter role
           transaction.set(userRef, {
             email: input.email.toLowerCase(),
             firstName: input.firstName.trim(),
             lastName: input.lastName.trim(),
-            role: "client", // Keep original role
+            role: "chatter", // CHATTER role - mutually exclusive with other roles
             isChatter: true,
             chatterStatus: "pending_quiz",
             createdAt: now,

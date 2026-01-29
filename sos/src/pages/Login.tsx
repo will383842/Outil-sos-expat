@@ -727,13 +727,21 @@ const Login: React.FC = () => {
       // sessionStorage is more reliable because it's set BEFORE navigation happens
       const redirectFromStorage = sessionStorage.getItem("loginRedirect");
       const redirectFromParams = searchParams.get("redirect");
-      const rawRedirectToUse = redirectFromStorage || redirectFromParams || "/dashboard";
+
+      // ✅ CHATTER REDIRECT: Rediriger les chatters vers leur dashboard dédié
+      // Les rôles sont mutuellement exclusifs : un chatter n'est ni client, ni avocat, ni expat
+      let defaultDashboard = "/dashboard";
+      if (user.role === "chatter") {
+        defaultDashboard = "/chatter/dashboard";
+      }
+
+      const rawRedirectToUse = redirectFromStorage || redirectFromParams || defaultDashboard;
 
       // Decode the redirect URL (it was encoded when passed to login page)
       const decodedRedirect = decodeURIComponent(rawRedirectToUse);
 
       // SECURITY: Validate redirect URL to prevent Open Redirect attacks
-      let finalUrl = isAllowedRedirect(decodedRedirect) ? decodedRedirect : "/dashboard";
+      let finalUrl = isAllowedRedirect(decodedRedirect) ? decodedRedirect : defaultDashboard;
 
       // ✅ FIX MULTILINGUE: Construire l'URL correcte avec locale et slug traduit
       // pour éviter les redirections multiples par LocaleRouter

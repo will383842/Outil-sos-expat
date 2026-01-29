@@ -85,7 +85,7 @@ const ChatterDashboard: React.FC = () => {
       <ChatterDashboardLayout>
         <div className="flex items-center justify-center py-20">
           <div className="text-center">
-            <Loader2 className="w-10 h-10 mx-auto text-amber-500 animate-spin mb-4" />
+            <Loader2 className="w-10 h-10 mx-auto text-red-500 animate-spin mb-4" />
             <p className="text-gray-500 dark:text-gray-400">
               <FormattedMessage id="common.loading" defaultMessage="Chargement..." />
             </p>
@@ -114,7 +114,7 @@ const ChatterDashboard: React.FC = () => {
     return (
       <ChatterDashboardLayout>
         <div className={`${UI.card} p-8 text-center`}>
-          <AlertCircle className="w-16 h-16 mx-auto text-amber-500 mb-4" />
+          <AlertCircle className="w-16 h-16 mx-auto text-red-500 mb-4" />
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
             <FormattedMessage id="chatter.dashboard.notChatter.title" defaultMessage="Pas encore Chatter" />
           </h2>
@@ -148,15 +148,15 @@ const ChatterDashboard: React.FC = () => {
         {/* Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <ChatterStatsCard
-            icon={<TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600 dark:text-amber-400" />}
+            icon={<TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 dark:text-red-400" />}
             label={intl.formatMessage({ id: 'chatter.stats.thisMonth', defaultMessage: 'Ce mois' })}
             value={formatAmount(thisMonthTotal)}
             subValue={intl.formatMessage(
               { id: 'chatter.stats.commissionsCount', defaultMessage: '{count} commissions' },
               { count: thisMonthCommissions.length }
             )}
-            gradient="from-amber-600 to-orange-600"
-            iconBg="bg-amber-100 dark:bg-amber-900/30"
+            gradient="from-red-600 to-orange-600"
+            iconBg="bg-red-100 dark:bg-red-900/30"
             loading={isLoading}
           />
 
@@ -219,7 +219,7 @@ const ChatterDashboard: React.FC = () => {
                 </h3>
                 <button
                   onClick={() => navigate(paymentsRoute)}
-                  className="text-sm text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1"
+                  className="text-sm text-red-600 dark:text-red-400 hover:underline flex items-center gap-1"
                 >
                   <FormattedMessage id="common.viewAll" defaultMessage="Voir tout" />
                   <ChevronRight className="w-4 h-4" />
@@ -245,13 +245,13 @@ const ChatterDashboard: React.FC = () => {
                           commission.status === 'available'
                             ? 'bg-green-100 dark:bg-green-900/30'
                             : commission.status === 'pending'
-                              ? 'bg-amber-100 dark:bg-amber-900/30'
+                              ? 'bg-red-100 dark:bg-red-900/30'
                               : 'bg-gray-100 dark:bg-gray-800'
                         }`}>
                           {commission.status === 'available' ? (
                             <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
                           ) : (
-                            <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                            <Clock className="w-5 h-5 text-red-600 dark:text-red-400" />
                           )}
                         </div>
                         <div>
@@ -274,7 +274,7 @@ const ChatterDashboard: React.FC = () => {
                           commission.status === 'available'
                             ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                             : commission.status === 'pending'
-                              ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                              ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                               : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
                         }`}>
                           {intl.formatMessage({ id: `chatter.status.${commission.status}`, defaultMessage: commission.status })}

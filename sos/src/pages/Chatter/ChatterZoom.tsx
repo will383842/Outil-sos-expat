@@ -27,7 +27,7 @@ import {
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
   button: {
-    primary: "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed",
+    primary: "bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed",
     secondary: "bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-300 rounded-xl transition-all",
   },
 } as const;
@@ -221,8 +221,8 @@ const ChatterZoom: React.FC = () => {
 
             <div className={`${UI.card} p-4`}>
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-xl">
-                  <CalendarDays className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-xl">
+                  <CalendarDays className="w-5 h-5 text-red-600 dark:text-red-400" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -242,7 +242,7 @@ const ChatterZoom: React.FC = () => {
               onClick={() => setActiveTab('upcoming')}
               className={`px-4 py-2 rounded-xl font-medium transition-all ${
                 activeTab === 'upcoming'
-                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                  ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
                   : 'bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300'
               }`}
             >
@@ -252,7 +252,7 @@ const ChatterZoom: React.FC = () => {
               onClick={() => setActiveTab('past')}
               className={`px-4 py-2 rounded-xl font-medium transition-all ${
                 activeTab === 'past'
-                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                  ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
                   : 'bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300'
               }`}
             >
@@ -271,7 +271,7 @@ const ChatterZoom: React.FC = () => {
           {/* Meetings List */}
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
+              <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
             </div>
           ) : meetings.length === 0 ? (
             <div className={`${UI.card} p-8 text-center`}>
@@ -309,7 +309,7 @@ const ChatterZoom: React.FC = () => {
                             </span>
                           )}
                           {meeting.bonusAmount > 0 && (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-full text-xs font-medium">
+                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full text-xs font-medium">
                               <Award className="w-3 h-3" />
                               +${(meeting.bonusAmount / 100).toFixed(2)}
                             </span>

@@ -2051,6 +2051,29 @@ service cloud.firestore {
       allow delete: if isAdmin() || isDev();
     }
 
+    // Groupes/Forums des chatters
+    match /chatter_groups/{groupId} {
+      // Lecture: tous les chatters actifs ou admin
+      allow read: if isChatter() || isAdmin() || isDev();
+      // Création: chatter actif uniquement
+      allow create: if isChatter() &&
+                    request.resource.data.submittedBy == request.auth.uid;
+      // Mise à jour: admin uniquement (modération status)
+      allow update: if isAdmin() || isDev();
+      allow delete: if isAdmin() || isDev();
+    }
+
+    // Activités dans les groupes chatters
+    match /chatter_groups/{groupId}/activities/{activityId} {
+      // Lecture: chatters ou admin
+      allow read: if isChatter() || isAdmin() || isDev();
+      // Création: chatter qui rejoint le groupe
+      allow create: if isChatter() &&
+                    request.resource.data.chatterId == request.auth.uid;
+      // Mise à jour/suppression: admin uniquement
+      allow update, delete: if isAdmin() || isDev();
+    }
+
     // Alertes de fraude des chatters
     match /chatter_fraud_alerts/{alertId} {
       // Lecture et écriture: admin uniquement

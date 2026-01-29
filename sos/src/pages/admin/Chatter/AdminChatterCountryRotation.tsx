@@ -19,17 +19,18 @@ import {
   Play,
   Percent,
 } from 'lucide-react';
+import AdminLayout from '../../../components/admin/AdminLayout';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 
 // Design tokens
 const UI = {
   card: "bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700",
   button: {
-    primary: "bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
+    primary: "bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
     secondary: "bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium rounded-lg transition-colors",
     danger: "bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
   },
-  input: "w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500",
+  input: "w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500",
 } as const;
 
 interface CountryDetail {
@@ -270,7 +271,7 @@ const AdminChatterCountryRotation: React.FC = () => {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 mx-auto text-amber-500 animate-spin mb-3" />
+          <Loader2 className="w-8 h-8 mx-auto text-red-500 animate-spin mb-3" />
           <p className="text-gray-500 dark:text-gray-400">
             <FormattedMessage id="common.loading" defaultMessage="Chargement..." />
           </p>
@@ -332,6 +333,7 @@ const AdminChatterCountryRotation: React.FC = () => {
   const availableCount = state.totalCountries - state.countriesAssignedInCurrentCycle;
 
   return (
+    <AdminLayout>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -371,8 +373,8 @@ const AdminChatterCountryRotation: React.FC = () => {
         {/* Current Cycle */}
         <div className={`${UI.card} p-4`}>
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
-              <RefreshCw className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+            <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg">
+              <RefreshCw className="w-5 h-5 text-red-600 dark:text-red-400" />
             </div>
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -442,7 +444,7 @@ const AdminChatterCountryRotation: React.FC = () => {
         {/* Progress */}
         <div className={`${UI.card} p-6`}>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-amber-500" />
+            <BarChart3 className="w-5 h-5 text-red-500" />
             <FormattedMessage id="admin.countryRotation.progress" defaultMessage="Progression du cycle" />
           </h3>
 
@@ -458,7 +460,7 @@ const AdminChatterCountryRotation: React.FC = () => {
               </div>
               <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-500"
+                  className="h-full bg-gradient-to-r from-red-500 to-orange-500 rounded-full transition-all duration-500"
                   style={{ width: `${percentAssigned}%` }}
                 />
               </div>
@@ -468,14 +470,14 @@ const AdminChatterCountryRotation: React.FC = () => {
               <span className="text-gray-600 dark:text-gray-400">
                 <FormattedMessage id="admin.countryRotation.threshold" defaultMessage="Seuil de déclenchement" />
               </span>
-              <span className="font-medium text-amber-600 dark:text-amber-400">
+              <span className="font-medium text-red-600 dark:text-red-400">
                 {state.cycleThresholdPercent}%
               </span>
             </div>
 
             {percentAssigned >= state.cycleThresholdPercent && (
-              <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
-                <p className="text-sm text-amber-700 dark:text-amber-300">
+              <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                <p className="text-sm text-red-700 dark:text-red-300">
                   <FormattedMessage
                     id="admin.countryRotation.thresholdReached"
                     defaultMessage="Le seuil est atteint. Le prochain enregistrement déclenchera automatiquement un nouveau cycle."
@@ -501,7 +503,7 @@ const AdminChatterCountryRotation: React.FC = () => {
         {/* Actions */}
         <div className={`${UI.card} p-6`}>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <Settings className="w-5 h-5 text-amber-500" />
+            <Settings className="w-5 h-5 text-red-500" />
             <FormattedMessage id="admin.countryRotation.actions" defaultMessage="Actions" />
           </h3>
 
@@ -533,10 +535,10 @@ const AdminChatterCountryRotation: React.FC = () => {
             <button
               onClick={handleAdvanceCycle}
               disabled={isAdvancing}
-              className="w-full p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg flex items-center justify-between hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors disabled:opacity-50"
+              className="w-full p-4 bg-red-50 dark:bg-red-900/20 rounded-lg flex items-center justify-between hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors disabled:opacity-50"
             >
               <div className="flex items-center gap-3">
-                <RefreshCw className={`w-5 h-5 text-amber-500 ${isAdvancing ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-5 h-5 text-red-500 ${isAdvancing ? 'animate-spin' : ''}`} />
                 <div className="text-left">
                   <p className="font-medium text-gray-900 dark:text-white">
                     <FormattedMessage id="admin.countryRotation.advanceCycle" defaultMessage="Forcer nouveau cycle" />
@@ -723,6 +725,7 @@ const AdminChatterCountryRotation: React.FC = () => {
         </div>
       )}
     </div>
+    </AdminLayout>
   );
 };
 

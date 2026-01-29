@@ -11,7 +11,7 @@ import { CheckCircle, XCircle, Trophy, RefreshCw, ArrowRight, PartyPopper } from
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
   button: {
-    primary: "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all",
+    primary: "bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all",
     secondary: "bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-200 font-medium rounded-xl transition-all",
   },
 } as const;
@@ -87,7 +87,7 @@ const ChatterQuizResult: React.FC<ChatterQuizResultProps> = ({
 
       {/* Score */}
       <div className="mb-6">
-        <p className="text-5xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
+        <p className="text-5xl font-bold bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
           {score}%
         </p>
         <p className="text-gray-500 dark:text-gray-400 mt-1">
@@ -110,7 +110,7 @@ const ChatterQuizResult: React.FC<ChatterQuizResultProps> = ({
         <>
           {/* Success Message */}
           <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl">
-            <Trophy className="w-8 h-8 mx-auto mb-2 text-amber-500" />
+            <Trophy className="w-8 h-8 mx-auto mb-2 text-red-500" />
             <p className="text-gray-700 dark:text-gray-300">
               <FormattedMessage
                 id="chatter.quiz.result.welcome"
@@ -127,11 +127,11 @@ const ChatterQuizResult: React.FC<ChatterQuizResultProps> = ({
               </h3>
 
               {affiliateCodeClient && (
-                <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
                     <FormattedMessage id="chatter.quiz.result.codeClient" defaultMessage="Code Client" />
                   </p>
-                  <p className="text-lg font-bold text-amber-600 dark:text-amber-400">
+                  <p className="text-lg font-bold text-red-600 dark:text-red-400">
                     {affiliateCodeClient}
                   </p>
                 </div>
@@ -173,8 +173,8 @@ const ChatterQuizResult: React.FC<ChatterQuizResultProps> = ({
 
           {/* Retry Info */}
           {retryTime && (
-            <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
-              <p className="text-amber-700 dark:text-amber-300">
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl">
+              <p className="text-red-700 dark:text-red-300">
                 <FormattedMessage
                   id="chatter.quiz.result.retryIn"
                   defaultMessage="Vous pourrez réessayer dans {hours}h {minutes}min"

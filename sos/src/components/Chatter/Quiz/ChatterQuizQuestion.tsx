@@ -36,7 +36,7 @@ const ChatterQuizQuestion: React.FC<ChatterQuizQuestionProps> = ({
       {/* Question Header */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-amber-600 dark:text-amber-400">
+          <span className="text-sm font-medium text-red-600 dark:text-red-400">
             Question {questionNumber}/{totalQuestions}
           </span>
           {showResult && (
@@ -74,7 +74,7 @@ const ChatterQuizQuestion: React.FC<ChatterQuizQuestionProps> = ({
                       ? 'bg-red-50 border-2 border-red-500 dark:bg-red-900/20 dark:border-red-400'
                       : 'bg-gray-50 border-2 border-transparent dark:bg-white/5'
                   : isSelected
-                    ? 'bg-amber-50 border-2 border-amber-500 dark:bg-amber-900/20 dark:border-amber-400'
+                    ? 'bg-red-50 border-2 border-red-500 dark:bg-red-900/20 dark:border-red-400'
                     : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100 dark:bg-white/5 dark:hover:bg-white/10'
               }`}
             >
@@ -91,7 +91,7 @@ const ChatterQuizQuestion: React.FC<ChatterQuizQuestionProps> = ({
                     <Circle className="w-5 h-5 text-gray-300 dark:text-gray-600" />
                   )
                 ) : isSelected ? (
-                  <CheckCircle className="w-5 h-5 text-amber-500" />
+                  <CheckCircle className="w-5 h-5 text-red-500" />
                 ) : (
                   <Circle className="w-5 h-5 text-gray-300 dark:text-gray-600" />
                 )}
@@ -106,7 +106,7 @@ const ChatterQuizQuestion: React.FC<ChatterQuizQuestionProps> = ({
                       ? 'text-red-700 dark:text-red-400'
                       : 'text-gray-700 dark:text-gray-300'
                   : isSelected
-                    ? 'text-amber-700 dark:text-amber-400'
+                    ? 'text-red-700 dark:text-red-400'
                     : 'text-gray-700 dark:text-gray-300'
               }`}>
                 {option.text}

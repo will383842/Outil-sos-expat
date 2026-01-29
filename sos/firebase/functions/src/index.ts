@@ -5582,14 +5582,52 @@ export {
   submitQuiz,
   getQuizQuestions,
   getChatterDashboard,
+  getChatterLeaderboard,
   chatterRequestWithdrawal,
   updateChatterProfile,
+  // Country Rotation callables
+  getAvailableCountriesForChatter,
+  assignCountriesToCurrentChatter,
+  // Posts callables
+  submitPost,
+  getMyPosts,
+  // Groups callables
+  submitGroup,
+  getAvailableGroups,
+  getMyGroups,
+  joinGroupAsChatter,
+  // Zoom callables
+  getZoomMeetings,
+  recordZoomAttendance,
+  getMyZoomAttendances,
   // Admin callables
   adminGetChattersList,
   adminGetChatterDetail,
   adminProcessChatterWithdrawal,
   adminUpdateChatterStatus,
   adminGetPendingChatterWithdrawals,
+  adminGetChatterConfig,
+  adminUpdateChatterConfig,
+  adminGetChatterLeaderboard,
+  adminExportChatters,
+  adminBulkChatterAction,
+  // Admin Country Rotation
+  adminInitializeCountryRotation,
+  adminGetCountryRotationStatus,
+  adminAdvanceCycle,
+  adminUpdateCycleThreshold,
+  // Admin Posts
+  adminGetPendingPosts,
+  adminModeratePost,
+  // Admin Groups
+  adminGetGroups,
+  adminUpdateGroupStatus,
+  // Admin Zoom
+  adminCreateZoomMeeting,
+  adminUpdateZoomMeeting,
+  adminGetZoomMeetings,
+  adminGetMeetingAttendees,
+  adminUpdateMeetingStatus,
   // Scheduled
   chatterValidatePendingCommissions,
   chatterReleaseValidatedCommissions,

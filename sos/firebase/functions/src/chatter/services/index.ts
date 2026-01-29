@@ -75,3 +75,23 @@ export {
   JoinGroupInput,
   JoinGroupResult,
 } from "./chatterGroupService";
+
+// Zoom Service
+export {
+  createZoomMeeting,
+  updateZoomMeeting,
+  getUpcomingMeetings,
+  getPastMeetings,
+  getMeetingById,
+  recordAttendance,
+  getChatterAttendances,
+  markAttendanceBonusPaid,
+  getAllMeetings,
+  getMeetingAttendees,
+  cancelMeeting,
+  completeMeeting,
+  setMeetingLive,
+  CreateZoomMeetingInput,
+  RecordAttendanceInput,
+  RecordAttendanceResult,
+} from "./chatterZoomService";

@@ -65,7 +65,7 @@ const ChatterQuizProgress: React.FC<ChatterQuizProgressProps> = ({
       {/* Timer */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Clock className={`w-5 h-5 ${isLowTime ? 'text-red-500 animate-pulse' : 'text-amber-500'}`} />
+          <Clock className={`w-5 h-5 ${isLowTime ? 'text-red-500 animate-pulse' : 'text-red-500'}`} />
           <span className={`text-lg font-bold ${isLowTime ? 'text-red-500' : 'text-gray-900 dark:text-white'}`}>
             {formatTime(remainingTime)}
           </span>
@@ -93,7 +93,7 @@ const ChatterQuizProgress: React.FC<ChatterQuizProgressProps> = ({
         </div>
         <div className="h-2 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-300"
+            className="h-full bg-gradient-to-r from-red-500 to-orange-500 transition-all duration-300"
             style={{ width: `${progressPercent}%` }}
           />
         </div>

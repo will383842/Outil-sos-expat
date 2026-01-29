@@ -29,7 +29,7 @@ import {
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
   button: {
-    primary: "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed",
+    primary: "bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed",
     secondary: "bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-300 rounded-xl transition-all",
   },
 } as const;
@@ -219,13 +219,13 @@ const ChatterTraining: React.FC = () => {
                   />
                 </p>
               </div>
-              <div className="text-3xl font-bold text-amber-600 dark:text-amber-400">
+              <div className="text-3xl font-bold text-red-600 dark:text-red-400">
                 {progressPercent.toFixed(0)}%
               </div>
             </div>
             <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-500"
+                className="h-full bg-gradient-to-r from-red-500 to-orange-500 rounded-full transition-all duration-500"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
@@ -234,7 +234,7 @@ const ChatterTraining: React.FC = () => {
           {/* Quick Tips */}
           <div className={`${UI.card} p-6`}>
             <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <Lightbulb className="w-5 h-5 text-amber-500" />
+              <Lightbulb className="w-5 h-5 text-red-500" />
               <FormattedMessage id="chatter.training.tips.title" defaultMessage="Conseils rapides" />
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -255,7 +255,7 @@ const ChatterTraining: React.FC = () => {
           {/* Training Modules */}
           <div>
             <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-amber-500" />
+              <BookOpen className="w-5 h-5 text-red-500" />
               <FormattedMessage id="chatter.training.modules.title" defaultMessage="Modules de formation" />
             </h3>
 
@@ -270,7 +270,7 @@ const ChatterTraining: React.FC = () => {
                     <div className={`p-3 rounded-xl ${
                       module.completed
                         ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-                        : 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'
+                        : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
                     }`}>
                       {module.completed ? <CheckCircle className="w-6 h-6" /> : module.icon}
                     </div>
@@ -285,7 +285,7 @@ const ChatterTraining: React.FC = () => {
                       <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
                         {module.description}
                       </p>
-                      <div className="flex items-center gap-2 mt-3 text-sm text-amber-600 dark:text-amber-400 font-medium">
+                      <div className="flex items-center gap-2 mt-3 text-sm text-red-600 dark:text-red-400 font-medium">
                         {module.completed ? (
                           <FormattedMessage id="chatter.training.review" defaultMessage="Revoir" />
                         ) : (
@@ -303,7 +303,7 @@ const ChatterTraining: React.FC = () => {
           {/* Resources */}
           <div className={`${UI.card} p-6`}>
             <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <Download className="w-5 h-5 text-amber-500" />
+              <Download className="w-5 h-5 text-red-500" />
               <FormattedMessage id="chatter.training.resources.title" defaultMessage="Ressources téléchargeables" />
             </h3>
             <div className="space-y-3">
@@ -356,7 +356,7 @@ const ChatterTraining: React.FC = () => {
                   <div className={`p-3 rounded-xl ${
                     selectedModule.completed
                       ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-                      : 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'
+                      : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
                   }`}>
                     {selectedModule.icon}
                   </div>

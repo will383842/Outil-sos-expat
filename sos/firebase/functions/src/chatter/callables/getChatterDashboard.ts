@@ -156,7 +156,7 @@ export const getChatterDashboard = onCall(
             title:
               meeting.titleTranslations?.[chatter.language] || meeting.title,
             scheduledAt: meeting.scheduledAt.toDate().toISOString(),
-            joinUrl: meeting.joinUrl,
+            joinUrl: meeting.joinUrl || meeting.zoomUrl || "",
           };
         }
       }

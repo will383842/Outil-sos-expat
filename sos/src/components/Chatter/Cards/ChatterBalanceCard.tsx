@@ -12,7 +12,7 @@ const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
   cardHover: "hover:shadow-xl transition-shadow duration-300",
   button: {
-    primary: "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all",
+    primary: "bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all",
   },
 } as const;
 
@@ -70,8 +70,8 @@ const ChatterBalanceCard: React.FC<ChatterBalanceCardProps> = ({
     <div className={`${UI.card} ${UI.cardHover} p-4 sm:p-6`}>
       <div className="text-center">
         {/* Piggy Bank Icon */}
-        <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 flex items-center justify-center">
-          <PiggyBank className="w-6 h-6 sm:w-8 sm:h-8 text-amber-600 dark:text-amber-400" />
+        <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-full bg-gradient-to-br from-red-100 to-orange-100 dark:from-red-900/30 dark:to-orange-900/30 flex items-center justify-center">
+          <PiggyBank className="w-6 h-6 sm:w-8 sm:h-8 text-red-600 dark:text-red-400" />
         </div>
 
         {/* Title */}
@@ -80,7 +80,7 @@ const ChatterBalanceCard: React.FC<ChatterBalanceCardProps> = ({
         </h3>
 
         {/* Available Balance (main) */}
-        <p className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent mb-1">
+        <p className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent mb-1">
           {formatAmount(availableBalance)}
         </p>
         <p className="text-xs text-gray-500 dark:text-gray-400 mb-3 sm:mb-4">
@@ -91,7 +91,7 @@ const ChatterBalanceCard: React.FC<ChatterBalanceCardProps> = ({
         <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4">
           <div className="p-2 sm:p-3 bg-gray-50 dark:bg-white/5 rounded-lg sm:rounded-xl">
             <div className="flex items-center justify-center gap-1 mb-1">
-              <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-500" />
+              <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-red-500" />
               <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
                 <FormattedMessage id="chatter.balance.pending" defaultMessage="En attente" />
               </span>
@@ -114,7 +114,7 @@ const ChatterBalanceCard: React.FC<ChatterBalanceCardProps> = ({
         </div>
 
         {/* Total */}
-        <div className="p-2 sm:p-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-lg sm:rounded-xl mb-3 sm:mb-4">
+        <div className="p-2 sm:p-3 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-lg sm:rounded-xl mb-3 sm:mb-4">
           <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
             <FormattedMessage id="chatter.balance.total" defaultMessage="Total général" />
           </span>
@@ -137,7 +137,7 @@ const ChatterBalanceCard: React.FC<ChatterBalanceCardProps> = ({
           <div className="mb-3 sm:mb-4">
             <div className="h-1.5 sm:h-2 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-500"
+                className="h-full bg-gradient-to-r from-red-500 to-orange-500 transition-all duration-500"
                 style={{ width: `${progressToMinimum}%` }}
               />
             </div>
@@ -153,8 +153,8 @@ const ChatterBalanceCard: React.FC<ChatterBalanceCardProps> = ({
 
         {/* Pending Withdrawal Notice */}
         {hasPendingWithdrawal && (
-          <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg sm:rounded-xl">
-            <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-300 flex items-center justify-center gap-1.5 sm:gap-2">
+          <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-red-50 dark:bg-red-900/20 rounded-lg sm:rounded-xl">
+            <p className="text-xs sm:text-sm text-red-700 dark:text-red-300 flex items-center justify-center gap-1.5 sm:gap-2">
               <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <FormattedMessage id="chatter.balance.pendingWithdrawal" defaultMessage="Retrait en cours de traitement" />
             </p>

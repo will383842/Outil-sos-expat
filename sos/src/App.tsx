@@ -295,17 +295,20 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/affiliate/bank-details", component: AffiliateBankDetails, protected: true, role: ['client', 'lawyer', 'expat'], translated: "affiliate-bank-details" },
   { path: "/affiliate/tools", component: AffiliateTools, protected: true, role: ['client', 'lawyer', 'expat'], translated: "affiliate-tools" },
   // Chatter System Routes - Protected routes for registered chatters
+  // IMPORTANT: Les rôles sont mutuellement exclusifs. Un chatter ne peut pas être client/lawyer/expat.
+  // L'inscription est accessible à tout utilisateur authentifié (le backend vérifie les restrictions de rôle)
   { path: "/chatter/inscription", component: ChatterRegister, protected: true, translated: "chatter-register" },
-  { path: "/chatter/presentation", component: ChatterPresentation, protected: true, translated: "chatter-presentation" },
-  { path: "/chatter/quiz", component: ChatterQuiz, protected: true, translated: "chatter-quiz" },
-  { path: "/chatter/pays", component: ChatterCountrySelection, protected: true, translated: "chatter-country-selection" },
-  { path: "/chatter/tableau-de-bord", component: ChatterDashboard, protected: true, translated: "chatter-dashboard" },
-  { path: "/chatter/classement", component: ChatterLeaderboard, protected: true, translated: "chatter-leaderboard" },
-  { path: "/chatter/paiements", component: ChatterPayments, protected: true, translated: "chatter-payments" },
-  { path: "/chatter/suspendu", component: ChatterSuspended, protected: true, translated: "chatter-suspended" },
-  { path: "/chatter/posts", component: ChatterPosts, protected: true, translated: "chatter-posts" },
-  { path: "/chatter/zoom", component: ChatterZoom, protected: true, translated: "chatter-zoom" },
-  { path: "/chatter/formation", component: ChatterTraining, protected: true, translated: "chatter-training" },
+  // Après inscription, l'utilisateur a role="chatter" - toutes les autres routes sont réservées aux chatters
+  { path: "/chatter/presentation", component: ChatterPresentation, protected: true, role: 'chatter', translated: "chatter-presentation" },
+  { path: "/chatter/quiz", component: ChatterQuiz, protected: true, role: 'chatter', translated: "chatter-quiz" },
+  { path: "/chatter/pays", component: ChatterCountrySelection, protected: true, role: 'chatter', translated: "chatter-country-selection" },
+  { path: "/chatter/tableau-de-bord", component: ChatterDashboard, protected: true, role: 'chatter', translated: "chatter-dashboard" },
+  { path: "/chatter/classement", component: ChatterLeaderboard, protected: true, role: 'chatter', translated: "chatter-leaderboard" },
+  { path: "/chatter/paiements", component: ChatterPayments, protected: true, role: 'chatter', translated: "chatter-payments" },
+  { path: "/chatter/suspendu", component: ChatterSuspended, protected: true, role: 'chatter', translated: "chatter-suspended" },
+  { path: "/chatter/posts", component: ChatterPosts, protected: true, role: 'chatter', translated: "chatter-posts" },
+  { path: "/chatter/zoom", component: ChatterZoom, protected: true, role: 'chatter', translated: "chatter-zoom" },
+  { path: "/chatter/formation", component: ChatterTraining, protected: true, role: 'chatter', translated: "chatter-training" },
 ];
 
 // ====================================

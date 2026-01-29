@@ -18,7 +18,7 @@ import { Globe, Loader2, AlertCircle, ShieldCheck } from 'lucide-react';
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
   button: {
-    primary: "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed",
+    primary: "bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed",
     secondary: "bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-200 font-medium rounded-xl transition-all",
   },
 } as const;
@@ -100,9 +100,9 @@ const ChatterCountrySelection: React.FC = () => {
   if (authLoading) {
     return (
       <Layout showFooter={false}>
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 via-amber-50/30 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 via-red-50/20 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black">
           <div className="text-center">
-            <Loader2 className="w-12 h-12 mx-auto text-amber-500 animate-spin mb-4" />
+            <Loader2 className="w-12 h-12 mx-auto text-red-500 animate-spin mb-4" />
             <p className="text-gray-500 dark:text-gray-400">
               <FormattedMessage id="common.loading" defaultMessage="Chargement..." />
             </p>
@@ -116,7 +116,7 @@ const ChatterCountrySelection: React.FC = () => {
   if (success) {
     return (
       <Layout showFooter={false}>
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 via-amber-50/30 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black px-4">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 via-red-50/20 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black px-4">
           <div className={`${UI.card} p-8 max-w-md w-full text-center`}>
             <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
               <ShieldCheck className="w-10 h-10 text-white" />
@@ -142,11 +142,11 @@ const ChatterCountrySelection: React.FC = () => {
 
   return (
     <Layout showFooter={false}>
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 via-amber-50/30 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black py-8 px-4">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 via-red-50/20 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black py-8 px-4">
         <div className="max-w-3xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl flex items-center justify-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-red-500 to-orange-500 rounded-2xl flex items-center justify-center">
               <Globe className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">

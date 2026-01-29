@@ -29,10 +29,10 @@ import {
 // Design tokens
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
-  input: "w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all",
+  input: "w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all",
   label: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1",
   button: {
-    primary: "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed",
+    primary: "bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed",
     secondary: "bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-200 font-medium rounded-xl transition-all",
   },
 } as const;
@@ -169,7 +169,7 @@ const ChatterWithdrawalForm: React.FC<ChatterWithdrawalFormProps> = ({
         className={`${UI.card} w-full p-4 flex items-center justify-between hover:shadow-lg transition-all`}
       >
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 flex items-center justify-center">
             <Smartphone className="w-6 h-6 text-orange-600 dark:text-orange-400" />
           </div>
           <div className="text-left">
@@ -415,7 +415,7 @@ const ChatterWithdrawalForm: React.FC<ChatterWithdrawalFormProps> = ({
             onClick={() => setWithdrawAmount('all')}
             className={`flex-1 py-3 rounded-xl font-medium transition-all ${
               withdrawAmount === 'all'
-                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
                 : 'bg-white dark:bg-white/10 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-white/10'
             }`}
           >
@@ -425,7 +425,7 @@ const ChatterWithdrawalForm: React.FC<ChatterWithdrawalFormProps> = ({
             onClick={() => setWithdrawAmount('custom')}
             className={`flex-1 py-3 rounded-xl font-medium transition-all ${
               withdrawAmount === 'custom'
-                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
                 : 'bg-white dark:bg-white/10 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-white/10'
             }`}
           >

@@ -171,7 +171,8 @@ interface SuccessResponse {
   status: string;
   expiresAt: string;
   stripeMode?: string;
-  stripeAccountId?: string;
+  // P0 SECURITY FIX: Ne plus exposer stripeAccountId - utiliser un booléen à la place
+  useDirectCharges?: boolean;
 }
 
 interface RateLimitBucket {
@@ -705,18 +706,21 @@ export const createPaymentIntent = onCall(
     // ═══════════════════════════════════════════════════════════════════════════
     // 🔍 DEBUG ENTRY POINT - Capture toutes les données entrantes
     // ═══════════════════════════════════════════════════════════════════════════
+    // P0 SECURITY FIX: Masquer les données sensibles dans les logs
+    const maskId = (id: string | undefined) => id ? `${id.substring(0, 8)}...` : undefined;
+
     prodLogger.info('PAYMENT_START', `[${requestId}] Nouvelle demande de paiement`, {
       requestId,
-      userId: request.auth?.uid || 'ANONYMOUS',
+      userId: maskId(request.auth?.uid) || 'ANONYMOUS',
       inputData: {
         amount: request.data?.amount,
         currency: request.data?.currency,
         serviceType: request.data?.serviceType,
-        providerId: request.data?.providerId,
-        clientId: request.data?.clientId,
+        providerId: maskId(request.data?.providerId),
+        clientId: maskId(request.data?.clientId),
         callSessionId: request.data?.callSessionId,
-        commissionAmount: request.data?.commissionAmount,
-        providerAmount: request.data?.providerAmount,
+        hasCommission: request.data?.commissionAmount !== undefined,
+        hasProviderAmount: request.data?.providerAmount !== undefined,
         hasCoupon: !!request.data?.coupon?.code,
       },
       timestamp: new Date().toISOString(),
@@ -1104,24 +1108,24 @@ export const createPaymentIntent = onCall(
       // ═══════════════════════════════════════════════════════════════════════════
       const totalProcessingTime = Date.now() - startTime;
 
-      // P0 FIX: Pour Direct Charges, le frontend DOIT recevoir le providerStripeAccountId
-      // car le PaymentIntent a été créé sur le compte du provider, pas sur la plateforme.
-      // Sans cet ID, confirmCardPayment retourne 404.
-      const stripeAccountIdForFrontend = providerStripeAccountId || undefined;
+      // P0 SECURITY FIX: Ne plus exposer stripeAccountId au frontend
+      // Pour Direct Charges, le clientSecret encode déjà l'information du compte connecté
+      // Le frontend utilise confirmCardPayment(clientSecret) sans avoir besoin de stripeAccount
+      const isDirectChargesMode = !!providerStripeAccountId;
 
+      // P0 SECURITY FIX: Ne JAMAIS logger clientSecret (même tronqué) - risque de reconstruction
       prodLogger.info('PAYMENT_SUCCESS', `[${requestId}] ✅ PaymentIntent créé avec succès en ${totalProcessingTime}ms`, {
         requestId,
-        paymentIntentId: result.paymentIntentId,
-        clientSecretPrefix: result.clientSecret?.substring(0, 20) + '...',
+        paymentIntentId: result.paymentIntentId ? `${result.paymentIntentId.substring(0, 10)}...` : null,
+        hasClientSecret: !!result.clientSecret,
         amount: amountInCents,
         currency,
         serviceType,
-        providerId: providerId?.substring(0, 10) + '...',
-        clientId: clientId?.substring(0, 10) + '...',
+        providerId: maskId(providerId),
+        clientId: maskId(clientId),
         callSessionId,
         stripeMode: STRIPE_MODE.value() || 'test',
-        stripeAccountId: stripeAccountIdForFrontend?.substring(0, 12) || null,
-        isDirectCharges: !!providerStripeAccountId,
+        useDirectCharges: isDirectChargesMode,
         totalProcessingTimeMs: totalProcessingTime,
         status: 'requires_payment_method',
       });
@@ -1136,10 +1140,9 @@ export const createPaymentIntent = onCall(
         status: 'requires_payment_method',
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
         stripeMode: STRIPE_MODE.value() || 'test',
-        // P0 FIX: Retourner le providerStripeAccountId pour Direct Charges
-        // Le frontend doit passer cet ID à confirmCardPayment() pour que Stripe
-        // puisse trouver le PaymentIntent sur le compte connecté du provider
-        stripeAccountId: stripeAccountIdForFrontend,
+        // P0 SECURITY FIX: Ne plus exposer stripeAccountId - utiliser un booléen à la place
+        // Le frontend n'a pas besoin de l'ID pour confirmCardPayment (clientSecret suffit)
+        useDirectCharges: isDirectChargesMode,
       };
     } catch (err: unknown) {
       const processingTime = Date.now() - startTime;
@@ -1147,22 +1150,23 @@ export const createPaymentIntent = onCall(
       // ═══════════════════════════════════════════════════════════════════════════
       // ❌ ERREUR GLOBALE - Log détaillé pour diagnostic
       // ═══════════════════════════════════════════════════════════════════════════
+      // P0 SECURITY FIX: Masquer les données sensibles dans les logs d'erreur
       prodLogger.error('PAYMENT_FATAL_ERROR', `[${requestId}] ❌ Erreur fatale dans createPaymentIntent`, {
         requestId,
         errorType: err instanceof HttpsError ? 'HttpsError' : 'UnknownError',
         errorMessage: err instanceof Error ? err.message : String(err),
         errorCode: err instanceof HttpsError ? err.code : 'unknown',
-        errorStack: err instanceof Error ? err.stack?.substring(0, 500) : null,
+        // P0 SECURITY FIX: Ne pas logger les stack traces (exposent l'architecture)
         processingTimeMs: processingTime,
         inputData: {
           amount: request.data?.amount,
           serviceType: request.data?.serviceType,
           currency: request.data?.currency,
-          providerId: request.data?.providerId?.substring(0, 10),
-          clientId: request.data?.clientId?.substring(0, 10),
+          providerId: request.data?.providerId ? `${request.data.providerId.substring(0, 8)}...` : undefined,
+          clientId: request.data?.clientId ? `${request.data.clientId.substring(0, 8)}...` : undefined,
           callSessionId: request.data?.callSessionId,
         },
-        userId: request.auth?.uid || 'not-authenticated',
+        userId: request.auth?.uid ? `${request.auth.uid.substring(0, 8)}...` : 'not-authenticated',
         environment: process.env.NODE_ENV,
         stripeMode: STRIPE_MODE.value() || 'test',
       });

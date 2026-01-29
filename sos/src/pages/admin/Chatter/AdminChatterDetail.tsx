@@ -27,12 +27,13 @@ import {
   Loader2,
   RefreshCw,
 } from 'lucide-react';
+import AdminLayout from '../../../components/admin/AdminLayout';
 
 // Design tokens
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
   button: {
-    primary: "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all",
+    primary: "bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all",
     secondary: "bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-200 font-medium rounded-xl transition-all",
     danger: "bg-red-500 hover:bg-red-600 text-white font-medium rounded-xl transition-all",
     success: "bg-green-500 hover:bg-green-600 text-white font-medium rounded-xl transition-all",
@@ -159,7 +160,7 @@ const AdminChatterDetail: React.FC = () => {
         return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
       case 'pending':
       case 'quiz_required':
-        return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
+        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
       case 'suspended':
         return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
       case 'banned':
@@ -172,7 +173,7 @@ const AdminChatterDetail: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-10 h-10 text-amber-500 animate-spin" />
+        <Loader2 className="w-10 h-10 text-red-500 animate-spin" />
       </div>
     );
   }
@@ -197,6 +198,7 @@ const AdminChatterDetail: React.FC = () => {
   }
 
   return (
+    <AdminLayout>
     <div className="space-y-6">
       {/* Back Button */}
       <button
@@ -211,7 +213,7 @@ const AdminChatterDetail: React.FC = () => {
       <div className={`${UI.card} p-6`}>
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-2xl font-bold">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-red-400 to-orange-500 flex items-center justify-center text-white text-2xl font-bold">
               {chatter.firstName?.[0]}{chatter.lastName?.[0]}
             </div>
             <div>
@@ -223,7 +225,7 @@ const AdminChatterDetail: React.FC = () => {
                   {chatter.status}
                 </span>
                 <span className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
-                  <Star className="w-4 h-4 text-amber-500" />
+                  <Star className="w-4 h-4 text-red-500" />
                   {getLevelName(chatter.level)}
                 </span>
               </div>
@@ -327,7 +329,7 @@ const AdminChatterDetail: React.FC = () => {
             </div>
             <div className="flex justify-between">
               <span className="text-gray-500 dark:text-gray-400">En attente</span>
-              <span className="font-medium text-amber-600">{formatAmount(chatter.pendingBalance)}</span>
+              <span className="font-medium text-red-600">{formatAmount(chatter.pendingBalance)}</span>
             </div>
             <hr className="border-gray-200 dark:border-white/10" />
             <div className="flex justify-between">
@@ -372,9 +374,9 @@ const AdminChatterDetail: React.FC = () => {
           <FormattedMessage id="admin.chatters.codes" defaultMessage="Codes affiliés" />
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
+          <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl">
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Code Client</p>
-            <p className="text-lg font-bold text-amber-600 dark:text-amber-400">
+            <p className="text-lg font-bold text-red-600 dark:text-red-400">
               {chatter.affiliateCodeClient || '-'}
             </p>
           </div>
@@ -427,6 +429,7 @@ const AdminChatterDetail: React.FC = () => {
         )}
       </div>
     </div>
+    </AdminLayout>
   );
 };
 

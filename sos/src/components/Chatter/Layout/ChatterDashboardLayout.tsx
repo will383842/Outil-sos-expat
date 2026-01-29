@@ -41,9 +41,9 @@ const UI = {
 
 // Chatter-specific gradient theme
 const CHATTER_THEME = {
-  header: "bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-white",
-  accent: "from-amber-500 to-orange-500",
-  accentBg: "bg-gradient-to-r from-amber-500 to-orange-500",
+  header: "bg-gradient-to-r from-red-500 via-orange-500 to-red-500 text-white",
+  accent: "from-red-500 to-orange-500",
+  accentBg: "bg-gradient-to-r from-red-500 to-orange-500",
 } as const;
 
 interface ChatterDashboardLayoutProps {
@@ -111,9 +111,9 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
   if (!user || !authInitialized) {
     return (
       <Layout showFooter={false}>
-        <div className="min-h-screen bg-gradient-to-b from-gray-50 via-amber-50/30 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black flex items-center justify-center">
+        <div className="min-h-screen bg-gradient-to-b from-gray-50 via-red-50/20 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-4 border-red-500 border-t-transparent rounded-full animate-spin" />
             <p className="text-sm text-gray-500 dark:text-gray-400">
               {intl.formatMessage({ id: 'common.loading', defaultMessage: 'Chargement...' })}
             </p>
@@ -211,7 +211,7 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
 
   return (
     <Layout showFooter={false}>
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 via-amber-50/30 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 via-red-50/20 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black">
         {/* Mobile Header */}
         <div className="lg:hidden sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-white/10">
           <div className="flex items-center justify-between px-4 py-3">
@@ -245,7 +245,7 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
                         }}
                         className={`w-full flex items-center px-4 py-3 text-sm font-medium ${UI.radiusSm} transition-all
                           ${currentKey === item.key
-                            ? "bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 dark:from-white/5 dark:to-white/10 dark:text-amber-400"
+                            ? "bg-gradient-to-r from-red-50 to-orange-50 text-red-700 dark:from-white/5 dark:to-white/10 dark:text-red-400"
                             : "text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5"
                           }
                         `}
@@ -321,7 +321,7 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
                           }}
                           className={`group relative w-full flex items-center px-4 py-2 text-sm font-medium ${UI.radiusSm} transition-all
                             ${currentKey === item.key
-                              ? "bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 dark:from-white/5 dark:to-white/10 dark:text-amber-400"
+                              ? "bg-gradient-to-r from-red-50 to-orange-50 text-red-700 dark:from-white/5 dark:to-white/10 dark:text-red-400"
                               : "text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5"
                             }
                           `}
@@ -330,14 +330,14 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
                           <span
                             className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 ${
                               currentKey === item.key
-                                ? "bg-gradient-to-b from-amber-500 to-orange-500"
+                                ? "bg-gradient-to-b from-red-500 to-orange-500"
                                 : "bg-transparent"
                             } ${UI.radiusSm}`}
                           />
                           {item.icon}
                           {item.labels[language] ?? item.labels.en}
                           {currentKey === item.key && (
-                            <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-white/10 dark:text-amber-400">
+                            <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-red-100 text-red-700 dark:bg-white/10 dark:text-red-400">
                               {intl.formatMessage({ id: "dashboard.active", defaultMessage: "Actif" })}
                             </span>
                           )}

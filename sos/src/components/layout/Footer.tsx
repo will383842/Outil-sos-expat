@@ -507,6 +507,10 @@ const Footer: React.FC = () => {
             label: intl.formatMessage({ id: "footer.services.testimonials" }),
             href: "/temoignages",
           },
+          {
+            label: intl.formatMessage({ id: "footer.services.becomeChatter" }),
+            href: "/devenir-chatter",
+          },
         ],
       },
       support: {

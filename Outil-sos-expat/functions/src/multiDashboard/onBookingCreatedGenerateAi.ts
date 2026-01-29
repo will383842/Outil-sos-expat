@@ -1,16 +1,20 @@
 /**
  * =============================================================================
- * MULTI DASHBOARD - Auto AI Response Generation
+ * AUTO AI RESPONSE GENERATION - All Providers (Outil)
  * =============================================================================
  *
  * Firestore trigger that automatically generates an AI response when a
- * booking_request is created for a multi-provider account.
+ * booking_request is created for ANY provider with valid AI access.
+ *
+ * AI access is granted via:
+ * - forcedAIAccess flag on the booking (set by SOS during sync)
+ * - Provider document with hasActiveSubscription = true
+ * - Provider document with freeTrialUntil in the future
  *
  * This is separate from the main aiOnBookingCreated trigger because:
  * 1. It listens to booking_requests (not bookings)
- * 2. It only triggers for multi-provider accounts
- * 3. It generates a "welcome" response, not a full analysis
- * 4. It stores the response directly in the booking_request document
+ * 2. It generates a "welcome" response, not a full analysis
+ * 3. It stores the response directly in the booking_request document
  */
 
 import * as admin from "firebase-admin";
@@ -68,20 +72,60 @@ interface ClaudeResponse {
 }
 
 // =============================================================================
-// HELPER: Check if provider belongs to a multi-provider account
+// HELPER: Check if provider has valid AI access
 // =============================================================================
 
-async function checkIfMultiProvider(providerId: string): Promise<boolean> {
+interface AiAccessResult {
+  hasAccess: boolean;
+  reason: 'forced_access' | 'subscription_active' | 'free_trial' | 'no_access';
+  note?: string;
+}
+
+async function checkProviderAiAccess(providerId: string): Promise<AiAccessResult> {
   const db = admin.firestore();
+  const now = new Date();
 
-  // Query users collection for accounts that have this providerId in linkedProviderIds
-  const usersQuery = await db
-    .collection("users")
-    .where("linkedProviderIds", "array-contains", providerId)
-    .limit(1)
-    .get();
+  // Check provider document for AI access flags (synced from SOS)
+  const providerDoc = await db.collection("providers").doc(providerId).get();
 
-  return !usersQuery.empty;
+  if (providerDoc.exists) {
+    const providerData = providerDoc.data()!;
+
+    // Check forcedAIAccess (synced from SOS via ingestBooking)
+    if (providerData.forcedAIAccess === true || providerData.forceAiAccess === true) {
+      return {
+        hasAccess: true,
+        reason: 'forced_access',
+        note: 'Accès IA accordé par administrateur'
+      };
+    }
+
+    // Check hasActiveSubscription (synced from SOS)
+    if (providerData.hasActiveSubscription === true) {
+      return {
+        hasAccess: true,
+        reason: 'subscription_active',
+        note: `Abonnement actif: ${providerData.subscriptionStatus || 'active'}`
+      };
+    }
+
+    // Check freeTrialUntil
+    if (providerData.freeTrialUntil) {
+      const freeTrialUntil = providerData.freeTrialUntil.toDate
+        ? providerData.freeTrialUntil.toDate()
+        : new Date(providerData.freeTrialUntil);
+
+      if (freeTrialUntil > now) {
+        return {
+          hasAccess: true,
+          reason: 'free_trial',
+          note: `Essai gratuit jusqu'au ${freeTrialUntil.toLocaleDateString('fr-FR')}`
+        };
+      }
+    }
+  }
+
+  return { hasAccess: false, reason: 'no_access' };
 }
 
 // =============================================================================
@@ -190,14 +234,14 @@ export const onBookingRequestCreatedGenerateAi = onDocumentCreated(
   async (event) => {
     const snap = event.data;
     if (!snap) {
-      logger.warn("[MultiDashboard] No snapshot data");
+      logger.warn("[AutoAI-Outil] No snapshot data");
       return;
     }
 
     const bookingId = event.params.bookingId;
     const booking = snap.data() as BookingRequestData;
 
-    logger.info("[MultiDashboard] New booking_request detected", {
+    logger.info("[AutoAI-Outil] New booking_request detected", {
       bookingId,
       providerId: booking.providerId,
       clientName: booking.clientName || booking.clientFirstName,
@@ -205,24 +249,27 @@ export const onBookingRequestCreatedGenerateAi = onDocumentCreated(
 
     // Skip if already processed
     if (booking.aiResponse || booking.aiProcessedAt) {
-      logger.info("[MultiDashboard] Already processed, skipping", { bookingId });
+      logger.info("[AutoAI-Outil] Already processed, skipping", { bookingId });
       return;
     }
 
-    // Check if provider belongs to a multi-provider account
-    const isMulti = await checkIfMultiProvider(booking.providerId);
+    // Check if provider has valid AI access
+    const aiAccess = await checkProviderAiAccess(booking.providerId);
 
-    if (!isMulti) {
-      logger.info("[MultiDashboard] Not a multi-provider, skipping", {
+    if (!aiAccess.hasAccess) {
+      logger.info("[AutoAI-Outil] Provider has no AI access, skipping", {
         bookingId,
         providerId: booking.providerId,
+        reason: aiAccess.reason,
       });
       return;
     }
 
-    logger.info("[MultiDashboard] Multi-provider detected, generating AI response", {
+    logger.info("[AutoAI-Outil] Provider has AI access, generating automatic response", {
       bookingId,
       providerId: booking.providerId,
+      accessReason: aiAccess.reason,
+      accessNote: aiAccess.note,
     });
 
     try {
@@ -248,12 +295,13 @@ export const onBookingRequestCreatedGenerateAi = onDocumentCreated(
           generatedAt: admin.firestore.FieldValue.serverTimestamp(),
           model: aiResult.model,
           tokensUsed: aiResult.tokensUsed,
-          source: "multi_dashboard_auto",
+          source: "auto_ai_welcome_outil",
+          accessReason: aiAccess.reason,
         },
         aiProcessedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
 
-      logger.info("[MultiDashboard] AI response saved successfully", {
+      logger.info("[AutoAI-Outil] AI response saved successfully", {
         bookingId,
         model: aiResult.model,
         tokensUsed: aiResult.tokensUsed,
@@ -262,7 +310,7 @@ export const onBookingRequestCreatedGenerateAi = onDocumentCreated(
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      logger.error("[MultiDashboard] Failed to generate AI response", {
+      logger.error("[AutoAI-Outil] Failed to generate AI response", {
         bookingId,
         error: errorMessage,
       });

@@ -76,6 +76,18 @@ export {
   adminUpdateGroupStatus,
 } from "./callables/groups";
 
+// Zoom Callables
+export {
+  getZoomMeetings,
+  recordZoomAttendance,
+  getMyZoomAttendances,
+  adminCreateZoomMeeting,
+  adminUpdateZoomMeeting,
+  adminGetZoomMeetings,
+  adminGetMeetingAttendees,
+  adminUpdateMeetingStatus,
+} from "./callables/zoom";
+
 // ============================================================================
 // SCHEDULED FUNCTIONS
 // ============================================================================
@@ -139,6 +151,7 @@ export type {
   ChatterAffiliateClick,
   ChatterNotification,
   ChatterZoomMeeting,
+  ChatterZoomMeetingStatus,
   ChatterZoomAttendance,
   ChatterPost,
   SupportedChatterLanguage,

@@ -54,6 +54,9 @@ import {
   UserPlus,
   Award,
   Wallet,
+  // Chatter icons
+  MessageCircle,
+  MapPin,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -539,6 +542,45 @@ export const adminMenuTree: AdminMenuItem[] = [
         path: "/admin/ambassadors",
         icon: Award,
         descriptionKey: "admin.menu.ambassadors.description",
+      },
+    ],
+  },
+
+  // ===== 💬 CHATTERS (Priorité 6.5 - Programme Ambassadeur) =====
+  {
+    id: "chatters",
+    labelKey: "admin.menu.chatters",
+    icon: MessageCircle,
+    descriptionKey: "admin.menu.chatters.description",
+    children: [
+      {
+        id: "chatters-list",
+        labelKey: "admin.menu.chattersList",
+        path: "/admin/chatters",
+        icon: Users,
+        descriptionKey: "admin.menu.chattersList.description",
+      },
+      {
+        id: "chatters-payments",
+        labelKey: "admin.menu.chattersPayments",
+        path: "/admin/chatters/payments",
+        icon: Wallet,
+        badge: "NEW",
+        descriptionKey: "admin.menu.chattersPayments.description",
+      },
+      {
+        id: "chatters-countries",
+        labelKey: "admin.menu.chattersCountries",
+        path: "/admin/chatters/countries",
+        icon: MapPin,
+        descriptionKey: "admin.menu.chattersCountries.description",
+      },
+      {
+        id: "chatters-config",
+        labelKey: "admin.menu.chattersConfig",
+        path: "/admin/chatters/config",
+        icon: Settings,
+        descriptionKey: "admin.menu.chattersConfig.description",
       },
     ],
   },

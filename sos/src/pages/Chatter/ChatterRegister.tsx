@@ -81,7 +81,7 @@ const ChatterRegister: React.FC = () => {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
-          <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-10 h-10 border-4 border-red-500 border-t-transparent rounded-full animate-spin" />
         </div>
       </Layout>
     );
@@ -89,7 +89,7 @@ const ChatterRegister: React.FC = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 via-amber-50/30 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black py-12 px-4">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 via-red-50/20 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black py-12 px-4">
         <div className="max-w-lg mx-auto">
           {/* Back Button */}
           <button
@@ -102,7 +102,7 @@ const ChatterRegister: React.FC = () => {
 
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
               <Star className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
@@ -125,7 +125,7 @@ const ChatterRegister: React.FC = () => {
               <p className="text-gray-500 dark:text-gray-400 mb-4">
                 <FormattedMessage id="chatter.register.success.subtitle" defaultMessage="Vous allez être redirigé vers la présentation..." />
               </p>
-              <div className="w-6 h-6 mx-auto border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+              <div className="w-6 h-6 mx-auto border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
             </div>
           ) : (
             /* Registration Form */

@@ -99,7 +99,7 @@ const ChatterSuspended: React.FC<ChatterSuspendedProps> = ({
               <div className="flex flex-col gap-2">
                 <a
                   href="mailto:support@sosexpat.com"
-                  className="flex items-center justify-center gap-2 text-amber-600 dark:text-amber-400 hover:underline"
+                  className="flex items-center justify-center gap-2 text-red-600 dark:text-red-400 hover:underline"
                 >
                   <Mail className="w-4 h-4" />
                   support@sosexpat.com

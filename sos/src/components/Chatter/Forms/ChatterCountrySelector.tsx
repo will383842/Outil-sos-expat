@@ -21,9 +21,9 @@ import { getFunctions, httpsCallable } from 'firebase/functions';
 // Design tokens
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
-  input: "w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all",
+  input: "w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all",
   button: {
-    primary: "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed",
+    primary: "bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed",
     secondary: "bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/20 rounded-xl transition-all",
   },
 } as const;
@@ -152,7 +152,7 @@ const ChatterCountrySelector: React.FC<ChatterCountrySelectorProps> = ({
   if (loadingCountries) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 text-amber-500 animate-spin mb-4" />
+        <Loader2 className="w-8 h-8 text-red-500 animate-spin mb-4" />
         <p className="text-gray-500 dark:text-gray-400">
           <FormattedMessage id="chatter.countries.loading" defaultMessage="Chargement des pays..." />
         </p>
@@ -181,7 +181,7 @@ const ChatterCountrySelector: React.FC<ChatterCountrySelectorProps> = ({
       {/* Header Info */}
       <div className={`${UI.card} p-4`}>
         <div className="flex items-start gap-3">
-          <Info className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+          <Info className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-sm text-gray-700 dark:text-gray-300">
               <FormattedMessage
@@ -235,7 +235,7 @@ const ChatterCountrySelector: React.FC<ChatterCountrySelectorProps> = ({
       {selectedCountries.length > 0 && (
         <div className={`${UI.card} p-4`}>
           <div className="flex items-center gap-2 mb-2">
-            <MapPin className="w-4 h-4 text-amber-500" />
+            <MapPin className="w-4 h-4 text-red-500" />
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
               <FormattedMessage
                 id="chatter.countries.selected"
@@ -251,7 +251,7 @@ const ChatterCountrySelector: React.FC<ChatterCountrySelectorProps> = ({
                 <button
                   key={code}
                   onClick={() => toggleCountry(code)}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full text-sm font-medium hover:opacity-90 transition-opacity"
+                  className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-full text-sm font-medium hover:opacity-90 transition-opacity"
                 >
                   <span>{getFlag(code)}</span>
                   <span>{country?.name || code}</span>
@@ -288,15 +288,15 @@ const ChatterCountrySelector: React.FC<ChatterCountrySelectorProps> = ({
                 className={`
                   flex items-center gap-3 p-3 rounded-xl border transition-all text-left
                   ${isSelected
-                    ? 'bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-500 dark:border-amber-400'
-                    : 'bg-white/50 dark:bg-white/5 border-gray-200 dark:border-white/10 hover:border-amber-300 dark:hover:border-amber-500/50'
+                    ? 'bg-gradient-to-r from-red-500/10 to-orange-500/10 border-red-500 dark:border-red-400'
+                    : 'bg-white/50 dark:bg-white/5 border-gray-200 dark:border-white/10 hover:border-red-300 dark:hover:border-red-500/50'
                   }
                   ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                 `}
               >
                 <span className="text-2xl">{getFlag(country.code)}</span>
                 <div className="flex-1 min-w-0">
-                  <p className={`font-medium truncate ${isSelected ? 'text-amber-600 dark:text-amber-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                  <p className={`font-medium truncate ${isSelected ? 'text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-gray-300'}`}>
                     {country.name}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -313,7 +313,7 @@ const ChatterCountrySelector: React.FC<ChatterCountrySelectorProps> = ({
                   </p>
                 </div>
                 {isSelected && (
-                  <div className="w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center">
+                  <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
                     <Check className="w-4 h-4 text-white" />
                   </div>
                 )}
@@ -348,7 +348,7 @@ const ChatterCountrySelector: React.FC<ChatterCountrySelectorProps> = ({
 
       {/* Validation Hint */}
       {selectedCountries.length < minSelection && (
-        <p className="text-sm text-center text-amber-600 dark:text-amber-400">
+        <p className="text-sm text-center text-red-600 dark:text-red-400">
           <FormattedMessage
             id="chatter.countries.minHint"
             defaultMessage="Sélectionnez au moins {min} pays"

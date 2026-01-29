@@ -26,6 +26,12 @@ function inferModeFromKey(secret: string | undefined): 'live' | 'test' | undefin
   return undefined;
 }
 
+// P0 SECURITY FIX: Helper pour masquer les IDs sensibles dans les logs
+function maskId(id: string | undefined | null): string | undefined {
+  if (!id) return undefined;
+  return `${id.substring(0, 8)}...`;
+}
+
 function normalizeCurrency(cur?: StripePaymentData['currency']): SupportedCurrency {
   const c = (cur || 'eur').toString().toLowerCase();
   return c === 'usd' ? 'usd' : 'eur';
@@ -437,10 +443,11 @@ export class StripeManager {
     const requestId = `pi_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
 
     try {
+      // P0 SECURITY FIX: Masquer les IDs sensibles dans les logs
       prodLogger.info('STRIPE_PAYMENT_START', `[${requestId}] Creating PaymentIntent`, {
         requestId,
-        clientId: data.clientId,
-        providerId: data.providerId,
+        clientId: maskId(data.clientId),
+        providerId: maskId(data.providerId),
         amount: data.amount,
         currency: data.currency,
         serviceType: data.serviceType,
@@ -728,13 +735,12 @@ export class StripeManager {
         clientSecret: paymentIntent.client_secret || undefined,
       };
     } catch (error) {
-      // Log d'erreur
+      // P0 SECURITY FIX: Masquer les IDs sensibles et ne pas logger les stack traces
       prodLogger.error('STRIPE_PAYMENT_ERROR', `[${requestId}] PaymentIntent creation failed`, {
         requestId,
-        clientId: data.clientId,
-        providerId: data.providerId,
+        clientId: maskId(data.clientId),
+        providerId: maskId(data.providerId),
         error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
       });
 
       // ===== GESTION IDEMPOTENCY ERROR =====
@@ -1216,9 +1222,10 @@ export class StripeManager {
           } catch (payoutError) {
             // Log mais ne pas bloquer - le payout peut être retraité plus tard
             console.error('[capturePayment] PayPal payout error (non-blocking):', payoutError);
-            prodLogger.warn('PAYPAL_PAYOUT_DEFERRED', `PayPal payout deferred for provider ${providerId}`, {
-              providerId,
-              paymentIntentId,
+            // P0 SECURITY FIX: Masquer providerId dans les logs
+            prodLogger.warn('PAYPAL_PAYOUT_DEFERRED', `PayPal payout deferred for provider`, {
+              providerId: maskId(providerId),
+              paymentIntentId: maskId(paymentIntentId),
               error: payoutError instanceof Error ? payoutError.message : 'Unknown error',
             });
           }
@@ -1341,13 +1348,14 @@ export class StripeManager {
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
       });
 
-      prodLogger.info('INTERNAL_PAYOUT', `Internal payout logged for ${providerId}`, {
-        providerId,
+      // P0 SECURITY FIX: Masquer providerId dans les logs
+      prodLogger.info('INTERNAL_PAYOUT', `Internal payout logged`, {
+        providerId: maskId(providerId),
         sessionId,
-        amountCents: providerAmountCents, // P0 FIX: montant provider, pas total
+        amountCents: providerAmountCents,
         currency,
         isAAA: payoutDecision.isAAA,
-        });
+      });
 
         return;
     }
@@ -1418,9 +1426,9 @@ export class StripeManager {
         status: payoutResult.status,
       });
 
-      // Logger le succès
-      prodLogger.info('PAYPAL_PAYOUT_SUCCESS', `PayPal payout created for provider ${providerId}`, {
-        providerId,
+      // P0 SECURITY FIX: Masquer providerId dans les logs
+      prodLogger.info('PAYPAL_PAYOUT_SUCCESS', `PayPal payout created`, {
+        providerId: maskId(providerId),
         sessionId,
         amount: providerAmount,
         currency,

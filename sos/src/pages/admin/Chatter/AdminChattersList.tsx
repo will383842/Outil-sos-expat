@@ -34,17 +34,18 @@ import {
   X,
   Check,
 } from 'lucide-react';
+import AdminLayout from '../../../components/admin/AdminLayout';
 
 // Design tokens
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
   button: {
-    primary: "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all",
+    primary: "bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all",
     secondary: "bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-200 font-medium rounded-xl transition-all",
     danger: "bg-red-500 hover:bg-red-600 text-white font-medium rounded-xl transition-all",
   },
-  input: "w-full px-4 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500",
-  select: "px-4 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500",
+  input: "w-full px-4 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500",
+  select: "px-4 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500",
 } as const;
 
 // Countries list (ISO 3166-1) - comprehensive list for 197+ countries
@@ -257,7 +258,7 @@ const AdminChattersList: React.FC = () => {
         return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
       case 'pending':
       case 'quiz_required':
-        return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
+        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
       case 'suspended':
         return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
       case 'banned':
@@ -377,12 +378,13 @@ const AdminChattersList: React.FC = () => {
   const totalPages = Math.ceil(total / limit);
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Header */}
+    <AdminLayout>
+      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+        {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2 sm:gap-3">
-            <Users className="w-6 h-6 sm:w-8 sm:h-8 text-amber-500" />
+            <Users className="w-6 h-6 sm:w-8 sm:h-8 text-red-500" />
             <FormattedMessage id="admin.chatters.title" defaultMessage="Gestion des Chatters" />
           </h1>
           <p className="mt-1 text-sm sm:text-base text-gray-500 dark:text-gray-400">
@@ -442,8 +444,8 @@ const AdminChattersList: React.FC = () => {
 
           <div className={`${UI.card} p-3 sm:p-4`}>
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
-                <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 dark:text-amber-400" />
+              <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 dark:text-red-400" />
               </div>
               <div className="min-w-0">
                 <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
@@ -575,9 +577,9 @@ const AdminChattersList: React.FC = () => {
 
       {/* Bulk Actions Bar */}
       {selectedIds.size > 0 && (
-        <div className={`${UI.card} p-3 sm:p-4 bg-amber-50 dark:bg-amber-900/20`}>
+        <div className={`${UI.card} p-3 sm:p-4 bg-red-50 dark:bg-red-900/20`}>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <p className="text-sm font-medium text-amber-700 dark:text-amber-300">
+            <p className="text-sm font-medium text-red-700 dark:text-red-300">
               <FormattedMessage
                 id="admin.chatters.bulkSelected"
                 defaultMessage="{count} chatter(s) sélectionné(s)"
@@ -630,7 +632,7 @@ const AdminChattersList: React.FC = () => {
       {/* Loading */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
+          <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
         </div>
       ) : (
         <>
@@ -653,7 +655,7 @@ const AdminChattersList: React.FC = () => {
                           type="checkbox"
                           checked={selectedIds.size === chatters.length && chatters.length > 0}
                           onChange={toggleSelectAll}
-                          className="w-4 h-4 rounded border-gray-300 text-amber-500 focus:ring-amber-500"
+                          className="w-4 h-4 rounded border-gray-300 text-red-500 focus:ring-red-500"
                         />
                       </th>
                       <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -684,7 +686,7 @@ const AdminChattersList: React.FC = () => {
                       <tr
                         key={chatter.id}
                         className={`hover:bg-gray-50 dark:hover:bg-white/5 ${
-                          selectedIds.has(chatter.id) ? 'bg-amber-50 dark:bg-amber-900/10' : ''
+                          selectedIds.has(chatter.id) ? 'bg-red-50 dark:bg-red-900/10' : ''
                         }`}
                       >
                         <td className="px-3 sm:px-4 py-3 sm:py-4">
@@ -693,7 +695,7 @@ const AdminChattersList: React.FC = () => {
                             checked={selectedIds.has(chatter.id)}
                             onChange={() => toggleSelection(chatter.id)}
                             onClick={(e) => e.stopPropagation()}
-                            className="w-4 h-4 rounded border-gray-300 text-amber-500 focus:ring-amber-500"
+                            className="w-4 h-4 rounded border-gray-300 text-red-500 focus:ring-red-500"
                           />
                         </td>
                         <td
@@ -701,7 +703,7 @@ const AdminChattersList: React.FC = () => {
                           onClick={() => navigate(`/admin/chatters/${chatter.id}`)}
                         >
                           <div className="flex items-center gap-2 sm:gap-3">
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-bold text-xs sm:text-sm">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-red-400 to-orange-500 flex items-center justify-center text-white font-bold text-xs sm:text-sm">
                               {chatter.firstName?.[0]}{chatter.lastName?.[0]}
                             </div>
                             <div className="min-w-0">
@@ -730,7 +732,7 @@ const AdminChattersList: React.FC = () => {
                         </td>
                         <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden md:table-cell">
                           <div className="flex items-center gap-1.5 sm:gap-2">
-                            <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />
+                            <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-500" />
                             <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
                               {getLevelName(chatter.level)}
                             </span>
@@ -811,7 +813,8 @@ const AdminChattersList: React.FC = () => {
           )}
         </>
       )}
-    </div>
+      </div>
+    </AdminLayout>
   );
 };
 

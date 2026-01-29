@@ -26,10 +26,10 @@ import {
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
   button: {
-    primary: "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed",
+    primary: "bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed",
     secondary: "bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-300 rounded-xl transition-all",
   },
-  input: "w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all",
+  input: "w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all",
 } as const;
 
 interface Post {
@@ -255,7 +255,7 @@ const ChatterPosts: React.FC = () => {
           {/* Posts List */}
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
+              <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
             </div>
           ) : posts.length === 0 ? (
             <div className={`${UI.card} p-8 text-center`}>
@@ -289,7 +289,7 @@ const ChatterPosts: React.FC = () => {
                         href={post.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm font-medium text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 break-all"
+                        className="text-sm font-medium text-red-600 dark:text-red-400 hover:underline flex items-center gap-1 break-all"
                       >
                         {post.url}
                         <ExternalLink className="w-3 h-3 flex-shrink-0" />
@@ -324,7 +324,7 @@ const ChatterPosts: React.FC = () => {
                           </p>
                         </div>
                         <div>
-                          <p className="text-lg font-bold text-amber-600 dark:text-amber-400">${(post.earningsGenerated / 100).toFixed(2)}</p>
+                          <p className="text-lg font-bold text-red-600 dark:text-red-400">${(post.earningsGenerated / 100).toFixed(2)}</p>
                           <p className="text-xs text-gray-500">
                             <FormattedMessage id="chatter.posts.earnings" defaultMessage="Gains" />
                           </p>

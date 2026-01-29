@@ -19,7 +19,7 @@ import { ArrowLeft, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
   button: {
-    primary: "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed",
+    primary: "bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed",
     secondary: "bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-200 font-medium rounded-xl transition-all",
   },
 } as const;
@@ -123,9 +123,9 @@ const ChatterQuiz: React.FC = () => {
   if (isLoadingQuestions) {
     return (
       <Layout showFooter={false}>
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 via-amber-50/30 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 via-red-50/20 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black">
           <div className="text-center">
-            <Loader2 className="w-12 h-12 mx-auto text-amber-500 animate-spin mb-4" />
+            <Loader2 className="w-12 h-12 mx-auto text-red-500 animate-spin mb-4" />
             <p className="text-gray-500 dark:text-gray-400">
               <FormattedMessage id="chatter.quiz.loading" defaultMessage="Chargement du quiz..." />
             </p>
@@ -139,7 +139,7 @@ const ChatterQuiz: React.FC = () => {
   if (error && !showResults) {
     return (
       <Layout showFooter={false}>
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 via-amber-50/30 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black px-4">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 via-red-50/20 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black px-4">
           <div className={`${UI.card} p-8 max-w-md w-full text-center`}>
             <AlertCircle className="w-16 h-16 mx-auto text-red-500 mb-4" />
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
@@ -162,7 +162,7 @@ const ChatterQuiz: React.FC = () => {
   if (showResults && quizResult) {
     return (
       <Layout showFooter={false}>
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 via-amber-50/30 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black px-4 py-12">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 via-red-50/20 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black px-4 py-12">
           <div className="max-w-md w-full">
             <ChatterQuizResult
               passed={quizResult.passed}
@@ -194,7 +194,7 @@ const ChatterQuiz: React.FC = () => {
 
   return (
     <Layout showFooter={false}>
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 via-amber-50/30 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black py-8 px-4">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 via-red-50/20 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black py-8 px-4">
         <div className="max-w-2xl mx-auto">
           {/* Progress */}
           {startedAt && (
@@ -268,7 +268,7 @@ const ChatterQuiz: React.FC = () => {
                 onClick={() => setCurrentQuestionIndex(idx)}
                 className={`w-10 h-10 rounded-lg font-medium transition-all ${
                   idx === currentQuestionIndex
-                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                    ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
                     : answers[q.id]
                       ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
                       : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-400'

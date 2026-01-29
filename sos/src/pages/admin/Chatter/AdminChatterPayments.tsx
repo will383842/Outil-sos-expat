@@ -18,12 +18,13 @@ import {
   Building2,
   Smartphone,
 } from 'lucide-react';
+import AdminLayout from '../../../components/admin/AdminLayout';
 
 // Design tokens
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
   button: {
-    primary: "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all",
+    primary: "bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all",
     secondary: "bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-200 font-medium rounded-xl transition-all",
     danger: "bg-red-500 hover:bg-red-600 text-white font-medium rounded-xl transition-all",
     success: "bg-green-500 hover:bg-green-600 text-white font-medium rounded-xl transition-all",
@@ -183,7 +184,7 @@ const AdminChatterPayments: React.FC = () => {
       case 'completed':
         return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
       case 'pending':
-        return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
+        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
       case 'processing':
         return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
       case 'failed':
@@ -201,12 +202,13 @@ const AdminChatterPayments: React.FC = () => {
   ];
 
   return (
+    <AdminLayout>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-            <Wallet className="w-8 h-8 text-amber-500" />
+            <Wallet className="w-8 h-8 text-red-500" />
             <FormattedMessage id="admin.chatterPayments.title" defaultMessage="Paiements Chatters" />
           </h1>
           <p className="mt-1 text-gray-500 dark:text-gray-400">
@@ -231,7 +233,7 @@ const AdminChatterPayments: React.FC = () => {
             onClick={() => setActiveTab(tab.key)}
             className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
               activeTab === tab.key
-                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
                 : 'bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/20'
             }`}
           >
@@ -254,7 +256,7 @@ const AdminChatterPayments: React.FC = () => {
       {/* Content */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
+          <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
         </div>
       ) : withdrawals.length === 0 ? (
         <div className={`${UI.card} p-8 text-center`}>
@@ -270,7 +272,7 @@ const AdminChatterPayments: React.FC = () => {
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 {/* Chatter Info */}
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-bold">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-400 to-orange-500 flex items-center justify-center text-white font-bold">
                     <User className="w-6 h-6" />
                   </div>
                   <div>
@@ -383,6 +385,7 @@ const AdminChatterPayments: React.FC = () => {
         </div>
       )}
     </div>
+    </AdminLayout>
   );
 };
 

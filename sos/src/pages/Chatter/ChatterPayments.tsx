@@ -25,7 +25,7 @@ import {
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
   button: {
-    primary: "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all",
+    primary: "bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all",
     secondary: "bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-200 font-medium rounded-xl transition-all",
   },
 } as const;
@@ -91,7 +91,7 @@ const ChatterPayments: React.FC = () => {
         return <CheckCircle className="w-5 h-5 text-green-500" />;
       case 'pending':
       case 'processing':
-        return <Clock className="w-5 h-5 text-amber-500" />;
+        return <Clock className="w-5 h-5 text-red-500" />;
       case 'failed':
       case 'cancelled':
         return <XCircle className="w-5 h-5 text-red-500" />;
@@ -108,7 +108,7 @@ const ChatterPayments: React.FC = () => {
         return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
       case 'pending':
       case 'processing':
-        return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
+        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
       case 'failed':
       case 'cancelled':
         return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
@@ -122,7 +122,7 @@ const ChatterPayments: React.FC = () => {
     return (
       <ChatterDashboardLayout activeKey="payments">
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-10 h-10 text-amber-500 animate-spin" />
+          <Loader2 className="w-10 h-10 text-red-500 animate-spin" />
         </div>
       </ChatterDashboardLayout>
     );
@@ -159,13 +159,13 @@ const ChatterPayments: React.FC = () => {
           </div>
 
           {/* Balance Summary */}
-          <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl">
-            <Wallet className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+          <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-xl">
+            <Wallet className="w-6 h-6 text-red-600 dark:text-red-400" />
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 <FormattedMessage id="chatter.payments.available" defaultMessage="Disponible" />
               </p>
-              <p className="text-xl font-bold text-amber-600 dark:text-amber-400">
+              <p className="text-xl font-bold text-red-600 dark:text-red-400">
                 {formatAmount(chatter?.availableBalance || 0)}
               </p>
             </div>
@@ -178,7 +178,7 @@ const ChatterPayments: React.FC = () => {
             onClick={() => setActiveTab('commissions')}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
               activeTab === 'commissions'
-                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10'
             }`}
           >
@@ -188,7 +188,7 @@ const ChatterPayments: React.FC = () => {
             onClick={() => setActiveTab('withdrawals')}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
               activeTab === 'withdrawals'
-                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10'
             }`}
           >
@@ -198,7 +198,7 @@ const ChatterPayments: React.FC = () => {
             onClick={() => setActiveTab('withdraw')}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
               activeTab === 'withdraw'
-                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10'
             }`}
           >
@@ -292,14 +292,14 @@ const ChatterPayments: React.FC = () => {
                           ? 'bg-green-100 dark:bg-green-900/30'
                           : withdrawal.status === 'failed'
                             ? 'bg-red-100 dark:bg-red-900/30'
-                            : 'bg-amber-100 dark:bg-amber-900/30'
+                            : 'bg-red-100 dark:bg-red-900/30'
                       }`}>
                         <ArrowUpRight className={`w-5 h-5 ${
                           withdrawal.status === 'completed'
                             ? 'text-green-500'
                             : withdrawal.status === 'failed'
                               ? 'text-red-500'
-                              : 'text-amber-500'
+                              : 'text-red-500'
                         }`} />
                       </div>
                       <div>

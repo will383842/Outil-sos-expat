@@ -1156,6 +1156,8 @@ export interface ChatterNotification {
  * Zoom meeting record
  * Collection: chatter_zoom_meetings/{meetingId}
  */
+export type ChatterZoomMeetingStatus = "scheduled" | "live" | "completed" | "cancelled";
+
 export interface ChatterZoomMeeting {
   /** Document ID */
   id: string;
@@ -1173,13 +1175,17 @@ export interface ChatterZoomMeeting {
   };
 
   /** Zoom meeting ID */
-  zoomMeetingId: string;
+  zoomMeetingId?: string;
+  /** Alternative field name for compatibility */
+  zoomId?: string;
 
   /** Zoom meeting password */
   zoomPassword?: string;
 
   /** Join URL */
-  joinUrl: string;
+  joinUrl?: string;
+  /** Alternative URL field for compatibility */
+  zoomUrl?: string;
 
   /** Scheduled start time */
   scheduledAt: Timestamp;
@@ -1187,26 +1193,44 @@ export interface ChatterZoomMeeting {
   /** Duration in minutes */
   durationMinutes: number;
 
-  /** Whether meeting has ended */
-  hasEnded: boolean;
+  /** Meeting status */
+  status: ChatterZoomMeetingStatus;
+
+  /** Whether meeting has ended (legacy) */
+  hasEnded?: boolean;
 
   /** Ended timestamp */
   endedAt?: Timestamp;
 
+  /** Bonus amount in cents */
+  bonusAmount?: number;
+
+  /** Max participants */
+  maxParticipants?: number;
+
+  /** Current attendee count */
+  attendeeCount: number;
+
+  /** Meeting topics */
+  topics?: string[];
+
+  /** Host name */
+  hostName?: string;
+
+  /** Meeting language */
+  language?: string;
+
   /** Created by (admin ID) */
-  createdBy: string;
+  createdBy?: string;
 
   /** Target audience */
-  targetAudience: "all" | "new_chatters" | "top_performers" | "selected";
+  targetAudience?: "all" | "new_chatters" | "top_performers" | "selected";
 
   /** Selected chatter IDs (if targetAudience is "selected") */
   selectedChatterIds?: string[];
 
   /** Minimum level required */
   minimumLevel?: ChatterLevel;
-
-  /** Attendance count */
-  attendanceCount: number;
 
   /** Created timestamp */
   createdAt: Timestamp;
@@ -1228,20 +1252,26 @@ export interface ChatterZoomAttendance {
 
   /** Chatter ID */
   chatterId: string;
-  chatterEmail: string;
-  chatterName: string;
+  chatterEmail?: string;
+  chatterName?: string;
 
-  /** Join time */
-  joinedAt: Timestamp;
+  /** Join time (legacy field) */
+  joinedAt?: Timestamp;
+  /** Attended timestamp (new field) */
+  attendedAt?: Timestamp;
 
   /** Leave time */
   leftAt?: Timestamp;
 
   /** Duration attended (minutes) */
-  durationMinutes: number;
+  durationMinutes?: number;
+  /** Alternative field name */
+  durationAttended?: number;
 
-  /** Whether attendance qualifies for bonus */
-  qualifiesForBonus: boolean;
+  /** Whether attendance qualifies for bonus (legacy) */
+  qualifiesForBonus?: boolean;
+  /** Whether bonus was received (new field) */
+  bonusReceived?: boolean;
 
   /** Bonus commission ID if awarded */
   bonusCommissionId?: string;

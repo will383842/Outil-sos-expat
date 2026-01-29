@@ -10,10 +10,10 @@ import { User, Mail, Phone, Globe, AlertCircle, Loader2, ChevronDown } from 'luc
 // Design tokens
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
-  input: "w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all",
+  input: "w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all",
   label: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1",
   button: {
-    primary: "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed",
+    primary: "bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed",
   },
 } as const;
 
@@ -298,7 +298,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
               onClick={() => toggleLanguage(lang.code)}
               className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                 formData.languages.includes(lang.code)
-                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                  ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
                   : 'bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/20'
               }`}
             >

@@ -185,9 +185,9 @@ const ChatterLevelCard: React.FC<ChatterLevelCardProps> = ({
         </div>
 
         {/* Monthly Rank */}
-        <div className="p-2 sm:p-3 bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-lg sm:rounded-xl">
+        <div className="p-2 sm:p-3 bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-lg sm:rounded-xl">
           <div className="flex items-center gap-1 sm:gap-2 mb-1">
-            <Trophy className={`w-3 h-3 sm:w-4 sm:h-4 ${monthlyRank && monthlyRank <= 3 ? 'text-amber-500' : 'text-gray-400'}`} />
+            <Trophy className={`w-3 h-3 sm:w-4 sm:h-4 ${monthlyRank && monthlyRank <= 3 ? 'text-red-500' : 'text-gray-400'}`} />
             <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 truncate">
               <FormattedMessage id="chatter.rank.monthly" defaultMessage="Classement" />
             </span>
@@ -198,7 +198,7 @@ const ChatterLevelCard: React.FC<ChatterLevelCardProps> = ({
                 #{monthlyRank}
               </p>
               {monthlyRank <= 3 && (
-                <p className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-400 mt-0.5 sm:mt-1">
+                <p className="text-[10px] sm:text-xs text-red-600 dark:text-red-400 mt-0.5 sm:mt-1">
                   <FormattedMessage
                     id={`chatter.rank.top${monthlyRank}`}
                     defaultMessage="Top {rank} ce mois!"

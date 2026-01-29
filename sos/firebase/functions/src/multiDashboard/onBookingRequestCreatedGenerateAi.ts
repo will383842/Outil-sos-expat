@@ -1,10 +1,15 @@
 /**
  * =============================================================================
- * MULTI DASHBOARD - Auto AI Response Generation
+ * AUTO AI RESPONSE GENERATION - All Providers
  * =============================================================================
  *
  * Firestore trigger that automatically generates an AI response when a
- * booking_request is created for a multi-provider account.
+ * booking_request is created for ANY provider with valid AI access.
+ *
+ * AI access is granted via:
+ * - Active subscription (subscriptions/{providerId})
+ * - Forced access by admin (users/{providerId}.forcedAIAccess = true)
+ * - Free trial until date (users/{providerId}.freeTrialUntil)
  *
  * This trigger is deployed on sos-urgently-ac307 (where booking_requests are created)
  */
@@ -57,22 +62,82 @@ interface ClaudeResponse {
 }
 
 // =============================================================================
-// HELPER: Check if provider belongs to a multi-provider account
+// HELPER: Check if provider has valid AI access
 // =============================================================================
 
-async function checkIfMultiProvider(providerId: string): Promise<boolean> {
+interface AiAccessResult {
+  hasAccess: boolean;
+  reason: 'subscription_active' | 'forced_access' | 'free_trial' | 'no_access';
+  note?: string;
+}
+
+async function checkProviderAiAccess(providerId: string): Promise<AiAccessResult> {
   const db = admin.firestore();
+  const now = new Date();
 
-  // Query users collection for accounts that have this providerId in linkedProviderIds
-  // AND are marked as multi-provider
-  const usersQuery = await db
-    .collection("users")
-    .where("linkedProviderIds", "array-contains", providerId)
-    .where("isMultiProvider", "==", true)
-    .limit(1)
-    .get();
+  // 1. Check user document for forced access or free trial
+  const userDoc = await db.collection("users").doc(providerId).get();
 
-  return !usersQuery.empty;
+  if (userDoc.exists) {
+    const userData = userDoc.data()!;
+
+    // Check forcedAIAccess (admin-granted access)
+    if (userData.forcedAIAccess === true || userData.forceAiAccess === true) {
+      return {
+        hasAccess: true,
+        reason: 'forced_access',
+        note: userData.forcedAccessNote || 'Accès IA accordé par administrateur'
+      };
+    }
+
+    // Check freeTrialUntil
+    if (userData.freeTrialUntil) {
+      const freeTrialUntil = userData.freeTrialUntil.toDate
+        ? userData.freeTrialUntil.toDate()
+        : new Date(userData.freeTrialUntil);
+
+      if (freeTrialUntil > now) {
+        return {
+          hasAccess: true,
+          reason: 'free_trial',
+          note: `Essai gratuit jusqu'au ${freeTrialUntil.toLocaleDateString('fr-FR')}`
+        };
+      }
+    }
+  }
+
+  // 2. Check subscription status
+  const subDoc = await db.collection("subscriptions").doc(providerId).get();
+
+  if (subDoc.exists) {
+    const subscription = subDoc.data()!;
+    const status = subscription.status;
+
+    // Active subscription statuses that grant AI access
+    const activeStatuses = ['active', 'trialing', 'past_due'];
+
+    if (activeStatuses.includes(status)) {
+      // For past_due, check grace period (7 days default)
+      if (status === 'past_due') {
+        const pastDueSince = subscription.pastDueSince?.toDate?.()
+          || subscription.updatedAt?.toDate?.()
+          || now;
+        const daysPastDue = Math.ceil((now.getTime() - pastDueSince.getTime()) / (1000 * 60 * 60 * 24));
+
+        if (daysPastDue >= 7) {
+          return { hasAccess: false, reason: 'no_access' };
+        }
+      }
+
+      return {
+        hasAccess: true,
+        reason: 'subscription_active',
+        note: `Abonnement ${status}`
+      };
+    }
+  }
+
+  return { hasAccess: false, reason: 'no_access' };
 }
 
 // =============================================================================
@@ -181,14 +246,14 @@ export const onBookingRequestCreatedGenerateAi = onDocumentCreated(
   async (event) => {
     const snap = event.data;
     if (!snap) {
-      logger.warn("[MultiDashboard-SOS] No snapshot data");
+      logger.warn("[AutoAI] No snapshot data");
       return;
     }
 
     const bookingId = event.params.bookingId;
     const booking = snap.data() as BookingRequestData;
 
-    logger.info("[MultiDashboard-SOS] New booking_request detected", {
+    logger.info("[AutoAI] New booking_request detected", {
       bookingId,
       providerId: booking.providerId,
       clientName: booking.clientName || booking.clientFirstName,
@@ -196,24 +261,27 @@ export const onBookingRequestCreatedGenerateAi = onDocumentCreated(
 
     // Skip if already processed
     if (booking.aiResponse || booking.aiProcessedAt) {
-      logger.info("[MultiDashboard-SOS] Already processed, skipping", { bookingId });
+      logger.info("[AutoAI] Already processed, skipping", { bookingId });
       return;
     }
 
-    // Check if provider belongs to a multi-provider account
-    const isMulti = await checkIfMultiProvider(booking.providerId);
+    // Check if provider has valid AI access (subscription, forced access, or free trial)
+    const aiAccess = await checkProviderAiAccess(booking.providerId);
 
-    if (!isMulti) {
-      logger.info("[MultiDashboard-SOS] Not a multi-provider, skipping", {
+    if (!aiAccess.hasAccess) {
+      logger.info("[AutoAI] Provider has no AI access, skipping", {
         bookingId,
         providerId: booking.providerId,
+        reason: aiAccess.reason,
       });
       return;
     }
 
-    logger.info("[MultiDashboard-SOS] Multi-provider detected, generating AI response", {
+    logger.info("[AutoAI] Provider has AI access, generating automatic response", {
       bookingId,
       providerId: booking.providerId,
+      accessReason: aiAccess.reason,
+      accessNote: aiAccess.note,
     });
 
     try {
@@ -239,12 +307,13 @@ export const onBookingRequestCreatedGenerateAi = onDocumentCreated(
           generatedAt: admin.firestore.FieldValue.serverTimestamp(),
           model: aiResult.model,
           tokensUsed: aiResult.tokensUsed,
-          source: "multi_dashboard_auto",
+          source: "auto_ai_welcome",
+          accessReason: aiAccess.reason,
         },
         aiProcessedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
 
-      logger.info("[MultiDashboard-SOS] AI response saved successfully", {
+      logger.info("[AutoAI] AI response saved successfully", {
         bookingId,
         model: aiResult.model,
         tokensUsed: aiResult.tokensUsed,
@@ -253,7 +322,7 @@ export const onBookingRequestCreatedGenerateAi = onDocumentCreated(
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      logger.error("[MultiDashboard-SOS] Failed to generate AI response", {
+      logger.error("[AutoAI] Failed to generate AI response", {
         bookingId,
         error: errorMessage,
       });

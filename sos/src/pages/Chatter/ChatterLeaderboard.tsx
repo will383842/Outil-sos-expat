@@ -30,14 +30,14 @@ import type { ChatterLeaderboardEntry, ChatterLevel } from '@/types/chatter';
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
   button: {
-    primary: "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all",
+    primary: "bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all",
     secondary: "bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-200 font-medium rounded-xl transition-all",
   },
 } as const;
 
 // Level colors and names
 const LEVEL_CONFIG: Record<ChatterLevel, { name: string; color: string; gradient: string }> = {
-  1: { name: 'Bronze', color: 'text-amber-700', gradient: 'from-amber-600 to-amber-800' },
+  1: { name: 'Bronze', color: 'text-red-700', gradient: 'from-amber-600 to-amber-800' },
   2: { name: 'Silver', color: 'text-gray-400', gradient: 'from-gray-300 to-gray-500' },
   3: { name: 'Gold', color: 'text-yellow-500', gradient: 'from-yellow-400 to-yellow-600' },
   4: { name: 'Platinum', color: 'text-cyan-400', gradient: 'from-cyan-300 to-cyan-500' },
@@ -186,7 +186,7 @@ const ChatterLeaderboard: React.FC = () => {
     return (
       <ChatterDashboardLayout>
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-10 h-10 text-amber-500 animate-spin" />
+          <Loader2 className="w-10 h-10 text-red-500 animate-spin" />
         </div>
       </ChatterDashboardLayout>
     );
@@ -199,7 +199,7 @@ const ChatterLeaderboard: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-              <Trophy className="w-8 h-8 text-amber-500" />
+              <Trophy className="w-8 h-8 text-red-500" />
               <FormattedMessage id="chatter.leaderboard.title" defaultMessage="Classement" />
             </h1>
             <p className="mt-1 text-gray-500 dark:text-gray-400">
@@ -235,10 +235,10 @@ const ChatterLeaderboard: React.FC = () => {
 
         {/* My Rank Card */}
         {myRank && currentUserEntry && (
-          <div className={`${UI.card} p-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-500/30`}>
+          <div className={`${UI.card} p-4 bg-gradient-to-r from-red-500/10 to-orange-500/10 border-red-500/30`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-bold">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-400 to-orange-500 flex items-center justify-center text-white font-bold">
                   #{myRank}
                 </div>
                 <div>
@@ -276,7 +276,7 @@ const ChatterLeaderboard: React.FC = () => {
         {/* Loading State */}
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-10 h-10 text-amber-500 animate-spin" />
+            <Loader2 className="w-10 h-10 text-red-500 animate-spin" />
           </div>
         ) : error ? (
           <div className={`${UI.card} p-6`}>
@@ -430,7 +430,7 @@ const ChatterLeaderboard: React.FC = () => {
                           <tr
                             key={entry.chatterId}
                             className={`hover:bg-gray-50 dark:hover:bg-white/5 ${
-                              isCurrentUser ? 'bg-amber-50 dark:bg-amber-900/10' : ''
+                              isCurrentUser ? 'bg-red-50 dark:bg-red-900/10' : ''
                             }`}
                           >
                             <td className="px-4 py-4 whitespace-nowrap">
@@ -440,7 +440,7 @@ const ChatterLeaderboard: React.FC = () => {
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap">
                               <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-bold">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-400 to-orange-500 flex items-center justify-center text-white font-bold">
                                   {entry.photoUrl ? (
                                     <img src={entry.photoUrl} alt={entry.chatterName} className="w-full h-full rounded-full object-cover" />
                                   ) : (
@@ -451,7 +451,7 @@ const ChatterLeaderboard: React.FC = () => {
                                   <p className="font-medium text-gray-900 dark:text-white flex items-center gap-1">
                                     {entry.chatterName}
                                     {isCurrentUser && (
-                                      <span className="text-xs px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded ml-1">
+                                      <span className="text-xs px-1.5 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded ml-1">
                                         <FormattedMessage id="chatter.leaderboard.you" defaultMessage="Vous" />
                                       </span>
                                     )}
@@ -524,8 +524,8 @@ const ChatterLeaderboard: React.FC = () => {
 
           <div className={`${UI.card} p-4`}>
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
-                <Medal className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                <Medal className="w-5 h-5 text-red-600 dark:text-red-400" />
               </div>
               <div>
                 <p className="font-semibold text-gray-900 dark:text-white">Top 3</p>

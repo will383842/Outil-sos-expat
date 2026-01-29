@@ -25,7 +25,7 @@ import {
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
   button: {
-    primary: "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold rounded-xl transition-all",
+    primary: "bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-bold rounded-xl transition-all",
   },
 } as const;
 
@@ -44,7 +44,7 @@ const ChatterPresentation: React.FC = () => {
       icon: <Star className="w-12 h-12" />,
       title: intl.formatMessage({ id: 'chatter.presentation.slide1.title', defaultMessage: 'Bienvenue chez les Chatters !' }),
       content: intl.formatMessage({ id: 'chatter.presentation.slide1.content', defaultMessage: 'Les Chatters sont les ambassadeurs de SOS-Expat. Vous allez apprendre à promouvoir notre plateforme et gagner des commissions.' }),
-      color: 'from-amber-500 to-orange-500',
+      color: 'from-red-500 to-orange-500',
     },
     {
       icon: <Users className="w-12 h-12" />,
@@ -62,7 +62,7 @@ const ChatterPresentation: React.FC = () => {
       icon: <Trophy className="w-12 h-12" />,
       title: intl.formatMessage({ id: 'chatter.presentation.slide4.title', defaultMessage: 'Bonus et niveaux' }),
       content: intl.formatMessage({ id: 'chatter.presentation.slide4.content', defaultMessage: '5 niveaux (Bronze à Diamond) avec bonus croissants. Les Top 3 du mois reçoivent jusqu\'à +100% de bonus sur leurs commissions !' }),
-      color: 'from-yellow-400 to-amber-500',
+      color: 'from-yellow-400 to-orange-500',
     },
     {
       icon: <BookOpen className="w-12 h-12" />,
@@ -93,7 +93,7 @@ const ChatterPresentation: React.FC = () => {
 
   return (
     <Layout showFooter={false}>
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 via-amber-50/30 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black flex flex-col">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 via-red-50/20 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black flex flex-col">
         {/* Progress Dots */}
         <div className="flex justify-center gap-2 py-6">
           {slides.map((_, idx) => (
@@ -102,9 +102,9 @@ const ChatterPresentation: React.FC = () => {
               onClick={() => setCurrentSlide(idx)}
               className={`w-2.5 h-2.5 rounded-full transition-all ${
                 idx === currentSlide
-                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 w-6'
+                  ? 'bg-gradient-to-r from-red-500 to-orange-500 w-6'
                   : idx < currentSlide
-                    ? 'bg-amber-300 dark:bg-amber-700'
+                    ? 'bg-red-300 dark:bg-red-700'
                     : 'bg-gray-300 dark:bg-gray-700'
               }`}
             />
@@ -134,7 +134,7 @@ const ChatterPresentation: React.FC = () => {
               <div className="flex justify-center gap-4 mb-8">
                 {quizInfo.map((info, idx) => (
                   <div key={idx} className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-white/10 rounded-lg">
-                    <span className="text-amber-500">{info.icon}</span>
+                    <span className="text-red-500">{info.icon}</span>
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{info.label}</span>
                   </div>
                 ))}
