@@ -161,7 +161,22 @@ const InfluencerLeaderboard = lazy(() => import('./pages/Influencer/InfluencerLe
 const InfluencerPayments = lazy(() => import('./pages/Influencer/InfluencerPayments'));
 const InfluencerProfile = lazy(() => import('./pages/Influencer/InfluencerProfile'));
 const InfluencerPromoTools = lazy(() => import('./pages/Influencer/InfluencerPromoTools'));
+const InfluencerTraining = lazy(() => import('./pages/Influencer/InfluencerTraining'));
 const InfluencerSuspended = lazy(() => import('./pages/Influencer/InfluencerSuspended'));
+
+// Blogger System
+const BloggerLanding = lazy(() => import('./pages/Blogger/BloggerLanding'));
+const BloggerRegister = lazy(() => import('./pages/Blogger/BloggerRegister'));
+const BloggerDashboard = lazy(() => import('./pages/Blogger/BloggerDashboard'));
+const BloggerEarnings = lazy(() => import('./pages/Blogger/BloggerEarnings'));
+const BloggerReferrals = lazy(() => import('./pages/Blogger/BloggerReferrals'));
+const BloggerLeaderboard = lazy(() => import('./pages/Blogger/BloggerLeaderboard'));
+const BloggerPayments = lazy(() => import('./pages/Blogger/BloggerPayments'));
+const BloggerResources = lazy(() => import('./pages/Blogger/BloggerResources'));
+const BloggerGuide = lazy(() => import('./pages/Blogger/BloggerGuide'));
+const BloggerPromoTools = lazy(() => import('./pages/Blogger/BloggerPromoTools'));
+const BloggerProfile = lazy(() => import('./pages/Blogger/BloggerProfile'));
+const BloggerSuspended = lazy(() => import('./pages/Blogger/BloggerSuspended'));
 
 // -------------------------------------------
 // Laguage config
@@ -266,6 +281,9 @@ const routeConfigs: RouteConfig[] = [
 
   // Influencer Landing Page (public)
   { path: "/devenir-influenceur", component: InfluencerLanding, translated: "influencer-landing" },
+
+  // Blogger Landing Page (public)
+  { path: "/devenir-blogger", component: BloggerLanding, translated: "blogger-landing" },
 ];
 
 // Protégées (utilisateur)
@@ -336,8 +354,25 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/influencer/classement", component: InfluencerLeaderboard, protected: true, role: 'influencer', translated: "influencer-leaderboard" },
   { path: "/influencer/paiements", component: InfluencerPayments, protected: true, role: 'influencer', translated: "influencer-payments" },
   { path: "/influencer/outils", component: InfluencerPromoTools, protected: true, role: 'influencer', translated: "influencer-promo-tools" },
+  { path: "/influencer/formation", component: InfluencerTraining, protected: true, role: 'influencer', translated: "influencer-training" },
   { path: "/influencer/profil", component: InfluencerProfile, protected: true, role: 'influencer', translated: "influencer-profile" },
   { path: "/influencer/suspendu", component: InfluencerSuspended, protected: true, role: 'influencer', translated: "influencer-suspended" },
+
+  // Blogger System Routes - Protected routes for registered bloggers
+  // IMPORTANT: Les rôles sont mutuellement exclusifs. Un blogueur ne peut pas devenir chatter/influencer/client/lawyer/expat.
+  // L'inscription est accessible à tout utilisateur authentifié (le backend vérifie les restrictions de rôle)
+  { path: "/blogger/inscription", component: BloggerRegister, protected: true, translated: "blogger-register" },
+  // Après inscription, l'utilisateur a role="blogger" - toutes les autres routes sont réservées aux blogueurs
+  { path: "/blogger/tableau-de-bord", component: BloggerDashboard, protected: true, role: 'blogger', translated: "blogger-dashboard" },
+  { path: "/blogger/gains", component: BloggerEarnings, protected: true, role: 'blogger', translated: "blogger-earnings" },
+  { path: "/blogger/filleuls", component: BloggerReferrals, protected: true, role: 'blogger', translated: "blogger-referrals" },
+  { path: "/blogger/classement", component: BloggerLeaderboard, protected: true, role: 'blogger', translated: "blogger-leaderboard" },
+  { path: "/blogger/paiements", component: BloggerPayments, protected: true, role: 'blogger', translated: "blogger-payments" },
+  { path: "/blogger/ressources", component: BloggerResources, protected: true, role: 'blogger', translated: "blogger-resources" },
+  { path: "/blogger/guide", component: BloggerGuide, protected: true, role: 'blogger', translated: "blogger-guide" },
+  { path: "/blogger/outils", component: BloggerPromoTools, protected: true, role: 'blogger', translated: "blogger-promo-tools" },
+  { path: "/blogger/profil", component: BloggerProfile, protected: true, role: 'blogger', translated: "blogger-profile" },
+  { path: "/blogger/suspendu", component: BloggerSuspended, protected: true, role: 'blogger', translated: "blogger-suspended" },
 ];
 
 // ====================================

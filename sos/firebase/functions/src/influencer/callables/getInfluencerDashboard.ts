@@ -56,8 +56,8 @@ export const getInfluencerDashboard = onCall(
       const influencer = influencerDoc.data() as Influencer;
 
       // 3. Check status
-      if (influencer.status === "blocked") {
-        throw new HttpsError("permission-denied", "Account is blocked");
+      if (influencer.status === "banned") {
+        throw new HttpsError("permission-denied", "Account is banned");
       }
 
       // 4. Get recent commissions (last 10)

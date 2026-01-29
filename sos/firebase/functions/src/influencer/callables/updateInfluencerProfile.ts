@@ -98,8 +98,8 @@ export const updateInfluencerProfile = onCall(
       const influencer = influencerDoc.data() as Influencer;
 
       // 4. Check status
-      if (influencer.status === "blocked") {
-        throw new HttpsError("permission-denied", "Account is blocked");
+      if (influencer.status === "banned") {
+        throw new HttpsError("permission-denied", "Account is banned");
       }
 
       // 5. Build update object

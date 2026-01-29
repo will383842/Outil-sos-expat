@@ -1,6 +1,6 @@
 /**
  * ChatterWithdrawalForm - Withdrawal request form for chatters
- * Supports Wise, Mobile Money, and Bank Transfer payment methods
+ * Supports Wise, PayPal, Mobile Money, and Bank Transfer payment methods
  */
 
 import React, { useState, useMemo } from 'react';
@@ -13,11 +13,13 @@ import {
   AlertCircle,
   Loader2,
   CheckCircle,
+  CreditCard,
 } from 'lucide-react';
 import {
   ChatterPaymentMethod,
   ChatterPaymentDetails,
   ChatterWiseDetails,
+  ChatterPayPalDetails,
   ChatterMobileMoneyDetails,
   ChatterBankDetails,
 } from '@/types/chatter';
@@ -63,6 +65,13 @@ const ChatterWithdrawalForm: React.FC<ChatterWithdrawalFormProps> = ({
 
   // Wise details
   const [wiseDetails, setWiseDetails] = useState<Partial<ChatterWiseDetails>>({
+    email: '',
+    accountHolderName: '',
+    currency: 'EUR',
+  });
+
+  // PayPal details
+  const [paypalDetails, setPaypalDetails] = useState<Partial<ChatterPayPalDetails>>({
     email: '',
     accountHolderName: '',
     currency: 'EUR',
@@ -125,6 +134,9 @@ const ChatterWithdrawalForm: React.FC<ChatterWithdrawalFormProps> = ({
       case 'wise':
         details = wiseDetails as ChatterWiseDetails;
         break;
+      case 'paypal':
+        details = paypalDetails as ChatterPayPalDetails;
+        break;
       case 'mobile_money':
         details = mobileMoneyDetails as ChatterMobileMoneyDetails;
         break;
@@ -158,6 +170,24 @@ const ChatterWithdrawalForm: React.FC<ChatterWithdrawalFormProps> = ({
             <p className="font-semibold text-gray-900 dark:text-white">Wise</p>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               <FormattedMessage id="chatter.withdraw.wiseDesc" defaultMessage="Virement international rapide" />
+            </p>
+          </div>
+        </div>
+        <ChevronRight className="w-5 h-5 text-gray-400" />
+      </button>
+
+      <button
+        onClick={() => selectMethod('paypal')}
+        className={`${UI.card} w-full p-4 flex items-center justify-between hover:shadow-lg transition-all`}
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-100 to-sky-100 dark:from-blue-900/30 dark:to-sky-900/30 flex items-center justify-center">
+            <CreditCard className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+          </div>
+          <div className="text-left">
+            <p className="font-semibold text-gray-900 dark:text-white">PayPal</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              <FormattedMessage id="chatter.withdraw.paypalDesc" defaultMessage="Paiement rapide et sécurisé" />
             </p>
           </div>
         </div>
@@ -240,6 +270,54 @@ const ChatterWithdrawalForm: React.FC<ChatterWithdrawalFormProps> = ({
         <select
           value={wiseDetails.currency}
           onChange={(e) => setWiseDetails({ ...wiseDetails, currency: e.target.value })}
+          className={UI.input}
+        >
+          {WISE_CURRENCIES.map(curr => (
+            <option key={curr.code} value={curr.code}>
+              {curr.symbol} - {curr.name}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+
+  // PayPal details form
+  const renderPayPalForm = () => (
+    <div className="space-y-4">
+      <div>
+        <label className={UI.label}>
+          <FormattedMessage id="chatter.withdraw.paypal.email" defaultMessage="Email PayPal" />
+        </label>
+        <input
+          type="email"
+          value={paypalDetails.email}
+          onChange={(e) => setPaypalDetails({ ...paypalDetails, email: e.target.value })}
+          className={UI.input}
+          placeholder="votre@email.com"
+        />
+      </div>
+
+      <div>
+        <label className={UI.label}>
+          <FormattedMessage id="chatter.withdraw.accountHolder" defaultMessage="Nom du titulaire" />
+        </label>
+        <input
+          type="text"
+          value={paypalDetails.accountHolderName}
+          onChange={(e) => setPaypalDetails({ ...paypalDetails, accountHolderName: e.target.value })}
+          className={UI.input}
+          placeholder="Nom complet"
+        />
+      </div>
+
+      <div>
+        <label className={UI.label}>
+          <FormattedMessage id="chatter.withdraw.currency" defaultMessage="Devise de réception" />
+        </label>
+        <select
+          value={paypalDetails.currency}
+          onChange={(e) => setPaypalDetails({ ...paypalDetails, currency: e.target.value })}
           className={UI.input}
         >
           {WISE_CURRENCIES.map(curr => (
@@ -401,6 +479,7 @@ const ChatterWithdrawalForm: React.FC<ChatterWithdrawalFormProps> = ({
 
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
         {selectedMethod === 'wise' && 'Wise'}
+        {selectedMethod === 'paypal' && 'PayPal'}
         {selectedMethod === 'mobile_money' && 'Mobile Money'}
         {selectedMethod === 'bank_transfer' && intl.formatMessage({ id: 'chatter.withdraw.bankTransfer', defaultMessage: 'Virement bancaire' })}
       </h3>
@@ -450,6 +529,7 @@ const ChatterWithdrawalForm: React.FC<ChatterWithdrawalFormProps> = ({
 
       {/* Payment Details */}
       {selectedMethod === 'wise' && renderWiseForm()}
+      {selectedMethod === 'paypal' && renderPayPalForm()}
       {selectedMethod === 'mobile_money' && renderMobileMoneyForm()}
       {selectedMethod === 'bank_transfer' && renderBankForm()}
 

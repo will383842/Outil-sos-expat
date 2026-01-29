@@ -478,8 +478,8 @@ export async function releaseCommission(
     // Check for level up
     await checkAndUpdateLevel(commission.chatterId);
 
-    // Check for $50 recruiter bonus (when recruited chatter reaches $500)
-    await checkRecruiterMilestoneBonus(commission.chatterId);
+    // REMOVED: $50 recruiter bonus feature has been disabled
+    // await checkRecruiterMilestoneBonus(commission.chatterId);
 
     return { success: true };
   } catch (error) {
@@ -673,150 +673,23 @@ export async function checkAndUpdateLevel(chatterId: string): Promise<{
 }
 
 // ============================================================================
-// RECRUITER MILESTONE BONUS
+// RECRUITER MILESTONE BONUS - DISABLED
 // ============================================================================
 
 /**
- * Award $50 recruiter bonus when recruited chatter reaches $500 in total earnings
- * This is a one-time bonus per recruited chatter
+ * DISABLED: This feature has been removed.
+ * Previously awarded $50 recruiter bonus when recruited chatter reaches $500 in total earnings.
+ * Kept for backward compatibility but always returns { bonusAwarded: false }
+ *
+ * @deprecated This function is disabled and does nothing
  */
-export async function checkRecruiterMilestoneBonus(chatterId: string): Promise<{
+export async function checkRecruiterMilestoneBonus(_chatterId: string): Promise<{
   bonusAwarded: boolean;
   recruiterId?: string;
   bonusCommissionId?: string;
 }> {
-  const db = getFirestore();
-  const MILESTONE_THRESHOLD = 50000; // $500 in cents
-  const RECRUITER_BONUS_AMOUNT = 5000; // $50 in cents
-
-  try {
-    const chatterDoc = await db.collection("chatters").doc(chatterId).get();
-
-    if (!chatterDoc.exists) {
-      return { bonusAwarded: false };
-    }
-
-    const chatter = chatterDoc.data() as Chatter;
-
-    // Check if chatter was recruited by another chatter
-    if (!chatter.recruitedBy) {
-      return { bonusAwarded: false };
-    }
-
-    // Check if chatter has reached $500 milestone
-    if (chatter.totalEarned < MILESTONE_THRESHOLD) {
-      return { bonusAwarded: false };
-    }
-
-    // Check if recruiter bonus was already paid for this milestone
-    // We use a special field to track this
-    if (chatter.recruiterMilestoneBonusPaid) {
-      return { bonusAwarded: false };
-    }
-
-    // Get recruiter
-    const recruiterDoc = await db.collection("chatters").doc(chatter.recruitedBy).get();
-
-    if (!recruiterDoc.exists) {
-      logger.warn("[checkRecruiterMilestoneBonus] Recruiter not found", {
-        chatterId,
-        recruiterId: chatter.recruitedBy,
-      });
-      return { bonusAwarded: false };
-    }
-
-    const recruiter = recruiterDoc.data() as Chatter;
-
-    // Check recruiter is active
-    if (recruiter.status !== "active") {
-      logger.info("[checkRecruiterMilestoneBonus] Recruiter not active, skipping bonus", {
-        chatterId,
-        recruiterId: chatter.recruitedBy,
-        recruiterStatus: recruiter.status,
-      });
-      return { bonusAwarded: false };
-    }
-
-    // Mark milestone bonus as processing to prevent race conditions
-    await db.collection("chatters").doc(chatterId).update({
-      recruiterMilestoneBonusPaid: true,
-      recruiterMilestoneBonusAt: Timestamp.now(),
-      updatedAt: Timestamp.now(),
-    });
-
-    // Create the $50 recruiter bonus commission
-    const result = await createCommission({
-      chatterId: chatter.recruitedBy,
-      type: "recruitment",
-      source: {
-        id: chatterId,
-        type: "user",
-        details: {
-          providerId: chatterId,
-          providerEmail: chatter.email,
-          bonusType: "recruiter_milestone",
-          bonusReason: `$500 milestone bonus for recruited chatter ${chatter.firstName} ${chatter.lastName}`,
-        },
-      },
-      baseAmount: RECRUITER_BONUS_AMOUNT,
-      description: `Bonus $50 - Filleul ${chatter.firstName} ${chatter.lastName.charAt(0)}. a atteint $500 de commissions`,
-      skipFraudCheck: true,
-    });
-
-    if (result.success) {
-      logger.info("[checkRecruiterMilestoneBonus] Recruiter milestone bonus awarded", {
-        chatterId,
-        recruiterId: chatter.recruitedBy,
-        commissionId: result.commissionId,
-        amount: RECRUITER_BONUS_AMOUNT,
-      });
-
-      // Create notification for recruiter
-      const notificationRef = db.collection("chatter_notifications").doc();
-      await notificationRef.set({
-        id: notificationRef.id,
-        chatterId: chatter.recruitedBy,
-        type: "commission_earned",
-        title: "Prime de recrutement $50 !",
-        titleTranslations: { en: "$50 Recruitment Bonus!" },
-        message: `Votre filleul ${chatter.firstName} ${chatter.lastName.charAt(0)}. a atteint $500 de commissions ! Vous recevez $50 de bonus.`,
-        messageTranslations: {
-          en: `Your recruit ${chatter.firstName} ${chatter.lastName.charAt(0)}. has reached $500 in commissions! You receive a $50 bonus.`,
-        },
-        actionUrl: "/chatter/dashboard",
-        isRead: false,
-        emailSent: false,
-        data: {
-          commissionId: result.commissionId,
-          amount: RECRUITER_BONUS_AMOUNT,
-        },
-        createdAt: Timestamp.now(),
-      });
-
-      return {
-        bonusAwarded: true,
-        recruiterId: chatter.recruitedBy,
-        bonusCommissionId: result.commissionId,
-      };
-    } else {
-      // Rollback the flag if commission creation failed
-      await db.collection("chatters").doc(chatterId).update({
-        recruiterMilestoneBonusPaid: false,
-        recruiterMilestoneBonusAt: null,
-        updatedAt: Timestamp.now(),
-      });
-
-      logger.error("[checkRecruiterMilestoneBonus] Failed to create bonus commission", {
-        chatterId,
-        recruiterId: chatter.recruitedBy,
-        error: result.error,
-      });
-      return { bonusAwarded: false };
-    }
-  } catch (error) {
-    logger.error("[checkRecruiterMilestoneBonus] Error", { chatterId, error });
-    return { bonusAwarded: false };
-  }
+  // Feature disabled - always return false
+  return { bonusAwarded: false };
 }
 
 // ============================================================================

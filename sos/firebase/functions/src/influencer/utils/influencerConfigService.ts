@@ -402,7 +402,8 @@ export function getAntiFraudConfig(config: InfluencerConfig) {
 
 /**
  * Check if anti-fraud is enabled
+ * NOTE: Returns true by default for security
  */
 export function isAntiFraudEnabled(config: InfluencerConfig): boolean {
-  return config.antiFraud?.enabled ?? false;
+  return config.antiFraud?.enabled ?? true;
 }

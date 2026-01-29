@@ -360,7 +360,7 @@ export const adminUpdateInfluencerStatus = onCall(
       throw new HttpsError("invalid-argument", "Influencer ID is required");
     }
 
-    if (!status || !["active", "suspended", "blocked"].includes(status)) {
+    if (!status || !["active", "suspended", "banned"].includes(status)) {
       throw new HttpsError("invalid-argument", "Valid status is required");
     }
 

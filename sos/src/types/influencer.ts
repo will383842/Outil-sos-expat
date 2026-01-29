@@ -8,7 +8,8 @@
 // ENUMS & CONSTANTS
 // ============================================================================
 
-export type InfluencerStatus = 'active' | 'suspended' | 'blocked';
+// NOTE: Changed from 'blocked' to 'banned' for consistency with Chatter
+export type InfluencerStatus = 'active' | 'suspended' | 'banned';
 
 // V2: Extended commission types
 export type InfluencerCommissionType =
@@ -29,7 +30,8 @@ export type InfluencerCommissionStatus = 'pending' | 'validated' | 'available' |
 
 export type InfluencerWithdrawalStatus = 'pending' | 'processing' | 'completed' | 'rejected' | 'failed';
 
-export type InfluencerPaymentMethod = 'wise' | 'paypal' | 'bank_transfer';
+// NOTE: Added 'mobile_money' for alignment with Chatter (African markets)
+export type InfluencerPaymentMethod = 'wise' | 'paypal' | 'mobile_money' | 'bank_transfer';
 
 export type InfluencerPlatform =
   | 'youtube'
@@ -211,6 +213,22 @@ export interface InfluencerPaymentDetailsPayPal {
   accountHolderName: string;
 }
 
+export type InfluencerMobileMoneyProvider =
+  | 'orange_money'
+  | 'wave'
+  | 'mtn_momo'
+  | 'moov_money'
+  | 'airtel_money'
+  | 'mpesa';
+
+export interface InfluencerPaymentDetailsMobileMoney {
+  type: 'mobile_money';
+  provider: InfluencerMobileMoneyProvider;
+  phoneNumber: string;
+  country: string;
+  accountName: string;
+}
+
 export interface InfluencerPaymentDetailsBankTransfer {
   type: 'bank_transfer';
   bankName: string;
@@ -225,6 +243,7 @@ export interface InfluencerPaymentDetailsBankTransfer {
 export type InfluencerPaymentDetails =
   | InfluencerPaymentDetailsWise
   | InfluencerPaymentDetailsPayPal
+  | InfluencerPaymentDetailsMobileMoney
   | InfluencerPaymentDetailsBankTransfer;
 
 export interface InfluencerWithdrawal {
@@ -312,6 +331,12 @@ export interface InfluencerNotification {
 // ============================================================================
 
 export interface InfluencerConfig {
+  // System status
+  isSystemActive?: boolean;
+  newRegistrationsEnabled?: boolean;
+  withdrawalsEnabled?: boolean;
+  trainingEnabled?: boolean;
+
   // Commission rates (fixed amounts in cents) - Legacy
   clientReferralCommission: number;
   providerRecruitmentCommission: number;
@@ -420,4 +445,163 @@ export interface RequestInfluencerWithdrawalInput {
   amount: number;
   paymentMethod: InfluencerPaymentMethod;
   paymentDetails: InfluencerPaymentDetails;
+}
+
+// ============================================================================
+// TRAINING SYSTEM
+// ============================================================================
+
+export type TrainingModuleStatus = "draft" | "published" | "archived";
+export type TrainingSlideType = "text" | "video" | "image" | "checklist" | "tips";
+export type InfluencerTrainingCategory =
+  | "onboarding"
+  | "content_creation"
+  | "promotion"
+  | "analytics"
+  | "monetization";
+
+export interface TrainingSlide {
+  order: number;
+  type: TrainingSlideType;
+  title: string;
+  titleTranslations?: Record<string, string>;
+  content: string;
+  contentTranslations?: Record<string, string>;
+  mediaUrl?: string;
+  checklistItems?: Array<{
+    text: string;
+    textTranslations?: Record<string, string>;
+  }>;
+  tips?: Array<{
+    text: string;
+    textTranslations?: Record<string, string>;
+  }>;
+}
+
+export interface TrainingQuizQuestion {
+  id: string;
+  question: string;
+  questionTranslations?: Record<string, string>;
+  options: Array<{
+    id: string;
+    text: string;
+    textTranslations?: Record<string, string>;
+  }>;
+  correctAnswerId: string;
+  explanation?: string;
+  explanationTranslations?: Record<string, string>;
+}
+
+export interface InfluencerTrainingModule {
+  id: string;
+  order: number;
+  title: string;
+  titleTranslations?: Record<string, string>;
+  description: string;
+  descriptionTranslations?: Record<string, string>;
+  category: InfluencerTrainingCategory;
+  coverImageUrl?: string;
+  introVideoUrl?: string;
+  slides: TrainingSlide[];
+  quizQuestions: TrainingQuizQuestion[];
+  passingScore: number;
+  estimatedMinutes: number;
+  isRequired: boolean;
+  prerequisites: string[];
+  status: TrainingModuleStatus;
+  completionReward?: {
+    type: "bonus";
+    bonusAmount?: number;
+  };
+}
+
+export interface InfluencerTrainingProgress {
+  influencerId: string;
+  moduleId: string;
+  moduleTitle: string;
+  startedAt: string;
+  completedAt?: string;
+  currentSlideIndex: number;
+  slidesViewed: number[];
+  quizAttempts: Array<{
+    attemptedAt: string;
+    answers: Array<{
+      questionId: string;
+      answerId: string;
+      isCorrect: boolean;
+    }>;
+    score: number;
+    passed: boolean;
+  }>;
+  bestScore: number;
+  isCompleted: boolean;
+  certificateId?: string;
+}
+
+export interface InfluencerTrainingCertificate {
+  id: string;
+  influencerId: string;
+  influencerName: string;
+  moduleId: string;
+  type: "module" | "full_program";
+  title: string;
+  averageScore: number;
+  modulesCompleted: number;
+  issuedAt: string;
+  pdfUrl?: string;
+  verificationCode: string;
+}
+
+export interface InfluencerTrainingModuleListItem {
+  id: string;
+  order: number;
+  title: string;
+  description: string;
+  category: InfluencerTrainingCategory;
+  coverImageUrl?: string;
+  estimatedMinutes: number;
+  isRequired: boolean;
+  prerequisites: string[];
+  progress: {
+    isStarted: boolean;
+    isCompleted: boolean;
+    currentSlideIndex: number;
+    totalSlides: number;
+    bestScore: number;
+  } | null;
+}
+
+export interface InfluencerTrainingOverallProgress {
+  completedModules: number;
+  totalModules: number;
+  completionPercent: number;
+  hasCertificate: boolean;
+  certificateId?: string;
+}
+
+export interface SubmitInfluencerTrainingQuizInput {
+  moduleId: string;
+  answers: Array<{
+    questionId: string;
+    answerId: string;
+  }>;
+}
+
+export interface SubmitInfluencerTrainingQuizResult {
+  success: boolean;
+  score: number;
+  passed: boolean;
+  passingScore: number;
+  results: Array<{
+    questionId: string;
+    isCorrect: boolean;
+    correctAnswerId: string;
+    explanation?: string;
+  }>;
+  moduleCompleted: boolean;
+  certificateId?: string;
+  rewardGranted?: {
+    type: "bonus";
+    bonusAmount?: number;
+  };
 }

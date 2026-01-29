@@ -1,0 +1,447 @@
+/**
+ * Trigger: onWithdrawalStatusChanged
+ *
+ * Fires when a withdrawal document is updated in payment_withdrawals collection.
+ * - Checks if status changed
+ * - Sends appropriate notification based on new status
+ * - Logs status change to audit log
+ * - Handles specific status transitions (e.g., approved -> processing)
+ */
+
+import { onDocumentUpdated } from "firebase-functions/v2/firestore";
+import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { logger } from "firebase-functions/v2";
+import { getApps, initializeApp } from "firebase-admin/app";
+
+import {
+  WithdrawalRequest,
+  WithdrawalStatus,
+  PaymentConfig,
+  DEFAULT_PAYMENT_CONFIG,
+} from "../types";
+
+// Lazy initialization
+function ensureInitialized() {
+  if (!getApps().length) {
+    initializeApp();
+  }
+}
+
+/**
+ * Withdrawal document path in Firestore
+ */
+const WITHDRAWAL_COLLECTION = "payment_withdrawals";
+
+/**
+ * Payment config document path
+ */
+const CONFIG_DOC_PATH = "config/payment_config";
+
+/**
+ * Status messages for notifications
+ */
+const STATUS_MESSAGES: Record<WithdrawalStatus, { title: string; message: string }> = {
+  pending: {
+    title: "Withdrawal Pending",
+    message: "Your withdrawal request is pending review.",
+  },
+  validating: {
+    title: "Withdrawal Being Validated",
+    message: "Your withdrawal request is being validated.",
+  },
+  approved: {
+    title: "Withdrawal Approved",
+    message: "Your withdrawal request has been approved and will be processed soon.",
+  },
+  queued: {
+    title: "Withdrawal Queued",
+    message: "Your withdrawal is queued for automatic processing.",
+  },
+  processing: {
+    title: "Withdrawal Processing",
+    message: "Your withdrawal is currently being processed by our payment provider.",
+  },
+  sent: {
+    title: "Withdrawal Sent",
+    message: "Your withdrawal has been sent! Funds should arrive within 1-3 business days.",
+  },
+  completed: {
+    title: "Withdrawal Completed",
+    message: "Your withdrawal has been completed successfully. Funds should now be in your account.",
+  },
+  failed: {
+    title: "Withdrawal Failed",
+    message: "Unfortunately, your withdrawal could not be processed. Please contact support.",
+  },
+  rejected: {
+    title: "Withdrawal Rejected",
+    message: "Your withdrawal request has been rejected. Please check your payment details.",
+  },
+  cancelled: {
+    title: "Withdrawal Cancelled",
+    message: "Your withdrawal request has been cancelled.",
+  },
+};
+
+/**
+ * Get payment configuration from Firestore
+ */
+async function getPaymentConfig(): Promise<PaymentConfig> {
+  const db = getFirestore();
+  const configDoc = await db.doc(CONFIG_DOC_PATH).get();
+
+  if (!configDoc.exists) {
+    logger.warn("[onWithdrawalStatusChanged] Payment config not found, using defaults");
+    return {
+      ...DEFAULT_PAYMENT_CONFIG,
+      updatedAt: new Date().toISOString(),
+      updatedBy: "system",
+    };
+  }
+
+  return configDoc.data() as PaymentConfig;
+}
+
+/**
+ * Create a notification for the user
+ */
+async function createUserNotification(
+  withdrawal: WithdrawalRequest,
+  title: string,
+  message: string,
+  additionalData?: Record<string, unknown>
+): Promise<void> {
+  const db = getFirestore();
+  const now = Timestamp.now();
+
+  // Determine the correct notification collection based on user type
+  const notificationCollection = `${withdrawal.userType}_notifications`;
+
+  const notification = {
+    id: "",
+    [`${withdrawal.userType}Id`]: withdrawal.userId,
+    type: "payment",
+    title,
+    titleTranslations: {
+      en: title,
+    },
+    message,
+    messageTranslations: {
+      en: message,
+    },
+    actionUrl: `/${withdrawal.userType}/payments`,
+    isRead: false,
+    emailSent: false,
+    data: {
+      withdrawalId: withdrawal.id,
+      amount: withdrawal.amount,
+      status: withdrawal.status,
+      ...additionalData,
+    },
+    createdAt: now,
+  };
+
+  const notificationRef = db.collection(notificationCollection).doc();
+  notification.id = notificationRef.id;
+  await notificationRef.set(notification);
+
+  logger.info("[onWithdrawalStatusChanged] User notification created", {
+    withdrawalId: withdrawal.id,
+    notificationId: notification.id,
+    status: withdrawal.status,
+  });
+}
+
+/**
+ * Send admin notification for specific status changes
+ */
+async function sendAdminNotification(
+  withdrawal: WithdrawalRequest,
+  oldStatus: WithdrawalStatus,
+  newStatus: WithdrawalStatus,
+  config: PaymentConfig
+): Promise<void> {
+  // Only notify admins for certain transitions
+  const notifiableStatuses: WithdrawalStatus[] = ["failed", "completed"];
+
+  if (!notifiableStatuses.includes(newStatus)) {
+    return;
+  }
+
+  // Check config for notification settings
+  if (newStatus === "completed" && !config.notifyOnCompletion) {
+    return;
+  }
+  if (newStatus === "failed" && !config.notifyOnFailure) {
+    return;
+  }
+
+  if (config.adminEmails.length === 0) {
+    return;
+  }
+
+  const db = getFirestore();
+  const now = Timestamp.now();
+
+  const adminNotification = {
+    id: "",
+    type: `withdrawal_${newStatus}`,
+    title: `Withdrawal ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)} - ${withdrawal.userType}`,
+    message: `${withdrawal.userName}'s withdrawal of $${(withdrawal.amount / 100).toFixed(2)} is now ${newStatus}`,
+    data: {
+      withdrawalId: withdrawal.id,
+      userId: withdrawal.userId,
+      userType: withdrawal.userType,
+      amount: withdrawal.amount,
+      provider: withdrawal.provider,
+      oldStatus,
+      newStatus,
+      errorMessage: withdrawal.errorMessage,
+      errorCode: withdrawal.errorCode,
+    },
+    isRead: false,
+    priority: newStatus === "failed" ? "high" : "normal",
+    adminEmails: config.adminEmails,
+    createdAt: now,
+  };
+
+  const notificationRef = db.collection("admin_notifications").doc();
+  adminNotification.id = notificationRef.id;
+  await notificationRef.set(adminNotification);
+
+  logger.info("[onWithdrawalStatusChanged] Admin notification created", {
+    withdrawalId: withdrawal.id,
+    notificationId: adminNotification.id,
+    newStatus,
+  });
+}
+
+/**
+ * Log status change to audit log
+ */
+async function logStatusChange(
+  withdrawal: WithdrawalRequest,
+  oldStatus: WithdrawalStatus,
+  newStatus: WithdrawalStatus
+): Promise<void> {
+  const db = getFirestore();
+  const now = Timestamp.now();
+
+  const auditLog = {
+    id: "",
+    action: "withdrawal_status_changed",
+    entityType: "withdrawal",
+    entityId: withdrawal.id,
+    userId: withdrawal.userId,
+    userType: withdrawal.userType,
+    data: {
+      oldStatus,
+      newStatus,
+      amount: withdrawal.amount,
+      provider: withdrawal.provider,
+      providerTransactionId: withdrawal.providerTransactionId,
+      processedBy: withdrawal.processedBy,
+      errorCode: withdrawal.errorCode,
+      errorMessage: withdrawal.errorMessage,
+    },
+    timestamp: now,
+    ipAddress: null,
+    userAgent: null,
+  };
+
+  const auditRef = db.collection("payment_audit_logs").doc();
+  auditLog.id = auditRef.id;
+  await auditRef.set(auditLog);
+
+  logger.info("[onWithdrawalStatusChanged] Audit log created", {
+    withdrawalId: withdrawal.id,
+    auditLogId: auditLog.id,
+    oldStatus,
+    newStatus,
+  });
+}
+
+/**
+ * Update user statistics on withdrawal completion
+ */
+async function updateUserStats(withdrawal: WithdrawalRequest): Promise<void> {
+  const db = getFirestore();
+
+  // Collection for user withdrawal stats
+  const userStatsRef = db.collection("payment_user_stats").doc(withdrawal.userId);
+  const userStatsDoc = await userStatsRef.get();
+
+  const now = new Date().toISOString();
+  const amountInCents = withdrawal.amount;
+
+  if (!userStatsDoc.exists) {
+    // Create new stats document
+    await userStatsRef.set({
+      userId: withdrawal.userId,
+      userType: withdrawal.userType,
+      totalWithdrawn: amountInCents,
+      withdrawalCount: 1,
+      pendingAmount: 0,
+      lastWithdrawalAt: now,
+      isAutoPaymentEligible: true,
+      createdAt: now,
+      updatedAt: now,
+    });
+  } else {
+    // Update existing stats
+    const currentStats = userStatsDoc.data()!;
+    await userStatsRef.update({
+      totalWithdrawn: (currentStats.totalWithdrawn || 0) + amountInCents,
+      withdrawalCount: (currentStats.withdrawalCount || 0) + 1,
+      lastWithdrawalAt: now,
+      updatedAt: now,
+    });
+  }
+
+  logger.info("[onWithdrawalStatusChanged] User stats updated", {
+    userId: withdrawal.userId,
+    amount: amountInCents,
+  });
+}
+
+/**
+ * Handle specific status transitions
+ */
+async function handleStatusTransition(
+  withdrawal: WithdrawalRequest,
+  oldStatus: WithdrawalStatus,
+  newStatus: WithdrawalStatus
+): Promise<void> {
+  // Handle approved -> processing transition
+  if (oldStatus === "approved" && newStatus === "processing") {
+    logger.info("[onWithdrawalStatusChanged] Withdrawal approved and processing", {
+      withdrawalId: withdrawal.id,
+      isAutomatic: withdrawal.isAutomatic,
+    });
+  }
+
+  // Handle completed withdrawal - update user stats
+  if (newStatus === "completed") {
+    await updateUserStats(withdrawal);
+  }
+
+  // Handle failed withdrawal - check if retry is possible
+  if (newStatus === "failed" && withdrawal.retryCount < withdrawal.maxRetries) {
+    const db = getFirestore();
+    const retryDelay = 60 * 60 * 1000; // 1 hour in milliseconds
+    const nextRetryAt = new Date(Date.now() + retryDelay).toISOString();
+
+    await db.collection(WITHDRAWAL_COLLECTION).doc(withdrawal.id).update({
+      canRetry: true,
+      nextRetryAt,
+    });
+
+    logger.info("[onWithdrawalStatusChanged] Withdrawal marked for retry", {
+      withdrawalId: withdrawal.id,
+      retryCount: withdrawal.retryCount,
+      maxRetries: withdrawal.maxRetries,
+      nextRetryAt,
+    });
+  }
+}
+
+/**
+ * Main trigger function
+ */
+export const paymentOnWithdrawalStatusChanged = onDocumentUpdated(
+  {
+    document: `${WITHDRAWAL_COLLECTION}/{withdrawalId}`,
+    region: "europe-west1",
+    memory: "256MiB",
+    timeoutSeconds: 60,
+  },
+  async (event) => {
+    ensureInitialized();
+
+    const beforeData = event.data?.before?.data();
+    const afterData = event.data?.after?.data();
+
+    if (!beforeData || !afterData) {
+      logger.warn("[onWithdrawalStatusChanged] Missing before or after data");
+      return;
+    }
+
+    const withdrawalId = event.params.withdrawalId;
+    const oldStatus = beforeData.status as WithdrawalStatus;
+    const newStatus = afterData.status as WithdrawalStatus;
+
+    // Only proceed if status actually changed
+    if (oldStatus === newStatus) {
+      logger.debug("[onWithdrawalStatusChanged] Status unchanged, skipping", {
+        withdrawalId,
+        status: oldStatus,
+      });
+      return;
+    }
+
+    const withdrawal = {
+      ...afterData,
+      id: withdrawalId,
+    } as WithdrawalRequest;
+
+    logger.info("[onWithdrawalStatusChanged] Processing status change", {
+      withdrawalId,
+      oldStatus,
+      newStatus,
+      userId: withdrawal.userId,
+      userType: withdrawal.userType,
+    });
+
+    try {
+      // 1. Log status change to audit log
+      await logStatusChange(withdrawal, oldStatus, newStatus);
+
+      // 2. Get payment configuration
+      const config = await getPaymentConfig();
+
+      // 3. Send user notification for the new status
+      const statusMessage = STATUS_MESSAGES[newStatus];
+      if (statusMessage) {
+        // Add amount to the message
+        const formattedAmount = `$${(withdrawal.amount / 100).toFixed(2)}`;
+        const personalizedMessage = statusMessage.message.replace(
+          "Your withdrawal",
+          `Your withdrawal of ${formattedAmount}`
+        );
+
+        await createUserNotification(
+          withdrawal,
+          statusMessage.title,
+          personalizedMessage,
+          {
+            oldStatus,
+            newStatus,
+            providerTransactionId: withdrawal.providerTransactionId,
+          }
+        );
+      }
+
+      // 4. Send admin notification if applicable
+      await sendAdminNotification(withdrawal, oldStatus, newStatus, config);
+
+      // 5. Handle specific status transitions
+      await handleStatusTransition(withdrawal, oldStatus, newStatus);
+
+      logger.info("[onWithdrawalStatusChanged] Status change processing complete", {
+        withdrawalId,
+        oldStatus,
+        newStatus,
+      });
+    } catch (error) {
+      logger.error("[onWithdrawalStatusChanged] Error processing status change", {
+        withdrawalId,
+        oldStatus,
+        newStatus,
+        error: error instanceof Error ? error.message : "Unknown error",
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+
+      // Don't throw - we don't want to retry the trigger
+    }
+  }
+);

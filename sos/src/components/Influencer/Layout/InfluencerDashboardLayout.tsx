@@ -18,6 +18,7 @@ import {
   Image,
   User,
   LogOut,
+  GraduationCap,
 } from 'lucide-react';
 
 interface InfluencerDashboardLayoutProps {
@@ -73,6 +74,13 @@ const InfluencerDashboardLayout: React.FC<InfluencerDashboardLayoutProps> = ({ c
       icon: <Image className="w-5 h-5" />,
       path: `/influencer/outils`,
       routeKey: 'influencer-tools' as RouteKey,
+    },
+    {
+      id: 'training',
+      label: intl.formatMessage({ id: 'influencer.menu.training', defaultMessage: 'Formation' }),
+      icon: <GraduationCap className="w-5 h-5" />,
+      path: `/influencer/formation`,
+      routeKey: 'influencer-training' as RouteKey,
     },
     {
       id: 'profile',

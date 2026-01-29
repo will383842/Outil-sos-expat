@@ -364,6 +364,31 @@ const AdminInfluencersLeaderboard = lazy(
   () => import("../../pages/admin/Influencers/AdminInfluencersLeaderboard")
 );
 
+// ===== LAZY IMPORTS - BLOGGER =====
+const AdminBloggersList = lazy(
+  () => import("../../pages/admin/Bloggers/AdminBloggersList")
+);
+const AdminBloggerDetail = lazy(
+  () => import("../../pages/admin/Bloggers/AdminBloggerDetail")
+);
+const AdminBloggersPayments = lazy(
+  () => import("../../pages/admin/Bloggers/AdminBloggersPayments")
+);
+const AdminBloggersConfig = lazy(
+  () => import("../../pages/admin/Bloggers/AdminBloggersConfig")
+);
+const AdminBloggersResources = lazy(
+  () => import("../../pages/admin/Bloggers/AdminBloggersResources")
+);
+const AdminBloggersGuide = lazy(
+  () => import("../../pages/admin/Bloggers/AdminBloggersGuide")
+);
+
+// ===== LAZY IMPORTS - TRAINING =====
+const AdminTrainingModules = lazy(
+  () => import("../../pages/admin/Training/AdminTrainingModules")
+);
+
 // ===== LAZY IMPORTS - B2B =====
 const AdminB2BAccounts = lazy(
   () => import("../../pages/admin/AdminB2BAccounts")
@@ -1086,6 +1111,74 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
 
+      {/* 📝 BLOGGERS */}
+      <Route
+        path="bloggers"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminBloggersList />
+          </Suspense>
+        }
+      />
+      <Route
+        path="bloggers/:bloggerId"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminBloggerDetail />
+          </Suspense>
+        }
+      />
+      <Route
+        path="bloggers/payments"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminBloggersPayments />
+          </Suspense>
+        }
+      />
+      <Route
+        path="bloggers/resources"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminBloggersResources />
+          </Suspense>
+        }
+      />
+      <Route
+        path="bloggers/guide"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminBloggersGuide />
+          </Suspense>
+        }
+      />
+      <Route
+        path="bloggers/config"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminBloggersConfig />
+          </Suspense>
+        }
+      />
+
+      {/* 📚 TRAINING MODULES */}
+      <Route
+        path="training"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminTrainingModules />
+          </Suspense>
+        }
+      />
+      <Route
+        path="training/modules"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminTrainingModules />
+          </Suspense>
+        }
+      />
+
       {/* ⚙️ CONFIG & OUTILS */}
       <Route
         path="pricing"
@@ -1464,6 +1557,17 @@ export const useAdminRouteValidation = () => {
       "/admin/chatters/:chatterId",
       "/admin/chatters/payments",
       "/admin/chatters/config",
+      "/admin/influencers",
+      "/admin/influencers/:influencerId",
+      "/admin/influencers/payments",
+      "/admin/influencers/leaderboard",
+      "/admin/influencers/config",
+      "/admin/bloggers",
+      "/admin/bloggers/:bloggerId",
+      "/admin/bloggers/payments",
+      "/admin/bloggers/resources",
+      "/admin/bloggers/guide",
+      "/admin/bloggers/config",
       "/admin/pricing",
       "/admin/countries",
       "/admin/documents",

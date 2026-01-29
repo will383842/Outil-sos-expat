@@ -176,7 +176,7 @@ export const registerInfluencer = onCall(
         const existingData = existingInfluencer.data() as Influencer;
 
         // If already registered, return existing data
-        if (existingData.status !== "blocked") {
+        if (existingData.status !== "banned") {
           return {
             success: true,
             influencerId: userId,
@@ -185,7 +185,7 @@ export const registerInfluencer = onCall(
             message: "Influencer already registered",
           };
         } else {
-          throw new HttpsError("permission-denied", "This account has been blocked");
+          throw new HttpsError("permission-denied", "This account has been banned");
         }
       }
 

@@ -1,0 +1,205 @@
+/**
+ * useBloggerResources Hook
+ *
+ * Hook for blogger-exclusive resources and integration guide.
+ */
+
+import { useState, useCallback } from 'react';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../config/firebase';
+import {
+  BloggerResourcesData,
+  BloggerGuideData,
+  BloggerResourceCategory,
+} from '../types/blogger';
+
+// ============================================================================
+// RESOURCES HOOK
+// ============================================================================
+
+interface UseBloggerResourcesReturn {
+  resources: BloggerResourcesData | null;
+  isLoading: boolean;
+  error: string | null;
+  fetchResources: (category?: BloggerResourceCategory) => Promise<void>;
+  downloadResource: (resourceId: string) => Promise<{ success: boolean; downloadUrl?: string; error?: string }>;
+  copyText: (textId: string) => Promise<{ success: boolean; content?: string; error?: string }>;
+}
+
+export function useBloggerResources(): UseBloggerResourcesReturn {
+  const [resources, setResources] = useState<BloggerResourcesData | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchResources = useCallback(async (category?: BloggerResourceCategory) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const getBloggerResources = httpsCallable<
+        { category?: BloggerResourceCategory },
+        BloggerResourcesData
+      >(functions, 'getBloggerResources');
+
+      const result = await getBloggerResources({ category });
+      setResources(result.data);
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      setError(e.message || 'Failed to load resources');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const downloadResource = useCallback(async (resourceId: string): Promise<{
+    success: boolean;
+    downloadUrl?: string;
+    error?: string;
+  }> => {
+    try {
+      const downloadBloggerResource = httpsCallable<
+        { resourceId: string },
+        { success: boolean; downloadUrl: string }
+      >(functions, 'downloadBloggerResource');
+
+      const result = await downloadBloggerResource({ resourceId });
+      return {
+        success: true,
+        downloadUrl: result.data.downloadUrl,
+      };
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      return {
+        success: false,
+        error: e.message || 'Failed to download resource',
+      };
+    }
+  }, []);
+
+  const copyText = useCallback(async (textId: string): Promise<{
+    success: boolean;
+    content?: string;
+    error?: string;
+  }> => {
+    try {
+      const copyBloggerResourceText = httpsCallable<
+        { textId: string },
+        { success: boolean; content: string }
+      >(functions, 'copyBloggerResourceText');
+
+      const result = await copyBloggerResourceText({ textId });
+
+      // Copy to clipboard
+      if (result.data.content) {
+        await navigator.clipboard.writeText(result.data.content);
+      }
+
+      return {
+        success: true,
+        content: result.data.content,
+      };
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      return {
+        success: false,
+        error: e.message || 'Failed to copy text',
+      };
+    }
+  }, []);
+
+  return {
+    resources,
+    isLoading,
+    error,
+    fetchResources,
+    downloadResource,
+    copyText,
+  };
+}
+
+// ============================================================================
+// GUIDE HOOK
+// ============================================================================
+
+interface UseBloggerGuideReturn {
+  guide: BloggerGuideData | null;
+  isLoading: boolean;
+  error: string | null;
+  fetchGuide: () => Promise<void>;
+  copyWithLink: (
+    textId: string,
+    textType: 'template' | 'copy_text',
+    affiliateLink: string
+  ) => Promise<{ success: boolean; content?: string; error?: string }>;
+}
+
+export function useBloggerGuide(): UseBloggerGuideReturn {
+  const [guide, setGuide] = useState<BloggerGuideData | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchGuide = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const getBloggerGuide = httpsCallable<unknown, BloggerGuideData>(
+        functions,
+        'getBloggerGuide'
+      );
+
+      const result = await getBloggerGuide({});
+      setGuide(result.data);
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      setError(e.message || 'Failed to load integration guide');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const copyWithLink = useCallback(async (
+    textId: string,
+    textType: 'template' | 'copy_text',
+    affiliateLink: string
+  ): Promise<{
+    success: boolean;
+    content?: string;
+    error?: string;
+  }> => {
+    try {
+      const copyBloggerGuideText = httpsCallable<
+        { textId: string; textType: 'template' | 'copy_text'; affiliateLink: string },
+        { success: boolean; content: string }
+      >(functions, 'copyBloggerGuideText');
+
+      const result = await copyBloggerGuideText({ textId, textType, affiliateLink });
+
+      // Copy to clipboard
+      if (result.data.content) {
+        await navigator.clipboard.writeText(result.data.content);
+      }
+
+      return {
+        success: true,
+        content: result.data.content,
+      };
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      return {
+        success: false,
+        error: e.message || 'Failed to copy text',
+      };
+    }
+  }, []);
+
+  return {
+    guide,
+    isLoading,
+    error,
+    fetchGuide,
+    copyWithLink,
+  };
+}
+
+export default useBloggerResources;

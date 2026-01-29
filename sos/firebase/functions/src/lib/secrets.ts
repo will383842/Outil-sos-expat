@@ -132,6 +132,22 @@ export const WISE_SECRETS = [
 ];
 
 // ============================================================================
+// FLUTTERWAVE SECRETS (Mobile Money Africa)
+// ============================================================================
+
+export const FLUTTERWAVE_SECRET_KEY = defineSecret("FLUTTERWAVE_SECRET_KEY");
+export const FLUTTERWAVE_PUBLIC_KEY = defineSecret("FLUTTERWAVE_PUBLIC_KEY");
+export const FLUTTERWAVE_WEBHOOK_SECRET = defineSecret("FLUTTERWAVE_WEBHOOK_SECRET");
+export const FLUTTERWAVE_MODE = defineString("FLUTTERWAVE_MODE", { default: "sandbox" });
+
+/** All Flutterwave secrets for function config */
+export const FLUTTERWAVE_SECRETS = [
+  FLUTTERWAVE_SECRET_KEY,
+  FLUTTERWAVE_PUBLIC_KEY,
+  FLUTTERWAVE_WEBHOOK_SECRET,
+];
+
+// ============================================================================
 // EXTERNAL API KEYS
 // ============================================================================
 
@@ -619,6 +635,99 @@ export function getWiseBaseUrl(): string {
     : 'https://api.sandbox.transferwise.tech';
 }
 
+// --- FLUTTERWAVE GETTERS ---
+
+export function getFlutterwaveMode(): 'sandbox' | 'production' {
+  // Force production mode in production environment
+  if (isProduction() && !isEmulator()) {
+    console.log('[Secrets] Production detected, forcing Flutterwave PRODUCTION mode');
+    return 'production';
+  }
+
+  try {
+    const modeValue = FLUTTERWAVE_MODE.value();
+    if (modeValue === 'production' || modeValue === 'sandbox') {
+      return modeValue;
+    }
+  } catch {
+    // Fallback to process.env
+  }
+
+  const envMode = process.env.FLUTTERWAVE_MODE;
+  if (envMode === 'production' || envMode === 'sandbox') {
+    return envMode;
+  }
+
+  return 'sandbox';
+}
+
+export function getFlutterwaveSecretKey(): string {
+  try {
+    const secretValue = FLUTTERWAVE_SECRET_KEY.value()?.trim();
+    if (secretValue && secretValue.length > 0) {
+      console.log(`[Secrets] FLUTTERWAVE_SECRET_KEY loaded from Firebase Secret`);
+      return secretValue;
+    }
+  } catch {
+    // Secret not available
+  }
+
+  const envValue = process.env.FLUTTERWAVE_SECRET_KEY?.trim();
+  if (envValue && envValue.length > 0) {
+    console.log(`[Secrets] FLUTTERWAVE_SECRET_KEY loaded from process.env`);
+    return envValue;
+  }
+
+  console.error(`[Secrets] FLUTTERWAVE_SECRET_KEY NOT FOUND`);
+  return "";
+}
+
+export function getFlutterwavePublicKey(): string {
+  try {
+    const secretValue = FLUTTERWAVE_PUBLIC_KEY.value()?.trim();
+    if (secretValue && secretValue.length > 0) {
+      console.log(`[Secrets] FLUTTERWAVE_PUBLIC_KEY loaded from Firebase Secret`);
+      return secretValue;
+    }
+  } catch {
+    // Secret not available
+  }
+
+  const envValue = process.env.FLUTTERWAVE_PUBLIC_KEY?.trim();
+  if (envValue && envValue.length > 0) {
+    console.log(`[Secrets] FLUTTERWAVE_PUBLIC_KEY loaded from process.env`);
+    return envValue;
+  }
+
+  console.error(`[Secrets] FLUTTERWAVE_PUBLIC_KEY NOT FOUND`);
+  return "";
+}
+
+export function getFlutterwaveWebhookSecret(): string {
+  try {
+    const secretValue = FLUTTERWAVE_WEBHOOK_SECRET.value()?.trim();
+    if (secretValue && secretValue.length > 0) {
+      return secretValue;
+    }
+  } catch {
+    // Secret not available
+  }
+
+  const envValue = process.env.FLUTTERWAVE_WEBHOOK_SECRET?.trim();
+  if (envValue && envValue.length > 0) {
+    return envValue;
+  }
+
+  console.error(`[Secrets] FLUTTERWAVE_WEBHOOK_SECRET NOT FOUND`);
+  return "";
+}
+
+export function getFlutterwaveBaseUrl(): string {
+  // Flutterwave uses the same base URL for sandbox and production
+  // The environment is determined by the API keys used
+  return 'https://api.flutterwave.com/v3';
+}
+
 // ============================================================================
 // COMBINED ARRAYS FOR FUNCTION CONFIG
 // ============================================================================
@@ -646,12 +755,19 @@ export const WISE_PAYOUT_SECRETS = [
   ENCRYPTION_KEY,
 ];
 
+/** All secrets for Flutterwave mobile money payout functions */
+export const FLUTTERWAVE_PAYOUT_SECRETS = [
+  ...FLUTTERWAVE_SECRETS,
+  ENCRYPTION_KEY,
+];
+
 /** All secrets - use sparingly, prefer specific arrays */
 export const ALL_SECRETS = [
   ...TWILIO_SECRETS,
   ...STRIPE_SECRETS,
   ...PAYPAL_SECRETS,
   ...WISE_SECRETS,
+  ...FLUTTERWAVE_SECRETS,
   ...EMAIL_SECRETS,
   ENCRYPTION_KEY,
   TASKS_AUTH_SECRET,

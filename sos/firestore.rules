@@ -2210,6 +2210,175 @@ service cloud.firestore {
       allow write: if isAdmin() || isDev();
     }
 
+    // ================= BLOGGERS (Programme Partenaire Blogueurs) =================
+    // Commissions FIXES: 10$ client, 5$ recrutement (pas de bonus/multiplicateur)
+    // Pas de niveaux, pas de quiz, rôle DÉFINITIF, ressources et guide EXCLUSIFS
+
+    // Helper: est un blogueur actif
+    function isBlogger() {
+      return isAuthenticated() &&
+             exists(/databases/$(database)/documents/bloggers/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/bloggers/$(request.auth.uid)).data.status == 'active';
+    }
+
+    // Helper: est le propriétaire du profil blogueur
+    function isBloggerOwner(bloggerId) {
+      return isAuthenticated() && request.auth.uid == bloggerId;
+    }
+
+    // Helper: a un profil blogueur (peu importe le status)
+    function hasBloggerProfile() {
+      return isAuthenticated() &&
+             exists(/databases/$(database)/documents/bloggers/$(request.auth.uid));
+    }
+
+    // Profils des blogueurs
+    match /bloggers/{bloggerId} {
+      // Lecture: propriétaire ou admin
+      allow read: if isBloggerOwner(bloggerId) || isAdmin() || isDev();
+      // Création: propriétaire uniquement (lors de l'inscription)
+      allow create: if isBloggerOwner(bloggerId);
+      // Mise à jour: propriétaire pour certains champs, admin pour tous
+      // Le propriétaire ne peut PAS modifier: status, codes, balances, stats, ranks
+      allow update: if (isBloggerOwner(bloggerId) &&
+                        !request.resource.data.diff(resource.data).affectedKeys()
+                          .hasAny(['status', 'affiliateCodeClient', 'affiliateCodeRecruitment',
+                                   'totalEarned', 'availableBalance', 'pendingBalance',
+                                   'validatedBalance', 'totalClients', 'totalRecruits',
+                                   'totalCommissions', 'currentMonthStats',
+                                   'currentMonthRank', 'bestRank', 'adminNotes']))
+                       || isAdmin() || isDev();
+      allow delete: if isAdmin() || isDev();
+    }
+
+    // Commissions blogueurs
+    match /blogger_commissions/{commissionId} {
+      // Lecture: propriétaire de la commission ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.bloggerId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // Retraits blogueurs
+    match /blogger_withdrawals/{withdrawalId} {
+      // Lecture: propriétaire ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.bloggerId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Création: blogueur actif pour lui-même
+      allow create: if isBlogger() &&
+                    request.resource.data.bloggerId == request.auth.uid;
+      // Mise à jour: admin uniquement (approbation/rejet)
+      allow update: if isAdmin() || isDev();
+      allow delete: if isAdmin() || isDev();
+    }
+
+    // Prestataires recrutés par blogueurs
+    match /blogger_recruited_providers/{recruitmentId} {
+      // Lecture: propriétaire ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.bloggerId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // Configuration du système blogueur
+    match /blogger_config/{docId} {
+      // Lecture: blogueurs actifs ou admin (contient les paramètres de commission)
+      allow read: if isBlogger() || isAdmin() || isDev();
+      // Écriture: admin uniquement
+      allow write: if isAdmin() || isDev();
+    }
+
+    // Classement mensuel blogueurs
+    match /blogger_monthly_rankings/{monthId} {
+      // Lecture: tous les blogueurs et admin
+      allow read: if isBlogger() || isAdmin() || isDev();
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // Notifications blogueurs
+    match /blogger_notifications/{notificationId} {
+      // Lecture: le propriétaire ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.bloggerId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Mise à jour: le propriétaire peut marquer comme lu
+      allow update: if isAuthenticated() &&
+                    resource.data.bloggerId == request.auth.uid &&
+                    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead', 'readAt']);
+      // Création/suppression: Cloud Functions uniquement
+      allow create, delete: if false;
+    }
+
+    // Clics affiliés blogueurs (tracking)
+    match /blogger_clicks/{clickId} {
+      // Lecture: admin uniquement
+      allow read: if isAdmin() || isDev();
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // Badges blogueurs (définitions)
+    match /blogger_badges/{badgeId} {
+      // Lecture: blogueurs et admin
+      allow read: if isBlogger() || isAdmin() || isDev();
+      // Écriture: admin uniquement
+      allow write: if isAdmin() || isDev();
+    }
+
+    // Ressources blogueurs (fichiers - EXCLUSIF)
+    match /blogger_resources/{resourceId} {
+      // Lecture: blogueurs actifs et admin
+      allow read: if isBlogger() || isAdmin() || isDev();
+      // Écriture: admin uniquement
+      allow write: if isAdmin() || isDev();
+    }
+
+    // Ressources blogueurs (textes - EXCLUSIF)
+    match /blogger_resource_texts/{textId} {
+      // Lecture: blogueurs actifs et admin
+      allow read: if isBlogger() || isAdmin() || isDev();
+      // Écriture: admin uniquement
+      allow write: if isAdmin() || isDev();
+    }
+
+    // Guide blogueurs - Templates (EXCLUSIF)
+    match /blogger_guide_templates/{templateId} {
+      // Lecture: blogueurs actifs et admin
+      allow read: if isBlogger() || isAdmin() || isDev();
+      // Écriture: admin uniquement
+      allow write: if isAdmin() || isDev();
+    }
+
+    // Guide blogueurs - Textes à copier (EXCLUSIF)
+    match /blogger_guide_copy_texts/{textId} {
+      // Lecture: blogueurs actifs et admin
+      allow read: if isBlogger() || isAdmin() || isDev();
+      // Écriture: admin uniquement
+      allow write: if isAdmin() || isDev();
+    }
+
+    // Guide blogueurs - Bonnes pratiques (EXCLUSIF)
+    match /blogger_guide_best_practices/{practiceId} {
+      // Lecture: blogueurs actifs et admin
+      allow read: if isBlogger() || isAdmin() || isDev();
+      // Écriture: admin uniquement
+      allow write: if isAdmin() || isDev();
+    }
+
+    // Logs d'utilisation blogueurs (tracking ressources/guide)
+    match /blogger_usage_logs/{logId} {
+      // Lecture: admin uniquement
+      allow read: if isAdmin() || isDev();
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
     // ================= CATCH-ALL (deny by default) =================
     // SECURITE: Refuse TOUT acces non explicitement autorise
     // Le role 'dev' est desactive en production

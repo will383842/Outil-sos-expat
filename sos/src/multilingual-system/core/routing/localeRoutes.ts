@@ -299,7 +299,21 @@ export type RouteKey =
   | "influencer-payments"     // /influencer/paiements -> /influencer/payments, etc.
   | "influencer-promo-tools"  // /influencer/outils -> /influencer/promo-tools, etc.
   | "influencer-profile"      // /influencer/profil -> /influencer/profile, etc.
-  | "influencer-suspended";   // /influencer/suspendu -> /influencer/suspended, etc.
+  | "influencer-suspended"    // /influencer/suspendu -> /influencer/suspended, etc.
+  | "influencer-training"     // /influencer/formation -> /influencer/training, etc.
+  // Blogger routes
+  | "blogger-landing"         // /devenir-blogger -> /become-blogger, etc.
+  | "blogger-register"        // /blogger/inscription -> /blogger/register, etc.
+  | "blogger-dashboard"       // /blogger/tableau-de-bord -> /blogger/dashboard, etc.
+  | "blogger-earnings"        // /blogger/gains -> /blogger/earnings, etc.
+  | "blogger-referrals"       // /blogger/filleuls -> /blogger/referrals, etc.
+  | "blogger-leaderboard"     // /blogger/classement -> /blogger/leaderboard, etc.
+  | "blogger-payments"        // /blogger/paiements -> /blogger/payments, etc.
+  | "blogger-resources"       // /blogger/ressources -> /blogger/resources, etc.
+  | "blogger-guide"           // /blogger/guide -> /blogger/guide, etc.
+  | "blogger-promo-tools"     // /blogger/outils -> /blogger/promo-tools, etc.
+  | "blogger-profile"         // /blogger/profil -> /blogger/profile, etc.
+  | "blogger-suspended";      // /blogger/suspendu -> /blogger/suspended, etc.
 
 const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
   "lawyer": {
@@ -1051,6 +1065,150 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "influencer/zanting",
     hi: "influencer/nilambit",
     ar: "مؤثر/معلق",
+  },
+  "influencer-training": {
+    fr: "influencer/formation",
+    en: "influencer/training",
+    es: "influencer/formacion",
+    de: "influencer/schulung",
+    ru: "influencer/obuchenie",
+    pt: "influencer/formacao",
+    ch: "influencer/peixun",
+    hi: "influencer/prashikshan",
+    ar: "مؤثر/تدريب",
+  },
+  // Blogger routes
+  "blogger-landing": {
+    fr: "devenir-blogger",
+    en: "become-blogger",
+    es: "ser-blogger",
+    de: "blogger-werden",
+    ru: "stat-bloggerom",
+    pt: "tornar-se-blogger",
+    ch: "chengwei-boke",
+    hi: "blogger-banen",
+    ar: "كن-مدون",
+  },
+  "blogger-register": {
+    fr: "blogger/inscription",
+    en: "blogger/register",
+    es: "blogger/registro",
+    de: "blogger/registrieren",
+    ru: "blogger/registratsiya",
+    pt: "blogger/registro",
+    ch: "blogger/zhuce",
+    hi: "blogger/panjikaran",
+    ar: "مدون/تسجيل",
+  },
+  "blogger-dashboard": {
+    fr: "blogger/tableau-de-bord",
+    en: "blogger/dashboard",
+    es: "blogger/panel",
+    de: "blogger/dashboard",
+    ru: "blogger/panel",
+    pt: "blogger/painel",
+    ch: "blogger/yibiaopan",
+    hi: "blogger/dashboard",
+    ar: "مدون/لوحة-التحكم",
+  },
+  "blogger-earnings": {
+    fr: "blogger/gains",
+    en: "blogger/earnings",
+    es: "blogger/ganancias",
+    de: "blogger/einnahmen",
+    ru: "blogger/zarabotok",
+    pt: "blogger/ganhos",
+    ch: "blogger/shouyi",
+    hi: "blogger/kamayi",
+    ar: "مدون/الأرباح",
+  },
+  "blogger-referrals": {
+    fr: "blogger/filleuls",
+    en: "blogger/referrals",
+    es: "blogger/referidos",
+    de: "blogger/empfehlungen",
+    ru: "blogger/referaly",
+    pt: "blogger/indicacoes",
+    ch: "blogger/tuijian",
+    hi: "blogger/sandarbh",
+    ar: "مدون/الإحالات",
+  },
+  "blogger-leaderboard": {
+    fr: "blogger/classement",
+    en: "blogger/leaderboard",
+    es: "blogger/clasificacion",
+    de: "blogger/rangliste",
+    ru: "blogger/liderboard",
+    pt: "blogger/classificacao",
+    ch: "blogger/paihangbang",
+    hi: "blogger/leaderboard",
+    ar: "مدون/الترتيب",
+  },
+  "blogger-payments": {
+    fr: "blogger/paiements",
+    en: "blogger/payments",
+    es: "blogger/pagos",
+    de: "blogger/zahlungen",
+    ru: "blogger/platezhi",
+    pt: "blogger/pagamentos",
+    ch: "blogger/zhifu",
+    hi: "blogger/bhugtan",
+    ar: "مدون/المدفوعات",
+  },
+  "blogger-resources": {
+    fr: "blogger/ressources",
+    en: "blogger/resources",
+    es: "blogger/recursos",
+    de: "blogger/ressourcen",
+    ru: "blogger/resursy",
+    pt: "blogger/recursos",
+    ch: "blogger/ziyuan",
+    hi: "blogger/sansadhan",
+    ar: "مدون/الموارد",
+  },
+  "blogger-guide": {
+    fr: "blogger/guide",
+    en: "blogger/guide",
+    es: "blogger/guia",
+    de: "blogger/anleitung",
+    ru: "blogger/rukovodstvo",
+    pt: "blogger/guia",
+    ch: "blogger/zhinan",
+    hi: "blogger/margdarshak",
+    ar: "مدون/الدليل",
+  },
+  "blogger-promo-tools": {
+    fr: "blogger/outils",
+    en: "blogger/promo-tools",
+    es: "blogger/herramientas",
+    de: "blogger/werkzeuge",
+    ru: "blogger/instrumenty",
+    pt: "blogger/ferramentas",
+    ch: "blogger/gongju",
+    hi: "blogger/upkaran",
+    ar: "مدون/أدوات-الترويج",
+  },
+  "blogger-profile": {
+    fr: "blogger/profil",
+    en: "blogger/profile",
+    es: "blogger/perfil",
+    de: "blogger/profil",
+    ru: "blogger/profil",
+    pt: "blogger/perfil",
+    ch: "blogger/geren-ziliao",
+    hi: "blogger/profile",
+    ar: "مدون/الملف-الشخصي",
+  },
+  "blogger-suspended": {
+    fr: "blogger/suspendu",
+    en: "blogger/suspended",
+    es: "blogger/suspendido",
+    de: "blogger/gesperrt",
+    ru: "blogger/priostanovlen",
+    pt: "blogger/suspenso",
+    ch: "blogger/zanting",
+    hi: "blogger/nilambit",
+    ar: "مدون/معلق",
   },
 };
 

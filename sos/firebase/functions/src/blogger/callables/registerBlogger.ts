@@ -1,0 +1,315 @@
+/**
+ * Register Blogger Callable
+ *
+ * Handles new blogger registration with:
+ * - Blog-specific fields validation
+ * - Definitive role acknowledgment check
+ * - Blocking if already chatter/influencer/provider
+ * - Direct activation (no quiz required)
+ */
+
+import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { logger } from "firebase-functions/v2";
+import {
+  RegisterBloggerInput,
+  RegisterBloggerResponse,
+  Blogger,
+  BloggerStatus,
+  SupportedBloggerLanguage,
+  BlogTheme,
+  BlogTrafficTier,
+} from "../types";
+import { getBloggerConfigCached } from "../utils/bloggerConfigService";
+import { generateBloggerAffiliateCodes } from "../utils/bloggerCodeGenerator";
+
+// ============================================================================
+// VALIDATION
+// ============================================================================
+
+const SUPPORTED_LANGUAGES: SupportedBloggerLanguage[] = [
+  "fr", "en", "es", "pt", "ar", "de", "it", "nl", "zh",
+];
+
+const BLOG_THEMES: BlogTheme[] = [
+  "expatriation", "travel", "legal", "finance", "lifestyle",
+  "tech", "family", "career", "education", "other",
+];
+
+const BLOG_TRAFFIC_TIERS: BlogTrafficTier[] = [
+  "lt1k", "1k-5k", "5k-10k", "10k-50k", "50k-100k", "gt100k",
+];
+
+function validateInput(input: RegisterBloggerInput): void {
+  // Required fields
+  if (!input.firstName?.trim()) {
+    throw new HttpsError("invalid-argument", "First name is required");
+  }
+  if (!input.lastName?.trim()) {
+    throw new HttpsError("invalid-argument", "Last name is required");
+  }
+  if (!input.email?.trim()) {
+    throw new HttpsError("invalid-argument", "Email is required");
+  }
+  if (!input.country?.trim()) {
+    throw new HttpsError("invalid-argument", "Country is required");
+  }
+  if (!input.language || !SUPPORTED_LANGUAGES.includes(input.language)) {
+    throw new HttpsError("invalid-argument", "Valid language is required");
+  }
+
+  // Blog-specific fields (REQUIRED for bloggers)
+  if (!input.blogUrl?.trim()) {
+    throw new HttpsError("invalid-argument", "Blog URL is required");
+  }
+  if (!input.blogName?.trim()) {
+    throw new HttpsError("invalid-argument", "Blog name is required");
+  }
+  if (!input.blogLanguage || !SUPPORTED_LANGUAGES.includes(input.blogLanguage)) {
+    throw new HttpsError("invalid-argument", "Valid blog language is required");
+  }
+  if (!input.blogCountry?.trim()) {
+    throw new HttpsError("invalid-argument", "Blog target country is required");
+  }
+  if (!input.blogTheme || !BLOG_THEMES.includes(input.blogTheme)) {
+    throw new HttpsError("invalid-argument", "Valid blog theme is required");
+  }
+  if (!input.blogTraffic || !BLOG_TRAFFIC_TIERS.includes(input.blogTraffic)) {
+    throw new HttpsError("invalid-argument", "Valid blog traffic estimate is required");
+  }
+
+  // Definitive role acknowledgment (REQUIRED)
+  if (!input.definitiveRoleAcknowledged) {
+    throw new HttpsError(
+      "invalid-argument",
+      "You must acknowledge that the blogger role is definitive and cannot be changed"
+    );
+  }
+
+  // Validate blog URL format
+  try {
+    new URL(input.blogUrl);
+  } catch {
+    throw new HttpsError("invalid-argument", "Invalid blog URL format");
+  }
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(input.email)) {
+    throw new HttpsError("invalid-argument", "Invalid email format");
+  }
+}
+
+// ============================================================================
+// CALLABLE
+// ============================================================================
+
+export const registerBlogger = onCall(
+  {
+    region: "europe-west1",
+    memory: "512MiB",
+    timeoutSeconds: 60,
+  },
+  async (request): Promise<RegisterBloggerResponse> => {
+    // 1. Check authentication
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    const uid = request.auth.uid;
+    const input = request.data as RegisterBloggerInput;
+
+    // 2. Validate input
+    validateInput(input);
+
+    const db = getFirestore();
+
+    try {
+      // 3. Check config
+      const config = await getBloggerConfigCached();
+
+      if (!config.isSystemActive) {
+        throw new HttpsError("failed-precondition", "Blogger system is currently inactive");
+      }
+
+      if (!config.newRegistrationsEnabled) {
+        throw new HttpsError("failed-precondition", "New blogger registrations are currently closed");
+      }
+
+      // 4. Check if user already has a blogger profile
+      const existingBlogger = await db.collection("bloggers").doc(uid).get();
+      if (existingBlogger.exists) {
+        throw new HttpsError("already-exists", "You are already registered as a blogger");
+      }
+
+      // 5. IMPORTANT: Check if user is already a chatter, influencer, or provider
+      // Bloggers CANNOT be chatters, influencers, or providers (definitive role)
+      const [chatterDoc, influencerDoc, providerDoc] = await Promise.all([
+        db.collection("chatters").doc(uid).get(),
+        db.collection("influencers").doc(uid).get(),
+        db.collection("providers").doc(uid).get(),
+      ]);
+
+      if (chatterDoc.exists) {
+        throw new HttpsError(
+          "failed-precondition",
+          "You cannot become a blogger because you are already registered as a chatter"
+        );
+      }
+
+      if (influencerDoc.exists) {
+        throw new HttpsError(
+          "failed-precondition",
+          "You cannot become a blogger because you are already registered as an influencer"
+        );
+      }
+
+      if (providerDoc.exists) {
+        throw new HttpsError(
+          "failed-precondition",
+          "You cannot become a blogger because you are already registered as a provider"
+        );
+      }
+
+      // 6. Check if blog URL is already registered by another blogger
+      const blogUrlQuery = await db
+        .collection("bloggers")
+        .where("blogUrl", "==", input.blogUrl.toLowerCase().trim())
+        .limit(1)
+        .get();
+
+      if (!blogUrlQuery.empty) {
+        throw new HttpsError(
+          "already-exists",
+          "This blog URL is already registered by another blogger"
+        );
+      }
+
+      // 7. Generate affiliate codes
+      const { affiliateCodeClient, affiliateCodeRecruitment } =
+        await generateBloggerAffiliateCodes(input.firstName);
+
+      // 8. Create blogger profile
+      const now = Timestamp.now();
+      const currentMonth = new Date().toISOString().slice(0, 7);
+
+      const blogger: Blogger = {
+        id: uid,
+        email: input.email.toLowerCase().trim(),
+        firstName: input.firstName.trim(),
+        lastName: input.lastName.trim(),
+        phone: input.phone?.trim() || undefined,
+        photoUrl: undefined,
+        country: input.country.trim(),
+        language: input.language,
+        additionalLanguages: input.additionalLanguages || [],
+        bio: input.bio?.trim() || undefined,
+
+        // Blog-specific fields
+        blogUrl: input.blogUrl.toLowerCase().trim(),
+        blogName: input.blogName.trim(),
+        blogLanguage: input.blogLanguage,
+        blogCountry: input.blogCountry.trim(),
+        blogTheme: input.blogTheme,
+        blogTraffic: input.blogTraffic,
+        blogDescription: input.blogDescription?.trim() || undefined,
+
+        // Status - ACTIVE immediately (no quiz required)
+        status: "active" as BloggerStatus,
+        adminNotes: undefined,
+        suspensionReason: undefined,
+
+        // Definitive role acknowledgment
+        definitiveRoleAcknowledged: true,
+        definitiveRoleAcknowledgedAt: now,
+
+        // Affiliate codes
+        affiliateCodeClient,
+        affiliateCodeRecruitment,
+
+        // Balances (all start at 0)
+        totalEarned: 0,
+        availableBalance: 0,
+        pendingBalance: 0,
+        validatedBalance: 0,
+        totalWithdrawn: 0,
+
+        // Statistics
+        totalClients: 0,
+        totalRecruits: 0,
+        totalCommissions: 0,
+        currentMonthStats: {
+          clients: 0,
+          recruits: 0,
+          earnings: 0,
+          month: currentMonth,
+        },
+        currentMonthRank: null,
+        bestRank: null,
+
+        // Gamification (simplified)
+        currentStreak: 0,
+        bestStreak: 0,
+        lastActivityDate: null,
+        badges: [],
+
+        // Payment details
+        preferredPaymentMethod: null,
+        paymentDetails: null,
+        pendingWithdrawalId: null,
+
+        // Timestamps
+        createdAt: now,
+        updatedAt: now,
+        lastLoginAt: now,
+      };
+
+      // 9. Save blogger profile
+      await db.collection("bloggers").doc(uid).set(blogger);
+
+      // 10. Create welcome notification
+      await db.collection("blogger_notifications").add({
+        id: "", // Will be set after creation
+        bloggerId: uid,
+        type: "system",
+        title: "Bienvenue dans le programme Blogueurs SOS-Expat !",
+        titleTranslations: {
+          en: "Welcome to the SOS-Expat Blogger Program!",
+          es: "¡Bienvenido al Programa de Bloggers de SOS-Expat!",
+          pt: "Bem-vindo ao Programa de Blogueiros SOS-Expat!",
+        },
+        message: `Félicitations ${input.firstName} ! Votre compte blogueur est maintenant actif. Découvrez vos outils de promotion et commencez à gagner des commissions dès aujourd'hui.`,
+        messageTranslations: {
+          en: `Congratulations ${input.firstName}! Your blogger account is now active. Discover your promotion tools and start earning commissions today.`,
+        },
+        actionUrl: "/blogger/tableau-de-bord",
+        isRead: false,
+        emailSent: false,
+        createdAt: now,
+      });
+
+      logger.info("[registerBlogger] Blogger registered successfully", {
+        bloggerId: uid,
+        email: input.email,
+        blogUrl: input.blogUrl,
+        affiliateCodeClient,
+        affiliateCodeRecruitment,
+      });
+
+      return {
+        success: true,
+        bloggerId: uid,
+        affiliateCodeClient,
+        affiliateCodeRecruitment,
+        message: "Inscription réussie ! Votre compte blogueur est maintenant actif.",
+      };
+    } catch (error) {
+      if (error instanceof HttpsError) {
+        throw error;
+      }
+
+      logger.error("[registerBlogger] Error", { uid, error });
+      throw new HttpsError("internal", "Failed to register blogger");
+    }
+  }
+);

@@ -48,7 +48,8 @@ export type ChatterWithdrawalStatus =
   | "failed"
   | "rejected";
 
-export type ChatterPaymentMethod = "wise" | "mobile_money" | "bank_transfer";
+// NOTE: Added 'paypal' for alignment with Influencer system
+export type ChatterPaymentMethod = "wise" | "paypal" | "mobile_money" | "bank_transfer";
 
 export type ChatterPlatform =
   | "facebook"
@@ -107,6 +108,13 @@ export interface ChatterWiseDetails {
   bic?: string;
 }
 
+export interface ChatterPayPalDetails {
+  type: "paypal";
+  email: string;
+  currency: string;
+  accountHolderName: string;
+}
+
 export type MobileMoneyProvider = "mtn" | "orange" | "moov" | "airtel" | "mpesa" | "wave";
 
 export interface ChatterMobileMoneyDetails {
@@ -133,6 +141,7 @@ export interface ChatterBankDetails {
 
 export type ChatterPaymentDetails =
   | ChatterWiseDetails
+  | ChatterPayPalDetails
   | ChatterMobileMoneyDetails
   | ChatterBankDetails;
 
@@ -440,4 +449,165 @@ export interface UpdateChatterProfileInput {
   photoUrl?: string;
   preferredPaymentMethod?: ChatterPaymentMethod;
   paymentDetails?: ChatterPaymentDetails;
+}
+
+// ============================================================================
+// TRAINING SYSTEM
+// ============================================================================
+
+export type TrainingModuleStatus = "draft" | "published" | "archived";
+export type TrainingSlideType = "text" | "video" | "image" | "checklist" | "tips";
+export type ChatterTrainingCategory =
+  | "onboarding"
+  | "promotion"
+  | "conversion"
+  | "recruitment"
+  | "best_practices";
+
+export interface TrainingSlide {
+  order: number;
+  type: TrainingSlideType;
+  title: string;
+  titleTranslations?: Record<string, string>;
+  content: string;
+  contentTranslations?: Record<string, string>;
+  mediaUrl?: string;
+  checklistItems?: Array<{
+    text: string;
+    textTranslations?: Record<string, string>;
+  }>;
+  tips?: Array<{
+    text: string;
+    textTranslations?: Record<string, string>;
+  }>;
+}
+
+export interface TrainingQuizQuestion {
+  id: string;
+  question: string;
+  questionTranslations?: Record<string, string>;
+  options: Array<{
+    id: string;
+    text: string;
+    textTranslations?: Record<string, string>;
+  }>;
+  correctAnswerId: string;
+  explanation?: string;
+  explanationTranslations?: Record<string, string>;
+}
+
+export interface ChatterTrainingModule {
+  id: string;
+  order: number;
+  title: string;
+  titleTranslations?: Record<string, string>;
+  description: string;
+  descriptionTranslations?: Record<string, string>;
+  category: ChatterTrainingCategory;
+  coverImageUrl?: string;
+  introVideoUrl?: string;
+  slides: TrainingSlide[];
+  quizQuestions: TrainingQuizQuestion[];
+  passingScore: number;
+  estimatedMinutes: number;
+  isRequired: boolean;
+  prerequisites: string[];
+  status: TrainingModuleStatus;
+  completionReward?: {
+    type: "badge" | "bonus";
+    badgeType?: ChatterBadgeType;
+    bonusAmount?: number;
+  };
+}
+
+export interface ChatterTrainingProgress {
+  chatterId: string;
+  moduleId: string;
+  moduleTitle: string;
+  startedAt: string;
+  completedAt?: string;
+  currentSlideIndex: number;
+  slidesViewed: number[];
+  quizAttempts: Array<{
+    attemptedAt: string;
+    answers: Array<{
+      questionId: string;
+      answerId: string;
+      isCorrect: boolean;
+    }>;
+    score: number;
+    passed: boolean;
+  }>;
+  bestScore: number;
+  isCompleted: boolean;
+  certificateId?: string;
+}
+
+export interface ChatterTrainingCertificate {
+  id: string;
+  chatterId: string;
+  chatterName: string;
+  moduleId: string;
+  type: "module" | "full_program";
+  title: string;
+  averageScore: number;
+  modulesCompleted: number;
+  issuedAt: string;
+  pdfUrl?: string;
+  verificationCode: string;
+}
+
+export interface TrainingModuleListItem {
+  id: string;
+  order: number;
+  title: string;
+  description: string;
+  category: ChatterTrainingCategory;
+  coverImageUrl?: string;
+  estimatedMinutes: number;
+  isRequired: boolean;
+  prerequisites: string[];
+  progress: {
+    isStarted: boolean;
+    isCompleted: boolean;
+    currentSlideIndex: number;
+    totalSlides: number;
+    bestScore: number;
+  } | null;
+}
+
+export interface TrainingOverallProgress {
+  completedModules: number;
+  totalModules: number;
+  completionPercent: number;
+  hasCertificate: boolean;
+  certificateId?: string;
+}
+
+export interface SubmitTrainingQuizInput {
+  moduleId: string;
+  answers: Array<{
+    questionId: string;
+    answerId: string;
+  }>;
+}
+
+export interface SubmitTrainingQuizResult {
+  success: boolean;
+  score: number;
+  passed: boolean;
+  passingScore: number;
+  results: Array<{
+    questionId: string;
+    isCorrect: boolean;
+    correctAnswerId: string;
+    explanation?: string;
+  }>;
+  moduleCompleted: boolean;
+  certificateId?: string;
+  rewardGranted?: {
+    type: "badge" | "bonus";
+    badgeType?: ChatterBadgeType;
+    bonusAmount?: number;
+  };
 }

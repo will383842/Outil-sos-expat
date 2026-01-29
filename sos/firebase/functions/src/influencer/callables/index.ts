@@ -9,6 +9,24 @@ export { updateInfluencerProfile } from "./updateInfluencerProfile";
 export { requestWithdrawal as influencerRequestWithdrawal } from "./requestWithdrawal";
 export { getInfluencerLeaderboard } from "./getInfluencerLeaderboard";
 
+// Training Callables
+export {
+  getInfluencerTrainingModules,
+  getInfluencerTrainingModuleContent,
+  updateInfluencerTrainingProgress,
+  submitInfluencerTrainingQuiz,
+  getInfluencerTrainingCertificate,
+} from "./training";
+
+// Admin Training Callables
+export {
+  adminGetInfluencerTrainingModules,
+  adminCreateInfluencerTrainingModule,
+  adminUpdateInfluencerTrainingModule,
+  adminDeleteInfluencerTrainingModule,
+  adminSeedInfluencerTrainingModules,
+} from "./adminTraining";
+
 // Admin Callables
 export {
   adminGetInfluencersList,

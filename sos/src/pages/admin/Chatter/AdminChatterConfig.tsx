@@ -23,6 +23,7 @@ import {
   Shield,
   Video,
   Users,
+  GraduationCap,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 
@@ -41,6 +42,7 @@ interface ChatterConfig {
   isSystemActive: boolean;
   newRegistrationsEnabled: boolean;
   withdrawalsEnabled: boolean;
+  trainingEnabled: boolean;
   commissionClientAmount: number;
   commissionRecruitmentAmount: number;
   levelBonuses: {
@@ -239,7 +241,7 @@ const AdminChatterConfig: React.FC = () => {
           <Shield className="w-5 h-5 text-red-500" />
           <FormattedMessage id="admin.chatterConfig.systemStatus" defaultMessage="Statut du système" />
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <label className="flex items-center gap-3 cursor-pointer">
             <input
               type="checkbox"
@@ -274,6 +276,19 @@ const AdminChatterConfig: React.FC = () => {
             <span className="text-gray-700 dark:text-gray-300">
               <FormattedMessage id="admin.chatterConfig.withdrawalsEnabled" defaultMessage="Retraits activés" />
             </span>
+          </label>
+
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={formData.trainingEnabled ?? config?.trainingEnabled ?? true}
+              onChange={(e) => handleChange('trainingEnabled', e.target.checked)}
+              className="w-5 h-5 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
+            />
+            <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+              <GraduationCap className="w-4 h-4 text-blue-500" />
+              <FormattedMessage id="admin.chatterConfig.trainingEnabled" defaultMessage="Formation visible" />
+            </div>
           </label>
         </div>
       </div>

@@ -57,6 +57,10 @@ import {
   // Chatter icons
   MessageCircle,
   MapPin,
+  // Training icons
+  GraduationCap,
+  // Blogger icons
+  FolderOpen,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -620,6 +624,72 @@ export const adminMenuTree: AdminMenuItem[] = [
         path: "/admin/influencers/config",
         icon: Settings,
         descriptionKey: "admin.menu.influencersConfig.description",
+      },
+    ],
+  },
+
+  // ===== 📝 BLOGUEURS (Priorité 6.7 - Programme Blogueurs) =====
+  {
+    id: "bloggers",
+    labelKey: "admin.menu.bloggers",
+    icon: FileText,
+    descriptionKey: "admin.menu.bloggers.description",
+    children: [
+      {
+        id: "bloggers-list",
+        labelKey: "admin.menu.bloggersList",
+        path: "/admin/bloggers",
+        icon: Users,
+        descriptionKey: "admin.menu.bloggersList.description",
+      },
+      {
+        id: "bloggers-payments",
+        labelKey: "admin.menu.bloggersPayments",
+        path: "/admin/bloggers/payments",
+        icon: Wallet,
+        badge: "NEW",
+        descriptionKey: "admin.menu.bloggersPayments.description",
+      },
+      {
+        id: "bloggers-resources",
+        labelKey: "admin.menu.bloggersResources",
+        path: "/admin/bloggers/resources",
+        icon: FolderOpen,
+        badge: "NEW",
+        descriptionKey: "admin.menu.bloggersResources.description",
+      },
+      {
+        id: "bloggers-guide",
+        labelKey: "admin.menu.bloggersGuide",
+        path: "/admin/bloggers/guide",
+        icon: BookOpen,
+        badge: "NEW",
+        descriptionKey: "admin.menu.bloggersGuide.description",
+      },
+      {
+        id: "bloggers-config",
+        labelKey: "admin.menu.bloggersConfig",
+        path: "/admin/bloggers/config",
+        icon: Settings,
+        descriptionKey: "admin.menu.bloggersConfig.description",
+      },
+    ],
+  },
+
+  // ===== 📚 FORMATIONS (Priorité 6.8 - Formation Chatters & Influenceurs) =====
+  {
+    id: "training",
+    labelKey: "admin.menu.training",
+    icon: GraduationCap,
+    descriptionKey: "admin.menu.training.description",
+    children: [
+      {
+        id: "training-modules",
+        labelKey: "admin.menu.trainingModules",
+        path: "/admin/training/modules",
+        icon: BookOpen,
+        badge: "NEW",
+        descriptionKey: "admin.menu.trainingModules.description",
       },
     ],
   },

@@ -19,6 +19,7 @@ import {
   Shield,
   History,
   ChevronRight,
+  GraduationCap,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 import {
@@ -319,6 +320,65 @@ const AdminInfluencersConfig: React.FC = () => {
         {/* Tab Content */}
         {activeTab === 'general' && (
           <div className="space-y-6">
+            {/* System Settings */}
+            <div className={`${UI.card} p-6`}>
+              <h2 className="font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                <Shield className="w-5 h-5 text-red-500" />
+                <FormattedMessage id="admin.config.systemSettings" defaultMessage="Paramètres système" />
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={config.isSystemActive ?? true}
+                    onChange={(e) => setConfig(prev => ({ ...prev, isSystemActive: e.target.checked }))}
+                    className="w-5 h-5 rounded border-gray-300 text-red-500 focus:ring-red-500"
+                  />
+                  <span className="text-gray-700 dark:text-gray-300 text-sm">
+                    <FormattedMessage id="admin.config.systemActive" defaultMessage="Système actif" />
+                  </span>
+                </label>
+
+                <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={config.newRegistrationsEnabled ?? true}
+                    onChange={(e) => setConfig(prev => ({ ...prev, newRegistrationsEnabled: e.target.checked }))}
+                    className="w-5 h-5 rounded border-gray-300 text-red-500 focus:ring-red-500"
+                  />
+                  <span className="text-gray-700 dark:text-gray-300 text-sm">
+                    <FormattedMessage id="admin.config.registrationsEnabled" defaultMessage="Inscriptions ouvertes" />
+                  </span>
+                </label>
+
+                <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={config.withdrawalsEnabled ?? true}
+                    onChange={(e) => setConfig(prev => ({ ...prev, withdrawalsEnabled: e.target.checked }))}
+                    className="w-5 h-5 rounded border-gray-300 text-red-500 focus:ring-red-500"
+                  />
+                  <span className="text-gray-700 dark:text-gray-300 text-sm">
+                    <FormattedMessage id="admin.config.withdrawalsEnabled" defaultMessage="Retraits activés" />
+                  </span>
+                </label>
+
+                <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={config.trainingEnabled ?? true}
+                    onChange={(e) => setConfig(prev => ({ ...prev, trainingEnabled: e.target.checked }))}
+                    className="w-5 h-5 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
+                  />
+                  <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 text-sm">
+                    <GraduationCap className="w-4 h-4 text-blue-500" />
+                    <FormattedMessage id="admin.config.trainingEnabled" defaultMessage="Formation visible" />
+                  </div>
+                </label>
+              </div>
+            </div>
+
             {/* Commission Settings (Legacy - for backward compatibility) */}
             <div className={`${UI.card} p-6`}>
               <h2 className="font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">

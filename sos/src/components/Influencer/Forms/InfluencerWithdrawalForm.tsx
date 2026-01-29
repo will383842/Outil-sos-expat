@@ -15,7 +15,7 @@ interface InfluencerWithdrawalFormProps {
   onCancel: () => void;
 }
 
-type PaymentMethod = 'wise' | 'paypal' | 'bank_transfer';
+type PaymentMethod = 'wise' | 'paypal' | 'mobile_money' | 'bank_transfer';
 
 const InfluencerWithdrawalForm: React.FC<InfluencerWithdrawalFormProps> = ({
   availableBalance,
@@ -41,6 +41,11 @@ const InfluencerWithdrawalForm: React.FC<InfluencerWithdrawalFormProps> = ({
     paypalEmail: '',
     paypalCurrency: 'USD',
     paypalAccountHolder: '',
+    // Mobile Money
+    mobileProvider: '' as 'orange_money' | 'wave' | 'mtn_momo' | 'moov_money' | 'airtel_money' | 'mpesa' | '',
+    mobilePhoneNumber: '',
+    mobileCountry: '',
+    mobileAccountName: '',
     // Bank
     bankName: '',
     bankAccountHolder: '',
@@ -78,6 +83,15 @@ const InfluencerWithdrawalForm: React.FC<InfluencerWithdrawalFormProps> = ({
             email: formData.paypalEmail,
             currency: formData.paypalCurrency,
             accountHolderName: formData.paypalAccountHolder,
+          };
+          break;
+        case 'mobile_money':
+          paymentDetails = {
+            type: 'mobile_money' as const,
+            provider: formData.mobileProvider,
+            phoneNumber: formData.mobilePhoneNumber,
+            country: formData.mobileCountry,
+            accountName: formData.mobileAccountName,
           };
           break;
         case 'bank_transfer':
@@ -172,13 +186,13 @@ const InfluencerWithdrawalForm: React.FC<InfluencerWithdrawalFormProps> = ({
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           <FormattedMessage id="influencer.withdrawal.method" defaultMessage="Méthode de paiement" />
         </label>
-        <div className="grid grid-cols-3 gap-2">
-          {(['wise', 'paypal', 'bank_transfer'] as PaymentMethod[]).map((method) => (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {(['wise', 'paypal', 'mobile_money', 'bank_transfer'] as PaymentMethod[]).map((method) => (
             <button
               key={method}
               type="button"
               onClick={() => setPaymentMethod(method)}
-              className={`px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
+              className={`px-3 py-3 rounded-xl text-sm font-medium transition-colors ${
                 paymentMethod === method
                   ? 'bg-red-500 text-white'
                   : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
@@ -186,6 +200,7 @@ const InfluencerWithdrawalForm: React.FC<InfluencerWithdrawalFormProps> = ({
             >
               {method === 'wise' && 'Wise'}
               {method === 'paypal' && 'PayPal'}
+              {method === 'mobile_money' && 'Mobile Money'}
               {method === 'bank_transfer' && intl.formatMessage({ id: 'influencer.withdrawal.bankTransfer', defaultMessage: 'Virement' })}
             </button>
           ))}
@@ -245,6 +260,83 @@ const InfluencerWithdrawalForm: React.FC<InfluencerWithdrawalFormProps> = ({
               required
               value={formData.paypalAccountHolder}
               onChange={(e) => setFormData({ ...formData, paypalAccountHolder: e.target.value })}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+            />
+          </div>
+        </div>
+      )}
+
+      {paymentMethod === 'mobile_money' && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FormattedMessage id="influencer.withdrawal.country" defaultMessage="Pays" /> *
+              </label>
+              <select
+                required
+                value={formData.mobileCountry}
+                onChange={(e) => setFormData({ ...formData, mobileCountry: e.target.value, mobileProvider: '' })}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+              >
+                <option value="">Sélectionner un pays</option>
+                <option value="SN">Sénégal</option>
+                <option value="CI">Côte d'Ivoire</option>
+                <option value="CM">Cameroun</option>
+                <option value="ML">Mali</option>
+                <option value="BF">Burkina Faso</option>
+                <option value="BJ">Bénin</option>
+                <option value="TG">Togo</option>
+                <option value="GN">Guinée</option>
+                <option value="NE">Niger</option>
+                <option value="KE">Kenya</option>
+                <option value="GH">Ghana</option>
+                <option value="NG">Nigeria</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FormattedMessage id="influencer.withdrawal.provider" defaultMessage="Opérateur" /> *
+              </label>
+              <select
+                required
+                value={formData.mobileProvider}
+                onChange={(e) => setFormData({ ...formData, mobileProvider: e.target.value as typeof formData.mobileProvider })}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+              >
+                <option value="">Sélectionner un opérateur</option>
+                <option value="orange_money">Orange Money</option>
+                <option value="wave">Wave</option>
+                <option value="mtn_momo">MTN Mobile Money</option>
+                <option value="moov_money">Moov Money</option>
+                <option value="airtel_money">Airtel Money</option>
+                <option value="mpesa">M-Pesa</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FormattedMessage id="influencer.withdrawal.phoneNumber" defaultMessage="Numéro de téléphone" /> *
+            </label>
+            <input
+              type="tel"
+              required
+              value={formData.mobilePhoneNumber}
+              onChange={(e) => setFormData({ ...formData, mobilePhoneNumber: e.target.value })}
+              placeholder="+221 77 123 45 67"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FormattedMessage id="influencer.withdrawal.accountName" defaultMessage="Nom du compte" /> *
+            </label>
+            <input
+              type="text"
+              required
+              value={formData.mobileAccountName}
+              onChange={(e) => setFormData({ ...formData, mobileAccountName: e.target.value })}
+              placeholder="Nom enregistré sur le compte"
               className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
             />
           </div>
