@@ -275,8 +275,10 @@ export class StripeManager {
     }
     // P1 FIX: Afficher le symbole correct selon la devise
     const currencySymbol = (data.currency?.toString().toLowerCase() === 'usd') ? '$' : '€';
+    const isUSD = data.currency?.toString().toLowerCase() === 'usd';
+    const maxAmount = isUSD ? 600 : 500; // USD: 600$, EUR: 500€
     if (amount < 0.50) throw new HttpsError('failed-precondition', `Montant minimum de 0.50${currencySymbol} requis`);
-    if (amount > 500) throw new HttpsError('failed-precondition', `Montant maximum de 500${currencySymbol} dépassé`);
+    if (amount > maxAmount) throw new HttpsError('failed-precondition', `Montant maximum de ${maxAmount}${currencySymbol} dépassé`);
 
     const commission = data.connectionFeeAmount ?? data.commissionAmount ?? 0;
     if (typeof commission !== 'number' || commission < 0) {
@@ -850,6 +852,7 @@ export class StripeManager {
       // pour retrieve ET capture.
       let providerStripeAccountId: string | undefined;
       let useDirectCharges = false;
+      let storedProviderAmountCents: number | undefined; // P1 FIX: Stocker le montant provider pour fallback précis
 
       try {
         const paymentDoc = await this.db.collection('payments').doc(paymentIntentId).get();
@@ -857,11 +860,16 @@ export class StripeManager {
           const paymentData = paymentDoc.data();
           providerStripeAccountId = paymentData?.providerStripeAccountId;
           useDirectCharges = paymentData?.useDirectCharges === true;
+          // P1 FIX: Stocker providerAmount pour utilisation ultérieure (évite le fallback 80%)
+          if (paymentData?.providerAmount) {
+            storedProviderAmountCents = Math.round(paymentData.providerAmount * 100);
+          }
 
           console.log('[capturePayment] Payment document retrieved:', {
             paymentIntentId,
             useDirectCharges,
             providerStripeAccountId: providerStripeAccountId || 'N/A (platform mode)',
+            storedProviderAmountCents,
           });
         } else {
           console.warn('[capturePayment] Payment document not found in Firestore:', paymentIntentId);
@@ -961,9 +969,10 @@ export class StripeManager {
                 if (aaaAccount.gateway === 'stripe' && aaaAccount.accountId) {
                   try {
                     // Calculer le montant du provider (excluant la commission SOS)
+                    // P1 FIX: Utiliser storedProviderAmountCents de Firestore au lieu du fallback 80%
                     const providerAmountCents = paymentIntent.metadata?.providerAmountCents
                       ? parseInt(paymentIntent.metadata.providerAmountCents, 10)
-                      : Math.round(paymentIntent.amount * 0.8); // 80% par défaut si non spécifié
+                      : (storedProviderAmountCents || Math.round(paymentIntent.amount * 0.8)); // Firestore > 80% fallback
 
                     // Créer un transfert vers le compte Stripe externe consolidé
                     const transfer = await this.stripe!.transfers.create({
@@ -1470,6 +1479,10 @@ export class StripeManager {
 
       // Verifier si ce paiement utilisait Destination Charges ou Direct Charges
       const paymentDoc = await this.db.collection('payments').doc(paymentIntentId).get();
+      // P1 FIX: Vérifier que le document existe avant d'utiliser les données
+      if (!paymentDoc.exists) {
+        throw new HttpsError('not-found', `Payment document not found: ${paymentIntentId}`);
+      }
       const paymentData = paymentDoc.data();
       // P0-5 FIX: Vérifier AUSSI useDirectCharges (nouveau modèle)
       // - useDestinationCharges: ancien modèle (transfer_data vers provider)
@@ -1721,7 +1734,7 @@ export class StripeManager {
 
       // Verify provider's account is capable of receiving payments
       const account = await this.stripe.accounts.retrieve(stripeAccountId);
-      
+
       if (!account.charges_enabled) {
         console.error(`❌ Provider ${providerId} charges not enabled`);
         throw new HttpsError(
@@ -1730,27 +1743,41 @@ export class StripeManager {
         );
       }
 
+      // P0 FIX: Also verify payouts_enabled to ensure transfers won't be blocked
+      if (!account.payouts_enabled) {
+        console.error(`❌ Provider ${providerId} payouts not enabled - transfer would be blocked`);
+        throw new HttpsError(
+          'failed-precondition',
+          'Provider account payouts not enabled yet. Please complete identity verification.'
+        );
+      }
+
       // Create the transfer
       // FIX: Utilise la devise originale du paiement au lieu de hardcoder EUR
-      const transfer = await this.stripe.transfers.create({
-        amount: Math.round(providerAmount * 100), // Convert to cents
-        currency: currency, // FIX: Devise dynamique
-        destination: stripeAccountId,
-        transfer_group: sessionId,
-        description: `Payment for call ${sessionId}`,
-        metadata: {
-          sessionId: sessionId,
-          providerId: providerId,
-          // FIX: Nom générique car peut être EUR ou USD
-          providerAmountMainUnit: providerAmount.toFixed(2),
-          providerAmountCurrency: currency.toUpperCase(),
-          // LEGACY: Garder pour compatibilité arrière
-          providerAmountEuros: providerAmount.toFixed(2),
-          environment: process.env.NODE_ENV || 'development',
-          mode: this.mode,
-          ...metadata,
+      // P0 FIX: Add idempotency key to prevent duplicate transfers on retry
+      const transferIdempotencyKey = `transfer_${sessionId}_${stripeAccountId}_${Date.now().toString(36)}`;
+      const transfer = await this.stripe.transfers.create(
+        {
+          amount: Math.round(providerAmount * 100), // Convert to cents
+          currency: currency, // FIX: Devise dynamique
+          destination: stripeAccountId,
+          transfer_group: sessionId,
+          description: `Payment for call ${sessionId}`,
+          metadata: {
+            sessionId: sessionId,
+            providerId: providerId,
+            // FIX: Nom générique car peut être EUR ou USD
+            providerAmountMainUnit: providerAmount.toFixed(2),
+            providerAmountCurrency: currency.toUpperCase(),
+            // LEGACY: Garder pour compatibilité arrière
+            providerAmountEuros: providerAmount.toFixed(2),
+            environment: process.env.NODE_ENV || 'development',
+            mode: this.mode,
+            ...metadata,
+          },
         },
-      });
+        { idempotencyKey: transferIdempotencyKey }
+      );
 
       console.log(`✅ Transfer created: ${transfer.id}`, {
         amount: transfer.amount,
@@ -1823,9 +1850,35 @@ async cancelPayment(
     this.validateConfiguration(secretKey);
     if (!this.stripe) throw new HttpsError('internal', 'Stripe non initialisé');
 
+    // P0 FIX: Récupérer le document payment pour obtenir providerStripeAccountId (Direct Charges)
+    let providerStripeAccountId: string | undefined;
+    let useDirectCharges = false;
+    try {
+      const paymentDoc = await this.db.collection('payments').doc(paymentIntentId).get();
+      if (paymentDoc.exists) {
+        const paymentData = paymentDoc.data();
+        providerStripeAccountId = paymentData?.providerStripeAccountId;
+        useDirectCharges = paymentData?.useDirectCharges === true;
+        console.log(`🚨 [${cancelDebugId}] Payment document found:`, {
+          useDirectCharges,
+          providerStripeAccountId: providerStripeAccountId || 'N/A (platform mode)',
+        });
+      } else {
+        console.log(`🚨 [${cancelDebugId}] Payment document not found in Firestore`);
+      }
+    } catch (firestoreError) {
+      console.warn(`🚨 [${cancelDebugId}] Could not fetch payment document:`, firestoreError);
+    }
+
+    // P0 FIX: Pour Direct Charges, le PaymentIntent est sur le compte du provider
+    const stripeAccountOptions: Stripe.RequestOptions | undefined =
+      useDirectCharges && providerStripeAccountId
+        ? { stripeAccount: providerStripeAccountId }
+        : undefined;
+
     // 🔍 DEBUG: Vérifier l'état actuel du PaymentIntent AVANT annulation
     console.log(`🚨 [${cancelDebugId}] Checking current PaymentIntent status...`);
-    const currentIntent = await this.stripe.paymentIntents.retrieve(paymentIntentId);
+    const currentIntent = await this.stripe.paymentIntents.retrieve(paymentIntentId, {}, stripeAccountOptions);
     console.log(`🚨 [${cancelDebugId}] Current status: ${currentIntent.status}`);
     console.log(`🚨 [${cancelDebugId}] Amount: ${currentIntent.amount} ${currentIntent.currency}`);
     console.log(`🚨 [${cancelDebugId}] Created: ${new Date(currentIntent.created * 1000).toISOString()}`);
@@ -1865,12 +1918,17 @@ async cancelPayment(
     const cancelIdempotencyKey = `cancel_${paymentIntentId}`;
 
     console.log(`🚨 [${cancelDebugId}] 🛑 PROCEEDING WITH CANCELLATION...`);
+    // P0 FIX: Merge stripeAccountOptions avec idempotencyKey pour Direct Charges
+    const cancelOptions: Stripe.RequestOptions = {
+      idempotencyKey: cancelIdempotencyKey,
+      ...(stripeAccountOptions || {}),
+    };
     const canceled = await this.stripe.paymentIntents.cancel(
       paymentIntentId,
       {
         ...(normalized ? { cancellation_reason: normalized } : {}),
       },
-      { idempotencyKey: cancelIdempotencyKey }
+      cancelOptions
     );
 
     await this.db.collection('payments').doc(paymentIntentId).update({

@@ -11,7 +11,8 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import nodemailer from "nodemailer";
-import { EMAIL_USER, EMAIL_PASS } from "../utils/secrets";
+// P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
+import { EMAIL_USER, EMAIL_PASS } from "../lib/secrets";
 
 type SupportedLanguage = 'fr' | 'en' | 'es' | 'pt' | 'de' | 'ru' | 'ar' | 'hi' | 'ch';
 

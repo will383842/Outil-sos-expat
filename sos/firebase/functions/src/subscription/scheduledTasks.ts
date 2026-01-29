@@ -12,13 +12,11 @@
 import * as admin from 'firebase-admin';
 import { onSchedule, ScheduledEvent } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions';
-import { defineSecret } from 'firebase-functions/params';
 import { MailwizzAPI } from '../emailMarketing/utils/mailwizz';
 import { getLanguageCode, MAILWIZZ_API_KEY_SECRET } from '../emailMarketing/config';
 import { APP_URLS } from './constants';
-
-// Secrets
-const STRIPE_SECRET_KEY = defineSecret('STRIPE_SECRET_KEY');
+// P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
+import { STRIPE_SECRET_KEY } from '../lib/secrets';
 
 // Lazy Firestore initialization
 const getDb = () => admin.firestore();

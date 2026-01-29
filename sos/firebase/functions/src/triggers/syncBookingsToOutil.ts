@@ -19,12 +19,10 @@
 
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
-import { defineSecret } from "firebase-functions/params";
 import { logger } from "firebase-functions";
 import * as admin from "firebase-admin";
-
-// Secret pour l'authentification avec Outil-sos-expat
-const OUTIL_SYNC_API_KEY = defineSecret("OUTIL_SYNC_API_KEY");
+// P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
+import { OUTIL_SYNC_API_KEY } from "../lib/secrets";
 
 // URL de l'endpoint ingestBooking dans Outil-sos-expat
 const OUTIL_INGEST_ENDPOINT = "https://europe-west1-outils-sos-expat.cloudfunctions.net/ingestBooking";

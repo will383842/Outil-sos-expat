@@ -9,7 +9,7 @@ import { Timestamp } from 'firebase/firestore';
 export type SupportedLanguage = "fr" | "en" | "es" | "de" | "ru" | "hi" | "pt" | "ch" | "ar";
 
 // Rôles d'utilisateur dans l'application
-export type UserRole = "client" | "lawyer" | "expat" | "admin";
+export type UserRole = "client" | "lawyer" | "expat" | "admin" | "chatter";
 
 // Types de service disponibles
 export type ServiceType = "lawyer_call" | "expat_call";
@@ -138,6 +138,12 @@ export interface User {
   provider?: string;
   affiliateCode?: string;
   referralBy?: string;
+
+  // Chatter-specific fields
+  chatterStatus?: 'pending' | 'quiz_required' | 'active' | 'suspended' | 'banned';
+  chatterLevel?: 1 | 2 | 3 | 4 | 5;
+  affiliateCodeClient?: string;
+  affiliateCodeRecruitment?: string;
   registrationIP?: string;
   userAgent?: string;
   deviceInfo?: {

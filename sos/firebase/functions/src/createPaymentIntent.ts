@@ -1,7 +1,6 @@
 import { onCall, CallableRequest, HttpsError } from 'firebase-functions/v2/https';
 import * as logger from 'firebase-functions/logger';
 import * as admin from 'firebase-admin';
-import Stripe from 'stripe';
 
 // -- App code existant --
 import { stripeManager } from './StripeManager';
@@ -1100,19 +1099,16 @@ export const createPaymentIntent = onCall(
         }
       }
 
-      let accountId: string | undefined;
-      try {
-        const stripe = new Stripe(stripeSecretKey, { apiVersion: '2023-10-16' });
-        const account = await stripe.accounts.retrieve();
-        accountId = account.id;
-      } catch (err) {
-        logger.warn("Impossible de récupérer l'account Stripe", err as unknown);
-      }
-
       // ═══════════════════════════════════════════════════════════════════════════
       // ✅ SUCCÈS - Log final avec toutes les informations
       // ═══════════════════════════════════════════════════════════════════════════
       const totalProcessingTime = Date.now() - startTime;
+
+      // P0 FIX: Pour Direct Charges, le frontend DOIT recevoir le providerStripeAccountId
+      // car le PaymentIntent a été créé sur le compte du provider, pas sur la plateforme.
+      // Sans cet ID, confirmCardPayment retourne 404.
+      const stripeAccountIdForFrontend = providerStripeAccountId || undefined;
+
       prodLogger.info('PAYMENT_SUCCESS', `[${requestId}] ✅ PaymentIntent créé avec succès en ${totalProcessingTime}ms`, {
         requestId,
         paymentIntentId: result.paymentIntentId,
@@ -1124,7 +1120,8 @@ export const createPaymentIntent = onCall(
         clientId: clientId?.substring(0, 10) + '...',
         callSessionId,
         stripeMode: STRIPE_MODE.value() || 'test',
-        stripeAccountId: accountId?.substring(0, 12) || null,
+        stripeAccountId: stripeAccountIdForFrontend?.substring(0, 12) || null,
+        isDirectCharges: !!providerStripeAccountId,
         totalProcessingTimeMs: totalProcessingTime,
         status: 'requires_payment_method',
       });
@@ -1139,7 +1136,10 @@ export const createPaymentIntent = onCall(
         status: 'requires_payment_method',
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
         stripeMode: STRIPE_MODE.value() || 'test',
-        stripeAccountId: accountId,
+        // P0 FIX: Retourner le providerStripeAccountId pour Direct Charges
+        // Le frontend doit passer cet ID à confirmCardPayment() pour que Stripe
+        // puisse trouver le PaymentIntent sur le compte connecté du provider
+        stripeAccountId: stripeAccountIdForFrontend,
       };
     } catch (err: unknown) {
       const processingTime = Date.now() - startTime;

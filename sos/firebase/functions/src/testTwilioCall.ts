@@ -1,11 +1,11 @@
 import { onRequest } from "firebase-functions/v2/https";
-import { defineSecret } from "firebase-functions/params";
 import twilio from "twilio";
-
-// Define secrets for Twilio credentials
-const TWILIO_ACCOUNT_SID = defineSecret("TWILIO_ACCOUNT_SID");
-const TWILIO_AUTH_TOKEN = defineSecret("TWILIO_AUTH_TOKEN");
-const TWILIO_PHONE_NUMBER = defineSecret("TWILIO_PHONE_NUMBER");
+// P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
+import {
+  TWILIO_ACCOUNT_SID,
+  TWILIO_AUTH_TOKEN,
+  TWILIO_PHONE_NUMBER,
+} from "./lib/secrets";
 
 // Initialize Twilio client only when needed (not during deployment)
 let client: twilio.Twilio | null = null;

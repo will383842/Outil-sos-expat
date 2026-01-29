@@ -1,15 +1,15 @@
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
-import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
 // import { resolveLang } from "./i18n";
 
-// 🔐 SECRETS
-const EMAIL_USER = defineSecret("EMAIL_USER");
-const EMAIL_PASS = defineSecret("EMAIL_PASS");
-// SMS only for booking_paid_provider
-const TWILIO_ACCOUNT_SID = defineSecret("TWILIO_ACCOUNT_SID");
-const TWILIO_AUTH_TOKEN = defineSecret("TWILIO_AUTH_TOKEN");
-const TWILIO_PHONE_NUMBER = defineSecret("TWILIO_PHONE_NUMBER");
+// P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
+import {
+  EMAIL_USER,
+  EMAIL_PASS,
+  TWILIO_ACCOUNT_SID,
+  TWILIO_AUTH_TOKEN,
+  TWILIO_PHONE_NUMBER,
+} from "../lib/secrets";
 
 // 📤 IMPORTS DES MODULES
 import { getTemplate } from "./templates";

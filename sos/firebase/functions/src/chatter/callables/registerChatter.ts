@@ -1,0 +1,322 @@
+/**
+ * Callable: registerChatter
+ *
+ * Registers a new chatter in the system.
+ * Creates chatter profile with pending_quiz status.
+ * Also creates/updates user document if needed.
+ */
+
+import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { logger } from "firebase-functions/v2";
+import { getApps, initializeApp } from "firebase-admin/app";
+
+import {
+  Chatter,
+  RegisterChatterInput,
+  RegisterChatterResponse,
+  SupportedChatterLanguage,
+  ChatterPlatform,
+} from "../types";
+import { getChatterConfigCached, areRegistrationsEnabled, isCountrySupported } from "../utils";
+import { checkChatterRegistrationFraud, hashIP } from "../utils";
+
+// Lazy initialization
+function ensureInitialized() {
+  if (!getApps().length) {
+    initializeApp();
+  }
+}
+
+// Supported languages validation
+const VALID_LANGUAGES: SupportedChatterLanguage[] = [
+  "fr", "en", "es", "pt", "ar", "de", "it", "nl", "zh"
+];
+
+// Valid platforms
+const VALID_PLATFORMS: ChatterPlatform[] = [
+  "facebook", "instagram", "twitter", "linkedin", "tiktok", "youtube",
+  "whatsapp", "telegram", "snapchat", "reddit", "discord", "blog",
+  "website", "forum", "other"
+];
+
+export const registerChatter = onCall(
+  {
+    region: "europe-west1",
+    memory: "512MiB",
+    timeoutSeconds: 60,
+  },
+  async (request): Promise<RegisterChatterResponse> => {
+    ensureInitialized();
+
+    // 1. Check authentication
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    const userId = request.auth.uid;
+    const db = getFirestore();
+
+    // 2. Validate input
+    const input = request.data as RegisterChatterInput;
+
+    if (!input.firstName || !input.lastName) {
+      throw new HttpsError("invalid-argument", "First name and last name are required");
+    }
+
+    if (!input.email || !input.email.includes("@")) {
+      throw new HttpsError("invalid-argument", "Valid email is required");
+    }
+
+    if (!input.country || input.country.length !== 2) {
+      throw new HttpsError("invalid-argument", "Valid country code is required");
+    }
+
+    if (!input.interventionCountries || input.interventionCountries.length === 0) {
+      throw new HttpsError("invalid-argument", "At least one intervention country is required");
+    }
+
+    if (!input.language || !VALID_LANGUAGES.includes(input.language)) {
+      throw new HttpsError("invalid-argument", "Valid language is required");
+    }
+
+    if (!input.platforms || input.platforms.length === 0) {
+      throw new HttpsError("invalid-argument", "At least one platform is required");
+    }
+
+    // Validate platforms
+    for (const platform of input.platforms) {
+      if (!VALID_PLATFORMS.includes(platform)) {
+        throw new HttpsError("invalid-argument", `Invalid platform: ${platform}`);
+      }
+    }
+
+    // Validate additional languages if provided
+    if (input.additionalLanguages) {
+      for (const lang of input.additionalLanguages) {
+        if (!VALID_LANGUAGES.includes(lang)) {
+          throw new HttpsError("invalid-argument", `Invalid language: ${lang}`);
+        }
+      }
+    }
+
+    try {
+      // 3. Get config and check registrations enabled
+      const config = await getChatterConfigCached();
+
+      if (!areRegistrationsEnabled(config)) {
+        throw new HttpsError("failed-precondition", "New registrations are currently disabled");
+      }
+
+      // 4. Check country support
+      if (!isCountrySupported(input.country, config)) {
+        throw new HttpsError(
+          "failed-precondition",
+          `Country ${input.country} is not currently supported`
+        );
+      }
+
+      // 5. Check for existing chatter
+      const existingChatter = await db.collection("chatters").doc(userId).get();
+
+      if (existingChatter.exists) {
+        const existingData = existingChatter.data() as Chatter;
+
+        // If already registered, return existing data
+        if (existingData.status !== "banned") {
+          return {
+            success: true,
+            chatterId: userId,
+            message: "Chatter already registered",
+          };
+        } else {
+          throw new HttpsError("permission-denied", "This account has been banned");
+        }
+      }
+
+      // 6. Check for duplicate email
+      const emailQuery = await db
+        .collection("chatters")
+        .where("email", "==", input.email.toLowerCase())
+        .limit(1)
+        .get();
+
+      if (!emailQuery.empty) {
+        throw new HttpsError("already-exists", "A chatter with this email already exists");
+      }
+
+      // 7. Fraud check
+      const ip = request.rawRequest?.ip || "unknown";
+      const fraudResult = await checkChatterRegistrationFraud(
+        input.email,
+        ip,
+        input.recruitmentCode
+      );
+
+      if (fraudResult.shouldBlock) {
+        logger.warn("[registerChatter] Blocked by fraud detection", {
+          userId,
+          email: input.email,
+          flags: fraudResult.flags,
+        });
+        throw new HttpsError(
+          "permission-denied",
+          "Registration blocked. Please contact support if this is an error."
+        );
+      }
+
+      // 8. Find recruiter if recruitment code provided
+      let recruitedBy: string | null = null;
+      let recruitedByCode: string | null = null;
+
+      if (input.recruitmentCode) {
+        const recruiterQuery = await db
+          .collection("chatters")
+          .where("affiliateCodeRecruitment", "==", input.recruitmentCode.toUpperCase())
+          .where("status", "==", "active")
+          .limit(1)
+          .get();
+
+        if (!recruiterQuery.empty) {
+          recruitedBy = recruiterQuery.docs[0].id;
+          recruitedByCode = input.recruitmentCode.toUpperCase();
+        }
+      }
+
+      // 9. Create chatter document
+      const now = Timestamp.now();
+
+      const chatter: Chatter = {
+        id: userId,
+        email: input.email.toLowerCase(),
+        firstName: input.firstName.trim(),
+        lastName: input.lastName.trim(),
+        phone: input.phone?.trim(),
+        country: input.country.toUpperCase(),
+        interventionCountries: input.interventionCountries.map((c) => c.toUpperCase()),
+        language: input.language,
+        additionalLanguages: input.additionalLanguages || [],
+        platforms: input.platforms,
+        bio: input.bio?.trim(),
+
+        status: "pending_quiz",
+        level: 1,
+        levelProgress: 0,
+
+        // Codes will be generated after quiz passes
+        affiliateCodeClient: "",
+        affiliateCodeRecruitment: "",
+
+        totalEarned: 0,
+        availableBalance: 0,
+        pendingBalance: 0,
+        validatedBalance: 0,
+
+        totalClients: 0,
+        totalRecruits: 0,
+        totalCommissions: 0,
+        commissionsByType: {
+          client_referral: { count: 0, amount: 0 },
+          recruitment: { count: 0, amount: 0 },
+          bonus: { count: 0, amount: 0 },
+        },
+
+        currentStreak: 0,
+        bestStreak: 0,
+        lastActivityDate: null,
+        badges: [],
+        currentMonthRank: null,
+        bestRank: null,
+
+        zoomMeetingsAttended: 0,
+        lastZoomAttendance: null,
+
+        quizAttempts: 0,
+        lastQuizAttempt: null,
+        quizPassedAt: null,
+
+        preferredPaymentMethod: null,
+        paymentDetails: null,
+        pendingWithdrawalId: null,
+
+        recruitedBy,
+        recruitedByCode,
+        recruitedAt: recruitedBy ? now : null,
+        recruiterCommissionPaid: false,
+
+        createdAt: now,
+        updatedAt: now,
+        lastLoginAt: now,
+      };
+
+      // 10. Create/update user document and chatter document in transaction
+      await db.runTransaction(async (transaction) => {
+        // Create chatter
+        const chatterRef = db.collection("chatters").doc(userId);
+        transaction.set(chatterRef, chatter);
+
+        // Update user document with chatter role
+        const userRef = db.collection("users").doc(userId);
+        const userDoc = await transaction.get(userRef);
+
+        if (userDoc.exists) {
+          transaction.update(userRef, {
+            isChatter: true,
+            chatterStatus: "pending_quiz",
+            updatedAt: now,
+          });
+        } else {
+          // Create minimal user document
+          transaction.set(userRef, {
+            email: input.email.toLowerCase(),
+            firstName: input.firstName.trim(),
+            lastName: input.lastName.trim(),
+            role: "client", // Keep original role
+            isChatter: true,
+            chatterStatus: "pending_quiz",
+            createdAt: now,
+            updatedAt: now,
+          });
+        }
+
+        // Track registration click if from recruitment
+        if (input.recruitmentCode && recruitedBy) {
+          const clickRef = db.collection("chatter_affiliate_clicks").doc();
+          transaction.set(clickRef, {
+            id: clickRef.id,
+            chatterCode: recruitedByCode,
+            chatterId: recruitedBy,
+            linkType: "recruitment",
+            landingPage: "/chatter/register",
+            ipHash: hashIP(ip),
+            converted: true,
+            conversionId: userId,
+            conversionType: "chatter_signup",
+            clickedAt: now,
+            convertedAt: now,
+          });
+        }
+      });
+
+      logger.info("[registerChatter] Chatter registered", {
+        chatterId: userId,
+        email: input.email,
+        country: input.country,
+        recruitedBy,
+      });
+
+      return {
+        success: true,
+        chatterId: userId,
+        message: "Registration successful. Please complete the quiz to activate your account.",
+      };
+    } catch (error) {
+      if (error instanceof HttpsError) {
+        throw error;
+      }
+
+      logger.error("[registerChatter] Error", { userId, error });
+      throw new HttpsError("internal", "Failed to register chatter");
+    }
+  }
+);

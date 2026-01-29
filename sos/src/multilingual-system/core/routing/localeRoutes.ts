@@ -275,7 +275,20 @@ export type RouteKey =
   | "affiliate-referrals"  // /affiliate/referrals -> /parrainage/filleuls, etc.
   | "affiliate-withdraw"   // /affiliate/withdraw -> /parrainage/retrait, etc.
   | "affiliate-bank-details" // /affiliate/bank-details -> /parrainage/coordonnees-bancaires, etc.
-  | "affiliate-tools"; // /affiliate/tools -> /parrainage/outils, etc.
+  | "affiliate-tools" // /affiliate/tools -> /parrainage/outils, etc.
+  // Chatter routes
+  | "chatter-landing"      // /devenir-chatter -> /become-chatter, etc.
+  | "chatter-register"     // /chatter/inscription -> /chatter/register, etc.
+  | "chatter-presentation" // /chatter/presentation -> /chatter/presentation, etc.
+  | "chatter-quiz"         // /chatter/quiz -> /chatter/quiz, etc.
+  | "chatter-dashboard"    // /chatter/tableau-de-bord -> /chatter/dashboard, etc.
+  | "chatter-leaderboard"  // /chatter/classement -> /chatter/leaderboard, etc.
+  | "chatter-payments"     // /chatter/paiements -> /chatter/payments, etc.
+  | "chatter-suspended"    // /chatter/suspendu -> /chatter/suspended, etc.
+  | "chatter-country-selection" // /chatter/pays -> /chatter/country-selection, etc.
+  | "chatter-posts"        // /chatter/posts -> /chatter/posts, etc.
+  | "chatter-zoom"         // /chatter/zoom -> /chatter/zoom, etc.
+  | "chatter-training";    // /chatter/formation -> /chatter/training, etc.
 
 const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
   "lawyer": {
@@ -783,6 +796,139 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "tuiguang/gongju",
     hi: "sahbhagi/upkaran",
     ar: "برنامج-الإحالة/أدوات",
+  },
+  // Chatter routes
+  "chatter-landing": {
+    fr: "devenir-chatter",
+    en: "become-chatter",
+    es: "ser-chatter",
+    de: "chatter-werden",
+    ru: "stat-chatterom",
+    pt: "tornar-se-chatter",
+    ch: "chengwei-chatter",
+    hi: "chatter-bane",
+    ar: "كن-مسوقا",
+  },
+  "chatter-register": {
+    fr: "chatter/inscription",
+    en: "chatter/register",
+    es: "chatter/registro",
+    de: "chatter/registrierung",
+    ru: "chatter/registratsiya",
+    pt: "chatter/cadastro",
+    ch: "chatter/zhuce",
+    hi: "chatter/panjikaran",
+    ar: "مسوق/تسجيل",
+  },
+  "chatter-presentation": {
+    fr: "chatter/presentation",
+    en: "chatter/presentation",
+    es: "chatter/presentacion",
+    de: "chatter/praesentation",
+    ru: "chatter/prezentatsiya",
+    pt: "chatter/apresentacao",
+    ch: "chatter/jieshao",
+    hi: "chatter/parichay",
+    ar: "مسوق/عرض",
+  },
+  "chatter-quiz": {
+    fr: "chatter/quiz",
+    en: "chatter/quiz",
+    es: "chatter/cuestionario",
+    de: "chatter/quiz",
+    ru: "chatter/viktorina",
+    pt: "chatter/questionario",
+    ch: "chatter/ceshi",
+    hi: "chatter/prashnottari",
+    ar: "مسوق/اختبار",
+  },
+  "chatter-dashboard": {
+    fr: "chatter/tableau-de-bord",
+    en: "chatter/dashboard",
+    es: "chatter/panel",
+    de: "chatter/dashboard",
+    ru: "chatter/panel-upravleniya",
+    pt: "chatter/painel",
+    ch: "chatter/kongzhi-mianban",
+    hi: "chatter/dashboard",
+    ar: "مسوق/لوحة-التحكم",
+  },
+  "chatter-leaderboard": {
+    fr: "chatter/classement",
+    en: "chatter/leaderboard",
+    es: "chatter/clasificacion",
+    de: "chatter/rangliste",
+    ru: "chatter/reiting",
+    pt: "chatter/classificacao",
+    ch: "chatter/paihangbang",
+    hi: "chatter/ranking",
+    ar: "مسوق/الترتيب",
+  },
+  "chatter-payments": {
+    fr: "chatter/paiements",
+    en: "chatter/payments",
+    es: "chatter/pagos",
+    de: "chatter/zahlungen",
+    ru: "chatter/platezhi",
+    pt: "chatter/pagamentos",
+    ch: "chatter/fukuan",
+    hi: "chatter/bhugtaan",
+    ar: "مسوق/المدفوعات",
+  },
+  "chatter-suspended": {
+    fr: "chatter/suspendu",
+    en: "chatter/suspended",
+    es: "chatter/suspendido",
+    de: "chatter/gesperrt",
+    ru: "chatter/priostanovlen",
+    pt: "chatter/suspenso",
+    ch: "chatter/zanting",
+    hi: "chatter/nilambit",
+    ar: "مسوق/معلق",
+  },
+  "chatter-country-selection": {
+    fr: "chatter/pays",
+    en: "chatter/country-selection",
+    es: "chatter/paises",
+    de: "chatter/laenderauswahl",
+    ru: "chatter/strany",
+    pt: "chatter/paises",
+    ch: "chatter/guojia",
+    hi: "chatter/desh",
+    ar: "مسوق/البلدان",
+  },
+  "chatter-posts": {
+    fr: "chatter/posts",
+    en: "chatter/posts",
+    es: "chatter/publicaciones",
+    de: "chatter/beitraege",
+    ru: "chatter/posty",
+    pt: "chatter/publicacoes",
+    ch: "chatter/tiezi",
+    hi: "chatter/post",
+    ar: "مسوق/المنشورات",
+  },
+  "chatter-zoom": {
+    fr: "chatter/zoom",
+    en: "chatter/zoom",
+    es: "chatter/zoom",
+    de: "chatter/zoom",
+    ru: "chatter/zoom",
+    pt: "chatter/zoom",
+    ch: "chatter/zoom",
+    hi: "chatter/zoom",
+    ar: "مسوق/زووم",
+  },
+  "chatter-training": {
+    fr: "chatter/formation",
+    en: "chatter/training",
+    es: "chatter/formacion",
+    de: "chatter/schulung",
+    ru: "chatter/obuchenie",
+    pt: "chatter/formacao",
+    ch: "chatter/peixun",
+    hi: "chatter/prashikshan",
+    ar: "مسوق/التدريب",
   },
 };
 

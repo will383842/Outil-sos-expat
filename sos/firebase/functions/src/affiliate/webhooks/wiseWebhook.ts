@@ -14,7 +14,8 @@ import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 import * as crypto from "crypto";
-import { defineSecret } from "firebase-functions/params";
+// P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
+import { WISE_WEBHOOK_SECRET } from "../../lib/secrets";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -22,9 +23,6 @@ function ensureInitialized() {
     initializeApp();
   }
 }
-
-// Wise webhook signing key from Secret Manager
-const WISE_WEBHOOK_SECRET = defineSecret("WISE_WEBHOOK_SECRET");
 
 // ============================================================================
 // TYPES

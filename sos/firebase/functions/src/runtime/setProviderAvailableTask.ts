@@ -2,13 +2,11 @@
 // Cloud Task handler for delayed provider availability (5 min cooldown after call)
 
 import { Request, Response } from "express";
-import { defineSecret } from "firebase-functions/params";
 import { setProviderAvailable } from "../callables/providerStatusManager";
 import { logError } from "../utils/logs/logError";
 import { logger as prodLogger } from "../utils/productionLogger";
-
-// Auth secret for Cloud Tasks validation
-export const TASKS_AUTH_SECRET = defineSecret("TASKS_AUTH_SECRET");
+// P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
+import { TASKS_AUTH_SECRET } from "../lib/secrets";
 
 interface SetProviderAvailablePayload {
   providerId: string;

@@ -689,7 +689,7 @@ export const updateCallRecord = async (
 // Fetch call sessions for a user (from call_sessions collection)
 export const getUserCallSessions = async (
   userId: string,
-  userRole: "client" | "lawyer" | "expat" | "admin"
+  userRole: "client" | "lawyer" | "expat" | "admin" | "chatter"
 ) => {
   try {
     const callSessionsRef = collection(db, "call_sessions");

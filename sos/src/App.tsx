@@ -137,6 +137,20 @@ const AffiliateTools = lazy(() => import('./pages/Affiliate/AffiliateTools'));
 // Multi-Provider Dashboard (standalone, password-protected)
 const MultiProviderDashboard = lazy(() => import('./pages/MultiProviderDashboard'));
 
+// Chatter System
+const ChatterLanding = lazy(() => import('./pages/Chatter/ChatterLanding'));
+const ChatterRegister = lazy(() => import('./pages/Chatter/ChatterRegister'));
+const ChatterPresentation = lazy(() => import('./pages/Chatter/ChatterPresentation'));
+const ChatterQuiz = lazy(() => import('./pages/Chatter/ChatterQuiz'));
+const ChatterDashboard = lazy(() => import('./pages/Chatter/ChatterDashboard'));
+const ChatterLeaderboard = lazy(() => import('./pages/Chatter/ChatterLeaderboard'));
+const ChatterPayments = lazy(() => import('./pages/Chatter/ChatterPayments'));
+const ChatterSuspended = lazy(() => import('./pages/Chatter/ChatterSuspended'));
+const ChatterCountrySelection = lazy(() => import('./pages/Chatter/ChatterCountrySelection'));
+const ChatterPosts = lazy(() => import('./pages/Chatter/ChatterPosts'));
+const ChatterZoom = lazy(() => import('./pages/Chatter/ChatterZoom'));
+const ChatterTraining = lazy(() => import('./pages/Chatter/ChatterTraining'));
+
 // -------------------------------------------
 // Laguage config
 // -------------------------------------------
@@ -234,6 +248,9 @@ const routeConfigs: RouteConfig[] = [
 
   // PWA Share Target
   { path: "/share-target", component: ShareTarget },
+
+  // Chatter Landing Page (public)
+  { path: "/devenir-chatter", component: ChatterLanding, translated: "chatter-landing" },
 ];
 
 // Protégées (utilisateur)
@@ -277,6 +294,18 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/affiliate/withdraw", component: AffiliateWithdraw, protected: true, role: ['client', 'lawyer', 'expat'], translated: "affiliate-withdraw" },
   { path: "/affiliate/bank-details", component: AffiliateBankDetails, protected: true, role: ['client', 'lawyer', 'expat'], translated: "affiliate-bank-details" },
   { path: "/affiliate/tools", component: AffiliateTools, protected: true, role: ['client', 'lawyer', 'expat'], translated: "affiliate-tools" },
+  // Chatter System Routes - Protected routes for registered chatters
+  { path: "/chatter/inscription", component: ChatterRegister, protected: true, translated: "chatter-register" },
+  { path: "/chatter/presentation", component: ChatterPresentation, protected: true, translated: "chatter-presentation" },
+  { path: "/chatter/quiz", component: ChatterQuiz, protected: true, translated: "chatter-quiz" },
+  { path: "/chatter/pays", component: ChatterCountrySelection, protected: true, translated: "chatter-country-selection" },
+  { path: "/chatter/tableau-de-bord", component: ChatterDashboard, protected: true, translated: "chatter-dashboard" },
+  { path: "/chatter/classement", component: ChatterLeaderboard, protected: true, translated: "chatter-leaderboard" },
+  { path: "/chatter/paiements", component: ChatterPayments, protected: true, translated: "chatter-payments" },
+  { path: "/chatter/suspendu", component: ChatterSuspended, protected: true, translated: "chatter-suspended" },
+  { path: "/chatter/posts", component: ChatterPosts, protected: true, translated: "chatter-posts" },
+  { path: "/chatter/zoom", component: ChatterZoom, protected: true, translated: "chatter-zoom" },
+  { path: "/chatter/formation", component: ChatterTraining, protected: true, translated: "chatter-training" },
 ];
 
 // ====================================

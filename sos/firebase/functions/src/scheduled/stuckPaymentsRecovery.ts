@@ -18,18 +18,17 @@
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
-import { defineSecret, defineString } from "firebase-functions/params";
 import Stripe from "stripe";
 import { logError } from "../utils/logs/logError";
 import { syncPaymentStatus } from "../utils/paymentSync";
 // P0 FIX: Import stuck transfers recovery
 import { recoverStuckTransfers } from "../PendingTransferProcessor";
-
-// Secrets
-const STRIPE_SECRET_KEY_TEST = defineSecret("STRIPE_SECRET_KEY_TEST");
-const STRIPE_SECRET_KEY_LIVE = defineSecret("STRIPE_SECRET_KEY_LIVE");
-// Note: STRIPE_MODE is a string param, not a secret
-const STRIPE_MODE = defineString("STRIPE_MODE");
+// P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
+import {
+  STRIPE_SECRET_KEY_TEST,
+  STRIPE_SECRET_KEY_LIVE,
+  STRIPE_MODE,
+} from "../lib/secrets";
 
 // Configuration
 const RECOVERY_CONFIG = {

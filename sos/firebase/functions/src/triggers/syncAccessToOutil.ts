@@ -17,11 +17,9 @@
  */
 
 import { onDocumentUpdated } from "firebase-functions/v2/firestore";
-import { defineSecret } from "firebase-functions/params";
 import { logger } from "firebase-functions";
-
-// Secret pour l'authentification avec Outil-sos-expat
-const OUTIL_SYNC_API_KEY = defineSecret("OUTIL_SYNC_API_KEY");
+// P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
+import { OUTIL_SYNC_API_KEY } from "../lib/secrets";
 
 // URL de l'endpoint syncProvider dans Outil-sos-expat (Cloud Run v2)
 const OUTIL_SYNC_ENDPOINT = "https://syncprovider-r47sd2uiqa-ew.a.run.app";

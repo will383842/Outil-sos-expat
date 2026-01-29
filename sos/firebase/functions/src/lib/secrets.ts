@@ -264,7 +264,8 @@ export function getStripeSecretKey(mode?: 'live' | 'test'): string {
 
 export function getStripeSecretKeyLive(): string {
   try {
-    const secretValue = STRIPE_SECRET_KEY_LIVE.value();
+    // P0 FIX: trim() to handle Windows CRLF in secrets
+    const secretValue = STRIPE_SECRET_KEY_LIVE.value()?.trim();
     if (secretValue && secretValue.length > 0 && secretValue.startsWith('sk_live_')) {
       console.log(`[Secrets] STRIPE_SECRET_KEY_LIVE loaded from Firebase Secret`);
       return secretValue;
@@ -293,7 +294,8 @@ export function getStripeSecretKeyLive(): string {
 
 export function getStripeSecretKeyTest(): string {
   try {
-    const secretValue = STRIPE_SECRET_KEY_TEST.value();
+    // P0 FIX: trim() to handle Windows CRLF in secrets
+    const secretValue = STRIPE_SECRET_KEY_TEST.value()?.trim();
     if (secretValue && secretValue.length > 0 && secretValue.startsWith('sk_test_')) {
       console.log(`[Secrets] STRIPE_SECRET_KEY_TEST loaded from Firebase Secret`);
       return secretValue;
@@ -327,7 +329,8 @@ export function getStripeWebhookSecret(mode?: 'live' | 'test'): string {
   const envKey = effectiveMode === 'live' ? 'STRIPE_WEBHOOK_SECRET_LIVE' : 'STRIPE_WEBHOOK_SECRET_TEST';
 
   try {
-    const secretValue = secretDef.value();
+    // P0 FIX: trim() to handle Windows CRLF in secrets
+    const secretValue = secretDef.value()?.trim();
     if (secretValue && secretValue.length > 0 && secretValue.startsWith('whsec_')) {
       return secretValue;
     }
@@ -335,7 +338,7 @@ export function getStripeWebhookSecret(mode?: 'live' | 'test'): string {
     // Secret not available
   }
 
-  const envValue = process.env[envKey];
+  const envValue = process.env[envKey]?.trim();
   if (envValue && envValue.length > 0) {
     return envValue;
   }
@@ -351,7 +354,8 @@ export function getStripeConnectWebhookSecret(mode?: 'live' | 'test'): string {
   const envKey = effectiveMode === 'live' ? 'STRIPE_CONNECT_WEBHOOK_SECRET_LIVE' : 'STRIPE_CONNECT_WEBHOOK_SECRET_TEST';
 
   try {
-    const secretValue = secretDef.value();
+    // P0 FIX: trim() to handle Windows CRLF in secrets
+    const secretValue = secretDef.value()?.trim();
     if (secretValue && secretValue.length > 0 && secretValue.startsWith('whsec_')) {
       return secretValue;
     }
@@ -359,7 +363,7 @@ export function getStripeConnectWebhookSecret(mode?: 'live' | 'test'): string {
     // Secret not available
   }
 
-  const envValue = process.env[envKey];
+  const envValue = process.env[envKey]?.trim();
   if (envValue && envValue.length > 0) {
     return envValue;
   }

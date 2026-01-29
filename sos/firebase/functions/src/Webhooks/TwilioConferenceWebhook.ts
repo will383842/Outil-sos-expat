@@ -1,5 +1,4 @@
 import { onRequest } from 'firebase-functions/v2/https';
-import { defineSecret } from 'firebase-functions/params';
 import { twilioCallManager } from '../TwilioCallManager';
 import { logCallRecord } from '../utils/logs/logCallRecord';
 import { logError } from '../utils/logs/logError';
@@ -7,11 +6,8 @@ import { Request, Response } from 'express';
 import * as admin from 'firebase-admin';
 import { validateTwilioWebhookSignature, TWILIO_AUTH_TOKEN_SECRET, TWILIO_ACCOUNT_SID_SECRET } from '../lib/twilio';
 import { STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST } from '../lib/stripe';
-
-// P0 FIX 2026-01-18: TASKS_AUTH_SECRET needed for scheduleProviderAvailableTask
-// Without this, the Cloud Task is created WITHOUT the X-Task-Auth header
-// and the provider will never return to "available" status after a call
-const TASKS_AUTH_SECRET = defineSecret('TASKS_AUTH_SECRET');
+// P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
+import { TASKS_AUTH_SECRET } from '../lib/secrets';
 
 // Ensure TypeScript recognizes the secrets are used in the secrets array
 void TWILIO_AUTH_TOKEN_SECRET;

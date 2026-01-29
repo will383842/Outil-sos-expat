@@ -1,6 +1,5 @@
 // firebase/functions/src/createAndScheduleCallFunction.ts - Version avec planification directe
 import { onCall, CallableRequest, HttpsError } from 'firebase-functions/v2/https';
-import { defineSecret } from 'firebase-functions/params';
 import { createCallSession } from './callScheduler';
 import { logError } from './utils/logs/logError';
 import * as admin from 'firebase-admin';
@@ -15,16 +14,14 @@ import { decryptPhoneNumber } from './utils/encryption';
 import { getServiceAmounts } from './services/pricingService';
 // P0 FIX: Import setProviderBusy to reserve provider immediately after payment
 import { setProviderBusy } from './callables/providerStatusManager';
-
-// Secret for phone number encryption
-const ENCRYPTION_KEY = defineSecret('ENCRYPTION_KEY');
-// Secrets for Stripe (needed for payment cancellation on error)
-const STRIPE_SECRET_KEY_TEST = defineSecret('STRIPE_SECRET_KEY_TEST');
-const STRIPE_SECRET_KEY_LIVE = defineSecret('STRIPE_SECRET_KEY_LIVE');
-// Secret for Cloud Tasks authentication
-const TASKS_AUTH_SECRET = defineSecret('TASKS_AUTH_SECRET');
-// Secret for Outil-sos-expat sync
-const OUTIL_SYNC_API_KEY = defineSecret('OUTIL_SYNC_API_KEY');
+// P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
+import {
+  ENCRYPTION_KEY,
+  STRIPE_SECRET_KEY_TEST,
+  STRIPE_SECRET_KEY_LIVE,
+  TASKS_AUTH_SECRET,
+  OUTIL_SYNC_API_KEY,
+} from './lib/secrets';
 
 // ✅ Interface corrigée pour correspondre exactement aux données frontend
 interface CreateCallRequest {

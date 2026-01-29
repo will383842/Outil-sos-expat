@@ -10,13 +10,11 @@
  */
 
 import * as admin from 'firebase-admin';
-import { defineSecret } from 'firebase-functions/params';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions';
 import Stripe from 'stripe';
-
-// Secrets Firebase
-const STRIPE_SECRET_KEY = defineSecret('STRIPE_SECRET_KEY');
+// P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
+import { STRIPE_SECRET_KEY } from '../lib/secrets';
 
 // Stripe client initialized lazily
 let stripeClient: Stripe | null = null;

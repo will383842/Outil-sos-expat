@@ -344,11 +344,12 @@ export class PayPalManager {
       };
     } catch (error) {
       console.error(`❌ [AAA] Error checking AAA status for ${providerId}:`, error);
-      // On error, fallback to internal (safer)
+      // P0 FIX: On error, fallback to internal (safer) with skipPayout: true
+      // to prevent unintended payouts when we can't verify AAA status
       return {
         isAAA: false,
         mode: "internal",
-        skipPayout: false,
+        skipPayout: true,
         reason: `Error checking AAA status: ${error}`,
       };
     }

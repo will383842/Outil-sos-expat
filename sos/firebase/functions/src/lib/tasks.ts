@@ -1,8 +1,10 @@
 // firebase/functions/src/lib/tasks.ts
 import { CloudTasksClient } from "@google-cloud/tasks";
-import { defineSecret, defineString } from "firebase-functions/params";
+import { defineString } from "firebase-functions/params";
 import { logError } from "../utils/logs/logError";
 import { logger as prodLogger } from "../utils/productionLogger";
+// P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
+import { TASKS_AUTH_SECRET } from "./secrets";
 
 // Types pour améliorer la sécurité du code
 interface TaskPayload {
@@ -31,7 +33,6 @@ interface QueueStats {
 const CLOUD_TASKS_LOCATION = defineString("CLOUD_TASKS_LOCATION", { default: "europe-west1" });
 const CLOUD_TASKS_QUEUE = defineString("CLOUD_TASKS_QUEUE", { default: "call-scheduler-queue" });
 const FUNCTIONS_BASE_URL_PARAM = defineString("FUNCTIONS_BASE_URL"); // optionnel
-const TASKS_AUTH_SECRET = defineSecret("TASKS_AUTH_SECRET");
 // P1-4 FIX: Cloud Run URL now configurable via environment variable
 // Firebase Functions v2 uses Cloud Run with different URL format than v1
 const EXECUTE_CALL_TASK_URL = defineString("EXECUTE_CALL_TASK_URL", {

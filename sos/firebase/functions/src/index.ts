@@ -472,7 +472,7 @@ import type { Request as ExpressRequest, Response } from "express";
 import { createAndScheduleCallHTTPS } from "./createAndScheduleCallFunction";
 
 import { runExecuteCallTask } from "./runtime/executeCallTask";
-import { runSetProviderAvailableTask, TASKS_AUTH_SECRET as PROVIDER_TASK_AUTH_SECRET } from "./runtime/setProviderAvailableTask";
+import { runSetProviderAvailableTask } from "./runtime/setProviderAvailableTask";
 export { forceEndCallTask } from "./runtime/forceEndCallTask";
 
 ultraLogger.debug("IMPORTS", "Imports principaux chargés avec succès");
@@ -506,16 +506,18 @@ function getStripeSecretKey(): string {
     : STRIPE_SECRET_KEY_TEST.value() || "";
 }
 function getStripeWebhookSecret(): string {
+  // P0 FIX: trim() to handle Windows CRLF in secrets
   return isLive()
-    ? STRIPE_WEBHOOK_SECRET_LIVE.value() || ""
-    : STRIPE_WEBHOOK_SECRET_TEST.value() || "";
+    ? (STRIPE_WEBHOOK_SECRET_LIVE.value() || "").trim()
+    : (STRIPE_WEBHOOK_SECRET_TEST.value() || "").trim();
 }
 
 // Helper pour le webhook Connect (Direct Charges) - reserve pour utilisation future
 export function getStripeConnectWebhookSecret(): string {
+  // P0 FIX: trim() to handle Windows CRLF in secrets
   return isLive()
-    ? STRIPE_CONNECT_WEBHOOK_SECRET_LIVE.value() || ""
-    : STRIPE_CONNECT_WEBHOOK_SECRET_TEST.value() || "";
+    ? (STRIPE_CONNECT_WEBHOOK_SECRET_LIVE.value() || "").trim()
+    : (STRIPE_CONNECT_WEBHOOK_SECRET_TEST.value() || "").trim();
 }
 
 // ====== INTERFACES DE DEBUGGING ======
@@ -1012,7 +1014,7 @@ export const setProviderAvailableTask = onRequest(
     minInstances: 0,
     concurrency: 1,
     // Only needs TASKS_AUTH_SECRET for Cloud Tasks auth
-    secrets: [PROVIDER_TASK_AUTH_SECRET],
+    secrets: [TASKS_AUTH_SECRET],
   },
   (req, res) => runSetProviderAvailableTask(req as any, res as any)
 );
@@ -2219,6 +2221,64 @@ export const stripeWebhook = onRequest(
                 }
               }
               console.log("✅ Handled charge.refunded");
+              break;
+
+            // P0 FIX: Handle charge.captured for syncing captures made via Stripe Dashboard
+            case "charge.captured":
+              console.log("💳 Processing charge.captured");
+              {
+                const charge = event.data.object as Stripe.Charge;
+                const paymentIntentId = charge.payment_intent as string;
+
+                if (paymentIntentId) {
+                  // Update payment document if exists
+                  const paymentRef = database.collection("payments").doc(paymentIntentId);
+                  const paymentDoc = await paymentRef.get();
+
+                  if (paymentDoc.exists) {
+                    const paymentData = paymentDoc.data();
+
+                    // Only update if not already captured (avoid duplicate updates)
+                    if (paymentData?.status !== "captured" && paymentData?.status !== "succeeded") {
+                      await paymentRef.update({
+                        status: "captured",
+                        stripeChargeId: charge.id,
+                        capturedAmount: charge.amount_captured,
+                        capturedAt: admin.firestore.FieldValue.serverTimestamp(),
+                        capturedVia: "stripe_webhook",
+                        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                      });
+
+                      console.log(`💳 Payment ${paymentIntentId} marked as captured via webhook`);
+
+                      // Update call_session if exists
+                      if (paymentData?.callSessionId) {
+                        await database.collection("call_sessions").doc(paymentData.callSessionId).update({
+                          "payment.status": "captured",
+                          "payment.capturedAt": admin.firestore.FieldValue.serverTimestamp(),
+                          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                        });
+                      }
+                    }
+                  } else {
+                    // Payment doc doesn't exist, create a basic record
+                    console.log(`⚠️ No payment doc found for ${paymentIntentId}, creating from webhook`);
+                    await paymentRef.set({
+                      paymentIntentId: paymentIntentId,
+                      stripeChargeId: charge.id,
+                      status: "captured",
+                      amount: charge.amount,
+                      amountCaptured: charge.amount_captured,
+                      currency: charge.currency,
+                      capturedAt: admin.firestore.FieldValue.serverTimestamp(),
+                      capturedVia: "stripe_webhook",
+                      source: "stripe_webhook",
+                      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    }, { merge: true });
+                  }
+                }
+              }
+              console.log("✅ Handled charge.captured");
               break;
 
             case "refund.updated":
@@ -5507,3 +5567,34 @@ export {
   initializeAffiliateConfig,
   resetAffiliateConfigToDefaults,
 } from './affiliate';
+
+// ========== CHATTER SYSTEM ==========
+// Chatter ambassador program with client referrals and provider recruitment
+export {
+  // Triggers
+  chatterOnChatterCreated,
+  chatterOnQuizPassed,
+  chatterOnCallCompleted,
+  chatterOnProviderRegistered,
+  chatterOnClientRegistered,
+  // User callables
+  registerChatter,
+  submitQuiz,
+  getQuizQuestions,
+  getChatterDashboard,
+  chatterRequestWithdrawal,
+  updateChatterProfile,
+  // Admin callables
+  adminGetChattersList,
+  adminGetChatterDetail,
+  adminProcessChatterWithdrawal,
+  adminUpdateChatterStatus,
+  adminGetPendingChatterWithdrawals,
+  // Scheduled
+  chatterValidatePendingCommissions,
+  chatterReleaseValidatedCommissions,
+  // Initialization
+  initializeChatterConfig,
+  resetChatterConfigToDefaults,
+  initializeChatterSystem,
+} from './chatter';

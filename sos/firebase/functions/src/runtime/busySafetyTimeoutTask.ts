@@ -2,14 +2,12 @@
 // Cloud Task handler for busy safety timeout - releases provider if stuck in busy state
 
 import { Request, Response } from "express";
-import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
 import { setProviderAvailable } from "../callables/providerStatusManager";
 import { logError } from "../utils/logs/logError";
 import { logger as prodLogger } from "../utils/productionLogger";
-
-// Auth secret for Cloud Tasks validation
-export const TASKS_AUTH_SECRET = defineSecret("TASKS_AUTH_SECRET");
+// P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
+import { TASKS_AUTH_SECRET } from "../lib/secrets";
 
 interface BusySafetyTimeoutPayload {
   providerId: string;

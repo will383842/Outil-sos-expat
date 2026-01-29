@@ -148,16 +148,21 @@ export const executeStripeTransferRetry = onRequest(
       try {
         const amountCents = Math.round(amount * 100);
 
-        const transfer = await stripe.transfers.create({
-          amount: amountCents,
-          currency: currency.toLowerCase(),
-          destination: stripeAccountId,
-          metadata: {
-            retryOf: pendingTransferId,
-            retryCount: (retryCount + 1).toString(),
-            originalFailure: "true",
+        // P0 FIX: Add idempotency key to prevent duplicate transfers on retry
+        const transferIdempotencyKey = `retry_transfer_${pendingTransferId}_${retryCount + 1}`;
+        const transfer = await stripe.transfers.create(
+          {
+            amount: amountCents,
+            currency: currency.toLowerCase(),
+            destination: stripeAccountId,
+            metadata: {
+              retryOf: pendingTransferId,
+              retryCount: (retryCount + 1).toString(),
+              originalFailure: "true",
+            },
           },
-        });
+          { idempotencyKey: transferIdempotencyKey }
+        );
 
         // Succès ! Mettre à jour le pending_transfer
         await pendingTransferRef.update({

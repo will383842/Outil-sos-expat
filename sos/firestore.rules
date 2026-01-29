@@ -1858,6 +1858,206 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ================= CHATTER SYSTEM =================
+    // Système ambassadeurs/chatters avec gamification
+
+    // Fonction helper pour vérifier si l'utilisateur est un chatter actif
+    function isChatter() {
+      return isAuthenticated() &&
+             exists(/databases/$(database)/documents/chatters/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/chatters/$(request.auth.uid)).data.status == 'active';
+    }
+
+    // Fonction pour vérifier si l'utilisateur est le propriétaire du chatter
+    function isChatterOwner(chatterId) {
+      return isAuthenticated() && request.auth.uid == chatterId;
+    }
+
+    // Fonction pour vérifier si l'utilisateur a un profil chatter (actif ou pending_quiz)
+    // Utilisé pour les ressources accessibles aux chatters en cours d'inscription
+    function hasChatterProfile() {
+      return isAuthenticated() &&
+             exists(/databases/$(database)/documents/chatters/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/chatters/$(request.auth.uid)).data.status in ['active', 'pending_quiz'];
+    }
+
+    // Profils des chatters
+    match /chatters/{chatterId} {
+      // Lecture: propriétaire ou admin
+      allow read: if isChatterOwner(chatterId) || isAdmin() || isDev();
+      // Création: propriétaire uniquement (lors de l'inscription)
+      allow create: if isChatterOwner(chatterId);
+      // Mise à jour: propriétaire pour certains champs, admin pour tous
+      // Le propriétaire ne peut PAS modifier: status, level, codes, balances, stats
+      allow update: if (isChatterOwner(chatterId) &&
+                        !request.resource.data.diff(resource.data).affectedKeys()
+                          .hasAny(['status', 'level', 'levelProgress',
+                                   'affiliateCodeClient', 'affiliateCodeRecruitment',
+                                   'totalEarned', 'availableBalance', 'pendingBalance',
+                                   'validatedBalance', 'totalClients', 'totalRecruits',
+                                   'totalCommissions', 'commissionsByType',
+                                   'currentStreak', 'bestStreak', 'badges',
+                                   'currentMonthRank', 'bestRank', 'quizPassedAt',
+                                   'recruitedBy', 'recruitedByCode', 'recruitedAt']))
+                       || isAdmin() || isDev();
+      allow delete: if isAdmin() || isDev();
+    }
+
+    // Commissions des chatters
+    match /chatter_commissions/{commissionId} {
+      // Lecture: le propriétaire (chatterId) ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.chatterId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // Demandes de retrait des chatters
+    match /chatter_withdrawals/{withdrawalId} {
+      // Lecture: le propriétaire ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.chatterId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Création: chatter actif pour son propre retrait
+      allow create: if isChatter() &&
+                    request.resource.data.chatterId == request.auth.uid;
+      // Mise à jour: admin uniquement
+      allow update: if isAdmin() || isDev();
+      allow delete: if false;
+    }
+
+    // Configuration du système chatter
+    match /chatter_config/{docId} {
+      // Lecture: chatters actifs ou admin (contient les paramètres de bonus)
+      allow read: if isChatter() || isAdmin() || isDev();
+      // Écriture: admin uniquement
+      allow write: if isAdmin() || isDev();
+    }
+
+    // Questions du quiz chatter
+    match /chatter_quiz_questions/{questionId} {
+      // Lecture: chatters (actifs ou pending_quiz pour passer le quiz) ou admin
+      allow read: if hasChatterProfile() || isAdmin() || isDev();
+      // Écriture: admin uniquement
+      allow write: if isAdmin() || isDev();
+    }
+
+    // Tentatives de quiz
+    match /chatter_quiz_attempts/{attemptId} {
+      // Lecture: le propriétaire ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.chatterId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // Définitions des badges
+    match /chatter_badges/{badgeId} {
+      // Lecture: tous les utilisateurs authentifiés
+      allow read: if isAuthenticated();
+      // Écriture: admin uniquement
+      allow write: if isAdmin() || isDev();
+    }
+
+    // Attribution des badges
+    match /chatter_badge_awards/{awardId} {
+      // Lecture: le propriétaire ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.chatterId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // Classements mensuels
+    match /chatter_monthly_rankings/{monthId} {
+      // Lecture: tous les chatters et admin
+      allow read: if isChatter() || isAdmin() || isDev();
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // Plateformes
+    match /chatter_platforms/{platformId} {
+      // Lecture: tous les utilisateurs authentifiés
+      allow read: if isAuthenticated();
+      // Écriture: admin uniquement
+      allow write: if isAdmin() || isDev();
+    }
+
+    // Tracking des clics affiliés
+    match /chatter_affiliate_clicks/{clickId} {
+      // Lecture: admin uniquement (données sensibles)
+      allow read: if isAdmin() || isDev();
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // Liens de recrutement
+    match /chatter_recruitment_links/{linkId} {
+      // Lecture: le propriétaire ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.chatterId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // Notifications des chatters
+    match /chatter_notifications/{notificationId} {
+      // Lecture: le propriétaire ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.chatterId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Mise à jour: le propriétaire peut marquer comme lu
+      allow update: if isAuthenticated() &&
+                    resource.data.chatterId == request.auth.uid &&
+                    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead', 'readAt']);
+      // Création/suppression: Cloud Functions uniquement
+      allow create, delete: if false;
+    }
+
+    // Réunions Zoom
+    match /chatter_zoom_meetings/{meetingId} {
+      // Lecture: chatters actifs et admin
+      allow read: if isChatter() || isAdmin() || isDev();
+      // Écriture: admin uniquement
+      allow write: if isAdmin() || isDev();
+    }
+
+    // Présences Zoom
+    match /chatter_zoom_attendance/{attendanceId} {
+      // Lecture: le propriétaire ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.chatterId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Écriture: Cloud Functions uniquement
+      allow write: if false;
+    }
+
+    // Posts des chatters (pour modération)
+    match /chatter_posts/{postId} {
+      // Lecture: le propriétaire ou admin
+      allow read: if isAuthenticated() &&
+                  (resource.data.chatterId == request.auth.uid ||
+                   isAdmin() || isDev());
+      // Création: chatter actif
+      allow create: if isChatter() &&
+                    request.resource.data.chatterId == request.auth.uid;
+      // Mise à jour: admin uniquement (modération)
+      allow update: if isAdmin() || isDev();
+      allow delete: if isAdmin() || isDev();
+    }
+
+    // Alertes de fraude des chatters
+    match /chatter_fraud_alerts/{alertId} {
+      // Lecture et écriture: admin uniquement
+      allow read: if isAdmin() || isDev();
+      allow write: if isAdmin() || isDev();
+    }
+
     // ================= CATCH-ALL (deny by default) =================
     // SECURITE: Refuse TOUT acces non explicitement autorise
     // Le role 'dev' est desactive en production

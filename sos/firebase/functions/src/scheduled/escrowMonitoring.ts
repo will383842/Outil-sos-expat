@@ -15,11 +15,11 @@
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import * as admin from "firebase-admin";
 import { logError } from "../utils/logs/logError";
-import { defineSecret } from "firebase-functions/params";
-
-// Secrets Stripe pour vérifier le solde
-const STRIPE_SECRET_KEY_LIVE = defineSecret("STRIPE_SECRET_KEY_LIVE");
-const STRIPE_SECRET_KEY_TEST = defineSecret("STRIPE_SECRET_KEY_TEST");
+// P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
+import {
+  STRIPE_SECRET_KEY_LIVE,
+  STRIPE_SECRET_KEY_TEST,
+} from "../lib/secrets";
 
 // Configuration des seuils
 const ESCROW_CONFIG = {

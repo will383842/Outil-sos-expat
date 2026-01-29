@@ -2045,6 +2045,9 @@ const BookingRequest: React.FC = () => {
   const [provider, setProvider] = useState<Provider | null>(null);
   const [providerLoading, setProviderLoading] = useState<boolean>(true);
 
+  // Track when auth just succeeded but user not yet loaded from Firestore
+  const [authPending, setAuthPending] = useState<boolean>(false);
+
   const { pricing } = usePricingConfig();
 
   // Load active promo from sessionStorage
@@ -2157,6 +2160,14 @@ const BookingRequest: React.FC = () => {
     }
     // Email-first auth: NO REDIRECT - show inline auth form instead
   }, [user, authLoading, providerId]);
+
+  // Reset authPending when user is loaded after registration/login
+  useEffect(() => {
+    if (user && authPending) {
+      console.log('[BookingRequest] User loaded, resetting authPending');
+      setAuthPending(false);
+    }
+  }, [user, authPending]);
 
   // Lecture provider depuis sessionStorage
   // P0 FIX: Use a ref-based approach to avoid useCallback dependency issues
@@ -2973,8 +2984,22 @@ const BookingRequest: React.FC = () => {
     return null;
   }
 
+  // ===== AUTH PENDING: Show loader while user is being loaded after registration/login =====
+  if (authPending && !user) {
+    return (
+      <Layout showFooter={false}>
+        <div className="min-h-screen flex items-center justify-center bg-white">
+          <div className="flex flex-col items-center space-y-4 text-gray-700">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500"></div>
+            <span>{intl.formatMessage({ id: 'auth.loadingProfile', defaultMessage: 'Chargement de votre profil...' })}</span>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   // ===== EMAIL-FIRST AUTH: Show auth form if not logged in =====
-  if (!authLoading && !user) {
+  if (!authLoading && !user && !authPending) {
     return (
       <Layout showFooter={false}>
         <div className={`min-h-screen bg-[linear-gradient(180deg,#fff7f7_0%,#ffffff_35%,#fff5f8_100%)] py-6 md:py-12 overflow-x-hidden w-full max-w-full box-border`}>
@@ -3019,7 +3044,11 @@ const BookingRequest: React.FC = () => {
           {/* Auth form */}
           <div className="max-w-xl mx-auto">
             <EmailFirstAuth
-              onAuthSuccess={() => {/* Auth success - user will be auto-detected by useAuth */}}
+              onAuthSuccess={() => {
+                // Signal that auth succeeded - prevents form from flashing while user loads from Firestore
+                console.log('[BookingRequest] onAuthSuccess called, setting authPending=true');
+                setAuthPending(true);
+              }}
               login={login}
               loginWithGoogle={loginWithGoogle}
               register={register}

@@ -1,5 +1,4 @@
 import { onRequest } from 'firebase-functions/v2/https';
-import { defineSecret } from 'firebase-functions/params';
 import { twilioCallManager } from '../TwilioCallManager';
 import { logCallRecord } from '../utils/logs/logCallRecord';
 import { logError } from '../utils/logs/logError';
@@ -10,10 +9,8 @@ import * as admin from 'firebase-admin';
 import { Request } from 'firebase-functions/v2/https';
 import { validateTwilioWebhookSignature, TWILIO_AUTH_TOKEN_SECRET, TWILIO_ACCOUNT_SID_SECRET } from '../lib/twilio';
 import { setProviderBusy } from '../callables/providerStatusManager';
-
-// P0 FIX 2026-01-18: TASKS_AUTH_SECRET needed for scheduleProviderAvailableTask
-// Without this, the Cloud Task is created WITHOUT the X-Task-Auth header
-const TASKS_AUTH_SECRET = defineSecret('TASKS_AUTH_SECRET');
+// P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
+import { TASKS_AUTH_SECRET } from '../lib/secrets';
 import voicePromptsJson from '../content/voicePrompts.json';
 
 // Helper function to get intro text based on participant type and language

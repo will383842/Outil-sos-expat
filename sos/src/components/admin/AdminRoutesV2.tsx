@@ -330,6 +330,23 @@ const AdminAmbassadors = lazy(() =>
   Promise.resolve({ default: () => <DevPage pageKey="ambassadors" /> })
 );
 
+// ===== LAZY IMPORTS - CHATTER =====
+const AdminChattersList = lazy(
+  () => import("../../pages/admin/Chatter/AdminChattersList")
+);
+const AdminChatterDetail = lazy(
+  () => import("../../pages/admin/Chatter/AdminChatterDetail")
+);
+const AdminChatterPayments = lazy(
+  () => import("../../pages/admin/Chatter/AdminChatterPayments")
+);
+const AdminChatterConfig = lazy(
+  () => import("../../pages/admin/Chatter/AdminChatterConfig")
+);
+const AdminChatterCountryRotation = lazy(
+  () => import("../../pages/admin/Chatter/AdminChatterCountryRotation")
+);
+
 // ===== LAZY IMPORTS - B2B =====
 const AdminB2BAccounts = lazy(
   () => import("../../pages/admin/AdminB2BAccounts")
@@ -968,6 +985,48 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
 
+      {/* 💬 CHATTER */}
+      <Route
+        path="chatters"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminChattersList />
+          </Suspense>
+        }
+      />
+      <Route
+        path="chatters/:chatterId"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminChatterDetail />
+          </Suspense>
+        }
+      />
+      <Route
+        path="chatters/payments"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminChatterPayments />
+          </Suspense>
+        }
+      />
+      <Route
+        path="chatters/config"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminChatterConfig />
+          </Suspense>
+        }
+      />
+      <Route
+        path="chatters/countries"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminChatterCountryRotation />
+          </Suspense>
+        }
+      />
+
       {/* ⚙️ CONFIG & OUTILS */}
       <Route
         path="pricing"
@@ -1342,6 +1401,10 @@ export const useAdminRouteValidation = () => {
       "/admin/b2b/billing",
       "/admin/b2b/invoices",
       "/admin/b2b/reports",
+      "/admin/chatters",
+      "/admin/chatters/:chatterId",
+      "/admin/chatters/payments",
+      "/admin/chatters/config",
       "/admin/pricing",
       "/admin/countries",
       "/admin/documents",

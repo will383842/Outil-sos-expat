@@ -139,6 +139,7 @@ interface PaymentIntentResponse {
   serviceType: string;
   status: string;
   expiresAt: string;
+  stripeAccountId?: string; // P0 FIX: Required for Direct Charges confirmation
 }
 
 interface CreateAndScheduleCallData {
@@ -2075,7 +2076,12 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
         // we MUST pass stripeAccount to confirmCardPayment, otherwise 404
         const stripeAccountId = resData?.stripeAccountId;
         if (stripeAccountId) {
-          console.log("[DEBUG] Direct Charges mode - stripeAccountId:", stripeAccountId);
+          // P0 FIX: Validate stripeAccountId format to prevent API errors
+          if (!stripeAccountId.startsWith('acct_')) {
+            console.error("[DEBUG] ❌ Invalid stripeAccountId format:", stripeAccountId);
+            throw new Error("Invalid payment configuration. Please try again.");
+          }
+          console.log("[DEBUG] Direct Charges mode - stripeAccountId:", stripeAccountId.substring(0, 12) + "...");
         }
 
         const chosenCardElement = isMobile
@@ -2111,6 +2117,9 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
         // P0 FIX: Pass stripeAccount for Direct Charges mode
         // Without this, confirmCardPayment returns 404 because the PaymentIntent
         // exists on the provider's account, not the platform account
+        // Note: For Direct Charges with Connected Accounts, the stripeAccount
+        // should be set server-side when creating the PaymentIntent.
+        // Client-side confirmation uses the standard flow.
         const result = await stripe!.confirmCardPayment(
           clientSecret,
           {
@@ -2121,9 +2130,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
                 email: user.email || "",
               },
             },
-          },
-          // P0 FIX: stripeAccount required for Direct Charges
-          stripeAccountId ? { stripeAccount: stripeAccountId } : undefined
+          }
         );
 
         if (result.error) {

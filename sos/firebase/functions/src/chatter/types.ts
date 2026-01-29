@@ -1,0 +1,1736 @@
+/**
+ * Chatter System Types
+ *
+ * Complete type definitions for the SOS-Expat Chatter (Affiliate Ambassador) program.
+ * Supports:
+ * - Client referral commissions
+ * - Provider recruitment commissions
+ * - Gamification (levels, badges, streaks)
+ * - Quiz qualification system
+ * - Monthly leaderboards with bonuses
+ */
+
+import { Timestamp } from "firebase-admin/firestore";
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+/**
+ * Chatter account status
+ */
+export type ChatterStatus =
+  | "pending_quiz"      // Registered but hasn't passed quiz
+  | "active"            // Passed quiz, can earn commissions
+  | "suspended"         // Temporarily suspended by admin
+  | "banned";           // Permanently banned
+
+/**
+ * Chatter level (1-5 based on total earnings)
+ */
+export type ChatterLevel = 1 | 2 | 3 | 4 | 5;
+
+/**
+ * Supported languages for chatters
+ */
+export type SupportedChatterLanguage =
+  | "fr"    // French
+  | "en"    // English
+  | "es"    // Spanish
+  | "pt"    // Portuguese
+  | "ar"    // Arabic
+  | "de"    // German
+  | "it"    // Italian
+  | "nl"    // Dutch
+  | "zh";   // Chinese
+
+/**
+ * Commission type for chatters
+ */
+export type ChatterCommissionType =
+  | "client_referral"       // Client completed a paid call
+  | "recruitment"           // Recruited provider received first call
+  | "bonus_level"           // Level-up bonus
+  | "bonus_streak"          // Streak bonus
+  | "bonus_top3"            // Monthly Top 3 bonus
+  | "bonus_zoom"            // Zoom meeting attendance bonus
+  | "manual_adjustment";    // Admin manual adjustment
+
+/**
+ * Commission status lifecycle
+ */
+export type ChatterCommissionStatus =
+  | "pending"       // In validation period (waiting for call completion/refund window)
+  | "validated"     // Validated, waiting to be released
+  | "available"     // Available for withdrawal
+  | "paid"          // Included in a withdrawal
+  | "cancelled";    // Cancelled by admin or system
+
+/**
+ * Withdrawal status lifecycle
+ */
+export type ChatterWithdrawalStatus =
+  | "pending"       // Requested, waiting for admin
+  | "approved"      // Admin approved, processing
+  | "processing"    // Payment in progress
+  | "completed"     // Payment successful
+  | "failed"        // Payment failed
+  | "rejected";     // Admin rejected
+
+/**
+ * Payment method for withdrawals
+ */
+export type ChatterPaymentMethod =
+  | "wise"          // Wise (TransferWise)
+  | "mobile_money"  // Mobile Money (Flutterwave)
+  | "bank_transfer"; // Bank transfer
+
+/**
+ * Platform where chatter promotes
+ */
+export type ChatterPlatform =
+  | "facebook"
+  | "instagram"
+  | "twitter"
+  | "linkedin"
+  | "tiktok"
+  | "youtube"
+  | "whatsapp"
+  | "telegram"
+  | "snapchat"
+  | "reddit"
+  | "discord"
+  | "blog"
+  | "website"
+  | "forum"
+  | "other";
+
+/**
+ * Badge types
+ */
+export type ChatterBadgeType =
+  | "first_client"          // First client referral
+  | "first_recruitment"     // First provider recruited
+  | "first_quiz_pass"       // First quiz pass
+  | "streak_7"              // 7-day streak
+  | "streak_30"             // 30-day streak
+  | "streak_100"            // 100-day streak
+  | "level_2"               // Reached level 2
+  | "level_3"               // Reached level 3
+  | "level_4"               // Reached level 4
+  | "level_5"               // Reached level 5
+  | "top1_monthly"          // Monthly #1
+  | "top3_monthly"          // Monthly Top 3
+  | "clients_10"            // 10 clients
+  | "clients_50"            // 50 clients
+  | "clients_100"           // 100 clients
+  | "recruits_5"            // 5 providers recruited
+  | "recruits_10"           // 10 providers recruited
+  | "earned_100"            // Earned $100
+  | "earned_500"            // Earned $500
+  | "earned_1000"           // Earned $1000
+  | "zoom_participant"      // First Zoom meeting
+  | "zoom_regular";         // 5 Zoom meetings
+
+// ============================================================================
+// CHATTER PROFILE
+// ============================================================================
+
+/**
+ * Chatter profile document
+ * Collection: chatters/{uid}
+ */
+export interface Chatter {
+  /** Document ID (same as user UID) */
+  id: string;
+
+  // ---- User Info ----
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+
+  /** Profile photo URL */
+  photoUrl?: string;
+
+  /** Country of residence */
+  country: string;
+
+  /** Countries where chatter can promote (list of country codes) */
+  interventionCountries: string[];
+
+  /** Primary language */
+  language: SupportedChatterLanguage;
+
+  /** Additional languages spoken */
+  additionalLanguages?: SupportedChatterLanguage[];
+
+  /** Platforms where chatter promotes */
+  platforms: ChatterPlatform[];
+
+  /** Bio/description */
+  bio?: string;
+
+  // ---- Status & Level ----
+
+  /** Account status */
+  status: ChatterStatus;
+
+  /** Current level (1-5) */
+  level: ChatterLevel;
+
+  /** Progress towards next level (0-100%) */
+  levelProgress: number;
+
+  /** Admin notes (internal) */
+  adminNotes?: string;
+
+  // ---- Affiliate Codes ----
+
+  /** Code for client referrals (e.g., "JEAN123") */
+  affiliateCodeClient: string;
+
+  /** Code for provider recruitment (e.g., "REC-JEAN123") */
+  affiliateCodeRecruitment: string;
+
+  // ---- Balances (in cents) ----
+
+  /** Total earned all time (never decreases) */
+  totalEarned: number;
+
+  /** Available for withdrawal */
+  availableBalance: number;
+
+  /** Pending (in validation period) */
+  pendingBalance: number;
+
+  /** Validated but not yet available */
+  validatedBalance: number;
+
+  // ---- Statistics ----
+
+  /** Total clients referred */
+  totalClients: number;
+
+  /** Total providers recruited */
+  totalRecruits: number;
+
+  /** Total commissions count */
+  totalCommissions: number;
+
+  /** Commissions by type */
+  commissionsByType: {
+    client_referral: { count: number; amount: number };
+    recruitment: { count: number; amount: number };
+    bonus: { count: number; amount: number };
+  };
+
+  // ---- Gamification ----
+
+  /** Current streak (consecutive days with activity) */
+  currentStreak: number;
+
+  /** Best streak ever */
+  bestStreak: number;
+
+  /** Last activity date (for streak calculation) */
+  lastActivityDate: string | null; // YYYY-MM-DD
+
+  /** Earned badges */
+  badges: ChatterBadgeType[];
+
+  /** Current month rank (1-indexed, null if not ranked) */
+  currentMonthRank: number | null;
+
+  /** Best ever rank */
+  bestRank: number | null;
+
+  // ---- Zoom ----
+
+  /** Total Zoom meetings attended */
+  zoomMeetingsAttended: number;
+
+  /** Last Zoom attendance date */
+  lastZoomAttendance: Timestamp | null;
+
+  // ---- Quiz ----
+
+  /** Quiz attempts count */
+  quizAttempts: number;
+
+  /** Last quiz attempt date */
+  lastQuizAttempt: Timestamp | null;
+
+  /** Quiz passed date */
+  quizPassedAt: Timestamp | null;
+
+  // ---- Payment Details ----
+
+  /** Preferred payment method */
+  preferredPaymentMethod: ChatterPaymentMethod | null;
+
+  /** Payment details (varies by method) */
+  paymentDetails: ChatterPaymentDetails | null;
+
+  /** Current pending withdrawal ID */
+  pendingWithdrawalId: string | null;
+
+  // ---- Referral (who recruited this chatter) ----
+
+  /** Chatter who recruited this one (chatter ID) */
+  recruitedBy: string | null;
+
+  /** Recruitment code used */
+  recruitedByCode: string | null;
+
+  /** When recruited */
+  recruitedAt: Timestamp | null;
+
+  /** Whether recruiter commission has been paid (for first client) */
+  recruiterCommissionPaid: boolean;
+
+  /** Whether $50 milestone bonus has been paid to recruiter (when chatter reached $500) */
+  recruiterMilestoneBonusPaid?: boolean;
+
+  /** When milestone bonus was paid */
+  recruiterMilestoneBonusAt?: Timestamp | null;
+
+  // ---- Timestamps ----
+
+  /** Registration date */
+  createdAt: Timestamp;
+
+  /** Last update */
+  updatedAt: Timestamp;
+
+  /** Last login */
+  lastLoginAt: Timestamp | null;
+}
+
+/**
+ * Payment details union type
+ */
+export type ChatterPaymentDetails =
+  | ChatterWiseDetails
+  | ChatterMobileMoneyDetails
+  | ChatterBankDetails;
+
+/**
+ * Wise payment details
+ */
+export interface ChatterWiseDetails {
+  type: "wise";
+  email: string;
+  currency: string;
+  accountHolderName: string;
+  iban?: string;
+  sortCode?: string;
+  accountNumber?: string;
+  routingNumber?: string;
+  bic?: string;
+  wiseRecipientId?: string;
+}
+
+/**
+ * Mobile Money payment details
+ */
+export interface ChatterMobileMoneyDetails {
+  type: "mobile_money";
+  provider: "mtn" | "orange" | "moov" | "airtel" | "mpesa" | "wave";
+  phoneNumber: string;
+  country: string;
+  currency: string;
+  accountName: string;
+}
+
+/**
+ * Bank transfer details
+ */
+export interface ChatterBankDetails {
+  type: "bank_transfer";
+  bankName: string;
+  accountHolderName: string;
+  accountNumber: string;
+  routingNumber?: string;
+  swiftCode?: string;
+  iban?: string;
+  country: string;
+  currency: string;
+}
+
+// ============================================================================
+// COMMISSION DOCUMENT
+// ============================================================================
+
+/**
+ * Individual commission record
+ * Collection: chatter_commissions/{commissionId}
+ */
+export interface ChatterCommission {
+  /** Document ID */
+  id: string;
+
+  // ---- Chatter ----
+
+  /** Chatter who earns the commission */
+  chatterId: string;
+  chatterEmail: string;
+  chatterCode: string;
+
+  // ---- Commission Type ----
+
+  /** Type of commission */
+  type: ChatterCommissionType;
+
+  // ---- Source Reference ----
+
+  /** ID of the source (call session, user, etc.) */
+  sourceId: string | null;
+
+  /** Type of source */
+  sourceType: "call_session" | "user" | "provider" | "bonus" | null;
+
+  /** Additional source details */
+  sourceDetails?: {
+    // For client referral
+    clientId?: string;
+    clientEmail?: string;
+    callSessionId?: string;
+    callDuration?: number;
+    connectionFee?: number;
+
+    // For recruitment
+    providerId?: string;
+    providerEmail?: string;
+    providerType?: "lawyer" | "expat";
+    firstCallId?: string;
+
+    // For bonuses
+    bonusType?: string;
+    bonusReason?: string;
+    rank?: number;
+    month?: string; // YYYY-MM
+    streakDays?: number;
+    levelReached?: ChatterLevel;
+  };
+
+  // ---- Amount ----
+
+  /** Base amount before bonuses (cents) */
+  baseAmount: number;
+
+  /** Level bonus multiplier applied (1.0 = no bonus) */
+  levelBonus: number;
+
+  /** Top 3 bonus multiplier applied (1.0 = no bonus) */
+  top3Bonus: number;
+
+  /** Zoom bonus multiplier applied (1.0 = no bonus) */
+  zoomBonus: number;
+
+  /** Final commission amount (cents) */
+  amount: number;
+
+  /** Currency (always USD) */
+  currency: "USD";
+
+  /** Human-readable calculation explanation */
+  calculationDetails: string;
+
+  // ---- Status ----
+
+  /** Current status */
+  status: ChatterCommissionStatus;
+
+  /** When the commission was validated */
+  validatedAt: Timestamp | null;
+
+  /** When the commission becomes available */
+  availableAt: Timestamp | null;
+
+  /** Cancellation details */
+  cancellationReason?: string;
+  cancelledBy?: string;
+  cancelledAt?: Timestamp;
+
+  // ---- Withdrawal ----
+
+  /** Withdrawal that included this commission */
+  withdrawalId: string | null;
+
+  /** When included in withdrawal */
+  paidAt: Timestamp | null;
+
+  // ---- Metadata ----
+
+  /** Human-readable description */
+  description: string;
+
+  /** Admin notes */
+  adminNotes?: string;
+
+  /** Created timestamp */
+  createdAt: Timestamp;
+
+  /** Last update timestamp */
+  updatedAt: Timestamp;
+}
+
+// ============================================================================
+// WITHDRAWAL DOCUMENT
+// ============================================================================
+
+/**
+ * Withdrawal request record
+ * Collection: chatter_withdrawals/{withdrawalId}
+ */
+export interface ChatterWithdrawal {
+  /** Document ID */
+  id: string;
+
+  /** Chatter who requested */
+  chatterId: string;
+  chatterEmail: string;
+  chatterName: string;
+
+  /** Amount requested (cents) */
+  amount: number;
+
+  /** Original currency (USD) */
+  sourceCurrency: "USD";
+
+  /** Target currency for payout */
+  targetCurrency: string;
+
+  /** Exchange rate at processing */
+  exchangeRate?: number;
+
+  /** Amount after conversion */
+  convertedAmount?: number;
+
+  /** Current status */
+  status: ChatterWithdrawalStatus;
+
+  // ---- Payment Method ----
+
+  /** Payment method used */
+  paymentMethod: ChatterPaymentMethod;
+
+  /** Payment details snapshot at request time */
+  paymentDetailsSnapshot: ChatterPaymentDetails;
+
+  // ---- Commission References ----
+
+  /** Commission IDs included in this withdrawal */
+  commissionIds: string[];
+
+  /** Number of commissions */
+  commissionCount: number;
+
+  // ---- Processing Details ----
+
+  /** Payment reference/transaction ID */
+  paymentReference?: string;
+
+  /** Wise transfer ID (if using Wise) */
+  wiseTransferId?: string;
+
+  /** Flutterwave reference (if using Mobile Money) */
+  flutterwaveRef?: string;
+
+  /** Estimated arrival date */
+  estimatedArrival?: Timestamp;
+
+  // ---- Timestamps ----
+
+  /** When requested */
+  requestedAt: Timestamp;
+
+  /** When processed by admin */
+  processedAt?: Timestamp;
+
+  /** Who processed it */
+  processedBy?: string;
+
+  /** Rejection reason */
+  rejectionReason?: string;
+
+  /** When payment completed */
+  completedAt?: Timestamp;
+
+  /** When failed */
+  failedAt?: Timestamp;
+
+  /** Failure reason */
+  failureReason?: string;
+
+  /** Admin notes */
+  adminNotes?: string;
+}
+
+// ============================================================================
+// RECRUITMENT LINK
+// ============================================================================
+
+/**
+ * Recruitment link for provider onboarding
+ * Collection: chatter_recruitment_links/{linkId}
+ */
+export interface ChatterRecruitmentLink {
+  /** Document ID */
+  id: string;
+
+  /** Chatter who owns this link */
+  chatterId: string;
+  chatterCode: string;
+
+  /** The recruitment code (unique) */
+  code: string;
+
+  /** Full tracking URL */
+  trackingUrl: string;
+
+  /** Provider ID if used */
+  usedByProviderId: string | null;
+
+  /** When provider registered */
+  usedAt: Timestamp | null;
+
+  /** Whether commission was paid (after first call) */
+  commissionPaid: boolean;
+
+  /** Commission ID if paid */
+  commissionId: string | null;
+
+  /** Expiration date (6 months from creation) */
+  expiresAt: Timestamp;
+
+  /** Whether link is active */
+  isActive: boolean;
+
+  /** Created timestamp */
+  createdAt: Timestamp;
+}
+
+// ============================================================================
+// CONFIGURATION
+// ============================================================================
+
+/**
+ * System configuration for chatter module
+ * Collection: chatter_config/current
+ */
+export interface ChatterConfig {
+  /** Document ID (always "current") */
+  id: "current";
+
+  // ---- System Status ----
+
+  /** Is the chatter system active */
+  isSystemActive: boolean;
+
+  /** Are new registrations accepted */
+  newRegistrationsEnabled: boolean;
+
+  /** Are withdrawals enabled */
+  withdrawalsEnabled: boolean;
+
+  // ---- Commission Amounts (cents) ----
+
+  /** Fixed commission per client referral */
+  commissionClientAmount: number;
+
+  /** Fixed commission per provider recruitment */
+  commissionRecruitmentAmount: number;
+
+  // ---- Level Bonuses ----
+
+  levelBonuses: {
+    level1: number;  // 1.00 = no bonus
+    level2: number;  // 1.10 = +10%
+    level3: number;  // 1.20 = +20%
+    level4: number;  // 1.35 = +35%
+    level5: number;  // 1.50 = +50%
+  };
+
+  // ---- Level Thresholds (cents) ----
+
+  levelThresholds: {
+    level2: number;  // $100 = 10000
+    level3: number;  // $500 = 50000
+    level4: number;  // $2000 = 200000
+    level5: number;  // $5000 = 500000
+  };
+
+  // ---- Top 3 Monthly Bonuses ----
+
+  top1BonusMultiplier: number;  // 2.00 = +100%
+  top2BonusMultiplier: number;  // 1.50 = +50%
+  top3BonusMultiplier: number;  // 1.15 = +15%
+
+  // ---- Zoom Bonus ----
+
+  /** Zoom attendance bonus multiplier */
+  zoomBonusMultiplier: number;  // 1.10 = +10%
+
+  /** Days after Zoom meeting that bonus applies */
+  zoomBonusDurationDays: number;
+
+  // ---- Recruitment Links ----
+
+  /** Duration of recruitment links in months */
+  recruitmentLinkDurationMonths: number;
+
+  // ---- Withdrawal Settings ----
+
+  /** Minimum withdrawal amount (cents) */
+  minimumWithdrawalAmount: number;
+
+  /** Hold period before commission is validated (hours) */
+  validationHoldPeriodHours: number;
+
+  /** Time before validated becomes available (hours) */
+  releaseDelayHours: number;
+
+  // ---- Quiz Settings ----
+
+  /** Passing score percentage */
+  quizPassingScore: number;
+
+  /** Hours to wait before retry */
+  quizRetryDelayHours: number;
+
+  /** Number of questions per quiz */
+  quizQuestionsCount: number;
+
+  // ---- Attribution ----
+
+  /** Cookie duration in days */
+  attributionWindowDays: number;
+
+  // ---- Supported Countries ----
+
+  /** Countries where chatters can operate */
+  supportedCountries: string[];
+
+  // ---- Version & History ----
+
+  /** Config version */
+  version: number;
+
+  /** Last update */
+  updatedAt: Timestamp;
+
+  /** Who updated */
+  updatedBy: string;
+}
+
+/**
+ * Default chatter configuration
+ */
+export const DEFAULT_CHATTER_CONFIG: Omit<
+  ChatterConfig,
+  "updatedAt" | "updatedBy"
+> = {
+  id: "current",
+  isSystemActive: true,
+  newRegistrationsEnabled: true,
+  withdrawalsEnabled: true,
+
+  commissionClientAmount: 1000,      // $10
+  commissionRecruitmentAmount: 500,  // $5
+
+  levelBonuses: {
+    level1: 1.00,
+    level2: 1.10,
+    level3: 1.20,
+    level4: 1.35,
+    level5: 1.50,
+  },
+
+  levelThresholds: {
+    level2: 10000,   // $100
+    level3: 50000,   // $500
+    level4: 200000,  // $2000
+    level5: 500000,  // $5000
+  },
+
+  top1BonusMultiplier: 2.00,
+  top2BonusMultiplier: 1.50,
+  top3BonusMultiplier: 1.15,
+
+  zoomBonusMultiplier: 1.10,
+  zoomBonusDurationDays: 7,
+
+  recruitmentLinkDurationMonths: 6,
+
+  minimumWithdrawalAmount: 2500,     // $25
+  validationHoldPeriodHours: 48,     // 2 days
+  releaseDelayHours: 24,             // 1 day after validation
+
+  quizPassingScore: 85,
+  quizRetryDelayHours: 24,
+  quizQuestionsCount: 5,
+
+  attributionWindowDays: 30,
+
+  supportedCountries: [
+    "FR", "BE", "CH", "CA", "LU", "MC",  // French-speaking
+    "US", "GB", "AU", "NZ", "IE",         // English-speaking
+    "ES", "MX", "AR", "CO", "CL",         // Spanish-speaking
+    "PT", "BR",                           // Portuguese-speaking
+    "DE", "AT",                           // German-speaking
+    "IT",                                 // Italian-speaking
+    "NL",                                 // Dutch-speaking
+    "SN", "CI", "CM", "MA", "TN", "DZ",  // African French-speaking
+    "AE", "SA", "EG",                     // Arabic-speaking
+  ],
+
+  version: 1,
+};
+
+// ============================================================================
+// QUIZ
+// ============================================================================
+
+/**
+ * Quiz question
+ * Collection: chatter_quiz_questions/{questionId}
+ */
+export interface ChatterQuizQuestion {
+  /** Document ID */
+  id: string;
+
+  /** Question text (supports markdown) */
+  question: string;
+
+  /** Question in different languages */
+  translations: {
+    [key in SupportedChatterLanguage]?: string;
+  };
+
+  /** Answer options */
+  options: Array<{
+    id: string;
+    text: string;
+    translations: {
+      [key in SupportedChatterLanguage]?: string;
+    };
+  }>;
+
+  /** Correct answer ID */
+  correctAnswerId: string;
+
+  /** Explanation shown after answer */
+  explanation?: string;
+  explanationTranslations?: {
+    [key in SupportedChatterLanguage]?: string;
+  };
+
+  /** Category/topic */
+  category: "general" | "rules" | "platform" | "ethics" | "commission";
+
+  /** Difficulty */
+  difficulty: "easy" | "medium" | "hard";
+
+  /** Is question active */
+  isActive: boolean;
+
+  /** Order for display (lower = first) */
+  order: number;
+
+  /** Created timestamp */
+  createdAt: Timestamp;
+
+  /** Updated timestamp */
+  updatedAt: Timestamp;
+}
+
+/**
+ * Quiz attempt record
+ * Collection: chatter_quiz_attempts/{attemptId}
+ */
+export interface ChatterQuizAttempt {
+  /** Document ID */
+  id: string;
+
+  /** Chatter who took the quiz */
+  chatterId: string;
+  chatterEmail: string;
+
+  /** Questions presented */
+  questionIds: string[];
+
+  /** Answers given */
+  answers: Array<{
+    questionId: string;
+    answerId: string;
+    isCorrect: boolean;
+  }>;
+
+  /** Score (0-100) */
+  score: number;
+
+  /** Whether passed */
+  passed: boolean;
+
+  /** Duration in seconds */
+  durationSeconds: number;
+
+  /** Started timestamp */
+  startedAt: Timestamp;
+
+  /** Completed timestamp */
+  completedAt: Timestamp;
+}
+
+// ============================================================================
+// GAMIFICATION
+// ============================================================================
+
+/**
+ * Badge definition
+ * Collection: chatter_badges/{badgeType}
+ */
+export interface ChatterBadgeDefinition {
+  /** Badge type (document ID) */
+  id: ChatterBadgeType;
+
+  /** Display name */
+  name: string;
+  nameTranslations: {
+    [key in SupportedChatterLanguage]?: string;
+  };
+
+  /** Description */
+  description: string;
+  descriptionTranslations: {
+    [key in SupportedChatterLanguage]?: string;
+  };
+
+  /** Icon URL or emoji */
+  icon: string;
+
+  /** Category */
+  category: "milestone" | "streak" | "level" | "competition" | "activity";
+
+  /** Rarity */
+  rarity: "common" | "uncommon" | "rare" | "epic" | "legendary";
+
+  /** Bonus reward for earning (cents, 0 = no reward) */
+  bonusReward: number;
+
+  /** Whether badge is currently active */
+  isActive: boolean;
+
+  /** Display order */
+  order: number;
+}
+
+/**
+ * Badge award record
+ * Collection: chatter_badge_awards/{awardId}
+ */
+export interface ChatterBadgeAward {
+  /** Document ID */
+  id: string;
+
+  /** Chatter who earned the badge */
+  chatterId: string;
+  chatterEmail: string;
+
+  /** Badge type */
+  badgeType: ChatterBadgeType;
+
+  /** When earned */
+  awardedAt: Timestamp;
+
+  /** Bonus commission ID if reward was given */
+  bonusCommissionId: string | null;
+
+  /** Context of award */
+  context?: {
+    rank?: number;
+    month?: string;
+    streakDays?: number;
+    level?: ChatterLevel;
+    clientCount?: number;
+    recruitCount?: number;
+    totalEarned?: number;
+  };
+}
+
+/**
+ * Monthly ranking record
+ * Collection: chatter_monthly_rankings/{year-month}
+ */
+export interface ChatterMonthlyRanking {
+  /** Document ID (YYYY-MM format) */
+  id: string;
+
+  /** Year-month string */
+  month: string;
+
+  /** Top performers (ordered by earnings this month) */
+  rankings: Array<{
+    rank: number;
+    chatterId: string;
+    chatterName: string;
+    chatterCode: string;
+    photoUrl?: string;
+    country: string;
+    monthlyEarnings: number;
+    monthlyClients: number;
+    monthlyRecruits: number;
+    level: ChatterLevel;
+  }>;
+
+  /** Bonus commissions awarded to top 3 */
+  bonusesAwarded: boolean;
+  bonusCommissionIds: string[];
+
+  /** When rankings were calculated */
+  calculatedAt: Timestamp;
+
+  /** Whether month is finalized */
+  isFinalized: boolean;
+}
+
+// ============================================================================
+// PLATFORM
+// ============================================================================
+
+/**
+ * Platform definition
+ * Collection: chatter_platforms/{platformId}
+ */
+export interface ChatterPlatformDefinition {
+  /** Platform ID */
+  id: ChatterPlatform;
+
+  /** Display name */
+  name: string;
+
+  /** Icon URL */
+  iconUrl: string;
+
+  /** Whether platform is active */
+  isActive: boolean;
+
+  /** Display order */
+  order: number;
+}
+
+// ============================================================================
+// AFFILIATE CLICKS TRACKING
+// ============================================================================
+
+/**
+ * Affiliate click tracking
+ * Collection: chatter_affiliate_clicks/{clickId}
+ */
+export interface ChatterAffiliateClick {
+  /** Document ID */
+  id: string;
+
+  /** Chatter code used */
+  chatterCode: string;
+
+  /** Chatter ID */
+  chatterId: string;
+
+  /** Type of link */
+  linkType: "client" | "recruitment";
+
+  /** Landing page URL */
+  landingPage: string;
+
+  /** Referrer URL */
+  referrer?: string;
+
+  /** UTM parameters */
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+
+  /** User agent */
+  userAgent?: string;
+
+  /** IP address (hashed for privacy) */
+  ipHash: string;
+
+  /** Country (from IP) */
+  country?: string;
+
+  /** Whether this click converted */
+  converted: boolean;
+
+  /** Conversion ID (user or provider ID) */
+  conversionId?: string;
+
+  /** Conversion type */
+  conversionType?: "client_signup" | "provider_signup" | "chatter_signup";
+
+  /** When clicked */
+  clickedAt: Timestamp;
+
+  /** When converted */
+  convertedAt?: Timestamp;
+}
+
+// ============================================================================
+// NOTIFICATIONS
+// ============================================================================
+
+/**
+ * Chatter notification
+ * Collection: chatter_notifications/{notificationId}
+ */
+export interface ChatterNotification {
+  /** Document ID */
+  id: string;
+
+  /** Chatter recipient */
+  chatterId: string;
+
+  /** Notification type */
+  type:
+    | "commission_earned"
+    | "commission_validated"
+    | "commission_available"
+    | "withdrawal_approved"
+    | "withdrawal_completed"
+    | "withdrawal_rejected"
+    | "badge_earned"
+    | "level_up"
+    | "streak_milestone"
+    | "rank_achieved"
+    | "zoom_reminder"
+    | "system";
+
+  /** Title */
+  title: string;
+  titleTranslations?: {
+    [key in SupportedChatterLanguage]?: string;
+  };
+
+  /** Message body */
+  message: string;
+  messageTranslations?: {
+    [key in SupportedChatterLanguage]?: string;
+  };
+
+  /** Link to navigate to */
+  actionUrl?: string;
+
+  /** Whether notification has been read */
+  isRead: boolean;
+
+  /** Whether email was sent */
+  emailSent: boolean;
+
+  /** Reference data */
+  data?: {
+    commissionId?: string;
+    withdrawalId?: string;
+    badgeType?: ChatterBadgeType;
+    newLevel?: ChatterLevel;
+    streakDays?: number;
+    rank?: number;
+    month?: string;
+    amount?: number;
+  };
+
+  /** Created timestamp */
+  createdAt: Timestamp;
+
+  /** Read timestamp */
+  readAt?: Timestamp;
+}
+
+// ============================================================================
+// ZOOM MEETINGS
+// ============================================================================
+
+/**
+ * Zoom meeting record
+ * Collection: chatter_zoom_meetings/{meetingId}
+ */
+export interface ChatterZoomMeeting {
+  /** Document ID */
+  id: string;
+
+  /** Meeting title */
+  title: string;
+  titleTranslations?: {
+    [key in SupportedChatterLanguage]?: string;
+  };
+
+  /** Meeting description */
+  description?: string;
+  descriptionTranslations?: {
+    [key in SupportedChatterLanguage]?: string;
+  };
+
+  /** Zoom meeting ID */
+  zoomMeetingId: string;
+
+  /** Zoom meeting password */
+  zoomPassword?: string;
+
+  /** Join URL */
+  joinUrl: string;
+
+  /** Scheduled start time */
+  scheduledAt: Timestamp;
+
+  /** Duration in minutes */
+  durationMinutes: number;
+
+  /** Whether meeting has ended */
+  hasEnded: boolean;
+
+  /** Ended timestamp */
+  endedAt?: Timestamp;
+
+  /** Created by (admin ID) */
+  createdBy: string;
+
+  /** Target audience */
+  targetAudience: "all" | "new_chatters" | "top_performers" | "selected";
+
+  /** Selected chatter IDs (if targetAudience is "selected") */
+  selectedChatterIds?: string[];
+
+  /** Minimum level required */
+  minimumLevel?: ChatterLevel;
+
+  /** Attendance count */
+  attendanceCount: number;
+
+  /** Created timestamp */
+  createdAt: Timestamp;
+
+  /** Updated timestamp */
+  updatedAt: Timestamp;
+}
+
+/**
+ * Zoom attendance record
+ * Collection: chatter_zoom_attendance/{attendanceId}
+ */
+export interface ChatterZoomAttendance {
+  /** Document ID */
+  id: string;
+
+  /** Meeting ID */
+  meetingId: string;
+
+  /** Chatter ID */
+  chatterId: string;
+  chatterEmail: string;
+  chatterName: string;
+
+  /** Join time */
+  joinedAt: Timestamp;
+
+  /** Leave time */
+  leftAt?: Timestamp;
+
+  /** Duration attended (minutes) */
+  durationMinutes: number;
+
+  /** Whether attendance qualifies for bonus */
+  qualifiesForBonus: boolean;
+
+  /** Bonus commission ID if awarded */
+  bonusCommissionId?: string;
+}
+
+// ============================================================================
+// POSTS (for admin moderation)
+// ============================================================================
+
+/**
+ * Chatter post submission
+ * Collection: chatter_posts/{postId}
+ */
+export interface ChatterPost {
+  /** Document ID */
+  id: string;
+
+  /** Chatter who submitted */
+  chatterId: string;
+  chatterName: string;
+  chatterCode: string;
+
+  /** Post type */
+  postType: "text" | "image" | "video" | "link";
+
+  /** Platform posted on */
+  platform: ChatterPlatform;
+
+  /** Post URL (external link) */
+  postUrl?: string;
+
+  /** Post content/caption */
+  content: string;
+
+  /** Attached media URLs */
+  mediaUrls?: string[];
+
+  /** Moderation status */
+  status: "pending" | "approved" | "rejected";
+
+  /** Rejection reason */
+  rejectionReason?: string;
+
+  /** Moderated by (admin ID) */
+  moderatedBy?: string;
+
+  /** Moderated timestamp */
+  moderatedAt?: Timestamp;
+
+  /** Engagement metrics (optional) */
+  engagement?: {
+    likes?: number;
+    comments?: number;
+    shares?: number;
+    views?: number;
+  };
+
+  /** Created timestamp */
+  createdAt: Timestamp;
+
+  /** Updated timestamp */
+  updatedAt: Timestamp;
+}
+
+// ============================================================================
+// POSTS / JOURNAL DES POSTS
+// ============================================================================
+
+/**
+ * Post submission by a chatter
+ * Collection: chatter_posts/{postId}
+ */
+export interface ChatterPostSubmission {
+  /** Document ID */
+  id: string;
+
+  /** Chatter who submitted */
+  chatterId: string;
+  chatterEmail: string;
+  chatterName: string;
+  chatterCode: string;
+
+  /** Post details */
+  url: string;
+  platform: ChatterPlatform;
+  targetCountry: string; // Country code or "GLOBAL"
+  language: SupportedChatterLanguage;
+  content?: string; // Post caption/text
+  screenshotUrl?: string;
+
+  /** Group/Forum reference (if posted in a tracked group) */
+  groupId?: string;
+  groupName?: string;
+
+  /** Stats */
+  clickCount: number;
+  conversionCount: number;
+  earningsGenerated: number;
+
+  /** Moderation */
+  status: "pending" | "approved" | "rejected";
+  moderatedBy?: string;
+  moderatedAt?: Timestamp;
+  rejectionReason?: string;
+
+  /** Spam detection */
+  isSpamFlagged: boolean;
+  spamFlags?: string[];
+
+  /** Timestamps */
+  postedAt: Timestamp; // When the post was made on the platform
+  submittedAt: Timestamp; // When submitted to our system
+  updatedAt: Timestamp;
+}
+
+// ============================================================================
+// GROUPS / FORUMS DATABASE
+// ============================================================================
+
+/**
+ * Group/Forum entry in the database
+ * Collection: chatter_groups/{groupId}
+ */
+export interface ChatterGroup {
+  /** Document ID */
+  id: string;
+
+  /** Group details */
+  name: string;
+  url: string;
+  platform: ChatterPlatform;
+  targetCountry: string; // Country code or "GLOBAL"
+  language: SupportedChatterLanguage;
+  memberCount?: number; // Approximate members
+  thematic: "expatriates" | "legal" | "real_estate" | "health" | "employment" | "general" | "other";
+  accessType: "public" | "private_member" | "admin_moderator";
+
+  /** Who submitted this group */
+  submittedByChatterId: string;
+  submittedByEmail: string;
+
+  /** Chatters active in this group */
+  activeChatterIds: string[];
+  activeChatterCount: number;
+
+  /** Stats aggregated */
+  totalPosts: number;
+  totalClicks: number;
+  totalConversions: number;
+  totalEarnings: number;
+
+  /** Admin status */
+  status: "active" | "saturated" | "banned" | "exclusive";
+  exclusiveToChatterId?: string; // If assigned exclusively
+  adminNotes?: string;
+  markedBy?: string;
+  markedAt?: Timestamp;
+
+  /** Deduplication - normalized URL hash */
+  urlHash: string;
+
+  /** Timestamps */
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+/**
+ * Chatter's activity in a specific group
+ * Subcollection: chatter_groups/{groupId}/chatter_activity/{chatterId}
+ */
+export interface ChatterGroupActivity {
+  chatterId: string;
+  chatterEmail: string;
+  groupId: string;
+
+  /** Stats for this chatter in this group */
+  postCount: number;
+  clickCount: number;
+  conversionCount: number;
+  earningsGenerated: number;
+
+  /** Status */
+  status: "active" | "banned" | "inactive";
+  bannedReason?: string;
+
+  /** First and last activity */
+  firstPostAt: Timestamp;
+  lastPostAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+// ============================================================================
+// COUNTRY ROTATION SYSTEM
+// ============================================================================
+
+/**
+ * Tracks country assignments per cycle
+ * Collection: chatter_country_assignments/{countryCode}
+ */
+export interface ChatterCountryAssignment {
+  /** Country code (ISO 3166-1 alpha-2) */
+  countryCode: string;
+
+  /** Country name for display */
+  countryName: string;
+
+  /** Current cycle number (starts at 1) */
+  currentCycle: number;
+
+  /** Number of times this country has been assigned in current cycle */
+  assignmentsInCurrentCycle: number;
+
+  /** Total assignments across all cycles */
+  totalAssignments: number;
+
+  /** Chatters assigned to this country in current cycle */
+  currentCycleChatterIds: string[];
+
+  /** Last assignment timestamp */
+  lastAssignedAt: Timestamp | null;
+
+  /** Created timestamp */
+  createdAt: Timestamp;
+
+  /** Updated timestamp */
+  updatedAt: Timestamp;
+}
+
+/**
+ * Global country rotation state
+ * Collection: chatter_config/country_rotation
+ */
+export interface ChatterCountryRotationState {
+  /** Document ID */
+  id: "country_rotation";
+
+  /** Current global cycle number */
+  currentGlobalCycle: number;
+
+  /** Total countries in the system */
+  totalCountries: number;
+
+  /** Countries assigned at least once in current cycle */
+  countriesAssignedInCurrentCycle: number;
+
+  /** Threshold percentage to advance to next cycle (default 90%) */
+  cycleThresholdPercent: number;
+
+  /** Whether cycle advancement is automatic */
+  autoAdvanceCycle: boolean;
+
+  /** Last cycle advancement */
+  lastCycleAdvancedAt: Timestamp | null;
+
+  /** Updated timestamp */
+  updatedAt: Timestamp;
+}
+
+/**
+ * List of all 197 supported countries
+ */
+export const SUPPORTED_COUNTRIES: Array<{ code: string; name: string }> = [
+  { code: "AF", name: "Afghanistan" }, { code: "AL", name: "Albania" }, { code: "DZ", name: "Algeria" },
+  { code: "AD", name: "Andorra" }, { code: "AO", name: "Angola" }, { code: "AG", name: "Antigua and Barbuda" },
+  { code: "AR", name: "Argentina" }, { code: "AM", name: "Armenia" }, { code: "AU", name: "Australia" },
+  { code: "AT", name: "Austria" }, { code: "AZ", name: "Azerbaijan" }, { code: "BS", name: "Bahamas" },
+  { code: "BH", name: "Bahrain" }, { code: "BD", name: "Bangladesh" }, { code: "BB", name: "Barbados" },
+  { code: "BY", name: "Belarus" }, { code: "BE", name: "Belgium" }, { code: "BZ", name: "Belize" },
+  { code: "BJ", name: "Benin" }, { code: "BT", name: "Bhutan" }, { code: "BO", name: "Bolivia" },
+  { code: "BA", name: "Bosnia and Herzegovina" }, { code: "BW", name: "Botswana" }, { code: "BR", name: "Brazil" },
+  { code: "BN", name: "Brunei" }, { code: "BG", name: "Bulgaria" }, { code: "BF", name: "Burkina Faso" },
+  { code: "BI", name: "Burundi" }, { code: "CV", name: "Cabo Verde" }, { code: "KH", name: "Cambodia" },
+  { code: "CM", name: "Cameroon" }, { code: "CA", name: "Canada" }, { code: "CF", name: "Central African Republic" },
+  { code: "TD", name: "Chad" }, { code: "CL", name: "Chile" }, { code: "CN", name: "China" },
+  { code: "CO", name: "Colombia" }, { code: "KM", name: "Comoros" }, { code: "CG", name: "Congo" },
+  { code: "CD", name: "DR Congo" }, { code: "CR", name: "Costa Rica" }, { code: "CI", name: "Côte d'Ivoire" },
+  { code: "HR", name: "Croatia" }, { code: "CU", name: "Cuba" }, { code: "CY", name: "Cyprus" },
+  { code: "CZ", name: "Czechia" }, { code: "DK", name: "Denmark" }, { code: "DJ", name: "Djibouti" },
+  { code: "DM", name: "Dominica" }, { code: "DO", name: "Dominican Republic" }, { code: "EC", name: "Ecuador" },
+  { code: "EG", name: "Egypt" }, { code: "SV", name: "El Salvador" }, { code: "GQ", name: "Equatorial Guinea" },
+  { code: "ER", name: "Eritrea" }, { code: "EE", name: "Estonia" }, { code: "SZ", name: "Eswatini" },
+  { code: "ET", name: "Ethiopia" }, { code: "FJ", name: "Fiji" }, { code: "FI", name: "Finland" },
+  { code: "FR", name: "France" }, { code: "GA", name: "Gabon" }, { code: "GM", name: "Gambia" },
+  { code: "GE", name: "Georgia" }, { code: "DE", name: "Germany" }, { code: "GH", name: "Ghana" },
+  { code: "GR", name: "Greece" }, { code: "GD", name: "Grenada" }, { code: "GT", name: "Guatemala" },
+  { code: "GN", name: "Guinea" }, { code: "GW", name: "Guinea-Bissau" }, { code: "GY", name: "Guyana" },
+  { code: "HT", name: "Haiti" }, { code: "HN", name: "Honduras" }, { code: "HU", name: "Hungary" },
+  { code: "IS", name: "Iceland" }, { code: "IN", name: "India" }, { code: "ID", name: "Indonesia" },
+  { code: "IR", name: "Iran" }, { code: "IQ", name: "Iraq" }, { code: "IE", name: "Ireland" },
+  { code: "IL", name: "Israel" }, { code: "IT", name: "Italy" }, { code: "JM", name: "Jamaica" },
+  { code: "JP", name: "Japan" }, { code: "JO", name: "Jordan" }, { code: "KZ", name: "Kazakhstan" },
+  { code: "KE", name: "Kenya" }, { code: "KI", name: "Kiribati" }, { code: "KP", name: "North Korea" },
+  { code: "KR", name: "South Korea" }, { code: "KW", name: "Kuwait" }, { code: "KG", name: "Kyrgyzstan" },
+  { code: "LA", name: "Laos" }, { code: "LV", name: "Latvia" }, { code: "LB", name: "Lebanon" },
+  { code: "LS", name: "Lesotho" }, { code: "LR", name: "Liberia" }, { code: "LY", name: "Libya" },
+  { code: "LI", name: "Liechtenstein" }, { code: "LT", name: "Lithuania" }, { code: "LU", name: "Luxembourg" },
+  { code: "MG", name: "Madagascar" }, { code: "MW", name: "Malawi" }, { code: "MY", name: "Malaysia" },
+  { code: "MV", name: "Maldives" }, { code: "ML", name: "Mali" }, { code: "MT", name: "Malta" },
+  { code: "MH", name: "Marshall Islands" }, { code: "MR", name: "Mauritania" }, { code: "MU", name: "Mauritius" },
+  { code: "MX", name: "Mexico" }, { code: "FM", name: "Micronesia" }, { code: "MD", name: "Moldova" },
+  { code: "MC", name: "Monaco" }, { code: "MN", name: "Mongolia" }, { code: "ME", name: "Montenegro" },
+  { code: "MA", name: "Morocco" }, { code: "MZ", name: "Mozambique" }, { code: "MM", name: "Myanmar" },
+  { code: "NA", name: "Namibia" }, { code: "NR", name: "Nauru" }, { code: "NP", name: "Nepal" },
+  { code: "NL", name: "Netherlands" }, { code: "NZ", name: "New Zealand" }, { code: "NI", name: "Nicaragua" },
+  { code: "NE", name: "Niger" }, { code: "NG", name: "Nigeria" }, { code: "MK", name: "North Macedonia" },
+  { code: "NO", name: "Norway" }, { code: "OM", name: "Oman" }, { code: "PK", name: "Pakistan" },
+  { code: "PW", name: "Palau" }, { code: "PA", name: "Panama" }, { code: "PG", name: "Papua New Guinea" },
+  { code: "PY", name: "Paraguay" }, { code: "PE", name: "Peru" }, { code: "PH", name: "Philippines" },
+  { code: "PL", name: "Poland" }, { code: "PT", name: "Portugal" }, { code: "QA", name: "Qatar" },
+  { code: "RO", name: "Romania" }, { code: "RU", name: "Russia" }, { code: "RW", name: "Rwanda" },
+  { code: "KN", name: "Saint Kitts and Nevis" }, { code: "LC", name: "Saint Lucia" }, { code: "VC", name: "Saint Vincent" },
+  { code: "WS", name: "Samoa" }, { code: "SM", name: "San Marino" }, { code: "ST", name: "São Tomé and Príncipe" },
+  { code: "SA", name: "Saudi Arabia" }, { code: "SN", name: "Senegal" }, { code: "RS", name: "Serbia" },
+  { code: "SC", name: "Seychelles" }, { code: "SL", name: "Sierra Leone" }, { code: "SG", name: "Singapore" },
+  { code: "SK", name: "Slovakia" }, { code: "SI", name: "Slovenia" }, { code: "SB", name: "Solomon Islands" },
+  { code: "SO", name: "Somalia" }, { code: "ZA", name: "South Africa" }, { code: "SS", name: "South Sudan" },
+  { code: "ES", name: "Spain" }, { code: "LK", name: "Sri Lanka" }, { code: "SD", name: "Sudan" },
+  { code: "SR", name: "Suriname" }, { code: "SE", name: "Sweden" }, { code: "CH", name: "Switzerland" },
+  { code: "SY", name: "Syria" }, { code: "TW", name: "Taiwan" }, { code: "TJ", name: "Tajikistan" },
+  { code: "TZ", name: "Tanzania" }, { code: "TH", name: "Thailand" }, { code: "TL", name: "Timor-Leste" },
+  { code: "TG", name: "Togo" }, { code: "TO", name: "Tonga" }, { code: "TT", name: "Trinidad and Tobago" },
+  { code: "TN", name: "Tunisia" }, { code: "TR", name: "Turkey" }, { code: "TM", name: "Turkmenistan" },
+  { code: "TV", name: "Tuvalu" }, { code: "UG", name: "Uganda" }, { code: "UA", name: "Ukraine" },
+  { code: "AE", name: "United Arab Emirates" }, { code: "GB", name: "United Kingdom" }, { code: "US", name: "United States" },
+  { code: "UY", name: "Uruguay" }, { code: "UZ", name: "Uzbekistan" }, { code: "VU", name: "Vanuatu" },
+  { code: "VA", name: "Vatican City" }, { code: "VE", name: "Venezuela" }, { code: "VN", name: "Vietnam" },
+  { code: "YE", name: "Yemen" }, { code: "ZM", name: "Zambia" }, { code: "ZW", name: "Zimbabwe" },
+];
+
+// ============================================================================
+// INPUT/OUTPUT TYPES FOR CALLABLES
+// ============================================================================
+
+export interface RegisterChatterInput {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  country: string;
+  interventionCountries: string[];
+  language: SupportedChatterLanguage;
+  additionalLanguages?: SupportedChatterLanguage[];
+  platforms: ChatterPlatform[];
+  bio?: string;
+  recruitmentCode?: string; // If recruited by another chatter
+}
+
+export interface RegisterChatterResponse {
+  success: boolean;
+  chatterId: string;
+  message: string;
+}
+
+export interface SubmitQuizInput {
+  answers: Array<{
+    questionId: string;
+    answerId: string;
+  }>;
+  startedAt: string; // ISO timestamp
+}
+
+export interface SubmitQuizResponse {
+  success: boolean;
+  passed: boolean;
+  score: number;
+  correctAnswers: number;
+  totalQuestions: number;
+  results: Array<{
+    questionId: string;
+    isCorrect: boolean;
+    correctAnswerId: string;
+    explanation?: string;
+  }>;
+  canRetryAt?: string; // ISO timestamp if failed
+  affiliateCodeClient?: string; // If passed
+  affiliateCodeRecruitment?: string; // If passed
+}
+
+export interface GetChatterDashboardResponse {
+  chatter: Omit<Chatter, "paymentDetails" | "adminNotes">;
+  recentCommissions: Array<{
+    id: string;
+    type: ChatterCommissionType;
+    amount: number;
+    status: ChatterCommissionStatus;
+    description: string;
+    createdAt: string;
+  }>;
+  monthlyStats: {
+    earnings: number;
+    clients: number;
+    recruits: number;
+    rank: number | null;
+  };
+  upcomingZoomMeeting: {
+    id: string;
+    title: string;
+    scheduledAt: string;
+    joinUrl: string;
+  } | null;
+  unreadNotifications: number;
+  config: Pick<ChatterConfig,
+    | "commissionClientAmount"
+    | "commissionRecruitmentAmount"
+    | "minimumWithdrawalAmount"
+    | "levelThresholds"
+    | "levelBonuses"
+  >;
+}
+
+export interface RequestWithdrawalInput {
+  amount?: number; // If not provided, withdraw all available
+  paymentMethod: ChatterPaymentMethod;
+  paymentDetails: ChatterPaymentDetails;
+}
+
+export interface RequestWithdrawalResponse {
+  success: boolean;
+  withdrawalId: string;
+  amount: number;
+  status: ChatterWithdrawalStatus;
+  message: string;
+}
+
+export interface UpdateChatterProfileInput {
+  phone?: string;
+  country?: string;
+  interventionCountries?: string[];
+  additionalLanguages?: SupportedChatterLanguage[];
+  platforms?: ChatterPlatform[];
+  bio?: string;
+  photoUrl?: string;
+  preferredPaymentMethod?: ChatterPaymentMethod;
+  paymentDetails?: ChatterPaymentDetails;
+}
+
+// ============================================================================
+// ADMIN INPUT/OUTPUT TYPES
+// ============================================================================
+
+export interface AdminGetChattersListInput {
+  status?: ChatterStatus;
+  level?: ChatterLevel;
+  country?: string;
+  search?: string;
+  sortBy?: "createdAt" | "totalEarned" | "totalClients" | "currentStreak";
+  sortOrder?: "asc" | "desc";
+  limit?: number;
+  offset?: number;
+}
+
+export interface AdminGetChattersListResponse {
+  chatters: Array<{
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    country: string;
+    status: ChatterStatus;
+    level: ChatterLevel;
+    totalEarned: number;
+    totalClients: number;
+    totalRecruits: number;
+    currentStreak: number;
+    createdAt: string;
+  }>;
+  total: number;
+  hasMore: boolean;
+}
+
+export interface AdminGetChatterDetailResponse {
+  chatter: Chatter;
+  commissions: Array<Omit<ChatterCommission, "createdAt"> & { createdAt: string }>;
+  withdrawals: Array<Omit<ChatterWithdrawal, "requestedAt"> & { requestedAt: string }>;
+  recruitmentLinks: Array<Omit<ChatterRecruitmentLink, "createdAt"> & { createdAt: string }>;
+  badges: Array<Omit<ChatterBadgeAward, "awardedAt"> & { awardedAt: string }>;
+  quizAttempts: Array<Omit<ChatterQuizAttempt, "completedAt"> & { completedAt: string }>;
+}
+
+export interface AdminProcessWithdrawalInput {
+  withdrawalId: string;
+  action: "approve" | "reject" | "complete" | "fail";
+  reason?: string;
+  paymentReference?: string;
+  notes?: string;
+}
+
+export interface AdminUpdateChatterStatusInput {
+  chatterId: string;
+  status: ChatterStatus;
+  reason: string;
+}

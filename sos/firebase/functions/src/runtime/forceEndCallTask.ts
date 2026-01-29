@@ -2,14 +2,12 @@
 // Cloud Task handler to force-end calls that exceed maximum duration
 import { onRequest } from "firebase-functions/v2/https";
 import { Request, Response } from "express";
-import { defineSecret } from "firebase-functions/params";
 import * as admin from 'firebase-admin';
 import { logError } from "../utils/logs/logError";
 import { logCallRecord } from "../utils/logs/logCallRecord";
 import { logger as prodLogger } from "../utils/productionLogger";
-
-// --- Secrets (v2) ---
-const TASKS_AUTH_SECRET = defineSecret("TASKS_AUTH_SECRET");
+// P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
+import { TASKS_AUTH_SECRET } from "../lib/secrets";
 
 interface ForceEndCallPayload {
   sessionId: string;
