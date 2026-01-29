@@ -1,57 +1,43 @@
 /**
- * ChatterRegisterForm - Registration form for becoming a chatter
- * Collects required information for chatter registration
+ * ChatterRegisterForm - Mobile-first registration form for becoming a chatter
+ * Uses phone codes and languages from data files
+ * All defaultMessage in English for proper i18n fallback
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { User, Mail, Phone, Globe, AlertCircle, Loader2, ChevronDown } from 'lucide-react';
+import { User, Mail, Phone, Globe, AlertCircle, Loader2, ChevronDown, Search, Languages } from 'lucide-react';
+import { useApp } from '@/contexts/AppContext';
+import { phoneCodesData, type PhoneCodeEntry } from '@/data/phone-codes';
+import { languagesData, getLanguageLabel, type SupportedLocale, type Language } from '@/data/languages-spoken';
 
-// Design tokens
+// Design tokens - Mobile-first
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
-  input: "w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all",
+  input: "w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all text-sm md:text-base",
   label: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1",
   button: {
-    primary: "bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed",
+    primary: "w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed",
   },
 } as const;
 
-// Supported languages for chatters
-const SUPPORTED_LANGUAGES = [
-  { code: 'fr', name: 'Français' },
-  { code: 'en', name: 'English' },
-  { code: 'es', name: 'Español' },
-  { code: 'de', name: 'Deutsch' },
-  { code: 'pt', name: 'Português' },
-  { code: 'ar', name: 'العربية' },
-];
+// Get country name based on locale
+const getCountryName = (entry: PhoneCodeEntry, locale: string): string => {
+  const localeMap: Record<string, keyof PhoneCodeEntry> = {
+    fr: 'fr', en: 'en', es: 'es', de: 'de', pt: 'pt', ru: 'ru', zh: 'zh', ch: 'zh', ar: 'ar', hi: 'hi'
+  };
+  const key = localeMap[locale] || 'en';
+  return entry[key] as string || entry.en;
+};
 
-// Countries (simplified list)
-const COUNTRIES = [
-  { code: 'SN', name: 'Sénégal' },
-  { code: 'CI', name: "Côte d'Ivoire" },
-  { code: 'CM', name: 'Cameroun' },
-  { code: 'MA', name: 'Maroc' },
-  { code: 'TN', name: 'Tunisie' },
-  { code: 'DZ', name: 'Algérie' },
-  { code: 'FR', name: 'France' },
-  { code: 'BE', name: 'Belgique' },
-  { code: 'CH', name: 'Suisse' },
-  { code: 'CA', name: 'Canada' },
-  { code: 'US', name: 'États-Unis' },
-  { code: 'GB', name: 'Royaume-Uni' },
-  { code: 'DE', name: 'Allemagne' },
-  { code: 'ES', name: 'Espagne' },
-  { code: 'PT', name: 'Portugal' },
-  { code: 'IT', name: 'Italie' },
-  { code: 'ML', name: 'Mali' },
-  { code: 'BF', name: 'Burkina Faso' },
-  { code: 'GN', name: 'Guinée' },
-  { code: 'KE', name: 'Kenya' },
-  { code: 'NG', name: 'Nigeria' },
-  { code: 'GH', name: 'Ghana' },
-];
+// Country flag emoji from country code
+const getFlag = (countryCode: string): string => {
+  const codePoints = countryCode
+    .toUpperCase()
+    .split('')
+    .map(char => 127397 + char.charCodeAt(0));
+  return String.fromCodePoint(...codePoints);
+};
 
 interface ChatterRegisterFormProps {
   onSubmit: (data: ChatterRegistrationData) => Promise<void>;
@@ -64,7 +50,8 @@ export interface ChatterRegistrationData {
   firstName: string;
   lastName: string;
   email: string;
-  phone: string;
+  phoneCode: string;
+  phoneNumber: string;
   country: string;
   languages: string[];
   referralCode?: string;
@@ -77,24 +64,58 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
   error,
 }) => {
   const intl = useIntl();
+  const { language } = useApp();
+  const locale = (language || 'en') as SupportedLocale;
 
   const [formData, setFormData] = useState<ChatterRegistrationData>({
     firstName: initialData?.firstName || '',
     lastName: initialData?.lastName || '',
     email: initialData?.email || '',
-    phone: initialData?.phone || '',
+    phoneCode: initialData?.phoneCode || '+1',
+    phoneNumber: initialData?.phoneNumber || '',
     country: initialData?.country || '',
-    languages: initialData?.languages || ['fr'],
+    languages: initialData?.languages || ['en'],
     referralCode: initialData?.referralCode || '',
   });
 
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [phoneCodeSearch, setPhoneCodeSearch] = useState('');
+  const [languageSearch, setLanguageSearch] = useState('');
+  const [showPhoneDropdown, setShowPhoneDropdown] = useState(false);
+  const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
+
+  // Filter phone codes based on search
+  const filteredPhoneCodes = useMemo(() => {
+    if (!phoneCodeSearch) return phoneCodesData;
+    const search = phoneCodeSearch.toLowerCase();
+    return phoneCodesData.filter(entry =>
+      getCountryName(entry, locale).toLowerCase().includes(search) ||
+      entry.phoneCode.includes(search) ||
+      entry.code.toLowerCase().includes(search)
+    );
+  }, [phoneCodeSearch, locale]);
+
+  // Filter languages based on search
+  const filteredLanguages = useMemo(() => {
+    if (!languageSearch) return languagesData.slice(0, 30); // Show top 30 by default
+    const search = languageSearch.toLowerCase();
+    return languagesData.filter(lang =>
+      getLanguageLabel(lang, locale).toLowerCase().includes(search) ||
+      lang.nativeName.toLowerCase().includes(search) ||
+      lang.code.toLowerCase().includes(search)
+    );
+  }, [languageSearch, locale]);
+
+  // Get selected phone code entry
+  const selectedPhoneEntry = useMemo(() =>
+    phoneCodesData.find(e => e.phoneCode === formData.phoneCode),
+    [formData.phoneCode]
+  );
 
   // Handle input change
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    // Clear validation error for this field
     if (validationErrors[name]) {
       setValidationErrors(prev => {
         const newErrors = { ...prev };
@@ -104,15 +125,34 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
     }
   };
 
+  // Select phone code
+  const selectPhoneCode = (entry: PhoneCodeEntry) => {
+    setFormData(prev => ({
+      ...prev,
+      phoneCode: entry.phoneCode,
+      country: entry.code
+    }));
+    setShowPhoneDropdown(false);
+    setPhoneCodeSearch('');
+  };
+
   // Handle language toggle
   const toggleLanguage = (langCode: string) => {
     setFormData(prev => {
       const languages = prev.languages.includes(langCode)
         ? prev.languages.filter(l => l !== langCode)
         : [...prev.languages, langCode];
-      // Ensure at least one language is selected
       return { ...prev, languages: languages.length > 0 ? languages : prev.languages };
     });
+  };
+
+  // Add language from dropdown
+  const addLanguageFromDropdown = (lang: Language) => {
+    if (!formData.languages.includes(lang.code)) {
+      setFormData(prev => ({ ...prev, languages: [...prev.languages, lang.code] }));
+    }
+    setShowLanguageDropdown(false);
+    setLanguageSearch('');
   };
 
   // Validate form
@@ -120,29 +160,29 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
     const errors: Record<string, string> = {};
 
     if (!formData.firstName.trim()) {
-      errors.firstName = intl.formatMessage({ id: 'chatter.register.error.firstName', defaultMessage: 'Le prénom est requis' });
+      errors.firstName = intl.formatMessage({ id: 'chatter.register.error.firstName', defaultMessage: 'First name is required' });
     }
 
     if (!formData.lastName.trim()) {
-      errors.lastName = intl.formatMessage({ id: 'chatter.register.error.lastName', defaultMessage: 'Le nom est requis' });
+      errors.lastName = intl.formatMessage({ id: 'chatter.register.error.lastName', defaultMessage: 'Last name is required' });
     }
 
     if (!formData.email.trim()) {
-      errors.email = intl.formatMessage({ id: 'chatter.register.error.email', defaultMessage: "L'email est requis" });
+      errors.email = intl.formatMessage({ id: 'chatter.register.error.email', defaultMessage: 'Email is required' });
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = intl.formatMessage({ id: 'chatter.register.error.emailInvalid', defaultMessage: 'Email invalide' });
+      errors.email = intl.formatMessage({ id: 'chatter.register.error.emailInvalid', defaultMessage: 'Invalid email address' });
     }
 
-    if (!formData.phone.trim()) {
-      errors.phone = intl.formatMessage({ id: 'chatter.register.error.phone', defaultMessage: 'Le téléphone est requis' });
+    if (!formData.phoneNumber.trim()) {
+      errors.phoneNumber = intl.formatMessage({ id: 'chatter.register.error.phone', defaultMessage: 'Phone number is required' });
     }
 
     if (!formData.country) {
-      errors.country = intl.formatMessage({ id: 'chatter.register.error.country', defaultMessage: 'Le pays est requis' });
+      errors.country = intl.formatMessage({ id: 'chatter.register.error.country', defaultMessage: 'Country is required' });
     }
 
     if (formData.languages.length === 0) {
-      errors.languages = intl.formatMessage({ id: 'chatter.register.error.languages', defaultMessage: 'Sélectionnez au moins une langue' });
+      errors.languages = intl.formatMessage({ id: 'chatter.register.error.languages', defaultMessage: 'Select at least one language' });
     }
 
     setValidationErrors(errors);
@@ -157,20 +197,20 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
       {/* Error Message */}
       {error && (
-        <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl flex items-start gap-3">
+        <div className="p-3 md:p-4 bg-red-50 dark:bg-red-900/20 rounded-xl flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
         </div>
       )}
 
-      {/* Name Fields */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* Name Fields - Stack on mobile */}
+      <div className="space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
         <div>
           <label htmlFor="firstName" className={UI.label}>
-            <FormattedMessage id="chatter.register.firstName" defaultMessage="Prénom" />
+            <FormattedMessage id="chatter.register.firstName" defaultMessage="First name" />
           </label>
           <div className="relative">
             <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -181,7 +221,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
               value={formData.firstName}
               onChange={handleChange}
               className={`${UI.input} pl-10 ${validationErrors.firstName ? 'border-red-500 focus:ring-red-500' : ''}`}
-              placeholder={intl.formatMessage({ id: 'chatter.register.firstNamePlaceholder', defaultMessage: 'Votre prénom' })}
+              placeholder={intl.formatMessage({ id: 'chatter.register.firstNamePlaceholder', defaultMessage: 'Your first name' })}
             />
           </div>
           {validationErrors.firstName && (
@@ -191,7 +231,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
 
         <div>
           <label htmlFor="lastName" className={UI.label}>
-            <FormattedMessage id="chatter.register.lastName" defaultMessage="Nom" />
+            <FormattedMessage id="chatter.register.lastName" defaultMessage="Last name" />
           </label>
           <div className="relative">
             <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -202,7 +242,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
               value={formData.lastName}
               onChange={handleChange}
               className={`${UI.input} pl-10 ${validationErrors.lastName ? 'border-red-500 focus:ring-red-500' : ''}`}
-              placeholder={intl.formatMessage({ id: 'chatter.register.lastNamePlaceholder', defaultMessage: 'Votre nom' })}
+              placeholder={intl.formatMessage({ id: 'chatter.register.lastNamePlaceholder', defaultMessage: 'Your last name' })}
             />
           </div>
           {validationErrors.lastName && (
@@ -225,7 +265,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
             value={formData.email}
             onChange={handleChange}
             className={`${UI.input} pl-10 ${validationErrors.email ? 'border-red-500 focus:ring-red-500' : ''}`}
-            placeholder={intl.formatMessage({ id: 'chatter.register.emailPlaceholder', defaultMessage: 'votre@email.com' })}
+            placeholder={intl.formatMessage({ id: 'chatter.register.emailPlaceholder', defaultMessage: 'your@email.com' })}
           />
         </div>
         {validationErrors.email && (
@@ -233,32 +273,88 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
         )}
       </div>
 
-      {/* Phone */}
+      {/* Phone with country code selector */}
       <div>
-        <label htmlFor="phone" className={UI.label}>
-          <FormattedMessage id="chatter.register.phone" defaultMessage="Téléphone" />
+        <label className={UI.label}>
+          <FormattedMessage id="chatter.register.phone" defaultMessage="Phone number" />
         </label>
-        <div className="relative">
-          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="tel"
-            id="phone"
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            className={`${UI.input} pl-10 ${validationErrors.phone ? 'border-red-500 focus:ring-red-500' : ''}`}
-            placeholder={intl.formatMessage({ id: 'chatter.register.phonePlaceholder', defaultMessage: '+221 77 123 45 67' })}
-          />
+        <div className="flex gap-2">
+          {/* Phone code dropdown */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowPhoneDropdown(!showPhoneDropdown)}
+              className={`${UI.input} w-[100px] md:w-[120px] flex items-center justify-between gap-1 px-2`}
+            >
+              <span className="flex items-center gap-1">
+                {selectedPhoneEntry && (
+                  <>
+                    <span className="text-base">{getFlag(selectedPhoneEntry.code)}</span>
+                    <span className="text-xs md:text-sm">{selectedPhoneEntry.phoneCode}</span>
+                  </>
+                )}
+              </span>
+              <ChevronDown className="w-4 h-4 text-gray-400" />
+            </button>
+
+            {showPhoneDropdown && (
+              <div className="absolute z-50 mt-1 w-[280px] md:w-[320px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-[300px] overflow-hidden">
+                <div className="p-2 border-b border-gray-200 dark:border-gray-700">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      value={phoneCodeSearch}
+                      onChange={(e) => setPhoneCodeSearch(e.target.value)}
+                      placeholder={intl.formatMessage({ id: 'chatter.register.searchCountry', defaultMessage: 'Search country...' })}
+                      className="w-full pl-9 pr-3 py-2 text-sm bg-gray-50 dark:bg-gray-700 rounded-lg border-0 focus:ring-2 focus:ring-red-500"
+                      autoFocus
+                    />
+                  </div>
+                </div>
+                <div className="overflow-y-auto max-h-[240px]">
+                  {filteredPhoneCodes.map((entry) => (
+                    <button
+                      key={entry.code}
+                      type="button"
+                      onClick={() => selectPhoneCode(entry)}
+                      className="w-full px-3 py-2 flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
+                    >
+                      <span className="text-lg">{getFlag(entry.code)}</span>
+                      <span className="flex-1 text-sm text-gray-900 dark:text-white truncate">
+                        {getCountryName(entry, locale)}
+                      </span>
+                      <span className="text-sm text-gray-500">{entry.phoneCode}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Phone number input */}
+          <div className="relative flex-1">
+            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="tel"
+              id="phoneNumber"
+              name="phoneNumber"
+              value={formData.phoneNumber}
+              onChange={handleChange}
+              className={`${UI.input} pl-10 ${validationErrors.phoneNumber ? 'border-red-500 focus:ring-red-500' : ''}`}
+              placeholder={intl.formatMessage({ id: 'chatter.register.phonePlaceholder', defaultMessage: '123 456 789' })}
+            />
+          </div>
         </div>
-        {validationErrors.phone && (
-          <p className="mt-1 text-xs text-red-500">{validationErrors.phone}</p>
+        {validationErrors.phoneNumber && (
+          <p className="mt-1 text-xs text-red-500">{validationErrors.phoneNumber}</p>
         )}
       </div>
 
-      {/* Country */}
+      {/* Country (auto-filled from phone code, but can change) */}
       <div>
         <label htmlFor="country" className={UI.label}>
-          <FormattedMessage id="chatter.register.country" defaultMessage="Pays de résidence" />
+          <FormattedMessage id="chatter.register.country" defaultMessage="Country of residence" />
         </label>
         <div className="relative">
           <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -270,11 +366,11 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
             className={`${UI.input} pl-10 appearance-none ${validationErrors.country ? 'border-red-500 focus:ring-red-500' : ''}`}
           >
             <option value="">
-              {intl.formatMessage({ id: 'chatter.register.countrySelect', defaultMessage: 'Sélectionner un pays' })}
+              {intl.formatMessage({ id: 'chatter.register.countrySelect', defaultMessage: 'Select a country' })}
             </option>
-            {COUNTRIES.map(country => (
-              <option key={country.code} value={country.code}>
-                {country.name}
+            {phoneCodesData.map(entry => (
+              <option key={entry.code} value={entry.code}>
+                {getFlag(entry.code)} {getCountryName(entry, locale)}
               </option>
             ))}
           </select>
@@ -288,24 +384,88 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
       {/* Languages */}
       <div>
         <label className={UI.label}>
-          <FormattedMessage id="chatter.register.languages" defaultMessage="Langues parlées" />
+          <FormattedMessage id="chatter.register.languages" defaultMessage="Languages spoken" />
         </label>
-        <div className="flex flex-wrap gap-2">
-          {SUPPORTED_LANGUAGES.map(lang => (
-            <button
-              key={lang.code}
-              type="button"
-              onClick={() => toggleLanguage(lang.code)}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                formData.languages.includes(lang.code)
-                  ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
-                  : 'bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/20'
-              }`}
-            >
-              {lang.name}
-            </button>
-          ))}
+
+        {/* Selected languages as chips */}
+        <div className="flex flex-wrap gap-2 mb-2">
+          {formData.languages.map(langCode => {
+            const lang = languagesData.find(l => l.code === langCode);
+            if (!lang) return null;
+            return (
+              <button
+                key={langCode}
+                type="button"
+                onClick={() => toggleLanguage(langCode)}
+                className="px-3 py-1.5 rounded-lg text-sm font-medium bg-gradient-to-r from-red-500 to-orange-500 text-white flex items-center gap-1"
+              >
+                {getLanguageLabel(lang, locale)}
+                <span className="ml-1">×</span>
+              </button>
+            );
+          })}
         </div>
+
+        {/* Add language dropdown */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setShowLanguageDropdown(!showLanguageDropdown)}
+            className={`${UI.input} flex items-center gap-2 text-gray-500`}
+          >
+            <Languages className="w-5 h-5" />
+            <span className="text-sm">
+              <FormattedMessage id="chatter.register.addLanguage" defaultMessage="Add a language..." />
+            </span>
+          </button>
+
+          {showLanguageDropdown && (
+            <div className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-[300px] overflow-hidden">
+              <div className="p-2 border-b border-gray-200 dark:border-gray-700">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    value={languageSearch}
+                    onChange={(e) => setLanguageSearch(e.target.value)}
+                    placeholder={intl.formatMessage({ id: 'chatter.register.searchLanguage', defaultMessage: 'Search language...' })}
+                    className="w-full pl-9 pr-3 py-2 text-sm bg-gray-50 dark:bg-gray-700 rounded-lg border-0 focus:ring-2 focus:ring-red-500"
+                    autoFocus
+                  />
+                </div>
+              </div>
+              <div className="overflow-y-auto max-h-[240px]">
+                {filteredLanguages.map((lang) => {
+                  const isSelected = formData.languages.includes(lang.code);
+                  return (
+                    <button
+                      key={lang.code}
+                      type="button"
+                      onClick={() => addLanguageFromDropdown(lang)}
+                      disabled={isSelected}
+                      className={`w-full px-3 py-2 flex items-center gap-3 text-left ${
+                        isSelected
+                          ? 'bg-gray-100 dark:bg-gray-700 opacity-50 cursor-not-allowed'
+                          : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                      }`}
+                    >
+                      <span className="flex-1 text-sm text-gray-900 dark:text-white">
+                        {getLanguageLabel(lang, locale)}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {lang.nativeName}
+                      </span>
+                      {isSelected && (
+                        <span className="text-xs text-green-500">✓</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
         {validationErrors.languages && (
           <p className="mt-1 text-xs text-red-500">{validationErrors.languages}</p>
         )}
@@ -314,7 +474,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
       {/* Referral Code (Optional) */}
       <div>
         <label htmlFor="referralCode" className={UI.label}>
-          <FormattedMessage id="chatter.register.referralCode" defaultMessage="Code de parrainage (optionnel)" />
+          <FormattedMessage id="chatter.register.referralCode" defaultMessage="Referral code (optional)" />
         </label>
         <input
           type="text"
@@ -326,7 +486,7 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
           placeholder={intl.formatMessage({ id: 'chatter.register.referralCodePlaceholder', defaultMessage: 'REC-XXXX' })}
         />
         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          <FormattedMessage id="chatter.register.referralCodeHint" defaultMessage="Si quelqu'un vous a recommandé, entrez son code" />
+          <FormattedMessage id="chatter.register.referralCodeHint" defaultMessage="If someone referred you, enter their code" />
         </p>
       </div>
 
@@ -334,15 +494,15 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
       <button
         type="submit"
         disabled={loading}
-        className={`${UI.button.primary} w-full py-4 flex items-center justify-center gap-2`}
+        className={`${UI.button.primary} py-3 md:py-4 flex items-center justify-center gap-2`}
       >
         {loading ? (
           <>
             <Loader2 className="w-5 h-5 animate-spin" />
-            <FormattedMessage id="chatter.register.submitting" defaultMessage="Inscription en cours..." />
+            <FormattedMessage id="chatter.register.submitting" defaultMessage="Signing up..." />
           </>
         ) : (
-          <FormattedMessage id="chatter.register.submit" defaultMessage="S'inscrire comme Chatter" />
+          <FormattedMessage id="chatter.register.submit" defaultMessage="Sign up as a Chatter" />
         )}
       </button>
     </form>
