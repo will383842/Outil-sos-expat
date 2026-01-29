@@ -31,7 +31,13 @@ export type ChatterCommissionType =
   | "bonus_streak"
   | "bonus_top3"
   | "bonus_zoom"
-  | "manual_adjustment";
+  | "manual_adjustment"
+  // Referral system commissions (2-level)
+  | "threshold_10"
+  | "threshold_50"
+  | "threshold_50_n2"
+  | "recurring_5pct"
+  | "tier_bonus";
 
 export type ChatterCommissionStatus =
   | "pending"
@@ -95,6 +101,16 @@ export type ChatterBadgeType =
 // ============================================================================
 // PAYMENT DETAILS
 // ============================================================================
+
+/**
+ * @deprecated These payment types are deprecated.
+ * Use the centralized payment system instead:
+ * - Types: @/types/payment (PaymentMethod, PaymentDetails, etc.)
+ * - Components: @/components/Payment
+ * - Hooks: @/hooks/usePayment
+ *
+ * These types will be removed in a future version.
+ */
 
 export interface ChatterWiseDetails {
   type: "wise";
@@ -205,6 +221,25 @@ export interface ChatterData {
   recruitedByCode: string | null;
   recruitedAt: string | null;
 
+  // Referral N2 (2-level system)
+  parrainNiveau2Id: string | null;
+
+  // Early Adopter (Pioneer)
+  isEarlyAdopter: boolean;
+  earlyAdopterCountry: string | null;
+  earlyAdopterDate: string | null;
+
+  // Referral Stats
+  qualifiedReferralsCount: number;
+  referralsN2Count: number;
+  referralEarnings: number;
+  referralToClientRatio: number;
+
+  // Referral Thresholds
+  threshold10Reached: boolean;
+  threshold50Reached: boolean;
+  tierBonusesPaid: number[];
+
   createdAt: string;
   updatedAt: string;
   lastLoginAt: string | null;
@@ -249,6 +284,16 @@ export interface ChatterCommissionSummary {
 // ============================================================================
 // WITHDRAWAL
 // ============================================================================
+
+/**
+ * @deprecated This withdrawal type is deprecated.
+ * Use the centralized payment system instead:
+ * - Types: @/types/payment (WithdrawalRequest, WithdrawalStatus, etc.)
+ * - Components: @/components/Payment
+ * - Hooks: @/hooks/usePayment
+ *
+ * This type will be removed in a future version.
+ */
 
 export interface ChatterWithdrawal {
   id: string;
@@ -433,6 +478,12 @@ export interface SubmitQuizInput {
   startedAt: string;
 }
 
+/**
+ * @deprecated This input type is deprecated.
+ * Use the centralized payment system instead:
+ * - Types: @/types/payment
+ * - Hooks: @/hooks/usePayment
+ */
 export interface RequestWithdrawalInput {
   amount?: number;
   paymentMethod: ChatterPaymentMethod;
@@ -611,3 +662,183 @@ export interface SubmitTrainingQuizResult {
     bonusAmount?: number;
   };
 }
+
+// ============================================================================
+// REFERRAL SYSTEM (2-LEVEL)
+// ============================================================================
+
+/**
+ * Referral commission from parrainage
+ */
+export interface ChatterReferralCommission {
+  id: string;
+  parrainId: string;
+  parrainEmail: string;
+  filleulId: string;
+  filleulName: string;
+  type: "threshold_10" | "threshold_50" | "threshold_50_n2" | "recurring_5pct" | "tier_bonus";
+  level: 1 | 2;
+  baseAmount: number;
+  earlyAdopterMultiplier: number;
+  promoMultiplier: number;
+  amount: number;
+  recurringMonth?: string;
+  tierReached?: number;
+  status: ChatterCommissionStatus;
+  calculationDetails: string;
+  createdAt: string;
+}
+
+/**
+ * Filleul N1 data for display
+ */
+export interface ChatterFilleulN1 {
+  id: string;
+  name: string;
+  email: string;
+  clientEarnings: number;
+  threshold10Reached: boolean;
+  threshold50Reached: boolean;
+  isActive: boolean;
+  joinedAt: string;
+}
+
+/**
+ * Filleul N2 data for display
+ */
+export interface ChatterFilleulN2 {
+  id: string;
+  name: string;
+  parrainN1Name: string;
+  threshold50Reached: boolean;
+  joinedAt: string;
+}
+
+/**
+ * Referral stats summary
+ */
+export interface ChatterReferralStats {
+  totalFilleulsN1: number;
+  qualifiedFilleulsN1: number;
+  totalFilleulsN2: number;
+  totalReferralEarnings: number;
+  monthlyReferralEarnings: number;
+}
+
+/**
+ * Tier progress info
+ */
+export interface ChatterTierProgress {
+  currentTier: number | null;
+  nextTier: number | null;
+  filleulsNeeded: number;
+  bonusAmount: number;
+}
+
+/**
+ * Early adopter (Pioneer) status
+ */
+export interface ChatterEarlyAdopterStatus {
+  isEarlyAdopter: boolean;
+  country: string | null;
+  multiplier: number;
+}
+
+/**
+ * Active promotion info
+ */
+export interface ChatterActivePromotion {
+  id: string;
+  name: string;
+  multiplier: number;
+  endsAt: string;
+}
+
+/**
+ * Promotion data
+ */
+export interface ChatterPromotion {
+  id: string;
+  name: string;
+  description: string;
+  type: "hackathon" | "bonus_weekend" | "country_challenge" | "special_event";
+  multiplier: number;
+  appliesToTypes: ChatterCommissionType[];
+  targetCountries: string[];
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
+  maxBudget: number;
+  currentSpent: number;
+}
+
+/**
+ * Early adopter counter per country
+ */
+export interface ChatterEarlyAdopterCounter {
+  countryCode: string;
+  countryName: string;
+  currentCount: number;
+  maxEarlyAdopters: number;
+  remainingSlots: number;
+  isOpen: boolean;
+}
+
+/**
+ * Viral kit data for sharing
+ */
+export interface ChatterViralKit {
+  referralLink: string;
+  referralCode: string;
+  shareMessages: {
+    fr: string;
+    en: string;
+  };
+  qrCodeUrl?: string;
+}
+
+/**
+ * Referral dashboard response
+ */
+export interface ChatterReferralDashboardData {
+  stats: ChatterReferralStats;
+  recentCommissions: Array<{
+    id: string;
+    type: ChatterCommissionType;
+    filleulName: string;
+    amount: number;
+    createdAt: string;
+  }>;
+  filleulsN1: ChatterFilleulN1[];
+  filleulsN2: ChatterFilleulN2[];
+  tierProgress: ChatterTierProgress;
+  earlyAdopter: ChatterEarlyAdopterStatus;
+  activePromotion: ChatterActivePromotion | null;
+}
+
+/**
+ * Referral configuration constants
+ */
+export const REFERRAL_CONFIG = {
+  THRESHOLDS: {
+    THRESHOLD_10: 1000,   // $10
+    THRESHOLD_50: 5000,   // $50
+  },
+  COMMISSIONS: {
+    THRESHOLD_10_AMOUNT: 100,    // $1
+    THRESHOLD_50_N1_AMOUNT: 400, // $4
+    THRESHOLD_50_N2_AMOUNT: 200, // $2
+    RECURRING_PERCENT: 0.05,
+    MONTHLY_ACTIVITY_THRESHOLD: 2000,
+  },
+  TIER_BONUSES: {
+    5: 2500,   // $25
+    10: 7500,  // $75
+    25: 20000, // $200
+    50: 50000, // $500
+  } as Record<number, number>,
+  EARLY_ADOPTER: {
+    MULTIPLIER: 1.5,
+    DEFAULT_SLOTS_PER_COUNTRY: 100,
+  },
+} as const;

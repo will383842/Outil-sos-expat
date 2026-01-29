@@ -9,3 +9,6 @@ export {
   chatterOnProviderRegistered,
   chatterOnClientRegistered,
 } from "./onProviderRegistered";
+
+// Referral system trigger
+export { chatterOnChatterEarningsUpdated } from "./onChatterEarningsUpdated";

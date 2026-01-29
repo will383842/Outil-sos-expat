@@ -83,7 +83,7 @@ export const adminApproveWithdrawal = onCall(
         withdrawalId,
       });
 
-      const withdrawalRef = db.collection('withdrawals').doc(withdrawalId);
+      const withdrawalRef = db.collection('payment_withdrawals').doc(withdrawalId);
       const withdrawalDoc = await withdrawalRef.get();
 
       if (!withdrawalDoc.exists) {

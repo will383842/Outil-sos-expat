@@ -5,7 +5,7 @@ interface ButtonProps {
   children: ReactNode;
   onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
   type?: 'button' | 'submit' | 'reset';
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
   size?: 'small' | 'medium' | 'large';
   disabled?: boolean;
   loading?: boolean;
@@ -121,6 +121,18 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
       'disabled:text-red-300',
       'disabled:bg-transparent',
     ].join(' '),
+
+    danger: [
+      'bg-red-500',
+      'text-white',
+      'border-red-500',
+      'hover:bg-red-600',
+      'hover:border-red-600',
+      'focus:ring-red-400',
+      'active:bg-red-700',
+      'disabled:bg-red-300',
+      'disabled:border-red-300',
+    ].join(' '),
   };
 
   // Mobile first sizing
@@ -198,6 +210,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
     switch (variant) {
       case 'primary':
       case 'secondary':
+      case 'danger':
         return 'white';
       case 'outline':
       case 'ghost':

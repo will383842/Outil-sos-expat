@@ -54,7 +54,13 @@ export type ChatterCommissionType =
   | "bonus_streak"          // Streak bonus
   | "bonus_top3"            // Monthly Top 3 bonus
   | "bonus_zoom"            // Zoom meeting attendance bonus
-  | "manual_adjustment";    // Admin manual adjustment
+  | "manual_adjustment"     // Admin manual adjustment
+  // Referral system commissions (2-level)
+  | "threshold_10"          // Filleul N1 reached $10 threshold
+  | "threshold_50"          // Filleul N1 reached $50 threshold
+  | "threshold_50_n2"       // Filleul N2 reached $50 threshold
+  | "recurring_5pct"        // Monthly recurring 5% on active filleuls
+  | "tier_bonus";           // Tier bonus (5/10/25/50 filleuls)
 
 /**
  * Commission status lifecycle
@@ -279,7 +285,7 @@ export interface Chatter {
 
   // ---- Referral (who recruited this chatter) ----
 
-  /** Chatter who recruited this one (chatter ID) */
+  /** Chatter who recruited this one (chatter ID) - N1 parrain */
   recruitedBy: string | null;
 
   /** Recruitment code used */
@@ -293,6 +299,47 @@ export interface Chatter {
 
   // REMOVED: recruiterMilestoneBonusPaid and recruiterMilestoneBonusAt
   // The $50 milestone bonus feature has been disabled
+
+  // ---- Referral N2 (2-level referral system) ----
+
+  /** N2 parrain - the parrain of this chatter's parrain */
+  parrainNiveau2Id: string | null;
+
+  // ---- Early Adopter (Pioneer) ----
+
+  /** Whether this chatter is an early adopter (+50% bonus for life) */
+  isEarlyAdopter: boolean;
+
+  /** Country where this chatter became an early adopter */
+  earlyAdopterCountry: string | null;
+
+  /** Date when this chatter became an early adopter */
+  earlyAdopterDate: Timestamp | null;
+
+  // ---- Referral Stats ----
+
+  /** Number of N1 filleuls who reached $50 threshold */
+  qualifiedReferralsCount: number;
+
+  /** Number of N2 filleuls (filleuls of filleuls) */
+  referralsN2Count: number;
+
+  /** Total earnings from referral commissions (separate from client/recruitment) */
+  referralEarnings: number;
+
+  /** Ratio of referral earnings to client earnings (for anti-fraud) */
+  referralToClientRatio: number;
+
+  // ---- Referral Thresholds Tracking ----
+
+  /** Whether this chatter's $10 threshold was reached (commission paid to parrain) */
+  threshold10Reached: boolean;
+
+  /** Whether this chatter's $50 threshold was reached (commission paid to parrain N1 and N2) */
+  threshold50Reached: boolean;
+
+  /** Tier bonuses already paid to this chatter (5, 10, 25, 50 filleuls) */
+  tierBonusesPaid: number[];
 
   // ---- Timestamps ----
 
@@ -1623,6 +1670,384 @@ export const SUPPORTED_COUNTRIES: Array<{ code: string; name: string }> = [
 ];
 
 // ============================================================================
+// REFERRAL SYSTEM TYPES (2-LEVEL)
+// ============================================================================
+
+/**
+ * Type of referral fraud alert
+ */
+export type ChatterReferralFraudAlertType =
+  | "circular_referral"       // A refers B who refers A (or chain)
+  | "high_ratio"             // referral/client ratio too high
+  | "multiple_accounts"      // Same IP/device multiple accounts
+  | "suspicious_activity"    // Unusual patterns
+  | "rapid_referrals";       // Too many referrals in short time
+
+/**
+ * Status of a referral fraud alert
+ */
+export type ChatterReferralFraudAlertStatus =
+  | "pending"      // Awaiting review
+  | "confirmed"    // Fraud confirmed
+  | "dismissed"    // False positive
+  | "resolved";    // Action taken
+
+/**
+ * Referral commission record (specific to referral system)
+ * Collection: chatter_referral_commissions/{id}
+ */
+export interface ChatterReferralCommission {
+  /** Document ID */
+  id: string;
+
+  /** Parrain who earns the commission */
+  parrainId: string;
+  parrainEmail: string;
+  parrainCode: string;
+
+  /** Filleul who triggered the commission */
+  filleulId: string;
+  filleulEmail: string;
+  filleulName: string;
+
+  /** Type of referral commission */
+  type: "threshold_10" | "threshold_50" | "threshold_50_n2" | "recurring_5pct" | "tier_bonus";
+
+  /** Level (1 = direct filleul, 2 = filleul of filleul) */
+  level: 1 | 2;
+
+  /** Base amount (cents) */
+  baseAmount: number;
+
+  /** Multipliers applied */
+  earlyAdopterMultiplier: number;  // 1.0 or 1.5 (50% bonus)
+  promoMultiplier: number;          // 1.0, 2.0, 3.0 for hackathons
+
+  /** Final amount (cents) */
+  amount: number;
+
+  /** For recurring: the month this is for (YYYY-MM) */
+  recurringMonth?: string;
+
+  /** For recurring: the filleul's earnings that month */
+  filleulMonthlyEarnings?: number;
+
+  /** For tier bonus: the tier reached (5, 10, 25, 50) */
+  tierReached?: number;
+
+  /** Currency (always USD) */
+  currency: "USD";
+
+  /** Status */
+  status: ChatterCommissionStatus;
+
+  /** Calculation breakdown */
+  calculationDetails: string;
+
+  /** Promotion ID if a promo was applied */
+  promotionId?: string;
+
+  /** Created timestamp */
+  createdAt: Timestamp;
+
+  /** Updated timestamp */
+  updatedAt: Timestamp;
+
+  /** When validated */
+  validatedAt?: Timestamp;
+
+  /** When made available */
+  availableAt?: Timestamp;
+}
+
+/**
+ * Promotion / Hackathon definition
+ * Collection: chatter_promotions/{id}
+ */
+export interface ChatterPromotion {
+  /** Document ID */
+  id: string;
+
+  /** Promotion name */
+  name: string;
+  nameTranslations?: {
+    [key in SupportedChatterLanguage]?: string;
+  };
+
+  /** Promotion description */
+  description: string;
+  descriptionTranslations?: {
+    [key in SupportedChatterLanguage]?: string;
+  };
+
+  /** Type of promotion */
+  type: "hackathon" | "bonus_weekend" | "country_challenge" | "special_event";
+
+  /** Multiplier applied to referral commissions (2.0 = x2, 3.0 = x3) */
+  multiplier: number;
+
+  /** Which commission types this applies to */
+  appliesToTypes: ChatterCommissionType[];
+
+  /** Country restrictions (empty = all countries) */
+  targetCountries: string[];
+
+  /** Start date */
+  startDate: Timestamp;
+
+  /** End date */
+  endDate: Timestamp;
+
+  /** Whether promotion is active */
+  isActive: boolean;
+
+  /** Maximum budget (cents, 0 = unlimited) */
+  maxBudget: number;
+
+  /** Current spent (cents) */
+  currentSpent: number;
+
+  /** Number of participants */
+  participantCount: number;
+
+  /** Created by (admin ID) */
+  createdBy: string;
+
+  /** Created timestamp */
+  createdAt: Timestamp;
+
+  /** Updated timestamp */
+  updatedAt: Timestamp;
+}
+
+/**
+ * Early Adopter counter per country
+ * Collection: chatter_early_adopter_counters/{countryCode}
+ */
+export interface ChatterEarlyAdopterCounter {
+  /** Country code (document ID) */
+  countryCode: string;
+
+  /** Country name */
+  countryName: string;
+
+  /** Maximum early adopters for this country */
+  maxEarlyAdopters: number;
+
+  /** Current count of early adopters */
+  currentCount: number;
+
+  /** Remaining slots */
+  remainingSlots: number;
+
+  /** Whether registration is still open */
+  isOpen: boolean;
+
+  /** List of early adopter chatter IDs */
+  earlyAdopterIds: string[];
+
+  /** Updated timestamp */
+  updatedAt: Timestamp;
+}
+
+/**
+ * Tier bonus history record
+ * Collection: chatter_tier_bonuses_history/{id}
+ */
+export interface ChatterTierBonusHistory {
+  /** Document ID */
+  id: string;
+
+  /** Chatter who received the bonus */
+  chatterId: string;
+  chatterEmail: string;
+  chatterName: string;
+
+  /** Tier reached (5, 10, 25, 50) */
+  tier: 5 | 10 | 25 | 50;
+
+  /** Bonus amount (cents) */
+  amount: number;
+
+  /** Commission ID */
+  commissionId: string;
+
+  /** Number of qualified filleuls at the time */
+  qualifiedFilleulsCount: number;
+
+  /** When awarded */
+  awardedAt: Timestamp;
+}
+
+/**
+ * Referral fraud alert
+ * Collection: chatter_referral_fraud_alerts/{id}
+ */
+export interface ChatterReferralFraudAlert {
+  /** Document ID */
+  id: string;
+
+  /** Chatter being investigated */
+  chatterId: string;
+  chatterEmail: string;
+  chatterName: string;
+
+  /** Type of alert */
+  alertType: ChatterReferralFraudAlertType;
+
+  /** Severity level */
+  severity: "low" | "medium" | "high" | "critical";
+
+  /** Alert status */
+  status: ChatterReferralFraudAlertStatus;
+
+  /** Detailed description */
+  details: string;
+
+  /** Evidence data */
+  evidence: {
+    /** For circular referral */
+    circularChain?: string[];
+    /** For high ratio */
+    ratio?: number;
+    referralEarnings?: number;
+    clientEarnings?: number;
+    /** For multiple accounts */
+    relatedAccountIds?: string[];
+    ipHash?: string;
+    /** For rapid referrals */
+    referralCount?: number;
+    timeWindowHours?: number;
+  };
+
+  /** Recommended action */
+  recommendedAction: "review" | "warn" | "suspend" | "ban";
+
+  /** Action taken (if any) */
+  actionTaken?: "none" | "warning_sent" | "suspended" | "banned";
+
+  /** Admin who reviewed */
+  reviewedBy?: string;
+
+  /** Review notes */
+  reviewNotes?: string;
+
+  /** Created timestamp */
+  createdAt: Timestamp;
+
+  /** Reviewed timestamp */
+  reviewedAt?: Timestamp;
+}
+
+/**
+ * Referral dashboard data response
+ */
+export interface GetReferralDashboardResponse {
+  /** Summary stats */
+  stats: {
+    totalFilleulsN1: number;
+    qualifiedFilleulsN1: number;
+    totalFilleulsN2: number;
+    totalReferralEarnings: number;
+    monthlyReferralEarnings: number;
+  };
+
+  /** Recent referral commissions */
+  recentCommissions: Array<{
+    id: string;
+    type: ChatterCommissionType;
+    filleulName: string;
+    amount: number;
+    createdAt: string;
+  }>;
+
+  /** Filleuls N1 with their progression */
+  filleulsN1: Array<{
+    id: string;
+    name: string;
+    email: string;
+    clientEarnings: number;
+    threshold10Reached: boolean;
+    threshold50Reached: boolean;
+    isActive: boolean;
+    joinedAt: string;
+  }>;
+
+  /** Filleuls N2 (simplified) */
+  filleulsN2: Array<{
+    id: string;
+    name: string;
+    parrainN1Name: string;
+    threshold50Reached: boolean;
+    joinedAt: string;
+  }>;
+
+  /** Tier bonus progress */
+  tierProgress: {
+    currentTier: number | null;
+    nextTier: number | null;
+    filleulsNeeded: number;
+    bonusAmount: number;
+  };
+
+  /** Early adopter status */
+  earlyAdopter: {
+    isEarlyAdopter: boolean;
+    country: string | null;
+    multiplier: number;
+  };
+
+  /** Active promotion if any */
+  activePromotion: {
+    id: string;
+    name: string;
+    multiplier: number;
+    endsAt: string;
+  } | null;
+}
+
+/**
+ * Referral configuration constants
+ */
+export const REFERRAL_CONFIG = {
+  /** Threshold amounts (cents) - EXCLUDES referral earnings */
+  THRESHOLDS: {
+    THRESHOLD_10: 1000,   // $10
+    THRESHOLD_50: 5000,   // $50
+  },
+
+  /** Commission amounts (cents) */
+  COMMISSIONS: {
+    THRESHOLD_10_AMOUNT: 100,    // $1 when filleul reaches $10
+    THRESHOLD_50_N1_AMOUNT: 400, // $4 when filleul N1 reaches $50
+    THRESHOLD_50_N2_AMOUNT: 200, // $2 when filleul N2 reaches $50
+    RECURRING_PERCENT: 0.05,     // 5% monthly on active filleuls
+    MONTHLY_ACTIVITY_THRESHOLD: 2000, // $20/month to be "active"
+  },
+
+  /** Tier bonuses (filleuls count → bonus in cents) */
+  TIER_BONUSES: {
+    5: 2500,    // $25 for 5 qualified filleuls
+    10: 7500,   // $75 for 10 qualified filleuls
+    25: 20000,  // $200 for 25 qualified filleuls
+    50: 50000,  // $500 for 50 qualified filleuls
+  } as Record<number, number>,
+
+  /** Early adopter settings */
+  EARLY_ADOPTER: {
+    MULTIPLIER: 1.5,              // +50% bonus
+    DEFAULT_SLOTS_PER_COUNTRY: 100, // 100 first per country
+  },
+
+  /** Anti-fraud thresholds */
+  FRAUD: {
+    MAX_REFERRAL_TO_CLIENT_RATIO: 2.0,  // Max 2:1 referral vs client earnings
+    MAX_REFERRALS_PER_DAY: 10,
+    CIRCULAR_DETECTION_DEPTH: 5,
+  },
+} as const;
+
+// ============================================================================
 // INPUT/OUTPUT TYPES FOR CALLABLES
 // ============================================================================
 
@@ -1701,6 +2126,42 @@ export interface GetChatterDashboardResponse {
     | "levelThresholds"
     | "levelBonuses"
   >;
+
+  /** Referral system stats (2-level) */
+  referralStats: {
+    filleulsN1: number;
+    qualifiedFilleulsN1: number;
+    filleulsN2: number;
+    referralEarnings: number;
+    nextTierBonus: {
+      tier: number;
+      filleulsNeeded: number;
+      bonusAmount: number;
+    } | null;
+  };
+
+  /** Early adopter (Pioneer) status */
+  earlyAdopter: {
+    isEarlyAdopter: boolean;
+    country: string | null;
+    multiplier: number;
+  };
+
+  /** Earnings ratio (affiliation vs referral) */
+  earningsRatio: {
+    affiliationEarnings: number;   // Client referrals + recruitment
+    referralEarnings: number;      // Referral system only
+    affiliationPercent: number;
+    referralPercent: number;
+  };
+
+  /** Active promotion if any */
+  activePromotion: {
+    id: string;
+    name: string;
+    multiplier: number;
+    endsAt: string;
+  } | null;
 }
 
 export interface RequestWithdrawalInput {

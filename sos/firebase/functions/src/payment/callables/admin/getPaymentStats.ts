@@ -181,10 +181,11 @@ export const adminGetPaymentStats = onCall(
       });
 
       const periodStart = getPeriodStartDate(period);
-      const periodTimestamp = Timestamp.fromDate(periodStart);
+      // Note: periodTimestamp kept for potential future use with Firestore Timestamp queries
+      void Timestamp.fromDate(periodStart);
 
       // Build query based on period
-      let query = db.collection('withdrawals') as FirebaseFirestore.Query;
+      let query = db.collection('payment_withdrawals') as FirebaseFirestore.Query;
 
       if (period !== 'all') {
         query = query.where('requestedAt', '>=', periodStart.toISOString());
@@ -307,7 +308,7 @@ export const adminGetPaymentStats = onCall(
 
       // Get all completed withdrawals for trends
       const completedSnapshot = await db
-        .collection('withdrawals')
+        .collection('payment_withdrawals')
         .where('status', 'in', ['completed', 'sent'])
         .where('completedAt', '>=', monthStart.toISOString())
         .get();

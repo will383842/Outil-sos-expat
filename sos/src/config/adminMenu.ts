@@ -694,6 +694,38 @@ export const adminMenuTree: AdminMenuItem[] = [
     ],
   },
 
+  // ===== 💳 PAIEMENTS CENTRALISES (Priorité 6.9 - Gestion des retraits) =====
+  {
+    id: "payments",
+    labelKey: "admin.menu.payments",
+    icon: Wallet,
+    descriptionKey: "admin.menu.payments.description",
+    children: [
+      {
+        id: "payments-dashboard",
+        labelKey: "admin.menu.paymentsDashboard",
+        path: "/admin/payments",
+        icon: LayoutDashboard,
+        descriptionKey: "admin.menu.paymentsDashboard.description",
+      },
+      {
+        id: "payments-withdrawals",
+        labelKey: "admin.menu.paymentsWithdrawals",
+        path: "/admin/payments/withdrawals",
+        icon: Banknote,
+        badge: "NEW",
+        descriptionKey: "admin.menu.paymentsWithdrawals.description",
+      },
+      {
+        id: "payments-config",
+        labelKey: "admin.menu.paymentsConfig",
+        path: "/admin/payments/config",
+        icon: Settings,
+        descriptionKey: "admin.menu.paymentsConfig.description",
+      },
+    ],
+  },
+
   // ===== ANALYTICS & RAPPORTS (Priorite 7) =====
   {
     id: "analytics",

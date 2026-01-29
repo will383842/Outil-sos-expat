@@ -316,6 +316,19 @@ export const registerChatter = onCall(
         recruitedAt: recruitedBy ? now : null,
         recruiterCommissionPaid: false,
 
+        // Referral N2 system fields (parrainNiveau2Id calculated in onChatterCreated trigger)
+        parrainNiveau2Id: null,
+        isEarlyAdopter: false,
+        earlyAdopterCountry: null,
+        earlyAdopterDate: null,
+        qualifiedReferralsCount: 0,
+        referralsN2Count: 0,
+        referralEarnings: 0,
+        referralToClientRatio: 0,
+        threshold10Reached: false,
+        threshold50Reached: false,
+        tierBonusesPaid: [],
+
         createdAt: now,
         updatedAt: now,
         lastLoginAt: now,

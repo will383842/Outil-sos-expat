@@ -2,13 +2,16 @@ import * as React from 'react';
 import { cn } from '@/lib/utils';
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: 'default' | 'outline' | 'destructive';
+  variant?: 'default' | 'outline' | 'destructive' | 'secondary' | 'success' | 'warning';
 }
 
 const badgeVariants = {
   default: 'bg-gray-100 text-gray-800',
   outline: 'border border-gray-300 text-gray-800',
   destructive: 'bg-red-100 text-red-700',
+  secondary: 'bg-blue-100 text-blue-800',
+  success: 'bg-green-100 text-green-800',
+  warning: 'bg-yellow-100 text-yellow-800',
 };
 
 const Badge: React.FC<BadgeProps> = ({ className, variant = 'default', ...props }) => {

@@ -19,7 +19,6 @@ import {
   getWiseApiToken,
   getWiseProfileId,
   getWiseMode,
-  getWiseBaseUrl,
   WISE_SECRETS,
 } from '../../lib/secrets';
 import {
@@ -318,7 +317,7 @@ export class WiseError extends Error {
     let body: Record<string, unknown> | null = null;
 
     try {
-      body = await response.json();
+      body = await response.json() as Record<string, unknown>;
     } catch {
       // Body is not JSON
     }

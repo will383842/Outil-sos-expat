@@ -133,16 +133,16 @@ const FLUTTERWAVE_COUNTRIES: CountryOption[] = [
   { code: 'MR', name: 'Mauritanie', nameEn: 'Mauritania', flag: '🇲🇷', currency: 'MRU', provider: 'flutterwave', methodType: 'mobile_money', mobileProviders: ['moov_money'] },
   { code: 'TD', name: 'Tchad', nameEn: 'Chad', flag: '🇹🇩', currency: 'XAF', provider: 'flutterwave', methodType: 'mobile_money', mobileProviders: ['airtel_money', 'moov_money'] },
   { code: 'CF', name: 'Centrafrique', nameEn: 'Central African Republic', flag: '🇨🇫', currency: 'XAF', provider: 'flutterwave', methodType: 'mobile_money', mobileProviders: ['orange_money'] },
-  { code: 'GH', name: 'Ghana', nameEn: 'Ghana', flag: '🇬🇭', currency: 'GHS', provider: 'flutterwave', methodType: 'mobile_money', mobileProviders: ['mtn_momo', 'airtel_money', 'vodafone'] as MobileMoneyProvider[] },
+  { code: 'GH', name: 'Ghana', nameEn: 'Ghana', flag: '🇬🇭', currency: 'GHS', provider: 'flutterwave', methodType: 'mobile_money', mobileProviders: ['mtn_momo', 'airtel_money', 'vodacom'] },
   { code: 'NG', name: 'Nigeria', nameEn: 'Nigeria', flag: '🇳🇬', currency: 'NGN', provider: 'flutterwave', methodType: 'mobile_money', mobileProviders: ['mtn_momo', 'airtel_money'] },
   { code: 'KE', name: 'Kenya', nameEn: 'Kenya', flag: '🇰🇪', currency: 'KES', provider: 'flutterwave', methodType: 'mobile_money', mobileProviders: ['mpesa', 'airtel_money'] },
   { code: 'TZ', name: 'Tanzanie', nameEn: 'Tanzania', flag: '🇹🇿', currency: 'TZS', provider: 'flutterwave', methodType: 'mobile_money', mobileProviders: ['mpesa', 'airtel_money'] },
   { code: 'UG', name: 'Ouganda', nameEn: 'Uganda', flag: '🇺🇬', currency: 'UGX', provider: 'flutterwave', methodType: 'mobile_money', mobileProviders: ['mtn_momo', 'airtel_money'] },
   { code: 'RW', name: 'Rwanda', nameEn: 'Rwanda', flag: '🇷🇼', currency: 'RWF', provider: 'flutterwave', methodType: 'mobile_money', mobileProviders: ['mtn_momo', 'airtel_money'] },
-  { code: 'ZA', name: 'Afrique du Sud', nameEn: 'South Africa', flag: '🇿🇦', currency: 'ZAR', provider: 'flutterwave', methodType: 'mobile_money', mobileProviders: ['vodacom'] as MobileMoneyProvider[] },
+  { code: 'ZA', name: 'Afrique du Sud', nameEn: 'South Africa', flag: '🇿🇦', currency: 'ZAR', provider: 'flutterwave', methodType: 'mobile_money', mobileProviders: ['vodacom'] },
   { code: 'MA', name: 'Maroc', nameEn: 'Morocco', flag: '🇲🇦', currency: 'MAD', provider: 'flutterwave', methodType: 'mobile_money', mobileProviders: ['orange_money'] },
   { code: 'TN', name: 'Tunisie', nameEn: 'Tunisia', flag: '🇹🇳', currency: 'TND', provider: 'flutterwave', methodType: 'mobile_money', mobileProviders: ['orange_money'] },
-  { code: 'DZ', name: 'Algerie', nameEn: 'Algeria', flag: '🇩🇿', currency: 'DZD', provider: 'flutterwave', methodType: 'mobile_money', mobileProviders: ['mobilis'] as MobileMoneyProvider[] },
+  { code: 'DZ', name: 'Algerie', nameEn: 'Algeria', flag: '🇩🇿', currency: 'DZD', provider: 'flutterwave', methodType: 'mobile_money', mobileProviders: ['mobilis'] },
   { code: 'MG', name: 'Madagascar', nameEn: 'Madagascar', flag: '🇲🇬', currency: 'MGA', provider: 'flutterwave', methodType: 'mobile_money', mobileProviders: ['orange_money', 'airtel_money'] },
   { code: 'MU', name: 'Maurice', nameEn: 'Mauritius', flag: '🇲🇺', currency: 'MUR', provider: 'flutterwave', methodType: 'mobile_money', mobileProviders: ['orange_money'] },
 ];
@@ -161,6 +161,8 @@ const MOBILE_PROVIDERS: MobileProviderOption[] = [
   { id: 'free_money', name: 'Free Money', displayName: 'Free Money', countries: ['SN'], color: '#FF3366' },
   { id: 't_money', name: 'T-Money', displayName: 'T-Money (Togocel)', countries: ['TG'], color: '#339933' },
   { id: 'flooz', name: 'Flooz', displayName: 'Flooz (Moov)', countries: ['TG'], color: '#FF6699' },
+  { id: 'vodacom', name: 'Vodacom', displayName: 'Vodacom M-Pesa', countries: ['ZA', 'GH'], color: '#E60000' },
+  { id: 'mobilis', name: 'Mobilis', displayName: 'Mobilis', countries: ['DZ'], color: '#00A551' },
 ];
 
 // Phone country codes

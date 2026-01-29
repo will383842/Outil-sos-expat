@@ -4,14 +4,17 @@
  * Fires when a new chatter document is created.
  * - Sends welcome email
  * - Creates notification
+ * - Calculates parrainNiveau2Id (N2 parrain)
+ * - Initializes referral system fields
  */
 
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
 import { Chatter, ChatterNotification } from "../types";
+import { calculateParrainN2 } from "../services/chatterReferralService";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -76,8 +79,37 @@ export const chatterOnChatterCreated = onDocumentCreated(
       notification.id = notificationRef.id;
       await notificationRef.set(notification);
 
-      // 2. If recruited by another chatter, create recruitment link tracking
+      // 2. If recruited by another chatter, handle referral chain
       if (chatter.recruitedBy) {
+        // Calculate N2 parrain (parrain of parrain)
+        const parrainNiveau2Id = await calculateParrainN2(chatterId);
+
+        // Update chatter with N2 parrain
+        const referralUpdates: Record<string, unknown> = {
+          parrainNiveau2Id: parrainNiveau2Id || null,
+          // Initialize referral system fields
+          isEarlyAdopter: false,
+          earlyAdopterCountry: null,
+          earlyAdopterDate: null,
+          qualifiedReferralsCount: 0,
+          referralsN2Count: 0,
+          referralEarnings: 0,
+          referralToClientRatio: 0,
+          threshold10Reached: false,
+          threshold50Reached: false,
+          tierBonusesPaid: [],
+          updatedAt: now,
+        };
+        await db.collection("chatters").doc(chatterId).update(referralUpdates);
+
+        // If there's an N2 parrain, increment their referralsN2Count
+        if (parrainNiveau2Id) {
+          await db.collection("chatters").doc(parrainNiveau2Id).update({
+            referralsN2Count: FieldValue.increment(1),
+            updatedAt: now,
+          });
+        }
+
         // Check for existing recruitment link
         const existingLinkQuery = await db
           .collection("chatter_recruitment_links")
@@ -119,6 +151,28 @@ export const chatterOnChatterCreated = onDocumentCreated(
         const recruiterNotifRef = db.collection("chatter_notifications").doc();
         recruiterNotification.id = recruiterNotifRef.id;
         await recruiterNotifRef.set(recruiterNotification);
+
+        logger.info("[chatterOnChatterCreated] Referral chain calculated", {
+          chatterId,
+          parrainN1: chatter.recruitedBy,
+          parrainN2: parrainNiveau2Id,
+        });
+      } else {
+        // No recruiter - still initialize referral fields
+        await db.collection("chatters").doc(chatterId).update({
+          parrainNiveau2Id: null,
+          isEarlyAdopter: false,
+          earlyAdopterCountry: null,
+          earlyAdopterDate: null,
+          qualifiedReferralsCount: 0,
+          referralsN2Count: 0,
+          referralEarnings: 0,
+          referralToClientRatio: 0,
+          threshold10Reached: false,
+          threshold50Reached: false,
+          tierBonusesPaid: [],
+          updatedAt: now,
+        });
       }
 
       logger.info("[chatterOnChatterCreated] Chatter setup complete", {

@@ -148,6 +148,13 @@ export function useInfluencer(): UseInfluencerReturn {
     }
   }, [user?.uid, functions]);
 
+  /**
+   * @deprecated This method is deprecated.
+   * Use the centralized payment system instead:
+   * - Hooks: @/hooks/usePayment (usePayment.requestWithdrawal)
+   *
+   * This method will be removed in a future version.
+   */
   // Request withdrawal
   const requestWithdrawal = useCallback(
     async (

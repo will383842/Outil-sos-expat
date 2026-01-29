@@ -1,4 +1,12 @@
 /**
+ * @deprecated This component is deprecated.
+ * Use the centralized payment system instead:
+ * - Components: @/components/Payment
+ * - Types: @/types/payment
+ * - Hooks: @/hooks/usePayment
+ *
+ * This file will be removed in a future version.
+ *
  * InfluencerWithdrawalForm - Form to request a withdrawal
  */
 

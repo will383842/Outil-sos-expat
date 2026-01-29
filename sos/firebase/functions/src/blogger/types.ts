@@ -70,6 +70,7 @@ export type BloggerCommissionStatus =
 
 /**
  * Withdrawal status lifecycle
+ * @deprecated Use centralized payment types instead. This type will be removed in a future version.
  */
 export type BloggerWithdrawalStatus =
   | "pending"       // Requested, waiting for admin
@@ -81,6 +82,7 @@ export type BloggerWithdrawalStatus =
 
 /**
  * Payment method for withdrawals
+ * @deprecated Use centralized payment types instead. This type will be removed in a future version.
  */
 export type BloggerPaymentMethod =
   | "paypal"        // PayPal
@@ -315,6 +317,7 @@ export interface Blogger {
 
 /**
  * Payment details union type
+ * @deprecated Use centralized payment types instead. This type will be removed in a future version.
  */
 export type BloggerPaymentDetails =
   | BloggerPayPalDetails
@@ -323,6 +326,7 @@ export type BloggerPaymentDetails =
 
 /**
  * PayPal payment details
+ * @deprecated Use centralized payment types instead. This type will be removed in a future version.
  */
 export interface BloggerPayPalDetails {
   type: "paypal";
@@ -333,6 +337,7 @@ export interface BloggerPayPalDetails {
 
 /**
  * Wise payment details
+ * @deprecated Use centralized payment types instead. This type will be removed in a future version.
  */
 export interface BloggerWiseDetails {
   type: "wise";
@@ -348,6 +353,7 @@ export interface BloggerWiseDetails {
 
 /**
  * Mobile Money payment details
+ * @deprecated Use centralized payment types instead. This type will be removed in a future version.
  */
 export interface BloggerMobileMoneyDetails {
   type: "mobile_money";
@@ -462,6 +468,7 @@ export interface BloggerCommission {
 /**
  * Withdrawal request record
  * Collection: blogger_withdrawals/{withdrawalId}
+ * @deprecated Use centralized payment types instead. This type will be removed in a future version.
  */
 export interface BloggerWithdrawal {
   /** Document ID */
@@ -1283,12 +1290,18 @@ export interface GetBloggerDashboardResponse {
   >;
 }
 
+/**
+ * @deprecated Use centralized payment types instead. This type will be removed in a future version.
+ */
 export interface RequestBloggerWithdrawalInput {
   amount?: number; // If not provided, withdraw all available
   paymentMethod: BloggerPaymentMethod;
   paymentDetails: BloggerPaymentDetails;
 }
 
+/**
+ * @deprecated Use centralized payment types instead. This type will be removed in a future version.
+ */
 export interface RequestBloggerWithdrawalResponse {
   success: boolean;
   withdrawalId: string;
@@ -1477,6 +1490,9 @@ export interface AdminGetBloggerDetailResponse {
   badges: Array<Omit<BloggerBadgeAward, "awardedAt"> & { awardedAt: string }>;
 }
 
+/**
+ * @deprecated Use centralized payment types instead. This type will be removed in a future version.
+ */
 export interface AdminProcessBloggerWithdrawalInput {
   withdrawalId: string;
   action: "approve" | "reject" | "complete" | "fail";

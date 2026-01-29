@@ -346,6 +346,18 @@ const AdminChatterConfig = lazy(
 const AdminChatterCountryRotation = lazy(
   () => import("../../pages/admin/Chatter/AdminChatterCountryRotation")
 );
+const AdminChatterReferrals = lazy(
+  () => import("../../pages/admin/Chatter/AdminChatterReferrals")
+);
+const AdminEarlyAdopters = lazy(
+  () => import("../../pages/admin/Chatter/AdminEarlyAdopters")
+);
+const AdminChatterPromotions = lazy(
+  () => import("../../pages/admin/Chatter/AdminChatterPromotions")
+);
+const AdminChatterFraud = lazy(
+  () => import("../../pages/admin/Chatter/AdminChatterFraud")
+);
 
 // ===== LAZY IMPORTS - INFLUENCER =====
 const AdminInfluencersList = lazy(
@@ -382,6 +394,17 @@ const AdminBloggersResources = lazy(
 );
 const AdminBloggersGuide = lazy(
   () => import("../../pages/admin/Bloggers/AdminBloggersGuide")
+);
+
+// ===== LAZY IMPORTS - CENTRALIZED PAYMENTS =====
+const AdminPaymentsDashboard = lazy(
+  () => import("../../pages/admin/Payments/AdminPaymentsDashboard")
+);
+const AdminPaymentDetail = lazy(
+  () => import("../../pages/admin/Payments/AdminPaymentDetail")
+);
+const AdminPaymentConfig = lazy(
+  () => import("../../pages/admin/Payments/AdminPaymentConfig")
 );
 
 // ===== LAZY IMPORTS - TRAINING =====
@@ -1068,6 +1091,38 @@ const AdminRoutesV2: React.FC = () => {
           </Suspense>
         }
       />
+      <Route
+        path="chatters/referrals"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminChatterReferrals />
+          </Suspense>
+        }
+      />
+      <Route
+        path="chatters/early-adopters"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminEarlyAdopters />
+          </Suspense>
+        }
+      />
+      <Route
+        path="chatters/promotions"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminChatterPromotions />
+          </Suspense>
+        }
+      />
+      <Route
+        path="chatters/fraud"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminChatterFraud />
+          </Suspense>
+        }
+      />
 
       {/* 📢 INFLUENCERS */}
       <Route
@@ -1175,6 +1230,40 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminTrainingModules />
+          </Suspense>
+        }
+      />
+
+      {/* 💳 CENTRALIZED PAYMENTS (Chatter, Influencer, Blogger) */}
+      <Route
+        path="payments"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminPaymentsDashboard />
+          </Suspense>
+        }
+      />
+      <Route
+        path="payments/withdrawals"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminPaymentsDashboard />
+          </Suspense>
+        }
+      />
+      <Route
+        path="payments/:userType/:withdrawalId"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminPaymentDetail />
+          </Suspense>
+        }
+      />
+      <Route
+        path="payments/config"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminPaymentConfig />
           </Suspense>
         }
       />
@@ -1568,6 +1657,10 @@ export const useAdminRouteValidation = () => {
       "/admin/bloggers/resources",
       "/admin/bloggers/guide",
       "/admin/bloggers/config",
+      "/admin/payments",
+      "/admin/payments/withdrawals",
+      "/admin/payments/:userType/:withdrawalId",
+      "/admin/payments/config",
       "/admin/pricing",
       "/admin/countries",
       "/admin/documents",

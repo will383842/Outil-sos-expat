@@ -289,6 +289,10 @@ export type RouteKey =
   | "chatter-posts"        // /chatter/posts -> /chatter/posts, etc.
   | "chatter-zoom"         // /chatter/zoom -> /chatter/zoom, etc.
   | "chatter-training"     // /chatter/formation -> /chatter/training, etc.
+  | "chatter-referrals"    // /chatter/filleuls -> /chatter/referrals, etc.
+  | "chatter-referral-earnings" // /chatter/gains-parrainage -> /chatter/referral-earnings, etc.
+  | "chatter-refer"        // /chatter/parrainer -> /chatter/refer, etc.
+  | "pioneers"             // /pioneers -> /pioneers, etc.
   // Influencer routes
   | "influencer-landing"      // /devenir-influenceur -> /become-influencer, etc.
   | "influencer-register"     // /influencer/inscription -> /influencer/register, etc.
@@ -954,6 +958,50 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "chatter/peixun",
     hi: "chatter/prashikshan",
     ar: "مسوق/التدريب",
+  },
+  "chatter-referrals": {
+    fr: "chatter/filleuls",
+    en: "chatter/referrals",
+    es: "chatter/referidos",
+    de: "chatter/empfehlungen",
+    ru: "chatter/referaly",
+    pt: "chatter/indicacoes",
+    ch: "chatter/tuijian",
+    hi: "chatter/sandarbh",
+    ar: "مسوق/الإحالات",
+  },
+  "chatter-referral-earnings": {
+    fr: "chatter/gains-parrainage",
+    en: "chatter/referral-earnings",
+    es: "chatter/ganancias-referidos",
+    de: "chatter/empfehlungs-einnahmen",
+    ru: "chatter/dokhody-referaly",
+    pt: "chatter/ganhos-indicacoes",
+    ch: "chatter/tuijian-shouyi",
+    hi: "chatter/sandarbh-kamayi",
+    ar: "مسوق/أرباح-الإحالات",
+  },
+  "chatter-refer": {
+    fr: "chatter/parrainer",
+    en: "chatter/refer",
+    es: "chatter/referir",
+    de: "chatter/empfehlen",
+    ru: "chatter/priglasit",
+    pt: "chatter/indicar",
+    ch: "chatter/tuijian-pengyou",
+    hi: "chatter/refer-kare",
+    ar: "مسوق/إحالة",
+  },
+  "pioneers": {
+    fr: "pioneers",
+    en: "pioneers",
+    es: "pioneros",
+    de: "pioniere",
+    ru: "pionery",
+    pt: "pioneiros",
+    ch: "xianquzhe",
+    hi: "agranee",
+    ar: "الرواد",
   },
   // Influencer routes
   "influencer-landing": {

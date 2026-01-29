@@ -71,6 +71,18 @@ const FEE_CONFIG: Record<PaymentMethodType, FeeConfig> = {
     minFee: 0,
     deliveryDays: { min: 0, max: 1 },
   },
+  wise: {
+    percentage: 0.5,
+    fixedFee: 0,
+    minFee: 0,
+    deliveryDays: { min: 1, max: 3 },
+  },
+  paypal: {
+    percentage: 2.9,
+    fixedFee: 30, // 30 cents
+    minFee: 0,
+    deliveryDays: { min: 0, max: 1 },
+  },
 };
 
 // ============================================================================

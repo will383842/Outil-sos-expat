@@ -24,8 +24,14 @@ export type BloggerCommissionType = 'client_referral' | 'recruitment' | 'manual_
 
 export type BloggerCommissionStatus = 'pending' | 'validated' | 'available' | 'paid' | 'cancelled';
 
+/**
+ * @deprecated Use centralized payment types from @/types/payment instead.
+ */
 export type BloggerWithdrawalStatus = 'pending' | 'approved' | 'processing' | 'completed' | 'failed' | 'rejected';
 
+/**
+ * @deprecated Use centralized payment types from @/types/payment instead.
+ */
 export type BloggerPaymentMethod = 'paypal' | 'wise' | 'mobile_money';
 
 export type BlogTrafficTier = 'lt1k' | '1k-5k' | '5k-10k' | '10k-50k' | '50k-100k' | 'gt100k';
@@ -142,6 +148,14 @@ export interface Blogger {
 // PAYMENT DETAILS
 // ============================================================================
 
+/**
+ * @deprecated These payment types are deprecated.
+ * Use the centralized payment system instead:
+ * - Types: @/types/payment
+ *
+ * These types will be removed in a future version.
+ */
+
 export interface BloggerPayPalDetails {
   type: 'paypal';
   email: string;
@@ -223,6 +237,13 @@ export interface BloggerCommission {
 // WITHDRAWAL
 // ============================================================================
 
+/**
+ * @deprecated This type is deprecated.
+ * Use the centralized payment system instead:
+ * - Types: @/types/payment
+ *
+ * This type will be removed in a future version.
+ */
 export interface BloggerWithdrawal {
   id: string;
   bloggerId: string;
@@ -557,12 +578,18 @@ export interface BloggerDashboardData {
   recruitmentEarnings?: number;
 }
 
+/**
+ * @deprecated Use centralized payment types from @/types/payment instead.
+ */
 export interface RequestBloggerWithdrawalInput {
   amount?: number;
   paymentMethod: BloggerPaymentMethod;
   paymentDetails: BloggerPaymentDetails;
 }
 
+/**
+ * @deprecated Use centralized payment types from @/types/payment instead.
+ */
 export interface RequestBloggerWithdrawalResponse {
   success: boolean;
   withdrawalId: string;

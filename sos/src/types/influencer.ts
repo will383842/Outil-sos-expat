@@ -28,9 +28,23 @@ export type CommissionCalculationType = 'fixed' | 'percentage' | 'hybrid';
 
 export type InfluencerCommissionStatus = 'pending' | 'validated' | 'available' | 'paid' | 'cancelled';
 
+/**
+ * @deprecated This type is deprecated.
+ * Use the centralized payment system instead:
+ * - Types: @/types/payment (WithdrawalStatus)
+ *
+ * This type will be removed in a future version.
+ */
 export type InfluencerWithdrawalStatus = 'pending' | 'processing' | 'completed' | 'rejected' | 'failed';
 
-// NOTE: Added 'mobile_money' for alignment with Chatter (African markets)
+/**
+ * @deprecated This type is deprecated.
+ * Use the centralized payment system instead:
+ * - Types: @/types/payment (PaymentMethod)
+ *
+ * NOTE: Added 'mobile_money' for alignment with Chatter (African markets)
+ * This type will be removed in a future version.
+ */
 export type InfluencerPaymentMethod = 'wise' | 'paypal' | 'mobile_money' | 'bank_transfer';
 
 export type InfluencerPlatform =
@@ -199,6 +213,13 @@ export interface InfluencerCommission {
 // WITHDRAWAL
 // ============================================================================
 
+/**
+ * @deprecated This type is deprecated.
+ * Use the centralized payment system instead:
+ * - Types: @/types/payment (PaymentDetailsWise)
+ *
+ * This type will be removed in a future version.
+ */
 export interface InfluencerPaymentDetailsWise {
   type: 'wise';
   email: string;
@@ -206,6 +227,13 @@ export interface InfluencerPaymentDetailsWise {
   accountHolderName: string;
 }
 
+/**
+ * @deprecated This type is deprecated.
+ * Use the centralized payment system instead:
+ * - Types: @/types/payment (PaymentDetailsPayPal)
+ *
+ * This type will be removed in a future version.
+ */
 export interface InfluencerPaymentDetailsPayPal {
   type: 'paypal';
   email: string;
@@ -213,6 +241,13 @@ export interface InfluencerPaymentDetailsPayPal {
   accountHolderName: string;
 }
 
+/**
+ * @deprecated This type is deprecated.
+ * Use the centralized payment system instead:
+ * - Types: @/types/payment (MobileMoneyProvider)
+ *
+ * This type will be removed in a future version.
+ */
 export type InfluencerMobileMoneyProvider =
   | 'orange_money'
   | 'wave'
@@ -221,6 +256,13 @@ export type InfluencerMobileMoneyProvider =
   | 'airtel_money'
   | 'mpesa';
 
+/**
+ * @deprecated This type is deprecated.
+ * Use the centralized payment system instead:
+ * - Types: @/types/payment (PaymentDetailsMobileMoney)
+ *
+ * This type will be removed in a future version.
+ */
 export interface InfluencerPaymentDetailsMobileMoney {
   type: 'mobile_money';
   provider: InfluencerMobileMoneyProvider;
@@ -229,6 +271,13 @@ export interface InfluencerPaymentDetailsMobileMoney {
   accountName: string;
 }
 
+/**
+ * @deprecated This type is deprecated.
+ * Use the centralized payment system instead:
+ * - Types: @/types/payment (PaymentDetailsBankTransfer)
+ *
+ * This type will be removed in a future version.
+ */
 export interface InfluencerPaymentDetailsBankTransfer {
   type: 'bank_transfer';
   bankName: string;
@@ -240,12 +289,26 @@ export interface InfluencerPaymentDetailsBankTransfer {
   currency: string;
 }
 
+/**
+ * @deprecated This type is deprecated.
+ * Use the centralized payment system instead:
+ * - Types: @/types/payment (PaymentDetails)
+ *
+ * This type will be removed in a future version.
+ */
 export type InfluencerPaymentDetails =
   | InfluencerPaymentDetailsWise
   | InfluencerPaymentDetailsPayPal
   | InfluencerPaymentDetailsMobileMoney
   | InfluencerPaymentDetailsBankTransfer;
 
+/**
+ * @deprecated This type is deprecated.
+ * Use the centralized payment system instead:
+ * - Types: @/types/payment (WithdrawalRequest)
+ *
+ * This type will be removed in a future version.
+ */
 export interface InfluencerWithdrawal {
   id: string;
   influencerId: string;
@@ -441,6 +504,14 @@ export interface UpdateInfluencerProfileInput {
   socialLinks?: Record<string, string>;
 }
 
+/**
+ * @deprecated This type is deprecated.
+ * Use the centralized payment system instead:
+ * - Types: @/types/payment (WithdrawalRequestInput)
+ * - Hooks: @/hooks/usePayment
+ *
+ * This type will be removed in a future version.
+ */
 export interface RequestInfluencerWithdrawalInput {
   amount: number;
   paymentMethod: InfluencerPaymentMethod;

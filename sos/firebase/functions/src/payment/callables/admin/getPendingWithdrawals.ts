@@ -125,7 +125,7 @@ export const adminGetPendingWithdrawals = onCall(
         : defaultStatuses;
 
       // Build query
-      let query = db.collection('withdrawals') as FirebaseFirestore.Query;
+      let query = db.collection('payment_withdrawals') as FirebaseFirestore.Query;
 
       // Filter by status
       query = query.where('status', 'in', statusFilter);
@@ -140,7 +140,7 @@ export const adminGetPendingWithdrawals = onCall(
 
       // Get total count first
       const countSnapshot = await db
-        .collection('withdrawals')
+        .collection('payment_withdrawals')
         .where('status', 'in', statusFilter)
         .count()
         .get();
@@ -158,7 +158,7 @@ export const adminGetPendingWithdrawals = onCall(
 
       // Calculate summary statistics
       const allPendingSnapshot = await db
-        .collection('withdrawals')
+        .collection('payment_withdrawals')
         .where('status', 'in', defaultStatuses)
         .get();
 

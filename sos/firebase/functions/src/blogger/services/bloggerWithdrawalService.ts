@@ -1,4 +1,12 @@
 /**
+ * @deprecated This service is deprecated.
+ * Use the centralized payment system instead:
+ * - Components: @/components/Payment
+ * - Types: @/types/payment
+ * - Hooks: @/hooks/usePayment
+ *
+ * This file will be removed in a future version.
+ *
  * Blogger Withdrawal Service
  *
  * Handles withdrawal requests and processing for bloggers.

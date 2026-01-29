@@ -1,4 +1,12 @@
 /**
+ * @deprecated This callable is deprecated.
+ * Use the centralized payment system instead:
+ * - Components: @/components/Payment
+ * - Types: @/types/payment
+ * - Hooks: @/hooks/usePayment
+ *
+ * This file will be removed in a future version.
+ *
  * Request Blogger Withdrawal Callable
  *
  * Handles withdrawal requests from bloggers.

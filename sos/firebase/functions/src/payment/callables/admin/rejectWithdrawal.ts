@@ -106,7 +106,7 @@ export const adminRejectWithdrawal = onCall(
 
       // Run in a transaction to ensure balance is restored atomically
       const result = await db.runTransaction(async (transaction) => {
-        const withdrawalRef = db.collection('withdrawals').doc(withdrawalId);
+        const withdrawalRef = db.collection('payment_withdrawals').doc(withdrawalId);
         const withdrawalDoc = await transaction.get(withdrawalRef);
 
         if (!withdrawalDoc.exists) {
@@ -183,7 +183,7 @@ export const adminRejectWithdrawal = onCall(
       });
 
       // Get updated withdrawal
-      const updatedDoc = await db.collection('withdrawals').doc(withdrawalId).get();
+      const updatedDoc = await db.collection('payment_withdrawals').doc(withdrawalId).get();
       const updatedWithdrawal = {
         ...updatedDoc.data(),
         id: updatedDoc.id,

@@ -151,7 +151,7 @@ export const adminExportWithdrawals = onCall(
       }
 
       // Build query
-      let query = db.collection('withdrawals') as FirebaseFirestore.Query;
+      let query = db.collection('payment_withdrawals') as FirebaseFirestore.Query;
 
       // Filter by date range
       query = query

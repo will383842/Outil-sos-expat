@@ -1,4 +1,13 @@
 /**
+ * @deprecated This component is deprecated.
+ * Use the centralized payment system instead:
+ * - Components: @/components/Payment
+ * - Types: @/types/payment
+ * - Hooks: @/hooks/usePayment
+ *
+ * This file will be removed in a future version.
+ *
+ * ---
  * ChatterWithdrawalForm - Withdrawal request form for chatters
  * Supports Wise, PayPal, Mobile Money, and Bank Transfer payment methods
  */

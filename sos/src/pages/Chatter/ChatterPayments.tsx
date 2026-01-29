@@ -1,100 +1,247 @@
 /**
- * ChatterPayments - Payments and withdrawal page for chatters
- * Shows commission history, withdrawals, and withdrawal form
+ * ChatterPayments - Full payment management page for chatters
+ *
+ * Uses the centralized payment system components:
+ * - PaymentMethodForm for adding/editing payment methods
+ * - WithdrawalRequestForm for requesting withdrawals
+ * - WithdrawalTracker for tracking withdrawal status
+ *
+ * Tabs:
+ * 1. Withdraw - Request new withdrawals
+ * 2. Payment Methods - Manage saved payment methods
+ * 3. History - View past withdrawals with tracking
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useChatter } from '@/hooks/useChatter';
-import { useChatterWithdrawal } from '@/hooks/useChatterWithdrawal';
-import { ChatterDashboardLayout } from '@/components/Chatter/Layout';
-import { ChatterWithdrawalForm } from '@/components/Chatter/Forms';
 import {
+  usePaymentMethods,
+  useWithdrawals,
+  useWithdrawalTracking,
+  usePaymentConfig,
+  usePendingWithdrawal,
+  PaymentDetails,
+  UserPaymentMethod,
+  WithdrawalRequest,
+  PaymentTrackingSummary,
+} from '@/hooks/usePayment';
+import { ChatterDashboardLayout } from '@/components/Chatter/Layout';
+import {
+  PaymentMethodForm,
+  WithdrawalRequestForm,
+  WithdrawalTracker,
+} from '@/components/payment';
+import {
+  Wallet,
+  CreditCard,
+  History,
   Clock,
   CheckCircle,
   XCircle,
-  Wallet,
-  ArrowUpRight,
-  ArrowDownRight,
-  Filter,
   Loader2,
   AlertCircle,
+  ArrowUpRight,
+  Plus,
+  Trash2,
+  Star,
+  ChevronRight,
+  Building2,
+  Smartphone,
+  Eye,
 } from 'lucide-react';
 
 // Design tokens
 const UI = {
-  card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
+  card: 'bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg',
   button: {
-    primary: "bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all",
-    secondary: "bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-200 font-medium rounded-xl transition-all",
+    primary:
+      'bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed',
+    secondary:
+      'bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-200 font-medium rounded-xl transition-all',
+    danger:
+      'bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-700 dark:text-red-400 font-medium rounded-xl transition-all',
   },
 } as const;
 
-type TabType = 'commissions' | 'withdrawals' | 'withdraw';
-type FilterType = 'all' | 'pending' | 'validated' | 'available' | 'paid';
+type TabType = 'withdraw' | 'methods' | 'history';
 
 const ChatterPayments: React.FC = () => {
   const intl = useIntl();
 
+  // Chatter data
   const {
     dashboardData,
-    commissions,
-    withdrawals,
-    isLoading,
-    error,
-    canWithdraw,
+    isLoading: chatterLoading,
+    error: chatterError,
     minimumWithdrawal,
-    requestWithdrawal,
   } = useChatter();
 
+  // Payment hooks
   const {
-    isSubmitting: withdrawalSubmitting,
-    error: withdrawalError,
-    success: withdrawalSuccess,
-    submitWithdrawal,
-    reset: resetWithdrawal,
-  } = useChatterWithdrawal();
+    methods,
+    defaultMethodId,
+    loading: methodsLoading,
+    error: methodsError,
+    saveMethod,
+    deleteMethod,
+    setDefaultMethod,
+    refresh: refreshMethods,
+  } = usePaymentMethods();
 
-  const [activeTab, setActiveTab] = useState<TabType>('commissions');
-  const [filter, setFilter] = useState<FilterType>('all');
+  const {
+    withdrawals,
+    loading: withdrawalsLoading,
+    error: withdrawalsError,
+    requestWithdrawal,
+    cancelWithdrawal,
+    refresh: refreshWithdrawals,
+  } = useWithdrawals();
+
+  const { hasPendingWithdrawal, pendingWithdrawal } = usePendingWithdrawal();
+  const { minimumWithdrawal: configMinWithdrawal, processingTimes, currency } = usePaymentConfig();
+
+  // Local state
+  const [activeTab, setActiveTab] = useState<TabType>('withdraw');
+  const [showPaymentMethodForm, setShowPaymentMethodForm] = useState(false);
+  const [savingMethod, setSavingMethod] = useState(false);
+  const [saveMethodError, setSaveMethodError] = useState<string | null>(null);
+  const [withdrawalLoading, setWithdrawalLoading] = useState(false);
+  const [withdrawalError, setWithdrawalError] = useState<string | null>(null);
+  const [withdrawalSuccess, setWithdrawalSuccess] = useState(false);
+  const [selectedWithdrawalId, setSelectedWithdrawalId] = useState<string | null>(null);
+  const [deletingMethodId, setDeletingMethodId] = useState<string | null>(null);
+
+  // Tracking for selected withdrawal
+  const {
+    tracking: selectedTracking,
+    loading: trackingLoading,
+    refresh: refreshTracking,
+  } = useWithdrawalTracking(selectedWithdrawalId);
+
+  // Get chatter data
+  const chatter = dashboardData?.chatter;
+  const availableBalance = chatter?.availableBalance || 0;
+  const pendingBalance = chatter?.pendingBalance || 0;
+  const validatedBalance = chatter?.validatedBalance || 0;
+  const totalBalance = availableBalance + pendingBalance + validatedBalance;
 
   // Format amount
-  const formatAmount = (cents: number) => {
-    return new Intl.NumberFormat(intl.locale, {
-      style: 'currency',
-      currency: 'XOF',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(cents);
-  };
+  const formatAmount = useCallback(
+    (cents: number) => {
+      return new Intl.NumberFormat(intl.locale, {
+        style: 'currency',
+        currency: 'XOF',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(cents);
+    },
+    [intl.locale]
+  );
 
-  // Filtered commissions
-  const filteredCommissions = useMemo(() => {
-    if (filter === 'all') return commissions;
-    return commissions.filter(c => c.status === filter);
-  }, [commissions, filter]);
+  // Handle withdrawal request
+  const handleWithdrawalRequest = useCallback(
+    async (paymentMethodId: string, amount?: number) => {
+      setWithdrawalLoading(true);
+      setWithdrawalError(null);
+      setWithdrawalSuccess(false);
 
-  // Handle withdrawal submission
-  const handleWithdrawal = async (method: any, details: any, amount?: number) => {
-    try {
-      await submitWithdrawal(details);
-    } catch (err) {
-      console.error('Withdrawal error:', err);
-    }
-  };
+      try {
+        await requestWithdrawal(paymentMethodId, amount);
+        setWithdrawalSuccess(true);
+        await refreshWithdrawals();
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Une erreur est survenue';
+        setWithdrawalError(message);
+      } finally {
+        setWithdrawalLoading(false);
+      }
+    },
+    [requestWithdrawal, refreshWithdrawals]
+  );
+
+  // Handle save payment method
+  const handleSavePaymentMethod = useCallback(
+    async (details: PaymentDetails) => {
+      setSavingMethod(true);
+      setSaveMethodError(null);
+
+      try {
+        await saveMethod(details, methods.length === 0); // Set as default if first method
+        setShowPaymentMethodForm(false);
+        await refreshMethods();
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Une erreur est survenue';
+        setSaveMethodError(message);
+        throw err; // Re-throw so the form can handle it
+      } finally {
+        setSavingMethod(false);
+      }
+    },
+    [saveMethod, methods.length, refreshMethods]
+  );
+
+  // Handle delete payment method
+  const handleDeleteMethod = useCallback(
+    async (methodId: string) => {
+      setDeletingMethodId(methodId);
+      try {
+        await deleteMethod(methodId);
+        await refreshMethods();
+      } catch (err) {
+        console.error('Failed to delete method:', err);
+      } finally {
+        setDeletingMethodId(null);
+      }
+    },
+    [deleteMethod, refreshMethods]
+  );
+
+  // Handle set default method
+  const handleSetDefaultMethod = useCallback(
+    async (methodId: string) => {
+      try {
+        await setDefaultMethod(methodId);
+      } catch (err) {
+        console.error('Failed to set default method:', err);
+      }
+    },
+    [setDefaultMethod]
+  );
+
+  // Handle cancel withdrawal
+  const handleCancelWithdrawal = useCallback(
+    async (withdrawalId: string) => {
+      try {
+        await cancelWithdrawal(withdrawalId);
+        await refreshWithdrawals();
+        if (selectedWithdrawalId === withdrawalId) {
+          setSelectedWithdrawalId(null);
+        }
+      } catch (err) {
+        console.error('Failed to cancel withdrawal:', err);
+      }
+    },
+    [cancelWithdrawal, refreshWithdrawals, selectedWithdrawalId]
+  );
 
   // Get status icon
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'available':
       case 'completed':
         return <CheckCircle className="w-5 h-5 text-green-500" />;
       case 'pending':
+      case 'validating':
+      case 'approved':
+      case 'queued':
       case 'processing':
-        return <Clock className="w-5 h-5 text-red-500" />;
+      case 'sent':
+        return <Clock className="w-5 h-5 text-blue-500" />;
       case 'failed':
-      case 'cancelled':
+      case 'rejected':
         return <XCircle className="w-5 h-5 text-red-500" />;
+      case 'cancelled':
+        return <XCircle className="w-5 h-5 text-gray-500" />;
       default:
         return <Clock className="w-5 h-5 text-gray-400" />;
     }
@@ -103,22 +250,36 @@ const ChatterPayments: React.FC = () => {
   // Get status color
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'available':
       case 'completed':
         return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
       case 'pending':
+      case 'validating':
+      case 'approved':
+      case 'queued':
       case 'processing':
-        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+      case 'sent':
+        return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
       case 'failed':
-      case 'cancelled':
+      case 'rejected':
         return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+      case 'cancelled':
+        return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400';
       default:
         return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400';
     }
   };
 
+  // Get method icon
+  const getMethodIcon = (methodType: string) => {
+    return methodType === 'mobile_money' ? (
+      <Smartphone className="w-5 h-5 text-orange-500" />
+    ) : (
+      <Building2 className="w-5 h-5 text-blue-500" />
+    );
+  };
+
   // Loading state
-  if (isLoading) {
+  if (chatterLoading) {
     return (
       <ChatterDashboardLayout activeKey="payments">
         <div className="flex items-center justify-center py-20">
@@ -129,127 +290,400 @@ const ChatterPayments: React.FC = () => {
   }
 
   // Error state
-  if (error) {
+  if (chatterError) {
     return (
       <ChatterDashboardLayout activeKey="payments">
         <div className={`${UI.card} p-6`}>
           <div className="flex items-center gap-3 text-red-500">
             <AlertCircle className="w-6 h-6" />
-            <span>{error}</span>
+            <span>{chatterError}</span>
           </div>
         </div>
       </ChatterDashboardLayout>
     );
   }
 
-  const chatter = dashboardData?.chatter;
-
   return (
     <ChatterDashboardLayout activeKey="payments">
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-              <FormattedMessage id="chatter.payments.title" defaultMessage="Mes paiements" />
-            </h1>
-            <p className="mt-1 text-gray-500 dark:text-gray-400">
-              <FormattedMessage id="chatter.payments.subtitle" defaultMessage="Gérez vos gains et retraits" />
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+            <FormattedMessage id="chatter.payments.title" defaultMessage="Mes paiements" />
+          </h1>
+          <p className="mt-1 text-gray-500 dark:text-gray-400">
+            <FormattedMessage
+              id="chatter.payments.subtitle"
+              defaultMessage="Gerez vos gains et retraits"
+            />
+          </p>
+        </div>
+
+        {/* Balance Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Available Balance */}
+          <div
+            className={`${UI.card} p-5 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20`}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg">
+                <Wallet className="w-5 h-5 text-green-600 dark:text-green-400" />
+              </div>
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                <FormattedMessage
+                  id="chatter.payments.availableBalance"
+                  defaultMessage="Disponible"
+                />
+              </span>
+            </div>
+            <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+              {formatAmount(availableBalance)}
             </p>
           </div>
 
-          {/* Balance Summary */}
-          <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-xl">
-            <Wallet className="w-6 h-6 text-red-600 dark:text-red-400" />
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                <FormattedMessage id="chatter.payments.available" defaultMessage="Disponible" />
-              </p>
-              <p className="text-xl font-bold text-red-600 dark:text-red-400">
-                {formatAmount(chatter?.availableBalance || 0)}
-              </p>
+          {/* Pending Balance */}
+          <div
+            className={`${UI.card} p-5 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20`}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-amber-100 dark:bg-amber-900/50 rounded-lg">
+                <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                <FormattedMessage id="chatter.payments.pendingBalance" defaultMessage="En attente" />
+              </span>
             </div>
+            <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+              {formatAmount(pendingBalance)}
+            </p>
+          </div>
+
+          {/* Validated Balance */}
+          <div
+            className={`${UI.card} p-5 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20`}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
+                <CheckCircle className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                <FormattedMessage id="chatter.payments.validatedBalance" defaultMessage="Valide" />
+              </span>
+            </div>
+            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+              {formatAmount(validatedBalance)}
+            </p>
           </div>
         </div>
 
+        {/* Pending Withdrawal Alert */}
+        {hasPendingWithdrawal && pendingWithdrawal && (
+          <div
+            className={`${UI.card} p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-l-4 border-blue-500`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
+                <div>
+                  <p className="font-medium text-blue-700 dark:text-blue-300">
+                    <FormattedMessage
+                      id="chatter.payments.pendingWithdrawal"
+                      defaultMessage="Retrait en cours"
+                    />
+                  </p>
+                  <p className="text-sm text-blue-600 dark:text-blue-400">
+                    {formatAmount(pendingWithdrawal.amount)} -{' '}
+                    {intl.formatMessage({
+                      id: `payment.status.${pendingWithdrawal.status}`,
+                      defaultMessage: pendingWithdrawal.status,
+                    })}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setSelectedWithdrawalId(pendingWithdrawal.id);
+                  setActiveTab('history');
+                }}
+                className={`${UI.button.secondary} px-4 py-2 text-sm flex items-center gap-2`}
+              >
+                <Eye className="w-4 h-4" />
+                <FormattedMessage id="chatter.payments.trackWithdrawal" defaultMessage="Suivre" />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Tabs */}
-        <div className="flex gap-2 border-b border-gray-200 dark:border-white/10 pb-2">
-          <button
-            onClick={() => setActiveTab('commissions')}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              activeTab === 'commissions'
-                ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10'
-            }`}
-          >
-            <FormattedMessage id="chatter.payments.tab.commissions" defaultMessage="Commissions" />
-          </button>
-          <button
-            onClick={() => setActiveTab('withdrawals')}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              activeTab === 'withdrawals'
-                ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10'
-            }`}
-          >
-            <FormattedMessage id="chatter.payments.tab.withdrawals" defaultMessage="Retraits" />
-          </button>
+        <div className="flex gap-2 border-b border-gray-200 dark:border-white/10 pb-2 overflow-x-auto">
           <button
             onClick={() => setActiveTab('withdraw')}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+            className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
               activeTab === 'withdraw'
                 ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10'
             }`}
           >
+            <Wallet className="w-4 h-4" />
             <FormattedMessage id="chatter.payments.tab.withdraw" defaultMessage="Retirer" />
+          </button>
+          <button
+            onClick={() => setActiveTab('methods')}
+            className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
+              activeTab === 'methods'
+                ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10'
+            }`}
+          >
+            <CreditCard className="w-4 h-4" />
+            <FormattedMessage id="chatter.payments.tab.methods" defaultMessage="Methodes" />
+            {methods.length > 0 && (
+              <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-white/20">
+                {methods.length}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
+              activeTab === 'history'
+                ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10'
+            }`}
+          >
+            <History className="w-4 h-4" />
+            <FormattedMessage id="chatter.payments.tab.history" defaultMessage="Historique" />
           </button>
         </div>
 
-        {/* Content */}
-        {activeTab === 'commissions' && (
-          <div className="space-y-4">
-            {/* Filter */}
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-gray-400" />
-              <select
-                value={filter}
-                onChange={(e) => setFilter(e.target.value as FilterType)}
-                className="px-3 py-1.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm"
-              >
-                <option value="all">{intl.formatMessage({ id: 'chatter.filter.all', defaultMessage: 'Toutes' })}</option>
-                <option value="pending">{intl.formatMessage({ id: 'chatter.filter.pending', defaultMessage: 'En attente' })}</option>
-                <option value="validated">{intl.formatMessage({ id: 'chatter.filter.validated', defaultMessage: 'Validées' })}</option>
-                <option value="available">{intl.formatMessage({ id: 'chatter.filter.available', defaultMessage: 'Disponibles' })}</option>
-              </select>
-            </div>
+        {/* Tab Content */}
+        {activeTab === 'withdraw' && (
+          <div className="space-y-6">
+            {/* Withdrawal Form using centralized component */}
+            <WithdrawalRequestForm
+              availableBalance={availableBalance}
+              currency="XOF"
+              onSubmit={handleWithdrawalRequest}
+              onAddPaymentMethod={() => {
+                setActiveTab('methods');
+                setShowPaymentMethodForm(true);
+              }}
+              loading={withdrawalLoading}
+              error={withdrawalError}
+              success={withdrawalSuccess}
+              paymentMethods={methods}
+              defaultPaymentMethodId={defaultMethodId}
+            />
+          </div>
+        )}
 
-            {/* Commissions List */}
-            <div className={`${UI.card} overflow-hidden`}>
-              {filteredCommissions.length === 0 ? (
-                <div className="p-8 text-center">
-                  <Clock className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
+        {activeTab === 'methods' && (
+          <div className="space-y-4">
+            {/* Add Payment Method Form */}
+            {showPaymentMethodForm ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    <FormattedMessage
+                      id="chatter.payments.addMethod"
+                      defaultMessage="Ajouter une methode de paiement"
+                    />
+                  </h3>
+                  <button
+                    onClick={() => setShowPaymentMethodForm(false)}
+                    className={`${UI.button.secondary} px-4 py-2 text-sm`}
+                  >
+                    <FormattedMessage id="common.cancel" defaultMessage="Annuler" />
+                  </button>
+                </div>
+                <PaymentMethodForm
+                  onSubmit={handleSavePaymentMethod}
+                  loading={savingMethod}
+                  error={saveMethodError}
+                />
+              </div>
+            ) : (
+              <>
+                {/* Add Method Button */}
+                <button
+                  onClick={() => setShowPaymentMethodForm(true)}
+                  className={`${UI.card} w-full p-4 border-2 border-dashed border-gray-300 dark:border-white/20 hover:border-red-400 dark:hover:border-red-400 transition-all flex items-center justify-center gap-3`}
+                >
+                  <Plus className="w-5 h-5 text-gray-400" />
+                  <span className="font-medium text-gray-600 dark:text-gray-400">
+                    <FormattedMessage
+                      id="chatter.payments.addPaymentMethod"
+                      defaultMessage="Ajouter une methode de paiement"
+                    />
+                  </span>
+                </button>
+
+                {/* Payment Methods List */}
+                {methodsLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
+                  </div>
+                ) : methodsError ? (
+                  <div className={`${UI.card} p-6 text-center`}>
+                    <AlertCircle className="w-12 h-12 mx-auto text-red-400 mb-3" />
+                    <p className="text-red-500">{methodsError}</p>
+                  </div>
+                ) : methods.length === 0 ? (
+                  <div className={`${UI.card} p-8 text-center`}>
+                    <CreditCard className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
+                    <p className="text-gray-500 dark:text-gray-400">
+                      <FormattedMessage
+                        id="chatter.payments.noMethods"
+                        defaultMessage="Aucune methode de paiement enregistree"
+                      />
+                    </p>
+                    <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+                      <FormattedMessage
+                        id="chatter.payments.addMethodHint"
+                        defaultMessage="Ajoutez une methode pour pouvoir effectuer des retraits"
+                      />
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {methods.map((method) => (
+                      <div
+                        key={method.id}
+                        className={`${UI.card} p-4 flex items-center justify-between hover:shadow-md transition-all`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-white/10 flex items-center justify-center">
+                            {getMethodIcon(method.methodType)}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium text-gray-900 dark:text-white">
+                                {method.displayName}
+                              </p>
+                              {method.isDefault && (
+                                <span className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
+                                  <Star className="w-3 h-3 fill-current" />
+                                  <FormattedMessage
+                                    id="chatter.payments.default"
+                                    defaultMessage="Par defaut"
+                                  />
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                              {method.methodType === 'mobile_money'
+                                ? 'Mobile Money'
+                                : 'Virement bancaire'}
+                              {'country' in method.details && method.details.country && ` - ${method.details.country}`}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {!method.isDefault && (
+                            <button
+                              onClick={() => handleSetDefaultMethod(method.id)}
+                              className={`${UI.button.secondary} p-2 text-sm`}
+                              title={intl.formatMessage({
+                                id: 'chatter.payments.setDefault',
+                                defaultMessage: 'Definir par defaut',
+                              })}
+                            >
+                              <Star className="w-4 h-4" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDeleteMethod(method.id)}
+                            disabled={deletingMethodId === method.id}
+                            className={`${UI.button.danger} p-2 text-sm`}
+                            title={intl.formatMessage({
+                              id: 'chatter.payments.delete',
+                              defaultMessage: 'Supprimer',
+                            })}
+                          >
+                            {deletingMethodId === method.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'history' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Withdrawals List */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                <FormattedMessage
+                  id="chatter.payments.withdrawalHistory"
+                  defaultMessage="Historique des retraits"
+                />
+              </h3>
+
+              {withdrawalsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
+                </div>
+              ) : withdrawalsError ? (
+                <div className={`${UI.card} p-6 text-center`}>
+                  <AlertCircle className="w-12 h-12 mx-auto text-red-400 mb-3" />
+                  <p className="text-red-500">{withdrawalsError}</p>
+                </div>
+              ) : withdrawals.length === 0 ? (
+                <div className={`${UI.card} p-8 text-center`}>
+                  <History className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
                   <p className="text-gray-500 dark:text-gray-400">
-                    <FormattedMessage id="chatter.payments.noCommissions" defaultMessage="Aucune commission" />
+                    <FormattedMessage
+                      id="chatter.payments.noWithdrawals"
+                      defaultMessage="Aucun retrait effectue"
+                    />
                   </p>
                 </div>
               ) : (
-                <div className="divide-y divide-gray-100 dark:divide-white/5">
-                  {filteredCommissions.map((commission) => (
-                    <div key={commission.id} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-white/5">
+                <div className={`${UI.card} overflow-hidden divide-y divide-gray-100 dark:divide-white/5`}>
+                  {withdrawals.map((withdrawal) => (
+                    <button
+                      key={withdrawal.id}
+                      onClick={() => setSelectedWithdrawalId(withdrawal.id)}
+                      className={`w-full px-4 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-white/5 transition-colors ${
+                        selectedWithdrawalId === withdrawal.id
+                          ? 'bg-red-50 dark:bg-red-900/20'
+                          : ''
+                      }`}
+                    >
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                          <ArrowDownRight className="w-5 h-5 text-green-500" />
+                        <div
+                          className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                            withdrawal.status === 'completed'
+                              ? 'bg-green-100 dark:bg-green-900/30'
+                              : withdrawal.status === 'failed' || withdrawal.status === 'rejected'
+                              ? 'bg-red-100 dark:bg-red-900/30'
+                              : 'bg-blue-100 dark:bg-blue-900/30'
+                          }`}
+                        >
+                          <ArrowUpRight
+                            className={`w-5 h-5 ${
+                              withdrawal.status === 'completed'
+                                ? 'text-green-500'
+                                : withdrawal.status === 'failed' || withdrawal.status === 'rejected'
+                                ? 'text-red-500'
+                                : 'text-blue-500'
+                            }`}
+                          />
                         </div>
-                        <div>
+                        <div className="text-left">
                           <p className="font-medium text-gray-900 dark:text-white">
-                            {commission.type === 'client_referral'
-                              ? intl.formatMessage({ id: 'chatter.commission.client', defaultMessage: 'Commission Client' })
-                              : intl.formatMessage({ id: 'chatter.commission.recruitment', defaultMessage: 'Commission Recrutement' })
-                            }
+                            {formatAmount(withdrawal.amount)}
                           </p>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {new Date(commission.createdAt).toLocaleDateString(intl.locale, {
+                            {new Date(withdrawal.requestedAt).toLocaleDateString(intl.locale, {
                               day: 'numeric',
                               month: 'short',
                               year: 'numeric',
@@ -257,92 +691,66 @@ const ChatterPayments: React.FC = () => {
                           </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-green-600 dark:text-green-400">
-                          +{formatAmount(commission.amount)}
-                        </p>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusColor(commission.status)}`}>
-                          {intl.formatMessage({ id: `chatter.status.${commission.status}`, defaultMessage: commission.status })}
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(withdrawal.status)}`}>
+                          {intl.formatMessage({
+                            id: `payment.status.${withdrawal.status}`,
+                            defaultMessage: withdrawal.status,
+                          })}
                         </span>
+                        <ChevronRight className="w-4 h-4 text-gray-400" />
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               )}
             </div>
-          </div>
-        )}
 
-        {activeTab === 'withdrawals' && (
-          <div className={`${UI.card} overflow-hidden`}>
-            {withdrawals.length === 0 ? (
-              <div className="p-8 text-center">
-                <Wallet className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
-                <p className="text-gray-500 dark:text-gray-400">
-                  <FormattedMessage id="chatter.payments.noWithdrawals" defaultMessage="Aucun retrait effectué" />
-                </p>
-              </div>
-            ) : (
-              <div className="divide-y divide-gray-100 dark:divide-white/5">
-                {withdrawals.map((withdrawal) => (
-                  <div key={withdrawal.id} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-white/5">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        withdrawal.status === 'completed'
-                          ? 'bg-green-100 dark:bg-green-900/30'
-                          : withdrawal.status === 'failed'
-                            ? 'bg-red-100 dark:bg-red-900/30'
-                            : 'bg-red-100 dark:bg-red-900/30'
-                      }`}>
-                        <ArrowUpRight className={`w-5 h-5 ${
-                          withdrawal.status === 'completed'
-                            ? 'text-green-500'
-                            : withdrawal.status === 'failed'
-                              ? 'text-red-500'
-                              : 'text-red-500'
-                        }`} />
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900 dark:text-white">
-                          <FormattedMessage id="chatter.withdrawal.title" defaultMessage="Retrait" />
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {new Date(withdrawal.requestedAt).toLocaleDateString(intl.locale, {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                          })}
-                          {' - '}
-                          {withdrawal.paymentMethod === 'wise' ? 'Wise' :
-                           withdrawal.paymentMethod === 'mobile_money' ? 'Mobile Money' :
-                           intl.formatMessage({ id: 'chatter.withdraw.bankTransfer', defaultMessage: 'Virement bancaire' })}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-gray-900 dark:text-white">
-                        {formatAmount(withdrawal.amount)}
-                      </p>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusColor(withdrawal.status)}`}>
-                        {intl.formatMessage({ id: `chatter.withdrawal.status.${withdrawal.status}`, defaultMessage: withdrawal.status })}
-                      </span>
-                    </div>
+            {/* Withdrawal Tracking */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                <FormattedMessage
+                  id="chatter.payments.trackingDetails"
+                  defaultMessage="Details du suivi"
+                />
+              </h3>
+
+              {selectedWithdrawalId ? (
+                trackingLoading ? (
+                  <div className={`${UI.card} p-6 flex items-center justify-center`}>
+                    <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
                   </div>
-                ))}
-              </div>
-            )}
+                ) : selectedTracking ? (
+                  <WithdrawalTracker
+                    tracking={selectedTracking}
+                    onRefresh={refreshTracking}
+                    onCancel={() => handleCancelWithdrawal(selectedWithdrawalId)}
+                    isRefreshing={trackingLoading}
+                  />
+                ) : (
+                  <div className={`${UI.card} p-6 text-center`}>
+                    <AlertCircle className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
+                    <p className="text-gray-500 dark:text-gray-400">
+                      <FormattedMessage
+                        id="chatter.payments.noTrackingData"
+                        defaultMessage="Impossible de charger les details"
+                      />
+                    </p>
+                  </div>
+                )
+              ) : (
+                <div className={`${UI.card} p-8 text-center`}>
+                  <Eye className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
+                  <p className="text-gray-500 dark:text-gray-400">
+                    <FormattedMessage
+                      id="chatter.payments.selectWithdrawal"
+                      defaultMessage="Selectionnez un retrait pour voir les details"
+                    />
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
-        )}
-
-        {activeTab === 'withdraw' && (
-          <ChatterWithdrawalForm
-            availableBalance={chatter?.availableBalance || 0}
-            minimumWithdrawal={minimumWithdrawal}
-            onSubmit={handleWithdrawal}
-            loading={withdrawalSubmitting}
-            error={withdrawalError}
-            success={withdrawalSuccess}
-          />
         )}
       </div>
     </ChatterDashboardLayout>

@@ -9,8 +9,11 @@ import { useLocaleNavigate } from '@/multilingual-system';
 import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
 import { useApp } from '@/contexts/AppContext';
 import { useChatter } from '@/hooks/useChatter';
+import { useChatterReferrals } from '@/hooks/useChatterReferrals';
 import { ChatterDashboardLayout } from '@/components/Chatter/Layout';
 import { ChatterBalanceCard, ChatterStatsCard, ChatterLevelCard } from '@/components/Chatter/Cards';
+import { EarningsRatioCard } from '@/components/Chatter/Cards/EarningsRatioCard';
+import { PioneerBadgeCard } from '@/components/Chatter/Cards/PioneerBadgeCard';
 import { ChatterAffiliateLinks } from '@/components/Chatter/Links';
 import {
   Users,
@@ -21,6 +24,7 @@ import {
   AlertCircle,
   ChevronRight,
   Loader2,
+  Share2,
 } from 'lucide-react';
 
 // Design tokens
@@ -47,7 +51,12 @@ const ChatterDashboard: React.FC = () => {
     totalBalance,
   } = useChatter();
 
+  // Referral data
+  const { stats: referralStats, earlyAdopter, isLoading: referralsLoading } = useChatterReferrals();
+
   const paymentsRoute = `/${getTranslatedRouteSlug('chatter-payments' as RouteKey, langCode)}`;
+  const referralsRoute = `/${getTranslatedRouteSlug('chatter-referrals' as RouteKey, langCode)}`;
+  const referRoute = `/${getTranslatedRouteSlug('chatter-refer' as RouteKey, langCode)}`;
 
   // Calculate stats
   const thisMonthCommissions = useMemo(() => {
@@ -128,22 +137,40 @@ const ChatterDashboard: React.FC = () => {
 
   const { chatter } = dashboardData;
 
+  // Calculate earnings ratio
+  const affiliationEarnings = chatter.totalEarned - (chatter.referralEarnings || 0);
+  const referralEarnings = chatter.referralEarnings || 0;
+
   return (
     <ChatterDashboardLayout activeKey="dashboard">
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-            <FormattedMessage id="chatter.dashboard.title" defaultMessage="Tableau de bord" />
-          </h1>
-          <p className="mt-1 text-gray-500 dark:text-gray-400">
-            <FormattedMessage
-              id="chatter.dashboard.welcome"
-              defaultMessage="Bienvenue, {name} !"
-              values={{ name: chatter.firstName }}
-            />
-          </p>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+              <FormattedMessage id="chatter.dashboard.title" defaultMessage="Tableau de bord" />
+            </h1>
+            <p className="mt-1 text-gray-500 dark:text-gray-400">
+              <FormattedMessage
+                id="chatter.dashboard.welcome"
+                defaultMessage="Bienvenue, {name} !"
+                values={{ name: chatter.firstName }}
+              />
+            </p>
+          </div>
+          <button
+            onClick={() => navigate(referRoute)}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg hover:opacity-90 transition-opacity"
+          >
+            <Share2 className="w-4 h-4" />
+            <FormattedMessage id="chatter.referrals.refer" defaultMessage="Parrainer" />
+          </button>
         </div>
+
+        {/* Pioneer Badge (if applicable) */}
+        {earlyAdopter?.isEarlyAdopter && (
+          <PioneerBadgeCard earlyAdopter={earlyAdopter} variant="compact" />
+        )}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -310,6 +337,62 @@ const ChatterDashboard: React.FC = () => {
               monthlyRank={chatter.currentMonthRank ?? undefined}
               loading={isLoading}
             />
+
+            {/* Earnings Ratio Card */}
+            {(affiliationEarnings > 0 || referralEarnings > 0) && (
+              <EarningsRatioCard
+                affiliationEarnings={affiliationEarnings}
+                referralEarnings={referralEarnings}
+                isLoading={isLoading || referralsLoading}
+              />
+            )}
+
+            {/* Referral Stats Quick View */}
+            {referralStats && (referralStats.totalFilleulsN1 > 0 || referralStats.totalFilleulsN2 > 0) && (
+              <div className={`${UI.card} p-6`}>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <Users className="w-5 h-5 text-gray-400" />
+                    <FormattedMessage id="chatter.referrals.myReferrals" defaultMessage="Mes Filleuls" />
+                  </h3>
+                  <button
+                    onClick={() => navigate(referralsRoute)}
+                    className="text-sm text-red-600 dark:text-red-400 hover:underline flex items-center gap-1"
+                  >
+                    <FormattedMessage id="common.viewAll" defaultMessage="Voir tout" />
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center p-3 bg-gray-50 dark:bg-white/5 rounded-lg">
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {referralStats.totalFilleulsN1}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <FormattedMessage id="chatter.referrals.filleulsN1" defaultMessage="Filleuls N1" />
+                    </p>
+                  </div>
+                  <div className="text-center p-3 bg-gray-50 dark:bg-white/5 rounded-lg">
+                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                      {referralStats.qualifiedFilleulsN1}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <FormattedMessage id="chatter.referrals.qualified" defaultMessage="Qualifiés" />
+                    </p>
+                  </div>
+                </div>
+                {referralStats.monthlyReferralEarnings > 0 && (
+                  <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-center">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <FormattedMessage id="chatter.referrals.thisMonth" defaultMessage="Ce mois" />
+                    </p>
+                    <p className="text-xl font-bold text-green-600 dark:text-green-400">
+                      +{formatAmount(referralStats.monthlyReferralEarnings)}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

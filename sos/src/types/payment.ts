@@ -12,7 +12,7 @@
 // ============================================================================
 
 export type PaymentProvider = 'wise' | 'flutterwave';
-export type PaymentMethodType = 'bank_transfer' | 'mobile_money';
+export type PaymentMethodType = 'bank_transfer' | 'mobile_money' | 'wise' | 'paypal';
 export type PaymentUserType = 'chatter' | 'influencer' | 'blogger';
 
 export type WithdrawalStatus =
@@ -36,11 +36,33 @@ export type MobileMoneyProvider =
   | 'mpesa'
   | 'free_money'
   | 't_money'
-  | 'flooz';
+  | 'flooz'
+  | 'vodacom'
+  | 'mobilis';
 
 // ============================================================================
 // PAYMENT DETAILS
 // ============================================================================
+
+export interface WisePaymentDetails {
+  type: 'wise';
+  email: string;
+  currency: string;
+  accountHolderName: string;
+  country?: string;
+  iban?: string;
+  sortCode?: string;
+  accountNumber?: string;
+  routingNumber?: string;
+  bic?: string;
+}
+
+export interface PayPalPaymentDetails {
+  type: 'paypal';
+  email: string;
+  currency: string;
+  accountHolderName: string;
+}
 
 export interface BankTransferDetails {
   type: 'bank_transfer';
@@ -54,6 +76,7 @@ export interface BankTransferDetails {
   bsb?: string;
   ifsc?: string;
   swiftBic?: string;
+  swiftCode?: string;
   bankName?: string;
 }
 
@@ -66,7 +89,11 @@ export interface MobileMoneyDetails {
   currency: string;
 }
 
-export type PaymentDetails = BankTransferDetails | MobileMoneyDetails;
+export type PaymentDetails =
+  | WisePaymentDetails
+  | PayPalPaymentDetails
+  | BankTransferDetails
+  | MobileMoneyDetails;
 
 // ============================================================================
 // USER PAYMENT METHOD
@@ -74,7 +101,7 @@ export type PaymentDetails = BankTransferDetails | MobileMoneyDetails;
 
 export interface UserPaymentMethod {
   id: string;
-  provider: PaymentProvider;
+  provider?: PaymentProvider;
   methodType: PaymentMethodType;
   details: PaymentDetails;
   isDefault: boolean;
@@ -83,7 +110,11 @@ export interface UserPaymentMethod {
   updatedAt: string;
   // Display helpers
   displayName: string; // e.g., "Compte bancaire - FR** **** 4532"
-  displayIcon: string; // Icon name
+  displayIcon?: string; // Icon name
+  // Extended fields from hooks
+  userId?: string;
+  userType?: PaymentUserType;
+  lastUsedAt?: string;
 }
 
 // ============================================================================
@@ -121,11 +152,18 @@ export interface StatusHistoryEntry {
 export interface PaymentTrackingSummary {
   withdrawalId: string;
   currentStatus: WithdrawalStatus;
-  statusLabel: string;
-  statusDescription: string;
-  progress: number;
+  statusLabel?: string;
+  statusDescription?: string;
+  progress?: number;
   estimatedCompletion?: string;
-  timeline: TrackingTimelineItem[];
+  timeline?: TrackingTimelineItem[];
+  // Extended fields from hooks
+  amount?: number;
+  currency?: string;
+  paymentMethod?: PaymentMethodType;
+  requestedAt?: string;
+  events?: Array<{ timestamp: string; status: WithdrawalStatus; description: string; details?: Record<string, unknown> }>;
+  lastUpdatedAt?: string;
 }
 
 export interface TrackingTimelineItem {

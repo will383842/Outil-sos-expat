@@ -1,129 +1,779 @@
 /**
- * InfluencerPayments - Withdrawal requests and payment history
+ * InfluencerPayments - Full payment management page for influencers
+ *
+ * Uses the centralized payment system components:
+ * - PaymentMethodForm for adding/editing payment methods
+ * - WithdrawalRequestForm for requesting withdrawals
+ * - WithdrawalTracker for tracking withdrawal status
+ *
+ * Tabs:
+ * 1. Withdraw - Request new withdrawals
+ * 2. Payment Methods - Manage saved payment methods
+ * 3. History - View past withdrawals with tracking
  */
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useInfluencer } from '@/hooks/useInfluencer';
+import {
+  usePaymentMethods,
+  useWithdrawals,
+  useWithdrawalTracking,
+  usePaymentConfig,
+  usePendingWithdrawal,
+  PaymentDetails,
+  UserPaymentMethod,
+  WithdrawalRequest,
+  PaymentTrackingSummary,
+} from '@/hooks/usePayment';
 import InfluencerDashboardLayout from '@/components/Influencer/Layout/InfluencerDashboardLayout';
-import InfluencerWithdrawalForm from '@/components/Influencer/Forms/InfluencerWithdrawalForm';
-import { DollarSign, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import {
+  PaymentMethodForm,
+  WithdrawalRequestForm,
+  WithdrawalTracker,
+} from '@/components/payment';
+import {
+  Wallet,
+  CreditCard,
+  History,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Loader2,
+  AlertCircle,
+  ArrowUpRight,
+  Plus,
+  Trash2,
+  Star,
+  ChevronRight,
+  Building2,
+  Smartphone,
+  Eye,
+  TrendingUp,
+} from 'lucide-react';
 
+// Design tokens
 const UI = {
-  card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
+  card: 'bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg',
   button: {
-    primary: "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-medium rounded-xl transition-all",
+    primary:
+      'bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed',
+    secondary:
+      'bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-200 font-medium rounded-xl transition-all',
+    danger:
+      'bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-700 dark:text-red-400 font-medium rounded-xl transition-all',
   },
 } as const;
 
+type TabType = 'withdraw' | 'methods' | 'history';
+
 const InfluencerPayments: React.FC = () => {
   const intl = useIntl();
-  const { dashboardData: dashboard } = useInfluencer();
-  const [showWithdrawForm, setShowWithdrawForm] = useState(false);
 
-  const formatCurrency = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+  // Influencer data
+  const {
+    dashboardData,
+    isLoading: influencerLoading,
+    error: influencerError,
+    minimumWithdrawal,
+  } = useInfluencer();
 
-  const canWithdraw = (dashboard?.influencer?.availableBalance || 0) >= (dashboard?.config?.minimumWithdrawalAmount || 5000);
-  const hasPendingWithdrawal = !!dashboard?.influencer?.pendingWithdrawalId;
+  // Payment hooks
+  const {
+    methods,
+    defaultMethodId,
+    loading: methodsLoading,
+    error: methodsError,
+    saveMethod,
+    deleteMethod,
+    setDefaultMethod,
+    refresh: refreshMethods,
+  } = usePaymentMethods();
 
+  const {
+    withdrawals,
+    loading: withdrawalsLoading,
+    error: withdrawalsError,
+    requestWithdrawal,
+    cancelWithdrawal,
+    refresh: refreshWithdrawals,
+  } = useWithdrawals();
+
+  const { hasPendingWithdrawal, pendingWithdrawal } = usePendingWithdrawal();
+  const { minimumWithdrawal: configMinWithdrawal, processingTimes, currency } = usePaymentConfig();
+
+  // Local state
+  const [activeTab, setActiveTab] = useState<TabType>('withdraw');
+  const [showPaymentMethodForm, setShowPaymentMethodForm] = useState(false);
+  const [savingMethod, setSavingMethod] = useState(false);
+  const [saveMethodError, setSaveMethodError] = useState<string | null>(null);
+  const [withdrawalLoading, setWithdrawalLoading] = useState(false);
+  const [withdrawalError, setWithdrawalError] = useState<string | null>(null);
+  const [withdrawalSuccess, setWithdrawalSuccess] = useState(false);
+  const [selectedWithdrawalId, setSelectedWithdrawalId] = useState<string | null>(null);
+  const [deletingMethodId, setDeletingMethodId] = useState<string | null>(null);
+
+  // Tracking for selected withdrawal
+  const {
+    tracking: selectedTracking,
+    loading: trackingLoading,
+    refresh: refreshTracking,
+  } = useWithdrawalTracking(selectedWithdrawalId);
+
+  // Get influencer data
+  const influencer = dashboardData?.influencer;
+  const availableBalance = influencer?.availableBalance || 0;
+  const pendingBalance = influencer?.pendingBalance || 0;
+  const validatedBalance = influencer?.validatedBalance || 0;
+  const totalEarned = influencer?.totalEarned || 0;
+
+  // Format amount
+  const formatAmount = useCallback(
+    (cents: number) => {
+      return new Intl.NumberFormat(intl.locale, {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(cents / 100);
+    },
+    [intl.locale]
+  );
+
+  // Handle withdrawal request
+  const handleWithdrawalRequest = useCallback(
+    async (paymentMethodId: string, amount?: number) => {
+      setWithdrawalLoading(true);
+      setWithdrawalError(null);
+      setWithdrawalSuccess(false);
+
+      try {
+        await requestWithdrawal(paymentMethodId, amount);
+        setWithdrawalSuccess(true);
+        await refreshWithdrawals();
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Une erreur est survenue';
+        setWithdrawalError(message);
+      } finally {
+        setWithdrawalLoading(false);
+      }
+    },
+    [requestWithdrawal, refreshWithdrawals]
+  );
+
+  // Handle save payment method
+  const handleSavePaymentMethod = useCallback(
+    async (details: PaymentDetails) => {
+      setSavingMethod(true);
+      setSaveMethodError(null);
+
+      try {
+        await saveMethod(details, methods.length === 0); // Set as default if first method
+        setShowPaymentMethodForm(false);
+        await refreshMethods();
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Une erreur est survenue';
+        setSaveMethodError(message);
+        throw err; // Re-throw so the form can handle it
+      } finally {
+        setSavingMethod(false);
+      }
+    },
+    [saveMethod, methods.length, refreshMethods]
+  );
+
+  // Handle delete payment method
+  const handleDeleteMethod = useCallback(
+    async (methodId: string) => {
+      setDeletingMethodId(methodId);
+      try {
+        await deleteMethod(methodId);
+        await refreshMethods();
+      } catch (err) {
+        console.error('Failed to delete method:', err);
+      } finally {
+        setDeletingMethodId(null);
+      }
+    },
+    [deleteMethod, refreshMethods]
+  );
+
+  // Handle set default method
+  const handleSetDefaultMethod = useCallback(
+    async (methodId: string) => {
+      try {
+        await setDefaultMethod(methodId);
+      } catch (err) {
+        console.error('Failed to set default method:', err);
+      }
+    },
+    [setDefaultMethod]
+  );
+
+  // Handle cancel withdrawal
+  const handleCancelWithdrawal = useCallback(
+    async (withdrawalId: string) => {
+      try {
+        await cancelWithdrawal(withdrawalId);
+        await refreshWithdrawals();
+        if (selectedWithdrawalId === withdrawalId) {
+          setSelectedWithdrawalId(null);
+        }
+      } catch (err) {
+        console.error('Failed to cancel withdrawal:', err);
+      }
+    },
+    [cancelWithdrawal, refreshWithdrawals, selectedWithdrawalId]
+  );
+
+  // Get status icon
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'completed': return <CheckCircle className="w-5 h-5 text-green-500" />;
-      case 'pending': case 'approved': case 'processing': return <Clock className="w-5 h-5 text-yellow-500" />;
-      case 'rejected': case 'failed': return <XCircle className="w-5 h-5 text-red-500" />;
-      default: return <AlertCircle className="w-5 h-5 text-gray-400" />;
+      case 'completed':
+        return <CheckCircle className="w-5 h-5 text-green-500" />;
+      case 'pending':
+      case 'validating':
+      case 'approved':
+      case 'queued':
+      case 'processing':
+      case 'sent':
+        return <Clock className="w-5 h-5 text-blue-500" />;
+      case 'failed':
+      case 'rejected':
+        return <XCircle className="w-5 h-5 text-red-500" />;
+      case 'cancelled':
+        return <XCircle className="w-5 h-5 text-gray-500" />;
+      default:
+        return <Clock className="w-5 h-5 text-gray-400" />;
     }
   };
+
+  // Get status color
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
+      case 'pending':
+      case 'validating':
+      case 'approved':
+      case 'queued':
+      case 'processing':
+      case 'sent':
+        return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+      case 'failed':
+      case 'rejected':
+        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+      case 'cancelled':
+        return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400';
+      default:
+        return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400';
+    }
+  };
+
+  // Get method icon
+  const getMethodIcon = (methodType: string) => {
+    return methodType === 'mobile_money' ? (
+      <Smartphone className="w-5 h-5 text-orange-500" />
+    ) : (
+      <Building2 className="w-5 h-5 text-blue-500" />
+    );
+  };
+
+  // Loading state
+  if (influencerLoading) {
+    return (
+      <InfluencerDashboardLayout>
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-10 h-10 text-red-500 animate-spin" />
+        </div>
+      </InfluencerDashboardLayout>
+    );
+  }
+
+  // Error state
+  if (influencerError) {
+    return (
+      <InfluencerDashboardLayout>
+        <div className={`${UI.card} p-6`}>
+          <div className="flex items-center gap-3 text-red-500">
+            <AlertCircle className="w-6 h-6" />
+            <span>{influencerError}</span>
+          </div>
+        </div>
+      </InfluencerDashboardLayout>
+    );
+  }
 
   return (
     <InfluencerDashboardLayout>
       <div className="space-y-6">
+        {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
             <FormattedMessage id="influencer.payments.title" defaultMessage="Mes paiements" />
           </h1>
-          <p className="text-gray-500 dark:text-gray-400">
-            <FormattedMessage id="influencer.payments.subtitle" defaultMessage="Gérez vos retraits et consultez l'historique" />
+          <p className="mt-1 text-gray-500 dark:text-gray-400">
+            <FormattedMessage
+              id="influencer.payments.subtitle"
+              defaultMessage="Gerez vos gains et retraits"
+            />
           </p>
         </div>
 
-        {/* Balance Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className={`${UI.card} p-6`}>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              <FormattedMessage id="influencer.payments.available" defaultMessage="Disponible pour retrait" />
-            </p>
-            <p className="text-3xl font-bold text-green-600 dark:text-green-400">
-              {formatCurrency(dashboard?.influencer?.availableBalance || 0)}
+        {/* Balance Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Available Balance */}
+          <div
+            className={`${UI.card} p-5 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20`}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg">
+                <Wallet className="w-5 h-5 text-green-600 dark:text-green-400" />
+              </div>
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                <FormattedMessage
+                  id="influencer.payments.availableBalance"
+                  defaultMessage="Disponible"
+                />
+              </span>
+            </div>
+            <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+              {formatAmount(availableBalance)}
             </p>
           </div>
-          <div className={`${UI.card} p-6`}>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              <FormattedMessage id="influencer.payments.minimum" defaultMessage="Minimum de retrait" />
-            </p>
-            <p className="text-3xl font-bold text-gray-600 dark:text-gray-400">
-              {formatCurrency(dashboard?.config?.minimumWithdrawalAmount || 5000)}
+
+          {/* Pending Balance */}
+          <div
+            className={`${UI.card} p-5 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20`}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-amber-100 dark:bg-amber-900/50 rounded-lg">
+                <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                <FormattedMessage id="influencer.payments.pendingBalance" defaultMessage="En attente" />
+              </span>
+            </div>
+            <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+              {formatAmount(pendingBalance)}
             </p>
           </div>
-          <div className={`${UI.card} p-6 flex flex-col justify-center`}>
-            {hasPendingWithdrawal ? (
-              <div className="text-center">
-                <Clock className="w-8 h-8 mx-auto mb-2 text-yellow-500" />
-                <p className="text-sm text-yellow-600 dark:text-yellow-400">
-                  <FormattedMessage id="influencer.payments.pendingWithdrawal" defaultMessage="Retrait en cours de traitement" />
-                </p>
+
+          {/* Validated Balance */}
+          <div
+            className={`${UI.card} p-5 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20`}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
+                <CheckCircle className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               </div>
-            ) : canWithdraw ? (
-              <button
-                onClick={() => setShowWithdrawForm(true)}
-                className={`${UI.button.primary} px-6 py-3 w-full`}
-              >
-                <FormattedMessage id="influencer.payments.requestWithdrawal" defaultMessage="Demander un retrait" />
-              </button>
-            ) : (
-              <div className="text-center">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  <FormattedMessage
-                    id="influencer.payments.needMore"
-                    defaultMessage="Il vous manque {amount} pour retirer"
-                    values={{ amount: formatCurrency((dashboard?.config?.minimumWithdrawalAmount || 5000) - (dashboard?.influencer?.availableBalance || 0)) }}
-                  />
-                </p>
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                <FormattedMessage id="influencer.payments.validatedBalance" defaultMessage="Valide" />
+              </span>
+            </div>
+            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+              {formatAmount(validatedBalance)}
+            </p>
+          </div>
+
+          {/* Total Earned */}
+          <div
+            className={`${UI.card} p-5 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20`}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
+                <TrendingUp className="w-5 h-5 text-purple-600 dark:text-purple-400" />
               </div>
-            )}
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                <FormattedMessage id="influencer.payments.totalEarned" defaultMessage="Total gagne" />
+              </span>
+            </div>
+            <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+              {formatAmount(totalEarned)}
+            </p>
           </div>
         </div>
 
-        {/* Withdrawal Form Modal */}
-        {showWithdrawForm && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className={`${UI.card} p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto`}>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                <FormattedMessage id="influencer.payments.withdrawTitle" defaultMessage="Demande de retrait" />
-              </h2>
-              <InfluencerWithdrawalForm
-                availableBalance={dashboard?.influencer?.availableBalance || 0}
-                minimumAmount={dashboard?.config?.minimumWithdrawalAmount || 5000}
-                onSuccess={() => setShowWithdrawForm(false)}
-                onCancel={() => setShowWithdrawForm(false)}
-              />
+        {/* Pending Withdrawal Alert */}
+        {hasPendingWithdrawal && pendingWithdrawal && (
+          <div
+            className={`${UI.card} p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-l-4 border-blue-500`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
+                <div>
+                  <p className="font-medium text-blue-700 dark:text-blue-300">
+                    <FormattedMessage
+                      id="influencer.payments.pendingWithdrawal"
+                      defaultMessage="Retrait en cours"
+                    />
+                  </p>
+                  <p className="text-sm text-blue-600 dark:text-blue-400">
+                    {formatAmount(pendingWithdrawal.amount)} -{' '}
+                    {intl.formatMessage({
+                      id: `payment.status.${pendingWithdrawal.status}`,
+                      defaultMessage: pendingWithdrawal.status,
+                    })}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setSelectedWithdrawalId(pendingWithdrawal.id);
+                  setActiveTab('history');
+                }}
+                className={`${UI.button.secondary} px-4 py-2 text-sm flex items-center gap-2`}
+              >
+                <Eye className="w-4 h-4" />
+                <FormattedMessage id="influencer.payments.trackWithdrawal" defaultMessage="Suivre" />
+              </button>
             </div>
           </div>
         )}
 
-        {/* Payment History */}
-        <div className={`${UI.card} p-6`}>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            <FormattedMessage id="influencer.payments.history" defaultMessage="Historique des paiements" />
-          </h2>
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            <DollarSign className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <FormattedMessage
-              id="influencer.payments.noHistory"
-              defaultMessage="Aucun paiement effectué pour le moment"
+        {/* Tabs */}
+        <div className="flex gap-2 border-b border-gray-200 dark:border-white/10 pb-2 overflow-x-auto">
+          <button
+            onClick={() => setActiveTab('withdraw')}
+            className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
+              activeTab === 'withdraw'
+                ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10'
+            }`}
+          >
+            <Wallet className="w-4 h-4" />
+            <FormattedMessage id="influencer.payments.tab.withdraw" defaultMessage="Retirer" />
+          </button>
+          <button
+            onClick={() => setActiveTab('methods')}
+            className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
+              activeTab === 'methods'
+                ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10'
+            }`}
+          >
+            <CreditCard className="w-4 h-4" />
+            <FormattedMessage id="influencer.payments.tab.methods" defaultMessage="Methodes" />
+            {methods.length > 0 && (
+              <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-white/20">
+                {methods.length}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
+              activeTab === 'history'
+                ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10'
+            }`}
+          >
+            <History className="w-4 h-4" />
+            <FormattedMessage id="influencer.payments.tab.history" defaultMessage="Historique" />
+          </button>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'withdraw' && (
+          <div className="space-y-6">
+            {/* Withdrawal Form using centralized component */}
+            <WithdrawalRequestForm
+              availableBalance={availableBalance}
+              currency="USD"
+              onSubmit={handleWithdrawalRequest}
+              onAddPaymentMethod={() => {
+                setActiveTab('methods');
+                setShowPaymentMethodForm(true);
+              }}
+              loading={withdrawalLoading}
+              error={withdrawalError}
+              success={withdrawalSuccess}
+              paymentMethods={methods}
+              defaultPaymentMethodId={defaultMethodId}
             />
           </div>
-        </div>
+        )}
+
+        {activeTab === 'methods' && (
+          <div className="space-y-4">
+            {/* Add Payment Method Form */}
+            {showPaymentMethodForm ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    <FormattedMessage
+                      id="influencer.payments.addMethod"
+                      defaultMessage="Ajouter une methode de paiement"
+                    />
+                  </h3>
+                  <button
+                    onClick={() => setShowPaymentMethodForm(false)}
+                    className={`${UI.button.secondary} px-4 py-2 text-sm`}
+                  >
+                    <FormattedMessage id="common.cancel" defaultMessage="Annuler" />
+                  </button>
+                </div>
+                <PaymentMethodForm
+                  onSubmit={handleSavePaymentMethod}
+                  loading={savingMethod}
+                  error={saveMethodError}
+                />
+              </div>
+            ) : (
+              <>
+                {/* Add Method Button */}
+                <button
+                  onClick={() => setShowPaymentMethodForm(true)}
+                  className={`${UI.card} w-full p-4 border-2 border-dashed border-gray-300 dark:border-white/20 hover:border-red-400 dark:hover:border-red-400 transition-all flex items-center justify-center gap-3`}
+                >
+                  <Plus className="w-5 h-5 text-gray-400" />
+                  <span className="font-medium text-gray-600 dark:text-gray-400">
+                    <FormattedMessage
+                      id="influencer.payments.addPaymentMethod"
+                      defaultMessage="Ajouter une methode de paiement"
+                    />
+                  </span>
+                </button>
+
+                {/* Payment Methods List */}
+                {methodsLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
+                  </div>
+                ) : methodsError ? (
+                  <div className={`${UI.card} p-6 text-center`}>
+                    <AlertCircle className="w-12 h-12 mx-auto text-red-400 mb-3" />
+                    <p className="text-red-500">{methodsError}</p>
+                  </div>
+                ) : methods.length === 0 ? (
+                  <div className={`${UI.card} p-8 text-center`}>
+                    <CreditCard className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
+                    <p className="text-gray-500 dark:text-gray-400">
+                      <FormattedMessage
+                        id="influencer.payments.noMethods"
+                        defaultMessage="Aucune methode de paiement enregistree"
+                      />
+                    </p>
+                    <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+                      <FormattedMessage
+                        id="influencer.payments.addMethodHint"
+                        defaultMessage="Ajoutez une methode pour pouvoir effectuer des retraits"
+                      />
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {methods.map((method) => (
+                      <div
+                        key={method.id}
+                        className={`${UI.card} p-4 flex items-center justify-between hover:shadow-md transition-all`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-white/10 flex items-center justify-center">
+                            {getMethodIcon(method.methodType)}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium text-gray-900 dark:text-white">
+                                {method.displayName}
+                              </p>
+                              {method.isDefault && (
+                                <span className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
+                                  <Star className="w-3 h-3 fill-current" />
+                                  <FormattedMessage
+                                    id="influencer.payments.default"
+                                    defaultMessage="Par defaut"
+                                  />
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                              {method.methodType === 'mobile_money'
+                                ? 'Mobile Money'
+                                : method.methodType === 'wise'
+                                ? 'Wise'
+                                : method.methodType === 'paypal'
+                                ? 'PayPal'
+                                : 'Virement bancaire'}
+                              {'country' in method.details && method.details.country && ` - ${method.details.country}`}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {!method.isDefault && (
+                            <button
+                              onClick={() => handleSetDefaultMethod(method.id)}
+                              className={`${UI.button.secondary} p-2 text-sm`}
+                              title={intl.formatMessage({
+                                id: 'influencer.payments.setDefault',
+                                defaultMessage: 'Definir par defaut',
+                              })}
+                            >
+                              <Star className="w-4 h-4" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDeleteMethod(method.id)}
+                            disabled={deletingMethodId === method.id}
+                            className={`${UI.button.danger} p-2 text-sm`}
+                            title={intl.formatMessage({
+                              id: 'influencer.payments.delete',
+                              defaultMessage: 'Supprimer',
+                            })}
+                          >
+                            {deletingMethodId === method.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'history' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Withdrawals List */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                <FormattedMessage
+                  id="influencer.payments.withdrawalHistory"
+                  defaultMessage="Historique des retraits"
+                />
+              </h3>
+
+              {withdrawalsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
+                </div>
+              ) : withdrawalsError ? (
+                <div className={`${UI.card} p-6 text-center`}>
+                  <AlertCircle className="w-12 h-12 mx-auto text-red-400 mb-3" />
+                  <p className="text-red-500">{withdrawalsError}</p>
+                </div>
+              ) : withdrawals.length === 0 ? (
+                <div className={`${UI.card} p-8 text-center`}>
+                  <History className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
+                  <p className="text-gray-500 dark:text-gray-400">
+                    <FormattedMessage
+                      id="influencer.payments.noWithdrawals"
+                      defaultMessage="Aucun retrait effectue"
+                    />
+                  </p>
+                </div>
+              ) : (
+                <div className={`${UI.card} overflow-hidden divide-y divide-gray-100 dark:divide-white/5`}>
+                  {withdrawals.map((withdrawal) => (
+                    <button
+                      key={withdrawal.id}
+                      onClick={() => setSelectedWithdrawalId(withdrawal.id)}
+                      className={`w-full px-4 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-white/5 transition-colors ${
+                        selectedWithdrawalId === withdrawal.id
+                          ? 'bg-red-50 dark:bg-red-900/20'
+                          : ''
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                            withdrawal.status === 'completed'
+                              ? 'bg-green-100 dark:bg-green-900/30'
+                              : withdrawal.status === 'failed' || withdrawal.status === 'rejected'
+                              ? 'bg-red-100 dark:bg-red-900/30'
+                              : 'bg-blue-100 dark:bg-blue-900/30'
+                          }`}
+                        >
+                          <ArrowUpRight
+                            className={`w-5 h-5 ${
+                              withdrawal.status === 'completed'
+                                ? 'text-green-500'
+                                : withdrawal.status === 'failed' || withdrawal.status === 'rejected'
+                                ? 'text-red-500'
+                                : 'text-blue-500'
+                            }`}
+                          />
+                        </div>
+                        <div className="text-left">
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            {formatAmount(withdrawal.amount)}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {new Date(withdrawal.requestedAt).toLocaleDateString(intl.locale, {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(withdrawal.status)}`}>
+                          {intl.formatMessage({
+                            id: `payment.status.${withdrawal.status}`,
+                            defaultMessage: withdrawal.status,
+                          })}
+                        </span>
+                        <ChevronRight className="w-4 h-4 text-gray-400" />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Withdrawal Tracking */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                <FormattedMessage
+                  id="influencer.payments.trackingDetails"
+                  defaultMessage="Details du suivi"
+                />
+              </h3>
+
+              {selectedWithdrawalId ? (
+                trackingLoading ? (
+                  <div className={`${UI.card} p-6 flex items-center justify-center`}>
+                    <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
+                  </div>
+                ) : selectedTracking ? (
+                  <WithdrawalTracker
+                    tracking={selectedTracking}
+                    onRefresh={refreshTracking}
+                    onCancel={() => handleCancelWithdrawal(selectedWithdrawalId)}
+                    isRefreshing={trackingLoading}
+                  />
+                ) : (
+                  <div className={`${UI.card} p-6 text-center`}>
+                    <AlertCircle className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
+                    <p className="text-gray-500 dark:text-gray-400">
+                      <FormattedMessage
+                        id="influencer.payments.noTrackingData"
+                        defaultMessage="Impossible de charger les details"
+                      />
+                    </p>
+                  </div>
+                )
+              ) : (
+                <div className={`${UI.card} p-8 text-center`}>
+                  <Eye className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
+                  <p className="text-gray-500 dark:text-gray-400">
+                    <FormattedMessage
+                      id="influencer.payments.selectWithdrawal"
+                      defaultMessage="Selectionnez un retrait pour voir les details"
+                    />
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </InfluencerDashboardLayout>
   );

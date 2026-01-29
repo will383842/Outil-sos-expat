@@ -26,6 +26,7 @@ import {
   X,
   Video,
   BookOpen,
+  DollarSign,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useApp } from '@/contexts/AppContext';
@@ -96,6 +97,9 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
     const postsSlug = getTranslatedRouteSlug('chatter-posts' as RouteKey, langCode);
     const zoomSlug = getTranslatedRouteSlug('chatter-zoom' as RouteKey, langCode);
     const trainingSlug = getTranslatedRouteSlug('chatter-training' as RouteKey, langCode);
+    const referralsSlug = getTranslatedRouteSlug('chatter-referrals' as RouteKey, langCode);
+    const referralEarningsSlug = getTranslatedRouteSlug('chatter-referral-earnings' as RouteKey, langCode);
+    const referSlug = getTranslatedRouteSlug('chatter-refer' as RouteKey, langCode);
 
     return {
       dashboard: `/${dashboardSlug}`,
@@ -104,6 +108,9 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
       posts: `/${postsSlug}`,
       zoom: `/${zoomSlug}`,
       training: `/${trainingSlug}`,
+      referrals: `/${referralsSlug}`,
+      referralEarnings: `/${referralEarningsSlug}`,
+      refer: `/${referSlug}`,
     };
   }, [langCode]);
 
@@ -145,6 +152,10 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
     if (path.includes('/posts') || path.includes('/publicaciones') || path.includes('/beitraege') || path.includes('/posty') || path.includes('/publicacoes') || path.includes('/tiezi')) return 'posts';
     if (path.includes('/zoom')) return 'zoom';
     if (path.includes('/training') || path.includes('/formation') || path.includes('/formacion') || path.includes('/schulung') || path.includes('/obuchenie') || path.includes('/formacao') || path.includes('/peixun') || path.includes('/prashikshan')) return 'training';
+    // Referral routes
+    if (path.includes('/referral-earnings') || path.includes('/gains-parrainage')) return 'referral-earnings';
+    if (path.includes('/referrals') || path.includes('/filleuls')) return 'referrals';
+    if (path.includes('/refer') || path.includes('/parrainer')) return 'refer';
     return 'dashboard';
   };
 
@@ -194,6 +205,24 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
       icon: <BookOpen className="mr-3 h-5 w-5" />,
       route: translatedRoutes.training,
       labels: { fr: "Formation", en: "Training", es: "Formación", de: "Schulung", ru: "Обучение", pt: "Formação", ch: "培训", hi: "प्रशिक्षण", ar: "التدريب" },
+    },
+    {
+      key: "referrals",
+      icon: <Users className="mr-3 h-5 w-5" />,
+      route: translatedRoutes.referrals,
+      labels: { fr: "Mes Filleuls", en: "My Referrals", es: "Mis Referidos", de: "Meine Empfehlungen", ru: "Мои рефералы", pt: "Meus Indicados", ch: "我的推荐", hi: "मेरे रेफरल", ar: "إحالاتي" },
+    },
+    {
+      key: "referral-earnings",
+      icon: <DollarSign className="mr-3 h-5 w-5" />,
+      route: translatedRoutes.referralEarnings,
+      labels: { fr: "Gains Parrainage", en: "Referral Earnings", es: "Ganancias de Referidos", de: "Empfehlungs-Einnahmen", ru: "Доходы от рефералов", pt: "Ganhos de Indicação", ch: "推荐收益", hi: "रेफरल आय", ar: "أرباح الإحالات" },
+    },
+    {
+      key: "refer",
+      icon: <Share2 className="mr-3 h-5 w-5" />,
+      route: translatedRoutes.refer,
+      labels: { fr: "Parrainer", en: "Refer", es: "Referir", de: "Empfehlen", ru: "Пригласить", pt: "Indicar", ch: "推荐", hi: "रेफर करें", ar: "إحالة" },
     },
   ];
 

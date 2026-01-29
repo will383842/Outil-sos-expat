@@ -14,6 +14,7 @@ export {
   chatterOnCallCompleted,
   chatterOnProviderRegistered,
   chatterOnClientRegistered,
+  chatterOnChatterEarningsUpdated,
 } from "./triggers";
 
 // ============================================================================
@@ -26,6 +27,9 @@ export { getChatterDashboard } from "./callables/getChatterDashboard";
 export { getChatterLeaderboard } from "./callables/getChatterLeaderboard";
 export { requestWithdrawal as chatterRequestWithdrawal } from "./callables/requestWithdrawal";
 export { updateChatterProfile } from "./callables/updateChatterProfile";
+
+// Referral Dashboard
+export { getReferralDashboard } from "./callables/getReferralDashboard";
 
 // ============================================================================
 // TRAINING CALLABLES
@@ -80,6 +84,27 @@ export {
   adminUpdateCycleThreshold,
 } from "./callables/countryRotation";
 
+// Admin Referral System
+export {
+  adminGetReferralStats,
+  adminGetReferralTree,
+  adminGetEarlyAdopters,
+  adminUpdateEarlyAdopterQuota,
+  adminGetReferralFraudAlerts,
+  adminReviewFraudAlert,
+  adminGetReferralCommissions,
+} from "./callables/admin/referral";
+
+// Admin Promotions
+export {
+  adminGetPromotions,
+  adminCreatePromotion,
+  adminUpdatePromotion,
+  adminDeletePromotion,
+  adminGetPromotionStats,
+  adminDuplicatePromotion,
+} from "./callables/admin/promotions";
+
 // Posts Callables
 export {
   submitPost,
@@ -117,6 +142,8 @@ export {
 export {
   chatterValidatePendingCommissions,
   chatterReleaseValidatedCommissions,
+  chatterMonthlyRecurringCommissions,
+  chatterValidatePendingReferralCommissions,
 } from "./scheduled";
 
 // ============================================================================
@@ -197,6 +224,16 @@ export type {
   ChatterPostSubmission,
   ChatterGroup,
   ChatterGroupActivity,
+  // Referral System Types
+  ChatterReferralCommission,
+  ChatterPromotion,
+  ChatterEarlyAdopterCounter,
+  ChatterTierBonusHistory,
+  ChatterReferralFraudAlert,
+  ChatterReferralFraudAlertType,
+  ChatterReferralFraudAlertStatus,
+  GetReferralDashboardResponse,
+  REFERRAL_CONFIG,
 } from "./types";
 
 // ============================================================================

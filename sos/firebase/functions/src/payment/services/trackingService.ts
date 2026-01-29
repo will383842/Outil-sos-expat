@@ -9,12 +9,11 @@
  * - Export capabilities for reports
  */
 
-import { getFirestore, Timestamp, FieldValue } from 'firebase-admin/firestore';
+import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions/v2';
 import {
   WithdrawalRequest,
   WithdrawalStatus,
-  StatusHistoryEntry,
   PaymentTrackingSummary,
   TrackingTimelineItem,
   PaymentUserType,
@@ -466,7 +465,7 @@ class TrackingService {
    * Get estimated completion time based on current status
    */
   getEstimatedCompletion(withdrawal: WithdrawalRequest): string | null {
-    const { status, provider, methodType, processedAt, sentAt } = withdrawal;
+    const { status, provider, methodType, sentAt } = withdrawal;
 
     // No estimate for terminal states
     if (['completed', 'failed', 'rejected', 'cancelled'].includes(status)) {
@@ -560,7 +559,7 @@ class TrackingService {
     }
 
     // Query withdrawals
-    let query: FirebaseFirestore.Query = this.db.collection('withdrawals');
+    let query: FirebaseFirestore.Query = this.db.collection('payment_withdrawals');
 
     if (period && period !== 'all') {
       query = query.where('requestedAt', '>=', startDate.toISOString());
@@ -663,7 +662,7 @@ class TrackingService {
    */
   async getFailedWithdrawals(limit: number = 50): Promise<WithdrawalRequest[]> {
     const snapshot = await this.db
-      .collection('withdrawals')
+      .collection('payment_withdrawals')
       .where('status', '==', 'failed')
       .orderBy('failedAt', 'desc')
       .limit(limit)
@@ -680,7 +679,7 @@ class TrackingService {
 
     // Get withdrawals that have been processing for too long
     const snapshot = await this.db
-      .collection('withdrawals')
+      .collection('payment_withdrawals')
       .where('status', 'in', ['processing', 'sent'])
       .where('processedAt', '<=', cutoffTime)
       .limit(100)
@@ -842,7 +841,7 @@ class TrackingService {
 
     // Build query
     let query: FirebaseFirestore.Query = this.db
-      .collection('withdrawals')
+      .collection('payment_withdrawals')
       .where('requestedAt', '>=', fromDate)
       .where('requestedAt', '<=', toDate);
 
@@ -936,7 +935,7 @@ class TrackingService {
 
     // Get all withdrawals for the month
     const snapshot = await this.db
-      .collection('withdrawals')
+      .collection('payment_withdrawals')
       .where('requestedAt', '>=', fromDate)
       .where('requestedAt', '<=', toDate)
       .get();

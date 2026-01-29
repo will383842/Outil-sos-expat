@@ -5577,6 +5577,7 @@ export {
   chatterOnCallCompleted,
   chatterOnProviderRegistered,
   chatterOnClientRegistered,
+  chatterOnChatterEarningsUpdated,
   // User callables
   registerChatter,
   submitQuiz,
@@ -5585,6 +5586,7 @@ export {
   getChatterLeaderboard,
   chatterRequestWithdrawal,
   updateChatterProfile,
+  getReferralDashboard,
   // Country Rotation callables
   getAvailableCountriesForChatter,
   assignCountriesToCurrentChatter,
@@ -5628,9 +5630,26 @@ export {
   adminGetZoomMeetings,
   adminGetMeetingAttendees,
   adminUpdateMeetingStatus,
+  // Admin Referral System
+  adminGetReferralStats,
+  adminGetReferralTree,
+  adminGetEarlyAdopters,
+  adminUpdateEarlyAdopterQuota,
+  adminGetReferralFraudAlerts,
+  adminReviewFraudAlert,
+  adminGetReferralCommissions,
+  // Admin Promotions
+  adminGetPromotions,
+  adminCreatePromotion,
+  adminUpdatePromotion,
+  adminDeletePromotion,
+  adminGetPromotionStats,
+  adminDuplicatePromotion,
   // Scheduled
   chatterValidatePendingCommissions,
   chatterReleaseValidatedCommissions,
+  chatterMonthlyRecurringCommissions,
+  chatterValidatePendingReferralCommissions,
   // Initialization
   initializeChatterConfig,
   resetChatterConfigToDefaults,
@@ -5740,3 +5759,33 @@ export {
   bloggerDeactivateExpiredRecruitments,
   bloggerFinalizeMonthlyRankings,
 } from './blogger';
+
+// ========== CENTRALIZED PAYMENT SYSTEM ==========
+// Unified payment system for Chatter, Influencer, and Blogger
+// Supports: Wise (bank transfers) and Flutterwave (Mobile Money)
+export {
+  // User callables
+  paymentSaveMethod,
+  paymentGetMethods,
+  paymentRequestWithdrawal,
+  paymentCancelWithdrawal,
+  paymentGetStatus,
+  paymentGetHistory,
+  // Admin callables
+  paymentAdminGetConfig,
+  paymentAdminUpdateConfig,
+  paymentAdminGetPending,
+  paymentAdminApprove,
+  paymentAdminReject,
+  paymentAdminProcess,
+  paymentAdminGetStats,
+  paymentAdminGetLogs,
+  paymentAdminGetLogActions,
+  paymentAdminExport,
+  // Triggers
+  paymentOnWithdrawalCreated,
+  paymentOnWithdrawalStatusChanged,
+  paymentProcessAutomaticPayments,
+  paymentWebhookWise,
+  paymentWebhookFlutterwave,
+} from './payment';

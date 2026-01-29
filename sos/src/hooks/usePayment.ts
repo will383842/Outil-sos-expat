@@ -29,8 +29,11 @@ export type PaymentMethodType = "wise" | "paypal" | "mobile_money" | "bank_trans
  */
 export type WithdrawalStatus =
   | "pending"
+  | "validating"
   | "approved"
+  | "queued"
   | "processing"
+  | "sent"
   | "completed"
   | "failed"
   | "rejected"
@@ -45,7 +48,12 @@ export type MobileMoneyProvider =
   | "mtn_momo"
   | "moov_money"
   | "airtel_money"
-  | "mpesa";
+  | "mpesa"
+  | "free_money"
+  | "t_money"
+  | "flooz"
+  | "vodacom"
+  | "mobilis";
 
 /**
  * User type for payment context
@@ -61,6 +69,7 @@ export interface WisePaymentDetails {
   email: string;
   currency: string;
   accountHolderName: string;
+  country?: string;
   iban?: string;
   sortCode?: string;
   accountNumber?: string;
@@ -86,13 +95,16 @@ export interface MobileMoneyPaymentDetails {
 
 export interface BankTransferPaymentDetails {
   type: "bank_transfer";
-  bankName: string;
+  bankName?: string;
   accountHolderName: string;
-  accountNumber: string;
+  accountNumber?: string;
   routingNumber?: string;
   swiftCode?: string;
   swiftBic?: string;
   iban?: string;
+  sortCode?: string;
+  bsb?: string;
+  ifsc?: string;
   country: string;
   currency: string;
 }
@@ -119,6 +131,8 @@ export interface UserPaymentMethod {
   updatedAt: string;
   lastUsedAt?: string;
   displayName: string; // e.g., "PayPal - john@example.com"
+  provider?: 'wise' | 'flutterwave'; // Payment provider
+  displayIcon?: string; // Icon name for display
 }
 
 // ============================================================================
@@ -167,6 +181,14 @@ export interface PaymentTrackingEvent {
   details?: Record<string, unknown>;
 }
 
+export interface TrackingTimelineItem {
+  step: number;
+  label: string;
+  description: string;
+  status: 'completed' | 'current' | 'pending' | 'failed';
+  timestamp?: string;
+}
+
 export interface PaymentTrackingSummary {
   withdrawalId: string;
   currentStatus: WithdrawalStatus;
@@ -177,6 +199,11 @@ export interface PaymentTrackingSummary {
   estimatedCompletion?: string;
   events: PaymentTrackingEvent[];
   lastUpdatedAt: string;
+  // Extended fields for tracking UI
+  statusLabel?: string;
+  statusDescription?: string;
+  progress?: number;
+  timeline?: TrackingTimelineItem[];
 }
 
 // ============================================================================
@@ -813,6 +840,41 @@ const MOBILE_PROVIDER_DETAILS: Record<MobileMoneyProvider, Omit<MobileMoneyProvi
     processingTime: "Instant",
     fees: { fixed: 0, percentage: 1 },
   },
+  free_money: {
+    name: "Free Money",
+    countries: ["SN"],
+    currencies: ["XOF"],
+    processingTime: "Instant - 24h",
+    fees: { fixed: 0, percentage: 1.5 },
+  },
+  t_money: {
+    name: "T-Money",
+    countries: ["TG"],
+    currencies: ["XOF"],
+    processingTime: "Instant - 24h",
+    fees: { fixed: 0, percentage: 1.5 },
+  },
+  flooz: {
+    name: "Flooz",
+    countries: ["TG"],
+    currencies: ["XOF"],
+    processingTime: "Instant - 24h",
+    fees: { fixed: 0, percentage: 1.5 },
+  },
+  vodacom: {
+    name: "Vodacom M-Pesa",
+    countries: ["ZA", "CD"],
+    currencies: ["ZAR", "CDF"],
+    processingTime: "Instant - 24h",
+    fees: { fixed: 0, percentage: 1.5 },
+  },
+  mobilis: {
+    name: "Mobilis",
+    countries: ["DZ"],
+    currencies: ["DZD"],
+    processingTime: "Instant - 24h",
+    fees: { fixed: 0, percentage: 2 },
+  },
 };
 
 export function useCountryPaymentInfo(): UseCountryPaymentInfoReturn {
@@ -1062,16 +1124,8 @@ export function usePaymentValidation(): UsePaymentValidationReturn {
     (details: Partial<BankTransferPaymentDetails>): ValidationErrors => {
       const errors: ValidationErrors = {};
 
-      if (!details.bankName) {
-        errors.bankName = "Bank name is required";
-      }
-
       if (!details.accountHolderName) {
         errors.accountHolderName = "Account holder name is required";
-      }
-
-      if (!details.accountNumber) {
-        errors.accountNumber = "Account number is required";
       }
 
       if (!details.country) {
@@ -1090,6 +1144,11 @@ export function usePaymentValidation(): UsePaymentValidationReturn {
         } else if (!/^[A-Z]{2}[0-9]{2}[A-Z0-9]{4,30}$/.test(details.iban.replace(/\s/g, ""))) {
           errors.iban = "Invalid IBAN format";
         }
+      }
+
+      // Account number or IBAN required
+      if (!details.accountNumber && !details.iban) {
+        errors.accountNumber = "Account number or IBAN is required";
       }
 
       return errors;
@@ -1203,8 +1262,15 @@ export function getPaymentMethodDisplayName(details: PaymentDetails): string {
         MOBILE_PROVIDER_DETAILS[details.provider]?.name || details.provider;
       return `${providerName} - ${details.phoneNumber}`;
     }
-    case "bank_transfer":
-      return `Bank - ${details.bankName} (****${details.accountNumber.slice(-4)})`;
+    case "bank_transfer": {
+      const bankName = details.bankName || "Bank";
+      const accountId = details.accountNumber
+        ? `****${details.accountNumber.slice(-4)}`
+        : details.iban
+          ? `****${details.iban.slice(-4)}`
+          : "";
+      return `${bankName}${accountId ? ` (${accountId})` : ""}`;
+    }
     default:
       return "Unknown payment method";
   }
@@ -1218,10 +1284,16 @@ export function getWithdrawalStatusColor(status: WithdrawalStatus): string {
   switch (status) {
     case "pending":
       return "yellow";
+    case "validating":
+      return "yellow";
     case "approved":
+      return "blue";
+    case "queued":
       return "blue";
     case "processing":
       return "blue";
+    case "sent":
+      return "indigo";
     case "completed":
       return "green";
     case "failed":
@@ -1245,12 +1317,15 @@ export function getWithdrawalStatusLabel(
 ): string {
   const labels: Record<WithdrawalStatus, { en: string; fr: string }> = {
     pending: { en: "Pending", fr: "En attente" },
-    approved: { en: "Approved", fr: "Approuve" },
+    validating: { en: "Validating", fr: "Validation" },
+    approved: { en: "Approved", fr: "Approuvé" },
+    queued: { en: "Queued", fr: "En file d'attente" },
     processing: { en: "Processing", fr: "En cours" },
-    completed: { en: "Completed", fr: "Termine" },
-    failed: { en: "Failed", fr: "Echoue" },
-    rejected: { en: "Rejected", fr: "Rejete" },
-    cancelled: { en: "Cancelled", fr: "Annule" },
+    sent: { en: "Sent", fr: "Envoyé" },
+    completed: { en: "Completed", fr: "Terminé" },
+    failed: { en: "Failed", fr: "Échoué" },
+    rejected: { en: "Rejected", fr: "Rejeté" },
+    cancelled: { en: "Cancelled", fr: "Annulé" },
   };
 
   const lang = locale.startsWith("fr") ? "fr" : "en";

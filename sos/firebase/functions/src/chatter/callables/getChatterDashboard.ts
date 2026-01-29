@@ -21,8 +21,11 @@ import {
   ChatterCommission,
   ChatterZoomMeeting,
   GetChatterDashboardResponse,
+  REFERRAL_CONFIG,
 } from "../types";
 import { getChatterConfigCached } from "../utils";
+import { getNextTierBonus } from "../services/chatterReferralService";
+import { getActivePromotions } from "../services/chatterPromotionService";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -216,6 +219,18 @@ export const getChatterDashboard = onCall(
           recruitedByCode: chatter.recruitedByCode,
           recruitedAt: chatter.recruitedAt,
           recruiterCommissionPaid: chatter.recruiterCommissionPaid,
+          // Referral N2 system fields
+          parrainNiveau2Id: chatter.parrainNiveau2Id,
+          isEarlyAdopter: chatter.isEarlyAdopter,
+          earlyAdopterCountry: chatter.earlyAdopterCountry,
+          earlyAdopterDate: chatter.earlyAdopterDate,
+          qualifiedReferralsCount: chatter.qualifiedReferralsCount,
+          referralsN2Count: chatter.referralsN2Count,
+          referralEarnings: chatter.referralEarnings,
+          referralToClientRatio: chatter.referralToClientRatio,
+          threshold10Reached: chatter.threshold10Reached,
+          threshold50Reached: chatter.threshold50Reached,
+          tierBonusesPaid: chatter.tierBonusesPaid,
           createdAt: chatter.createdAt,
           updatedAt: chatter.updatedAt,
           lastLoginAt: chatter.lastLoginAt,
@@ -236,6 +251,44 @@ export const getChatterDashboard = onCall(
           levelThresholds: config.levelThresholds,
           levelBonuses: config.levelBonuses,
         },
+        // Referral system stats
+        referralStats: {
+          filleulsN1: chatter.totalRecruits,
+          qualifiedFilleulsN1: chatter.qualifiedReferralsCount || 0,
+          filleulsN2: chatter.referralsN2Count || 0,
+          referralEarnings: chatter.referralEarnings || 0,
+          nextTierBonus: getNextTierBonus(chatter),
+        },
+        // Early adopter (Pioneer) status
+        earlyAdopter: {
+          isEarlyAdopter: chatter.isEarlyAdopter || false,
+          country: chatter.earlyAdopterCountry || null,
+          multiplier: chatter.isEarlyAdopter ? REFERRAL_CONFIG.EARLY_ADOPTER.MULTIPLIER : 1,
+        },
+        // Earnings ratio
+        earningsRatio: (() => {
+          const affiliationEarnings = (chatter.totalEarned || 0) - (chatter.referralEarnings || 0);
+          const referralEarnings = chatter.referralEarnings || 0;
+          const total = affiliationEarnings + referralEarnings;
+          return {
+            affiliationEarnings,
+            referralEarnings,
+            affiliationPercent: total > 0 ? Math.round((affiliationEarnings / total) * 100) : 100,
+            referralPercent: total > 0 ? Math.round((referralEarnings / total) * 100) : 0,
+          };
+        })(),
+        // Active promotion
+        activePromotion: await (async () => {
+          const promos = await getActivePromotions(userId, chatter.country);
+          if (promos.length === 0) return null;
+          const best = promos.reduce((a, b) => (a.multiplier > b.multiplier ? a : b));
+          return {
+            id: best.id,
+            name: best.name,
+            multiplier: best.multiplier,
+            endsAt: best.endDate.toDate().toISOString(),
+          };
+        })(),
       };
 
       logger.info("[getChatterDashboard] Dashboard data returned", {
