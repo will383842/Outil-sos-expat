@@ -5635,6 +5635,19 @@ export {
   initializeChatterConfig,
   resetChatterConfigToDefaults,
   initializeChatterSystem,
+  // Training callables
+  getChatterTrainingModules,
+  getChatterTrainingModuleContent,
+  updateChatterTrainingProgress,
+  submitChatterTrainingQuiz,
+  getChatterTrainingCertificate,
+  // Admin Training callables
+  adminGetChatterTrainingModules,
+  adminCreateChatterTrainingModule,
+  adminUpdateChatterTrainingModule,
+  adminDeleteChatterTrainingModule,
+  adminSeedChatterTrainingModules,
+  adminReorderChatterTrainingModules,
 } from './chatter';
 
 // ========== INFLUENCER SYSTEM ==========
@@ -5666,4 +5679,64 @@ export {
   influencerReleaseValidatedCommissions,
   // Initialization
   initializeInfluencerConfig,
+  // Training callables
+  getInfluencerTrainingModules,
+  getInfluencerTrainingModuleContent,
+  updateInfluencerTrainingProgress,
+  submitInfluencerTrainingQuiz,
+  getInfluencerTrainingCertificate,
+  // Admin Training callables
+  adminGetInfluencerTrainingModules,
+  adminCreateInfluencerTrainingModule,
+  adminUpdateInfluencerTrainingModule,
+  adminDeleteInfluencerTrainingModule,
+  adminSeedInfluencerTrainingModules,
 } from './influencer';
+
+// ========== BLOGGER SYSTEM ==========
+// Blogger partner program with FIXED commissions ($10 client, $5 recruitment)
+// KEY DIFFERENCES: No quiz, no levels, no bonuses, 0% client discount, definitive role
+// EXCLUSIVE FEATURES: Resources section, Integration Guide
+export {
+  // Triggers
+  onBloggerCreated,
+  // User callables
+  registerBlogger,
+  getBloggerDashboard,
+  updateBloggerProfile,
+  bloggerRequestWithdrawal,
+  getBloggerLeaderboard,
+  // Resources (EXCLUSIVE)
+  getBloggerResources,
+  downloadBloggerResource,
+  copyBloggerResourceText,
+  // Guide (EXCLUSIVE)
+  getBloggerGuide,
+  copyBloggerGuideText,
+  trackBloggerGuideUsage,
+  // Admin callables
+  adminGetBloggersList,
+  adminGetBloggerDetail,
+  adminProcessBloggerWithdrawal,
+  adminUpdateBloggerStatus,
+  adminGetBloggerConfig,
+  adminUpdateBloggerConfig,
+  adminCreateBloggerResource,
+  adminUpdateBloggerResource,
+  adminDeleteBloggerResource,
+  adminCreateBloggerResourceText,
+  adminCreateBloggerGuideTemplate,
+  adminUpdateBloggerGuideTemplate,
+  adminCreateBloggerGuideCopyText,
+  adminUpdateBloggerGuideCopyText,
+  adminCreateBloggerGuideBestPractice,
+  adminUpdateBloggerGuideBestPractice,
+  adminExportBloggers,
+  adminGetBloggerLeaderboard,
+  // Scheduled
+  bloggerValidatePendingCommissions,
+  bloggerReleaseValidatedCommissions,
+  bloggerUpdateMonthlyRankings,
+  bloggerDeactivateExpiredRecruitments,
+  bloggerFinalizeMonthlyRankings,
+} from './blogger';

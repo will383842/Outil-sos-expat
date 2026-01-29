@@ -60,6 +60,7 @@ export async function migrateToV2(): Promise<{
         isSystemActive: true,
         newRegistrationsEnabled: true,
         withdrawalsEnabled: true,
+        trainingEnabled: true,
         commissionClientAmount: 1000,
         commissionRecruitmentAmount: 500,
         clientDiscountPercent: 5,

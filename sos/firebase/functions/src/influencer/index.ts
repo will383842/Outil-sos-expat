@@ -26,6 +26,27 @@ export { influencerRequestWithdrawal } from "./callables";
 export { getInfluencerLeaderboard } from "./callables/getInfluencerLeaderboard";
 
 // ============================================================================
+// TRAINING CALLABLES
+// ============================================================================
+
+export {
+  getInfluencerTrainingModules,
+  getInfluencerTrainingModuleContent,
+  updateInfluencerTrainingProgress,
+  submitInfluencerTrainingQuiz,
+  getInfluencerTrainingCertificate,
+} from "./callables/training";
+
+// Admin Training Callables
+export {
+  adminGetInfluencerTrainingModules,
+  adminCreateInfluencerTrainingModule,
+  adminUpdateInfluencerTrainingModule,
+  adminDeleteInfluencerTrainingModule,
+  adminSeedInfluencerTrainingModules,
+} from "./callables/adminTraining";
+
+// ============================================================================
 // ADMIN CALLABLES
 // ============================================================================
 

@@ -23,11 +23,12 @@ import { Timestamp } from "firebase-admin/firestore";
 
 /**
  * Influencer account status
+ * NOTE: Using "banned" for consistency with Chatter system
  */
 export type InfluencerStatus =
   | "active"      // Active, can earn commissions
   | "suspended"   // Temporarily suspended by admin
-  | "blocked";    // Permanently blocked
+  | "banned";     // Permanently banned (aligned with Chatter terminology)
 
 /**
  * Supported languages for influencers
@@ -85,10 +86,12 @@ export type InfluencerWithdrawalStatus =
 
 /**
  * Payment method for withdrawals
+ * NOTE: Aligned with Chatter - includes Mobile Money for African markets
  */
 export type InfluencerPaymentMethod =
   | "wise"          // Wise (TransferWise)
   | "paypal"        // PayPal
+  | "mobile_money"  // Mobile Money (Flutterwave) - for African markets
   | "bank_transfer"; // Bank transfer
 
 /**
@@ -261,10 +264,12 @@ export interface Influencer {
 
 /**
  * Payment details union type
+ * NOTE: Aligned with Chatter - includes Mobile Money support
  */
 export type InfluencerPaymentDetails =
   | InfluencerWiseDetails
   | InfluencerPayPalDetails
+  | InfluencerMobileMoneyDetails
   | InfluencerBankDetails;
 
 /**
@@ -290,6 +295,19 @@ export interface InfluencerPayPalDetails {
   email: string;
   currency: string;
   accountHolderName: string;
+}
+
+/**
+ * Mobile Money payment details
+ * NOTE: Added for alignment with Chatter system - supports African markets
+ */
+export interface InfluencerMobileMoneyDetails {
+  type: "mobile_money";
+  provider: "mtn" | "orange" | "moov" | "airtel" | "mpesa" | "wave";
+  phoneNumber: string;
+  country: string;
+  currency: string;
+  accountName: string;
 }
 
 /**
@@ -678,6 +696,9 @@ export interface InfluencerConfig {
   /** Are withdrawals enabled */
   withdrawalsEnabled: boolean;
 
+  /** Is the training module visible to influencers */
+  trainingEnabled: boolean;
+
   // ---- Commission Amounts (cents) ----
 
   /** Fixed commission per client referral ($10 = 1000 cents) */
@@ -857,16 +878,17 @@ export const DEFAULT_COMMISSION_RULES: InfluencerCommissionRule[] = [
 
 /**
  * Default anti-fraud configuration (V2)
+ * NOTE: Anti-fraud is ENABLED by default for security
  */
 export const DEFAULT_ANTI_FRAUD_CONFIG: InfluencerAntiFraudConfig = {
-  enabled: false,
-  maxReferralsPerDay: 0,
-  maxReferralsPerWeek: 0,
-  blockSameIPReferrals: false,
-  minAccountAgeDays: 0,
-  requireEmailVerification: false,
-  suspiciousConversionRateThreshold: 0,
-  autoSuspendOnViolation: false,
+  enabled: true,
+  maxReferralsPerDay: 50,
+  maxReferralsPerWeek: 200,
+  blockSameIPReferrals: true,
+  minAccountAgeDays: 1,
+  requireEmailVerification: true,
+  suspiciousConversionRateThreshold: 0.8,
+  autoSuspendOnViolation: true,
 };
 
 /**
@@ -880,6 +902,7 @@ export const DEFAULT_INFLUENCER_CONFIG: Omit<
   isSystemActive: true,
   newRegistrationsEnabled: true,
   withdrawalsEnabled: true,
+  trainingEnabled: true,
 
   commissionClientAmount: 1000,      // $10
   commissionRecruitmentAmount: 500,  // $5
@@ -1370,3 +1393,328 @@ export const INFLUENCER_PLATFORMS: InfluencerPlatformDefinition[] = [
   { id: "forum", name: "Forum", isActive: true, order: 16 },
   { id: "other", name: "Autre", isActive: true, order: 99 },
 ];
+
+// ============================================================================
+// TRAINING SYSTEM
+// ============================================================================
+
+/**
+ * Training module status
+ */
+export type TrainingModuleStatus = "draft" | "published" | "archived";
+
+/**
+ * Training slide type
+ */
+export type TrainingSlideType = "text" | "video" | "image" | "checklist" | "tips";
+
+/**
+ * Training module category for influencers
+ */
+export type InfluencerTrainingCategory =
+  | "onboarding"       // Introduction to the platform
+  | "content_creation" // Creating engaging content
+  | "promotion"        // How to promote effectively
+  | "analytics"        // Understanding your stats
+  | "monetization";    // Maximizing earnings
+
+/**
+ * Training slide content
+ */
+export interface TrainingSlide {
+  /** Slide order (1, 2, 3...) */
+  order: number;
+
+  /** Slide type */
+  type: TrainingSlideType;
+
+  /** Slide title */
+  title: string;
+  titleTranslations?: {
+    [key in SupportedInfluencerLanguage]?: string;
+  };
+
+  /** Main content (markdown supported) */
+  content: string;
+  contentTranslations?: {
+    [key in SupportedInfluencerLanguage]?: string;
+  };
+
+  /** Media URL (for video/image types) */
+  mediaUrl?: string;
+
+  /** Checklist items (for checklist type) */
+  checklistItems?: Array<{
+    text: string;
+    textTranslations?: {
+      [key in SupportedInfluencerLanguage]?: string;
+    };
+  }>;
+
+  /** Tips list (for tips type) */
+  tips?: Array<{
+    text: string;
+    textTranslations?: {
+      [key in SupportedInfluencerLanguage]?: string;
+    };
+  }>;
+}
+
+/**
+ * Training module quiz question
+ */
+export interface TrainingQuizQuestion {
+  /** Question ID */
+  id: string;
+
+  /** Question text */
+  question: string;
+  questionTranslations?: {
+    [key in SupportedInfluencerLanguage]?: string;
+  };
+
+  /** Answer options */
+  options: Array<{
+    id: string;
+    text: string;
+    textTranslations?: {
+      [key in SupportedInfluencerLanguage]?: string;
+    };
+  }>;
+
+  /** Correct answer ID */
+  correctAnswerId: string;
+
+  /** Explanation shown after answer */
+  explanation?: string;
+  explanationTranslations?: {
+    [key in SupportedInfluencerLanguage]?: string;
+  };
+}
+
+/**
+ * Training module
+ * Collection: influencer_training_modules/{moduleId}
+ */
+export interface InfluencerTrainingModule {
+  /** Document ID */
+  id: string;
+
+  /** Module order (1, 2, 3, 4, 5) */
+  order: number;
+
+  /** Module title */
+  title: string;
+  titleTranslations?: {
+    [key in SupportedInfluencerLanguage]?: string;
+  };
+
+  /** Short description */
+  description: string;
+  descriptionTranslations?: {
+    [key in SupportedInfluencerLanguage]?: string;
+  };
+
+  /** Module category */
+  category: InfluencerTrainingCategory;
+
+  /** Cover image URL */
+  coverImageUrl?: string;
+
+  /** Video URL (optional intro video) */
+  introVideoUrl?: string;
+
+  /** Module slides/content */
+  slides: TrainingSlide[];
+
+  /** Quiz questions for this module */
+  quizQuestions: TrainingQuizQuestion[];
+
+  /** Minimum score to pass (percentage, e.g., 80) */
+  passingScore: number;
+
+  /** Estimated duration in minutes */
+  estimatedMinutes: number;
+
+  /** Is this module required to be completed? */
+  isRequired: boolean;
+
+  /** Prerequisites (module IDs that must be completed first) */
+  prerequisites: string[];
+
+  /** Module status */
+  status: TrainingModuleStatus;
+
+  /** Reward for completing (optional bonus) */
+  completionReward?: {
+    type: "bonus";
+    bonusAmount?: number; // In cents
+  };
+
+  /** Created timestamp */
+  createdAt: Timestamp;
+
+  /** Updated timestamp */
+  updatedAt: Timestamp;
+
+  /** Created by (admin ID) */
+  createdBy: string;
+}
+
+/**
+ * Influencer's training progress
+ * Collection: influencer_training_progress/{influencerId}/modules/{moduleId}
+ */
+export interface InfluencerTrainingProgress {
+  /** Influencer ID */
+  influencerId: string;
+
+  /** Module ID */
+  moduleId: string;
+
+  /** Module title (denormalized for display) */
+  moduleTitle: string;
+
+  /** Started at */
+  startedAt: Timestamp;
+
+  /** Completed at */
+  completedAt?: Timestamp;
+
+  /** Current slide index (0-based) */
+  currentSlideIndex: number;
+
+  /** Slides viewed */
+  slidesViewed: number[];
+
+  /** Quiz attempts */
+  quizAttempts: Array<{
+    attemptedAt: Timestamp;
+    answers: Array<{
+      questionId: string;
+      answerId: string;
+      isCorrect: boolean;
+    }>;
+    score: number; // Percentage
+    passed: boolean;
+  }>;
+
+  /** Best quiz score */
+  bestScore: number;
+
+  /** Whether module is completed */
+  isCompleted: boolean;
+
+  /** Certificate ID (if completed) */
+  certificateId?: string;
+}
+
+/**
+ * Training certificate
+ * Collection: influencer_training_certificates/{certificateId}
+ */
+export interface InfluencerTrainingCertificate {
+  /** Document ID */
+  id: string;
+
+  /** Influencer ID */
+  influencerId: string;
+
+  /** Influencer name */
+  influencerName: string;
+
+  /** Module ID (or "all" for full completion) */
+  moduleId: string;
+
+  /** Certificate type */
+  type: "module" | "full_program";
+
+  /** Module title (or "Programme Complet") */
+  title: string;
+
+  /** Average score across all modules/quizzes */
+  averageScore: number;
+
+  /** Total modules completed */
+  modulesCompleted: number;
+
+  /** Issued at */
+  issuedAt: Timestamp;
+
+  /** Certificate PDF URL (generated) */
+  pdfUrl?: string;
+
+  /** Verification code (unique, for QR code) */
+  verificationCode: string;
+}
+
+// ============================================================================
+// TRAINING INPUT/OUTPUT TYPES
+// ============================================================================
+
+export interface GetInfluencerTrainingModulesResponse {
+  modules: Array<{
+    id: string;
+    order: number;
+    title: string;
+    description: string;
+    category: InfluencerTrainingCategory;
+    coverImageUrl?: string;
+    estimatedMinutes: number;
+    isRequired: boolean;
+    prerequisites: string[];
+    progress: {
+      isStarted: boolean;
+      isCompleted: boolean;
+      currentSlideIndex: number;
+      totalSlides: number;
+      bestScore: number;
+    } | null;
+  }>;
+  overallProgress: {
+    completedModules: number;
+    totalModules: number;
+    completionPercent: number;
+    hasCertificate: boolean;
+    certificateId?: string;
+  };
+}
+
+export interface GetInfluencerTrainingModuleContentResponse {
+  module: InfluencerTrainingModule;
+  progress: InfluencerTrainingProgress | null;
+  canAccess: boolean;
+  blockedByPrerequisites: string[];
+}
+
+export interface SubmitInfluencerTrainingQuizInput {
+  moduleId: string;
+  answers: Array<{
+    questionId: string;
+    answerId: string;
+  }>;
+}
+
+export interface SubmitInfluencerTrainingQuizResponse {
+  success: boolean;
+  score: number;
+  passed: boolean;
+  passingScore: number;
+  results: Array<{
+    questionId: string;
+    isCorrect: boolean;
+    correctAnswerId: string;
+    explanation?: string;
+  }>;
+  moduleCompleted: boolean;
+  certificateId?: string;
+  rewardGranted?: {
+    type: "bonus";
+    bonusAmount?: number;
+  };
+}
+
+export interface GetInfluencerTrainingCertificateResponse {
+  certificate: InfluencerTrainingCertificate;
+  verificationUrl: string;
+}

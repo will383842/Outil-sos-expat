@@ -27,6 +27,28 @@ export { getChatterLeaderboard } from "./callables/getChatterLeaderboard";
 export { requestWithdrawal as chatterRequestWithdrawal } from "./callables/requestWithdrawal";
 export { updateChatterProfile } from "./callables/updateChatterProfile";
 
+// ============================================================================
+// TRAINING CALLABLES
+// ============================================================================
+
+export {
+  getChatterTrainingModules,
+  getChatterTrainingModuleContent,
+  updateChatterTrainingProgress,
+  submitChatterTrainingQuiz,
+  getChatterTrainingCertificate,
+} from "./callables/training";
+
+// Admin Training Callables
+export {
+  adminGetTrainingModules as adminGetChatterTrainingModules,
+  adminCreateTrainingModule as adminCreateChatterTrainingModule,
+  adminUpdateTrainingModule as adminUpdateChatterTrainingModule,
+  adminDeleteTrainingModule as adminDeleteChatterTrainingModule,
+  adminSeedTrainingModules as adminSeedChatterTrainingModules,
+  adminReorderTrainingModules as adminReorderChatterTrainingModules,
+} from "./callables/adminTraining";
+
 // Country Rotation
 export {
   getAvailableCountriesForChatter,

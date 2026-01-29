@@ -79,9 +79,11 @@ export type ChatterWithdrawalStatus =
 
 /**
  * Payment method for withdrawals
+ * NOTE: Aligned with Influencer - includes PayPal support
  */
 export type ChatterPaymentMethod =
   | "wise"          // Wise (TransferWise)
+  | "paypal"        // PayPal
   | "mobile_money"  // Mobile Money (Flutterwave)
   | "bank_transfer"; // Bank transfer
 
@@ -289,11 +291,8 @@ export interface Chatter {
   /** Whether recruiter commission has been paid (for first client) */
   recruiterCommissionPaid: boolean;
 
-  /** Whether $50 milestone bonus has been paid to recruiter (when chatter reached $500) */
-  recruiterMilestoneBonusPaid?: boolean;
-
-  /** When milestone bonus was paid */
-  recruiterMilestoneBonusAt?: Timestamp | null;
+  // REMOVED: recruiterMilestoneBonusPaid and recruiterMilestoneBonusAt
+  // The $50 milestone bonus feature has been disabled
 
   // ---- Timestamps ----
 
@@ -309,9 +308,11 @@ export interface Chatter {
 
 /**
  * Payment details union type
+ * NOTE: Aligned with Influencer - includes PayPal support
  */
 export type ChatterPaymentDetails =
   | ChatterWiseDetails
+  | ChatterPayPalDetails
   | ChatterMobileMoneyDetails
   | ChatterBankDetails;
 
@@ -329,6 +330,17 @@ export interface ChatterWiseDetails {
   routingNumber?: string;
   bic?: string;
   wiseRecipientId?: string;
+}
+
+/**
+ * PayPal payment details
+ * NOTE: Added for alignment with Influencer system
+ */
+export interface ChatterPayPalDetails {
+  type: "paypal";
+  email: string;
+  currency: string;
+  accountHolderName: string;
 }
 
 /**
@@ -635,6 +647,9 @@ export interface ChatterConfig {
   /** Are withdrawals enabled */
   withdrawalsEnabled: boolean;
 
+  /** Is the training module visible to chatters */
+  trainingEnabled: boolean;
+
   // ---- Commission Amounts (cents) ----
 
   /** Fixed commission per client referral */
@@ -736,6 +751,7 @@ export const DEFAULT_CHATTER_CONFIG: Omit<
   isSystemActive: true,
   newRegistrationsEnabled: true,
   withdrawalsEnabled: true,
+  trainingEnabled: true,
 
   commissionClientAmount: 1000,      // $10
   commissionRecruitmentAmount: 500,  // $5
@@ -774,16 +790,21 @@ export const DEFAULT_CHATTER_CONFIG: Omit<
 
   attributionWindowDays: 30,
 
+  // All 197 countries supported - uses SUPPORTED_COUNTRIES constant
   supportedCountries: [
-    "FR", "BE", "CH", "CA", "LU", "MC",  // French-speaking
-    "US", "GB", "AU", "NZ", "IE",         // English-speaking
-    "ES", "MX", "AR", "CO", "CL",         // Spanish-speaking
-    "PT", "BR",                           // Portuguese-speaking
-    "DE", "AT",                           // German-speaking
-    "IT",                                 // Italian-speaking
-    "NL",                                 // Dutch-speaking
-    "SN", "CI", "CM", "MA", "TN", "DZ",  // African French-speaking
-    "AE", "SA", "EG",                     // Arabic-speaking
+    "AF", "AL", "DZ", "AD", "AO", "AG", "AR", "AM", "AU", "AT", "AZ", "BS", "BH", "BD", "BB",
+    "BY", "BE", "BZ", "BJ", "BT", "BO", "BA", "BW", "BR", "BN", "BG", "BF", "BI", "CV", "KH",
+    "CM", "CA", "CF", "TD", "CL", "CN", "CO", "KM", "CG", "CD", "CR", "CI", "HR", "CU", "CY",
+    "CZ", "DK", "DJ", "DM", "DO", "EC", "EG", "SV", "GQ", "ER", "EE", "SZ", "ET", "FJ", "FI",
+    "FR", "GA", "GM", "GE", "DE", "GH", "GR", "GD", "GT", "GN", "GW", "GY", "HT", "HN", "HU",
+    "IS", "IN", "ID", "IR", "IQ", "IE", "IL", "IT", "JM", "JP", "JO", "KZ", "KE", "KI", "KP",
+    "KR", "KW", "KG", "LA", "LV", "LB", "LS", "LR", "LY", "LI", "LT", "LU", "MG", "MW", "MY",
+    "MV", "ML", "MT", "MH", "MR", "MU", "MX", "FM", "MD", "MC", "MN", "ME", "MA", "MZ", "MM",
+    "NA", "NR", "NP", "NL", "NZ", "NI", "NE", "NG", "MK", "NO", "OM", "PK", "PW", "PA", "PG",
+    "PY", "PE", "PH", "PL", "PT", "QA", "RO", "RU", "RW", "KN", "LC", "VC", "WS", "SM", "ST",
+    "SA", "SN", "RS", "SC", "SL", "SG", "SK", "SI", "SB", "SO", "ZA", "SS", "ES", "LK", "SD",
+    "SR", "SE", "CH", "SY", "TW", "TJ", "TZ", "TH", "TL", "TG", "TO", "TT", "TN", "TR", "TM",
+    "TV", "UG", "UA", "AE", "GB", "US", "UY", "UZ", "VU", "VA", "VE", "VN", "YE", "ZM", "ZW",
   ],
 
   version: 1,
@@ -1763,4 +1784,331 @@ export interface AdminUpdateChatterStatusInput {
   chatterId: string;
   status: ChatterStatus;
   reason: string;
+}
+
+// ============================================================================
+// TRAINING SYSTEM
+// ============================================================================
+
+/**
+ * Training module status
+ */
+export type TrainingModuleStatus = "draft" | "published" | "archived";
+
+/**
+ * Training slide type
+ */
+export type TrainingSlideType = "text" | "video" | "image" | "checklist" | "tips";
+
+/**
+ * Training module category
+ */
+export type ChatterTrainingCategory =
+  | "onboarding"      // Introduction to the platform
+  | "promotion"       // How to promote effectively
+  | "conversion"      // Converting leads to clients
+  | "recruitment"     // Recruiting providers
+  | "best_practices"; // Tips and best practices
+
+/**
+ * Training slide content
+ */
+export interface TrainingSlide {
+  /** Slide order (1, 2, 3...) */
+  order: number;
+
+  /** Slide type */
+  type: TrainingSlideType;
+
+  /** Slide title */
+  title: string;
+  titleTranslations?: {
+    [key in SupportedChatterLanguage]?: string;
+  };
+
+  /** Main content (markdown supported) */
+  content: string;
+  contentTranslations?: {
+    [key in SupportedChatterLanguage]?: string;
+  };
+
+  /** Media URL (for video/image types) */
+  mediaUrl?: string;
+
+  /** Checklist items (for checklist type) */
+  checklistItems?: Array<{
+    text: string;
+    textTranslations?: {
+      [key in SupportedChatterLanguage]?: string;
+    };
+  }>;
+
+  /** Tips list (for tips type) */
+  tips?: Array<{
+    text: string;
+    textTranslations?: {
+      [key in SupportedChatterLanguage]?: string;
+    };
+  }>;
+}
+
+/**
+ * Training module quiz question
+ */
+export interface TrainingQuizQuestion {
+  /** Question ID */
+  id: string;
+
+  /** Question text */
+  question: string;
+  questionTranslations?: {
+    [key in SupportedChatterLanguage]?: string;
+  };
+
+  /** Answer options */
+  options: Array<{
+    id: string;
+    text: string;
+    textTranslations?: {
+      [key in SupportedChatterLanguage]?: string;
+    };
+  }>;
+
+  /** Correct answer ID */
+  correctAnswerId: string;
+
+  /** Explanation shown after answer */
+  explanation?: string;
+  explanationTranslations?: {
+    [key in SupportedChatterLanguage]?: string;
+  };
+}
+
+/**
+ * Training module
+ * Collection: chatter_training_modules/{moduleId}
+ */
+export interface ChatterTrainingModule {
+  /** Document ID */
+  id: string;
+
+  /** Module order (1, 2, 3, 4, 5) */
+  order: number;
+
+  /** Module title */
+  title: string;
+  titleTranslations?: {
+    [key in SupportedChatterLanguage]?: string;
+  };
+
+  /** Short description */
+  description: string;
+  descriptionTranslations?: {
+    [key in SupportedChatterLanguage]?: string;
+  };
+
+  /** Module category */
+  category: ChatterTrainingCategory;
+
+  /** Cover image URL */
+  coverImageUrl?: string;
+
+  /** Video URL (optional intro video) */
+  introVideoUrl?: string;
+
+  /** Module slides/content */
+  slides: TrainingSlide[];
+
+  /** Quiz questions for this module */
+  quizQuestions: TrainingQuizQuestion[];
+
+  /** Minimum score to pass (percentage, e.g., 80) */
+  passingScore: number;
+
+  /** Estimated duration in minutes */
+  estimatedMinutes: number;
+
+  /** Is this module required to be completed? */
+  isRequired: boolean;
+
+  /** Prerequisites (module IDs that must be completed first) */
+  prerequisites: string[];
+
+  /** Module status */
+  status: TrainingModuleStatus;
+
+  /** Reward for completing (optional badge or bonus) */
+  completionReward?: {
+    type: "badge" | "bonus";
+    badgeType?: ChatterBadgeType;
+    bonusAmount?: number; // In cents
+  };
+
+  /** Created timestamp */
+  createdAt: Timestamp;
+
+  /** Updated timestamp */
+  updatedAt: Timestamp;
+
+  /** Created by (admin ID) */
+  createdBy: string;
+}
+
+/**
+ * Chatter's training progress
+ * Collection: chatter_training_progress/{chatterId}/modules/{moduleId}
+ */
+export interface ChatterTrainingProgress {
+  /** Chatter ID */
+  chatterId: string;
+
+  /** Module ID */
+  moduleId: string;
+
+  /** Module title (denormalized for display) */
+  moduleTitle: string;
+
+  /** Started at */
+  startedAt: Timestamp;
+
+  /** Completed at */
+  completedAt?: Timestamp;
+
+  /** Current slide index (0-based) */
+  currentSlideIndex: number;
+
+  /** Slides viewed */
+  slidesViewed: number[];
+
+  /** Quiz attempts */
+  quizAttempts: Array<{
+    attemptedAt: Timestamp;
+    answers: Array<{
+      questionId: string;
+      answerId: string;
+      isCorrect: boolean;
+    }>;
+    score: number; // Percentage
+    passed: boolean;
+  }>;
+
+  /** Best quiz score */
+  bestScore: number;
+
+  /** Whether module is completed */
+  isCompleted: boolean;
+
+  /** Certificate ID (if completed) */
+  certificateId?: string;
+}
+
+/**
+ * Training certificate
+ * Collection: chatter_training_certificates/{certificateId}
+ */
+export interface ChatterTrainingCertificate {
+  /** Document ID */
+  id: string;
+
+  /** Chatter ID */
+  chatterId: string;
+
+  /** Chatter name */
+  chatterName: string;
+
+  /** Module ID (or "all" for full completion) */
+  moduleId: string;
+
+  /** Certificate type */
+  type: "module" | "full_program";
+
+  /** Module title (or "Programme Complet") */
+  title: string;
+
+  /** Average score across all modules/quizzes */
+  averageScore: number;
+
+  /** Total modules completed */
+  modulesCompleted: number;
+
+  /** Issued at */
+  issuedAt: Timestamp;
+
+  /** Certificate PDF URL (generated) */
+  pdfUrl?: string;
+
+  /** Verification code (unique, for QR code) */
+  verificationCode: string;
+}
+
+// ============================================================================
+// TRAINING INPUT/OUTPUT TYPES
+// ============================================================================
+
+export interface GetTrainingModulesResponse {
+  modules: Array<{
+    id: string;
+    order: number;
+    title: string;
+    description: string;
+    category: ChatterTrainingCategory;
+    coverImageUrl?: string;
+    estimatedMinutes: number;
+    isRequired: boolean;
+    prerequisites: string[];
+    progress: {
+      isStarted: boolean;
+      isCompleted: boolean;
+      currentSlideIndex: number;
+      totalSlides: number;
+      bestScore: number;
+    } | null;
+  }>;
+  overallProgress: {
+    completedModules: number;
+    totalModules: number;
+    completionPercent: number;
+    hasCertificate: boolean;
+    certificateId?: string;
+  };
+}
+
+export interface GetTrainingModuleContentResponse {
+  module: ChatterTrainingModule;
+  progress: ChatterTrainingProgress | null;
+  canAccess: boolean;
+  blockedByPrerequisites: string[];
+}
+
+export interface SubmitTrainingQuizInput {
+  moduleId: string;
+  answers: Array<{
+    questionId: string;
+    answerId: string;
+  }>;
+}
+
+export interface SubmitTrainingQuizResponse {
+  success: boolean;
+  score: number;
+  passed: boolean;
+  passingScore: number;
+  results: Array<{
+    questionId: string;
+    isCorrect: boolean;
+    correctAnswerId: string;
+    explanation?: string;
+  }>;
+  moduleCompleted: boolean;
+  certificateId?: string;
+  rewardGranted?: {
+    type: "badge" | "bonus";
+    badgeType?: ChatterBadgeType;
+    bonusAmount?: number;
+  };
+}
+
+export interface GetTrainingCertificateResponse {
+  certificate: ChatterTrainingCertificate;
+  verificationUrl: string;
 }
