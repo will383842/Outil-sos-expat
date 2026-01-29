@@ -15,6 +15,9 @@ import {
   InfluencerWithdrawal,
   InfluencerReferral,
   InfluencerConfig,
+  InfluencerCommissionRule,
+  InfluencerRateHistoryEntry,
+  InfluencerAntiFraudConfig,
   AdminGetInfluencersListInput,
   AdminGetInfluencersListResponse,
   AdminGetInfluencerDetailResponse,
@@ -25,6 +28,8 @@ import {
   getInfluencerConfigCached,
   updateInfluencerConfig,
   clearInfluencerConfigCache,
+  updateCommissionRules,
+  getRateHistory,
 } from "../../utils";
 import {
   approveWithdrawal,
@@ -497,6 +502,137 @@ export const adminUpdateInfluencerConfig = onCall(
 );
 
 // ============================================================================
+// V2: UPDATE COMMISSION RULES
+// ============================================================================
+
+export const adminUpdateCommissionRules = onCall(
+  {
+    region: "europe-west1",
+    memory: "256MiB",
+    timeoutSeconds: 30,
+  },
+  async (request): Promise<{ success: boolean; config: InfluencerConfig }> => {
+    ensureInitialized();
+    const adminId = await checkAdmin(request.auth);
+
+    const { rules, reason } = request.data as {
+      rules: InfluencerCommissionRule[];
+      reason: string;
+    };
+
+    if (!rules || !Array.isArray(rules)) {
+      throw new HttpsError("invalid-argument", "Rules array is required");
+    }
+
+    if (!reason || reason.trim().length === 0) {
+      throw new HttpsError("invalid-argument", "Reason for change is required");
+    }
+
+    // Validate rules
+    for (const rule of rules) {
+      if (!rule.id || !rule.type) {
+        throw new HttpsError("invalid-argument", "Each rule must have id and type");
+      }
+      if (rule.calculationType === "percentage" || rule.calculationType === "hybrid") {
+        if (rule.percentageRate < 0 || rule.percentageRate > 1) {
+          throw new HttpsError("invalid-argument", "Percentage rate must be between 0 and 1");
+        }
+      }
+      if (rule.fixedAmount < 0) {
+        throw new HttpsError("invalid-argument", "Fixed amount cannot be negative");
+      }
+    }
+
+    try {
+      const config = await updateCommissionRules(rules, adminId, reason.trim());
+
+      logger.info("[adminUpdateCommissionRules] Rules updated", {
+        adminId,
+        rulesCount: rules.length,
+        reason: reason.trim(),
+      });
+
+      return { success: true, config };
+    } catch (error) {
+      logger.error("[adminUpdateCommissionRules] Error", { error });
+      throw new HttpsError("internal", "Failed to update commission rules");
+    }
+  }
+);
+
+// ============================================================================
+// V2: GET RATE HISTORY
+// ============================================================================
+
+export const adminGetRateHistory = onCall(
+  {
+    region: "europe-west1",
+    memory: "256MiB",
+    timeoutSeconds: 30,
+  },
+  async (request): Promise<{ history: InfluencerRateHistoryEntry[] }> => {
+    ensureInitialized();
+    await checkAdmin(request.auth);
+
+    const { limit: historyLimit } = request.data as { limit?: number };
+
+    try {
+      const history = await getRateHistory(historyLimit || 20);
+
+      // Convert Timestamps for JSON serialization
+      const serializedHistory = history.map((entry) => ({
+        ...entry,
+        changedAt: entry.changedAt?.toDate?.()?.toISOString() || "",
+      }));
+
+      return { history: serializedHistory as unknown as InfluencerRateHistoryEntry[] };
+    } catch (error) {
+      logger.error("[adminGetRateHistory] Error", { error });
+      throw new HttpsError("internal", "Failed to get rate history");
+    }
+  }
+);
+
+// ============================================================================
+// V2: UPDATE ANTI-FRAUD CONFIG
+// ============================================================================
+
+export const adminUpdateAntiFraudConfig = onCall(
+  {
+    region: "europe-west1",
+    memory: "256MiB",
+    timeoutSeconds: 30,
+  },
+  async (request): Promise<{ success: boolean; config: InfluencerConfig }> => {
+    ensureInitialized();
+    const adminId = await checkAdmin(request.auth);
+
+    const { antiFraud } = request.data as {
+      antiFraud: InfluencerAntiFraudConfig;
+    };
+
+    if (!antiFraud) {
+      throw new HttpsError("invalid-argument", "Anti-fraud config is required");
+    }
+
+    try {
+      const config = await updateInfluencerConfig({ antiFraud }, adminId);
+      clearInfluencerConfigCache();
+
+      logger.info("[adminUpdateAntiFraudConfig] Anti-fraud config updated", {
+        adminId,
+        enabled: antiFraud.enabled,
+      });
+
+      return { success: true, config };
+    } catch (error) {
+      logger.error("[adminUpdateAntiFraudConfig] Error", { error });
+      throw new HttpsError("internal", "Failed to update anti-fraud config");
+    }
+  }
+);
+
+// ============================================================================
 // GET INFLUENCER LEADERBOARD (ADMIN VERSION - FULL DATA)
 // ============================================================================
 
@@ -556,6 +692,262 @@ export const adminGetInfluencerLeaderboard = onCall(
     } catch (error) {
       logger.error("[adminGetInfluencerLeaderboard] Error", { error });
       throw new HttpsError("internal", "Failed to get leaderboard");
+    }
+  }
+);
+
+// ============================================================================
+// EXPORT INFLUENCERS TO CSV
+// ============================================================================
+
+export const adminExportInfluencers = onCall(
+  {
+    region: "europe-west1",
+    memory: "512MiB",
+    timeoutSeconds: 120,
+  },
+  async (request): Promise<{ csv: string; count: number }> => {
+    ensureInitialized();
+    await checkAdmin(request.auth);
+
+    const db = getFirestore();
+    const input = request.data as {
+      status?: string;
+      country?: string;
+      language?: string;
+      search?: string;
+    };
+
+    const { status, country, language, search } = input;
+
+    try {
+      let query = db.collection("influencers") as FirebaseFirestore.Query;
+
+      // Apply filters
+      if (status) {
+        query = query.where("status", "==", status);
+      }
+      if (country) {
+        query = query.where("country", "==", country.toUpperCase());
+      }
+      if (language) {
+        query = query.where("language", "==", language);
+      }
+
+      query = query.orderBy("createdAt", "desc");
+      const snapshot = await query.get();
+
+      let influencers = snapshot.docs.map((doc) => doc.data() as Influencer);
+
+      // Apply search filter
+      if (search) {
+        const searchLower = search.toLowerCase();
+        influencers = influencers.filter(
+          (i) =>
+            i.email.toLowerCase().includes(searchLower) ||
+            i.firstName.toLowerCase().includes(searchLower) ||
+            i.lastName.toLowerCase().includes(searchLower) ||
+            i.affiliateCodeClient?.toLowerCase().includes(searchLower)
+        );
+      }
+
+      // Build CSV
+      const headers = [
+        "ID",
+        "Email",
+        "Prénom",
+        "Nom",
+        "Statut",
+        "Pays",
+        "Langue",
+        "Code Affilié",
+        "Clients Référés",
+        "Providers Recrutés",
+        "Total Gagné ($)",
+        "Solde Disponible ($)",
+        "Date Inscription",
+      ];
+
+      const rows = influencers.map((i) => [
+        i.id,
+        i.email,
+        i.firstName,
+        i.lastName,
+        i.status,
+        i.country || "",
+        i.language || "",
+        i.affiliateCodeClient || "",
+        i.totalClients?.toString() || "0",
+        i.totalRecruits?.toString() || "0",
+        ((i.totalEarned || 0) / 100).toFixed(2),
+        ((i.availableBalance || 0) / 100).toFixed(2),
+        i.createdAt?.toDate?.()?.toISOString()?.split("T")[0] || "",
+      ]);
+
+      // Escape CSV values
+      const escapeCSV = (value: string) => {
+        if (value.includes(",") || value.includes('"') || value.includes("\n")) {
+          return `"${value.replace(/"/g, '""')}"`;
+        }
+        return value;
+      };
+
+      const csvContent = [
+        headers.map(escapeCSV).join(","),
+        ...rows.map((row) => row.map(escapeCSV).join(",")),
+      ].join("\n");
+
+      logger.info("[adminExportInfluencers] Export completed", {
+        count: influencers.length,
+        filters: { status, country, language, search: !!search },
+      });
+
+      return { csv: csvContent, count: influencers.length };
+    } catch (error) {
+      logger.error("[adminExportInfluencers] Error", { error });
+      throw new HttpsError("internal", "Failed to export influencers");
+    }
+  }
+);
+
+// ============================================================================
+// BULK ACTIONS ON INFLUENCERS
+// ============================================================================
+
+export const adminBulkInfluencerAction = onCall(
+  {
+    region: "europe-west1",
+    memory: "512MiB",
+    timeoutSeconds: 120,
+  },
+  async (request): Promise<{ success: boolean; processed: number; failed: number; message: string }> => {
+    ensureInitialized();
+    const adminId = await checkAdmin(request.auth);
+
+    const db = getFirestore();
+    const { influencerIds, action, reason } = request.data as {
+      influencerIds: string[];
+      action: "suspend" | "activate" | "email";
+      reason?: string;
+    };
+
+    if (!influencerIds || !Array.isArray(influencerIds) || influencerIds.length === 0) {
+      throw new HttpsError("invalid-argument", "Influencer IDs array is required");
+    }
+
+    if (!action || !["suspend", "activate", "email"].includes(action)) {
+      throw new HttpsError("invalid-argument", "Valid action is required (suspend, activate, email)");
+    }
+
+    if (influencerIds.length > 100) {
+      throw new HttpsError("invalid-argument", "Maximum 100 influencers can be processed at once");
+    }
+
+    try {
+      let processed = 0;
+      let failed = 0;
+      const now = Timestamp.now();
+      const batch = db.batch();
+
+      for (const influencerId of influencerIds) {
+        try {
+          const influencerRef = db.collection("influencers").doc(influencerId);
+          const influencerDoc = await influencerRef.get();
+
+          if (!influencerDoc.exists) {
+            failed++;
+            continue;
+          }
+
+          // influencerDoc data is available if needed for future use
+          // const influencer = influencerDoc.data() as Influencer;
+
+          switch (action) {
+            case "suspend":
+              batch.update(influencerRef, {
+                status: "suspended",
+                suspensionReason: reason || "Bulk suspension by admin",
+                adminNotes: `SUSPENDED by admin ${adminId} on ${now.toDate().toISOString()}`,
+                updatedAt: now,
+              });
+              // Create notification
+              const suspendNotifRef = db.collection("influencer_notifications").doc();
+              batch.set(suspendNotifRef, {
+                id: suspendNotifRef.id,
+                influencerId,
+                type: "system",
+                title: "Compte suspendu",
+                message: reason || "Votre compte a été suspendu par l'administration.",
+                isRead: false,
+                emailSent: false,
+                createdAt: now,
+              });
+              processed++;
+              break;
+
+            case "activate":
+              batch.update(influencerRef, {
+                status: "active",
+                suspensionReason: null,
+                adminNotes: `ACTIVATED by admin ${adminId} on ${now.toDate().toISOString()}`,
+                updatedAt: now,
+              });
+              // Create notification
+              const activateNotifRef = db.collection("influencer_notifications").doc();
+              batch.set(activateNotifRef, {
+                id: activateNotifRef.id,
+                influencerId,
+                type: "system",
+                title: "Compte réactivé",
+                message: "Votre compte influenceur a été réactivé. Vous pouvez à nouveau gagner des commissions.",
+                isRead: false,
+                emailSent: false,
+                createdAt: now,
+              });
+              processed++;
+              break;
+
+            case "email":
+              // Create notification to be sent by email
+              const emailNotifRef = db.collection("influencer_notifications").doc();
+              batch.set(emailNotifRef, {
+                id: emailNotifRef.id,
+                influencerId,
+                type: "promo",
+                title: "Message de l'équipe SOS-Expat",
+                message: reason || "Nouveau message de l'équipe SOS-Expat.",
+                isRead: false,
+                emailSent: false,
+                sendEmail: true,
+                createdAt: now,
+              });
+              processed++;
+              break;
+          }
+        } catch {
+          failed++;
+        }
+      }
+
+      await batch.commit();
+
+      logger.info("[adminBulkInfluencerAction] Bulk action completed", {
+        adminId,
+        action,
+        requested: influencerIds.length,
+        processed,
+        failed,
+      });
+
+      return {
+        success: true,
+        processed,
+        failed,
+        message: `Action "${action}" completed: ${processed} processed, ${failed} failed`,
+      };
+    } catch (error) {
+      logger.error("[adminBulkInfluencerAction] Error", { error });
+      throw new HttpsError("internal", "Failed to perform bulk action");
     }
   }
 );

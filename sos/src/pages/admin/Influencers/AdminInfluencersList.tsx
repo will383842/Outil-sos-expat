@@ -146,7 +146,7 @@ const AdminInfluencersList: React.FC = () => {
       );
 
       const result = await adminGetInfluencersList({
-        page,
+        offset: (page - 1) * limit, // Convert page to offset for backend
         limit,
         status: statusFilter === 'all' ? undefined : statusFilter,
         country: countryFilter === 'all' ? undefined : countryFilter,

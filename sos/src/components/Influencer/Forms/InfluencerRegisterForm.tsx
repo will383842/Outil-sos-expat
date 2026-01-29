@@ -48,14 +48,26 @@ const InfluencerRegisterForm: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    country: string;
+    language: string;
+    platforms: string[];
+    bio: string;
+    communitySize: string;
+    communityNiche: string;
+    socialLinks: Record<string, string>;
+  }>({
     firstName: user?.firstName || user?.displayName?.split(' ')[0] || '',
     lastName: user?.lastName || user?.displayName?.split(' ').slice(1).join(' ') || '',
     email: user?.email || '',
     phone: '',
     country: '',
-    language: language || 'fr',
-    platforms: [] as string[],
+    language: (language || 'fr') as string,
+    platforms: [],
     bio: '',
     communitySize: '',
     communityNiche: '',

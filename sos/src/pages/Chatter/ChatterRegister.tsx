@@ -56,7 +56,7 @@ const ChatterRegister: React.FC = () => {
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
-        phone: data.phone,
+        phone: `${data.phoneCode}${data.phoneNumber}`,
         country: data.country,
         languages: data.languages,
         recruiterCode: data.referralCode || undefined,

@@ -2,23 +2,23 @@
  * InfluencerLeaderboard - Monthly top 10 rankings (informational only)
  */
 
-import React, { useEffect, useState } from 'react';
-import { FormattedMessage, useIntl } from 'react-intl';
+import React, { useEffect } from 'react';
+import { FormattedMessage } from 'react-intl';
 import { useInfluencer } from '@/hooks/useInfluencer';
+import type { InfluencerLeaderboardEntry } from '@/types/influencer';
 import InfluencerDashboardLayout from '@/components/Influencer/Layout/InfluencerDashboardLayout';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
-import { Trophy, Medal, Users, DollarSign } from 'lucide-react';
+import { Trophy, Medal } from 'lucide-react';
 
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
 } as const;
 
 const InfluencerLeaderboard: React.FC = () => {
-  const intl = useIntl();
-  const { leaderboard, loadingLeaderboard, fetchLeaderboard } = useInfluencer();
+  const { leaderboard, isLoading, refreshLeaderboard } = useInfluencer();
 
   useEffect(() => {
-    fetchLeaderboard();
+    refreshLeaderboard();
   }, []);
 
   const formatCurrency = (cents: number) => `$${(cents / 100).toFixed(2)}`;
@@ -32,7 +32,7 @@ const InfluencerLeaderboard: React.FC = () => {
     }
   };
 
-  if (loadingLeaderboard && !leaderboard) {
+  if (isLoading && !leaderboard) {
     return (
       <InfluencerDashboardLayout>
         <div className="flex items-center justify-center min-h-[400px]">
@@ -74,7 +74,7 @@ const InfluencerLeaderboard: React.FC = () => {
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
                   <span className="text-xl font-bold text-red-600 dark:text-red-400">
-                    #{leaderboard.currentUserRank}
+                    #{leaderboard.currentUserRank.rank}
                   </span>
                 </div>
                 <div>
@@ -82,14 +82,14 @@ const InfluencerLeaderboard: React.FC = () => {
                     <FormattedMessage id="influencer.leaderboard.you" defaultMessage="Vous" />
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {formatCurrency(leaderboard.currentUserStats?.monthlyEarnings || 0)}
+                    {formatCurrency(leaderboard.currentUserRank.earnings || 0)}
                     <FormattedMessage id="influencer.leaderboard.thisMonth" defaultMessage=" ce mois" />
                   </p>
                 </div>
               </div>
               <div className="text-right">
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {leaderboard.currentUserStats?.monthlyClients || 0}
+                  {leaderboard.currentUserRank.referrals || 0}
                   <FormattedMessage id="influencer.leaderboard.clients" defaultMessage=" clients" />
                 </p>
               </div>
@@ -99,40 +99,40 @@ const InfluencerLeaderboard: React.FC = () => {
 
         {/* Rankings */}
         <div className={`${UI.card} overflow-hidden`}>
-          {leaderboard?.rankings && leaderboard.rankings.length > 0 ? (
+          {leaderboard?.entries && leaderboard.entries.length > 0 ? (
             <div className="divide-y divide-gray-200 dark:divide-gray-700">
-              {leaderboard.rankings.map((rank) => (
+              {leaderboard.entries.map((entry: InfluencerLeaderboardEntry) => (
                 <div
-                  key={rank.influencerId}
+                  key={entry.influencerId}
                   className={`p-4 flex items-center gap-4 ${
-                    rank.isCurrentUser ? 'bg-red-50 dark:bg-red-900/20' : ''
+                    entry.isCurrentUser ? 'bg-red-50 dark:bg-red-900/20' : ''
                   }`}
                 >
                   <div className="w-10 flex justify-center">
-                    {getRankIcon(rank.rank)}
+                    {getRankIcon(entry.rank)}
                   </div>
                   <div className="flex-1">
                     <p className={`font-medium ${
-                      rank.isCurrentUser ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'
+                      entry.isCurrentUser ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'
                     }`}>
-                      {rank.influencerName}
-                      {rank.isCurrentUser && (
+                      {entry.displayName}
+                      {entry.isCurrentUser && (
                         <span className="ml-2 text-xs text-red-500">
                           (<FormattedMessage id="influencer.leaderboard.you" defaultMessage="Vous" />)
                         </span>
                       )}
                     </p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {rank.country}
+                      {entry.country}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-green-600 dark:text-green-400">
-                      {formatCurrency(rank.monthlyEarnings)}
+                      {formatCurrency(entry.earnings)}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {rank.monthlyClients}
-                      <FormattedMessage id="influencer.leaderboard.clientsShort" defaultMessage=" clients" />
+                      {entry.referrals}
+                      <FormattedMessage id="influencer.leaderboard.clientsShort" defaultMessage=" réf." />
                     </p>
                   </div>
                 </div>

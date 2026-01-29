@@ -26,6 +26,7 @@ import {
   generateClientCode,
   generateRecruitmentCode,
   hashIP,
+  captureCurrentRates,
 } from "../utils";
 
 // Lazy initialization
@@ -203,7 +204,10 @@ export const registerInfluencer = onCall(
       const affiliateCodeClient = await generateClientCode(input.firstName);
       const affiliateCodeRecruitment = generateRecruitmentCode(affiliateCodeClient);
 
-      // 8. Create influencer document
+      // 8. V2: Capture current rates (frozen at registration)
+      const capturedRates = captureCurrentRates(config);
+
+      // 9. Create influencer document
       const now = Timestamp.now();
       const currentMonth = now.toDate().toISOString().substring(0, 7);
 
@@ -247,13 +251,17 @@ export const registerInfluencer = onCall(
         paymentDetails: null,
         pendingWithdrawalId: null,
 
+        // V2: Captured rates (frozen at registration)
+        capturedRates,
+        totalWithdrawn: 0,
+
         createdAt: now,
         updatedAt: now,
         lastLoginAt: now,
         lastActivityDate: null,
       };
 
-      // 9. Create user document and influencer document in transaction
+      // 10. Create user document and influencer document in transaction
       await db.runTransaction(async (transaction) => {
         // Create influencer
         const influencerRef = db.collection("influencers").doc(userId);

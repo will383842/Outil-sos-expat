@@ -38,6 +38,12 @@ export {
   adminGetInfluencerConfig,
   adminUpdateInfluencerConfig,
   adminGetInfluencerLeaderboard,
+  // V2 Admin Callables
+  adminUpdateCommissionRules,
+  adminGetRateHistory,
+  adminUpdateAntiFraudConfig,
+  adminExportInfluencers,
+  adminBulkInfluencerAction,
 } from "./callables/admin";
 
 // ============================================================================

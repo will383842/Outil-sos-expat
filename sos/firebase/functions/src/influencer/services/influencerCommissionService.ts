@@ -19,11 +19,14 @@ import {
   Influencer,
   InfluencerCommission,
   InfluencerCommissionType,
+  InfluencerConfig,
+  CommissionCalculationType,
 } from "../types";
 import {
   getInfluencerConfigCached,
   getValidationDelayMs,
   getReleaseDelayMs,
+  getCommissionRule,
 } from "../utils/influencerConfigService";
 
 // ============================================================================
@@ -51,9 +54,12 @@ export interface CreateCommissionInput {
       callId?: string;
       recruitmentDate?: string;
       monthsRemaining?: number;
+      // For percentage-based calculations (V2)
+      totalAmount?: number;
     };
   };
-  amount?: number; // Override amount (otherwise use config)
+  amount?: number; // Override amount (otherwise use config/captured rates)
+  baseAmount?: number; // Base amount for percentage calculations (V2)
   description?: string;
 }
 
@@ -63,6 +69,74 @@ export interface CreateCommissionResult {
   amount?: number;
   error?: string;
   reason?: string;
+}
+
+// ============================================================================
+// V2: COMMISSION CALCULATION
+// ============================================================================
+
+/**
+ * Calculate commission amount based on V2 flexible rules
+ * Uses captured rates (frozen at registration) if available
+ */
+export function calculateCommissionAmount(
+  influencer: Influencer,
+  type: InfluencerCommissionType,
+  baseAmount: number,
+  config: InfluencerConfig
+): number {
+  // V2: Use captured rates if available (frozen at registration)
+  if (influencer.capturedRates && influencer.capturedRates.rules[type]) {
+    const capturedRule = influencer.capturedRates.rules[type]!;
+    return calculateByType(
+      capturedRule.calculationType,
+      capturedRule.fixedAmount,
+      capturedRule.percentageRate,
+      baseAmount
+    );
+  }
+
+  // Fallback: Use current config rules
+  const rule = getCommissionRule(config, type);
+  if (rule && rule.enabled) {
+    return calculateByType(
+      rule.calculationType,
+      rule.fixedAmount,
+      rule.percentageRate,
+      baseAmount
+    );
+  }
+
+  // Legacy fallback: Use fixed amounts from config
+  switch (type) {
+    case "client_referral":
+      return config.commissionClientAmount;
+    case "recruitment":
+      return config.commissionRecruitmentAmount;
+    default:
+      return 0;
+  }
+}
+
+/**
+ * Calculate amount based on calculation type
+ */
+function calculateByType(
+  calculationType: CommissionCalculationType,
+  fixedAmount: number,
+  percentageRate: number,
+  baseAmount: number
+): number {
+  switch (calculationType) {
+    case "fixed":
+      return fixedAmount;
+    case "percentage":
+      return Math.round(baseAmount * percentageRate);
+    case "hybrid":
+      return fixedAmount + Math.round(baseAmount * percentageRate);
+    default:
+      return fixedAmount;
+  }
 }
 
 // ============================================================================
@@ -76,7 +150,7 @@ export async function createCommission(
   input: CreateCommissionInput
 ): Promise<CreateCommissionResult> {
   const db = getFirestore();
-  const { influencerId, type, source, amount: inputAmount, description } = input;
+  const { influencerId, type, source, amount: inputAmount, baseAmount, description } = input;
 
   try {
     // 1. Get influencer data
@@ -104,22 +178,21 @@ export async function createCommission(
       return { success: false, error: "Influencer system is not active" };
     }
 
-    // 4. Calculate amount (FIXED - no bonuses)
+    // 4. Calculate amount (V2: flexible calculation using captured rates)
     let commissionAmount: number;
 
     if (inputAmount !== undefined) {
+      // Manual override
       commissionAmount = inputAmount;
     } else {
-      switch (type) {
-        case "client_referral":
-          commissionAmount = config.commissionClientAmount; // $10
-          break;
-        case "recruitment":
-          commissionAmount = config.commissionRecruitmentAmount; // $5
-          break;
-        default:
-          commissionAmount = 0;
-      }
+      // V2: Calculate using captured rates or current rules
+      // Base amount can come from input or source details
+      const base = baseAmount
+        || source.details?.totalAmount
+        || source.details?.connectionFee
+        || 0;
+
+      commissionAmount = calculateCommissionAmount(influencer, type, base, config);
     }
 
     // 5. Create timestamp

@@ -13,6 +13,17 @@ export {
   getRecruitmentWindowEnd,
   isRecruitmentActive,
   getRecruitmentMonthsRemaining,
+  // V2 exports
+  getCommissionRule,
+  getEnabledCommissionRules,
+  captureCurrentRates,
+  updateCommissionRules,
+  getRateHistory,
+  getHoldPeriodForType,
+  getHoldPeriodMsForType,
+  getReleaseDelayMsForType,
+  getAntiFraudConfig,
+  isAntiFraudEnabled,
 } from "./influencerConfigService";
 
 export {

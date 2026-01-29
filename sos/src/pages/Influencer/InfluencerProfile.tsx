@@ -5,6 +5,7 @@
 import React from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useInfluencer } from '@/hooks/useInfluencer';
+import type { InfluencerPlatform } from '@/types/influencer';
 import InfluencerDashboardLayout from '@/components/Influencer/Layout/InfluencerDashboardLayout';
 import { User, Globe, CreditCard, Settings } from 'lucide-react';
 
@@ -14,7 +15,7 @@ const UI = {
 
 const InfluencerProfile: React.FC = () => {
   const intl = useIntl();
-  const { dashboard } = useInfluencer();
+  const { dashboardData: dashboard } = useInfluencer();
   const influencer = dashboard?.influencer;
 
   return (
@@ -74,7 +75,7 @@ const InfluencerProfile: React.FC = () => {
             </h2>
           </div>
           <div className="flex flex-wrap gap-2">
-            {influencer?.platforms?.map((platform) => (
+            {influencer?.platforms?.map((platform: InfluencerPlatform) => (
               <span
                 key={platform}
                 className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-sm"
@@ -129,21 +130,12 @@ const InfluencerProfile: React.FC = () => {
               <FormattedMessage id="influencer.profile.payment" defaultMessage="Paramètres de paiement" />
             </h2>
           </div>
-          {influencer?.preferredPaymentMethod ? (
-            <div>
-              <p className="text-gray-700 dark:text-gray-300">
-                <FormattedMessage id="influencer.profile.paymentMethod" defaultMessage="Méthode préférée:" />{' '}
-                <span className="font-medium capitalize">{influencer.preferredPaymentMethod}</span>
-              </p>
-            </div>
-          ) : (
-            <p className="text-gray-500 dark:text-gray-400">
-              <FormattedMessage
-                id="influencer.profile.noPayment"
-                defaultMessage="Aucune méthode de paiement configurée. Configurez-en une lors de votre première demande de retrait."
-              />
-            </p>
-          )}
+          <p className="text-gray-500 dark:text-gray-400">
+            <FormattedMessage
+              id="influencer.profile.paymentInfo"
+              defaultMessage="Configurez votre méthode de paiement lors de votre première demande de retrait."
+            />
+          </p>
         </div>
       </div>
     </InfluencerDashboardLayout>

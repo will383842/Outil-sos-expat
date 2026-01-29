@@ -44,12 +44,23 @@ export type SupportedInfluencerLanguage =
   | "zh";   // Chinese
 
 /**
- * Commission type for influencers
+ * Commission type for influencers (V2 - Extended)
  */
 export type InfluencerCommissionType =
   | "client_referral"       // Client completed a paid call
   | "recruitment"           // Recruited provider received a call (6 months window)
+  | "signup_bonus"          // Bonus inscription filleul
+  | "first_call"            // Premier appel du filleul
+  | "recurring_call"        // Appels récurrents
+  | "subscription"          // Souscription abonnement
+  | "renewal"               // Renouvellement abonnement
+  | "provider_bonus"        // Bonus prestataire validé
   | "manual_adjustment";    // Admin manual adjustment
+
+/**
+ * Commission calculation type (V2)
+ */
+export type CommissionCalculationType = "fixed" | "percentage" | "hybrid";
 
 /**
  * Commission status lifecycle
@@ -224,6 +235,14 @@ export interface Influencer {
 
   /** Current pending withdrawal ID */
   pendingWithdrawalId: string | null;
+
+  // ---- V2: Captured Rates ----
+
+  /** Commission rates frozen at registration */
+  capturedRates?: InfluencerCapturedRates;
+
+  /** Total amount withdrawn all time */
+  totalWithdrawn: number;
 
   // ---- Timestamps ----
 
@@ -529,11 +548,119 @@ export interface InfluencerReferral {
 }
 
 // ============================================================================
+// COMMISSION RULES (V2)
+// ============================================================================
+
+/**
+ * Commission rule conditions
+ */
+export interface InfluencerCommissionConditions {
+  /** Minimum call duration in seconds */
+  minCallDuration?: number;
+  /** Provider types this applies to */
+  providerTypes?: ("lawyer" | "expat")[];
+  /** Maximum commissions per month (0 = unlimited) */
+  maxPerMonth?: number;
+  /** Lifetime limit (0 = unlimited) */
+  lifetimeLimit?: number;
+  /** Require email verification */
+  requireEmailVerification?: boolean;
+}
+
+/**
+ * Commission rule definition (V2)
+ * Defines how a specific commission type is calculated
+ */
+export interface InfluencerCommissionRule {
+  /** Rule ID */
+  id: string;
+  /** Commission type this rule applies to */
+  type: InfluencerCommissionType;
+  /** Whether this rule is enabled */
+  enabled: boolean;
+  /** How to calculate the commission */
+  calculationType: CommissionCalculationType;
+
+  /** Fixed amount in cents (for fixed or hybrid) */
+  fixedAmount: number;
+  /** Percentage rate (0.75 = 75%) for percentage or hybrid */
+  percentageRate: number;
+  /** What to apply percentage to */
+  applyTo?: "connection_fee" | "total_amount";
+
+  /** Conditions that must be met */
+  conditions: InfluencerCommissionConditions;
+
+  /** Hold period in days (overrides global default) */
+  holdPeriodDays: number;
+  /** Release delay in hours after hold period */
+  releaseDelayHours: number;
+
+  /** Human-readable description */
+  description: string;
+}
+
+/**
+ * Captured rates at registration (V2)
+ * Rates are frozen at signup and never change for the influencer
+ */
+export interface InfluencerCapturedRates {
+  /** When rates were captured */
+  capturedAt: Timestamp;
+  /** Config version at capture time */
+  version: number;
+  /** Captured rules by type */
+  rules: Partial<Record<InfluencerCommissionType, {
+    calculationType: CommissionCalculationType;
+    fixedAmount: number;
+    percentageRate: number;
+    holdPeriodDays: number;
+    releaseDelayHours: number;
+  }>>;
+}
+
+/**
+ * Anti-fraud configuration (V2)
+ */
+export interface InfluencerAntiFraudConfig {
+  /** Whether anti-fraud is enabled */
+  enabled: boolean;
+  /** Max referrals per day (0 = unlimited) */
+  maxReferralsPerDay: number;
+  /** Max referrals per week (0 = unlimited) */
+  maxReferralsPerWeek: number;
+  /** Block referrals from same IP */
+  blockSameIPReferrals: boolean;
+  /** Minimum account age in days */
+  minAccountAgeDays: number;
+  /** Require email verification for referrals */
+  requireEmailVerification: boolean;
+  /** Suspicious conversion rate threshold (0.5 = 50%) */
+  suspiciousConversionRateThreshold: number;
+  /** Auto-suspend on violation */
+  autoSuspendOnViolation: boolean;
+}
+
+/**
+ * Rate history entry (V2)
+ */
+export interface InfluencerRateHistoryEntry {
+  /** When the change was made */
+  changedAt: Timestamp;
+  /** Admin who made the change */
+  changedBy: string;
+  /** Previous rules before change */
+  previousRules: InfluencerCommissionRule[];
+  /** Reason for change */
+  reason: string;
+}
+
+// ============================================================================
 // CONFIGURATION
 // ============================================================================
 
 /**
- * System configuration for influencer module
+ * System configuration for influencer module (V2 Enhanced)
  * Collection: influencer_config/current
  */
 export interface InfluencerConfig {
@@ -588,6 +715,29 @@ export interface InfluencerConfig {
   /** Number of influencers shown in leaderboard */
   leaderboardSize: number;
 
+  // ---- V2: Commission Rules ----
+
+  /** Commission rules by type */
+  commissionRules: InfluencerCommissionRule[];
+
+  // ---- V2: Anti-Fraud ----
+
+  /** Anti-fraud configuration */
+  antiFraud: InfluencerAntiFraudConfig;
+
+  // ---- V2: Hold Period Defaults ----
+
+  /** Default hold period in days for new rules */
+  defaultHoldPeriodDays: number;
+
+  /** Default release delay in hours */
+  defaultReleaseDelayHours: number;
+
+  // ---- V2: Rate History ----
+
+  /** History of rate changes */
+  rateHistory: InfluencerRateHistoryEntry[];
+
   // ---- Version & History ----
 
   /** Config version */
@@ -601,7 +751,126 @@ export interface InfluencerConfig {
 }
 
 /**
- * Default influencer configuration
+ * Default commission rules (V2)
+ */
+export const DEFAULT_COMMISSION_RULES: InfluencerCommissionRule[] = [
+  {
+    id: "client_referral",
+    type: "client_referral",
+    enabled: true,
+    calculationType: "fixed",
+    fixedAmount: 1000, // $10
+    percentageRate: 0,
+    conditions: {},
+    holdPeriodDays: 7,
+    releaseDelayHours: 24,
+    description: "Commission par client référé",
+  },
+  {
+    id: "recruitment",
+    type: "recruitment",
+    enabled: true,
+    calculationType: "fixed",
+    fixedAmount: 500, // $5
+    percentageRate: 0,
+    conditions: {},
+    holdPeriodDays: 7,
+    releaseDelayHours: 24,
+    description: "Commission par appel de prestataire recruté",
+  },
+  {
+    id: "signup_bonus",
+    type: "signup_bonus",
+    enabled: false,
+    calculationType: "fixed",
+    fixedAmount: 0,
+    percentageRate: 0,
+    conditions: { requireEmailVerification: true },
+    holdPeriodDays: 14,
+    releaseDelayHours: 24,
+    description: "Bonus inscription filleul",
+  },
+  {
+    id: "first_call",
+    type: "first_call",
+    enabled: false,
+    calculationType: "fixed",
+    fixedAmount: 0,
+    percentageRate: 0,
+    conditions: { minCallDuration: 60 },
+    holdPeriodDays: 7,
+    releaseDelayHours: 24,
+    description: "Bonus premier appel du filleul",
+  },
+  {
+    id: "recurring_call",
+    type: "recurring_call",
+    enabled: false,
+    calculationType: "percentage",
+    fixedAmount: 0,
+    percentageRate: 0,
+    applyTo: "connection_fee",
+    conditions: {},
+    holdPeriodDays: 7,
+    releaseDelayHours: 24,
+    description: "Commission sur appels récurrents",
+  },
+  {
+    id: "subscription",
+    type: "subscription",
+    enabled: false,
+    calculationType: "percentage",
+    fixedAmount: 0,
+    percentageRate: 0,
+    applyTo: "total_amount",
+    conditions: {},
+    holdPeriodDays: 30,
+    releaseDelayHours: 24,
+    description: "Commission souscription abonnement",
+  },
+  {
+    id: "renewal",
+    type: "renewal",
+    enabled: false,
+    calculationType: "percentage",
+    fixedAmount: 0,
+    percentageRate: 0,
+    applyTo: "total_amount",
+    conditions: {},
+    holdPeriodDays: 30,
+    releaseDelayHours: 24,
+    description: "Commission renouvellement abonnement",
+  },
+  {
+    id: "provider_bonus",
+    type: "provider_bonus",
+    enabled: false,
+    calculationType: "fixed",
+    fixedAmount: 0,
+    percentageRate: 0,
+    conditions: {},
+    holdPeriodDays: 14,
+    releaseDelayHours: 24,
+    description: "Bonus prestataire validé",
+  },
+];
+
+/**
+ * Default anti-fraud configuration (V2)
+ */
+export const DEFAULT_ANTI_FRAUD_CONFIG: InfluencerAntiFraudConfig = {
+  enabled: false,
+  maxReferralsPerDay: 0,
+  maxReferralsPerWeek: 0,
+  blockSameIPReferrals: false,
+  minAccountAgeDays: 0,
+  requireEmailVerification: false,
+  suspiciousConversionRateThreshold: 0,
+  autoSuspendOnViolation: false,
+};
+
+/**
+ * Default influencer configuration (V2 Enhanced)
  */
 export const DEFAULT_INFLUENCER_CONFIG: Omit<
   InfluencerConfig,
@@ -625,6 +894,19 @@ export const DEFAULT_INFLUENCER_CONFIG: Omit<
   attributionWindowDays: 30,
 
   leaderboardSize: 10,
+
+  // V2: Commission rules
+  commissionRules: DEFAULT_COMMISSION_RULES,
+
+  // V2: Anti-fraud
+  antiFraud: DEFAULT_ANTI_FRAUD_CONFIG,
+
+  // V2: Hold period defaults
+  defaultHoldPeriodDays: 7,
+  defaultReleaseDelayHours: 24,
+
+  // V2: Rate history
+  rateHistory: [],
 
   version: 1,
 };

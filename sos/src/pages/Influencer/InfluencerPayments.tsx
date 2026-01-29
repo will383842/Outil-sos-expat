@@ -18,7 +18,7 @@ const UI = {
 
 const InfluencerPayments: React.FC = () => {
   const intl = useIntl();
-  const { dashboard } = useInfluencer();
+  const { dashboardData: dashboard } = useInfluencer();
   const [showWithdrawForm, setShowWithdrawForm] = useState(false);
 
   const formatCurrency = (cents: number) => `$${(cents / 100).toFixed(2)}`;

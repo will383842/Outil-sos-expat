@@ -21,7 +21,7 @@ type TabType = 'links' | 'banners' | 'widgets' | 'qrcode' | 'texts';
 
 const InfluencerPromoTools: React.FC = () => {
   const intl = useIntl();
-  const { dashboard } = useInfluencer();
+  const { dashboardData: dashboard } = useInfluencer();
   const [activeTab, setActiveTab] = useState<TabType>('links');
   const [copied, setCopied] = useState(false);
 

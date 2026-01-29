@@ -9,7 +9,7 @@ import Layout from '@/components/layout/Layout';
 import { AlertTriangle, Mail } from 'lucide-react';
 
 const InfluencerSuspended: React.FC = () => {
-  const { dashboard } = useInfluencer();
+  const { dashboardData: dashboard } = useInfluencer();
 
   return (
     <Layout>

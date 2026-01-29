@@ -10,7 +10,20 @@
 
 export type InfluencerStatus = 'active' | 'suspended' | 'blocked';
 
-export type InfluencerCommissionType = 'client_referral' | 'provider_recruitment';
+// V2: Extended commission types
+export type InfluencerCommissionType =
+  | 'client_referral'
+  | 'recruitment'
+  | 'signup_bonus'
+  | 'first_call'
+  | 'recurring_call'
+  | 'subscription'
+  | 'renewal'
+  | 'provider_bonus'
+  | 'manual_adjustment';
+
+// V2: Commission calculation type
+export type CommissionCalculationType = 'fixed' | 'percentage' | 'hybrid';
 
 export type InfluencerCommissionStatus = 'pending' | 'validated' | 'available' | 'paid' | 'cancelled';
 
@@ -30,6 +43,62 @@ export type InfluencerPlatform =
   | 'podcast'
   | 'newsletter'
   | 'other';
+
+// ============================================================================
+// V2: COMMISSION RULES
+// ============================================================================
+
+export interface InfluencerCommissionConditions {
+  minCallDuration?: number;
+  providerTypes?: ('lawyer' | 'expat')[];
+  maxPerMonth?: number;
+  lifetimeLimit?: number;
+  requireEmailVerification?: boolean;
+}
+
+export interface InfluencerCommissionRule {
+  id: string;
+  type: InfluencerCommissionType;
+  enabled: boolean;
+  calculationType: CommissionCalculationType;
+  fixedAmount: number;
+  percentageRate: number;
+  applyTo?: 'connection_fee' | 'total_amount';
+  conditions: InfluencerCommissionConditions;
+  holdPeriodDays: number;
+  releaseDelayHours: number;
+  description: string;
+}
+
+export interface InfluencerCapturedRates {
+  capturedAt: string;
+  version: number;
+  rules: Partial<Record<InfluencerCommissionType, {
+    calculationType: CommissionCalculationType;
+    fixedAmount: number;
+    percentageRate: number;
+    holdPeriodDays: number;
+    releaseDelayHours: number;
+  }>>;
+}
+
+export interface InfluencerAntiFraudConfig {
+  enabled: boolean;
+  maxReferralsPerDay: number;
+  maxReferralsPerWeek: number;
+  blockSameIPReferrals: boolean;
+  minAccountAgeDays: number;
+  requireEmailVerification: boolean;
+  suspiciousConversionRateThreshold: number;
+  autoSuspendOnViolation: boolean;
+}
+
+export interface InfluencerRateHistoryEntry {
+  changedAt: string;
+  changedBy: string;
+  previousRules: InfluencerCommissionRule[];
+  reason: string;
+}
 
 // ============================================================================
 // INFLUENCER PROFILE
@@ -85,6 +154,9 @@ export interface Influencer {
   lastActivityAt?: string;
   currentStreak: number;
   longestStreak: number;
+
+  // V2: Captured rates (frozen at registration)
+  capturedRates?: InfluencerCapturedRates;
 
   // Timestamps
   createdAt: string;
@@ -240,7 +312,7 @@ export interface InfluencerNotification {
 // ============================================================================
 
 export interface InfluencerConfig {
-  // Commission rates (fixed amounts in cents)
+  // Commission rates (fixed amounts in cents) - Legacy
   clientReferralCommission: number;
   providerRecruitmentCommission: number;
 
@@ -256,6 +328,22 @@ export interface InfluencerConfig {
 
   // Recruitment window
   recruitmentCommissionWindowMonths: number;
+
+  // V2: Commission rules
+  commissionRules?: InfluencerCommissionRule[];
+
+  // V2: Anti-fraud
+  antiFraud?: InfluencerAntiFraudConfig;
+
+  // V2: Hold period defaults
+  defaultHoldPeriodDays?: number;
+  defaultReleaseDelayHours?: number;
+
+  // V2: Rate history
+  rateHistory?: InfluencerRateHistoryEntry[];
+
+  // Version
+  version?: number;
 
   // Timestamps
   updatedAt?: string;

@@ -12,6 +12,8 @@ import {
   Twitter,
   Linkedin,
   ArrowUp,
+  MessageCircle,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 import { useIntl } from "react-intl";
@@ -395,6 +397,83 @@ const LegalLinksNav = memo<LegalLinksNavProps>(function LegalLinksNav({
   );
 });
 
+interface JoinUsCTAProps {
+  readonly chatterLabel: string;
+  readonly influencerLabel: string;
+  readonly chatterHref: string;
+  readonly influencerHref: string;
+  readonly sectionTitle: string;
+}
+
+const JoinUsCTA = memo<JoinUsCTAProps>(function JoinUsCTA({
+  chatterLabel,
+  influencerLabel,
+  chatterHref,
+  influencerHref,
+  sectionTitle,
+}) {
+  return (
+    <div className="col-span-1 md:col-span-2 lg:col-span-1 order-first lg:order-last">
+      {/* Mobile: Section mise en évidence avec fond */}
+      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-white/5 to-white/[0.02]
+        border border-white/10 backdrop-blur-sm">
+        <h3 className="text-lg sm:text-xl font-bold text-white text-center lg:text-left mb-4">
+          {sectionTitle}
+        </h3>
+
+        {/* Boutons en grille sur mobile, empilés sur desktop */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3">
+          {/* Bouton Chatter */}
+          <Link
+            to={chatterHref}
+            className="group flex items-center gap-3 sm:gap-4 w-full px-4 sm:px-5 py-4 sm:py-5 rounded-xl
+              bg-gradient-to-r from-red-500 to-red-600
+              hover:from-red-600 hover:to-red-700
+              shadow-lg shadow-red-500/25 hover:shadow-red-500/40
+              transform hover:scale-[1.02] active:scale-[0.98]
+              transition-all duration-300 focus:outline-none
+              focus-visible:ring-2 focus-visible:ring-white/50"
+          >
+            <div className="p-2.5 sm:p-3 rounded-xl bg-white/20 group-hover:bg-white/30 transition-colors">
+              <MessageCircle size={22} className="text-white" />
+            </div>
+            <div className="flex flex-col flex-1">
+              <span className="text-white font-bold text-base sm:text-lg">{chatterLabel}</span>
+              <span className="text-white/80 text-xs sm:text-sm">1 000 FCFA/appel</span>
+            </div>
+            <span className="text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" aria-hidden="true">
+              →
+            </span>
+          </Link>
+
+          {/* Bouton Influenceur */}
+          <Link
+            to={influencerHref}
+            className="group flex items-center gap-3 sm:gap-4 w-full px-4 sm:px-5 py-4 sm:py-5 rounded-xl
+              bg-gradient-to-r from-purple-500 to-purple-600
+              hover:from-purple-600 hover:to-purple-700
+              shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40
+              transform hover:scale-[1.02] active:scale-[0.98]
+              transition-all duration-300 focus:outline-none
+              focus-visible:ring-2 focus-visible:ring-white/50"
+          >
+            <div className="p-2.5 sm:p-3 rounded-xl bg-white/20 group-hover:bg-white/30 transition-colors">
+              <Users size={22} className="text-white" />
+            </div>
+            <div className="flex flex-col flex-1">
+              <span className="text-white font-bold text-base sm:text-lg">{influencerLabel}</span>
+              <span className="text-white/80 text-xs sm:text-sm">$10/client référé</span>
+            </div>
+            <span className="text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" aria-hidden="true">
+              →
+            </span>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+});
+
 interface ScrollToTopButtonProps {
   readonly visible: boolean;
   readonly onClick: () => void;
@@ -506,10 +585,6 @@ const Footer: React.FC = () => {
           {
             label: intl.formatMessage({ id: "footer.services.testimonials" }),
             href: "/temoignages",
-          },
-          {
-            label: intl.formatMessage({ id: "footer.services.becomeChatter" }),
-            href: "/devenir-chatter",
           },
         ],
       },
@@ -759,7 +834,7 @@ const Footer: React.FC = () => {
       {/* Main content */}
       <div className="relative backdrop-blur-sm bg-black/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12">
             {/* Company Info */}
             <div className="lg:col-span-1 space-y-6">
               <div className="group">
@@ -813,6 +888,15 @@ const Footer: React.FC = () => {
               title={footerSections.support.title}
               links={footerSections.support.links}
               navAriaLabel={intl.formatMessage({ id: "footer.support.navAria" })}
+            />
+
+            {/* Rejoignez-nous */}
+            <JoinUsCTA
+              sectionTitle={intl.formatMessage({ id: "footer.joinUs.title", defaultMessage: "Rejoignez-nous" })}
+              chatterLabel={intl.formatMessage({ id: "footer.joinUs.chatter", defaultMessage: "Devenir Chatter" })}
+              influencerLabel={intl.formatMessage({ id: "footer.joinUs.influencer", defaultMessage: "Devenir Influenceur" })}
+              chatterHref="/devenir-chatter"
+              influencerHref="/devenir-influenceur"
             />
           </div>
 

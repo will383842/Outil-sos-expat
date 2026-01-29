@@ -9,6 +9,7 @@ import { useLocaleNavigate } from '@/multilingual-system';
 import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
 import { useApp } from '@/contexts/AppContext';
 import { useInfluencer } from '@/hooks/useInfluencer';
+import type { InfluencerCommission } from '@/types/influencer';
 import InfluencerDashboardLayout from '@/components/Influencer/Layout/InfluencerDashboardLayout';
 import InfluencerBalanceCard from '@/components/Influencer/Cards/InfluencerBalanceCard';
 import InfluencerStatsCard from '@/components/Influencer/Cards/InfluencerStatsCard';
@@ -38,7 +39,7 @@ const InfluencerDashboard: React.FC = () => {
   const { language } = useApp();
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
 
-  const { dashboard, loading, error, refreshDashboard } = useInfluencer();
+  const { dashboardData: dashboard, isLoading: loading, error, refreshDashboard } = useInfluencer();
 
   useEffect(() => {
     refreshDashboard();
@@ -79,11 +80,28 @@ const InfluencerDashboard: React.FC = () => {
 
   const influencer = dashboard?.influencer;
   const config = dashboard?.config;
-  const monthlyStats = dashboard?.monthlyStats;
-  const recentCommissions = dashboard?.recentCommissions || [];
+  const recentCommissions: InfluencerCommission[] = dashboard?.recentCommissions || [];
+  const recentNotifications = dashboard?.recentNotifications || [];
+  const unreadCount = recentNotifications.filter(n => !n.readAt).length;
 
   const formatCurrency = (cents: number) => {
     return `$${(cents / 100).toFixed(2)}`;
+  };
+
+  // V2: Format commission rate based on calculation type
+  const formatCommissionRate = (rate: {
+    calculationType: string;
+    fixedAmount: number;
+    percentageRate: number;
+  }) => {
+    if (rate.calculationType === 'fixed') {
+      return formatCurrency(rate.fixedAmount);
+    } else if (rate.calculationType === 'percentage') {
+      return `${(rate.percentageRate * 100).toFixed(0)}%`;
+    } else if (rate.calculationType === 'hybrid') {
+      return `${formatCurrency(rate.fixedAmount)} + ${(rate.percentageRate * 100).toFixed(0)}%`;
+    }
+    return formatCurrency(rate.fixedAmount);
   };
 
   return (
@@ -107,13 +125,13 @@ const InfluencerDashboard: React.FC = () => {
             </p>
           </div>
 
-          {dashboard?.unreadNotifications > 0 && (
+          {unreadCount > 0 && (
             <button
-              onClick={() => navigate(`/${getTranslatedRouteSlug('influencer-notifications' as RouteKey, langCode)}`)}
+              onClick={() => navigate(`/${getTranslatedRouteSlug('influencer-dashboard' as RouteKey, langCode)}`)}
               className={`${UI.button.secondary} px-4 py-2 flex items-center gap-2`}
             >
               <Bell className="w-4 h-4" />
-              {dashboard.unreadNotifications}
+              {unreadCount}
               <FormattedMessage
                 id="influencer.dashboard.notifications"
                 defaultMessage="nouvelles notifications"
@@ -122,24 +140,31 @@ const InfluencerDashboard: React.FC = () => {
           )}
         </div>
 
-        {/* Balance Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Balance Cards - V2: 4 cards with withdrawn */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <InfluencerBalanceCard
+            label={intl.formatMessage({ id: 'influencer.dashboard.balance.total', defaultMessage: 'Total gagné' })}
+            amount={influencer?.totalEarned || 0}
+            color="gray"
+            icon={<DollarSign className="w-5 h-5" />}
+          />
           <InfluencerBalanceCard
             label={intl.formatMessage({ id: 'influencer.dashboard.balance.available', defaultMessage: 'Disponible' })}
             amount={influencer?.availableBalance || 0}
             color="green"
             icon={<DollarSign className="w-5 h-5" />}
+            highlight
           />
           <InfluencerBalanceCard
             label={intl.formatMessage({ id: 'influencer.dashboard.balance.pending', defaultMessage: 'En attente' })}
-            amount={influencer?.pendingBalance || 0}
+            amount={(influencer?.pendingBalance || 0) + (influencer?.validatedBalance || 0)}
             color="yellow"
             icon={<TrendingUp className="w-5 h-5" />}
           />
           <InfluencerBalanceCard
-            label={intl.formatMessage({ id: 'influencer.dashboard.balance.total', defaultMessage: 'Total gagné' })}
-            amount={influencer?.totalEarned || 0}
-            color="red"
+            label={intl.formatMessage({ id: 'influencer.dashboard.balance.withdrawn', defaultMessage: 'Déjà retiré' })}
+            amount={influencer?.totalWithdrawn || 0}
+            color="gray"
             icon={<DollarSign className="w-5 h-5" />}
           />
         </div>
@@ -148,25 +173,25 @@ const InfluencerDashboard: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <InfluencerStatsCard
             label={intl.formatMessage({ id: 'influencer.dashboard.stats.monthlyEarnings', defaultMessage: 'Gains ce mois' })}
-            value={formatCurrency(monthlyStats?.earnings || 0)}
+            value={formatCurrency(influencer?.currentMonthEarnings || 0)}
             icon={<DollarSign className="w-5 h-5" />}
             color="green"
           />
           <InfluencerStatsCard
-            label={intl.formatMessage({ id: 'influencer.dashboard.stats.clients', defaultMessage: 'Clients ce mois' })}
-            value={monthlyStats?.clients?.toString() || '0'}
+            label={intl.formatMessage({ id: 'influencer.dashboard.stats.clients', defaultMessage: 'Clients référés' })}
+            value={influencer?.totalClientsReferred?.toString() || '0'}
             icon={<Users className="w-5 h-5" />}
             color="blue"
           />
           <InfluencerStatsCard
-            label={intl.formatMessage({ id: 'influencer.dashboard.stats.recruits', defaultMessage: 'Recrutés ce mois' })}
-            value={monthlyStats?.recruits?.toString() || '0'}
+            label={intl.formatMessage({ id: 'influencer.dashboard.stats.recruits', defaultMessage: 'Prestataires recrutés' })}
+            value={influencer?.totalProvidersRecruited?.toString() || '0'}
             icon={<Users className="w-5 h-5" />}
             color="purple"
           />
           <InfluencerStatsCard
-            label={intl.formatMessage({ id: 'influencer.dashboard.stats.rank', defaultMessage: 'Classement' })}
-            value={monthlyStats?.rank ? `#${monthlyStats.rank}` : '-'}
+            label={intl.formatMessage({ id: 'influencer.dashboard.stats.rank', defaultMessage: 'Classement mensuel' })}
+            value={influencer?.currentMonthRank ? `#${influencer.currentMonthRank}` : '-'}
             icon={<TrendingUp className="w-5 h-5" />}
             color="yellow"
           />
@@ -245,7 +270,11 @@ const InfluencerDashboard: React.FC = () => {
                   >
                     <div>
                       <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {commission.description}
+                        {commission.type === 'client_referral'
+                          ? intl.formatMessage({ id: 'influencer.commissionType.client_referral', defaultMessage: 'Client référé' })
+                          : commission.type === 'recruitment'
+                          ? intl.formatMessage({ id: 'influencer.commissionType.provider_recruitment', defaultMessage: 'Recrutement' })
+                          : intl.formatMessage({ id: 'influencer.commissionType.manual_adjustment', defaultMessage: 'Ajustement' })}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         {new Date(commission.createdAt).toLocaleDateString()}
@@ -253,7 +282,7 @@ const InfluencerDashboard: React.FC = () => {
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-bold text-green-600 dark:text-green-400">
-                        {formatCurrency(commission.amount)}
+                        {formatCurrency(commission.finalAmount)}
                       </p>
                       <span className={`text-xs px-2 py-0.5 rounded-full ${
                         commission.status === 'available'
@@ -283,37 +312,88 @@ const InfluencerDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Commission Info */}
+        {/* Commission Info - V2: Show captured rates if available */}
         <div className={`${UI.card} p-6`}>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            <FormattedMessage id="influencer.dashboard.info.title" defaultMessage="Vos commissions" />
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-            <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/20">
-              <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-                {formatCurrency(config?.commissionClientAmount || 1000)}
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                <FormattedMessage id="influencer.dashboard.info.client" defaultMessage="par client référé" />
-              </p>
-            </div>
-            <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-900/20">
-              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                {formatCurrency(config?.commissionRecruitmentAmount || 500)}
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                <FormattedMessage id="influencer.dashboard.info.recruit" defaultMessage="par appel recruté (6 mois)" />
-              </p>
-            </div>
-            <div className="p-4 rounded-xl bg-green-50 dark:bg-green-900/20">
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {formatCurrency(config?.minimumWithdrawalAmount || 5000)}
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                <FormattedMessage id="influencer.dashboard.info.minWithdraw" defaultMessage="minimum de retrait" />
-              </p>
-            </div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <FormattedMessage id="influencer.dashboard.info.title" defaultMessage="Vos commissions" />
+            </h2>
+            {influencer?.capturedRates && (
+              <span className="text-xs px-2 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-full">
+                <FormattedMessage id="influencer.dashboard.info.frozen" defaultMessage="Taux figés à vie" />
+              </span>
+            )}
           </div>
+
+          {/* V2: Display captured rates if available */}
+          {influencer?.capturedRates ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                {influencer.capturedRates.rules.client_referral && (
+                  <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/20">
+                    <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+                      {formatCommissionRate(influencer.capturedRates.rules.client_referral)}
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <FormattedMessage id="influencer.dashboard.info.client" defaultMessage="par client référé" />
+                    </p>
+                  </div>
+                )}
+                {influencer.capturedRates.rules.recruitment && (
+                  <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-900/20">
+                    <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                      {formatCommissionRate(influencer.capturedRates.rules.recruitment)}
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <FormattedMessage id="influencer.dashboard.info.recruit" defaultMessage="par appel recruté (6 mois)" />
+                    </p>
+                  </div>
+                )}
+                <div className="p-4 rounded-xl bg-green-50 dark:bg-green-900/20">
+                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                    {formatCurrency(config?.minimumWithdrawalAmount || 5000)}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <FormattedMessage id="influencer.dashboard.info.minWithdraw" defaultMessage="minimum de retrait" />
+                  </p>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center">
+                <FormattedMessage
+                  id="influencer.dashboard.info.capturedAt"
+                  defaultMessage="Taux capturés le {date}"
+                  values={{ date: new Date(influencer.capturedRates.capturedAt).toLocaleDateString() }}
+                />
+              </p>
+            </>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+              <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/20">
+                <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+                  {formatCurrency(config?.clientReferralCommission || 1000)}
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <FormattedMessage id="influencer.dashboard.info.client" defaultMessage="par client référé" />
+                </p>
+              </div>
+              <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-900/20">
+                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                  {formatCurrency(config?.providerRecruitmentCommission || 500)}
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <FormattedMessage id="influencer.dashboard.info.recruit" defaultMessage="par appel recruté (6 mois)" />
+                </p>
+              </div>
+              <div className="p-4 rounded-xl bg-green-50 dark:bg-green-900/20">
+                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  {formatCurrency(config?.minimumWithdrawalAmount || 5000)}
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <FormattedMessage id="influencer.dashboard.info.minWithdraw" defaultMessage="minimum de retrait" />
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </InfluencerDashboardLayout>
