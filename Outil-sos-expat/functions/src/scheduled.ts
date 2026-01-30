@@ -1,6 +1,7 @@
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import * as admin from "firebase-admin";
 import { logger } from "firebase-functions";
+import { getSosFirestore, SOS_SERVICE_ACCOUNT } from "./multiDashboard/sosFirestore";
 
 // =============================================================================
 // CLEANUP: Anciennes conversations (180 jours)
@@ -162,9 +163,18 @@ export const archiveExpiredConversations = onSchedule(
   {
     schedule: "every 1 hours",
     region: "europe-west1",
+    secrets: [SOS_SERVICE_ACCOUNT], // Need SOS access to update booking_requests
   },
   async () => {
     const db = admin.firestore();
+    let sosDb: FirebaseFirestore.Firestore | null = null;
+
+    // Try to initialize SOS Firestore for syncing
+    try {
+      sosDb = getSosFirestore();
+    } catch (e) {
+      logger.warn("[archiveExpiredConversations] Could not initialize SOS Firestore, will skip sync", { error: e });
+    }
 
     try {
       // Stratégie: Récupérer les conversations des dernières 24h
@@ -184,6 +194,7 @@ export const archiveExpiredConversations = onSchedule(
 
       let archivedCount = 0;
       let skippedAlreadyArchived = 0;
+      let sosSyncCount = 0;
       const now = Date.now();
 
       for (const convoDoc of conversations.docs) {
@@ -220,6 +231,23 @@ export const archiveExpiredConversations = onSchedule(
             archiveReason: "auto_archive_expired",
           });
           archivedCount++;
+
+          // SYNC TO SOS: Update the corresponding booking_request in SOS
+          if (sosDb && booking.externalId) {
+            try {
+              await sosDb.collection("booking_requests").doc(booking.externalId).update({
+                status: "completed",
+                completedAt: new Date().toISOString(),
+                completedReason: "conversation_expired",
+              });
+              sosSyncCount++;
+            } catch (syncErr) {
+              logger.warn("[archiveExpiredConversations] Failed to sync to SOS", {
+                externalId: booking.externalId,
+                error: syncErr,
+              });
+            }
+          }
         }
       }
 
@@ -227,6 +255,7 @@ export const archiveExpiredConversations = onSchedule(
         logger.info("[archiveExpiredConversations] Traitement terminé", {
           archivedCount,
           skippedAlreadyArchived,
+          sosSyncCount,
           totalChecked: conversations.size,
         });
       }

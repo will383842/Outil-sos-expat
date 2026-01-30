@@ -108,6 +108,7 @@ export {
   generateMultiDashboardOutilToken,
   getProviderConversations,
   sendMultiDashboardMessage,
+  migrateOldPendingBookings,
 } from "./multiDashboard";
 
 // =============================================================================

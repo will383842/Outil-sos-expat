@@ -69,12 +69,15 @@ export const generateMultiDashboardOutilToken = onCall<
     ],
   },
   async (request) => {
-    const { sessionToken, providerId, bookingId } = request.data;
+    logger.info("[generateMultiDashboardOutilToken] Function invoked");
+
+    const { sessionToken, providerId, bookingId } = request.data || {};
 
     logger.info("[generateMultiDashboardOutilToken] Request received", {
-      providerId,
+      providerId: providerId || "MISSING",
       bookingId: bookingId || "none",
       hasSessionToken: !!sessionToken,
+      hasData: !!request.data,
     });
 
     // Validate inputs
@@ -152,15 +155,19 @@ export const generateMultiDashboardOutilToken = onCall<
 
       const customToken = await auth.createCustomToken(providerId, customClaims);
 
-      // 4. Log the access
-      await db.collection("auditLogs").add({
-        action: "multi_dashboard_outil_token",
-        providerId,
-        providerEmail,
-        ownerUserId,
-        timestamp: admin.firestore.FieldValue.serverTimestamp(),
-        sessionTokenPrefix: sessionToken.substring(0, 10) + "...",
-      });
+      // 4. Log the access (non-blocking, don't fail if audit log fails)
+      try {
+        await db.collection("auditLogs").add({
+          action: "multi_dashboard_outil_token",
+          providerId,
+          providerEmail,
+          ownerUserId,
+          timestamp: new Date().toISOString(),
+          sessionTokenPrefix: sessionToken.substring(0, 10) + "...",
+        });
+      } catch (auditError) {
+        logger.warn("[generateMultiDashboardOutilToken] Failed to write audit log (non-blocking)", { error: auditError });
+      }
 
       logger.info("[generateMultiDashboardOutilToken] Token generated successfully", {
         providerId,

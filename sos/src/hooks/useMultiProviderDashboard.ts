@@ -144,6 +144,7 @@ interface UseMultiProviderDashboardReturn {
   // Actions
   refresh: () => Promise<void>;
   openAiTool: (providerId: string, bookingId?: string) => Promise<void>;
+  migrateOldBookings: (dryRun?: boolean) => Promise<{ migrated: number; message: string } | null>;
 
   // Chat
   conversations: ChatConversation[];
@@ -454,6 +455,49 @@ export function useMultiProviderDashboard(): UseMultiProviderDashboardReturn {
     }
   }, []);
 
+  /**
+   * Migrate old pending bookings to completed status
+   * One-time operation to fix historical data
+   */
+  const migrateOldBookings = useCallback(async (dryRun = false): Promise<{ migrated: number; message: string } | null> => {
+    const session = getSession();
+    if (!session?.token) {
+      setError('Session invalide. Veuillez vous reconnecter.');
+      return null;
+    }
+
+    try {
+      const migrate = httpsCallable<
+        { sessionToken: string; dryRun?: boolean },
+        { success: boolean; migrated: number; skipped: number; errors: number; message: string }
+      >(outilsFunctions, 'migrateOldPendingBookings');
+
+      const result = await migrate({
+        sessionToken: session.token,
+        dryRun,
+      });
+
+      if (!result.data.success) {
+        throw new Error('Migration failed');
+      }
+
+      // Refresh data after migration
+      if (!dryRun) {
+        await loadAccounts();
+      }
+
+      return {
+        migrated: result.data.migrated,
+        message: result.data.message,
+      };
+
+    } catch (err) {
+      console.error('[useMultiProviderDashboard] migrateOldBookings error:', err);
+      setError('Erreur lors de la migration.');
+      return null;
+    }
+  }, [loadAccounts]);
+
   // ============================================================================
   // CHAT FUNCTIONS
   // ============================================================================
@@ -559,6 +603,7 @@ export function useMultiProviderDashboard(): UseMultiProviderDashboardReturn {
     logout,
     refresh,
     openAiTool,
+    migrateOldBookings,
     // Chat
     conversations,
     chatLoading,

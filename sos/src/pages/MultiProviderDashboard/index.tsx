@@ -53,6 +53,7 @@ const MultiProviderDashboard: React.FC = () => {
     logout,
     refresh,
     openAiTool,
+    migrateOldBookings,
     // Chat
     conversations,
     chatLoading,
@@ -70,6 +71,10 @@ const MultiProviderDashboard: React.FC = () => {
     bookingRequestId: undefined,
     initialMessage: undefined,
   });
+
+  // Migration state
+  const [isMigrating, setIsMigrating] = useState(false);
+  const [migrationResult, setMigrationResult] = useState<string | null>(null);
 
   // View state - with persistence
   const [viewMode, setViewMode] = useState<'expanded' | 'condensed'>(() => {
@@ -178,6 +183,29 @@ const MultiProviderDashboard: React.FC = () => {
     }
   }, [chatState.providerId, chatState.bookingRequestId, sendMessage]);
 
+  // Handle migration of old pending bookings
+  const handleMigration = useCallback(async () => {
+    if (isMigrating) return;
+
+    const confirmed = window.confirm(
+      'Voulez-vous marquer toutes les anciennes demandes en attente comme "terminées" ?\n\n' +
+      'Cette action est irréversible.'
+    );
+
+    if (!confirmed) return;
+
+    setIsMigrating(true);
+    setMigrationResult(null);
+
+    const result = await migrateOldBookings(false);
+
+    if (result) {
+      setMigrationResult(result.message);
+    }
+
+    setIsMigrating(false);
+  }, [isMigrating, migrateOldBookings]);
+
   // Not authenticated - show password gate
   if (!isAuthenticated) {
     return (
@@ -282,6 +310,20 @@ const MultiProviderDashboard: React.FC = () => {
                 <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
                 <span className="hidden sm:inline">Rafraîchir</span>
               </button>
+
+              {/* Migration button - Only show if there are pending bookings */}
+              {stats.pendingBookings > 0 && (
+                <button
+                  onClick={handleMigration}
+                  disabled={isMigrating}
+                  className="flex items-center gap-2 px-4 py-2 text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg transition-colors"
+                  title="Marquer anciennes demandes comme terminées"
+                >
+                  <Clock className={cn("w-4 h-4", isMigrating && "animate-spin")} />
+                  <span className="hidden sm:inline">{isMigrating ? 'Migration...' : 'Clôturer anciennes'}</span>
+                </button>
+              )}
+
               <button
                 onClick={logout}
                 className="flex items-center gap-2 px-4 py-2 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
@@ -408,6 +450,22 @@ const MultiProviderDashboard: React.FC = () => {
           <div className="mb-6 flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400">
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
             <p className="text-sm">{error}</p>
+          </div>
+        )}
+
+        {/* Migration Result */}
+        {migrationResult && (
+          <div className="mb-6 flex items-center justify-between gap-3 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl text-green-700 dark:text-green-400">
+            <div className="flex items-center gap-3">
+              <Bot className="w-5 h-5 flex-shrink-0" />
+              <p className="text-sm">{migrationResult}</p>
+            </div>
+            <button
+              onClick={() => setMigrationResult(null)}
+              className="text-green-500 hover:text-green-700 dark:hover:text-green-300"
+            >
+              &times;
+            </button>
           </div>
         )}
 

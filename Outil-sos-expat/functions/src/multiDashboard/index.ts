@@ -12,3 +12,4 @@ export { onBookingRequestCreatedGenerateAi } from "./onBookingCreatedGenerateAi"
 export { generateMultiDashboardOutilToken } from "./generateMultiDashboardOutilToken";
 export { getProviderConversations, sendMultiDashboardMessage } from "./getProviderConversations";
 export { generateMultiDashboardAiResponse } from "./generateAiResponseCallable";
+export { migrateOldPendingBookings } from "./migrateOldBookings";
