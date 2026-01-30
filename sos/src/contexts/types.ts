@@ -9,7 +9,7 @@ import { Timestamp } from 'firebase/firestore';
 export type SupportedLanguage = "fr" | "en" | "es" | "de" | "ru" | "hi" | "pt" | "ch" | "ar";
 
 // Rôles d'utilisateur dans l'application
-export type UserRole = "client" | "lawyer" | "expat" | "admin" | "chatter";
+export type UserRole = "client" | "lawyer" | "expat" | "admin" | "chatter" | "influencer" | "blogger";
 
 // Types de service disponibles
 export type ServiceType = "lawyer_call" | "expat_call";

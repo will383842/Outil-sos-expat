@@ -24,8 +24,8 @@ import {
   serverTimestamp,
   Timestamp,
 } from 'firebase/firestore';
-import { db } from '@/firebase';
-import { useAuth } from '@/hooks/useAuth';
+import { db } from '@/config/firebase';
+import { useAuth } from '@/contexts/useAuth';
 import AdminLayout from '@/components/admin/AdminLayout';
 import {
   Plus,
