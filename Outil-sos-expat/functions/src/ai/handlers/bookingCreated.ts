@@ -29,6 +29,7 @@ import {
   buildBookingMessage,
   notifyProvider,
 } from "./shared";
+import { getSosFirestore, SOS_SERVICE_ACCOUNT } from "../../multiDashboard/sosFirestore";
 
 // =============================================================================
 // TRIGGER: NEW BOOKING
@@ -38,7 +39,7 @@ export const aiOnBookingCreated = onDocumentCreated(
   {
     document: "bookings/{bookingId}",
     region: "europe-west1",
-    secrets: AI_SECRETS,
+    secrets: [...AI_SECRETS, SOS_SERVICE_ACCOUNT],
     // SCALABILITÉ: Configuration optimisée pour appels IA
     memory: "512MiB",
     timeoutSeconds: 120,
@@ -386,8 +387,47 @@ export const aiOnBookingCreated = onDocumentCreated(
         providerType,
         quotaUsedAfter: aiStatus.quotaUsed + 1,
         responseModel: response.model,
-        totalSteps: 11,
+        totalSteps: 12,
       });
+
+      // ============================================================
+      // DEBUG STEP 12: SYNC AI RESPONSE TO SOS
+      // ============================================================
+      // If the booking has an externalId (SOS booking_request ID), sync the AI response back
+      const bookingAnyData = booking as Record<string, unknown>;
+      const externalId = bookingAnyData.externalId as string | undefined;
+
+      if (externalId) {
+        try {
+          const sosDb = getSosFirestore();
+          await sosDb.collection("booking_requests").doc(externalId).update({
+            aiResponse: {
+              content: response.response,
+              generatedAt: new Date().toISOString(),
+              model: response.model,
+              provider: response.provider,
+              tokensUsed: response.tokensUsed || null,
+              source: "outil_ai_sync",
+              conversationId: convoRef.id,
+            },
+            aiProcessedAt: new Date().toISOString(),
+            status: "in_progress", // Mark as in_progress when AI responds
+          });
+
+          logger.info(`🔄 [AI-DEBUG-${debugId}] STEP 12: AI response synced to SOS`, {
+            externalId,
+            conversationId: convoRef.id,
+          });
+        } catch (syncError) {
+          // Non-blocking - don't fail the whole function if sync fails
+          logger.warn(`⚠️ [AI-DEBUG-${debugId}] STEP 12: Failed to sync to SOS (non-blocking)`, {
+            externalId,
+            error: (syncError as Error).message,
+          });
+        }
+      } else {
+        logger.info(`ℹ️ [AI-DEBUG-${debugId}] STEP 12: No externalId, skipping SOS sync`);
+      }
 
     } catch (error) {
       // ============================================================
