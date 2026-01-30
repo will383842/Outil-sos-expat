@@ -26,7 +26,7 @@ const ChatterRegister: React.FC = () => {
   const navigate = useLocaleNavigate();
   const [searchParams] = useSearchParams();
   const { language } = useApp();
-  const { user, authInitialized } = useAuth();
+  const { user, authInitialized, isLoading: authLoading } = useAuth();
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
 
   const [loading, setLoading] = useState(false);
@@ -47,14 +47,60 @@ const ChatterRegister: React.FC = () => {
   // Routes
   const landingRoute = `/${getTranslatedRouteSlug('chatter-landing' as RouteKey, langCode)}`;
   const presentationRoute = `/${getTranslatedRouteSlug('chatter-presentation' as RouteKey, langCode)}`;
-  const loginRoute = `/${getTranslatedRouteSlug('login' as RouteKey, langCode)}`;
+  const dashboardRoute = `/${getTranslatedRouteSlug('chatter-dashboard' as RouteKey, langCode)}`;
 
-  // Redirect if not logged in
+  // ============================================================================
+  // ROLE CHECK: Redirect if user already has a role
+  // ============================================================================
+  const userRole = user?.role;
+  const hasExistingRole = userRole && ['blogger', 'chatter', 'influencer', 'lawyer', 'expat', 'client'].includes(userRole);
+  const isAlreadyChatter = userRole === 'chatter';
+
+  // Redirect chatters to their dashboard
   useEffect(() => {
-    if (authInitialized && !user) {
-      navigate(`${loginRoute}?redirect=${encodeURIComponent(window.location.pathname)}`);
+    if (authInitialized && !authLoading && isAlreadyChatter) {
+      navigate(dashboardRoute);
     }
-  }, [authInitialized, user, navigate, loginRoute]);
+  }, [authInitialized, authLoading, isAlreadyChatter, navigate, dashboardRoute]);
+
+  // Show error if user has another role
+  if (authInitialized && !authLoading && hasExistingRole && !isAlreadyChatter) {
+    const roleLabels: Record<string, string> = {
+      blogger: 'Blogger',
+      influencer: 'Influencer',
+      lawyer: intl.formatMessage({ id: 'role.lawyer', defaultMessage: 'Lawyer' }),
+      expat: intl.formatMessage({ id: 'role.expat', defaultMessage: 'Expat Helper' }),
+      client: intl.formatMessage({ id: 'role.client', defaultMessage: 'Client' }),
+    };
+
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gray-50 dark:bg-gray-900">
+          <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 text-center">
+            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">⚠️</span>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              <FormattedMessage id="chatter.register.roleConflict.title" defaultMessage="Registration Not Allowed" />
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              <FormattedMessage
+                id="chatter.register.roleConflict.message"
+                defaultMessage="You are already registered as {role}. Each account can only have one role."
+                values={{ role: roleLabels[userRole] || userRole }}
+              />
+            </p>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="w-full px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-colors"
+            >
+              <FormattedMessage id="chatter.register.roleConflict.button" defaultMessage="Go to My Dashboard" />
+            </button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   // Handle registration
   const handleSubmit = async (data: ChatterRegistrationData) => {
@@ -79,9 +125,10 @@ const ChatterRegister: React.FC = () => {
       setTimeout(() => {
         navigate(presentationRoute);
       }, 2000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[ChatterRegister] Error:', err);
-      setError(err.message || intl.formatMessage({ id: 'chatter.register.error.generic', defaultMessage: 'Une erreur est survenue' }));
+      const errorMessage = err instanceof Error ? err.message : intl.formatMessage({ id: 'chatter.register.error.generic', defaultMessage: 'Une erreur est survenue' });
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

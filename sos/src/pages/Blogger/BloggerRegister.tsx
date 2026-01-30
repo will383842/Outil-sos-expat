@@ -98,7 +98,7 @@ const BloggerRegister: React.FC = () => {
   const intl = useIntl();
   const navigate = useLocaleNavigate();
   const [searchParams] = useSearchParams();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { language } = useApp();
   const locale = (language || 'en') as string;
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
@@ -113,6 +113,24 @@ const BloggerRegister: React.FC = () => {
   }, [searchParams]);
 
   const dashboardRoute = `/${getTranslatedRouteSlug('blogger-dashboard' as RouteKey, langCode)}`;
+
+  // ============================================================================
+  // ROLE CHECK VARIABLES (used in hooks and conditional return)
+  // ============================================================================
+  const userRole = user?.role;
+  const hasExistingRole = userRole && ['blogger', 'chatter', 'influencer', 'lawyer', 'expat', 'client'].includes(userRole);
+  const isAlreadyBlogger = userRole === 'blogger';
+
+  // Redirect bloggers to their dashboard (hook must be before any return)
+  useEffect(() => {
+    if (!authLoading && isAlreadyBlogger) {
+      navigate(dashboardRoute);
+    }
+  }, [authLoading, isAlreadyBlogger, navigate, dashboardRoute]);
+
+  // ============================================================================
+  // ALL OTHER HOOKS
+  // ============================================================================
 
   const [formData, setFormData] = useState<BloggerFormData>({
     firstName: '',
@@ -343,6 +361,49 @@ const BloggerRegister: React.FC = () => {
       setIsSubmitting(false);
     }
   };
+
+  // ============================================================================
+  // ROLE CHECK: Show error or redirect if user already has a role
+  // ============================================================================
+
+  // Show error if user has another role
+  if (!authLoading && hasExistingRole && !isAlreadyBlogger) {
+    const roleLabels: Record<string, string> = {
+      chatter: 'Chatter',
+      influencer: 'Influencer',
+      lawyer: intl.formatMessage({ id: 'role.lawyer', defaultMessage: 'Lawyer' }),
+      expat: intl.formatMessage({ id: 'role.expat', defaultMessage: 'Expat Helper' }),
+      client: intl.formatMessage({ id: 'role.client', defaultMessage: 'Client' }),
+    };
+
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gray-50 dark:bg-gray-900">
+          <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 text-center">
+            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">⚠️</span>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              <FormattedMessage id="blogger.register.roleConflict.title" defaultMessage="Registration Not Allowed" />
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              <FormattedMessage
+                id="blogger.register.roleConflict.message"
+                defaultMessage="You are already registered as {role}. Each account can only have one role."
+                values={{ role: roleLabels[userRole] || userRole }}
+              />
+            </p>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="w-full px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl transition-colors"
+            >
+              <FormattedMessage id="blogger.register.roleConflict.button" defaultMessage="Go to My Dashboard" />
+            </button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   if (success) {
     return (

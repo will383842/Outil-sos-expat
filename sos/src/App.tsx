@@ -334,8 +334,8 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/affiliate/tools", component: AffiliateTools, protected: true, role: ['client', 'lawyer', 'expat'], translated: "affiliate-tools" },
   // Chatter System Routes - Protected routes for registered chatters
   // IMPORTANT: Les rôles sont mutuellement exclusifs. Un chatter ne peut pas être client/lawyer/expat.
-  // L'inscription est accessible à tout utilisateur authentifié (le backend vérifie les restrictions de rôle)
-  { path: "/chatter/inscription", component: ChatterRegister, protected: true, translated: "chatter-register" },
+  // L'inscription est PUBLIQUE - le composant gère la vérification des rôles existants
+  { path: "/chatter/inscription", component: ChatterRegister, translated: "chatter-register" },
   // Après inscription, l'utilisateur a role="chatter" - toutes les autres routes sont réservées aux chatters
   { path: "/chatter/presentation", component: ChatterPresentation, protected: true, role: 'chatter', translated: "chatter-presentation" },
   { path: "/chatter/quiz", component: ChatterQuiz, protected: true, role: 'chatter', translated: "chatter-quiz" },
@@ -357,8 +357,8 @@ const protectedUserRoutes: RouteConfig[] = [
 
   // Influencer System Routes - Protected routes for registered influencers
   // IMPORTANT: Les rôles sont mutuellement exclusifs. Un influenceur ne peut pas être client/lawyer/expat/chatter.
-  // L'inscription est accessible à tout utilisateur authentifié (le backend vérifie les restrictions de rôle)
-  { path: "/influencer/inscription", component: InfluencerRegister, protected: true, translated: "influencer-register" },
+  // L'inscription est PUBLIQUE - le composant gère la vérification des rôles existants
+  { path: "/influencer/inscription", component: InfluencerRegister, translated: "influencer-register" },
   // Après inscription, l'utilisateur a role="influencer" - toutes les autres routes sont réservées aux influenceurs
   { path: "/influencer/tableau-de-bord", component: InfluencerDashboard, protected: true, role: 'influencer', translated: "influencer-dashboard" },
   { path: "/influencer/gains", component: InfluencerEarnings, protected: true, role: 'influencer', translated: "influencer-earnings" },
@@ -372,8 +372,8 @@ const protectedUserRoutes: RouteConfig[] = [
 
   // Blogger System Routes - Protected routes for registered bloggers
   // IMPORTANT: Les rôles sont mutuellement exclusifs. Un blogueur ne peut pas devenir chatter/influencer/client/lawyer/expat.
-  // L'inscription est accessible à tout utilisateur authentifié (le backend vérifie les restrictions de rôle)
-  { path: "/blogger/inscription", component: BloggerRegister, protected: true, translated: "blogger-register" },
+  // L'inscription est PUBLIQUE - le composant gère la vérification des rôles existants
+  { path: "/blogger/inscription", component: BloggerRegister, translated: "blogger-register" },
   // Après inscription, l'utilisateur a role="blogger" - toutes les autres routes sont réservées aux blogueurs
   { path: "/blogger/tableau-de-bord", component: BloggerDashboard, protected: true, role: 'blogger', translated: "blogger-dashboard" },
   { path: "/blogger/gains", component: BloggerEarnings, protected: true, role: 'blogger', translated: "blogger-earnings" },

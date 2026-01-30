@@ -2,11 +2,16 @@
  * InfluencerRegister - Registration page for influencers
  * No quiz required - direct activation after registration
  * Supports auto referral code from URL params
+ * PUBLIC route - handles role conflicts internally
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocation, useSearchParams } from 'react-router-dom';
+import { useLocaleNavigate } from '@/multilingual-system';
+import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
+import { useAuth } from '@/contexts/AuthContext';
+import { useApp } from '@/contexts/AppContext';
 import Layout from '@/components/layout/Layout';
 import SEOHead from '@/components/layout/SEOHead';
 import HreflangLinks from '@/multilingual-system/components/HrefLang/HreflangLinks';
@@ -20,7 +25,11 @@ const UI = {
 const InfluencerRegister: React.FC = () => {
   const intl = useIntl();
   const location = useLocation();
+  const navigate = useLocaleNavigate();
   const [searchParams] = useSearchParams();
+  const { user, authInitialized, isLoading: authLoading } = useAuth();
+  const { language } = useApp();
+  const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
 
   // Get referral code from URL params (supports: ref, referralCode, code, sponsor)
   const referralCodeFromUrl = useMemo(() => {
@@ -30,6 +39,61 @@ const InfluencerRegister: React.FC = () => {
       || searchParams.get('sponsor')
       || '';
   }, [searchParams]);
+
+  const dashboardRoute = `/${getTranslatedRouteSlug('influencer-dashboard' as RouteKey, langCode)}`;
+
+  // ============================================================================
+  // ROLE CHECK: Redirect if user already has a role
+  // ============================================================================
+  const userRole = user?.role;
+  const hasExistingRole = userRole && ['blogger', 'chatter', 'influencer', 'lawyer', 'expat', 'client'].includes(userRole);
+  const isAlreadyInfluencer = userRole === 'influencer';
+
+  // Redirect influencers to their dashboard
+  useEffect(() => {
+    if (authInitialized && !authLoading && isAlreadyInfluencer) {
+      navigate(dashboardRoute);
+    }
+  }, [authInitialized, authLoading, isAlreadyInfluencer, navigate, dashboardRoute]);
+
+  // Show error if user has another role
+  if (authInitialized && !authLoading && hasExistingRole && !isAlreadyInfluencer) {
+    const roleLabels: Record<string, string> = {
+      blogger: 'Blogger',
+      chatter: 'Chatter',
+      lawyer: intl.formatMessage({ id: 'role.lawyer', defaultMessage: 'Lawyer' }),
+      expat: intl.formatMessage({ id: 'role.expat', defaultMessage: 'Expat Helper' }),
+      client: intl.formatMessage({ id: 'role.client', defaultMessage: 'Client' }),
+    };
+
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gray-50 dark:bg-gray-900">
+          <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 text-center">
+            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">⚠️</span>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              <FormattedMessage id="influencer.register.roleConflict.title" defaultMessage="Registration Not Allowed" />
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              <FormattedMessage
+                id="influencer.register.roleConflict.message"
+                defaultMessage="You are already registered as {role}. Each account can only have one role."
+                values={{ role: roleLabels[userRole] || userRole }}
+              />
+            </p>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="w-full px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-colors"
+            >
+              <FormattedMessage id="influencer.register.roleConflict.button" defaultMessage="Go to My Dashboard" />
+            </button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   const seoTitle = intl.formatMessage({
     id: 'influencer.register.seo.title',
