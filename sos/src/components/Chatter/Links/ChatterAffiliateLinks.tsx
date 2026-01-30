@@ -136,7 +136,7 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
         <p className="text-xs text-gray-500 dark:text-gray-400">
           <FormattedMessage
             id="chatter.links.client.commission"
-            defaultMessage="Commission : 1 000 FCFA par appel payé"
+            defaultMessage="Commission : $2 par appel payé"
           />
         </p>
       </div>
@@ -212,7 +212,7 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
         <p className="text-xs text-gray-500 dark:text-gray-400">
           <FormattedMessage
             id="chatter.links.recruitment.commission"
-            defaultMessage="Commission : 500 FCFA par appel du prestataire recruté (pendant 6 mois)"
+            defaultMessage="Commission : $1 par appel du prestataire recruté (pendant 6 mois)"
           />
         </p>
       </div>

@@ -444,7 +444,7 @@ const JoinUsCTA = memo<JoinUsCTAProps>(function JoinUsCTA({
             </div>
             <div className="flex flex-col flex-1">
               <span className="text-white font-bold text-base sm:text-lg">{chatterLabel}</span>
-              <span className="text-white/80 text-xs sm:text-sm">1 000 FCFA/appel</span>
+              <span className="text-white/80 text-xs sm:text-sm">$2/appel</span>
             </div>
             <span className="text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" aria-hidden="true">
               →
@@ -455,9 +455,9 @@ const JoinUsCTA = memo<JoinUsCTAProps>(function JoinUsCTA({
           <Link
             to={influencerHref}
             className="group flex items-center gap-3 sm:gap-4 w-full px-4 sm:px-5 py-4 sm:py-5 rounded-xl
-              bg-gradient-to-r from-purple-500 to-purple-600
-              hover:from-purple-600 hover:to-purple-700
-              shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40
+              bg-gradient-to-r from-orange-500 to-red-500
+              hover:from-orange-600 hover:to-red-600
+              shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40
               transform hover:scale-[1.02] active:scale-[0.98]
               transition-all duration-300 focus:outline-none
               focus-visible:ring-2 focus-visible:ring-white/50"
@@ -467,7 +467,7 @@ const JoinUsCTA = memo<JoinUsCTAProps>(function JoinUsCTA({
             </div>
             <div className="flex flex-col flex-1">
               <span className="text-white font-bold text-base sm:text-lg">{influencerLabel}</span>
-              <span className="text-white/80 text-xs sm:text-sm">$10/client référé</span>
+              <span className="text-white/80 text-xs sm:text-sm">$10/appel</span>
             </div>
             <span className="text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" aria-hidden="true">
               →
@@ -478,9 +478,9 @@ const JoinUsCTA = memo<JoinUsCTAProps>(function JoinUsCTA({
           <Link
             to={bloggerHref}
             className="group flex items-center gap-3 sm:gap-4 w-full px-4 sm:px-5 py-4 sm:py-5 rounded-xl
-              bg-gradient-to-r from-blue-500 to-blue-600
-              hover:from-blue-600 hover:to-blue-700
-              shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40
+              bg-gradient-to-r from-purple-500 to-purple-600
+              hover:from-purple-600 hover:to-purple-700
+              shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40
               transform hover:scale-[1.02] active:scale-[0.98]
               transition-all duration-300 focus:outline-none
               focus-visible:ring-2 focus-visible:ring-white/50"
@@ -490,7 +490,7 @@ const JoinUsCTA = memo<JoinUsCTAProps>(function JoinUsCTA({
             </div>
             <div className="flex flex-col flex-1">
               <span className="text-white font-bold text-base sm:text-lg">{bloggerLabel}</span>
-              <span className="text-white/80 text-xs sm:text-sm">$10/client référé</span>
+              <span className="text-white/80 text-xs sm:text-sm">$10/appel</span>
             </div>
             <span className="text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" aria-hidden="true">
               →

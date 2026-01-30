@@ -55,7 +55,7 @@ const ChatterPresentation: React.FC = () => {
     {
       icon: <Wallet className="w-12 h-12" />,
       title: intl.formatMessage({ id: 'chatter.presentation.slide3.title', defaultMessage: 'Vos gains' }),
-      content: intl.formatMessage({ id: 'chatter.presentation.slide3.content', defaultMessage: '1 000 FCFA par client qui passe un appel payé. 500 FCFA par appel reçu par un prestataire que vous avez recruté (pendant 6 mois).' }),
+      content: intl.formatMessage({ id: 'chatter.presentation.slide3.content', defaultMessage: '$2 par appel payé de votre client. $1 par appel reçu par un prestataire que vous avez recruté (pendant 6 mois).' }),
       color: 'from-green-500 to-emerald-500',
     },
     {
