@@ -10,7 +10,7 @@ import { Request } from 'firebase-functions/v2/https';
 import { validateTwilioWebhookSignature, TWILIO_AUTH_TOKEN_SECRET, TWILIO_ACCOUNT_SID_SECRET } from '../lib/twilio';
 import { setProviderBusy } from '../callables/providerStatusManager';
 // P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
-import { TASKS_AUTH_SECRET } from '../lib/secrets';
+import { TASKS_AUTH_SECRET, STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST } from '../lib/secrets';
 import voicePromptsJson from '../content/voicePrompts.json';
 
 // Helper function to get intro text based on participant type and language
@@ -80,7 +80,8 @@ export const twilioCallWebhook = onRequest(
     concurrency: 1,    // Keep at 1 to avoid race conditions with Firestore updates
     // P0 CRITICAL FIX: Add Twilio secrets for signature validation + hangup calls to voicemail
     // P0 FIX 2026-01-18: Added TASKS_AUTH_SECRET for scheduleProviderAvailableTask (provider cooldown)
-    secrets: [TWILIO_AUTH_TOKEN_SECRET, TWILIO_ACCOUNT_SID_SECRET, TASKS_AUTH_SECRET]
+    // P0 FIX 2026-01-30: Added Stripe secrets for payment capture after successful call
+    secrets: [TWILIO_AUTH_TOKEN_SECRET, TWILIO_ACCOUNT_SID_SECRET, TASKS_AUTH_SECRET, STRIPE_SECRET_KEY_LIVE, STRIPE_SECRET_KEY_TEST]
   },
   async (req: Request, res: Response) => {
     const requestId = `twilio-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;

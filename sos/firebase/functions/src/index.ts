@@ -225,13 +225,16 @@ export {
 } from "./paypal/emailVerification";
 
 // KYC Templates Seed
-export { initKYCReminderTemplates } from "./seeds/kycReminderTemplates";
+// DISABLED 2026-01-30: One-time seed functions - removed to free Cloud Run quota
+// export { initKYCReminderTemplates } from "./seeds/kycReminderTemplates";
 
 // Unclaimed Funds Templates Seed
-export { initUnclaimedFundsTemplates } from "./seeds/unclaimedFundsTemplates";
+// DISABLED 2026-01-30: One-time seed functions - removed to free Cloud Run quota
+// export { initUnclaimedFundsTemplates } from "./seeds/unclaimedFundsTemplates";
 
 // PayPal Welcome Templates Seed (9 langues)
-export { initPayPalWelcomeTemplates } from "./seeds/paypalWelcomeTemplates";
+// DISABLED 2026-01-30: One-time seed functions - removed to free Cloud Run quota
+// export { initPayPalWelcomeTemplates } from "./seeds/paypalWelcomeTemplates";
 
 // Country Fiscal Configs Seed (200 countries + 64 USA/Canada subdivisions)
 // NOTE: Data already seeded via local script (scripts/seedCountryData.js)
@@ -894,7 +897,8 @@ export { trackCAPIEvent } from "./tracking/capiEvents";
 // export { testCAPIConnection } from "./monitoring/testCAPIConnection";
 
 // Utilitaires complémentaires
-export { initializeMessageTemplates } from "./initializeMessageTemplates";
+// DISABLED 2026-01-30: One-time init function - removed to free Cloud Run quota
+// export { initializeMessageTemplates } from "./initializeMessageTemplates";
 export { notifyAfterPayment } from "./notifications/notifyAfterPayment";
 
 // Contact reply (admin responds to contact form messages)
@@ -4734,7 +4738,8 @@ export { providerCatalogFeed, generateProviderFeed } from './providerCatalogFeed
 
 // ========== TRANSLATION FUNCTIONS ==========
 export * from './translation/translateProvider';
-export * from './translation/initializeProviderTranslation';
+// DISABLED 2026-01-30: One-time init function - removed to free Cloud Run quota
+// export * from './translation/initializeProviderTranslation';
 export * from './translation/updateProviderTranslation';
 
 // ========== EMAIL MARKETING AUTOMATION (MailWizz) ==========
@@ -5130,7 +5135,8 @@ export { onBookingRequestCreated, retryOutilSync } from './triggers/syncBookings
 export { syncFromOutil } from './triggers/syncFromOutil';
 
 // ========== MIGRATIONS ==========
-export { migrateProvidersToUid } from './migrations/migrateProvidersToUid';
+// DISABLED 2026-01-30: One-time migration - removed to free Cloud Run quota
+// export { migrateProvidersToUid } from './migrations/migrateProvidersToUid';
 
 // ========== SSO - AUTHENTICATION CROSS-PROJECT ==========
 export { generateOutilToken } from './auth/generateOutilToken';
@@ -5262,15 +5268,17 @@ export {
   // Callable functions for admin dashboard
   getThresholdDashboard,
   getCountryThreshold,
-  markCountryAsRegistered,
+  // DISABLED 2026-01-30: Country rotation removed to free quota
+  // markCountryAsRegistered,
   acknowledgeThresholdAlert,
-  initializeThresholdTracking,
+  // DISABLED 2026-01-30: One-time init - removed to free quota
+  // initializeThresholdTracking,
   triggerThresholdRecalculation,
 } from './thresholds';
 
 // ========== MIGRATIONS ==========
-// Scripts de migration one-time
-export { migrateProviderSlugs } from './migrations/migrateProviderSlugs';
+// DISABLED 2026-01-30: One-time migrations - removed to free Cloud Run quota
+// export { migrateProviderSlugs } from './migrations/migrateProviderSlugs';
 
 // ========== PROVIDER PROFILE VALIDATION WORKFLOW ==========
 // Complete validation workflow for provider profiles (lawyers/expats)
@@ -5564,7 +5572,8 @@ export {
   // Webhooks
   wiseWebhook,
   // Initialization
-  initializeAffiliateConfig,
+  // DISABLED 2026-01-30: One-time init - removed to free quota
+  // initializeAffiliateConfig,
   resetAffiliateConfigToDefaults,
 } from './affiliate';
 
@@ -5588,8 +5597,9 @@ export {
   updateChatterProfile,
   getReferralDashboard,
   // Country Rotation callables
-  getAvailableCountriesForChatter,
-  assignCountriesToCurrentChatter,
+  // DISABLED 2026-01-30: Country rotation system removed to free quota
+  // getAvailableCountriesForChatter,
+  // assignCountriesToCurrentChatter,
   // Posts callables
   submitPost,
   getMyPosts,
@@ -5599,9 +5609,10 @@ export {
   getMyGroups,
   joinGroupAsChatter,
   // Zoom callables
-  getZoomMeetings,
-  recordZoomAttendance,
-  getMyZoomAttendances,
+  // DISABLED 2026-01-30: Zoom integration removed to free quota
+  // getZoomMeetings,
+  // recordZoomAttendance,
+  // getMyZoomAttendances,
   // Admin callables
   adminGetChattersList,
   adminGetChatterDetail,
@@ -5614,8 +5625,9 @@ export {
   adminExportChatters,
   adminBulkChatterAction,
   // Admin Country Rotation
-  adminInitializeCountryRotation,
-  adminGetCountryRotationStatus,
+  // DISABLED 2026-01-30: Country rotation system removed to free quota
+  // adminInitializeCountryRotation,
+  // adminGetCountryRotationStatus,
   adminAdvanceCycle,
   adminUpdateCycleThreshold,
   // Admin Posts
@@ -5625,17 +5637,19 @@ export {
   adminGetGroups,
   adminUpdateGroupStatus,
   // Admin Zoom
-  adminCreateZoomMeeting,
-  adminUpdateZoomMeeting,
-  adminGetZoomMeetings,
-  adminGetMeetingAttendees,
+  // DISABLED 2026-01-30: Zoom integration removed to free quota
+  // adminCreateZoomMeeting,
+  // adminUpdateZoomMeeting,
+  // adminGetZoomMeetings,
+  // adminGetMeetingAttendees,
   adminUpdateMeetingStatus,
   // Admin Referral System
   adminGetReferralStats,
   adminGetReferralTree,
   adminGetEarlyAdopters,
   adminUpdateEarlyAdopterQuota,
-  adminInitializeAllEarlyAdopterCounters,
+  // DISABLED 2026-01-30: One-time init - removed to free quota
+  // adminInitializeAllEarlyAdopterCounters,
   adminGetReferralFraudAlerts,
   adminReviewFraudAlert,
   adminGetReferralCommissions,
@@ -5652,9 +5666,10 @@ export {
   chatterMonthlyRecurringCommissions,
   chatterValidatePendingReferralCommissions,
   // Initialization
-  initializeChatterConfig,
+  // DISABLED 2026-01-30: One-time init functions - removed to free quota
+  // initializeChatterConfig,
   resetChatterConfigToDefaults,
-  initializeChatterSystem,
+  // initializeChatterSystem,
   // Training callables
   getChatterTrainingModules,
   getChatterTrainingModuleContent,
@@ -5666,7 +5681,8 @@ export {
   adminCreateChatterTrainingModule,
   adminUpdateChatterTrainingModule,
   adminDeleteChatterTrainingModule,
-  adminSeedChatterTrainingModules,
+  // DISABLED 2026-01-30: One-time seed - removed to free quota
+  // adminSeedChatterTrainingModules,
   adminReorderChatterTrainingModules,
 } from './chatter';
 
@@ -5710,7 +5726,8 @@ export {
   adminCreateInfluencerTrainingModule,
   adminUpdateInfluencerTrainingModule,
   adminDeleteInfluencerTrainingModule,
-  adminSeedInfluencerTrainingModules,
+  // DISABLED 2026-01-30: One-time seed - removed to free quota
+  // adminSeedInfluencerTrainingModules,
 } from './influencer';
 
 // ========== BLOGGER SYSTEM ==========
