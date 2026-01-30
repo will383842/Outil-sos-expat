@@ -21,15 +21,17 @@ import {
 // ============================================
 export const formStyles = {
   // Base input - 48px height for touch targets (44px minimum)
+  // Background grisé pour mieux repérer les champs à remplir
   input: `
     w-full px-4 py-3.5
-    bg-white dark:bg-gray-900/50
-    border border-gray-200 dark:border-gray-700/50
+    bg-gray-100 dark:bg-gray-800/70
+    border-2 border-gray-200 dark:border-gray-600/50
     rounded-2xl
     text-base text-gray-900 dark:text-white
-    placeholder:text-gray-400 dark:placeholder:text-gray-500
+    placeholder:text-gray-500 dark:placeholder:text-gray-400
     focus:outline-none focus:ring-2 focus:ring-offset-0
     focus:border-transparent
+    focus:bg-white dark:focus:bg-gray-900
     transition-all duration-200 ease-out
     disabled:opacity-50 disabled:cursor-not-allowed
   `,
@@ -38,9 +40,12 @@ export const formStyles = {
   inputWithIcon: 'pl-12',
 
   // Input states
-  inputError: 'border-red-400 dark:border-red-500 focus:ring-red-500/30',
-  inputSuccess: 'border-green-400 dark:border-green-500 focus:ring-green-500/30',
+  inputError: 'border-red-400 dark:border-red-500 focus:ring-red-500/30 bg-red-50 dark:bg-red-900/20',
+  inputSuccess: 'border-green-400 dark:border-green-500 focus:ring-green-500/30 bg-green-50 dark:bg-green-900/20',
   inputDefault: 'focus:ring-blue-500/30 dark:focus:ring-blue-400/30',
+
+  // Input filled state (when value is present)
+  inputFilled: 'bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600',
 
   // Label
   label: `
@@ -238,11 +243,17 @@ export const FormInput: React.FC<FormInputProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   const inputType = type === 'password' && showPassword ? 'text' : type;
 
+  // Determine state class based on error/success/filled
   const stateClass = error
     ? formStyles.inputError
     : success
       ? formStyles.inputSuccess
       : formStyles.inputDefault;
+
+  // Add filled style when input has value (more visible/white background)
+  const filledClass = value && value.length > 0 && !error && !success
+    ? formStyles.inputFilled
+    : '';
 
   return (
     <div className={`space-y-1 ${className}`}>
@@ -253,7 +264,7 @@ export const FormInput: React.FC<FormInputProps> = ({
 
       <div className="relative">
         {icon && (
-          <div className={`${formStyles.iconContainer} ${error ? 'text-red-400' : success ? 'text-green-400' : ''}`}>
+          <div className={`${formStyles.iconContainer} ${error ? 'text-red-400' : success ? 'text-green-400' : value ? 'text-gray-600 dark:text-gray-300' : ''}`}>
             {icon}
           </div>
         )}
@@ -272,6 +283,7 @@ export const FormInput: React.FC<FormInputProps> = ({
             ${formStyles.input}
             ${icon ? formStyles.inputWithIcon : ''}
             ${stateClass}
+            ${filledClass}
             ${type === 'password' ? 'pr-12' : ''}
           `}
         />
@@ -382,7 +394,7 @@ export const FormSelect: React.FC<FormSelectProps> = ({
 
       <div className="relative">
         {icon && (
-          <div className={`${formStyles.iconContainer} ${error ? 'text-red-400' : ''}`}>
+          <div className={`${formStyles.iconContainer} ${error ? 'text-red-400' : selectedOption ? 'text-gray-600 dark:text-gray-300' : ''}`}>
             {icon}
           </div>
         )}
@@ -396,11 +408,12 @@ export const FormSelect: React.FC<FormSelectProps> = ({
             ${formStyles.input}
             ${icon ? formStyles.inputWithIcon : ''}
             ${error ? formStyles.inputError : formStyles.inputDefault}
+            ${selectedOption ? formStyles.inputFilled : ''}
             pr-10 text-left
             flex items-center justify-between
           `}
         >
-          <span className={selectedOption ? '' : 'text-gray-400 dark:text-gray-500'}>
+          <span className={selectedOption ? '' : 'text-gray-500 dark:text-gray-400'}>
             {selectedOption ? (
               <span className="flex items-center gap-2">
                 {selectedOption.icon}
@@ -508,6 +521,11 @@ export const FormTextarea: React.FC<FormTextareaProps> = ({
   showCount = false,
   className = '',
 }) => {
+  // Add filled style when textarea has value
+  const filledClass = value && value.length > 0 && !error
+    ? formStyles.inputFilled
+    : '';
+
   return (
     <div className={`space-y-1 ${className}`}>
       <label htmlFor={id} className={formStyles.label}>
@@ -527,6 +545,7 @@ export const FormTextarea: React.FC<FormTextareaProps> = ({
         className={`
           ${formStyles.input}
           ${error ? formStyles.inputError : formStyles.inputDefault}
+          ${filledClass}
           resize-none
         `}
       />
