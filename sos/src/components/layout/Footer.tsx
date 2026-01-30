@@ -444,7 +444,6 @@ const JoinUsCTA = memo<JoinUsCTAProps>(function JoinUsCTA({
             </div>
             <div className="flex flex-col flex-1">
               <span className="text-white font-bold text-base sm:text-lg">{chatterLabel}</span>
-              <span className="text-white/80 text-xs sm:text-sm">$2/appel</span>
             </div>
             <span className="text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" aria-hidden="true">
               →
@@ -467,7 +466,6 @@ const JoinUsCTA = memo<JoinUsCTAProps>(function JoinUsCTA({
             </div>
             <div className="flex flex-col flex-1">
               <span className="text-white font-bold text-base sm:text-lg">{influencerLabel}</span>
-              <span className="text-white/80 text-xs sm:text-sm">$10/appel</span>
             </div>
             <span className="text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" aria-hidden="true">
               →
@@ -490,7 +488,6 @@ const JoinUsCTA = memo<JoinUsCTAProps>(function JoinUsCTA({
             </div>
             <div className="flex flex-col flex-1">
               <span className="text-white font-bold text-base sm:text-lg">{bloggerLabel}</span>
-              <span className="text-white/80 text-xs sm:text-sm">$10/appel</span>
             </div>
             <span className="text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" aria-hidden="true">
               →

@@ -1,98 +1,238 @@
 /**
- * InfluencerRegisterForm - Registration form for influencers
+ * InfluencerRegisterForm - Mobile-first registration form for influencers
+ * Harmonized 2026 UX with platform selection and community info
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
+import {
+  User,
+  Mail,
+  Globe,
+  Users,
+  Tag,
+  FileText,
+  ChevronDown,
+  Search,
+  Check,
+} from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocaleNavigate } from '@/multilingual-system';
 import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
 import { useApp } from '@/contexts/AppContext';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { Loader2, Check, AlertCircle } from 'lucide-react';
+import { phoneCodesData, type PhoneCodeEntry } from '@/data/phone-codes';
+import {
+  FormInput,
+  FormTextarea,
+  FormChips,
+  FormSection,
+  FormError,
+  FormSuccess,
+  FormButton,
+  formStyles,
+} from '@/components/forms/FormElements';
+
+// Get country name based on locale
+const getCountryName = (entry: PhoneCodeEntry, locale: string): string => {
+  const localeMap: Record<string, keyof PhoneCodeEntry> = {
+    fr: 'fr', en: 'en', es: 'es', de: 'de', pt: 'pt', ru: 'ru', zh: 'zh', ch: 'zh', ar: 'ar', hi: 'hi'
+  };
+  const key = localeMap[locale] || 'en';
+  return entry[key] as string || entry.en;
+};
+
+// Country flag emoji from country code
+const getFlag = (countryCode: string): string => {
+  const codePoints = countryCode
+    .toUpperCase()
+    .split('')
+    .map(char => 127397 + char.charCodeAt(0));
+  return String.fromCodePoint(...codePoints);
+};
 
 const PLATFORMS = [
-  { id: 'youtube', label: 'YouTube' },
-  { id: 'instagram', label: 'Instagram' },
-  { id: 'facebook', label: 'Facebook' },
-  { id: 'tiktok', label: 'TikTok' },
-  { id: 'twitter', label: 'Twitter/X' },
-  { id: 'linkedin', label: 'LinkedIn' },
-  { id: 'blog', label: 'Blog' },
-  { id: 'website', label: 'Site Web' },
-  { id: 'podcast', label: 'Podcast' },
-  { id: 'newsletter', label: 'Newsletter' },
-  { id: 'other', label: 'Autre' },
+  { value: 'youtube', label: 'YouTube' },
+  { value: 'instagram', label: 'Instagram' },
+  { value: 'facebook', label: 'Facebook' },
+  { value: 'tiktok', label: 'TikTok' },
+  { value: 'twitter', label: 'Twitter/X' },
+  { value: 'linkedin', label: 'LinkedIn' },
+  { value: 'blog', label: 'Blog' },
+  { value: 'website', label: 'Website' },
+  { value: 'podcast', label: 'Podcast' },
+  { value: 'newsletter', label: 'Newsletter' },
+  { value: 'other', label: 'Other' },
 ];
 
 const LANGUAGES = [
-  { id: 'fr', label: 'Français' },
-  { id: 'en', label: 'English' },
-  { id: 'es', label: 'Español' },
-  { id: 'de', label: 'Deutsch' },
-  { id: 'pt', label: 'Português' },
-  { id: 'ar', label: 'العربية' },
-  { id: 'it', label: 'Italiano' },
-  { id: 'nl', label: 'Nederlands' },
-  { id: 'zh', label: '中文' },
+  { value: 'fr', label: 'Français' },
+  { value: 'en', label: 'English' },
+  { value: 'es', label: 'Español' },
+  { value: 'de', label: 'Deutsch' },
+  { value: 'pt', label: 'Português' },
+  { value: 'ar', label: 'العربية' },
+  { value: 'it', label: 'Italiano' },
+  { value: 'nl', label: 'Nederlands' },
+  { value: 'zh', label: '中文' },
 ];
+
+interface InfluencerFormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  country: string;
+  language: string;
+  platforms: string[];
+  bio: string;
+  communitySize: string;
+  communityNiche: string;
+}
 
 const InfluencerRegisterForm: React.FC = () => {
   const intl = useIntl();
   const navigate = useLocaleNavigate();
   const { user } = useAuth();
   const { language } = useApp();
+  const locale = (language || 'en') as string;
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
-  const [formData, setFormData] = useState<{
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
-    country: string;
-    language: string;
-    platforms: string[];
-    bio: string;
-    communitySize: string;
-    communityNiche: string;
-    socialLinks: Record<string, string>;
-  }>({
+  const [formData, setFormData] = useState<InfluencerFormData>({
     firstName: user?.firstName || user?.displayName?.split(' ')[0] || '',
     lastName: user?.lastName || user?.displayName?.split(' ').slice(1).join(' ') || '',
     email: user?.email || '',
-    phone: '',
     country: '',
     language: (language || 'fr') as string,
     platforms: [],
     bio: '',
     communitySize: '',
     communityNiche: '',
-    socialLinks: {
-      youtube: '',
-      instagram: '',
-      facebook: '',
-      tiktok: '',
-      twitter: '',
-      linkedin: '',
-      website: '',
-    },
   });
 
-  const handlePlatformToggle = (platformId: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      platforms: prev.platforms.includes(platformId)
-        ? prev.platforms.filter((p) => p !== platformId)
-        : [...prev.platforms, platformId],
-    }));
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
+  const [countrySearch, setCountrySearch] = useState('');
+
+  const countryDropdownRef = useRef<HTMLDivElement>(null);
+  const languageDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (countryDropdownRef.current && !countryDropdownRef.current.contains(e.target as Node)) {
+        setShowCountryDropdown(false);
+        setCountrySearch('');
+      }
+      if (languageDropdownRef.current && !languageDropdownRef.current.contains(e.target as Node)) {
+        setShowLanguageDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Filter countries based on search
+  const filteredCountries = useMemo(() => {
+    if (!countrySearch) return phoneCodesData;
+    const search = countrySearch.toLowerCase();
+    return phoneCodesData.filter(entry =>
+      getCountryName(entry, locale).toLowerCase().includes(search) ||
+      entry.code.toLowerCase().includes(search)
+    );
+  }, [countrySearch, locale]);
+
+  // Get selected country entry
+  const selectedCountryEntry = useMemo(() =>
+    phoneCodesData.find(e => e.code === formData.country),
+    [formData.country]
+  );
+
+  // Get selected language
+  const selectedLanguage = useMemo(() =>
+    LANGUAGES.find(l => l.value === formData.language),
+    [formData.language]
+  );
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (validationErrors[name]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
+
+  const selectCountry = (entry: PhoneCodeEntry) => {
+    setFormData(prev => ({ ...prev, country: entry.code }));
+    setShowCountryDropdown(false);
+    setCountrySearch('');
+    if (validationErrors.country) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.country;
+        return newErrors;
+      });
+    }
+  };
+
+  const selectLanguage = (langValue: string) => {
+    setFormData(prev => ({ ...prev, language: langValue }));
+    setShowLanguageDropdown(false);
+  };
+
+  const handlePlatformChange = (platforms: string[]) => {
+    setFormData(prev => ({ ...prev, platforms }));
+    if (validationErrors.platforms && platforms.length > 0) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.platforms;
+        return newErrors;
+      });
+    }
+  };
+
+  const validate = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    if (!formData.firstName.trim()) {
+      errors.firstName = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
+    }
+
+    if (!formData.lastName.trim()) {
+      errors.lastName = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
+    }
+
+    if (!formData.email.trim()) {
+      errors.email = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = intl.formatMessage({ id: 'form.error.emailInvalid', defaultMessage: 'Please enter a valid email' });
+    }
+
+    if (!formData.country) {
+      errors.country = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'This field is required' });
+    }
+
+    if (formData.platforms.length === 0) {
+      errors.platforms = intl.formatMessage({ id: 'form.error.selectOne', defaultMessage: 'Select at least one option' });
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validate()) return;
+
     setLoading(true);
     setError(null);
 
@@ -104,23 +244,18 @@ const InfluencerRegisterForm: React.FC = () => {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
-        phone: formData.phone || undefined,
         country: formData.country,
         language: formData.language,
         platforms: formData.platforms,
         bio: formData.bio || undefined,
         communitySize: formData.communitySize ? parseInt(formData.communitySize) : undefined,
         communityNiche: formData.communityNiche || undefined,
-        socialLinks: Object.fromEntries(
-          Object.entries(formData.socialLinks).filter(([_, v]) => v)
-        ),
       });
 
       const data = result.data as { success: boolean; affiliateCodeClient: string };
 
       if (data.success) {
         setSuccess(true);
-        // Redirect to dashboard after 2 seconds
         setTimeout(() => {
           navigate(`/${getTranslatedRouteSlug('influencer-dashboard' as RouteKey, langCode)}`);
         }, 2000);
@@ -136,196 +271,257 @@ const InfluencerRegisterForm: React.FC = () => {
 
   if (success) {
     return (
-      <div className="text-center py-12">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-          <Check className="w-8 h-8 text-green-600 dark:text-green-400" />
-        </div>
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          <FormattedMessage id="influencer.register.success.title" defaultMessage="Inscription réussie !" />
-        </h2>
-        <p className="text-gray-500 dark:text-gray-400">
-          <FormattedMessage id="influencer.register.success.message" defaultMessage="Votre compte est activé. Redirection vers votre tableau de bord..." />
-        </p>
-      </div>
+      <FormSuccess
+        title={<FormattedMessage id="influencer.register.success.title" defaultMessage="Registration successful!" />}
+        message={<FormattedMessage id="influencer.register.success.message" defaultMessage="Your account is now active. Redirecting to your dashboard..." />}
+      />
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {error && (
-        <div className="flex items-center gap-3 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400">
-          <AlertCircle className="w-5 h-5 flex-shrink-0" />
-          <p className="text-sm">{error}</p>
-        </div>
-      )}
+    <form onSubmit={handleSubmit} className="space-y-8">
+      <FormError error={error} />
 
-      {/* Personal Info */}
-      <div className="space-y-4">
-        <h3 className="font-semibold text-gray-900 dark:text-white">
-          <FormattedMessage id="influencer.register.section.personal" defaultMessage="Informations personnelles" />
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              <FormattedMessage id="influencer.register.firstName" defaultMessage="Prénom" /> *
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.firstName}
-              onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              <FormattedMessage id="influencer.register.lastName" defaultMessage="Nom" /> *
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.lastName}
-              onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            <FormattedMessage id="influencer.register.email" defaultMessage="Email" /> *
-          </label>
-          <input
-            type="email"
-            required
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              <FormattedMessage id="influencer.register.country" defaultMessage="Pays" /> *
-            </label>
-            <input
-              type="text"
-              required
-              placeholder="FR, US, MA..."
-              maxLength={2}
-              value={formData.country}
-              onChange={(e) => setFormData({ ...formData, country: e.target.value.toUpperCase() })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              <FormattedMessage id="influencer.register.language" defaultMessage="Langue principale" /> *
-            </label>
-            <select
-              required
-              value={formData.language}
-              onChange={(e) => setFormData({ ...formData, language: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
-            >
-              {LANGUAGES.map((lang) => (
-                <option key={lang.id} value={lang.id}>{lang.label}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Platforms */}
-      <div className="space-y-4">
-        <h3 className="font-semibold text-gray-900 dark:text-white">
-          <FormattedMessage id="influencer.register.section.platforms" defaultMessage="Vos plateformes" /> *
-        </h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          <FormattedMessage id="influencer.register.platformsHint" defaultMessage="Sélectionnez au moins une plateforme" />
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {PLATFORMS.map((platform) => (
-            <button
-              key={platform.id}
-              type="button"
-              onClick={() => handlePlatformToggle(platform.id)}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-                formData.platforms.includes(platform.id)
-                  ? 'bg-red-500 text-white'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-              }`}
-            >
-              {platform.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Community Info */}
-      <div className="space-y-4">
-        <h3 className="font-semibold text-gray-900 dark:text-white">
-          <FormattedMessage id="influencer.register.section.community" defaultMessage="Votre communauté" />
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              <FormattedMessage id="influencer.register.communitySize" defaultMessage="Taille de la communauté" />
-            </label>
-            <input
-              type="number"
-              placeholder="Ex: 5000"
-              value={formData.communitySize}
-              onChange={(e) => setFormData({ ...formData, communitySize: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              <FormattedMessage id="influencer.register.communityNiche" defaultMessage="Thématique/niche" />
-            </label>
-            <input
-              type="text"
-              placeholder="Ex: expatriation, voyage..."
-              value={formData.communityNiche}
-              onChange={(e) => setFormData({ ...formData, communityNiche: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            <FormattedMessage id="influencer.register.bio" defaultMessage="Bio / Description" />
-          </label>
-          <textarea
-            rows={3}
-            placeholder={intl.formatMessage({ id: 'influencer.register.bioPlaceholder', defaultMessage: 'Décrivez votre communauté et votre activité...' })}
-            value={formData.bio}
-            onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
-          />
-        </div>
-      </div>
-
-      {/* Submit */}
-      <button
-        type="submit"
-        disabled={loading || formData.platforms.length === 0}
-        className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2"
+      {/* Personal Info Section */}
+      <FormSection
+        title={<FormattedMessage id="influencer.register.section.personal" defaultMessage="Personal Information" />}
       >
-        {loading ? (
-          <>
-            <Loader2 className="w-5 h-5 animate-spin" />
-            <FormattedMessage id="influencer.register.submitting" defaultMessage="Inscription en cours..." />
-          </>
-        ) : (
-          <FormattedMessage id="influencer.register.submit" defaultMessage="Devenir Influenceur" />
-        )}
-      </button>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormInput
+              id="firstName"
+              name="firstName"
+              value={formData.firstName}
+              onChange={handleChange}
+              label={<FormattedMessage id="form.firstName" defaultMessage="First name" />}
+              placeholder={intl.formatMessage({ id: 'form.firstName.placeholder', defaultMessage: 'Your first name' })}
+              icon={<User className="w-5 h-5" />}
+              error={validationErrors.firstName}
+              required
+            />
+
+            <FormInput
+              id="lastName"
+              name="lastName"
+              value={formData.lastName}
+              onChange={handleChange}
+              label={<FormattedMessage id="form.lastName" defaultMessage="Last name" />}
+              placeholder={intl.formatMessage({ id: 'form.lastName.placeholder', defaultMessage: 'Your last name' })}
+              icon={<User className="w-5 h-5" />}
+              error={validationErrors.lastName}
+              required
+            />
+          </div>
+
+          <FormInput
+            id="email"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            label={<FormattedMessage id="form.email" defaultMessage="Email" />}
+            placeholder={intl.formatMessage({ id: 'form.email.placeholder', defaultMessage: 'your@email.com' })}
+            icon={<Mail className="w-5 h-5" />}
+            error={validationErrors.email}
+            required
+            autoComplete="email"
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Country Dropdown */}
+            <div ref={countryDropdownRef} className="space-y-2">
+              <label className={formStyles.label}>
+                <FormattedMessage id="form.country" defaultMessage="Country" />
+                <span className="text-red-500 ml-0.5">*</span>
+              </label>
+
+              <div className="relative">
+                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
+                <button
+                  type="button"
+                  onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+                  className={`
+                    ${formStyles.input}
+                    pl-12 pr-10 text-left
+                    flex items-center justify-between
+                    ${validationErrors.country ? formStyles.inputError : formStyles.inputDefault}
+                  `}
+                >
+                  <span className={selectedCountryEntry ? '' : 'text-gray-400'}>
+                    {selectedCountryEntry ? (
+                      <span className="flex items-center gap-2">
+                        <span className="text-lg">{getFlag(selectedCountryEntry.code)}</span>
+                        {getCountryName(selectedCountryEntry, locale)}
+                      </span>
+                    ) : (
+                      intl.formatMessage({ id: 'form.country.placeholder', defaultMessage: 'Select country' })
+                    )}
+                  </span>
+                  <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${showCountryDropdown ? 'rotate-180' : ''}`} />
+                </button>
+
+                {showCountryDropdown && (
+                  <div className={formStyles.dropdown}>
+                    <div className="p-2 border-b border-gray-200 dark:border-gray-700">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                          type="text"
+                          value={countrySearch}
+                          onChange={(e) => setCountrySearch(e.target.value)}
+                          placeholder={intl.formatMessage({ id: 'form.search.country', defaultMessage: 'Search country...' })}
+                          className="w-full pl-9 pr-3 py-2.5 text-sm bg-gray-50 dark:bg-gray-800 rounded-xl border-0 focus:ring-2 focus:ring-red-500/30"
+                          autoFocus
+                        />
+                      </div>
+                    </div>
+                    <div className="max-h-[280px] overflow-y-auto overscroll-contain">
+                      {filteredCountries.map((entry) => (
+                        <button
+                          key={entry.code}
+                          type="button"
+                          onClick={() => selectCountry(entry)}
+                          className={`
+                            ${formStyles.dropdownItem}
+                            ${entry.code === formData.country ? 'bg-red-50 dark:bg-red-900/20' : ''}
+                          `}
+                        >
+                          <span className="text-xl">{getFlag(entry.code)}</span>
+                          <span className="flex-1 text-sm">{getCountryName(entry, locale)}</span>
+                          {entry.code === formData.country && (
+                            <Check className="w-4 h-4 text-red-500" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {validationErrors.country && (
+                <p className={formStyles.errorText}>
+                  <span className="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px]">!</span>
+                  {validationErrors.country}
+                </p>
+              )}
+            </div>
+
+            {/* Language Dropdown */}
+            <div ref={languageDropdownRef} className="space-y-2">
+              <label className={formStyles.label}>
+                <FormattedMessage id="form.language" defaultMessage="Main language" />
+                <span className="text-red-500 ml-0.5">*</span>
+              </label>
+
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowLanguageDropdown(!showLanguageDropdown)}
+                  className={`
+                    ${formStyles.input}
+                    pr-10 text-left
+                    flex items-center justify-between
+                    ${formStyles.inputDefault}
+                  `}
+                >
+                  <span>{selectedLanguage?.label || 'Select language'}</span>
+                  <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${showLanguageDropdown ? 'rotate-180' : ''}`} />
+                </button>
+
+                {showLanguageDropdown && (
+                  <div className={formStyles.dropdown}>
+                    <div className="max-h-[280px] overflow-y-auto overscroll-contain">
+                      {LANGUAGES.map((lang) => (
+                        <button
+                          key={lang.value}
+                          type="button"
+                          onClick={() => selectLanguage(lang.value)}
+                          className={`
+                            ${formStyles.dropdownItem}
+                            ${lang.value === formData.language ? 'bg-red-50 dark:bg-red-900/20' : ''}
+                          `}
+                        >
+                          <span className="flex-1 text-sm">{lang.label}</span>
+                          {lang.value === formData.language && (
+                            <Check className="w-4 h-4 text-red-500" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </FormSection>
+
+      {/* Platforms Section */}
+      <FormSection
+        title={<FormattedMessage id="influencer.register.section.platforms" defaultMessage="Your Platforms" />}
+        description={<FormattedMessage id="influencer.register.platformsHint" defaultMessage="Select at least one platform where you create content" />}
+      >
+        <FormChips
+          selected={formData.platforms}
+          onChange={handlePlatformChange}
+          options={PLATFORMS}
+          label=""
+          error={validationErrors.platforms}
+          required
+        />
+      </FormSection>
+
+      {/* Community Section */}
+      <FormSection
+        title={<FormattedMessage id="influencer.register.section.community" defaultMessage="Your Community" />}
+      >
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormInput
+              id="communitySize"
+              name="communitySize"
+              type="number"
+              value={formData.communitySize}
+              onChange={handleChange}
+              label={<FormattedMessage id="form.communitySize" defaultMessage="Community size" />}
+              placeholder={intl.formatMessage({ id: 'form.communitySize.placeholder', defaultMessage: 'e.g. 5000' })}
+              icon={<Users className="w-5 h-5" />}
+            />
+
+            <FormInput
+              id="communityNiche"
+              name="communityNiche"
+              value={formData.communityNiche}
+              onChange={handleChange}
+              label={<FormattedMessage id="form.communityNiche" defaultMessage="Niche / Theme" />}
+              placeholder={intl.formatMessage({ id: 'form.communityNiche.placeholder', defaultMessage: 'e.g. expatriation, travel...' })}
+              icon={<Tag className="w-5 h-5" />}
+            />
+          </div>
+
+          <FormTextarea
+            id="bio"
+            name="bio"
+            value={formData.bio}
+            onChange={handleChange}
+            label={<FormattedMessage id="form.bio" defaultMessage="Bio / Description" />}
+            placeholder={intl.formatMessage({ id: 'form.bio.placeholder', defaultMessage: 'Tell us about your community and content...' })}
+            rows={3}
+            maxLength={500}
+            showCount
+          />
+        </div>
+      </FormSection>
+
+      {/* Submit Button */}
+      <FormButton
+        type="submit"
+        variant="primary"
+        loading={loading}
+        disabled={loading}
+      >
+        <FormattedMessage id="influencer.register.submit" defaultMessage="Become an Influencer" />
+      </FormButton>
     </form>
   );
 };
