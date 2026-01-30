@@ -602,7 +602,7 @@ export const FormChips: React.FC<FormChipsProps> = ({
       <div className="flex flex-wrap gap-2">
         {options.map((opt) => {
           const isSelected = selected.includes(opt.value);
-          const isDisabled = !isSelected && maxItems && selected.length >= maxItems;
+          const isDisabled = !isSelected && !!maxItems && selected.length >= maxItems;
 
           return (
             <button

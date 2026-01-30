@@ -10,6 +10,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { getApps, initializeApp } from 'firebase-admin/app';
 import { logger } from 'firebase-functions/v2';
 import { PaymentConfig, DEFAULT_PAYMENT_CONFIG } from '../../types';
+import { adminConfig } from '../../../lib/functionConfigs';
 
 // Lazy initialization
 function ensureInitialized() {
@@ -54,11 +55,7 @@ async function verifyAdmin(request: CallableRequest): Promise<string> {
  * - Provider settings
  */
 export const adminGetPaymentConfig = onCall(
-  {
-    region: 'europe-west1',
-    memory: '256MiB',
-    timeoutSeconds: 30,
-  },
+  { ...adminConfig, memory: '256MiB', timeoutSeconds: 30 },
   async (request): Promise<{ config: PaymentConfig }> => {
     ensureInitialized();
     const adminId = await verifyAdmin(request);

@@ -8,6 +8,7 @@ import { onCall, HttpsError, CallableRequest } from "firebase-functions/v2/https
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
+import { adminConfig } from "../../../lib/functionConfigs";
 
 import {
   Chatter,
@@ -70,11 +71,7 @@ async function assertAdmin(request: CallableRequest): Promise<string> {
 // ============================================================================
 
 export const adminGetChattersList = onCall(
-  {
-    region: "europe-west1",
-    memory: "512MiB",
-    timeoutSeconds: 30,
-  },
+  { ...adminConfig, timeoutSeconds: 30 },
   async (request): Promise<AdminGetChattersListResponse> => {
     ensureInitialized();
     await assertAdmin(request);
@@ -176,11 +173,7 @@ export const adminGetChattersList = onCall(
 // ============================================================================
 
 export const adminGetChatterDetail = onCall(
-  {
-    region: "europe-west1",
-    memory: "512MiB",
-    timeoutSeconds: 30,
-  },
+  { ...adminConfig, timeoutSeconds: 30 },
   async (request): Promise<AdminGetChatterDetailResponse> => {
     ensureInitialized();
     await assertAdmin(request);

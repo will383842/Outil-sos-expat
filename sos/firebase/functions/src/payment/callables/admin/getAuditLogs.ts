@@ -9,6 +9,7 @@ import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { getApps, initializeApp } from 'firebase-admin/app';
 import { logger } from 'firebase-functions/v2';
+import { adminConfig } from '../../../lib/functionConfigs';
 
 // Lazy initialization
 function ensureInitialized() {
@@ -88,11 +89,7 @@ interface GetAuditLogsResponse {
  * Supports comprehensive filtering for compliance and investigation.
  */
 export const adminGetAuditLogs = onCall(
-  {
-    region: 'europe-west1',
-    memory: '512MiB',
-    timeoutSeconds: 30,
-  },
+  { ...adminConfig, timeoutSeconds: 30 },
   async (request): Promise<GetAuditLogsResponse> => {
     ensureInitialized();
     const adminId = await verifyAdmin(request);
@@ -237,11 +234,7 @@ export const adminGetAuditLogs = onCall(
  * Returns the list of possible audit log actions for filtering.
  */
 export const adminGetAuditLogActions = onCall(
-  {
-    region: 'europe-west1',
-    memory: '256MiB',
-    timeoutSeconds: 10,
-  },
+  { ...adminConfig, memory: '256MiB', timeoutSeconds: 10 },
   async (request): Promise<{ actions: string[] }> => {
     ensureInitialized();
     await verifyAdmin(request);

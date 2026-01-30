@@ -12,6 +12,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
+import { adminConfig } from "../../../lib/functionConfigs";
 
 import {
   Chatter,
@@ -53,11 +54,7 @@ interface GetReferralStatsResponse {
 }
 
 export const adminGetReferralStats = onCall(
-  {
-    region: "europe-west1",
-    memory: "256MiB",
-    timeoutSeconds: 60,
-  },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 60 },
   async (request): Promise<GetReferralStatsResponse> => {
     ensureInitialized();
 
@@ -188,11 +185,7 @@ interface GetReferralTreeResponse {
 }
 
 export const adminGetReferralTree = onCall(
-  {
-    region: "europe-west1",
-    memory: "512MiB",
-    timeoutSeconds: 120,
-  },
+  { ...adminConfig, timeoutSeconds: 120 },
   async (request): Promise<GetReferralTreeResponse> => {
     ensureInitialized();
 
@@ -293,11 +286,7 @@ interface GetEarlyAdoptersResponse {
 }
 
 export const adminGetEarlyAdopters = onCall(
-  {
-    region: "europe-west1",
-    memory: "256MiB",
-    timeoutSeconds: 60,
-  },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 60 },
   async (request): Promise<GetEarlyAdoptersResponse> => {
     ensureInitialized();
 
@@ -370,11 +359,7 @@ interface UpdateEarlyAdopterQuotaInput {
 }
 
 export const adminUpdateEarlyAdopterQuota = onCall(
-  {
-    region: "europe-west1",
-    memory: "256MiB",
-    timeoutSeconds: 60,
-  },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 60 },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
 
@@ -566,11 +551,7 @@ interface InitializeCountersResponse {
 }
 
 export const adminInitializeAllEarlyAdopterCounters = onCall(
-  {
-    region: "europe-west1",
-    memory: "512MiB",
-    timeoutSeconds: 120,
-  },
+  { ...adminConfig, timeoutSeconds: 120 },
   async (request): Promise<InitializeCountersResponse> => {
     ensureInitialized();
 
@@ -653,11 +634,7 @@ interface GetFraudAlertsResponse {
 }
 
 export const adminGetReferralFraudAlerts = onCall(
-  {
-    region: "europe-west1",
-    memory: "256MiB",
-    timeoutSeconds: 60,
-  },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 60 },
   async (request): Promise<GetFraudAlertsResponse> => {
     ensureInitialized();
 
@@ -713,11 +690,7 @@ interface ReviewFraudAlertInput {
 }
 
 export const adminReviewFraudAlert = onCall(
-  {
-    region: "europe-west1",
-    memory: "256MiB",
-    timeoutSeconds: 60,
-  },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 60 },
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
 
@@ -767,11 +740,7 @@ interface GetReferralCommissionsResponse {
 }
 
 export const adminGetReferralCommissions = onCall(
-  {
-    region: "europe-west1",
-    memory: "256MiB",
-    timeoutSeconds: 60,
-  },
+  { ...adminConfig, memory: "256MiB", timeoutSeconds: 60 },
   async (request): Promise<GetReferralCommissionsResponse> => {
     ensureInitialized();
 

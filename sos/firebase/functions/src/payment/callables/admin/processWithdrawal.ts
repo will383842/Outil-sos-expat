@@ -9,6 +9,7 @@ import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { getApps, initializeApp } from 'firebase-admin/app';
 import { logger } from 'firebase-functions/v2';
+import { adminConfig } from '../../../lib/functionConfigs';
 import {
   WithdrawalRequest,
   WithdrawalStatus,
@@ -111,12 +112,7 @@ async function processFlutterwavePayment(
  * The withdrawal must be in 'approved' or 'queued' status.
  */
 export const adminProcessWithdrawal = onCall(
-  {
-    region: 'europe-west1',
-    memory: '512MiB',
-    timeoutSeconds: 120,
-    secrets: [...WISE_PROVIDER_SECRETS, ...FLUTTERWAVE_PAYOUT_SECRETS],
-  },
+  { ...adminConfig, timeoutSeconds: 120, secrets: [...WISE_PROVIDER_SECRETS, ...FLUTTERWAVE_PAYOUT_SECRETS] },
   async (request): Promise<{
     success: boolean;
     message: string;

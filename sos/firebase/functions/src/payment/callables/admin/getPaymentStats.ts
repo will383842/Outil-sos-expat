@@ -10,6 +10,7 @@ import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { getApps, initializeApp } from 'firebase-admin/app';
 import { logger } from 'firebase-functions/v2';
 import { WithdrawalRequest, WithdrawalStatus, PaymentUserType, PaymentProvider } from '../../types';
+import { adminConfig } from '../../../lib/functionConfigs';
 
 // Lazy initialization
 function ensureInitialized() {
@@ -161,11 +162,7 @@ function getPeriodLabel(period: string): string {
  * Returns comprehensive statistics about withdrawals for the admin dashboard.
  */
 export const adminGetPaymentStats = onCall(
-  {
-    region: 'europe-west1',
-    memory: '512MiB',
-    timeoutSeconds: 60,
-  },
+  { ...adminConfig, timeoutSeconds: 60 },
   async (request): Promise<PaymentStatsResponse> => {
     ensureInitialized();
     const adminId = await verifyAdmin(request);

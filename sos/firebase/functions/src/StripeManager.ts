@@ -9,6 +9,8 @@ import { logger as prodLogger } from './utils/productionLogger';
 import { getStripeSecretKey, getStripeSecretKeyLegacy, getStripeMode, validateStripeMode } from './lib/stripe';
 // P0 FIX: Import PayPalManager for PayPal-only provider payouts
 import { PayPalManager } from './PayPalManager';
+// P0 FIX 2026-01-30: Circuit breaker for Stripe API resilience
+import { stripeCircuitBreaker, CircuitBreakerError } from './lib/circuitBreaker';
 
 /* ===================================================================
  * Utils
@@ -629,23 +631,36 @@ export class StripeManager {
       // - L'argent va directement au provider, pas à la plateforme puis transfert
       let paymentIntent: Stripe.PaymentIntent;
 
-      if (useDirectCharges && providerStripeAccountId) {
-        console.log('[createPaymentIntent] Création PaymentIntent sur le compte du provider (Direct Charges)');
-        paymentIntent = await this.stripe.paymentIntents.create(
-          paymentIntentParams,
-          {
-            idempotencyKey: idempotencyKey.substring(0, 255),
-            stripeAccount: providerStripeAccountId, // DIRECT CHARGES: Charge créée sur le compte du provider
-          }
-        );
-      } else {
-        console.log('[createPaymentIntent] Création PaymentIntent sur le compte plateforme (fallback mode)');
-        paymentIntent = await this.stripe.paymentIntents.create(
-          paymentIntentParams,
-          {
-            idempotencyKey: idempotencyKey.substring(0, 255),
-          }
-        );
+      // P0 FIX 2026-01-30: Wrap Stripe API calls with circuit breaker for resilience
+      try {
+        if (useDirectCharges && providerStripeAccountId) {
+          console.log('[createPaymentIntent] Création PaymentIntent sur le compte du provider (Direct Charges)');
+          paymentIntent = await stripeCircuitBreaker.execute(() =>
+            this.stripe!.paymentIntents.create(
+              paymentIntentParams,
+              {
+                idempotencyKey: idempotencyKey.substring(0, 255),
+                stripeAccount: providerStripeAccountId, // DIRECT CHARGES: Charge créée sur le compte du provider
+              }
+            )
+          );
+        } else {
+          console.log('[createPaymentIntent] Création PaymentIntent sur le compte plateforme (fallback mode)');
+          paymentIntent = await stripeCircuitBreaker.execute(() =>
+            this.stripe!.paymentIntents.create(
+              paymentIntentParams,
+              {
+                idempotencyKey: idempotencyKey.substring(0, 255),
+              }
+            )
+          );
+        }
+      } catch (error) {
+        if (error instanceof CircuitBreakerError) {
+          console.error('[createPaymentIntent] Circuit breaker OPEN - Stripe API unavailable');
+          throw new HttpsError('unavailable', 'Service de paiement temporairement indisponible. Réessayez dans quelques instants.');
+        }
+        throw error;
       }
       console.log('paymentIntent created with idempotency key:', idempotencyKey.substring(0, 50) + '...');
 
@@ -974,46 +989,77 @@ export class StripeManager {
 
                 if (aaaAccount.gateway === 'stripe' && aaaAccount.accountId) {
                   try {
-                    // Calculer le montant du provider (excluant la commission SOS)
-                    // P1 FIX: Utiliser storedProviderAmountCents de Firestore au lieu du fallback 80%
+                    // P0 FIX 2026-01-30: FAIL-FAST - Récupérer le montant exact du provider
+                    // NE JAMAIS utiliser de fallback qui pourrait sous-payer le provider
                     const providerAmountCents = paymentIntent.metadata?.providerAmountCents
                       ? parseInt(paymentIntent.metadata.providerAmountCents, 10)
-                      : (storedProviderAmountCents || Math.round(paymentIntent.amount * 0.8)); // Firestore > 80% fallback
+                      : storedProviderAmountCents;
 
-                    // Créer un transfert vers le compte Stripe externe consolidé
-                    const transfer = await this.stripe!.transfers.create({
-                      amount: providerAmountCents,
-                      currency: paymentIntent.currency,
-                      destination: aaaAccount.accountId,
-                      transfer_group: `aaa_${sessionId || paymentIntentId}`,
-                      metadata: {
-                        type: 'aaa_external_payout',
-                        originalProviderId: providerId,
+                    if (!providerAmountCents) {
+                      // FAIL-FAST: Créer une alerte admin et ne pas procéder au payout
+                      console.error(`[capturePayment] ❌ CRITICAL: No provider amount found for AAA transfer - payment ${paymentIntentId}`);
+                      await this.db.collection('admin_alerts').add({
+                        type: 'payment_amount_missing',
+                        priority: 'critical',
+                        title: '⚠️ Montant provider manquant pour transfert AAA',
+                        message: `Le paiement ${paymentIntentId} n'a pas de montant provider enregistré. Transfert AAA suspendu.`,
+                        paymentIntentId,
+                        providerId,
+                        sessionId: sessionId || null,
+                        read: false,
+                        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                      });
+                      // Ne pas throw - le paiement est capturé, juste le transfert est suspendu
+                      // Créer un pending_transfer pour traitement manuel
+                      await this.db.collection('pending_transfers').add({
+                        paymentIntentId,
+                        providerId,
+                        amount: null, // Montant inconnu - nécessite vérification manuelle
+                        currency: paymentIntent.currency,
+                        status: 'pending_review',
+                        reason: 'Provider amount missing - requires manual verification',
+                        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                      });
+                      // Skip transfer - providerAmountCents is missing
+                    } else {
+                      // Créer un transfert vers le compte Stripe externe consolidé
+                      // P0 FIX 2026-01-30: Wrap transfer with circuit breaker
+                      const transfer = await stripeCircuitBreaker.execute(() =>
+                        this.stripe!.transfers.create({
+                          amount: providerAmountCents,
+                          currency: paymentIntent.currency,
+                          destination: aaaAccount.accountId,
+                          transfer_group: `aaa_${sessionId || paymentIntentId}`,
+                          metadata: {
+                            type: 'aaa_external_payout',
+                            originalProviderId: providerId,
+                            externalAccountId: aaaAccount.id,
+                            externalAccountName: aaaAccount.name,
+                            paymentIntentId: paymentIntentId,
+                            sessionId: sessionId || '',
+                          },
+                        }, {
+                          idempotencyKey: `aaa_transfer_${paymentIntentId}_${aaaAccount.id}`.substring(0, 255),
+                        })
+                      );
+
+                      // Log le payout externe
+                      await this.db.collection('aaa_external_payouts').add({
+                        paymentIntentId: paymentIntentId,
+                        providerId: providerId,
+                        amount: providerAmountCents,
+                        currency: paymentIntent.currency,
+                        mode: 'external',
                         externalAccountId: aaaAccount.id,
                         externalAccountName: aaaAccount.name,
-                        paymentIntentId: paymentIntentId,
-                        sessionId: sessionId || '',
-                      },
-                    }, {
-                      idempotencyKey: `aaa_transfer_${paymentIntentId}_${aaaAccount.id}`.substring(0, 255),
-                    });
+                        transferId: transfer.id,
+                        sessionId: sessionId || null,
+                        success: true,
+                        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                      });
 
-                    // Log le payout externe
-                    await this.db.collection('aaa_external_payouts').add({
-                      paymentIntentId: paymentIntentId,
-                      providerId: providerId,
-                      amount: providerAmountCents,
-                      currency: paymentIntent.currency,
-                      mode: 'external',
-                      externalAccountId: aaaAccount.id,
-                      externalAccountName: aaaAccount.name,
-                      transferId: transfer.id,
-                      sessionId: sessionId || null,
-                      success: true,
-                      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-                    });
-
-                    console.log(`[capturePayment] AAA External payout SUCCESS to ${aaaAccount.name}: ${transfer.id}`);
+                      console.log(`[capturePayment] AAA External payout SUCCESS to ${aaaAccount.name}: ${transfer.id}`);
+                    }
                   } catch (transferError) {
                     console.error('[capturePayment] AAA External transfer failed:', transferError);
                     // Log l'échec
@@ -1101,11 +1147,23 @@ export class StripeManager {
         idempotencyKey: captureIdempotencyKey.substring(0, 30) + '...',
       });
 
-      const captured = await this.stripe.paymentIntents.capture(
-        paymentIntentId,
-        {},
-        captureOptions
-      );
+      // P0 FIX 2026-01-30: Wrap capture with circuit breaker
+      let captured: Stripe.PaymentIntent;
+      try {
+        captured = await stripeCircuitBreaker.execute(() =>
+          this.stripe!.paymentIntents.capture(
+            paymentIntentId,
+            {},
+            captureOptions
+          )
+        );
+      } catch (error) {
+        if (error instanceof CircuitBreakerError) {
+          console.error('[capturePayment] Circuit breaker OPEN - Stripe API unavailable');
+          throw new HttpsError('unavailable', 'Service de paiement temporairement indisponible. La capture sera retentée automatiquement.');
+        }
+        throw error;
+      }
 
       // Recuperer l'ID du transfert auto-cree par Stripe (Destination Charges)
       // Le transfert est disponible directement sur le PaymentIntent apres capture
@@ -1308,16 +1366,56 @@ export class StripeManager {
       } else if (paymentData.metadata?.providerAmount) {
         providerAmountCents = Math.round(Number(paymentData.metadata.providerAmount) * 100);
       } else {
-        // Fallback basé sur le pricing standard (30€ pour avocat, 10€ pour expat)
-        const providerType = provider?.type || provider?.role || 'expat';
-        providerAmountCents = providerType === 'lawyer' ? 3000 : 1000;
-        console.warn(`[handlePayPalProviderPayout] ⚠️ P0 FIX: No provider amount in payment, using fallback: ${providerAmountCents} cents`);
+        // P0 FIX 2026-01-30: FAIL-FAST - Ne jamais utiliser de fallback hardcodé
+        // Créer une alerte admin et suspendre le payout
+        console.error(`[handlePayPalProviderPayout] ❌ CRITICAL: No provider amount found in payment for session ${sessionId}`);
+        await this.db.collection('admin_alerts').add({
+          type: 'paypal_payout_amount_missing',
+          priority: 'critical',
+          title: '⚠️ Montant provider manquant pour payout PayPal',
+          message: `Le paiement pour la session ${sessionId} n'a pas de montant provider. Payout PayPal suspendu pour éviter erreur de montant.`,
+          sessionId,
+          providerId,
+          paymentId: paymentDoc.docs[0].id,
+          read: false,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        // Créer un pending payout pour traitement manuel
+        await this.db.collection('pending_paypal_payouts').add({
+          providerId,
+          sessionId,
+          amountCents: null, // Montant inconnu
+          currency,
+          status: 'pending_review',
+          reason: 'Provider amount missing in payment document - requires manual verification',
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        return; // FAIL-FAST: Ne pas procéder avec un montant potentiellement incorrect
       }
     } else {
-      // Fallback si payment non trouvé - utiliser le montant capturé moins 20% de commission
-      const providerType = provider?.type || provider?.role || 'expat';
-      providerAmountCents = providerType === 'lawyer' ? 3000 : 1000;
-      console.warn(`[handlePayPalProviderPayout] ⚠️ P0 FIX: Payment not found for session ${sessionId}, using fallback: ${providerAmountCents} cents`);
+      // P0 FIX 2026-01-30: FAIL-FAST - Payment document non trouvé
+      console.error(`[handlePayPalProviderPayout] ❌ CRITICAL: Payment not found for session ${sessionId}`);
+      await this.db.collection('admin_alerts').add({
+        type: 'paypal_payout_payment_missing',
+        priority: 'critical',
+        title: '⚠️ Document paiement introuvable pour payout PayPal',
+        message: `Aucun document de paiement trouvé pour la session ${sessionId}. Payout PayPal suspendu.`,
+        sessionId,
+        providerId,
+        read: false,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      // Créer un pending payout pour investigation
+      await this.db.collection('pending_paypal_payouts').add({
+        providerId,
+        sessionId,
+        amountCents: null,
+        currency,
+        status: 'pending_review',
+        reason: 'Payment document not found - requires investigation',
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      return; // FAIL-FAST: Ne pas procéder sans données de paiement
     }
 
     console.log(`[handlePayPalProviderPayout] P0 FIX: Using correct provider amount: ${providerAmountCents} cents (NOT total: ${capturedAmountCents} cents)`);
@@ -1557,7 +1655,20 @@ export class StripeManager {
       // IMPORTANT: NE PAS inclure Date.now() - un remboursement ne doit se faire qu'une seule fois
       const refundIdempotencyKey = `refund_${paymentIntentId}_${amount || 'full'}`;
       stripeOptions.idempotencyKey = refundIdempotencyKey.substring(0, 255);
-      const refund = await this.stripe.refunds.create(refundData, stripeOptions);
+
+      // P0 FIX 2026-01-30: Wrap refund with circuit breaker
+      let refund: Stripe.Refund;
+      try {
+        refund = await stripeCircuitBreaker.execute(() =>
+          this.stripe!.refunds.create(refundData, stripeOptions)
+        );
+      } catch (error) {
+        if (error instanceof CircuitBreakerError) {
+          console.error('[refundPayment] Circuit breaker OPEN - Stripe API unavailable');
+          throw new HttpsError('unavailable', 'Service de paiement temporairement indisponible. Le remboursement sera retenté.');
+        }
+        throw error;
+      }
 
       // Mise a jour du document payment avec les infos de remboursement
       const refundUpdate: Record<string, unknown> = {
@@ -1931,13 +2042,26 @@ async cancelPayment(
       idempotencyKey: cancelIdempotencyKey,
       ...(stripeAccountOptions || {}),
     };
-    const canceled = await this.stripe.paymentIntents.cancel(
-      paymentIntentId,
-      {
-        ...(normalized ? { cancellation_reason: normalized } : {}),
-      },
-      cancelOptions
-    );
+
+    // P0 FIX 2026-01-30: Wrap cancel with circuit breaker
+    let canceled: Stripe.PaymentIntent;
+    try {
+      canceled = await stripeCircuitBreaker.execute(() =>
+        this.stripe!.paymentIntents.cancel(
+          paymentIntentId,
+          {
+            ...(normalized ? { cancellation_reason: normalized } : {}),
+          },
+          cancelOptions
+        )
+      );
+    } catch (error) {
+      if (error instanceof CircuitBreakerError) {
+        console.error(`[${cancelDebugId}] Circuit breaker OPEN - Stripe API unavailable`);
+        throw new HttpsError('unavailable', 'Service de paiement temporairement indisponible.');
+      }
+      throw error;
+    }
 
     await this.db.collection('payments').doc(paymentIntentId).update({
       status: canceled.status,

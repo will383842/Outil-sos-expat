@@ -10,6 +10,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { getApps, initializeApp } from 'firebase-admin/app';
 import { logger } from 'firebase-functions/v2';
 import { WithdrawalRequest, PaymentUserType, WithdrawalStatus } from '../../types';
+import { adminConfig } from '../../../lib/functionConfigs';
 
 // Lazy initialization
 function ensureInitialized() {
@@ -82,11 +83,7 @@ interface GetPendingWithdrawalsResponse {
  * - failed: Failed and may need attention
  */
 export const adminGetPendingWithdrawals = onCall(
-  {
-    region: 'europe-west1',
-    memory: '512MiB',
-    timeoutSeconds: 30,
-  },
+  { ...adminConfig, timeoutSeconds: 30 },
   async (request): Promise<GetPendingWithdrawalsResponse> => {
     ensureInitialized();
     const adminId = await verifyAdmin(request);

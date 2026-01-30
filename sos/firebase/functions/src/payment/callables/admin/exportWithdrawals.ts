@@ -10,6 +10,7 @@ import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { getApps, initializeApp } from 'firebase-admin/app';
 import { logger } from 'firebase-functions/v2';
 import { WithdrawalRequest, WithdrawalStatus, PaymentUserType } from '../../types';
+import { adminConfig } from '../../../lib/functionConfigs';
 
 // Lazy initialization
 function ensureInitialized() {
@@ -96,11 +97,7 @@ function formatAmount(amountInCents: number): string {
  * Returns data in CSV or JSON format.
  */
 export const adminExportWithdrawals = onCall(
-  {
-    region: 'europe-west1',
-    memory: '1GiB',
-    timeoutSeconds: 120,
-  },
+  { ...adminConfig, memory: '1GiB', timeoutSeconds: 120 },
   async (request): Promise<ExportWithdrawalsResponse> => {
     ensureInitialized();
     const adminId = await verifyAdmin(request);
